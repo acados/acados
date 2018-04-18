@@ -596,18 +596,18 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
     for (i = 0; i <= N; i++) {
         // TODO(rien) where should the update happen??? move to qp update ???
         // TODO fix and move where appropriate
-        //		if(i<N)
-        //		{
-        //			ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
-        //			sim_rk_opts *opts = dynamics_opts->sim_solver;
-        //			if (opts->scheme != NULL && opts->scheme->type != exact)
-        //			{
-        //				for (int_t j = 0; j < nx; j++)
-        //					BLASFEO_DVECEL(nlp_mem->cost_grad+i, nu+j) += work->sim_out[i]->grad[j];
-        //				for (int_t j = 0; j < nu; j++)
-        //					BLASFEO_DVECEL(nlp_mem->cost_grad+i, j) += work->sim_out[i]->grad[nx+j];
-        //			}
-        //		}
+        // 	if(i<N)
+        // 	{
+        // 		ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
+        // 		sim_rk_opts *opts = dynamics_opts->sim_solver;
+        // 		if (opts->scheme != NULL && opts->scheme->type != exact)
+        // 		{
+        // 			for (int_t j = 0; j < nx; j++)
+        // 				BLASFEO_DVECEL(nlp_mem->cost_grad+i, nu+j) += work->sim_out[i]->grad[j];
+        // 			for (int_t j = 0; j < nu; j++)
+        // 				BLASFEO_DVECEL(nlp_mem->cost_grad+i, j) += work->sim_out[i]->grad[nx+j];
+        // 		}
+        // 	}
     }
 
     return;
@@ -663,7 +663,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
     // TODO fix and move where appropriate
     //    for (i = 0; i < N; i++)
     //    {
-    //		nx1 = dims->constraints[i+1]->nx;
+    // 	nx1 = dims->constraints[i+1]->nx;
     //        for (j = 0; j < nx1; j++)
     //        {
     //            work->sim_in[i]->S_adj[j] = -BLASFEO_DVECEL(&work->qp_out->pi[i], j);
@@ -787,19 +787,19 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
         }
 
         // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
-        //		print_ocp_qp_in(work->qp_in);
+        // 	print_ocp_qp_in(work->qp_in);
 
         int qp_status =
             qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
                                 mem->qp_solver_mem, work->qp_work);
 
         // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
-        //		print_ocp_qp_out(work->qp_out);
-        //		if(sqp_iter==1)
-        //		exit(1);
+        // 	print_ocp_qp_out(work->qp_out);
+        // 	if(sqp_iter==1)
+        // 	exit(1);
 
         if (qp_status != 0) {
-            //			print_ocp_qp_in(work->qp_in);
+            // 		print_ocp_qp_in(work->qp_in);
 
             printf("QP solver returned error status %d in iteration %d\n", qp_status, sqp_iter);
             return -1;
@@ -814,7 +814,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
         // ??? @rien
         //        for (int_t i = 0; i < N; i++)
         //        {
-        //			ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
+        // 		ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
         //            sim_rk_opts *rk_opts = dynamics_opts->sim_solver;
         //            if (rk_opts->scheme == NULL)
         //                continue;
@@ -829,7 +829,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
     // stop timer
     total_time += acados_toc(&timer);
 
-    //	ocp_nlp_out_print(nlp_out);
+    // ocp_nlp_out_print(nlp_out);
 
     // save sqp iterations number
     mem->sqp_iter = sqp_iter;

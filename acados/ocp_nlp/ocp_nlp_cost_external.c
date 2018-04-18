@@ -147,18 +147,18 @@ void *ocp_nlp_cost_external_opts_assign(void *config_, void *dims_, void *raw_me
 
 void ocp_nlp_cost_external_opts_initialize_default(void *config_, void *dims_, void *opts_) {
     // ocp_nlp_cost_config *config = config_;
-    //	ocp_nlp_cost_external_opts *opts = opts_;
+    // ocp_nlp_cost_external_opts *opts = opts_;
 
-    //	opts->gauss_newton_hess = 1;
+    // opts->gauss_newton_hess = 1;
 
     return;
 }
 
 void ocp_nlp_cost_external_opts_update(void *config_, void *dims_, void *opts_) {
     // ocp_nlp_cost_config *config = config_;
-    //	ocp_nlp_cost_external_opts *opts = opts_;
+    // ocp_nlp_cost_external_opts *opts = opts_;
 
-    //	opts->gauss_newton_hess = 1;
+    // opts->gauss_newton_hess = 1;
 
     return;
 }
@@ -175,7 +175,7 @@ int ocp_nlp_cost_external_memory_calculate_size(void *config_, void *dims_, void
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
-    //	int ny = dims->ny;
+    // int ny = dims->ny;
     int ns = dims->ns;
 
     int size = 0;
@@ -200,7 +200,7 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
-    //	int ny = dims->ny;
+    // int ny = dims->ny;
     int ns = dims->ns;
 
     // struct
@@ -310,7 +310,7 @@ void ocp_nlp_cost_external_initialize(void *config_, void *dims_, void *model_, 
     ocp_nlp_cost_external_memory *memory = memory_;
     // ocp_nlp_cost_external_workspace *work= work_;
 
-    //	ocp_nlp_cost_external_cast_workspace(config_, dims, opts_, work_);
+    // ocp_nlp_cost_external_cast_workspace(config_, dims, opts_, work_);
 
     int ns = dims->ns;
 
@@ -364,10 +364,10 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_dveccp(2 * ns, &model->z, 0, &memory->grad, nu + nx);
     blasfeo_dvecmulacc(2 * ns, &model->Z, 0, memory->ux, nu + nx, &memory->grad, nu + nx);
 
-    //	blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
-    //	blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
-    //	blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
-    //	exit(1);
+    // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
+    // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
+    // blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
+    // exit(1);
 
     return;
 }

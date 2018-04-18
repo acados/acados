@@ -572,7 +572,7 @@ int main() {
 	void *nlp_in_mem = malloc(tmp_size);
 	ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, nlp_in_mem);
 
-//	ocp_nlp_dims_print(nlp_in->dims);
+// ocp_nlp_dims_print(nlp_in->dims);
 
 	// sampling times
 	double Ts = 0.5;
@@ -687,10 +687,10 @@ int main() {
 
 
 	// XXX hack: overwrite config with hand-setted one
-//	nlp_opts->qp_solver = &config_qp;
-//	nlp_opts->sim_solvers = config_sim_ptrs;
-//	for (int ii=0; ii<N; ii++)
-//		nlp_opts->sim_solvers[ii] = config_sim_ptrs[ii];
+// nlp_opts->qp_solver = &config_qp;
+// nlp_opts->sim_solvers = config_sim_ptrs;
+// for (int ii=0; ii<N; ii++)
+// 	nlp_opts->sim_solvers[ii] = config_sim_ptrs[ii];
 
 
 
@@ -711,7 +711,7 @@ int main() {
 	void *nlp_out_mem = malloc(tmp_size);
 	ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, nlp_out_mem);
 
-//	ocp_nlp_dims_print(nlp_out->dims);
+// ocp_nlp_dims_print(nlp_out->dims);
 
     /************************************************
     * sqp memory
@@ -739,16 +739,16 @@ int main() {
     for (int rep = 0; rep < NREP; rep++)
     {
 		// warm start output initial guess of solution
-//		if (rep==0)
-//		{
+// 	if (rep==0)
+// 	{
 			for (int i=0; i<=N; i++)
 			{
 				blasfeo_dvecse(nu[i], 0.0, nlp_out->ux+i, 0);
 				blasfeo_dvecse(nx[i], 0.0, nlp_out->ux+i, nu[i]);
-//				blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
-//				blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
+// 			blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
+// 			blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
 			}
-//		}
+// 	}
 
 		// call nlp solver
         status = ocp_nlp_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
@@ -757,7 +757,7 @@ int main() {
     double time = acados_toc(&timer)/NREP;
 
 	printf("\nresiduals (max = %e)\n", nlp_out->inf_norm_res);
-//	ocp_nlp_res_print(dims, nlp_mem->nlp_res);
+// ocp_nlp_res_print(dims, nlp_mem->nlp_res);
 
 	printf("\nsolution\n");
 	ocp_nlp_out_print(dims, nlp_out);

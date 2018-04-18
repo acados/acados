@@ -262,8 +262,8 @@ int main()
 
 		sim_rk_opts *opts = sim_opts_create(config, dims);
 
-//		opts->ns = 4; // number of stages in rk integrator
-//		opts->num_steps = 5; // number of integration steps
+// 	opts->ns = 4; // number of stages in rk integrator
+// 	opts->num_steps = 5; // number of integration steps
 		opts->sens_adj = true;
 
 		/************************************************

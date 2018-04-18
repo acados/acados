@@ -196,7 +196,7 @@ int main()
 	int number_sim_solvers = 3;
 	int nss;
 	for (nss=0; nss<number_sim_solvers; nss++)
-//	for (nss=1; nss<2; nss++)
+// for (nss=1; nss<2; nss++)
 	{
 
 /************************************************
@@ -348,14 +348,14 @@ int main()
 * sim solver
 ************************************************/
 
-//		acados_tic(&timer);
+// 	acados_tic(&timer);
 
 		for (ii=0;ii<NREP;ii++)
 			config->evaluate(config, in, out, opts, mem, work);
 
 
 
-//		Time1 = acados_toc(&timer)/NREP;
+// 	Time1 = acados_toc(&timer)/NREP;
 
 		double *xn = out->xn;
 
@@ -423,8 +423,8 @@ int main()
 
 			struct blasfeo_dvec sz;
 			blasfeo_allocate_dvec(nx+nu, &sz);
-//			blasfeo_print_dmat(nx, nx+nu, &sA, 0, 0);
-//			blasfeo_print_tran_dvec(nx, &sx, 0);
+// 		blasfeo_print_dmat(nx, nx+nu, &sA, 0, 0);
+// 		blasfeo_print_tran_dvec(nx, &sx, 0);
 			blasfeo_dgemv_t(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
 
 			printf("\nJac times lambdaX:\n");

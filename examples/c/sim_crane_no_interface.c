@@ -479,8 +479,8 @@ int main()
 
 			struct blasfeo_dvec sz;
 			blasfeo_allocate_dvec(nx+nu, &sz);
-//			blasfeo_print_dmat(nx, nx+nu, &sA, 0, 0);
-//			blasfeo_print_tran_dvec(nx, &sx, 0);
+// 		blasfeo_print_dmat(nx, nx+nu, &sA, 0, 0);
+// 		blasfeo_print_tran_dvec(nx, &sx, 0);
 			blasfeo_dgemv_t(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
 
 			printf("\nJac times lambdaX:\n");

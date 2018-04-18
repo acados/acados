@@ -442,7 +442,7 @@ int external_function_casadi_calculate_size(external_function_casadi *fun) {
     size += 8;  // initial align
     size += 8;  // align to double
 
-    //	make_int_multiple_of(64, &size);
+    // make_int_multiple_of(64, &size);
 
     return size;
 }
@@ -646,7 +646,7 @@ int external_function_param_casadi_calculate_size(external_function_param_casadi
     size += 8;  // initial align
     size += 8;  // align to double
 
-    //	make_int_multiple_of(64, &size);
+    // make_int_multiple_of(64, &size);
 
     return size;
 }

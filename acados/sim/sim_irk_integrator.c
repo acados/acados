@@ -411,15 +411,15 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     for (kk = 0; kk < nx * (2 * nx + nu); kk++) jac_out[kk] = 0.0;
     for (kk = 0; kk < nx * nx; kk++) Jt[kk] = 0.0;
 
-    //	double inf_norm_K;
-    //	double tol_inf_norm_K = 1e-6;
+    // double inf_norm_K;
+    // double tol_inf_norm_K = 1e-6;
 
     // start the loop
     acados_tic(&timer);
     for (ss = 0; ss < num_steps; ss++) {
         //  obtain Kn
         // TODO add exit condition on residuals ???
-        //		inf_norm_K = 1.0;
+        // 	inf_norm_K = 1.0;
         //        for(iter=0; inf_norm_K>tol_inf_norm_K & iter<newton_iter; iter++)
         for (iter = 0; iter < newton_iter; iter++) {
             if (opts->sens_adj) {
@@ -538,7 +538,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_daxpy(nx * ns, -1.0, rG, 0, K, 0, K, 0);
 
             // inf norm of K
-            //			blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
+            // 		blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
         }  // end iter
 
         if (opts->sens_adj) {
