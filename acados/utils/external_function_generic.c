@@ -650,6 +650,10 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
 			d_cvt_dvec_args_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
 			break;
 
+		case IGNORE:
+			// do nothing
+			break;
+
 		default:
 			printf("\ntype in %d\n", type_in[ii]);
 			printf("\nUnknown external function argument type\n\n");
@@ -685,6 +689,10 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
 
 		case BLASFEO_DVEC_ARGS:
 			d_cvt_casadi_to_dvec_args((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
+		case IGNORE:
+			// do nothing
 			break;
 
 		default:
