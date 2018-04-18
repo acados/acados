@@ -121,25 +121,25 @@ int sim_new_lifted_irk_dims_calculate_size();
 //
 void *sim_new_lifted_irk_dims_assign(void* config_, void *raw_memory);
 //
-int sim_new_lifted_irk_model_calculate_size(void *config, sim_dims *dims);
+int sim_new_lifted_irk_model_calculate_size(void *config, void *dims);
 //
-void *sim_new_lifted_irk_model_assign(void *config, sim_dims *dims, void *raw_memory);
+void *sim_new_lifted_irk_model_assign(void *config, void *dims, void *raw_memory);
 //
-int sim_new_lifted_irk_opts_calculate_size(void *config, sim_dims *dims);
+int sim_new_lifted_irk_opts_calculate_size(void *config, void *dims);
 //
-void *sim_new_lifted_irk_opts_assign(void *config, sim_dims *dims, void *raw_memory);
+void *sim_new_lifted_irk_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void sim_new_lifted_irk_opts_initialize_default(void *config, sim_dims *dims, void *opts_);
+void sim_new_lifted_irk_opts_initialize_default(void *config, void *dims, void *opts_);
 //
-void sim_new_lifted_irk_opts_update(void *config_, sim_dims *dims, void *opts_);
+void sim_new_lifted_irk_opts_update(void *config_, void *dims, void *opts_);
 //
-int sim_new_lifted_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_);
+int sim_new_lifted_irk_memory_calculate_size(void *config, void *dims, void *opts_);
 //
-void *sim_new_lifted_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory);
+void *sim_new_lifted_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 //
 int sim_new_lifted_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 //
-int sim_new_lifted_irk_workspace_calculate_size(void *config, sim_dims *dims, void *opts_);
+int sim_new_lifted_irk_workspace_calculate_size(void *config, void *dims, void *opts_);
 //
 void sim_new_lifted_irk_config_initialize_default(void *config);
 //
