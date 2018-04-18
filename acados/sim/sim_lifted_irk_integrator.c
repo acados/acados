@@ -34,6 +34,28 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 
+/************************************************
+* dims
+************************************************/
+
+int sim_lifted_irk_dims_calculate_size()
+{
+    int size = sizeof(sim_lifted_irk_dims);
+
+    return size;
+}
+
+void *sim_lifted_irk_dims_assign(void* config_, void *raw_memory)
+{
+    char *c_ptr = raw_memory;
+
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) c_ptr;
+    c_ptr += sizeof(sim_lifted_irk_dims);
+
+    assert((char *) raw_memory + sim_lifted_irk_dims_calculate_size() >= c_ptr);
+
+    return dims;
+}
 
 
 /************************************************
@@ -1611,8 +1633,8 @@ void sim_lifted_irk_config_initialize_default(void *config_)
 	config->model_calculate_size = &sim_lifted_irk_model_calculate_size;
 	config->model_assign = &sim_lifted_irk_model_assign;
     config->model_set_function = &sim_lifted_irk_model_set_function;
-    config->dims_calculate_size = &sim_dims_calculate_size;
-    config->dims_assign = &sim_dims_assign_standard;
+    config->dims_calculate_size = &sim_lifted_irk_dims_calculate_size;
+    config->dims_assign = &sim_lifted_irk_dims_assign;
 	return;
 
 }

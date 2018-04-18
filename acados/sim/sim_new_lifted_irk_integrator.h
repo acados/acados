@@ -27,6 +27,11 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
+typedef struct
+{
+    int nx;
+    int nu;
+} sim_new_lifted_irk_dims;
 
 
 typedef struct
@@ -111,6 +116,10 @@ typedef struct
 
 } sim_new_lifted_irk_memory;
 
+
+int sim_new_lifted_irk_dims_calculate_size();
+//
+void *sim_new_lifted_irk_dims_assign(void* config_, void *raw_memory);
 //
 int sim_new_lifted_irk_model_calculate_size(void *config, sim_dims *dims);
 //

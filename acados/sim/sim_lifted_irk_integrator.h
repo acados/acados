@@ -32,6 +32,11 @@ extern "C" {
 #define CODE_GENERATION 0
 
 
+typedef struct
+{
+    int nx;
+    int nu;
+} sim_lifted_irk_dims;
 
 typedef struct
 {
@@ -90,7 +95,10 @@ typedef struct {
 
 } sim_lifted_irk_memory;
 
-
+//
+int sim_lifted_irk_dims_calculate_size();
+//
+void *sim_lifted_irk_dims_assign(void* config_, void *raw_memory);
 //
 int sim_lifted_irk_model_calculate_size(void *config, sim_dims *dims);
 //
