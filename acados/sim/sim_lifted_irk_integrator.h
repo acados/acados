@@ -95,6 +95,9 @@ typedef struct {
 
 } sim_lifted_irk_memory;
 
+
+void sim_lifted_irk_set_nx_nu(void *dims_, int nx, int nu);
+void sim_lifted_irk_extract_nx_nu(void *dims, int* nx, int* nu);
 //
 int sim_lifted_irk_dims_calculate_size();
 //

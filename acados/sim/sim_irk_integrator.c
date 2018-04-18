@@ -40,6 +40,20 @@ void *sim_irk_dims_assign(void* config_, void *raw_memory)
     return dims;
 }
 
+void sim_irk_set_nx_nu(void *dims_, int nx, int nu)
+{
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
+
+    dims->nx = nx;
+    dims->nu = nu;
+}
+
+void sim_irk_extract_nx_nu(void *dims_, int* nx, int* nu)
+{
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
+    *nx = dims->nx;
+    *nu = dims->nu;
+}
 
 /************************************************
 * model
@@ -895,6 +909,8 @@ void sim_irk_config_initialize_default(void *config_)
     config->model_set_function = &sim_irk_model_set_function;
     config->dims_calculate_size = &sim_irk_dims_calculate_size;
     config->dims_assign = &sim_irk_dims_assign;
+    config->set_nx_nu = &sim_irk_set_nx_nu;
+    config->extract_nx_nu = &sim_irk_extract_nx_nu;
 	return;
 
 }
