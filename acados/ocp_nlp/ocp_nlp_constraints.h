@@ -47,7 +47,7 @@ typedef struct
     int nbu;
     int ng;  // number of general linear constraints
 	int nh;  // number of nonlinear path constraints
-	int nq;  // number of quadratic_over_nonlinear constraints TODO
+	int np;  // dimension of nonlinear function in quadratic_over_nonlinear constraint
     int ns;  // number of soft constraints
 } ocp_nlp_constraints_dims;
 
@@ -112,7 +112,7 @@ typedef struct
 	struct blasfeo_dvec d;
 	struct blasfeo_dmat DCt;
 	external_function_generic *h;
-	external_function_generic *quadratic;
+	external_function_generic *p;
 } ocp_nlp_constraints_model;
 
 //
@@ -179,7 +179,7 @@ void ocp_nlp_constraints_memory_set_idxs_ptr(int *idxs, void *memory_);
 typedef struct
 {
 	struct blasfeo_dvec tmp_ni;
-//	struct blasfeo_dmat jacobian_quadratic;
+	struct blasfeo_dmat jacobian_quadratic;
 } ocp_nlp_constraints_workspace;
 
 //

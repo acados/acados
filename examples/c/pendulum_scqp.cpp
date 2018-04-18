@@ -59,7 +59,7 @@ int main() {
 	nv.at(N) = 4;
 	ny.at(N) = 4;
 	nh.at(N) = 1;
-	nq.at(N) = 2;
+	nq.at(N) = 0;
 
 	// Make plan
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
@@ -67,8 +67,10 @@ int main() {
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = LINEAR_LS;
-	for (int i = 0; i < N; i++)
+	for (int i = 0; i < N; i++) {
+		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 		plan->sim_solver_plan[i].sim_solver = ERK;
+	}
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
 

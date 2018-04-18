@@ -29,16 +29,16 @@ extern "C" {
 #define casadi_s1 CASADI_PREFIX(s1)
 #define casadi_s2 CASADI_PREFIX(s2)
 
-static const casadi_int casadi_s0[9] = {5, 1, 0, 5, 0, 1, 2, 3, 4};
+static const casadi_int casadi_s0[8] = {4, 1, 0, 4, 0, 1, 2, 3};
 static const casadi_int casadi_s1[6] = {2, 1, 0, 2, 0, 1};
-static const casadi_int casadi_s2[8] = {5, 2, 0, 2, 3, 1, 3, 3};
+static const casadi_int casadi_s2[8] = {4, 2, 0, 2, 3, 0, 2, 2};
 
-/* position:(i0[5])->(o0[2],o1[5x2,3nz]) */
+/* position:(i0[4])->(o0[2],o1[4x2,3nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2, a3;
-  a0=arg[0] ? arg[0][1] : 0;
+  a0=arg[0] ? arg[0][0] : 0;
   a1=8.0000000000000004e-01;
-  a2=arg[0] ? arg[0][3] : 0;
+  a2=arg[0] ? arg[0][2] : 0;
   a3=sin(a2);
   a3=(a1*a3);
   a0=(a0-a3);
