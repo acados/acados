@@ -100,7 +100,7 @@ ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory);
 /* model */
 
 typedef struct {
-    //	ocp_nlp_constraints_dims *dims;
+    //  ocp_nlp_constraints_dims *dims;
     int *idxb;
     int *idxs;
     struct blasfeo_dvec d;

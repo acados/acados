@@ -140,7 +140,7 @@ void *ocp_nlp_constraints_model_assign(void *config, void *dims_, void *raw_memo
     c_ptr += sizeof(ocp_nlp_constraints_model);
 
     // dims
-    //	model->dims = dims;
+    //  model->dims = dims;
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -160,7 +160,7 @@ void *ocp_nlp_constraints_model_assign(void *config, void *dims_, void *raw_memo
     assign_and_advance_int(ns, &model->idxs, &c_ptr);
 
     // h
-    //	model->h = NULL;
+    //  model->h = NULL;
 
     // assert
     assert((char *)raw_memory + ocp_nlp_constraints_model_calculate_size(config, dims) >= c_ptr);
@@ -190,13 +190,13 @@ void *ocp_nlp_constraints_opts_assign(void *config_, void *dims_, void *raw_memo
 }
 
 void ocp_nlp_constraints_opts_initialize_default(void *config_, void *dims_, void *opts_) {
-    //	ocp_nlp_constraints_opts *opts = opts_;
+    //  ocp_nlp_constraints_opts *opts = opts_;
 
     return;
 }
 
 void ocp_nlp_constraints_opts_update(void *config_, void *dims_, void *opts_) {
-    //	ocp_nlp_constraints_opts *opts = opts_;
+    //  ocp_nlp_constraints_opts *opts = opts_;
 
     return;
 }

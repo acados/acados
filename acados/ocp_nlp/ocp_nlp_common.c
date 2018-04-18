@@ -296,7 +296,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 
     size += 8;  // initial align
 
-    //	make_int_multiple_of(64, &size);
+    //  make_int_multiple_of(64, &size);
 
     return size;
 }
@@ -383,7 +383,7 @@ int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
     size += 8;   // blasfeo_struct align
     size += 64;  // blasfeo_mem align
 
-    //	make_int_multiple_of(64, &size);
+    //  make_int_multiple_of(64, &size);
 
     return size;
 }
@@ -475,7 +475,7 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *d
     size += 8;   // blasfeo_struct align
     size += 64;  // blasfeo_mem align
 
-    //	make_int_multiple_of(64, &size);
+    //  make_int_multiple_of(64, &size);
 
     return size;
 }
@@ -568,7 +568,7 @@ int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims) {
     size += 8;   // blasfeo_struct align
     size += 64;  // blasfeo_mem align
 
-    //	make_int_multiple_of(64, &size);
+    //  make_int_multiple_of(64, &size);
 
     return size;
 }
