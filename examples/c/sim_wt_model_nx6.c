@@ -443,33 +443,36 @@ int main()
 			d_print_e_mat(1, nx+nu, S_adj_out, 1);
 		}
 
-		// debug adjoints
-		struct blasfeo_dmat S_forw_result;
-		struct blasfeo_dvec adjoint_seed;
-		struct blasfeo_dvec forw_times_seed;
+		if(opts->sens_forw){
+			// debug adjoints
+			struct blasfeo_dmat S_forw_result;
+			struct blasfeo_dvec adjoint_seed;
+			struct blasfeo_dvec forw_times_seed;
 
-		int Sf_mem_size = blasfeo_memsize_dmat(nx, nx+nu);
-		int adj_s_mem_size = blasfeo_memsize_dvec(nx);
-		int check_mem_size = blasfeo_memsize_dvec(nx+nu);
+			int Sf_mem_size = blasfeo_memsize_dmat(nx, nx+nu);
+			int adj_s_mem_size = blasfeo_memsize_dvec(nx);
+			int check_mem_size = blasfeo_memsize_dvec(nx+nu);
 
-		void *Sf_mem = malloc(Sf_mem_size);
-		void *seed_mem = malloc(adj_s_mem_size);
-		void *check_mem = malloc(check_mem_size);
+			void *Sf_mem;
+			v_zeros_align(&Sf_mem, Sf_mem_size);
+			void *seed_mem = malloc(adj_s_mem_size);
+			void *check_mem = malloc(check_mem_size);
 
-		blasfeo_create_dmat(nx, nu+nx, &S_forw_result, Sf_mem);
-		blasfeo_create_dvec(nx, &adjoint_seed, seed_mem);
-		blasfeo_create_dvec(nu+nx, &forw_times_seed, check_mem);
+			blasfeo_create_dmat(nx, nu+nx, &S_forw_result, Sf_mem);
+			blasfeo_create_dvec(nx, &adjoint_seed, seed_mem);
+			blasfeo_create_dvec(nu+nx, &forw_times_seed, check_mem);
 
-		blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &S_forw_result, 0, 0);
-		blasfeo_pack_dvec(nx, in->S_adj, &adjoint_seed, 0);
+			blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &S_forw_result, 0, 0);
+			blasfeo_pack_dvec(nx, in->S_adj, &adjoint_seed, 0);
 
-		blasfeo_dgemv_t(nx, nx+nu, 1.0, &S_forw_result, 0, 0, &adjoint_seed, 0, 0.0, &forw_times_seed, 0, &forw_times_seed, 0);
-		printf("S_forw^T * adj_seed = \n");
-		blasfeo_print_exp_tran_dvec(nx+nu, &forw_times_seed, 0);
+			blasfeo_dgemv_t(nx, nx+nu, 1.0, &S_forw_result, 0, 0, &adjoint_seed, 0, 0.0, &forw_times_seed, 0, &forw_times_seed, 0);
+			printf("S_forw^T * adj_seed = \n");
+			blasfeo_print_exp_tran_dvec(nx+nu, &forw_times_seed, 0);
 
-		free(Sf_mem);
-		free(seed_mem);
-		free(check_mem);
+			v_free_align(Sf_mem);
+			free(seed_mem);
+			free(check_mem);
+		}
 	#if 0
 		printf("\n");
 		printf("cpt: %8.4f [ms]\n", 1000*out->info->CPUtime);
