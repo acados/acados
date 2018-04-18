@@ -4,132 +4,124 @@
 extern "C" {
 #endif
 
+/* How to prefix internal symbols */
 #ifdef CODEGEN_PREFIX
   #define NAMESPACE_CONCAT(NS, ID) _NAMESPACE_CONCAT(NS, ID)
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
-#else /* CODEGEN_PREFIX */
+#else
   #define CASADI_PREFIX(ID) vde_forw_pendulum_ ## ID
-#endif /* CODEGEN_PREFIX */
+#endif
 
 #include <math.h>
 
-#ifndef real_t
-#define real_t double
-#endif /* real_t */
-
-#define to_double(x) (double) x
-#define to_int(x) (int) x
-#define CASADI_CAST(x,y) (x) y
-/* Pre-c99 compatibility */
-#if __STDC_VERSION__ < 199901L
-real_t CASADI_PREFIX(fmin)(real_t x, real_t y) { return x<y ? x : y;}
-#define fmin(x,y) CASADI_PREFIX(fmin)(x,y)
-real_t CASADI_PREFIX(fmax)(real_t x, real_t y) { return x>y ? x : y;}
-#define fmax(x,y) CASADI_PREFIX(fmax)(x,y)
+#ifndef casadi_real
+#define casadi_real double
 #endif
 
-#define PRINTF printf
-real_t CASADI_PREFIX(sq)(real_t x) { return x*x;}
-#define sq(x) CASADI_PREFIX(sq)(x)
+#ifndef casadi_int
+#define casadi_int int
+#endif
 
-real_t CASADI_PREFIX(sign)(real_t x) { return x<0 ? -1 : x>0 ? 1 : x;}
-#define sign(x) CASADI_PREFIX(sign)(x)
+/* Add prefix to internal symbols */
+#define casadi_f0 CASADI_PREFIX(f0)
+#define casadi_s0 CASADI_PREFIX(s0)
+#define casadi_s1 CASADI_PREFIX(s1)
+#define casadi_s2 CASADI_PREFIX(s2)
 
-static const int CASADI_PREFIX(s0)[8] = {4, 1, 0, 4, 0, 1, 2, 3};
-#define s0 CASADI_PREFIX(s0)
-static const int CASADI_PREFIX(s1)[23] = {4, 4, 0, 4, 8, 12, 16, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
-#define s1 CASADI_PREFIX(s1)
-static const int CASADI_PREFIX(s2)[5] = {1, 1, 0, 1, 0};
-#define s2 CASADI_PREFIX(s2)
-/* vdeFun */
-int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
-  real_t a0=arg[0] ? arg[0][1] : 0;
+static const casadi_int casadi_s0[8] = {4, 1, 0, 4, 0, 1, 2, 3};
+static const casadi_int casadi_s1[23] = {4, 4, 0, 4, 8, 12, 16, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
+static const casadi_int casadi_s2[5] = {1, 1, 0, 1, 0};
+
+/* vdeFun:(i0[4],i1[4x4],i2[4],i3)->(o0[4],o1[4x4],o2[4]) */
+static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
+  casadi_real a0, a1, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a2, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a3, a30, a31, a32, a33, a34, a35, a36, a37, a38, a4, a5, a6, a7, a8, a9;
+  a0=arg[0] ? arg[0][1] : 0;
   if (res[0]!=0) res[0][0]=a0;
-  a0=arg[0] ? arg[0][2] : 0;
-  real_t a1=sin(a0);
-  real_t a2=-8.0000000000000016e-02;
-  a1=(a2*a1);
-  real_t a3=arg[0] ? arg[0][3] : 0;
-  real_t a4=(a1*a3);
-  real_t a5=(a4*a3);
-  real_t a6=cos(a0);
-  real_t a7=9.8100000000000009e-01;
-  a6=(a7*a6);
-  real_t a8=sin(a0);
-  real_t a9=(a6*a8);
+  a0=-8.0000000000000016e-02;
+  a1=arg[0] ? arg[0][2] : 0;
+  a2=sin(a1);
+  a2=(a0*a2);
+  a3=arg[0] ? arg[0][3] : 0;
+  a4=(a2*a3);
+  a5=(a4*a3);
+  a6=9.8100000000000009e-01;
+  a7=cos(a1);
+  a7=(a6*a7);
+  a8=sin(a1);
+  a9=(a7*a8);
   a5=(a5+a9);
   a9=arg[3] ? arg[3][0] : 0;
   a5=(a5+a9);
-  real_t a10=cos(a0);
-  real_t a11=1.0000000000000001e-01;
-  a10=(a11*a10);
-  real_t a12=cos(a0);
-  real_t a13=(a10*a12);
-  real_t a14=1.1000000000000001e+00;
-  a14=(a14-a13);
-  a5=(a5/a14);
+  a10=1.1000000000000001e+00;
+  a11=1.0000000000000001e-01;
+  a12=cos(a1);
+  a12=(a11*a12);
+  a13=cos(a1);
+  a14=(a12*a13);
+  a10=(a10-a14);
+  a5=(a5/a10);
   if (res[0]!=0) res[0][1]=a5;
   if (res[0]!=0) res[0][2]=a3;
-  a13=cos(a0);
-  a13=(a2*a13);
-  real_t a15=sin(a0);
-  real_t a16=(a13*a15);
-  real_t a17=(a16*a3);
-  real_t a18=(a17*a3);
-  real_t a19=cos(a0);
-  real_t a20=(a9*a19);
+  a14=cos(a1);
+  a14=(a0*a14);
+  a15=sin(a1);
+  a16=(a14*a15);
+  a17=(a16*a3);
+  a18=(a17*a3);
+  a19=cos(a1);
+  a20=(a9*a19);
   a18=(a18+a20);
-  a20=sin(a0);
-  real_t a21=1.0791000000000002e+01;
-  a20=(a21*a20);
-  a18=(a18+a20);
-  a20=8.0000000000000004e-01;
-  real_t a22=(a20*a14);
+  a20=1.0791000000000002e+01;
+  a21=sin(a1);
+  a21=(a20*a21);
+  a18=(a18+a21);
+  a21=8.0000000000000004e-01;
+  a22=(a21*a10);
   a18=(a18/a22);
   if (res[0]!=0) res[0][3]=a18;
-  real_t a23=arg[1] ? arg[1][1] : 0;
+  a23=arg[1] ? arg[1][1] : 0;
   if (res[1]!=0) res[1][0]=a23;
-  a23=cos(a0);
-  real_t a24=arg[1] ? arg[1][2] : 0;
-  real_t a25=(a23*a24);
-  a25=(a2*a25);
+  a23=cos(a1);
+  a24=arg[1] ? arg[1][2] : 0;
+  a25=(a23*a24);
+  a25=(a0*a25);
   a25=(a3*a25);
-  real_t a26=arg[1] ? arg[1][3] : 0;
-  real_t a27=(a1*a26);
+  a26=arg[1] ? arg[1][3] : 0;
+  a27=(a2*a26);
   a25=(a25+a27);
   a25=(a3*a25);
   a27=(a4*a26);
   a25=(a25+a27);
-  a27=cos(a0);
-  real_t a28=(a27*a24);
-  a28=(a6*a28);
-  real_t a29=sin(a0);
-  real_t a30=(a29*a24);
-  a30=(a7*a30);
+  a27=cos(a1);
+  a28=(a27*a24);
+  a28=(a7*a28);
+  a29=sin(a1);
+  a30=(a29*a24);
+  a30=(a6*a30);
   a30=(a8*a30);
   a28=(a28-a30);
   a25=(a25+a28);
-  a25=(a25/a14);
-  a28=(a5/a14);
-  a30=sin(a0);
-  real_t a31=(a30*a24);
+  a25=(a25/a10);
+  a28=(a5/a10);
+  a30=sin(a1);
+  a31=(a30*a24);
   a31=(a11*a31);
-  a31=(a12*a31);
-  real_t a32=sin(a0);
-  real_t a33=(a32*a24);
-  a33=(a10*a33);
+  a31=(a13*a31);
+  a32=sin(a1);
+  a33=(a32*a24);
+  a33=(a12*a33);
   a31=(a31+a33);
   a33=(a28*a31);
   a25=(a25-a33);
   if (res[1]!=0) res[1][1]=a25;
   if (res[1]!=0) res[1][2]=a26;
-  a25=cos(a0);
+  a25=cos(a1);
   a33=(a25*a24);
-  a33=(a13*a33);
-  real_t a34=sin(a0);
-  real_t a35=(a34*a24);
-  a35=(a2*a35);
+  a33=(a14*a33);
+  a34=sin(a1);
+  a35=(a34*a24);
+  a35=(a0*a35);
   a35=(a15*a35);
   a33=(a33-a35);
   a33=(a3*a33);
@@ -138,17 +130,17 @@ int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   a33=(a3*a33);
   a26=(a17*a26);
   a33=(a33+a26);
-  a26=sin(a0);
+  a26=sin(a1);
   a35=(a26*a24);
   a35=(a9*a35);
   a33=(a33-a35);
-  a35=cos(a0);
+  a35=cos(a1);
   a24=(a35*a24);
-  a24=(a21*a24);
+  a24=(a20*a24);
   a33=(a33+a24);
   a33=(a33/a22);
   a24=(a18/a22);
-  a31=(a20*a31);
+  a31=(a21*a31);
   a31=(a24*a31);
   a33=(a33-a31);
   if (res[1]!=0) res[1][3]=a33;
@@ -156,36 +148,36 @@ int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   if (res[1]!=0) res[1][4]=a33;
   a33=arg[1] ? arg[1][6] : 0;
   a31=(a23*a33);
-  a31=(a2*a31);
+  a31=(a0*a31);
   a31=(a3*a31);
-  real_t a36=arg[1] ? arg[1][7] : 0;
-  real_t a37=(a1*a36);
+  a36=arg[1] ? arg[1][7] : 0;
+  a37=(a2*a36);
   a31=(a31+a37);
   a31=(a3*a31);
   a37=(a4*a36);
   a31=(a31+a37);
   a37=(a27*a33);
-  a37=(a6*a37);
-  real_t a38=(a29*a33);
-  a38=(a7*a38);
+  a37=(a7*a37);
+  a38=(a29*a33);
+  a38=(a6*a38);
   a38=(a8*a38);
   a37=(a37-a38);
   a31=(a31+a37);
-  a31=(a31/a14);
+  a31=(a31/a10);
   a37=(a30*a33);
   a37=(a11*a37);
-  a37=(a12*a37);
+  a37=(a13*a37);
   a38=(a32*a33);
-  a38=(a10*a38);
+  a38=(a12*a38);
   a37=(a37+a38);
   a38=(a28*a37);
   a31=(a31-a38);
   if (res[1]!=0) res[1][5]=a31;
   if (res[1]!=0) res[1][6]=a36;
   a31=(a25*a33);
-  a31=(a13*a31);
+  a31=(a14*a31);
   a38=(a34*a33);
-  a38=(a2*a38);
+  a38=(a0*a38);
   a38=(a15*a38);
   a31=(a31-a38);
   a31=(a3*a31);
@@ -198,10 +190,10 @@ int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   a36=(a9*a36);
   a31=(a31-a36);
   a33=(a35*a33);
-  a33=(a21*a33);
+  a33=(a20*a33);
   a31=(a31+a33);
   a31=(a31/a22);
-  a37=(a20*a37);
+  a37=(a21*a37);
   a37=(a24*a37);
   a31=(a31-a37);
   if (res[1]!=0) res[1][7]=a31;
@@ -209,36 +201,36 @@ int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   if (res[1]!=0) res[1][8]=a31;
   a31=arg[1] ? arg[1][10] : 0;
   a37=(a23*a31);
-  a37=(a2*a37);
+  a37=(a0*a37);
   a37=(a3*a37);
   a33=arg[1] ? arg[1][11] : 0;
-  a36=(a1*a33);
+  a36=(a2*a33);
   a37=(a37+a36);
   a37=(a3*a37);
   a36=(a4*a33);
   a37=(a37+a36);
   a36=(a27*a31);
-  a36=(a6*a36);
+  a36=(a7*a36);
   a38=(a29*a31);
-  a38=(a7*a38);
+  a38=(a6*a38);
   a38=(a8*a38);
   a36=(a36-a38);
   a37=(a37+a36);
-  a37=(a37/a14);
+  a37=(a37/a10);
   a36=(a30*a31);
   a36=(a11*a36);
-  a36=(a12*a36);
+  a36=(a13*a36);
   a38=(a32*a31);
-  a38=(a10*a38);
+  a38=(a12*a38);
   a36=(a36+a38);
   a38=(a28*a36);
   a37=(a37-a38);
   if (res[1]!=0) res[1][9]=a37;
   if (res[1]!=0) res[1][10]=a33;
   a37=(a25*a31);
-  a37=(a13*a37);
+  a37=(a14*a37);
   a38=(a34*a31);
-  a38=(a2*a38);
+  a38=(a0*a38);
   a38=(a15*a38);
   a37=(a37-a38);
   a37=(a3*a37);
@@ -251,10 +243,10 @@ int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   a33=(a9*a33);
   a37=(a37-a33);
   a31=(a35*a31);
-  a31=(a21*a31);
+  a31=(a20*a31);
   a37=(a37+a31);
   a37=(a37/a22);
-  a36=(a20*a36);
+  a36=(a21*a36);
   a36=(a24*a36);
   a37=(a37-a36);
   if (res[1]!=0) res[1][11]=a37;
@@ -262,36 +254,36 @@ int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   if (res[1]!=0) res[1][12]=a37;
   a37=arg[1] ? arg[1][14] : 0;
   a23=(a23*a37);
-  a23=(a2*a23);
+  a23=(a0*a23);
   a23=(a3*a23);
   a36=arg[1] ? arg[1][15] : 0;
-  a31=(a1*a36);
+  a31=(a2*a36);
   a23=(a23+a31);
   a23=(a3*a23);
   a31=(a4*a36);
   a23=(a23+a31);
   a27=(a27*a37);
-  a27=(a6*a27);
+  a27=(a7*a27);
   a29=(a29*a37);
-  a29=(a7*a29);
+  a29=(a6*a29);
   a29=(a8*a29);
   a27=(a27-a29);
   a23=(a23+a27);
-  a23=(a23/a14);
+  a23=(a23/a10);
   a30=(a30*a37);
   a30=(a11*a30);
-  a30=(a12*a30);
+  a30=(a13*a30);
   a32=(a32*a37);
-  a32=(a10*a32);
+  a32=(a12*a32);
   a30=(a30+a32);
   a28=(a28*a30);
   a23=(a23-a28);
   if (res[1]!=0) res[1][13]=a23;
   if (res[1]!=0) res[1][14]=a36;
   a25=(a25*a37);
-  a25=(a13*a25);
+  a25=(a14*a25);
   a34=(a34*a37);
-  a34=(a2*a34);
+  a34=(a0*a34);
   a34=(a15*a34);
   a25=(a25-a34);
   a25=(a3*a25);
@@ -304,82 +296,86 @@ int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   a26=(a9*a26);
   a25=(a25-a26);
   a35=(a35*a37);
-  a35=(a21*a35);
+  a35=(a20*a35);
   a25=(a25+a35);
   a25=(a25/a22);
-  a30=(a20*a30);
+  a30=(a21*a30);
   a24=(a24*a30);
   a25=(a25-a24);
   if (res[1]!=0) res[1][15]=a25;
   a25=arg[2] ? arg[2][1] : 0;
   if (res[2]!=0) res[2][0]=a25;
-  a25=cos(a0);
-  a24=arg[2] ? arg[2][2] : 0;
-  a25=(a25*a24);
-  a25=(a2*a25);
-  a25=(a3*a25);
-  a30=arg[2] ? arg[2][3] : 0;
-  a1=(a1*a30);
-  a25=(a25+a1);
-  a25=(a3*a25);
+  a25=(1./a10);
+  a24=cos(a1);
+  a30=arg[2] ? arg[2][2] : 0;
+  a24=(a24*a30);
+  a24=(a0*a24);
+  a24=(a3*a24);
+  a35=arg[2] ? arg[2][3] : 0;
+  a2=(a2*a35);
+  a24=(a24+a2);
+  a24=(a3*a24);
+  a4=(a4*a35);
+  a24=(a24+a4);
+  a4=cos(a1);
   a4=(a4*a30);
-  a25=(a25+a4);
-  a4=cos(a0);
-  a4=(a4*a24);
-  a6=(a6*a4);
-  a4=sin(a0);
-  a4=(a4*a24);
   a7=(a7*a4);
-  a8=(a8*a7);
-  a6=(a6-a8);
-  a25=(a25+a6);
-  a25=(a25/a14);
-  a5=(a5/a14);
-  a6=sin(a0);
-  a6=(a6*a24);
-  a11=(a11*a6);
+  a4=sin(a1);
+  a4=(a4*a30);
+  a6=(a6*a4);
+  a8=(a8*a6);
+  a7=(a7-a8);
+  a24=(a24+a7);
+  a24=(a24/a10);
+  a5=(a5/a10);
+  a10=sin(a1);
+  a10=(a10*a30);
+  a11=(a11*a10);
+  a13=(a13*a11);
+  a11=sin(a1);
+  a11=(a11*a30);
   a12=(a12*a11);
-  a11=sin(a0);
-  a11=(a11*a24);
-  a10=(a10*a11);
-  a12=(a12+a10);
-  a5=(a5*a12);
-  a25=(a25-a5);
-  a14=(1./a14);
-  a14=(a14+a25);
-  if (res[2]!=0) res[2][1]=a14;
-  if (res[2]!=0) res[2][2]=a30;
+  a13=(a13+a12);
+  a5=(a5*a13);
+  a24=(a24-a5);
+  a25=(a25+a24);
+  if (res[2]!=0) res[2][1]=a25;
+  if (res[2]!=0) res[2][2]=a35;
   a19=(a19/a22);
-  a14=cos(a0);
-  a14=(a14*a24);
-  a13=(a13*a14);
-  a14=sin(a0);
-  a14=(a14*a24);
-  a2=(a2*a14);
-  a15=(a15*a2);
-  a13=(a13-a15);
-  a13=(a3*a13);
-  a16=(a16*a30);
-  a13=(a13+a16);
-  a3=(a3*a13);
-  a17=(a17*a30);
+  a25=cos(a1);
+  a25=(a25*a30);
+  a14=(a14*a25);
+  a25=sin(a1);
+  a25=(a25*a30);
+  a0=(a0*a25);
+  a15=(a15*a0);
+  a14=(a14-a15);
+  a14=(a3*a14);
+  a16=(a16*a35);
+  a14=(a14+a16);
+  a3=(a3*a14);
+  a17=(a17*a35);
   a3=(a3+a17);
-  a17=sin(a0);
-  a17=(a17*a24);
+  a17=sin(a1);
+  a17=(a17*a30);
   a9=(a9*a17);
   a3=(a3-a9);
-  a0=cos(a0);
-  a0=(a0*a24);
-  a21=(a21*a0);
-  a3=(a3+a21);
+  a1=cos(a1);
+  a1=(a1*a30);
+  a20=(a20*a1);
+  a3=(a3+a20);
   a3=(a3/a22);
   a18=(a18/a22);
-  a20=(a20*a12);
-  a18=(a18*a20);
+  a21=(a21*a13);
+  a18=(a18*a21);
   a3=(a3-a18);
   a19=(a19+a3);
   if (res[2]!=0) res[2][3]=a19;
   return 0;
+}
+
+int vdeFun(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
+  return casadi_f0(arg, res, iw, w, mem);
 }
 
 void vdeFun_incref(void) {
@@ -388,11 +384,11 @@ void vdeFun_incref(void) {
 void vdeFun_decref(void) {
 }
 
-int vdeFun_n_in(void) { return 4;}
+casadi_int vdeFun_n_in(void) { return 4;}
 
-int vdeFun_n_out(void) { return 3;}
+casadi_int vdeFun_n_out(void) { return 3;}
 
-const char* vdeFun_name_in(int i){
+const char* vdeFun_name_in(casadi_int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -402,7 +398,7 @@ const char* vdeFun_name_in(int i){
   }
 }
 
-const char* vdeFun_name_out(int i){
+const char* vdeFun_name_out(casadi_int i){
   switch (i) {
     case 0: return "o0";
     case 1: return "o1";
@@ -411,30 +407,30 @@ const char* vdeFun_name_out(int i){
   }
 }
 
-const int* vdeFun_sparsity_in(int i) {
+const casadi_int* vdeFun_sparsity_in(casadi_int i) {
   switch (i) {
-    case 0: return s0;
-    case 1: return s1;
-    case 2: return s0;
-    case 3: return s2;
+    case 0: return casadi_s0;
+    case 1: return casadi_s1;
+    case 2: return casadi_s0;
+    case 3: return casadi_s2;
     default: return 0;
   }
 }
 
-const int* vdeFun_sparsity_out(int i) {
+const casadi_int* vdeFun_sparsity_out(casadi_int i) {
   switch (i) {
-    case 0: return s0;
-    case 1: return s1;
-    case 2: return s0;
+    case 0: return casadi_s0;
+    case 1: return casadi_s1;
+    case 2: return casadi_s0;
     default: return 0;
   }
 }
 
-int vdeFun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+int vdeFun_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 4;
   if (sz_res) *sz_res = 3;
   if (sz_iw) *sz_iw = 0;
-  if (sz_w) *sz_w = 39;
+  if (sz_w) *sz_w = 0;
   return 0;
 }
 
