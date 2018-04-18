@@ -1,6 +1,6 @@
 ---
 Language:        Cpp
-# BasedOnStyle:  Google
+BasedOnStyle:  Google
 AccessModifierOffset: -1
 AlignAfterOpenBracket: true
 AlignEscapedNewlinesLeft: true
@@ -20,7 +20,7 @@ BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
 BinPackParameters: true
 BinPackArguments: true
-ColumnLimit:     80
+ColumnLimit:     100
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 4
 DerivePointerAlignment: true
@@ -45,7 +45,7 @@ SpacesBeforeTrailingComments: 2
 Cpp11BracedListStyle: true
 Standard:        Auto
 IndentWidth:     4
-TabWidth:        8
+TabWidth:        4
 UseTab:          Never
 BreakBeforeBraces: Attach
 SpacesInParentheses: false
