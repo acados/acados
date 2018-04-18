@@ -160,6 +160,9 @@ sim_solver_config *sim_solver_config_assign(void *raw_memory);
 int sim_dims_calculate_size();
 //
 sim_dims *sim_dims_assign(void *raw_memory);
+
+void *sim_dims_assign_standard(void* config_, void *raw_memory);
+
 //
 int sim_in_calculate_size(void *config, sim_dims *dims);
 //

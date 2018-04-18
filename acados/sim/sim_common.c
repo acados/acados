@@ -87,7 +87,17 @@ sim_dims *sim_dims_assign(void *raw_memory)
     return dims;
 }
 
+void *sim_dims_assign_standard(void* config_, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
 
+    sim_dims *dims = (sim_dims *) c_ptr;
+    c_ptr += sizeof(sim_dims);
+
+    assert((char *) raw_memory + sim_dims_calculate_size() >= c_ptr);
+
+    return (void *) dims;
+}
 
 /************************************************
 * in
