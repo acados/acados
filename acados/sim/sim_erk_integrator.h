@@ -74,6 +74,7 @@ typedef struct
 
 } sim_erk_workspace;
 
+void sim_erk_set_nx_nu(void *dims_, int nx, int nu);
 void sim_erk_extract_nx_nu(void *dims, int* nx, int* nu);
 //
 int sim_erk_dims_calculate_size();

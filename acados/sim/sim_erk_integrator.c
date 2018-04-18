@@ -51,11 +51,19 @@ void *sim_erk_dims_assign(void* config_, void *raw_memory)
     return dims;
 }
 
-void sim_erk_extract_nx_nu(void *dims, int* nx, int* nu)
+void sim_erk_set_nx_nu(void *dims_, int nx, int nu)
 {
-    sim_erk_dims *erk_dims = (sim_erk_dims *) dims;
-    *nx = erk_dims->nx;
-    *nu = erk_dims->nu;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+
+    dims->nx = nx;
+    dims->nu = nu;
+}
+
+void sim_erk_extract_nx_nu(void *dims_, int* nx, int* nu)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    *nx = dims->nx;
+    *nu = dims->nu;
 }
 
 
@@ -168,10 +176,11 @@ void *sim_erk_opts_assign(void *config_, void *dims, void *raw_memory)
 
 
 
-void sim_erk_opts_initialize_default(void *config_, void *dims, void *opts_)
+void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     sim_rk_opts *opts = opts_;
-    sim_erk_dims *erk_dims = (sim_erk_dims *) dims;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+
 
 	opts->ns = 4; // ERK 4
     int ns = opts->ns;
@@ -229,7 +238,7 @@ void sim_erk_opts_initialize_default(void *config_, void *dims, void *opts_)
 	}
 
     opts->num_steps = 2;
-    opts->num_forw_sens = erk_dims->nx + erk_dims->nu;
+    opts->num_forw_sens = dims->nx + dims->nu;
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
@@ -326,15 +335,15 @@ void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_mem
 * workspace
 ************************************************/
 
-int sim_erk_workspace_calculate_size(void *config_, void *dims, void *opts_)
+int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
 	sim_rk_opts *opts = opts_;
-    sim_erk_dims *erk_dims = (sim_erk_dims *) dims;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     int ns = opts->ns;
 
-    int nx = erk_dims->nx;
-    int nu = erk_dims->nu;
+    int nx = dims->nx;
+    int nu = dims->nu;
     int nf = opts->num_forw_sens;
 
     int nX = nx*(1+nf); // (nx) for ODE and (nf*nx) for VDE
@@ -377,15 +386,15 @@ int sim_erk_workspace_calculate_size(void *config_, void *dims, void *opts_)
 
 
 
-static void *sim_erk_cast_workspace(void *config_, void *dims, void *opts_, void *raw_memory)
+static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
 	sim_rk_opts *opts = opts_;
-    sim_erk_dims *erk_dims = (sim_erk_dims *) dims;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     int ns = opts->ns;
 
-    int nx = erk_dims->nx;
-    int nu = erk_dims->nu;
+    int nx = dims->nx;
+    int nu = dims->nu;
     int nf = opts->num_forw_sens;
 
     int nX = nx*(1+nf); // (nx) for ODE and (nf*nx) for VDE
@@ -445,15 +454,15 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     int ns = opts->ns;
 
-    void *dims = in->dims;
-    sim_erk_dims *erk_dims = (sim_erk_dims *) dims;
+    void *dims_ = in->dims;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     sim_erk_workspace *workspace = (sim_erk_workspace *) sim_erk_cast_workspace(config, dims, opts, work_);
 
     int i, j, s, istep;
     double a = 0, b =0; // temp values of A_mat and b_vec
-    int nx = erk_dims->nx;
-    int nu = erk_dims->nu;
+    int nx = dims->nx;
+    int nu = dims->nu;
 
     int nf = opts->num_forw_sens;
     if (!opts->sens_forw)
@@ -739,6 +748,8 @@ void sim_erk_config_initialize_default(void *config_)
 	config->config_initialize_default = &sim_erk_config_initialize_default;
     config->dims_calculate_size = &sim_erk_dims_calculate_size;
     config->dims_assign = &sim_erk_dims_assign;
+    config->set_nx_nu = &sim_erk_set_nx_nu;
+    config->extract_nx_nu = &sim_erk_extract_nx_nu;
 	return;
 
 }

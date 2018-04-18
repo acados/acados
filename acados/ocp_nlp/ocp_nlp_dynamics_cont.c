@@ -39,11 +39,12 @@
 
 int ocp_nlp_dynamics_cont_dims_calculate_size(void *config_)
 {
+	sim_solver_config *config = (sim_solver_config *) config_;
     int size = 0;
 
 	size += sizeof(ocp_nlp_dynamics_cont_dims);
 
-	size += sim_dims_calculate_size();
+	size += config->dims_calculate_size(config_);
 
     return size;
 }
@@ -52,13 +53,15 @@ int ocp_nlp_dynamics_cont_dims_calculate_size(void *config_)
 
 void *ocp_nlp_dynamics_cont_dims_assign(void *config_, void *raw_memory)
 {
+    sim_solver_config *config = (sim_solver_config *) config_;
     char *c_ptr = (char *) raw_memory;
 
     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_cont_dims);
 
-	dims->sim = sim_dims_assign(c_ptr);
-	c_ptr += sim_dims_calculate_size();
+	dims->sim = config->dims_assign(config_, c_ptr);
+
+	c_ptr += config->dims_calculate_size(config_);
 
     assert((char *) raw_memory + ocp_nlp_dynamics_cont_dims_calculate_size(config_) >= c_ptr);
 
@@ -76,8 +79,10 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config_, void *dims_, int nx, i
 	dims->nx1 = nx1;
 	dims->nu1 = nu1;
 
-	dims->sim->nx = nx;
-	dims->sim->nu = nu;
+	// dims->sim->nx = nx;
+	// dims->sim->nu = nu;
+	sim_solver_config *config = (sim_solver_config *) config_;
+	config->set_nx_nu(dims->sim, nx, nu);
 
 	return;
 }
