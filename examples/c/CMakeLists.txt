@@ -146,6 +146,7 @@ file(GLOB WT_MODEL_NX3_SRC
 file(GLOB WT_MODEL_NX6_SRC
     wt_model_nx6/expl_ode_fun.c
     wt_model_nx6/expl_vde_for.c
+    wt_model_nx6/expl_vde_adj.c
     wt_model_nx6/impl_ode_fun.c
     wt_model_nx6/impl_ode_jac_x.c
     wt_model_nx6/impl_ode_jac_xdot.c
