@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 // qore
-#include "qpsolver_dense.h"
+#include "qore/QPSOLVER_DENSE/include/qpsolver_dense.h"
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
