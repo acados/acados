@@ -1,3 +1,21 @@
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
 
 #include <algorithm>
 #include <cmath>
@@ -11,7 +29,7 @@
 
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp_interface.h"
-#include "acados_c/options.h"
+#include "acados_c/options_interface.h"
 
 #include "acados_cpp/hpipm_helper.hpp"
 #include "acados_cpp/utils.hpp"
@@ -340,8 +358,9 @@ vector<vector<uint>> ocp_qp::bounds_indices(string name) {
                 if (qp->idxb[stage][i] < qp->dim->nu[stage])
                     idxb.at(stage).push_back(qp->idxb[stage][i]);
         }
-    } else
+    } else {
         throw std::invalid_argument("Can only get bounds from x and u, you gave: '" + name + "'.");
+    }
     return idxb;
 }
 

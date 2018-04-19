@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_C_CONDENSING_INTERFACE_H_
-#define ACADOS_C_CONDENSING_INTERFACE_H_
+#ifndef INTERFACES_ACADOS_C_CONDENSING_INTERFACE_H_
+#define INTERFACES_ACADOS_C_CONDENSING_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,7 +37,7 @@ typedef struct {
 } condensing_plan;
 
 typedef struct {
-    ocp_qp_condensing_config *config;  // TODO
+    ocp_qp_condensing_config *config;
     void *dims;
     void *opts;
     void *mem;
@@ -64,4 +64,4 @@ int ocp_qp_expand(condensing_module *module, void *qp_in, void *qp_out);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_CONDENSING_INTERFACE_H_
+#endif  // INTERFACES_ACADOS_C_CONDENSING_INTERFACE_H_

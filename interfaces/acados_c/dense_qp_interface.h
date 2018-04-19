@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_C_DENSE_QP_INTERFACE_H_
-#define ACADOS_C_DENSE_QP_INTERFACE_H_
+#ifndef INTERFACES_ACADOS_C_DENSE_QP_INTERFACE_H_
+#define INTERFACES_ACADOS_C_DENSE_QP_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,4 +66,4 @@ void dense_qp_inf_norm_residuals(dense_qp_dims *dims, dense_qp_in *qp_in, dense_
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_DENSE_QP_INTERFACE_H_
+#endif  // INTERFACES_ACADOS_C_DENSE_QP_INTERFACE_H_

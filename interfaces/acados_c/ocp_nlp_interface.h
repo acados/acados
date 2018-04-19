@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_C_OCP_NLP_INTERFACE_H_
-#define ACADOS_C_OCP_NLP_INTERFACE_H_
+#ifndef INTERFACES_ACADOS_C_OCP_NLP_INTERFACE_H_
+#define INTERFACES_ACADOS_C_OCP_NLP_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,4 +76,4 @@ int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_OCP_NLP_INTERFACE_H_
+#endif  // INTERFACES_ACADOS_C_OCP_NLP_INTERFACE_H_

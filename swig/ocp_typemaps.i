@@ -43,7 +43,7 @@
     $1 = is_map($input) ? 1 : 0;
 }
 
-%typemap(typecheck, precedence=SWIG_TYPECHECK_INTEGER) uint {
+%typemap(typecheck, precedence = SWIG_TYPECHECK_INTEGER) uint {
 #if defined(SWIGMATLAB)
     $1 = mxIsScalar($input) ? 1 : 0;
 #elif defined(SWIGPYTHON)
@@ -71,7 +71,7 @@
     $1 = tmp;
 }
 
-%typemap(typecheck, precedence=SWIG_TYPECHECK_POINTER) std::vector<double> {
+%typemap(typecheck, precedence = SWIG_TYPECHECK_POINTER) std::vector<double> {
 #if defined(SWIGMATLAB)
     $1 = (mxIsNumeric($input) ? 1 : 0);
 #elif defined(SWIGPYTHON)
@@ -88,7 +88,8 @@
 
 
 %typemap(out) ocp_qp_info  {
-    const char *fields[5] = {"num_iter", "qp_solver_time", "condensing_time", "interface_time", "total_time"};
+    const char *fields[5] = {"num_iter", "qp_solver_time", "condensing_time", "interface_time",
+                             "total_time"};
 #if defined(SWIGMATLAB)
     mxArray *mat_struct = mxCreateStructMatrix(1, 1, 5, fields);
     mxSetField(mat_struct, 0, fields[0], mxCreateDoubleScalar($1.num_iter));

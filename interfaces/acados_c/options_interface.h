@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_C_OPTIONS_H_
-#define ACADOS_C_OPTIONS_H_
+#ifndef INTERFACES_ACADOS_C_OPTIONS_INTERFACE_H_
+#define INTERFACES_ACADOS_C_OPTIONS_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,4 +43,4 @@ bool set_option_double_array(void *args_, const char *option, const double *valu
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_OPTIONS_H_
+#endif  // INTERFACES_ACADOS_C_OPTIONS_INTERFACE_H_

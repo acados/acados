@@ -122,7 +122,8 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
     }
 
     std::vector<std::string> fields() {
-        return std::vector<std::string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"});
+        return std::vector<std::string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx",
+                                         "lbu", "ubu", "C", "D", "lg", "ug"});
     }
 
     char *__str__() {

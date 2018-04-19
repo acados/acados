@@ -1,6 +1,24 @@
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
 
-#ifndef ACADOS_INTERFACES_ACADOS_CPP_OPTIONS_HPP_
-#define ACADOS_INTERFACES_ACADOS_CPP_OPTIONS_HPP_
+#ifndef INTERFACES_ACADOS_CPP_OPTIONS_HPP_
+#define INTERFACES_ACADOS_CPP_OPTIONS_HPP_
 
 #include <map>
 #include <string>
@@ -8,7 +26,7 @@
 namespace acados {
 
 class option_t {
-   public:
+ public:
     inline virtual std::string repr() { return ""; }
 
     inline virtual int as_int() { return 0; }
@@ -34,8 +52,8 @@ class option_t {
 
 template <typename T>
 class option : public option_t {
-   public:
-    option(T val) : value(val) {}
+ public:
+    explicit option(T val) : value(val) {}
 
     inline std::string repr() override { return std::to_string(value); }
 
@@ -45,14 +63,14 @@ class option : public option_t {
 
     ~option() override = default;
 
-   private:
+ private:
     T value;
 };
 
 template <>
 class option<std::map<std::string, option_t *>> : public option_t {
-   public:
-    option(std::map<std::string, option_t *> val) : value(val) {}
+ public:
+    explicit option(std::map<std::string, option_t *> val) : value(val) {}
 
     inline bool nested() override { return true; }
 
@@ -62,7 +80,7 @@ class option<std::map<std::string, option_t *>> : public option_t {
 
     inline std::map<std::string, option_t *>::iterator end() override { return value.end(); }
 
-   private:
+ private:
     std::map<std::string, option_t *> value;
 };
 
@@ -82,4 +100,4 @@ inline std::map<std::string, acados::option_t *> &to_map(acados::option_t *opt) 
 
 }  // namespace std
 
-#endif  // ACADOS_INTERFACES_ACADOS_CPP_OPTIONS_HPP_
+#endif  // INTERFACES_ACADOS_CPP_OPTIONS_HPP_

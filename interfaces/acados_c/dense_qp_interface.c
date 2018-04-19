@@ -31,7 +31,6 @@
 #ifdef ACADOS_WITH_QORE
 #include "acados/dense_qp/dense_qp_qore.h"
 #endif
-#include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
 
 qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan) {

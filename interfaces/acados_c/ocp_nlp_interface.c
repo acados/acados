@@ -55,7 +55,7 @@ ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory) {
     plan->nlp_dynamics = (ocp_nlp_dynamics_t *)c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_dynamics_t);
 
-    // TODO
+    // TODO(all): fix assert
     // assert( 0 == 0);
 
     return plan;

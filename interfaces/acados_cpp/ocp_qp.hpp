@@ -1,6 +1,24 @@
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
 
-#ifndef ACADOS_INTERFACES_ACADOS_CPP_OCP_QP_HPP_
-#define ACADOS_INTERFACES_ACADOS_CPP_OCP_QP_HPP_
+#ifndef INTERFACES_ACADOS_CPP_OCP_QP_HPP_
+#define INTERFACES_ACADOS_CPP_OCP_QP_HPP_
 
 #include <functional>
 #include <map>
@@ -18,11 +36,12 @@
 namespace acados {
 
 class ocp_qp {
-   public:
+
+ public:
     ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, std::vector<uint> nbu,
            std::vector<uint> ng);
 
-    ocp_qp(std::map<std::string, std::vector<uint>>);
+    explicit ocp_qp(std::map<std::string, std::vector<uint>>);
 
     ocp_qp(uint N, uint nx, uint nu, uint nbx = 0, uint nbu = 0, uint ng = 0);
 
@@ -45,7 +64,7 @@ class ocp_qp {
 
     const uint N;
 
-   private:
+ private:
     vector<uint> idxb(vector<double> lower_bound, vector<double> upper_bound);
 
     void fill_in_bounds();
@@ -88,4 +107,4 @@ class ocp_qp {
 
 }  // namespace acados
 
-#endif  // ACADOS_INTERFACES_ACADOS_CPP_OCP_QP_SOLUTION_HPP_
+#endif  // INTERFACES_ACADOS_CPP_OCP_QP_HPP_

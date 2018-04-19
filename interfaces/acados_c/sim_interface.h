@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_C_SIM_INTERFACE_H_
-#define ACADOS_C_SIM_INTERFACE_H_
+#ifndef INTERFACES_ACADOS_C_SIM_INTERFACE_H_
+#define INTERFACES_ACADOS_C_SIM_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,4 +68,4 @@ int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_SIM_INTERFACE_H_
+#endif  // INTERFACES_ACADOS_C_SIM_INTERFACE_H_

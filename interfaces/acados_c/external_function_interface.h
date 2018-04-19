@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_C_EXTERNAL_FUNCTION_INTERFACE_H_
-#define ACADOS_C_EXTERNAL_FUNCTION_INTERFACE_H_
+#ifndef INTERFACES_ACADOS_C_EXTERNAL_FUNCTION_INTERFACE_H_
+#define INTERFACES_ACADOS_C_EXTERNAL_FUNCTION_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,4 +57,4 @@ void external_function_param_casadi_free_array(int size, external_function_param
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_EXTERNAL_FUNCTION_INTERFACE_H_
+#endif  // INTERFACES_ACADOS_C_EXTERNAL_FUNCTION_INTERFACE_H_

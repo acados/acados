@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_C_OCP_QP_INTERFACE_H_
-#define ACADOS_C_OCP_QP_INTERFACE_H_
+#ifndef INTERFACES_ACADOS_C_OCP_QP_INTERFACE_H_
+#define INTERFACES_ACADOS_C_OCP_QP_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,4 +70,4 @@ void ocp_qp_inf_norm_residuals(ocp_qp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_OCP_QP_INTERFACE_H_
+#endif  // INTERFACES_ACADOS_C_OCP_QP_INTERFACE_H_
