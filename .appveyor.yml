@@ -25,7 +25,7 @@ artifacts:
     name: Acados Windows
 
 deploy:
-  - provider: Github
+  - provider: GitHub
     artifact: Acados Windows
     draft: false
     prerelease: fasle
