@@ -1,3 +1,4 @@
+
 clc;
 clear all;
 close all;
@@ -82,9 +83,9 @@ jac_u = SX.zeros(nx,nu) + jacobian(f_impl,u);
 impl_ode_jac_x = Function('casadi_impl_ode_jac_x',{x,x_dot,u},{jac_x});
 impl_ode_jac_xdot = Function('casadi_impl_ode_jac_xdot',{x,x_dot,u},{jac_xdot});
 impl_ode_jac_u = Function('casadi_impl_ode_jac_u',{x,x_dot,u},{jac_u});
-impl_ode_fun_jac_x_xdot = Function('casadi_impl_ode_fun_jac_x_xdot', {x, x_dot, u}, {[f_impl, jac_x, jac_xdot]});
-impl_ode_jac_x_xdot_u = Function('casadi_impl_ode_jac_x_xdot_u', {x, x_dot, u}, {[jac_x, jac_xdot, jac_u]});
-impl_ode_jac_x_u = Function('casadi_impl_ode_jac_x_u', {x, x_dot, u}, {[jac_x, jac_xdot, jac_u]});
+impl_ode_fun_jac_x_xdot = Function('casadi_impl_ode_fun_jac_x_xdot', {x, x_dot, u}, {f_impl, jac_x, jac_xdot});
+impl_ode_jac_x_xdot_u = Function('casadi_impl_ode_jac_x_xdot_u', {x, x_dot, u}, {jac_x, jac_xdot, jac_u});
+impl_ode_jac_x_u = Function('casadi_impl_ode_jac_x_u', {x, x_dot, u}, {jac_x, jac_xdot, jac_u});
 
 
 % casadi opts for code generation
