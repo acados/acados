@@ -20,20 +20,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
 #include "test/test_utils/eigen.h"
-
-// #include "blasfeo/include/blasfeo_target.h"
-// #include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
 #include "catch/include/catch.hpp"
-
-// #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-// #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
-// #include "acados/ocp_qp/ocp_qp_hpipm.h"
-// #include "acados/ocp_qp/ocp_qp_hpmpc.h"
-// #include "acados/ocp_qp/ocp_qp_qpdunes.h"
-// #include "test/test_utils/read_matrix.h"
-// #include "test/test_utils/read_ocp_qp_in.h"
-#include "acados/utils/print.h"
 
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/options.h"
@@ -48,12 +37,6 @@ using std::vector;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Map;
-
-double TOL_HPIPM = 1e-8;
-double TOL_HPMPC = 1e-8;
-double TOL_QPDUNES = 1e-10;
-double TOL_QPOASES = 1e-10;
-double TOL_QORE = 1e-10;
 
 
 
@@ -75,7 +58,7 @@ double solver_tolerance(std::string const& inString)
 {
     if (inString == "SPARSE_HPIPM") return 1e-8;
     if (inString == "SPARSE_HPMPC") return 1e-5;
-    if (inString == "SPARSE_QPDUNES") return 1e-10;
+    if (inString == "SPARSE_QPDUNES") return 1e-8;
 
     if (inString == "DENSE_HPIPM") return 1e-8;
     if (inString == "DENSE_QPOASES") return 1e-10;
@@ -85,11 +68,45 @@ double solver_tolerance(std::string const& inString)
 }
 
 
+
+void set_N2(std::string const& inString, void *opts, int N2, int N)
+{
+    bool option_found = false;
+
+    if (inString == "SPARSE_HPIPM")
+    {
+        option_found = set_option_int(opts, "sparse_hpipm.N2", N2);
+        REQUIRE(option_found == true);
+    }
+
+    if (inString == "SPARSE_HPMPC")
+    {
+        option_found = set_option_int(opts, "hpmpc.N2", N2);
+        REQUIRE(option_found == true);
+    }
+
+    if (inString == "SPARSE_QPDUNES")
+    {
+        option_found = set_option_int(opts, "qpdunes.N2", N2);
+        REQUIRE(option_found == true);
+        if (N2 == N)
+        {
+            option_found = set_option_int(opts, "qpdunes.clipping", 1);
+            REQUIRE(option_found == true);
+        }
+        else
+        {
+            option_found = set_option_int(opts, "qpdunes.clipping", 0);
+            REQUIRE(option_found == true);
+        }
+    }
+}
+
+
+
 TEST_CASE("mass spring example", "[QP solvers]")
 {
-    vector<std::string> solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};
-    // TODO(dimitris): FIX QPDUNES CASE!!!
-    // vector<std::string> solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC", "SPARSE_QPDUNES", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};
+    vector<std::string> solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC", "SPARSE_QPDUNES", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};
 
     /************************************************
      * set up dimensions
@@ -107,6 +124,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
     int ngN = 0;   // number of general constraints at last stage
 
+    double N2_values[] = {15, 5, 3};  // horizon of partially condensed QP for sparse solvers
 
 	ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring(N, nx_, nu_, nb_, ng_, ngN);
 
@@ -130,12 +148,17 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
     double tol;
 
+    int N2_length;  // 3 for sparse solvers, 1 for dense solvers
+
+    std::size_t sparse_solver;
+
     for (std::string solver : solvers)
     {
-
         SECTION(solver)
         {
             plan.qp_solver = hashit(solver);  // convert string to enum
+
+            sparse_solver = !solver.find("SPARSE");
 
             tol = solver_tolerance(solver);
 
@@ -143,37 +166,56 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
             opts = ocp_qp_opts_create(config, qp_dims);
 
-            // TODO(dimitris): the t slacks calculated here (after solving with qpDUNES) are different than in the example!!
 
-            // TODO(dimitris): fix low accuracy in qpDUNES
-
-            // TODO(dimitris): test qpdunes both with clipping and qpOASES
-
-            qp_solver = ocp_qp_create(config, qp_dims, opts);
-
-            acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
-
-            REQUIRE(acados_return == 0);
-
-            ocp_qp_inf_norm_residuals(qp_dims, qp_in, qp_out, res);
-
-            // if (plan.qp_solver == PARTIAL_CONDENSING_QPDUNES)
-            //     print_ocp_qp_out(qp_out);
-
-            max_res = 0.0;
-            for (int ii = 0; ii < 4; ii++)
+            if (sparse_solver)
             {
-                max_res = (res[ii] > max_res) ? res[ii] : max_res;
+                N2_length = 3;
+                if (plan.qp_solver == PARTIAL_CONDENSING_HPMPC)
+                    N2_length = 1;  // TODO(dimitris): fix this
+            }
+            else
+            {
+                N2_length = 1;
             }
 
-            std::cout << "\n---> residuals of " << solver << "\n";
-            printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
-            REQUIRE(max_res <= tol);
+            for (int ii = 0; ii < N2_length; ii++)
+            {
+                set_N2(solver, opts, N2_values[ii], N);
 
-            free(qp_solver);
+                qp_solver = ocp_qp_create(config, qp_dims, opts);
+
+                acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
+
+                // TODO(dimitris): fix this hack for qpDUNES
+                // (it terminates one iteration before optimal solution,
+                // fixed with warm-start and calling solve twice)
+                if (plan.qp_solver == PARTIAL_CONDENSING_QPDUNES)
+                {
+                    acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
+                }
+
+                REQUIRE(acados_return == 0);
+
+                ocp_qp_inf_norm_residuals(qp_dims, qp_in, qp_out, res);
+
+                max_res = 0.0;
+                for (int ii = 0; ii < 4; ii++)
+                {
+                    max_res = (res[ii] > max_res) ? res[ii] : max_res;
+                }
+
+                std::cout << "\n---> residuals of " << solver << " (N2 = " << N2_values[ii] << ")\n";
+                printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
+                REQUIRE(max_res <= tol);
+
+                free(qp_solver);
+            }
+
             free(opts);
             free(config);
-        }
+
+        }  // END_FOR_N2
+
     }  // END_FOR_SOLVERS
 
     free(qp_out);
