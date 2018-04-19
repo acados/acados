@@ -182,10 +182,10 @@ void *sim_new_lifted_irk_opts_assign(void *config_, void *dims, void *raw_memory
 void sim_new_lifted_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     sim_rk_opts *opts = opts_;
-    sim_new_lifted_irk_dims* dims = (sim_new_lifted_irk_dims *) dims_;
+    // sim_new_lifted_irk_dims* dims = (sim_new_lifted_irk_dims *) dims_;
 
-    int nx = dims->nx;
-    int nu = dims->nu;
+    // int nx = dims->nx;
+    // int nu = dims->nu;
 	opts->ns = 3; // GL 3
     int ns = opts->ns;
 
