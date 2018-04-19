@@ -17,12 +17,12 @@
  *
  */
 
-#include "acados/utils/external_function_generic.h"
-#include "acados/utils/mem.h"
 
 #include <assert.h>
-
 #include <stdlib.h>
+
+#include "acados/utils/external_function_generic.h"
+#include "acados/utils/mem.h"
 
 /************************************************
  * generic external function

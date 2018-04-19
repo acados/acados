@@ -123,8 +123,8 @@ int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opt
 
     // populate dimensions of new ocp_qp based on N2
     opts->pcond_dims->N = opts->N2;
-    d_compute_block_size_cond_qp_ocp2ocp(dims->N, opts->N2,
-                                         opts->block_size);  // TODO(all): user-defined block size ???
+    // TODO(all): user-defined block size
+    d_compute_block_size_cond_qp_ocp2ocp(dims->N, opts->N2, opts->block_size);
 
     d_compute_qp_dim_ocp2ocp(dims, opts->block_size, opts->pcond_dims);
 

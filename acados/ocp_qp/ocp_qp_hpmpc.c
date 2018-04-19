@@ -126,7 +126,7 @@ int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *o
             ws_size += sizeof(double) * (nx[ii + 1]);  // Pb
             ws_size += sizeof(struct blasfeo_dvec);
         }
-        // TODO: CHANGE ALL INSTANCES!
+        // TODO(all): CHANGE ALL INSTANCES!
         ws_size += blasfeo_memsize_dmat(nx[M] + 1, nx[M]);  // sLxM
         ws_size += sizeof(double) * (nx[M] + 1) * (nx[M]);  // sPpM
 

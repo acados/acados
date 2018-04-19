@@ -103,7 +103,7 @@ void ocp_qp_full_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims,
     // full condensing
     ocp_qp_full_condensing_opts_update(dims, opts->cond_opts);
     // qp solver
-    qp_solver->opts_update(qp_solver, NULL, opts->qp_solver_opts);  // TODO(all): pass dense_qp_dims ???
+    qp_solver->opts_update(qp_solver, NULL, opts->qp_solver_opts);  // TODO(all): pass dense_qp_dims
 }
 
 /************************************************

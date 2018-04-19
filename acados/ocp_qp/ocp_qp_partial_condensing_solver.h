@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_QP_OCP_QP_SPARSE_SOLVER_H_
-#define ACADOS_OCP_QP_OCP_QP_SPARSE_SOLVER_H_
+#ifndef ACADOS_OCP_QP_OCP_QP_PARTIAL_CONDENSING_SOLVER_H_
+#define ACADOS_OCP_QP_OCP_QP_PARTIAL_CONDENSING_SOLVER_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -78,4 +78,4 @@ void ocp_qp_partial_condensing_solver_config_initialize_default(void *config_);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_QP_OCP_QP_SPARSE_SOLVER_H_
+#endif  // ACADOS_OCP_QP_OCP_QP_PARTIAL_CONDENSING_SOLVER_H_

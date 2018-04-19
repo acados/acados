@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_SIM_SIM_COLLOCATION_H_
-#define ACADOS_SIM_SIM_COLLOCATION_H_
+#ifndef ACADOS_SIM_SIM_COLLOCATION_UTILS_H_
+#define ACADOS_SIM_SIM_COLLOCATION_UTILS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,4 +59,4 @@ void butcher_table(int ns, double *nodes, double *b, double *A, void *work);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_SIM_SIM_COLLOCATION_H_
+#endif  // ACADOS_SIM_SIM_COLLOCATION_UTILS_H_

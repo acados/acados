@@ -419,9 +419,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     double *b_vec = opts->b_vec;
     int num_steps = opts->num_steps;
     if (num_steps > 1) {
-        printf(
-            "FORWARD-BACKWARD SWEEP NECESSARY TO USE num_steps > 1 \
-                NOT IMPLEMENTED YET - EXITING.");
+        printf("forward-backward sweep necessary to use num_steps > 1 not implemented yet");
         exit(1);
     }
 
@@ -516,8 +514,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
         int iter;
         for (iter = 0; iter < newton_iter; iter++) {
-            for (ii = 0; ii < ns; ii++)  // ii-th row of tableau
-            {
+            for (ii = 0; ii < ns; ii++) {  // ii-th row of tableau
                 // take x(n); copy a strvec into a strvec
                 blasfeo_dveccp(nx, xn, 0, xt, 0);
 

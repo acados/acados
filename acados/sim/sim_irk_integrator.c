@@ -419,15 +419,14 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     for (ss = 0; ss < num_steps; ss++) {
         //  obtain Kn
         // TODO(all): add exit condition on residuals ???
-        // 	inf_norm_K = 1.0;
+        // inf_norm_K = 1.0;
         //        for(iter=0; inf_norm_K>tol_inf_norm_K & iter<newton_iter; iter++)
         for (iter = 0; iter < newton_iter; iter++) {
             if (opts->sens_adj) {
                 blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
             }
 
-            for (ii = 0; ii < ns; ii++)  // ii-th row of tableau
-            {
+            for (ii = 0; ii < ns; ii++) {  // ii-th row of tableau
                 // take x(n); copy a strvec into a strvec
                 blasfeo_dveccp(nx, xn, 0, xt, 0);
 
@@ -538,8 +537,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_daxpy(nx * ns, -1.0, rG, 0, K, 0, K, 0);
 
             // inf norm of K
-            // 		blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
-        }  // end iter
+            //       blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
+        }
 
         if (opts->sens_adj) {
             blasfeo_dveccp(nx * ns, K, 0, &K_traj[ss], 0);
@@ -632,7 +631,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         // obtain x(n+1)
         for (ii = 0; ii < ns; ii++) blasfeo_daxpy(nx, step * b_vec[ii], K, ii * nx, xn, 0, xn, 0);
 
-    }  // end int step ss
+    }
 
     // evaluate backwards
     if (opts->sens_adj) {

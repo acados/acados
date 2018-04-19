@@ -184,8 +184,7 @@ void gauss_nodes(int ns, double *nodes, void *work) {
         y_prev[i] = 2.0;
     }
 
-    while (err > eps)  // iterate until step sufficiently small
-    {
+    while (err > eps) {  // iterate until step sufficiently small
         for (int i = 0; i < N1; i++) lgvm[i] = 1.0;
         for (int i = 0; i < N1; i++) lgvm[N1 + i] = y[i];
         for (int k = 2; k < N2; k++) {
@@ -261,8 +260,7 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work) {
     }
     // transf1_T:
     for (int i = 0; i < ns; i++) {
-        if ((i + 1) < ns)  // complex conjugate pair of eigenvalues
-        {
+        if ((i + 1) < ns) {  // complex conjugate pair of eigenvalues
             for (int i1 = i; i1 < i + 2; i1++) {
                 for (int i2 = 0; i2 < ns; i2++) {
                     scheme->transf1_T[i2 * ns + i1] = 0.0;
@@ -273,8 +271,7 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work) {
                 }
             }
             i++;
-        } else  // real eigenvalue
-        {
+        } else {  // real eigenvalue
             for (int i2 = 0; i2 < ns; i2++) {
                 scheme->transf1_T[i2 * ns + i] = D[i] * T[i * ns + i2];
             }
@@ -289,8 +286,7 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work) {
 
     // transf1:
     for (int i = 0; i < ns; i++) {
-        if ((i + 1) < ns)  // complex conjugate pair of eigenvalues
-        {
+        if ((i + 1) < ns) {  // complex conjugate pair of eigenvalues
             for (int i1 = i; i1 < i + 2; i1++) {
                 for (int i2 = 0; i2 < ns; i2++) {
                     scheme->transf1[i2 * ns + i1] = 0.0;
@@ -300,8 +296,7 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work) {
                 }
             }
             i++;
-        } else  // real eigenvalue
-        {
+        } else {  // real eigenvalue
             for (int i2 = 0; i2 < ns; i2++) {
                 scheme->transf1[i2 * ns + i] = D[i] * T_inv[i2 * ns + i];
             }

@@ -48,15 +48,15 @@ typedef struct {
 
 // typedef struct
 // {
-// 	/* external functions */
-// 	// implicit ode
-// 	external_function_generic *ode_impl;
-// 	// jac_x implicit ode
-// 	external_function_generic *jac_x_ode_impl;
-// 	// jac_xdot implicit ode
-// 	external_function_generic *jac_xdot_ode_impl;
-// 	// jac_u implicit ode
-// 	external_function_generic *jac_u_ode_impl;
+// /* external functions */
+// // implicit ode
+// external_function_generic *ode_impl;
+// // jac_x implicit ode
+// external_function_generic *jac_x_ode_impl;
+// // jac_xdot implicit ode
+// external_function_generic *jac_xdot_ode_impl;
+// // jac_u implicit ode
+// external_function_generic *jac_u_ode_impl;
 
 // } new_lifted_irk_model;
 

@@ -397,8 +397,10 @@ void *sim_lifted_irk_memory_assign(void *config_, sim_dims *dims, void *opts_, v
     for (int i = 0; i < num_steps * ns * nx * nf; ++i) memory->DK_traj[i] = 0.0;
     for (int i = 0; i < num_steps * ns * nx; ++i) memory->mu_traj[i] = 0.0;
 
-    if (opts->scheme->type == simplified_inis)
-        for (int i = 0; i < num_steps * ns * nx * nf; ++i) memory->delta_DK_traj[i] = 0.0;
+    if (opts->scheme->type == simplified_inis) {
+        for (int i = 0; i < num_steps * ns * nx * nf; ++i)
+            memory->delta_DK_traj[i] = 0.0;
+    }
     if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
         for (int i = 0; i < num_steps * ns * nx; ++i) memory->adj_traj[i] = 0.0;
         for (int i = 0; i < num_steps * ns; ++i)

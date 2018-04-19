@@ -33,7 +33,7 @@ real_t acados_toc(acados_timer* t) {
     return ((t->toc.QuadPart - t->tic.QuadPart) / (real_t)t->freq.QuadPart);
 }
 
-#elif (defined __APPLE__)
+#elif defined(__APPLE__)
 void acados_tic(acados_timer* t) {
     /* read current clock cycles */
     t->tic = mach_absolute_time();
@@ -53,7 +53,7 @@ real_t acados_toc(acados_timer* t) {
     return (real_t)duration / 1e9;
 }
 
-#elif (defined __DSPACE__)
+#elif defined(__DSPACE__)
 
 void acados_tic(acados_timer* t) {
     ds1401_tic_start();

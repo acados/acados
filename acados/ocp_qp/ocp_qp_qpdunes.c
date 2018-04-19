@@ -401,9 +401,11 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
     int *ng = in->dim->ng;
 
     // coldstart
-    if (opts->warmstart == 0)
+    if (opts->warmstart == 0) {
         for (int ii = 0; ii < N; ii++)
-            for (int jj = 0; jj < nx; jj++) mem->qpData.lambda.data[ii * nx + jj] = 0.0;
+            for (int jj = 0; jj < nx; jj++)
+                mem->qpData.lambda.data[ii * nx + jj] = 0.0;
+    }
 
     mem->qpData.options.maxIter = opts->options.maxIter;
 

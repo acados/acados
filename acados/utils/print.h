@@ -31,7 +31,7 @@ extern "C" {
 #include "acados/utils/types.h"
 
 #ifdef MATLAB
-#include "mex.h"
+#include "./mex.h"
 #define acados_printf mexPrintf
 #else
 #define acados_printf printf

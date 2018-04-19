@@ -39,7 +39,7 @@ typedef struct acados_timer_ {
     LARGE_INTEGER freq;
 } acados_timer;
 
-#elif (defined __APPLE__)
+#elif defined(__APPLE__)
 
 #include <mach/mach_time.h>
 
@@ -50,7 +50,7 @@ typedef struct acados_timer_ {
     mach_timebase_info_data_t tinfo;
 } acados_timer;
 
-#elif (defined __DSPACE__)
+#elif defined(__DSPACE__)
 
 #include <brtenv.h>
 
