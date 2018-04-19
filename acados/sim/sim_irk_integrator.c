@@ -409,7 +409,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     sim_irk_dims* dims = (sim_irk_dims *) dims_;
     sim_irk_workspace *workspace = (sim_irk_workspace *) sim_irk_workspace_cast(config, dims, opts, work_);
 
-    int ii, jj, iter, kk, ss;
+    int ii, jj, iter, ss;
     double a;
 
     int nx = dims->nx;
