@@ -74,6 +74,9 @@ script:
   - python -c "import acados" # check installation
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
 
+after_script:
+  - sleep 10
+
 after_success:
   - pushd build
   # Upload report to CodeCov
