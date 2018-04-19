@@ -9,7 +9,6 @@ install:
 build_script:
   - git submodule update --init --recursive
   - cmake -E make_directory build
-  - cmake -E make_directory appveyor-artifacts
   - cmake -E chdir build cmake ..
   - cmake --build build --config Debug
   - cmake -E chdir build ctest --output-on-failure
@@ -17,7 +16,9 @@ build_script:
   - cmake -E chdir build ctest --output-on-failure
   - rm -fr build
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -D MAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\appveyor-artifacts ..
+  - cmake -E make_directory appveyor-artifacts
+  - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\appveyor-artifacts ..
+  - cmake --build build --target install
   - 7z a acados-windows.zip %APPVEYOR_BUILD_FOLDER%\appveyor-artifacts
 
 artifacts:
