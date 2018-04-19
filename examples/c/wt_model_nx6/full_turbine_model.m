@@ -64,6 +64,16 @@ expl_vde_for = Function('casadi_expl_vde_for', {x, Sx, Su, u, p}, {fe, vdeX, vde
 expl_vde_for.generate('expl_vde_for', opts);
 
 
+% expl_vde_adj
+
+lam = MX.sym('lam', nx, 1);
+
+adj = jtimes(fe, [x; u], lam, true);
+
+expl_vde_adj = Function('casadi_expl_vde_adj', {x, lam, u, p}, {adj});
+expl_vde_adj.generate('expl_vde_adj', opts);
+
+
 % impl_ode_fun
 
 impl_ode_fun = Function('casadi_impl_ode_fun', {x, dx, u, p}, {fi});
