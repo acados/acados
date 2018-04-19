@@ -47,7 +47,7 @@ Standard:        Auto
 IndentWidth:     4
 TabWidth:        4
 UseTab:          Never
-BreakBeforeBraces: Attach
+BreakBeforeBraces: Allman
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
 SpacesInAngles:  false
