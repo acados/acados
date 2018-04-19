@@ -2,7 +2,6 @@ clc;
 clear all;
 close all;
 
-addpath('../../../external/casadi-octave-v3.2.3')
 import casadi.*
 
 % constants
@@ -73,12 +72,16 @@ end
 
 hessFun = Function('adjFun',{x,Sx,Sp,lambdaX,u},{adj,hess2});
 
-opts = struct('mex', false, 'with_header', true, 'with_export', false);
+opts = struct('mex', false, 'with_header', true, 'with_export', false, 'casadi_int', 'int');
 vdeFun.generate(['vde_forw_pendulum'], opts);
 jacFun.generate(['jac_pendulum'], opts);
 adjFun.generate(['vde_adj_pendulum'], opts);
 hessFun.generate(['vde_hess_pendulum'], opts);
 
 p = vertcat(x1-l*sin(theta) - l, l*cos(theta) - l);
-quad_constraint = Function('quad_constraint', {vertcat(u, x)}, {p, jacobian(p, vertcat(u, x)).T});
-quad_constraint.generate('quad_constraint', opts);
+quad_constraint = Function('position', {x}, {p, jacobian(p, x).T});
+quad_constraint.generate('position', opts);
+
+h = mtimes(p.T, p);
+constraint = Function('constraint', {x}, {h, jacobian(h, x).T});
+constraint.generate('constraint', opts);

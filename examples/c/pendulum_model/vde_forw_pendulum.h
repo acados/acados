@@ -4,20 +4,24 @@
 extern "C" {
 #endif
 
-#ifndef real_t
-#define real_t double
-#endif /* real_t */
+#ifndef casadi_real
+#define casadi_real double
+#endif
 
-int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+#ifndef casadi_int
+#define casadi_int int
+#endif
+
+int vdeFun(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem);
 void vdeFun_incref(void);
 void vdeFun_decref(void);
-int vdeFun_n_in(void);
-int vdeFun_n_out(void);
-const char* vdeFun_name_in(int i);
-const char* vdeFun_name_out(int i);
-const int* vdeFun_sparsity_in(int i);
-const int* vdeFun_sparsity_out(int i);
-int vdeFun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+casadi_int vdeFun_n_out(void);
+casadi_int vdeFun_n_in(void);
+const char* vdeFun_name_in(casadi_int i);
+const char* vdeFun_name_out(casadi_int i);
+const casadi_int* vdeFun_sparsity_in(casadi_int i);
+const casadi_int* vdeFun_sparsity_out(casadi_int i);
+int vdeFun_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
