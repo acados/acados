@@ -58,7 +58,7 @@ script:
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
   - cmake --build build --target lint
-  - cmake --build build
+  - cmake --build build && sleep 10
   - cmake -E chdir build ctest --verbose --output-on-failure
   - rm -r -f build
   - cmake -E make_directory build
@@ -74,11 +74,8 @@ script:
   - python -c "import acados" # check installation
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
 
-after_failure:
-  - sleep 10
 
 after_success:
-  - sleep 10
   - pushd build
   # Upload report to CodeCov
   - if [ "$COVERAGE" == "lcov" ]; then bash <(curl -s https://codecov.io/bash); else echo "Codecov did not collect coverage reports"; fi
