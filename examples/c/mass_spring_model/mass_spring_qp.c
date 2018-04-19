@@ -23,8 +23,6 @@
 #include <stdlib.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 

@@ -26,7 +26,7 @@ extern "C" {
 
 // blasfeo
 #include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_target.h"
+
 // acados
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/utils/external_function_generic.h"

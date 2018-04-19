@@ -24,9 +24,6 @@
 extern "C" {
 #endif
 
-// blasfeo
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_target.h"
 // acados
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"

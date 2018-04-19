@@ -33,9 +33,6 @@ extern "C" {
 #include "acados/sim/sim_collocation_utils.h"  // TODO(all): remove ???
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
-// blasfeo
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_target.h"
 
 /************************************************
  * options

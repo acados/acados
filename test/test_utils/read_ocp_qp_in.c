@@ -28,7 +28,6 @@
 
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_target.h"
 
 static void transpose_matrix(real_t *mat, int m, int n) {
     int_t ii, jj;

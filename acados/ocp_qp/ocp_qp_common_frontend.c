@@ -21,10 +21,10 @@
 // TODO(dimitris): remove memcpy to avoid this dependency?
 #include <string.h>
 #include <assert.h>
+
 // blasfeo
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
+
 // hpipm
 // #include "hpipm/include/hpipm_d_ocp_qp.h"
 // #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
