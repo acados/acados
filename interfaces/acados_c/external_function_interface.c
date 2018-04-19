@@ -29,7 +29,8 @@
  * casadi external function
  ************************************************/
 
-void external_function_casadi_create(external_function_casadi *fun) {
+void external_function_casadi_create(external_function_casadi *fun)
+{
     int fun_size = external_function_casadi_calculate_size(fun);
     void *fun_mem = malloc(fun_size);
     external_function_casadi_assign(fun, fun_mem);
@@ -37,7 +38,8 @@ void external_function_casadi_create(external_function_casadi *fun) {
     return;
 }
 
-void external_function_casadi_create_array(int size, external_function_casadi *funs) {
+void external_function_casadi_create_array(int size, external_function_casadi *funs)
+{
     // loop index
     int ii;
 
@@ -48,7 +50,8 @@ void external_function_casadi_create_array(int size, external_function_casadi *f
     int funs_size_tot = 0;
 
     // compute sizes
-    for (ii = 0; ii < size; ii++) {
+    for (ii = 0; ii < size; ii++)
+    {
         funs_size[ii] = external_function_casadi_calculate_size(funs + ii);
         funs_size_tot += funs_size[ii];
     }
@@ -58,7 +61,8 @@ void external_function_casadi_create_array(int size, external_function_casadi *f
 
     // assign
     c_ptr = funs_mem;
-    for (ii = 0; ii < size; ii++) {
+    for (ii = 0; ii < size; ii++)
+    {
         external_function_casadi_assign(funs + ii, c_ptr);
         c_ptr += funs_size[ii];
     }
@@ -69,13 +73,15 @@ void external_function_casadi_create_array(int size, external_function_casadi *f
     return;
 }
 
-void external_function_casadi_free(external_function_casadi *fun) {
+void external_function_casadi_free(external_function_casadi *fun)
+{
     free(fun->ptr_ext_mem);
 
     return;
 }
 
-void external_function_casadi_free_array(int size, external_function_casadi *funs) {
+void external_function_casadi_free_array(int size, external_function_casadi *funs)
+{
     free(funs[0].ptr_ext_mem);
 
     return;
@@ -85,7 +91,8 @@ void external_function_casadi_free_array(int size, external_function_casadi *fun
  * casadi external paramteric function
  ************************************************/
 
-void external_function_param_casadi_create(external_function_param_casadi *fun, int np) {
+void external_function_param_casadi_create(external_function_param_casadi *fun, int np)
+{
     int fun_size = external_function_param_casadi_calculate_size(fun, np);
     void *fun_mem = malloc(fun_size);
     external_function_param_casadi_assign(fun, fun_mem);
@@ -94,7 +101,8 @@ void external_function_param_casadi_create(external_function_param_casadi *fun, 
 }
 
 void external_function_param_casadi_create_array(int size, external_function_param_casadi *funs,
-                                                 int np) {
+                                                 int np)
+{
     // loop index
     int ii;
 
@@ -105,7 +113,8 @@ void external_function_param_casadi_create_array(int size, external_function_par
     int funs_size_tot = 0;
 
     // compute sizes
-    for (ii = 0; ii < size; ii++) {
+    for (ii = 0; ii < size; ii++)
+    {
         funs_size[ii] = external_function_param_casadi_calculate_size(funs + ii, np);
         funs_size_tot += funs_size[ii];
     }
@@ -115,7 +124,8 @@ void external_function_param_casadi_create_array(int size, external_function_par
 
     // assign
     c_ptr = funs_mem;
-    for (ii = 0; ii < size; ii++) {
+    for (ii = 0; ii < size; ii++)
+    {
         external_function_param_casadi_assign(funs + ii, c_ptr);
         c_ptr += funs_size[ii];
     }
@@ -126,13 +136,15 @@ void external_function_param_casadi_create_array(int size, external_function_par
     return;
 }
 
-void external_function_param_casadi_free(external_function_param_casadi *fun) {
+void external_function_param_casadi_free(external_function_param_casadi *fun)
+{
     free(fun->ptr_ext_mem);
 
     return;
 }
 
-void external_function_param_casadi_free_array(int size, external_function_param_casadi *funs) {
+void external_function_param_casadi_free_array(int size, external_function_param_casadi *funs)
+{
     free(funs[0].ptr_ext_mem);
 
     return;

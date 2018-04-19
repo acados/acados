@@ -41,7 +41,8 @@ typedef struct d_ocp_qp_res_workspace ocp_qp_res_ws;
 #ifndef QP_SOLVER_CONFIG_
 #define QP_SOLVER_CONFIG_
 
-typedef struct {
+typedef struct
+{
     // TODO(dimitris): pass dims to evaluate?
     int (*evaluate)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     int (*opts_calculate_size)(void *config, void *dims);
@@ -55,7 +56,8 @@ typedef struct {
 
 #endif
 
-typedef struct {
+typedef struct
+{
     int (*condensing)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     int (*expansion)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     int (*opts_calculate_size)(ocp_qp_dims *dims);
@@ -67,7 +69,8 @@ typedef struct {
     int (*workspace_calculate_size)(ocp_qp_dims *dims, void *opts);
 } ocp_qp_condensing_config;
 
-typedef struct {
+typedef struct
+{
     int (*evaluate)(void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem,
                     void *work);
     int (*opts_calculate_size)(void *config, ocp_qp_dims *dims);
@@ -80,7 +83,8 @@ typedef struct {
     qp_solver_config *qp_solver;  // either ocp_qp_solver or dense_solver
 } ocp_qp_xcond_solver_config;
 
-typedef struct {
+typedef struct
+{
     double solve_QP_time;
     double condensing_time;
     double interface_time;

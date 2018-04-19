@@ -33,7 +33,8 @@
  * config
  ************************************************/
 
-int ocp_nlp_cost_config_calculate_size() {
+int ocp_nlp_cost_config_calculate_size()
+{
     int size = 0;
 
     size += sizeof(ocp_nlp_cost_config);
@@ -41,7 +42,8 @@ int ocp_nlp_cost_config_calculate_size() {
     return size;
 }
 
-ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory) {
+ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory)
+{
     char *c_ptr = raw_memory;
 
     ocp_nlp_cost_config *config = (ocp_nlp_cost_config *)c_ptr;

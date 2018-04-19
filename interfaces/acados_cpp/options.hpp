@@ -23,9 +23,10 @@
 #include <map>
 #include <string>
 
-namespace acados {
-
-class option_t {
+namespace acados
+{
+class option_t
+{
  public:
     inline virtual std::string repr() { return ""; }
 
@@ -33,17 +34,20 @@ class option_t {
 
     inline virtual double as_double() { return 0.0; }
 
-    inline virtual std::map<std::string, option_t *> &as_map() {
+    inline virtual std::map<std::string, option_t *> &as_map()
+    {
         throw std::runtime_error("option_t is no map");
     }
 
     inline virtual bool nested() { return false; }
 
-    inline virtual std::map<std::string, option_t *>::iterator begin() {
+    inline virtual std::map<std::string, option_t *>::iterator begin()
+    {
         throw std::range_error("option_t is not iterable");
     }
 
-    inline virtual std::map<std::string, option_t *>::iterator end() {
+    inline virtual std::map<std::string, option_t *>::iterator end()
+    {
         throw std::range_error("option_t is not iterable");
     }
 
@@ -51,7 +55,8 @@ class option_t {
 };
 
 template <typename T>
-class option : public option_t {
+class option : public option_t
+{
  public:
     explicit option(T val) : value(val) {}
 
@@ -68,7 +73,8 @@ class option : public option_t {
 };
 
 template <>
-class option<std::map<std::string, option_t *>> : public option_t {
+class option<std::map<std::string, option_t *>> : public option_t
+{
  public:
     explicit option(std::map<std::string, option_t *> val) : value(val) {}
 
@@ -86,15 +92,16 @@ class option<std::map<std::string, option_t *>> : public option_t {
 
 }  // namespace acados
 
-namespace std {
-
+namespace std
+{
 inline string to_string(acados::option_t *opt) { return opt->repr(); }
 
 inline int to_int(acados::option_t *opt) { return opt->as_int(); }
 
 inline double to_double(acados::option_t *opt) { return opt->as_double(); }
 
-inline std::map<std::string, acados::option_t *> &to_map(acados::option_t *opt) {
+inline std::map<std::string, acados::option_t *> &to_map(acados::option_t *opt)
+{
     return opt->as_map();
 }
 

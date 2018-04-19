@@ -18,15 +18,17 @@
 #define ACADOS_UTILS_STRSEP_H_
 
 #ifdef __cplusplus
-    #include <string>
-    #define STD(x) std::x
-    namespace std {
+#include <string>
+#define STD(x) std::x
+namespace std
+{
 #else
-    #include <string.h>
-    #define STD(x) x
+#include <string.h>
+#define STD(x) x
 #endif
 
-char* strsep_acados(char** stringp, const char* delim) {
+char* strsep_acados(char** stringp, const char* delim)
+{
     char* result;
 
     if ((stringp == NULL) || (*stringp == NULL)) return NULL;

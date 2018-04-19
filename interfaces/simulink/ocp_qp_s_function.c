@@ -15,9 +15,11 @@
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/options.h"
 
-static void mdlInitializeSizes(SimStruct *S) {
+static void mdlInitializeSizes(SimStruct *S)
+{
     ssSetNumSFcnParams(S, 4);
-    if (ssGetNumSFcnParams(S) != ssGetSFcnParamsCount(S)) {
+    if (ssGetNumSFcnParams(S) != ssGetSFcnParamsCount(S))
+    {
         return; /* Parameter mismatch will be reported by Simulink */
     }
     const mxArray *B = ssGetSFcnParam(S, 3);
@@ -40,13 +42,15 @@ static void mdlInitializeSizes(SimStruct *S) {
     ssSetNumSampleTimes(S, 1);
 }
 
-static void mdlInitializeSampleTimes(SimStruct *S) {
+static void mdlInitializeSampleTimes(SimStruct *S)
+{
     ssSetSampleTime(S, 0, INHERITED_SAMPLE_TIME);
     ssSetOffsetTime(S, 0, 0.0);
 }
 
 #define MDL_START
-static void mdlStart(SimStruct *S) {
+static void mdlStart(SimStruct *S)
+{
     printf("mdlStart: Read parameters");
     const mxArray *Q = ssGetSFcnParam(S, 0);
     const mxArray *R = ssGetSFcnParam(S, 1);
@@ -61,7 +65,8 @@ static void mdlStart(SimStruct *S) {
     ocp_qp_dims *qp_dims = ocp_qp_dims_create(AC_HORIZON_LENGTH);
     qp_dims->nbx[0] = nx;
     qp_dims->nb[0] = nx;
-    for (int i = 0; i < AC_HORIZON_LENGTH; ++i) {
+    for (int i = 0; i < AC_HORIZON_LENGTH; ++i)
+    {
         qp_dims->nx[i] = nx;
         qp_dims->nu[i] = nu;
     }
@@ -73,7 +78,8 @@ static void mdlStart(SimStruct *S) {
     ocp_qp_in *qp_in = ocp_qp_in_create(config, qp_dims);
     for (int i = 0; i < nx; ++i) qp_in->idxb[0][i] = nu + i;
 
-    for (int i = 0; i < AC_HORIZON_LENGTH; ++i) {
+    for (int i = 0; i < AC_HORIZON_LENGTH; ++i)
+    {
         d_cvt_colmaj_to_ocp_qp_Q(i, (double *)mxGetData(Q), qp_in);
         d_cvt_colmaj_to_ocp_qp_R(i, (double *)mxGetData(R), qp_in);
         d_cvt_colmaj_to_ocp_qp_A(i, (double *)mxGetData(A), qp_in);
@@ -96,7 +102,8 @@ static void mdlStart(SimStruct *S) {
     ssGetPWork(S)[4] = (void *)qp_solver;
 }
 
-static void mdlOutputs(SimStruct *S, int_T tid) {
+static void mdlOutputs(SimStruct *S, int_T tid)
+{
     ocp_qp_in *qp_in = (ocp_qp_in *)ssGetPWork(S)[1];
     ocp_qp_out *qp_out = (ocp_qp_out *)ssGetPWork(S)[2];
     ocp_qp_solver *qp_solver = (ocp_qp_solver *)ssGetPWork(S)[4];
@@ -118,7 +125,8 @@ static void mdlOutputs(SimStruct *S, int_T tid) {
     *status_out = (double)status;
 }
 
-static void mdlTerminate(SimStruct *S) {
+static void mdlTerminate(SimStruct *S)
+{
     free(ssGetPWork(S)[0]);
     free(ssGetPWork(S)[1]);
     free(ssGetPWork(S)[2]);

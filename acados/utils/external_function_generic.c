@@ -17,7 +17,6 @@
  *
  */
 
-
 #include <assert.h>
 #include <stdlib.h>
 
@@ -32,17 +31,23 @@
  * casadi utils
  ************************************************/
 
-static int casadi_nnz(const int *sparsity) {
+static int casadi_nnz(const int *sparsity)
+{
     int nnz = 0;
-    if (sparsity != NULL) {
+    if (sparsity != NULL)
+    {
         const int nrow = sparsity[0];
         const int ncol = sparsity[1];
         const int dense = sparsity[2];
-        if (dense) {
+        if (dense)
+        {
             nnz = nrow * ncol;
-        } else {
+        }
+        else
+        {
             const int *idxcol = sparsity + 2;
-            for (int i = 0; i < ncol; ++i) {
+            for (int i = 0; i < ncol; ++i)
+            {
                 nnz += idxcol[i + 1] - idxcol[i];
             }
         }
@@ -51,16 +56,20 @@ static int casadi_nnz(const int *sparsity) {
     return nnz;
 }
 
-static void d_cvt_casadi_to_colmaj(double *in, int *sparsity_in, double *out) {
+static void d_cvt_casadi_to_colmaj(double *in, int *sparsity_in, double *out)
+{
     int ii, jj, idx;
 
     int nrow = sparsity_in[0];
     int ncol = sparsity_in[1];
     int dense = sparsity_in[2];
 
-    if (dense) {
+    if (dense)
+    {
         for (ii = 0; ii < ncol * nrow; ii++) out[ii] = in[ii];
-    } else {
+    }
+    else
+    {
         double *ptr = in;
         int *idxcol = sparsity_in + 2;
         int *row = sparsity_in + ncol + 3;
@@ -68,8 +77,10 @@ static void d_cvt_casadi_to_colmaj(double *in, int *sparsity_in, double *out) {
         for (jj = 0; jj < ncol; jj++)
             for (ii = 0; ii < nrow; ii++) out[ii + jj * nrow] = 0.0;
         // Copy nonzeros
-        for (jj = 0; jj < ncol; jj++) {
-            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++) {
+        for (jj = 0; jj < ncol; jj++)
+        {
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+            {
                 out[row[idx] + jj * nrow] = ptr[0];
                 ptr++;
             }
@@ -79,22 +90,28 @@ static void d_cvt_casadi_to_colmaj(double *in, int *sparsity_in, double *out) {
     return;
 }
 
-static void d_cvt_colmaj_to_casadi(double *in, double *out, int *sparsity_out) {
+static void d_cvt_colmaj_to_casadi(double *in, double *out, int *sparsity_out)
+{
     int ii, jj, idx;
 
     int nrow = sparsity_out[0];
     int ncol = sparsity_out[1];
     int dense = sparsity_out[2];
 
-    if (dense) {
+    if (dense)
+    {
         for (ii = 0; ii < ncol * nrow; ii++) out[ii] = in[ii];
-    } else {
+    }
+    else
+    {
         double *ptr = out;
         int *idxcol = sparsity_out + 2;
         int *row = sparsity_out + ncol + 3;
         // Copy nonzeros
-        for (jj = 0; jj < ncol; jj++) {
-            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++) {
+        for (jj = 0; jj < ncol; jj++)
+        {
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+            {
                 ptr[0] = in[row[idx] + jj * nrow];
                 ptr++;
             }
@@ -105,24 +122,30 @@ static void d_cvt_colmaj_to_casadi(double *in, double *out, int *sparsity_out) {
 }
 
 // TODO(all): detect if dense from number of elements per column !!!
-static void d_cvt_casadi_to_dmat(double *in, int *sparsity_in, struct blasfeo_dmat *out) {
+static void d_cvt_casadi_to_dmat(double *in, int *sparsity_in, struct blasfeo_dmat *out)
+{
     int jj, idx;
 
     int nrow = sparsity_in[0];
     int ncol = sparsity_in[1];
     int dense = sparsity_in[2];
 
-    if (dense) {
+    if (dense)
+    {
         blasfeo_pack_dmat(nrow, ncol, in, nrow, out, 0, 0);
-    } else {
+    }
+    else
+    {
         double *ptr = in;
         int *idxcol = sparsity_in + 2;
         int *row = sparsity_in + ncol + 3;
         // Fill with zeros
         blasfeo_dgese(nrow, ncol, 0.0, out, 0, 0);
         // Copy nonzeros
-        for (jj = 0; jj < ncol; jj++) {
-            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++) {
+        for (jj = 0; jj < ncol; jj++)
+        {
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+            {
                 BLASFEO_DMATEL(out, row[idx], jj) = ptr[0];
                 ptr++;
             }
@@ -133,22 +156,28 @@ static void d_cvt_casadi_to_dmat(double *in, int *sparsity_in, struct blasfeo_dm
 }
 
 // TODO(all): detect if dense from number of elements per column !!!
-static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *sparsity_out) {
+static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *sparsity_out)
+{
     int jj, idx;
 
     int nrow = sparsity_out[0];
     int ncol = sparsity_out[1];
     int dense = sparsity_out[2];
 
-    if (dense) {
+    if (dense)
+    {
         blasfeo_unpack_dmat(nrow, ncol, in, 0, 0, out, nrow);
-    } else {
+    }
+    else
+    {
         double *ptr = out;
         int *idxcol = sparsity_out + 2;
         int *row = sparsity_out + ncol + 3;
         // Copy nonzeros
-        for (jj = 0; jj < ncol; jj++) {
-            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++) {
+        for (jj = 0; jj < ncol; jj++)
+        {
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+            {
                 ptr[0] = BLASFEO_DMATEL(in, row[idx], nrow);
                 ptr++;
             }
@@ -160,7 +189,8 @@ static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *spar
 
 // column vector: assume sparsity_in[1] = 1 !!!
 // TODO(all): detect if dense from number of elements per column !!!
-static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dvec *out) {
+static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dvec *out)
+{
     int idx;
 
     assert(sparsity_in[1] == 1);
@@ -168,16 +198,20 @@ static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dv
     int n = sparsity_in[0];
     int dense = sparsity_in[2];
 
-    if (dense) {
+    if (dense)
+    {
         blasfeo_pack_dvec(n, in, out, 0);
-    } else {
+    }
+    else
+    {
         double *ptr = in;
         int *idxcol = sparsity_in + 2;
         int *row = sparsity_in + 1 + 3;
         // Fill with zeros
         blasfeo_dvecse(n, 0.0, out, 0);
         // Copy nonzeros
-        for (idx = idxcol[0]; idx != idxcol[1]; idx++) {
+        for (idx = idxcol[0]; idx != idxcol[1]; idx++)
+        {
             BLASFEO_DVECEL(out, row[idx]) = ptr[0];
             ptr++;
         }
@@ -188,7 +222,8 @@ static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dv
 
 // column vector: assume sparsity_in[1] = 1 !!!
 // TODO(all): detect if dense from number of elements per column !!!
-static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *sparsity_out) {
+static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *sparsity_out)
+{
     int idx;
 
     assert(sparsity_out[1] == 1);
@@ -196,14 +231,18 @@ static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *spar
     int n = sparsity_out[0];
     int dense = sparsity_out[2];
 
-    if (dense) {
+    if (dense)
+    {
         blasfeo_unpack_dvec(n, in, 0, out);
-    } else {
+    }
+    else
+    {
         double *ptr = out;
         int *idxcol = sparsity_out + 2;
         int *row = sparsity_out + 1 + 3;
         // Copy nonzeros
-        for (idx = idxcol[0]; idx != idxcol[1]; idx++) {
+        for (idx = idxcol[0]; idx != idxcol[1]; idx++)
+        {
             ptr[0] = BLASFEO_DVECEL(in, row[idx]);
             ptr++;
         }
@@ -212,7 +251,8 @@ static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *spar
     return;
 }
 
-static void d_cvt_casadi_to_colmaj_args(double *in, int *sparsity_in, struct colmaj_args *out) {
+static void d_cvt_casadi_to_colmaj_args(double *in, int *sparsity_in, struct colmaj_args *out)
+{
     int ii, jj, idx;
 
     int nrow = sparsity_in[0];
@@ -222,10 +262,13 @@ static void d_cvt_casadi_to_colmaj_args(double *in, int *sparsity_in, struct col
     double *A = out->A;
     int lda = out->lda;
 
-    if (dense) {
+    if (dense)
+    {
         for (ii = 0; ii < ncol; ii++)
             for (jj = 0; jj < nrow; jj++) A[ii + jj * lda] = in[ii + ncol * jj];
-    } else {
+    }
+    else
+    {
         double *ptr = in;
         int *idxcol = sparsity_in + 2;
         int *row = sparsity_in + ncol + 3;
@@ -233,8 +276,10 @@ static void d_cvt_casadi_to_colmaj_args(double *in, int *sparsity_in, struct col
         for (jj = 0; jj < ncol; jj++)
             for (ii = 0; ii < nrow; ii++) A[ii + jj * lda] = 0.0;
         // Copy nonzeros
-        for (jj = 0; jj < ncol; jj++) {
-            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++) {
+        for (jj = 0; jj < ncol; jj++)
+        {
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+            {
                 A[row[idx] + jj * lda] = ptr[0];
                 ptr++;
             }
@@ -244,7 +289,8 @@ static void d_cvt_casadi_to_colmaj_args(double *in, int *sparsity_in, struct col
     return;
 }
 
-static void d_cvt_colmaj_args_to_casadi(struct colmaj_args *in, double *out, int *sparsity_out) {
+static void d_cvt_colmaj_args_to_casadi(struct colmaj_args *in, double *out, int *sparsity_out)
+{
     int ii, jj, idx;
 
     int nrow = sparsity_out[0];
@@ -254,16 +300,21 @@ static void d_cvt_colmaj_args_to_casadi(struct colmaj_args *in, double *out, int
     double *A = in->A;
     int lda = in->lda;
 
-    if (dense) {
+    if (dense)
+    {
         for (ii = 0; ii < ncol; ii++)
             for (jj = 0; jj < nrow; jj++) out[ii + ncol * jj] = A[ii + jj * lda];
-    } else {
+    }
+    else
+    {
         double *ptr = out;
         int *idxcol = sparsity_out + 2;
         int *row = sparsity_out + ncol + 3;
         // Copy nonzeros
-        for (jj = 0; jj < ncol; jj++) {
-            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++) {
+        for (jj = 0; jj < ncol; jj++)
+        {
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+            {
                 ptr[0] = A[row[idx] + jj * lda];
                 ptr++;
             }
@@ -274,7 +325,8 @@ static void d_cvt_colmaj_args_to_casadi(struct colmaj_args *in, double *out, int
 }
 
 // TODO(all): detect if dense from number of elements per column !!!
-static void d_cvt_casadi_to_dmat_args(double *in, int *sparsity_in, struct blasfeo_dmat_args *out) {
+static void d_cvt_casadi_to_dmat_args(double *in, int *sparsity_in, struct blasfeo_dmat_args *out)
+{
     int jj, idx;
 
     int nrow = sparsity_in[0];
@@ -285,17 +337,22 @@ static void d_cvt_casadi_to_dmat_args(double *in, int *sparsity_in, struct blasf
     int ai = out->ai;
     int aj = out->aj;
 
-    if (dense) {
+    if (dense)
+    {
         blasfeo_pack_dmat(nrow, ncol, in, nrow, A, ai, aj);
-    } else {
+    }
+    else
+    {
         double *ptr = in;
         int *idxcol = sparsity_in + 2;
         int *row = sparsity_in + ncol + 3;
         // Fill with zeros
         blasfeo_dgese(nrow, ncol, 0.0, A, ai, aj);
         // Copy nonzeros
-        for (jj = 0; jj < ncol; jj++) {
-            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++) {
+        for (jj = 0; jj < ncol; jj++)
+        {
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+            {
                 BLASFEO_DMATEL(A, ai + row[idx], aj + jj) = ptr[0];
                 ptr++;
             }
@@ -306,8 +363,8 @@ static void d_cvt_casadi_to_dmat_args(double *in, int *sparsity_in, struct blasf
 }
 
 // TODO(all): detect if dense from number of elements per column !!!
-static void d_cvt_dmat_args_to_casadi(struct blasfeo_dmat_args *in, double *out,
-                                      int *sparsity_out) {
+static void d_cvt_dmat_args_to_casadi(struct blasfeo_dmat_args *in, double *out, int *sparsity_out)
+{
     int jj, idx;
 
     int nrow = sparsity_out[0];
@@ -318,15 +375,20 @@ static void d_cvt_dmat_args_to_casadi(struct blasfeo_dmat_args *in, double *out,
     int ai = in->ai;
     int aj = in->aj;
 
-    if (dense) {
+    if (dense)
+    {
         blasfeo_unpack_dmat(nrow, ncol, A, ai, aj, out, nrow);
-    } else {
+    }
+    else
+    {
         double *ptr = out;
         int *idxcol = sparsity_out + 2;
         int *row = sparsity_out + ncol + 3;
         // Copy nonzeros
-        for (jj = 0; jj < ncol; jj++) {
-            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++) {
+        for (jj = 0; jj < ncol; jj++)
+        {
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+            {
                 ptr[0] = BLASFEO_DMATEL(A, ai + row[idx], aj + nrow);
                 ptr++;
             }
@@ -338,7 +400,8 @@ static void d_cvt_dmat_args_to_casadi(struct blasfeo_dmat_args *in, double *out,
 
 // column vector: assume sparsity_in[1] = 1 !!!
 // TODO(all): detect if dense from number of elements per column !!!
-static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasfeo_dvec_args *out) {
+static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasfeo_dvec_args *out)
+{
     int idx;
 
     assert(sparsity_in[1] == 1);
@@ -349,16 +412,20 @@ static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasf
     struct blasfeo_dvec *x = out->x;
     int xi = out->xi;
 
-    if (dense) {
+    if (dense)
+    {
         blasfeo_pack_dvec(n, in, x, xi);
-    } else {
+    }
+    else
+    {
         double *ptr = in;
         int *idxcol = sparsity_in + 2;
         int *row = sparsity_in + 1 + 3;
         // Fill with zeros
         blasfeo_dvecse(n, 0.0, x, xi);
         // Copy nonzeros
-        for (idx = idxcol[0]; idx != idxcol[1]; idx++) {
+        for (idx = idxcol[0]; idx != idxcol[1]; idx++)
+        {
             BLASFEO_DVECEL(x, xi + row[idx]) = ptr[0];
             ptr++;
         }
@@ -369,8 +436,8 @@ static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasf
 
 // column vector: assume sparsity_in[1] = 1 !!!
 // TODO(all): detect if dense from number of elements per column !!!
-static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out,
-                                      int *sparsity_out) {
+static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out, int *sparsity_out)
+{
     int idx;
 
     assert(sparsity_out[1] == 1);
@@ -381,14 +448,18 @@ static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out,
     struct blasfeo_dvec *x = in->x;
     int xi = in->xi;
 
-    if (dense) {
+    if (dense)
+    {
         blasfeo_unpack_dvec(n, x, xi, out);
-    } else {
+    }
+    else
+    {
         double *ptr = out;
         int *idxcol = sparsity_out + 2;
         int *row = sparsity_out + 1 + 3;
         // Copy nonzeros
-        for (idx = idxcol[0]; idx != idxcol[1]; idx++) {
+        for (idx = idxcol[0]; idx != idxcol[1]; idx++)
+        {
             ptr[0] = BLASFEO_DVECEL(x, xi + row[idx]);
             ptr++;
         }
@@ -401,7 +472,8 @@ static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out,
  * casadi external function
  ************************************************/
 
-int external_function_casadi_calculate_size(external_function_casadi *fun) {
+int external_function_casadi_calculate_size(external_function_casadi *fun)
+{
     // casadi wrapper as evaluate
     fun->evaluate = &external_function_casadi_wrapper;
 
@@ -447,7 +519,8 @@ int external_function_casadi_calculate_size(external_function_casadi *fun) {
     return size;
 }
 
-void external_function_casadi_assign(external_function_casadi *fun, void *raw_memory) {
+void external_function_casadi_assign(external_function_casadi *fun, void *raw_memory)
+{
     // loop index
     int ii;
 
@@ -496,7 +569,8 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
 }
 
 void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in,
-                                      ext_fun_arg_t *type_out, void **out) {
+                                      ext_fun_arg_t *type_out, void **out)
+{
     // cast into external casadi function
     external_function_casadi *fun = self;
 
@@ -504,8 +578,10 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
     int ii;
 
     // in as args
-    for (ii = 0; ii < fun->in_num; ii++) {
-        switch (type_in[ii]) {
+    for (ii = 0; ii < fun->in_num; ii++)
+    {
+        switch (type_in[ii])
+        {
             case COLMAJ:
                 d_cvt_colmaj_to_casadi(in[ii], (double *)fun->args[ii],
                                        (int *)fun->casadi_sparsity_in(ii));
@@ -549,8 +625,10 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
     // call casadi function
     fun->casadi_fun((const double **)fun->args, fun->res, fun->iw, fun->w, NULL);
 
-    for (ii = 0; ii < fun->out_num; ii++) {
-        switch (type_out[ii]) {
+    for (ii = 0; ii < fun->out_num; ii++)
+    {
+        switch (type_out[ii])
+        {
             case COLMAJ:
                 d_cvt_casadi_to_colmaj((double *)fun->res[ii], (int *)fun->casadi_sparsity_out(ii),
                                        out[ii]);
@@ -598,7 +676,8 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
  * casadi external parametric function
  ************************************************/
 
-int external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np) {
+int external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np)
+{
     // loop index
     int ii;
 
@@ -651,7 +730,8 @@ int external_function_param_casadi_calculate_size(external_function_param_casadi
     return size;
 }
 
-void external_function_param_casadi_assign(external_function_param_casadi *fun, void *raw_memory) {
+void external_function_param_casadi_assign(external_function_param_casadi *fun, void *raw_memory)
+{
     // loop index
     int ii;
 
@@ -703,7 +783,8 @@ void external_function_param_casadi_assign(external_function_param_casadi *fun, 
 }
 
 void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in,
-                                            ext_fun_arg_t *type_out, void **out) {
+                                            ext_fun_arg_t *type_out, void **out)
+{
     // cast into external casadi function
     external_function_param_casadi *fun = self;
 
@@ -712,8 +793,10 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
 
     // in as args
     // skip last argument (that is the parameters vector)
-    for (ii = 0; ii < fun->in_num - 1; ii++) {
-        switch (type_in[ii]) {
+    for (ii = 0; ii < fun->in_num - 1; ii++)
+    {
+        switch (type_in[ii])
+        {
             case COLMAJ:
                 d_cvt_colmaj_to_casadi(in[ii], (double *)fun->args[ii],
                                        (int *)fun->casadi_sparsity_in(ii));
@@ -755,8 +838,10 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
     // call casadi function
     fun->casadi_fun((const double **)fun->args, fun->res, fun->iw, fun->w, NULL);
 
-    for (ii = 0; ii < fun->out_num; ii++) {
-        switch (type_out[ii]) {
+    for (ii = 0; ii < fun->out_num; ii++)
+    {
+        switch (type_out[ii])
+        {
             case COLMAJ:
                 d_cvt_casadi_to_colmaj((double *)fun->res[ii], (int *)fun->casadi_sparsity_out(ii),
                                        out[ii]);
@@ -795,7 +880,8 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
     return;
 }
 
-void external_function_param_casadi_set_param(void *self, double *p) {
+void external_function_param_casadi_set_param(void *self, double *p)
+{
     // cast into external casadi function
     external_function_param_casadi *fun = self;
 

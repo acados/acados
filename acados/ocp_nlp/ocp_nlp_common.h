@@ -36,7 +36,8 @@ extern "C" {
  * dims
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     void **cost;
     void **dynamics;
     void **constraints;
@@ -60,7 +61,8 @@ void ocp_nlp_dims_initialize(void *config, int *nx, int *nu, int *ny, int *nbx, 
  * in
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     ocp_nlp_dims *dims;  // pointer to nlp dimensions
 
     double *Ts;  // length of sampling intervals
@@ -78,7 +80,8 @@ typedef struct {
  * out
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dvec *ux;
     struct blasfeo_dvec *pi;
     struct blasfeo_dvec *lam;
@@ -92,7 +95,8 @@ typedef struct {
  * memory TODO move to sqp ???
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dvec *cost_grad;
     struct blasfeo_dvec *ineq_fun;
     struct blasfeo_dvec *ineq_adj;
@@ -104,7 +108,8 @@ typedef struct {
  * residuals
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dvec *res_g;  // stationarity
     struct blasfeo_dvec *res_b;  // dynamics
     struct blasfeo_dvec *res_d;  // inequality constraints
@@ -120,7 +125,8 @@ typedef struct {
  * config
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int N;  // number of stages
 
     // all the others

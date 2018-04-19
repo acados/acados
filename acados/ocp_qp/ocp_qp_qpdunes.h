@@ -38,14 +38,16 @@ typedef enum qpdunes_options_t_ {
 
 typedef enum { QPDUNES_WITH_QPOASES, QPDUNES_WITH_CLIPPING } qpdunes_stage_qp_solver_t;
 
-typedef struct ocp_qp_qpdunes_opts_ {
+typedef struct ocp_qp_qpdunes_opts_
+{
     qpOptions_t options;
     qpdunes_stage_qp_solver_t stageQpSolver;
     int warmstart;  // warmstart = 0: all multipliers set to zero, warmstart = 1: use previous mult.
     bool isLinearMPC;
 } ocp_qp_qpdunes_opts;
 
-typedef struct ocp_qp_qpdunes_memory_ {
+typedef struct ocp_qp_qpdunes_memory_
+{
     int firstRun;
     int nx;
     int nu;
@@ -54,7 +56,8 @@ typedef struct ocp_qp_qpdunes_memory_ {
     qpData_t qpData;
 } ocp_qp_qpdunes_memory;
 
-typedef struct ocp_qp_qpdunes_workspace_ {
+typedef struct ocp_qp_qpdunes_workspace_
+{
     double *H;
     double *Q;
     double *R;

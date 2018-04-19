@@ -36,7 +36,8 @@
  * opts
  ************************************************/
 
-int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims) {
+int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims)
+{
     int N = dims->N;
 
     int size = 0;
@@ -57,7 +58,8 @@ int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims) {
     return size;
 }
 
-void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory) {
+void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
+{
     int N = dims->N;
 
     char *c_ptr = (char *)raw_memory;
@@ -90,7 +92,8 @@ void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
     return opts;
 }
 
-void ocp_qp_partial_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opts_) {
+void ocp_qp_partial_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opts_)
+{
     ocp_qp_partial_condensing_opts *opts = opts_;
 
     int N = dims->N;
@@ -103,7 +106,8 @@ void ocp_qp_partial_condensing_opts_initialize_default(ocp_qp_dims *dims, void *
     d_set_default_cond_qp_ocp2ocp_arg(opts->N2, opts->hpipm_opts);
 }
 
-void ocp_qp_partial_condensing_opts_update(ocp_qp_dims *dims, void *opts_) {
+void ocp_qp_partial_condensing_opts_update(ocp_qp_dims *dims, void *opts_)
+{
     ocp_qp_partial_condensing_opts *opts = opts_;
 
     opts->pcond_dims->N = opts->N2;
@@ -116,7 +120,8 @@ void ocp_qp_partial_condensing_opts_update(ocp_qp_dims *dims, void *opts_) {
  * memory
  ************************************************/
 
-int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_) {
+int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_)
+{
     ocp_qp_partial_condensing_opts *opts = opts_;
 
     int size = 0;
@@ -137,7 +142,8 @@ int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opt
     return size;
 }
 
-void *ocp_qp_partial_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void *raw_memory) {
+void *ocp_qp_partial_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void *raw_memory)
+{
     ocp_qp_partial_condensing_opts *opts = opts_;
 
     char *c_ptr = (char *)raw_memory;
@@ -176,7 +182,8 @@ int ocp_qp_partial_condensing_workspace_calculate_size(ocp_qp_dims *dims, void *
  ************************************************/
 
 void ocp_qp_partial_condensing(ocp_qp_in *in, ocp_qp_in *out, ocp_qp_partial_condensing_opts *opts,
-                               ocp_qp_partial_condensing_memory *mem, void *work) {
+                               ocp_qp_partial_condensing_memory *mem, void *work)
+{
     assert(opts->N2 == opts->N2_bkp);
 
     // save pointers to ocp_qp_in in memory (needed for expansion)
@@ -188,14 +195,16 @@ void ocp_qp_partial_condensing(ocp_qp_in *in, ocp_qp_in *out, ocp_qp_partial_con
 }
 
 void ocp_qp_partial_expansion(ocp_qp_out *in, ocp_qp_out *out, ocp_qp_partial_condensing_opts *opts,
-                              ocp_qp_partial_condensing_memory *mem, void *work) {
+                              ocp_qp_partial_condensing_memory *mem, void *work)
+{
     assert(opts->N2 == opts->N2_bkp);
 
     d_expand_sol_ocp2ocp(mem->qp_in, mem->pcond_qp_in, in, out, opts->hpipm_opts,
                          mem->hpipm_workspace);
 }
 
-void ocp_qp_partial_condensing_config_initialize_default(void *config_) {
+void ocp_qp_partial_condensing_config_initialize_default(void *config_)
+{
     ocp_qp_condensing_config *config = config_;
 
     config->opts_calculate_size = &ocp_qp_partial_condensing_opts_calculate_size;

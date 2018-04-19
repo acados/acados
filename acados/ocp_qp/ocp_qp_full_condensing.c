@@ -37,7 +37,8 @@
  * dims
  ************************************************/
 
-void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims) {
+void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims)
+{
     d_compute_qp_dim_ocp2dense(dims, ddims);
 }
 
@@ -45,7 +46,8 @@ void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims) {
  * opts
  ************************************************/
 
-int ocp_qp_full_condensing_opts_calculate_size(ocp_qp_dims *dims) {
+int ocp_qp_full_condensing_opts_calculate_size(ocp_qp_dims *dims)
+{
     int size = 0;
     size += sizeof(ocp_qp_full_condensing_opts);
     // hpipm opts
@@ -58,7 +60,8 @@ int ocp_qp_full_condensing_opts_calculate_size(ocp_qp_dims *dims) {
     return size;
 }
 
-void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory) {
+void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
+{
     char *c_ptr = (char *)raw_memory;
 
     // opts
@@ -80,7 +83,8 @@ void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory) {
     return opts;
 }
 
-void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opts_) {
+void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opts_)
+{
     ocp_qp_full_condensing_opts *opts = opts_;
 
     // condense both Hessian and gradient by default
@@ -97,7 +101,8 @@ void ocp_qp_full_condensing_opts_update(ocp_qp_dims *dims, void *opts_) { return
  * memory
  ************************************************/
 
-int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_) {
+int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_)
+{
     ocp_qp_full_condensing_opts *opts = opts_;
     int size = 0;
 
@@ -108,7 +113,8 @@ int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_)
     return size;
 }
 
-void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void *raw_memory) {
+void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void *raw_memory)
+{
     ocp_qp_full_condensing_opts *opts = opts_;
 
     char *c_ptr = (char *)raw_memory;
@@ -133,15 +139,19 @@ void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void 
 int ocp_qp_full_condensing_workspace_calculate_size(ocp_qp_dims *dims, void *opts_) { return 0; }
 
 void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condensing_opts *opts,
-                            ocp_qp_full_condensing_memory *mem, void *work) {
+                            ocp_qp_full_condensing_memory *mem, void *work)
+{
     // save pointer to ocp_qp_in in memory (needed for expansion)
     mem->qp_in = in;
 
     // convert to dense qp structure
-    if (opts->condense_rhs_only == 1) {
+    if (opts->condense_rhs_only == 1)
+    {
         // condense gradient only
         d_cond_rhs_qp_ocp2dense(in, out, opts->hpipm_opts, mem->hpipm_workspace);
-    } else {
+    }
+    else
+    {
         // condense gradient and Hessian
         d_cond_qp_ocp2dense(in, out, opts->hpipm_opts, mem->hpipm_workspace);
 
@@ -158,15 +168,20 @@ void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condens
 }
 
 void ocp_qp_full_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_condensing_opts *opts,
-                           ocp_qp_full_condensing_memory *mem, void *work) {
-    if (opts->expand_primal_sol_only == 1) {
+                           ocp_qp_full_condensing_memory *mem, void *work)
+{
+    if (opts->expand_primal_sol_only == 1)
+    {
         d_expand_primal_sol_dense2ocp(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
-    } else {
+    }
+    else
+    {
         d_expand_sol_dense2ocp(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
     }
 }
 
-void ocp_qp_full_condensing_config_initialize_default(void *config_) {
+void ocp_qp_full_condensing_config_initialize_default(void *config_)
+{
     ocp_qp_condensing_config *config = config_;
 
     config->opts_calculate_size = &ocp_qp_full_condensing_opts_calculate_size;

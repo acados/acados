@@ -35,7 +35,8 @@
 #endif
 
 // TODO(rien): replace these LU codes with blasfeo
-static double lu_system_solve(double *A, double *b, int *perm, int dim, int dim_rhs, void *work) {
+static double lu_system_solve(double *A, double *b, int *perm, int dim, int dim_rhs, void *work)
+{
     char *c_ptr = work;
 
     double *b_perm = (double *)c_ptr;
@@ -51,22 +52,28 @@ static double lu_system_solve(double *A, double *b, int *perm, int dim, int dim_
     int intSwap;
     double tmp_var;
 
-    for (i = 0; i < dim; ++i) {
+    for (i = 0; i < dim; ++i)
+    {
         perm[i] = i;
     }
     det = 1.0000000000000000e+00;
-    for (i = 0; i < (dim - 1); i++) {
+    for (i = 0; i < (dim - 1); i++)
+    {
         indexMax = i;
         valueMax = fabs(A[i * dim + i]);
-        for (j = (i + 1); j < dim; j++) {
+        for (j = (i + 1); j < dim; j++)
+        {
             swap = fabs(A[i * dim + j]);
-            if (swap > valueMax) {
+            if (swap > valueMax)
+            {
                 indexMax = j;
                 valueMax = swap;
             }
         }
-        if (indexMax > i) {
-            for (k = 0; k < dim; ++k) {
+        if (indexMax > i)
+        {
+            for (k = 0; k < dim; ++k)
+            {
                 swap = A[k * dim + i];
                 A[k * dim + i] = A[k * dim + indexMax];
                 A[k * dim + indexMax] = swap;
@@ -75,48 +82,61 @@ static double lu_system_solve(double *A, double *b, int *perm, int dim, int dim_
             perm[i] = perm[indexMax];
             perm[indexMax] = intSwap;
         }
-        for (j = i + 1; j < dim; j++) {
+        for (j = i + 1; j < dim; j++)
+        {
             A[i * dim + j] = -A[i * dim + j] / A[i * dim + i];
-            for (k = i + 1; k < dim; k++) {
+            for (k = i + 1; k < dim; k++)
+            {
                 A[k * dim + j] += A[i * dim + j] * A[k * dim + i];
             }
         }
     }
 
-    for (i = 0; i < dim; ++i) {
+    for (i = 0; i < dim; ++i)
+    {
         index1 = perm[i];
-        for (j = 0; j < dim_rhs; ++j) {
+        for (j = 0; j < dim_rhs; ++j)
+        {
             b_perm[j * dim + i] = b[j * dim + index1];
         }
     }
-    for (j = 1; j < dim; ++j) {
-        for (i = 0; i < j; ++i) {
+    for (j = 1; j < dim; ++j)
+    {
+        for (i = 0; i < j; ++i)
+        {
             tmp_var = A[i * dim + j];
-            for (k = 0; k < dim_rhs; ++k) {
+            for (k = 0; k < dim_rhs; ++k)
+            {
                 b_perm[k * dim + j] += tmp_var * b_perm[k * dim + i];
             }
         }
     }
-    for (i = dim - 1; - 1 < i; --i) {
-        for (j = dim - 1; i < j; --j) {
+    for (i = dim - 1; - 1 < i; --i)
+    {
+        for (j = dim - 1; i < j; --j)
+        {
             tmp_var = A[j * dim + i];
-            for (k = 0; k < dim_rhs; ++k) {
+            for (k = 0; k < dim_rhs; ++k)
+            {
                 b_perm[k * dim + i] -= tmp_var * b_perm[k * dim + j];
             }
         }
         tmp_var = 1.0 / A[i * (dim + 1)];
-        for (k = 0; k < dim_rhs; ++k) {
+        for (k = 0; k < dim_rhs; ++k)
+        {
             b_perm[k * dim + i] = tmp_var * b_perm[k * dim + i];
         }
     }
-    for (k = 0; k < dim * dim_rhs; ++k) {
+    for (k = 0; k < dim * dim_rhs; ++k)
+    {
         b[k] = b_perm[k];
     }
 
     return det;
 }
 
-int gauss_nodes_work_calculate_size(int ns) {
+int gauss_nodes_work_calculate_size(int ns)
+{
     int N = ns - 1;
     int N1 = N + 1;
     int N2 = N + 2;
@@ -129,7 +149,8 @@ int gauss_nodes_work_calculate_size(int ns) {
     return size;
 }
 
-void gauss_nodes(int ns, double *nodes, void *work) {
+void gauss_nodes(int ns, double *nodes, void *work)
+{
     //    if ( ns == 1 ) {         // GL2
     //        nodes[0] = 1.0/2.0;
     //    } else if ( ns == 2 ) {  // GL4
@@ -172,20 +193,26 @@ void gauss_nodes(int ns, double *nodes, void *work) {
     double a = 0.0;
     double b = 1.0;  // code for collocation interval [a,b]
 
-    for (int i = 0; i < N1; i++) {
-        if (N > 0) {
+    for (int i = 0; i < N1; i++)
+    {
+        if (N > 0)
+        {
             x_init[i] = -1 + i * 2.0 / N;
-        } else {
+        }
+        else
+        {
             x_init[i] = -1;
         }
         y[i] = cos((2 * i + 1) * M_PI / (2 * N + 2)) + (0.27 / N1) * sin(M_PI * x_init[i] * N / N2);
         y_prev[i] = 2.0;
     }
 
-    while (err > eps) {  // iterate until step sufficiently small
+    while (err > eps)
+    {  // iterate until step sufficiently small
         for (int i = 0; i < N1; i++) lgvm[i] = 1.0;
         for (int i = 0; i < N1; i++) lgvm[N1 + i] = y[i];
-        for (int k = 2; k < N2; k++) {
+        for (int k = 2; k < N2; k++)
+        {
             for (int i = 0; i < N1; i++)
                 lgvm[k * N1 + i] = ((2 * k - 1) * y[i] * lgvm[(k - 1) * N1 + i] -
                                     (k - 1) * lgvm[(k - 2) * N1 + i]) /
@@ -199,7 +226,8 @@ void gauss_nodes(int ns, double *nodes, void *work) {
             y[i] = y_prev[i] - lgvm[N1 * N1 + i] / der_lgvm[i];  // Newton step
 
         err = 0;
-        for (int i = 0; i < N1; i++) {
+        for (int i = 0; i < N1; i++)
+        {
             if (err < fabs(y[i] - y_prev[i])) err = fabs(y[i] - y_prev[i]);
         }
     }
@@ -208,7 +236,8 @@ void gauss_nodes(int ns, double *nodes, void *work) {
     return;
 }
 
-int gauss_simplified_work_calculate_size(int ns) {
+int gauss_simplified_work_calculate_size(int ns)
+{
     int size = 0;
 
     size += 1 * 2 * ns * sizeof(double);   // D
@@ -219,7 +248,8 @@ int gauss_simplified_work_calculate_size(int ns) {
     return size;
 }
 
-void gauss_simplified(int ns, Newton_scheme *scheme, void *work) {
+void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
+{
     char *c_ptr = work;
 
     // D
@@ -250,59 +280,80 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work) {
 
     scheme->single = false;
     scheme->low_tria = 0;
-    for (int i = 0; i < ns; i++) {
+    for (int i = 0; i < ns; i++)
+    {
         scheme->eig[i] = D[i];
     }
-    for (int i = 0; i < ns * ns; i++) {
+    for (int i = 0; i < ns * ns; i++)
+    {
         scheme->transf2[i] = T[i];
     }
     // transf1_T:
-    for (int i = 0; i < ns; i++) {
-        if ((i + 1) < ns) {  // complex conjugate pair of eigenvalues
-            for (int i1 = i; i1 < i + 2; i1++) {
-                for (int i2 = 0; i2 < ns; i2++) {
+    for (int i = 0; i < ns; i++)
+    {
+        if ((i + 1) < ns)
+        {  // complex conjugate pair of eigenvalues
+            for (int i1 = i; i1 < i + 2; i1++)
+            {
+                for (int i2 = 0; i2 < ns; i2++)
+                {
                     scheme->transf1_T[i2 * ns + i1] = 0.0;
-                    for (int i3 = 0; i3 < 2; i3++) {
+                    for (int i3 = 0; i3 < 2; i3++)
+                    {
                         scheme->transf1_T[i2 * ns + i1] +=
                             D[(i1 - i) * ns + (i + i3)] * T[(i + i3) * ns + i2];
                     }
                 }
             }
             i++;
-        } else {  // real eigenvalue
-            for (int i2 = 0; i2 < ns; i2++) {
+        }
+        else
+        {  // real eigenvalue
+            for (int i2 = 0; i2 < ns; i2++)
+            {
                 scheme->transf1_T[i2 * ns + i] = D[i] * T[i * ns + i2];
             }
         }
     }
 
-    for (int i = 0; i < ns; i++) {
+    for (int i = 0; i < ns; i++)
+    {
         T_inv[i * (ns + 1)] = 1.0;
     }
 
     lu_system_solve(T, T_inv, perm, ns, ns, lu_work);
 
     // transf1:
-    for (int i = 0; i < ns; i++) {
-        if ((i + 1) < ns) {  // complex conjugate pair of eigenvalues
-            for (int i1 = i; i1 < i + 2; i1++) {
-                for (int i2 = 0; i2 < ns; i2++) {
+    for (int i = 0; i < ns; i++)
+    {
+        if ((i + 1) < ns)
+        {  // complex conjugate pair of eigenvalues
+            for (int i1 = i; i1 < i + 2; i1++)
+            {
+                for (int i2 = 0; i2 < ns; i2++)
+                {
                     scheme->transf1[i2 * ns + i1] = 0.0;
-                    for (int i3 = 0; i3 < 2; i3++) {
+                    for (int i3 = 0; i3 < 2; i3++)
+                    {
                         scheme->transf1[i2 * ns + i1] += D[i3 * ns + i1] * T_inv[i2 * ns + i + i3];
                     }
                 }
             }
             i++;
-        } else {  // real eigenvalue
-            for (int i2 = 0; i2 < ns; i2++) {
+        }
+        else
+        {  // real eigenvalue
+            for (int i2 = 0; i2 < ns; i2++)
+            {
                 scheme->transf1[i2 * ns + i] = D[i] * T_inv[i2 * ns + i];
             }
         }
     }
     // transf2_T:
-    for (int i = 0; i < ns; i++) {
-        for (int i2 = 0; i2 < ns; i2++) {
+    for (int i = 0; i < ns; i++)
+    {
+        for (int i2 = 0; i2 < ns; i2++)
+        {
             scheme->transf2_T[i2 * ns + i] = T_inv[i * ns + i2];
         }
     }
@@ -310,7 +361,8 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work) {
     return;
 }
 
-int butcher_table_work_calculate_size(int ns) {
+int butcher_table_work_calculate_size(int ns)
+{
     int size = 0;
 
     size += 3 * ns * ns * sizeof(double);  // can_vm, rhs, lu_work
@@ -320,7 +372,8 @@ int butcher_table_work_calculate_size(int ns) {
     return size;
 }
 
-void butcher_table(int ns, double *nodes, double *b, double *A, void *work) {
+void butcher_table(int ns, double *nodes, double *b, double *A, void *work)
+{
     int i, j, k;
 
     char *c_ptr = work;
@@ -340,7 +393,8 @@ void butcher_table(int ns, double *nodes, double *b, double *A, void *work) {
 
     // TODO(all): assert !!!
 
-    for (j = 0; j < ns; j++) {
+    for (j = 0; j < ns; j++)
+    {
         for (i = 0; i < ns; i++) can_vm[i + j * ns] = pow(nodes[i], j);
     }
 
@@ -349,18 +403,23 @@ void butcher_table(int ns, double *nodes, double *b, double *A, void *work) {
 
     lu_system_solve(can_vm, rhs, perm, ns, ns, lu_work);
 
-    for (k = 0; k < ns; k++) {
-        for (i = 0; i < ns; i++) {
+    for (k = 0; k < ns; k++)
+    {
+        for (i = 0; i < ns; i++)
+        {
             A[i * ns + k] = 0.0;
-            for (j = 0; j < ns; j++) {
+            for (j = 0; j < ns; j++)
+            {
                 A[i * ns + k] = A[i * ns + k] + pow(nodes[k], j + 1) / (j + 1) * rhs[i * ns + j];
             }
         }
     }
 
-    for (i = 0; i < ns; i++) {
+    for (i = 0; i < ns; i++)
+    {
         b[i] = 0.0;
-        for (j = 0; j < ns; j++) {
+        for (j = 0; j < ns; j++)
+        {
             b[i] = b[i] + 1.0 / (j + 1) * rhs[i * ns + j];
         }
     }

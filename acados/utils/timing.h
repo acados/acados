@@ -33,7 +33,8 @@ extern "C" {
 #include <Windows.h>
 
 /** A structure for keeping internal timer data. */
-typedef struct acados_timer_ {
+typedef struct acados_timer_
+{
     LARGE_INTEGER tic;
     LARGE_INTEGER toc;
     LARGE_INTEGER freq;
@@ -44,7 +45,8 @@ typedef struct acados_timer_ {
 #include <mach/mach_time.h>
 
 /** A structure for keeping internal timer data. */
-typedef struct acados_timer_ {
+typedef struct acados_timer_
+{
     uint64_t tic;
     uint64_t toc;
     mach_timebase_info_data_t tinfo;
@@ -54,7 +56,8 @@ typedef struct acados_timer_ {
 
 #include <brtenv.h>
 
-typedef struct acados_timer_ {
+typedef struct acados_timer_
+{
     double time;
 } acados_timer;
 
@@ -68,7 +71,8 @@ typedef struct acados_timer_ {
 #include <sys/stat.h>
 #include <sys/time.h>
 
-typedef struct acados_timer_ {
+typedef struct acados_timer_
+{
     struct timeval tic;
     struct timeval toc;
 } acados_timer;
@@ -76,7 +80,8 @@ typedef struct acados_timer_ {
 #else  // ANSI C Mode
 
 /** A structure for keeping internal timer data. */
-typedef struct acados_timer_ {
+typedef struct acados_timer_
+{
     struct timespec tic;
     struct timespec toc;
 } acados_timer;

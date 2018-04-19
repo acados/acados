@@ -31,7 +31,8 @@ extern "C" {
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 // TODO(dimitris): probably does not belong here
-typedef struct {
+typedef struct
+{
     int (*fun)(void *);
     int (*calculate_args_size)(void *);
     void *(*assign_args)(void *);

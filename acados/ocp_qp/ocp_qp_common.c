@@ -40,7 +40,8 @@
  * config
  ************************************************/
 
-int ocp_qp_solver_config_calculate_size() {
+int ocp_qp_solver_config_calculate_size()
+{
     int size = 0;
 
     size += sizeof(qp_solver_config);
@@ -48,7 +49,8 @@ int ocp_qp_solver_config_calculate_size() {
     return size;
 }
 
-qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory) {
+qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory)
+{
     char *c_ptr = raw_memory;
 
     qp_solver_config *config = (qp_solver_config *)c_ptr;
@@ -57,7 +59,8 @@ qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory) {
     return config;
 }
 
-int ocp_qp_xcond_solver_config_calculate_size() {
+int ocp_qp_xcond_solver_config_calculate_size()
+{
     int size = 0;
 
     size += sizeof(ocp_qp_xcond_solver_config);
@@ -67,7 +70,8 @@ int ocp_qp_xcond_solver_config_calculate_size() {
     return size;
 }
 
-ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory) {
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory)
+{
     char *c_ptr = raw_memory;
 
     ocp_qp_xcond_solver_config *config = (ocp_qp_xcond_solver_config *)c_ptr;
@@ -79,7 +83,8 @@ ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory) 
     return config;
 }
 
-int ocp_qp_condensing_config_calculate_size() {
+int ocp_qp_condensing_config_calculate_size()
+{
     int size = 0;
 
     size += sizeof(ocp_qp_condensing_config);
@@ -87,7 +92,8 @@ int ocp_qp_condensing_config_calculate_size() {
     return size;
 }
 
-ocp_qp_condensing_config *ocp_qp_condensing_config_assign(void *raw_memory) {
+ocp_qp_condensing_config *ocp_qp_condensing_config_assign(void *raw_memory)
+{
     char *c_ptr = raw_memory;
 
     ocp_qp_condensing_config *config = (ocp_qp_condensing_config *)c_ptr;
@@ -100,7 +106,8 @@ ocp_qp_condensing_config *ocp_qp_condensing_config_assign(void *raw_memory) {
  * dims
  ************************************************/
 
-int ocp_qp_dims_calculate_size(int N) {
+int ocp_qp_dims_calculate_size(int N)
+{
     int size = sizeof(ocp_qp_dims);
 
     size += d_memsize_ocp_qp_dim(N);
@@ -108,7 +115,8 @@ int ocp_qp_dims_calculate_size(int N) {
     return size;
 }
 
-ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory) {
+ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
+{
     char *c_ptr = (char *)raw_memory;
 
     ocp_qp_dims *dims = (ocp_qp_dims *)c_ptr;
@@ -128,14 +136,16 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory) {
  * in
  ************************************************/
 
-int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims) {
+int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims)
+{
     int size = sizeof(ocp_qp_in);
     size += d_memsize_ocp_qp(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
     return size;
 }
 
-ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory) {
+ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
+{
     char *c_ptr = (char *)raw_memory;
 
     ocp_qp_in *qp_in = (ocp_qp_in *)c_ptr;
@@ -149,7 +159,8 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory) {
 
     dims_copy->N = dims->N;
 
-    for (int ii = 0; ii < dims->N + 1; ii++) {
+    for (int ii = 0; ii < dims->N + 1; ii++)
+    {
         dims_copy->nx[ii] = dims->nx[ii];
         dims_copy->nu[ii] = dims->nu[ii];
         dims_copy->nb[ii] = dims->nb[ii];
@@ -170,7 +181,8 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory) {
  * out
  ************************************************/
 
-int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims) {
+int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims)
+{
     int size = sizeof(ocp_qp_out);
     size += d_memsize_ocp_qp_sol(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
@@ -178,7 +190,8 @@ int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims) {
     return size;
 }
 
-ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory) {
+ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
+{
     char *c_ptr = (char *)raw_memory;
 
     ocp_qp_out *qp_out = (ocp_qp_out *)c_ptr;
@@ -195,7 +208,8 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 
     dims_copy->N = dims->N;
 
-    for (int ii = 0; ii < dims->N + 1; ii++) {
+    for (int ii = 0; ii < dims->N + 1; ii++)
+    {
         dims_copy->nx[ii] = dims->nx[ii];
         dims_copy->nu[ii] = dims->nu[ii];
         dims_copy->nb[ii] = dims->nb[ii];
@@ -218,13 +232,15 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 
 // TODO(all): add config !!!
 
-int ocp_qp_res_calculate_size(ocp_qp_dims *dims) {
+int ocp_qp_res_calculate_size(ocp_qp_dims *dims)
+{
     int size = sizeof(ocp_qp_res);
     size += d_memsize_ocp_qp_res(dims);
     return size;
 }
 
-ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory) {
+ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory)
+{
     char *c_ptr = (char *)raw_memory;
 
     ocp_qp_res *qp_res = (ocp_qp_res *)c_ptr;
@@ -238,13 +254,15 @@ ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory) {
     return qp_res;
 }
 
-int ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims) {
+int ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims)
+{
     int size = sizeof(ocp_qp_res_ws);
     size += d_memsize_ocp_qp_res_workspace(dims);
     return size;
 }
 
-ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory) {
+ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory)
+{
     char *c_ptr = (char *)raw_memory;
 
     ocp_qp_res_ws *qp_res_ws = (ocp_qp_res_ws *)c_ptr;
@@ -259,7 +277,8 @@ ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory) 
 }
 
 void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res,
-                        ocp_qp_res_ws *res_ws) {
+                        ocp_qp_res_ws *res_ws)
+{
     // loop index
     int ii;
 
@@ -281,7 +300,8 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 
     int nx_i, nu_i, nb_i, ng_i;
 
-    for (ii = 0; ii <= N; ii++) {
+    for (ii = 0; ii <= N; ii++)
+    {
         nx_i = nx[ii];
         nu_i = nu[ii];
         nb_i = nb[ii];
@@ -304,7 +324,8 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
     return;
 }
 
-void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4]) {
+void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4])
+{
     // loop index
     int ii;
 
@@ -321,25 +342,29 @@ void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4]) {
     double tmp;
 
     res[0] = 0.0;
-    for (ii = 0; ii <= N; ii++) {
+    for (ii = 0; ii <= N; ii++)
+    {
         blasfeo_dvecnrm_inf(nx[ii] + nu[ii] + 2 * ns[ii], &qp_res->res_g[ii], 0, &tmp);
         res[0] = tmp > res[0] ? tmp : res[0];
     }
 
     res[1] = 0.0;
-    for (ii = 0; ii < N; ii++) {
+    for (ii = 0; ii < N; ii++)
+    {
         blasfeo_dvecnrm_inf(nx[ii + 1], &qp_res->res_b[ii], 0, &tmp);
         res[1] = tmp > res[1] ? tmp : res[1];
     }
 
     res[2] = 0.0;
-    for (ii = 0; ii <= N; ii++) {
+    for (ii = 0; ii <= N; ii++)
+    {
         blasfeo_dvecnrm_inf(2 * nb[ii] + 2 * ng[ii] + 2 * ns[ii], &qp_res->res_d[ii], 0, &tmp);
         res[2] = tmp > res[2] ? tmp : res[2];
     }
 
     res[3] = 0.0;
-    for (ii = 0; ii <= N; ii++) {
+    for (ii = 0; ii <= N; ii++)
+    {
         blasfeo_dvecnrm_inf(2 * nb[ii] + 2 * ng[ii] + 2 * ns[ii], &qp_res->res_m[ii], 0, &tmp);
         res[3] = tmp > res[3] ? tmp : res[3];
     }
@@ -354,7 +379,8 @@ void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4]) {
     int net = 0;
     int nct = 0;
 
-    for (ii = 0; ii < N; ii++) {
+    for (ii = 0; ii < N; ii++)
+    {
         nvt += nx[ii] + nu[ii] + 2 * ns[ii];
         net += nx[ii + 1];
         nct += 2 * nb[ii] + 2 * ng[ii] + 2 * ns[ii];

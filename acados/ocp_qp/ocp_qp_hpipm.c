@@ -34,7 +34,8 @@
  * opts
  ************************************************/
 
-int ocp_qp_hpipm_opts_calculate_size(void *config_, void *dims_) {
+int ocp_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
+{
     ocp_qp_dims *dims = dims_;
 
     int size = 0;
@@ -46,7 +47,8 @@ int ocp_qp_hpipm_opts_calculate_size(void *config_, void *dims_) {
     return size;
 }
 
-void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory) {
+void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
+{
     ocp_qp_dims *dims = dims_;
     ocp_qp_hpipm_opts *opts;
 
@@ -69,7 +71,8 @@ void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory) {
     return (void *)opts;
 }
 
-void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_) {
+void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
+{
     // ocp_qp_dims *dims = dims_;
     ocp_qp_hpipm_opts *opts = opts_;
 
@@ -87,7 +90,8 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts
     return;
 }
 
-void ocp_qp_hpipm_opts_update(void *config_, void *dims_, void *opts_) {
+void ocp_qp_hpipm_opts_update(void *config_, void *dims_, void *opts_)
+{
     //    ocp_qp_hpipm_opts *opts = (ocp_qp_hpipm_opts *)opts_;
 
     return;
@@ -97,7 +101,8 @@ void ocp_qp_hpipm_opts_update(void *config_, void *dims_, void *opts_) {
  * memory
  ************************************************/
 
-int ocp_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_) {
+int ocp_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_)
+{
     ocp_qp_dims *dims = dims_;
     ocp_qp_hpipm_opts *opts = opts_;
 
@@ -112,7 +117,8 @@ int ocp_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_) 
     return size;
 }
 
-void *ocp_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory) {
+void *ocp_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
+{
     ocp_qp_dims *dims = dims_;
     ocp_qp_hpipm_opts *opts = opts_;
     ocp_qp_hpipm_memory *mem;
@@ -150,7 +156,8 @@ int ocp_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts
  * functions
  ************************************************/
 
-int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_) {
+int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
+{
     ocp_qp_in *qp_in = qp_in_;
     ocp_qp_out *qp_out = qp_out_;
 
@@ -179,7 +186,8 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     return acados_status;
 }
 
-void ocp_qp_hpipm_config_initialize_default(void *config_) {
+void ocp_qp_hpipm_config_initialize_default(void *config_)
+{
     qp_solver_config *config = config_;
 
     config->opts_calculate_size = &ocp_qp_hpipm_opts_calculate_size;

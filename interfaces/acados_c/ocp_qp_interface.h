@@ -36,11 +36,13 @@ typedef enum {
     FULL_CONDENSING_QORE
 } ocp_qp_solver_t;
 
-typedef struct {
+typedef struct
+{
     ocp_qp_solver_t qp_solver;
 } ocp_qp_solver_plan;
 
-typedef struct {
+typedef struct
+{
     ocp_qp_xcond_solver_config *config;
     void *dims;
     void *opts;

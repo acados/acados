@@ -38,7 +38,8 @@ extern "C" {
  * options
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int maxIter;
     double min_res_g;
     double min_res_b;
@@ -63,7 +64,8 @@ void ocp_nlp_sqp_opts_update(void *config, ocp_nlp_dims *dims, void *opts);
  * memory
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     //    ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
@@ -90,7 +92,8 @@ void *ocp_nlp_sqp_memory_assign(void *config, ocp_nlp_dims *dims, void *opts_, v
  * workspace
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     // QP solver
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;

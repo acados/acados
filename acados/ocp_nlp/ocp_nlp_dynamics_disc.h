@@ -36,7 +36,8 @@ extern "C" {
  * dims
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int nx;   // number of states at the current stage
     int nu;   // number of inputs at the current stage
     int nx1;  // number of states at the next stage
@@ -55,7 +56,8 @@ void ocp_nlp_dynamics_disc_dims_initialize(void *config, void *dims, int nx, int
  * options
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int dummy;
 } ocp_nlp_dynamics_disc_opts;
 
@@ -72,7 +74,8 @@ void ocp_nlp_dynamics_disc_opts_update(void *config, void *dims, void *opts);
  * memory
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
     struct blasfeo_dvec *ux;    // pointer to ux in nlp_out at current stage
@@ -102,7 +105,8 @@ void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *
  * workspace
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     double *discrete_model_in;
     double *discrete_model_out;
 } ocp_nlp_dynamics_disc_workspace;
@@ -113,7 +117,8 @@ int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, void *dims, voi
  * model
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     external_function_generic *discrete_model;
 } ocp_nlp_dynamics_disc_model;
 

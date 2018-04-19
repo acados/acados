@@ -26,8 +26,8 @@ extern "C" {
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 
-
-typedef struct {
+typedef struct
+{
     int N;
     int *nx;
     int *nu;
@@ -50,16 +50,16 @@ typedef struct {
     double **uc;
 } colmaj_ocp_qp_in;
 
-
-typedef struct {
+typedef struct
+{
     double **x;
     double **u;
     double **pi;
     double **lam;
 } colmaj_ocp_qp_out;
 
-
-typedef struct {
+typedef struct
+{
     double **res_r;
     double **res_q;
     double **res_ls;
@@ -79,7 +79,6 @@ typedef struct {
     double **res_m_us;
     double res_nrm_inf[4];
 } colmaj_ocp_qp_res;
-
 
 //
 int colmaj_ocp_qp_in_calculate_size(ocp_qp_dims *dims);

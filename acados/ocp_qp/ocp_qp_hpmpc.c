@@ -41,14 +41,16 @@
  * opts
  ************************************************/
 
-int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims) {
+int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims)
+{
     int size = sizeof(ocp_qp_hpmpc_opts);
     size = (size + 63) / 64 * 64;  // make multiple of typical cache line size
     size += 1 * 64;                // align once to typical cache line size
     return size;
 }
 
-void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory) {
+void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
+{
     ocp_qp_hpmpc_opts *args;
     char *c_ptr = (char *)raw_memory;
     args = (ocp_qp_hpmpc_opts *)c_ptr;
@@ -67,7 +69,8 @@ void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memor
     return (void *)args;
 }
 
-void ocp_qp_hpmpc_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_) {
+void ocp_qp_hpmpc_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_)
+{
     ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *)opts_;
     args->tol = 1e-8;
     args->max_iter = 100;
@@ -78,7 +81,8 @@ void ocp_qp_hpmpc_opts_initialize_default(void *config_, ocp_qp_dims *dims, void
     return;
 }
 
-void ocp_qp_hpmpc_opts_update(void *config_, ocp_qp_dims *dims, void *opts_) {
+void ocp_qp_hpmpc_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
+{
     //    ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *)opts_;
 
     return;
@@ -88,7 +92,8 @@ void ocp_qp_hpmpc_opts_update(void *config_, ocp_qp_dims *dims, void *opts_) {
  * memory
  ************************************************/
 
-int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_) {
+int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
+{
     ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *)opts_;
 
     int N = dims->N;
@@ -110,8 +115,10 @@ int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *o
     ws_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes_noidxb(N, nx, nu, nb, dims->nbx,
                                                                    dims->nbu, ng, N2);
 
-    if (M < N) {
-        for (ii = 0; ii <= N; ii++) {
+    if (M < N)
+    {
+        for (ii = 0; ii <= N; ii++)
+        {
             ws_size += sizeof(double) * (nu[ii] + nx[ii] + 1) * (nu[ii] + nx[ii]);  // L
             ws_size += sizeof(struct blasfeo_dmat);
             ws_size += sizeof(double) * (nu[ii] + nx[ii]);  // dux
@@ -137,7 +144,8 @@ int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *o
     return ws_size;
 }
 
-void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory) {
+void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory)
+{
     ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *)opts_;
 
     // char pointer
@@ -165,7 +173,8 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
 
     int ii;
 
-    if (M < N) {
+    if (M < N)
+    {
         assign_and_advance_blasfeo_dmat_structs(N + 1, &mem->hsL, &c_ptr);
 
         assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->hsQx, &c_ptr);
@@ -185,7 +194,8 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
 
         align_char_to(64, &c_ptr);
 
-        for (ii = 0; ii <= N; ii++) {
+        for (ii = 0; ii <= N; ii++)
+        {
             // partial tightening-specific
             blasfeo_create_dmat(nu[ii] + nx[ii] + 1, nu[ii] + nx[ii], &mem->hsL[ii], c_ptr);
             c_ptr += (&mem->hsL[ii])->memsize;
@@ -196,7 +206,8 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
         blasfeo_create_dmat(nx[M] + 1, nx[M], &mem->sPpM, c_ptr);
         c_ptr += (&mem->sPpM)->memsize;
 
-        for (ii = 0; ii <= N; ii++) {
+        for (ii = 0; ii <= N; ii++)
+        {
             blasfeo_create_dvec(nx[ii] + nu[ii], &mem->ux0[ii], c_ptr);
             c_ptr += (&mem->ux0[ii])->memsize;
             blasfeo_create_dvec(2 * (nb[ii] + ng[ii]), &mem->lam0[ii], c_ptr);
@@ -252,7 +263,8 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
  * workspace
  ************************************************/
 
-int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_) {
+int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
+{
     return 0;
 }
 
@@ -261,7 +273,8 @@ int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void
  ************************************************/
 
 int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_,
-                 void *work_) {
+                 void *work_)
+{
     ocp_qp_hpmpc_opts *hpmpc_args = (ocp_qp_hpmpc_opts *)opts_;
     ocp_qp_hpmpc_memory *mem = (ocp_qp_hpmpc_memory *)mem_;
 
@@ -272,8 +285,10 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
     int *ng = qp_in->dim->ng;
     int *ns = qp_in->dim->ns;
 
-    for (int ii = 0; ii <= N; ii++) {
-        if (ns[ii] > 0) {
+    for (int ii = 0; ii <= N; ii++)
+    {
+        if (ns[ii] > 0)
+        {
             printf("\nHPMPC interface can not handle ns>0 yet: what about implementing it? :)\n");
             return ACADOS_FAILURE;
         }
@@ -304,7 +319,8 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
     struct blasfeo_dmat *hsmatdummy = NULL;
     struct blasfeo_dvec *hsvecdummy = NULL;
 
-    for (int ii = 0; ii <= N; ++ii) {
+    for (int ii = 0; ii <= N; ++ii)
+    {
         // temporarily invert sign of upper bounds
         blasfeo_dvecsc(nb[ii], -1.0, &qp_in->d[ii], nb[ii] + ng[ii]);
         blasfeo_dvecsc(ng[ii], -1.0, &qp_in->d[ii], 2 * nb[ii] + ng[ii]);
@@ -320,7 +336,8 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
     info->interface_time = acados_toc(&interface_timer);
     acados_tic(&qp_timer);
 
-    if (M < N) {
+    if (M < N)
+    {
         for (int ii = 0; ii <= N; ii++)
             blasfeo_create_dvec(nu[ii] + nx[ii], &mem->hsrq[ii], qp_in->rqz[ii].pa);
 
@@ -376,7 +393,8 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
         // compute alpha, dlam and dt real_t alpha = 1.0;
         // compute primal step hsdux for stages M to N
         real_t *temp_p1, *temp_p2;
-        for (int i = M; i <= N; i++) {
+        for (int i = M; i <= N; i++)
+        {
             // hsdux is initialized to be equal to hpmpc_args.ux0
             temp_p1 = mem->hsdux[i].pa;
             temp_p2 = qp_out->ux[i].pa;  // hsux[i].pa;
@@ -395,7 +413,9 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
                                      alpha, &qp_out->ux[M], &mem->hsdux[M], &mem->t0[M],
                                      &mem->hsdt[M], &qp_out->lam[M], &mem->hsdlam[M], &mem->hpi[M],
                                      &mem->hsdpi[M]);
-    } else {
+    }
+    else
+    {
         // IPM at the beginning
         hpmpc_status = d_ip2_res_mpc_hard_libstr(
             &kk, k_max, mu0, mu_tol, hpmpc_args->alpha_min, warm_start, mem->stats, N, nx, nu, nb,
@@ -413,7 +433,8 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
     for (ii = 0; ii < N; ii++) blasfeo_dveccp(nx[ii + 1], &mem->hpi[ii + 1], 0, &qp_out->pi[ii], 0);
 
     // restore sign of upper bounds
-    for (int jj = 0; jj <= N; jj++) {
+    for (int jj = 0; jj <= N; jj++)
+    {
         blasfeo_dvecsc(nb[jj], -1.0, &qp_in->d[jj], nb[jj] + ng[jj]);
         blasfeo_dvecsc(ng[jj], -1.0, &qp_in->d[jj], 2 * nb[jj] + ng[jj]);
     }
@@ -430,7 +451,8 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
     return acados_status;
 }
 
-void ocp_qp_hpmpc_config_initialize_default(void *config_) {
+void ocp_qp_hpmpc_config_initialize_default(void *config_)
+{
     qp_solver_config *config = config_;
 
     config->opts_calculate_size = (int (*)(void *, void *)) & ocp_qp_hpmpc_opts_calculate_size;

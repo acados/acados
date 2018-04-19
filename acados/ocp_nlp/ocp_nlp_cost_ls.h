@@ -36,7 +36,8 @@ extern "C" {
  * dims
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int nx;  // number of states
     int nu;  // number of inputs
     int ny;  // number of outputs
@@ -54,7 +55,8 @@ void ocp_nlp_cost_ls_dims_initialize(void *config, void *dims, int nx, int nu, i
  * model
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dmat Cyt;
     struct blasfeo_dmat W;
     struct blasfeo_dvec y_ref;
@@ -71,7 +73,8 @@ void *ocp_nlp_cost_ls_model_assign(void *config, void *dims, void *raw_memory);
  * options
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int dummy;
 } ocp_nlp_cost_ls_opts;
 
@@ -88,7 +91,8 @@ void ocp_nlp_cost_ls_opts_update(void *config, void *dims, void *opts);
  * memory
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dmat hess;    // hessian of cost function
     struct blasfeo_dmat W_chol;  // cholesky factor of weight matrix
     struct blasfeo_dvec res;     // ls residual r(x)
@@ -115,7 +119,8 @@ void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
  * workspace
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dmat tmp_nv_ny;
     struct blasfeo_dvec tmp_ny;
 } ocp_nlp_cost_ls_workspace;

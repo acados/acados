@@ -27,7 +27,8 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
+typedef struct
+{
     /* external functions */
     // explicit ode
     external_function_generic *expl_ode_fun;
@@ -42,12 +43,14 @@ typedef struct {
 
 } erk_model;
 
-typedef struct {
+typedef struct
+{
     // no memory
     void *dummy;
 } sim_erk_memory;
 
-typedef struct {
+typedef struct
+{
     double *rhs_forw_in;  // x + S + p
 
     double *K_traj;         // (stages *nX) or (steps*stages*nX) for adj

@@ -33,7 +33,8 @@ extern "C" {
  * dims
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int nx;
     int nu;
     int nb;  // nbx + nbu
@@ -57,7 +58,8 @@ void ocp_nlp_constraints_dims_initialize(void *config, void *dims, int nx, int n
  * config
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
     void (*dims_initialize)(void *config, void *dims, int nx, int nu, int nbx, int nbu, int ng,
@@ -96,7 +98,8 @@ ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory);
 
 /* model */
 
-typedef struct {
+typedef struct
+{
     //  ocp_nlp_constraints_dims *dims;
     int *idxb;
     int *idxs;
@@ -113,7 +116,8 @@ void *ocp_nlp_constraints_assign(void *config, void *dims, void *raw_memory);
 
 /* options */
 
-typedef struct {
+typedef struct
+{
     int dummy;  // so cmake is happy
 } ocp_nlp_constraints_opts;
 
@@ -128,7 +132,8 @@ void ocp_nlp_constraints_opts_update(void *config, void *dims, void *opts);
 
 /* memory */
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
@@ -159,7 +164,8 @@ void ocp_nlp_constraints_memory_set_idxs_ptr(int *idxs, void *memory_);
 
 /* workspace */
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dmat jacobian_quadratic;
 } ocp_nlp_constraints_workspace;

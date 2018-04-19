@@ -34,14 +34,16 @@
  * opts
  ************************************************/
 
-int dense_qp_qore_opts_calculate_size(void *config_, dense_qp_dims *dims) {
+int dense_qp_qore_opts_calculate_size(void *config_, dense_qp_dims *dims)
+{
     int size = 0;
     size += sizeof(dense_qp_qore_opts);
 
     return size;
 }
 
-void *dense_qp_qore_opts_assign(void *config_, dense_qp_dims *dims, void *raw_memory) {
+void *dense_qp_qore_opts_assign(void *config_, dense_qp_dims *dims, void *raw_memory)
+{
     dense_qp_qore_opts *opts;
 
     char *c_ptr = (char *)raw_memory;
@@ -54,7 +56,8 @@ void *dense_qp_qore_opts_assign(void *config_, dense_qp_dims *dims, void *raw_me
     return (void *)opts;
 }
 
-void dense_qp_qore_opts_initialize_default(void *config_, dense_qp_dims *dims, void *opts_) {
+void dense_qp_qore_opts_initialize_default(void *config_, dense_qp_dims *dims, void *opts_)
+{
     dense_qp_qore_opts *opts = (dense_qp_qore_opts *)opts_;
 
     opts->print_freq = -1;
@@ -67,7 +70,8 @@ void dense_qp_qore_opts_initialize_default(void *config_, dense_qp_dims *dims, v
     return;
 }
 
-void dense_qp_qore_opts_update(void *config_, dense_qp_dims *dims, void *opts_) {
+void dense_qp_qore_opts_update(void *config_, dense_qp_dims *dims, void *opts_)
+{
     //    dense_qp_qore_opts *opts = (dense_qp_qore_opts *)opts_;
 
     return;
@@ -77,7 +81,8 @@ void dense_qp_qore_opts_update(void *config_, dense_qp_dims *dims, void *opts_) 
  * memory
  ************************************************/
 
-int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_) {
+int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
+{
     dense_qp_qore_opts *opts = (dense_qp_qore_opts *)opts_;
 
     int nvd = dims->nv;
@@ -107,8 +112,8 @@ int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void
     return size;
 }
 
-void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts_,
-                                  void *raw_memory) {
+void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts_, void *raw_memory)
+{
     dense_qp_qore_memory *mem;
     dense_qp_qore_opts *opts = (dense_qp_qore_opts *)opts_;
 
@@ -161,7 +166,8 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
  * workspace
  ************************************************/
 
-int dense_qp_qore_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *opts_) {
+int dense_qp_qore_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
+{
     return 0;
 }
 
@@ -170,7 +176,8 @@ int dense_qp_qore_workspace_calculate_size(void *config_, dense_qp_dims *dims, v
  ************************************************/
 
 int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
-                  void *memory_, void *work_) {
+                  void *memory_, void *work_)
+{
     dense_qp_info *info = (dense_qp_info *)qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
 
@@ -204,7 +211,8 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     int nbd = qp_in->dim->nb;
     int nsd = qp_in->dim->ns;
 
-    if (nsd > 0) {
+    if (nsd > 0)
+    {
         printf("\nQORE interface can not handle ns>0 yet: what about implementing it? :)\n");
         return ACADOS_FAILURE;
     }
@@ -219,11 +227,13 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
                              NULL, NULL, NULL, NULL);
 
     // reorder bounds
-    for (int ii = 0; ii < nvd; ii++) {
+    for (int ii = 0; ii < nvd; ii++)
+    {
         d_lb[ii] = -INFINITY;
         d_ub[ii] = +INFINITY;
     }
-    for (int ii = 0; ii < nbd; ii++) {
+    for (int ii = 0; ii < nbd; ii++)
+    {
         d_lb[idxb[ii]] = d_lb0[ii];
         d_ub[idxb[ii]] = d_ub0[ii];
     }
@@ -236,8 +246,10 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
 
     /* transpose C as expected by QORE */
     int i, j;
-    for (j = 0; j < nvd; j++) {
-        for (i = 0; i < ngd; i++) {
+    for (j = 0; j < nvd; j++)
+    {
+        for (i = 0; i < ngd; i++)
+        {
             Ct[j + i * nvd] = C[i + j * ngd];
         }
     }
@@ -246,10 +258,13 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     // solve dense qp
     acados_tic(&qp_timer);
 
-    if (opts->warm_start) {
+    if (opts->warm_start)
+    {
         QPDenseSetInt(QP, "warmstrategy", opts->warm_strategy);
         QPDenseUpdateMatrices(QP, nvd, ngd, Ct, H);
-    } else if (!opts->hot_start) {
+    }
+    else if (!opts->hot_start)
+    {
         QPDenseSetData(QP, nvd, ngd, Ct, H);
     }
 
@@ -273,13 +288,15 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     // copy prim_sol and dual_sol to qpd_sol
     blasfeo_pack_dvec(nvd, prim_sol, qp_out->v, 0);
     for (int ii = 0; ii < 2 * nbd + 2 * ngd; ii++) qp_out->lam->pa[ii] = 0.0;
-    for (int ii = 0; ii < nbd; ii++) {
+    for (int ii = 0; ii < nbd; ii++)
+    {
         if (dual_sol[idxb[ii]] >= 0.0)
             qp_out->lam->pa[ii] = dual_sol[idxb[ii]];
         else
             qp_out->lam->pa[nbd + ngd + ii] = -dual_sol[idxb[ii]];
     }
-    for (int ii = 0; ii < ngd; ii++) {
+    for (int ii = 0; ii < ngd; ii++)
+    {
         if (dual_sol[nvd + ii] >= 0.0)
             qp_out->lam->pa[nbd + ii] = dual_sol[nvd + ii];
         else
@@ -296,7 +313,8 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     return acados_status;
 }
 
-void dense_qp_qore_config_initialize_default(void *config_) {
+void dense_qp_qore_config_initialize_default(void *config_)
+{
     qp_solver_config *config = config_;
 
     config->opts_calculate_size = (int (*)(void *, void *)) & dense_qp_qore_opts_calculate_size;

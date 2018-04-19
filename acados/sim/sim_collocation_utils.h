@@ -26,9 +26,15 @@ extern "C" {
 
 #include "acados/utils/types.h"
 
-enum Newton_type_collocation { exact = 0, simplified_in, simplified_inis };
+enum Newton_type_collocation
+{
+    exact = 0,
+    simplified_in,
+    simplified_inis
+};
 
-typedef struct {
+typedef struct
+{
     enum Newton_type_collocation type;
     double *eig;
     double *low_tria;

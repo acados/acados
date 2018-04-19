@@ -44,14 +44,17 @@
 
 int get_option_int(const void *args_, const char *option) { return 0; }
 
-bool set_option_int(void *args_, const char *option, const int value) {
+bool set_option_int(void *args_, const char *option, const int value)
+{
     char *option_cpy, *token;
     option_cpy = (char *)malloc(sizeof(char) * MAX_STR_LEN);
     strcpy(option_cpy, option);
     token = strsep_acados(&option_cpy, ".");
-    while (token) {
+    while (token)
+    {
         // Linear search since the number of options is small.
-        if (!strcmp(token, "sparse_hpipm")) {
+        if (!strcmp(token, "sparse_hpipm"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args =
                 (ocp_qp_partial_condensing_solver_opts *)args_;
@@ -66,7 +69,9 @@ bool set_option_int(void *args_, const char *option, const int value) {
                 pcond_opts->N2 = value;
             else
                 return false;
-        } else if (!strcmp(token, "condensing_hpipm")) {
+        }
+        else if (!strcmp(token, "condensing_hpipm"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args =
                 (ocp_qp_partial_condensing_solver_opts *)args_;
@@ -78,7 +83,9 @@ bool set_option_int(void *args_, const char *option, const int value) {
             else
                 return false;
 #ifdef ACADOS_WITH_HPMPC
-        } else if (!strcmp(token, "hpmpc")) {
+        }
+        else if (!strcmp(token, "hpmpc"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args =
                 (ocp_qp_partial_condensing_solver_opts *)args_;
@@ -102,7 +109,9 @@ bool set_option_int(void *args_, const char *option, const int value) {
                 return false;
 #endif
 #ifdef ACADOS_WITH_OOQP
-        } else if (!strcmp(token, "ooqp")) {
+        }
+        else if (!strcmp(token, "ooqp"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args =
                 (ocp_qp_partial_condensing_solver_opts *)args_;
@@ -113,35 +122,53 @@ bool set_option_int(void *args_, const char *option, const int value) {
                 return false;
 #endif
 #ifdef ACADOS_WITH_QPDUNES
-        } else if (!strcmp(token, "qpdunes")) {
+        }
+        else if (!strcmp(token, "qpdunes"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args =
                 (ocp_qp_partial_condensing_solver_opts *)args_;
             ocp_qp_qpdunes_opts *args = (ocp_qp_qpdunes_opts *)sparse_args->qp_solver_opts;
             ocp_qp_partial_condensing_opts *pcond_opts =
                 (ocp_qp_partial_condensing_opts *)sparse_args->pcond_opts;
-            if (!strcmp(token, "print_level")) {
+            if (!strcmp(token, "print_level"))
+            {
                 args->options.printLevel = value;
-            } else if (!strcmp(token, "warm_start")) {
+            }
+            else if (!strcmp(token, "warm_start"))
+            {
                 args->warmstart = value;
-            } else if (!strcmp(token, "max_iter")) {
+            }
+            else if (!strcmp(token, "max_iter"))
+            {
                 args->options.maxIter = value;
-            } else if (!strcmp(token, "N2")) {
+            }
+            else if (!strcmp(token, "N2"))
+            {
                 pcond_opts->N2 = value;
-            } else if (!strcmp(token, "clipping")) {
-                if (value == 1) {
+            }
+            else if (!strcmp(token, "clipping"))
+            {
+                if (value == 1)
+                {
                     args->stageQpSolver = QPDUNES_WITH_CLIPPING;
                     args->options.lsType = QPDUNES_LS_ACCELERATED_GRADIENT_BISECTION_LS;
-                } else {
+                }
+                else
+                {
                     args->stageQpSolver = QPDUNES_WITH_QPOASES;
                     args->options.lsType = QPDUNES_LS_HOMOTOPY_GRID_SEARCH;
                 }
-            } else {
+            }
+            else
+            {
                 return false;
             }
 #endif
 #ifdef ACADOS_WITH_QORE
-        } else if (!strcmp(token, "qore")) {
+        }
+        else if (!strcmp(token, "qore"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_full_condensing_solver_opts *cond_opts =
                 (ocp_qp_full_condensing_solver_opts *)args_;
@@ -162,7 +189,9 @@ bool set_option_int(void *args_, const char *option, const int value) {
                 return false;
 #endif
 #ifdef ACADOS_WITH_QPOASES
-        } else if (!strcmp(token, "qpoases")) {
+        }
+        else if (!strcmp(token, "qpoases"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_full_condensing_solver_opts *cond_opts =
                 (ocp_qp_full_condensing_solver_opts *)args_;
@@ -174,7 +203,9 @@ bool set_option_int(void *args_, const char *option, const int value) {
             else
                 return false;
 #endif
-        } else {
+        }
+        else
+        {
             return false;
         }
         token = strsep_acados(&option_cpy, ".");
@@ -184,7 +215,8 @@ bool set_option_int(void *args_, const char *option, const int value) {
 
 const int *get_option_int_array(const void *args_, const char *option) { return NULL; }
 
-bool set_option_int_array(void *args_, const char *option, const int *value) {
+bool set_option_int_array(void *args_, const char *option, const int *value)
+{
     bool return_value = true;
 
     return return_value;
@@ -192,13 +224,16 @@ bool set_option_int_array(void *args_, const char *option, const int *value) {
 
 double get_option_double(const void *args_, const char *option) { return 0; }
 
-bool set_option_double(void *args_, const char *option, const double value) {
+bool set_option_double(void *args_, const char *option, const double value)
+{
     char *option_cpy, *token;
     option_cpy = (char *)malloc(sizeof(char) * MAX_STR_LEN);
     strcpy(option_cpy, option);
-    while ((token = strsep_acados(&option_cpy, "."))) {
+    while ((token = strsep_acados(&option_cpy, ".")))
+    {
         // Linear search since the number of options is small.
-        if (!strcmp(token, "sparse_hpipm")) {
+        if (!strcmp(token, "sparse_hpipm"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args =
                 (ocp_qp_partial_condensing_solver_opts *)args_;
@@ -217,7 +252,9 @@ bool set_option_double(void *args_, const char *option, const double value) {
                 args->hpipm_opts->mu0 = value;
             else
                 return false;
-        } else if (!strcmp(token, "condensing_hpipm")) {
+        }
+        else if (!strcmp(token, "condensing_hpipm"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args =
                 (ocp_qp_partial_condensing_solver_opts *)args_;
@@ -237,7 +274,9 @@ bool set_option_double(void *args_, const char *option, const double value) {
             else
                 return false;
 #ifdef ACADOS_WITH_HPMPC
-        } else if (!strcmp(token, "hpmpc")) {
+        }
+        else if (!strcmp(token, "hpmpc"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args =
                 (ocp_qp_partial_condensing_solver_opts *)args_;
@@ -253,7 +292,9 @@ bool set_option_double(void *args_, const char *option, const double value) {
                 return false;
 #endif
 #ifdef ACADOS_WITH_QPDUNES
-        } else if (!strcmp(token, "qpdunes")) {
+        }
+        else if (!strcmp(token, "qpdunes"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args =
                 (ocp_qp_partial_condensing_solver_opts *)args_;
@@ -264,7 +305,9 @@ bool set_option_double(void *args_, const char *option, const double value) {
                 return false;
 #endif
 #ifdef ACADOS_WITH_QPOASES
-        } else if (!strcmp(token, "qpoases")) {
+        }
+        else if (!strcmp(token, "qpoases"))
+        {
             token = strsep_acados(&option_cpy, ".");
             ocp_qp_full_condensing_solver_opts *cond_opts =
                 (ocp_qp_full_condensing_solver_opts *)args_;
@@ -274,7 +317,9 @@ bool set_option_double(void *args_, const char *option, const double value) {
             else
                 return false;
 #endif
-        } else {
+        }
+        else
+        {
             return false;
         }
         token = strsep_acados(&option_cpy, ".");
@@ -284,7 +329,8 @@ bool set_option_double(void *args_, const char *option, const double value) {
 
 const double *get_option_double_array(const void *args_, const char *option) { return NULL; }
 
-bool set_option_double_array(void *args_, const char *option, const double *value) {
+bool set_option_double_array(void *args_, const char *option, const double *value)
+{
     bool return_value = true;
 
     return return_value;

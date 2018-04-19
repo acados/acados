@@ -36,7 +36,8 @@ typedef enum { LINEAR_LS, NONLINEAR_LS, EXTERNALLY_PROVIDED } ocp_nlp_cost_t;
 
 typedef enum { CONTINUOUS_MODEL, DISCRETE_MODEL } ocp_nlp_dynamics_t;
 
-typedef struct {
+typedef struct
+{
     ocp_qp_solver_plan ocp_qp_solver_plan;
     sim_solver_plan *sim_solver_plan;
     ocp_nlp_solver_t nlp_solver;
@@ -44,7 +45,8 @@ typedef struct {
     ocp_nlp_dynamics_t *nlp_dynamics;
 } ocp_nlp_solver_plan;
 
-typedef struct {
+typedef struct
+{
     ocp_nlp_solver_config *config;
     void *dims;
     void *opts;

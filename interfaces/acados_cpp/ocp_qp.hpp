@@ -33,10 +33,10 @@
 #include "acados_cpp/ocp_qp_solution.hpp"
 #include "acados_cpp/options.hpp"
 
-namespace acados {
-
-class ocp_qp {
-
+namespace acados
+{
+class ocp_qp
+{
  public:
     ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, std::vector<uint> nbu,
            std::vector<uint> ng);

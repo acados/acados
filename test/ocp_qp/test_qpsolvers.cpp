@@ -63,7 +63,8 @@ static vector<std::string> scenarios = {"ocp_qp/LTI", "ocp_qp/LTV"};
 vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_BOUNDS", "CONSTRAINED"};
 
 // TODO(dimitris): Clean up octave code
-TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
+TEST_CASE("Solve random OCP_QP", "[QP solvers]")
+{
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
 
@@ -75,13 +76,17 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
     int return_value;
     VectorXd acados_W, acados_PI, true_W, true_PI;
 
-    for (std::string constraint : constraints) {
-        SECTION(constraint) {
+    for (std::string constraint : constraints)
+    {
+        SECTION(constraint)
+        {
             if (constraint == "CONSTRAINED" || constraint == "ONLY_BOUNDS") SET_BOUNDS = 1;
             if (constraint == "CONSTRAINED" || constraint == "ONLY_AFFINE") SET_INEQUALITIES = 1;
 
-            for (std::string scenario : scenarios) {
-                SECTION(scenario) {
+            for (std::string scenario : scenarios)
+            {
+                SECTION(scenario)
+                {
                     qp_in = read_ocp_qp_in((char *)scenario.c_str(), SET_BOUNDS, SET_INEQUALITIES,
                                            SET_x0, QUIET);
                     qp_out = ocp_qp_out_create(qp_in->N, (int *)qp_in->nx, (int *)qp_in->nu,
@@ -93,29 +98,38 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                     int_t nu = qp_in->nu[0];
 
                     // load optimal solution from quadprog
-                    if (constraint == "UNCONSTRAINED") {
+                    if (constraint == "UNCONSTRAINED")
+                    {
                         true_W = readMatrixFromFile(scenario + "/w_star_ocp_unconstrained.dat",
                                                     (N + 1) * nx + N * nu, 1);
                         //                        true_PI = readMatrixFromFile(scenario +
                         //                            "/pi_star_ocp_unconstrained.dat", N*nx, 1);
-                    } else if (constraint == "ONLY_BOUNDS") {
+                    }
+                    else if (constraint == "ONLY_BOUNDS")
+                    {
                         true_W = readMatrixFromFile(scenario + "/w_star_ocp_bounds.dat",
                                                     (N + 1) * nx + N * nu, 1);
                         //                        true_PI = readMatrixFromFile(scenario +
                         //                            "/pi_star_ocp_bounds.dat", N*nx, 1);
-                    } else if (constraint == "ONLY_AFFINE") {
+                    }
+                    else if (constraint == "ONLY_AFFINE")
+                    {
                         true_W = readMatrixFromFile(scenario + "/w_star_ocp_no_bounds.dat",
                                                     (N + 1) * nx + N * nu, 1);
                         //                        true_PI = readMatrixFromFile(scenario +
                         //                            "/pi_star_ocp_no_bounds.dat", N*nx, 1);
-                    } else if (constraint == "CONSTRAINED") {
+                    }
+                    else if (constraint == "CONSTRAINED")
+                    {
                         true_W = readMatrixFromFile(scenario + "/w_star_ocp_constrained.dat",
                                                     (N + 1) * nx + N * nu, 1);
                         true_PI = readMatrixFromFile(scenario + "/pi_star_ocp_constrained.dat",
                                                      N * nx, 1);
                     }
-                    if (TEST_QPOASES) {
-                        SECTION("qpOASES") {
+                    if (TEST_QPOASES)
+                    {
+                        SECTION("qpOASES")
+                        {
                             std::cout << "---> TESTING qpOASES with QP: " << scenario << ", "
                                       << constraint << std::endl;
 
@@ -133,7 +147,8 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_QPOASES));
                             // TODO(dimitris): check multipliers in other solvers too
-                            if (constraint == "CONSTRAINED") {
+                            if (constraint == "CONSTRAINED")
+                            {
                                 // for (int j = 0; j < N*nx; j++) {
                                 //     printf(" %5.2e \t %5.2e\n", acados_PI(j), true_PI(j));
                                 // }
@@ -143,8 +158,10 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout << "---> PASSED " << std::endl;
                         }
                     }
-                    if (TEST_QPDUNES) {
-                        SECTION("qpDUNES") {
+                    if (TEST_QPDUNES)
+                    {
+                        SECTION("qpDUNES")
+                        {
                             std::cout << "---> TESTING qpDUNES with QP: " << scenario << ", "
                                       << constraint << std::endl;
 
@@ -161,8 +178,10 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                         }
                     }
 #ifdef OOQP
-                    if (TEST_OOQP) {
-                        SECTION("OOQP") {
+                    if (TEST_OOQP)
+                    {
+                        SECTION("OOQP")
+                        {
                             std::cout << "---> TESTING OOQP with QP: " << scenario << ", "
                                       << constraint << std::endl;
 
@@ -179,8 +198,10 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                         }
                     }
 #endif
-                    if (TEST_HPMPC) {
-                        SECTION("HPMPC") {
+                    if (TEST_HPMPC)
+                    {
+                        SECTION("HPMPC")
+                        {
                             std::cout << "---> TESTING HPMPC with QP: " << scenario << ", "
                                       << constraint << std::endl;
 
@@ -198,8 +219,10 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout << "---> PASSED " << std::endl;
                         }
                     }
-                    if (TEST_CON_HPIPM) {
-                        SECTION("CONDENSING_HPIPM") {
+                    if (TEST_CON_HPIPM)
+                    {
+                        SECTION("CONDENSING_HPIPM")
+                        {
                             std::cout << "---> TESTING condensing + HPIPM with QP: " << scenario
                                       << ", " << constraint << std::endl;
 
@@ -220,7 +243,8 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
 
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_CON_HPIPM));
-                            if (constraint == "CONSTRAINED") {
+                            if (constraint == "CONSTRAINED")
+                            {
                                 // for (int j = 0; j < N*nx; j++) {
                                 //     printf(" %5.2e \t %5.2e\n", acados_PI(j), true_PI(j));
                                 // }
@@ -229,8 +253,10 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout << "---> PASSED " << std::endl;
                         }
                     }
-                    if (TEST_HPIPM) {
-                        SECTION("HPIPM") {
+                    if (TEST_HPIPM)
+                    {
+                        SECTION("HPIPM")
+                        {
                             std::cout << "---> TESTING HPIPM with QP: " << scenario << ", "
                                       << constraint << std::endl;
 
@@ -246,7 +272,8 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
 
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_HPIPM));
-                            if (constraint == "CONSTRAINED") {
+                            if (constraint == "CONSTRAINED")
+                            {
                                 // for (int j = 0; j < N*nx; j++) {
                                 //     printf(" %5.2e \t %5.2e\n", acados_PI(j), true_PI(j));
                                 // }

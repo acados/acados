@@ -27,7 +27,8 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
+typedef struct
+{
     /* external functions */
     // implicit ode
     external_function_generic *impl_ode_fun;
@@ -60,7 +61,8 @@ typedef struct {
 
 // } new_lifted_irk_model;
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dmat *S_forw;   // forward sensitivities
     struct blasfeo_dmat *JG_traj;  // JGK trajectory
 
@@ -86,7 +88,8 @@ typedef struct {
 
 } sim_new_lifted_irk_workspace;
 
-typedef struct {
+typedef struct
+{
     // memory for lifted integrators
     struct blasfeo_dmat *JGK;  // jacobian of G over K (nx*ns, nx*ns)
     struct blasfeo_dmat *JGf;  // jacobian of G over x and u (nx*ns, nx+nu);

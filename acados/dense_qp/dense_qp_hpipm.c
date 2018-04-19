@@ -33,7 +33,8 @@
  * opts
  ************************************************/
 
-int dense_qp_hpipm_opts_calculate_size(void *config_, void *dims_) {
+int dense_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
+{
     dense_qp_dims *dims = dims_;
 
     int size = 0;
@@ -44,7 +45,8 @@ int dense_qp_hpipm_opts_calculate_size(void *config_, void *dims_) {
     return size;
 }
 
-void *dense_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory) {
+void *dense_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
+{
     dense_qp_dims *dims = dims_;
     dense_qp_hpipm_opts *opts;
 
@@ -66,7 +68,8 @@ void *dense_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory) {
     return (void *)opts;
 }
 
-void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_) {
+void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
+{
     dense_qp_hpipm_opts *opts = opts_;
 
     d_set_default_dense_qp_ipm_arg(opts->hpipm_opts);
@@ -83,7 +86,8 @@ void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *op
     return;
 }
 
-void dense_qp_hpipm_opts_update(void *config_, void *dims_, void *opts_) {
+void dense_qp_hpipm_opts_update(void *config_, void *dims_, void *opts_)
+{
     //    dense_qp_hpipm_opts *opts = (dense_qp_hpipm_opts *)opts_;
 
     return;
@@ -93,7 +97,8 @@ void dense_qp_hpipm_opts_update(void *config_, void *dims_, void *opts_) {
  * memory
  ************************************************/
 
-int dense_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_) {
+int dense_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_)
+{
     dense_qp_dims *dims = dims_;
     dense_qp_hpipm_opts *opts = opts_;
 
@@ -106,7 +111,8 @@ int dense_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_
     return size;
 }
 
-void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory) {
+void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
+{
     dense_qp_dims *dims = dims_;
     dense_qp_hpipm_opts *opts = opts_;
     dense_qp_hpipm_memory *mem;
@@ -134,8 +140,8 @@ void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void
 
 int dense_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_) { return 0; }
 
-int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void *mem_,
-                   void *work_) {
+int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
+{
     dense_qp_in *qp_in = qp_in_;
     dense_qp_out *qp_out = qp_out_;
 
@@ -166,7 +172,8 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     return acados_status;
 }
 
-void dense_qp_hpipm_config_initialize_default(void *config_) {
+void dense_qp_hpipm_config_initialize_default(void *config_)
+{
     qp_solver_config *config = config_;
 
     config->opts_calculate_size = &dense_qp_hpipm_opts_calculate_size;

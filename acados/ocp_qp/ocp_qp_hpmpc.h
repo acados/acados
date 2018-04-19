@@ -29,7 +29,8 @@ extern "C" {
 
 typedef enum hpmpc_options_t_ { HPMPC_DEFAULT_ARGUMENTS } hpmpc_options_t;
 
-typedef struct ocp_qp_hpmpc_opts_ {
+typedef struct ocp_qp_hpmpc_opts_
+{
     double tol;
     int max_iter;
     double mu0;
@@ -44,7 +45,8 @@ typedef struct ocp_qp_hpmpc_opts_ {
 } ocp_qp_hpmpc_opts;
 
 // struct of the solver memory
-typedef struct ocp_qp_hpmpc_memory_ {
+typedef struct ocp_qp_hpmpc_memory_
+{
     struct blasfeo_dvec *hpi;
     double *stats;
 

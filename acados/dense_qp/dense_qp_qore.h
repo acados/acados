@@ -30,7 +30,8 @@ extern "C" {
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
 
-typedef struct dense_qp_qore_opts_ {
+typedef struct dense_qp_qore_opts_
+{
     int nsmax;       // maximum size of Schur complement
     int print_freq;  // print frequency,
                      // prtfreq  < 0: disable printing;
@@ -44,7 +45,8 @@ typedef struct dense_qp_qore_opts_ {
     int max_iter;       // maximum number of iterations
 } dense_qp_qore_opts;
 
-typedef struct dense_qp_qore_memory_ {
+typedef struct dense_qp_qore_memory_
+{
     double *H;
     double *g;
     double *A;

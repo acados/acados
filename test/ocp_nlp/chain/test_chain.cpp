@@ -53,35 +53,48 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear optimization]") {
+TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear optimization]")
+{
     // TODO(nielsvd): re-implement (Frozen) IN/INIS
-    for (int INEXACT = 0; INEXACT < 5; INEXACT++) {
+    for (int INEXACT = 0; INEXACT < 5; INEXACT++)
+    {
         int d_start = 0;
         if (INEXACT > 0) d_start = 2;
 
-        for (int d = d_start; d < 4; d++) {  // RK4 in case d == 0
-            for (int NMF = 1; NMF < 4; NMF++) {
-                if (INEXACT == 0) {
+        for (int d = d_start; d < 4; d++)
+        {  // RK4 in case d == 0
+            for (int NMF = 1; NMF < 4; NMF++)
+            {
+                if (INEXACT == 0)
+                {
                     printf(
                         "\n----- NUMBER OF FREE MASSES = %d, d = %d (Exact "
                         "Newton) -----\n",
                         NMF, d);
-                } else if (INEXACT == 1) {
+                }
+                else if (INEXACT == 1)
+                {
                     printf(
                         "\n----- NUMBER OF FREE MASSES = %d, d = %d (IN "
                         "Scheme) -----\n",
                         NMF, d);
-                } else if (INEXACT == 2) {
+                }
+                else if (INEXACT == 2)
+                {
                     printf(
                         "\n----- NUMBER OF FREE MASSES = %d, d = %d (INIS "
                         "Scheme) -----\n",
                         NMF, d);
-                } else if (INEXACT == 3) {
+                }
+                else if (INEXACT == 3)
+                {
                     printf(
                         "\n----- NUMBER OF FREE MASSES = %d, d = %d (FROZEN IN "
                         "Scheme) -----\n",
                         NMF, d);
-                } else if (INEXACT == 4) {
+                }
+                else if (INEXACT == 4)
+                {
                     printf(
                         "\n----- NUMBER OF FREE MASSES = %d, d = %d (FROZEN "
                         "INIS Scheme) -----\n",
@@ -129,7 +142,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 ls_cost.W[N] = WN;
                 ls_cost.y_ref = (real_t **)malloc(sizeof(*ls_cost.y_ref) * (N + 1));
                 ls_cost.fun = (ocp_nlp_function **)malloc(sizeof(*ls_cost.fun) * (N + 1));
-                for (int_t i = 0; i < N; i++) {
+                for (int_t i = 0; i < N; i++)
+                {
                     ls_cost.fun[i] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
                     // Initialize LS cost
                     ls_cost.fun[i]->nx = NX;
@@ -141,7 +155,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                     ls_cost.fun[i]->in->compute_hess = false;
                     ls_cost.fun[i]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
                     ls_cost.fun[i]->args = casadi_wrapper_create_arguments();
-                    switch (NMF) {
+                    switch (NMF)
+                    {
                         case 1:
                             ls_cost.fun[i]->args->fun = &ls_cost_nm2;
                             ls_cost.fun[i]->args->dims = &ls_cost_nm2_work;
@@ -178,7 +193,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 ls_cost.fun[N]->in->compute_hess = false;
                 ls_cost.fun[N]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
                 ls_cost.fun[N]->args = casadi_wrapper_create_arguments();
-                switch (NMF) {
+                switch (NMF)
+                {
                     case 1:
                         ls_cost.fun[N]->args->fun = &ls_costN_nm2;
                         ls_cost.fun[N]->args->dims = &ls_costN_nm2_work;
@@ -221,15 +237,19 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 struct d_strmat str_mat[N];
                 struct d_strmat str_sol[N];
 
-                for (jj = 0; jj < N; jj++) {
+                for (jj = 0; jj < N; jj++)
+                {
                     integrators[jj] = (sim_solver *)malloc(sizeof(sim_solver));
                     integrators[jj]->in = &sim_in[jj];
                     integrators[jj]->out = &sim_out[jj];
                     integrators[jj]->args = &rk_opts[jj];
-                    if (d > 0) {
+                    if (d > 0)
+                    {
                         integrators[jj]->fun = &sim_lifted_irk;
                         integrators[jj]->mem = &irk_mem[jj];
-                    } else {
+                    }
+                    else
+                    {
                         integrators[jj]->fun = &sim_erk;
                         integrators[jj]->mem = 0;
                     }
@@ -244,7 +264,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                     sim_in[jj].sens_hess = false;
                     sim_in[jj].num_forw_sens = NX + NU;
 
-                    switch (NMF) {
+                    switch (NMF)
+                    {
                         case 1:
                             sim_in[jj].vde = &vde_chain_nm2;
                             sim_in[jj].forward_vde_wrapper = &vde_fun;
@@ -288,20 +309,28 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                     sim_out[jj].grad = (real_t *)malloc(sizeof(*sim_out[jj].grad) * (NX + NU));
 
                     int_t workspace_size;
-                    if (d > 0) {
+                    if (d > 0)
+                    {
                         sim_irk_create_arguments(&rk_opts[jj], d, "Gauss");
-                        if (INEXACT == 0) {
+                        if (INEXACT == 0)
+                        {
                             sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", exact);
-                        } else if (INEXACT == 1 || INEXACT == 3) {
+                        }
+                        else if (INEXACT == 1 || INEXACT == 3)
+                        {
                             sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_in);
-                        } else if (INEXACT == 2 || INEXACT == 4) {
+                        }
+                        else if (INEXACT == 2 || INEXACT == 4)
+                        {
                             sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_inis);
                         }
 
                         workspace_size =
                             sim_lifted_irk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
                         sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj], &irk_mem[jj]);
-                    } else {
+                    }
+                    else
+                    {
                         sim_erk_create_arguments(&rk_opts[jj], 4);
                         workspace_size =
                             sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
@@ -315,7 +344,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 int_t nb[NN + 1] = {0};
                 int_t nc[NN + 1] = {0};
                 int_t ng[NN + 1] = {0};
-                for (int_t i = 0; i < N; i++) {
+                for (int_t i = 0; i < N; i++)
+                {
                     nx[i] = NX;
                     nu[i] = NU;
                 }
@@ -332,12 +362,14 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 d_zeros(&lb0, NX + NU, 1);
                 real_t *ub0;
                 d_zeros(&ub0, NX + NU, 1);
-                for (jj = 0; jj < NX; jj++) {
+                for (jj = 0; jj < NX; jj++)
+                {
                     lb0[jj] = x0(jj);  // xmin
                     ub0[jj] = x0(jj);  // xmax
                     idxb0[jj] = jj;
                 }
-                for (; jj < NX + NU; jj++) {
+                for (; jj < NX + NU; jj++)
+                {
                     lb0[jj] = -UMAX;  // umin
                     ub0[jj] = UMAX;   // umax
                     idxb0[jj] = jj;
@@ -348,15 +380,18 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 int_zeros(&idxb1, NMF + NU, 1);
                 double *lb1[N - 1];
                 double *ub1[N - 1];
-                for (int_t i = 0; i < N - 1; i++) {
+                for (int_t i = 0; i < N - 1; i++)
+                {
                     d_zeros(&lb1[i], NMF + NU, 1);
                     d_zeros(&ub1[i], NMF + NU, 1);
-                    for (jj = 0; jj < NMF; jj++) {
+                    for (jj = 0; jj < NMF; jj++)
+                    {
                         lb1[i][jj] = wall_pos;  // wall position
                         ub1[i][jj] = 1e12;
                         idxb1[jj] = 6 * jj + 1;
                     }
-                    for (jj = 0; jj < NU; jj++) {
+                    for (jj = 0; jj < NU; jj++)
+                    {
                         lb1[i][NMF + jj] = -UMAX;  // umin
                         ub1[i][NMF + jj] = UMAX;   // umax
                         idxb1[NMF + jj] = NX + jj;
@@ -370,7 +405,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 d_zeros(&lbN, NX, 1);
                 real_t *ubN;
                 d_zeros(&ubN, NX, 1);
-                for (jj = 0; jj < NX; jj++) {
+                for (jj = 0; jj < NX; jj++)
+                {
                     lbN[jj] = xref(jj);  // xmin
                     ubN[jj] = xref(jj);  // xmax
                     idxbN[jj] = jj;
@@ -384,7 +420,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 hlb[0] = lb0;
                 hub[0] = ub0;
                 hidxb[0] = idxb0;
-                for (int_t i = 1; i < N; i++) {
+                for (int_t i = 1; i < N; i++)
+                {
                     hlb[i] = lb1[i - 1];
                     hub[i] = ub1[i - 1];
                     hidxb[i] = idxb1;
@@ -398,7 +435,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                  ************************************************/
                 ocp_nlp_function **path_constraints =
                     (ocp_nlp_function **)malloc(sizeof(ocp_nlp_function *) * (N + 1));
-                for (int_t i = 0; i < N; i++) {
+                for (int_t i = 0; i < N; i++)
+                {
                     // Initialize path constraints
                     path_constraints[i] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
                     path_constraints[i]->nx = NX;
@@ -412,7 +450,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                     path_constraints[i]->out =
                         (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
                     path_constraints[i]->args = casadi_wrapper_create_arguments();
-                    switch (NMF) {
+                    switch (NMF)
+                    {
                         case 1:
                             path_constraints[i]->args->fun = &pathcon_nm2;
                             path_constraints[i]->args->dims = &pathcon_nm2_work;
@@ -445,7 +484,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 path_constraints[N]->in->compute_hess = false;
                 path_constraints[N]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
                 path_constraints[N]->args = casadi_wrapper_create_arguments();
-                switch (NMF) {
+                switch (NMF)
+                {
                     case 1:
                         path_constraints[N]->args->fun = &pathconN_nm2;
                         path_constraints[N]->args->dims = &pathconN_nm2_work;
@@ -476,7 +516,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 sensitivity_method.initialize = &ocp_nlp_sm_gn_initialize;
                 sensitivity_method.destroy = &ocp_nlp_sm_gn_destroy;
                 sensitivity_method.args = ocp_nlp_sm_gn_create_arguments();
-                if (INEXACT > 2) {
+                if (INEXACT > 2)
+                {
                     ((ocp_nlp_sm_gn_args *)sensitivity_method.args)->freezeSens = true;
                 }
 
@@ -521,7 +562,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 nlp_out.pi = (real_t **)malloc(sizeof(*nlp_out.pi) * (N + 1));
                 nlp_out.lam = (real_t **)malloc(sizeof(*nlp_out.lam) * (N + 1));
                 // Allocate output variables
-                for (int_t i = 0; i < N; i++) {
+                for (int_t i = 0; i < N; i++)
+                {
                     nlp_out.x[i] = (real_t *)malloc(sizeof(*nlp_out.x[i]) * (NX));
                     nlp_out.u[i] = (real_t *)malloc(sizeof(*nlp_out.u[i]) * (NU));
                     nlp_out.pi[i] = (real_t *)malloc(sizeof(*nlp_out.pi[i]) * (NX));
@@ -547,7 +589,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 // TODO(nielsvd): set memory to zero during allocation
                 real_t **nlp_x_mem = (real_t **)nlp_mem->common->x;
                 real_t **nlp_u_mem = (real_t **)nlp_mem->common->u;
-                for (int_t i = 0; i < N; i++) {
+                for (int_t i = 0; i < N; i++)
+                {
                     for (int_t j = 0; j < NX; j++) nlp_x_mem[i][j] = xref[j];  // resX(j,i)
                     for (int_t j = 0; j < NU; j++) nlp_u_mem[i][j] = 0.0;      // resU(j, i)
                 }
@@ -560,13 +603,15 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
 
                 real_t out_x[NX * (N + 1)], err_x[NX * (N + 1)];
                 real_t out_u[NU * N], err_u[NU * N];
-                for (int_t i = 0; i < N; i++) {
+                for (int_t i = 0; i < N; i++)
+                {
                     for (int_t j = 0; j < NX; j++) out_x[i * NX + j] = nlp_out.x[i][j];
                     for (int_t j = 0; j < NU; j++) out_u[i * NU + j] = nlp_out.u[i][j];
                 }
                 for (int_t j = 0; j < NX; j++) out_x[N * NX + j] = nlp_out.x[N][j];
 
-                for (int_t i = 0; i < N; i++) {
+                for (int_t i = 0; i < N; i++)
+                {
                     for (int_t j = 0; j < NX; j++)
                         err_x[i * NX + j] = fabs(out_x[i * NX + j] - resX(j, i));
                     for (int_t j = 0; j < NU; j++)
@@ -605,7 +650,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 d_free(lb0);
                 d_free(ub0);
                 int_free(idxb1);
-                for (jj = 0; jj < N - 1; jj++) {
+                for (jj = 0; jj < N - 1; jj++)
+                {
                     d_free(lb1[jj]);
                     d_free(ub1[jj]);
                 }
@@ -614,7 +660,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 d_free(ubN);
 
                 // LS cost and path constraints
-                for (int_t i = 0; i <= N; i++) {
+                for (int_t i = 0; i <= N; i++)
+                {
                     // Least-squares cost
                     free(ls_cost.fun[i]->in);
                     free(ls_cost.fun[i]->out);
@@ -634,7 +681,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 free(ls_cost.y_ref);
 
                 // Integrators
-                for (jj = 0; jj < N; jj++) {
+                for (jj = 0; jj < N; jj++)
+                {
                     free(sim_in[jj].x);
                     free(sim_in[jj].u);
                     free(sim_in[jj].S_forw);
@@ -650,7 +698,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 // NLP arguments
                 free(nlp_args);
                 // NLP output
-                for (int_t i = 0; i <= N; i++) {
+                for (int_t i = 0; i <= N; i++)
+                {
                     free(nlp_out.x[i]);
                     free(nlp_out.u[i]);
                     free(nlp_out.pi[i]);

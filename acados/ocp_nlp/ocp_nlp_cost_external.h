@@ -36,7 +36,8 @@ extern "C" {
  * dims
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int nx;  // number of states
     int nu;  // number of inputs
     int ns;  // number of slacks
@@ -54,7 +55,8 @@ void ocp_nlp_cost_external_dims_initialize(void *config, void *dims, int nx, int
  * model
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     external_function_generic *ext_cost;  // gradient and hessian
     struct blasfeo_dvec Z;
     struct blasfeo_dvec z;
@@ -69,7 +71,8 @@ void *ocp_nlp_cost_external_model_assign(void *config, void *dims, void *raw_mem
  * options
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int dummy;
 } ocp_nlp_cost_external_opts;
 
@@ -86,7 +89,8 @@ void ocp_nlp_cost_external_opts_update(void *config, void *dims, void *opts);
  * memory
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
@@ -110,7 +114,8 @@ void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
  * workspace
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     double *ext_cost_in;
     double *ext_cost_out;
 } ocp_nlp_cost_external_workspace;

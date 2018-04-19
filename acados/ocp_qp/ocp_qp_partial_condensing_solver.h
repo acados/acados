@@ -29,19 +29,22 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/utils/types.h"
 
-typedef struct ocp_qp_partial_condensing_solver_opts_ {
+typedef struct ocp_qp_partial_condensing_solver_opts_
+{
     ocp_qp_partial_condensing_opts *pcond_opts;
     void *qp_solver_opts;
 } ocp_qp_partial_condensing_solver_opts;
 
-typedef struct ocp_qp_partial_condensing_solver_memory_ {
+typedef struct ocp_qp_partial_condensing_solver_memory_
+{
     ocp_qp_partial_condensing_memory *pcond_memory;
     void *solver_memory;
     ocp_qp_in *pcond_qp_in;
     ocp_qp_out *pcond_qp_out;
 } ocp_qp_partial_condensing_solver_memory;
 
-typedef struct ocp_qp_partial_condensing_solver_workspace_ {
+typedef struct ocp_qp_partial_condensing_solver_workspace_
+{
     void *pcond_work;
     void *solver_work;
     // TODO(dimitris): move from memory to workspace

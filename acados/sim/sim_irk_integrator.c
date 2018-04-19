@@ -19,7 +19,8 @@
  * model
  ************************************************/
 
-int sim_irk_model_calculate_size(void *config, sim_dims *dims) {
+int sim_irk_model_calculate_size(void *config, sim_dims *dims)
+{
     int size = 0;
 
     size += sizeof(irk_model);
@@ -27,7 +28,8 @@ int sim_irk_model_calculate_size(void *config, sim_dims *dims) {
     return size;
 }
 
-void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory) {
+void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory)
+{
     char *c_ptr = (char *)raw_memory;
 
     irk_model *data = (irk_model *)c_ptr;
@@ -38,10 +40,12 @@ void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory) {
     return data;
 }
 
-int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun) {
+int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
+{
     irk_model *model = model_;
 
-    switch (fun_type) {
+    switch (fun_type)
+    {
         case IMPL_ODE_FUN:
             model->impl_ode_fun = (external_function_generic *)fun;
             break;
@@ -73,7 +77,8 @@ int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
  * opts
  ************************************************/
 
-int sim_irk_opts_calculate_size(void *config_, sim_dims *dims) {
+int sim_irk_opts_calculate_size(void *config_, sim_dims *dims)
+{
     int ns_max = NS_MAX;
 
     int size = 0;
@@ -95,7 +100,8 @@ int sim_irk_opts_calculate_size(void *config_, sim_dims *dims) {
     return size;
 }
 
-void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory) {
+void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
+{
     int ns_max = NS_MAX;
 
     char *c_ptr = (char *)raw_memory;
@@ -121,7 +127,8 @@ void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory) {
     return (void *)opts;
 }
 
-void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_) {
+void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
+{
     sim_rk_opts *opts = opts_;
 
     opts->ns = 3;  // GL 3
@@ -151,7 +158,8 @@ void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
     return;
 }
 
-void sim_irk_opts_update(void *config_, sim_dims *dims, void *opts_) {
+void sim_irk_opts_update(void *config_, sim_dims *dims, void *opts_)
+{
     sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -176,7 +184,8 @@ void sim_irk_opts_update(void *config_, sim_dims *dims, void *opts_) {
 
 int sim_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_) { return 0; }
 
-void *sim_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory) {
+void *sim_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory)
+{
     return NULL;
 }
 
@@ -184,7 +193,8 @@ void *sim_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw
  * workspace
  ************************************************/
 
-int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_) {
+int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
+{
     sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -229,7 +239,8 @@ int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
     return size;
 }
 
-static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, void *raw_memory) {
+static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, void *raw_memory)
+{
     sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -285,7 +296,8 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
     assign_and_advance_blasfeo_dmat_mem(nx * ns, nx + nu, workspace->JGf, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx * ns, nx + nu, workspace->JKf, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, workspace->S_forw, &c_ptr);
-    for (int i = 0; i < steps; i++) {
+    for (int i = 0; i < steps; i++)
+    {
         assign_and_advance_blasfeo_dmat_mem(nx * ns, nx * ns, &workspace->JG_traj[i], &c_ptr);
     }
 
@@ -295,7 +307,8 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xn, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx + nu, workspace->lambda, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx * ns, workspace->lambdaK, &c_ptr);
-    for (int i = 0; i < steps; i++) {
+    for (int i = 0; i < steps; i++)
+    {
         assign_and_advance_blasfeo_dvec_mem(nx, &workspace->xn_traj[i], &c_ptr);
         assign_and_advance_blasfeo_dvec_mem(nx * ns, &workspace->K_traj[i], &c_ptr);
     }
@@ -320,7 +333,8 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
  * functions
  ************************************************/
 
-int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_) {
+int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
+{
     sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
 
@@ -414,23 +428,29 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     // start the loop
     acados_tic(&timer);
-    for (ss = 0; ss < num_steps; ss++) {
+    for (ss = 0; ss < num_steps; ss++)
+    {
         //  obtain Kn
         // TODO(all): add exit condition on residuals ???
         // inf_norm_K = 1.0;
         //        for(iter=0; inf_norm_K>tol_inf_norm_K & iter<newton_iter; iter++)
-        for (iter = 0; iter < newton_iter; iter++) {
-            if (opts->sens_adj) {
+        for (iter = 0; iter < newton_iter; iter++)
+        {
+            if (opts->sens_adj)
+            {
                 blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
             }
 
-            for (ii = 0; ii < ns; ii++) {  // ii-th row of tableau
+            for (ii = 0; ii < ns; ii++)
+            {  // ii-th row of tableau
                 // take x(n); copy a strvec into a strvec
                 blasfeo_dveccp(nx, xn, 0, xt, 0);
 
-                for (jj = 0; jj < ns; jj++) {  // jj-th col of tableau
+                for (jj = 0; jj < ns; jj++)
+                {  // jj-th col of tableau
                     a = A_mat[ii + ns * jj];
-                    if (a != 0) {  // xt = xt + T_int * a[i,j]*K_j
+                    if (a != 0)
+                    {  // xt = xt + T_int * a[i,j]*K_j
                         a *= step;
                         blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                     }
@@ -442,9 +462,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 blasfeo_unpack_dvec(nx, K, ii * nx, ode_args + nx);
 
                 // compute the residual of implicit ode at time t_ii, store value in rGt
-                if (!((opts->jac_reuse & (ss == 0) & (iter == 0)) |
-                      (!opts->jac_reuse))) {  // otherwise eval the ode together with the jacobians
-                                              // within next if
+                if (!((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse)))
+                {  // otherwise eval the ode together with the jacobians
+                   // within next if
                     acados_tic(&timer_ad);
 
                     ext_fun_type_in[0] = COLMAJ;
@@ -471,7 +491,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
                 // blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
 
-                if ((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse)) {
+                if ((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse))
+                {
                     // compute the jacobian of implicit ode
                     acados_tic(&timer_ad);
 
@@ -499,13 +520,16 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_pack_dvec(nx, jac_out, rG, ii * nx);
 
                     // compute the blocks of JGK
-                    for (jj = 0; jj < ns; jj++) {  // compute the block (ii,jj)th block = Jt
+                    for (jj = 0; jj < ns; jj++)
+                    {  // compute the block (ii,jj)th block = Jt
                         a = A_mat[ii + ns * jj];
-                        if (a != 0) {
+                        if (a != 0)
+                        {
                             a *= step;
                             for (kk = 0; kk < nx * nx; kk++) Jt[kk] = a * jac_out[kk + nx];
                         }
-                        if (jj == ii) {
+                        if (jj == ii)
+                        {
                             for (kk = 0; kk < nx * nx; kk++) Jt[kk] += jac_out[nx * (nx + 1) + kk];
                         }
                         // fill in the ii-th, jj-th block of JGK
@@ -516,7 +540,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             // DGETRF computes an LU factorization of a general M-by-N matrix A
             // using partial pivoting with row interchanges.
-            if ((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse)) {
+            if ((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse))
+            {
                 blasfeo_dgetrf_rowpivot(nx * ns, nx * ns, JGK, 0, 0, JGK, 0, 0, ipiv);
             }
 
@@ -538,19 +563,24 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             //       blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
         }
 
-        if (opts->sens_adj) {
+        if (opts->sens_adj)
+        {
             blasfeo_dveccp(nx * ns, K, 0, &K_traj[ss], 0);
         }
 
         // evaluate forward sensitivities
-        if (opts->sens_forw) {
+        if (opts->sens_forw)
+        {
             // evaluate JGK(xn,Kn)
-            for (ii = 0; ii < ns; ii++) {
+            for (ii = 0; ii < ns; ii++)
+            {
                 blasfeo_dveccp(nx, xn, 0, xt, 0);
                 // compute xt = final x;
-                for (jj = 0; jj < ns; jj++) {
+                for (jj = 0; jj < ns; jj++)
+                {
                     a = A_mat[ii + ns * jj];
-                    if (a != 0) {
+                    if (a != 0)
+                    {
                         a *= step;
                         blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                     }
@@ -591,13 +621,16 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                 timing_ad += acados_toc(&timer_ad);
 
-                for (jj = 0; jj < ns; jj++) {
+                for (jj = 0; jj < ns; jj++)
+                {
                     a = A_mat[ii + ns * jj];
-                    if (a != 0) {
+                    if (a != 0)
+                    {
                         a *= step;
                         for (kk = 0; kk < nx * nx; kk++) Jt[kk] = a * jac_out[kk];
                     }
-                    if (jj == ii) {
+                    if (jj == ii)
+                    {
                         for (kk = 0; kk < nx * nx; kk++) Jt[kk] += jac_out[nx * nx + kk];
                     }
                     blasfeo_pack_dmat(nx, nx, Jt, nx, JGK, ii * nx, jj * nx);
@@ -607,7 +640,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // factorize JGK
             blasfeo_dgetrf_rowpivot(nx * ns, nx * ns, JGK, 0, 0, JGK, 0, 0, ipiv);
 
-            if (opts->sens_adj) {  // store the factorization and permutation
+            if (opts->sens_adj)
+            {  // store the factorization and permutation
                 blasfeo_dgecp(nx * ns, nx * ns, JGK, 0, 0, &JG_traj[ss], 0, 0);
             }
 
@@ -628,20 +662,25 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
         // obtain x(n+1)
         for (ii = 0; ii < ns; ii++) blasfeo_daxpy(nx, step * b_vec[ii], K, ii * nx, xn, 0, xn, 0);
-
     }
 
     // evaluate backwards
-    if (opts->sens_adj) {
-        for (ss = num_steps - 1; ss > -1; ss--) {
+    if (opts->sens_adj)
+    {
+        for (ss = num_steps - 1; ss > -1; ss--)
+        {
             blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);
 
-            if (opts->sens_forw) {  // evalute JGf and extract factorization
+            if (opts->sens_forw)
+            {  // evalute JGf and extract factorization
 
-                for (ii = 0; ii < ns; ii++) {
-                    for (jj = 0; jj < ns; jj++) {
+                for (ii = 0; ii < ns; ii++)
+                {
+                    for (jj = 0; jj < ns; jj++)
+                    {
                         a = A_mat[ii + ns * jj];
-                        if (a != 0) {
+                        if (a != 0)
+                        {
                             a *= step;
                             blasfeo_daxpy(nx, a, &K_traj[ss], jj * nx, xt, 0, xt, 0);
                         }
@@ -675,13 +714,17 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // jac_out+2*nx*nx); blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx,
                     // nx); timing_ad += acados_toc(&timer_ad);
                 }
+            }
+            else
+            {  // extract trajectory to evaluate JGf and JGK
 
-            } else {  // extract trajectory to evaluate JGf and JGK
-
-                for (ii = 0; ii < ns; ii++) {
-                    for (jj = 0; jj < ns; jj++) {
+                for (ii = 0; ii < ns; ii++)
+                {
+                    for (jj = 0; jj < ns; jj++)
+                    {
                         a = A_mat[ii + ns * jj];
-                        if (a != 0) {
+                        if (a != 0)
+                        {
                             a *= step;
                             blasfeo_daxpy(nx, a, &K_traj[ss], jj * nx, xt, 0, xt, 0);
                         }
@@ -718,13 +761,16 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args,
                     // jac_out+nx*nx);
                     timing_ad += acados_toc(&timer_ad);
-                    for (jj = 0; jj < ns; jj++) {
+                    for (jj = 0; jj < ns; jj++)
+                    {
                         a = A_mat[ii + ns * jj];
-                        if (a != 0) {
+                        if (a != 0)
+                        {
                             a *= step;
                             for (kk = 0; kk < nx * nx; kk++) Jt[kk] = a * jac_out[kk];
                         }
-                        if (jj == ii) {
+                        if (jj == ii)
+                        {
                             for (kk = 0; kk < nx * nx; kk++) Jt[kk] += jac_out[nx * nx + kk];
                         }
                         blasfeo_pack_dmat(nx, nx, Jt, nx, &JG_traj[ss], ii * nx, jj * nx);
@@ -765,7 +811,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     return 0;
 }
 
-void sim_irk_config_initialize_default(void *config_) {
+void sim_irk_config_initialize_default(void *config_)
+{
     sim_solver_config *config = config_;
 
     config->evaluate = &sim_irk;

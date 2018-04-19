@@ -28,7 +28,8 @@ extern "C" {
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
 
-typedef struct dense_qp_qpoases_opts_ {
+typedef struct dense_qp_qpoases_opts_
+{
     double max_cputime;  // maximum cpu time in seconds
     int max_nwsr;        // maximum number of working set recalculations
     int warm_start;      // warm start with dual_sol in memory
@@ -39,7 +40,8 @@ typedef struct dense_qp_qpoases_opts_ {
     int compute_t;       // compute t in qp_out (to have correct residuals in NLP)
 } dense_qp_qpoases_opts;
 
-typedef struct dense_qp_qpoases_memory_ {
+typedef struct dense_qp_qpoases_memory_
+{
     double *H;
     double *R;
     double *g;

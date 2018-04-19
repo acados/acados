@@ -31,7 +31,8 @@ extern "C" {
 #define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
 
-typedef struct {
+typedef struct
+{
     /* external functions */
     // jacobian explicit ode
     external_function_generic *expl_ode_jac;
@@ -40,7 +41,8 @@ typedef struct {
 
 } lifted_irk_model;
 
-typedef struct {
+typedef struct
+{
     real_t *rhs_in;
     real_t *jac_tmp;
     real_t **VDE_tmp;
@@ -58,7 +60,8 @@ typedef struct {
     real_t *out_adj_tmp;
 } sim_lifted_irk_workspace;
 
-typedef struct {
+typedef struct
+{
     double *grad_correction;
     double *grad_K;  // gradient correction
 

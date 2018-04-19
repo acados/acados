@@ -27,7 +27,8 @@
 #include "test/test_utils/eigen.h"
 
 void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out, sim_info* info, sim_rk_opts* rk_opts,
-                           int_t NX, int_t NU, real_t T, bool hessian) {
+                           int_t NX, int_t NU, real_t T, bool hessian)
+{
     sim_in->num_steps = 10;
     sim_in->step = T / sim_in->num_steps;
     sim_in->nx = NX;
@@ -42,10 +43,13 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out, sim_info* info, sim
 
     sim_in->vde = &vde_forw_pendulum;
     sim_in->forward_vde_wrapper = &vde_fun;
-    if (hessian) {
+    if (hessian)
+    {
         sim_in->adjoint_vde_wrapper = &vde_hess_fun;
         sim_in->vde_adj = &vde_hess_pendulum;
-    } else {
+    }
+    else
+    {
         sim_in->adjoint_vde_wrapper = &vde_adj_fun;
         sim_in->vde_adj = &vde_adj_pendulum;
     }
@@ -62,7 +66,8 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out, sim_info* info, sim
     sim_out->xn = (real_t*)malloc(sizeof(*sim_out->xn) * (NX));
     sim_out->S_forw = (real_t*)malloc(sizeof(*sim_out->S_forw) * (NX * (NX + NU)));
     sim_out->S_adj = (real_t*)malloc(sizeof(*sim_out->S_adj) * (NX + NU));
-    if (hessian) {
+    if (hessian)
+    {
         sim_out->S_hess = (real_t*)malloc(sizeof(*sim_out->S_hess) * (nhess));
     }
     sim_out->info = info;

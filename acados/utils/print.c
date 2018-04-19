@@ -46,19 +46,26 @@
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
 #include "acados/utils/print.h"
 
-void print_matrix(char *file_name, const real_t *matrix, const int_t nrows, const int_t ncols) {
+void print_matrix(char *file_name, const real_t *matrix, const int_t nrows, const int_t ncols)
+{
     FILE *output;
-    if (strcmp(file_name, "stdout") == 0) {
+    if (strcmp(file_name, "stdout") == 0)
+    {
         output = stdout;
-    } else {
+    }
+    else
+    {
         output = fopen(file_name, "w");
     }
-    if (output == NULL) {
+    if (output == NULL)
+    {
         fprintf(stderr, "Opening of file `%s' failed!\n", file_name);
     }
     // Assumes column major ordering
-    for (int_t i = 0; i < nrows; i++) {
-        for (int_t j = 0; j < ncols; j++) {
+    for (int_t i = 0; i < nrows; i++)
+    {
+        for (int_t j = 0; j < ncols; j++)
+        {
             fprintf(output, "%+.3e ", matrix[j * nrows + i]);
         }
         fprintf(output, "\n");
@@ -67,20 +74,27 @@ void print_matrix(char *file_name, const real_t *matrix, const int_t nrows, cons
 }
 
 void print_matrix_name(char *file_name, char *name, const real_t *matrix, const int_t nrows,
-                       const int_t ncols) {
+                       const int_t ncols)
+{
     FILE *output;
-    if (strcmp(file_name, "stdout") == 0) {
+    if (strcmp(file_name, "stdout") == 0)
+    {
         output = stdout;
-    } else {
+    }
+    else
+    {
         output = fopen(file_name, "w");
     }
-    if (output == NULL) {
+    if (output == NULL)
+    {
         fprintf(stderr, "Opening of file `%s' failed!\n", file_name);
     }
     fprintf(output, "%s:\n", name);
     // Assumes column major ordering
-    for (int_t i = 0; i < nrows; i++) {
-        for (int_t j = 0; j < ncols; j++) {
+    for (int_t i = 0; i < nrows; i++)
+    {
+        for (int_t j = 0; j < ncols; j++)
+        {
             fprintf(output, "%+.3e ", matrix[j * nrows + i]);
         }
         fprintf(output, "\n");
@@ -88,19 +102,26 @@ void print_matrix_name(char *file_name, char *name, const real_t *matrix, const 
     if (output != stdout) fclose(output);
 }
 
-void print_int_matrix(char *file_name, const int_t *matrix, const int_t nrows, const int_t ncols) {
+void print_int_matrix(char *file_name, const int_t *matrix, const int_t nrows, const int_t ncols)
+{
     FILE *output;
-    if (strcmp(file_name, "stdout") == 0) {
+    if (strcmp(file_name, "stdout") == 0)
+    {
         output = stdout;
-    } else {
+    }
+    else
+    {
         output = fopen(file_name, "w");
     }
-    if (output == NULL) {
+    if (output == NULL)
+    {
         fprintf(stderr, "Opening of file `%s' failed!\n", file_name);
     }
     // Assumes column major ordering
-    for (int_t i = 0; i < nrows; i++) {
-        for (int_t j = 0; j < ncols; j++) {
+    for (int_t i = 0; i < nrows; i++)
+    {
+        for (int_t j = 0; j < ncols; j++)
+        {
             fprintf(output, "%d ", matrix[j * nrows + i]);
         }
         fprintf(output, "\n");
@@ -108,28 +129,35 @@ void print_int_matrix(char *file_name, const int_t *matrix, const int_t nrows, c
     if (output != stdout) fclose(output);
 }
 
-void print_array(char *file_name, real_t *array, int_t size) {
+void print_array(char *file_name, real_t *array, int_t size)
+{
     print_matrix(file_name, array, size, 1);
 }
 
-void print_int_array(char *file_name, const int_t *array, int_t size) {
+void print_int_array(char *file_name, const int_t *array, int_t size)
+{
     print_int_matrix(file_name, array, size, 1);
 }
 
 // Read space delimited file into column-major matrix
-void read_matrix(const char *file_name, real_t *array, const int_t nrows, const int_t ncols) {
+void read_matrix(const char *file_name, real_t *array, const int_t nrows, const int_t ncols)
+{
     FILE *file;
     file = fopen(file_name, "r");
 
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf("Error opening file %s ! ! ! ! ! ! ! ! !\n", file_name);
         exit(1);
     }
 
     // Read numbers from file into buffer.
-    for (int i = 0; i < nrows; i++) {
-        for (int j = 0; j < ncols; j++) {
-            if (!fscanf(file, "%lf", &array[nrows * j + i])) {
+    for (int i = 0; i < nrows; i++)
+    {
+        for (int j = 0; j < ncols; j++)
+        {
+            if (!fscanf(file, "%lf", &array[nrows * j + i]))
+            {
                 break;
             }
         }
@@ -138,13 +166,15 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows, const 
     fclose(file);
 }
 
-void ocp_nlp_dims_print(ocp_nlp_dims *dims) {
+void ocp_nlp_dims_print(ocp_nlp_dims *dims)
+{
     int N = dims->N;
 
     //    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\tns\n");
     printf("k\tnx\tnu\tni\n");
 
-    for (int kk = 0; kk < N + 1; kk++) {
+    for (int kk = 0; kk < N + 1; kk++)
+    {
         //        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk],
         //        dims->nb[kk],
         //            dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->ns[kk]);
@@ -152,18 +182,21 @@ void ocp_nlp_dims_print(ocp_nlp_dims *dims) {
     }
 }
 
-void print_ocp_qp_dims(ocp_qp_dims *dims) {
+void print_ocp_qp_dims(ocp_qp_dims *dims)
+{
     int N = dims->N;
 
     printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\tns\n");
 
-    for (int kk = 0; kk < N + 1; kk++) {
+    for (int kk = 0; kk < N + 1; kk++)
+    {
         printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk], dims->nb[kk],
                dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->ns[kk]);
     }
 }
 
-void print_dense_qp_dims(dense_qp_dims *dims) {
+void print_dense_qp_dims(dense_qp_dims *dims)
+{
     printf("nv = %d\n", dims->nv);
     printf("ne = %d\n", dims->ne);
     printf("nb = %d\n", dims->nb);
@@ -171,7 +204,8 @@ void print_dense_qp_dims(dense_qp_dims *dims) {
     printf("ns = %d\n", dims->ns);
 }
 
-void print_ocp_qp_in(ocp_qp_in *qp_in) {
+void print_ocp_qp_in(ocp_qp_in *qp_in)
+{
     int N = qp_in->dim->N;
     int *nx = qp_in->dim->nx;
     int *nu = qp_in->dim->nu;
@@ -181,37 +215,44 @@ void print_ocp_qp_in(ocp_qp_in *qp_in) {
 
 #if 1
     printf("BAbt =\n");
-    for (int ii = 0; ii < N; ii++) {
+    for (int ii = 0; ii < N; ii++)
+    {
         blasfeo_print_dmat(nu[ii] + nx[ii] + 1, nx[ii + 1], &qp_in->BAbt[ii], 0, 0);
     }
 
     printf("b =\n");
-    for (int ii = 0; ii < N; ii++) {
+    for (int ii = 0; ii < N; ii++)
+    {
         blasfeo_print_tran_dvec(nx[ii + 1], &qp_in->b[ii], 0);
     }
 
     printf("RSQrq =\n");
-    for (int ii = 0; ii < N + 1; ii++) {
+    for (int ii = 0; ii < N + 1; ii++)
+    {
         blasfeo_print_dmat(nu[ii] + nx[ii] + 1, nu[ii] + nx[ii], &qp_in->RSQrq[ii], 0, 0);
     }
 
     printf("rq =\n");
-    for (int ii = 0; ii < N + 1; ii++) {
+    for (int ii = 0; ii < N + 1; ii++)
+    {
         blasfeo_print_tran_dvec(nu[ii] + nx[ii], &qp_in->rqz[ii], 0);
     }
 
     printf("d =\n");
-    for (int ii = 0; ii < N + 1; ii++) {
+    for (int ii = 0; ii < N + 1; ii++)
+    {
         blasfeo_print_tran_dvec(2 * nb[ii] + 2 * ng[ii], &qp_in->d[ii], 0);
     }
 
     printf("idxb =\n");
-    for (int ii = 0; ii < N + 1; ii++) {
+    for (int ii = 0; ii < N + 1; ii++)
+    {
         int_print_mat(1, nb[ii], qp_in->idxb[ii], 1);
     }
 
     printf("DCt =\n");
-    for (int ii = 0; ii < N + 1; ii++) {
+    for (int ii = 0; ii < N + 1; ii++)
+    {
         blasfeo_print_dmat(nu[ii] + nx[ii], ng[ii], &qp_in->DCt[ii], 0, 0);
     }
 
@@ -231,7 +272,8 @@ void print_ocp_qp_in(ocp_qp_in *qp_in) {
 
 #else
 
-    for (int ii = 0; ii <= N; ii++) {
+    for (int ii = 0; ii <= N; ii++)
+    {
         printf("k = %d\n\n", ii);
 
         printf("RSQrq =\n");
@@ -240,7 +282,8 @@ void print_ocp_qp_in(ocp_qp_in *qp_in) {
         printf("rq =\n");
         blasfeo_print_tran_dvec(nu[ii] + nx[ii], &qp_in->rqz[ii], 0);
 
-        if (ii < N) {
+        if (ii < N)
+        {
             printf("BAbt =\n");
             blasfeo_print_dmat(nu[ii] + nx[ii] + 1, nx[ii + 1], &qp_in->BAbt[ii], 0, 0);
 
@@ -275,7 +318,8 @@ void print_ocp_qp_in(ocp_qp_in *qp_in) {
     return;
 }
 
-void print_ocp_qp_out(ocp_qp_out *qp_out) {
+void print_ocp_qp_out(ocp_qp_out *qp_out)
+{
     int ii;
 
     int N = qp_out->dim->N;
@@ -304,13 +348,15 @@ void print_ocp_qp_out(ocp_qp_out *qp_out) {
 
 #else
 
-    for (ii = 0; ii < N + 1; ii++) {
+    for (ii = 0; ii < N + 1; ii++)
+    {
         printf("k = %d\n\n", ii);
 
         printf("ux =\n");
         blasfeo_print_tran_dvec(nu[ii] + nx[ii], &qp_out->ux[ii], 0);
 
-        if (ii < N) {
+        if (ii < N)
+        {
             printf("pi =\n");
             blasfeo_print_tran_dvec(nx[ii], &qp_out->pi[ii], 0);
         }
@@ -323,7 +369,8 @@ void print_ocp_qp_out(ocp_qp_out *qp_out) {
     return;
 }
 
-void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out) {
+void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
+{
     int ii;
 
     int N = dims->N;
@@ -336,17 +383,20 @@ void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out) {
 
     printf("\nN = %d\n", N);
     printf("uxs =\n");
-    for (ii = 0; ii <= N; ii++) {
+    for (ii = 0; ii <= N; ii++)
+    {
         blasfeo_print_tran_dvec(nv[ii], &nlp_out->ux[ii], 0);
     }
 
     printf("pi =\n");
-    for (ii = 0; ii < N; ii++) {
+    for (ii = 0; ii < N; ii++)
+    {
         blasfeo_print_tran_dvec(nx[ii + 1], &nlp_out->pi[ii], 0);
     }
 
     printf("lam =\n");
-    for (ii = 0; ii <= N; ii++) {
+    for (ii = 0; ii <= N; ii++)
+    {
         blasfeo_print_tran_dvec(2 * ni[ii], &nlp_out->lam[ii], 0);
     }
 
@@ -356,13 +406,15 @@ void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out) {
 
 #else
 
-    for (ii = 0; ii < N + 1; ii++) {
+    for (ii = 0; ii < N + 1; ii++)
+    {
         printf("k = %d\n\n", ii);
 
         printf("ux =\n");
         blasfeo_print_tran_dvec(nu[ii] + nx[ii], &nlp_out->ux[ii], 0);
 
-        if (ii < N) {
+        if (ii < N)
+        {
             printf("pi =\n");
             blasfeo_print_tran_dvec(nx[ii], &nlp_out->pi[ii], 0);
         }
@@ -375,7 +427,8 @@ void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out) {
     return;
 }
 
-void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res) {
+void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
+{
     int ii;
 
     int N = dims->N;
@@ -385,29 +438,34 @@ void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res) {
     int *ni = dims->ni;
 
     printf("res_g =\n");
-    for (ii = 0; ii <= N; ii++) {
+    for (ii = 0; ii <= N; ii++)
+    {
         blasfeo_print_exp_tran_dvec(nv[ii], &nlp_res->res_g[ii], 0);
     }
 
     printf("res_b =\n");
-    for (ii = 0; ii < N; ii++) {
+    for (ii = 0; ii < N; ii++)
+    {
         blasfeo_print_exp_tran_dvec(nx[ii + 1], &nlp_res->res_b[ii], 0);
     }
 
     printf("res_d =\n");
-    for (ii = 0; ii <= N; ii++) {
+    for (ii = 0; ii <= N; ii++)
+    {
         blasfeo_print_exp_tran_dvec(2 * ni[ii], &nlp_res->res_d[ii], 0);
     }
 
     printf("res_m =\n");
-    for (ii = 0; ii <= N; ii++) {
+    for (ii = 0; ii <= N; ii++)
+    {
         blasfeo_print_exp_tran_dvec(2 * ni[ii], &nlp_res->res_m[ii], 0);
     }
 
     return;
 }
 
-void print_ocp_qp_res(ocp_qp_res *qp_res) {
+void print_ocp_qp_res(ocp_qp_res *qp_res)
+{
     int ii;
 
     int N = qp_res->dim->N;
@@ -433,14 +491,16 @@ void print_ocp_qp_res(ocp_qp_res *qp_res) {
     return;
 }
 
-void print_ocp_qp_in_to_string(char *string_out, ocp_qp_in *qp_in) {
+void print_ocp_qp_in_to_string(char *string_out, ocp_qp_in *qp_in)
+{
     int N = qp_in->dim->N;
     int *nx = qp_in->dim->nx;
     int *nu = qp_in->dim->nu;
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
 
-    for (int ii = 0; ii < N + 1; ii++) {
+    for (int ii = 0; ii < N + 1; ii++)
+    {
         string_out += sprintf(string_out, "k = %d\n\n", ii);
 
         string_out += sprintf(string_out, "RSQrq =\n");
@@ -450,7 +510,8 @@ void print_ocp_qp_in_to_string(char *string_out, ocp_qp_in *qp_in) {
         string_out += sprintf(string_out, "rq =\n");
         blasfeo_print_to_string_tran_dvec(&string_out, nu[ii] + nx[ii], &qp_in->rqz[ii], 0);
 
-        if (ii < N) {
+        if (ii < N)
+        {
             string_out += sprintf(string_out, "BAbt =\n");
             blasfeo_print_to_string_dmat(&string_out, nu[ii] + nx[ii] + 1, nx[ii + 1],
                                          &qp_in->BAbt[ii], 0, 0);
@@ -468,20 +529,23 @@ void print_ocp_qp_in_to_string(char *string_out, ocp_qp_in *qp_in) {
     }
 }
 
-void print_ocp_qp_out_to_string(char *string_out, ocp_qp_out *qp_out) {
+void print_ocp_qp_out_to_string(char *string_out, ocp_qp_out *qp_out)
+{
     int N = qp_out->dim->N;
     int *nx = qp_out->dim->nx;
     int *nu = qp_out->dim->nu;
     int *nb = qp_out->dim->nb;
     int *ng = qp_out->dim->ng;
 
-    for (int ii = 0; ii < N + 1; ii++) {
+    for (int ii = 0; ii < N + 1; ii++)
+    {
         string_out += sprintf(string_out, "k = %d\n\n", ii);
 
         string_out += sprintf(string_out, "ux =\n");
         blasfeo_print_to_string_tran_dvec(&string_out, nu[ii] + nx[ii], &qp_out->ux[ii], 0);
 
-        if (ii < N) {
+        if (ii < N)
+        {
             string_out += sprintf(string_out, "pi =\n");
             blasfeo_print_to_string_tran_dvec(&string_out, nx[ii], &qp_out->pi[ii], 0);
         }
@@ -492,7 +556,8 @@ void print_ocp_qp_out_to_string(char *string_out, ocp_qp_out *qp_out) {
     }
 }
 
-void print_colmaj_ocp_qp_in(colmaj_ocp_qp_in *qp) {
+void print_colmaj_ocp_qp_in(colmaj_ocp_qp_in *qp)
+{
     int_t N = qp->N;
     printf("ocp_qp structure with contents:\n");
     printf("N: %d\n", qp->N);
@@ -504,8 +569,10 @@ void print_colmaj_ocp_qp_in(colmaj_ocp_qp_in *qp) {
     print_int_matrix("stdout", qp->nb, 1, N + 1);
     printf("nc:\n");
     print_int_matrix("stdout", qp->nc, 1, N + 1);
-    for (int_t stage = 0; stage < N + 1; stage++) {
-        if (stage < N) {
+    for (int_t stage = 0; stage < N + 1; stage++)
+    {
+        if (stage < N)
+        {
             printf("A[%d]:\n", stage);
             print_matrix("stdout", qp->A[stage], qp->nx[stage], qp->nx[stage]);
             printf("B[%d]:\n", stage);
@@ -539,9 +606,11 @@ void print_colmaj_ocp_qp_in(colmaj_ocp_qp_in *qp) {
     printf("\n");
 }
 
-void print_colmaj_ocp_qp_in_to_file(colmaj_ocp_qp_in *qp) {
+void print_colmaj_ocp_qp_in_to_file(colmaj_ocp_qp_in *qp)
+{
     char filename[MAX_STR_LEN];
-    for (int_t i = 0; i <= qp->N; i++) {
+    for (int_t i = 0; i <= qp->N; i++)
+    {
         snprintf(filename, sizeof(filename), "Qm%d.txt", i);
         print_matrix(filename, qp->Q[i], qp->nx[i], qp->nx[i]);
         snprintf(filename, sizeof(filename), "Sm%d.txt", i);
@@ -552,7 +621,8 @@ void print_colmaj_ocp_qp_in_to_file(colmaj_ocp_qp_in *qp) {
         print_matrix(filename, qp->q[i], qp->nx[i], 1);
         snprintf(filename, sizeof(filename), "rv%d.txt", i);
         print_matrix(filename, qp->r[i], qp->nu[i], 1);
-        if (i < qp->N) {
+        if (i < qp->N)
+        {
             snprintf(filename, sizeof(filename), "Am%d.txt", i);
             print_matrix(filename, qp->A[i], qp->nx[i + 1], qp->nx[i + 1]);
             snprintf(filename, sizeof(filename), "Bm%d.txt", i);
@@ -573,13 +643,16 @@ void print_colmaj_ocp_qp_in_to_file(colmaj_ocp_qp_in *qp) {
     }
 }
 
-void print_colmaj_ocp_qp_out(char *filename, colmaj_ocp_qp_in *qp, colmaj_ocp_qp_out *out) {
-    for (int_t i = 0; i <= qp->N; i++) {
+void print_colmaj_ocp_qp_out(char *filename, colmaj_ocp_qp_in *qp, colmaj_ocp_qp_out *out)
+{
+    for (int_t i = 0; i <= qp->N; i++)
+    {
         printf("x[%d]:\n", i);
         print_matrix(filename, out->x[i], qp->nx[i], 1);
         printf("u[%d]:\n", i);
         print_matrix(filename, out->u[i], qp->nu[i], 1);
-        if (i < qp->N) {
+        if (i < qp->N)
+        {
             printf("pi[%d]:\n", i);
             print_matrix(filename, out->pi[i], qp->nx[i], 1);
         }
@@ -588,7 +661,8 @@ void print_colmaj_ocp_qp_out(char *filename, colmaj_ocp_qp_in *qp, colmaj_ocp_qp
     }
 }
 
-void print_dense_qp_in(dense_qp_in *qp_in) {
+void print_dense_qp_in(dense_qp_in *qp_in)
+{
     int nv = qp_in->dim->nv;
     int ne = qp_in->dim->ne;
 
@@ -602,7 +676,8 @@ void print_dense_qp_in(dense_qp_in *qp_in) {
     blasfeo_print_dvec(ne, qp_in->b, 0);
 }
 
-void print_ocp_qp_info(ocp_qp_info *info) {
+void print_ocp_qp_info(ocp_qp_info *info)
+{
     double misc =
         info->total_time - info->condensing_time - info->solve_QP_time - info->interface_time;
     //    assert((misc >= 0 || fabs(misc) <= ACADOS_EPS) && "sum of timings larger than total
@@ -621,7 +696,8 @@ void print_ocp_qp_info(ocp_qp_info *info) {
     printf("***************************************************************\n\n");
 }
 
-void print_blasfeo_target() {
+void print_blasfeo_target()
+{
     printf("\n");
 #if defined(LA_HIGH_PERFORMANCE)
     printf("blasfeo compiled with LA = HIGH_PERFORMANCE\n");

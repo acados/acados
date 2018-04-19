@@ -24,7 +24,8 @@
 #include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
 
-int_t sim_discrete_model(const sim_in *in, sim_out *out, void *args, void *mem, void *work) {
+int_t sim_discrete_model(const sim_in *in, sim_out *out, void *args, void *mem, void *work)
+{
     int_t nx = in->nx;
     int_t nu = in->nu;
     real_t *in_array, *out_array;

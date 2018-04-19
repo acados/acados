@@ -37,9 +37,11 @@
 #define CASADI_N_IN_FUNCTION(a) CASADI_N_IN_FUNCTION_CAT(a)
 #define CASADI_N_OUT_FUNCTION(a) CASADI_N_OUT_FUNCTION_CAT(a)
 
-static void mdlInitializeSizes(SimStruct *S) {
+static void mdlInitializeSizes(SimStruct *S)
+{
     ssSetNumSFcnParams(S, 2);
-    if (ssGetNumSFcnParams(S) != ssGetSFcnParamsCount(S)) {
+    if (ssGetNumSFcnParams(S) != ssGetSFcnParamsCount(S))
+    {
         return; /* Parameter mismatch will be reported by Simulink */
     }
     const mxArray *Q = ssGetSFcnParam(S, 0);
@@ -64,13 +66,15 @@ static void mdlInitializeSizes(SimStruct *S) {
     ssSetNumSampleTimes(S, 1);
 }
 
-static void mdlInitializeSampleTimes(SimStruct *S) {
+static void mdlInitializeSampleTimes(SimStruct *S)
+{
     ssSetSampleTime(S, 0, INHERITED_SAMPLE_TIME);
     ssSetOffsetTime(S, 0, 0.0);
 }
 
 #define MDL_START
-static void mdlStart(SimStruct *S) {
+static void mdlStart(SimStruct *S)
+{
     const mxArray *Q = ssGetSFcnParam(S, 0);
     const mxArray *R = ssGetSFcnParam(S, 1);
 
@@ -83,7 +87,8 @@ static void mdlStart(SimStruct *S) {
         nbx[NUM_STAGES + 1], nbu[NUM_STAGES + 1], ng[NUM_STAGES + 1], nh[NUM_STAGES + 1],
         ns[NUM_STAGES + 1], nq[NUM_STAGES + 1];
 
-    for (int i = 0; i < NUM_STAGES; ++i) {
+    for (int i = 0; i < NUM_STAGES; ++i)
+    {
         nx[i] = num_states;
         nu[i] = num_controls;
         ny[i] = num_states + num_controls;
@@ -112,7 +117,8 @@ static void mdlStart(SimStruct *S) {
     ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NUM_STAGES);
     plan->nlp_solver = SQP_GN;
 
-    for (int i = 0; i < NUM_STAGES; i++) {
+    for (int i = 0; i < NUM_STAGES; i++)
+    {
         plan->nlp_cost[i] = LINEAR_LS;
         plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
         plan->sim_solver_plan[i].sim_solver = ERK;
@@ -127,7 +133,8 @@ static void mdlStart(SimStruct *S) {
     ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, ns, nq, nlp_dims);
 
     external_function_casadi *expl_vde_for = malloc(NUM_STAGES * sizeof(external_function_casadi));
-    for (int i = 0; i < NUM_STAGES; ++i) {
+    for (int i = 0; i < NUM_STAGES; ++i)
+    {
         expl_vde_for[i].casadi_fun = &MODEL_NAME;
         expl_vde_for[i].casadi_work = &CASADI_WORK_FUNCTION(MODEL_NAME);
         expl_vde_for[i].casadi_sparsity_in = &CASADI_SPARSITY_IN_FUNCTION(MODEL_NAME);
@@ -143,7 +150,8 @@ static void mdlStart(SimStruct *S) {
     for (int i = 0; i < NUM_STAGES; ++i) nlp_in->Ts[i] = HORIZON_LENGTH / NUM_STAGES;
 
     ocp_nlp_cost_ls_model *stage_cost_ls;
-    for (int i = 0; i <= NUM_STAGES; ++i) {
+    for (int i = 0; i <= NUM_STAGES; ++i)
+    {
         stage_cost_ls = (ocp_nlp_cost_ls_model *)nlp_in->cost[i];
         // Cyt
         blasfeo_dgese(nu[i] + nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
@@ -161,7 +169,8 @@ static void mdlStart(SimStruct *S) {
         blasfeo_dvecse(nu[i], 0.0, &stage_cost_ls->y_ref, nx[i]);
     }
 
-    for (int i = 0; i < NUM_STAGES; ++i) {
+    for (int i = 0; i < NUM_STAGES; ++i)
+    {
         nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
     }
 
@@ -184,7 +193,8 @@ static void mdlStart(SimStruct *S) {
     ssGetPWork(S)[4] = (void *)nlp_solver;
 }
 
-static void mdlOutputs(SimStruct *S, int_T tid) {
+static void mdlOutputs(SimStruct *S, int_T tid)
+{
     ocp_nlp_in *nlp_in = (ocp_nlp_in *)ssGetPWork(S)[1];
     ocp_nlp_out *nlp_out = (ocp_nlp_out *)ssGetPWork(S)[2];
     ocp_nlp_solver *nlp_solver = (ocp_nlp_solver *)ssGetPWork(S)[4];
@@ -212,7 +222,8 @@ static void mdlOutputs(SimStruct *S, int_T tid) {
     *status_out = (double)status;
 }
 
-static void mdlTerminate(SimStruct *S) {
+static void mdlTerminate(SimStruct *S)
+{
     free(ssGetPWork(S)[0]);
     free(ssGetPWork(S)[1]);
     free(ssGetPWork(S)[2]);

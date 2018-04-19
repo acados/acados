@@ -36,7 +36,8 @@ extern "C" {
  * dims
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int nx;  // number of states
     int nu;  // number of inputs
     int ny;  // number of outputs
@@ -54,7 +55,8 @@ void ocp_nlp_cost_nls_dims_initialize(void *config, void *dims, int nx, int nu, 
  * model
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     external_function_generic *nls_jac;   // evaluation and jacobian of ls residuals
     external_function_generic *nls_hess;  // hessian*seeds of ls residuals
     struct blasfeo_dmat W;
@@ -74,7 +76,8 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config);
  * options
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     bool gauss_newton_hess;  // gauss-newton hessian approximation
 } ocp_nlp_cost_nls_opts;
 
@@ -91,7 +94,8 @@ void ocp_nlp_cost_nls_opts_update(void *config, void *dims, void *opts);
  * memory
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dmat W_chol;  // cholesky factor of weight matrix
     struct blasfeo_dmat Jt;      // jacobian of nls fun
     struct blasfeo_dvec res;     // nls residual r(x)
@@ -118,7 +122,8 @@ void ocp_nlp_cost_nls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
  * workspace
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dmat tmp_nv_ny;
     struct blasfeo_dvec tmp_ny;
 } ocp_nlp_cost_nls_workspace;

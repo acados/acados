@@ -29,12 +29,14 @@
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/utils/mem.h"
 
-ocp_qp_condensing_config *ocp_qp_condensing_config_create(condensing_plan *plan) {
+ocp_qp_condensing_config *ocp_qp_condensing_config_create(condensing_plan *plan)
+{
     int bytes = ocp_qp_condensing_config_calculate_size();
     void *ptr = calloc(1, bytes);
     ocp_qp_condensing_config *config = ocp_qp_condensing_config_assign(ptr);
 
-    switch (plan->condensing_type) {
+    switch (plan->condensing_type)
+    {
         case PARTIAL_CONDENSING:
             ocp_qp_partial_condensing_config_initialize_default(config);
             break;
@@ -45,7 +47,8 @@ ocp_qp_condensing_config *ocp_qp_condensing_config_create(condensing_plan *plan)
     return config;
 }
 
-void *ocp_qp_condensing_opts_create(ocp_qp_condensing_config *config, void *dims_) {
+void *ocp_qp_condensing_opts_create(ocp_qp_condensing_config *config, void *dims_)
+{
     int bytes = config->opts_calculate_size(dims_);
 
     void *ptr = calloc(1, bytes);
@@ -57,7 +60,8 @@ void *ocp_qp_condensing_opts_create(ocp_qp_condensing_config *config, void *dims
     return opts;
 }
 
-int ocp_qp_condensing_calculate_size(ocp_qp_condensing_config *config, void *dims_, void *opts_) {
+int ocp_qp_condensing_calculate_size(ocp_qp_condensing_config *config, void *dims_, void *opts_)
+{
     int bytes = sizeof(condensing_module);
 
     bytes += config->memory_calculate_size(dims_, opts_);
@@ -67,7 +71,8 @@ int ocp_qp_condensing_calculate_size(ocp_qp_condensing_config *config, void *dim
 }
 
 condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, void *dims_,
-                                            void *opts_, void *raw_memory) {
+                                            void *opts_, void *raw_memory)
+{
     char *c_ptr = (char *)raw_memory;
 
     condensing_module *module = (condensing_module *)c_ptr;
@@ -89,7 +94,8 @@ condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, vo
 }
 
 condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, void *dims_,
-                                            void *opts_) {
+                                            void *opts_)
+{
     config->opts_update(dims_, opts_);
     int bytes = ocp_qp_condensing_calculate_size(config, dims_, opts_);
 
@@ -100,10 +106,12 @@ condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, vo
     return module;
 }
 
-int ocp_qp_condense(condensing_module *module, void *qp_in, void *qp_out) {
+int ocp_qp_condense(condensing_module *module, void *qp_in, void *qp_out)
+{
     return module->config->condensing(qp_in, qp_out, module->opts, module->mem, module->work);
 }
 
-int ocp_qp_expand(condensing_module *module, void *qp_in, void *qp_out) {
+int ocp_qp_expand(condensing_module *module, void *qp_in, void *qp_out)
+{
     return module->config->expansion(qp_in, qp_out, module->opts, module->mem, module->work);
 }

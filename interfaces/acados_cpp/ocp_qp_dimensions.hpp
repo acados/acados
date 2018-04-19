@@ -27,8 +27,8 @@
 
 #include "acados_c/ocp_qp_interface.h"
 
-namespace acados {
-
+namespace acados
+{
 const std::vector<std::string> dimension_keys{"nx", "nu", "nbx", "nbu", "ng"};
 
 bool valid_dimensions(std::map<std::string, std::vector<uint>> dims);

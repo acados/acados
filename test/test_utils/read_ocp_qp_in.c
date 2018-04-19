@@ -29,13 +29,16 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
-static void transpose_matrix(real_t *mat, int m, int n) {
+static void transpose_matrix(real_t *mat, int m, int n)
+{
     int_t ii, jj;
     real_t *tmp;
     d_zeros(&tmp, m, n);
 
-    for (jj = 0; jj < n; jj++) {
-        for (ii = 0; ii < m; ii++) {
+    for (jj = 0; jj < n; jj++)
+    {
+        for (ii = 0; ii < m; ii++)
+        {
             tmp[ii * n + jj] = mat[jj * m + ii];
         }
     }
@@ -43,17 +46,20 @@ static void transpose_matrix(real_t *mat, int m, int n) {
     d_free(tmp);
 }
 
-int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *fname) {
+int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *fname)
+{
     int_t status, ii;
     FILE *myFile;
     myFile = fopen(fname, "r");
 
-    if (myFile == NULL) {
+    if (myFile == NULL)
+    {
         printf("Error Reading File %s ! ! ! ! ! ! ! ! !\n", fname);
         return -1;
     }
 
-    for (ii = 0; ii < n; ii++) {
+    for (ii = 0; ii < n; ii++)
+    {
         status = fscanf(myFile, "%d,", &vec[ii]);
         assert(status >= 0);
     }
@@ -63,17 +69,20 @@ int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *fname) {
     return 0;
 }
 
-int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *fname) {
+int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *fname)
+{
     int_t status, ii;
     FILE *myFile;
     myFile = fopen(fname, "r");
 
-    if (myFile == NULL) {
+    if (myFile == NULL)
+    {
         printf("Error opening file %s ! ! ! ! ! ! ! ! !\n", fname);
         return -1;
     }
 
-    for (ii = 0; ii < n; ii++) {
+    for (ii = 0; ii < n; ii++)
+    {
         status = fscanf(myFile, "%lf,", &vec[ii]);
         assert(status >= 0);
     }
@@ -83,25 +92,29 @@ int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *fname) {
     return 0;
 }
 
-int_t read_double_matrix_from_txt(real_t *mat, int_t m, int_t n, const char *fname) {
+int_t read_double_matrix_from_txt(real_t *mat, int_t m, int_t n, const char *fname)
+{
     int_t status;
     status = read_double_vector_from_txt(mat, m * n, fname);
     transpose_matrix(mat, n, m);
     return status;
 }
 
-int_t write_double_vector_to_txt(real_t *vec, int_t n, const char *fname) {
+int_t write_double_vector_to_txt(real_t *vec, int_t n, const char *fname)
+{
     int_t i, status;
     FILE *myFile;
 
     myFile = fopen(fname, "wr");
 
-    if (myFile == NULL) {
+    if (myFile == NULL)
+    {
         printf("Error opening file %s ! ! ! ! ! ! ! ! !\n", fname);
         return -1;
     }
 
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++)
+    {
         status = fprintf(myFile, "%.16e\n", vec[i]);
         assert(status >= 0);
     }
@@ -111,18 +124,21 @@ int_t write_double_vector_to_txt(real_t *vec, int_t n, const char *fname) {
     return 0;
 }
 
-int_t write_int_vector_to_txt(int_t *vec, int_t n, const char *fname) {
+int_t write_int_vector_to_txt(int_t *vec, int_t n, const char *fname)
+{
     int_t i, status;
     FILE *myFile;
 
     myFile = fopen(fname, "wr");
 
-    if (myFile == NULL) {
+    if (myFile == NULL)
+    {
         printf("Error opening file %s ! ! ! ! ! ! ! ! !\n", fname);
         return -1;
     }
 
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++)
+    {
         status = fprintf(myFile, "%d\n", vec[i]);
         assert(status >= 0);
     }
@@ -132,7 +148,8 @@ int_t write_int_vector_to_txt(int_t *vec, int_t n, const char *fname) {
     return 0;
 }
 
-static void read_ocp_qp_in_N(int_t *N, const char *fpath) {
+static void read_ocp_qp_in_N(int_t *N, const char *fpath)
+{
     char fname[MAX_STR_LEN];
     int status;
     snprintf(fname, sizeof(fname), "%s%s", fpath, "N.txt");
@@ -141,7 +158,8 @@ static void read_ocp_qp_in_N(int_t *N, const char *fpath) {
     assert(*N > 0);
 }
 
-static void read_ocp_qp_in_nx(int_t **nx, int_t N, const char *fpath) {
+static void read_ocp_qp_in_nx(int_t **nx, int_t N, const char *fpath)
+{
     int_t kk, status;
     char fname[MAX_STR_LEN];
 
@@ -151,7 +169,8 @@ static void read_ocp_qp_in_nx(int_t **nx, int_t N, const char *fpath) {
     for (kk = 0; kk < N + 1; kk++) assert(nx[0][kk] >= 0);
 }
 
-static void read_ocp_qp_in_nu(int_t **nu, int_t N, const char *fpath) {
+static void read_ocp_qp_in_nu(int_t **nu, int_t N, const char *fpath)
+{
     int_t kk, status;
     char fname[MAX_STR_LEN];
 
@@ -161,7 +180,8 @@ static void read_ocp_qp_in_nu(int_t **nu, int_t N, const char *fpath) {
     for (kk = 0; kk < N; kk++) assert(nu[0][kk] >= 0);
 }
 
-static void read_ocp_qp_in_nb(int_t **nb, int_t N, const char *fpath) {
+static void read_ocp_qp_in_nb(int_t **nb, int_t N, const char *fpath)
+{
     int_t kk, status;
     char fname[MAX_STR_LEN];
 
@@ -171,7 +191,8 @@ static void read_ocp_qp_in_nb(int_t **nb, int_t N, const char *fpath) {
     for (kk = 0; kk < N + 1; kk++) assert(nb[0][kk] >= 0);
 }
 
-static void read_ocp_qp_in_nc(int_t **nc, int_t N, const char *fpath) {
+static void read_ocp_qp_in_nc(int_t **nc, int_t N, const char *fpath)
+{
     int_t kk, status;
     char fname[MAX_STR_LEN];
 
@@ -181,13 +202,15 @@ static void read_ocp_qp_in_nc(int_t **nc, int_t N, const char *fpath) {
     for (kk = 0; kk < N + 1; kk++) assert(nc[0][kk] >= 0);
 }
 
-static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
+static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath)
+{
     int_t kk, N, status;
     char fname[MAX_STR_LEN];
     char stage[16];
     N = in->N;
 
-    for (kk = 0; kk < N; kk++) {
+    for (kk = 0; kk < N; kk++)
+    {
         snprintf(stage, sizeof(stage), "%d", kk);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "Q", kk, ".txt");
@@ -234,12 +257,14 @@ static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
     assert(status == 0);
 }
 
-static void read_ocp_qp_in_bounds(ocp_qp_in *const in, const char *fpath) {
+static void read_ocp_qp_in_bounds(ocp_qp_in *const in, const char *fpath)
+{
     char fname[MAX_STR_LEN];
     char stage[16];
     int_t ii, kk, status;
 
-    for (kk = 0; kk <= in->N; kk++) {
+    for (kk = 0; kk <= in->N; kk++)
+    {
         snprintf(stage, sizeof(stage), "%d", kk);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "lb", kk, ".txt");
@@ -253,7 +278,8 @@ static void read_ocp_qp_in_bounds(ocp_qp_in *const in, const char *fpath) {
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "idxb", kk, ".txt");
         status = read_int_vector_from_txt((int_t *)in->idxb[kk], in->nb[kk], fname);
         assert(status == 0);
-        for (ii = 0; ii < in->nb[kk]; ii++) {
+        for (ii = 0; ii < in->nb[kk]; ii++)
+        {
             assert(in->idxb[kk][ii] >= 0);
             if (kk < in->N) assert(in->idxb[kk][ii] < in->nx[kk] + in->nu[kk]);
             if (kk == in->N) assert(in->idxb[kk][ii] < in->nx[kk]);
@@ -262,12 +288,14 @@ static void read_ocp_qp_in_bounds(ocp_qp_in *const in, const char *fpath) {
     }
 }
 
-static void read_ocp_qp_in_polyhedral(ocp_qp_in *const in, const char *fpath) {
+static void read_ocp_qp_in_polyhedral(ocp_qp_in *const in, const char *fpath)
+{
     char fname[MAX_STR_LEN];
     char stage[16];
     int_t ii, kk, status;
 
-    for (kk = 0; kk <= in->N; kk++) {
+    for (kk = 0; kk <= in->N; kk++)
+    {
         snprintf(stage, sizeof(stage), "%d", kk);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "lc", kk, ".txt");
@@ -282,7 +310,8 @@ static void read_ocp_qp_in_polyhedral(ocp_qp_in *const in, const char *fpath) {
         status = read_double_matrix_from_txt((real_t *)in->Cx[kk], in->nc[kk], in->nx[kk], fname);
         assert(status == 0);
 
-        if (kk < in->N) {
+        if (kk < in->N)
+        {
             snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "Cu", kk, ".txt");
             status =
                 read_double_matrix_from_txt((real_t *)in->Cu[kk], in->nc[kk], in->nu[kk], fname);
@@ -292,7 +321,8 @@ static void read_ocp_qp_in_polyhedral(ocp_qp_in *const in, const char *fpath) {
     }
 }
 
-static void read_ocp_qp_in_x0(ocp_qp_in *const in, const char *fpath) {
+static void read_ocp_qp_in_x0(ocp_qp_in *const in, const char *fpath)
+{
     char fname[MAX_STR_LEN];
     int ii, status, *ptr;
 
@@ -306,16 +336,21 @@ static void read_ocp_qp_in_x0(ocp_qp_in *const in, const char *fpath) {
     for (ii = 0; ii < in->nx[0]; ii++) ptr[ii] = ii;
 }
 
-static int_t check_for_slash_on_dir(const char *fpath) {
+static int_t check_for_slash_on_dir(const char *fpath)
+{
     int_t pathLength = (int_t)strlen(fpath);
-    if ((fpath[pathLength - 1] != '/') && (fpath[pathLength - 1] != '\\')) {
+    if ((fpath[pathLength - 1] != '/') && (fpath[pathLength - 1] != '\\'))
+    {
         return -1;
-    } else {
+    }
+    else
+    {
         return 0;
     }
 }
 
-void print_ocp_qp_in(ocp_qp_in const in) {
+void print_ocp_qp_in(ocp_qp_in const in)
+{
     int_t kk, ii;
     int_t N = in.N;
     printf("\n----------------------------------\n");
@@ -330,21 +365,26 @@ void print_ocp_qp_in(ocp_qp_in const in) {
     printf("nc:\n");
     int_print_mat(1, N + 1, (int_t *)in.nc, 1);
     printf("bounds:\n");
-    for (kk = 0; kk <= N; kk++) {
-        for (ii = 0; ii < in.nb[kk]; ii++) {
+    for (kk = 0; kk <= N; kk++)
+    {
+        for (ii = 0; ii < in.nb[kk]; ii++)
+        {
             printf("%2.2f  <=  z_%d[%d]  <=  %2.2f\n", in.lb[kk][ii], kk, in.idxb[kk][ii],
                    in.ub[kk][ii]);
         }
     }
     printf("\ninequality bounds:\n");
-    for (kk = 0; kk <= N; kk++) {
-        for (ii = 0; ii < in.nc[kk]; ii++) {
+    for (kk = 0; kk <= N; kk++)
+    {
+        for (ii = 0; ii < in.nc[kk]; ii++)
+        {
             printf("%2.2f  <=  [Cx_%d[%d] Cu_%d[%d]]*z_%d  <=  %2.2f\n", in.lc[kk][ii], kk, ii, kk,
                    ii, kk, in.uc[kk][ii]);
         }
     }
     printf("\nobjective:");
-    for (kk = 0; kk < N; kk++) {
+    for (kk = 0; kk < N; kk++)
+    {
         printf("\nQ[%d] =\n", kk);
         d_print_mat(in.nx[kk], in.nx[kk], (real_t *)in.Q[kk], in.nx[kk]);
         printf("\nR[%d] =\n", kk);
@@ -362,7 +402,8 @@ void print_ocp_qp_in(ocp_qp_in const in) {
     d_print_mat(in.nx[N], 1, (real_t *)in.q[N], in.nx[N]);
 
     printf("\nequalities:");
-    for (kk = 0; kk < N; kk++) {
+    for (kk = 0; kk < N; kk++)
+    {
         printf("\nA[%d] =\n", kk);
         d_print_mat(in.nx[kk + 1], in.nx[kk], (real_t *)in.A[kk], in.nx[kk + 1]);
         printf("\nB[%d] =\n", kk);
@@ -371,15 +412,18 @@ void print_ocp_qp_in(ocp_qp_in const in) {
         d_print_mat(in.nx[kk + 1], 1, (real_t *)in.b[kk], in.nx[kk + 1]);
     }
     printf("\ninequalities:");
-    for (kk = 0; kk < N; kk++) {
-        if (in.nc[kk] > 0) {
+    for (kk = 0; kk < N; kk++)
+    {
+        if (in.nc[kk] > 0)
+        {
             printf("\nCx[%d] =\n", kk);
             d_print_mat(in.nc[kk], in.nx[kk], (real_t *)in.Cx[kk], in.nc[kk]);
             printf("\nCu[%d] =\n", kk);
             d_print_mat(in.nc[kk], in.nu[kk], (real_t *)in.Cu[kk], in.nc[kk]);
         }
     }
-    if (in.nc[N] > 0) {
+    if (in.nc[N] > 0)
+    {
         printf("\nCx[%d] =\n", kk);
         d_print_mat(in.nc[N], in.nx[N], (real_t *)in.Cx[N], in.nc[N]);
         printf("\n----------------------------------\n");
@@ -387,7 +431,8 @@ void print_ocp_qp_in(ocp_qp_in const in) {
 }
 
 ocp_qp_in *read_ocp_qp_in(const char *fpath_, int_t BOUNDS, int_t INEQUALITIES, int_t MPC,
-                          int_t QUIET) {
+                          int_t QUIET)
+{
     char fpath[MAX_STR_LEN];
     int_t ii, kk, N, pathLength;
     int_t *nx, *nu, *nb, *nc;
@@ -395,9 +440,12 @@ ocp_qp_in *read_ocp_qp_in(const char *fpath_, int_t BOUNDS, int_t INEQUALITIES, 
     // adding slash at the end if missing
     pathLength = (int_t)strlen(fpath_);
     // TODO(dimitris): add windows support..
-    if (fpath_[pathLength - 1] != '/') {
+    if (fpath_[pathLength - 1] != '/')
+    {
         snprintf(fpath, sizeof(fpath), "%s%c", fpath_, '/');
-    } else {
+    }
+    else
+    {
         snprintf(fpath, sizeof(fpath), "%s", fpath_);
     }
 
@@ -411,7 +459,8 @@ ocp_qp_in *read_ocp_qp_in(const char *fpath_, int_t BOUNDS, int_t INEQUALITIES, 
     read_ocp_qp_in_nx(&nx, N, fpath);
     read_ocp_qp_in_nu(&nu, N, fpath);
 
-    if (BOUNDS) {
+    if (BOUNDS)
+    {
         read_ocp_qp_in_nb(&nb, N, fpath);
         for (kk = 0; kk < N; kk++) assert(nb[kk] <= nx[kk] + nu[kk]);
         assert(nb[N] <= nx[N]);
@@ -425,9 +474,12 @@ ocp_qp_in *read_ocp_qp_in(const char *fpath_, int_t BOUNDS, int_t INEQUALITIES, 
     if (BOUNDS) read_ocp_qp_in_bounds(in, fpath);
     if (INEQUALITIES) read_ocp_qp_in_polyhedral(in, fpath);
     if (MPC) read_ocp_qp_in_x0(in, fpath);  // NOTE: call it always AFTER the bounds
-    if (BOUNDS && MPC) {
-        for (ii = 0; ii < in->nx[0]; ii++) {
-            if (in->idxb[0][ii] != ii) {
+    if (BOUNDS && MPC)
+    {
+        for (ii = 0; ii < in->nx[0]; ii++)
+        {
+            if (in->idxb[0][ii] != ii)
+            {
                 printf("\nERROR: Not implemented yet!\n");
                 printf("If BOUNDS == 1 & MPC == 1, x0 must be bounded: idxb[0][0:nx-1] = 0:nx-1\n");
                 assert(0 == 1);
@@ -445,7 +497,8 @@ ocp_qp_in *read_ocp_qp_in(const char *fpath_, int_t BOUNDS, int_t INEQUALITIES, 
     return in;
 }
 
-void write_ocp_qp_in_to_txt(ocp_qp_in *const in, const char *dir) {
+void write_ocp_qp_in_to_txt(ocp_qp_in *const in, const char *dir)
+{
     int_t nQ = 0;
     int_t nR = 0;
     int_t nq = 0;
@@ -468,20 +521,25 @@ void write_ocp_qp_in_to_txt(ocp_qp_in *const in, const char *dir) {
     real_t *lb_vertcat, *ub_vertcat;
 
     int_t ans = check_for_slash_on_dir(dir);
-    if (ans == -1) {
+    if (ans == -1)
+    {
         // TODO(dimitris): add windows support
         sep[0] = '/';
-    } else {
+    }
+    else
+    {
         sep[0] = '\0';
     }
 
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk < in->N + 1; kk++)
+    {
         nz += in->nx[kk] + in->nu[kk];
         nQ += in->nx[kk] * in->nx[kk];
         nR += in->nu[kk] * in->nu[kk];
         nq += in->nx[kk];
         nr += in->nu[kk];
-        if (kk < in->N) {
+        if (kk < in->N)
+        {
             nA += in->nx[kk] * in->nx[kk];
             nB += in->nx[kk] * in->nu[kk];
             nb += in->nx[kk];
@@ -504,63 +562,80 @@ void write_ocp_qp_in_to_txt(ocp_qp_in *const in, const char *dir) {
 
     // Write Q matrices
     ind = 0;
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk < in->N + 1; kk++)
+    {
         nx[kk] = in->nx[kk];
-        for (ii = 0; ii < in->nx[kk] * in->nx[kk]; ii++) {
+        for (ii = 0; ii < in->nx[kk] * in->nx[kk]; ii++)
+        {
             Q_vertcat[ind++] = in->Q[kk][ii];
         }
     }
     // Write R matrices
     ind = 0;
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk < in->N + 1; kk++)
+    {
         nu[kk] = in->nu[kk];
-        for (ii = 0; ii < in->nu[kk] * in->nu[kk]; ii++) {
+        for (ii = 0; ii < in->nu[kk] * in->nu[kk]; ii++)
+        {
             R_vertcat[ind++] = in->R[kk][ii];
         }
     }
     // Write q vectors
     ind = 0;
-    for (kk = 0; kk < in->N + 1; kk++) {
-        for (ii = 0; ii < nx[kk]; ii++) {
+    for (kk = 0; kk < in->N + 1; kk++)
+    {
+        for (ii = 0; ii < nx[kk]; ii++)
+        {
             q_vertcat[ind++] = in->q[kk][ii];
         }
     }
     // Write r vectors
     ind = 0;
-    for (kk = 0; kk < in->N + 1; kk++) {
-        for (ii = 0; ii < nu[kk]; ii++) {
+    for (kk = 0; kk < in->N + 1; kk++)
+    {
+        for (ii = 0; ii < nu[kk]; ii++)
+        {
             r_vertcat[ind++] = in->r[kk][ii];
         }
     }
     // Write A matrices
     ind = 0;
-    for (kk = 0; kk < in->N; kk++) {
-        for (ii = 0; ii < nx[kk] * nx[kk]; ii++) {
+    for (kk = 0; kk < in->N; kk++)
+    {
+        for (ii = 0; ii < nx[kk] * nx[kk]; ii++)
+        {
             A_vertcat[ind++] = in->A[kk][ii];
         }
     }
     // Write B matrices
     ind = 0;
-    for (kk = 0; kk < in->N; kk++) {
-        for (ii = 0; ii < nx[kk] * nu[kk]; ii++) {
+    for (kk = 0; kk < in->N; kk++)
+    {
+        for (ii = 0; ii < nx[kk] * nu[kk]; ii++)
+        {
             B_vertcat[ind++] = in->B[kk][ii];
         }
     }
     // Write b vectors
     ind = 0;
-    for (kk = 0; kk < in->N; kk++) {
-        for (ii = 0; ii < nx[kk]; ii++) {
+    for (kk = 0; kk < in->N; kk++)
+    {
+        for (ii = 0; ii < nx[kk]; ii++)
+        {
             b_vertcat[ind++] = in->b[kk][ii];
         }
     }
     // Write bounds
     ind = 0;
-    for (kk = 0; kk < in->N + 1; kk++) {
-        for (ii = 0; ii < nx[kk] + nu[kk]; ii++) {
+    for (kk = 0; kk < in->N + 1; kk++)
+    {
+        for (ii = 0; ii < nx[kk] + nu[kk]; ii++)
+        {
             lb_vertcat[ind + ii] = -infty;
             ub_vertcat[ind + ii] = infty;
         }
-        for (ii = 0; ii < in->nb[kk]; ii++) {
+        for (ii = 0; ii < in->nb[kk]; ii++)
+        {
             lb_vertcat[ind + in->idxb[kk][ii]] = in->lb[kk][ii];
             ub_vertcat[ind + in->idxb[kk][ii]] = in->ub[kk][ii];
         }

@@ -31,7 +31,8 @@
  * config
  ************************************************/
 
-int sim_solver_config_calculate_size() {
+int sim_solver_config_calculate_size()
+{
     int size = 0;
 
     size += sizeof(sim_solver_config);
@@ -39,7 +40,8 @@ int sim_solver_config_calculate_size() {
     return size;
 }
 
-sim_solver_config *sim_solver_config_assign(void *raw_memory) {
+sim_solver_config *sim_solver_config_assign(void *raw_memory)
+{
     char *c_ptr = raw_memory;
 
     sim_solver_config *config = (sim_solver_config *)c_ptr;
@@ -54,13 +56,15 @@ sim_solver_config *sim_solver_config_assign(void *raw_memory) {
  * dims
  ************************************************/
 
-int sim_dims_calculate_size() {
+int sim_dims_calculate_size()
+{
     int size = sizeof(sim_dims);
 
     return size;
 }
 
-sim_dims *sim_dims_assign(void *raw_memory) {
+sim_dims *sim_dims_assign(void *raw_memory)
+{
     char *c_ptr = (char *)raw_memory;
 
     sim_dims *dims = (sim_dims *)c_ptr;
@@ -75,7 +79,8 @@ sim_dims *sim_dims_assign(void *raw_memory) {
  * in
  ************************************************/
 
-int sim_in_calculate_size(void *config_, sim_dims *dims) {
+int sim_in_calculate_size(void *config_, sim_dims *dims)
+{
     sim_solver_config *config = config_;
 
     int size = sizeof(sim_in);
@@ -96,7 +101,8 @@ int sim_in_calculate_size(void *config_, sim_dims *dims) {
     return size;
 }
 
-sim_in *sim_in_assign(void *config_, sim_dims *dims, void *raw_memory) {
+sim_in *sim_in_assign(void *config_, sim_dims *dims, void *raw_memory)
+{
     sim_solver_config *config = config_;
 
     char *c_ptr = (char *)raw_memory;
@@ -129,7 +135,8 @@ sim_in *sim_in_assign(void *config_, sim_dims *dims, void *raw_memory) {
  * out
  ************************************************/
 
-int sim_out_calculate_size(void *config_, sim_dims *dims) {
+int sim_out_calculate_size(void *config_, sim_dims *dims)
+{
     /* sim_solver_config *config = config_; */
 
     int size = sizeof(sim_out);
@@ -151,7 +158,8 @@ int sim_out_calculate_size(void *config_, sim_dims *dims) {
     return size;
 }
 
-sim_out *sim_out_assign(void *config_, sim_dims *dims, void *raw_memory) {
+sim_out *sim_out_assign(void *config_, sim_dims *dims, void *raw_memory)
+{
     /* sim_solver_config *config = config_; */
 
     char *c_ptr = (char *)raw_memory;

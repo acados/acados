@@ -28,11 +28,13 @@ extern "C" {
 
 typedef enum { ERK, LIFTED_IRK, IRK, NEW_LIFTED_IRK } sim_solver_t;
 
-typedef struct {
+typedef struct
+{
     sim_solver_t sim_solver;
 } sim_solver_plan;
 
-typedef struct {
+typedef struct
+{
     sim_solver_config *config;
     void *dims;
     void *opts;

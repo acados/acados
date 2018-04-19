@@ -40,7 +40,8 @@ typedef struct d_dense_qp_res_workspace dense_qp_res_ws;
 #ifndef QP_SOLVER_CONFIG_
 #define QP_SOLVER_CONFIG_
 
-typedef struct {
+typedef struct
+{
     // TODO(dimitris): pass dims to evaluate?
     int (*evaluate)(void *config, void *qp_in, void *qp_out, void *args, void *mem, void *work);
     int (*opts_calculate_size)(void *config, void *dims);
@@ -54,7 +55,8 @@ typedef struct {
 
 #endif
 
-typedef struct {
+typedef struct
+{
     double solve_QP_time;
     double interface_time;
     double total_time;

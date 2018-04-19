@@ -21,4 +21,6 @@
 
 void copy_real_matrix_sequence(const int_t int_num_matrices, const int_t *matrix_num_rows,
                                const int_t *matrix_num_cols, const real_t **source,
-                               real_t **destination) {}
+                               real_t **destination)
+{
+}

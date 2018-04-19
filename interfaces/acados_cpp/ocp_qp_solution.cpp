@@ -26,19 +26,22 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 
-namespace acados {
-
+namespace acados
+{
 ocp_qp_solution::ocp_qp_solution(std::unique_ptr<ocp_qp_out> solution)
-    : N(solution->dim->N), qp_out(nullptr) {
+    : N(solution->dim->N), qp_out(nullptr)
+{
     if (solution == nullptr) throw std::invalid_argument("Null pointer passed to constructor");
     qp_out = std::move(solution);
 }
 
-ocp_qp_solution::ocp_qp_solution(ocp_qp_solution &&other) : N(other.N), qp_out(nullptr) {
+ocp_qp_solution::ocp_qp_solution(ocp_qp_solution &&other) : N(other.N), qp_out(nullptr)
+{
     std::swap(qp_out, other.qp_out);
 }
 
-ocp_qp_solution::ocp_qp_solution(const ocp_qp_solution &other) : N(other.N), qp_out(nullptr) {
+ocp_qp_solution::ocp_qp_solution(const ocp_qp_solution &other) : N(other.N), qp_out(nullptr)
+{
     auto dims = std::unique_ptr<ocp_qp_dims>(ocp_qp_dims_create(N));
 
     std::copy_n(other.qp_out->dim->nx, N + 1, dims->nx);
@@ -51,7 +54,8 @@ ocp_qp_solution::ocp_qp_solution(const ocp_qp_solution &other) : N(other.N), qp_
 
     qp_out = std::unique_ptr<ocp_qp_out>(ocp_qp_out_create(NULL, dims.get()));
 
-    for (int i = 0; i <= N; ++i) {
+    for (int i = 0; i <= N; ++i)
+    {
         blasfeo_dveccp(dims->nx[i] + dims->nu[i], &other.qp_out->ux[i], 0, &qp_out->ux[i], 0);
         if (i < N) blasfeo_dveccp(dims->nx[i + 1], &other.qp_out->pi[i], 0, &qp_out->pi[i], 0);
         blasfeo_dveccp(2 * dims->nb[i] + 2 * dims->ng[i], &other.qp_out->lam[i], 0, &qp_out->lam[i],
@@ -70,9 +74,11 @@ ocp_qp_solution::ocp_qp_solution(const ocp_qp_solution &other) : N(other.N), qp_
     qp_out->memsize = other.qp_out->memsize;
 }
 
-vector<vector<double>> ocp_qp_solution::states() {
+vector<vector<double>> ocp_qp_solution::states()
+{
     vector<vector<double>> result;
-    for (int stage = 0; stage <= N; ++stage) {
+    for (int stage = 0; stage <= N; ++stage)
+    {
         vector<double> tmp(qp_out->dim->nx[stage]);
         d_cvt_ocp_qp_sol_to_colmaj_x(qp_out.get(), tmp.data(), stage);
         result.push_back(tmp);
@@ -80,9 +86,11 @@ vector<vector<double>> ocp_qp_solution::states() {
     return result;
 }
 
-vector<vector<double>> ocp_qp_solution::controls() {
+vector<vector<double>> ocp_qp_solution::controls()
+{
     vector<vector<double>> result;
-    for (int stage = 0; stage <= N; ++stage) {
+    for (int stage = 0; stage <= N; ++stage)
+    {
         vector<double> tmp(qp_out->dim->nu[stage]);
         d_cvt_ocp_qp_sol_to_colmaj_u(qp_out.get(), tmp.data(), stage);
         result.push_back(tmp);
@@ -90,9 +98,11 @@ vector<vector<double>> ocp_qp_solution::controls() {
     return result;
 }
 
-vector<vector<double>> ocp_qp_solution::lag_mul_dynamics() {
+vector<vector<double>> ocp_qp_solution::lag_mul_dynamics()
+{
     vector<vector<double>> result;
-    for (int stage = 0; stage <= N - 1; ++stage) {
+    for (int stage = 0; stage <= N - 1; ++stage)
+    {
         vector<double> tmp(qp_out->dim->nx[stage + 1]);
         d_cvt_ocp_qp_sol_to_colmaj_pi(qp_out.get(), tmp.data(), stage);
         result.push_back(tmp);
@@ -100,9 +110,11 @@ vector<vector<double>> ocp_qp_solution::lag_mul_dynamics() {
     return result;
 }
 
-vector<vector<double>> ocp_qp_solution::lag_mul_bounds() {
+vector<vector<double>> ocp_qp_solution::lag_mul_bounds()
+{
     vector<vector<double>> result;
-    for (int stage = 0; stage <= N; ++stage) {
+    for (int stage = 0; stage <= N; ++stage)
+    {
         int nb = qp_out->dim->nb[stage];
         vector<double> tmp(2 * nb);
         d_cvt_ocp_qp_sol_to_colmaj_lam_lb(qp_out.get(), tmp.data(), stage);
@@ -112,9 +124,11 @@ vector<vector<double>> ocp_qp_solution::lag_mul_bounds() {
     return result;
 }
 
-vector<vector<double>> ocp_qp_solution::lag_mul_constraints() {
+vector<vector<double>> ocp_qp_solution::lag_mul_constraints()
+{
     vector<vector<double>> result;
-    for (int stage = 0; stage <= N - 1; ++stage) {
+    for (int stage = 0; stage <= N - 1; ++stage)
+    {
         int ng = qp_out->dim->ng[stage];
         vector<double> tmp(2 * ng);
         d_cvt_ocp_qp_sol_to_colmaj_lam_lg(qp_out.get(), tmp.data(), stage);

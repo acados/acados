@@ -36,7 +36,8 @@ extern "C" {
  * config
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
     void (*dims_initialize)(void *config, void *dims, int nx, int nu, int nx1, int nu1);

@@ -27,7 +27,8 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
+typedef struct
+{
     /* external functions */
     // implicit ode
     external_function_generic *impl_ode_fun;
@@ -46,7 +47,8 @@ typedef struct {
 
 } irk_model;
 
-typedef struct {
+typedef struct
+{
     struct blasfeo_dmat *JGK;     // jacobian of G over K (nx*ns, nx*ns)
     struct blasfeo_dmat *JGf;     // jacobian of G over x and u (nx*ns, nx+nu);
     struct blasfeo_dmat *JKf;     // jacobian of K over x and u (nx*ns, nx+nu);

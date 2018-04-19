@@ -32,11 +32,13 @@ typedef enum {
     FULL_CONDENSING,
 } condensing_t;
 
-typedef struct {
+typedef struct
+{
     condensing_t condensing_type;
 } condensing_plan;
 
-typedef struct {
+typedef struct
+{
     ocp_qp_condensing_config *config;
     void *dims;
     void *opts;

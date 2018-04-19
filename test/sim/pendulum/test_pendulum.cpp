@@ -33,7 +33,8 @@ real_t FD_EPS = 1e-8;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
+TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]")
+{
     int_t NX = 4;
     int_t NU = 1;
     real_t T = 0.5;
@@ -58,15 +59,18 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
     for (int_t i = 0; i < NU; i++) seed[NX + i] = 0.0;
     for (int_t i = 0; i < NX + NU; i++) sim_in.S_adj[i] = seed[i];
 
-    SECTION("Adjoint sensitivities") {
+    SECTION("Adjoint sensitivities")
+    {
         for (int_t i = 0; i < NX; i++) sim_in.x[i] = 0.0;
         sim_in.u[0] = 0.1;
 
         sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
 
         for (int_t i = 0; i < NX + NU; i++) adj[i] = 0.0;
-        for (int_t j = 0; j < NX + NU; j++) {
-            for (int_t i = 0; i < NX; i++) {
+        for (int_t j = 0; j < NX + NU; j++)
+        {
+            for (int_t i = 0; i < NX; i++)
+            {
                 adj[j] += seed[i] * sim_out.S_forw[j * NX + i];
             }
         }
@@ -90,7 +94,8 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
     // adjoint seed:
     for (int_t i = 0; i < NX + NU; i++) sim_in2.S_adj[i] = seed[i];
 
-    SECTION("Symmetric second order sensitivities") {
+    SECTION("Symmetric second order sensitivities")
+    {
         for (int_t i = 0; i < NX; i++) sim_in2.x[i] = 0.0;
         sim_in2.u[0] = 0.1;
 
@@ -98,23 +103,30 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
 
         // hessian test:
         int_t index = 0;
-        for (int_t j = 0; j < NX + NU; j++) {
-            for (int_t i = 0; i < j; i++) {
+        for (int_t j = 0; j < NX + NU; j++)
+        {
+            for (int_t i = 0; i < j; i++)
+            {
                 hess_test[j * (NX + NU) + i] = hess_test[i * (NX + NU) + j];
             }
-            for (int_t i = j; i < NX + NU; i++) {
+            for (int_t i = j; i < NX + NU; i++)
+            {
                 hess_test[j * (NX + NU) + i] = sim_out2.S_hess[index];
                 index++;
             }
         }
 
         // hessian FD:
-        for (int_t s = 0; s < NX + NU; s++) {
+        for (int_t s = 0; s < NX + NU; s++)
+        {
             for (int_t i = 0; i < NX; i++) sim_in.x[i] = 0.0;
             sim_in.u[0] = 0.1;
-            if (s < NX) {
+            if (s < NX)
+            {
                 sim_in.x[s] = sim_in.x[s] + FD_EPS;
-            } else {
+            }
+            else
+            {
                 sim_in.u[s - NX] = sim_in.u[s - NX] + FD_EPS;
             }
 
@@ -124,7 +136,8 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
                 hess_FD[s * (NX + NU) + i] = (sim_out.S_adj[i] - adj[i]) / FD_EPS;
         }
 
-        for (int_t i = 0; i < (NX + NU) * (NX + NU); i++) {
+        for (int_t i = 0; i < (NX + NU) * (NX + NU); i++)
+        {
             hess_err[i] = hess_FD[i] - hess_test[i];
         }
 

@@ -27,9 +27,10 @@
 
 using std::vector;
 
-namespace acados {
-
-class ocp_qp_solution {
+namespace acados
+{
+class ocp_qp_solution
+{
  public:
     explicit ocp_qp_solution(std::unique_ptr<ocp_qp_out> solution);
 

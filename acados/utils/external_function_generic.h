@@ -41,24 +41,28 @@ typedef enum {
     IGNORE
 } ext_fun_arg_t;
 
-struct colmaj_args {
+struct colmaj_args
+{
     double *A;
     int lda;
 };
 
-struct blasfeo_dmat_args {
+struct blasfeo_dmat_args
+{
     struct blasfeo_dmat *A;
     int ai;
     int aj;
 };
 
-struct blasfeo_dvec_args {
+struct blasfeo_dvec_args
+{
     struct blasfeo_dvec *x;
     int xi;
 };
 
 // prototype of an external function
-typedef struct {
+typedef struct
+{
     // public members (have to be before private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
     // private members
@@ -69,7 +73,8 @@ typedef struct {
  * casadi external function
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     // public members (have to be the same as in the prototype, and before the private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
     // private members
@@ -108,7 +113,8 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
  * casadi external parametric function
  ************************************************/
 
-typedef struct {
+typedef struct
+{
     // public members (have to be the same as in the prototype, and before the private ones)
     void (*evaluate)(void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
     // private members

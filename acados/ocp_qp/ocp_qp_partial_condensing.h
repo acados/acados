@@ -27,7 +27,8 @@ extern "C" {
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 
-typedef struct ocp_qp_partial_condensing_opts_ {
+typedef struct ocp_qp_partial_condensing_opts_
+{
     struct d_cond_qp_ocp2ocp_arg *hpipm_opts;
     ocp_qp_dims *pcond_dims;  // TODO(all): move to dims
     int *block_size;
@@ -35,7 +36,8 @@ typedef struct ocp_qp_partial_condensing_opts_ {
     int N2_bkp;
 } ocp_qp_partial_condensing_opts;
 
-typedef struct ocp_qp_partial_condensing_memory_ {
+typedef struct ocp_qp_partial_condensing_memory_
+{
     struct d_cond_qp_ocp2ocp_workspace *hpipm_workspace;
     ocp_qp_in *qp_in;
     ocp_qp_in *pcond_qp_in;

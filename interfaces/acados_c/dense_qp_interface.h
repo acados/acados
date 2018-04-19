@@ -28,11 +28,13 @@ extern "C" {
 
 typedef enum { DENSE_QP_HPIPM, DENSE_QP_QORE, DENSE_QP_QPOASES } dense_qp_solver_t;
 
-typedef struct {
+typedef struct
+{
     dense_qp_solver_t qp_solver;
 } dense_qp_solver_plan;
 
-typedef struct {
+typedef struct
+{
     qp_solver_config *config;
     void *dims;
     void *opts;
