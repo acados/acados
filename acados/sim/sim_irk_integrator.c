@@ -253,8 +253,8 @@ int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 
     size += nx *ns * sizeof(int); // ipiv
 
-    size += 2 * blasfeo_memsize_dmat(nx, nx); // J_t_x, J_t_xdot
-    size += blasfeo_memsize_dmat(nx, nu); // J_t_u
+    size += 2 * blasfeo_memsize_dmat(nx, nx); // J_temp_x, J_temp_xdot
+    size += blasfeo_memsize_dmat(nx, nu); // J_temp_u
 
     make_int_multiple_of(64, &size);
     size += 1 * 64;
@@ -326,9 +326,9 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
     //     assign_and_advance_blasfeo_dmat_mem(nx*ns, nx*ns, &workspace->JG_traj[i], &c_ptr);
     // }
 
-    assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->J_t_x, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->J_t_xdot, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx, nu, &workspace->J_t_u, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->J_temp_x, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->J_temp_xdot, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nu, &workspace->J_temp_u, &c_ptr);
 
     assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->rG, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->K, &c_ptr);
@@ -394,9 +394,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dvec *xn = workspace->xn;
     struct blasfeo_dmat *S_forw = workspace->S_forw;
 
-    struct blasfeo_dmat J_t_x = workspace->J_t_x;
-    struct blasfeo_dmat J_t_xdot = workspace->J_t_xdot;
-    struct blasfeo_dmat J_t_u = workspace->J_t_u;
+    struct blasfeo_dmat J_temp_x = workspace->J_temp_x;
+    struct blasfeo_dmat J_temp_xdot = workspace->J_temp_xdot;
+    struct blasfeo_dmat J_temp_u = workspace->J_temp_u;
 
     // for adjoint
     struct blasfeo_dvec *lambda = workspace->lambda;
@@ -442,19 +442,19 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     impl_ode_fun_jac_x_xdot_type_out[0] = BLASFEO_DVEC_ARGS;
     impl_ode_fun_jac_x_xdot_out[0] = &impl_ode_res_out;
     impl_ode_fun_jac_x_xdot_type_out[1] = BLASFEO_DMAT;
-    impl_ode_fun_jac_x_xdot_out[1] = &J_t_x;
+    impl_ode_fun_jac_x_xdot_out[1] = &J_temp_x;
     impl_ode_fun_jac_x_xdot_type_out[2] = BLASFEO_DMAT;
-    impl_ode_fun_jac_x_xdot_out[2] = &J_t_xdot; // jac_xdot: nx*nx
+    impl_ode_fun_jac_x_xdot_out[2] = &J_temp_xdot; // jac_xdot: nx*nx
 
     // impl_ode_jac_x_xdot_u
 	ext_fun_arg_t impl_ode_jac_x_xdot_u_type_out[3];
 	void *impl_ode_jac_x_xdot_u_out[3];
     impl_ode_jac_x_xdot_u_type_out[0] = BLASFEO_DMAT;
-    impl_ode_jac_x_xdot_u_out[0] = &J_t_x;
+    impl_ode_jac_x_xdot_u_out[0] = &J_temp_x;
     impl_ode_jac_x_xdot_u_type_out[1] = BLASFEO_DMAT;
-    impl_ode_jac_x_xdot_u_out[1] = &J_t_xdot;
+    impl_ode_jac_x_xdot_u_out[1] = &J_temp_xdot;
     impl_ode_jac_x_xdot_u_type_out[2] = BLASFEO_DMAT;
-    impl_ode_jac_x_xdot_u_out[2] = &J_t_u;
+    impl_ode_jac_x_xdot_u_out[2] = &J_temp_u;
 	irk_model *model = in->model;
 
     acados_timer timer, timer_ad;
@@ -541,11 +541,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         if (a!=0)
 						{
                             a *= step;
-                            blasfeo_dgead(nx, nx, a, &J_t_x, 0, 0, JGK, ii*nx, jj*nx);
+                            blasfeo_dgead(nx, nx, a, &J_temp_x, 0, 0, JGK, ii*nx, jj*nx);
                         }
                         if(jj==ii)
 						{
-                            blasfeo_dgead(nx, nx, 1, &J_t_xdot, 0, 0, JGK, ii*nx, jj*nx);
+                            blasfeo_dgead(nx, nx, 1, &J_temp_xdot, 0, 0, JGK, ii*nx, jj*nx);
                         }
 
                     } // end jj
@@ -606,8 +606,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, impl_ode_type_in, impl_ode_in, impl_ode_jac_x_xdot_u_type_out, impl_ode_jac_x_xdot_u_out);
                 timing_ad += acados_toc(&timer_ad);
 
-                blasfeo_dgecp(nx, nx, &J_t_x, 0, 0, JGf, ii*nx, 0);
-                blasfeo_dgecp(nx, nu, &J_t_u, 0, 0, JGf, ii*nx, nx);
+                blasfeo_dgecp(nx, nx, &J_temp_x, 0, 0, JGf, ii*nx, 0);
+                blasfeo_dgecp(nx, nu, &J_temp_u, 0, 0, JGf, ii*nx, nx);
 
                 for (jj=0; jj<ns; jj++)
                 { //compute the block (ii,jj)th block of JGK
@@ -615,11 +615,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     if (a!=0)
                     {
                         a *= step;
-                        blasfeo_dgead(nx, nx, a, &J_t_x, 0, 0, JGK, ii*nx, jj*nx);
+                        blasfeo_dgead(nx, nx, a, &J_temp_x, 0, 0, JGK, ii*nx, jj*nx);
                     }
                     if(jj==ii)
                     {
-                        blasfeo_dgead(nx, nx, 1, &J_t_xdot, 0, 0, JGK, ii*nx, jj*nx);
+                        blasfeo_dgead(nx, nx, 1, &J_temp_xdot, 0, 0, JGK, ii*nx, jj*nx);
                     }
                 } // end jj
             } // end ii
@@ -673,8 +673,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, impl_ode_type_in, impl_ode_in, impl_ode_jac_x_xdot_u_type_out, impl_ode_jac_x_xdot_u_out);
                 timing_ad += acados_toc(&timer_ad);
 
-                blasfeo_dgecp(nx, nx, &J_t_x, 0, 0, JGf, ii*nx, 0);
-                blasfeo_dgecp(nx, nu, &J_t_u, 0, 0, JGf, ii*nx, nx);
+                blasfeo_dgecp(nx, nx, &J_temp_x, 0, 0, JGf, ii*nx, 0);
+                blasfeo_dgecp(nx, nu, &J_temp_u, 0, 0, JGf, ii*nx, nx);
 
                 for (jj=0; jj<ns; jj++)
                 { //compute the block (ii,jj)th block of JGK
@@ -682,11 +682,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     if (a!=0)
                     {
                         a *= step;
-                        blasfeo_dgead(nx, nx, a, &J_t_x, 0, 0, JGK, ii*nx, jj*nx);
+                        blasfeo_dgead(nx, nx, a, &J_temp_x, 0, 0, JGK, ii*nx, jj*nx);
                     }
                     if(jj==ii)
                     {
-                        blasfeo_dgead(nx, nx, 1, &J_t_xdot, 0, 0, JGK, ii*nx, jj*nx);
+                        blasfeo_dgead(nx, nx, 1, &J_temp_xdot, 0, 0, JGK, ii*nx, jj*nx);
                     }
                 } // end jj
             } // end ii
