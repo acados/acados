@@ -138,8 +138,10 @@ typedef struct
     void (*config_initialize_default) (void *config);
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
-    void (*extract_nx_nu)(void *dims_, int* nx, int* nu);
-    void (*set_nx_nu)(void *dims_, int nx, int nu);
+    void (*get_nx)(void *dims_, int* nx);
+    void (*get_nu)(void *dims_, int* nu);
+    void (*set_nx)(void *dims_, int nx);
+    void (*set_nu)(void *dims_, int nu);
 } sim_solver_config;
 
 

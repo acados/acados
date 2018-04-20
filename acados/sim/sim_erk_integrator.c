@@ -51,22 +51,29 @@ void *sim_erk_dims_assign(void* config_, void *raw_memory)
     return dims;
 }
 
-void sim_erk_set_nx_nu(void *dims_, int nx, int nu)
+void sim_erk_set_nx(void *dims_, int nx)
 {
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
-
     dims->nx = nx;
+}
+
+void sim_erk_set_nu(void *dims_, int nu)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
     dims->nu = nu;
 }
 
-void sim_erk_extract_nx_nu(void *dims_, int* nx, int* nu)
+void sim_erk_get_nx(void *dims_, int* nx)
 {
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
     *nx = dims->nx;
-    *nu = dims->nu;
 }
 
-
+void sim_erk_get_nu(void *dims_, int* nu)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    *nu = dims->nu;
+}
 
 /************************************************
 * model
@@ -748,8 +755,10 @@ void sim_erk_config_initialize_default(void *config_)
 	config->config_initialize_default = &sim_erk_config_initialize_default;
     config->dims_calculate_size = &sim_erk_dims_calculate_size;
     config->dims_assign = &sim_erk_dims_assign;
-    config->set_nx_nu = &sim_erk_set_nx_nu;
-    config->extract_nx_nu = &sim_erk_extract_nx_nu;
+    config->set_nx = &sim_erk_set_nx;
+    config->set_nu = &sim_erk_set_nu;
+    config->get_nx = &sim_erk_get_nx;
+    config->get_nu = &sim_erk_get_nu;
 	return;
 
 }

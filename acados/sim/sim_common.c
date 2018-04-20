@@ -72,7 +72,8 @@ int sim_in_calculate_size(void *config_, void *dims)
     int size = sizeof(sim_in);
 
     int nx, nu;
-    config->extract_nx_nu(dims, &nx, &nu);
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
 
     size += nx * sizeof(double);  // x
     size += nu * sizeof(double);  // u
@@ -101,7 +102,8 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 	in->dims = dims;
 
     int nx, nu;
-    config->extract_nx_nu(dims, &nx, &nu);
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
 
     int NF = nx+nu;
 
@@ -134,7 +136,8 @@ int sim_out_calculate_size(void *config_, void *dims)
     int size = sizeof(sim_out);
 
     int nx, nu;
-    config->extract_nx_nu(dims, &nx, &nu);
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
 
     int NF = nx + nu;
     size += sizeof(sim_info);
@@ -160,8 +163,9 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
     char *c_ptr = (char *) raw_memory;
 
     int nx, nu;
-    config->extract_nx_nu(dims, &nx, &nu);
-
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
+    
     int NF = nx + nu;
 
     sim_out *out = (sim_out *) c_ptr;

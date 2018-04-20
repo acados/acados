@@ -84,11 +84,11 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config_, void *dims_, int nx, i
 	dims->nx1 = nx1;
 	dims->nu1 = nu1;
 
-	// dims->sim->nx = nx;
-	// dims->sim->nu = nu;
 	ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
 	sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
-	sim_config->set_nx_nu(dims->sim, nx, nu);
+
+	sim_config->set_nx(dims->sim, nx);
+	sim_config->set_nu(dims->sim, nu);
 
 	return;
 }

@@ -116,8 +116,11 @@ typedef struct
 
 } sim_new_lifted_irk_memory;
 
-void sim_new_lifted_irk_set_nx_nu(void *dims_, int nx, int nu);
-void sim_new_lifted_irk_extract_nx_nu(void *dims, int* nx, int* nu);
+// get & set functions
+void sim_new_lifted_irk_set_nx(void *dims_, int nx);
+void sim_new_lifted_irk_set_nu(void *dims_, int nu);
+void sim_new_lifted_irk_get_nx(void *dims_, int* nx);
+void sim_new_lifted_irk_get_nu(void *dims_, int* nu);
 
 int sim_new_lifted_irk_dims_calculate_size();
 //

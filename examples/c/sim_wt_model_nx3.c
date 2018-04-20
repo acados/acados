@@ -236,9 +236,8 @@ int main()
 
 		void *dims = sim_dims_create(config);
 		
-		config->set_nx_nu(dims, nx, nu);
-		// dims->nx = nx;
-		// dims->nu = nu;
+		config->set_nx(dims, nx);
+		config->set_nu(dims, nu);
 
 		/************************************************
 		* sim opts
