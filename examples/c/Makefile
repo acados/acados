@@ -187,6 +187,10 @@ WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_u.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_u.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun_jac_y.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_jac_y_uhat.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/get_matrices_fun.o
 
 wind_turbine_nmpc: $(WT_NX6P2_OBJS) wind_turbine_nmpc.o
 	$(CCC) -o wind_turbine_nmpc.out wind_turbine_nmpc.o  $(WT_NX6P2_OBJS) $(LDFLAGS) $(LIBS)

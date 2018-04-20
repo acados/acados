@@ -172,6 +172,10 @@ file(GLOB WT_MODEL_NX6P2_SRC
     wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.c
     wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.c
     wt_model_nx6/nx6p2/impl_ode_jac_x_u.c
+    wt_model_nx6/nx6p2/phi_fun_jac_y.c
+    wt_model_nx6/nx6p2/phi_jac_y_uhat.c
+    wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.c
+    wt_model_nx6/nx6p2/get_matrices_fun.c
 )
 
 file(GLOB GNSF_CRANE_SRC
