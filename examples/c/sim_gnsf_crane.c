@@ -94,12 +94,15 @@ int main() {
 
     printf("assigned plan, config");
 
-    gnsf_dims *gnsf_dim = gnsf_dims_create();
-    // gnsf_get_dims(gnsf_dim, get_ints_fun);
-    gnsf_dim->nx = 9;
+    void *dims = sim_dims_create(config);
+    sim_gnsf_dims *gnsf_dim = (sim_gnsf_dims *) dims;
+    int nx = 9;
+    int nu = 2;
+
+    gnsf_dim->nx = nx;
     gnsf_dim->nx1 = 8;
     gnsf_dim->nx2 = 1;
-    gnsf_dim->nu = 2;
+    gnsf_dim->nu = nu;
     gnsf_dim->n_out = 2;
     gnsf_dim->nz = 1;
     gnsf_dim->ny = 4;
@@ -108,7 +111,7 @@ int main() {
     gnsf_dim->num_steps = 2;
 
     // set up sim_dims
-    sim_dims *dims = (sim_dims *) gnsf_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
+    // sim_dims *dims = (sim_dims *) gnsf_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
 
     // set up gnsf_opts
     int opts_size = config->opts_calculate_size(config, dims);
@@ -142,14 +145,14 @@ int main() {
     printf("\nsim_in create\n");
     sim_in *in = sim_in_create(config, dims);
 
-    for (int ii = 0; ii < dims->nx *(dims->nx +dims->nu); ii++) {
+    for (int ii = 0; ii < nx *(nx +nu); ii++) {
         in->S_forw[ii] = 0.0;
     }
-    for (int ii = 0; ii < dims->nx; ii++) {
-        in->S_forw[ii+ ii*dims->nx] = 1.0;
+    for (int ii = 0; ii < nx; ii++) {
+        in->S_forw[ii+ ii*nx] = 1.0;
         in->x[ii] = 0.0;
     }
-    for (int ii = 0; ii < dims->nx; ii++) {
+    for (int ii = 0; ii < nx; ii++) {
         in->S_adj[ii] = 1.0;
     }
     in->x[2] = 0.8;
@@ -195,11 +198,11 @@ int main() {
     // PRINTING
     printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_iter, gnsf_dim->num_steps);
     printf("xf =\n");
-    d_print_e_mat(1, dims->nx, out->xn, 1);
+    d_print_e_mat(1, nx, out->xn, 1);
     printf("forw_Sensitivities = \n");
-    d_print_e_mat(dims->nx, dims->nx + dims->nu, out->S_forw, dims->nx);
+    d_print_e_mat(nx, nx + nu, out->S_forw, nx);
     printf("adj Sensitivities =\n");
-    d_print_e_mat(1, dims->nx + dims->nu, out->S_adj, 1);
+    d_print_e_mat(1, nx + nu, out->S_adj, 1);
     
     printf("gnsf_time  =  %f [ms]\n", gnsf_time*1000);
     printf("casadi_time =  %f [ms]\t minimum of %d executions \n", casadi_time*1000, NREP);

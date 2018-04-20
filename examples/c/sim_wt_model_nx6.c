@@ -245,7 +245,7 @@ int main()
 
 	int number_sim_solvers = 4;
 	int nss;
-	for (nss = 2; nss < number_sim_solvers; nss++)
+	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
 		/************************************************
 		* sim plan & config
@@ -277,6 +277,31 @@ int main()
 		/************************************************
 		* sim dims
 		************************************************/
+		// sim_dims *dims; // OJ: declaration in if causes error
+		// gnsf_dims *gnsf_dim;
+		// if (nss == 3){
+		// 	gnsf_dims *gnsf_dim = gnsf_dims_create();
+		// 	printf("\n adress of dims %p\n",(void*)gnsf_dim);
+    	// 	dims = (sim_dims *) gnsf_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
+		// 	gnsf_dim->nx = nx;
+		// 	gnsf_dim->nu = nu;
+		// 	gnsf_dim->nx1= nx;
+		// 	gnsf_dim->nx2= 0;
+		// 	gnsf_dim->n_in = nx + nu;
+		// 	gnsf_dim->n_out = 1;
+		// 	gnsf_dim->num_stages = 8;
+		// 	printf("gnsf: n_in = %d \n", gnsf_dim->n_in);
+		// 	printf("\n adress of dims %p\n",(void*)gnsf_dim);
+		// }
+		// else {
+		// 	dims = sim_dims_create();
+		// 	dims->nx = nx;
+		// 	dims->nu = nu;
+		// }
+
+		// dims = sim_dims_create();
+		// dims->nx = nx;
+		// dims->nu = nu;
 
 		void *dims = sim_dims_create(config);
 		config->set_nx(dims, nx);
@@ -291,6 +316,8 @@ int main()
 	//		opts->num_steps = 5; // number of integration steps
 		opts->sens_adj = true;
 		opts->sens_forw = true;
+
+		sim_gnsf_dims *gnsf_dim;
 
 		switch (nss)
 		{
@@ -310,14 +337,26 @@ int main()
 				opts->num_steps = 3; // number of integration steps
 				break;
 
-			case 3: //gnsf
+			case 3://gnsf
+				// set additional dimensions
+				gnsf_dim = (sim_gnsf_dims *) dims; // declaration not allowed inside switch somehow
+				gnsf_dim->nx = nx;
+				gnsf_dim->nu = nu;
+				gnsf_dim->nx1= nx;
+				gnsf_dim->nx2= 0;
+				gnsf_dim->ny = nx;//nx + nu;
+				gnsf_dim->nuhat = 2;//nx + nu;
+				gnsf_dim->n_out = 1;
+				gnsf_dim->num_stages = 8;
+
+				// set options
 				opts->ns = 8; // number of stages in rk integrator
 				gnsf_dim->num_stages = 8;
 				opts->num_steps = 1; // number of integration steps
 				gnsf_dim->num_steps = 1;
 				break;
 
-			default :
+			default:
 				printf("\nnot enough sim solvers implemented!\n");
 				exit(1);
 
@@ -417,8 +456,8 @@ int main()
 		// printf("SOLVER CREATED\n");
 		int acados_return;
 
-		if (nss == 3)
-			gnsf_precompute(gnsf_dim, in->model, opts, in);
+		// if (nss == 3)
+		// 	gnsf_precompute(gnsf_dim, in->model, opts, in);
 
 		// printf("USED TABLEAU: A = \n");
     	// d_print_e_mat(opts->ns, opts->ns, opts->A_mat, opts->ns);
@@ -542,7 +581,6 @@ int main()
 			// }
 		}
 
-
 		if(opts->sens_adj){
 			double *S_adj_out = out->S_adj;
 			printf("\nS_adj_out: \n");
@@ -599,7 +637,7 @@ int main()
 		free(opts);
 		free(config);
 
-		free(gnsf_dim);
+		// free(gnsf_dim);
 	}
 
 	free(x_sim);
