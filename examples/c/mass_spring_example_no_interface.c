@@ -327,7 +327,10 @@ int main() {
             * solve
             ************************************************/
 
-			solver_config->evaluate(solver_config, qp_in, qp_out, solver_opts, solver_mem, solver_work);
+            for (int rep = 0; rep < NREP; rep++)
+            {
+				solver_config->evaluate(solver_config, qp_in, qp_out, solver_opts, solver_mem, solver_work);
+			}
 
             /************************************************
             * info

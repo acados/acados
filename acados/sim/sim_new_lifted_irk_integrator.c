@@ -18,12 +18,58 @@
 #include "external/blasfeo/include/blasfeo_d_blas.h"
 
 
+/************************************************
+* dims
+************************************************/
+
+int sim_new_lifted_irk_dims_calculate_size()
+{
+    int size = sizeof(sim_new_lifted_irk_dims);
+
+    return size;
+}
+
+void *sim_new_lifted_irk_dims_assign(void* config_, void *raw_memory)
+{
+    char *c_ptr = raw_memory;
+
+    sim_new_lifted_irk_dims *dims = (sim_new_lifted_irk_dims *) c_ptr;
+    c_ptr += sizeof(sim_new_lifted_irk_dims);
+
+    assert((char *) raw_memory + sim_new_lifted_irk_dims_calculate_size() >= c_ptr);
+
+    return dims;
+}
+
+void sim_new_lifted_irk_set_nx(void *dims_, int nx)
+{
+    sim_new_lifted_irk_dims *dims = (sim_new_lifted_irk_dims *) dims_;
+    dims->nx = nx;
+}
+
+void sim_new_lifted_irk_set_nu(void *dims_, int nu)
+{
+    sim_new_lifted_irk_dims *dims = (sim_new_lifted_irk_dims *) dims_;
+    dims->nu = nu;
+}
+
+void sim_new_lifted_irk_get_nx(void *dims_, int* nx)
+{
+    sim_new_lifted_irk_dims *dims = (sim_new_lifted_irk_dims *) dims_;
+    *nx = dims->nx;
+}
+
+void sim_new_lifted_irk_get_nu(void *dims_, int* nu)
+{
+    sim_new_lifted_irk_dims *dims = (sim_new_lifted_irk_dims *) dims_;
+    *nu = dims->nu;
+}
 
 /************************************************
 * model
 ************************************************/
 
-int sim_new_lifted_irk_model_calculate_size(void *config, sim_dims *dims)
+int sim_new_lifted_irk_model_calculate_size(void *config, void *dims)
 {
 
 	int size = 0;
@@ -36,7 +82,7 @@ int sim_new_lifted_irk_model_calculate_size(void *config, sim_dims *dims)
 
 
 
-void *sim_new_lifted_irk_model_assign(void *config, sim_dims *dims, void *raw_memory)
+void *sim_new_lifted_irk_model_assign(void *config, void *dims, void *raw_memory)
 {
 
 	char *c_ptr = (char *) raw_memory;
@@ -88,7 +134,7 @@ int sim_new_lifted_irk_model_set_function(void *model_, sim_function_t fun_type,
 * opts
 ************************************************/
 
-int sim_new_lifted_irk_opts_calculate_size(void *config_, sim_dims *dims)
+int sim_new_lifted_irk_opts_calculate_size(void *config_, void *dims)
 {
 	int ns_max = NS_MAX;
 
@@ -113,7 +159,7 @@ int sim_new_lifted_irk_opts_calculate_size(void *config_, sim_dims *dims)
 
 
 
-void *sim_new_lifted_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
+void *sim_new_lifted_irk_opts_assign(void *config_, void *dims, void *raw_memory)
 {
 	int ns_max = NS_MAX;
 
@@ -142,10 +188,13 @@ void *sim_new_lifted_irk_opts_assign(void *config_, sim_dims *dims, void *raw_me
 
 
 
-void sim_new_lifted_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
+void sim_new_lifted_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     sim_rk_opts *opts = opts_;
-
+    sim_new_lifted_irk_dims* dims = (sim_new_lifted_irk_dims *) dims_;
+    
+    int nx = dims->nx;
+    int nu = dims->nu;
 	opts->ns = 3; // GL 3
     int ns = opts->ns;
 
@@ -164,7 +213,7 @@ void sim_new_lifted_irk_opts_initialize_default(void *config_, sim_dims *dims, v
     opts->newton_iter = 1;
     opts->scheme = NULL;
     opts->num_steps = 1;
-    opts->num_forw_sens = dims->nx + dims->nu;
+    opts->num_forw_sens = nx + nu;
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
@@ -175,7 +224,7 @@ void sim_new_lifted_irk_opts_initialize_default(void *config_, sim_dims *dims, v
 
 
 
-void sim_new_lifted_irk_opts_update(void *config_, sim_dims *dims, void *opts_)
+void sim_new_lifted_irk_opts_update(void *config_, void *dims, void *opts_)
 {
     sim_rk_opts *opts = opts_;
 
@@ -201,9 +250,10 @@ void sim_new_lifted_irk_opts_update(void *config_, sim_dims *dims, void *opts_)
 * memory
 ************************************************/
 
-int sim_new_lifted_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_)
+int sim_new_lifted_irk_memory_calculate_size(void *config, void *dims_, void *opts_)
 {
 	sim_rk_opts *opts = opts_;
+    sim_new_lifted_irk_dims* dims = (sim_new_lifted_irk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -232,11 +282,12 @@ int sim_new_lifted_irk_memory_calculate_size(void *config, sim_dims *dims, void 
 
 
 
-void *sim_new_lifted_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory)
+void *sim_new_lifted_irk_memory_assign(void *config, void *dims_, void *opts_, void *raw_memory)
 {
     char *c_ptr = (char *)raw_memory;
 
 	sim_rk_opts *opts = opts_;
+    sim_new_lifted_irk_dims* dims = (sim_new_lifted_irk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -294,9 +345,10 @@ void *sim_new_lifted_irk_memory_assign(void *config, sim_dims *dims, void *opts_
 * workspace
 ************************************************/
 
-int sim_new_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
+int sim_new_lifted_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
 	sim_rk_opts *opts = opts_;
+    sim_new_lifted_irk_dims* dims = (sim_new_lifted_irk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -342,9 +394,10 @@ int sim_new_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, v
 
 
 
-static void *sim_new_lifted_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, void *raw_memory)
+static void *sim_new_lifted_irk_workspace_cast(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
 	sim_rk_opts *opts = opts_;
+    sim_new_lifted_irk_dims* dims = (sim_new_lifted_irk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -434,7 +487,9 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
     int ns = opts->ns;
 
-    sim_dims *dims = in->dims;
+    void *dims_ = in->dims;
+    sim_new_lifted_irk_dims* dims = (sim_new_lifted_irk_dims *) dims_;
+
     sim_new_lifted_irk_workspace *workspace = (sim_new_lifted_irk_workspace *)
         sim_new_lifted_irk_workspace_cast(config, dims, opts, work_);
 
@@ -759,7 +814,12 @@ void sim_new_lifted_irk_config_initialize_default(void *config_)
 	config->model_calculate_size = &sim_new_lifted_irk_model_calculate_size;
 	config->model_assign = &sim_new_lifted_irk_model_assign;
     config->model_set_function = &sim_new_lifted_irk_model_set_function;
-
+    config->dims_calculate_size = &sim_new_lifted_irk_dims_calculate_size;
+    config->dims_assign = &sim_new_lifted_irk_dims_assign;
+    config->set_nx = &sim_new_lifted_irk_set_nx;
+    config->set_nu = &sim_new_lifted_irk_set_nu;
+    config->get_nx = &sim_new_lifted_irk_get_nx;
+    config->get_nu = &sim_new_lifted_irk_get_nu;
 	return;
 
 }

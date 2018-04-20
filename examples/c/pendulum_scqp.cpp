@@ -36,7 +36,8 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 
 #include "pendulum_model/vde_forw_pendulum.h"
-#include "pendulum_model/jac_constraint.h"
+#include "pendulum_model/constraint.h"
+#include "pendulum_model/position.h"
 
 int main() {
 
@@ -49,7 +50,7 @@ int main() {
 	int max_num_sqp_iterations = 100;
 
 	std::vector<int> nx(N+1, num_states), nu(N+1, num_controls), nbx(N+1, 0), nbu(N+1, 0),
-		nb(N+1, 0), ng(N+1, 0), nh(N+1, 0), nq(N+1, 0),
+		nb(N+1, 0), ng(N+1, 0), nh(N+1, 0), np(N+1, 0),
 		ns(N+1, 0), nv(N+1, num_states+num_controls), ny(N+1, num_states+num_controls);
 
 	nbx.at(0) = num_states;
@@ -59,7 +60,7 @@ int main() {
 	nv.at(N) = 4;
 	ny.at(N) = 4;
 	nh.at(N) = 1;
-	nq.at(N) = 2;
+	np.at(N) = 2;
 
 	// Make plan
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
@@ -67,13 +68,15 @@ int main() {
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = LINEAR_LS;
-	for (int i = 0; i < N; i++)
+	for (int i = 0; i < N; i++) {
+		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 		plan->sim_solver_plan[i].sim_solver = ERK;
+	}
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), nq.data(), ns.data(), dims);
+	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), np.data(), ns.data(), dims);
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
@@ -138,22 +141,35 @@ int main() {
 
     nlp_in->freezeSens = false;
 
-	// NLP constraints
-	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
-
+	// convex-composite constraint
 	external_function_casadi nonlinear_constraint;
-	nonlinear_constraint.casadi_fun = &jac_constraint;
-	nonlinear_constraint.casadi_n_in = &jac_constraint_n_in;
-	nonlinear_constraint.casadi_n_out = &jac_constraint_n_out;
-	nonlinear_constraint.casadi_sparsity_in = &jac_constraint_sparsity_in;
-	nonlinear_constraint.casadi_sparsity_out = &jac_constraint_sparsity_out;
-	nonlinear_constraint.casadi_work = &jac_constraint_work;
+	nonlinear_constraint.casadi_fun = &constraint;
+	nonlinear_constraint.casadi_n_in = &constraint_n_in;
+	nonlinear_constraint.casadi_n_out = &constraint_n_out;
+	nonlinear_constraint.casadi_sparsity_in = &constraint_sparsity_in;
+	nonlinear_constraint.casadi_sparsity_out = &constraint_sparsity_out;
+	nonlinear_constraint.casadi_work = &constraint_work;
 
 	int constraint_size = external_function_casadi_calculate_size(&nonlinear_constraint);
 	void *ptr = malloc(constraint_size);
 	external_function_casadi_assign(&nonlinear_constraint, ptr);
 
+	// nonlinear part of convex-composite constraint
+	external_function_casadi position_constraint;
+	position_constraint.casadi_fun = &position;
+	position_constraint.casadi_n_in = &position_n_in;
+	position_constraint.casadi_n_out = &position_n_out;
+	position_constraint.casadi_sparsity_in = &position_sparsity_in;
+	position_constraint.casadi_sparsity_out = &position_sparsity_out;
+	position_constraint.casadi_work = &position_work;
+
+	constraint_size = external_function_casadi_calculate_size(&position_constraint);
+	ptr = malloc(constraint_size);
+	external_function_casadi_assign(&position_constraint, ptr);
+
 	// bounds
+	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+
     constraints[0]->idxb = idxb_0.data();
 	blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, 0);
 	blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, nb[0]+ng[0]);
@@ -161,6 +177,7 @@ int main() {
 	blasfeo_pack_dvec(nh[N], &neg_inf, &constraints[N]->d, nb[N]+ng[N]);
 	blasfeo_pack_dvec(nh[N], &radius2, &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
 	constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
+	constraints[N]->p = (external_function_generic *) &position_constraint;
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 

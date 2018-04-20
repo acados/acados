@@ -146,6 +146,7 @@ file(GLOB WT_MODEL_NX3_SRC
 file(GLOB WT_MODEL_NX6_SRC
     wt_model_nx6/expl_ode_fun.c
     wt_model_nx6/expl_vde_for.c
+    wt_model_nx6/expl_vde_adj.c
     wt_model_nx6/impl_ode_fun.c
     wt_model_nx6/impl_ode_jac_x.c
     wt_model_nx6/impl_ode_jac_xdot.c
@@ -245,9 +246,12 @@ endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
-    # add_executable(pendulum_sqp pendulum_sqp_gn.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
-    # target_link_libraries(pendulum_sqp acados)
-    # add_test(pendulum_sqp pendulum_sqp)
+    add_executable(pendulum_scqp pendulum_scqp.cpp
+        pendulum_model/vde_forw_pendulum.c
+        pendulum_model/constraint.c
+        pendulum_model/position.c)
+    target_link_libraries(pendulum_scqp acados)
+    add_test(pendulum_scqp pendulum_scqp)
 
     # -------------------- mass_spring
     if(ACADOS_WITH_C_INTERFACE)
@@ -305,19 +309,19 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_test(sim_crane_example sim_crane_example)
     endif()
 
-    add_executable(
-        sim_crane_no_interface_example
-        sim_crane_no_interface.c
-        ${CRANE_MODEL_SRC}
-    )
-    target_link_libraries(
-        sim_crane_no_interface_example
-        acados
-    )
-    add_test(
-        sim_crane_no_interface_example
-        sim_crane_no_interface_example
-    )
+    # add_executable(
+    #     sim_crane_no_interface_example
+    #     sim_crane_no_interface.c
+    #     ${CRANE_MODEL_SRC}
+    # )
+    # target_link_libraries(
+    #     sim_crane_no_interface_example
+    #     acados
+    # )
+    # add_test(
+    #     sim_crane_no_interface_example
+    #     sim_crane_no_interface_example
+    # )
 
     # -------------------- sim_wt
     if(ACADOS_WITH_C_INTERFACE)

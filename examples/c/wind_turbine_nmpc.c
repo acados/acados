@@ -48,7 +48,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 
-#include "examples/c/wt_model_nx6/wt_model.h"
+#include "examples/c/wt_model_nx6/nx6p2/wt_model.h"
 #include "examples/c/wt_model_nx6/setup.c"
 
 #define NN 40
@@ -482,7 +482,7 @@ int main()
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 //		plan->sim_solver_plan[i].sim_solver = ERK;
 		plan->sim_solver_plan[i].sim_solver = IRK;
-		// plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+//		plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
 	}
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
