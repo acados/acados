@@ -62,20 +62,21 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
 
 
 
-sim_dims *sim_dims_create()
+void *sim_dims_create(void *config_)
 {
-    int bytes = sim_dims_calculate_size();
+    sim_solver_config *config = (sim_solver_config *) config_;
+    int bytes = config->dims_calculate_size(config_);
 
     void *ptr = calloc(1, bytes);
 
-    sim_dims *dims = sim_dims_assign(ptr);
+    void *dims = config->dims_assign(config_, ptr);
 
     return dims;
 }
 
 
 
-sim_in *sim_in_create(sim_solver_config *config, sim_dims *dims)
+sim_in *sim_in_create(sim_solver_config *config, void *dims)
 {
     int bytes = sim_in_calculate_size(config, dims);
 
@@ -134,7 +135,7 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
 
 
 
-sim_out *sim_out_create(sim_solver_config *config, sim_dims *dims)
+sim_out *sim_out_create(sim_solver_config *config, void *dims)
 {
     int bytes = sim_out_calculate_size(config, dims);
 
@@ -147,7 +148,7 @@ sim_out *sim_out_create(sim_solver_config *config, sim_dims *dims)
 
 
 
-void *sim_opts_create(sim_solver_config *config, sim_dims *dims)
+void *sim_opts_create(sim_solver_config *config, void *dims)
 {
     int bytes = config->opts_calculate_size(config, dims);
 
@@ -162,7 +163,7 @@ void *sim_opts_create(sim_solver_config *config, sim_dims *dims)
 
 
 
-int sim_calculate_size(sim_solver_config *config, sim_dims *dims, void *opts_)
+int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 {
     int bytes = sizeof(sim_solver);
 
@@ -174,7 +175,7 @@ int sim_calculate_size(sim_solver_config *config, sim_dims *dims, void *opts_)
 
 
 
-sim_solver *sim_assign(sim_solver_config *config, sim_dims *dims, void *opts_, void *raw_memory)
+sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -200,7 +201,7 @@ sim_solver *sim_assign(sim_solver_config *config, sim_dims *dims, void *opts_, v
 
 
 
-sim_solver *sim_create(sim_solver_config *config, sim_dims *dims, void *opts_)
+sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
 {
 	// update Butcher tableau (needed if the user changed ns)
 	config->opts_update(config, dims, opts_);

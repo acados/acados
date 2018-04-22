@@ -53,7 +53,7 @@
 
 #define NN 40
 
-#define MAX_SQP_ITERS 10
+#define MAX_SQP_ITERS 15
 #define NREP 1
 
 
@@ -481,7 +481,7 @@ int main()
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 //		plan->sim_solver_plan[i].sim_solver = ERK;
-//		plan->sim_solver_plan[i].sim_solver = IRK;
+		// plan->sim_solver_plan[i].sim_solver = IRK;
 		plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
 	}
 

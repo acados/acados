@@ -15,13 +15,58 @@
 #include "external/blasfeo/include/blasfeo_d_aux.h"
 #include "external/blasfeo/include/blasfeo_d_blas.h"
 
+/************************************************
+* dims
+************************************************/
 
+int sim_irk_dims_calculate_size()
+{
+    int size = sizeof(sim_irk_dims);
+
+    return size;
+}
+
+void *sim_irk_dims_assign(void* config_, void *raw_memory)
+{
+    char *c_ptr = raw_memory;
+
+    sim_irk_dims *dims = (sim_irk_dims *) c_ptr;
+    c_ptr += sizeof(sim_irk_dims);
+
+    assert((char *) raw_memory + sim_irk_dims_calculate_size() >= c_ptr);
+
+    return dims;
+}
+
+void sim_irk_set_nx(void *dims_, int nx)
+{
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
+    dims->nx = nx;
+}
+
+void sim_irk_set_nu(void *dims_, int nu)
+{
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
+    dims->nu = nu;
+}
+
+void sim_irk_get_nx(void *dims_, int* nx)
+{
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
+    *nx = dims->nx;
+}
+
+void sim_irk_get_nu(void *dims_, int* nu)
+{
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
+    *nu = dims->nu;
+}
 
 /************************************************
 * model
 ************************************************/
 
-int sim_irk_model_calculate_size(void *config, sim_dims *dims)
+int sim_irk_model_calculate_size(void *config, void *dims)
 {
 
 	int size = 0;
@@ -34,7 +79,7 @@ int sim_irk_model_calculate_size(void *config, sim_dims *dims)
 
 
 
-void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory)
+void *sim_irk_model_assign(void *config, void *dims, void *raw_memory)
 {
 
 	char *c_ptr = (char *) raw_memory;
@@ -88,7 +133,7 @@ int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
 * opts
 ************************************************/
 
-int sim_irk_opts_calculate_size(void *config_, sim_dims *dims)
+int sim_irk_opts_calculate_size(void *config_, void *dims)
 {
 	int ns_max = NS_MAX;
 
@@ -113,7 +158,7 @@ int sim_irk_opts_calculate_size(void *config_, sim_dims *dims)
 
 
 
-void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
+void *sim_irk_opts_assign(void *config_, void *dims, void *raw_memory)
 {
 	int ns_max = NS_MAX;
 
@@ -142,8 +187,9 @@ void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 
 
 
-void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
+void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
+    sim_irk_dims* dims = (sim_irk_dims *) dims_;
     sim_rk_opts *opts = opts_;
 
 	opts->ns = 3; // GL 3
@@ -175,7 +221,7 @@ void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
 
 
-void sim_irk_opts_update(void *config_, sim_dims *dims, void *opts_)
+void sim_irk_opts_update(void *config_, void *dims, void *opts_)
 {
     sim_rk_opts *opts = opts_;
 
@@ -201,14 +247,14 @@ void sim_irk_opts_update(void *config_, sim_dims *dims, void *opts_)
 * memory
 ************************************************/
 
-int sim_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_)
+int sim_irk_memory_calculate_size(void *config, void *dims, void *opts_)
 {
     return 0;
 }
 
 
 
-void *sim_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory)
+void *sim_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory)
 {
     return NULL;
 }
@@ -219,8 +265,9 @@ void *sim_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw
 * workspace
 ************************************************/
 
-int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
+int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
+    sim_irk_dims* dims = (sim_irk_dims *) dims_;
 	sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -264,9 +311,10 @@ int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 
 
 
-static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, void *raw_memory)
+static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
 	sim_rk_opts *opts = opts_;
+    sim_irk_dims* dims = (sim_irk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -366,10 +414,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     int ns = opts->ns;
 
-    sim_dims *dims = in->dims;
+    void *dims_ = in->dims;
+    sim_irk_dims* dims = (sim_irk_dims *) dims_;
     sim_irk_workspace *workspace = (sim_irk_workspace *) sim_irk_workspace_cast(config, dims, opts, work_);
 
-    int ii, jj, iter, kk, ss;
+    int ii, jj, iter, ss;
     double a;
 
     int nx = dims->nx;
@@ -738,6 +787,11 @@ void sim_irk_config_initialize_default(void *config_)
 	config->model_calculate_size = &sim_irk_model_calculate_size;
 	config->model_assign = &sim_irk_model_assign;
     config->model_set_function = &sim_irk_model_set_function;
-
+    config->dims_calculate_size = &sim_irk_dims_calculate_size;
+    config->dims_assign = &sim_irk_dims_assign;
+    config->set_nx = &sim_irk_set_nx;
+    config->set_nu = &sim_irk_set_nu;
+    config->get_nx = &sim_irk_get_nx;
+    config->get_nu = &sim_irk_get_nu;
 	return;
 }

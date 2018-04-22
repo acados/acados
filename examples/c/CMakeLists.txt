@@ -289,19 +289,19 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_test(sim_crane_example sim_crane_example)
     endif()
 
-    add_executable(
-        sim_crane_no_interface_example
-        sim_crane_no_interface.c
-        ${CRANE_MODEL_SRC}
-    )
-    target_link_libraries(
-        sim_crane_no_interface_example
-        acados
-    )
-    add_test(
-        sim_crane_no_interface_example
-        sim_crane_no_interface_example
-    )
+    # add_executable(
+    #     sim_crane_no_interface_example
+    #     sim_crane_no_interface.c
+    #     ${CRANE_MODEL_SRC}
+    # )
+    # target_link_libraries(
+    #     sim_crane_no_interface_example
+    #     acados
+    # )
+    # add_test(
+    #     sim_crane_no_interface_example
+    #     sim_crane_no_interface_example
+    # )
 
     # -------------------- sim_wt
     if(ACADOS_WITH_C_INTERFACE)
