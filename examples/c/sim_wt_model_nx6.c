@@ -233,16 +233,6 @@ int main()
     get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
 	external_function_casadi_create(&get_matrices_fun);
 
-	// f - Linear Output System
-	external_function_param_casadi f_lo_jac_x1_x1dot_u_z;
-	f_lo_jac_x1_x1dot_u_z.casadi_fun 			= &casadi_f_lo_fun_jac_x1k1uz;
-	f_lo_jac_x1_x1dot_u_z.casadi_work 			= &casadi_f_lo_fun_jac_x1k1uz_work;
-	f_lo_jac_x1_x1dot_u_z.casadi_sparsity_in 	= &casadi_f_lo_fun_jac_x1k1uz_sparsity_in;
-	f_lo_jac_x1_x1dot_u_z.casadi_sparsity_out 	= &casadi_f_lo_fun_jac_x1k1uz_sparsity_out;
-	f_lo_jac_x1_x1dot_u_z.casadi_n_in 			= &casadi_f_lo_fun_jac_x1k1uz_n_in;
-	f_lo_jac_x1_x1dot_u_z.casadi_n_out 			= &casadi_f_lo_fun_jac_x1k1uz_n_out;
-	external_function_param_casadi_create(&f_lo_jac_x1_x1dot_u_z, np);
-
 	int number_sim_solvers = 4;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
@@ -395,7 +385,7 @@ int main()
 			{
 				sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
 				sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
-				sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_jac_x1_x1dot_u_z);
+				sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
 				// import & precompute matrices, TODO: do this through interface? would need some modification..
 				// printf("functions set\n");
 				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
@@ -456,8 +446,8 @@ int main()
 		// printf("SOLVER CREATED\n");
 		int acados_return;
 
-		// if (nss == 3)
-		// 	gnsf_precompute(gnsf_dim, in->model, opts, in);
+		if (nss == 3)
+			gnsf_precompute(gnsf_dim, in->model, opts, in->T);
 
 		// printf("USED TABLEAU: A = \n");
     	// d_print_e_mat(opts->ns, opts->ns, opts->A_mat, opts->ns);
@@ -521,7 +511,7 @@ int main()
 				case 3: {
 					phi_fun_jac_y.set_param(&phi_fun_jac_y, p_sim+ii*np);
 					phi_jac_y_uhat.set_param(&phi_jac_y_uhat, p_sim+ii*np);
-					f_lo_jac_x1_x1dot_u_z.set_param(&f_lo_jac_x1_x1dot_u_z, p_sim+ii*np);
+					f_lo_fun_jac_x1k1uz.set_param(&f_lo_fun_jac_x1k1uz, p_sim+ii*np);
 					break;
 				}
 				default :

@@ -228,7 +228,7 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
 // precomputation
 int gnsf_pre_workspace_calculate_size(sim_gnsf_dims *dims, sim_rk_opts *opts);
 void *gnsf_cast_pre_workspace(sim_gnsf_dims* dims, sim_rk_opts *opts, void *raw_memory);
-void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, sim_in *in);
+void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, double T);
 
 // workspace & memory
 int gnsf_workspace_calculate_size(void *config, void *dims_, void *args);

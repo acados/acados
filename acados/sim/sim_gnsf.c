@@ -436,7 +436,7 @@ void *gnsf_cast_pre_workspace(sim_gnsf_dims* dims, sim_rk_opts *opts, void *raw_
 
 
 
-void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, sim_in *in){
+void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, double T){
     acados_timer atimer;
     acados_tic(&atimer);
     int nu         = dims->nu;
@@ -456,7 +456,7 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
     int nZ  = num_stages * nz;
 
     // simulation time
-    double T = in->T;
+    // double T = in->T;
 
     // set up precomputation workspace
     int pre_workspace_size = gnsf_pre_workspace_calculate_size(dims, opts);
