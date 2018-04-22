@@ -694,7 +694,7 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
 
     free(pre_work_);
     double precomputation_time = acados_toc(&atimer) * 1000;
-    printf("time 2 precompute = %f [ms]\n", precomputation_time);
+    // printf("time 2 precompute = %f [ms]\n", precomputation_time);
 }
 
 

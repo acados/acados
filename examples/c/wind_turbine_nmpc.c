@@ -48,6 +48,8 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 
+#include "acados/sim/sim_gnsf.h"
+
 #include "examples/c/wt_model_nx6/nx6p2/wt_model.h"
 #include "examples/c/wt_model_nx6/setup.c"
 
@@ -203,6 +205,17 @@ int main()
 
 	int np = 1; // number of local parametrs for each dynamics model function
 
+	// GNSF import matrices function -- where to put?!
+    external_function_casadi get_matrices_fun;
+    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
+	external_function_casadi_create(&get_matrices_fun);
+
+	external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
     /************************************************
     * problem dimensions
     ************************************************/
@@ -506,6 +519,7 @@ int main()
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 //		plan->sim_solver_plan[i].sim_solver = ERK;
 		// plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
+		// plan->sim_solver_plan[i].sim_solver = IRK;
 		plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
@@ -547,6 +561,29 @@ int main()
 	external_function_param_casadi_create_array(NN, phi_fun_jac_y, np);
 	external_function_param_casadi_create_array(NN, phi_jac_y_uhat, np);
 	external_function_param_casadi_create_array(NN, f_lo_jac_x1_x1dot_u_z, np);
+
+	for (int i = 0; i < NN; i++)
+	{
+		if (plan->sim_solver_plan[i].sim_solver == GNSF)
+		{
+			// initialize additional dimensions
+			sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
+			// sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dims->dynamics[i]->sim;
+			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
+			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
+			// printf("gnsf_dims.nx = %d \n ", gnsf_dims->nx);
+			// printf("gnsf_dims.nu = %d \n ", gnsf_dims->nu);
+			gnsf_dims->nx1 		= 8;
+			gnsf_dims->nz  		= 0;
+			gnsf_dims->nx2 		= 0;
+			gnsf_dims->n_out 	= 1;
+			gnsf_dims->ny 		= 8;
+			gnsf_dims->nuhat 	= 2;
+			gnsf_dims->num_stages= 4;
+			gnsf_dims->num_steps = 1;
+
+		}
+	}
 
 
     /************************************************
@@ -712,7 +749,35 @@ int main()
 			sim_opts->ns = 4;
 			sim_opts->num_steps = 1;
 		}
+		else if (plan->sim_solver_plan[i].sim_solver == GNSF)
+		{
+			sim_opts->ns = 4;
+			sim_opts->num_steps = 1;
+		}
     }
+
+	for (int i=0; i<NN; i++){
+		if (plan->sim_solver_plan[i].sim_solver == GNSF)
+		{
+			ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
+			gnsf_model* model = (gnsf_model *)dynamics->sim_model;
+
+			// sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
+			// get gnsf_dims
+			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
+			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
+
+			// get sim opts
+			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_opts->dynamics[i];
+			sim_rk_opts *sim_opts = dynamics_stage_opts->sim_solver;
+
+			gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
+
+			// precompute
+			gnsf_precompute(gnsf_dims, model, sim_opts, nlp_in->Ts[i]);
+
+		}
+	}
 
     sqp_opts->maxIter = MAX_SQP_ITERS;
     sqp_opts->min_res_g = 1e-6;
@@ -773,12 +838,18 @@ int main()
 				{
 					expl_vde_for[ii].set_param(expl_vde_for+ii, wind0_ref+idx+ii);
 				}
-				else if (plan->sim_solver_plan[ii].sim_solver == IRK | plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK)
+				else if ((plan->sim_solver_plan[ii].sim_solver == IRK | plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK))
 				{
 					impl_ode_fun[ii].set_param(impl_ode_fun+ii, wind0_ref+idx+ii);
 					impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);
 					impl_ode_jac_x_xdot_u[ii].set_param(impl_ode_jac_x_xdot_u+ii, wind0_ref+idx+ii);
 					impl_ode_jac_x_u[ii].set_param(impl_ode_jac_x_u+ii, wind0_ref+idx+ii);
+				}
+				else if (plan->sim_solver_plan[ii].sim_solver == GNSF) // ?!
+				{
+					phi_fun_jac_y[ii].set_param(phi_fun_jac_y+ii, wind0_ref+idx+ii);
+					phi_jac_y_uhat[ii].set_param(phi_jac_y_uhat+ii, wind0_ref+idx+ii);
+					f_lo_jac_x1_x1dot_u_z[ii].set_param(f_lo_jac_x1_x1dot_u_z+ii, wind0_ref+idx+ii);
 				}
 				else
 				{
