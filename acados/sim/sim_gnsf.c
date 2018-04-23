@@ -273,6 +273,8 @@ void *sim_gnsf_model_assign(void *config, void *dim_in, void *raw_memory)
     // printf("E = \n");
     // d_print_e_mat(nx1+nz, nx1+nz, model->E, nx1+nz);
 
+    // TODO:
+    // maybe here import model_matrices and precompute
     assert((char *) raw_memory + sim_gnsf_model_calculate_size(config, dim_in) >= c_ptr);
 	return model;
 }
@@ -537,6 +539,7 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
     blasfeo_dgese(nZ , nK1, 0.0, &DD2, 0, 0);
     blasfeo_dgese(nK1, nK1, 0.0, &EE1, 0, 0);
     blasfeo_dgese(nZ , nZ , 0.0, &EE2, 0, 0);
+    blasfeo_dgese(nyy, nK1, 0.0, &LLK, 0, 0);
 
     blasfeo_pack_dmat(nx1, nx1, model->E, nx1+nz, &E11, 0, 0);
 
@@ -586,6 +589,7 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
 
         blasfeo_pack_dmat(nx2, nx2 , A_LO, nx2, &dK2_dx2_work, ii*nx2, 0); // dK2_dx2 = repmat(s.ALO,opts.n_stages,1);
     }
+
     for (int ii = 0; ii < num_stages; ii++) { // perform kronecker product
         for (int jj = 0; jj < num_stages; jj++){
             blasfeo_dgead(nz, nx1, A_dt[ii*num_stages+jj], &A2, 0, 0, &DD2, jj*nz, ii*nx1);
@@ -671,8 +675,9 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
     blasfeo_dgemm_nn(nyy, nu, nK1, 1.0, &LLK, 0, 0, &KKu, 0, 0, 0.0, &LLx, 0, 0, &YYu, 0, 0);
     blasfeo_dgemm_nn(nyy, nu, nZ , 1.0, &LLZ, 0, 0, &ZZu, 0, 0, 1.0, &YYu, 0, 0, &YYu, 0, 0);
     // printf("YYu = (in precompute) \n");
-    // blasfeo_print_dmat(nyy, nu, &YYu, 0, 0);
-// build YYf
+    // blasfeo_print_exp_dmat(nyy, nu, &YYu, 0, 0);
+
+    // build YYf
     blasfeo_dgemm_nn(nyy, nff, nK1, 1.0, &LLK, 0, 0, &KKf, 0, 0, 0.0, &LLx, 0, 0, &YYf, 0, 0);
     blasfeo_dgemm_nn(nyy, nff, nZ , 1.0, &LLZ, 0, 0, &ZZf, 0, 0, 1.0, &YYf, 0, 0, &YYf, 0, 0);
 
@@ -694,6 +699,7 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
 
     free(pre_work_);
     double precomputation_time = acados_toc(&atimer) * 1000;
+
     // printf("time 2 precompute = %f [ms]\n", precomputation_time);
 }
 
@@ -1091,6 +1097,8 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
     int num_stages = dims->num_stages;
     int num_steps = dims->num_steps;
     assert(dims->num_stages == opts->ns && "dims->num_stages not equal opts->ns, check initialization!!!");
+
+    // printf("%d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t", nx, nu, nx1, nx2, nz, n_out, ny, nuhat, num_stages, num_steps);
 
     int nff = num_stages * n_out;
     int nyy = num_stages * ny;
