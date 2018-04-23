@@ -58,7 +58,7 @@ script:
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=OFF -DSWIG_PYTHON=OFF ..
   - cmake --build build --target lint
-  - cmake --build build && sleep 10
+  - cmake --build build && sleep 100
   # - cmake -E chdir build ctest --verbose --output-on-failure
   # - rm -r -f build
   # - cmake -E make_directory build
