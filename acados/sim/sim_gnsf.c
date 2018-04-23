@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -33,6 +34,7 @@
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_collocation_utils.h"
 
+// blasfeo
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
@@ -266,13 +268,6 @@ void *sim_gnsf_model_assign(void *config, void *dim_in, void *raw_memory)
 
     assign_and_advance_blasfeo_dmat_mem(nuhat, nu, &model->Lu, &c_ptr);
 
-	// assert
-    // printf("assigned stuff: \n");
-    // printf("A = \n");
-    // d_print_e_mat(nx1+nz, nx1, model->A, nx1+nz);
-    // printf("E = \n");
-    // d_print_e_mat(nx1+nz, nx1+nz, model->E, nx1+nz);
-
     // TODO:
     // maybe here import model_matrices and precompute
     assert((char *) raw_memory + sim_gnsf_model_calculate_size(config, dim_in) >= c_ptr);
@@ -456,9 +451,6 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
     int nK1 = num_stages * nx1;
     int nK2 = num_stages * nx2;
     int nZ  = num_stages * nz;
-
-    // simulation time
-    // double T = in->T;
 
     // set up precomputation workspace
     int pre_workspace_size = gnsf_pre_workspace_calculate_size(dims, opts);
@@ -1166,14 +1158,15 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
     blasfeo_pack_dvec(nx+nu, &in->S_adj[0], &lambda, 0);
     blasfeo_pack_dvec(nx+nu, &in->S_adj[0], &lambda_old, 0);
     blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, &S_forw, 0, 0);
+
     // initialize ff_val
     for (int ss = 0; ss < num_steps; ss++){
         blasfeo_dvecse(nff, 0, &ff_val[ss],0);
     }
 
-/************************************************
-* Set up function input & outputs
-************************************************/
+    /************************************************
+    * Set up function input & outputs
+    ************************************************/
     // PHI
     ext_fun_arg_t phi_type_in[2];
 	void         *phi_in[2];
@@ -1258,12 +1251,14 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
     blasfeo_dgemv_n(nyy, nu , 1.0, &fix->YYu, 0, 0, &u0, 0, 0.0, &yyu, 0, &yyu, 0);
     blasfeo_dgemv_n(nK1, nu , 1.0, &fix->KKu, 0, 0, &u0, 0, 0.0, &K1_val[0], 0, &K1u, 0);
     blasfeo_dgemv_n(nZ , nu , 1.0, &fix->ZZu, 0, 0, &u0, 0, 0.0, &Z_val[0] , 0, &Zu, 0);
+    
     // compute uhat
-    blasfeo_dgemv_n(nuhat, nu, 1.0, &fix->Lu, 0, 0, &u0, 0, 0.0, &uhat, 0, &uhat, 0); // calculate uhat
+    blasfeo_dgemv_n(nuhat, nu, 1.0, &fix->Lu, 0, 0, &u0, 0, 0.0, &uhat, 0, &uhat, 0);
 
-/************************************************
-* FORWARD LOOP
-************************************************/    
+    /************************************************
+    * FORWARD LOOP
+    ************************************************/
+
     for (int ss = 0; ss < num_steps; ss++) { // STEP LOOP
         blasfeo_dgemv_n(nyy, nx1, 1.0, &fix->YYx, 0, 0, &x0_traj, ss*nx, 1.0, &yyu, 0, &yyss, nyy*ss);
 
@@ -1320,7 +1315,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             }
         }
         if (nx2){
-/* SIMULATE LINEAR OUTPUT SYSTEM */
+            /* SIMULATE LINEAR OUTPUT SYSTEM */
             blasfeo_dgemv_n(nx2, nx2, 1.0, &fix->ALO, 0, 0, &x0_traj, ss*nx+nx1, 0.0, &f_LO_val[ss], 0, &ALOtimesx02, 0);
             for (int ii = 0; ii < num_stages; ii++) { // Evaluate f_LO + jacobian and pack to blasfeo structs
                 f_lo_in_x1.xi = ii*nx1;
@@ -1340,13 +1335,15 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             // solve for K2
             blasfeo_dgemv_n( nK2, nK2, -1.0, &fix->M2inv, 0, 0, &f_LO_val[ss], 0, 0.0, &K2_val, 0, &K2_val, 0);
         }
-/* Get simulation result */
+
+        /* Get simulation result */
         blasfeo_daxpy(nx, 0.0, &x0_traj, 0, &x0_traj, nx * ss, &x0_traj, nx * (ss+1));
         for (int ii = 0; ii < num_stages; ii++) {
             blasfeo_daxpy(nx1, fix->b_dt[ii], &K1_val[ss], ii*nx1, &x0_traj, nx * (ss+1) , &x0_traj, nx * (ss+1));
             blasfeo_daxpy(nx2, fix->b_dt[ii], &K2_val    , ii*nx2, &x0_traj, nx1 + nx * (ss+1),  &x0_traj, nx1 + nx * (ss+1));
         }
-// Forward Sensitivities (via IND)
+
+        // Forward Sensitivities (via IND)
         if (opts->sens_forw) {
             // evaluate jacobian of residual function
             // update yy
@@ -1356,6 +1353,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             for (int ii = 0; ii < nff; ii++) {
                 blasfeo_dgein1(1.0, &J_r_ff, ii, ii);            
             }
+
             for (int ii = 0; ii < num_stages; ii++) { //
                 y_in.xi = ii*ny; // set input of phi
                 phi_jac_uhat_arg.ai = ii*n_out; // set output
@@ -1371,7 +1369,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                 blasfeo_dgemm_nn(n_out, nx1, ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &fix->YYx, ii*ny, 0, 0.0, &J_r_x1u, ii*n_out, 0, &J_r_x1u, ii*n_out, 0); // w.r.t. x1
                 blasfeo_dgemm_nn(n_out, nu,  ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &fix->YYu, ii*ny, 0, 0.0, &J_r_x1u, ii*n_out, nx1, &J_r_x1u, ii*n_out, nx1); // w.r.t. u
                 blasfeo_dgemm_nn(n_out, nu, nuhat, -1.0, &dPHI_dyuhat, ii*n_out, ny, &fix->Lu, 0, 0,  1.0,  &J_r_x1u, ii*n_out, nx1, &J_r_x1u, ii*n_out, nx1); // + dPhi_duhat * L_u;
-        }
+            }
             blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
             blasfeo_drowpe(nff, ipiv, &J_r_x1u); // permute also rhs
             blasfeo_dtrsm_llnu(nff, nx1 + nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
@@ -1379,8 +1377,9 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
 
             blasfeo_dgemm_nn(nK1, nx1, nff, -1.0, &fix->KKf, 0, 0, &J_r_x1u, 0,  0,        1.0, &fix->KKx, 0, 0, &dK1_dx1, 0, 0);
             blasfeo_dgemm_nn(nK1, nu,  nff, -1.0, &fix->KKf, 0, 0, &J_r_x1u, 0, nx1, 1.0, &fix->KKu, 0, 0, &dK1_du , 0, 0); // Blasfeo HP & Reference differ here
-            blasfeo_dgemm_nn(nZ, nx1, nff, -1.0, &fix->ZZf, 0, 0, &J_r_x1u, 0, 0,         1.0, &fix->ZZx, 0, 0, &dZ_dx1, 0, 0);
-            blasfeo_dgemm_nn(nZ, nu , nff, -1.0, &fix->ZZf, 0, 0, &J_r_x1u, 0, nx1, 1.0, &fix->ZZu, 0, 0, &dZ_du, 0, 0);
+            blasfeo_dgemm_nn(nZ , nx1, nff, -1.0, &fix->ZZf, 0, 0, &J_r_x1u, 0, 0,         1.0, &fix->ZZx, 0, 0, &dZ_dx1, 0, 0);
+            blasfeo_dgemm_nn(nZ , nu , nff, -1.0, &fix->ZZf, 0, 0, &J_r_x1u, 0, nx1, 1.0, &fix->ZZu, 0, 0, &dZ_du, 0, 0);
+
             if (nx2){
                 // BUILD J_G2_wn, J_G2_K1
                 for (int ii = 0; ii < num_stages; ii++) {
@@ -1426,93 +1425,91 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
         }
         gnsf_neville(&Z_out[ii], 0.0, num_stages-1, fix->c, Z_work);
     }
-/************************************************
-* ADJOINT SENSITIVITY PROPAGATION
-************************************************/    
+
+    /************************************************
+    * ADJOINT SENSITIVITY PROPAGATION
+    ************************************************/
+
     if (opts->sens_adj) {
-        // if (opts->sens_forw){ // seems like cheating - better for timing comparison with irk..
-        //         blasfeo_dgemv_t(nx, nx+nu, 1.0, &S_forw, 0, 0, &lambda_old, 0, 0.0, &lambda, 0, &lambda, 0);
-        // } else {
-            for (int ss = num_steps-1; ss >= 0; ss--) {
-                y_in.x = &yy_val[ss];
-                for (int ii = 0; ii < num_stages; ii++) {
-                    blasfeo_dgemm_nn(nx2, nff, nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &fix->ZZf, ii* nz, 0, 0.0, &fix->ZZf, 0, 0, &aux_G2_ff, ii * nx2, 0);
-                    blasfeo_dgemm_nn(nx2, nx1, nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &fix->ZZx, ii* nz, 0, 0.0, &fix->ZZx, 0, 0, &aux_G2_x1, ii * nx2, 0);
-                    blasfeo_dgemm_nn(nx2, nu , nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &fix->ZZu, ii* nz, 0, 0.0, &fix->ZZu, 0, 0, &aux_G2_u , ii * nx2, 0);
-                    for (int jj = 0; jj < num_stages; jj++) {
-                        blasfeo_dgecpsc(nx2, nx1, -fix->A_dt[ii+jj*num_stages], &f_LO_jac[ss], nx2 * ii, 0, &J_G2_K1, ii*nx2, jj*nx1);
-                    }
-                    blasfeo_dgead(nx2, nx1, -1.0, &f_LO_jac[ss], nx2*ii, nx1, &J_G2_K1, nx2*ii, nx1*ii);
+        for (int ss = num_steps-1; ss >= 0; ss--) {
+            y_in.x = &yy_val[ss];
+            for (int ii = 0; ii < num_stages; ii++) {
+                blasfeo_dgemm_nn(nx2, nff, nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &fix->ZZf, ii* nz, 0, 0.0, &fix->ZZf, 0, 0, &aux_G2_ff, ii * nx2, 0);
+                blasfeo_dgemm_nn(nx2, nx1, nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &fix->ZZx, ii* nz, 0, 0.0, &fix->ZZx, 0, 0, &aux_G2_x1, ii * nx2, 0);
+                blasfeo_dgemm_nn(nx2, nu , nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &fix->ZZu, ii* nz, 0, 0.0, &fix->ZZu, 0, 0, &aux_G2_u , ii * nx2, 0);
+                for (int jj = 0; jj < num_stages; jj++) {
+                    blasfeo_dgecpsc(nx2, nx1, -fix->A_dt[ii+jj*num_stages], &f_LO_jac[ss], nx2 * ii, 0, &J_G2_K1, ii*nx2, jj*nx1);
                 }
-                blasfeo_dgemm_nn(nK2, nff, nK1, 1.0, &J_G2_K1, 0, 0, &fix->KKf, 0, 0, 1.0, &aux_G2_ff, 0, 0, &aux_G2_ff, 0, 0);
-                blasfeo_dgemm_nn(nK2, nx1, nK1, 1.0, &J_G2_K1, 0, 0, &fix->KKx, 0, 0, 1.0, &aux_G2_x1, 0, 0, &aux_G2_x1, 0, 0);
-                blasfeo_dgemm_nn(nK2, nu , nK1, 1.0, &J_G2_K1, 0, 0, &fix->KKu, 0, 0, 1.0, &aux_G2_u , 0, 0, &aux_G2_u , 0, 0);
-
-                blasfeo_dgead(nK2, nx1, -1.0, &f_LO_jac[ss], 0, 0, &aux_G2_x1, 0, 0);
-                blasfeo_dgead(nK2, nu , -1.0, &f_LO_jac[ss], 0, 2*nx1 + nz, &aux_G2_u, 0, 0);
-
-                blasfeo_dgemm_nn(nK2, nff, nK2, -1.0, &fix->M2inv, 0, 0, &aux_G2_ff, 0, 0, 0.0, &dK2_dff, 0, 0, &dK2_dff, 0, 0);
-                blasfeo_dgemm_nn(nK2, nx1, nK2, -1.0, &fix->M2inv, 0, 0, &aux_G2_x1, 0, 0, 0.0, &dK2_dx1, 0, 0, &dK2_dx1, 0, 0);
-                blasfeo_dgemm_nn(nK2, nu , nK2, -1.0, &fix->M2inv, 0, 0, &aux_G2_u , 0, 0, 0.0, &dK2_du,  0, 0, &dK2_du,  0, 0);
-
-                blasfeo_dgese(nx, nff, 0.0, &dPsi_dff, 0, 0); // initialize dPsi_d.. 
-                blasfeo_dgese(nx, nx, 0.0, &dPsi_dx, 0, 0);
-                blasfeo_dgese(nx, nu, 0.0, &dPsi_du, 0, 0);
-                blasfeo_ddiare(nx, 1.0, &dPsi_dx, 0, 0); //dPsi_dx is unit now
-
-                // compute dPsi_d..
-                for (int ii = 0; ii < num_stages; ii++) {
-                    blasfeo_dgead(nx1, nff, fix->b_dt[ii], &fix->KKf, ii*nx1, 0, &dPsi_dff, 0, 0);
-                    blasfeo_dgead(nx1, nx1, fix->b_dt[ii], &fix->KKx, ii*nx1, 0, &dPsi_dx, 0, 0);
-                    blasfeo_dgead(nx1, nu,  fix->b_dt[ii], &fix->KKu, ii*nx1, 0, &dPsi_du, 0, 0);
-                    
-                    blasfeo_dgead(nx2, nff, fix->b_dt[ii], &dK2_dff, ii*nx2, 0, &dPsi_dff, nx1, 0);
-                    blasfeo_dgead(nx2, nx1, fix->b_dt[ii], &dK2_dx1, ii*nx2, 0, &dPsi_dx, nx1, 0);
-                    blasfeo_dgead(nx2, nx2, fix->b_dt[ii], &fix->dK2_dx2, ii*nx2, 0, &dPsi_dx, nx1, nx1);
-                    blasfeo_dgead(nx2, nu,  fix->b_dt[ii], &dK2_du, ii*nx2, 0, &dPsi_du, nx1, 0);            
-                }
-                // evaluate jacobian of residual function
-                // update yy
-                blasfeo_dgemv_n(nyy, nff, 1.0, &fix->YYf, 0, 0, &ff_val[ss], 0, 1.0, &yyss, nyy*ss, &yy_val[ss], 0);
-                // set J_r_ff to unit matrix
-                blasfeo_dgese(nff, nff, 0.0, &J_r_ff, 0, 0);
-                for (int ii = 0; ii < nff; ii++) {
-                    blasfeo_dgein1(1.0, &J_r_ff, ii, ii);
-                }
-                for (int ii = 0; ii < num_stages; ii++) {
-                    y_in.xi = ii*ny; // set input of phi
-                    phi_jac_uhat_arg.ai = ii*n_out;
-                    phi_jac_y_arg.ai = ii*n_out;
-
-                    acados_tic(&casadi_timer);
-                    fix->phi_jac_y_uhat->evaluate(fix->phi_jac_y_uhat, phi_type_in, phi_in, phi_jac_yuhat_type_out, phi_jac_yuhat_out);
-                    out->info->ADtime += acados_toc(&casadi_timer);
-
-                    // build J_r_ff
-                    blasfeo_dgemm_nn(n_out, nff, ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &fix->YYf, ii*ny, 0, 1.0, &J_r_ff, ii*n_out, 0, &J_r_ff, ii*n_out, 0);
-                    // build J_r_x1u
-                    blasfeo_dgemm_nn(n_out, nx1, ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &fix->YYx, ii*ny, 0, 0.0, &J_r_x1u, ii*n_out, 0, &J_r_x1u, ii*n_out, 0); // w.r.t. x1
-                    blasfeo_dgemm_nn(n_out, nu,  ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &fix->YYu, ii*ny, 0, 0.0, &J_r_x1u, ii*n_out, nx1, &J_r_x1u, ii*n_out, nx1); // w.r.t. u
-                    blasfeo_dgemm_nn(n_out, nu, nuhat, -1.0, &dPHI_dyuhat, ii*n_out, ny, &fix->Lu, 0, 0,  1.0,  &J_r_x1u, ii*n_out, nx1, &J_r_x1u, ii*n_out, nx1); // + dPhi_duhat * L_u;
-                }
-
-                blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
-
-                blasfeo_dgemv_t(nx, nff, 1.0, &dPsi_dff, 0, 0, &lambda, 0, 0.0, &res_val, 0, &res_val, 0); // use res_val to store lambda_ff
-
-                blasfeo_dvecpei(nff, ipiv, &res_val, 0); // permute r.h.s.
-                blasfeo_dtrsv_utn(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
-                blasfeo_dtrsv_ltu(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
-
-                blasfeo_dveccp(nx +nu, &lambda, 0, &lambda_old, 0);
-                blasfeo_dgemv_t(nx, nu, 1.0, &dPsi_du, 0, 0, &lambda_old, 0, 1.0, &lambda_old, nx, &lambda, nx); // update lambda_u
-
-                blasfeo_dgemv_t(nx, nx, 1.0, &dPsi_dx, 0, 0, &lambda_old, 0, 0.0, &res_val, 0, &lambda, 0); // recheck!
-                blasfeo_dveccp(nx +nu, &lambda, 0, &lambda_old, 0);
-                blasfeo_dgemv_t(nff, nx1, -1.0, &J_r_x1u, 0  , 0, &res_val, 0, 1.0, &lambda_old, 0, &lambda, 0);
-                blasfeo_dgemv_t(nff, nu, -1.0, &J_r_x1u, 0, nx1, &res_val, 0, 1.0, &lambda_old, nx, &lambda, nx);
+                blasfeo_dgead(nx2, nx1, -1.0, &f_LO_jac[ss], nx2*ii, nx1, &J_G2_K1, nx2*ii, nx1*ii);
             }
-        // }
+            blasfeo_dgemm_nn(nK2, nff, nK1, 1.0, &J_G2_K1, 0, 0, &fix->KKf, 0, 0, 1.0, &aux_G2_ff, 0, 0, &aux_G2_ff, 0, 0);
+            blasfeo_dgemm_nn(nK2, nx1, nK1, 1.0, &J_G2_K1, 0, 0, &fix->KKx, 0, 0, 1.0, &aux_G2_x1, 0, 0, &aux_G2_x1, 0, 0);
+            blasfeo_dgemm_nn(nK2, nu , nK1, 1.0, &J_G2_K1, 0, 0, &fix->KKu, 0, 0, 1.0, &aux_G2_u , 0, 0, &aux_G2_u , 0, 0);
+
+            blasfeo_dgead(nK2, nx1, -1.0, &f_LO_jac[ss], 0, 0, &aux_G2_x1, 0, 0);
+            blasfeo_dgead(nK2, nu , -1.0, &f_LO_jac[ss], 0, 2*nx1 + nz, &aux_G2_u, 0, 0);
+
+            blasfeo_dgemm_nn(nK2, nff, nK2, -1.0, &fix->M2inv, 0, 0, &aux_G2_ff, 0, 0, 0.0, &dK2_dff, 0, 0, &dK2_dff, 0, 0);
+            blasfeo_dgemm_nn(nK2, nx1, nK2, -1.0, &fix->M2inv, 0, 0, &aux_G2_x1, 0, 0, 0.0, &dK2_dx1, 0, 0, &dK2_dx1, 0, 0);
+            blasfeo_dgemm_nn(nK2, nu , nK2, -1.0, &fix->M2inv, 0, 0, &aux_G2_u , 0, 0, 0.0, &dK2_du,  0, 0, &dK2_du,  0, 0);
+
+            blasfeo_dgese(nx, nff, 0.0, &dPsi_dff, 0, 0); // initialize dPsi_d.. 
+            blasfeo_dgese(nx, nx, 0.0, &dPsi_dx, 0, 0);
+            blasfeo_dgese(nx, nu, 0.0, &dPsi_du, 0, 0);
+            blasfeo_ddiare(nx, 1.0, &dPsi_dx, 0, 0); //dPsi_dx is unit now
+
+            // compute dPsi_d..
+            for (int ii = 0; ii < num_stages; ii++) {
+                blasfeo_dgead(nx1, nff, fix->b_dt[ii], &fix->KKf, ii*nx1, 0, &dPsi_dff, 0, 0);
+                blasfeo_dgead(nx1, nx1, fix->b_dt[ii], &fix->KKx, ii*nx1, 0, &dPsi_dx, 0, 0);
+                blasfeo_dgead(nx1, nu,  fix->b_dt[ii], &fix->KKu, ii*nx1, 0, &dPsi_du, 0, 0);
+                
+                blasfeo_dgead(nx2, nff, fix->b_dt[ii], &dK2_dff, ii*nx2, 0, &dPsi_dff, nx1, 0);
+                blasfeo_dgead(nx2, nx1, fix->b_dt[ii], &dK2_dx1, ii*nx2, 0, &dPsi_dx, nx1, 0);
+                blasfeo_dgead(nx2, nx2, fix->b_dt[ii], &fix->dK2_dx2, ii*nx2, 0, &dPsi_dx, nx1, nx1);
+                blasfeo_dgead(nx2, nu,  fix->b_dt[ii], &dK2_du, ii*nx2, 0, &dPsi_du, nx1, 0);            
+            }
+            // evaluate jacobian of residual function
+            // update yy
+            blasfeo_dgemv_n(nyy, nff, 1.0, &fix->YYf, 0, 0, &ff_val[ss], 0, 1.0, &yyss, nyy*ss, &yy_val[ss], 0);
+            // set J_r_ff to unit matrix
+            blasfeo_dgese(nff, nff, 0.0, &J_r_ff, 0, 0);
+            for (int ii = 0; ii < nff; ii++) {
+                blasfeo_dgein1(1.0, &J_r_ff, ii, ii);
+            }
+            for (int ii = 0; ii < num_stages; ii++) {
+                y_in.xi = ii*ny; // set input of phi
+                phi_jac_uhat_arg.ai = ii*n_out;
+                phi_jac_y_arg.ai = ii*n_out;
+
+                acados_tic(&casadi_timer);
+                fix->phi_jac_y_uhat->evaluate(fix->phi_jac_y_uhat, phi_type_in, phi_in, phi_jac_yuhat_type_out, phi_jac_yuhat_out);
+                out->info->ADtime += acados_toc(&casadi_timer);
+
+                // build J_r_ff
+                blasfeo_dgemm_nn(n_out, nff, ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &fix->YYf, ii*ny, 0, 1.0, &J_r_ff, ii*n_out, 0, &J_r_ff, ii*n_out, 0);
+                // build J_r_x1u
+                blasfeo_dgemm_nn(n_out, nx1, ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &fix->YYx, ii*ny, 0, 0.0, &J_r_x1u, ii*n_out, 0, &J_r_x1u, ii*n_out, 0); // w.r.t. x1
+                blasfeo_dgemm_nn(n_out, nu,  ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &fix->YYu, ii*ny, 0, 0.0, &J_r_x1u, ii*n_out, nx1, &J_r_x1u, ii*n_out, nx1); // w.r.t. u
+                blasfeo_dgemm_nn(n_out, nu, nuhat, -1.0, &dPHI_dyuhat, ii*n_out, ny, &fix->Lu, 0, 0,  1.0,  &J_r_x1u, ii*n_out, nx1, &J_r_x1u, ii*n_out, nx1); // + dPhi_duhat * L_u;
+            }
+
+            blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
+
+            blasfeo_dgemv_t(nx, nff, 1.0, &dPsi_dff, 0, 0, &lambda, 0, 0.0, &res_val, 0, &res_val, 0); // use res_val to store lambda_ff
+
+            blasfeo_dvecpei(nff, ipiv, &res_val, 0); // permute r.h.s.
+            blasfeo_dtrsv_utn(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
+            blasfeo_dtrsv_ltu(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
+
+            blasfeo_dveccp(nx +nu, &lambda, 0, &lambda_old, 0);
+            blasfeo_dgemv_t(nx, nu, 1.0, &dPsi_du, 0, 0, &lambda_old, 0, 1.0, &lambda_old, nx, &lambda, nx); // update lambda_u
+
+            blasfeo_dgemv_t(nx, nx, 1.0, &dPsi_dx, 0, 0, &lambda_old, 0, 0.0, &res_val, 0, &lambda, 0); // recheck!
+            blasfeo_dveccp(nx +nu, &lambda, 0, &lambda_old, 0);
+            blasfeo_dgemv_t(nff, nx1, -1.0, &J_r_x1u, 0  , 0, &res_val, 0, 1.0, &lambda_old, 0, &lambda, 0);
+            blasfeo_dgemv_t(nff, nu, -1.0, &J_r_x1u, 0, nx1, &res_val, 0, 1.0, &lambda_old, nx, &lambda, nx);
+        }
     }
     blasfeo_unpack_dvec(nx, &x0_traj, nx * num_steps, out->xn);
     blasfeo_unpack_dmat(nx, nx + nu, &S_forw, 0, 0, out->S_forw, nx);
