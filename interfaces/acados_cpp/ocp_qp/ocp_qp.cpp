@@ -7,14 +7,14 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "acados_cpp/ocp_qp.hpp"
+#include "acados_cpp/ocp_qp/ocp_qp.hpp"
 
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/options.h"
 
-#include "acados_cpp/hpipm_helper.hpp"
-#include "acados_cpp/utils.hpp"
+#include "acados_cpp/ocp_qp/hpipm_helper.hpp"
+#include "acados_cpp/ocp_qp/utils.hpp"
 
 using std::map;
 using std::string;
