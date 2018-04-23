@@ -30,6 +30,7 @@ extern "C" {
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 
+
 typedef struct
 {
     int nx;
@@ -61,6 +62,7 @@ typedef struct
 
 typedef struct
 {
+
     struct blasfeo_dmat *JGK; // jacobian of G over K (nx*ns, nx*ns)
     struct blasfeo_dmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
     struct blasfeo_dmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);

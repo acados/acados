@@ -762,7 +762,6 @@ int main()
 			ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 			gnsf_model* model = (gnsf_model *)dynamics->sim_model;
 
-			// sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
 			// get gnsf_dims
 			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
 			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
@@ -845,7 +844,7 @@ int main()
 					impl_ode_jac_x_xdot_u[ii].set_param(impl_ode_jac_x_xdot_u+ii, wind0_ref+idx+ii);
 					impl_ode_jac_x_u[ii].set_param(impl_ode_jac_x_u+ii, wind0_ref+idx+ii);
 				}
-				else if (plan->sim_solver_plan[ii].sim_solver == GNSF) // ?!
+				else if (plan->sim_solver_plan[ii].sim_solver == GNSF)
 				{
 					phi_fun_jac_y[ii].set_param(phi_fun_jac_y+ii, wind0_ref+idx+ii);
 					phi_jac_y_uhat[ii].set_param(phi_jac_y_uhat+ii, wind0_ref+idx+ii);
@@ -886,7 +885,7 @@ int main()
 				printf("electrical power = %f\n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7));
 			}
 
-			if (0) // oj: todo, replace with(status!=0)
+			if (status!=0)
 			{
 				if (!(status == 1 && MAX_SQP_ITERS == 1))  // if not RTI
 				{

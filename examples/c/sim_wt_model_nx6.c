@@ -34,8 +34,6 @@
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include <acados/sim/sim_gnsf.h>
 
-#include <xmmintrin.h> // for debugging
-
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
@@ -65,7 +63,6 @@ int main()
 	/************************************************
 	* initialization
 	************************************************/
-// int nsim = 1; // OJ: added; todo: where is this initially defined?!
     int ii, jj;
 
     int nx = 6;
@@ -75,11 +72,11 @@ int main()
     int NF = nx + nu; // columns of forward seed
 
     double Ts = 0.2; // simulation time
+
 	double *x_sim = malloc(sizeof(double)*nx*(nsim+1));
+
 	for (ii=0; ii<nx; ii++)
 		x_sim[ii] = x_ref[ii];
-	printf("x_ref = \n");
-	d_print_mat(1, nx, x_ref, 1);
 
 	/************************************************
 	* external functions (explicit model)
@@ -233,6 +230,7 @@ int main()
     get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
 	external_function_casadi_create(&get_matrices_fun);
 
+
 	int number_sim_solvers = 4;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
@@ -267,31 +265,6 @@ int main()
 		/************************************************
 		* sim dims
 		************************************************/
-		// sim_dims *dims; // OJ: declaration in if causes error
-		// gnsf_dims *gnsf_dim;
-		// if (nss == 3){
-		// 	gnsf_dims *gnsf_dim = gnsf_dims_create();
-		// 	printf("\n adress of dims %p\n",(void*)gnsf_dim);
-    	// 	dims = (sim_dims *) gnsf_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
-		// 	gnsf_dim->nx = nx;
-		// 	gnsf_dim->nu = nu;
-		// 	gnsf_dim->nx1= nx;
-		// 	gnsf_dim->nx2= 0;
-		// 	gnsf_dim->n_in = nx + nu;
-		// 	gnsf_dim->n_out = 1;
-		// 	gnsf_dim->num_stages = 8;
-		// 	printf("gnsf: n_in = %d \n", gnsf_dim->n_in);
-		// 	printf("\n adress of dims %p\n",(void*)gnsf_dim);
-		// }
-		// else {
-		// 	dims = sim_dims_create();
-		// 	dims->nx = nx;
-		// 	dims->nu = nu;
-		// }
-
-		// dims = sim_dims_create();
-		// dims->nx = nx;
-		// dims->nu = nu;
 
 		void *dims = sim_dims_create(config);
 		config->set_nx(dims, nx);
@@ -300,6 +273,7 @@ int main()
 		/************************************************
 		* sim opts
 		************************************************/
+
 		sim_rk_opts *opts = sim_opts_create(config, dims);
 
 	//		opts->ns = 4; // number of stages in rk integrator
@@ -318,8 +292,8 @@ int main()
 				break;
 
 			case 1:
-				opts->ns = 1; // number of stages in rk integrator
-				opts->num_steps = 1; // number of integration steps
+				opts->ns = 2; // number of stages in rk integrator
+				opts->num_steps = 6; // number of integration steps
 				break;
 
 			case 2:
@@ -357,8 +331,7 @@ int main()
 		************************************************/
 
 		sim_in *in = sim_in_create(config, dims);
-		// printf("dimz in main2: \t \t %d \t %d \t%d \t %d \t%d \t%d \t  \n", gnsf_dim->nu, gnsf_dim->nx1, gnsf_dim->nx2,gnsf_dim->nz, gnsf_dim->n_out, gnsf_dim->n_in);
-		// printf("dimz: %d \t %d \t%d \t %d \t%d \t%d \t  \n", nu, nx1, nx2,nz, n_out, n_in);
+
 		sim_out *out = sim_out_create(config, dims);
 
 		in->T = Ts;
@@ -383,14 +356,14 @@ int main()
 			}
 			case 3: // gnsf
 			{
+				// set model funtions
 				sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
 				sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
 				sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
-				// import & precompute matrices, TODO: do this through interface? would need some modification..
-				// printf("functions set\n");
+
+				// import model matrices
 				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
-				gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);				// printf("imported matrices\n");
-				// printf("model set\n");
+				gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);
 				break;
 			}
 			default :
@@ -429,7 +402,7 @@ int main()
 			case 1:
 			case 2:
 				printf("\n\nsim solver: IRK, ns=%d, num_steps=%d\n", opts->ns, opts->num_steps);
-				plan.sim_solver = IRK; // unnecessary(?!), see second switch
+				plan.sim_solver = IRK;
 				break;
 			case 3:
 				printf("\n\nsim solver: gnsf, ns=%d, num_steps=%d\n", opts->ns, opts->num_steps);
@@ -443,16 +416,12 @@ int main()
 		}
 
 		sim_solver *sim_solver = sim_create(config, dims, opts);
-		// printf("SOLVER CREATED\n");
+
 		int acados_return;
 
-		if (nss == 3)
+		if (nss == 3) // for gnsf: perform precomputation
 			gnsf_precompute(gnsf_dim, in->model, opts, in->T);
 
-		// printf("USED TABLEAU: A = \n");
-    	// d_print_e_mat(opts->ns, opts->ns, opts->A_mat, opts->ns);
-		// printf("b = \n");
-    	// d_print_e_mat(1, opts->ns, opts->b_vec, 1);
 
 		acados_timer timer;
 		acados_tic(&timer);
@@ -474,21 +443,16 @@ int main()
 
 		for (ii=0; ii<nsim; ii++)
 		{
-			// printf("n_sim = %d, ii = %d \n", nsim, ii);
 			// update initial state
 			for (jj = 0; jj < nx; jj++)
 				in->x[jj] = x_sim[ii*nx+jj];
-			// printf("\n x_in =: \n");
-			// d_print_e_mat(1, nx, in->x, 1);	
-			// printf("p0 = %f\n", *p_sim);
+
 			// compute inputs
 			for (jj = 0; jj < nu; jj++)
 				in->u[jj] = u_sim[ii*nu+jj];
 			tmp = in->u[1] - uctrl;
 			in->u[1] = tmp>0.0 ? tmp : 0.0;
 
-			// printf("\n u_0 =: \n");
-			// d_print_e_mat(1, nu, in->u, 1);	
 			// update parameters
 			switch (nss)
 			{
@@ -508,7 +472,8 @@ int main()
 					impl_ode_jac_x_u.set_param(&impl_ode_jac_x_u, p_sim+ii*np);
 					break;
 				}
-				case 3: {
+				case 3:
+				{
 					phi_fun_jac_y.set_param(&phi_fun_jac_y, p_sim+ii*np);
 					phi_jac_y_uhat.set_param(&phi_jac_y_uhat, p_sim+ii*np);
 					f_lo_fun_jac_x1k1uz.set_param(&f_lo_fun_jac_x1k1uz, p_sim+ii*np);
@@ -535,6 +500,9 @@ int main()
 			cpu_time += out->info->CPUtime;
 			la_time += out->info->LAtime;
 			ad_time += out->info->ADtime;
+
+			// d_print_mat(1, nx, out->xn, 1);
+			// d_print_mat(1, nx, x_ref+ii*nx, 1);
 
 			// extract state at next time step
 			for (jj = 0; jj < nx; jj++)
@@ -564,11 +532,6 @@ int main()
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");
 			d_print_e_mat(nx, NF, S_forw_out, nx);
-			// for (ii=0;ii<nx;ii++){
-			// 	for (jj=0;jj<NF;jj++)
-			// 		printf("%8.5f ", S_forw_out[jj*nx+ii]);
-			// 	printf("\n");
-			// }
 		}
 
 		if(opts->sens_adj){

@@ -188,7 +188,7 @@ void *ocp_qp_full_condensing_solver_memory_assign(void *config_, ocp_qp_dims *di
 
 
 /************************************************
-* workspace
+* workspac3
 ************************************************/
 
 int ocp_qp_full_condensing_solver_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)

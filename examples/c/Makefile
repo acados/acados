@@ -123,14 +123,6 @@ sim_gnsf_crane: $(CRANE_GNSF_OBJS)
 	@echo " Example sim_gnsf_crane build complete."
 	@echo
 
-BLASFEO_BUG_OBJ =
-BLASFEO_BUG_OBJ += blasfeo_bug_minimal_example.o
-
-blasfeo_bug_minimal_example: $(BLASFEO_BUG_OBJ)
-	$(CCC) -o blasfeo_bug_minimal_example.out  $(BLASFEO_BUG_OBJ) $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example blasfeo_bug_minimal_example build complete."
-	@echo
 
 run_sim_crane_no_interface:
 	./sim_crane_no_interface.out
@@ -411,9 +403,6 @@ nonlinear_chain_ocp_nlp: $(CHAIN_OBJS) nonlinear_chain_ocp_nlp.o
 run_nonlinear_chain_ocp_nlp:
 	./nonlinear_chain_ocp_nlp.out
 
-
-run_sim_erk_wt:
-	./sim_erk_wt.out
 
 
 #################################################
