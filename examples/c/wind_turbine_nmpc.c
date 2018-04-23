@@ -205,7 +205,7 @@ int main()
 
 	int np = 1; // number of local parametrs for each dynamics model function
 
-	// GNSF import matrices function -- where to put?!
+	// GNSF import matrices function
     external_function_casadi get_matrices_fun;
     get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
     get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
@@ -216,6 +216,7 @@ int main()
 	external_function_casadi_create(&get_matrices_fun);
 
 	external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
+	
     /************************************************
     * problem dimensions
     ************************************************/
@@ -579,9 +580,8 @@ int main()
 			gnsf_dims->n_out 	= 1;
 			gnsf_dims->ny 		= 8;
 			gnsf_dims->nuhat 	= 2;
-			gnsf_dims->num_stages= 4;
-			gnsf_dims->num_steps = 1;
-
+			gnsf_dims->num_stages= 3;
+			gnsf_dims->num_steps = 2;
 		}
 	}
 
@@ -751,8 +751,8 @@ int main()
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
-			sim_opts->ns = 4;
-			sim_opts->num_steps = 1;
+			sim_opts->ns = 3;
+			sim_opts->num_steps = 2;
 		}
     }
 
@@ -886,7 +886,7 @@ int main()
 				printf("electrical power = %f\n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7));
 			}
 
-			if (status!=0)
+			if (0) // oj: todo, replace with(status!=0)
 			{
 				if (!(status == 1 && MAX_SQP_ITERS == 1))  // if not RTI
 				{
