@@ -255,7 +255,7 @@ void sim_lifted_irk_opts_initialize_default(void *config_, void *dims_, void *op
     opts->num_steps = 2;
     opts->num_forw_sens = dims->nx + dims->nu;
     opts->sens_forw = true;
-    opts->sens_adj = false;
+    opts->sens_adj = false; // TODO(andrea): this effectively disables the expansion step in lifted integrators !!!!!
     opts->sens_hess = false;
 
 	return;
