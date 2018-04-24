@@ -144,9 +144,62 @@ void gnsf_neville(double *out, double xx, int n, double *x, double *Q){ // Nevil
 * opts
 ************************************************/
 
+int sim_gnsf_opts_calculate_size(void *config_, void *dims)
+{
+	int ns_max = NS_MAX;
+
+    int size = 0;
+
+    size += sizeof(sim_rk_opts);
+
+    size += ns_max * ns_max * sizeof(double);  // A_mat
+    size += ns_max * sizeof(double);  // b_vec
+    size += ns_max * sizeof(double);  // c_vec
+
+	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
+	int tmp1 = butcher_table_work_calculate_size(ns_max);
+	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
+	size += work_size; // work
+
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
+
+    return size;
+}
+
+
+
+void *sim_gnsf_opts_assign(void *config_, void *dims, void *raw_memory)
+{
+	int ns_max = NS_MAX;
+
+    char *c_ptr = (char *) raw_memory;
+
+    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
+    c_ptr += sizeof(sim_rk_opts);
+
+    align_char_to(8, &c_ptr);
+
+    assign_and_advance_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
+
+	// work
+	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
+	int tmp1 = butcher_table_work_calculate_size(ns_max);
+	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
+	opts->work = c_ptr;
+	c_ptr += work_size;
+
+    assert((char*)raw_memory + sim_gnsf_opts_calculate_size(config_, dims) >= c_ptr);
+
+    return (void *)opts;
+}
+
+
 void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-    sim_irk_dims* dims = (sim_irk_dims *) dims_;
+    sim_gnsf_dims* dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = opts_;
 
 	opts->ns = 3; // GL 3
@@ -176,13 +229,33 @@ void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
 	return;
 }
 
+void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
+{
+    sim_rk_opts *opts = opts_;
+
+    int ns = opts->ns;
+
+    assert(ns <= NS_MAX && "ns > NS_MAX!");
+
+	// set tableau size
+	opts->tableau_size = opts->ns;
+
+	// gauss collocation nodes
+    gauss_nodes(ns, opts->c_vec, opts->work);
+
+	// butcher tableau
+    butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
+
+	return;
+}
+
 /************************************************
 * model
 ************************************************/
 
-int sim_gnsf_model_calculate_size(void *config, void *dim_in)
+int sim_gnsf_model_calculate_size(void *config, void *dims_)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dim_in; // typecasting works as sim_gnsf_dims has entries of sim_dims at the beginning
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_; // typecasting works as sim_gnsf_dims has entries of sim_dims at the beginning
     int nu  = dims->nu;
     int nx1 = dims->nx1;
     int nx2 = dims->nx2;
@@ -231,18 +304,16 @@ int sim_gnsf_model_calculate_size(void *config, void *dim_in)
     size += blasfeo_memsize_dmat(nK2, nx2); // dK2_dx2
 
     size += blasfeo_memsize_dmat(nuhat,nu); // Lu
-    // printf("gnsf_model_size = %d \n", size);
 
     return size;
 }
 
 
-void *sim_gnsf_model_assign(void *config, void *dim_in, void *raw_memory)
+void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dim_in; // typecasting works as sim_gnsf_dims has entries of sim_dims at the beginning
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_; // typecasting works as sim_gnsf_dims has entries of sim_dims at the beginning
     // extract sizes
-    // int nx  = dims->nx;
     int nu  = dims->nu;
     int nx1 = dims->nx1;
     int nx2 = dims->nx2;
@@ -309,7 +380,7 @@ void *sim_gnsf_model_assign(void *config, void *dim_in, void *raw_memory)
 
     // TODO:
     // maybe here import model_matrices and precompute
-    assert((char *) raw_memory + sim_gnsf_model_calculate_size(config, dim_in) >= c_ptr);
+    assert((char *) raw_memory + sim_gnsf_model_calculate_size(config, dims_) >= c_ptr);
 	return model;
 }
 
@@ -340,7 +411,6 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
 
 int gnsf_pre_workspace_calculate_size(sim_gnsf_dims *dims, sim_rk_opts *opts)
 {
-    // sim_gnsf_dims *dims = (sim_gnsf_dims *) dim_in; // typecasting works as sim_gnsf_dims has entries of sim_dims at the beginning
     int nu         = dims->nu;
     int nx1        = dims->nx1;
     int nx2        = dims->nx2;
@@ -361,7 +431,7 @@ int gnsf_pre_workspace_calculate_size(sim_gnsf_dims *dims, sim_rk_opts *opts)
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
-    size += (2*nZ + nK1) * sizeof(int);//ipivEE1, ipivEE2, ipivQQ1
+    size += (2*nZ + nK1) * sizeof(int); //ipivEE1, ipivEE2, ipivQQ1
     size += nK2 * sizeof(int); //ipivM2
 
     make_int_multiple_of(64, &size);
@@ -1617,10 +1687,10 @@ void sim_gnsf_config_initialize_default(void *config_)
 {
 	sim_solver_config *config = config_;
 	config->evaluate = &gnsf_simulate;
-	config->opts_calculate_size = &sim_irk_opts_calculate_size;
-	config->opts_assign = &sim_irk_opts_assign;
+	config->opts_calculate_size = &sim_gnsf_opts_calculate_size;
+	config->opts_assign = &sim_gnsf_opts_assign;
     config->opts_initialize_default = &sim_gnsf_opts_initialize_default;
-    config->opts_update = &sim_irk_opts_update;
+    config->opts_update = &sim_gnsf_opts_update;
 	config->memory_calculate_size = &sim_gnsf_memory_calculate_size;
 	config->memory_assign = &sim_gnsf_memory_assign;
 	config->workspace_calculate_size = &gnsf_workspace_calculate_size;

@@ -215,11 +215,17 @@ void export_from_ML_wrapped(const real_t *in, real_t *out, casadi_function_t get
 void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_function_generic *get_matrices_fun);
 void gnsf_import_precomputed(sim_gnsf_dims* dims, gnsf_model *model, casadi_function_t But_KK_YY_ZZ_LO_fun);
 
-// gnsf2 dims
+// gnsf dims
 int sim_gnsf_dims_calculate_size();
 void *sim_gnsf_dims_assign(void* config_, void *raw_memory);
 void *gnsf_dims_create();
 void gnsf_get_dims( sim_gnsf_dims* dims, casadi_function_t get_ints_fun); // maybe remove
+
+// opts
+int sim_gnsf_opts_calculate_size(void *config, void *dims);
+void *sim_gnsf_opts_assign(void *config, void *dims, void *raw_memory);
+void sim_gnsf_opts_initialize_default(void *config, void *dims, void *opts_);
+void sim_gnsf_opts_update(void *config_, void *dims, void *opts_);
 
 // model
 int sim_gnsf_model_calculate_size(void *config, void *dims_);

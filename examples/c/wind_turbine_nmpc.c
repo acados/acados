@@ -528,7 +528,7 @@ int main()
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 //		plan->sim_solver_plan[i].sim_solver = ERK;
-		// plan->sim_solver_plan[i].sim_solver = IRK;
+		plan->sim_solver_plan[i].sim_solver = IRK;
 		// plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
 		plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
@@ -574,8 +574,8 @@ int main()
 	external_function_param_casadi_create_array(NN, phi_jac_y_uhat, np);
 	external_function_param_casadi_create_array(NN, f_lo_jac_x1_x1dot_u_z, np);
 
-	int gnsf_num_stages = 3;
-	int gnsf_num_steps  = 1;
+	int gnsf_num_stages = 5;
+	int gnsf_num_steps  = 2;
 
 	for (int i = 0; i < NN; i++)
 	{
@@ -684,8 +684,6 @@ int main()
 
     nlp_in->freezeSens = false;
 
-
-
     /* constraints */
 
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
@@ -773,6 +771,23 @@ int main()
 		}
     }
 
+    sqp_opts->maxIter = MAX_SQP_ITERS;
+    sqp_opts->min_res_g = 1e-6;
+    sqp_opts->min_res_b = 1e-8;
+    sqp_opts->min_res_d = 1e-8;
+    sqp_opts->min_res_m = 1e-8;
+
+	// partial condensing
+	if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
+	{
+		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
+		ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
+		pcond_solver_opts->pcond_opts->N2 = 10;
+	}
+
+	// update after user-defined opts
+	config->opts_update(config, dims, nlp_opts);
+
 	for (int i=0; i<NN; i++){
 		if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
@@ -794,23 +809,6 @@ int main()
 
 		}
 	}
-
-    sqp_opts->maxIter = MAX_SQP_ITERS;
-    sqp_opts->min_res_g = 1e-6;
-    sqp_opts->min_res_b = 1e-8;
-    sqp_opts->min_res_d = 1e-8;
-    sqp_opts->min_res_m = 1e-8;
-
-	// partial condensing
-	if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
-	{
-		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
-		ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
-		pcond_solver_opts->pcond_opts->N2 = 10;
-	}
-
-	// update after user-defined opts
-	config->opts_update(config, dims, nlp_opts);
 
     /************************************************
     * ocp_nlp out
