@@ -54,28 +54,16 @@ typedef struct
 
 } new_lifted_irk_model;
 
-// typedef struct
-// {
-// 	/* external functions */
-// 	// implicit ode
-// 	external_function_generic *ode_impl;
-// 	// jac_x implicit ode
-// 	external_function_generic *jac_x_ode_impl;
-// 	// jac_xdot implicit ode
-// 	external_function_generic *jac_xdot_ode_impl;
-// 	// jac_u implicit ode
-// 	external_function_generic *jac_u_ode_impl;
-
-// } new_lifted_irk_model;
-
-
-
 
 typedef struct
 {
 
     struct blasfeo_dmat *S_forw; // forward sensitivities
     struct blasfeo_dmat *JG_traj; // JGK trajectory
+
+    struct blasfeo_dmat J_temp_x;    // temporary Jacobian of ode w.r.t x (nx, nx)
+    struct blasfeo_dmat J_temp_xdot; // temporary Jacobian of ode w.r.t xdot (nx, nx)
+    struct blasfeo_dmat J_temp_u;    // temporary Jacobian of ode w.r.t u (nx, nu)
 
     struct blasfeo_dvec *rG; // residuals of G (nx*ns)
     struct blasfeo_dvec *xt; // temporary x
@@ -88,15 +76,7 @@ typedef struct
     struct blasfeo_dvec *K_traj;  // K trajectory
     struct blasfeo_dvec *w;       // stacked x and u
 
-    double *rGt; // temporary residuals of G (nx, 1)
-    double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
-    double *Jt; // temporary Jacobian of ode (nx, nx)
-    double *ode_args; // pointer to ode args
-    double *S_adj_w;
     int *ipiv; // index of pivot vector
-
-
-    // additional workspace for lifted integrators
 
 } sim_new_lifted_irk_workspace;
 
