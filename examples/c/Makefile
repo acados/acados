@@ -110,6 +110,7 @@ sim_erk_crane: $(CRANE_OBJS) sim_erk_crane.o
 	@echo
 
 CRANE_GNSF_OBJS =
+CRANE_GNSF_OBJS += gnsf_crane_model/phi_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/phi_fun_jac_y.o
 CRANE_GNSF_OBJS += gnsf_crane_model/f_lo_fun_jac_x1k1uz.o
 CRANE_GNSF_OBJS += gnsf_crane_model/get_ints_fun.o
@@ -153,6 +154,7 @@ WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_u.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_fun_jac_x_xdot.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_xdot_u.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_u.o
+WT_NX6_OBJS += wt_model_nx6/phi_fun.o
 WT_NX6_OBJS += wt_model_nx6/phi_fun_jac_y.o
 WT_NX6_OBJS += wt_model_nx6/phi_jac_y_uhat.o
 WT_NX6_OBJS += wt_model_nx6/f_lo_fun_jac_x1k1uz.o
@@ -179,6 +181,7 @@ WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_u.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_u.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun_jac_y.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_jac_y_uhat.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.o

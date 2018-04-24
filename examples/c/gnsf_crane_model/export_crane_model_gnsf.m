@@ -109,7 +109,7 @@ L_z = full(L_z_fun(0));
 y_check = L_xdot * x1_dot +L_x * x1 + L_z * z; %% THis should be the same as y
 uhat_check = L_u * u;
 
-phi_fun = Function('Phi_fun',{y,uhat}, {phi});
+phi_fun = Function([casadi_export_prefix,'phi_fun'],{y,uhat}, {phi});
 
 jac_phi_y = jacobian(phi,y);
 jac_phi_uhat = jacobian(phi,uhat);
@@ -158,6 +158,7 @@ get_matrices_fun.generate('get_matrices_fun', casadi_opts);
 
 % generate Phi, f_LO
 f_lo_fun_jac_x1k1uz.generate(['f_lo_fun_jac_x1k1uz'], casadi_opts);
+phi_fun.generate('phi_fun', casadi_opts);
 phi_fun_jac_y.generate(['phi_fun_jac_y'], casadi_opts);
 phi_jac_y_uhat.generate(['phi_jac_y_uhat'], casadi_opts);
 
@@ -175,7 +176,7 @@ get_ints_fun.generate('get_ints_fun', casadi_opts);
 y0 = [7.980440e-01    -7.476009e-02   -5.242442e-03   -1.573284e-01];
 uhat = 4.010815e+01;
 
-check_phi_jac_y_uhat = external('check_phi_jac_y_uhat', './check_phi_jac_y_uhat.so');
+% check_phi_jac_y_uhat = external('check_phi_jac_y_uhat', './check_phi_jac_y_uhat.so');
 
 % 
 % % get matrices - for use in final version

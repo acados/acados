@@ -189,6 +189,16 @@ int main()
 	/************************************************
 	* external functions (Generalized Nonlinear Static Feedback (GNSF) model)
 	************************************************/
+    // phi_fun
+    external_function_param_casadi phi_fun;
+    phi_fun.casadi_fun            = &casadi_phi_fun;
+    phi_fun.casadi_work           = &casadi_phi_fun_work;
+    phi_fun.casadi_sparsity_in    = &casadi_phi_fun_sparsity_in;
+    phi_fun.casadi_sparsity_out   = &casadi_phi_fun_sparsity_out;
+    phi_fun.casadi_n_in           = &casadi_phi_fun_n_in;
+    phi_fun.casadi_n_out          = &casadi_phi_fun_n_out;
+	external_function_param_casadi_create(&phi_fun, np);
+
     // Phi_inc_dy
     external_function_param_casadi phi_fun_jac_y;
     phi_fun_jac_y.casadi_fun            = &casadi_phi_fun_jac_y;
@@ -357,6 +367,7 @@ int main()
 			case 3: // gnsf
 			{
 				// set model funtions
+				sim_set_model(config, in, "phi_fun", &phi_fun);
 				sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
 				sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
 				sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
@@ -474,6 +485,7 @@ int main()
 				}
 				case 3:
 				{
+					phi_fun.set_param(&phi_fun, p_sim+ii*np);
 					phi_fun_jac_y.set_param(&phi_fun_jac_y, p_sim+ii*np);
 					phi_jac_y_uhat.set_param(&phi_jac_y_uhat, p_sim+ii*np);
 					f_lo_fun_jac_x1k1uz.set_param(&f_lo_fun_jac_x1k1uz, p_sim+ii*np);
@@ -609,6 +621,7 @@ int main()
 	external_function_param_casadi_free(&impl_ode_jac_x_u);
 	// gnsf functions:
 	external_function_param_casadi_free(&f_lo_fun_jac_x1k1uz);
+	external_function_param_casadi_free(&phi_fun);
 	external_function_param_casadi_free(&phi_fun_jac_y);
 	external_function_param_casadi_free(&phi_jac_y_uhat);
 

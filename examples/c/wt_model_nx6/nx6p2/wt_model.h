@@ -92,6 +92,14 @@ const int *casadi_get_matrices_fun_sparsity_out(int);
 int        casadi_get_matrices_fun_n_in();
 int        casadi_get_matrices_fun_n_out();
 
+// phi_fun
+int        casadi_phi_fun(const double** arg, double** res, int* iw, double* w, void *mem);
+int        casadi_phi_fun_work(int *, int *, int *, int *);
+const int *casadi_phi_fun_sparsity_in(int);
+const int *casadi_phi_fun_sparsity_out(int);
+int        casadi_phi_fun_n_in();
+int        casadi_phi_fun_n_out();
+
 // phi_fun_jac_y
 int        casadi_phi_fun_jac_y(const double** arg, double** res, int* iw, double* w, void *mem);
 int        casadi_phi_fun_jac_y_work(int *, int *, int *, int *);

@@ -36,11 +36,22 @@
 #include "examples/c/gnsf_crane_model/gnsf_crane_model.h"
 
 int main() {
+
 /************************************************
 *   external functions
 ************************************************/
 
-    // Phi_inc_dy
+    // phi_fun
+    external_function_casadi phi_fun;
+    phi_fun.casadi_fun            = &casadi_phi_fun;
+    phi_fun.casadi_work           = &casadi_phi_fun_work;
+    phi_fun.casadi_sparsity_in    = &casadi_phi_fun_sparsity_in;
+    phi_fun.casadi_sparsity_out   = &casadi_phi_fun_sparsity_out;
+    phi_fun.casadi_n_in           = &casadi_phi_fun_n_in;
+    phi_fun.casadi_n_out          = &casadi_phi_fun_n_out;
+	external_function_casadi_create(&phi_fun);
+
+    // phi_fun_jac_y
     external_function_casadi phi_fun_jac_y;
     phi_fun_jac_y.casadi_fun            = &casadi_phi_fun_jac_y;
     phi_fun_jac_y.casadi_work           = &casadi_phi_fun_jac_y_work;
@@ -165,6 +176,7 @@ int main() {
     gnsf_model *model = in->model;
     // set external functions
     model->f_lo_fun_jac_x1_x1dot_u_z = (external_function_generic *) &f_lo_fun_jac_x1k1uz;
+    model->phi_fun = (external_function_generic *) &phi_fun;
     model->phi_fun_jac_y = (external_function_generic *) &phi_fun_jac_y;
     model->phi_jac_y_uhat = (external_function_generic *) &phi_jac_y_uhat;
     external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
@@ -214,9 +226,10 @@ int main() {
     free(opts_mem);
     free(sim_solver);
 
+	external_function_casadi_free(&phi_fun);
 	external_function_casadi_free(&phi_fun_jac_y);
-	external_function_casadi_free(&f_lo_fun_jac_x1k1uz);
 	external_function_casadi_free(&phi_jac_y_uhat);
+    external_function_casadi_free(&f_lo_fun_jac_x1k1uz);
 	external_function_casadi_free(&get_matrices_fun);
 
     return 0;
