@@ -634,11 +634,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
                         blasfeo_daxpy(nx, a, K, jj*nx, xt, 0, xt, 0);
                     }
                 }
-                // put xn+sum kj into first nx elements of ode_arg
-                // blasfeo_unpack_dvec(nx, xt, 0, ode_args);
-
-                // put ki into the next nx elements of ode_args
-                // blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
 
                 // compute the residual of implicit ode at time t_ii, store value in rGt
                 acados_tic(&timer_ad);
@@ -655,63 +650,15 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
                 ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
                 ext_fun_out_rG.x = rG;
                 ext_fun_out_rG.xi = ii*nx;
-                ext_fun_out[0] = &ext_fun_out_rG; // fun: nx
+                ext_fun_out[0] = &ext_fun_out_rG;       // fun: nx
 
                 model->impl_ode_fun->evaluate(model->impl_ode_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
                 timing_ad += acados_toc(&timer_ad);
-                // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
-                // blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
 
                 if ( update_sens )
                 {
                     // compute the jacobian of implicit ode
                     acados_tic(&timer_ad);
-
-                    ext_fun_type_in[0] = BLASFEO_DVEC;
-                    ext_fun_in[0] = xt;                     // x: nx
-                    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-                    ext_fun_in_K.xi = ii*nx;
-                    ext_fun_in_K.x = K;
-                    ext_fun_in[1] = &ext_fun_in_K; 
-                    ext_fun_type_in[2] = COLMAJ;
-                    ext_fun_in[2] = u;                      // u: nu
-
-					ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
-					ext_fun_out[0] = &ext_fun_out_rG;         // fun: nx
-                    ext_fun_out_rG.x = rG;
-                    ext_fun_out_rG.xi = ii*nx;
-					ext_fun_type_out[1] = COLMAJ;
-					ext_fun_out[1] = jac_out+nx;        // jac_x: nx*nx
-					ext_fun_type_out[2] = COLMAJ;
-					ext_fun_out[2] = jac_out+nx+nx*nx;  // jac_xdot: nx*nx
-
-                    model->impl_ode_fun_jac_x_xdot->evaluate(
-                            model->impl_ode_fun_jac_x_xdot,
-                            ext_fun_type_in, ext_fun_in, ext_fun_type_out,
-                            ext_fun_out);
-
-                    timing_ad += acados_toc(&timer_ad);
-                    // blasfeo_pack_dvec(nx, jac_out, rG, ii*nx);
-
-                    // compute the blocks of JGK
-                    for (jj=0; jj<ns; jj++)
-                    { //compute the block (ii,jj)th block = Jt
-                        a = A_mat[ii + ns*jj];
-                        if (a!=0)
-                        {
-                            a *= step;
-                            for (kk=0; kk<nx*nx; kk++)
-                                Jt[kk] = a * jac_out[kk+nx];
-                        }
-                        if(jj==ii)
-                        {
-                            for (kk=0; kk<nx*nx; kk++)
-                                Jt[kk] += jac_out[nx*(nx+1)+kk];
-                        }
-                        // fill in the ii-th, jj-th block of JGK
-                        blasfeo_pack_dmat(nx, nx, Jt, nx, JGK, ii*nx, jj*nx);
-                    } // end jj
-
 
                     blasfeo_dveccp(nx, xn, 0, xt, 0);
                     for(jj=0; jj<ns; jj++)
@@ -723,11 +670,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
                             blasfeo_daxpy(nx, a, K, jj*nx, xt, 0, xt, 0);
                         }
                     }
-
-                    // blasfeo_unpack_dvec(nx, xt, 0, ode_args);
-                    // blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
-
-                    acados_tic(&timer_ad);
 
                     ext_fun_type_in[0] = BLASFEO_DVEC;
                     ext_fun_in[0] = xt;                     // x: nx
@@ -751,10 +693,35 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
                             ext_fun_type_out, ext_fun_out);
 
                     timing_ad += acados_toc(&timer_ad);
+                    
                     // extract Jacobian of G wrt x
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
+                    
                     // extract Jacobian of G wrt u
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+
+
+                    timing_ad += acados_toc(&timer_ad);
+                    
+                    // compute the blocks of JGK
+                    for (jj=0; jj<ns; jj++)
+                    { 
+                        //compute the block (ii,jj)th block = Jt
+                        a = A_mat[ii + ns*jj];
+                        if (a!=0)
+                        {
+                            a *= step;
+                            for (kk=0; kk<nx*nx; kk++)
+                                Jt[kk] = a * jac_out[kk];
+                        }
+                        if(jj==ii)
+                        {
+                            for (kk=0; kk<nx*nx; kk++)
+                                Jt[kk] += jac_out[nx*nx+kk];
+                        }
+                        // fill in the ii-th, jj-th block of JGK
+                        blasfeo_pack_dmat(nx, nx, Jt, nx, JGK, ii*nx, jj*nx);
+                    } // end jj
                 }
             } // end ii
         }
