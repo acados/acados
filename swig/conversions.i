@@ -736,7 +736,7 @@ void fill_array_from(const LangObject *map, const char *key, int_t *array, int_t
     }
 }
 
-#include "acados_cpp/options.hpp"
+#include "acados_cpp/ocp_qp/options.hpp"
 
 namespace acados {
 

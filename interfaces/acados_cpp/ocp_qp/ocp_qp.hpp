@@ -12,8 +12,8 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 
 #include "acados_c/ocp_qp_interface.h"
-#include "acados_cpp/ocp_qp_solution.hpp"
-#include "acados_cpp/options.hpp"
+#include "acados_cpp/ocp_qp/ocp_qp_solution.hpp"
+#include "acados_cpp/ocp_qp/options.hpp"
 
 namespace acados {
 
