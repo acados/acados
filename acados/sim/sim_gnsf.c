@@ -48,6 +48,13 @@
 * dims
 ************************************************/
 
+int sim_gnsf_dims_calculate_size()
+{
+    int size = sizeof(sim_gnsf_dims);
+    return size;
+}
+
+
 void *sim_gnsf_dims_assign(void* config_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
@@ -56,6 +63,7 @@ void *sim_gnsf_dims_assign(void* config_, void *raw_memory)
     assert((char *) raw_memory + sim_gnsf_dims_calculate_size() == c_ptr);
     return dims;
 }
+
 
 void gnsf_get_dims( sim_gnsf_dims *dims, casadi_function_t get_ints_fun)
 {
@@ -132,11 +140,6 @@ void gnsf_neville(double *out, double xx, int n, double *x, double *Q){ // Nevil
         out[0] = Q[0];
 }
 
-int sim_gnsf_dims_calculate_size()
-{
-    int size = sizeof(sim_gnsf_dims);
-    return size;
-}
 
 /************************************************
 * model
@@ -197,6 +200,7 @@ int sim_gnsf_model_calculate_size(void *config, void *dim_in)
 
     return size;
 }
+
 
 void *sim_gnsf_model_assign(void *config, void *dim_in, void *raw_memory)
 {
@@ -274,12 +278,16 @@ void *sim_gnsf_model_assign(void *config, void *dim_in, void *raw_memory)
 	return model;
 }
 
+
 int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun)
 {
     gnsf_model *model = model_;
 
     switch (fun_type)
     {
+        case PHI_FUN:
+            model->phi_fun = (external_function_generic *) fun;
+            break;
         case PHI_FUN_JAC_Y:
             model->phi_fun_jac_y = (external_function_generic *) fun;
             break;
@@ -293,6 +301,7 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
     }
     return ACADOS_SUCCESS;
 }
+
 
 int gnsf_pre_workspace_calculate_size(sim_gnsf_dims *dims, sim_rk_opts *opts)
 {
@@ -361,6 +370,7 @@ int gnsf_pre_workspace_calculate_size(sim_gnsf_dims *dims, sim_rk_opts *opts)
     size += 1 * 8;
     return size;
 }
+
 
 void *gnsf_cast_pre_workspace(sim_gnsf_dims* dims, sim_rk_opts *opts, void *raw_memory){
     int nu         = dims->nu;
@@ -593,6 +603,7 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
     /************************************************
     *   Compute QQ1 KK*, ZZ* via QQ1
     ************************************************/
+
     // SOLVE EE1 \ DD1, ... EE1 \ AA1;
     blasfeo_dgetrf_rowpivot(nK1, nK1, &EE1, 0, 0, &EE1, 0, 0, ipivEE1); // factorize EE1
 
@@ -656,24 +667,27 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
     blasfeo_drowpe(nZ, ipivQQ1, &ZZu); // permute also rhs
     blasfeo_dtrsm_llnu(nZ, nx1, 1.0, &QQ1, 0, 0, &ZZx, 0, 0, &ZZx, 0, 0);
     blasfeo_dtrsm_lunn(nZ, nx1, 1.0, &QQ1, 0, 0, &ZZx, 0, 0, &ZZx, 0, 0);  // ZZx now contains QQ1\ZZx
-// build KK*
+
+    /* build KKf, KKu, KKx */
     blasfeo_dgemm_nn(nK1, nff, nZ, 1.0, &DD1, 0, 0, &ZZf, 0, 0, 1.0, &CC1, 0, 0, &KKf, 0, 0); // KKf = DD1 * ZZf + CC1
     blasfeo_dgemm_nn(nK1, nu , nZ, 1.0, &DD1, 0, 0, &ZZu, 0, 0, 1.0, &BB1, 0, 0, &KKu, 0, 0); // KKu = DD1 * ZZu + BB1
     blasfeo_dgemm_nn(nK1, nx1, nZ, 1.0, &DD1, 0, 0, &ZZx, 0, 0, 1.0, &AA1, 0, 0, &KKx, 0, 0); // KKx = DD1 * ZZx + AA1
-// build YYx
+
+    /* build YYx */
     blasfeo_dgemm_nn(nyy, nx1, nK1, 1.0, &LLK, 0, 0, &KKx, 0, 0, 1.0, &LLx, 0, 0, &YYx, 0, 0);
     blasfeo_dgemm_nn(nyy, nx1, nZ , 1.0, &LLZ, 0, 0, &ZZx, 0, 0, 1.0, &YYx, 0, 0, &YYx, 0, 0);
-// build YYu
+
+    /* build YYu */
     blasfeo_dgemm_nn(nyy, nu, nK1, 1.0, &LLK, 0, 0, &KKu, 0, 0, 0.0, &LLx, 0, 0, &YYu, 0, 0);
     blasfeo_dgemm_nn(nyy, nu, nZ , 1.0, &LLZ, 0, 0, &ZZu, 0, 0, 1.0, &YYu, 0, 0, &YYu, 0, 0);
     // printf("YYu = (in precompute) \n");
     // blasfeo_print_exp_dmat(nyy, nu, &YYu, 0, 0);
 
-    // build YYf
+    /* build YYf*/
     blasfeo_dgemm_nn(nyy, nff, nK1, 1.0, &LLK, 0, 0, &KKf, 0, 0, 0.0, &LLx, 0, 0, &YYf, 0, 0);
     blasfeo_dgemm_nn(nyy, nff, nZ , 1.0, &LLZ, 0, 0, &ZZf, 0, 0, 1.0, &YYf, 0, 0, &YYf, 0, 0);
 
-// build M2_inv
+    // build M2_inv
     blasfeo_ddiare(nK2, 1.0, &M2inv, 0,0); // add eye(nK2) to M2inv
     blasfeo_ddiare(nK2, 1.0, &M2, 0,0); // add eye(nK2) to M2
     for (int ii = 0; ii < num_stages; ii++) {
@@ -682,6 +696,7 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
         }
     }
     blasfeo_dgetrf_rowpivot(nK2, nK2, &M2, 0, 0, &M2, 0, 0, ipivM2); // factorize M2
+
     // solve M2\M2inv, result is M2inv
     blasfeo_drowpe(nK2, ipivM2, &M2inv); // permute also rhs
     blasfeo_dtrsm_llnu(nK2, nK2, 1.0, &M2, 0, 0, &M2, 0, 0, &M2inv, 0, 0);
@@ -871,6 +886,7 @@ void gnsf_import_precomputed(sim_gnsf_dims* dims, gnsf_model *model, casadi_func
     free(export_in);
 }
 
+
 int gnsf_workspace_calculate_size(void *config, void *dim_in, void *args)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dim_in; // typecasting works as sim_gnsf_dims has entries of sim_dims at the beginning
@@ -962,6 +978,7 @@ int gnsf_workspace_calculate_size(void *config, void *dim_in, void *args)
     size += 1 * 8;
     return size;
 }
+
 
 void *gnsf_cast_workspace(void *config, void* dims_, void *raw_memory, void *args)
 {
@@ -1167,51 +1184,61 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
     /************************************************
     * Set up function input & outputs
     ************************************************/
-    // PHI
+
+    /* PHI - NONLINEARITY FUNCTION */
     ext_fun_arg_t phi_type_in[2];
 	void         *phi_in[2];
+
+    ext_fun_arg_t phi_fun_type_out[1];
+    void          *phi_fun_out[1];
+
 	ext_fun_arg_t phi_fun_jac_y_type_out[2];
 	void         *phi_fun_jac_y_out[2];
 
  	ext_fun_arg_t phi_jac_yuhat_type_out[2];
-	void         *phi_jac_yuhat_out[2]; 
+	void         *phi_jac_yuhat_out[2];
+
+    // set up external function argument structs
+    struct blasfeo_dvec_args y_in; // input for y of phi;
+    struct blasfeo_dvec_args phi_fun_val_arg; // output arg for function value of phi
+    struct blasfeo_dmat_args phi_jac_y_arg; // output arg for jacobian of phi w.r.t. y
+    struct blasfeo_dmat_args phi_jac_uhat_arg; // output arg for jacobian of phi w.r.t. uhat
 
     // set input for phi
     phi_type_in[0] = BLASFEO_DVEC_ARGS;
-    struct blasfeo_dvec_args y_in;
-    phi_in[0] = &y_in;
-
     phi_type_in[1] = BLASFEO_DVEC;
+    phi_in[0] = &y_in;
     phi_in[1] = &uhat;
 
-    // set output for phi_fun_jac_y // [1]: //SIMULATION
-    phi_fun_jac_y_type_out[0] = BLASFEO_DVEC_ARGS;
-    struct blasfeo_dvec_args phi_fun_val_arg;
+    // set output for phi_fun
+    phi_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+    phi_fun_out[0] = &phi_fun_val_arg;
     phi_fun_val_arg.x = &res_val;
+
+    // set output for phi_fun_jac_y
+    phi_fun_jac_y_type_out[0] = BLASFEO_DVEC_ARGS;
     phi_fun_jac_y_out[0] = &phi_fun_val_arg;
-    // [2]:
+
     phi_fun_jac_y_type_out[1] = BLASFEO_DMAT_ARGS; // jac_y
-    struct blasfeo_dmat_args phi_jac_y_arg;
     phi_jac_y_arg.A = &dPHI_dyuhat;
     phi_jac_y_arg.aj= 0;
     phi_fun_jac_y_out[1] = &phi_jac_y_arg;
 
-    // set output for phi_jac_yuhat // [1]: // jac_y
+    // set output for phi_jac_yuhat // jac_y
     phi_jac_yuhat_type_out[0] = BLASFEO_DMAT_ARGS;
     phi_jac_yuhat_out[0] = &phi_jac_y_arg;
-    // [2]:
-    phi_jac_yuhat_type_out[1] = BLASFEO_DMAT_ARGS; // jac_u
-    struct blasfeo_dmat_args phi_jac_uhat_arg;
+    // jac_uhat
+    phi_jac_yuhat_type_out[1] = BLASFEO_DMAT_ARGS;
     phi_jac_uhat_arg.A = &dPHI_dyuhat;
     phi_jac_uhat_arg.aj= ny;
     phi_jac_yuhat_out[1] = &phi_jac_uhat_arg;
 
-    // f_lo_fun
+    /* f_lo - LINEAR OUTPUT FUNCTION */
     ext_fun_arg_t f_lo_fun_type_in[4];
 	void         *f_lo_fun_in[4];
 	ext_fun_arg_t f_lo_fun_type_out[2];
 	void         *f_lo_fun_out[2];
-    // input
+
     f_lo_fun_type_in[0] = BLASFEO_DVEC_ARGS;
     f_lo_fun_type_in[1] = BLASFEO_DVEC_ARGS;
     f_lo_fun_type_in[2] = BLASFEO_DVEC_ARGS;
@@ -1226,7 +1253,6 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
     // f_lo_in[2]: z;
     struct blasfeo_dvec_args f_lo_in_z;
     f_lo_fun_in[2] = &f_lo_in_z;
-
     // f_lo_in[3]: u;
     f_lo_fun_in[3] = &u0;
 
@@ -1242,16 +1268,16 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
     f_lo_jac_out.aj = 0;
 
 
-    /* timings */
+    /* TIMINGS */
     out->info->ADtime = 0;
     out->info->LAtime = 0;
     out->info->CPUtime = 0;
 
-    // precompute YYu * u, KKu * u, ZZu * u;
+    // PRECOMPUTE YYu * u, KKu * u, ZZu * u;
     blasfeo_dgemv_n(nyy, nu , 1.0, &fix->YYu, 0, 0, &u0, 0, 0.0, &yyu, 0, &yyu, 0);
     blasfeo_dgemv_n(nK1, nu , 1.0, &fix->KKu, 0, 0, &u0, 0, 0.0, &K1_val[0], 0, &K1u, 0);
     blasfeo_dgemv_n(nZ , nu , 1.0, &fix->ZZu, 0, 0, &u0, 0, 0.0, &Z_val[0] , 0, &Zu, 0);
-    
+
     // compute uhat
     blasfeo_dgemv_n(nuhat, nu, 1.0, &fix->Lu, 0, 0, &u0, 0, 0.0, &uhat, 0, &uhat, 0);
 
@@ -1272,32 +1298,53 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
         f_lo_jac_out.A = &f_LO_jac[ss];
 
         for (int iter = 0; iter < newton_max; iter++) { // NEWTON-ITERATION
-            // evaluate residual function and jacobian
+            /* EVALUATE RESIDUAL FUNCTION & JACOBIAN */
+
             blasfeo_dgemv_n(nyy, nff, 1.0, &fix->YYf, 0, 0, &ff_val[ss], 0, 1.0, &yyss, nyy*ss, &yy_val[ss], 0);
-            // set J_r_ff to unit matrix
-            blasfeo_dgese(nff, nff, 0.0, &J_r_ff, 0, 0);
-            for (int ii = 0; ii < nff; ii++) {
-                blasfeo_dgein1(1.0, &J_r_ff, ii, ii);            
+
+
+            if ((opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse)){
+                // set J_r_ff to unit matrix
+                blasfeo_dgese(nff, nff, 0.0, &J_r_ff, 0, 0);
+                for (int ii = 0; ii < nff; ii++) {
+                    blasfeo_dgein1(1.0, &J_r_ff, ii, ii);            
+                }
             }
-            for (int ii = 0; ii < num_stages; ii++) { // eval phi
+
+            for (int ii = 0; ii < num_stages; ii++) { // eval phi, respectively phi_fun_jac_y
                 y_in.xi = ii*ny;
                 phi_fun_val_arg.xi = ii*n_out;
                 phi_jac_y_arg.ai = ii*n_out;
-                acados_tic(&casadi_timer);
-                fix->phi_fun_jac_y->evaluate(fix->phi_fun_jac_y, phi_type_in, phi_in, phi_fun_jac_y_type_out, phi_fun_jac_y_out);
-                out->info->ADtime += acados_toc(&casadi_timer);
-
-                blasfeo_dgemm_nn(n_out, nff, ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &fix->YYf, ii*ny, 0, 1.0, &J_r_ff, ii*n_out, 0, &J_r_ff, ii*n_out, 0);                
+                if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) ){
+                    // evaluate
+                    acados_tic(&casadi_timer);
+                    fix->phi_fun_jac_y->evaluate(fix->phi_fun_jac_y, phi_type_in, phi_in, phi_fun_jac_y_type_out, phi_fun_jac_y_out);
+                    out->info->ADtime += acados_toc(&casadi_timer);
+                    // build jacobian J_r_ff
+                    blasfeo_dgemm_nn(n_out, nff, ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &fix->YYf, ii*ny, 0, 1.0, &J_r_ff, ii*n_out, 0, &J_r_ff, ii*n_out, 0);
+                }
+                else {
+                    acados_tic(&casadi_timer);
+                    fix->phi_fun->evaluate(fix->phi_fun, phi_type_in, phi_in, phi_fun_type_out, phi_fun_out);
+                    out->info->ADtime += acados_toc(&casadi_timer);
+                }
             }
-            blasfeo_dveccpsc(nff, -1.0, &res_val, 0, &res_val, 0);
-            blasfeo_dvecad(nff, 1.0, &ff_val[ss], 0, &res_val, 0);
+            
+            // set up res_val
+            blasfeo_dveccpsc(nff, -1.0, &res_val, 0, &res_val, 0); // set res_val = - res_val; NOW: res_val = -PHI_val;
+            blasfeo_dvecad(nff, 1.0, &ff_val[ss], 0, &res_val, 0); // set res_val = res_val + ff_val; this is the actual value of the residual function
 
-            // solve linear system and update ff
-            blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
+            // factorize J_r_ff
+            if ((opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse)){
+                blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); 
+            }
+
+            /* Solve linear system and update ff */
             blasfeo_dvecpe(nff, ipiv, &res_val, 0); // permute r.h.s.
             blasfeo_dtrsv_lnu(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
             blasfeo_dtrsv_unn(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
             blasfeo_daxpy(nff, -1.0, &res_val, 0, &ff_val[ss], 0, &ff_val[ss], 0);
+
         } // END NEWTON-ITERATION
 
         // compute K1 and Z values
@@ -1390,6 +1437,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                     blasfeo_dgemm_nn( nx2, nx1, nz, 1.0, &f_LO_jac[ss], ii* nx2, 2 * nx1, &dZ_dx1, ii*nz, 0, 0.0, &aux_G2_x1, ii*nx2, 0, &aux_G2_x1, ii*nx2, 0);
                     blasfeo_dgemm_nn( nx2, nu , nz, 1.0, &f_LO_jac[ss], ii* nx2, 2 * nx1, &dZ_du , ii*nz, 0, 0.0, &aux_G2_u,  ii*nx2, 0, &aux_G2_u,  ii*nx2, 0);
                 } // check: aux_G2_x1u seems correct but should be tested with nontrivial values i.e. not zeros..
+
                 // BUILD dK2_dwn // dK2_dx1
                 blasfeo_dgemm_nn(nK2, nx1, nK1, 1.0, &J_G2_K1, 0, 0, &dK1_dx1, 0, 0, 1.0, &aux_G2_x1, 0, 0, &aux_G2_x1, 0, 0);
                 blasfeo_dgead(nK2, nx1, -1.0, &f_LO_jac[ss], 0, 0, &aux_G2_x1, 0, 0);

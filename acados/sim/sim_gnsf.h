@@ -61,6 +61,7 @@ typedef struct
 {
     // external functions
     // phi: nonlinearity function
+    external_function_generic *phi_fun;
     external_function_generic *phi_fun_jac_y;
     external_function_generic *phi_jac_y_uhat;
     // f_lo: linear output function
