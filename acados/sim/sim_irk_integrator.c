@@ -567,20 +567,14 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 impl_ode_res_out.xi = ii*nx; // store output in this posistion of rG
                 // compute the residual of implicit ode at time t_ii
                 if ( !((opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse)) )
-                { // otherwise eval the ode together with the jacobians within next if
+                { 
                     acados_tic(&timer_ad);
                     model->impl_ode_fun->evaluate(model->impl_ode_fun, impl_ode_type_in, impl_ode_in, impl_ode_fun_type_out, impl_ode_fun_out);
                     timing_ad += acados_toc(&timer_ad);
-                    // fill in elements of rG
                 }
-
-                if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) )
-				{
-                    // compute the jacobian of implicit ode
+                else { // evaluate the ode function & jacobian w.r.t. x, xdot and compute jacobian JGK;
                     acados_tic(&timer_ad);
-
                     model->impl_ode_fun_jac_x_xdot->evaluate(model->impl_ode_fun_jac_x_xdot, impl_ode_type_in, impl_ode_in, impl_ode_fun_jac_x_xdot_type_out, impl_ode_fun_jac_x_xdot_out);
-
                     timing_ad += acados_toc(&timer_ad);
 
                     // compute the blocks of JGK
