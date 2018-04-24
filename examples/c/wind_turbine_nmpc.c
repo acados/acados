@@ -574,6 +574,9 @@ int main()
 	external_function_param_casadi_create_array(NN, phi_jac_y_uhat, np);
 	external_function_param_casadi_create_array(NN, f_lo_jac_x1_x1dot_u_z, np);
 
+	int gnsf_num_stages = 3;
+	int gnsf_num_steps  = 1;
+
 	for (int i = 0; i < NN; i++)
 	{
 		if (plan->sim_solver_plan[i].sim_solver == GNSF)
@@ -591,8 +594,8 @@ int main()
 			gnsf_dims->n_out 	= 1;
 			gnsf_dims->ny 		= 8;
 			gnsf_dims->nuhat 	= 2;
-			gnsf_dims->num_stages= 3;
-			gnsf_dims->num_steps = 2;
+			gnsf_dims->num_stages= gnsf_num_stages;
+			gnsf_dims->num_steps = gnsf_num_steps;
 		}
 	}
 
@@ -759,13 +762,14 @@ int main()
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
 		{
-			sim_opts->ns = 4;
-			sim_opts->num_steps = 1;
+			sim_opts->ns = 5;
+			sim_opts->num_steps = 4;
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
-			sim_opts->ns = 3;
-			sim_opts->num_steps = 2;
+			sim_opts->ns = gnsf_num_stages;
+			sim_opts->num_steps = gnsf_num_steps;
+			sim_opts->jac_reuse = true;
 		}
     }
 

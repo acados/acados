@@ -140,6 +140,41 @@ void gnsf_neville(double *out, double xx, int n, double *x, double *Q){ // Nevil
         out[0] = Q[0];
 }
 
+/************************************************
+* opts
+************************************************/
+
+void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
+{
+    sim_irk_dims* dims = (sim_irk_dims *) dims_;
+    sim_rk_opts *opts = opts_;
+
+	opts->ns = 3; // GL 3
+    int ns = opts->ns;
+
+    assert(ns <= NS_MAX && "ns > NS_MAX!");
+
+	// set tableau size
+	opts->tableau_size = opts->ns;
+
+	// gauss collocation nodes
+    gauss_nodes(ns, opts->c_vec, opts->work);
+
+	// butcher tableau
+    butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
+
+	// default options
+    opts->newton_iter = 3;
+    opts->scheme = NULL;
+    opts->num_steps = 2;
+    opts->num_forw_sens = dims->nx + dims->nu;
+    opts->sens_forw = true;
+    opts->sens_adj = false;
+    opts->sens_hess = false;
+    opts->jac_reuse = true;
+
+	return;
+}
 
 /************************************************
 * model
@@ -1584,7 +1619,7 @@ void sim_gnsf_config_initialize_default(void *config_)
 	config->evaluate = &gnsf_simulate;
 	config->opts_calculate_size = &sim_irk_opts_calculate_size;
 	config->opts_assign = &sim_irk_opts_assign;
-    config->opts_initialize_default = &sim_irk_opts_initialize_default;
+    config->opts_initialize_default = &sim_gnsf_opts_initialize_default;
     config->opts_update = &sim_irk_opts_update;
 	config->memory_calculate_size = &sim_gnsf_memory_calculate_size;
 	config->memory_assign = &sim_gnsf_memory_assign;
