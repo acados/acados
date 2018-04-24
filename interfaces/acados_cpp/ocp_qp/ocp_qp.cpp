@@ -391,7 +391,7 @@ vector< vector<double> > ocp_qp::extract(std::string field) {
         last_index = N-1;
     vector< vector<double> > result;
     for (uint i = 0; i <= last_index; i++) {
-        auto dims = dimensions(field, i);
+        auto dims = shape_of(field, i);
         vector<double> v(dims.first * dims.second);
         extract_functions[field](i, qp.get(), v.data());
         result.push_back(v);
@@ -455,7 +455,7 @@ void ocp_qp::check_range(std::string field, uint stage) {
               std::to_string(lower_bound) + ", " + std::to_string(upper_bound) + "].");
 }
 
-std::pair<uint, uint> ocp_qp::dimensions(std::string field, uint stage) {
+std::pair<uint, uint> ocp_qp::shape_of(std::string field, uint stage) {
 
     check_range(field, stage);
 
@@ -503,8 +503,8 @@ static bool match(std::pair<uint, uint> dims, uint nb_elems) {
 }
 
 void ocp_qp::check_num_elements(std::string field, uint stage, uint nb_elems) {
-    if (!match(dimensions(field, stage), nb_elems))
-        throw std::invalid_argument("I need " + std::to_string(dimensions(field, stage)) + " elements but got " + std::to_string(nb_elems) + ".");
+    if (!match(shape_of(field, stage), nb_elems))
+        throw std::invalid_argument("I need " + std::to_string(shape_of(field, stage)) + " elements but got " + std::to_string(nb_elems) + ".");
 }
 
 ocp_qp_solver_plan string_to_plan(string solver) {
