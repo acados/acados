@@ -489,7 +489,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
     sim_new_lifted_irk_memory *memory = (sim_new_lifted_irk_memory *) mem_;
 
-    int ii, jj, kk, ss;
+    int ii, jj, ss;
     double a;
 
     int nx = dims->nx;
