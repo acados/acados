@@ -363,7 +363,6 @@ int sim_new_lifted_irk_workspace_calculate_size(void *config_, void *dims_, void
     size += steps*sizeof(struct blasfeo_dmat); // JG_traj
 
     size += 3*sizeof(struct blasfeo_dvec); // rG, xt, xn
-    size += 2*sizeof(struct blasfeo_dvec); // lambda, lambdaK
     size += 2*steps*sizeof(struct blasfeo_dvec);  // **xn_traj, **K_traj;
     size += 1*sizeof(struct blasfeo_dvec);  // w ([x; u])
 
@@ -374,8 +373,6 @@ int sim_new_lifted_irk_workspace_calculate_size(void *config_, void *dims_, void
 
     size += 1*blasfeo_memsize_dvec(nx*ns); // rG
     size += 2*blasfeo_memsize_dvec(nx); // xt, x
-    size += blasfeo_memsize_dvec(nx+nu); // lambda
-    size += blasfeo_memsize_dvec(nx*ns); // lambdaK
     size += blasfeo_memsize_dvec(nx + nu); // w
     size += steps * blasfeo_memsize_dvec(nx); // for xn_traj
     size += steps * blasfeo_memsize_dvec(nx*ns); // for K_traj
@@ -434,12 +431,6 @@ static void *sim_new_lifted_irk_cast_workspace(void *config_, void *dims_, void 
     workspace->w = (struct blasfeo_dvec *)c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->lambda = (struct blasfeo_dvec *)c_ptr;
-    c_ptr += sizeof(struct blasfeo_dvec);
-
-    workspace->lambdaK = (struct blasfeo_dvec *)c_ptr;
-    c_ptr += sizeof(struct blasfeo_dvec);
-
     align_char_to(64, &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nx, nx+nu, workspace->S_forw, &c_ptr);
@@ -454,8 +445,6 @@ static void *sim_new_lifted_irk_cast_workspace(void *config_, void *dims_, void 
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xt, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xn, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx+nu, workspace->w, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(nx+nu, workspace->lambda, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->lambdaK, &c_ptr);
 
     for (int i=0;i<steps;i++){
         assign_and_advance_blasfeo_dvec_mem(nx, &workspace->xn_traj[i], &c_ptr);
@@ -538,8 +527,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     struct blasfeo_dvec *xt = workspace->xt;
     struct blasfeo_dvec *xn = workspace->xn;
 
-    struct blasfeo_dvec *lambda = workspace->lambda;
-    struct blasfeo_dvec *lambdaK = workspace->lambdaK;
     struct blasfeo_dvec *w = workspace->w;
 
     double *x_out = out->xn;
@@ -575,8 +562,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
     blasfeo_dvecse(nx*ns, 0.0, rG, 0);
     blasfeo_pack_dvec(nx, x, xn, 0);
-
-    blasfeo_dvecse(nx*ns, 0.0, lambdaK, 0);
 
     // start the loop
     acados_tic(&timer);

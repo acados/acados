@@ -69,9 +69,6 @@ typedef struct
     struct blasfeo_dvec *xt; // temporary x
     struct blasfeo_dvec *xn; // x at each integration step
     
-    struct blasfeo_dvec *lambda; // adjoint seed (nx+nu)
-    struct blasfeo_dvec *lambdaK; // auxiliary variable (nx*ns)
-    
     struct blasfeo_dvec *xn_traj; // xn trajectory
     struct blasfeo_dvec *K_traj;  // K trajectory
     struct blasfeo_dvec *w;       // stacked x and u
