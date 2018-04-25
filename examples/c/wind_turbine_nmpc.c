@@ -53,7 +53,7 @@
 #include "examples/c/wt_model_nx6/nx6p2/wt_model.h"
 #include "examples/c/wt_model_nx6/setup.c"
 
-#define NN 10
+#define NN 40
 
 #define MAX_SQP_ITERS 15
 #define NREP 1
@@ -827,7 +827,7 @@ int main()
     * sqp solve
     ************************************************/
 
-	int nmpc_problems = 2;
+	int nmpc_problems = 40;
 
     int status;
 
