@@ -582,7 +582,7 @@ int main()
 		if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
 			// initialize additional dimensions
-			sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
+			// sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
 			// sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dims->dynamics[i]->sim;
 			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
 			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
@@ -653,7 +653,7 @@ int main()
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
 			if (set_fun_status != 0) exit(1);
 		}
-		else if ((plan->sim_solver_plan[i].sim_solver == IRK | plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK))
+		else if ((plan->sim_solver_plan[i].sim_solver == IRK) | (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK))
 		{
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
 			if (set_fun_status != 0) exit(1);
@@ -785,8 +785,19 @@ int main()
 		pcond_solver_opts->pcond_opts->N2 = 10;
 	}
 
-	// update after user-defined opts
 	config->opts_update(config, dims, nlp_opts);
+
+    /************************************************
+    * ocp_nlp out
+    ************************************************/
+
+	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
+
+	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+
+	/************************************************
+	* 	precomputation (after all options are set)
+	************************************************/
 
 	for (int i=0; i<NN; i++){
 		if (plan->sim_solver_plan[i].sim_solver == GNSF)
@@ -802,6 +813,7 @@ int main()
 			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_opts->dynamics[i];
 			sim_rk_opts *sim_opts = dynamics_stage_opts->sim_solver;
 
+			// import model matrices
 			gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
 
 			// precompute
@@ -810,13 +822,6 @@ int main()
 		}
 	}
 
-    /************************************************
-    * ocp_nlp out
-    ************************************************/
-
-	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
-
-	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
     /************************************************
     * sqp solve
@@ -852,7 +857,7 @@ int main()
 				{
 					expl_vde_for[ii].set_param(expl_vde_for+ii, wind0_ref+idx+ii);
 				}
-				else if ((plan->sim_solver_plan[ii].sim_solver == IRK | plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK))
+				else if ((plan->sim_solver_plan[ii].sim_solver == IRK) | (plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK))
 				{
 					impl_ode_fun[ii].set_param(impl_ode_fun+ii, wind0_ref+idx+ii);
 					impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);

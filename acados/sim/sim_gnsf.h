@@ -203,23 +203,15 @@ typedef struct { //workspace
 } gnsf_workspace;
 
 
+// gnsf dims
+int sim_gnsf_dims_calculate_size();
+void *sim_gnsf_dims_assign(void* config_, void *raw_memory);
+
 // get & set functions
 void sim_gnsf_set_nx(void *dims_, int nx);
 void sim_gnsf_set_nu(void *dims_, int nu);
 void sim_gnsf_get_nx(void *dims_, int* nx);
 void sim_gnsf_get_nu(void *dims_, int* nu);
-
-
-// import
-void export_from_ML_wrapped(const real_t *in, real_t *out, casadi_function_t get_ints_fun);
-void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_function_generic *get_matrices_fun);
-void gnsf_import_precomputed(sim_gnsf_dims* dims, gnsf_model *model, casadi_function_t But_KK_YY_ZZ_LO_fun);
-
-// gnsf dims
-int sim_gnsf_dims_calculate_size();
-void *sim_gnsf_dims_assign(void* config_, void *raw_memory);
-void *gnsf_dims_create();
-void gnsf_get_dims( sim_gnsf_dims* dims, casadi_function_t get_ints_fun); // maybe remove
 
 // opts
 int sim_gnsf_opts_calculate_size(void *config, void *dims);
@@ -232,14 +224,20 @@ int sim_gnsf_model_calculate_size(void *config, void *dims_);
 void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory);
 int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun);
 
+// import
+void export_from_ML_wrapped(const double *in, double *out, casadi_function_t import_fun);
+void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_function_generic *get_matrices_fun);
+void gnsf_import_precomputed(sim_gnsf_dims* dims, gnsf_model *model, casadi_function_t But_KK_YY_ZZ_LO_fun);
+void gnsf_get_dims( sim_gnsf_dims* dims, casadi_function_t get_ints_fun); // maybe remove
+
 // precomputation
 int gnsf_pre_workspace_calculate_size(sim_gnsf_dims *dims, sim_rk_opts *opts);
 void *gnsf_cast_pre_workspace(sim_gnsf_dims* dims, sim_rk_opts *opts, void *raw_memory);
 void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, double T);
 
 // workspace & memory
-int gnsf_workspace_calculate_size(void *config, void *dims_, void *args);
-void *gnsf_cast_workspace(void *config, void* dims_, void *raw_memory, void *args);
+int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args);
+void *sim_gnsf_cast_workspace(void *config, void* dims_, void *raw_memory, void *args);
 int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_);
 void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_memory);
 
@@ -249,7 +247,7 @@ void sim_gnsf_config_initialize_default(void *config_);
 // integrator
 int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *opts, void *mem_, void *work_);
 
-// tools
+// helpful functions
 double minimum_of_doubles(double *x, int n);
 void gnsf_neville(double *out, double xx, int n, double *x, double *Q);
 
