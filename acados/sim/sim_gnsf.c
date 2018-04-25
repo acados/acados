@@ -205,92 +205,99 @@ void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_funct
     free(export_out);
 }
 
+
+
+/************************************************
+* OUTDATED FUNCTION: THIS WAS CODED, WHEN HAVING AN OLD GNSF STRUCTURE
+* 
+* developers will decide if a working version of this function is needed
+************************************************/
 // this function can be used instead of import_matrices + precompute (ATTENTION!!!)
-void gnsf_import_precomputed(sim_gnsf_dims* dims, gnsf_model *model, casadi_function_t But_KK_YY_ZZ_LO_fun)
-{
-    acados_timer atimer;
-    acados_tic(&atimer);
-    int nu  = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
-    int num_stages = dims->num_stages;
+// void gnsf_import_precomputed(sim_gnsf_dims* dims, gnsf_model *model, casadi_function_t But_KK_YY_ZZ_LO_fun)
+// {
+//     acados_timer atimer;
+//     acados_tic(&atimer);
+//     int nu  = dims->nu;
+//     int nx1 = dims->nx1;
+//     int nx2 = dims->nx2;
+//     int nz = dims->nz;
+//     int n_out = dims->n_out;
+//     int ny = dims->ny;
+//     // int nuhat = dims->nuhat;
+//     int num_stages = dims->num_stages;
 
-    int nK1 = num_stages * nx1;
-    int nK2 = num_stages * nx2;
-    int nZ  = num_stages * nz;
-    int nff = n_out * num_stages;
-    int nyy = ny    * num_stages;
+//     int nK1 = num_stages * nx1;
+//     int nK2 = num_stages * nx2;
+//     int nZ  = num_stages * nz;
+//     int nff = n_out * num_stages;
+//     int nyy = ny    * num_stages;
 
-    // double *out;
-    int exported_doubles = 0;
-    exported_doubles += num_stages * (num_stages +2); // Butcher matrices
-    exported_doubles += nK1 * (nff + nx1 + nu); //KK* matrices
-    exported_doubles += nyy * (nff + nx1 + nu); //YY* matrices
-    exported_doubles += nZ * (nff + nx1 + nu); //ZZ* matrices
-    exported_doubles += nK2 * (nK2 + nx2) + nx2 * nx2; //LO matrices
+//     // double *out;
+//     int exported_doubles = 0;
+//     exported_doubles += num_stages * (num_stages +2); // Butcher matrices
+//     exported_doubles += nK1 * (nff + nx1 + nu); // KK* matrices
+//     exported_doubles += nyy * (nff + nx1 + nu); // YY* matrices
+//     exported_doubles += nZ * (nff + nx1 + nu); // ZZ* matrices
+//     exported_doubles += nK2 * (nK2 + nx2) + nx2 * nx2; // LO matrices
 
-    // printf("exported_%d \n",exported_doubles);
-    double *export_in  = (double*) malloc(1*sizeof(double));
-    double *export_out = (double*) malloc(exported_doubles*sizeof(double));
-    export_from_ML_wrapped(export_in, export_out, But_KK_YY_ZZ_LO_fun);
+//     // printf("exported_%d \n",exported_doubles);
+//     double *export_in  = (double*) malloc(1*sizeof(double));
+//     double *export_out = (double*) malloc(exported_doubles*sizeof(double));
+//     export_from_ML_wrapped(export_in, export_out, But_KK_YY_ZZ_LO_fun);
 
-    double *read_mem = export_out;
+//     double *read_mem = export_out;
 
-    // IMPORT BUTCHER
-    for (int ii = 0; ii < num_stages*num_stages; ii++) {
-        model->A_dt[ii] = read_mem[ii];
-    }
-    read_mem += num_stages*num_stages;
+//     // IMPORT BUTCHER
+//     for (int ii = 0; ii < num_stages*num_stages; ii++) {
+//         model->A_dt[ii] = read_mem[ii];
+//     }
+//     read_mem += num_stages*num_stages;
 
-    for (int ii = 0; ii < num_stages; ii++) {
-        model->b_dt[ii] = read_mem[ii];
-    }
-    read_mem += num_stages;
+//     for (int ii = 0; ii < num_stages; ii++) {
+//         model->b_dt[ii] = read_mem[ii];
+//     }
+//     read_mem += num_stages;
 
-    for (int ii = 0; ii < num_stages; ii++) {
-        model->c[ii] = read_mem[ii];
-    }
-    read_mem += num_stages;
+//     for (int ii = 0; ii < num_stages; ii++) {
+//         model->c[ii] = read_mem[ii];
+//     }
+//     read_mem += num_stages;
 
-    // IMPORT KKmat
-    blasfeo_pack_dmat(nK1, nff, read_mem, nK1, &model->KKf, 0, 0);
-    read_mem += nK1 * nff;
-    blasfeo_pack_dmat(nK1, nx1, read_mem, nK1, &model->KKx, 0, 0);
-    read_mem += nK1 * nx1;
-    blasfeo_pack_dmat(nK1, nu,  read_mem, nK1, &model->KKu, 0, 0);
-    read_mem += nK1 * nu;
+//     // IMPORT KKmat
+//     blasfeo_pack_dmat(nK1, nff, read_mem, nK1, &model->KKf, 0, 0);
+//     read_mem += nK1 * nff;
+//     blasfeo_pack_dmat(nK1, nx1, read_mem, nK1, &model->KKx, 0, 0);
+//     read_mem += nK1 * nx1;
+//     blasfeo_pack_dmat(nK1, nu,  read_mem, nK1, &model->KKu, 0, 0);
+//     read_mem += nK1 * nu;
 
-    // IMPORT YYmat
-    blasfeo_pack_dmat(nyy, nff, read_mem, nyy, &model->YYf, 0, 0);
-    read_mem += nyy * nff;
-    blasfeo_pack_dmat(nyy, nx1, read_mem, nyy, &model->YYx, 0, 0);
-    read_mem += nyy * nx1;
-    blasfeo_pack_dmat(nyy, nu,  read_mem, nyy, &model->YYu, 0, 0);
-    read_mem += nyy * nu;
+//     // IMPORT YYmat
+//     blasfeo_pack_dmat(nyy, nff, read_mem, nyy, &model->YYf, 0, 0);
+//     read_mem += nyy * nff;
+//     blasfeo_pack_dmat(nyy, nx1, read_mem, nyy, &model->YYx, 0, 0);
+//     read_mem += nyy * nx1;
+//     blasfeo_pack_dmat(nyy, nu,  read_mem, nyy, &model->YYu, 0, 0);
+//     read_mem += nyy * nu;
 
-    // IMPORT ZZmat
-    blasfeo_pack_dmat(nZ, nff, read_mem, nZ, &model->ZZf, 0, 0);
-    read_mem += nZ * nff;
-    blasfeo_pack_dmat(nZ, nx1, read_mem, nZ, &model->ZZx, 0, 0);
-    read_mem += nZ * nx1;
-    blasfeo_pack_dmat(nZ, nu,  read_mem, nZ, &model->ZZu, 0, 0);
-    read_mem += nZ * nu;
+//     // IMPORT ZZmat
+//     blasfeo_pack_dmat(nZ, nff, read_mem, nZ, &model->ZZf, 0, 0);
+//     read_mem += nZ * nff;
+//     blasfeo_pack_dmat(nZ, nx1, read_mem, nZ, &model->ZZx, 0, 0);
+//     read_mem += nZ * nx1;
+//     blasfeo_pack_dmat(nZ, nu,  read_mem, nZ, &model->ZZu, 0, 0);
+//     read_mem += nZ * nu;
 
-    // IMPORT LO matrices
-    blasfeo_pack_dmat(nx2, nx2, read_mem, nx2, &model->ALO, 0, 0);
-    read_mem += nx2 * nx2;
-    blasfeo_pack_dmat(nK2, nK2, read_mem, nK2, &model->M2inv, 0, 0);
-    read_mem += nK2 * nK2;
-    blasfeo_pack_dmat(nK2, nx2, read_mem, nx2, &model->dK2_dx2, 0, 0);
-    read_mem += nK2 * nx2;
+//     // IMPORT LO matrices
+//     blasfeo_pack_dmat(nx2, nx2, read_mem, nx2, &model->ALO, 0, 0);
+//     read_mem += nx2 * nx2;
+//     blasfeo_pack_dmat(nK2, nK2, read_mem, nK2, &model->M2inv, 0, 0);
+//     read_mem += nK2 * nK2;
+//     blasfeo_pack_dmat(nK2, nx2, read_mem, nx2, &model->dK2_dx2, 0, 0);
+//     read_mem += nK2 * nx2;
 
-    free(export_out);
-    free(export_in);
-}
+//     free(export_out);
+//     free(export_in);
+// }
 
 void export_from_ML_wrapped(const double *in, double *out, casadi_function_t import_fun){
     
@@ -470,7 +477,7 @@ int sim_gnsf_model_calculate_size(void *config, void *dims_)
     int nK2 = num_stages * nx2;
     int nZ  = num_stages * nz;
 
-    int size = 0;// int size = 8; // todo WHY needed?!
+    int size = 0;
     size += sizeof(gnsf_model);
     // model defining matrices
     size += num_stages * num_stages * sizeof(double); // A_dt
@@ -521,7 +528,7 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
     int num_stages = dims->num_stages;
     int ny = dims->ny;
     int nuhat = dims->nuhat;
-    int nx = dims->nx;
+    // int nx = dims->nx;
 
     int nff = num_stages * n_out;
     int nyy = num_stages * ny;
@@ -577,8 +584,6 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
 
     assign_and_advance_blasfeo_dmat_mem(nuhat, nu, &model->Lu, &c_ptr);
 
-    // TODO:
-    // maybe here import model_matrices and precompute
     assert((char *) raw_memory + sim_gnsf_model_calculate_size(config, dims_) >= c_ptr);
 	return model;
 }
@@ -602,6 +607,7 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
         case LO_FUN:
             model->f_lo_fun_jac_x1_x1dot_u_z = (external_function_generic *) fun;
             break;
+        default:
             return ACADOS_FAILURE;
     }
     return ACADOS_SUCCESS;
@@ -619,7 +625,7 @@ int gnsf_pre_workspace_calculate_size(sim_gnsf_dims *dims, sim_rk_opts *opts)
     int nz         = dims->nz;
     int n_out      = dims->n_out;
     int ny         = dims->ny;
-    int nuhat      = dims->nuhat;
+    // int nuhat      = dims->nuhat;
     int num_stages = opts->ns;
 
     int nff = num_stages * n_out;
@@ -686,7 +692,7 @@ void *gnsf_cast_pre_workspace(sim_gnsf_dims* dims, sim_rk_opts *opts, void *raw_
     int nz         = dims->nz;
     int n_out      = dims->n_out;
     int ny         = dims->ny;
-    int nuhat      = dims->nuhat;
+    // int nuhat      = dims->nuhat;
     int num_stages = opts->ns;
 
     int nff = num_stages * n_out;
@@ -1013,7 +1019,7 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
     blasfeo_dgemm_nn(nK2, nx2, nK2, 1.0, &M2inv, 0, 0, &dK2_dx2_work, 0, 0, 0.0, &YYf, 0, 0, &dK2_dx2, 0, 0);
 
     free(pre_work_);
-    double precomputation_time = acados_toc(&atimer) * 1000;
+    // double precomputation_time = acados_toc(&atimer) * 1000;
 
     // printf("time 2 precompute = %f [ms]\n", precomputation_time);
 }
@@ -1223,8 +1229,7 @@ void *sim_gnsf_cast_workspace(void *config, void* dims_, void *raw_memory, void 
     assign_and_advance_blasfeo_dmat_mem(nx,  nx , &workspace->dPsi_dx  , &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx,  nu , &workspace->dPsi_du  , &c_ptr);
  
-    void *sim_dim = (void *) dims;
-    assert((char*)raw_memory + sim_gnsf_workspace_calculate_size(config, sim_dim, args) >= c_ptr);
+    assert((char*)raw_memory + sim_gnsf_workspace_calculate_size(config, dims_, args) >= c_ptr);
 
     return (void *)workspace;
 }
@@ -1267,7 +1272,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
 
     // assign variables from workspace
     double *Z_out = workspace->Z_out; // remove when this is part of output
-    double *Z_work = workspace->Z_work; // remove when this is part of output
+    double *Z_work = workspace->Z_work;
 
     struct blasfeo_dmat J_r_ff = workspace->J_r_ff; // store the the jacobian of the residual w.r.t. ff
     int *ipiv = workspace->ipiv;

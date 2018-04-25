@@ -32,7 +32,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
-#include <acados/sim/sim_gnsf.h>
+#include "acados/sim/sim_gnsf.h"
 
 #include "acados/utils/external_function_generic.h"
 

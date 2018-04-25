@@ -528,7 +528,7 @@ int main()
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 //		plan->sim_solver_plan[i].sim_solver = ERK;
-		plan->sim_solver_plan[i].sim_solver = IRK;
+		// plan->sim_solver_plan[i].sim_solver = IRK;
 		// plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
 		plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
@@ -760,8 +760,8 @@ int main()
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
 		{
-			sim_opts->ns = 5;
-			sim_opts->num_steps = 4;
+			sim_opts->ns = 4;
+			sim_opts->num_steps = 1;
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
