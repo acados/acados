@@ -58,8 +58,6 @@
 int main()
 {
 
-    // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
-
 	/************************************************
 	* initialization
 	************************************************/
@@ -261,14 +259,17 @@ int main()
 			case 2:
 				plan.sim_solver = IRK;
 				break;
+
 			case 3:
 				plan.sim_solver = GNSF;
 				break;
+
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
 				exit(1);
 
 		}
+
 		// create correct config based on plan
 		sim_solver_config *config = sim_config_create(plan);
 
@@ -595,14 +596,12 @@ int main()
 		/************************************************
 		* free memory
 		************************************************/
-
+		free(dims);
 		free(sim_solver);
 		free(in);
 		free(out);
 		free(opts);
 		free(config);
-
-		// free(gnsf_dim);
 	}
 
 	free(x_sim);
