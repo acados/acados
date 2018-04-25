@@ -9,37 +9,75 @@ using std::vector;
 
 namespace acados {
 
-bool valid_dimensions(map<string, vector<uint>> dims) {
+/*
+ * OCP QP dimensions should have fields
+ * nx  - array with the number of states, per stage
+ * nu  - array ""       ""        controls
+ * 
+ * and can have following optional fields
+ * nbx - array ""       ""        state bounds
+ * nbu - array ""       ""        control bounds
+ * ng  - array ""       ""        polytopic constraints
+ */
+bool are_valid_ocp_qp_dimensions(const map<string, vector<uint>> dimensions) {
 
-    auto expected_size = dims["nx"].size();
-    if (expected_size <= 0)
+    if (!dimensions.count("nx") || dimensions.at("nx").size() == 0)
+        return false;
+    if (!dimensions.count("nu") || dimensions.at("nu").size() == 0)
         return false;
 
-    for (auto dim : dimension_keys) {
-        if (!dims.count(dim))
+    if (dimensions.count("nu") && dimensions.at("nu").back() != 0)
+        return false;
+    if (dimensions.count("nbu") && dimensions.at("nbu").back() != 0)
+        return false;
+
+    std::vector<string> dim_names {"nx", "nu", "nbx", "nbu", "ng", "ns"};
+
+    int expected_size = dimensions.at("nx").size();
+    for (auto elem : dimensions) {
+        if (std::find(dim_names.begin(), dim_names.end(), elem.first) == dim_names.end())
+            return false;  // dimension name not valid
+        if (elem.second.size() != expected_size)
             return false;
-        if (dims[dim].size() != expected_size)
+    }
+
+    for (int i = 0; i < expected_size; ++i) {
+        if (dimensions.at("nbx").at(i) > dimensions.at("nx").at(i))
+            return false;
+        if (dimensions.at("nbu").at(i) > dimensions.at("nu").at(i))
             return false;
     }
     return true;
 }
 
-std::unique_ptr<ocp_qp_dims> make_dimensions_ptr(map<string, vector<uint>> dims) {
+std::unique_ptr<ocp_qp_dims> create_ocp_qp_dimensions_ptr(const map<string, vector<uint>>& dims) {
 
-    if (!valid_dimensions(dims))
-        throw std::invalid_argument("Invalid dimensions container.");
+    if (!are_valid_ocp_qp_dimensions(dims))
+        throw std::invalid_argument("Invalid dimensions map.");
 
-    int N = dims["nx"].size() - 1;
+    int N = dims.at("nx").size() - 1;
 
-    auto dim = std::unique_ptr<ocp_qp_dims>(ocp_qp_dims_create(N));
+    auto dimensions_ptr = std::unique_ptr<ocp_qp_dims>(ocp_qp_dims_create(N));
 
-    std::copy_n(std::begin(dims["nx"]), N+1, dim->nx);
-    std::copy_n(std::begin(dims["nu"]), N+1, dim->nu);
-    std::copy_n(std::begin(dims["nbx"]), N+1, dim->nbx);
-    std::copy_n(std::begin(dims["nbu"]), N+1, dim->nbu);
-    std::copy_n(std::begin(dims["ng"]), N+1, dim->ng);
+    // required fields
+    std::copy_n(std::begin(dims.at("nx")), N+1, dimensions_ptr->nx);
+    std::copy_n(std::begin(dims.at("nu")), N+1, dimensions_ptr->nu);
+    
+    // optional fields
+    vector<uint> nbx = dims.count("nbx") ? dims.at("nbx") : vector<uint>(N+1, 0);
+    vector<uint> nbu = dims.count("nbu") ? dims.at("nbu") : vector<uint>(N+1, 0);
+    vector<uint> ng = dims.count("ng") ? dims.at("ng") : vector<uint>(N+1, 0);
+    vector<uint> ns = dims.count("ns") ? dims.at("ns") : vector<uint>(N+1, 0);
 
-    return dim;
+    std::vector<uint> nb(N+1);
+    std::transform(nbx.begin(), nbx.end(), nbu.begin(), nb.begin(), std::plus<uint>());    
+
+    std::copy_n(std::begin(nbx), N+1, dimensions_ptr->nbx);
+    std::copy_n(std::begin(nbu), N+1, dimensions_ptr->nbu);
+    std::copy_n(std::begin(ng), N+1, dimensions_ptr->ng);
+    std::copy_n(std::begin(nb), N+1, dimensions_ptr->nb);
+
+    return dimensions_ptr;
 
 }
 

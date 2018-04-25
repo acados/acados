@@ -11,11 +11,11 @@
 
 namespace acados {
 
-const std::vector<std::string> dimension_keys {"nx", "nu", "nbx", "nbu", "ng"};
+bool
+are_valid_ocp_qp_dimensions(std::map<std::string, std::vector<uint>> dims);
 
-bool valid_dimensions(std::map<std::string, std::vector<uint>> dims);
-
-std::unique_ptr<ocp_qp_dims> make_dimensions_ptr(std::map<std::string, std::vector<uint>> dims);
+std::unique_ptr<ocp_qp_dims>
+create_ocp_qp_dimensions_ptr(const std::map<std::string, std::vector<uint>>&);
 
 }  // namespace acados
 

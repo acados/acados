@@ -21,11 +21,10 @@ class ocp_qp {
 
 public:
 
-    ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, std::vector<uint> nbu, std::vector<uint> ng);
+    ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, std::vector<uint> nbu,
+           std::vector<uint> ng, std::vector<uint> ns);
 
-    ocp_qp(std::map<std::string, std::vector<uint>>);
-
-    ocp_qp(uint N, uint nx, uint nu, uint nbx = 0, uint nbu = 0, uint ng = 0);
+    ocp_qp(uint N, uint nx, uint nu, uint nbx = 0, uint nbu = 0, uint ng = 0, uint ns = 0);
 
     void set(std::string field, uint stage, std::vector<double> v);
     void set(std::string field, std::vector<double> v);
@@ -73,6 +72,8 @@ private:
     std::unique_ptr<ocp_qp_in> qp;
 
     std::unique_ptr<ocp_qp_solver> solver;
+
+    std::map<std::string, ocp_qp_solver_plan> available_solvers;
 
     std::unique_ptr<ocp_qp_xcond_solver_config> config;
 
