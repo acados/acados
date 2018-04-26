@@ -26,22 +26,20 @@ public:
 
     ocp_qp(uint N, uint nx, uint nu, uint nbx = 0, uint nbu = 0, uint ng = 0, uint ns = 0);
 
-    void set(std::string field, uint stage, std::vector<double> v);
-    void set(std::string field, std::vector<double> v);
+    std::vector< std::vector<double> > get_field(std::string field);
+    void set_field(std::string field, uint stage, std::vector<double> v);
+    void set_field(std::string field, std::vector<double> v);
+    std::pair<uint, uint> shape_of_field(std::string field, uint stage);
 
     void initialize_solver(std::string solver_name, std::map<std::string, option_t *> options = {});
 
     ocp_qp_solution solve();
 
-    std::vector< std::vector<double> > extract(std::string field);
-
     std::map<std::string, std::vector<uint>> dimensions();
 
-    std::pair<uint, uint> shape_of(std::string field, uint stage);
-
-    void set_bounds_indices(std::string name, uint stage, std::vector<uint> v);
-
-    std::vector<std::vector<uint>> bounds_indices(std::string name);
+    const std::vector<std::string> fields {
+        "Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"
+    };
 
     const uint N;
 
@@ -55,11 +53,11 @@ private:
 
     void expand_dimensions();
 
-    void check_range(std::string field, uint stage);
+    std::vector<std::vector<uint>> bounds_indices(std::string name);
 
-    void check_num_elements(std::string, uint stage, uint nb_elems);
+    void set_bounds_indices(std::string name, uint stage, std::vector<uint> v);
 
-    void flatten(std::map<std::string, option_t *>& input, std::map<std::string, option_t *>& output);
+    bool in_range(std::string field, uint stage);
 
     std::vector<uint> nx();
     std::vector<uint> nu();
@@ -81,12 +79,9 @@ private:
 
     std::string cached_solver;
 
-    bool needs_initializing = true;
+    bool needs_initializing;
 
     static std::map<std::string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
-
-    friend std::ostream& operator<<(std::ostream& oss, const ocp_qp& qp);
-
 };
 
 

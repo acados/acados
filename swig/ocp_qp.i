@@ -100,12 +100,14 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %rename("$ignore", %$isconstructor) ocp_qp_solution;
 %include "acados_cpp/ocp_qp/ocp_qp_solution.hpp"
-%ignore extract;
+%ignore get_field;
+%ignore fields;
 %rename("$ignore", %$isconstructor) ocp_qp;
 %include "acados_cpp/ocp_qp/ocp_qp.hpp"
 
 %rename("%s", %$isconstructor) ocp_qp;
-%rename("%s") extract;
+%rename("%s") get_field;
+%rename("%s") fields;
 
 %extend acados::ocp_qp {
 
@@ -113,24 +115,16 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
         return new acados::ocp_qp(N, nx, nu, nx, nu, ng);
     }
 
-    LangObject *extract(std::string field) {
-        std::vector<std::vector<double>> tmp = $self->extract(field);
+    LangObject *get_field(std::string field) {
+        std::vector<std::vector<double>> tmp = $self->get_field(field);
         std::vector<LangObject *> result;
         for (int i = 0; i < tmp.size(); ++i)
-            result.push_back(new_matrix($self->shape_of(field, i), tmp.at(i).data()));
+            result.push_back(new_matrix($self->shape_of_field(field, i), tmp.at(i).data()));
         return swig::from(result);
     }
 
     std::vector<std::string> fields() {
-        return std::vector<std::string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"});
+        return $self->fields;
     }
 
-    char *__str__() {
-        static char tmp[1000000];
-        std::ostringstream stream;
-        stream << *($self);
-        std::string a = stream.str();
-        std::copy(std::begin(a), std::end(a), tmp);
-        return tmp;
-    }
 }

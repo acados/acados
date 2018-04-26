@@ -25,7 +25,7 @@ namespace acados {
 
 ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx,
              std::vector<uint> nbu, std::vector<uint> ng, std::vector<uint> ns)
-             : N(nx.size() - 1), qp(nullptr), solver(nullptr) {
+             : N(nx.size() - 1), qp(nullptr), solver(nullptr), needs_initializing(true) {
 
 
     // Number of controls on last stage should be zero;
@@ -84,24 +84,24 @@ ocp_qp::ocp_qp(uint N, uint nx, uint nu, uint nbx, uint nbu, uint ng, uint ns)
 /*
  * Update all fields with the same values. Matrices are passed in column-major ordering.
  */
-void ocp_qp::set(string field, vector<double> v) {
+void ocp_qp::set_field(string field, vector<double> v) {
     uint last_stage = N;
     if (field == "A" || field == "B" || field == "b")
         last_stage = N-1;
 
     for (uint stage = 0; stage <= last_stage; ++stage)
-        set(field, stage, v);
+        set_field(field, stage, v);
 }
 
 /*
  * Update one field with some values. Matrices are passed in column-major ordering.
  */
-void ocp_qp::set(std::string field, uint stage, std::vector<double> v) {
+void ocp_qp::set_field(std::string field, uint stage, std::vector<double> v) {
 
-    if (stage > N)
-        throw std::invalid_argument("Stage index should be in [0, N].");
-    if (!match(shape_of(field, stage), v.size()))
-        throw std::invalid_argument("I need " + std::to_string(shape_of(field, stage)) +
+    if (!in_range(field, stage))
+        throw std::out_of_range("Stage index should be in [0, N].");
+    if (!match(shape_of_field(field, stage), v.size()))
+        throw std::invalid_argument("I need " + std::to_string(shape_of_field(field, stage)) +
                                     " elements but got " + std::to_string(v.size()) + ".");
 
     if (field == "lbx" || field == "ubx" || field == "lbu" || field == "ubu") {
@@ -134,16 +134,10 @@ void ocp_qp::set(std::string field, uint stage, std::vector<double> v) {
     } else if (field == "r") {
         d_cvt_colmaj_to_ocp_qp_r(stage, v.data(), qp.get());
     } else if (field == "A") {
-        if (stage == N)
-            throw std::invalid_argument("Can't set 'A' on last stage");
         d_cvt_colmaj_to_ocp_qp_A(stage, v.data(), qp.get());
     } else if (field == "B") {
-        if (stage == N)
-            throw std::invalid_argument("Can't set 'B' on last stage");
         d_cvt_colmaj_to_ocp_qp_B(stage, v.data(), qp.get());
     } else if (field == "b") {
-        if (stage == N)
-            throw std::invalid_argument("Can't set 'b' on last stage");
         d_cvt_colmaj_to_ocp_qp_b(stage, v.data(), qp.get());
     } else if (field == "C") {
         d_cvt_colmaj_to_ocp_qp_C(stage, v.data(), qp.get());
@@ -167,30 +161,17 @@ void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> optio
     } catch (std::exception e) {
         throw std::invalid_argument("QP solver '" + solver_name + "' is not available.");
     }
-    cached_solver = solver_name;
 
     squeeze_dimensions();
 
     config.reset(ocp_qp_config_create(plan));
     args.reset(ocp_qp_opts_create(config.get(), qp->dim));
+    process_options(solver_name, options, args.get());
 
-    map<string, option_t *> solver_options;
-    auto nested_options = std::make_unique<option<map<string, option_t *>>>(options);
-    solver_options[solver_name] = nested_options.get();
-
-    auto flattened_options = map<string, option_t *>();
-    flatten(solver_options, flattened_options);
-
-    for (auto opt : flattened_options) {
-        string option_name = opt.first;
-        option_t *opt_p = opt.second;
-        bool found = set_option_int(args.get(), option_name.c_str(), std::to_int(opt_p));
-        found |= set_option_double(args.get(), option_name.c_str(), std::to_double(opt_p));
-        if (!found)
-            throw std::invalid_argument("Option " + option_name + " not known.");
-    }
     solver.reset(ocp_qp_create(config.get(), qp->dim, args.get()));
+
     needs_initializing = false;
+    cached_solver = solver_name;
 }
 
 vector<uint> ocp_qp::idxb(vector<double> lower_bound, vector<double> upper_bound) {
@@ -200,7 +181,7 @@ vector<uint> ocp_qp::idxb(vector<double> lower_bound, vector<double> upper_bound
 
     for (uint idx = 0; idx < lower_bound.size(); ++idx)
         if (lower_bound.at(idx) != -INFINITY || upper_bound.at(idx) != +INFINITY)
-            bound_indices.push_back(idx); // there is a double-sided bound at this index
+            bound_indices.push_back(idx); // there is a one-sided or two-sided bound at this index
 
     return bound_indices;
 }
@@ -236,7 +217,7 @@ void ocp_qp::expand_dimensions() {
 
     for (string bound : {"x", "u"}) {
         for (uint stage = 0; stage <= N; ++stage) {
-            vector<double> lb_old = extract("lb" + bound).at(stage), ub_old = extract("ub" + bound).at(stage);
+            vector<double> lb_old = get_field("lb" + bound).at(stage), ub_old = get_field("ub" + bound).at(stage);
             vector<uint> idxb = bounds_indices(bound).at(stage);
             vector<double> lb_new, ub_new;
             for (uint idx = 0, bound_index = 0; idx < dimensions()["n" + bound].at(stage); ++idx) {
@@ -258,7 +239,7 @@ void ocp_qp::expand_dimensions() {
 
     needs_initializing = true;
 
-    for (uint i = 0; i < N; ++i) {
+    for (uint i = 0; i <= N; ++i) {
         std::vector<uint> idx_states(dimensions()["nx"].at(i));
         std::iota(std::begin(idx_states), std::end(idx_states), 0);
         set_bounds_indices("x", i, idx_states);
@@ -267,9 +248,6 @@ void ocp_qp::expand_dimensions() {
         std::iota(std::begin(idx_controls), std::end(idx_controls), 0);
         set_bounds_indices("u", i, idx_controls);
     }
-    std::vector<uint> idx_states(dimensions()["nx"].at(N));
-    std::iota(std::begin(idx_states), std::end(idx_states), 0);
-    set_bounds_indices("x", N, idx_states);
 }
 
 void ocp_qp::fill_in_bounds() {
@@ -317,22 +295,6 @@ ocp_qp_solution ocp_qp::solve() {
             throw std::runtime_error("QP solver " + cached_solver + " failed with solver-specific error code " + std::to_string(return_code));
     }
     return ocp_qp_solution(std::move(result));
-}
-
-
-
-void ocp_qp::flatten(map<string, option_t *>& input, map<string, option_t *>& output) {
-    for (auto opt : input) {
-        if (opt.second->nested()) {
-            for (auto nested_opt : *opt.second) {
-                input.erase(opt.first);
-                input[opt.first + "." + nested_opt.first] = nested_opt.second;
-                flatten(input, output);
-            }
-        } else {
-            output[opt.first] = opt.second;
-        }
-    }
 }
 
 vector<vector<uint>> ocp_qp::bounds_indices(string name) {
@@ -394,13 +356,13 @@ map<string, std::function<void(int, ocp_qp_in *, double *)>> ocp_qp::extract_fun
     };
 
 
-vector< vector<double> > ocp_qp::extract(std::string field) {
+vector< vector<double> > ocp_qp::get_field(std::string field) {
     uint last_index = N;
     if (field == "A" || field == "B" || field == "b")
         last_index = N-1;
     vector< vector<double> > result;
     for (uint i = 0; i <= last_index; i++) {
-        auto dims = shape_of(field, i);
+        auto dims = shape_of_field(field, i);
         vector<double> v(dims.first * dims.second);
         extract_functions[field](i, qp.get(), v.data());
         result.push_back(v);
@@ -444,29 +406,14 @@ std::vector<uint> ocp_qp::ng() {
     return tmp;
 }
 
-std::ostream& operator<<(std::ostream& oss, const ocp_qp& qp) {
-    static char a[1000000];
-    print_ocp_qp_in_to_string(a, qp.qp.get());
-    oss << a;
-    return oss;
+bool ocp_qp::in_range(std::string field, uint stage) {
+    return (field == "A" || field == "B" || field == "b") ? (stage < N) : (stage <= N);
 }
 
-void ocp_qp::check_range(std::string field, uint stage) {
-    uint lower_bound = 0;
-    uint upper_bound;
-    if (field == "A" || field == "B" || field == "b") {
-        upper_bound = N-1;
-    } else {
-        upper_bound = N;
-    }
-    if(stage < lower_bound || stage > upper_bound)
-        throw std::out_of_range(std::to_string(stage) + " must be in range [" +
-              std::to_string(lower_bound) + ", " + std::to_string(upper_bound) + "].");
-}
+std::pair<uint, uint> ocp_qp::shape_of_field(std::string field, uint stage) {
 
-std::pair<uint, uint> ocp_qp::shape_of(std::string field, uint stage) {
-
-    check_range(field, stage);
+    if(!in_range(field, stage))
+        throw std::out_of_range("Stage index should be in [0, N].");
 
     if (field == "Q")
         return std::make_pair(num_rows_Q(stage, qp->dim), num_cols_Q(stage, qp->dim));
