@@ -311,7 +311,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 
 
 
-static void *sim_irk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory)
+static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
 	sim_rk_opts *opts = opts_;
     sim_irk_dims* dims = (sim_irk_dims *) dims_;
@@ -416,7 +416,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     void *dims_ = in->dims;
     sim_irk_dims* dims = (sim_irk_dims *) dims_;
-    sim_irk_workspace *workspace = (sim_irk_workspace *) sim_irk_cast_workspace(config, dims, opts, work_);
+    sim_irk_workspace *workspace = (sim_irk_workspace *) sim_irk_workspace_cast(config, dims, opts, work_);
 
     int ii, jj, iter, ss;
     double a;

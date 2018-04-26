@@ -575,7 +575,7 @@ int sim_lifted_irk_workspace_calculate_size(void *config_, void *dims_, void *op
 
 
 
-static void sim_lifted_irk_cast_workspace(void *config_, sim_lifted_irk_workspace *work, const sim_in *in, void *opts_)
+static void sim_lifted_irk_workspace_cast(void *config_, sim_lifted_irk_workspace *work, const sim_in *in, void *opts_)
 {
 	sim_rk_opts *opts = opts_;
     sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) in->dims;
@@ -1097,7 +1097,7 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     int i, s1, s2, j, istep;
     sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *)mem_;
     sim_lifted_irk_workspace *work = (sim_lifted_irk_workspace *)work_;
-    sim_lifted_irk_cast_workspace(config, work, in, opts);
+    sim_lifted_irk_workspace_cast(config, work, in, opts);
     double H_INT = in->T/opts->num_steps;
     int NF = opts->num_forw_sens;
 
