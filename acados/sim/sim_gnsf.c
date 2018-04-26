@@ -1236,7 +1236,7 @@ void *sim_gnsf_cast_workspace(void *config, void* dims_, void *raw_memory, void 
 
 int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem, void *work_)
 {
-    acados_timer tot_timer, casadi_timer;
+    acados_timer tot_timer, casadi_timer, la_timer;
     acados_tic(&tot_timer);
 
     sim_rk_opts *opts = (sim_rk_opts *) args;
@@ -1487,6 +1487,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             blasfeo_dveccpsc(nff, -1.0, &res_val, 0, &res_val, 0); // set res_val = - res_val; NOW: res_val = -PHI_val;
             blasfeo_dvecad(nff, 1.0, &ff_val[ss], 0, &res_val, 0); // set res_val = res_val + ff_val; this is the actual value of the residual function
 
+            acados_tic(&la_timer);
             // factorize J_r_ff
             if ((opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse)){
                 blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); 
@@ -1496,6 +1497,8 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             blasfeo_dvecpe(nff, ipiv, &res_val, 0); // permute r.h.s.
             blasfeo_dtrsv_lnu(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
             blasfeo_dtrsv_unn(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
+            out->info->LAtime += acados_toc(&la_timer);
+
             blasfeo_daxpy(nff, -1.0, &res_val, 0, &ff_val[ss], 0, &ff_val[ss], 0);
 
         } // END NEWTON-ITERATION
@@ -1570,10 +1573,12 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                 blasfeo_dgemm_nn(n_out, nu,  ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &model->YYu, ii*ny, 0, 0.0, &J_r_x1u, ii*n_out, nx1, &J_r_x1u, ii*n_out, nx1); // w.r.t. u
                 blasfeo_dgemm_nn(n_out, nu, nuhat, -1.0, &dPHI_dyuhat, ii*n_out, ny, &model->Lu, 0, 0,  1.0,  &J_r_x1u, ii*n_out, nx1, &J_r_x1u, ii*n_out, nx1); // + dPhi_duhat * L_u;
             }
+            acados_tic(&la_timer);
             blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
             blasfeo_drowpe(nff, ipiv, &J_r_x1u); // permute also rhs
             blasfeo_dtrsm_llnu(nff, nx1 + nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
             blasfeo_dtrsm_lunn(nff, nx1 + nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
+            out->info->LAtime += acados_toc(&la_timer);
 
             blasfeo_dgemm_nn(nK1, nx1, nff, -1.0, &model->KKf, 0, 0, &J_r_x1u, 0,  0,        1.0, &model->KKx, 0, 0, &dK1_dx1, 0, 0);
             blasfeo_dgemm_nn(nK1, nu,  nff, -1.0, &model->KKf, 0, 0, &J_r_x1u, 0, nx1, 1.0, &model->KKu, 0, 0, &dK1_du , 0, 0); // Blasfeo HP & Reference differ here
@@ -1694,14 +1699,17 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                 blasfeo_dgemm_nn(n_out, nu,  ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &model->YYu, ii*ny, 0, 0.0, &J_r_x1u, ii*n_out, nx1, &J_r_x1u, ii*n_out, nx1); // w.r.t. u
                 blasfeo_dgemm_nn(n_out, nu,nuhat,-1.0, &dPHI_dyuhat, ii*n_out, ny, &model->Lu, 0, 0,  1.0,  &J_r_x1u, ii*n_out, nx1, &J_r_x1u, ii*n_out, nx1); // + dPhi_duhat * L_u;
             }
-
+            acados_tic(&la_timer);
             blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
+            out->info->LAtime += acados_toc(&la_timer);
 
             blasfeo_dgemv_t(nx, nff, 1.0, &dPsi_dff, 0, 0, &lambda, 0, 0.0, &res_val, 0, &res_val, 0); // use res_val to store lambda_ff
 
+            acados_tic(&la_timer);
             blasfeo_dvecpei(nff, ipiv, &res_val, 0); // permute r.h.s.
             blasfeo_dtrsv_utn(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
             blasfeo_dtrsv_ltu(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
+            out->info->LAtime += acados_toc(&la_timer);
 
             blasfeo_dveccp(nx +nu, &lambda, 0, &lambda_old, 0);
             blasfeo_dgemv_t(nx, nu, 1.0, &dPsi_du, 0, 0, &lambda_old, 0, 1.0, &lambda_old, nx, &lambda, nx); // update lambda_u
