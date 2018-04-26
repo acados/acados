@@ -1,7 +1,7 @@
 
 #include "acados_c/options.h"
 
-#include "acados_cpp/ocp_qp/options.hpp"
+#include "acados_cpp/options.hpp"
 
 namespace acados {
 

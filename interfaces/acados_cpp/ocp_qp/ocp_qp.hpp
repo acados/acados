@@ -13,7 +13,7 @@
 
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_cpp/ocp_qp/ocp_qp_solution.hpp"
-#include "acados_cpp/ocp_qp/options.hpp"
+#include "acados_cpp/options.hpp"
 
 namespace acados {
 

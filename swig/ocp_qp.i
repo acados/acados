@@ -9,7 +9,7 @@
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_cpp/ocp_qp/ocp_qp.hpp"
 #include "acados_cpp/ocp_qp/ocp_qp_solution.hpp"
-#include "acados_cpp/ocp_qp/options.hpp"
+#include "acados_cpp/options.hpp"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/print.h"
@@ -95,8 +95,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %}
 
-%ignore operator<<;
-%include "acados_cpp/ocp_qp/options.hpp"
+%include "acados_cpp/options.hpp"
 
 %rename("$ignore", %$isconstructor) ocp_qp_solution;
 %include "acados_cpp/ocp_qp/ocp_qp_solution.hpp"

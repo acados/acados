@@ -132,6 +132,9 @@ if(ACADOS_WITH_C_INTERFACE)
 	endif()
 endif()
 
+find_package(casadi REQUIRED CONFIG)
+target_link_libraries(acados PUBLIC casadi)
+
 # Only test acados library for coverage
 if(COVERAGE MATCHES "lcov")
     include(CodeCoverage)
