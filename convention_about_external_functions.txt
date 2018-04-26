@@ -230,13 +230,13 @@ inputs:
 2) [u]    size: nu    type: COLMAJ
 
 outputs:
-0) [fun]    size: nx    type: BLASFEO_DVEC_ARGS
+0) [fun]    size: nx  type: BLASFEO_DVEC_ARGS
 
 
 
-// jacobians of implicit ode model
+// function of implicit ode model + jacobians of implicit ode model
 
-external function: impl_ode_jac_x_xdot_u
+external function: impl_ode_fun_jac_x_xdot_u
 
 inputs:
 0) [x]    size: nx    type: BLASFEO_DVEC
@@ -244,6 +244,7 @@ inputs:
 2) [u]    size: nu    type: COLMAJ
 
 outputs:
-0) [jac_x]      size: nx*nx    type: BLASFEO_DMAT
-1) [jac_xdot]   size: nx*nx    type: BLASFEO_DMAT
-2) [jac_u]      size: nx*nu    type: BLASFEO_DMAT
+0) [fun]        size: nx        type: BLASFEO_DVEC_ARGS
+1) [jac_x]      size: nx*nx     type: BLASFEO_DMAT
+2) [jac_xdot]   size: nx*nx     type: BLASFEO_DMAT
+3) [jac_u]      size: nx*nu     type: BLASFEO_DMAT
