@@ -50,8 +50,6 @@
 
 #include "examples/c/wt_model_nx6/nx6p2/wt_model.h"
 #include "examples/c/wt_model_nx6/setup.c"
-#define _GNU_SOURCE
-#include <fenv.h>
 #define NN 40
 
 #define MAX_SQP_ITERS 15
@@ -181,10 +179,6 @@ void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *typ
 int main()
 {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
-    feenableexcept(FE_INVALID   | 
-                   FE_DIVBYZERO | 
-                   FE_OVERFLOW  | 
-                   FE_UNDERFLOW);
 	int nx_ = 8;
     int nu_ = 2;
 	int ny_ = 4;
