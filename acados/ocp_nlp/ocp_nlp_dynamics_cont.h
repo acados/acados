@@ -41,7 +41,7 @@ extern "C" {
 
 typedef struct
 {
-	sim_dims *sim;
+	void *sim;
     int nx; // number of states at the current stage
     int nu; // number of inputs at the current stage
 	int nx1; // number of states at the next stage

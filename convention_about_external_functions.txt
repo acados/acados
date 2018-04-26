@@ -1,18 +1,23 @@
+This file contains the description of all external functions interfaced to acados.
+
+!!! Please keep it updated when developing new features !!!
+
+
+
 /************************************************
 * ocp_nlp_cost_external
 ************************************************/
 
-// ext cost
+// complete gradient and hessian of cost, computed externally
 
-ext_fun_type_in[0] = COLMAJ;
-ext_fun_in[0] = work->ext_cost_in+0; // ux: nu+nx
+external function: ext_cost
 
-ext_fun_type_out[0] = COLMAJ;
-ext_fun_out[0] = work->ext_cost_out+0; // grad: nu+nx
-ext_fun_type_out[1] = COLMAJ;
-ext_fun_out[1] = work->ext_cost_out+nx+nu; // hess: (nu+nx) * (nu+nx)
+inputs:
+0) [u; x]    size: nu+nx    type: COLMAJ
 
-model->ext_cost->evaluate(model->ext_cost, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+outputs:
+0) [grad_u; grad_x]    size: nu+nx    type: COLMAJ
+1) [hess_uu, hess_ux; hess_xu; hess_xx]    size: (nu+nx)*(nu+nx)    type: COLMAJ
 
 
 
@@ -20,30 +25,29 @@ model->ext_cost->evaluate(model->ext_cost, ext_fun_type_in, ext_fun_in, ext_fun_
 * ocp_nlp_cost_nls
 ************************************************/
 
-// nls_jac
+// function and jacobian_transposed of residuals of nonlinear least-squares
 
-ext_fun_type_in[0] = BLASFEO_DVEC;
-ext_fun_in[0] = memory->ux; // ux: nu+nx
+external function: nls_jac
 
-ext_fun_type_out[0] = BLASFEO_DVEC;
-ext_fun_out[0] = &memory->res; // fun: ny
-ext_fun_type_out[1] = BLASFEO_DMAT;
-ext_fun_out[1] = &memory->Jt; // jac': (nu+nx) * ny
+inputs:
+0) [u; x]    size: nu+nx    type: BLASFEO_DVEC
 
-model->nls_jac->evaluate(model->nls_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+outputs:
+0) [fun]    size: ny    type: BLASFEO_DVEC
+1) [jac_u'; jac_x']    size: (nu+nx)*(ny)    type: BLASFEO_DMAT
 
 
-// nls_jac
 
-ext_fun_type_in[0] = BLASFEO_DVEC;
-ext_fun_in[0] = memory->ux; // ux: nu+nx
-ext_fun_type_in[1] = BLASFEO_DVEC;
-ext_fun_in[1] = &work->tmp_ny; // fun: ny
+// exact hessian of nonlinear least-squares, computed using the numerical values in fun for the residuals
 
-ext_fun_type_out[0] = BLASFEO_DMAT;
-ext_fun_out[0] = memory->RSQrq; // hess: (nu+nx) * (nu+nx)
+external function: nls_hess
 
-model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+inputs:
+0) [u; x]    size: nu+nx    type: BLASFEO_DVEC
+1) [fun]    size: ny    type: BLASFEO_DVEC
+
+outputs:
+0) [hess_uu, hess_ux; hess_xu; hess_xx]    size: (nu+nx)*(nu+nx)    type: BLASFEO_DMAT
 
 
 
@@ -51,27 +55,16 @@ model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_
 * ocp_nlp_constraints
 ************************************************/
 
-// h
+// function and jacobian_transposed of nonlinear constraints
 
-//
-ext_fun_type_in[0] = BLASFEO_DVEC;
-ext_fun_in[0] = memory->ux; // ux: nu+nx
+external function: h
 
-//
-ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
-struct blasfeo_dvec_args h_args;
-h_args.x = &work->tmp_nbgh;
-h_args.xi = nb+ng;
-ext_fun_out[0] = &h_args; // fun: nh
-//
-ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
-struct blasfeo_dmat_args Jht_args;
-Jht_args.A = memory->DCt;
-Jht_args.ai = 0;
-Jht_args.aj = ng;
-ext_fun_out[1] = &Jht_args; // jac': (nu+nx) * nh
+inputs:
+0) [u; x]    size: nu+nx    type: BLASFEO_DVEC
 
-model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+outputs:
+0) [fun]    size: nh    type: BLASFEO_DVEC_ARGS
+1) [jac_u'; jac_x']    size: (nu+nx)*nh    type: BLASFEO_DMAT_ARGS
 
 
 
@@ -79,75 +72,62 @@ model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_
 * sim_erk_integrator
 ************************************************/
 
-// expl_vde_for
+// function of explicit ode model
 
-ext_fun_type_in[0] = COLMAJ;
-ext_fun_in[0] = rhs_forw_in+0; // x: nx
-ext_fun_type_in[1] = COLMAJ;
-ext_fun_in[1] = rhs_forw_in+nx; // Sx: nx*nx
-ext_fun_type_in[2] = COLMAJ;
-ext_fun_in[2] = rhs_forw_in+nx+nx*nx; // Su: nx*nu
-ext_fun_type_in[3] = COLMAJ;
-ext_fun_in[3] = rhs_forw_in+nx+nx*nx+nx*nu; // u: nu
+external function: expl_ode_fun
 
-ext_fun_type_out[0] = COLMAJ;
-ext_fun_out[0] = K_traj+s*nX+0; // fun: nx
-ext_fun_type_out[1] = COLMAJ;
-ext_fun_out[1] = K_traj+s*nX+nx; // Sx: nx*nx
-ext_fun_type_out[2] = COLMAJ;
-ext_fun_out[2] = K_traj+s*nX+nx+nx*nx; // Su: nx*nu
+inputs:
+0) [x]    size: nx    type: COLMAJ
+1) [u]    size: nu    type: COLMAJ
 
-model->expl_vde_for->evaluate(model->expl_vde_for, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+outputs:
+0) [fun]    size: nx    type: COLMAJ
 
 
-// expl_ode_fun
 
-ext_fun_type_in[0] = COLMAJ;
-ext_fun_in[0] = rhs_forw_in+0; // x: nx
-ext_fun_type_in[1] = COLMAJ;
-ext_fun_in[1] = rhs_forw_in+nx; // u: nu
+// function and jacobian-times-seeds (forward sensitivities) of explicit ode model, computed using vde model
 
-ext_fun_type_out[0] = COLMAJ;
-ext_fun_out[0] = K_traj+s*nX+0; // fun: nx
+external function: expl_vde_for
 
-model->expl_ode_fun->evaluate(model->expl_ode_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+inputs:
+0) [x]    size: nx    type: COLMAJ
+1) [Sx]    size: nx*nx    type: COLMAJ
+2) [Su]    size: nx*nu    type: COLMAJ
+3) [u]    size: nu    type: COLMAJ
 
-
-// expl_ode_hess
-
-ext_fun_type_in[0] = COLMAJ;
-ext_fun_in[0] = rhs_adj_in+0; // x: nx
-ext_fun_type_in[1] = COLMAJ;
-ext_fun_in[1] = rhs_adj_in+nx; // lam: nx
-ext_fun_type_in[2] = COLMAJ;
-ext_fun_in[2] = rhs_adj_in+nx+nx; // u: nu
-
-ext_fun_type_out[0] = COLMAJ;
-ext_fun_out[0] = adj_traj+s*nAdj+0; // adj: nx+nu
-
-model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+outputs:
+0) [fun]    size: nx    type: COLMAJ
+1) [jac_x*Sx]    size: nx*nx    type: COLMAJ
+2) [jac_x*Su+jac_u]    size: nx*nu    type: COLMAJ
 
 
-// expl_vde_adj
 
-ext_fun_type_in[0] = COLMAJ;
-ext_fun_in[0] = rhs_adj_in+0; // x: nx
-ext_fun_type_in[1] = COLMAJ;
-ext_fun_in[1] = rhs_adj_in+nx; // Sx: nx*nx
-ext_fun_type_in[2] = COLMAJ;
-ext_fun_in[2] = rhs_adj_in+nx+nx*nx; // Su: nx*nu
-ext_fun_type_in[3] = COLMAJ;
-ext_fun_in[3] = rhs_adj_in+nx+nx*nx+nx*nu; // lam: nx
-ext_fun_type_in[4] = COLMAJ;
-ext_fun_in[4] = rhs_adj_in+nx+nx*nx+nx*nu+nx; // u: nu
+// jacobian_transposed-times-vector (adjoint sensitivities) of explicit ode model
 
-ext_fun_type_out[0] = COLMAJ;
-ext_fun_out[0] = adj_traj+s*nAdj+0; // adj: nx+nu
-ext_fun_type_out[1] = COLMAJ;
-ext_fun_out[1] = adj_traj+s*nAdj+nx+nu; // hess: (nx+nu)*(nx+nu)
+external function: expl_ode_adj
 
-model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+0) [x]    size: nx    type: COLMAJ
+1) [lam]    size: nx    type: COLMAJ
+2) [u]    size: nu    type: COLMAJ
 
+outputs:
+0) [jac_x'*lam; jac_u'*lam]    size: nx+nu    type: COLMAJ
+
+
+
+// hessian of explicit ode model, computed using vde model
+
+external function: expl_vde_hess
+
+0) [x]    size: nx    type: COLMAJ
+1) [Sx]    size: nx*nx    type: COLMAJ
+2) [Su]    size: nx*nu    type: COLMAJ
+3) [lam]    size: nx    type: COLMAJ
+4) [u]    size: nu    type: COLMAJ
+
+outputs:
+0) [jac_x'*lam; jac_u'*lam]    size: nx+nu    type: COLMAJ
+1) [hess_xx, hess_xu; hess_ux, hess_uu]    size: (nx+nu)*(nx+nu)    type: COLMAJ
 
 
 
@@ -155,40 +135,34 @@ model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in, 
 * sim_lifted_irk_integrator
 ************************************************/
 
-// expl_ode_jac
+// function and jacobian of explicit ode model
 
-ext_fun_type_in[0] = COLMAJ;
-ext_fun_in[0] = rhs_in+0; // x: nx
-ext_fun_type_in[1] = COLMAJ;
-ext_fun_in[1] = rhs_in+nx; // u: nu
+external function: expl_ode_jac
 
-ext_fun_type_out[0] = COLMAJ;
-ext_fun_out[0] = jac_tmp+0; // fun: nx
-ext_fun_type_out[1] = COLMAJ;
-ext_fun_out[1] = jac_tmp+nx; // jac_x: nx*nx
+inputs:
+0) [x]    size: nx    type: COLMAJ
+1) [u]    size: nu    type: COLMAJ
 
-model->expl_ode_jac->evaluate(model->expl_ode_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+outputs:
+0) [fun]    size: nx    type: COLMAJ
+1) [jac]    size: nx*ns    type: COLMAJ
 
 
-// expl_vde_for
 
-ext_fun_type_in[0] = COLMAJ;
-ext_fun_in[0] = rhs_in+0; // x: nx
-ext_fun_type_in[1] = COLMAJ;
-ext_fun_in[1] = rhs_in+nx; // Sx: nx*nx
-ext_fun_type_in[2] = COLMAJ;
-ext_fun_in[2] = rhs_in+nx+nx*nx; // Su: nx*nu
-ext_fun_type_in[3] = COLMAJ;
-ext_fun_in[3] = rhs_in+nx+nx*nx+nx*nu; // u: nu
+// function and jacobian-times-seeds (forward sensitivities) of explicit ode model, computed using vde model
 
-ext_fun_type_out[0] = COLMAJ;
-ext_fun_out[0] = VDE_tmp[s1]+0; // fun: nx
-ext_fun_type_out[1] = COLMAJ;
-ext_fun_out[1] = VDE_tmp[s1]+nx; // Sx: nx*nx
-ext_fun_type_out[2] = COLMAJ;
-ext_fun_out[2] = VDE_tmp[s1]+nx+nx*nx; // Su: nx*nu
+external function: expl_vde_for
 
-model->expl_vde_for->evaluate(model->expl_vde_for, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+inputs:
+0) [x]    size: nx    type: COLMAJ
+1) [Sx]    size: nx*nx    type: COLMAJ
+2) [Su]    size: nx*nu    type: COLMAJ
+3) [u]    size: nu    type: COLMAJ
+
+outputs:
+0) [fun]    size: nx    type: COLMAJ
+1) [jac_x*Sx]    size: nx*nx    type: COLMAJ
+2) [jac_x*Su+jac_u]    size: nx*nu    type: COLMAJ
 
 
 
@@ -196,73 +170,81 @@ model->expl_vde_for->evaluate(model->expl_vde_for, ext_fun_type_in, ext_fun_in, 
 * sim_irk_integrator
 ************************************************/
 
-// impl_ode_fun
+// function of implicit ode model
 
-ext_fun_type_in[0] = COLMAJ;
-ext_fun_in[0] = ode_args+0; // x: nx
-ext_fun_type_in[1] = COLMAJ;
-ext_fun_in[1] = ode_args+nx; // dx: nx
-ext_fun_type_in[2] = COLMAJ;
-ext_fun_in[2] = ode_args+nx+nx; // u: nu
+external function: impl_ode_fun
 
-ext_fun_type_out[0] = COLMAJ;
-ext_fun_out[0] = rGt+0; // fun: nx
+inputs:
+0) [x]    size: nx    type: BLASFEO_DVEC
+1) [K]    size: nx    type: BLASFEO_DVEC_ARGS
+2) [u]    size: nu    type: COLMAJ
 
-model->impl_ode_fun->evaluate(model->impl_ode_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+outputs:
+0) [fun]    size: nx    type: BLASFEO_DVEC_ARGS
 
 
-// impl_ode_fun_jac_x_xdot
 
-ext_fun_type_in[0] = COLMAJ;
-ext_fun_in[0] = ode_args+0; // x: nx
-ext_fun_type_in[1] = COLMAJ;
-ext_fun_in[1] = ode_args+nx; // dx: nx
-ext_fun_type_in[2] = COLMAJ;
-ext_fun_in[2] = ode_args+nx+nx; // u: nu
+// function and jacobians of implicit ode model
 
-ext_fun_type_out[0] = COLMAJ;
-ext_fun_out[0] = jac_out+0; // fun: nx
-ext_fun_type_out[1] = COLMAJ;
-ext_fun_out[1] = jac_out+nx; // jac_x: nx*nx
-ext_fun_type_out[2] = COLMAJ;
-ext_fun_out[2] = jac_out+nx+nx*nx; // jac_xdot: nx*nx
+external function: impl_ode_fun_jac_x_xdot
 
-model->impl_ode_fun_jac_x_xdot->evaluate(model->impl_ode_fun_jac_x_xdot, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+inputs:
+0) [x]    size: nx    type: BLASFEO_DVEC
+1) [K]    size: nx    type: BLASFEO_DVEC_ARGS
+2) [u]    size: nu    type: COLMAJ
+
+outputs:
+0) [fun]    size: nx    type: BLASFEO_DVEC_ARGS
+1) [jac_x]    size: nx*nx    type: BLASFEO_DMAT
+2) [jac_xdot]    size: nx*nx    type: BLASFEO_DMAT
 
 
-// impl_ode_jac_x_xdot_u
 
-ext_fun_type_in[0] = COLMAJ;
-ext_fun_in[0] = ode_args+0; // x: nx
-ext_fun_type_in[1] = COLMAJ;
-ext_fun_in[1] = ode_args+nx; // dx: nx
-ext_fun_type_in[2] = COLMAJ;
-ext_fun_in[2] = ode_args+nx+nx; // u: nu
+// jacobians of implicit ode model
 
-ext_fun_type_out[0] = COLMAJ;
-ext_fun_out[0] = jac_out+0; // jac_x: nx*nx
-ext_fun_type_out[1] = COLMAJ;
-ext_fun_out[1] = jac_out+nx*nx; // jac_xdot: nx*nx
-ext_fun_type_out[2] = COLMAJ;
-ext_fun_out[2] = jac_out+nx*nx+nx*nx; // jac_u: nx*nu
+external function: impl_ode_jac_x_xdot_u
 
-model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+inputs:
+0) [x]    size: nx    type: BLASFEO_DVEC
+1) [K]    size: nx    type: BLASFEO_DVEC_ARGS
+2) [u]    size: nu    type: COLMAJ
+
+outputs:
+0) [jac_x]    size: nx*nx    type: BLASFEO_DMAT
+1) [jac_xdot]    size: nx*nx    type: BLASFEO_DMAT
+2) [jac_u]    size: nx*nu    type: BLASFEO_DMAT
 
 
-// impl_ode_jac_x_u
 
-ext_fun_type_in[0] = COLMAJ;
-ext_fun_in[0] = ode_args+0; // x: nx
-ext_fun_type_in[1] = COLMAJ;
-ext_fun_in[1] = ode_args+nx; // dx: nx
-ext_fun_type_in[2] = COLMAJ;
-ext_fun_in[2] = ode_args+nx+nx; // u: nu
+/************************************************
+* sim_new_lifted_irk_integrator
+************************************************/
 
-ext_fun_type_out[0] = COLMAJ;
-ext_fun_out[0] = jac_out+0; // jac_x: nx*nx
-ext_fun_type_out[1] = COLMAJ;
-ext_fun_out[1] = jac_out+nx*nx; // jac_u: nx*nu
+// function of implicit ode model
 
-model->impl_ode_jac_x_u->evaluate(model->impl_ode_jac_x_u, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+external function: impl_ode_fun
+
+inputs:
+0) [x]    size: nx    type: BLASFEO_DVEC
+1) [K]    size: nx    type: BLASFEO_DVEC_ARGS
+2) [u]    size: nu    type: COLMAJ
+
+outputs:
+0) [fun]    size: nx  type: BLASFEO_DVEC_ARGS
 
 
+
+// function of implicit ode model + jacobians of implicit ode model
+
+external function: impl_ode_fun_jac_x_xdot_u
+
+inputs:
+0) [x]    size: nx    type: BLASFEO_DVEC
+1) [K]    size: nx    type: BLASFEO_DVEC_ARGS
+2) [u]    size: nu    type: COLMAJ
+
+outputs:
+0) [fun]        size: nx        type: BLASFEO_DVEC_ARGS
+1) [jac_x]      size: nx*nx     type: BLASFEO_DMAT
+2) [jac_xdot]   size: nx*nx     type: BLASFEO_DMAT
+3) [jac_u]      size: nx*nu     type: BLASFEO_DMAT
