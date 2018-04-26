@@ -1,5 +1,5 @@
 
-#include "acados_cpp/ocp_qp_dimensions.hpp"
+#include "acados_cpp/ocp_qp/ocp_qp_dimensions.hpp"
 
 #include <algorithm>
 
