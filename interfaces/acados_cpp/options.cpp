@@ -1,7 +1,9 @@
 
-#include "acados_c/options.h"
-
 #include "acados_cpp/options.hpp"
+
+#include <memory>
+
+#include "acados_c/options.h"
 
 namespace acados {
 

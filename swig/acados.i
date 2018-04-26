@@ -33,6 +33,10 @@ typedef PyObject LangObject;
 #define NONE Py_None
 #endif
 
+%{
+typedef unsigned int uint;
+%}
+
 %include "acados/utils/types.h"
 
 %include "std_string.i"
@@ -89,3 +93,4 @@ char compiler[16] = "cc";
 
 %feature("autodoc", "3");
 %include "ocp_qp.i"
+%include "ocp_nlp.i"
