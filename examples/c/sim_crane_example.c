@@ -27,10 +27,7 @@
 #include <stdlib.h>
 
 // acados
-// TODO(dimitris): remove most includes
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_irk_integrator.h"
-#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
@@ -40,12 +37,12 @@
 #include "examples/c/crane_model/crane_model.h"
 
 // blasfeo
-#include <blasfeo/include/blasfeo_target.h>
-#include <blasfeo/include/blasfeo_common.h>
-#include <blasfeo/include/blasfeo_d_aux.h>
-#include <blasfeo/include/blasfeo_d_aux_ext_dep.h>
-#include <blasfeo/include/blasfeo_v_aux_ext_dep.h>
-#include <blasfeo/include/blasfeo_d_blas.h>
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
 
 
 
@@ -53,12 +50,10 @@ int main()
 {
 
 	/************************************************
-	* bla bla bla
+	* Initialize
 	************************************************/
 
     int NREP = 500;
-
-	/* double Time1, Time2, Time3; */
 
     int ii;
     int jj;
@@ -68,7 +63,6 @@ int main()
     int NF = nx + nu; // columns of forward seed
 
     double T = 0.05;
-    // int num_stages = 4;
     double *xref;
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
@@ -173,42 +167,6 @@ int main()
 	impl_ode_jac_x_u.casadi_n_out = &casadi_impl_ode_jac_x_u_n_out;
 	external_function_casadi_create(&impl_ode_jac_x_u);
 
-#if 0
-	// jac_x implicit ODE
-
-	external_function_casadi impl_jac_x_ode;
-	impl_jac_x_ode.casadi_fun = &impl_jacFun_x;
-	impl_jac_x_ode.casadi_work = &impl_jacFun_x_work;
-	impl_jac_x_ode.casadi_sparsity_in = &impl_jacFun_x_sparsity_in;
-	impl_jac_x_ode.casadi_sparsity_out = &impl_jacFun_x_sparsity_out;
-	impl_jac_x_ode.casadi_n_in = &impl_jacFun_x_n_in;
-	impl_jac_x_ode.casadi_n_out = &impl_jacFun_x_n_out;
-	external_function_casadi_create(&impl_jac_x_ode);
-
-	// jac_xdot implicit ODE
-
-	external_function_casadi impl_jac_xdot_ode;
-	impl_jac_xdot_ode.casadi_fun = &impl_jacFun_xdot;
-	impl_jac_xdot_ode.casadi_work = &impl_jacFun_xdot_work;
-	impl_jac_xdot_ode.casadi_sparsity_in = &impl_jacFun_xdot_sparsity_in;
-	impl_jac_xdot_ode.casadi_sparsity_out = &impl_jacFun_xdot_sparsity_out;
-	impl_jac_xdot_ode.casadi_n_in = &impl_jacFun_xdot_n_in;
-	impl_jac_xdot_ode.casadi_n_out = &impl_jacFun_xdot_n_out;
-	external_function_casadi_create(&impl_jac_xdot_ode);
-
-	// jac_u implicit ODE
-
-	external_function_casadi impl_jac_u_ode;
-	impl_jac_u_ode.casadi_fun = &impl_jacFun_u;
-	impl_jac_u_ode.casadi_work = &impl_jacFun_u_work;
-	impl_jac_u_ode.casadi_sparsity_in = &impl_jacFun_u_sparsity_in;
-	impl_jac_u_ode.casadi_sparsity_out = &impl_jacFun_u_sparsity_out;
-	impl_jac_u_ode.casadi_n_in = &impl_jacFun_u_n_in;
-	impl_jac_u_ode.casadi_n_out = &impl_jacFun_u_n_out;
-	external_function_casadi_create(&impl_jac_u_ode);
-#endif
-
-
 	int number_sim_solvers = 3;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
@@ -224,17 +182,17 @@ int main()
 		{
 
 			case 0:
-				printf("\n\nsim solver: ERK\n");
+				printf("\nsim solver: ERK\n");
 				plan.sim_solver = ERK;
 				break;
 
 			case 1:
-				printf("\n\nsim solver: IRK\n");
+				printf("\nim solver: IRK\n");
 				plan.sim_solver = IRK;
 				break;
 
 			case 2:
-				printf("\n\nsim solver: Lifted_IRK\n");
+				printf("\nsim solver: Lifted_IRK\n");
 				plan.sim_solver = LIFTED_IRK;
 				break;
 
@@ -261,8 +219,8 @@ int main()
 
 		sim_rk_opts *opts = sim_opts_create(config, dims);
 
-//		opts->ns = 4; // number of stages in rk integrator
-//		opts->num_steps = 5; // number of integration steps
+		opts->ns = 4; // number of stages in rk integrator
+		opts->num_steps = 5; // number of integration steps
 		opts->sens_adj = true;
 
 		/************************************************
@@ -321,6 +279,8 @@ int main()
 		// seeds adj
 		for (ii = 0; ii < nx; ii++)
 			in->S_adj[ii] = 1.0;
+		for (ii = 0; ii < nu; ii++)
+			in->S_adj[ii+nx] = 0.0;
 
 		/************************************************
 		* sim solver
@@ -348,31 +308,19 @@ int main()
 		************************************************/
 
 		printf("\nxn: \n");
-		for (ii=0;ii<nx;ii++)
-			printf("%8.5f ",xn[ii]);
-		printf("\n");
+		d_print_e_mat(1, nx, &xn[0], 1);
 
-		double *S_forw_out;
-		S_forw_out = NULL;
+		double *S_forw_out = NULL;
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");
-			for (ii=0;ii<nx;ii++){
-				for (jj=0;jj<NF;jj++)
-					printf("%8.5f ", S_forw_out[jj*nx+ii]);
-				printf("\n");
-			}
+			d_print_e_mat(nx, NF, S_forw_out, nx);
 		}
 
-		double *S_adj_out;
-		if(opts->sens_adj)
-		{
-			S_adj_out = out->S_adj;
+		if(opts->sens_adj){
+			double *S_adj_out = out->S_adj;
 			printf("\nS_adj_out: \n");
-			for (ii=0;ii<nx+nu;ii++){
-				printf("%8.5f ", S_adj_out[ii]);
-			}
-			printf("\n");
+			d_print_e_mat(1, nx+nu, S_adj_out, 1);
 		}
 
 		double *S_hess_out;
@@ -393,10 +341,6 @@ int main()
 			}
 		}
 
-		printf("\n");
-		printf("cpt: %8.4f [ms]\n", 1000*out->info->CPUtime);
-		printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
-
 		if(opts->sens_adj)
 		{
 			struct blasfeo_dmat sA;
@@ -414,12 +358,18 @@ int main()
 			blasfeo_dgemv_t(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
 
 			printf("\nJac times lambdaX:\n");
-			blasfeo_print_tran_dvec(nx+nu, &sz, 0);
+			blasfeo_print_exp_tran_dvec(nx+nu, &sz, 0);
 
 			blasfeo_free_dmat(&sA);
 			blasfeo_free_dvec(&sx);
 			blasfeo_free_dvec(&sz);
 		}
+
+		printf("\n");
+		printf("cpt: %8.4f [ms]\n", 1000*out->info->CPUtime);
+		printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
+		printf("========================\n");
+
 		free(sim_solver);
 		free(in);
 		free(out);
