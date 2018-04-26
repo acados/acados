@@ -29,9 +29,6 @@
 // acados
 // TODO(dimitris): remove most includes
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/sim_irk_integrator.h"
-#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/sim/sim_gnsf.h"
 
 #include "acados/utils/external_function_generic.h"
@@ -40,12 +37,12 @@
 #include "acados_c/sim_interface.h"
 
 // blasfeo
-#include <blasfeo/include/blasfeo_target.h>
-#include <blasfeo/include/blasfeo_common.h>
-#include <blasfeo/include/blasfeo_d_aux.h>
-#include <blasfeo/include/blasfeo_d_aux_ext_dep.h>
-#include <blasfeo/include/blasfeo_v_aux_ext_dep.h>
-#include <blasfeo/include/blasfeo_d_blas.h>
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
 
 // wt model
 #include "examples/c/wt_model_nx6/wt_model.h"
@@ -535,9 +532,6 @@ int main()
 		* printing
 		************************************************/
 		printf("\nxn: \n");
-		// for (ii=0; ii<nx; ii++)
-		// 	printf("%8.5f ", x_sim[nsim0*nx+ii]);
-		// printf("\n");
 		d_print_e_mat(1, nx, &x_sim[nsim0*nx], 1);
 
 		double *S_forw_out = NULL;
