@@ -76,6 +76,8 @@ mxClassID get_numeric_type() {
         return mxDOUBLE_CLASS;
     else if (typeid(T) == typeid(int_t))
         return mxDOUBLE_CLASS;
+    else if (typeid(T) == typeid(uint))
+        return mxDOUBLE_CLASS;
     throw std::invalid_argument("Matrix can only have integer or floating point entries");
     return mxUNKNOWN_CLASS;
 }
@@ -216,20 +218,20 @@ LangObject *new_matrix(std::pair<int, int> dimensions, const T *data) {
     int_t nb_cols = dimensions.second;
 #if defined(SWIGMATLAB)
     mxArray *matrix = mxCreateNumericMatrix(nb_rows, nb_cols, get_numeric_type<T>(), mxREAL);
-    T *new_array = (T *) mxCalloc(nb_rows*nb_cols, sizeof(T));
+    double *new_array = (double *) mxCalloc(nb_rows*nb_cols, sizeof(double));
     for (int_t i = 0; i < nb_rows*nb_cols; i++)
-        new_array[i] = data[i];
+        new_array[i] = (double) data[i];
     mxSetData(matrix, new_array);
     return matrix;
 #elif defined(SWIGPYTHON)
     PyObject *matrix = NULL;
     if (nb_cols == 1) {
-        T *data_copy = (T *) calloc(nb_rows, sizeof(T));
+        double *data_copy = (double *) calloc(nb_rows, sizeof(double));
         std::copy_n(data, nb_rows, data_copy);
         npy_intp npy_dims[1] = {nb_rows};
         matrix = PyArray_NewFromDataF(1, npy_dims, data_copy);
     } else {
-        T *data_copy = (T *) calloc(nb_rows * nb_cols, sizeof(T));
+        double *data_copy = (double *) calloc(nb_rows * nb_cols, sizeof(double));
         std::copy_n(data, nb_rows * nb_cols, data_copy);
         npy_intp npy_dims[2] = {nb_rows, nb_cols};
         matrix = PyArray_NewFromDataF(2, npy_dims, data_copy);
@@ -736,7 +738,7 @@ void fill_array_from(const LangObject *map, const char *key, int_t *array, int_t
     }
 }
 
-#include "acados_cpp/options.hpp"
+#include "acados_cpp/ocp_qp/options.hpp"
 
 namespace acados {
 

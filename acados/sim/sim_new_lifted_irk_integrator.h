@@ -51,52 +51,30 @@ typedef struct
     external_function_generic *impl_ode_jac_x_u;
 	// jax_x & jac_xdot & jac_u implicit ode
     external_function_generic *impl_ode_jac_x_xdot_u;
+	// implicit ode & jax_x & jac_xdot & jac_u implicit ode
+    external_function_generic *impl_ode_fun_jac_x_xdot_u;
 
 } new_lifted_irk_model;
-
-// typedef struct
-// {
-// 	/* external functions */
-// 	// implicit ode
-// 	external_function_generic *ode_impl;
-// 	// jac_x implicit ode
-// 	external_function_generic *jac_x_ode_impl;
-// 	// jac_xdot implicit ode
-// 	external_function_generic *jac_xdot_ode_impl;
-// 	// jac_u implicit ode
-// 	external_function_generic *jac_u_ode_impl;
-
-// } new_lifted_irk_model;
-
-
 
 
 typedef struct
 {
 
-    struct blasfeo_dmat *S_forw; // forward sensitivities
     struct blasfeo_dmat *JG_traj; // JGK trajectory
+
+    struct blasfeo_dmat *J_temp_x;    // temporary Jacobian of ode w.r.t x (nx, nx)
+    struct blasfeo_dmat *J_temp_xdot; // temporary Jacobian of ode w.r.t xdot (nx, nx)
+    struct blasfeo_dmat *J_temp_u;    // temporary Jacobian of ode w.r.t u (nx, nu)
 
     struct blasfeo_dvec *rG; // residuals of G (nx*ns)
     struct blasfeo_dvec *xt; // temporary x
     struct blasfeo_dvec *xn; // x at each integration step
     
-    struct blasfeo_dvec *lambda; // adjoint seed (nx+nu)
-    struct blasfeo_dvec *lambdaK; // auxiliary variable (nx*ns)
-    
     struct blasfeo_dvec *xn_traj; // xn trajectory
     struct blasfeo_dvec *K_traj;  // K trajectory
     struct blasfeo_dvec *w;       // stacked x and u
 
-    double *rGt; // temporary residuals of G (nx, 1)
-    double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
-    double *Jt; // temporary Jacobian of ode (nx, nx)
-    double *ode_args; // pointer to ode args
-    double *S_adj_w;
     int *ipiv; // index of pivot vector
-
-
-    // additional workspace for lifted integrators
 
 } sim_new_lifted_irk_workspace;
 
@@ -104,13 +82,14 @@ typedef struct
 typedef struct
 {
     // memory for lifted integrators
-    struct blasfeo_dmat *JGK; // jacobian of G over K (nx*ns, nx*ns)
-    struct blasfeo_dmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
-    struct blasfeo_dmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
+    struct blasfeo_dmat *S_forw;    // forward sensitivities
+    struct blasfeo_dmat *JGK;       // jacobian of G over K (nx*ns, nx*ns)
+    struct blasfeo_dmat *JGf;       // jacobian of G over x and u (nx*ns, nx+nu);
+    struct blasfeo_dmat *JKf;       // jacobian of K over x and u (nx*ns, nx+nu);
 
-    struct blasfeo_dvec *K; // internal variables (nx*ns)
-    struct blasfeo_dvec *x; // states (nx) -- for expansion step
-    struct blasfeo_dvec *u; // controls (nu) -- for expansion step
+    struct blasfeo_dvec *K;         // internal variables (nx*ns)
+    struct blasfeo_dvec *x;         // states (nx) -- for expansion step
+    struct blasfeo_dvec *u;         // controls (nu) -- for expansion step
     
     int update_sens;
 

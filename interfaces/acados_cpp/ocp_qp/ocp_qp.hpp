@@ -12,8 +12,8 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 
 #include "acados_c/ocp_qp_interface.h"
-#include "acados_cpp/ocp_qp_solution.hpp"
-#include "acados_cpp/options.hpp"
+#include "acados_cpp/ocp_qp/ocp_qp_solution.hpp"
+#include "acados_cpp/ocp_qp/options.hpp"
 
 namespace acados {
 
@@ -38,7 +38,7 @@ public:
 
     std::map<std::string, std::vector<uint>> dimensions();
 
-    std::pair<uint, uint> dimensions(std::string field, uint stage);
+    std::pair<uint, uint> shape_of(std::string field, uint stage);
 
     void set_bounds_indices(std::string name, uint stage, std::vector<uint> v);
 
