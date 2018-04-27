@@ -158,7 +158,7 @@ static void select_dynamics_wt_casadi(int N,
 		phi_jac_y_uhat[ii].casadi_sparsity_out = &casadi_phi_jac_y_uhat_sparsity_out;
 		phi_jac_y_uhat[ii].casadi_n_in = &casadi_phi_jac_y_uhat_n_in;
 		phi_jac_y_uhat[ii].casadi_n_out = &casadi_phi_jac_y_uhat_n_out;
-		
+
 		// f_lo - linear output function
 		f_lo_jac_x1_x1dot_u_z[ii].casadi_fun = &casadi_f_lo_fun_jac_x1k1uz;
 		f_lo_jac_x1_x1dot_u_z[ii].casadi_work = &casadi_f_lo_fun_jac_x1k1uz_work;
@@ -682,6 +682,7 @@ int main()
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "phi_jac_y_uhat", &phi_jac_y_uhat[i]);
 			if (set_fun_status != 0) exit(1);
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z", &f_lo_jac_x1_x1dot_u_z[i]);
+		}
 		else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
 		{
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
