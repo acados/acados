@@ -23,7 +23,7 @@ are_valid_ocp_dimensions(const map<string, vector<uint>>& dimensions,
     if (dimensions.count("nbu") && dimensions.at("nbu").back() != 0)
         return false;
 
-    int expected_size = dimensions.at("nx").size();
+    auto expected_size = dimensions.at("nx").size();
     for (auto elem : dimensions) {
         if (std::find(valid_names.begin(), valid_names.end(), elem.first) == valid_names.end())
             return false;  // dimension name not valid
@@ -31,7 +31,7 @@ are_valid_ocp_dimensions(const map<string, vector<uint>>& dimensions,
             return false;
     }
 
-    for (int i = 0; i < expected_size; ++i) {
+    for (uint i = 0; i < expected_size; ++i) {
         if (dimensions.at("nbx").at(i) > dimensions.at("nx").at(i))
             return false;
         if (dimensions.at("nbu").at(i) > dimensions.at("nu").at(i))

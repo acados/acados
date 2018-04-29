@@ -25,7 +25,7 @@ namespace acados {
  * ns  - array ""       ""        slack variables
  */
 bool
-are_valid_ocp_dimensions(std::map<std::string, std::vector<uint>> dims, std::vector<std::string> valid_names);
+are_valid_ocp_dimensions(const std::map<std::string, std::vector<uint>>& dims, std::vector<std::string> valid_names);
 
 std::unique_ptr<ocp_qp_dims>
 create_ocp_qp_dimensions_ptr(const std::map<std::string, std::vector<uint>>&);
