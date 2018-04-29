@@ -9,7 +9,8 @@ x = SX.sym('x')
 f = Function('f', [x], [x])
 
 nlp = ocp_nlp()
-nlp.set_model(f)
+a = nlp.set_model(f)
+print(a)
 
 # from models import chen_model
 

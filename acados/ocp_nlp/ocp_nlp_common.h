@@ -43,7 +43,7 @@ typedef struct
 	void **cost;
 	void **dynamics;
 	void **constraints;
-	ocp_qp_dims *qp_solver; // xcond_solver inserad ???
+	ocp_qp_dims *qp_solver;
 	int *nv; // number of primal variables (states+controls+slacks)
 	int *nx; // number of states
 	int *nu; // number of inputs

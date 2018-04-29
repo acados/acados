@@ -78,19 +78,6 @@ namespace std {
 %include "conversions.i"
 %include "ocp_typemaps.i"
 
-%{
-// TODO(dimitris): support compilation with visual studio
-#if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
-#include <windows.h>
-char compiler[16] = "gcc";
-#else
-#include <dlfcn.h>
-char compiler[16] = "cc";
-#endif
-// #include <xmmintrin.h>  // for floating point exceptions
-// _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
-%}
-
 %feature("autodoc", "3");
 %include "ocp_qp.i"
 %include "ocp_nlp.i"

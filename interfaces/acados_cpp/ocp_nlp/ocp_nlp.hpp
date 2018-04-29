@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/utils/types.h"
 #include "acados_cpp/options.hpp"
 
 #include "casadi/casadi.hpp"
@@ -17,6 +19,7 @@ namespace acados {
 class ocp_nlp {
  
  public:
+
     // ocp_nlp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, std::vector<uint> ng,
             // std::vector<uint> nh, std::vector<uint> ns);
 
@@ -30,7 +33,13 @@ class ocp_nlp {
 
     // void set_constraint(const casadi::Function& h);
 
+ private:
+
+    std::unique_ptr<ocp_nlp_in> _ocp_nlp;
+
 };
+
+void *compile_and_load(std::string name);
 
 }  // namespace acados
 

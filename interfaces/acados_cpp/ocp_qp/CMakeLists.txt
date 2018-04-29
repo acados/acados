@@ -1,6 +1,5 @@
 
 set(INTERFACES_ACADOS_CPP_OCP_QP_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp_dimensions.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp_solution.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp.cpp)
 
