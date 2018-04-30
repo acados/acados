@@ -429,7 +429,7 @@ int main()
 		int acados_return;
 
 		if (nss == 3) // for gnsf: perform precomputation
-			gnsf_precompute(gnsf_dim, in->model, opts, sim_solver->work, in->T);
+			gnsf_precompute(config, gnsf_dim, in->model, opts, sim_solver->work, in->T);
 
 
 		acados_timer timer;

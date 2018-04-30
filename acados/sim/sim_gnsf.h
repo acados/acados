@@ -232,8 +232,8 @@ void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_funct
 void gnsf_get_dims( sim_gnsf_dims* dims, casadi_function_t get_ints_fun); // maybe remove
 
 // precomputation
-void *gnsf_cast_pre_workspace(sim_gnsf_dims* dims, sim_rk_opts *opts, void *raw_memory);
-void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, void* work_, double T);
+void *gnsf_cast_pre_workspace(void* config_, sim_gnsf_dims *dims, void* opts, void *raw_memory);
+void gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, void* work_, double T);
 
 // workspace & memory
 int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args);

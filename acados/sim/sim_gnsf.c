@@ -615,7 +615,10 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
 * GNSF PRECOMPUTATION
 ************************************************/
 
-void *gnsf_cast_pre_workspace(sim_gnsf_dims* dims, sim_rk_opts *opts, void *raw_memory){
+// void *gnsf_cast_pre_workspace(sim_gnsf_dims* dims, sim_rk_opts *opts, void *raw_memory)
+void *gnsf_cast_pre_workspace(void* config_, sim_gnsf_dims *dims_, void * opts_, void *raw_memory){
+    sim_gnsf_dims* dims = (sim_gnsf_dims *) dims_;
+    sim_rk_opts* opts = (sim_rk_opts *) opts_;
     int nu         = dims->nu;
     int nx1        = dims->nx1;
     int nx2        = dims->nx2;
@@ -680,13 +683,13 @@ void *gnsf_cast_pre_workspace(sim_gnsf_dims* dims, sim_rk_opts *opts, void *raw_
     assign_and_advance_blasfeo_dmat_mem(nK2, nK2, &work->M2, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nK2, nx2, &work->dK2_dx2_work, &c_ptr);
 
-    assert((char*)raw_memory + gnsf_pre_workspace_calculate_size(dims, opts) >= c_ptr);
+    assert((char*)raw_memory + sim_gnsf_workspace_calculate_size(config_, dims, opts) >= c_ptr);
     return (void *) work;
 }
 
 
 
-void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, void *work_, double T){
+void gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, void *work_, double T){
     acados_timer atimer;
     acados_tic(&atimer);
     int nu         = dims->nu;
@@ -706,7 +709,7 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
     int nZ  = num_stages * nz;
 
     // set up precomputation workspace
-    gnsf_pre_workspace *work = (gnsf_pre_workspace *) gnsf_cast_pre_workspace(dims, opts, work_);
+    gnsf_pre_workspace *work = (gnsf_pre_workspace *) gnsf_cast_pre_workspace(config, dims, opts, work_);
 
     double dt = T/num_steps;
     model->dt = dt;

@@ -836,9 +836,12 @@ int main()
 
 			// import model matrices
 			gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
-			
+
+			// get sim_solver_onfig
+			sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
+
 			// precompute
-			gnsf_precompute(gnsf_dims, model, sim_opts, solver->work, nlp_in->Ts[i]);
+			gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts, solver->work, nlp_in->Ts[i]);
 			// NOTE; solver->work can be used, as it is for sure larger than the workspace
 			//		 needed to precompute, as the latter is part of the first.
 		}
