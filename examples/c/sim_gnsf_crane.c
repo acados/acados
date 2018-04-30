@@ -181,13 +181,15 @@ int main() {
     model->phi_jac_y_uhat = (external_function_generic *) &phi_jac_y_uhat;
     external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
     gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
-    gnsf_precompute(gnsf_dim, model, opts, in->T);
+
+    sim_solver *sim_solver = sim_create(config, dims, opts);
+
+    gnsf_precompute(gnsf_dim, model, opts, sim_solver->work, in->T);
 
     // gnsf_import_precomputed(gnsf_dim, model, But_KK_YY_ZZ_LO_fun);
 
     // set up sim_out
     sim_out *out = sim_out_create(config, dims);
-    sim_solver *sim_solver = sim_create(config, dims, opts);
 
     int NREP = 10000;
     double casadi_times[NREP];
