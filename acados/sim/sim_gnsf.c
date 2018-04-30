@@ -615,74 +615,6 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
 * GNSF PRECOMPUTATION
 ************************************************/
 
-int gnsf_pre_workspace_calculate_size(sim_gnsf_dims *dims, sim_rk_opts *opts)
-{
-    int nu         = dims->nu;
-    int nx1        = dims->nx1;
-    int nx2        = dims->nx2;
-    int nz         = dims->nz;
-    int n_out      = dims->n_out;
-    int ny         = dims->ny;
-    // int nuhat      = dims->nuhat;
-    int num_stages = opts->ns;
-
-    int nff = num_stages * n_out;
-    int nyy = num_stages * ny;
-    int nK1 = num_stages * nx1;
-    int nK2 = num_stages * nx2;
-    int nZ  = num_stages * nz;
-
-    int pre_size = sizeof(gnsf_pre_workspace);
-
-    make_int_multiple_of(8, &pre_size);
-    pre_size += 1 * 8;
-
-    pre_size += (2*nZ + nK1) * sizeof(int); //ipivEE1, ipivEE2, ipivQQ1
-    pre_size += nK2 * sizeof(int); //ipivM2
-
-    make_int_multiple_of(64, &pre_size);
-    pre_size += 1 * 64;
-
-    pre_size += blasfeo_memsize_dmat(nx1, nx1); // E11
-    pre_size += blasfeo_memsize_dmat(nx1, nz);  // E12
-    pre_size += blasfeo_memsize_dmat(nz , nx1); // E21
-    pre_size += blasfeo_memsize_dmat(nz , nz);  // E22
-
-    pre_size += blasfeo_memsize_dmat(nx1, nx1);   // A1
-    pre_size += blasfeo_memsize_dmat(nz , nx1);   // A2
-    pre_size += blasfeo_memsize_dmat(nx1, nu);    // B1
-    pre_size += blasfeo_memsize_dmat(nz , nu);    // B2
-    pre_size += blasfeo_memsize_dmat(nx1, n_out); // C1
-    pre_size += blasfeo_memsize_dmat(nz , n_out); // C2
-
-    pre_size += blasfeo_memsize_dmat(nK1, nx1); // AA1
-    pre_size += blasfeo_memsize_dmat(nZ , nx1); // AA2
-    pre_size += blasfeo_memsize_dmat(nK1, nu);  // BB1
-    pre_size += blasfeo_memsize_dmat(nZ , nu);  // BB2
-
-    pre_size += blasfeo_memsize_dmat(nK1, nff); // CC1
-    pre_size += blasfeo_memsize_dmat(nZ , nff); // CC2
-    pre_size += blasfeo_memsize_dmat(nK1, nZ);  // DD1
-    pre_size += blasfeo_memsize_dmat(nZ , nK1); // DD2
-
-    pre_size += blasfeo_memsize_dmat(nK1, nK1); // EE1
-    pre_size += blasfeo_memsize_dmat(nZ , nZ ); // EE2
-
-    pre_size += blasfeo_memsize_dmat(nZ , nZ ); // QQ1
-
-    pre_size += blasfeo_memsize_dmat(nyy, nZ ); // LLZ
-    pre_size += blasfeo_memsize_dmat(nyy, nx1); // LLx
-    pre_size += blasfeo_memsize_dmat(nyy, nK1); // LLK
-
-    pre_size += blasfeo_memsize_dmat(nK2, nK2 ); // M2
-    pre_size += blasfeo_memsize_dmat(nK2, nx2 ); // dK2_dx2_work
-
-    make_int_multiple_of(8, &pre_size);
-    pre_size += 1 * 8;
-    return pre_size;
-}
-
-
 void *gnsf_cast_pre_workspace(sim_gnsf_dims* dims, sim_rk_opts *opts, void *raw_memory){
     int nu         = dims->nu;
     int nx1        = dims->nx1;
@@ -774,8 +706,6 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
     int nZ  = num_stages * nz;
 
     // set up precomputation workspace
-    // int pre_workspace_size = gnsf_pre_workspace_calculate_size(dims, opts);
-    // void *pre_work_ = malloc(pre_workspace_size);
     gnsf_pre_workspace *work = (gnsf_pre_workspace *) gnsf_cast_pre_workspace(dims, opts, work_);
 
     double dt = T/num_steps;
@@ -1016,14 +946,13 @@ void gnsf_precompute(sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, 
 
     blasfeo_dgemm_nn(nK2, nx2, nK2, 1.0, &M2inv, 0, 0, &dK2_dx2_work, 0, 0, 0.0, &YYf, 0, 0, &dK2_dx2, 0, 0);
 
-    // free(pre_work_);
     // double precomputation_time = acados_toc(&atimer) * 1000;
 
     // printf("time 2 precompute = %f [ms]\n", precomputation_time);
 }
 
 /************************************************
-* workspace
+* memory & workspace
 ************************************************/
 
 int sim_gnsf_memory_calculate_size(void *config, void *dims, void *opts_)
@@ -1171,11 +1100,12 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args)
     size += blasfeo_memsize_dmat(nx, nx ); // dPsi_dx
     size += blasfeo_memsize_dmat(nx, nu ); // dPsi_du
 
-    size += blasfeo_memsize_dmat(nff, ny+nuhat);// dPHI_dyuhat TODO
+    size += blasfeo_memsize_dmat(nff, ny+nuhat);// dPHI_dyuhat
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
+    /* take maximum of both workspace sizes */
     size = (size > pre_size) ? size : pre_size;
 
     return size;
