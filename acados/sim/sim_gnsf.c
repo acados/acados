@@ -94,226 +94,51 @@ void sim_gnsf_get_nu(void *dims_, int* nu)
 * import functions
 ************************************************/
 
-void gnsf_get_dims( sim_gnsf_dims *dims, casadi_function_t get_ints_fun)
-{
-    double *ints_out;
-    ints_out = (double*) calloc(10,sizeof(double));
-    export_from_ML_wrapped(ints_out, ints_out, get_ints_fun);
-
-    dims->nx        = (int) ints_out[0];
-    dims->nu        = (int) ints_out[1]; 
-    dims->nz        = (int) ints_out[2];
-    dims->nx1       = (int) ints_out[3];
-    dims->nx2       = (int) ints_out[4];
-    dims->n_out     = (int) ints_out[5];
-    dims->ny        = (int) ints_out[6];
-    dims->nuhat     = (int) ints_out[7];
-    dims->num_stages= (int) ints_out[8];
-    dims->num_steps = (int) ints_out[9];
-
-    free(ints_out);
-}
-
-
 void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_function_generic *get_matrices_fun)
 {
-    int nu  = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
-    int exported_doubles = 0;
-
-    exported_doubles += (nx1 + nz) * (nx1 + nu + n_out + nx1+nz); // A, B, C, E;
-    exported_doubles += ny * (2*nx1 + nz); // L_x, L_xdot, L_z, L_u;
-    exported_doubles += nuhat * nu; // L_u;
-    exported_doubles += nx2*nx2; // A_LO;
-    // printf("exported_doubles %d= \n",exported_doubles);
-    double *export_in  = (double*) malloc(1*sizeof(double));
-    double *export_out = (double*) malloc(exported_doubles*sizeof(double));
-
     // calling the external function
     ext_fun_arg_t ext_fun_type_in[1];
 	void *ext_fun_in[1];
-    ext_fun_arg_t ext_fun_type_out[1];
-	void *ext_fun_out[1];
+    ext_fun_arg_t ext_fun_type_out[9];
+	void *ext_fun_out[9];
 
     ext_fun_type_in[0] = COLMAJ;
-    ext_fun_in[0] = export_in; // x: 
+    ext_fun_in[0] = model->A_dt; // just to have some input;
+
     ext_fun_type_out[0] = COLMAJ;
-    ext_fun_out[0] = export_out; // fun: nx
+    ext_fun_type_out[1] = COLMAJ;
+    ext_fun_type_out[2] = COLMAJ;
+    ext_fun_type_out[3] = COLMAJ;
+    ext_fun_type_out[4] = COLMAJ;
+    ext_fun_type_out[5] = COLMAJ;
+    ext_fun_type_out[6] = COLMAJ;
+    ext_fun_type_out[7] = COLMAJ;
+    ext_fun_type_out[8] = COLMAJ;
+
+    ext_fun_out[0] = model->A;
+    ext_fun_out[1] = model->B;
+    ext_fun_out[2] = model->C;
+    ext_fun_out[3] = model->E;
+    ext_fun_out[4] = model->L_x;
+    ext_fun_out[5] = model->L_xdot;
+    ext_fun_out[6] = model->L_z;
+    ext_fun_out[7] = model->L_u;
+    ext_fun_out[8] = model->A_LO;
+
 
     get_matrices_fun->evaluate(get_matrices_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-
-    double *read_mem = export_out;
-
-    // A, B, C, E
-    for (int ii = 0; ii < (nx1+nz)*nx1; ii++)
-        model->A[ii] = read_mem[ii];
-    read_mem += (nx1+nz)*nx1;
-
-    for (int ii = 0; ii < (nx1+nz)*nu; ii++) {
-        model->B[ii] = read_mem[ii];
-    }
-    read_mem += (nx1+nz)*nu;
-
-    for (int ii = 0; ii < (nx1+nz)*n_out; ii++) {
-        model->C[ii] = read_mem[ii];
-    }
-    read_mem += (nx1+nz)*n_out;
-
-    for (int ii = 0; ii < (nx1+nz)*(nx1+nz); ii++) {
-        model->E[ii] = read_mem[ii];
-    }
-    read_mem += (nx1+nz)*(nx1+nz);   
-
-    // L_x, L_xdot, L_z
-    for (int ii = 0; ii < ny*nx1; ii++) {
-        model->L_x[ii] = read_mem[ii];
-    }
-    read_mem += ny*nx1;
-
-    for (int ii = 0; ii < ny*nx1; ii++) {
-        model->L_xdot[ii] = read_mem[ii];
-    }
-    read_mem += ny*nx1;
-
-    for (int ii = 0; ii < ny*nz; ii++) {
-        model->L_z[ii] = read_mem[ii];
-    }
-    read_mem += ny*nz;
-
-    // L_u
-    for (int ii = 0; ii < nuhat*nu; ii++) {
-        model->L_u[ii] = read_mem[ii];
-    }
-    read_mem += nuhat*nu;
-
-    // A_LO
-    for (int ii = 0; ii < nx2*nx2; ii++) {
-        model->A_LO[ii] = read_mem[ii];
-    }
-    read_mem += nx2*nx2;
-
-    // printf("\n adress of read mem %p\n",(void*)read_mem);
-    // printf("\n adress of exp out %p\n",(void*)export_out);
-    free(export_in);
-    free(export_out);
 }
-
-
 
 /************************************************
-* OUTDATED FUNCTION: THIS WAS CODED, WHEN HAVING AN OLD GNSF STRUCTURE
-* 
-* developers will decide if a working version of this function is needed
+* OUTDATED FUNCTIONS: the following functions were implemented
+* before some major changes were applied, maybe similar
+* functionalities will be implemented at some point:
 ************************************************/
-// this function can be used instead of import_matrices + precompute (ATTENTION!!!)
+// void gnsf_get_dims( sim_gnsf_dims *dims, casadi_function_t get_ints_fun)
+
 // void gnsf_import_precomputed(sim_gnsf_dims* dims, gnsf_model *model, casadi_function_t But_KK_YY_ZZ_LO_fun)
-// {
-//     acados_timer atimer;
-//     acados_tic(&atimer);
-//     int nu  = dims->nu;
-//     int nx1 = dims->nx1;
-//     int nx2 = dims->nx2;
-//     int nz = dims->nz;
-//     int n_out = dims->n_out;
-//     int ny = dims->ny;
-//     // int nuhat = dims->nuhat;
-//     int num_stages = dims->num_stages;
+// this function can be used instead of import_matrices + precompute (not working now, ATTENTION!!!)
 
-//     int nK1 = num_stages * nx1;
-//     int nK2 = num_stages * nx2;
-//     int nZ  = num_stages * nz;
-//     int nff = n_out * num_stages;
-//     int nyy = ny    * num_stages;
-
-//     // double *out;
-//     int exported_doubles = 0;
-//     exported_doubles += num_stages * (num_stages +2); // Butcher matrices
-//     exported_doubles += nK1 * (nff + nx1 + nu); // KK* matrices
-//     exported_doubles += nyy * (nff + nx1 + nu); // YY* matrices
-//     exported_doubles += nZ * (nff + nx1 + nu); // ZZ* matrices
-//     exported_doubles += nK2 * (nK2 + nx2) + nx2 * nx2; // LO matrices
-
-//     // printf("exported_%d \n",exported_doubles);
-//     double *export_in  = (double*) malloc(1*sizeof(double));
-//     double *export_out = (double*) malloc(exported_doubles*sizeof(double));
-//     export_from_ML_wrapped(export_in, export_out, But_KK_YY_ZZ_LO_fun);
-
-//     double *read_mem = export_out;
-
-//     // IMPORT BUTCHER
-//     for (int ii = 0; ii < num_stages*num_stages; ii++) {
-//         model->A_dt[ii] = read_mem[ii];
-//     }
-//     read_mem += num_stages*num_stages;
-
-//     for (int ii = 0; ii < num_stages; ii++) {
-//         model->b_dt[ii] = read_mem[ii];
-//     }
-//     read_mem += num_stages;
-
-//     for (int ii = 0; ii < num_stages; ii++) {
-//         model->c[ii] = read_mem[ii];
-//     }
-//     read_mem += num_stages;
-
-//     // IMPORT KKmat
-//     blasfeo_pack_dmat(nK1, nff, read_mem, nK1, &model->KKf, 0, 0);
-//     read_mem += nK1 * nff;
-//     blasfeo_pack_dmat(nK1, nx1, read_mem, nK1, &model->KKx, 0, 0);
-//     read_mem += nK1 * nx1;
-//     blasfeo_pack_dmat(nK1, nu,  read_mem, nK1, &model->KKu, 0, 0);
-//     read_mem += nK1 * nu;
-
-//     // IMPORT YYmat
-//     blasfeo_pack_dmat(nyy, nff, read_mem, nyy, &model->YYf, 0, 0);
-//     read_mem += nyy * nff;
-//     blasfeo_pack_dmat(nyy, nx1, read_mem, nyy, &model->YYx, 0, 0);
-//     read_mem += nyy * nx1;
-//     blasfeo_pack_dmat(nyy, nu,  read_mem, nyy, &model->YYu, 0, 0);
-//     read_mem += nyy * nu;
-
-//     // IMPORT ZZmat
-//     blasfeo_pack_dmat(nZ, nff, read_mem, nZ, &model->ZZf, 0, 0);
-//     read_mem += nZ * nff;
-//     blasfeo_pack_dmat(nZ, nx1, read_mem, nZ, &model->ZZx, 0, 0);
-//     read_mem += nZ * nx1;
-//     blasfeo_pack_dmat(nZ, nu,  read_mem, nZ, &model->ZZu, 0, 0);
-//     read_mem += nZ * nu;
-
-//     // IMPORT LO matrices
-//     blasfeo_pack_dmat(nx2, nx2, read_mem, nx2, &model->ALO, 0, 0);
-//     read_mem += nx2 * nx2;
-//     blasfeo_pack_dmat(nK2, nK2, read_mem, nK2, &model->M2inv, 0, 0);
-//     read_mem += nK2 * nK2;
-//     blasfeo_pack_dmat(nK2, nx2, read_mem, nx2, &model->dK2_dx2, 0, 0);
-//     read_mem += nK2 * nx2;
-
-//     free(export_out);
-//     free(export_in);
-// }
-
-void export_from_ML_wrapped(const double *in, double *out, casadi_function_t import_fun){
-    
-    int casadi_mem = 0;
-    int *casadi_iw = NULL;
-    double *casadi_w = NULL;
-
-    double *ints_out = out;
-
-    const double *casadi_arg[1];
-    double *casadi_res[1];
-
-    casadi_arg[0] = in;
-
-    casadi_res[0] = ints_out;
-
-    import_fun(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
-}
 
 
 /************************************************
