@@ -404,11 +404,31 @@ bool is_string(LangObject *input) {
 #endif
 }
 
+std::string string_from(LangObject *input) {
+    const char *string;
+#if defined(SWIGMATLAB)
+    string = mxArrayToUTF8String(input);
+    if (string == NULL)
+        throw std::runtime_error("Error during string conversion.");
+#elif defined(SWIGPYTHON)
+    string = PyUnicode_AsUTF8(input);
+#endif
+    return std::string(string);
+}
+
 bool is_boolean(LangObject *input) {
 #if defined(SWIGMATLAB)
     return mxIsLogicalScalar(input);
 #elif defined(SWIGPYTHON)
     return PyBool_Check(input);
+#endif
+}
+
+bool boolean_from(LangObject *input) {
+#if defined(SWIGMATLAB)
+    return mxIsLogicalScalarTrue(input)
+#elif defined(SWIGPYTHON)
+    return PyObject_IsTrue(input);
 #endif
 }
 
@@ -752,7 +772,9 @@ option_t *as_option_ptr(LangObject *val) {
     else if (is_real(val))
         return new option<double>(real_from(val));
     else if (is_boolean(val))
-        return new option<bool>(val);
+        return new option<bool>(bool_from(val));
+    else if (is_string(val))
+        return new option<std::string>(string_from(val));
     else throw std::invalid_argument("Option does not have a valid type");
 }
 

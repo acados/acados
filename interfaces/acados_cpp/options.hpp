@@ -63,8 +63,32 @@ public:
     }
 
     ~option() override = default;
+
 private:
     T value;
+};
+
+template<>
+class option<std::string> : public option_t {
+public:
+    option(std::string val) : value(val) {}
+
+    inline std::string repr() override {
+        return value;
+    }
+
+    inline int as_int() override {
+        return 0;
+    }
+
+    inline double as_double() override {
+        return 0;
+    }
+
+    ~option() override = default;
+
+private:
+    std::string value;
 };
 
 template<>

@@ -5,12 +5,17 @@ from scipy.linalg import block_diag
 from casadi import SX, Function, vertcat
 from acados import ocp_nlp
 
-x = SX.sym('x')
-f = Function('f', [x], [x])
+x = SX.sym('x', 2)
+u = SX.sym('u')
+f = Function('f', [x, u], [x])
 
-nlp = ocp_nlp()
-a = nlp.set_model(f)
-print(a)
+N, nx, nu = 5, 2, 1
+
+nlp = ocp_nlp(N, nx, nu)
+nlp.set_dynamics(f, {'integrator': 'rk4', 'dt': 0.1})
+# nlp.set_constraint()
+
+
 
 # from models import chen_model
 
