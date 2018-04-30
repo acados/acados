@@ -21,31 +21,34 @@ class ocp_qp {
 
 public:
 
-    ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, std::vector<uint> nbu,
-           std::vector<uint> ng, std::vector<uint> ns);
+    ocp_qp(std::vector<int> nx, std::vector<int> nu, std::vector<int> nbx, std::vector<int> nbu,
+           std::vector<int> ng, std::vector<int> ns);
 
-    ocp_qp(uint N, uint nx, uint nu, uint nbx = 0, uint nbu = 0, uint ng = 0, uint ns = 0);
+    ocp_qp(int N, int nx, int nu, int nbx = 0, int nbu = 0, int ng = 0, int ns = 0);
 
     std::vector< std::vector<double> > get_field(std::string field);
-    void set_field(std::string field, uint stage, std::vector<double> v);
+    
+    void set_field(std::string field, int stage, std::vector<double> v);
+    
     void set_field(std::string field, std::vector<double> v);
-    std::pair<uint, uint> shape_of_field(std::string field, uint stage);
+    
+    std::pair<int, int> shape_of_field(std::string field, int stage);
 
     void initialize_solver(std::string solver_name, std::map<std::string, option_t *> options = {});
 
     ocp_qp_solution solve();
 
-    std::map<std::string, std::vector<uint>> dimensions();
+    std::map<std::string, std::vector<int>> dimensions();
 
     const std::vector<std::string> fields {
         "Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"
     };
 
-    const uint N;
+    const int N;
 
 private:
 
-    vector<uint> idxb(vector<double> lower_bound, vector<double> upper_bound);
+    vector<int> idxb(vector<double> lower_bound, vector<double> upper_bound);
 
     void fill_in_bounds();
 
@@ -53,17 +56,17 @@ private:
 
     void expand_dimensions();
 
-    std::vector<std::vector<uint>> bounds_indices(std::string name);
+    std::vector<std::vector<int>> bounds_indices(std::string name);
 
-    void set_bounds_indices(std::string name, uint stage, std::vector<uint> v);
+    void set_bounds_indices(std::string name, int stage, std::vector<int> v);
 
-    bool in_range(std::string field, uint stage);
+    bool in_range(std::string field, int stage);
 
-    std::vector<uint> nx();
-    std::vector<uint> nu();
-    std::vector<uint> nbx();
-    std::vector<uint> nbu();
-    std::vector<uint> ng();
+    std::vector<int> nx();
+    std::vector<int> nu();
+    std::vector<int> nbx();
+    std::vector<int> nbu();
+    std::vector<int> ng();
 
     std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
 

@@ -37,7 +37,7 @@
 
 %extend acados::ocp_qp {
 
-    ocp_qp(uint N = 10, uint nx = 2, uint nu = 1, uint ng = 0) {
+    ocp_qp(int N = 10, int nx = 2, int nu = 1, int ng = 0) {
         return new acados::ocp_qp(N, nx, nu, nx, nu, ng);
     }
 

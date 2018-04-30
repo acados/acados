@@ -76,8 +76,6 @@ mxClassID get_numeric_type() {
         return mxDOUBLE_CLASS;
     else if (typeid(T) == typeid(int_t))
         return mxDOUBLE_CLASS;
-    else if (typeid(T) == typeid(uint))
-        return mxDOUBLE_CLASS;
     throw std::invalid_argument("Matrix can only have integer or floating point entries");
     return mxUNKNOWN_CLASS;
 }

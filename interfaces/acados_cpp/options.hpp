@@ -92,11 +92,7 @@ private:
     std::map<std::string, option_t *> value;
 };
 
-}  // namespace acados
-
-namespace std {
-
-inline string to_string(acados::option_t *opt) {
+inline std::string to_string(acados::option_t *opt) {
     return opt->repr();
 }
 
@@ -112,6 +108,6 @@ inline std::map<std::string, acados::option_t *>& to_map(acados::option_t *opt) 
     return opt->as_map();
 }
 
-}  // namespace std
+}  // namespace acados
 
 #endif  // ACADOS_INTERFACES_ACADOS_CPP_OPTIONS_HPP_

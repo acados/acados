@@ -33,10 +33,6 @@ typedef PyObject LangObject;
 #define NONE Py_None
 #endif
 
-%{
-typedef unsigned int uint;
-%}
-
 %include "acados/utils/types.h"
 
 %include "std_string.i"
@@ -44,19 +40,18 @@ typedef unsigned int uint;
 %include "std_vector.i"
 namespace std {
     %template(vector_i) vector<int>;
-    %template(vector_u) vector<uint>;
     %template(vector_string) vector<string>;
     %template(vector_O) vector<LangObject *>;
 };
 
 %include "std_pair.i"
 namespace std {
-    %template(pair_ii) pair<uint, uint>;
+    %template(pair_ii) pair<int, int>;
 }
 
 %include "std_map.i"
 namespace std {
-    %template(map_si) map< string, vector<uint> >;
+    %template(map_si) map< string, vector<int> >;
 }
 
 #if defined(SWIGPYTHON)
