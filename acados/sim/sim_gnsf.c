@@ -140,12 +140,11 @@ void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_funct
 // this function can be used instead of import_matrices + precompute (not working now, ATTENTION!!!)
 
 
-
 /************************************************
 * helpful functions
 ************************************************/
 
-static void gnsf_neville(double *out, double xx, int n, double *x, double *Q){ // Neville scheme
+static void sim_gnsf_neville(double *out, double xx, int n, double *x, double *Q){ // Neville scheme
 // writes value of interpolating polynom corresponding to the nodes x and Q evaluated evaluated at xx into out
         for (int i = n; i>0; i--) {
             for (int j = 0; j < i; j++) {
@@ -785,7 +784,6 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     sim_rk_opts *opts = opts_;
 
     // necessary integers
-    int nx      = dims->nx;
     int nu      = dims->nu;
     int nx1     = dims->nx1;
     int nx2     = dims->nx2;
@@ -795,8 +793,6 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     int nuhat   = dims->nuhat;
 
     int num_stages = opts->ns;
-    int num_steps  = opts->num_steps;
-    int newton_max = opts->newton_iter;
 
     int nff = num_stages * n_out;
     int nyy = num_stages * ny;
@@ -1098,7 +1094,7 @@ static void *sim_gnsf_cast_workspace(void *config, void* dims_, void *opts_, voi
     return (void *)workspace;
 }
 
-int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_, void *work_)
+int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, void *work_)
 {
     acados_timer tot_timer, casadi_timer, la_timer;
     acados_tic(&tot_timer);
@@ -1517,7 +1513,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_
         for (int jj = 0; jj < num_stages; jj++) {
             Z_work[jj] = blasfeo_dvecex1(&Z_val[0], nz*ii+jj); //values of Z_ii in first step, use Z_work
         }
-        gnsf_neville(&Z_out[ii], 0.0, num_stages-1, mem->c, Z_work);
+        sim_gnsf_neville(&Z_out[ii], 0.0, num_stages-1, mem->c, Z_work);
     }
 
     /************************************************
@@ -1620,7 +1616,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_
 void sim_gnsf_config_initialize_default(void *config_)
 {
 	sim_solver_config *config = config_;
-	config->evaluate = &gnsf_simulate;
+	config->evaluate = &sim_gnsf;
     // opts
 	config->opts_calculate_size = &sim_gnsf_opts_calculate_size;
 	config->opts_assign = &sim_gnsf_opts_assign;

@@ -105,8 +105,8 @@ typedef struct { // pre_workspace - workspace used in the precomputation phase
     struct blasfeo_dmat dK2_dx2_work;
 
     int *ipivEE1; // index of pivot vector
-    int *ipivEE2; // index of pivot vector
-    int *ipivQQ1; // index of pivot vector
+    int *ipivEE2;
+    int *ipivQQ1;
     int* ipivM2;
 } gnsf_pre_workspace;
 
@@ -237,6 +237,6 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
 void sim_gnsf_config_initialize_default(void *config_);
 
 // integrator
-int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *opts, void *mem_, void *work_);
+int sim_gnsf(void *config, sim_in *in, sim_out *out, void *opts, void *mem_, void *work_);
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_
