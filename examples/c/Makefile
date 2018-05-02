@@ -152,6 +152,7 @@ WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_xdot.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_u.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_fun_jac_x_xdot.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_fun_jac_x_xdot_u.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_xdot_u.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_u.o
 WT_NX6_OBJS += wt_model_nx6/phi_fun.o
@@ -179,6 +180,7 @@ WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_xdot.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_u.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_u.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun.o
@@ -351,6 +353,7 @@ CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_chain_nm2.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_xdot_chain_nm2.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_u_chain_nm2.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm2.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm2.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm2.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_u_chain_nm2.o
 # 3 masses
@@ -359,6 +362,7 @@ CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_chain_nm3.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_xdot_chain_nm3.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_u_chain_nm3.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm3.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm3.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm3.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_u_chain_nm3.o
 # 4 masses
@@ -367,6 +371,7 @@ CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_chain_nm4.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_xdot_chain_nm4.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_u_chain_nm4.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm4.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm4.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm4.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_u_chain_nm4.o
 # 5 masses
@@ -375,6 +380,7 @@ CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_chain_nm5.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_xdot_chain_nm5.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_u_chain_nm5.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm5.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm5.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm5.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_u_chain_nm5.o
 # 6 masses
@@ -383,6 +389,7 @@ CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_chain_nm6.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_xdot_chain_nm6.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_u_chain_nm6.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm6.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm6.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_u_chain_nm6.o
 
