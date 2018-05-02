@@ -220,18 +220,6 @@ int main()
 	int ny_ = 4;
 
 	int np = 1; // number of local parametrs for each dynamics model function
-
-	// GNSF import matrices function
-    external_function_casadi get_matrices_fun;
-    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
-    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
-    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
-    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
-    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
-    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
-	external_function_casadi_create(&get_matrices_fun);
-
-	external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
 	
     /************************************************
     * problem dimensions
@@ -536,8 +524,8 @@ int main()
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
         // plan->sim_solver_plan[i].sim_solver = ERK;
 		// plan->sim_solver_plan[i].sim_solver = IRK;
-		// plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
-		plan->sim_solver_plan[i].sim_solver = GNSF;
+		plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+		// plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
@@ -583,8 +571,20 @@ int main()
 	external_function_param_casadi_create_array(NN, phi_jac_y_uhat, np);
 	external_function_param_casadi_create_array(NN, f_lo_jac_x1_x1dot_u_z, np);
 
-	int gnsf_num_stages = 5;
-	int gnsf_num_steps  = 2;
+	int gnsf_num_stages = 4;
+	int gnsf_num_steps  = 1;
+
+	// GNSF import matrices function
+    external_function_casadi get_matrices_fun;
+    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
+	external_function_casadi_create(&get_matrices_fun);
+
+	external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
 
 	for (int i = 0; i < NN; i++)
 	{
@@ -788,6 +788,7 @@ int main()
 		{
 			sim_opts->ns = gnsf_num_stages;
 			sim_opts->num_steps = gnsf_num_steps;
+			sim_opts->newton_iter = 1;
 			sim_opts->jac_reuse = true;
 		}
     }
