@@ -103,7 +103,7 @@ void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_funct
 	void *ext_fun_out[9];
 
     ext_fun_type_in[0] = COLMAJ;
-    ext_fun_in[0] = model->A_dt; // just to have some input;
+    ext_fun_in[0] = model->A; // just to have some input;
 
     ext_fun_type_out[0] = COLMAJ;
     ext_fun_type_out[1] = COLMAJ;
@@ -272,23 +272,22 @@ void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
 
 int sim_gnsf_model_calculate_size(void *config, void *dims_)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_; // typecasting works as sim_gnsf_dims has entries of sim_dims at the beginning
-    int nu  = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int num_stages = dims->num_stages;
-    int ny         = dims->ny;
-    int nuhat      = dims->nuhat;
+    // typecast
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
 
+    // necessary integers
+    int nu      = dims->nu;
+    int nx1     = dims->nx1;
+    int nx2     = dims->nx2;
+    int nz      = dims->nz;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
 
     int size = 0;
     size += sizeof(gnsf_model);
-    // model defining matrices
-    size += num_stages * num_stages * sizeof(double); // A_dt
-    size += 2*num_stages * sizeof(double); // b_dt, c_butcher;
 
+    // model defining matrices
     size += (nx1+nz) * (nx1+nu +n_out + (nx1+nz)) * sizeof(double); // A,B,C,E
 
     size += ny * (2*nx1+nz)* sizeof(double); // L_x, L_xdot, L_z
@@ -305,16 +304,19 @@ int sim_gnsf_model_calculate_size(void *config, void *dims_)
 void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_; // typecasting works as sim_gnsf_dims has entries of sim_dims at the beginning
-    // extract sizes
-    int nu  = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int num_stages = dims->num_stages;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
+
+    // typecast
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+
+    // necessary integers
+    // int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nx1     = dims->nx1;
+    int nx2     = dims->nx2;
+    int nz      = dims->nz;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
 
 	// initial align
 	align_char_to(8, &c_ptr);
@@ -322,11 +324,6 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
 	// struct
     gnsf_model *model = (gnsf_model *) c_ptr;
     c_ptr += sizeof(gnsf_model);
-
-    // assign butcher
-    assign_and_advance_double(num_stages * num_stages, &model->A_dt, &c_ptr);
-    assign_and_advance_double(num_stages, &model->b_dt, &c_ptr);
-    assign_and_advance_double(num_stages, &model->c,    &c_ptr);
 
     // assign model matrices
     assign_and_advance_double((nx1+nz)*nx1     , &model->A, &c_ptr);
@@ -387,6 +384,7 @@ void *gnsf_cast_pre_workspace(void* config_, sim_gnsf_dims *dims_, void * opts_,
     int n_out      = dims->n_out;
     int ny         = dims->ny;
     // int nuhat      = dims->nuhat;
+
     int num_stages = opts->ns;
 
     int nff = num_stages * n_out;
@@ -475,15 +473,15 @@ void gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_
     sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
 
     double dt = T/num_steps;
-    model->dt = dt;
+    mem->dt = dt;
 
     double *A_mat = opts->A_mat;
     double *b_vec = opts->b_vec;
     double *c_vec = opts->c_vec;
 
-    double *c     = model->c;
-    double *b_dt  = model->b_dt;
-    double *A_dt  = model->A_dt;
+    double *c     = mem->c;
+    double *b_dt  = mem->b_dt;
+    double *A_dt  = mem->A_dt;
 
     double *A_LO = model->A_LO;
 
@@ -726,17 +724,20 @@ void gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_
 
 int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
 {
+    // typecast
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = opts_;
-    sim_gnsf_dims* dims = (sim_gnsf_dims *) dims_;
 
-    int nu  = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int num_stages = dims->num_stages;
-    int ny         = dims->ny;
-    int nuhat      = dims->nuhat;
+    // necessary integers
+    int nu      = dims->nu;
+    int nx1     = dims->nx1;
+    int nx2     = dims->nx2;
+    int nz      = dims->nz;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+
+    int num_stages = opts->ns;
 
     int nff = num_stages * n_out;
     int nyy = num_stages * ny;
@@ -745,6 +746,10 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
     int nZ  = num_stages * nz;
 
     int size = sizeof(sim_gnsf_memory);
+
+    // scaled butcher table
+    size += num_stages * num_stages * sizeof(double); // A_dt
+    size += 2*num_stages * sizeof(double); // b_dt, c_butcher;
 
     make_int_multiple_of(64, &size);
     size += 1 * 64;
@@ -775,17 +780,23 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
 {
     char *c_ptr = (char *) raw_memory;
 
+    // typecast
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = opts_;
-    sim_gnsf_dims* dims = (sim_gnsf_dims *) dims_;
 
-    int nu  = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int num_stages = dims->num_stages;
-    int ny         = dims->ny;
-    int nuhat      = dims->nuhat;
+    // necessary integers
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nx1     = dims->nx1;
+    int nx2     = dims->nx2;
+    int nz      = dims->nz;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+
+    int num_stages = opts->ns;
+    int num_steps  = opts->num_steps;
+    int newton_max = opts->newton_iter;
 
     int nff = num_stages * n_out;
     int nyy = num_stages * ny;
@@ -796,6 +807,11 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
 	// struct
     sim_gnsf_memory *mem = (sim_gnsf_memory *) c_ptr;
     c_ptr += sizeof(sim_gnsf_memory);
+
+    // assign scaled butcher table
+    assign_and_advance_double(num_stages * num_stages, &mem->A_dt, &c_ptr);
+    assign_and_advance_double(num_stages, &mem->b_dt, &c_ptr);
+    assign_and_advance_double(num_stages, &mem->c,    &c_ptr);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
@@ -825,19 +841,24 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
 }
 
 
-int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args)
+int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_; // typecasting works as sim_gnsf_dims has entries of sim_dims at the beginning
-    int nx  = dims->nx;
-    int nu  = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
-    int num_stages = dims->num_stages;
-    int num_steps = dims->num_steps;
+    // typecast
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    sim_rk_opts *opts = opts_;
+
+    // necessary integers
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nx1     = dims->nx1;
+    int nx2     = dims->nx2;
+    int nz      = dims->nz;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+
+    int num_stages = opts->ns;
+    int num_steps  = opts->num_steps;
 
     int nff = num_stages * n_out;
     int nyy = num_stages * ny;
@@ -971,26 +992,30 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args)
 }
 
 
-void *sim_gnsf_cast_workspace(void *config, void* dims_, void *raw_memory, void *args)
+static void *sim_gnsf_cast_workspace(void *config, void* dims_, void *opts_, void *raw_memory)
 {
-    sim_gnsf_dims* dims = (sim_gnsf_dims *) dims_;
+    // typecast
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    sim_rk_opts *opts = opts_;
 
-    int nx  = dims->nx;
-    int nu  = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
-    int num_stages = dims->num_stages;
-    int num_steps = dims->num_steps;
+    // necessary integers
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nx1     = dims->nx1;
+    int nx2     = dims->nx2;
+    int nz      = dims->nz;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+
+    int num_stages = opts->ns;
+    int num_steps  = opts->num_steps;
 
     int nff = num_stages * n_out;
+    int nyy = num_stages * ny;
     int nK1 = num_stages * nx1;
     int nK2 = num_stages * nx2;
     int nZ  = num_stages * nz;
-    int nyy = num_stages * ny;
 
     char *c_ptr = (char *)raw_memory;
     gnsf_workspace *workspace = (gnsf_workspace *) c_ptr;
@@ -1068,7 +1093,7 @@ void *sim_gnsf_cast_workspace(void *config, void* dims_, void *raw_memory, void 
     assign_and_advance_blasfeo_dmat_mem(nx,  nx , &workspace->dPsi_dx  , &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx,  nu , &workspace->dPsi_du  , &c_ptr);
  
-    assert((char*)raw_memory + sim_gnsf_workspace_calculate_size(config, dims_, args) >= c_ptr);
+    assert((char*)raw_memory + sim_gnsf_workspace_calculate_size(config, dims_, opts) >= c_ptr);
 
     return (void *)workspace;
 }
@@ -1083,32 +1108,33 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_
     sim_rk_opts *opts = (sim_rk_opts *) args;
     sim_gnsf_dims *dims = (sim_gnsf_dims *) in->dims;
     gnsf_model *model = in->model;
-    gnsf_workspace *workspace = (gnsf_workspace *) sim_gnsf_cast_workspace(config, dims, work_, args);
+    gnsf_workspace *workspace = (gnsf_workspace *) sim_gnsf_cast_workspace(config, dims, opts, work_);
 
-    // helpful integers
-    int nx  = dims->nx;
-    int nu  = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
-    int num_stages = dims->num_stages;
-    int num_steps = dims->num_steps;
-    
-    assert(dims->num_stages == opts->ns && "dims->num_stages not equal opts->ns, check initialization!!!");
-    assert(model->dt == in->T/opts->num_steps && "model->dt not equal to im_in.T/opts->num_steps, check initialization");
+    // necessary integers
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nx1     = dims->nx1;
+    int nx2     = dims->nx2;
+    int nz      = dims->nz;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
 
-    // printf("%d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t", nx, nu, nx1, nx2, nz, n_out, ny, nuhat, num_stages, num_steps);
+    int num_stages = opts->ns;
+    int num_steps  = opts->num_steps;
+    int newton_max = opts->newton_iter;
 
     int nff = num_stages * n_out;
     int nyy = num_stages * ny;
     int nK1 = num_stages * nx1;
     int nK2 = num_stages * nx2;
     int nZ  = num_stages * nz;
+    
+    // assert(dims->num_stages == opts->ns && "dims->num_stages not equal opts->ns, check initialization!!!");
+    assert(mem->dt == in->T/opts->num_steps && "model->dt not equal to im_in.T/opts->num_steps, check initialization");
 
-    int newton_max = opts->newton_iter;
+    // printf("%d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t", nx, nu, nx1, nx2, nz, n_out, ny, nuhat, num_stages, num_steps);
+
 
     // assign variables from workspace
     double *Z_out = workspace->Z_out; // remove when this is part of output
@@ -1163,6 +1189,9 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_
     struct blasfeo_dvec uhat       = workspace->uhat;
 
     // memory - precomputed matrices
+    double *A_dt = mem->A_dt;
+    double *b_dt = mem->b_dt;
+
     struct blasfeo_dmat KKf = mem->KKf;
     struct blasfeo_dmat KKx = mem->KKx;
     struct blasfeo_dmat KKu = mem->KKu;
@@ -1373,7 +1402,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_
         for (int ii = 0; ii < num_stages; ii++){
             blasfeo_daxpy(nx1, 0.0, &x1_val[ss], 0, &x0_traj, ss*nx, &x1_val[ss], nx1 * ii);
             for (int jj = 0; jj <num_stages; jj++) {
-                blasfeo_daxpy(nx1, model->A_dt[ii+num_stages*jj], &K1_val[ss], nx1*jj, &x1_val[ss], nx1*ii, &x1_val[ss], nx1*ii);
+                blasfeo_daxpy(nx1, A_dt[ii+num_stages*jj], &K1_val[ss], nx1*jj, &x1_val[ss], nx1*ii, &x1_val[ss], nx1*ii);
             }
         }
         if (nx2){
@@ -1401,8 +1430,8 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_
         /* Get simulation result */
         blasfeo_daxpy(nx, 0.0, &x0_traj, 0, &x0_traj, nx * ss, &x0_traj, nx * (ss+1));
         for (int ii = 0; ii < num_stages; ii++) {
-            blasfeo_daxpy(nx1, model->b_dt[ii], &K1_val[ss], ii*nx1, &x0_traj, nx * (ss+1) , &x0_traj, nx * (ss+1));
-            blasfeo_daxpy(nx2, model->b_dt[ii], &K2_val    , ii*nx2, &x0_traj, nx1 + nx * (ss+1),  &x0_traj, nx1 + nx * (ss+1));
+            blasfeo_daxpy(nx1, b_dt[ii], &K1_val[ss], ii*nx1, &x0_traj, nx * (ss+1) , &x0_traj, nx * (ss+1));
+            blasfeo_daxpy(nx2, b_dt[ii], &K2_val    , ii*nx2, &x0_traj, nx1 + nx * (ss+1),  &x0_traj, nx1 + nx * (ss+1));
         }
 
         // Forward Sensitivities (via IND)
@@ -1448,7 +1477,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_
                 // BUILD J_G2_wn, J_G2_K1
                 for (int ii = 0; ii < num_stages; ii++) {
                     for (int jj = 0; jj < num_stages; jj++) {
-                        blasfeo_dgecpsc( nx2, nx1, -model->A_dt[ii+ jj*num_stages], &f_LO_jac[ss], ii*nx2, 0, &J_G2_K1, ii*nx2, jj*nx1);
+                        blasfeo_dgecpsc( nx2, nx1, -A_dt[ii+ jj*num_stages], &f_LO_jac[ss], ii*nx2, 0, &J_G2_K1, ii*nx2, jj*nx1);
                     }
                     blasfeo_dgead(nx2, nx1, 1.0, &f_LO_jac[ss], ii*nx2, nx1, &J_G2_K1, ii*nx2, ii*nx1);
                     blasfeo_dgemm_nn( nx2, nx1, nz, 1.0, &f_LO_jac[ss], ii* nx2, 2 * nx1, &dZ_dx1, ii*nz, 0, 0.0, &aux_G2_x1, ii*nx2, 0, &aux_G2_x1, ii*nx2, 0);
@@ -1470,13 +1499,13 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_
                 blasfeo_dgein1(1.0, &dxf_dwn, ii,ii);            
             }
             for (int ii = 0; ii < num_stages; ii++) {
-                blasfeo_dgead(nx1, nx1, model->b_dt[ii], &dK1_dx1, ii * nx1, 0, &dxf_dwn, 0, 0);  // derivatives w.r.t. x1
-                blasfeo_dgead(nx2, nx1, model->b_dt[ii], &dK2_dx1, ii * nx2, 0, &dxf_dwn, nx1, 0);
+                blasfeo_dgead(nx1, nx1, b_dt[ii], &dK1_dx1, ii * nx1, 0, &dxf_dwn, 0, 0);  // derivatives w.r.t. x1
+                blasfeo_dgead(nx2, nx1, b_dt[ii], &dK2_dx1, ii * nx2, 0, &dxf_dwn, nx1, 0);
 
-                blasfeo_dgead(nx2, nx2, model->b_dt[ii], &dK2_dx2, ii * nx2, 0, &dxf_dwn, nx1, nx1);  // derivatives w.r.t. x2
+                blasfeo_dgead(nx2, nx2, b_dt[ii], &dK2_dx2, ii * nx2, 0, &dxf_dwn, nx1, nx1);  // derivatives w.r.t. x2
                 
-                blasfeo_dgead(nx1, nu, model->b_dt[ii], &dK1_du, ii * nx1, 0, &dxf_dwn, 0, nx);  // derivatives w.r.t. u
-                blasfeo_dgead(nx2, nu, model->b_dt[ii], &dK2_du, ii * nx2, 0, &dxf_dwn, nx1, nx);
+                blasfeo_dgead(nx1, nu, b_dt[ii], &dK1_du, ii * nx1, 0, &dxf_dwn, 0, nx);  // derivatives w.r.t. u
+                blasfeo_dgead(nx2, nu, b_dt[ii], &dK2_du, ii * nx2, 0, &dxf_dwn, nx1, nx);
             }
             blasfeo_dgemm_nn(nx, nx, nx, 1.0, &dxf_dwn, 0, 0, &S_forw, 0, 0, 0.0, &S_forw_new, 0, 0, &S_forw_new, 0, 0);
             blasfeo_dgemm_nn(nx, nu, nx, 1.0, &dxf_dwn, 0, 0, &S_forw, 0, nx, 1.0, &dxf_dwn, 0, nx, &S_forw_new, 0, nx);
@@ -1488,7 +1517,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_
         for (int jj = 0; jj < num_stages; jj++) {
             Z_work[jj] = blasfeo_dvecex1(&Z_val[0], nz*ii+jj); //values of Z_ii in first step, use Z_work
         }
-        gnsf_neville(&Z_out[ii], 0.0, num_stages-1, model->c, Z_work);
+        gnsf_neville(&Z_out[ii], 0.0, num_stages-1, mem->c, Z_work);
     }
 
     /************************************************
@@ -1503,7 +1532,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_
                 blasfeo_dgemm_nn(nx2, nx1, nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &ZZx, ii* nz, 0, 0.0, &ZZx, 0, 0, &aux_G2_x1, ii * nx2, 0);
                 blasfeo_dgemm_nn(nx2, nu , nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &ZZu, ii* nz, 0, 0.0, &ZZu, 0, 0, &aux_G2_u , ii * nx2, 0);
                 for (int jj = 0; jj < num_stages; jj++) {
-                    blasfeo_dgecpsc(nx2, nx1, -model->A_dt[ii+jj*num_stages], &f_LO_jac[ss], nx2 * ii, 0, &J_G2_K1, ii*nx2, jj*nx1);
+                    blasfeo_dgecpsc(nx2, nx1, -A_dt[ii+jj*num_stages], &f_LO_jac[ss], nx2 * ii, 0, &J_G2_K1, ii*nx2, jj*nx1);
                 }
                 blasfeo_dgead(nx2, nx1, -1.0, &f_LO_jac[ss], nx2*ii, nx1, &J_G2_K1, nx2*ii, nx1*ii);
             }
@@ -1525,14 +1554,14 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem_
 
             // compute dPsi_d..
             for (int ii = 0; ii < num_stages; ii++) {
-                blasfeo_dgead(nx1, nff, model->b_dt[ii], &KKf, ii*nx1, 0, &dPsi_dff, 0, 0);
-                blasfeo_dgead(nx1, nx1, model->b_dt[ii], &KKx, ii*nx1, 0, &dPsi_dx, 0, 0);
-                blasfeo_dgead(nx1, nu,  model->b_dt[ii], &KKu, ii*nx1, 0, &dPsi_du, 0, 0);
+                blasfeo_dgead(nx1, nff, b_dt[ii], &KKf, ii*nx1, 0, &dPsi_dff, 0, 0);
+                blasfeo_dgead(nx1, nx1, b_dt[ii], &KKx, ii*nx1, 0, &dPsi_dx, 0, 0);
+                blasfeo_dgead(nx1, nu,  b_dt[ii], &KKu, ii*nx1, 0, &dPsi_du, 0, 0);
                 
-                blasfeo_dgead(nx2, nff, model->b_dt[ii], &dK2_dff, ii*nx2, 0, &dPsi_dff, nx1, 0);
-                blasfeo_dgead(nx2, nx1, model->b_dt[ii], &dK2_dx1, ii*nx2, 0, &dPsi_dx, nx1, 0);
-                blasfeo_dgead(nx2, nx2, model->b_dt[ii], &dK2_dx2, ii*nx2, 0, &dPsi_dx, nx1, nx1);
-                blasfeo_dgead(nx2, nu,  model->b_dt[ii], &dK2_du, ii*nx2, 0, &dPsi_du, nx1, 0);            
+                blasfeo_dgead(nx2, nff, b_dt[ii], &dK2_dff, ii*nx2, 0, &dPsi_dff, nx1, 0);
+                blasfeo_dgead(nx2, nx1, b_dt[ii], &dK2_dx1, ii*nx2, 0, &dPsi_dx, nx1, 0);
+                blasfeo_dgead(nx2, nx2, b_dt[ii], &dK2_dx2, ii*nx2, 0, &dPsi_dx, nx1, nx1);
+                blasfeo_dgead(nx2, nu,  b_dt[ii], &dK2_du, ii*nx2, 0, &dPsi_du, nx1, 0);            
             }
             // evaluate jacobian of residual function
             // update yy

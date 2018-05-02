@@ -603,8 +603,6 @@ int main()
 			gnsf_dims->n_out 	= 1;
 			gnsf_dims->ny 		= 8;
 			gnsf_dims->nuhat 	= 2;
-			gnsf_dims->num_stages= gnsf_num_stages;
-			gnsf_dims->num_steps = gnsf_num_steps;
 		}
 	}
 

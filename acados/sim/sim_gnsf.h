@@ -40,11 +40,9 @@ typedef struct
 {
     int nx;
     int nu;
-    int num_stages;
     int nz;
     int nx1;
     int nx2;
-    int num_steps;
     int n_out;
     int ny;
     int nuhat;
@@ -71,16 +69,9 @@ typedef struct
     double *L_z;
     double *L_u;
     double *A_LO;
-
-    // butcher table maybe remove
-    double* A_dt;
-    double* b_dt;
-    double* c;
-    double dt;
-
 } gnsf_model;
 
-typedef struct {
+typedef struct { // pre_workspace - workspace used in the precomputation phase
     struct blasfeo_dmat E11;
     struct blasfeo_dmat E12;
     struct blasfeo_dmat E21;
@@ -118,6 +109,7 @@ typedef struct {
     int *ipivQQ1; // index of pivot vector
     int* ipivM2;
 } gnsf_pre_workspace;
+
 
 typedef struct { //workspace
     double *Z_work; // used to perform computations to get Z_out
@@ -179,6 +171,12 @@ typedef struct { //workspace
 
 typedef struct
 {
+    // scaled butcher table
+    double* A_dt;
+    double* b_dt;
+    double* c;
+    double dt;
+
     // precomputed matrices
     struct blasfeo_dmat KKf;
     struct blasfeo_dmat KKx;
@@ -232,7 +230,6 @@ void gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_
 
 // workspace & memory
 int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args);
-void *sim_gnsf_cast_workspace(void *config, void* dims_, void *raw_memory, void *args);
 int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_);
 void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_memory);
 
