@@ -185,7 +185,7 @@ int main() {
 
     sim_solver *sim_solver = sim_create(config, dims, opts);
 
-    gnsf_precompute(config, gnsf_dim, model, opts, sim_solver->work, in->T);
+    gnsf_precompute(config, gnsf_dim, model, opts, sim_solver->mem, sim_solver->work, in->T);
 
     // gnsf_import_precomputed(gnsf_dim, model, But_KK_YY_ZZ_LO_fun);
 

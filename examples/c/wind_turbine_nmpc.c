@@ -524,8 +524,8 @@ int main()
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
         // plan->sim_solver_plan[i].sim_solver = ERK;
 		// plan->sim_solver_plan[i].sim_solver = IRK;
-		plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
-		// plan->sim_solver_plan[i].sim_solver = GNSF;
+		// plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+		plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
@@ -838,11 +838,19 @@ int main()
 			// import model matrices
 			gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
 
-			// get sim_solver_onfig
+			// get sim_solver_config
 			sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
 
+			// get sim_solver memory
+			ocp_nlp_sqp_memory *mem = solver->mem;
+			ocp_nlp_dynamics_cont_memory* dynamics_mem = (ocp_nlp_dynamics_cont_memory *) mem->dynamics[i];
+			char *mem_ptr = (char *) dynamics_mem;
+			mem_ptr += sizeof(ocp_nlp_dynamics_cont_memory); // mem_ptr now points to the memory of the integrator;
+
+
+
 			// precompute
-			gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts, solver->work, nlp_in->Ts[i]);
+			gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts, mem_ptr, solver->work, nlp_in->Ts[i]);
 			// NOTE; solver->work can be used, as it is for sure larger than the workspace
 			//		 needed to precompute, as the latter is part of the first.
 		}
