@@ -142,7 +142,6 @@ file(GLOB WT_MODEL_NX6P2_SRC
     wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.c
     wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.c
     wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.c
-    wt_model_nx6/nx6p2/impl_ode_jac_x_u.c
 )
 
 # Define examples

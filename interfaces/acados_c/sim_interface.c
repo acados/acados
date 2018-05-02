@@ -115,20 +115,12 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         status = config->model_set_function(model, EXPL_VDE_ADJ, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_fun"))
         status = config->model_set_function(model, IMPL_ODE_FUN, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_jac_x"))
-        status = config->model_set_function(model, IMPL_ODE_JAC_X, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_jac_xdot"))
-        status = config->model_set_function(model, IMPL_ODE_JAC_XDOT, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_jac_u"))
-        status = config->model_set_function(model, IMPL_ODE_JAC_U, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot"))
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u"))
         status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot_u"))
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT_U, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_jac_x_u"))
-        status = config->model_set_function(model, IMPL_ODE_JAC_X_U, fun_ptr);
     else
         return ACADOS_FAILURE;
 
