@@ -84,8 +84,7 @@ static void select_dynamics_wt_casadi(int N,
 	external_function_param_casadi *impl_ode_fun,
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot,
 	external_function_param_casadi *impl_ode_jac_x_xdot_u,
-    external_function_param_casadi *impl_ode_fun_jac_x_xdot_u,
-	external_function_param_casadi *impl_ode_jac_x_u)
+    external_function_param_casadi *impl_ode_fun_jac_x_xdot_u)
 {
 	for (int ii = 0; ii < N; ii++)
 	{
@@ -506,7 +505,7 @@ int main()
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot_u = malloc(NN*sizeof(external_function_param_casadi));
 	external_function_param_casadi *impl_ode_jac_x_u = malloc(NN*sizeof(external_function_param_casadi));
 
-	select_dynamics_wt_casadi(NN, expl_vde_for, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_jac_x_xdot_u, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_u);
+	select_dynamics_wt_casadi(NN, expl_vde_for, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_jac_x_xdot_u, impl_ode_fun_jac_x_xdot_u);
 
 	// explicit model
 	external_function_param_casadi_create_array(NN, expl_vde_for, np);
@@ -515,7 +514,6 @@ int main()
 	external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot, np);
 	external_function_param_casadi_create_array(NN, impl_ode_jac_x_xdot_u, np);
 	external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u, np);
-	external_function_param_casadi_create_array(NN, impl_ode_jac_x_u, np);
 
     /************************************************
     * nlp_in
@@ -578,20 +576,12 @@ int main()
 			if (set_fun_status != 0) exit(1);
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_u", &impl_ode_jac_x_u[i]);
-			if (set_fun_status != 0) exit(1);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
 		{
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot[i]);
-			if (set_fun_status != 0) exit(1);
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
-			if (set_fun_status != 0) exit(1);
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u[i]);
-			if (set_fun_status != 0) exit(1);
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_u", &impl_ode_jac_x_u[i]);
 			if (set_fun_status != 0) exit(1);
 		}
 		else
@@ -745,13 +735,12 @@ int main()
 				{
 					expl_vde_for[ii].set_param(expl_vde_for+ii, wind0_ref+idx+ii);
 				}
-				else if (plan->sim_solver_plan[ii].sim_solver == IRK | plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK)
+				else if ((plan->sim_solver_plan[ii].sim_solver == IRK) | (plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK))
 				{
 					impl_ode_fun[ii].set_param(impl_ode_fun+ii, wind0_ref+idx+ii);
 					impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);
 					impl_ode_jac_x_xdot_u[ii].set_param(impl_ode_jac_x_xdot_u+ii, wind0_ref+idx+ii);
 					impl_ode_fun_jac_x_xdot_u[ii].set_param(impl_ode_fun_jac_x_xdot_u+ii, wind0_ref+idx+ii);
-					impl_ode_jac_x_u[ii].set_param(impl_ode_jac_x_u+ii, wind0_ref+idx+ii);
 				}
 				else
 				{
