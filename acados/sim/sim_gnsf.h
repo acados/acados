@@ -50,14 +50,6 @@ typedef struct
     int nuhat;
 } sim_gnsf_dims;
 
-
-typedef struct {
-    double *ff;
-    double *x0_1;
-    double *u_0;
-} gnsf_res_in;
-
-
 typedef struct
 {
     // external functions
@@ -248,6 +240,5 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *opts, void *mem_
 
 // helpful functions
 double minimum_of_doubles(double *x, int n);
-void gnsf_neville(double *out, double xx, int n, double *x, double *Q);
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

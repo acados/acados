@@ -51,7 +51,7 @@
 The following dynamic system structure is called Generalized Nonlinear Static Feedback structure (GNSF), as it consists of a nonlinear static feedback (NSF) coupled to an index-1 differential algebraic equation (DAE) and a linear output system (LOS). It reads as:
 
 \begin{align*}
-E \matr{c}{\dot{x}\uind{1} \\ z} & = A x\uind{1} + B u + C \phi(\lxdot\dot{x}\uind{1}+ \lx x\uind{1} + \lz z + \lu u)  	\\
+E \matr{c}{\dot{x}\uind{1} \\ z} & = A x\uind{1} + B u + C \phi(\lxdot\dot{x}\uind{1}+ \lx x\uind{1} + \lz z, \lu u)  	\\
 %	&= \bx x\uind{1} + \bu u + \bg g( x\uind{1}, z, u) 	\label{eq:dyn_nlsf_dae_b} \\
 \dot{x}\uind{2} &= \lo x\uind{2} + f(\dot{x}\uind{1}, x\uind{1}, z,u) 
 \end{align*}

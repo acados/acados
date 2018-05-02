@@ -157,7 +157,7 @@ double minimum_of_doubles(double *x, int n){
     return min;
 }
 
-void gnsf_neville(double *out, double xx, int n, double *x, double *Q){ // Neville scheme
+static void gnsf_neville(double *out, double xx, int n, double *x, double *Q){ // Neville scheme
 // writes value of interpolating polynom corresponding to the nodes x and Q evaluated evaluated at xx into out
         for (int i = n; i>0; i--) {
             for (int j = 0; j < i; j++) {
