@@ -46,11 +46,12 @@ typedef struct
     int n_out;
     int ny;
     int nuhat;
+
 } sim_gnsf_dims;
 
 typedef struct
 {
-    // external functions
+    /* external functions */
     // phi: nonlinearity function
     external_function_generic *phi_fun;
     external_function_generic *phi_fun_jac_y;
@@ -58,7 +59,7 @@ typedef struct
     // f_lo: linear output function
     external_function_generic *f_lo_fun_jac_x1_x1dot_u_z;
 
-    // model defining matrices
+    /* model defining matrices */
     double *A;
     double *B;
     double *C;
@@ -69,6 +70,7 @@ typedef struct
     double *L_z;
     double *L_u;
     double *A_LO;
+
 } gnsf_model;
 
 typedef struct { // pre_workspace - workspace used in the precomputation phase
@@ -108,10 +110,12 @@ typedef struct { // pre_workspace - workspace used in the precomputation phase
     int *ipivEE2;
     int *ipivQQ1;
     int* ipivM2;
+
 } gnsf_pre_workspace;
 
 
-typedef struct { //workspace
+typedef struct {
+    /* workspace */
     double *Z_work; // used to perform computations to get Z_out
     double *Z_out;
 
@@ -195,6 +199,7 @@ typedef struct
     struct blasfeo_dmat dK2_dx2;
 
     struct blasfeo_dmat Lu;
+    
 } sim_gnsf_memory;
 
 
@@ -225,7 +230,6 @@ void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_funct
 // void gnsf_get_dims( sim_gnsf_dims* dims, casadi_function_t get_ints_fun); // maybe remove
 
 // precomputation
-void *gnsf_cast_pre_workspace(void* config_, sim_gnsf_dims *dims, void* opts, void *raw_memory);
 void gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, void* mem_, void *work_, double T);
 
 // workspace & memory

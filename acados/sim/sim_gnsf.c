@@ -372,8 +372,7 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
 * GNSF PRECOMPUTATION
 ************************************************/
 
-// void *gnsf_cast_pre_workspace(sim_gnsf_dims* dims, sim_rk_opts *opts, void *raw_memory)
-void *gnsf_cast_pre_workspace(void* config_, sim_gnsf_dims *dims_, void * opts_, void *raw_memory){
+static void *gnsf_cast_pre_workspace(void* config_, sim_gnsf_dims *dims_, void * opts_, void *raw_memory){
     sim_gnsf_dims* dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts* opts = (sim_rk_opts *) opts_;
     int nu         = dims->nu;
