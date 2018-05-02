@@ -66,41 +66,26 @@ file(GLOB CHAIN_MODEL_SRC
     ### implicit ###
     # 2 masses
     implicit_chain_model/impl_ode_fun_chain_nm2.c
-    implicit_chain_model/impl_ode_jac_x_chain_nm2.c
-    implicit_chain_model/impl_ode_jac_xdot_chain_nm2.c
-    implicit_chain_model/impl_ode_jac_u_chain_nm2.c
     implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm2.c
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm2.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm2.c
     # 3 masses
     implicit_chain_model/impl_ode_fun_chain_nm3.c
-    implicit_chain_model/impl_ode_jac_x_chain_nm3.c
-    implicit_chain_model/impl_ode_jac_xdot_chain_nm3.c
-    implicit_chain_model/impl_ode_jac_u_chain_nm3.c
     implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm3.c
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm3.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm3.c
     # 4 masses
     implicit_chain_model/impl_ode_fun_chain_nm4.c
-    implicit_chain_model/impl_ode_jac_x_chain_nm4.c
-    implicit_chain_model/impl_ode_jac_xdot_chain_nm4.c
-    implicit_chain_model/impl_ode_jac_u_chain_nm4.c
     implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm4.c
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm4.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm4.c
     # 5 masses
     implicit_chain_model/impl_ode_fun_chain_nm5.c
-    implicit_chain_model/impl_ode_jac_x_chain_nm5.c
-    implicit_chain_model/impl_ode_jac_xdot_chain_nm5.c
-    implicit_chain_model/impl_ode_jac_u_chain_nm5.c
     implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm5.c
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm5.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm5.c
     # 6 masses
     implicit_chain_model/impl_ode_fun_chain_nm6.c
-    implicit_chain_model/impl_ode_jac_x_chain_nm6.c
-    implicit_chain_model/impl_ode_jac_xdot_chain_nm6.c
-    implicit_chain_model/impl_ode_jac_u_chain_nm6.c
     implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm6.c
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm6.c
@@ -116,11 +101,7 @@ set(CHEN_MODEL_SRC chen_model/chen_model.c)
 
 file(GLOB CRANE_MODEL_SRC
     crane_model/impl_ode_fun.c
-    crane_model/impl_ode_jac_x.c
-    crane_model/impl_ode_jac_xdot.c
-    crane_model/impl_ode_jac_u.c
     crane_model/impl_ode_fun_jac_x_xdot.c
-    crane_model/impl_ode_jac_x_u.c
     crane_model/impl_ode_jac_x_xdot_u.c
     crane_model/jac_model.c
     crane_model/ode_model.c
@@ -135,12 +116,8 @@ file(GLOB WT_MODEL_NX3_SRC
     wt_model_nx3/expl_vde_for.c
     wt_model_nx3/expl_vde_adj.c
     wt_model_nx3/impl_ode_fun.c
-    wt_model_nx3/impl_ode_jac_x.c
-    wt_model_nx3/impl_ode_jac_xdot.c
-    wt_model_nx3/impl_ode_jac_u.c
     wt_model_nx3/impl_ode_fun_jac_x_xdot.c
     wt_model_nx3/impl_ode_jac_x_xdot_u.c
-    wt_model_nx3/impl_ode_jac_x_u.c
 )
 
 file(GLOB WT_MODEL_NX6_SRC
@@ -148,22 +125,15 @@ file(GLOB WT_MODEL_NX6_SRC
     wt_model_nx6/expl_vde_for.c
     wt_model_nx6/expl_vde_adj.c
     wt_model_nx6/impl_ode_fun.c
-    wt_model_nx6/impl_ode_jac_x.c
-    wt_model_nx6/impl_ode_jac_xdot.c
-    wt_model_nx6/impl_ode_jac_u.c
     wt_model_nx6/impl_ode_fun_jac_x_xdot.c
     wt_model_nx6/impl_ode_jac_x_xdot_u.c
     wt_model_nx6/impl_ode_fun_jac_x_xdot_u.c
-    wt_model_nx6/impl_ode_jac_x_u.c
 )
 
 file(GLOB WT_MODEL_NX6P2_SRC
     wt_model_nx6/nx6p2/expl_ode_fun.c
     wt_model_nx6/nx6p2/expl_vde_for.c
     wt_model_nx6/nx6p2/impl_ode_fun.c
-    wt_model_nx6/nx6p2/impl_ode_jac_x.c
-    wt_model_nx6/nx6p2/impl_ode_jac_xdot.c
-    wt_model_nx6/nx6p2/impl_ode_jac_u.c
     wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.c
     wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.c
     wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.c
