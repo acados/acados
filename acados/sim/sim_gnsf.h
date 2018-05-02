@@ -238,7 +238,4 @@ void sim_gnsf_config_initialize_default(void *config_);
 // integrator
 int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *opts, void *mem_, void *work_);
 
-// helpful functions
-double minimum_of_doubles(double *x, int n);
-
 #endif  // ACADOS_SIM_SIM_COMMON_H_

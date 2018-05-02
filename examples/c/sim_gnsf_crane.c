@@ -28,6 +28,7 @@
 #include <acados/sim/sim_gnsf.h>
 
 #include "acados/utils/external_function_generic.h"
+#include "acados/utils/math.h"
 
 #include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"

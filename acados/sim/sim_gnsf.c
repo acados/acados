@@ -145,18 +145,6 @@ void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_funct
 * helpful functions
 ************************************************/
 
-double minimum_of_doubles(double *x, int n){
-    double min = x[0];
-    for (int c = 1 ; c < n ; c++ ) 
-    {
-        if ( x[c] < min ) 
-        {
-           min = x[c];
-        }
-    }
-    return min;
-}
-
 static void gnsf_neville(double *out, double xx, int n, double *x, double *Q){ // Neville scheme
 // writes value of interpolating polynom corresponding to the nodes x and Q evaluated evaluated at xx into out
         for (int i = n; i>0; i--) {
