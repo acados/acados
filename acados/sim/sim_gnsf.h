@@ -60,25 +60,6 @@ typedef struct
     // f_lo: linear output function
     external_function_generic *f_lo_fun_jac_x1_x1dot_u_z;
 
-    // precomputed matrices
-    struct blasfeo_dmat KKf;
-    struct blasfeo_dmat KKx;
-    struct blasfeo_dmat KKu;
-
-    struct blasfeo_dmat YYf;
-    struct blasfeo_dmat YYx;
-    struct blasfeo_dmat YYu;
-
-    struct blasfeo_dmat ZZf;
-    struct blasfeo_dmat ZZx;
-    struct blasfeo_dmat ZZu;
-
-    struct blasfeo_dmat ALO;
-    struct blasfeo_dmat M2inv;
-    struct blasfeo_dmat dK2_dx2;
-
-    struct blasfeo_dmat Lu;
-
     // model defining matrices
     double *A;
     double *B;
@@ -96,6 +77,7 @@ typedef struct
     double* b_dt;
     double* c;
     double dt;
+
 } gnsf_model;
 
 typedef struct {
@@ -195,6 +177,28 @@ typedef struct { //workspace
 
 } gnsf_workspace;
 
+typedef struct
+{
+    // precomputed matrices
+    struct blasfeo_dmat KKf;
+    struct blasfeo_dmat KKx;
+    struct blasfeo_dmat KKu;
+
+    struct blasfeo_dmat YYf;
+    struct blasfeo_dmat YYx;
+    struct blasfeo_dmat YYu;
+
+    struct blasfeo_dmat ZZf;
+    struct blasfeo_dmat ZZx;
+    struct blasfeo_dmat ZZu;
+
+    struct blasfeo_dmat ALO;
+    struct blasfeo_dmat M2inv;
+    struct blasfeo_dmat dK2_dx2;
+
+    struct blasfeo_dmat Lu;
+} sim_gnsf_memory;
+
 
 // gnsf dims
 int sim_gnsf_dims_calculate_size();
@@ -224,7 +228,7 @@ void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_funct
 
 // precomputation
 void *gnsf_cast_pre_workspace(void* config_, sim_gnsf_dims *dims, void* opts, void *raw_memory);
-void gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, void* work_, double T);
+void gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, void* mem_, void *work_, double T);
 
 // workspace & memory
 int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args);
