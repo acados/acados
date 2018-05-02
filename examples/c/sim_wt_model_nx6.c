@@ -123,36 +123,6 @@ int main()
 	impl_ode_fun.casadi_n_out = &casadi_impl_ode_fun_n_out;
 	external_function_param_casadi_create(&impl_ode_fun, np);
 
-	// impl_ode_jac_x
-	external_function_param_casadi impl_ode_jac_x;
-	impl_ode_jac_x.casadi_fun = &casadi_impl_ode_jac_x;
-	impl_ode_jac_x.casadi_work = &casadi_impl_ode_jac_x_work;
-	impl_ode_jac_x.casadi_sparsity_in = &casadi_impl_ode_jac_x_sparsity_in;
-	impl_ode_jac_x.casadi_sparsity_out = &casadi_impl_ode_jac_x_sparsity_out;
-	impl_ode_jac_x.casadi_n_in = &casadi_impl_ode_jac_x_n_in;
-	impl_ode_jac_x.casadi_n_out = &casadi_impl_ode_jac_x_n_out;
-	external_function_param_casadi_create(&impl_ode_jac_x, np);
-
-	// impl_ode_jac_xdot
-	external_function_param_casadi impl_ode_jac_xdot;
-	impl_ode_jac_xdot.casadi_fun = &casadi_impl_ode_jac_xdot;
-	impl_ode_jac_xdot.casadi_work = &casadi_impl_ode_jac_xdot_work;
-	impl_ode_jac_xdot.casadi_sparsity_in = &casadi_impl_ode_jac_xdot_sparsity_in;
-	impl_ode_jac_xdot.casadi_sparsity_out = &casadi_impl_ode_jac_xdot_sparsity_out;
-	impl_ode_jac_xdot.casadi_n_in = &casadi_impl_ode_jac_xdot_n_in;
-	impl_ode_jac_xdot.casadi_n_out = &casadi_impl_ode_jac_xdot_n_out;
-	external_function_param_casadi_create(&impl_ode_jac_xdot, np);
-
-	// impl_ode_jac_u
-	external_function_param_casadi impl_ode_jac_u;
-	impl_ode_jac_u.casadi_fun = &casadi_impl_ode_jac_u;
-	impl_ode_jac_u.casadi_work = &casadi_impl_ode_jac_u_work;
-	impl_ode_jac_u.casadi_sparsity_in = &casadi_impl_ode_jac_u_sparsity_in;
-	impl_ode_jac_u.casadi_sparsity_out = &casadi_impl_ode_jac_u_sparsity_out;
-	impl_ode_jac_u.casadi_n_in = &casadi_impl_ode_jac_u_n_in;
-	impl_ode_jac_u.casadi_n_out = &casadi_impl_ode_jac_u_n_out;
-	external_function_param_casadi_create(&impl_ode_jac_u, np);
-
 	// impl_ode_fun_jac_x_xdot
 	external_function_param_casadi impl_ode_fun_jac_x_xdot;
 	impl_ode_fun_jac_x_xdot.casadi_fun = &casadi_impl_ode_fun_jac_x_xdot;
@@ -172,18 +142,6 @@ int main()
 	impl_ode_jac_x_xdot_u.casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_n_in;
 	impl_ode_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
 	external_function_param_casadi_create(&impl_ode_jac_x_xdot_u, np);
-
-	// impl_ode_jac_x_u
-	external_function_param_casadi impl_ode_jac_x_u;
-	impl_ode_jac_x_u.casadi_fun = &casadi_impl_ode_jac_x_u;
-	impl_ode_jac_x_u.casadi_work = &casadi_impl_ode_jac_x_u_work;
-	impl_ode_jac_x_u.casadi_sparsity_in = &casadi_impl_ode_jac_x_u_sparsity_in;
-	impl_ode_jac_x_u.casadi_sparsity_out = &casadi_impl_ode_jac_x_u_sparsity_out;
-	impl_ode_jac_x_u.casadi_n_in = &casadi_impl_ode_jac_x_u_n_in;
-	impl_ode_jac_x_u.casadi_n_out = &casadi_impl_ode_jac_x_u_n_out;
-	external_function_param_casadi_create(&impl_ode_jac_x_u, np);
-
-
 
 
 	int number_sim_solvers = 3;
@@ -287,7 +245,6 @@ int main()
 				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
 				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
 				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-				sim_set_model(config, in, "impl_ode_jac_x_u", &impl_ode_jac_x_u);
 				break;
 			}
 			default :
@@ -380,7 +337,6 @@ int main()
 					impl_ode_fun.set_param(&impl_ode_fun, p_sim+ii*np);
 					impl_ode_fun_jac_x_xdot.set_param(&impl_ode_fun_jac_x_xdot, p_sim+ii*np);
 					impl_ode_jac_x_xdot_u.set_param(&impl_ode_jac_x_xdot_u, p_sim+ii*np);
-					impl_ode_jac_x_u.set_param(&impl_ode_jac_x_u, p_sim+ii*np);
 					break;
 				}
 				default :
@@ -481,7 +437,7 @@ if(opts->sens_forw){		// debug adjoints
       v_free_align(Sf_mem);
       v_free_align(seed_mem);
       v_free_align(check_mem);
-		}
+	}
 
     #if 0
 		printf("\n");
@@ -514,12 +470,8 @@ if(opts->sens_forw){		// debug adjoints
 	external_function_param_casadi_free(&expl_vde_adj);
 	// implicit model
 	external_function_param_casadi_free(&impl_ode_fun);
-	external_function_param_casadi_free(&impl_ode_jac_x);
-	external_function_param_casadi_free(&impl_ode_jac_xdot);
-	external_function_param_casadi_free(&impl_ode_jac_u);
 	external_function_param_casadi_free(&impl_ode_fun_jac_x_xdot);
 	external_function_param_casadi_free(&impl_ode_jac_x_xdot_u);
-	external_function_param_casadi_free(&impl_ode_jac_x_u);
 
 	printf("\nsuccess!\n\n");
 
