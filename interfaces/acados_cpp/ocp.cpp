@@ -1,6 +1,8 @@
 
 #include "acados_cpp/ocp.hpp"
 
+#include <algorithm>
+
 #include "acados/utils/types.h"
 #include "acados_cpp/ocp_bounds.hpp"
 

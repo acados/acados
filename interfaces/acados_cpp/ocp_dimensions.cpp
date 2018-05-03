@@ -32,7 +32,7 @@ are_valid_ocp_dimensions(const map<string, vector<int>>& dimensions,
             return false;
     }
 
-    for (int i = 0; i < expected_size; ++i) {
+    for (size_t i = 0; i < expected_size; ++i) {
         if (dimensions.at("nbx").at(i) > dimensions.at("nx").at(i))
             return false;
         if (dimensions.at("nbu").at(i) > dimensions.at("nu").at(i))

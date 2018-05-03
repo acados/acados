@@ -3,6 +3,7 @@
 #define INTERFACES_ACADOS_CPP_OCP_NLP_OCP_NLP_SOLUTION_HPP_
 
 #include <memory>
+#include <vector>
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 
@@ -17,9 +18,8 @@ class ocp_nlp_solution {
 
 public:
 
-    ocp_nlp_solution(std::unique_ptr<ocp_nlp_out> solution);
-
-    ocp_nlp_solution(ocp_nlp_solution&& other);
+    ocp_nlp_solution(std::unique_ptr<ocp_nlp_out> solution,
+                     std::shared_ptr<ocp_nlp_dims> dims);
 
     ocp_nlp_solution(const ocp_nlp_solution& other);
 
@@ -35,6 +35,8 @@ public:
 private:
 
     std::unique_ptr<ocp_nlp_out> nlp_out_;
+
+    std::shared_ptr<ocp_nlp_dims> dims_;
 
 };
 }  // namespace acados

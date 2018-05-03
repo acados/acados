@@ -79,7 +79,7 @@ class ocp_nlp : private ocp {
 
     std::unique_ptr<ocp_nlp_in> nlp_;
 
-    std::unique_ptr<ocp_nlp_dims> dims_;
+    std::shared_ptr<ocp_nlp_dims> dims_;
 
     std::unique_ptr<ocp_nlp_solver_config> config_;
 

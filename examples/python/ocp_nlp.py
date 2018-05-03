@@ -20,6 +20,10 @@ nlp.set_field("ubx", 0, x0)
 
 nlp.initialize_solver("blabla")
 
+output = nlp.solve()
+
+print(output)
+
 # from models import chen_model
 
 # N = 10

@@ -109,9 +109,9 @@ ocp_nlp_solution ocp_nlp::solve() {
 
     auto result = std::unique_ptr<ocp_nlp_out>(ocp_nlp_out_create(config_.get(), dims_.get()));
 
-    int status = ocp_nlp_solve(solver_.get(), nlp_.get(), result.get());
+    ocp_nlp_solve(solver_.get(), nlp_.get(), result.get());
 
-    return ocp_nlp_solution(std::move(result));
+    return ocp_nlp_solution(std::move(result), dims_);
 }
 
 void ocp_nlp::set_field(string field, vector<double> v) {
@@ -123,7 +123,7 @@ void ocp_nlp::set_field(string field, int stage, vector<double> v) {
 
     if (field == "lbx" || field == "ubx") {
 
-        if (v.size() != dimensions_["nx"].at(stage))
+        if (v.size() != (size_t) dimensions_["nx"].at(stage))
             throw std::invalid_argument("Expected size " + std::to_string(dimensions_["nx"].at(stage))
                                         + " but got " + std::to_string(v.size()) + " instead.");
 
@@ -131,7 +131,7 @@ void ocp_nlp::set_field(string field, int stage, vector<double> v) {
 
     } else if (field == "lbu" || field == "ubu") {
 
-        if (v.size() != dimensions_["nu"].at(stage))
+        if (v.size() != (size_t) dimensions_["nu"].at(stage))
             throw std::invalid_argument("Expected size " + std::to_string(dimensions_["nu"].at(stage))
                                         + " but got " + std::to_string(v.size()) + " instead.");
         
@@ -262,7 +262,7 @@ void ocp_nlp::set_bound(std::string bound, int stage, std::vector<double> new_bo
 
 void ocp_nlp::change_bound_dimensions(std::vector<int> nbx, std::vector<int> nbu) {
 
-    if (nbx.size() != (num_stages()+1) || nbu.size() != (num_stages()+1))
+    if (nbx.size() != (size_t) (num_stages()+1) || nbu.size() != (size_t) (num_stages()+1))
         throw std::invalid_argument("Expected " + std::to_string(num_stages()) + " bounds.");
 
 	ocp_nlp_constraints_dims **constraint_dims = (ocp_nlp_constraints_dims **) dims_->constraints;
@@ -316,13 +316,13 @@ void ocp_nlp::set_bound_indices(std::string bound, int stage, std::vector<int> i
     int nbu = constraint_dims[stage]->nbu;
 
     if (bound == "x") {
-        if (idxb.size() != nbx)
+        if (idxb.size() != (size_t) nbx)
             throw std::invalid_argument("Expected " + std::to_string(constraint_dims[stage]->nbx)
                                         + " bound indices but got " + std::to_string(idxb.size()) + ".");
         for (int i = 0; i < nbx; ++i)
             constraints[stage]->idxb[nbu + i] = idxb[i];
     } else if (bound == "u") {
-        if (idxb.size() != nbu)
+        if (idxb.size() != (size_t) nbu)
             throw std::invalid_argument("Expected " + std::to_string(constraint_dims[stage]->nbu)
                                         + " bound indices but got " + std::to_string(idxb.size()) + ".");
         for (int i = 0; i < nbu; ++i)

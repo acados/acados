@@ -173,7 +173,7 @@ ocp_qp_solution ocp_qp::solve() {
     if (needs_initializing())
         throw std::runtime_error("Initialize solver before calling 'solve'.");
 
-    fill_in_bounds();
+    fill_bounds(cached_bounds);
 
     auto result = std::unique_ptr<ocp_qp_out>(ocp_qp_out_create(NULL, qp->dim));
 
@@ -215,7 +215,7 @@ void ocp_qp::set_bound_indices(string name, int stage, vector<int> v) {
     else
         throw std::invalid_argument("Can only set bounds on x and u, you gave: '" + name + "'.");
 
-    if (nb_bounds != v.size())
+    if ((size_t) nb_bounds != v.size())
         throw std::invalid_argument("I need " + std::to_string(nb_bounds) + " indices, you gave " + std::to_string(v.size()) + ".");
     for (int i = 0; i < nb_bounds; ++i)
         if (name == "x")

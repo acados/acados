@@ -52,8 +52,6 @@ private:
 
     void reset_bounds();
 
-    void fill_in_bounds();
-
     bool in_range(std::string field, int stage);
 
     void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>> bounds) override {

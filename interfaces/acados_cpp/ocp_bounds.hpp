@@ -5,6 +5,8 @@
 #include <cmath>
 #include <vector>
 
+namespace acados {
+
 /*
  * From lower and upper bounds, calculate the bounded indices.
  */
@@ -22,5 +24,7 @@ calculate_all_idxb(const std::vector<std::vector<double>>& lower_bounds, const s
  */
 void
 copy_at(std::vector<double>& output, std::vector<double> input, std::vector<int> copy_ids);
+
+}  // namespace acados
 
 #endif  // ACADOS_INTERFACES_ACADOS_CPP_OCP_BOUNDS_HPP_H

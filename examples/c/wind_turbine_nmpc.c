@@ -569,7 +569,7 @@ int main()
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
 			if (set_fun_status != 0) exit(1);
 		}
-		else if (plan->sim_solver_plan[i].sim_solver == IRK | plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+		else if (plan->sim_solver_plan[i].sim_solver == IRK || plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
 		{
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
 			if (set_fun_status != 0) exit(1);
@@ -731,7 +731,7 @@ int main()
 				{
 					expl_vde_for[ii].set_param(expl_vde_for+ii, wind0_ref+idx+ii);
 				}
-				else if (plan->sim_solver_plan[ii].sim_solver == IRK | plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK)
+				else if (plan->sim_solver_plan[ii].sim_solver == IRK || plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK)
 				{
 					impl_ode_fun[ii].set_param(impl_ode_fun+ii, wind0_ref+idx+ii);
 					impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);

@@ -1,6 +1,11 @@
 
 #include "acados_cpp/ocp_bounds.hpp"
 
+#include <algorithm>
+#include <stdexcept>
+
+namespace acados {
+
 using std::vector;
 
 vector<int>
@@ -10,7 +15,7 @@ calculate_idxb(const vector<double>& lower_bound, const vector<double>& upper_bo
 
     vector<int> bound_indices;
 
-    for (int idx = 0; idx < lower_bound.size(); ++idx)
+    for (size_t idx = 0; idx < lower_bound.size(); ++idx)
         if (lower_bound.at(idx) != -INFINITY || upper_bound.at(idx) != +INFINITY)
             bound_indices.push_back(idx); // there is a one-sided or two-sided bound at this index
 
@@ -39,3 +44,4 @@ copy_at(vector<double>& output, vector<double> input, vector<int> copy_ids) {
         output.at(idx) = input.at(idx);
 }
 
+}  // namespace acados
