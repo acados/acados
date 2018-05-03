@@ -47,24 +47,14 @@ typedef enum {
     IMPL_ODE_JAC_U,
     IMPL_ODE_FUN_JAC_X_XDOT,
     IMPL_ODE_JAC_X_XDOT_U,
+    IMPL_ODE_FUN_JAC_X_XDOT_U,
     IMPL_ODE_JAC_X_U,
 } sim_function_t;
 
 
 typedef struct
 {
-    int nx;
-    int nu;
-//    int dummy;  // NOTE(dimitris): sizeof(struct) should always be multiple of 8
-	// TODO have nx np nf instead !!!
-} sim_dims;
-
-
-
-typedef struct
-{
-
-    sim_dims *dims;
+    void *dims;
 
     // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
     double *x;  // x[NX]
@@ -136,17 +126,23 @@ typedef struct
 typedef struct
 {
     int (*evaluate) (void *config, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
-    int (*opts_calculate_size) (void *config, sim_dims *dims);
-    void *(*opts_assign) (void *config, sim_dims *dims, void *raw_memory);
-    void (*opts_initialize_default) (void *config, sim_dims *dims, void *opts);
-    void (*opts_update) (void *config, sim_dims *dims, void *opts);
-    int (*memory_calculate_size) (void *config, sim_dims *dims, void *opts);
-    void *(*memory_assign) (void *config, sim_dims *dims, void *opts, void *raw_memory);
-    int (*workspace_calculate_size) (void *config, sim_dims *dims, void *opts);
-    int (*model_calculate_size) (void *config, sim_dims *dims);
-    void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
+    int (*opts_calculate_size) (void *config, void *dims);
+    void *(*opts_assign) (void *config, void *dims, void *raw_memory);
+    void (*opts_initialize_default) (void *config, void *dims, void *opts);
+    void (*opts_update) (void *config, void *dims, void *opts);
+    int (*memory_calculate_size) (void *config, void *dims, void *opts);
+    void *(*memory_assign) (void *config, void *dims, void *opts, void *raw_memory);
+    int (*workspace_calculate_size) (void *config, void *dims, void *opts);
+    int (*model_calculate_size) (void *config, void *dims);
+    void *(*model_assign) (void *config, void *dims, void *raw_memory);
     int (*model_set_function) (void *model, sim_function_t fun_type, void *fun);
     void (*config_initialize_default) (void *config);
+    int (*dims_calculate_size)(void *config);
+    void *(*dims_assign)(void *config, void *raw_memory);
+    void (*get_nx)(void *dims_, int* nx);
+    void (*get_nu)(void *dims_, int* nu);
+    void (*set_nx)(void *dims_, int nx);
+    void (*set_nu)(void *dims_, int nu);
 } sim_solver_config;
 
 
@@ -155,16 +151,12 @@ int sim_solver_config_calculate_size();
 //
 sim_solver_config *sim_solver_config_assign(void *raw_memory);
 //
-int sim_dims_calculate_size();
+int sim_in_calculate_size(void *config, void *dims);
 //
-sim_dims *sim_dims_assign(void *raw_memory);
+sim_in *sim_in_assign(void *config, void *dims, void *raw_memory);
 //
-int sim_in_calculate_size(void *config, sim_dims *dims);
+int sim_out_calculate_size(void *config, void *dims);
 //
-sim_in *sim_in_assign(void *config, sim_dims *dims, void *raw_memory);
-//
-int sim_out_calculate_size(void *config, sim_dims *dims);
-//
-sim_out *sim_out_assign(void *config, sim_dims *dims, void *raw_memory);
+sim_out *sim_out_assign(void *config, void *dims, void *raw_memory);
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

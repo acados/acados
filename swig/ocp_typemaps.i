@@ -43,6 +43,33 @@
     $1 = is_map($input) ? 1 : 0;
 }
 
+%typemap(out) std::map< std::string, std::vector<uint> > {
+    LangObject *result_map;
+
+    std::vector<std::string> names;
+    for (auto elem : $1) {
+        names.push_back(elem.first);
+    }
+    const char **fieldnames = (const char **) calloc(names.size(), sizeof(char *));
+    for (int i = 0; i < names.size(); ++i) {
+        fieldnames[i] = names[i].c_str();
+    }
+#if defined(SWIGMATLAB)
+    result_map = mxCreateStructMatrix(1, 1, names.size(), fieldnames);
+    for (int i = 0; i < names.size(); ++i) {
+        auto v = $1[names[i]];
+        mxSetField(result_map, 0, fieldnames[i], new_matrix(std::make_pair(v.size(), 1), v.data()));
+    }
+#elif defined(SWIGPYTHON)
+    result_map = PyDict_New();
+    for (int i = 0; i < names.size(); ++i) {
+        auto v = $1[names[i]];
+        PyDict_SetItemString(result_map, fieldnames[i], new_matrix(std::make_pair(v.size(), 1), v.data()));
+    }
+#endif
+    $result = result_map;
+}
+
 %typemap(typecheck, precedence=SWIG_TYPECHECK_INTEGER) uint {
 #if defined(SWIGMATLAB)
     $1 = mxIsScalar($input) ? 1 : 0;

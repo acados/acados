@@ -70,6 +70,7 @@ file(GLOB CHAIN_MODEL_SRC
     implicit_chain_model/impl_ode_jac_xdot_chain_nm2.c
     implicit_chain_model/impl_ode_jac_u_chain_nm2.c
     implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm2.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm2.c
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm2.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm2.c
     # 3 masses
@@ -78,6 +79,7 @@ file(GLOB CHAIN_MODEL_SRC
     implicit_chain_model/impl_ode_jac_xdot_chain_nm3.c
     implicit_chain_model/impl_ode_jac_u_chain_nm3.c
     implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm3.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm3.c
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm3.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm3.c
     # 4 masses
@@ -86,6 +88,7 @@ file(GLOB CHAIN_MODEL_SRC
     implicit_chain_model/impl_ode_jac_xdot_chain_nm4.c
     implicit_chain_model/impl_ode_jac_u_chain_nm4.c
     implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm4.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm4.c
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm4.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm4.c
     # 5 masses
@@ -94,6 +97,7 @@ file(GLOB CHAIN_MODEL_SRC
     implicit_chain_model/impl_ode_jac_xdot_chain_nm5.c
     implicit_chain_model/impl_ode_jac_u_chain_nm5.c
     implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm5.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm5.c
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm5.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm5.c
     # 6 masses
@@ -102,6 +106,7 @@ file(GLOB CHAIN_MODEL_SRC
     implicit_chain_model/impl_ode_jac_xdot_chain_nm6.c
     implicit_chain_model/impl_ode_jac_u_chain_nm6.c
     implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm6.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm6.c
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm6.c
 )
@@ -146,12 +151,14 @@ file(GLOB WT_MODEL_NX3_SRC
 file(GLOB WT_MODEL_NX6_SRC
     wt_model_nx6/expl_ode_fun.c
     wt_model_nx6/expl_vde_for.c
+    wt_model_nx6/expl_vde_adj.c
     wt_model_nx6/impl_ode_fun.c
     wt_model_nx6/impl_ode_jac_x.c
     wt_model_nx6/impl_ode_jac_xdot.c
     wt_model_nx6/impl_ode_jac_u.c
     wt_model_nx6/impl_ode_fun_jac_x_xdot.c
     wt_model_nx6/impl_ode_jac_x_xdot_u.c
+    wt_model_nx6/impl_ode_fun_jac_x_xdot_u.c
     wt_model_nx6/impl_ode_jac_x_u.c
 )
 
@@ -164,6 +171,7 @@ file(GLOB WT_MODEL_NX6P2_SRC
     wt_model_nx6/nx6p2/impl_ode_jac_u.c
     wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.c
     wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.c
+    wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.c
     wt_model_nx6/nx6p2/impl_ode_jac_x_u.c
 )
 
@@ -288,19 +296,19 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_test(sim_crane_example sim_crane_example)
     endif()
 
-    add_executable(
-        sim_crane_no_interface_example
-        sim_crane_no_interface.c
-        ${CRANE_MODEL_SRC}
-    )
-    target_link_libraries(
-        sim_crane_no_interface_example
-        acados
-    )
-    add_test(
-        sim_crane_no_interface_example
-        sim_crane_no_interface_example
-    )
+    # add_executable(
+    #     sim_crane_no_interface_example
+    #     sim_crane_no_interface.c
+    #     ${CRANE_MODEL_SRC}
+    # )
+    # target_link_libraries(
+    #     sim_crane_no_interface_example
+    #     acados
+    # )
+    # add_test(
+    #     sim_crane_no_interface_example
+    #     sim_crane_no_interface_example
+    # )
 
     # -------------------- sim_wt
     if(ACADOS_WITH_C_INTERFACE)

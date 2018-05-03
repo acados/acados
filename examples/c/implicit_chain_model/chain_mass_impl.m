@@ -82,15 +82,17 @@ for Nm = 2:10
     impl_ode_jac_x = Function(['casadi_impl_ode_jac_x_chain_nm' num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {jac_x});
     impl_ode_jac_xdot = Function(['casadi_impl_ode_jac_xdot_chain_nm' num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {jac_xdot});
     impl_ode_jac_u = Function(['casadi_impl_ode_jac_u_chain_nm' num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {jac_u});
-	impl_ode_inc_J_x_xdot = Function(['casadi_impl_ode_fun_jac_x_xdot_chain_nm',num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {[ode_impl, jac_x, jac_xdot]});
-	impl_ode_J_x_xdot_u = Function(['casadi_impl_ode_jac_x_xdot_u_chain_nm',num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {[jac_x, jac_xdot, jac_u]});
-	impl_ode_J_x_u = Function(['casadi_impl_ode_jac_x_u_chain_nm',num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {[jac_x, jac_xdot, jac_u]});
+	impl_ode_inc_J_x_xdot = Function(['casadi_impl_ode_fun_jac_x_xdot_chain_nm',num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {ode_impl, jac_x, jac_xdot});
+    impl_ode_inc_J_x_xdot_u = Function(['casadi_impl_ode_fun_jac_x_xdot_u_chain_nm',num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {ode_impl, jac_x, jac_xdot, jac_u});
+	impl_ode_J_x_xdot_u = Function(['casadi_impl_ode_jac_x_xdot_u_chain_nm',num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {jac_x, jac_xdot, jac_u});
+	impl_ode_J_x_u = Function(['casadi_impl_ode_jac_x_u_chain_nm',num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {jac_x, jac_xdot, jac_u});
     
     impl_ode_fun.generate(['impl_ode_fun_chain_nm' num2str(Nm)], opts);
     impl_ode_jac_x.generate(['impl_ode_jac_x_chain_nm' num2str(Nm)], opts);
     impl_ode_jac_xdot.generate(['impl_ode_jac_xdot_chain_nm' num2str(Nm)], opts);
     impl_ode_jac_u.generate(['impl_ode_jac_u_chain_nm' num2str(Nm)], opts);
 	impl_ode_inc_J_x_xdot.generate(['impl_ode_fun_jac_x_xdot_chain_nm',num2str(Nm)], opts);
+    impl_ode_inc_J_x_xdot_u.generate(['impl_ode_fun_jac_x_xdot_u_chain_nm',num2str(Nm)], opts);
 	impl_ode_J_x_xdot_u.generate(['impl_ode_jac_x_xdot_u_chain_nm',num2str(Nm)], opts);
 	impl_ode_J_x_u.generate(['impl_ode_jac_x_u_chain_nm',num2str(Nm)], opts);
 
