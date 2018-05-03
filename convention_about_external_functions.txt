@@ -248,3 +248,45 @@ outputs:
 1) [jac_x]      size: nx*nx     type: BLASFEO_DMAT
 2) [jac_xdot]   size: nx*nx     type: BLASFEO_DMAT
 3) [jac_u]      size: nx*nu     type: BLASFEO_DMAT
+
+/************************************************
+* sim_gnsf
+************************************************/
+
+/* nonlinearity function phi */
+
+external functions: phi_fun, phi_fun_jac_y, phi_jac_y_uhat
+
+inputs:
+0) [y]    size: ny    type: BLASFEO_DVEC_ARGS
+1) [uhat] size: nuhat type: BLASFEO_DVEC
+
+// phi_fun
+outputs:
+0) [fun]    size: n_out    type: BLASFEO_DVEC_ARGS
+
+// phi_fun_jac_y
+outputs:
+0) [fun]    size: n_out    type: BLASFEO_DVEC_ARGS
+1) [jac_y]  size: n_out*ny type: BLASFEO_DMAT_ARGS
+
+// phi_jac_y_uhat
+outputs:
+0) [jac_y]  size: n_out*ny type: BLASFEO_DMAT_ARGS
+1) [jac_uhat]  size: n_out*nuhat type: BLASFEO_DMAT_ARGS
+
+
+
+/* linear output function f_lo */
+
+external function: f_lo_fun_jac_x1_x1dot_u_z
+
+inputs:
+0) [x1]    size: nx1   type: BLASFEO_DVEC_ARGS
+1) [x1dot] size: nx1   type: BLASFEO_DVEC_ARGS
+2) [z]     size: nz    type: BLASFEO_DVEC_ARGS
+3) [u]     size: nu    type: BLASFEO_DVEC
+
+outputs:
+0) [fun]              size: nx2                 type: BLASFEO_DVEC_ARGS
+1) [jac_x1_x1dot_u_z] size: nx2*(2*nx1+nu+nz)   type: BLASFEO_DMAT_ARGS
