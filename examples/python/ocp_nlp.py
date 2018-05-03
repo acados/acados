@@ -7,15 +7,18 @@ from acados import ocp_nlp
 
 x = SX.sym('x', 2)
 u = SX.sym('u')
-f = Function('f', [x, u], [x])
+f = Function('f', [x, u], [x + u])
 
 N, nx, nu = 5, 2, 1
 
 nlp = ocp_nlp(N, nx, nu)
 nlp.set_dynamics(f, {'integrator': 'rk4', 'dt': 0.1})
-# nlp.set_constraint()
 
+x0 = array([1, 1])
+nlp.set_field("lbx", 0, x0)
+nlp.set_field("ubx", 0, x0)
 
+nlp.initialize_solver("blabla")
 
 # from models import chen_model
 

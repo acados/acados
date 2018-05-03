@@ -8,20 +8,21 @@
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
+#include "acados_cpp/ocp.hpp"
 #include "acados_cpp/options.hpp"
 
 #include "casadi/casadi.hpp"
 
 namespace acados {
 
-class ocp_nlp {
+class ocp_nlp : private ocp {
  
  public:
 
-    ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> nbx, std::vector<int> nbu,
-            std::vector<int> ng, std::vector<int> nh, std::vector<int> ns);
+    ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, std::vector<int> nh,
+            std::vector<int> ns);
 
-    ocp_nlp(int N, int nx, int nu, int nbx = 0, int nbu = 0, int ng = 0, int nh = 0, int ns = 0);
+    ocp_nlp(int N, int nx, int nu, int ng = 0, int nh = 0, int ns = 0);
 
     void initialize_solver(std::string solver_name, std::map<std::string, option_t *> options = {});
 
@@ -29,7 +30,9 @@ class ocp_nlp {
 
     std::vector<std::string> fields = {"lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug", "lh", "uh"};
 
-    // void set_field(std::string field, int stage);
+    void set_field(std::string field, std::vector<double> v);
+
+    void set_field(std::string field, int stage, std::vector<double> v);
 
     void set_dynamics(const casadi::Function& f, std::map<std::string, option_t *> options = {});
 
@@ -48,9 +51,21 @@ class ocp_nlp {
 
  private:
 
+    void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>>) override;
+
+    void change_bound_dimensions(std::vector<int> nbx, std::vector<int> nbu) override;
+
+    bool needs_initializing() override;
+
+    void needs_initializing(bool) override;
+
+    void set_bounds_indices(std::string, int, std::vector<int>) override;
+
+    int num_stages() override;
+
     std::map<std::string, casadi::Function> create_explicit_ode_functions(const casadi::Function& model);
 
-    std::unique_ptr<ocp_nlp_in> ocp_nlp_;
+    std::unique_ptr<ocp_nlp_in> nlp_;
 
     std::unique_ptr<ocp_nlp_dims> dims_;
 
@@ -61,6 +76,8 @@ class ocp_nlp {
     std::map<std::string, std::vector<int>> dimensions_;
 
     std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
+
+    bool needs_initializing_;
 
 };
 

@@ -25,7 +25,7 @@ using std::vector;
 namespace acados {
 
 ocp_qp::ocp_qp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, std::vector<int> ns)
-             : N(nx.size() - 1), qp(nullptr), solver(nullptr), needs_initializing(true) {
+             : N(nx.size() - 1), qp(nullptr), solver(nullptr), needs_initializing_(true) {
 
 
     // Number of controls on last stage should be zero;
@@ -52,9 +52,6 @@ ocp_qp::ocp_qp(int N, int nx, int nu, int ng, int ns)
     : ocp_qp(std::vector<int>(N+1, nx), std::vector<int>(N+1, nu), std::vector<int>(N+1, ng),
              std::vector<int>(N+1, ns)) {}
 
-/*
- * Update all fields with the same values. Matrices are passed in column-major ordering.
- */
 void ocp_qp::set_field(string field, vector<double> v) {
     int last_stage = N;
     if (field == "A" || field == "B" || field == "b")
@@ -118,6 +115,10 @@ void ocp_qp::set_field(string field, int stage, std::vector<double> v) {
     }
 }
 
+void ocp_qp::squeeze_dimensions(map<string, vector<vector<double>>> bounds) {
+    ocp::squeeze_dimensions(cached_bounds);
+}
+
 void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> options) {
 
     // check if solver is available
@@ -128,7 +129,7 @@ void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> optio
         throw std::invalid_argument("QP solver '" + solver_name + "' is not available.");
     }
 
-    squeeze_dimensions();
+    squeeze_dimensions(cached_bounds);
 
     config.reset(ocp_qp_config_create(plan));
     args.reset(ocp_qp_opts_create(config.get(), qp->dim));
@@ -136,29 +137,8 @@ void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> optio
 
     solver.reset(ocp_qp_create(config.get(), qp->dim, args.get()));
 
-    needs_initializing = false;
+    needs_initializing(false);
     cached_solver = solver_name;
-}
-
-void ocp_qp::squeeze_dimensions() {
-    
-    // Get bound indices for all stages
-    map<string, vector<vector<int>>> idxb_new;
-    idxb_new["x"] = calculate_all_idxb(cached_bounds.at("lbx"), cached_bounds.at("ubx"));
-    idxb_new["u"] = calculate_all_idxb(cached_bounds.at("lbu"), cached_bounds.at("ubu"));
-
-    // Calculate new dimensions
-    map<string, vector<int>> nb {{"x", std::vector<int>(N+1)}, {"u", std::vector<int>(N+1)}};
-    std::transform(idxb_new["x"].begin(), idxb_new["x"].end(), nb["x"].begin(), [](auto elem){return elem.size();});
-    std::transform(idxb_new["u"].begin(), idxb_new["u"].end(), nb["u"].begin(), [](auto elem){return elem.size();});
-
-    d_change_bounds_dimensions_ocp_qp(nb.at("u").data(), nb.at("x").data(), qp.get());
-
-    needs_initializing = true;
-
-    for (string bound : {"x", "u"})
-        for (int stage = 0; stage <= N; ++stage)
-            set_bounds_indices(bound, stage, idxb_new.at(bound).at(stage));
 }
 
 void ocp_qp::reset_bounds() {
@@ -176,7 +156,7 @@ void ocp_qp::reset_bounds() {
         set_bounds_indices("u", stage, idx_controls);
     }
 
-    needs_initializing = true;
+    needs_initializing(true);
 }
 
 void ocp_qp::fill_in_bounds() {
@@ -211,7 +191,7 @@ void ocp_qp::fill_in_bounds() {
 
 ocp_qp_solution ocp_qp::solve() {
 
-    if (needs_initializing)
+    if (needs_initializing())
         throw std::runtime_error("Initialize solver before calling 'solve'.");
 
     fill_in_bounds();
@@ -383,6 +363,22 @@ std::pair<int, int> ocp_qp::shape_of_field(string field, int stage) {
         return std::make_pair(num_elems_ug(stage, qp->dim), 1);
     else
         throw std::invalid_argument("OCP QP does not contain field " + field);
+}
+
+void ocp_qp::change_bound_dimensions(vector<int> nbx, vector<int> nbu) {
+    d_change_bounds_dimensions_ocp_qp(nbu.data(), nbx.data(), qp.get());
+}
+
+void ocp_qp::needs_initializing(bool flag) {
+    needs_initializing_ = flag;
+}
+
+bool ocp_qp::needs_initializing() {
+    return needs_initializing_;
+}
+
+int ocp_qp::num_stages() {
+    return N;
 }
 
 }  // namespace acados

@@ -12,12 +12,13 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 
 #include "acados_c/ocp_qp_interface.h"
-#include "acados_cpp/ocp_qp/ocp_qp_solution.hpp"
+#include "acados_cpp/ocp.hpp"
 #include "acados_cpp/options.hpp"
+#include "acados_cpp/ocp_qp/ocp_qp_solution.hpp"
 
 namespace acados {
 
-class ocp_qp {
+class ocp_qp : private ocp {
 
 public:
 
@@ -26,9 +27,11 @@ public:
     ocp_qp(int N, int nx, int nu, int ng = 0, int ns = 0);
 
     std::vector< std::vector<double> > get_field(std::string field);
-    
+
+    // Update all fields with the same values. Matrices are passed in column-major ordering.
     void set_field(std::string field, int stage, std::vector<double> v);
-    
+
+    // Update a single field. Matrices are passed in column-major ordering.    
     void set_field(std::string field, std::vector<double> v);
     
     std::pair<int, int> shape_of_field(std::string field, int stage);
@@ -43,7 +46,7 @@ public:
         "Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"
     };
 
-    const int N;
+    int num_stages() override;
 
 private:
 
@@ -51,15 +54,19 @@ private:
 
     void fill_in_bounds();
 
-    void squeeze_dimensions();
-
-    void expand_dimensions();
-
     std::vector<std::vector<int>> get_bounds_indices(std::string name);
 
-    void set_bounds_indices(std::string name, int stage, std::vector<int> v);
-
     bool in_range(std::string field, int stage);
+
+    void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>>) override;
+
+    void change_bound_dimensions(vector<int> nbx, vector<int> nbu) override;
+
+    bool needs_initializing() override;
+
+    void needs_initializing(bool) override;
+
+    void set_bounds_indices(std::string name, int stage, std::vector<int> v) override;
 
     std::vector<int> nx();
     std::vector<int> nu();
@@ -67,7 +74,7 @@ private:
     std::vector<int> nbu();
     std::vector<int> ng();
 
-    std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
+    const int N;
 
     std::unique_ptr<ocp_qp_in> qp;
 
@@ -99,9 +106,12 @@ private:
 
     std::string cached_solver;
 
-    bool needs_initializing;
+    std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
+
+    bool needs_initializing_;
 
     static std::map<std::string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
+
 };
 
 
