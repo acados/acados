@@ -48,7 +48,7 @@ public:
 
 private:
 
-    vector<int> idxb(vector<double> lower_bound, vector<double> upper_bound);
+    void reset_bounds();
 
     void fill_in_bounds();
 
@@ -56,7 +56,7 @@ private:
 
     void expand_dimensions();
 
-    std::vector<std::vector<int>> bounds_indices(std::string name);
+    std::vector<std::vector<int>> get_bounds_indices(std::string name);
 
     void set_bounds_indices(std::string name, int stage, std::vector<int> v);
 
@@ -74,7 +74,25 @@ private:
 
     std::unique_ptr<ocp_qp_solver> solver;
 
-    std::map<std::string, ocp_qp_solver_plan> available_solvers;
+    const std::map<std::string, ocp_qp_solver_plan> available_solvers = {
+        {"condensing_hpipm", {FULL_CONDENSING_HPIPM}},
+        {"sparse_hpipm", {PARTIAL_CONDENSING_HPIPM}},
+#ifdef ACADOS_WITH_HPMPC
+        {"hpmpc", {PARTIAL_CONDENSING_HPMPC}},
+#endif
+#ifdef ACADOS_WITH_OOQP
+        {"ooqp", {PARTIAL_CONDENSING_OOQP}}
+#endif
+#ifdef ACADOS_WITH_QPDUNES
+        {"qpdunes", {PARTIAL_CONDENSING_QPDUNES}},
+#endif
+#ifdef ACADOS_WITH_QPOASES
+        {"qpoases", {FULL_CONDENSING_QPOASES}},
+#endif
+#ifdef ACADOS_WITH_QORE
+        {"qore", {FULL_CONDENSING_QORE}},
+#endif
+    };
 
     std::unique_ptr<ocp_qp_xcond_solver_config> config;
 

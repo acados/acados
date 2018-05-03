@@ -2,6 +2,7 @@
 #include "acados_cpp/ocp_dimensions.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 using std::map;
 using std::string;

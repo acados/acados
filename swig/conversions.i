@@ -772,7 +772,7 @@ option_t *as_option_ptr(LangObject *val) {
     else if (is_real(val))
         return new option<double>(real_from(val));
     else if (is_boolean(val))
-        return new option<bool>(bool_from(val));
+        return new option<bool>(boolean_from(val));
     else if (is_string(val))
         return new option<std::string>(string_from(val));
     else throw std::invalid_argument("Option does not have a valid type");
