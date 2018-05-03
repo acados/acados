@@ -39,6 +39,28 @@ clear x_St y_St c_St c_StVek
 S04_SetupNonlinearStateSpaceDynamics;
 
 %% Generalized nonlinear static feedback formulation (GNSF)
+% NOTES on how the model was transcribed:
+% == (1) ==
+%   all components of x which enter the nonlinearity must belong to x1
+%       -> x(1:5) are part of x1;
+
+% == (2) ==
+%   all components of x which enter the dynamics of the states determined
+%   in (1) must be part of x1;
+%       -> Regard fe(1:5)
+%       -> fe(1) contains x(6);
+%       -> fe(5) contains x(7);
+%           => x(1:7) is part of x1;
+
+% == (3) ==
+%   REPEAT (2) until you determine no additional components of x to be part
+%   of x1;
+%       -> fe(6) contains x(8);
+
+%   As now for all components of x it is determined to which part of the
+%   gnsf model structure they belong to; the hardest part of 
+
+
 nx = length(xy) + length(xnoy);
 nu = length(u);
 np = length(p);
@@ -47,7 +69,6 @@ x1 = [xy; xnoy];
 nx1 = length(x1);
 z = MX.sym('z',0);
 nz = 0;
-% x2 = SX.sy('x2',0);
 nx2 = 0;
 x1_dot = MX.sym('x1_dot',nx1,1);
 
