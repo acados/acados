@@ -220,4 +220,31 @@ outputs:
 * sim_new_lifted_irk_integrator
 ************************************************/
 
-TODO
+// function of implicit ode model
+
+external function: impl_ode_fun
+
+inputs:
+0) [x]    size: nx    type: BLASFEO_DVEC
+1) [K]    size: nx    type: BLASFEO_DVEC_ARGS
+2) [u]    size: nu    type: COLMAJ
+
+outputs:
+0) [fun]    size: nx  type: BLASFEO_DVEC_ARGS
+
+
+
+// function of implicit ode model + jacobians of implicit ode model
+
+external function: impl_ode_fun_jac_x_xdot_u
+
+inputs:
+0) [x]    size: nx    type: BLASFEO_DVEC
+1) [K]    size: nx    type: BLASFEO_DVEC_ARGS
+2) [u]    size: nu    type: COLMAJ
+
+outputs:
+0) [fun]        size: nx        type: BLASFEO_DVEC_ARGS
+1) [jac_x]      size: nx*nx     type: BLASFEO_DMAT
+2) [jac_xdot]   size: nx*nx     type: BLASFEO_DMAT
+3) [jac_u]      size: nx*nu     type: BLASFEO_DMAT

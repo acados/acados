@@ -117,7 +117,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
         std::vector<std::vector<double>> tmp = $self->extract(field);
         std::vector<LangObject *> result;
         for (int i = 0; i < tmp.size(); ++i)
-            result.push_back(new_matrix($self->dimensions(field, i), tmp.at(i).data()));
+            result.push_back(new_matrix($self->shape_of(field, i), tmp.at(i).data()));
         return swig::from(result);
     }
 

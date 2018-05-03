@@ -38,7 +38,7 @@ public:
 
     std::map<std::string, std::vector<uint>> dimensions();
 
-    std::pair<uint, uint> dimensions(std::string field, uint stage);
+    std::pair<uint, uint> shape_of(std::string field, uint stage);
 
     void set_bounds_indices(std::string name, uint stage, std::vector<uint> v);
 

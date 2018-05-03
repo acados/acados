@@ -18,7 +18,7 @@ if CasadiMeta.version()=='3.4.0'
 	opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 else
 	% old casadi versions
-	opts = struct('mex', false);
+	error('Please download and install Casadi 3.4.0')
 end
 
 
@@ -108,6 +108,12 @@ impl_ode_fun_jac_x_xdot.generate('impl_ode_fun_jac_x_xdot', opts);
 
 impl_ode_jac_x_xdot_u = Function('casadi_impl_ode_jac_x_xdot_u', {x, dx, u, p}, {jacobian(fi, x), jacobian(fi, dx), jacobian(fi, u)});
 impl_ode_jac_x_xdot_u.generate('impl_ode_jac_x_xdot_u', opts);
+
+
+% impl_ode_fun_jac_x_xdot_u
+
+impl_ode_fun_jac_x_xdot_u = Function('casadi_impl_ode_fun_jac_x_xdot_u', {x, dx, u, p}, {fi, jacobian(fi, x), jacobian(fi, dx), jacobian(fi, u)});
+impl_ode_fun_jac_x_xdot_u.generate('impl_ode_fun_jac_x_xdot_u', opts);
 
 
 % impl_ode_jac_x_u
