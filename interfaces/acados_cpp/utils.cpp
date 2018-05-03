@@ -1,9 +1,5 @@
 
-#ifndef ACADOS_INTERFACES_ACADOS_CPP_PAIR_HPP_
-#define ACADOS_INTERFACES_ACADOS_CPP_PAIR_HPP_
-
-#include <utility>
-#include <vector>
+#include "acados_cpp/utils.hpp"
 
 namespace acados {
 
@@ -37,6 +33,31 @@ const T& clamp(const T& lo, const T& hi, const T& val) {
     return val;
 }
 
-}  // namespace acados
+std::string load_error_message() {
+    #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
 
-#endif  // ACADOS_INTERFACES_ACADOS_CPP_PAIR_HPP_
+    // Retrieve the system error message for the last-error code
+    LPVOID lpMsgBuf;
+    DWORD dw = GetLastError();
+
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        dw,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR) &lpMsgBuf,
+        0, NULL);
+
+    return std::string((LPTSTR) lpMsgBuf);
+
+    #else
+
+    return std::string(dlerror());
+
+    #endif
+
+}
+
+}  // namespace acados

@@ -7,8 +7,6 @@
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 
-using std::vector;
-
 namespace acados {
 
 class ocp_qp_solution {
@@ -21,11 +19,11 @@ public:
 
     ocp_qp_solution(const ocp_qp_solution& other);
 
-    vector<vector<double>> states();
-    vector<vector<double>> controls();
-    vector<vector<double>> lag_mul_dynamics();
-    vector<vector<double>> lag_mul_bounds();
-    vector<vector<double>> lag_mul_constraints();
+    std::vector<std::vector<double>> states();
+    std::vector<std::vector<double>> controls();
+    std::vector<std::vector<double>> lag_mul_dynamics();
+    std::vector<std::vector<double>> lag_mul_bounds();
+    std::vector<std::vector<double>> lag_mul_constraints();
     ocp_qp_info info();
 
     const int N;

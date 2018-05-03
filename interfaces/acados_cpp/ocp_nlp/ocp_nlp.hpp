@@ -6,10 +6,12 @@
 #include <string>
 #include <vector>
 
-#include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados_c/ocp_nlp_interface.h"
 #include "acados/utils/types.h"
+
 #include "acados_cpp/ocp.hpp"
 #include "acados_cpp/options.hpp"
+#include "acados_cpp/ocp_nlp/ocp_nlp_solution.hpp"
 
 #include "casadi/casadi.hpp"
 
@@ -26,7 +28,7 @@ class ocp_nlp : private ocp {
 
     void initialize_solver(std::string solver_name, std::map<std::string, option_t *> options = {});
 
-    // void solve();
+    ocp_nlp_solution solve();
 
     std::vector<std::string> fields = {"lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug", "lh", "uh"};
 
@@ -51,7 +53,13 @@ class ocp_nlp : private ocp {
 
  private:
 
-    void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>>) override;
+    void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>> bounds) override {
+        ocp::squeeze_dimensions(bounds);
+    }
+
+    void fill_bounds(std::map<std::string, std::vector<std::vector<double>>> bounds) override {
+        ocp::fill_bounds(bounds);
+    }
 
     void change_bound_dimensions(std::vector<int> nbx, std::vector<int> nbu) override;
 
@@ -59,7 +67,11 @@ class ocp_nlp : private ocp {
 
     void needs_initializing(bool) override;
 
-    void set_bounds_indices(std::string, int, std::vector<int>) override;
+    void set_bound(std::string bound, int stage, std::vector<double> new_bound) override;
+
+    std::vector<int> get_bound_indices(std::string, int) override;
+
+    void set_bound_indices(std::string, int, std::vector<int>) override;
 
     int num_stages() override;
 
@@ -70,6 +82,10 @@ class ocp_nlp : private ocp {
     std::unique_ptr<ocp_nlp_dims> dims_;
 
     std::unique_ptr<ocp_nlp_solver_config> config_;
+
+    std::unique_ptr<ocp_nlp_solver> solver_;
+
+    std::unique_ptr<void, void (*)(void *)> solver_options_ {nullptr, &std::free};
 
     std::map<std::string, void *> dynamics_handle;
 

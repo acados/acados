@@ -1,6 +1,7 @@
 
 #include "acados_cpp/ocp.hpp"
 
+#include "acados/utils/types.h"
 #include "acados_cpp/ocp_bounds.hpp"
 
 namespace acados {
@@ -25,9 +26,31 @@ void ocp::squeeze_dimensions(map<string, vector<vector<double>>> bounds) {
 
     for (string bound : {"x", "u"})
         for (int stage = 0; stage <= num_stages(); ++stage)
-            set_bounds_indices(bound, stage, idxb_new.at(bound).at(stage));
+            set_bound_indices(bound, stage, idxb_new.at(bound).at(stage));
 
     needs_initializing(true);
+}
+
+void ocp::fill_bounds(map<string, vector<vector<double>>> bounds) {
+    for (auto bound : bounds) {
+        for (int stage = 0; stage <= num_stages(); ++stage) {
+
+            auto idxb_stage = get_bound_indices(bound.first, stage);
+            auto stage_bound = bound.second.at(stage);
+
+            vector<double> new_bound(idxb_stage.size());
+
+            if (bound.first == "lbx" || bound.first == "lbu") {
+                std::fill(new_bound.begin(), new_bound.end(), ACADOS_NEG_INFTY);
+            } else if (bound.first == "ubx" || bound.first == "ubu") {
+                std::fill(new_bound.begin(), new_bound.end(), ACADOS_POS_INFTY);
+            }
+            
+            copy_at(new_bound, stage_bound, idxb_stage);
+            set_bound(bound.first, stage, new_bound);
+            
+        }
+    }
 }
 
 }  // namespace acados

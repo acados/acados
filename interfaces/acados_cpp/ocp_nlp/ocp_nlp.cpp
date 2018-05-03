@@ -6,17 +6,19 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
+
 #include "acados_cpp/ocp_dimensions.hpp"
+#include "acados_cpp/utils.hpp"
+
+#include "blasfeo/include/blasfeo_d_aux.h"
 
 #include "casadi/casadi.hpp"
 #include "casadi/mem.h"
 
 #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
 #include <windows.h>
-std::string compiler {"mex"};
 #else
 #include <dlfcn.h>
-std::string compiler {"cc"};
 #endif
 int global_library_counter = 0;
 
@@ -94,15 +96,23 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
         nlp_set_model_in_stage(config_.get(), nlp_.get(), stage, "expl_vde_for", fcn_handle);
 
     squeeze_dimensions(cached_bounds);
+
+    solver_options_.reset(ocp_nlp_opts_create(config_.get(), dims_.get()));
+
 }
 
-// ocp_nlp_solution ocp_nlp::solve() {
+ocp_nlp_solution ocp_nlp::solve() {
 
-//     // fill_in_bounds();
+    fill_bounds(cached_bounds);
 
-//     // config_->evaluate();
+    solver_.reset(ocp_nlp_create(config_.get(), dims_.get(), solver_options_.get()));
 
-// }
+    auto result = std::unique_ptr<ocp_nlp_out>(ocp_nlp_out_create(config_.get(), dims_.get()));
+
+    int status = ocp_nlp_solve(solver_.get(), nlp_.get(), result.get());
+
+    return ocp_nlp_solution(std::move(result));
+}
 
 void ocp_nlp::set_field(string field, vector<double> v) {
     for (int stage = 0; stage <= N; ++stage)
@@ -181,33 +191,6 @@ void *load_function(std::string function_name, void *handle) {
     #endif
 }
 
-static std::string load_error_message() {
-    #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
-
-    // Retrieve the system error message for the last-error code
-    LPVOID lpMsgBuf;
-    DWORD dw = GetLastError();
-
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER |
-        FORMAT_MESSAGE_FROM_SYSTEM |
-        FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        dw,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR) &lpMsgBuf,
-        0, NULL);
-
-    return std::string((LPTSTR) lpMsgBuf);
-
-    #else
-
-    return std::string(dlerror());
-
-    #endif
-
-}
-
 std::map<std::string, casadi::Function> ocp_nlp::create_explicit_ode_functions(const casadi::Function& model) {
     casadi::SX x = model.sx_in(0);
     casadi::SX u = model.sx_in(1);
@@ -230,6 +213,11 @@ std::map<std::string, casadi::Function> ocp_nlp::create_explicit_ode_functions(c
 }
 
 void *compile_and_load(std::string name) {
+#if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
+    std::string compiler {"mex"};
+#else
+    std::string compiler {"cc"};
+#endif
     void *handle;
     std::string library_name = name + std::to_string(global_library_counter++) + std::string(".so");
     std::string path_to_library = std::string("./") + library_name;
@@ -250,9 +238,27 @@ void *compile_and_load(std::string name) {
     return handle;
 }
 
-void ocp_nlp::squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>> bounds) {
-    ocp::squeeze_dimensions(bounds);
+void ocp_nlp::set_bound(std::string bound, int stage, std::vector<double> new_bound) {
+	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_->constraints;
+	ocp_nlp_constraints_dims **constraint_dims = (ocp_nlp_constraints_dims **) dims_->constraints;
+
+    int nbx = constraint_dims[stage]->nbx;
+    int nbu = constraint_dims[stage]->nbu;
+    int ni = dims_->ni[stage];
+
+    if (bound == "lbx") {
+        blasfeo_pack_dvec(nbx, new_bound.data(), &constraints[stage]->d, nbu);
+    } else if (bound == "ubx") {
+        blasfeo_pack_dvec(nbx, new_bound.data(), &constraints[stage]->d, ni+nbu);
+    } else if (bound == "lbu") {
+        blasfeo_pack_dvec(nbu, new_bound.data(), &constraints[stage]->d, 0);
+    } else if (bound == "ubu") {
+        blasfeo_pack_dvec(nbu, new_bound.data(), &constraints[stage]->d, ni);
+    } else {
+        throw std::invalid_argument("Expected one of {'lbx', 'ubx', 'lbu', 'ubu'} but got " + bound + ".");
+    }
 }
+
 
 void ocp_nlp::change_bound_dimensions(std::vector<int> nbx, std::vector<int> nbu) {
 
@@ -278,25 +284,51 @@ void ocp_nlp::needs_initializing(bool flag) {
     needs_initializing_ = flag;
 }
 
-void ocp_nlp::set_bounds_indices(std::string bound, int stage, std::vector<int> idxb) {
+vector<int> ocp_nlp::get_bound_indices(std::string bound, int stage) {
+   
+	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_->constraints;
+	ocp_nlp_constraints_dims **constraint_dims = (ocp_nlp_constraints_dims **) dims_->constraints;
+    
+    vector<int> idxb;
+
+    int nbx = constraint_dims[stage]->nbx;
+    int nbu = constraint_dims[stage]->nbu;
+
+    if (bound == "x") {
+        for (int i = 0; i < nbx; ++i)
+            idxb.push_back(constraints[stage]->idxb[nbu + i]);
+    } else if (bound == "u") {
+        for (int i = 0; i < nbu; ++i)
+            idxb.push_back(constraints[stage]->idxb[i]);
+    } else {
+        throw std::invalid_argument("Can only get bound indices for 'x' and 'u'.");
+    }
+
+    return idxb;
+}
+
+void ocp_nlp::set_bound_indices(std::string bound, int stage, std::vector<int> idxb) {
 
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_->constraints;
 	ocp_nlp_constraints_dims **constraint_dims = (ocp_nlp_constraints_dims **) dims_->constraints;
 
+    int nbx = constraint_dims[stage]->nbx;
+    int nbu = constraint_dims[stage]->nbu;
+
     if (bound == "x") {
-        if (idxb.size() != constraint_dims[stage]->nbx)
+        if (idxb.size() != nbx)
             throw std::invalid_argument("Expected " + std::to_string(constraint_dims[stage]->nbx)
                                         + " bound indices but got " + std::to_string(idxb.size()) + ".");
-        for (int i = 0; i < constraint_dims[stage]->nbx; ++i)
-            constraints[stage]->idxb[constraint_dims[stage]->nbu + i] = idxb[i];
+        for (int i = 0; i < nbx; ++i)
+            constraints[stage]->idxb[nbu + i] = idxb[i];
     } else if (bound == "u") {
-        if (idxb.size() != constraint_dims[stage]->nbu)
+        if (idxb.size() != nbu)
             throw std::invalid_argument("Expected " + std::to_string(constraint_dims[stage]->nbu)
                                         + " bound indices but got " + std::to_string(idxb.size()) + ".");
-        for (int i = 0; i < constraint_dims[stage]->nbu; ++i)
+        for (int i = 0; i < nbu; ++i)
             constraints[stage]->idxb[i] = idxb[i];
     } else {
-        throw std::invalid_argument("Can only set bounds for 'x' and 'u'.");
+        throw std::invalid_argument("Can only get bound indices for 'x' and 'u'.");
     }
 
 }

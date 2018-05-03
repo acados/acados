@@ -54,19 +54,27 @@ private:
 
     void fill_in_bounds();
 
-    std::vector<std::vector<int>> get_bounds_indices(std::string name);
-
     bool in_range(std::string field, int stage);
 
-    void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>>) override;
+    void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>> bounds) override {
+        ocp::squeeze_dimensions(bounds);
+    }
 
-    void change_bound_dimensions(vector<int> nbx, vector<int> nbu) override;
+    void fill_bounds(std::map<std::string, std::vector<std::vector<double>>> bounds) override {
+        ocp::fill_bounds(bounds);
+    }
+
+    void change_bound_dimensions(std::vector<int> nbx, std::vector<int> nbu) override;
+
+    void set_bound(std::string bound, int stage, std::vector<double> new_bound) override;
+
+    std::vector<int> get_bound_indices(std::string name, int stage) override;
+
+    void set_bound_indices(std::string name, int stage, std::vector<int> v) override;
 
     bool needs_initializing() override;
 
     void needs_initializing(bool) override;
-
-    void set_bounds_indices(std::string name, int stage, std::vector<int> v) override;
 
     std::vector<int> nx();
     std::vector<int> nu();
