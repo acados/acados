@@ -382,12 +382,11 @@ int main()
 	external_function_generic h1;
 	double *lh1;
 	double *uh1;
+	lh1 = malloc((nh[1])*sizeof(double));
+	uh1 = malloc((nh[1])*sizeof(double));
 	if (nh[1]>0)
 	{
 		h1.evaluate = &ext_fun_h1;
-
-		lh1 = malloc((nh[1])*sizeof(double));
-		uh1 = malloc((nh[1])*sizeof(double));
 
 		// electric power
 		lh1[0] = Pel_min;
@@ -835,6 +834,9 @@ int main()
 	free(idxb0);
 	free(idxb1);
 	free(idxbN);
+
+	free(lh1);
+	free(uh1);
 
 	free(ls0);
 	free(us0);
