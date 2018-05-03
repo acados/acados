@@ -60,8 +60,6 @@ typedef struct
 typedef struct
 {
 
-    struct blasfeo_dmat *JG_traj; // JGK trajectory
-
     struct blasfeo_dmat *J_temp_x;    // temporary Jacobian of ode w.r.t x (nx, nx)
     struct blasfeo_dmat *J_temp_xdot; // temporary Jacobian of ode w.r.t xdot (nx, nx)
     struct blasfeo_dmat *J_temp_u;    // temporary Jacobian of ode w.r.t u (nx, nu)
@@ -69,10 +67,7 @@ typedef struct
     struct blasfeo_dvec *rG; // residuals of G (nx*ns)
     struct blasfeo_dvec *xt; // temporary x
     struct blasfeo_dvec *xn; // x at each integration step
-    
-    struct blasfeo_dvec *xn_traj; // xn trajectory
-    struct blasfeo_dvec *K_traj;  // K trajectory
-    struct blasfeo_dvec *w;       // stacked x and u
+    struct blasfeo_dvec *w;  // stacked x and u
 
     int *ipiv; // index of pivot vector
 
