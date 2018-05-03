@@ -336,7 +336,7 @@ void *sim_new_lifted_irk_memory_assign(void *config, void *dims_, void *opts_, v
     }
 
     for (int i=0;i < num_steps; i++) {
-        assign_and_advance_blasfeo_dvec_mem(nx, &memory->K[i], &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nx*ns, &memory->K[i], &c_ptr);
         blasfeo_dvecse(nx*ns, 0.0, &memory->K[i], 0);
     }
 
@@ -702,7 +702,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     } // end int step ss
 
     // extract output
-    blasfeo_print_dmat(nx, nx+nu, S_forw, 0, 0);
     blasfeo_unpack_dvec(nx, xn, 0, x_out);
 
     blasfeo_unpack_dmat(nx, nx+nu, S_forw, 0, 0, S_forw_out, nx);
