@@ -30,9 +30,6 @@ calculate_all_idxb(const vector<vector<double>>& lower_bounds, const vector<vect
     return bounds_indices;
 }
 
-/*
- * Copy values from input at given indices, pad remaining elements with a given value.
- */
 void
 copy_at(vector<double>& output, vector<double> input, vector<int> copy_ids) {
     if (copy_ids.size() > output.size())

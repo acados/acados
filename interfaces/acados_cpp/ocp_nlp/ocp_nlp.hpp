@@ -60,6 +60,8 @@ class ocp_nlp {
 
     std::map<std::string, std::vector<int>> dimensions_;
 
+    std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
+
 };
 
 void *load_function(std::string function_name, void *handle);

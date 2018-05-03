@@ -18,7 +18,7 @@ std::vector<std::vector<int>>
 calculate_all_idxb(const std::vector<std::vector<double>>& lower_bounds, const std::vector<std::vector<double>>& upper_bounds);
 
 /*
- * 
+ * Copy values from input at given indices, pad remaining elements with a given value.
  */
 void
 copy_at(std::vector<double>& output, std::vector<double> input, std::vector<int> copy_ids);

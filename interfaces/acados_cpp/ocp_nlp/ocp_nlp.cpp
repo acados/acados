@@ -205,4 +205,24 @@ void *compile_and_load(std::string name) {
     return handle;
 }
 
+// void ocp_nlp::reset_bounds() {
+
+//     for (int stage = 0; stage <= N; ++stage) {
+//         cached_bounds["lbx"].push_back(vector<double>(qp->dim->nx[stage], ACADOS_NEG_INFTY));
+//         cached_bounds["ubx"].push_back(vector<double>(qp->dim->nx[stage], ACADOS_POS_INFTY));
+//         cached_bounds["lbu"].push_back(vector<double>(qp->dim->nu[stage], ACADOS_NEG_INFTY));
+//         cached_bounds["ubu"].push_back(vector<double>(qp->dim->nu[stage], ACADOS_POS_INFTY));
+
+//         std::vector<int> idx_states(nbx().at(stage));
+//         std::iota(std::begin(idx_states), std::end(idx_states), 0);
+//         set_bounds_indices("x", stage, idx_states);
+
+//         std::vector<int> idx_controls(nbu().at(stage));
+//         std::iota(std::begin(idx_controls), std::end(idx_controls), 0);
+//         set_bounds_indices("u", stage, idx_controls);
+//     }
+
+//     needs_initializing = true;
+// }
+
 }  // namespace acados

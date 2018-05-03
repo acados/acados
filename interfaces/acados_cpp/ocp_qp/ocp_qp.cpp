@@ -24,28 +24,33 @@ using std::vector;
 
 namespace acados {
 
-ocp_qp::ocp_qp(std::vector<int> nx, std::vector<int> nu, std::vector<int> nbx,
-             std::vector<int> nbu, std::vector<int> ng, std::vector<int> ns)
+ocp_qp::ocp_qp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, std::vector<int> ns)
              : N(nx.size() - 1), qp(nullptr), solver(nullptr), needs_initializing(true) {
 
 
     // Number of controls on last stage should be zero;
     if (!nu.empty()) nu.back() = 0;
-    if (!nbu.empty()) nbu.back() = 0;
 
     auto dim = create_ocp_qp_dimensions_ptr({
-        {"nx", nx}, {"nu", nu}, {"nbx", nbx}, {"nbu", nbu}, {"ng", ng}, {"ns", ns}
+        {"nx", nx}, {"nu", nu}, {"nbx", nx}, {"nbu", nu}, {"ng", ng}, {"ns", ns}
     });
 
     qp = std::unique_ptr<ocp_qp_in>(ocp_qp_in_create(NULL, dim.get()));
+
+    for (int stage = 0; stage <= N; ++stage) {
+        cached_bounds["lbx"].push_back(vector<double>(qp->dim->nx[stage], -INFINITY));
+        cached_bounds["ubx"].push_back(vector<double>(qp->dim->nx[stage], +INFINITY));
+        cached_bounds["lbu"].push_back(vector<double>(qp->dim->nu[stage], -INFINITY));
+        cached_bounds["ubu"].push_back(vector<double>(qp->dim->nu[stage], +INFINITY));
+    }
 
     reset_bounds();
 
 }
 
-ocp_qp::ocp_qp(int N, int nx, int nu, int nbx, int nbu, int ng, int ns)
-    : ocp_qp(std::vector<int>(N+1, nx), std::vector<int>(N+1, nu), std::vector<int>(N+1, nbx),
-      std::vector<int>(N+1, nbu), std::vector<int>(N+1, ng), std::vector<int>(N+1, ns)) {}
+ocp_qp::ocp_qp(int N, int nx, int nu, int ng, int ns)
+    : ocp_qp(std::vector<int>(N+1, nx), std::vector<int>(N+1, nu), std::vector<int>(N+1, ng),
+             std::vector<int>(N+1, ns)) {}
 
 /*
  * Update all fields with the same values. Matrices are passed in column-major ordering.
@@ -72,14 +77,17 @@ void ocp_qp::set_field(string field, int stage, std::vector<double> v) {
 
     if (field == "lbx" || field == "ubx" || field == "lbu" || field == "ubu") {
         
-        // Saturate the bound values
-        std::transform(v.begin(), v.end(), v.begin(), [](auto elem) {
-            return clamp(ACADOS_NEG_INFTY, ACADOS_POS_INFTY, elem);
-        });
-        
         cached_bounds.at(field).at(stage) = v;
         
-        reset_bounds();
+        bool needs_resetting = false;
+        if (field == "lbx" || field == "ubx") {
+            if (get_bounds_indices("x").at(stage) != calculate_idxb(cached_bounds["lbx"].at(stage), cached_bounds["ubx"].at(stage)))
+                needs_resetting = true;
+        } else if (field == "lbu" || field == "ubu")
+            if (get_bounds_indices("u").at(stage) != calculate_idxb(cached_bounds["lbu"].at(stage), cached_bounds["ubu"].at(stage)))
+                needs_resetting = true;
+        if (needs_resetting)
+            reset_bounds();
 
     } else if (field == "Q") {
         d_cvt_colmaj_to_ocp_qp_Q(stage, v.data(), qp.get());
@@ -158,10 +166,6 @@ void ocp_qp::reset_bounds() {
     d_change_bounds_dimensions_ocp_qp(qp->dim->nu, qp->dim->nx, qp.get());
 
     for (int stage = 0; stage <= N; ++stage) {
-        cached_bounds["lbx"].push_back(vector<double>(qp->dim->nx[stage], ACADOS_NEG_INFTY));
-        cached_bounds["ubx"].push_back(vector<double>(qp->dim->nx[stage], ACADOS_POS_INFTY));
-        cached_bounds["lbu"].push_back(vector<double>(qp->dim->nu[stage], ACADOS_NEG_INFTY));
-        cached_bounds["ubu"].push_back(vector<double>(qp->dim->nu[stage], ACADOS_POS_INFTY));
 
         std::vector<int> idx_states(nbx().at(stage));
         std::iota(std::begin(idx_states), std::end(idx_states), 0);
@@ -179,21 +183,28 @@ void ocp_qp::fill_in_bounds() {
     for (auto it : cached_bounds) {
         for (int stage = 0; stage <= N; ++stage) {
 
-            auto idxb_stage = get_bounds_indices(std::to_string(it.first.back())).at(stage);
+            auto idxb_stage = get_bounds_indices(string(1, it.first.back())).at(stage);
             auto stage_bound = it.second.at(stage);
 
-            vector<double> new_bound(stage_bound.size());
+            vector<double> new_bound(idxb_stage.size());
 
-            copy_at(new_bound, stage_bound, idxb_stage);
-
-            if (it.first == "lbx")
+            if (it.first == "lbx") {
+                std::fill(new_bound.begin(), new_bound.end(), ACADOS_NEG_INFTY);
+                copy_at(new_bound, stage_bound, idxb_stage);
                 d_cvt_colmaj_to_ocp_qp_lbx(stage, new_bound.data(), qp.get());
-            else if (it.first == "ubx")
+            } else if (it.first == "ubx") {
+                std::fill(new_bound.begin(), new_bound.end(), ACADOS_POS_INFTY);
+                copy_at(new_bound, stage_bound, idxb_stage);
                 d_cvt_colmaj_to_ocp_qp_ubx(stage, new_bound.data(), qp.get());
-            else if (it.first == "lbu")
+            } else if (it.first == "lbu") {
+                std::fill(new_bound.begin(), new_bound.end(), ACADOS_NEG_INFTY);
+                copy_at(new_bound, stage_bound, idxb_stage);
                 d_cvt_colmaj_to_ocp_qp_lbu(stage, new_bound.data(), qp.get());
-            else if (it.first == "ubu")
+            } else if (it.first == "ubu") {
+                std::fill(new_bound.begin(), new_bound.end(), ACADOS_POS_INFTY);
+                copy_at(new_bound, stage_bound, idxb_stage);
                 d_cvt_colmaj_to_ocp_qp_ubu(stage, new_bound.data(), qp.get());
+            }
         }
     }
 }

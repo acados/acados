@@ -21,10 +21,9 @@ class ocp_qp {
 
 public:
 
-    ocp_qp(std::vector<int> nx, std::vector<int> nu, std::vector<int> nbx, std::vector<int> nbu,
-           std::vector<int> ng, std::vector<int> ns);
+    ocp_qp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, std::vector<int> ns);
 
-    ocp_qp(int N, int nx, int nu, int nbx = 0, int nbu = 0, int ng = 0, int ns = 0);
+    ocp_qp(int N, int nx, int nu, int ng = 0, int ns = 0);
 
     std::vector< std::vector<double> > get_field(std::string field);
     
