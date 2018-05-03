@@ -316,13 +316,13 @@ int main()
 				gnsf_dim->nu = nu;
 				gnsf_dim->nx1= nx;
 				gnsf_dim->nx2= 0;
-				gnsf_dim->ny = nx;//nx + nu;
-				gnsf_dim->nuhat = 2;//nx + nu;
+				gnsf_dim->ny = 5;
+				gnsf_dim->nuhat = 0;
 				gnsf_dim->n_out = 1;
 
 				// set options
 				opts->ns = 8; // number of stages in rk integrator
-				opts->num_steps = 1; // number of integration steps
+				opts->num_steps = 3; // number of integration steps
 				break;
 
 			default:
