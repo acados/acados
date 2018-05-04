@@ -89,6 +89,8 @@ class ocp_nlp : private ocp {
 
     std::map<std::string, void *> dynamics_handle;
 
+    external_function_casadi forw_vde_;
+
     std::map<std::string, std::vector<int>> dimensions_;
 
     std::map<std::string, std::vector<std::vector<double>>> cached_bounds;

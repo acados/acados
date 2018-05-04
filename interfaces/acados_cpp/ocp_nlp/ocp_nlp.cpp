@@ -7,6 +7,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
+#include "acados_c/external_function_interface.h"
 #include "acados_cpp/ocp_dimensions.hpp"
 #include "acados_cpp/utils.hpp"
 
@@ -90,10 +91,17 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
 
     nlp_.reset(ocp_nlp_in_create(config_.get(), dims_.get()));
 
-    void *fcn_handle = load_function("expl_vde_for", dynamics_handle["expl_vde_for"]);
+    forw_vde_.casadi_fun = reinterpret_cast<casadi_eval_t>(load_function("expl_vde_for", dynamics_handle["expl_vde_for"]));
+    forw_vde_.casadi_n_in = reinterpret_cast<casadi_getint_t>(load_function("expl_vde_for_n_in", dynamics_handle["expl_vde_for"]));
+    forw_vde_.casadi_n_out = reinterpret_cast<casadi_getint_t>(load_function("expl_vde_for_n_out", dynamics_handle["expl_vde_for"]));
+    forw_vde_.casadi_sparsity_in = reinterpret_cast<casadi_sparsity_t>(load_function("expl_vde_for_sparsity_in", dynamics_handle["expl_vde_for"]));
+    forw_vde_.casadi_sparsity_out = reinterpret_cast<casadi_sparsity_t>(load_function("expl_vde_for_sparsity_out", dynamics_handle["expl_vde_for"]));
+    forw_vde_.casadi_work = reinterpret_cast<casadi_work_t>(load_function("expl_vde_for_work", dynamics_handle["expl_vde_for"]));
+
+    external_function_casadi_create_array(1, &forw_vde_);
 
     for (int stage = 0; stage < N; ++stage)
-        nlp_set_model_in_stage(config_.get(), nlp_.get(), stage, "expl_vde_for", fcn_handle);
+        nlp_set_model_in_stage(config_.get(), nlp_.get(), stage, "expl_vde_for", &forw_vde_);
 
     squeeze_dimensions(cached_bounds);
 
@@ -107,11 +115,11 @@ ocp_nlp_solution ocp_nlp::solve() {
 
     solver_.reset(ocp_nlp_create(config_.get(), dims_.get(), solver_options_.get()));
 
-    auto result = std::unique_ptr<ocp_nlp_out>(ocp_nlp_out_create(config_.get(), dims_.get()));
+    auto result = std::shared_ptr<ocp_nlp_out>(ocp_nlp_out_create(config_.get(), dims_.get()));
 
     ocp_nlp_solve(solver_.get(), nlp_.get(), result.get());
 
-    return ocp_nlp_solution(std::move(result), dims_);
+    return ocp_nlp_solution(result, dims_);
 }
 
 void ocp_nlp::set_field(string field, vector<double> v) {
@@ -294,14 +302,14 @@ vector<int> ocp_nlp::get_bound_indices(std::string bound, int stage) {
     int nbx = constraint_dims[stage]->nbx;
     int nbu = constraint_dims[stage]->nbu;
 
-    if (bound == "x") {
+    if (bound == "lbx" || bound == "ubx") {
         for (int i = 0; i < nbx; ++i)
             idxb.push_back(constraints[stage]->idxb[nbu + i]);
-    } else if (bound == "u") {
+    } else if (bound == "lbu" || bound == "ubu") {
         for (int i = 0; i < nbu; ++i)
             idxb.push_back(constraints[stage]->idxb[i]);
     } else {
-        throw std::invalid_argument("Can only get bound indices for 'x' and 'u'.");
+        throw std::invalid_argument("Expected 'x' or 'u' but got '" + bound + "'.");
     }
 
     return idxb;

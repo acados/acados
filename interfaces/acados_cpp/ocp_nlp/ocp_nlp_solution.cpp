@@ -9,21 +9,21 @@ namespace acados {
 
 using std::vector;
 
-ocp_nlp_solution::ocp_nlp_solution(std::unique_ptr<ocp_nlp_out> solution, std::shared_ptr<ocp_nlp_dims> dims)
-    : N(dims->N), nlp_out_(nullptr) {
+ocp_nlp_solution::ocp_nlp_solution(std::shared_ptr<ocp_nlp_out> solution, std::shared_ptr<ocp_nlp_dims> dims)
+    : N(dims->N), nlp_out_(nullptr), dims_(nullptr) {
 
     if (solution == nullptr || dims == nullptr)
         throw std::invalid_argument("Null pointer passed to constructor");
 
-    nlp_out_ = std::move(solution);
+    nlp_out_ = solution;
     dims_ = dims;
 }
 
 ocp_nlp_solution::ocp_nlp_solution(const ocp_nlp_solution& other)
-    : N(other.N), nlp_out_(nullptr) {
+    : N(other.N), nlp_out_(nullptr), dims_(nullptr) {
     
-    nlp_out_.reset(other.nlp_out_.get());
-    dims_.reset(other.dims_.get());
+    nlp_out_ = other.nlp_out_;
+    dims_ = other.dims_;
 }
 
 vector<vector<double>> ocp_nlp_solution::states() {
