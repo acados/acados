@@ -577,13 +577,10 @@ int main()
 	{
 		if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
-			// initialize additional dimensions
-			// sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
-			// sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dims->dynamics[i]->sim;
+			/* initialize additional gnsf dimensions */
 			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
 			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
-			// printf("gnsf_dims.nx = %d \n ", gnsf_dims->nx);
-			// printf("gnsf_dims.nu = %d \n ", gnsf_dims->nu);
+
 			gnsf_dims->nx1 		= 8;
 			gnsf_dims->nz  		= 0;
 			gnsf_dims->nx2 		= 0;
