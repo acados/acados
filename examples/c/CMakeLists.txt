@@ -160,6 +160,13 @@ file(GLOB WT_MODEL_NX6_SRC
     wt_model_nx6/impl_ode_jac_x_xdot_u.c
     wt_model_nx6/impl_ode_fun_jac_x_xdot_u.c
     wt_model_nx6/impl_ode_jac_x_u.c
+    # gnsf functions
+    wt_model_nx6/phi_fun.c
+    wt_model_nx6/phi_fun_jac_y.c
+    wt_model_nx6/phi_jac_y_uhat.c
+    wt_model_nx6/f_lo_fun_jac_x1k1uz.c
+    wt_model_nx6/get_matrices_fun.c
+
 )
 
 file(GLOB WT_MODEL_NX6P2_SRC
@@ -173,6 +180,20 @@ file(GLOB WT_MODEL_NX6P2_SRC
     wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.c
     wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.c
     wt_model_nx6/nx6p2/impl_ode_jac_x_u.c
+    wt_model_nx6/nx6p2/phi_fun.c
+    wt_model_nx6/nx6p2/phi_fun_jac_y.c
+    wt_model_nx6/nx6p2/phi_jac_y_uhat.c
+    wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.c
+    wt_model_nx6/nx6p2/get_matrices_fun.c
+)
+
+file(GLOB GNSF_CRANE_SRC
+    gnsf_crane_model/phi_fun.c
+    gnsf_crane_model/phi_fun_jac_y.c
+    gnsf_crane_model/f_lo_fun_jac_x1k1uz.c
+    gnsf_crane_model/get_ints_fun.c
+    gnsf_crane_model/get_matrices_fun.c
+    gnsf_crane_model/phi_jac_y_uhat.c
 )
 
 # Define examples
@@ -229,6 +250,12 @@ if(ACADOS_WITH_C_INTERFACE)
     add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
     target_link_libraries(sim_wt_model_nx6 acados)
     add_test(sim_wt_model_nx6 sim_wt_model_nx6)
+endif()
+
+if(ACADOS_WITH_C_INTERFACE)
+    add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
+    target_link_libraries(sim_gnsf_crane acados)
+    add_test(sim_gnsf_crane sim_gnsf_crane)
 endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")

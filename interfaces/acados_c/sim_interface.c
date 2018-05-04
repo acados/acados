@@ -21,6 +21,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
+#include "acados/sim/sim_gnsf.h"
 #include "acados/sim/sim_new_lifted_irk_integrator.h"
 
 #include "acados_c/sim_interface.h"
@@ -52,6 +53,9 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
             break;
         case IRK:
             sim_irk_config_initialize_default(solver_config);
+            break;
+        case GNSF:
+            sim_gnsf_config_initialize_default(solver_config);
             break;
         case NEW_LIFTED_IRK:
             sim_new_lifted_irk_config_initialize_default(solver_config);
@@ -129,6 +133,15 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT_U, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_jac_x_u"))
         status = config->model_set_function(model, IMPL_ODE_JAC_X_U, fun_ptr);
+    // GNSF functions
+    else if (!strcmp(fun_type, "phi_fun"))
+        status = config->model_set_function(model, PHI_FUN, fun_ptr);
+    else if (!strcmp(fun_type, "phi_fun_jac_y"))
+        status = config->model_set_function(model, PHI_FUN_JAC_Y, fun_ptr);
+    else if (!strcmp(fun_type, "phi_jac_y_uhat"))
+        status = config->model_set_function(model, PHI_JAC_Y_UHAT, fun_ptr);
+    else if (!strcmp(fun_type, "f_lo_jac_x1_x1dot_u_z"))
+        status = config->model_set_function(model, LO_FUN, fun_ptr);
     else
         return ACADOS_FAILURE;
 
@@ -207,7 +220,6 @@ sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
 {
 	// update Butcher tableau (needed if the user changed ns)
 	config->opts_update(config, dims, opts_);
-
     int bytes = sim_calculate_size(config, dims, opts_);
 
     void *ptr = calloc(1, bytes);

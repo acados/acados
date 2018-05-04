@@ -54,10 +54,10 @@ EXAMPLES += nonlinear_chain_ocp_nlp
 # EXAMPLES += sim_crane_no_interface
 EXAMPLES += mass_spring_example_no_interface
 EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
+EXAMPLES += sim_gnsf_crane
 EXAMPLES += wind_turbine_nmpc
 
 examples: $(EXAMPLES)
-
 
 
 RUN_EXAMPLES =
@@ -103,10 +103,30 @@ sim_crane_no_interface: $(CRANE_OBJS) sim_crane_no_interface.o
 	@echo " Example sim_crane_no_interface build complete."
 	@echo
 
+sim_erk_crane: $(CRANE_OBJS) sim_erk_crane.o
+	$(CCC) -o sim_erk_crane.out sim_erk_crane.o  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_erk_crane build complete."
+	@echo
+
+CRANE_GNSF_OBJS =
+CRANE_GNSF_OBJS += gnsf_crane_model/phi_fun.o
+CRANE_GNSF_OBJS += gnsf_crane_model/phi_fun_jac_y.o
+CRANE_GNSF_OBJS += gnsf_crane_model/f_lo_fun_jac_x1k1uz.o
+CRANE_GNSF_OBJS += gnsf_crane_model/get_ints_fun.o
+CRANE_GNSF_OBJS += gnsf_crane_model/get_matrices_fun.o
+CRANE_GNSF_OBJS += gnsf_crane_model/phi_jac_y_uhat.o
+CRANE_GNSF_OBJS += sim_gnsf_crane.o
+
+sim_gnsf_crane: $(CRANE_GNSF_OBJS)
+	$(CCC) -o sim_gnsf_crane.out  $(CRANE_GNSF_OBJS) $(LDFLAGS) $(LIBS) #/opt/openblas/lib/libopenblas.a -pthread -lgfortran -lm
+	@echo
+	@echo " Example sim_gnsf_crane build complete."
+	@echo
+
+
 run_sim_crane_no_interface:
 	./sim_crane_no_interface.out
-
-
 
 sim_crane_example: $(CRANE_OBJS) sim_crane_example.o
 	$(CCC) -o sim_crane_example.out sim_crane_example.o  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
@@ -114,9 +134,9 @@ sim_crane_example: $(CRANE_OBJS) sim_crane_example.o
 	@echo " Example sim_crane_example build complete."
 	@echo
 
+
 run_sim_crane_example:
 	./sim_crane_example.out
-
 
 
 #################################################
@@ -135,6 +155,11 @@ WT_NX6_OBJS += wt_model_nx6/impl_ode_fun_jac_x_xdot.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_fun_jac_x_xdot_u.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_xdot_u.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_u.o
+WT_NX6_OBJS += wt_model_nx6/phi_fun.o
+WT_NX6_OBJS += wt_model_nx6/phi_fun_jac_y.o
+WT_NX6_OBJS += wt_model_nx6/phi_jac_y_uhat.o
+WT_NX6_OBJS += wt_model_nx6/f_lo_fun_jac_x1k1uz.o
+WT_NX6_OBJS += wt_model_nx6/get_matrices_fun.o
 
 sim_wt_model_nx6: $(WT_NX6_OBJS) sim_wt_model_nx6.o
 	$(CCC) -o sim_wt_model_nx6.out sim_wt_model_nx6.o  $(WT_NX6_OBJS) $(LDFLAGS) $(LIBS)
@@ -158,6 +183,11 @@ WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.o
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_u.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun_jac_y.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_jac_y_uhat.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/get_matrices_fun.o
 
 wind_turbine_nmpc: $(WT_NX6P2_OBJS) wind_turbine_nmpc.o
 	$(CCC) -o wind_turbine_nmpc.out wind_turbine_nmpc.o  $(WT_NX6P2_OBJS) $(LDFLAGS) $(LIBS)
@@ -167,7 +197,6 @@ wind_turbine_nmpc: $(WT_NX6P2_OBJS) wind_turbine_nmpc.o
 
 run_wind_turbine_nmpc:
 	./wind_turbine_nmpc.out
-
 
 
 #################################################
