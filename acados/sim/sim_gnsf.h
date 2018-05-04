@@ -36,6 +36,8 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
 
+
+
 typedef struct
 {
     int nx;
@@ -48,6 +50,8 @@ typedef struct
     int nuhat;
 
 } sim_gnsf_dims;
+
+
 
 typedef struct
 {
@@ -73,7 +77,11 @@ typedef struct
 
 } gnsf_model;
 
-typedef struct { // pre_workspace - workspace used in the precomputation phase
+
+
+// pre_workspace - workspace used in the precomputation phase
+typedef struct
+{
     struct blasfeo_dmat E11;
     struct blasfeo_dmat E12;
     struct blasfeo_dmat E21;
@@ -114,8 +122,10 @@ typedef struct { // pre_workspace - workspace used in the precomputation phase
 } gnsf_pre_workspace;
 
 
-typedef struct {
-    /* workspace */
+
+// workspace
+typedef struct
+{
     double *Z_work; // used to perform computations to get Z_out
     double *Z_out;
 
@@ -173,6 +183,9 @@ typedef struct {
 
 } gnsf_workspace;
 
+
+
+// memory
 typedef struct
 {
     // scaled butcher table
@@ -203,6 +216,7 @@ typedef struct
 } sim_gnsf_memory;
 
 
+
 // gnsf dims
 int sim_gnsf_dims_calculate_size();
 void *sim_gnsf_dims_assign(void* config_, void *raw_memory);
@@ -225,12 +239,12 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory);
 int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun);
 
 // import
-void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_function_generic *get_matrices_fun);
+void sim_gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_function_generic *get_matrices_fun);
 // void gnsf_import_precomputed(sim_gnsf_dims* dims, gnsf_model *model, casadi_function_t But_KK_YY_ZZ_LO_fun);
 // void gnsf_get_dims( sim_gnsf_dims* dims, casadi_function_t get_ints_fun); // maybe remove
 
 // precomputation
-void gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, void* mem_, void *work_, double T);
+void sim_gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, void* mem_, void *work_, double T);
 
 // workspace & memory
 int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args);

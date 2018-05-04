@@ -93,7 +93,7 @@ void sim_gnsf_get_nu(void *dims_, int* nu)
 * import functions
 ************************************************/
 
-void gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_function_generic *get_matrices_fun)
+void sim_gnsf_import_matrices(sim_gnsf_dims* dims, gnsf_model *model, external_function_generic *get_matrices_fun)
 {
     // calling the external function
     ext_fun_arg_t ext_fun_type_in[1];
@@ -445,7 +445,7 @@ static void *gnsf_cast_pre_workspace(void* config_, sim_gnsf_dims *dims_, void *
 
 
 
-void gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, void* mem_, void *work_, double T){
+void sim_gnsf_precompute(void * config, sim_gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, void* mem_, void *work_, double T){
     acados_timer atimer;
     acados_tic(&atimer);
     int nu         = dims->nu;

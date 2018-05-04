@@ -332,7 +332,7 @@ int main()
 
 				// import model matrices
 				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
-				gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);
+				sim_gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);
 				break;
 			}
 			default :
@@ -389,7 +389,7 @@ int main()
 		int acados_return;
 
 		if (nss == 3) // for gnsf: perform precomputation
-			gnsf_precompute(config, gnsf_dim, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
+			sim_gnsf_precompute(config, gnsf_dim, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
 
 
 		acados_timer timer;
