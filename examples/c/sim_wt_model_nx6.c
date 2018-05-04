@@ -267,6 +267,8 @@ int main()
 			case 2:
 				opts->ns = 8; // number of stages in rk integrator
 				opts->num_steps = 3; // number of integration steps
+				opts->jac_reuse = true; // jacobian reuse
+				opts->newton_iter = 3; // number of newton iterations per integration step
 				break;
 
 			case 3://gnsf
@@ -283,6 +285,8 @@ int main()
 				// set options
 				opts->ns = 8; // number of stages in rk integrator
 				opts->num_steps = 3; // number of integration steps
+				opts->jac_reuse = true; // jacobian reuse
+				opts->newton_iter = 3; // number of newton iterations per integration step
 				break;
 
 			default:
