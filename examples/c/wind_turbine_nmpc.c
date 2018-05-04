@@ -540,7 +540,6 @@ int main()
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot = malloc(NN*sizeof(external_function_param_casadi));
 	external_function_param_casadi *impl_ode_jac_x_xdot_u = malloc(NN*sizeof(external_function_param_casadi));
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot_u = malloc(NN*sizeof(external_function_param_casadi));
-	external_function_param_casadi *impl_ode_jac_x_u = malloc(NN*sizeof(external_function_param_casadi));
 	// gnsf model
 	external_function_param_casadi *phi_fun = malloc(NN*sizeof(external_function_param_casadi));
 	external_function_param_casadi *phi_fun_jac_y = malloc(NN*sizeof(external_function_param_casadi));
@@ -959,7 +958,6 @@ int main()
  	external_function_param_casadi_free(impl_ode_fun_jac_x_xdot);
  	external_function_param_casadi_free(impl_ode_jac_x_xdot_u);
     external_function_param_casadi_free(impl_ode_fun_jac_x_xdot_u);
- 	external_function_param_casadi_free(impl_ode_jac_x_u);
  	external_function_param_casadi_free(phi_fun);
  	external_function_param_casadi_free(phi_fun_jac_y);
  	external_function_param_casadi_free(phi_jac_y_uhat);
