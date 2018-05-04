@@ -42,16 +42,8 @@ typedef struct
 	/* external functions */
 	// implicit ode
 	external_function_generic *impl_ode_fun;
-	// jac_x implicit ode
-	external_function_generic *impl_ode_jac_x;
-	// jac_xdot implicit ode
-	external_function_generic *impl_ode_jac_xdot;
-	// jac_u implicit ode
-	external_function_generic *impl_ode_jac_u;
     // implicit ode (included) & jac_x & jax_xdot
     external_function_generic *impl_ode_fun_jac_x_xdot;
-	// jax_x & jac_u implicit ode
-    external_function_generic *impl_ode_jac_x_u;
 	// jax_x & jac_xdot & jac_u implicit ode
     external_function_generic *impl_ode_jac_x_xdot_u;
 

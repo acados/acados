@@ -31,7 +31,6 @@
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_gnsf.h"
-#include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_collocation_utils.h"
 
 // blasfeo
