@@ -12,7 +12,7 @@ f = Function('f', [x, u], [x + u])
 N, nx, nu = 5, 2, 1
 
 nlp = ocp_nlp(N, nx, nu)
-nlp.set_dynamics(f, {'integrator': 'rk4', 'dt': 0.1})
+nlp.set_dynamics(f, {'integrator': 'rk4', 'step': 0.1})
 
 x0 = array([1, 1])
 nlp.set_field("lbx", 0, x0)

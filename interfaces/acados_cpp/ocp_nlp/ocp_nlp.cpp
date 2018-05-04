@@ -8,6 +8,7 @@
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
 #include "acados_c/external_function_interface.h"
+#include "acados_cpp/ocp_bounds.hpp"
 #include "acados_cpp/ocp_dimensions.hpp"
 #include "acados_cpp/utils.hpp"
 
@@ -25,6 +26,7 @@ int global_library_counter = 0;
 
 namespace acados {
 
+using std::map;
 using std::vector;
 using std::string;
 
@@ -83,13 +85,31 @@ ocp_nlp::ocp_nlp(int N, int nx, int nu, int ng, int nh, int ns)
 
 void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, option_t *> options) {
 
+    // Get bound indices for all stages
+    map<string, vector<vector<int>>> idxb_new;
+    idxb_new["x"] = calculate_all_idxb(cached_bounds.at("lbx"), cached_bounds.at("ubx"));
+    idxb_new["u"] = calculate_all_idxb(cached_bounds.at("lbu"), cached_bounds.at("ubu"));
+
+    // Calculate new dimensions
+    map<string, vector<int>> nb {{"x", std::vector<int>(num_stages()+1)}, {"u", std::vector<int>(num_stages()+1)}};
+    std::transform(idxb_new["x"].begin(), idxb_new["x"].end(), nb["x"].begin(), [](auto elem){return elem.size();});
+    std::transform(idxb_new["u"].begin(), idxb_new["u"].end(), nb["u"].begin(), [](auto elem){return elem.size();});
+
     dims_.reset(ocp_nlp_dims_create(config_.get()));
+
     ocp_nlp_dims_initialize(config_.get(), dimensions_["nx"].data(), dimensions_["nu"].data(),
-                            dimensions_["ny"].data(), dimensions_["nbx"].data(), dimensions_["nbu"].data(),
+                            dimensions_["ny"].data(), nb["x"].data(), nb["u"].data(),
                             dimensions_["ng"].data(), dimensions_["nh"].data(), std::vector<int>(N+1, 0).data(),
                             dimensions_["ns"].data(), dims_.get());
 
     nlp_.reset(ocp_nlp_in_create(config_.get(), dims_.get()));
+
+    for (int i = 0; i < N; ++i)
+        nlp_->Ts[i] = step_;
+
+    for (string bound : {"x", "u"})
+        for (int stage = 0; stage <= num_stages(); ++stage)
+            set_bound_indices(bound, stage, idxb_new.at(bound).at(stage));
 
     forw_vde_.casadi_fun = reinterpret_cast<casadi_eval_t>(load_function("expl_vde_for", dynamics_handle["expl_vde_for"]));
     forw_vde_.casadi_n_in = reinterpret_cast<casadi_getint_t>(load_function("expl_vde_for_n_in", dynamics_handle["expl_vde_for"]));
@@ -103,7 +123,29 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
     for (int stage = 0; stage < N; ++stage)
         nlp_set_model_in_stage(config_.get(), nlp_.get(), stage, "expl_vde_for", &forw_vde_);
 
-    squeeze_dimensions(cached_bounds);
+    vector<double> xref(2, 0);
+    vector<double> uref(1, 0);
+
+    for (int i = 0; i <= N; ++i) {
+        ocp_nlp_cost_ls_model *stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_->cost[i];
+        // Cyt
+        blasfeo_dgese(dimensions_["nu"][i]+dimensions_["nx"][i], dimensions_["ny"][i], 0.0, &stage_cost_ls->Cyt, 0, 0);
+        for (int j = 0; j < dimensions_["nu"][i]; j++)
+            BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, dimensions_["nx"][i]+j) = 1.0;
+        for (int j = 0; j < dimensions_["nx"][i]; j++)
+            BLASFEO_DMATEL(&stage_cost_ls->Cyt, dimensions_["nu"][i]+j, j) = 1.0;
+
+        // W
+        blasfeo_dgese(dimensions_["ny"][i], dimensions_["ny"][i], 0.0, &stage_cost_ls->W, 0, 0);
+        for (int j = 0; j < dimensions_["nx"][i]; j++)
+            BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = 100.0;
+        for (int j = 0; j < dimensions_["nu"][i]; j++)
+            BLASFEO_DMATEL(&stage_cost_ls->W, dimensions_["nx"][i]+j, dimensions_["nx"][i]+j) = 1.0;
+
+        // y_ref
+        blasfeo_pack_dvec(dimensions_["nx"][i], xref.data(), &stage_cost_ls->y_ref, 0);
+        blasfeo_pack_dvec(dimensions_["nu"][i], uref.data(), &stage_cost_ls->y_ref, dimensions_["nx"][i]);
+    }
 
     solver_options_.reset(ocp_nlp_opts_create(config_.get(), dims_.get()));
 
@@ -172,10 +214,15 @@ void ocp_nlp::set_dynamics(const casadi::Function& model, std::map<std::string, 
     if (!is_valid_model(model))
         throw std::invalid_argument("Model is invalid.");
 
+    if (!options.count("step"))
+        throw std::invalid_argument("Expected 'step' as an option.");
+
+    step_ = to_double(options["step"]);
+
     auto functions = create_explicit_ode_functions(model);
 
     for (auto elem : functions) {
-        elem.second.generate(elem.first + ".c", {{"with_header", true}, {"with_export", false}});
+        elem.second.generate(elem.first + ".c", {{"with_header", true}, {"with_export", false}, {"casadi_int", "int"}});
         dynamics_handle[elem.first] = compile_and_load(elem.first);
     }
 
@@ -301,15 +348,16 @@ vector<int> ocp_nlp::get_bound_indices(std::string bound, int stage) {
 
     int nbx = constraint_dims[stage]->nbx;
     int nbu = constraint_dims[stage]->nbu;
+    int nu = dims_->nu[stage];
 
     if (bound == "lbx" || bound == "ubx") {
         for (int i = 0; i < nbx; ++i)
-            idxb.push_back(constraints[stage]->idxb[nbu + i]);
+            idxb.push_back(constraints[stage]->idxb[nbu + i] - nu);
     } else if (bound == "lbu" || bound == "ubu") {
         for (int i = 0; i < nbu; ++i)
             idxb.push_back(constraints[stage]->idxb[i]);
     } else {
-        throw std::invalid_argument("Expected 'x' or 'u' but got '" + bound + "'.");
+        throw std::invalid_argument("Expected 'lbx', 'ubx', 'lbu' or 'ubu' but got '" + bound + "'.");
     }
 
     return idxb;
@@ -328,7 +376,7 @@ void ocp_nlp::set_bound_indices(std::string bound, int stage, std::vector<int> i
             throw std::invalid_argument("Expected " + std::to_string(constraint_dims[stage]->nbx)
                                         + " bound indices but got " + std::to_string(idxb.size()) + ".");
         for (int i = 0; i < nbx; ++i)
-            constraints[stage]->idxb[nbu + i] = idxb[i];
+            constraints[stage]->idxb[nbu + i] =  dims_->nu[stage] + idxb[i];
     } else if (bound == "u") {
         if (idxb.size() != (size_t) nbu)
             throw std::invalid_argument("Expected " + std::to_string(constraint_dims[stage]->nbu)

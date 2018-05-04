@@ -97,6 +97,8 @@ class ocp_nlp : private ocp {
 
     bool needs_initializing_;
 
+    double step_;
+
 };
 
 void *load_function(std::string function_name, void *handle);
