@@ -30,6 +30,7 @@ typedef enum {
     ERK,
     LIFTED_IRK,
     IRK,
+    GNSF,
     NEW_LIFTED_IRK
 } sim_solver_t;
 
