@@ -1000,9 +1000,6 @@ int main()
 	free(idxb1);
 	free(idxbN);
 
-	free(lh1);
-	free(uh1);
-
 	free(ls0);
 	free(us0);
 	free(ls1);
