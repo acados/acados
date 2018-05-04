@@ -80,12 +80,8 @@ jac_x = SX.zeros(nx,nx) + jacobian(f_impl,x);
 jac_xdot = SX.zeros(nx,nx) + jacobian(f_impl,x_dot);
 jac_u = SX.zeros(nx,nu) + jacobian(f_impl,u);
 
-impl_ode_jac_x = Function('casadi_impl_ode_jac_x',{x,x_dot,u},{jac_x});
-impl_ode_jac_xdot = Function('casadi_impl_ode_jac_xdot',{x,x_dot,u},{jac_xdot});
-impl_ode_jac_u = Function('casadi_impl_ode_jac_u',{x,x_dot,u},{jac_u});
 impl_ode_fun_jac_x_xdot = Function('casadi_impl_ode_fun_jac_x_xdot', {x, x_dot, u}, {f_impl, jac_x, jac_xdot});
 impl_ode_jac_x_xdot_u = Function('casadi_impl_ode_jac_x_xdot_u', {x, x_dot, u}, {jac_x, jac_xdot, jac_u});
-impl_ode_jac_x_u = Function('casadi_impl_ode_jac_x_u', {x, x_dot, u}, {jac_x, jac_xdot, jac_u});
 
 
 % casadi opts for code generation
@@ -99,12 +95,8 @@ end
 
 
 impl_ode_fun.generate(['impl_ode_fun'],opts);
-impl_ode_jac_x.generate(['impl_ode_jac_x'],opts);
-impl_ode_jac_xdot.generate(['impl_ode_jac_xdot'],opts);
-impl_ode_jac_u.generate(['impl_ode_jac_u'],opts);
 impl_ode_fun_jac_x_xdot.generate('impl_ode_fun_jac_x_xdot', opts);
 impl_ode_jac_x_xdot_u.generate('impl_ode_jac_x_xdot_u', opts);
-impl_ode_jac_x_u.generate('impl_ode_jac_x_u', opts);
 
 x0 = [0;3.14;0;0];
 u0 = 0;
@@ -113,7 +105,3 @@ k0 = 0*ones(4,1);
 % ode_fun(x0,u0)
 
 impl_ode_fun(x0,k0,u0)
-
-impl_ode_jac_x(x0,k0,u0)
-impl_ode_jac_xdot(x0,k0,u0)
-impl_ode_jac_u(x0,k0,u0)

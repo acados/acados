@@ -87,7 +87,6 @@ static void select_dynamics_wt_casadi(int N,
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot,
 	external_function_param_casadi *impl_ode_jac_x_xdot_u,
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot_u,
-	external_function_param_casadi *impl_ode_jac_x_u,
 	external_function_param_casadi *phi_fun,
 	external_function_param_casadi *phi_fun_jac_y,
 	external_function_param_casadi *phi_jac_y_uhat,
@@ -129,13 +128,7 @@ static void select_dynamics_wt_casadi(int N,
 		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_u_sparsity_out;
 		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_u_n_in;
 		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_u_n_out;
-
-		impl_ode_jac_x_u[ii].casadi_fun = &casadi_impl_ode_jac_x_u;
-		impl_ode_jac_x_u[ii].casadi_work = &casadi_impl_ode_jac_x_u_work;
-		impl_ode_jac_x_u[ii].casadi_sparsity_in = &casadi_impl_ode_jac_x_u_sparsity_in;
-		impl_ode_jac_x_u[ii].casadi_sparsity_out = &casadi_impl_ode_jac_x_u_sparsity_out;
-		impl_ode_jac_x_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_u_n_in;
-		impl_ode_jac_x_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_u_n_out;
+		
 		// GNSF functions
 		// phi_fun
 		phi_fun[ii].casadi_fun            = &casadi_phi_fun;
@@ -547,14 +540,13 @@ int main()
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot = malloc(NN*sizeof(external_function_param_casadi));
 	external_function_param_casadi *impl_ode_jac_x_xdot_u = malloc(NN*sizeof(external_function_param_casadi));
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot_u = malloc(NN*sizeof(external_function_param_casadi));
-	external_function_param_casadi *impl_ode_jac_x_u = malloc(NN*sizeof(external_function_param_casadi));
 	// gnsf model
 	external_function_param_casadi *phi_fun = malloc(NN*sizeof(external_function_param_casadi));
 	external_function_param_casadi *phi_fun_jac_y = malloc(NN*sizeof(external_function_param_casadi));
 	external_function_param_casadi *phi_jac_y_uhat = malloc(NN*sizeof(external_function_param_casadi));
 	external_function_param_casadi *f_lo_jac_x1_x1dot_u_z = malloc(NN*sizeof(external_function_param_casadi));
 
-	select_dynamics_wt_casadi(NN, expl_vde_for, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_jac_x_xdot_u, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_u, phi_fun, phi_fun_jac_y, phi_jac_y_uhat, f_lo_jac_x1_x1dot_u_z);
+	select_dynamics_wt_casadi(NN, expl_vde_for, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_jac_x_xdot_u, impl_ode_fun_jac_x_xdot_u, phi_fun, phi_fun_jac_y, phi_jac_y_uhat, f_lo_jac_x1_x1dot_u_z);
 
 	// explicit model
 	external_function_param_casadi_create_array(NN, expl_vde_for, np);
@@ -563,7 +555,6 @@ int main()
 	external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot, np);
 	external_function_param_casadi_create_array(NN, impl_ode_jac_x_xdot_u, np);
 	external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u, np);
-	external_function_param_casadi_create_array(NN, impl_ode_jac_x_u, np);
 	// gnsf model
 	external_function_param_casadi_create_array(NN, phi_fun, np);
 	external_function_param_casadi_create_array(NN, phi_fun_jac_y, np);
@@ -586,13 +577,10 @@ int main()
 	{
 		if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
-			// initialize additional dimensions
-			// sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
-			// sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dims->dynamics[i]->sim;
+			/* initialize additional gnsf dimensions */
 			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
 			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
-			// printf("gnsf_dims.nx = %d \n ", gnsf_dims->nx);
-			// printf("gnsf_dims.nu = %d \n ", gnsf_dims->nu);
+
 			gnsf_dims->nx1 		= 8;
 			gnsf_dims->nz  		= 0;
 			gnsf_dims->nx2 		= 0;
@@ -664,8 +652,6 @@ int main()
 			if (set_fun_status != 0) exit(1);
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_u", &impl_ode_jac_x_u[i]);
-			if (set_fun_status != 0) exit(1);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
@@ -681,13 +667,7 @@ int main()
 		{
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot[i]);
-			if (set_fun_status != 0) exit(1);
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
-			if (set_fun_status != 0) exit(1);
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u[i]);
-			if (set_fun_status != 0) exit(1);
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_u", &impl_ode_jac_x_u[i]);
 			if (set_fun_status != 0) exit(1);
 		}
 		else
@@ -891,7 +871,6 @@ int main()
 					impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);
 					impl_ode_jac_x_xdot_u[ii].set_param(impl_ode_jac_x_xdot_u+ii, wind0_ref+idx+ii);
 					impl_ode_fun_jac_x_xdot_u[ii].set_param(impl_ode_fun_jac_x_xdot_u+ii, wind0_ref+idx+ii);
-					impl_ode_jac_x_u[ii].set_param(impl_ode_jac_x_u+ii, wind0_ref+idx+ii);
 				}
 				else if (plan->sim_solver_plan[ii].sim_solver == GNSF)
 				{
@@ -976,7 +955,6 @@ int main()
  	external_function_param_casadi_free(impl_ode_fun_jac_x_xdot);
  	external_function_param_casadi_free(impl_ode_jac_x_xdot_u);
     external_function_param_casadi_free(impl_ode_fun_jac_x_xdot_u);
- 	external_function_param_casadi_free(impl_ode_jac_x_u);
  	external_function_param_casadi_free(phi_fun);
  	external_function_param_casadi_free(phi_fun_jac_y);
  	external_function_param_casadi_free(phi_jac_y_uhat);
@@ -987,7 +965,6 @@ int main()
 	free(impl_ode_fun_jac_x_xdot);
 	free(impl_ode_jac_x_xdot_u);
     free(impl_ode_fun_jac_x_xdot_u);
-	free(impl_ode_jac_x_u);
 
 	free(phi_fun);
 	free(phi_fun_jac_y);
@@ -1019,9 +996,6 @@ int main()
 	free(idxb0);
 	free(idxb1);
 	free(idxbN);
-
-	free(lh1);
-	free(uh1);
 
 	free(ls0);
 	free(us0);

@@ -104,23 +104,11 @@ int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
         case IMPL_ODE_FUN:
             model->impl_ode_fun = (external_function_generic *) fun;
             break;
-        case IMPL_ODE_JAC_X:
-            model->impl_ode_jac_x = (external_function_generic *) fun;
-            break;
-        case IMPL_ODE_JAC_XDOT:
-            model->impl_ode_jac_xdot = (external_function_generic *) fun;
-            break;
-        case IMPL_ODE_JAC_U:
-            model->impl_ode_jac_u = (external_function_generic *) fun;
-            break;
         case IMPL_ODE_FUN_JAC_X_XDOT:
             model->impl_ode_fun_jac_x_xdot = (external_function_generic *) fun;
             break;
         case IMPL_ODE_JAC_X_XDOT_U:
             model->impl_ode_jac_x_xdot_u = (external_function_generic *) fun;
-            break;
-        case IMPL_ODE_JAC_X_U:
-            model->impl_ode_jac_x_u = (external_function_generic *) fun;
             break;
         default:
             return ACADOS_FAILURE;
