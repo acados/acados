@@ -19,8 +19,6 @@
 
 cmake_minimum_required(VERSION 3.1)
 
-set(ACADOS_WITH_C_INTERFACE ON CACHE BOOL "acados with c interface")
-
 if(CMAKE_MAKE_PROGRAM)
     file(TO_CMAKE_PATH ${CMAKE_MAKE_PROGRAM} CMAKE_MAKE_PROGRAM)
     find_program(CMAKE_MAKE_PROGRAM ${CMAKE_MAKE_PROGRAM})
