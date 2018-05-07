@@ -45,9 +45,8 @@ typedef struct
 } new_lifted_irk_model;
 
 
-    struct blasfeo_dvec *xn_traj;  // xn trajectory
-    struct blasfeo_dvec *K_traj;   // K trajectory
-    struct blasfeo_dvec *w;        // stacked x and u
+typedef struct 
+{
 
     struct blasfeo_dmat *JG_traj; // JGK trajectory
 

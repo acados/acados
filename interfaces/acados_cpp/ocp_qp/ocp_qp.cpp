@@ -550,13 +550,8 @@ void ocp_qp::check_range(std::string field, uint stage)
                                 "].");
 }
 
-<<<<<<< HEAD:interfaces/acados_cpp/ocp_qp.cpp
-std::pair<uint, uint> ocp_qp::dimensions(std::string field, uint stage)
-{
-=======
 std::pair<uint, uint> ocp_qp::shape_of(std::string field, uint stage) {
 
->>>>>>> master:interfaces/acados_cpp/ocp_qp/ocp_qp.cpp
     check_range(field, stage);
 
     if (field == "Q")
@@ -602,17 +597,9 @@ static bool match(std::pair<uint, uint> dims, uint nb_elems)
     return false;
 }
 
-<<<<<<< HEAD:interfaces/acados_cpp/ocp_qp.cpp
-void ocp_qp::check_num_elements(std::string field, uint stage, uint nb_elems)
-{
-    if (!match(dimensions(field, stage), nb_elems))
-        throw std::invalid_argument("I need " + std::to_string(dimensions(field, stage)) +
-                                    " elements but got " + std::to_string(nb_elems) + ".");
-=======
 void ocp_qp::check_num_elements(std::string field, uint stage, uint nb_elems) {
     if (!match(shape_of(field, stage), nb_elems))
         throw std::invalid_argument("I need " + std::to_string(shape_of(field, stage)) + " elements but got " + std::to_string(nb_elems) + ".");
->>>>>>> master:interfaces/acados_cpp/ocp_qp/ocp_qp.cpp
 }
 
 ocp_qp_solver_plan string_to_plan(string solver)
@@ -626,32 +613,6 @@ ocp_qp_solver_plan string_to_plan(string solver)
     else if (solver == "sparse_hpipm")
     {
         plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
-<<<<<<< HEAD:interfaces/acados_cpp/ocp_qp.cpp
-    }
-    else if (solver == "hpmpc")
-    {
-        plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
-    }
-    else if (solver == "ooqp")
-    {
-        plan.qp_solver = PARTIAL_CONDENSING_OOQP;
-    }
-    else if (solver == "qpdunes")
-    {
-        plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
-    }
-    else if (solver == "qpoases")
-    {
-        plan.qp_solver = FULL_CONDENSING_QPOASES;
-    }
-    else if (solver == "qore")
-    {
-        plan.qp_solver = FULL_CONDENSING_QORE;
-    }
-    else
-    {
-        throw std::invalid_argument("Solver not known.");
-=======
     } else if (solver == "hpmpc") {
 #ifdef ACADOS_WITH_HPMPC
         plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
@@ -684,7 +645,6 @@ ocp_qp_solver_plan string_to_plan(string solver)
 #endif
     } else {
         throw std::invalid_argument("Solver name '" + solver + "' not known.");
->>>>>>> master:interfaces/acados_cpp/ocp_qp/ocp_qp.cpp
     }
     return plan;
 }

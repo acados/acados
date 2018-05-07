@@ -31,6 +31,7 @@
 #include "acados/sim/sim_common.h"
 
 #include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
 
 /************************************************
 * dims
@@ -248,8 +249,6 @@ int sim_irk_memory_calculate_size(void *config, void *dims, void *opts_)
     return 0;
 }
 
-
-int sim_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_) { return 0; }
 
 void *sim_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory)
 {
@@ -518,10 +517,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     blasfeo_dvecse(nx * ns, 0.0, lambdaK, 0);
 
     blasfeo_pack_dvec(nx+nu, in->S_adj, lambda, 0);
-
-    for (kk = 0; kk < nx; kk++) rGt[kk] = 0.0;
-    for (kk = 0; kk < nx * (2 * nx + nu); kk++) jac_out[kk] = 0.0;
-    for (kk = 0; kk < nx * nx; kk++) Jt[kk] = 0.0;
 
     // start the loop
     acados_tic(&timer);
