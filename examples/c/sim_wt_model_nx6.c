@@ -154,7 +154,7 @@ int main()
     phi_fun.casadi_n_out          = &casadi_phi_fun_n_out;
 	external_function_param_casadi_create(&phi_fun, np);
 
-    // Phi_inc_dy
+    // phi_fun_jac_y
     external_function_param_casadi phi_fun_jac_y;
     phi_fun_jac_y.casadi_fun            = &casadi_phi_fun_jac_y;
     phi_fun_jac_y.casadi_work           = &casadi_phi_fun_jac_y_work;
@@ -266,7 +266,7 @@ int main()
 
 			case 2:
 				opts->ns = 8; // number of stages in rk integrator
-				opts->num_steps = 3; // number of integration steps
+				opts->num_steps = 1; // number of integration steps
 				opts->jac_reuse = true; // jacobian reuse
 				opts->newton_iter = 3; // number of newton iterations per integration step
 				break;
@@ -281,10 +281,11 @@ int main()
 				gnsf_dim->ny = 5;
 				gnsf_dim->nuhat = 0;
 				gnsf_dim->n_out = 1;
+				gnsf_dim->nz = 0;
 
 				// set options
 				opts->ns = 8; // number of stages in rk integrator
-				opts->num_steps = 3; // number of integration steps
+				opts->num_steps = 1; // number of integration steps
 				opts->jac_reuse = true; // jacobian reuse
 				opts->newton_iter = 3; // number of newton iterations per integration step
 				break;

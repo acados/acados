@@ -81,7 +81,7 @@ else
 end
 casadi_export_prefix = 'casadi_';
 
-A = zeros(nx);
+A = zeros(nx1);
 A(1,4) = p_14/(p_10+p_11);
 A(1,2) = p_13/(p_10+p_11);
 A(1,6) = -p_12/(p_10+p_11);
@@ -100,16 +100,15 @@ B(8,2) = 1;
 phi = fe(2);
 
 n_out  = length(phi);
-C = zeros(nx, n_out); C(2,1) = 1;
+C = zeros(nx1, n_out); C(2,1) = 1;
 
-E = eye(nx+nz);
+E = eye(nx1+nz);
 y = xy;
 
 uhat = []; %u(:); %u(1:2);
 ny = length(y);
 nuhat = length(uhat);
 
-% linear input matrices
 % linear input matrices
 L_x_fun = Function('L_x_fun',{x1},{jacobian(y,x1)});
 L_xdot_fun = Function('L_x_fun',{x1},{jacobian(y,x1_dot)});
