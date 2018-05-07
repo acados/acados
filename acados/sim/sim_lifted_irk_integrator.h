@@ -31,6 +31,13 @@ extern "C" {
 #define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
 
+
+typedef struct
+{
+    int nx;
+    int nu;
+} sim_lifted_irk_dims;
+
 typedef struct
 {
     /* external functions */
@@ -85,26 +92,35 @@ typedef struct
 
 } sim_lifted_irk_memory;
 
+// get & set functions
+void sim_lifted_irk_set_nx(void *dims_, int nx);
+void sim_lifted_irk_set_nu(void *dims_, int nu);
+void sim_lifted_irk_get_nx(void *dims_, int* nx);
+void sim_lifted_irk_get_nu(void *dims_, int* nu);
 //
-int sim_lifted_irk_model_calculate_size(void *config, sim_dims *dims);
+int sim_lifted_irk_dims_calculate_size();
 //
-void *sim_lifted_irk_model_assign(void *config, sim_dims *dims, void *raw_memory);
+void *sim_lifted_irk_dims_assign(void* config_, void *raw_memory);
+//
+int sim_lifted_irk_model_calculate_size(void *config, void *dims);
+//
+void *sim_lifted_irk_model_assign(void *config, void *dims, void *raw_memory);
 //
 int sim_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun);
 //
-int sim_lifted_irk_opts_calculate_size(void *config, sim_dims *dims);
+int sim_lifted_irk_opts_calculate_size(void *config, void *dims);
 //
-void *sim_lifted_irk_opts_assign(void *config, sim_dims *dims, void *raw_memory);
+void *sim_lifted_irk_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void sim_lifted_irk_opts_initialize_default(void *config, sim_dims *dims, void *opts_);
+void sim_lifted_irk_opts_initialize_default(void *config, void *dims, void *opts_);
 //
-void sim_lifted_irk_opts_update(void *config_, sim_dims *dims, void *opts_);
+void sim_lifted_irk_opts_update(void *config_, void *dims, void *opts_);
 //
-int sim_lifted_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts);
+int sim_lifted_irk_memory_calculate_size(void *config, void *dims, void *opts);
 //
-void *sim_lifted_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory);
+void *sim_lifted_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 //
-int sim_lifted_irk_workspace_calculate_size(void *config, sim_dims *in, void *args);
+int sim_lifted_irk_workspace_calculate_size(void *config, void *in, void *args);
 //
 int sim_lifted_irk(void *config, sim_in *in, sim_out *out, void *args, void *mem, void *work);
 //

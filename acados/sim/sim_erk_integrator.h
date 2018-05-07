@@ -27,6 +27,13 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
+
+typedef struct
+{
+    int nx;
+    int nu;
+} sim_erk_dims;
+
 typedef struct
 {
     /* external functions */
@@ -62,26 +69,41 @@ typedef struct
 
 } sim_erk_workspace;
 
-//
-int sim_erk_model_calculate_size(void *config, sim_dims *dims);
-//
-void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory);
-//
+
+// get & set functions
+void sim_erk_set_nx(void *dims_, int nx);
+void sim_erk_set_nu(void *dims_, int nu);
+void sim_erk_get_nx(void *dims_, int* nx);
+void sim_erk_get_nu(void *dims_, int* nu);
+
+// dims
+int sim_erk_dims_calculate_size();
+void *sim_erk_dims_assign(void* config_, void *raw_memory);
+
+// model
+int sim_erk_model_calculate_size(void *config, void *dims);
+void *sim_erk_model_assign(void *config, void *dims, void *raw_memory);
 int sim_erk_model_set_function(void *model, sim_function_t fun_type, void *fun);
+
+// opts
+int sim_erk_opts_calculate_size(void *config, void *dims);
 //
-int sim_erk_opts_calculate_size(void *config, sim_dims *dims);
+void sim_erk_opts_update(void *config_, void *dims, void *opts_);
 //
-void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_);
+void *sim_erk_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void *sim_erk_opts_assign(void *config, sim_dims *dims, void *raw_memory);
+void sim_erk_opts_initialize_default(void *config, void *dims, void *opts_);
+
+// memory
+int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_);
 //
-void sim_erk_opts_initialize_default(void *config, sim_dims *dims, void *opts_);
+void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+
+// workspace
+int sim_erk_workspace_calculate_size(void *config, void *dims, void *opts_);
 //
-int sim_erk_memory_calculate_size(void *config, sim_dims *dims, void *opts_);
-//
-void *sim_erk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory);
-//
-int sim_erk_workspace_calculate_size(void *config, sim_dims *dims, void *opts_);
+// static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory);
+
 //
 int sim_erk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 //

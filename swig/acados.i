@@ -40,6 +40,7 @@ typedef PyObject LangObject;
 %include "std_vector.i"
 namespace std {
     %template(vector_i) vector<int>;
+    %template(vector_u) vector<uint>;
     %template(vector_string) vector<string>;
     %template(vector_O) vector<LangObject *>;
 };
@@ -47,6 +48,11 @@ namespace std {
 %include "std_pair.i"
 namespace std {
     %template(pair_ii) pair<uint, uint>;
+}
+
+%include "std_map.i"
+namespace std {
+    %template(map_si) map< string, vector<uint> >;
 }
 
 #if defined(SWIGPYTHON)
