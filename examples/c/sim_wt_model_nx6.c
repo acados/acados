@@ -29,21 +29,20 @@
 // acados
 // TODO(dimitris): remove most includes
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/sim_irk_integrator.h"
-#include "acados/sim/sim_lifted_irk_integrator.h"
+#include "acados/sim/sim_gnsf.h"
+
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"
 
 // blasfeo
-#include <blasfeo/include/blasfeo_target.h>
-#include <blasfeo/include/blasfeo_common.h>
-#include <blasfeo/include/blasfeo_d_aux.h>
-#include <blasfeo/include/blasfeo_d_aux_ext_dep.h>
-#include <blasfeo/include/blasfeo_v_aux_ext_dep.h>
-#include <blasfeo/include/blasfeo_d_blas.h>
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
 
 // wt model
 #include "examples/c/wt_model_nx6/wt_model.h"
@@ -59,7 +58,6 @@ int main()
 	/************************************************
 	* initialization
 	************************************************/
-
     int ii, jj;
 
     int nx = 6;
@@ -99,6 +97,16 @@ int main()
 	expl_vde_for.casadi_n_out = &casadi_expl_vde_for_n_out;
 	external_function_param_casadi_create(&expl_vde_for, np);
 
+	// expl_vde_adj
+	external_function_param_casadi expl_vde_adj;
+	expl_vde_adj.casadi_fun = &casadi_expl_vde_adj;
+	expl_vde_adj.casadi_work = &casadi_expl_vde_adj_work;
+	expl_vde_adj.casadi_sparsity_in = &casadi_expl_vde_adj_sparsity_in;
+	expl_vde_adj.casadi_sparsity_out = &casadi_expl_vde_adj_sparsity_out;
+	expl_vde_adj.casadi_n_in = &casadi_expl_vde_adj_n_in;
+	expl_vde_adj.casadi_n_out = &casadi_expl_vde_adj_n_out;
+	external_function_param_casadi_create(&expl_vde_adj, np);
+
 	/************************************************
 	* external functions (implicit model)
 	************************************************/
@@ -112,36 +120,6 @@ int main()
 	impl_ode_fun.casadi_n_in = &casadi_impl_ode_fun_n_in;
 	impl_ode_fun.casadi_n_out = &casadi_impl_ode_fun_n_out;
 	external_function_param_casadi_create(&impl_ode_fun, np);
-
-	// impl_ode_jac_x
-	external_function_param_casadi impl_ode_jac_x;
-	impl_ode_jac_x.casadi_fun = &casadi_impl_ode_jac_x;
-	impl_ode_jac_x.casadi_work = &casadi_impl_ode_jac_x_work;
-	impl_ode_jac_x.casadi_sparsity_in = &casadi_impl_ode_jac_x_sparsity_in;
-	impl_ode_jac_x.casadi_sparsity_out = &casadi_impl_ode_jac_x_sparsity_out;
-	impl_ode_jac_x.casadi_n_in = &casadi_impl_ode_jac_x_n_in;
-	impl_ode_jac_x.casadi_n_out = &casadi_impl_ode_jac_x_n_out;
-	external_function_param_casadi_create(&impl_ode_jac_x, np);
-
-	// impl_ode_jac_xdot
-	external_function_param_casadi impl_ode_jac_xdot;
-	impl_ode_jac_xdot.casadi_fun = &casadi_impl_ode_jac_xdot;
-	impl_ode_jac_xdot.casadi_work = &casadi_impl_ode_jac_xdot_work;
-	impl_ode_jac_xdot.casadi_sparsity_in = &casadi_impl_ode_jac_xdot_sparsity_in;
-	impl_ode_jac_xdot.casadi_sparsity_out = &casadi_impl_ode_jac_xdot_sparsity_out;
-	impl_ode_jac_xdot.casadi_n_in = &casadi_impl_ode_jac_xdot_n_in;
-	impl_ode_jac_xdot.casadi_n_out = &casadi_impl_ode_jac_xdot_n_out;
-	external_function_param_casadi_create(&impl_ode_jac_xdot, np);
-
-	// impl_ode_jac_u
-	external_function_param_casadi impl_ode_jac_u;
-	impl_ode_jac_u.casadi_fun = &casadi_impl_ode_jac_u;
-	impl_ode_jac_u.casadi_work = &casadi_impl_ode_jac_u_work;
-	impl_ode_jac_u.casadi_sparsity_in = &casadi_impl_ode_jac_u_sparsity_in;
-	impl_ode_jac_u.casadi_sparsity_out = &casadi_impl_ode_jac_u_sparsity_out;
-	impl_ode_jac_u.casadi_n_in = &casadi_impl_ode_jac_u_n_in;
-	impl_ode_jac_u.casadi_n_out = &casadi_impl_ode_jac_u_n_out;
-	external_function_param_casadi_create(&impl_ode_jac_u, np);
 
 	// impl_ode_fun_jac_x_xdot
 	external_function_param_casadi impl_ode_fun_jac_x_xdot;
@@ -163,20 +141,62 @@ int main()
 	impl_ode_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
 	external_function_param_casadi_create(&impl_ode_jac_x_xdot_u, np);
 
-	// impl_ode_jac_x_u
-	external_function_param_casadi impl_ode_jac_x_u;
-	impl_ode_jac_x_u.casadi_fun = &casadi_impl_ode_jac_x_u;
-	impl_ode_jac_x_u.casadi_work = &casadi_impl_ode_jac_x_u_work;
-	impl_ode_jac_x_u.casadi_sparsity_in = &casadi_impl_ode_jac_x_u_sparsity_in;
-	impl_ode_jac_x_u.casadi_sparsity_out = &casadi_impl_ode_jac_x_u_sparsity_out;
-	impl_ode_jac_x_u.casadi_n_in = &casadi_impl_ode_jac_x_u_n_in;
-	impl_ode_jac_x_u.casadi_n_out = &casadi_impl_ode_jac_x_u_n_out;
-	external_function_param_casadi_create(&impl_ode_jac_x_u, np);
+	/************************************************
+	* external functions (Generalized Nonlinear Static Feedback (GNSF) model)
+	************************************************/
+    // phi_fun
+    external_function_param_casadi phi_fun;
+    phi_fun.casadi_fun            = &casadi_phi_fun;
+    phi_fun.casadi_work           = &casadi_phi_fun_work;
+    phi_fun.casadi_sparsity_in    = &casadi_phi_fun_sparsity_in;
+    phi_fun.casadi_sparsity_out   = &casadi_phi_fun_sparsity_out;
+    phi_fun.casadi_n_in           = &casadi_phi_fun_n_in;
+    phi_fun.casadi_n_out          = &casadi_phi_fun_n_out;
+	external_function_param_casadi_create(&phi_fun, np);
+
+    // Phi_inc_dy
+    external_function_param_casadi phi_fun_jac_y;
+    phi_fun_jac_y.casadi_fun            = &casadi_phi_fun_jac_y;
+    phi_fun_jac_y.casadi_work           = &casadi_phi_fun_jac_y_work;
+    phi_fun_jac_y.casadi_sparsity_in    = &casadi_phi_fun_jac_y_sparsity_in;
+    phi_fun_jac_y.casadi_sparsity_out   = &casadi_phi_fun_jac_y_sparsity_out;
+    phi_fun_jac_y.casadi_n_in           = &casadi_phi_fun_jac_y_n_in;
+    phi_fun_jac_y.casadi_n_out          = &casadi_phi_fun_jac_y_n_out;
+	external_function_param_casadi_create(&phi_fun_jac_y, np);
+
+    // phi_jac_y_uhat
+    external_function_param_casadi phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_fun                = &casadi_phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_work               = &casadi_phi_jac_y_uhat_work;
+    phi_jac_y_uhat.casadi_sparsity_in        = &casadi_phi_jac_y_uhat_sparsity_in;
+    phi_jac_y_uhat.casadi_sparsity_out       = &casadi_phi_jac_y_uhat_sparsity_out;
+    phi_jac_y_uhat.casadi_n_in               = &casadi_phi_jac_y_uhat_n_in;
+    phi_jac_y_uhat.casadi_n_out              = &casadi_phi_jac_y_uhat_n_out;
+
+	external_function_param_casadi_create(&phi_jac_y_uhat, np);
+
+    // f_lo_fun_jac_x1k1uz
+    external_function_param_casadi f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_fun            = &casadi_f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_work           = &casadi_f_lo_fun_jac_x1k1uz_work;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &casadi_f_lo_fun_jac_x1k1uz_sparsity_in;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &casadi_f_lo_fun_jac_x1k1uz_sparsity_out;
+    f_lo_fun_jac_x1k1uz.casadi_n_in           = &casadi_f_lo_fun_jac_x1k1uz_n_in;
+    f_lo_fun_jac_x1k1uz.casadi_n_out          = &casadi_f_lo_fun_jac_x1k1uz_n_out;
+	external_function_param_casadi_create(&f_lo_fun_jac_x1k1uz, np);
+
+    // get_matrices_fun
+    external_function_casadi get_matrices_fun;
+    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
+	external_function_casadi_create(&get_matrices_fun);
 
 
-
-
-	int number_sim_solvers = 3;
+	int number_sim_solvers = 4;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
@@ -188,7 +208,6 @@ int main()
 		sim_solver_plan plan;
 		switch (nss)
 		{
-
 			case 0:
 				plan.sim_solver = ERK;
 				break;
@@ -198,12 +217,15 @@ int main()
 				plan.sim_solver = IRK;
 				break;
 
+			case 3:
+				plan.sim_solver = GNSF;
+				break;
+
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
 				exit(1);
 
 		}
-
 
 		// create correct config based on plan
 		sim_solver_config *config = sim_config_create(plan);
@@ -212,10 +234,9 @@ int main()
 		* sim dims
 		************************************************/
 
-		sim_dims *dims = sim_dims_create();
-
-		dims->nx = nx;
-		dims->nu = nu;
+		void *dims = sim_dims_create(config);
+		config->set_nx(dims, nx);
+		config->set_nu(dims, nu);
 
 		/************************************************
 		* sim opts
@@ -225,9 +246,10 @@ int main()
 
 	//		opts->ns = 4; // number of stages in rk integrator
 	//		opts->num_steps = 5; // number of integration steps
-		opts->sens_adj = false;
+		opts->sens_adj = true;
 		opts->sens_forw = true;
 
+		sim_gnsf_dims *gnsf_dim;
 
 		switch (nss)
 		{
@@ -244,10 +266,30 @@ int main()
 
 			case 2:
 				opts->ns = 8; // number of stages in rk integrator
-				opts->num_steps = 1; // number of integration steps
+				opts->num_steps = 3; // number of integration steps
+				opts->jac_reuse = true; // jacobian reuse
+				opts->newton_iter = 3; // number of newton iterations per integration step
 				break;
 
-			default :
+			case 3://gnsf
+				// set additional dimensions
+				gnsf_dim = (sim_gnsf_dims *) dims; // declaration not allowed inside switch somehow
+				gnsf_dim->nx = nx;
+				gnsf_dim->nu = nu;
+				gnsf_dim->nx1= nx;
+				gnsf_dim->nx2= 0;
+				gnsf_dim->ny = 5;
+				gnsf_dim->nuhat = 0;
+				gnsf_dim->n_out = 1;
+
+				// set options
+				opts->ns = 8; // number of stages in rk integrator
+				opts->num_steps = 3; // number of integration steps
+				opts->jac_reuse = true; // jacobian reuse
+				opts->newton_iter = 3; // number of newton iterations per integration step
+				break;
+
+			default:
 				printf("\nnot enough sim solvers implemented!\n");
 				exit(1);
 
@@ -258,10 +300,10 @@ int main()
 		************************************************/
 
 		sim_in *in = sim_in_create(config, dims);
+
 		sim_out *out = sim_out_create(config, dims);
 
 		in->T = Ts;
-
 		// external functions
 		switch (nss)
 		{
@@ -269,15 +311,28 @@ int main()
 			{
 				sim_set_model(config, in, "expl_ode_fun", &expl_ode_fun);
 				sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
+				sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
 				break;
 			}
 			case 1:
-			case 2:
+			case 2: // IRK
 			{
 				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
 				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
 				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-				sim_set_model(config, in, "impl_ode_jac_x_u", &impl_ode_jac_x_u);
+				break;
+			}
+			case 3: // gnsf
+			{
+				// set model funtions
+				sim_set_model(config, in, "phi_fun", &phi_fun);
+				sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
+				sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
+				sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+
+				// import model matrices
+				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
+				sim_gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);
 				break;
 			}
 			default :
@@ -296,12 +351,15 @@ int main()
 		// seeds adj
 		for (ii = 0; ii < nx; ii++)
 			in->S_adj[ii] = 1.0;
+		for (ii = 0; ii < nu; ii++)
+			in->S_adj[ii+nx] = 0.0;
 
 		/************************************************
 		* sim solver
 		************************************************/
 
 		// print solver info
+		printf("\n ===  USING SOLVER NUMBER %d === \n",nss);
 		switch (nss)
 		{
 
@@ -315,6 +373,10 @@ int main()
 				printf("\n\nsim solver: IRK, ns=%d, num_steps=%d\n", opts->ns, opts->num_steps);
 				plan.sim_solver = IRK;
 				break;
+			case 3:
+				printf("\n\nsim solver: gnsf, ns=%d, num_steps=%d\n", opts->ns, opts->num_steps);
+				plan.sim_solver = GNSF;
+				break;
 
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
@@ -325,6 +387,10 @@ int main()
 		sim_solver *sim_solver = sim_create(config, dims, opts);
 
 		int acados_return;
+
+		if (nss == 3) // for gnsf: perform precomputation
+			sim_gnsf_precompute(config, gnsf_dim, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
+
 
 		acados_timer timer;
 		acados_tic(&timer);
@@ -341,6 +407,8 @@ int main()
 		double kI = 1e-1;
 		double kP = 10;
 		double tmp, ctrlErr;
+
+
 
 		for (ii=0; ii<nsim; ii++)
 		{
@@ -361,6 +429,7 @@ int main()
 				{
 					expl_ode_fun.set_param(&expl_ode_fun, p_sim+ii*np);
 					expl_vde_for.set_param(&expl_vde_for, p_sim+ii*np);
+					expl_vde_for.set_param(&expl_vde_adj, p_sim+ii*np);
 					break;
 				}
 				case 1:
@@ -369,7 +438,14 @@ int main()
 					impl_ode_fun.set_param(&impl_ode_fun, p_sim+ii*np);
 					impl_ode_fun_jac_x_xdot.set_param(&impl_ode_fun_jac_x_xdot, p_sim+ii*np);
 					impl_ode_jac_x_xdot_u.set_param(&impl_ode_jac_x_xdot_u, p_sim+ii*np);
-					impl_ode_jac_x_u.set_param(&impl_ode_jac_x_u, p_sim+ii*np);
+					break;
+				}
+				case 3:
+				{
+					phi_fun.set_param(&phi_fun, p_sim+ii*np);
+					phi_fun_jac_y.set_param(&phi_fun_jac_y, p_sim+ii*np);
+					phi_jac_y_uhat.set_param(&phi_jac_y_uhat, p_sim+ii*np);
+					f_lo_fun_jac_x1k1uz.set_param(&f_lo_fun_jac_x1k1uz, p_sim+ii*np);
 					break;
 				}
 				default :
@@ -378,8 +454,6 @@ int main()
 					exit(1);
 				}
 			}
-
-
 
 			// d_print_mat(1, nx, in->x, 1);
 			// d_print_mat(1, nu, in->u, 1);
@@ -416,25 +490,44 @@ int main()
 		/************************************************
 		* printing
 		************************************************/
-
 		printf("\nxn: \n");
-		for (ii=0; ii<nx; ii++)
-			printf("%8.5f ", x_sim[nsim0*nx+ii]);
-		printf("\n");
+		d_print_e_mat(1, nx, &x_sim[nsim0*nx], 1);
 
-		double *S_forw_out;
-		S_forw_out = NULL;
+		double *S_forw_out = NULL;
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");
-			for (ii=0;ii<nx;ii++){
-				for (jj=0;jj<NF;jj++)
-					printf("%8.5f ", S_forw_out[jj*nx+ii]);
-				printf("\n");
-			}
+			d_print_e_mat(nx, NF, S_forw_out, nx);
 		}
 
-	#if 0
+		if(opts->sens_adj){
+			double *S_adj_out = out->S_adj;
+			printf("\nS_adj_out: \n");
+			d_print_e_mat(1, nx+nu, S_adj_out, 1);
+		}
+
+		if(opts->sens_forw){		// debug adjoints
+			struct blasfeo_dmat S_forw_result;
+			struct blasfeo_dvec adjoint_seed;
+			struct blasfeo_dvec forw_times_seed;
+
+			blasfeo_allocate_dmat(nx, nx+nu, &S_forw_result);
+			blasfeo_allocate_dvec(nx, &adjoint_seed);
+			blasfeo_allocate_dvec(nx+nu, &forw_times_seed);
+
+			blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &S_forw_result, 0, 0);
+			blasfeo_pack_dvec(nx, in->S_adj, &adjoint_seed, 0);
+
+			blasfeo_dgemv_t(nx, nx+nu, 1.0, &S_forw_result, 0, 0, &adjoint_seed, 0, 0.0, &forw_times_seed, 0, &forw_times_seed, 0);
+			printf("S_forw^T * adj_seed = \n");
+			blasfeo_print_exp_tran_dvec(nx+nu, &forw_times_seed, 0);
+
+			blasfeo_free_dmat(&S_forw_result);
+			blasfeo_free_dvec(&adjoint_seed);
+			blasfeo_free_dvec(&forw_times_seed);			
+		}
+
+    #if 0
 		printf("\n");
 		printf("cpt: %8.4f [ms]\n", 1000*out->info->CPUtime);
 		printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
@@ -442,19 +535,18 @@ int main()
 	#endif
 
 		// printf("time split: %f ms CPU, %f ms LA, %f ms AD\n\n", cpu_time, la_time, ad_time);
-		printf("\n\ntime for %d simulation steps: %f ms (AD time: %f ms (%5.2f%%))\n\n", nsim, 1e3*total_cpu_time, 1e3*ad_time, 1e2*ad_time/cpu_time);
+		printf("\ntime for %d simulation steps: %f ms (AD time: %f ms (%5.2f%%))\n\n", nsim, 1e3*total_cpu_time, 1e3*ad_time, 1e2*ad_time/cpu_time);
+		printf("time spent in integrator outside of casADi %f \n", 1e3*(total_cpu_time-ad_time));
 
 		/************************************************
 		* free memory
 		************************************************/
-
+		free(dims);
 		free(sim_solver);
 		free(in);
 		free(out);
-
 		free(opts);
 		free(config);
-
 	}
 
 	free(x_sim);
@@ -462,15 +554,18 @@ int main()
 	// explicit model
 	external_function_param_casadi_free(&expl_ode_fun);
 	external_function_param_casadi_free(&expl_vde_for);
+	external_function_param_casadi_free(&expl_vde_adj);
 	// implicit model
 	external_function_param_casadi_free(&impl_ode_fun);
-	external_function_param_casadi_free(&impl_ode_jac_x);
-	external_function_param_casadi_free(&impl_ode_jac_xdot);
-	external_function_param_casadi_free(&impl_ode_jac_u);
 	external_function_param_casadi_free(&impl_ode_fun_jac_x_xdot);
 	external_function_param_casadi_free(&impl_ode_jac_x_xdot_u);
-	external_function_param_casadi_free(&impl_ode_jac_x_u);
+	// gnsf functions:
+	external_function_param_casadi_free(&f_lo_fun_jac_x1k1uz);
+	external_function_param_casadi_free(&phi_fun);
+	external_function_param_casadi_free(&phi_fun_jac_y);
+	external_function_param_casadi_free(&phi_jac_y_uhat);
 
+	external_function_casadi_free(&get_matrices_fun);
 	printf("\nsuccess!\n\n");
 
     return 0;
