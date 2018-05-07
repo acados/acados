@@ -573,19 +573,12 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         blasfeo_daxpy(nu, -1.0, memory->u, 0, w, nx, w, nx);
         blasfeo_dgemv_n(nx*ns, nx+nu, 1.0, &JKf[ss], 0, 0, w, 0, 1.0, &K[ss], 0, &K[ss], 0);
 
-
         blasfeo_pack_dvec(nx, in->x, memory->x, 0);
         blasfeo_pack_dvec(nu, in->u, memory->u, 0);
 
         // reset value of JKf
         blasfeo_dgese(nx*ns, nx+nu, 0.0, &JKf[ss], 0, 0);
 
-
-        // printf("K:\n\n");
-        // blasfeo_print_dvec(nx, &K[ss], 0); 
-
-        printf("xn:\n\n");
-        blasfeo_print_dvec(nx, xt, 0); 
         int iter;
         for(ii = 0; ii < ns; ii++) // ii-th row of tableau
         {
@@ -688,8 +681,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         if (update_sens)
         {
             blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
-            // printf("ss = %i, JGK (fact):\n\n", ss);
-            // blasfeo_print_dmat(nx*ns, nx*ns, JGK, 0, 0); 
         }
 
         // update r.h.s (6.23, Quirynen2017)
@@ -715,43 +706,22 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         for(ii=0;ii<ns;ii++)
             blasfeo_daxpy(nx, -step*b_vec[ii], rG, ii*nx, dxn, 0, dxn, 0);
 
-        // evaluate forward sensitivities
-
-        // printf("S_forw:\n\n");
-        // blasfeo_print_dmat(nx, nx+nu, S_forw, 0, 0);
-        // printf("JG:\n\n");
-        // blasfeo_print_dmat(nx*ns, nx + nu, JGf, 0, 0); 
-       
-        // obtain JKf
-        // printf("ss = %i, JKf:\n\n", ss);
-        // blasfeo_print_dmat(nx*ns, nx + nu, &JKf[ss], 0, 0); 
-
+        // update JKf
         blasfeo_dgemm_nn(nx*ns, nx+nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, &JKf[ss], 0, 0, &JKf[ss], 0, 0);
 
-        // printf("ss = %i, JKf:\n\n", ss);
-        // blasfeo_print_dmat(nx*ns, nx + nu, &JKf[ss], 0, 0); 
-
         blasfeo_dgead(nx*ns, nu, 1.0, JGf, 0, nx, &JKf[ss], 0, nx);
-
 
         blasfeo_drowpe(nx*ns, ipiv, &JKf[ss]);
         blasfeo_dtrsm_llnu(nx*ns, nx+nu, 1.0, JGK, 0, 0, &JKf[ss], 0, 0, &JKf[ss], 0, 0);
         blasfeo_dtrsm_lunn(nx*ns, nx+nu, 1.0, JGK, 0, 0, &JKf[ss], 0, 0, &JKf[ss], 0, 0);
-        // printf("ss = %i, JKf:\n\n", ss);
-        // blasfeo_print_dmat(nx*ns, nx + nu, &JKf[ss], 0, 0); 
-
 
         // update forward sensitivity
         for(jj=0; jj<ns; jj++)
             blasfeo_dgead(nx, nx+nu, -step*b_vec[jj], &JKf[ss], jj*nx, 0, S_forw, 0, 0);
 
-        // printf("S_forw:\n\n");
-        // blasfeo_print_dmat(nx, nx+nu, S_forw, 0, 0); 
-        
         // obtain x(n+1) 
         for(ii = 0; ii < ns; ii++)
             blasfeo_daxpy(nx, step*b_vec[ii], &K[ss], ii*nx, xn_out, 0, xn_out, 0);
-
 
     } // end int step ss
     
