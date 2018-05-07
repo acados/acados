@@ -200,7 +200,7 @@ void sim_new_lifted_irk_opts_initialize_default(void *config_, void *dims_, void
     
     int nx = dims->nx;
     int nu = dims->nu;
-	opts->ns = 3; // GL 3
+	opts->ns = 5; // GL 3
     int ns = opts->ns;
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
@@ -217,7 +217,7 @@ void sim_new_lifted_irk_opts_initialize_default(void *config_, void *dims_, void
 	// default options
     opts->newton_iter = 1;
     opts->scheme = NULL;
-    opts->num_steps = 4;
+    opts->num_steps = 5;
     opts->num_forw_sens = nx + nu;
     opts->sens_forw = true;
     opts->sens_adj = false;
@@ -573,12 +573,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         blasfeo_daxpy(nu, -1.0, memory->u, 0, w, nx, w, nx);
         blasfeo_dgemv_n(nx*ns, nx+nu, 1.0, &JKf[ss], 0, 0, w, 0, 1.0, &K[ss], 0, &K[ss], 0);
 
-        // take x(n); copy a strvec into a strvec
-        blasfeo_dveccp(nx, xn, 0, xt, 0);
-
-        // obtain x(n+1) before updating K(n)
-        for(ii = 0; ii < ns; ii++)
-            blasfeo_daxpy(nx, step*b_vec[ii], &K[ss], ii*nx, xn, 0, xn, 0);
 
         blasfeo_pack_dvec(nx, in->x, memory->x, 0);
         blasfeo_pack_dvec(nu, in->u, memory->u, 0);
@@ -593,32 +587,55 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         printf("xn:\n\n");
         blasfeo_print_dvec(nx, xt, 0); 
         int iter;
-        for(iter = 0; iter < newton_iter; iter++) {
-            for(ii = 0; ii < ns; ii++) // ii-th row of tableau
-            {
-                
+        for(ii = 0; ii < ns; ii++) // ii-th row of tableau
+        {
+            
+            // take x(n); copy a strvec into a strvec
+            blasfeo_dveccp(nx, xn, 0, xt, 0);
 
-                for(jj=0; jj<ns; jj++)
-                { // jj-th col of tableau
-                    a = A_mat[ii+ns*jj];
-                    if(a!=0)
-                    {           
-                        // xt = xt + T_int * a[i,j]*K_j
-                        a *= step;
-                        blasfeo_daxpy(nx, a, &K[ss], jj*nx, xt, 0, xt, 0);
-                    }
+            for(jj=0; jj<ns; jj++)
+            { // jj-th col of tableau
+                a = A_mat[ii+ns*jj];
+                if(a!=0)
+                {           
+                    // xt = xt + T_int * a[i,j]*K_j
+                    a *= step;
+                    blasfeo_daxpy(nx, a, &K[ss], jj*nx, xt, 0, xt, 0);
                 }
+            }
 
-                if (!update_sens) {
-                // compute the residual of implicit ode at time t_ii, store value in rGt
+            if (!update_sens) {
+            // compute the residual of implicit ode at time t_ii, store value in rGt
+            acados_tic(&timer_ad);
+
+            ext_fun_type_in[0] = BLASFEO_DVEC;
+            ext_fun_in[0] = xt;                     // x: nx
+            ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+            ext_fun_in_K.xi = ii*nx;
+            ext_fun_in_K.x = &K[ss];
+            ext_fun_in[1] = &ext_fun_in_K;          // K[ii*nx]: nx 
+            ext_fun_type_in[2] = COLMAJ;
+            ext_fun_in[2] = u;                      // u: nu
+
+            ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+            ext_fun_out_rG.x = rG;
+            ext_fun_out_rG.xi = ii*nx;
+            ext_fun_out[0] = &ext_fun_out_rG;       // fun: nx
+
+            model->impl_ode_fun->evaluate(model->impl_ode_fun, 
+                    ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+            timing_ad += acados_toc(&timer_ad);
+            } else {
+                // compute the jacobian of implicit ode
                 acados_tic(&timer_ad);
 
                 ext_fun_type_in[0] = BLASFEO_DVEC;
                 ext_fun_in[0] = xt;                     // x: nx
                 ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-                ext_fun_in_K.xi = ii*nx;
+                ext_fun_in_K.xi = ii*nx;                // K[ii*nx]: nx 
                 ext_fun_in_K.x = &K[ss];
-	            ext_fun_in[1] = &ext_fun_in_K;          // K[ii*nx]: nx 
+                ext_fun_in[1] = &ext_fun_in_K; 
                 ext_fun_type_in[2] = COLMAJ;
                 ext_fun_in[2] = u;                      // u: nu
 
@@ -626,63 +643,45 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
                 ext_fun_out_rG.x = rG;
                 ext_fun_out_rG.xi = ii*nx;
                 ext_fun_out[0] = &ext_fun_out_rG;       // fun: nx
+                ext_fun_type_out[1] = BLASFEO_DMAT;
+                ext_fun_out[1] = J_temp_x;              // jac_x: nx*nx
+                ext_fun_type_out[2] = BLASFEO_DMAT;
+                ext_fun_out[2] = J_temp_xdot;           // jac_xdot: nx*nx
+                ext_fun_type_out[3] = BLASFEO_DMAT;
+                ext_fun_out[3] = J_temp_u;              // jac_u: nx*nu
 
-                model->impl_ode_fun->evaluate(model->impl_ode_fun, 
-                        ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+                model->impl_ode_fun_jac_x_xdot_u->evaluate(
+                        model->impl_ode_fun_jac_x_xdot_u,
+                        ext_fun_type_in, ext_fun_in,
+                        ext_fun_type_out, ext_fun_out);
 
                 timing_ad += acados_toc(&timer_ad);
-                } else {
-                    // compute the jacobian of implicit ode
-                    acados_tic(&timer_ad);
+                
+                blasfeo_dgecp(nx, nx, J_temp_x, 0, 0, JGf, ii*nx, 0);
+                blasfeo_dgecp(nx, nu, J_temp_u, 0, 0, JGf, ii*nx, nx);
 
-                    ext_fun_type_in[0] = BLASFEO_DVEC;
-                    ext_fun_in[0] = xt;                     // x: nx
-                    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-                    ext_fun_in_K.xi = ii*nx;                // K[ii*nx]: nx 
-                    ext_fun_in_K.x = &K[ss];
-                    ext_fun_in[1] = &ext_fun_in_K; 
-                    ext_fun_type_in[2] = COLMAJ;
-                    ext_fun_in[2] = u;                      // u: nu
+                for (jj=0; jj<ns; jj++)
+                { 
+                    //compute the block (ii,jj)th block of JGK
+                    a = A_mat[ii + ns*jj];
+                    if (a!=0)
+                    {
+                        a *= step;
+                        blasfeo_dgead(nx, nx, a, J_temp_x, 0, 0, JGK, ii*nx, jj*nx);
+                    }
+                    if(jj==ii)
+                    {
+                        blasfeo_dgead(nx, nx, 1, J_temp_xdot, 0, 0, JGK, ii*nx, jj*nx);
+                    }
+                } // end jj
 
-                    ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
-                    ext_fun_out_rG.x = rG;
-                    ext_fun_out_rG.xi = ii*nx;
-                    ext_fun_out[0] = &ext_fun_out_rG;       // fun: nx
-                    ext_fun_type_out[1] = BLASFEO_DMAT;
-                    ext_fun_out[1] = J_temp_x;              // jac_x: nx*nx
-                    ext_fun_type_out[2] = BLASFEO_DMAT;
-                    ext_fun_out[2] = J_temp_xdot;           // jac_xdot: nx*nx
-                    ext_fun_type_out[3] = BLASFEO_DMAT;
-                    ext_fun_out[3] = J_temp_u;              // jac_u: nx*nu
+            }
+        } // end ii
+        
+        // obtain x(n+1) before updating K(n)
+        for(ii = 0; ii < ns; ii++)
+            blasfeo_daxpy(nx, step*b_vec[ii], &K[ss], ii*nx, xn, 0, xn, 0);
 
-                    model->impl_ode_fun_jac_x_xdot_u->evaluate(
-                            model->impl_ode_fun_jac_x_xdot_u,
-                            ext_fun_type_in, ext_fun_in,
-                            ext_fun_type_out, ext_fun_out);
-
-                    timing_ad += acados_toc(&timer_ad);
-                    
-                    blasfeo_dgecp(nx, nx, J_temp_x, 0, 0, JGf, ii*nx, 0);
-                    blasfeo_dgecp(nx, nu, J_temp_u, 0, 0, JGf, ii*nx, nx);
-
-                    for (jj=0; jj<ns; jj++)
-                    { 
-                        //compute the block (ii,jj)th block of JGK
-                        a = A_mat[ii + ns*jj];
-                        if (a!=0)
-                        {
-                            a *= step;
-                            blasfeo_dgead(nx, nx, a, J_temp_x, 0, 0, JGK, ii*nx, jj*nx);
-                        }
-                        if(jj==ii)
-                        {
-                            blasfeo_dgead(nx, nx, 1, J_temp_xdot, 0, 0, JGK, ii*nx, jj*nx);
-                        }
-                    } // end jj
-
-                }
-            } // end ii
-        }
         // DGETRF computes an LU factorization of a general M-by-N matrix A
         // using partial pivoting with row interchanges.
 
