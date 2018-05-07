@@ -21,8 +21,8 @@
 
 find_package(Eigen3)
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.3")
-    message(WARNING "You chose to run unit tests but casadi-octave-v3.2.3 was not found in: ${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.3")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.4.0")
+    message(WARNING "You chose to run unit tests but 'casadi-octave-v3.4.0' was not found in: ${PROJECT_SOURCE_DIR}/external")
 endif()
 
 include_directories(${EIGEN3_INCLUDE_DIR})

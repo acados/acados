@@ -25,7 +25,7 @@
 #include "catch/include/catch.hpp"
 
 #include "acados_c/ocp_qp_interface.h"
-#include "acados_c/options.h"
+#include "acados_c/options_interface.h"
 
 extern "C"
 {
