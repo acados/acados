@@ -64,10 +64,12 @@ typedef struct
     struct blasfeo_dmat *J_temp_xdot; // temporary Jacobian of ode w.r.t xdot (nx, nx)
     struct blasfeo_dmat *J_temp_u;    // temporary Jacobian of ode w.r.t u (nx, nu)
 
-    struct blasfeo_dvec *rG; // residuals of G (nx*ns)
-    struct blasfeo_dvec *xt; // temporary x
-    struct blasfeo_dvec *xn; // x at each integration step
-    struct blasfeo_dvec *w;  // stacked x and u
+    struct blasfeo_dvec *rG;      // residuals of G (nx*ns)
+    struct blasfeo_dvec *xt;      // temporary x
+    struct blasfeo_dvec *xn;      // x at each integration step (for evaluations)
+    struct blasfeo_dvec *xn_out;  // x at each integration step (output)
+    struct blasfeo_dvec *dxn;     // dx at each integration step
+    struct blasfeo_dvec *w;       // stacked x and u
 
     int *ipiv; // index of pivot vector
 
