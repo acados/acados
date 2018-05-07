@@ -17,10 +17,7 @@
  *
  */
 
-#define _USE_MATH_DEFINES
-
 #include <stdio.h>
-#include <cmath>
 #include <cstdlib>
 #include <vector>
 
@@ -41,12 +38,15 @@
 #include "pendulum_model/constraint.h"
 #include "pendulum_model/position.h"
 
+#define PI 3.1415926535897932
+
 int main() {
 
 	int num_states = 4, num_controls = 1, N = 20;
 	double Tf = 1.0, Q = 1e-10, R = 1e-4, QN = 1e-10;
 	std::vector<int> idxb_0 {1, 2, 3, 4};
-	std::vector<double> x0({0, 0, M_PI, 0});
+	std::vector<double> x0(num_states, 0);
+	x0[2] = PI;
 
 	double radius2 = 0.04, neg_inf = -1000000;
 	int max_num_sqp_iterations = 100;
@@ -196,7 +196,7 @@ int main() {
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
 
 	// for (int i = 0; i <= N; ++i)
-		// BLASFEO_DVECEL(nlp_out->ux+i, 3) = M_PI;
+		// BLASFEO_DVECEL(nlp_out->ux+i, 3) = PI;
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
