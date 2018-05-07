@@ -547,10 +547,12 @@ int main()
 
 		free(opts);
 		free(config);
+		// free(dims);
 	}
 
 	// TODO(dimitris): free all external functions (or write a free_model)
 	// explicit model
+    external_function_casadi_free(&expl_ode_fun);
 	external_function_casadi_free(&expl_vde_for);
 	external_function_casadi_free(&expl_vde_adj);
 	external_function_casadi_free(&expl_ode_jac);
