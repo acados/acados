@@ -200,7 +200,7 @@ void sim_new_lifted_irk_opts_initialize_default(void *config_, void *dims_, void
     
     int nx = dims->nx;
     int nu = dims->nu;
-	opts->ns = 5; // GL 3
+	opts->ns = 3; // GL 3
     int ns = opts->ns;
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
@@ -217,7 +217,7 @@ void sim_new_lifted_irk_opts_initialize_default(void *config_, void *dims_, void
 	// default options
     opts->newton_iter = 1;
     opts->scheme = NULL;
-    opts->num_steps = 5;
+    opts->num_steps = 1;
     opts->num_forw_sens = nx + nu;
     opts->sens_forw = true;
     opts->sens_adj = false;
