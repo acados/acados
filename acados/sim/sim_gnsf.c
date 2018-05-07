@@ -1211,10 +1211,13 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     blasfeo_pack_dvec(nx+nu, &in->S_adj[0], &lambda_old, 0);
     blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, &S_forw, 0, 0);
 
+
     // initialize ff_val
     for (int ss = 0; ss < num_steps; ss++){
         blasfeo_dvecse(nff, 0, &ff_val[ss],0);
     }
+    // set to 0
+    blasfeo_dgese(nff, nff, 0.0, &J_r_ff, 0, 0);
 
     /************************************************
     * Set up function input & outputs
@@ -1342,7 +1345,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 // set J_r_ff to unit matrix
                 blasfeo_dgese(nff, nff, 0.0, &J_r_ff, 0, 0);
                 for (int ii = 0; ii < nff; ii++) {
-                    blasfeo_dgein1(1.0, &J_r_ff, ii, ii);            
+                    blasfeo_dgein1(1.0, &J_r_ff, ii, ii);
                 }
             }
 
