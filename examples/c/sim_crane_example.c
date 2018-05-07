@@ -156,17 +156,6 @@ int main()
 	impl_ode_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
 	external_function_casadi_create(&impl_ode_jac_x_xdot_u);
 
-	//
-
-	external_function_casadi impl_ode_jac_x_u;
-	impl_ode_jac_x_u.casadi_fun = &casadi_impl_ode_jac_x_u;
-	impl_ode_jac_x_u.casadi_work = &casadi_impl_ode_jac_x_u_work;
-	impl_ode_jac_x_u.casadi_sparsity_in = &casadi_impl_ode_jac_x_u_sparsity_in;
-	impl_ode_jac_x_u.casadi_sparsity_out = &casadi_impl_ode_jac_x_u_sparsity_out;
-	impl_ode_jac_x_u.casadi_n_in = &casadi_impl_ode_jac_x_u_n_in;
-	impl_ode_jac_x_u.casadi_n_out = &casadi_impl_ode_jac_x_u_n_out;
-	external_function_casadi_create(&impl_ode_jac_x_u);
-
 	int number_sim_solvers = 3;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
@@ -246,7 +235,6 @@ int main()
 				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
 				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
 				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-				sim_set_model(config, in, "impl_ode_jac_x_u", &impl_ode_jac_x_u);
 				break;
 			}
 			case 2:
@@ -388,7 +376,6 @@ int main()
 	external_function_casadi_free(&impl_ode_fun);
 	external_function_casadi_free(&impl_ode_fun_jac_x_xdot);
 	external_function_casadi_free(&impl_ode_jac_x_xdot_u);
-	external_function_casadi_free(&impl_ode_jac_x_u);
 
 	/************************************************
 	* return
