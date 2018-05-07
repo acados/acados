@@ -33,8 +33,8 @@
 #include "acados/utils/print.h"
 
 /************************************************
-* dims
-************************************************/
+ * dims
+ ************************************************/
 
 int sim_lifted_irk_dims_calculate_size()
 {
@@ -43,39 +43,39 @@ int sim_lifted_irk_dims_calculate_size()
     return size;
 }
 
-void *sim_lifted_irk_dims_assign(void* config_, void *raw_memory)
+void *sim_lifted_irk_dims_assign(void *config_, void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) c_ptr;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)c_ptr;
     c_ptr += sizeof(sim_lifted_irk_dims);
 
-    assert((char *) raw_memory + sim_lifted_irk_dims_calculate_size() >= c_ptr);
+    assert((char *)raw_memory + sim_lifted_irk_dims_calculate_size() >= c_ptr);
 
     return dims;
 }
 
 void sim_lifted_irk_set_nx(void *dims_, int nx)
 {
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
     dims->nx = nx;
 }
 
 void sim_lifted_irk_set_nu(void *dims_, int nu)
 {
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
     dims->nu = nu;
 }
 
-void sim_lifted_irk_get_nx(void *dims_, int* nx)
+void sim_lifted_irk_get_nx(void *dims_, int *nx)
 {
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
     *nx = dims->nx;
 }
 
-void sim_lifted_irk_get_nu(void *dims_, int* nu)
+void sim_lifted_irk_get_nu(void *dims_, int *nu)
 {
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
     *nu = dims->nu;
 }
 
@@ -91,8 +91,6 @@ int sim_lifted_irk_model_calculate_size(void *config, void *dims)
 
     return size;
 }
-
-
 
 void *sim_lifted_irk_model_assign(void *config, void *dims, void *raw_memory)
 {
@@ -162,9 +160,7 @@ int sim_lifted_irk_opts_calculate_size(void *config_, void *dims)
     return size;
 }
 
-
-
-// TODO return pointer to sim_rk_opts instead
+// TODO(all): return pointer to sim_rk_opts instead
 void *sim_lifted_irk_opts_assign(void *config_, void *dims, void *raw_memory)
 {
     int ns_max = 15;
@@ -206,12 +202,10 @@ void *sim_lifted_irk_opts_assign(void *config_, void *dims, void *raw_memory)
     return (void *)opts;
 }
 
-
-
 void sim_lifted_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     sim_rk_opts *opts = opts_;
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
 
     opts->ns = 3;  // GL 3
     int ns = opts->ns;
@@ -244,13 +238,12 @@ void sim_lifted_irk_opts_initialize_default(void *config_, void *dims_, void *op
     opts->num_steps = 2;
     opts->num_forw_sens = dims->nx + dims->nu;
     opts->sens_forw = true;
-    opts->sens_adj = false; // TODO(andrea): this effectively disables the expansion step in lifted integrators !!!!!
+    opts->sens_adj = false;  // TODO(andrea): this effectively disables the expansion step in lifted
+                             // integrators !!!!!
     opts->sens_hess = false;
 
     return;
 }
-
-
 
 void sim_lifted_irk_opts_update(void *config_, void *dims, void *opts_)
 {
@@ -289,8 +282,8 @@ void sim_lifted_irk_opts_update(void *config_, void *dims, void *opts_)
 
 int sim_lifted_irk_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
-	sim_rk_opts *opts = opts_;
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    sim_rk_opts *opts = opts_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
 
     int ns = opts->ns;
 
@@ -370,12 +363,10 @@ int sim_lifted_irk_memory_calculate_size(void *config_, void *dims_, void *opts_
     return size;
 }
 
-
-
 void *sim_lifted_irk_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
-	sim_rk_opts *opts = opts_;
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    sim_rk_opts *opts = opts_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
 
     int ns = opts->ns;
 
@@ -504,8 +495,8 @@ void *sim_lifted_irk_memory_assign(void *config_, void *dims_, void *opts_, void
 
 int sim_lifted_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
-	sim_rk_opts *opts = opts_;
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    sim_rk_opts *opts = opts_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
 
     int ns = opts->ns;
 
@@ -568,8 +559,8 @@ int sim_lifted_irk_workspace_calculate_size(void *config_, void *dims_, void *op
 static void sim_lifted_irk_workspace_cast(void *config_, sim_lifted_irk_workspace *work,
                                           const sim_in *in, void *opts_)
 {
-	sim_rk_opts *opts = opts_;
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) in->dims;
+    sim_rk_opts *opts = opts_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)in->dims;
 
     int ns = opts->ns;
 
@@ -970,15 +961,15 @@ static void form_linear_system_matrix(void *config_, int istep, const sim_in *in
                                       sim_lifted_irk_memory *mem, sim_lifted_irk_workspace *work,
                                       double *sys_mat, double **sys_mat2, double timing_ad)
 {
-	sim_rk_opts *opts = opts_;
+    sim_rk_opts *opts = opts_;
     int ns = opts->ns;
 
-    sim_lifted_irk_dims* dims = (sim_lifted_irk_dims *) in->dims;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)in->dims;
 
     int nx = dims->nx;
     int nu = dims->nu;
 
-    double H_INT = in->T/opts->num_steps;
+    double H_INT = in->T / opts->num_steps;
     double *A_mat = opts->A_mat;
     double *c_vec = opts->c_vec;
 
@@ -1136,11 +1127,11 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
     int ns = opts->ns;
 
-    sim_lifted_irk_dims* dims = (sim_lifted_irk_dims *) in->dims;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)in->dims;
 
     int nx = dims->nx;
     int nu = dims->nu;
-    
+
     int dim_sys = ns * nx;
     int i, s1, s2, j, istep;
     sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *)mem_;
@@ -1779,5 +1770,4 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     config->get_nx = &sim_lifted_irk_get_nx;
     config->get_nu = &sim_lifted_irk_get_nu;
     return;
-
 }

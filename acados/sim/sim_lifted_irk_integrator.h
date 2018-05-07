@@ -31,7 +31,6 @@ extern "C" {
 #define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
 
-
 typedef struct
 {
     int nx;
@@ -95,12 +94,12 @@ typedef struct
 // get & set functions
 void sim_lifted_irk_set_nx(void *dims_, int nx);
 void sim_lifted_irk_set_nu(void *dims_, int nu);
-void sim_lifted_irk_get_nx(void *dims_, int* nx);
-void sim_lifted_irk_get_nu(void *dims_, int* nu);
+void sim_lifted_irk_get_nx(void *dims_, int *nx);
+void sim_lifted_irk_get_nu(void *dims_, int *nu);
 //
 int sim_lifted_irk_dims_calculate_size();
 //
-void *sim_lifted_irk_dims_assign(void* config_, void *raw_memory);
+void *sim_lifted_irk_dims_assign(void *config_, void *raw_memory);
 //
 int sim_lifted_irk_model_calculate_size(void *config, void *dims);
 //

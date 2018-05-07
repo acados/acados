@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef INTERFACES_ACADOS_CPP_OCP_QP_HPP_
-#define INTERFACES_ACADOS_CPP_OCP_QP_HPP_
+#ifndef INTERFACES_ACADOS_CPP_OCP_QP_OCP_QP_HPP_
+#define INTERFACES_ACADOS_CPP_OCP_QP_OCP_QP_HPP_
 
 #include <functional>
 #include <map>
@@ -107,4 +107,4 @@ class ocp_qp
 
 }  // namespace acados
 
-#endif  // INTERFACES_ACADOS_CPP_OCP_QP_HPP_
+#endif  // INTERFACES_ACADOS_CPP_OCP_QP_OCP_QP_HPP_

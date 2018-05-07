@@ -64,7 +64,9 @@
     result_map = PyDict_New();
     for (int i = 0; i < names.size(); ++i) {
         auto v = $1[names[i]];
-        PyDict_SetItemString(result_map, fieldnames[i], new_matrix(std::make_pair(v.size(), 1), v.data()));
+        PyDict_SetItemString(result_map,
+                             fieldnames[i],
+                             new_matrix(std::make_pair(v.size(), 1), v.data()));
     }
 #endif
     $result = result_map;

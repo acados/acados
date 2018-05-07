@@ -19,8 +19,8 @@
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_gnsf.h"
+#include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/sim/sim_new_lifted_irk_integrator.h"
 
@@ -64,11 +64,9 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
     return solver_config;
 }
 
-
-
 void *sim_dims_create(void *config_)
 {
-    sim_solver_config *config = (sim_solver_config *) config_;
+    sim_solver_config *config = (sim_solver_config *)config_;
     int bytes = config->dims_calculate_size(config_);
 
     void *ptr = calloc(1, bytes);
@@ -77,8 +75,6 @@ void *sim_dims_create(void *config_)
 
     return dims;
 }
-
-
 
 sim_in *sim_in_create(sim_solver_config *config, void *dims)
 {
@@ -137,8 +133,6 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
     return status;
 }
 
-
-
 sim_out *sim_out_create(sim_solver_config *config, void *dims)
 {
     int bytes = sim_out_calculate_size(config, dims);
@@ -149,8 +143,6 @@ sim_out *sim_out_create(sim_solver_config *config, void *dims)
 
     return out;
 }
-
-
 
 void *sim_opts_create(sim_solver_config *config, void *dims)
 {
@@ -165,8 +157,6 @@ void *sim_opts_create(sim_solver_config *config, void *dims)
     return opts;
 }
 
-
-
 int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 {
     int bytes = sizeof(sim_solver);
@@ -176,8 +166,6 @@ int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 
     return bytes;
 }
-
-
 
 sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void *raw_memory)
 {
@@ -203,12 +191,10 @@ sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void 
     return solver;
 }
 
-
-
 sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
 {
-	// update Butcher tableau (needed if the user changed ns)
-	config->opts_update(config, dims, opts_);
+    // update Butcher tableau (needed if the user changed ns)
+    config->opts_update(config, dims, opts_);
     int bytes = sim_calculate_size(config, dims, opts_);
 
     void *ptr = calloc(1, bytes);

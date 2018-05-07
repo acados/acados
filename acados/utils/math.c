@@ -1105,14 +1105,14 @@ void regularize(int_t dim, real_t *A)
     reconstruct_A(dim, A, V, d);
 }
 
-
-double minimum_of_doubles(double *x, int n){
+double minimum_of_doubles(double *x, int n)
+{
     double min = x[0];
-    for (int c = 1 ; c < n ; c++ ) 
+    for (int c = 1; c < n; c++)
     {
-        if ( x[c] < min ) 
+        if (x[c] < min)
         {
-           min = x[c];
+            min = x[c];
         }
     }
     return min;

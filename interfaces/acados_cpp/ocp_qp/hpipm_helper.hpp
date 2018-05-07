@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef INTERFACES_ACADOS_CPP_HPIPM_HELPER_HPP_
-#define INTERFACES_ACADOS_CPP_HPIPM_HELPER_HPP_
+#ifndef INTERFACES_ACADOS_CPP_OCP_QP_HPIPM_HELPER_HPP_
+#define INTERFACES_ACADOS_CPP_OCP_QP_HPIPM_HELPER_HPP_
 
 #define num_rows_Q(stage, dim) (dim->nx[stage])
 
@@ -66,4 +66,4 @@
 
 #define num_elems_ug(stage, dim) (dim->ng[stage])
 
-#endif  // INTERFACES_ACADOS_CPP_HPIPM_HELPER_HPP_
+#endif  // INTERFACES_ACADOS_CPP_OCP_QP_HPIPM_HELPER_HPP_

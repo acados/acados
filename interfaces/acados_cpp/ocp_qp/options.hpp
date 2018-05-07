@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef INTERFACES_ACADOS_CPP_OPTIONS_HPP_
-#define INTERFACES_ACADOS_CPP_OPTIONS_HPP_
+#ifndef INTERFACES_ACADOS_CPP_OCP_QP_OPTIONS_HPP_
+#define INTERFACES_ACADOS_CPP_OCP_QP_OPTIONS_HPP_
 
 #include <map>
 #include <string>
@@ -107,4 +107,4 @@ inline std::map<std::string, acados::option_t *> &to_map(acados::option_t *opt)
 
 }  // namespace std
 
-#endif  // INTERFACES_ACADOS_CPP_OPTIONS_HPP_
+#endif  // INTERFACES_ACADOS_CPP_OCP_QP_OPTIONS_HPP_

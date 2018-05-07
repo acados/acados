@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef INTERFACES_ACADOS_CPP_OCP_QP_SOLUTION_HPP_
-#define INTERFACES_ACADOS_CPP_OCP_QP_SOLUTION_HPP_
+#ifndef INTERFACES_ACADOS_CPP_OCP_QP_OCP_QP_SOLUTION_HPP_
+#define INTERFACES_ACADOS_CPP_OCP_QP_OCP_QP_SOLUTION_HPP_
 
 #include <memory>
 #include <vector>
@@ -53,4 +53,4 @@ class ocp_qp_solution
 
 }  // namespace acados
 
-#endif  // INTERFACES_ACADOS_CPP_OCP_QP_SOLUTION_HPP_
+#endif  // INTERFACES_ACADOS_CPP_OCP_QP_OCP_QP_SOLUTION_HPP_

@@ -472,10 +472,10 @@ map<string, std::function<void(int, ocp_qp_in *, double *)>> ocp_qp::extract_fun
 vector<vector<double>> ocp_qp::extract(std::string field)
 {
     uint last_index = N;
-    if (field == "A" || field == "B" || field == "b")
-        last_index = N-1;
-    vector< vector<double> > result;
-    for (uint i = 0; i <= last_index; i++) {
+    if (field == "A" || field == "B" || field == "b") last_index = N - 1;
+    vector<vector<double>> result;
+    for (uint i = 0; i <= last_index; i++)
+    {
         auto dims = shape_of(field, i);
         vector<double> v(dims.first * dims.second);
         extract_functions[field](i, qp.get(), v.data());
@@ -550,8 +550,8 @@ void ocp_qp::check_range(std::string field, uint stage)
                                 "].");
 }
 
-std::pair<uint, uint> ocp_qp::shape_of(std::string field, uint stage) {
-
+std::pair<uint, uint> ocp_qp::shape_of(std::string field, uint stage)
+{
     check_range(field, stage);
 
     if (field == "Q")
@@ -597,9 +597,11 @@ static bool match(std::pair<uint, uint> dims, uint nb_elems)
     return false;
 }
 
-void ocp_qp::check_num_elements(std::string field, uint stage, uint nb_elems) {
+void ocp_qp::check_num_elements(std::string field, uint stage, uint nb_elems)
+{
     if (!match(shape_of(field, stage), nb_elems))
-        throw std::invalid_argument("I need " + std::to_string(shape_of(field, stage)) + " elements but got " + std::to_string(nb_elems) + ".");
+        throw std::invalid_argument("I need " + std::to_string(shape_of(field, stage)) +
+                                    " elements but got " + std::to_string(nb_elems) + ".");
 }
 
 ocp_qp_solver_plan string_to_plan(string solver)
@@ -613,37 +615,49 @@ ocp_qp_solver_plan string_to_plan(string solver)
     else if (solver == "sparse_hpipm")
     {
         plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
-    } else if (solver == "hpmpc") {
+    }
+    else if (solver == "hpmpc")
+    {
 #ifdef ACADOS_WITH_HPMPC
         plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
 #else
         throw std::invalid_argument("Acados compiled without solver HPMPC.");
 #endif
-    } else if (solver == "ooqp") {
+    }
+    else if (solver == "ooqp")
+    {
 #ifdef ACADOS_WITH_OOQP
         plan.qp_solver = PARTIAL_CONDENSING_OOQP;
 #else
         throw std::invalid_argument("Acados compiled without solver OOQP.");
 #endif
-    } else if (solver == "qpdunes") {
+    }
+    else if (solver == "qpdunes")
+    {
 #ifdef ACADOS_WITH_QPDUNES
         plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
-#else 
+#else
         throw std::invalid_argument("Acados compiled without solver qpDUNES.");
 #endif
-    } else if (solver == "qpoases") {
+    }
+    else if (solver == "qpoases")
+    {
 #ifdef ACADOS_WITH_QPOASES
         plan.qp_solver = FULL_CONDENSING_QPOASES;
 #else
         throw std::invalid_argument("Acados compiled without solver qpOASES.");
 #endif
-    } else if (solver == "qore") {
+    }
+    else if (solver == "qore")
+    {
 #ifdef ACADOS_WITH_QORE
         plan.qp_solver = FULL_CONDENSING_QORE;
 #else
         throw std::invalid_argument("Acados compiled without solver QORE.");
 #endif
-    } else {
+    }
+    else
+    {
         throw std::invalid_argument("Solver name '" + solver + "' not known.");
     }
     return plan;

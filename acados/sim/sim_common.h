@@ -115,22 +115,22 @@ typedef struct
 
 typedef struct
 {
-    int (*evaluate) (void *config, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
-    int (*opts_calculate_size) (void *config, void *dims);
-    void *(*opts_assign) (void *config, void *dims, void *raw_memory);
-    void (*opts_initialize_default) (void *config, void *dims, void *opts);
-    void (*opts_update) (void *config, void *dims, void *opts);
-    int (*memory_calculate_size) (void *config, void *dims, void *opts);
-    void *(*memory_assign) (void *config, void *dims, void *opts, void *raw_memory);
-    int (*workspace_calculate_size) (void *config, void *dims, void *opts);
-    int (*model_calculate_size) (void *config, void *dims);
-    void *(*model_assign) (void *config, void *dims, void *raw_memory);
-    int (*model_set_function) (void *model, sim_function_t fun_type, void *fun);
-    void (*config_initialize_default) (void *config);
+    int (*evaluate)(void *config, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
+    int (*opts_calculate_size)(void *config, void *dims);
+    void *(*opts_assign)(void *config, void *dims, void *raw_memory);
+    void (*opts_initialize_default)(void *config, void *dims, void *opts);
+    void (*opts_update)(void *config, void *dims, void *opts);
+    int (*memory_calculate_size)(void *config, void *dims, void *opts);
+    void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
+    int (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    int (*model_calculate_size)(void *config, void *dims);
+    void *(*model_assign)(void *config, void *dims, void *raw_memory);
+    int (*model_set_function)(void *model, sim_function_t fun_type, void *fun);
+    void (*config_initialize_default)(void *config);
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
-    void (*get_nx)(void *dims_, int* nx);
-    void (*get_nu)(void *dims_, int* nu);
+    void (*get_nx)(void *dims_, int *nx);
+    void (*get_nu)(void *dims_, int *nu);
     void (*set_nx)(void *dims_, int nx);
     void (*set_nu)(void *dims_, int nu);
 } sim_solver_config;

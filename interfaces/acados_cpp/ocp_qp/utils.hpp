@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef INTERFACES_ACADOS_CPP_UTILS_HPP_
-#define INTERFACES_ACADOS_CPP_UTILS_HPP_
+#ifndef INTERFACES_ACADOS_CPP_OCP_QP_UTILS_HPP_
+#define INTERFACES_ACADOS_CPP_OCP_QP_UTILS_HPP_
 
 #include <string>
 #include <utility>
@@ -43,4 +43,4 @@ std::string to_string(std::vector<T> v)
 }
 }  // namespace std
 
-#endif  // INTERFACES_ACADOS_CPP_UTILS_HPP_
+#endif  // INTERFACES_ACADOS_CPP_OCP_QP_UTILS_HPP_

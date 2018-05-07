@@ -27,7 +27,6 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-
 typedef struct
 {
     int nx;
@@ -69,16 +68,15 @@ typedef struct
 
 } sim_erk_workspace;
 
-
 // get & set functions
 void sim_erk_set_nx(void *dims_, int nx);
 void sim_erk_set_nu(void *dims_, int nu);
-void sim_erk_get_nx(void *dims_, int* nx);
-void sim_erk_get_nu(void *dims_, int* nu);
+void sim_erk_get_nx(void *dims_, int *nx);
+void sim_erk_get_nu(void *dims_, int *nu);
 
 // dims
 int sim_erk_dims_calculate_size();
-void *sim_erk_dims_assign(void* config_, void *raw_memory);
+void *sim_erk_dims_assign(void *config_, void *raw_memory);
 
 // model
 int sim_erk_model_calculate_size(void *config, void *dims);

@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef INTERFACES_ACADOS_CPP_OCP_QP_DIMENSIONS_HPP_
-#define INTERFACES_ACADOS_CPP_OCP_QP_DIMENSIONS_HPP_
+#ifndef INTERFACES_ACADOS_CPP_OCP_QP_OCP_QP_DIMENSIONS_HPP_
+#define INTERFACES_ACADOS_CPP_OCP_QP_OCP_QP_DIMENSIONS_HPP_
 
 #include <map>
 #include <memory>
@@ -37,4 +37,4 @@ std::unique_ptr<ocp_qp_dims> make_dimensions_ptr(std::map<std::string, std::vect
 
 }  // namespace acados
 
-#endif  // INTERFACES_ACADOS_CPP_OCP_QP_DIMENSIONS_HPP_
+#endif  // INTERFACES_ACADOS_CPP_OCP_QP_OCP_QP_DIMENSIONS_HPP_
