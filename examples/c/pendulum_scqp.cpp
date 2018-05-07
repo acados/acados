@@ -17,6 +17,8 @@
  *
  */
 
+#define _USE_MATH_DEFINES
+
 #include <stdio.h>
 #include <cmath>
 #include <cstdlib>
@@ -44,7 +46,7 @@ int main() {
 	int num_states = 4, num_controls = 1, N = 20;
 	double Tf = 1.0, Q = 1e-10, R = 1e-4, QN = 1e-10;
 	std::vector<int> idxb_0 {1, 2, 3, 4};
-	std::vector<double> x0 {0, 0, M_PI, 0};
+	std::vector<double> x0({0, 0, M_PI, 0});
 
 	double radius2 = 0.04, neg_inf = -1000000;
 	int max_num_sqp_iterations = 100;
