@@ -56,7 +56,7 @@ script:
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=OFF -DSWIG_PYTHON=OFF ..
   - cmake --build build --target lint
   - cmake --build build
-  - cmake -E chdir build ctest --verbose --output-on-failure
+  - cmake -E chdir build ctest --output-on-failure
   - rm -r -f build
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain-mingw32.cmake ..

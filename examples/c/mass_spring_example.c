@@ -227,20 +227,22 @@ int main() {
                     printf("\nFull condensing + HPIPM:\n\n");
                     // default options
                     break;
-                case FULL_CONDENSING_QORE:
 #ifdef ACADOS_WITH_QORE
+                case FULL_CONDENSING_QORE:
                     printf("\nFull condensing + QORE:\n\n");
                     // default options
-#endif
                     break;
+#endif
+#ifdef ACADOS_WITH_QPOASES
                 case FULL_CONDENSING_QPOASES:
-        #ifdef ACADOS_WITH_QPOASES
                     printf("\nFull condensing + QPOASES:\n\n");
                     // default options
-#endif
                     break;
+#endif
+#ifdef ACADOS_WITH_OOQP
                 case PARTIAL_CONDENSING_OOQP:
                     break;
+#endif
             }
 
             ocp_qp_solver *qp_solver = ocp_qp_create(config, qp_dims, opts);

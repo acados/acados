@@ -66,29 +66,31 @@ ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan)
         case PARTIAL_CONDENSING_HPIPM:
             ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
             break;
-        case PARTIAL_CONDENSING_HPMPC:
 #ifdef ACADOS_WITH_HPMPC
+        case PARTIAL_CONDENSING_HPMPC:
             ocp_qp_hpmpc_config_initialize_default(solver_config->qp_solver);
 #endif
             break;
+#ifdef ACADOS_WITH_OOQP
         case PARTIAL_CONDENSING_OOQP:
             // NOT IMPLEMENTED YET
             break;
-        case PARTIAL_CONDENSING_QPDUNES:
+#endif
 #ifdef ACADOS_WITH_QPDUNES
+        case PARTIAL_CONDENSING_QPDUNES:
             ocp_qp_qpdunes_config_initialize_default(solver_config->qp_solver);
 #endif
             break;
         case FULL_CONDENSING_HPIPM:
             dense_qp_hpipm_config_initialize_default(solver_config->qp_solver);
             break;
-        case FULL_CONDENSING_QPOASES:
 #ifdef ACADOS_WITH_QPOASES
+        case FULL_CONDENSING_QPOASES:
             dense_qp_qpoases_config_initialize_default(solver_config->qp_solver);
 #endif
             break;
-        case FULL_CONDENSING_QORE:
 #ifdef ACADOS_WITH_QORE
+        case FULL_CONDENSING_QORE:
             dense_qp_qore_config_initialize_default(solver_config->qp_solver);
 #endif
             break;

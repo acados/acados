@@ -28,12 +28,22 @@ extern "C" {
 
 typedef enum {
     PARTIAL_CONDENSING_HPIPM,
+#ifdef ACADOS_WITH_HPMPC
     PARTIAL_CONDENSING_HPMPC,
+#endif
+#ifdef ACADOS_WITH_OOQP
     PARTIAL_CONDENSING_OOQP,
+#endif
+#ifdef ACADOS_WITH_QPDUNES
     PARTIAL_CONDENSING_QPDUNES,
+#endif
     FULL_CONDENSING_HPIPM,
+#ifdef ACADOS_WITH_QPOASES
     FULL_CONDENSING_QPOASES,
+#endif
+#ifdef ACADOS_WITH_QORE
     FULL_CONDENSING_QORE
+#endif
 } ocp_qp_solver_t;
 
 typedef struct
