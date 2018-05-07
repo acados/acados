@@ -32,6 +32,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
+#include "acados/sim/sim_gnsf.h"
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
@@ -151,8 +152,62 @@ int main()
 	impl_ode_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
 	external_function_casadi_create(&impl_ode_jac_x_xdot_u);
 
+	/************************************************
+	* external functions (Generalized Nonlinear Static Feedback (GNSF) model)
+	************************************************/
+    // phi_fun
+    external_function_casadi phi_fun;
+    phi_fun.casadi_fun            = &casadi_phi_fun;
+    phi_fun.casadi_work           = &casadi_phi_fun_work;
+    phi_fun.casadi_sparsity_in    = &casadi_phi_fun_sparsity_in;
+    phi_fun.casadi_sparsity_out   = &casadi_phi_fun_sparsity_out;
+    phi_fun.casadi_n_in           = &casadi_phi_fun_n_in;
+    phi_fun.casadi_n_out          = &casadi_phi_fun_n_out;
+	external_function_casadi_create(&phi_fun);
 
-	int number_sim_solvers = 3;
+    // phi_fun_jac_y
+    external_function_casadi phi_fun_jac_y;
+    phi_fun_jac_y.casadi_fun            = &casadi_phi_fun_jac_y;
+    phi_fun_jac_y.casadi_work           = &casadi_phi_fun_jac_y_work;
+    phi_fun_jac_y.casadi_sparsity_in    = &casadi_phi_fun_jac_y_sparsity_in;
+    phi_fun_jac_y.casadi_sparsity_out   = &casadi_phi_fun_jac_y_sparsity_out;
+    phi_fun_jac_y.casadi_n_in           = &casadi_phi_fun_jac_y_n_in;
+    phi_fun_jac_y.casadi_n_out          = &casadi_phi_fun_jac_y_n_out;
+	external_function_casadi_create(&phi_fun_jac_y);
+
+    // phi_jac_y_uhat
+    external_function_casadi phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_fun                = &casadi_phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_work               = &casadi_phi_jac_y_uhat_work;
+    phi_jac_y_uhat.casadi_sparsity_in        = &casadi_phi_jac_y_uhat_sparsity_in;
+    phi_jac_y_uhat.casadi_sparsity_out       = &casadi_phi_jac_y_uhat_sparsity_out;
+    phi_jac_y_uhat.casadi_n_in               = &casadi_phi_jac_y_uhat_n_in;
+    phi_jac_y_uhat.casadi_n_out              = &casadi_phi_jac_y_uhat_n_out;
+	external_function_casadi_create(&phi_jac_y_uhat);
+
+    // f_lo_fun_jac_x1k1uz
+    external_function_casadi f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_fun            = &casadi_f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_work           = &casadi_f_lo_fun_jac_x1k1uz_work;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &casadi_f_lo_fun_jac_x1k1uz_sparsity_in;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &casadi_f_lo_fun_jac_x1k1uz_sparsity_out;
+    f_lo_fun_jac_x1k1uz.casadi_n_in           = &casadi_f_lo_fun_jac_x1k1uz_n_in;
+    f_lo_fun_jac_x1k1uz.casadi_n_out          = &casadi_f_lo_fun_jac_x1k1uz_n_out;
+	external_function_casadi_create(&f_lo_fun_jac_x1k1uz);
+
+    // get_matrices_fun
+    external_function_casadi get_matrices_fun;
+    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
+	external_function_casadi_create(&get_matrices_fun);
+
+
+
+	int number_sim_solvers = 4;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
@@ -180,6 +235,11 @@ int main()
 				printf("\n\nsim solver: Lifted_IRK\n");
 				plan.sim_solver = LIFTED_IRK;
 				break;
+			case 3:
+				printf("\n\nsim solver: GNSF\n");
+				plan.sim_solver = GNSF;
+				break;
+
 
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
@@ -210,6 +270,8 @@ int main()
 		opts->sens_forw = true;
 		opts->sens_adj = false;
 
+		sim_gnsf_dims *gnsf_dim;
+
 		switch (nss)
 		{
 
@@ -226,6 +288,24 @@ int main()
 			case 2:
 				// lifted IRK
 				opts->ns = 2; // number of stages in rk integrator
+				break;
+			case 3:
+				// GNSF
+				opts->ns = 2; // number of stages in rk integrator
+				opts->jac_reuse = true; // jacobian reuse
+				opts->newton_iter = 3; // number of newton iterations per integration step
+				
+				// set additional dimensions
+				gnsf_dim = (sim_gnsf_dims *) dims; // declaration not allowed inside switch somehow
+				gnsf_dim->nx = nx;
+				gnsf_dim->nu = nu;
+				gnsf_dim->nx1= nx;
+				gnsf_dim->nx2= 0;
+				gnsf_dim->ny = nx;
+				gnsf_dim->nuhat = nu;
+				gnsf_dim->n_out = 1;
+				gnsf_dim->nz = 0;
+
 				break;
 
 			default :
@@ -261,10 +341,23 @@ int main()
 				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
 				break;
 			}
-			case 2:
+			case 2: // lifted IRK
 			{
 				sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
 				sim_set_model(config, in, "expl_ode_jac", &expl_ode_jac);
+				break;
+			}
+			case 3: // GNSF
+			{
+				// set model funtions
+				sim_set_model(config, in, "phi_fun", &phi_fun);
+				sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
+				sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
+				sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+
+				// import model matrices
+				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
+				sim_gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);
 				break;
 			}
 			default :
@@ -291,6 +384,9 @@ int main()
 		sim_solver *sim_solver = sim_create(config, dims, opts);
 
 		int acados_return;
+
+		if (nss == 3) // for gnsf: perform precomputation
+			sim_gnsf_precompute(config, gnsf_dim, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
 
     	acados_timer timer;
 		acados_tic(&timer);
