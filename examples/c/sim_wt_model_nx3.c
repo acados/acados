@@ -152,6 +152,16 @@ int main()
 	impl_ode_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
 	external_function_casadi_create(&impl_ode_jac_x_xdot_u);
 
+	// impl_ode_jac_x_xdot_u
+	external_function_casadi impl_ode_fun_jac_x_xdot_u;
+	impl_ode_fun_jac_x_xdot_u.casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_u;
+	impl_ode_fun_jac_x_xdot_u.casadi_work = &casadi_impl_ode_fun_jac_x_xdot_u_work;
+	impl_ode_fun_jac_x_xdot_u.casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_u_sparsity_in;
+	impl_ode_fun_jac_x_xdot_u.casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_u_sparsity_out;
+	impl_ode_fun_jac_x_xdot_u.casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_u_n_in;
+	impl_ode_fun_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_u_n_out;
+	external_function_casadi_create(&impl_ode_fun_jac_x_xdot_u);
+
 	/************************************************
 	* external functions (Generalized Nonlinear Static Feedback (GNSF) model)
 	************************************************/
@@ -207,7 +217,7 @@ int main()
 
 
 
-	int number_sim_solvers = 4;
+	int number_sim_solvers = 5;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
@@ -235,11 +245,16 @@ int main()
 				printf("\n\nsim solver: Lifted_IRK\n");
 				plan.sim_solver = LIFTED_IRK;
 				break;
+
 			case 3:
 				printf("\n\nsim solver: GNSF\n");
 				plan.sim_solver = GNSF;
 				break;
-
+			
+			case 4:
+				printf("\n\nsim solver: NEW_LIFTED_IRK\n");
+				plan.sim_solver = NEW_LIFTED_IRK;
+				break;
 
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
@@ -289,12 +304,13 @@ int main()
 				// lifted IRK
 				opts->ns = 2; // number of stages in rk integrator
 				break;
+
 			case 3:
 				// GNSF
 				opts->ns = 2; // number of stages in rk integrator
 				opts->jac_reuse = true; // jacobian reuse
 				opts->newton_iter = 3; // number of newton iterations per integration step
-				
+
 				// set additional dimensions
 				gnsf_dim = (sim_gnsf_dims *) dims; // declaration not allowed inside switch somehow
 				gnsf_dim->nx = nx;
@@ -306,6 +322,11 @@ int main()
 				gnsf_dim->n_out = 1;
 				gnsf_dim->nz = 0;
 
+				break;
+
+			case 4:
+				// new lifted IRK
+				opts->ns = 2; // number of stages in rk integrator
 				break;
 
 			default :
@@ -358,6 +379,12 @@ int main()
 				// import model matrices
 				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
 				sim_gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);
+				break;
+			}
+			case 4: // new_lifted_irk
+			{
+				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
+				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u);
 				break;
 			}
 			default :
@@ -531,7 +558,13 @@ int main()
 	external_function_casadi_free(&impl_ode_fun);
 	external_function_casadi_free(&impl_ode_fun_jac_x_xdot);
 	external_function_casadi_free(&impl_ode_jac_x_xdot_u);
-	
+	external_function_casadi_free(&impl_ode_fun_jac_x_xdot_u);
+	// gnsf functions:
+	external_function_casadi_free(&f_lo_fun_jac_x1k1uz);
+	external_function_casadi_free(&phi_fun);
+	external_function_casadi_free(&phi_fun_jac_y);
+	external_function_casadi_free(&phi_jac_y_uhat);
+	external_function_casadi_free(&get_matrices_fun);	
 
 	/************************************************
 	* return

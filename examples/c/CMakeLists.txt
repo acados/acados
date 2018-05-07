@@ -123,6 +123,7 @@ file(GLOB WT_MODEL_NX3_SRC
     wt_model_nx3/impl_ode_fun.c
     wt_model_nx3/impl_ode_fun_jac_x_xdot.c
     wt_model_nx3/impl_ode_jac_x_xdot_u.c
+    wt_model_nx3/impl_ode_fun_jac_x_xdot_u.c
     wt_model_nx3/phi_fun.c
     wt_model_nx3/phi_fun_jac_y.c
     wt_model_nx3/phi_jac_y_uhat.c
