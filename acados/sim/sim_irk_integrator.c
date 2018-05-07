@@ -1,3 +1,24 @@
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
+#include "acados/sim/sim_irk_integrator.h"
+
 // standard
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,12 +29,11 @@
 #include "acados/utils/mem.h"
 
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_irk_integrator.h"
 
-#include "external/blasfeo/include/blasfeo_target.h"
-#include "external/blasfeo/include/blasfeo_common.h"
-#include "external/blasfeo/include/blasfeo_d_aux.h"
-#include "external/blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
 
 /************************************************
 * dims
@@ -104,23 +124,11 @@ int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
         case IMPL_ODE_FUN:
             model->impl_ode_fun = (external_function_generic *) fun;
             break;
-        case IMPL_ODE_JAC_X:
-            model->impl_ode_jac_x = (external_function_generic *) fun;
-            break;
-        case IMPL_ODE_JAC_XDOT:
-            model->impl_ode_jac_xdot = (external_function_generic *) fun;
-            break;
-        case IMPL_ODE_JAC_U:
-            model->impl_ode_jac_u = (external_function_generic *) fun;
-            break;
         case IMPL_ODE_FUN_JAC_X_XDOT:
             model->impl_ode_fun_jac_x_xdot = (external_function_generic *) fun;
             break;
         case IMPL_ODE_JAC_X_XDOT_U:
             model->impl_ode_jac_x_xdot_u = (external_function_generic *) fun;
-            break;
-        case IMPL_ODE_JAC_X_U:
-            model->impl_ode_jac_x_u = (external_function_generic *) fun;
             break;
         default:
             return ACADOS_FAILURE;
@@ -506,8 +514,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     impl_ode_jac_x_xdot_u_out[2] = &J_temp_u;
 	irk_model *model = in->model;
 
-    acados_timer timer, timer_ad;
+    acados_timer timer, timer_ad, timer_la;
     double timing_ad = 0.0;
+    double timing_la = 0.0;
 
     // initialize
     blasfeo_dgese(nx*ns, nx*ns, 0.0, JGK, 0, 0);
@@ -567,20 +576,14 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 impl_ode_res_out.xi = ii*nx; // store output in this posistion of rG
                 // compute the residual of implicit ode at time t_ii
                 if ( !((opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse)) )
-                { // otherwise eval the ode together with the jacobians within next if
+                { 
                     acados_tic(&timer_ad);
                     model->impl_ode_fun->evaluate(model->impl_ode_fun, impl_ode_type_in, impl_ode_in, impl_ode_fun_type_out, impl_ode_fun_out);
                     timing_ad += acados_toc(&timer_ad);
-                    // fill in elements of rG
                 }
-
-                if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) )
-				{
-                    // compute the jacobian of implicit ode
+                else { // evaluate the ode function & jacobian w.r.t. x, xdot and compute jacobian JGK;
                     acados_tic(&timer_ad);
-
                     model->impl_ode_fun_jac_x_xdot->evaluate(model->impl_ode_fun_jac_x_xdot, impl_ode_type_in, impl_ode_in, impl_ode_fun_jac_x_xdot_type_out, impl_ode_fun_jac_x_xdot_out);
-
                     timing_ad += acados_toc(&timer_ad);
 
                     // compute the blocks of JGK
@@ -602,6 +605,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             } // end ii
 
 
+            acados_tic(&timer_la);
             //DGETRF computes an LU factorization of a general M-by-N matrix A
             //using partial pivoting with row interchanges.
 			if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) )
@@ -619,6 +623,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // solve JGK * x = rG, JGK on the (l)eft, (u)pper-trian, (n)o-trans
             //                    (n)o unit trian , and store x in rG
             blasfeo_dtrsv_unn(nx*ns, JGK, 0, 0, rG, 0, rG, 0);
+
+            timing_la += acados_toc(&timer_la);
+
             // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is DeltaK
             blasfeo_daxpy(nx*ns, -1.0, rG, 0, K, 0, K, 0);
 
@@ -673,8 +680,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 } // end jj
             } // end ii
 
-            // factorize JGK 
+            // factorize JGK
+            acados_tic(&timer_la);
             blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
+            timing_la += acados_toc(&timer_la);
             // NOTE: it is possible to store the factorization and permutation of JGK and reuse it in the adjoint propagation, but as in common MPC schemes only one of those is needed, this is omited for now - JG_traj was used for this;
 
             // obtain JKf
@@ -682,9 +691,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_dgemm_nn(nx*ns, nx+nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
             blasfeo_dgead(nx*ns, nu, 1.0, JGf, 0, nx, JKf, 0, nx);
 
+            acados_tic(&timer_la);
             blasfeo_drowpe(nx*ns, ipiv, JKf);
             blasfeo_dtrsm_llnu(nx*ns, nx+nu, 1.0, JGK, 0, 0, JKf, 0, 0, JKf, 0, 0);
             blasfeo_dtrsm_lunn(nx*ns, nx+nu, 1.0, JGK, 0, 0, JKf, 0, 0, JKf, 0, 0);
+            timing_la += acados_toc(&timer_la);
 
             // update forward sensitivity
 			for(jj=0; jj<ns; jj++)
@@ -718,6 +729,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         blasfeo_daxpy(nx, a, &K_traj[ss], jj*nx, xt, 0, xt, 0);
                     }
                 }
+
                 acados_tic(&timer_ad);
                 model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, impl_ode_type_in, impl_ode_in, impl_ode_jac_x_xdot_u_type_out, impl_ode_jac_x_xdot_u_out);
                 timing_ad += acados_toc(&timer_ad);
@@ -741,14 +753,17 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             } // end ii
 
             // factorize JGK
+            acados_tic(&timer_la);
             blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv); //
+            timing_la += acados_toc(&timer_la);
 
 			for(jj=0; jj<ns; jj++)
 				blasfeo_dveccpsc(nx, -step*b_vec[jj], lambda, 0, lambdaK, jj*nx);
 
+            acados_tic(&timer_la);
             blasfeo_dtrsv_utn(nx*ns, JGK, 0, 0, lambdaK, 0, lambdaK, 0);
-
             blasfeo_dtrsv_ltu(nx*ns, JGK, 0, 0, lambdaK, 0, lambdaK, 0);
+            timing_la += acados_toc(&timer_la);
 
             blasfeo_dvecpei(nx*ns, ipiv, lambdaK, 0);
             blasfeo_dgemv_t(nx*ns, nx+nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda, 0);
@@ -763,7 +778,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     blasfeo_unpack_dvec(nx+nu, lambda, 0, S_adj_out);
 
     out->info->CPUtime = acados_toc(&timer);
-    out->info->LAtime = 0.0;
+    out->info->LAtime = timing_la; // note: this is the time for factorization and solving the linear systems
     out->info->ADtime = timing_ad;
 
     return 0;

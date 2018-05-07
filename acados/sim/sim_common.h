@@ -42,13 +42,14 @@ typedef enum {
     EXPL_VDE_ADJ,
     // IRK
     IMPL_ODE_FUN,
-    IMPL_ODE_JAC_X,
-    IMPL_ODE_JAC_XDOT,
-    IMPL_ODE_JAC_U,
     IMPL_ODE_FUN_JAC_X_XDOT,
     IMPL_ODE_JAC_X_XDOT_U,
     IMPL_ODE_FUN_JAC_X_XDOT_U,
-    IMPL_ODE_JAC_X_U,
+    // gnsf
+    PHI_FUN,
+    PHI_FUN_JAC_Y,
+    PHI_JAC_Y_UHAT,
+    LO_FUN
 } sim_function_t;
 
 
