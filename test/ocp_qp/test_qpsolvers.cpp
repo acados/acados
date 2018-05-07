@@ -104,7 +104,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
     vector<std::string> solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC",  "SPARSE_QPDUNES",
                                    "DENSE_HPIPM",  "DENSE_QPOASES"
 #ifdef ACADOS_WITH_QORE
-                                   ,"DENSE_QORE"};
+                                   , "DENSE_QORE"};
 #else
                                    };
 #endif
