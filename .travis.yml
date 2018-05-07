@@ -53,7 +53,7 @@ before_script:
 
 script:
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=OFF -DSWIG_PYTHON=OFF ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release ..
   - cmake --build build --target lint
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
