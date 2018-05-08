@@ -117,13 +117,6 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 
-if(SWIG_MATLAB)
-    find_package(Matlab COMPONENTS MX_LIBRARY REQUIRED)
-    target_compile_definitions(acados PUBLIC MATLAB)
-    target_include_directories(acados PUBLIC ${Matlab_INCLUDE_DIRS})
-    target_link_libraries(acados PUBLIC ${Matlab_MEX_LIBRARY})
-endif()
-
 add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
 if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
 	add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
