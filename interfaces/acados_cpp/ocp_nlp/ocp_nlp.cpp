@@ -56,6 +56,8 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
     std::transform(nx.begin(), nx.end(), nu.begin(), ny.begin(), std::plus<int>());
     dimensions_["ny"] = ny;
 
+    step_ = std::vector<double>(N);
+
     int bytes = ocp_nlp_solver_config_calculate_size(N);
 	void *config_mem = calloc(1, bytes);
 	config_.reset(ocp_nlp_solver_config_assign(N, config_mem));
@@ -65,7 +67,6 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
     config_->qp_solver = ocp_qp_config_create({PARTIAL_CONDENSING_HPIPM});
 
     for (int i = 0; i <= N; ++i) {
-        ocp_nlp_cost_ls_config_initialize_default(config_->cost[i]);
         ocp_nlp_constraints_config_initialize_default(config_->constraints[i]);
     }
 
@@ -102,26 +103,12 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
                             dimensions_["ng"].data(), dimensions_["nh"].data(), std::vector<int>(N+1, 0).data(),
                             dimensions_["ns"].data(), dims_.get());
 
-    nlp_.reset(ocp_nlp_in_create(config_.get(), dims_.get()));
-
-    for (int i = 0; i < N; ++i)
-        nlp_->Ts[i] = step_;
+    nlp_->dims = dims_.get();
+    nlp_->Ts = step_.data();
 
     for (string bound : {"x", "u"})
         for (int stage = 0; stage <= num_stages(); ++stage)
             set_bound_indices(bound, stage, idxb_new.at(bound).at(stage));
-
-    forw_vde_.casadi_fun = reinterpret_cast<casadi_eval_t>(load_function("expl_vde_for", dynamics_handle["expl_vde_for"]));
-    forw_vde_.casadi_n_in = reinterpret_cast<casadi_getint_t>(load_function("expl_vde_for_n_in", dynamics_handle["expl_vde_for"]));
-    forw_vde_.casadi_n_out = reinterpret_cast<casadi_getint_t>(load_function("expl_vde_for_n_out", dynamics_handle["expl_vde_for"]));
-    forw_vde_.casadi_sparsity_in = reinterpret_cast<casadi_sparsity_t>(load_function("expl_vde_for_sparsity_in", dynamics_handle["expl_vde_for"]));
-    forw_vde_.casadi_sparsity_out = reinterpret_cast<casadi_sparsity_t>(load_function("expl_vde_for_sparsity_out", dynamics_handle["expl_vde_for"]));
-    forw_vde_.casadi_work = reinterpret_cast<casadi_work_t>(load_function("expl_vde_for_work", dynamics_handle["expl_vde_for"]));
-
-    external_function_casadi_create_array(1, &forw_vde_);
-
-    for (int stage = 0; stage < N; ++stage)
-        nlp_set_model_in_stage(config_.get(), nlp_.get(), stage, "expl_vde_for", &forw_vde_);
 
     vector<double> xref(2, 0);
     vector<double> uref(1, 0);
@@ -217,14 +204,7 @@ void ocp_nlp::set_dynamics(const casadi::Function& model, std::map<std::string, 
     if (!options.count("step"))
         throw std::invalid_argument("Expected 'step' as an option.");
 
-    step_ = to_double(options["step"]);
-
-    auto functions = create_explicit_ode_functions(model);
-
-    for (auto elem : functions) {
-        elem.second.generate(elem.first + ".c", {{"with_header", true}, {"with_export", false}, {"casadi_int", "int"}});
-        dynamics_handle[elem.first] = compile_and_load(elem.first);
-    }
+    std::fill(step_.begin(), step_.end(), to_double(options["step"]));
 
     sim_solver_plan sim_plan;
     if (to_string(options.at("integrator")) == "rk4")
@@ -236,6 +216,30 @@ void ocp_nlp::set_dynamics(const casadi::Function& model, std::map<std::string, 
         ocp_nlp_dynamics_cont_config_initialize_default(config_->dynamics[i]);
         config_->dynamics[i]->sim_solver = sim_config_create(sim_plan);
     }
+
+    auto functions = create_explicit_ode_functions(model);
+
+    std::map<std::string, void *> dynamics_handle;
+
+    for (auto elem : functions) {
+        elem.second.generate(elem.first + ".c", {{"with_header", true}, {"with_export", false}, {"casadi_int", "int"}});
+        dynamics_handle[elem.first] = compile_and_load(elem.first);
+    }
+
+    external_function_casadi forw_vde;
+
+    forw_vde.casadi_fun = reinterpret_cast<casadi_eval_t>(load_function("expl_vde_for", dynamics_handle["expl_vde_for"]));
+    forw_vde.casadi_n_in = reinterpret_cast<casadi_getint_t>(load_function("expl_vde_for_n_in", dynamics_handle["expl_vde_for"]));
+    forw_vde.casadi_n_out = reinterpret_cast<casadi_getint_t>(load_function("expl_vde_for_n_out", dynamics_handle["expl_vde_for"]));
+    forw_vde.casadi_sparsity_in = reinterpret_cast<casadi_sparsity_t>(load_function("expl_vde_for_sparsity_in", dynamics_handle["expl_vde_for"]));
+    forw_vde.casadi_sparsity_out = reinterpret_cast<casadi_sparsity_t>(load_function("expl_vde_for_sparsity_out", dynamics_handle["expl_vde_for"]));
+    forw_vde.casadi_work = reinterpret_cast<casadi_work_t>(load_function("expl_vde_for_work", dynamics_handle["expl_vde_for"]));
+
+    external_function_casadi_create_array(1, &forw_vde);
+
+    for (int stage = 0; stage < N; ++stage)
+        nlp_set_model_in_stage(config_.get(), nlp_.get(), stage, "expl_vde_for", &forw_vde);
+
 };
 
 void *load_function(std::string function_name, void *handle) {

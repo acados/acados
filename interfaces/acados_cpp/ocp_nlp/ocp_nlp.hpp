@@ -87,17 +87,13 @@ class ocp_nlp : private ocp {
 
     std::unique_ptr<void, void (*)(void *)> solver_options_ {nullptr, &std::free};
 
-    std::map<std::string, void *> dynamics_handle;
-
-    external_function_casadi forw_vde_;
-
     std::map<std::string, std::vector<int>> dimensions_;
 
     std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
 
     bool needs_initializing_;
 
-    double step_;
+    std::vector<double> step_;
 
 };
 
