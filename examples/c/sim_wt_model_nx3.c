@@ -27,11 +27,7 @@
 #include <stdlib.h>
 
 // acados
-// TODO(dimitris): remove most includes
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/sim_irk_integrator.h"
-#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/sim/sim_gnsf.h"
 #include "acados/utils/external_function_generic.h"
 
@@ -42,12 +38,9 @@
 #include "examples/c/wt_model_nx3/wt_model.h"
 
 // blasfeo
-#include <blasfeo/include/blasfeo_target.h>
-#include <blasfeo/include/blasfeo_common.h>
-#include <blasfeo/include/blasfeo_d_aux.h>
-#include <blasfeo/include/blasfeo_d_aux_ext_dep.h>
-#include <blasfeo/include/blasfeo_v_aux_ext_dep.h>
-#include <blasfeo/include/blasfeo_d_blas.h>
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
 
 // x0 and u for simulation
 #include "examples/c/wt_model_nx3/u_x0.c"
@@ -58,9 +51,8 @@ int main()
 {
 
 /************************************************
-* bla bla bla
+* initialize common stuff (for all integrators)
 ************************************************/
-
     int ii;
     int jj;
 
@@ -418,7 +410,7 @@ int main()
     	acados_timer timer;
 		acados_tic(&timer);
 
-		int nsim0 = nsim;
+		int nsim0 = 1;//nsim;
 
 		double cpu_time = 0.0;
 		double la_time = 0.0;
@@ -547,7 +539,7 @@ int main()
 
 		free(opts);
 		free(config);
-		// free(dims);
+		free(dims);
 	}
 
 	// TODO(dimitris): free all external functions (or write a free_model)

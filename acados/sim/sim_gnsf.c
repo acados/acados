@@ -1216,8 +1216,6 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     for (int ss = 0; ss < num_steps; ss++){
         blasfeo_dvecse(nff, 0, &ff_val[ss],0);
     }
-    // set to 0
-    blasfeo_dgese(nff, nff, 0.0, &J_r_ff, 0, 0);
 
     /************************************************
     * Set up function input & outputs
