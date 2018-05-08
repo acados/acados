@@ -29,7 +29,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 # add_subdirectory(ocp_nlp)
 add_subdirectory(ocp_qp)
-# add_subdirectory(sim)
+add_subdirectory(sim)
 
 # set(TEST_OCP_NLP_SRC
 #     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/chain/test_chain.cpp
@@ -38,6 +38,25 @@ add_subdirectory(ocp_qp)
 set(TEST_OCP_QP_SRC
     ${PROJECT_SOURCE_DIR}/examples/c/mass_spring_model/mass_spring_qp.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/test_qpsolvers.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/../test_utils/read_ocp_qp_in.c
+)
+
+
+set(TEST_SIM_SRC
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_ode_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_ode_jac.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_vde_for.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_vde_adj.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/impl_ode_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/impl_ode_fun_jac_x_xdot.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/impl_ode_jac_x_xdot_u.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/impl_ode_fun_jac_x_xdot_u.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/phi_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/phi_fun_jac_y.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/phi_jac_y_uhat.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/f_lo_fun_jac_x1k1uz.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/get_matrices_fun.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/sim/sim_test.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/../test_utils/read_ocp_qp_in.c
 )
 
@@ -58,7 +77,7 @@ add_executable(unit_tests
     # $<TARGET_OBJECTS:ocp_qp_gen>
     ${TEST_OCP_QP_SRC}
     # $<TARGET_OBJECTS:sim_gen>
-    # ${TEST_SIM_SRC}
+    ${TEST_SIM_SRC}
     # ${TEST_UTILS_SRC}
 )
 
