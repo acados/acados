@@ -53,7 +53,7 @@ SpacesInSquareBrackets: false
 SpacesInAngles:  false
 SpaceInEmptyParentheses: false
 SpacesInCStyleCastParentheses: false
-SpaceAfterCStyleCast: false
+SpaceAfterCStyleCast: true
 SpacesInContainerLiterals: true
 SpaceBeforeAssignmentOperators: true
 ContinuationIndentWidth: 4

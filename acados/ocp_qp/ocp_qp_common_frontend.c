@@ -89,80 +89,80 @@ char *assign_colmaj_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in **qp_in, void 
     char *c_ptr_QPdata;
 
     // char pointer
-    char *c_ptr = (char *)ptr;
+    char *c_ptr = (char *) ptr;
 
-    *qp_in = (colmaj_ocp_qp_in *)c_ptr;
+    *qp_in = (colmaj_ocp_qp_in *) c_ptr;
     c_ptr += sizeof(colmaj_ocp_qp_in);
 
     // copy dimensions to workspace
     (*qp_in)->N = N;
 
-    (*qp_in)->nx = (int *)c_ptr;
+    (*qp_in)->nx = (int *) c_ptr;
     memcpy(c_ptr, nx, (N + 1) * sizeof(int));
     c_ptr += (N + 1) * sizeof(int);
 
-    (*qp_in)->nu = (int *)c_ptr;
+    (*qp_in)->nu = (int *) c_ptr;
     memcpy(c_ptr, nu, (N + 1) * sizeof(int));
     c_ptr += (N + 1) * sizeof(int);
 
-    (*qp_in)->nb = (int *)c_ptr;
+    (*qp_in)->nb = (int *) c_ptr;
     memcpy(c_ptr, nb, (N + 1) * sizeof(int));
     c_ptr += (N + 1) * sizeof(int);
 
-    (*qp_in)->nc = (int *)c_ptr;
+    (*qp_in)->nc = (int *) c_ptr;
     memcpy(c_ptr, nc, (N + 1) * sizeof(int));
     c_ptr += (N + 1) * sizeof(int);
 
     // assign double pointers
-    (*qp_in)->A = (double **)c_ptr;
+    (*qp_in)->A = (double **) c_ptr;
     c_ptr += N * sizeof(double *);
 
-    (*qp_in)->B = (double **)c_ptr;
+    (*qp_in)->B = (double **) c_ptr;
     c_ptr += N * sizeof(double *);
 
-    (*qp_in)->b = (double **)c_ptr;
+    (*qp_in)->b = (double **) c_ptr;
     c_ptr += N * sizeof(double *);
 
-    (*qp_in)->Q = (double **)c_ptr;
+    (*qp_in)->Q = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_in)->S = (double **)c_ptr;
+    (*qp_in)->S = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_in)->R = (double **)c_ptr;
+    (*qp_in)->R = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_in)->q = (double **)c_ptr;
+    (*qp_in)->q = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_in)->r = (double **)c_ptr;
+    (*qp_in)->r = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_in)->idxb = (int **)c_ptr;
+    (*qp_in)->idxb = (int **) c_ptr;
     c_ptr += (N + 1) * sizeof(int *);
 
-    (*qp_in)->lb = (double **)c_ptr;
+    (*qp_in)->lb = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_in)->ub = (double **)c_ptr;
+    (*qp_in)->ub = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_in)->Cx = (double **)c_ptr;
+    (*qp_in)->Cx = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_in)->Cu = (double **)c_ptr;
+    (*qp_in)->Cu = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_in)->lc = (double **)c_ptr;
+    (*qp_in)->lc = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_in)->uc = (double **)c_ptr;
+    (*qp_in)->uc = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
     // assign pointers to ints
     for (int k = 0; k < N + 1; k++)
     {
-        (*qp_in)->idxb[k] = (int *)c_ptr;
+        (*qp_in)->idxb[k] = (int *) c_ptr;
         c_ptr += nb[k] * sizeof(int);
     }
 
@@ -178,47 +178,47 @@ char *assign_colmaj_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in **qp_in, void 
 
         if (k < N)
         {
-            (*qp_in)->A[k] = (double *)c_ptr;
+            (*qp_in)->A[k] = (double *) c_ptr;
             c_ptr += nx[k + 1] * nx[k] * sizeof(double);
 
-            (*qp_in)->B[k] = (double *)c_ptr;
+            (*qp_in)->B[k] = (double *) c_ptr;
             c_ptr += nx[k + 1] * nu[k] * sizeof(double);
 
-            (*qp_in)->b[k] = (double *)c_ptr;
+            (*qp_in)->b[k] = (double *) c_ptr;
             c_ptr += nx[k + 1] * sizeof(double);
         }
 
-        (*qp_in)->Q[k] = (double *)c_ptr;
+        (*qp_in)->Q[k] = (double *) c_ptr;
         c_ptr += nx[k] * nx[k] * sizeof(double);
 
-        (*qp_in)->S[k] = (double *)c_ptr;
+        (*qp_in)->S[k] = (double *) c_ptr;
         c_ptr += nu[k] * nx[k] * sizeof(double);
 
-        (*qp_in)->R[k] = (double *)c_ptr;
+        (*qp_in)->R[k] = (double *) c_ptr;
         c_ptr += nu[k] * nu[k] * sizeof(double);
 
-        (*qp_in)->q[k] = (double *)c_ptr;
+        (*qp_in)->q[k] = (double *) c_ptr;
         c_ptr += nx[k] * sizeof(double);
 
-        (*qp_in)->r[k] = (double *)c_ptr;
+        (*qp_in)->r[k] = (double *) c_ptr;
         c_ptr += nu[k] * sizeof(double);
 
-        (*qp_in)->lb[k] = (double *)c_ptr;
+        (*qp_in)->lb[k] = (double *) c_ptr;
         c_ptr += nb[k] * sizeof(double);
 
-        (*qp_in)->ub[k] = (double *)c_ptr;
+        (*qp_in)->ub[k] = (double *) c_ptr;
         c_ptr += nb[k] * sizeof(double);
 
-        (*qp_in)->Cx[k] = (double *)c_ptr;
+        (*qp_in)->Cx[k] = (double *) c_ptr;
         c_ptr += nc[k] * nx[k] * sizeof(double);
 
-        (*qp_in)->Cu[k] = (double *)c_ptr;
+        (*qp_in)->Cu[k] = (double *) c_ptr;
         c_ptr += nc[k] * nu[k] * sizeof(double);
 
-        (*qp_in)->lc[k] = (double *)c_ptr;
+        (*qp_in)->lc[k] = (double *) c_ptr;
         c_ptr += nc[k] * sizeof(double);
 
-        (*qp_in)->uc[k] = (double *)c_ptr;
+        (*qp_in)->uc[k] = (double *) c_ptr;
         c_ptr += nc[k] * sizeof(double);
     }
 
@@ -263,22 +263,22 @@ char *assign_colmaj_ocp_qp_out(ocp_qp_dims *dims, colmaj_ocp_qp_out **qp_out, vo
     int *nc = dims->ng;
 
     // char pointer
-    char *c_ptr = (char *)ptr;
+    char *c_ptr = (char *) ptr;
 
-    *qp_out = (colmaj_ocp_qp_out *)c_ptr;
+    *qp_out = (colmaj_ocp_qp_out *) c_ptr;
     c_ptr += sizeof(colmaj_ocp_qp_out);
 
     // assign double pointers
-    (*qp_out)->x = (double **)c_ptr;
+    (*qp_out)->x = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_out)->u = (double **)c_ptr;
+    (*qp_out)->u = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
-    (*qp_out)->pi = (double **)c_ptr;
+    (*qp_out)->pi = (double **) c_ptr;
     c_ptr += N * sizeof(double *);
 
-    (*qp_out)->lam = (double **)c_ptr;
+    (*qp_out)->lam = (double **) c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
 
     // align data
@@ -289,22 +289,22 @@ char *assign_colmaj_ocp_qp_out(ocp_qp_dims *dims, colmaj_ocp_qp_out **qp_out, vo
     // assign pointers to QP solution
     for (int k = 0; k < N + 1; k++)
     {
-        (*qp_out)->x[k] = (double *)c_ptr;
+        (*qp_out)->x[k] = (double *) c_ptr;
         c_ptr += nx[k] * sizeof(double);
 
-        (*qp_out)->u[k] = (double *)c_ptr;
+        (*qp_out)->u[k] = (double *) c_ptr;
         c_ptr += nu[k] * sizeof(double);
     }
 
     for (int k = 0; k < N; k++)
     {
-        (*qp_out)->pi[k] = (double *)c_ptr;
+        (*qp_out)->pi[k] = (double *) c_ptr;
         c_ptr += nx[k + 1] * sizeof(double);
     }
 
     for (int k = 0; k < N + 1; k++)
     {
-        (*qp_out)->lam[k] = (double *)c_ptr;
+        (*qp_out)->lam[k] = (double *) c_ptr;
         c_ptr += 2 * (nb[k] + nc[k]) * sizeof(double);
     }
     return c_ptr;
@@ -353,9 +353,9 @@ char *assign_colmaj_ocp_qp_res(ocp_qp_dims *dims, colmaj_ocp_qp_res **qp_res, vo
     int *ns = dims->ns;
 
     // char pointer
-    char *c_ptr = (char *)ptr;
+    char *c_ptr = (char *) ptr;
 
-    *qp_res = (colmaj_ocp_qp_res *)c_ptr;
+    *qp_res = (colmaj_ocp_qp_res *) c_ptr;
     c_ptr += sizeof(colmaj_ocp_qp_res);
 
     // assign double pointers

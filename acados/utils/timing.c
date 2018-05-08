@@ -32,7 +32,7 @@ void acados_tic(acados_timer* t)
 real_t acados_toc(acados_timer* t)
 {
     QueryPerformanceCounter(&t->toc);
-    return ((t->toc.QuadPart - t->tic.QuadPart) / (real_t)t->freq.QuadPart);
+    return ((t->toc.QuadPart - t->tic.QuadPart) / (real_t) t->freq.QuadPart);
 }
 
 #elif defined(__APPLE__)
@@ -54,7 +54,7 @@ real_t acados_toc(acados_timer* t)
     duration *= t->tinfo.numer;
     duration /= t->tinfo.denom;
 
-    return (real_t)duration / 1e9;
+    return (real_t) duration / 1e9;
 }
 
 #elif defined(__DSPACE__)
@@ -92,7 +92,7 @@ real_t acados_toc(acados_timer* t)
         temp.tv_usec = t->toc.tv_usec - t->tic.tv_usec;
     }
 
-    return (real_t)temp.tv_sec + (real_t)temp.tv_usec / 1e6;
+    return (real_t) temp.tv_sec + (real_t) temp.tv_usec / 1e6;
 }
 
 #else  // ANSI C Mode
@@ -118,7 +118,7 @@ real_t acados_toc(acados_timer* t)
         temp.tv_nsec = t->toc.tv_nsec - t->tic.tv_nsec;
     }
 
-    return (real_t)temp.tv_sec + (real_t)temp.tv_nsec / 1e9;
+    return (real_t) temp.tv_sec + (real_t) temp.tv_nsec / 1e9;
 }
 
 #endif  // __STDC_VERSION__ >= 199901L

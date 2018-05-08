@@ -66,7 +66,7 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
 
 void *sim_dims_create(void *config_)
 {
-    sim_solver_config *config = (sim_solver_config *)config_;
+    sim_solver_config *config = (sim_solver_config *) config_;
     int bytes = config->dims_calculate_size(config_);
 
     void *ptr = calloc(1, bytes);
@@ -169,9 +169,9 @@ int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 
 sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    sim_solver *solver = (sim_solver *)c_ptr;
+    sim_solver *solver = (sim_solver *) c_ptr;
     c_ptr += sizeof(sim_solver);
 
     solver->config = config;
@@ -183,10 +183,10 @@ sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void 
     solver->mem = config->memory_assign(config, dims, opts_, c_ptr);
     c_ptr += config->memory_calculate_size(config, dims, opts_);
 
-    solver->work = (void *)c_ptr;
+    solver->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(config, dims, opts_);
 
-    assert((char *)raw_memory + sim_calculate_size(config, dims, opts_) == c_ptr);
+    assert((char *) raw_memory + sim_calculate_size(config, dims, opts_) == c_ptr);
 
     return solver;
 }

@@ -62,14 +62,14 @@ int ocp_qp_full_condensing_opts_calculate_size(ocp_qp_dims *dims)
 
 void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // opts
-    ocp_qp_full_condensing_opts *opts = (ocp_qp_full_condensing_opts *)c_ptr;
+    ocp_qp_full_condensing_opts *opts = (ocp_qp_full_condensing_opts *) c_ptr;
     c_ptr += sizeof(ocp_qp_full_condensing_opts);
 
     // hpipm_opts
-    opts->hpipm_opts = (struct d_cond_qp_ocp2dense_arg *)c_ptr;
+    opts->hpipm_opts = (struct d_cond_qp_ocp2dense_arg *) c_ptr;
     c_ptr += sizeof(struct d_cond_qp_ocp2dense_arg);
 
     align_char_to(8, &c_ptr);
@@ -78,7 +78,7 @@ void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
     d_create_cond_qp_ocp2dense_arg(opts->hpipm_opts, c_ptr);
     c_ptr += opts->hpipm_opts->memsize;
 
-    assert((char *)raw_memory + ocp_qp_full_condensing_opts_calculate_size(dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_qp_full_condensing_opts_calculate_size(dims) >= c_ptr);
 
     return opts;
 }
@@ -117,21 +117,21 @@ void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void 
 {
     ocp_qp_full_condensing_opts *opts = opts_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_qp_full_condensing_memory *mem = (ocp_qp_full_condensing_memory *)c_ptr;
+    ocp_qp_full_condensing_memory *mem = (ocp_qp_full_condensing_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_full_condensing_memory);
 
-    mem->hpipm_workspace = (struct d_cond_qp_ocp2dense_workspace *)c_ptr;
+    mem->hpipm_workspace = (struct d_cond_qp_ocp2dense_workspace *) c_ptr;
     c_ptr += sizeof(struct d_cond_qp_ocp2dense_workspace);
 
-    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     // hpipm workspace
     d_create_cond_qp_ocp2dense(dims, opts->hpipm_opts, mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
 
-    assert((char *)raw_memory + ocp_qp_full_condensing_memory_calculate_size(dims, opts) >= c_ptr);
+    assert((char *) raw_memory + ocp_qp_full_condensing_memory_calculate_size(dims, opts) >= c_ptr);
 
     return mem;
 }

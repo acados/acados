@@ -88,10 +88,10 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]")
             {
                 SECTION(scenario)
                 {
-                    qp_in = read_ocp_qp_in((char *)scenario.c_str(), SET_BOUNDS, SET_INEQUALITIES,
+                    qp_in = read_ocp_qp_in((char *) scenario.c_str(), SET_BOUNDS, SET_INEQUALITIES,
                                            SET_x0, QUIET);
-                    qp_out = ocp_qp_out_create(qp_in->N, (int *)qp_in->nx, (int *)qp_in->nu,
-                                               (int *)qp_in->nb, (int *)qp_in->nc);
+                    qp_out = ocp_qp_out_create(qp_in->N, (int *) qp_in->nx, (int *) qp_in->nu,
+                                               (int *) qp_in->nb, (int *) qp_in->nc);
 
                     // TODO(dimitris): extend to variable dimensions
                     int_t N = qp_in->N;

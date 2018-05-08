@@ -43,18 +43,18 @@ int ocp_nlp_plan_calculate_size(int N)
 
 ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_solver_plan *plan = (ocp_nlp_solver_plan *)c_ptr;
+    ocp_nlp_solver_plan *plan = (ocp_nlp_solver_plan *) c_ptr;
     c_ptr += sizeof(ocp_nlp_solver_plan);
 
-    plan->sim_solver_plan = (sim_solver_plan *)c_ptr;
+    plan->sim_solver_plan = (sim_solver_plan *) c_ptr;
     c_ptr += N * sizeof(sim_solver_plan);
 
-    plan->nlp_cost = (ocp_nlp_cost_t *)c_ptr;
+    plan->nlp_cost = (ocp_nlp_cost_t *) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_cost_t);
 
-    plan->nlp_dynamics = (ocp_nlp_dynamics_t *)c_ptr;
+    plan->nlp_dynamics = (ocp_nlp_dynamics_t *) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_dynamics_t);
 
     // TODO(all): fix assert
@@ -231,9 +231,9 @@ int ocp_nlp_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, vo
 ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_,
                                void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_solver *solver = (ocp_nlp_solver *)c_ptr;
+    ocp_nlp_solver *solver = (ocp_nlp_solver *) c_ptr;
     c_ptr += sizeof(ocp_nlp_solver);
 
     solver->config = config;
@@ -243,10 +243,10 @@ ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
     solver->mem = config->memory_assign(config, dims, opts_, c_ptr);
     c_ptr += config->memory_calculate_size(config, dims, opts_);
 
-    solver->work = (void *)c_ptr;
+    solver->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(config, dims, opts_);
 
-    assert((char *)raw_memory + ocp_nlp_calculate_size(config, dims, opts_) == c_ptr);
+    assert((char *) raw_memory + ocp_nlp_calculate_size(config, dims, opts_) == c_ptr);
 
     return solver;
 }

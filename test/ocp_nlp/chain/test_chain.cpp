@@ -137,23 +137,23 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 for (int_t i = 0; i < NX; i++) WN[i * (NX + 1)] = 1e-2;
 
                 ls_cost.N = N;
-                ls_cost.W = (real_t **)malloc(sizeof(*ls_cost.W) * (N + 1));
+                ls_cost.W = (real_t **) malloc(sizeof(*ls_cost.W) * (N + 1));
                 for (int_t i = 0; i < N; i++) ls_cost.W[i] = W;
                 ls_cost.W[N] = WN;
-                ls_cost.y_ref = (real_t **)malloc(sizeof(*ls_cost.y_ref) * (N + 1));
-                ls_cost.fun = (ocp_nlp_function **)malloc(sizeof(*ls_cost.fun) * (N + 1));
+                ls_cost.y_ref = (real_t **) malloc(sizeof(*ls_cost.y_ref) * (N + 1));
+                ls_cost.fun = (ocp_nlp_function **) malloc(sizeof(*ls_cost.fun) * (N + 1));
                 for (int_t i = 0; i < N; i++)
                 {
-                    ls_cost.fun[i] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
+                    ls_cost.fun[i] = (ocp_nlp_function *) malloc(sizeof(ocp_nlp_function));
                     // Initialize LS cost
                     ls_cost.fun[i]->nx = NX;
                     ls_cost.fun[i]->nu = NU;
                     ls_cost.fun[i]->np = 0;
                     ls_cost.fun[i]->ny = (NX + NU);
-                    ls_cost.fun[i]->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+                    ls_cost.fun[i]->in = (casadi_wrapper_in *) malloc(sizeof(casadi_wrapper_in));
                     ls_cost.fun[i]->in->compute_jac = true;
                     ls_cost.fun[i]->in->compute_hess = false;
-                    ls_cost.fun[i]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+                    ls_cost.fun[i]->out = (casadi_wrapper_out *) malloc(sizeof(casadi_wrapper_out));
                     ls_cost.fun[i]->args = casadi_wrapper_create_arguments();
                     switch (NMF)
                     {
@@ -179,19 +179,19 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                     casadi_wrapper_initialize(ls_cost.fun[i]->in, ls_cost.fun[i]->args,
                                               &ls_cost.fun[i]->work);
 
-                    ls_cost.y_ref[i] = (real_t *)malloc(sizeof(*ls_cost.y_ref[i]) * (NX + NU));
+                    ls_cost.y_ref[i] = (real_t *) malloc(sizeof(*ls_cost.y_ref[i]) * (NX + NU));
                     for (int_t j = 0; j < NX; j++) ls_cost.y_ref[i][j] = xref[j];
                     for (int_t j = 0; j < NU; j++) ls_cost.y_ref[i][NX + j] = 0.0;
                 }
-                ls_cost.fun[N] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
+                ls_cost.fun[N] = (ocp_nlp_function *) malloc(sizeof(ocp_nlp_function));
                 ls_cost.fun[N]->nx = NX;
                 ls_cost.fun[N]->nu = 0;
                 ls_cost.fun[N]->np = 0;
                 ls_cost.fun[N]->ny = NX;
-                ls_cost.fun[N]->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+                ls_cost.fun[N]->in = (casadi_wrapper_in *) malloc(sizeof(casadi_wrapper_in));
                 ls_cost.fun[N]->in->compute_jac = true;
                 ls_cost.fun[N]->in->compute_hess = false;
-                ls_cost.fun[N]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+                ls_cost.fun[N]->out = (casadi_wrapper_out *) malloc(sizeof(casadi_wrapper_out));
                 ls_cost.fun[N]->args = casadi_wrapper_create_arguments();
                 switch (NMF)
                 {
@@ -217,7 +217,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 casadi_wrapper_initialize(ls_cost.fun[N]->in, ls_cost.fun[N]->args,
                                           &ls_cost.fun[N]->work);
 
-                ls_cost.y_ref[N] = (real_t *)malloc(sizeof(*ls_cost.y_ref[N]) * (NX));
+                ls_cost.y_ref[N] = (real_t *) malloc(sizeof(*ls_cost.y_ref[N]) * (NX));
                 for (int_t j = 0; j < NX; j++) ls_cost.y_ref[N][j] = xref(j);
 
                 /************************************************
@@ -239,7 +239,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
 
                 for (jj = 0; jj < N; jj++)
                 {
-                    integrators[jj] = (sim_solver *)malloc(sizeof(sim_solver));
+                    integrators[jj] = (sim_solver *) malloc(sizeof(sim_solver));
                     integrators[jj]->in = &sim_in[jj];
                     integrators[jj]->out = &sim_out[jj];
                     integrators[jj]->args = &rk_opts[jj];
@@ -289,24 +289,24 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                             break;
                     }
 
-                    sim_in[jj].x = (real_t *)malloc(sizeof(*sim_in[jj].x) * (NX));
-                    sim_in[jj].u = (real_t *)malloc(sizeof(*sim_in[jj].u) * (NU));
+                    sim_in[jj].x = (real_t *) malloc(sizeof(*sim_in[jj].x) * (NX));
+                    sim_in[jj].u = (real_t *) malloc(sizeof(*sim_in[jj].u) * (NU));
                     sim_in[jj].S_forw =
-                        (real_t *)malloc(sizeof(*sim_in[jj].S_forw) * (NX * (NX + NU)));
+                        (real_t *) malloc(sizeof(*sim_in[jj].S_forw) * (NX * (NX + NU)));
                     for (int_t i = 0; i < NX * (NX + NU); i++) sim_in[jj].S_forw[i] = 0.0;
                     for (int_t i = 0; i < NX; i++) sim_in[jj].S_forw[i * (NX + 1)] = 1.0;
 
-                    sim_in[jj].S_adj = (real_t *)malloc(sizeof(*sim_in[jj].S_adj) * (NX + NU));
+                    sim_in[jj].S_adj = (real_t *) malloc(sizeof(*sim_in[jj].S_adj) * (NX + NU));
                     for (int_t i = 0; i < NX + NU; i++) sim_in[jj].S_adj[i] = 0.0;
 
-                    sim_in[jj].grad_K = (real_t *)malloc(sizeof(*sim_in[jj].grad_K) * (d * NX));
+                    sim_in[jj].grad_K = (real_t *) malloc(sizeof(*sim_in[jj].grad_K) * (d * NX));
                     for (int_t i = 0; i < d * NX; i++) sim_in[jj].grad_K[i] = 0.0;
 
-                    sim_out[jj].xn = (real_t *)malloc(sizeof(*sim_out[jj].xn) * (NX));
+                    sim_out[jj].xn = (real_t *) malloc(sizeof(*sim_out[jj].xn) * (NX));
                     sim_out[jj].S_forw =
-                        (real_t *)malloc(sizeof(*sim_out[jj].S_forw) * (NX * (NX + NU)));
+                        (real_t *) malloc(sizeof(*sim_out[jj].S_forw) * (NX * (NX + NU)));
                     sim_out[jj].info = &info[jj];
-                    sim_out[jj].grad = (real_t *)malloc(sizeof(*sim_out[jj].grad) * (NX + NU));
+                    sim_out[jj].grad = (real_t *) malloc(sizeof(*sim_out[jj].grad) * (NX + NU));
 
                     int_t workspace_size;
                     if (d > 0)
@@ -335,7 +335,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                         workspace_size =
                             sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
                     }
-                    if (jj == 0) sim_work = (void *)malloc(workspace_size);
+                    if (jj == 0) sim_work = (void *) malloc(workspace_size);
                     integrators[jj]->work = sim_work;
                 }
 
@@ -434,21 +434,21 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                  * nonlinear path constraints
                  ************************************************/
                 ocp_nlp_function **path_constraints =
-                    (ocp_nlp_function **)malloc(sizeof(ocp_nlp_function *) * (N + 1));
+                    (ocp_nlp_function **) malloc(sizeof(ocp_nlp_function *) * (N + 1));
                 for (int_t i = 0; i < N; i++)
                 {
                     // Initialize path constraints
-                    path_constraints[i] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
+                    path_constraints[i] = (ocp_nlp_function *) malloc(sizeof(ocp_nlp_function));
                     path_constraints[i]->nx = NX;
                     path_constraints[i]->nu = NU;
                     path_constraints[i]->np = 0;
                     path_constraints[i]->ny = (NX + NU);
                     path_constraints[i]->in =
-                        (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+                        (casadi_wrapper_in *) malloc(sizeof(casadi_wrapper_in));
                     path_constraints[i]->in->compute_jac = true;
                     path_constraints[i]->in->compute_hess = false;
                     path_constraints[i]->out =
-                        (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+                        (casadi_wrapper_out *) malloc(sizeof(casadi_wrapper_out));
                     path_constraints[i]->args = casadi_wrapper_create_arguments();
                     switch (NMF)
                     {
@@ -474,15 +474,16 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                     casadi_wrapper_initialize(path_constraints[i]->in, path_constraints[i]->args,
                                               &path_constraints[i]->work);
                 }
-                path_constraints[N] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
+                path_constraints[N] = (ocp_nlp_function *) malloc(sizeof(ocp_nlp_function));
                 path_constraints[N]->nx = NX;
                 path_constraints[N]->nu = 0;
                 path_constraints[N]->np = 0;
                 path_constraints[N]->ny = NX;
-                path_constraints[N]->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+                path_constraints[N]->in = (casadi_wrapper_in *) malloc(sizeof(casadi_wrapper_in));
                 path_constraints[N]->in->compute_jac = true;
                 path_constraints[N]->in->compute_hess = false;
-                path_constraints[N]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+                path_constraints[N]->out =
+                    (casadi_wrapper_out *) malloc(sizeof(casadi_wrapper_out));
                 path_constraints[N]->args = casadi_wrapper_create_arguments();
                 switch (NMF)
                 {
@@ -518,7 +519,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 sensitivity_method.args = ocp_nlp_sm_gn_create_arguments();
                 if (INEXACT > 2)
                 {
-                    ((ocp_nlp_sm_gn_args *)sensitivity_method.args)->freezeSens = true;
+                    ((ocp_nlp_sm_gn_args *) sensitivity_method.args)->freezeSens = true;
                 }
 
                 /************************************************
@@ -531,10 +532,10 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 qp_solver.qp_in = ocp_qp_in_create(N, nx, nu, nb, ng);
                 qp_solver.qp_out = ocp_qp_out_create(N, nx, nu, nb, ng);
                 // TODO(nielsvd): lines below should go
-                int_t **idxb = (int_t **)qp_solver.qp_in->idxb;
+                int_t **idxb = (int_t **) qp_solver.qp_in->idxb;
                 for (int_t i = 0; i <= N; i++)
                     for (int_t j = 0; j < nb[i]; j++) idxb[i][j] = hidxb[i][j];
-                qp_solver.args = (void *)ocp_qp_qpdunes_create_arguments(
+                qp_solver.args = (void *) ocp_qp_qpdunes_create_arguments(
                     QPDUNES_NONLINEAR_MPC);  // qp_solver.qp_in); //
 
                 /************************************************
@@ -547,33 +548,33 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 nlp_in.nu = nu;
                 nlp_in.nb = nb;
                 nlp_in.ng = ng;
-                nlp_in.idxb = (const int_t **)hidxb;
-                nlp_in.lb = (const real_t **)hlb;
-                nlp_in.ub = (const real_t **)hub;
+                nlp_in.idxb = (const int_t **) hidxb;
+                nlp_in.lb = (const real_t **) hlb;
+                nlp_in.ub = (const real_t **) hub;
                 nlp_in.lg = NULL;
                 nlp_in.ug = NULL;
-                nlp_in.sim = (void **)&integrators;
-                nlp_in.cost = (void *)&ls_cost;
-                nlp_in.path_constraints = (void **)path_constraints;
+                nlp_in.sim = (void **) &integrators;
+                nlp_in.cost = (void *) &ls_cost;
+                nlp_in.path_constraints = (void **) path_constraints;
 
                 ocp_nlp_out nlp_out;
-                nlp_out.x = (real_t **)malloc(sizeof(*nlp_out.x) * (N + 1));
-                nlp_out.u = (real_t **)malloc(sizeof(*nlp_out.u) * (N + 1));
-                nlp_out.pi = (real_t **)malloc(sizeof(*nlp_out.pi) * (N + 1));
-                nlp_out.lam = (real_t **)malloc(sizeof(*nlp_out.lam) * (N + 1));
+                nlp_out.x = (real_t **) malloc(sizeof(*nlp_out.x) * (N + 1));
+                nlp_out.u = (real_t **) malloc(sizeof(*nlp_out.u) * (N + 1));
+                nlp_out.pi = (real_t **) malloc(sizeof(*nlp_out.pi) * (N + 1));
+                nlp_out.lam = (real_t **) malloc(sizeof(*nlp_out.lam) * (N + 1));
                 // Allocate output variables
                 for (int_t i = 0; i < N; i++)
                 {
-                    nlp_out.x[i] = (real_t *)malloc(sizeof(*nlp_out.x[i]) * (NX));
-                    nlp_out.u[i] = (real_t *)malloc(sizeof(*nlp_out.u[i]) * (NU));
-                    nlp_out.pi[i] = (real_t *)malloc(sizeof(*nlp_out.pi[i]) * (NX));
+                    nlp_out.x[i] = (real_t *) malloc(sizeof(*nlp_out.x[i]) * (NX));
+                    nlp_out.u[i] = (real_t *) malloc(sizeof(*nlp_out.u[i]) * (NU));
+                    nlp_out.pi[i] = (real_t *) malloc(sizeof(*nlp_out.pi[i]) * (NX));
                     nlp_out.lam[i] =
-                        (real_t *)malloc(sizeof(*nlp_out.lam[i]) * 2 * nb[i] + 2 * ng[i]);
+                        (real_t *) malloc(sizeof(*nlp_out.lam[i]) * 2 * nb[i] + 2 * ng[i]);
                 }
-                nlp_out.x[N] = (real_t *)malloc(sizeof(*nlp_out.x[N]) * (NX));
-                nlp_out.u[N] = (real_t *)malloc(sizeof(*nlp_out.u[N]) * 0);
-                nlp_out.pi[N] = (real_t *)malloc(sizeof(*nlp_out.pi[N]) * 0);
-                nlp_out.lam[N] = (real_t *)malloc(sizeof(*nlp_out.lam[N]) * 2 * nb[N] + 2 * ng[N]);
+                nlp_out.x[N] = (real_t *) malloc(sizeof(*nlp_out.x[N]) * (NX));
+                nlp_out.u[N] = (real_t *) malloc(sizeof(*nlp_out.u[N]) * 0);
+                nlp_out.pi[N] = (real_t *) malloc(sizeof(*nlp_out.pi[N]) * 0);
+                nlp_out.lam[N] = (real_t *) malloc(sizeof(*nlp_out.lam[N]) * 2 * nb[N] + 2 * ng[N]);
 
                 ocp_nlp_sqp_args *nlp_args = ocp_nlp_sqp_create_arguments();
                 nlp_args->maxIter = max_sqp_iters;
@@ -582,13 +583,13 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
 
                 ocp_nlp_sqp_memory *nlp_mem;
                 ocp_nlp_sqp_workspace *nlp_work;
-                ocp_nlp_sqp_initialize(&nlp_in, nlp_args, (void **)&nlp_mem, (void **)&nlp_work);
+                ocp_nlp_sqp_initialize(&nlp_in, nlp_args, (void **) &nlp_mem, (void **) &nlp_work);
 
                 // TOOD(nielsvd): should go, old interface
 
                 // TODO(nielsvd): set memory to zero during allocation
-                real_t **nlp_x_mem = (real_t **)nlp_mem->common->x;
-                real_t **nlp_u_mem = (real_t **)nlp_mem->common->u;
+                real_t **nlp_x_mem = (real_t **) nlp_mem->common->x;
+                real_t **nlp_u_mem = (real_t **) nlp_mem->common->u;
                 for (int_t i = 0; i < N; i++)
                 {
                     for (int_t j = 0; j < NX; j++) nlp_x_mem[i][j] = xref[j];  // resX(j,i)
@@ -625,8 +626,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 // print_matrix_name((char*)"stdout", (char*)"out_u", out_u, NU,
                 // N);
 
-                print_matrix_name((char *)"stdout", (char *)"err_x", err_x, NX, N + 1);
-                print_matrix_name((char *)"stdout", (char *)"err_u", err_u, NU, N);
+                print_matrix_name((char *) "stdout", (char *) "err_x", err_x, NX, N + 1);
+                print_matrix_name((char *) "stdout", (char *) "err_u", err_u, NU, N);
 
                 std::cout << resX << std::endl;
                 std::cout << resU << std::endl;

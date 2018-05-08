@@ -159,9 +159,9 @@ int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims,
 ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_,
                              void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_qp_solver *solver = (ocp_qp_solver *)c_ptr;
+    ocp_qp_solver *solver = (ocp_qp_solver *) c_ptr;
     c_ptr += sizeof(ocp_qp_solver);
 
     solver->config = config;
@@ -173,10 +173,10 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
     solver->mem = config->memory_assign(config, dims, opts_, c_ptr);
     c_ptr += config->memory_calculate_size(config, dims, opts_);
 
-    solver->work = (void *)c_ptr;
+    solver->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(config, dims, opts_);
 
-    assert((char *)raw_memory + ocp_qp_calculate_size(config, dims, opts_) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_calculate_size(config, dims, opts_) == c_ptr);
 
     return solver;
 }

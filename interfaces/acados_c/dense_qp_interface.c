@@ -121,9 +121,9 @@ int dense_qp_calculate_size(qp_solver_config *config, dense_qp_dims *dims, void 
 dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, void *opts_,
                                  void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    dense_qp_solver *solver = (dense_qp_solver *)c_ptr;
+    dense_qp_solver *solver = (dense_qp_solver *) c_ptr;
     c_ptr += sizeof(dense_qp_solver);
 
     solver->config = config;
@@ -135,10 +135,10 @@ dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, 
     solver->mem = config->memory_assign(config, dims, opts_, c_ptr);
     c_ptr += config->memory_calculate_size(config, dims, opts_);
 
-    solver->work = (void *)c_ptr;
+    solver->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(config, dims, opts_);
 
-    assert((char *)raw_memory + dense_qp_calculate_size(config, dims, opts_) == c_ptr);
+    assert((char *) raw_memory + dense_qp_calculate_size(config, dims, opts_) == c_ptr);
 
     return solver;
 }

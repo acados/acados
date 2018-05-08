@@ -50,22 +50,22 @@ void *dense_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
     dense_qp_dims *dims = dims_;
     dense_qp_hpipm_opts *opts;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    opts = (dense_qp_hpipm_opts *)c_ptr;
+    opts = (dense_qp_hpipm_opts *) c_ptr;
     c_ptr += sizeof(dense_qp_hpipm_opts);
 
-    opts->hpipm_opts = (struct d_dense_qp_ipm_arg *)c_ptr;
+    opts->hpipm_opts = (struct d_dense_qp_ipm_arg *) c_ptr;
     c_ptr += sizeof(struct d_dense_qp_ipm_arg);
 
-    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     d_create_dense_qp_ipm_arg(dims, opts->hpipm_opts, c_ptr);
     c_ptr += d_memsize_dense_qp_ipm_arg(dims);
 
-    assert((char *)raw_memory + dense_qp_hpipm_opts_calculate_size(config_, dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_hpipm_opts_calculate_size(config_, dims) == c_ptr);
 
-    return (void *)opts;
+    return (void *) opts;
 }
 
 void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
@@ -117,23 +117,24 @@ void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void
     dense_qp_hpipm_opts *opts = opts_;
     dense_qp_hpipm_memory *mem;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    mem = (dense_qp_hpipm_memory *)c_ptr;
+    mem = (dense_qp_hpipm_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_hpipm_memory);
 
-    mem->hpipm_workspace = (struct d_dense_qp_ipm_workspace *)c_ptr;
+    mem->hpipm_workspace = (struct d_dense_qp_ipm_workspace *) c_ptr;
     c_ptr += sizeof(struct d_dense_qp_ipm_workspace);
 
     struct d_dense_qp_ipm_workspace *ipm_workspace = mem->hpipm_workspace;
 
-    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     // ipm workspace structure
     d_create_dense_qp_ipm(dims, opts->hpipm_opts, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;
 
-    assert((char *)raw_memory + dense_qp_hpipm_memory_calculate_size(config_, dims, opts) == c_ptr);
+    assert((char *) raw_memory + dense_qp_hpipm_memory_calculate_size(config_, dims, opts) ==
+           c_ptr);
 
     return mem;
 }
@@ -145,7 +146,7 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     dense_qp_in *qp_in = qp_in_;
     dense_qp_out *qp_out = qp_out_;
 
-    dense_qp_info *info = (dense_qp_info *)qp_out->misc;
+    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer;
 
     acados_tic(&tot_timer);

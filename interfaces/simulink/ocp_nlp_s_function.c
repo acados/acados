@@ -152,7 +152,7 @@ static void mdlStart(SimStruct *S)
     ocp_nlp_cost_ls_model *stage_cost_ls;
     for (int i = 0; i <= NUM_STAGES; ++i)
     {
-        stage_cost_ls = (ocp_nlp_cost_ls_model *)nlp_in->cost[i];
+        stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
         // Cyt
         blasfeo_dgese(nu[i] + nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
         for (int j = 0; j < nu[i]; j++) BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, nx[i] + j) = 1.0;
@@ -160,8 +160,8 @@ static void mdlStart(SimStruct *S)
 
         // W
         blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_ls->W, 0, 0);
-        blasfeo_pack_dmat(nx[i], nx[i], (double *)mxGetData(Q), nx[i], &stage_cost_ls->W, 0, 0);
-        blasfeo_pack_dmat(nu[i], nu[i], (double *)mxGetData(R), nu[i], &stage_cost_ls->W, nx[i],
+        blasfeo_pack_dmat(nx[i], nx[i], (double *) mxGetData(Q), nx[i], &stage_cost_ls->W, 0, 0);
+        blasfeo_pack_dmat(nu[i], nu[i], (double *) mxGetData(R), nu[i], &stage_cost_ls->W, nx[i],
                           nx[i]);
 
         // y_ref
@@ -176,7 +176,7 @@ static void mdlStart(SimStruct *S)
 
     nlp_in->freezeSens = false;
 
-    ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **)nlp_in->constraints;
+    ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
 
     for (int i = 0; i < num_states; ++i) constraints[0]->idxb[i] = num_controls + i;
 
@@ -186,18 +186,18 @@ static void mdlStart(SimStruct *S)
 
     ocp_nlp_solver *nlp_solver = ocp_nlp_create(config, nlp_dims, nlp_opts);
 
-    ssGetPWork(S)[0] = (void *)nlp_dims;
-    ssGetPWork(S)[1] = (void *)nlp_in;
-    ssGetPWork(S)[2] = (void *)nlp_out;
-    ssGetPWork(S)[3] = (void *)nlp_opts;
-    ssGetPWork(S)[4] = (void *)nlp_solver;
+    ssGetPWork(S)[0] = (void *) nlp_dims;
+    ssGetPWork(S)[1] = (void *) nlp_in;
+    ssGetPWork(S)[2] = (void *) nlp_out;
+    ssGetPWork(S)[3] = (void *) nlp_opts;
+    ssGetPWork(S)[4] = (void *) nlp_solver;
 }
 
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    ocp_nlp_in *nlp_in = (ocp_nlp_in *)ssGetPWork(S)[1];
-    ocp_nlp_out *nlp_out = (ocp_nlp_out *)ssGetPWork(S)[2];
-    ocp_nlp_solver *nlp_solver = (ocp_nlp_solver *)ssGetPWork(S)[4];
+    ocp_nlp_in *nlp_in = (ocp_nlp_in *) ssGetPWork(S)[1];
+    ocp_nlp_out *nlp_out = (ocp_nlp_out *) ssGetPWork(S)[2];
+    ocp_nlp_solver *nlp_solver = (ocp_nlp_solver *) ssGetPWork(S)[4];
 
     const mxArray *Q = ssGetSFcnParam(S, 0);
     const mxArray *R = ssGetSFcnParam(S, 1);
@@ -205,11 +205,11 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     int nx = mxGetM(Q);
     int nu = mxGetM(R);
 
-    ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **)nlp_in->constraints;
+    ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
 
     const double *x0 = ssGetInputPortRealSignal(S, 0);
-    blasfeo_pack_dvec(nx, (double *)x0, &constraints[0]->d, 0);
-    blasfeo_pack_dvec(nx, (double *)x0, &constraints[0]->d, nx);
+    blasfeo_pack_dvec(nx, (double *) x0, &constraints[0]->d, 0);
+    blasfeo_pack_dvec(nx, (double *) x0, &constraints[0]->d, nx);
 
     int status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
 
@@ -219,7 +219,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     blasfeo_unpack_dvec(nu, &nlp_out->ux[0], 0, u0_opt);
     blasfeo_unpack_dvec(nx, &nlp_out->ux[1], nu, x1);
-    *status_out = (double)status;
+    *status_out = (double) status;
 }
 
 static void mdlTerminate(SimStruct *S)

@@ -48,35 +48,35 @@ void *sim_irk_dims_assign(void *config_, void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    sim_irk_dims *dims = (sim_irk_dims *)c_ptr;
+    sim_irk_dims *dims = (sim_irk_dims *) c_ptr;
     c_ptr += sizeof(sim_irk_dims);
 
-    assert((char *)raw_memory + sim_irk_dims_calculate_size() >= c_ptr);
+    assert((char *) raw_memory + sim_irk_dims_calculate_size() >= c_ptr);
 
     return dims;
 }
 
 void sim_irk_set_nx(void *dims_, int nx)
 {
-    sim_irk_dims *dims = (sim_irk_dims *)dims_;
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
     dims->nx = nx;
 }
 
 void sim_irk_set_nu(void *dims_, int nu)
 {
-    sim_irk_dims *dims = (sim_irk_dims *)dims_;
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
     dims->nu = nu;
 }
 
 void sim_irk_get_nx(void *dims_, int *nx)
 {
-    sim_irk_dims *dims = (sim_irk_dims *)dims_;
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
     *nx = dims->nx;
 }
 
 void sim_irk_get_nu(void *dims_, int *nu)
 {
-    sim_irk_dims *dims = (sim_irk_dims *)dims_;
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
     *nu = dims->nu;
 }
 
@@ -95,12 +95,12 @@ int sim_irk_model_calculate_size(void *config, void *dims)
 
 void *sim_irk_model_assign(void *config, void *dims, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    irk_model *data = (irk_model *)c_ptr;
+    irk_model *data = (irk_model *) c_ptr;
     c_ptr += sizeof(irk_model);
 
-    assert((char *)raw_memory + sim_irk_model_calculate_size(config, dims) >= c_ptr);
+    assert((char *) raw_memory + sim_irk_model_calculate_size(config, dims) >= c_ptr);
 
     return data;
 }
@@ -112,13 +112,13 @@ int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
     switch (fun_type)
     {
         case IMPL_ODE_FUN:
-            model->impl_ode_fun = (external_function_generic *)fun;
+            model->impl_ode_fun = (external_function_generic *) fun;
             break;
         case IMPL_ODE_FUN_JAC_X_XDOT:
-            model->impl_ode_fun_jac_x_xdot = (external_function_generic *)fun;
+            model->impl_ode_fun_jac_x_xdot = (external_function_generic *) fun;
             break;
         case IMPL_ODE_JAC_X_XDOT_U:
-            model->impl_ode_jac_x_xdot_u = (external_function_generic *)fun;
+            model->impl_ode_jac_x_xdot_u = (external_function_generic *) fun;
             break;
         default:
             return ACADOS_FAILURE;
@@ -157,9 +157,9 @@ void *sim_irk_opts_assign(void *config_, void *dims, void *raw_memory)
 {
     int ns_max = NS_MAX;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    sim_rk_opts *opts = (sim_rk_opts *)c_ptr;
+    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
     c_ptr += sizeof(sim_rk_opts);
 
     align_char_to(8, &c_ptr);
@@ -175,14 +175,14 @@ void *sim_irk_opts_assign(void *config_, void *dims, void *raw_memory)
     opts->work = c_ptr;
     c_ptr += work_size;
 
-    assert((char *)raw_memory + sim_irk_opts_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + sim_irk_opts_calculate_size(config_, dims) >= c_ptr);
 
-    return (void *)opts;
+    return (void *) opts;
 }
 
 void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-    sim_irk_dims *dims = (sim_irk_dims *)dims_;
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
     sim_rk_opts *opts = opts_;
 
     opts->ns = 3;  // GL 3
@@ -249,7 +249,7 @@ void *sim_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_mem
 
 int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
-    sim_irk_dims *dims = (sim_irk_dims *)dims_;
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
     sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -294,7 +294,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
     sim_rk_opts *opts = opts_;
-    sim_irk_dims *dims = (sim_irk_dims *)dims_;
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -303,44 +303,44 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
 
     int steps = opts->num_steps;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    sim_irk_workspace *workspace = (sim_irk_workspace *)c_ptr;
+    sim_irk_workspace *workspace = (sim_irk_workspace *) c_ptr;
     c_ptr += sizeof(sim_irk_workspace);
 
     // assign_and_advance_blasfeo_dmat_structs(steps, &workspace->JG_traj, &c_ptr);
 
-    workspace->JGK = (struct blasfeo_dmat *)c_ptr;
+    workspace->JGK = (struct blasfeo_dmat *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dmat);
 
-    workspace->JGf = (struct blasfeo_dmat *)c_ptr;
+    workspace->JGf = (struct blasfeo_dmat *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dmat);
 
-    workspace->JKf = (struct blasfeo_dmat *)c_ptr;
+    workspace->JKf = (struct blasfeo_dmat *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dmat);
 
-    workspace->S_forw = (struct blasfeo_dmat *)c_ptr;
+    workspace->S_forw = (struct blasfeo_dmat *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dmat);
 
     assign_and_advance_blasfeo_dvec_structs(steps, &workspace->xn_traj, &c_ptr);
     assign_and_advance_blasfeo_dvec_structs(steps, &workspace->K_traj, &c_ptr);
 
-    workspace->rG = (struct blasfeo_dvec *)c_ptr;
+    workspace->rG = (struct blasfeo_dvec *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->K = (struct blasfeo_dvec *)c_ptr;
+    workspace->K = (struct blasfeo_dvec *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->xt = (struct blasfeo_dvec *)c_ptr;
+    workspace->xt = (struct blasfeo_dvec *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->xn = (struct blasfeo_dvec *)c_ptr;
+    workspace->xn = (struct blasfeo_dvec *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->lambda = (struct blasfeo_dvec *)c_ptr;
+    workspace->lambda = (struct blasfeo_dvec *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->lambdaK = (struct blasfeo_dvec *)c_ptr;
+    workspace->lambdaK = (struct blasfeo_dvec *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
 
     align_char_to(64, &c_ptr);
@@ -374,9 +374,9 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory -
     // sim_irk_calculate_workspace_size(dims, opts_));
 
-    assert((char *)raw_memory + sim_irk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
+    assert((char *) raw_memory + sim_irk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
-    return (void *)workspace;
+    return (void *) workspace;
 }
 
 /************************************************
@@ -394,9 +394,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int ns = opts->ns;
 
     void *dims_ = in->dims;
-    sim_irk_dims *dims = (sim_irk_dims *)dims_;
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
     sim_irk_workspace *workspace =
-        (sim_irk_workspace *)sim_irk_workspace_cast(config, dims, opts, work_);
+        (sim_irk_workspace *) sim_irk_workspace_cast(config, dims, opts, work_);
 
     int ii, jj, iter, ss;
     double a;

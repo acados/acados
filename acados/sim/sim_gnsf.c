@@ -53,10 +53,10 @@ int sim_gnsf_dims_calculate_size()
 
 void *sim_gnsf_dims_assign(void *config_, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)c_ptr;
+    char *c_ptr = (char *) raw_memory;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) c_ptr;
     c_ptr += sizeof(sim_gnsf_dims);
-    assert((char *)raw_memory + sim_gnsf_dims_calculate_size() == c_ptr);
+    assert((char *) raw_memory + sim_gnsf_dims_calculate_size() == c_ptr);
     return dims;
 }
 
@@ -66,25 +66,25 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory)
 
 void sim_gnsf_set_nx(void *dims_, int nx)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     dims->nx = nx;
 }
 
 void sim_gnsf_set_nu(void *dims_, int nu)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     dims->nu = nu;
 }
 
 void sim_gnsf_get_nx(void *dims_, int *nx)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     *nx = dims->nx;
 }
 
 void sim_gnsf_get_nu(void *dims_, int *nu)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     *nu = dims->nu;
 }
 
@@ -144,7 +144,7 @@ void sim_gnsf_import_matrices(sim_gnsf_dims *dims, gnsf_model *model,
  ************************************************/
 
 static void sim_gnsf_neville(double *out, double xx, int n, double *x, double *Q)
-{   // Neville scheme
+{  // Neville scheme
     // writes value of interpolating polynom corresponding to the nodes x and Q evaluated evaluated
     // at xx into out
     for (int i = n; i > 0; i--)
@@ -190,9 +190,9 @@ void *sim_gnsf_opts_assign(void *config_, void *dims, void *raw_memory)
 {
     int ns_max = NS_MAX;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    sim_rk_opts *opts = (sim_rk_opts *)c_ptr;
+    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
     c_ptr += sizeof(sim_rk_opts);
 
     align_char_to(8, &c_ptr);
@@ -208,14 +208,14 @@ void *sim_gnsf_opts_assign(void *config_, void *dims, void *raw_memory)
     opts->work = c_ptr;
     c_ptr += work_size;
 
-    assert((char *)raw_memory + sim_gnsf_opts_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + sim_gnsf_opts_calculate_size(config_, dims) >= c_ptr);
 
-    return (void *)opts;
+    return (void *) opts;
 }
 
 void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = opts_;
 
     opts->ns = 3;  // GL 3
@@ -272,7 +272,7 @@ void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
 int sim_gnsf_model_calculate_size(void *config, void *dims_)
 {
     // typecast
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
 
     // necessary integers
     int nu = dims->nu;
@@ -301,10 +301,10 @@ int sim_gnsf_model_calculate_size(void *config, void *dims_)
 
 void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // typecast
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
 
     // necessary integers
     // int nx      = dims->nx;
@@ -320,7 +320,7 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
     align_char_to(8, &c_ptr);
 
     // struct
-    gnsf_model *model = (gnsf_model *)c_ptr;
+    gnsf_model *model = (gnsf_model *) c_ptr;
     c_ptr += sizeof(gnsf_model);
 
     // assign model matrices
@@ -337,7 +337,7 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
 
     assign_and_advance_double(nx2 * nx2, &model->A_LO, &c_ptr);
 
-    assert((char *)raw_memory + sim_gnsf_model_calculate_size(config, dims_) >= c_ptr);
+    assert((char *) raw_memory + sim_gnsf_model_calculate_size(config, dims_) >= c_ptr);
     return model;
 }
 
@@ -348,16 +348,16 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
     switch (fun_type)
     {
         case PHI_FUN:
-            model->phi_fun = (external_function_generic *)fun;
+            model->phi_fun = (external_function_generic *) fun;
             break;
         case PHI_FUN_JAC_Y:
-            model->phi_fun_jac_y = (external_function_generic *)fun;
+            model->phi_fun_jac_y = (external_function_generic *) fun;
             break;
         case PHI_JAC_Y_UHAT:
-            model->phi_jac_y_uhat = (external_function_generic *)fun;
+            model->phi_jac_y_uhat = (external_function_generic *) fun;
             break;
         case LO_FUN:
-            model->f_lo_fun_jac_x1_x1dot_u_z = (external_function_generic *)fun;
+            model->f_lo_fun_jac_x1_x1dot_u_z = (external_function_generic *) fun;
             break;
         default:
             return ACADOS_FAILURE;
@@ -372,8 +372,8 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
 static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *opts_,
                                      void *raw_memory)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
-    sim_rk_opts *opts = (sim_rk_opts *)opts_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
     int nu = dims->nu;
     int nx1 = dims->nx1;
     int nx2 = dims->nx2;
@@ -390,11 +390,11 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
     int nK2 = num_stages * nx2;
     int nZ = num_stages * nz;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
     align_char_to(8, &c_ptr);
 
     // struct
-    gnsf_pre_workspace *work = (gnsf_pre_workspace *)c_ptr;
+    gnsf_pre_workspace *work = (gnsf_pre_workspace *) c_ptr;
     c_ptr += sizeof(gnsf_pre_workspace);
 
     // int nz_nx1_max = nz>nx1 ? nz : nx1;
@@ -439,8 +439,8 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
     assign_and_advance_blasfeo_dmat_mem(nK2, nK2, &work->M2, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nK2, nx2, &work->dK2_dx2_work, &c_ptr);
 
-    assert((char *)raw_memory + sim_gnsf_workspace_calculate_size(config_, dims, opts) >= c_ptr);
-    return (void *)work;
+    assert((char *) raw_memory + sim_gnsf_workspace_calculate_size(config_, dims, opts) >= c_ptr);
+    return (void *) work;
 }
 
 void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, sim_rk_opts *opts,
@@ -466,9 +466,9 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
 
     // set up precomputation workspace
     gnsf_pre_workspace *work =
-        (gnsf_pre_workspace *)gnsf_cast_pre_workspace(config, dims, opts, work_);
+        (gnsf_pre_workspace *) gnsf_cast_pre_workspace(config, dims, opts, work_);
     // set up memory
-    sim_gnsf_memory *mem = (sim_gnsf_memory *)mem_;
+    sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
 
     double dt = T / num_steps;
     mem->dt = dt;
@@ -753,7 +753,7 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
 int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
 {
     // typecast
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = opts_;
 
     // necessary integers
@@ -806,10 +806,10 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
 
 void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // typecast
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = opts_;
 
     // necessary integers
@@ -830,7 +830,7 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     int nZ = num_stages * nz;
 
     // struct
-    sim_gnsf_memory *mem = (sim_gnsf_memory *)c_ptr;
+    sim_gnsf_memory *mem = (sim_gnsf_memory *) c_ptr;
     c_ptr += sizeof(sim_gnsf_memory);
 
     // assign scaled butcher table
@@ -860,14 +860,14 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
 
     assign_and_advance_blasfeo_dmat_mem(nuhat, nu, &mem->Lu, &c_ptr);
 
-    assert((char *)raw_memory + sim_gnsf_memory_calculate_size(config, dims_, opts_) >= c_ptr);
+    assert((char *) raw_memory + sim_gnsf_memory_calculate_size(config, dims_, opts_) >= c_ptr);
     return mem;
 }
 
 int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
 {
     // typecast
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = opts_;
 
     // necessary integers
@@ -1018,7 +1018,7 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
 static void *sim_gnsf_cast_workspace(void *config, void *dims_, void *opts_, void *raw_memory)
 {
     // typecast
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = opts_;
 
     // necessary integers
@@ -1040,8 +1040,8 @@ static void *sim_gnsf_cast_workspace(void *config, void *dims_, void *opts_, voi
     int nK2 = num_stages * nx2;
     int nZ = num_stages * nz;
 
-    char *c_ptr = (char *)raw_memory;
-    gnsf_workspace *workspace = (gnsf_workspace *)c_ptr;
+    char *c_ptr = (char *) raw_memory;
+    gnsf_workspace *workspace = (gnsf_workspace *) c_ptr;
     c_ptr += sizeof(gnsf_workspace);
     align_char_to(8, &c_ptr);
 
@@ -1118,9 +1118,9 @@ static void *sim_gnsf_cast_workspace(void *config, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->dPsi_dx, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nu, &workspace->dPsi_du, &c_ptr);
 
-    assert((char *)raw_memory + sim_gnsf_workspace_calculate_size(config, dims_, opts) >= c_ptr);
+    assert((char *) raw_memory + sim_gnsf_workspace_calculate_size(config, dims_, opts) >= c_ptr);
 
-    return (void *)workspace;
+    return (void *) workspace;
 }
 
 int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, void *work_)
@@ -1129,12 +1129,12 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     acados_tic(&tot_timer);
 
     // typecast
-    sim_gnsf_memory *mem = (sim_gnsf_memory *)mem_;
-    sim_rk_opts *opts = (sim_rk_opts *)args;
-    sim_gnsf_dims *dims = (sim_gnsf_dims *)in->dims;
+    sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
+    sim_rk_opts *opts = (sim_rk_opts *) args;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) in->dims;
     gnsf_model *model = in->model;
     gnsf_workspace *workspace =
-        (gnsf_workspace *)sim_gnsf_cast_workspace(config, dims, opts, work_);
+        (gnsf_workspace *) sim_gnsf_cast_workspace(config, dims, opts, work_);
 
     // necessary integers
     int nx = dims->nx;

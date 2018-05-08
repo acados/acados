@@ -64,12 +64,12 @@ ocp_qp_solution::ocp_qp_solution(const ocp_qp_solution &other) : N(other.N), qp_
                        &qp_out->t[i], 0);
     }
 
-    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
-    info->num_iter = ((ocp_qp_info *)other.qp_out->misc)->num_iter;
-    info->solve_QP_time = ((ocp_qp_info *)other.qp_out->misc)->solve_QP_time;
-    info->condensing_time = ((ocp_qp_info *)other.qp_out->misc)->condensing_time;
-    info->interface_time = ((ocp_qp_info *)other.qp_out->misc)->interface_time;
-    info->total_time = ((ocp_qp_info *)other.qp_out->misc)->total_time;
+    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    info->num_iter = ((ocp_qp_info *) other.qp_out->misc)->num_iter;
+    info->solve_QP_time = ((ocp_qp_info *) other.qp_out->misc)->solve_QP_time;
+    info->condensing_time = ((ocp_qp_info *) other.qp_out->misc)->condensing_time;
+    info->interface_time = ((ocp_qp_info *) other.qp_out->misc)->interface_time;
+    info->total_time = ((ocp_qp_info *) other.qp_out->misc)->total_time;
 
     qp_out->memsize = other.qp_out->memsize;
 }
@@ -138,6 +138,6 @@ vector<vector<double>> ocp_qp_solution::lag_mul_constraints()
     return result;
 }
 
-ocp_qp_info ocp_qp_solution::info() { return *((ocp_qp_info *)qp_out->misc); }
+ocp_qp_info ocp_qp_solution::info() { return *((ocp_qp_info *) qp_out->misc); }
 
 }  // namespace acados

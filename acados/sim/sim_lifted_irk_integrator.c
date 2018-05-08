@@ -47,35 +47,35 @@ void *sim_lifted_irk_dims_assign(void *config_, void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)c_ptr;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) c_ptr;
     c_ptr += sizeof(sim_lifted_irk_dims);
 
-    assert((char *)raw_memory + sim_lifted_irk_dims_calculate_size() >= c_ptr);
+    assert((char *) raw_memory + sim_lifted_irk_dims_calculate_size() >= c_ptr);
 
     return dims;
 }
 
 void sim_lifted_irk_set_nx(void *dims_, int nx)
 {
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
     dims->nx = nx;
 }
 
 void sim_lifted_irk_set_nu(void *dims_, int nu)
 {
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
     dims->nu = nu;
 }
 
 void sim_lifted_irk_get_nx(void *dims_, int *nx)
 {
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
     *nx = dims->nx;
 }
 
 void sim_lifted_irk_get_nu(void *dims_, int *nu)
 {
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
     *nu = dims->nu;
 }
 
@@ -94,9 +94,9 @@ int sim_lifted_irk_model_calculate_size(void *config, void *dims)
 
 void *sim_lifted_irk_model_assign(void *config, void *dims, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    lifted_irk_model *data = (lifted_irk_model *)c_ptr;
+    lifted_irk_model *data = (lifted_irk_model *) c_ptr;
     c_ptr += sizeof(lifted_irk_model);
 
     return data;
@@ -109,10 +109,10 @@ int sim_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, voi
     switch (fun_type)
     {
         case EXPL_ODE_JAC:
-            model->expl_ode_jac = (external_function_generic *)fun;
+            model->expl_ode_jac = (external_function_generic *) fun;
             break;
         case EXPL_VDE_FOR:
-            model->expl_vde_for = (external_function_generic *)fun;
+            model->expl_vde_for = (external_function_generic *) fun;
             break;
         default:
             return ACADOS_FAILURE;
@@ -165,9 +165,9 @@ void *sim_lifted_irk_opts_assign(void *config_, void *dims, void *raw_memory)
 {
     int ns_max = 15;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    sim_rk_opts *opts = (sim_rk_opts *)c_ptr;
+    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
     c_ptr += sizeof(sim_rk_opts);
 
     align_char_to(8, &c_ptr);
@@ -176,7 +176,7 @@ void *sim_lifted_irk_opts_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
     assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
-    opts->scheme = (Newton_scheme *)c_ptr;
+    opts->scheme = (Newton_scheme *) c_ptr;
     c_ptr += sizeof(Newton_scheme);
 
     align_char_to(8, &c_ptr);
@@ -197,15 +197,15 @@ void *sim_lifted_irk_opts_assign(void *config_, void *dims, void *raw_memory)
     opts->work = c_ptr;
     c_ptr += work_size;
 
-    assert((char *)raw_memory + sim_lifted_irk_opts_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + sim_lifted_irk_opts_calculate_size(config_, dims) >= c_ptr);
 
-    return (void *)opts;
+    return (void *) opts;
 }
 
 void sim_lifted_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     sim_rk_opts *opts = opts_;
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
 
     opts->ns = 3;  // GL 3
     int ns = opts->ns;
@@ -283,7 +283,7 @@ void sim_lifted_irk_opts_update(void *config_, void *dims, void *opts_)
 int sim_lifted_irk_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
     sim_rk_opts *opts = opts_;
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -291,7 +291,7 @@ int sim_lifted_irk_memory_calculate_size(void *config_, void *dims_, void *opts_
     int nu = dims->nu;
     int num_steps = opts->num_steps;
     int nf = opts->num_forw_sens;
-    int num_sys = (int)ceil(ns / 2.0);
+    int num_sys = (int) ceil(ns / 2.0);
 
     int size = sizeof(sim_lifted_irk_memory);
 
@@ -366,7 +366,7 @@ int sim_lifted_irk_memory_calculate_size(void *config_, void *dims_, void *opts_
 void *sim_lifted_irk_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
     sim_rk_opts *opts = opts_;
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -374,7 +374,7 @@ void *sim_lifted_irk_memory_assign(void *config_, void *dims_, void *opts_, void
     int nu = dims->nu;
     int num_steps = opts->num_steps;
     int nf = opts->num_forw_sens;
-    int num_sys = (int)ceil(ns / 2.0);
+    int num_sys = (int) ceil(ns / 2.0);
 
     char *c_ptr = raw_memory;
 
@@ -454,7 +454,7 @@ void *sim_lifted_irk_memory_assign(void *config_, void *dims_, void *opts_, void
                                                 memory->sys_mat2[i]);
             assign_and_advance_blasfeo_dmat_mem(dim_sys, 1 + nf, memory->str_sol2[i],
                                                 memory->sys_sol2[i]);
-            d_cast_diag_mat2strmat((double *)c_ptr, memory->str_mat2[i]);
+            d_cast_diag_mat2strmat((double *) c_ptr, memory->str_mat2[i]);
             c_ptr += dim_sys * sizeof(double);
 #else   // LA_BLAS
             assign_and_advance_blasfeo_dmat_mem(dim_sys, dim_sys, memory->str_mat2[i],
@@ -468,7 +468,8 @@ void *sim_lifted_irk_memory_assign(void *config_, void *dims_, void *opts_, void
     }
 #endif  // !TRIPLE_LOOP
 
-    assert((char *)raw_memory + sim_lifted_irk_memory_calculate_size(config_, dims, opts) >= c_ptr);
+    assert((char *) raw_memory + sim_lifted_irk_memory_calculate_size(config_, dims, opts) >=
+           c_ptr);
 
     // initialize
     for (int i = 0; i < num_steps * ns * nx; ++i) memory->K_traj[i] = 0.0;
@@ -496,7 +497,7 @@ void *sim_lifted_irk_memory_assign(void *config_, void *dims_, void *opts_, void
 int sim_lifted_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     sim_rk_opts *opts = opts_;
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)dims_;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -560,7 +561,7 @@ static void sim_lifted_irk_workspace_cast(void *config_, sim_lifted_irk_workspac
                                           const sim_in *in, void *opts_)
 {
     sim_rk_opts *opts = opts_;
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)in->dims;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) in->dims;
 
     int ns = opts->ns;
 
@@ -575,49 +576,49 @@ static void sim_lifted_irk_workspace_cast(void *config_, sim_lifted_irk_workspac
         if (ns > 1) dim_sys = 2 * nx;
     }
 
-    char *ptr = (char *)work;
+    char *ptr = (char *) work;
     ptr += sizeof(sim_lifted_irk_workspace);
-    work->rhs_in = (double *)ptr;
+    work->rhs_in = (double *) ptr;
     ptr += (nx * (1 + NF) + nu + 1) * sizeof(double);  // rhs_in
-    work->out_tmp = (double *)ptr;
+    work->out_tmp = (double *) ptr;
     ptr += (nx * (1 + NF)) * sizeof(double);  // out_tmp
     if (opts->scheme->type == exact)
     {
-        work->ipiv = (int *)ptr;
+        work->ipiv = (int *) ptr;
         ptr += (dim_sys) * sizeof(int);  // ipiv
-        work->sys_mat = (double *)ptr;
+        work->sys_mat = (double *) ptr;
         ptr += (dim_sys * dim_sys) * sizeof(double);  // sys_mat
     }
-    work->sys_sol = (double *)ptr;
+    work->sys_sol = (double *) ptr;
     ptr += ((ns * nx) * (1 + NF)) * sizeof(double);  // sys_sol
-    work->VDE_tmp = (double **)ptr;
+    work->VDE_tmp = (double **) ptr;
     ptr += (ns) * sizeof(double *);  // VDE_tmp
     for (int i = 0; i < ns; i++)
     {
-        work->VDE_tmp[i] = (double *)ptr;
+        work->VDE_tmp[i] = (double *) ptr;
         ptr += (nx * (1 + NF)) * sizeof(double);  // VDE_tmp[i]
     }
-    work->jac_tmp = (double *)ptr;
+    work->jac_tmp = (double *) ptr;
     ptr += (nx * (nx + 1)) * sizeof(double);  // jac_tmp
 
     if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis)
     {
-        work->sys_sol_trans = (double *)ptr;
+        work->sys_sol_trans = (double *) ptr;
         ptr += ((ns * nx) * (1 + NF)) * sizeof(double);  // sys_sol_trans
-        work->trans = (double *)ptr;
+        work->trans = (double *) ptr;
         ptr += (ns * ns) * sizeof(double);  // trans
     }
 
     if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis)
     {
-        work->out_adj_tmp = (double *)ptr;
+        work->out_adj_tmp = (double *) ptr;
         ptr += (nx) * sizeof(double);  // out_adj_tmp
     }
 
 #if !TRIPLE_LOOP
-    work->str_mat = (struct blasfeo_dmat *)ptr;
+    work->str_mat = (struct blasfeo_dmat *) ptr;
     ptr += sizeof(struct blasfeo_dmat);
-    work->str_sol = (struct blasfeo_dmat *)ptr;
+    work->str_sol = (struct blasfeo_dmat *) ptr;
     ptr += sizeof(struct blasfeo_dmat);
 #if defined(LA_HIGH_PERFORMANCE)
     // matrices in matrix struct format:
@@ -636,7 +637,7 @@ static void sim_lifted_irk_workspace_cast(void *config_, sim_lifted_irk_workspac
     blasfeo_create_dmat(dim_sys, dim_sys, work->str_mat, work->sys_mat);
     blasfeo_create_dmat(dim_sys, 1 + NF, work->str_sol, work->sys_sol);
 
-    d_cast_diag_mat2strmat((double *)ptr, work->str_mat);
+    d_cast_diag_mat2strmat((double *) ptr, work->str_mat);
     ptr += blasfeo_memsize_diag_dmat(dim_sys, dim_sys);
 
 #else  // LA_BLAS
@@ -735,7 +736,7 @@ double solve_system_ACADO(double *const A, double *const b, int *const perm, int
     dim2 += 0;
 #endif
     double *bPerm;
-    bPerm = (double *)calloc(DIM * DIM_RHS, sizeof(double));
+    bPerm = (double *) calloc(DIM * DIM_RHS, sizeof(double));
     double tmp_var;
 
     for (i = 0; i < DIM; ++i)
@@ -796,7 +797,7 @@ double solve_system_trans_ACADO(double *const A, double *const b, int *const per
     dim2 += 0;
 #endif
     double *bPerm;
-    bPerm = (double *)calloc(DIM * DIM_RHS, sizeof(double));
+    bPerm = (double *) calloc(DIM * DIM_RHS, sizeof(double));
     double tmp_var;
 
     for (k = 0; k < DIM * DIM_RHS; ++k)
@@ -964,7 +965,7 @@ static void form_linear_system_matrix(void *config_, int istep, const sim_in *in
     sim_rk_opts *opts = opts_;
     int ns = opts->ns;
 
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)in->dims;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) in->dims;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -1127,15 +1128,15 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
     int ns = opts->ns;
 
-    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *)in->dims;
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) in->dims;
 
     int nx = dims->nx;
     int nu = dims->nu;
 
     int dim_sys = ns * nx;
     int i, s1, s2, j, istep;
-    sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *)mem_;
-    sim_lifted_irk_workspace *work = (sim_lifted_irk_workspace *)work_;
+    sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *) mem_;
+    sim_lifted_irk_workspace *work = (sim_lifted_irk_workspace *) work_;
     sim_lifted_irk_workspace_cast(config, work, in, opts);
     double H_INT = in->T / opts->num_steps;
     int NF = opts->num_forw_sens;
@@ -1446,7 +1447,7 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
                 }
             }
             rhs_in[nx * (1 + NF) + nu] =
-                ((double)istep + c_vec[s1]) / ((double)opts->num_steps);  // time
+                ((double) istep + c_vec[s1]) / ((double) opts->num_steps);  // time
 
             acados_tic(&timer_ad);
 

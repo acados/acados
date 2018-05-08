@@ -44,12 +44,12 @@ int ocp_nlp_dynamics_disc_dims_calculate_size(void *config_)
 
 void *ocp_nlp_dynamics_disc_dims_assign(void *config_, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *)c_ptr;
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_dims);
 
-    assert((char *)raw_memory + ocp_nlp_dynamics_disc_dims_calculate_size(config_) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_dynamics_disc_dims_calculate_size(config_) >= c_ptr);
 
     return dims;
 }
@@ -88,12 +88,13 @@ void *ocp_nlp_dynamics_disc_opts_assign(void *config_, void *dims_, void *raw_me
     // ocp_nlp_dynamics_config *config = config_;
     // ocp_nlp_dynamics_disc_dims *dims = dims_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_dynamics_disc_opts *opts = (ocp_nlp_dynamics_disc_opts *)c_ptr;
+    ocp_nlp_dynamics_disc_opts *opts = (ocp_nlp_dynamics_disc_opts *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_opts);
 
-    assert((char *)raw_memory + ocp_nlp_dynamics_disc_opts_calculate_size(config_, dims_) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_dynamics_disc_opts_calculate_size(config_, dims_) >=
+           c_ptr);
 
     return opts;
 }
@@ -147,7 +148,7 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
     ocp_nlp_dynamics_disc_dims *dims = dims_;
     // ocp_nlp_dynamics_disc_opts *opts = opts_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // extract dims
     int nx = dims->nx;
@@ -155,7 +156,7 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
     int nx1 = dims->nx1;
 
     // struct
-    ocp_nlp_dynamics_disc_memory *memory = (ocp_nlp_dynamics_disc_memory *)c_ptr;
+    ocp_nlp_dynamics_disc_memory *memory = (ocp_nlp_dynamics_disc_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_memory);
 
     // blasfeo_mem align
@@ -166,7 +167,8 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
     // fun
     assign_and_advance_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
 
-    assert((char *)raw_memory + ocp_nlp_dynamics_disc_memory_calculate_size(config_, dims, opts_) >=
+    assert((char *) raw_memory +
+               ocp_nlp_dynamics_disc_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
 
     return memory;
@@ -260,7 +262,7 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, voi
     int nu = dims->nu;
     int nx1 = dims->nx1;
 
-    char *c_ptr = (char *)work_;
+    char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_workspace);
 
     align_char_to(8, &c_ptr);
@@ -270,7 +272,7 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, voi
     // discrete_model_out
     assign_and_advance_double(nx1 + nx1 * (nx + nu), &work->discrete_model_out, &c_ptr);
 
-    assert((char *)work + ocp_nlp_dynamics_disc_workspace_calculate_size(config_, dims, opts_) >=
+    assert((char *) work + ocp_nlp_dynamics_disc_workspace_calculate_size(config_, dims, opts_) >=
            c_ptr);
 
     return;
@@ -299,17 +301,17 @@ void *ocp_nlp_dynamics_disc_model_assign(void *config_, void *dims_, void *raw_m
 {
     // ocp_nlp_dynamics_config *config = config_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // extract dims
     // int nx = dims->nx;
     // int nu = dims->nu;
 
     // struct
-    ocp_nlp_dynamics_disc_model *model = (ocp_nlp_dynamics_disc_model *)c_ptr;
+    ocp_nlp_dynamics_disc_model *model = (ocp_nlp_dynamics_disc_model *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_model);
 
-    assert((char *)raw_memory + ocp_nlp_dynamics_disc_model_calculate_size(config_, dims_) >=
+    assert((char *) raw_memory + ocp_nlp_dynamics_disc_model_calculate_size(config_, dims_) >=
            c_ptr);
 
     return model;

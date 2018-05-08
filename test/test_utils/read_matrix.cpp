@@ -30,7 +30,7 @@
 
 #include "catch/include/catch.hpp"
 
-#define MAXBUFSIZE ((int)1e6)
+#define MAXBUFSIZE ((int) 1e6)
 
 // Trim from start (in place)
 static inline void ltrim(std::string *s)

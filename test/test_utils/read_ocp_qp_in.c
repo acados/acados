@@ -214,46 +214,46 @@ static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath)
         snprintf(stage, sizeof(stage), "%d", kk);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "Q", kk, ".txt");
-        status = read_double_matrix_from_txt((real_t *)in->Q[kk], in->nx[kk], in->nx[kk], fname);
+        status = read_double_matrix_from_txt((real_t *) in->Q[kk], in->nx[kk], in->nx[kk], fname);
         assert(status == 0);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "qv", kk, ".txt");
-        status = read_double_vector_from_txt((real_t *)in->q[kk], in->nx[kk], fname);
+        status = read_double_vector_from_txt((real_t *) in->q[kk], in->nx[kk], fname);
         assert(status == 0);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "S", kk, ".txt");
-        status = read_double_matrix_from_txt((real_t *)in->S[kk], in->nu[kk], in->nx[kk], fname);
+        status = read_double_matrix_from_txt((real_t *) in->S[kk], in->nu[kk], in->nx[kk], fname);
         assert(status == 0);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "R", kk, ".txt");
-        status = read_double_matrix_from_txt((real_t *)in->R[kk], in->nu[kk], in->nu[kk], fname);
+        status = read_double_matrix_from_txt((real_t *) in->R[kk], in->nu[kk], in->nu[kk], fname);
         assert(status == 0);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "rv", kk, ".txt");
-        status = read_double_vector_from_txt((real_t *)in->r[kk], in->nu[kk], fname);
+        status = read_double_vector_from_txt((real_t *) in->r[kk], in->nu[kk], fname);
         assert(status == 0);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "A", kk, ".txt");
         status =
-            read_double_matrix_from_txt((real_t *)in->A[kk], in->nx[kk + 1], in->nx[kk], fname);
+            read_double_matrix_from_txt((real_t *) in->A[kk], in->nx[kk + 1], in->nx[kk], fname);
         assert(status == 0);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "B", kk, ".txt");
         status =
-            read_double_matrix_from_txt((real_t *)in->B[kk], in->nx[kk + 1], in->nu[kk], fname);
+            read_double_matrix_from_txt((real_t *) in->B[kk], in->nx[kk + 1], in->nu[kk], fname);
         assert(status == 0);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "bv", kk, ".txt");
-        status = read_double_vector_from_txt((real_t *)in->b[kk], in->nx[kk + 1], fname);
+        status = read_double_vector_from_txt((real_t *) in->b[kk], in->nx[kk + 1], fname);
         assert(status == 0);
     }
     snprintf(stage, sizeof(stage), "%d", N);
     snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "Q", kk, ".txt");
-    status = read_double_matrix_from_txt((real_t *)in->Q[N], in->nx[N], in->nx[N], fname);
+    status = read_double_matrix_from_txt((real_t *) in->Q[N], in->nx[N], in->nx[N], fname);
     assert(status == 0);
 
     snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "qv", kk, ".txt");
-    status = read_double_vector_from_txt((real_t *)in->q[N], in->nx[N], fname);
+    status = read_double_vector_from_txt((real_t *) in->q[N], in->nx[N], fname);
     assert(status == 0);
 }
 
@@ -268,15 +268,15 @@ static void read_ocp_qp_in_bounds(ocp_qp_in *const in, const char *fpath)
         snprintf(stage, sizeof(stage), "%d", kk);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "lb", kk, ".txt");
-        status = read_double_vector_from_txt((real_t *)in->lb[kk], in->nb[kk], fname);
+        status = read_double_vector_from_txt((real_t *) in->lb[kk], in->nb[kk], fname);
         assert(status == 0);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "ub", kk, ".txt");
-        status = read_double_vector_from_txt((real_t *)in->ub[kk], in->nb[kk], fname);
+        status = read_double_vector_from_txt((real_t *) in->ub[kk], in->nb[kk], fname);
         assert(status == 0);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "idxb", kk, ".txt");
-        status = read_int_vector_from_txt((int_t *)in->idxb[kk], in->nb[kk], fname);
+        status = read_int_vector_from_txt((int_t *) in->idxb[kk], in->nb[kk], fname);
         assert(status == 0);
         for (ii = 0; ii < in->nb[kk]; ii++)
         {
@@ -299,22 +299,22 @@ static void read_ocp_qp_in_polyhedral(ocp_qp_in *const in, const char *fpath)
         snprintf(stage, sizeof(stage), "%d", kk);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "lc", kk, ".txt");
-        status = read_double_vector_from_txt((real_t *)in->lc[kk], in->nc[kk], fname);
+        status = read_double_vector_from_txt((real_t *) in->lc[kk], in->nc[kk], fname);
         assert(status == 0);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "uc", kk, ".txt");
-        status = read_double_vector_from_txt((real_t *)in->uc[kk], in->nc[kk], fname);
+        status = read_double_vector_from_txt((real_t *) in->uc[kk], in->nc[kk], fname);
         assert(status == 0);
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "Cx", kk, ".txt");
-        status = read_double_matrix_from_txt((real_t *)in->Cx[kk], in->nc[kk], in->nx[kk], fname);
+        status = read_double_matrix_from_txt((real_t *) in->Cx[kk], in->nc[kk], in->nx[kk], fname);
         assert(status == 0);
 
         if (kk < in->N)
         {
             snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "Cu", kk, ".txt");
             status =
-                read_double_matrix_from_txt((real_t *)in->Cu[kk], in->nc[kk], in->nu[kk], fname);
+                read_double_matrix_from_txt((real_t *) in->Cu[kk], in->nc[kk], in->nu[kk], fname);
             assert(status == 0);
         }
         for (ii = 0; ii < in->nc[kk]; ii++) assert(in->lc[kk][ii] <= in->uc[kk][ii]);
@@ -327,18 +327,18 @@ static void read_ocp_qp_in_x0(ocp_qp_in *const in, const char *fpath)
     int ii, status, *ptr;
 
     snprintf(fname, sizeof(fname), "%s%s", fpath, "x0.txt");
-    status = read_double_vector_from_txt((real_t *)in->lb[0], in->nx[0], fname);
+    status = read_double_vector_from_txt((real_t *) in->lb[0], in->nx[0], fname);
     assert(status == 0);
-    status = read_double_vector_from_txt((real_t *)in->ub[0], in->nx[0], fname);
+    status = read_double_vector_from_txt((real_t *) in->ub[0], in->nx[0], fname);
     assert(status == 0);
 
-    ptr = (int_t *)in->idxb[0];
+    ptr = (int_t *) in->idxb[0];
     for (ii = 0; ii < in->nx[0]; ii++) ptr[ii] = ii;
 }
 
 static int_t check_for_slash_on_dir(const char *fpath)
 {
-    int_t pathLength = (int_t)strlen(fpath);
+    int_t pathLength = (int_t) strlen(fpath);
     if ((fpath[pathLength - 1] != '/') && (fpath[pathLength - 1] != '\\'))
     {
         return -1;
@@ -357,13 +357,13 @@ void print_ocp_qp_in(ocp_qp_in const in)
     printf("LOADED DATA FROM TXT FILES:\n\n");
     printf("N:\n%d\n\n", N);
     printf("nx:\n");
-    int_print_mat(1, N + 1, (int_t *)in.nx, 1);
+    int_print_mat(1, N + 1, (int_t *) in.nx, 1);
     printf("nu:\n");
-    int_print_mat(1, N, (int_t *)in.nu, 1);
+    int_print_mat(1, N, (int_t *) in.nu, 1);
     printf("nb:\n");
-    int_print_mat(1, N + 1, (int_t *)in.nb, 1);
+    int_print_mat(1, N + 1, (int_t *) in.nb, 1);
     printf("nc:\n");
-    int_print_mat(1, N + 1, (int_t *)in.nc, 1);
+    int_print_mat(1, N + 1, (int_t *) in.nc, 1);
     printf("bounds:\n");
     for (kk = 0; kk <= N; kk++)
     {
@@ -386,30 +386,30 @@ void print_ocp_qp_in(ocp_qp_in const in)
     for (kk = 0; kk < N; kk++)
     {
         printf("\nQ[%d] =\n", kk);
-        d_print_mat(in.nx[kk], in.nx[kk], (real_t *)in.Q[kk], in.nx[kk]);
+        d_print_mat(in.nx[kk], in.nx[kk], (real_t *) in.Q[kk], in.nx[kk]);
         printf("\nR[%d] =\n", kk);
-        d_print_mat(in.nu[kk], in.nu[kk], (real_t *)in.R[kk], in.nu[kk]);
+        d_print_mat(in.nu[kk], in.nu[kk], (real_t *) in.R[kk], in.nu[kk]);
         printf("\nS[%d] =\n", kk);
-        d_print_mat(in.nu[kk], in.nx[kk], (real_t *)in.S[kk], in.nu[kk]);
+        d_print_mat(in.nu[kk], in.nx[kk], (real_t *) in.S[kk], in.nu[kk]);
         printf("\nq[%d] =\n", kk);
-        d_print_mat(in.nx[kk], 1, (real_t *)in.q[kk], in.nx[kk]);
+        d_print_mat(in.nx[kk], 1, (real_t *) in.q[kk], in.nx[kk]);
         printf("\nr[%d] =\n", kk);
-        d_print_mat(in.nu[kk], 1, (real_t *)in.r[kk], in.nu[kk]);
+        d_print_mat(in.nu[kk], 1, (real_t *) in.r[kk], in.nu[kk]);
     }
     printf("\nQ[%d] =\n", kk);
-    d_print_mat(in.nx[N], in.nx[N], (real_t *)in.Q[N], in.nx[N]);
+    d_print_mat(in.nx[N], in.nx[N], (real_t *) in.Q[N], in.nx[N]);
     printf("\nq[%d] =\n", kk);
-    d_print_mat(in.nx[N], 1, (real_t *)in.q[N], in.nx[N]);
+    d_print_mat(in.nx[N], 1, (real_t *) in.q[N], in.nx[N]);
 
     printf("\nequalities:");
     for (kk = 0; kk < N; kk++)
     {
         printf("\nA[%d] =\n", kk);
-        d_print_mat(in.nx[kk + 1], in.nx[kk], (real_t *)in.A[kk], in.nx[kk + 1]);
+        d_print_mat(in.nx[kk + 1], in.nx[kk], (real_t *) in.A[kk], in.nx[kk + 1]);
         printf("\nB[%d] =\n", kk);
-        d_print_mat(in.nx[kk + 1], in.nu[kk], (real_t *)in.B[kk], in.nx[kk + 1]);
+        d_print_mat(in.nx[kk + 1], in.nu[kk], (real_t *) in.B[kk], in.nx[kk + 1]);
         printf("\nb[%d] =\n", kk);
-        d_print_mat(in.nx[kk + 1], 1, (real_t *)in.b[kk], in.nx[kk + 1]);
+        d_print_mat(in.nx[kk + 1], 1, (real_t *) in.b[kk], in.nx[kk + 1]);
     }
     printf("\ninequalities:");
     for (kk = 0; kk < N; kk++)
@@ -417,15 +417,15 @@ void print_ocp_qp_in(ocp_qp_in const in)
         if (in.nc[kk] > 0)
         {
             printf("\nCx[%d] =\n", kk);
-            d_print_mat(in.nc[kk], in.nx[kk], (real_t *)in.Cx[kk], in.nc[kk]);
+            d_print_mat(in.nc[kk], in.nx[kk], (real_t *) in.Cx[kk], in.nc[kk]);
             printf("\nCu[%d] =\n", kk);
-            d_print_mat(in.nc[kk], in.nu[kk], (real_t *)in.Cu[kk], in.nc[kk]);
+            d_print_mat(in.nc[kk], in.nu[kk], (real_t *) in.Cu[kk], in.nc[kk]);
         }
     }
     if (in.nc[N] > 0)
     {
         printf("\nCx[%d] =\n", kk);
-        d_print_mat(in.nc[N], in.nx[N], (real_t *)in.Cx[N], in.nc[N]);
+        d_print_mat(in.nc[N], in.nx[N], (real_t *) in.Cx[N], in.nc[N]);
         printf("\n----------------------------------\n");
     }
 }
@@ -438,7 +438,7 @@ ocp_qp_in *read_ocp_qp_in(const char *fpath_, int_t BOUNDS, int_t INEQUALITIES, 
     int_t *nx, *nu, *nb, *nc;
 
     // adding slash at the end if missing
-    pathLength = (int_t)strlen(fpath_);
+    pathLength = (int_t) strlen(fpath_);
     // TODO(dimitris): add windows support..
     if (fpath_[pathLength - 1] != '/')
     {
@@ -546,19 +546,19 @@ void write_ocp_qp_in_to_txt(ocp_qp_in *const in, const char *dir)
         }
     }
 
-    nx = (int_t *)calloc(in->N + 1, sizeof(*nx));
-    nu = (int_t *)calloc(in->N + 1, sizeof(*nu));
-    Q_vertcat = (real_t *)calloc(nQ, sizeof(*Q_vertcat));
-    R_vertcat = (real_t *)calloc(nR, sizeof(*R_vertcat));
-    q_vertcat = (real_t *)calloc(nq, sizeof(*q_vertcat));
-    r_vertcat = (real_t *)calloc(nr, sizeof(*r_vertcat));
+    nx = (int_t *) calloc(in->N + 1, sizeof(*nx));
+    nu = (int_t *) calloc(in->N + 1, sizeof(*nu));
+    Q_vertcat = (real_t *) calloc(nQ, sizeof(*Q_vertcat));
+    R_vertcat = (real_t *) calloc(nR, sizeof(*R_vertcat));
+    q_vertcat = (real_t *) calloc(nq, sizeof(*q_vertcat));
+    r_vertcat = (real_t *) calloc(nr, sizeof(*r_vertcat));
 
-    A_vertcat = (real_t *)calloc(nA, sizeof(*A_vertcat));
-    B_vertcat = (real_t *)calloc(nB, sizeof(*B_vertcat));
-    b_vertcat = (real_t *)calloc(nb, sizeof(*b_vertcat));
+    A_vertcat = (real_t *) calloc(nA, sizeof(*A_vertcat));
+    B_vertcat = (real_t *) calloc(nB, sizeof(*B_vertcat));
+    b_vertcat = (real_t *) calloc(nb, sizeof(*b_vertcat));
 
-    lb_vertcat = (real_t *)calloc(nz, sizeof(*lb_vertcat));
-    ub_vertcat = (real_t *)calloc(nz, sizeof(*ub_vertcat));
+    lb_vertcat = (real_t *) calloc(nz, sizeof(*lb_vertcat));
+    ub_vertcat = (real_t *) calloc(nz, sizeof(*ub_vertcat));
 
     // Write Q matrices
     ind = 0;

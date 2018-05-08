@@ -62,17 +62,17 @@ void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     int N = dims->N;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // opts
-    ocp_qp_partial_condensing_opts *opts = (ocp_qp_partial_condensing_opts *)c_ptr;
+    ocp_qp_partial_condensing_opts *opts = (ocp_qp_partial_condensing_opts *) c_ptr;
     c_ptr += sizeof(ocp_qp_partial_condensing_opts);
 
     // pcond_dims
-    opts->pcond_dims = (ocp_qp_dims *)c_ptr;
+    opts->pcond_dims = (ocp_qp_dims *) c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
     // hpipm_opts
-    opts->hpipm_opts = (struct d_cond_qp_ocp2ocp_arg *)c_ptr;
+    opts->hpipm_opts = (struct d_cond_qp_ocp2ocp_arg *) c_ptr;
     c_ptr += sizeof(struct d_cond_qp_ocp2ocp_arg);
 
     // block size
@@ -87,7 +87,7 @@ void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
     d_create_cond_qp_ocp2ocp_arg(N, opts->hpipm_opts, c_ptr);
     c_ptr += opts->hpipm_opts->memsize;
 
-    assert((char *)raw_memory + ocp_qp_partial_condensing_opts_calculate_size(dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_qp_partial_condensing_opts_calculate_size(dims) >= c_ptr);
 
     return opts;
 }
@@ -146,17 +146,17 @@ void *ocp_qp_partial_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, vo
 {
     ocp_qp_partial_condensing_opts *opts = opts_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_qp_partial_condensing_memory *mem = (ocp_qp_partial_condensing_memory *)c_ptr;
+    ocp_qp_partial_condensing_memory *mem = (ocp_qp_partial_condensing_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_partial_condensing_memory);
     // hpipm_workspace
-    mem->hpipm_workspace = (struct d_cond_qp_ocp2ocp_workspace *)c_ptr;
+    mem->hpipm_workspace = (struct d_cond_qp_ocp2ocp_workspace *) c_ptr;
     c_ptr += sizeof(struct d_cond_qp_ocp2ocp_workspace);
 
     // hpipm workspace structure
     align_char_to(8, &c_ptr);
-    assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
+    assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     // hpipm_workspace
     d_create_cond_qp_ocp2ocp(dims, opts->block_size, opts->pcond_dims, opts->hpipm_opts,
@@ -165,7 +165,7 @@ void *ocp_qp_partial_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, vo
 
     mem->qp_in = NULL;  // initialized when partial condensing routine is called
 
-    assert((char *)raw_memory + ocp_qp_partial_condensing_memory_calculate_size(dims, opts) >=
+    assert((char *) raw_memory + ocp_qp_partial_condensing_memory_calculate_size(dims, opts) >=
            c_ptr);
 
     return mem;

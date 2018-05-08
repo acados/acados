@@ -48,7 +48,7 @@ ocp_nlp_dynamics_config *ocp_nlp_dynamics_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    ocp_nlp_dynamics_config *config = (ocp_nlp_dynamics_config *)c_ptr;
+    ocp_nlp_dynamics_config *config = (ocp_nlp_dynamics_config *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_config);
 
     config->sim_solver = sim_solver_config_assign(c_ptr);

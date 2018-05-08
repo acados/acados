@@ -80,13 +80,13 @@ static void mdlStart(SimStruct *S)
 
     for (int i = 0; i < AC_HORIZON_LENGTH; ++i)
     {
-        d_cvt_colmaj_to_ocp_qp_Q(i, (double *)mxGetData(Q), qp_in);
-        d_cvt_colmaj_to_ocp_qp_R(i, (double *)mxGetData(R), qp_in);
-        d_cvt_colmaj_to_ocp_qp_A(i, (double *)mxGetData(A), qp_in);
-        d_cvt_colmaj_to_ocp_qp_B(i, (double *)mxGetData(B), qp_in);
+        d_cvt_colmaj_to_ocp_qp_Q(i, (double *) mxGetData(Q), qp_in);
+        d_cvt_colmaj_to_ocp_qp_R(i, (double *) mxGetData(R), qp_in);
+        d_cvt_colmaj_to_ocp_qp_A(i, (double *) mxGetData(A), qp_in);
+        d_cvt_colmaj_to_ocp_qp_B(i, (double *) mxGetData(B), qp_in);
     }
-    d_cvt_colmaj_to_ocp_qp_Q(AC_HORIZON_LENGTH, (double *)mxGetData(Q), qp_in);
-    d_cvt_colmaj_to_ocp_qp_R(AC_HORIZON_LENGTH, (double *)mxGetData(R), qp_in);
+    d_cvt_colmaj_to_ocp_qp_Q(AC_HORIZON_LENGTH, (double *) mxGetData(Q), qp_in);
+    d_cvt_colmaj_to_ocp_qp_R(AC_HORIZON_LENGTH, (double *) mxGetData(R), qp_in);
 
     ocp_qp_out *qp_out = ocp_qp_out_create(config, qp_dims);
 
@@ -95,18 +95,18 @@ static void mdlStart(SimStruct *S)
     printf("mdlStart: Create acados solver");
     ocp_qp_solver *qp_solver = ocp_qp_create(config, qp_dims, qp_opts);
 
-    ssGetPWork(S)[0] = (void *)qp_dims;
-    ssGetPWork(S)[1] = (void *)qp_in;
-    ssGetPWork(S)[2] = (void *)qp_out;
-    ssGetPWork(S)[3] = (void *)qp_opts;
-    ssGetPWork(S)[4] = (void *)qp_solver;
+    ssGetPWork(S)[0] = (void *) qp_dims;
+    ssGetPWork(S)[1] = (void *) qp_in;
+    ssGetPWork(S)[2] = (void *) qp_out;
+    ssGetPWork(S)[3] = (void *) qp_opts;
+    ssGetPWork(S)[4] = (void *) qp_solver;
 }
 
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    ocp_qp_in *qp_in = (ocp_qp_in *)ssGetPWork(S)[1];
-    ocp_qp_out *qp_out = (ocp_qp_out *)ssGetPWork(S)[2];
-    ocp_qp_solver *qp_solver = (ocp_qp_solver *)ssGetPWork(S)[4];
+    ocp_qp_in *qp_in = (ocp_qp_in *) ssGetPWork(S)[1];
+    ocp_qp_out *qp_out = (ocp_qp_out *) ssGetPWork(S)[2];
+    ocp_qp_solver *qp_solver = (ocp_qp_solver *) ssGetPWork(S)[4];
 
     const double *x0 = ssGetInputPortRealSignal(S, 0);
     d_cvt_colmaj_to_ocp_qp_lbx(0, x0, qp_in);
@@ -114,7 +114,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     int status = ocp_qp_solve(qp_solver, qp_in, qp_out);
 
-    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
 
     double *u0_opt = ssGetOutputPortRealSignal(S, 0);
     double *time = ssGetOutputPortRealSignal(S, 1);
@@ -122,7 +122,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     d_cvt_ocp_qp_sol_to_colmaj_u(qp_out, u0_opt, 0);
     *time = info->total_time;
-    *status_out = (double)status;
+    *status_out = (double) status;
 }
 
 static void mdlTerminate(SimStruct *S)

@@ -50,7 +50,7 @@ ocp_qp_solver_t hashit(std::string const &inString)
     if (inString == "DENSE_QORE") return FULL_CONDENSING_QORE;
 #endif
 
-    return (ocp_qp_solver_t)-1;
+    return (ocp_qp_solver_t) -1;
 }
 
 double solver_tolerance(std::string const &inString)
@@ -101,12 +101,16 @@ void set_N2(std::string const &inString, void *opts, int N2, int N)
 
 TEST_CASE("mass spring example", "[QP solvers]")
 {
-    vector<std::string> solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC",  "SPARSE_QPDUNES",
-                                   "DENSE_HPIPM",  "DENSE_QPOASES"
+    vector<std::string> solvers = {"SPARSE_HPIPM",
+                                   "SPARSE_HPMPC",
+                                   "SPARSE_QPDUNES",
+                                   "DENSE_HPIPM",
+                                   "DENSE_QPOASES"
 #ifdef ACADOS_WITH_QORE
-                                   , "DENSE_QORE"};
+                                   ,
+                                   "DENSE_QORE"};
 #else
-                                   };
+    };
 #endif
 
     /************************************************

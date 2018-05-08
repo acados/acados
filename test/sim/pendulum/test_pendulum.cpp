@@ -52,7 +52,7 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]")
 
     create_ERK_integrator(&sim_in, &sim_out, &info, &rk_opts, NX, NU, T, false);
     int_t workspace_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
-    erk_work = (void*)malloc(workspace_size);
+    erk_work = (void*) malloc(workspace_size);
 
     // adjoint seed:
     for (int_t i = 0; i < NX; i++) seed[i] = 1.0;
@@ -75,8 +75,8 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]")
             }
         }
 
-        print_matrix_name((char*)"stdout", (char*)"adj", adj, 1, NX + NU);
-        print_matrix_name((char*)"stdout", (char*)"adj_test", sim_out.S_adj, 1, NX + NU);
+        print_matrix_name((char*) "stdout", (char*) "adj", adj, 1, NX + NU);
+        print_matrix_name((char*) "stdout", (char*) "adj_test", sim_out.S_adj, 1, NX + NU);
 
         VectorXd true_adj = Eigen::Map<VectorXd>(&adj[0], NX + NU);
         VectorXd test_adj = Eigen::Map<VectorXd>(&sim_out.S_adj[0], NX + NU);
@@ -89,7 +89,7 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]")
 
     create_ERK_integrator(&sim_in2, &sim_out2, &info2, &rk_opts2, NX, NU, T, true);
     workspace_size = sim_erk_calculate_workspace_size(&sim_in2, &rk_opts2);
-    erk_work2 = (void*)malloc(workspace_size);
+    erk_work2 = (void*) malloc(workspace_size);
 
     // adjoint seed:
     for (int_t i = 0; i < NX + NU; i++) sim_in2.S_adj[i] = seed[i];
@@ -141,9 +141,9 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]")
             hess_err[i] = hess_FD[i] - hess_test[i];
         }
 
-        print_matrix_name((char*)"stdout", (char*)"hess_FD", hess_FD, NX + NU, NX + NU);
-        print_matrix_name((char*)"stdout", (char*)"hess_test", hess_test, NX + NU, NX + NU);
-        print_matrix_name((char*)"stdout", (char*)"hess_err", hess_err, NX + NU, NX + NU);
+        print_matrix_name((char*) "stdout", (char*) "hess_FD", hess_FD, NX + NU, NX + NU);
+        print_matrix_name((char*) "stdout", (char*) "hess_test", hess_test, NX + NU, NX + NU);
+        print_matrix_name((char*) "stdout", (char*) "hess_err", hess_err, NX + NU, NX + NU);
 
         MatrixXd FD_hess = Eigen::Map<MatrixXd>(&hess_FD[0], NX + NU, NX + NU);
         MatrixXd test_hess = Eigen::Map<MatrixXd>(&hess_test[0], NX + NU, NX + NU);

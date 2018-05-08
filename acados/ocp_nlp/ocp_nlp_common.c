@@ -68,9 +68,9 @@ ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory)
 {
     int ii;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)c_ptr;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) c_ptr;
     c_ptr += sizeof(ocp_nlp_solver_config);
 
     config->N = N;
@@ -80,7 +80,7 @@ ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory)
     c_ptr += ocp_qp_xcond_solver_config_calculate_size();
 
     // dynamics
-    config->dynamics = (ocp_nlp_dynamics_config **)c_ptr;
+    config->dynamics = (ocp_nlp_dynamics_config **) c_ptr;
     c_ptr += N * sizeof(ocp_nlp_dynamics_config *);
 
     for (ii = 0; ii < N; ii++)
@@ -90,7 +90,7 @@ ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory)
     }
 
     // cost
-    config->cost = (ocp_nlp_cost_config **)c_ptr;
+    config->cost = (ocp_nlp_cost_config **) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_cost_config *);
 
     for (ii = 0; ii <= N; ii++)
@@ -100,7 +100,7 @@ ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory)
     }
 
     // constraints
-    config->constraints = (ocp_nlp_constraints_config **)c_ptr;
+    config->constraints = (ocp_nlp_constraints_config **) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_constraints_config *);
 
     for (ii = 0; ii <= N; ii++)
@@ -161,13 +161,13 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
 
     int ii;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // initial align
     align_char_to(8, &c_ptr);
 
     // struct
-    ocp_nlp_dims *dims = (ocp_nlp_dims *)c_ptr;
+    ocp_nlp_dims *dims = (ocp_nlp_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dims);
 
     // nv
@@ -180,7 +180,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
     assign_and_advance_int(N + 1, &dims->ni, &c_ptr);
 
     // dynamics
-    dims->dynamics = (void **)c_ptr;
+    dims->dynamics = (void **) c_ptr;
     c_ptr += N * sizeof(void *);
 
     for (ii = 0; ii < N; ii++)
@@ -190,7 +190,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
     }
 
     // cost
-    dims->cost = (void **)c_ptr;
+    dims->cost = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
 
     for (ii = 0; ii <= N; ii++)
@@ -200,7 +200,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
     }
 
     // constraints
-    dims->constraints = (void **)c_ptr;
+    dims->constraints = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
 
     for (ii = 0; ii <= N; ii++)
@@ -218,7 +218,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
     dims->N = N;
 
     // assert
-    assert((char *)raw_memory + ocp_nlp_dims_calculate_size(config_) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_dims_calculate_size(config_) >= c_ptr);
 
     return dims;
 }
@@ -326,23 +326,23 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
 
     int N = dims->N;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // initial align
     align_char_to(8, &c_ptr);
 
     // struct
-    ocp_nlp_in *in = (ocp_nlp_in *)c_ptr;
+    ocp_nlp_in *in = (ocp_nlp_in *) c_ptr;
     c_ptr += sizeof(ocp_nlp_in);
 
     in->dims = dims;
 
     // Ts
-    in->Ts = (double *)c_ptr;
+    in->Ts = (double *) c_ptr;
     c_ptr += N * sizeof(double);
 
     // dynamics
-    in->dynamics = (void **)c_ptr;
+    in->dynamics = (void **) c_ptr;
     c_ptr += N * sizeof(void *);
     for (ii = 0; ii < N; ii++)
     {
@@ -353,7 +353,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
     }
 
     // cost
-    in->cost = (void **)c_ptr;
+    in->cost = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
     for (ii = 0; ii <= N; ii++)
     {
@@ -362,7 +362,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
     }
 
     // constraints
-    in->constraints = (void **)c_ptr;
+    in->constraints = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
     for (ii = 0; ii <= N; ii++)
     {
@@ -372,7 +372,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
                                                                dims->constraints[ii]);
     }
 
-    assert((char *)raw_memory + ocp_nlp_in_calculate_size(config, dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_in_calculate_size(config, dims) >= c_ptr);
 
     return in;
 }
@@ -422,12 +422,12 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
     // int *nu = dims->nu;
     int *ni = dims->ni;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // initial align
     align_char_to(8, &c_ptr);
 
-    ocp_nlp_out *out = (ocp_nlp_out *)c_ptr;
+    ocp_nlp_out *out = (ocp_nlp_out *) c_ptr;
     c_ptr += sizeof(ocp_nlp_out);
 
     // blasfeo_struct align
@@ -468,7 +468,7 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
         assign_and_advance_blasfeo_dvec_mem(2 * ni[ii], out->t + ii, &c_ptr);
     }
 
-    assert((char *)raw_memory + ocp_nlp_out_calculate_size(config, dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_out_calculate_size(config, dims) >= c_ptr);
 
     return out;
 }
@@ -514,7 +514,7 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *d
 ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
                                       void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // extract sizes
     int N = dims->N;
@@ -527,7 +527,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dim
     align_char_to(8, &c_ptr);
 
     // struct
-    ocp_nlp_memory *mem = (ocp_nlp_memory *)c_ptr;
+    ocp_nlp_memory *mem = (ocp_nlp_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_memory);
 
     // blasfeo_struct align
@@ -614,7 +614,7 @@ int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
 
 ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // extract sizes
     int N = dims->N;
@@ -627,7 +627,7 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
     align_char_to(8, &c_ptr);
 
     // struct
-    ocp_nlp_res *res = (ocp_nlp_res *)c_ptr;
+    ocp_nlp_res *res = (ocp_nlp_res *) c_ptr;
     c_ptr += sizeof(ocp_nlp_res);
 
     // blasfeo_struct align

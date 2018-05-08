@@ -42,35 +42,35 @@ void *sim_erk_dims_assign(void *config_, void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    sim_erk_dims *dims = (sim_erk_dims *)c_ptr;
+    sim_erk_dims *dims = (sim_erk_dims *) c_ptr;
     c_ptr += sizeof(sim_erk_dims);
 
-    assert((char *)raw_memory + sim_erk_dims_calculate_size() >= c_ptr);
+    assert((char *) raw_memory + sim_erk_dims_calculate_size() >= c_ptr);
 
     return dims;
 }
 
 void sim_erk_set_nx(void *dims_, int nx)
 {
-    sim_erk_dims *dims = (sim_erk_dims *)dims_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
     dims->nx = nx;
 }
 
 void sim_erk_set_nu(void *dims_, int nu)
 {
-    sim_erk_dims *dims = (sim_erk_dims *)dims_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
     dims->nu = nu;
 }
 
 void sim_erk_get_nx(void *dims_, int *nx)
 {
-    sim_erk_dims *dims = (sim_erk_dims *)dims_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
     *nx = dims->nx;
 }
 
 void sim_erk_get_nu(void *dims_, int *nu)
 {
-    sim_erk_dims *dims = (sim_erk_dims *)dims_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
     *nu = dims->nu;
 }
 
@@ -89,9 +89,9 @@ int sim_erk_model_calculate_size(void *config, void *dims)
 
 void *sim_erk_model_assign(void *config, void *dims, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    erk_model *model = (erk_model *)c_ptr;
+    erk_model *model = (erk_model *) c_ptr;
     c_ptr += sizeof(erk_model);
 
     return model;
@@ -104,19 +104,19 @@ int sim_erk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
     switch (fun_type)
     {
         case EXPL_ODE_FUN:
-            model->expl_ode_fun = (external_function_generic *)fun;
+            model->expl_ode_fun = (external_function_generic *) fun;
             break;
         case EXPL_ODE_JAC:
-            model->expl_ode_jac = (external_function_generic *)fun;
+            model->expl_ode_jac = (external_function_generic *) fun;
             break;
         case EXPL_ODE_HES:
-            model->expl_ode_hes = (external_function_generic *)fun;
+            model->expl_ode_hes = (external_function_generic *) fun;
             break;
         case EXPL_VDE_FOR:
-            model->expl_vde_for = (external_function_generic *)fun;
+            model->expl_vde_for = (external_function_generic *) fun;
             break;
         case EXPL_VDE_ADJ:
-            model->expl_vde_adj = (external_function_generic *)fun;
+            model->expl_vde_adj = (external_function_generic *) fun;
             break;
         default:
             return ACADOS_FAILURE;
@@ -148,9 +148,9 @@ void *sim_erk_opts_assign(void *config_, void *dims, void *raw_memory)
 {
     int ns_max = NS_MAX;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    sim_rk_opts *opts = (sim_rk_opts *)c_ptr;
+    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
     c_ptr += sizeof(sim_rk_opts);
 
     align_char_to(8, &c_ptr);
@@ -159,19 +159,19 @@ void *sim_erk_opts_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
     assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
-    assert((char *)raw_memory + sim_erk_opts_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + sim_erk_opts_calculate_size(config_, dims) >= c_ptr);
 
     opts->newton_iter = 0;
     opts->scheme = NULL;
     opts->jac_reuse = false;
 
-    return (void *)opts;
+    return (void *) opts;
 }
 
 void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     sim_rk_opts *opts = opts_;
-    sim_erk_dims *dims = (sim_erk_dims *)dims_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     opts->ns = 4;  // ERK 4
     int ns = opts->ns;
@@ -364,7 +364,7 @@ void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_mem
 int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     sim_rk_opts *opts = opts_;
-    sim_erk_dims *dims = (sim_erk_dims *)dims_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -413,7 +413,7 @@ int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
     sim_rk_opts *opts = opts_;
-    sim_erk_dims *dims = (sim_erk_dims *)dims_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -425,9 +425,9 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
     int nhess = (nf + 1) * nf / 2;
     int num_steps = opts->num_steps;  // number of steps
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    sim_erk_workspace *workspace = (sim_erk_workspace *)c_ptr;
+    sim_erk_workspace *workspace = (sim_erk_workspace *) c_ptr;
     c_ptr += sizeof(sim_erk_workspace);
 
     align_char_to(8, &c_ptr);
@@ -458,9 +458,9 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
         assign_and_advance_double(ns * (nx + nu), &workspace->adj_traj, &c_ptr);
     }
 
-    assert((char *)raw_memory + sim_erk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
+    assert((char *) raw_memory + sim_erk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
-    return (void *)workspace;
+    return (void *) workspace;
 }
 
 /************************************************
@@ -477,10 +477,10 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int ns = opts->ns;
 
     void *dims_ = in->dims;
-    sim_erk_dims *dims = (sim_erk_dims *)dims_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     sim_erk_workspace *workspace =
-        (sim_erk_workspace *)sim_erk_cast_workspace(config, dims, opts, work_);
+        (sim_erk_workspace *) sim_erk_cast_workspace(config, dims, opts, work_);
 
     int i, j, s, istep;
     double a = 0, b = 0;  // temp values of A_mat and b_vec

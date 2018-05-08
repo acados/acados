@@ -47,7 +47,7 @@ ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    ocp_nlp_constraints_config *config = (ocp_nlp_constraints_config *)c_ptr;
+    ocp_nlp_constraints_config *config = (ocp_nlp_constraints_config *) c_ptr;
     c_ptr += sizeof(ocp_nlp_constraints_config);
 
     return config;
@@ -66,12 +66,12 @@ int ocp_nlp_constraints_dims_calculate_size(void *config_)
 
 void *ocp_nlp_constraints_dims_assign(void *config_, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_constraints_dims *dims = (ocp_nlp_constraints_dims *)c_ptr;
+    ocp_nlp_constraints_dims *dims = (ocp_nlp_constraints_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_constraints_dims);
 
-    assert((char *)raw_memory + ocp_nlp_constraints_dims_calculate_size(config_) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_constraints_dims_calculate_size(config_) >= c_ptr);
 
     return dims;
 }
@@ -130,7 +130,7 @@ void *ocp_nlp_constraints_model_assign(void *config, void *dims_, void *raw_memo
 {
     ocp_nlp_constraints_dims *dims = dims_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // extract sizes
     int nx = dims->nx;
@@ -141,7 +141,7 @@ void *ocp_nlp_constraints_model_assign(void *config, void *dims_, void *raw_memo
     int ns = dims->ns;
 
     // struct
-    ocp_nlp_constraints_model *model = (ocp_nlp_constraints_model *)c_ptr;
+    ocp_nlp_constraints_model *model = (ocp_nlp_constraints_model *) c_ptr;
     c_ptr += sizeof(ocp_nlp_constraints_model);
 
     // dims
@@ -168,7 +168,7 @@ void *ocp_nlp_constraints_model_assign(void *config, void *dims_, void *raw_memo
     //  model->h = NULL;
 
     // assert
-    assert((char *)raw_memory + ocp_nlp_constraints_model_calculate_size(config, dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_constraints_model_calculate_size(config, dims) >= c_ptr);
 
     return model;
 }
@@ -186,12 +186,12 @@ int ocp_nlp_constraints_opts_calculate_size(void *config_, void *dims_)
 
 void *ocp_nlp_constraints_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_constraints_opts *opts = (ocp_nlp_constraints_opts *)c_ptr;
+    ocp_nlp_constraints_opts *opts = (ocp_nlp_constraints_opts *) c_ptr;
     c_ptr += sizeof(ocp_nlp_constraints_opts);
 
-    assert((char *)raw_memory + ocp_nlp_constraints_opts_calculate_size(config_, dims_) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_constraints_opts_calculate_size(config_, dims_) >= c_ptr);
 
     return opts;
 }
@@ -240,7 +240,7 @@ void *ocp_nlp_constraints_memory_assign(void *config_, void *dims_, void *opts_,
 {
     ocp_nlp_constraints_dims *dims = dims_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // extract dims
     int nx = dims->nx;
@@ -251,7 +251,7 @@ void *ocp_nlp_constraints_memory_assign(void *config_, void *dims_, void *opts_,
     int ns = dims->ns;
 
     // struct
-    ocp_nlp_constraints_memory *memory = (ocp_nlp_constraints_memory *)c_ptr;
+    ocp_nlp_constraints_memory *memory = (ocp_nlp_constraints_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_constraints_memory);
 
     // blasfeo_mem align
@@ -262,7 +262,7 @@ void *ocp_nlp_constraints_memory_assign(void *config_, void *dims_, void *opts_,
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->adj, &c_ptr);
 
-    assert((char *)raw_memory + ocp_nlp_constraints_memory_calculate_size(config_, dims, opts_) >=
+    assert((char *) raw_memory + ocp_nlp_constraints_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
 
     return memory;
@@ -366,7 +366,7 @@ static void ocp_nlp_constraints_cast_workspace(void *config_, void *dims_, void 
     int ns = dims->ns;
     int np = dims->np;
 
-    char *c_ptr = (char *)work_;
+    char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_constraints_workspace);
 
     // blasfeo_mem align
@@ -378,7 +378,7 @@ static void ocp_nlp_constraints_cast_workspace(void *config_, void *dims_, void 
     align_char_to(64, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx + nu, np, &work->jacobian_quadratic, &c_ptr);
 
-    assert((char *)work + ocp_nlp_constraints_workspace_calculate_size(config_, dims, opts_) >=
+    assert((char *) work + ocp_nlp_constraints_workspace_calculate_size(config_, dims, opts_) >=
            c_ptr);
 
     return;

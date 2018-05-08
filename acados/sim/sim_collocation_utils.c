@@ -39,7 +39,7 @@ static double lu_system_solve(double *A, double *b, int *perm, int dim, int dim_
 {
     char *c_ptr = work;
 
-    double *b_perm = (double *)c_ptr;
+    double *b_perm = (double *) c_ptr;
     c_ptr += dim * dim_rhs * sizeof(double);
 
     double det;
@@ -173,19 +173,19 @@ void gauss_nodes(int ns, double *nodes, void *work)
     char *c_ptr = work;
 
     // x_init
-    double *x_init = (double *)c_ptr;
+    double *x_init = (double *) c_ptr;
     c_ptr += N1 * sizeof(double);
     // y
-    double *y = (double *)c_ptr;
+    double *y = (double *) c_ptr;
     c_ptr += N1 * sizeof(double);
     // y_prev
-    double *y_prev = (double *)c_ptr;
+    double *y_prev = (double *) c_ptr;
     c_ptr += N1 * sizeof(double);
     // lgvm // Legendre-Gauss Vandermonde Matrix
-    double *lgvm = (double *)c_ptr;
+    double *lgvm = (double *) c_ptr;
     c_ptr += N1 * N2 * sizeof(double);
     // der_lgvm // derivative of LGVM
-    double *der_lgvm = (double *)c_ptr;
+    double *der_lgvm = (double *) c_ptr;
     c_ptr += N1 * sizeof(double);
 
     // TODO(all): assert !!!
@@ -253,19 +253,19 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
     char *c_ptr = work;
 
     // D
-    double *D = (double *)c_ptr;
+    double *D = (double *) c_ptr;
     c_ptr += 2 * ns * sizeof(double);
     // T
-    double *T = (double *)c_ptr;
+    double *T = (double *) c_ptr;
     c_ptr += ns * ns * sizeof(double);
     // T_inv
-    double *T_inv = (double *)c_ptr;
+    double *T_inv = (double *) c_ptr;
     c_ptr += ns * ns * sizeof(double);
     // lu_work
-    double *lu_work = (double *)c_ptr;
+    double *lu_work = (double *) c_ptr;
     c_ptr += ns * ns * sizeof(double);
     // perm
-    int *perm = (int *)c_ptr;
+    int *perm = (int *) c_ptr;
     c_ptr += ns * sizeof(int);
 
     // TODO(all): assert !!!
@@ -379,16 +379,16 @@ void butcher_table(int ns, double *nodes, double *b, double *A, void *work)
     char *c_ptr = work;
 
     // can_vm
-    double *can_vm = (double *)c_ptr;
+    double *can_vm = (double *) c_ptr;
     c_ptr += ns * ns * sizeof(double);
     // rhs
-    double *rhs = (double *)c_ptr;
+    double *rhs = (double *) c_ptr;
     c_ptr += ns * ns * sizeof(double);
     // lu_work
-    double *lu_work = (double *)c_ptr;
+    double *lu_work = (double *) c_ptr;
     c_ptr += ns * ns * sizeof(double);
     // perm
-    int *perm = (int *)c_ptr;
+    int *perm = (int *) c_ptr;
     c_ptr += ns * sizeof(int);
 
     // TODO(all): assert !!!

@@ -123,19 +123,19 @@ void *ocp_qp_qpdunes_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_mem
 {
     ocp_qp_qpdunes_opts *opts;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    opts = (ocp_qp_qpdunes_opts *)c_ptr;
+    opts = (ocp_qp_qpdunes_opts *) c_ptr;
     c_ptr += sizeof(ocp_qp_qpdunes_opts);
 
-    assert((char *)raw_memory + ocp_qp_qpdunes_opts_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_qp_qpdunes_opts_calculate_size(config_, dims) >= c_ptr);
 
-    return (void *)opts;
+    return (void *) opts;
 }
 
 void ocp_qp_qpdunes_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_)
 {
-    ocp_qp_qpdunes_opts *opts = (ocp_qp_qpdunes_opts *)opts_;
+    ocp_qp_qpdunes_opts *opts = (ocp_qp_qpdunes_opts *) opts_;
 
     // TODO(dimitris): this should be type for all QP solvers and be passed in init. default opts
     qpdunes_options_t qpdunes_opts = QPDUNES_ACADO_SETTINGS;
@@ -206,13 +206,13 @@ int ocp_qp_qpdunes_memory_calculate_size(void *config_, ocp_qp_dims *dims, void 
 
 void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory)
 {
-    ocp_qp_qpdunes_opts *opts = (ocp_qp_qpdunes_opts *)opts_;
+    ocp_qp_qpdunes_opts *opts = (ocp_qp_qpdunes_opts *) opts_;
     ocp_qp_qpdunes_memory *mem;
 
     // char pointer
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    mem = (ocp_qp_qpdunes_memory *)c_ptr;
+    mem = (ocp_qp_qpdunes_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_qpdunes_memory);
 
     // initialize memory
@@ -251,7 +251,7 @@ void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_
                 printf("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
             }
         }
-        if (mem->nDmax > 0) nD_ptr = (uint *)dims->ng;  // otherwise leave pointer equal to zero
+        if (mem->nDmax > 0) nD_ptr = (uint *) dims->ng;  // otherwise leave pointer equal to zero
     }
 
     // qpDUNES memory allocation
@@ -411,7 +411,7 @@ int ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, vo
 
 static void cast_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory *mem)
 {
-    char *c_ptr = (char *)work;
+    char *c_ptr = (char *) work;
     c_ptr += sizeof(ocp_qp_qpdunes_workspace);
 
     int nx = mem->nx;
@@ -511,7 +511,7 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
             if (value != QPDUNES_OK)
             {
                 printf("Setup of qpDUNES failed on interval %d\n", kk);
-                return (int)value;
+                return (int) value;
             }
         }
         form_bounds(work->zLow, work->zUpp, nx, 0, nb[N], ng[N], in->idxb[N], &in->d[N],
@@ -534,7 +534,7 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
         if (value != QPDUNES_OK)
         {
             printf("Setup of qpDUNES failed on last interval\n");
-            return (int)value;
+            return (int) value;
         }
 
         // setup of stage QPs
@@ -542,7 +542,7 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
         if (value != QPDUNES_OK)
         {
             printf("Setup of qpDUNES failed on initialization of stage QPs\n");
-            return (int)value;
+            return (int) value;
         }
     }
     else
@@ -574,7 +574,7 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
                 if (value != QPDUNES_OK)
                 {
                     printf("Update of qpDUNES failed on interval %d\n", kk);
-                    return (int)value;
+                    return (int) value;
                 }
                 // qpDUNES_printMatrixData( work->ABt, nx, nx+nu, "AB[%d]", kk);
             }
@@ -599,7 +599,7 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
             if (value != QPDUNES_OK)
             {
                 printf("Update of qpDUNES failed on last interval\n");
-                return (int)value;
+                return (int) value;
             }
         }
         else
@@ -611,12 +611,12 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
             if (value != QPDUNES_OK)
             {
                 printf("Update of qpDUNES failed on first interval\n");
-                return (int)value;
+                return (int) value;
             }
         }
     }
     mem->firstRun = 0;
-    return (int)value;
+    return (int) value;
 }
 
 static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem)
@@ -673,7 +673,7 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory
 // TODO(dimitris): free also qp_in, qp_out, etc and write for all solvers?
 void ocp_qp_qpdunes_free_memory(void *mem_)
 {
-    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *)mem_;
+    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
     qpDUNES_cleanup(&(mem->qpData));
 }
 
@@ -697,13 +697,13 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     }
 
     acados_timer tot_timer, qp_timer, interface_timer;
-    ocp_qp_info *info = (ocp_qp_info *)out->misc;
+    ocp_qp_info *info = (ocp_qp_info *) out->misc;
     acados_tic(&tot_timer);
 
     // cast data structures
-    ocp_qp_qpdunes_opts *opts = (ocp_qp_qpdunes_opts *)opts_;
-    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *)mem_;
-    ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *)work_;
+    ocp_qp_qpdunes_opts *opts = (ocp_qp_qpdunes_opts *) opts_;
+    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
+    ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *) work_;
 
     acados_tic(&interface_timer);
     cast_workspace(work, mem);
@@ -733,14 +733,14 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
     qp_solver_config *config = config_;
 
     config->opts_calculate_size = (int (*)(void *, void *)) & ocp_qp_qpdunes_opts_calculate_size;
-    config->opts_assign = (void *(*)(void *, void *, void *)) & ocp_qp_qpdunes_opts_assign;
+    config->opts_assign = (void *(*) (void *, void *, void *) ) & ocp_qp_qpdunes_opts_assign;
     config->opts_initialize_default =
         (void (*)(void *, void *, void *)) & ocp_qp_qpdunes_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & ocp_qp_qpdunes_opts_update;
     config->memory_calculate_size =
         (int (*)(void *, void *, void *)) & ocp_qp_qpdunes_memory_calculate_size;
     config->memory_assign =
-        (void *(*)(void *, void *, void *, void *)) & ocp_qp_qpdunes_memory_assign;
+        (void *(*) (void *, void *, void *, void *) ) & ocp_qp_qpdunes_memory_assign;
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & ocp_qp_qpdunes_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_qpdunes;

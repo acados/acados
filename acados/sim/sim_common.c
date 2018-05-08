@@ -44,10 +44,10 @@ sim_solver_config *sim_solver_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    sim_solver_config *config = (sim_solver_config *)c_ptr;
+    sim_solver_config *config = (sim_solver_config *) c_ptr;
     c_ptr += sizeof(sim_solver_config);
 
-    assert((char *)raw_memory + sim_solver_config_calculate_size() >= c_ptr);
+    assert((char *) raw_memory + sim_solver_config_calculate_size() >= c_ptr);
 
     return config;
 }
@@ -83,9 +83,9 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 {
     sim_solver_config *config = config_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    sim_in *in = (sim_in *)c_ptr;
+    sim_in *in = (sim_in *) c_ptr;
     c_ptr += sizeof(sim_in);
 
     in->dims = dims;
@@ -106,7 +106,7 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
     in->model = config->model_assign(config, dims, c_ptr);
     c_ptr += config->model_calculate_size(config, dims);
 
-    assert((char *)raw_memory + sim_in_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + sim_in_calculate_size(config_, dims) >= c_ptr);
 
     return in;
 }
@@ -144,7 +144,7 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 {
     sim_solver_config *config = config_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     int nx, nu;
     config->get_nx(dims, &nx);
@@ -152,10 +152,10 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 
     int NF = nx + nu;
 
-    sim_out *out = (sim_out *)c_ptr;
+    sim_out *out = (sim_out *) c_ptr;
     c_ptr += sizeof(sim_out);
 
-    out->info = (sim_info *)c_ptr;
+    out->info = (sim_info *) c_ptr;
     c_ptr += sizeof(sim_info);
 
     align_char_to(8, &c_ptr);
@@ -166,7 +166,7 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double((NF + 1) * NF / 2, &out->S_hess, &c_ptr);
     assign_and_advance_double(NF, &out->grad, &c_ptr);
 
-    assert((char *)raw_memory + sim_out_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + sim_out_calculate_size(config_, dims) >= c_ptr);
 
     return out;
 }

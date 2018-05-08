@@ -46,19 +46,19 @@ void *dense_qp_qore_opts_assign(void *config_, dense_qp_dims *dims, void *raw_me
 {
     dense_qp_qore_opts *opts;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    opts = (dense_qp_qore_opts *)c_ptr;
+    opts = (dense_qp_qore_opts *) c_ptr;
     c_ptr += sizeof(dense_qp_qore_opts);
 
-    assert((char *)raw_memory + dense_qp_qore_opts_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + dense_qp_qore_opts_calculate_size(config_, dims) >= c_ptr);
 
-    return (void *)opts;
+    return (void *) opts;
 }
 
 void dense_qp_qore_opts_initialize_default(void *config_, dense_qp_dims *dims, void *opts_)
 {
-    dense_qp_qore_opts *opts = (dense_qp_qore_opts *)opts_;
+    dense_qp_qore_opts *opts = (dense_qp_qore_opts *) opts_;
 
     opts->print_freq = -1;
     opts->warm_start = 0;
@@ -83,7 +83,7 @@ void dense_qp_qore_opts_update(void *config_, dense_qp_dims *dims, void *opts_)
 
 int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
-    dense_qp_qore_opts *opts = (dense_qp_qore_opts *)opts_;
+    dense_qp_qore_opts *opts = (dense_qp_qore_opts *) opts_;
 
     int nvd = dims->nv;
     int ned = dims->ne;
@@ -115,7 +115,7 @@ int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void
 void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts_, void *raw_memory)
 {
     dense_qp_qore_memory *mem;
-    dense_qp_qore_opts *opts = (dense_qp_qore_opts *)opts_;
+    dense_qp_qore_opts *opts = (dense_qp_qore_opts *) opts_;
 
     int nvd = dims->nv;
     int ned = dims->ne;
@@ -124,12 +124,12 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     int nsmax = (2 * nvd >= opts->nsmax) ? opts->nsmax : 2 * nvd;
 
     // char pointer
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    mem = (dense_qp_qore_memory *)c_ptr;
+    mem = (dense_qp_qore_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qore_memory);
 
-    assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
+    assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     assign_and_advance_double(nvd * nvd, &mem->H, &c_ptr);
     assign_and_advance_double(nvd * ned, &mem->A, &c_ptr);
@@ -148,16 +148,17 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     assign_and_advance_double(nvd + ngd, &mem->prim_sol, &c_ptr);
     assign_and_advance_double(nvd + ngd, &mem->dual_sol, &c_ptr);
 
-    assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
+    assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    mem->QP = (QoreProblemDense *)c_ptr;
+    mem->QP = (QoreProblemDense *) c_ptr;
     QPDenseCreate(&mem->QP, nvd, ngd, nsmax, c_ptr);
     c_ptr += QPDenseSize(nvd, ngd, nsmax);
 
     // int stuff
     assign_and_advance_int(nbd, &mem->idxb, &c_ptr);
 
-    assert((char *)raw_memory + dense_qp_qore_memory_calculate_size(config_, dims, opts_) >= c_ptr);
+    assert((char *) raw_memory + dense_qp_qore_memory_calculate_size(config_, dims, opts_) >=
+           c_ptr);
 
     return mem;
 }
@@ -178,14 +179,14 @@ int dense_qp_qore_workspace_calculate_size(void *config_, dense_qp_dims *dims, v
 int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
                   void *memory_, void *work_)
 {
-    dense_qp_info *info = (dense_qp_info *)qp_out->misc;
+    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
 
     acados_tic(&tot_timer);
 
     // cast structures
-    dense_qp_qore_opts *opts = (dense_qp_qore_opts *)opts_;
-    dense_qp_qore_memory *memory = (dense_qp_qore_memory *)memory_;
+    dense_qp_qore_opts *opts = (dense_qp_qore_opts *) opts_;
+    dense_qp_qore_memory *memory = (dense_qp_qore_memory *) memory_;
 
     // extract qpoases data
     double *H = memory->H;
@@ -318,14 +319,14 @@ void dense_qp_qore_config_initialize_default(void *config_)
     qp_solver_config *config = config_;
 
     config->opts_calculate_size = (int (*)(void *, void *)) & dense_qp_qore_opts_calculate_size;
-    config->opts_assign = (void *(*)(void *, void *, void *)) & dense_qp_qore_opts_assign;
+    config->opts_assign = (void *(*) (void *, void *, void *) ) & dense_qp_qore_opts_assign;
     config->opts_initialize_default =
         (void (*)(void *, void *, void *)) & dense_qp_qore_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & dense_qp_qore_opts_update;
     config->memory_calculate_size =
         (int (*)(void *, void *, void *)) & dense_qp_qore_memory_calculate_size;
     config->memory_assign =
-        (void *(*)(void *, void *, void *, void *)) & dense_qp_qore_memory_assign;
+        (void *(*) (void *, void *, void *, void *) ) & dense_qp_qore_memory_assign;
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & dense_qp_qore_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_qore;

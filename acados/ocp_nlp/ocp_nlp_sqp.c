@@ -70,7 +70,7 @@
 
 int ocp_nlp_sqp_opts_calculate_size(void *config_, ocp_nlp_dims *dims)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
@@ -111,7 +111,7 @@ int ocp_nlp_sqp_opts_calculate_size(void *config_, ocp_nlp_dims *dims)
 
 void *ocp_nlp_sqp_opts_assign(void *config_, ocp_nlp_dims *dims, void *raw_memory)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
@@ -120,16 +120,16 @@ void *ocp_nlp_sqp_opts_assign(void *config_, ocp_nlp_dims *dims, void *raw_memor
 
     int N = dims->N;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *)c_ptr;
+    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) c_ptr;
     c_ptr += sizeof(ocp_nlp_sqp_opts);
 
     opts->qp_solver_opts = qp_solver->opts_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
 
     // dynamics
-    opts->dynamics = (void **)c_ptr;
+    opts->dynamics = (void **) c_ptr;
     c_ptr += N * sizeof(void *);
     for (int ii = 0; ii < N; ii++)
     {
@@ -138,7 +138,7 @@ void *ocp_nlp_sqp_opts_assign(void *config_, ocp_nlp_dims *dims, void *raw_memor
     }
 
     // cost
-    opts->cost = (void **)c_ptr;
+    opts->cost = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
     for (int ii = 0; ii <= N; ii++)
     {
@@ -147,7 +147,7 @@ void *ocp_nlp_sqp_opts_assign(void *config_, ocp_nlp_dims *dims, void *raw_memor
     }
 
     // constraints
-    opts->constraints = (void **)c_ptr;
+    opts->constraints = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
     for (int ii = 0; ii <= N; ii++)
     {
@@ -156,15 +156,15 @@ void *ocp_nlp_sqp_opts_assign(void *config_, ocp_nlp_dims *dims, void *raw_memor
         c_ptr += constraints[ii]->opts_calculate_size(constraints[ii], dims->constraints[ii]);
     }
 
-    assert((char *)raw_memory + ocp_nlp_sqp_opts_calculate_size(config, dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_sqp_opts_calculate_size(config, dims) >= c_ptr);
 
     return opts;
 }
 
 void ocp_nlp_sqp_opts_initialize_default(void *config_, ocp_nlp_dims *dims, void *opts_)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
-    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *)opts_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
+    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
@@ -207,8 +207,8 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, ocp_nlp_dims *dims, void
 
 void ocp_nlp_sqp_opts_update(void *config_, ocp_nlp_dims *dims, void *opts_)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
-    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *)opts_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
+    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
@@ -248,8 +248,8 @@ void ocp_nlp_sqp_opts_update(void *config_, ocp_nlp_dims *dims, void *opts_)
 
 int ocp_nlp_sqp_memory_calculate_size(void *config_, ocp_nlp_dims *dims, void *opts_)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
-    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *)opts_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
+    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
@@ -305,15 +305,15 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, ocp_nlp_dims *dims, void *o
 
 void *ocp_nlp_sqp_memory_assign(void *config_, ocp_nlp_dims *dims, void *opts_, void *raw_memory)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
-    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *)opts_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
+    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // extract dims
     int N = dims->N;
@@ -323,7 +323,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, ocp_nlp_dims *dims, void *opts_, 
     // initial align
     align_char_to(8, &c_ptr);
 
-    ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *)c_ptr;
+    ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_sqp_memory);
 
     // QP solver
@@ -340,7 +340,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, ocp_nlp_dims *dims, void *opts_, 
     c_ptr += ocp_nlp_memory_calculate_size(config, dims);
 
     // dynamics
-    mem->dynamics = (void **)c_ptr;
+    mem->dynamics = (void **) c_ptr;
     c_ptr += N * sizeof(void *);
     for (int ii = 0; ii < N; ii++)
     {
@@ -351,7 +351,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, ocp_nlp_dims *dims, void *opts_, 
     }
 
     // cost
-    mem->cost = (void **)c_ptr;
+    mem->cost = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
     for (int ii = 0; ii <= N; ii++)
     {
@@ -360,7 +360,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, ocp_nlp_dims *dims, void *opts_, 
     }
 
     // constraints
-    mem->constraints = (void **)c_ptr;
+    mem->constraints = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
     for (int ii = 0; ii <= N; ii++)
     {
@@ -370,7 +370,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, ocp_nlp_dims *dims, void *opts_, 
                                                         opts->constraints[ii]);
     }
 
-    assert((char *)raw_memory + ocp_nlp_sqp_memory_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_sqp_memory_calculate_size(config, dims, opts) >= c_ptr);
 
     return mem;
 }
@@ -381,8 +381,8 @@ void *ocp_nlp_sqp_memory_assign(void *config_, ocp_nlp_dims *dims, void *opts_, 
 
 int ocp_nlp_sqp_workspace_calculate_size(void *config_, ocp_nlp_dims *dims, void *opts_)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
-    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *)opts_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
+    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
@@ -439,14 +439,14 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, ocp_nlp_dims *dims, void
 static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nlp_sqp_work *work,
                                        ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
 
-    char *c_ptr = (char *)work;
+    char *c_ptr = (char *) work;
     c_ptr += sizeof(ocp_nlp_sqp_work);
 
     // extract dims
@@ -461,11 +461,11 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
     c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
 
     // qp solver
-    work->qp_work = (void *)c_ptr;
+    work->qp_work = (void *) c_ptr;
     c_ptr += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
     // dynamics
-    work->dynamics = (void **)c_ptr;
+    work->dynamics = (void **) c_ptr;
     c_ptr += N * sizeof(void *);
     for (int ii = 0; ii < N; ii++)
     {
@@ -475,7 +475,7 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
     }
 
     // cost
-    work->cost = (void **)c_ptr;
+    work->cost = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
     for (int ii = 0; ii <= N; ii++)
     {
@@ -484,7 +484,7 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
     }
 
     // constraints
-    work->constraints = (void **)c_ptr;
+    work->constraints = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
     for (int ii = 0; ii <= N; ii++)
     {
@@ -494,7 +494,7 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
     }
 
     // assert & return
-    assert((char *)work + ocp_nlp_sqp_workspace_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char *) work + ocp_nlp_sqp_workspace_calculate_size(config, dims, opts) >= c_ptr);
 
     return;
 }
@@ -507,7 +507,7 @@ static void initialize_qp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
                           ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem,
                           ocp_nlp_sqp_work *work)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
     // loop index
     int ii;
@@ -545,7 +545,7 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
                                          ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts,
                                          ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
     // loop index
     int i;
@@ -746,12 +746,12 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
 int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                 void *opts_, void *mem_, void *work_)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
-    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *)opts_;
-    ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *)mem_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
+    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
+    ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *) mem_;
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-    ocp_nlp_sqp_work *work = (ocp_nlp_sqp_work *)work_;
+    ocp_nlp_sqp_work *work = (ocp_nlp_sqp_work *) work_;
 
     ocp_nlp_sqp_cast_workspace(config, dims, work, mem, opts);
 
@@ -903,7 +903,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
 void ocp_nlp_sqp_config_initialize_default(void *config_)
 {
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *)config_;
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
     config->opts_calculate_size = &ocp_nlp_sqp_opts_calculate_size;
     config->opts_assign = &ocp_nlp_sqp_opts_assign;

@@ -56,19 +56,19 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out, sim_info* info, sim
     sim_in->jacobian_wrapper = &jac_fun;
     sim_in->jac = &jac_pendulum;
 
-    sim_in->x = (real_t*)malloc(sizeof(*sim_in->x) * (NX));
-    sim_in->u = (real_t*)malloc(sizeof(*sim_in->u) * (NU));
-    sim_in->S_forw = (real_t*)malloc(sizeof(*sim_in->S_forw) * (NX * (NX + NU)));
-    sim_in->S_adj = (real_t*)malloc(sizeof(*sim_in->S_adj) * (NX + NU));
+    sim_in->x = (real_t*) malloc(sizeof(*sim_in->x) * (NX));
+    sim_in->u = (real_t*) malloc(sizeof(*sim_in->u) * (NU));
+    sim_in->S_forw = (real_t*) malloc(sizeof(*sim_in->S_forw) * (NX * (NX + NU)));
+    sim_in->S_adj = (real_t*) malloc(sizeof(*sim_in->S_adj) * (NX + NU));
     for (int_t i = 0; i < NX * (NX + NU); i++) sim_in->S_forw[i] = 0.0;
     for (int_t i = 0; i < NX; i++) sim_in->S_forw[i * (NX + 1)] = 1.0;
 
-    sim_out->xn = (real_t*)malloc(sizeof(*sim_out->xn) * (NX));
-    sim_out->S_forw = (real_t*)malloc(sizeof(*sim_out->S_forw) * (NX * (NX + NU)));
-    sim_out->S_adj = (real_t*)malloc(sizeof(*sim_out->S_adj) * (NX + NU));
+    sim_out->xn = (real_t*) malloc(sizeof(*sim_out->xn) * (NX));
+    sim_out->S_forw = (real_t*) malloc(sizeof(*sim_out->S_forw) * (NX * (NX + NU)));
+    sim_out->S_adj = (real_t*) malloc(sizeof(*sim_out->S_adj) * (NX + NU));
     if (hessian)
     {
-        sim_out->S_hess = (real_t*)malloc(sizeof(*sim_out->S_hess) * (nhess));
+        sim_out->S_hess = (real_t*) malloc(sizeof(*sim_out->S_hess) * (nhess));
     }
     sim_out->info = info;
 

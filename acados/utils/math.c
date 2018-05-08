@@ -408,7 +408,7 @@ double twonormv(int n, double *ptrv)
     double temp;
     temp = 0;
     for (int i = 0; i < n; i++) temp += ptrv[i] * ptrv[i];
-    return (double)sqrt(temp);
+    return (double) sqrt(temp);
 }
 
 /* computes the Pade approximation of degree m of the matrix A */
@@ -706,7 +706,7 @@ void padeapprox(int m, int row, double *A)
     dmcopy(row, row, V, row, D, row);
     //    daxpy_(&row2, &dm1, U, &i1, D, &i1);
     daxpy_3l(row2, -1.0, U, D);
-    int *ipiv = (int *)calloc(row, sizeof(int));
+    int *ipiv = (int *) calloc(row, sizeof(int));
     int info = 0;
     //    dgesv_(&row, &row, D, &row, ipiv, A, &row, &info);
     dgesv_3l(row, row, D, row, ipiv, A, row, &info);
@@ -1053,7 +1053,7 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e)
 
 static void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d)
 {
-    real_t *e = (real_t *)calloc(dim, sizeof(real_t));
+    real_t *e = (real_t *) calloc(dim, sizeof(real_t));
     for (int_t i = 0; i < dim; i++)
         for (int_t j = 0; j < dim; j++) V[i * dim + j] = A[i * dim + j];
     tred2(dim, V, d, e);
@@ -1089,8 +1089,8 @@ reconstruct_A(A, V, d);
 /* mirroring regularization */
 void regularize(int_t dim, real_t *A)
 {
-    real_t *V = (real_t *)calloc(dim * dim, sizeof(real_t));
-    real_t *d = (real_t *)calloc(dim, sizeof(real_t));
+    real_t *V = (real_t *) calloc(dim * dim, sizeof(real_t));
+    real_t *d = (real_t *) calloc(dim, sizeof(real_t));
 
     eigen_decomposition(dim, A, V, d);
 

@@ -222,7 +222,7 @@ void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> optio
 
     map<string, option_t *> solver_options;
     auto nested_options = std::unique_ptr<option<map<string, option_t *>>>(
-                                         new option<map<string, option_t *>>(options));
+        new option<map<string, option_t *>>(options));
     solver_options[solver_name] = nested_options.get();
 
     auto flattened_options = map<string, option_t *>();

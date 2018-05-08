@@ -43,12 +43,12 @@ int ocp_nlp_cost_external_dims_calculate_size(void *config_)
 
 void *ocp_nlp_cost_external_dims_assign(void *config_, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_cost_external_dims *dims = (ocp_nlp_cost_external_dims *)c_ptr;
+    ocp_nlp_cost_external_dims *dims = (ocp_nlp_cost_external_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_cost_external_dims);
 
-    assert((char *)raw_memory + ocp_nlp_cost_external_dims_calculate_size(config_) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_cost_external_dims_calculate_size(config_) >= c_ptr);
 
     return dims;
 }
@@ -94,7 +94,7 @@ void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_m
 {
     ocp_nlp_cost_external_dims *dims = dims_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // int nx = dims->nx;
     // int nu = dims->nu;
@@ -102,7 +102,7 @@ void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_m
     int ns = dims->ns;
 
     // struct
-    ocp_nlp_cost_external_model *model = (ocp_nlp_cost_external_model *)c_ptr;
+    ocp_nlp_cost_external_model *model = (ocp_nlp_cost_external_model *) c_ptr;
     c_ptr += sizeof(ocp_nlp_cost_external_model);
 
     // blasfeo_mem align
@@ -115,7 +115,7 @@ void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_m
     assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->z, &c_ptr);
 
     // assert
-    assert((char *)raw_memory + ocp_nlp_cost_external_model_calculate_size(config_, dims_) >=
+    assert((char *) raw_memory + ocp_nlp_cost_external_model_calculate_size(config_, dims_) >=
            c_ptr);
 
     return model;
@@ -140,12 +140,13 @@ void *ocp_nlp_cost_external_opts_assign(void *config_, void *dims_, void *raw_me
 {
     // ocp_nlp_cost_config *config = config_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_cost_external_opts *opts = (ocp_nlp_cost_external_opts *)c_ptr;
+    ocp_nlp_cost_external_opts *opts = (ocp_nlp_cost_external_opts *) c_ptr;
     c_ptr += sizeof(ocp_nlp_cost_external_opts);
 
-    assert((char *)raw_memory + ocp_nlp_cost_external_opts_calculate_size(config_, dims_) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_cost_external_opts_calculate_size(config_, dims_) >=
+           c_ptr);
 
     return opts;
 }
@@ -203,7 +204,7 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
     ocp_nlp_cost_external_dims *dims = dims_;
     // ocp_nlp_cost_external_opts *opts = opts_;
 
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
     // extract dims
     int nx = dims->nx;
@@ -212,7 +213,7 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
     int ns = dims->ns;
 
     // struct
-    ocp_nlp_cost_external_memory *memory = (ocp_nlp_cost_external_memory *)c_ptr;
+    ocp_nlp_cost_external_memory *memory = (ocp_nlp_cost_external_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_cost_external_memory);
 
     // blasfeo_mem align
@@ -221,7 +222,8 @@ void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts
     // grad
     assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->grad, &c_ptr);
 
-    assert((char *)raw_memory + ocp_nlp_cost_external_memory_calculate_size(config_, dims, opts_) >=
+    assert((char *) raw_memory +
+               ocp_nlp_cost_external_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
 
     return memory;
@@ -297,7 +299,7 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
     int nx = dims->nx;
     int nu = dims->nu;
 
-    char *c_ptr = (char *)work_;
+    char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_cost_external_workspace);
 
     align_char_to(8, &c_ptr);
@@ -307,7 +309,7 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
     // external_jac_out
     assign_and_advance_double((nu + nx) + (nu + nx) * (nu + nx), &work->ext_cost_out, &c_ptr);
 
-    assert((char *)work + ocp_nlp_cost_external_workspace_calculate_size(config_, dims, opts_) >=
+    assert((char *) work + ocp_nlp_cost_external_workspace_calculate_size(config_, dims, opts_) >=
            c_ptr);
 
     return;

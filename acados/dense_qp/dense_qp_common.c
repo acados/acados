@@ -51,7 +51,7 @@ qp_solver_config *dense_qp_solver_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    qp_solver_config *config = (qp_solver_config *)c_ptr;
+    qp_solver_config *config = (qp_solver_config *) c_ptr;
     c_ptr += sizeof(qp_solver_config);
 
     return config;
@@ -72,15 +72,15 @@ int dense_qp_dims_calculate_size()
 
 dense_qp_dims *dense_qp_dims_assign(void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    dense_qp_dims *dims = (dense_qp_dims *)c_ptr;
+    dense_qp_dims *dims = (dense_qp_dims *) c_ptr;
     c_ptr += sizeof(dense_qp_dims);
 
     d_create_dense_qp_dim(dims, c_ptr);
     c_ptr += d_memsize_dense_qp_dim();
 
-    assert((char *)raw_memory + dense_qp_dims_calculate_size() == c_ptr);
+    assert((char *) raw_memory + dense_qp_dims_calculate_size() == c_ptr);
 
     return dims;
 }
@@ -99,17 +99,17 @@ int dense_qp_in_calculate_size(void *config, dense_qp_dims *dims)
 
 dense_qp_in *dense_qp_in_assign(void *config, dense_qp_dims *dims, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    dense_qp_in *qp_in = (dense_qp_in *)c_ptr;
+    dense_qp_in *qp_in = (dense_qp_in *) c_ptr;
     c_ptr += sizeof(dense_qp_in);
 
-    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     d_create_dense_qp(dims, qp_in, c_ptr);
     c_ptr += d_memsize_dense_qp(dims);
 
-    qp_in->dim = (dense_qp_dims *)c_ptr;
+    qp_in->dim = (dense_qp_dims *) c_ptr;
     c_ptr += sizeof(dense_qp_dims);
 
     qp_in->dim->nv = dims->nv;
@@ -118,7 +118,7 @@ dense_qp_in *dense_qp_in_assign(void *config, dense_qp_dims *dims, void *raw_mem
     qp_in->dim->ng = dims->ng;
     qp_in->dim->ns = dims->ns;
 
-    assert((char *)raw_memory + dense_qp_in_calculate_size(config, dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_in_calculate_size(config, dims) == c_ptr);
 
     return qp_in;
 }
@@ -137,20 +137,20 @@ int dense_qp_out_calculate_size(void *config, dense_qp_dims *dims)
 
 dense_qp_out *dense_qp_out_assign(void *config, dense_qp_dims *dims, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    dense_qp_out *qp_out = (dense_qp_out *)c_ptr;
+    dense_qp_out *qp_out = (dense_qp_out *) c_ptr;
     c_ptr += sizeof(dense_qp_out);
 
-    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     d_create_dense_qp_sol(dims, qp_out, c_ptr);
     c_ptr += d_memsize_dense_qp_sol(dims);
 
-    qp_out->misc = (void *)c_ptr;
+    qp_out->misc = (void *) c_ptr;
     c_ptr += sizeof(dense_qp_info);
 
-    assert((char *)raw_memory + dense_qp_out_calculate_size(config, dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_out_calculate_size(config, dims) == c_ptr);
 
     return qp_out;
 }
@@ -168,15 +168,15 @@ int dense_qp_res_calculate_size(dense_qp_dims *dims)
 
 dense_qp_res *dense_qp_res_assign(dense_qp_dims *dims, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    dense_qp_res *qp_res = (dense_qp_res *)c_ptr;
+    dense_qp_res *qp_res = (dense_qp_res *) c_ptr;
     c_ptr += sizeof(dense_qp_res);
 
     d_create_dense_qp_res(dims, qp_res, c_ptr);
     c_ptr += d_memsize_dense_qp_res(dims);
 
-    assert((char *)raw_memory + dense_qp_res_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_res_calculate_size(dims) == c_ptr);
 
     return qp_res;
 }
@@ -190,15 +190,15 @@ int dense_qp_res_workspace_calculate_size(dense_qp_dims *dims)
 
 dense_qp_res_ws *dense_qp_res_workspace_assign(dense_qp_dims *dims, void *raw_memory)
 {
-    char *c_ptr = (char *)raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    dense_qp_res_ws *res_ws = (dense_qp_res_ws *)c_ptr;
+    dense_qp_res_ws *res_ws = (dense_qp_res_ws *) c_ptr;
     c_ptr += sizeof(dense_qp_res_ws);
 
     d_create_dense_qp_res_workspace(dims, res_ws, c_ptr);
     c_ptr += d_memsize_dense_qp_res_workspace(dims);
 
-    assert((char *)raw_memory + dense_qp_res_workspace_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_res_workspace_calculate_size(dims) == c_ptr);
 
     return res_ws;
 }

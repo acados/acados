@@ -46,7 +46,7 @@ ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    ocp_nlp_cost_config *config = (ocp_nlp_cost_config *)c_ptr;
+    ocp_nlp_cost_config *config = (ocp_nlp_cost_config *) c_ptr;
     c_ptr += sizeof(ocp_nlp_cost_config);
 
     return config;
