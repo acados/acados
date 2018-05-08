@@ -32,6 +32,8 @@ install:
   - pushd external
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
       source download_encrypted_files.sh;
+    else
+      export SWIG_MATLAB=OFF
     fi'
   - popd
   - travis_retry source .travis_install.sh

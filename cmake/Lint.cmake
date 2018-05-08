@@ -1,8 +1,8 @@
 # Linter
 find_package(PythonInterp 3)
 
-if(NOT PYTHONINTERP_FOUND)
-    message(STATUS "Python not found: disabling lint")
+if(NOT PYTHONINTERP_FOUND OR CMAKE_SYSTEM_NAME MATCHES "Windows")
+    message(STATUS "Disabling lint")
     return()
 endif()
 
