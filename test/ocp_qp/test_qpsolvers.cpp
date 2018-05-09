@@ -180,35 +180,38 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
             for (int ii = 0; ii < N2_length; ii++)
             {
-                set_N2(solver, opts, N2_values[ii], N);
-
-                qp_solver = ocp_qp_create(config, qp_dims, opts);
-
-                acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
-
-                // TODO(dimitris): fix this hack for qpDUNES
-                // (it terminates one iteration before optimal solution,
-                // fixed with warm-start and calling solve twice)
-                if (plan.qp_solver == PARTIAL_CONDENSING_QPDUNES)
+                SECTION("N2 = " + std::to_string((int)N2_values[ii]))
                 {
+                    set_N2(solver, opts, N2_values[ii], N);
+
+                    qp_solver = ocp_qp_create(config, qp_dims, opts);
+
                     acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
+
+                    // TODO(dimitris): fix this hack for qpDUNES
+                    // (it terminates one iteration before optimal solution,
+                    // fixed with warm-start and calling solve twice)
+                    if (plan.qp_solver == PARTIAL_CONDENSING_QPDUNES)
+                    {
+                        acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
+                    }
+
+                    REQUIRE(acados_return == 0);
+
+                    ocp_qp_inf_norm_residuals(qp_dims, qp_in, qp_out, res);
+
+                    max_res = 0.0;
+                    for (int ii = 0; ii < 4; ii++)
+                    {
+                        max_res = (res[ii] > max_res) ? res[ii] : max_res;
+                    }
+
+                    std::cout << "\n---> residuals of " << solver << " (N2 = " << N2_values[ii] << ")\n";
+                    printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
+                    REQUIRE(max_res <= tol);
+
+                    free(qp_solver);
                 }
-
-                REQUIRE(acados_return == 0);
-
-                ocp_qp_inf_norm_residuals(qp_dims, qp_in, qp_out, res);
-
-                max_res = 0.0;
-                for (int ii = 0; ii < 4; ii++)
-                {
-                    max_res = (res[ii] > max_res) ? res[ii] : max_res;
-                }
-
-                std::cout << "\n---> residuals of " << solver << " (N2 = " << N2_values[ii] << ")\n";
-                printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
-                REQUIRE(max_res <= tol);
-
-                free(qp_solver);
             }
 
             free(opts);
