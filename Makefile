@@ -125,14 +125,18 @@ qpoases_static:
 # TODO how is BLASFEO path set for QORE ?????
 qore_static: blasfeo_static
 	( cd $(QORE_PATH); $(MAKE) static_dense; )
-	mkdir -p include/qore/include
+	mkdir -p include/qore/QPSOLVER_DENSE/include
+	mkdir -p include/qore/QPSOLVER_DENSE/source
+	mkdir -p include/qore/KKTPACK_DENSE/include
+	mkdir -p include/qore/KKTPACK_DENSE/source
+	mkdir -p include/qore/QORE/include
 	mkdir -p lib
-	cp $(QORE_PATH)/qp_types.h include/qore/include
-	cp $(QORE_PATH)/QPSOLVER_DENSE/include/*.h include/qore/include
-	cp $(QORE_PATH)/QPSOLVER_DENSE/source/*.h include/qore/include
-	cp $(QORE_PATH)/KKTPACK_DENSE/source/*.h include/qore/include
-	cp $(QORE_PATH)/KKTPACK_DENSE/include/*.h include/qore/include
-	cp $(QORE_PATH)/QPCORE/include/*.h include/qore/include
+	cp $(QORE_PATH)/qp_types.h include/qore/
+	cp $(QORE_PATH)/QPSOLVER_DENSE/include/*.h include/qore/QPSOLVER_DENSE/include
+	cp $(QORE_PATH)/QPSOLVER_DENSE/source/*.h include/qore/QPSOLVER_DENSE/source
+	cp $(QORE_PATH)/KKTPACK_DENSE/source/*.h include/qore/KKTPACK_DENSE/source
+	cp $(QORE_PATH)/KKTPACK_DENSE/include/*.h include/qore/KKTPACK_DENSE/include
+	cp $(QORE_PATH)/QPCORE/include/*.h include/qore/QORE/include
 	cp $(QORE_PATH)/bin/libqore_dense.a lib
 
 qpdunes_static:
