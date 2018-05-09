@@ -82,7 +82,7 @@ double sim_solver_tolerance(std::string const& inString)
 TEST_CASE("wt_nx3_example", "[integrators]")
 {
     vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF"}; //, "NEW_LIFTED_IRK"};//{"NEW_LIFTED_IRK"};//{"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
-
+    // todo(andrea): add NEW_LIFTED_IRK, and make it work
     // initialize dimensions
     int ii;
     int jj;
