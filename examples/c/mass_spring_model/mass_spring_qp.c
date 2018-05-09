@@ -23,8 +23,6 @@
 #include <stdlib.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
@@ -36,9 +34,7 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 
 // acados_c
-#ifdef ACADOS_WITH_C_INTERFACE
 #include <acados_c/ocp_qp_interface.h>
-#endif
 
 
 
@@ -534,13 +530,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, i
     dims.nbu = nbu;
     dims.nbx = nbx;
 
-#ifdef ACADOS_WITH_C_INTERFACE
     ocp_qp_in *qp_in = ocp_qp_in_create(config, &dims);
-#else // ! ACADOS_WITH_C_INTERFACE
-	int qp_in_size = ocp_qp_in_calculate_size(config, &dims);
-	void *qp_in_mem = malloc(qp_in_size);
-	ocp_qp_in *qp_in = ocp_qp_in_assign(config, &dims, qp_in_mem);
-#endif
 
 	d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
 
@@ -1110,13 +1100,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_
     dims.nbu = nbu;
     dims.nbx = nbx;
 
-#ifdef ACADOS_WITH_C_INTERFACE
     ocp_qp_in *qp_in = ocp_qp_in_create(config, &dims);
-#else // ! ACADOS_WITH_C_INTERFACE
-	int qp_in_size = ocp_qp_in_calculate_size(config, &dims);
-	void *qp_in_mem = malloc(qp_in_size);
-	ocp_qp_in *qp_in = ocp_qp_in_assign(config, &dims, qp_in_mem);
-#endif
 
 	d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hZl, hZu, hzl, hzu, hidxs, hd_ls, hd_us, qp_in);
 

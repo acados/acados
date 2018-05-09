@@ -17,51 +17,51 @@
  *
  */
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_COMMON_H_
-#define ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_COMMON_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_
+#define ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
+
 // acados
-#include "acados/utils/types.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/external_function_generic.h"
-
-
+#include "acados/utils/types.h"
 
 /************************************************
-* config
-************************************************/
+ * config
+ ************************************************/
 
 typedef struct
 {
-	int (*dims_calculate_size) (void *config);
-	void *(*dims_assign) (void *config, void *raw_memory);
-	void (*dims_initialize) (void *config, void *dims, int nx, int nu, int nx1, int nu1);
-	int (*model_calculate_size) (void *config, void *dims);
-	void *(*model_assign) (void *config, void *dims, void *raw_memory);
-	void (*model_set_T) (double T, void *model);
-	int (*opts_calculate_size) (void *config, void *dims);
-	void *(*opts_assign) (void *config, void *dims, void *raw_memory);
-	void (*opts_initialize_default) (void *config, void *dims, void *opts);
-	void (*opts_update) (void *config, void *dims, void *opts);
-	int (*memory_calculate_size) (void *config, void *dims, void *opts);
-	void *(*memory_assign) (void *config, void *dims, void *opts, void *raw_memory);
-	struct blasfeo_dvec *(*memory_get_fun_ptr) (void *memory_);
-	struct blasfeo_dvec *(*memory_get_adj_ptr) (void *memory_);
-	void (*memory_set_ux_ptr) (struct blasfeo_dvec *ux, void *memory_);
-	void (*memory_set_ux1_ptr) (struct blasfeo_dvec *ux1, void *memory_);
-	void (*memory_set_pi_ptr) (struct blasfeo_dvec *pi, void *memory_);
-	void (*memory_set_BAbt_ptr) (struct blasfeo_dmat *BAbt, void *memory_);
-	int (*workspace_calculate_size) (void *config, void *dims, void *opts);
-	void (*initialize) (void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-	void (*update_qp_matrices) (void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-	void (*config_initialize_default) (void *config);
+    int (*dims_calculate_size)(void *config);
+    void *(*dims_assign)(void *config, void *raw_memory);
+    void (*dims_initialize)(void *config, void *dims, int nx, int nu, int nx1, int nu1);
+    int (*model_calculate_size)(void *config, void *dims);
+    void *(*model_assign)(void *config, void *dims, void *raw_memory);
+    void (*model_set_T)(double T, void *model);
+    int (*opts_calculate_size)(void *config, void *dims);
+    void *(*opts_assign)(void *config, void *dims, void *raw_memory);
+    void (*opts_initialize_default)(void *config, void *dims, void *opts);
+    void (*opts_update)(void *config, void *dims, void *opts);
+    int (*memory_calculate_size)(void *config, void *dims, void *opts);
+    void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
+    struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory_);
+    struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory_);
+    void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory_);
+    void (*memory_set_ux1_ptr)(struct blasfeo_dvec *ux1, void *memory_);
+    void (*memory_set_pi_ptr)(struct blasfeo_dvec *pi, void *memory_);
+    void (*memory_set_BAbt_ptr)(struct blasfeo_dmat *BAbt, void *memory_);
+    int (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
+                       void *work_);
+    void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
+                               void *work_);
+    void (*config_initialize_default)(void *config);
     sim_solver_config *sim_solver;
 } ocp_nlp_dynamics_config;
 
@@ -70,10 +70,8 @@ int ocp_nlp_dynamics_config_calculate_size();
 //
 ocp_nlp_dynamics_config *ocp_nlp_dynamics_config_assign(void *raw_memory);
 
-
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_

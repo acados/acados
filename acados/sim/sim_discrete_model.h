@@ -28,10 +28,10 @@ extern "C" {
 
 int_t sim_discrete_model(const sim_in *, sim_out *, void *, void *, void *);
 
-void vde_adj_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
+void vde_adj_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out,
                  casadi_function_t vde_hess);
 
-void vde_hess_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
+void vde_hess_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out,
                   casadi_function_t vde_hess);
 
 #ifdef __cplusplus

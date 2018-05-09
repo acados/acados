@@ -32,6 +32,8 @@ install:
   - pushd external
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
       source download_encrypted_files.sh;
+    else
+      export SWIG_MATLAB=OFF;
     fi'
   - popd
   - travis_retry source .travis_install.sh
@@ -41,7 +43,6 @@ install:
   - export LD_LIBRARY_PATH=$HOME/local/lib:$LD_LIBRARY_PATH
 
 before_script:
-  - set -e
   - mkdir -p /home/travis/octave_download
   - |
     if [ -z "$(ls -1qA /home/travis/octave_download)" ]; then
@@ -53,26 +54,25 @@ before_script:
     fi
 
 script:
-  # travis-wait seems to stop at 20 mins, regardless if output is being generated
-  - (while true ; do sleep 60 ; echo "ping" ; done ) &
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release ..
   - cmake --build build --target lint
   - cmake --build build
-  - cmake -E chdir build ctest --verbose --output-on-failure
+  - cmake -E chdir build ctest --output-on-failure
   - rm -r -f build
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain-mingw32.cmake ..
-  - cmake --build build --clean-first
+  - cmake --build build
   - rm -r -f build
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DMatlab_ROOT_DIR=../external/matlab -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
   - export CXX="$CXX -std=c++11" # needed for octave
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
   - cmake --build build --target install
   - python -c "import acados" # check installation
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
+
 
 after_success:
   - pushd build

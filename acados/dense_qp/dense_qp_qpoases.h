@@ -17,7 +17,6 @@
  *
  */
 
-
 #ifndef ACADOS_DENSE_QP_DENSE_QP_QPOASES_H_
 #define ACADOS_DENSE_QP_DENSE_QP_QPOASES_H_
 
@@ -28,21 +27,18 @@ extern "C" {
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
-// blasfeo
-#include "blasfeo_target.h"
-#include "blasfeo_common.h"
 
-typedef struct dense_qp_qpoases_opts_ {
+typedef struct dense_qp_qpoases_opts_
+{
     double max_cputime;  // maximum cpu time in seconds
     int max_nwsr;        // maximum number of working set recalculations
     int warm_start;      // warm start with dual_sol in memory
-	int use_precomputed_cholesky;
-	int hotstart; 		 // this option requires constant data matrices! (eg linear MPC, inexact schemes with frozen sensitivities)
+    int use_precomputed_cholesky;
+    int hotstart;  // this option requires constant data matrices! (eg linear MPC, inexact schemes
+                   // with frozen sensitivities)
     int set_acado_opts;  // use same options as in acado code generation
-	int compute_t;       // compute t in qp_out (to have correct residuals in NLP)
+    int compute_t;       // compute t in qp_out (to have correct residuals in NLP)
 } dense_qp_qpoases_opts;
-
-
 
 typedef struct dense_qp_qpoases_memory_
 {
@@ -61,14 +57,12 @@ typedef struct dense_qp_qpoases_memory_
     int *idxb;
     double *prim_sol;
     double *dual_sol;
-    void *QPB;                 // NOTE(giaf): cast to QProblemB to use
-    void *QP;                  // NOTE(giaf): cast to QProblem to use
-    double cputime;            // cputime of qpoases
-    int nwsr;                  // performed number of working set recalculations
-	int first_it;              // to be used with hotstart
+    void *QPB;       // NOTE(giaf): cast to QProblemB to use
+    void *QP;        // NOTE(giaf): cast to QProblem to use
+    double cputime;  // cputime of qpoases
+    int nwsr;        // performed number of working set recalculations
+    int first_it;    // to be used with hotstart
 } dense_qp_qpoases_memory;
-
-
 
 int dense_qp_qpoases_opts_calculate_size(void *config, dense_qp_dims *dims);
 //
@@ -80,14 +74,15 @@ void dense_qp_qpoases_opts_update(void *config, dense_qp_dims *dims, void *opts_
 //
 int dense_qp_qpoases__memorycalculate_size(void *config, dense_qp_dims *dims, void *opts_);
 //
-void *dense_qp_qpoases__memoryassign(void *config, dense_qp_dims *dims, void *opts_, void *raw_memory);
+void *dense_qp_qpoases__memoryassign(void *config, dense_qp_dims *dims, void *opts_,
+                                     void *raw_memory);
 //
 int dense_qp_qpoases__workspacecalculate_size(void *config, dense_qp_dims *dims, void *opts_);
 //
-int dense_qp_qpoases(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_);
+int dense_qp_qpoases(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
+                     void *memory_, void *work_);
 //
 void dense_qp_qpoases_config_initialize_default(void *config_);
-
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -19,14 +19,14 @@
 
 #include "acados_c/condensing_interface.h"
 
-//external
-#include <stdlib.h>
+// external
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 // acados
-#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/ocp_qp/ocp_qp_full_condensing.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/utils/mem.h"
 
 ocp_qp_condensing_config *ocp_qp_condensing_config_create(condensing_plan *plan)
@@ -47,8 +47,6 @@ ocp_qp_condensing_config *ocp_qp_condensing_config_create(condensing_plan *plan)
     return config;
 }
 
-
-
 void *ocp_qp_condensing_opts_create(ocp_qp_condensing_config *config, void *dims_)
 {
     int bytes = config->opts_calculate_size(dims_);
@@ -62,8 +60,6 @@ void *ocp_qp_condensing_opts_create(ocp_qp_condensing_config *config, void *dims
     return opts;
 }
 
-
-
 int ocp_qp_condensing_calculate_size(ocp_qp_condensing_config *config, void *dims_, void *opts_)
 {
     int bytes = sizeof(condensing_module);
@@ -74,9 +70,8 @@ int ocp_qp_condensing_calculate_size(ocp_qp_condensing_config *config, void *dim
     return bytes;
 }
 
-
-
-condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, void *dims_, void *opts_, void *raw_memory)
+condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, void *dims_,
+                                            void *opts_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -93,14 +88,13 @@ condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, vo
     module->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(dims_, opts_);
 
-    assert((char*)raw_memory + ocp_qp_condensing_calculate_size(config, dims_, opts_) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_condensing_calculate_size(config, dims_, opts_) == c_ptr);
 
     return module;
 }
 
-
-
-condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, void *dims_, void *opts_)
+condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, void *dims_,
+                                            void *opts_)
 {
     config->opts_update(dims_, opts_);
     int bytes = ocp_qp_condensing_calculate_size(config, dims_, opts_);
@@ -112,14 +106,10 @@ condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, vo
     return module;
 }
 
-
-
 int ocp_qp_condense(condensing_module *module, void *qp_in, void *qp_out)
 {
     return module->config->condensing(qp_in, qp_out, module->opts, module->mem, module->work);
 }
-
-
 
 int ocp_qp_expand(condensing_module *module, void *qp_in, void *qp_out)
 {

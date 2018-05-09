@@ -19,17 +19,17 @@
 
 #include "acados_c/ocp_qp_interface.h"
 
-//external
-#include <stdlib.h>
+// external
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
-//acados_c
+// acados_c
 
 #include "acados/utils/mem.h"
 
+#include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-#include "acados/dense_qp/dense_qp_hpipm.h"
 #ifdef ACADOS_WITH_QORE
 #include "acados/dense_qp/dense_qp_qore.h"
 #endif
@@ -44,7 +44,6 @@
 
 ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan)
 {
-
     int bytes = ocp_qp_xcond_solver_config_calculate_size();
     void *ptr = calloc(1, bytes);
     ocp_qp_xcond_solver_config *solver_config = ocp_qp_xcond_solver_config_assign(ptr);
@@ -67,38 +66,38 @@ ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan)
         case PARTIAL_CONDENSING_HPIPM:
             ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
             break;
+#ifdef ACADOS_WITH_HPMPC
         case PARTIAL_CONDENSING_HPMPC:
-            #ifdef ACADOS_WITH_HPMPC
             ocp_qp_hpmpc_config_initialize_default(solver_config->qp_solver);
-            #endif
+#endif
             break;
+#ifdef ACADOS_WITH_OOQP
         case PARTIAL_CONDENSING_OOQP:
             // NOT IMPLEMENTED YET
             break;
+#endif
+#ifdef ACADOS_WITH_QPDUNES
         case PARTIAL_CONDENSING_QPDUNES:
-            #ifdef ACADOS_WITH_QPDUNES
             ocp_qp_qpdunes_config_initialize_default(solver_config->qp_solver);
-            #endif
+#endif
             break;
         case FULL_CONDENSING_HPIPM:
             dense_qp_hpipm_config_initialize_default(solver_config->qp_solver);
             break;
+#ifdef ACADOS_WITH_QPOASES
         case FULL_CONDENSING_QPOASES:
-            #ifdef ACADOS_WITH_QPOASES
             dense_qp_qpoases_config_initialize_default(solver_config->qp_solver);
-            #endif
+#endif
             break;
+#ifdef ACADOS_WITH_QORE
         case FULL_CONDENSING_QORE:
-            #ifdef ACADOS_WITH_QORE
             dense_qp_qore_config_initialize_default(solver_config->qp_solver);
-            #endif
+#endif
             break;
     }
 
     return solver_config;
 }
-
-
 
 ocp_qp_dims *ocp_qp_dims_create(int N)
 {
@@ -112,8 +111,6 @@ ocp_qp_dims *ocp_qp_dims_create(int N)
     return dims;
 }
 
-
-
 ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
 {
     int bytes = ocp_qp_in_calculate_size(config, dims);
@@ -125,8 +122,6 @@ ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dim
     return in;
 }
 
-
-
 ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
 {
     int bytes = ocp_qp_out_calculate_size(config, dims);
@@ -137,8 +132,6 @@ ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *d
 
     return out;
 }
-
-
 
 void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
 {
@@ -153,8 +146,6 @@ void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
     return opts;
 }
 
-
-
 int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_)
 {
     int bytes = sizeof(ocp_qp_solver);
@@ -165,9 +156,8 @@ int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims,
     return bytes;
 }
 
-
-
-ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_, void *raw_memory)
+ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_,
+                             void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -186,16 +176,14 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
     solver->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(config, dims, opts_);
 
-    assert((char *)raw_memory + ocp_qp_calculate_size(config, dims, opts_) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_calculate_size(config, dims, opts_) == c_ptr);
 
     return solver;
 }
 
-
-
 ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_)
 {
-	config->opts_update(config, dims, opts_);
+    config->opts_update(config, dims, opts_);
 
     int bytes = ocp_qp_calculate_size(config, dims, opts_);
 
@@ -206,14 +194,11 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
     return solver;
 }
 
-
-
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
-    return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem, solver->work);
+    return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem,
+                                    solver->work);
 }
-
-
 
 static ocp_qp_res *ocp_qp_res_create(ocp_qp_dims *dims)
 {
@@ -223,8 +208,6 @@ static ocp_qp_res *ocp_qp_res_create(ocp_qp_dims *dims)
     return qp_res;
 }
 
-
-
 static ocp_qp_res_ws *ocp_qp_res_workspace_create(ocp_qp_dims *dims)
 {
     int size = ocp_qp_res_workspace_calculate_size(dims);
@@ -232,8 +215,6 @@ static ocp_qp_res_ws *ocp_qp_res_workspace_create(ocp_qp_dims *dims)
     ocp_qp_res_ws *res_ws = ocp_qp_res_workspace_assign(dims, ptr);
     return res_ws;
 }
-
-
 
 // TODO(dimitris): better name for this wrapper?
 void ocp_qp_inf_norm_residuals(ocp_qp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, double *res)

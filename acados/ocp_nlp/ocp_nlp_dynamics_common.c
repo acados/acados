@@ -19,51 +19,40 @@
 
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/utils/mem.h"
 
-
-
 /************************************************
-* config
-************************************************/
+ * config
+ ************************************************/
 
 int ocp_nlp_dynamics_config_calculate_size()
 {
+    int size = 0;
 
-	int size = 0;
+    size += sizeof(ocp_nlp_dynamics_config);
 
-	size += sizeof(ocp_nlp_dynamics_config);
+    size += sim_solver_config_calculate_size();
 
-	size += sim_solver_config_calculate_size();
-
-	return size;
-
+    return size;
 }
-
-
 
 ocp_nlp_dynamics_config *ocp_nlp_dynamics_config_assign(void *raw_memory)
 {
+    char *c_ptr = raw_memory;
 
-	char *c_ptr = raw_memory;
+    ocp_nlp_dynamics_config *config = (ocp_nlp_dynamics_config *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_dynamics_config);
 
-	ocp_nlp_dynamics_config *config = (ocp_nlp_dynamics_config *) c_ptr;
-	c_ptr += sizeof(ocp_nlp_dynamics_config);
+    config->sim_solver = sim_solver_config_assign(c_ptr);
+    c_ptr += sim_solver_config_calculate_size();
 
-	config->sim_solver = sim_solver_config_assign(c_ptr);
-	c_ptr += sim_solver_config_calculate_size();
-
-	return config;
-
+    return config;
 }
-

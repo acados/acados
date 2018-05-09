@@ -27,7 +27,6 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-
 typedef struct
 {
     int nx;
@@ -36,37 +35,32 @@ typedef struct
 
 typedef struct
 {
-	/* external functions */
-	// explicit ode
-	external_function_generic *expl_ode_fun;
-	// jacobian explicit ode
-	external_function_generic *expl_ode_jac;
-	// hessian explicit ode
-	external_function_generic *expl_ode_hes;
-	// forward explicit vde
-	external_function_generic *expl_vde_for;
-	// adjoint explicit vde
-	external_function_generic *expl_vde_adj;
+    /* external functions */
+    // explicit ode
+    external_function_generic *expl_ode_fun;
+    // jacobian explicit ode
+    external_function_generic *expl_ode_jac;
+    // hessian explicit ode
+    external_function_generic *expl_ode_hes;
+    // forward explicit vde
+    external_function_generic *expl_vde_for;
+    // adjoint explicit vde
+    external_function_generic *expl_vde_adj;
 
 } erk_model;
 
-
-
 typedef struct
 {
-	// no memory
-	void *dummy;
+    // no memory
+    void *dummy;
 } sim_erk_memory;
 
-
-
 typedef struct
 {
-
     double *rhs_forw_in;  // x + S + p
 
-    double *K_traj; // (stages *nX) or (steps*stages*nX) for adj
-    double *out_forw_traj; // S or (steps+1)*nX for adj
+    double *K_traj;         // (stages *nX) or (steps*stages*nX) for adj
+    double *out_forw_traj;  // S or (steps+1)*nX for adj
 
     double *rhs_adj_in;
     double *out_adj_tmp;
@@ -74,16 +68,15 @@ typedef struct
 
 } sim_erk_workspace;
 
-
 // get & set functions
 void sim_erk_set_nx(void *dims_, int nx);
 void sim_erk_set_nu(void *dims_, int nu);
-void sim_erk_get_nx(void *dims_, int* nx);
-void sim_erk_get_nu(void *dims_, int* nu);
+void sim_erk_get_nx(void *dims_, int *nx);
+void sim_erk_get_nu(void *dims_, int *nu);
 
 // dims
 int sim_erk_dims_calculate_size();
-void *sim_erk_dims_assign(void* config_, void *raw_memory);
+void *sim_erk_dims_assign(void *config_, void *raw_memory);
 
 // model
 int sim_erk_model_calculate_size(void *config, void *dims);
@@ -113,7 +106,6 @@ int sim_erk_workspace_calculate_size(void *config, void *dims, void *opts_);
 int sim_erk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 //
 void sim_erk_config_initialize_default(void *config);
-
 
 #ifdef __cplusplus
 } /* extern "C" */

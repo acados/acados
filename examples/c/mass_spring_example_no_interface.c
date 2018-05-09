@@ -130,7 +130,7 @@ int main() {
 
 					// opts
 					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
-//					printf("\nopts size = %d\n", solver_opts_size);
+// 				printf("\nopts size = %d\n", solver_opts_size);
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
@@ -150,7 +150,7 @@ int main() {
 
 					// opts
 					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
-//					printf("\nopts size = %d\n", solver_opts_size);
+// 				printf("\nopts size = %d\n", solver_opts_size);
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
@@ -170,7 +170,7 @@ int main() {
 
 					// opts
 					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
-//					printf("\nopts size = %d\n", solver_opts_size);
+// 				printf("\nopts size = %d\n", solver_opts_size);
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
@@ -190,13 +190,13 @@ int main() {
 
 					// opts
 					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
-//					printf("\nopts size = %d\n", solver_opts_size);
+// 				printf("\nopts size = %d\n", solver_opts_size);
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
-//					partial_condensing_solver_opts = solver_opts;
-//					dense_hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
-//					dense_hpipm_opts->hpipm_opts->iter_max = 30;
+// 				partial_condensing_solver_opts = solver_opts;
+// 				dense_hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
+// 				dense_hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 
 					break;
@@ -211,13 +211,13 @@ int main() {
 
 					// opts
 					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
-//					printf("\nopts size = %d\n", solver_opts_size);
+// 				printf("\nopts size = %d\n", solver_opts_size);
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
-//					partial_condensing_solver_opts = solver_opts;
-//					dense_hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
-//					dense_hpipm_opts->hpipm_opts->iter_max = 30;
+// 				partial_condensing_solver_opts = solver_opts;
+// 				dense_hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
+// 				dense_hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 
 					break;
@@ -232,14 +232,14 @@ int main() {
 
 					// opts
 					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
-//					printf("\nopts size = %d\n", solver_opts_size);
+// 				printf("\nopts size = %d\n", solver_opts_size);
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
 					partial_condensing_solver_opts = solver_opts;
 					partial_condensing_solver_opts->pcond_opts->N2 = N2;
-//					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
-//					hpipm_opts->hpipm_opts->iter_max = 30;
+// 				hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
+// 				hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 
 					break;
@@ -254,14 +254,14 @@ int main() {
 
 					// opts
 					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
-//					printf("\nopts size = %d\n", solver_opts_size);
+// 				printf("\nopts size = %d\n", solver_opts_size);
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
 					partial_condensing_solver_opts = solver_opts;
 					partial_condensing_solver_opts->pcond_opts->N2 = N2;
-//					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
-//					hpipm_opts->hpipm_opts->iter_max = 30;
+// 				hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
+// 				hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 
 					break;
@@ -311,7 +311,7 @@ int main() {
             ************************************************/
 
 			solver_mem_size = solver_config->memory_calculate_size(solver_config, qp_dims, solver_opts);
-//			printf("\nmem size = %d\n", solver_mem_size);
+// 		printf("\nmem size = %d\n", solver_mem_size);
 			solver_mem_mem = malloc(solver_mem_size);
 			solver_mem = solver_config->memory_assign(solver_config, qp_dims, solver_opts, solver_mem_mem);
 
@@ -320,7 +320,7 @@ int main() {
             ************************************************/
 
 			solver_work_size = solver_config->workspace_calculate_size(solver_config, qp_dims, solver_opts);
-//			printf("\nwork size = %d\n", solver_work_size);
+// 		printf("\nwork size = %d\n", solver_work_size);
 			solver_work = malloc(solver_work_size);
 
             /************************************************
@@ -349,19 +349,19 @@ int main() {
             * print solution
             ************************************************/
 
-//			 print_ocp_qp_out(qp_out);
+// 		 print_ocp_qp_out(qp_out);
 
             /************************************************
             * compute residuals
             ************************************************/
 
 			int res_size = ocp_qp_res_calculate_size(qp_dims);
-//			printf("\nres size = %d\n", res_size);
+// 		printf("\nres size = %d\n", res_size);
 			void *res_mem = malloc(res_size);
 			ocp_qp_res *qp_res = ocp_qp_res_assign(qp_dims, res_mem);
 
 			int res_work_size = ocp_qp_res_workspace_calculate_size(qp_dims);
-//			printf("\nres work size = %d\n", res_work_size);
+// 		printf("\nres work size = %d\n", res_work_size);
 			void *res_work_mem = malloc(res_work_size);
 			ocp_qp_res_ws *res_ws = ocp_qp_res_workspace_assign(qp_dims, res_work_mem);
 
@@ -371,7 +371,7 @@ int main() {
              * print residuals
              ************************************************/
 
-//			 print_ocp_qp_res(qp_res);
+// 		 print_ocp_qp_res(qp_res);
 
             /************************************************
             * compute infinity norm of residuals

@@ -25,23 +25,23 @@ extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
+
 // acados
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
-#include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
+#include "acados/utils/types.h"
 
 /************************************************
-* dims
-************************************************/
+ * dims
+ ************************************************/
 
 typedef struct
 {
-	int nx; // number of states
-	int nu; // number of inputs
-	int ny; // number of outputs
-	int ns; // number of slacks
+    int nx;  // number of states
+    int nu;  // number of inputs
+    int ny;  // number of outputs
+    int ns;  // number of slacks
 } ocp_nlp_cost_nls_dims;
 
 //
@@ -49,22 +49,20 @@ int ocp_nlp_cost_nls_dims_calculate_size(void *config);
 //
 void *ocp_nlp_cost_nls_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_cost_nls_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns); 
-
-
+void ocp_nlp_cost_nls_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns);
 
 /************************************************
-* model
-************************************************/
+ * model
+ ************************************************/
 
 typedef struct
 {
-	external_function_generic *nls_jac; // evaluation and jacobian of ls residuals
-	external_function_generic *nls_hess; // hessian*seeds of ls residuals
-	struct blasfeo_dmat W;
+    external_function_generic *nls_jac;   // evaluation and jacobian of ls residuals
+    external_function_generic *nls_hess;  // hessian*seeds of ls residuals
+    struct blasfeo_dmat W;
     struct blasfeo_dvec y_ref;
-	struct blasfeo_dvec Z;
-	struct blasfeo_dvec z;
+    struct blasfeo_dvec Z;
+    struct blasfeo_dvec z;
 } ocp_nlp_cost_nls_model;
 
 //
@@ -74,15 +72,13 @@ void *ocp_nlp_cost_nls_model_assign(void *config, void *dims, void *raw_memory);
 //
 void ocp_nlp_cost_nls_config_initialize_default(void *config);
 
-
-
 /************************************************
-* options
-************************************************/
+ * options
+ ************************************************/
 
 typedef struct
 {
-    bool gauss_newton_hess; // gauss-newton hessian approximation
+    bool gauss_newton_hess;  // gauss-newton hessian approximation
 } ocp_nlp_cost_nls_opts;
 
 //
@@ -94,21 +90,19 @@ void ocp_nlp_cost_nls_opts_initialize_default(void *config, void *dims, void *op
 //
 void ocp_nlp_cost_nls_opts_update(void *config, void *dims, void *opts);
 
-
-
 /************************************************
-* memory
-************************************************/
+ * memory
+ ************************************************/
 
 typedef struct
 {
-	struct blasfeo_dmat W_chol; // cholesky factor of weight matrix
-	struct blasfeo_dmat Jt; // jacobian of nls fun
-    struct blasfeo_dvec res; // nls residual r(x)
-	struct blasfeo_dvec grad; // gradient of cost function
-	struct blasfeo_dvec *ux; // pointer to ux in nlp_out
-	struct blasfeo_dmat *RSQrq; // pointer to RSQrq in qp_in
-	struct blasfeo_dvec *Z; // pointer to Z in qp_in
+    struct blasfeo_dmat W_chol;  // cholesky factor of weight matrix
+    struct blasfeo_dmat Jt;      // jacobian of nls fun
+    struct blasfeo_dvec res;     // nls residual r(x)
+    struct blasfeo_dvec grad;    // gradient of cost function
+    struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
+    struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
+    struct blasfeo_dvec *Z;      // pointer to Z in qp_in
 } ocp_nlp_cost_nls_memory;
 
 //
@@ -124,36 +118,32 @@ void ocp_nlp_cost_nls_memory_set_Z_ptr(struct blasfeo_dvec *Z, void *memory);
 //
 void ocp_nlp_cost_nls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
 
-
-
 /************************************************
-* workspace
-************************************************/
+ * workspace
+ ************************************************/
 
 typedef struct
 {
-	struct blasfeo_dmat tmp_nv_ny;
-	struct blasfeo_dvec tmp_ny;
+    struct blasfeo_dmat tmp_nv_ny;
+    struct blasfeo_dvec tmp_ny;
 } ocp_nlp_cost_nls_workspace;
 
 //
 int ocp_nlp_cost_nls_workspace_calculate_size(void *config, void *dims, void *opts);
 
-
-
 /************************************************
-* functions
-************************************************/
+ * functions
+ ************************************************/
 
 //
-void ocp_nlp_cost_nls_initialize(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+void ocp_nlp_cost_nls_initialize(void *config_, void *dims, void *model_, void *opts_, void *mem_,
+                                 void *work_);
 //
-void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
-
-
+void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_,
+                                         void *memory_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif // ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_

@@ -21,19 +21,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #include <xmmintrin.h>
-
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
+#include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
-
-#include "acados/dense_qp/dense_qp_hpipm.h"
-
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
@@ -1535,7 +1529,7 @@ int main() {
 
 
 
-//	ocp_nlp_dims_print(nlp_in->dims);
+// ocp_nlp_dims_print(nlp_in->dims);
 
     // NOTE(dimitris): use nlp_in->dims instead of &dims from now on since nb is filled with nbx+nbu!
 
@@ -1888,10 +1882,10 @@ int main() {
 
 
 	// XXX hack: overwrite config with hand-setted one
-//	nlp_opts->qp_solver = &config_qp;
-//	nlp_opts->sim_solvers = config_sim_ptrs;
-//	for (int ii=0; ii<NN; ii++)
-//		nlp_opts->sim_solvers[ii] = config_sim_ptrs[ii];
+// nlp_opts->qp_solver = &config_qp;
+// nlp_opts->sim_solvers = config_sim_ptrs;
+// for (int ii=0; ii<NN; ii++)
+// 	nlp_opts->sim_solvers[ii] = config_sim_ptrs[ii];
 
 
 
@@ -1912,7 +1906,7 @@ int main() {
 	void *nlp_out_mem = malloc(tmp_size);
 	ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, nlp_out_mem);
 
-//	ocp_nlp_dims_print(nlp_out->dims);
+// ocp_nlp_dims_print(nlp_out->dims);
 
     /************************************************
     * sqp memory
@@ -1942,14 +1936,14 @@ int main() {
     for (int rep = 0; rep < NREP; rep++)
     {
 		// warm start output initial guess of solution
-//		if (rep==0)
-//		{
+// 	if (rep==0)
+// 	{
 			for (int i=0; i<=NN; i++)
 			{
 				blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
 				blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
 			}
-//		}
+// 	}
 
 		// call nlp solver
         status = ocp_nlp_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
