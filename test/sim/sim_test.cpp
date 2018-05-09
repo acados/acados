@@ -36,7 +36,7 @@
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
-#include "acados_c/sim_interface.h"
+#include "interfaces/acados_c/sim_interface.h"
 
 // wt model
 #include "examples/c/wt_model_nx3/wt_model.h"
@@ -46,7 +46,7 @@
 
 extern "C"
 {
-
+// printf("SIMULATION TEST \n");
 }
 
 using std::vector;
@@ -54,7 +54,7 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Map;
 
-sim_solver_t hashit(std::string const& inString)
+sim_solver_t hashitsim(std::string const& inString)
 {
     if (inString == "ERK") return ERK;
     if (inString == "IRK") return IRK;
@@ -65,7 +65,7 @@ sim_solver_t hashit(std::string const& inString)
     return (sim_solver_t) -1;
 }
 
-double solver_tolerance(std::string const& inString)
+double sim_solver_tolerance(std::string const& inString)
 {
     if (inString == "ERK") return 1e-5;
     if (inString == "IRK") return 1e-5;
@@ -84,6 +84,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
 
     // initialize dimensions
+    // printf("SIMULATION TEST \n");
 
     int ii;
     int jj;
@@ -245,16 +246,23 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
 	external_function_casadi_create(&get_matrices_fun);
 
-    sim_solver_plan plan;
 
 	/************************************************
 	* Create Reference Solution
 	************************************************/
 
+    sim_solver_plan plan;
+    plan.sim_solver = IRK;
+
     sim_solver_config *config = sim_config_create(plan);
+
     void *dims = sim_dims_create(config);
 
-    sim_rk_opts *opts = sim_opts_create(config, dims);
+    config->set_nx(dims, nx);
+    config->set_nu(dims, nu);
+
+    void *opts_ = sim_opts_create(config, dims);
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
     opts->sens_forw = true;
     opts->sens_adj = false;
@@ -333,8 +341,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
             double error[nx];
             double max_error;
 
-            plan.sim_solver = IRK;
-            tol = solver_tolerance(solver);
+            double tol = sim_solver_tolerance(solver);
+
+            plan.sim_solver = hashitsim(solver);
 
             // create correct config based on plan
             sim_solver_config *config = sim_config_create(plan);
@@ -352,7 +361,8 @@ TEST_CASE("wt_nx3_example", "[integrators]")
             * sim opts
             ************************************************/
 
-            sim_rk_opts *opts = sim_opts_create(config, dims);
+            void *opts_ = sim_opts_create(config, dims);
+            sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
             opts->sens_forw = true;
             opts->sens_adj = false;
@@ -363,25 +373,25 @@ TEST_CASE("wt_nx3_example", "[integrators]")
             opts->newton_iter = 3; // number of newton iterations per integration step
             opts->num_steps = 1; // number of steps
 
-            switch (nss)
+            switch (plan.sim_solver)
             {
 
-                case 0:
+                case ERK:
                     // ERK
                     opts->ns = 4; // number of stages in rk integrator
                     break;
 
-                case 1:
+                case IRK:
                     // IRK
                     opts->ns = 2; // number of stages in rk integrator
                     break;
 
-                case 2:
+                case LIFTED_IRK:
                     // lifted IRK
                     opts->ns = 2; // number of stages in rk integrator
                     break;
 
-                case 3:
+                case GNSF:
                     // GNSF
                     opts->ns = 2; // number of stages in rk integrator
 
@@ -398,7 +408,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                     break;
 
-                case 4:
+                case NEW_LIFTED_IRK:
                     // new lifted IRK
                     opts->ns = 2; // number of stages in rk integrator
                     break;
@@ -419,29 +429,29 @@ TEST_CASE("wt_nx3_example", "[integrators]")
             in->T = T;
 
             // external functions
-            switch (nss)
+            switch (plan.sim_solver)
             {
-                case 0: // ERK
+                case ERK: // ERK
                 {
                     sim_set_model(config, in, "expl_ode_fun", &expl_ode_fun);
                     sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
                     sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
                     break;
                 }
-                case 1: // IRK
+                case IRK: // IRK
                 {
                     sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
                     sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
                     sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
                     break;
                 }
-                case 2: // lifted IRK
+                case LIFTED_IRK: // lifted IRK
                 {
                     sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
                     sim_set_model(config, in, "expl_ode_jac", &expl_ode_jac);
                     break;
                 }
-                case 3: // GNSF
+                case GNSF: // GNSF
                 {
                     // set model funtions
                     sim_set_model(config, in, "phi_fun", &phi_fun);
@@ -451,10 +461,11 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                     // import model matrices
                     external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
-                    sim_gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);
+                    gnsf_model *model = (gnsf_model *) in->model;
+                    sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
                     break;
                 }
-                case 4: // new_lifted_irk
+                case NEW_LIFTED_IRK: // new_lifted_irk
                 {
                     sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
                     sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u);
@@ -481,13 +492,14 @@ TEST_CASE("wt_nx3_example", "[integrators]")
             * sim solver
             ************************************************/
 
-            sim_solver *sim_solver = sim_create(config, dims, opts);
-
+            sim_solver = sim_create(config, dims, opts);
+            // sim_solver *le_sim_solver = (sim_solver *) sim_solver_;
             int acados_return;
 
-            if (nss == 3) // for gnsf: perform precomputation
-                sim_gnsf_precompute(config, gnsf_dim, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
-
+            if (plan.sim_solver == GNSF){ // for gnsf: perform precomputation
+                gnsf_model *model = (gnsf_model *) in->model;
+                sim_gnsf_precompute(config, gnsf_dim, model, opts, sim_solver->mem, sim_solver->work, in->T);
+            }
             for (ii=0; ii<nsim0; ii++)
             {
                 // x
@@ -509,7 +521,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
             }
 
             for (jj = 0; jj < nx; jj++)
-                x_sol[jj] = out->xn[jj+nx*nsim0];
+                x_sol[jj] = out->xn[jj];
 
             for (jj = 0; jj < nx; jj++)
                 error[jj] = x_sol[jj] - x_ref_sol[jj];
@@ -517,8 +529,14 @@ TEST_CASE("wt_nx3_example", "[integrators]")
             max_error = 0.0;
             for (int ii = 0; ii < nx; ii++)
             {
-                max_error = (error[ii] > max_error) ? errror[ii] : max_error;
+                max_error = (error[ii] > max_error) ? error[ii] : max_error;
             }
+
+            /************************************************
+            * printing
+            ************************************************/
+            printf("\nxn: \n");
+            d_print_e_mat(1, nx, &x_sol[0], 1);
 
             REQUIRE(max_error <= tol);
 
@@ -532,10 +550,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
         } // end section
     } // END FOR SOLVERS
-
-
-
-
 
 	// explicit model
     external_function_casadi_free(&expl_ode_fun);

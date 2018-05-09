@@ -21,6 +21,10 @@
 #ifndef ACADOS_SIM_SIM_GNSF_H_
 #define ACADOS_SIM_SIM_GNSF_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 
 #include "acados/utils/timing.h"
@@ -256,5 +260,9 @@ void sim_gnsf_config_initialize_default(void *config_);
 
 // integrator
 int sim_gnsf(void *config, sim_in *in, sim_out *out, void *opts, void *mem_, void *work_);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_
