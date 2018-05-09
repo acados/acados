@@ -96,14 +96,6 @@ file(GLOB CHAIN_MODEL_SRC
     implicit_chain_model/impl_ode_jac_x_u_chain_nm6.c
 )
 
-set(CHEN_MODEL_SRC chen_model/chen_model.c)
-
-#file(GLOB PENDULUM_MODEL_SRC
-#    pendulum_model/pendulum_model.c
-#    pendulum_model/vde_forw_pendulum.c
-#    pendulum_model/jac_pendulum.c
-#)
-
 file(GLOB CRANE_MODEL_SRC
     crane_model/impl_ode_fun.c
     crane_model/impl_ode_fun_jac_x_xdot.c
@@ -167,58 +159,19 @@ file(GLOB GNSF_CRANE_SRC
 # Define examples
 
 # -------------------- nonlinear_chain
-
-if(ACADOS_WITH_C_INTERFACE)
-    add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
-    target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
-    add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
-else()
-    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-        add_executable(
-                nonlinear_chain_ocp_nlp_no_interface_example
-                nonlinear_chain_ocp_nlp_no_interface.c
-                ${CHAIN_MODEL_SRC}
-            )
-            target_link_libraries(
-                nonlinear_chain_ocp_nlp_no_interface_example
-                acados
-            )
-            add_test(
-                nonlinear_chain_ocp_nlp_no_interface_example
-                nonlinear_chain_ocp_nlp_no_interface_example
-            )
-
-        add_executable(
-                nonlinear_chain_ocp_nlp_no_interface_lifted_example
-                nonlinear_chain_ocp_nlp_no_interface_lifted.c
-                ${CHAIN_MODEL_SRC}
-            )
-            target_link_libraries(
-                nonlinear_chain_ocp_nlp_no_interface_lifted_example
-                acados
-            )
-            add_test(
-                nonlinear_chain_ocp_nlp_no_interface_lifted_example
-                nonlinear_chain_ocp_nlp_no_interface_example
-            )
-    endif()
-endif()
+add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
+target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
+add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
 
 # -------------------- wind turbine nmpc
-
-if(ACADOS_WITH_C_INTERFACE)
-    add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6P2_SRC})
-    target_link_libraries(wind_turbine_nmpc_example acados)
-    add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
-endif()
+# add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6P2_SRC})
+# target_link_libraries(wind_turbine_nmpc_example acados)
+# add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
 
 # -------------------- sim_wt_nx6
-
-if(ACADOS_WITH_C_INTERFACE)
-    add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
-    target_link_libraries(sim_wt_model_nx6 acados)
-    add_test(sim_wt_model_nx6 sim_wt_model_nx6)
-endif()
+add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
+target_link_libraries(sim_wt_model_nx6 acados)
+add_test(sim_wt_model_nx6 sim_wt_model_nx6)
 
 if(ACADOS_WITH_C_INTERFACE)
     add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
@@ -236,129 +189,46 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_test(pendulum_scqp pendulum_scqp)
 
     # -------------------- mass_spring
-    if(ACADOS_WITH_C_INTERFACE)
-        add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)
-        target_link_libraries(mass_spring_example acados)
-        add_test(mass_spring_example mass_spring_example)
+    add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_example acados)
+    add_test(mass_spring_example mass_spring_example)
 
-        add_executable(mass_spring_fcond_split mass_spring_fcond_split.c mass_spring_model/mass_spring_qp.c)
-        target_link_libraries(mass_spring_fcond_split acados)
-        add_test(mass_spring_fcond_split mass_spring_example)
+    add_executable(mass_spring_fcond_split mass_spring_fcond_split.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_fcond_split acados)
+    add_test(mass_spring_fcond_split mass_spring_example)
 
-        add_executable(mass_spring_pcond_split mass_spring_pcond_split.c mass_spring_model/mass_spring_qp.c)
-        target_link_libraries(mass_spring_pcond_split acados)
-        add_test(mass_spring_pcond_split mass_spring_example)
+    add_executable(mass_spring_pcond_split mass_spring_pcond_split.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_pcond_split acados)
+    add_test(mass_spring_pcond_split mass_spring_example)
 
-        add_executable(mass_spring_offline_fcond_qpoases_split mass_spring_offline_fcond_qpoases_split.c mass_spring_model/mass_spring_qp.c)
-        target_link_libraries(mass_spring_offline_fcond_qpoases_split acados)
-        add_test(mass_spring_offline_fcond_qpoases_split mass_spring_example)
+    add_executable(mass_spring_offline_fcond_qpoases_split mass_spring_offline_fcond_qpoases_split.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_offline_fcond_qpoases_split acados)
+    add_test(mass_spring_offline_fcond_qpoases_split mass_spring_example)
 
-        add_executable(mass_spring_nmpc_example mass_spring_nmpc_example.c mass_spring_model/mass_spring_qp.c)
-        target_link_libraries(mass_spring_nmpc_example acados)
-        add_test(mass_spring_nmpc_example mass_spring_example)
-    endif()
+    add_executable(mass_spring_nmpc_example mass_spring_nmpc_example.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_nmpc_example acados)
+    add_test(mass_spring_nmpc_example mass_spring_example)
 
-    add_executable(
-        mass_spring_example_no_interface
-        mass_spring_example_no_interface.c
-        mass_spring_model/mass_spring_qp.c
-    )
-    target_link_libraries(
-        mass_spring_example_no_interface
-        acados
-    )
-    add_test(
-        mass_spring_example_no_interface
-        mass_spring_example_no_interface
-    )
+    add_executable(mass_spring_example_no_interface mass_spring_example_no_interface.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_example_no_interface acados)
+    add_test(mass_spring_example_no_interface mass_spring_example_no_interface)
 
-    # add_executable(mass_spring_partial_tightening_example
-    #   mass_spring_partial_tightening.c
-    # )
-    # target_link_libraries(mass_spring_partial_tightening_example acados)
-    # add_test(
-    #   NAME mass_spring_partial_tightening_example
-    #   COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH}
-    #   ./mass_spring_partial_tightening_example
-    # )
-
-
-
-    # -------------------- sim_crane
-    if(ACADOS_WITH_C_INTERFACE)
-        add_executable(sim_crane_example sim_crane_example.c ${CRANE_MODEL_SRC})
-        target_link_libraries(sim_crane_example acados)
-        add_test(sim_crane_example sim_crane_example)
-    endif()
-
-    # add_executable(
-    #     sim_crane_no_interface_example
-    #     sim_crane_no_interface.c
-    #     ${CRANE_MODEL_SRC}
-    # )
-    # target_link_libraries(
-    #     sim_crane_no_interface_example
-    #     acados
-    # )
-    # add_test(
-    #     sim_crane_no_interface_example
-    #     sim_crane_no_interface_example
-    # )
+    add_executable(sim_crane_example sim_crane_example.c ${CRANE_MODEL_SRC})
+    target_link_libraries(sim_crane_example acados)
+    add_test(sim_crane_example sim_crane_example)
 
     # -------------------- sim_wt
-    if(ACADOS_WITH_C_INTERFACE)
-        add_executable(sim_wt_model_nx3 sim_wt_model_nx3.c ${WT_MODEL_NX3_SRC})
-        target_link_libraries(sim_wt_model_nx3 acados)
-        add_test(sim_wt_model_nx3 sim_wt_model_nx3)
-    endif()
+    add_executable(sim_wt_model_nx3 sim_wt_model_nx3.c ${WT_MODEL_NX3_SRC})
+    target_link_libraries(sim_wt_model_nx3 acados)
+    add_test(sim_wt_model_nx3 sim_wt_model_nx3)
 
-    # -------------------- ocp_qp
-    if(ACADOS_WITH_C_INTERFACE)
-        add_executable(ocp_qp ocp_qp.c)
-        target_link_libraries(ocp_qp acados)
-        add_test(ocp_qp ocp_qp)
-    endif()
+    add_executable(ocp_qp ocp_qp.c)
+    target_link_libraries(ocp_qp acados)
+    add_test(ocp_qp ocp_qp)
 
     # -------------------- dense_qp
-    if(ACADOS_WITH_C_INTERFACE)
-        add_executable(dense_qp dense_qp.c)
-        target_link_libraries(dense_qp acados)
-        add_test(dense_qp dense_qp)
-    endif()
-
-    # -------------------- chen
-
-    # add_executable(chen_nmpc_qpoases_example
-    #   chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
-    #   target_link_libraries(chen_nmpc_qpoases_example acados)
-    #   add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
-    #   install(TARGETS chen_nmpc_qpoases_example RUNTIME DESTINATION bin)
-    #   set_target_properties(chen_nmpc_qpoases_example PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/")
-
-    # -------------------- pendulum
-
-    # add_executable(pendulum_partial_tightening_example
-    #   pendulum_partial_tightening.c ${PENDULUM_MODEL_SRC})
-    # target_link_libraries(pendulum_partial_tightening_example acados)
-    # add_test(pendulum_partial_tightening_example pendulum_partial_tightening_example)
-
-    # # add_executable(linear_mpc_example linear_mpc.c)
-    # # target_link_libraries(linear_mpc_example acados)
-    # # target_compile_definitions(linear_mpc_example PRIVATE USE_ACADOS_TYPES)
-    # # add_test(linear_mpc_example linear_mpc_example)
-
-    # add_executable(discrete_model
-    #   discrete_model.c
-    #   discrete_model/discrete_model.c
-    #   discrete_model/discrete_model_cost.c
-    #   discrete_model/discrete_model_costN.c
-    # )
-    # target_link_libraries(discrete_model acados)
-    # add_test(discrete_model discrete_model)
-
-    # add_executable(pendulum_hpmpc_libstr_example pendulum_hpmpc_libstr.c ${PENDULUM_MODEL_SRC})
-    # target_link_libraries(pendulum_hpmpc_libstr_example acados)
-    # add_test(NAME pendulum_hpmpc_libstr_example
-    #   COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_hpmpc_libstr_example)
+    add_executable(dense_qp dense_qp.c)
+    target_link_libraries(dense_qp acados)
+    add_test(dense_qp dense_qp)
 
 endif()

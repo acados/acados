@@ -64,8 +64,7 @@ target_include_directories(acados
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/interfaces>
-        $<INSTALL_INTERFACE:include>
-        $<INSTALL_INTERFACE:include/blasfeo/include>)
+        $<INSTALL_INTERFACE:include>)
 
 # HPMPC must come before BLASFEO!
 if(ACADOS_WITH_HPMPC)
@@ -118,18 +117,9 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 
-if(SWIG_MATLAB)
-    find_package(Matlab COMPONENTS MX_LIBRARY REQUIRED)
-    target_compile_definitions(acados PUBLIC MATLAB)
-    target_include_directories(acados PUBLIC ${Matlab_INCLUDE_DIRS})
-    target_link_libraries(acados PUBLIC ${Matlab_MEX_LIBRARY})
-endif()
-
-if(ACADOS_WITH_C_INTERFACE)
-	add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
-	if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
-		add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
-	endif()
+add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
+if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+	add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
 endif()
 
 # Only test acados library for coverage

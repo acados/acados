@@ -29,7 +29,7 @@
 
 // c interface
 #include <acados_c/ocp_qp_interface.h>
-#include <acados_c/options.h>
+#include <acados_c/options_interface.h>
 
 // mass spring helper functions
 // hard constraints
@@ -185,18 +185,18 @@ int main() {
 #endif
 
                     break;
+#ifdef ACADOS_WITH_HPMPC
                 case PARTIAL_CONDENSING_HPMPC:
-                #ifdef ACADOS_WITH_HPMPC
                     printf("\nPartial condensing + HPMPC (N2 = %d):\n\n", N2);
 
                     ok = set_option_int(opts, "hpmpc.N2", N2);
                     assert(ok = true && "specified option not found!");
                     ok = set_option_int(opts, "hpmpc.max_iter", 30);
                     assert(ok = true && "specified option not found!");
-                #endif
                     break;
+#endif
+#ifdef ACADOS_WITH_QPDUNES
                 case PARTIAL_CONDENSING_QPDUNES:
-                #ifdef ACADOS_WITH_QPDUNES
                     printf("\nPartial condensing + qpDUNES (N2 = %d):\n\n", N2);
                 #ifdef ELIMINATE_X0
                     assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
@@ -221,26 +221,28 @@ int main() {
 
                     ok = set_option_int(opts, "qpdunes.N2", N2);
                     assert(ok = true && "specified option not found!");
-                #endif
                     break;
+#endif
                 case FULL_CONDENSING_HPIPM:
                     printf("\nFull condensing + HPIPM:\n\n");
                     // default options
                     break;
-                case FULL_CONDENSING_QORE:
 #ifdef ACADOS_WITH_QORE
+                case FULL_CONDENSING_QORE:
                     printf("\nFull condensing + QORE:\n\n");
                     // default options
-#endif
                     break;
+#endif
+#ifdef ACADOS_WITH_QPOASES
                 case FULL_CONDENSING_QPOASES:
-        #ifdef ACADOS_WITH_QPOASES
                     printf("\nFull condensing + QPOASES:\n\n");
                     // default options
-#endif
                     break;
+#endif
+#ifdef ACADOS_WITH_OOQP
                 case PARTIAL_CONDENSING_OOQP:
                     break;
+#endif
             }
 
             ocp_qp_solver *qp_solver = ocp_qp_create(config, qp_dims, opts);
@@ -282,7 +284,7 @@ int main() {
              * print solution
              ************************************************/
 
-//			print_ocp_qp_out(qp_out);
+// 		print_ocp_qp_out(qp_out);
 
             /************************************************
              * compute infinity norm of residuals

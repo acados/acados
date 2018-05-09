@@ -64,7 +64,9 @@
     result_map = PyDict_New();
     for (int i = 0; i < names.size(); ++i) {
         auto v = $1[names[i]];
-        PyDict_SetItemString(result_map, fieldnames[i], new_matrix(std::make_pair(v.size(), 1), v.data()));
+        PyDict_SetItemString(result_map,
+                             fieldnames[i],
+                             new_matrix(std::make_pair(v.size(), 1), v.data()));
     }
 #endif
     $result = result_map;
@@ -98,7 +100,7 @@
     $1 = tmp;
 }
 
-%typemap(typecheck, precedence=SWIG_TYPECHECK_POINTER) std::vector<double> {
+%typemap(typecheck, precedence = SWIG_TYPECHECK_POINTER) std::vector<double> {
 #if defined(SWIGMATLAB)
     $1 = (mxIsNumeric($input) ? 1 : 0);
 #elif defined(SWIGPYTHON)
@@ -115,7 +117,8 @@
 
 
 %typemap(out) ocp_qp_info  {
-    const char *fields[5] = {"num_iter", "qp_solver_time", "condensing_time", "interface_time", "total_time"};
+    const char *fields[5] = {"num_iter", "qp_solver_time", "condensing_time", "interface_time",
+                             "total_time"};
 #if defined(SWIGMATLAB)
     mxArray *mat_struct = mxCreateStructMatrix(1, 1, 5, fields);
     mxSetField(mat_struct, 0, fields[0], mxCreateDoubleScalar($1.num_iter));

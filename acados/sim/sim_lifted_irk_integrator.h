@@ -31,7 +31,6 @@ extern "C" {
 #define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
 
-
 typedef struct
 {
     int nx;
@@ -40,17 +39,16 @@ typedef struct
 
 typedef struct
 {
-	/* external functions */
-	// jacobian explicit ode
-	external_function_generic *expl_ode_jac;
-	// forward explicit vde
-	external_function_generic *expl_vde_for;
+    /* external functions */
+    // jacobian explicit ode
+    external_function_generic *expl_ode_jac;
+    // forward explicit vde
+    external_function_generic *expl_vde_for;
 
 } lifted_irk_model;
 
-
-
-typedef struct {
+typedef struct
+{
     real_t *rhs_in;
     real_t *jac_tmp;
     real_t **VDE_tmp;
@@ -68,10 +66,8 @@ typedef struct {
     real_t *out_adj_tmp;
 } sim_lifted_irk_workspace;
 
-
-
-typedef struct {
-
+typedef struct
+{
     double *grad_correction;
     double *grad_K;  // gradient correction
 
@@ -98,12 +94,12 @@ typedef struct {
 // get & set functions
 void sim_lifted_irk_set_nx(void *dims_, int nx);
 void sim_lifted_irk_set_nu(void *dims_, int nu);
-void sim_lifted_irk_get_nx(void *dims_, int* nx);
-void sim_lifted_irk_get_nu(void *dims_, int* nu);
+void sim_lifted_irk_get_nx(void *dims_, int *nx);
+void sim_lifted_irk_get_nu(void *dims_, int *nu);
 //
 int sim_lifted_irk_dims_calculate_size();
 //
-void *sim_lifted_irk_dims_assign(void* config_, void *raw_memory);
+void *sim_lifted_irk_dims_assign(void *config_, void *raw_memory);
 //
 int sim_lifted_irk_model_calculate_size(void *config, void *dims);
 //
@@ -128,7 +124,6 @@ int sim_lifted_irk_workspace_calculate_size(void *config, void *in, void *args);
 int sim_lifted_irk(void *config, sim_in *in, sim_out *out, void *args, void *mem, void *work);
 //
 void sim_lifted_irk_config_initialize_default(void *config);
-
 
 #ifdef __cplusplus
 } /* extern "C" */

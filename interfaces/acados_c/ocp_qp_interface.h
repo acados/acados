@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_C_OCP_QP_INTERFACE_H_
-#define ACADOS_C_OCP_QP_INTERFACE_H_
+#ifndef INTERFACES_ACADOS_C_OCP_QP_INTERFACE_H_
+#define INTERFACES_ACADOS_C_OCP_QP_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,19 +28,31 @@ extern "C" {
 
 typedef enum {
     PARTIAL_CONDENSING_HPIPM,
+#ifdef ACADOS_WITH_HPMPC
     PARTIAL_CONDENSING_HPMPC,
+#endif
+#ifdef ACADOS_WITH_OOQP
     PARTIAL_CONDENSING_OOQP,
+#endif
+#ifdef ACADOS_WITH_QPDUNES
     PARTIAL_CONDENSING_QPDUNES,
+#endif
     FULL_CONDENSING_HPIPM,
+#ifdef ACADOS_WITH_QPOASES
     FULL_CONDENSING_QPOASES,
+#endif
+#ifdef ACADOS_WITH_QORE
     FULL_CONDENSING_QORE
+#endif
 } ocp_qp_solver_t;
 
-typedef struct {
+typedef struct
+{
     ocp_qp_solver_t qp_solver;
 } ocp_qp_solver_plan;
 
-typedef struct {
+typedef struct
+{
     ocp_qp_xcond_solver_config *config;
     void *dims;
     void *opts;
@@ -63,10 +75,11 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
 //
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 //
-void ocp_qp_inf_norm_residuals(ocp_qp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, double *res);
+void ocp_qp_inf_norm_residuals(ocp_qp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+                               double *res);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_OCP_QP_INTERFACE_H_
+#endif  // INTERFACES_ACADOS_C_OCP_QP_INTERFACE_H_

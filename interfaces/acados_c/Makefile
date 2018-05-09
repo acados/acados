@@ -5,7 +5,7 @@ OBJS += external_function_interface.o
 OBJS += dense_qp_interface.o
 OBJS += ocp_nlp_interface.o
 OBJS += ocp_qp_interface.o
-OBJS += options_i.o
+OBJS += options_interface.o
 OBJS += sim_interface.o
 
 static_library: $(OBJS)

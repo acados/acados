@@ -18,19 +18,19 @@ wget -q http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
 mkdir -p eigen
 tar -xf 3.2.10.tar.gz --strip-components=1 -C eigen
 
-wget -q https://sourceforge.net/projects/casadi/files/CasADi/3.2.3/linux/casadi-octave-v3.2.3.tar.gz
-mkdir -p casadi-octave-v3.2.3
-tar -xf casadi-octave-v3.2.3.tar.gz -C casadi-octave-v3.2.3
+wget -q https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
+mkdir -p casadi-octave-v3.4.0
+tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave-v3.4.0
 
-wget -q https://sourceforge.net/projects/casadi/files/CasADi/3.2.3/linux/casadi-py35-np1.9-v3.2.3.tar.gz
-mkdir -p casadi-py35-np1.9-v3.2.3
-tar -xf casadi-py35-np1.9-v3.2.3.tar.gz -C casadi-py35-np1.9-v3.2.3
-export PYTHONPATH=$(pwd)/casadi-py35-np1.9-v3.2.3:$PYTHONPATH
+wget -q https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
+mkdir -p casadi-linux-py35-v3.4.0-64bit
+tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-linux-py35-v3.4.0-64bit
+export PYTHONPATH=$(pwd)/casadi-linux-py35-v3.4.0-64bit:$PYTHONPATH
 
-wget -q https://sourceforge.net/projects/casadi/files/CasADi/3.2.3/linux/casadi-matlabR2014b-v3.2.3.tar.gz
-mkdir -p casadi-matlabR2014b-v3.2.3
-tar -xf casadi-matlabR2014b-v3.2.3.tar.gz -C casadi-matlabR2014b-v3.2.3
-export MATLABPATH=$(pwd)/casadi-matlabR2014b-v3.2.3:$MATLABPATH
+wget -q https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
+mkdir -p casadi-linux-matlabR2014b-v3.4.0
+tar -xf casadi-linux-matlabR2014b-v3.4.0.tar.gz -C casadi-linux-matlabR2014b-v3.4.0
+export MATLABPATH=$(pwd)/casadi-linux-matlabR2014b-v3.4.0:$MATLABPATH
 
 wget -q http://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64/libblas.lib
 sudo mv libblas.lib /usr/x86_64-w64-mingw32/lib/libblas.a

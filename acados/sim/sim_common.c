@@ -18,56 +18,47 @@
  */
 
 // standard
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 // acados
+#include "acados/sim/sim_common.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
-#include "acados/sim/sim_common.h"
-
-
 
 /************************************************
-* config
-************************************************/
+ * config
+ ************************************************/
 
 int sim_solver_config_calculate_size()
 {
+    int size = 0;
 
-	int size = 0;
+    size += sizeof(sim_solver_config);
 
-	size += sizeof(sim_solver_config);
-
-	return size;
-
+    return size;
 }
-
-
 
 sim_solver_config *sim_solver_config_assign(void *raw_memory)
 {
+    char *c_ptr = raw_memory;
 
-	char *c_ptr = raw_memory;
+    sim_solver_config *config = (sim_solver_config *) c_ptr;
+    c_ptr += sizeof(sim_solver_config);
 
-	sim_solver_config *config = (sim_solver_config *) c_ptr;
-	c_ptr += sizeof(sim_solver_config);
+    assert((char *) raw_memory + sim_solver_config_calculate_size() >= c_ptr);
 
-    assert((char*)raw_memory + sim_solver_config_calculate_size() >= c_ptr);
-
-	return config;
-
+    return config;
 }
 
-
 /************************************************
-* in
-************************************************/
+ * in
+ ************************************************/
 
 int sim_in_calculate_size(void *config_, void *dims)
 {
-	sim_solver_config *config = config_;
+    sim_solver_config *config = config_;
 
     int size = sizeof(sim_in);
 
@@ -75,12 +66,12 @@ int sim_in_calculate_size(void *config_, void *dims)
     config->get_nx(dims, &nx);
     config->get_nu(dims, &nu);
 
-    size += nx * sizeof(double);  // x
-    size += nu * sizeof(double);  // u
-    size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
-    size += (nx + nu) * sizeof(double);  // S_adj
+    size += nx * sizeof(double);              // x
+    size += nu * sizeof(double);              // u
+    size += nx * (nx + nu) * sizeof(double);  // S_forw (max dimension)
+    size += (nx + nu) * sizeof(double);       // S_adj
 
-	size += config->model_calculate_size(config, dims);
+    size += config->model_calculate_size(config, dims);
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -88,24 +79,22 @@ int sim_in_calculate_size(void *config_, void *dims)
     return size;
 }
 
-
-
 sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 {
-	sim_solver_config *config = config_;
+    sim_solver_config *config = config_;
 
     char *c_ptr = (char *) raw_memory;
 
     sim_in *in = (sim_in *) c_ptr;
     c_ptr += sizeof(sim_in);
 
-	in->dims = dims;
+    in->dims = dims;
 
     int nx, nu;
     config->get_nx(dims, &nx);
     config->get_nu(dims, &nu);
 
-    int NF = nx+nu;
+    int NF = nx + nu;
 
     align_char_to(8, &c_ptr);
 
@@ -114,24 +103,21 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(nx * NF, &in->S_forw, &c_ptr);
     assign_and_advance_double(NF, &in->S_adj, &c_ptr);
 
-	in->model = config->model_assign(config, dims, c_ptr);
-	c_ptr += config->model_calculate_size(config, dims);
+    in->model = config->model_assign(config, dims, c_ptr);
+    c_ptr += config->model_calculate_size(config, dims);
 
-    assert((char*)raw_memory + sim_in_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + sim_in_calculate_size(config_, dims) >= c_ptr);
 
     return in;
 }
 
-
-
-
 /************************************************
-* out
-************************************************/
+ * out
+ ************************************************/
 
 int sim_out_calculate_size(void *config_, void *dims)
 {
-	sim_solver_config *config = config_;
+    sim_solver_config *config = config_;
 
     int size = sizeof(sim_out);
 
@@ -142,11 +128,11 @@ int sim_out_calculate_size(void *config_, void *dims)
     int NF = nx + nu;
     size += sizeof(sim_info);
 
-    size += nx * sizeof(double);  // xn
-    size += nx * NF * sizeof(double);  // S_forw
-    size += (nx + nu) * sizeof(double);  // S_adj
+    size += nx * sizeof(double);                   // xn
+    size += nx * NF * sizeof(double);              // S_forw
+    size += (nx + nu) * sizeof(double);            // S_adj
     size += ((NF + 1) * NF / 2) * sizeof(double);  // S_hess
-    size += NF * sizeof(double);  // grad
+    size += NF * sizeof(double);                   // grad
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -154,24 +140,22 @@ int sim_out_calculate_size(void *config_, void *dims)
     return size;
 }
 
-
-
 sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 {
-	sim_solver_config *config = config_;
+    sim_solver_config *config = config_;
 
     char *c_ptr = (char *) raw_memory;
 
     int nx, nu;
     config->get_nx(dims, &nx);
     config->get_nu(dims, &nu);
-    
+
     int NF = nx + nu;
 
     sim_out *out = (sim_out *) c_ptr;
     c_ptr += sizeof(sim_out);
 
-    out->info = (sim_info *)c_ptr;
+    out->info = (sim_info *) c_ptr;
     c_ptr += sizeof(sim_info);
 
     align_char_to(8, &c_ptr);
@@ -182,7 +166,7 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double((NF + 1) * NF / 2, &out->S_hess, &c_ptr);
     assign_and_advance_double(NF, &out->grad, &c_ptr);
 
-    assert((char*)raw_memory + sim_out_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + sim_out_calculate_size(config_, dims) >= c_ptr);
 
     return out;
 }
