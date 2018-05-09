@@ -116,9 +116,9 @@ typedef struct
 } ocp_nlp_constraints_model;
 
 //
-int ocp_nlp_constraints_calculate_size(void *config, void *dims);
+int ocp_nlp_constraints_model_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_constraints_assign(void *config, void *dims, void *raw_memory);
+void *ocp_nlp_constraints_model_assign(void *config, void *dims, void *raw_memory);
 
 
 

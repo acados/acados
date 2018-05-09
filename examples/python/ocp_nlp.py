@@ -22,7 +22,13 @@ nlp.initialize_solver("blabla")
 
 output = nlp.solve()
 
-print(output)
+print("states:")
+print(output.states())
+print()
+
+print("controls:")
+print(output.controls())
+print()
 
 # from models import chen_model
 

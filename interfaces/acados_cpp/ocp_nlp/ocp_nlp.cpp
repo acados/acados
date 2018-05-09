@@ -67,8 +67,64 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
     config_->qp_solver = ocp_qp_config_create({PARTIAL_CONDENSING_HPIPM});
 
     for (int i = 0; i <= N; ++i) {
+        ocp_nlp_cost_ls_config_initialize_default(config_->cost[i]);
         ocp_nlp_constraints_config_initialize_default(config_->constraints[i]);
     }
+
+    nlp_.reset(new ocp_nlp_in);
+    nlp_->constraints = (void **) calloc(N+1, sizeof(void *));
+    nlp_->cost = (void **) calloc(N+1, sizeof(void *));
+    nlp_->dynamics = (void **) calloc(N, sizeof(void *));
+
+    dims_.reset(new ocp_nlp_dims);
+    dims_->N = N;
+    dims_->nv = (int *) calloc(N+1, sizeof(int));
+    dims_->nx = (int *) calloc(N+1, sizeof(int));
+    dims_->nu = (int *) calloc(N+1, sizeof(int));
+    dims_->ni = (int *) calloc(N+1, sizeof(int));
+    dims_->constraints = (void **) calloc(N+1, sizeof(void *));
+    dims_->cost = (void **) calloc(N+1, sizeof(void *));
+    dims_->dynamics = (void **) calloc(N, sizeof(void *));
+
+    for (int i = 0; i <= N; ++i) {
+        dims_->nv[i] = dimensions_["nx"][i] + dimensions_["nu"][i] + dimensions_["ns"][i];
+        dims_->nx[i] = dimensions_["nx"][i];
+        dims_->nu[i] = dimensions_["nu"][i];
+        dims_->ni[i] = dimensions_["nbx"][i] + dimensions_["nbu"][i] + dimensions_["ng"][i] + dimensions_["nh"][i];
+    }
+
+    for (int i = 0; i <= N; ++i) {
+        dims_->constraints[i] = malloc(sizeof(ocp_nlp_constraints_dims));
+        ocp_nlp_constraints_dims *con_dims = (ocp_nlp_constraints_dims *) dims_->constraints[i];
+        con_dims->nx = dimensions_["nx"][i];
+        con_dims->nu = dimensions_["nu"][i];
+        con_dims->nb = dimensions_["nbx"][i] + dimensions_["nbu"][i];
+        con_dims->nbx = dimensions_["nbx"][i];
+        con_dims->nbu = dimensions_["nbu"][i];
+        con_dims->ng = dimensions_["ng"][i];
+        con_dims->nh = dimensions_["nh"][i];
+        con_dims->np = 0;
+        con_dims->ns = dimensions_["ns"][i];
+        int num_bytes = ocp_nlp_constraints_model_calculate_size(config_->constraints[i], con_dims);
+        void *raw_memory = calloc(1, num_bytes);
+        nlp_->constraints[i] = ocp_nlp_constraints_model_assign(config_->constraints[i], con_dims, raw_memory);
+
+        dims_->cost[i] = malloc(sizeof(ocp_nlp_cost_ls_dims));
+        ocp_nlp_cost_ls_dims *cost_dims = (ocp_nlp_cost_ls_dims *) dims_->cost[i];
+        cost_dims->nx = dimensions_["nx"][i];
+        cost_dims->nu = dimensions_["nu"][i];
+        cost_dims->ns = dimensions_["ns"][i];
+        cost_dims->ny = dimensions_["ny"][i];
+        num_bytes = ocp_nlp_cost_ls_model_calculate_size(config_->cost[i], cost_dims);
+        raw_memory = calloc(1, num_bytes);
+        nlp_->cost[i] = ocp_nlp_cost_ls_model_assign(config_->cost[i], cost_dims, raw_memory);
+    }
+
+    int num_bytes = ocp_qp_dims_calculate_size(N);
+    void *raw_memory = calloc(1, num_bytes);
+    dims_->qp_solver = ocp_qp_dims_assign(N, raw_memory);
+
+    nlp_->dims = dims_.get();
 
     for (int stage = 0; stage <= N; ++stage) {
         cached_bounds["lbx"].push_back(vector<double>(nx[stage], -INFINITY));
@@ -86,29 +142,13 @@ ocp_nlp::ocp_nlp(int N, int nx, int nu, int ng, int nh, int ns)
 
 void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, option_t *> options) {
 
-    // Get bound indices for all stages
-    map<string, vector<vector<int>>> idxb_new;
-    idxb_new["x"] = calculate_all_idxb(cached_bounds.at("lbx"), cached_bounds.at("ubx"));
-    idxb_new["u"] = calculate_all_idxb(cached_bounds.at("lbu"), cached_bounds.at("ubu"));
+    squeeze_dimensions(cached_bounds);
 
-    // Calculate new dimensions
-    map<string, vector<int>> nb {{"x", std::vector<int>(num_stages()+1)}, {"u", std::vector<int>(num_stages()+1)}};
-    std::transform(idxb_new["x"].begin(), idxb_new["x"].end(), nb["x"].begin(), [](auto elem){return elem.size();});
-    std::transform(idxb_new["u"].begin(), idxb_new["u"].end(), nb["u"].begin(), [](auto elem){return elem.size();});
+    ocp_nlp_dims_initialize(config_.get(), dimensions_["nx"].data(), dimensions_["nu"].data(), dimensions_["ny"].data(),
+                            dimensions_["nbx"].data(), dimensions_["nbu"].data(), dimensions_["ng"].data(), dimensions_["nh"].data(),
+                            std::vector<int>(N+1, 0).data(), dimensions_["ns"].data(), nlp_->dims);
 
-    dims_.reset(ocp_nlp_dims_create(config_.get()));
-
-    ocp_nlp_dims_initialize(config_.get(), dimensions_["nx"].data(), dimensions_["nu"].data(),
-                            dimensions_["ny"].data(), nb["x"].data(), nb["u"].data(),
-                            dimensions_["ng"].data(), dimensions_["nh"].data(), std::vector<int>(N+1, 0).data(),
-                            dimensions_["ns"].data(), dims_.get());
-
-    nlp_->dims = dims_.get();
     nlp_->Ts = step_.data();
-
-    for (string bound : {"x", "u"})
-        for (int stage = 0; stage <= num_stages(); ++stage)
-            set_bound_indices(bound, stage, idxb_new.at(bound).at(stage));
 
     vector<double> xref(2, 0);
     vector<double> uref(1, 0);
@@ -217,28 +257,37 @@ void ocp_nlp::set_dynamics(const casadi::Function& model, std::map<std::string, 
         config_->dynamics[i]->sim_solver = sim_config_create(sim_plan);
     }
 
-    auto functions = create_explicit_ode_functions(model);
+    for (int i = 0; i < N; ++i) {
+        int num_bytes = ocp_nlp_dynamics_cont_dims_calculate_size(config_->dynamics[i]);
+        void *raw_memory = calloc(1, num_bytes);
+        dims_->dynamics[i] = ocp_nlp_dynamics_cont_dims_assign(config_->dynamics[i], raw_memory);
+        ocp_nlp_dynamics_cont_dims_initialize(config_->dynamics[i], dims_->dynamics[i],
+                                              dimensions_["nx"][i], dimensions_["nu"][i],
+                                              dimensions_["nx"][i+1], dimensions_["nu"][i+1]);
 
-    std::map<std::string, void *> dynamics_handle;
+        num_bytes = ocp_nlp_dynamics_cont_model_calculate_size(config_->dynamics[i], dims_->dynamics[i]);
+        raw_memory = calloc(1, num_bytes);
+        nlp_->dynamics[i] = ocp_nlp_dynamics_cont_model_assign(config_->dynamics[i], dims_->dynamics[i], raw_memory);
+    }
+
+    auto functions = create_explicit_ode_functions(model);
 
     for (auto elem : functions) {
         elem.second.generate(elem.first + ".c", {{"with_header", true}, {"with_export", false}, {"casadi_int", "int"}});
-        dynamics_handle[elem.first] = compile_and_load(elem.first);
+        dynamics_handle_[elem.first] = compile_and_load(elem.first);
     }
 
-    external_function_casadi forw_vde;
+    forw_vde_.casadi_fun = reinterpret_cast<casadi_eval_t>(load_function("expl_vde_for", dynamics_handle_["expl_vde_for"]));
+    forw_vde_.casadi_n_in = reinterpret_cast<casadi_getint_t>(load_function("expl_vde_for_n_in", dynamics_handle_["expl_vde_for"]));
+    forw_vde_.casadi_n_out = reinterpret_cast<casadi_getint_t>(load_function("expl_vde_for_n_out", dynamics_handle_["expl_vde_for"]));
+    forw_vde_.casadi_sparsity_in = reinterpret_cast<casadi_sparsity_t>(load_function("expl_vde_for_sparsity_in", dynamics_handle_["expl_vde_for"]));
+    forw_vde_.casadi_sparsity_out = reinterpret_cast<casadi_sparsity_t>(load_function("expl_vde_for_sparsity_out", dynamics_handle_["expl_vde_for"]));
+    forw_vde_.casadi_work = reinterpret_cast<casadi_work_t>(load_function("expl_vde_for_work", dynamics_handle_["expl_vde_for"]));
 
-    forw_vde.casadi_fun = reinterpret_cast<casadi_eval_t>(load_function("expl_vde_for", dynamics_handle["expl_vde_for"]));
-    forw_vde.casadi_n_in = reinterpret_cast<casadi_getint_t>(load_function("expl_vde_for_n_in", dynamics_handle["expl_vde_for"]));
-    forw_vde.casadi_n_out = reinterpret_cast<casadi_getint_t>(load_function("expl_vde_for_n_out", dynamics_handle["expl_vde_for"]));
-    forw_vde.casadi_sparsity_in = reinterpret_cast<casadi_sparsity_t>(load_function("expl_vde_for_sparsity_in", dynamics_handle["expl_vde_for"]));
-    forw_vde.casadi_sparsity_out = reinterpret_cast<casadi_sparsity_t>(load_function("expl_vde_for_sparsity_out", dynamics_handle["expl_vde_for"]));
-    forw_vde.casadi_work = reinterpret_cast<casadi_work_t>(load_function("expl_vde_for_work", dynamics_handle["expl_vde_for"]));
-
-    external_function_casadi_create_array(1, &forw_vde);
+    external_function_casadi_create_array(1, &forw_vde_);
 
     for (int stage = 0; stage < N; ++stage)
-        nlp_set_model_in_stage(config_.get(), nlp_.get(), stage, "expl_vde_for", &forw_vde);
+        nlp_set_model_in_stage(config_.get(), nlp_.get(), stage, "expl_vde_for", &forw_vde_);
 
 };
 
@@ -396,6 +445,43 @@ void ocp_nlp::set_bound_indices(std::string bound, int stage, std::vector<int> i
 
 int ocp_nlp::num_stages() {
     return N;
+}
+
+ocp_nlp::~ocp_nlp() {
+    for (int i = 0; i < N; ++i) {
+        free(dims_->constraints[i]);
+        free(dims_->cost[i]);
+        free(dims_->dynamics[i]);
+
+        free(nlp_->constraints[i]);
+        free(nlp_->cost[i]);
+        free(nlp_->dynamics[i]);
+    }
+
+    free(dims_->constraints[N]);
+    free(dims_->cost[N]);
+
+    free(nlp_->constraints[N]);
+    free(nlp_->cost[N]);
+
+    free(dims_->nv);
+    free(dims_->nx);
+    free(dims_->nu);
+    free(dims_->ni);
+
+    free(dims_->constraints);
+    free(dims_->cost);
+    free(dims_->dynamics);
+    free(dims_->qp_solver);
+
+    free(nlp_->constraints);
+    free(nlp_->cost);
+    free(nlp_->dynamics);
+
+    free(config_->qp_solver);
+
+    for (auto& elem : dynamics_handle_)
+        dlclose(elem.second);
 }
 
 }  // namespace acados

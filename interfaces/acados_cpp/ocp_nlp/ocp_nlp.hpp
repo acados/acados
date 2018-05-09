@@ -26,6 +26,8 @@ class ocp_nlp : private ocp {
 
     ocp_nlp(int N, int nx, int nu, int ng = 0, int nh = 0, int ns = 0);
 
+    ~ocp_nlp();
+
     void initialize_solver(std::string solver_name, std::map<std::string, option_t *> options = {});
 
     ocp_nlp_solution solve();
@@ -84,6 +86,10 @@ class ocp_nlp : private ocp {
     std::unique_ptr<ocp_nlp_solver_config> config_;
 
     std::unique_ptr<ocp_nlp_solver> solver_;
+
+    std::map<std::string, void *> dynamics_handle_;
+
+    external_function_casadi forw_vde_;
 
     std::unique_ptr<void, void (*)(void *)> solver_options_ {nullptr, &std::free};
 
