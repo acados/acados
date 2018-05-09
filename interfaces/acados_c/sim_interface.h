@@ -45,7 +45,7 @@ typedef struct
 //
 sim_solver_config *sim_config_create(sim_solver_plan plan);
 //
-void *sim_dims_create();
+void *sim_dims_create(void *config_);
 //
 sim_in *sim_in_create(sim_solver_config *config, void *dims);
 //
