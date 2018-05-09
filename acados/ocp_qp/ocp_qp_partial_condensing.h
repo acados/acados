@@ -30,13 +30,11 @@ extern "C" {
 typedef struct ocp_qp_partial_condensing_opts_
 {
     struct d_cond_qp_ocp2ocp_arg *hpipm_opts;
-    ocp_qp_dims *pcond_dims; // TODO why in opts??? move in memory or in dims ??? Dimitris: I'd say dims
-	int *block_size;
+    ocp_qp_dims *pcond_dims;  // TODO(all): move to dims
+    int *block_size;
     int N2;
     int N2_bkp;
 } ocp_qp_partial_condensing_opts;
-
-
 
 typedef struct ocp_qp_partial_condensing_memory_
 {
@@ -44,8 +42,6 @@ typedef struct ocp_qp_partial_condensing_memory_
     ocp_qp_in *qp_in;
     ocp_qp_in *pcond_qp_in;
 } ocp_qp_partial_condensing_memory;
-
-
 
 //
 int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims);
@@ -62,9 +58,11 @@ void *ocp_qp_partial_condensing_memory_assign(ocp_qp_dims *dims, void *opts, voi
 //
 int ocp_qp_partial_condensing_workspace_calculate_size(ocp_qp_dims *dims, void *opts_);
 //
-void ocp_qp_partial_condensing(ocp_qp_in *in, ocp_qp_in *out, ocp_qp_partial_condensing_opts *opts, ocp_qp_partial_condensing_memory *mem, void *work);
+void ocp_qp_partial_condensing(ocp_qp_in *in, ocp_qp_in *out, ocp_qp_partial_condensing_opts *opts,
+                               ocp_qp_partial_condensing_memory *mem, void *work);
 //
-void ocp_qp_partial_expansion(ocp_qp_out *in, ocp_qp_out *out, ocp_qp_partial_condensing_opts *opts, ocp_qp_partial_condensing_memory *mem, void *work);
+void ocp_qp_partial_expansion(ocp_qp_out *in, ocp_qp_out *out, ocp_qp_partial_condensing_opts *opts,
+                              ocp_qp_partial_condensing_memory *mem, void *work);
 //
 void ocp_qp_partial_condensing_config_initialize_default(void *config_);
 

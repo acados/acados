@@ -19,11 +19,11 @@
 
 #include "acados_c/dense_qp_interface.h"
 
-//external
-#include <stdlib.h>
+// external
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
-//acados_c
+// acados_c
 
 #include "acados/utils/mem.h"
 
@@ -32,7 +32,6 @@
 #include "acados/dense_qp/dense_qp_qore.h"
 #endif
 #include "acados/dense_qp/dense_qp_qpoases.h"
-#include "acados/dense_qp/dense_qp_hpipm.h"
 
 qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
 {
@@ -50,20 +49,18 @@ qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
             dense_qp_hpipm_config_initialize_default(solver_config);
             break;
         case DENSE_QP_QPOASES:
-            #ifdef ACADOS_WITH_QPOASES
+#ifdef ACADOS_WITH_QPOASES
             dense_qp_qpoases_config_initialize_default(solver_config);
-            #endif
+#endif
             break;
         case DENSE_QP_QORE:
-            #ifdef ACADOS_WITH_QORE
+#ifdef ACADOS_WITH_QORE
             dense_qp_qore_config_initialize_default(solver_config);
-            #endif
+#endif
             break;
     }
     return solver_config;
 }
-
-
 
 dense_qp_dims *dense_qp_dims_create()
 {
@@ -76,8 +73,6 @@ dense_qp_dims *dense_qp_dims_create()
     return dims;
 }
 
-
-
 dense_qp_in *dense_qp_in_create(qp_solver_config *config, dense_qp_dims *dims)
 {
     int bytes = dense_qp_in_calculate_size(config, dims);
@@ -89,8 +84,6 @@ dense_qp_in *dense_qp_in_create(qp_solver_config *config, dense_qp_dims *dims)
     return in;
 }
 
-
-
 dense_qp_out *dense_qp_out_create(qp_solver_config *config, dense_qp_dims *dims)
 {
     int bytes = dense_qp_out_calculate_size(config, dims);
@@ -101,8 +94,6 @@ dense_qp_out *dense_qp_out_create(qp_solver_config *config, dense_qp_dims *dims)
 
     return out;
 }
-
-
 
 void *dense_qp_opts_create(qp_solver_config *config, dense_qp_dims *dims)
 {
@@ -117,8 +108,6 @@ void *dense_qp_opts_create(qp_solver_config *config, dense_qp_dims *dims)
     return opts;
 }
 
-
-
 int dense_qp_calculate_size(qp_solver_config *config, dense_qp_dims *dims, void *opts_)
 {
     int bytes = sizeof(dense_qp_solver);
@@ -129,9 +118,8 @@ int dense_qp_calculate_size(qp_solver_config *config, dense_qp_dims *dims, void 
     return bytes;
 }
 
-
-
-dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, void *opts_, void *raw_memory)
+dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, void *opts_,
+                                 void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -150,12 +138,10 @@ dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, 
     solver->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(config, dims, opts_);
 
-    assert((char*)raw_memory + dense_qp_calculate_size(config, dims, opts_) == c_ptr);
+    assert((char *) raw_memory + dense_qp_calculate_size(config, dims, opts_) == c_ptr);
 
     return solver;
 }
-
-
 
 dense_qp_solver *dense_qp_create(qp_solver_config *config, dense_qp_dims *dims, void *opts_)
 {
@@ -168,14 +154,11 @@ dense_qp_solver *dense_qp_create(qp_solver_config *config, dense_qp_dims *dims, 
     return solver;
 }
 
-
-
 int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp_out)
 {
-    return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem, solver->work);
+    return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem,
+                                    solver->work);
 }
-
-
 
 static dense_qp_res *dense_qp_res_create(dense_qp_dims *dims)
 {
@@ -185,8 +168,6 @@ static dense_qp_res *dense_qp_res_create(dense_qp_dims *dims)
     return qp_res;
 }
 
-
-
 static dense_qp_res_ws *dense_qp_res_workspace_create(dense_qp_dims *dims)
 {
     int size = dense_qp_res_workspace_calculate_size(dims);
@@ -195,10 +176,9 @@ static dense_qp_res_ws *dense_qp_res_workspace_create(dense_qp_dims *dims)
     return res_ws;
 }
 
-
-
 // TODO(dimitris): better name for this wrapper?
-void dense_qp_inf_norm_residuals(dense_qp_dims *dims, dense_qp_in *qp_in, dense_qp_out *qp_out, double *res)
+void dense_qp_inf_norm_residuals(dense_qp_dims *dims, dense_qp_in *qp_in, dense_qp_out *qp_out,
+                                 double *res)
 {
     // double *residuals = malloc(4*sizeof(double));
     dense_qp_res *qp_res = dense_qp_res_create(dims);

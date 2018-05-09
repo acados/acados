@@ -1,5 +1,5 @@
 
-#define S_FUNCTION_NAME  ocp_qp_s_function
+#define S_FUNCTION_NAME ocp_qp_s_function
 #define S_FUNCTION_LEVEL 2
 
 #ifndef MATLAB_MEX_FILE
@@ -11,14 +11,15 @@
 
 #include "simstruc.h"
 
+#include "acados/utils/print.h"
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/options.h"
-#include "acados/utils/print.h"
 
 static void mdlInitializeSizes(SimStruct *S)
 {
     ssSetNumSFcnParams(S, 4);
-    if (ssGetNumSFcnParams(S) != ssGetSFcnParamsCount(S)) {
+    if (ssGetNumSFcnParams(S) != ssGetSFcnParamsCount(S))
+    {
         return; /* Parameter mismatch will be reported by Simulink */
     }
     const mxArray *B = ssGetSFcnParam(S, 3);
@@ -48,7 +49,8 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 }
 
 #define MDL_START
-static void mdlStart(SimStruct *S) {
+static void mdlStart(SimStruct *S)
+{
     printf("mdlStart: Read parameters");
     const mxArray *Q = ssGetSFcnParam(S, 0);
     const mxArray *R = ssGetSFcnParam(S, 1);
@@ -59,24 +61,25 @@ static void mdlStart(SimStruct *S) {
     ssSetInputPortWidth(S, 0, nx);
     int nu = mxGetN(B);
     ssSetOutputPortWidth(S, 0, nu);
-    
+
     ocp_qp_dims *qp_dims = ocp_qp_dims_create(AC_HORIZON_LENGTH);
     qp_dims->nbx[0] = nx;
     qp_dims->nb[0] = nx;
-    for (int i = 0; i < AC_HORIZON_LENGTH; ++i) {
+    for (int i = 0; i < AC_HORIZON_LENGTH; ++i)
+    {
         qp_dims->nx[i] = nx;
         qp_dims->nu[i] = nu;
     }
     qp_dims->nx[AC_HORIZON_LENGTH] = nx;
-    
+
     ocp_qp_solver_plan plan = {PARTIAL_CONDENSING_HPIPM};
     ocp_qp_xcond_solver_config *config = ocp_qp_config_create(plan);
 
     ocp_qp_in *qp_in = ocp_qp_in_create(config, qp_dims);
-    for (int i = 0; i < nx; ++i)
-        qp_in->idxb[0][i] = nu+i;
+    for (int i = 0; i < nx; ++i) qp_in->idxb[0][i] = nu + i;
 
-    for (int i = 0; i < AC_HORIZON_LENGTH; ++i) {
+    for (int i = 0; i < AC_HORIZON_LENGTH; ++i)
+    {
         d_cvt_colmaj_to_ocp_qp_Q(i, (double *) mxGetData(Q), qp_in);
         d_cvt_colmaj_to_ocp_qp_R(i, (double *) mxGetData(R), qp_in);
         d_cvt_colmaj_to_ocp_qp_A(i, (double *) mxGetData(A), qp_in);
@@ -86,12 +89,12 @@ static void mdlStart(SimStruct *S) {
     d_cvt_colmaj_to_ocp_qp_R(AC_HORIZON_LENGTH, (double *) mxGetData(R), qp_in);
 
     ocp_qp_out *qp_out = ocp_qp_out_create(config, qp_dims);
-    
+
     void *qp_opts = ocp_qp_opts_create(config, qp_dims);
-    
+
     printf("mdlStart: Create acados solver");
     ocp_qp_solver *qp_solver = ocp_qp_create(config, qp_dims, qp_opts);
-    
+
     ssGetPWork(S)[0] = (void *) qp_dims;
     ssGetPWork(S)[1] = (void *) qp_in;
     ssGetPWork(S)[2] = (void *) qp_out;
@@ -100,19 +103,19 @@ static void mdlStart(SimStruct *S) {
 }
 
 static void mdlOutputs(SimStruct *S, int_T tid)
-{    
+{
     ocp_qp_in *qp_in = (ocp_qp_in *) ssGetPWork(S)[1];
     ocp_qp_out *qp_out = (ocp_qp_out *) ssGetPWork(S)[2];
     ocp_qp_solver *qp_solver = (ocp_qp_solver *) ssGetPWork(S)[4];
 
-    const double *x0 = ssGetInputPortRealSignal(S,0);
+    const double *x0 = ssGetInputPortRealSignal(S, 0);
     d_cvt_colmaj_to_ocp_qp_lbx(0, x0, qp_in);
     d_cvt_colmaj_to_ocp_qp_ubx(0, x0, qp_in);
-    
+
     int status = ocp_qp_solve(qp_solver, qp_in, qp_out);
-    
+
     ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
-    
+
     double *u0_opt = ssGetOutputPortRealSignal(S, 0);
     double *time = ssGetOutputPortRealSignal(S, 1);
     double *status_out = ssGetOutputPortRealSignal(S, 2);
@@ -122,7 +125,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     *status_out = (double) status;
 }
 
-static void mdlTerminate(SimStruct *S) {
+static void mdlTerminate(SimStruct *S)
+{
     free(ssGetPWork(S)[0]);
     free(ssGetPWork(S)[1]);
     free(ssGetPWork(S)[2]);
@@ -130,8 +134,8 @@ static void mdlTerminate(SimStruct *S) {
     free(ssGetPWork(S)[4]);
 }
 
-#ifdef  MATLAB_MEX_FILE    /* Is this file being compiled as a MEX-file? */
-#include "simulink.c"      /* MEX-file interface mechanism */
+#ifdef MATLAB_MEX_FILE /* Is this file being compiled as a MEX-file? */
+#include "simulink.c"  /* MEX-file interface mechanism */
 #else
-#include "cg_sfun.h"       /* Code generation registration function */
+#include "cg_sfun.h" /* Code generation registration function */
 #endif

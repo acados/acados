@@ -273,7 +273,7 @@ int main()
 		sim_rk_opts *opts = sim_opts_create(config, dims);
 
 		// opts->ns = 4; // number of stages in rk integrator
-//		opts->num_steps = 5; // number of integration steps
+// 	opts->num_steps = 5; // number of integration steps
 		opts->sens_forw = true;
 		opts->sens_adj = false;
 
@@ -416,7 +416,7 @@ int main()
 		double la_time = 0.0;
 		double ad_time = 0.0;
 
-//		for (ii=0; ii<nsim; ii++)
+// 	for (ii=0; ii<nsim; ii++)
 		for (ii=0; ii<nsim0; ii++)
 		{
 			// x
@@ -429,8 +429,8 @@ int main()
 			for (jj = 0; jj < nu; jj++)
 				in->u[2+jj] = 0.1;
 
-//			d_print_mat(1, nx, in->x, 1);
-//			d_print_mat(1, nu, in->u, 1);
+// 		d_print_mat(1, nx, in->x, 1);
+// 		d_print_mat(1, nu, in->u, 1);
 
 		    acados_return = sim_solve(sim_solver, in, out);
 			if (acados_return != 0)
@@ -440,7 +440,7 @@ int main()
 			la_time += out->info->LAtime;
 			ad_time += out->info->ADtime;
 
-//			d_print_mat(1, nx, out->xn, 1);
+// 		d_print_mat(1, nx, out->xn, 1);
 
 			// x_out
 			for (jj = 0; jj < nx; jj++)
@@ -530,7 +530,7 @@ int main()
 		}
 #endif
 
-//		printf("time split: %f ms CPU, %f ms LA, %f ms AD\n\n", cpu_time, la_time, ad_time);
+// 	printf("time split: %f ms CPU, %f ms LA, %f ms AD\n\n", cpu_time, la_time, ad_time);
 		printf("time for %d simulation steps: %f ms (AD time: %f ms (%5.2f%%))\n\n", nsim, 1e3*total_cpu_time, 1e3*ad_time, 1e2*ad_time/cpu_time);
 
 		free(sim_solver);

@@ -36,7 +36,7 @@ int_t write_int_vector_to_txt(int_t *vec, int_t n, const char *fname);
 void print_ocp_qp_in(ocp_qp_in const in);
 
 ocp_qp_in *read_ocp_qp_in(const char *fpath_, int_t BOUNDS, int_t INEQUALITIES, int_t MPC,
-    int_t QUIET);
+                          int_t QUIET);
 
 void write_ocp_qp_in_to_txt(ocp_qp_in *const in, const char *dir);
 
@@ -44,4 +44,4 @@ void write_ocp_qp_in_to_txt(ocp_qp_in *const in, const char *dir);
 } /* extern "C" */
 #endif
 
-#endif  /* TEST_TEST_UTILS_READ_OCP_QP_IN_H_ */
+#endif /* TEST_TEST_UTILS_READ_OCP_QP_IN_H_ */

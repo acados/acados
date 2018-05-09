@@ -19,16 +19,16 @@
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/sim_lifted_irk_integrator.h"
-#include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_gnsf.h"
+#include "acados/sim/sim_irk_integrator.h"
+#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/sim/sim_new_lifted_irk_integrator.h"
 
 #include "acados_c/sim_interface.h"
 
-//external
-#include <stdlib.h>
+// external
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "acados/utils/mem.h"
@@ -64,8 +64,6 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
     return solver_config;
 }
 
-
-
 void *sim_dims_create(void *config_)
 {
     sim_solver_config *config = (sim_solver_config *) config_;
@@ -78,8 +76,6 @@ void *sim_dims_create(void *config_)
     return dims;
 }
 
-
-
 sim_in *sim_in_create(sim_solver_config *config, void *dims)
 {
     int bytes = sim_in_calculate_size(config, dims);
@@ -91,8 +87,6 @@ sim_in *sim_in_create(sim_solver_config *config, void *dims)
     return in;
 }
 
-
-
 int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr)
 {
     int status = sim_set_model_internal(config, in->model, fun_type, fun_ptr);
@@ -100,10 +94,9 @@ int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, v
     return status;
 }
 
-
-
 // NOTE(dimitris) not exposed to user, used by NLP interface too
-int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type, void *fun_ptr)
+int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type,
+                           void *fun_ptr)
 {
     int status = ACADOS_SUCCESS;
 
@@ -140,8 +133,6 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
     return status;
 }
 
-
-
 sim_out *sim_out_create(sim_solver_config *config, void *dims)
 {
     int bytes = sim_out_calculate_size(config, dims);
@@ -152,8 +143,6 @@ sim_out *sim_out_create(sim_solver_config *config, void *dims)
 
     return out;
 }
-
-
 
 void *sim_opts_create(sim_solver_config *config, void *dims)
 {
@@ -168,8 +157,6 @@ void *sim_opts_create(sim_solver_config *config, void *dims)
     return opts;
 }
 
-
-
 int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 {
     int bytes = sizeof(sim_solver);
@@ -179,8 +166,6 @@ int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 
     return bytes;
 }
-
-
 
 sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void *raw_memory)
 {
@@ -201,17 +186,15 @@ sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void 
     solver->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(config, dims, opts_);
 
-    assert((char*)raw_memory + sim_calculate_size(config, dims, opts_) == c_ptr);
+    assert((char *) raw_memory + sim_calculate_size(config, dims, opts_) == c_ptr);
 
     return solver;
 }
 
-
-
 sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
 {
-	// update Butcher tableau (needed if the user changed ns)
-	config->opts_update(config, dims, opts_);
+    // update Butcher tableau (needed if the user changed ns)
+    config->opts_update(config, dims, opts_);
     int bytes = sim_calculate_size(config, dims, opts_);
 
     void *ptr = calloc(1, bytes);
@@ -221,9 +204,8 @@ sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
     return solver;
 }
 
-
-
 int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out)
 {
-    return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem, solver->work);
+    return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem,
+                                    solver->work);
 }

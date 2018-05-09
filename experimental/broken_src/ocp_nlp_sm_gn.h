@@ -34,9 +34,13 @@ typedef struct {
     int_t N;
 } ocp_nlp_ls_cost;
 
-typedef struct { bool freezeSens; } ocp_nlp_sm_gn_args;
+typedef struct {
+    bool freezeSens;
+} ocp_nlp_sm_gn_args;
 
-typedef struct { bool inexact_init; } ocp_nlp_sm_gn_memory;
+typedef struct {
+    bool inexact_init;
+} ocp_nlp_sm_gn_memory;
 
 typedef struct {
     real_t **F;
@@ -49,29 +53,24 @@ typedef struct {
 
 ocp_nlp_sm_gn_args *ocp_nlp_sm_gn_create_arguments();
 
-int_t ocp_nlp_sm_gn_calculate_memory_size(const ocp_nlp_sm_in *sm_in,
-                                          void *args_);
+int_t ocp_nlp_sm_gn_calculate_memory_size(const ocp_nlp_sm_in *sm_in, void *args_);
 
-char *ocp_nlp_sm_gn_assign_memory(const ocp_nlp_sm_in *sm_in, void *args_,
-                                  void **mem_, void *raw_memory);
+char *ocp_nlp_sm_gn_assign_memory(const ocp_nlp_sm_in *sm_in, void *args_, void **mem_,
+                                  void *raw_memory);
 
-ocp_nlp_sm_gn_memory *ocp_nlp_sm_gn_create_memory(const ocp_nlp_sm_in *sm_in,
-                                                  void *args_);
+ocp_nlp_sm_gn_memory *ocp_nlp_sm_gn_create_memory(const ocp_nlp_sm_in *sm_in, void *args_);
 
-int_t ocp_nlp_sm_gn_calculate_workspace_size(const ocp_nlp_sm_in *sm_in,
-                                             void *args_);
+int_t ocp_nlp_sm_gn_calculate_workspace_size(const ocp_nlp_sm_in *sm_in, void *args_);
 
-char *ocp_nlp_sm_gn_assign_workspace(const ocp_nlp_sm_in *sm_in, void *args_,
-                                     void **work_, void *raw_memory);
+char *ocp_nlp_sm_gn_assign_workspace(const ocp_nlp_sm_in *sm_in, void *args_, void **work_,
+                                     void *raw_memory);
 
-ocp_nlp_sm_gn_workspace *ocp_nlp_sm_gn_create_workspace(
-    const ocp_nlp_sm_in *sm_in, void *args_);
+ocp_nlp_sm_gn_workspace *ocp_nlp_sm_gn_create_workspace(const ocp_nlp_sm_in *sm_in, void *args_);
 
-int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
-                    void *args_, void *memory_, void *workspace_);
+int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *args_, void *memory_,
+                    void *workspace_);
 
-void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_,
-                              void **mem, void **work);
+void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_, void **mem, void **work);
 
 void ocp_nlp_sm_gn_destroy(void *mem_, void *work_);
 
