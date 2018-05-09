@@ -970,7 +970,7 @@ int main()
 {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
-	const int NMF = 2;  // number of free masses: actually one more is used: possible values are 1,2,3,4,5
+	const int NMF = 3;  // number of free masses: actually one more is used: possible values are 1,2,3,4,5
 
     print_problem_info(NMF);
 
@@ -1154,11 +1154,6 @@ int main()
 		else
 		{
 			plan->nlp_dynamics[i] = DISCRETE_MODEL;
-			if (NMF > 3) // in this case the discrete model is not supported, commented in cmake to speed up compilation
-			{
-				plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-				plan->sim_solver_plan[i].sim_solver = IRK;
-			}
 		}
 	}
 
@@ -1239,8 +1234,13 @@ int main()
 
 	if (NMF<4)
 	{
-		// discrete model
+		// discrete model supported
 		external_function_casadi_create_array(NN, erk4_casadi);
+	}
+	else
+	{
+		printf("\nERROR: in this case (Number of free masses (NMF) > 3)discrete model is not supported, commented in cmake to speed up compilation\n");
+		exit(1);
 	}
 
 
