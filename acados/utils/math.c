@@ -24,7 +24,6 @@
  *                                                                                                 *
  **************************************************************************************************/
 
-
 // external
 #include <math.h>
 #include <stdio.h>
@@ -33,14 +32,17 @@
 #include "acados/utils/math.h"
 #include "acados/utils/types.h"
 
-void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb,
-                 double *C, int ldc) {
+void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb, double *C, int ldc)
+{
     int ii, jj, kk;
 
-    for (jj = 0; jj < n; jj++) {
-        for (ii = 0; ii < m; ii++) {
+    for (jj = 0; jj < n; jj++)
+    {
+        for (ii = 0; ii < m; ii++)
+        {
             C[ii + ldc * jj] = 0;
-            for (kk = 0; kk < k; kk++) {
+            for (kk = 0; kk < k; kk++)
+            {
                 C[ii + ldc * jj] += A[ii + lda * kk] * B[kk + ldb * jj];
             }
         }
@@ -49,13 +51,14 @@ void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb,
     return;
 }
 
-
-
-void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y) {
+void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y)
+{
     int ii, jj;
 
-    for (jj = 0; jj < n; jj++) {
-        for (ii = 0; ii < m; ii++) {
+    for (jj = 0; jj < n; jj++)
+    {
+        for (ii = 0; ii < m; ii++)
+        {
             y[ii] += A[ii + lda * jj] * x[jj];
         }
     }
@@ -63,13 +66,14 @@ void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y) {
     return;
 }
 
-
-
-void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y) {
+void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y)
+{
     int ii, jj;
 
-    for (ii = 0; ii < n; ii++) {
-        for (jj = 0; jj < m; jj++) {
+    for (ii = 0; ii < n; ii++)
+    {
+        for (jj = 0; jj < m; jj++)
+        {
             y[ii] += A[jj + lda * ii] * x[jj];
         }
     }
@@ -77,17 +81,21 @@ void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y) {
     return;
 }
 
-
-
-void dcopy_3l(int n, double *x, int incx, double *y, int incy) {
+void dcopy_3l(int n, double *x, int incx, double *y, int incy)
+{
     int ii;
 
-    if (incx == 1 && incy == 1) {
-        for (ii = 0; ii < n; ii++) {
+    if (incx == 1 && incy == 1)
+    {
+        for (ii = 0; ii < n; ii++)
+        {
             y[ii] = x[ii];
         }
-    } else {
-        for (ii = 0; ii < n; ii++) {
+    }
+    else
+    {
+        for (ii = 0; ii < n; ii++)
+        {
             y[ii * incy] = x[ii * incx];
         }
     }
@@ -95,20 +103,20 @@ void dcopy_3l(int n, double *x, int incx, double *y, int incy) {
     return;
 }
 
-
-
-void daxpy_3l(int n, double da, double *dx, double *dy) {
+void daxpy_3l(int n, double da, double *dx, double *dy)
+{
     int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++)
+    {
         dy[i] += da * dx[i];
     }
 }
 
-
-
-void dscal_3l(int n, double da, double *dx) {
+void dscal_3l(int n, double da, double *dx)
+{
     int i;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++)
+    {
         dx[i] *= da;
     }
 }
@@ -116,16 +124,20 @@ void dscal_3l(int n, double da, double *dx) {
 /************************************************
  Routine that copies a matrix
 ************************************************/
-void dmcopy(int row, int col, double *A, int lda, double *B, int ldb) {
+void dmcopy(int row, int col, double *A, int lda, double *B, int ldb)
+{
     int i, j;
-    for (j = 0; j < col; j++) {
-        for (i = 0; i < row; i++) {
+    for (j = 0; j < col; j++)
+    {
+        for (i = 0; i < row; i++)
+        {
             B[i + j * ldb] = A[i + j * lda];
         }
     }
 }
 
-int idamax_3l(int n, double *x) {
+int idamax_3l(int n, double *x)
+{
     if (n <= 0) return 0;
     if (n == 1) return 0;
 
@@ -133,9 +145,11 @@ int idamax_3l(int n, double *x) {
     double dmax = (x[0] > 0 ? x[0] : -x[0]);
     int idmax = 0;
     int jj;
-    for (jj = 1; jj < n; jj++) {
+    for (jj = 1; jj < n; jj++)
+    {
         dabs = (x[jj] > 0 ? x[jj] : -x[jj]);
-        if (dabs > dmax) {
+        if (dabs > dmax)
+        {
             dmax = dabs;
             idmax = jj;
         }
@@ -144,12 +158,14 @@ int idamax_3l(int n, double *x) {
     return idmax;
 }
 
-void dswap_3l(int n, double *x, int incx, double *y, int incy) {
+void dswap_3l(int n, double *x, int incx, double *y, int incy)
+{
     if (n <= 0) return;
 
     double temp;
     int jj;
-    for (jj = 0; jj < n; jj++) {
+    for (jj = 0; jj < n; jj++)
+    {
         temp = x[0];
         x[0] = y[0];
         y[0] = temp;
@@ -158,18 +174,21 @@ void dswap_3l(int n, double *x, int incx, double *y, int incy) {
     }
 }
 
-void dger_3l(int m, int n, double alpha, double *x, int incx, double *y,
-             int incy, double *A, int lda) {
+void dger_3l(int m, int n, double alpha, double *x, int incx, double *y, int incy, double *A,
+             int lda)
+{
     if (m == 0 || n == 0 || alpha == 0.0) return;
 
     int i, j;
     double *px, *py, temp;
 
     py = y;
-    for (j = 0; j < n; j++) {
+    for (j = 0; j < n; j++)
+    {
         temp = alpha * py[0];
         px = x;
-        for (i = 0; i < m; i++) {
+        for (i = 0; i < m; i++)
+        {
             A[i + lda * j] += px[0] * temp;
             px += incx;
         }
@@ -179,9 +198,8 @@ void dger_3l(int m, int n, double alpha, double *x, int incx, double *y,
     return;
 }
 
-
-
-void dgetf2_3l(int m, int n, double *A, int lda, int *ipiv, int *info) {
+void dgetf2_3l(int m, int n, double *A, int lda, int *ipiv, int *info)
+{
     if (m <= 0 || n <= 0) return;
 
     int i, j, jp;
@@ -191,40 +209,52 @@ void dgetf2_3l(int m, int n, double *A, int lda, int *ipiv, int *info) {
     int size_min = (m < n ? m : n);
 
     // find the pivot and test for singularity
-    for (j = 0; j < size_min; j++) {
+    for (j = 0; j < size_min; j++)
+    {
         jp = j + idamax_3l(m - j, &A[j + lda * j]);
         ipiv[j] = jp;
-        if (A[jp + lda * j] != 0) {
+        if (A[jp + lda * j] != 0)
+        {
             // apply the interchange to columns 0:n-1
-            if (jp != j) {
+            if (jp != j)
+            {
                 dswap_3l(n, &A[j], lda, &A[jp], lda);
             }
             // compute elements j+1:m-1 of j-th column
-            if (j < m - 1) {
+            if (j < m - 1)
+            {
                 Ajj = A[j + lda * j];
-                if ((Ajj > 0 ? Ajj : -Ajj) >= 2.22e-16) {
+                if ((Ajj > 0 ? Ajj : -Ajj) >= 2.22e-16)
+                {
                     dscal_3l(m - j - 1, 1.0 / Ajj, &A[j + 1 + lda * j]);
-                } else {
-                    for (i = j + 1; i < m; i++) {
+                }
+                else
+                {
+                    for (i = j + 1; i < m; i++)
+                    {
                         A[i + lda * j] /= Ajj;
                     }
                 }
             }
-        } else if (*info == 0) {
+        }
+        else if (*info == 0)
+        {
             *info = j + 1;
         }
 
-        if (j < size_min) {
+        if (j < size_min)
+        {
             // update trailing submatrix
-            dger_3l(m - j - 1, n - j - 1, -1.0, &A[j + 1 + lda * j], 1,
-                    &A[j + lda * (j + 1)], lda, &A[j + 1 + lda * (j + 1)], lda);
+            dger_3l(m - j - 1, n - j - 1, -1.0, &A[j + 1 + lda * j], 1, &A[j + lda * (j + 1)], lda,
+                    &A[j + 1 + lda * (j + 1)], lda);
         }
     }
 
     return;
 }
 
-void dlaswp_3l(int n, double *A, int lda, int k1, int k2, int *ipiv) {
+void dlaswp_3l(int n, double *A, int lda, int k1, int k2, int *ipiv)
+{
     int i, j, k, ix, ix0, i1, i2, n32, ip;
     double temp;
 
@@ -233,13 +263,18 @@ void dlaswp_3l(int n, double *A, int lda, int k1, int k2, int *ipiv) {
     i2 = k2;
 
     n32 = (n / 32) * 32;
-    if (n32 != 0) {
-        for (j = 0; j < n32; j += 32) {
+    if (n32 != 0)
+    {
+        for (j = 0; j < n32; j += 32)
+        {
             ix = ix0;
-            for (i = i1; i < i2; i++) {
+            for (i = i1; i < i2; i++)
+            {
                 ip = ipiv[ix];
-                if (ip != i) {
-                    for (k = j; k < j + 32; k++) {
+                if (ip != i)
+                {
+                    for (k = j; k < j + 32; k++)
+                    {
                         temp = A[i + lda * k];
                         A[i + lda * k] = A[ip + lda * k];
                         A[ip + lda * k] = temp;
@@ -249,12 +284,16 @@ void dlaswp_3l(int n, double *A, int lda, int k1, int k2, int *ipiv) {
             }
         }
     }
-    if (n32 != n) {
+    if (n32 != n)
+    {
         ix = ix0;
-        for (i = i1; i < i2; i++) {
+        for (i = i1; i < i2; i++)
+        {
             ip = ipiv[ix];
-            if (ip != i) {
-                for (k = n32; k < n; k++) {
+            if (ip != i)
+            {
+                for (k = n32; k < n; k++)
+                {
                     temp = A[i + lda * k];
                     A[i + lda * k] = A[ip + lda * k];
                     A[ip + lda * k] = temp;
@@ -268,14 +307,18 @@ void dlaswp_3l(int n, double *A, int lda, int k1, int k2, int *ipiv) {
 }
 
 // left lower no-transp unit
-void dtrsm_llnu_3l(int m, int n, double *A, int lda, double *B, int ldb) {
+void dtrsm_llnu_3l(int m, int n, double *A, int lda, double *B, int ldb)
+{
     if (m == 0 || n == 0) return;
 
     int i, j, k;
 
-    for (j = 0; j < n; j++) {
-        for (k = 0; k < m; k++) {
-            for (i = k + 1; i < m; i++) {
+    for (j = 0; j < n; j++)
+    {
+        for (k = 0; k < m; k++)
+        {
+            for (i = k + 1; i < m; i++)
+            {
                 B[i + ldb * j] -= B[k + ldb * j] * A[i + lda * k];
             }
         }
@@ -285,15 +328,19 @@ void dtrsm_llnu_3l(int m, int n, double *A, int lda, double *B, int ldb) {
 }
 
 // left upper no-transp non-unit
-void dtrsm_lunn_3l(int m, int n, double *A, int lda, double *B, int ldb) {
+void dtrsm_lunn_3l(int m, int n, double *A, int lda, double *B, int ldb)
+{
     if (m == 0 || n == 0) return;
 
     int i, j, k;
 
-    for (j = 0; j < n; j++) {
-        for (k = m - 1; k >= 0; k--) {
+    for (j = 0; j < n; j++)
+    {
+        for (k = m - 1; k >= 0; k--)
+        {
             B[k + ldb * j] /= A[k + lda * k];
-            for (i = 0; i < k; i++) {
+            for (i = 0; i < k; i++)
+            {
                 B[i + ldb * j] -= B[k + ldb * j] * A[i + lda * k];
             }
         }
@@ -302,8 +349,8 @@ void dtrsm_lunn_3l(int m, int n, double *A, int lda, double *B, int ldb) {
     return;
 }
 
-void dgetrs_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B,
-               int ldb) {
+void dgetrs_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B, int ldb)
+{
     if (n == 0 || nrhs == 0) return;
 
     // solve A * X = B
@@ -320,12 +367,13 @@ void dgetrs_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B,
     return;
 }
 
-void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B,
-              int ldb, int *info) {
+void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B, int ldb, int *info)
+{
     // compute the LU factorization of A
     dgetf2_3l(n, n, A, lda, ipiv, info);
 
-    if (*info == 0) {
+    if (*info == 0)
+    {
         // solve the system A*X = B, overwriting B with X
         dgetrs_3l(n, nrhs, A, lda, ipiv, B, ldb);
     }
@@ -334,13 +382,16 @@ void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B,
 }
 
 /* one norm of a matrix */
-double onenorm(int row, int col, double *ptrA) {
+double onenorm(int row, int col, double *ptrA)
+{
     double max, temp;
     int i, j;
     temp = 0;
-    for (j = 0; j < col; j++) {
+    for (j = 0; j < col; j++)
+    {
         temp = fabs(*(ptrA + j * row));
-        for (i = 1; i < row; i++) {
+        for (i = 1; i < row; i++)
+        {
             temp += fabs(*(ptrA + j * row + i));
         }
         if (j == 0)
@@ -352,38 +403,41 @@ double onenorm(int row, int col, double *ptrA) {
 }
 
 /* two norm of a vector */
-double twonormv(int n, double *ptrv) {
+double twonormv(int n, double *ptrv)
+{
     double temp;
     temp = 0;
     for (int i = 0; i < n; i++) temp += ptrv[i] * ptrv[i];
-    return (double)sqrt(temp);
+    return (double) sqrt(temp);
 }
 
 /* computes the Pade approximation of degree m of the matrix A */
-void padeapprox(int m, int row, double *A) {
+void padeapprox(int m, int row, double *A)
+{
     int row2 = row * row;
     /*    int i1 = 1;*/
     /*    double d0 = 0;*/
     /*    double d1 = 1;*/
     /*    double dm1 = -1;*/
 
-    double *U = malloc(row*row*sizeof(double));
-	for(int ii=0; ii<row*row; ii++) U[ii] = 0.0;
-    double *V = malloc(row*row*sizeof(double));
-	for(int ii=0; ii<row*row; ii++) V[ii] = 0.0;
+    double *U = malloc(row * row * sizeof(double));
+    for (int ii = 0; ii < row * row; ii++) U[ii] = 0.0;
+    double *V = malloc(row * row * sizeof(double));
+    for (int ii = 0; ii < row * row; ii++) V[ii] = 0.0;
 
-    if (m == 3) {
+    if (m == 3)
+    {
         double c[] = {120, 60, 12, 1};
-        double *A0 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A0[ii] = 0.0;
-		for(int ii=0; ii<row; ii++) A0[ii*(row+1)] = 1.0;
-        double *A2 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A2[ii] = 0.0;
+        double *A0 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A0[ii] = 0.0;
+        for (int ii = 0; ii < row; ii++) A0[ii * (row + 1)] = 1.0;
+        double *A2 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A2[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 0;
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A, &row,
         //        &beta, A2, &row);
         dgemm_nn_3l(row, row, row, A, row, A, row, A2, row);
-        double *temp = malloc(row*row*sizeof(double));
+        double *temp = malloc(row * row * sizeof(double));
         //        dscal_(&row2, &d0, temp, &i1);
         dscal_3l(row2, 0, temp);
         //        daxpy_(&row2, &c[3], A2, &i1, temp, &i1);
@@ -402,15 +456,17 @@ void padeapprox(int m, int row, double *A) {
         free(A0);
         free(A2);
         free(temp);
-    } else if (m == 5) {
+    }
+    else if (m == 5)
+    {
         double c[] = {30240, 15120, 3360, 420, 30, 1};
-        double *A0 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A0[ii] = 0.0;
-		for(int ii=0; ii<row; ii++) A0[ii*(row+1)] = 1.0;
-        double *A2 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A2[ii] = 0.0;
-        double *A4 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A4[ii] = 0.0;
+        double *A0 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A0[ii] = 0.0;
+        for (int ii = 0; ii < row; ii++) A0[ii * (row + 1)] = 1.0;
+        double *A2 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A2[ii] = 0.0;
+        double *A4 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A4[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 0;
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A, &row,
         //        &beta, A2, &row);
@@ -419,8 +475,8 @@ void padeapprox(int m, int row, double *A) {
         //        &beta, A4, &row);
         dgemm_nn_3l(row, row, row, A2, row, A2, row, A4, row);
         dmcopy(row, row, A4, row, V, row);
-        double *temp = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) temp[ii] = 0.0;
+        double *temp = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) temp[ii] = 0.0;
         dmcopy(row, row, A4, row, temp, row);
         //        daxpy_(&row2, &c[3], A2, &i1, temp, &i1);
         daxpy_3l(row2, c[3], A2, temp);
@@ -439,17 +495,19 @@ void padeapprox(int m, int row, double *A) {
         free(A2);
         free(A4);
         free(temp);
-    } else if (m == 7) {
+    }
+    else if (m == 7)
+    {
         double c[] = {17297280, 8648640, 1995840, 277200, 25200, 1512, 56, 1};
-        double *A0 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A0[ii] = 0.0;
-		for(int ii=0; ii<row; ii++) A0[ii*(row+1)] = 1.0;
-        double *A2 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A2[ii] = 0.0;
-        double *A4 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A4[ii] = 0.0;
-        double *A6 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A6[ii] = 0.0;
+        double *A0 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A0[ii] = 0.0;
+        for (int ii = 0; ii < row; ii++) A0[ii * (row + 1)] = 1.0;
+        double *A2 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A2[ii] = 0.0;
+        double *A4 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A4[ii] = 0.0;
+        double *A6 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A6[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 1;
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A, &row,
         //        &beta, A2, &row);
@@ -460,8 +518,8 @@ void padeapprox(int m, int row, double *A) {
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A4, &row, A2, &row,
         //        &beta, A6, &row);
         dgemm_nn_3l(row, row, row, A4, row, A2, row, A6, row);
-        double *temp = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) temp[ii] = 0.0;
+        double *temp = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) temp[ii] = 0.0;
         //        dscal_(&row2, &d0, temp, &i1);
         dscal_3l(row2, 0, temp);
         //        daxpy_(&row2, &c[3], A2, &i1, temp, &i1);
@@ -490,20 +548,22 @@ void padeapprox(int m, int row, double *A) {
         free(A4);
         free(A6);
         free(temp);
-    } else if (m == 9) {
+    }
+    else if (m == 9)
+    {
         double c[] = {17643225600, 8821612800, 2075673600, 302702400, 30270240,
                       2162160,     110880,     3960,       90,        1};
-        double *A0 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A0[ii] = 0.0;
-		for(int ii=0; ii<row; ii++) A0[ii*(row+1)] = 1.0;
-        double *A2 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A2[ii] = 0.0;
-        double *A4 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A4[ii] = 0.0;
-        double *A6 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A6[ii] = 0.0;
-        double *A8 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A8[ii] = 0.0;
+        double *A0 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A0[ii] = 0.0;
+        for (int ii = 0; ii < row; ii++) A0[ii * (row + 1)] = 1.0;
+        double *A2 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A2[ii] = 0.0;
+        double *A4 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A4[ii] = 0.0;
+        double *A6 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A6[ii] = 0.0;
+        double *A8 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A8[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 0;
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A, &row,
         //        &beta, A2, &row);
@@ -518,8 +578,8 @@ void padeapprox(int m, int row, double *A) {
         //        &beta, A8, &row);
         dgemm_nn_3l(row, row, row, A6, row, A2, row, A8, row);
         dmcopy(row, row, A8, row, V, row);
-        double *temp = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) temp[ii] = 0.0;
+        double *temp = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) temp[ii] = 0.0;
         dmcopy(row, row, A8, row, temp, row);
         //        daxpy_(&row2, &c[3], A2, &i1, temp, &i1);
         daxpy_3l(row2, c[3], A2, temp);
@@ -548,7 +608,9 @@ void padeapprox(int m, int row, double *A) {
         free(A6);
         free(A8);
         free(temp);
-    } else if (m == 13) {  // tested
+    }
+    else if (m == 13)
+    {  // tested
         double c[] = {64764752532480000,
                       32382376266240000,
                       7771770303897600,
@@ -563,15 +625,15 @@ void padeapprox(int m, int row, double *A) {
                       16380,
                       182,
                       1};
-        double *A0 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A0[ii] = 0.0;
-		for(int ii=0; ii<row; ii++) A0[ii*(row+1)] = 1.0;
-        double *A2 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A2[ii] = 0.0;
-        double *A4 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A4[ii] = 0.0;
-        double *A6 = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) A6[ii] = 0.0;
+        double *A0 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A0[ii] = 0.0;
+        for (int ii = 0; ii < row; ii++) A0[ii * (row + 1)] = 1.0;
+        double *A2 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A2[ii] = 0.0;
+        double *A4 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A4[ii] = 0.0;
+        double *A6 = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) A6[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 0;
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A, &row,
         //        &beta, A2, &row);
@@ -583,8 +645,8 @@ void padeapprox(int m, int row, double *A) {
         //        &beta, A6, &row);
         dgemm_nn_3l(row, row, row, A4, row, A2, row, A6, row);
         dmcopy(row, row, A2, row, U, row);
-        double *temp = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) temp[ii] = 0.0;
+        double *temp = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) temp[ii] = 0.0;
         //        dscal_(&row2, &c[9], U, &i1);
         dscal_3l(row2, c[9], U);
         //        daxpy_(&row2, &c[11], A4, &i1, U, &i1);
@@ -628,12 +690,14 @@ void padeapprox(int m, int row, double *A) {
         free(A4);
         free(A6);
         free(temp);
-    } else {
+    }
+    else
+    {
         printf("%s\n", "Wrong Pade approximatin degree");
         exit(1);
     }
-    double *D = malloc(row*row*sizeof(double));
-	for(int ii=0; ii<row*row; ii++) D[ii] = 0.0;
+    double *D = malloc(row * row * sizeof(double));
+    for (int ii = 0; ii < row * row; ii++) D[ii] = 0.0;
     //    dcopy_(&row2, V, &i1, A, &i1);
     dmcopy(row, row, V, row, A, row);
     //    daxpy_(&row2, &d1, U, &i1, A, &i1);
@@ -642,7 +706,7 @@ void padeapprox(int m, int row, double *A) {
     dmcopy(row, row, V, row, D, row);
     //    daxpy_(&row2, &dm1, U, &i1, D, &i1);
     daxpy_3l(row2, -1.0, U, D);
-    int *ipiv = (int *)calloc(row, sizeof(int));
+    int *ipiv = (int *) calloc(row, sizeof(int));
     int info = 0;
     //    dgesv_(&row, &row, D, &row, ipiv, A, &row, &info);
     dgesv_3l(row, row, D, row, ipiv, A, row, &info);
@@ -652,24 +716,30 @@ void padeapprox(int m, int row, double *A) {
     free(V);
 }
 
-void expm(int row, double *A) {
+void expm(int row, double *A)
+{
     int i;
 
     int m_vals[] = {3, 5, 7, 9, 13};
-    double theta[] = {0.01495585217958292, 0.2539398330063230,
-                      0.9504178996162932, 2.097847961257068, 5.371920351148152};
+    double theta[] = {0.01495585217958292, 0.2539398330063230, 0.9504178996162932,
+                      2.097847961257068, 5.371920351148152};
     int lentheta = 5;
 
     double normA = onenorm(row, row, A);
 
-    if (normA <= theta[4]) {
-        for (i = 0; i < lentheta; i++) {
-            if (normA <= theta[i]) {
+    if (normA <= theta[4])
+    {
+        for (i = 0; i < lentheta; i++)
+        {
+            if (normA <= theta[i])
+            {
                 padeapprox(m_vals[i], row, A);
                 break;
             }
         }
-    } else {
+    }
+    else
+    {
         int s;
         double t = frexp(normA / (theta[4]), &s);
         s = s - (t == 0.5);
@@ -679,10 +749,11 @@ void expm(int row, double *A) {
         //        dscal_(&row2, &t, A, &i1);
         dscal_3l(row2, t, A);
         padeapprox(m_vals[4], row, A);
-        double *temp = malloc(row*row*sizeof(double));
-		for(int ii=0; ii<row*row; ii++) temp[ii] = 0.0;
+        double *temp = malloc(row * row * sizeof(double));
+        for (int ii = 0; ii < row * row; ii++) temp[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 0;
-        for (i = 0; i < s; i++) {
+        for (i = 0; i < s; i++)
+        {
             //            dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A,
             //            &row, &beta, temp, &row);
             dgemm_nn_3l(row, row, row, A, row, A, row, temp, row);
@@ -692,13 +763,11 @@ void expm(int row, double *A) {
     }
 }
 
-
-
 // TODO(dimitris): move this to condensing module once implemented
 // compute the memory size of condensing for [x u] order of bounds (instead of [u x] in hpipm)
 void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
-    int *nvd, int *ned, int *nbd, int *ngd) {
-
+                                     int *nvd, int *ned, int *nbd, int *ngd)
+{
     int ii, jj;
 
     *nvd = 0;
@@ -707,31 +776,34 @@ void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hid
     *ngd = 0;
 
     // first stage
-    *nvd += nx[0]+nu[0];
+    *nvd += nx[0] + nu[0];
     *nbd += nb[0];
     *ngd += ng[0];
     // remaining stages
-    for (ii = 1; ii <= N; ii++) {
+    for (ii = 1; ii <= N; ii++)
+    {
         *nvd += nu[ii];
-        for (jj = 0; jj < nb[ii]; jj++) {
-            if (hidxb[ii][jj] < nx[ii]) {  // state constraint
+        for (jj = 0; jj < nb[ii]; jj++)
+        {
+            if (hidxb[ii][jj] < nx[ii])
+            {  // state constraint
                 (*ngd)++;
-            } else {  // input constraint
+            }
+            else
+            {  // input constraint
                 (*nbd)++;
             }
         }
-    *ngd += ng[ii];
+        *ngd += ng[ii];
     }
 }
 
-static real_t hypot2(real_t x, real_t y) {
-    return sqrt(x*x + y*y);
-}
+static real_t hypot2(real_t x, real_t y) { return sqrt(x * x + y * y); }
 
 /* Symmetric Householder reduction to tridiagonal form. */
 
-static void tred2(int_t dim, real_t *V, real_t *d, real_t *e) {
-
+static void tred2(int_t dim, real_t *V, real_t *d, real_t *e)
+{
     /* This is derived from the Algol procedures tred2 by
     Bowdler, Martin, Reinsch, and Wilkinson, Handbook for
     Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
@@ -739,77 +811,91 @@ static void tred2(int_t dim, real_t *V, real_t *d, real_t *e) {
 
     int i, j, k;
     real_t f, g, h, hh;
-    for (j = 0; j < dim; j++) {
-        d[j] = V[(dim-1)*dim+j];
+    for (j = 0; j < dim; j++)
+    {
+        d[j] = V[(dim - 1) * dim + j];
     }
 
     /* Householder reduction to tridiagonal form. */
 
-    for (i = dim-1; i > 0; i--) {
-
+    for (i = dim - 1; i > 0; i--)
+    {
         /* Scale to avoid under/overflow. */
 
         real_t scale = 0.0;
         real_t h = 0.0;
-        for (k = 0; k < i; k++) {
+        for (k = 0; k < i; k++)
+        {
             scale = scale + fabs(d[k]);
         }
-        if (scale == 0.0) {
-            e[i] = d[i-1];
-            for (j = 0; j < i; j++) {
-                d[j] = V[(i-1)*dim+j];
-                V[i*dim+j] = 0.0;
-                V[j*dim+i] = 0.0;
+        if (scale == 0.0)
+        {
+            e[i] = d[i - 1];
+            for (j = 0; j < i; j++)
+            {
+                d[j] = V[(i - 1) * dim + j];
+                V[i * dim + j] = 0.0;
+                V[j * dim + i] = 0.0;
             }
-        } else {
-
+        }
+        else
+        {
             /* Generate Householder vector. */
 
-            for (k = 0; k < i; k++) {
+            for (k = 0; k < i; k++)
+            {
                 d[k] /= scale;
                 h += d[k] * d[k];
             }
-            f = d[i-1];
+            f = d[i - 1];
             g = sqrt(h);
-            if (f > 0) {
+            if (f > 0)
+            {
                 g = -g;
             }
             e[i] = scale * g;
             h = h - f * g;
-            d[i-1] = f - g;
-            for (j = 0; j < i; j++) {
+            d[i - 1] = f - g;
+            for (j = 0; j < i; j++)
+            {
                 e[j] = 0.0;
             }
 
             /* Apply similarity transformation to remaining columns. */
 
-            for (j = 0; j < i; j++) {
+            for (j = 0; j < i; j++)
+            {
                 f = d[j];
-                V[j*dim+i] = f;
-                g = e[j] + V[j*dim+j] * f;
-                for (k = j+1; k <= i-1; k++) {
-                    g += V[k*dim+j] * d[k];
-                    e[k] += V[k*dim+j] * f;
+                V[j * dim + i] = f;
+                g = e[j] + V[j * dim + j] * f;
+                for (k = j + 1; k <= i - 1; k++)
+                {
+                    g += V[k * dim + j] * d[k];
+                    e[k] += V[k * dim + j] * f;
                 }
                 e[j] = g;
             }
             f = 0.0;
-            for (j = 0; j < i; j++) {
+            for (j = 0; j < i; j++)
+            {
                 e[j] /= h;
                 f += e[j] * d[j];
             }
             hh = f / (h + h);
-            for (j = 0; j < i; j++) {
+            for (j = 0; j < i; j++)
+            {
                 e[j] -= hh * d[j];
             }
-            for (j = 0; j < i; j++) {
+            for (j = 0; j < i; j++)
+            {
                 f = d[j];
                 g = e[j];
-                for (k = j; k <= i-1; k++) {
-                    V[k*dim+j] -= (f * e[k] + g * d[k]);
+                for (k = j; k <= i - 1; k++)
+                {
+                    V[k * dim + j] -= (f * e[k] + g * d[k]);
                 }
-                d[j] = V[(i-1)*dim+j];
-                V[i*dim+j] = 0.0;
+                d[j] = V[(i - 1) * dim + j];
+                V[i * dim + j] = 0.0;
             }
         }
         d[i] = h;
@@ -817,40 +903,48 @@ static void tred2(int_t dim, real_t *V, real_t *d, real_t *e) {
 
     /* Accumulate transformations. */
 
-    for (i = 0; i < dim-1; i++) {
-        V[(dim-1)*dim+i] = V[i*dim+i];
-        V[i*dim+i] = 1.0;
-        h = d[i+1];
-        if (h != 0.0) {
-        for (k = 0; k <= i; k++) {
-            d[k] = V[k*dim+i+1] / h;
-        }
-        for (j = 0; j <= i; j++) {
-            g = 0.0;
-            for (k = 0; k <= i; k++) {
-            g += V[k*dim+i+1] * V[k*dim+j];
+    for (i = 0; i < dim - 1; i++)
+    {
+        V[(dim - 1) * dim + i] = V[i * dim + i];
+        V[i * dim + i] = 1.0;
+        h = d[i + 1];
+        if (h != 0.0)
+        {
+            for (k = 0; k <= i; k++)
+            {
+                d[k] = V[k * dim + i + 1] / h;
             }
-            for (k = 0; k <= i; k++) {
-            V[k*dim+j] -= g * d[k];
+            for (j = 0; j <= i; j++)
+            {
+                g = 0.0;
+                for (k = 0; k <= i; k++)
+                {
+                    g += V[k * dim + i + 1] * V[k * dim + j];
+                }
+                for (k = 0; k <= i; k++)
+                {
+                    V[k * dim + j] -= g * d[k];
+                }
             }
         }
-        }
-        for (k = 0; k <= i; k++) {
-        V[k*dim+i+1] = 0.0;
+        for (k = 0; k <= i; k++)
+        {
+            V[k * dim + i + 1] = 0.0;
         }
     }
-    for (j = 0; j < dim; j++) {
-        d[j] = V[(dim-1)*dim+j];
-        V[(dim-1)*dim+j] = 0.0;
+    for (j = 0; j < dim; j++)
+    {
+        d[j] = V[(dim - 1) * dim + j];
+        V[(dim - 1) * dim + j] = 0.0;
     }
-    V[(dim-1)*dim+dim-1] = 1.0;
+    V[(dim - 1) * dim + dim - 1] = 1.0;
     e[0] = 0.0;
 }
 
 /* Symmetric tridiagonal QL algorithm. */
 
-static void tql2(int_t dim, real_t *V, real_t *d, real_t *e) {
-
+static void tql2(int_t dim, real_t *V, real_t *d, real_t *e)
+{
     /*  This is derived from the Algol procedures tql2, by
     Bowdler, Martin, Reinsch, and Wilkinson, Handbook for
     Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
@@ -860,22 +954,25 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e) {
     real_t g, p, r, dl1, h, f, tst1, eps;
     real_t c, c2, c3, el1, s, s2;
 
-    for (i = 1; i < dim; i++) {
-        e[i-1] = e[i];
+    for (i = 1; i < dim; i++)
+    {
+        e[i - 1] = e[i];
     }
-    e[dim-1] = 0.0;
+    e[dim - 1] = 0.0;
 
     f = 0.0;
     tst1 = 0.0;
     eps = pow(2.0, -52.0);
-    for (l = 0; l < dim; l++) {
-
+    for (l = 0; l < dim; l++)
+    {
         /* Find small subdiagonal element */
 
         tst1 = fmax(tst1, fabs(d[l]) + fabs(e[l]));
         m = l;
-        while (m < dim) {
-            if (fabs(e[m]) <= eps*tst1) {
+        while (m < dim)
+        {
+            if (fabs(e[m]) <= eps * tst1)
+            {
                 break;
             }
             m++;
@@ -884,24 +981,28 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e) {
         /* If m == l, d[l] is an eigenvalue,
         otherwise, iterate. */
 
-        if (m > l) {
+        if (m > l)
+        {
             int iter = 0;
-            do {
+            do
+            {
                 iter = iter + 1;
                 /* Compute implicit shift */
 
                 g = d[l];
-                p = (d[l+1] - g) / (2.0 * e[l]);
+                p = (d[l + 1] - g) / (2.0 * e[l]);
                 r = hypot2(p, 1.0);
-                if (p < 0) {
-                r = -r;
+                if (p < 0)
+                {
+                    r = -r;
                 }
                 d[l] = e[l] / (p + r);
-                d[l+1] = e[l] * (p + r);
-                dl1 = d[l+1];
+                d[l + 1] = e[l] * (p + r);
+                dl1 = d[l + 1];
                 h = g - d[l];
-                for (i = l+2; i < dim; i++) {
-                d[i] -= h;
+                for (i = l + 2; i < dim; i++)
+                {
+                    d[i] -= h;
                 }
                 f = f + h;
 
@@ -911,28 +1012,30 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e) {
                 c = 1.0;
                 c2 = c;
                 c3 = c;
-                el1 = e[l+1];
+                el1 = e[l + 1];
                 s = 0.0;
                 s2 = 0.0;
-                for (i = m-1; i >= l; i--) {
+                for (i = m - 1; i >= l; i--)
+                {
                     c3 = c2;
                     c2 = c;
                     s2 = s;
                     g = c * e[i];
                     h = c * p;
                     r = hypot2(p, e[i]);
-                    e[i+1] = s * r;
+                    e[i + 1] = s * r;
                     s = e[i] / r;
                     c = p / r;
                     p = c * d[i] - s * g;
-                    d[i+1] = h + s * (c * g + s * d[i]);
+                    d[i + 1] = h + s * (c * g + s * d[i]);
 
                     /* Accumulate transformation. */
 
-                    for (k = 0; k < dim; k++) {
-                        h = V[k*dim+i+1];
-                        V[k*dim+i+1] = s * V[k*dim+i] + c * h;
-                        V[k*dim+i] = c * V[k*dim+i] - s * h;
+                    for (k = 0; k < dim; k++)
+                    {
+                        h = V[k * dim + i + 1];
+                        V[k * dim + i + 1] = s * V[k * dim + i] + c * h;
+                        V[k * dim + i] = c * V[k * dim + i] - s * h;
                     }
                 }
                 p = -s * s2 * c3 * el1 * e[l] / dl1;
@@ -941,29 +1044,32 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e) {
 
                 /* Check for convergence. */
 
-            } while (fabs(e[l]) > eps*tst1 && iter < 20);  /* (Check iteration count here.) */
+            } while (fabs(e[l]) > eps * tst1 && iter < 20); /* (Check iteration count here.) */
         }
         d[l] = d[l] + f;
         e[l] = 0.0;
     }
 }
 
-static void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d) {
+static void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d)
+{
     real_t *e = (real_t *) calloc(dim, sizeof(real_t));
     for (int_t i = 0; i < dim; i++)
-        for (int_t j = 0; j < dim; j++)
-            V[i*dim+j] = A[i*dim+j];
+        for (int_t j = 0; j < dim; j++) V[i * dim + j] = A[i * dim + j];
     tred2(dim, V, d, e);
     tql2(dim, V, d, e);
 }
 
-static void reconstruct_A(int_t dim, real_t *A, real_t *V, real_t *d) {
-    for (int_t i = 0; i < dim; i++) {
-        for (int_t j = 0; j <= i; j++) {
-            A[i*dim+j] = 0.0;
+static void reconstruct_A(int_t dim, real_t *A, real_t *V, real_t *d)
+{
+    for (int_t i = 0; i < dim; i++)
+    {
+        for (int_t j = 0; j <= i; j++)
+        {
+            A[i * dim + j] = 0.0;
             for (int_t k = 0; k < dim; k++)
-                A[i*dim+j] += V[i*dim+k]*d[k]*V[j*dim+k];
-            A[j*dim+i] = A[i*dim+j];
+                A[i * dim + j] += V[i * dim + k] * d[k] * V[j * dim + k];
+            A[j * dim + i] = A[i * dim + j];
         }
     }
 }
@@ -981,13 +1087,15 @@ reconstruct_A(A, V, d);
 }*/
 
 /* mirroring regularization */
-void regularize(int_t dim, real_t *A) {
-    real_t *V = (real_t *) calloc(dim*dim, sizeof(real_t));
+void regularize(int_t dim, real_t *A)
+{
+    real_t *V = (real_t *) calloc(dim * dim, sizeof(real_t));
     real_t *d = (real_t *) calloc(dim, sizeof(real_t));
 
     eigen_decomposition(dim, A, V, d);
 
-    for (int_t i = 0; i < dim; i++) {
+    for (int_t i = 0; i < dim; i++)
+    {
         if (d[i] >= -ACADOS_EPS && d[i] <= ACADOS_EPS)
             d[i] = ACADOS_EPS;
         else if (d[i] < 0)
@@ -997,14 +1105,14 @@ void regularize(int_t dim, real_t *A) {
     reconstruct_A(dim, A, V, d);
 }
 
-
-double minimum_of_doubles(double *x, int n){
+double minimum_of_doubles(double *x, int n)
+{
     double min = x[0];
-    for (int c = 1 ; c < n ; c++ ) 
+    for (int c = 1; c < n; c++)
     {
-        if ( x[c] < min ) 
+        if (x[c] < min)
         {
-           min = x[c];
+            min = x[c];
         }
     }
     return min;

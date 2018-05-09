@@ -26,7 +26,7 @@
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/dense_qp_interface.h"
 #include "acados_c/condensing_interface.h"
-#include "acados_c/options.h"
+#include "acados_c/options_interface.h"
 
 // acados
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"

@@ -25,8 +25,6 @@
 #include "test/test_utils/eigen.h"
 #include "catch/include/catch.hpp"
 
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
@@ -149,9 +147,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 	external_function_casadi *forw_vde,
 	external_function_casadi *jac_ode,
 	external_function_casadi *impl_ode_fun,
-	external_function_casadi *impl_ode_jac_x,
-	external_function_casadi *impl_ode_jac_xdot,
-	external_function_casadi *impl_ode_jac_u,
 	external_function_casadi *impl_ode_fun_jac_x_xdot,
 	external_function_casadi *impl_ode_fun_jac_x_xdot_u,
 	external_function_casadi *impl_ode_jac_x_xdot_u,
@@ -356,12 +351,19 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				impl_ode_fun_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_u_chain_nm5_n_in;
 				impl_ode_fun_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_u_chain_nm5_n_out;
 
-				// erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm5;
-				// erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm5_work;
-				// erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm5_sparsity_in;
-				// erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm5_sparsity_out;
-				// erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm5_n_in;
-				// erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm5_n_out;
+				impl_ode_jac_x_xdot_u[ii].casadi_fun = &casadi_impl_ode_jac_x_xdot_u_chain_nm5;
+				impl_ode_jac_x_xdot_u[ii].casadi_work = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_work;
+				impl_ode_jac_x_xdot_u[ii].casadi_sparsity_in = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_sparsity_in;
+				impl_ode_jac_x_xdot_u[ii].casadi_sparsity_out = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_sparsity_out;
+				impl_ode_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_n_in;
+				impl_ode_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_n_out;
+
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm5;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm5_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm5_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm5_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm5_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm5_n_out;
 			}
 			break;
 		case 5:
@@ -409,12 +411,12 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				impl_ode_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_chain_nm6_n_in;
 				impl_ode_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_chain_nm6_n_out;
 
-				// erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm6;
-				// erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm6_work;
-				// erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm6_sparsity_in;
-				// erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm6_sparsity_out;
-				// erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm6_n_in;
-				// erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm6_n_out;
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm6;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm6_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm6_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm6_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm6_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm6_n_out;
 			}
 			break;
 		default:
@@ -971,11 +973,11 @@ void nonlin_constr_nm6(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fu
 TEST_CASE("chain example", "[NLP solver]")
 {
 	std::vector<int> horizon_lenghts = {15, 20, 25};
-    std::vector<int> num_masses = {1, 2, 3};
-	std::vector<std::string> cons = {"BOX", "GENERAL", "NONLINEAR+GENERAL"};//{"BOX", "GENERAL", "NONLINEAR+GENERAL"};
-	std::vector<std::string> models = {"DISCRETE", "CONTINUOUS", "MIXED"};//{"DISCRETE", "CONTINUOUS", "MIXED"};
-	std::vector<std::string> integrators = {"IRK", "LIFTED_IRK", "NEW_LIFTED_IRK", "ERK", "MIXED"};//{"IRK", "LIFTED_IRK", "NEW_LIFTED_IRK", "ERK", "MIXED"};
-	std::vector<std::string> costs = {"LINEAR LS", "NONLINEAR LS", "EXTERNAL", "MIXED"};//{"LINEAR LS", "NONLINEAR LS", "EXTERNAL", "MIXED"};
+    std::vector<int> num_masses = {4, 5};
+	std::vector<std::string> cons = {"NONLINEAR+GENERAL"};//{"BOX", "GENERAL", "NONLINEAR+GENERAL"};
+	std::vector<std::string> models = {"MIXED"};//{"DISCRETE", "CONTINUOUS", "MIXED"};
+	std::vector<std::string> integrators = {"MIXED"};//{"IRK", "LIFTED_IRK", "NEW_LIFTED_IRK", "ERK", "MIXED"};
+	std::vector<std::string> costs = {"MIXED"};//{"LINEAR LS", "NONLINEAR LS", "EXTERNAL", "MIXED"};
 	std::vector<std::string> qp_solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC", "SPARSE_QPDUNES", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};//{"SPARSE_HPIPM", "SPARSE_HPMPC", "SPARSE_QPDUNES", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};
 
 	for (int NN : horizon_lenghts)
@@ -1312,9 +1314,6 @@ TEST_CASE("chain example", "[NLP solver]")
 
 															// implicit
 															external_function_casadi *impl_ode_fun = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
-															external_function_casadi *impl_ode_jac_x = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
-															external_function_casadi *impl_ode_jac_xdot = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
-															external_function_casadi *impl_ode_jac_u = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
 															external_function_casadi *impl_ode_fun_jac_x_xdot = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
 															external_function_casadi *impl_ode_fun_jac_x_xdot_u = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
 															external_function_casadi *impl_ode_jac_x_xdot_u = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
@@ -1322,7 +1321,7 @@ TEST_CASE("chain example", "[NLP solver]")
 															// discrete model
 															external_function_casadi *erk4_casadi = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
 
-															select_dynamics_casadi(NN, NMF, expl_vde_for, expl_ode_jac, impl_ode_fun, impl_ode_jac_x, impl_ode_jac_xdot, impl_ode_jac_u, impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
+															select_dynamics_casadi(NN, NMF, expl_vde_for, expl_ode_jac, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
 															// forw_vde
 															external_function_casadi_create_array(NN, expl_vde_for);
@@ -1696,9 +1695,6 @@ TEST_CASE("chain example", "[NLP solver]")
 															external_function_casadi_free(impl_ode_jac_x_xdot_u);
 
 															free(impl_ode_fun);
-															free(impl_ode_jac_x);
-															free(impl_ode_jac_xdot);
-															free(impl_ode_jac_u);
 															free(impl_ode_fun_jac_x_xdot);
 															free(impl_ode_fun_jac_x_xdot_u);
 															free(impl_ode_jac_x_xdot_u);

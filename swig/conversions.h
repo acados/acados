@@ -22,25 +22,25 @@
 
 #if defined(SWIGMATLAB)
 
-    typedef mxArray LangObject;
-    #define LANG_SEQUENCE_NAME "cell array"
-    #define LANG_MAP_NAME "struct"
-    #define LANG_MATRIX_NAME "matrix"
+typedef mxArray LangObject;
+#define LANG_SEQUENCE_NAME "cell array"
+#define LANG_MAP_NAME "struct"
+#define LANG_MATRIX_NAME "matrix"
 
 #elif defined(SWIGPYTHON)
 
-    #define NO_IMPORT_ARRAY
-    #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-    #include "numpy/arrayobject.h"
+#define NO_IMPORT_ARRAY
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include "numpy/arrayobject.h"
 
-    typedef PyObject LangObject;
-    #define LANG_SEQUENCE_NAME "list"
-    #define LANG_MAP_NAME "dictionary"
-    #define LANG_MATRIX_NAME "ndarray"
+typedef PyObject LangObject;
+#define LANG_SEQUENCE_NAME "list"
+#define LANG_MAP_NAME "dictionary"
+#define LANG_MATRIX_NAME "ndarray"
 
-    #define PyArray_NewFromDataF(nd, dims, data) \
-            PyArray_New(&PyArray_Type, nd, dims, NPY_FLOAT64, NULL, \
-                        (void *) data, 0, NPY_ARRAY_FARRAY | NPY_ARRAY_OWNDATA, NULL)
+#define PyArray_NewFromDataF(nd, dims, data)                                  \
+    PyArray_New(&PyArray_Type, nd, dims, NPY_FLOAT64, NULL, (void *) data, 0, \
+                NPY_ARRAY_FARRAY | NPY_ARRAY_OWNDATA, NULL)
 #endif
 
 #include "acados/utils/types.h"

@@ -17,7 +17,6 @@
  *
  */
 
-
 #ifndef ACADOS_DENSE_QP_DENSE_QP_HPIPM_H_
 #define ACADOS_DENSE_QP_DENSE_QP_HPIPM_H_
 
@@ -27,20 +26,16 @@ extern "C" {
 
 // hpipm
 #include "hpipm/include/hpipm_d_dense_qp.h"
-#include "hpipm/include/hpipm_d_dense_qp_sol.h"
 #include "hpipm/include/hpipm_d_dense_qp_ipm.h"
+#include "hpipm/include/hpipm_d_dense_qp_sol.h"
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
-
-
 
 typedef struct dense_qp_hpipm_opts_
 {
     struct d_dense_qp_ipm_arg *hpipm_opts;
 } dense_qp_hpipm_opts;
-
-
 
 typedef struct dense_qp_hpipm_memory_
 {

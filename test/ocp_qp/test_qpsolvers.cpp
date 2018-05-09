@@ -21,16 +21,16 @@
 #include <string>
 #include <vector>
 
-#include "test/test_utils/eigen.h"
 #include "catch/include/catch.hpp"
+#include "test/test_utils/eigen.h"
 
 #include "acados_c/ocp_qp_interface.h"
-#include "acados_c/options.h"
+#include "acados_c/options_interface.h"
 
-extern "C"
-{
+extern "C" {
 ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
-ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
+ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, int nb_, int ng_,
+                                        int ngN);
 }
 
 using std::vector;
@@ -38,9 +38,7 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Map;
 
-
-
-ocp_qp_solver_t hashit(std::string const& inString)
+ocp_qp_solver_t hashit(std::string const &inString)
 {
     if (inString == "SPARSE_HPIPM") return PARTIAL_CONDENSING_HPIPM;
     if (inString == "SPARSE_HPMPC") return PARTIAL_CONDENSING_HPMPC;
@@ -48,13 +46,14 @@ ocp_qp_solver_t hashit(std::string const& inString)
 
     if (inString == "DENSE_HPIPM") return FULL_CONDENSING_HPIPM;
     if (inString == "DENSE_QPOASES") return FULL_CONDENSING_QPOASES;
+#ifdef ACADOS_WITH_QORE
     if (inString == "DENSE_QORE") return FULL_CONDENSING_QORE;
+#endif
 
     return (ocp_qp_solver_t) -1;
 }
 
-
-double solver_tolerance(std::string const& inString)
+double solver_tolerance(std::string const &inString)
 {
     if (inString == "SPARSE_HPIPM") return 1e-8;
     if (inString == "SPARSE_HPMPC") return 1e-5;
@@ -67,9 +66,7 @@ double solver_tolerance(std::string const& inString)
     return -1;
 }
 
-
-
-void set_N2(std::string const& inString, void *opts, int N2, int N)
+void set_N2(std::string const &inString, void *opts, int N2, int N)
 {
     bool option_found = false;
 
@@ -102,31 +99,39 @@ void set_N2(std::string const& inString, void *opts, int N2, int N)
     }
 }
 
-
-
 TEST_CASE("mass spring example", "[QP solvers]")
 {
-    vector<std::string> solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC", "SPARSE_QPDUNES", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};
+    vector<std::string> solvers = {"SPARSE_HPIPM",
+                                   "SPARSE_HPMPC",
+                                   "SPARSE_QPDUNES",
+                                   "DENSE_HPIPM",
+                                   "DENSE_QPOASES"
+#ifdef ACADOS_WITH_QORE
+                                   ,
+                                   "DENSE_QORE"};
+#else
+    };
+#endif
 
     /************************************************
      * set up dimensions
      ************************************************/
 
-    int nx_ = 8;   // number of states (it has to be even for the mass-spring system test problem)
+    int nx_ = 8;  // number of states (it has to be even for the mass-spring system test problem)
 
-    int nu_ = 3;   // number of inputs (controllers) (  1 <= nu_ <= nx_/2 )
+    int nu_ = 3;  // number of inputs (controllers) (  1 <= nu_ <= nx_/2 )
 
-    int N = 15;    // horizon length
+    int N = 15;  // horizon length
 
     int nb_ = 11;  // number of box constrained inputs and states
 
-    int ng_ = 0;   // number of general constraints
+    int ng_ = 0;  // number of general constraints
 
-    int ngN = 0;   // number of general constraints at last stage
+    int ngN = 0;  // number of general constraints at last stage
 
     double N2_values[] = {15, 5, 3};  // horizon of partially condensed QP for sparse solvers
 
-	ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring(N, nx_, nu_, nb_, ng_, ngN);
+    ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring(N, nx_, nu_, nb_, ng_, ngN);
 
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(NULL, N, nx_, nu_, nb_, ng_, ngN);
 
@@ -165,7 +170,6 @@ TEST_CASE("mass spring example", "[QP solvers]")
             config = ocp_qp_config_create(plan);
 
             opts = ocp_qp_opts_create(config, qp_dims);
-
 
             if (sparse_solver)
             {

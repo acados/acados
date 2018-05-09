@@ -22,7 +22,7 @@
 find_package(Eigen3)
 
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.4.0")
-    message(WARNING "You chose to run unit tests but casadi-octave-v3.4.0 was not found in: ${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.4.0")
+    message(WARNING "You chose to run unit tests but 'casadi-octave-v3.4.0' was not found in: ${PROJECT_SOURCE_DIR}/external")
 endif()
 
 include_directories(${EIGEN3_INCLUDE_DIR})
@@ -64,7 +64,7 @@ set(TEST_OCP_NLP_SRC
     #chain_model/vde_hess_chain_nm5.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_cost_nm5.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_costN_nm5.c
-    # chain_model/casadi_erk4_chain_nm5.c
+    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/casadi_erk4_chain_nm5.c
     # 6 masses
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_chain_nm6.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/jac_chain_nm6.c
@@ -72,7 +72,7 @@ set(TEST_OCP_NLP_SRC
     #chain_model/vde_hess_chain_nm6.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_cost_nm6.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_costN_nm6.c
-    # chain_model/casadi_erk4_chain_nm6.c
+    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/casadi_erk4_chain_nm6.c
 
     ### implicit ###
     # 2 masses

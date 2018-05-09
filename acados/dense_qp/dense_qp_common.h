@@ -17,7 +17,6 @@
  *
  */
 
-
 #ifndef ACADOS_DENSE_QP_DENSE_QP_COMMON_H_
 #define ACADOS_DENSE_QP_DENSE_QP_COMMON_H_
 
@@ -27,8 +26,8 @@ extern "C" {
 
 // hpipm
 #include "hpipm/include/hpipm_d_dense_qp.h"
-#include "hpipm/include/hpipm_d_dense_qp_sol.h"
 #include "hpipm/include/hpipm_d_dense_qp_res.h"
+#include "hpipm/include/hpipm_d_dense_qp_sol.h"
 // acados
 #include "acados/utils/types.h"
 
@@ -38,32 +37,30 @@ typedef struct d_dense_qp_sol dense_qp_out;
 typedef struct d_dense_qp_res dense_qp_res;
 typedef struct d_dense_qp_res_workspace dense_qp_res_ws;
 
-
-
 #ifndef QP_SOLVER_CONFIG_
 #define QP_SOLVER_CONFIG_
 
-typedef struct {
+typedef struct
+{
     // TODO(dimitris): pass dims to evaluate?
-    int (*evaluate) (void *config, void *qp_in, void *qp_out, void *args, void *mem, void *work);
-    int (*opts_calculate_size) (void *config, void *dims);
-    void *(*opts_assign) (void *config, void *dims, void *raw_memory);
-    void (*opts_initialize_default) (void *config, void *dims, void *args);
-    void (*opts_update) (void *config, void *dims, void *args);
-    int (*memory_calculate_size) (void *config, void *dims, void *args);
-    void *(*memory_assign) (void *config, void *dims, void *args, void *raw_memory);
-    int (*workspace_calculate_size) (void *config, void *dims, void *args);
+    int (*evaluate)(void *config, void *qp_in, void *qp_out, void *args, void *mem, void *work);
+    int (*opts_calculate_size)(void *config, void *dims);
+    void *(*opts_assign)(void *config, void *dims, void *raw_memory);
+    void (*opts_initialize_default)(void *config, void *dims, void *args);
+    void (*opts_update)(void *config, void *dims, void *args);
+    int (*memory_calculate_size)(void *config, void *dims, void *args);
+    void *(*memory_assign)(void *config, void *dims, void *args, void *raw_memory);
+    int (*workspace_calculate_size)(void *config, void *dims, void *args);
 } qp_solver_config;
 
 #endif
 
-
-
-typedef struct {
+typedef struct
+{
     double solve_QP_time;
     double interface_time;
     double total_time;
-    int    num_iter;
+    int num_iter;
 } dense_qp_info;
 
 //
@@ -91,7 +88,8 @@ int dense_qp_res_workspace_calculate_size(dense_qp_dims *dims);
 //
 dense_qp_res_ws *dense_qp_res_workspace_assign(dense_qp_dims *dims, void *raw_memory);
 //
-void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws);
+void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res,
+                          dense_qp_res_ws *res_ws);
 //
 void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4]);
 //

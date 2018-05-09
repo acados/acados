@@ -17,27 +17,29 @@
  *
  */
 
-#ifndef ACADOS_C_CONDENSING_INTERFACE_H_
-#define ACADOS_C_CONDENSING_INTERFACE_H_
+#ifndef INTERFACES_ACADOS_C_CONDENSING_INTERFACE_H_
+#define INTERFACES_ACADOS_C_CONDENSING_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/ocp_qp/ocp_qp_full_condensing.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 
 typedef enum {
     PARTIAL_CONDENSING,
     FULL_CONDENSING,
 } condensing_t;
 
-typedef struct {
+typedef struct
+{
     condensing_t condensing_type;
 } condensing_plan;
 
-typedef struct {
-    ocp_qp_condensing_config *config;  // TODO
+typedef struct
+{
+    ocp_qp_condensing_config *config;
     void *dims;
     void *opts;
     void *mem;
@@ -50,9 +52,11 @@ void *ocp_qp_condensing_opts_create(ocp_qp_condensing_config *config, void *dims
 //
 int ocp_qp_condensing_calculate_size(ocp_qp_condensing_config *config, void *dims_, void *opts_);
 //
-condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, void *dims_, void *opts_, void *raw_memory);
+condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, void *dims_,
+                                            void *opts_, void *raw_memory);
 //
-condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, void *dims_, void *opts_);
+condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, void *dims_,
+                                            void *opts_);
 //
 int ocp_qp_condense(condensing_module *module, void *qp_in, void *qp_out);
 //
@@ -62,4 +66,4 @@ int ocp_qp_expand(condensing_module *module, void *qp_in, void *qp_out);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_CONDENSING_INTERFACE_H_
+#endif  // INTERFACES_ACADOS_C_CONDENSING_INTERFACE_H_

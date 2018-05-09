@@ -22,10 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #include <xmmintrin.h>
-
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
@@ -493,7 +489,7 @@ int main()
 	d_print_mat(ny_, nx_, Vx, ny_);
 	d_print_mat(ny_, nu_, Vu, ny_);
 	d_print_mat(ny_, ny_, W, ny_);
-//	exit(1);
+// exit(1);
 #endif
 
     /************************************************
@@ -508,8 +504,8 @@ int main()
 		plan->nlp_cost[i] = LINEAR_LS;
 
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
-//	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
-//	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
+// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
 
 	for (int i = 0; i < NN; i++)
 	{
@@ -619,8 +615,8 @@ int main()
 		// W
 		blasfeo_pack_dmat(ny[i], ny[i], W, ny_, &cost[i]->W, 0, 0);
 
-//		blasfeo_print_dmat(nu[i]+nx[i], ny[i], &cost[i]->Cyt, 0, 0);
-//		blasfeo_print_dmat(ny[i], ny[i], &cost[i]->W, 0, 0);
+// 	blasfeo_print_dmat(nu[i]+nx[i], ny[i], &cost[i]->Cyt, 0, 0);
+// 	blasfeo_print_dmat(ny[i], ny[i], &cost[i]->W, 0, 0);
 	}
 
 	// slacks (middle stages)
@@ -728,7 +724,7 @@ int main()
     }
 
 //    for (int i = 0; i <= NN; i++)
-//		int_print_mat(1, ns[i], constraints[i]->idxs, 1);
+// 	int_print_mat(1, ns[i], constraints[i]->idxs, 1);
 
     /************************************************
     * sqp opts
