@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "acados_c/options.h"
+#include "acados_c/options_interface.h"
 
 namespace acados {
 
@@ -26,7 +26,7 @@ void flatten(map<string, option_t *>& input, map<string, option_t *>& output) {
 
 void process_options(string solver_name, map<string, option_t *>& options, void *args) {
     map<string, option_t *> solver_options;
-    auto nested_options = std::make_unique<option<map<string, option_t *>>>(options);
+    auto nested_options = std::unique_ptr<option<map<string, option_t *>>>(new option<map<string, option_t *>>(options));
     solver_options[solver_name] = nested_options.get();
 
     auto flattened_options = map<string, option_t *>();

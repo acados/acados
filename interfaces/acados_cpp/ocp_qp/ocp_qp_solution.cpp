@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <utility>
 
-#include "acados_cpp/ocp_qp/ocp_qp_dimensions.hpp"
+#include "acados_cpp/ocp_dimensions.hpp"
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 

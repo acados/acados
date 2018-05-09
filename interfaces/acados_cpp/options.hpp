@@ -68,8 +68,6 @@ public:
         return std::to_string(value);
     }
 
-    inline std::string repr() override { return std::to_string(value); }
-
     inline int as_int() override { return static_cast<int>(value); }
 
     inline double as_double() override { return static_cast<double>(value); }

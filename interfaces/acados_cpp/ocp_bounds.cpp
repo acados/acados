@@ -30,7 +30,7 @@ calculate_all_idxb(const vector<vector<double>>& lower_bounds, const vector<vect
     vector<vector<int>> bounds_indices(lower_bounds.size());
 
     std::transform(lower_bounds.begin(), lower_bounds.end(), upper_bounds.begin(),
-                   bounds_indices.begin(), [](auto lb, auto ub) {return calculate_idxb(lb, ub);});
+                   bounds_indices.begin(), [](vector<double> lb, vector<double> ub) {return calculate_idxb(lb, ub);});
 
     return bounds_indices;
 }

@@ -21,8 +21,8 @@ void ocp::squeeze_dimensions(map<string, vector<vector<double>>> bounds) {
 
     // Calculate new dimensions
     map<string, vector<int>> nb {{"x", std::vector<int>(num_stages()+1)}, {"u", std::vector<int>(num_stages()+1)}};
-    std::transform(idxb_new["x"].begin(), idxb_new["x"].end(), nb["x"].begin(), [](auto elem){return elem.size();});
-    std::transform(idxb_new["u"].begin(), idxb_new["u"].end(), nb["u"].begin(), [](auto elem){return elem.size();});
+    std::transform(idxb_new["x"].begin(), idxb_new["x"].end(), nb["x"].begin(), [](const vector<int>& elem){return elem.size();});
+    std::transform(idxb_new["u"].begin(), idxb_new["u"].end(), nb["u"].begin(), [](const vector<int>& elem){return elem.size();});
 
     change_bound_dimensions(nb["x"], nb["u"]);
 
