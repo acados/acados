@@ -1,7 +1,7 @@
 find_package(PythonInterp 3 REQUIRED)
 find_package(PythonLibs 3 REQUIRED)
 find_package(NumPy REQUIRED)
-find_package(casadi REQUIRED CONFIG)
+find_package(casadi REQUIRED)
 
 include_directories(${PYTHON_INCLUDE_DIRS})
 include_directories(${PYTHON_NUMPY_INCLUDE_DIR})

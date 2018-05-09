@@ -122,7 +122,7 @@ if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
 	add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
 endif()
 
-find_package(casadi REQUIRED CONFIG)
+find_package(Casadi REQUIRED)
 target_link_libraries(acados PUBLIC casadi)
 
 # Only test acados library for coverage

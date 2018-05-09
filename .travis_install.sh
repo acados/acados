@@ -26,6 +26,7 @@ wget -q https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-py
 mkdir -p casadi-linux-py35-v3.4.0-64bit
 tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-linux-py35-v3.4.0-64bit
 export PYTHONPATH=$(pwd)/casadi-linux-py35-v3.4.0-64bit:$PYTHONPATH
+export CASADIPATH=$(pwd)/casadi-linux-py35-v3.4.0-64bit
 
 wget -q https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
 mkdir -p casadi-linux-matlabR2014b-v3.4.0
