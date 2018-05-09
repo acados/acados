@@ -79,7 +79,7 @@ add_executable(unit_tests
     ${TEST_OCP_NLP_SRC}
     # $<TARGET_OBJECTS:ocp_qp_gen>
     ${TEST_SIM_SRC}
-    # ${TEST_OCP_QP_SRC}
+    ${TEST_OCP_QP_SRC}
     # $<TARGET_OBJECTS:sim_gen>
     # ${TEST_UTILS_SRC}
 )

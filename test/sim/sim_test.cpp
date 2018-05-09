@@ -67,10 +67,10 @@ sim_solver_t hashitsim(std::string const& inString)
 
 double sim_solver_tolerance(std::string const& inString)
 {
-    if (inString == "ERK") return 1e-5;
-    if (inString == "IRK") return 1e-5;
-    if (inString == "LIFTED_IRK") return 1e-5;
-    if (inString == "GNSF") return 1e-5;
+    if (inString == "ERK") return 1e-8;
+    if (inString == "IRK") return 1e-8;
+    if (inString == "LIFTED_IRK") return 1e-8;
+    if (inString == "GNSF") return 1e-8;
     if (inString == "NEW_LIFTED_IRK") return 1e-5;
 
     return -1;
@@ -81,11 +81,9 @@ double sim_solver_tolerance(std::string const& inString)
 
 TEST_CASE("wt_nx3_example", "[integrators]")
 {
-    vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
+    vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF"}; //, "NEW_LIFTED_IRK"};//{"NEW_LIFTED_IRK"};//{"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
 
     // initialize dimensions
-    // printf("SIMULATION TEST \n");
-
     int ii;
     int jj;
 
@@ -93,9 +91,11 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     int nu = 4;
     int NF = nx + nu; // columns of forward seed
 
+    int nsim0 = 1; //nsim;
+
     double T = 0.05; // simulation time
 
-    double x_sim[nx*(nsim+1)];
+    double x_sim[nx*(nsim0+1)];
     double x_ref_sol[nx];
     double x_sol[nx];
     double error[nx];
@@ -300,8 +300,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     sim_solver *sim_solver = sim_create(config, dims, opts);
 
     int acados_return;
-
-    int nsim0 = 1; //nsim;
 
     for (ii=0; ii<nsim0; ii++)
     {
