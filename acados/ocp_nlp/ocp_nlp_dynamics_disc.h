@@ -17,33 +17,31 @@
  *
  */
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_DISC_H_
-#define ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_DISC_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_DISC_H_
+#define ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_DISC_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // blasfeo
-#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
+
 // acados
-#include "acados/utils/types.h"
-#include "acados/utils/external_function_generic.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
-
-
+#include "acados/utils/external_function_generic.h"
+#include "acados/utils/types.h"
 
 /************************************************
-* dims
-************************************************/
+ * dims
+ ************************************************/
 
 typedef struct
 {
-    int nx; // number of states at the current stage
-    int nu; // number of inputs at the current stage
-	int nx1; // number of states at the next stage
-	int nu1; // number of inputes at the next stage
+    int nx;   // number of states at the current stage
+    int nu;   // number of inputs at the current stage
+    int nx1;  // number of states at the next stage
+    int nu1;  // number of inputes at the next stage
 } ocp_nlp_dynamics_disc_dims;
 
 //
@@ -51,13 +49,12 @@ int ocp_nlp_dynamics_disc_dims_calculate_size(void *config);
 //
 void *ocp_nlp_dynamics_disc_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_dynamics_disc_dims_initialize(void *config, void *dims, int nx, int nu, int nx1, int nu1);
-
-
+void ocp_nlp_dynamics_disc_dims_initialize(void *config, void *dims, int nx, int nu, int nx1,
+                                           int nu1);
 
 /************************************************
-* options
-************************************************/
+ * options
+ ************************************************/
 
 typedef struct
 {
@@ -73,20 +70,18 @@ void ocp_nlp_dynamics_disc_opts_initialize_default(void *config, void *dims, voi
 //
 void ocp_nlp_dynamics_disc_opts_update(void *config, void *dims, void *opts);
 
-
-
 /************************************************
-* memory
-************************************************/
+ * memory
+ ************************************************/
 
 typedef struct
 {
-	struct blasfeo_dvec fun;
-	struct blasfeo_dvec adj;
-	struct blasfeo_dvec *ux; // pointer to ux in nlp_out at current stage
-	struct blasfeo_dvec *ux1; // pointer to ux in nlp_out at next stage
-	struct blasfeo_dvec *pi; // pointer to pi in nlp_out at current stage
-	struct blasfeo_dmat *BAbt; // pointer to BAbt in qp_in
+    struct blasfeo_dvec fun;
+    struct blasfeo_dvec adj;
+    struct blasfeo_dvec *ux;    // pointer to ux in nlp_out at current stage
+    struct blasfeo_dvec *ux1;   // pointer to ux in nlp_out at next stage
+    struct blasfeo_dvec *pi;    // pointer to pi in nlp_out at current stage
+    struct blasfeo_dmat *BAbt;  // pointer to BAbt in qp_in
 } ocp_nlp_dynamics_disc_memory;
 
 //
@@ -106,28 +101,25 @@ void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memo
 //
 void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory);
 
-
-
 /************************************************
-* workspace
-************************************************/
+ * workspace
+ ************************************************/
 
 typedef struct
 {
-	double *discrete_model_in;
-	double *discrete_model_out;
+    double *discrete_model_in;
+    double *discrete_model_out;
 } ocp_nlp_dynamics_disc_workspace;
 
 int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, void *dims, void *opts);
 
-
 /************************************************
-* model
-************************************************/
+ * model
+ ************************************************/
 
 typedef struct
 {
-	external_function_generic *discrete_model;
+    external_function_generic *discrete_model;
 } ocp_nlp_dynamics_disc_model;
 
 //
@@ -137,23 +129,21 @@ void *ocp_nlp_dynamics_disc_model_assign(void *config, void *dims, void *raw_mem
 //
 void ocp_nlp_dynamics_disc_model_set_T(double T, void *model);
 
-
-
 /************************************************
-* functions
-************************************************/
+ * functions
+ ************************************************/
 
 //
 void ocp_nlp_dynamics_disc_config_initialize_default(void *config);
 //
-void ocp_nlp_dynamics_disc_initialize(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+void ocp_nlp_dynamics_disc_initialize(void *config_, void *dims, void *model_, void *opts,
+                                      void *mem, void *work_);
 //
-void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
-
-
+void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *model_, void *opts,
+                                              void *mem, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_DISC_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_DISC_H_

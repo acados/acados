@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_C_SIM_INTERFACE_H_
-#define ACADOS_C_SIM_INTERFACE_H_
+#ifndef INTERFACES_ACADOS_C_SIM_INTERFACE_H_
+#define INTERFACES_ACADOS_C_SIM_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,19 +26,15 @@ extern "C" {
 
 #include "acados/sim/sim_common.h"
 
-typedef enum {
-    ERK,
-    LIFTED_IRK,
-    IRK,
-    GNSF,
-    NEW_LIFTED_IRK
-} sim_solver_t;
+typedef enum { ERK, LIFTED_IRK, IRK, GNSF, NEW_LIFTED_IRK } sim_solver_t;
 
-typedef struct {
+typedef struct
+{
     sim_solver_t sim_solver;
 } sim_solver_plan;
 
-typedef struct {
+typedef struct
+{
     sim_solver_config *config;
     void *dims;
     void *opts;
@@ -49,13 +45,14 @@ typedef struct {
 //
 sim_solver_config *sim_config_create(sim_solver_plan plan);
 //
-void *sim_dims_create();
+void *sim_dims_create(void *config_);
 //
 sim_in *sim_in_create(sim_solver_config *config, void *dims);
 //
 int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr);
 //
-int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type, void *fun_ptr);
+int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type,
+                           void *fun_ptr);
 //
 sim_out *sim_out_create(sim_solver_config *config, void *dims);
 //
@@ -73,4 +70,4 @@ int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_SIM_INTERFACE_H_
+#endif  // INTERFACES_ACADOS_C_SIM_INTERFACE_H_

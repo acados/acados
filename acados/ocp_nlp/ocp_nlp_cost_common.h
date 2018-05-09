@@ -24,39 +24,37 @@
 extern "C" {
 #endif
 
-// blasfeo
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
 // acados
-#include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
-
+#include "acados/utils/types.h"
 
 /************************************************
-* config
-************************************************/
+ * config
+ ************************************************/
 
 typedef struct
 {
-	int (*dims_calculate_size) (void *config);
-	void *(*dims_assign) (void *config, void *raw_memory);
-	void (*dims_initialize) (void *config, void *dims, int nx, int nu, int ny, int ns); 
-	int (*model_calculate_size) (void *config, void *dims);
-	void *(*model_assign) (void *config, void *dims, void *raw_memory);
-	int (*opts_calculate_size) (void *config, void *dims);
-	void *(*opts_assign) (void *config, void *dims, void *raw_memory);
-	void (*opts_initialize_default) (void *config, void *dims, void *opts);
-	void (*opts_update) (void *config, void *dims, void *opts);
-	int (*memory_calculate_size) (void *config, void *dims, void *opts);
-	struct blasfeo_dvec *(*memory_get_grad_ptr) (void *memory);
-	void (*memory_set_ux_ptr) (struct blasfeo_dvec *ux, void *memory);
-	void (*memory_set_RSQrq_ptr) (struct blasfeo_dmat *RSQrq, void *memory);
-	void (*memory_set_Z_ptr) (struct blasfeo_dvec *Z, void *memory);
-	void *(*memory_assign) (void *config, void *dims, void *opts, void *raw_memory);
-	int (*workspace_calculate_size) (void *config, void *dims, void *opts);
-	void (*initialize) (void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-	void (*update_qp_matrices) (void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
-	void (*config_initialize_default) (void *config);
+    int (*dims_calculate_size)(void *config);
+    void *(*dims_assign)(void *config, void *raw_memory);
+    void (*dims_initialize)(void *config, void *dims, int nx, int nu, int ny, int ns);
+    int (*model_calculate_size)(void *config, void *dims);
+    void *(*model_assign)(void *config, void *dims, void *raw_memory);
+    int (*opts_calculate_size)(void *config, void *dims);
+    void *(*opts_assign)(void *config, void *dims, void *raw_memory);
+    void (*opts_initialize_default)(void *config, void *dims, void *opts);
+    void (*opts_update)(void *config, void *dims, void *opts);
+    int (*memory_calculate_size)(void *config, void *dims, void *opts);
+    struct blasfeo_dvec *(*memory_get_grad_ptr)(void *memory);
+    void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory);
+    void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
+    void (*memory_set_Z_ptr)(struct blasfeo_dvec *Z, void *memory);
+    void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
+    int (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
+                       void *work_);
+    void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
+                               void *work_);
+    void (*config_initialize_default)(void *config);
 } ocp_nlp_cost_config;
 
 //
@@ -68,4 +66,4 @@ ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory);
 } /* extern "C" */
 #endif
 
-#endif // ACADOS_OCP_NLP_OCP_NLP_COST_COMMON_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_COST_COMMON_H_

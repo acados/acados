@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_SIM_SIM_COLLOCATION_H_
-#define ACADOS_SIM_SIM_COLLOCATION_H_
+#ifndef ACADOS_SIM_SIM_COLLOCATION_UTILS_H_
+#define ACADOS_SIM_SIM_COLLOCATION_UTILS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,16 +26,12 @@ extern "C" {
 
 #include "acados/utils/types.h"
 
-
-
 enum Newton_type_collocation
 {
-	exact = 0,
-	simplified_in,
-	simplified_inis
+    exact = 0,
+    simplified_in,
+    simplified_inis
 };
-
-
 
 typedef struct
 {
@@ -52,8 +48,6 @@ typedef struct
     double *transf2_T;
 } Newton_scheme;
 
-
-
 //
 int gauss_nodes_work_calculate_size(int ns);
 //
@@ -67,10 +61,8 @@ int butcher_table_work_calculate_size(int ns);
 //
 void butcher_table(int ns, double *nodes, double *b, double *A, void *work);
 
-
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_SIM_SIM_COLLOCATION_H_
+#endif  // ACADOS_SIM_SIM_COLLOCATION_UTILS_H_

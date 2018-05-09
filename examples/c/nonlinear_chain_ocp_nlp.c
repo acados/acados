@@ -22,10 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #include <xmmintrin.h>
-
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
@@ -1133,8 +1129,8 @@ int main()
 	}
 
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
-//	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
-//	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
+// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
 
 	// NOTE(dimitris): switching between different integrators on each stage to test everything
 	for (int i = 0; i < NN; i++)

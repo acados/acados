@@ -1,3 +1,21 @@
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
 
 #include <algorithm>
 #include <cmath>
@@ -11,7 +29,7 @@
 
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp_interface.h"
-#include "acados_c/options.h"
+#include "acados_c/options_interface.h"
 
 #include "acados_cpp/ocp_bounds.hpp"
 #include "acados_cpp/ocp_dimensions.hpp"
@@ -88,29 +106,53 @@ void ocp_qp::set_field(string field, int stage, std::vector<double> v) {
 
     } else if (field == "Q") {
         d_cvt_colmaj_to_ocp_qp_Q(stage, v.data(), qp.get());
-    } else if (field == "S") {
+    }
+    else if (field == "S")
+    {
         d_cvt_colmaj_to_ocp_qp_S(stage, v.data(), qp.get());
-    } else if (field == "R") {
+    }
+    else if (field == "R")
+    {
         d_cvt_colmaj_to_ocp_qp_R(stage, v.data(), qp.get());
-    } else if (field == "q") {
+    }
+    else if (field == "q")
+    {
         d_cvt_colmaj_to_ocp_qp_q(stage, v.data(), qp.get());
-    } else if (field == "r") {
+    }
+    else if (field == "r")
+    {
         d_cvt_colmaj_to_ocp_qp_r(stage, v.data(), qp.get());
-    } else if (field == "A") {
+    }
+    else if (field == "A")
+    {
         d_cvt_colmaj_to_ocp_qp_A(stage, v.data(), qp.get());
-    } else if (field == "B") {
+    }
+    else if (field == "B")
+    {
         d_cvt_colmaj_to_ocp_qp_B(stage, v.data(), qp.get());
-    } else if (field == "b") {
+    }
+    else if (field == "b")
+    {
         d_cvt_colmaj_to_ocp_qp_b(stage, v.data(), qp.get());
-    } else if (field == "C") {
+    }
+    else if (field == "C")
+    {
         d_cvt_colmaj_to_ocp_qp_C(stage, v.data(), qp.get());
-    } else if (field == "D") {
+    }
+    else if (field == "D")
+    {
         d_cvt_colmaj_to_ocp_qp_D(stage, v.data(), qp.get());
-    } else if (field == "lg") {
+    }
+    else if (field == "lg")
+    {
         d_cvt_colmaj_to_ocp_qp_lg(stage, v.data(), qp.get());
-    } else if (field == "ug") {
+    }
+    else if (field == "ug")
+    {
         d_cvt_colmaj_to_ocp_qp_ug(stage, v.data(), qp.get());
-    } else {
+    }
+    else
+    {
         throw std::invalid_argument("OCP QP does not contain field " + field);
     }
 }
@@ -179,13 +221,17 @@ ocp_qp_solution ocp_qp::solve() {
 
     int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
 
-    if (return_code != ACADOS_SUCCESS) {
+    if (return_code != ACADOS_SUCCESS)
+    {
         if (return_code == ACADOS_MAXITER)
-            throw std::runtime_error("QP solver " + cached_solver + " reached maximum number of iterations.");
+            throw std::runtime_error("QP solver " + cached_solver +
+                                     " reached maximum number of iterations.");
         else if (return_code == ACADOS_MINSTEP)
             throw std::runtime_error("QP solver " + cached_solver + " reached minimum step size.");
         else
-            throw std::runtime_error("QP solver " + cached_solver + " failed with solver-specific error code " + std::to_string(return_code));
+            throw std::runtime_error("QP solver " + cached_solver +
+                                     " failed with solver-specific error code " +
+                                     std::to_string(return_code));
     }
     return ocp_qp_solution(std::move(result));
 }
@@ -219,7 +265,7 @@ void ocp_qp::set_bound_indices(string name, int stage, vector<int> v) {
         throw std::invalid_argument("I need " + std::to_string(nb_bounds) + " indices, you gave " + std::to_string(v.size()) + ".");
     for (int i = 0; i < nb_bounds; ++i)
         if (name == "x")
-            qp->idxb[stage][qp->dim->nbu[stage]+i] = qp->dim->nu[stage]+v.at(i);
+            qp->idxb[stage][qp->dim->nbu[stage] + i] = qp->dim->nu[stage] + v.at(i);
         else if (name == "u")
             qp->idxb[stage][i] = v.at(i);
 }

@@ -75,10 +75,9 @@ typedef struct {
 
 // TODO(nielsvd): add sm_in and sm_out to struct
 typedef struct {
-    int_t (*fun)(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
-                 void *args_, void *mem_, void *work_);
-    void (*initialize)(const ocp_nlp_sm_in *sm_in, void *args_, void **mem_,
-                       void **work_);
+    int_t (*fun)(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *args_, void *mem_,
+                 void *work_);
+    void (*initialize)(const ocp_nlp_sm_in *sm_in, void *args_, void **mem_, void **work_);
     void (*destroy)(void *mem_, void *work_);
     void *args;
     void *mem;

@@ -31,27 +31,23 @@ extern "C" {
 
 typedef enum qpdunes_options_t_ {
     QPDUNES_DEFAULT_ARGUMENTS,
-    QPDUNES_LINEAR_MPC,    // TODO(dimitris): partly implemented
+    QPDUNES_LINEAR_MPC,     // TODO(dimitris): partly implemented
     QPDUNES_NONLINEAR_MPC,  // TODO(dimitris): not implemented yet
     QPDUNES_ACADO_SETTINGS
 } qpdunes_options_t;
 
+typedef enum { QPDUNES_WITH_QPOASES, QPDUNES_WITH_CLIPPING } qpdunes_stage_qp_solver_t;
 
-typedef enum {
-    QPDUNES_WITH_QPOASES,
-    QPDUNES_WITH_CLIPPING
-} qpdunes_stage_qp_solver_t;
-
-
-typedef struct ocp_qp_qpdunes_opts_ {
+typedef struct ocp_qp_qpdunes_opts_
+{
     qpOptions_t options;
     qpdunes_stage_qp_solver_t stageQpSolver;
     int warmstart;  // warmstart = 0: all multipliers set to zero, warmstart = 1: use previous mult.
     bool isLinearMPC;
 } ocp_qp_qpdunes_opts;
 
-
-typedef struct ocp_qp_qpdunes_memory_ {
+typedef struct ocp_qp_qpdunes_memory_
+{
     int firstRun;
     int nx;
     int nu;
@@ -60,8 +56,8 @@ typedef struct ocp_qp_qpdunes_memory_ {
     qpData_t qpData;
 } ocp_qp_qpdunes_memory;
 
-
-typedef struct ocp_qp_qpdunes_workspace_ {
+typedef struct ocp_qp_qpdunes_workspace_
+{
     double *H;
     double *Q;
     double *R;
@@ -75,7 +71,6 @@ typedef struct ocp_qp_qpdunes_workspace_ {
     double *zLow;
     double *zUpp;
 } ocp_qp_qpdunes_workspace;
-
 
 //
 int ocp_qp_qpdunes_opts_calculate_size(void *config_, ocp_qp_dims *dims);
@@ -92,7 +87,8 @@ void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_
 //
 int ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_qpdunes(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *memory_, void *work_);
+int ocp_qp_qpdunes(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *memory_,
+                   void *work_);
 //
 void ocp_qp_qpdunes_free_memory(void *mem_);
 //

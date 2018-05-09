@@ -433,7 +433,8 @@ bool boolean_from(LangObject *input) {
 }
 
 bool is_valid_option_type(LangObject *input) {
-    return is_integer(input) || is_real(input) || is_matrix(input) || is_map(input) || is_string(input) || is_boolean(input);
+    return is_integer(input) || is_real(input) || is_matrix(input) || is_map(input)
+                             || is_string(input) || is_boolean(input);
 }
 
 void to(LangObject *sequence, const int_t index, LangObject *item) {
@@ -775,7 +776,8 @@ option_t *as_option_ptr(LangObject *val) {
         return new option<bool>(boolean_from(val));
     else if (is_string(val))
         return new option<std::string>(string_from(val));
-    else throw std::invalid_argument("Option does not have a valid type");
+    else
+        throw std::invalid_argument("Option does not have a valid type");
 }
 
 }  // namespace acados
