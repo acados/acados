@@ -82,6 +82,8 @@ void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hid
 
 void regularize(int_t dim, real_t *A);
 
+double minimum_of_doubles(double *x, int n);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

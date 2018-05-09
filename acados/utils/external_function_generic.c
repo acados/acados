@@ -205,13 +205,13 @@ static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *spar
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!!
+// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 // TODO detect if dense from number of elements per column !!!
 static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dvec *out)
 {
 	int idx;
 
-	assert( sparsity_in[1]==1 );
+	assert((sparsity_in[1]==1) | (sparsity_in[0] == 0) | (sparsity_in[1] == 0));
 
     int n = sparsity_in[0];
     int dense = sparsity_in[2];
@@ -240,13 +240,13 @@ static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dv
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!!
+// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 // TODO detect if dense from number of elements per column !!!
 static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *sparsity_out)
 {
 	int idx;
 
-	assert( sparsity_out[1]==1 );
+	assert((sparsity_out[1]==1) | (sparsity_out[0] == 0) | (sparsity_out[1] == 0));
 
     int n = sparsity_out[0];
     int dense = sparsity_out[2];
@@ -431,13 +431,13 @@ static void d_cvt_dmat_args_to_casadi(struct blasfeo_dmat_args *in, double *out,
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!!
+// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 // TODO detect if dense from number of elements per column !!!
 static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasfeo_dvec_args *out)
 {
 	int idx;
 
-	assert( sparsity_in[1]==1 );
+	assert((sparsity_in[1]==1) | (sparsity_in[0] == 0) | (sparsity_in[1] == 0));
 
     int n = sparsity_in[0];
     int dense = sparsity_in[2];
@@ -469,14 +469,14 @@ static void d_cvt_casadi_to_dvec_args(double *in, int *sparsity_in, struct blasf
 
 
 
-// column vector: assume sparsity_in[1] = 1 !!!
+// column vector: assume sparsity_in[1] = 1 !!! or empty vector;
 // TODO detect if dense from number of elements per column !!!
 static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out, int *sparsity_out)
 {
 	int idx;
 
-	assert( sparsity_out[1]==1 );
-
+	assert((sparsity_out[1]==1) | (sparsity_out[0] == 0) | (sparsity_out[1] == 0));
+	
     int n = sparsity_out[0];
     int dense = sparsity_out[2];
 

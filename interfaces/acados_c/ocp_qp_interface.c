@@ -238,7 +238,6 @@ static ocp_qp_res_ws *ocp_qp_res_workspace_create(ocp_qp_dims *dims)
 // TODO(dimitris): better name for this wrapper?
 void ocp_qp_inf_norm_residuals(ocp_qp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, double *res)
 {
-    // double *residuals = malloc(4*sizeof(double));
     ocp_qp_res *qp_res = ocp_qp_res_create(dims);
     ocp_qp_res_ws *res_ws = ocp_qp_res_workspace_create(dims);
     ocp_qp_res_compute(qp_in, qp_out, qp_res, res_ws);

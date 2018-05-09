@@ -61,46 +61,19 @@ sim_solver_config *sim_solver_config_assign(void *raw_memory)
 }
 
 
-
-/************************************************
-* dims
-************************************************/
-
-int sim_dims_calculate_size()
-{
-    int size = sizeof(sim_dims);
-
-    return size;
-}
-
-
-
-sim_dims *sim_dims_assign(void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    sim_dims *dims = (sim_dims *) c_ptr;
-    c_ptr += sizeof(sim_dims);
-
-    assert((char *) raw_memory + sim_dims_calculate_size() >= c_ptr);
-
-    return dims;
-}
-
-
-
 /************************************************
 * in
 ************************************************/
 
-int sim_in_calculate_size(void *config_, sim_dims *dims)
+int sim_in_calculate_size(void *config_, void *dims)
 {
 	sim_solver_config *config = config_;
 
     int size = sizeof(sim_in);
 
-    int nx = dims->nx;
-    int nu = dims->nu;
+    int nx, nu;
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
 
     size += nx * sizeof(double);  // x
     size += nu * sizeof(double);  // u
@@ -117,7 +90,7 @@ int sim_in_calculate_size(void *config_, sim_dims *dims)
 
 
 
-sim_in *sim_in_assign(void *config_, sim_dims *dims, void *raw_memory)
+sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 {
 	sim_solver_config *config = config_;
 
@@ -128,8 +101,10 @@ sim_in *sim_in_assign(void *config_, sim_dims *dims, void *raw_memory)
 
 	in->dims = dims;
 
-    int nx = dims->nx;
-    int nu = dims->nu;
+    int nx, nu;
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
+
     int NF = nx+nu;
 
     align_char_to(8, &c_ptr);
@@ -154,14 +129,16 @@ sim_in *sim_in_assign(void *config_, sim_dims *dims, void *raw_memory)
 * out
 ************************************************/
 
-int sim_out_calculate_size(void *config_, sim_dims *dims)
+int sim_out_calculate_size(void *config_, void *dims)
 {
-	/* sim_solver_config *config = config_; */
+	sim_solver_config *config = config_;
 
     int size = sizeof(sim_out);
 
-    int nx = dims->nx;
-    int nu = dims->nu;
+    int nx, nu;
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
+
     int NF = nx + nu;
     size += sizeof(sim_info);
 
@@ -179,14 +156,16 @@ int sim_out_calculate_size(void *config_, sim_dims *dims)
 
 
 
-sim_out *sim_out_assign(void *config_, sim_dims *dims, void *raw_memory)
+sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 {
-	/* sim_solver_config *config = config_; */
+	sim_solver_config *config = config_;
 
     char *c_ptr = (char *) raw_memory;
 
-    int nx = dims->nx;
-    int nu = dims->nu;
+    int nx, nu;
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
+    
     int NF = nx + nu;
 
     sim_out *out = (sim_out *) c_ptr;

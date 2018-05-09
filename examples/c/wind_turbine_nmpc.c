@@ -48,12 +48,13 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 
+#include "acados/sim/sim_gnsf.h"
+
 #include "examples/c/wt_model_nx6/nx6p2/wt_model.h"
 #include "examples/c/wt_model_nx6/setup.c"
-
 #define NN 40
 
-#define MAX_SQP_ITERS 10
+#define MAX_SQP_ITERS 15
 #define NREP 1
 
 
@@ -85,7 +86,11 @@ static void select_dynamics_wt_casadi(int N,
 	external_function_param_casadi *impl_ode_fun,
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot,
 	external_function_param_casadi *impl_ode_jac_x_xdot_u,
-	external_function_param_casadi *impl_ode_jac_x_u)
+	external_function_param_casadi *impl_ode_fun_jac_x_xdot_u,
+	external_function_param_casadi *phi_fun,
+	external_function_param_casadi *phi_fun_jac_y,
+	external_function_param_casadi *phi_jac_y_uhat,
+	external_function_param_casadi *f_lo_jac_x1_x1dot_u_z)
 {
 	for (int ii = 0; ii < N; ii++)
 	{
@@ -117,12 +122,43 @@ static void select_dynamics_wt_casadi(int N,
 		impl_ode_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_n_in;
 		impl_ode_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
 
-		impl_ode_jac_x_u[ii].casadi_fun = &casadi_impl_ode_jac_x_u;
-		impl_ode_jac_x_u[ii].casadi_work = &casadi_impl_ode_jac_x_u_work;
-		impl_ode_jac_x_u[ii].casadi_sparsity_in = &casadi_impl_ode_jac_x_u_sparsity_in;
-		impl_ode_jac_x_u[ii].casadi_sparsity_out = &casadi_impl_ode_jac_x_u_sparsity_out;
-		impl_ode_jac_x_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_u_n_in;
-		impl_ode_jac_x_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_u_n_out;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_u;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_u_work;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_u_sparsity_in;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_u_sparsity_out;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_u_n_in;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_u_n_out;
+		
+		// GNSF functions
+		// phi_fun
+		phi_fun[ii].casadi_fun            = &casadi_phi_fun;
+		phi_fun[ii].casadi_work           = &casadi_phi_fun_work;
+		phi_fun[ii].casadi_sparsity_in    = &casadi_phi_fun_sparsity_in;
+		phi_fun[ii].casadi_sparsity_out   = &casadi_phi_fun_sparsity_out;
+		phi_fun[ii].casadi_n_in           = &casadi_phi_fun_n_in;
+		phi_fun[ii].casadi_n_out          = &casadi_phi_fun_n_out;
+
+		phi_fun_jac_y[ii].casadi_fun = &casadi_phi_fun_jac_y;
+		phi_fun_jac_y[ii].casadi_work = &casadi_phi_fun_jac_y_work;
+		phi_fun_jac_y[ii].casadi_sparsity_in = &casadi_phi_fun_jac_y_sparsity_in;
+		phi_fun_jac_y[ii].casadi_sparsity_out = &casadi_phi_fun_jac_y_sparsity_out;
+		phi_fun_jac_y[ii].casadi_n_in = &casadi_phi_fun_jac_y_n_in;
+		phi_fun_jac_y[ii].casadi_n_out = &casadi_phi_fun_jac_y_n_out;
+
+		phi_jac_y_uhat[ii].casadi_fun = &casadi_phi_jac_y_uhat;
+		phi_jac_y_uhat[ii].casadi_work = &casadi_phi_jac_y_uhat_work;
+		phi_jac_y_uhat[ii].casadi_sparsity_in = &casadi_phi_jac_y_uhat_sparsity_in;
+		phi_jac_y_uhat[ii].casadi_sparsity_out = &casadi_phi_jac_y_uhat_sparsity_out;
+		phi_jac_y_uhat[ii].casadi_n_in = &casadi_phi_jac_y_uhat_n_in;
+		phi_jac_y_uhat[ii].casadi_n_out = &casadi_phi_jac_y_uhat_n_out;
+
+		// f_lo - linear output function
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_fun = &casadi_f_lo_fun_jac_x1k1uz;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_work = &casadi_f_lo_fun_jac_x1k1uz_work;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_sparsity_in = &casadi_f_lo_fun_jac_x1k1uz_sparsity_in;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_sparsity_out = &casadi_f_lo_fun_jac_x1k1uz_sparsity_out;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_n_in = &casadi_f_lo_fun_jac_x1k1uz_n_in;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_n_out = &casadi_f_lo_fun_jac_x1k1uz_n_out;
 	}
 }
 
@@ -172,13 +208,12 @@ void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *typ
 int main()
 {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
-
 	int nx_ = 8;
     int nu_ = 2;
 	int ny_ = 4;
 
 	int np = 1; // number of local parametrs for each dynamics model function
-
+	
     /************************************************
     * problem dimensions
     ************************************************/
@@ -382,12 +417,11 @@ int main()
 	external_function_generic h1;
 	double *lh1;
 	double *uh1;
+	lh1 = malloc((nh[1])*sizeof(double));
+	uh1 = malloc((nh[1])*sizeof(double));
 	if (nh[1]>0)
 	{
 		h1.evaluate = &ext_fun_h1;
-
-		lh1 = malloc((nh[1])*sizeof(double));
-		uh1 = malloc((nh[1])*sizeof(double));
 
 		// electric power
 		lh1[0] = Pel_min;
@@ -480,9 +514,10 @@ int main()
 	for (int i = 0; i < NN; i++)
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-//		plan->sim_solver_plan[i].sim_solver = ERK;
-//		plan->sim_solver_plan[i].sim_solver = IRK;
-		plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+        // plan->sim_solver_plan[i].sim_solver = ERK;
+		// plan->sim_solver_plan[i].sim_solver = IRK;
+		// plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+		plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
@@ -504,9 +539,14 @@ int main()
 	external_function_param_casadi *impl_ode_fun = malloc(NN*sizeof(external_function_param_casadi));
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot = malloc(NN*sizeof(external_function_param_casadi));
 	external_function_param_casadi *impl_ode_jac_x_xdot_u = malloc(NN*sizeof(external_function_param_casadi));
-	external_function_param_casadi *impl_ode_jac_x_u = malloc(NN*sizeof(external_function_param_casadi));
+	external_function_param_casadi *impl_ode_fun_jac_x_xdot_u = malloc(NN*sizeof(external_function_param_casadi));
+	// gnsf model
+	external_function_param_casadi *phi_fun = malloc(NN*sizeof(external_function_param_casadi));
+	external_function_param_casadi *phi_fun_jac_y = malloc(NN*sizeof(external_function_param_casadi));
+	external_function_param_casadi *phi_jac_y_uhat = malloc(NN*sizeof(external_function_param_casadi));
+	external_function_param_casadi *f_lo_jac_x1_x1dot_u_z = malloc(NN*sizeof(external_function_param_casadi));
 
-	select_dynamics_wt_casadi(NN, expl_vde_for, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_jac_x_xdot_u, impl_ode_jac_x_u);
+	select_dynamics_wt_casadi(NN, expl_vde_for, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_jac_x_xdot_u, impl_ode_fun_jac_x_xdot_u, phi_fun, phi_fun_jac_y, phi_jac_y_uhat, f_lo_jac_x1_x1dot_u_z);
 
 	// explicit model
 	external_function_param_casadi_create_array(NN, expl_vde_for, np);
@@ -514,7 +554,42 @@ int main()
 	external_function_param_casadi_create_array(NN, impl_ode_fun, np);
 	external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot, np);
 	external_function_param_casadi_create_array(NN, impl_ode_jac_x_xdot_u, np);
-	external_function_param_casadi_create_array(NN, impl_ode_jac_x_u, np);
+	external_function_param_casadi_create_array(NN, impl_ode_fun_jac_x_xdot_u, np);
+	// gnsf model
+	external_function_param_casadi_create_array(NN, phi_fun, np);
+	external_function_param_casadi_create_array(NN, phi_fun_jac_y, np);
+	external_function_param_casadi_create_array(NN, phi_jac_y_uhat, np);
+	external_function_param_casadi_create_array(NN, f_lo_jac_x1_x1dot_u_z, np);
+
+	// GNSF import matrices function
+    external_function_casadi get_matrices_fun;
+    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
+	external_function_casadi_create(&get_matrices_fun);
+
+	external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
+
+	for (int i = 0; i < NN; i++)
+	{
+		if (plan->sim_solver_plan[i].sim_solver == GNSF)
+		{
+			/* initialize additional gnsf dimensions */
+			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
+			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
+
+			gnsf_dims->nx1 		= 8;
+			gnsf_dims->nz  		= 0;
+			gnsf_dims->nx2 		= 0;
+			gnsf_dims->n_out 	= 1;
+			gnsf_dims->ny 		= 5;
+			gnsf_dims->nuhat 	= 0;
+		}
+	}
+
 
     /************************************************
     * nlp_in
@@ -569,7 +644,7 @@ int main()
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
 			if (set_fun_status != 0) exit(1);
 		}
-		else if (plan->sim_solver_plan[i].sim_solver == IRK || plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+		else if (plan->sim_solver_plan[i].sim_solver == IRK) 
 		{
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
 			if (set_fun_status != 0) exit(1);
@@ -577,7 +652,22 @@ int main()
 			if (set_fun_status != 0) exit(1);
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_u", &impl_ode_jac_x_u[i]);
+		}
+		else if (plan->sim_solver_plan[i].sim_solver == GNSF)
+		{
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "phi_fun", &phi_fun[i]);
+			if (set_fun_status != 0) exit(1);
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "phi_fun_jac_y", &phi_fun_jac_y[i]);
+			if (set_fun_status != 0) exit(1);
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "phi_jac_y_uhat", &phi_jac_y_uhat[i]);
+			if (set_fun_status != 0) exit(1);
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z", &f_lo_jac_x1_x1dot_u_z[i]);
+		}
+		else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+		{
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
+			if (set_fun_status != 0) exit(1);
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u[i]);
 			if (set_fun_status != 0) exit(1);
 		}
 		else
@@ -588,8 +678,6 @@ int main()
 	}
 
     nlp_in->freezeSens = false;
-
-
 
     /* constraints */
 
@@ -661,14 +749,21 @@ int main()
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == IRK)
 		{
-			sim_opts->ns = 3;
-			sim_opts->num_steps = 2;
+			sim_opts->ns = 4;
+			sim_opts->num_steps = 1;
 			sim_opts->jac_reuse = true;
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
 		{
 			sim_opts->ns = 4;
 			sim_opts->num_steps = 1;
+		}
+		else if (plan->sim_solver_plan[i].sim_solver == GNSF)
+		{
+			sim_opts->ns = 4;
+			sim_opts->num_steps = 1;
+			sim_opts->newton_iter = 1;
+			sim_opts->jac_reuse = true;
 		}
     }
 
@@ -686,7 +781,6 @@ int main()
 		pcond_solver_opts->pcond_opts->N2 = 10;
 	}
 
-	// update after user-defined opts
 	config->opts_update(config, dims, nlp_opts);
 
     /************************************************
@@ -696,6 +790,46 @@ int main()
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+
+	/************************************************
+	* 	precomputation (after all options are set)
+	************************************************/
+
+	for (int i=0; i<NN; i++){
+		if (plan->sim_solver_plan[i].sim_solver == GNSF)
+		{
+			ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
+			gnsf_model* model = (gnsf_model *)dynamics->sim_model;
+
+			// get gnsf_dims
+			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
+			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
+
+			// get sim opts
+			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_opts->dynamics[i];
+			sim_rk_opts *sim_opts = dynamics_stage_opts->sim_solver;
+
+			// import model matrices
+			sim_gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
+
+			// get sim_solver_config
+			sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
+
+			// get sim_solver memory
+			ocp_nlp_sqp_memory *mem = solver->mem;
+			ocp_nlp_dynamics_cont_memory* dynamics_mem = (ocp_nlp_dynamics_cont_memory *) mem->dynamics[i];
+			char *mem_ptr = (char *) dynamics_mem;
+			mem_ptr += sizeof(ocp_nlp_dynamics_cont_memory); // mem_ptr now points to the memory of the integrator;
+
+
+
+			// precompute
+			sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts, mem_ptr, solver->work, nlp_in->Ts[i]);
+			// NOTE; solver->work can be used, as it is for sure larger than the workspace
+			//		 needed to precompute, as the latter is part of the first.
+		}
+	}
+
 
     /************************************************
     * sqp solve
@@ -736,7 +870,14 @@ int main()
 					impl_ode_fun[ii].set_param(impl_ode_fun+ii, wind0_ref+idx+ii);
 					impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);
 					impl_ode_jac_x_xdot_u[ii].set_param(impl_ode_jac_x_xdot_u+ii, wind0_ref+idx+ii);
-					impl_ode_jac_x_u[ii].set_param(impl_ode_jac_x_u+ii, wind0_ref+idx+ii);
+					impl_ode_fun_jac_x_xdot_u[ii].set_param(impl_ode_fun_jac_x_xdot_u+ii, wind0_ref+idx+ii);
+				}
+				else if (plan->sim_solver_plan[ii].sim_solver == GNSF)
+				{
+					phi_fun[ii].set_param(phi_fun+ii, wind0_ref+idx+ii);
+					phi_fun_jac_y[ii].set_param(phi_fun_jac_y+ii, wind0_ref+idx+ii);
+					phi_jac_y_uhat[ii].set_param(phi_jac_y_uhat+ii, wind0_ref+idx+ii);
+					f_lo_jac_x1_x1dot_u_z[ii].set_param(f_lo_jac_x1_x1dot_u_z+ii, wind0_ref+idx+ii);
 				}
 				else
 				{
@@ -807,16 +948,29 @@ int main()
     ************************************************/
 
 	// TODO(dimitris): VALGRIND!
+	external_function_casadi_free(&get_matrices_fun);
+
  	external_function_param_casadi_free(expl_vde_for);
  	external_function_param_casadi_free(impl_ode_fun);
  	external_function_param_casadi_free(impl_ode_fun_jac_x_xdot);
  	external_function_param_casadi_free(impl_ode_jac_x_xdot_u);
- 	external_function_param_casadi_free(impl_ode_jac_x_u);
+    external_function_param_casadi_free(impl_ode_fun_jac_x_xdot_u);
+ 	external_function_param_casadi_free(phi_fun);
+ 	external_function_param_casadi_free(phi_fun_jac_y);
+ 	external_function_param_casadi_free(phi_jac_y_uhat);
+ 	external_function_param_casadi_free(f_lo_jac_x1_x1dot_u_z);
+
 	free(expl_vde_for);
 	free(impl_ode_fun);
 	free(impl_ode_fun_jac_x_xdot);
 	free(impl_ode_jac_x_xdot_u);
-	free(impl_ode_jac_x_u);
+    free(impl_ode_fun_jac_x_xdot_u);
+
+	free(phi_fun);
+	free(phi_fun_jac_y);
+	free(phi_jac_y_uhat);
+	free(f_lo_jac_x1_x1dot_u_z);
+
 
 	free(nlp_opts);
 	free(nlp_in);
@@ -832,6 +986,13 @@ int main()
 	free(ub1);
 	free(lbN);
 	free(ubN);
+
+	free(lh1);
+	free(uh1);
+	free(Vx);
+	free(Vu);
+	free(W);
+
 	free(idxb0);
 	free(idxb1);
 	free(idxbN);

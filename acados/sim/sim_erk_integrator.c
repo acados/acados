@@ -28,12 +28,58 @@
 #include "acados/sim/sim_erk_integrator.h"
 
 
+/************************************************
+* dims
+************************************************/
+
+int sim_erk_dims_calculate_size()
+{
+    int size = sizeof(sim_erk_dims);
+
+    return size;
+}
+
+void *sim_erk_dims_assign(void* config_, void *raw_memory)
+{
+    char *c_ptr = raw_memory;
+
+    sim_erk_dims *dims = (sim_erk_dims *) c_ptr;
+    c_ptr += sizeof(sim_erk_dims);
+
+    assert((char *) raw_memory + sim_erk_dims_calculate_size() >= c_ptr);
+
+    return dims;
+}
+
+void sim_erk_set_nx(void *dims_, int nx)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    dims->nx = nx;
+}
+
+void sim_erk_set_nu(void *dims_, int nu)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    dims->nu = nu;
+}
+
+void sim_erk_get_nx(void *dims_, int* nx)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    *nx = dims->nx;
+}
+
+void sim_erk_get_nu(void *dims_, int* nu)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    *nu = dims->nu;
+}
 
 /************************************************
 * model
 ************************************************/
 
-int sim_erk_model_calculate_size(void *config, sim_dims *dims)
+int sim_erk_model_calculate_size(void *config, void *dims)
 {
 
 	int size = 0;
@@ -46,7 +92,7 @@ int sim_erk_model_calculate_size(void *config, sim_dims *dims)
 
 
 
-void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory)
+void *sim_erk_model_assign(void *config, void *dims, void *raw_memory)
 {
 
 	char *c_ptr = (char *) raw_memory;
@@ -93,7 +139,7 @@ int sim_erk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
 * opts
 ************************************************/
 
-int sim_erk_opts_calculate_size(void *config_, sim_dims *dims)
+int sim_erk_opts_calculate_size(void *config_, void *dims)
 {
 	int ns_max = NS_MAX;
 
@@ -111,7 +157,7 @@ int sim_erk_opts_calculate_size(void *config_, sim_dims *dims)
 
 
 
-void *sim_erk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
+void *sim_erk_opts_assign(void *config_, void *dims, void *raw_memory)
 {
 	int ns_max = NS_MAX;
 
@@ -137,9 +183,11 @@ void *sim_erk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 
 
 
-void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
+void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     sim_rk_opts *opts = opts_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+
 
 	opts->ns = 4; // ERK 4
     int ns = opts->ns;
@@ -205,7 +253,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
 
 
-void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_)
+void sim_erk_opts_update(void *config_, void *dims, void *opts_)
 {
     sim_rk_opts *opts = opts_;
 
@@ -276,14 +324,14 @@ void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_)
 * memory
 ************************************************/
 
-int sim_erk_memory_calculate_size(void *config, sim_dims *dims, void *opts_)
+int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_)
 {
     return 0;
 }
 
 
 
-void *sim_erk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory)
+void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory)
 {
     return NULL;
 }
@@ -294,9 +342,10 @@ void *sim_erk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw
 * workspace
 ************************************************/
 
-int sim_erk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
+int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
 	sim_rk_opts *opts = opts_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -344,9 +393,10 @@ int sim_erk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 
 
 
-static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, void *raw_memory)
+static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
 	sim_rk_opts *opts = opts_;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     int ns = opts->ns;
 
@@ -411,7 +461,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     int ns = opts->ns;
 
-    sim_dims *dims = in->dims;
+    void *dims_ = in->dims;
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+
     sim_erk_workspace *workspace = (sim_erk_workspace *) sim_erk_cast_workspace(config, dims, opts, work_);
 
     int i, j, s, istep;
@@ -701,7 +753,12 @@ void sim_erk_config_initialize_default(void *config_)
     config->model_set_function = &sim_erk_model_set_function;
 	config->evaluate = &sim_erk;
 	config->config_initialize_default = &sim_erk_config_initialize_default;
-
+    config->dims_calculate_size = &sim_erk_dims_calculate_size;
+    config->dims_assign = &sim_erk_dims_assign;
+    config->set_nx = &sim_erk_set_nx;
+    config->set_nu = &sim_erk_set_nu;
+    config->get_nx = &sim_erk_get_nx;
+    config->get_nu = &sim_erk_get_nu;
 	return;
 
 }
