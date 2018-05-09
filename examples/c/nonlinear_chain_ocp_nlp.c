@@ -970,7 +970,7 @@ int main()
 {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
-	const int NMF = 5;  // number of free masses
+	const int NMF = 3;  // number of free masses: actually one more is used: possible values are 1,2,3,4,5
 
     print_problem_info(NMF);
 
