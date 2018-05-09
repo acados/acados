@@ -31,29 +31,26 @@
 
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_cpp/ocp.hpp"
-#include "acados_cpp/options.hpp"
 #include "acados_cpp/ocp_qp/ocp_qp_solution.hpp"
+#include "acados_cpp/options.hpp"
 
 namespace acados
 {
-
 class ocp_qp : private ocp
 {
-
-public:
-
+ public:
     ocp_qp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, std::vector<int> ns);
 
     ocp_qp(int N, int nx, int nu, int ng = 0, int ns = 0);
 
-    std::vector< std::vector<double> > get_field(std::string field);
+    std::vector<std::vector<double>> get_field(std::string field);
 
     // Update all fields with the same values. Matrices are passed in column-major ordering.
     void set_field(std::string field, int stage, std::vector<double> v);
 
-    // Update a single field. Matrices are passed in column-major ordering.    
+    // Update a single field. Matrices are passed in column-major ordering.
     void set_field(std::string field, std::vector<double> v);
-    
+
     std::pair<int, int> shape_of_field(std::string field, int stage);
 
     void initialize_solver(std::string solver_name, std::map<std::string, option_t *> options = {});
@@ -62,23 +59,23 @@ public:
 
     std::map<std::string, std::vector<int>> dimensions();
 
-    const std::vector<std::string> fields {
-        "Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"
-    };
+    const std::vector<std::string> fields{"Q",   "S",   "R",   "q",   "r", "A", "B",  "b",
+                                          "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"};
 
     int num_stages() override;
 
-private:
-
+ private:
     void reset_bounds();
 
     bool in_range(std::string field, int stage);
 
-    void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>> bounds) override {
+    void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>> bounds) override
+    {
         ocp::squeeze_dimensions(bounds);
     }
 
-    void fill_bounds(std::map<std::string, std::vector<std::vector<double>>> bounds) override {
+    void fill_bounds(std::map<std::string, std::vector<std::vector<double>>> bounds) override
+    {
         ocp::fill_bounds(bounds);
     }
 
@@ -137,7 +134,6 @@ private:
     bool needs_initializing_;
 
     static std::map<std::string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
-
 };
 
 }  // namespace acados

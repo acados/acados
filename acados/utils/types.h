@@ -34,7 +34,7 @@ extern "C" {
 typedef double real_t;
 typedef int int_t;
 
-typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, void *mem);
+typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, void* mem);
 
 // enum of return values
 enum return_values

@@ -1,26 +1,25 @@
 
-#ifndef INTERFACES_ACADOS_CPP_OCP_NLP_OCP_NLP_H_
-#define INTERFACES_ACADOS_CPP_OCP_NLP_OCP_NLP_H_
+#ifndef INTERFACES_ACADOS_CPP_OCP_NLP_OCP_NLP_HPP_
+#define INTERFACES_ACADOS_CPP_OCP_NLP_OCP_NLP_HPP_
 
 #include <map>
 #include <string>
 #include <vector>
 
-#include "acados_c/ocp_nlp_interface.h"
 #include "acados/utils/types.h"
+#include "acados_c/ocp_nlp_interface.h"
 
 #include "acados_cpp/ocp.hpp"
-#include "acados_cpp/options.hpp"
 #include "acados_cpp/ocp_nlp/ocp_nlp_solution.hpp"
+#include "acados_cpp/options.hpp"
 
 #include "casadi/casadi.hpp"
 
-namespace acados {
-
-class ocp_nlp : private ocp {
- 
+namespace acados
+{
+class ocp_nlp : private ocp
+{
  public:
-
     ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, std::vector<int> nh,
             std::vector<int> ns);
 
@@ -32,13 +31,14 @@ class ocp_nlp : private ocp {
 
     ocp_nlp_solution solve();
 
-    std::vector<std::string> fields = {"lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug", "lh", "uh"};
+    std::vector<std::string> fields = {"lbx", "ubx", "lbu", "ubu", "C",
+                                       "D",   "lg",  "ug",  "lh",  "uh"};
 
     void set_field(std::string field, std::vector<double> v);
 
     void set_field(std::string field, int stage, std::vector<double> v);
 
-    void set_dynamics(const casadi::Function& f, std::map<std::string, option_t *> options = {});
+    void set_dynamics(const casadi::Function &f, std::map<std::string, option_t *> options = {});
 
     // void set_stage_constraint(const casadi::Function& h);
     // void set_terminal_constraint(const casadi::Function& h_N);
@@ -54,12 +54,13 @@ class ocp_nlp : private ocp {
     const int N;
 
  private:
-
-    void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>> bounds) override {
+    void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>> bounds) override
+    {
         ocp::squeeze_dimensions(bounds);
     }
 
-    void fill_bounds(std::map<std::string, std::vector<std::vector<double>>> bounds) override {
+    void fill_bounds(std::map<std::string, std::vector<std::vector<double>>> bounds) override
+    {
         ocp::fill_bounds(bounds);
     }
 
@@ -77,7 +78,8 @@ class ocp_nlp : private ocp {
 
     int num_stages() override;
 
-    std::map<std::string, casadi::Function> create_explicit_ode_functions(const casadi::Function& model);
+    std::map<std::string, casadi::Function> create_explicit_ode_functions(
+        const casadi::Function &model);
 
     std::unique_ptr<ocp_nlp_in> nlp_;
 
@@ -91,7 +93,7 @@ class ocp_nlp : private ocp {
 
     external_function_casadi forw_vde_;
 
-    std::unique_ptr<void, void (*)(void *)> solver_options_ {nullptr, &std::free};
+    std::unique_ptr<void, void (*)(void *)> solver_options_{nullptr, &std::free};
 
     std::map<std::string, std::vector<int>> dimensions_;
 
@@ -100,7 +102,6 @@ class ocp_nlp : private ocp {
     bool needs_initializing_;
 
     std::vector<double> step_;
-
 };
 
 void *load_function(std::string function_name, void *handle);
@@ -109,4 +110,4 @@ void *compile_and_load(std::string name);
 
 }  // namespace acados
 
-#endif  // INTERFACES_ACADOS_CPP_OCP_NLP_OCP_NLP_H_
+#endif  // INTERFACES_ACADOS_CPP_OCP_NLP_OCP_NLP_HPP_

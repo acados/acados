@@ -1,17 +1,16 @@
 
-#ifndef INTERFACES_ACADOS_CPP_OCP_NLP_OCP_H_
-#define INTERFACES_ACADOS_CPP_OCP_NLP_OCP_H_
+#ifndef INTERFACES_ACADOS_CPP_OCP_HPP_
+#define INTERFACES_ACADOS_CPP_OCP_HPP_
 
 #include <map>
 #include <string>
 #include <vector>
 
-namespace acados {
-
-class ocp {
-
+namespace acados
+{
+class ocp
+{
  protected:
-    
     virtual void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>>) = 0;
 
     virtual void change_bound_dimensions(std::vector<int> nbx, std::vector<int> nbu) = 0;
@@ -30,10 +29,9 @@ class ocp {
 
     virtual int num_stages() = 0;
 
-    virtual ~ocp() {};
-
+    virtual ~ocp(){}
 };
 
 }  // namespace acados
 
-#endif  // INTERFACES_ACADOS_CPP_OCP_NLP_OCP_H_
+#endif  // INTERFACES_ACADOS_CPP_OCP_HPP_

@@ -251,7 +251,8 @@ void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_
                 printf("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
             }
         }
-        if (mem->nDmax > 0) nD_ptr = (unsigned int *)dims->ng;  // otherwise leave pointer equal to zero
+        if (mem->nDmax > 0)
+            nD_ptr = (unsigned int *) dims->ng;  // otherwise leave pointer equal to zero
     }
 
     // qpDUNES memory allocation

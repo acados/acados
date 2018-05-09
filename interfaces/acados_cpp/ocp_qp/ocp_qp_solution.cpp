@@ -28,7 +28,6 @@
 
 namespace acados
 {
-
 using std::vector;
 
 ocp_qp_solution::ocp_qp_solution(std::unique_ptr<ocp_qp_out> solution)

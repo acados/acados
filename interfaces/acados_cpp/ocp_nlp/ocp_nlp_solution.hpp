@@ -7,19 +7,18 @@
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 
-namespace acados {
-
-struct ocp_nlp_info {
+namespace acados
+{
+struct ocp_nlp_info
+{
     int num_iter;
     double inf_norm_residual;
 };
 
-class ocp_nlp_solution {
-
-public:
-
-    ocp_nlp_solution(std::shared_ptr<ocp_nlp_out> solution,
-                     std::shared_ptr<ocp_nlp_dims> dims);
+class ocp_nlp_solution
+{
+ public:
+    ocp_nlp_solution(std::shared_ptr<ocp_nlp_out> solution, std::shared_ptr<ocp_nlp_dims> dims);
 
     ocp_nlp_solution(const ocp_nlp_solution& other);
 
@@ -32,12 +31,10 @@ public:
 
     const int N;
 
-private:
-
+ private:
     std::shared_ptr<ocp_nlp_out> nlp_out_;
 
     std::shared_ptr<ocp_nlp_dims> dims_;
-
 };
 }  // namespace acados
 
