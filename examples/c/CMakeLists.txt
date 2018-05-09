@@ -53,7 +53,7 @@ file(GLOB CHAIN_MODEL_SRC
     #chain_model/vde_hess_chain_nm5.c
     chain_model/ls_cost_nm5.c
     chain_model/ls_costN_nm5.c
-    # chain_model/casadi_erk4_chain_nm5.c
+    chain_model/casadi_erk4_chain_nm5.c
     # 6 masses
     chain_model/vde_chain_nm6.c
     chain_model/jac_chain_nm6.c
@@ -61,7 +61,7 @@ file(GLOB CHAIN_MODEL_SRC
     #chain_model/vde_hess_chain_nm6.c
     chain_model/ls_cost_nm6.c
     chain_model/ls_costN_nm6.c
-    # chain_model/casadi_erk4_chain_nm6.c
+    chain_model/casadi_erk4_chain_nm6.c
 
     ### implicit ###
     # 2 masses
