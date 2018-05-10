@@ -70,10 +70,6 @@ typedef struct
     void **cost;
     void **dynamics;
     void **constraints;
-
-    // TODO(rien): what about invariants, e.g., algebraic constraints?
-
-    bool freezeSens;  // TODO(dimitris): shouldn't this be in the integrator args?
 } ocp_nlp_in;
 
 /************************************************
