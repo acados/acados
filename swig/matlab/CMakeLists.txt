@@ -1,5 +1,5 @@
 find_package(Matlab COMPONENTS MX_LIBRARY ENG_LIBRARY REQUIRED)
-find_package(casadi REQUIRED)
+find_package(Casadi REQUIRED)
 
 set_source_files_properties(../acados.i PROPERTIES CPLUSPLUS ON)
 
