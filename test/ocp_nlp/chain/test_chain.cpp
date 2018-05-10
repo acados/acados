@@ -517,10 +517,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 sensitivity_method.initialize = &ocp_nlp_sm_gn_initialize;
                 sensitivity_method.destroy = &ocp_nlp_sm_gn_destroy;
                 sensitivity_method.args = ocp_nlp_sm_gn_create_arguments();
-                if (INEXACT > 2)
-                {
-                    ((ocp_nlp_sm_gn_args *) sensitivity_method.args)->freezeSens = true;
-                }
 
                 /************************************************
                  * QP solver
