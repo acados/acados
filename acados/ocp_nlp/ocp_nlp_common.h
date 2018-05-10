@@ -63,8 +63,6 @@ void ocp_nlp_dims_initialize(void *config, int *nx, int *nu, int *ny, int *nbx, 
 
 typedef struct
 {
-    ocp_nlp_dims *dims;  // pointer to nlp dimensions
-
     double *Ts;  // length of sampling intervals
 
     void **cost;

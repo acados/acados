@@ -335,8 +335,6 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in = (ocp_nlp_in *) c_ptr;
     c_ptr += sizeof(ocp_nlp_in);
 
-    in->dims = dims;
-
     // Ts
     in->Ts = (double *) c_ptr;
     c_ptr += N * sizeof(double);
