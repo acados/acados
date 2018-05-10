@@ -50,7 +50,11 @@ typedef struct
 } ocp_nlp_dims;
 
 //
+int ocp_nlp_dims_calculate_size_self(void *config);
+//
 int ocp_nlp_dims_calculate_size(void *config);
+//
+ocp_nlp_dims *ocp_nlp_dims_assign_self(void *config, void *raw_memory);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
 //
