@@ -695,26 +695,26 @@ void ext_cost_nm2(void *fun,
 
     // ref
     double *ref = (double *)calloc(nx+nu, sizeof(double));
-    for (ii=0; ii<nu; ii++)
+    for (ii = 0; ii < nu; ii++)
         ref[ii] = 0.0;
-    for (ii=0; ii<nx; ii++)
+    for (ii = 0; ii < nx; ii++)
         ref[nu+ii] = xN_nm2[ii];
 
     // Hessian
     double *hess = (double *)out[1];
-    for (ii=0; ii<nv*nv; ii++)
+    for (ii = 0; ii < nv*nv; ii++)
         hess[ii] = 0.0;
-    for (ii=0; ii<nu; ii++)
+    for (ii = 0; ii < nu; ii++)
         hess[ii*(nv+1)] = 1.0;
-    for (; ii<nu+nx; ii++)
+    for (; ii < nu+nx; ii++)
         hess[ii*(nv+1)] = 1e-2;
 
     // gradient
     double *ux = (double *)in[0];
     double *grad = (double *)out[0];
-    for (ii=0; ii<nv; ii++)
+    for (ii = 0; ii < nv; ii++)
         grad[ii] = 0.0;
-    for (ii=0; ii<nv; ii++)
+    for (ii = 0; ii < nv; ii++)
         grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
     free(ref);
@@ -738,26 +738,26 @@ void ext_cost_nm3(void *fun,
 
     // ref
     double *ref = (double *)calloc(nx+nu, sizeof(double));
-    for (ii=0; ii<nu; ii++)
+    for (ii = 0; ii < nu; ii++)
         ref[ii] = 0.0;
-    for (ii=0; ii<nx; ii++)
+    for (ii = 0; ii < nx; ii++)
         ref[nu+ii] = xN_nm3[ii];
 
     // Hessian
     double *hess = (double *)out[1];
-    for (ii=0; ii<nv*nv; ii++)
+    for (ii = 0; ii < nv*nv; ii++)
         hess[ii] = 0.0;
-    for (ii=0; ii<nu; ii++)
+    for (ii = 0; ii < nu; ii++)
         hess[ii*(nv+1)] = 1.0;
-    for (; ii<nu+nx; ii++)
+    for (; ii < nu+nx; ii++)
         hess[ii*(nv+1)] = 1e-2;
 
     // gradient
     double *ux = (double *)in[0];
     double *grad = (double *)out[0];
-    for (ii=0; ii<nv; ii++)
+    for (ii = 0; ii < nv; ii++)
         grad[ii] = 0.0;
-    for (ii=0; ii<nv; ii++)
+    for (ii = 0; ii < nv; ii++)
         grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
     free(ref);
@@ -781,26 +781,26 @@ void ext_cost_nm4(void *fun,
 
     // ref
     double *ref = (double *)calloc(nx+nu, sizeof(double));
-    for (ii=0; ii<nu; ii++)
+    for (ii = 0; ii < nu; ii++)
         ref[ii] = 0.0;
-    for (ii=0; ii<nx; ii++)
+    for (ii = 0; ii < nx; ii++)
         ref[nu+ii] = xN_nm4[ii];
 
     // Hessian
     double *hess = (double *)out[1];
-    for (ii=0; ii<nv*nv; ii++)
+    for (ii = 0; ii < nv*nv; ii++)
         hess[ii] = 0.0;
-    for (ii=0; ii<nu; ii++)
+    for (ii = 0; ii < nu; ii++)
         hess[ii*(nv+1)] = 1.0;
-    for (; ii<nu+nx; ii++)
+    for (; ii < nu+nx; ii++)
         hess[ii*(nv+1)] = 1e-2;
 
     // gradient
     double *ux = (double *)in[0];
     double *grad = (double *)out[0];
-    for (ii=0; ii<nv; ii++)
+    for (ii = 0; ii < nv; ii++)
         grad[ii] = 0.0;
-    for (ii=0; ii<nv; ii++)
+    for (ii = 0; ii < nv; ii++)
         grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
     free(ref);
@@ -824,26 +824,26 @@ void ext_cost_nm5(void *fun,
 
     // ref
     double *ref = (double *)calloc(nx+nu, sizeof(double));
-    for (ii=0; ii<nu; ii++)
+    for (ii = 0; ii < nu; ii++)
         ref[ii] = 0.0;
-    for (ii=0; ii<nx; ii++)
+    for (ii = 0; ii < nx; ii++)
         ref[nu+ii] = xN_nm5[ii];
 
     // Hessian
     double *hess = (double *)out[1];
-    for (ii=0; ii<nv*nv; ii++)
+    for (ii = 0; ii < nv*nv; ii++)
         hess[ii] = 0.0;
-    for (ii=0; ii<nu; ii++)
+    for (ii = 0; ii < nu; ii++)
         hess[ii*(nv+1)] = 1.0;
-    for (; ii<nu+nx; ii++)
+    for (; ii < nu+nx; ii++)
         hess[ii*(nv+1)] = 1e-2;
 
     // gradient
     double *ux = (double *)in[0];
     double *grad = (double *)out[0];
-    for (ii=0; ii<nv; ii++)
+    for (ii = 0; ii < nv; ii++)
         grad[ii] = 0.0;
-    for (ii=0; ii<nv; ii++)
+    for (ii = 0; ii < nv; ii++)
         grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
     free(ref);
@@ -867,26 +867,26 @@ void ext_cost_nm6(void *fun,
 
     // ref
     double *ref = (double *)calloc(nx+nu, sizeof(double));
-    for (ii=0; ii<nu; ii++)
+    for (ii = 0; ii < nu; ii++)
         ref[ii] = 0.0;
-    for (ii=0; ii<nx; ii++)
+    for (ii = 0; ii < nx; ii++)
         ref[nu+ii] = xN_nm6[ii];
 
     // Hessian
     double *hess = (double *)out[1];
-    for (ii=0; ii<nv*nv; ii++)
+    for (ii = 0; ii < nv*nv; ii++)
         hess[ii] = 0.0;
-    for (ii=0; ii<nu; ii++)
+    for (ii = 0; ii < nu; ii++)
         hess[ii*(nv+1)] = 1.0;
-    for (; ii<nu+nx; ii++)
+    for (; ii < nu+nx; ii++)
         hess[ii*(nv+1)] = 1e-2;
 
     // gradient
     double *ux = (double *)in[0];
     double *grad = (double *)out[0];
-    for (ii=0; ii<nv; ii++)
+    for (ii = 0; ii < nv; ii++)
         grad[ii] = 0.0;
-    for (ii=0; ii<nv; ii++)
+    for (ii = 0; ii < nv; ii++)
         grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
     free(ref);
@@ -924,7 +924,7 @@ void nonlin_constr_nm2(void *evaluate,
     int ai = jac_args->ai;
     int aj = jac_args->aj;
     blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    for (ii=0; ii<nh; ii++)
+    for (ii = 0; ii < nh; ii++)
         BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
 
     return;
@@ -958,7 +958,7 @@ void nonlin_constr_nm3(void *evaluate,
     int ai = jac_args->ai;
     int aj = jac_args->aj;
     blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    for (ii=0; ii<nh; ii++)
+    for (ii = 0; ii < nh; ii++)
         BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
 
     return;
@@ -992,7 +992,7 @@ void nonlin_constr_nm4(void *evaluate,
     int ai = jac_args->ai;
     int aj = jac_args->aj;
     blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    for (ii=0; ii<nh; ii++)
+    for (ii = 0; ii < nh; ii++)
         BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
 
     return;
@@ -1026,7 +1026,7 @@ void nonlin_constr_nm5(void *evaluate,
     int ai = jac_args->ai;
     int aj = jac_args->aj;
     blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    for (ii=0; ii<nh; ii++)
+    for (ii = 0; ii < nh; ii++)
         BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
 
     return;
@@ -1060,7 +1060,7 @@ void nonlin_constr_nm6(void *evaluate,
     int ai = jac_args->ai;
     int aj = jac_args->aj;
     blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    for (ii=0; ii<nh; ii++)
+    for (ii = 0; ii < nh; ii++)
         BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
 
     return;
@@ -1504,7 +1504,7 @@ void setup_and_solve_nlp(int NN,
     ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
 
     // sampling times
-    for (int ii=0; ii<NN; ii++)
+    for (int ii = 0; ii < NN; ii++)
         nlp_in->Ts[ii] = TF/NN;
 
     // output definition: y = [x; u]
@@ -1577,7 +1577,7 @@ void setup_and_solve_nlp(int NN,
     // function via nlp interface
     ocp_nlp_dynamics_disc_model *dynamics;
 
-    for (int i=0; i<NN; i++)
+    for (int i = 0; i < NN; i++)
     {
         switch (plan->nlp_dynamics[i])
         {
@@ -1652,11 +1652,11 @@ void setup_and_solve_nlp(int NN,
             break;
         case GENERAL:
             double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
-            for (int ii=0; ii<nu[0]; ii++)
+            for (int ii = 0; ii < nu[0]; ii++)
                 Cu0[ii*(ng[0]+1)] = 1.0;
 
             double *Cx0; d_zeros(&Cx0, ng[0], nx[0]);
-            for (int ii=0; ii<nx[0]; ii++)
+            for (int ii = 0; ii < nx[0]; ii++)
                 Cx0[nu[0]+ii*(ng[0]+1)] = 1.0;
 
             blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
@@ -1670,7 +1670,7 @@ void setup_and_solve_nlp(int NN,
         case GENERAL_NONLINEAR:
         default:
             blasfeo_dgese(nu[0]+nx[0], ng[0], 0.0, &constraints[0]->DCt, 0, 0);
-            for (int ii=0; ii<ng[0]; ii++)
+            for (int ii = 0; ii < ng[0]; ii++)
                 BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
 
             ocp_nlp_constraints_model **nl_constr = (ocp_nlp_constraints_model **)
@@ -1867,7 +1867,7 @@ TEST_CASE("chain example", "[NLP solver]")
                                             // "DENSE_HPIPM",
                                             "DENSE_QPOASES"
 #ifdef ACADOS_WITH_QORE
-                                            //,"DENSE_QORE"
+                                            // ,"DENSE_QORE"
                                             };
 #else
     };
@@ -1927,20 +1927,20 @@ TEST_CASE("chain example", "[NLP solver]")
                                                                                 qp_solver_str,
                                                                                 model_str,
                                                                                 integrator_str);
-                                                        } // integrator
+                                                        }  // integrator
                                                     }
-                                                } // type of model
+                                                }  // type of model
                                             }
-                                        } // qp solver
+                                        }  // qp solver
                                     }
-                                } // type of stage cost
+                                }  // type of stage cost
                             }
-                        } // type of constraints
+                        }  // type of constraints
                     }
 
-                } // number of masses
+                }  // number of masses
             }
 
-        } // horizon lenght
+        }  // horizon lenght
     }
-} // TEST_CASE
+}  // TEST_CASE
