@@ -74,24 +74,24 @@ typedef enum {
 	GENERAL_NONLINEAR
 } constraints_t;
 
-static void print_problem_info(int NN, int NMF,
-							   std::string const& con_str,
-							   std::string const& cost_str,
-							   std::string const& qp_solver_str,
-							   std::string const& model_str,
-							   std::string const& integrator_str)
-{
-	std::cout << "-------------------------------------------------------------------------------" << std::endl;
-	std::cout << "chain example" << std::endl;
-    std::cout << "  Horizon length: " << NN << std::endl;
-	std::cout << "  Number of masses: " << NMF << std::endl;
-	std::cout << "  Type of constraints: " + con_str << std::endl;
-	std::cout << "  Stage cost type: " + cost_str << std::endl;
-	std::cout << "  QP solver: " + qp_solver_str << std::endl;
-	std::cout << "  Type of model: " + model_str << std::endl;
-	std::cout << "  Integrator: " + integrator_str << std::endl;
-    std::cout << "-------------------------------------------------------------------------------" << std::endl;
-}
+// static void print_problem_info(int NN, int NMF,
+// 							   std::string const& con_str,
+// 							   std::string const& cost_str,
+// 							   std::string const& qp_solver_str,
+// 							   std::string const& model_str,
+// 							   std::string const& integrator_str)
+// {
+// 	std::cout << "-------------------------------------------------------------------------------" << std::endl;
+// 	std::cout << "chain example" << std::endl;
+//     std::cout << "  Horizon length: " << NN << std::endl;
+// 	std::cout << "  Number of masses: " << NMF << std::endl;
+// 	std::cout << "  Type of constraints: " + con_str << std::endl;
+// 	std::cout << "  Stage cost type: " + cost_str << std::endl;
+// 	std::cout << "  QP solver: " + qp_solver_str << std::endl;
+// 	std::cout << "  Type of model: " + model_str << std::endl;
+// 	std::cout << "  Integrator: " + integrator_str << std::endl;
+//     std::cout << "-------------------------------------------------------------------------------" << std::endl;
+// }
 
 ocp_qp_solver_t qp_solver_enum(std::string const& inString)
 {
@@ -358,12 +358,12 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				impl_ode_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_n_in;
 				impl_ode_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_n_out;
 
-				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm5;
-				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm5_work;
-				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm5_sparsity_in;
-				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm5_sparsity_out;
-				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm5_n_in;
-				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm5_n_out;
+				// erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm5;
+				// erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm5_work;
+				// erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm5_sparsity_in;
+				// erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm5_sparsity_out;
+				// erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm5_n_in;
+				// erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm5_n_out;
 			}
 			break;
 		case 5:
@@ -411,12 +411,12 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				impl_ode_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_chain_nm6_n_in;
 				impl_ode_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_chain_nm6_n_out;
 
-				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm6;
-				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm6_work;
-				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm6_sparsity_in;
-				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm6_sparsity_out;
-				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm6_n_in;
-				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm6_n_out;
+				// erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm6;
+				// erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm6_work;
+				// erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm6_sparsity_in;
+				// erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm6_sparsity_out;
+				// erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm6_n_in;
+				// erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm6_n_out;
 			}
 			break;
 		default:
@@ -964,7 +964,7 @@ void nonlin_constr_nm6(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fu
 
 }
 
-
+extern bool CHAIN_EXTENSIVE;
 
 /************************************************
 * TEST CASE: nonlinear chain
@@ -972,13 +972,35 @@ void nonlin_constr_nm6(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fu
 
 TEST_CASE("chain example", "[NLP solver]")
 {
-	std::vector<int> horizon_lenghts = {15, 20, 25};
-    std::vector<int> num_masses = {4, 5};
-	std::vector<std::string> cons = {"NONLINEAR+GENERAL"};//{"BOX", "GENERAL", "NONLINEAR+GENERAL"};
-	std::vector<std::string> models = {"MIXED"};//{"DISCRETE", "CONTINUOUS", "MIXED"};
-	std::vector<std::string> integrators = {"MIXED"};//{"IRK", "LIFTED_IRK", "NEW_LIFTED_IRK", "ERK", "MIXED"};
-	std::vector<std::string> costs = {"MIXED"};//{"LINEAR LS", "NONLINEAR LS", "EXTERNAL", "MIXED"};
-	std::vector<std::string> qp_solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC", "SPARSE_QPDUNES", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};//{"SPARSE_HPIPM", "SPARSE_HPMPC", "SPARSE_QPDUNES", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};
+	std::vector<int> horizon_lenghts;
+	std::vector<int> num_masses;
+	std::vector<std::string> cons;
+	std::vector<std::string> models;
+	std::vector<std::string> integrators;
+	std::vector<std::string> costs;
+	std::vector<std::string> qp_solvers;
+
+	if (CHAIN_EXTENSIVE)
+	{
+		horizon_lenghts = {20};
+		num_masses = {2, 3, 4};
+		cons = {"BOX", "GENERAL", "NONLINEAR+GENERAL"};
+		models = {"DISCRETE", "CONTINUOUS", "MIXED"};
+		integrators = {"MIXED"};
+		costs = {"MIXED"};
+		qp_solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC", "SPARSE_QPDUNES", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};
+	}
+	else
+	{
+		horizon_lenghts = {20, 25};
+		num_masses = {2, 3, 4};
+		cons = {"NONLINEAR+GENERAL"};
+		models = {"DISCRETE", "CONTINUOUS", "MIXED"};
+		integrators = {"MIXED"};
+		costs = {"MIXED"};
+		qp_solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC", "SPARSE_QPDUNES", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};
+
+	}
 
 	for (int NN : horizon_lenghts)
 	{
@@ -1294,6 +1316,9 @@ TEST_CASE("chain example", "[NLP solver]")
 																	flag = true;
 															}
 
+															if (NMF > 3 && model_type != CONTINUOUS_MODEL)
+																continue;
+
 															// TODO(dimitris): fix minor memory leak here
 															ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
 
@@ -1319,7 +1344,10 @@ TEST_CASE("chain example", "[NLP solver]")
 															external_function_casadi *impl_ode_jac_x_xdot_u = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
 
 															// discrete model
-															external_function_casadi *erk4_casadi = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
+															external_function_casadi *erk4_casadi = NULL;
+
+															if (NMF < 4)
+																erk4_casadi = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
 
 															select_dynamics_casadi(NN, NMF, expl_vde_for, expl_ode_jac, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
@@ -1337,8 +1365,8 @@ TEST_CASE("chain example", "[NLP solver]")
 															//
 															external_function_casadi_create_array(NN, impl_ode_jac_x_xdot_u);
 
-															// discrete model
-															external_function_casadi_create_array(NN, erk4_casadi);
+															if (erk4_casadi != NULL)
+																external_function_casadi_create_array(NN, erk4_casadi);
 
 															/************************************************
 															* nonlinear least squares
@@ -1536,8 +1564,11 @@ TEST_CASE("chain example", "[NLP solver]")
 																		break;
 																	case DISCRETE_MODEL:
 																		// TODO(dimitris): do this through the interface and remove header
-																		dynamics = (ocp_nlp_dynamics_disc_model *)nlp_in->dynamics[i];
-																		dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
+																		if (NMF < 4)
+																		{
+																			dynamics = (ocp_nlp_dynamics_disc_model *)nlp_in->dynamics[i];
+																			dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
+																		}
 																		break;
 																}
 															}
@@ -1645,7 +1676,7 @@ TEST_CASE("chain example", "[NLP solver]")
 															/************************************************
 															* print problem info
 															************************************************/
-															print_problem_info(NN, NMF, con_string, cost_string, qp_solver_string, model_string, integrator_string);
+															// print_problem_info(NN, NMF, con_string, cost_string, qp_solver_string, model_string, integrator_string);
 
 															/************************************************
 															* sqp solve
@@ -1699,8 +1730,11 @@ TEST_CASE("chain example", "[NLP solver]")
 															free(impl_ode_fun_jac_x_xdot_u);
 															free(impl_ode_jac_x_xdot_u);
 
-															external_function_casadi_free(erk4_casadi);
-															free(erk4_casadi);
+															if (erk4_casadi != NULL)
+															{
+																external_function_casadi_free(erk4_casadi);
+																free(erk4_casadi);
+															}
 
 															free(nlp_opts);
 															free(nlp_in);
