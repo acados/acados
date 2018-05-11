@@ -29,6 +29,7 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 #include "acados_c/external_function_interface.h"
+#include "acados_c/ocp_qp_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
 
 // TODO(dimitris): use only the strictly necessary includes here
@@ -101,7 +102,9 @@ ocp_qp_solver_t qp_solver_enum(std::string const& inString)
 
     if (inString == "DENSE_HPIPM") return FULL_CONDENSING_HPIPM;
     if (inString == "DENSE_QPOASES") return FULL_CONDENSING_QPOASES;
+#ifdef ACADOS_WITH_QORE
     if (inString == "DENSE_QORE") return FULL_CONDENSING_QORE;
+#endif
 
     return (ocp_qp_solver_t) -1;
 }
@@ -978,7 +981,16 @@ TEST_CASE("chain example", "[NLP solver]")
 	std::vector<std::string> models;
 	std::vector<std::string> integrators;
 	std::vector<std::string> costs;
-	std::vector<std::string> qp_solvers;
+	std::vector<std::string> qp_solvers = { "SPARSE_HPIPM",
+										    "SPARSE_HPMPC",
+											"SPARSE_QPDUNES",
+											"DENSE_HPIPM",
+											"DENSE_QPOASES"
+#ifdef ACADOS_WITH_QORE
+											,"DENSE_QORE"};
+#else
+    };
+#endif
 
 	if (CHAIN_EXTENSIVE)
 	{
@@ -988,7 +1000,6 @@ TEST_CASE("chain example", "[NLP solver]")
 		models = {"DISCRETE", "CONTINUOUS", "MIXED"};
 		integrators = {"MIXED"};
 		costs = {"MIXED"};
-		qp_solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC", "SPARSE_QPDUNES", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};
 	}
 	else
 	{
@@ -998,8 +1009,6 @@ TEST_CASE("chain example", "[NLP solver]")
 		models = {"DISCRETE", "CONTINUOUS", "MIXED"};
 		integrators = {"MIXED"};
 		costs = {"MIXED"};
-		qp_solvers = {"SPARSE_HPIPM", "SPARSE_HPMPC", "SPARSE_QPDUNES", "DENSE_HPIPM", "DENSE_QPOASES", "DENSE_QORE"};
-
 	}
 
 	for (int NN : horizon_lenghts)
