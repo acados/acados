@@ -982,12 +982,13 @@ TEST_CASE("chain example", "[NLP solver]")
 	std::vector<std::string> integrators;
 	std::vector<std::string> costs;
 	std::vector<std::string> qp_solvers = { "SPARSE_HPIPM",
-										    "SPARSE_HPMPC",
-											"SPARSE_QPDUNES",
-											"DENSE_HPIPM",
+										    //"SPARSE_HPMPC",
+											//"SPARSE_QPDUNES",
+											//"DENSE_HPIPM",
 											"DENSE_QPOASES"
 #ifdef ACADOS_WITH_QORE
-											,"DENSE_QORE"};
+											//,"DENSE_QORE"
+											};
 #else
     };
 #endif
