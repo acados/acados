@@ -210,7 +210,8 @@ TEST_CASE("mass spring example", "[QP solvers]")
                         max_res = (res[ii] > max_res) ? res[ii] : max_res;
                     }
 
-                    std::cout << "\n---> residuals of " << solver << " (N2 = " << N2_values[ii] << ")\n";
+                    std::cout << "\n---> residuals of " << solver << " (N2 = "
+                                                        << N2_values[ii] << ")\n";
                     printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
                     REQUIRE(max_res <= tol);
 
