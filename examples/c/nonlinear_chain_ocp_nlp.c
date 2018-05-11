@@ -354,12 +354,12 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				impl_ode_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_n_in;
 				impl_ode_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_n_out;
 
-				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm5;
-				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm5_work;
-				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm5_sparsity_in;
-				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm5_sparsity_out;
-				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm5_n_in;
-				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm5_n_out;
+				// erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm5;
+				// erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm5_work;
+				// erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm5_sparsity_in;
+				// erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm5_sparsity_out;
+				// erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm5_n_in;
+				// erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm5_n_out;
 			}
 			break;
 		case 5:
@@ -407,12 +407,12 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				impl_ode_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_chain_nm6_n_in;
 				impl_ode_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_chain_nm6_n_out;
 
-				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm6;
-				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm6_work;
-				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm6_sparsity_in;
-				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm6_sparsity_out;
-				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm6_n_in;
-				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm6_n_out;
+				// erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm6;
+				// erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm6_work;
+				// erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm6_sparsity_in;
+				// erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm6_sparsity_out;
+				// erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm6_n_in;
+				// erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm6_n_out;
 			}
 			break;
 		default:
@@ -1232,8 +1232,17 @@ int main()
 	//
 	external_function_casadi_create_array(NN, impl_ode_jac_x_xdot_u);
 
-	// discrete model
-	external_function_casadi_create_array(NN, erk4_casadi);
+	if (NMF<4)
+	{
+		// discrete model supported
+		external_function_casadi_create_array(NN, erk4_casadi);
+	}
+	else
+	{
+		printf("\nERROR: in this case (Number of free masses (NMF) > 3)discrete model is not supported, commented in cmake to speed up compilation\n");
+		exit(1);
+	}
+
 
     /************************************************
     * nonlinear least squares
