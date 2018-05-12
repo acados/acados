@@ -257,7 +257,8 @@ vector<int> ocp_qp::get_bound_indices(string name, int stage)
             if (qp->idxb[stage][i] < qp->dim->nu[stage]) idxb.push_back(qp->idxb[stage][i]);
     }
     else
-        throw std::invalid_argument("Expected bounds name 'lbx', 'ubx', 'lbu' or 'ubu', but got '" + name + "' instead.");
+        throw std::invalid_argument("Expected bounds name 'lbx', 'ubx', 'lbu' or 'ubu', but got '" +
+                                    name + "' instead.");
 
     return idxb;
 }
