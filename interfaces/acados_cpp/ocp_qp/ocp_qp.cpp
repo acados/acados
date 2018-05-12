@@ -95,12 +95,12 @@ void ocp_qp::set_field(string field, int stage, std::vector<double> v)
         bool needs_resetting = false;
         if (field == "lbx" || field == "ubx")
         {
-            if (get_bound_indices("x", stage) !=
+            if (get_bound_indices("lbx", stage) !=
                 calculate_idxb(cached_bounds["lbx"].at(stage), cached_bounds["ubx"].at(stage)))
                 needs_resetting = true;
         }
         else if (field == "lbu" || field == "ubu")
-            if (get_bound_indices("u", stage) !=
+            if (get_bound_indices("lbu", stage) !=
                 calculate_idxb(cached_bounds["lbu"].at(stage), cached_bounds["ubu"].at(stage)))
                 needs_resetting = true;
         if (needs_resetting) reset_bounds();
@@ -245,19 +245,19 @@ ocp_qp_solution ocp_qp::solve()
 vector<int> ocp_qp::get_bound_indices(string name, int stage)
 {
     vector<int> idxb;
-    if (name == "x")
+    if (name == "lbx" || name == "ubx")
     {
         for (int i = 0; i < qp->dim->nb[stage]; ++i)
             if (qp->idxb[stage][i] >= qp->dim->nu[stage])
                 idxb.push_back(qp->idxb[stage][i] - qp->dim->nu[stage]);
     }
-    else if (name == "u")
+    else if (name == "lbu" || name == "ubu")
     {
         for (int i = 0; i < qp->dim->nb[stage]; ++i)
             if (qp->idxb[stage][i] < qp->dim->nu[stage]) idxb.push_back(qp->idxb[stage][i]);
     }
     else
-        throw std::invalid_argument("Can only get bounds from x and u, you gave: '" + name + "'.");
+        throw std::invalid_argument("Expected bounds name 'lbx', 'ubx', 'lbu' or 'ubu', but got '" + name + "' instead.");
 
     return idxb;
 }

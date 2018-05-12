@@ -25,15 +25,21 @@
 %include "acados_cpp/ocp_qp/ocp_qp_solution.hpp"
 
 // ocp_qp.hpp
+%rename("$ignore", %$isconstructor) ocp_qp;
 %ignore get_field;
 %ignore fields;
 %include "acados_cpp/ocp_qp/ocp_qp.hpp"
 
 // unignore functions extended below
+%rename("%s") ocp_qp;
 %rename("%s") get_field;
 %rename("%s") fields;
 
 %extend acados::ocp_qp {
+
+    ocp_qp(int N=10, int nx=2, int nu=1) {
+        return new acados::ocp_qp(N, nx, nu);
+    }
 
     LangObject *get_field(std::string field) {
         std::vector<std::vector<double>> tmp = $self->get_field(field);
