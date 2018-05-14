@@ -333,7 +333,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     double M_gen_max = 5.0;
     // electric power
     double Pel_min = 0.0;
-    double Pel_max = 10.0;
+    double Pel_max = 5.0;
 
 
     /* soft constraints */
