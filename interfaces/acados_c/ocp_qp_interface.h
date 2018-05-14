@@ -61,6 +61,9 @@ typedef struct
 } ocp_qp_solver;
 
 //
+void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
+                                                   ocp_qp_xcond_solver_config *solver_config);
+//
 ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan);
 //
 ocp_qp_dims *ocp_qp_dims_create(int N);

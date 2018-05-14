@@ -58,15 +58,8 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
     void *raw_memory = malloc(config_size);
     config_.reset(ocp_nlp_solver_config_assign(N, raw_memory));
 
-    config_->N = N;
-    ocp_nlp_sqp_config_initialize_default(config_.get());
-    config_->qp_solver = ocp_qp_config_create({PARTIAL_CONDENSING_HPIPM});
-
     for (int i = 0; i <= N; ++i)
-    {
-        ocp_nlp_cost_ls_config_initialize_default(config_->cost[i]);
         ocp_nlp_constraints_config_initialize_default(config_->constraints[i]);
-    }
 
     int nlp_size = ocp_nlp_in_calculate_size_self(N);
     raw_memory = malloc(nlp_size);
@@ -125,6 +118,24 @@ ocp_nlp::ocp_nlp(int N, int nx, int nu, int ng, int nh, int ns)
 
 void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, option_t *> options)
 {
+    if (solver_name == "sqp")
+        ocp_nlp_sqp_config_initialize_default(config_.get());
+    else
+        throw std::invalid_argument("Solver name '" + solver_name + "' not known.");
+
+    string qp_solver_name;
+    if (options.count("qp_solver"))
+        qp_solver_name = to_string(options.at("qp_solver"));
+    else
+        qp_solver_name = "hpipm";
+
+    if (qp_solver_name == "hpipm")
+        ocp_qp_xcond_solver_config_initialize_default(PARTIAL_CONDENSING_HPIPM, config_->qp_solver);
+    else if (qp_solver_name == "qpoases")
+        ocp_qp_xcond_solver_config_initialize_default(FULL_CONDENSING_QPOASES, config_->qp_solver);
+    else
+        throw std::invalid_argument("QP solver name '" + qp_solver_name + "' not known.");
+
     squeeze_dimensions(cached_bounds);
 
     ocp_nlp_dims_initialize(config_.get(), d_["nx"].data(), d_["nu"].data(),
@@ -204,6 +215,12 @@ void ocp_nlp::set_stage_cost(std::vector<double> C, std::vector<double> y_ref,
         set_stage_cost(i, C, y_ref, W);
 }
 
+void ocp_nlp::set_terminal_cost(std::vector<double> C, std::vector<double> y_ref,
+                                std::vector<double> W)
+{
+    set_stage_cost(N, C, y_ref, W);
+}
+
 void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<double> y_ref,
                              std::vector<double> W)
 {
@@ -216,6 +233,8 @@ void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<doubl
 
     if (W.size() != ny*ny)
         throw std::invalid_argument("Linear least squares weighting matrix has wrong dimensions.");
+
+    ocp_nlp_cost_ls_config_initialize_default(config_->cost[stage]);
 
     int nx = d_["nx"][stage], nu = d_["nu"][stage];
 
@@ -230,45 +249,6 @@ void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<doubl
     nlp_->cost[stage] = ocp_nlp_cost_ls_model_assign(config_->cost[stage], cost_dims, raw_memory);
 
     ocp_nlp_cost_ls_model *stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_->cost[stage];
-
-    // Cyt
-    blasfeo_pack_tran_dmat(ny, nu, &C.data()[ny*nx], ny, &stage_cost_ls->Cyt, 0, 0);
-    blasfeo_pack_tran_dmat(ny, nx, C.data(), ny, &stage_cost_ls->Cyt, nu, 0);
-
-    // y_ref
-    blasfeo_pack_dvec(ny, y_ref.data(), &stage_cost_ls->y_ref, 0);
-
-    // W
-    blasfeo_pack_dmat(ny, ny, W.data(), ny, &stage_cost_ls->W, 0, 0);
-
-}
-
-void ocp_nlp::set_terminal_cost(std::vector<double> C, std::vector<double> y_ref,
-                                std::vector<double> W)
-{
-    if (C.size() % (d_["nx"][N]+d_["nu"][N]+d_["ns"][N]) != 0)
-        throw std::invalid_argument("Linear least squares matrix has wrong dimensions.");
-
-    auto ny = C.size() / (d_["nx"][N]+d_["nu"][N]);
-    d_["ny"][N] = ny;
-
-    if (W.size() != ny*ny)
-        throw std::invalid_argument("Linear least squares weighting matrix has wrong dimensions.");
-
-    int nx = d_["nx"][N], nu = d_["nu"][N];
-
-    dims_->cost[N] = malloc(sizeof(ocp_nlp_cost_ls_dims));
-    ocp_nlp_cost_ls_dims *cost_dims = (ocp_nlp_cost_ls_dims *) dims_->cost[N];
-    cost_dims->nx = d_["nx"][N];
-    cost_dims->nu = d_["nu"][N];
-    cost_dims->ns = d_["ns"][N];
-    cost_dims->ny = ny;
-    int num_bytes = ocp_nlp_cost_ls_model_calculate_size(config_->cost[N], cost_dims);
-    void *raw_memory = calloc(1, num_bytes);
-    nlp_->cost[N] = ocp_nlp_cost_ls_model_assign(config_->cost[N], cost_dims, raw_memory);
-
-
-    ocp_nlp_cost_ls_model *stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_->cost[N];
 
     // Cyt
     blasfeo_pack_tran_dmat(ny, nu, &C.data()[ny*nx], ny, &stage_cost_ls->Cyt, 0, 0);
@@ -305,16 +285,16 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
 
     for (int i = 0; i < N; ++i)
     {
-        int num_bytes = ocp_nlp_dynamics_cont_dims_calculate_size(config_->dynamics[i]);
-        void *raw_memory = calloc(1, num_bytes);
+        int dims_size = ocp_nlp_dynamics_cont_dims_calculate_size(config_->dynamics[i]);
+        void *raw_memory = malloc(dims_size);
         dims_->dynamics[i] = ocp_nlp_dynamics_cont_dims_assign(config_->dynamics[i], raw_memory);
         ocp_nlp_dynamics_cont_dims_initialize(config_->dynamics[i], dims_->dynamics[i],
                                               d_["nx"][i], d_["nu"][i],
                                               d_["nx"][i + 1], d_["nu"][i + 1]);
 
-        num_bytes =
+        int model_size =
             ocp_nlp_dynamics_cont_model_calculate_size(config_->dynamics[i], dims_->dynamics[i]);
-        raw_memory = calloc(1, num_bytes);
+        raw_memory = malloc(model_size);
         nlp_->dynamics[i] = ocp_nlp_dynamics_cont_model_assign(config_->dynamics[i],
                                                                dims_->dynamics[i], raw_memory);
     }
@@ -532,6 +512,8 @@ ocp_nlp::~ocp_nlp()
         free(nlp_->constraints[i]);
         free(nlp_->cost[i]);
         free(nlp_->dynamics[i]);
+
+        free(config_->dynamics[i]->sim_solver);
     }
 
     free(dims_->constraints[N]);
@@ -539,8 +521,6 @@ ocp_nlp::~ocp_nlp()
 
     free(nlp_->constraints[N]);
     free(nlp_->cost[N]);
-
-    free(config_->qp_solver);
 
     for (auto &elem : dynamics_handle_) dlclose(elem.second);
 }
