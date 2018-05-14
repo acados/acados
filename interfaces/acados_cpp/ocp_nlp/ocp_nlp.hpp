@@ -102,8 +102,6 @@ class ocp_nlp : private ocp
     std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
 
     bool needs_initializing_;
-
-    std::vector<double> step_;
 };
 
 void *load_function(std::string function_name, void *handle);

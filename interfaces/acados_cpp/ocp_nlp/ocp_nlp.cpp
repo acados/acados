@@ -54,11 +54,9 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
     d_["ns"] = ns;
     d_["ny"] = vector<int>(N+1);
 
-    step_ = std::vector<double>(N);
-
-    int bytes = ocp_nlp_solver_config_calculate_size(N);
-    void *config_mem = calloc(1, bytes);
-    config_.reset(ocp_nlp_solver_config_assign(N, config_mem));
+    int config_size = ocp_nlp_solver_config_calculate_size(N);
+    void *raw_memory = malloc(config_size);
+    config_.reset(ocp_nlp_solver_config_assign(N, raw_memory));
 
     config_->N = N;
     ocp_nlp_sqp_config_initialize_default(config_.get());
@@ -70,20 +68,13 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
         ocp_nlp_constraints_config_initialize_default(config_->constraints[i]);
     }
 
-    nlp_.reset(new ocp_nlp_in);
-    nlp_->constraints = (void **) calloc(N + 1, sizeof(void *));
-    nlp_->cost = (void **) calloc(N + 1, sizeof(void *));
-    nlp_->dynamics = (void **) calloc(N, sizeof(void *));
+    int nlp_size = ocp_nlp_in_calculate_size_self(N);
+    raw_memory = malloc(nlp_size);
+    nlp_.reset(ocp_nlp_in_assign_self(N, raw_memory));
 
-    dims_.reset(new ocp_nlp_dims);
-    dims_->N = N;
-    dims_->nv = (int *) calloc(N + 1, sizeof(int));
-    dims_->nx = (int *) calloc(N + 1, sizeof(int));
-    dims_->nu = (int *) calloc(N + 1, sizeof(int));
-    dims_->ni = (int *) calloc(N + 1, sizeof(int));
-    dims_->constraints = (void **) calloc(N + 1, sizeof(void *));
-    dims_->cost = (void **) calloc(N + 1, sizeof(void *));
-    dims_->dynamics = (void **) calloc(N, sizeof(void *));
+    int dims_size = ocp_nlp_dims_calculate_size_self(N);
+    raw_memory = malloc(dims_size);
+    dims_.reset(ocp_nlp_dims_assign_self(N, raw_memory));
 
     for (int i = 0; i <= N; ++i)
     {
@@ -113,11 +104,9 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
             ocp_nlp_constraints_model_assign(config_->constraints[i], con_dims, raw_memory);
     }
 
-    int num_bytes = ocp_qp_dims_calculate_size(N);
-    void *raw_memory = calloc(1, num_bytes);
+    int qp_dims_size = ocp_qp_dims_calculate_size(N);
+    raw_memory = malloc(qp_dims_size);
     dims_->qp_solver = ocp_qp_dims_assign(N, raw_memory);
-
-    nlp_->dims = dims_.get();
 
     for (int stage = 0; stage <= N; ++stage)
     {
@@ -142,9 +131,7 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
                             d_["ny"].data(), d_["nbx"].data(),
                             d_["nbu"].data(), d_["ng"].data(),
                             d_["nh"].data(), std::vector<int>(N + 1, 0).data(),
-                            d_["ns"].data(), nlp_->dims);
-
-    nlp_->Ts = step_.data();
+                            d_["ns"].data(), dims_.get());
 
     solver_options_.reset(ocp_nlp_opts_create(config_.get(), dims_.get()));
 }
@@ -302,7 +289,7 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
 
     if (!options.count("step")) throw std::invalid_argument("Expected 'step' as an option.");
 
-    std::fill(step_.begin(), step_.end(), to_double(options["step"]));
+    std::fill(nlp_->Ts, nlp_->Ts+N, to_double(options["step"]));
 
     sim_solver_plan sim_plan;
     if (to_string(options.at("integrator")) == "rk4")
@@ -552,20 +539,6 @@ ocp_nlp::~ocp_nlp()
 
     free(nlp_->constraints[N]);
     free(nlp_->cost[N]);
-
-    free(dims_->nv);
-    free(dims_->nx);
-    free(dims_->nu);
-    free(dims_->ni);
-
-    free(dims_->constraints);
-    free(dims_->cost);
-    free(dims_->dynamics);
-    free(dims_->qp_solver);
-
-    free(nlp_->constraints);
-    free(nlp_->cost);
-    free(nlp_->dynamics);
 
     free(config_->qp_solver);
 
