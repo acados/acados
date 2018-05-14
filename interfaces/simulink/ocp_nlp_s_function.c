@@ -174,8 +174,6 @@ static void mdlStart(SimStruct *S)
         nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
     }
 
-    nlp_in->freezeSens = false;
-
     ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
 
     for (int i = 0; i < num_states; ++i) constraints[0]->idxb[i] = num_controls + i;

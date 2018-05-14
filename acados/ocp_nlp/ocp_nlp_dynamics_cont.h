@@ -123,7 +123,6 @@ int ocp_nlp_dynamics_cont_workspace_calculate_size(void *config, void *dims, voi
 
 typedef struct
 {
-    void *dims;
     void *sim_model;
     // double *state_transition; // TODO
     double T;  // simulation time

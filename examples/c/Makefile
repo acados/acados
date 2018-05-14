@@ -42,6 +42,7 @@ LIBS += -lblasfeo -lm -lblas -llapack
 # LDFLAGS += -pg
 
 EXAMPLES =
+EXAMPLES += pendulum_scqp
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_crane_example
@@ -61,6 +62,7 @@ examples: $(EXAMPLES)
 
 
 RUN_EXAMPLES =
+RUN_EXAMPLES += run_pendulum_scqp
 RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
 RUN_EXAMPLES += run_sim_crane_example
@@ -376,6 +378,27 @@ nonlinear_chain_ocp_nlp: $(CHAIN_OBJS) nonlinear_chain_ocp_nlp.o
 
 run_nonlinear_chain_ocp_nlp:
 	./nonlinear_chain_ocp_nlp.out
+
+
+
+#################################################
+# pendulum model
+#################################################
+
+PENDULUM_OBJS = 
+PENDULUM_OBJS += pendulum_model/vde_forw_pendulum.o 
+PENDULUM_OBJS += pendulum_model/constraint.o
+PENDULUM_OBJS += pendulum_model/position.o
+
+pendulum_scqp: $(PENDULUM_OBJS) pendulum_scqp.o
+	$(CXX) -o pendulum_scqp.out $(PENDULUM_OBJS) pendulum_scqp.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example pendulum_scqp build complete."
+	@echo
+
+run_pendulum_scqp:
+	./pendulum_scqp.out
+
 
 
 

@@ -50,7 +50,11 @@ typedef struct
 } ocp_nlp_dims;
 
 //
+int ocp_nlp_dims_calculate_size_self(void *config);
+//
 int ocp_nlp_dims_calculate_size(void *config);
+//
+ocp_nlp_dims *ocp_nlp_dims_assign_self(void *config, void *raw_memory);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
 //
@@ -63,17 +67,11 @@ void ocp_nlp_dims_initialize(void *config, int *nx, int *nu, int *ny, int *nbx, 
 
 typedef struct
 {
-    ocp_nlp_dims *dims;  // pointer to nlp dimensions
-
     double *Ts;  // length of sampling intervals
 
     void **cost;
     void **dynamics;
     void **constraints;
-
-    // TODO(rien): what about invariants, e.g., algebraic constraints?
-
-    bool freezeSens;  // TODO(dimitris): shouldn't this be in the integrator args?
 } ocp_nlp_in;
 
 /************************************************

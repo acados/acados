@@ -141,8 +141,6 @@ int main() {
 		model->expl_vde_for = (external_function_generic *) &forw_vde_casadi[i];
 	}
 
-    nlp_in->freezeSens = false;
-
 	// convex-composite constraint
 	external_function_casadi nonlinear_constraint;
 	nonlinear_constraint.casadi_fun = &constraint;
