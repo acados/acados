@@ -147,8 +147,6 @@ int main() {
 		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
 	}
 
-    nlp_in->freezeSens = false;
-
 	// NLP constraints
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
 

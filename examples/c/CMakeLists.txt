@@ -54,6 +54,7 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/ls_cost_nm5.c
     chain_model/ls_costN_nm5.c
     # chain_model/casadi_erk4_chain_nm5.c
+    # NOTE: chain_model/casadi_erk4_chain_nm5.c (and 6) commented, because compilation takes quite a while
     # 6 masses
     chain_model/vde_chain_nm6.c
     chain_model/jac_chain_nm6.c

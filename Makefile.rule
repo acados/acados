@@ -115,3 +115,5 @@ endif
 # search directories
 CFLAGS += -I$(TOP) -I$(TOP)/interfaces -I$(TOP)/include -I$(BLASFEO_PATH)/include -I$(HPIPM_PATH)/include -I$(HPMPC_PATH)/include -I$(QPOASES_PATH)/include -I$(TOP)/include/qore/include -I$(QPDUNES_PATH)/include
 LDFLAGS += -L$(TOP)/lib
+
+CXXFLAGS = $(CFLAGS) -std=c++11

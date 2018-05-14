@@ -673,7 +673,6 @@ int main()
 		}
 	}
 
-    nlp_in->freezeSens = false;
 
     /* constraints */
 

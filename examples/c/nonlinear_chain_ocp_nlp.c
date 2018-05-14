@@ -143,9 +143,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 	external_function_casadi *forw_vde,
 	external_function_casadi *jac_ode,
 	external_function_casadi *impl_ode_fun,
-	external_function_casadi *impl_ode_jac_x,
-	external_function_casadi *impl_ode_jac_xdot,
-	external_function_casadi *impl_ode_jac_u,
 	external_function_casadi *impl_ode_fun_jac_x_xdot,
 	external_function_casadi *impl_ode_fun_jac_x_xdot_u,
 	external_function_casadi *impl_ode_jac_x_xdot_u,
@@ -349,6 +346,13 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_u_chain_nm5_sparsity_out;
 				impl_ode_fun_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_u_chain_nm5_n_in;
 				impl_ode_fun_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_u_chain_nm5_n_out;
+
+				impl_ode_jac_x_xdot_u[ii].casadi_fun = &casadi_impl_ode_jac_x_xdot_u_chain_nm5;
+				impl_ode_jac_x_xdot_u[ii].casadi_work = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_work;
+				impl_ode_jac_x_xdot_u[ii].casadi_sparsity_in = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_sparsity_in;
+				impl_ode_jac_x_xdot_u[ii].casadi_sparsity_out = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_sparsity_out;
+				impl_ode_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_n_in;
+				impl_ode_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_chain_nm5_n_out;
 
 				// erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm5;
 				// erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm5_work;
@@ -966,7 +970,7 @@ int main()
 {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
-	const int NMF = 3;  // number of free masses
+	const int NMF = 3;  // number of free masses: actually one more is used: possible values are 1,2,3,4,5
 
     print_problem_info(NMF);
 
@@ -1205,9 +1209,6 @@ int main()
 
 	// implicit
 	external_function_casadi *impl_ode_fun = malloc(NN*sizeof(external_function_casadi));
-	external_function_casadi *impl_ode_jac_x = malloc(NN*sizeof(external_function_casadi));
-	external_function_casadi *impl_ode_jac_xdot = malloc(NN*sizeof(external_function_casadi));
-	external_function_casadi *impl_ode_jac_u = malloc(NN*sizeof(external_function_casadi));
 	external_function_casadi *impl_ode_fun_jac_x_xdot = malloc(NN*sizeof(external_function_casadi));
 	external_function_casadi *impl_ode_fun_jac_x_xdot_u = malloc(NN*sizeof(external_function_casadi));
 	external_function_casadi *impl_ode_jac_x_xdot_u = malloc(NN*sizeof(external_function_casadi));
@@ -1215,7 +1216,7 @@ int main()
 	// discrete model
 	external_function_casadi *erk4_casadi = malloc(NN*sizeof(external_function_casadi));
 
-	select_dynamics_casadi(NN, NMF, expl_vde_for, expl_ode_jac, impl_ode_fun, impl_ode_jac_x, impl_ode_jac_xdot, impl_ode_jac_u, impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
+	select_dynamics_casadi(NN, NMF, expl_vde_for, expl_ode_jac, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
 	// forw_vde
 	external_function_casadi_create_array(NN, expl_vde_for);
@@ -1231,8 +1232,17 @@ int main()
 	//
 	external_function_casadi_create_array(NN, impl_ode_jac_x_xdot_u);
 
-	// discrete model
-	external_function_casadi_create_array(NN, erk4_casadi);
+	if (NMF<4)
+	{
+		// discrete model supported
+		external_function_casadi_create_array(NN, erk4_casadi);
+	}
+	else
+	{
+		printf("\nERROR: in this case (Number of free masses (NMF) > 3)discrete model is not supported, commented in cmake to speed up compilation\n");
+		exit(1);
+	}
+
 
     /************************************************
     * nonlinear least squares
@@ -1438,9 +1448,6 @@ int main()
 		}
 	}
 
-    nlp_in->freezeSens = false;
-	// if (scheme > 2)
-    //     nlp_in->freezeSens = true;
 
     /* constraints */
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
@@ -1598,13 +1605,12 @@ int main()
 	free(expl_ode_jac);
 
 	external_function_casadi_free(impl_ode_fun);
-	external_function_casadi_free(impl_ode_jac_x);
-	external_function_casadi_free(impl_ode_jac_xdot);
-	external_function_casadi_free(impl_ode_jac_u);
 	external_function_casadi_free(impl_ode_fun_jac_x_xdot);
 	external_function_casadi_free(impl_ode_fun_jac_x_xdot_u);
 	external_function_casadi_free(impl_ode_jac_x_xdot_u);
+
 	free(impl_ode_fun);
+	free(impl_ode_fun_jac_x_xdot);
 	free(impl_ode_fun_jac_x_xdot_u);
 	free(impl_ode_jac_x_xdot_u);
 
