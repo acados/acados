@@ -1448,9 +1448,6 @@ int main()
 		}
 	}
 
-    nlp_in->freezeSens = false;
-	// if (scheme > 2)
-    //     nlp_in->freezeSens = true;
 
     /* constraints */
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;

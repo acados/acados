@@ -348,9 +348,6 @@ void *ocp_nlp_dynamics_cont_model_assign(void *config_, void *dims_, void *raw_m
     ocp_nlp_dynamics_cont_model *model = (ocp_nlp_dynamics_cont_model *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_cont_model);
 
-    // dims
-    model->dims = dims;
-
     model->sim_model = config->sim_solver->model_assign(config->sim_solver, dims->sim, c_ptr);
     c_ptr += config->sim_solver->model_calculate_size(config->sim_solver, dims->sim);
 
