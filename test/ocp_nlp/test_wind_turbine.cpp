@@ -287,7 +287,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         nb[i] = nbu[i]+nbx[i];
         ng[i] = 0;
         nh[i] = 1;
-        ns[i] = 0;
+        ns[i] = 1;
         ny[i] = 4;  // ny_
     }
 
