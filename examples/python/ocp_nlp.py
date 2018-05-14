@@ -15,7 +15,7 @@ nlp = ocp_nlp(N, nx, nu)
 nlp.set_dynamics(f, {'integrator': 'rk4', 'step': 0.1})
 
 nlp.set_stage_cost(eye(nx+nu), zeros(nx+nu), diag([100, 100, 1]))
-nlp.set_terminal_cost(eye(nx), zeros(nx), eye(nx))
+nlp.set_terminal_cost(eye(nx), zeros(nx), 100*eye(nx))
 
 x0 = array([1, 1])
 nlp.set_field("lbx", 0, x0)

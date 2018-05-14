@@ -217,7 +217,8 @@ void ocp_nlp::set_stage_cost(std::vector<double> C, std::vector<double> y_ref,
         set_stage_cost(i, C, y_ref, W);
 }
 
-void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<double> y_ref, std::vector<double> W)
+void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<double> y_ref,
+                             std::vector<double> W)
 {
 
     if (C.size() % (d_["nx"][stage]+d_["nu"][stage]+d_["ns"][stage]) != 0)
@@ -225,7 +226,7 @@ void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<doubl
 
     auto ny = C.size() / (d_["nx"][stage]+d_["nu"][stage]);
     d_["ny"][stage] = ny;
-    
+
     if (W.size() != ny*ny)
         throw std::invalid_argument("Linear least squares weighting matrix has wrong dimensions.");
 
@@ -244,17 +245,19 @@ void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<doubl
     ocp_nlp_cost_ls_model *stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_->cost[stage];
 
     // Cyt
-    blasfeo_pack_tran_dmat(ny, nx+nu, C.data(), ny, &stage_cost_ls->Cyt, 0, 0);
+    blasfeo_pack_tran_dmat(ny, nu, &C.data()[ny*nx], ny, &stage_cost_ls->Cyt, 0, 0);
+    blasfeo_pack_tran_dmat(ny, nx, C.data(), ny, &stage_cost_ls->Cyt, nu, 0);
 
     // y_ref
     blasfeo_pack_dvec(ny, y_ref.data(), &stage_cost_ls->y_ref, 0);
-    
+
     // W
     blasfeo_pack_dmat(ny, ny, W.data(), ny, &stage_cost_ls->W, 0, 0);
 
 }
 
-void ocp_nlp::set_terminal_cost(std::vector<double> C, std::vector<double> y_ref, std::vector<double> W)
+void ocp_nlp::set_terminal_cost(std::vector<double> C, std::vector<double> y_ref,
+                                std::vector<double> W)
 {
     if (C.size() % (d_["nx"][N]+d_["nu"][N]+d_["ns"][N]) != 0)
         throw std::invalid_argument("Linear least squares matrix has wrong dimensions.");
@@ -281,11 +284,12 @@ void ocp_nlp::set_terminal_cost(std::vector<double> C, std::vector<double> y_ref
     ocp_nlp_cost_ls_model *stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_->cost[N];
 
     // Cyt
-    blasfeo_pack_tran_dmat(ny, nx+nu, C.data(), ny, &stage_cost_ls->Cyt, 0, 0);
+    blasfeo_pack_tran_dmat(ny, nu, &C.data()[ny*nx], ny, &stage_cost_ls->Cyt, 0, 0);
+    blasfeo_pack_tran_dmat(ny, nx, C.data(), ny, &stage_cost_ls->Cyt, nu, 0);
 
     // y_ref
     blasfeo_pack_dvec(ny, y_ref.data(), &stage_cost_ls->y_ref, 0);
-    
+
     // W
     blasfeo_pack_dmat(ny, ny, W.data(), ny, &stage_cost_ls->W, 0, 0);
 
