@@ -50,11 +50,11 @@ typedef struct
 } ocp_nlp_dims;
 
 //
-int ocp_nlp_dims_calculate_size_self(void *config);
+int ocp_nlp_dims_calculate_size_self(int N);
 //
 int ocp_nlp_dims_calculate_size(void *config);
 //
-ocp_nlp_dims *ocp_nlp_dims_assign_self(void *config, void *raw_memory);
+ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
 //
@@ -169,7 +169,11 @@ ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory);
  ************************************************/
 
 //
+int ocp_nlp_in_calculate_size_self(int N);
+//
 int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory);
 //
 ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
 
