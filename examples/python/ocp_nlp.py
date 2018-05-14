@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from numpy import array, diag
+from numpy import array, diag, eye, zeros
 from scipy.linalg import block_diag
 
 from casadi import SX, Function, vertcat
@@ -14,11 +14,14 @@ N, nx, nu = 5, 2, 1
 nlp = ocp_nlp(N, nx, nu)
 nlp.set_dynamics(f, {'integrator': 'rk4', 'step': 0.1})
 
+nlp.set_stage_cost(eye(nx+nu), zeros(nx+nu), diag([100, 100, 1]))
+nlp.set_terminal_cost(eye(nx), zeros(nx), eye(nx))
+
 x0 = array([1, 1])
 nlp.set_field("lbx", 0, x0)
 nlp.set_field("ubx", 0, x0)
 
-nlp.initialize_solver("blabla")
+nlp.initialize_solver("")
 
 output = nlp.solve()
 

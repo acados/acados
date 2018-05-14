@@ -44,11 +44,13 @@ class ocp_nlp : private ocp
     // void set_terminal_constraint(const casadi::Function& h_N);
 
     // void set_stage_cost(const casadi::Function& l);
-    // void set_stage_cost(std::vector<double> C, std::vector<double> W);
+    void set_stage_cost(std::vector<double> C, std::vector<double> y_ref, std::vector<double> W);
+    void set_stage_cost(int stage, std::vector<double> C, std::vector<double> y_ref,
+                        std::vector<double> W);
     // void set_stage_cost(const casadi::Function& r, std::vector<double> W);
 
     // void set_terminal_cost(const casadi::Function& l_N);
-    // void set_terminal_cost(std::vector<double> C_N, std::vector<double> W_N);
+    void set_terminal_cost(std::vector<double> C, std::vector<double> y_ref, std::vector<double> W);
     // void set_terminal_cost(const casadi::Function& r_N, std::vector<double> W_N);
 
     const int N;
@@ -95,7 +97,7 @@ class ocp_nlp : private ocp
 
     std::unique_ptr<void, void (*)(void *)> solver_options_{nullptr, &std::free};
 
-    std::map<std::string, std::vector<int>> dimensions_;
+    std::map<std::string, std::vector<int>> d_;
 
     std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
 

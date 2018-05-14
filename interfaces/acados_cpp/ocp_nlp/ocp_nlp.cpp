@@ -45,17 +45,14 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
     if (!are_valid_ocp_dimensions(dims, {"nx", "nu", "nbx", "nbu", "nb", "ng", "nh", "ns"}))
         throw std::invalid_argument("Invalid dimensions map.");
 
-    dimensions_["nx"] = nx;
-    dimensions_["nu"] = nu;
-    dimensions_["nbx"] = nx;
-    dimensions_["nbu"] = nu;
-    dimensions_["ng"] = ng;
-    dimensions_["nh"] = nh;
-    dimensions_["ns"] = ns;
-
-    std::vector<int> ny(N + 1, 0);
-    std::transform(nx.begin(), nx.end(), nu.begin(), ny.begin(), std::plus<int>());
-    dimensions_["ny"] = ny;
+    d_["nx"] = nx;
+    d_["nu"] = nu;
+    d_["nbx"] = nx;
+    d_["nbu"] = nu;
+    d_["ng"] = ng;
+    d_["nh"] = nh;
+    d_["ns"] = ns;
+    d_["ny"] = vector<int>(N+1);
 
     step_ = std::vector<double>(N);
 
@@ -90,40 +87,30 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
 
     for (int i = 0; i <= N; ++i)
     {
-        dims_->nv[i] = dimensions_["nx"][i] + dimensions_["nu"][i] + dimensions_["ns"][i];
-        dims_->nx[i] = dimensions_["nx"][i];
-        dims_->nu[i] = dimensions_["nu"][i];
-        dims_->ni[i] = dimensions_["nbx"][i] + dimensions_["nbu"][i] + dimensions_["ng"][i] +
-                       dimensions_["nh"][i];
+        dims_->nv[i] = d_["nx"][i] + d_["nu"][i] + d_["ns"][i];
+        dims_->nx[i] = d_["nx"][i];
+        dims_->nu[i] = d_["nu"][i];
+        dims_->ni[i] = d_["nbx"][i] + d_["nbu"][i] + d_["ng"][i] +
+                       d_["nh"][i];
     }
 
     for (int i = 0; i <= N; ++i)
     {
         dims_->constraints[i] = malloc(sizeof(ocp_nlp_constraints_dims));
         ocp_nlp_constraints_dims *con_dims = (ocp_nlp_constraints_dims *) dims_->constraints[i];
-        con_dims->nx = dimensions_["nx"][i];
-        con_dims->nu = dimensions_["nu"][i];
-        con_dims->nb = dimensions_["nbx"][i] + dimensions_["nbu"][i];
-        con_dims->nbx = dimensions_["nbx"][i];
-        con_dims->nbu = dimensions_["nbu"][i];
-        con_dims->ng = dimensions_["ng"][i];
-        con_dims->nh = dimensions_["nh"][i];
+        con_dims->nx = d_["nx"][i];
+        con_dims->nu = d_["nu"][i];
+        con_dims->nb = d_["nbx"][i] + d_["nbu"][i];
+        con_dims->nbx = d_["nbx"][i];
+        con_dims->nbu = d_["nbu"][i];
+        con_dims->ng = d_["ng"][i];
+        con_dims->nh = d_["nh"][i];
         con_dims->np = 0;
-        con_dims->ns = dimensions_["ns"][i];
+        con_dims->ns = d_["ns"][i];
         int num_bytes = ocp_nlp_constraints_model_calculate_size(config_->constraints[i], con_dims);
         void *raw_memory = calloc(1, num_bytes);
         nlp_->constraints[i] =
             ocp_nlp_constraints_model_assign(config_->constraints[i], con_dims, raw_memory);
-
-        dims_->cost[i] = malloc(sizeof(ocp_nlp_cost_ls_dims));
-        ocp_nlp_cost_ls_dims *cost_dims = (ocp_nlp_cost_ls_dims *) dims_->cost[i];
-        cost_dims->nx = dimensions_["nx"][i];
-        cost_dims->nu = dimensions_["nu"][i];
-        cost_dims->ns = dimensions_["ns"][i];
-        cost_dims->ny = dimensions_["ny"][i];
-        num_bytes = ocp_nlp_cost_ls_model_calculate_size(config_->cost[i], cost_dims);
-        raw_memory = calloc(1, num_bytes);
-        nlp_->cost[i] = ocp_nlp_cost_ls_model_assign(config_->cost[i], cost_dims, raw_memory);
     }
 
     int num_bytes = ocp_qp_dims_calculate_size(N);
@@ -151,41 +138,13 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
 {
     squeeze_dimensions(cached_bounds);
 
-    ocp_nlp_dims_initialize(config_.get(), dimensions_["nx"].data(), dimensions_["nu"].data(),
-                            dimensions_["ny"].data(), dimensions_["nbx"].data(),
-                            dimensions_["nbu"].data(), dimensions_["ng"].data(),
-                            dimensions_["nh"].data(), std::vector<int>(N + 1, 0).data(),
-                            dimensions_["ns"].data(), nlp_->dims);
+    ocp_nlp_dims_initialize(config_.get(), d_["nx"].data(), d_["nu"].data(),
+                            d_["ny"].data(), d_["nbx"].data(),
+                            d_["nbu"].data(), d_["ng"].data(),
+                            d_["nh"].data(), std::vector<int>(N + 1, 0).data(),
+                            d_["ns"].data(), nlp_->dims);
 
     nlp_->Ts = step_.data();
-
-    vector<double> xref(2, 0);
-    vector<double> uref(1, 0);
-
-    for (int i = 0; i <= N; ++i)
-    {
-        ocp_nlp_cost_ls_model *stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_->cost[i];
-        // Cyt
-        blasfeo_dgese(dimensions_["nu"][i] + dimensions_["nx"][i], dimensions_["ny"][i], 0.0,
-                      &stage_cost_ls->Cyt, 0, 0);
-        for (int j = 0; j < dimensions_["nu"][i]; j++)
-            BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, dimensions_["nx"][i] + j) = 1.0;
-        for (int j = 0; j < dimensions_["nx"][i]; j++)
-            BLASFEO_DMATEL(&stage_cost_ls->Cyt, dimensions_["nu"][i] + j, j) = 1.0;
-
-        // W
-        blasfeo_dgese(dimensions_["ny"][i], dimensions_["ny"][i], 0.0, &stage_cost_ls->W, 0, 0);
-        for (int j = 0; j < dimensions_["nx"][i]; j++)
-            BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = 100.0;
-        for (int j = 0; j < dimensions_["nu"][i]; j++)
-            BLASFEO_DMATEL(&stage_cost_ls->W, dimensions_["nx"][i] + j, dimensions_["nx"][i] + j) =
-                1.0;
-
-        // y_ref
-        blasfeo_pack_dvec(dimensions_["nx"][i], xref.data(), &stage_cost_ls->y_ref, 0);
-        blasfeo_pack_dvec(dimensions_["nu"][i], uref.data(), &stage_cost_ls->y_ref,
-                          dimensions_["nx"][i]);
-    }
 
     solver_options_.reset(ocp_nlp_opts_create(config_.get(), dims_.get()));
 }
@@ -212,18 +171,18 @@ void ocp_nlp::set_field(string field, int stage, vector<double> v)
 {
     if (field == "lbx" || field == "ubx")
     {
-        if (v.size() != (size_t) dimensions_["nx"].at(stage))
+        if (v.size() != (size_t) d_["nx"].at(stage))
             throw std::invalid_argument("Expected size " +
-                                        std::to_string(dimensions_["nx"].at(stage)) + " but got " +
+                                        std::to_string(d_["nx"].at(stage)) + " but got " +
                                         std::to_string(v.size()) + " instead.");
 
         cached_bounds[field].at(stage) = v;
     }
     else if (field == "lbu" || field == "ubu")
     {
-        if (v.size() != (size_t) dimensions_["nu"].at(stage))
+        if (v.size() != (size_t) d_["nu"].at(stage))
             throw std::invalid_argument("Expected size " +
-                                        std::to_string(dimensions_["nu"].at(stage)) + " but got " +
+                                        std::to_string(d_["nu"].at(stage)) + " but got " +
                                         std::to_string(v.size()) + " instead.");
 
         cached_bounds[field].at(stage) = v;
@@ -251,6 +210,88 @@ static bool is_valid_model(const casadi::Function &model)
     return true;
 }
 
+void ocp_nlp::set_stage_cost(std::vector<double> C, std::vector<double> y_ref,
+                             std::vector<double> W)
+{
+    for (int i = 0; i < N; ++i)
+        set_stage_cost(i, C, y_ref, W);
+}
+
+void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<double> y_ref, std::vector<double> W)
+{
+
+    if (C.size() % (d_["nx"][stage]+d_["nu"][stage]+d_["ns"][stage]) != 0)
+        throw std::invalid_argument("Linear least squares matrix has wrong dimensions.");
+
+    auto ny = C.size() / (d_["nx"][stage]+d_["nu"][stage]);
+    d_["ny"][stage] = ny;
+    
+    if (W.size() != ny*ny)
+        throw std::invalid_argument("Linear least squares weighting matrix has wrong dimensions.");
+
+    int nx = d_["nx"][stage], nu = d_["nu"][stage];
+
+    dims_->cost[stage] = malloc(sizeof(ocp_nlp_cost_ls_dims));
+    ocp_nlp_cost_ls_dims *cost_dims = (ocp_nlp_cost_ls_dims *) dims_->cost[stage];
+    cost_dims->nx = nx;
+    cost_dims->nu = nu;
+    cost_dims->ns = d_["ns"][stage];
+    cost_dims->ny = ny;
+    int num_bytes = ocp_nlp_cost_ls_model_calculate_size(config_->cost[stage], cost_dims);
+    void *raw_memory = calloc(1, num_bytes);
+    nlp_->cost[stage] = ocp_nlp_cost_ls_model_assign(config_->cost[stage], cost_dims, raw_memory);
+
+    ocp_nlp_cost_ls_model *stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_->cost[stage];
+
+    // Cyt
+    blasfeo_pack_tran_dmat(ny, nx+nu, C.data(), ny, &stage_cost_ls->Cyt, 0, 0);
+
+    // y_ref
+    blasfeo_pack_dvec(ny, y_ref.data(), &stage_cost_ls->y_ref, 0);
+    
+    // W
+    blasfeo_pack_dmat(ny, ny, W.data(), ny, &stage_cost_ls->W, 0, 0);
+
+}
+
+void ocp_nlp::set_terminal_cost(std::vector<double> C, std::vector<double> y_ref, std::vector<double> W)
+{
+    if (C.size() % (d_["nx"][N]+d_["nu"][N]+d_["ns"][N]) != 0)
+        throw std::invalid_argument("Linear least squares matrix has wrong dimensions.");
+
+    auto ny = C.size() / (d_["nx"][N]+d_["nu"][N]);
+    d_["ny"][N] = ny;
+
+    if (W.size() != ny*ny)
+        throw std::invalid_argument("Linear least squares weighting matrix has wrong dimensions.");
+
+    int nx = d_["nx"][N], nu = d_["nu"][N];
+
+    dims_->cost[N] = malloc(sizeof(ocp_nlp_cost_ls_dims));
+    ocp_nlp_cost_ls_dims *cost_dims = (ocp_nlp_cost_ls_dims *) dims_->cost[N];
+    cost_dims->nx = d_["nx"][N];
+    cost_dims->nu = d_["nu"][N];
+    cost_dims->ns = d_["ns"][N];
+    cost_dims->ny = ny;
+    int num_bytes = ocp_nlp_cost_ls_model_calculate_size(config_->cost[N], cost_dims);
+    void *raw_memory = calloc(1, num_bytes);
+    nlp_->cost[N] = ocp_nlp_cost_ls_model_assign(config_->cost[N], cost_dims, raw_memory);
+
+
+    ocp_nlp_cost_ls_model *stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_->cost[N];
+
+    // Cyt
+    blasfeo_pack_tran_dmat(ny, nx+nu, C.data(), ny, &stage_cost_ls->Cyt, 0, 0);
+
+    // y_ref
+    blasfeo_pack_dvec(ny, y_ref.data(), &stage_cost_ls->y_ref, 0);
+    
+    // W
+    blasfeo_pack_dmat(ny, ny, W.data(), ny, &stage_cost_ls->W, 0, 0);
+
+}
+
+
 void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, option_t *> options)
 {
     if (!is_valid_model(model)) throw std::invalid_argument("Model is invalid.");
@@ -277,8 +318,8 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
         void *raw_memory = calloc(1, num_bytes);
         dims_->dynamics[i] = ocp_nlp_dynamics_cont_dims_assign(config_->dynamics[i], raw_memory);
         ocp_nlp_dynamics_cont_dims_initialize(config_->dynamics[i], dims_->dynamics[i],
-                                              dimensions_["nx"][i], dimensions_["nu"][i],
-                                              dimensions_["nx"][i + 1], dimensions_["nu"][i + 1]);
+                                              d_["nx"][i], d_["nu"][i],
+                                              d_["nx"][i + 1], d_["nu"][i + 1]);
 
         num_bytes =
             ocp_nlp_dynamics_cont_model_calculate_size(config_->dynamics[i], dims_->dynamics[i]);
@@ -420,8 +461,8 @@ void ocp_nlp::change_bound_dimensions(std::vector<int> nbx, std::vector<int> nbu
         constraint_dims[i]->nbu = nbu[i];
     }
 
-    dimensions_["nbx"] = nbx;
-    dimensions_["nbu"] = nbu;
+    d_["nbx"] = nbx;
+    d_["nbu"] = nbu;
 }
 
 bool ocp_nlp::needs_initializing() { return needs_initializing_; }
