@@ -1601,7 +1601,6 @@ void setup_and_solve_nlp(int NN,
                                                             "expl_ode_jac", &expl_ode_jac[i]);
                     if (set_fun_status != 0) exit(1);
                 }
-<<<<<<< HEAD
                 else if (plan->sim_solver_plan[i].sim_solver == IRK)
                 {
                     set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
@@ -1615,62 +1614,6 @@ void setup_and_solve_nlp(int NN,
                     if (set_fun_status != 0) exit(1);
                 }
                 else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
-=======
-                casadi_wrapper_initialize(path_constraints[N]->in, path_constraints[N]->args,
-                                          &path_constraints[N]->work);
-
-                /************************************************
-                 * sensitivity method
-                 ************************************************/
-                ocp_nlp_sm sensitivity_method;
-                sensitivity_method.fun = &ocp_nlp_sm_gn;
-                sensitivity_method.initialize = &ocp_nlp_sm_gn_initialize;
-                sensitivity_method.destroy = &ocp_nlp_sm_gn_destroy;
-                sensitivity_method.args = ocp_nlp_sm_gn_create_arguments();
-
-                /************************************************
-                 * QP solver
-                 ************************************************/
-                ocp_qp_solver qp_solver;
-                qp_solver.fun = &ocp_qp_qpdunes;
-                qp_solver.initialize = &ocp_qp_qpdunes_initialize;
-                qp_solver.destroy = &ocp_qp_qpdunes_destroy;
-                qp_solver.qp_in = ocp_qp_in_create(N, nx, nu, nb, ng);
-                qp_solver.qp_out = ocp_qp_out_create(N, nx, nu, nb, ng);
-                // TODO(nielsvd): lines below should go
-                int_t **idxb = (int_t **) qp_solver.qp_in->idxb;
-                for (int_t i = 0; i <= N; i++)
-                    for (int_t j = 0; j < nb[i]; j++) idxb[i][j] = hidxb[i][j];
-                qp_solver.args = (void *) ocp_qp_qpdunes_create_arguments(
-                    QPDUNES_NONLINEAR_MPC);  // qp_solver.qp_in); //
-
-                /************************************************
-                 * SQP method
-                 ************************************************/
-
-                ocp_nlp_in nlp_in;
-                nlp_in.N = N;
-                nlp_in.nx = nx;
-                nlp_in.nu = nu;
-                nlp_in.nb = nb;
-                nlp_in.ng = ng;
-                nlp_in.idxb = (const int_t **) hidxb;
-                nlp_in.lb = (const real_t **) hlb;
-                nlp_in.ub = (const real_t **) hub;
-                nlp_in.lg = NULL;
-                nlp_in.ug = NULL;
-                nlp_in.sim = (void **) &integrators;
-                nlp_in.cost = (void *) &ls_cost;
-                nlp_in.path_constraints = (void **) path_constraints;
-
-                ocp_nlp_out nlp_out;
-                nlp_out.x = (real_t **) malloc(sizeof(*nlp_out.x) * (N + 1));
-                nlp_out.u = (real_t **) malloc(sizeof(*nlp_out.u) * (N + 1));
-                nlp_out.pi = (real_t **) malloc(sizeof(*nlp_out.pi) * (N + 1));
-                nlp_out.lam = (real_t **) malloc(sizeof(*nlp_out.lam) * (N + 1));
-                // Allocate output variables
-                for (int_t i = 0; i < N; i++)
->>>>>>> 9e9ed24aaf7faa2af9b9768ae09ee71ceac08de6
                 {
                     set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
                                                             "impl_ode_fun", &impl_ode_fun[i]);
@@ -1692,9 +1635,6 @@ void setup_and_solve_nlp(int NN,
                 break;
         }
     }
-
-
-    nlp_in->freezeSens = false;
 
     /* constraints */
     ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
