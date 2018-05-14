@@ -6,6 +6,7 @@
 #include <string>
 
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
@@ -193,10 +194,11 @@ void ocp_nlp::set_field(string field, int stage, vector<double> v)
 
 static bool is_valid_model(const casadi::Function &model)
 {
-    if (model.n_in() != 2 && model.n_in() != 3)
+    if (model.n_in() != 2)
         throw std::invalid_argument("An ODE model should have 2 inputs: states and controls.");
     if (model.n_out() != 1)
         throw std::runtime_error("An ODE model should have 1 output: the right hand side");
+
     casadi::SX x = model.sx_in(0);
     casadi::SX u = model.sx_in(1);
     int_t nx = x.size1();
@@ -205,6 +207,17 @@ static bool is_valid_model(const casadi::Function &model)
     casadi::SX rhs = casadi::SX::vertcat(model(input));
     if (rhs.size1() != nx)
         throw std::runtime_error("Length of right hand size should equal number of states");
+    return true;
+}
+
+static bool is_valid_nls_residual(const casadi::Function &r)
+{
+    if (r.n_in() != 1 && r.n_in() != 2)
+        throw std::invalid_argument("An NLS residual should have max 2 inputs: states and "
+                                    "controls.");
+    if (r.n_out() != 1)
+        throw std::invalid_argument("An NLS residual function should have 1 output.");
+
     return true;
 }
 
@@ -224,7 +237,6 @@ void ocp_nlp::set_terminal_cost(std::vector<double> C, std::vector<double> y_ref
 void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<double> y_ref,
                              std::vector<double> W)
 {
-
     if (C.size() % (d_["nx"][stage]+d_["nu"][stage]+d_["ns"][stage]) != 0)
         throw std::invalid_argument("Linear least squares matrix has wrong dimensions.");
 
@@ -262,6 +274,66 @@ void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<doubl
 
 }
 
+void ocp_nlp::set_stage_cost(const casadi::Function& r, vector<double> y_ref,
+                             vector<double> W)
+{
+    if (!is_valid_nls_residual(r))
+        throw std::invalid_argument("Invalid NLS residual function.");
+
+    int ny = r.numel_out(0);
+
+    if (W.size() != ny*ny)
+        throw std::invalid_argument("Linear least squares weighting matrix has wrong dimensions.");
+
+    for (int i = 0; i < N; ++i)
+    {
+
+        d_["ny"][i] = ny;
+
+        ocp_nlp_cost_nls_config_initialize_default(config_->cost[i]);
+
+        int dims_size = ocp_nlp_cost_nls_dims_calculate_size(config_->cost[i]);
+        void *raw_memory = malloc(dims_size);
+        dims_->cost[i] = ocp_nlp_cost_nls_dims_assign(config_->cost[i], raw_memory);
+        ocp_nlp_cost_nls_dims_initialize(config_->cost[i], dims_->cost[i],
+                                              d_["nx"][i], d_["nu"][i], d_["ny"][i], d_["ns"][i]);
+
+        int model_size =
+            ocp_nlp_cost_nls_model_calculate_size(config_->cost[i], dims_->cost[i]);
+        raw_memory = malloc(model_size);
+        nlp_->cost[i] = ocp_nlp_cost_nls_model_assign(config_->cost[i], dims_->cost[i], raw_memory);
+    }
+
+    auto residual_functions = create_nls_residual(r);
+
+    generate_casadi_function(residual_functions);
+
+    for (auto& f : residual_functions)
+        residuals_handle_[f.first] = compile_and_load(f.first);
+
+    nls_residual_.casadi_fun = reinterpret_cast<casadi_eval_t>(
+        load_function("nls_res", residuals_handle_["nls_res"]));
+    nls_residual_.casadi_n_in = reinterpret_cast<casadi_getint_t>(
+        load_function("nls_res_n_in", residuals_handle_["nls_res"]));
+    nls_residual_.casadi_n_out = reinterpret_cast<casadi_getint_t>(
+        load_function("nls_res_n_out", residuals_handle_["nls_res"]));
+    nls_residual_.casadi_sparsity_in = reinterpret_cast<casadi_sparsity_t>(
+        load_function("nls_res_sparsity_in", residuals_handle_["nls_res"]));
+    nls_residual_.casadi_sparsity_out = reinterpret_cast<casadi_sparsity_t>(
+        load_function("nls_res_sparsity_out", residuals_handle_["nls_res"]));
+    nls_residual_.casadi_work = reinterpret_cast<casadi_work_t>(
+        load_function("nls_res_work", residuals_handle_["nls_res"]));
+
+    external_function_casadi_create(&nls_residual_);
+
+    for (int stage = 0; stage < N; ++stage) {
+        ocp_nlp_cost_nls_model *model = (ocp_nlp_cost_nls_model *) nlp_->cost[stage];
+        model->nls_jac = (external_function_generic *) &nls_residual_;
+        blasfeo_pack_dmat(ny, ny, W.data(), ny, &model->W, 0, 0);
+        blasfeo_pack_dvec(ny, y_ref.data(), &model->y_ref, 0);
+    }
+
+}
 
 void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, option_t *> options)
 {
@@ -281,10 +353,7 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
     {
         ocp_nlp_dynamics_cont_config_initialize_default(config_->dynamics[i]);
         config_->dynamics[i]->sim_solver = sim_config_create(sim_plan);
-    }
 
-    for (int i = 0; i < N; ++i)
-    {
         int dims_size = ocp_nlp_dynamics_cont_dims_calculate_size(config_->dynamics[i]);
         void *raw_memory = malloc(dims_size);
         dims_->dynamics[i] = ocp_nlp_dynamics_cont_dims_assign(config_->dynamics[i], raw_memory);
@@ -301,13 +370,10 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
 
     auto functions = create_explicit_ode_functions(model);
 
-    for (auto elem : functions)
-    {
-        elem.second.generate(
-            elem.first + ".c",
-            {{"with_header", true}, {"with_export", false}, {"casadi_int", "int"}});
+    generate_casadi_function(functions);
+
+    for (auto& elem : functions)
         dynamics_handle_[elem.first] = compile_and_load(elem.first);
-    }
 
     forw_vde_.casadi_fun = reinterpret_cast<casadi_eval_t>(
         load_function("expl_vde_for", dynamics_handle_["expl_vde_for"]));
@@ -322,11 +388,21 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
     forw_vde_.casadi_work = reinterpret_cast<casadi_work_t>(
         load_function("expl_vde_for_work", dynamics_handle_["expl_vde_for"]));
 
-    external_function_casadi_create_array(1, &forw_vde_);
+    external_function_casadi_create(&forw_vde_);
 
     for (int stage = 0; stage < N; ++stage)
         nlp_set_model_in_stage(config_.get(), nlp_.get(), stage, "expl_vde_for", &forw_vde_);
 };
+
+void generate_casadi_function(map<string, casadi::Function> functions)
+{
+    for (auto& elem : functions)
+    {
+        elem.second.generate(
+            elem.first + ".c",
+            {{"with_header", true}, {"with_export", false}, {"casadi_int", "int"}});
+    }
+}
 
 void *load_function(std::string function_name, void *handle)
 {
@@ -337,14 +413,30 @@ void *load_function(std::string function_name, void *handle)
 #endif
 }
 
-std::map<std::string, casadi::Function> ocp_nlp::create_explicit_ode_functions(
+map<string, casadi::Function> create_nls_residual(const casadi::Function& r)
+{
+    casadi::SX x = r.sx_in(0);
+    casadi::SX u = r.sx_in(1);
+
+    vector<casadi::SX> xu {x, u};
+    vector<casadi::SX> ux {u, x};
+
+    casadi::SX r_new = casadi::SX::vertcat(r(xu));
+    casadi::SX r_jacT = casadi::SX::jacobian(r_new, casadi::SX::vertcat(ux)).T();
+
+    casadi::Function r_fun("nls_res", {casadi::SX::vertcat(ux)}, {r_new, r_jacT});
+
+    return {{"nls_res", r_fun}};
+}
+
+map<string, casadi::Function> create_explicit_ode_functions(
     const casadi::Function &model)
 {
     casadi::SX x = model.sx_in(0);
     casadi::SX u = model.sx_in(1);
     int_t nx = x.size1();
     int_t nu = u.size1();
-    casadi::SX rhs = casadi::SX::vertcat(model(std::vector<casadi::SX>({x, u})));
+    casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, u})));
 
     casadi::SX Sx = casadi::SX::sym("Sx", nx, nx);
     casadi::SX Su = casadi::SX::sym("Su", nx, nu);
@@ -521,6 +613,8 @@ ocp_nlp::~ocp_nlp()
 
     free(nlp_->constraints[N]);
     free(nlp_->cost[N]);
+
+    free(forw_vde_.ptr_ext_mem);
 
     for (auto &elem : dynamics_handle_) dlclose(elem.second);
 }

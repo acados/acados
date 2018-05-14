@@ -47,11 +47,13 @@ class ocp_nlp : private ocp
     void set_stage_cost(std::vector<double> C, std::vector<double> y_ref, std::vector<double> W);
     void set_stage_cost(int stage, std::vector<double> C, std::vector<double> y_ref,
                         std::vector<double> W);
-    // void set_stage_cost(const casadi::Function& r, std::vector<double> W);
+    void set_stage_cost(const casadi::Function& r, std::vector<double> y_ref,
+                        std::vector<double> W);
+    // void set_stage_cost(int stage, const casadi::Function& r, std::vector<double> W);
 
     // void set_terminal_cost(const casadi::Function& l_N);
     void set_terminal_cost(std::vector<double> C, std::vector<double> y_ref, std::vector<double> W);
-    // void set_terminal_cost(const casadi::Function& r_N, std::vector<double> W_N);
+    // void set_terminal_cost(const casadi::Function& r, std::vector<double> W);
 
     const int N;
 
@@ -80,9 +82,6 @@ class ocp_nlp : private ocp
 
     int num_stages() override;
 
-    std::map<std::string, casadi::Function> create_explicit_ode_functions(
-        const casadi::Function &model);
-
     std::unique_ptr<ocp_nlp_in> nlp_;
 
     std::shared_ptr<ocp_nlp_dims> dims_;
@@ -93,7 +92,11 @@ class ocp_nlp : private ocp
 
     std::map<std::string, void *> dynamics_handle_;
 
+    std::map<std::string, void *> residuals_handle_;
+
     external_function_casadi forw_vde_;
+
+    external_function_casadi nls_residual_;
 
     std::unique_ptr<void, void (*)(void *)> solver_options_{nullptr, &std::free};
 
@@ -107,6 +110,13 @@ class ocp_nlp : private ocp
 void *load_function(std::string function_name, void *handle);
 
 void *compile_and_load(std::string name);
+
+std::map<std::string, casadi::Function> create_explicit_ode_functions(
+    const casadi::Function& model);
+
+std::map<std::string, casadi::Function> create_nls_residual(const casadi::Function& r);
+
+void generate_casadi_function(std::map<std::string, casadi::Function> functions);
 
 }  // namespace acados
 

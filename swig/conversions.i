@@ -204,8 +204,10 @@ double *asDoublePointer(LangObject *input) {
     return (double *) mxGetData(input);
 #elif defined(SWIGPYTHON)
     PyObject *matrix = PyArray_FROM_OTF(input, NPY_FLOAT64, NPY_ARRAY_FARRAY_RO);
-    if (matrix == NULL)
+    if (matrix == NULL) {
+        PyErr_Print();
         throw std::runtime_error("Something went wrong while converting matrix");
+    }
     return (double *) PyArray_DATA((PyArrayObject *) matrix);
 #endif
 }
@@ -234,8 +236,10 @@ LangObject *new_matrix(std::pair<int, int> dimensions, const T *data) {
         npy_intp npy_dims[2] = {nb_rows, nb_cols};
         matrix = PyArray_NewFromDataF(2, npy_dims, data_copy);
     }
-    if (matrix == NULL)
+    if (matrix == NULL) {
+        PyErr_Print();
         throw std::runtime_error("Something went wrong while copying array");
+    }
     return matrix;
 #endif
 }

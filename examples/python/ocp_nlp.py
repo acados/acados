@@ -2,20 +2,26 @@ import matplotlib.pyplot as plt
 from numpy import array, diag, eye, zeros
 from scipy.linalg import block_diag
 
-from casadi import SX, Function, vertcat
 from acados import ocp_nlp
+from casadi import SX, Function, vertcat
+from models import chen_model
 
-x = SX.sym('x', 2)
-u = SX.sym('u')
-f = Function('f', [x, u], [x + u])
+ode_fun, nx, nu = chen_model()
 
-N, nx, nu = 5, 2, 1
+N = 15
 
 nlp = ocp_nlp(N, nx, nu)
-nlp.set_dynamics(f, {'integrator': 'rk4', 'step': 0.1})
+nlp.set_dynamics(ode_fun, {'integrator': 'rk4', 'step': 0.1})
 
-nlp.set_stage_cost(eye(nx+nu), zeros(nx+nu), diag([100, 100, 1]))
-nlp.set_terminal_cost(eye(nx), zeros(nx), 100*eye(nx))
+q, r = 0.5, 1
+P = array([[16.5926, 11.5926], [11.5926, 16.5926]])
+
+x = SX.sym('x', nx)
+u = SX.sym('u', nu)
+res = Function('r', [x, u], [vertcat(x, u)])
+
+nlp.set_stage_cost(res, zeros(nx+nu), diag([q, q, r]))
+nlp.set_terminal_cost(eye(nx), zeros(nx), P)
 
 x0 = array([1, 1])
 nlp.set_field("lbx", 0, x0)
