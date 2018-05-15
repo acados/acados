@@ -256,4 +256,4 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *opts, void *mem_, voi
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_SIM_SIM_GNSF_H
+#endif  // ACADOS_SIM_SIM_GNSF_H_

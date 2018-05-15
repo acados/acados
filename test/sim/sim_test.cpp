@@ -333,7 +333,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
         S_forw_ref_sol[jj] = out->S_forw[jj];
 
     for (jj = 0; jj < nx*NF; jj++)
-        S_adj_ref_sol[jj] = out->S_adj[jj];        
+        S_adj_ref_sol[jj] = out->S_adj[jj];
 
     free(sim_solver);
     free(in);
@@ -381,7 +381,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                     opts->sens_adj = true;
                 else
                     opts->sens_adj = false;
-                
 
 
                 sim_gnsf_dims *gnsf_dim;
@@ -562,7 +561,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 for (jj = 0; jj < nx*NF; jj++)
                     max_error_forw = (error_S_forw[ii] > max_error_forw)
                             ? error_S_forw[ii] : max_error_forw;
-                
+
                 // error_S_adj
                 for (jj = 0; jj < NF; jj++)
                     error_S_adj[jj] = S_adj_ref_sol[jj] - out->S_adj[jj];
@@ -589,9 +588,10 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 REQUIRE(max_error <= tol);
                 REQUIRE(max_error_forw <= tol);
+
+                // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
                 if ((plan.sim_solver != NEW_LIFTED_IRK) && (plan.sim_solver != LIFTED_IRK))
                     REQUIRE(max_error_adj <= tol);
-                
 
                 free(sim_solver);
                 free(in);
