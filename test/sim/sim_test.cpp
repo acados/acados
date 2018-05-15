@@ -67,11 +67,11 @@ sim_solver_t hashitsim(std::string const& inString)
 
 double sim_solver_tolerance(std::string const& inString)
 {
-    if (inString == "ERK") return 1e-8;
-    if (inString == "IRK") return 1e-8;
-    if (inString == "LIFTED_IRK") return 1e-8;
-    if (inString == "GNSF") return 1e-8;
-    if (inString == "NEW_LIFTED_IRK") return 1e-5;
+    if (inString == "ERK") return 1e-13;
+    if (inString == "IRK") return 1e-13;
+    if (inString == "LIFTED_IRK") return 1e-13;
+    if (inString == "GNSF") return 1e-13;
+    if (inString == "NEW_LIFTED_IRK") return 1e-13;
 
     return -1;
 }
@@ -81,8 +81,7 @@ double sim_solver_tolerance(std::string const& inString)
 
 TEST_CASE("wt_nx3_example", "[integrators]")
 {
-    vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF"}; //, "NEW_LIFTED_IRK"};//{"NEW_LIFTED_IRK"};//{"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
-    // todo(andrea): add NEW_LIFTED_IRK, and make it work
+    vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
     int ii;
     int jj;
@@ -97,10 +96,13 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
     double x_sim[nx*(nsim0+1)];
     double x_ref_sol[nx];
+    double S_forw_ref_sol[nx*NF];
     double x_sol[nx];
     double error[nx];
 
-    double max_error;
+    double error_S_forw[nx*NF];
+
+    double max_error, max_error_forw;
 
 	for (ii=0; ii<nx; ii++)
 		x_sim[ii] = x0[ii];
@@ -323,6 +325,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     for (jj = 0; jj < nx; jj++)
         x_ref_sol[jj] = out->xn[jj];
 
+    for (jj = 0; jj < nx*NF; jj++)
+        S_forw_ref_sol[jj] = out->S_forw[jj];
+
     free(sim_solver);
     free(in);
     free(out);
@@ -521,22 +526,40 @@ TEST_CASE("wt_nx3_example", "[integrators]")
             for (jj = 0; jj < nx; jj++)
                 x_sol[jj] = out->xn[jj];
 
+
+            // error sim
             for (jj = 0; jj < nx; jj++)
                 error[jj] = x_sol[jj] - x_ref_sol[jj];
 
             max_error = 0.0;
             for (int ii = 0; ii < nx; ii++)
-            {
                 max_error = (error[ii] > max_error) ? error[ii] : max_error;
-            }
+
+            // error_S_forw
+            for (jj = 0; jj < nx*NF; jj++)
+                error_S_forw[jj] = S_forw_ref_sol[jj] - out->S_forw[jj];
+
+            max_error_forw = 0.0;
+            for (jj = 0; jj < nx*NF; jj++)
+                max_error_forw = (error_S_forw[ii] > max_error_forw) ? error_S_forw[ii] : max_error_forw;
+
+
 
             /************************************************
             * printing
             ************************************************/
-            printf("\nxn: \n");
-            d_print_e_mat(1, nx, &x_sol[0], 1);
+            std::cout << "\n---> testing integrator " << solver << " (num_stages = " << opts->ns
+                      << ", jac_reuse = " << opts->jac_reuse << ", newton_iter = " << opts->newton_iter
+                      << ")\n";
+
+            std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = " << max_error_forw
+                      << "\n";
+            // d_print_e_mat(1, nx, &x_sol[0], 1);
+            // d_print_e_mat(nx, NF, &out->S_forw[0], 1);
+
 
             REQUIRE(max_error <= tol);
+            REQUIRE(max_error_forw <= tol);
 
             free(sim_solver);
             free(in);
