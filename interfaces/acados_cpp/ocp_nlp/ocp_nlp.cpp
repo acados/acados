@@ -14,31 +14,12 @@
 #include "acados_cpp/ocp_bounds.hpp"
 #include "acados_cpp/ocp_dimensions.hpp"
 #include "acados_cpp/utils.hpp"
+#include "acados_cpp/ocp_nlp/dynamic_loading.hpp"
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 
 #include "casadi/casadi.hpp"
 #include "casadi/mem.h"
-
-#if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
-#include <windows.h>
-const char dynamic_library_suffix[] = ".dll";
-static void create_directory(std::string name){
-    CreateDirectory(name.c_str(), NULL);
-    if (ERROR_ALREADY_EXISTS != GetLastError())
-        throw std::runtime_error("Could not create folder '" + name + "'.");
-}
-#else
-#include <dlfcn.h>
-const char dynamic_library_suffix[] = ".so";
-static void create_directory(std::string name){
-    std::string command = "mkdir -p " + name;
-    int creation_failed = system(command.c_str());
-    if (creation_failed)
-        throw std::runtime_error("Could not create folder '" + name + "'.");
-}
-#endif
-const char tmp_dir[] = "_casadi_gen";
 
 namespace acados
 {
@@ -326,7 +307,7 @@ void ocp_nlp::set_stage_cost(int stage, const casadi::Function& r, vector<double
     generate_casadi_function(residual_functions);
 
     for (auto& f : residual_functions)
-        residuals_handle_[f.first] = compile_and_load(f.first);
+        residuals_handle_[f.first] = compile_and_load_library(f.first);
 
     nls_residual_.casadi_fun = reinterpret_cast<casadi_eval_t>(
         load_function("nls_res", residuals_handle_["nls_res"]));
@@ -392,7 +373,7 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
     generate_casadi_function(functions);
 
     for (auto& elem : functions)
-        dynamics_handle_[elem.first] = compile_and_load(elem.first);
+        dynamics_handle_[elem.first] = compile_and_load_library(elem.first);
 
     forw_vde_.casadi_fun = reinterpret_cast<casadi_eval_t>(
         load_function("expl_vde_for", dynamics_handle_["expl_vde_for"]));
@@ -415,7 +396,7 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
 
 void generate_casadi_function(map<string, casadi::Function> functions)
 {
-    create_directory(tmp_dir);
+    create_directory(TMP_DIR);
 
     for (auto& elem : functions)
     {
@@ -424,17 +405,8 @@ void generate_casadi_function(map<string, casadi::Function> functions)
                                                                   {"with_export", false},
                                                                   {"casadi_int", "int"}});
         generator.add(elem.second);
-        generator.generate(string(tmp_dir) + "/");
+        generator.generate(string(TMP_DIR) + "/");
     }
-}
-
-void *load_function(std::string function_name, void *handle)
-{
-#if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
-    return GetProcAddress((HMODULE) handle, function_name.c_str());
-#else
-    return dlsym(handle, function_name.c_str());
-#endif
 }
 
 map<string, casadi::Function> create_nls_residual(const casadi::Function& r)
@@ -474,34 +446,6 @@ map<string, casadi::Function> create_explicit_ode_functions(
     casadi::Function jac_fun("expl_ode_jac" + model.name(), {x, Sx, Su, u}, {rhs, jac_x});
 
     return {{"expl_vde_for", vde_fun}, {"expl_ode_jac", jac_fun}};
-}
-
-void *compile_and_load(std::string name)
-{
-#if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
-    std::string compiler{"mex"};
-#else
-    std::string compiler{"cc"};
-#endif
-    void *handle;
-    std::string library_name = name + dynamic_library_suffix;
-    std::string path_to_library = "./" + string(tmp_dir) + "/" + library_name;
-    std::string path_to_file = "./" + string(tmp_dir) + "/" + name;
-    char command[MAX_STR_LEN];
-    snprintf(command, sizeof(command), "%s -fPIC -shared -g %s.c -o %s", compiler.c_str(),
-             path_to_file.c_str(), path_to_library.c_str());
-    int compilation_failed = system(command);
-    if (compilation_failed)
-        throw std::runtime_error("Something went wrong when compiling the model.");
-#if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
-    handle = LoadLibrary(path_to_library.c_str());
-#else
-    handle = dlopen(path_to_library.c_str(), RTLD_LAZY);
-#endif
-    if (handle == NULL)
-        throw std::runtime_error("Loading of " + path_to_library +
-                                 " failed. Error message: " + load_error_message());
-    return handle;
 }
 
 void ocp_nlp::set_bound(std::string bound, int stage, std::vector<double> new_bound)
@@ -641,7 +585,7 @@ ocp_nlp::~ocp_nlp()
 
     free(forw_vde_.ptr_ext_mem);
 
-    for (auto &elem : dynamics_handle_) dlclose(elem.second);
+    for (auto &elem : dynamics_handle_) free_handle(elem.second);
 }
 
 }  // namespace acados

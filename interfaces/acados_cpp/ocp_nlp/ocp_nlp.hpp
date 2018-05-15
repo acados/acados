@@ -109,10 +109,6 @@ class ocp_nlp : private ocp
     bool needs_initializing_;
 };
 
-void *load_function(std::string function_name, void *handle);
-
-void *compile_and_load(std::string name);
-
 std::map<std::string, casadi::Function> create_explicit_ode_functions(
     const casadi::Function& model);
 
