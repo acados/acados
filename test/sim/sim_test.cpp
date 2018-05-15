@@ -99,12 +99,14 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     double x_sim[nx*(nsim0+1)];
     double x_ref_sol[nx];
     double S_forw_ref_sol[nx*NF];
+    double S_adj_ref_sol[NF];
     double x_sol[nx];
+
     double error[nx];
-
     double error_S_forw[nx*NF];
+    double error_S_adj[NF];
 
-    double max_error, max_error_forw;
+    double max_error, max_error_forw, max_error_adj;
 
     for (ii=0; ii < nx; ii++)
         x_sim[ii] = x0[ii];
@@ -269,7 +271,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
     opts->sens_forw = true;
-    opts->sens_adj = false;
+    opts->sens_adj = true;
 
     sim_gnsf_dims *gnsf_dim;
 
@@ -330,6 +332,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     for (jj = 0; jj < nx*NF; jj++)
         S_forw_ref_sol[jj] = out->S_forw[jj];
 
+    for (jj = 0; jj < nx*NF; jj++)
+        S_adj_ref_sol[jj] = out->S_adj[jj];        
+
     free(sim_solver);
     free(in);
     free(out);
@@ -372,7 +377,12 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
                 opts->sens_forw = true;
-                opts->sens_adj = false;
+                if (plan.sim_solver != NEW_LIFTED_IRK)
+                    opts->sens_adj = true;
+                else
+                    opts->sens_adj = false;
+                
+
 
                 sim_gnsf_dims *gnsf_dim;
 
@@ -538,7 +548,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 // error sim
                 for (jj = 0; jj < nx; jj++)
-                    error[jj] = x_sol[jj] - x_ref_sol[jj];
+                    error[jj] = abs(x_sol[jj] - x_ref_sol[jj]);
 
                 max_error = 0.0;
                 for (int ii = 0; ii < nx; ii++)
@@ -546,29 +556,42 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 // error_S_forw
                 for (jj = 0; jj < nx*NF; jj++)
-                    error_S_forw[jj] = S_forw_ref_sol[jj] - out->S_forw[jj];
+                    error_S_forw[jj] = abs(S_forw_ref_sol[jj] - out->S_forw[jj]);
 
                 max_error_forw = 0.0;
                 for (jj = 0; jj < nx*NF; jj++)
                     max_error_forw = (error_S_forw[ii] > max_error_forw)
                             ? error_S_forw[ii] : max_error_forw;
+                
+                // error_S_adj
+                for (jj = 0; jj < NF; jj++)
+                    error_S_adj[jj] = S_adj_ref_sol[jj] - out->S_adj[jj];
+
+                max_error_adj = 0.0;
+                for (jj = 0; jj < NF; jj++)
+                    max_error_adj = (error_S_adj[ii] > max_error_adj)
+                            ? error_S_adj[ii] : max_error_adj;
 
                 /************************************************
                 * printing
                 ************************************************/
                 std::cout << "\n---> testing integrator " << solver <<
-                        " (num_stages = " << opts->ns << ", jac_reuse = "
-                        << opts->jac_reuse << ", newton_iter = " << opts->newton_iter
-                        << ")\n";
+                        " (num_steps = " << opts->num_steps << ", num_stages = " << opts->ns
+                        << ", jac_reuse = " << opts->jac_reuse << ", newton_iter = "
+                        << opts->newton_iter << ")\n";
 
                 std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = "
-                         << max_error_forw << "\n";
+                         << max_error_forw << ",\nerror_adj_sens = "
+                         << max_error_adj << "\n";
                 // d_print_e_mat(1, nx, &x_sol[0], 1);
                 // d_print_e_mat(nx, NF, &out->S_forw[0], 1);
 
 
                 REQUIRE(max_error <= tol);
                 REQUIRE(max_error_forw <= tol);
+                if ((plan.sim_solver != NEW_LIFTED_IRK) && (plan.sim_solver != LIFTED_IRK))
+                    REQUIRE(max_error_adj <= tol);
+                
 
                 free(sim_solver);
                 free(in);
