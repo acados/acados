@@ -576,15 +576,13 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             {
                 plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 
-                if (i%5 == 0)
+                if (i%4 == 0)
                     plan->sim_solver_plan[i].sim_solver = IRK;
-                else if (i%5 == 1)
+                else if (i%4 == 1)
                     plan->sim_solver_plan[i].sim_solver = ERK;
-                else if (i%5 == 2)
-                    plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
-                else if (i%5 == 3)
+                else if (i%4 == 2)
                     plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
-                else if (i%5 == 4)
+                else if (i%4 == 3)
                     plan->sim_solver_plan[i].sim_solver = GNSF;
 
             }
@@ -722,29 +720,36 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         {
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for",
                 &expl_vde_for[i]);
+            REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == IRK)
         {
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun",
                 &impl_ode_fun[i]);
+            REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot",
                 &impl_ode_fun_jac_x_xdot[i]);
+            REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u",
                 &impl_ode_jac_x_xdot_u[i]);
+            REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "phi_fun", &phi_fun[i]);
+            REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "phi_fun_jac_y",
                 &phi_fun_jac_y[i]);
+            REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "phi_jac_y_uhat",
                 &phi_jac_y_uhat[i]);
+            REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
                 &f_lo_jac_x1_x1dot_u_z[i]);
@@ -753,9 +758,11 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         {
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun",
                 &impl_ode_fun[i]);
+            REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u",
                 &impl_ode_fun_jac_x_xdot_u[i]);
+            REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
         else
@@ -1121,7 +1128,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
 TEST_CASE("wind turbine nmpc", "[NLP solver]")
 {
-    std::vector<std::string> integrators = {"IRK", "ERK", "NEW_LIFTED_IRK", "GNSF"};
+    std::vector<std::string> integrators = {"IRK", "ERK", "NEW_LIFTED_IRK", "GNSF", "MIXED"};
     std::vector<std::string> qp_solvers = { "SPARSE_HPIPM",
                                             // "SPARSE_HPMPC",
                                             // "SPARSE_QPDUNES",
