@@ -47,6 +47,7 @@
 extern "C"
 {
 // printf("SIMULATION TEST \n");
+    // std::cout << "=== INTEGRATOR TEST - USING a windturbine model with nx = 3 ===" <<  "\n";
 }
 
 using std::vector;
@@ -81,6 +82,7 @@ double sim_solver_tolerance(std::string const& inString)
 
 TEST_CASE("wt_nx3_example", "[integrators]")
 {
+
     vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
     int ii;
@@ -341,234 +343,237 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     {
         SECTION(solver)
         {
-            double error[nx];
-            double max_error;
-
-            double tol = sim_solver_tolerance(solver);
-
-            plan.sim_solver = hashitsim(solver);
-
-            // create correct config based on plan
-            sim_solver_config *config = sim_config_create(plan);
-
-            /************************************************
-            * sim dims
-            ************************************************/
-
-            void *dims = sim_dims_create(config);
-            
-            config->set_nx(dims, nx);
-            config->set_nu(dims, nu);
-
-            /************************************************
-            * sim opts
-            ************************************************/
-
-            void *opts_ = sim_opts_create(config, dims);
-            sim_rk_opts *opts = (sim_rk_opts *) opts_;
-
-            opts->sens_forw = true;
-            opts->sens_adj = false;
-
-            sim_gnsf_dims *gnsf_dim;
-
-            opts->jac_reuse = true; // jacobian reuse
-            opts->newton_iter = 3; // number of newton iterations per integration step
-            opts->num_steps = 1; // number of steps
-
-            switch (plan.sim_solver)
+            for (int num_steps = 1; num_steps < 4; num_steps++)
             {
 
-                case ERK:
-                    // ERK
-                    opts->ns = 4; // number of stages in rk integrator
-                    break;
+                double error[nx];
+                double max_error;
 
-                case IRK:
-                    // IRK
-                    opts->ns = 2; // number of stages in rk integrator
-                    break;
+                double tol = sim_solver_tolerance(solver);
 
-                case LIFTED_IRK:
-                    // lifted IRK
-                    opts->ns = 2; // number of stages in rk integrator
-                    break;
+                plan.sim_solver = hashitsim(solver);
 
-                case GNSF:
-                    // GNSF
-                    opts->ns = 2; // number of stages in rk integrator
+                // create correct config based on plan
+                sim_solver_config *config = sim_config_create(plan);
 
-                    // set additional dimensions
-                    gnsf_dim = (sim_gnsf_dims *) dims; // declaration not allowed inside switch somehow
-                    gnsf_dim->nx = nx;
-                    gnsf_dim->nu = nu;
-                    gnsf_dim->nx1= nx;
-                    gnsf_dim->nx2= 0;
-                    gnsf_dim->ny = nx;
-                    gnsf_dim->nuhat = nu;
-                    gnsf_dim->n_out = 1;
-                    gnsf_dim->nz = 0;
+                /************************************************
+                * sim dims
+                ************************************************/
 
-                    break;
+                void *dims = sim_dims_create(config);
+                
+                config->set_nx(dims, nx);
+                config->set_nu(dims, nu);
 
-                case NEW_LIFTED_IRK:
-                    // new lifted IRK
-                    opts->ns = 2; // number of stages in rk integrator
-                    break;
+                /************************************************
+                * sim opts
+                ************************************************/
 
-                default :
-                    printf("\nnot enough sim solvers implemented!\n");
-                    exit(1);
+                void *opts_ = sim_opts_create(config, dims);
+                sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
-            }
+                opts->sens_forw = true;
+                opts->sens_adj = false;
 
-            /************************************************
-            * sim in / out
-            ************************************************/
+                sim_gnsf_dims *gnsf_dim;
 
-            sim_in *in = sim_in_create(config, dims);
-            sim_out *out = sim_out_create(config, dims);
+                opts->jac_reuse = true; // jacobian reuse
+                opts->newton_iter = 1; // number of newton iterations per integration step
+                opts->num_steps = num_steps; // number of steps
 
-            in->T = T;
-
-            // external functions
-            switch (plan.sim_solver)
-            {
-                case ERK: // ERK
+                switch (plan.sim_solver)
                 {
-                    sim_set_model(config, in, "expl_ode_fun", &expl_ode_fun);
-                    sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-                    sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
-                    break;
+
+                    case ERK:
+                        // ERK
+                        opts->ns = 4; // number of stages in rk integrator
+                        break;
+
+                    case IRK:
+                        // IRK
+                        opts->ns = 2; // number of stages in rk integrator
+                        break;
+
+                    case LIFTED_IRK:
+                        // lifted IRK
+                        opts->ns = 2; // number of stages in rk integrator
+                        break;
+
+                    case GNSF:
+                        // GNSF
+                        opts->ns = 2; // number of stages in rk integrator
+
+                        // set additional dimensions
+                        gnsf_dim = (sim_gnsf_dims *) dims; // declaration not allowed inside switch somehow
+                        gnsf_dim->nx = nx;
+                        gnsf_dim->nu = nu;
+                        gnsf_dim->nx1= nx;
+                        gnsf_dim->nx2= 0;
+                        gnsf_dim->ny = nx;
+                        gnsf_dim->nuhat = nu;
+                        gnsf_dim->n_out = 1;
+                        gnsf_dim->nz = 0;
+
+                        break;
+
+                    case NEW_LIFTED_IRK:
+                        // new lifted IRK
+                        opts->ns = 2; // number of stages in rk integrator
+                        break;
+
+                    default :
+                        printf("\nnot enough sim solvers implemented!\n");
+                        exit(1);
+
                 }
-                case IRK: // IRK
-                {
-                    sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-                    sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
-                    sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-                    break;
-                }
-                case LIFTED_IRK: // lifted IRK
-                {
-                    sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-                    sim_set_model(config, in, "expl_ode_jac", &expl_ode_jac);
-                    break;
-                }
-                case GNSF: // GNSF
-                {
-                    // set model funtions
-                    sim_set_model(config, in, "phi_fun", &phi_fun);
-                    sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
-                    sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
-                    sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
 
-                    // import model matrices
-                    external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
+                /************************************************
+                * sim in / out
+                ************************************************/
+
+                sim_in *in = sim_in_create(config, dims);
+                sim_out *out = sim_out_create(config, dims);
+
+                in->T = T;
+
+                // external functions
+                switch (plan.sim_solver)
+                {
+                    case ERK: // ERK
+                    {
+                        sim_set_model(config, in, "expl_ode_fun", &expl_ode_fun);
+                        sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
+                        sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
+                        break;
+                    }
+                    case IRK: // IRK
+                    {
+                        sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
+                        sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
+                        sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                        break;
+                    }
+                    case LIFTED_IRK: // lifted IRK
+                    {
+                        sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
+                        sim_set_model(config, in, "expl_ode_jac", &expl_ode_jac);
+                        break;
+                    }
+                    case GNSF: // GNSF
+                    {
+                        // set model funtions
+                        sim_set_model(config, in, "phi_fun", &phi_fun);
+                        sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
+                        sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
+                        sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+
+                        // import model matrices
+                        external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
+                        gnsf_model *model = (gnsf_model *) in->model;
+                        sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
+                        break;
+                    }
+                    case NEW_LIFTED_IRK: // new_lifted_irk
+                    {
+                        sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
+                        sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u);
+                        break;
+                    }
+                    default :
+                    {
+                        printf("\nnot enough sim solvers implemented!\n");
+                        exit(1);
+                    }
+                }
+
+                // seeds forw
+                for (ii = 0; ii < nx * NF; ii++)
+                    in->S_forw[ii] = 0.0;
+                for (ii = 0; ii < nx; ii++)
+                    in->S_forw[ii * (nx + 1)] = 1.0;
+
+                // seeds adj
+                for (ii = 0; ii < nx; ii++)
+                    in->S_adj[ii] = 1.0;
+
+                /************************************************
+                * sim solver
+                ************************************************/
+
+                sim_solver = sim_create(config, dims, opts);
+                // sim_solver *le_sim_solver = (sim_solver *) sim_solver_;
+                int acados_return;
+
+                if (plan.sim_solver == GNSF){ // for gnsf: perform precomputation
                     gnsf_model *model = (gnsf_model *) in->model;
-                    sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
-                    break;
+                    sim_gnsf_precompute(config, gnsf_dim, model, opts, sim_solver->mem, sim_solver->work, in->T);
                 }
-                case NEW_LIFTED_IRK: // new_lifted_irk
+                for (ii=0; ii<nsim0; ii++)
                 {
-                    sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-                    sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u);
-                    break;
+                    // x
+                    for (jj = 0; jj < nx; jj++)
+                        in->x[jj] = x_sim[ii*nx+jj];
+
+                    // p
+                    for (jj = 0; jj < 2; jj++)
+                        in->u[jj] = u_sim[ii*2+jj];
+                    for (jj = 0; jj < nu; jj++)
+                        in->u[2+jj] = 0.1;
+
+                    acados_return = sim_solve(sim_solver, in, out);
+                    REQUIRE(acados_return == 0);
+
+                    for (jj = 0; jj < nx; jj++)
+                        x_sim[(ii+1)*nx+jj] = out->xn[jj];
+
                 }
-                default :
-                {
-                    printf("\nnot enough sim solvers implemented!\n");
-                    exit(1);
-                }
-            }
-
-            // seeds forw
-            for (ii = 0; ii < nx * NF; ii++)
-                in->S_forw[ii] = 0.0;
-            for (ii = 0; ii < nx; ii++)
-                in->S_forw[ii * (nx + 1)] = 1.0;
-
-            // seeds adj
-            for (ii = 0; ii < nx; ii++)
-                in->S_adj[ii] = 1.0;
-
-            /************************************************
-            * sim solver
-            ************************************************/
-
-            sim_solver = sim_create(config, dims, opts);
-            // sim_solver *le_sim_solver = (sim_solver *) sim_solver_;
-            int acados_return;
-
-            if (plan.sim_solver == GNSF){ // for gnsf: perform precomputation
-                gnsf_model *model = (gnsf_model *) in->model;
-                sim_gnsf_precompute(config, gnsf_dim, model, opts, sim_solver->mem, sim_solver->work, in->T);
-            }
-            for (ii=0; ii<nsim0; ii++)
-            {
-                // x
-                for (jj = 0; jj < nx; jj++)
-                    in->x[jj] = x_sim[ii*nx+jj];
-
-                // p
-                for (jj = 0; jj < 2; jj++)
-                    in->u[jj] = u_sim[ii*2+jj];
-                for (jj = 0; jj < nu; jj++)
-                    in->u[2+jj] = 0.1;
-
-                acados_return = sim_solve(sim_solver, in, out);
-                REQUIRE(acados_return == 0);
 
                 for (jj = 0; jj < nx; jj++)
-                    x_sim[(ii+1)*nx+jj] = out->xn[jj];
-
-            }
-
-            for (jj = 0; jj < nx; jj++)
-                x_sol[jj] = out->xn[jj];
+                    x_sol[jj] = out->xn[jj];
 
 
-            // error sim
-            for (jj = 0; jj < nx; jj++)
-                error[jj] = x_sol[jj] - x_ref_sol[jj];
+                // error sim
+                for (jj = 0; jj < nx; jj++)
+                    error[jj] = x_sol[jj] - x_ref_sol[jj];
 
-            max_error = 0.0;
-            for (int ii = 0; ii < nx; ii++)
-                max_error = (error[ii] > max_error) ? error[ii] : max_error;
+                max_error = 0.0;
+                for (int ii = 0; ii < nx; ii++)
+                    max_error = (error[ii] > max_error) ? error[ii] : max_error;
 
-            // error_S_forw
-            for (jj = 0; jj < nx*NF; jj++)
-                error_S_forw[jj] = S_forw_ref_sol[jj] - out->S_forw[jj];
+                // error_S_forw
+                for (jj = 0; jj < nx*NF; jj++)
+                    error_S_forw[jj] = S_forw_ref_sol[jj] - out->S_forw[jj];
 
-            max_error_forw = 0.0;
-            for (jj = 0; jj < nx*NF; jj++)
-                max_error_forw = (error_S_forw[ii] > max_error_forw) ? error_S_forw[ii] : max_error_forw;
+                max_error_forw = 0.0;
+                for (jj = 0; jj < nx*NF; jj++)
+                    max_error_forw = (error_S_forw[ii] > max_error_forw) ? error_S_forw[ii] : max_error_forw;
 
 
 
-            /************************************************
-            * printing
-            ************************************************/
-            std::cout << "\n---> testing integrator " << solver << " (num_stages = " << opts->ns
-                      << ", jac_reuse = " << opts->jac_reuse << ", newton_iter = " << opts->newton_iter
-                      << ")\n";
+                /************************************************
+                * printing
+                ************************************************/
+                std::cout << "\n---> testing integrator " << solver << " (num_stages = " << opts->ns
+                        << ", jac_reuse = " << opts->jac_reuse << ", newton_iter = " << opts->newton_iter
+                        << ")\n";
 
-            std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = " << max_error_forw
-                      << "\n";
-            // d_print_e_mat(1, nx, &x_sol[0], 1);
-            // d_print_e_mat(nx, NF, &out->S_forw[0], 1);
+                std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = " << max_error_forw
+                        << "\n";
+                // d_print_e_mat(1, nx, &x_sol[0], 1);
+                // d_print_e_mat(nx, NF, &out->S_forw[0], 1);
 
 
-            REQUIRE(max_error <= tol);
-            REQUIRE(max_error_forw <= tol);
+                REQUIRE(max_error <= tol);
+                REQUIRE(max_error_forw <= tol);
 
-            free(sim_solver);
-            free(in);
-            free(out);
+                free(sim_solver);
+                free(in);
+                free(out);
 
-            free(opts);
-            free(config);
-            free(dims);
-
+                free(opts);
+                free(config);
+                free(dims);
+            } // end for num_steps
         } // end section
     } // END FOR SOLVERS
 
