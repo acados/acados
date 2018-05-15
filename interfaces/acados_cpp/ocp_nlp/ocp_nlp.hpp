@@ -47,13 +47,15 @@ class ocp_nlp : private ocp
     void set_stage_cost(std::vector<double> C, std::vector<double> y_ref, std::vector<double> W);
     void set_stage_cost(int stage, std::vector<double> C, std::vector<double> y_ref,
                         std::vector<double> W);
+    void set_stage_cost(int stage, const casadi::Function& r, std::vector<double> y_ref,
+                        std::vector<double> W);
     void set_stage_cost(const casadi::Function& r, std::vector<double> y_ref,
                         std::vector<double> W);
-    // void set_stage_cost(int stage, const casadi::Function& r, std::vector<double> W);
 
     // void set_terminal_cost(const casadi::Function& l_N);
     void set_terminal_cost(std::vector<double> C, std::vector<double> y_ref, std::vector<double> W);
-    // void set_terminal_cost(const casadi::Function& r, std::vector<double> W);
+    void set_terminal_cost(const casadi::Function& r, std::vector<double> y_ref,
+                           std::vector<double> W);
 
     const int N;
 

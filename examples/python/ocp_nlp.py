@@ -20,7 +20,7 @@ x = SX.sym('x', nx)
 u = SX.sym('u', nu)
 res = Function('r', [x, u], [vertcat(x, u)])
 
-nlp.set_stage_cost(res, zeros(nx+nu), diag([q, q, r]))
+nlp.set_stage_cost(eye(nx+nu), zeros(nx+nu), diag([q, q, r]))
 nlp.set_terminal_cost(eye(nx), zeros(nx), P)
 
 x0 = array([1, 1])

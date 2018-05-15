@@ -22,10 +22,23 @@
 
 #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
 #include <windows.h>
+const char dynamic_library_suffix[] = ".dll";
+static void create_directory(std::string name){
+    CreateDirectory(name.c_str(), NULL);
+    if (ERROR_ALREADY_EXISTS != GetLastError())
+        throw std::runtime_error("Could not create folder '" + name + "'.");
+}
 #else
 #include <dlfcn.h>
+const char dynamic_library_suffix[] = ".so";
+static void create_directory(std::string name){
+    std::string command = "mkdir -p " + name;
+    int creation_failed = system(command.c_str());
+    if (creation_failed)
+        throw std::runtime_error("Could not create folder '" + name + "'.");
+}
 #endif
-int global_library_counter = 0;
+const char tmp_dir[] = "_casadi_gen";
 
 namespace acados
 {
@@ -274,7 +287,13 @@ void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<doubl
 
 }
 
-void ocp_nlp::set_stage_cost(const casadi::Function& r, vector<double> y_ref,
+void ocp_nlp::set_stage_cost(const casadi::Function& r, vector<double> y_ref, vector<double> W)
+{
+    for (int i = 0; i < N; ++i)
+        set_stage_cost(i, r, y_ref, W);
+}
+
+void ocp_nlp::set_stage_cost(int stage, const casadi::Function& r, vector<double> y_ref,
                              vector<double> W)
 {
     if (!is_valid_nls_residual(r))
@@ -285,24 +304,22 @@ void ocp_nlp::set_stage_cost(const casadi::Function& r, vector<double> y_ref,
     if (W.size() != ny*ny)
         throw std::invalid_argument("Linear least squares weighting matrix has wrong dimensions.");
 
-    for (int i = 0; i < N; ++i)
-    {
+    d_["ny"][stage] = ny;
 
-        d_["ny"][i] = ny;
+    ocp_nlp_cost_nls_config_initialize_default(config_->cost[stage]);
 
-        ocp_nlp_cost_nls_config_initialize_default(config_->cost[i]);
+    int dims_size = ocp_nlp_cost_nls_dims_calculate_size(config_->cost[stage]);
+    void *raw_memory = malloc(dims_size);
+    dims_->cost[stage] = ocp_nlp_cost_nls_dims_assign(config_->cost[stage], raw_memory);
+    ocp_nlp_cost_nls_dims_initialize(config_->cost[stage], dims_->cost[stage],
+                                     d_["nx"][stage], d_["nu"][stage], d_["ny"][stage],
+                                     d_["ns"][stage]);
 
-        int dims_size = ocp_nlp_cost_nls_dims_calculate_size(config_->cost[i]);
-        void *raw_memory = malloc(dims_size);
-        dims_->cost[i] = ocp_nlp_cost_nls_dims_assign(config_->cost[i], raw_memory);
-        ocp_nlp_cost_nls_dims_initialize(config_->cost[i], dims_->cost[i],
-                                              d_["nx"][i], d_["nu"][i], d_["ny"][i], d_["ns"][i]);
-
-        int model_size =
-            ocp_nlp_cost_nls_model_calculate_size(config_->cost[i], dims_->cost[i]);
-        raw_memory = malloc(model_size);
-        nlp_->cost[i] = ocp_nlp_cost_nls_model_assign(config_->cost[i], dims_->cost[i], raw_memory);
-    }
+    int model_size = ocp_nlp_cost_nls_model_calculate_size(config_->cost[stage],
+                                                           dims_->cost[stage]);
+    raw_memory = malloc(model_size);
+    nlp_->cost[stage] = ocp_nlp_cost_nls_model_assign(config_->cost[stage], dims_->cost[stage],
+                                                      raw_memory);
 
     auto residual_functions = create_nls_residual(r);
 
@@ -326,13 +343,15 @@ void ocp_nlp::set_stage_cost(const casadi::Function& r, vector<double> y_ref,
 
     external_function_casadi_create(&nls_residual_);
 
-    for (int stage = 0; stage < N; ++stage) {
-        ocp_nlp_cost_nls_model *model = (ocp_nlp_cost_nls_model *) nlp_->cost[stage];
-        model->nls_jac = (external_function_generic *) &nls_residual_;
-        blasfeo_pack_dmat(ny, ny, W.data(), ny, &model->W, 0, 0);
-        blasfeo_pack_dvec(ny, y_ref.data(), &model->y_ref, 0);
-    }
+    ocp_nlp_cost_nls_model *model = (ocp_nlp_cost_nls_model *) nlp_->cost[stage];
+    model->nls_jac = (external_function_generic *) &nls_residual_;
+    blasfeo_pack_dmat(ny, ny, W.data(), ny, &model->W, 0, 0);
+    blasfeo_pack_dvec(ny, y_ref.data(), &model->y_ref, 0);
+}
 
+void ocp_nlp::set_terminal_cost(const casadi::Function& r, vector<double> y_ref, vector<double> W)
+{
+    set_stage_cost(N, r, y_ref, W);
 }
 
 void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, option_t *> options)
@@ -396,11 +415,16 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
 
 void generate_casadi_function(map<string, casadi::Function> functions)
 {
+    create_directory(tmp_dir);
+
     for (auto& elem : functions)
     {
-        elem.second.generate(
-            elem.first + ".c",
-            {{"with_header", true}, {"with_export", false}, {"casadi_int", "int"}});
+        auto generator = casadi::CodeGenerator(elem.first + ".c", {
+                                                                  {"with_header", true},
+                                                                  {"with_export", false},
+                                                                  {"casadi_int", "int"}});
+        generator.add(elem.second);
+        generator.generate(string(tmp_dir) + "/");
     }
 }
 
@@ -460,11 +484,12 @@ void *compile_and_load(std::string name)
     std::string compiler{"cc"};
 #endif
     void *handle;
-    std::string library_name = name + std::to_string(global_library_counter++) + std::string(".so");
-    std::string path_to_library = std::string("./") + library_name;
+    std::string library_name = name + dynamic_library_suffix;
+    std::string path_to_library = "./" + string(tmp_dir) + "/" + library_name;
+    std::string path_to_file = "./" + string(tmp_dir) + "/" + name;
     char command[MAX_STR_LEN];
     snprintf(command, sizeof(command), "%s -fPIC -shared -g %s.c -o %s", compiler.c_str(),
-             name.c_str(), library_name.c_str());
+             path_to_file.c_str(), path_to_library.c_str());
     int compilation_failed = system(command);
     if (compilation_failed)
         throw std::runtime_error("Something went wrong when compiling the model.");
