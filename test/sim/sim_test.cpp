@@ -23,9 +23,6 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define nx 3
-#define nu 4
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -91,8 +88,8 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     int ii;
     int jj;
 
-    // const int nx = 3;
-    // const int nu = 4;
+    const int nx = 3;
+    const int nu = 4;
     int NF = nx + nu;  // columns of forward seed
 
     int nsim0 = 1;  // nsim;
