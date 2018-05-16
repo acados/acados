@@ -90,7 +90,7 @@ void casadi_module::generate(std::string output_folder)
 
     create_directory(output_folder);
 
-    auto generator = casadi::CodeGenerator(function_.name() + ".c", options);
+    auto generator = casadi::CodeGenerator(function_.name() + std::string(".c"), options);
     generator.add(function_);
     generator.generate(output_folder + "/");
 }
