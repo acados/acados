@@ -430,7 +430,7 @@ bool is_boolean(LangObject *input) {
 
 bool boolean_from(LangObject *input) {
 #if defined(SWIGMATLAB)
-    return mxIsLogicalScalarTrue(input)
+    return mxIsLogicalScalarTrue(input);
 #elif defined(SWIGPYTHON)
     return PyObject_IsTrue(input);
 #endif
