@@ -62,6 +62,8 @@ int main()
     int nx = 6;
     int nu = 2;
 	int np = 1;
+	
+	int nsim = 1000;
 
     int NF = nx + nu; // columns of forward seed
 

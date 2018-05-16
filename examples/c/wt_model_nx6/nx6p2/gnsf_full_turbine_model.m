@@ -79,7 +79,7 @@ else
 	% old casadi versions
     printf('you dont have casadi 3.4.0; please download & install it!');
 end
-casadi_export_prefix = 'casadi_';
+model_name_prefix = 'wt_nx6p2_';
 
 A = zeros(nx1);
 A(1,4) = p_14/(p_10+p_11);
@@ -127,12 +127,12 @@ uhat_check = L_u * u;
 jac_phi_y = jacobian(phi,y);
 jac_phi_uhat = jacobian(phi,uhat);
 
-phi_fun = Function([casadi_export_prefix,'phi_fun'], {y,uhat,p}, {phi});
+phi_fun = Function([model_name_prefix,'phi_fun'], {y,uhat,p}, {phi});
 
-phi_fun_jac_y = Function([casadi_export_prefix,'phi_fun_jac_y'], {y,uhat,p}, {phi, jac_phi_y});
-phi_jac_y_uhat = Function([casadi_export_prefix,'phi_jac_y_uhat'], {y,uhat,p}, {jac_phi_y, jac_phi_uhat});
+phi_fun_jac_y = Function([model_name_prefix,'phi_fun_jac_y'], {y,uhat,p}, {phi, jac_phi_y});
+phi_jac_y_uhat = Function([model_name_prefix,'phi_jac_y_uhat'], {y,uhat,p}, {jac_phi_y, jac_phi_uhat});
 
-phi_jac_y = Function([casadi_export_prefix,'phi_jac_y_uhat'], {y,uhat,p}, {jac_phi_y});
+phi_jac_y = Function([model_name_prefix,'phi_jac_y_uhat'], {y,uhat,p}, {jac_phi_y});
 
 % Linear output
 ALO = zeros(nx2);
@@ -148,7 +148,7 @@ f_fun = Function('f_los', {x1_dot,x1,z,u}, {f});
 
 % jac_Phi_u_fun = Function('jac_Phi_u_fun', {y,u},{jac_Phi_u});
 
-f_lo_fun_jac_x1k1uz = Function([casadi_export_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1_dot, z, u}, ...
+f_lo_fun_jac_x1k1uz = Function([model_name_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1_dot, z, u}, ...
     {f, [jac_f_x1, jac_f_k1, jac_f_z, jac_f_u]});
 
 % struct for matlab prototype
@@ -168,14 +168,14 @@ dummy = SX.sym('dummy');
 
 model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)])) + ...
     [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)];
-get_matrices_fun = Function([casadi_export_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
-get_matrices_fun.generate('get_matrices_fun', casadi_opts);
+get_matrices_fun = Function([model_name_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
+get_matrices_fun.generate([model_name_prefix,'get_matrices_fun'], casadi_opts);
 
 % generate Phi, f_LO
-f_lo_fun_jac_x1k1uz.generate(['f_lo_fun_jac_x1k1uz'], casadi_opts);
-phi_fun.generate('phi_fun', casadi_opts);
-phi_fun_jac_y.generate(['phi_fun_jac_y'], casadi_opts);
-phi_jac_y_uhat.generate(['phi_jac_y_uhat'], casadi_opts);
+f_lo_fun_jac_x1k1uz.generate([model_name_prefix,'f_lo_fun_jac_x1k1uz'], casadi_opts);
+phi_fun.generate([model_name_prefix,'phi_fun'], casadi_opts);
+phi_fun_jac_y.generate([model_name_prefix,'phi_fun_jac_y'], casadi_opts);
+phi_jac_y_uhat.generate([model_name_prefix,'phi_jac_y_uhat'], casadi_opts);
 
 %% check if equivalent:
 x_ = [ 1.298203064731849;

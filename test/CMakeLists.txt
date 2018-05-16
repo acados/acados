@@ -114,17 +114,17 @@ set(TEST_OCP_NLP_SRC
     ### WIND TURBINE EXAMPLE ###
     ############################
 
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/expl_ode_fun.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/expl_vde_for.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/impl_ode_fun.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/phi_fun.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/phi_fun_jac_y.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/phi_jac_y_uhat.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/get_matrices_fun.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_expl_ode_fun.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_expl_vde_for.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_jac_x_xdot_u.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot_u.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_phi_fun.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_phi_fun_jac_y.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_phi_jac_y_uhat.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_f_lo_fun_jac_x1k1uz.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_get_matrices_fun.c
 
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/test_chain.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/test_wind_turbine.cpp
