@@ -90,9 +90,15 @@ void casadi_module::generate(std::string output_folder)
 
     create_directory(output_folder);
 
-    auto generator = casadi::CodeGenerator(function_.name() + std::string(".c"), options);
-    generator.add(function_);
-    generator.generate(output_folder + "/");
+    // Hacky workaround because of bug in gcc-4.9
+
+    auto command = "cd " + output_folder;
+    system(command.c_str());
+
+    function_.generate(options);
+
+    command = "cd ..";
+    system(command.c_str());
 }
 
 }  // namespace acados
