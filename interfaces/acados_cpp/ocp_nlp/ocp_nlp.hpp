@@ -11,9 +11,8 @@
 
 #include "acados_cpp/ocp.hpp"
 #include "acados_cpp/ocp_nlp/ocp_nlp_solution.hpp"
+#include "acados_cpp/ocp_nlp/casadi_module.hpp"
 #include "acados_cpp/options.hpp"
-
-#include "casadi/casadi.hpp"
 
 namespace acados
 {
@@ -92,15 +91,9 @@ class ocp_nlp : private ocp
 
     std::unique_ptr<ocp_nlp_solver> solver_;
 
-    std::map<std::string, void *> dynamics_handle_;
-
-    std::map<std::string, void *> residuals_handle_;
-
-    external_function_casadi forw_vde_;
-
-    external_function_casadi nls_residual_;
-
     std::unique_ptr<void, void (*)(void *)> solver_options_{nullptr, &std::free};
+
+    std::map<std::string, casadi_module> module_;
 
     std::map<std::string, std::vector<int>> d_;
 
@@ -108,13 +101,6 @@ class ocp_nlp : private ocp
 
     bool needs_initializing_;
 };
-
-std::map<std::string, casadi::Function> create_explicit_ode_functions(
-    const casadi::Function& model);
-
-std::map<std::string, casadi::Function> create_nls_residual(const casadi::Function& r);
-
-void generate_casadi_function(std::map<std::string, casadi::Function> functions);
 
 }  // namespace acados
 

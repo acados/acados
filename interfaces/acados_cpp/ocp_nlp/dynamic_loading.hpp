@@ -6,9 +6,7 @@
 
 namespace acados {
 
-#define TMP_DIR "_casadi_gen"
-
-void *compile_and_load_library(std::string source_name);
+void *compile_and_load_library(std::string output_folder, std::string source_name);
 
 void *load_function(std::string function_name, void *handle);
 

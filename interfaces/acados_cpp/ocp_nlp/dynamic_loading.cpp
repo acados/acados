@@ -2,6 +2,7 @@
 #include "acados_cpp/ocp_nlp/dynamic_loading.hpp"
 
 #include <cstdlib>
+#include <stdexcept>
 
 #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
 #include <windows.h>
@@ -13,7 +14,7 @@ namespace acados {
 
 using std::string;
 
-void *compile_and_load_library(string source_name)
+void *compile_and_load_library(string output_folder, string source_name)
 {
 #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
     std::string dynamic_library_suffix {".dll"};
@@ -24,8 +25,8 @@ void *compile_and_load_library(string source_name)
 #endif
     void *handle;
     std::string library_name = source_name + dynamic_library_suffix;
-    std::string path_to_library = "./" + string(TMP_DIR) + "/" + library_name;
-    std::string path_to_file = "./" + string(TMP_DIR) + "/" + source_name;
+    std::string path_to_library = "./" + output_folder + "/" + library_name;
+    std::string path_to_file = "./" + output_folder + "/" + source_name;
     char command[256];
     snprintf(command, sizeof(command), "%s -fPIC -shared -g %s.c -o %s", compiler.c_str(),
              path_to_file.c_str(), path_to_library.c_str());
