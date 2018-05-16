@@ -2,9 +2,11 @@
 #include "acados_cpp/ocp_nlp/casadi_module.hpp"
 
 #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
+#include <direct.h>
 #include <windows.h>
 #else
 #include <dlfcn.h>
+#include <unistd.h>
 #endif
 
 #include <utility>
@@ -92,13 +94,11 @@ void casadi_module::generate(std::string output_folder)
 
     // Hacky workaround because of bug in gcc-4.9
 
-    auto command = "cd " + output_folder;
-    system(command.c_str());
+    chdir(output_folder.c_str());
 
     function_.generate(options);
 
-    command = "cd ..";
-    system(command.c_str());
+    chdir("..");
 }
 
 }  // namespace acados
