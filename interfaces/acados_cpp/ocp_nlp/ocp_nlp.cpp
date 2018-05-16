@@ -105,6 +105,7 @@ ocp_nlp::ocp_nlp(int N, int nx, int nu, int ng, int nh, int ns)
     : ocp_nlp(std::vector<int>(N + 1, nx), std::vector<int>(N + 1, nu), std::vector<int>(N + 1, ng),
               std::vector<int>(N + 1, nh), std::vector<int>(N + 1, ns))
 {
+    // Delegating constructor
 }
 
 void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, option_t *> options)
@@ -180,24 +181,6 @@ void ocp_nlp::set_field(string field, int stage, vector<double> v)
     {
         throw std::invalid_argument("OCP NLP does not contain field '" + field + "'.");
     }
-}
-
-static bool is_valid_model(const casadi::Function &model)
-{
-    if (model.n_in() != 2)
-        throw std::invalid_argument("An ODE model should have 2 inputs: states and controls.");
-    if (model.n_out() != 1)
-        throw std::runtime_error("An ODE model should have 1 output: the right hand side");
-
-    casadi::SX x = model.sx_in(0);
-    casadi::SX u = model.sx_in(1);
-    int_t nx = x.size1();
-    std::vector<casadi::SX> input{x, u};
-
-    casadi::SX rhs = casadi::SX::vertcat(model(input));
-    if (rhs.size1() != nx)
-        throw std::runtime_error("Length of right hand size should equal number of states");
-    return true;
 }
 
 static bool is_valid_nls_residual(const casadi::Function &r)
@@ -309,6 +292,24 @@ void ocp_nlp::set_stage_cost(int stage, const casadi::Function& residual, vector
 void ocp_nlp::set_terminal_cost(const casadi::Function& r, vector<double> y_ref, vector<double> W)
 {
     set_stage_cost(N, r, y_ref, W);
+}
+
+static bool is_valid_model(const casadi::Function &model)
+{
+    if (model.n_in() != 2)
+        throw std::invalid_argument("An ODE model should have 2 inputs: states and controls.");
+    if (model.n_out() != 1)
+        throw std::runtime_error("An ODE model should have 1 output: the right hand side");
+
+    casadi::SX x = model.sx_in(0);
+    casadi::SX u = model.sx_in(1);
+    int_t nx = x.size1();
+    std::vector<casadi::SX> input{x, u};
+
+    casadi::SX rhs = casadi::SX::vertcat(model(input));
+    if (rhs.size1() != nx)
+        throw std::runtime_error("Length of right hand size should equal number of states");
+    return true;
 }
 
 void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, option_t *> options)

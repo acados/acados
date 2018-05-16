@@ -39,20 +39,25 @@ class ocp_nlp : private ocp
 
     void set_dynamics(const casadi::Function &f, std::map<std::string, option_t *> options = {});
 
-    // void set_stage_constraint(const casadi::Function& h);
-    // void set_terminal_constraint(const casadi::Function& h_N);
+    // Affine path constraints
+    // void set_stage_constraint(std::vector<double> C, std::vector<double> D);
+    // void set_stage_constraint(int stage, std::vector<double> C, std::vector<double> D);
+    // void set_terminal_constraint(std::vector<double> C, std::vector<double> D);
 
-    // void set_stage_cost(const casadi::Function& l);
+    // void set_stage_constraint(int stage, const casadi::Function& h);
+    // void set_terminal_constraint(const casadi::Function& h);
+
+    // Linear least squares cost
     void set_stage_cost(std::vector<double> C, std::vector<double> y_ref, std::vector<double> W);
     void set_stage_cost(int stage, std::vector<double> C, std::vector<double> y_ref,
                         std::vector<double> W);
-    void set_stage_cost(int stage, const casadi::Function& r, std::vector<double> y_ref,
-                        std::vector<double> W);
+    void set_terminal_cost(std::vector<double> C, std::vector<double> y_ref, std::vector<double> W);
+
+    // Nonlinear least squares cost
     void set_stage_cost(const casadi::Function& r, std::vector<double> y_ref,
                         std::vector<double> W);
-
-    // void set_terminal_cost(const casadi::Function& l_N);
-    void set_terminal_cost(std::vector<double> C, std::vector<double> y_ref, std::vector<double> W);
+    void set_stage_cost(int stage, const casadi::Function& r, std::vector<double> y_ref,
+                        std::vector<double> W);
     void set_terminal_cost(const casadi::Function& r, std::vector<double> y_ref,
                            std::vector<double> W);
 
