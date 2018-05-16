@@ -171,9 +171,9 @@ target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
 add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
 
 # -------------------- wind turbine nmpc
-# add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6P2_SRC})
-# target_link_libraries(wind_turbine_nmpc_example acados)
-# add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
+add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6P2_SRC})
+target_link_libraries(wind_turbine_nmpc_example acados)
+add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
 
 # -------------------- sim_wt_nx6
 add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
