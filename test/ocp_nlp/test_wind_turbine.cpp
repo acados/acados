@@ -153,7 +153,8 @@ static void select_dynamics_wt_casadi(int N,
         impl_ode_jac_x_xdot_u[ii].casadi_fun = &wt_nx6p2_impl_ode_jac_x_xdot_u;
         impl_ode_jac_x_xdot_u[ii].casadi_work = &wt_nx6p2_impl_ode_jac_x_xdot_u_work;
         impl_ode_jac_x_xdot_u[ii].casadi_sparsity_in = &wt_nx6p2_impl_ode_jac_x_xdot_u_sparsity_in;
-        impl_ode_jac_x_xdot_u[ii].casadi_sparsity_out = &wt_nx6p2_impl_ode_jac_x_xdot_u_sparsity_out;
+        impl_ode_jac_x_xdot_u[ii].casadi_sparsity_out =
+            &wt_nx6p2_impl_ode_jac_x_xdot_u_sparsity_out;
         impl_ode_jac_x_xdot_u[ii].casadi_n_in = &wt_nx6p2_impl_ode_jac_x_xdot_u_n_in;
         impl_ode_jac_x_xdot_u[ii].casadi_n_out = &wt_nx6p2_impl_ode_jac_x_xdot_u_n_out;
 
