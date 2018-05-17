@@ -298,6 +298,7 @@ int main()
 			case 2:
 				// lifted IRK
 				opts->ns = 2; // number of stages in rk integrator
+				opts->sens_adj = false; // not stable
 				break;
 
 			case 3:
@@ -322,6 +323,7 @@ int main()
 			case 4:
 				// new lifted IRK
 				opts->ns = 2; // number of stages in rk integrator
+				opts->sens_adj = false; // not implemented yet
 				break;
 
 			default :
