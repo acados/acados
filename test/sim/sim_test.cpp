@@ -375,11 +375,16 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 void *opts_ = sim_opts_create(config, dims);
                 sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
-                opts->sens_forw = true;
                 if ((plan.sim_solver != NEW_LIFTED_IRK) && (plan.sim_solver != ERK))
                     opts->sens_adj = true;
                 else
                     opts->sens_adj = false;
+
+                if (plan.sim_solver != ERK)
+                    opts->sens_forw = true;
+                else
+                    opts->sens_forw = false;
+
 
 
                 sim_gnsf_dims *gnsf_dim;
