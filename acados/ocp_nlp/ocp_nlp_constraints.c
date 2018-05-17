@@ -43,6 +43,8 @@ int ocp_nlp_constraints_config_calculate_size()
     return size;
 }
 
+
+
 ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
@@ -52,6 +54,8 @@ ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory)
 
     return config;
 }
+
+
 
 /************************************************
  * dims

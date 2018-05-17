@@ -815,15 +815,15 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
         ocp_nlp_res_compute(dims, nlp_in, nlp_out, mem->nlp_res, mem->nlp_mem);
 
         nlp_out->inf_norm_res = mem->nlp_res->inf_norm_res_g;
-        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_b > nlp_out->inf_norm_res)
-                                    ? mem->nlp_res->inf_norm_res_b
-                                    : nlp_out->inf_norm_res;
-        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_d > nlp_out->inf_norm_res)
-                                    ? mem->nlp_res->inf_norm_res_d
-                                    : nlp_out->inf_norm_res;
-        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_m > nlp_out->inf_norm_res)
-                                    ? mem->nlp_res->inf_norm_res_m
-                                    : nlp_out->inf_norm_res;
+        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_b > nlp_out->inf_norm_res) ?
+                                    mem->nlp_res->inf_norm_res_b :
+                                    nlp_out->inf_norm_res;
+        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_d > nlp_out->inf_norm_res) ?
+                                    mem->nlp_res->inf_norm_res_d :
+                                    nlp_out->inf_norm_res;
+        nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_m > nlp_out->inf_norm_res) ?
+                                    mem->nlp_res->inf_norm_res_m :
+                                    nlp_out->inf_norm_res;
 
         // exit conditions on residuals
         if ((mem->nlp_res->inf_norm_res_g < opts->min_res_g) &

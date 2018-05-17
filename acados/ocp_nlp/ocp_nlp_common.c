@@ -170,8 +170,7 @@ int ocp_nlp_dims_calculate_size(void *config_)
         size += config->dynamics[ii]->dims_calculate_size(config->dynamics[ii]);
 
     // cost
-    for (ii = 0; ii <= N; ii++)
-        size += config->cost[ii]->dims_calculate_size(config->cost[ii]);
+    for (ii = 0; ii <= N; ii++) size += config->cost[ii]->dims_calculate_size(config->cost[ii]);
 
     // constraints
     for (ii = 0; ii <= N; ii++)
