@@ -273,9 +273,10 @@ int main()
 		sim_rk_opts *opts = sim_opts_create(config, dims);
 
 		// opts->ns = 4; // number of stages in rk integrator
-// 	opts->num_steps = 5; // number of integration steps
+		// opts->num_steps = 3; // number of integration steps
+
 		opts->sens_forw = true;
-		opts->sens_adj = false;
+		opts->sens_adj = true;
 
 		sim_gnsf_dims *gnsf_dim;
 
@@ -416,6 +417,9 @@ int main()
 		double la_time = 0.0;
 		double ad_time = 0.0;
 
+		printf("\n---> testing integrator %d (num_steps = %d, num_stages = %d, jac_reuse = %d, newton_iter = %d )\n",
+					nss, opts->num_steps, opts->ns, opts->jac_reuse, opts->newton_iter);
+
 // 	for (ii=0; ii<nsim; ii++)
 		for (ii=0; ii<nsim0; ii++)
 		{
@@ -531,7 +535,7 @@ int main()
 #endif
 
 // 	printf("time split: %f ms CPU, %f ms LA, %f ms AD\n\n", cpu_time, la_time, ad_time);
-		printf("time for %d simulation steps: %f ms (AD time: %f ms (%5.2f%%))\n\n", nsim, 1e3*total_cpu_time, 1e3*ad_time, 1e2*ad_time/cpu_time);
+		printf("time for %d simulation steps: %f ms (AD time: %f ms (%5.2f%%))\n\n", nsim0, 1e3*total_cpu_time, 1e3*ad_time, 1e2*ad_time/cpu_time);
 
 		free(sim_solver);
 		free(in);
