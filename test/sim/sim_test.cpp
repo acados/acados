@@ -27,8 +27,6 @@
 #include <string>
 #include <vector>
 
-#include <fenv.h>
-
 #include "test/test_utils/eigen.h"
 #include "catch/include/catch.hpp"
 
@@ -387,7 +385,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
 
                 sim_gnsf_dims *gnsf_dim;
-                
+
                 opts->jac_reuse = true;  // jacobian reuse
                 opts->newton_iter = 1;  // number of newton iterations per integration step
                 opts->num_steps = num_steps;  // number of steps
@@ -592,7 +590,8 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 REQUIRE(max_error_forw <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
-                if ((plan.sim_solver != NEW_LIFTED_IRK) && (plan.sim_solver != LIFTED_IRK) && (plan.sim_solver != ERK))
+                if ((plan.sim_solver != NEW_LIFTED_IRK) && (plan.sim_solver != LIFTED_IRK)
+                                                        && (plan.sim_solver != ERK))
                     REQUIRE(max_error_adj <= tol);
 
                 free(sim_solver);
