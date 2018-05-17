@@ -46,6 +46,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
@@ -1272,7 +1273,7 @@ int main() {
 	// constraitns
     for (int ii = 0; ii <= NN; ii++)
     {
-		ocp_nlp_constraints_config_initialize_default(config->constraints[ii]);
+		ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii]);
     }
 
     /************************************************
@@ -1716,7 +1717,7 @@ int main() {
 
     /* box constraints */
 
-	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
 	// idxb0
     // int idxb0[nb[0]];
@@ -1792,7 +1793,7 @@ int main() {
 	for (int ii=0; ii<ng[0]; ii++)
 		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
 
-    ocp_nlp_constraints_model **nl_constr = (ocp_nlp_constraints_model **) nlp_in->constraints;
+    ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 	nl_constr[0]->h = &nonlin_constr_generic;
 
 	blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);
