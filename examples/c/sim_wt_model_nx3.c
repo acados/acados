@@ -286,6 +286,8 @@ int main()
 			case 0:
 				// ERK
 				opts->ns = 4; // number of stages in rk integrator
+				opts->sens_adj = true;
+
 				break;
 
 			case 1:

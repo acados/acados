@@ -82,8 +82,6 @@ double sim_solver_tolerance(std::string const& inString)
 
 TEST_CASE("wt_nx3_example", "[integrators]")
 {
-    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
-
     vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
     int ii;
