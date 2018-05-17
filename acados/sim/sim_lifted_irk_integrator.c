@@ -1588,7 +1588,8 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
             blasfeo_dtrsm_lunn(dim_sys, 1 + NF, 1.0, str_mat, 0, 0, str_sol, 0, 0, str_sol, 0,
                                0);                                                  // U backsolve
             blasfeo_unpack_dmat(dim_sys, 1 + NF, str_sol, 0, 0, sys_sol, dim_sys);  // strmat2mat
-                                                                                    // BLASFEO: row transformations + backsolve
+
+            // BLASFEO: row transformations + backsolve
 #else   // LA_BLAS | LA_REFERENCE
             // ---- BLASFEO: row transformations + backsolve ----
             blasfeo_drowpe(dim_sys, ipiv, str_sol);  // row permutations
