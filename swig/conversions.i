@@ -97,6 +97,10 @@ bool is_integer(const LangObject *input) {
 #if defined(SWIGMATLAB)
     if (!mxIsScalar(input) || !mxIsNumeric(input))
         return false;
+    double input_as_double = mxGetScalar(input);
+    int input_as_int = mxGetScalar(input);
+    if ((double) input_as_int != input_as_double)
+        return false;
     return true;
 #elif defined(SWIGPYTHON)
     if (!PyLong_Check((PyObject *) input))
