@@ -334,14 +334,13 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     for (jj = 0; jj < nx*NF; jj++)
         S_adj_ref_sol[jj] = out->S_adj[jj];
 
-    free(sim_solver);
-    free(in);
-    free(out);
-
-    free(opts);
     free(config);
     free(dims);
+    free(opts);
 
+    free(in);
+    free(out);
+    free(sim_solver);
 
     for (std::string solver : solvers)
     {
@@ -590,7 +589,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
 
                 REQUIRE(max_error <= tol);
-                if (plan.sim_solver != IRK)
+                if (plan.sim_solver != IRK)// && (plan.sim_solver != ERK))
                     REQUIRE(max_error_forw <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
@@ -598,32 +597,33 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                                                         && (plan.sim_solver != ERK))
                     REQUIRE(max_error_adj <= tol);
 
-                free(sim_solver);
-                free(in);
-                free(out);
 
-                free(opts);
                 free(config);
                 free(dims);
+                free(opts);
+
+                free(in);
+                free(out);
+                free(sim_solver);
             }  // end for num_steps
         }  // end section
     }  // END FOR SOLVERS
 
     // explicit model
     external_function_casadi_free(&expl_ode_fun);
+    external_function_casadi_free(&expl_ode_jac);
     external_function_casadi_free(&expl_vde_for);
     external_function_casadi_free(&expl_vde_adj);
-    external_function_casadi_free(&expl_ode_jac);
     // implicit model
     external_function_casadi_free(&impl_ode_fun);
     external_function_casadi_free(&impl_ode_fun_jac_x_xdot);
-    external_function_casadi_free(&impl_ode_jac_x_xdot_u);
     external_function_casadi_free(&impl_ode_fun_jac_x_xdot_u);
+    external_function_casadi_free(&impl_ode_jac_x_xdot_u);
     // gnsf functions:
-    external_function_casadi_free(&f_lo_fun_jac_x1k1uz);
     external_function_casadi_free(&phi_fun);
     external_function_casadi_free(&phi_fun_jac_y);
     external_function_casadi_free(&phi_jac_y_uhat);
+    external_function_casadi_free(&f_lo_fun_jac_x1k1uz);
     external_function_casadi_free(&get_matrices_fun);
 
 }  // END_TEST_CASE
