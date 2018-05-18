@@ -10,6 +10,7 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
+#include "acados_cpp/code_generator.hpp"
 #include "acados_cpp/ocp_bounds.hpp"
 #include "acados_cpp/ocp_dimensions.hpp"
 #include "acados_cpp/utils.hpp"
@@ -92,6 +93,8 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
     raw_memory = malloc(qp_dims_size);
     dims_->qp_solver = ocp_qp_dims_assign(N, raw_memory);
 
+    plan_ = ocp_nlp_plan_create(N);
+
     for (int stage = 0; stage <= N; ++stage)
     {
         cached_bounds["lbx"].push_back(vector<double>(nx[stage], -INFINITY));
@@ -108,12 +111,39 @@ ocp_nlp::ocp_nlp(int N, int nx, int nu, int ng, int nh, int ns)
     // Delegating constructor
 }
 
+ocp_nlp::~ocp_nlp()
+{
+    for (int i = 0; i < N; ++i)
+    {
+        free(dims_->constraints[i]);
+        free(dims_->cost[i]);
+        free(dims_->dynamics[i]);
+
+        free(nlp_->constraints[i]);
+        free(nlp_->cost[i]);
+        free(nlp_->dynamics[i]);
+
+        free(config_->dynamics[i]->sim_solver);
+    }
+
+    free(dims_->constraints[N]);
+    free(dims_->cost[N]);
+
+    free(nlp_->constraints[N]);
+    free(nlp_->cost[N]);
+}
+
 void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, option_t *> options)
 {
     if (solver_name == "sqp")
+    {
         ocp_nlp_sqp_config_initialize_default(config_.get());
+        plan_->nlp_solver = SQP_GN;
+    }
     else
+    {
         throw std::invalid_argument("Solver name '" + solver_name + "' not known.");
+    }
 
     string qp_solver_name;
     if (options.count("qp_solver"))
@@ -122,11 +152,19 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
         qp_solver_name = "hpipm";
 
     if (qp_solver_name == "hpipm")
+    {
         ocp_qp_xcond_solver_config_initialize_default(PARTIAL_CONDENSING_HPIPM, config_->qp_solver);
+        plan_->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+    }
     else if (qp_solver_name == "qpoases")
+    {
         ocp_qp_xcond_solver_config_initialize_default(FULL_CONDENSING_QPOASES, config_->qp_solver);
+        plan_->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+    }
     else
+    {
         throw std::invalid_argument("QP solver name '" + qp_solver_name + "' not known.");
+    }
 
     squeeze_dimensions(cached_bounds);
 
@@ -219,6 +257,8 @@ void ocp_nlp::set_stage_cost(int stage, std::vector<double> C, std::vector<doubl
     if (W.size() != ny*ny)
         throw std::invalid_argument("Linear least squares weighting matrix has wrong dimensions.");
 
+    plan_->nlp_cost[stage] = LINEAR_LS;
+
     ocp_nlp_cost_ls_config_initialize_default(config_->cost[stage]);
 
     int nx = d_["nx"][stage], nu = d_["nu"][stage];
@@ -265,6 +305,8 @@ void ocp_nlp::set_stage_cost(int stage, const casadi::Function& residual, vector
         throw std::invalid_argument("Linear least squares weighting matrix has wrong dimensions.");
 
     d_["ny"][stage] = ny;
+
+    plan_->nlp_cost[stage] = NONLINEAR_LS;
 
     ocp_nlp_cost_nls_config_initialize_default(config_->cost[stage]);
 
@@ -343,13 +385,18 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
         raw_memory = malloc(model_size);
         nlp_->dynamics[i] = ocp_nlp_dynamics_cont_model_assign(config_->dynamics[i],
                                                                dims_->dynamics[i], raw_memory);
+
+        plan_->nlp_dynamics[i] = CONTINUOUS_MODEL;
     }
 
     module_["expl_vde_for"] = generate_forward_vde(model);
 
+    cached_model_ = module_["expl_vde_for"].name();
+
     for (int stage = 0; stage < N; ++stage)
         nlp_set_model_in_stage(config_.get(), nlp_.get(), stage, "expl_vde_for",
                                (void *) module_["expl_vde_for"].as_external_function());
+
 };
 
 void ocp_nlp::set_bound(std::string bound, int stage, std::vector<double> new_bound)
@@ -469,26 +516,9 @@ int ocp_nlp::num_stages()
     return N;
 }
 
-ocp_nlp::~ocp_nlp()
+void ocp_nlp::generate_s_function(string file_name)
 {
-    for (int i = 0; i < N; ++i)
-    {
-        free(dims_->constraints[i]);
-        free(dims_->cost[i]);
-        free(dims_->dynamics[i]);
-
-        free(nlp_->constraints[i]);
-        free(nlp_->cost[i]);
-        free(nlp_->dynamics[i]);
-
-        free(config_->dynamics[i]->sim_solver);
-    }
-
-    free(dims_->constraints[N]);
-    free(dims_->cost[N]);
-
-    free(nlp_->constraints[N]);
-    free(nlp_->cost[N]);
+    code_generator(this).generate_s_function(file_name);
 }
 
 }  // namespace acados

@@ -2,15 +2,20 @@
 import casadi.*
 import acados.*
 
-[ode_fun, nx, nu] = chen_model();
+nx = 2;
+nu = 1;
+
+x = SX.sym('x', nx);
+u = SX.sym('u', nu);
+ode_fun = Function('ode_fun', {x, u}, {vertcat(x(2), u)});
 
 N = 15;
 
 nlp = ocp_nlp(N, nx, nu);
 nlp.set_dynamics(ode_fun, struct('integrator', 'rk4', 'step', 0.1));
 
-q = 0.5; r = 1;
-P = [16.5926, 11.5926; 11.5926, 16.5926];
+q = 1; r = 1;
+P = eye(nx);
 
 x = SX.sym('x', nx);
 u = SX.sym('u', nu);

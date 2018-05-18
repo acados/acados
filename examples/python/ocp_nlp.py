@@ -4,23 +4,23 @@ from scipy.linalg import block_diag
 
 from acados import ocp_nlp
 from casadi import SX, Function, vertcat
-from models import chen_model
 
-ode_fun, nx, nu = chen_model()
+nx, nu = 2, 1
+
+x = SX.sym('x', nx)
+u = SX.sym('u', nu)
+
+ode_fun = Function('ode_fun', [x, u], [vertcat(x[1], u)])
 
 N = 15
 
 nlp = ocp_nlp(N, nx, nu)
 nlp.set_dynamics(ode_fun, {'integrator': 'rk4', 'step': 0.1})
 
-q, r = 0.5, 1
-P = array([[16.5926, 11.5926], [11.5926, 16.5926]])
+q, r = 1, 1
+P = eye(nx)
 
-x = SX.sym('x', nx)
-u = SX.sym('u', nu)
-res = Function('r', [x, u], [vertcat(x, u)])
-
-nlp.set_stage_cost(res, zeros(nx+nu), diag([q, q, r]))
+nlp.set_stage_cost(eye(nx+nu), zeros(nx+nu), diag([q, q, r]))
 nlp.set_terminal_cost(eye(nx), zeros(nx), P)
 
 x0 = array([1, 1])

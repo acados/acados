@@ -32,6 +32,10 @@ class casadi_module {
 
     const external_function_casadi *as_external_function() const;
 
+    std::string path_to_header();
+
+    std::string name();
+
  private:
 
     void load_functions(std::string output_folder);
@@ -43,6 +47,8 @@ class casadi_module {
     external_function_casadi external_function_;
 
     std::unique_ptr<void, int (*)(void *)> handle_;
+
+    std::string generated_header_;
 
 };
 

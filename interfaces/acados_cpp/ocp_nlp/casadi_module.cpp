@@ -51,6 +51,9 @@ casadi_module& casadi_module::operator=(casadi_module&& other)
 
     other.external_function_.ptr_ext_mem = nullptr;
 
+    generated_header_ = "";
+    std::swap(generated_header_, other.generated_header_);
+
     return *this;
 }
 
@@ -96,9 +99,21 @@ void casadi_module::generate(std::string output_folder)
 
     chdir(output_folder.c_str());
 
-    function_.generate(options);
+    generated_header_ = output_folder + "/" + function_.generate(options);
+
+    generated_header_.back() = 'h';
 
     chdir("..");
+}
+
+std::string casadi_module::path_to_header()
+{
+    return generated_header_;
+}
+
+std::string casadi_module::name()
+{
+    return function_.name();
 }
 
 }  // namespace acados

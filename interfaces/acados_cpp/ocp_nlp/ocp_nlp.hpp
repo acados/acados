@@ -16,6 +16,9 @@
 
 namespace acados
 {
+
+class code_generator;
+
 class ocp_nlp : private ocp
 {
  public:
@@ -61,6 +64,8 @@ class ocp_nlp : private ocp
     void set_terminal_cost(const casadi::Function& r, std::vector<double> y_ref,
                            std::vector<double> W);
 
+    void generate_s_function(std::string filename);
+
     const int N;
 
  private:
@@ -105,6 +110,12 @@ class ocp_nlp : private ocp
     std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
 
     bool needs_initializing_;
+
+    ocp_nlp_solver_plan *plan_;
+
+    std::string cached_model_;
+
+    friend code_generator;
 };
 
 }  // namespace acados
