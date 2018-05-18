@@ -26,6 +26,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <math.h>
+
 
 #include "test/test_utils/eigen.h"
 #include "catch/include/catch.hpp"
@@ -331,8 +333,12 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     for (jj = 0; jj < nx*NF; jj++)
         S_forw_ref_sol[jj] = out->S_forw[jj];
 
-    for (jj = 0; jj < nx*NF; jj++)
+    for (jj = 0; jj < NF; jj++)
         S_adj_ref_sol[jj] = out->S_adj[jj];
+
+    printf("ref sens \n");
+    d_print_e_mat(nx, NF, &S_forw_ref_sol[0], 1);
+
 
     free(config);
     free(dims);
@@ -374,15 +380,15 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 void *opts_ = sim_opts_create(config, dims);
                 sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
-                if ((plan.sim_solver != NEW_LIFTED_IRK) && (plan.sim_solver != ERK))
+                if (plan.sim_solver != NEW_LIFTED_IRK)
                     opts->sens_adj = true;
                 else
                     opts->sens_adj = false;
 
-                if (plan.sim_solver != IRK)
-                    opts->sens_forw = true;
-                else
-                    opts->sens_forw = false;
+                // if (plan.sim_solver != IRK)
+                //     opts->sens_forw = true;
+                // else
+                //     opts->sens_forw = false;
 
 
 
@@ -550,7 +556,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 // error sim
                 for (jj = 0; jj < nx; jj++)
-                    error[jj] = abs(x_sol[jj] - x_ref_sol[jj]);
+                    error[jj] = fabs(x_sol[jj] - x_ref_sol[jj]);
 
                 max_error = 0.0;
                 for (int ii = 0; ii < nx; ii++)
@@ -558,12 +564,12 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 // error_S_forw
                 for (jj = 0; jj < nx*NF; jj++)
-                    error_S_forw[jj] = abs(S_forw_ref_sol[jj] - out->S_forw[jj]);
+                    error_S_forw[jj] = fabs(S_forw_ref_sol[jj] - out->S_forw[jj]);
 
                 max_error_forw = 0.0;
                 for (jj = 0; jj < nx*NF; jj++)
-                    max_error_forw = (error_S_forw[ii] > max_error_forw)
-                            ? error_S_forw[ii] : max_error_forw;
+                    max_error_forw = (error_S_forw[jj] > max_error_forw)
+                            ? error_S_forw[jj] : max_error_forw;
 
                 // error_S_adj
                 for (jj = 0; jj < NF; jj++)
@@ -571,8 +577,8 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 max_error_adj = 0.0;
                 for (jj = 0; jj < NF; jj++)
-                    max_error_adj = (error_S_adj[ii] > max_error_adj)
-                            ? error_S_adj[ii] : max_error_adj;
+                    max_error_adj = (error_S_adj[jj] > max_error_adj)
+                            ? error_S_adj[jj] : max_error_adj;
 
                 /************************************************
                 * printing
@@ -585,17 +591,14 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = "
                          << max_error_forw << ",\nerror_adj_sens = "
                          << max_error_adj << "\n";
-                // d_print_e_mat(nx, NF, &out->S_forw[0], 1);
+                d_print_e_mat(nx, NF, &out->S_forw[0], 1);
 
 
                 REQUIRE(max_error <= tol);
-                if ((plan.sim_solver != IRK) && (plan.sim_solver != ERK)
-                                             && (plan.sim_solver != LIFTED_IRK))
-                    REQUIRE(max_error_forw <= tol);
+                REQUIRE(max_error_forw <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
-                if ((plan.sim_solver != NEW_LIFTED_IRK) && (plan.sim_solver != LIFTED_IRK)
-                                                        && (plan.sim_solver != ERK))
+                if ((plan.sim_solver != LIFTED_IRK) && (plan.sim_solver != NEW_LIFTED_IRK))
                     REQUIRE(max_error_adj <= tol);
 
 
