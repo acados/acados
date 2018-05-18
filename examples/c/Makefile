@@ -167,17 +167,17 @@ run_sim_wt_model_nx6:
 
 
 WT_NX6P2_OBJS =
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/expl_ode_fun.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/expl_vde_for.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun_jac_y.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_jac_y_uhat.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/get_matrices_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_expl_ode_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_expl_vde_for.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot_u.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_jac_x_xdot_u.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_phi_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_phi_fun_jac_y.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_phi_jac_y_uhat.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_f_lo_fun_jac_x1k1uz.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_get_matrices_fun.o
 
 wind_turbine_nmpc: $(WT_NX6P2_OBJS) wind_turbine_nmpc.o
 	$(CCC) -o wind_turbine_nmpc.out wind_turbine_nmpc.o  $(WT_NX6P2_OBJS) $(LDFLAGS) $(LIBS)
