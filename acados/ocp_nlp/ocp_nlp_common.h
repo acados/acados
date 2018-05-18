@@ -41,7 +41,7 @@ typedef struct
     void **cost;
     void **dynamics;
     void **constraints;
-    ocp_qp_dims *qp_solver;
+    ocp_qp_dims *qp_solver;  // xcond solver instead ??
     int *nv;  // number of primal variables (states+controls+slacks)
     int *nx;  // number of states
     int *nu;  // number of inputs
