@@ -589,7 +589,8 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
 
                 REQUIRE(max_error <= tol);
-                if ((plan.sim_solver != IRK) && (plan.sim_solver != ERK))
+                if ((plan.sim_solver != IRK) && (plan.sim_solver != ERK)
+                                             && (plan.sim_solver != LIFTED_IRK))
                     REQUIRE(max_error_forw <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
