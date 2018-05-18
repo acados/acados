@@ -31,6 +31,8 @@
 // acados
 #include "acados/utils/mem.h"
 
+
+
 /************************************************
  * config
  ************************************************/
@@ -63,6 +65,8 @@ int ocp_nlp_solver_config_calculate_size(int N)
 
     return size;
 }
+
+
 
 ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory)
 {
