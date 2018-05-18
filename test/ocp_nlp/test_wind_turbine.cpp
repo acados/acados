@@ -49,6 +49,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
 #include "acados/sim/sim_gnsf.h"
 
@@ -780,7 +781,8 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
     /* constraints */
 
-    ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
+    ocp_nlp_constraints_bgh_model **constraints =
+        (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
     /* box constraints */
 

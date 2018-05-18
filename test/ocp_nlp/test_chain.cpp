@@ -46,6 +46,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
@@ -1642,7 +1643,8 @@ void setup_and_solve_nlp(int NN,
     }
 
     /* constraints */
-    ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
+    ocp_nlp_constraints_bgh_model **constraints =
+        (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
     // first stage
     switch (con_type)
