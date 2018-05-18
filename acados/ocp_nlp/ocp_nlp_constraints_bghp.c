@@ -396,8 +396,8 @@ static void ocp_nlp_constraints_bghp_cast_workspace(void *config_, void *dims_, 
     align_char_to(64, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx + nu, np, &work->jacobian_quadratic, &c_ptr);
 
-    assert((char *) work + ocp_nlp_constraints_bghp_workspace_calculate_size(config_, dims, opts_) >=
-           c_ptr);
+    assert((char *) work + ocp_nlp_constraints_bghp_workspace_calculate_size(config_, dims, opts_)
+           >= c_ptr);
 
     return;
 }

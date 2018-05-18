@@ -76,7 +76,7 @@ int main() {
 		plan->sim_solver_plan[i].sim_solver = ERK;
 	}
 	for (int i = 0; i <= N; i++)
-		plan->nlp_constraints[i] = BGH;
+		plan->nlp_constraints[i] = BGHP;
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
 

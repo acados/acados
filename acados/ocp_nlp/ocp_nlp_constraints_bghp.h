@@ -52,8 +52,8 @@ int ocp_nlp_constraints_bghp_dims_calculate_size(void *config);
 //
 void *ocp_nlp_constraints_bghp_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_constraints_bghp_dims_initialize(void *config, void *dims, int nx, int nu, int nbx, int nbu,
-                                         int ng, int nh, int nq, int ns);
+void ocp_nlp_constraints_bghp_dims_initialize(void *config, void *dims, int nx, int nu, int nbx,
+                                         int nbu, int ng, int nh, int nq, int ns);
 
 
 
@@ -108,7 +108,8 @@ typedef struct
 //
 int ocp_nlp_constraints_bghp_memory_calculate_size(void *config, void *dims, void *opts);
 //
-void *ocp_nlp_constraints_bghp_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
+void *ocp_nlp_constraints_bghp_memory_assign(void *config, void *dims, void *opts,
+    void *raw_memory);
 //
 struct blasfeo_dvec *ocp_nlp_constraints_bghp_memory_get_fun_ptr(void *memory_);
 //
@@ -139,11 +140,11 @@ int ocp_nlp_constraints_bghp_workspace_calculate_size(void *config, void *dims, 
 //
 void ocp_nlp_constraints_bghp_config_initialize_default(void *config);
 //
-void ocp_nlp_constraints_bghp_initialize(void *config, void *dims, void *model, void *opts, void *mem,
-                                    void *work);
+void ocp_nlp_constraints_bghp_initialize(void *config, void *dims, void *model, void *opts,
+                                    void *mem, void *work);
 //
-void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_,
-                                            void *memory_, void *work_);
+void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims, void *model_,
+                                            void *opts_, void *memory_, void *work_);
 
 
 

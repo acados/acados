@@ -589,6 +589,11 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             break;
     }
 
+    for (int i = 0; i <= NN; i++)
+    {
+        plan->nlp_constraints[i] = BGH;
+    }
+
     ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
 
     /************************************************
@@ -775,7 +780,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
     /* constraints */
 
-    ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+    ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
     /* box constraints */
 

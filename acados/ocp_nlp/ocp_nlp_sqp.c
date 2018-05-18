@@ -64,6 +64,8 @@
 //     return max_sim_work_size;
 // }
 
+
+
 /************************************************
  * options
  ************************************************/
@@ -108,6 +110,8 @@ int ocp_nlp_sqp_opts_calculate_size(void *config_, ocp_nlp_dims *dims)
 
     return size;
 }
+
+
 
 void *ocp_nlp_sqp_opts_assign(void *config_, ocp_nlp_dims *dims, void *raw_memory)
 {
@@ -161,6 +165,8 @@ void *ocp_nlp_sqp_opts_assign(void *config_, ocp_nlp_dims *dims, void *raw_memor
     return opts;
 }
 
+
+
 void ocp_nlp_sqp_opts_initialize_default(void *config_, ocp_nlp_dims *dims, void *opts_)
 {
     ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
@@ -205,6 +211,8 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, ocp_nlp_dims *dims, void
     return;
 }
 
+
+
 void ocp_nlp_sqp_opts_update(void *config_, ocp_nlp_dims *dims, void *opts_)
 {
     ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
@@ -241,6 +249,8 @@ void ocp_nlp_sqp_opts_update(void *config_, ocp_nlp_dims *dims, void *opts_)
 
     return;
 }
+
+
 
 /************************************************
  * memory
@@ -302,6 +312,8 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, ocp_nlp_dims *dims, void *o
 
     return size;
 }
+
+
 
 void *ocp_nlp_sqp_memory_assign(void *config_, ocp_nlp_dims *dims, void *opts_, void *raw_memory)
 {
@@ -375,6 +387,8 @@ void *ocp_nlp_sqp_memory_assign(void *config_, ocp_nlp_dims *dims, void *opts_, 
     return mem;
 }
 
+
+
 /************************************************
  * workspace
  ************************************************/
@@ -433,6 +447,8 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, ocp_nlp_dims *dims, void
 
     return size;
 }
+
+
 
 // TODO(all): introduce member "memsize" in all structures to make on-line cast cheaper (i.e. avoid
 // to calculate size on-line)
@@ -499,6 +515,8 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
     return;
 }
 
+
+
 /************************************************
  * functions
  ************************************************/
@@ -540,6 +558,8 @@ static void initialize_qp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
 
     return;
 }
+
+
 
 static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
                                          ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts,
@@ -655,6 +675,8 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
     return;
 }
 
+
+
 // update QP rhs for SQP (step prim var, abs dual var)
 // TODO(all): move in dynamics, cost, constraints modules ???
 static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
@@ -693,6 +715,8 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 
     return;
 }
+
+
 
 static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts,
                                  ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
@@ -741,6 +765,8 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
 
     return;
 }
+
+
 
 // Simple fixed-step Gauss-Newton based SQP routine
 int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
@@ -900,6 +926,8 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
     // maximum number of iterations reached
     return 1;
 }
+
+
 
 void ocp_nlp_sqp_config_initialize_default(void *config_)
 {

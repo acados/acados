@@ -58,7 +58,7 @@ void *ocp_nlp_constraints_bgh_dims_assign(void *config_, void *raw_memory)
 
 
 void ocp_nlp_constraints_bgh_dims_initialize(void *config_, void *dims_, int nx, int nu, int nbx,
-                                             int nbu, int ng, int nh, int np, int ns)
+                                             int nbu, int ng, int nh, int dummy0, int ns)
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
 
@@ -69,7 +69,6 @@ void ocp_nlp_constraints_bgh_dims_initialize(void *config_, void *dims_, int nx,
     dims->nb = nbx + nbu;
     dims->ng = ng;
     dims->nh = nh;
-    dims->np = np;
     dims->ns = ns;
 
     return;
@@ -352,17 +351,14 @@ int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_,
     int ng = dims->ng;
     int nh = dims->nh;
     int ns = dims->ns;
-    int np = dims->np;
 
     int size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgh_workspace);
 
     size += 1 * blasfeo_memsize_dvec(nb + ng + nh + ns);  // tmp_ni
-    size += np * (nx + nu) * sizeof(double);
-    size += 1 * blasfeo_memsize_dmat(nx + nu, np);
 
-    size += 2 * 64;  // blasfeo_mem align
+    size += 1 * 64;  // blasfeo_mem align
 
     return size;
 }
@@ -382,7 +378,6 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
     int ng = dims->ng;
     int nh = dims->nh;
     int ns = dims->ns;
-    int np = dims->np;
 
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_constraints_bgh_workspace);
@@ -392,9 +387,6 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
 
     // tmp_ni
     assign_and_advance_blasfeo_dvec_mem(nb + ng + nh + ns, &work->tmp_ni, &c_ptr);
-    c_ptr += np * (nx + nu) * sizeof(double);
-    align_char_to(64, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx + nu, np, &work->jacobian_quadratic, &c_ptr);
 
     assert((char *) work + ocp_nlp_constraints_bgh_workspace_calculate_size(config_, dims, opts_) >=
            c_ptr);
@@ -460,7 +452,6 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
     int ng = dims->ng;
     int nh = dims->nh;
     int ns = dims->ns;
-    int np = dims->np;
 
     // XXX large enough ?
     ext_fun_arg_t ext_fun_type_in[2];
@@ -497,37 +488,6 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         ext_fun_out[1] = &Jht_args;  // jac': (nu+nx) * nh
 
         model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-    }
-
-    if (np > 0)
-    {
-        if (nh != 1)
-        {
-            printf("Not implemented");
-            exit(1);
-        }
-        //
-        ext_fun_type_in[0] = BLASFEO_DVEC;
-        ext_fun_in[0] = memory->ux;  // ux: nu+nx
-
-        //
-        ext_fun_type_out[0] = IGNORE;
-        //
-        ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
-        struct blasfeo_dmat_args Jp_args;
-        Jp_args.A = &work->jacobian_quadratic;
-        Jp_args.ai = 0;
-        Jp_args.aj = 0;
-        ext_fun_out[1] = &Jp_args;  // jac': (nu+nx) * np
-        model->p->evaluate(model->p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-
-        // SCQP Hessian
-        double lam = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh) -
-                     blasfeo_dvecex1(memory->lam, nb + ng);
-
-        blasfeo_dsyrk_ln(nx + nu, np, 2 * lam, &work->jacobian_quadratic, 0, 0,
-                         &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq,
-                         0, 0);
     }
 
     blasfeo_daxpy(nb + ng + nh, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);

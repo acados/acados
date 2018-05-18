@@ -1355,6 +1355,11 @@ void setup_and_solve_nlp(int NN,
         }
     }
 
+    for (int i = 0; i <= NN; i++)
+    {
+        plan->nlp_constraints[i] = BGH;
+    }
+
     if (NMF > 3 && model_type != CONTINUOUS_MODEL)
         return;
 
@@ -1637,7 +1642,7 @@ void setup_and_solve_nlp(int NN,
     }
 
     /* constraints */
-    ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+    ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
     // first stage
     switch (con_type)
@@ -1670,7 +1675,7 @@ void setup_and_solve_nlp(int NN,
             for (int ii = 0; ii < ng[0]; ii++)
                 BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
 
-            ocp_nlp_constraints_model **nl_constr = (ocp_nlp_constraints_model **)
+            ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **)
                                                     nlp_in->constraints;
             nl_constr[0]->h = &nonlin_constr_generic;
 

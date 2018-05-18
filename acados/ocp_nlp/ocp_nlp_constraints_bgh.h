@@ -43,7 +43,6 @@ typedef struct
     int nbu;
     int ng;  // number of general linear constraints
     int nh;  // number of nonlinear path constraints
-    int np;  // dimension of nonlinear function in quadratic_over_nonlinear constraint
     int ns;  // number of soft constraints
 } ocp_nlp_constraints_bgh_dims;
 
@@ -52,8 +51,8 @@ int ocp_nlp_constraints_bgh_dims_calculate_size(void *config);
 //
 void *ocp_nlp_constraints_bgh_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_constraints_bgh_dims_initialize(void *config, void *dims, int nx, int nu, int nbx, int nbu,
-                                         int ng, int nh, int nq, int ns);
+void ocp_nlp_constraints_bgh_dims_initialize(void *config, void *dims, int nx, int nu, int nbx,
+                                         int nbu, int ng, int nh, int dummy0, int ns);
 
 
 
@@ -67,7 +66,6 @@ typedef struct
     struct blasfeo_dvec d;
     struct blasfeo_dmat DCt;
     external_function_generic *h;
-    external_function_generic *p;
 } ocp_nlp_constraints_bgh_model;
 
 //
@@ -128,7 +126,6 @@ void ocp_nlp_constraints_bgh_memory_set_idxs_ptr(int *idxs, void *memory_);
 typedef struct
 {
     struct blasfeo_dvec tmp_ni;
-    struct blasfeo_dmat jacobian_quadratic;
 } ocp_nlp_constraints_bgh_workspace;
 
 //
@@ -139,11 +136,11 @@ int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config, void *dims, v
 //
 void ocp_nlp_constraints_bgh_config_initialize_default(void *config);
 //
-void ocp_nlp_constraints_bgh_initialize(void *config, void *dims, void *model, void *opts, void *mem,
-                                    void *work);
+void ocp_nlp_constraints_bgh_initialize(void *config, void *dims, void *model, void *opts,
+                                    void *mem, void *work);
 //
-void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_,
-                                            void *memory_, void *work_);
+void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims, void *model_,
+                                            void *opts_, void *memory_, void *work_);
 
 
 

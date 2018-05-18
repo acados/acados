@@ -32,32 +32,32 @@ extern "C" {
 
 typedef enum
 {
-	SQP_GN,
+    SQP_GN,
 } ocp_nlp_solver_t;
 
 
 
 typedef enum
 {
-	LINEAR_LS,
-	NONLINEAR_LS,
-	EXTERNALLY_PROVIDED,
+    LINEAR_LS,
+    NONLINEAR_LS,
+    EXTERNALLY_PROVIDED,
 } ocp_nlp_cost_t;
 
 
 
 typedef enum
 {
-	CONTINUOUS_MODEL,
-	DISCRETE_MODEL,
+    CONTINUOUS_MODEL,
+    DISCRETE_MODEL,
 } ocp_nlp_dynamics_t;
 
 
 
 typedef enum
 {
-	BGH,
-	BGHP,
+    BGH,
+    BGHP,
 } ocp_nlp_constraints_t;
 
 

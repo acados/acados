@@ -50,7 +50,7 @@ int ocp_nlp_plan_calculate_size(int N)
 
 ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
 {
-	int ii;
+    int ii;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -69,13 +69,13 @@ ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
     plan->nlp_constraints = (ocp_nlp_constraints_t *) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_constraints_t);
 
-	// initialize to default value !=0 to detect empty plans
-	for(ii=0; ii<=N; ii++)
-		plan->nlp_cost[ii] = 100;
-	for(ii=0; ii<N; ii++)
-		plan->nlp_dynamics[ii] = 100;
-	for(ii=0; ii<=N; ii++)
-		plan->nlp_constraints[ii] = 100;
+    // initialize to default value !=0 to detect empty plans
+    for (ii=0; ii <= N; ii++)
+        plan->nlp_cost[ii] = 100;
+    for (ii=0; ii < N; ii++)
+        plan->nlp_dynamics[ii] = 100;
+    for (ii=0; ii <= N; ii++)
+        plan->nlp_constraints[ii] = 100;
 
     // TODO(all): fix assert
     // assert( 0 == 0);
@@ -142,8 +142,8 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
                 case EXTERNALLY_PROVIDED:
                     ocp_nlp_cost_external_config_initialize_default(config->cost[i]);
                     break;
-				case 100:
-					printf("\nForgot to plan cost?\n\n");
+                case 100:
+                    printf("\nForgot to plan cost?\n\n");
                     exit(1);
                 default:
                     printf("Cost not available!\n");
@@ -163,8 +163,8 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
                 case DISCRETE_MODEL:
                     ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i]);
                     break;
-				case 100:
-					printf("\nForgot to plan dynamics?\n\n");
+                case 100:
+                    printf("\nForgot to plan dynamics?\n\n");
                     exit(1);
                 default:
                     printf("Dynamics not available!\n");
@@ -174,23 +174,23 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 
         // Constraints
         for (int i = 0; i <= N; ++i)
-		{
+        {
             switch (plan.nlp_constraints[i])
             {
                 case BGH:
-					ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i]);
+                    ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i]);
                     break;
                 case BGHP:
-					ocp_nlp_constraints_bghp_config_initialize_default(config->constraints[i]);
+                    ocp_nlp_constraints_bghp_config_initialize_default(config->constraints[i]);
                     break;
-				case 100:
-					printf("\nForgot to plan constraints?\n\n");
+                case 100:
+                    printf("\nForgot to plan constraints?\n\n");
                     exit(1);
                 default:
                     printf("\nConstraint not available!\n\n");
                     exit(1);
             }
-		}
+        }
 
     }
     else
