@@ -176,10 +176,10 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, ocp_nlp_dims *dims, void
     int N = dims->N;
 
     opts->maxIter = 20;
-    opts->min_res_g = 1e-12;
-    opts->min_res_b = 1e-12;
-    opts->min_res_d = 1e-12;
-    opts->min_res_m = 1e-12;
+    opts->min_res_g = 1e-8;
+    opts->min_res_b = 1e-8;
+    opts->min_res_d = 1e-8;
+    opts->min_res_m = 1e-8;
 
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
