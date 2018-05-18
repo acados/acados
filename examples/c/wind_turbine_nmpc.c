@@ -43,6 +43,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
 #include "acados/sim/sim_gnsf.h"
 
@@ -516,6 +517,9 @@ int main()
 		plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
+	for (int i = 0; i <= NN; i++)
+		plan->nlp_constraints[i] = BGH;
+
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
 
     /************************************************
@@ -676,7 +680,7 @@ int main()
 
     /* constraints */
 
-	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
 	/* box constraints */
 
