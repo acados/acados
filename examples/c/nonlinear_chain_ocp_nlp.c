@@ -1454,8 +1454,10 @@ int main()
 
 	// fist stage
 #if CONSTRAINTS==0 // box constraints
-	blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
-	blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
+	// blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
+	// blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
+	nlp_set_constraint_bounds_in_stage(dims, nlp_in, 0, "lb", lb0);
+	nlp_set_constraint_bounds_in_stage(dims, nlp_in, 0, "ub", ub0);
     constraints[0]->idxb = idxb0;
 #elif CONSTRAINTS==1 // general constraints
 	double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
@@ -1468,8 +1470,10 @@ int main()
 
 	blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
 	blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
-	blasfeo_pack_dvec(ng[0], lb0, &constraints[0]->d, nb[0]);
-	blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]);
+	// blasfeo_pack_dvec(ng[0], lb0, &constraints[0]->d, nb[0]);
+	// blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]);
+	nlp_set_constraint_bounds_in_stage(dims, nlp_in, 0, "lg", lb0);
+	nlp_set_constraint_bounds_in_stage(dims, nlp_in, 0, "ug", ub0);
 
 	d_free(Cu0);
 	d_free(Cx0);
@@ -1481,19 +1485,25 @@ int main()
     ocp_nlp_constraints_model **nl_constr = (ocp_nlp_constraints_model **) nlp_in->constraints;
 	nl_constr[0]->h = &nonlin_constr_generic;
 
-	blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);
-	blasfeo_pack_dvec(ng[0]+nh[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]+nh[0]);
+	// blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);
+	// blasfeo_pack_dvec(ng[0]+nh[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]+nh[0]);
+	nlp_set_constraint_bounds_in_stage_with_offset(dims, nlp_in, 0, "lg", ng[0]+nh[0], 0, lb0);
+	nlp_set_constraint_bounds_in_stage_with_offset(dims, nlp_in, 0, "ug", ng[0]+nh[0], 0, ub0);
 #endif
 
 	// other stages
     for (int i = 1; i < NN; i++)
 	{
-		blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
-		blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]);
+		// blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
+		// blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]);
+		nlp_set_constraint_bounds_in_stage(dims, nlp_in, i, "lb", lb1);
+		nlp_set_constraint_bounds_in_stage(dims, nlp_in, i, "ub", ub1);
         constraints[i]->idxb = idxb1;
     }
-	blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
-	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
+	// blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
+	// blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
+	nlp_set_constraint_bounds_in_stage(dims, nlp_in, NN, "lb", lbN);
+	nlp_set_constraint_bounds_in_stage(dims, nlp_in, NN, "ub", ubN);
     constraints[NN]->idxb = idxbN;
 
 #if 0
