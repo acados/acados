@@ -11,6 +11,7 @@ OBJS += ocp_nlp_cost_nls.o
 OBJS += ocp_nlp_cost_external.o
 OBJS += ocp_nlp_constraints_common.o
 OBJS += ocp_nlp_constraints_bgh.o
+OBJS += ocp_nlp_constraints_bghp.o
 OBJS += ocp_nlp_dynamics_common.o
 OBJS += ocp_nlp_dynamics_cont.o
 OBJS += ocp_nlp_dynamics_disc.o

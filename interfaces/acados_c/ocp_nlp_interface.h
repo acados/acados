@@ -57,6 +57,7 @@ typedef enum
 typedef enum
 {
 	BGH,
+	BGHP,
 } ocp_nlp_constraints_t;
 
 

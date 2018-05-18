@@ -30,6 +30,7 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/utils/mem.h"
 
@@ -178,6 +179,9 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
             {
                 case BGH:
 					ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i]);
+                    break;
+                case BGHP:
+					ocp_nlp_constraints_bghp_config_initialize_default(config->constraints[i]);
                     break;
 				case 100:
 					printf("\nForgot to plan constraints?\n\n");
