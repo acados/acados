@@ -1485,10 +1485,8 @@ int main()
     ocp_nlp_constraints_model **nl_constr = (ocp_nlp_constraints_model **) nlp_in->constraints;
 	nl_constr[0]->h = &nonlin_constr_generic;
 
-	// blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);
-	// blasfeo_pack_dvec(ng[0]+nh[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]+nh[0]);
-	nlp_set_constraint_bounds_in_stage_with_offset(dims, nlp_in, 0, "lg", ng[0]+nh[0], 0, lb0);
-	nlp_set_constraint_bounds_in_stage_with_offset(dims, nlp_in, 0, "ug", ng[0]+nh[0], 0, ub0);
+	blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);
+	blasfeo_pack_dvec(ng[0]+nh[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]+nh[0]);
 #endif
 
 	// other stages
