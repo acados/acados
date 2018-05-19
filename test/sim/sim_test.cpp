@@ -86,8 +86,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 {
     vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
-    int ii;
-    int jj;
+    int ii, jj;
 
     const int nx = 3;
     const int nu = 4;
@@ -101,7 +100,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     double x_ref_sol[nx];
     double S_forw_ref_sol[nx*NF];
     double S_adj_ref_sol[NF];
-    double x_sol[nx];
 
     double error[nx];
     double error_S_forw[nx*NF];
@@ -336,7 +334,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     for (jj = 0; jj < NF; jj++)
         S_adj_ref_sol[jj] = out->S_adj[jj];
 
-    printf("ref sens \n");
+    printf("Reference forward sensitivities \n");
     d_print_e_mat(nx, NF, &S_forw_ref_sol[0], 1);
 
 
@@ -354,10 +352,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
         {
             for (int num_steps = 1; num_steps < 4; num_steps++)
             {
-
-                double error[nx];
-                double max_error;
-
                 double tol = sim_solver_tolerance(solver);
 
                 plan.sim_solver = hashitsim(solver);
@@ -384,13 +378,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                     opts->sens_adj = true;
                 else
                     opts->sens_adj = false;
-
-                // if (plan.sim_solver != IRK)
-                //     opts->sens_forw = true;
-                // else
-                //     opts->sens_forw = false;
-
-
 
                 sim_gnsf_dims *gnsf_dim;
 
@@ -550,13 +537,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 }
 
-                for (jj = 0; jj < nx; jj++)
-                    x_sol[jj] = out->xn[jj];
-
-
                 // error sim
                 for (jj = 0; jj < nx; jj++)
-                    error[jj] = fabs(x_sol[jj] - x_ref_sol[jj]);
+                    error[jj] = fabs(out->xn[jj] - x_ref_sol[jj]);
 
                 max_error = 0.0;
                 for (int ii = 0; ii < nx; ii++)
