@@ -20,12 +20,16 @@
 # Find Casadi libraries
 find_library(Casadi_LIBRARY
     NAMES casadi
-    PATHS ENV CASADIPATH
+    PATHS
+        ENV CASADIPATH
+        ${CMAKE_SOURCE_DIR}/external/*
     PATH_SUFFIXES casadi lib casadi/lib)
 
 find_path(Casadi_INCLUDE_DIR
     NAMES casadi/casadi.hpp
-    PATHS ENV CASADIPATH
+    PATHS
+        ENV CASADIPATH
+        ${CMAKE_SOURCE_DIR}/external/*
     PATH_SUFFIXES casadi include casadi/include)
 
 include(FindPackageHandleStandardArgs)
