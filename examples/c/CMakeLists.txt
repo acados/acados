@@ -180,11 +180,10 @@ add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
 target_link_libraries(sim_wt_model_nx6 acados)
 add_test(sim_wt_model_nx6 sim_wt_model_nx6)
 
-if(ACADOS_WITH_C_INTERFACE)
-    add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
-    target_link_libraries(sim_gnsf_crane acados)
-    add_test(sim_gnsf_crane sim_gnsf_crane)
-endif()
+# -------------------- sim_gnsf_crane
+add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
+target_link_libraries(sim_gnsf_crane acados)
+add_test(sim_gnsf_crane sim_gnsf_crane)
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
