@@ -23,6 +23,8 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
@@ -241,6 +243,140 @@ int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int st
     ocp_nlp_dynamics_cont_model *dynamics = in->dynamics[stage];
 
     int status = sim_set_model_internal(sim_config, dynamics->sim_model, fun_type, fun_ptr);
+
+    return status;
+}
+
+
+
+int nlp_bounds_bgh_set(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
+                       const char *identifier, double *values)
+{
+    int status = 0;
+    char key[MAX_STR_LEN];
+
+    if (!dims || !model || !identifier || !values) return status;
+
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
+
+    strcpy(key, identifier);
+    for (int i = 0; key[i]; i++) key[i] = tolower(key[i]);
+
+    if (strcmp(key, "lb") == 0)
+    {
+        blasfeo_pack_dvec(nb, values, &model->d, 0);
+        status = 1;
+    }
+    else if (strcmp(key, "ub") == 0)
+    {
+        blasfeo_pack_dvec(nb, values, &model->d, nb+ng+nh);
+        status = 1;
+    }
+    else if (strcmp(key, "lg") == 0)
+    {
+        blasfeo_pack_dvec(ng, values, &model->d, nb);
+        status = 1;
+    }
+    else if (strcmp(key, "ug") == 0)
+    {
+        blasfeo_pack_dvec(ng, values, &model->d, 2*nb+ng+nh);
+        status = 1;
+    }
+    else if (strcmp(key, "lh") == 0)
+    {
+        blasfeo_pack_dvec(nh, values, &model->d, nb+ng);
+        status = 1;
+    }
+    else if (strcmp(key, "uh") == 0)
+    {
+        blasfeo_pack_dvec(nh, values, &model->d, 2*nb+2*ng+nh);
+        status = 1;
+    }
+    else if (strcmp(key, "ls") == 0)
+    {
+        blasfeo_pack_dvec(ns, values, &model->d, 2*nb+2*ng+2*nh);
+        status = 1;
+    }
+    else if (strcmp(key, "us") == 0)
+    {
+        blasfeo_pack_dvec(ns, values, &model->d, 2*nb+2*ng+2*nh+ns);
+        status = 1;
+    }
+    else
+    {
+        printf("Array identifier not implemented!\n");
+    }
+
+    return status;
+}
+
+
+
+int nlp_bounds_bgh_get(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
+                       const char *identifier, double *values)
+{
+    int status = 0;
+    char key[MAX_STR_LEN];
+
+    if (!dims || !model || !identifier || !values) return status;
+
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
+
+    strcpy(key, identifier);
+    for (int i = 0; key[i]; i++) key[i] = tolower(key[i]);
+
+    if (strcmp(key, "lb") == 0)
+    {
+        blasfeo_unpack_dvec(nb, &model->d, 0, values);
+        status = 1;
+    }
+    else if (strcmp(key, "ub") == 0)
+    {
+        blasfeo_unpack_dvec(nb, &model->d, nb+ng+nh, values);
+        status = 1;
+    }
+    else if (strcmp(key, "lg") == 0)
+    {
+        blasfeo_unpack_dvec(ng, &model->d, nb, values);
+        status = 1;
+    }
+    else if (strcmp(key, "ug") == 0)
+    {
+        blasfeo_unpack_dvec(ng, &model->d, 2*nb+ng+nh, values);
+        status = 1;
+    }
+    else if (strcmp(key, "lh") == 0)
+    {
+        blasfeo_unpack_dvec(nh, &model->d, nb+ng, values);
+        status = 1;
+    }
+    else if (strcmp(key, "uh") == 0)
+    {
+        blasfeo_unpack_dvec(nh, &model->d, 2*nb+2*ng+nh, values);
+        status = 1;
+    }
+    else if (strcmp(key, "ls") == 0)
+    {
+        blasfeo_unpack_dvec(ns, &model->d, 2*nb+2*ng+2*nh, values);
+        status = 1;
+    }
+    else if (strcmp(key, "us") == 0)
+    {
+        blasfeo_unpack_dvec(ns, &model->d, 2*nb+2*ng+2*nh+ns, values);
+        status = 1;
+    }
+    else
+    {
+        printf("Array identifier not implemented!\n");
+    }
+
+    return status;
 
     return status;
 }
