@@ -17,14 +17,15 @@
  *
  */
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_COST_COMMON_H_
-#define ACADOS_OCP_NLP_OCP_NLP_COST_COMMON_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_COMMON_H_
+#define ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_COMMON_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // acados
+#include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
 
@@ -38,7 +39,8 @@ typedef struct
 {
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
-    void (*dims_initialize)(void *config, void *dims, int nx, int nu, int ny, int ns);
+    void (*dims_initialize)(void *config, void *dims, int nx, int nu, int nbx, int nbu, int ng,
+                            int nh, int nq, int ns);
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
     int (*opts_calculate_size)(void *config, void *dims);
@@ -46,23 +48,26 @@ typedef struct
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
     void (*opts_update)(void *config, void *dims, void *opts);
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
-    struct blasfeo_dvec *(*memory_get_grad_ptr)(void *memory);
+    struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory);
+    struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory);
     void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory);
+    void (*memory_set_lam_ptr)(struct blasfeo_dvec *lam, void *memory);
+    void (*memory_set_DCt_ptr)(struct blasfeo_dmat *DCt, void *memory);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
-    void (*memory_set_Z_ptr)(struct blasfeo_dvec *Z, void *memory);
+    void (*memory_set_idxb_ptr)(int *idxb, void *memory);
+    void (*memory_set_idxs_ptr)(int *idxs, void *memory);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
-    void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
-                       void *work_);
-    void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
-                               void *work_);
+    void (*initialize)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
+    void (*update_qp_matrices)(void *config, void *dims, void *model, void *opts, void *mem,
+                               void *work);
     void (*config_initialize_default)(void *config);
-} ocp_nlp_cost_config;
+} ocp_nlp_constraints_config;
 
 //
-int ocp_nlp_cost_config_calculate_size();
+int ocp_nlp_constraints_config_calculate_size();
 //
-ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory);
+ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory);
 
 
 
@@ -70,4 +75,4 @@ ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_COST_COMMON_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_COMMON_H_
