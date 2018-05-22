@@ -23,7 +23,7 @@
 
 #include "acados/utils/print.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-#include "acados/ocp_nlp/ocp_nlp_constraints.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
@@ -70,10 +70,13 @@ int main() {
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = LINEAR_LS;
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++)
+	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 		plan->sim_solver_plan[i].sim_solver = ERK;
 	}
+	for (int i = 0; i <= N; i++)
+		plan->nlp_constraints[i] = BGHP;
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
 
@@ -168,7 +171,7 @@ int main() {
 	external_function_casadi_assign(&position_constraint, ptr);
 
 	// bounds
-	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+	ocp_nlp_constraints_bghp_model **constraints = (ocp_nlp_constraints_bghp_model **) nlp_in->constraints;
 
     constraints[0]->idxb = idxb_0.data();
 	blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, 0);

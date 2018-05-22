@@ -42,6 +42,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
@@ -1157,6 +1158,9 @@ int main()
 		}
 	}
 
+	for (int i = 0; i <= NN; i++)
+		plan->nlp_constraints[i] = BGH;
+
 	// TODO(dimitris): fix minor memory leak here
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
 
@@ -1450,7 +1454,7 @@ int main()
 
 
     /* constraints */
-	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
 	// fist stage
 #if CONSTRAINTS==0 // box constraints
@@ -1482,7 +1486,7 @@ int main()
 	for (int ii=0; ii<ng[0]; ii++)
 		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
 
-    ocp_nlp_constraints_model **nl_constr = (ocp_nlp_constraints_model **) nlp_in->constraints;
+    ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 	nl_constr[0]->h = &nonlin_constr_generic;
 
 	blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);

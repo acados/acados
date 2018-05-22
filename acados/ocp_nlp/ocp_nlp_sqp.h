@@ -24,15 +24,12 @@
 extern "C" {
 #endif
 
-// acados_c
-// #include <acados_c/ocp_qp_interface.h>
-// #include <acados_c/sim.h>
-
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/sim/sim_collocation_utils.h"  // TODO(all): remove ???
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
+
+
 
 /************************************************
  * options

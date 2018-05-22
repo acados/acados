@@ -31,8 +31,12 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/utils/mem.h"
+
+
 
 int ocp_nlp_plan_calculate_size(int N)
 {
@@ -40,11 +44,16 @@ int ocp_nlp_plan_calculate_size(int N)
     bytes += N * sizeof(sim_solver_plan);
     bytes += (N + 1) * sizeof(ocp_nlp_cost_t);
     bytes += N * sizeof(ocp_nlp_dynamics_t);
+    bytes += (N+1) * sizeof(ocp_nlp_constraints_t);
     return bytes;
 }
 
+
+
 ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
 {
+    int ii;
+
     char *c_ptr = (char *) raw_memory;
 
     ocp_nlp_solver_plan *plan = (ocp_nlp_solver_plan *) c_ptr;
@@ -57,13 +66,26 @@ ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
     c_ptr += (N + 1) * sizeof(ocp_nlp_cost_t);
 
     plan->nlp_dynamics = (ocp_nlp_dynamics_t *) c_ptr;
-    c_ptr += (N + 1) * sizeof(ocp_nlp_dynamics_t);
+    c_ptr += N * sizeof(ocp_nlp_dynamics_t);
+
+    plan->nlp_constraints = (ocp_nlp_constraints_t *) c_ptr;
+    c_ptr += (N + 1) * sizeof(ocp_nlp_constraints_t);
+
+    // initialize to default value !=0 to detect empty plans
+    for (ii=0; ii <= N; ii++)
+        plan->nlp_cost[ii] = 100;
+    for (ii=0; ii < N; ii++)
+        plan->nlp_dynamics[ii] = 100;
+    for (ii=0; ii <= N; ii++)
+        plan->nlp_constraints[ii] = 100;
 
     // TODO(all): fix assert
     // assert( 0 == 0);
 
     return plan;
 }
+
+
 
 void ocp_nlp_plan_initialize_default(int N, ocp_nlp_solver_plan *plan)
 {
@@ -78,6 +100,8 @@ void ocp_nlp_plan_initialize_default(int N, ocp_nlp_solver_plan *plan)
     }
 }
 
+
+
 ocp_nlp_solver_plan *ocp_nlp_plan_create(int N)
 {
     int bytes = ocp_nlp_plan_calculate_size(N);
@@ -89,6 +113,8 @@ ocp_nlp_solver_plan *ocp_nlp_plan_create(int N)
 
     return plan;
 }
+
+
 
 // TODO(dimitris): this leaks memory! Either provide free config or calculate size should be nested
 ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
@@ -118,6 +144,9 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
                 case EXTERNALLY_PROVIDED:
                     ocp_nlp_cost_external_config_initialize_default(config->cost[i]);
                     break;
+                case 100:
+                    printf("\nForgot to plan cost?\n\n");
+                    exit(1);
                 default:
                     printf("Cost not available!\n");
                     exit(1);
@@ -136,6 +165,9 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
                 case DISCRETE_MODEL:
                     ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i]);
                     break;
+                case 100:
+                    printf("\nForgot to plan dynamics?\n\n");
+                    exit(1);
                 default:
                     printf("Dynamics not available!\n");
                     exit(1);
@@ -144,7 +176,24 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 
         // Constraints
         for (int i = 0; i <= N; ++i)
-            ocp_nlp_constraints_config_initialize_default(config->constraints[i]);
+        {
+            switch (plan.nlp_constraints[i])
+            {
+                case BGH:
+                    ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i]);
+                    break;
+                case BGHP:
+                    ocp_nlp_constraints_bghp_config_initialize_default(config->constraints[i]);
+                    break;
+                case 100:
+                    printf("\nForgot to plan constraints?\n\n");
+                    exit(1);
+                default:
+                    printf("\nConstraint not available!\n\n");
+                    exit(1);
+            }
+        }
+
     }
     else
     {
@@ -153,6 +202,8 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
     }
     return config;
 }
+
+
 
 ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
 {
@@ -169,6 +220,8 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
     return dims;
 }
 
+
+
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
     int bytes = ocp_nlp_in_calculate_size(config, dims);
@@ -179,6 +232,8 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 
     return nlp_in;
 }
+
+
 
 int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
                            const char *fun_type, void *fun_ptr)
@@ -192,6 +247,7 @@ int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int st
     return status;
 }
 
+<<<<<<< HEAD
 int nlp_set_constraint_bounds_in_stage_with_offset(ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
                                       const char *identifier, int numel, int offset, double *values)
 {
@@ -469,6 +525,9 @@ int nlp_get_constraint_bounds_from_stage(ocp_nlp_dims *dims, ocp_nlp_in *in, int
     return nlp_get_constraint_bounds_from_stage_with_offset(dims, in, stage, identifier, -1, 0,
                                                             values);
 }
+=======
+
+>>>>>>> 1340daee251b5b1c4afdc3ed30ab7357dea10444
 
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
@@ -485,6 +544,8 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
     return nlp_out;
 }
 
+
+
 void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
     int bytes = config->opts_calculate_size(config, dims);
@@ -498,6 +559,8 @@ void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
     return opts;
 }
 
+
+
 int ocp_nlp_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_)
 {
     int bytes = sizeof(ocp_nlp_solver);
@@ -507,6 +570,8 @@ int ocp_nlp_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, vo
 
     return bytes;
 }
+
+
 
 ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_,
                                void *raw_memory)
@@ -531,6 +596,8 @@ ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
     return solver;
 }
 
+
+
 ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_)
 {
     config->opts_update(config, dims, opts_);
@@ -543,6 +610,8 @@ ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
 
     return solver;
 }
+
+
 
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
