@@ -17,7 +17,7 @@
  *
  */
 
-#include "acados/ocp_nlp/ocp_nlp_cost_common.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_common.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -27,29 +27,30 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
+#include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/mem.h"
-
-
 
 /************************************************
  * config
  ************************************************/
 
-int ocp_nlp_cost_config_calculate_size()
+int ocp_nlp_constraints_config_calculate_size()
 {
     int size = 0;
 
-    size += sizeof(ocp_nlp_cost_config);
+    size += sizeof(ocp_nlp_constraints_config);
 
     return size;
 }
 
-ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory)
+
+
+ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    ocp_nlp_cost_config *config = (ocp_nlp_cost_config *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_cost_config);
+    ocp_nlp_constraints_config *config = (ocp_nlp_constraints_config *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_constraints_config);
 
     return config;
 }

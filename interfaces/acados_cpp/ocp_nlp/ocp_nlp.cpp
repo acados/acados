@@ -5,6 +5,7 @@
 #include <functional>
 #include <string>
 
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
@@ -51,7 +52,7 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
     config_.reset(ocp_nlp_solver_config_assign(N, raw_memory));
 
     for (int i = 0; i <= N; ++i)
-        ocp_nlp_constraints_config_initialize_default(config_->constraints[i]);
+        ocp_nlp_constraints_bgh_config_initialize_default(config_->constraints[i]);
 
     int nlp_size = ocp_nlp_in_calculate_size_self(N);
     raw_memory = malloc(nlp_size);
@@ -72,8 +73,9 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
 
     for (int i = 0; i <= N; ++i)
     {
-        dims_->constraints[i] = malloc(sizeof(ocp_nlp_constraints_dims));
-        ocp_nlp_constraints_dims *con_dims = (ocp_nlp_constraints_dims *) dims_->constraints[i];
+        dims_->constraints[i] = malloc(sizeof(ocp_nlp_constraints_bgh_dims));
+        ocp_nlp_constraints_bgh_dims *con_dims =
+            (ocp_nlp_constraints_bgh_dims *) dims_->constraints[i];
         con_dims->nx = d_["nx"][i];
         con_dims->nu = d_["nu"][i];
         con_dims->nb = d_["nbx"][i] + d_["nbu"][i];
@@ -81,12 +83,13 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
         con_dims->nbu = d_["nbu"][i];
         con_dims->ng = d_["ng"][i];
         con_dims->nh = d_["nh"][i];
-        con_dims->np = 0;
+        // con_dims->np = 0;
         con_dims->ns = d_["ns"][i];
-        int num_bytes = ocp_nlp_constraints_model_calculate_size(config_->constraints[i], con_dims);
+        int num_bytes =
+            ocp_nlp_constraints_bgh_model_calculate_size(config_->constraints[i], con_dims);
         void *raw_memory = calloc(1, num_bytes);
         nlp_->constraints[i] =
-            ocp_nlp_constraints_model_assign(config_->constraints[i], con_dims, raw_memory);
+            ocp_nlp_constraints_bgh_model_assign(config_->constraints[i], con_dims, raw_memory);
     }
 
     int qp_dims_size = ocp_qp_dims_calculate_size(N);
@@ -401,8 +404,10 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
 
 void ocp_nlp::set_bound(std::string bound, int stage, std::vector<double> new_bound)
 {
-    ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_->constraints;
-    ocp_nlp_constraints_dims **constraint_dims = (ocp_nlp_constraints_dims **) dims_->constraints;
+    ocp_nlp_constraints_bgh_model **constraints =
+        (ocp_nlp_constraints_bgh_model **) nlp_->constraints;
+    ocp_nlp_constraints_bgh_dims **constraint_dims =
+        (ocp_nlp_constraints_bgh_dims **) dims_->constraints;
 
     int nbx = constraint_dims[stage]->nbx;
     int nbu = constraint_dims[stage]->nbu;
@@ -436,7 +441,8 @@ void ocp_nlp::change_bound_dimensions(std::vector<int> nbx, std::vector<int> nbu
     if (nbx.size() != (size_t)(num_stages() + 1) || nbu.size() != (size_t)(num_stages() + 1))
         throw std::invalid_argument("Expected " + std::to_string(num_stages()) + " bounds.");
 
-    ocp_nlp_constraints_dims **constraint_dims = (ocp_nlp_constraints_dims **) dims_->constraints;
+    ocp_nlp_constraints_bgh_dims **constraint_dims =
+        (ocp_nlp_constraints_bgh_dims **) dims_->constraints;
 
     for (int i = 0; i <= N; ++i)
     {
@@ -454,8 +460,10 @@ void ocp_nlp::needs_initializing(bool flag) { needs_initializing_ = flag; }
 
 vector<int> ocp_nlp::get_bound_indices(std::string bound, int stage)
 {
-    ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_->constraints;
-    ocp_nlp_constraints_dims **constraint_dims = (ocp_nlp_constraints_dims **) dims_->constraints;
+    ocp_nlp_constraints_bgh_model **constraints =
+        (ocp_nlp_constraints_bgh_model **) nlp_->constraints;
+    ocp_nlp_constraints_bgh_dims **constraint_dims =
+        (ocp_nlp_constraints_bgh_dims **) dims_->constraints;
 
     vector<int> idxb;
 
@@ -482,8 +490,10 @@ vector<int> ocp_nlp::get_bound_indices(std::string bound, int stage)
 
 void ocp_nlp::set_bound_indices(std::string bound, int stage, std::vector<int> idxb)
 {
-    ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_->constraints;
-    ocp_nlp_constraints_dims **constraint_dims = (ocp_nlp_constraints_dims **) dims_->constraints;
+    ocp_nlp_constraints_bgh_model **constraints =
+        (ocp_nlp_constraints_bgh_model **) nlp_->constraints;
+    ocp_nlp_constraints_bgh_dims **constraint_dims =
+        (ocp_nlp_constraints_bgh_dims **) dims_->constraints;
 
     int nbx = constraint_dims[stage]->nbx;
     int nbu = constraint_dims[stage]->nbu;

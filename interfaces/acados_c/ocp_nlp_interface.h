@@ -26,15 +26,42 @@ extern "C" {
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 // acados_c
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/sim_interface.h"
 
-typedef enum { SQP_GN } ocp_nlp_solver_t;
+typedef enum
+{
+    SQP_GN,
+} ocp_nlp_solver_t;
 
-typedef enum { LINEAR_LS, NONLINEAR_LS, EXTERNALLY_PROVIDED } ocp_nlp_cost_t;
 
-typedef enum { CONTINUOUS_MODEL, DISCRETE_MODEL } ocp_nlp_dynamics_t;
+
+typedef enum
+{
+    LINEAR_LS,
+    NONLINEAR_LS,
+    EXTERNALLY_PROVIDED,
+} ocp_nlp_cost_t;
+
+
+
+typedef enum
+{
+    CONTINUOUS_MODEL,
+    DISCRETE_MODEL,
+} ocp_nlp_dynamics_t;
+
+
+
+typedef enum
+{
+    BGH,
+    BGHP,
+} ocp_nlp_constraints_t;
+
+
 
 typedef struct
 {
@@ -43,7 +70,10 @@ typedef struct
     ocp_nlp_solver_t nlp_solver;
     ocp_nlp_cost_t *nlp_cost;
     ocp_nlp_dynamics_t *nlp_dynamics;
+    ocp_nlp_constraints_t *nlp_constraints;
 } ocp_nlp_solver_plan;
+
+
 
 typedef struct
 {
@@ -53,6 +83,8 @@ typedef struct
     void *mem;
     void *work;
 } ocp_nlp_solver;
+
+
 
 //
 ocp_nlp_solver_plan *ocp_nlp_plan_create(int N);
@@ -65,6 +97,12 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 //
 int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
                            const char *fun_type, void *fun_ptr);
+//
+int nlp_bounds_bgh_set(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
+                       const char *identifier, double *values);
+//
+int nlp_bounds_bgh_get(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
+                       const char *identifier, double *values);
 //
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //

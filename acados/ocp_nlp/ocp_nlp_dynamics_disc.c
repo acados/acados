@@ -318,7 +318,6 @@ void *ocp_nlp_dynamics_disc_model_assign(void *config_, void *dims_, void *raw_m
 }
 
 void ocp_nlp_dynamics_disc_model_set_T(double T, void *model_) { return; }
-
 /************************************************
  * functions
  ************************************************/

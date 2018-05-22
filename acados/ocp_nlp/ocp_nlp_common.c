@@ -31,6 +31,8 @@
 // acados
 #include "acados/utils/mem.h"
 
+
+
 /************************************************
  * config
  ************************************************/
@@ -63,6 +65,8 @@ int ocp_nlp_solver_config_calculate_size(int N)
 
     return size;
 }
+
+
 
 ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory)
 {
@@ -164,8 +168,7 @@ int ocp_nlp_dims_calculate_size(void *config_)
         size += config->dynamics[ii]->dims_calculate_size(config->dynamics[ii]);
 
     // cost
-    for (ii = 0; ii <= N; ii++)
-        size += config->cost[ii]->dims_calculate_size(config->cost[ii]);
+    for (ii = 0; ii <= N; ii++) size += config->cost[ii]->dims_calculate_size(config->cost[ii]);
 
     // constraints
     for (ii = 0; ii <= N; ii++)
