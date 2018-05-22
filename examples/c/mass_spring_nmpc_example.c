@@ -43,6 +43,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
 // temp
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
@@ -391,7 +392,7 @@ int main() {
 	// constraitns
     for (int ii = 0; ii <= N; ii++)
     {
-		ocp_nlp_constraints_config_initialize_default(config->constraints[ii]);
+		ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii]);
     }
 
     /************************************************
@@ -617,7 +618,7 @@ int main() {
 
     /* constraints */
 
-	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
 	// fist stage
 #if CONSTRAINTS==0 // box constraints

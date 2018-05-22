@@ -799,7 +799,6 @@ void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hid
 }
 
 static real_t hypot2(real_t x, real_t y) { return sqrt(x * x + y * y); }
-
 /* Symmetric Householder reduction to tridiagonal form. */
 
 static void tred2(int_t dim, real_t *V, real_t *d, real_t *e)

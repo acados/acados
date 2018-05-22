@@ -237,7 +237,6 @@ void sim_irk_opts_update(void *config_, void *dims, void *opts_)
  ************************************************/
 
 int sim_irk_memory_calculate_size(void *config, void *dims, void *opts_) { return 0; }
-
 void *sim_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory)
 {
     return NULL;

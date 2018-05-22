@@ -73,7 +73,6 @@ real_t acados_toc(acados_timer* t) { return ds1401_tic_read() - t->time; }
 
 /* read current time */
 void acados_tic(acados_timer* t) { gettimeofday(&t->tic, 0); }
-
 /* return time passed since last call to tic on this timer */
 real_t acados_toc(acados_timer* t)
 {
@@ -99,7 +98,6 @@ real_t acados_toc(acados_timer* t)
 
 /* read current time */
 void acados_tic(acados_timer* t) { clock_gettime(CLOCK_MONOTONIC, &t->tic); }
-
 /* return time passed since last call to tic on this timer */
 real_t acados_toc(acados_timer* t)
 {
@@ -128,7 +126,6 @@ real_t acados_toc(acados_timer* t)
 #else  // Dummy functions when timing is off
 
 void acados_tic(acados_timer *t) {}
-
 real_t acados_toc(acados_timer *t) { return 0; }
 
 #endif  // MEASURE_TIMINGS
