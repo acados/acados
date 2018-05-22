@@ -33,6 +33,7 @@ typedef struct
 {
     int nx;
     int nu;
+    int nz;
 } sim_irk_dims;
 
 typedef struct
@@ -77,37 +78,37 @@ typedef struct
 // get & set functions
 void sim_irk_set_nx(void *dims_, int nx);
 void sim_irk_set_nu(void *dims_, int nu);
+void sim_irk_set_nz(void *dims_, int nz);
+
 void sim_irk_get_nx(void *dims_, int *nx);
 void sim_irk_get_nu(void *dims_, int *nu);
+void sim_irk_get_nz(void *dims_, int *nz);
 
-//
+// dims
 int sim_irk_dims_calculate_size();
-//
 void *sim_irk_dims_assign(void *config_, void *raw_memory);
-//
+
+// model
 int sim_irk_model_calculate_size(void *config, void *dims);
-//
 void *sim_irk_model_assign(void *config, void *dims, void *raw_memory);
-//
 int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun);
-//
+
+// opts
 int sim_irk_opts_calculate_size(void *config, void *dims);
-//
 void *sim_irk_opts_assign(void *config, void *dims, void *raw_memory);
-//
 void sim_irk_opts_initialize_default(void *config, void *dims, void *opts_);
-//
 void sim_irk_opts_update(void *config_, void *dims, void *opts_);
-//
+
+// memory
 int sim_irk_memory_calculate_size(void *config, void *dims, void *opts_);
-//
 void *sim_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
-//
-int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
-//
+
+// workspace
 int sim_irk_workspace_calculate_size(void *config, void *dims, void *opts_);
-//
 void sim_irk_config_initialize_default(void *config);
+
+// main
+int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

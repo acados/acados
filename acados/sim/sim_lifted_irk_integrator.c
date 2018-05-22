@@ -67,6 +67,12 @@ void sim_lifted_irk_set_nu(void *dims_, int nu)
     dims->nu = nu;
 }
 
+void sim_lifted_irk_set_nz(void *dims_, int nz)
+{
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    dims->nz = nz;
+}
+
 void sim_lifted_irk_get_nx(void *dims_, int *nx)
 {
     sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
@@ -77,6 +83,12 @@ void sim_lifted_irk_get_nu(void *dims_, int *nu)
 {
     sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
     *nu = dims->nu;
+}
+
+void sim_lifted_irk_get_nz(void *dims_, int *nz)
+{
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    *nz = dims->nz;
 }
 
 /************************************************
@@ -241,6 +253,9 @@ void sim_lifted_irk_opts_initialize_default(void *config_, void *dims_, void *op
     opts->sens_adj = false;  // TODO(andrea): this effectively disables the expansion step in lifted
                              // integrators !!!!!
     opts->sens_hess = false;
+
+    opts->report_algebraic = false;
+    opts->sens_algebraic = false;
 
     return;
 }
@@ -1766,7 +1781,9 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     config->dims_assign = &sim_lifted_irk_dims_assign;
     config->set_nx = &sim_lifted_irk_set_nx;
     config->set_nu = &sim_lifted_irk_set_nu;
+    config->set_nz = &sim_lifted_irk_set_nz;
     config->get_nx = &sim_lifted_irk_get_nx;
     config->get_nu = &sim_lifted_irk_get_nu;
+    config->get_nz = &sim_lifted_irk_get_nz;
     return;
 }

@@ -62,6 +62,13 @@ void sim_erk_set_nu(void *dims_, int nu)
     dims->nu = nu;
 }
 
+void sim_erk_set_nz(void *dims_, int nz)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    dims->nz = nz;
+}
+
+
 void sim_erk_get_nx(void *dims_, int *nx)
 {
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
@@ -72,6 +79,12 @@ void sim_erk_get_nu(void *dims_, int *nu)
 {
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
     *nu = dims->nu;
+}
+
+void sim_erk_get_nz(void *dims_, int *nz)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    *nz = dims->nz;
 }
 
 /************************************************
@@ -256,6 +269,9 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
+
+    opts->report_algebraic = false;
+    opts->sens_algebraic = false;
 }
 
 void sim_erk_opts_update(void *config_, void *dims, void *opts_)
@@ -755,7 +771,9 @@ void sim_erk_config_initialize_default(void *config_)
     config->dims_assign = &sim_erk_dims_assign;
     config->set_nx = &sim_erk_set_nx;
     config->set_nu = &sim_erk_set_nu;
+    config->set_nz = &sim_erk_set_nz;
     config->get_nx = &sim_erk_get_nx;
     config->get_nu = &sim_erk_get_nu;
+    config->get_nz = &sim_erk_get_nz;
     return;
 }

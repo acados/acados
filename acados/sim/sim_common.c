@@ -121,9 +121,10 @@ int sim_out_calculate_size(void *config_, void *dims)
 
     int size = sizeof(sim_out);
 
-    int nx, nu;
+    int nx, nu, nz;
     config->get_nx(dims, &nx);
     config->get_nu(dims, &nu);
+    config->get_nz(dims, &nz);
 
     int NF = nx + nu;
     size += sizeof(sim_info);
@@ -132,6 +133,10 @@ int sim_out_calculate_size(void *config_, void *dims)
     size += nx * NF * sizeof(double);              // S_forw
     size += (nx + nu) * sizeof(double);            // S_adj
     size += ((NF + 1) * NF / 2) * sizeof(double);  // S_hess
+
+    size += nz * sizeof(double);                   //  zn
+    size += nz * NF * sizeof(double);               // S_algebraic
+
     size += NF * sizeof(double);                   // grad
 
     make_int_multiple_of(8, &size);

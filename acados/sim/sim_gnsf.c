@@ -76,6 +76,12 @@ void sim_gnsf_set_nu(void *dims_, int nu)
     dims->nu = nu;
 }
 
+void sim_gnsf_set_nz(void *dims_, int nz)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    dims->nz = nz;
+}
+
 void sim_gnsf_get_nx(void *dims_, int *nx)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
@@ -86,6 +92,12 @@ void sim_gnsf_get_nu(void *dims_, int *nu)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     *nu = dims->nu;
+}
+
+void sim_gnsf_get_nz(void *dims_, int *nz)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    *nz = dims->nz;
 }
 
 /************************************************
@@ -241,6 +253,9 @@ void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_adj = false;
     opts->sens_hess = false;
     opts->jac_reuse = true;
+
+    opts->report_algebraic = false;
+    opts->sens_algebraic = false;
 
     return;
 }
@@ -1782,7 +1797,9 @@ void sim_gnsf_config_initialize_default(void *config_)
     config->dims_assign = &sim_gnsf_dims_assign;
     config->set_nx = &sim_gnsf_set_nx;
     config->set_nu = &sim_gnsf_set_nu;
+    config->set_nz = &sim_gnsf_set_nz;
     config->get_nx = &sim_gnsf_get_nx;
     config->get_nu = &sim_gnsf_get_nu;
+    config->get_nz = &sim_gnsf_get_nz;
     return;
 }

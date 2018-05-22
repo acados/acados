@@ -35,6 +35,7 @@ typedef struct
 {
     int nx;
     int nu;
+    int nz;
 } sim_lifted_irk_dims;
 
 typedef struct
@@ -94,8 +95,11 @@ typedef struct
 // get & set functions
 void sim_lifted_irk_set_nx(void *dims_, int nx);
 void sim_lifted_irk_set_nu(void *dims_, int nu);
+void sim_lifted_irk_set_nz(void *dims_, int nz);
+
 void sim_lifted_irk_get_nx(void *dims_, int *nx);
 void sim_lifted_irk_get_nu(void *dims_, int *nu);
+void sim_lifted_irk_get_nz(void *dims_, int *nz);
 //
 int sim_lifted_irk_dims_calculate_size();
 //
