@@ -28,7 +28,6 @@
 #include <vector>
 #include <math.h>
 
-
 #include "test/test_utils/eigen.h"
 #include "catch/include/catch.hpp"
 
@@ -48,8 +47,7 @@
 
 extern "C"
 {
-// printf("SIMULATION TEST \n");
-    // std::cout << "=== INTEGRATOR TEST - USING a windturbine model with nx = 3 ===" <<  "\n";
+
 }
 
 using std::vector;
@@ -507,6 +505,10 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 /************************************************
                 * sim solver
                 ************************************************/
+                std::cout << "\n---> testing integrator " << solver <<
+                        " (num_steps = " << opts->num_steps << ", num_stages = " << opts->ns
+                        << ", jac_reuse = " << opts->jac_reuse << ", newton_iter = "
+                        << opts->newton_iter << ")\n";
 
                 sim_solver = sim_create(config, dims, opts);
                 // sim_solver *le_sim_solver = (sim_solver *) sim_solver_;
@@ -532,8 +534,10 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                     acados_return = sim_solve(sim_solver, in, out);
                     REQUIRE(acados_return == 0);
 
-                    for (jj = 0; jj < nx; jj++)
+                    for (jj = 0; jj < nx; jj++){
                         x_sim[(ii+1)*nx+jj] = out->xn[jj];
+                        REQUIRE(isnan(out->xn[jj]) == 0);
+                    }
 
                 }
 
@@ -543,33 +547,32 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 max_error = 0.0;
                 for (int ii = 0; ii < nx; ii++)
-                    max_error = (error[ii] > max_error) ? error[ii] : max_error;
+                    max_error = (error[ii] >= max_error) ? error[ii] : max_error;
 
                 // error_S_forw
-                for (jj = 0; jj < nx*NF; jj++)
+                for (jj = 0; jj < nx*NF; jj++){
+                    REQUIRE(isnan(out->S_forw[jj]) == 0);
                     error_S_forw[jj] = fabs(S_forw_ref_sol[jj] - out->S_forw[jj]);
+                }
 
                 max_error_forw = 0.0;
                 for (jj = 0; jj < nx*NF; jj++)
-                    max_error_forw = (error_S_forw[jj] > max_error_forw)
+                    max_error_forw = (error_S_forw[jj] >= max_error_forw)
                             ? error_S_forw[jj] : max_error_forw;
 
                 // error_S_adj
-                for (jj = 0; jj < NF; jj++)
+                for (jj = 0; jj < NF; jj++){
+                    REQUIRE(isnan(out->S_forw[jj]) == 0);
                     error_S_adj[jj] = S_adj_ref_sol[jj] - out->S_adj[jj];
-
+                }
                 max_error_adj = 0.0;
                 for (jj = 0; jj < NF; jj++)
-                    max_error_adj = (error_S_adj[jj] > max_error_adj)
+                    max_error_adj = (error_S_adj[jj] >= max_error_adj)
                             ? error_S_adj[jj] : max_error_adj;
 
                 /************************************************
                 * printing
                 ************************************************/
-                std::cout << "\n---> testing integrator " << solver <<
-                        " (num_steps = " << opts->num_steps << ", num_stages = " << opts->ns
-                        << ", jac_reuse = " << opts->jac_reuse << ", newton_iter = "
-                        << opts->newton_iter << ")\n";
 
                 std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = "
                          << max_error_forw << ",\nerror_adj_sens = "
