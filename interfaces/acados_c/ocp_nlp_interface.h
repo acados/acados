@@ -26,6 +26,7 @@ extern "C" {
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 // acados_c
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/sim_interface.h"
@@ -97,17 +98,11 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
                            const char *fun_type, void *fun_ptr);
 //
-int nlp_set_constraint_bounds_in_stage_with_offset(ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-                                     const char *identifier, int numel, int offset, double *values);
+int nlp_bounds_bgh_set(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
+                       const char *identifier, double *values);
 //
-int nlp_set_constraint_bounds_in_stage(ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-                                       const char *identifier, double *values);
-//
-int nlp_get_constraint_bounds_from_stage_with_offset(ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-                                     const char *identifier, int numel, int offset, double *values);
-//
-int nlp_get_constraint_bounds_from_stage(ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-                                         const char *identifier, double *values);
+int nlp_bounds_bgh_get(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
+                       const char *identifier, double *values);
 //
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //

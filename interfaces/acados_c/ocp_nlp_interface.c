@@ -247,130 +247,63 @@ int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int st
     return status;
 }
 
-<<<<<<< HEAD
-int nlp_set_constraint_bounds_in_stage_with_offset(ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-                                      const char *identifier, int numel, int offset, double *values)
+
+
+int nlp_bounds_bgh_set(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
+                       const char *identifier, double *values)
 {
     int status = 0;
     char key[MAX_STR_LEN];
 
-    if (!in || !dims || stage < 0 || stage > dims->N) return 0;
-    if (!identifier || !values || offset < 0) return 0;
+    if (!dims || !model || !identifier || !values) return status;
 
-    ocp_nlp_constraints_model **cons_model = (ocp_nlp_constraints_model **) in->constraints;
-    ocp_nlp_constraints_dims **cons_dims = (ocp_nlp_constraints_dims **) dims->constraints;
-
-    int nb = cons_dims[stage]->nb;
-    int ng = cons_dims[stage]->ng;
-    int nh = cons_dims[stage]->nh;
-    int np = cons_dims[stage]->np;
-    int ns = cons_dims[stage]->ns;
-
-    // currently, p overwrites h, i.e. both cannot exist at the same time!
-    int nhp = (nh > 0) ? nh : np;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
 
     strcpy(key, identifier);
     for (int i = 0; key[i]; i++) key[i] = tolower(key[i]);
 
     if (strcmp(key, "lb") == 0)
     {
-        int n = (numel >= 0) ? numel : nb;
-
-        if (offset + n <= nb)
-        {
-            blasfeo_pack_dvec(n, values, &cons_model[stage]->d, offset);
-            status = 1;
-        }
+        blasfeo_pack_dvec(nb, values, &model->d, 0);
+        status = 1;
     }
     else if (strcmp(key, "ub") == 0)
     {
-        int n = (numel >= 0) ? numel : nb;
-
-        if (offset + n <= nb)
-        {
-            blasfeo_pack_dvec(n, values, &cons_model[stage]->d, nb+ng+nhp+offset);
-            status = 1;
-        }
+        blasfeo_pack_dvec(nb, values, &model->d, nb+ng+nh);
+        status = 1;
     }
     else if (strcmp(key, "lg") == 0)
     {
-        int n = (numel >= 0) ? numel : ng;
-
-        if (offset + n <= ng)
-        {
-            blasfeo_pack_dvec(n, values, &cons_model[stage]->d, nb+offset);
-            status = 1;
-        }
+        blasfeo_pack_dvec(ng, values, &model->d, nb);
+        status = 1;
     }
     else if (strcmp(key, "ug") == 0)
     {
-        int n = (numel >= 0) ? numel : ng;
-
-        if (offset + n <= ng)
-        {
-            blasfeo_pack_dvec(n, values, &cons_model[stage]->d, 2*nb+ng+nhp+offset);
-            status = 1;
-        }
+        blasfeo_pack_dvec(ng, values, &model->d, 2*nb+ng+nh);
+        status = 1;
     }
     else if (strcmp(key, "lh") == 0)
     {
-        int n = (numel >= 0) ? numel : nhp;
-
-        if (offset + n <= nhp)
-        {
-            blasfeo_pack_dvec(n, values, &cons_model[stage]->d, nb+ng+offset);
-            status = 1;
-        }
+        blasfeo_pack_dvec(nh, values, &model->d, nb+ng);
+        status = 1;
     }
     else if (strcmp(key, "uh") == 0)
     {
-        int n = (numel >= 0) ? numel : nhp;
-
-        if (offset + n <= nhp)
-        {
-            blasfeo_pack_dvec(n, values, &cons_model[stage]->d, 2*nb+2*ng+nhp+offset);
-            status = 1;
-        }
-    }
-    else if (strcmp(key, "lp") == 0)
-    {
-        int n = (numel >= 0) ? numel : nhp;
-
-        if (offset + n <= nhp)
-        {
-            blasfeo_pack_dvec(n, values, &cons_model[stage]->d, nb+ng+offset);
-            status = 1;
-        }
-    }
-    else if (strcmp(key, "up") == 0)
-    {
-        int n = (numel >= 0) ? numel : nhp;
-
-        if (offset + n <= nhp)
-        {
-            blasfeo_pack_dvec(n, values, &cons_model[stage]->d, 2*nb+2*ng+nhp+offset);
-            status = 1;
-        }
+        blasfeo_pack_dvec(nh, values, &model->d, 2*nb+2*ng+nh);
+        status = 1;
     }
     else if (strcmp(key, "ls") == 0)
     {
-        int n = (numel >= 0) ? numel : ns;
-
-        if (offset + n <= ns)
-        {
-            blasfeo_pack_dvec(n, values, &cons_model[stage]->d, 2*nb+2*ng+2*nhp+offset);
-            status = 1;
-        }
+        blasfeo_pack_dvec(ns, values, &model->d, 2*nb+2*ng+2*nh);
+        status = 1;
     }
     else if (strcmp(key, "us") == 0)
     {
-        int n = (numel >= 0) ? numel : ns;
-
-        if (offset + n <= ns)
-        {
-            blasfeo_pack_dvec(n, values, &cons_model[stage]->d, 2*nb+2*ng+2*nhp+ns+offset);
-            status = 1;
-        }
+        blasfeo_pack_dvec(ns, values, &model->d, 2*nb+2*ng+2*nh+ns);
+        status = 1;
     }
     else
     {
@@ -380,136 +313,63 @@ int nlp_set_constraint_bounds_in_stage_with_offset(ocp_nlp_dims *dims, ocp_nlp_i
     return status;
 }
 
-int nlp_set_constraint_bounds_in_stage(ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-                                       const char *identifier, double *values)
-{
-    return nlp_set_constraint_bounds_in_stage_with_offset(dims, in, stage, identifier, -1, 0,
-                                                          values);
-}
 
-int nlp_get_constraint_bounds_from_stage_with_offset(ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-                                      const char *identifier, int numel, int offset, double *values)
+
+int nlp_bounds_bgh_get(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
+                       const char *identifier, double *values)
 {
     int status = 0;
     char key[MAX_STR_LEN];
 
-    if (!in || !dims || stage < 0 || stage > dims->N) return 0;
-    if (!identifier || !values || offset < 0) return 0;
+    if (!dims || !model || !identifier || !values) return status;
 
-    ocp_nlp_constraints_model **cons_model = (ocp_nlp_constraints_model **) in->constraints;
-    ocp_nlp_constraints_dims **cons_dims = (ocp_nlp_constraints_dims **) dims->constraints;
-
-    int nb = cons_dims[stage]->nb;
-    int ng = cons_dims[stage]->ng;
-    int nh = cons_dims[stage]->nh;
-    int np = cons_dims[stage]->np;
-    int ns = cons_dims[stage]->ns;
-
-    // currently, p overwrites h, i.e. both cannot exist at the same time!
-    int nhp = (nh > 0) ? nh : np;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
 
     strcpy(key, identifier);
     for (int i = 0; key[i]; i++) key[i] = tolower(key[i]);
 
     if (strcmp(key, "lb") == 0)
     {
-        int n = (numel >= 0) ? numel : nb;
-
-        if (offset + n <= nb)
-        {
-            blasfeo_unpack_dvec(n, &cons_model[stage]->d, offset, values);
-            status = 1;
-        }
+        blasfeo_unpack_dvec(nb, &model->d, 0, values);
+        status = 1;
     }
     else if (strcmp(key, "ub") == 0)
     {
-        int n = (numel >= 0) ? numel : nb;
-
-        if (offset + n <= nb)
-        {
-            blasfeo_unpack_dvec(n, &cons_model[stage]->d, nb+ng+nhp+offset, values);
-            status = 1;
-        }
+        blasfeo_unpack_dvec(nb, &model->d, nb+ng+nh, values);
+        status = 1;
     }
     else if (strcmp(key, "lg") == 0)
     {
-        int n = (numel >= 0) ? numel : ng;
-
-        if (offset + n <= ng)
-        {
-            blasfeo_unpack_dvec(n, &cons_model[stage]->d, nb+offset, values);
-            status = 1;
-        }
+        blasfeo_unpack_dvec(ng, &model->d, nb, values);
+        status = 1;
     }
     else if (strcmp(key, "ug") == 0)
     {
-        int n = (numel >= 0) ? numel : ng;
-
-        if (offset + n <= ng)
-        {
-            blasfeo_unpack_dvec(n, &cons_model[stage]->d, 2*nb+ng+nhp+offset, values);
-            status = 1;
-        }
+        blasfeo_unpack_dvec(ng, &model->d, 2*nb+ng+nh, values);
+        status = 1;
     }
     else if (strcmp(key, "lh") == 0)
     {
-        int n = (numel >= 0) ? numel : nhp;
-
-        if (offset + n <= nhp)
-        {
-            blasfeo_unpack_dvec(n, &cons_model[stage]->d, nb+ng+offset, values);
-            status = 1;
-        }
+        blasfeo_unpack_dvec(nh, &model->d, nb+ng, values);
+        status = 1;
     }
     else if (strcmp(key, "uh") == 0)
     {
-        int n = (numel >= 0) ? numel : nhp;
-
-        if (offset + n <= nhp)
-        {
-            blasfeo_unpack_dvec(n, &cons_model[stage]->d, 2*nb+2*ng+nhp+offset, values);
-            status = 1;
-        }
-    }
-    else if (strcmp(key, "lp") == 0)
-    {
-        int n = (numel >= 0) ? numel : nhp;
-
-        if (offset + n <= nhp)
-        {
-            blasfeo_unpack_dvec(n, &cons_model[stage]->d, nb+ng+offset, values);
-            status = 1;
-        }
-    }
-    else if (strcmp(key, "up") == 0)
-    {
-        int n = (numel >= 0) ? numel : nhp;
-
-        if (offset + n <= nhp)
-        {
-            blasfeo_unpack_dvec(n, &cons_model[stage]->d, 2*nb+2*ng+nhp+offset, values);
-            status = 1;
-        }
+        blasfeo_unpack_dvec(nh, &model->d, 2*nb+2*ng+nh, values);
+        status = 1;
     }
     else if (strcmp(key, "ls") == 0)
     {
-        int n = (numel >= 0) ? numel : ns;
-
-        if (offset + n <= nhp)
-        {
-            blasfeo_unpack_dvec(n, &cons_model[stage]->d, 2*nb+2*ng+2*nhp+offset, values);
-            status = 1;
-        }
+        blasfeo_unpack_dvec(ns, &model->d, 2*nb+2*ng+2*nh, values);
+        status = 1;
     }
     else if (strcmp(key, "us") == 0)
     {
-        int n = (numel >= 0) ? numel : ns;
-
-        if (offset + n <= nhp)
-        {
-            blasfeo_unpack_dvec(n, &cons_model[stage]->d, 2*nb+2*ng+2*nhp+ns+offset, values);
-            status = 1;
-        }
+        blasfeo_unpack_dvec(ns, &model->d, 2*nb+2*ng+2*nh+ns, values);
+        status = 1;
     }
     else
     {
@@ -517,17 +377,11 @@ int nlp_get_constraint_bounds_from_stage_with_offset(ocp_nlp_dims *dims, ocp_nlp
     }
 
     return status;
+
+    return status;
 }
 
-int nlp_get_constraint_bounds_from_stage(ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-                                      const char *identifier, double *values)
-{
-    return nlp_get_constraint_bounds_from_stage_with_offset(dims, in, stage, identifier, -1, 0,
-                                                            values);
-}
-=======
 
->>>>>>> 1340daee251b5b1c4afdc3ed30ab7357dea10444
 
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
