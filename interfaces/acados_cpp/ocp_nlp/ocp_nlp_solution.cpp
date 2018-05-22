@@ -55,7 +55,8 @@ vector<vector<double>> ocp_nlp_solution::controls()
 
 vector<vector<double>> ocp_nlp_solution::lag_mul_bounds()
 {
-    ocp_nlp_constraints_bgh_dims **constraint_dims = (ocp_nlp_constraints_bgh_dims **) dims_->constraints;
+    ocp_nlp_constraints_bgh_dims **constraint_dims = (ocp_nlp_constraints_bgh_dims **)
+                                                     dims_->constraints;
 
     vector<vector<double>> result;
     for (int stage = 0; stage <= N; ++stage)
