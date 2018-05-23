@@ -221,7 +221,7 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_hess = false;
     opts->jac_reuse = true;
 
-    opts->report_algebraic = false;
+    opts->output_z = false;
     opts->sens_algebraic = false;
 
     return;
@@ -417,6 +417,15 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
+
+    // assert - only use supported features
+    assert(nz == 0 && "nz should be zero - DAEs are not (yet) supported for this integrator");
+    assert(opts->output_z == false &&
+            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
+    assert(opts->sens_algebraic == false &&
+       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
+
     double *x = in->x;
     double *u = in->u;
     double *S_forw_in = in->S_forw;

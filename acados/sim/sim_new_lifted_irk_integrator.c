@@ -232,7 +232,7 @@ void sim_new_lifted_irk_opts_initialize_default(void *config_, void *dims_, void
     opts->sens_hess = false;
     opts->jac_reuse = false;
 
-    opts->report_algebraic = false;
+    opts->output_z = false;
     opts->sens_algebraic = false;
     return;
 }
@@ -481,12 +481,10 @@ static void *sim_new_lifted_irk_cast_workspace(void *config_, void *dims_, void 
 int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
                        void *work_)
 {
+    // typecasting
     sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
-
-    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
-
-    int ns = opts->ns;
+    sim_new_lifted_irk_memory *memory = (sim_new_lifted_irk_memory *) mem_;
 
     void *dims_ = in->dims;
     sim_new_lifted_irk_dims *dims = (sim_new_lifted_irk_dims *) dims_;
@@ -495,13 +493,25 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         (sim_new_lifted_irk_workspace *) sim_new_lifted_irk_cast_workspace(config, dims, opts,
                                                                            work_);
 
-    sim_new_lifted_irk_memory *memory = (sim_new_lifted_irk_memory *) mem_;
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nz = dims->nz;
+
+    int ns = opts->ns;
+
+    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
+
+    // assert - only use supported features
+    assert(nz == 0 && "nz should be zero - DAEs are not (yet) supported for this integrator");
+    assert(opts->output_z == false &&
+            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
+    assert(opts->sens_algebraic == false &&
+       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
 
     int ii, jj, ss;
     double a;
 
-    int nx = dims->nx;
-    int nu = dims->nu;
+
     double *x = in->x;
     double *u = in->u;
     double *S_forw_in = in->S_forw;

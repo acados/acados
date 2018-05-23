@@ -254,7 +254,7 @@ void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_hess = false;
     opts->jac_reuse = true;
 
-    opts->report_algebraic = false;
+    opts->output_z = false;
     opts->sens_algebraic = false;
 
     return;
@@ -330,6 +330,12 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
     int n_out = dims->n_out;
     int ny = dims->ny;
     int nuhat = dims->nuhat;
+
+    // assert - only use supported features
+    assert(opts->output_z == false &&
+            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
+    assert(opts->sens_algebraic == false &&
+       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
 
     // initial align
     align_char_to(8, &c_ptr);

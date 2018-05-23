@@ -81,7 +81,8 @@ typedef struct
     double *S_hess;  //
 
     double *zn;      // z - algebraic variables - value for start of simulation
-    double *S_algebraic;  // sensitivities of reported value of algebraic variables w.r.t. initial stat & control (x_n,u)
+    double *S_algebraic;  // sensitivities of reported value of algebraic variables w.r.t.
+                          // initial stat & control (x_n,u)
 
     double *grad;  // gradient correction
 
@@ -104,7 +105,7 @@ typedef struct
     bool sens_adj;
     bool sens_hess;
 
-    bool report_algebraic;  // 1 -- if zn should be reported
+    bool output_z;  // 1 -- if zn should be computed
     bool sens_algebraic;    // 1 -- if S_algebraic should be computed
 
     // for explicit integrators: newton_iter == 0 && scheme == NULL

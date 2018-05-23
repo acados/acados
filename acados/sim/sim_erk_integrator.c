@@ -270,7 +270,7 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_adj = false;
     opts->sens_hess = false;
 
-    opts->report_algebraic = false;
+    opts->output_z = false;
     opts->sens_algebraic = false;
 }
 
@@ -501,6 +501,14 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double a = 0, b = 0;  // temp values of A_mat and b_vec
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
+
+    // assert - only use supported features
+    assert(nz == 0 && "nz should be zero - DAEs are not (yet) supported for this integrator");
+    assert(opts->output_z == false &&
+            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
+    assert(opts->sens_algebraic == false &&
+       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
 
     int nf = opts->num_forw_sens;
     if (!opts->sens_forw) nf = 0;
