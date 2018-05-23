@@ -19,15 +19,14 @@ addons:
 
 cache:
   directories:
+    - /home/travis/external_software/
     - /home/travis/octave_download/
 
 install:
   - pushd external
   - |
-    if [ -n "${EXTERNAL_SOFTWARE_DOWNLOADLINK}" ]; then
-      wget -q -O external.tar.gz "${EXTERNAL_SOFTWARE_DOWNLOADLINK}";
-      tar -xf external.tar.gz > /dev/null;
-      rm external.tar.gz;
+    if [ -f /home/travis/external_software/external.tar.gz ]; then
+      tar -xf /home/travis/external_software/external.tar.gz > /dev/null;
       pushd coinhsl;
       chmod +x ./*;
       popd;
@@ -38,11 +37,9 @@ install:
       echo "Skipping installation of encrypted software";
     fi
   - |
-    if [ -n "${MATLAB_DOWNLOADLINK}" ]; then
+    if [ -f /home/travis/external_software/matlab.tar ]; then
       export USE_MATLAB=true
-      wget -q -O matlab.tar.gz "${MATLAB_DOWNLOADLINK}"
-      tar -xf matlab.tar.gz > /dev/null
-      rm matlab.tar.gz
+      tar -xf /home/travis/external_software/matlab.tar > /dev/null
       export MATLAB_ROOT=$(pwd)/matlab
       pushd matlab/bin
       ./matlab -nodesktop -nojvm -nosplash < ../../hello_world.m
@@ -65,6 +62,14 @@ before_script:
       pushd /home/travis/octave_download
       wget http://packages.octave.org/download/optim-1.5.2.tar.gz
       wget http://packages.octave.org/download/struct-1.0.14.tar.gz
+      popd
+    fi
+  - mkdir -p /home/travis/external_software
+  - |
+    if [ -z "$(ls -1qA /home/travis/external_software)" ]; then
+      pushd /home/travis/external_software
+      [ -n "${EXTERNAL_SOFTWARE_DOWNLOADLINK}" ] && wget -q -O external.tar.gz "${EXTERNAL_SOFTWARE_DOWNLOADLINK}";
+      [ -n "${MATLAB_DOWNLOADLINK}" ] && wget -q -O matlab.tar "${MATLAB_DOWNLOADLINK}";
       popd
     fi
 
