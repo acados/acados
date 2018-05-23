@@ -39,11 +39,9 @@
 #include "acados_c/external_function_interface.h"
 #include "interfaces/acados_c/sim_interface.h"
 
-// wt model
-#include "examples/c/wt_model_nx3/wt_model.h"
+// crane dae model
+#include "examples/c/crane_dae_model/crane_dae_model.h"
 
-// x0 and u for simulation
-#include "examples/c/wt_model_nx3/u_x0.c"
 
 extern "C"
 {
@@ -68,11 +66,11 @@ sim_solver_t hashitsim(std::string const& inString)
 
 double sim_solver_tolerance(std::string const& inString)
 {
-    if (inString == "ERK") return 1e-13;
-    if (inString == "IRK") return 1e-13;
-    if (inString == "LIFTED_IRK") return 1e-13;
-    if (inString == "GNSF") return 1e-13;
-    if (inString == "NEW_LIFTED_IRK") return 1e-13;
+    // if (inString == "ERK") return 1e-3;
+    if (inString == "IRK") return 1e-5;
+    // if (inString == "LIFTED_IRK") return 1e-3;
+    if (inString == "GNSF") return 1e-6;
+    // if (inString == "NEW_LIFTED_IRK") return 1e-3;
 
     return -1;
 }
@@ -80,21 +78,40 @@ double sim_solver_tolerance(std::string const& inString)
 
 
 
-TEST_CASE("wt_nx3_example", "[integrators]")
+TEST_CASE("crane_dae_example", "[integrators]")
 {
-    vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
+    vector<std::string> solvers = {"GNSF"}; //, "NEW_LIFTED_IRK"};  //{"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
     int ii, jj;
 
-    const int nx = 3;
-    const int nu = 4;
+    const int nx = 9;
+    const int nu = 2;
+    const int nz = 1;
+    const int nx1 = 8;  // gnsf split
+    const int nx2 = 1;
+    const int n_out = 2;
+    const int ny = 4;
+    const int nuhat = 1;
+
+    // generate x0, u_sim
+    double x0[nx];
+    double u_sim[nu];
+
+    for (int ii = 0; ii < nx; ii++) {
+        x0[ii] = 0.0;
+    }
+    x0[2] = 0.8;
+
+    u_sim[0] = 40.108149413030752;
+    u_sim[1] = -50.446662212534974;
+
     int NF = nx + nu;  // columns of forward seed
 
     int nsim0 = 1;  // nsim;
 
     double T = 0.05;  // simulation time
 
-    double x_sim[nx*(nsim0+1)];
+    double x_sim[nx*(nsim0+2)];
     double x_ref_sol[nx];
     double S_forw_ref_sol[nx*NF];
     double S_adj_ref_sol[NF];
@@ -109,91 +126,47 @@ TEST_CASE("wt_nx3_example", "[integrators]")
         x_sim[ii] = x0[ii];
 
     /************************************************
-    * external functions (explicit model)
-    ************************************************/
-
-    // expl_ode_fun
-    external_function_casadi expl_ode_fun;
-    expl_ode_fun.casadi_fun = &casadi_expl_ode_fun;
-    expl_ode_fun.casadi_work = &casadi_expl_ode_fun_work;
-    expl_ode_fun.casadi_sparsity_in = &casadi_expl_ode_fun_sparsity_in;
-    expl_ode_fun.casadi_sparsity_out = &casadi_expl_ode_fun_sparsity_out;
-    expl_ode_fun.casadi_n_in = &casadi_expl_ode_fun_n_in;
-    expl_ode_fun.casadi_n_out = &casadi_expl_ode_fun_n_out;
-    external_function_casadi_create(&expl_ode_fun);
-
-    // expl_ode_jac
-    external_function_casadi expl_ode_jac;
-    expl_ode_jac.casadi_fun = &casadi_expl_ode_jac;
-    expl_ode_jac.casadi_work = &casadi_expl_ode_jac_work;
-    expl_ode_jac.casadi_sparsity_in = &casadi_expl_ode_jac_sparsity_in;
-    expl_ode_jac.casadi_sparsity_out = &casadi_expl_ode_jac_sparsity_out;
-    expl_ode_jac.casadi_n_in = &casadi_expl_ode_jac_n_in;
-    expl_ode_jac.casadi_n_out = &casadi_expl_ode_jac_n_out;
-    external_function_casadi_create(&expl_ode_jac);
-
-    // expl_vde_for
-    external_function_casadi expl_vde_for;
-    expl_vde_for.casadi_fun = &casadi_expl_vde_for;
-    expl_vde_for.casadi_work = &casadi_expl_vde_for_work;
-    expl_vde_for.casadi_sparsity_in = &casadi_expl_vde_for_sparsity_in;
-    expl_vde_for.casadi_sparsity_out = &casadi_expl_vde_for_sparsity_out;
-    expl_vde_for.casadi_n_in = &casadi_expl_vde_for_n_in;
-    expl_vde_for.casadi_n_out = &casadi_expl_vde_for_n_out;
-    external_function_casadi_create(&expl_vde_for);
-
-    // expl_vde_adj
-    external_function_casadi expl_vde_adj;
-    expl_vde_adj.casadi_fun = &casadi_expl_vde_adj;
-    expl_vde_adj.casadi_work = &casadi_expl_vde_adj_work;
-    expl_vde_adj.casadi_sparsity_in = &casadi_expl_vde_adj_sparsity_in;
-    expl_vde_adj.casadi_sparsity_out = &casadi_expl_vde_adj_sparsity_out;
-    expl_vde_adj.casadi_n_in = &casadi_expl_vde_adj_n_in;
-    expl_vde_adj.casadi_n_out = &casadi_expl_vde_adj_n_out;
-    external_function_casadi_create(&expl_vde_adj);
-
-    /************************************************
     * external functions (implicit model)
     ************************************************/
 
     // impl_ode_fun
     external_function_casadi impl_ode_fun;
-    impl_ode_fun.casadi_fun = &casadi_impl_ode_fun;
-    impl_ode_fun.casadi_work = &casadi_impl_ode_fun_work;
-    impl_ode_fun.casadi_sparsity_in = &casadi_impl_ode_fun_sparsity_in;
-    impl_ode_fun.casadi_sparsity_out = &casadi_impl_ode_fun_sparsity_out;
-    impl_ode_fun.casadi_n_in = &casadi_impl_ode_fun_n_in;
-    impl_ode_fun.casadi_n_out = &casadi_impl_ode_fun_n_out;
+    impl_ode_fun.casadi_fun = &crane_dae_impl_ode_fun;
+    impl_ode_fun.casadi_work = &crane_dae_impl_ode_fun_work;
+    impl_ode_fun.casadi_sparsity_in = &crane_dae_impl_ode_fun_sparsity_in;
+    impl_ode_fun.casadi_sparsity_out = &crane_dae_impl_ode_fun_sparsity_out;
+    impl_ode_fun.casadi_n_in = &crane_dae_impl_ode_fun_n_in;
+    impl_ode_fun.casadi_n_out = &crane_dae_impl_ode_fun_n_out;
     external_function_casadi_create(&impl_ode_fun);
 
     // impl_ode_fun_jac_x_xdot
     external_function_casadi impl_ode_fun_jac_x_xdot;
-    impl_ode_fun_jac_x_xdot.casadi_fun = &casadi_impl_ode_fun_jac_x_xdot;
-    impl_ode_fun_jac_x_xdot.casadi_work = &casadi_impl_ode_fun_jac_x_xdot_work;
-    impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_sparsity_in;
-    impl_ode_fun_jac_x_xdot.casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_sparsity_out;
-    impl_ode_fun_jac_x_xdot.casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_n_in;
-    impl_ode_fun_jac_x_xdot.casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_n_out;
+    impl_ode_fun_jac_x_xdot.casadi_fun = &crane_dae_impl_ode_fun_jac_x_xdot;
+    impl_ode_fun_jac_x_xdot.casadi_work = &crane_dae_impl_ode_fun_jac_x_xdot_work;
+    impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &crane_dae_impl_ode_fun_jac_x_xdot_sparsity_in;
+    impl_ode_fun_jac_x_xdot.casadi_sparsity_out = &crane_dae_impl_ode_fun_jac_x_xdot_sparsity_out;
+    impl_ode_fun_jac_x_xdot.casadi_n_in = &crane_dae_impl_ode_fun_jac_x_xdot_n_in;
+    impl_ode_fun_jac_x_xdot.casadi_n_out = &crane_dae_impl_ode_fun_jac_x_xdot_n_out;
     external_function_casadi_create(&impl_ode_fun_jac_x_xdot);
 
     // impl_ode_jac_x_xdot_u
     external_function_casadi impl_ode_jac_x_xdot_u;
-    impl_ode_jac_x_xdot_u.casadi_fun = &casadi_impl_ode_jac_x_xdot_u;
-    impl_ode_jac_x_xdot_u.casadi_work = &casadi_impl_ode_jac_x_xdot_u_work;
-    impl_ode_jac_x_xdot_u.casadi_sparsity_in = &casadi_impl_ode_jac_x_xdot_u_sparsity_in;
-    impl_ode_jac_x_xdot_u.casadi_sparsity_out = &casadi_impl_ode_jac_x_xdot_u_sparsity_out;
-    impl_ode_jac_x_xdot_u.casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_n_in;
-    impl_ode_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
+    impl_ode_jac_x_xdot_u.casadi_fun = &crane_dae_impl_ode_jac_x_xdot_u;
+    impl_ode_jac_x_xdot_u.casadi_work = &crane_dae_impl_ode_jac_x_xdot_u_work;
+    impl_ode_jac_x_xdot_u.casadi_sparsity_in = &crane_dae_impl_ode_jac_x_xdot_u_sparsity_in;
+    impl_ode_jac_x_xdot_u.casadi_sparsity_out = &crane_dae_impl_ode_jac_x_xdot_u_sparsity_out;
+    impl_ode_jac_x_xdot_u.casadi_n_in = &crane_dae_impl_ode_jac_x_xdot_u_n_in;
+    impl_ode_jac_x_xdot_u.casadi_n_out = &crane_dae_impl_ode_jac_x_xdot_u_n_out;
     external_function_casadi_create(&impl_ode_jac_x_xdot_u);
 
     // impl_ode_jac_x_xdot_u
     external_function_casadi impl_ode_fun_jac_x_xdot_u;
-    impl_ode_fun_jac_x_xdot_u.casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_u;
-    impl_ode_fun_jac_x_xdot_u.casadi_work = &casadi_impl_ode_fun_jac_x_xdot_u_work;
-    impl_ode_fun_jac_x_xdot_u.casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_u_sparsity_in;
-    impl_ode_fun_jac_x_xdot_u.casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_u_sparsity_out;
-    impl_ode_fun_jac_x_xdot_u.casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_u_n_in;
-    impl_ode_fun_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_u_n_out;
+    impl_ode_fun_jac_x_xdot_u.casadi_fun = &crane_dae_impl_ode_fun_jac_x_xdot_u;
+    impl_ode_fun_jac_x_xdot_u.casadi_work = &crane_dae_impl_ode_fun_jac_x_xdot_u_work;
+    impl_ode_fun_jac_x_xdot_u.casadi_sparsity_in = &crane_dae_impl_ode_fun_jac_x_xdot_u_sparsity_in;
+    impl_ode_fun_jac_x_xdot_u.casadi_sparsity_out = &crane_dae_impl_ode_fun_jac_x_xdot_u_sparsity_out;
+    impl_ode_fun_jac_x_xdot_u.casadi_n_in = &crane_dae_impl_ode_fun_jac_x_xdot_u_n_in;
+    impl_ode_fun_jac_x_xdot_u.casadi_n_out = &crane_dae_impl_ode_fun_jac_x_xdot_u_n_out;
     external_function_casadi_create(&impl_ode_fun_jac_x_xdot_u);
 
     /************************************************
@@ -201,52 +174,52 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     ************************************************/
     // phi_fun
     external_function_casadi phi_fun;
-    phi_fun.casadi_fun            = &casadi_phi_fun;
-    phi_fun.casadi_work           = &casadi_phi_fun_work;
-    phi_fun.casadi_sparsity_in    = &casadi_phi_fun_sparsity_in;
-    phi_fun.casadi_sparsity_out   = &casadi_phi_fun_sparsity_out;
-    phi_fun.casadi_n_in           = &casadi_phi_fun_n_in;
-    phi_fun.casadi_n_out          = &casadi_phi_fun_n_out;
+    phi_fun.casadi_fun            = &crane_dae_phi_fun;
+    phi_fun.casadi_work           = &crane_dae_phi_fun_work;
+    phi_fun.casadi_sparsity_in    = &crane_dae_phi_fun_sparsity_in;
+    phi_fun.casadi_sparsity_out   = &crane_dae_phi_fun_sparsity_out;
+    phi_fun.casadi_n_in           = &crane_dae_phi_fun_n_in;
+    phi_fun.casadi_n_out          = &crane_dae_phi_fun_n_out;
     external_function_casadi_create(&phi_fun);
 
     // phi_fun_jac_y
     external_function_casadi phi_fun_jac_y;
-    phi_fun_jac_y.casadi_fun            = &casadi_phi_fun_jac_y;
-    phi_fun_jac_y.casadi_work           = &casadi_phi_fun_jac_y_work;
-    phi_fun_jac_y.casadi_sparsity_in    = &casadi_phi_fun_jac_y_sparsity_in;
-    phi_fun_jac_y.casadi_sparsity_out   = &casadi_phi_fun_jac_y_sparsity_out;
-    phi_fun_jac_y.casadi_n_in           = &casadi_phi_fun_jac_y_n_in;
-    phi_fun_jac_y.casadi_n_out          = &casadi_phi_fun_jac_y_n_out;
+    phi_fun_jac_y.casadi_fun            = &crane_dae_phi_fun_jac_y;
+    phi_fun_jac_y.casadi_work           = &crane_dae_phi_fun_jac_y_work;
+    phi_fun_jac_y.casadi_sparsity_in    = &crane_dae_phi_fun_jac_y_sparsity_in;
+    phi_fun_jac_y.casadi_sparsity_out   = &crane_dae_phi_fun_jac_y_sparsity_out;
+    phi_fun_jac_y.casadi_n_in           = &crane_dae_phi_fun_jac_y_n_in;
+    phi_fun_jac_y.casadi_n_out          = &crane_dae_phi_fun_jac_y_n_out;
     external_function_casadi_create(&phi_fun_jac_y);
 
     // phi_jac_y_uhat
     external_function_casadi phi_jac_y_uhat;
-    phi_jac_y_uhat.casadi_fun                = &casadi_phi_jac_y_uhat;
-    phi_jac_y_uhat.casadi_work               = &casadi_phi_jac_y_uhat_work;
-    phi_jac_y_uhat.casadi_sparsity_in        = &casadi_phi_jac_y_uhat_sparsity_in;
-    phi_jac_y_uhat.casadi_sparsity_out       = &casadi_phi_jac_y_uhat_sparsity_out;
-    phi_jac_y_uhat.casadi_n_in               = &casadi_phi_jac_y_uhat_n_in;
-    phi_jac_y_uhat.casadi_n_out              = &casadi_phi_jac_y_uhat_n_out;
+    phi_jac_y_uhat.casadi_fun                = &crane_dae_phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_work               = &crane_dae_phi_jac_y_uhat_work;
+    phi_jac_y_uhat.casadi_sparsity_in        = &crane_dae_phi_jac_y_uhat_sparsity_in;
+    phi_jac_y_uhat.casadi_sparsity_out       = &crane_dae_phi_jac_y_uhat_sparsity_out;
+    phi_jac_y_uhat.casadi_n_in               = &crane_dae_phi_jac_y_uhat_n_in;
+    phi_jac_y_uhat.casadi_n_out              = &crane_dae_phi_jac_y_uhat_n_out;
     external_function_casadi_create(&phi_jac_y_uhat);
 
     // f_lo_fun_jac_x1k1uz
     external_function_casadi f_lo_fun_jac_x1k1uz;
-    f_lo_fun_jac_x1k1uz.casadi_fun            = &casadi_f_lo_fun_jac_x1k1uz;
-    f_lo_fun_jac_x1k1uz.casadi_work           = &casadi_f_lo_fun_jac_x1k1uz_work;
-    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &casadi_f_lo_fun_jac_x1k1uz_sparsity_in;
-    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &casadi_f_lo_fun_jac_x1k1uz_sparsity_out;
-    f_lo_fun_jac_x1k1uz.casadi_n_in           = &casadi_f_lo_fun_jac_x1k1uz_n_in;
-    f_lo_fun_jac_x1k1uz.casadi_n_out          = &casadi_f_lo_fun_jac_x1k1uz_n_out;
+    f_lo_fun_jac_x1k1uz.casadi_fun            = &crane_dae_f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_work           = &crane_dae_f_lo_fun_jac_x1k1uz_work;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &crane_dae_f_lo_fun_jac_x1k1uz_sparsity_in;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &crane_dae_f_lo_fun_jac_x1k1uz_sparsity_out;
+    f_lo_fun_jac_x1k1uz.casadi_n_in           = &crane_dae_f_lo_fun_jac_x1k1uz_n_in;
+    f_lo_fun_jac_x1k1uz.casadi_n_out          = &crane_dae_f_lo_fun_jac_x1k1uz_n_out;
     external_function_casadi_create(&f_lo_fun_jac_x1k1uz);
 
     // get_matrices_fun
     external_function_casadi get_matrices_fun;
-    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
-    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
-    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
-    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
-    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
-    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
+    get_matrices_fun.casadi_fun            = &crane_dae_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &crane_dae_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &crane_dae_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &crane_dae_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &crane_dae_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &crane_dae_get_matrices_fun_n_out;
     external_function_casadi_create(&get_matrices_fun);
 
 
@@ -255,7 +228,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     ************************************************/
 
     sim_solver_plan plan;
-    plan.sim_solver = IRK;
+    plan.sim_solver = GNSF;
 
     sim_solver_config *config = sim_config_create(plan);
 
@@ -263,6 +236,22 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
     config->set_nx(dims, nx);
     config->set_nu(dims, nu);
+    config->set_nz(dims, nz);
+
+    // set dimensions
+    sim_gnsf_dims *gnsf_dim = (sim_gnsf_dims *) dims;
+
+    // gnsf_dim->nx = nx;
+    // gnsf_dim->nu = nu;
+    // gnsf_dim->nz = nz;
+    gnsf_dim->nx1 = nx1;
+    gnsf_dim->nx2 = nx2;
+    gnsf_dim->ny = ny;
+    gnsf_dim->nuhat = nuhat;
+    gnsf_dim->n_out = n_out;
+
+
+
 
     void *opts_ = sim_opts_create(config, dims);
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
@@ -272,7 +261,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 5;  // number of newton iterations per integration step
-    opts->num_steps = 10;  // number of steps
+    opts->num_steps = 50;  // number of steps
     opts->ns = 5;  // number of stages in rk integrator
 
     sim_in *in = sim_in_create(config, dims);
@@ -280,9 +269,17 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
     in->T = T;
 
-    sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-    sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
-    sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+    // import model matrices
+    external_function_generic *get_model_matrices =
+            (external_function_generic *) &get_matrices_fun;
+    gnsf_model *model = (gnsf_model *) in->model;
+    sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
+
+    // set model funtions
+    sim_set_model(config, in, "phi_fun", &phi_fun);
+    sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
+    sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
+    sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
 
     // seeds forw
     for (ii = 0; ii < nx * NF; ii++)
@@ -300,6 +297,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
     sim_solver *sim_solver = sim_create(config, dims, opts);
 
+    sim_gnsf_precompute(config, gnsf_dim, model, opts,
+                             sim_solver->mem, sim_solver->work, in->T);
+
     int acados_return;
 
     for (ii=0; ii < nsim0; ii++)
@@ -308,11 +308,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
         for (jj = 0; jj < nx; jj++)
             in->x[jj] = x_sim[ii*nx+jj];
 
-        // p
-        for (jj = 0; jj < 2; jj++)
-            in->u[jj] = u_sim[ii*2+jj];
+        // u
         for (jj = 0; jj < nu; jj++)
-            in->u[2+jj] = 0.1;
+            in->u[jj] = u_sim[ii*nu+jj];
 
         acados_return = sim_solve(sim_solver, in, out);
         REQUIRE(acados_return == 0);
@@ -330,8 +328,14 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     for (jj = 0; jj < NF; jj++)
         S_adj_ref_sol[jj] = out->S_adj[jj];
 
+
+    printf("Reference xn \n");
+    d_print_e_mat(1, nx, &x_ref_sol[0], 1);
+
+
     printf("Reference forward sensitivities \n");
-    d_print_e_mat(nx, NF, &S_forw_ref_sol[0], 1);
+    d_print_e_mat(nx, NF, &S_forw_ref_sol[0], nx);
+
 
 
     free(config);
@@ -346,7 +350,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     {
         SECTION(solver)
         {
-            for (int num_steps = 1; num_steps < 4; num_steps++)
+            for (int num_steps = 2; num_steps < 7; num_steps++)
             {
                 double tol = sim_solver_tolerance(solver);
 
@@ -362,6 +366,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 void *dims = sim_dims_create(config);
                 config->set_nx(dims, nx);
                 config->set_nu(dims, nu);
+                config->set_nz(dims, nz);
 
                 /************************************************
                 * sim opts
@@ -377,8 +382,8 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 sim_gnsf_dims *gnsf_dim;
 
-                opts->jac_reuse = true;  // jacobian reuse
-                opts->newton_iter = 1;  // number of newton iterations per integration step
+                opts->jac_reuse = false;  // jacobian reuse
+                opts->newton_iter = 3;  // number of newton iterations per integration step
                 opts->num_steps = num_steps;  // number of steps
 
                 switch (plan.sim_solver)
@@ -401,25 +406,22 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                     case GNSF:
                         // GNSF
-                        opts->ns = 2;  // number of stages in rk integrator
+                        opts->ns = 5;  // number of stages in rk integrator
 
                         // set additional dimensions
                         gnsf_dim = (sim_gnsf_dims *) dims;
                               // declaration not allowed inside switch somehow
-                        gnsf_dim->nx = nx;
-                        gnsf_dim->nu = nu;
-                        gnsf_dim->nx1 = nx;
-                        gnsf_dim->nx2 = 0;
-                        gnsf_dim->ny = nx;
-                        gnsf_dim->nuhat = nu;
-                        gnsf_dim->n_out = 1;
-                        gnsf_dim->nz = 0;
+                        gnsf_dim->nx1 = nx1;
+                        gnsf_dim->nx2 = nx2;
+                        gnsf_dim->ny = ny;
+                        gnsf_dim->nuhat = nuhat;
+                        gnsf_dim->n_out = n_out;
 
                         break;
 
                     case NEW_LIFTED_IRK:
                         // new lifted IRK
-                        opts->ns = 2;  // number of stages in rk integrator
+                        opts->ns = 3;  // number of stages in rk integrator
                         break;
 
                     default :
@@ -440,25 +442,12 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 // external functions
                 switch (plan.sim_solver)
                 {
-                    case ERK:  // ERK
-                    {
-                        sim_set_model(config, in, "expl_ode_fun", &expl_ode_fun);
-                        sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-                        sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
-                        break;
-                    }
                     case IRK:  // IRK
                     {
                         sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
                         sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
                                 &impl_ode_fun_jac_x_xdot);
                         sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-                        break;
-                    }
-                    case LIFTED_IRK:  // lifted IRK
-                    {
-                        sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-                        sim_set_model(config, in, "expl_ode_jac", &expl_ode_jac);
                         break;
                     }
                     case GNSF:  // GNSF
@@ -523,18 +512,16 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                     for (jj = 0; jj < nx; jj++)
                         in->x[jj] = x_sim[ii*nx+jj];
 
-                    // p
-                    for (jj = 0; jj < 2; jj++)
-                        in->u[jj] = u_sim[ii*2+jj];
+                    // u
                     for (jj = 0; jj < nu; jj++)
-                        in->u[2+jj] = 0.1;
+                        in->u[jj] = u_sim[ii*nu+jj];
 
                     acados_return = sim_solve(sim_solver, in, out);
                     REQUIRE(acados_return == 0);
 
                     for (jj = 0; jj < nx; jj++){
                         x_sim[(ii+1)*nx+jj] = out->xn[jj];
-                        REQUIRE(isnan(out->xn[jj]) == 0);
+                        REQUIRE(isnan(out->xn[jj]) == false);
                     }
 
                 }
@@ -571,11 +558,12 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 /************************************************
                 * printing
                 ************************************************/
+                d_print_e_mat(1, nx, &out->xn[0], 1);
 
                 std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = "
                          << max_error_forw << ",\nerror_adj_sens = "
                          << max_error_adj << "\n";
-                d_print_e_mat(nx, NF, &out->S_forw[0], 1);
+                d_print_e_mat(nx, NF, &out->S_forw[0], nx);
 
 
                 REQUIRE(max_error <= tol);
@@ -597,11 +585,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
         }  // end section
     }  // END FOR SOLVERS
 
-    // explicit model
-    external_function_casadi_free(&expl_ode_fun);
-    external_function_casadi_free(&expl_ode_jac);
-    external_function_casadi_free(&expl_vde_for);
-    external_function_casadi_free(&expl_vde_adj);
     // implicit model
     external_function_casadi_free(&impl_ode_fun);
     external_function_casadi_free(&impl_ode_fun_jac_x_xdot);

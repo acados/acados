@@ -11,7 +11,7 @@ tau2 = 0.024695192379264;   a2   = 0.034087337273386;
 g = 9.81;
 
 %% Set up States & Controls
-xC = SX.sym('xC');     %States  
+xC = SX.sym('xC');     %States
 vC = SX.sym('vC');
 xL = SX.sym('xL');     
 vL = SX.sym('vL');
@@ -63,7 +63,6 @@ else
 	error('Please download and install Casadi 3.4.0')
 end
 model_name_prefix = 'crane_dae_';
-casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 
 %% Model defining matrices
 A = zeros(nx1+nz,nx1);
@@ -108,15 +107,14 @@ L_z = full(L_z_fun(0));
 y_check = L_xdot * x1_dot +L_x * x1 + L_z * z; %% THis should be the same as y
 uhat_check = L_u * u;
 
-phi_fun = Function('Phi_fun',{y,uhat}, {phi});
-
 jac_phi_y = jacobian(phi,y);
 jac_phi_uhat = jacobian(phi,uhat);
 
+phi_fun = Function([model_name_prefix,'phi_fun'], {y,uhat}, {phi});
 phi_fun_jac_y = Function([model_name_prefix,'phi_fun_jac_y'], {y,uhat}, {phi, jac_phi_y});
 phi_jac_y_uhat = Function([model_name_prefix,'phi_jac_y_uhat'], {y,uhat}, {jac_phi_y, jac_phi_uhat});
 
-phi_jac_y = Function([model_name_prefix,'phi_jac_y_uhat'], {y,uhat}, {[jac_phi_y]});
+phi_jac_y = Function([model_name_prefix,'phi_jac_y_uhat'], {y,uhat}, {jac_phi_y});
 
 % Linear output
 ALO = zeros(nx2);
@@ -154,6 +152,7 @@ get_matrices_fun.generate([model_name_prefix,'get_matrices_fun'], casadi_opts);
 
 % generate Phi, f_LO
 f_lo_fun_jac_x1k1uz.generate([model_name_prefix,'f_lo_fun_jac_x1k1uz'], casadi_opts);
+phi_fun.generate([model_name_prefix,'phi_fun'], casadi_opts);
 phi_fun_jac_y.generate([model_name_prefix,'phi_fun_jac_y'], casadi_opts);
 phi_jac_y_uhat.generate([model_name_prefix,'phi_jac_y_uhat'], casadi_opts);
 
