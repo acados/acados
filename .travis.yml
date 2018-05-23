@@ -6,10 +6,10 @@ python:
   - 3.5
 
 env:
-  - CXX="g++-6" CC="gcc-6"
-  - CXX="g++-5" CC="gcc-5"
-  - CXX="g++-4.9" CC="gcc-4.9" USE_MATLAB=true COVERAGE="lcov"
-  - CXX="clang++-3.7" CC="clang-3.7"
+  - CXX="g++-6" CC="gcc-6" SWIG_PYTHON=ON SWIG_MATLAB=OFF # no MATLAB support for gcc>=5
+  - CXX="g++-5" CC="gcc-5" SWIG_PYTHON=ON SWIG_MATLAB=OFF
+  - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=ON SWIG_MATLAB=ON COVERAGE="lcov"
+  - CXX="clang++-3.7" CC="clang-3.7" SWIG_PYTHON=ON SWIG_MATLAB=OFF
 
 addons:
   apt:
@@ -58,7 +58,6 @@ install:
   - export LD_LIBRARY_PATH=$HOME/local/lib:$LD_LIBRARY_PATH
 
 before_script:
-  - set -e
   - mkdir -p /home/travis/octave_download
   - |
     if [ -z "$(ls -1qA /home/travis/octave_download)" ]; then
@@ -74,17 +73,17 @@ script:
        SWIG_MATLAB=ON;
     fi'
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release ..
   - cmake --build build --target lint
   - cmake --build build
-  - cmake -E chdir build ctest --verbose --output-on-failure
+  - cmake -E chdir build ctest --output-on-failure
   - rm -r -f build
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain-mingw32.cmake ..
-  - cmake --build build --clean-first
+  - cmake --build build
   - rm -r -f build
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DMatlab_ROOT_DIR=../external/matlab -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
   - export CXX="$CXX -std=c++11" # needed for octave
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
@@ -104,6 +103,9 @@ deploy:
   api_key: "${GITHUB_OAUTH_TOKEN}"
   file: "${RELEASES_PREFIX}/acados.tar.gz"
   skip_cleanup: true
+  on:
+    tags: true
+
 
 after_success:
   - pushd build

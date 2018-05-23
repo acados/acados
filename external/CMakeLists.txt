@@ -17,10 +17,12 @@
 #
 #
 
-# TODO: The following definition should go ASAP!
-if(CMAKE_SYSTEM_NAME MATCHES "dSpace")
-    set(EXT_DEP OFF CACHE BOOL "Compile external dependencies in BLASFEO")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error -w")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error -w")
 endif()
+
+# TODO: The following definition should go ASAP!
 set(TARGET "GENERIC" CACHE STRING "Target architecture")
 set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
 set(BLASFEO_HEADERS_INSTALLATION_DIRECTORY "include/blasfeo/include" CACHE STRING "")
@@ -29,11 +31,24 @@ set(HPMPC_HEADERS_INSTALLATION_DIRECTORY "include/hpmpc/include" CACHE STRING ""
 
 add_subdirectory(blasfeo)
 add_subdirectory(hpipm)
-if((NOT CMAKE_C_COMPILER_ID MATCHES "MSVC") AND (NOT CMAKE_SYSTEM_NAME MATCHES "dSpace"))
+
+if(ACADOS_WITH_HPMPC)
 	add_subdirectory(hpmpc)
 endif()
-add_subdirectory(qpdunes)
-add_subdirectory(qpoases)
+
+if(ACADOS_WITH_QORE)
+    set(QORE_DENSE TRUE CACHE BOOL "Build dense qore library")
+    add_subdirectory(qore)
+endif()
+
+if(ACADOS_WITH_QPDUNES)
+    add_subdirectory(qpdunes)
+endif()
+
+if(ACADOS_WITH_QPOASES)
+    add_subdirectory(qpoases)
+endif()
+
 if (ACADOS_WITH_OOQP)
     include(external/ooqp)
 endif()

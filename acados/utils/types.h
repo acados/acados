@@ -28,6 +28,8 @@ extern "C" {
 
 #define MAX_STR_LEN 256
 #define ACADOS_EPS 1e-12
+#define ACADOS_NEG_INFTY -1.0e9
+#define ACADOS_POS_INFTY +1.0e9
 
 typedef double real_t;
 typedef unsigned int uint;
@@ -36,7 +38,13 @@ typedef int int_t;
 typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, int mem);
 
 // enum of return values
-enum return_values { ACADOS_SUCCESS, ACADOS_MAXITER, ACADOS_MINSTEP };
+enum return_values
+{
+    ACADOS_SUCCESS,
+    ACADOS_FAILURE,
+    ACADOS_MAXITER,
+    ACADOS_MINSTEP
+};
 
 #ifdef __cplusplus
 } /* extern "C" */

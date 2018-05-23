@@ -24,67 +24,180 @@
 extern "C" {
 #endif
 
+#include "acados/ocp_nlp/ocp_nlp_constraints_common.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_common.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/sim/sim_common.h"
+#include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
 
-typedef struct {
-    real_t **hess_l;  // TODO(nielsvd): Hessians of stage-wise
-                            // Lagrangians, document precise definition.
-    real_t **grad_f;  // Gradients of stage-wise cost terms.
-    real_t **jac_h;   // TODO(niels): rename (maybe phi?). Jacobians of
-                            // stage-wise integration operator.
-    real_t **jac_g;   // Jacobians of stage-wise path constraints.
-    real_t **h;       // TODO(nielsvd): rename (maybe phi?). Evaluation of
-                            // stage-wise integration operator.
-    real_t **g;       // Evaluation of stage-wise path constraints.
-    real_t **x;
-    real_t **u;
-    real_t **pi;
-    real_t **lam;
-    // TODO(nielsvd): what about parameters and addtionaly variables such as
-    // lifted variables?
-} ocp_nlp_memory;
+/************************************************
+ * dims
+ ************************************************/
 
-typedef struct {
-    int_t N;
-    const int_t *nx;
-    const int_t *nu;
-    const int_t *nb;
-    const int_t *ng;
-    const int_t **idxb;
-    const real_t **lb;
-    const real_t **ub;
-    const real_t **lg;
-    const real_t **ug;
+typedef struct
+{
+    void **cost;
+    void **dynamics;
+    void **constraints;
+    ocp_qp_dims *qp_solver;  // xcond_solver inserad ???
+    int *nv;                 // number of primal variables (states+controls+slacks)
+    int *nx;                 // number of states
+    int *nu;                 // number of inputs
+    int *ni;                 // number of two-sided inequality constraints TODO make one-sided ???
+    int N;
+} ocp_nlp_dims;
 
-    void *cost;
-    void **sim;
-    void **path_constraints;
+//
+int ocp_nlp_dims_calculate_size_self(void *config);
+//
+int ocp_nlp_dims_calculate_size(void *config);
+//
+ocp_nlp_dims *ocp_nlp_dims_assign_self(void *config, void *raw_memory);
+//
+ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
+//
+void ocp_nlp_dims_initialize(void *config, int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng,
+                             int *nh, int *nq, int *ns, ocp_nlp_dims *dims);
+
+/************************************************
+ * in
+ ************************************************/
+
+typedef struct
+{
+    double *Ts;  // length of sampling intervals
+
+    void **cost;
+    void **dynamics;
+    void **constraints;
 } ocp_nlp_in;
 
-typedef struct {
-    real_t **x;
-    real_t **u;
-    real_t **pi;
-    real_t **lam;
+/************************************************
+ * out
+ ************************************************/
+
+typedef struct
+{
+    struct blasfeo_dvec *ux;
+    struct blasfeo_dvec *pi;
+    struct blasfeo_dvec *lam;
+    struct blasfeo_dvec *t;
+
+    int sqp_iter;
+    double inf_norm_res;
 } ocp_nlp_out;
 
-typedef struct {
-    int_t (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem, void *work);
-    void (*initialize)(const ocp_nlp_in *nlp_in, void *args, void **mem, void **work);
-    void (*destroy)(void *mem, void *work);
-    ocp_nlp_in *nlp_in;
-    ocp_nlp_out *nlp_out;
-    void *args;
-    void *mem;
-    void *work;
-} ocp_nlp_solver;
+/************************************************
+ * memory TODO move to sqp ???
+ ************************************************/
 
-int_t ocp_nlp_calculate_memory_size(const ocp_nlp_in *nlp_in);
-char *ocp_nlp_assign_memory(const ocp_nlp_in *nlp_in, void **mem_,
-                            void *raw_memory);
-ocp_nlp_memory *ocp_nlp_create_memory(const ocp_nlp_in *nlp_in);
+typedef struct
+{
+    struct blasfeo_dvec *cost_grad;
+    struct blasfeo_dvec *ineq_fun;
+    struct blasfeo_dvec *ineq_adj;
+    struct blasfeo_dvec *dyn_fun;
+    struct blasfeo_dvec *dyn_adj;
+} ocp_nlp_memory;
 
-void ocp_nlp_destroy(void *mem_);
+/************************************************
+ * residuals
+ ************************************************/
+
+typedef struct
+{
+    struct blasfeo_dvec *res_g;  // stationarity
+    struct blasfeo_dvec *res_b;  // dynamics
+    struct blasfeo_dvec *res_d;  // inequality constraints
+    struct blasfeo_dvec *res_m;  // complementarity
+    double inf_norm_res_g;
+    double inf_norm_res_b;
+    double inf_norm_res_d;
+    double inf_norm_res_m;
+    int memsize;
+} ocp_nlp_res;
+
+/************************************************
+ * config
+ ************************************************/
+
+typedef struct
+{
+    int N;  // number of stages
+
+    // all the others
+    int (*opts_calculate_size)(void *config, ocp_nlp_dims *dims);
+    void *(*opts_assign)(void *config, ocp_nlp_dims *dims, void *raw_memory);
+    void (*opts_initialize_default)(void *config, ocp_nlp_dims *dims, void *opts_);
+    void (*opts_update)(void *config, ocp_nlp_dims *dims, void *opts_);
+    int (*memory_calculate_size)(void *config, ocp_nlp_dims *dims, void *opts_);
+    void *(*memory_assign)(void *config, ocp_nlp_dims *dims, void *opts_, void *raw_memory);
+    int (*workspace_calculate_size)(void *config, ocp_nlp_dims *dims, void *opts_);
+    int (*evaluate)(void *config, ocp_nlp_dims *dims, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out,
+                    void *opts_, void *mem, void *work);
+    void (*config_initialize_default)(void *config);
+    ocp_qp_xcond_solver_config *qp_solver;
+    //    sim_solver_config **sim_solvers;
+    ocp_nlp_dynamics_config **dynamics;
+    ocp_nlp_cost_config **cost;
+    ocp_nlp_constraints_config **constraints;
+} ocp_nlp_solver_config;
+
+/************************************************
+ * headers
+ ************************************************/
+
+/************************************************
+ * config
+ ************************************************/
+
+//
+int ocp_nlp_solver_config_calculate_size(int N);
+//
+ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory);
+
+/************************************************
+ * in
+ ************************************************/
+
+//
+int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
+
+/************************************************
+ * out
+ ************************************************/
+
+//
+int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+                                void *raw_memory);
+
+/************************************************
+ * memory
+ ************************************************/
+
+//
+int ocp_nlp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+                                      void *raw_memory);
+
+/************************************************
+ * residuals
+ ************************************************/
+
+//
+int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
+//
+void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res,
+                         ocp_nlp_memory *mem);
 
 #ifdef __cplusplus
 } /* extern "C" */

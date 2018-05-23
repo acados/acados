@@ -17,6 +17,127 @@
  *
  */
 
+%include "std_map.i";
+
+%typemap(in) std::map<std::string, acados::option_t *> {
+    std::map<std::string, acados::option_t *> tmp;
+#if defined(SWIGMATLAB)
+    for (int i = 0; i < num_elems($input); ++i) {
+        const char *key = mxGetFieldNameByNumber($input, i);
+        mxArray *value = mxGetField($input, 0, key);
+        tmp[std::string(key)] = acados::as_option_ptr(value);
+    }
+#elif defined(SWIGPYTHON)
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next($input, &pos, &key, &value)) {
+        if (!PyUnicode_Check(key))
+            throw std::invalid_argument("Key must be a string");
+        tmp[std::string(PyUnicode_AsUTF8AndSize(key, NULL))] = acados::as_option_ptr(value);
+    }
+#endif
+    $1 = tmp;
+}
+
+%typemap(typecheck) std::map<std::string, acados::option_t *> {
+    $1 = is_map($input) ? 1 : 0;
+}
+
+%typemap(out) std::map< std::string, std::vector<uint> > {
+    LangObject *result_map;
+
+    std::vector<std::string> names;
+    for (auto elem : $1) {
+        names.push_back(elem.first);
+    }
+    const char **fieldnames = (const char **) calloc(names.size(), sizeof(char *));
+    for (int i = 0; i < names.size(); ++i) {
+        fieldnames[i] = names[i].c_str();
+    }
+#if defined(SWIGMATLAB)
+    result_map = mxCreateStructMatrix(1, 1, names.size(), fieldnames);
+    for (int i = 0; i < names.size(); ++i) {
+        auto v = $1[names[i]];
+        mxSetField(result_map, 0, fieldnames[i], new_matrix(std::make_pair(v.size(), 1), v.data()));
+    }
+#elif defined(SWIGPYTHON)
+    result_map = PyDict_New();
+    for (int i = 0; i < names.size(); ++i) {
+        auto v = $1[names[i]];
+        PyDict_SetItemString(result_map,
+                             fieldnames[i],
+                             new_matrix(std::make_pair(v.size(), 1), v.data()));
+    }
+#endif
+    $result = result_map;
+}
+
+%typemap(typecheck, precedence=SWIG_TYPECHECK_INTEGER) uint {
+#if defined(SWIGMATLAB)
+    $1 = mxIsScalar($input) ? 1 : 0;
+#elif defined(SWIGPYTHON)
+    $1 = PyInt_Check($input) ? 1 : 0;
+#endif
+}
+
+%typemap(in) uint {
+#if defined(SWIGMATLAB)
+    $1 = static_cast<uint>(mxGetScalar($input));
+#elif defined(SWIGPYTHON)
+    $1 = static_cast<uint>(PyInt_AsLong($input));
+#endif
+}
+
+%typemap(in) std::vector<double> {
+    if (!is_matrix($input)) {
+        SWIG_exception(SWIG_ValueError, "Input is not of valid matrix type.");
+        SWIG_fail;
+    }
+    int nbRows = numRows($input), nbCols = numColumns($input);
+    int nbElems = nbRows * nbCols;
+    std::vector<double> tmp(nbElems);
+    std::copy_n(asDoublePointer($input), nbElems, tmp.begin());
+    $1 = tmp;
+}
+
+%typemap(typecheck, precedence = SWIG_TYPECHECK_POINTER) std::vector<double> {
+#if defined(SWIGMATLAB)
+    $1 = (mxIsNumeric($input) ? 1 : 0);
+#elif defined(SWIGPYTHON)
+    $1 = (PyArray_Check($input) ? 1 : 0);
+#endif
+}
+
+%typemap(out) std::vector< std::vector<double> > {
+    std::vector<LangObject *> tmp;
+    for (int i = 0; i < $1.size(); ++i)
+        tmp.push_back(new_matrix(std::make_pair($1.at(i).size(), 1), $1.at(i).data()));
+    $result = swig::from(tmp);
+}
+
+
+%typemap(out) ocp_qp_info  {
+    const char *fields[5] = {"num_iter", "qp_solver_time", "condensing_time", "interface_time",
+                             "total_time"};
+#if defined(SWIGMATLAB)
+    mxArray *mat_struct = mxCreateStructMatrix(1, 1, 5, fields);
+    mxSetField(mat_struct, 0, fields[0], mxCreateDoubleScalar($1.num_iter));
+    mxSetField(mat_struct, 0, fields[1], mxCreateDoubleScalar($1.solve_QP_time));
+    mxSetField(mat_struct, 0, fields[2], mxCreateDoubleScalar($1.condensing_time));
+    mxSetField(mat_struct, 0, fields[3], mxCreateDoubleScalar($1.interface_time));
+    mxSetField(mat_struct, 0, fields[4], mxCreateDoubleScalar($1.total_time));
+    $result = mat_struct;
+#elif defined(SWIGPYTHON)
+    PyObject *dict = PyDict_New();
+    PyDict_SetItemString(dict, fields[0], PyLong_FromLong($1.num_iter));
+    PyDict_SetItemString(dict, fields[1], PyFloat_FromDouble($1.solve_QP_time));
+    PyDict_SetItemString(dict, fields[2], PyFloat_FromDouble($1.condensing_time));
+    PyDict_SetItemString(dict, fields[3], PyFloat_FromDouble($1.interface_time));
+    PyDict_SetItemString(dict, fields[4], PyFloat_FromDouble($1.total_time));
+    $result = dict;
+#endif
+}
+
 %typemap(in) int_t N {
     $1 = ($1_ltype) arg1->$1_name;
     SWIG_Error(SWIG_ValueError, "It's not allowed to change number of stages");
@@ -61,17 +182,6 @@
 
 %typemap(out) const int_t * nc {
     $result = new_sequence_from($1, arg1->N+1);
-}
-
-%typemap(in) const real_t ** A {
-    $1 = ($1_ltype) arg1->$1_name;
-    fill_array_from($input, $1, arg1->N, &(arg1->nx[1]), &(arg1->nx[0]));
-}
-
-%typemap(out) const real_t ** A {
-    const int_t *nb_rows = &arg1->nx[1];
-    const int_t *nb_cols = &arg1->nx[0];
-    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N, nb_rows, nb_cols);
 }
 
 %typemap(in) const real_t ** B {

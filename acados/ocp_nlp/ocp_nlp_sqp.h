@@ -24,59 +24,96 @@
 extern "C" {
 #endif
 
+// acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_sm_common.h"
-#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
-    int_t maxIter;
-    ocp_qp_solver *qp_solver;
-    ocp_nlp_sm *sensitivity_method;
-    // char qp_solver_name[MAX_STR_LEN];
-    // char sm_method_name[MAX_STR_LEN];
-} ocp_nlp_sqp_args;
 
-typedef struct {
-    ocp_nlp_memory *common;
 
-    // TODO(nielsvd): qp solver and sensitivity method
-    //       could be automatically initialized for user
-    //       convenience, look into this!
-    ocp_nlp_sm_in *sm_in;
-    ocp_nlp_sm_out *sm_out;
-    // ocp_qp_solver *qp_solver;
-    // ocp_nlp_sm *sensitivity_method;
+/************************************************
+ * options
+ ************************************************/
+
+typedef struct
+{
+    int maxIter;
+    double min_res_g;
+    double min_res_b;
+    double min_res_d;
+    double min_res_m;
+    void *qp_solver_opts;
+    void **dynamics;     // dynamics_opts
+    void **cost;         // cost_opts
+    void **constraints;  // constraints_opts
+} ocp_nlp_sqp_opts;
+
+//
+int ocp_nlp_sqp_opts_calculate_size(void *config, ocp_nlp_dims *dims);
+//
+void *ocp_nlp_sqp_opts_assign(void *config, ocp_nlp_dims *dims, void *raw_memory);
+//
+void ocp_nlp_sqp_opts_initialize_default(void *config, ocp_nlp_dims *dims, void *opts);
+//
+void ocp_nlp_sqp_opts_update(void *config, ocp_nlp_dims *dims, void *opts);
+
+/************************************************
+ * memory
+ ************************************************/
+
+typedef struct
+{
+    //    ocp_nlp_dims *dims;
+    void *qp_solver_mem;
+
+    void **dynamics;     // dynamics memory
+    void **cost;         // cost memory
+    void **constraints;  // constraints memory
+
+    // residuals
+    ocp_nlp_res *nlp_res;
+
+    // nlp memory
+    ocp_nlp_memory *nlp_mem;
+
+    int sqp_iter;
+    int dummy;  // NOTE(dimitris): make struct size multiple of 8
 } ocp_nlp_sqp_memory;
 
-typedef struct { int_t dummy; } ocp_nlp_sqp_workspace;
+//
+int ocp_nlp_sqp_memory_calculate_size(void *config, ocp_nlp_dims *dims, void *opts_);
+//
+void *ocp_nlp_sqp_memory_assign(void *config, ocp_nlp_dims *dims, void *opts_, void *raw_memory);
 
-ocp_nlp_sqp_args *ocp_nlp_sqp_create_arguments();
+/************************************************
+ * workspace
+ ************************************************/
 
-int_t ocp_nlp_sqp_calculate_memory_size(const ocp_nlp_in *nlp_in, void *args_);
+typedef struct
+{
+    // QP solver
+    ocp_qp_in *qp_in;
+    ocp_qp_out *qp_out;
+    void *qp_work;
 
-char *ocp_nlp_sqp_assign_memory(const ocp_nlp_in *nlp_in, void *args_,
-                                void **mem_, void *raw_memory);
+    void **dynamics;     // dynamics_workspace
+    void **cost;         // cost_workspace
+    void **constraints;  // constraints_workspace
 
-ocp_nlp_sqp_memory *ocp_nlp_sqp_create_memory(const ocp_nlp_in *nlp_in,
-                                              void *args_);
+} ocp_nlp_sqp_work;
 
-int_t ocp_nlp_sqp_calculate_workspace_size(const ocp_nlp_in *nlp_in,
-                                           void *args_);
+//
+int ocp_nlp_sqp_workspace_calculate_size(void *config, ocp_nlp_dims *dims, void *opts_);
 
-char *ocp_nlp_sqp_assign_workspace(const ocp_nlp_in *nlp_in, void *args_,
-                                   void **work_, void *raw_memory);
+/************************************************
+ * functions
+ ************************************************/
 
-ocp_nlp_sqp_workspace *ocp_nlp_sqp_create_workspace(const ocp_nlp_in *nlp_in,
-                                                    void *args_);
-
-int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *args_,
-                  void *memory_, void *workspace_);
-
-void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem_,
-                            void **work_);
-
-void ocp_nlp_sqp_destroy(void *mem_, void *work_);
+//
+int ocp_nlp_sqp(void *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
+                void *args, void *mem, void *work_);
+//
+void ocp_nlp_sqp_config_initialize_default(void *config_);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -11,24 +11,24 @@ follow the [manual installation instructions](#manual-installation) below.
 
 ### Getting started
 
-#### MATLAB
+#### MATLAB (DISCLAIMER: CURRENTLY ONLY QP INTERFACE IS WORKING)
 First, add CasADi and acados to your MATLAB path. From a MATLAB command window
 ```
-addpath <path_to_acados_root_folder>/external/casadi-matlabR2014b-v3.1.1
+addpath <path_to_acados_root_folder>/external/casadi-matlabR2014b-v3.4.0
 addpath <path_to_acados_installation_folder>
 % To permanently add these paths:
 savepath
 ```
 Run an acados example, from `<path_to_acados_root_folder>/examples/matlab/`:
 ```
-ocp_nlp_example.m
+ocp_qp_example.m
 ```
 
-#### Python
+#### Python (DISCLAIMER: CURRENTLY ONLY QP INTERFACE IS WORKING)
 
 acados only supports `Python3`. Add CasADi and acados to the `PYTHONPATH` environment variable (add those lines to your `.bashrc` or `.zshrc` to set the paths permanently):
 ```
-export PYTHONPATH=<path_to_acados_root_folder>/external/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
+export PYTHONPATH=<path_to_acados_root_folder>/external/casadi-py35-v3.4.0-64bit:$PYTHONPATH
 export PYTHONPATH=<path_to_acados_installation_folder>:$PYTHONPATH
 ```
 To run a Python example from the acados root folder:
@@ -50,17 +50,17 @@ Otherwise, follow the steps below:
 1. Download CasADi into the `<acados_root_folder>/external` folder:
     ```
     cd external
-    wget -q -nc http://files.casadi.org/3.1.1/linux/casadi-octave-v3.1.1.tar.gz
-    mkdir -p casadi-octave-v3.1.1
-    tar -xf casadi-octave-v3.1.1.tar.gz -C casadi-octave-v3.1.1
+    wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
+    mkdir -p casadi-octave-v3.4.0
+    tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave-v3.4.0
 
-    wget -q -nc http://files.casadi.org/3.1.1/linux/casadi-py35-np1.9.1-v3.1.1.tar.gz
-    mkdir -p casadi-py35-np1.9.1-v3.1.1
-    tar -xf casadi-py35-np1.9.1-v3.1.1.tar.gz -C casadi-py35-np1.9.1-v3.1.1
+    wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
+    mkdir -p casadi-py35-v3.4.0-64bit
+    tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-py35-v3.4.0-64bit
 
-    wget -q -nc https://sourceforge.net/projects/casadi/files/CasADi/3.2.3/linux/casadi-matlabR2014b-v3.2.3.tar.gz
-    mkdir -p casadi-matlabR2014b-v3.2.3
-    tar -xf casadi-matlabR2014b-v3.2.3.tar.gz -C casadi-matlabR2014b-v3.2.3
+    wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
+    mkdir -p casadi-matlabR2014b-v3.4.0
+    tar -xf casadi-linux-matlabR2014b-v3.4.0.tar.gz -C casadi-matlabR2014b-v3.4.0
     cd ..
     ```
 

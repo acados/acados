@@ -1,7 +1,7 @@
 ---
 Language:        Cpp
-# BasedOnStyle:  Google
-AccessModifierOffset: -1
+BasedOnStyle:  Google
+AccessModifierOffset: -3
 AlignAfterOpenBracket: true
 AlignEscapedNewlinesLeft: true
 AlignOperands:   true
@@ -16,11 +16,11 @@ AlwaysBreakAfterDefinitionReturnType: false
 AlwaysBreakTemplateDeclarations: true
 AlwaysBreakBeforeMultilineStrings: true
 BreakBeforeBinaryOperators: None
-BreakBeforeTernaryOperators: true
+BreakBeforeTernaryOperators: false
 BreakConstructorInitializersBeforeComma: false
 BinPackParameters: true
 BinPackArguments: true
-ColumnLimit:     80
+ColumnLimit:     100
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 4
 DerivePointerAlignment: true
@@ -28,7 +28,7 @@ ExperimentalAutoDetectBinPacking: false
 IndentCaseLabels: true
 IndentWrappedFunctionNames: false
 IndentFunctionDeclarationAfterType: false
-MaxEmptyLinesToKeep: 1
+MaxEmptyLinesToKeep: 3
 KeepEmptyLinesAtTheStartOfBlocks: false
 NamespaceIndentation: None
 ObjCBlockIndentWidth: 2
@@ -45,15 +45,15 @@ SpacesBeforeTrailingComments: 2
 Cpp11BracedListStyle: true
 Standard:        Auto
 IndentWidth:     4
-TabWidth:        8
+TabWidth:        4
 UseTab:          Never
-BreakBeforeBraces: Attach
+BreakBeforeBraces: Allman
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
 SpacesInAngles:  false
 SpaceInEmptyParentheses: false
 SpacesInCStyleCastParentheses: false
-SpaceAfterCStyleCast: false
+SpaceAfterCStyleCast: true
 SpacesInContainerLiterals: true
 SpaceBeforeAssignmentOperators: true
 ContinuationIndentWidth: 4

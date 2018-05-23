@@ -21,116 +21,215 @@ configure_file(chain_model/chain_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/chain_mo
 
 # Define sources for models used in the examples
 file(GLOB CHAIN_MODEL_SRC
-    chain_model/jac_chain_nm2.c
-    chain_model/jac_chain_nm3.c
-    chain_model/jac_chain_nm4.c
+    ### explicit ###
+    # 2 masses
     chain_model/vde_chain_nm2.c
-    chain_model/vde_chain_nm3.c
-    chain_model/vde_chain_nm4.c
+    chain_model/jac_chain_nm2.c
+    chain_model/vde_adj_chain_nm2.c
+    #chain_model/vde_hess_chain_nm2.c
     chain_model/ls_cost_nm2.c
-    chain_model/ls_cost_nm3.c
-    chain_model/ls_cost_nm4.c
     chain_model/ls_costN_nm2.c
+    chain_model/casadi_erk4_chain_nm2.c
+    # 3 masses
+    chain_model/vde_chain_nm3.c
+    chain_model/jac_chain_nm3.c
+    chain_model/vde_adj_chain_nm3.c
+    #chain_model/vde_hess_chain_nm3.c
+    chain_model/ls_cost_nm3.c
     chain_model/ls_costN_nm3.c
+    chain_model/casadi_erk4_chain_nm3.c
+    # 4 masses
+    chain_model/vde_chain_nm4.c
+    chain_model/jac_chain_nm4.c
+    chain_model/vde_adj_chain_nm4.c
+    #chain_model/vde_hess_chain_nm4.c
+    chain_model/ls_cost_nm4.c
     chain_model/ls_costN_nm4.c
-    chain_model/pathcon_nm2.c
-    chain_model/pathcon_nm3.c
-    chain_model/pathcon_nm4.c
-    chain_model/pathconN_nm2.c
-    chain_model/pathconN_nm3.c
-    chain_model/pathconN_nm4.c
-    chain_model/vde_hess_chain_nm2.c
-    chain_model/vde_hess_chain_nm3.c
-    chain_model/vde_hess_chain_nm4.c
+    chain_model/casadi_erk4_chain_nm4.c
+    # 5 masses
+    chain_model/vde_chain_nm5.c
+    chain_model/jac_chain_nm5.c
+    chain_model/vde_adj_chain_nm5.c
+    #chain_model/vde_hess_chain_nm5.c
+    chain_model/ls_cost_nm5.c
+    chain_model/ls_costN_nm5.c
+    # chain_model/casadi_erk4_chain_nm5.c
+    # NOTE: chain_model/casadi_erk4_chain_nm5.c (and 6) commented, because compilation takes quite a while
+    # 6 masses
+    chain_model/vde_chain_nm6.c
+    chain_model/jac_chain_nm6.c
+    chain_model/vde_adj_chain_nm6.c
+    #chain_model/vde_hess_chain_nm6.c
+    chain_model/ls_cost_nm6.c
+    chain_model/ls_costN_nm6.c
+    # chain_model/casadi_erk4_chain_nm6.c
+
+    ### implicit ###
+    # 2 masses
+    implicit_chain_model/impl_ode_fun_chain_nm2.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm2.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm2.c
+    implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm2.c
+    implicit_chain_model/impl_ode_jac_x_u_chain_nm2.c
+    # 3 masses
+    implicit_chain_model/impl_ode_fun_chain_nm3.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm3.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm3.c
+    implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm3.c
+    implicit_chain_model/impl_ode_jac_x_u_chain_nm3.c
+    # 4 masses
+    implicit_chain_model/impl_ode_fun_chain_nm4.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm4.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm4.c
+    implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm4.c
+    implicit_chain_model/impl_ode_jac_x_u_chain_nm4.c
+    # 5 masses
+    implicit_chain_model/impl_ode_fun_chain_nm5.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm5.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm5.c
+    implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm5.c
+    implicit_chain_model/impl_ode_jac_x_u_chain_nm5.c
+    # 6 masses
+    implicit_chain_model/impl_ode_fun_chain_nm6.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm6.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm6.c
+    implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.c
+    implicit_chain_model/impl_ode_jac_x_u_chain_nm6.c
 )
 
-set(CHEN_MODEL_SRC chen_model/chen_model.c)
-file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
-    pendulum_model/vde_forw_pendulum.c
-    pendulum_model/jac_pendulum.c)
+file(GLOB CRANE_MODEL_SRC
+    crane_model/impl_ode_fun.c
+    crane_model/impl_ode_fun_jac_x_xdot.c
+    crane_model/impl_ode_jac_x_xdot_u.c
+    crane_model/jac_model.c
+    crane_model/ode_model.c
+    crane_model/vde_adj_model.c
+    crane_model/vde_forw_model.c
+    crane_model/vde_hess_model.c
+)
+
+file(GLOB WT_MODEL_NX3_SRC
+    wt_model_nx3/expl_ode_fun.c
+    wt_model_nx3/expl_ode_jac.c
+    wt_model_nx3/expl_vde_for.c
+    wt_model_nx3/expl_vde_adj.c
+    wt_model_nx3/impl_ode_fun.c
+    wt_model_nx3/impl_ode_fun_jac_x_xdot.c
+    wt_model_nx3/impl_ode_jac_x_xdot_u.c
+)
+
+file(GLOB WT_MODEL_NX6_SRC
+    wt_model_nx6/expl_ode_fun.c
+    wt_model_nx6/expl_vde_for.c
+    wt_model_nx6/expl_vde_adj.c
+    wt_model_nx6/impl_ode_fun.c
+    wt_model_nx6/impl_ode_fun_jac_x_xdot.c
+    wt_model_nx6/impl_ode_jac_x_xdot_u.c
+    wt_model_nx6/impl_ode_fun_jac_x_xdot_u.c
+    # gnsf functions
+    wt_model_nx6/phi_fun.c
+    wt_model_nx6/phi_fun_jac_y.c
+    wt_model_nx6/phi_jac_y_uhat.c
+    wt_model_nx6/f_lo_fun_jac_x1k1uz.c
+    wt_model_nx6/get_matrices_fun.c
+
+)
+
+file(GLOB WT_MODEL_NX6P2_SRC
+    wt_model_nx6/nx6p2/expl_ode_fun.c
+    wt_model_nx6/nx6p2/expl_vde_for.c
+    wt_model_nx6/nx6p2/impl_ode_fun.c
+    wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.c
+    wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.c
+    wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.c
+    wt_model_nx6/nx6p2/phi_fun.c
+    wt_model_nx6/nx6p2/phi_fun_jac_y.c
+    wt_model_nx6/nx6p2/phi_jac_y_uhat.c
+    wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.c
+    wt_model_nx6/nx6p2/get_matrices_fun.c
+)
+
+file(GLOB GNSF_CRANE_SRC
+    gnsf_crane_model/phi_fun.c
+    gnsf_crane_model/phi_fun_jac_y.c
+    gnsf_crane_model/phi_jac_y_uhat.c
+    gnsf_crane_model/f_lo_fun_jac_x1k1uz.c
+    gnsf_crane_model/get_matrices_fun.c
+)
 
 # Define examples
-if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    add_executable(mass_spring_hpmpc_example mass_spring_hpmpc.c)
-    target_link_libraries(mass_spring_hpmpc_example acados)
-    add_test(mass_spring_hpmpc_example mass_spring_hpmpc_example)
 
-    add_executable(mass_spring_hpipm_example mass_spring_hpipm.c)
-    target_link_libraries(mass_spring_hpipm_example acados)
-    add_test(mass_spring_hpipm_example mass_spring_hpipm_example)
+# -------------------- nonlinear_chain
+add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
+target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
+add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
 
-    add_executable(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm.c)
-    target_link_libraries(mass_spring_condensing_hpipm_example acados)
-    add_test(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm_example)
+# -------------------- wind turbine nmpc
+add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6P2_SRC})
+target_link_libraries(wind_turbine_nmpc_example acados)
+add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
 
-    # Remove from test because of weird GCC bug (Segfault)
-    add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
-    target_link_libraries(mass_spring_qpoases_example acados)
-    # add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
+# -------------------- sim_wt_nx6
+add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
+target_link_libraries(sim_wt_model_nx6 acados)
+add_test(sim_wt_model_nx6 sim_wt_model_nx6)
 
-    add_executable(mass_spring_qpdunes_example mass_spring_qpdunes.c)
-    target_link_libraries(mass_spring_qpdunes_example acados)
-    target_compile_definitions(mass_spring_qpdunes_example PRIVATE USE_ACADOS_TYPES)
-    add_test(mass_spring_qpdunes_example mass_spring_qpdunes_example)
-
-    if(ACADOS_WITH_OOQP)
-        add_executable(mass_spring_ooqp_example mass_spring_ooqp.c)
-        target_link_libraries(mass_spring_ooqp_example acados)
-        add_test(mass_spring_ooqp_example mass_spring_ooqp_example)
-    endif()
-
-    add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
-    target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
-    add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
-
-# add_executable(mass_spring_partial_tightening_example
-#    mass_spring_partial_tightening.c
-# )
-# target_link_libraries(mass_spring_partial_tightening_example acados)
-# add_test(
-#     NAME mass_spring_partial_tightening_example
-#     COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_partial_tightening_example
-# )
-
-    add_executable(chen_nmpc_qpoases_example
-        chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
-    target_link_libraries(chen_nmpc_qpoases_example acados)
-    add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
-#     install(TARGETS chen_nmpc_qpoases_example RUNTIME DESTINATION bin)
-#     set_target_properties(chen_nmpc_qpoases_example PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/")
-
-    add_executable(nonlinear_chain_sqp_example
-        nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
-    target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
-    target_link_libraries(nonlinear_chain_sqp_example acados)
-    add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
-endif()
-
-# add_executable(pendulum_hpmpc_libstr_example pendulum_hpmpc_libstr.c ${PENDULUM_MODEL_SRC})
-# target_link_libraries(pendulum_hpmpc_libstr_example acados)
-# add_test(NAME pendulum_hpmpc_libstr_example COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_hpmpc_libstr_example)
-
-if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    add_executable(pendulum_partial_tightening_example
-      pendulum_partial_tightening.c ${PENDULUM_MODEL_SRC})
-    target_link_libraries(pendulum_partial_tightening_example acados)
-    add_test(pendulum_partial_tightening_example pendulum_partial_tightening_example)
+if(ACADOS_WITH_C_INTERFACE)
+    add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
+    target_link_libraries(sim_gnsf_crane acados)
+    add_test(sim_gnsf_crane sim_gnsf_crane)
 endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    add_executable(linear_mpc_example linear_mpc.c)
-    target_link_libraries(linear_mpc_example acados)
-    target_compile_definitions(linear_mpc_example PRIVATE USE_ACADOS_TYPES)
-    add_test(linear_mpc_example linear_mpc_example)
-endif()
 
-if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    add_executable(discrete_model
-        discrete_model.c
-        discrete_model/discrete_model.c
-        discrete_model/discrete_model_cost.c
-        discrete_model/discrete_model_costN.c
-        )
-    target_link_libraries(discrete_model acados)
-    add_test(discrete_model discrete_model)
+    add_executable(pendulum_scqp pendulum_scqp.cpp
+        pendulum_model/vde_forw_pendulum.c
+        pendulum_model/constraint.c
+        pendulum_model/position.c)
+    target_link_libraries(pendulum_scqp acados)
+    add_test(pendulum_scqp pendulum_scqp)
+
+    # -------------------- mass_spring
+    add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_example acados)
+    add_test(mass_spring_example mass_spring_example)
+
+    add_executable(mass_spring_fcond_split mass_spring_fcond_split.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_fcond_split acados)
+    add_test(mass_spring_fcond_split mass_spring_example)
+
+    add_executable(mass_spring_pcond_split mass_spring_pcond_split.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_pcond_split acados)
+    add_test(mass_spring_pcond_split mass_spring_example)
+
+    add_executable(mass_spring_offline_fcond_qpoases_split mass_spring_offline_fcond_qpoases_split.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_offline_fcond_qpoases_split acados)
+    add_test(mass_spring_offline_fcond_qpoases_split mass_spring_example)
+
+    add_executable(mass_spring_nmpc_example mass_spring_nmpc_example.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_nmpc_example acados)
+    add_test(mass_spring_nmpc_example mass_spring_example)
+
+    add_executable(mass_spring_example_no_interface mass_spring_example_no_interface.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_example_no_interface acados)
+    add_test(mass_spring_example_no_interface mass_spring_example_no_interface)
+
+    add_executable(sim_crane_example sim_crane_example.c ${CRANE_MODEL_SRC})
+    target_link_libraries(sim_crane_example acados)
+    add_test(sim_crane_example sim_crane_example)
+
+    # -------------------- sim_wt
+    add_executable(sim_wt_model_nx3 sim_wt_model_nx3.c ${WT_MODEL_NX3_SRC})
+    target_link_libraries(sim_wt_model_nx3 acados)
+    add_test(sim_wt_model_nx3 sim_wt_model_nx3)
+
+    add_executable(ocp_qp ocp_qp.c)
+    target_link_libraries(ocp_qp acados)
+    add_test(ocp_qp ocp_qp)
+
+    # -------------------- dense_qp
+    add_executable(dense_qp dense_qp.c)
+    target_link_libraries(dense_qp acados)
+    add_test(dense_qp dense_qp)
+
 endif()

@@ -7,7 +7,7 @@ from acados import ocp_nlp_function, ocp_nlp_ls_cost, ocp_nlp, ocp_nlp_solver
 from models import chen_model
 
 N = 10
-ode_fun, nx, nu = chen_model(implicit=True)
+ode_fun, nx, nu = chen_model()
 nlp = ocp_nlp({'N': N, 'nx': nx, 'nu': nu, 'ng': N*[1] + [0]})
 
 # ODE Model
@@ -34,7 +34,7 @@ for i in range(N):
     nlp.lg[i] = -0.5
     nlp.ug[i] = +0.5
 
-solver = ocp_nlp_solver('sqp', nlp, {'sim_solver': 'lifted-irk', 'integrator_steps': 2, 'qp_solver':'hpipm', 'sensitivity_method': 'gauss-newton'})
+solver = ocp_nlp_solver('sqp', nlp, {'integrator_steps': 2, 'qp_solver':'condensing_qpoases', 'sensitivity_method': 'gauss-newton'})
 
 # Simulation
 STATES = [array([0.1, 0.1])]
