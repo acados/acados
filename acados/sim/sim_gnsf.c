@@ -331,12 +331,6 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
     int ny = dims->ny;
     int nuhat = dims->nuhat;
 
-    // assert - only use supported features
-    assert(opts->output_z == false &&
-            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
-    assert(opts->sens_algebraic == false &&
-       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
-
     // initial align
     align_char_to(8, &c_ptr);
 
@@ -1176,6 +1170,12 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     int nK1 = num_stages * nx1;
     int nK2 = num_stages * nx2;
     int nZ = num_stages * nz;
+
+    // assert - only use supported features
+    assert(opts->output_z == false &&
+            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
+    assert(opts->sens_algebraic == false &&
+       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
 
     // assert(dims->num_stages == opts->ns && "dims->num_stages not equal opts->ns, check
     // initialization!!!");

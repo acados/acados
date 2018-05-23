@@ -516,7 +516,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     double *u = in->u;
     double *S_forw_in = in->S_forw;
 
-    int newton_iter = opts->newton_iter;
+    // int newton_iter = opts->newton_iter; // not used; always 1 in lifted
     double *A_mat = opts->A_mat;
     double *b_vec = opts->b_vec;
     int num_steps = opts->num_steps;
@@ -605,7 +605,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         // reset value of JKf
         blasfeo_dgese(nx * ns, nx + nu, 0.0, &JKf[ss], 0, 0);
 
-        int iter;
         for (ii = 0; ii < ns; ii++)  // ii-th row of tableau
         {
             // take x(n); copy a strvec into a strvec
