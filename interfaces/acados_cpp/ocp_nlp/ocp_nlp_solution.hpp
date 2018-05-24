@@ -30,7 +30,7 @@ class ocp_nlp_solution
     std::vector<std::vector<double>> lag_mul_dynamics();
     std::vector<std::vector<double>> lag_mul_bounds();
     std::vector<std::vector<double>> lag_mul_constraints();
-    
+
     ocp_nlp_info info();
 
     const int N;
