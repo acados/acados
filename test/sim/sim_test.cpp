@@ -68,11 +68,11 @@ sim_solver_t hashitsim(std::string const& inString)
 
 double sim_solver_tolerance(std::string const& inString)
 {
-    if (inString == "ERK") return 1e-13;
-    if (inString == "IRK") return 1e-13;
-    if (inString == "LIFTED_IRK") return 1e-13;
-    if (inString == "GNSF") return 1e-13;
-    if (inString == "NEW_LIFTED_IRK") return 1e-13;
+    if (inString == "ERK") return 1e-7;
+    if (inString == "IRK") return 1e-7;
+    if (inString == "LIFTED_IRK") return 1e-5;
+    if (inString == "GNSF") return 1e-7;
+    if (inString == "NEW_LIFTED_IRK") return 1e-5;
 
     return -1;
 }
