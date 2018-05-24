@@ -80,7 +80,8 @@ double sim_solver_tolerance(std::string const& inString)
 
 TEST_CASE("crane_dae_example", "[integrators]")
 {
-    vector<std::string> solvers = {"GNSF"}; //, "NEW_LIFTED_IRK"};  //{"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
+    vector<std::string> solvers = {"GNSF"};  //, "NEW_LIFTED_IRK"};
+      // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
     int ii, jj;
 
@@ -115,12 +116,14 @@ TEST_CASE("crane_dae_example", "[integrators]")
     double x_ref_sol[nx];
     double S_forw_ref_sol[nx*NF];
     double S_adj_ref_sol[NF];
+    double z_ref_sol[nz];
 
     double error[nx];
+    double error_z[nz];
     double error_S_forw[nx*NF];
     double error_S_adj[NF];
 
-    double max_error, max_error_forw, max_error_adj;
+    double max_error, max_error_forw, max_error_adj, max_error_z;
 
     for (ii=0; ii < nx; ii++)
         x_sim[ii] = x0[ii];
@@ -163,8 +166,10 @@ TEST_CASE("crane_dae_example", "[integrators]")
     external_function_casadi impl_ode_fun_jac_x_xdot_u;
     impl_ode_fun_jac_x_xdot_u.casadi_fun = &crane_dae_impl_ode_fun_jac_x_xdot_u;
     impl_ode_fun_jac_x_xdot_u.casadi_work = &crane_dae_impl_ode_fun_jac_x_xdot_u_work;
-    impl_ode_fun_jac_x_xdot_u.casadi_sparsity_in = &crane_dae_impl_ode_fun_jac_x_xdot_u_sparsity_in;
-    impl_ode_fun_jac_x_xdot_u.casadi_sparsity_out = &crane_dae_impl_ode_fun_jac_x_xdot_u_sparsity_out;
+    impl_ode_fun_jac_x_xdot_u.casadi_sparsity_in =
+                            &crane_dae_impl_ode_fun_jac_x_xdot_u_sparsity_in;
+    impl_ode_fun_jac_x_xdot_u.casadi_sparsity_out =
+                            &crane_dae_impl_ode_fun_jac_x_xdot_u_sparsity_out;
     impl_ode_fun_jac_x_xdot_u.casadi_n_in = &crane_dae_impl_ode_fun_jac_x_xdot_u_n_in;
     impl_ode_fun_jac_x_xdot_u.casadi_n_out = &crane_dae_impl_ode_fun_jac_x_xdot_u_n_out;
     external_function_casadi_create(&impl_ode_fun_jac_x_xdot_u);
@@ -258,6 +263,8 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
     opts->sens_forw = true;
     opts->sens_adj = true;
+    opts->output_z = true;
+
 
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 5;  // number of newton iterations per integration step
@@ -328,10 +335,15 @@ TEST_CASE("crane_dae_example", "[integrators]")
     for (jj = 0; jj < NF; jj++)
         S_adj_ref_sol[jj] = out->S_adj[jj];
 
+    for (jj = 0; jj < nz; jj++)
+        z_ref_sol[jj] = out->zn[jj];
+
 
     printf("Reference xn \n");
     d_print_e_mat(1, nx, &x_ref_sol[0], 1);
 
+    printf("Reference zn \n");
+    d_print_e_mat(1, nz, &z_ref_sol[0], 1);
 
     printf("Reference forward sensitivities \n");
     d_print_e_mat(nx, NF, &S_forw_ref_sol[0], nx);
@@ -350,7 +362,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     {
         SECTION(solver)
         {
-            for (int num_steps = 2; num_steps < 7; num_steps++)
+            for (int num_steps = 2; num_steps < 16; num_steps++)
             {
                 double tol = sim_solver_tolerance(solver);
 
@@ -385,6 +397,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 opts->jac_reuse = false;  // jacobian reuse
                 opts->newton_iter = 3;  // number of newton iterations per integration step
                 opts->num_steps = num_steps;  // number of steps
+                opts->output_z = true;
 
                 switch (plan.sim_solver)
                 {
@@ -534,6 +547,14 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 for (int ii = 0; ii < nx; ii++)
                     max_error = (error[ii] >= max_error) ? error[ii] : max_error;
 
+                // error_z
+                for (jj = 0; jj < nz; jj++)
+                    error_z[jj] = fabs(out->zn[jj] - z_ref_sol[jj]);
+
+                max_error_z = 0.0;
+                for (int ii = 0; ii < nz; ii++)
+                    max_error_z = (error_z[ii] >= max_error_z) ? error_z[ii] : max_error_z;
+
                 // error_S_forw
                 for (jj = 0; jj < nx*NF; jj++){
                     REQUIRE(isnan(out->S_forw[jj]) == 0);
@@ -562,12 +583,11 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
                 std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = "
                          << max_error_forw << ",\nerror_adj_sens = "
-                         << max_error_adj << "\n";
-                d_print_e_mat(nx, NF, &out->S_forw[0], nx);
-
+                         << max_error_adj << "\nerror_z = "<< max_error_z << "\n";
 
                 REQUIRE(max_error <= tol);
                 REQUIRE(max_error_forw <= tol);
+                REQUIRE(max_error_z <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
                 if ((plan.sim_solver != LIFTED_IRK) && (plan.sim_solver != NEW_LIFTED_IRK))

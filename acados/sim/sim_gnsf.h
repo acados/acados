@@ -122,8 +122,7 @@ typedef struct
 // workspace
 typedef struct
 {
-    double *Z_work;  // used to perform computations to get Z_out
-    double *Z_out;
+    double *Z_work;  // used to perform computations to get out->zn
 
     int *ipiv;  // index of pivot vector
 

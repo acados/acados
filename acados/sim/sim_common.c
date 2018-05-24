@@ -151,9 +151,10 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 
     char *c_ptr = (char *) raw_memory;
 
-    int nx, nu;
+    int nx, nu, nz;
     config->get_nx(dims, &nx);
     config->get_nu(dims, &nu);
+    config->get_nz(dims, &nz);
 
     int NF = nx + nu;
 
@@ -170,6 +171,9 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(nx + nu, &out->S_adj, &c_ptr);
     assign_and_advance_double((NF + 1) * NF / 2, &out->S_hess, &c_ptr);
     assign_and_advance_double(NF, &out->grad, &c_ptr);
+
+    assign_and_advance_double(nz, &out->zn, &c_ptr);
+    assign_and_advance_double(nz * NF, &out->S_algebraic, &c_ptr);
 
     assert((char *) raw_memory + sim_out_calculate_size(config_, dims) >= c_ptr);
 

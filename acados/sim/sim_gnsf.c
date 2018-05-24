@@ -958,7 +958,6 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
-    size += nz * sizeof(double);          // Z_out
     size += num_stages * sizeof(double);  // Z_work
 
     size += 6 * num_steps *
@@ -1060,7 +1059,6 @@ static void *sim_gnsf_cast_workspace(void *config, void *dims_, void *opts_, voi
     c_ptr += sizeof(gnsf_workspace);
     align_char_to(8, &c_ptr);
 
-    assign_and_advance_double(nz, &workspace->Z_out, &c_ptr);
     assign_and_advance_double(num_stages, &workspace->Z_work, &c_ptr);
 
     assign_and_advance_int(nff, &workspace->ipiv, &c_ptr);
@@ -1172,8 +1170,6 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     int nZ = num_stages * nz;
 
     // assert - only use supported features
-    assert(opts->output_z == false &&
-            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
     assert(opts->sens_algebraic == false &&
        "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
 
@@ -1186,7 +1182,6 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     // n_out, ny, nuhat, num_stages, num_steps);
 
     // assign variables from workspace
-    double *Z_out = workspace->Z_out;  // remove when this is part of output
     double *Z_work = workspace->Z_work;
 
     struct blasfeo_dmat J_r_ff =
@@ -1641,15 +1636,19 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         }
     }
     // get output value for algebraic states z
-    for (int ii = 0; ii < nz; ii++)
+    if (opts->output_z)
     {
-        for (int jj = 0; jj < num_stages; jj++)
+        for (int ii = 0; ii < nz; ii++)
         {
-            Z_work[jj] = blasfeo_dvecex1(&Z_val[0],
-                                         nz * ii + jj);  // values of Z_ii in first step, use Z_work
+            for (int jj = 0; jj < num_stages; jj++)
+            {
+                Z_work[jj] = blasfeo_dvecex1(&Z_val[0], nz * ii + jj);
+                            // values of Z_ii in first step, use Z_work
+            }
+            sim_gnsf_neville(&out->zn[ii], 0.0, num_stages - 1, mem->c, Z_work);
         }
-        sim_gnsf_neville(&Z_out[ii], 0.0, num_stages - 1, mem->c, Z_work);
     }
+
 
     /************************************************
      * ADJOINT SENSITIVITY PROPAGATION
