@@ -310,11 +310,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
         for (jj = 0; jj < nx; jj++)
             in->x[jj] = x_sim[ii*nx+jj];
 
-        // p
-        for (jj = 0; jj < 2; jj++)
-            in->u[jj] = u_sim[ii*2+jj];
+        // u
         for (jj = 0; jj < nu; jj++)
-            in->u[2+jj] = 0.1;
+            in->u[jj] = u_sim[ii*nu+jj];
 
         acados_return = sim_solve(sim_solver, in, out);
         REQUIRE(acados_return == 0);
@@ -525,11 +523,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                     for (jj = 0; jj < nx; jj++)
                         in->x[jj] = x_sim[ii*nx+jj];
 
-                    // p
-                    for (jj = 0; jj < 2; jj++)
-                        in->u[jj] = u_sim[ii*2+jj];
+                    // u
                     for (jj = 0; jj < nu; jj++)
-                        in->u[2+jj] = 0.1;
+                        in->u[jj] = u_sim[ii*nu+jj];
 
                     acados_return = sim_solve(sim_solver, in, out);
                     REQUIRE(acados_return == 0);
