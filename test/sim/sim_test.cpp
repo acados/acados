@@ -68,11 +68,11 @@ sim_solver_t hashitsim(std::string const& inString)
 
 double sim_solver_tolerance(std::string const& inString)
 {
-    if (inString == "ERK") return 1e-13;
-    if (inString == "IRK") return 1e-13;
-    if (inString == "LIFTED_IRK") return 1e-13;
-    if (inString == "GNSF") return 1e-13;
-    if (inString == "NEW_LIFTED_IRK") return 1e-13;
+    if (inString == "ERK") return 1e-7;
+    if (inString == "IRK") return 1e-7;
+    if (inString == "LIFTED_IRK") return 1e-5;
+    if (inString == "GNSF") return 1e-7;
+    if (inString == "NEW_LIFTED_IRK") return 1e-5;
 
     return -1;
 }
@@ -310,11 +310,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
         for (jj = 0; jj < nx; jj++)
             in->x[jj] = x_sim[ii*nx+jj];
 
-        // p
-        for (jj = 0; jj < 2; jj++)
-            in->u[jj] = u_sim[ii*2+jj];
+        // u
         for (jj = 0; jj < nu; jj++)
-            in->u[2+jj] = 0.1;
+            in->u[jj] = u_sim[ii*nu+jj];
 
         acados_return = sim_solve(sim_solver, in, out);
         REQUIRE(acados_return == 0);
@@ -525,11 +523,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                     for (jj = 0; jj < nx; jj++)
                         in->x[jj] = x_sim[ii*nx+jj];
 
-                    // p
-                    for (jj = 0; jj < 2; jj++)
-                        in->u[jj] = u_sim[ii*2+jj];
+                    // u
                     for (jj = 0; jj < nu; jj++)
-                        in->u[2+jj] = 0.1;
+                        in->u[jj] = u_sim[ii*nu+jj];
 
                     acados_return = sim_solve(sim_solver, in, out);
                     REQUIRE(acados_return == 0);

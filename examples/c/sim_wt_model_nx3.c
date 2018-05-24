@@ -431,11 +431,9 @@ int main()
 			for (jj = 0; jj < nx; jj++)
 				in->x[jj] = x_sim[ii*nx+jj];
 
-			// p
-			for (jj = 0; jj < 2; jj++)
-				in->u[jj] = u_sim[ii*2+jj];
+			// u
 			for (jj = 0; jj < nu; jj++)
-				in->u[2+jj] = 0.1;
+				in->u[jj] = u_sim[ii*nu+jj];
 
 // 		d_print_mat(1, nx, in->x, 1);
 // 		d_print_mat(1, nu, in->u, 1);
