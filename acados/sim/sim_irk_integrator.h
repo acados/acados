@@ -50,13 +50,14 @@ typedef struct
 
 typedef struct
 {
-    struct blasfeo_dmat *JGK;     // jacobian of G over K (nx*ns, nx*ns)
+    struct blasfeo_dmat *JGK;     // jacobian of G over K ((nx+nz)*ns, (nx+nz)*ns)
     struct blasfeo_dmat *JGf;     // jacobian of G over x and u (nx*ns, nx+nu);
     struct blasfeo_dmat *JKf;     // jacobian of K over x and u (nx*ns, nx+nu);
     struct blasfeo_dmat *S_forw;  // forward sensitivities
 
     struct blasfeo_dvec *rG;  // residuals of G (nx*ns)
-    struct blasfeo_dvec *K;   // internal variables (nx*ns)
+    struct blasfeo_dvec *K;   // internal K variables (nx*ns)
+    struct blasfeo_dvec *Z;   // internal Z variables (nz*ns)
     struct blasfeo_dvec *xt;  // temporary x
     struct blasfeo_dvec *xn;  // x at each integration step
 
@@ -67,11 +68,15 @@ typedef struct
 
     struct blasfeo_dvec *xn_traj;  // xn trajectory
     struct blasfeo_dvec *K_traj;   // K trajectory
+    struct blasfeo_dvec *Z_traj;   // Z trajectory
+    // todo: maybe remove? but could maybe be used for hessian propagation
     // struct blasfeo_dmat *JG_traj; // JGK trajectory
 
-    struct blasfeo_dmat J_temp_x;     // temporary Jacobian of ode w.r.t x (nx, nx)
-    struct blasfeo_dmat J_temp_xdot;  // temporary Jacobian of ode w.r.t xdot (nx, nx)
-    struct blasfeo_dmat J_temp_u;     // temporary Jacobian of ode w.r.t u (nx, nu)
+    struct blasfeo_dmat J_temp_x;     // temporary Jacobian of ode w.r.t x (nx+nz, nx)
+    struct blasfeo_dmat J_temp_xdot;  // temporary Jacobian of ode w.r.t xdot (nx+nz, nx)
+    struct blasfeo_dmat J_temp_u;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
+    struct blasfeo_dmat J_temp_z;     // temporary Jacobian of ode w.r.t z (nx+nz, nu)
+    
 
 } sim_irk_workspace;
 
