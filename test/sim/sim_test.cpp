@@ -536,7 +536,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                     for (jj = 0; jj < nx; jj++){
                         x_sim[(ii+1)*nx+jj] = out->xn[jj];
-                        REQUIRE(isnan(out->xn[jj]) == 0);
+                        REQUIRE(std::isnan(out->xn[jj]) == 0);
                     }
 
                 }
@@ -551,7 +551,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 // error_S_forw
                 for (jj = 0; jj < nx*NF; jj++){
-                    REQUIRE(isnan(out->S_forw[jj]) == 0);
+                    REQUIRE(std::isnan(out->S_forw[jj]) == 0);
                     error_S_forw[jj] = fabs(S_forw_ref_sol[jj] - out->S_forw[jj]);
                 }
 
@@ -562,7 +562,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 // error_S_adj
                 for (jj = 0; jj < NF; jj++){
-                    REQUIRE(isnan(out->S_forw[jj]) == 0);
+                    REQUIRE(std::isnan(out->S_forw[jj]) == 0);
                     error_S_adj[jj] = S_adj_ref_sol[jj] - out->S_adj[jj];
                 }
                 max_error_adj = 0.0;
