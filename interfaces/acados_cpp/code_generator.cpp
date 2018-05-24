@@ -7,13 +7,11 @@ namespace acados
 code_generator::code_generator(ocp_nlp *nlp)
     : nlp_{nlp}
 {
-    // Nothing to be done
 }
 
 void code_generator::generate_s_function(std::string name)
 {
     std::ofstream file;
-
     file.open(name + ".c");
 
     generate_s_function_header(file, name);
@@ -165,8 +163,10 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\t\tplan->nlp_dynamics[i] = " + std::to_string(nlp_->plan_->nlp_dynamics[0]) + ";\n";
     out << "\t\tplan->sim_solver_plan[i].sim_solver = " +
             std::to_string(nlp_->plan_->sim_solver_plan[0].sim_solver) + ";\n";
+    out << "\t\tplan->nlp_constraints[i] = 0;\n";
     out << "\t}\n";
 
+    out << "\tplan->nlp_constraints[NUM_STAGES] = 0;\n";
     out << "\tplan->nlp_cost[NUM_STAGES] = " + std::to_string(nlp_->plan_->nlp_cost[nlp_->N])
                                              + ";\n";
 
@@ -201,7 +201,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
 
     generate_ls_cost_initialization(out);
 
-    out << "\n\tocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) "
+    out << "\n\tocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) "
            "nlp_in->constraints;\n";
 
     out << "\tfor (int i = 0; i < NUM_STATES; ++i)\n";
@@ -229,7 +229,7 @@ void code_generator::generate_mdl_outputs(std::ostream& out)
     out << "\tocp_nlp_out *nlp_out = (ocp_nlp_out *) ssGetPWork(S)[2];\n";
     out << "\tocp_nlp_solver *nlp_solver = (ocp_nlp_solver *) ssGetPWork(S)[4];\n";
 
-    out << "\n\tocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) "
+    out << "\n\tocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) "
            "nlp_in->constraints;\n";
 
     out << "\n\tconst double *x0 = ssGetInputPortRealSignal(S, 0);\n";
