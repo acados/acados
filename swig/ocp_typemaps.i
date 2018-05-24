@@ -122,6 +122,25 @@
 #endif
 }
 
+%typemap(out) ocp_nlp_info {
+    const char *fields[4] = {"num_iter", "status", "norm_residual", "total_time"};
+
+#if defined(SWIGMATLAB)
+    mxArray *mat_struct = mxCreateStructMatrix(1, 1, 4, fields);
+    mxSetField(mat_struct, 0, fields[0], mxCreateDoubleScalar($1.num_iter));
+    mxSetField(mat_struct, 0, fields[1], mxCreateDoubleScalar($1.status));
+    mxSetField(mat_struct, 0, fields[2], mxCreateDoubleScalar($1.inf_norm_residual));
+    mxSetField(mat_struct, 0, fields[3], mxCreateDoubleScalar($1.total_time));
+#elif defined(SWIGPYTHON)
+    PyObject *dict = PyDict_New();
+    PyDict_SetItemString(dict, fields[0], PyLong_FromLong($1.num_iter));
+    PyDict_SetItemString(dict, fields[1], PyLong_FromLong($1.status));
+    PyDict_SetItemString(dict, fields[2], PyFloat_FromDouble($1.inf_norm_residual));
+    PyDict_SetItemString(dict, fields[3], PyFloat_FromDouble($1.total_time));
+    $result = dict;
+#endif
+}
+
 %typemap(in) int_t N {
     $1 = ($1_ltype) arg1->$1_name;
     SWIG_Error(SWIG_ValueError, "It's not allowed to change number of stages");

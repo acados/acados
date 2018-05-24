@@ -31,7 +31,7 @@ class ocp_nlp : private ocp
 
     void initialize_solver(std::string solver_name, std::map<std::string, option_t *> options = {});
 
-    ocp_nlp_solution solve();
+    ocp_nlp_solution solve(std::vector<double> x_guess = {}, std::vector<double> u_guess = {});
 
     std::vector<std::string> fields = {"lbx", "ubx", "lbu", "ubu", "C",
                                        "D",   "lg",  "ug",  "lh",  "uh"};
@@ -110,6 +110,8 @@ class ocp_nlp : private ocp
     std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
 
     bool needs_initializing_;
+
+    std::shared_ptr<ocp_nlp_out> result_;
 
     ocp_nlp_solver_plan *plan_;
 

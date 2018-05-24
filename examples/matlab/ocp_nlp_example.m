@@ -4,33 +4,43 @@ import acados.*
 
 %% Model
 
-nx = 2;
-nu = 1;
+[ode_fun, nx, nu] = pendulum_model();
 
-x = SX.sym('x', nx);
-u = SX.sym('u', nu);
-ode_fun = Function('ode_fun', {x, u}, {vertcat(x(2), u)});
-
-N = 15;
+N = 20;
+Ts = 0.05;
+Q = diag([1, 1, 1e-10, 1e-10]);
+W = blkdiag(Q, 1e-2);
+WN = 1000*Q;
 
 %% NLP solver
 
 nlp = ocp_nlp(N, nx, nu);
-nlp.set_dynamics(ode_fun, struct('integrator', 'rk4', 'step', 0.1));
+nlp.set_dynamics(ode_fun, struct('integrator', 'rk4', 'step', Ts));
 
-q = 1; r = 1;
-P = eye(nx);
+nlp.set_stage_cost(eye(nx+nu), zeros(nx+nu), W);
+nlp.set_terminal_cost(eye(nx), zeros(nx, 1), WN);
 
-nlp.set_stage_cost(eye(nx+nu), zeros(nx+nu), diag([q, q, r]));
-nlp.set_terminal_cost(eye(nx), zeros(nx, 1), P);
-
-x0 = [1; 1];
+x0 = [0; pi; 0; 0];
 nlp.set_field('lbx', 0, x0);
 nlp.set_field('ubx', 0, x0);
 
-nlp.initialize_solver('sqp', struct('qp_solver', 'hpipm'));
+nlp.set_field('lbu', -8);
+nlp.set_field('ubu', +8);
 
-output = nlp.solve();
+nlp.initialize_solver('sqp', struct('qp_solver', 'qpoases'));
+
+output = nlp.solve(x0, 0);
+
+for i=1:99
+
+    states = output.states();
+    disp(states{1});
+
+    nlp.set_field('lbx', 0, states{2});
+    nlp.set_field('ubx', 0, states{2});
+
+    output = nlp.solve();
+end
 
 %% Plotting
 

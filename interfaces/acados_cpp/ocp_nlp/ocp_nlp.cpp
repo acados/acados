@@ -178,19 +178,29 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
                             d_["ns"].data(), dims_.get());
 
     solver_options_.reset(ocp_nlp_opts_create(config_.get(), dims_.get()));
+
+    result_.reset(ocp_nlp_out_create(config_.get(), dims_.get()));
+
 }
 
-ocp_nlp_solution ocp_nlp::solve()
+ocp_nlp_solution ocp_nlp::solve(vector<double> x_guess, vector<double> u_guess)
 {
     fill_bounds(cached_bounds);
 
     solver_.reset(ocp_nlp_create(config_.get(), dims_.get(), solver_options_.get()));
 
-    auto result = std::shared_ptr<ocp_nlp_out>(ocp_nlp_out_create(config_.get(), dims_.get()));
+    if (!x_guess.empty() || !u_guess.empty())
+    {
+        for (int i = 0; i <= N; ++i)
+        {
+            blasfeo_pack_dvec(d_["nx"].at(i), x_guess.data(), &result_->ux[i], d_["nu"].at(i));
+            blasfeo_pack_dvec(d_["nu"].at(i), u_guess.data(), &result_->ux[i], 0);
+        }
+    }
 
-    ocp_nlp_solve(solver_.get(), nlp_.get(), result.get());
+    int status = ocp_nlp_solve(solver_.get(), nlp_.get(), result_.get());
 
-    return ocp_nlp_solution(result, dims_);
+    return ocp_nlp_solution(result_, dims_, status);
 }
 
 void ocp_nlp::set_field(string field, vector<double> v)
@@ -211,6 +221,8 @@ void ocp_nlp::set_field(string field, int stage, vector<double> v)
     }
     else if (field == "lbu" || field == "ubu")
     {
+        if (stage == N)
+            return;
         if (v.size() != (size_t) d_["nu"].at(stage))
             throw std::invalid_argument("Expected size " +
                                         std::to_string(d_["nu"].at(stage)) + " but got " +
