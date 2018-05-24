@@ -28,7 +28,7 @@ void *compile_and_load_library(string output_folder, string source_name)
     std::string path_to_library = "./" + output_folder + "/" + library_name;
     std::string path_to_file = "./" + output_folder + "/" + source_name;
     char command[256];
-    snprintf(command, sizeof(command), "%s -fPIC -shared -g %s.c -o %s", compiler.c_str(),
+    snprintf(command, sizeof(command), "%s -fPIC -shared -O3 %s.c -o %s", compiler.c_str(),
              path_to_file.c_str(), path_to_library.c_str());
     int compilation_failed = system(command);
     if (compilation_failed)

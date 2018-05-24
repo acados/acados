@@ -12,13 +12,16 @@ namespace acados
 struct ocp_nlp_info
 {
     int num_iter;
+    int status;
     double inf_norm_residual;
+    double total_time;
 };
 
 class ocp_nlp_solution
 {
  public:
-    ocp_nlp_solution(std::shared_ptr<ocp_nlp_out> solution, std::shared_ptr<ocp_nlp_dims> dims);
+    ocp_nlp_solution(std::shared_ptr<ocp_nlp_out> solution, std::shared_ptr<ocp_nlp_dims> dims,
+                     int status);
 
     ocp_nlp_solution(const ocp_nlp_solution& other);
 
@@ -27,6 +30,7 @@ class ocp_nlp_solution
     std::vector<std::vector<double>> lag_mul_dynamics();
     std::vector<std::vector<double>> lag_mul_bounds();
     std::vector<std::vector<double>> lag_mul_constraints();
+    
     ocp_nlp_info info();
 
     const int N;
@@ -35,6 +39,8 @@ class ocp_nlp_solution
     std::shared_ptr<ocp_nlp_out> nlp_out_;
 
     std::shared_ptr<ocp_nlp_dims> dims_;
+
+    int status_;
 };
 }  // namespace acados
 

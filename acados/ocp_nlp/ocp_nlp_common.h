@@ -87,6 +87,7 @@ typedef struct
 
     int sqp_iter;
     double inf_norm_res;
+    double total_time;
 } ocp_nlp_out;
 
 /************************************************

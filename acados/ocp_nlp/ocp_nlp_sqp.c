@@ -866,6 +866,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
             // stop timer
             total_time += acados_toc(&timer);
+            nlp_out->total_time = total_time;
 
             return 0;
         }
@@ -919,6 +920,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
     // save sqp iterations number
     mem->sqp_iter = sqp_iter;
     nlp_out->sqp_iter = sqp_iter;
+    nlp_out->total_time = total_time;
 
     // printf("%d sqp iterations\n", sqp_iter);
     // print_ocp_qp_in(work->qp_in);
