@@ -91,71 +91,71 @@ static void select_dynamics_wt_casadi(int N,
 {
 	for (int ii = 0; ii < N; ii++)
 	{
-		expl_vde_for[ii].casadi_fun = &casadi_expl_vde_for;
-		expl_vde_for[ii].casadi_work = &casadi_expl_vde_for_work;
-		expl_vde_for[ii].casadi_sparsity_in = &casadi_expl_vde_for_sparsity_in;
-		expl_vde_for[ii].casadi_sparsity_out = &casadi_expl_vde_for_sparsity_out;
-		expl_vde_for[ii].casadi_n_in = &casadi_expl_vde_for_n_in;
-		expl_vde_for[ii].casadi_n_out = &casadi_expl_vde_for_n_out;
+		expl_vde_for[ii].casadi_fun = &wt_nx6p2_expl_vde_for;
+		expl_vde_for[ii].casadi_work = &wt_nx6p2_expl_vde_for_work;
+		expl_vde_for[ii].casadi_sparsity_in = &wt_nx6p2_expl_vde_for_sparsity_in;
+		expl_vde_for[ii].casadi_sparsity_out = &wt_nx6p2_expl_vde_for_sparsity_out;
+		expl_vde_for[ii].casadi_n_in = &wt_nx6p2_expl_vde_for_n_in;
+		expl_vde_for[ii].casadi_n_out = &wt_nx6p2_expl_vde_for_n_out;
 
-		impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun;
-		impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_work;
-		impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_sparsity_in;
-		impl_ode_fun[ii].casadi_sparsity_out = &casadi_impl_ode_fun_sparsity_out;
-		impl_ode_fun[ii].casadi_n_in = &casadi_impl_ode_fun_n_in;
-		impl_ode_fun[ii].casadi_n_out = &casadi_impl_ode_fun_n_out;
+		impl_ode_fun[ii].casadi_fun = &wt_nx6p2_impl_ode_fun;
+		impl_ode_fun[ii].casadi_work = &wt_nx6p2_impl_ode_fun_work;
+		impl_ode_fun[ii].casadi_sparsity_in = &wt_nx6p2_impl_ode_fun_sparsity_in;
+		impl_ode_fun[ii].casadi_sparsity_out = &wt_nx6p2_impl_ode_fun_sparsity_out;
+		impl_ode_fun[ii].casadi_n_in = &wt_nx6p2_impl_ode_fun_n_in;
+		impl_ode_fun[ii].casadi_n_out = &wt_nx6p2_impl_ode_fun_n_out;
 
-		impl_ode_fun_jac_x_xdot[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot;
-		impl_ode_fun_jac_x_xdot[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_work;
-		impl_ode_fun_jac_x_xdot[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_sparsity_in;
-		impl_ode_fun_jac_x_xdot[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_sparsity_out;
-		impl_ode_fun_jac_x_xdot[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_n_in;
-		impl_ode_fun_jac_x_xdot[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_n_out;
+		impl_ode_fun_jac_x_xdot[ii].casadi_fun = &wt_nx6p2_impl_ode_fun_jac_x_xdot;
+		impl_ode_fun_jac_x_xdot[ii].casadi_work = &wt_nx6p2_impl_ode_fun_jac_x_xdot_work;
+		impl_ode_fun_jac_x_xdot[ii].casadi_sparsity_in = &wt_nx6p2_impl_ode_fun_jac_x_xdot_sparsity_in;
+		impl_ode_fun_jac_x_xdot[ii].casadi_sparsity_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_sparsity_out;
+		impl_ode_fun_jac_x_xdot[ii].casadi_n_in = &wt_nx6p2_impl_ode_fun_jac_x_xdot_n_in;
+		impl_ode_fun_jac_x_xdot[ii].casadi_n_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_n_out;
 
-		impl_ode_jac_x_xdot_u[ii].casadi_fun = &casadi_impl_ode_jac_x_xdot_u;
-		impl_ode_jac_x_xdot_u[ii].casadi_work = &casadi_impl_ode_jac_x_xdot_u_work;
-		impl_ode_jac_x_xdot_u[ii].casadi_sparsity_in = &casadi_impl_ode_jac_x_xdot_u_sparsity_in;
-		impl_ode_jac_x_xdot_u[ii].casadi_sparsity_out = &casadi_impl_ode_jac_x_xdot_u_sparsity_out;
-		impl_ode_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_n_in;
-		impl_ode_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
+		impl_ode_jac_x_xdot_u[ii].casadi_fun = &wt_nx6p2_impl_ode_jac_x_xdot_u;
+		impl_ode_jac_x_xdot_u[ii].casadi_work = &wt_nx6p2_impl_ode_jac_x_xdot_u_work;
+		impl_ode_jac_x_xdot_u[ii].casadi_sparsity_in = &wt_nx6p2_impl_ode_jac_x_xdot_u_sparsity_in;
+		impl_ode_jac_x_xdot_u[ii].casadi_sparsity_out = &wt_nx6p2_impl_ode_jac_x_xdot_u_sparsity_out;
+		impl_ode_jac_x_xdot_u[ii].casadi_n_in = &wt_nx6p2_impl_ode_jac_x_xdot_u_n_in;
+		impl_ode_jac_x_xdot_u[ii].casadi_n_out = &wt_nx6p2_impl_ode_jac_x_xdot_u_n_out;
 
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_u;
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_u_work;
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_u_sparsity_in;
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_u_sparsity_out;
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_u_n_in;
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_u_n_out;
-
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_fun = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_work = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_work;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_in = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_sparsity_in;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_sparsity_out;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_in = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_n_in;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_n_out;
+		
 		// GNSF functions
 		// phi_fun
-		phi_fun[ii].casadi_fun            = &casadi_phi_fun;
-		phi_fun[ii].casadi_work           = &casadi_phi_fun_work;
-		phi_fun[ii].casadi_sparsity_in    = &casadi_phi_fun_sparsity_in;
-		phi_fun[ii].casadi_sparsity_out   = &casadi_phi_fun_sparsity_out;
-		phi_fun[ii].casadi_n_in           = &casadi_phi_fun_n_in;
-		phi_fun[ii].casadi_n_out          = &casadi_phi_fun_n_out;
+		phi_fun[ii].casadi_fun            = &wt_nx6p2_phi_fun;
+		phi_fun[ii].casadi_work           = &wt_nx6p2_phi_fun_work;
+		phi_fun[ii].casadi_sparsity_in    = &wt_nx6p2_phi_fun_sparsity_in;
+		phi_fun[ii].casadi_sparsity_out   = &wt_nx6p2_phi_fun_sparsity_out;
+		phi_fun[ii].casadi_n_in           = &wt_nx6p2_phi_fun_n_in;
+		phi_fun[ii].casadi_n_out          = &wt_nx6p2_phi_fun_n_out;
 
-		phi_fun_jac_y[ii].casadi_fun = &casadi_phi_fun_jac_y;
-		phi_fun_jac_y[ii].casadi_work = &casadi_phi_fun_jac_y_work;
-		phi_fun_jac_y[ii].casadi_sparsity_in = &casadi_phi_fun_jac_y_sparsity_in;
-		phi_fun_jac_y[ii].casadi_sparsity_out = &casadi_phi_fun_jac_y_sparsity_out;
-		phi_fun_jac_y[ii].casadi_n_in = &casadi_phi_fun_jac_y_n_in;
-		phi_fun_jac_y[ii].casadi_n_out = &casadi_phi_fun_jac_y_n_out;
+		phi_fun_jac_y[ii].casadi_fun = &wt_nx6p2_phi_fun_jac_y;
+		phi_fun_jac_y[ii].casadi_work = &wt_nx6p2_phi_fun_jac_y_work;
+		phi_fun_jac_y[ii].casadi_sparsity_in = &wt_nx6p2_phi_fun_jac_y_sparsity_in;
+		phi_fun_jac_y[ii].casadi_sparsity_out = &wt_nx6p2_phi_fun_jac_y_sparsity_out;
+		phi_fun_jac_y[ii].casadi_n_in = &wt_nx6p2_phi_fun_jac_y_n_in;
+		phi_fun_jac_y[ii].casadi_n_out = &wt_nx6p2_phi_fun_jac_y_n_out;
 
-		phi_jac_y_uhat[ii].casadi_fun = &casadi_phi_jac_y_uhat;
-		phi_jac_y_uhat[ii].casadi_work = &casadi_phi_jac_y_uhat_work;
-		phi_jac_y_uhat[ii].casadi_sparsity_in = &casadi_phi_jac_y_uhat_sparsity_in;
-		phi_jac_y_uhat[ii].casadi_sparsity_out = &casadi_phi_jac_y_uhat_sparsity_out;
-		phi_jac_y_uhat[ii].casadi_n_in = &casadi_phi_jac_y_uhat_n_in;
-		phi_jac_y_uhat[ii].casadi_n_out = &casadi_phi_jac_y_uhat_n_out;
+		phi_jac_y_uhat[ii].casadi_fun = &wt_nx6p2_phi_jac_y_uhat;
+		phi_jac_y_uhat[ii].casadi_work = &wt_nx6p2_phi_jac_y_uhat_work;
+		phi_jac_y_uhat[ii].casadi_sparsity_in = &wt_nx6p2_phi_jac_y_uhat_sparsity_in;
+		phi_jac_y_uhat[ii].casadi_sparsity_out = &wt_nx6p2_phi_jac_y_uhat_sparsity_out;
+		phi_jac_y_uhat[ii].casadi_n_in = &wt_nx6p2_phi_jac_y_uhat_n_in;
+		phi_jac_y_uhat[ii].casadi_n_out = &wt_nx6p2_phi_jac_y_uhat_n_out;
 
 		// f_lo - linear output function
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_fun = &casadi_f_lo_fun_jac_x1k1uz;
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_work = &casadi_f_lo_fun_jac_x1k1uz_work;
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_sparsity_in = &casadi_f_lo_fun_jac_x1k1uz_sparsity_in;
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_sparsity_out = &casadi_f_lo_fun_jac_x1k1uz_sparsity_out;
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_n_in = &casadi_f_lo_fun_jac_x1k1uz_n_in;
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_n_out = &casadi_f_lo_fun_jac_x1k1uz_n_out;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_fun = &wt_nx6p2_f_lo_fun_jac_x1k1uz;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_work = &wt_nx6p2_f_lo_fun_jac_x1k1uz_work;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_sparsity_in = &wt_nx6p2_f_lo_fun_jac_x1k1uz_sparsity_in;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_sparsity_out = &wt_nx6p2_f_lo_fun_jac_x1k1uz_sparsity_out;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_n_in = &wt_nx6p2_f_lo_fun_jac_x1k1uz_n_in;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_n_out = &wt_nx6p2_f_lo_fun_jac_x1k1uz_n_out;
 	}
 }
 
@@ -563,12 +563,12 @@ int main()
 
 	// GNSF import matrices function
     external_function_casadi get_matrices_fun;
-    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
-    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
-    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
-    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
-    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
-    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
+    get_matrices_fun.casadi_fun            = &wt_nx6p2_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &wt_nx6p2_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &wt_nx6p2_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &wt_nx6p2_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &wt_nx6p2_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &wt_nx6p2_get_matrices_fun_n_out;
 	external_function_casadi_create(&get_matrices_fun);
 
 	external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
