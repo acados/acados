@@ -297,7 +297,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     size += blasfeo_memsize_dvec(nz * ns);          // Z
     size += 2 * blasfeo_memsize_dvec(nx);           // xt, x
     size += blasfeo_memsize_dvec(nx + nu);          // lambda
-    size += blasfeo_memsize_dvec(nx * ns);          // lambdaK
+    size += blasfeo_memsize_dvec((nx + nz) * ns);   // lambdaK
     size += steps * blasfeo_memsize_dvec(nx);       // for xn_traj
     size += steps * blasfeo_memsize_dvec(nx * ns);  // for K_traj
     size += steps * blasfeo_memsize_dvec(nz * ns);  // for Z_traj
@@ -392,16 +392,15 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xt, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xn, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx + nu, workspace->lambda, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(nx * ns, workspace->lambdaK, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem((nx + nz) * ns, workspace->lambdaK, &c_ptr);
     for (int i = 0; i < steps; i++)
     {
         assign_and_advance_blasfeo_dvec_mem(nx, &workspace->xn_traj[i], &c_ptr);
         assign_and_advance_blasfeo_dvec_mem(nx * ns, &workspace->K_traj[i], &c_ptr);
         assign_and_advance_blasfeo_dvec_mem(nz * ns, &workspace->Z_traj[i], &c_ptr);
     }
-
-    assign_and_advance_int((nx + nz) * ns, &workspace->ipiv, &c_ptr);
     assign_and_advance_double(ns, &workspace->Z_work, &c_ptr);
+    assign_and_advance_int((nx + nz) * ns, &workspace->ipiv, &c_ptr);
 
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory -
     // sim_irk_calculate_workspace_size(dims, opts_));
@@ -438,8 +437,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int nz = dims->nz;
 
     // assert - only use supported features
-    assert((nz == 0) | (!opts->sens_adj) &&
-           "nz != 0 - adjoint sensitivity propagation for DAEs not (yet) supported by this integrator");
     assert(opts->sens_algebraic == false &&
        "sensitivity propagation for algebraic variables not (yet) supported by this integrator");
 
@@ -550,17 +547,18 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     blasfeo_dgese((nx + nz) * ns, (nx + nz) * ns, 0.0, JGK, 0, 0);
     blasfeo_dgese((nx + nz) * ns, nx + nu, 0.0, JGf, 0, 0);
     blasfeo_dgese((nx + nz) * ns, nx + nu, 0.0, JKf, 0, 0);
-    // TODO(dimitris): shouldn't this be NF instead of nx+nu??
-    blasfeo_pack_dmat(nx, nx + nu, S_forw_in, nx, S_forw, 0, 0);
 
     blasfeo_dvecse((nx + nz) * ns, 0.0, rG, 0);
     blasfeo_dvecse(nx * ns, 0.0, K, 0);
     blasfeo_dvecse(nz * ns, 0.0, Z, 0);
+    blasfeo_dvecse((nx + nz) * ns, 0.0, lambdaK, 0);
+
+    // pack
     blasfeo_pack_dvec(nx, x, xn, 0);
-
-    blasfeo_dvecse(nx * ns, 0.0, lambdaK, 0);
-
+    blasfeo_pack_dmat(nx, nx + nu, S_forw_in, nx, S_forw, 0, 0);
     blasfeo_pack_dvec(nx + nu, in->S_adj, lambda, 0);
+
+    // TODO(dimitris, FreyJo): implement NF (number of forward sensis) properly, instead of nx+nu?
 
     // start the loop
     acados_tic(&timer);
@@ -740,8 +738,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // obtain JKf
             // TODO(all): add the option to use VDE instead of dgemm ???
             // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw
-            blasfeo_dgemm_nn((nx + nz) * ns, nx + nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0,
-                             JKf, 0, 0);
+            blasfeo_dgemm_nn((nx + nz) * ns, nx + nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf,
+                              0, 0, JKf, 0, 0);
             // dK_du = dK_du + 1 * dG_du
             blasfeo_dgead((nx + nz) * ns, nu, 1.0, JGf, 0, nx, JKf, 0, nx);
 
@@ -792,6 +790,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns})
                 impl_ode_z_in.xi    = ii * nz;  // use z_i of Z = (z_1,..., z_{ns})
 
+                // build stage value
                 blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);
                 for (jj = 0; jj < ns; jj++)
                 {
@@ -809,8 +808,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     impl_ode_jac_x_xdot_u_type_out, impl_ode_jac_x_xdot_u_out);
                 timing_ad += acados_toc(&timer_ad);
 
-                blasfeo_dgecp((nx + nz) + nz, nx, &J_temp_x, 0, 0, JGf, ii * nx, 0);
-                blasfeo_dgecp((nx + nz) + nz, nu, &J_temp_u, 0, 0, JGf, ii * nx, nx);
+                blasfeo_dgecp(nx + nz, nx, &J_temp_x, 0, 0, JGf, ii * (nx + nz), 0);
+                blasfeo_dgecp(nx + nz, nu, &J_temp_u, 0, 0, JGf, ii * (nx + nz), nx);
 
                 // compute the blocks of JGK
                 for (jj = 0; jj < ns; jj++)
@@ -837,17 +836,21 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_dgetrf_rowpivot((nx + nz) * ns, (nx + nz) * ns, JGK, 0, 0, JGK, 0, 0, ipiv);
             timing_la += acados_toc(&timer_la);
 
+            blasfeo_dvecse((nx + nz) * ns, 0.0, lambdaK, 0);
             for (jj = 0; jj < ns; jj++)
                 blasfeo_dveccpsc(nx, -step * b_vec[jj], lambda, 0, lambdaK, jj * nx);
+                // lambdaK_jj = -step b_jj * lambda_x
 
+            // obtain lambda_K
             acados_tic(&timer_la);
             blasfeo_dtrsv_utn((nx + nz) * ns, JGK, 0, 0, lambdaK, 0, lambdaK, 0);
             blasfeo_dtrsv_ltu((nx + nz) * ns, JGK, 0, 0, lambdaK, 0, lambdaK, 0);
+            blasfeo_dvecpei((nx + nz) * ns, ipiv, lambdaK, 0);
             timing_la += acados_toc(&timer_la);
 
-            blasfeo_dvecpei(nx * ns, ipiv, lambdaK, 0);  // DAE (nx + nz) ?!
-            blasfeo_dgemv_t((nx + nz) * ns, nx + nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda,
-                            0);
+            // lambda = 1 * lambda + 1 * JGf' * lambdaK
+            blasfeo_dgemv_t((nx + nz) * ns, nx + nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda,
+                             0, lambda, 0);
         }
     }
     // extract output

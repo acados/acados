@@ -177,16 +177,14 @@ set(TEST_SIM_DAE_SRC
 # ) # TODO (dimitris): eliminate this at some point
 
 # Unit test executable
-# message("bla\n")
-# message(${TEST_SIM_SRC})
 add_executable(unit_tests
     ${PROJECT_SOURCE_DIR}/test/all_tests.cpp
     # $<TARGET_OBJECTS:ocp_nlp_gen>
     # $<TARGET_OBJECTS:ocp_qp_gen>
-    # ${TEST_SIM_DAE_SRC}
+    ${TEST_SIM_DAE_SRC}
     ${TEST_SIM_ODE_SRC}
-    # ${TEST_OCP_QP_SRC}
-    # ${TEST_OCP_NLP_SRC}
+    ${TEST_OCP_QP_SRC}
+    ${TEST_OCP_NLP_SRC}
     # $<TARGET_OBJECTS:sim_gen>
     # ${TEST_UTILS_SRC}
 )

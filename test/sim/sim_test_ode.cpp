@@ -403,9 +403,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                         // set additional dimensions
                         gnsf_dim = (sim_gnsf_dims *) dims;
-                              // declaration not allowed inside switch somehow
-                        gnsf_dim->nx = nx;
-                        gnsf_dim->nu = nu;
                         gnsf_dim->nx1 = nx;
                         gnsf_dim->nx2 = 0;
                         gnsf_dim->ny = nx;
@@ -507,7 +504,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         << opts->newton_iter << ")\n";
 
                 sim_solver = sim_create(config, dims, opts);
-                // sim_solver *le_sim_solver = (sim_solver *) sim_solver_;
+
                 int acados_return;
 
                 if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
@@ -568,18 +565,17 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 * printing
                 ************************************************/
 
-                std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = "
-                         << max_error_forw << ",\nerror_adj_sens = "
-                         << max_error_adj << "\n";
-                d_print_e_mat(nx, NF, &out->S_forw[0], 1);
-
+                std::cout  << "error_sim   = " << max_error << "\n";
+                std::cout  << "error_forw  = " << max_error_forw << "\n";
 
                 REQUIRE(max_error <= tol);
                 REQUIRE(max_error_forw <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
-                if ((plan.sim_solver != LIFTED_IRK) && (plan.sim_solver != NEW_LIFTED_IRK))
+                if ((plan.sim_solver != LIFTED_IRK) && (plan.sim_solver != NEW_LIFTED_IRK)){
+                    std::cout  << "error_adj   = " << max_error_adj  << "\n";
                     REQUIRE(max_error_adj <= tol);
+                }
 
 
                 free(config);

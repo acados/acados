@@ -34,6 +34,7 @@ typedef struct
     int nx;
     int nu;
     int nz;
+
 } sim_irk_dims;
 
 typedef struct
@@ -62,7 +63,7 @@ typedef struct
     struct blasfeo_dvec *xn;  // x at each integration step
 
     struct blasfeo_dvec *lambda;   // adjoint seed (nx+nu)
-    struct blasfeo_dvec *lambdaK;  // auxiliary variable (nx*ns)
+    struct blasfeo_dvec *lambdaK;  // auxiliary variable ((nx+nz)*ns)
 
     int *ipiv;  // index of pivot vector
     double *Z_work;  // used to perform computations to get out->zn
@@ -77,7 +78,6 @@ typedef struct
     struct blasfeo_dmat J_temp_xdot;  // temporary Jacobian of ode w.r.t xdot (nx+nz, nx)
     struct blasfeo_dmat J_temp_u;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
     struct blasfeo_dmat J_temp_z;     // temporary Jacobian of ode w.r.t z (nx+nz, nu)
-
 
 } sim_irk_workspace;
 

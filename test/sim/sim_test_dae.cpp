@@ -27,7 +27,6 @@
 #include <string>
 #include <vector>
 #include <math.h>
-#include <fenv.h>
 
 #include "test/test_utils/eigen.h"
 #include "catch/include/catch.hpp"
@@ -84,7 +83,6 @@ TEST_CASE("crane_dae_example", "[integrators]")
     vector<std::string> solvers = {"GNSF", "IRK"};
       // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
-    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     int ii, jj;
 
     const int nx = 9;
@@ -293,6 +291,8 @@ TEST_CASE("crane_dae_example", "[integrators]")
     // seeds adj
     for (ii = 0; ii < nx; ii++)
         in->S_adj[ii] = 1.0;
+    for (ii = nx; ii < nx + nu; ii++)
+        in->S_adj[ii] = 0.0;
 
     /************************************************
     * sim solver
@@ -335,14 +335,17 @@ TEST_CASE("crane_dae_example", "[integrators]")
         z_ref_sol[jj] = out->zn[jj];
 
 
-    printf("Reference xn \n");
-    d_print_e_mat(1, nx, &x_ref_sol[0], 1);
+    // printf("Reference xn \n");
+    // d_print_e_mat(1, nx, &x_ref_sol[0], 1);
 
-    printf("Reference zn \n");
-    d_print_e_mat(1, nz, &z_ref_sol[0], 1);
+    // printf("Reference zn \n");
+    // d_print_e_mat(1, nz, &z_ref_sol[0], 1);
 
-    printf("Reference forward sensitivities \n");
-    d_print_e_mat(nx, NF, &S_forw_ref_sol[0], nx);
+    // printf("Reference forward sensitivities \n");
+    // d_print_e_mat(nx, NF, &S_forw_ref_sol[0], nx);
+
+    // printf("tested adjoint sensitivities \n");
+    // d_print_e_mat(1, NF, &S_adj_ref_sol[0], 1);
 
 
 
@@ -358,7 +361,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     {
         SECTION(solver)
         {
-            for (int num_steps = 2; num_steps < 3; num_steps++)
+            for (int num_steps = 2; num_steps < 8; num_steps++)
             {
                 double tol = sim_solver_tolerance_dae(solver);
 
@@ -382,36 +385,31 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
                 void *opts_ = sim_opts_create(config, dims);
                 sim_rk_opts *opts = (sim_rk_opts *) opts_;
+                config->opts_initialize_default(config, dims, opts);
 
-                if (plan.sim_solver != NEW_LIFTED_IRK)
-                    opts->sens_adj = true;
-                else
-                    opts->sens_adj = false;
-
-                sim_gnsf_dims *gnsf_dim;
 
                 opts->jac_reuse = false;  // jacobian reuse
                 opts->newton_iter = 3;  // number of newton iterations per integration step
                 opts->num_steps = num_steps;  // number of steps
                 opts->output_z = true;
+                opts->ns = 5;  // number of stages in rk integrator
+                opts->output_z = true;
+                opts->sens_adj = true;
+                opts->sens_forw = true;
 
+
+                sim_gnsf_dims *gnsf_dim;
                 switch (plan.sim_solver)
                 {
                     case IRK:
                          // IRK
-                        opts->ns = 5;  // number of stages in rk integrator
-                        opts->output_z = true;
-                        opts->sens_adj = false;
-                        opts->sens_forw = true;
+
                         break;
 
                     case GNSF:
                         // GNSF
-                        opts->ns = 5;  // number of stages in rk integrator
-
                         // set additional dimensions
                         gnsf_dim = (sim_gnsf_dims *) dims;
-                              // declaration not allowed inside switch somehow
                         gnsf_dim->nx1 = nx1;
                         gnsf_dim->nx2 = nx2;
                         gnsf_dim->ny = ny;
@@ -420,13 +418,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
                         break;
 
-                    case NEW_LIFTED_IRK:
-                        // new lifted IRK
-                        opts->ns = 3;  // number of stages in rk integrator
-                        break;
+                    // case NEW_LIFTED_IRK:
+                    //     // new lifted IRK
+                    //     opts->ns = 3;  // number of stages in rk integrator
+                    //     break;
 
                     default :
-                        printf("\nnot enough sim solvers implemented!\n");
+                        printf("\nplan.sim_solver does not support DAEs!\n");
                         exit(1);
 
                 }
@@ -466,13 +464,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
                         sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
                         break;
                     }
-                    case NEW_LIFTED_IRK:  // new_lifted_irk
-                    {
-                        sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-                        sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u",
-                                 &impl_ode_fun_jac_x_xdot_u);
-                        break;
-                    }
+                    // case NEW_LIFTED_IRK:  // new_lifted_irk
+                    // {
+                    //     sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
+                    //     sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u",
+                    //              &impl_ode_fun_jac_x_xdot_u);
+                    //     break;
+                    // }
                     default :
                     {
                         printf("\nnot enough sim solvers implemented!\n");
@@ -489,6 +487,8 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 // seeds adj
                 for (ii = 0; ii < nx; ii++)
                     in->S_adj[ii] = 1.0;
+                for (ii = nx; ii < nx + nu; ii++)
+                    in->S_adj[ii] = 0.0;
 
                 /************************************************
                 * sim solver
@@ -567,27 +567,21 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 /************************************************
                 * printing
                 ************************************************/
-                d_print_e_mat(1, nx, &out->xn[0], 1);
 
-                // std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = "
-                //          << max_error_forw << ",\nerror_adj_sens = "
-                //          << max_error_adj << "\nerror_z = "<< max_error_z << "\n";
                 std::cout  << "error_sim   = " << max_error << "\n";
                 std::cout  << "error_z     = " << max_error_z << "\n";
                 std::cout  << "error_forw  = " << max_error_forw << "\n";
+                std::cout  << "error_adj   = " << max_error_adj  << "\n";
 
                 REQUIRE(max_error <= tol);
                 REQUIRE(max_error_z <= tol);
 
-                printf("tested forward sensitivities \n");
-                d_print_e_mat(nx, NF, &out->S_forw[0], nx);
+                // printf("tested forward sensitivities \n");
+                // d_print_e_mat(nx, NF, &out->S_forw[0], nx);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
-                if ((plan.sim_solver != IRK) && (plan.sim_solver != NEW_LIFTED_IRK))
-                    REQUIRE(max_error_adj <= tol);
-
-                if (plan.sim_solver == GNSF)
-                    REQUIRE(max_error_forw <= tol);
+                REQUIRE(max_error_adj <= tol);
+                REQUIRE(max_error_forw <= tol);
 
                 free(config);
                 free(dims);
