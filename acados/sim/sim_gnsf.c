@@ -28,6 +28,7 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
+#include "acados/utils/math.h"
 
 #include "acados/sim/sim_collocation_utils.h"
 #include "acados/sim/sim_common.h"
@@ -151,25 +152,6 @@ void sim_gnsf_import_matrices(sim_gnsf_dims *dims, gnsf_model *model,
 // But_KK_YY_ZZ_LO_fun) this function can be used instead of import_matrices + precompute (not
 // working now, ATTENTION!!!)
 
-/************************************************
- * helpful functions
- ************************************************/
-
-static void sim_gnsf_neville(double *out, double xx, int n, double *x, double *Q)
-{  // Neville scheme
-    // writes value of interpolating polynom corresponding to the nodes x and Q evaluated evaluated
-    // at xx into out
-    for (int i = n; i > 0; i--)
-    {
-        for (int j = 0; j < i; j++)
-        {
-            Q[j] = (xx - x[j]) * Q[j + 1] -
-                   (xx - x[j + n - i + 1]) * Q[j];  // 0 is where we want the approximation of z
-            Q[j] = Q[j] / (x[j + n - i + 1] - x[j]);
-        }
-    }
-    out[0] = Q[0];
-}
 
 /************************************************
  * opts
@@ -1645,7 +1627,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 Z_work[jj] = blasfeo_dvecex1(&Z_val[0], nz * ii + jj);
                             // values of Z_ii in first step, use Z_work
             }
-            sim_gnsf_neville(&out->zn[ii], 0.0, num_stages - 1, mem->c, Z_work);
+            neville_algorithm(&out->zn[ii], 0.0, num_stages - 1, mem->c, Z_work);
         }
     }
 

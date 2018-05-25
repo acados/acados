@@ -1116,3 +1116,19 @@ double minimum_of_doubles(double *x, int n)
     }
     return min;
 }
+
+void neville_algorithm(double *out, double xx, int n, double *x, double *Q)
+{  // Neville's algorithm
+    // writes value of interpolating polynom corresponding to the nodes (x_i, Q_i), i = 1,...,n
+    // evaluated evaluated at xx into out
+    for (int i = n; i > 0; i--)
+    {
+        for (int j = 0; j < i; j++)
+        {
+            Q[j] = (xx - x[j]) * Q[j + 1] -
+                   (xx - x[j + n - i + 1]) * Q[j];
+            Q[j] = Q[j] / (x[j + n - i + 1] - x[j]);
+        }
+    }
+    out[0] = Q[0];
+}
