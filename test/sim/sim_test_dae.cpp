@@ -68,7 +68,7 @@ sim_solver_t hashitsim_dae(std::string const& inString)
 double sim_solver_tolerance_dae(std::string const& inString)
 {
     // if (inString == "ERK") return 1e-3;
-    if (inString == "IRK") return 1e-4;
+    if (inString == "IRK") return 1e-6;
     // if (inString == "LIFTED_IRK") return 1e-3;
     if (inString == "GNSF") return 1e-6;
     // if (inString == "NEW_LIFTED_IRK") return 1e-3;
@@ -241,25 +241,19 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
     void *dims = sim_dims_create(config);
 
+    // set dimensions
     config->set_nx(dims, nx);
     config->set_nu(dims, nu);
     config->set_nz(dims, nz);
-
-    // set dimensions
+    // additional gnsf dims
     sim_gnsf_dims *gnsf_dim = (sim_gnsf_dims *) dims;
-
-    // gnsf_dim->nx = nx;
-    // gnsf_dim->nu = nu;
-    // gnsf_dim->nz = nz;
     gnsf_dim->nx1 = nx1;
     gnsf_dim->nx2 = nx2;
     gnsf_dim->ny = ny;
     gnsf_dim->nuhat = nuhat;
     gnsf_dim->n_out = n_out;
 
-
-
-
+    // set opts
     void *opts_ = sim_opts_create(config, dims);
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
@@ -271,7 +265,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 5;  // number of newton iterations per integration step
     opts->num_steps = 50;  // number of steps
-    opts->ns = 2;  // number of stages in rk integrator
+    opts->ns = 8;  // number of stages in rk integrator
 
     sim_in *in = sim_in_create(config, dims);
     sim_out *out = sim_out_create(config, dims);
@@ -364,7 +358,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     {
         SECTION(solver)
         {
-            for (int num_steps = 2; num_steps < 16; num_steps++)
+            for (int num_steps = 2; num_steps < 3; num_steps++)
             {
                 double tol = sim_solver_tolerance_dae(solver);
 
@@ -403,23 +397,12 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
                 switch (plan.sim_solver)
                 {
-
-                    case ERK:
-                         // ERK
-                        opts->ns = 4;  // number of stages in rk integrator
-                        break;
-
                     case IRK:
                          // IRK
-                        opts->ns = 2;  // number of stages in rk integrator
+                        opts->ns = 5;  // number of stages in rk integrator
                         opts->output_z = true;
                         opts->sens_adj = false;
-                        opts->sens_forw = false;
-                        break;
-
-                    case LIFTED_IRK:
-                         // lifted IRK
-                        opts->ns = 2;  // number of stages in rk integrator
+                        opts->sens_forw = true;
                         break;
 
                     case GNSF:
@@ -586,12 +569,18 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 ************************************************/
                 d_print_e_mat(1, nx, &out->xn[0], 1);
 
-                std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = "
-                         << max_error_forw << ",\nerror_adj_sens = "
-                         << max_error_adj << "\nerror_z = "<< max_error_z << "\n";
+                // std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = "
+                //          << max_error_forw << ",\nerror_adj_sens = "
+                //          << max_error_adj << "\nerror_z = "<< max_error_z << "\n";
+                std::cout  << "error_sim   = " << max_error << "\n";
+                std::cout  << "error_z     = " << max_error_z << "\n";
+                std::cout  << "error_forw  = " << max_error_forw << "\n";
 
                 REQUIRE(max_error <= tol);
                 REQUIRE(max_error_z <= tol);
+
+                printf("tested forward sensitivities \n");
+                d_print_e_mat(nx, NF, &out->S_forw[0], nx);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
                 if ((plan.sim_solver != IRK) && (plan.sim_solver != NEW_LIFTED_IRK))

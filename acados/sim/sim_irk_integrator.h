@@ -51,8 +51,8 @@ typedef struct
 typedef struct
 {
     struct blasfeo_dmat *JGK;     // jacobian of G over K ((nx+nz)*ns, (nx+nz)*ns)
-    struct blasfeo_dmat *JGf;     // jacobian of G over x and u (nx*ns, nx+nu);
-    struct blasfeo_dmat *JKf;     // jacobian of K over x and u (nx*ns, nx+nu);
+    struct blasfeo_dmat *JGf;     // jacobian of G over x and u ((nx+nz)*ns, nx+nu);
+    struct blasfeo_dmat *JKf;     // jacobian of (K,Z) over x and u ((nx+nz)*ns, nx+nu);
     struct blasfeo_dmat *S_forw;  // forward sensitivities
 
     struct blasfeo_dvec *rG;  // residuals of G (nx*ns)
@@ -77,7 +77,7 @@ typedef struct
     struct blasfeo_dmat J_temp_xdot;  // temporary Jacobian of ode w.r.t xdot (nx+nz, nx)
     struct blasfeo_dmat J_temp_u;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
     struct blasfeo_dmat J_temp_z;     // temporary Jacobian of ode w.r.t z (nx+nz, nu)
-    
+
 
 } sim_irk_workspace;
 

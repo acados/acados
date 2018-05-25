@@ -288,7 +288,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     size += steps * sizeof(struct blasfeo_dvec);      // Ztraj
 
     size += blasfeo_memsize_dmat((nx+nz) * ns, (nx+nz) * ns);      // JGK
-    size += 2 * blasfeo_memsize_dmat(nx * ns, nx + nu);  // JGf, JKf
+    size += 2 * blasfeo_memsize_dmat((nx+nz) * ns, nx + nu);  // JGf, JKf
     size += blasfeo_memsize_dmat(nx, nx + nu);           // S_forw
     // size += steps * blasfeo_memsize_dmat(nx*ns, nx*ns); // for JG_traj
 
@@ -373,9 +373,9 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
 
     align_char_to(64, &c_ptr);
 
-    assign_and_advance_blasfeo_dmat_mem((nx+nz) * ns, (nx+nz) * ns, workspace->JGK, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx * ns, nx + nu, workspace->JGf, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx * ns, nx + nu, workspace->JKf, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem((nx + nz) * ns, (nx+nz) * ns, workspace->JGK, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem((nx + nz) * ns, nx + nu, workspace->JGf, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem((nx + nz) * ns, nx + nu, workspace->JKf, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, workspace->S_forw, &c_ptr);
     // for (int i=0;i<steps;i++){
     //     assign_and_advance_blasfeo_dmat_mem(nx*ns, nx*ns, &workspace->JG_traj[i], &c_ptr);
@@ -438,10 +438,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int nz = dims->nz;
 
     // assert - only use supported features
-    assert((nz == 0) | (!opts->sens_adj && !opts->sens_forw) &&
-                "nz != 0 - sensitivity propagation for DAEs not (yet) supported by this integrator");
+    assert((nz == 0) | (!opts->sens_adj) &&
+           "nz != 0 - adjoint sensitivity propagation for DAEs not (yet) supported by this integrator");
     assert(opts->sens_algebraic == false &&
-       "opts->sens_algebraic should be false - sensitivity propagation for DAEs not (yet) supported by this integrator");
+       "sensitivity propagation for algebraic variables not (yet) supported by this integrator");
 
     double *x = in->x;
     double *u = in->u;
@@ -548,8 +548,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     // initialize
     blasfeo_dgese((nx + nz) * ns, (nx + nz) * ns, 0.0, JGK, 0, 0);
-    blasfeo_dgese(nx * ns, nx + nu, 0.0, JGf, 0, 0);
-    blasfeo_dgese(nx * ns, nx + nu, 0.0, JKf, 0, 0);
+    blasfeo_dgese((nx + nz) * ns, nx + nu, 0.0, JGf, 0, 0);
+    blasfeo_dgese((nx + nz) * ns, nx + nu, 0.0, JKf, 0, 0);
     // TODO(dimitris): shouldn't this be NF instead of nx+nu??
     blasfeo_pack_dmat(nx, nx + nu, S_forw_in, nx, S_forw, 0, 0);
 
@@ -598,7 +598,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         a *= step;
                         blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                     }
-                } 
+                }
                 impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns})
                 impl_ode_z_in.xi    = ii * nz;  // use z_i of Z = (z_1,..., z_{ns})
                 impl_ode_res_out.xi = ii * (nx + nz);  // store output in this posistion of rG
@@ -626,12 +626,15 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         if (a != 0)
                         {
                             a *= step;
-                            blasfeo_dgead(nx + nz, nx, a, &J_temp_x, 0, 0, JGK, ii * (nx + nz), jj * nx);
+                            blasfeo_dgead(nx + nz, nx, a, &J_temp_x, 0, 0,
+                                              JGK, ii * (nx + nz), jj * nx);
                         }
                         if (jj == ii)
                         {
-                            blasfeo_dgead(nx + nz, nx, 1, &J_temp_xdot, 0, 0, JGK, ii * (nx + nz), jj * nx);
-                            blasfeo_dgead(nx + nz, nz, 1, &J_temp_z,    0, 0, JGK, ii * (nx + nz), (nx * ns) + jj * nz);
+                            blasfeo_dgead(nx + nz, nx, 1, &J_temp_xdot, 0, 0,
+                                          JGK, ii * (nx + nz), jj * nx);
+                            blasfeo_dgead(nx + nz, nz, 1, &J_temp_z,    0, 0,
+                                          JGK, ii * (nx + nz), (nx * ns) + jj * nz);
                         }
                     }  // end jj
                 }
@@ -678,7 +681,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         // evaluate forward sensitivities
         if (opts->sens_forw)
         {
-            blasfeo_dgese((nx + nz) * ns, (nx + nz) * ns, 0.0, JGK, 0, 0);  // initialize JGK with zeros
+            blasfeo_dgese((nx + nz) * ns, (nx + nz) * ns, 0.0, JGK, 0, 0);
+                         // initialize JGK with zeros
             // evaluate JGK(xn,Kn)
             for (ii = 0; ii < ns; ii++)
             {
@@ -702,8 +706,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     impl_ode_jac_x_xdot_u_type_out, impl_ode_jac_x_xdot_u_out);
                 timing_ad += acados_toc(&timer_ad);
 
-                blasfeo_dgecp(nx + nz, nx, &J_temp_x, 0, 0, JGf, ii * nx, 0);
-                blasfeo_dgecp(nx + nz, nu, &J_temp_u, 0, 0, JGf, ii * nx, nx);
+                blasfeo_dgecp(nx + nz, nx, &J_temp_x, 0, 0, JGf, ii * (nx + nz), 0);
+                blasfeo_dgecp(nx + nz, nu, &J_temp_u, 0, 0, JGf, ii * (nx + nz), nx);
 
                 // compute the blocks of JGK
                 for (jj = 0; jj < ns; jj++)
@@ -712,12 +716,15 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     if (a != 0)
                     {
                         a *= step;
-                        blasfeo_dgead(nx + nz, nx, a, &J_temp_x, 0, 0, JGK, ii * (nx + nz), jj * nx);
+                        blasfeo_dgead(nx + nz, nx, a, &J_temp_x, 0, 0,
+                                            JGK, ii * (nx + nz), jj * nx);
                     }
                     if (jj == ii)
                     {
-                        blasfeo_dgead(nx + nz, nx, 1, &J_temp_xdot, 0, 0, JGK, ii * (nx + nz), jj * nx);
-                        blasfeo_dgead(nx + nz, nz, 1, &J_temp_z,    0, 0, JGK, ii * (nx + nz), (nx * ns) + jj * nz);
+                        blasfeo_dgead(nx + nz, nx, 1, &J_temp_xdot, 0, 0,
+                                        JGK, ii * (nx + nz), jj * nx);
+                        blasfeo_dgead(nx + nz, nz, 1, &J_temp_z,    0, 0,
+                                        JGK, ii * (nx + nz), (nx * ns) + jj * nz);
                     }
                 }  // end jj
             }  // end ii
@@ -732,9 +739,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             // obtain JKf
             // TODO(all): add the option to use VDE instead of dgemm ???
-            blasfeo_dgemm_nn(nx * ns, nx + nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0,
+            // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw
+            blasfeo_dgemm_nn((nx + nz) * ns, nx + nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0,
                              JKf, 0, 0);
-            blasfeo_dgead(nx * ns, nu, 1.0, JGf, 0, nx, JKf, 0, nx);
+            // dK_du = dK_du + 1 * dG_du
+            blasfeo_dgead((nx + nz) * ns, nu, 1.0, JGf, 0, nx, JKf, 0, nx);
 
             acados_tic(&timer_la);
             blasfeo_drowpe((nx + nz) * ns, ipiv, JKf);
@@ -745,12 +754,12 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // update forward sensitivity
             for (jj = 0; jj < ns; jj++)
                 blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], JKf, jj * nx, 0, S_forw, 0, 0);
-        } // end if sens_forw
+        }  // end if sens_forw
 
         // obtain x(n+1)
         for (ii = 0; ii < ns; ii++) blasfeo_daxpy(nx, step * b_vec[ii], K, ii * nx, xn, 0, xn, 0);
 
-        if (opts->output_z && ss == 0) // generate z output
+        if (opts->output_z && ss == 0)  // generate z output
         {
             for (int ii = 0; ii < nz; ii++)
             {
@@ -763,7 +772,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                              // eval polynomial through (c_i, Z_i) at 0.
             }
         }
-    } // end step loop (ss)
+    }  // end step loop (ss)
 
 
 
@@ -775,7 +784,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             impl_ode_xdot_in.x = &K_traj[ss];              // use K values of step ss
             impl_ode_z_in.x = &Z_traj[ss];                 // use Z values of step ss
 
-            blasfeo_dgese((nx + nz) * ns, (nx + nz) * ns, 0.0, JGK, 0, 0);  // initialize JGK with zeros
+            blasfeo_dgese((nx + nz) * ns, (nx + nz) * ns, 0.0, JGK, 0, 0);
+                                                    // initialize JGK with zeros
 
             for (ii = 0; ii < ns; ii++)
             {
@@ -799,8 +809,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     impl_ode_jac_x_xdot_u_type_out, impl_ode_jac_x_xdot_u_out);
                 timing_ad += acados_toc(&timer_ad);
 
-                blasfeo_dgecp(nx + nz, nx, &J_temp_x, 0, 0, JGf, ii * nx, 0);
-                blasfeo_dgecp(nx + nz, nu, &J_temp_u, 0, 0, JGf, ii * nx, nx);
+                blasfeo_dgecp((nx + nz) + nz, nx, &J_temp_x, 0, 0, JGf, ii * nx, 0);
+                blasfeo_dgecp((nx + nz) + nz, nu, &J_temp_u, 0, 0, JGf, ii * nx, nx);
 
                 // compute the blocks of JGK
                 for (jj = 0; jj < ns; jj++)
@@ -809,12 +819,15 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     if (a != 0)
                     {
                         a *= step;
-                        blasfeo_dgead(nx + nz, nx, a, &J_temp_x, 0, 0, JGK, ii * (nx + nz), jj * nx);
+                        blasfeo_dgead(nx + nz, nx, a, &J_temp_x, 0, 0,
+                                            JGK, ii * (nx + nz), jj * nx);
                     }
                     if (jj == ii)
                     {
-                        blasfeo_dgead(nx + nz, nx, 1, &J_temp_xdot, 0, 0, JGK, ii * (nx + nz), jj * nx);
-                        blasfeo_dgead(nx + nz, nz, 1, &J_temp_z,    0, 0, JGK, ii * (nx + nz), (nx * ns) + jj * nz);
+                        blasfeo_dgead(nx + nz, nx, 1, &J_temp_xdot, 0, 0,
+                                        JGK, ii * (nx + nz), jj * nx);
+                        blasfeo_dgead(nx + nz, nz, 1, &J_temp_z,    0, 0,
+                                        JGK, ii * (nx + nz), (nx * ns) + jj * nz);
                     }
                 }  // end jj
             }  // end ii
@@ -832,8 +845,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_dtrsv_ltu((nx + nz) * ns, JGK, 0, 0, lambdaK, 0, lambdaK, 0);
             timing_la += acados_toc(&timer_la);
 
-            blasfeo_dvecpei(nx * ns, ipiv, lambdaK, 0); // DAE (nx + nz) ?!
-            blasfeo_dgemv_t(nx * ns, nx + nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda,
+            blasfeo_dvecpei(nx * ns, ipiv, lambdaK, 0);  // DAE (nx + nz) ?!
+            blasfeo_dgemv_t((nx + nz) * ns, nx + nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda,
                             0);
         }
     }
