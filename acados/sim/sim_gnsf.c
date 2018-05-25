@@ -1625,9 +1625,10 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             for (int jj = 0; jj < num_stages; jj++)
             {
                 Z_work[jj] = blasfeo_dvecex1(&Z_val[0], nz * ii + jj);
-                            // values of Z_ii in first step, use Z_work
+                        // copy values of z_ii in first step, into Z_work
             }
             neville_algorithm(&out->zn[ii], 0.0, num_stages - 1, mem->c, Z_work);
+                        // eval polynomial through (c_i, Z_i) at 0.
         }
     }
 

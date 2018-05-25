@@ -27,6 +27,7 @@
 // acados
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
+#include "acados/utils/math.h"
 
 #include "acados/sim/sim_common.h"
 
@@ -302,6 +303,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     size += steps * blasfeo_memsize_dvec(nz * ns);  // for Z_traj
 
     size += (nx + nz) * ns * sizeof(int);  // ipiv
+    size += ns * sizeof(double);  // Z_work
 
     size += 2 * blasfeo_memsize_dmat(nx + nz, nx);  // J_temp_x, J_temp_xdot
     size += blasfeo_memsize_dmat(nx + nz, nu);      // J_temp_u
@@ -399,6 +401,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     }
 
     assign_and_advance_int((nx + nz) * ns, &workspace->ipiv, &c_ptr);
+    assign_and_advance_double(ns, &workspace->Z_work, &c_ptr);
 
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory -
     // sim_irk_calculate_workspace_size(dims, opts_));
@@ -435,11 +438,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int nz = dims->nz;
 
     // assert - only use supported features
-    assert(nz == 0 && "nz should be zero - DAEs are not (yet) supported for this integrator");
-    assert(opts->output_z == false &&
-            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
+    assert((nz == 0) | (!opts->sens_adj && !opts->sens_forw) &&
+                "nz != 0 - sensitivity propagation for DAEs not (yet) supported by this integrator");
     assert(opts->sens_algebraic == false &&
-       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
+       "opts->sens_algebraic should be false - sensitivity propagation for DAEs not (yet) supported by this integrator");
 
     double *x = in->x;
     double *u = in->u;
@@ -452,6 +454,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double step = in->T / num_steps;
 
     int *ipiv = workspace->ipiv;
+    double *Z_work = workspace->Z_work;
+
     struct blasfeo_dmat *JGK = workspace->JGK;
     struct blasfeo_dvec *rG = workspace->rG;
     struct blasfeo_dvec *K = workspace->K;
@@ -636,6 +640,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             acados_tic(&timer_la);
             // DGETRF computes an LU factorization of a general M-by-N matrix A
             // using partial pivoting with row interchanges.
+            // printf("JGK = (IRK) \n");
+            // blasfeo_print_exp_dmat((nz+nx) *ns, (nz+nx) *ns, JGK, 0, 0);
             if ((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse))
             {
                 blasfeo_dgetrf_rowpivot((nx + nz) * ns, (nx + nz) * ns, JGK, 0, 0, JGK, 0, 0, ipiv);
@@ -739,11 +745,27 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // update forward sensitivity
             for (jj = 0; jj < ns; jj++)
                 blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], JKf, jj * nx, 0, S_forw, 0, 0);
-        }
+        } // end if sens_forw
 
         // obtain x(n+1)
         for (ii = 0; ii < ns; ii++) blasfeo_daxpy(nx, step * b_vec[ii], K, ii * nx, xn, 0, xn, 0);
-    }
+
+        if (opts->output_z && ss == 0) // generate z output
+        {
+            for (int ii = 0; ii < nz; ii++)
+            {
+                for (int jj = 0; jj < ns; jj++)
+                {
+                    Z_work[jj] = blasfeo_dvecex1(Z, nz * ii + jj);
+                             // copy values of z_ii in first step, into Z_work
+                }
+                neville_algorithm(&out->zn[ii], 0.0, ns - 1, opts->c_vec, Z_work);
+                             // eval polynomial through (c_i, Z_i) at 0.
+            }
+        }
+    } // end step loop (ss)
+
+
 
     // evaluate backwards
     if (opts->sens_adj)

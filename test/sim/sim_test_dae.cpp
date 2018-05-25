@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 #include <math.h>
+#include <fenv.h>
 
 #include "test/test_utils/eigen.h"
 #include "catch/include/catch.hpp"
@@ -53,7 +54,7 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Map;
 
-sim_solver_t hashitsim(std::string const& inString)
+sim_solver_t hashitsim_dae(std::string const& inString)
 {
     if (inString == "ERK") return ERK;
     if (inString == "IRK") return IRK;
@@ -64,10 +65,10 @@ sim_solver_t hashitsim(std::string const& inString)
     return (sim_solver_t) -1;
 }
 
-double sim_solver_tolerance(std::string const& inString)
+double sim_solver_tolerance_dae(std::string const& inString)
 {
     // if (inString == "ERK") return 1e-3;
-    if (inString == "IRK") return 1e-5;
+    if (inString == "IRK") return 1e-4;
     // if (inString == "LIFTED_IRK") return 1e-3;
     if (inString == "GNSF") return 1e-6;
     // if (inString == "NEW_LIFTED_IRK") return 1e-3;
@@ -80,9 +81,10 @@ double sim_solver_tolerance(std::string const& inString)
 
 TEST_CASE("crane_dae_example", "[integrators]")
 {
-    vector<std::string> solvers = {"GNSF"};  //, "NEW_LIFTED_IRK"};
+    vector<std::string> solvers = {"GNSF", "IRK"};
       // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
+    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     int ii, jj;
 
     const int nx = 9;
@@ -269,7 +271,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 5;  // number of newton iterations per integration step
     opts->num_steps = 50;  // number of steps
-    opts->ns = 5;  // number of stages in rk integrator
+    opts->ns = 2;  // number of stages in rk integrator
 
     sim_in *in = sim_in_create(config, dims);
     sim_out *out = sim_out_create(config, dims);
@@ -364,9 +366,9 @@ TEST_CASE("crane_dae_example", "[integrators]")
         {
             for (int num_steps = 2; num_steps < 16; num_steps++)
             {
-                double tol = sim_solver_tolerance(solver);
+                double tol = sim_solver_tolerance_dae(solver);
 
-                plan.sim_solver = hashitsim(solver);
+                plan.sim_solver = hashitsim_dae(solver);
 
                 // create correct config based on plan
                 sim_solver_config *config = sim_config_create(plan);
@@ -410,6 +412,9 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     case IRK:
                          // IRK
                         opts->ns = 2;  // number of stages in rk integrator
+                        opts->output_z = true;
+                        opts->sens_adj = false;
+                        opts->sens_forw = false;
                         break;
 
                     case LIFTED_IRK:
@@ -586,13 +591,14 @@ TEST_CASE("crane_dae_example", "[integrators]")
                          << max_error_adj << "\nerror_z = "<< max_error_z << "\n";
 
                 REQUIRE(max_error <= tol);
-                REQUIRE(max_error_forw <= tol);
                 REQUIRE(max_error_z <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
-                if ((plan.sim_solver != LIFTED_IRK) && (plan.sim_solver != NEW_LIFTED_IRK))
+                if ((plan.sim_solver != IRK) && (plan.sim_solver != NEW_LIFTED_IRK))
                     REQUIRE(max_error_adj <= tol);
 
+                if (plan.sim_solver == GNSF)
+                    REQUIRE(max_error_forw <= tol);
 
                 free(config);
                 free(dims);

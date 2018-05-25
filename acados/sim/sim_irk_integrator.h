@@ -65,6 +65,7 @@ typedef struct
     struct blasfeo_dvec *lambdaK;  // auxiliary variable (nx*ns)
 
     int *ipiv;  // index of pivot vector
+    double *Z_work;  // used to perform computations to get out->zn
 
     struct blasfeo_dvec *xn_traj;  // xn trajectory
     struct blasfeo_dvec *K_traj;   // K trajectory
