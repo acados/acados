@@ -75,6 +75,12 @@ expl_vde_adj.generate('expl_vde_adj', opts);
 
 %% Implicit model
 % impl_ode_fun_jac_x_xdot
+impl_ode_fun = Function('casadi_impl_ode_fun', {x, dx, u, p}, {fi});
+x0 = ones(nx,1);
+x0dot = ones(nx,1);
+u0 = ones(nu,1);
+p0 = 1;
+fi0 = impl_ode_fun(x0, x0dot, u0, p0)
 
 impl_ode_fun_jac_x_xdot = Function('casadi_impl_ode_fun_jac_x_xdot', {x, dx, u, p}, {fi, jacobian(fi, x), jacobian(fi, dx)});
 impl_ode_fun_jac_x_xdot.generate('impl_ode_fun_jac_x_xdot', opts);
@@ -91,8 +97,11 @@ impl_ode_jac_x_xdot_u.generate('impl_ode_jac_x_xdot_u', opts);
 impl_ode_fun_jac_x_xdot_u = Function('casadi_impl_ode_fun_jac_x_xdot_u', {x, dx, u, p}, {fi, jacobian(fi, x), jacobian(fi, dx), jacobian(fi, u)});
 impl_ode_fun_jac_x_xdot_u.generate('impl_ode_fun_jac_x_xdot_u', opts);
 
-
 %% Generalized nonlinear static feedback formulation (GNSF)
+% NOTE: this is an outdated reformulation: see gnsf_full_turbine_model.m
+% for the recent version, using smaller input dimensions
+gnsf = 0;
+if gnsf
 
 nx = length(x);
 nu = length(u);
@@ -200,7 +209,7 @@ f_lo_fun_jac_x1k1uz.generate(['f_lo_fun_jac_x1k1uz'], casadi_opts);
 phi_fun.generate(['phi_fun'], casadi_opts);
 phi_fun_jac_y.generate(['phi_fun_jac_y'], casadi_opts);
 phi_jac_y_uhat.generate(['phi_jac_y_uhat'], casadi_opts);
-
+end
 
 
 return

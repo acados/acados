@@ -1083,7 +1083,7 @@ static void *sim_gnsf_cast_workspace(void *config, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dvec_mem(nK1, &workspace->K1u, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nZ, &workspace->Zu, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx2, &workspace->ALOtimesx02, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(nx2, &workspace->uhat, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nuhat, &workspace->uhat, &c_ptr);
 
     // blasfeo_dmat_mem align
     align_char_to(64, &c_ptr);
@@ -1246,6 +1246,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     blasfeo_pack_dvec(nx + nu, &in->S_adj[0], &lambda_old, 0);
     blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, &S_forw, 0, 0);
 
+
     // initialize ff_val
     for (int ss = 0; ss < num_steps; ss++)
     {
@@ -1398,6 +1399,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                     model->phi_fun_jac_y->evaluate(model->phi_fun_jac_y, phi_type_in, phi_in,
                                                    phi_fun_jac_y_type_out, phi_fun_jac_y_out);
                     out->info->ADtime += acados_toc(&casadi_timer);
+
                     // build jacobian J_r_ff
                     blasfeo_dgemm_nn(n_out, nff, ny, -1.0, &dPHI_dyuhat, ii * n_out, 0, &YYf,
                                      ii * ny, 0, 1.0, &J_r_ff, ii * n_out, 0, &J_r_ff, ii * n_out,
@@ -1540,6 +1542,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             acados_tic(&la_timer);
             blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0,
                                     ipiv);        // factorize J_r_ff
+            // printf("dPHI_dyuhat = (forward, ss = %d) \n", ss);
+            // blasfeo_print_exp_dmat(nff, ny+nuhat, &dPHI_dyuhat, 0, 0);
+
             blasfeo_drowpe(nff, ipiv, &J_r_x1u);  // permute also rhs
             blasfeo_dtrsm_llnu(nff, nx1 + nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
             blasfeo_dtrsm_lunn(nff, nx1 + nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
@@ -1708,6 +1713,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 // build J_r_ff
                 blasfeo_dgemm_nn(n_out, nff, ny, -1.0, &dPHI_dyuhat, ii * n_out, 0, &YYf, ii * ny,
                                  0, 1.0, &J_r_ff, ii * n_out, 0, &J_r_ff, ii * n_out, 0);
+
                 // build J_r_x1u
                 blasfeo_dgemm_nn(n_out, nx1, ny, -1.0, &dPHI_dyuhat, ii * n_out, 0, &YYx, ii * ny,
                                  0, 0.0, &J_r_x1u, ii * n_out, 0, &J_r_x1u, ii * n_out,

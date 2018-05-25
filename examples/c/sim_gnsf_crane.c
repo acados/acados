@@ -189,7 +189,7 @@ int main() {
     // set up sim_out
     sim_out *out = sim_out_create(config, dims);
 
-    int NREP = 10000;
+    int NREP = 100;
     double casadi_times[NREP];
     double gnsf_times[NREP];
     for (int i = 0; i < NREP; i++) {
