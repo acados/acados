@@ -48,7 +48,7 @@ int main() {
     double zu[] = {1.0, 1.0};
 
     dense_qp_solver_plan plan;
-    plan.qp_solver = DENSE_QP_HPIPM;
+    plan.qp_solver = DENSE_QP_QPOASES;
 
     qp_solver_config *config = dense_qp_config_create(&plan);
 
@@ -58,8 +58,8 @@ int main() {
     dims.nb = 1;
     dims.ng = 1;
     dims.ns = 2;
-//    dims.nsb = 1;
-//    dims.nsg = 1;
+    dims.nsb = 1;
+    dims.nsg = 1;
 
     dense_qp_in *qp_in = dense_qp_in_create(config, &dims);
 
@@ -74,15 +74,15 @@ int main() {
     dense_qp_solver *qp_solver = dense_qp_create(config, &dims, opts);
 
 	// overwrite default opts
-	dense_qp_hpipm_opts *hpipm_opts = opts;
-	hpipm_opts->hpipm_opts->mu0 = 1e1;
+	// dense_qp_hpipm_opts *hpipm_opts = opts;
+	// hpipm_opts->hpipm_opts->mu0 = 1e1;
 
     int acados_return = dense_qp_solve(qp_solver, qp_in, qp_out);
 
-    // if (acados_return != ACADOS_SUCCESS)
-    //     return -1;
-
     printf("STATUS: %d\n", acados_return);
+
+    if (acados_return != ACADOS_SUCCESS)
+        return -1;
 
 //    print_dense_qp_out(qp_out);
 
@@ -91,9 +91,6 @@ int main() {
      ************************************************/
 
     double res[4];
-    dense_qp_res *qp_res = dense_qp_res_create(&dims);
-    dense_qp_res_ws *res_ws = dense_qp_res_workspace_create(&dims);
-    d_compute_res_dense_qp(qp_in, qp_out, qp_res, res_ws);
 
 #if 0
 	blasfeo_print_exp_tran_dvec(dims.nv+2*dims.ns, qp_res->res_g, 0);

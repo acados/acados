@@ -57,6 +57,7 @@
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
+#include "acados/utils/print.h"
 
 /************************************************
  * opts
@@ -336,10 +337,10 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     for (int ii = 0; ii < ns; ii++)
     {
         d_lb[nv+ii] = d_ls[ii];
-        d_lb[nv+ns+ii] = d_ls[ii];
+        d_lb[nv+ns+ii] = d_us[ii];
 
-        d_ub[nv+ii] = d_us[ii];
-        d_ub[nv+ns+ii] = d_us[ii];
+        d_ub[nv+ii] = +QPOASES_INFTY;
+        d_ub[nv+ns+ii] = +QPOASES_INFTY;
     }
 
     if (ns > 0)
@@ -427,12 +428,11 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
                 CC[nv + ns + k_sb + nv2*row_b] = -1.0;
                 d_ug[row_b] = d_ub0[js];
 
-                row_b++;
 
                 // -x_i - sl_i <= -lb_i
                 CC[jx + nv2*row_b] = -1.0;
-                CC[nv + k_sb + nv2*row_b] = -1.0;
-                d_ug[row_b] = -d_lb0[js];
+                CC[nv + k_sb + nv2*(row_b+nsb)] = -1.0;
+                d_ug[row_b+nsb] = -d_lb0[js];
 
                 row_b++; k_sb++;
             }
@@ -453,7 +453,6 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             }
         }
     }
-
 
     // cholesky factorization of H
     // blasfeo_dpotrf_l(nvd, qpd->Hv, 0, 0, sR, 0, 0);
@@ -626,6 +625,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             QProblemB_getDualSolution(QPB, dual_sol);
         }
     }
+
     // save solution statistics to memory
     memory->cputime = cputime;
     memory->nwsr = nwsr;
@@ -633,8 +633,8 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
     acados_tic(&interface_timer);
     // copy prim_sol and dual_sol to qpd_sol
-    blasfeo_pack_dvec(nv, prim_sol, qp_out->v, 0);
-    for (int ii = 0; ii < 2 * nb + 2 * ng; ii++) qp_out->lam->pa[ii] = 0.0;
+    blasfeo_pack_dvec(nv2, prim_sol, qp_out->v, 0);
+    for (int ii = 0; ii < 2 * nb + 2 * ng + 2 * ns; ii++) qp_out->lam->pa[ii] = 0.0;
     for (int ii = 0; ii < nb; ii++)
     {
         if (dual_sol[idxb[ii]] >= 0.0)
@@ -642,12 +642,38 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
         else
             qp_out->lam->pa[nb + ng + ii] = -dual_sol[idxb[ii]];
     }
+
+    int k = 0;
+    for (int ii = 0; ii < ns; ii++)
+    {
+        int js = idxs[ii];
+
+        if (js < nb)
+        {
+            // dual variables for softened upper box constraints
+            if (dual_sol[2*ng+k] <= 0.0)
+                qp_out->lam->pa[nb+ng+js] = -dual_sol[2*ng+k];
+
+            // dual variables for softened lower box constraints
+            if (dual_sol[2*ng+nsb+k] <= 0.0)
+                qp_out->lam->pa[js] = -dual_sol[2*ng+nsb+k];
+        }
+
+        // dual variables for sl >= d_ls
+        if (dual_sol[nv+ii] >= 0)
+            qp_out->lam->pa[2*nb+2*ng+ii] = dual_sol[nv+ii];
+
+        // dual variables for su >= d_us
+        if (dual_sol[nv+ns+ii] >= 0)
+            qp_out->lam->pa[2*nb+2*ng+ns+ii] = dual_sol[nv+ns+ii];
+    }
+
     for (int ii = 0; ii < ng; ii++)
     {
-        if (dual_sol[nv + ii] >= 0.0)
-            qp_out->lam->pa[nb + ii] = dual_sol[nv + ii];
+        if (dual_sol[nv2 + ii] >= 0.0)
+            qp_out->lam->pa[nb + ii] = dual_sol[nv2 + ii];
         else
-            qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv + ii];
+            qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv2 + ii];
     }
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);

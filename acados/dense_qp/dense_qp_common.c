@@ -117,6 +117,8 @@ dense_qp_in *dense_qp_in_assign(void *config, dense_qp_dims *dims, void *raw_mem
     qp_in->dim->nb = dims->nb;
     qp_in->dim->ng = dims->ng;
     qp_in->dim->ns = dims->ns;
+    qp_in->dim->nsb = dims->nsb;
+    qp_in->dim->nsg = dims->nsg;
 
     assert((char *) raw_memory + dense_qp_in_calculate_size(config, dims) == c_ptr);
 
