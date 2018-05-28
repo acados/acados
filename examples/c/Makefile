@@ -42,6 +42,7 @@ LIBS += -lblasfeo -lm -lblas -llapack
 # LDFLAGS += -pg
 
 EXAMPLES =
+EXAMPLES += dense_qp
 EXAMPLES += pendulum_scqp
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
@@ -62,6 +63,7 @@ examples: $(EXAMPLES)
 
 
 RUN_EXAMPLES =
+RUN_EXAMPLES += run_dense_qp
 RUN_EXAMPLES += run_pendulum_scqp
 RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
@@ -398,6 +400,24 @@ pendulum_scqp: $(PENDULUM_OBJS) pendulum_scqp.o
 
 run_pendulum_scqp:
 	./pendulum_scqp.out
+
+
+
+
+#################################################
+# dense qp
+#################################################
+
+DENSE_QP = 
+
+dense_qp: $(DENSE_QP) dense_qp.o
+	$(CXX) -o dense_qp.out $(DENSE_QP) dense_qp.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example dense_qp build complete."
+	@echo
+
+run_dense_qp:
+	./dense_qp.out
 
 
 
