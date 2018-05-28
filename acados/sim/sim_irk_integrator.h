@@ -54,7 +54,7 @@ typedef struct
     struct blasfeo_dmat *JGK;     // jacobian of G over K ((nx+nz)*ns, (nx+nz)*ns)
     struct blasfeo_dmat *JGf;     // jacobian of G over x and u ((nx+nz)*ns, nx+nu);
     struct blasfeo_dmat *JKf;     // jacobian of (K,Z) over x and u ((nx+nz)*ns, nx+nu);
-    struct blasfeo_dmat *S_forw;  // forward sensitivities
+    struct blasfeo_dmat *S_forw;  // forward sensitivities (nx, nx+nu)
 
     struct blasfeo_dvec *rG;  // residuals of G (nx*ns)
     struct blasfeo_dvec *K;   // internal K variables (nx*ns)
@@ -62,11 +62,14 @@ typedef struct
     struct blasfeo_dvec *xt;  // temporary x
     struct blasfeo_dvec *xn;  // x at each integration step
 
+    struct blasfeo_dvec xtdot;  // temporary xdot
+
     struct blasfeo_dvec *lambda;   // adjoint seed (nx+nu)
     struct blasfeo_dvec *lambdaK;  // auxiliary variable ((nx+nz)*ns)
 
-    int *ipiv;  // index of pivot vector
-    double *Z_work;  // used to perform computations to get out->zn
+    int *ipiv;  // index of pivot vector (ns * (nx + nz))
+    int *ipiv_one_stage;  // index of pivot vector (nx+nz)
+    double *Z_work;  // used to perform computations to get out->zn (ns)
 
     struct blasfeo_dvec *xn_traj;  // xn trajectory
     struct blasfeo_dvec *K_traj;   // K trajectory
@@ -79,6 +82,8 @@ typedef struct
     struct blasfeo_dmat J_temp_u;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
     struct blasfeo_dmat J_temp_z;     // temporary Jacobian of ode w.r.t z (nx+nz, nu)
 
+    struct blasfeo_dmat J_xdot_z;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
+                        // used for algebraic sensitivity generation
 } sim_irk_workspace;
 
 // get & set functions

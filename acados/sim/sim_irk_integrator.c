@@ -295,7 +295,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     size += blasfeo_memsize_dvec(nx * ns);          // K
     size += blasfeo_memsize_dvec((nx + nz) * ns);   // rG
     size += blasfeo_memsize_dvec(nz * ns);          // Z
-    size += 2 * blasfeo_memsize_dvec(nx);           // xt, x
+    size += 3 * blasfeo_memsize_dvec(nx);           // xt, xn, xtdot
     size += blasfeo_memsize_dvec(nx + nu);          // lambda
     size += blasfeo_memsize_dvec((nx + nz) * ns);   // lambdaK
     size += steps * blasfeo_memsize_dvec(nx);       // for xn_traj
@@ -303,11 +303,14 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     size += steps * blasfeo_memsize_dvec(nz * ns);  // for Z_traj
 
     size += (nx + nz) * ns * sizeof(int);  // ipiv
+    size += (nx + nz) * sizeof(int);  // ipiv_one_stage
     size += ns * sizeof(double);  // Z_work
 
     size += 2 * blasfeo_memsize_dmat(nx + nz, nx);  // J_temp_x, J_temp_xdot
     size += blasfeo_memsize_dmat(nx + nz, nu);      // J_temp_u
     size += blasfeo_memsize_dmat(nx + nz, nz);      // J_temp_z
+
+    size += blasfeo_memsize_dmat(nx + nz, nx + nz);  // J_xdot_z
 
     make_int_multiple_of(64, &size);
     size += 1 * 64;
@@ -385,12 +388,14 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nx, &workspace->J_temp_xdot, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nu, &workspace->J_temp_u, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nz, &workspace->J_temp_z, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nz, &workspace->J_xdot_z, &c_ptr);
 
     assign_and_advance_blasfeo_dvec_mem((nx + nz) * ns, workspace->rG, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx * ns, workspace->K, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nz * ns, workspace->Z, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xt, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xn, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx, &workspace->xtdot, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx + nu, workspace->lambda, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem((nx + nz) * ns, workspace->lambdaK, &c_ptr);
     for (int i = 0; i < steps; i++)
@@ -401,6 +406,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     }
     assign_and_advance_double(ns, &workspace->Z_work, &c_ptr);
     assign_and_advance_int((nx + nz) * ns, &workspace->ipiv, &c_ptr);
+    assign_and_advance_int((nx + nz), &workspace->ipiv_one_stage, &c_ptr);
 
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory -
     // sim_irk_calculate_workspace_size(dims, opts_));
@@ -436,10 +442,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int nu = dims->nu;
     int nz = dims->nz;
 
-    // assert - only use supported features
-    assert(opts->sens_algebraic == false &&
-       "sensitivity propagation for algebraic variables not (yet) supported by this integrator");
-
     double *x = in->x;
     double *u = in->u;
     double *S_forw_in = in->S_forw;
@@ -451,6 +453,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double step = in->T / num_steps;
 
     int *ipiv = workspace->ipiv;
+    int *ipiv_one_stage = workspace->ipiv_one_stage;
     double *Z_work = workspace->Z_work;
 
     struct blasfeo_dmat *JGK = workspace->JGK;
@@ -460,6 +463,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dmat *JGf = workspace->JGf;
     struct blasfeo_dmat *JKf = workspace->JKf;
     struct blasfeo_dvec *xt = workspace->xt;
+    struct blasfeo_dvec *xtdot = &workspace->xtdot;
+
     struct blasfeo_dvec *xn = workspace->xn;
     struct blasfeo_dmat *S_forw = workspace->S_forw;
 
@@ -467,6 +472,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dmat J_temp_xdot = workspace->J_temp_xdot;
     struct blasfeo_dmat J_temp_u = workspace->J_temp_u;
     struct blasfeo_dmat J_temp_z = workspace->J_temp_z;
+
+    struct blasfeo_dmat J_xdot_z = workspace->J_xdot_z;
 
     // for adjoint
     struct blasfeo_dvec *lambda = workspace->lambda;
@@ -479,6 +486,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double *x_out = out->xn;
     double *S_forw_out = out->S_forw;
     double *S_adj_out = out->S_adj;
+    double *S_algebraic = out->S_algebraic;
 
     /* SET FUNCTION IN- & OUTPUT TYPES */
 
@@ -757,18 +765,75 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         // obtain x(n+1)
         for (ii = 0; ii < ns; ii++) blasfeo_daxpy(nx, step * b_vec[ii], K, ii * nx, xn, 0, xn, 0);
 
-        if (opts->output_z && ss == 0)  // generate z output
+        // generate z output
+        if ((opts->output_z || opts->sens_algebraic) && ss == 0)
         {
             for (int ii = 0; ii < nz; ii++)
             {
                 for (int jj = 0; jj < ns; jj++)
                 {
-                    Z_work[jj] = blasfeo_dvecex1(Z, nz * ii + jj);
+                    Z_work[jj] = blasfeo_dvecex1(Z, nz * jj + ii);
                              // copy values of z_ii in first step, into Z_work
                 }
                 neville_algorithm(&out->zn[ii], 0.0, ns - 1, opts->c_vec, Z_work);
                              // eval polynomial through (c_i, Z_i) at 0.
             }
+        }
+
+        if (opts->sens_algebraic && ss == 0)  // generate S_algebraic
+        {
+            double interpolated_value;
+            for (int ii = 0; ii < nx; ii++)
+            {
+                for (int jj = 0; jj < ns; jj++)
+                {
+                    Z_work[jj] = blasfeo_dvecex1(K, nx * jj + ii);
+                        // copy values of k_ii in first step, into Z_work
+                }
+                neville_algorithm(&interpolated_value, 0.0, ns - 1, opts->c_vec, Z_work);
+                             // eval polynomial through (c_i, Z_i) at 0.
+                blasfeo_pack_dvec(1, &interpolated_value, xtdot, ii);
+            }
+            // xtdot now contains x_dot(0)
+
+            // set input for impl_ode
+            impl_ode_type_in[1] = BLASFEO_DVEC;
+            impl_ode_type_in[3] = COLMAJ;
+            impl_ode_in[1] = xtdot;
+            impl_ode_in[3] = &out->zn[0];
+
+            // eval jacobians at interpolated values
+            acados_tic(&timer_ad);
+            model->impl_ode_jac_x_xdot_u->evaluate(
+                    model->impl_ode_jac_x_xdot_u, impl_ode_type_in, impl_ode_in,
+                    impl_ode_jac_x_xdot_u_type_out, impl_ode_jac_x_xdot_u_out);
+            timing_ad += acados_toc(&timer_ad);
+
+            // set up J_xdot_z
+            blasfeo_dgecp(nx + nz, nx, &J_temp_xdot, 0, 0, &J_xdot_z, 0, 0);
+            blasfeo_dgecp(nx + nz, nz, &J_temp_z,    0, 0, &J_xdot_z, 0, nx);
+            // set up right hand side JKf (only first nx+nz columns used here)
+            blasfeo_dgecp(nx + nz, nx, &J_temp_x, 0, 0, JKf, 0, 0);
+            blasfeo_dgecp(nx + nz, nu, &J_temp_u, 0, 0, JKf, 0, nx);
+
+            // solve linear system
+            acados_tic(&timer_la);
+            blasfeo_dgetrf_rowpivot(nx + nz, nx + nz, &J_xdot_z, 0, 0, &J_xdot_z, 0, 0,
+                                                                        ipiv_one_stage);
+            blasfeo_drowpe(nx + nz, ipiv_one_stage, JKf);
+            blasfeo_dtrsm_llnu(nx + nz, nx + nu, 1.0, &J_xdot_z, 0, 0, JKf, 0, 0, JKf, 0, 0);
+            blasfeo_dtrsm_lunn(nx + nz, nx + nu, 1.0, &J_xdot_z, 0, 0, JKf, 0, 0, JKf, 0, 0);
+            timing_la += acados_toc(&timer_la);
+
+            // extract output
+            blasfeo_unpack_dmat(nz, nx + nu, JKf, nx, 0, S_algebraic, nz);
+
+            // Reset impl_ode inputs
+            impl_ode_type_in[1] = BLASFEO_DVEC_ARGS;  // k_i
+            impl_ode_type_in[3] = BLASFEO_DVEC_ARGS;  // z_i
+            impl_ode_in[1] = &impl_ode_xdot_in;
+            impl_ode_in[3] = &impl_ode_z_in;     // 4th input is part of Z[ss]
+
         }
     }  // end step loop (ss)
 
