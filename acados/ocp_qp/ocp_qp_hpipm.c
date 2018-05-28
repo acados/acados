@@ -151,7 +151,6 @@ void *ocp_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *
  ************************************************/
 
 int ocp_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_) { return 0; }
-
 /************************************************
  * functions
  ************************************************/

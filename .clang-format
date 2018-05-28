@@ -16,7 +16,7 @@ AlwaysBreakAfterDefinitionReturnType: false
 AlwaysBreakTemplateDeclarations: true
 AlwaysBreakBeforeMultilineStrings: true
 BreakBeforeBinaryOperators: None
-BreakBeforeTernaryOperators: true
+BreakBeforeTernaryOperators: false
 BreakConstructorInitializersBeforeComma: false
 BinPackParameters: true
 BinPackArguments: true
@@ -28,7 +28,7 @@ ExperimentalAutoDetectBinPacking: false
 IndentCaseLabels: true
 IndentWrappedFunctionNames: false
 IndentFunctionDeclarationAfterType: false
-MaxEmptyLinesToKeep: 1
+MaxEmptyLinesToKeep: 3
 KeepEmptyLinesAtTheStartOfBlocks: false
 NamespaceIndentation: None
 ObjCBlockIndentWidth: 2

@@ -140,7 +140,6 @@ void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void
 }
 
 int dense_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_) { return 0; }
-
 int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
 {
     dense_qp_in *qp_in = qp_in_;

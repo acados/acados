@@ -96,7 +96,6 @@ void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opt
 }
 
 void ocp_qp_full_condensing_opts_update(ocp_qp_dims *dims, void *opts_) { return; }
-
 /************************************************
  * memory
  ************************************************/
@@ -137,7 +136,6 @@ void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void 
 }
 
 int ocp_qp_full_condensing_workspace_calculate_size(ocp_qp_dims *dims, void *opts_) { return 0; }
-
 void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condensing_opts *opts,
                             ocp_qp_full_condensing_memory *mem, void *work)
 {

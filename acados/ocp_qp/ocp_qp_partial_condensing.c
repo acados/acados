@@ -176,7 +176,6 @@ void *ocp_qp_partial_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, vo
  ************************************************/
 
 int ocp_qp_partial_condensing_workspace_calculate_size(ocp_qp_dims *dims, void *opts_) { return 0; }
-
 /************************************************
  * functions
  ************************************************/

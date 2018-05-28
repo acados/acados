@@ -42,6 +42,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
@@ -1157,6 +1158,9 @@ int main()
 		}
 	}
 
+	for (int i = 0; i <= NN; i++)
+		plan->nlp_constraints[i] = BGH;
+
 	// TODO(dimitris): fix minor memory leak here
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
 
@@ -1450,12 +1454,15 @@ int main()
 
 
     /* constraints */
-	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
+	ocp_nlp_constraints_bgh_dims **constraints_dims = (ocp_nlp_constraints_bgh_dims **) dims->constraints;
 
 	// fist stage
 #if CONSTRAINTS==0 // box constraints
-	blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
-	blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
+	// blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
+	// blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
+	nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lb", lb0);
+	nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ub", ub0);
     constraints[0]->idxb = idxb0;
 #elif CONSTRAINTS==1 // general constraints
 	double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
@@ -1468,8 +1475,10 @@ int main()
 
 	blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
 	blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
-	blasfeo_pack_dvec(ng[0], lb0, &constraints[0]->d, nb[0]);
-	blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]);
+	// blasfeo_pack_dvec(ng[0], lb0, &constraints[0]->d, nb[0]);
+	// blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]);
+	nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lg", lb0);
+	nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ug", ub0);
 
 	d_free(Cu0);
 	d_free(Cx0);
@@ -1478,7 +1487,7 @@ int main()
 	for (int ii=0; ii<ng[0]; ii++)
 		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
 
-    ocp_nlp_constraints_model **nl_constr = (ocp_nlp_constraints_model **) nlp_in->constraints;
+    ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 	nl_constr[0]->h = &nonlin_constr_generic;
 
 	blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);
@@ -1488,12 +1497,16 @@ int main()
 	// other stages
     for (int i = 1; i < NN; i++)
 	{
-		blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
-		blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]);
+		// blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
+		// blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]);
+		nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "lb", lb1);
+		nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "ub", ub1);
         constraints[i]->idxb = idxb1;
     }
-	blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
-	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
+	// blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
+	// blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
+	nlp_bounds_bgh_set(constraints_dims[NN], constraints[NN], "lb", lbN);
+	nlp_bounds_bgh_set(constraints_dims[NN], constraints[NN], "ub", ubN);
     constraints[NN]->idxb = idxbN;
 
 #if 0

@@ -20,7 +20,7 @@ else
 	% old casadi versions
 	error('Please download and install Casadi 3.4.0')
 end
-
+model_name_prefix = 'wt_nx6p2_';
 
 %% define the symbolic variables of the plant
 S02_DefACADOSVarSpace;
@@ -44,8 +44,8 @@ nu = 2;
 
 % expl_ode_fun
 
-expl_ode_fun = Function('casadi_expl_ode_fun', {x, u, p}, {fe});
-expl_ode_fun.generate('expl_ode_fun', opts);
+expl_ode_fun = Function([model_name_prefix,'expl_ode_fun'], {x, u, p}, {fe});
+expl_ode_fun.generate([model_name_prefix,'expl_ode_fun'], opts);
 
 
 % expl_vde_for
@@ -59,8 +59,8 @@ vdeX = MX.zeros(nx, nx) + jtimes(fe, x, Sx);
 vdeU = MX.zeros(nx, nu) + jtimes(fe, x, Su) + jacobian(fe, u);
 %vdeU = MX.zeros(nx, nu) + jacobian(fe, x)*Su + jacobian(fe, u);
 
-expl_vde_for = Function('casadi_expl_vde_for', {x, Sx, Su, u, p}, {fe, vdeX, vdeU});
-expl_vde_for.generate('expl_vde_for', opts);
+expl_vde_for = Function([model_name_prefix,'expl_vde_for'], {x, Sx, Su, u, p}, {fe, vdeX, vdeU});
+expl_vde_for.generate([model_name_prefix,'expl_vde_for'], opts);
 
 
 % expl_vde_adj
@@ -69,31 +69,31 @@ lam = MX.sym('lam', nx, 1);
 
 adj = jtimes(fe, [x; u], lam, true);
 
-expl_vde_adj = Function('casadi_expl_vde_adj', {x, lam, u, p}, {adj});
-expl_vde_adj.generate('expl_vde_adj', opts);
+expl_vde_adj = Function([model_name_prefix,'expl_vde_adj'], {x, lam, u, p}, {adj});
+expl_vde_adj.generate([model_name_prefix,'expl_vde_adj'], opts);
 
 
 % impl_ode_fun
 
-impl_ode_fun = Function('casadi_impl_ode_fun', {x, dx, u, p}, {fi});
-impl_ode_fun.generate('impl_ode_fun', opts);
+impl_ode_fun = Function([model_name_prefix,'impl_ode_fun'], {x, dx, u, p}, {fi});
+impl_ode_fun.generate([model_name_prefix,'impl_ode_fun'], opts);
 
 
 % impl_ode_fun_jac_x_xdot
 
-impl_ode_fun_jac_x_xdot = Function('casadi_impl_ode_fun_jac_x_xdot', {x, dx, u, p}, {fi, jacobian(fi, x), jacobian(fi, dx)});
-impl_ode_fun_jac_x_xdot.generate('impl_ode_fun_jac_x_xdot', opts);
+impl_ode_fun_jac_x_xdot = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot'], {x, dx, u, p}, {fi, jacobian(fi, x), jacobian(fi, dx)});
+impl_ode_fun_jac_x_xdot.generate([model_name_prefix,'impl_ode_fun_jac_x_xdot'], opts);
 
 
 % impl_ode_jac_x_xdot_u
 
-impl_ode_jac_x_xdot_u = Function('casadi_impl_ode_jac_x_xdot_u', {x, dx, u, p}, {jacobian(fi, x), jacobian(fi, dx), jacobian(fi, u)});
-impl_ode_jac_x_xdot_u.generate('impl_ode_jac_x_xdot_u', opts);
+impl_ode_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_jac_x_xdot_u'], {x, dx, u, p}, {jacobian(fi, x), jacobian(fi, dx), jacobian(fi, u)});
+impl_ode_jac_x_xdot_u.generate([model_name_prefix,'impl_ode_jac_x_xdot_u'], opts);
 
 
 % impl_fun_ode_jac_x_xdot_u
 
-impl_ode_fun_jac_x_xdot_u = Function('casadi_impl_ode_fun_jac_x_xdot_u', {x, dx, u, p}, {fi, jacobian(fi, x), jacobian(fi, dx), jacobian(fi, u)});
-impl_ode_fun_jac_x_xdot_u.generate('impl_ode_fun_jac_x_xdot_u', opts);
+impl_ode_fun_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'], {x, dx, u, p}, {fi, jacobian(fi, x), jacobian(fi, dx), jacobian(fi, u)});
+impl_ode_fun_jac_x_xdot_u.generate([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'], opts);
 
 
