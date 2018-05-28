@@ -15,6 +15,7 @@ struct ocp_nlp_info
     int status;
     double inf_norm_residual;
     double total_time;
+    int num_qp_iter;
 };
 
 class ocp_nlp_solution

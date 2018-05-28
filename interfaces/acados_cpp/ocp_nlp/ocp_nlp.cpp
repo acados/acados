@@ -154,7 +154,7 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
     else
         qp_solver_name = "hpipm";
 
-    if (qp_solver_name == "hpipm")
+    if (qp_solver_name == "sparse_hpipm" || qp_solver_name == "hpipm")
     {
         ocp_qp_xcond_solver_config_initialize_default(PARTIAL_CONDENSING_HPIPM, config_->qp_solver);
         plan_->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
@@ -163,6 +163,11 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
     {
         ocp_qp_xcond_solver_config_initialize_default(FULL_CONDENSING_QPOASES, config_->qp_solver);
         plan_->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+    }
+    else if (qp_solver_name == "dense_hpipm")
+    {
+        ocp_qp_xcond_solver_config_initialize_default(FULL_CONDENSING_HPIPM, config_->qp_solver);
+        plan_->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
     }
     else
     {
@@ -179,15 +184,16 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
 
     solver_options_.reset(ocp_nlp_opts_create(config_.get(), dims_.get()));
 
+    process_options(solver_name, options, solver_options_.get());
+
     result_.reset(ocp_nlp_out_create(config_.get(), dims_.get()));
 
+    solver_.reset(ocp_nlp_create(config_.get(), dims_.get(), solver_options_.get()));
 }
 
 ocp_nlp_solution ocp_nlp::solve(vector<double> x_guess, vector<double> u_guess)
 {
     fill_bounds(cached_bounds);
-
-    solver_.reset(ocp_nlp_create(config_.get(), dims_.get(), solver_options_.get()));
 
     if (!x_guess.empty() || !u_guess.empty())
     {

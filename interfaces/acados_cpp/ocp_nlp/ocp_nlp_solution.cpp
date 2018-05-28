@@ -104,7 +104,8 @@ ocp_nlp_info ocp_nlp_solution::info() {
         nlp_out_->sqp_iter,
         status_,
         nlp_out_->inf_norm_res,
-        nlp_out_->total_time
+        nlp_out_->total_time,
+        nlp_out_->qp_iter
     };
 }
 

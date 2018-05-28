@@ -60,7 +60,7 @@ casadi_module generate_ode_jacobian(const casadi::Function& model, string output
     casadi::SX Sx = casadi::SX::sym("Sx", nx, nx);
     casadi::SX Su = casadi::SX::sym("Su", nx, nu);
 
-    casadi::SX jac_x = casadi::SX::zeros(nx, nx) + casadi::SX::jacobian(rhs, x);
+    casadi::SX jac_x = casadi::SX::jacobian(rhs, x);
     casadi::Function jac_fun(model.name() + "_expl_ode_jac", {x, Sx, Su, u}, {rhs, jac_x});
 
     return casadi_module(jac_fun, output_folder);

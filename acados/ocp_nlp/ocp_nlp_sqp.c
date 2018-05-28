@@ -878,6 +878,8 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
             qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
                                 mem->qp_solver_mem, work->qp_work);
 
+        nlp_out->qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
+
         // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
         //  print_ocp_qp_out(work->qp_out);
         //  if(sqp_iter==1)

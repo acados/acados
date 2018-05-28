@@ -774,6 +774,8 @@ option_t *as_option_ptr(T val) {
     return new option<T>(val);
 }
 
+option_t *make_option_map(LangObject *val);
+
 template<>
 option_t *as_option_ptr(LangObject *val) {
     if (is_integer(val))
@@ -784,8 +786,30 @@ option_t *as_option_ptr(LangObject *val) {
         return new option<bool>(boolean_from(val));
     else if (is_string(val))
         return new option<std::string>(string_from(val));
+    else if (is_map(val))
+        return make_option_map(val);
     else
         throw std::invalid_argument("Option does not have a valid type");
+}
+
+option_t *make_option_map(LangObject *val) {
+    std::map<std::string, option_t *> option_map;
+#if defined(SWIGMATLAB)
+    int num_fields = mxGetNumberOfFields(val);
+    for (int i = 0; i < num_fields; ++i) {
+        std::string field_name {mxGetFieldNameByNumber(val, i)};
+        option_map[field_name] = as_option_ptr(mxGetField(val, 0, field_name.c_str()));
+    }
+#elif defined(SWIGPYTHON)
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(val, &pos, &key, &value)) {
+        std::string field_name {PyUnicode_AsUTF8AndSize(key, NULL)};
+        option_map[field_name] = as_option_ptr(value);
+    }
+#endif
+    return new option<std::map<std::string, option_t *>>(option_map);
 }
 
 }  // namespace acados

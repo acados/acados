@@ -19,6 +19,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/mem.h"
@@ -66,7 +67,7 @@ static void d_cvt_casadi_to_colmaj(double *in, int *sparsity_in, double *out)
 
     if (dense)
     {
-        for (ii = 0; ii < ncol * nrow; ii++) out[ii] = in[ii];
+        memcpy(out, in, nrow*ncol*sizeof(double));
     }
     else
     {
@@ -74,8 +75,7 @@ static void d_cvt_casadi_to_colmaj(double *in, int *sparsity_in, double *out)
         int *idxcol = sparsity_in + 2;
         int *row = sparsity_in + ncol + 3;
         // Fill with zeros
-        for (jj = 0; jj < ncol; jj++)
-            for (ii = 0; ii < nrow; ii++) out[ii + jj * nrow] = 0.0;
+        memset(out, 0, ncol*nrow*sizeof(double));
         // Copy nonzeros
         for (jj = 0; jj < ncol; jj++)
         {
@@ -100,7 +100,7 @@ static void d_cvt_colmaj_to_casadi(double *in, double *out, int *sparsity_out)
 
     if (dense)
     {
-        for (ii = 0; ii < ncol * nrow; ii++) out[ii] = in[ii];
+        memcpy(out, in, ncol*nrow*sizeof(double));
     }
     else
     {
