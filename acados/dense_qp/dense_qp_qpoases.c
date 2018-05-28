@@ -657,6 +657,8 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             // dual variables for softened lower box constraints
             if (dual_sol[2*ng+nsb+k] <= 0.0)
                 qp_out->lam->pa[js] = -dual_sol[2*ng+nsb+k];
+
+            k++;
         }
 
         // dual variables for sl >= d_ls
