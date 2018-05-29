@@ -80,7 +80,7 @@ double sim_solver_tolerance_dae(std::string const& inString)
 
 TEST_CASE("crane_dae_example", "[integrators]")
 {
-    vector<std::string> solvers = {"GNSF", "IRK"};
+    vector<std::string> solvers = {"IRK", "GNSF"};
       // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
     int ii, jj;
@@ -117,13 +117,15 @@ TEST_CASE("crane_dae_example", "[integrators]")
     double S_forw_ref_sol[nx*NF];
     double S_adj_ref_sol[NF];
     double z_ref_sol[nz];
+    double S_alg_ref_sol[NF*nz];
 
     double error[nx];
     double error_z[nz];
     double error_S_forw[nx*NF];
     double error_S_adj[NF];
+    double error_S_alg[NF*nz];
 
-    double max_error, max_error_forw, max_error_adj, max_error_z;
+    double max_error, max_error_forw, max_error_adj, max_error_z, max_error_S_alg;
 
     for (ii=0; ii < nx; ii++)
         x_sim[ii] = x0[ii];
@@ -257,6 +259,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
     opts->sens_forw = true;
     opts->sens_adj = true;
+    opts->sens_algebraic = true;
     opts->output_z = true;
 
 
@@ -334,6 +337,8 @@ TEST_CASE("crane_dae_example", "[integrators]")
     for (jj = 0; jj < nz; jj++)
         z_ref_sol[jj] = out->zn[jj];
 
+    for (jj = 0; jj < nz*NF; jj++)
+        S_alg_ref_sol[jj] = out->S_algebraic[jj];
 
     // printf("Reference xn \n");
     // d_print_e_mat(1, nx, &x_ref_sol[0], 1);
@@ -347,8 +352,6 @@ TEST_CASE("crane_dae_example", "[integrators]")
     // printf("tested adjoint sensitivities \n");
     // d_print_e_mat(1, NF, &S_adj_ref_sol[0], 1);
 
-
-
     free(config);
     free(dims);
     free(opts);
@@ -361,7 +364,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     {
         SECTION(solver)
         {
-            for (int num_steps = 2; num_steps < 8; num_steps++)
+            for (int num_steps = 2; num_steps < 42; num_steps = num_steps+6)
             {
                 double tol = sim_solver_tolerance_dae(solver);
 
@@ -396,6 +399,8 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 opts->output_z = true;
                 opts->sens_adj = true;
                 opts->sens_forw = true;
+                opts->sens_algebraic = true;
+
 
 
                 sim_gnsf_dims *gnsf_dim;
@@ -543,6 +548,16 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 for (int ii = 0; ii < nz; ii++)
                     max_error_z = (error_z[ii] >= max_error_z) ? error_z[ii] : max_error_z;
 
+                // error_S_alg
+                for (jj = 0; jj < nz*NF; jj++){
+                    REQUIRE(std::isnan(out->S_algebraic[jj]) == 0);
+                    error_S_alg[jj] = fabs(out->S_algebraic[jj] - S_alg_ref_sol[jj]);
+                }
+
+                max_error_S_alg = 0.0;
+                for (int ii = 0; ii < nz * NF; ii++)
+                    max_error_S_alg = (error_S_alg[ii] >= max_error_S_alg) ? error_S_alg[ii] : max_error_S_alg;
+
                 // error_S_forw
                 for (jj = 0; jj < nx*NF; jj++){
                     REQUIRE(std::isnan(out->S_forw[jj]) == 0);
@@ -568,18 +583,18 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 * printing
                 ************************************************/
 
-                std::cout  << "error_sim   = " << max_error << "\n";
-                std::cout  << "error_z     = " << max_error_z << "\n";
-                std::cout  << "error_forw  = " << max_error_forw << "\n";
-                std::cout  << "error_adj   = " << max_error_adj  << "\n";
+                std::cout  << "error_sim        = " << max_error << "\n";
+                std::cout  << "error_z          = " << max_error_z << "\n";
+                std::cout  << "error_forw       = " << max_error_forw << "\n";
+                std::cout  << "error_adj        = " << max_error_adj  << "\n";
+                std::cout  << "error_algeb_sens = " << max_error_S_alg  << "\n";
 
                 REQUIRE(max_error <= tol);
                 REQUIRE(max_error_z <= tol);
 
-                // printf("tested forward sensitivities \n");
-                // d_print_e_mat(nx, NF, &out->S_forw[0], nx);
+                printf("tested algebraic sensitivities \n");
+                d_print_e_mat(nz, NF, &out->S_algebraic[0], nz);
 
-                // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
                 REQUIRE(max_error_adj <= tol);
                 REQUIRE(max_error_forw <= tol);
 
