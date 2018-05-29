@@ -757,9 +757,9 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
 
     blasfeo_dgemm_nn(nK2, nx2, nK2, 1.0, &M2inv, 0, 0, &dK2_dx2_work, 0, 0, 0.0, &dK2_dx2, 0, 0,
                      &dK2_dx2, 0, 0);
-    
+
     if (opts->sens_algebraic){
-        
+
         /************************************************
         * ONLY FOR ALGEBRAIC SENSITIVITIES
         ************************************************/
