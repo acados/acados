@@ -825,6 +825,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_dtrsm_lunn(nx + nz, nx + nu, 1.0, &J_xdot_z, 0, 0, JKf, 0, 0, JKf, 0, 0);
             timing_la += acados_toc(&timer_la);
 
+            // solution has different sign
+            blasfeo_dgesc(nx + nz, nx + nu, -1.0, JKf, 0, 0);
+
             // extract output
             blasfeo_unpack_dmat(nz, nx + nu, JKf, nx, 0, S_algebraic, nz);
 
