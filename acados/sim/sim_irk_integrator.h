@@ -51,9 +51,9 @@ typedef struct
 
 typedef struct
 {
-    struct blasfeo_dmat *JGK;     // jacobian of G over K ((nx+nz)*ns, (nx+nz)*ns)
-    struct blasfeo_dmat *JGf;     // jacobian of G over x and u ((nx+nz)*ns, nx+nu);
-    struct blasfeo_dmat *JKf;     // jacobian of (K,Z) over x and u ((nx+nz)*ns, nx+nu);
+    struct blasfeo_dmat *dG_dK;     // jacobian of G over K ((nx+nz)*ns, (nx+nz)*ns)
+    struct blasfeo_dmat *dG_dxu;     // jacobian of G over x and u ((nx+nz)*ns, nx+nu);
+    struct blasfeo_dmat *dK_dxu;     // jacobian of (K,Z) over x and u ((nx+nz)*ns, nx+nu);
     struct blasfeo_dmat *S_forw;  // forward sensitivities (nx, nx+nu)
 
     struct blasfeo_dvec *rG;  // residuals of G (nx*ns)
@@ -75,14 +75,14 @@ typedef struct
     struct blasfeo_dvec *K_traj;   // K trajectory
     struct blasfeo_dvec *Z_traj;   // Z trajectory
     // todo: maybe remove? but could maybe be used for hessian propagation
-    // struct blasfeo_dmat *JG_traj; // JGK trajectory
+    // struct blasfeo_dmat *JG_traj; // dG_dK trajectory
 
-    struct blasfeo_dmat J_temp_x;     // temporary Jacobian of ode w.r.t x (nx+nz, nx)
-    struct blasfeo_dmat J_temp_xdot;  // temporary Jacobian of ode w.r.t xdot (nx+nz, nx)
-    struct blasfeo_dmat J_temp_u;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
-    struct blasfeo_dmat J_temp_z;     // temporary Jacobian of ode w.r.t z (nx+nz, nu)
+    struct blasfeo_dmat df_dx;     // temporary Jacobian of ode w.r.t x (nx+nz, nx)
+    struct blasfeo_dmat df_dxdot;  // temporary Jacobian of ode w.r.t xdot (nx+nz, nx)
+    struct blasfeo_dmat df_du;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
+    struct blasfeo_dmat df_dz;     // temporary Jacobian of ode w.r.t z (nx+nz, nu)
 
-    struct blasfeo_dmat J_xdot_z;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
+    struct blasfeo_dmat df_dxdotz;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
                         // used for algebraic sensitivity generation
 } sim_irk_workspace;
 

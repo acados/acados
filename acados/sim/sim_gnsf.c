@@ -806,7 +806,7 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
     blasfeo_dtrsm_llnu(nx1, nu, 1.0, &E11, 0, 0, &K0u, 0, 0, &K0u, 0, 0);
     blasfeo_dtrsm_lunn(nx1, nu, 1.0, &E11, 0, 0, &K0u, 0, 0, &K0u, 0,
                        0);              // K0u now contains E11\B1
-                       
+
     blasfeo_drowpe(nx1, ipivEE1, &K0f);  // permute also rhs
     blasfeo_dtrsm_llnu(nx1, n_out, 1.0, &E11, 0, 0, &K0f, 0, 0, &K0f, 0, 0);
     blasfeo_dtrsm_lunn(nx1, n_out, 1.0, &E11, 0, 0, &K0f, 0, 0, &K0f, 0,
@@ -1089,7 +1089,6 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
     size += blasfeo_memsize_dvec(nyy);              // yyu
     size += blasfeo_memsize_dvec(nyy * num_steps);  // yyss
     size += blasfeo_memsize_dvec(ny);  // y_one_stage
-    
 
     size += blasfeo_memsize_dvec(nK1);  // K1u
     size += blasfeo_memsize_dvec(nZ);   // Zu
@@ -1104,7 +1103,7 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
 
     size += blasfeo_memsize_dmat(nff, nff);       // J_r_ff
     size += blasfeo_memsize_dmat(nff, nx1 + nu);  // J_r_x1u
-    size += blasfeo_memsize_dmat(nz, nx1 + nu);  // dz0_dx1u    
+    size += blasfeo_memsize_dmat(nz, nx1 + nu);  // dz0_dx1u
 
     size += blasfeo_memsize_dmat(nK1, nx1);  // dK1_dx1
     size += blasfeo_memsize_dmat(nK1, nu);   // dK1_du
@@ -1280,9 +1279,6 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     int nZ  = num_stages * nz;
 
     // assert - only use supported features
-    
-    // assert(dims->num_stages == opts->ns && "dims->num_stages not equal opts->ns, check
-    // initialization!!!");
     assert(mem->dt == in->T / opts->num_steps &&
            "model->dt not equal to im_in.T/opts->num_steps, check initialization");
 
@@ -1755,12 +1751,12 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         }
 
         // propagate sensitivities of z
-        if (ss == 0)  // report z and propagate corresponding sensitivities 
+        if (ss == 0)  // output z and propagate corresponding sensitivities
         {
             // get output value for algebraic states z
             if (opts->output_z || opts->sens_algebraic)
-            { 
-                for (int ii = 0; ii < nz; ii++) // ith component ofz
+            {
+                for (int ii = 0; ii < nz; ii++)  // ith component of z
                 {
                     for (int jj = 0; jj < num_stages; jj++)
                     {
@@ -1772,10 +1768,10 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 }
             }
 
-            // propagate sensitivities of z -- second approach -- TODO: test;
+            // propagate sensitivities of z -- TODO: test;
             if (opts->sens_algebraic)
             {
-                for (int ii = 0; ii < nx1; ii++) // ith component of x0dot1
+                for (int ii = 0; ii < nx1; ii++)  // ith component of x0dot1
                 {
                     for (int jj = 0; jj < num_stages; jj++)
                     {
@@ -1844,7 +1840,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 blasfeo_unpack_dmat(nz, nx1, &dz0_dx1u, 0, 0, out->S_algebraic, nz);
                 blasfeo_unpack_dmat(nz, nu , &dz0_dx1u, 0, nx1, &out->S_algebraic[nx*nz], nz);
 
-                for (int ii = 0; ii < nx2 * nz; ii++) { //  dz_dx2_0 = 0
+                for (int ii = 0; ii < nx2 * nz; ii++) {  //  dz_dx2_0 = 0
                     out->S_algebraic[nx1 * nz + ii] = 0;
                 }
 

@@ -556,7 +556,8 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
                 max_error_S_alg = 0.0;
                 for (int ii = 0; ii < nz * NF; ii++)
-                    max_error_S_alg = (error_S_alg[ii] >= max_error_S_alg) ? error_S_alg[ii] : max_error_S_alg;
+                    max_error_S_alg = (error_S_alg[ii] >= max_error_S_alg) ?
+                                         error_S_alg[ii] : max_error_S_alg;
 
                 // error_S_forw
                 for (jj = 0; jj < nx*NF; jj++){
