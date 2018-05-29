@@ -67,9 +67,9 @@ sim_solver_t hashitsim_dae(std::string const& inString)
 double sim_solver_tolerance_dae(std::string const& inString)
 {
     // if (inString == "ERK") return 1e-3;
-    if (inString == "IRK") return 1e-6;
+    if (inString == "IRK") return 1e-4;
     // if (inString == "LIFTED_IRK") return 1e-3;
-    if (inString == "GNSF") return 1e-6;
+    if (inString == "GNSF") return 1e-4;
     // if (inString == "NEW_LIFTED_IRK") return 1e-3;
 
     return -1;
@@ -87,10 +87,10 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
     const int nx = 9;
     const int nu = 2;
-    const int nz = 1;
+    const int nz = 2;
     const int nx1 = 8;  // gnsf split
     const int nx2 = 1;
-    const int n_out = 2;
+    const int n_out = 3;
     const int ny = 4;
     const int nuhat = 1;
 
@@ -364,7 +364,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     {
         SECTION(solver)
         {
-            for (int num_steps = 2; num_steps < 42; num_steps = num_steps+6)
+            for (int num_steps = 2; num_steps < 300; num_steps = num_steps+50)
             {
                 double tol = sim_solver_tolerance_dae(solver);
 

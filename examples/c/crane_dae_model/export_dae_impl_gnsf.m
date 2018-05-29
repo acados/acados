@@ -41,7 +41,7 @@ u = vertcat(uCR, uLR);
 x1 = vertcat(xC, vC, xL, vL, uC, uL, theta, omega);
 x2 = q; % Linear output/quadrature state
 
-z = SX.sym('z'); % define an algebraic state;
+z = SX.sym('z',2); % define an algebraic state;
 % here z is just added to the ODE to have some algebraic states
 % z = (theta^2)/8 + xL
 nz = length(z);
@@ -74,7 +74,7 @@ A(4,4) = -1/tau2;
 A(4,6) = a2/tau2;
 A(7,8) = 1;
 
-B = zeros( nx1+nz, nu);
+B = zeros( nx1 + nz, nu);
 B(5,1) = 1;
 B(6,2) = 1;
 
@@ -82,7 +82,8 @@ E = eye(nx1+nz);
 %% nonlinearity function
 % gather all nonlinear parts
 phi = [- (a1 * uCR * cos(theta) + g* sin(theta) + 2*vL*omega) / xL;
-      (theta^2)/8 + xL]; % isolated nonlinearity
+      (theta^2)/8 + xL;
+      cos(omega + 0.1) + uCR*vL]; % isolated nonlinearity
 n_out = length(phi);
 % concatination of all states&controls Phi is dependent on
 y = vertcat(xL, vL, theta, omega);
@@ -90,7 +91,7 @@ uhat = uCR;
 ny = length(y);
 nuhat = length(uhat);
 
-C = zeros( nx1+nz, n_out); C(8,1) = 1; C(9,2) = 1;
+C = zeros( nx1+nz, n_out); C(8,1) = 1; C(9,2) = 1; C(10,3) = 1;
 
 % linear input matrices
 L_x_fun = Function('L_x_fun',{x1},{jacobian(y,x1)});
@@ -168,7 +169,7 @@ num_stages = 4;
 x0 = zeros(nx,1);
 x0(3) = .8;
 x0dot = zeros(nx,1);
-z0 = 0;
+z0 = zeros(nz,1);
 u0 = [40.108149413030752; 50.446662212534974];
 
 x1_0 = x0(1:nx1);
@@ -186,7 +187,8 @@ gnsf_val0 = [E * [x1dot_0; z0] - full(A*x1_0 + B * u0 + C * phi_val0);
 x2_dot = SX.sym('x2_dot', nx2);
 xdot = [x1_dot; x2_dot];
 f_impl = [(f_expl - [x1_dot; x2_dot]);
-            z - ((theta^2)/8 + xL)];
+            z - [((theta^2)/8 + xL);
+             (cos(omega + 0.1) + uCR*vL)]];
 
 % impl_ode_fun
 impl_ode_fun = Function([model_name_prefix,'impl_ode_fun'], {x, xdot, u, z}, {f_impl});

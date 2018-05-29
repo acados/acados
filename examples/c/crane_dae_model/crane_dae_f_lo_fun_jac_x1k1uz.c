@@ -47,13 +47,13 @@ extern "C" {
 #endif
 
 static const casadi_int casadi_s0[12] = {8, 1, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7};
-static const casadi_int casadi_s1[5] = {1, 1, 0, 1, 0};
-static const casadi_int casadi_s2[6] = {2, 1, 0, 2, 0, 1};
-static const casadi_int casadi_s3[24] = {1, 19, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 0, 0};
+static const casadi_int casadi_s1[6] = {2, 1, 0, 2, 0, 1};
+static const casadi_int casadi_s2[5] = {1, 1, 0, 1, 0};
+static const casadi_int casadi_s3[25] = {1, 20, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 0, 0};
 
 casadi_real casadi_sq(casadi_real x) { return x*x;}
 
-/* crane_dae_f_lo_fun_jac_x1k1uz:(i0[8],i1[8],i2,i3[2])->(o0,o1[1x19,2nz]) */
+/* crane_dae_f_lo_fun_jac_x1k1uz:(i0[8],i1[8],i2[2],i3[2])->(o0,o1[1x20,2nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2, a3;
   a0=arg[3] ? arg[3][0] : 0;
@@ -106,14 +106,14 @@ CASADI_SYMBOL_EXPORT const casadi_int* crane_dae_f_lo_fun_jac_x1k1uz_sparsity_in
     case 0: return casadi_s0;
     case 1: return casadi_s0;
     case 2: return casadi_s1;
-    case 3: return casadi_s2;
+    case 3: return casadi_s1;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT const casadi_int* crane_dae_f_lo_fun_jac_x1k1uz_sparsity_out(casadi_int i) {
   switch (i) {
-    case 0: return casadi_s1;
+    case 0: return casadi_s2;
     case 1: return casadi_s3;
     default: return 0;
   }
