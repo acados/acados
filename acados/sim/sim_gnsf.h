@@ -117,6 +117,11 @@ typedef struct
     int *ipivQQ1;
     int *ipivM2;
 
+    // for algebraic sensitivity propagation
+    struct blasfeo_dmat K0x;
+    struct blasfeo_dmat K0u;
+    struct blasfeo_dmat K0f;
+
 } gnsf_pre_workspace;
 
 // workspace
@@ -136,6 +141,8 @@ typedef struct
     struct blasfeo_dvec yyu;
     struct blasfeo_dvec yyss;
 
+    struct blasfeo_dvec y_one_stage;
+
     struct blasfeo_dvec *K1_val;
     struct blasfeo_dvec *x1_val;
     struct blasfeo_dvec *ff_val;
@@ -148,11 +155,11 @@ typedef struct
     struct blasfeo_dvec ALOtimesx02;
 
     struct blasfeo_dvec uhat;
-
     struct blasfeo_dmat *f_LO_jac;
 
     struct blasfeo_dmat J_r_ff;
     struct blasfeo_dmat J_r_x1u;
+    struct blasfeo_dmat dz0_dx1u;  // (nz) * (nx1+nu);
 
     struct blasfeo_dmat dK1_dx1;
     struct blasfeo_dmat dK1_du;
@@ -205,6 +212,14 @@ typedef struct
     struct blasfeo_dmat dK2_dx2;
 
     struct blasfeo_dmat Lu;
+
+    // for algebraic sensitivities
+    struct blasfeo_dmat Z0x;
+    struct blasfeo_dmat Z0u;
+    struct blasfeo_dmat Z0f;
+    struct blasfeo_dmat Lx;
+    struct blasfeo_dmat Lxdot;
+    struct blasfeo_dmat Lz;
 
 } sim_gnsf_memory;
 
