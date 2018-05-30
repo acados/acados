@@ -409,7 +409,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dvec_mem(nx, &workspace->xtdot, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx + nu, workspace->lambda, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem((nx + nz) * ns, workspace->lambdaK, &c_ptr);
-    
+
     if (opts->sens_adj){
         for (int i = 0; i < steps; i++)
         {
