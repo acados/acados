@@ -110,7 +110,8 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
     int nsim0 = 1;  // nsim;
 
-    double T = 0.05;  // simulation time
+    double T = 0.01;  // simulation time // former values .1, .05
+    // reduced for faster test
 
     double x_sim[nx*(nsim0+2)];
     double x_ref_sol[nx];
@@ -367,7 +368,19 @@ TEST_CASE("crane_dae_example", "[integrators]")
     {
         SECTION(solver)
         {
-            for (int num_steps = 3; num_steps < 7; num_steps++)
+
+            for (int sens_forw = 0; sens_forw < 2; sens_forw++)
+            {
+            for (int sens_adj = 0; sens_adj < 2; sens_adj++)
+            {
+            for (int output_z = 0; output_z < 2; output_z++)
+            {
+            for (int sens_alg = 0; sens_alg < 2; sens_alg++)
+            {
+            for (int num_stages = 3; num_stages < 5; num_stages++)
+            {
+            for (int num_steps = 2; num_steps < 7; num_steps++)
+            // for (int num_steps = (8-num_stages)*(8-num_stages); num_steps < 50; (num_steps+= 10))
             {
                 double tol = sim_solver_tolerance_dae(solver);
 
@@ -376,77 +389,48 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 // create correct config based on plan
                 sim_solver_config *config = sim_config_create(plan);
 
-                /************************************************
-                * sim dims
-                ************************************************/
-
+            /* sim dims */
                 void *dims = sim_dims_create(config);
                 config->set_nx(dims, nx);
                 config->set_nu(dims, nu);
                 config->set_nz(dims, nz);
+                // GNSF -- set additional dimensions
+                sim_gnsf_dims *gnsf_dim;
+                if (plan.sim_solver == GNSF)
+                {
+                    gnsf_dim = (sim_gnsf_dims *) dims;
+                    gnsf_dim->nx1 = nx1;
+                    gnsf_dim->nx2 = nx2;
+                    gnsf_dim->ny = ny;
+                    gnsf_dim->nuhat = nuhat;
+                    gnsf_dim->n_out = n_out;
+                }
 
-                /************************************************
-                * sim opts
-                ************************************************/
+            /* sim options */
 
                 void *opts_ = sim_opts_create(config, dims);
                 sim_rk_opts *opts = (sim_rk_opts *) opts_;
                 config->opts_initialize_default(config, dims, opts);
 
+                opts->jac_reuse = false;        // jacobian reuse
+                opts->newton_iter = 3;          // number of newton iterations per integration step
 
-                opts->jac_reuse = false;  // jacobian reuse
-                opts->newton_iter = 3;  // number of newton iterations per integration step
-                opts->num_steps = num_steps;  // number of steps
-                opts->output_z = true;
-                opts->ns = 5;  // number of stages in rk integrator
-                opts->output_z = true;
-                opts->sens_adj = true;
-                opts->sens_forw = true;
-                opts->sens_algebraic = true;
-
+                opts->ns                = num_stages;          // number of stages in rk integrator
+                opts->num_steps         = num_steps;    // number of steps
+                opts->sens_forw         = (bool) sens_forw;
+                opts->sens_adj          = (bool) sens_adj;
+                opts->output_z          = (bool) output_z;
+                opts->sens_algebraic    = (bool) sens_alg;
 
 
-                sim_gnsf_dims *gnsf_dim;
-                switch (plan.sim_solver)
-                {
-                    case IRK:
-                         // IRK
-
-                        break;
-
-                    case GNSF:
-                        // GNSF
-                        // set additional dimensions
-                        gnsf_dim = (sim_gnsf_dims *) dims;
-                        gnsf_dim->nx1 = nx1;
-                        gnsf_dim->nx2 = nx2;
-                        gnsf_dim->ny = ny;
-                        gnsf_dim->nuhat = nuhat;
-                        gnsf_dim->n_out = n_out;
-
-                        break;
-
-                    // case NEW_LIFTED_IRK:
-                    //     // new lifted IRK
-                    //     opts->ns = 3;  // number of stages in rk integrator
-                    //     break;
-
-                    default :
-                        printf("\nplan.sim_solver does not support DAEs!\n");
-                        exit(1);
-
-                }
-
-                /************************************************
-                * sim in / out
-                ************************************************/
+            /* sim in / out */
 
                 sim_in *in = sim_in_create(config, dims);
                 sim_out *out = sim_out_create(config, dims);
 
                 in->T = T;
 
-                // external functions
+                // external functions -- model
                 switch (plan.sim_solver)
                 {
                     case IRK:  // IRK
@@ -486,7 +470,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     }
                 }
 
-                // seeds forw
+            /* seeds */
                 for (ii = 0; ii < nx * NF; ii++)
                     in->S_forw[ii] = 0.0;
                 for (ii = 0; ii < nx; ii++)
@@ -498,14 +482,16 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 for (ii = nx; ii < nx + nu; ii++)
                     in->S_adj[ii] = 0.0;
 
-                /************************************************
-                * sim solver
-                ************************************************/
-                std::cout << "\n---> testing integrator " << solver <<
-                        " (num_steps = " << opts->num_steps << ", num_stages = " << opts->ns
-                        << ", jac_reuse = " << opts->jac_reuse << ", newton_iter = "
-                        << opts->newton_iter << ")\n";
+            /* print */
+            std::cout << "\n---> testing integrator " << solver;
+            std::cout << " OPTS: num_steps = " << opts->num_steps;
+            std::cout << ", num_stages = " << opts->ns;
+            std::cout << ", jac_reuse = " << opts->jac_reuse;
+            std::cout << ", newton_iter = " << opts->newton_iter << ")\n";
+            
+                // std::cout  << "error_forw       = " << max_error_forw << "\n";
 
+            /** sim solver  */
                 sim_solver = sim_create(config, dims, opts);
                 // sim_solver *le_sim_solver = (sim_solver *) sim_solver_;
                 int acados_return;
@@ -530,7 +516,6 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
                     for (jj = 0; jj < nx; jj++){
                         x_sim[(ii+1)*nx+jj] = out->xn[jj];
-                        REQUIRE(std::isnan(out->xn[jj]) == false);
                     }
 
                 }
@@ -540,8 +525,10 @@ TEST_CASE("crane_dae_example", "[integrators]")
             ************************************************/
 
                 // error sim
-                for (jj = 0; jj < nx; jj++)
+                for (jj = 0; jj < nx; jj++){
                     error[jj] = fabs(out->xn[jj] - x_ref_sol[jj]);
+                    REQUIRE(std::isnan(out->xn[jj]) == false);
+                }
                 // max_error
                 max_error = 0.0;
                 for (int ii = 0; ii < nx; ii++)
@@ -635,8 +622,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 free(in);
                 free(out);
                 free(sim_solver);
+            }  // end for
+            }  // end for
+            }  // end for
+            }  // end for
 
             }  // end for num_steps
+            }  // end for num_stages
         }  // end section solver
     }  // END FOR SOLVERS
 
