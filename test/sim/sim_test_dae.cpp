@@ -91,7 +91,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     const int nx1 = 8;  // gnsf split
     const int nx2 = 1;
     const int n_out = 3;
-    const int ny = 4;
+    const int ny = 5;
     const int nuhat = 1;
 
     // generate x0, u_sim
@@ -591,7 +591,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 std::cout  << "error_algeb_sens = " << max_error_S_alg  << "\n";
 
                 REQUIRE(max_error <= tol);
-                REQUIRE(max_error_z <= tol);
+                REQUIRE(max_error_z <= 1e2*tol);
 
                 printf("tested algebraic sensitivities \n");
                 d_print_e_mat(nz, NF, &out->S_algebraic[0], nz);
