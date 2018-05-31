@@ -131,6 +131,10 @@ typedef struct
 
     int *ipiv;  // index of pivot vector
 
+    struct blasfeo_dvec *ff_traj;
+    struct blasfeo_dvec *yy_traj;
+    struct blasfeo_dmat *f_LO_jac_traj;
+
     struct blasfeo_dvec K2_val;
     struct blasfeo_dvec x0_traj;
     struct blasfeo_dvec res_val;
@@ -140,22 +144,18 @@ typedef struct
 
     struct blasfeo_dvec yyu;
     struct blasfeo_dvec yyss;
-
     struct blasfeo_dvec y_one_stage;
 
-    struct blasfeo_dvec *K1_val;
-    struct blasfeo_dvec *x1_val;
-    struct blasfeo_dvec *ff_val;
-    struct blasfeo_dvec *yy_val;
-    struct blasfeo_dvec *Z_val;
-    struct blasfeo_dvec *f_LO_val;
+    struct blasfeo_dvec K1_val;
+    struct blasfeo_dvec f_LO_val;
+    struct blasfeo_dvec x1_stage_val;
+    struct blasfeo_dvec Z_val;
 
     struct blasfeo_dvec K1u;
     struct blasfeo_dvec Zu;
     struct blasfeo_dvec ALOtimesx02;
 
     struct blasfeo_dvec uhat;
-    struct blasfeo_dmat *f_LO_jac;
 
     struct blasfeo_dmat J_r_ff;
     struct blasfeo_dmat J_r_x1u;
