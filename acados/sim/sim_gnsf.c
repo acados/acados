@@ -1712,14 +1712,14 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                         blasfeo_dgecpsc(nx2, nx1, -A_dt[ii + jj * num_stages], &f_LO_jac_traj[ss],
                                         ii * nx2, 0, &J_G2_K1, ii * nx2, jj * nx1);
                     }
-                    blasfeo_dgead(nx2, nx1, 1.0, &f_LO_jac_traj[ss], ii * nx2, nx1, &J_G2_K1, ii * nx2,
-                                  ii * nx1);
-                    blasfeo_dgemm_nn(nx2, nx1, nz, 1.0, &f_LO_jac_traj[ss], ii * nx2, 2 * nx1, &dZ_dx1,
-                                     ii * nz, 0, 0.0, &aux_G2_x1, ii * nx2, 0, &aux_G2_x1, ii * nx2,
-                                     0);
-                    blasfeo_dgemm_nn(nx2, nu, nz, 1.0, &f_LO_jac_traj[ss], ii * nx2, 2 * nx1, &dZ_du,
-                                     ii * nz, 0, 0.0, &aux_G2_u, ii * nx2, 0, &aux_G2_u, ii * nx2,
-                                     0);
+                    blasfeo_dgead(nx2, nx1, 1.0, &f_LO_jac_traj[ss], ii * nx2, nx1,
+                                 &J_G2_K1, ii * nx2, ii * nx1);
+                    blasfeo_dgemm_nn(nx2, nx1, nz, 1.0, &f_LO_jac_traj[ss], ii * nx2, 2 * nx1,
+                                     &dZ_dx1, ii * nz, 0, 0.0, &aux_G2_x1, ii * nx2, 0,
+                                     &aux_G2_x1, ii * nx2, 0);
+                    blasfeo_dgemm_nn(nx2, nu, nz, 1.0, &f_LO_jac_traj[ss], ii * nx2, 2 * nx1,
+                                 &dZ_du, ii * nz, 0, 0.0, &aux_G2_u, ii * nx2, 0,
+                                 &aux_G2_u, ii * nx2,  0);
                 }  // check: aux_G2_x1u seems correct but should be tested with nontrivial values
                    // i.e. not zeros..
 
@@ -1872,12 +1872,12 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                                  ii * nz, 0, 0.0, &aux_G2_ff, ii * nx2, 0, &aux_G2_ff, ii * nx2, 0);
                 blasfeo_dgemm_nn(nx2, nx1, nz, -1.0, &f_LO_jac_traj[ss], nx2 * ii, 2 * nx1, &ZZx,
                                  ii * nz, 0, 0.0, &aux_G2_x1, ii * nx2, 0, &aux_G2_x1, ii * nx2, 0);
-                blasfeo_dgemm_nn(nx2, nu, nz, -1.0, &f_LO_jac_traj[ss], nx2 * ii, 2 * nx1, &ZZu, ii * nz,
-                                 0, 0.0, &aux_G2_u, ii * nx2, 0, &aux_G2_u, ii * nx2, 0);
+                blasfeo_dgemm_nn(nx2, nu, nz, -1.0, &f_LO_jac_traj[ss], nx2 * ii, 2 * nx1,
+                             &ZZu, ii * nz, 0, 0.0, &aux_G2_u, ii * nx2, 0, &aux_G2_u, ii * nx2, 0);
                 for (int jj = 0; jj < num_stages; jj++)
                 {
-                    blasfeo_dgecpsc(nx2, nx1, -A_dt[ii + jj * num_stages], &f_LO_jac_traj[ss], nx2 * ii,
-                                    0, &J_G2_K1, ii * nx2, jj * nx1);
+                    blasfeo_dgecpsc(nx2, nx1, -A_dt[ii + jj * num_stages], &f_LO_jac_traj[ss],
+                                 nx2 * ii, 0, &J_G2_K1, ii * nx2, jj * nx1);
                 }
                 blasfeo_dgead(nx2, nx1, -1.0, &f_LO_jac_traj[ss], nx2 * ii, nx1, &J_G2_K1, nx2 * ii,
                               nx1 * ii);

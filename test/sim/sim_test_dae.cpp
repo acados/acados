@@ -125,14 +125,14 @@ TEST_CASE("crane_dae_example", "[integrators]")
     double error_S_adj[NF];
     double error_S_alg[NF*nz];
 
-    double max_error, max_error_forw, max_error_adj, max_error_z, max_error_S_alg;
+    double max_error, max_error_forw, max_error_adj, max_error_z, max_error_sens_alg;
 
     for (ii=0; ii < nx; ii++)
         x_sim[ii] = x0[ii];
 
-    /************************************************
-    * external functions (implicit model)
-    ************************************************/
+/************************************************
+* external functions
+************************************************/
 
     // impl_ode_fun
     external_function_casadi impl_ode_fun;
@@ -230,9 +230,9 @@ TEST_CASE("crane_dae_example", "[integrators]")
     external_function_casadi_create(&get_matrices_fun);
 
 
-    /************************************************
-    * Create Reference Solution
-    ************************************************/
+/************************************************
+* Create Reference Solution
+************************************************/
 
     sim_solver_plan plan;
     plan.sim_solver = GNSF;
@@ -257,15 +257,14 @@ TEST_CASE("crane_dae_example", "[integrators]")
     void *opts_ = sim_opts_create(config, dims);
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
+    // opts reference solution
     opts->sens_forw = true;
     opts->sens_adj = true;
     opts->sens_algebraic = true;
     opts->output_z = true;
-
-
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 5;  // number of newton iterations per integration step
-    opts->num_steps = 50;  // number of steps
+    opts->num_steps = 500;  // number of steps
     opts->ns = 8;  // number of stages in rk integrator
 
     sim_in *in = sim_in_create(config, dims);
@@ -360,11 +359,15 @@ TEST_CASE("crane_dae_example", "[integrators]")
     free(out);
     free(sim_solver);
 
+/************************************************
+* test solver loop
+************************************************/
+
     for (std::string solver : solvers)
     {
         SECTION(solver)
         {
-            for (int num_steps = 2; num_steps < 300; num_steps = num_steps+50)
+            for (int num_steps = 3; num_steps < 7; num_steps++)
             {
                 double tol = sim_solver_tolerance_dae(solver);
 
@@ -532,73 +535,99 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
                 }
 
+            /************************************************
+            * compute error w.r.t. reference solution
+            ************************************************/
+
                 // error sim
                 for (jj = 0; jj < nx; jj++)
                     error[jj] = fabs(out->xn[jj] - x_ref_sol[jj]);
-
+                // max_error
                 max_error = 0.0;
                 for (int ii = 0; ii < nx; ii++)
                     max_error = (error[ii] >= max_error) ? error[ii] : max_error;
 
-                // error_z
-                for (jj = 0; jj < nz; jj++)
-                    error_z[jj] = fabs(out->zn[jj] - z_ref_sol[jj]);
-
-                max_error_z = 0.0;
-                for (int ii = 0; ii < nz; ii++)
-                    max_error_z = (error_z[ii] >= max_error_z) ? error_z[ii] : max_error_z;
-
-                // error_S_alg
-                for (jj = 0; jj < nz*NF; jj++){
-                    REQUIRE(std::isnan(out->S_algebraic[jj]) == 0);
-                    error_S_alg[jj] = fabs(out->S_algebraic[jj] - S_alg_ref_sol[jj]);
+                if ( opts->sens_forw ){     // error_S_forw
+                    max_error_forw = 0.0;
+                    for (jj = 0; jj < nx*NF; jj++){
+                        REQUIRE(std::isnan(out->S_forw[jj]) == 0);
+                        error_S_forw[jj] = fabs(S_forw_ref_sol[jj] - out->S_forw[jj]);
+                        max_error_forw = (error_S_forw[jj] >= max_error_forw)
+                                ? error_S_forw[jj] : max_error_forw;
+                    }
                 }
 
-                max_error_S_alg = 0.0;
-                for (int ii = 0; ii < nz * NF; ii++)
-                    max_error_S_alg = (error_S_alg[ii] >= max_error_S_alg) ?
-                                         error_S_alg[ii] : max_error_S_alg;
-
-                // error_S_forw
-                for (jj = 0; jj < nx*NF; jj++){
-                    REQUIRE(std::isnan(out->S_forw[jj]) == 0);
-                    error_S_forw[jj] = fabs(S_forw_ref_sol[jj] - out->S_forw[jj]);
+                if ( opts->sens_adj ){               // error_S_adj
+                    for (jj = 0; jj < nx + nu; jj++){
+                        REQUIRE(std::isnan(out->S_adj[jj]) == 0);
+                        error_S_adj[jj] = S_adj_ref_sol[jj] - out->S_adj[jj];
+                    }
+                    max_error_adj = 0.0;
+                    for (jj = 0; jj < nx + nu; jj++)
+                        max_error_adj = (error_S_adj[jj] >= max_error_adj)
+                                ? error_S_adj[jj] : max_error_adj;
                 }
 
-                max_error_forw = 0.0;
-                for (jj = 0; jj < nx*NF; jj++)
-                    max_error_forw = (error_S_forw[jj] >= max_error_forw)
-                            ? error_S_forw[jj] : max_error_forw;
-
-                // error_S_adj
-                for (jj = 0; jj < NF; jj++){
-                    REQUIRE(std::isnan(out->S_forw[jj]) == 0);
-                    error_S_adj[jj] = S_adj_ref_sol[jj] - out->S_adj[jj];
+                if ( opts->output_z ){      // error_z
+                    max_error_z = 0.0;
+                    for (jj = 0; jj < nz; jj++){
+                        error_z[jj] = fabs(out->zn[jj] - z_ref_sol[jj]);
+                        REQUIRE(std::isnan(out->zn[jj]) == 0);
+                        max_error_z = (error_z[ii] >= max_error_z) ? error_z[ii] : max_error_z;
+                    }
                 }
-                max_error_adj = 0.0;
-                for (jj = 0; jj < NF; jj++)
-                    max_error_adj = (error_S_adj[jj] >= max_error_adj)
-                            ? error_S_adj[jj] : max_error_adj;
 
-                /************************************************
-                * printing
-                ************************************************/
+                if ( opts->sens_algebraic ){        // error_S_alg
+                    max_error_sens_alg = 0.0;
+                    for (jj = 0; jj < nz*NF; jj++){
+                        REQUIRE(std::isnan(out->S_algebraic[jj]) == 0);
+                        error_S_alg[jj] = fabs(out->S_algebraic[jj] - S_alg_ref_sol[jj]);
+                    }
+                    for (int ii = 0; ii < nz * NF; ii++)
+                        max_error_sens_alg = (error_S_alg[ii] >= max_error_sens_alg) ?
+                                            error_S_alg[ii] : max_error_sens_alg;
+                }
+
+
+
+
+            /************************************************
+            * printing
+            ************************************************/
 
                 std::cout  << "error_sim        = " << max_error << "\n";
-                std::cout  << "error_z          = " << max_error_z << "\n";
+                if ( opts->sens_forw )
                 std::cout  << "error_forw       = " << max_error_forw << "\n";
+                if ( opts->sens_adj )
                 std::cout  << "error_adj        = " << max_error_adj  << "\n";
-                std::cout  << "error_algeb_sens = " << max_error_S_alg  << "\n";
+                if ( opts->sens_algebraic )
+                std::cout  << "error_algeb_sens = " << max_error_sens_alg  << "\n";
+                if ( opts->output_z )
+                std::cout  << "error_z          = " << max_error_z << "\n";
 
+                // printf("tested algebraic sensitivities \n");
+                // d_print_e_mat(nz, NF, &out->S_algebraic[0], nz);
+
+            /************************************************
+            * asserts on erors
+            ************************************************/
                 REQUIRE(max_error <= tol);
-                REQUIRE(max_error_z <= 1e2*tol);
 
-                printf("tested algebraic sensitivities \n");
-                d_print_e_mat(nz, NF, &out->S_algebraic[0], nz);
+                if ( opts->sens_forw )
+                    REQUIRE(max_error_forw <= tol);
 
-                REQUIRE(max_error_adj <= tol);
-                REQUIRE(max_error_forw <= tol);
+                if ( opts->sens_adj )
+                    REQUIRE(max_error_adj <= tol);
 
+                if ( opts->output_z )
+                    REQUIRE(max_error_z <= 1e1*tol);
+
+                if ( opts->sens_algebraic )
+                    REQUIRE(max_error_sens_alg <= 1e3*tol);
+
+            /************************************************
+            * free tested solver
+            ************************************************/
                 free(config);
                 free(dims);
                 free(opts);
@@ -606,8 +635,9 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 free(in);
                 free(out);
                 free(sim_solver);
+
             }  // end for num_steps
-        }  // end section
+        }  // end section solver
     }  // END FOR SOLVERS
 
     // implicit model
