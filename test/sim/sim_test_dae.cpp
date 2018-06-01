@@ -364,24 +364,39 @@ TEST_CASE("crane_dae_example", "[integrators]")
 * test solver loop
 ************************************************/
 
-    for (std::string solver : solvers)
-    {
-        SECTION(solver)
-        {
 
-            for (int sens_forw = 0; sens_forw < 2; sens_forw++)
-            {
+
+        for (int sens_forw = 0; sens_forw < 2; sens_forw++)
+        {
+        SECTION("sens_forw = " + std::to_string((bool)sens_forw))
+        {
             for (int sens_adj = 0; sens_adj < 2; sens_adj++)
+            {
+            SECTION("sens_adj = " + std::to_string((bool)sens_adj))
             {
             for (int output_z = 0; output_z < 2; output_z++)
             {
+            SECTION("output_z = " + std::to_string((bool)output_z))
+            {
             for (int sens_alg = 0; sens_alg < 2; sens_alg++)
+            {
+            SECTION("sens_alg = " + std::to_string((bool)sens_alg))
             {
             for (int num_stages = 3; num_stages < 5; num_stages++)
             {
-            for (int num_steps = 2; num_steps < 7; num_steps++)
-            // for (int num_steps = (8-num_stages)*(8-num_stages); num_steps < 50; (num_steps+= 10))
+            SECTION("num_stages = " + std::to_string(num_stages))
             {
+            for (int num_steps = 2; num_steps < 7; num_steps += 3)
+            {
+            SECTION("num_steps = " + std::to_string(num_steps))
+            {
+
+            for (std::string solver : solvers)
+            {
+            SECTION(solver)
+            {
+
+
                 double tol = sim_solver_tolerance_dae(solver);
 
                 plan.sim_solver = hashitsim_dae(solver);
@@ -488,12 +503,9 @@ TEST_CASE("crane_dae_example", "[integrators]")
             std::cout << ", num_stages = " << opts->ns;
             std::cout << ", jac_reuse = " << opts->jac_reuse;
             std::cout << ", newton_iter = " << opts->newton_iter << ")\n";
-            
-                // std::cout  << "error_forw       = " << max_error_forw << "\n";
 
             /** sim solver  */
                 sim_solver = sim_create(config, dims, opts);
-                // sim_solver *le_sim_solver = (sim_solver *) sim_solver_;
                 int acados_return;
 
                 if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
@@ -622,12 +634,17 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 free(in);
                 free(out);
                 free(sim_solver);
+            }  // end SECTION
             }  // end for
+            }  // end SECTION
             }  // end for
+            }  // end SECTION
             }  // end for
+            }  // end SECTION
             }  // end for
-
+            }  // end SECTION
             }  // end for num_steps
+            }  // end SECTION
             }  // end for num_stages
         }  // end section solver
     }  // END FOR SOLVERS
