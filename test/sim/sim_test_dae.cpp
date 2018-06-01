@@ -236,27 +236,33 @@ TEST_CASE("crane_dae_example", "[integrators]")
 ************************************************/
 
     sim_solver_plan plan;
-    plan.sim_solver = GNSF;
+    plan.sim_solver = GNSF;  // IRK; -- works but super slow
 
     sim_solver_config *config = sim_config_create(plan);
 
     void *dims = sim_dims_create(config);
 
-    // set dimensions
+    /* set dimensions */
     config->set_nx(dims, nx);
     config->set_nu(dims, nu);
     config->set_nz(dims, nz);
-    // additional gnsf dims
-    sim_gnsf_dims *gnsf_dim = (sim_gnsf_dims *) dims;
-    gnsf_dim->nx1 = nx1;
-    gnsf_dim->nx2 = nx2;
-    gnsf_dim->ny = ny;
-    gnsf_dim->nuhat = nuhat;
-    gnsf_dim->n_out = n_out;
+
+    // GNSF -- set additional dimensions
+    sim_gnsf_dims *gnsf_dim;
+    if (plan.sim_solver == GNSF)
+    {
+        gnsf_dim = (sim_gnsf_dims *) dims;
+        gnsf_dim->nx1 = nx1;
+        gnsf_dim->nx2 = nx2;
+        gnsf_dim->ny = ny;
+        gnsf_dim->nuhat = nuhat;
+        gnsf_dim->n_out = n_out;
+    }
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    config->opts_initialize_default(config, dims, opts);
 
     // opts reference solution
     opts->sens_forw = true;
@@ -277,13 +283,39 @@ TEST_CASE("crane_dae_example", "[integrators]")
     external_function_generic *get_model_matrices =
             (external_function_generic *) &get_matrices_fun;
     gnsf_model *model = (gnsf_model *) in->model;
-    sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
 
-    // set model funtions
-    sim_set_model(config, in, "phi_fun", &phi_fun);
-    sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
-    sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
-    sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+    // set model
+    switch (plan.sim_solver)
+    {
+        case IRK:  // IRK
+        {
+            sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
+            sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
+                    &impl_ode_fun_jac_x_xdot);
+            sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+            break;
+        }
+        case GNSF:  // GNSF
+        {
+            // set model funtions
+            sim_set_model(config, in, "phi_fun", &phi_fun);
+            sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
+            sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
+            sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+
+            // import model matrices
+            external_function_generic *get_model_matrices =
+                    (external_function_generic *) &get_matrices_fun;
+            gnsf_model *model = (gnsf_model *) in->model;
+            sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
+            break;
+        }
+        default :
+        {
+            printf("\nnot plan.sim_solver not supported!\n");
+            exit(1);
+        }
+    }
 
     // seeds forw
     for (ii = 0; ii < nx * NF; ii++)
@@ -303,8 +335,12 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
     sim_solver *sim_solver = sim_create(config, dims, opts);
 
-    sim_gnsf_precompute(config, gnsf_dim, model, opts,
-                             sim_solver->mem, sim_solver->work, in->T);
+
+    if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
+        gnsf_model *model = (gnsf_model *) in->model;
+        sim_gnsf_precompute(config, gnsf_dim, model, opts,
+                    sim_solver->mem, sim_solver->work, in->T);
+    }
 
     int acados_return;
 
@@ -352,6 +388,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     // printf("tested adjoint sensitivities \n");
     // d_print_e_mat(1, NF, &S_adj_ref_sol[0], 1);
 
+    /* free */
     free(config);
     free(dims);
     free(opts);
@@ -366,19 +403,19 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
 
 
-        for (int sens_forw = 0; sens_forw < 2; sens_forw++)
+    for (int sens_forw = 1; sens_forw < 2; sens_forw++)
+    {
+    SECTION("sens_forw = " + std::to_string((bool)sens_forw))
+    {
+        for (int sens_adj = 1; sens_adj < 2; sens_adj++)
         {
-        SECTION("sens_forw = " + std::to_string((bool)sens_forw))
+        SECTION("sens_adj = " + std::to_string((bool)sens_adj))
         {
-            for (int sens_adj = 0; sens_adj < 2; sens_adj++)
-            {
-            SECTION("sens_adj = " + std::to_string((bool)sens_adj))
-            {
-            for (int output_z = 0; output_z < 2; output_z++)
+            for (int output_z = 1; output_z < 2; output_z++)
             {
             SECTION("output_z = " + std::to_string((bool)output_z))
             {
-            for (int sens_alg = 0; sens_alg < 2; sens_alg++)
+            for (int sens_alg = 1; sens_alg < 2; sens_alg++)
             {
             SECTION("sens_alg = " + std::to_string((bool)sens_alg))
             {
@@ -428,7 +465,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 config->opts_initialize_default(config, dims, opts);
 
                 opts->jac_reuse = false;        // jacobian reuse
-                opts->newton_iter = 3;          // number of newton iterations per integration step
+                opts->newton_iter = 2;          // number of newton iterations per integration step
 
                 opts->ns                = num_stages;          // number of stages in rk integrator
                 opts->num_steps         = num_steps;    // number of steps
@@ -497,13 +534,6 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 for (ii = nx; ii < nx + nu; ii++)
                     in->S_adj[ii] = 0.0;
 
-            /* print */
-            std::cout << "\n---> testing integrator " << solver;
-            std::cout << " OPTS: num_steps = " << opts->num_steps;
-            std::cout << ", num_stages = " << opts->ns;
-            std::cout << ", jac_reuse = " << opts->jac_reuse;
-            std::cout << ", newton_iter = " << opts->newton_iter << ")\n";
-
             /** sim solver  */
                 sim_solver = sim_create(config, dims, opts);
                 int acados_return;
@@ -513,6 +543,14 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     sim_gnsf_precompute(config, gnsf_dim, model, opts,
                              sim_solver->mem, sim_solver->work, in->T);
                 }
+        
+            /* print */
+            std::cout << "\n---> testing integrator " << solver;
+            std::cout << " OPTS: num_steps = " << opts->num_steps;
+            std::cout << ", num_stages = " << opts->ns;
+            std::cout << ", jac_reuse = " << opts->jac_reuse;
+            std::cout << ", newton_iter = " << opts->newton_iter << ")\n";
+
                 for (ii=0; ii < nsim0; ii++)
                 {
                     // x
