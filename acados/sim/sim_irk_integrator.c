@@ -779,81 +779,89 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         }  // end if sens_forw
 
         // obtain x(n+1)
-        for (ii = 0; ii < ns; ii++) blasfeo_daxpy(nx, step * b_vec[ii], K, ii * nx, xn, 0, xn, 0);
-
-        // generate z output
-        if ((opts->output_z || opts->sens_algebraic) && ss == 0)
-        {
-            for (int ii = 0; ii < nz; ii++)
-            {
-                for (int jj = 0; jj < ns; jj++)
-                {
-                    Z_work[jj] = blasfeo_dvecex1(Z, nz * jj + ii);
-                             // copy values of z_ii in first step, into Z_work
-                }
-                neville_algorithm(&out->zn[ii], 0.0, ns - 1, opts->c_vec, Z_work);
-                             // eval polynomial through (c_jj, z_jj) at 0.
-            }
+        for (ii = 0; ii < ns; ii++){
+            blasfeo_daxpy(nx, step * b_vec[ii], K, ii * nx, xn, 0, xn, 0);
         }
 
-        if (opts->sens_algebraic && ss == 0)  // generate S_algebraic
+        if (ss == 0)
         {
-            double interpolated_value;
-            for (int ii = 0; ii < nx; ii++)
+            // generate z output
+            if ((opts->output_z || opts->sens_algebraic))
             {
-                for (int jj = 0; jj < ns; jj++)
+                for (int ii = 0; ii < nz; ii++)
                 {
-                    Z_work[jj] = blasfeo_dvecex1(K, nx * jj + ii);
-                        // copy values of k_ii in first step, into Z_work
+                    for (int jj = 0; jj < ns; jj++)
+                    {
+                        Z_work[jj] = blasfeo_dvecex1(Z, nz * jj + ii);
+                                // copy values of z_ii in first step, into Z_work
+                    }
+                    neville_algorithm(&out->zn[ii], 0.0, ns - 1, opts->c_vec, Z_work);
+                                // eval polynomial through (c_jj, z_jj) at 0.
                 }
-                neville_algorithm(&interpolated_value, 0.0, ns - 1, opts->c_vec, Z_work);
-                             // eval polynomial through (c_jj, k_jj) at 0.
-                blasfeo_pack_dvec(1, &interpolated_value, xtdot, ii);
             }
-            // xtdot now contains x_dot(0)
 
-            // set input for impl_ode
-            impl_ode_type_in[1] = BLASFEO_DVEC;
-            impl_ode_type_in[3] = COLMAJ;
-            impl_ode_in[1] = xtdot;
-            impl_ode_in[3] = &out->zn[0];
+            if (opts->sens_algebraic)  // generate S_algebraic
+            {
+                double interpolated_value;
+                for (int ii = 0; ii < nx; ii++)
+                {
+                    for (int jj = 0; jj < ns; jj++)
+                    {
+                        Z_work[jj] = blasfeo_dvecex1(K, nx * jj + ii);
+                            // copy values of k_ii in first step, into Z_work
+                    }
+                    neville_algorithm(&interpolated_value, 0.0, ns - 1, opts->c_vec, Z_work);
+                                // eval polynomial through (c_jj, k_jj) at 0.
+                    blasfeo_pack_dvec(1, &interpolated_value, xtdot, ii);
+                }
+                // xtdot now contains x_dot(0)
 
-            // eval jacobians at interpolated values
-            acados_tic(&timer_ad);
-            model->impl_ode_jac_x_xdot_u_z->evaluate(
-                    model->impl_ode_jac_x_xdot_u_z, impl_ode_type_in, impl_ode_in,
-                    impl_ode_jac_x_xdot_u_z_type_out, impl_ode_jac_x_xdot_u_z_out);
-            timing_ad += acados_toc(&timer_ad);
+                // set input for impl_ode
+                impl_ode_type_in[0] = COLMAJ;
+                impl_ode_type_in[1] = BLASFEO_DVEC;
+                impl_ode_type_in[3] = COLMAJ;
+                impl_ode_in[0] = in->x;  // 1st input is always xn
+                impl_ode_in[1] = xtdot;
+                impl_ode_in[3] = &out->zn[0];
 
-            // set up df_dxdotz
-            blasfeo_dgecp(nx + nz, nx, &df_dxdot, 0, 0, &df_dxdotz, 0, 0);
-            blasfeo_dgecp(nx + nz, nz, &df_dz,    0, 0, &df_dxdotz, 0, nx);
-            // set up right hand side dK_dxu (only first nx+nz columns used here)
-            blasfeo_dgecp(nx + nz, nx, &df_dx, 0, 0, dK_dxu, 0, 0);
-            blasfeo_dgecp(nx + nz, nu, &df_du, 0, 0, dK_dxu, 0, nx);
+                // eval jacobians at interpolated values
+                acados_tic(&timer_ad);
+                model->impl_ode_jac_x_xdot_u_z->evaluate(
+                        model->impl_ode_jac_x_xdot_u_z, impl_ode_type_in, impl_ode_in,
+                        impl_ode_jac_x_xdot_u_z_type_out, impl_ode_jac_x_xdot_u_z_out);
+                timing_ad += acados_toc(&timer_ad);
 
-            // solve linear system
-            acados_tic(&timer_la);
-            blasfeo_dgetrf_rowpivot(nx + nz, nx + nz, &df_dxdotz, 0, 0, &df_dxdotz, 0, 0,
-                                                                        ipiv_one_stage);
-            blasfeo_drowpe(nx + nz, ipiv_one_stage, dK_dxu);
-            blasfeo_dtrsm_llnu(nx + nz, nx + nu, 1.0, &df_dxdotz, 0, 0, dK_dxu, 0, 0, dK_dxu, 0, 0);
-            blasfeo_dtrsm_lunn(nx + nz, nx + nu, 1.0, &df_dxdotz, 0, 0, dK_dxu, 0, 0, dK_dxu, 0, 0);
-            timing_la += acados_toc(&timer_la);
+                // set up df_dxdotz
+                blasfeo_dgecp(nx + nz, nx, &df_dxdot, 0, 0, &df_dxdotz, 0, 0);
+                blasfeo_dgecp(nx + nz, nz, &df_dz,    0, 0, &df_dxdotz, 0, nx);
+                // set up right hand side dK_dxu (only first nx+nz columns used here)
+                blasfeo_dgecp(nx + nz, nx, &df_dx, 0, 0, dK_dxu, 0, 0);
+                blasfeo_dgecp(nx + nz, nu, &df_du, 0, 0, dK_dxu, 0, nx);
 
-            // solution has different sign
-            blasfeo_dgesc(nx + nz, nx + nu, -1.0, dK_dxu, 0, 0);
+                // solve linear system
+                acados_tic(&timer_la);
+                blasfeo_dgetrf_rowpivot(nx + nz, nx + nz, &df_dxdotz, 0, 0, &df_dxdotz, 0, 0,
+                                                                            ipiv_one_stage);
+                blasfeo_drowpe(nx + nz, ipiv_one_stage, dK_dxu);
+                blasfeo_dtrsm_llnu(nx + nz, nx + nu, 1.0, &df_dxdotz, 0, 0, dK_dxu, 0, 0, dK_dxu, 0, 0);
+                blasfeo_dtrsm_lunn(nx + nz, nx + nu, 1.0, &df_dxdotz, 0, 0, dK_dxu, 0, 0, dK_dxu, 0, 0);
+                timing_la += acados_toc(&timer_la);
 
-            // extract output
-            blasfeo_unpack_dmat(nz, nx + nu, dK_dxu, nx, 0, S_algebraic, nz);
+                // solution has different sign
+                blasfeo_dgesc(nx + nz, nx + nu, -1.0, dK_dxu, 0, 0);
 
-            // Reset impl_ode inputs
-            impl_ode_type_in[1] = BLASFEO_DVEC_ARGS;  // k_i
-            impl_ode_type_in[3] = BLASFEO_DVEC_ARGS;  // z_i
-            impl_ode_in[1] = &impl_ode_xdot_in;
-            impl_ode_in[3] = &impl_ode_z_in;     // 4th input is part of Z[ss]
+                // extract output
+                blasfeo_unpack_dmat(nz, nx + nu, dK_dxu, nx, 0, S_algebraic, nz);
 
-        }
+                // Reset impl_ode inputs
+                impl_ode_type_in[0] = BLASFEO_DVEC;       // xt
+                impl_ode_type_in[1] = BLASFEO_DVEC_ARGS;  // k_i
+                impl_ode_type_in[3] = BLASFEO_DVEC_ARGS;  // z_i
+                impl_ode_in[0] = xt;  // 1st input is always xt
+                impl_ode_in[1] = &impl_ode_xdot_in;
+                impl_ode_in[3] = &impl_ode_z_in;     // 4th input is part of Z[ss]
+            }  // end if sens_algebraic
+        }  //  end if (ss == 0)
     }  // end step loop (ss)
 
 
