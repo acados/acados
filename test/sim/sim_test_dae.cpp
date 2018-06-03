@@ -419,11 +419,11 @@ TEST_CASE("crane_dae_example", "[integrators]")
             {
             SECTION("sens_alg = " + std::to_string((bool)sens_alg))
             {
-            for (int num_stages = 3; num_stages < 5; num_stages++)
+            for (int num_stages = 5; num_stages < 6; num_stages++)
             {
             SECTION("num_stages = " + std::to_string(num_stages))
             {
-            for (int num_steps = 2; num_steps < 7; num_steps += 3)
+            for (int num_steps = 1; num_steps < 5; num_steps += 1)
             {
             SECTION("num_steps = " + std::to_string(num_steps))
             {
@@ -637,10 +637,10 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 std::cout  << "error_forw       = " << max_error_forw << "\n";
                 if ( opts->sens_adj )
                 std::cout  << "error_adj        = " << max_error_adj  << "\n";
-                if ( opts->sens_algebraic )
-                std::cout  << "error_algeb_sens = " << max_error_sens_alg  << "\n";
                 if ( opts->output_z )
                 std::cout  << "error_z          = " << max_error_z << "\n";
+                if ( opts->sens_algebraic )
+                std::cout  << "error_algeb_sens = " << max_error_sens_alg  << "\n";
 
                 // printf("tested algebraic sensitivities \n");
                 // d_print_e_mat(nz, NF, &out->S_algebraic[0], nz);
@@ -657,10 +657,10 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     REQUIRE(max_error_adj <= tol);
 
                 if ( opts->output_z )
-                    REQUIRE(max_error_z <= 1e1*tol);
+                    REQUIRE(max_error_z <= tol);
 
                 if ( opts->sens_algebraic )
-                    REQUIRE(max_error_sens_alg <= 1e3*tol);
+                    REQUIRE(max_error_sens_alg <= tol);
 
             /************************************************
             * free tested solver
