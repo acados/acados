@@ -543,7 +543,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     sim_gnsf_precompute(config, gnsf_dim, model, opts,
                              sim_solver->mem, sim_solver->work, in->T);
                 }
-        
+
             /* print */
             std::cout << "\n---> testing integrator " << solver;
             std::cout << " OPTS: num_steps = " << opts->num_steps;
