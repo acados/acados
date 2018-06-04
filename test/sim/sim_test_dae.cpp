@@ -67,9 +67,9 @@ sim_solver_t hashitsim_dae(std::string const& inString)
 double sim_solver_tolerance_dae(std::string const& inString)
 {
     // if (inString == "ERK") return 1e-3;
-    if (inString == "IRK") return 1e-4;
+    if (inString == "IRK") return 1e-7;
     // if (inString == "LIFTED_IRK") return 1e-3;
-    if (inString == "GNSF") return 1e-4;
+    if (inString == "GNSF") return 1e-7;
     // if (inString == "NEW_LIFTED_IRK") return 1e-3;
 
     return -1;
@@ -81,9 +81,9 @@ double sim_solver_tolerance_dae(std::string const& inString)
 TEST_CASE("crane_dae_example", "[integrators]")
 {
     vector<std::string> solvers = {"IRK", "GNSF"};
+    // vector<std::string> solvers = {"GNSF", "IRK"};
       // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
-    int ii, jj;
 
     const int nx = 9;
     const int nu = 2;
@@ -128,7 +128,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
     double max_error, max_error_forw, max_error_adj, max_error_z, max_error_sens_alg;
 
-    for (ii=0; ii < nx; ii++)
+    for (int ii = 0; ii < nx; ii++)
         x_sim[ii] = x0[ii];
 
 /************************************************
@@ -270,7 +270,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     opts->sens_algebraic = true;
     opts->output_z = true;
     opts->jac_reuse = false;  // jacobian reuse
-    opts->newton_iter = 5;  // number of newton iterations per integration step
+    opts->newton_iter = 8;  // number of newton iterations per integration step
     opts->num_steps = 500;  // number of steps
     opts->ns = 8;  // number of stages in rk integrator
 
@@ -318,15 +318,15 @@ TEST_CASE("crane_dae_example", "[integrators]")
     }
 
     // seeds forw
-    for (ii = 0; ii < nx * NF; ii++)
+    for (int ii = 0; ii < nx * NF; ii++)
         in->S_forw[ii] = 0.0;
-    for (ii = 0; ii < nx; ii++)
+    for (int ii = 0; ii < nx; ii++)
         in->S_forw[ii * (nx + 1)] = 1.0;
 
     // seeds adj
-    for (ii = 0; ii < nx; ii++)
+    for (int ii = 0; ii < nx; ii++)
         in->S_adj[ii] = 1.0;
-    for (ii = nx; ii < nx + nu; ii++)
+    for (int ii = nx; ii < nx + nu; ii++)
         in->S_adj[ii] = 0.0;
 
     /************************************************
@@ -344,36 +344,36 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
     int acados_return;
 
-    for (ii=0; ii < nsim0; ii++)
+    for (int ii = 0; ii < nsim0; ii++)
     {
         // x
-        for (jj = 0; jj < nx; jj++)
+        for (int jj = 0; jj < nx; jj++)
             in->x[jj] = x_sim[ii*nx+jj];
 
         // u
-        for (jj = 0; jj < nu; jj++)
+        for (int jj = 0; jj < nu; jj++)
             in->u[jj] = u_sim[ii*nu+jj];
 
         acados_return = sim_solve(sim_solver, in, out);
         REQUIRE(acados_return == 0);
 
-        for (jj = 0; jj < nx; jj++)
+        for (int jj = 0; jj < nx; jj++)
             x_sim[(ii+1)*nx+jj] = out->xn[jj];
     }
 
-    for (jj = 0; jj < nx; jj++)
+    for (int jj = 0; jj < nx; jj++)
         x_ref_sol[jj] = out->xn[jj];
 
-    for (jj = 0; jj < nx*NF; jj++)
+    for (int jj = 0; jj < nx*NF; jj++)
         S_forw_ref_sol[jj] = out->S_forw[jj];
 
-    for (jj = 0; jj < NF; jj++)
+    for (int jj = 0; jj < NF; jj++)
         S_adj_ref_sol[jj] = out->S_adj[jj];
 
-    for (jj = 0; jj < nz; jj++)
+    for (int jj = 0; jj < nz; jj++)
         z_ref_sol[jj] = out->zn[jj];
 
-    for (jj = 0; jj < nz*NF; jj++)
+    for (int jj = 0; jj < nz*NF; jj++)
         S_alg_ref_sol[jj] = out->S_algebraic[jj];
 
     // printf("Reference xn \n");
@@ -403,27 +403,27 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
 
 
-    for (int sens_forw = 1; sens_forw < 2; sens_forw++)
+    for (int sens_forw = 0; sens_forw < 2; sens_forw++)
     {
     SECTION("sens_forw = " + std::to_string((bool)sens_forw))
     {
-        for (int sens_adj = 1; sens_adj < 2; sens_adj++)
+        for (int sens_adj = 0; sens_adj < 2; sens_adj++)
         {
         SECTION("sens_adj = " + std::to_string((bool)sens_adj))
         {
-            for (int output_z = 1; output_z < 2; output_z++)
+            for (int output_z = 0; output_z < 2; output_z++)
             {
             SECTION("output_z = " + std::to_string((bool)output_z))
             {
-            for (int sens_alg = 1; sens_alg < 2; sens_alg++)
+            for (int sens_alg = 0; sens_alg < 2; sens_alg++)
             {
             SECTION("sens_alg = " + std::to_string((bool)sens_alg))
             {
-            for (int num_stages = 5; num_stages < 6; num_stages++)
+            for (int num_stages = 3; num_stages < 6; num_stages++)
             {
             SECTION("num_stages = " + std::to_string(num_stages))
             {
-            for (int num_steps = 1; num_steps < 5; num_steps += 1)
+            for (int num_steps = 3; num_steps < 5; num_steps += 2)
             {
             SECTION("num_steps = " + std::to_string(num_steps))
             {
@@ -523,15 +523,15 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 }
 
             /* seeds */
-                for (ii = 0; ii < nx * NF; ii++)
+                for (int ii = 0; ii < nx * NF; ii++)
                     in->S_forw[ii] = 0.0;
-                for (ii = 0; ii < nx; ii++)
+                for (int ii = 0; ii < nx; ii++)
                     in->S_forw[ii * (nx + 1)] = 1.0;
 
                 // seeds adj
-                for (ii = 0; ii < nx; ii++)
+                for (int ii = 0; ii < nx; ii++)
                     in->S_adj[ii] = 1.0;
-                for (ii = nx; ii < nx + nu; ii++)
+                for (int ii = nx; ii < nx + nu; ii++)
                     in->S_adj[ii] = 0.0;
 
             /** sim solver  */
@@ -551,20 +551,20 @@ TEST_CASE("crane_dae_example", "[integrators]")
             std::cout << ", jac_reuse = " << opts->jac_reuse;
             std::cout << ", newton_iter = " << opts->newton_iter << ")\n";
 
-                for (ii=0; ii < nsim0; ii++)
+                for (int ii = 0; ii < nsim0; ii++)
                 {
                     // x
-                    for (jj = 0; jj < nx; jj++)
+                    for (int jj = 0; jj < nx; jj++)
                         in->x[jj] = x_sim[ii*nx+jj];
 
                     // u
-                    for (jj = 0; jj < nu; jj++)
+                    for (int jj = 0; jj < nu; jj++)
                         in->u[jj] = u_sim[ii*nu+jj];
 
                     acados_return = sim_solve(sim_solver, in, out);
                     REQUIRE(acados_return == 0);
 
-                    for (jj = 0; jj < nx; jj++){
+                    for (int jj = 0; jj < nx; jj++){
                         x_sim[(ii+1)*nx+jj] = out->xn[jj];
                     }
 
@@ -575,18 +575,17 @@ TEST_CASE("crane_dae_example", "[integrators]")
             ************************************************/
 
                 // error sim
-                for (jj = 0; jj < nx; jj++){
+                for (int jj = 0; jj < nx; jj++){
                     error[jj] = fabs(out->xn[jj] - x_ref_sol[jj]);
                     REQUIRE(std::isnan(out->xn[jj]) == false);
                 }
-                // max_error
                 max_error = 0.0;
-                for (int ii = 0; ii < nx; ii++)
-                    max_error = (error[ii] >= max_error) ? error[ii] : max_error;
+                for (int jj = 0; jj < nx; jj++)
+                    max_error = (error[jj] >= max_error) ? error[jj] : max_error;
 
                 if ( opts->sens_forw ){     // error_S_forw
                     max_error_forw = 0.0;
-                    for (jj = 0; jj < nx*NF; jj++){
+                    for (int jj = 0; jj < nx*NF; jj++){
                         REQUIRE(std::isnan(out->S_forw[jj]) == 0);
                         error_S_forw[jj] = fabs(S_forw_ref_sol[jj] - out->S_forw[jj]);
                         max_error_forw = (error_S_forw[jj] >= max_error_forw)
@@ -595,34 +594,34 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 }
 
                 if ( opts->sens_adj ){               // error_S_adj
-                    for (jj = 0; jj < nx + nu; jj++){
+                    for (int jj = 0; jj < nx + nu; jj++){
                         REQUIRE(std::isnan(out->S_adj[jj]) == 0);
                         error_S_adj[jj] = S_adj_ref_sol[jj] - out->S_adj[jj];
                     }
                     max_error_adj = 0.0;
-                    for (jj = 0; jj < nx + nu; jj++)
+                    for (int jj = 0; jj < nx + nu; jj++)
                         max_error_adj = (error_S_adj[jj] >= max_error_adj)
                                 ? error_S_adj[jj] : max_error_adj;
                 }
 
                 if ( opts->output_z ){      // error_z
                     max_error_z = 0.0;
-                    for (jj = 0; jj < nz; jj++){
+                    for (int jj = 0; jj < nz; jj++){
                         error_z[jj] = fabs(out->zn[jj] - z_ref_sol[jj]);
                         REQUIRE(std::isnan(out->zn[jj]) == 0);
-                        max_error_z = (error_z[ii] >= max_error_z) ? error_z[ii] : max_error_z;
+                        max_error_z = (error_z[jj] >= max_error_z) ? error_z[jj] : max_error_z;
                     }
                 }
 
                 if ( opts->sens_algebraic ){        // error_S_alg
                     max_error_sens_alg = 0.0;
-                    for (jj = 0; jj < nz*NF; jj++){
+                    for (int jj = 0; jj < nz*NF; jj++){
                         REQUIRE(std::isnan(out->S_algebraic[jj]) == 0);
                         error_S_alg[jj] = fabs(out->S_algebraic[jj] - S_alg_ref_sol[jj]);
                     }
-                    for (int ii = 0; ii < nz * NF; ii++)
-                        max_error_sens_alg = (error_S_alg[ii] >= max_error_sens_alg) ?
-                                            error_S_alg[ii] : max_error_sens_alg;
+                    for (int jj = 0; jj < nz * NF; jj++)
+                        max_error_sens_alg = (error_S_alg[jj] >= max_error_sens_alg) ?
+                                            error_S_alg[jj] : max_error_sens_alg;
                 }
 
 
@@ -657,10 +656,10 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     REQUIRE(max_error_adj <= tol);
 
                 if ( opts->output_z )
-                    REQUIRE(max_error_z <= tol);
+                    REQUIRE(max_error_z <= 1e3*tol);
 
                 if ( opts->sens_algebraic )
-                    REQUIRE(max_error_sens_alg <= tol);
+                    REQUIRE(max_error_sens_alg <= 1e3*tol);
 
             /************************************************
             * free tested solver

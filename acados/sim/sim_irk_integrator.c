@@ -843,8 +843,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 blasfeo_dgetrf_rowpivot(nx + nz, nx + nz, &df_dxdotz, 0, 0, &df_dxdotz, 0, 0,
                                                                             ipiv_one_stage);
                 blasfeo_drowpe(nx + nz, ipiv_one_stage, dK_dxu);
-                blasfeo_dtrsm_llnu(nx + nz, nx + nu, 1.0, &df_dxdotz, 0, 0, dK_dxu, 0, 0, dK_dxu, 0, 0);
-                blasfeo_dtrsm_lunn(nx + nz, nx + nu, 1.0, &df_dxdotz, 0, 0, dK_dxu, 0, 0, dK_dxu, 0, 0);
+                blasfeo_dtrsm_llnu(nx + nz, nx + nu, 1.0, &df_dxdotz, 0, 0,
+                                   dK_dxu, 0, 0, dK_dxu, 0, 0);
+                blasfeo_dtrsm_lunn(nx + nz, nx + nu, 1.0, &df_dxdotz, 0, 0,
+                                   dK_dxu, 0, 0, dK_dxu, 0, 0);
                 timing_la += acados_toc(&timer_la);
 
                 // solution has different sign
