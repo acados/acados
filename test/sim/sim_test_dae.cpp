@@ -271,7 +271,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     opts->output_z = true;
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 8;  // number of newton iterations per integration step
-    opts->num_steps = 500;  // number of steps
+    opts->num_steps = 100;  // number of steps
     opts->ns = 8;  // number of stages in rk integrator
 
     sim_in *in = sim_in_create(config, dims);
