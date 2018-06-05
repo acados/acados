@@ -75,6 +75,9 @@ typedef struct
     double *L_u;
     double *A_LO;
 
+    /* constant vector */
+    double *c;
+
 } gnsf_model;
 
 // pre_workspace - workspace used in the precomputation phase
@@ -121,6 +124,10 @@ typedef struct
     struct blasfeo_dmat K0x;
     struct blasfeo_dmat K0u;
     struct blasfeo_dmat K0f;
+
+    // for constant term in NSF
+    struct blasfeo_dvec cc1;
+    struct blasfeo_dvec cc2;
 
 } gnsf_pre_workspace;
 
@@ -191,7 +198,7 @@ typedef struct
     // scaled butcher table
     double *A_dt;
     double *b_dt;
-    double *c;
+    double *c_butcher;
     double dt;
 
     // precomputed matrices
@@ -221,6 +228,11 @@ typedef struct
     struct blasfeo_dmat Lxdot;
     struct blasfeo_dmat Lz;
 
+    // precomputed vectors for constant term in NSF
+    struct blasfeo_dvec KK0;
+    struct blasfeo_dvec YY0;
+    struct blasfeo_dvec ZZ0;
+
 } sim_gnsf_memory;
 
 // gnsf dims
@@ -231,6 +243,7 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory);
 void sim_gnsf_set_nx(void *dims_, int nx);
 void sim_gnsf_set_nu(void *dims_, int nu);
 void sim_gnsf_set_nz(void *dims_, int nz);
+
 void sim_gnsf_get_nx(void *dims_, int *nx);
 void sim_gnsf_get_nu(void *dims_, int *nu);
 void sim_gnsf_get_nz(void *dims_, int *nz);
