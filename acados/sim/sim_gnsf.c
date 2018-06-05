@@ -740,7 +740,7 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
                        0);  // ZZx now contains QQ1\ZZx
 
     /* build ZZ0  */
-    blasfeo_dgemv_n(nZ, nK1, 1.0, &DD2, 0, 0, &cc1, 0, 1.0, &cc2, 0, &ZZ0, 0); 
+    blasfeo_dgemv_n(nZ, nK1, 1.0, &DD2, 0, 0, &cc1, 0, 1.0, &cc2, 0, &ZZ0, 0);
                                                 // ZZ0 = DD2 * cc1 + cc2;
     // solve QQ1\ZZ0 and store result in ZZ0;
     blasfeo_dvecpe(nZ, ipivQQ1, &ZZ0, 0);  // permute rhs
@@ -1557,7 +1557,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     for (int ss = 0; ss < num_steps; ss++)
     {  // STEP LOOP
         blasfeo_dgemv_n(nyy, nx1, 1.0, &YYx, 0, 0, &x0_traj, ss * nx, 1.0, &yyu, 0, &yyss,
-                        nyy * ss); // yyss = YY0 + YYu * u + YYx * x0(at_stage)
+                        nyy * ss);  // yyss = YY0 + YYu * u + YYx * x0(at_stage)
 
         y_in.x = &yy_traj[ss];
 
