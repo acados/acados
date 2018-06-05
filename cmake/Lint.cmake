@@ -1,7 +1,7 @@
 # Linter
 find_package(PythonInterp 3)
 
-if(NOT PYTHONINTERP_FOUND OR CMAKE_SYSTEM_NAME MATCHES "Windows")
+if(NOT PYTHONINTERP_FOUND OR CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "dSpace")
     message(STATUS "Disabling lint")
     return()
 endif()
