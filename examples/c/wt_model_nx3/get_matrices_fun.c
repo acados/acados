@@ -44,9 +44,9 @@ extern "C" {
 #endif
 
 static const casadi_int casadi_s0[5] = {1, 1, 0, 1, 0};
-static const casadi_int casadi_s1[71] = {67, 1, 0, 67, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66};
+static const casadi_int casadi_s1[74] = {70, 1, 0, 70, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69};
 
-/* casadi_get_matrices_fun:(i0)->(o0[67]) */
+/* casadi_get_matrices_fun:(i0)->(o0[70]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1;
   a0=0.;
@@ -118,6 +118,9 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[0]!=0) res[0][64]=a0;
   if (res[0]!=0) res[0][65]=a0;
   if (res[0]!=0) res[0][66]=a1;
+  if (res[0]!=0) res[0][67]=a0;
+  if (res[0]!=0) res[0][68]=a0;
+  if (res[0]!=0) res[0][69]=a0;
   return 0;
 }
 
