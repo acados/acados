@@ -90,6 +90,16 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
         void *raw_memory = calloc(1, num_bytes);
         nlp_->constraints[i] =
             ocp_nlp_constraints_bgh_model_assign(config_->constraints[i], con_dims, raw_memory);
+
+        dims_->cost[i] = nullptr;
+        nlp_->cost[i] = nullptr;
+    }
+
+    for (int i = 0; i < N; ++i)
+    {
+        dims_->dynamics[i] = nullptr;
+        nlp_->dynamics[i] = nullptr;
+        config_->dynamics[i]->sim_solver = nullptr;
     }
 
     int qp_dims_size = ocp_qp_dims_calculate_size(N);
