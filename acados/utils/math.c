@@ -396,10 +396,10 @@ double onenorm(int row, int col, double *ptrA)
         }
         if (j == 0)
             max = temp;
-        else if (max > temp)
-            temp = max;
+        else if (temp > max)
+            max = temp;
     }
-    return temp;
+    return max;
 }
 
 /* two norm of a vector */

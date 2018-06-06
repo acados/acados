@@ -210,8 +210,10 @@ void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res
     // int ned = qp_in->dim->ne;
     int ngd = qp_in->dim->ng;
     int nbd = qp_in->dim->nb;
+    int nsd = qp_in->dim->ns;
 
     int *idxb = qp_in->idxb;
+    int *idxs = qp_in->idxs;
 
     struct blasfeo_dvec *tmp_nbg = res_ws->tmp_nbg;
 
@@ -226,9 +228,17 @@ void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res
     blasfeo_daxpby(nbd, 1.0, tmp_nbg + 0, 0, -1.0, qp_in->d, 0, qp_out->t, 0);
     blasfeo_daxpby(nbd, -1.0, tmp_nbg + 0, 0, -1.0, qp_in->d, nbd + ngd, qp_out->t, nbd + ngd);
 
+    // soft
+    blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd, idxs, qp_out->t, 0);
+    blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd+nsd, idxs, qp_out->t, nbd+ngd);
+//    blasfeo_daxpy(2*nsd, -1.0, qp_out->v, nvd, qp_out->t, 2*nbd+2*ngd, qp_out->t, 2*nbd+2*ngd);
+    blasfeo_dvecse(2*nsd, 0.0, qp_out->t, 2*nbd+2*ngd);
+
     // compute residuals
     d_compute_res_dense_qp(qp_in, qp_out, qp_res, res_ws);
 }
+
+
 
 void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4])
 {
@@ -243,3 +253,5 @@ void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4])
     blasfeo_dvecnrm_inf(2 * nb + 2 * ng + 2 * ns, qp_res->res_d, 0, &res[2]);
     blasfeo_dvecnrm_inf(2 * nb + 2 * ng + 2 * ns, qp_res->res_m, 0, &res[3]);
 }
+
+
