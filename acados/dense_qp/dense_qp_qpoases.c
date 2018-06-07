@@ -59,6 +59,8 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/print.h"
 
+#include "acados_c/dense_qp_interface.h"
+
 /************************************************
  * opts
  ************************************************/
@@ -113,6 +115,8 @@ void dense_qp_qpoases_opts_update(void *config_, dense_qp_dims *dims, void *opts
 
 int dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
+    dense_qp_dims dims_stacked;
+
     int nv  = dims->nv;
     int ne  = dims->ne;
     int ng  = dims->ng;
@@ -123,6 +127,7 @@ int dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dims *dims, v
 
     int nv2 = nv + 2*ns;
     int ng2 = (ns > 0) ? 2*(ng + nsb) : ng;
+    int nb2 = nb - nsb + 2 * ns;
 
     // size in bytes
     int size = sizeof(dense_qp_qpoases_memory);
@@ -130,21 +135,28 @@ int dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dims *dims, v
     size += 1 * nv * nv * sizeof(double);      // H
     size += 1 * nv2 * nv2 * sizeof(double);    // HH
     size += 1 * nv2 * nv2 * sizeof(double);    // R
-    size += 1 * nv * ne * sizeof(double);      // A
+    size += 1 * nv2 * ne * sizeof(double);      // A
     size += 1 * nv * ng * sizeof(double);      // C
     size += 1 * nv2 * ng2 * sizeof(double);    // CC
     size += 1 * nv * sizeof(double);           // g
     size += 1 * nv2 * sizeof(double);          // gg
     size += 2 * nv2 * sizeof(double);          // d_lb d_ub
     size += 1 * ne * sizeof(double);           // b
-    size += 2 * nb * sizeof(double);           // d_lb0 d_ub0
+    size += 2 * nb2 * sizeof(double);          // d_lb0 d_ub0
     size += 2 * ng * sizeof(double);           // d_lg0 d_ug0
     size += 2 * ng2 * sizeof(double);          // d_lg d_ug
     size += 1 * nb * sizeof(int);              // idxb
+    size += 1 * nb2 * sizeof(int);             // idxb_stacked
     size += 1 * ns * sizeof(int);              // idxs
     size += 1 * nv2 * sizeof(double);          // prim_sol
     size += 1 * (nv2 + ng2) * sizeof(double);  // dual_sol
     size += 6 * ns * sizeof(double);           // Zl, Zu, zl, zu, d_ls, d_us
+
+    if (ns > 0)
+    {
+        dense_qp_stack_slacks_dims(dims, &dims_stacked);
+        size += dense_qp_in_calculate_size(config_, &dims_stacked);
+    }
 
     if (ng > 0 || ns > 0)  // QProblem
         size += QProblem_calculateMemorySize(nv2, ng2);
@@ -160,6 +172,7 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
                                      void *raw_memory)
 {
     dense_qp_qpoases_memory *mem;
+    dense_qp_dims dims_stacked;
 
     int nv  = dims->nv;
     int ne  = dims->ne;
@@ -171,6 +184,7 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
 
     int nv2 = nv + 2*ns;
     int ng2 = (ns > 0) ? 2*(ng + nsb) : ng;
+    int nb2 = nb - nsb + 2 * ns;
 
     // char pointer
     char *c_ptr = (char *) raw_memory;
@@ -178,34 +192,46 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     mem = (dense_qp_qpoases_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_memory);
 
-    assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
+    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
+    if (ns > 0)
+    {
+        dense_qp_stack_slacks_dims(dims, &dims_stacked);
+        mem->qp_stacked = dense_qp_in_assign(config_, &dims_stacked, c_ptr);
+        c_ptr += dense_qp_in_calculate_size(config_, &dims_stacked);
+    }
+    else
+    {
+        mem->qp_stacked = NULL;
+    }
+
+    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     assign_and_advance_double(nv * nv, &mem->H, &c_ptr);
     assign_and_advance_double(nv2 * nv2, &mem->HH, &c_ptr);
     assign_and_advance_double(nv2 * nv2, &mem->R, &c_ptr);
-    assign_and_advance_double(nv * ne, &mem->A, &c_ptr);
+    assign_and_advance_double(nv2 * ne, &mem->A, &c_ptr);
     assign_and_advance_double(nv * ng, &mem->C, &c_ptr);
     assign_and_advance_double(nv2 * ng2, &mem->CC, &c_ptr);
     assign_and_advance_double(nv, &mem->g, &c_ptr);
     assign_and_advance_double(nv2, &mem->gg, &c_ptr);
     assign_and_advance_double(ne, &mem->b, &c_ptr);
-    assign_and_advance_double(nb, &mem->d_lb0, &c_ptr);
-    assign_and_advance_double(nb, &mem->d_ub0, &c_ptr);
+    assign_and_advance_double(nb2, &mem->d_lb0, &c_ptr);
+    assign_and_advance_double(nb2, &mem->d_ub0, &c_ptr);
     assign_and_advance_double(nv2, &mem->d_lb, &c_ptr);
     assign_and_advance_double(nv2, &mem->d_ub, &c_ptr);
     assign_and_advance_double(ng, &mem->d_lg0, &c_ptr);
     assign_and_advance_double(ng, &mem->d_ug0, &c_ptr);
     assign_and_advance_double(ng2, &mem->d_lg, &c_ptr);
     assign_and_advance_double(ng2, &mem->d_ug, &c_ptr);
+    assign_and_advance_double(ns, &mem->d_ls, &c_ptr);
+    assign_and_advance_double(ns, &mem->d_us, &c_ptr);
     assign_and_advance_double(ns, &mem->Zl, &c_ptr);
     assign_and_advance_double(ns, &mem->Zu, &c_ptr);
     assign_and_advance_double(ns, &mem->zl, &c_ptr);
     assign_and_advance_double(ns, &mem->zu, &c_ptr);
-    assign_and_advance_double(ns, &mem->d_ls, &c_ptr);
-    assign_and_advance_double(ns, &mem->d_us, &c_ptr);
     assign_and_advance_double(nv2, &mem->prim_sol, &c_ptr);
     assign_and_advance_double(nv2 + ng2, &mem->dual_sol, &c_ptr);
-
 
     // TODO(dimitris): update assign syntax in qpOASES
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
@@ -222,6 +248,7 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     }
 
     assign_and_advance_int(nb, &mem->idxb, &c_ptr);
+    assign_and_advance_int(nb2, &mem->idxb_stacked, &c_ptr);
     assign_and_advance_int(ns, &mem->idxs, &c_ptr);
 
     assert((char *) raw_memory + dense_qp_qpoases_memory_calculate_size(config_, dims, opts_) >=
@@ -254,6 +281,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
     acados_tic(&tot_timer);
     acados_tic(&interface_timer);
+    info->t_computed = 0;
 
     // cast structures
     dense_qp_qpoases_opts *opts = (dense_qp_qpoases_opts *) opts_;
@@ -276,18 +304,20 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     double *d_ug0 = memory->d_ug0;
     double *d_lg = memory->d_lg;
     double *d_ug = memory->d_ug;
-    double *d_ls = memory->d_ls;
-    double *d_us = memory->d_us;
     double *Zl = memory->Zl;
     double *Zu = memory->Zu;
     double *zl = memory->zl;
     double *zu = memory->zu;
+    double *d_ls = memory->d_ls;
+    double *d_us = memory->d_us;
     int *idxb = memory->idxb;
+    int *idxb_stacked = memory->idxb_stacked;
     int *idxs = memory->idxs;
     double *prim_sol = memory->prim_sol;
     double *dual_sol = memory->dual_sol;
     QProblemB *QPB = memory->QPB;
     QProblem *QP = memory->QP;
+    dense_qp_in *qp_stacked = memory->qp_stacked;
 
     // extract dense qp size
     int nv  = qp_in->dim->nv;
@@ -300,159 +330,72 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
     int nv2 = nv + 2*ns;
     int ng2 = (ns > 0) ? 2*(ng + nsb) : ng;
+    int nb2 = nb - nsb + 2 * ns;
 
     // fill in the upper triangular of H in dense_qp
     blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
-    // dense qp row-major
+    // extract data from qp_in in row-major
     d_cvt_dense_qp_to_rowmaj(qp_in, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg0, d_ug0,
-                             Zl, Zu, zl, zu, idxs, d_ls, d_us);
+                                 Zl, Zu, zl, zu, idxs, d_ls, d_us);
 
-    // in case ns > 0, slack variables are introduced, i.e. v2 = [v; sl; su]
     // reorder box constraints bounds
     for (int ii = 0; ii < nv2; ii++)
     {
         d_lb[ii] = -QPOASES_INFTY;
         d_ub[ii] = +QPOASES_INFTY;
     }
-    for (int ii = 0; ii < nb; ii++)
-    {
-        d_lb[idxb[ii]] = d_lb0[ii];
-        d_ub[idxb[ii]] = d_ub0[ii];
-    }
-
-    // if a box constraint is softened, remove it from box constraints bounds
-    for (int ii = 0; ii < ns; ii++)
-    {
-        int js = idxs[ii];
-
-        if (js < nb)
-        {
-            d_lb[idxb[js]] = -QPOASES_INFTY;
-            d_ub[idxb[js]] = +QPOASES_INFTY;
-        }
-    }
-
-    // copy d_ls and d_us to box constraints bounds
-    for (int ii = 0; ii < ns; ii++)
-    {
-        d_lb[nv+ii] = d_ls[ii];
-        d_lb[nv+ns+ii] = d_us[ii];
-
-        d_ub[nv+ii] = +QPOASES_INFTY;
-        d_ub[nv+ns+ii] = +QPOASES_INFTY;
-    }
 
     if (ns > 0)
     {
-        // in case ns > 0, HH = [H 0 0; 0 Zl 0; 0 0 Zu]
+        dense_qp_stack_slacks(qp_in, qp_stacked);
 
-        // initialize HH tp 0.0
-        for (int ii = 0; ii < nv2 * nv2; ii++) HH[ii] = 0.0;
+    #if 0
+        dense_qp_solver_plan plan;
+        plan.qp_solver = DENSE_QP_HPIPM;
 
-        // copy H to upper left corner of HH
-        for (int ii = 0; ii < nv; ii++)
+        qp_solver_config *config = dense_qp_config_create(&plan);
+        void *opts = dense_qp_opts_create(config, qp_stacked->dim);
+        dense_qp_out *out = dense_qp_out_create(config, qp_stacked->dim);
+        dense_qp_solver *qp_solver = dense_qp_create(config, qp_stacked->dim, opts);
+        int acados_return = dense_qp_solve(qp_solver, qp_stacked, out);
+
+        printf("v=\n");
+        blasfeo_print_exp_tran_dvec(nv2, out->v, 0);
+
+        printf("lam=\n");
+        blasfeo_print_exp_tran_dvec(2*qp_stacked->dim->nb + 2*qp_stacked->dim->ng, out->lam, 0);
+
+        double res[4];
+        dense_qp_inf_norm_residuals(qp_stacked->dim, qp_stacked, out, res);
+        printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
+
+        exit(1);
+    #endif
+
+        d_cvt_dense_qp_to_rowmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg, d_ug,
+                                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+        for (int ii = 0; ii < nb2; ii++)
         {
-            for (int jj = 0; jj < nv; jj++)
-            {
-                HH[jj + nv2*ii] = H[jj + nv*ii];
-            }
-        }
-
-        // copy Zl and Zu to the main diagonal of HH
-        for (int ii = 0; ii < ns; ii++)
-        {
-            int ll = ii + nv;
-            int uu = ii + nv + ns;
-
-            HH[ll + nv2*ll] = Zl[ii];
-            HH[uu + nv2*uu] = Zu[ii];
-        }
-
-        // in case ns > 0, gg = [g; zl; zu]
-        // copy g to gg
-        for (int ii = 0; ii < nv; ii++) gg[ii] = g[ii];
-
-        // copy zl and zu to gg
-        for (int ii = 0; ii < ns; ii++)
-        {
-            gg[ii+nv] = zl[ii];
-            gg[ii+nv+ns] = zu[ii];
-        }
-
-        for (int ii = 0; ii < ng2; ii++)
-        {
-            // initialize d_ug to 0.0
-            d_ug[ii] = 0.0;
-
-            // set d_lg[i] to -INFTY
-            d_lg[ii] = -QPOASES_INFTY;
-        }
-
-        // copy [d_ug0;-d_lg0] to d_ug
-        for (int ii = 0; ii < ng; ii++)
-        {
-            d_ug[ii] = d_ug0[ii];
-            d_ug[ii+ng] = -d_lg0[ii];
-        }
-
-        // in case ns > 0, CC contains softened box constraints and
-        // both regular and softened general constraints
-
-        // initialize CC to 0.0
-        for (int ii = 0; ii < nv2 * ng2; ii++) CC[ii] = 0.0;
-
-        // copy [C; -C] to upper left corner of CC
-        for (int ii = 0; ii < ng; ii++)
-        {
-            for (int jj = 0; jj < nv; jj++)
-            {
-                CC[jj + nv2*ii] = C[jj + nv*ii];
-                CC[jj + nv2*(ii+ng)] = -C[jj + nv*ii];
-            }
-        }
-
-        // insert soft constraints into CC
-        int k_sb = 0, k_sg = 0, row_b = 2*ng;
-        for (int ii = 0; ii < ns; ii++)
-        {
-            int js = idxs[ii];
-
-            if (js < nb)
-            {
-                // index of a soft box constraint
-                int jx = idxb[js];
-
-                // x_i - su_i <= ub_i
-                CC[jx + nv2*row_b] = 1.0;
-                CC[nv + ns + k_sb + nv2*row_b] = -1.0;
-                d_ug[row_b] = d_ub0[js];
-
-
-                // -x_i - sl_i <= -lb_i
-                CC[jx + nv2*row_b] = -1.0;
-                CC[nv + k_sb + nv2*(row_b+nsb)] = -1.0;
-                d_ug[row_b+nsb] = -d_lb0[js];
-
-                row_b++; k_sb++;
-            }
-            else
-            {
-                // index of a soft general constraint
-                int row_g = js - nb;
-
-                // C_i x - su_i <= ug_i
-                CC[nv + ns + nsb + k_sg + nv2*row_g] = -1.0;
-
-                row_g += ng;
-
-                // -C_i x - sl_i <= -lg_i
-                CC[nv + nsb + k_sg + nv2*row_g] = -1.0;
-
-                k_sg++;
-            }
+            d_lb[idxb_stacked[ii]] = d_lb0[ii];
+            d_ub[idxb_stacked[ii]] = d_ub0[ii];
         }
     }
+    else
+    {
+        for (int ii = 0; ii < nb; ii++)
+        {
+            d_lb[idxb[ii]] = d_lb0[ii];
+            d_ub[idxb[ii]] = d_ub0[ii];
+        }
+    }
+
+    // printf("d_lb =\n");
+    // for (int ii = 0; ii < nv2; ii++) printf("%e\n", d_lb[ii]);
+
+    // printf("d_ub =\n");
+    // for (int ii = 0; ii < nv2; ii++) printf("%e\n", d_ub[ii]);
 
     // cholesky factorization of H
     // blasfeo_dpotrf_l(nvd, qpd->Hv, 0, 0, sR, 0, 0);
@@ -626,6 +569,10 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
         }
     }
 
+    // printf("dual_sol=\n");
+    // for (int ii = 0; ii < nv2 + ng2; ii++) printf("%e\t", dual_sol[ii]);
+    // printf("\n");
+
     // save solution statistics to memory
     memory->cputime = cputime;
     memory->nwsr = nwsr;
@@ -651,31 +598,34 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
         if (js < nb)
         {
             // dual variables for softened upper box constraints
-            if (dual_sol[2*ng+k] <= 0.0)
-                qp_out->lam->pa[nb+ng+js] = -dual_sol[2*ng+k];
+            if (dual_sol[nv2 + 2*ng + k] <= 0.0)
+                qp_out->lam->pa[nb + ng + js] = -dual_sol[nv2 + 2*ng + k];
 
             // dual variables for softened lower box constraints
-            if (dual_sol[2*ng+nsb+k] <= 0.0)
-                qp_out->lam->pa[js] = -dual_sol[2*ng+nsb+k];
+            if (dual_sol[nv2 + 2*ng + nsb + k] <= 0.0)
+                qp_out->lam->pa[js] = -dual_sol[nv2 + 2*ng + nsb + k];
 
             k++;
         }
 
         // dual variables for sl >= d_ls
-        if (dual_sol[nv+ii] >= 0)
-            qp_out->lam->pa[2*nb+2*ng+ii] = dual_sol[nv+ii];
+        if (dual_sol[nv + ii] >= 0)
+            qp_out->lam->pa[2*nb + 2*ng + ii] = dual_sol[nv + ii];
 
         // dual variables for su >= d_us
-        if (dual_sol[nv+ns+ii] >= 0)
-            qp_out->lam->pa[2*nb+2*ng+ns+ii] = dual_sol[nv+ns+ii];
+        if (dual_sol[nv + ns + ii] >= 0)
+            qp_out->lam->pa[2*nb + 2*ng + ns + ii] = dual_sol[nv + ns + ii];
     }
 
     for (int ii = 0; ii < ng; ii++)
     {
-        if (dual_sol[nv2 + ii] >= 0.0)
-            qp_out->lam->pa[nb + ii] = dual_sol[nv2 + ii];
-        else
-            qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv2 + ii];
+        // dual variables for upper general constraints
+        if (dual_sol[nv2 + ii] <= 0.0)
+            qp_out->lam->pa[nb + ii] = -dual_sol[nv2 + ii];
+
+        // dual variables for lower general constraints
+        if (dual_sol[nv2 + ng + ii] <= 0.0)
+            qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv2 + ng + ii];
     }
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
@@ -684,12 +634,49 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     // compute slacks
     if (opts->compute_t)
     {
-        blasfeo_dvecex_sp(nb, 1.0, qp_in->idxb, qp_out->v, 0, qp_out->t, nb + ng);
-        blasfeo_dgemv_t(nv, ng, 1.0, qp_in->Ct, 0, 0, qp_out->v, 0, 0.0, qp_out->t, 2 * nb + ng,
-                        qp_out->t, 2 * nb + ng);
-        blasfeo_dveccpsc(nb + ng, -1.0, qp_out->t, nb + ng, qp_out->t, 0);
-        blasfeo_daxpy(2 * nb + 2 * ng, -1.0, qp_in->d, 0, qp_out->t, 0, qp_out->t, 0);
+        dense_qp_compute_t(qp_in, qp_out);
+        info->t_computed = 1;
     }
+
+    double res[4];
+    dense_qp_inf_norm_residuals(qp_in->dim, qp_in, qp_out, res);
+    printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
+
+    printf("status = %d\n", qpoases_status);
+
+#if 1
+    int nbd = qp_stacked->dim->nb;
+    int ngd = qp_stacked->dim->ng;
+    int nvd = qp_stacked->dim->nv;
+
+    dense_qp_out *out = dense_qp_out_create(config_, qp_stacked->dim);
+    blasfeo_pack_dvec(nvd, prim_sol, out->v, 0);
+    for (int ii = 0; ii < 2 * nbd + 2 * ngd; ii++) out->lam->pa[ii] = 0.0;
+    for (int ii = 0; ii < nbd; ii++)
+    {
+        if (dual_sol[idxb_stacked[ii]] >= 0.0)
+            out->lam->pa[ii] = dual_sol[idxb_stacked[ii]];
+        else
+            out->lam->pa[nbd + ngd + ii] = -dual_sol[idxb_stacked[ii]];
+    }
+    for (int ii = 0; ii < ngd; ii++)
+    {
+        if (dual_sol[nvd + ii] >= 0.0)
+            out->lam->pa[nbd + ii] = dual_sol[nvd + ii];
+        else
+            out->lam->pa[2 * nbd + ngd + ii] = -dual_sol[nvd + ii];
+    }
+
+    blasfeo_print_exp_tran_dvec(nvd, out->v, 0);
+    blasfeo_print_exp_tran_dvec(2*nbd+2*ngd, out->lam, 0);
+
+    dense_qp_compute_t(qp_stacked, out);
+
+    dense_qp_inf_norm_residuals(qp_stacked->dim, qp_stacked, out, res);
+    printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
+
+    exit(1);
+#endif
 
     int acados_status = qpoases_status;
     if (qpoases_status == SUCCESSFUL_RETURN) acados_status = ACADOS_SUCCESS;

@@ -183,6 +183,7 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     acados_timer tot_timer, qp_timer, interface_timer;
 
     acados_tic(&tot_timer);
+    info->t_computed = 0;
 
     // cast structures
     dense_qp_qore_opts *opts = (dense_qp_qore_opts *) opts_;

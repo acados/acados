@@ -163,6 +163,7 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     info->interface_time = 0;  // there are no conversions for hpipm
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = memory->hpipm_workspace->iter;
+    info->t_computed = 1;
 
     // check exit conditions
     int acados_status = hpipm_status;
