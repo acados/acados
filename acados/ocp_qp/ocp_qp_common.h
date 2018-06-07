@@ -90,6 +90,7 @@ typedef struct
     double interface_time;
     double total_time;
     int num_iter;
+    int t_computed;
 } ocp_qp_info;
 
 //

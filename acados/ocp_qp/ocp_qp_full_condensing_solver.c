@@ -271,6 +271,7 @@ int ocp_qp_full_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out *q
     info->solve_QP_time = ((dense_qp_info *) (memory->qpd_out->misc))->solve_QP_time;
     info->interface_time = ((dense_qp_info *) (memory->qpd_out->misc))->interface_time;
     info->num_iter = ((dense_qp_info *) (memory->qpd_out->misc))->num_iter;
+    info->t_computed = ((dense_qp_info *) (memory->qpd_out->misc))->t_computed;
 
     return solver_status;
 }
