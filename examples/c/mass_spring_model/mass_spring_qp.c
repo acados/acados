@@ -187,6 +187,9 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, in
 		dims->nb[ii] = nb[ii];
 		dims->ng[ii] = ng[ii];
 		dims->ns[ii] = ns[ii];
+        dims->nsbx[ii] = ns[ii];
+        dims->nsbu[ii] = ns[ii];
+        dims->nsg[ii] = ns[ii];
 		dims->nbu[ii] = nbu[ii];
 		dims->nbx[ii] = nbx[ii];
 	}
@@ -653,6 +656,9 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_,
 		dims->nb[ii] = nb[ii];
 		dims->ng[ii] = ng[ii];
 		dims->ns[ii] = ns[ii];
+        dims->nsbx[ii] = nbx[ii];
+        dims->nsbu[ii] = 0;
+        dims->nsg[ii] = ng[ii];
 		dims->nbu[ii] = nbu[ii];
 		dims->nbx[ii] = nbx[ii];
 	}

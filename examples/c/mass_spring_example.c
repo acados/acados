@@ -45,9 +45,9 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_
 
 #define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
-//#define SOFT_CONSTRAINTS
+#define SOFT_CONSTRAINTS
 
-#define NREP 100
+#define NREP 1
 
 int main() {
     printf("\n");
@@ -92,7 +92,7 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15, 5, 3};
 
-    int ii_max = 6;
+    int ii_max = 2;
 
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
@@ -111,16 +111,16 @@ int main() {
     // choose ocp qp solvers
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
-		PARTIAL_CONDENSING_HPIPM,
+		// PARTIAL_CONDENSING_HPIPM,
         #ifdef ACADOS_WITH_HPMPC
-        PARTIAL_CONDENSING_HPMPC,
+        // PARTIAL_CONDENSING_HPMPC,
         #endif
         #ifdef ACADOS_WITH_QPDUNES
-        PARTIAL_CONDENSING_QPDUNES,
+        // PARTIAL_CONDENSING_QPDUNES,
         #endif
         FULL_CONDENSING_HPIPM,
         #ifdef ACADOS_WITH_QORE
-        FULL_CONDENSING_QORE,
+        // FULL_CONDENSING_QORE,
         #endif
         #ifdef ACADOS_WITH_QPOASES
         FULL_CONDENSING_QPOASES,
@@ -284,7 +284,7 @@ int main() {
              * print solution
              ************************************************/
 
-// 		print_ocp_qp_out(qp_out);
+		    print_ocp_qp_out(qp_out);
 
             /************************************************
              * compute infinity norm of residuals
