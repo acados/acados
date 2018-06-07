@@ -32,6 +32,41 @@ extern "C" {
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
 
+
+
+/************************************************
+ * config
+ ************************************************/
+
+typedef struct
+{
+    int N;  // number of stages
+
+    // all the others
+    int (*opts_calculate_size)(void *config, void *dims);
+    void *(*opts_assign)(void *config, void *dims, void *raw_memory);
+    void (*opts_initialize_default)(void *config, void *dims, void *opts_);
+    void (*opts_update)(void *config, void *dims, void *opts_);
+    int (*memory_calculate_size)(void *config, void *dims, void *opts_);
+    void *(*memory_assign)(void *config, void *dims, void *opts_, void *raw_memory);
+    int (*workspace_calculate_size)(void *config, void *dims, void *opts_);
+    int (*evaluate)(void *config, void *dims, void *qp_in, void *qp_out,
+                    void *opts_, void *mem, void *work);
+    void (*config_initialize_default)(void *config);
+    ocp_qp_xcond_solver_config *qp_solver;
+    //    sim_solver_config **sim_solvers;
+    ocp_nlp_dynamics_config **dynamics;
+    ocp_nlp_cost_config **cost;
+    ocp_nlp_constraints_config **constraints;
+} ocp_nlp_solver_config;
+
+//
+int ocp_nlp_solver_config_calculate_size(int N);
+//
+ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory);
+
+
+
 /************************************************
  * dims
  ************************************************/
@@ -61,6 +96,8 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
 void ocp_nlp_dims_initialize(void *config, int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng,
                              int *nh, int *nq, int *ns, ocp_nlp_dims *dims);
 
+
+
 /************************************************
  * in
  ************************************************/
@@ -73,6 +110,13 @@ typedef struct
     void **dynamics;
     void **constraints;
 } ocp_nlp_in;
+
+//
+int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
+
+
 
 /************************************************
  * out
@@ -89,6 +133,14 @@ typedef struct
     double inf_norm_res;
 } ocp_nlp_out;
 
+//
+int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+                                void *raw_memory);
+
+
+
 /************************************************
  * memory TODO move to sqp ???
  ************************************************/
@@ -101,6 +153,14 @@ typedef struct
     struct blasfeo_dvec *dyn_fun;
     struct blasfeo_dvec *dyn_adj;
 } ocp_nlp_memory;
+
+//
+int ocp_nlp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+                                      void *raw_memory);
+
+
 
 /************************************************
  * residuals
@@ -119,78 +179,6 @@ typedef struct
     int memsize;
 } ocp_nlp_res;
 
-/************************************************
- * config
- ************************************************/
-
-typedef struct
-{
-    int N;  // number of stages
-
-    // all the others
-    int (*opts_calculate_size)(void *config, ocp_nlp_dims *dims);
-    void *(*opts_assign)(void *config, ocp_nlp_dims *dims, void *raw_memory);
-    void (*opts_initialize_default)(void *config, ocp_nlp_dims *dims, void *opts_);
-    void (*opts_update)(void *config, ocp_nlp_dims *dims, void *opts_);
-    int (*memory_calculate_size)(void *config, ocp_nlp_dims *dims, void *opts_);
-    void *(*memory_assign)(void *config, ocp_nlp_dims *dims, void *opts_, void *raw_memory);
-    int (*workspace_calculate_size)(void *config, ocp_nlp_dims *dims, void *opts_);
-    int (*evaluate)(void *config, ocp_nlp_dims *dims, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out,
-                    void *opts_, void *mem, void *work);
-    void (*config_initialize_default)(void *config);
-    ocp_qp_xcond_solver_config *qp_solver;
-    //    sim_solver_config **sim_solvers;
-    ocp_nlp_dynamics_config **dynamics;
-    ocp_nlp_cost_config **cost;
-    ocp_nlp_constraints_config **constraints;
-} ocp_nlp_solver_config;
-
-/************************************************
- * headers
- ************************************************/
-
-/************************************************
- * config
- ************************************************/
-
-//
-int ocp_nlp_solver_config_calculate_size(int N);
-//
-ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory);
-
-/************************************************
- * in
- ************************************************/
-
-//
-int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
-//
-ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
-
-/************************************************
- * out
- ************************************************/
-
-//
-int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
-//
-ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
-                                void *raw_memory);
-
-/************************************************
- * memory
- ************************************************/
-
-//
-int ocp_nlp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
-//
-ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
-                                      void *raw_memory);
-
-/************************************************
- * residuals
- ************************************************/
-
 //
 int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
 //
@@ -198,6 +186,8 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
 //
 void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res,
                          ocp_nlp_memory *mem);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */
