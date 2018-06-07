@@ -236,7 +236,7 @@ int main() {
 #ifdef ACADOS_WITH_QPOASES
                 case FULL_CONDENSING_QPOASES:
                     printf("\nFull condensing + QPOASES:\n\n");
-                    // default options
+                    set_option_int(opts, "qpoases.warm_start", 0);
                     break;
 #endif
 #ifdef ACADOS_WITH_OOQP

@@ -76,8 +76,6 @@ mxClassID get_numeric_type() {
         return mxDOUBLE_CLASS;
     else if (typeid(T) == typeid(int_t))
         return mxDOUBLE_CLASS;
-    else if (typeid(T) == typeid(uint))
-        return mxDOUBLE_CLASS;
     throw std::invalid_argument("Matrix can only have integer or floating point entries");
     return mxUNKNOWN_CLASS;
 }
@@ -98,6 +96,10 @@ int get_numeric_type() {
 bool is_integer(const LangObject *input) {
 #if defined(SWIGMATLAB)
     if (!mxIsScalar(input) || !mxIsNumeric(input))
+        return false;
+    double input_as_double = mxGetScalar(input);
+    int input_as_int = mxGetScalar(input);
+    if ((double) input_as_int != input_as_double)
         return false;
     return true;
 #elif defined(SWIGPYTHON)
@@ -206,8 +208,10 @@ double *asDoublePointer(LangObject *input) {
     return (double *) mxGetData(input);
 #elif defined(SWIGPYTHON)
     PyObject *matrix = PyArray_FROM_OTF(input, NPY_FLOAT64, NPY_ARRAY_FARRAY_RO);
-    if (matrix == NULL)
+    if (matrix == NULL) {
+        PyErr_Print();
         throw std::runtime_error("Something went wrong while converting matrix");
+    }
     return (double *) PyArray_DATA((PyArrayObject *) matrix);
 #endif
 }
@@ -236,8 +240,10 @@ LangObject *new_matrix(std::pair<int, int> dimensions, const T *data) {
         npy_intp npy_dims[2] = {nb_rows, nb_cols};
         matrix = PyArray_NewFromDataF(2, npy_dims, data_copy);
     }
-    if (matrix == NULL)
+    if (matrix == NULL) {
+        PyErr_Print();
         throw std::runtime_error("Something went wrong while copying array");
+    }
     return matrix;
 #endif
 }
@@ -406,11 +412,31 @@ bool is_string(LangObject *input) {
 #endif
 }
 
+std::string string_from(LangObject *input) {
+    const char *string;
+#if defined(SWIGMATLAB)
+    string = mxArrayToUTF8String(input);
+    if (string == NULL)
+        throw std::runtime_error("Error during string conversion.");
+#elif defined(SWIGPYTHON)
+    string = PyUnicode_AsUTF8(input);
+#endif
+    return std::string(string);
+}
+
 bool is_boolean(LangObject *input) {
 #if defined(SWIGMATLAB)
     return mxIsLogicalScalar(input);
 #elif defined(SWIGPYTHON)
     return PyBool_Check(input);
+#endif
+}
+
+bool boolean_from(LangObject *input) {
+#if defined(SWIGMATLAB)
+    return mxIsLogicalScalarTrue(input);
+#elif defined(SWIGPYTHON)
+    return PyObject_IsTrue(input);
 #endif
 }
 
@@ -739,7 +765,7 @@ void fill_array_from(const LangObject *map, const char *key, int_t *array, int_t
     }
 }
 
-#include "acados_cpp/ocp_qp/options.hpp"
+#include "acados_cpp/options.hpp"
 
 namespace acados {
 
@@ -748,6 +774,8 @@ option_t *as_option_ptr(T val) {
     return new option<T>(val);
 }
 
+option_t *make_option_map(LangObject *val);
+
 template<>
 option_t *as_option_ptr(LangObject *val) {
     if (is_integer(val))
@@ -755,9 +783,33 @@ option_t *as_option_ptr(LangObject *val) {
     else if (is_real(val))
         return new option<double>(real_from(val));
     else if (is_boolean(val))
-        return new option<bool>(val);
+        return new option<bool>(boolean_from(val));
+    else if (is_string(val))
+        return new option<std::string>(string_from(val));
+    else if (is_map(val))
+        return make_option_map(val);
     else
         throw std::invalid_argument("Option does not have a valid type");
+}
+
+option_t *make_option_map(LangObject *val) {
+    std::map<std::string, option_t *> option_map;
+#if defined(SWIGMATLAB)
+    int num_fields = mxGetNumberOfFields(val);
+    for (int i = 0; i < num_fields; ++i) {
+        std::string field_name {mxGetFieldNameByNumber(val, i)};
+        option_map[field_name] = as_option_ptr(mxGetField(val, 0, field_name.c_str()));
+    }
+#elif defined(SWIGPYTHON)
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(val, &pos, &key, &value)) {
+        std::string field_name {PyUnicode_AsUTF8AndSize(key, NULL)};
+        option_map[field_name] = as_option_ptr(value);
+    }
+#endif
+    return new option<std::map<std::string, option_t *>>(option_map);
 }
 
 }  // namespace acados

@@ -76,20 +76,20 @@ typedef struct
     void **cost;
     void **dynamics;
     void **constraints;
-    ocp_qp_dims *qp_solver;  // xcond_solver inserad ???
-    int *nv;                 // number of primal variables (states+controls+slacks)
-    int *nx;                 // number of states
-    int *nu;                 // number of inputs
-    int *ni;                 // number of two-sided inequality constraints TODO make one-sided ???
+    ocp_qp_dims *qp_solver;  // xcond solver instead ??
+    int *nv;  // number of primal variables (states+controls+slacks)
+    int *nx;  // number of states
+    int *nu;  // number of inputs
+    int *ni;  // number of two-sided inequality constraints TODO make one-sided ???
     int N;
 } ocp_nlp_dims;
 
 //
-int ocp_nlp_dims_calculate_size_self(void *config);
+int ocp_nlp_dims_calculate_size_self(int N);
 //
 int ocp_nlp_dims_calculate_size(void *config);
 //
-ocp_nlp_dims *ocp_nlp_dims_assign_self(void *config, void *raw_memory);
+ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
 //
@@ -112,7 +112,11 @@ typedef struct
 } ocp_nlp_in;
 
 //
+int ocp_nlp_in_calculate_size_self(int N);
+//
 int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory);
 //
 ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
 
@@ -130,7 +134,9 @@ typedef struct
     struct blasfeo_dvec *t;
 
     int sqp_iter;
+    int qp_iter;
     double inf_norm_res;
+    double total_time;
 } ocp_nlp_out;
 
 //

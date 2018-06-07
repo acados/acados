@@ -611,7 +611,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
                                           (int *) fun->casadi_sparsity_in(ii));
                 break;
 
-            case IGNORE:
+            case IGNORE_ARGUMENT:
                 // do nothing
                 break;
 
@@ -658,7 +658,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
                                           (int *) fun->casadi_sparsity_out(ii), out[ii]);
                 break;
 
-            case IGNORE:
+            case IGNORE_ARGUMENT:
                 // do nothing
                 break;
 

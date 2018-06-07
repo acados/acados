@@ -23,7 +23,7 @@
 
 #include "acados_c/external_function_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
-#include "acados_c/options.h"
+#include "acados_c/options_interface.h"
 
 #define CASADI_WORK_FUNCTION_CAT(a) a##_work
 #define CASADI_SPARSITY_IN_FUNCTION_CAT(a) a##_sparsity_in

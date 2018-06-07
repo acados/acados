@@ -389,7 +389,7 @@ int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 
     int nX = nx * (1 + nf);  // (nx) for ODE and (nf*nx) for VDE
     int nhess = (nf + 1) * nf / 2;
-    uint num_steps = opts->num_steps;  // number of steps
+    int num_steps = opts->num_steps;  // number of steps
 
     int size = sizeof(sim_erk_workspace);
 

@@ -32,10 +32,9 @@ extern "C" {
 #define ACADOS_POS_INFTY +1.0e9
 
 typedef double real_t;
-typedef unsigned int uint;
 typedef int int_t;
 
-typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, int mem);
+typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, void* mem);
 
 // enum of return values
 enum return_values
