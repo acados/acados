@@ -32,7 +32,9 @@
 
 
 
-/* dims */
+/************************************************
+ * dims
+ ************************************************/
 
 int ocp_nlp_constraints_bgh_dims_calculate_size(void *config_)
 {
@@ -76,7 +78,9 @@ void ocp_nlp_constraints_bgh_dims_initialize(void *config_, void *dims_, int nx,
 
 
 
-/* model */
+/************************************************
+ * model
+ ************************************************/
 
 int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
 {
@@ -156,7 +160,9 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
 
 
 
-/* options */
+/************************************************
+ * options
+ ************************************************/
 
 int ocp_nlp_constraints_bgh_opts_calculate_size(void *config_, void *dims_)
 {
@@ -186,7 +192,9 @@ void *ocp_nlp_constraints_bgh_opts_assign(void *config_, void *dims_, void *raw_
 
 void ocp_nlp_constraints_bgh_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-    //  ocp_nlp_constraints_bgh_opts *opts = opts_;
+    ocp_nlp_constraints_bgh_opts *opts = opts_;
+
+	opts->compute_adj = 1;
 
     return;
 }
@@ -202,7 +210,9 @@ void ocp_nlp_constraints_bgh_opts_update(void *config_, void *dims_, void *opts_
 
 
 
-/* memory */
+/************************************************
+ * memory
+ ************************************************/
 
 int ocp_nlp_constraints_bgh_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
@@ -338,7 +348,9 @@ void ocp_nlp_constraints_bgh_memory_set_idxs_ptr(int *idxs, void *memory_)
 
 
 
-/* workspace */
+/************************************************
+ * workspace
+ ************************************************/
 
 int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
@@ -396,7 +408,9 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
 
 
 
-/* functions */
+/************************************************
+ * functions
+ ************************************************/
 
 void ocp_nlp_constraints_bgh_initialize(void *config_, void *dims_, void *model_, void *opts,
                                         void *memory_, void *work_)
@@ -440,6 +454,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
     ocp_nlp_constraints_bgh_model *model = model_;
+    ocp_nlp_constraints_bgh_opts *opts = opts_;
     ocp_nlp_constraints_bgh_memory *memory = memory_;
     ocp_nlp_constraints_bgh_workspace *work = work_;
 
@@ -502,16 +517,19 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
                   &memory->fun, 2 * nb + 2 * ng + 2 * nh);
 
     // nlp_mem: ineq_adj
-    blasfeo_dvecse(nu + nx + 2 * ns, 0.0, &memory->adj, 0);
-    blasfeo_daxpy(nb + ng + nh, -1.0, memory->lam, nb + ng + nh, memory->lam, 0, &work->tmp_ni, 0);
-    blasfeo_dvecad_sp(nb, 1.0, &work->tmp_ni, 0, model->idxb, &memory->adj, 0);
-    blasfeo_dgemv_n(nu + nx, ng + nh, 1.0, memory->DCt, 0, 0, &work->tmp_ni, nb, 1.0, &memory->adj,
-                    0, &memory->adj, 0);
-    // soft
-    blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, 0, &memory->adj, nu + nx);
-    blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb + ng + nh, &memory->adj, nu + nx + ns);
-    blasfeo_daxpy(2 * ns, 1.0, memory->lam, 2 * nb + 2 * ng + 2 * nh, &memory->adj, nu + nx,
-                  &memory->adj, nu + nx);
+	if (opts->compute_adj)
+	{
+		blasfeo_dvecse(nu + nx + 2 * ns, 0.0, &memory->adj, 0);
+		blasfeo_daxpy(nb + ng + nh, -1.0, memory->lam, nb + ng + nh, memory->lam, 0, &work->tmp_ni, 0);
+		blasfeo_dvecad_sp(nb, 1.0, &work->tmp_ni, 0, model->idxb, &memory->adj, 0);
+		blasfeo_dgemv_n(nu + nx, ng + nh, 1.0, memory->DCt, 0, 0, &work->tmp_ni, nb, 1.0, &memory->adj,
+						0, &memory->adj, 0);
+		// soft
+		blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, 0, &memory->adj, nu + nx);
+		blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb + ng + nh, &memory->adj, nu + nx + ns);
+		blasfeo_daxpy(2 * ns, 1.0, memory->lam, 2 * nb + 2 * ng + 2 * nh, &memory->adj, nu + nx,
+					  &memory->adj, nu + nx);
+	}
 
     return;
 }

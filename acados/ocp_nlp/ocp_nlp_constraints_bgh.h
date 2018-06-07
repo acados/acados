@@ -32,7 +32,9 @@ extern "C" {
 
 
 
-/* dims */
+/************************************************
+ * dims
+ ************************************************/
 
 typedef struct
 {
@@ -56,7 +58,9 @@ void ocp_nlp_constraints_bgh_dims_initialize(void *config, void *dims, int nx, i
 
 
 
-/* model */
+/************************************************
+ * model
+ ************************************************/
 
 typedef struct
 {
@@ -73,11 +77,15 @@ int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims, void *raw_memory);
 
-/* options */
+
+
+/************************************************
+ * options
+ ************************************************/
 
 typedef struct
 {
-    int dummy;  // so cmake is happy
+	int compute_adj;
 } ocp_nlp_constraints_bgh_opts;
 
 //
@@ -89,7 +97,11 @@ void ocp_nlp_constraints_bgh_opts_initialize_default(void *config, void *dims, v
 //
 void ocp_nlp_constraints_bgh_opts_update(void *config, void *dims, void *opts);
 
-/* memory */
+
+
+/************************************************
+ * memory
+ ************************************************/
 
 typedef struct
 {
@@ -121,7 +133,11 @@ void ocp_nlp_constraints_bgh_memory_set_idxb_ptr(int *idxb, void *memory_);
 //
 void ocp_nlp_constraints_bgh_memory_set_idxs_ptr(int *idxs, void *memory_);
 
-/* workspace */
+
+
+/************************************************
+ * workspace
+ ************************************************/
 
 typedef struct
 {
