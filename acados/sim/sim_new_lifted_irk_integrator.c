@@ -73,6 +73,12 @@ void sim_new_lifted_irk_set_nu(void *dims_, int nu)
     dims->nu = nu;
 }
 
+void sim_new_lifted_irk_set_nz(void *dims_, int nz)
+{
+    sim_new_lifted_irk_dims *dims = (sim_new_lifted_irk_dims *) dims_;
+    dims->nz = nz;
+}
+
 void sim_new_lifted_irk_get_nx(void *dims_, int *nx)
 {
     sim_new_lifted_irk_dims *dims = (sim_new_lifted_irk_dims *) dims_;
@@ -83,6 +89,12 @@ void sim_new_lifted_irk_get_nu(void *dims_, int *nu)
 {
     sim_new_lifted_irk_dims *dims = (sim_new_lifted_irk_dims *) dims_;
     *nu = dims->nu;
+}
+
+void sim_new_lifted_irk_get_nz(void *dims_, int *nz)
+{
+    sim_new_lifted_irk_dims *dims = (sim_new_lifted_irk_dims *) dims_;
+    *nz = dims->nz;
 }
 
 /************************************************
@@ -220,6 +232,8 @@ void sim_new_lifted_irk_opts_initialize_default(void *config_, void *dims_, void
     opts->sens_hess = false;
     opts->jac_reuse = false;
 
+    opts->output_z = false;
+    opts->sens_algebraic = false;
     return;
 }
 
@@ -467,12 +481,10 @@ static void *sim_new_lifted_irk_cast_workspace(void *config_, void *dims_, void 
 int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
                        void *work_)
 {
+    // typecasting
     sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
-
-    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
-
-    int ns = opts->ns;
+    sim_new_lifted_irk_memory *memory = (sim_new_lifted_irk_memory *) mem_;
 
     void *dims_ = in->dims;
     sim_new_lifted_irk_dims *dims = (sim_new_lifted_irk_dims *) dims_;
@@ -481,18 +493,30 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         (sim_new_lifted_irk_workspace *) sim_new_lifted_irk_cast_workspace(config, dims, opts,
                                                                            work_);
 
-    sim_new_lifted_irk_memory *memory = (sim_new_lifted_irk_memory *) mem_;
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nz = dims->nz;
+
+    int ns = opts->ns;
+
+    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
+
+    // assert - only use supported features
+    assert(nz == 0 && "nz should be zero - DAEs are not (yet) supported for this integrator");
+    assert(opts->output_z == false &&
+            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
+    assert(opts->sens_algebraic == false &&
+       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
 
     int ii, jj, ss;
     double a;
 
-    int nx = dims->nx;
-    int nu = dims->nu;
+
     double *x = in->x;
     double *u = in->u;
     double *S_forw_in = in->S_forw;
 
-    int newton_iter = opts->newton_iter;
+    // int newton_iter = opts->newton_iter; // not used; always 1 in lifted
     double *A_mat = opts->A_mat;
     double *b_vec = opts->b_vec;
     int num_steps = opts->num_steps;
@@ -581,7 +605,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         // reset value of JKf
         blasfeo_dgese(nx * ns, nx + nu, 0.0, &JKf[ss], 0, 0);
 
-        int iter;
         for (ii = 0; ii < ns; ii++)  // ii-th row of tableau
         {
             // take x(n); copy a strvec into a strvec
@@ -762,7 +785,9 @@ void sim_new_lifted_irk_config_initialize_default(void *config_)
     config->dims_assign = &sim_new_lifted_irk_dims_assign;
     config->set_nx = &sim_new_lifted_irk_set_nx;
     config->set_nu = &sim_new_lifted_irk_set_nu;
+    config->set_nz = &sim_new_lifted_irk_set_nz;
     config->get_nx = &sim_new_lifted_irk_get_nx;
     config->get_nu = &sim_new_lifted_irk_get_nu;
+    config->get_nz = &sim_new_lifted_irk_get_nz;
     return;
 }

@@ -68,11 +68,11 @@ sim_solver_t hashitsim(std::string const& inString)
 
 double sim_solver_tolerance(std::string const& inString)
 {
-    if (inString == "ERK") return 1e-13;
-    if (inString == "IRK") return 1e-13;
-    if (inString == "LIFTED_IRK") return 1e-13;
-    if (inString == "GNSF") return 1e-13;
-    if (inString == "NEW_LIFTED_IRK") return 1e-13;
+    if (inString == "ERK") return 1e-7;
+    if (inString == "IRK") return 1e-7;
+    if (inString == "LIFTED_IRK") return 1e-5;
+    if (inString == "GNSF") return 1e-7;
+    if (inString == "NEW_LIFTED_IRK") return 1e-5;
 
     return -1;
 }
@@ -270,8 +270,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     opts->sens_forw = true;
     opts->sens_adj = true;
 
-    sim_gnsf_dims *gnsf_dim;
-
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 5;  // number of newton iterations per integration step
     opts->num_steps = 10;  // number of steps
@@ -310,11 +308,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
         for (jj = 0; jj < nx; jj++)
             in->x[jj] = x_sim[ii*nx+jj];
 
-        // p
-        for (jj = 0; jj < 2; jj++)
-            in->u[jj] = u_sim[ii*2+jj];
+        // u
         for (jj = 0; jj < nu; jj++)
-            in->u[2+jj] = 0.1;
+            in->u[jj] = u_sim[ii*nu+jj];
 
         acados_return = sim_solve(sim_solver, in, out);
         REQUIRE(acados_return == 0);
@@ -407,9 +403,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                         // set additional dimensions
                         gnsf_dim = (sim_gnsf_dims *) dims;
-                              // declaration not allowed inside switch somehow
-                        gnsf_dim->nx = nx;
-                        gnsf_dim->nu = nu;
                         gnsf_dim->nx1 = nx;
                         gnsf_dim->nx2 = 0;
                         gnsf_dim->ny = nx;
@@ -511,7 +504,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         << opts->newton_iter << ")\n";
 
                 sim_solver = sim_create(config, dims, opts);
-                // sim_solver *le_sim_solver = (sim_solver *) sim_solver_;
+
                 int acados_return;
 
                 if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
@@ -525,11 +518,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                     for (jj = 0; jj < nx; jj++)
                         in->x[jj] = x_sim[ii*nx+jj];
 
-                    // p
-                    for (jj = 0; jj < 2; jj++)
-                        in->u[jj] = u_sim[ii*2+jj];
+                    // u
                     for (jj = 0; jj < nu; jj++)
-                        in->u[2+jj] = 0.1;
+                        in->u[jj] = u_sim[ii*nu+jj];
 
                     acados_return = sim_solve(sim_solver, in, out);
                     REQUIRE(acados_return == 0);
@@ -574,18 +565,17 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 * printing
                 ************************************************/
 
-                std::cout << "error_sim = " << max_error << ",\nerror_forw_sens = "
-                         << max_error_forw << ",\nerror_adj_sens = "
-                         << max_error_adj << "\n";
-                d_print_e_mat(nx, NF, &out->S_forw[0], 1);
-
+                std::cout  << "error_sim   = " << max_error << "\n";
+                std::cout  << "error_forw  = " << max_error_forw << "\n";
 
                 REQUIRE(max_error <= tol);
                 REQUIRE(max_error_forw <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
-                if ((plan.sim_solver != LIFTED_IRK) && (plan.sim_solver != NEW_LIFTED_IRK))
+                if ((plan.sim_solver != LIFTED_IRK) && (plan.sim_solver != NEW_LIFTED_IRK)){
+                    std::cout  << "error_adj   = " << max_error_adj  << "\n";
                     REQUIRE(max_error_adj <= tol);
+                }
 
 
                 free(config);
