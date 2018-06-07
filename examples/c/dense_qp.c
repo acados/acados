@@ -4,10 +4,14 @@
 #include <stdlib.h>
 #include <stddef.h>
 
+// acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/utils/print.h"
+#include "acados/utils/mem.h"
 #include "acados_c/dense_qp_interface.h"
+// hpipm
+#include "hpipm/include/hpipm_d_dense_qp_kkt.h"
 
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 

@@ -137,7 +137,7 @@ set(TEST_OCP_QP_SRC
 )
 
 
-set(TEST_SIM_SRC
+set(TEST_SIM_ODE_SRC
     ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_ode_fun.c
     ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_ode_jac.c
     ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_vde_for.c
@@ -151,9 +151,20 @@ set(TEST_SIM_SRC
     ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/phi_jac_y_uhat.c
     ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/f_lo_fun_jac_x1k1uz.c
     ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/get_matrices_fun.c
-    # ${PROJECT_SOURCE_DIR}/acados/sim/sim_gnsf.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/sim/sim_test.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/../test_utils/read_ocp_qp_in.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/sim/sim_test_ode.cpp
+)
+
+set(TEST_SIM_DAE_SRC
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_impl_ode_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_impl_ode_fun_jac_x_xdot.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_impl_ode_jac_x_xdot_u.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_impl_ode_fun_jac_x_xdot_u.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_phi_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_phi_fun_jac_y.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_phi_jac_y_uhat.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_f_lo_fun_jac_x1k1uz.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_get_matrices_fun.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/sim/sim_test_dae.cpp
 )
 
 # set(TEST_SIM_SRC
@@ -166,13 +177,12 @@ set(TEST_SIM_SRC
 # ) # TODO (dimitris): eliminate this at some point
 
 # Unit test executable
-# message("bla\n")
-# message(${TEST_SIM_SRC})
 add_executable(unit_tests
     ${PROJECT_SOURCE_DIR}/test/all_tests.cpp
     # $<TARGET_OBJECTS:ocp_nlp_gen>
     # $<TARGET_OBJECTS:ocp_qp_gen>
-    ${TEST_SIM_SRC}
+    ${TEST_SIM_DAE_SRC}
+    ${TEST_SIM_ODE_SRC}
     ${TEST_OCP_QP_SRC}
     ${TEST_OCP_NLP_SRC}
     # $<TARGET_OBJECTS:sim_gen>
