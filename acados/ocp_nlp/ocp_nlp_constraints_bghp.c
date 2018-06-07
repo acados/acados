@@ -511,7 +511,7 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
         ext_fun_in[0] = memory->ux;  // ux: nu+nx
 
         //
-        ext_fun_type_out[0] = IGNORE;
+        ext_fun_type_out[0] = IGNORE_ARGUMENT;
         //
         ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
         struct blasfeo_dmat_args Jp_args;
