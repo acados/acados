@@ -61,6 +61,7 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config, void *dims, int nx, int
 typedef struct
 {
     void *sim_solver;
+	int compute_adj;
 } ocp_nlp_dynamics_cont_opts;
 
 //

@@ -101,8 +101,9 @@ void *ocp_nlp_dynamics_disc_opts_assign(void *config_, void *dims_, void *raw_me
 
 void ocp_nlp_dynamics_disc_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-    // ocp_nlp_dynamics_config *config = config_;
-    // ocp_nlp_dynamics_disc_opts *opts = opts_;
+    ocp_nlp_dynamics_disc_opts *opts = opts_;
+
+	opts->compute_adj = 1;
 
     return;
 }
@@ -335,7 +336,7 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
 
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    // ocp_nlp_dynamics_disc_opts *opts = opts_;
+    ocp_nlp_dynamics_disc_opts *opts = opts_;
     ocp_nlp_dynamics_disc_workspace *work = work_;
     ocp_nlp_dynamics_disc_memory *mem = mem_;
     ocp_nlp_dynamics_disc_model *model = model_;
@@ -379,9 +380,12 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
 
     // adj TODO if not computed by the external function
-    blasfeo_dgemv_n(nu + nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj,
-                    0);
-    blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
+	if (opts->compute_adj)
+	{
+		blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj,
+						0);
+		blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
+	}
 
     return;
 }

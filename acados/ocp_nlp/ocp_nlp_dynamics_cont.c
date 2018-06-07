@@ -127,6 +127,8 @@ void ocp_nlp_dynamics_cont_opts_initialize_default(void *config_, void *dims_, v
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
 
+	opts->compute_adj = 1;
+
     config->sim_solver->opts_initialize_default(config->sim_solver, dims->sim, opts->sim_solver);
 
     return;
@@ -421,9 +423,12 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
 
     // adj TODO if not computed by the integrator
-    blasfeo_dgemv_n(nu + nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj,
-                    0);
-    blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
+	if (opts->compute_adj)
+	{
+		blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj,
+						0);
+		blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
+	}
 
     return;
 }

@@ -58,7 +58,7 @@ void ocp_nlp_dynamics_disc_dims_initialize(void *config, void *dims, int nx, int
 
 typedef struct
 {
-    int dummy;
+	int compute_adj;
 } ocp_nlp_dynamics_disc_opts;
 
 //

@@ -783,6 +783,7 @@ int main()
 		for (int i = 0; i < NN; ++i)
 		{
 			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_rti_opts->dynamics[i];
+			dynamics_stage_opts->compute_adj = 0;
 			sim_opts[i] = dynamics_stage_opts->sim_solver;
 		}
 
