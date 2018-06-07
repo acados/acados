@@ -604,7 +604,7 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
         c_butcher[ii] = c_vec[ii];
     }
 
-    // Build fat matrices AA1, AA2, ... , EE2, LLx, ..., LLZ, vectors cc1,cc2
+    // Build fat matrices AA1, AA2, ... , EE2, LLx, ..., LLZ, vectors cc1, cc2
     for (int ii = 0; ii < num_stages; ii++)
     {  // num_stages
         blasfeo_dgecp(nx1, nx1, &A1, 0, 0, &AA1, ii * nx1, 0);
@@ -697,12 +697,12 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
     blasfeo_dtrsm_lunn(nZ, nK1, 1.0, &EE2, 0, 0, &DD2, 0, 0, &DD2, 0, 0);
                                     // DD2 now contains EE2\DD2
 
-    blasfeo_dvecpe(nK2, ipivEE2, &cc2, 0);  // permute rhs
-    blasfeo_dtrsv_lnu(nK2, &EE2, 0, 0, &cc2, 0, &cc2, 0);
-    blasfeo_dtrsv_unn(nK2, &EE2, 0, 0, &cc2, 0, &cc2, 0);
+    blasfeo_dvecpe(nZ, ipivEE2, &cc2, 0);  // permute rhs
+    blasfeo_dtrsv_lnu(nZ, &EE2, 0, 0, &cc2, 0, &cc2, 0);
+    blasfeo_dtrsv_unn(nZ, &EE2, 0, 0, &cc2, 0, &cc2, 0);
     // cc2 now contains EE2\cc2
 
-    // Build and factorize QQ1
+    /* Build and factorize QQ1 */
     blasfeo_dgemm_nn(nZ, nZ, nK1, -1.0, &DD2, 0, 0, &DD1, 0, 0, 0.0, &QQ1, 0, 0, &QQ1, 0,
                      0);                                               // QQ1 = -DD2*DD1
     blasfeo_ddiare(nZ, 1.0, &QQ1, 0, 0);                               // add eye(nZ) to QQ1
@@ -884,7 +884,6 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
     }
 
     // double precomputation_time = acados_toc(&atimer) * 1000;
-
     // printf("time 2 precompute = %f [ms]\n", precomputation_time);
 }
 
@@ -1615,10 +1614,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             // set up res_val
             blasfeo_dveccpsc(nff, -1.0, &res_val, 0, &res_val,
                              0);  // set res_val = - res_val; NOW: res_val = -PHI_val;
-            blasfeo_dvecad(nff, 1.0, &ff_traj[ss], 0, &res_val, 0);  // set res_val = res_val +
-                                                                    // ff_traj; this is the actual
-                                                                    // value of the residual
-                                                                    // function
+            blasfeo_dvecad(nff, 1.0, &ff_traj[ss], 0, &res_val, 0);
+                    // set res_val = res_val + ff_traj;
+                    // this is the actual value of the residual function!
 
             acados_tic(&la_timer);
             // factorize J_r_ff
