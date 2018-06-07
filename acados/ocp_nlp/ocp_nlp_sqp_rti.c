@@ -184,7 +184,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
 
 
 
-void ocp_nlp_sqp_opts_rti_update(void *config_, void *dims_, void *opts_)
+void ocp_nlp_sqp_rti_opts_update(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_solver_config *config = config_;
