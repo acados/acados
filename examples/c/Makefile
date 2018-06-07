@@ -42,6 +42,7 @@ LIBS += -lblasfeo -lm -lblas -llapack
 # LDFLAGS += -pg
 
 EXAMPLES =
+EXAMPLES += dense_qp
 EXAMPLES += pendulum_scqp
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
@@ -62,6 +63,7 @@ examples: $(EXAMPLES)
 
 
 RUN_EXAMPLES =
+RUN_EXAMPLES += run_dense_qp
 RUN_EXAMPLES += run_pendulum_scqp
 RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
@@ -167,17 +169,17 @@ run_sim_wt_model_nx6:
 
 
 WT_NX6P2_OBJS =
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/expl_ode_fun.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/expl_vde_for.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun_jac_y.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_jac_y_uhat.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/get_matrices_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_expl_ode_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_expl_vde_for.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot_u.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_jac_x_xdot_u.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_phi_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_phi_fun_jac_y.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_phi_jac_y_uhat.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_f_lo_fun_jac_x1k1uz.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_get_matrices_fun.o
 
 wind_turbine_nmpc: $(WT_NX6P2_OBJS) wind_turbine_nmpc.o
 	$(CCC) -o wind_turbine_nmpc.out wind_turbine_nmpc.o  $(WT_NX6P2_OBJS) $(LDFLAGS) $(LIBS)
@@ -201,6 +203,12 @@ WT_OBJS += wt_model_nx3/expl_vde_adj.o
 WT_OBJS += wt_model_nx3/impl_ode_fun.o
 WT_OBJS += wt_model_nx3/impl_ode_fun_jac_x_xdot.o
 WT_OBJS += wt_model_nx3/impl_ode_jac_x_xdot_u.o
+WT_OBJS += wt_model_nx3/impl_ode_fun_jac_x_xdot_u.o
+WT_OBJS += wt_model_nx3/phi_fun.o
+WT_OBJS += wt_model_nx3/phi_fun_jac_y.o
+WT_OBJS += wt_model_nx3/phi_jac_y_uhat.o
+WT_OBJS += wt_model_nx3/f_lo_fun_jac_x1k1uz.o
+WT_OBJS += wt_model_nx3/get_matrices_fun.o
 
 sim_wt_model_nx3: $(WT_OBJS) sim_wt_model_nx3.o
 	$(CCC) -o sim_wt_model_nx3.out sim_wt_model_nx3.o  $(WT_OBJS) $(LDFLAGS) $(LIBS)
@@ -398,6 +406,24 @@ pendulum_scqp: $(PENDULUM_OBJS) pendulum_scqp.o
 
 run_pendulum_scqp:
 	./pendulum_scqp.out
+
+
+
+
+#################################################
+# dense qp
+#################################################
+
+DENSE_QP = 
+
+dense_qp: $(DENSE_QP) dense_qp.o
+	$(CXX) -o dense_qp.out $(DENSE_QP) dense_qp.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example dense_qp build complete."
+	@echo
+
+run_dense_qp:
+	./dense_qp.out
 
 
 

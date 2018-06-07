@@ -54,7 +54,6 @@ typedef struct
 {
     void *dims;
 
-    // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
     double *x;  // x[NX]
     double *u;  // u[NU]
 
@@ -81,6 +80,10 @@ typedef struct
     double *S_adj;   //
     double *S_hess;  //
 
+    double *zn;      // z - algebraic variables - value for start of simulation
+    double *S_algebraic;  // sensitivities of reported value of algebraic variables w.r.t.
+                          // initial stat & control (x_n,u)
+
     double *grad;  // gradient correction
 
     sim_info *info;
@@ -102,13 +105,16 @@ typedef struct
     bool sens_adj;
     bool sens_hess;
 
+    bool output_z;  // 1 -- if zn should be computed
+    bool sens_algebraic;    // 1 -- if S_algebraic should be computed
+
     // for explicit integrators: newton_iter == 0 && scheme == NULL
     // && jac_reuse=false
     int newton_iter;
     bool jac_reuse;
     Newton_scheme *scheme;
 
-    // work space
+    // workspace
     void *work;
 
 } sim_rk_opts;
@@ -129,10 +135,13 @@ typedef struct
     void (*config_initialize_default)(void *config);
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
+    // getters & setters
     void (*get_nx)(void *dims_, int *nx);
     void (*get_nu)(void *dims_, int *nu);
+    void (*get_nz)(void *dims_, int *nz);
     void (*set_nx)(void *dims_, int nx);
     void (*set_nu)(void *dims_, int nu);
+    void (*set_nz)(void *dims_, int nz);
 } sim_solver_config;
 
 //

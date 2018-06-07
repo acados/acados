@@ -375,8 +375,6 @@ int nlp_bounds_bgh_get(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_b
     }
 
     return status;
-
-    return status;
 }
 
 

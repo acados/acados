@@ -118,6 +118,12 @@ file(GLOB WT_MODEL_NX3_SRC
     wt_model_nx3/impl_ode_fun.c
     wt_model_nx3/impl_ode_fun_jac_x_xdot.c
     wt_model_nx3/impl_ode_jac_x_xdot_u.c
+    wt_model_nx3/impl_ode_fun_jac_x_xdot_u.c
+    wt_model_nx3/phi_fun.c
+    wt_model_nx3/phi_fun_jac_y.c
+    wt_model_nx3/phi_jac_y_uhat.c
+    wt_model_nx3/f_lo_fun_jac_x1k1uz.c
+    wt_model_nx3/get_matrices_fun.c
 )
 
 file(GLOB WT_MODEL_NX6_SRC
@@ -138,17 +144,17 @@ file(GLOB WT_MODEL_NX6_SRC
 )
 
 file(GLOB WT_MODEL_NX6P2_SRC
-    wt_model_nx6/nx6p2/expl_ode_fun.c
-    wt_model_nx6/nx6p2/expl_vde_for.c
-    wt_model_nx6/nx6p2/impl_ode_fun.c
-    wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.c
-    wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.c
-    wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.c
-    wt_model_nx6/nx6p2/phi_fun.c
-    wt_model_nx6/nx6p2/phi_fun_jac_y.c
-    wt_model_nx6/nx6p2/phi_jac_y_uhat.c
-    wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.c
-    wt_model_nx6/nx6p2/get_matrices_fun.c
+    wt_model_nx6/nx6p2/wt_nx6p2_expl_ode_fun.c
+    wt_model_nx6/nx6p2/wt_nx6p2_expl_vde_for.c
+    wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun.c
+    wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot.c
+    wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_jac_x_xdot_u.c
+    wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot_u.c
+    wt_model_nx6/nx6p2/wt_nx6p2_phi_fun.c
+    wt_model_nx6/nx6p2/wt_nx6p2_phi_fun_jac_y.c
+    wt_model_nx6/nx6p2/wt_nx6p2_phi_jac_y_uhat.c
+    wt_model_nx6/nx6p2/wt_nx6p2_f_lo_fun_jac_x1k1uz.c
+    wt_model_nx6/nx6p2/wt_nx6p2_get_matrices_fun.c
 )
 
 file(GLOB GNSF_CRANE_SRC
@@ -176,11 +182,10 @@ add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
 target_link_libraries(sim_wt_model_nx6 acados)
 add_test(sim_wt_model_nx6 sim_wt_model_nx6)
 
-if(ACADOS_WITH_C_INTERFACE)
-    add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
-    target_link_libraries(sim_gnsf_crane acados)
-    add_test(sim_gnsf_crane sim_gnsf_crane)
-endif()
+# -------------------- sim_gnsf_crane
+add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
+target_link_libraries(sim_gnsf_crane acados)
+add_test(sim_gnsf_crane sim_gnsf_crane)
 
 add_executable(pendulum_scqp pendulum_scqp.cpp
     pendulum_model/vde_forw_pendulum.c
