@@ -45,7 +45,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_
 
 #define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
-// #define SOFT_CONSTRAINTS
+#define SOFT_CONSTRAINTS
 
 #define NREP 1
 
