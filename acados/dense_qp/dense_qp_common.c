@@ -303,6 +303,10 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
     assert(nb2 == nb-nsb+2*ns && "Dimensions are wrong!");
     assert(ng2 == 2*ng+2*nsb && "Dimensions are wrong!");
 
+    // set matrice to 0.0
+    blasfeo_dgese(nv2, nv2, 0.0, out->Hv, 0, 0);
+    blasfeo_dgese(nv2, ng2, 0.0, out->Ct, 0, 0);
+
     // copy in->Hv to upper left corner of out->Hv, out->Hv = [in->Hv 0; 0 0]
     blasfeo_dgecp(nv, nv, in->Hv, 0, 0, out->Hv, 0, 0);
 
@@ -336,7 +340,7 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
             BLASFEO_DVECEL(out->m, ii) = 1.0;
         }
 
-        int k_sb = 0, k_sg = 0, col_b = 2*ng;
+        int k_s = 0, col_b = 2*ng;
         for (int ii = 0; ii < ns; ii++)
         {
             int js = idxs[ii];
@@ -351,15 +355,15 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
 
                 // insert softened box constraint into out->Ct, x_i - su_i <= ub_i
                 BLASFEO_DMATEL(out->Ct, jv, col_b) = 1.0;
-                BLASFEO_DMATEL(out->Ct, nv+ns+k_sb, col_b) = -1.0;
+                BLASFEO_DMATEL(out->Ct, nv+ns+k_s, col_b) = -1.0;
                 BLASFEO_DVECEL(out->d, 2*nb2+ng2+col_b) = -BLASFEO_DVECEL(in->d, nb+ng+js);
 
                 // insert softened box constraint into out->Ct, -x_i - sl_i <= -lb_i
                 BLASFEO_DMATEL(out->Ct, jv, col_b+nsb) = -1.0;
-                BLASFEO_DMATEL(out->Ct, nv+k_sb, col_b+nsb) = -1.0;
+                BLASFEO_DMATEL(out->Ct, nv+k_s, col_b+nsb) = -1.0;
                 BLASFEO_DVECEL(out->d, 2*nb2+ng2+col_b+nsb) = -BLASFEO_DVECEL(in->d, js);
 
-                col_b++; k_sb++;
+                col_b++;
             }
             else
             {
@@ -367,13 +371,13 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
                 int col_g = js - nb;
 
                 // C_i x - su_i <= ug_i
-                BLASFEO_DMATEL(out->Ct, nv + ns + nsb + k_sg, col_g) = -1.0;
-                col_g += ng;
+                BLASFEO_DMATEL(out->Ct, nv + ns + k_s, col_g) = -1.0;
 
                 // -C_i x - sl_i <= -lg_i
-                BLASFEO_DMATEL(out->Ct, nv + nsb + k_sg, col_g) = -1.0;
-                k_sg++;
+                BLASFEO_DMATEL(out->Ct, nv + k_s, col_g+ng) = -1.0;
             }
+
+            k_s++;
 
             // slack variables have box constraints
             out->idxb[nb-nsb+ii] = ii + nv;

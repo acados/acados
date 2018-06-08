@@ -619,13 +619,23 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
     for (int ii = 0; ii < ng; ii++)
     {
-        // dual variables for upper general constraints
-        if (dual_sol[nv2 + ii] <= 0.0)
-            qp_out->lam->pa[nb + ii] = -dual_sol[nv2 + ii];
+        if (ns > 0)
+        {
+            // dual variables for upper general constraints
+            if (dual_sol[nv2 + ii] <= 0.0)
+                qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv2 + ii];
 
-        // dual variables for lower general constraints
-        if (dual_sol[nv2 + ng + ii] <= 0.0)
-            qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv2 + ng + ii];
+            // dual variables for lower general constraints
+            if (dual_sol[nv2 + ng + ii] <= 0.0)
+                qp_out->lam->pa[nb + ii] = -dual_sol[nv2 + ng + ii];
+        }
+        else
+        {
+            if (dual_sol[nv + ii] >= 0.0)
+                qp_out->lam->pa[nb + ii] = dual_sol[nv + ii];
+            else
+                qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv + ii];
+        }
     }
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
@@ -638,13 +648,19 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
         info->t_computed = 1;
     }
 
-    double res[4];
-    dense_qp_inf_norm_residuals(qp_in->dim, qp_in, qp_out, res);
-    printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
+    // print_dense_qp_dims(qp_in->dim);
+    // printf("v=\n");
+    // blasfeo_print_exp_tran_dvec(nv+2*ns, qp_out->v, 0);
+    // printf("lam=\n");
+    // blasfeo_print_exp_tran_dvec(2*nb+2*ng+2*ns, qp_out->lam, 0);
 
-    printf("status = %d\n", qpoases_status);
+    // double res[4];
+    // dense_qp_inf_norm_residuals(qp_in->dim, qp_in, qp_out, res);
+    // printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
 
-#if 1
+    // printf("status = %d\n", qpoases_status);
+
+#if 0
     int nbd = qp_stacked->dim->nb;
     int ngd = qp_stacked->dim->ng;
     int nvd = qp_stacked->dim->nv;
