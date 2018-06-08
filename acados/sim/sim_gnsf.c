@@ -1828,10 +1828,10 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             blasfeo_dgecp(nx, nx + nu, &S_forw_new, 0, 0, &S_forw, 0, 0);
         }
 
-        // propagate sensitivities of z
-        if (ss == 0)  // output z and propagate corresponding sensitivities
+/* output z and propagate corresponding sensitivities */
+        if (ss == 0)
         {
-            // get output value for algebraic states z
+        /* get output value for algebraic states z */
             if (opts->output_z || opts->sens_algebraic)
             {
                 for (int ii = 0; ii < nz; ii++)  // ith component of z
@@ -1846,7 +1846,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 }
             }
 
-            // propagate sensitivities of z
+        /* propagate sensitivities of z */
             if (opts->sens_algebraic)
             {
                 for (int ii = 0; ii < nx1; ii++)  // ith component of x0dot_1
@@ -1881,8 +1881,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 phi_type_in[0] = BLASFEO_DVEC;
                 phi_in[0] = &y_one_stage;
 
-                // printf("y_one_stage =  \n");
-                // blasfeo_print_exp_tran_dvec(ny, &y_one_stage, 0);
+                printf("y_one_stage =  \n");
+                blasfeo_print_exp_tran_dvec(ny, &y_one_stage, 0);
                 // printf("z0 =  \n");
                 // blasfeo_print_exp_tran_dvec(nz, &z0, 0);
 
@@ -1932,9 +1932,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
 
 
-    /************************************************
-     * ADJOINT SENSITIVITY PROPAGATION
-     ************************************************/
+/************************************************
+ * ADJOINT SENSITIVITY PROPAGATION
+ ************************************************/
 
     if (opts->sens_adj)
     {
@@ -2053,6 +2053,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                             &lambda, nx);
         }
     }
+/* unpack */
     blasfeo_unpack_dvec(nx, &x0_traj, nx * num_steps, out->xn);
     blasfeo_unpack_dmat(nx, nx + nu, &S_forw, 0, 0, out->S_forw, nx);
     blasfeo_unpack_dvec(nx + nu, &lambda, 0, out->S_adj);
