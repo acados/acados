@@ -252,8 +252,14 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, i
     ng[N] = ngN;
 
 	int ns[N+1];
+    int nsbx[N+1];
+    int nsbu[N+1];
+    int nsg[N+1];
 	for (int ii = 0; ii <= N; ii++) {
         ns[ii] = 0;
+        nsbx[ii] = 0;
+        nsbu[ii] = 0;
+        nsg[ii] = 0;
     }
 
 //    printf("Test problem: mass-spring system with %d masses and %d controls.\n\n", nx_ / 2, nu_);
@@ -530,6 +536,9 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, i
     dims.nb = nb;
     dims.ng = ng;
     dims.ns = ns;
+    dims.nsbx = nsbx;
+    dims.nsbu = nsbu;
+    dims.nsg = nsg;
     dims.nbu = nbu;
     dims.nbx = nbx;
 

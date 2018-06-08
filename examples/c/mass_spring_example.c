@@ -92,7 +92,7 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15, 5, 3};
 
-    int ii_max = 2;
+    int ii_max = 3;
 
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
@@ -111,7 +111,7 @@ int main() {
     // choose ocp qp solvers
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
-		// PARTIAL_CONDENSING_HPIPM,
+		PARTIAL_CONDENSING_HPIPM,
         #ifdef ACADOS_WITH_HPMPC
         // PARTIAL_CONDENSING_HPMPC,
         #endif
