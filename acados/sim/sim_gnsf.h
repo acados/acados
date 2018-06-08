@@ -166,7 +166,6 @@ typedef struct
 
     struct blasfeo_dmat J_r_ff;
     struct blasfeo_dmat J_r_x1u;
-    struct blasfeo_dmat dz0_dx1u;  // (nz) * (nx1+nu);
 
     struct blasfeo_dmat dK1_dx1;
     struct blasfeo_dmat dK1_du;
@@ -189,6 +188,11 @@ typedef struct
     struct blasfeo_dmat dPsi_du;
 
     struct blasfeo_dmat dPHI_dyuhat;
+
+    // memory only available if (opts->sens_algebraic)
+    struct blasfeo_dvec x0dot_1;
+    struct blasfeo_dvec z0;
+    struct blasfeo_dmat dz0_dx1u;  // (nz) * (nx1+nu);
 
 } gnsf_workspace;
 
