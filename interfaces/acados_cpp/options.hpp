@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef INTERFACES_ACADOS_CPP_OCP_QP_OPTIONS_HPP_
-#define INTERFACES_ACADOS_CPP_OCP_QP_OPTIONS_HPP_
+#ifndef INTERFACES_ACADOS_CPP_OPTIONS_HPP_
+#define INTERFACES_ACADOS_CPP_OPTIONS_HPP_
 
 #include <map>
 #include <string>
@@ -54,6 +54,11 @@ class option_t
     virtual ~option_t() = default;
 };
 
+void flatten(std::map<std::string, option_t *> &input, std::map<std::string, option_t *> &output);
+
+void process_options(std::string solver_name, std::map<std::string, option_t *> &options,
+                     void *args);
+
 template <typename T>
 class option : public option_t
 {
@@ -70,6 +75,24 @@ class option : public option_t
 
  private:
     T value;
+};
+
+template <>
+class option<std::string> : public option_t
+{
+ public:
+    explicit option(std::string val) : value(val) {}
+
+    inline std::string repr() override { return value; }
+
+    inline int as_int() override { return 0; }
+
+    inline double as_double() override { return 0; }
+
+    ~option() override = default;
+
+ private:
+    std::string value;
 };
 
 template <>
@@ -90,11 +113,7 @@ class option<std::map<std::string, option_t *>> : public option_t
     std::map<std::string, option_t *> value;
 };
 
-}  // namespace acados
-
-namespace std
-{
-inline string to_string(acados::option_t *opt) { return opt->repr(); }
+inline std::string to_string(acados::option_t *opt) { return opt->repr(); }
 
 inline int to_int(acados::option_t *opt) { return opt->as_int(); }
 
@@ -105,6 +124,6 @@ inline std::map<std::string, acados::option_t *> &to_map(acados::option_t *opt)
     return opt->as_map();
 }
 
-}  // namespace std
+}  // namespace acados
 
-#endif  // INTERFACES_ACADOS_CPP_OCP_QP_OPTIONS_HPP_
+#endif  // INTERFACES_ACADOS_CPP_OPTIONS_HPP_

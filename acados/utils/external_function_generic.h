@@ -38,7 +38,7 @@ typedef enum {
     COLMAJ_ARGS,
     BLASFEO_DMAT_ARGS,
     BLASFEO_DVEC_ARGS,
-    IGNORE
+    IGNORE_ARGUMENT
 } ext_fun_arg_t;
 
 struct colmaj_args

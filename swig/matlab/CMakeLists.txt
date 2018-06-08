@@ -1,13 +1,5 @@
 find_package(Matlab COMPONENTS MX_LIBRARY ENG_LIBRARY REQUIRED)
-find_package(CasadiMatlab REQUIRED)
-
-if(CASADIMATLAB_FOUND)
-    add_library(casadi_matlab UNKNOWN IMPORTED)
-    set_property(TARGET casadi_matlab PROPERTY IMPORTED_LOCATION "${CASADI_MATLAB_LIBRARY}")
-    include_directories("${CASADI_MATLAB_INCLUDE_DIR}")
-    get_filename_component(CASADI_MATLAB_LIBRARY_DIR "${CASADI_MATLAB_LIBRARY}" DIRECTORY)
-    list(APPEND CMAKE_INSTALL_RPATH "${CASADI_MATLAB_LIBRARY_DIR}")
-endif()
+find_package(Casadi REQUIRED)
 
 set_source_files_properties(../acados.i PROPERTIES CPLUSPLUS ON)
 
@@ -26,7 +18,7 @@ else()
     add_library(acadosMATLAB MODULE ${MEX_FILE})
 endif()
 target_include_directories(acadosMATLAB PUBLIC ${Matlab_INCLUDE_DIRS})
-target_link_libraries(acadosMATLAB acados casadi_matlab ${Matlab_LIBRARIES})
+target_link_libraries(acadosMATLAB acados casadi ${Matlab_LIBRARIES})
 set_target_properties(acadosMATLAB
     PROPERTIES
         OUTPUT_NAME "acadosMEX"

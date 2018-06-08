@@ -69,9 +69,9 @@ typedef struct
 } ocp_nlp_constraints_bgh_model;
 
 //
-int ocp_nlp_constraints_bgh_calculate_size(void *config, void *dims);
+int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_constraints_bgh_assign(void *config, void *dims, void *raw_memory);
+void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims, void *raw_memory);
 
 /* options */
 

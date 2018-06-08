@@ -92,7 +92,7 @@ void dense_qp_qpoases_opts_initialize_default(void *config_, dense_qp_dims *dims
     dense_qp_qpoases_opts *opts = (dense_qp_qpoases_opts *) opts_;
 
     opts->max_cputime = 1000.0;
-    opts->warm_start = 0;
+    opts->warm_start = 1;
     opts->max_nwsr = 1000;
     opts->use_precomputed_cholesky = 0;
     opts->hotstart = 0;
