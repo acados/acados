@@ -349,30 +349,6 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     if (ns > 0)
     {
         dense_qp_stack_slacks(qp_in, qp_stacked);
-
-    #if 0
-        dense_qp_solver_plan plan;
-        plan.qp_solver = DENSE_QP_HPIPM;
-
-        qp_solver_config *config = dense_qp_config_create(&plan);
-        void *opts = dense_qp_opts_create(config, qp_stacked->dim);
-        dense_qp_out *out = dense_qp_out_create(config, qp_stacked->dim);
-        dense_qp_solver *qp_solver = dense_qp_create(config, qp_stacked->dim, opts);
-        int acados_return = dense_qp_solve(qp_solver, qp_stacked, out);
-
-        printf("v=\n");
-        blasfeo_print_exp_tran_dvec(nv2, out->v, 0);
-
-        printf("lam=\n");
-        blasfeo_print_exp_tran_dvec(2*qp_stacked->dim->nb + 2*qp_stacked->dim->ng, out->lam, 0);
-
-        double res[4];
-        dense_qp_inf_norm_residuals(qp_stacked->dim, qp_stacked, out, res);
-        printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
-
-        exit(1);
-    #endif
-
         d_cvt_dense_qp_to_rowmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg, d_ug,
                                 NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
@@ -390,12 +366,6 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             d_ub[idxb[ii]] = d_ub0[ii];
         }
     }
-
-    // printf("d_lb =\n");
-    // for (int ii = 0; ii < nv2; ii++) printf("%e\n", d_lb[ii]);
-
-    // printf("d_ub =\n");
-    // for (int ii = 0; ii < nv2; ii++) printf("%e\n", d_ub[ii]);
 
     // cholesky factorization of H
     // blasfeo_dpotrf_l(nvd, qpd->Hv, 0, 0, sR, 0, 0);
@@ -569,17 +539,13 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
         }
     }
 
-    // printf("dual_sol=\n");
-    // for (int ii = 0; ii < nv2 + ng2; ii++) printf("%e\t", dual_sol[ii]);
-    // printf("\n");
-
     // save solution statistics to memory
     memory->cputime = cputime;
     memory->nwsr = nwsr;
     info->solve_QP_time = acados_toc(&qp_timer);
 
     acados_tic(&interface_timer);
-    // copy prim_sol and dual_sol to qpd_sol
+    // copy prim_sol and dual_sol to qp_out
     blasfeo_pack_dvec(nv2, prim_sol, qp_out->v, 0);
     for (int ii = 0; ii < 2 * nb + 2 * ng + 2 * ns; ii++) qp_out->lam->pa[ii] = 0.0;
     for (int ii = 0; ii < nb; ii++)
@@ -647,52 +613,6 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
         dense_qp_compute_t(qp_in, qp_out);
         info->t_computed = 1;
     }
-
-    // print_dense_qp_dims(qp_in->dim);
-    // printf("v=\n");
-    // blasfeo_print_exp_tran_dvec(nv+2*ns, qp_out->v, 0);
-    // printf("lam=\n");
-    // blasfeo_print_exp_tran_dvec(2*nb+2*ng+2*ns, qp_out->lam, 0);
-
-    // double res[4];
-    // dense_qp_inf_norm_residuals(qp_in->dim, qp_in, qp_out, res);
-    // printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
-
-    // printf("status = %d\n", qpoases_status);
-
-#if 0
-    int nbd = qp_stacked->dim->nb;
-    int ngd = qp_stacked->dim->ng;
-    int nvd = qp_stacked->dim->nv;
-
-    dense_qp_out *out = dense_qp_out_create(config_, qp_stacked->dim);
-    blasfeo_pack_dvec(nvd, prim_sol, out->v, 0);
-    for (int ii = 0; ii < 2 * nbd + 2 * ngd; ii++) out->lam->pa[ii] = 0.0;
-    for (int ii = 0; ii < nbd; ii++)
-    {
-        if (dual_sol[idxb_stacked[ii]] >= 0.0)
-            out->lam->pa[ii] = dual_sol[idxb_stacked[ii]];
-        else
-            out->lam->pa[nbd + ngd + ii] = -dual_sol[idxb_stacked[ii]];
-    }
-    for (int ii = 0; ii < ngd; ii++)
-    {
-        if (dual_sol[nvd + ii] >= 0.0)
-            out->lam->pa[nbd + ii] = dual_sol[nvd + ii];
-        else
-            out->lam->pa[2 * nbd + ngd + ii] = -dual_sol[nvd + ii];
-    }
-
-    blasfeo_print_exp_tran_dvec(nvd, out->v, 0);
-    blasfeo_print_exp_tran_dvec(2*nbd+2*ngd, out->lam, 0);
-
-    dense_qp_compute_t(qp_stacked, out);
-
-    dense_qp_inf_norm_residuals(qp_stacked->dim, qp_stacked, out, res);
-    printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
-
-    exit(1);
-#endif
 
     int acados_status = qpoases_status;
     if (qpoases_status == SUCCESSFUL_RETURN) acados_status = ACADOS_SUCCESS;
