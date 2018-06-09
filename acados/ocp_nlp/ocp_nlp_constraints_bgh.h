@@ -96,6 +96,8 @@ void *ocp_nlp_constraints_bgh_opts_assign(void *config, void *dims, void *raw_me
 void ocp_nlp_constraints_bgh_opts_initialize_default(void *config, void *dims, void *opts);
 //
 void ocp_nlp_constraints_bgh_opts_update(void *config, void *dims, void *opts);
+//
+void ocp_nlp_constraints_bgh_opts_set(void *config, void *dims, void *opts, enum acados_opts name, void *ptr_value);
 
 
 

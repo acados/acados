@@ -158,12 +158,16 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
 
     int N = dims->N;
 
+	// do not compute adjoint in dynamics and constraints
+	int compute_adj = 0;
+
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
     // dynamics
     for (ii = 0; ii < N; ii++)
     {
         dynamics[ii]->opts_initialize_default(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+        dynamics[ii]->opts_set(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii], COMPUTE_ADJ, &compute_adj);
     }
 
     // cost
@@ -175,8 +179,8 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
     // constraints
     for (ii = 0; ii <= N; ii++)
     {
-        constraints[ii]->opts_initialize_default(constraints[ii], dims->constraints[ii],
-                                                 opts->constraints[ii]);
+        constraints[ii]->opts_initialize_default(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+        constraints[ii]->opts_set(constraints[ii], dims->constraints[ii], opts->constraints[ii], COMPUTE_ADJ, &compute_adj);
     }
 
     return;

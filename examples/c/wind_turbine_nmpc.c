@@ -783,18 +783,18 @@ int main()
 		for (int i = 0; i < NN; ++i)
 		{
 			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_rti_opts->dynamics[i];
-			dynamics_stage_opts->compute_adj = 0;
+//			dynamics_stage_opts->compute_adj = 0;
 			sim_opts[i] = dynamics_stage_opts->sim_solver;
 		}
 
-		for (int i = 0; i < NN; ++i)
-		{
-			if (plan->nlp_constraints[i] == BGH)
-			{
-				ocp_nlp_constraints_bgh_opts *constr_stage_opts = sqp_rti_opts->constraints[i];
-				constr_stage_opts->compute_adj = 0;
-			}
-		}
+//		for (int i = 0; i < NN; ++i)
+//		{
+//			if (plan->nlp_constraints[i] == BGH)
+//			{
+//				ocp_nlp_constraints_bgh_opts *constr_stage_opts = sqp_rti_opts->constraints[i];
+//				constr_stage_opts->compute_adj = 0;
+//			}
+//		}
 
 		pcond_solver_opts = sqp_rti_opts->qp_solver_opts;
 

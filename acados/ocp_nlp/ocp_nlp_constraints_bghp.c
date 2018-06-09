@@ -205,6 +205,29 @@ void ocp_nlp_constraints_bghp_opts_update(void *config_, void *dims_, void *opts
 
 
 
+void ocp_nlp_constraints_bghp_opts_set(void *config_, void *dims_, void *opts_, enum acados_opts name, void *ptr_value)
+{
+
+    ocp_nlp_constraints_bghp_opts *opts = opts_;
+
+	if (name==COMPUTE_ADJ)
+	{
+		int *compute_adj = ptr_value;
+		opts->compute_adj = *compute_adj;
+	}
+	else
+	{
+		// TODO something better tha this print-and-exit
+		printf("\nocp_nlp_constraints_bghp_opts_set: unknown opts name !\n");
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 /* memory */
 
 int ocp_nlp_constraints_bghp_memory_calculate_size(void *config_, void *dims_, void *opts_)
@@ -577,6 +600,7 @@ void ocp_nlp_constraints_bghp_config_initialize_default(void *config_)
     config->opts_assign = &ocp_nlp_constraints_bghp_opts_assign;
     config->opts_initialize_default = &ocp_nlp_constraints_bghp_opts_initialize_default;
     config->opts_update = &ocp_nlp_constraints_bghp_opts_update;
+    config->opts_set = &ocp_nlp_constraints_bghp_opts_set;
     config->memory_calculate_size = &ocp_nlp_constraints_bghp_memory_calculate_size;
     config->memory_assign = &ocp_nlp_constraints_bghp_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_constraints_bghp_memory_get_fun_ptr;

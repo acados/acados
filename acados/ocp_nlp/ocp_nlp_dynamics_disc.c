@@ -29,6 +29,8 @@
 // acados
 #include "acados/utils/mem.h"
 
+
+
 /************************************************
  * dims
  ************************************************/
@@ -42,6 +44,8 @@ int ocp_nlp_dynamics_disc_dims_calculate_size(void *config_)
     return size;
 }
 
+
+
 void *ocp_nlp_dynamics_disc_dims_assign(void *config_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
@@ -53,6 +57,8 @@ void *ocp_nlp_dynamics_disc_dims_assign(void *config_, void *raw_memory)
 
     return dims;
 }
+
+
 
 void ocp_nlp_dynamics_disc_dims_initialize(void *config_, void *dims_, int nx, int nu, int nx1,
                                            int nu1)
@@ -66,6 +72,8 @@ void ocp_nlp_dynamics_disc_dims_initialize(void *config_, void *dims_, int nx, i
 
     return;
 }
+
+
 
 /************************************************
  * options
@@ -83,6 +91,8 @@ int ocp_nlp_dynamics_disc_opts_calculate_size(void *config_, void *dims_)
     return size;
 }
 
+
+
 void *ocp_nlp_dynamics_disc_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
     // ocp_nlp_dynamics_config *config = config_;
@@ -99,6 +109,8 @@ void *ocp_nlp_dynamics_disc_opts_assign(void *config_, void *dims_, void *raw_me
     return opts;
 }
 
+
+
 void ocp_nlp_dynamics_disc_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     ocp_nlp_dynamics_disc_opts *opts = opts_;
@@ -108,6 +120,8 @@ void ocp_nlp_dynamics_disc_opts_initialize_default(void *config_, void *dims_, v
     return;
 }
 
+
+
 void ocp_nlp_dynamics_disc_opts_update(void *config_, void *dims_, void *opts_)
 {
     // ocp_nlp_dynamics_config *config = config_;
@@ -115,6 +129,31 @@ void ocp_nlp_dynamics_disc_opts_update(void *config_, void *dims_, void *opts_)
 
     return;
 }
+
+
+
+void ocp_nlp_dynamics_disc_opts_set(void *config_, void *dims_, void *opts_, enum acados_opts name, void *ptr_value)
+{
+
+    ocp_nlp_dynamics_disc_opts *opts = opts_;
+
+	if (name==COMPUTE_ADJ)
+	{
+		int *compute_adj = ptr_value;
+		opts->compute_adj = *compute_adj;
+	}
+	else
+	{
+		// TODO something better tha this print-and-exit
+		printf("\nocp_nlp_dynamics_disc_opts_set: unknown opts name !\n");
+		exit(1);
+	}
+
+	return;
+
+}
+
+
 
 /************************************************
  * memory
@@ -142,6 +181,8 @@ int ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *dims_, void
 
     return size;
 }
+
+
 
 void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
@@ -175,6 +216,8 @@ void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts
     return memory;
 }
 
+
+
 struct blasfeo_dvec *ocp_nlp_dynamics_disc_memory_get_fun_ptr(void *memory_)
 {
     ocp_nlp_dynamics_disc_memory *memory = memory_;
@@ -182,12 +225,16 @@ struct blasfeo_dvec *ocp_nlp_dynamics_disc_memory_get_fun_ptr(void *memory_)
     return &memory->fun;
 }
 
+
+
 struct blasfeo_dvec *ocp_nlp_dynamics_disc_memory_get_adj_ptr(void *memory_)
 {
     ocp_nlp_dynamics_disc_memory *memory = memory_;
 
     return &memory->adj;
 }
+
+
 
 void ocp_nlp_dynamics_disc_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
 {
@@ -198,6 +245,8 @@ void ocp_nlp_dynamics_disc_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
     return;
 }
 
+
+
 void ocp_nlp_dynamics_disc_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *memory_)
 {
     ocp_nlp_dynamics_disc_memory *memory = memory_;
@@ -206,6 +255,8 @@ void ocp_nlp_dynamics_disc_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *me
 
     return;
 }
+
+
 
 void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory_)
 {
@@ -216,6 +267,8 @@ void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memo
     return;
 }
 
+
+
 void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory_)
 {
     ocp_nlp_dynamics_disc_memory *memory = memory_;
@@ -224,6 +277,8 @@ void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *
 
     return;
 }
+
+
 
 /************************************************
  * workspace
@@ -250,6 +305,8 @@ int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void *dims_, v
 
     return size;
 }
+
+
 
 static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, void *opts_,
                                                  void *work_)
@@ -279,6 +336,8 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, voi
     return;
 }
 
+
+
 /************************************************
  * model
  ************************************************/
@@ -297,6 +356,8 @@ int ocp_nlp_dynamics_disc_model_calculate_size(void *config_, void *dims_)
 
     return size;
 }
+
+
 
 void *ocp_nlp_dynamics_disc_model_assign(void *config_, void *dims_, void *raw_memory)
 {
@@ -318,7 +379,15 @@ void *ocp_nlp_dynamics_disc_model_assign(void *config_, void *dims_, void *raw_m
     return model;
 }
 
-void ocp_nlp_dynamics_disc_model_set_T(double T, void *model_) { return; }
+
+
+void ocp_nlp_dynamics_disc_model_set_T(double T, void *model_) 
+{
+	return;
+}
+
+
+
 /************************************************
  * functions
  ************************************************/
@@ -328,6 +397,8 @@ void ocp_nlp_dynamics_disc_initialize(void *config_, void *dims_, void *model_, 
 {
     return;
 }
+
+
 
 void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *model_, void *opts_,
                                               void *mem_, void *work_)
@@ -390,6 +461,8 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
     return;
 }
 
+
+
 void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
 {
     ocp_nlp_dynamics_config *config = config_;
@@ -404,6 +477,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->opts_assign = &ocp_nlp_dynamics_disc_opts_assign;
     config->opts_initialize_default = &ocp_nlp_dynamics_disc_opts_initialize_default;
     config->opts_update = &ocp_nlp_dynamics_disc_opts_update;
+	config->opts_set = &ocp_nlp_dynamics_disc_opts_set;
     config->memory_calculate_size = &ocp_nlp_dynamics_disc_memory_calculate_size;
     config->memory_assign = &ocp_nlp_dynamics_disc_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_dynamics_disc_memory_get_fun_ptr;
