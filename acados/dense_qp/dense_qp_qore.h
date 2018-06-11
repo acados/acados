@@ -48,24 +48,39 @@ typedef struct dense_qp_qore_opts_
 typedef struct dense_qp_qore_memory_
 {
     double *H;
+    double *HH;
     double *g;
+    double *gg;
+    double *Zl;
+    double *Zu;
+    double *zl;
+    double *zu;
     double *A;
     double *b;
     double *C;
+    double *CC;
     double *Ct;
+    double *CCt;
     double *d_lb0;
     double *d_ub0;
     double *d_lb;
     double *d_ub;
+    double *d_lg0;
+    double *d_ug0;
     double *d_lg;
     double *d_ug;
+    double *d_ls;
+    double *d_us;
     double *lb;
     double *ub;
     int *idxb;
+    int *idxb_stacked;
+    int *idxs;
     double *prim_sol;
     double *dual_sol;
     QoreProblemDense *QP;
     int num_iter;
+    dense_qp_in *qp_stacked;
 } dense_qp_qore_memory;
 
 int dense_qp_qore_opts_calculate_size(void *config, dense_qp_dims *dims);

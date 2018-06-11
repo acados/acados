@@ -84,28 +84,49 @@ void dense_qp_qore_opts_update(void *config_, dense_qp_dims *dims, void *opts_)
 int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
     dense_qp_qore_opts *opts = (dense_qp_qore_opts *) opts_;
+    dense_qp_dims dims_stacked;
 
-    int nvd = dims->nv;
-    int ned = dims->ne;
-    int ngd = dims->ng;
-    int nbd = dims->nb;
-    int nsmax = (2 * nvd >= opts->nsmax) ? opts->nsmax : 2 * nvd;
+    int nv = dims->nv;
+    int ne = dims->ne;
+    int ng = dims->ng;
+    int nb = dims->nb;
+    int ns = dims->ns;
+    int nsb = dims->nsb;
+    int nsg = dims->nsg;
+    int nsmax = (2 * nv >= opts->nsmax) ? opts->nsmax : 2 * nv;
+
+    int nv2 = nv + 2*ns;
+    int ng2 = (ns > 0) ? 2*(ng + nsb) : ng;
+    int nb2 = nb - nsb + 2*ns;
 
     // size in bytes
     int size = sizeof(dense_qp_qore_memory);
 
-    size += 1 * nvd * nvd * sizeof(double);    // H
-    size += 1 * nvd * ned * sizeof(double);    // A
-    size += 2 * nvd * ngd * sizeof(double);    // C, Ct
-    size += 3 * nvd * sizeof(double);          // g d_lb d_ub
-    size += 1 * ned * sizeof(double);          // b
-    size += 2 * nbd * sizeof(double);          // d_lb0 d_ub0
-    size += 2 * ngd * sizeof(double);          // d_lg d_ug
-    size += 1 * nbd * sizeof(int);             // idxb
-    size += 2 * (nvd + ngd) * sizeof(double);  // lb, ub
-    size += (nvd + ngd) * sizeof(double);      // prim_sol
-    size += (nvd + ngd) * sizeof(double);      // dual_sol
-    size += QPDenseSize(nvd, ngd, nsmax);
+    size += 1 * nv * nv * sizeof(double);      // H
+    size += 1 * nv2 * nv2 * sizeof(double);    // HH
+    size += 1 * nv2 * ne * sizeof(double);     // A
+    size += 2 * nv * ng * sizeof(double);      // C, Ct
+    size += 2 * nv2 * ng2 * sizeof(double);    // CC, CCt
+    size += 1 * nv * sizeof(double);           // g
+    size += 3 * nv2 * sizeof(double);          // gg d_lb d_ub
+    size += 1 * ne * sizeof(double);           // b
+    size += 2 * nb2 * sizeof(double);          // d_lb0 d_ub0
+    size += 2 * ng * sizeof(double);           // d_lg0 d_ug0
+    size += 2 * ng2 * sizeof(double);          // d_lg d_ug
+    size += 1 * nb * sizeof(int);              // idxb
+    size += 1 * nb2 * sizeof(int);             // idxb_stacked
+    size += 1 * ns * sizeof(int);
+    size += 2 * (nv2 + ng2) * sizeof(double);  // lb, ub
+    size += 1 * (nv2 + ng2) * sizeof(double);  // prim_sol
+    size += 1 * (nv2 + ng2) * sizeof(double);  // dual_sol
+    size += 6 * ns * sizeof(double);           // Zl, Zu, zl, zu, d_ls, d_us
+    size += QPDenseSize(nv2, ng2, nsmax);
+
+    if (ns > 0)
+    {
+        dense_qp_stack_slacks_dims(dims, &dims_stacked);
+        size += dense_qp_in_calculate_size(config_, &dims_stacked);
+    }
 
     make_int_multiple_of(8, &size);
 
@@ -116,12 +137,20 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 {
     dense_qp_qore_memory *mem;
     dense_qp_qore_opts *opts = (dense_qp_qore_opts *) opts_;
+    dense_qp_dims dims_stacked;
 
-    int nvd = dims->nv;
-    int ned = dims->ne;
-    int ngd = dims->ng;
-    int nbd = dims->nb;
-    int nsmax = (2 * nvd >= opts->nsmax) ? opts->nsmax : 2 * nvd;
+    int nv = dims->nv;
+    int ne = dims->ne;
+    int ng = dims->ng;
+    int nb = dims->nb;
+    int ns = dims->ns;
+    int nsb = dims->nsb;
+    int nsg = dims->nsg;
+    int nsmax = (2 * nv >= opts->nsmax) ? opts->nsmax : 2 * nv;
+
+    int nv2 = nv + 2*ns;
+    int ng2 = (ns > 0) ? 2*(ng + nsb) : ng;
+    int nb2 = nb - nsb + 2*ns;
 
     // char pointer
     char *c_ptr = (char *) raw_memory;
@@ -129,33 +158,60 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     mem = (dense_qp_qore_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qore_memory);
 
+    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
+    if (ns > 0)
+    {
+        dense_qp_stack_slacks_dims(dims, &dims_stacked);
+        mem->qp_stacked = dense_qp_in_assign(config_, &dims_stacked, c_ptr);
+        c_ptr += dense_qp_in_calculate_size(config_, &dims_stacked);
+    }
+    else
+    {
+        mem->qp_stacked = NULL;
+    }
+
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    assign_and_advance_double(nvd * nvd, &mem->H, &c_ptr);
-    assign_and_advance_double(nvd * ned, &mem->A, &c_ptr);
-    assign_and_advance_double(nvd * ngd, &mem->C, &c_ptr);
-    assign_and_advance_double(nvd * ngd, &mem->Ct, &c_ptr);
-    assign_and_advance_double(nvd, &mem->g, &c_ptr);
-    assign_and_advance_double(ned, &mem->b, &c_ptr);
-    assign_and_advance_double(nbd, &mem->d_lb0, &c_ptr);
-    assign_and_advance_double(nbd, &mem->d_ub0, &c_ptr);
-    assign_and_advance_double(nvd, &mem->d_lb, &c_ptr);
-    assign_and_advance_double(nvd, &mem->d_ub, &c_ptr);
-    assign_and_advance_double(ngd, &mem->d_lg, &c_ptr);
-    assign_and_advance_double(ngd, &mem->d_ug, &c_ptr);
-    assign_and_advance_double(nvd + ngd, &mem->lb, &c_ptr);
-    assign_and_advance_double(nvd + ngd, &mem->ub, &c_ptr);
-    assign_and_advance_double(nvd + ngd, &mem->prim_sol, &c_ptr);
-    assign_and_advance_double(nvd + ngd, &mem->dual_sol, &c_ptr);
+    assign_and_advance_double(nv * nv, &mem->H, &c_ptr);
+    assign_and_advance_double(nv2 * nv2, &mem->HH, &c_ptr);
+    assign_and_advance_double(nv2 * ne, &mem->A, &c_ptr);
+    assign_and_advance_double(nv * ng, &mem->C, &c_ptr);
+    assign_and_advance_double(nv * ng, &mem->Ct, &c_ptr);
+    assign_and_advance_double(nv2 * ng2, &mem->CC, &c_ptr);
+    assign_and_advance_double(nv2 * ng2, &mem->CCt, &c_ptr);
+    assign_and_advance_double(nv, &mem->g, &c_ptr);
+    assign_and_advance_double(nv2, &mem->gg, &c_ptr);
+    assign_and_advance_double(ne, &mem->b, &c_ptr);
+    assign_and_advance_double(nb2, &mem->d_lb0, &c_ptr);
+    assign_and_advance_double(nb2, &mem->d_ub0, &c_ptr);
+    assign_and_advance_double(nv2, &mem->d_lb, &c_ptr);
+    assign_and_advance_double(nv2, &mem->d_ub, &c_ptr);
+    assign_and_advance_double(ng, &mem->d_lg0, &c_ptr);
+    assign_and_advance_double(ng, &mem->d_ug0, &c_ptr);
+    assign_and_advance_double(ng2, &mem->d_lg, &c_ptr);
+    assign_and_advance_double(ng2, &mem->d_ug, &c_ptr);
+    assign_and_advance_double(ns, &mem->Zl, &c_ptr);
+    assign_and_advance_double(ns, &mem->Zu, &c_ptr);
+    assign_and_advance_double(ns, &mem->zl, &c_ptr);
+    assign_and_advance_double(ns, &mem->zu, &c_ptr);
+    assign_and_advance_double(ns, &mem->d_ls, &c_ptr);
+    assign_and_advance_double(ns, &mem->d_us, &c_ptr);
+    assign_and_advance_double(nv2 + ng2, &mem->lb, &c_ptr);
+    assign_and_advance_double(nv2 + ng2, &mem->ub, &c_ptr);
+    assign_and_advance_double(nv2 + ng2, &mem->prim_sol, &c_ptr);
+    assign_and_advance_double(nv2 + ng2, &mem->dual_sol, &c_ptr);
 
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     mem->QP = (QoreProblemDense *) c_ptr;
-    QPDenseCreate(&mem->QP, nvd, ngd, nsmax, c_ptr);
-    c_ptr += QPDenseSize(nvd, ngd, nsmax);
+    QPDenseCreate(&mem->QP, nv2, ng2, nsmax, c_ptr);
+    c_ptr += QPDenseSize(nv2, ng2, nsmax);
 
     // int stuff
-    assign_and_advance_int(nbd, &mem->idxb, &c_ptr);
+    assign_and_advance_int(nb, &mem->idxb, &c_ptr);
+    assign_and_advance_int(nb2, &mem->idxb_stacked, &c_ptr);
+    assign_and_advance_int(ns, &mem->idxs, &c_ptr);
 
     assert((char *) raw_memory + dense_qp_qore_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
@@ -191,10 +247,14 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
 
     // extract qpoases data
     double *H = memory->H;
+    double *HH = memory->HH;
     double *A = memory->A;
     double *C = memory->C;
+    double *CC = memory->CC;
     double *Ct = memory->Ct;
+    double *CCt = memory->CCt;
     double *g = memory->g;
+    double *gg = memory->gg;
     double *b = memory->b;
     double *d_lb0 = memory->d_lb0;
     double *d_ub0 = memory->d_ub0;
@@ -202,10 +262,16 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     double *d_ub = memory->d_ub;
     double *d_lg = memory->d_lg;
     double *d_ug = memory->d_ug;
+    double *d_lg0 = memory->d_lg0;
+    double *d_ug0 = memory->d_ug0;
     double *lb = memory->lb;
     double *ub = memory->ub;
     int *idxb = memory->idxb;
+    int *idxb_stacked = memory->idxb_stacked;
+    int *idxs = memory->idxs;
     QoreProblemDense *QP = memory->QP;
+    double *prim_sol = memory->prim_sol;
+    double *dual_sol = memory->dual_sol;
 
     // extract dense qp size
     int nvd = qp_in->dim->nv;
@@ -276,8 +342,6 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     int qore_status;
     QPDenseGetInt(QP, "status", &qore_status);
 
-    double *prim_sol = memory->prim_sol;
-    double *dual_sol = memory->dual_sol;
     QPDenseGetDblVector(QP, "primalsol", prim_sol);
     QPDenseGetDblVector(QP, "dualsol", dual_sol);
     int num_iter;
