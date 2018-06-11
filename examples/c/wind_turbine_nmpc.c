@@ -504,9 +504,10 @@ int main()
 	for (int i = 0; i <= NN; i++)
 		plan->nlp_cost[i] = LINEAR_LS;
 
-	// plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
-	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QORE;
 
 	for (int i = 0; i < NN; i++)
 	{

@@ -92,7 +92,7 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15, 5, 3};
 
-    int ii_max = 3;
+    int ii_max = 4;
 
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
@@ -120,7 +120,7 @@ int main() {
         #endif
         FULL_CONDENSING_HPIPM,
         #ifdef ACADOS_WITH_QORE
-        // FULL_CONDENSING_QORE,
+        FULL_CONDENSING_QORE,
         #endif
         #ifdef ACADOS_WITH_QPOASES
         FULL_CONDENSING_QPOASES,
