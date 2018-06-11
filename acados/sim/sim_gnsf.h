@@ -124,6 +124,7 @@ typedef struct
     struct blasfeo_dmat K0x;
     struct blasfeo_dmat K0u;
     struct blasfeo_dmat K0f;
+    struct blasfeo_dmat Q1;
 
     // for constant term in NSF
     struct blasfeo_dvec cc1;
@@ -193,6 +194,10 @@ typedef struct
     struct blasfeo_dvec x0dot_1;
     struct blasfeo_dvec z0;
     struct blasfeo_dmat dz0_dx1u;  // (nz) * (nx1+nu);
+    struct blasfeo_dmat dr0_dff0;  // (n_out * n_out)
+    struct blasfeo_dmat dr0_dxn1u;  // n_out * (nx1+nu)
+    int *ipiv_ff0;
+
 
 } gnsf_workspace;
 
@@ -228,6 +233,11 @@ typedef struct
     struct blasfeo_dmat Z0x;
     struct blasfeo_dmat Z0u;
     struct blasfeo_dmat Z0f;
+
+    struct blasfeo_dmat Y0x;
+    struct blasfeo_dmat Y0u;
+    struct blasfeo_dmat Y0f;
+
     struct blasfeo_dmat Lx;
     struct blasfeo_dmat Lxdot;
     struct blasfeo_dmat Lz;
