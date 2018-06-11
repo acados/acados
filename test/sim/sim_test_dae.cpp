@@ -97,7 +97,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     const int nx1 = 8;  // gnsf split
     const int nx2 = 1;
     const int n_out = 3;
-    const int ny = 5;
+    const int ny = 6;
     const int nuhat = 1;
 
     // generate x0, u_sim
@@ -593,7 +593,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
             * compute error w.r.t. reference solution
             ************************************************/
                 double rel_error_forw, rel_error_adj, rel_error_z, rel_error_alg;
-                
+
                 // error sim
                 for (int jj = 0; jj < nx; jj++){
                     error[jj] = fabs(out->xn[jj] - x_ref_sol[jj]);
