@@ -195,7 +195,6 @@ typedef struct
     struct blasfeo_dvec z0;
     struct blasfeo_dmat dz0_dx1u;  // (nz) * (nx1+nu);
     struct blasfeo_dmat dr0_dff0;  // (n_out * n_out)
-    struct blasfeo_dmat dr0_dxn1u;  // n_out * (nx1+nu)
     int *ipiv_ff0;
 
 
