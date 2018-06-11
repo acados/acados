@@ -135,7 +135,7 @@ int dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dims *dims, v
     size += 1 * nv * nv * sizeof(double);      // H
     size += 1 * nv2 * nv2 * sizeof(double);    // HH
     size += 1 * nv2 * nv2 * sizeof(double);    // R
-    size += 1 * nv2 * ne * sizeof(double);      // A
+    size += 1 * nv2 * ne * sizeof(double);     // A
     size += 1 * nv * ng * sizeof(double);      // C
     size += 1 * nv2 * ng2 * sizeof(double);    // CC
     size += 1 * nv * sizeof(double);           // g

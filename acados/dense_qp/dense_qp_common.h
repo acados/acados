@@ -99,6 +99,8 @@ void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4]);
 void dense_qp_stack_slacks_dims(dense_qp_dims *in, dense_qp_dims *out);
 //
 void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out);
+//
+void dense_qp_unstack_slacks(dense_qp_out *in, dense_qp_in *qp_out, dense_qp_out *out);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -227,12 +227,12 @@ void dense_qp_compute_t(dense_qp_in *qp_in, dense_qp_out *qp_out)
     blasfeo_dgemv_t(nvd, ngd, -1.0, qp_in->Ct, 0, 0, qp_out->v, 0, -1.0, qp_in->d, 2 * nbd + ngd,
                     qp_out->t, 2 * nbd + ngd);
 
-	// soft
-	blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd, idxs, qp_out->t, 0);
-	blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd+nsd, idxs, qp_out->t, nbd+ngd);
+    // soft
+    blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd, idxs, qp_out->t, 0);
+    blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd+nsd, idxs, qp_out->t, nbd+ngd);
 //	blasfeo_daxpy(2*nsd, -1.0, qp_out->v, nvd, qp_out->t, 2*nbd+2*ngd, qp_out->t, 2*nbd+2*ngd);
 //	blasfeo_dvecse(2*nsd, 0.0, qp_out->t, 2*nbd+2*ngd);
-   	blasfeo_dveccp(2*nsd, qp_out->v, nvd, qp_out->t, 2*nbd+2*ngd);
+       blasfeo_dveccp(2*nsd, qp_out->v, nvd, qp_out->t, 2*nbd+2*ngd);
     blasfeo_daxpy(2*nsd, -1.0, qp_in->d, 2*nbd+2*ngd, qp_out->t, 2*nbd+2*ngd, qp_out->t, 2*nbd+2*ngd);
 
 }
@@ -296,6 +296,7 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
     int *idxb = in->idxb;
 
     int nv2 = out->dim->nv;
+    int ne2 = out->dim->ne;
     int nb2 = out->dim->nb;
     int ng2 = out->dim->ng;
 
@@ -303,8 +304,9 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
     assert(nb2 == nb-nsb+2*ns && "Dimensions are wrong!");
     assert(ng2 == 2*ng+2*nsb && "Dimensions are wrong!");
 
-    // set matrice to 0.0
+    // set matrices to 0.0
     blasfeo_dgese(nv2, nv2, 0.0, out->Hv, 0, 0);
+    blasfeo_dgese(ne2, nv2, 0.0, out->A, 0, 0);
     blasfeo_dgese(nv2, ng2, 0.0, out->Ct, 0, 0);
 
     // copy in->Hv to upper left corner of out->Hv, out->Hv = [in->Hv 0; 0 0]
@@ -337,47 +339,59 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
         // use out->m temporarily for this
         for (int ii = 0; ii < nb; ii++)
         {
+            // TODO: pick up some workspace for this
             BLASFEO_DVECEL(out->m, ii) = 1.0;
         }
 
-        int k_s = 0, col_b = 2*ng;
+        int col_b = 2*ng;
         for (int ii = 0; ii < ns; ii++)
         {
             int js = idxs[ii];
 
-            if (js < nb)
+            int idx_v_ls0 = nv+ii;
+            int idx_v_us0 = nv+ns+ii;
+            int idx_v_ls1 = nv+ii;
+            int idx_v_us1 = nv+ns+ii;
+
+            int idx_d_ls0 = js;
+            int idx_d_us0 = nb+ng+js;
+            int idx_d_ls1;
+            int idx_d_us1;
+
+            if (js < nb)  // soft box constraint
             {
                 // index of a soft box constraint
                 int jv = idxb[js];
 
+                idx_d_ls1 = 2*nb2+ng2+col_b+nsb;
+                idx_d_us1 = 2*nb2+ng2+col_b;
+
                 // softened box constraint, set its flag to -1
                 BLASFEO_DVECEL(out->m, js) = -1.0;
 
-                // insert softened box constraint into out->Ct, x_i - su_i <= ub_i
+                // insert softened box constraint into out->Ct (upper bound), x_i - su_i <= ub_i
                 BLASFEO_DMATEL(out->Ct, jv, col_b) = 1.0;
-                BLASFEO_DMATEL(out->Ct, nv+ns+k_s, col_b) = -1.0;
-                BLASFEO_DVECEL(out->d, 2*nb2+ng2+col_b) = -BLASFEO_DVECEL(in->d, nb+ng+js);
+                BLASFEO_DMATEL(out->Ct, idx_v_us1, col_b) = -1.0;
+                BLASFEO_DVECEL(out->d, idx_d_us1) = -BLASFEO_DVECEL(in->d, idx_d_us0);
 
-                // insert softened box constraint into out->Ct, -x_i - sl_i <= -lb_i
+                // insert softened box constraint into out->Ct (lower bound), -x_i - sl_i <= -lb_i
                 BLASFEO_DMATEL(out->Ct, jv, col_b+nsb) = -1.0;
-                BLASFEO_DMATEL(out->Ct, nv+k_s, col_b+nsb) = -1.0;
-                BLASFEO_DVECEL(out->d, 2*nb2+ng2+col_b+nsb) = -BLASFEO_DVECEL(in->d, js);
+                BLASFEO_DMATEL(out->Ct, idx_v_ls1, col_b+nsb) = -1.0;
+                BLASFEO_DVECEL(out->d, idx_d_ls1) = -BLASFEO_DVECEL(in->d, idx_d_ls0);
 
                 col_b++;
             }
-            else
+            else  // soft general constraint
             {
                 // index of a soft general constraint
                 int col_g = js - nb;
 
-                // C_i x - su_i <= ug_i
-                BLASFEO_DMATEL(out->Ct, nv + ns + k_s, col_g) = -1.0;
+                // soft general constraint (upper bound), C_i x - su_i <= ug_i
+                BLASFEO_DMATEL(out->Ct, idx_v_us1, col_g) = -1.0;
 
-                // -C_i x - sl_i <= -lg_i
-                BLASFEO_DMATEL(out->Ct, nv + k_s, col_g+ng) = -1.0;
+                // soft general constraint (lower bound), -C_i x - sl_i <= -lg_i
+                BLASFEO_DMATEL(out->Ct, idx_v_ls1, col_g+ng) = -1.0;
             }
-
-            k_s++;
 
             // slack variables have box constraints
             out->idxb[nb-nsb+ii] = ii + nv;
@@ -423,4 +437,113 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
         blasfeo_dveccp(2*nb+2*ng, in->d, 0, out->d, 0);
         blasfeo_dveccp(2*nb+2*ng, in->m, 0, out->m, 0);
     }
+}
+
+
+
+void dense_qp_unstack_slacks(dense_qp_out *in, dense_qp_in *qp_out, dense_qp_out *out)
+{
+    int nv = qp_out->dim->nv;
+    int ne = qp_out->dim->ne;
+    int nb = qp_out->dim->nb;
+    int ng = qp_out->dim->ng;
+    int ns = qp_out->dim->ns;
+    int nsb = qp_out->dim->nsb;
+    int nsg = qp_out->dim->nsg;
+
+    int *idxs = qp_out->idxs;
+
+    int nv2 = in->dim->nv;
+    int ne2 = in->dim->ne;
+    int nb2 = in->dim->nb;
+    int ng2 = in->dim->ng;
+
+    assert(nv2 == nv+2*ns && "Dimensions are wrong!");
+    assert(nb2 == nb-nsb+2*ns && "Dimensions are wrong!");
+    assert(ng2 == 2*ng+2*nsb && "Dimensions are wrong!");
+
+    // inequality constraints multipliers and slacks
+    if (ns > 0)
+    {
+
+        // set flags for non-softened box constraints
+        // use out->v temporarily for this
+        // XXX assume that nb<=nv
+        assert(nv+2*ns >= nb);
+
+        for (int ii = 0; ii < nb; ii++)
+        {
+            BLASFEO_DVECEL(out->v, ii) = 1.0; // TODO pick up some workspace for this
+        }
+
+        int col_b = 2*ng;
+        for (int ii = 0; ii < ns; ii++)
+        {
+            int js = idxs[ii];
+
+            int idx_d_ls0 = js;
+            int idx_d_us0 = nb+ng+js;
+            int idx_d_ls1;
+            int idx_d_us1;
+
+            if (js < nb)
+            {
+                // softened box constraint, set its flag to -1
+                BLASFEO_DVECEL(out->v, js) = -1.0;
+
+                idx_d_ls1 = 2*nb2+ng2+col_b+nsb;
+                idx_d_us1 = 2*nb2+ng2+col_b;
+
+                BLASFEO_DVECEL(out->lam, idx_d_ls0) = BLASFEO_DVECEL(in->lam, idx_d_ls1);
+                BLASFEO_DVECEL(out->lam, idx_d_us0) = BLASFEO_DVECEL(in->lam, idx_d_us1);
+
+                BLASFEO_DVECEL(out->t, idx_d_ls0) = BLASFEO_DVECEL(in->t, idx_d_ls1);
+                BLASFEO_DVECEL(out->t, idx_d_us0) = BLASFEO_DVECEL(in->t, idx_d_us1);
+
+                col_b++;
+            }
+        }
+
+        int k_nsb = 0; // number of non-softed bounds
+        for (int ii = 0; ii < nb; ii++)
+        {
+            int idx_d_ls0 = ii;
+            int idx_d_us0 = nb+ng+ii;
+            int idx_d_ls1;
+            int idx_d_us1;
+
+            if (BLASFEO_DVECEL(out->v, ii) > 0)
+            {
+                idx_d_ls1 = k_nsb;
+                idx_d_us1 = nb2+ng2+k_nsb;
+
+                BLASFEO_DVECEL(out->lam, idx_d_ls0) = BLASFEO_DVECEL(in->lam, idx_d_ls1);
+                BLASFEO_DVECEL(out->lam, idx_d_us0) = BLASFEO_DVECEL(in->lam, idx_d_us1);
+
+                BLASFEO_DVECEL(out->t, idx_d_ls0) = BLASFEO_DVECEL(in->t, idx_d_ls1);
+                BLASFEO_DVECEL(out->t, idx_d_us0) = BLASFEO_DVECEL(in->t, idx_d_us1);
+
+                k_nsb++;
+            }
+        }
+
+        assert(k_nsb == nb-nsb && "Dimensions are wrong!");
+
+        blasfeo_dveccp(2*ns, in->t, k_nsb, out->t, 2*nb+2*ng);
+        blasfeo_dveccp(ng, in->t, 2*nb2+ng2, out->t, 2*nb+ng);
+        blasfeo_dveccp(ng, in->t, 2*nb2+ng2+ng, out->t, nb);
+
+        blasfeo_dveccp(2*ns, in->lam, k_nsb, out->lam, 2*nb+2*ng);
+        blasfeo_dveccp(ng, in->lam, 2*nb2+ng2, out->lam, 2*nb+ng);
+        blasfeo_dveccp(ng, in->lam, 2*nb2+ng2+ng, out->lam, nb);
+
+        // variables
+        blasfeo_dveccp(nv+2*ns, in->v, 0, out->v, 0);
+
+        // equality constraints multipliers
+        blasfeo_dveccp(ne, in->pi, 0, out->pi, 0);
+
+    }
+
+    return;
 }
