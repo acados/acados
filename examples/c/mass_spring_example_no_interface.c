@@ -42,7 +42,7 @@
 
 // mass spring
 ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
-ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
+ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims);
 
 
 
@@ -295,7 +295,7 @@ int main() {
 			 * ocp qp in
 			 ************************************************/
 
-			ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(solver_config, N, nx_, nu_, nb_, ng_, ngN);
+			ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(solver_config, qp_dims);
 
 			/************************************************
 			 * ocp qp out
