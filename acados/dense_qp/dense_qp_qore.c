@@ -65,7 +65,8 @@ void dense_qp_qore_opts_initialize_default(void *config_, dense_qp_dims *dims, v
     opts->warm_strategy = 0;
     opts->nsmax = 400;
     opts->hot_start = 0;
-    opts->max_iter = 100;
+    opts->max_iter = 1000;
+    opts->compute_t = 1;
 
     return;
 }
@@ -239,6 +240,7 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     acados_timer tot_timer, qp_timer, interface_timer;
 
     acados_tic(&tot_timer);
+    acados_tic(&interface_timer);
     info->t_computed = 0;
 
     // cast structures
@@ -266,61 +268,92 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     double *d_ug0 = memory->d_ug0;
     double *lb = memory->lb;
     double *ub = memory->ub;
+    double *Zl = memory->Zl;
+    double *Zu = memory->Zu;
+    double *zl = memory->zl;
+    double *zu = memory->zu;
+    double *d_ls = memory->d_ls;
+    double *d_us = memory->d_us;
     int *idxb = memory->idxb;
     int *idxb_stacked = memory->idxb_stacked;
     int *idxs = memory->idxs;
     QoreProblemDense *QP = memory->QP;
     double *prim_sol = memory->prim_sol;
     double *dual_sol = memory->dual_sol;
+    dense_qp_in *qp_stacked = memory->qp_stacked;
 
     // extract dense qp size
-    int nvd = qp_in->dim->nv;
-    int ngd = qp_in->dim->ng;
-    int nbd = qp_in->dim->nb;
-    int nsd = qp_in->dim->ns;
+    int nv = qp_in->dim->nv;
+    int ng = qp_in->dim->ng;
+    int nb = qp_in->dim->nb;
+    int ns = qp_in->dim->ns;
+    int nsb = qp_in->dim->nsb;
+    int nsg = qp_in->dim->nsg;
 
-    if (nsd > 0)
-    {
-        printf("\nQORE interface can not handle ns>0 yet: what about implementing it? :)\n");
-        return ACADOS_FAILURE;
-    }
-
-    acados_tic(&interface_timer);
+    int nv2 = nv + 2*ns;
+    int ng2 = (ns > 0) ? 2*(ng + nsb) : ng;
+    int nb2 = nb - nsb + 2 * ns;
 
     // fill in the upper triangular of H in dense_qp
-    blasfeo_dtrtr_l(nvd, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
+    blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
-    // dense qp row-major
-    d_cvt_dense_qp_to_colmaj(qp_in, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug, NULL, NULL, NULL,
-                             NULL, NULL, NULL, NULL);
+    // extract data from qp_in in col-major
+    d_cvt_dense_qp_to_colmaj(qp_in, H, gg, A, b, idxb, d_lb0, d_ub0, C, d_lg0, d_ug0,
+                             Zl, Zu, zl, zu, idxs, d_ls, d_us);
 
     // reorder bounds
-    for (int ii = 0; ii < nvd; ii++)
+    for (int ii = 0; ii < nv2; ii++)
     {
         d_lb[ii] = -INFINITY;
         d_ub[ii] = +INFINITY;
     }
-    for (int ii = 0; ii < nbd; ii++)
+
+    if (ns > 0)
     {
-        d_lb[idxb[ii]] = d_lb0[ii];
-        d_ub[idxb[ii]] = d_ub0[ii];
-    }
+        dense_qp_stack_slacks(qp_in, qp_stacked);
+        d_cvt_dense_qp_to_colmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg, d_ug,
+                                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
-    memcpy(lb, d_lb, nvd * sizeof(double));
-    memcpy(lb + nvd, d_lg, ngd * sizeof(double));
-
-    memcpy(ub, d_ub, nvd * sizeof(double));
-    memcpy(ub + nvd, d_ug, ngd * sizeof(double));
-
-    /* transpose C as expected by QORE */
-    int i, j;
-    for (j = 0; j < nvd; j++)
-    {
-        for (i = 0; i < ngd; i++)
+        for (int ii = 0; ii < nb2; ii++)
         {
-            Ct[j + i * nvd] = C[i + j * ngd];
+            d_lb[idxb_stacked[ii]] = d_lb0[ii];
+            d_ub[idxb_stacked[ii]] = d_ub0[ii];
+        }
+
+        // transpose CC as expected by QORE
+        for (int j = 0; j < nv2; j++)
+        {
+            for (int i = 0; i < ng2; i++)
+            {
+                CCt[j + i * nv2] = CC[i + j * ng2];
+            }
         }
     }
+    else
+    {
+        for (int ii = 0; ii < nb; ii++)
+        {
+            d_lb[idxb[ii]] = d_lb0[ii];
+            d_ub[idxb[ii]] = d_ub0[ii];
+        }
+
+        // transpose C as expected by QORE
+        for (int j = 0; j < nv; j++)
+        {
+            for (int i = 0; i < ng; i++)
+            {
+                Ct[j + i * nv] = C[i + j * ng];
+            }
+        }
+    }
+
+    memcpy(lb, d_lb, nv2 * sizeof(double));
+    memcpy(lb + nv2, d_lg, ng2 * sizeof(double));
+
+    memcpy(ub, d_ub, nv2 * sizeof(double));
+    memcpy(ub + nv2, d_ug, ng2 * sizeof(double));
+
+
     info->interface_time = acados_toc(&interface_timer);
 
     // solve dense qp
@@ -329,16 +362,18 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     if (opts->warm_start)
     {
         QPDenseSetInt(QP, "warmstrategy", opts->warm_strategy);
-        QPDenseUpdateMatrices(QP, nvd, ngd, Ct, H);
+        (ns > 0) ? QPDenseUpdateMatrices(QP, nv2, ng2, CCt, HH) :
+                   QPDenseUpdateMatrices(QP, nv, ng, Ct, H);
     }
     else if (!opts->hot_start)
     {
-        QPDenseSetData(QP, nvd, ngd, Ct, H);
+        (ns > 0) ? QPDenseSetData(QP, nv2, ng2, CCt, HH) :
+                   QPDenseSetData(QP, nv, ng, Ct, H);
     }
 
     QPDenseSetInt(QP, "maxiter", opts->max_iter);
     QPDenseSetInt(QP, "prtfreq", opts->print_freq);
-    QPDenseOptimize(QP, lb, ub, g, 0, 0);
+    QPDenseOptimize(QP, lb, ub, gg, 0, 0);
     int qore_status;
     QPDenseGetInt(QP, "status", &qore_status);
 
@@ -352,26 +387,74 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     acados_tic(&interface_timer);
 
     // copy prim_sol and dual_sol to qpd_sol
-    blasfeo_pack_dvec(nvd, prim_sol, qp_out->v, 0);
-    for (int ii = 0; ii < 2 * nbd + 2 * ngd; ii++) qp_out->lam->pa[ii] = 0.0;
-    for (int ii = 0; ii < nbd; ii++)
+    blasfeo_pack_dvec(nv2, prim_sol, qp_out->v, 0);
+    for (int ii = 0; ii < 2 * nb + 2 * ng + 2 * ns; ii++) qp_out->lam->pa[ii] = 0.0;
+    for (int ii = 0; ii < nb; ii++)
     {
         if (dual_sol[idxb[ii]] >= 0.0)
             qp_out->lam->pa[ii] = dual_sol[idxb[ii]];
         else
-            qp_out->lam->pa[nbd + ngd + ii] = -dual_sol[idxb[ii]];
+            qp_out->lam->pa[nb + ng + ii] = -dual_sol[idxb[ii]];
     }
-    for (int ii = 0; ii < ngd; ii++)
+
+    int k = 0;
+    for (int ii = 0; ii < ns; ii++)
     {
-        if (dual_sol[nvd + ii] >= 0.0)
-            qp_out->lam->pa[nbd + ii] = dual_sol[nvd + ii];
+        int js = idxs[ii];
+
+        if (js < nb)
+        {
+            // dual variables for softened upper box constraints
+            if (dual_sol[nv2 + 2*ng + k] <= 0.0)
+                qp_out->lam->pa[nb + ng + js] = -dual_sol[nv2 + 2*ng + k];
+
+            // dual variables for softened lower box constraints
+            if (dual_sol[nv2 + 2*ng + nsb + k] <= 0.0)
+                qp_out->lam->pa[js] = -dual_sol[nv2 + 2*ng + nsb + k];
+
+            k++;
+        }
+
+        // dual variables for sl >= d_ls
+        if (dual_sol[nv + ii] >= 0)
+            qp_out->lam->pa[2*nb + 2*ng + ii] = dual_sol[nv + ii];
+
+        // dual variables for su >= d_us
+        if (dual_sol[nv + ns + ii] >= 0)
+            qp_out->lam->pa[2*nb + 2*ng + ns + ii] = dual_sol[nv + ns + ii];
+    }
+
+    for (int ii = 0; ii < ng; ii++)
+    {
+        if (ns > 0)
+        {
+            // dual variables for upper general constraints
+            if (dual_sol[nv2 + ii] <= 0.0)
+                qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv2 + ii];
+
+            // dual variables for lower general constraints
+            if (dual_sol[nv2 + ng + ii] <= 0.0)
+                qp_out->lam->pa[nb + ii] = -dual_sol[nv2 + ng + ii];
+        }
         else
-            qp_out->lam->pa[2 * nbd + ngd + ii] = -dual_sol[nvd + ii];
+        {
+            if (dual_sol[nv + ii] >= 0.0)
+                qp_out->lam->pa[nb + ii] = dual_sol[nv + ii];
+            else
+                qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv + ii];
+        }
     }
 
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = num_iter;
+
+    // compute slacks
+    if (opts->compute_t)
+    {
+        dense_qp_compute_t(qp_in, qp_out);
+        info->t_computed = 1;
+    }
 
     int acados_status = qore_status;
     if (qore_status == QPSOLVER_DENSE_OPTIMAL) acados_status = ACADOS_SUCCESS;

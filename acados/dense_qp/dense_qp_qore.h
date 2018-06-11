@@ -43,6 +43,7 @@ typedef struct dense_qp_qore_opts_
                         // solution
     int hot_start;      // hot start with unchanged matrices H and C
     int max_iter;       // maximum number of iterations
+    int compute_t;      // compute t in qp_out (to have correct residuals in NLP)
 } dense_qp_qore_opts;
 
 typedef struct dense_qp_qore_memory_
