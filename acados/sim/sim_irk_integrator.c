@@ -52,6 +52,10 @@ void *sim_irk_dims_assign(void *config_, void *raw_memory)
     sim_irk_dims *dims = (sim_irk_dims *) c_ptr;
     c_ptr += sizeof(sim_irk_dims);
 
+    dims->nx = 0;
+    dims->nu = 0;
+    dims->nz = 0;
+
     assert((char *) raw_memory + sim_irk_dims_calculate_size() >= c_ptr);
 
     return dims;

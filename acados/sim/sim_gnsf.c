@@ -57,6 +57,16 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory)
     char *c_ptr = (char *) raw_memory;
     sim_gnsf_dims *dims = (sim_gnsf_dims *) c_ptr;
     c_ptr += sizeof(sim_gnsf_dims);
+
+    dims->nx = 0;
+    dims->nu = 0;
+    dims->nz = 0;
+    dims->nx1 = 0;
+    dims->nx2 = 0;
+    dims->n_out = 0;
+    dims->ny = 0;
+    dims->nuhat = 0;
+
     assert((char *) raw_memory + sim_gnsf_dims_calculate_size() == c_ptr);
     return dims;
 }
