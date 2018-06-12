@@ -81,6 +81,8 @@ B(5,1) = 1;
 B(6,2) = 1;
 
 E = eye(nx1+nz);
+c = zeros(nx1 + nz,1);
+
 %% nonlinearity function
 % gather all nonlinear parts
 phi = [- (a1 * uCR * cos(theta) + g* sin(theta) + 2*vL*omega) / xL;
@@ -155,7 +157,7 @@ dummy = SX.sym('dummy');
 %     [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)];
 % get_matrices_fun = Function([casadi_export_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
 get_matrices_fun = Function([casadi_export_prefix,'get_matrices_fun'], {dummy},...
-    {A, B, C, E, L_x, L_xdot, L_z, L_u, ALO});
+    {A, B, C, E, L_x, L_xdot, L_z, L_u, ALO, c});
 get_matrices_fun.generate('get_matrices_fun', casadi_opts);
 
 % generate Phi, f_LO
