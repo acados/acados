@@ -799,7 +799,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         Z_work[jj] = blasfeo_dvecex1(Z, nz * jj + ii);
                                 // copy values of z_ii in first step, into Z_work
                     }
-                    neville_algorithm(&out->zn[ii], 0.0, ns - 1, opts->c_vec, Z_work);
+                    neville_algorithm(0.0, ns - 1, opts->c_vec, Z_work, &out->zn[ii]);
                                 // eval polynomial through (c_jj, z_jj) at 0.
                 }
             }
@@ -814,7 +814,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         Z_work[jj] = blasfeo_dvecex1(K, nx * jj + ii);
                             // copy values of k_ii in first step, into Z_work
                     }
-                    neville_algorithm(&interpolated_value, 0.0, ns - 1, opts->c_vec, Z_work);
+                    neville_algorithm(0.0, ns - 1, opts->c_vec, Z_work, &interpolated_value);
                                 // eval polynomial through (c_jj, k_jj) at 0.
                     blasfeo_pack_dvec(1, &interpolated_value, xtdot, ii);
                 }
