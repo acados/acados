@@ -57,8 +57,7 @@ typedef struct
     struct blasfeo_dmat *S_forw;  // forward sensitivities (nx, nx+nu)
 
     struct blasfeo_dvec *rG;  // residuals of G (nx*ns)
-    struct blasfeo_dvec *K;   // internal K variables (nx*ns)
-    struct blasfeo_dvec *Z;   // internal Z variables (nz*ns)
+    struct blasfeo_dvec *K;   // internal K variables ((nx+nz)*ns)
     struct blasfeo_dvec *xt;  // temporary x
     struct blasfeo_dvec *xn;  // x at each integration step
 
@@ -73,7 +72,6 @@ typedef struct
 
     struct blasfeo_dvec *xn_traj;  // xn trajectory
     struct blasfeo_dvec *K_traj;   // K trajectory
-    struct blasfeo_dvec *Z_traj;   // Z trajectory
     // todo: maybe remove? but could maybe be used for hessian propagation
     // struct blasfeo_dmat *JG_traj; // dG_dK trajectory
 
