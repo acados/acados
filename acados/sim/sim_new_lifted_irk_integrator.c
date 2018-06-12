@@ -517,6 +517,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     double *S_forw_in = in->S_forw;
 
     // int newton_iter = opts->newton_iter; // not used; always 1 in lifted
+
     double *A_mat = opts->A_mat;
     double *b_vec = opts->b_vec;
     int num_steps = opts->num_steps;

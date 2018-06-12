@@ -876,7 +876,7 @@ int main()
 				{
 					expl_vde_for[ii].set_param(expl_vde_for+ii, wind0_ref+idx+ii);
 				}
-				else if ((plan->sim_solver_plan[ii].sim_solver == IRK) | (plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK))
+				else if (plan->sim_solver_plan[ii].sim_solver == IRK || plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK)
 				{
 					impl_ode_fun[ii].set_param(impl_ode_fun+ii, wind0_ref+idx+ii);
 					impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);

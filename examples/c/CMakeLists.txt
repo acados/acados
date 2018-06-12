@@ -17,6 +17,8 @@
 #
 #
 
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+
 configure_file(chain_model/chain_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/chain_model/chain_model.h @ONLY)
 
 # Define sources for models used in the examples
@@ -202,56 +204,54 @@ add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
 target_link_libraries(sim_gnsf_crane acados)
 add_test(sim_gnsf_crane sim_gnsf_crane)
 
-if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+add_executable(pendulum_scqp pendulum_scqp.cpp
+    pendulum_model/vde_forw_pendulum.c
+    pendulum_model/constraint.c
+    pendulum_model/position.c)
+target_link_libraries(pendulum_scqp acados)
+add_test(pendulum_scqp pendulum_scqp)
 
-    add_executable(pendulum_scqp pendulum_scqp.cpp
-        pendulum_model/vde_forw_pendulum.c
-        pendulum_model/constraint.c
-        pendulum_model/position.c)
-    target_link_libraries(pendulum_scqp acados)
-    add_test(pendulum_scqp pendulum_scqp)
+# -------------------- mass_spring
+add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)
+target_link_libraries(mass_spring_example acados)
+add_test(mass_spring_example mass_spring_example)
 
-    # -------------------- mass_spring
-    add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)
-    target_link_libraries(mass_spring_example acados)
-    add_test(mass_spring_example mass_spring_example)
+add_executable(mass_spring_fcond_split mass_spring_fcond_split.c mass_spring_model/mass_spring_qp.c)
+target_link_libraries(mass_spring_fcond_split acados)
+add_test(mass_spring_fcond_split mass_spring_example)
 
-    add_executable(mass_spring_fcond_split mass_spring_fcond_split.c mass_spring_model/mass_spring_qp.c)
-    target_link_libraries(mass_spring_fcond_split acados)
-    add_test(mass_spring_fcond_split mass_spring_example)
+add_executable(mass_spring_pcond_split mass_spring_pcond_split.c mass_spring_model/mass_spring_qp.c)
+target_link_libraries(mass_spring_pcond_split acados)
+add_test(mass_spring_pcond_split mass_spring_example)
 
-    add_executable(mass_spring_pcond_split mass_spring_pcond_split.c mass_spring_model/mass_spring_qp.c)
-    target_link_libraries(mass_spring_pcond_split acados)
-    add_test(mass_spring_pcond_split mass_spring_example)
+add_executable(mass_spring_offline_fcond_qpoases_split mass_spring_offline_fcond_qpoases_split.c mass_spring_model/mass_spring_qp.c)
+target_link_libraries(mass_spring_offline_fcond_qpoases_split acados)
+add_test(mass_spring_offline_fcond_qpoases_split mass_spring_example)
 
-    add_executable(mass_spring_offline_fcond_qpoases_split mass_spring_offline_fcond_qpoases_split.c mass_spring_model/mass_spring_qp.c)
-    target_link_libraries(mass_spring_offline_fcond_qpoases_split acados)
-    add_test(mass_spring_offline_fcond_qpoases_split mass_spring_example)
+add_executable(mass_spring_nmpc_example mass_spring_nmpc_example.c mass_spring_model/mass_spring_qp.c)
+target_link_libraries(mass_spring_nmpc_example acados)
+add_test(mass_spring_nmpc_example mass_spring_example)
 
-    add_executable(mass_spring_nmpc_example mass_spring_nmpc_example.c mass_spring_model/mass_spring_qp.c)
-    target_link_libraries(mass_spring_nmpc_example acados)
-    add_test(mass_spring_nmpc_example mass_spring_example)
+add_executable(mass_spring_example_no_interface mass_spring_example_no_interface.c mass_spring_model/mass_spring_qp.c)
+target_link_libraries(mass_spring_example_no_interface acados)
+add_test(mass_spring_example_no_interface mass_spring_example_no_interface)
 
-    add_executable(mass_spring_example_no_interface mass_spring_example_no_interface.c mass_spring_model/mass_spring_qp.c)
-    target_link_libraries(mass_spring_example_no_interface acados)
-    add_test(mass_spring_example_no_interface mass_spring_example_no_interface)
+add_executable(sim_crane_example sim_crane_example.c ${CRANE_MODEL_SRC})
+target_link_libraries(sim_crane_example acados)
+add_test(sim_crane_example sim_crane_example)
 
-    add_executable(sim_crane_example sim_crane_example.c ${CRANE_MODEL_SRC})
-    target_link_libraries(sim_crane_example acados)
-    add_test(sim_crane_example sim_crane_example)
+# -------------------- sim_wt
+add_executable(sim_wt_model_nx3 sim_wt_model_nx3.c ${WT_MODEL_NX3_SRC})
+target_link_libraries(sim_wt_model_nx3 acados)
+add_test(sim_wt_model_nx3 sim_wt_model_nx3)
 
-    # -------------------- sim_wt
-    add_executable(sim_wt_model_nx3 sim_wt_model_nx3.c ${WT_MODEL_NX3_SRC})
-    target_link_libraries(sim_wt_model_nx3 acados)
-    add_test(sim_wt_model_nx3 sim_wt_model_nx3)
+add_executable(ocp_qp ocp_qp.c)
+target_link_libraries(ocp_qp acados)
+add_test(ocp_qp ocp_qp)
 
-    add_executable(ocp_qp ocp_qp.c)
-    target_link_libraries(ocp_qp acados)
-    add_test(ocp_qp ocp_qp)
-
-    # -------------------- dense_qp
-    add_executable(dense_qp dense_qp.c)
-    target_link_libraries(dense_qp acados)
-    add_test(dense_qp dense_qp)
+# -------------------- dense_qp
+add_executable(dense_qp dense_qp.c)
+target_link_libraries(dense_qp acados)
+add_test(dense_qp dense_qp)
 
 endif()

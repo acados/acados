@@ -182,10 +182,10 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, ocp_nlp_dims *dims, void
     int N = dims->N;
 
     opts->maxIter = 20;
-    opts->min_res_g = 1e-12;
-    opts->min_res_b = 1e-12;
-    opts->min_res_d = 1e-12;
-    opts->min_res_m = 1e-12;
+    opts->min_res_g = 1e-8;
+    opts->min_res_b = 1e-8;
+    opts->min_res_d = 1e-8;
+    opts->min_res_m = 1e-8;
 
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
@@ -866,6 +866,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
             // stop timer
             total_time += acados_toc(&timer);
+            nlp_out->total_time = total_time;
 
             return 0;
         }
@@ -876,6 +877,8 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
         int qp_status =
             qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
                                 mem->qp_solver_mem, work->qp_work);
+
+        nlp_out->qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
 
         // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
         //  print_ocp_qp_out(work->qp_out);
@@ -919,6 +922,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
     // save sqp iterations number
     mem->sqp_iter = sqp_iter;
     nlp_out->sqp_iter = sqp_iter;
+    nlp_out->total_time = total_time;
 
     // printf("%d sqp iterations\n", sqp_iter);
     // print_ocp_qp_in(work->qp_in);

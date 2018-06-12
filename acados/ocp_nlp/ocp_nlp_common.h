@@ -41,20 +41,20 @@ typedef struct
     void **cost;
     void **dynamics;
     void **constraints;
-    ocp_qp_dims *qp_solver;  // xcond_solver inserad ???
-    int *nv;                 // number of primal variables (states+controls+slacks)
-    int *nx;                 // number of states
-    int *nu;                 // number of inputs
-    int *ni;                 // number of two-sided inequality constraints TODO make one-sided ???
+    ocp_qp_dims *qp_solver;  // xcond solver instead ??
+    int *nv;  // number of primal variables (states+controls+slacks)
+    int *nx;  // number of states
+    int *nu;  // number of inputs
+    int *ni;  // number of two-sided inequality constraints TODO make one-sided ???
     int N;
 } ocp_nlp_dims;
 
 //
-int ocp_nlp_dims_calculate_size_self(void *config);
+int ocp_nlp_dims_calculate_size_self(int N);
 //
 int ocp_nlp_dims_calculate_size(void *config);
 //
-ocp_nlp_dims *ocp_nlp_dims_assign_self(void *config, void *raw_memory);
+ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
 //
@@ -86,7 +86,9 @@ typedef struct
     struct blasfeo_dvec *t;
 
     int sqp_iter;
+    int qp_iter;
     double inf_norm_res;
+    double total_time;
 } ocp_nlp_out;
 
 /************************************************
@@ -127,7 +129,7 @@ typedef struct
 {
     int N;  // number of stages
 
-    // all the others
+    // solver-specific implementations of memory management functions
     int (*opts_calculate_size)(void *config, ocp_nlp_dims *dims);
     void *(*opts_assign)(void *config, ocp_nlp_dims *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, ocp_nlp_dims *dims, void *opts_);
@@ -135,14 +137,20 @@ typedef struct
     int (*memory_calculate_size)(void *config, ocp_nlp_dims *dims, void *opts_);
     void *(*memory_assign)(void *config, ocp_nlp_dims *dims, void *opts_, void *raw_memory);
     int (*workspace_calculate_size)(void *config, ocp_nlp_dims *dims, void *opts_);
+
+    // evaluate solver
     int (*evaluate)(void *config, ocp_nlp_dims *dims, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out,
                     void *opts_, void *mem, void *work);
+
+    // initalize this struct with default values
     void (*config_initialize_default)(void *config);
+
+    // config structs of submodules
     ocp_qp_xcond_solver_config *qp_solver;
-    //    sim_solver_config **sim_solvers;
     ocp_nlp_dynamics_config **dynamics;
     ocp_nlp_cost_config **cost;
     ocp_nlp_constraints_config **constraints;
+
 } ocp_nlp_solver_config;
 
 /************************************************
@@ -163,7 +171,11 @@ ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory);
  ************************************************/
 
 //
+int ocp_nlp_in_calculate_size_self(int N);
+//
 int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory);
 //
 ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
 

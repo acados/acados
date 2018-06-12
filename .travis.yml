@@ -40,7 +40,6 @@ install:
   - export MPLBACKEND=Agg # For matplotlib
   - export MATLABPATH=$HOME/local/lib:$MATLABPATH
   - export PYTHONPATH=$HOME/local/lib:$PYTHONPATH
-  - export LD_LIBRARY_PATH=$HOME/local/lib:$LD_LIBRARY_PATH
 
 before_script:
   - mkdir -p /home/travis/octave_download
@@ -59,10 +58,6 @@ script:
   - cmake --build build --target lint
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
-  - rm -r -f build
-  - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain-mingw32.cmake ..
-  - cmake --build build
   - rm -r -f build
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DMatlab_ROOT_DIR=../external/matlab -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..

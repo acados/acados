@@ -30,67 +30,98 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 
 #include "acados_c/ocp_qp_interface.h"
+#include "acados_cpp/ocp.hpp"
 #include "acados_cpp/ocp_qp/ocp_qp_solution.hpp"
-#include "acados_cpp/ocp_qp/options.hpp"
+#include "acados_cpp/options.hpp"
 
 namespace acados
 {
-class ocp_qp
+class ocp_qp : private ocp
 {
  public:
-    ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, std::vector<uint> nbu,
-           std::vector<uint> ng);
+    ocp_qp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, std::vector<int> ns);
 
-    explicit ocp_qp(std::map<std::string, std::vector<uint>>);
+    ocp_qp(int N, int nx, int nu, int ng = 0, int ns = 0);
 
-    ocp_qp(uint N, uint nx, uint nu, uint nbx = 0, uint nbu = 0, uint ng = 0);
+    std::vector<std::vector<double>> get_field(std::string field);
 
-    void set(std::string field, uint stage, std::vector<double> v);
-    void set(std::string field, std::vector<double> v);
+    // Update all fields with the same values. Matrices are passed in column-major ordering.
+    void set_field(std::string field, int stage, std::vector<double> v);
+
+    // Update a single field. Matrices are passed in column-major ordering.
+    void set_field(std::string field, std::vector<double> v);
+
+    std::pair<int, int> shape_of_field(std::string field, int stage);
 
     void initialize_solver(std::string solver_name, std::map<std::string, option_t *> options = {});
 
     ocp_qp_solution solve();
 
-    std::vector<std::vector<double>> extract(std::string field);
+    std::map<std::string, std::vector<int>> dimensions();
 
-    std::map<std::string, std::vector<uint>> dimensions();
+    const std::vector<std::string> fields{"Q",   "S",   "R",   "q",   "r", "A", "B",  "b",
+                                          "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"};
 
-    std::pair<uint, uint> shape_of(std::string field, uint stage);
-
-    void set_bounds_indices(std::string name, uint stage, std::vector<uint> v);
-
-    std::vector<std::vector<uint>> bounds_indices(std::string name);
-
-    const uint N;
+    int num_stages() override;
 
  private:
-    vector<uint> idxb(vector<double> lower_bound, vector<double> upper_bound);
+    void reset_bounds();
 
-    void fill_in_bounds();
+    bool in_range(std::string field, int stage);
 
-    void squeeze_dimensions();
+    void squeeze_dimensions(std::map<std::string, std::vector<std::vector<double>>> bounds) override
+    {
+        ocp::squeeze_dimensions(bounds);
+    }
 
-    void expand_dimensions();
+    void fill_bounds(std::map<std::string, std::vector<std::vector<double>>> bounds) override
+    {
+        ocp::fill_bounds(bounds);
+    }
 
-    void check_range(std::string field, uint stage);
+    void change_bound_dimensions(std::vector<int> nbx, std::vector<int> nbu) override;
 
-    void check_num_elements(std::string, uint stage, uint nb_elems);
+    void set_bound(std::string bound, int stage, std::vector<double> new_bound) override;
 
-    void flatten(std::map<std::string, option_t *> &input,
-                 std::map<std::string, option_t *> &output);
+    std::vector<int> get_bound_indices(std::string name, int stage) override;
 
-    std::vector<uint> nx();
-    std::vector<uint> nu();
-    std::vector<uint> nbx();
-    std::vector<uint> nbu();
-    std::vector<uint> ng();
+    void set_bound_indices(std::string name, int stage, std::vector<int> v) override;
 
-    std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
+    bool needs_initializing() override;
+
+    void needs_initializing(bool) override;
+
+    std::vector<int> nx();
+    std::vector<int> nu();
+    std::vector<int> nbx();
+    std::vector<int> nbu();
+    std::vector<int> ng();
+
+    const int N;
 
     std::unique_ptr<ocp_qp_in> qp;
 
     std::unique_ptr<ocp_qp_solver> solver;
+
+    const std::map<std::string, ocp_qp_solver_plan> available_solvers = {
+        {"condensing_hpipm", {FULL_CONDENSING_HPIPM}},
+        {"sparse_hpipm", {PARTIAL_CONDENSING_HPIPM}},
+#ifdef ACADOS_WITH_HPMPC
+        {"hpmpc", {PARTIAL_CONDENSING_HPMPC}},
+#endif
+#ifdef ACADOS_WITH_OOQP
+        {"ooqp", {PARTIAL_CONDENSING_OOQP}}
+#endif
+#ifdef ACADOS_WITH_QPDUNES
+        {"qpdunes", {PARTIAL_CONDENSING_QPDUNES}},
+#endif
+#ifdef ACADOS_WITH_QPOASES
+        {"qpoases", {FULL_CONDENSING_QPOASES}},
+#endif
+#ifdef ACADOS_WITH_QORE
+        {"qore", {FULL_CONDENSING_QORE}},
+#endif
+    };
 
     std::unique_ptr<ocp_qp_xcond_solver_config> config;
 
@@ -98,11 +129,11 @@ class ocp_qp
 
     std::string cached_solver;
 
-    bool needs_initializing = true;
+    std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
+
+    bool needs_initializing_;
 
     static std::map<std::string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
-
-    friend std::ostream &operator<<(std::ostream &oss, const ocp_qp &qp);
 };
 
 }  // namespace acados

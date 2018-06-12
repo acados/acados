@@ -89,7 +89,7 @@ void dense_qp_qpoases_opts_initialize_default(void *config_, dense_qp_dims *dims
     dense_qp_qpoases_opts *opts = (dense_qp_qpoases_opts *) opts_;
 
     opts->max_cputime = 1000.0;
-    opts->warm_start = 0;
+    opts->warm_start = 1;
     opts->max_nwsr = 1000;
     opts->use_precomputed_cholesky = 0;
     opts->hotstart = 0;
@@ -299,8 +299,6 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             if (memory->first_it == 1)
             {
                 QProblemCON(QP, nvd, ngd, HST_POSDEF);
-                QProblem_setPrintLevel(QP, PL_MEDIUM);
-                // QProblem_setPrintLevel(QP, PL_DEBUG_ITER);
                 if (opts->set_acado_opts)
                 {
                     static Options options;
@@ -327,8 +325,6 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             if (memory->first_it == 1)
             {
                 QProblemBCON(QPB, nvd, HST_POSDEF);
-                QProblemB_setPrintLevel(QPB, PL_MEDIUM);
-                // QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER);
                 if (opts->set_acado_opts)
                 {
                     static Options options;
@@ -355,9 +351,6 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
         if (ngd > 0)
         {
             QProblemCON(QP, nvd, ngd, HST_POSDEF);
-            // QProblem_setPrintLevel(QP, PL_HIGH);
-            QProblem_setPrintLevel(QP, PL_DEBUG_ITER);
-            QProblem_printProperties(QP);
             if (opts->use_precomputed_cholesky == 1)
             {
                 // static Options options;
@@ -396,9 +389,6 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
         else
         {  // QProblemB
             QProblemBCON(QPB, nvd, HST_POSDEF);
-            // QProblemB_setPrintLevel(QPB, PL_MEDIUM);
-            QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER);
-            QProblemB_printProperties(QPB);
             if (opts->use_precomputed_cholesky == 1)
             {
                 // static Options options;
@@ -434,6 +424,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             QProblemB_getDualSolution(QPB, dual_sol);
         }
     }
+
     // save solution statistics to memory
     memory->cputime = cputime;
     memory->nwsr = nwsr;

@@ -110,7 +110,7 @@ void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
 ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_);
 //
-int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out);
+int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
 #ifdef __cplusplus
 } /* extern "C" */

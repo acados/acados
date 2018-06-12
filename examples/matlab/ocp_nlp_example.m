@@ -1,62 +1,63 @@
+
 import casadi.*
 import acados.*
 
-N = 10;
-[ode_fun, nx, nu] = chen_model();
-ng = cell(N+1, 1);
-for i=1:N
-    ng{i} = 1;
-end
-ng{N+1} = 0;
-nlp = ocp_nlp(struct('N', N, 'nx', nx, 'nu', nu, 'ng', ng));
+%% Model
 
-% ODE Model
-step = 0.1;
-nlp.set_model(ode_fun, step);
+[ode_fun, nx, nu] = pendulum_model();
 
-% Cost function
-Q = diag([1.0, 1.0]);
-R = 1e-2;
-x = SX.sym('x',nx);
-u = SX.sym('u',nu);
-u_N = SX.sym('u',0);
-f = ocp_nlp_function(Function('ls_cost', {x, u}, {vertcat(x, u)}));
-f_N = ocp_nlp_function(Function('ls_cost_N', {x, u_N}, {x}));
-cost_functions = cell(N+1, 1);
-cost_matrices = cell(N+1, 1);
-for i=1:N
-    cost_functions{i} = f;
-    cost_matrices{i} = blkdiag(Q, R);
-end
-cost_functions{N+1} = f_N;
-cost_matrices{N+1} = Q;
+N = 20;
+Ts = 0.05;
+Q = diag([1, 1, 1e-10, 1e-10]);
+W = blkdiag(Q, 1e-2);
+WN = 1000*Q;
 
-ls_cost = ocp_nlp_ls_cost(N, cost_functions);
-ls_cost.ls_cost_matrix = cost_matrices;
-nlp.set_cost(ls_cost);
+%% NLP solver
 
-% Constraints
-g = ocp_nlp_function(Function('path_constraint', {x, u}, {u}));
-g_N = ocp_nlp_function(Function('path_constraint_N', {x, u_N}, {SX([])}));
-path_constraints = cell(N+1, 1);
-for i=1:N
-    path_constraints{i} = g;
-    nlp.lg{i} = -0.5;
-    nlp.ug{i} = +0.5;
-end
-path_constraints{N+1} = g_N;
-nlp.set_path_constraints(path_constraints);
- 
-solver = ocp_nlp_solver('sqp', nlp, struct('integrator_steps', 2, 'qp_solver', 'condensing_qpoases', 'sensitivity_method', 'gauss-newton'));
- 
-% Simulation
-num_iters = 20;
-STATES = zeros(nx, num_iters+1);
-STATES(:, 1) = [0.1; 0.1];
-for i=1:num_iters
-    output = solver.evaluate(STATES(:, i));
-    STATES(:, i+1) = output.states{2};
+nlp = ocp_nlp(N, nx, nu);
+nlp.set_dynamics(ode_fun, struct('integrator', 'rk4', 'step', Ts));
+
+nlp.set_stage_cost(eye(nx+nu), zeros(nx+nu), W);
+nlp.set_terminal_cost(eye(nx), zeros(nx, 1), WN);
+
+x0 = [0; pi; 0; 0];
+nlp.set_field('lbx', 0, x0);
+nlp.set_field('ubx', 0, x0);
+
+nlp.set_field('lbu', -8);
+nlp.set_field('ubu', +8);
+
+nlp.initialize_solver('sqp', struct('qp_solver', 'qpoases'));
+
+output = nlp.solve(x0, 0);
+
+for i=1:99
+
+    states = output.states();
+    disp(states{1});
+
+    nlp.set_field('lbx', 0, states{2});
+    nlp.set_field('ubx', 0, states{2});
+
+    output = nlp.solve();
 end
 
-plot(STATES(1, :), STATES(2, :));
-axis equal
+%% Plotting
+
+states = output.states();
+X = [states{1}.'];
+for i=1:numel(states)-1
+    X = [X; states{i+1}.'];
+end
+
+controls = output.controls();
+U = [controls{1}.'];
+for i=1:numel(controls)-1
+    U = [U; controls{i+1}.'];
+end
+
+figure(1); clf;
+subplot(211)
+plot(X);
+subplot(212)
+plot(U);

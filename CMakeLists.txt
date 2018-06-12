@@ -39,6 +39,10 @@ message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 
 enable_testing(true)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    add_definitions(-D _GLIBCXX_USE_CXX11_ABI=0) # Needed for CasADi compatibility
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fdiagnostics-show-option")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fdiagnostics-show-option")
@@ -52,10 +56,7 @@ message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
 # Rpath handling, see https://cmake.org/Wiki/CMake_RPATH_handling#What_is_RPATH_.3F
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-set(CMAKE_MACOSX_RPATH TRUE)
-# set(CMAKE_INSTALL_RPATH "\$ORIGIN")
-# SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_INSTALL_RPATH "$ENV{CASADIPATH}/casadi")
 
 if(NOT CMAKE_C_COMPILER_ID MATCHES "MSVC")
     set(ACADOS_WITH_HPMPC ON CACHE BOOL "Add HPMPC solver")
