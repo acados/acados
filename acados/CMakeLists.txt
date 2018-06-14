@@ -120,7 +120,7 @@ endif()
 add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
 if((SWIG_PYTHON OR SWIG_MATLAB) AND NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
     find_package(Casadi REQUIRED)
-	add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
+    add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
     target_link_libraries(acados PUBLIC casadi)
 endif()
 

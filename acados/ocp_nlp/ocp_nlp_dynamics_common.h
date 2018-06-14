@@ -51,7 +51,7 @@ typedef struct
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
-	void (*opts_set) (void *config_, void *dims_, void *opts_, enum acados_opts name, void *ptr_value);
+    void (*opts_set) (void *config_, void *dims_, void *opts_, enum acados_opts name, void *ptr_value);
     void (*opts_update)(void *config, void *dims, void *opts);
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);

@@ -158,14 +158,14 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
 
     int N = dims->N;
 
-	// SQP RTI opts
+    // SQP RTI opts
 
-//	opts->compute_dual_sol = 1;
+//    opts->compute_dual_sol = 1;
 
-	// submodules opts
+    // submodules opts
 
-	// do not compute adjoint in dynamics and constraints
-	int compute_adj = 0;
+    // do not compute adjoint in dynamics and constraints
+    int compute_adj = 0;
 
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
@@ -754,8 +754,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_solver_config *config = config_;
     ocp_nlp_sqp_rti_opts *opts = opts_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
-	ocp_nlp_in *nlp_in = nlp_in_;
-	ocp_nlp_out *nlp_out = nlp_out_;
+    ocp_nlp_in *nlp_in = nlp_in_;
+    ocp_nlp_out *nlp_out = nlp_out_;
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_sqp_rti_work *work = work_;
@@ -807,39 +807,39 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 //    double total_time = 0;
 //    acados_tic(&timer);
 
-	// SQP body
+    // SQP body
 
-	// linearizate NLP and update QP matrices
-	linearize_update_qp_matrices(config, dims, nlp_in, nlp_out, opts, mem, work);
+    // linearizate NLP and update QP matrices
+    linearize_update_qp_matrices(config, dims, nlp_in, nlp_out, opts, mem, work);
 
-	// update QP rhs for SQP (step prim var, abs dual var)
-	sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
+    // update QP rhs for SQP (step prim var, abs dual var)
+    sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
 
-	// printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
-	//  print_ocp_qp_in(work->qp_in);
+    // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
+    //  print_ocp_qp_in(work->qp_in);
 
-	int qp_status =
-		qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
-							mem->qp_solver_mem, work->qp_work);
+    int qp_status =
+        qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
+                            mem->qp_solver_mem, work->qp_work);
 
-	// printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
-	//  print_ocp_qp_out(work->qp_out);
-	//  if(sqp_iter==1)
-	//  exit(1);
+    // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
+    //  print_ocp_qp_out(work->qp_out);
+    //  if(sqp_iter==1)
+    //  exit(1);
 
-	if (qp_status != 0)
-	{
-		//   print_ocp_qp_in(work->qp_in);
+    if (qp_status != 0)
+    {
+        //   print_ocp_qp_in(work->qp_in);
 
-		printf("QP solver returned error status %d\n", qp_status);
-		return -1;
-	}
+        printf("QP solver returned error status %d\n", qp_status);
+        return -1;
+    }
 
-	sqp_update_variables(dims, nlp_out, opts, mem, work);
+    sqp_update_variables(dims, nlp_out, opts, mem, work);
 
-	// ocp_nlp_dims_print(nlp_out->dims);
-	// ocp_nlp_out_print(nlp_out);
-	// exit(1);
+    // ocp_nlp_dims_print(nlp_out->dims);
+    // ocp_nlp_out_print(nlp_out);
+    // exit(1);
 
     // stop timer
 //    total_time += acados_toc(&timer);

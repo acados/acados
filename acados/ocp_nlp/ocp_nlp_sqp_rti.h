@@ -41,7 +41,7 @@ typedef struct
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
-	int compute_dual_sol;
+    int compute_dual_sol;
 } ocp_nlp_sqp_rti_opts;
 
 //

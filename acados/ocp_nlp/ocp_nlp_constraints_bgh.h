@@ -85,7 +85,7 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims, void *raw_m
 
 typedef struct
 {
-	int compute_adj;
+    int compute_adj;
 } ocp_nlp_constraints_bgh_opts;
 
 //

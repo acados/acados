@@ -782,8 +782,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_solver_config *config = config_;
     ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_sqp_memory *mem = mem_;
-	ocp_nlp_in *nlp_in = nlp_in_;
-	ocp_nlp_out *nlp_out = nlp_out_;
+    ocp_nlp_in *nlp_in = nlp_in_;
+    ocp_nlp_out *nlp_out = nlp_out_;
 
     ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_sqp_work *work = work_;

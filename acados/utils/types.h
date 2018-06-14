@@ -56,8 +56,8 @@ enum return_values
 // opts values ( please keep in alphabetical order ! )
 enum acados_opts
 {
-	COMPUTE_ADJ,
-//	COMPUTE_DUAL_SOL,
+    COMPUTE_ADJ,
+//    COMPUTE_DUAL_SOL,
 };
 
 

@@ -79,7 +79,7 @@ void *ocp_nlp_constraints_bghp_assign(void *config, void *dims, void *raw_memory
 
 typedef struct
 {
-	int compute_adj;
+    int compute_adj;
 } ocp_nlp_constraints_bghp_opts;
 
 //

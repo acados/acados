@@ -115,7 +115,7 @@ void ocp_nlp_dynamics_disc_opts_initialize_default(void *config_, void *dims_, v
 {
     ocp_nlp_dynamics_disc_opts *opts = opts_;
 
-	opts->compute_adj = 1;
+    opts->compute_adj = 1;
 
     return;
 }
@@ -137,19 +137,19 @@ void ocp_nlp_dynamics_disc_opts_set(void *config_, void *dims_, void *opts_, enu
 
     ocp_nlp_dynamics_disc_opts *opts = opts_;
 
-	if (name==COMPUTE_ADJ)
-	{
-		int *compute_adj = ptr_value;
-		opts->compute_adj = *compute_adj;
-	}
-	else
-	{
-		// TODO something better tha this print-and-exit
-		printf("\nocp_nlp_dynamics_disc_opts_set: unknown opts name !\n");
-		exit(1);
-	}
+    if (name==COMPUTE_ADJ)
+    {
+        int *compute_adj = ptr_value;
+        opts->compute_adj = *compute_adj;
+    }
+    else
+    {
+        // TODO something better tha this print-and-exit
+        printf("\nocp_nlp_dynamics_disc_opts_set: unknown opts name !\n");
+        exit(1);
+    }
 
-	return;
+    return;
 
 }
 
@@ -383,7 +383,7 @@ void *ocp_nlp_dynamics_disc_model_assign(void *config_, void *dims_, void *raw_m
 
 void ocp_nlp_dynamics_disc_model_set_T(double T, void *model_) 
 {
-	return;
+    return;
 }
 
 
@@ -451,12 +451,12 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
 
     // adj TODO if not computed by the external function
-	if (opts->compute_adj)
-	{
-		blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj,
-						0);
-		blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
-	}
+    if (opts->compute_adj)
+    {
+        blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj,
+                        0);
+        blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
+    }
 
     return;
 }
@@ -477,7 +477,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->opts_assign = &ocp_nlp_dynamics_disc_opts_assign;
     config->opts_initialize_default = &ocp_nlp_dynamics_disc_opts_initialize_default;
     config->opts_update = &ocp_nlp_dynamics_disc_opts_update;
-	config->opts_set = &ocp_nlp_dynamics_disc_opts_set;
+    config->opts_set = &ocp_nlp_dynamics_disc_opts_set;
     config->memory_calculate_size = &ocp_nlp_dynamics_disc_memory_calculate_size;
     config->memory_assign = &ocp_nlp_dynamics_disc_memory_assign;
     config->memory_get_fun_ptr = &ocp_nlp_dynamics_disc_memory_get_fun_ptr;
