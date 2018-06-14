@@ -417,10 +417,10 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
         blasfeo_dveccp(2*ns, in->d, 2*nb+2*ng, out->d, k_nsb);
 
         // for slack variables out->ub is +INFTY
-        blasfeo_dvecse(2*ns, 1.0e6, out->d, nb2+ng2+k_nsb);
+        blasfeo_dvecse(2*ns, ACADOS_POS_INFTY, out->d, nb2+ng2+k_nsb);
 
         // set out->lg to -INFTY
-        blasfeo_dvecse(ng2, -1.0e6, out->d, nb2);
+        blasfeo_dvecse(ng2, ACADOS_NEG_INFTY, out->d, nb2);
 
         // copy in->ug and -in->lg to out->ug
         blasfeo_dveccpsc(ng, -1.0, in->d, 2*nb+ng, out->d, 2*nb2+ng2);
