@@ -41,6 +41,7 @@ typedef struct
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
+	int compute_dual_sol;
 } ocp_nlp_sqp_rti_opts;
 
 //
@@ -51,6 +52,8 @@ void *ocp_nlp_sqp_rti_opts_assign(void *config, void *dims, void *raw_memory);
 void ocp_nlp_sqp_rti_opts_initialize_default(void *config, void *dims, void *opts);
 //
 void ocp_nlp_sqp_rti_opts_update(void *config, void *dims, void *opts);
+
+
 
 /************************************************
  * memory
@@ -75,6 +78,8 @@ int ocp_nlp_sqp_rti_memory_calculate_size(void *config, void *dims, void *opts_)
 //
 void *ocp_nlp_sqp_rti_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 
+
+
 /************************************************
  * workspace
  ************************************************/
@@ -95,6 +100,8 @@ typedef struct
 //
 int ocp_nlp_sqp_rti_workspace_calculate_size(void *config, void *dims, void *opts_);
 
+
+
 /************************************************
  * functions
  ************************************************/
@@ -104,6 +111,8 @@ int ocp_nlp_sqp_rti(void *config, void *dims, void *nlp_in, void *nlp_out,
                 void *args, void *mem, void *work_);
 //
 void ocp_nlp_sqp_rti_config_initialize_default(void *config_);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

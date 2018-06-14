@@ -57,6 +57,7 @@ enum return_values
 enum acados_opts
 {
 	COMPUTE_ADJ,
+//	COMPUTE_DUAL_SOL,
 };
 
 

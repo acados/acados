@@ -158,6 +158,12 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
 
     int N = dims->N;
 
+	// SQP RTI opts
+
+//	opts->compute_dual_sol = 1;
+
+	// submodules opts
+
 	// do not compute adjoint in dynamics and constraints
 	int compute_adj = 0;
 
