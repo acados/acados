@@ -157,6 +157,18 @@ file(GLOB WT_MODEL_NX6P2_SRC
     wt_model_nx6/nx6p2/wt_nx6p2_get_matrices_fun.c
 )
 
+file(GLOB INV_PENDULUM_SRC
+    inverted_pendulum_model/inv_pendulum_impl_ode_fun.c
+    inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot.c
+    inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u.c
+    inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_u.c
+    inverted_pendulum_model/inv_pendulum_phi_fun.c
+    inverted_pendulum_model/inv_pendulum_phi_fun_jac_y.c
+    inverted_pendulum_model/inv_pendulum_phi_jac_y_uhat.c
+    inverted_pendulum_model/inv_pendulum_f_lo_fun_jac_x1k1uz.c
+    inverted_pendulum_model/inv_pendulum_get_matrices_fun.c
+)
+
 file(GLOB GNSF_CRANE_SRC
     gnsf_crane_model/phi_fun.c
     gnsf_crane_model/phi_fun_jac_y.c
@@ -176,6 +188,11 @@ add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
 add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6P2_SRC})
 target_link_libraries(wind_turbine_nmpc_example acados)
 add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
+
+# -------------------- sim_inverted_pendulum
+add_executable(sim_inverted_pendulum sim_inverted_pendulum.c ${INV_PENDULUM_SRC})
+target_link_libraries(sim_inverted_pendulum acados)
+add_test(sim_inverted_pendulum sim_inverted_pendulum)
 
 # -------------------- sim_wt_nx6
 add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})

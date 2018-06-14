@@ -56,7 +56,7 @@ static const casadi_int casadi_s5[7] = {11, 2, 0, 1, 2, 9, 10};
 
 /* crane_dae_impl_ode_jac_x_xdot_u:(i0[9],i1[9],i2[2],i3[2])->(o0[11x9,16nz],o1[11x9,10nz],o2[11x2,5nz],o3[11x2,2nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
-  casadi_real a0, a1, a10, a11, a12, a13, a2, a3, a4, a5, a6, a7, a8, a9;
+  casadi_real a0, a1, a10, a11, a12, a13, a14, a2, a3, a4, a5, a6, a7, a8, a9;
   a0=1.;
   if (res[0]!=0) res[0][0]=a0;
   a1=-7.8182378879940387e+01;
@@ -88,24 +88,24 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[0]!=0) res[0][5]=a0;
   a13=-4.0493711676434543e+01;
   if (res[0]!=0) res[0][6]=a13;
-  a8=(a8*a11);
-  a8=(a8/a12);
-  a8=(-a8);
-  if (res[0]!=0) res[0][7]=a8;
-  a8=arg[1] ? arg[1][2] : 0;
-  a13=(a2*a9);
-  a8=(a8-a13);
-  a13=(a8+a8);
-  a13=(a13*a2);
-  if (res[0]!=0) res[0][8]=a13;
-  a13=3.7072679182318851e+00;
-  if (res[0]!=0) res[0][9]=a13;
-  a13=1.3803228073658729e+00;
-  if (res[0]!=0) res[0][10]=a13;
-  a13=cos(a4);
-  a7=(a7*a13);
-  a13=sin(a4);
-  a3=(a3*a13);
+  a13=(a8*a11);
+  a13=(a13/a12);
+  a13=(-a13);
+  if (res[0]!=0) res[0][7]=a13;
+  a13=arg[1] ? arg[1][2] : 0;
+  a14=(a2*a9);
+  a13=(a13-a14);
+  a14=(a13+a13);
+  a14=(a14*a2);
+  if (res[0]!=0) res[0][8]=a14;
+  a14=3.7072679182318851e+00;
+  if (res[0]!=0) res[0][9]=a14;
+  a14=1.3803228073658729e+00;
+  if (res[0]!=0) res[0][10]=a14;
+  a14=cos(a4);
+  a7=(a7*a14);
+  a14=sin(a4);
+  a3=(a3*a14);
   a7=(a7-a3);
   a7=(a7/a12);
   a7=(-a7);
@@ -126,7 +126,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[1]!=0) res[1][0]=a6;
   if (res[1]!=0) res[1][1]=a6;
   if (res[1]!=0) res[1][2]=a6;
-  a11=(a8+a8);
+  a11=(a13+a13);
   a11=(-a11);
   if (res[1]!=0) res[1][3]=a11;
   if (res[1]!=0) res[1][4]=a6;
@@ -142,12 +142,12 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[2]!=0) res[2][1]=a1;
   a2=(a2+a2);
   if (res[2]!=0) res[2][2]=a2;
-  a8=(a8+a8);
-  a8=(a8*a9);
-  if (res[2]!=0) res[2][3]=a8;
+  a13=(a13+a13);
+  a13=(a13*a9);
+  if (res[2]!=0) res[2][3]=a13;
   if (res[2]!=0) res[2][4]=a0;
   if (res[3]!=0) res[3][0]=a0;
-  if (res[3]!=0) res[3][1]=a0;
+  if (res[3]!=0) res[3][1]=a8;
   return 0;
 }
 

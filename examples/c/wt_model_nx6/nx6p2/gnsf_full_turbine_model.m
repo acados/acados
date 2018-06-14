@@ -97,6 +97,8 @@ B = zeros(nx, nu);
 B(7,1) = 1;
 B(8,2) = 1;
 
+c = zeros(nx1 + nz,1);
+
 phi = fe(2);
 
 n_out  = length(phi);
@@ -166,8 +168,8 @@ s = struct('A', A, 'B', B, 'C', C, 'E', E, 'ALO',ALO, 'L_x', L_x, 'L_xdot', L_xd
 % get matrices
 dummy = SX.sym('dummy');
 
-model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)])) + ...
-    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)];
+model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)])) + ...
+    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)];
 get_matrices_fun = Function([model_name_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
 get_matrices_fun.generate([model_name_prefix,'get_matrices_fun'], casadi_opts);
 
@@ -194,5 +196,5 @@ p_ = 15.710649490356451; %rand(np,1);
 y_ = L_x * x_;
 uhat_ = L_u * u_;
 phi_val = phi_fun(y_, uhat_, p_);
-gnsf_val = full(A*x_ + B*u_ + C * phi_val);
+gnsf_val = full(A*x_ + B*u_ + C * phi_val + c);
 

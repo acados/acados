@@ -75,6 +75,9 @@ typedef struct
     double *L_u;
     double *A_LO;
 
+    /* constant vector */
+    double *c;
+
 } gnsf_model;
 
 // pre_workspace - workspace used in the precomputation phase
@@ -121,6 +124,11 @@ typedef struct
     struct blasfeo_dmat K0x;
     struct blasfeo_dmat K0u;
     struct blasfeo_dmat K0f;
+    struct blasfeo_dmat Q1;
+
+    // for constant term in NSF
+    struct blasfeo_dvec cc1;
+    struct blasfeo_dvec cc2;
 
 } gnsf_pre_workspace;
 
@@ -159,7 +167,6 @@ typedef struct
 
     struct blasfeo_dmat J_r_ff;
     struct blasfeo_dmat J_r_x1u;
-    struct blasfeo_dmat dz0_dx1u;  // (nz) * (nx1+nu);
 
     struct blasfeo_dmat dK1_dx1;
     struct blasfeo_dmat dK1_du;
@@ -183,6 +190,14 @@ typedef struct
 
     struct blasfeo_dmat dPHI_dyuhat;
 
+    // memory only available if (opts->sens_algebraic)
+    struct blasfeo_dvec x0dot_1;
+    struct blasfeo_dvec z0;
+    struct blasfeo_dmat dz0_dx1u;  // (nz) * (nx1+nu);
+    struct blasfeo_dmat dr0_dff0;  // (n_out * n_out)
+    int *ipiv_ff0;
+
+
 } gnsf_workspace;
 
 // memory
@@ -191,7 +206,7 @@ typedef struct
     // scaled butcher table
     double *A_dt;
     double *b_dt;
-    double *c;
+    double *c_butcher;
     double dt;
 
     // precomputed matrices
@@ -217,9 +232,19 @@ typedef struct
     struct blasfeo_dmat Z0x;
     struct blasfeo_dmat Z0u;
     struct blasfeo_dmat Z0f;
+
+    struct blasfeo_dmat Y0x;
+    struct blasfeo_dmat Y0u;
+    struct blasfeo_dmat Y0f;
+
     struct blasfeo_dmat Lx;
     struct blasfeo_dmat Lxdot;
     struct blasfeo_dmat Lz;
+
+    // precomputed vectors for constant term in NSF
+    struct blasfeo_dvec KK0;
+    struct blasfeo_dvec YY0;
+    struct blasfeo_dvec ZZ0;
 
 } sim_gnsf_memory;
 
@@ -231,6 +256,7 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory);
 void sim_gnsf_set_nx(void *dims_, int nx);
 void sim_gnsf_set_nu(void *dims_, int nu);
 void sim_gnsf_set_nz(void *dims_, int nz);
+
 void sim_gnsf_get_nx(void *dims_, int *nx);
 void sim_gnsf_get_nu(void *dims_, int *nu);
 void sim_gnsf_get_nz(void *dims_, int *nz);
