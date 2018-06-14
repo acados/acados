@@ -132,19 +132,20 @@ void ocp_nlp_dynamics_disc_opts_update(void *config_, void *dims_, void *opts_)
 
 
 
-void ocp_nlp_dynamics_disc_opts_set(void *config_, void *dims_, void *opts_, enum acados_opts name, void *ptr_value)
+void ocp_nlp_dynamics_disc_opts_set(void *config_, void *dims_, void *opts_, enum acados_opts name,
+    void *ptr_value)
 {
 
     ocp_nlp_dynamics_disc_opts *opts = opts_;
 
-    if (name==COMPUTE_ADJ)
+    if (name == COMPUTE_ADJ)
     {
         int *compute_adj = ptr_value;
         opts->compute_adj = *compute_adj;
     }
     else
     {
-        // TODO something better tha this print-and-exit
+        // TODO(fuck_you_lint): something better tha this print-and-exit
         printf("\nocp_nlp_dynamics_disc_opts_set: unknown opts name !\n");
         exit(1);
     }
@@ -381,7 +382,7 @@ void *ocp_nlp_dynamics_disc_model_assign(void *config_, void *dims_, void *raw_m
 
 
 
-void ocp_nlp_dynamics_disc_model_set_T(double T, void *model_) 
+void ocp_nlp_dynamics_disc_model_set_T(double T, void *model_)
 {
     return;
 }

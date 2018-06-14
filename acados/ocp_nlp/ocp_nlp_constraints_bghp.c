@@ -205,19 +205,20 @@ void ocp_nlp_constraints_bghp_opts_update(void *config_, void *dims_, void *opts
 
 
 
-void ocp_nlp_constraints_bghp_opts_set(void *config_, void *dims_, void *opts_, enum acados_opts name, void *ptr_value)
+void ocp_nlp_constraints_bghp_opts_set(void *config_, void *dims_, void *opts_,
+    enum acados_opts name, void *ptr_value)
 {
 
     ocp_nlp_constraints_bghp_opts *opts = opts_;
 
-    if (name==COMPUTE_ADJ)
+    if (name == COMPUTE_ADJ)
     {
         int *compute_adj = ptr_value;
         opts->compute_adj = *compute_adj;
     }
     else
     {
-        // TODO something better tha this print-and-exit
+        // TODO(fuck_lint): something better tha this print-and-exit
         printf("\nocp_nlp_constraints_bghp_opts_set: unknown opts name !\n");
         exit(1);
     }
@@ -571,13 +572,13 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     if (opts->compute_adj)
     {
         blasfeo_dvecse(nu + nx + 2 * ns, 0.0, &memory->adj, 0);
-        blasfeo_daxpy(nb + ng + nh, -1.0, memory->lam, nb + ng + nh, memory->lam, 0, &work->tmp_ni, 0);
+        blasfeo_daxpy(nb+ng+nh, -1.0, memory->lam, nb + ng + nh, memory->lam, 0, &work->tmp_ni, 0);
         blasfeo_dvecad_sp(nb, 1.0, &work->tmp_ni, 0, model->idxb, &memory->adj, 0);
-        blasfeo_dgemv_n(nu + nx, ng + nh, 1.0, memory->DCt, 0, 0, &work->tmp_ni, nb, 1.0, &memory->adj,
+        blasfeo_dgemv_n(nu+nx, ng+nh, 1.0, memory->DCt, 0, 0, &work->tmp_ni, nb, 1.0, &memory->adj,
                         0, &memory->adj, 0);
         // soft
         blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, 0, &memory->adj, nu + nx);
-        blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb + ng + nh, &memory->adj, nu + nx + ns);
+        blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb+ng+nh, &memory->adj, nu+nx+ns);
         blasfeo_daxpy(2 * ns, 1.0, memory->lam, 2 * nb + 2 * ng + 2 * nh, &memory->adj, nu + nx,
                       &memory->adj, nu + nx);
     }

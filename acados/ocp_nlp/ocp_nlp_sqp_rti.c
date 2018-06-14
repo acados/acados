@@ -173,7 +173,8 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
     for (ii = 0; ii < N; ii++)
     {
         dynamics[ii]->opts_initialize_default(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
-        dynamics[ii]->opts_set(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii], COMPUTE_ADJ, &compute_adj);
+        dynamics[ii]->opts_set(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii], COMPUTE_ADJ,
+            &compute_adj);
     }
 
     // cost
@@ -185,8 +186,10 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
     // constraints
     for (ii = 0; ii <= N; ii++)
     {
-        constraints[ii]->opts_initialize_default(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
-        constraints[ii]->opts_set(constraints[ii], dims->constraints[ii], opts->constraints[ii], COMPUTE_ADJ, &compute_adj);
+        constraints[ii]->opts_initialize_default(constraints[ii], dims->constraints[ii],
+            opts->constraints[ii]);
+        constraints[ii]->opts_set(constraints[ii], dims->constraints[ii], opts->constraints[ii],
+            COMPUTE_ADJ, &compute_adj);
     }
 
     return;
@@ -359,7 +362,7 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, voi
                                                         opts->constraints[ii]);
     }
 
-    assert((char *) raw_memory + ocp_nlp_sqp_rti_memory_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char *) raw_memory+ocp_nlp_sqp_rti_memory_calculate_size(config, dims, opts) >= c_ptr);
 
     return mem;
 }
@@ -430,8 +433,9 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
 
 // TODO(all): introduce member "memsize" in all structures to make on-line cast cheaper (i.e. avoid
 // to calculate size on-line)
-static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nlp_sqp_rti_work *work,
-                                       ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_opts *opts)
+static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
+                                           ocp_nlp_sqp_rti_work *work,
+                                           ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_opts *opts)
 {
     ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
@@ -500,8 +504,8 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims, oc
  ************************************************/
 
 static void initialize_qp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
-                          ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp_rti_memory *mem,
-                          ocp_nlp_sqp_rti_work *work)
+                          ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts,
+                          ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_work *work)
 {
     ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
@@ -696,8 +700,9 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 
 
 
-static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts,
-                                 ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_work *work)
+static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
+                                 ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp_rti_memory *mem,
+                                 ocp_nlp_sqp_rti_work *work)
 {
     // loop index
     int i;
