@@ -80,6 +80,8 @@ void regularize(int_t dim, real_t *A);
 
 double minimum_of_doubles(double *x, int n);
 
+void neville_algorithm(double xx, int n, double *x, double *Q, double *out);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

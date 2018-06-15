@@ -45,6 +45,10 @@ void *sim_erk_dims_assign(void *config_, void *raw_memory)
     sim_erk_dims *dims = (sim_erk_dims *) c_ptr;
     c_ptr += sizeof(sim_erk_dims);
 
+    dims->nx = 0;
+    dims->nu = 0;
+    dims->nz = 0;
+
     assert((char *) raw_memory + sim_erk_dims_calculate_size() >= c_ptr);
 
     return dims;
@@ -62,6 +66,13 @@ void sim_erk_set_nu(void *dims_, int nu)
     dims->nu = nu;
 }
 
+void sim_erk_set_nz(void *dims_, int nz)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    dims->nz = nz;
+}
+
+
 void sim_erk_get_nx(void *dims_, int *nx)
 {
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
@@ -72,6 +83,12 @@ void sim_erk_get_nu(void *dims_, int *nu)
 {
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
     *nu = dims->nu;
+}
+
+void sim_erk_get_nz(void *dims_, int *nz)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    *nz = dims->nz;
 }
 
 /************************************************
@@ -256,6 +273,9 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
+
+    opts->output_z = false;
+    opts->sens_algebraic = false;
 }
 
 void sim_erk_opts_update(void *config_, void *dims, void *opts_)
@@ -373,7 +393,7 @@ int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 
     int nX = nx * (1 + nf);  // (nx) for ODE and (nf*nx) for VDE
     int nhess = (nf + 1) * nf / 2;
-    uint num_steps = opts->num_steps;  // number of steps
+    int num_steps = opts->num_steps;  // number of steps
 
     int size = sizeof(sim_erk_workspace);
 
@@ -485,6 +505,14 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double a = 0, b = 0;  // temp values of A_mat and b_vec
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
+
+    // assert - only use supported features
+    assert(nz == 0 && "nz should be zero - DAEs are not supported for this integrator");
+    assert(opts->output_z == false &&
+            "opts->output_z should be false - DAEs are not supported for this integrator");
+    assert(opts->sens_algebraic == false &&
+       "opts->sens_algebraic should be false - DAEs are not supported for this integrator");
 
     int nf = opts->num_forw_sens;
     if (!opts->sens_forw) nf = 0;
@@ -755,7 +783,9 @@ void sim_erk_config_initialize_default(void *config_)
     config->dims_assign = &sim_erk_dims_assign;
     config->set_nx = &sim_erk_set_nx;
     config->set_nu = &sim_erk_set_nu;
+    config->set_nz = &sim_erk_set_nz;
     config->get_nx = &sim_erk_get_nx;
     config->get_nu = &sim_erk_get_nu;
+    config->get_nz = &sim_erk_get_nz;
     return;
 }

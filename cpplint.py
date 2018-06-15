@@ -3240,13 +3240,18 @@ def CheckComment(line, filename, linenum, next_line_start, error):
     # Check if the // may be in quotes.  If so, ignore it
     if re.sub(r'\\.', '', line[0:commentpos]).count('"') % 2 == 0:
       # Allow one space for new scopes, two spaces otherwise:
+#      if (not (Match(r'^.*{ *//', line) and next_line_start == commentpos) and
+#          ((commentpos >= 1 and
+#            line[commentpos-1] not in string.whitespace) or
+#           (commentpos >= 2 and
+#            line[commentpos-2] not in string.whitespace))):
+#        error(filename, linenum, 'whitespace/comments', 2,
+#              'At least two spaces is best between code and comments')
       if (not (Match(r'^.*{ *//', line) and next_line_start == commentpos) and
           ((commentpos >= 1 and
-            line[commentpos-1] not in string.whitespace) or
-           (commentpos >= 2 and
-            line[commentpos-2] not in string.whitespace))):
+            line[commentpos-1] not in string.whitespace))):
         error(filename, linenum, 'whitespace/comments', 2,
-              'At least two spaces is best between code and comments')
+              'At least one spaces is best between code and comments')
 
       # Checks for common mistakes in TODO comments.
       comment = line[commentpos:]

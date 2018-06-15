@@ -75,6 +75,9 @@ typedef struct
     double *L_u;
     double *A_LO;
 
+    /* constant vector */
+    double *c;
+
 } gnsf_model;
 
 // pre_workspace - workspace used in the precomputation phase
@@ -117,15 +120,28 @@ typedef struct
     int *ipivQQ1;
     int *ipivM2;
 
+    // for algebraic sensitivity propagation
+    struct blasfeo_dmat K0x;
+    struct blasfeo_dmat K0u;
+    struct blasfeo_dmat K0f;
+    struct blasfeo_dmat Q1;
+
+    // for constant term in NSF
+    struct blasfeo_dvec cc1;
+    struct blasfeo_dvec cc2;
+
 } gnsf_pre_workspace;
 
 // workspace
 typedef struct
 {
-    double *Z_work;  // used to perform computations to get Z_out
-    double *Z_out;
+    double *Z_work;  // used to perform computations to get out->zn
 
     int *ipiv;  // index of pivot vector
+
+    struct blasfeo_dvec *ff_traj;
+    struct blasfeo_dvec *yy_traj;
+    struct blasfeo_dmat *f_LO_jac_traj;
 
     struct blasfeo_dvec K2_val;
     struct blasfeo_dvec x0_traj;
@@ -136,21 +152,18 @@ typedef struct
 
     struct blasfeo_dvec yyu;
     struct blasfeo_dvec yyss;
+    struct blasfeo_dvec y_one_stage;
 
-    struct blasfeo_dvec *K1_val;
-    struct blasfeo_dvec *x1_val;
-    struct blasfeo_dvec *ff_val;
-    struct blasfeo_dvec *yy_val;
-    struct blasfeo_dvec *Z_val;
-    struct blasfeo_dvec *f_LO_val;
+    struct blasfeo_dvec K1_val;
+    struct blasfeo_dvec f_LO_val;
+    struct blasfeo_dvec x1_stage_val;
+    struct blasfeo_dvec Z_val;
 
     struct blasfeo_dvec K1u;
     struct blasfeo_dvec Zu;
     struct blasfeo_dvec ALOtimesx02;
 
     struct blasfeo_dvec uhat;
-
-    struct blasfeo_dmat *f_LO_jac;
 
     struct blasfeo_dmat J_r_ff;
     struct blasfeo_dmat J_r_x1u;
@@ -177,6 +190,14 @@ typedef struct
 
     struct blasfeo_dmat dPHI_dyuhat;
 
+    // memory only available if (opts->sens_algebraic)
+    struct blasfeo_dvec x0dot_1;
+    struct blasfeo_dvec z0;
+    struct blasfeo_dmat dz0_dx1u;  // (nz) * (nx1+nu);
+    struct blasfeo_dmat dr0_dff0;  // (n_out * n_out)
+    int *ipiv_ff0;
+
+
 } gnsf_workspace;
 
 // memory
@@ -185,7 +206,7 @@ typedef struct
     // scaled butcher table
     double *A_dt;
     double *b_dt;
-    double *c;
+    double *c_butcher;
     double dt;
 
     // precomputed matrices
@@ -207,6 +228,24 @@ typedef struct
 
     struct blasfeo_dmat Lu;
 
+    // for algebraic sensitivities
+    struct blasfeo_dmat Z0x;
+    struct blasfeo_dmat Z0u;
+    struct blasfeo_dmat Z0f;
+
+    struct blasfeo_dmat Y0x;
+    struct blasfeo_dmat Y0u;
+    struct blasfeo_dmat Y0f;
+
+    struct blasfeo_dmat Lx;
+    struct blasfeo_dmat Lxdot;
+    struct blasfeo_dmat Lz;
+
+    // precomputed vectors for constant term in NSF
+    struct blasfeo_dvec KK0;
+    struct blasfeo_dvec YY0;
+    struct blasfeo_dvec ZZ0;
+
 } sim_gnsf_memory;
 
 // gnsf dims
@@ -216,8 +255,11 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory);
 // get & set functions
 void sim_gnsf_set_nx(void *dims_, int nx);
 void sim_gnsf_set_nu(void *dims_, int nu);
+void sim_gnsf_set_nz(void *dims_, int nz);
+
 void sim_gnsf_get_nx(void *dims_, int *nx);
 void sim_gnsf_get_nu(void *dims_, int *nu);
+void sim_gnsf_get_nz(void *dims_, int *nz);
 
 // opts
 int sim_gnsf_opts_calculate_size(void *config, void *dims);

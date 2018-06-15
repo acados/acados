@@ -42,15 +42,10 @@
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #endif
 
-ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan)
+void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
+                                                   ocp_qp_xcond_solver_config *solver_config)
 {
-    int bytes = ocp_qp_xcond_solver_config_calculate_size();
-    void *ptr = calloc(1, bytes);
-    ocp_qp_xcond_solver_config *solver_config = ocp_qp_xcond_solver_config_assign(ptr);
-
-    ocp_qp_solver_t solver_name = plan.qp_solver;
-
-    if (solver_name < FULL_CONDENSING_HPIPM)
+if (solver_name < FULL_CONDENSING_HPIPM)
     {
         ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
     }
@@ -59,8 +54,6 @@ ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan)
         ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
     }
 
-    // TODO(dimitris): cath error if solver not compiled
-    // printf("\n\nSpecified solver interface not compiled with acados!\n\n");
     switch (solver_name)
     {
         case PARTIAL_CONDENSING_HPIPM:
@@ -95,6 +88,15 @@ ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan)
 #endif
             break;
     }
+}
+
+ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan)
+{
+    int bytes = ocp_qp_xcond_solver_config_calculate_size();
+    void *ptr = calloc(1, bytes);
+    ocp_qp_xcond_solver_config *solver_config = ocp_qp_xcond_solver_config_assign(ptr);
+
+    ocp_qp_xcond_solver_config_initialize_default(plan.qp_solver, solver_config);
 
     return solver_config;
 }

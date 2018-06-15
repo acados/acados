@@ -31,6 +31,7 @@ typedef struct
 {
     int nx;
     int nu;
+    int nz;
 } sim_erk_dims;
 
 typedef struct
@@ -71,8 +72,11 @@ typedef struct
 // get & set functions
 void sim_erk_set_nx(void *dims_, int nx);
 void sim_erk_set_nu(void *dims_, int nu);
+void sim_erk_set_nz(void *dims_, int nz);
+
 void sim_erk_get_nx(void *dims_, int *nx);
 void sim_erk_get_nu(void *dims_, int *nu);
+void sim_erk_get_nz(void *dims_, int *nz);
 
 // dims
 int sim_erk_dims_calculate_size();
@@ -99,8 +103,6 @@ void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_mem
 
 // workspace
 int sim_erk_workspace_calculate_size(void *config, void *dims, void *opts_);
-//
-// static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory);
 
 //
 int sim_erk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);

@@ -38,6 +38,7 @@
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
 
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
@@ -51,7 +52,7 @@
 #include "examples/c/wt_model_nx6/setup.c"
 #define NN 40
 
-#define MAX_SQP_ITERS 15
+#define MAX_SQP_ITERS 1
 #define NREP 1
 
 
@@ -91,71 +92,71 @@ static void select_dynamics_wt_casadi(int N,
 {
 	for (int ii = 0; ii < N; ii++)
 	{
-		expl_vde_for[ii].casadi_fun = &casadi_expl_vde_for;
-		expl_vde_for[ii].casadi_work = &casadi_expl_vde_for_work;
-		expl_vde_for[ii].casadi_sparsity_in = &casadi_expl_vde_for_sparsity_in;
-		expl_vde_for[ii].casadi_sparsity_out = &casadi_expl_vde_for_sparsity_out;
-		expl_vde_for[ii].casadi_n_in = &casadi_expl_vde_for_n_in;
-		expl_vde_for[ii].casadi_n_out = &casadi_expl_vde_for_n_out;
+		expl_vde_for[ii].casadi_fun = &wt_nx6p2_expl_vde_for;
+		expl_vde_for[ii].casadi_work = &wt_nx6p2_expl_vde_for_work;
+		expl_vde_for[ii].casadi_sparsity_in = &wt_nx6p2_expl_vde_for_sparsity_in;
+		expl_vde_for[ii].casadi_sparsity_out = &wt_nx6p2_expl_vde_for_sparsity_out;
+		expl_vde_for[ii].casadi_n_in = &wt_nx6p2_expl_vde_for_n_in;
+		expl_vde_for[ii].casadi_n_out = &wt_nx6p2_expl_vde_for_n_out;
 
-		impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun;
-		impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_work;
-		impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_sparsity_in;
-		impl_ode_fun[ii].casadi_sparsity_out = &casadi_impl_ode_fun_sparsity_out;
-		impl_ode_fun[ii].casadi_n_in = &casadi_impl_ode_fun_n_in;
-		impl_ode_fun[ii].casadi_n_out = &casadi_impl_ode_fun_n_out;
+		impl_ode_fun[ii].casadi_fun = &wt_nx6p2_impl_ode_fun;
+		impl_ode_fun[ii].casadi_work = &wt_nx6p2_impl_ode_fun_work;
+		impl_ode_fun[ii].casadi_sparsity_in = &wt_nx6p2_impl_ode_fun_sparsity_in;
+		impl_ode_fun[ii].casadi_sparsity_out = &wt_nx6p2_impl_ode_fun_sparsity_out;
+		impl_ode_fun[ii].casadi_n_in = &wt_nx6p2_impl_ode_fun_n_in;
+		impl_ode_fun[ii].casadi_n_out = &wt_nx6p2_impl_ode_fun_n_out;
 
-		impl_ode_fun_jac_x_xdot[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot;
-		impl_ode_fun_jac_x_xdot[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_work;
-		impl_ode_fun_jac_x_xdot[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_sparsity_in;
-		impl_ode_fun_jac_x_xdot[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_sparsity_out;
-		impl_ode_fun_jac_x_xdot[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_n_in;
-		impl_ode_fun_jac_x_xdot[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_n_out;
+		impl_ode_fun_jac_x_xdot[ii].casadi_fun = &wt_nx6p2_impl_ode_fun_jac_x_xdot;
+		impl_ode_fun_jac_x_xdot[ii].casadi_work = &wt_nx6p2_impl_ode_fun_jac_x_xdot_work;
+		impl_ode_fun_jac_x_xdot[ii].casadi_sparsity_in = &wt_nx6p2_impl_ode_fun_jac_x_xdot_sparsity_in;
+		impl_ode_fun_jac_x_xdot[ii].casadi_sparsity_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_sparsity_out;
+		impl_ode_fun_jac_x_xdot[ii].casadi_n_in = &wt_nx6p2_impl_ode_fun_jac_x_xdot_n_in;
+		impl_ode_fun_jac_x_xdot[ii].casadi_n_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_n_out;
 
-		impl_ode_jac_x_xdot_u[ii].casadi_fun = &casadi_impl_ode_jac_x_xdot_u;
-		impl_ode_jac_x_xdot_u[ii].casadi_work = &casadi_impl_ode_jac_x_xdot_u_work;
-		impl_ode_jac_x_xdot_u[ii].casadi_sparsity_in = &casadi_impl_ode_jac_x_xdot_u_sparsity_in;
-		impl_ode_jac_x_xdot_u[ii].casadi_sparsity_out = &casadi_impl_ode_jac_x_xdot_u_sparsity_out;
-		impl_ode_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_n_in;
-		impl_ode_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
+		impl_ode_jac_x_xdot_u[ii].casadi_fun = &wt_nx6p2_impl_ode_jac_x_xdot_u;
+		impl_ode_jac_x_xdot_u[ii].casadi_work = &wt_nx6p2_impl_ode_jac_x_xdot_u_work;
+		impl_ode_jac_x_xdot_u[ii].casadi_sparsity_in = &wt_nx6p2_impl_ode_jac_x_xdot_u_sparsity_in;
+		impl_ode_jac_x_xdot_u[ii].casadi_sparsity_out = &wt_nx6p2_impl_ode_jac_x_xdot_u_sparsity_out;
+		impl_ode_jac_x_xdot_u[ii].casadi_n_in = &wt_nx6p2_impl_ode_jac_x_xdot_u_n_in;
+		impl_ode_jac_x_xdot_u[ii].casadi_n_out = &wt_nx6p2_impl_ode_jac_x_xdot_u_n_out;
 
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_u;
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_u_work;
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_u_sparsity_in;
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_u_sparsity_out;
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_u_n_in;
-		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_u_n_out;
-
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_fun = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_work = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_work;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_in = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_sparsity_in;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_sparsity_out;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_in = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_n_in;
+		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_n_out;
+		
 		// GNSF functions
 		// phi_fun
-		phi_fun[ii].casadi_fun            = &casadi_phi_fun;
-		phi_fun[ii].casadi_work           = &casadi_phi_fun_work;
-		phi_fun[ii].casadi_sparsity_in    = &casadi_phi_fun_sparsity_in;
-		phi_fun[ii].casadi_sparsity_out   = &casadi_phi_fun_sparsity_out;
-		phi_fun[ii].casadi_n_in           = &casadi_phi_fun_n_in;
-		phi_fun[ii].casadi_n_out          = &casadi_phi_fun_n_out;
+		phi_fun[ii].casadi_fun            = &wt_nx6p2_phi_fun;
+		phi_fun[ii].casadi_work           = &wt_nx6p2_phi_fun_work;
+		phi_fun[ii].casadi_sparsity_in    = &wt_nx6p2_phi_fun_sparsity_in;
+		phi_fun[ii].casadi_sparsity_out   = &wt_nx6p2_phi_fun_sparsity_out;
+		phi_fun[ii].casadi_n_in           = &wt_nx6p2_phi_fun_n_in;
+		phi_fun[ii].casadi_n_out          = &wt_nx6p2_phi_fun_n_out;
 
-		phi_fun_jac_y[ii].casadi_fun = &casadi_phi_fun_jac_y;
-		phi_fun_jac_y[ii].casadi_work = &casadi_phi_fun_jac_y_work;
-		phi_fun_jac_y[ii].casadi_sparsity_in = &casadi_phi_fun_jac_y_sparsity_in;
-		phi_fun_jac_y[ii].casadi_sparsity_out = &casadi_phi_fun_jac_y_sparsity_out;
-		phi_fun_jac_y[ii].casadi_n_in = &casadi_phi_fun_jac_y_n_in;
-		phi_fun_jac_y[ii].casadi_n_out = &casadi_phi_fun_jac_y_n_out;
+		phi_fun_jac_y[ii].casadi_fun = &wt_nx6p2_phi_fun_jac_y;
+		phi_fun_jac_y[ii].casadi_work = &wt_nx6p2_phi_fun_jac_y_work;
+		phi_fun_jac_y[ii].casadi_sparsity_in = &wt_nx6p2_phi_fun_jac_y_sparsity_in;
+		phi_fun_jac_y[ii].casadi_sparsity_out = &wt_nx6p2_phi_fun_jac_y_sparsity_out;
+		phi_fun_jac_y[ii].casadi_n_in = &wt_nx6p2_phi_fun_jac_y_n_in;
+		phi_fun_jac_y[ii].casadi_n_out = &wt_nx6p2_phi_fun_jac_y_n_out;
 
-		phi_jac_y_uhat[ii].casadi_fun = &casadi_phi_jac_y_uhat;
-		phi_jac_y_uhat[ii].casadi_work = &casadi_phi_jac_y_uhat_work;
-		phi_jac_y_uhat[ii].casadi_sparsity_in = &casadi_phi_jac_y_uhat_sparsity_in;
-		phi_jac_y_uhat[ii].casadi_sparsity_out = &casadi_phi_jac_y_uhat_sparsity_out;
-		phi_jac_y_uhat[ii].casadi_n_in = &casadi_phi_jac_y_uhat_n_in;
-		phi_jac_y_uhat[ii].casadi_n_out = &casadi_phi_jac_y_uhat_n_out;
+		phi_jac_y_uhat[ii].casadi_fun = &wt_nx6p2_phi_jac_y_uhat;
+		phi_jac_y_uhat[ii].casadi_work = &wt_nx6p2_phi_jac_y_uhat_work;
+		phi_jac_y_uhat[ii].casadi_sparsity_in = &wt_nx6p2_phi_jac_y_uhat_sparsity_in;
+		phi_jac_y_uhat[ii].casadi_sparsity_out = &wt_nx6p2_phi_jac_y_uhat_sparsity_out;
+		phi_jac_y_uhat[ii].casadi_n_in = &wt_nx6p2_phi_jac_y_uhat_n_in;
+		phi_jac_y_uhat[ii].casadi_n_out = &wt_nx6p2_phi_jac_y_uhat_n_out;
 
 		// f_lo - linear output function
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_fun = &casadi_f_lo_fun_jac_x1k1uz;
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_work = &casadi_f_lo_fun_jac_x1k1uz_work;
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_sparsity_in = &casadi_f_lo_fun_jac_x1k1uz_sparsity_in;
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_sparsity_out = &casadi_f_lo_fun_jac_x1k1uz_sparsity_out;
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_n_in = &casadi_f_lo_fun_jac_x1k1uz_n_in;
-		f_lo_jac_x1_x1dot_u_z[ii].casadi_n_out = &casadi_f_lo_fun_jac_x1k1uz_n_out;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_fun = &wt_nx6p2_f_lo_fun_jac_x1k1uz;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_work = &wt_nx6p2_f_lo_fun_jac_x1k1uz_work;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_sparsity_in = &wt_nx6p2_f_lo_fun_jac_x1k1uz_sparsity_in;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_sparsity_out = &wt_nx6p2_f_lo_fun_jac_x1k1uz_sparsity_out;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_n_in = &wt_nx6p2_f_lo_fun_jac_x1k1uz_n_in;
+		f_lo_jac_x1_x1dot_u_z[ii].casadi_n_out = &wt_nx6p2_f_lo_fun_jac_x1k1uz_n_out;
 	}
 }
 
@@ -499,7 +500,8 @@ int main()
 
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
 
-	plan->nlp_solver = SQP_GN;
+//	plan->nlp_solver = SQP_GN;
+	plan->nlp_solver = SQP_RTI;
 
 	for (int i = 0; i <= NN; i++)
 		plan->nlp_cost[i] = LINEAR_LS;
@@ -563,12 +565,12 @@ int main()
 
 	// GNSF import matrices function
     external_function_casadi get_matrices_fun;
-    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
-    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
-    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
-    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
-    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
-    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
+    get_matrices_fun.casadi_fun            = &wt_nx6p2_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &wt_nx6p2_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &wt_nx6p2_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &wt_nx6p2_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &wt_nx6p2_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &wt_nx6p2_get_matrices_fun_n_out;
 	external_function_casadi_create(&get_matrices_fun);
 
 	external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
@@ -745,53 +747,95 @@ int main()
     * sqp opts
     ************************************************/
 
+	// create opts
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
-	ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
 
-    for (int i = 0; i < NN; ++i)
+	// extract opts
+	sim_rk_opts *sim_opts[NN+1];
+	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts;
+
+	// nlp opts
+	if (plan->nlp_solver == SQP_GN)
 	{
-		ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_opts->dynamics[i];
-        sim_rk_opts *sim_opts = dynamics_stage_opts->sim_solver;
+
+		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
+
+		sqp_opts->maxIter = MAX_SQP_ITERS;
+		sqp_opts->min_res_g = 1e-6;
+		sqp_opts->min_res_b = 1e-8;
+		sqp_opts->min_res_d = 1e-8;
+		sqp_opts->min_res_m = 1e-8;
+
+		for (int i = 0; i < NN; ++i)
+		{
+			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_opts->dynamics[i];
+			sim_opts[i] = dynamics_stage_opts->sim_solver;
+		}
+
+		pcond_solver_opts = sqp_opts->qp_solver_opts;
+
+	}
+	else if (plan->nlp_solver == SQP_RTI)
+	{
+
+		ocp_nlp_sqp_rti_opts *sqp_rti_opts = nlp_opts;
+	
+		for (int i = 0; i < NN; ++i)
+		{
+			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_rti_opts->dynamics[i];
+//			dynamics_stage_opts->compute_adj = 0;
+			sim_opts[i] = dynamics_stage_opts->sim_solver;
+		}
+
+//		for (int i = 0; i < NN; ++i)
+//		{
+//			if (plan->nlp_constraints[i] == BGH)
+//			{
+//				ocp_nlp_constraints_bgh_opts *constr_stage_opts = sqp_rti_opts->constraints[i];
+//				constr_stage_opts->compute_adj = 0;
+//			}
+//		}
+
+		pcond_solver_opts = sqp_rti_opts->qp_solver_opts;
+
+	}
+
+	// sim opts
+	for (int i = 0; i < NN; ++i)
+	{
 
 		if (plan->sim_solver_plan[i].sim_solver == ERK)
 		{
-			sim_opts->ns = 4;
-			sim_opts->num_steps = 10;
+			sim_opts[i]->ns = 4;
+			sim_opts[i]->num_steps = 10;
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == IRK)
 		{
-			sim_opts->ns = 4;
-			sim_opts->num_steps = 1;
-			sim_opts->jac_reuse = true;
+			sim_opts[i]->ns = 4;
+			sim_opts[i]->num_steps = 1;
+			sim_opts[i]->jac_reuse = true;
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
 		{
-			sim_opts->ns = 4;
-			sim_opts->num_steps = 1;
+			sim_opts[i]->ns = 4;
+			sim_opts[i]->num_steps = 1;
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
-			sim_opts->ns = 4;
-			sim_opts->num_steps = 1;
-			sim_opts->newton_iter = 1;
-			sim_opts->jac_reuse = true;
+			sim_opts[i]->ns = 4;
+			sim_opts[i]->num_steps = 1;
+			sim_opts[i]->newton_iter = 1;
+			sim_opts[i]->jac_reuse = true;
 		}
-    }
+	}
 
-    sqp_opts->maxIter = MAX_SQP_ITERS;
-    sqp_opts->min_res_g = 1e-6;
-    sqp_opts->min_res_b = 1e-8;
-    sqp_opts->min_res_d = 1e-8;
-    sqp_opts->min_res_m = 1e-8;
-
-	// partial condensing
+	// partial condensing opts
 	if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
 	{
-		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
-		ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
 		pcond_solver_opts->pcond_opts->N2 = 10;
 	}
 
+	// update opts after manual changes
 	config->opts_update(config, dims, nlp_opts);
 
     /************************************************
@@ -817,8 +861,8 @@ int main()
 			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
 
 			// get sim opts
-			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_opts->dynamics[i];
-			sim_rk_opts *sim_opts = dynamics_stage_opts->sim_solver;
+//			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_opts->dynamics[i];
+//			sim_rk_opts *sim_opts = dynamics_stage_opts->sim_solver;
 
 			// import model matrices
 			sim_gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
@@ -827,15 +871,28 @@ int main()
 			sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
 
 			// get sim_solver memory
-			ocp_nlp_sqp_memory *mem = solver->mem;
-			ocp_nlp_dynamics_cont_memory* dynamics_mem = (ocp_nlp_dynamics_cont_memory *) mem->dynamics[i];
-			char *mem_ptr = (char *) dynamics_mem;
-			mem_ptr += sizeof(ocp_nlp_dynamics_cont_memory); // mem_ptr now points to the memory of the integrator;
+			ocp_nlp_dynamics_cont_memory *dynamics_mem;
 
+			if (plan->nlp_solver == SQP_GN)
+			{
+				ocp_nlp_sqp_memory *sqp_mem = solver->mem;
+				dynamics_mem = sqp_mem->dynamics[i];
+			}
+			else if (plan->nlp_solver == SQP_RTI)
+			{
+				ocp_nlp_sqp_memory *sqp_rti_mem = solver->mem;
+				dynamics_mem = sqp_rti_mem->dynamics[i];
+			}
 
+			// XXX why this all ? dangerous !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//			ocp_nlp_sqp_memory *mem = solver->mem;
+//			ocp_nlp_dynamics_cont_memory* dynamics_mem = (ocp_nlp_dynamics_cont_memory *) mem->dynamics[i];
+//			char *mem_ptr = (char *) dynamics_mem;
+//			mem_ptr += sizeof(ocp_nlp_dynamics_cont_memory); // mem_ptr now points to the memory of the integrator;
 
 			// precompute
-			sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts, mem_ptr, solver->work, nlp_in->Ts[i]);
+//			sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts[i], mem_ptr, solver->work, nlp_in->Ts[i]);
+			sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts[i], dynamics_mem->sim_solver, solver->work, nlp_in->Ts[i]);
 			// NOTE; solver->work can be used, as it is for sure larger than the workspace
 			//		 needed to precompute, as the latter is part of the first.
 		}
@@ -876,7 +933,7 @@ int main()
 				{
 					expl_vde_for[ii].set_param(expl_vde_for+ii, wind0_ref+idx+ii);
 				}
-				else if ((plan->sim_solver_plan[ii].sim_solver == IRK) | (plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK))
+				else if (plan->sim_solver_plan[ii].sim_solver == IRK || plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK)
 				{
 					impl_ode_fun[ii].set_param(impl_ode_fun+ii, wind0_ref+idx+ii);
 					impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);
@@ -919,7 +976,14 @@ int main()
 			// print info
 			if (true)
 			{
-				printf("\nproblem #%d, status %d, iters %d\n", idx, status, ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter);
+				if (plan->nlp_solver == SQP_GN)
+				{
+					printf("\nproblem #%d, status %d, iters %d\n", idx, status, ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter);
+				}
+				else if (plan->nlp_solver == SQP_RTI)
+				{
+					printf("\nproblem #%d, status %d\n", idx, status);
+				}
 				printf("xsim = \n");
 				blasfeo_print_tran_dvec(dims->nx[0], &nlp_out->ux[0], dims->nu[0]);
 				printf("electrical power = %f\n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7));

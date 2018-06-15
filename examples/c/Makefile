@@ -42,9 +42,11 @@ LIBS += -lblasfeo -lm -lblas -llapack
 # LDFLAGS += -pg
 
 EXAMPLES =
+EXAMPLES += dense_qp
 EXAMPLES += pendulum_scqp
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
+EXAMPLES += sim_inverted_pendulum
 EXAMPLES += sim_crane_example
 EXAMPLES += mass_spring_example
 EXAMPLES += mass_spring_nmpc_example
@@ -62,6 +64,7 @@ examples: $(EXAMPLES)
 
 
 RUN_EXAMPLES =
+RUN_EXAMPLES += run_dense_qp
 RUN_EXAMPLES += run_pendulum_scqp
 RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
@@ -167,17 +170,17 @@ run_sim_wt_model_nx6:
 
 
 WT_NX6P2_OBJS =
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/expl_ode_fun.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/expl_vde_for.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_fun_jac_y.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/phi_jac_y_uhat.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/get_matrices_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_expl_ode_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_expl_vde_for.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot_u.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_jac_x_xdot_u.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_phi_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_phi_fun_jac_y.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_phi_jac_y_uhat.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_f_lo_fun_jac_x1k1uz.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/wt_nx6p2_get_matrices_fun.o
 
 wind_turbine_nmpc: $(WT_NX6P2_OBJS) wind_turbine_nmpc.o
 	$(CCC) -o wind_turbine_nmpc.out wind_turbine_nmpc.o  $(WT_NX6P2_OBJS) $(LDFLAGS) $(LIBS)
@@ -201,6 +204,12 @@ WT_OBJS += wt_model_nx3/expl_vde_adj.o
 WT_OBJS += wt_model_nx3/impl_ode_fun.o
 WT_OBJS += wt_model_nx3/impl_ode_fun_jac_x_xdot.o
 WT_OBJS += wt_model_nx3/impl_ode_jac_x_xdot_u.o
+WT_OBJS += wt_model_nx3/impl_ode_fun_jac_x_xdot_u.o
+WT_OBJS += wt_model_nx3/phi_fun.o
+WT_OBJS += wt_model_nx3/phi_fun_jac_y.o
+WT_OBJS += wt_model_nx3/phi_jac_y_uhat.o
+WT_OBJS += wt_model_nx3/f_lo_fun_jac_x1k1uz.o
+WT_OBJS += wt_model_nx3/get_matrices_fun.o
 
 sim_wt_model_nx3: $(WT_OBJS) sim_wt_model_nx3.o
 	$(CCC) -o sim_wt_model_nx3.out sim_wt_model_nx3.o  $(WT_OBJS) $(LDFLAGS) $(LIBS)
@@ -210,6 +219,30 @@ sim_wt_model_nx3: $(WT_OBJS) sim_wt_model_nx3.o
 
 run_sim_wt_model_nx3:
 	./sim_wt_model_nx3.out
+
+#################################################
+# inverted_pendulum model (DAE)
+#################################################
+
+INV_PENDULUM_OBJS =
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_u.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_fun.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_fun_jac_y.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_jac_y_uhat.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_f_lo_fun_jac_x1k1uz.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_get_matrices_fun.o
+
+sim_inverted_pendulum: $(INV_PENDULUM_OBJS) sim_inverted_pendulum.o
+	$(CCC) -o sim_inverted_pendulum.out sim_inverted_pendulum.o  $(INV_PENDULUM_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_inverted_pendulum build complete."
+	@echo
+
+run_sim_inverted_pendulum:
+	./sim_inverted_pendulum.out
 
 
 
@@ -398,6 +431,24 @@ pendulum_scqp: $(PENDULUM_OBJS) pendulum_scqp.o
 
 run_pendulum_scqp:
 	./pendulum_scqp.out
+
+
+
+
+#################################################
+# dense qp
+#################################################
+
+DENSE_QP = 
+
+dense_qp: $(DENSE_QP) dense_qp.o
+	$(CXX) -o dense_qp.out $(DENSE_QP) dense_qp.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example dense_qp build complete."
+	@echo
+
+run_dense_qp:
+	./dense_qp.out
 
 
 

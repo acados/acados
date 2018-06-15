@@ -45,16 +45,14 @@ nz = 0;
 nx2 = 0;
 x1_dot = MX.sym('x1_dot',nx1,1);
 
-% if CasadiMeta.version()=='3.4.0'
-% 	% casadi 3.4
-% 	casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-% else
-% 	% old casadi versions
-% 	casadi_opts = struct('mex', false);
-% end
+if CasadiMeta.version()=='3.4.0'
+	% casadi 3.4
+	casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
+else
+	% old casadi versions
+    error('Provide Casadi version 3.4.0');
+end
 casadi_export_prefix = 'casadi_';
-casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-casadi_opts_mex = struct('mex', true, 'casadi_int', 'int', 'casadi_real', 'double');
 
 %% Model defining matrices
 A = zeros(nx);
@@ -70,6 +68,8 @@ B(5,1) = p_15;
 A(6,6) = -p_16;
 B(6,2) = p_16;
 
+c = zeros(nx1 + nz,1);
+
 phi = fe(2);
 
 n_out  = length(phi);
@@ -84,7 +84,6 @@ ny = length(y);
 nuhat = length(uhat);
 
 % linear input matrices
-% linear input matrices
 L_x_fun = Function('L_x_fun',{x1},{jacobian(y,x1)});
 L_xdot_fun = Function('L_x_fun',{x1},{jacobian(y,x1_dot)});
 L_z_fun = Function('L_z_fun',{x1},{jacobian(y,z)});
@@ -96,7 +95,7 @@ L_xdot = full(L_xdot_fun(0));
 L_u = full(L_u_fun(0));
 L_z = full(L_z_fun(0));
 
-y_check = L_xdot * x1_dot +L_x * x1 + L_z * z; %% THis should be the same as y
+y_check = L_xdot * x1_dot +L_x * x1 + L_z * z; % This should be the same as y
 uhat_check = L_u * u;
 
 jac_phi_y = jacobian(phi,y);
@@ -141,8 +140,8 @@ s = struct('A', A, 'B', B, 'C', C, 'E', E, 'ALO',ALO, 'L_x', L_x, 'L_xdot', L_xd
 % get matrices
 dummy = SX.sym('dummy');
 
-model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)])) + ...
-    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)];
+model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)])) + ...
+    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)];
 get_matrices_fun = Function([casadi_export_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
 get_matrices_fun.generate('get_matrices_fun', casadi_opts);
 
@@ -151,3 +150,15 @@ f_lo_fun_jac_x1k1uz.generate(['f_lo_fun_jac_x1k1uz'], casadi_opts);
 phi_fun.generate(['phi_fun'], casadi_opts);
 phi_fun_jac_y.generate(['phi_fun_jac_y'], casadi_opts);
 phi_jac_y_uhat.generate(['phi_jac_y_uhat'], casadi_opts);
+
+
+%% check if same result as in full_turbine_model.m
+x0 = ones(nx,1);
+x0dot = ones(nx,1);
+u0 = ones(nu,1);
+p0 = 1;
+
+y0 = L_x * x0 + L_xdot * x0dot;
+uhat0 = L_u * u0;
+
+gnsf0 = E*x0dot - A*x0 - B*u0 - C*phi_fun(y0, uhat0, p0) - c

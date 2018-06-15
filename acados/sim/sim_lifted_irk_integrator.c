@@ -50,6 +50,10 @@ void *sim_lifted_irk_dims_assign(void *config_, void *raw_memory)
     sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) c_ptr;
     c_ptr += sizeof(sim_lifted_irk_dims);
 
+    dims->nx = 0;
+    dims->nu = 0;
+    dims->nz = 0;
+
     assert((char *) raw_memory + sim_lifted_irk_dims_calculate_size() >= c_ptr);
 
     return dims;
@@ -67,6 +71,12 @@ void sim_lifted_irk_set_nu(void *dims_, int nu)
     dims->nu = nu;
 }
 
+void sim_lifted_irk_set_nz(void *dims_, int nz)
+{
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    dims->nz = nz;
+}
+
 void sim_lifted_irk_get_nx(void *dims_, int *nx)
 {
     sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
@@ -77,6 +87,12 @@ void sim_lifted_irk_get_nu(void *dims_, int *nu)
 {
     sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
     *nu = dims->nu;
+}
+
+void sim_lifted_irk_get_nz(void *dims_, int *nz)
+{
+    sim_lifted_irk_dims *dims = (sim_lifted_irk_dims *) dims_;
+    *nz = dims->nz;
 }
 
 /************************************************
@@ -241,6 +257,9 @@ void sim_lifted_irk_opts_initialize_default(void *config_, void *dims_, void *op
     opts->sens_adj = false;  // TODO(andrea): this effectively disables the expansion step in lifted
                              // integrators !!!!!
     opts->sens_hess = false;
+
+    opts->output_z = false;
+    opts->sens_algebraic = false;
 
     return;
 }
@@ -1132,6 +1151,14 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
+
+    // assert - only use supported features
+    assert(nz == 0 && "nz should be zero - DAEs are not (yet) supported for this integrator");
+    assert(opts->output_z == false &&
+            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
+    assert(opts->sens_algebraic == false &&
+       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
 
     int dim_sys = ns * nx;
     int i, s1, s2, j, istep;
@@ -1766,7 +1793,9 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     config->dims_assign = &sim_lifted_irk_dims_assign;
     config->set_nx = &sim_lifted_irk_set_nx;
     config->set_nu = &sim_lifted_irk_set_nu;
+    config->set_nz = &sim_lifted_irk_set_nz;
     config->get_nx = &sim_lifted_irk_get_nx;
     config->get_nu = &sim_lifted_irk_get_nu;
+    config->get_nz = &sim_lifted_irk_get_nz;
     return;
 }

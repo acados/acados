@@ -29,7 +29,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 # add_subdirectory(ocp_nlp)
 add_subdirectory(ocp_qp)
-# add_subdirectory(sim)
+add_subdirectory(sim)
 
 set(TEST_OCP_NLP_SRC
     ######################
@@ -114,17 +114,17 @@ set(TEST_OCP_NLP_SRC
     ### WIND TURBINE EXAMPLE ###
     ############################
 
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/expl_ode_fun.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/expl_vde_for.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/impl_ode_fun.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot_u.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/phi_fun.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/phi_fun_jac_y.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/phi_jac_y_uhat.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/f_lo_fun_jac_x1k1uz.c
-    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/get_matrices_fun.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_expl_ode_fun.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_expl_vde_for.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_jac_x_xdot_u.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_impl_ode_fun_jac_x_xdot_u.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_phi_fun.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_phi_fun_jac_y.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_phi_jac_y_uhat.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_f_lo_fun_jac_x1k1uz.c
+    ${CMAKE_SOURCE_DIR}/examples/c/wt_model_nx6/nx6p2/wt_nx6p2_get_matrices_fun.c
 
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/test_chain.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/test_wind_turbine.cpp
@@ -134,6 +134,37 @@ set(TEST_OCP_QP_SRC
     ${PROJECT_SOURCE_DIR}/examples/c/mass_spring_model/mass_spring_qp.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/test_qpsolvers.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/../test_utils/read_ocp_qp_in.c
+)
+
+
+set(TEST_SIM_ODE_SRC
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_ode_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_ode_jac.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_vde_for.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_vde_adj.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/impl_ode_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/impl_ode_fun_jac_x_xdot.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/impl_ode_jac_x_xdot_u.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/impl_ode_fun_jac_x_xdot_u.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/phi_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/phi_fun_jac_y.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/phi_jac_y_uhat.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/f_lo_fun_jac_x1k1uz.c
+    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/get_matrices_fun.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/sim/sim_test_ode.cpp
+)
+
+set(TEST_SIM_DAE_SRC
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_impl_ode_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_impl_ode_fun_jac_x_xdot.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_impl_ode_jac_x_xdot_u.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_impl_ode_fun_jac_x_xdot_u.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_phi_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_phi_fun_jac_y.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_phi_jac_y_uhat.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_f_lo_fun_jac_x1k1uz.c
+    ${PROJECT_SOURCE_DIR}/examples/c/crane_dae_model/crane_dae_get_matrices_fun.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/sim/sim_test_dae.cpp
 )
 
 # set(TEST_SIM_SRC
@@ -150,10 +181,11 @@ add_executable(unit_tests
     ${PROJECT_SOURCE_DIR}/test/all_tests.cpp
     # $<TARGET_OBJECTS:ocp_nlp_gen>
     # $<TARGET_OBJECTS:ocp_qp_gen>
+    ${TEST_SIM_DAE_SRC}
+    ${TEST_SIM_ODE_SRC}
     ${TEST_OCP_QP_SRC}
     ${TEST_OCP_NLP_SRC}
     # $<TARGET_OBJECTS:sim_gen>
-    # ${TEST_SIM_SRC}
     # ${TEST_UTILS_SRC}
 )
 
