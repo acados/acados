@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+
+
 // blasfeo
 #include "blasfeo/include/blasfeo_common.h"
 
@@ -32,6 +34,8 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
+
+
 
 /************************************************
  * dims
@@ -54,6 +58,8 @@ void *ocp_nlp_dynamics_cont_dims_assign(void *config, void *raw_memory);
 void ocp_nlp_dynamics_cont_dims_initialize(void *config, void *dims, int nx, int nu, int nx1,
                                            int nu1);
 
+
+
 /************************************************
  * options
  ************************************************/
@@ -61,6 +67,7 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config, void *dims, int nx, int
 typedef struct
 {
     void *sim_solver;
+    int compute_adj;
 } ocp_nlp_dynamics_cont_opts;
 
 //
@@ -71,6 +78,11 @@ void *ocp_nlp_dynamics_cont_opts_assign(void *config, void *dims, void *raw_memo
 void ocp_nlp_dynamics_cont_opts_initialize_default(void *config, void *dims, void *opts);
 //
 void ocp_nlp_dynamics_cont_opts_update(void *config, void *dims, void *opts);
+//
+void ocp_nlp_dynamics_cont_opts_set(void *config_, void *dims_, void *opts_, enum acados_opts name,
+    void *ptr_value);
+
+
 
 /************************************************
  * memory
@@ -104,6 +116,8 @@ void ocp_nlp_dynamics_cont_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memo
 //
 void ocp_nlp_dynamics_cont_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory);
 
+
+
 /************************************************
  * workspace
  ************************************************/
@@ -116,6 +130,8 @@ typedef struct
 } ocp_nlp_dynamics_cont_workspace;
 
 int ocp_nlp_dynamics_cont_workspace_calculate_size(void *config, void *dims, void *opts);
+
+
 
 /************************************************
  * model
@@ -135,6 +151,8 @@ void *ocp_nlp_dynamics_cont_model_assign(void *config, void *dims, void *raw_mem
 //
 void ocp_nlp_dynamics_cont_model_set_T(double T, void *model);
 
+
+
 /************************************************
  * functions
  ************************************************/
@@ -147,6 +165,8 @@ void ocp_nlp_dynamics_cont_initialize(void *config_, void *dims, void *model_, v
 //
 void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims, void *model_, void *opts,
                                               void *mem, void *work_);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

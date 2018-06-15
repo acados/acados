@@ -47,6 +47,8 @@ typedef struct
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
     void (*opts_update)(void *config, void *dims, void *opts);
+    void (*opts_set)(void *config_, void *dims_, void *opts_, enum acados_opts name,
+        void *ptr_value);
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory);
     struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory);

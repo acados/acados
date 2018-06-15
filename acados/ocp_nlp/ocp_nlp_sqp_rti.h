@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_SQP_H_
-#define ACADOS_OCP_NLP_OCP_NLP_SQP_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_SQP_RTI_H_
+#define ACADOS_OCP_NLP_OCP_NLP_SQP_RTI_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,25 +37,23 @@ extern "C" {
 
 typedef struct
 {
-    int maxIter;
-    double min_res_g;
-    double min_res_b;
-    double min_res_d;
-    double min_res_m;
     void *qp_solver_opts;
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
-} ocp_nlp_sqp_opts;
+    int compute_dual_sol;
+} ocp_nlp_sqp_rti_opts;
 
 //
-int ocp_nlp_sqp_opts_calculate_size(void *config, void *dims);
+int ocp_nlp_sqp_rti_opts_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_sqp_opts_assign(void *config, void *dims, void *raw_memory);
+void *ocp_nlp_sqp_rti_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_sqp_opts_initialize_default(void *config, void *dims, void *opts);
+void ocp_nlp_sqp_rti_opts_initialize_default(void *config, void *dims, void *opts);
 //
-void ocp_nlp_sqp_opts_update(void *config, void *dims, void *opts);
+void ocp_nlp_sqp_rti_opts_update(void *config, void *dims, void *opts);
+
+
 
 /************************************************
  * memory
@@ -70,20 +68,17 @@ typedef struct
     void **cost;         // cost memory
     void **constraints;  // constraints memory
 
-    // residuals
-    ocp_nlp_res *nlp_res;
-
     // nlp memory
     ocp_nlp_memory *nlp_mem;
 
-    int sqp_iter;
-    int dummy;  // NOTE(dimitris): make struct size multiple of 8
-} ocp_nlp_sqp_memory;
+} ocp_nlp_sqp_rti_memory;
 
 //
-int ocp_nlp_sqp_memory_calculate_size(void *config, void *dims, void *opts_);
+int ocp_nlp_sqp_rti_memory_calculate_size(void *config, void *dims, void *opts_);
 //
-void *ocp_nlp_sqp_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+void *ocp_nlp_sqp_rti_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+
+
 
 /************************************************
  * workspace
@@ -100,23 +95,27 @@ typedef struct
     void **cost;         // cost_workspace
     void **constraints;  // constraints_workspace
 
-} ocp_nlp_sqp_work;
+} ocp_nlp_sqp_rti_work;
 
 //
-int ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
+int ocp_nlp_sqp_rti_workspace_calculate_size(void *config, void *dims, void *opts_);
+
+
 
 /************************************************
  * functions
  ************************************************/
 
 //
-int ocp_nlp_sqp(void *config, void *dims, void *nlp_in, void *nlp_out,
+int ocp_nlp_sqp_rti(void *config, void *dims, void *nlp_in, void *nlp_out,
                 void *args, void *mem, void *work_);
 //
-void ocp_nlp_sqp_config_initialize_default(void *config_);
+void ocp_nlp_sqp_rti_config_initialize_default(void *config_);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_SQP_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_SQP_RTI_H_
