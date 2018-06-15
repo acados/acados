@@ -37,9 +37,8 @@ install:
       echo "Skipping installation of encrypted software";
     fi
   - |
-    if [ -f /home/travis/external_software/matlab.tar.gz ]; then
+    if [ -f /home/travis/external_software/matlab.tar.gz -a "${SWIG_MATLAB}" = 'ON' ]; then
       tar -xzf /home/travis/external_software/matlab.tar.gz > /dev/null
-      export USE_MATLAB=true
       export MATLAB_ROOT=$(pwd)/matlab
       pushd matlab/bin
       ./matlab -nodesktop -nojvm -nosplash < ../../hello_world.m
@@ -73,9 +72,6 @@ before_script:
     fi
 
 script:
-  - 'if [ "$USE_MATLAB" == "true" ]; then
-       SWIG_MATLAB=ON;
-    fi'
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release ..
   - cmake --build build --target lint
@@ -83,7 +79,7 @@ script:
   - cmake -E chdir build ctest --output-on-failure
   - rm -r -f build
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DMatlab_ROOT_DIR=../external/matlab -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
   - export CXX="$CXX -std=c++11" # needed for octave
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
@@ -94,7 +90,7 @@ script:
   - mkdir build
   - mkdir install
   - export RELEASES_PREFIX="$(pwd)"
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/local -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
   - cmake --build build --target install
   - tar -zcf acados.tar.gz ${HOME}/local/lib
 
