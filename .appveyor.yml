@@ -1,4 +1,3 @@
-
 branches:
   only:
     - master
@@ -15,3 +14,23 @@ build_script:
   - cmake -E chdir build ctest --output-on-failure
   - cmake --build build --config Release
   - cmake -E chdir build ctest --output-on-failure
+  - rm -fr build
+  - cmake -E make_directory build
+  - cmake -E make_directory appveyor-artifacts
+  - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\appveyor-artifacts ..
+  - cmake --build build --target install
+  - 7z a acados-windows.zip %APPVEYOR_BUILD_FOLDER%\appveyor-artifacts
+
+artifacts:
+  - path: acados-windows.zip
+    name: Acados Windows
+
+deploy:
+  - provider: GitHub
+    artifact: Acados Windows
+    draft: false
+    prerelease: fasle
+    auth_token:
+      secure: lmT6hGzdCqtbutvVHrWLpK+iUOwD6YhYmqx1Vkmm7ttqucLZy6EzDRTMT7YKL3KC
+    on:
+      branch: master
