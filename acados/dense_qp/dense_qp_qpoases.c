@@ -126,7 +126,7 @@ int dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dims *dims, v
     int ns  = dims->ns;
 
     int nv2 = nv + 2*ns;
-    int ng2 = (ns > 0) ? 2*(ng + nsb) : ng;
+    int ng2 = (ns > 0) ? ng + nsb : ng;
     int nb2 = nb - nsb + 2 * ns;
 
     // size in bytes
@@ -183,7 +183,7 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     int ns  = dims->ns;
 
     int nv2 = nv + 2*ns;
-    int ng2 = (ns > 0) ? 2*(ng + nsb) : ng;
+    int ng2 = (ns > 0) ? ng + nsb : ng;
     int nb2 = nb - nsb + 2 * ns;
 
     // char pointer
@@ -329,7 +329,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     int ns  = qp_in->dim->ns;
 
     int nv2 = nv + 2*ns;
-    int ng2 = (ns > 0) ? 2*(ng + nsb) : ng;
+    int ng2 = (ns > 0) ? ng + nsb : ng;
     int nb2 = nb - nsb + 2 * ns;
 
     // fill in the upper triangular of H in dense_qp
@@ -556,53 +556,52 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             qp_out->lam->pa[nb + ng + ii] = -dual_sol[idxb[ii]];
     }
 
+    for (int ii = 0; ii < ng; ii++)
+    {
+        if (dual_sol[nv2 + ii] >= 0.0)
+            qp_out->lam->pa[nb + ii] = dual_sol[nv2 + ii];
+        else
+            qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv2 + ii];
+    }
+
     int k = 0;
     for (int ii = 0; ii < ns; ii++)
     {
         int js = idxs[ii];
 
+        double offset_l = 0.0;
+        double offset_u = 0.0;
+
         if (js < nb)
         {
-            // dual variables for softened upper box constraints
-            if (dual_sol[nv2 + 2*ng + k] <= 0.0)
-                qp_out->lam->pa[nb + ng + js] = -dual_sol[nv2 + 2*ng + k];
-
-            // dual variables for softened lower box constraints
-            if (dual_sol[nv2 + 2*ng + nsb + k] <= 0.0)
-                qp_out->lam->pa[js] = -dual_sol[nv2 + 2*ng + nsb + k];
+            if (dual_sol[nv2 + ng + k] <= 0.0) // softened upper box constraints
+            {
+                qp_out->lam->pa[nb + ng + js] = -dual_sol[nv2 + ng + k];
+                offset_u = -dual_sol[nv2 + ng + k];
+            }
+            else // softened lower box constraints
+            {
+                qp_out->lam->pa[js] = dual_sol[nv2 + ng + k];
+                offset_l = dual_sol[nv2 + ng + k];
+            }
 
             k++;
+        }
+        else
+        {
+            offset_l = qp_out->lam->pa[nb+js-nb];
+            offset_u = qp_out->lam->pa[2*nb+ng+js-nb];
         }
 
         // dual variables for sl >= d_ls
         if (dual_sol[nv + ii] >= 0)
-            qp_out->lam->pa[2*nb + 2*ng + ii] = dual_sol[nv + ii];
+            qp_out->lam->pa[2*nb + 2*ng + ii] = dual_sol[nv + ii] - offset_u;
 
         // dual variables for su >= d_us
         if (dual_sol[nv + ns + ii] >= 0)
-            qp_out->lam->pa[2*nb + 2*ng + ns + ii] = dual_sol[nv + ns + ii];
+            qp_out->lam->pa[2*nb + 2*ng + ns + ii] = dual_sol[nv + ns + ii] - offset_l;
     }
 
-    for (int ii = 0; ii < ng; ii++)
-    {
-        if (ns > 0)
-        {
-            // dual variables for upper general constraints
-            if (dual_sol[nv2 + ii] <= 0.0)
-                qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv2 + ii];
-
-            // dual variables for lower general constraints
-            if (dual_sol[nv2 + ng + ii] <= 0.0)
-                qp_out->lam->pa[nb + ii] = -dual_sol[nv2 + ng + ii];
-        }
-        else
-        {
-            if (dual_sol[nv + ii] >= 0.0)
-                qp_out->lam->pa[nb + ii] = dual_sol[nv + ii];
-            else
-                qp_out->lam->pa[2 * nb + ng + ii] = -dual_sol[nv + ii];
-        }
-    }
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = nwsr;

@@ -275,7 +275,7 @@ void dense_qp_stack_slacks_dims(dense_qp_dims *in, dense_qp_dims *out)
     out->nv = in->nv + 2 * in->ns;
     out->ne = in->ne;
     out->nb = in->nb - in->nsb + 2 * in->ns;
-    out->ng = in->ns > 0 ? 2 * in->ng + 2 * in->nsb : in->ng;
+    out->ng = in->ns > 0 ? in->ng + in->nsb : in->ng;
     out->ns = 0;
     out->nsb = 0;
     out->nsg = 0;
@@ -302,7 +302,7 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
 
     assert(nv2 == nv+2*ns && "Dimensions are wrong!");
     assert(nb2 == nb-nsb+2*ns && "Dimensions are wrong!");
-    assert(ng2 == 2*ng+2*nsb && "Dimensions are wrong!");
+    assert(ng2 == ng+nsb && "Dimensions are wrong!");
 
     // set matrices to 0.0
     blasfeo_dgese(nv2, nv2, 0.0, out->Hv, 0, 0);
@@ -327,14 +327,11 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
         blasfeo_dveccp(ne, in->b, 0, out->b, 0);
     }
 
-    // copy in->Ct to out->Ct, out->Ct = [in->Ct 0 0 0; 0 0 0 0]
+    // copy in->Ct to out->Ct, out->Ct = [in->Ct 0; 0 0]
     blasfeo_dgecp(nv, ng, in->Ct, 0, 0, out->Ct, 0, 0);
 
     if (ns > 0)
     {
-        // copy -in->Ct to out->Ct, out->Ct = [in->Ct -in->Ct 0 0; 0 0 0 0]
-        blasfeo_dgecpsc(nv, ng, -1.0, in->Ct, 0, 0, out->Ct, 0, ng);
-
         // set flags for non-softened box constraints
         // use out->m temporarily for this
         for (int ii = 0; ii < nb; ii++)
@@ -343,7 +340,7 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
             BLASFEO_DVECEL(out->m, ii) = 1.0;
         }
 
-        int col_b = 2*ng;
+        int col_b = ng;
         for (int ii = 0; ii < ns; ii++)
         {
             int js = idxs[ii];
@@ -363,21 +360,18 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
                 // index of a soft box constraint
                 int jv = idxb[js];
 
-                idx_d_ls1 = 2*nb2+ng2+col_b+nsb;
+                idx_d_ls1 = nb2+col_b;
                 idx_d_us1 = 2*nb2+ng2+col_b;
 
                 // softened box constraint, set its flag to -1
                 BLASFEO_DVECEL(out->m, js) = -1.0;
 
-                // insert softened box constraint into out->Ct (upper bound), x_i - su_i <= ub_i
+                // insert softened box constraint into out->Ct, lb_i <= x_i + sl_i - su_i <= ub_i
                 BLASFEO_DMATEL(out->Ct, jv, col_b) = 1.0;
+                BLASFEO_DMATEL(out->Ct, idx_v_ls1, col_b) = +1.0;
                 BLASFEO_DMATEL(out->Ct, idx_v_us1, col_b) = -1.0;
+                BLASFEO_DVECEL(out->d, idx_d_ls1) = BLASFEO_DVECEL(in->d, idx_d_ls0);
                 BLASFEO_DVECEL(out->d, idx_d_us1) = -BLASFEO_DVECEL(in->d, idx_d_us0);
-
-                // insert softened box constraint into out->Ct (lower bound), -x_i - sl_i <= -lb_i
-                BLASFEO_DMATEL(out->Ct, jv, col_b+nsb) = -1.0;
-                BLASFEO_DMATEL(out->Ct, idx_v_ls1, col_b+nsb) = -1.0;
-                BLASFEO_DVECEL(out->d, idx_d_ls1) = -BLASFEO_DVECEL(in->d, idx_d_ls0);
 
                 col_b++;
             }
@@ -386,11 +380,9 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
                 // index of a soft general constraint
                 int col_g = js - nb;
 
-                // soft general constraint (upper bound), C_i x - su_i <= ug_i
+                // soft general constraint, lg_i <= C_i x + sl_i - su_i <= ug_i
+                BLASFEO_DMATEL(out->Ct, idx_v_ls1, col_g) = +1.0;
                 BLASFEO_DMATEL(out->Ct, idx_v_us1, col_g) = -1.0;
-
-                // soft general constraint (lower bound), -C_i x - sl_i <= -lg_i
-                BLASFEO_DMATEL(out->Ct, idx_v_ls1, col_g+ng) = -1.0;
             }
 
             // slack variables have box constraints
@@ -419,12 +411,11 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
         // for slack variables out->ub is +INFTY
         blasfeo_dvecse(2*ns, ACADOS_POS_INFTY, out->d, nb2+ng2+k_nsb);
 
-        // set out->lg to -INFTY
-        blasfeo_dvecse(ng2, ACADOS_NEG_INFTY, out->d, nb2);
+        // copy in->lg to out->lg
+        blasfeo_dveccp(ng, in->d, nb, out->d, nb2);
 
-        // copy in->ug and -in->lg to out->ug
+        // copy in->ug to out->ug
         blasfeo_dveccpsc(ng, -1.0, in->d, 2*nb+ng, out->d, 2*nb2+ng2);
-        blasfeo_dveccpsc(ng, -1.0, in->d, nb, out->d, 2*nb2+ng2+ng);
 
         // flip signs for ub and ug
         blasfeo_dvecsc(nb2+ng2, -1.0, out->d, nb2+ng2);
@@ -491,7 +482,7 @@ void dense_qp_unstack_slacks(dense_qp_out *in, dense_qp_in *qp_out, dense_qp_out
                 // softened box constraint, set its flag to -1
                 BLASFEO_DVECEL(out->v, js) = -1.0;
 
-                idx_d_ls1 = 2*nb2+ng2+col_b+nsb;
+                idx_d_ls1 = nb2+col_b;
                 idx_d_us1 = 2*nb2+ng2+col_b;
 
                 BLASFEO_DVECEL(out->lam, idx_d_ls0) = BLASFEO_DVECEL(in->lam, idx_d_ls1);
@@ -531,11 +522,11 @@ void dense_qp_unstack_slacks(dense_qp_out *in, dense_qp_in *qp_out, dense_qp_out
 
         blasfeo_dveccp(2*ns, in->t, k_nsb, out->t, 2*nb+2*ng);
         blasfeo_dveccp(ng, in->t, 2*nb2+ng2, out->t, 2*nb+ng);
-        blasfeo_dveccp(ng, in->t, 2*nb2+ng2+ng, out->t, nb);
+        blasfeo_dveccp(ng, in->t, nb2, out->t, nb);
 
         blasfeo_dveccp(2*ns, in->lam, k_nsb, out->lam, 2*nb+2*ng);
         blasfeo_dveccp(ng, in->lam, 2*nb2+ng2, out->lam, 2*nb+ng);
-        blasfeo_dveccp(ng, in->lam, 2*nb2+ng2+ng, out->lam, nb);
+        blasfeo_dveccp(ng, in->lam, nb2, out->lam, nb);
 
         // variables
         blasfeo_dveccp(nv+2*ns, in->v, 0, out->v, 0);
