@@ -71,7 +71,10 @@ before_script:
 
 script:
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release ..
+  - export RELEASES_PREFIX="$(pwd)"
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/local -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
+  - cmake --build build --target install
+  - tar -zcf acados.tar.gz ${HOME}/local/lib
   - cmake --build build --target lint
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
@@ -84,13 +87,6 @@ script:
   - cmake --build build --target install
   - python -c "import acados" # check installation
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
-  - rm -r -f build
-  - mkdir build
-  - mkdir install
-  - export RELEASES_PREFIX="$(pwd)"
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/local -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
-  - cmake --build build --target install
-  - tar -zcf acados.tar.gz ${HOME}/local/lib
 
 deploy:
   provider: releases
