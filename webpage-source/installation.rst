@@ -1,17 +1,5 @@
 Installation
 ========================
-Some information will follow soon!
-The following information is completely nonsense!
+You can find precompiled packages on our `Github Releases Page`_.
 
-Linux
-~~~~~
-Some instruction for linux operating systems.
-
-MacOS
-~~~~~
-Instruction for MacOS go here.
-
-Windows
-~~~~~~~
-And finally some instruction for people using windows in science. Let those
-guys scroll...
+.. _Github Releases Page: https://github.com/acados/acados/releases
