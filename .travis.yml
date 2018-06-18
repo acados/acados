@@ -43,6 +43,7 @@ install:
     else
       echo "Skipping MATLAB installation"
     fi
+    export MATLAB_ROOT=$(pwd)/matlab
   - popd
   - travis_retry source .travis_install.sh
   - export MPLBACKEND=Agg # For matplotlib
