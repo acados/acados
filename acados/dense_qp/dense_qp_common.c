@@ -427,6 +427,7 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
     {
         blasfeo_dveccp(2*nb+2*ng, in->d, 0, out->d, 0);
         blasfeo_dveccp(2*nb+2*ng, in->m, 0, out->m, 0);
+        for (int ii = 0; ii < nb; ii++) out->idxb[ii] = in->idxb[ii];
     }
 }
 
