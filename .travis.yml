@@ -33,8 +33,22 @@ install:
   - |
     mkdir -p /home/travis/external_software
     pushd /home/travis/external_software
-    [ -n "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}" -a ! -f external.tar.gz ] && wget -q -O external.tar.gz "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}";
-    [ -n "${MATLAB_DOWNLOAD_LINK}" -a ! -f matlab.tar.gz ] && wget -q -O matlab.tar.gz "${MATLAB_DOWNLOAD_LINK}";
+    ls -l
+    if [ -n "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}" ]; then
+      echo 'Prepare to download external software';
+      if [ ! -f external.tar.gz ]; then
+        echo 'Download external software';
+        wget -q -O external.tar.gz "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}";
+      fi
+    fi
+    if [ -n "${MATLAB_DOWNLOAD_LINK}" ]; then
+      echo 'Prepare to download matlab software';
+      if [ ! -f matlab.tar.gz ]; then
+        echo 'Download matlab software';
+        wget -q -O matlab.tar.gz "${MATLAB_DOWNLOAD_LINK}";
+      fi
+    fi
+    ls -l
     popd
   - pushd external
   - |
