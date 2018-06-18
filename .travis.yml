@@ -39,13 +39,13 @@ install:
   - |
     if [ -f /home/travis/external_software/matlab.tar.gz -a "${SWIG_MATLAB}" = 'ON' ]; then
       tar -xzf /home/travis/external_software/matlab.tar.gz > /dev/null
-      export MATLAB_ROOT=$(pwd)/matlab
       pushd matlab/bin
       ./matlab -nodesktop -nojvm -nosplash < ../../hello_world.m
       popd
     else
       echo "Skipping MATLAB installation"
     fi
+    export MATLAB_ROOT=$(pwd)/matlab
   - popd
   - travis_retry source .travis_install.sh
   - export MPLBACKEND=Agg # For matplotlib
