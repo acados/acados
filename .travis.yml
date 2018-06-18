@@ -23,6 +23,33 @@ cache:
     - /home/travis/octave_download/
 
 install:
+  - |
+    # directory empty
+    mkdir -p /home/travis/octave_download
+    pushd /home/travis/octave_download
+    [ ! -f optim-1.5.2.tar.gz ] && wget -q -O optim-1.5.2.tar.gz http://packages.octave.org/download/optim-1.5.2.tar.gz
+    [ ! -f struct-1.0.14.tar.gz ] && wget -q -O struct-1.0.14.tar.gz http://packages.octave.org/download/struct-1.0.14.tar.gz
+    popd
+  - |
+    mkdir -p /home/travis/external_software
+    pushd /home/travis/external_software
+    ls -l
+    if [ -n "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}" ]; then
+      echo 'Prepare to download external software';
+      if [ ! -f external.tar.gz ]; then
+        echo 'Download external software';
+        wget -q -O external.tar.gz "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}";
+      fi
+    fi
+    if [ -n "${MATLAB_DOWNLOAD_LINK}" ]; then
+      echo 'Prepare to download matlab software';
+      if [ ! -f matlab.tar.gz ]; then
+        echo 'Download matlab software';
+        wget -q -O matlab.tar.gz "${MATLAB_DOWNLOAD_LINK}";
+      fi
+    fi
+    ls -l
+    popd
   - pushd external
   - |
     if [ -f /home/travis/external_software/external.tar.gz ]; then
@@ -39,9 +66,7 @@ install:
   - |
     if [ -f /home/travis/external_software/matlab.tar.gz -a "${SWIG_MATLAB}" = 'ON' ]; then
       tar -xzf /home/travis/external_software/matlab.tar.gz > /dev/null
-      pushd matlab/bin
-      ./matlab -nodesktop -nojvm -nosplash < ../../hello_world.m
-      popd
+      export MATLAB_ROOT=$(pwd)/matlab
     else
       echo "Skipping MATLAB installation"
     fi
@@ -52,28 +77,12 @@ install:
   - export MATLABPATH=$HOME/local/lib:$MATLABPATH
   - export PYTHONPATH=$HOME/local/lib:$PYTHONPATH
 
-before_script:
-  - mkdir -p /home/travis/octave_download
-  - |
-    if [ -z "$(ls -1qA /home/travis/octave_download)" ]; then
-      # directory empty
-      pushd /home/travis/octave_download
-      wget http://packages.octave.org/download/optim-1.5.2.tar.gz
-      wget http://packages.octave.org/download/struct-1.0.14.tar.gz
-      popd
-    fi
-  - mkdir -p /home/travis/external_software
-  - |
-    if [ -z "$(ls -1qA /home/travis/external_software)" ]; then
-      pushd /home/travis/external_software
-      [ -n "${EXTERNAL_SOFTWARE_DOWNLOADLINK}" ] && wget -q -O external.tar.gz "${EXTERNAL_SOFTWARE_DOWNLOADLINK}";
-      [ -n "${MATLAB_DOWNLOADLINK}" ] && wget -q -O matlab.tar.gz "${MATLAB_DOWNLOADLINK}";
-      popd
-    fi
-
 script:
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release ..
+  - export RELEASES_PREFIX="$(pwd)"
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/local -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
+  - cmake --build build --target install
+  - tar -zcf acados.tar.gz ${HOME}/local/lib
   - cmake --build build --target lint
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
@@ -86,13 +95,6 @@ script:
   - cmake --build build --target install
   - python -c "import acados" # check installation
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
-  - rm -r -f build
-  - mkdir build
-  - mkdir install
-  - export RELEASES_PREFIX="$(pwd)"
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/local -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
-  - cmake --build build --target install
-  - tar -zcf acados.tar.gz ${HOME}/local/lib
 
 deploy:
   provider: releases
