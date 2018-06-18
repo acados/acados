@@ -45,6 +45,10 @@ void *sim_erk_dims_assign(void *config_, void *raw_memory)
     sim_erk_dims *dims = (sim_erk_dims *) c_ptr;
     c_ptr += sizeof(sim_erk_dims);
 
+    dims->nx = 0;
+    dims->nu = 0;
+    dims->nz = 0;
+
     assert((char *) raw_memory + sim_erk_dims_calculate_size() >= c_ptr);
 
     return dims;
@@ -504,11 +508,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int nz = dims->nz;
 
     // assert - only use supported features
-    assert(nz == 0 && "nz should be zero - DAEs are not (yet) supported for this integrator");
+    assert(nz == 0 && "nz should be zero - DAEs are not supported for this integrator");
     assert(opts->output_z == false &&
-            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
+            "opts->output_z should be false - DAEs are not supported for this integrator");
     assert(opts->sens_algebraic == false &&
-       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
+       "opts->sens_algebraic should be false - DAEs are not supported for this integrator");
 
     int nf = opts->num_forw_sens;
     if (!opts->sens_forw) nf = 0;

@@ -31,10 +31,16 @@ extern "C" {
 #define ACADOS_NEG_INFTY -1.0e9
 #define ACADOS_POS_INFTY +1.0e9
 
+
+
 typedef double real_t;
 typedef int int_t;
 
+
+
 typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, void* mem);
+
+
 
 // enum of return values
 enum return_values
@@ -42,8 +48,19 @@ enum return_values
     ACADOS_SUCCESS,
     ACADOS_FAILURE,
     ACADOS_MAXITER,
-    ACADOS_MINSTEP
+    ACADOS_MINSTEP,
 };
+
+
+
+// opts values ( please keep in alphabetical order ! )
+enum acados_opts
+{
+    COMPUTE_ADJ,
+//    COMPUTE_DUAL_SOL,
+};
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

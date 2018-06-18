@@ -19,22 +19,33 @@ addons:
 
 cache:
   directories:
+    - /home/travis/external_software/
     - /home/travis/octave_download/
-
-before_install:
-  - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST TRAVIS_BRANCH=$TRAVIS_BRANCH"
-  - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
-      openssl aes-256-cbc -K $encrypted_15c483c21b41_key -iv $encrypted_15c483c21b41_iv -in external/encrypted_scripts.tar.enc -out external/encrypted_scripts.tar -d;
-      tar -xvf external/encrypted_scripts.tar -C external;
-    fi'
 
 install:
   - pushd external
-  - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
-      source download_encrypted_files.sh;
+  - |
+    if [ -f /home/travis/external_software/external.tar.gz ]; then
+      tar -xf /home/travis/external_software/external.tar.gz > /dev/null;
+      pushd coinhsl;
+      chmod +x ./*;
+      popd;
+      pushd OOQP;
+      chmod +x ./*;
+      popd;
     else
-      export SWIG_MATLAB=OFF;
-    fi'
+      echo "Skipping installation of encrypted software";
+    fi
+  - |
+    if [ -f /home/travis/external_software/matlab.tar.gz -a "${SWIG_MATLAB}" = 'ON' ]; then
+      tar -xzf /home/travis/external_software/matlab.tar.gz > /dev/null
+      pushd matlab/bin
+      ./matlab -nodesktop -nojvm -nosplash < ../../hello_world.m
+      popd
+    else
+      echo "Skipping MATLAB installation"
+    fi
+    export MATLAB_ROOT=$(pwd)/matlab
   - popd
   - travis_retry source .travis_install.sh
   - export MPLBACKEND=Agg # For matplotlib
@@ -51,6 +62,14 @@ before_script:
       wget http://packages.octave.org/download/struct-1.0.14.tar.gz
       popd
     fi
+  - mkdir -p /home/travis/external_software
+  - |
+    if [ -z "$(ls -1qA /home/travis/external_software)" ]; then
+      pushd /home/travis/external_software
+      [ -n "${EXTERNAL_SOFTWARE_DOWNLOADLINK}" ] && wget -q -O external.tar.gz "${EXTERNAL_SOFTWARE_DOWNLOADLINK}";
+      [ -n "${MATLAB_DOWNLOADLINK}" ] && wget -q -O matlab.tar.gz "${MATLAB_DOWNLOADLINK}";
+      popd
+    fi
 
 script:
   - cmake -E make_directory build
@@ -60,13 +79,28 @@ script:
   - cmake -E chdir build ctest --output-on-failure
   - rm -r -f build
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DMatlab_ROOT_DIR=../external/matlab -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
   - export CXX="$CXX -std=c++11" # needed for octave
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
   - cmake --build build --target install
   - python -c "import acados" # check installation
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
+  - rm -r -f build
+  - mkdir build
+  - mkdir install
+  - export RELEASES_PREFIX="$(pwd)"
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/local -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
+  - cmake --build build --target install
+  - tar -zcf acados.tar.gz ${HOME}/local/lib
+
+deploy:
+  provider: releases
+  api_key: "${GITHUB_OAUTH_TOKEN}"
+  file: "${RELEASES_PREFIX}/acados.tar.gz"
+  skip_cleanup: true
+  on:
+    tags: true
 
 
 after_success:

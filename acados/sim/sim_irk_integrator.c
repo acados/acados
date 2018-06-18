@@ -52,6 +52,10 @@ void *sim_irk_dims_assign(void *config_, void *raw_memory)
     sim_irk_dims *dims = (sim_irk_dims *) c_ptr;
     c_ptr += sizeof(sim_irk_dims);
 
+    dims->nx = 0;
+    dims->nu = 0;
+    dims->nz = 0;
+
     assert((char *) raw_memory + sim_irk_dims_calculate_size() >= c_ptr);
 
     return dims;
@@ -282,7 +286,6 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 
     size += 4 * sizeof(struct blasfeo_dvec);          // rG, K, xt, xn
     size += 2 * sizeof(struct blasfeo_dvec);          // lambda,lambdaK
-    size += 1 * sizeof(struct blasfeo_dvec);          // Z
 
     if (opts->sens_adj){
         size += 3 * steps * sizeof(struct blasfeo_dvec);  // **xn_traj, **K_traj, Ztraj
@@ -293,17 +296,15 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     size += blasfeo_memsize_dmat(nx, nx + nu);           // S_forw
     // size += steps * blasfeo_memsize_dmat(nx*ns, nx*ns); // for JG_traj
 
-    size += blasfeo_memsize_dvec(nx * ns);          // K
+    size += blasfeo_memsize_dvec((nx + nz) * ns);   // K
     size += blasfeo_memsize_dvec((nx + nz) * ns);   // rG
-    size += blasfeo_memsize_dvec(nz * ns);          // Z
     size += 3 * blasfeo_memsize_dvec(nx);           // xt, xn, xtdot
     size += blasfeo_memsize_dvec(nx + nu);          // lambda
     size += blasfeo_memsize_dvec((nx + nz) * ns);   // lambdaK
 
     if (opts->sens_adj){
         size += steps * blasfeo_memsize_dvec(nx);       // for xn_traj
-        size += steps * blasfeo_memsize_dvec(nx * ns);  // for K_traj
-        size += steps * blasfeo_memsize_dvec(nz * ns);  // for Z_traj
+        size += steps * blasfeo_memsize_dvec((nx + nz) * ns);  // for K_traj
     }
 
     size += (nx + nz) * ns * sizeof(int);  // ipiv
@@ -359,16 +360,12 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     if (opts->sens_adj){
         assign_and_advance_blasfeo_dvec_structs(steps, &workspace->xn_traj, &c_ptr);
         assign_and_advance_blasfeo_dvec_structs(steps, &workspace->K_traj, &c_ptr);
-        assign_and_advance_blasfeo_dvec_structs(steps, &workspace->Z_traj, &c_ptr);
     }
 
     workspace->rG = (struct blasfeo_dvec *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->K = (struct blasfeo_dvec *) c_ptr;
-    c_ptr += sizeof(struct blasfeo_dvec);
-
-    assign_and_advance_blasfeo_dvec_structs(1, &workspace->Z, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(1, &workspace->K, &c_ptr);
 
     workspace->xt = (struct blasfeo_dvec *) c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
@@ -402,8 +399,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     }
 
     assign_and_advance_blasfeo_dvec_mem((nx + nz) * ns, workspace->rG, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(nx * ns, workspace->K, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(nz * ns, workspace->Z, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem((nx + nz) * ns, workspace->K, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xt, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xn, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, &workspace->xtdot, &c_ptr);
@@ -414,8 +410,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
         for (int i = 0; i < steps; i++)
         {
             assign_and_advance_blasfeo_dvec_mem(nx, &workspace->xn_traj[i], &c_ptr);
-            assign_and_advance_blasfeo_dvec_mem(nx * ns, &workspace->K_traj[i], &c_ptr);
-            assign_and_advance_blasfeo_dvec_mem(nz * ns, &workspace->Z_traj[i], &c_ptr);
+            assign_and_advance_blasfeo_dvec_mem((nx + nz) * ns, &workspace->K_traj[i], &c_ptr);
         }
     }
     assign_and_advance_double(ns, &workspace->Z_work, &c_ptr);
@@ -475,7 +470,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dmat *dG_dK = workspace->dG_dK;
     struct blasfeo_dvec *rG = workspace->rG;
     struct blasfeo_dvec *K = workspace->K;
-    struct blasfeo_dvec *Z = workspace->Z;
     struct blasfeo_dmat *dG_dxu = workspace->dG_dxu;
     struct blasfeo_dmat *dK_dxu = workspace->dK_dxu;
     struct blasfeo_dvec *xt = workspace->xt;
@@ -496,7 +490,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dvec *lambdaK = workspace->lambdaK;
     struct blasfeo_dvec *xn_traj = workspace->xn_traj;
     struct blasfeo_dvec *K_traj = workspace->K_traj;
-    struct blasfeo_dvec *Z_traj = workspace->Z_traj;
     // struct blasfeo_dmat *JG_traj = workspace->JG_traj;
 
     double *x_out = out->xn;
@@ -571,8 +564,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     blasfeo_dgese(nK, nx + nu, 0.0, dK_dxu, 0, 0);
 
     blasfeo_dvecse(nK, 0.0, rG, 0);
-    blasfeo_dvecse(nx * ns, 0.0, K, 0);
-    blasfeo_dvecse(nz * ns, 0.0, Z, 0);
+    blasfeo_dvecse(nK, 0.0, K, 0);
     blasfeo_dvecse(nK, 0.0, lambdaK, 0);
 
     // pack
@@ -591,7 +583,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         // inf_norm_K = 1.0;
         // for(iter=0; inf_norm_K>tol_inf_norm_K & iter<newton_iter; iter++)
         impl_ode_xdot_in.x = K;
-        impl_ode_z_in.x = Z;
+        impl_ode_z_in.x = K;
         for (iter = 0; iter < newton_iter; iter++)
         {
             if ((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse))
@@ -619,8 +611,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                     }
                 }
-                impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns})
-                impl_ode_z_in.xi    = ii * nz;  // use z_i of Z = (z_1,..., z_{ns})
+                impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
+                impl_ode_z_in.xi    = ns * nx + ii * nz;
+                                              // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                 impl_ode_res_out.xi = ii * (nx + nz);  // store output in this posistion of rG
                 // compute the residual of implicit ode at time t_ii
                 if (!((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse)))
@@ -685,17 +678,14 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is
             // [DeltaK, DeltaZ]
-            blasfeo_daxpy(nx * ns, -1.0, rG, 0, K, 0, K, 0);
-            // similar for Z #offset; check(!!)
-            blasfeo_daxpy(nz * ns, -1.0, rG, nx * ns, Z, 0, Z, 0);
+            blasfeo_daxpy(nK, -1.0, rG, 0, K, 0, K, 0);
             // inf norm of K
             //       blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
         }
 
         if (opts->sens_adj)
         {
-            blasfeo_dveccp(nx * ns, K, 0, &K_traj[ss], 0);
-            blasfeo_dveccp(nz * ns, Z, 0, &Z_traj[ss], 0);
+            blasfeo_dveccp(nK, K, 0, &K_traj[ss], 0);
         }
 
         // evaluate forward sensitivities
@@ -706,8 +696,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // evaluate dG_dK(xn,Kn)
             for (ii = 0; ii < ns; ii++)
             {
-                impl_ode_xdot_in.xi = ii * nx;
-                impl_ode_z_in.xi = ii * nz;
+                impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
+                impl_ode_z_in.xi    = ns * nx + ii * nz;
+                                                // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                 blasfeo_dveccp(nx, xn, 0, xt, 0);
 
                 for (jj = 0; jj < ns; jj++)
@@ -792,10 +783,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 {
                     for (int jj = 0; jj < ns; jj++)
                     {
-                        Z_work[jj] = blasfeo_dvecex1(Z, nz * jj + ii);
+                        Z_work[jj] = blasfeo_dvecex1(K, nx * ns + nz * jj + ii);
                                 // copy values of z_ii in first step, into Z_work
                     }
-                    neville_algorithm(&out->zn[ii], 0.0, ns - 1, opts->c_vec, Z_work);
+                    neville_algorithm(0.0, ns - 1, opts->c_vec, Z_work, &out->zn[ii]);
                                 // eval polynomial through (c_jj, z_jj) at 0.
                 }
             }
@@ -810,7 +801,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         Z_work[jj] = blasfeo_dvecex1(K, nx * jj + ii);
                             // copy values of k_ii in first step, into Z_work
                     }
-                    neville_algorithm(&interpolated_value, 0.0, ns - 1, opts->c_vec, Z_work);
+                    neville_algorithm(0.0, ns - 1, opts->c_vec, Z_work, &interpolated_value);
                                 // eval polynomial through (c_jj, k_jj) at 0.
                     blasfeo_pack_dvec(1, &interpolated_value, xtdot, ii);
                 }
@@ -874,15 +865,16 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         for (ss = num_steps - 1; ss > -1; ss--)
         {
             impl_ode_xdot_in.x = &K_traj[ss];              // use K values of step ss
-            impl_ode_z_in.x = &Z_traj[ss];                 // use Z values of step ss
+            impl_ode_z_in.x = &K_traj[ss];                 // use Z values of step ss
 
             blasfeo_dgese(nK, nK, 0.0, dG_dK, 0, 0);
                                                     // initialize dG_dK with zeros
 
             for (ii = 0; ii < ns; ii++)
             {
-                impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns})
-                impl_ode_z_in.xi    = ii * nz;  // use z_i of Z = (z_1,..., z_{ns})
+                impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
+                impl_ode_z_in.xi    = ns * nx + ii * nz;
+                            // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
 
                 // build stage value
                 blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);

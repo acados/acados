@@ -68,6 +68,8 @@ B(5,1) = p_15;
 A(6,6) = -p_16;
 B(6,2) = p_16;
 
+c = zeros(nx1 + nz,1);
+
 phi = fe(2);
 
 n_out  = length(phi);
@@ -138,8 +140,8 @@ s = struct('A', A, 'B', B, 'C', C, 'E', E, 'ALO',ALO, 'L_x', L_x, 'L_xdot', L_xd
 % get matrices
 dummy = SX.sym('dummy');
 
-model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)])) + ...
-    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)];
+model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)])) + ...
+    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)];
 get_matrices_fun = Function([casadi_export_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
 get_matrices_fun.generate('get_matrices_fun', casadi_opts);
 
@@ -159,4 +161,4 @@ p0 = 1;
 y0 = L_x * x0 + L_xdot * x0dot;
 uhat0 = L_u * u0;
 
-gnsf0 = E*x0dot - A*x0 - B*u0 - C*phi_fun(y0, uhat0, p0)
+gnsf0 = E*x0dot - A*x0 - B*u0 - C*phi_fun(y0, uhat0, p0) - c

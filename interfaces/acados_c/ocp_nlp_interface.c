@@ -34,6 +34,7 @@
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/utils/mem.h"
 
 
@@ -126,80 +127,84 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
     if (plan.nlp_solver == SQP_GN)
     {
         ocp_nlp_sqp_config_initialize_default(config);
-
-        // QP solver
-        config->qp_solver = ocp_qp_config_create(plan.ocp_qp_solver_plan);
-
-        // cost
-        for (int i = 0; i <= N; ++i)
-        {
-            switch (plan.nlp_cost[i])
-            {
-                case LINEAR_LS:
-                    ocp_nlp_cost_ls_config_initialize_default(config->cost[i]);
-                    break;
-                case NONLINEAR_LS:
-                    ocp_nlp_cost_nls_config_initialize_default(config->cost[i]);
-                    break;
-                case EXTERNALLY_PROVIDED:
-                    ocp_nlp_cost_external_config_initialize_default(config->cost[i]);
-                    break;
-                case 100:
-                    printf("\nForgot to plan cost?\n\n");
-                    exit(1);
-                default:
-                    printf("Cost not available!\n");
-                    exit(1);
-            }
-        }
-
-        // Dynamics
-        for (int i = 0; i < N; ++i)
-        {
-            switch (plan.nlp_dynamics[i])
-            {
-                case CONTINUOUS_MODEL:
-                    ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[i]);
-                    config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver_plan[i]);
-                    break;
-                case DISCRETE_MODEL:
-                    ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i]);
-                    break;
-                case 100:
-                    printf("\nForgot to plan dynamics?\n\n");
-                    exit(1);
-                default:
-                    printf("Dynamics not available!\n");
-                    exit(1);
-            }
-        }
-
-        // Constraints
-        for (int i = 0; i <= N; ++i)
-        {
-            switch (plan.nlp_constraints[i])
-            {
-                case BGH:
-                    ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i]);
-                    break;
-                case BGHP:
-                    ocp_nlp_constraints_bghp_config_initialize_default(config->constraints[i]);
-                    break;
-                case 100:
-                    printf("\nForgot to plan constraints?\n\n");
-                    exit(1);
-                default:
-                    printf("\nConstraint not available!\n\n");
-                    exit(1);
-            }
-        }
-
+    }
+    else if (plan.nlp_solver == SQP_RTI)
+    {
+        ocp_nlp_sqp_rti_config_initialize_default(config);
     }
     else
     {
         printf("Solver not available!\n");
         exit(1);
     }
+
+    // QP solver
+    config->qp_solver = ocp_qp_config_create(plan.ocp_qp_solver_plan);
+
+    // cost
+    for (int i = 0; i <= N; ++i)
+    {
+        switch (plan.nlp_cost[i])
+        {
+            case LINEAR_LS:
+                ocp_nlp_cost_ls_config_initialize_default(config->cost[i]);
+                break;
+            case NONLINEAR_LS:
+                ocp_nlp_cost_nls_config_initialize_default(config->cost[i]);
+                break;
+            case EXTERNALLY_PROVIDED:
+                ocp_nlp_cost_external_config_initialize_default(config->cost[i]);
+                break;
+            case 100:
+                printf("\nForgot to plan cost?\n\n");
+                exit(1);
+            default:
+                printf("Cost not available!\n");
+                exit(1);
+        }
+    }
+
+    // Dynamics
+    for (int i = 0; i < N; ++i)
+    {
+        switch (plan.nlp_dynamics[i])
+        {
+            case CONTINUOUS_MODEL:
+                ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[i]);
+                config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver_plan[i]);
+                break;
+            case DISCRETE_MODEL:
+                ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i]);
+                break;
+            case 100:
+                printf("\nForgot to plan dynamics?\n\n");
+                exit(1);
+            default:
+                printf("Dynamics not available!\n");
+                exit(1);
+        }
+    }
+
+    // Constraints
+    for (int i = 0; i <= N; ++i)
+    {
+        switch (plan.nlp_constraints[i])
+        {
+            case BGH:
+                ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i]);
+                break;
+            case BGHP:
+                ocp_nlp_constraints_bghp_config_initialize_default(config->constraints[i]);
+                break;
+            case 100:
+                printf("\nForgot to plan constraints?\n\n");
+                exit(1);
+            default:
+                printf("\nConstraint not available!\n\n");
+                exit(1);
+        }
+    }
+
     return config;
 }
 

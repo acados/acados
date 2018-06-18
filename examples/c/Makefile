@@ -46,6 +46,7 @@ EXAMPLES += dense_qp
 EXAMPLES += pendulum_scqp
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
+EXAMPLES += sim_inverted_pendulum
 EXAMPLES += sim_crane_example
 EXAMPLES += mass_spring_example
 EXAMPLES += mass_spring_nmpc_example
@@ -218,6 +219,30 @@ sim_wt_model_nx3: $(WT_OBJS) sim_wt_model_nx3.o
 
 run_sim_wt_model_nx3:
 	./sim_wt_model_nx3.out
+
+#################################################
+# inverted_pendulum model (DAE)
+#################################################
+
+INV_PENDULUM_OBJS =
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_u.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_fun.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_fun_jac_y.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_jac_y_uhat.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_f_lo_fun_jac_x1k1uz.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_get_matrices_fun.o
+
+sim_inverted_pendulum: $(INV_PENDULUM_OBJS) sim_inverted_pendulum.o
+	$(CCC) -o sim_inverted_pendulum.out sim_inverted_pendulum.o  $(INV_PENDULUM_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_inverted_pendulum build complete."
+	@echo
+
+run_sim_inverted_pendulum:
+	./sim_inverted_pendulum.out
 
 
 

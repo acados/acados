@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+
+
 // blasfeo
 #include "blasfeo/include/blasfeo_common.h"
 
@@ -31,6 +33,8 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
+
+
 
 /************************************************
  * config
@@ -47,6 +51,8 @@ typedef struct
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
+    void (*opts_set)(void *config_, void *dims_, void *opts_, enum acados_opts name,
+        void *ptr_value);
     void (*opts_update)(void *config, void *dims, void *opts);
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
@@ -69,6 +75,8 @@ typedef struct
 int ocp_nlp_dynamics_config_calculate_size();
 //
 ocp_nlp_dynamics_config *ocp_nlp_dynamics_config_assign(void *raw_memory);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

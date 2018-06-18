@@ -79,14 +79,16 @@ B(5,1) = 1;
 B(6,2) = 1;
 
 E = eye(nx1+nz);
+
+c = zeros(nx1 + nz,1);
 %% nonlinearity function
 % gather all nonlinear parts
 phi = [- (a1 * uCR * cos(theta) + g* sin(theta) + 2*vL*omega) / xL;
       (theta^2)/8 + xL;
-      cos(omega + 0.1) + (x1_dot(3) - uCR*vL)^2]; % isolated nonlinearity
+      cos(omega + 0.1) + (x1_dot(3) - uCR*vL)^2 - z(2)]; % isolated nonlinearity
 n_out = length(phi);
 % concatination of all states&controls Phi is dependent on
-y = vertcat(xL, vL, theta, omega, x1_dot(3));
+y = vertcat(xL, vL, theta, omega, x1_dot(3), z(2));
 uhat = uCR;
 ny = length(y);
 nuhat = length(uhat);
@@ -146,8 +148,8 @@ s = struct('A', A, 'B', B, 'C', C, 'E', E, 'ALO',ALO, 'L_x', L_x, 'L_xdot', L_xd
 % get matrices
 dummy = SX.sym('dummy');
 
-model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)])) + ...
-    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)];
+model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)])) + ...
+    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)];
 get_matrices_fun = Function([model_name_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
 get_matrices_fun.generate([model_name_prefix,'get_matrices_fun'], casadi_opts);
 
@@ -180,7 +182,7 @@ y0 = L_x * x1_0 + L_xdot * x1dot_0 + L_z * z0;
 
 uhat0 = L_u * u0;
 phi_val0 = phi_fun(y0, uhat0);
-gnsf_val0 = [E * [x1dot_0; z0] - full(A*x1_0 + B * u0 + C * phi_val0); 
+gnsf_val0 = [E * [x1dot_0; z0] - full(A*x1_0 + B * u0 + C * phi_val0 + c); 
             full(f_lo_fun(x1_0, x1dot_0, z0, u0))]
 
 %% set up equivalent implicit model
@@ -188,7 +190,7 @@ x2_dot = SX.sym('x2_dot', nx2);
 xdot = [x1_dot; x2_dot];
 f_impl = [(f_expl - [x1_dot; x2_dot]);
             z - [((theta^2)/8 + xL);
-      cos(omega + 0.1) + (x1_dot(3) - uCR*vL)^2]];
+      cos(omega + 0.1) + (x1_dot(3) - uCR*vL)^2 - z(2)]];
 
 % impl_ode_fun
 impl_ode_fun = Function([model_name_prefix,'impl_ode_fun'], {x, xdot, u, z}, {f_impl});

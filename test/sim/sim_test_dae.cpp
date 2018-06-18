@@ -67,8 +67,7 @@ sim_solver_t hashitsim_dae(std::string const& inString)
 
 double sim_solver_tolerance_dae(std::string const& inString)
 {
-    // if (inString == "ERK") return 1e-3;
-    if (inString == "IRK") return 1e-7;
+    if (inString == "IRK")  return 1e-7;
     // if (inString == "LIFTED_IRK") return 1e-3;
     if (inString == "GNSF") return 1e-7;
     // if (inString == "NEW_LIFTED_IRK") return 1e-3;
@@ -76,14 +75,20 @@ double sim_solver_tolerance_dae(std::string const& inString)
     return -1;
 }
 
+double sim_solver_tolerance_algebraic_dae(std::string const& inString)
+{
+    if (inString == "IRK")  return 1e-4;
+    if (inString == "GNSF") return 1e-4;
+
+    return -1;
+}
 
 
 
 TEST_CASE("crane_dae_example", "[integrators]")
 {
     vector<std::string> solvers = {"IRK", "GNSF"};
-    // vector<std::string> solvers = {"GNSF", "IRK"};
-      // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
+    // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
 
     const int nx = 9;
@@ -92,7 +97,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     const int nx1 = 8;  // gnsf split
     const int nx2 = 1;
     const int n_out = 3;
-    const int ny = 5;
+    const int ny = 6;
     const int nuhat = 1;
 
     // generate x0, u_sim
@@ -115,6 +120,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     // reduced for faster test
 
     double x_sim[nx*(nsim0+2)];
+
     double x_ref_sol[nx];
     double S_forw_ref_sol[nx*NF];
     double S_adj_ref_sol[NF];
@@ -446,6 +452,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
 
                 double tol = sim_solver_tolerance_dae(solver);
+                double tol_algebraic = sim_solver_tolerance_algebraic_dae(solver);
 
                 plan.sim_solver = hashitsim_dae(solver);
 
@@ -457,14 +464,15 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 config->set_nx(dims, nx);
                 config->set_nu(dims, nu);
                 config->set_nz(dims, nz);
+
                 // GNSF -- set additional dimensions
                 sim_gnsf_dims *gnsf_dim;
                 if (plan.sim_solver == GNSF)
                 {
                     gnsf_dim = (sim_gnsf_dims *) dims;
-                    gnsf_dim->nx1 = nx1;
-                    gnsf_dim->nx2 = nx2;
-                    gnsf_dim->ny = ny;
+                    gnsf_dim->nx1   = nx1;
+                    gnsf_dim->nx2   = nx2;
+                    gnsf_dim->ny    = ny;
                     gnsf_dim->nuhat = nuhat;
                     gnsf_dim->n_out = n_out;
                 }
@@ -493,7 +501,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
                 in->T = T;
 
-                // external functions -- model
+            /* set model */
                 switch (plan.sim_solver)
                 {
                     case IRK:  // IRK
@@ -545,7 +553,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 for (int ii = nx; ii < nx + nu; ii++)
                     in->S_adj[ii] = 0.0;
 
-            /** sim solver  */
+            /* sim solver  */
                 sim_solver = sim_create(config, dims, opts);
                 int acados_return;
 
@@ -556,11 +564,11 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 }
 
             /* print */
-            std::cout << "\n---> testing integrator " << solver;
-            std::cout << " OPTS: num_steps = " << opts->num_steps;
-            std::cout << ", num_stages = " << opts->ns;
-            std::cout << ", jac_reuse = " << opts->jac_reuse;
-            std::cout << ", newton_iter = " << opts->newton_iter << ")\n";
+                std::cout << "\n---> testing integrator " << solver;
+                std::cout << " OPTS: num_steps = " << opts->num_steps;
+                std::cout << ", num_stages = " << opts->ns;
+                std::cout << ", jac_reuse = " << opts->jac_reuse;
+                std::cout << ", newton_iter = " << opts->newton_iter << ")\n";
 
                 for (int ii = 0; ii < nsim0; ii++)
                 {
@@ -584,7 +592,8 @@ TEST_CASE("crane_dae_example", "[integrators]")
             /************************************************
             * compute error w.r.t. reference solution
             ************************************************/
-            double rel_error_forw, rel_error_adj, rel_error_z, rel_error_alg;
+                double rel_error_forw, rel_error_adj, rel_error_z, rel_error_alg;
+
                 // error sim
                 for (int jj = 0; jj < nx; jj++){
                     error[jj] = fabs(out->xn[jj] - x_ref_sol[jj]);
@@ -663,10 +672,10 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     REQUIRE(rel_error_adj <= tol);
 
                 if ( opts->output_z )
-                    REQUIRE(rel_error_z <= 1e3*tol);
+                    REQUIRE(rel_error_z <= tol_algebraic);
 
                 if ( opts->sens_algebraic )
-                    REQUIRE(rel_error_alg <= 1e3*tol);
+                    REQUIRE(rel_error_alg <= tol_algebraic);
 
             /************************************************
             * free tested solver
