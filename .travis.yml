@@ -23,23 +23,19 @@ cache:
     - /home/travis/octave_download/
 
 install:
-  - mkdir -p /home/travis/octave_download
   - |
-    if [ -z "$(ls -1qA /home/travis/octave_download)" ]; then
-      # directory empty
-      pushd /home/travis/octave_download
-      [ ! -f 'optim-1.5.2.tar.gz' ] && wget -q -O optim-1.5.2.tar.gz http://packages.octave.org/download/optim-1.5.2.tar.gz
-      [ ! -f 'struct-1.0.14.tar.gz' ] && wget -q -O struct-1.0.14.tar.gz http://packages.octave.org/download/struct-1.0.14.tar.gz
-      popd
-    fi
-  - mkdir -p /home/travis/external_software
+    # directory empty
+    mkdir -p /home/travis/octave_download
+    pushd /home/travis/octave_download
+    [ ! -f optim-1.5.2.tar.gz ] && wget -q -O optim-1.5.2.tar.gz http://packages.octave.org/download/optim-1.5.2.tar.gz
+    [ ! -f struct-1.0.14.tar.gz ] && wget -q -O struct-1.0.14.tar.gz http://packages.octave.org/download/struct-1.0.14.tar.gz
+    popd
   - |
-    if [ -z "$(ls -1qA /home/travis/external_software)" ]; then
-      pushd /home/travis/external_software
-      [ -n "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}" -a ! -f external.tar.gz ] && wget -q -O external.tar.gz "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}";
-      [ -n "${MATLAB_DOWNLOAD_LINK}" -a ! -f matlab.tar.gz ] && wget -q -O matlab.tar.gz "${MATLAB_DOWNLOAD_LINK}";
-      popd
-    fi
+    mkdir -p /home/travis/external_software
+    pushd /home/travis/external_software
+    [ -n "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}" -a ! -f external.tar.gz ] && wget -q -O external.tar.gz "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}";
+    [ -n "${MATLAB_DOWNLOAD_LINK}" -a ! -f matlab.tar.gz ] && wget -q -O matlab.tar.gz "${MATLAB_DOWNLOAD_LINK}";
+    popd
   - pushd external
   - |
     if [ -f /home/travis/external_software/external.tar.gz ]; then
