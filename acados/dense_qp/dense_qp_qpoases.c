@@ -349,8 +349,8 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     if (ns > 0)
     {
         dense_qp_stack_slacks(qp_in, qp_stacked);
-        d_cvt_dense_qp_to_rowmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg, d_ug,
-                                NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        d_cvt_dense_qp_to_rowmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg,
+            d_ug, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
         for (int ii = 0; ii < nb2; ii++)
         {
@@ -574,12 +574,12 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
         if (js < nb)
         {
-            if (dual_sol[nv2 + ng + k] <= 0.0) // softened upper box constraints
+            if (dual_sol[nv2 + ng + k] <= 0.0)  // softened upper box constraints
             {
                 qp_out->lam->pa[nb + ng + js] = -dual_sol[nv2 + ng + k];
                 offset_u = -dual_sol[nv2 + ng + k];
             }
-            else // softened lower box constraints
+            else  // softened lower box constraints
             {
                 qp_out->lam->pa[js] = dual_sol[nv2 + ng + k];
                 offset_l = dual_sol[nv2 + ng + k];

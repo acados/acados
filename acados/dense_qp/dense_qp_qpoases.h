@@ -78,7 +78,7 @@ typedef struct dense_qp_qpoases_memory_
     double cputime;  // cputime of qpoases
     int nwsr;        // performed number of working set recalculations
     int first_it;    // to be used with hotstart
-    dense_qp_in *qp_stacked; //
+    dense_qp_in *qp_stacked;
 } dense_qp_qpoases_memory;
 
 int dense_qp_qpoases_opts_calculate_size(void *config, dense_qp_dims *dims);

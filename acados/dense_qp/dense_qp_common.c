@@ -230,10 +230,9 @@ void dense_qp_compute_t(dense_qp_in *qp_in, dense_qp_out *qp_out)
     // soft
     blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd, idxs, qp_out->t, 0);
     blasfeo_dvecad_sp(nsd, 1.0, qp_out->v, nvd+nsd, idxs, qp_out->t, nbd+ngd);
-//	blasfeo_daxpy(2*nsd, -1.0, qp_out->v, nvd, qp_out->t, 2*nbd+2*ngd, qp_out->t, 2*nbd+2*ngd);
-//	blasfeo_dvecse(2*nsd, 0.0, qp_out->t, 2*nbd+2*ngd);
-       blasfeo_dveccp(2*nsd, qp_out->v, nvd, qp_out->t, 2*nbd+2*ngd);
-    blasfeo_daxpy(2*nsd, -1.0, qp_in->d, 2*nbd+2*ngd, qp_out->t, 2*nbd+2*ngd, qp_out->t, 2*nbd+2*ngd);
+    blasfeo_dveccp(2*nsd, qp_out->v, nvd, qp_out->t, 2*nbd+2*ngd);
+    blasfeo_daxpy(2*nsd, -1.0, qp_in->d, 2*nbd+2*ngd, qp_out->t, 2*nbd+2*ngd, qp_out->t,
+        2*nbd+2*ngd);
 
 }
 
@@ -336,7 +335,7 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
         // use out->m temporarily for this
         for (int ii = 0; ii < nb; ii++)
         {
-            // TODO: pick up some workspace for this
+            // TODO(bnovoselnik): pick up some workspace for this
             BLASFEO_DVECEL(out->m, ii) = 1.0;
         }
 
@@ -465,7 +464,8 @@ void dense_qp_unstack_slacks(dense_qp_out *in, dense_qp_in *qp_out, dense_qp_out
 
         for (int ii = 0; ii < nb; ii++)
         {
-            BLASFEO_DVECEL(out->v, ii) = 1.0; // TODO pick up some workspace for this
+            // TODO(bnovoselnik): pick up some workspace for this
+            BLASFEO_DVECEL(out->v, ii) = 1.0;
         }
 
         int col_b = 2*ng;
@@ -496,7 +496,7 @@ void dense_qp_unstack_slacks(dense_qp_out *in, dense_qp_in *qp_out, dense_qp_out
             }
         }
 
-        int k_nsb = 0; // number of non-softed bounds
+        int k_nsb = 0;  // number of non-softed bounds
         for (int ii = 0; ii < nb; ii++)
         {
             int idx_d_ls0 = ii;

@@ -326,7 +326,8 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
             // compute slacks for bounds
             blasfeo_dvecex_sp(nb_i, 1.0, idxb[ii], ux + ii, 0, tmp_nbgM + 0, 0);
             blasfeo_daxpby(nb_i, 1.0, tmp_nbgM + 0, 0, -1.0, d + ii, 0, t + ii, 0);
-            blasfeo_daxpby(nb_i, -1.0, tmp_nbgM + 0, 0, -1.0, d + ii, nb_i + ng_i, t + ii, nb_i + ng_i);
+            blasfeo_daxpby(nb_i, -1.0, tmp_nbgM + 0, 0, -1.0, d + ii, nb_i + ng_i, t + ii,
+                nb_i + ng_i);
         }
 
         info->t_computed = 1;
@@ -416,15 +417,15 @@ void ocp_qp_stack_slacks_dims(ocp_qp_dims *in, ocp_qp_dims *out)
 {
     int N     = in->N;
     int *nx   = in->nx;
-	int *nu   = in->nu;
-	int *nb   = in->nb;
-	int *nbx  = in->nbx;
-	int *nbu  = in->nbu;
-	int *ng   = in->ng;
-	int *ns   = in->ns;
-	int *nsbx = in->nsbx;
-	int *nsbu = in->nsbu;
-	int *nsg  = in->nsg;
+    int *nu   = in->nu;
+    int *nb   = in->nb;
+    int *nbx  = in->nbx;
+    int *nbu  = in->nbu;
+    int *ng   = in->ng;
+    int *ns   = in->ns;
+    int *nsbx = in->nsbx;
+    int *nsbu = in->nsbu;
+    int *nsg  = in->nsg;
 
     out->N = N;
 
@@ -447,15 +448,15 @@ void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out)
 {
     int N     = in->dim->N;
     int *nx   = in->dim->nx;
-	int *nu   = in->dim->nu;
-	int *nb   = in->dim->nb;
-	int *nbx  = in->dim->nbx;
-	int *nbu  = in->dim->nbu;
-	int *ng   = in->dim->ng;
-	int *ns   = in->dim->ns;
-	int *nsbx = in->dim->nsbx;
-	int *nsbu = in->dim->nsbu;
-	int *nsg  = in->dim->nsg;
+    int *nu   = in->dim->nu;
+    int *nb   = in->dim->nb;
+    int *nbx  = in->dim->nbx;
+    int *nbu  = in->dim->nbu;
+    int *ng   = in->dim->ng;
+    int *ns   = in->dim->ns;
+    int *nsbx = in->dim->nsbx;
+    int *nsbu = in->dim->nsbu;
+    int *nsg  = in->dim->nsg;
     int **idxb = in->idxb;
     int **idxs = in->idxs;
 
@@ -488,7 +489,8 @@ void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out)
         blasfeo_ddiain(2*ns[ii], 1.0, in->Z+ii, 0, out->RSQrq+ii, 0, 0);
 
         // copy in->RSQrq to out->RSQrq, out->RSQrq = [Z 0 0; 0 R S; 0 S' Q; 0 r' q']
-        blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], in->RSQrq+ii, 0, 0, out->RSQrq+ii, 2*ns[ii], 2*ns[ii]);
+        blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], in->RSQrq+ii, 0, 0, out->RSQrq+ii, 2*ns[ii],
+            2*ns[ii]);
 
         // copy in->rqz to out->rqz, out->rqz = [z r q]
         blasfeo_dveccp(2*ns[ii], in->rqz+ii, nu[ii]+nx[ii], out->rqz+ii, 0);
@@ -503,7 +505,7 @@ void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out)
             // use out->m temporarily for this
             for (int jj = 0; jj < nb[ii]; jj++)
             {
-                // TODO: pick up some workspace for this
+                // TODO(bnovoselnik): pick up some workspace for this
                 BLASFEO_DVECEL(out->m+ii, jj) = 1.0;
             }
 
@@ -520,7 +522,7 @@ void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out)
                 int idx_d_ls1;
                 int idx_d_us1;
 
-                if (js < nb[ii]) // soft box constraint
+                if (js < nb[ii])  // soft box constraint
                 {
                     // index of a soft box constraint
                     int jv = idxb[ii][js]+2*ns[ii];
