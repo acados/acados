@@ -8,7 +8,7 @@ pip install numpy scipy matplotlib
 
 # Windows libs for openblas
 pushd $HOME
-wget -q https://sourceforge.net/projects/openblas/files/v0.2.19/OpenBLAS-v0.2.19-Win64-int32.zip
+wget https://sourceforge.net/projects/openblas/files/v0.2.19/OpenBLAS-v0.2.19-Win64-int32.zip
 mkdir -p WindowsLibs
 bsdtar xvf OpenBLAS-v0.2.19-Win64-int32.zip --strip-components=1 -C WindowsLibs
 popd
