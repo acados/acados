@@ -112,7 +112,6 @@ int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void
     size += 3 * nv2 * sizeof(double);          // gg d_lb d_ub
     size += 1 * ne * sizeof(double);           // b
     size += 2 * nb2 * sizeof(double);          // d_lb0 d_ub0
-    size += 2 * ng * sizeof(double);           // d_lg0 d_ug0
     size += 2 * ng2 * sizeof(double);          // d_lg d_ug
     size += 1 * nb * sizeof(int);              // idxb
     size += 1 * nb2 * sizeof(int);             // idxb_stacked
@@ -188,8 +187,6 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     assign_and_advance_double(nb2, &mem->d_ub0, &c_ptr);
     assign_and_advance_double(nv2, &mem->d_lb, &c_ptr);
     assign_and_advance_double(nv2, &mem->d_ub, &c_ptr);
-    assign_and_advance_double(ng, &mem->d_lg0, &c_ptr);
-    assign_and_advance_double(ng, &mem->d_ug0, &c_ptr);
     assign_and_advance_double(ng2, &mem->d_lg, &c_ptr);
     assign_and_advance_double(ng2, &mem->d_ug, &c_ptr);
     assign_and_advance_double(ns, &mem->Zl, &c_ptr);
@@ -264,8 +261,6 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     double *d_ub = memory->d_ub;
     double *d_lg = memory->d_lg;
     double *d_ug = memory->d_ug;
-    double *d_lg0 = memory->d_lg0;
-    double *d_ug0 = memory->d_ug0;
     double *lb = memory->lb;
     double *ub = memory->ub;
     double *Zl = memory->Zl;
@@ -298,7 +293,7 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
     // extract data from qp_in in col-major
-    d_cvt_dense_qp_to_colmaj(qp_in, H, gg, A, b, idxb, d_lb0, d_ub0, C, d_lg0, d_ug0,
+    d_cvt_dense_qp_to_colmaj(qp_in, H, gg, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug,
                              Zl, Zu, zl, zu, idxs, d_ls, d_us);
 
     // reorder bounds

@@ -66,8 +66,6 @@ typedef struct dense_qp_qore_memory_
     double *d_ub0;
     double *d_lb;
     double *d_ub;
-    double *d_lg0;
-    double *d_ug0;
     double *d_lg;
     double *d_ug;
     double *d_ls;
