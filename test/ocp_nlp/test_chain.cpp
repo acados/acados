@@ -1093,6 +1093,7 @@ void setup_and_solve_nlp(int NN,
     int  *nq = (int *)calloc(NN+1, sizeof(int));
     int  *ns = (int *)calloc(NN+1, sizeof(int));
     int  *ny = (int *)calloc(NN+1, sizeof(int));
+    int  *nz = (int *)calloc(NN+1, sizeof(int));
 
 
     int NX = 6 * NMF;
@@ -1101,6 +1102,7 @@ void setup_and_solve_nlp(int NN,
     nx[0] = NX;
     nu[0] = NU;
     ny[0] = nx[0]+nu[0];
+    nz[0] = 0;
 
     constraints_t con_type = constraints_enum(con_str);
     switch (con_type)
@@ -1139,6 +1141,7 @@ void setup_and_solve_nlp(int NN,
         ng[i] = 0;
         nh[i] = 0;
         ny[i] = nx[i]+nu[i];
+        nz[i] = 0;
     }
 
     nx[NN] = NX;
@@ -1149,6 +1152,7 @@ void setup_and_solve_nlp(int NN,
     ng[NN] = 0;
     nh[NN] = 0;
     ny[NN] = nx[NN]+nu[NN];
+    nz[NN] = 0;
 
     /************************************************
     * problem data
@@ -1373,7 +1377,7 @@ void setup_and_solve_nlp(int NN,
     ************************************************/
 
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-    ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, dims);
+    ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
 
     /************************************************
     * dynamics
