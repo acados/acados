@@ -125,7 +125,8 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "{\n";
     out << "\tint nx[NUM_STAGES + 1], nu[NUM_STAGES + 1], ny[NUM_STAGES + 1],\n";
     out << "\t\tnb[NUM_STAGES + 1], nbx[NUM_STAGES + 1], nbu[NUM_STAGES + 1], \n";
-    out << "\t\tng[NUM_STAGES + 1], nh[NUM_STAGES + 1], ns[NUM_STAGES + 1], nq[NUM_STAGES + 1];\n";
+    out << "\t\tng[NUM_STAGES + 1], nh[NUM_STAGES + 1], ns[NUM_STAGES + 1], nq[NUM_STAGES + 1],\n";
+    out << "\t\tnz[NUM_STAGES + 1];\n";
 
     out << "\n\tfor (int i = 0; i < NUM_STAGES; ++i)\n";
     out << "\t{\n";
@@ -139,6 +140,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\t\tnh[i] = 0;\n";
     out << "\t\tns[i] = 0;\n";
     out << "\t\tnq[i] = 0;\n";
+    out << "\t\tnz[i] = 0;\n";
     out << "\t}\n";
 
     out << "\n\tnbx[0] = NUM_STATES;\n";
@@ -153,6 +155,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\tnh[NUM_STAGES] = 0;\n";
     out << "\tns[NUM_STAGES] = 0;\n";
     out << "\tnq[NUM_STAGES] = 0;\n";
+    out << "\tnz[NUM_STAGES] = 0;\n";
 
     out << "\n\tocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NUM_STAGES);\n";
     out << "\tplan->nlp_solver = " + std::to_string(nlp_->plan_->nlp_solver) + ";\n";
@@ -176,7 +179,8 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\n\tocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NUM_STAGES);\n";
 
     out << "\n\tocp_nlp_dims *nlp_dims = ocp_nlp_dims_create(config);\n";
-    out << "\tocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, ns, nq, nlp_dims);\n";
+    out << "\tocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, ";
+    out << "nlp_dims);\n";
 
     out << "\n\texternal_function_casadi *expl_vde_for = malloc(NUM_STAGES "
            "* sizeof(external_function_casadi));\n";
