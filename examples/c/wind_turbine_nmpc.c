@@ -225,6 +225,7 @@ int main()
     int nq[NN+1] = {};
     int ns[NN+1] = {};
 	int ny[NN+1] = {};
+	int nz[NN+1] = {};
 
 	// TODO(dimitris): setup bounds on states and controls based on ACADO controller
     nx[0] = nx_;
@@ -237,6 +238,7 @@ int main()
 	nh[0] = 0;
 	ns[0] = 0;
 	ny[0] = 4; // ny_
+	nz[0] = 0;
 
     for (int i = 1; i < NN; i++)
     {
@@ -249,6 +251,7 @@ int main()
 		nh[i] = 1;
 		ns[i] = 1;
 		ny[i] = 4; // ny_
+		nz[i] = 0;
     }
 
     nx[NN] = nx_;
@@ -260,6 +263,7 @@ int main()
 	nh[NN] = 0;
 	ns[NN] = 0;
 	ny[NN] = 2;
+	nz[NN] = 0;
 
     /************************************************
     * problem data
@@ -527,7 +531,7 @@ int main()
     ************************************************/
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, dims);
+	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
 
     /************************************************
     * dynamics

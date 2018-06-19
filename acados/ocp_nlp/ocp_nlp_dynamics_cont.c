@@ -67,7 +67,7 @@ void *ocp_nlp_dynamics_cont_dims_assign(void *config_, void *raw_memory)
 }
 
 void ocp_nlp_dynamics_cont_dims_initialize(void *config_, void *dims_, int nx, int nu, int nx1,
-                                           int nu1)
+                                           int nu1, int nz)
 {
     ocp_nlp_dynamics_cont_dims *dims = dims_;
 
@@ -81,6 +81,7 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config_, void *dims_, int nx, i
 
     sim_config->set_nx(dims->sim, nx);
     sim_config->set_nu(dims->sim, nu);
+    sim_config->set_nz(dims->sim, nz);
 
     return;
 }

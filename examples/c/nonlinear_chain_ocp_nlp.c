@@ -992,6 +992,7 @@ int main()
     int nq[NN + 1] = {0};
     int ns[NN+1] = {0};
 	int ny[NN+1] = {0};
+	int nz[NN+1] = {0};
 
     nx[0] = NX;
     nu[0] = NU;
@@ -1169,7 +1170,7 @@ int main()
     ************************************************/
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, dims);
+	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
 
     /************************************************
     * dynamics

@@ -55,7 +55,7 @@ void *ocp_nlp_dynamics_disc_dims_assign(void *config_, void *raw_memory)
 }
 
 void ocp_nlp_dynamics_disc_dims_initialize(void *config_, void *dims_, int nx, int nu, int nx1,
-                                           int nu1)
+                                           int nu1, int nz)
 {
     ocp_nlp_dynamics_disc_dims *dims = dims_;
 

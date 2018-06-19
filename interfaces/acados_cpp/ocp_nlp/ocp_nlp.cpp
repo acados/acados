@@ -46,6 +46,7 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
     d_["nh"] = nh;
     d_["ns"] = ns;
     d_["ny"] = vector<int>(N+1);
+    d_["nz"] = vector<int>(N+1);
 
     int config_size = ocp_nlp_solver_config_calculate_size(N);
     void *raw_memory = malloc(config_size);
@@ -190,7 +191,7 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
                             d_["ny"].data(), d_["nbx"].data(),
                             d_["nbu"].data(), d_["ng"].data(),
                             d_["nh"].data(), std::vector<int>(N + 1, 0).data(),
-                            d_["ns"].data(), dims_.get());
+                            d_["ns"].data(), d_["nz"].data(), dims_.get());
 
     solver_options_.reset(ocp_nlp_opts_create(config_.get(), dims_.get()));
 
@@ -409,7 +410,7 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
         dims_->dynamics[i] = ocp_nlp_dynamics_cont_dims_assign(config_->dynamics[i], raw_memory);
         ocp_nlp_dynamics_cont_dims_initialize(config_->dynamics[i], dims_->dynamics[i],
                                               d_["nx"][i], d_["nu"][i],
-                                              d_["nx"][i + 1], d_["nu"][i + 1]);
+                                              d_["nx"][i + 1], d_["nu"][i + 1], d_["nz"][i]);
 
         int model_size =
             ocp_nlp_dynamics_cont_model_calculate_size(config_->dynamics[i], dims_->dynamics[i]);
