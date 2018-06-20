@@ -18,7 +18,7 @@ void *compile_and_load_library(string output_folder, string source_name)
 {
 #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
     std::string dynamic_library_suffix {".dll"};
-    std::string compiler {"mex"};
+    std::string compiler {"gcc"};
 #else
     std::string dynamic_library_suffix {".so"};
     std::string compiler {"cc"};
