@@ -14,21 +14,21 @@ bsdtar xvf OpenBLAS-v0.2.19-Win64-int32.zip --strip-components=1 -C WindowsLibs
 popd
 
 pushd external
-wget -q http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
+wget http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
 mkdir -p eigen
 tar -xf 3.2.10.tar.gz --strip-components=1 -C eigen
 
-wget -q https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
+wget https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
 mkdir -p casadi-octave-v3.4.0
 tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave-v3.4.0
 
-wget -q https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
+wget https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
 mkdir -p casadi-linux-py35-v3.4.0-64bit
 tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-linux-py35-v3.4.0-64bit
 export PYTHONPATH=$(pwd)/casadi-linux-py35-v3.4.0-64bit:$PYTHONPATH
 export CASADIPATH=$(pwd)/casadi-linux-py35-v3.4.0-64bit
 
-wget -q https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
+wget https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
 mkdir -p casadi-linux-matlabR2014b-v3.4.0
 tar -xf casadi-linux-matlabR2014b-v3.4.0.tar.gz -C casadi-linux-matlabR2014b-v3.4.0
 export MATLABPATH=$(pwd)/casadi-linux-matlabR2014b-v3.4.0:$MATLABPATH
