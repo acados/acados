@@ -102,20 +102,21 @@ static void generate_ls_cost_initialization(std::ostream& out)
 {
     out << "\n\tocp_nlp_cost_ls_model *stage_cost;\n";
 
-    out << "\tfor (int i = 0; i <= NUM_STAGES; ++i)\n";
+    out << "\tint i, j;\n";
+    out << "\tfor (i = 0; i <= NUM_STAGES; ++i)\n";
     out << "\t{\n";
     out << "\t\tstage_cost = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];\n";
 
     out << "\n\t\tblasfeo_dgese(nu[i] + nx[i], ny[i], 0.0, &stage_cost->Cyt, 0, 0);\n";
-    out << "\t\tfor (int j = 0; j < nu[i]; ++j)\n";
+    out << "\t\tfor (j = 0; j < nu[i]; ++j)\n";
     out << "\t\t\tBLASFEO_DMATEL(&stage_cost->Cyt, j, nx[i] + j) = 1.0;\n";
-    out << "\t\tfor (int j = 0; j < nx[i]; ++j)\n";
+    out << "\t\tfor (j = 0; j < nx[i]; ++j)\n";
     out << "\t\t\tBLASFEO_DMATEL(&stage_cost->Cyt, nu[i] + j, j) = 1.0;\n";
 
     out << "\n\t\tblasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost->W, 0, 0);\n";
-    out << "\t\tfor (int j = 0; j < nx[i]; ++j)\n";
+    out << "\t\tfor (j = 0; j < nx[i]; ++j)\n";
     out << "\t\t\tBLASFEO_DMATEL(&stage_cost->W, j, j) = 1.0;\n";
-    out << "\t\tfor (int j = 0; j < nu[i]; ++j)\n";
+    out << "\t\tfor (j = 0; j < nu[i]; ++j)\n";
     out << "\t\t\tBLASFEO_DMATEL(&stage_cost->W, nx[i] + j, nx[i] + j) = 1.0;\n";
 
     out << "\n\t\tblasfeo_dvecse(nx[i], 0.0, &stage_cost->y_ref, 0);\n";
@@ -133,7 +134,8 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\t\tng[NUM_STAGES + 1], nh[NUM_STAGES + 1], ns[NUM_STAGES + 1], nq[NUM_STAGES + 1],\n";
     out << "\t\tnz[NUM_STAGES + 1];\n";
 
-    out << "\n\tfor (int i = 0; i < NUM_STAGES; ++i)\n";
+    out << "\tint i;\n";
+    out << "\n\tfor (i = 0; i < NUM_STAGES; ++i)\n";
     out << "\t{\n";
     out << "\t\tnx[i] = NUM_STATES;\n";
     out << "\t\tnu[i] = NUM_CONTROLS;\n";
@@ -165,7 +167,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\n\tocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NUM_STAGES);\n";
     out << "\tplan->nlp_solver = " + std::to_string(nlp_->plan_->nlp_solver) + ";\n";
 
-    out << "\n\tfor (int i = 0; i < NUM_STAGES; i++)\n";
+    out << "\n\tfor (i = 0; i < NUM_STAGES; i++)\n";
     out << "\t{\n";
     out << "\t\tplan->nlp_cost[i] = " + std::to_string(nlp_->plan_->nlp_cost[0]) + ";\n";
     out << "\t\tplan->nlp_dynamics[i] = " + std::to_string(nlp_->plan_->nlp_dynamics[0]) + ";\n";
@@ -189,7 +191,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
 
     out << "\n\texternal_function_casadi *expl_vde_for = malloc(NUM_STAGES "
            "* sizeof(external_function_casadi));\n";
-    out << "\tfor (int i = 0; i < NUM_STAGES; ++i)\n";
+    out << "\tfor (i = 0; i < NUM_STAGES; ++i)\n";
     out << "\t{\n";
     out << "\t\texpl_vde_for[i].casadi_fun = &" + nlp_->cached_model_ + ";\n";
     out << "\t\texpl_vde_for[i].casadi_n_in = &" + nlp_->cached_model_ + "_n_in;\n";
@@ -202,10 +204,10 @@ void code_generator::generate_mdl_start(std::ostream& out)
 
     out << "\n\tocp_nlp_in *nlp_in = ocp_nlp_in_create(config, nlp_dims);\n";
 
-    out << "\n\tfor (int i = 0; i < NUM_STAGES; ++i)\n";
+    out << "\n\tfor (i = 0; i < NUM_STAGES; ++i)\n";
     out << "\t\tnlp_in->Ts[i] = LEN_INTERVAL;\n";
 
-    out << "\n\tfor (int i = 0; i < NUM_STAGES; ++i)\n";
+    out << "\n\tfor (i = 0; i < NUM_STAGES; ++i)\n";
     out << "\t\tnlp_set_model_in_stage(config, nlp_in, i, \"expl_vde_for\", &expl_vde_for[i]);\n";
 
     generate_ls_cost_initialization(out);
@@ -213,7 +215,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\n\tocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) "
            "nlp_in->constraints;\n";
 
-    out << "\tfor (int i = 0; i < NUM_STATES; ++i)\n";
+    out << "\tfor (i = 0; i < NUM_STATES; ++i)\n";
     out << "\t\tconstraints[0]->idxb[i] = NUM_CONTROLS + i;\n";
 
     out << "\n\tvoid *nlp_opts = ocp_nlp_opts_create(config, nlp_dims);\n";
@@ -283,7 +285,7 @@ void code_generator::generate_s_function_makefile(std::ostream& out, std::string
     out << "% Dialog with which the user selects the folder where the acados libs\n";
     out << "% reside.\n";
     out << "\nif(~ exist('acados_lib_path', 'var'))\n";
-    out << "\tacados_path = uigetdir('', 'Please select folder with acados libraries for dSpace');";
+    out << "\tacados_path = uigetdir('', 'Please select folder with the acados libraries.);";
     out << "\n";
     out << "\tacados_lib_path = fullfile(acados_path, 'lib');\n";
     out << "\tacados_include_path = fullfile(acados_path, 'include');\n";
