@@ -27,7 +27,7 @@ nlp.set_field('ubx', 0, x0);
 nlp.set_field('lbu', -8);
 nlp.set_field('ubu', +8);
 
-nlp.initialize_solver('sqp', struct('qp_solver', 'qpoases'));
+nlp.initialize_solver('sqp');
 
 output = nlp.solve(x0, 0);
 
@@ -55,9 +55,9 @@ U = [controls{1}.'];
 for i=1:numel(controls)-1
     U = [U; controls{i+1}.'];
 end
-
-figure(1); clf;
-subplot(211)
-plot(X);
-subplot(212)
-plot(U);
+% 
+% figure(1); clf;
+% subplot(211)
+% plot(X);
+% subplot(212)
+% plot(U);
