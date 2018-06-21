@@ -102,7 +102,6 @@ static void generate_ls_cost_initialization(std::ostream& out)
 {
     out << "\n\tocp_nlp_cost_ls_model *stage_cost;\n";
 
-    out << "\tint i, j;\n";
     out << "\tfor (i = 0; i <= NUM_STAGES; ++i)\n";
     out << "\t{\n";
     out << "\t\tstage_cost = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];\n";
@@ -134,7 +133,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\t\tng[NUM_STAGES + 1], nh[NUM_STAGES + 1], ns[NUM_STAGES + 1], nq[NUM_STAGES + 1],\n";
     out << "\t\tnz[NUM_STAGES + 1];\n";
 
-    out << "\tint i;\n";
+    out << "\tint i, j;\n";
     out << "\n\tfor (i = 0; i < NUM_STAGES; ++i)\n";
     out << "\t{\n";
     out << "\t\tnx[i] = NUM_STATES;\n";
@@ -285,7 +284,7 @@ void code_generator::generate_s_function_makefile(std::ostream& out, std::string
     out << "% Dialog with which the user selects the folder where the acados libs\n";
     out << "% reside.\n";
     out << "\nif(~ exist('acados_lib_path', 'var'))\n";
-    out << "\tacados_path = uigetdir('', 'Please select folder with the acados libraries.);";
+    out << "\tacados_path = uigetdir('', 'Please select folder with the acados libraries.');";
     out << "\n";
     out << "\tacados_lib_path = fullfile(acados_path, 'lib');\n";
     out << "\tacados_include_path = fullfile(acados_path, 'include');\n";
@@ -297,7 +296,7 @@ void code_generator::generate_s_function_makefile(std::ostream& out, std::string
     out << "mex_command = [mex_command, ' -I', acados_include_path];\n";
     out << "mex_command = [mex_command, ' -I', blasfeo_include_path];\n";
     out << "mex_command = [mex_command, ' -L', acados_lib_path];\n";
-    out << "mex_command = [mex_command, ' -lacados -lblasfeo -lhpmpc -lhpipm -lqpOASES_e'];\n";
+    out << "mex_command = [mex_command, ' -lacados -lhpmpc -lhpipm -lqpOASES_e -lblasfeo'];\n";
 
     out << "\neval(mex_command);\n";
 }
