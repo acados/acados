@@ -28,6 +28,11 @@ void code_generator::generate_s_function(std::string name)
 
     generate_s_function_footer(file);
 
+    std::ofstream makefile;
+    makefile.open(name + "_make.m");
+
+    generate_s_function_makefile(makefile, name);
+
 }
 
 void code_generator::generate_s_function_header(std::ostream& out, std::string s_function_name)
@@ -269,6 +274,30 @@ void code_generator::generate_s_function_footer(std::ostream& out)
     out << "#else\n";
     out << "#include \"cg_sfun.h\" /* Code generation registration function */\n";
     out << "#endif\n";
+}
+
+void code_generator::generate_s_function_makefile(std::ostream& out, std::string function_name)
+{
+    out << "\n";
+
+    out << "% Dialog with which the user selects the folder where the acados libs\n";
+    out << "% reside.\n";
+    out << "\nif(~ exist('acados_lib_path', 'var'))\n";
+    out << "\tacados_path = uigetdir('', 'Please select folder with acados libraries for dSpace');";
+    out << "\n";
+    out << "\tacados_lib_path = fullfile(acados_path, 'lib');\n";
+    out << "\tacados_include_path = fullfile(acados_path, 'include');\n";
+    out << "\tblasfeo_include_path = fullfile(acados_path, 'include/blasfeo/include');\n";
+    out << "end\n";
+
+    out << "\nmex_command = 'mex " + function_name + ".c';\n";
+    out << "mex_command = [mex_command, ' _casadi_generated/" + nlp_->cached_model_ + ".c'];\n";
+    out << "mex_command = [mex_command, ' -I', acados_include_path];\n";
+    out << "mex_command = [mex_command, ' -I', blasfeo_include_path];\n";
+    out << "mex_command = [mex_command, ' -L', acados_lib_path];\n";
+    out << "mex_command = [mex_command, ' -lacados -lblasfeo -lhpmpc -lhpipm -lqpOASES_e'];\n";
+
+    out << "\neval(mex_command);\n";
 }
 
 }  // namespace acados
