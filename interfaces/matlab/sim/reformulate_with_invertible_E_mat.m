@@ -57,26 +57,26 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
 
     % % GNSF
     % get dimensions
-    nx  = gnsf.nx;
-    nu  = gnsf.nu;
-    nz  = gnsf.nz;
+%     nx  = gnsf.nx;
+%     nu  = gnsf.nu;
+%     nz  = gnsf.nz;
 
     nx1 = gnsf.nx1;
-    nx2 = gnsf.nx2;
-    n_out = gnsf.n_out;
-    ny = gnsf.ny;
-    nuhat = gnsf.nuhat;
-
-    % get model matrices
-    A  = gnsf.A;
-    B  = gnsf.B;
-    C  = gnsf.C;
-    E  = gnsf.E;
-    c  = gnsf.c;
+%     nx2 = gnsf.nx2;
+%     n_out = gnsf.n_out;
+%     ny = gnsf.ny;
+%     nuhat = gnsf.nuhat;
+% 
+%     % get model matrices
+%     A  = gnsf.A;
+%     B  = gnsf.B;
+%     C  = gnsf.C;
+%     E  = gnsf.E;
+%     c  = gnsf.c;
 
     phi_current = gnsf.phi_expr;
     
-    A_LO = gnsf.A_LO;
+%     A_LO = gnsf.A_LO;
 
     x1 = x(1:nx1);
 

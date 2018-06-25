@@ -46,7 +46,6 @@ L_x    = gnsf.L_x;
 L_z    = gnsf.L_z;
 L_xdot = gnsf.L_xdot;
 L_u    = gnsf.L_u;
-phi = gnsf.phi_expr;
 
 
 A_LO = gnsf.A_LO;

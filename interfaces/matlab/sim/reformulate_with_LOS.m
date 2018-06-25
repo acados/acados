@@ -63,16 +63,14 @@ phi_current = gnsf.phi_expr;
 A_LO = gnsf.A_LO;
 
 y = gnsf.y;
-uhat = gnsf.uhat;
+% uhat = gnsf.uhat;
 
 x1 = x(1:nx1);
-x2 = x(nx1+1:nx);
+% x2 = x(nx1+1:nx);
 
 x1dot = xdot(1:nx1);
-x2dot = xdot(nx1+1:nx);
+% x2dot = xdot(nx1+1:nx);
 
-
-E_old = E;
 
 %% Reformulate with linear output system (LOS):
 
@@ -129,13 +127,11 @@ end
 %               - else: add new equations (the rows where nonzeros occured)
 %                        and go to *
 I_x2 = [];
-I_x1;
 for ii = I_x2_candidates % ensured: xii_dot does not enter phi_current
     if print_info
     disp(['============= candidate ii = ', num2str(ii), '  ===================']);
     end
     candidates = [ii];
-    I_eq = [];
     while 1
         if any(any(candidates' == I_x1)) % some candidate is in I_x1 already
             I_x1 = unique([I_x1, ii]);
@@ -187,8 +183,6 @@ end
 %               + ( A(i_eq, I_x2) / E(i_eq, i_x2) ) * x2;
 %
 %            =: f_LO(x1, x1dot, u, z) + A_LO( i_LO, :) * x2;
-
-
 
 
 f_LO = [];
@@ -330,9 +324,6 @@ end
 function I_eq = equations_candidates_enter_linearly( candidates, A )
 % determine index set of components of x, for which either x_i or xdot_i
 % enters at least one of the equations corresponding to I_equ linearly.
-nx = size(A,2);
-new_candidates = [];
-
 
 I_eq = [];
 for ii = candidates

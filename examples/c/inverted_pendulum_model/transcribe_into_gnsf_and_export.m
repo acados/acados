@@ -45,7 +45,7 @@ generate_c_code = 1;
 
 
 %% define f_impl
-[ model ] = export_inverted_pendulum_dae();
+[ model ] = export_inverted_pendulum_dae_model();
 
 disp(' ');
 disp(['restructuring ', model.name, ' model'])

@@ -113,6 +113,8 @@ disp( T_dim )
 
 end
 
+
+%% auxilary function
 function print_casadi_function(f)
 
 

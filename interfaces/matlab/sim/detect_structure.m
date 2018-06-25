@@ -32,6 +32,7 @@
 % have changed signs.
 % The C functions to simulate the system as an implicit ODE can also be
 % generated
+%% THIS IS A TEMPLATE
 
 clc;
 clear all;

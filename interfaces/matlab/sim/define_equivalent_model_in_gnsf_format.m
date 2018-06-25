@@ -69,9 +69,6 @@ z0 = rand(size(z));
 gnsf = struct('nx', nx, 'nu', nu, 'nz', nz, 'nx1', nx1, 'nx2', nx2, ...
     'nuhat', nuhat, 'ny', ny, 'n_out', nx+nz);
 
-x_old = x;
-f_impl_old = f_impl_expr;
-
 phi_current = f_impl_expr;
 A = zeros(nx + nz, nx);
 B = zeros(nx + nz, nu);
@@ -99,7 +96,6 @@ check = check_reformulation(f_impl_fun, gnsf, print_info);
 %% Represent all affine dependencies through the model matrices A, B, E, c
 %% determine A
 n_nodes_current = phi_current.n_nodes();
-n_nodes_initial = n_nodes_current;
 
 for ii = 1:length(phi_current)
     fii = phi_current(ii);

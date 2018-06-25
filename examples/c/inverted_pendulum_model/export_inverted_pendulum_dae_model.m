@@ -1,4 +1,4 @@
-function [ model ] = export_inverted_pendulum_dae()
+function [ model ] = export_inverted_pendulum_dae_model()
     %% this function generates an implicit ODE / index-1 DAE model,
     % which consists of a CasADi expression f_impl_expr
     % that depends on the symbolic CasADi variables x, xdot, u, z,

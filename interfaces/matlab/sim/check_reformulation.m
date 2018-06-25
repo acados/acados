@@ -34,9 +34,9 @@ nz  = gnsf.nz;
 
 nx1 = gnsf.nx1;
 nx2 = gnsf.nx2;
-n_out = gnsf.n_out;
-ny = gnsf.ny;
-nuhat = gnsf.nuhat;
+% n_out = gnsf.n_out;
+% ny = gnsf.ny;
+% nuhat = gnsf.nuhat;
 
 
 % get model matrices
@@ -89,8 +89,6 @@ for i_check = 1:num_eval
     rel_error = norm(f_impl_val - gnsf_val) / norm(f_impl_val);
 
     if rel_error > TOL
-        f_impl_val;
-        gnsf_val;
         abs_error = gnsf_val - f_impl_val;
         T = table(f_impl_val, gnsf_val, abs_error);
         disp(T)
