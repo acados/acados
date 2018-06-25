@@ -12,7 +12,7 @@ code_generator::code_generator(ocp_nlp *nlp)
 void code_generator::generate_s_function(std::string name)
 {
     std::ofstream file;
-    file.open(name + ".c");
+    file.open("_autogen/" + name + ".c");
 
     generate_s_function_header(file, name);
 
@@ -29,10 +29,11 @@ void code_generator::generate_s_function(std::string name)
     generate_s_function_footer(file);
 
     std::ofstream makefile;
-    makefile.open(name + "_make.m");
+    makefile.open("_autogen/" + name + "_make.m");
 
     generate_s_function_makefile(makefile, name);
 
+    generate_dspace_makefile(makefile, name);
 }
 
 void code_generator::generate_s_function_header(std::ostream& out, std::string s_function_name)
@@ -54,7 +55,7 @@ void code_generator::generate_s_function_header(std::ostream& out, std::string s
 
     out << "\n";
     for (auto& module : nlp_->module_)
-        out << "#include \"" + module.second.path_to_header() + "\"\n";
+        out << "#include \"" + module.second.name() + ".h\"\n";
 
     out << "\n#define NUM_STAGES " + std::to_string(nlp_->N) + "\n";
     out << "#define LEN_INTERVAL " + std::to_string(nlp_->nlp_->Ts[0]) + "\n";
@@ -292,13 +293,63 @@ void code_generator::generate_s_function_makefile(std::ostream& out, std::string
     out << "end\n";
 
     out << "\nmex_command = 'mex " + function_name + ".c';\n";
-    out << "mex_command = [mex_command, ' _casadi_generated/" + nlp_->cached_model_ + ".c'];\n";
+    out << "mex_command = [mex_command, ' " + nlp_->cached_model_ + ".c'];\n";
     out << "mex_command = [mex_command, ' -I', acados_include_path];\n";
     out << "mex_command = [mex_command, ' -I', blasfeo_include_path];\n";
     out << "mex_command = [mex_command, ' -L', acados_lib_path];\n";
     out << "mex_command = [mex_command, ' -lacados -lhpmpc -lhpipm -lqpOASES_e -lblasfeo'];\n";
 
     out << "\neval(mex_command);\n";
+}
+
+void code_generator::generate_dspace_makefile(std::ostream& out, std::string function_name)
+{
+    out << "\n";
+
+    out << "model_name = 'acados_template';\n";
+
+    out << "if isempty(which(model_name))\n";
+    out << "\tnew_system(model_name);\n";
+    out << "else\n";
+    out << "\tload_system(model_name);\n";
+    out << "end\n";
+
+    out << "\nsave_system(model_name);\n";
+
+    out << "\nif (isempty(find_system(model_name, 'Name', 'S-function')))\n";
+    out << "\tadd_block('simulink/User-Defined Functions/S-Function', [model_name, '/S-function']);\n";
+    out << "\tset_param([model_name, '/S-function'], 'FunctionName', '" + function_name + "');\n";
+    out << "\tset_param([model_name, '/S-function'], 'position', [100 40 220 100]);\n";
+    out << "end\n";
+
+    out << "\nif (isempty(find_system(model_name, 'Name', 'u_opt')))\n";
+    out << "\tadd_block('simulink/Sinks/Scope', [model_name, '/u_opt']);\n";
+    out << "\tset_param([model_name, '/u_opt'], 'position', [250 40 270 60]);\n";
+    out << "\tadd_line(model_name, 'S-function/1', 'u_opt/1');\n";
+    out << "end\n";
+
+    out << "\nif (isempty(find_system(model_name, 'Name', 'Status')))";
+    out << "\tadd_block('simulink/Sinks/Scope', [model_name, '/Status']);\n";
+    out << "\tset_param([model_name, '/Status'], 'position', [250 80 270 100]);\n";
+    out << "\tadd_line(model_name, 'S-function/2', 'Status/1');\n";
+    out << "end\n";
+
+    out << "\nset_param(getActiveConfigSet(model_name), 'StopTime', 'Inf');\n";
+    out << "\nset_param(getActiveConfigSet(model_name), 'Solver', 'FixedStepDiscrete');\n";
+    out << "\nset_param(getActiveConfigSet(model_name), 'FixedStep', '0.1');\n";
+
+    out << "\nset_param(getActiveConfigSet(model_name), 'CustomSource', [pwd, '/" + nlp_->cached_model_ + ".c']);\n";
+    out << "set_param(getActiveConfigSet(model_name), 'CustomInclude', [acados_include_path, ' ', blasfeo_include_path]);\n";
+    out << "set_param(getActiveConfigSet(model_name), 'CustomLibrary', ...\n";
+    out << "\t[acados_lib_path, '/../dspace/lib/acados.lib ', ...\n";
+    out << "\tacados_lib_path, '/../dspace/lib/hpipm.lib ', ...\n";
+    out << "\tacados_lib_path, '/../dspace/lib/hpmpc.lib ', ...\n";
+    out << "\tacados_lib_path, '/../dspace/lib/blasfeo.lib ']);\n";
+
+    out << "\nsave_system(model_name);\n";
+
+    out << "\nopen_system(model_name);\n";
+
 }
 
 }  // namespace acados
