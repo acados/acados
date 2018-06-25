@@ -317,7 +317,8 @@ void code_generator::generate_dspace_makefile(std::ostream& out, std::string fun
     out << "\nsave_system(model_name);\n";
 
     out << "\nif (isempty(find_system(model_name, 'Name', 'S-function')))\n";
-    out << "\tadd_block('simulink/User-Defined Functions/S-Function', [model_name, '/S-function']);\n";
+    out << "\tadd_block('simulink/User-Defined Functions/S-Function', "
+           "[model_name, '/S-function']);\n";
     out << "\tset_param([model_name, '/S-function'], 'FunctionName', '" + function_name + "');\n";
     out << "\tset_param([model_name, '/S-function'], 'position', [100 40 220 100]);\n";
     out << "end\n";
@@ -338,8 +339,10 @@ void code_generator::generate_dspace_makefile(std::ostream& out, std::string fun
     out << "\nset_param(getActiveConfigSet(model_name), 'Solver', 'FixedStepDiscrete');\n";
     out << "\nset_param(getActiveConfigSet(model_name), 'FixedStep', '0.1');\n";
 
-    out << "\nset_param(getActiveConfigSet(model_name), 'CustomSource', [pwd, '/" + nlp_->cached_model_ + ".c']);\n";
-    out << "set_param(getActiveConfigSet(model_name), 'CustomInclude', [acados_include_path, ' ', blasfeo_include_path]);\n";
+    out << "\nset_param(getActiveConfigSet(model_name), 'CustomSource', [pwd, '/" +
+           nlp_->cached_model_ + ".c']);\n";
+    out << "set_param(getActiveConfigSet(model_name), 'CustomInclude', "
+           "[acados_include_path, ' ', blasfeo_include_path]);\n";
     out << "set_param(getActiveConfigSet(model_name), 'CustomLibrary', ...\n";
     out << "\t[acados_lib_path, '/../dspace/lib/acados.lib ', ...\n";
     out << "\tacados_lib_path, '/../dspace/lib/hpipm.lib ', ...\n";
