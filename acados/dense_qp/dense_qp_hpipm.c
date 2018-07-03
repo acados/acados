@@ -72,7 +72,7 @@ void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *op
 {
     dense_qp_hpipm_opts *opts = opts_;
 
-    d_set_default_dense_qp_ipm_arg(opts->hpipm_opts);
+    d_set_default_dense_qp_ipm_arg(BALANCE, opts->hpipm_opts);
     // overwrite some default options
     opts->hpipm_opts->res_g_max = 1e-6;
     opts->hpipm_opts->res_b_max = 1e-8;
