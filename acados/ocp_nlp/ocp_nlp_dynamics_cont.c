@@ -28,6 +28,7 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
+#include "acados/utils/math.h"
 #include "acados/utils/mem.h"
 
 /************************************************
@@ -164,12 +165,13 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
     size += sizeof(ocp_nlp_dynamics_cont_memory);
 
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
+    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // hes
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
 
     size +=
         config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
 
-    size += 64;  // blasfeo_mem align
+    size += 2*64;  // blasfeo_mem align
 
     return size;
 }
@@ -202,6 +204,11 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
 
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
+
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
+    // hes
+    assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &memory->hes, &c_ptr);
     // fun
     assign_and_advance_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
 
@@ -258,6 +265,15 @@ void ocp_nlp_dynamics_cont_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *
     ocp_nlp_dynamics_cont_memory *memory = memory_;
 
     memory->BAbt = BAbt;
+
+    return;
+}
+
+void ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_)
+{
+    ocp_nlp_dynamics_cont_memory *memory = memory_;
+
+    memory->RSQrq = RSQrq;
 
     return;
 }
@@ -405,6 +421,7 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     for (int jj = 0; jj < nx1 * (nx + nu); jj++) work->sim_in->S_forw[jj] = 0.0;
     for (int jj = 0; jj < nx1; jj++) work->sim_in->S_forw[jj * (nx + 1)] = 1.0;
     for (int jj = 0; jj < nx + nu; jj++) work->sim_in->S_adj[jj] = 0.0;
+    blasfeo_unpack_dvec(nx1, mem->pi, 0, work->sim_in->S_adj);
 
     // call integrator
     config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out, opts->sim_solver,
@@ -426,6 +443,42 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
                     0);
     blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
 
+    int hess_index = 0;
+    for (int j = 0; j < nx; j++) {
+        for (int k = j; k < nx; k++) {
+            BLASFEO_DMATEL(&mem->hes, nu+k, nu+j) = work->sim_out->S_hess[hess_index];
+            hess_index++;
+        }
+        for (int k = 0; k < nu; k++) {
+            BLASFEO_DMATEL(&mem->hes, nu+j, k) = work->sim_out->S_hess[hess_index];  // S: nu x nx
+            hess_index++;
+        }
+    }
+    for (int j = 0; j < nu; j++) {
+        for (int k = j; k < nu; k++) {
+            BLASFEO_DMATEL(&mem->hes, k, j) = work->sim_out->S_hess[hess_index];
+            hess_index++;
+        }
+    }
+
+    // Add hessian contribution
+    blasfeo_dgead(nx+nu, nx+nu, 1.0, &mem->hes, 0, 0, mem->RSQrq, 0, 0);
+
+    // Make symmetric
+    blasfeo_dtrtr_l(nx+nu, mem->RSQrq, 0, 0, mem->RSQrq, 0, 0);
+
+    // printf("\nBEFORE\n");
+    // blasfeo_print_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
+
+    // Regularize
+    double tmp_hess[(nx+nu)*(nx+nu)];
+    blasfeo_unpack_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0, tmp_hess, nx+nu);
+    regularize(nx+nu, tmp_hess);
+    blasfeo_pack_dmat(nx+nu, nx+nu, tmp_hess, nx+nu, mem->RSQrq, 0, 0);
+
+    // printf("\nAFTER\n");
+    // blasfeo_print_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
+    
     return;
 }
 
@@ -451,6 +504,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->memory_set_ux1_ptr = &ocp_nlp_dynamics_cont_memory_set_ux1_ptr;
     config->memory_set_pi_ptr = &ocp_nlp_dynamics_cont_memory_set_pi_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_cont_memory_set_BAbt_ptr;
+    config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;

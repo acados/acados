@@ -20,15 +20,16 @@
 #include <numeric>
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 
 #include "acados/utils/print.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-#include "acados/ocp_nlp/ocp_nlp_constraints.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/sim/sim_erk_integrator.h"
 
@@ -38,7 +39,8 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 #include "pendulum_model/vde_forw_pendulum.h"
-#include "pendulum_model/jac_constraint.h"
+#include "pendulum_model/vde_hess_pendulum.h"
+#include "pendulum_model/constraint.h"
 
 std::ostream& operator<<(std::ostream& strm, std::vector<double> v) {
 	for (auto e : v)
@@ -49,16 +51,16 @@ std::ostream& operator<<(std::ostream& strm, std::vector<double> v) {
 
 int main() {
 
-	int num_states = 4, num_controls = 1, N = 40;
-	double Tf = 2.0, Q = 1e-10, R = 1e-4, QN = 1e-10;
+	int num_states = 4, num_controls = 1, N = 20;
+	double Tf = 1.0, Q = 1e-10, R = 1e-4, QN = 1e-10;
 	std::vector<int> idxb_0 {1, 2, 3, 4}, idxb_N {0, 1, 2, 3};
 	std::vector<double> x0 {0, 0, M_PI, 0}, xN {0, 0, 0, 0};
 
-	int max_num_sqp_iterations = 1;
+	int max_num_sqp_iterations = 500;
 
 	std::vector<int> nx(N+1, num_states), nu(N+1, num_controls), nbx(N+1, 0), nbu(N+1, 0),
 		nb(N+1, 0), ng(N+1, 0), nh(N+1, 0), nq(N+1, 0),
-		ns(N+1, 0), nv(N+1, num_states+num_controls), ny(N+1, num_states+num_controls);
+		ns(N+1, 0), nv(N+1, num_states+num_controls), ny(N+1, num_states+num_controls), nz(N+1, 0);
 
 	nbx.at(0) = num_states;
 	nb.at(0) = num_states;
@@ -71,20 +73,24 @@ int main() {
 
 	// Make plan
 
-	ocp_qp_solver_plan qp_plan = {FULL_CONDENSING_QPOASES};
+	ocp_qp_solver_plan qp_plan = {PARTIAL_CONDENSING_HPIPM};
 	std::vector<sim_solver_plan> sim_plan(N, {ERK});
 	std::vector<ocp_nlp_cost_t> cost_plan(N+1, LINEAR_LS);
+	std::vector<ocp_nlp_dynamics_t> dynamics_plan(N, CONTINUOUS_MODEL);
+	std::vector<ocp_nlp_constraints_t> constraints_plan(N+1, BGH);
 
 	ocp_nlp_solver_plan plan = {
 		qp_plan,
 		sim_plan.data(),
 		SQP_GN,
-		cost_plan.data()
+		cost_plan.data(),
+		dynamics_plan.data(),
+		constraints_plan.data(),
 	};
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(plan, N);
 
-	ocp_nlp_dims *dims = ocp_nlp_dims_create(N);
-	ocp_nlp_dims_initialize(nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), nq.data(), ns.data(), dims);
+	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
+	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), nq.data(), ns.data(), nz.data(), dims);
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
@@ -94,6 +100,16 @@ int main() {
 		forw_vde_casadi[i].casadi_sparsity_in = &vdeFun_sparsity_in;
 		forw_vde_casadi[i].casadi_sparsity_out = &vdeFun_sparsity_out;
 		forw_vde_casadi[i].casadi_work = &vdeFun_work;
+	}
+
+	external_function_casadi hess_vde_casadi[N];
+	for (int i = 0; i < N; ++i) {
+		hess_vde_casadi[i].casadi_fun = &adjFun;
+		hess_vde_casadi[i].casadi_n_in = &adjFun_n_in;
+		hess_vde_casadi[i].casadi_n_out = &adjFun_n_out;
+		hess_vde_casadi[i].casadi_sparsity_in = &adjFun_sparsity_in;
+		hess_vde_casadi[i].casadi_sparsity_out = &adjFun_sparsity_out;
+		hess_vde_casadi[i].casadi_work = &adjFun_work;
 	}
 
 	// NLP model: forward VDEs
@@ -106,6 +122,18 @@ int main() {
 		external_function_casadi_assign(forw_vde_casadi+i, c_ptr);
 		c_ptr += external_function_casadi_calculate_size(forw_vde_casadi+i);
 	}
+
+	// NLP model: hessian VDEs
+	function_size = 0;
+	for (int i = 0; i < N; ++i)
+		function_size += external_function_casadi_calculate_size(hess_vde_casadi+i);
+
+	c_ptr = (char *) calloc(1, function_size);
+	for (int i = 0; i < N; ++i) {
+		external_function_casadi_assign(hess_vde_casadi+i, c_ptr);
+		c_ptr += external_function_casadi_calculate_size(hess_vde_casadi+i);
+	}
+
 
 	ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
 
@@ -142,21 +170,22 @@ int main() {
 
 	// NLP dynamics
 	for (int i = 0; i < N; ++i) {
-		ocp_nlp_dynamics_model *dynamics = (ocp_nlp_dynamics_model *) nlp_in->dynamics[i];
+		ocp_nlp_dynamics_cont_model *dynamics = (ocp_nlp_dynamics_cont_model *) nlp_in->dynamics[i];
 		erk_model *model = (erk_model *) dynamics->sim_model;
-		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
+		model->expl_vde_for = (external_function_generic *) &forw_vde_casadi[i];
+		model->expl_vde_adj = (external_function_generic *) &hess_vde_casadi[i];
 	}
 
 	// NLP constraints
-	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
 	external_function_casadi nonlinear_constraint;
-	nonlinear_constraint.casadi_fun = &jac_constraint;
-	nonlinear_constraint.casadi_n_in = &jac_constraint_n_in;
-	nonlinear_constraint.casadi_n_out = &jac_constraint_n_out;
-	nonlinear_constraint.casadi_sparsity_in = &jac_constraint_sparsity_in;
-	nonlinear_constraint.casadi_sparsity_out = &jac_constraint_sparsity_out;
-	nonlinear_constraint.casadi_work = &jac_constraint_work;
+	nonlinear_constraint.casadi_fun = &constraint;
+	nonlinear_constraint.casadi_n_in = &constraint_n_in;
+	nonlinear_constraint.casadi_n_out = &constraint_n_out;
+	nonlinear_constraint.casadi_sparsity_in = &constraint_sparsity_in;
+	nonlinear_constraint.casadi_sparsity_out = &constraint_sparsity_out;
+	nonlinear_constraint.casadi_work = &constraint_work;
 
 	int constraint_size = external_function_casadi_calculate_size(&nonlinear_constraint);
 	void *ptr = malloc(constraint_size);
@@ -179,6 +208,12 @@ int main() {
     sqp_opts->min_res_b = 1e-9;
     sqp_opts->min_res_d = 1e-9;
     sqp_opts->min_res_m = 1e-9;
+	for (int i = 0; i < N; ++i)
+	{
+		sim_rk_opts *rk_opts = (sim_rk_opts *) ((ocp_nlp_dynamics_cont_opts *)sqp_opts->dynamics[i])->sim_solver;
+		rk_opts->sens_hess = true;
+		rk_opts->sens_adj = true;
+	}
 	// ((ocp_qp_partial_condensing_solver_opts *) sqp_opts->qp_solver_opts)->pcond_opts->N2 = 10;
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
@@ -209,7 +244,7 @@ int main() {
 		// blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, 0);
 		// blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, nb[0]+ng[0]);
 
-		while (kkt_norm_inf > 1e-9) {
+		// while (kkt_norm_inf > 1e-9) {
 			acados_tic(&timer);
 			solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 			elapsed_time = acados_toc(&timer);
@@ -217,13 +252,13 @@ int main() {
 			kkt_norm_inf = nlp_out->inf_norm_res;
 			// printf(" iteration %d | time  %f |  ", iteration_number, elapsed_time);
 			// blasfeo_print_tran_dvec(nx.at(0)+nu.at(0), &nlp_out->ux[0], 0);
-			std::vector<double> ux0(nx[0]+nu[0]);
-			blasfeo_unpack_dvec(nx[0]+nu[0], &nlp_out->ux[0], 0, ux0.data());
-			MPC_log.push_back(ux0);
-			blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, 0);
-			blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, nb[0]+ng[0]);
-			iteration_number++;
-		}
+			// std::vector<double> ux0(nx[0]+nu[0]);
+			// blasfeo_unpack_dvec(nx[0]+nu[0], &nlp_out->ux[0], 0, ux0.data());
+			// MPC_log.push_back(ux0);
+			// blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, 0);
+			// blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, nb[0]+ng[0]);
+			// iteration_number++;
+		// }
 	// }
 
 	std::ofstream ostrm("states_controls.txt");
