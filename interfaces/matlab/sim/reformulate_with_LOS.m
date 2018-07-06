@@ -171,6 +171,7 @@ gnsf.x = [x1; x2];
 gnsf.nx1 = length(x1);
 gnsf.nx2 = length(x2);
 
+reordered_model = model;
 reordered_model.x = gnsf.x;
 reordered_model.xdot = gnsf.xdot;
 
@@ -232,9 +233,6 @@ f_permutation = [I_remaining_eq, I_eq_x2];
 f_impl_expr = f_impl_expr( f_permutation ) ;
 f_impl_expr = f_impl_expr.simplify();
 
-reordered_model = model;
-reordered_model.x = x;
-reordered_model.xdot = xdot;
 reordered_model.f_impl_expr = f_impl_expr;
 reordered_model.equ_changed_sign = equ_changed_sign;
 
@@ -266,9 +264,6 @@ gnsf.C = C_new;
 
 gnsf.phi_expr = phi_new;
 gnsf.n_out = length(phi_new);
-
-gnsf.x = x;
-gnsf.xdot = xdot;
 
 [ gnsf ] = determine_input_nonlinearity_function( gnsf );
 

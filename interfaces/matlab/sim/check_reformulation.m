@@ -70,7 +70,7 @@ uhat = gnsf.uhat;
 % create functions
 impl_ode_fun = Function(['impl_ode_fun'], {x, xdot, u, z}, {model.f_impl_expr});
 phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
-f_lo_fun = Function('f_lo_fun',{x, xdot, z, u}, {gnsf.f_lo_expr});
+f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z, u}, {gnsf.f_lo_expr});
 
 
 
