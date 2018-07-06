@@ -37,19 +37,12 @@ x = model.x;
 xdot = model.xdot;
 u = model.u;
 z = model.z;
-model_name_prefix = model.name;
 
 % % GNSF
 % get dimensions
 nx  = gnsf.nx;
-nu  = gnsf.nu;
 nz  = gnsf.nz;
-
 nx1 = gnsf.nx1;
-nx2 = gnsf.nx2;
-n_out = gnsf.n_out;
-ny = gnsf.ny;
-nuhat = gnsf.nuhat;
 
 % get model matrices
 A  = gnsf.A;
@@ -71,12 +64,9 @@ x1 = x(1:nx1);
 x1dot = xdot(1:nx1);
 % x2dot = xdot(nx1+1:nx);
 
-
-%% Reformulate with linear output system (LOS):
-
-
-%% build initial I_x1: all components of x for which either xii or xdot_ii
-%% enters y;     I_x2_candidates: the remaining components
+%% build initial I_x1 and I_x2_candidates
+% I_x1: all components of x for which either xii or xdot_ii enters y;
+% I_x2_candidates: the remaining components
 
 I_x1 = [];
 I_x2_candidates = [];
@@ -87,13 +77,13 @@ for ii = 1:nx1
     dy_dxii_sparsity = dy_dxii.sparsity;
     dy_dxiidot_sparsity = dy_dxiidot.sparsity;
     if or(dy_dxii_sparsity.nnz, dy_dxiidot_sparsity.nnz)
-        % i.e. xii or xiidot are part of y, i.e. enter phi_current
+        % i.e. xii or xiidot are part of y, i.e. enter phi_expr
         if print_info
             disp(['xii is part of x1, ii = ', num2str(ii)]);
         end
         I_x1 = [I_x1, ii];
     else
-        % i.e. neither xii nor xiidot are part of y, i.e. enter phi_current
+        % i.e. neither xii nor xiidot are part of y, i.e. enter phi_expr
         I_x2_candidates = [I_x2_candidates, ii];
     end
 end
@@ -127,7 +117,7 @@ end
 %               - else: add new equations (the rows where nonzeros occured)
 %                        and go to *
 I_x2 = [];
-for ii = I_x2_candidates % ensured: xii_dot does not enter phi_current
+for ii = I_x2_candidates % ensured: xii_dot does not enter phi_expr
     if print_info
     disp(['============= candidate ii = ', num2str(ii), '  ===================']);
     end
@@ -169,6 +159,24 @@ for ii = I_x2_candidates % ensured: xii_dot does not enter phi_current
     end
 end
 
+%% permute x, xdot
+x1 = x(I_x1);
+x2 = x(I_x2);
+x1dot = xdot(I_x1);
+x2dot = xdot(I_x2);
+
+gnsf.xdot = [x1dot; x2dot];
+gnsf.x = [x1; x2];
+
+gnsf.nx1 = length(x1);
+gnsf.nx2 = length(x2);
+
+reordered_model.x = gnsf.x;
+reordered_model.xdot = gnsf.xdot;
+
+
+
+
 
 %% Set up LOS given the components given in I_x2
 % create equivalent equations in LOS
@@ -193,8 +201,8 @@ for ii_x2 = I_x2
     i_eq = equations_defining_candidates(ii_x2, E);
 %     keyboard
     f_LO = vertcat(f_LO,...
-        ( A(i_eq, I_x1) * x(I_x1) + B(i_eq, :) * u + C(i_eq, :) * phi_current + c(i_eq) ...
-            -  E(i_eq, I_x1) * xdot( I_x1 ) - E(i_eq, I_z) * z) / E(i_eq, ii_x2) );
+        ( A(i_eq, I_x1) * x1 + B(i_eq, :) * u + C(i_eq, :) * gnsf.phi_expr + c(i_eq) ...
+            -  E(i_eq, I_x1) * x1dot - E(i_eq, I_z) * z) / E(i_eq, ii_x2) );
     i_LO = find( I_x2 == ii_x2 );
     A_LO(i_LO, :) = A(i_eq, I_x2) / E(i_eq, ii_x2) ;
     E_entry = E(i_eq, ii_x2);
@@ -219,24 +227,10 @@ for i = I_eq_x2
     I_remaining_eq = I_remaining_eq([1:i_remove-1, i_remove+1:length(I_remaining_eq)]);
 end
 
-% permute x, xdot
-x1 = x(I_x1);
-x2 = x(I_x2);
-nx1 = length(x1);
-nx2 = length(x2);
-gnsf.nx1 = nx1;
-gnsf.nx2 = nx2;
-
-x = [x1; x2];
-x1dot = xdot(I_x1);
-x2dot = xdot(I_x2);
-xdot = [x1dot; x2dot];
-
 % permute f accordingly
 f_permutation = [I_remaining_eq, I_eq_x2];
 f_impl_expr = f_impl_expr( f_permutation ) ;
 f_impl_expr = f_impl_expr.simplify();
-f_impl_fun = Function([model_name_prefix,'f_impl_fun'], {x, xdot, u, z}, {f_impl_expr});
 
 reordered_model = model;
 reordered_model.x = x;
@@ -245,10 +239,7 @@ reordered_model.f_impl_expr = f_impl_expr;
 reordered_model.equ_changed_sign = equ_changed_sign;
 
 gnsf.A_LO = A_LO;
-
-
 gnsf.f_lo_expr = f_LO;
-gnsf.f_lo_fun = Function('f_lo_fun',{x1, x1dot, z, u}, {[f_LO]});
 
 
 %% reduce size of first system of GNSF (a)
@@ -261,33 +252,32 @@ gnsf.E = gnsf.E(I_remaining_eq, [I_x1, nx+1 : nx+nz ]);
 gnsf.c = gnsf.c(I_remaining_eq, :);
 
 C_new = [];
-f_new = [];
+phi_new = [];
+gnsf.C
 for ii = 1:size(gnsf.C, 2) % n_colums of C
     if all(gnsf.C(:,ii) == 0) % if column == 0
     else
         C_new = [C_new, gnsf.C(:,ii)];
-        f_new = [f_new; phi_current(ii)];
+        phi_new = [phi_new; gnsf.phi_expr(ii)];
     end
 end
-gnsf.C = C_new;
-gnsf.n_out = length(f_new);
-phi_current = f_new;
 
-gnsf.phi_expr = phi_current;
+gnsf.C = C_new;
+
+gnsf.phi_expr = phi_new;
+gnsf.n_out = length(phi_new);
+
 gnsf.x = x;
 gnsf.xdot = xdot;
 
-[ gnsf.L_x, gnsf.L_xdot, gnsf.L_z, gnsf.L_u, gnsf.phi_fun, y, uhat ] = ...
-       determine_input_nonlinearity_function( x1, x1dot, z, u, f_new );
-gnsf.ny = length(y);
-gnsf.nuhat = length(uhat);
+[ gnsf ] = determine_input_nonlinearity_function( gnsf );
 
-check = check_reformulation(f_impl_fun, gnsf, print_info);
+check_reformulation(reordered_model, gnsf, print_info);
 
 if print_info
 disp('Successfully detected Linear Output System');
 disp(['==>>  moved  ', num2str(nx2), ' states to the Linear Output System']);
-disp(['==>>  recuced output dimension of phi from  ', num2str(length(phi_current)), ' to ', num2str(length(f_new))]);
+disp(['==>>  recuced output dimension of phi from  ', num2str(length(phi_old)), ' to ', num2str(length(gnsf.phi_expr))]);
 end
 
 

@@ -1,4 +1,4 @@
-function check = check_reformulation(f_impl, gnsf, print_info)
+function check = check_reformulation(model, gnsf, print_info)
 %
 %   This file is part of acados.
 %
@@ -23,6 +23,8 @@ function check = check_reformulation(f_impl, gnsf, print_info)
 % to evaluate both models at num_eval random points x0, x0dot, z0, u0;
 % if for all points the relative error is <= TOL, the function will return
 % 1, otherwise it will give an error.
+
+import casadi.*
 
 TOL = 1e-14;
 num_eval = 10;
@@ -56,7 +58,24 @@ A_LO = gnsf.A_LO;
 I_x1 = 1:nx1;
 I_x2 = nx1+1:nx;
 
+
+% get casadi variables
+x = gnsf.x;
+xdot = gnsf.xdot;
+z = gnsf.z;
+u = gnsf.u;
+y = gnsf.y;
+uhat = gnsf.uhat;
+
+% create functions
+impl_ode_fun = Function(['impl_ode_fun'], {x, xdot, u, z}, {model.f_impl_expr});
+phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
+f_lo_fun = Function('f_lo_fun',{x, xdot, z, u}, {gnsf.f_lo_expr});
+
+
+
 for i_check = 1:num_eval
+    
     % generate random values
     x0    = rand(nx, 1);
     x0dot = rand(nx, 1);
@@ -65,21 +84,20 @@ for i_check = 1:num_eval
     
     
     % eval f_impl;
-    f_impl_val = full(f_impl(x0, x0dot, u0, z0));
+    f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0));
 
-    
     % eval gnsf
     y0 = L_x * x0(I_x1) + L_xdot * x0dot(I_x1) + L_z * z0;
     uhat0 = L_u * u0;
 
     gnsf_val1 = (A * x0(I_x1) + B * u0 + ...
-        C * gnsf.phi_fun( y0, uhat0) + c) - E * [x0dot(I_x1); z0];
+        C * phi_fun( y0, uhat0) + c) - E * [x0dot(I_x1); z0];
     
     if nx2 > 0 % eval LOS
 %         gnsf_val2 = A_LO * x0(I_x2) + ...
 %             gnsf.f_lo_fun(x0(I_x1), x0dot(I_x1), z0, u0) - x0dot(I_x2);
         gnsf_val2 =  A_LO * x0(I_x2) + ...
-            gnsf.f_lo_fun(x0(I_x1), x0dot(I_x1), z0, u0) - x0dot(I_x2);
+            f_lo_fun(x0(I_x1), x0dot(I_x1), z0, u0) - x0dot(I_x2);
         gnsf_val = full([gnsf_val1; gnsf_val2 ]);
     else
         gnsf_val = full(gnsf_val1);

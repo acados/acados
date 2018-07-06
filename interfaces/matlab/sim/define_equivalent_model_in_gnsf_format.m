@@ -36,18 +36,15 @@ end
 % load model
 f_impl_expr = model.f_impl_expr;
 
+model_name_prefix = model.name;
+
+% get intputs
 x = model.x;
 xdot = model.xdot;
 u = model.u;
 z = model.z;
-model_name_prefix = model.name;
-
-% set up implicit function
-f_impl_fun = Function([model_name_prefix,'f_impl_fun'], {x, xdot, u, z}, {f_impl_expr});
 
 % model dimensions
-x1 = x;
-x1dot = xdot;
 nx = length(x);
 nx1 = nx;
 nx2 = 0;
@@ -69,14 +66,16 @@ gnsf.c = zeros(nx + nz, 1);
 gnsf.C = eye(nx + nz, nx + nz);
 gnsf.name = model_name_prefix;
 
+gnsf.x = x;
+gnsf.xdot = xdot;
+gnsf.z = z;
+gnsf.u = u;
 
-[ gnsf.L_x, gnsf.L_xdot, gnsf.L_z, gnsf.L_u, gnsf.phi_fun, y, uhat ] = ...
-        determine_input_nonlinearity_function( x1, x1dot, z, u, gnsf.phi_expr );
+[ gnsf ] = determine_input_nonlinearity_function( gnsf );
     
 gnsf.A_LO = [];
-gnsf.f_lo_fun = Function('f_lo_fun',{x, xdot, z, u}, {[]});
-
-check = check_reformulation(f_impl_fun, gnsf, print_info);
+gnsf.f_lo_expr = [];
+check_reformulation(model, gnsf, print_info);
 
 
 %% Represent all affine dependencies through the model matrices A, B, E, c
@@ -121,8 +120,7 @@ end
 gnsf.phi_expr = f_next;
 
 
-gnsf.phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
-check = check_reformulation(f_impl_fun, gnsf, print_info);
+check_reformulation(model, gnsf, print_info);
 
 
 %% determine B
@@ -164,8 +162,7 @@ end
 
 gnsf.phi_expr = f_next;
 
-gnsf.phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
-check = check_reformulation(f_impl_fun, gnsf, print_info);
+check_reformulation(model, gnsf, print_info);
 
 
 %% determine E
@@ -206,9 +203,7 @@ if print_info
 end
 
 gnsf.phi_expr = f_next;
-
-gnsf.phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
-check = check_reformulation(f_impl_fun, gnsf, print_info);
+check_reformulation(model, gnsf, print_info);
 
 %% determine constant term c
 
@@ -243,9 +238,7 @@ if print_info
 end
 
 gnsf.phi_expr = f_next;
-
-gnsf.phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
-check = check_reformulation(f_impl_fun, gnsf, print_info);
+check_reformulation(model, gnsf, print_info);
 
 
 %% determine nonlinearity & corresponding matrix C
@@ -274,8 +267,7 @@ n_nodes_next = f_next.n_nodes();
 % assert(n_nodes_current >= n_nodes_next,'n_nodes_current >= n_nodes_next FAILED')
 gnsf.phi_expr = f_next;
 
-gnsf.phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
-check = check_reformulation(f_impl_fun, gnsf, print_info);
+check_reformulation(model, gnsf, print_info);
 
 gnsf.n_out = length(gnsf.phi_expr);
 
@@ -290,23 +282,12 @@ if print_info
 end
 
 %% determine input of nonlinearity function
-[ gnsf.L_x, gnsf.L_xdot, gnsf.L_z, gnsf.L_u, gnsf.phi_fun, y, uhat ] = ...
-       determine_input_nonlinearity_function( x1, x1dot, z, u, gnsf.phi_expr );
+[ gnsf ] = determine_input_nonlinearity_function( gnsf );
 
-check = check_reformulation(f_impl_fun, gnsf, print_info);
-ny = length(y);
-nuhat = length(uhat);
-gnsf.ny = ny;
-gnsf.nuhat = nuhat;
+check_reformulation(model, gnsf, print_info);
 
-gnsf.y = y;
-gnsf.uhat = uhat;
-gnsf.phi_expr = gnsf.phi_expr;
-
-gnsf.x = x;
-gnsf.xdot = xdot;
-gnsf.z = z;
-gnsf.u = u;
+gnsf.ny = length(gnsf.y);
+gnsf.nuhat = length(gnsf.uhat);
 
 if print_info
     disp('----------------------------------');
