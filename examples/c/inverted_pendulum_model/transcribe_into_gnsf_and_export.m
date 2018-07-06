@@ -68,7 +68,7 @@ structure_detection_print_summary(gnsf, initial_model, reordered_model);
 %% EXPORT C Code
 if generate_c_code
     % generate gnsf model
-    gnsf_generate_c_code
+    generate_c_code_gnsf(gnsf)
     % generate implicit model
-    implicit_ode_generate_c_code
+    generate_c_code_implicit_ode(reordered_model)
 end

@@ -57,35 +57,21 @@ nu  = length(u);
 nuhat = nu;
 ny = 2 * nx + nz;
 
-
-% set up vectors to eval the functions
-x0 = rand(size(x));
-x0dot = rand(size(x));
-u0 = rand(size(u));
-z0 = rand(size(z));
-
-
 %% initialize gnsf struct
 gnsf = struct('nx', nx, 'nu', nu, 'nz', nz, 'nx1', nx1, 'nx2', nx2, ...
     'nuhat', nuhat, 'ny', ny, 'n_out', nx+nz);
 
-phi_current = f_impl_expr;
-A = zeros(nx + nz, nx);
-B = zeros(nx + nz, nu);
-E = zeros(nx + nz, nx + nz);
-c = zeros(nx + nz, 1);
-C = eye(nx + nz, nx + nz);
-
-gnsf.A = A;
-gnsf.B = B;
-gnsf.C = C;
-gnsf.E = E;
-gnsf.c = c;
+gnsf.phi_expr = f_impl_expr;
+gnsf.A = zeros(nx + nz, nx);
+gnsf.B = zeros(nx + nz, nu);
+gnsf.E = zeros(nx + nz, nx + nz);
+gnsf.c = zeros(nx + nz, 1);
+gnsf.C = eye(nx + nz, nx + nz);
+gnsf.name = model_name_prefix;
 
 
 [ gnsf.L_x, gnsf.L_xdot, gnsf.L_z, gnsf.L_u, gnsf.phi_fun, y, uhat ] = ...
-        determine_input_nonlinearity_function( x1, x1dot, z, u, phi_current );
-gnsf.phi_expr = [];
+        determine_input_nonlinearity_function( x1, x1dot, z, u, gnsf.phi_expr );
     
 gnsf.A_LO = [];
 gnsf.f_lo_fun = Function('f_lo_fun',{x, xdot, z, u}, {[]});
@@ -95,20 +81,21 @@ check = check_reformulation(f_impl_fun, gnsf, print_info);
 
 %% Represent all affine dependencies through the model matrices A, B, E, c
 %% determine A
-n_nodes_current = phi_current.n_nodes();
+n_nodes_current = gnsf.phi_expr.n_nodes();
 
-for ii = 1:length(phi_current)
-    fii = phi_current(ii);
+for ii = 1:length(gnsf.phi_expr)
+    fii = gnsf.phi_expr(ii);
     for ix = 1:nx
         % symbolic jacobian of fii w.r.t. xi;
         jac_fii_xi = jacobian(fii,x(ix));
         if jac_fii_xi.is_constant
             % jacobian value
             jac_fii_xi_fun = Function(['jac_fii_xi_fun'],...
-                            {x, xdot, u, z}, {jac_fii_xi});
-            A(ii, ix) = full(jac_fii_xi_fun(x0,x0dot, u0, z0));                
+                            {x(1)}, {jac_fii_xi});
+            % x(1) as input just to have a scalar input and call the function as follows:
+            gnsf.A(ii, ix) = full(jac_fii_xi_fun(0));                
         else
-            A(ii, ix) = 0;
+            gnsf.A(ii, ix) = 0;
             if print_info
                 disp(['fii is NOT linear in x(ix) ii = ', num2str(ii),',  ix = ', num2str(ix)]);
                 disp(fii)
@@ -118,43 +105,42 @@ for ii = 1:length(phi_current)
     end
 end
 
-f_next = phi_current - A * x;
+f_next = gnsf.phi_expr - gnsf.A * x;
 f_next = f_next.simplify();
 n_nodes_next = f_next.n_nodes();
 
 if print_info
     fprintf('\n')
     disp(['determined matrix A:']);
-    disp(A)
+    disp(gnsf.A)
     disp(['reduced nonlinearity from  ', num2str(n_nodes_current),...
           ' to ', num2str(n_nodes_next) ' nodes']);
 end
 
 % assert(n_nodes_current >= n_nodes_next,'n_nodes_current >= n_nodes_next FAILED')
-phi_current = f_next;
+gnsf.phi_expr = f_next;
 
 
-gnsf.phi_fun = Function('phi_fun',{y,uhat}, {phi_current});
-gnsf.A = A;
+gnsf.phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
 check = check_reformulation(f_impl_fun, gnsf, print_info);
 
 
 %% determine B
 
-n_nodes_current = phi_current.n_nodes();
+n_nodes_current = gnsf.phi_expr.n_nodes();
 
-for ii = 1:length(phi_current)
-    fii = phi_current(ii);
+for ii = 1:length(gnsf.phi_expr)
+    fii = gnsf.phi_expr(ii);
     for iu = 1:length(u)
         % symbolic jacobian of fii w.r.t. ui;
         jac_fii_ui = jacobian(fii, u(iu));
         if jac_fii_ui.is_constant % i.e. hessian is structural zero
             % jacobian value
             jac_fii_ui_fun = Function(['jac_fii_ui_fun'],...
-                            {x, xdot, u, z}, {jac_fii_ui});
-            B(ii, iu) = full(jac_fii_ui_fun(x0,x0dot, u0, z0));                
+                            {x(1)}, {jac_fii_ui});
+            gnsf.B(ii, iu) = full(jac_fii_ui_fun(0));                
         else
-            B(ii, iu) = 0;
+            gnsf.B(ii, iu) = 0;
             if print_info
                 disp(['fii is NOT linear in u(iu) ii = ', num2str(ii),',  iu = ', num2str(iu)]);
                 disp(fii)
@@ -164,41 +150,40 @@ for ii = 1:length(phi_current)
     end
 end
 
-f_next = phi_current - B * u;
+f_next = gnsf.phi_expr - gnsf.B * u;
 f_next = f_next.simplify();
 n_nodes_next = f_next.n_nodes();
 
 if print_info
     fprintf('\n')
     disp(['determined matrix B:']);
-    disp(B)
+    disp(gnsf.B)
     disp(['reduced nonlinearity from  ', num2str(n_nodes_current),...
           ' to ', num2str(n_nodes_next) ' nodes']);
 end
 
-phi_current = f_next;
+gnsf.phi_expr = f_next;
 
-gnsf.phi_fun = Function('phi_fun',{y,uhat}, {phi_current});
-gnsf.B = B;
+gnsf.phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
 check = check_reformulation(f_impl_fun, gnsf, print_info);
 
 
 %% determine E
-n_nodes_current = phi_current.n_nodes();
+n_nodes_current = gnsf.phi_expr.n_nodes();
 k = vertcat(xdot, z);
 
-for ii = 1:length(phi_current)
-    fii = phi_current(ii);
+for ii = 1:length(gnsf.phi_expr)
+    fii = gnsf.phi_expr(ii);
     for ik = 1:length(k)
         % symbolic jacobian of fii w.r.t. ui;
         jac_fii_ki = jacobian(fii, k(ik));
         if jac_fii_ki.is_constant
             % jacobian value
             jac_fii_ki_fun = Function(['jac_fii_ki_fun'],...
-                        {x, xdot, u, z}, {jac_fii_ki});
-            E(ii, ik) = - full(jac_fii_ki_fun(x0,x0dot, u0, z0));                
+                        {x(1)}, {jac_fii_ki});
+            gnsf.E(ii, ik) = - full(jac_fii_ki_fun(0));                
         else
-            E(ii, ik) = 0;
+            gnsf.E(ii, ik) = 0;
             if print_info
                 disp(['fii is NOT linear in k(ik) for ii = ', num2str(ii),',  ik = ', num2str(ik)]);
                 disp(fii)
@@ -208,37 +193,35 @@ for ii = 1:length(phi_current)
     end
 end
 
-f_next = phi_current + E * k;
+f_next = gnsf.phi_expr + gnsf.E * k;
 f_next = f_next.simplify();
 n_nodes_next = f_next.n_nodes();
 
 if print_info
     fprintf('\n')
     disp(['determined matrix E:']);
-    disp(E)
+    disp(gnsf.E)
     disp(['reduced nonlinearity from  ', num2str(n_nodes_current),...
           ' to ', num2str(n_nodes_next) ' nodes']);
 end
 
-phi_current = f_next;
+gnsf.phi_expr = f_next;
 
-gnsf.phi_fun = Function('phi_fun',{y,uhat}, {phi_current});
-gnsf.E = E;
-
+gnsf.phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
 check = check_reformulation(f_impl_fun, gnsf, print_info);
 
 %% determine constant term c
 
-n_nodes_current = phi_current.n_nodes();
-for ii = 1:length(phi_current)
-    fii = phi_current(ii);
+n_nodes_current = gnsf.phi_expr.n_nodes();
+for ii = 1:length(gnsf.phi_expr)
+    fii = gnsf.phi_expr(ii);
     if fii.is_constant
         % function value goes into c
         fii_fun = Function(['fii_fun'],...
-                {x, xdot, u, z}, {fii});
-        c(ii) = full(fii_fun(x0,x0dot, u0, z0));                
+                {x(1)}, {fii});
+        gnsf.c(ii) = full(fii_fun(0));                
     else
-        c(ii) = 0;
+        gnsf.c(ii) = 0;
         if print_info
             disp(['fii is NOT constant for ii = ', num2str(ii)]);
             disp(fii)
@@ -247,31 +230,30 @@ for ii = 1:length(phi_current)
     end
 end
 
-f_next = phi_current - c;
+f_next = gnsf.phi_expr - gnsf.c;
 % f_next = f_next.simplify();
 n_nodes_next = f_next.n_nodes();
 
 if print_info
     fprintf('\n')
     disp(['determined vector c:']);
-    disp(c)
+    disp(gnsf.c)
     disp(['reduced nonlinearity from  ', num2str(n_nodes_current),...
           ' to ', num2str(n_nodes_next) ' nodes']);
 end
 
-phi_current = f_next;
+gnsf.phi_expr = f_next;
 
-gnsf.phi_fun = Function('phi_fun',{y,uhat}, {phi_current});
-gnsf.c = c;
+gnsf.phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
 check = check_reformulation(f_impl_fun, gnsf, print_info);
 
 
 %% determine nonlinearity & corresponding matrix C
 %% Reduce dimension of f
-n_nodes_current = phi_current.n_nodes();
+n_nodes_current = gnsf.phi_expr.n_nodes();
 ind_non_zero = [];
-for ii = 1:length(phi_current)
-    fii = phi_current(ii);
+for ii = 1:length(gnsf.phi_expr)
+    fii = gnsf.phi_expr(ii);
     fii = fii.simplify();
     if ~fii.is_zero
         ind_non_zero = [ind_non_zero, ii];
@@ -279,38 +261,37 @@ for ii = 1:length(phi_current)
 end
 
 clear f_next
-f_next = phi_current(ind_non_zero);
+f_next = gnsf.phi_expr(ind_non_zero);
 
 % C
-C = zeros(nx+nz, length(ind_non_zero));
+gnsf.C = zeros(nx+nz, length(ind_non_zero));
 for ii = 1:length(ind_non_zero)
-    C(ind_non_zero(ii), ii) = 1;
+    gnsf.C(ind_non_zero(ii), ii) = 1;
 end
 
 n_nodes_next = f_next.n_nodes();
 
 % assert(n_nodes_current >= n_nodes_next,'n_nodes_current >= n_nodes_next FAILED')
-phi_current = f_next;
+gnsf.phi_expr = f_next;
 
-gnsf.phi_fun = Function('phi_fun',{y,uhat}, {phi_current});
-gnsf.C = C;
+gnsf.phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
 check = check_reformulation(f_impl_fun, gnsf, print_info);
 
-gnsf.n_out = length(phi_current);
+gnsf.n_out = length(gnsf.phi_expr);
 
 if print_info
     fprintf('\n')
     disp(['determined matrix C:']);
-    disp(C)
+    disp(gnsf.C)
     disp(['reduced nonlinearity dimension n_out from  ', num2str(nx+nz),'   to  ', num2str(gnsf.n_out)]);
     disp(['reduced nodes in CasADi expr of nonlinearity from  ', num2str(n_nodes_current),...
           ' to ', num2str(n_nodes_next) ' nodes']);
-    disp(phi_current);
+    disp(gnsf.phi_expr);
 end
 
 %% determine input of nonlinearity function
 [ gnsf.L_x, gnsf.L_xdot, gnsf.L_z, gnsf.L_u, gnsf.phi_fun, y, uhat ] = ...
-       determine_input_nonlinearity_function( x1, x1dot, z, u, phi_current );
+       determine_input_nonlinearity_function( x1, x1dot, z, u, gnsf.phi_expr );
 
 check = check_reformulation(f_impl_fun, gnsf, print_info);
 ny = length(y);
@@ -320,7 +301,7 @@ gnsf.nuhat = nuhat;
 
 gnsf.y = y;
 gnsf.uhat = uhat;
-gnsf.phi_expr = phi_current;
+gnsf.phi_expr = gnsf.phi_expr;
 
 gnsf.x = x;
 gnsf.xdot = xdot;
