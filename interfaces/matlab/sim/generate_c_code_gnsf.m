@@ -15,7 +15,8 @@
 %   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 %
 %   Author: Jonathan Frey: jonathanpaulfrey(at)gmail.com
-
+function generate_c_code_gnsf(gnsf)
+%% import casadi
 import casadi.*
 
 if CasadiMeta.version()=='3.4.0'
@@ -26,15 +27,15 @@ else
 	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
 end
 
-nx  = gnsf.nx;
-nu  = gnsf.nu;
-nz  = gnsf.nz;
-
-nx1 = gnsf.nx1;
-nx2 = gnsf.nx2;
-n_out = gnsf.n_out;
-ny = gnsf.ny;
-nuhat = gnsf.nuhat;
+% nx  = gnsf.nx;
+% nu  = gnsf.nu;
+% nz  = gnsf.nz;
+% 
+% nx1 = gnsf.nx1;
+% nx2 = gnsf.nx2;
+% n_out = gnsf.n_out;
+% ny = gnsf.ny;
+% nuhat = gnsf.nuhat;
 
 A  = gnsf.A;
 B  = gnsf.B;
@@ -59,7 +60,7 @@ uhat = gnsf.uhat;
 jac_phi_y = jacobian(phi,y);
 jac_phi_uhat = jacobian(phi,uhat);
 
-model_name_prefix = model.name;
+model_name_prefix = gnsf.name;
 
 phi_fun = Function([model_name_prefix,'phi_fun'], {y,uhat}, {phi});
 phi_fun_jac_y = Function([model_name_prefix,'phi_fun_jac_y'], {y,uhat}, {phi, jac_phi_y});
@@ -80,16 +81,13 @@ jac_f_u  = jacobian(f_lo,u);
 jac_f_z  = jacobian(f_lo,z);
 jac_f_k1 = jacobian(f_lo,x1dot);
 
-f_fun = Function('f_los', {x1dot,x1,z,u}, {f_lo});
-
 f_lo_fun_jac_x1k1uz = Function([model_name_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u}, ...
     {f_lo, [jac_f_x1, jac_f_k1, jac_f_z, jac_f_u]});
 
-f_lo_fun = Function([model_name_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u}, {f_lo});
+% f_lo_fun = Function([model_name_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u}, {f_lo});
 
 
 %% generate functions
-% get matrices
 dummy = SX.sym('dummy');
 
 model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); A_LO(:); c(:)])) + ...
@@ -103,3 +101,4 @@ phi_fun.generate([model_name_prefix,'phi_fun'], casadi_opts);
 phi_fun_jac_y.generate([model_name_prefix,'phi_fun_jac_y'], casadi_opts);
 phi_jac_y_uhat.generate([model_name_prefix,'phi_jac_y_uhat'], casadi_opts);
 
+end
