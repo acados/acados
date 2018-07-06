@@ -51,18 +51,13 @@ C  = gnsf.C;
 E  = gnsf.E;
 c  = gnsf.c;
 
-phi_current = gnsf.phi_expr;
-
 A_LO = gnsf.A_LO;
 
 y = gnsf.y;
-% uhat = gnsf.uhat;
-
 x1 = x(1:nx1);
-% x2 = x(nx1+1:nx);
-
 x1dot = xdot(1:nx1);
-% x2dot = xdot(nx1+1:nx);
+
+phi_old = gnsf.phi_expr;
 
 %% build initial I_x1 and I_x2_candidates
 % I_x1: all components of x for which either xii or xdot_ii enters y;
@@ -171,12 +166,10 @@ gnsf.x = [x1; x2];
 gnsf.nx1 = length(x1);
 gnsf.nx2 = length(x2);
 
+% define reordered_model
 reordered_model = model;
 reordered_model.x = gnsf.x;
 reordered_model.xdot = gnsf.xdot;
-
-
-
 
 
 %% Set up LOS given the components given in I_x2
@@ -192,15 +185,12 @@ reordered_model.xdot = gnsf.xdot;
 %               + ( A(i_eq, I_x2) / E(i_eq, i_x2) ) * x2;
 %
 %            =: f_LO(x1, x1dot, u, z) + A_LO( i_LO, :) * x2;
-
-
 f_LO = [];
 I_z = nx1+1:nx1+nz;
 
 equ_changed_sign = [];
 for ii_x2 = I_x2
     i_eq = equations_defining_candidates(ii_x2, E);
-%     keyboard
     f_LO = vertcat(f_LO,...
         ( A(i_eq, I_x1) * x1 + B(i_eq, :) * u + C(i_eq, :) * gnsf.phi_expr + c(i_eq) ...
             -  E(i_eq, I_x1) * x1dot - E(i_eq, I_z) * z) / E(i_eq, ii_x2) );
@@ -222,14 +212,14 @@ for ii = I_x2
     I_eq_x2 = [I_eq_x2, equations_defining_candidates(ii, E)];
 end
 
-I_remaining_eq = 1:nx1+nz;
+I_eq_x1 = 1:nx1+nz;
 for i = I_eq_x2
-    i_remove = find( I_remaining_eq == i );
-    I_remaining_eq = I_remaining_eq([1:i_remove-1, i_remove+1:length(I_remaining_eq)]);
+    i_remove = find( I_eq_x1 == i );
+    I_eq_x1 = I_eq_x1([1:i_remove-1, i_remove+1:length(I_eq_x1)]);
 end
 
 % permute f accordingly
-f_permutation = [I_remaining_eq, I_eq_x2];
+f_permutation = [I_eq_x1, I_eq_x2];
 f_impl_expr = f_impl_expr( f_permutation ) ;
 f_impl_expr = f_impl_expr.simplify();
 
@@ -243,15 +233,14 @@ gnsf.f_lo_expr = f_LO;
 %% reduce size of first system of GNSF (a)
 old_Ix1 = I_x1;
 
-gnsf.A = gnsf.A(I_remaining_eq, I_x1);
-gnsf.B = gnsf.B(I_remaining_eq, :);
-gnsf.C = gnsf.C(I_remaining_eq, :);
-gnsf.E = gnsf.E(I_remaining_eq, [I_x1, nx+1 : nx+nz ]);
-gnsf.c = gnsf.c(I_remaining_eq, :);
+gnsf.A = gnsf.A(I_eq_x1, I_x1);
+gnsf.B = gnsf.B(I_eq_x1, :);
+gnsf.C = gnsf.C(I_eq_x1, :);
+gnsf.E = gnsf.E(I_eq_x1, [I_x1, nx+1 : nx+nz ]);
+gnsf.c = gnsf.c(I_eq_x1, :);
 
 C_new = [];
 phi_new = [];
-gnsf.C
 for ii = 1:size(gnsf.C, 2) % n_colums of C
     if all(gnsf.C(:,ii) == 0) % if column == 0
     else
@@ -271,7 +260,7 @@ check_reformulation(reordered_model, gnsf, print_info);
 
 if print_info
 disp('Successfully detected Linear Output System');
-disp(['==>>  moved  ', num2str(nx2), ' states to the Linear Output System']);
+disp(['==>>  moved  ', num2str(gnsf.nx2), ' states to the Linear Output System']);
 disp(['==>>  recuced output dimension of phi from  ', num2str(length(phi_old)), ' to ', num2str(length(gnsf.phi_expr))]);
 end
 
@@ -318,7 +307,6 @@ end
 I_eq = unique(I_eq); 
 
 end
-
 
 function I_equ = equations_defining_candidates( candidates, E)
 % determine the index set of equations that the candidates or its

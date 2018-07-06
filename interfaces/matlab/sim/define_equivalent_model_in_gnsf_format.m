@@ -46,17 +46,16 @@ z = model.z;
 
 % model dimensions
 nx = length(x);
-nx1 = nx;
-nx2 = 0;
 nz  = length(z);
 nu  = length(u);
 
-nuhat = nu;
-ny = 2 * nx + nz;
-
 %% initialize gnsf struct
-gnsf = struct('nx', nx, 'nu', nu, 'nz', nz, 'nx1', nx1, 'nx2', nx2, ...
-    'nuhat', nuhat, 'ny', ny, 'n_out', nx+nz);
+% dimensions
+gnsf = struct('nx', nx, 'nu', nu, 'nz', nz);
+gnsf.nx1 = nx;
+gnsf.nx2 = 0;
+gnsf.nuhat = nu;
+gnsf.ny = 2 * nx + nz;
 
 gnsf.phi_expr = f_impl_expr;
 gnsf.A = zeros(nx + nz, nx);
@@ -119,6 +118,7 @@ end
 % assert(n_nodes_current >= n_nodes_next,'n_nodes_current >= n_nodes_next FAILED')
 gnsf.phi_expr = f_next;
 
+% keyboard % here it fails for MX
 
 check_reformulation(model, gnsf, print_info);
 
@@ -291,8 +291,8 @@ gnsf.nuhat = length(gnsf.uhat);
 
 if print_info
     disp('----------------------------------');
-    disp(['reduced input ny    of phi from  ', num2str(2*nx+nz),'   to  ', num2str( ny )]);
-    disp(['reduced input nuhat of phi from  ', num2str(nu),'   to  ', num2str( nuhat )]);
+    disp(['reduced input ny    of phi from  ', num2str(2*nx+nz),'   to  ', num2str( gnsf.ny )]);
+    disp(['reduced input nuhat of phi from  ', num2str(nu),'   to  ', num2str( gnsf.nuhat )]);
     disp('----------------------------------');
 end
 

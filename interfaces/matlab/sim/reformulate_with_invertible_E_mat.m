@@ -57,32 +57,13 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
 
     % % GNSF
     % get dimensions
-%     nx  = gnsf.nx;
-%     nu  = gnsf.nu;
-%     nz  = gnsf.nz;
-
     nx1 = gnsf.nx1;
-%     nx2 = gnsf.nx2;
-%     n_out = gnsf.n_out;
-%     ny = gnsf.ny;
-%     nuhat = gnsf.nuhat;
-% 
-%     % get model matrices
-%     A  = gnsf.A;
-%     B  = gnsf.B;
-%     C  = gnsf.C;
-%     E  = gnsf.E;
-%     c  = gnsf.c;
 
     phi_current = gnsf.phi_expr;
     
-%     A_LO = gnsf.A_LO;
-
     x1 = x(1:nx1);
 
     x1dot = xdot(1:nx1);
-
-    length(phi_current)
 
     k = [x1dot; z];
     for i = [1,2]
@@ -143,8 +124,7 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
     end
     gnsf.phi_expr = phi_current;
 
-    f_impl_fun = Function([model_name_prefix,'f_impl_fun'], {x, xdot, u, z}, {f_impl_expr});
-    check_reformulation(f_impl_fun, gnsf, print_info);
+    check_reformulation(model, gnsf, print_info);
 
     disp('successfully reformulated the model with invertible matrices E11, E22');
 end

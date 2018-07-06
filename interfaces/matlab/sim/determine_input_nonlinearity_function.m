@@ -79,7 +79,7 @@ end
 
 %% generate gnsf.phi_expr_fun;
 % linear input matrices
-dummy = SX.sym('dummy');
+dummy = gnsf.x(1);
 L_x_fun     = Function('L_x_fun',{dummy}, ...
                     {jacobian( y, gnsf.x(1:gnsf.nx1)) });
 L_xdot_fun  = Function('L_xdot_fun',{dummy}, ...
