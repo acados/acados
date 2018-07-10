@@ -100,11 +100,11 @@ if ~ isempty(reordered_model.equ_changed_sign)
     disp('--------------------------------------------------------------------------------------------------------');
     disp(' ');
     disp('During the reformulation we changed the signs (multiplied with -1) of the Equations with initial index');
+    disp(' ');
     disp(reordered_model.equ_changed_sign);
 end
 
 %% print GNSF dimenstions
-disp(' ');
 disp('--------------------------------------------------------------------------------------------------------');
 disp(' ');
 disp('The dimensions of the GNSF reformulated model read as:');
