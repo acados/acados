@@ -27,16 +27,8 @@ else
 	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
 end
 
-% nx  = gnsf.nx;
-% nu  = gnsf.nu;
-% nz  = gnsf.nz;
-% 
-% nx1 = gnsf.nx1;
-% nx2 = gnsf.nx2;
-% n_out = gnsf.n_out;
-% ny = gnsf.ny;
-% nuhat = gnsf.nuhat;
-
+%% import models
+% model matrices
 A  = gnsf.A;
 B  = gnsf.B;
 C  = gnsf.C;
@@ -50,55 +42,54 @@ L_u    = gnsf.L_u;
 
 
 A_LO = gnsf.A_LO;
-f_lo = gnsf.f_lo_expr;
 
-% functions
-phi = gnsf.phi_expr;
-y = gnsf.y;
-uhat = gnsf.uhat;
-
-jac_phi_y = jacobian(phi,y);
-jac_phi_uhat = jacobian(phi,uhat);
-
-model_name_prefix = gnsf.name;
-
-phi_fun = Function([model_name_prefix,'phi_fun'], {y,uhat}, {phi});
-phi_fun_jac_y = Function([model_name_prefix,'phi_fun_jac_y'], {y,uhat}, {phi, jac_phi_y});
-phi_jac_y_uhat = Function([model_name_prefix,'phi_jac_y_uhat'], {y,uhat}, {jac_phi_y, jac_phi_uhat});
-
-phi_jac_y = Function([model_name_prefix,'phi_jac_y_uhat'], {y,uhat}, {jac_phi_y});
-
-% Linear output
+% CasADi variables and expressions
 x1 = gnsf.x(1:gnsf.nx1);
 x1dot = gnsf.xdot(1:gnsf.nx1);
 u = gnsf.u;
 z = gnsf.z;
+y = gnsf.y;
+uhat = gnsf.uhat;
 
-% x2 = gnsf.x(1+gnsf.nx1 : gnsf.nx);
+phi = gnsf.phi_expr;
+f_lo = gnsf.f_lo_expr;
 
-jac_f_x1 = jacobian(f_lo,x1);
-jac_f_u  = jacobian(f_lo,u);
-jac_f_z  = jacobian(f_lo,z);
-jac_f_k1 = jacobian(f_lo,x1dot);
+% name
+model_name_prefix = gnsf.name;
 
-f_lo_fun_jac_x1k1uz = Function([model_name_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u}, ...
-    {f_lo, [jac_f_x1, jac_f_k1, jac_f_z, jac_f_u]});
+% generate functions
+jac_phi_y = jacobian(phi,y);
+jac_phi_uhat = jacobian(phi,uhat);
 
-% f_lo_fun = Function([model_name_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u}, {f_lo});
+if isfield(gnsf, 'p')
+    p = gnsf.p;
+    phi_fun = Function([model_name_prefix,'phi_fun'], {y, uhat, p}, {phi});
+    phi_fun_jac_y = Function([model_name_prefix,'phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y});
+    phi_jac_y_uhat = Function([model_name_prefix,'phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat});
 
+    f_lo_fun_jac_x1k1uz = Function([model_name_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u, p}, ...
+        {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z)]});
+else
+    phi_fun = Function([model_name_prefix,'phi_fun'], {y, uhat}, {phi});
+    phi_fun_jac_y = Function([model_name_prefix,'phi_fun_jac_y'], {y, uhat}, {phi, jac_phi_y});
+    phi_jac_y_uhat = Function([model_name_prefix,'phi_jac_y_uhat'], {y, uhat}, {jac_phi_y, jac_phi_uhat});
 
-%% generate functions
-dummy = SX.sym('dummy');
+    f_lo_fun_jac_x1k1uz = Function([model_name_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u}, ...
+        {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z)]});
+end
 
+% get_matrices function
+dummy = x1(1);
 model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); A_LO(:); c(:)])) + ...
     [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); A_LO(:); c(:)];
 get_matrices_fun = Function([model_name_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
-get_matrices_fun.generate([model_name_prefix,'get_matrices_fun'], casadi_opts);
 
-% generate phi, f_LO
+
+%% generate functions
 f_lo_fun_jac_x1k1uz.generate([model_name_prefix,'f_lo_fun_jac_x1k1uz'], casadi_opts);
 phi_fun.generate([model_name_prefix,'phi_fun'], casadi_opts);
 phi_fun_jac_y.generate([model_name_prefix,'phi_fun_jac_y'], casadi_opts);
 phi_jac_y_uhat.generate([model_name_prefix,'phi_jac_y_uhat'], casadi_opts);
+get_matrices_fun.generate([model_name_prefix,'get_matrices_fun'], casadi_opts);
 
 end

@@ -28,7 +28,7 @@ function [ gnsf ] = determine_input_nonlinearity_function( gnsf )
 % Additionally matrices L_x, L_xdot, L_z, L_u are determined such that
 %           y    = L_x * x + L_xdot * xdot + L_z * z
 %           uhat = L_u * u;
-% Furthermore the dimensions ny, nuhat are updated
+% Furthermore the dimensions ny, nuhat, n_out are updated
 
 import casadi.*
 
@@ -97,6 +97,7 @@ gnsf.uhat = uhat;
 
 gnsf.ny = length(y);
 gnsf.nuhat = length(uhat);
+gnsf.n_out = length(gnsf.phi_expr);
 
 end
 

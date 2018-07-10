@@ -33,13 +33,8 @@ num_eval = 10;
 nx  = gnsf.nx;
 nu  = gnsf.nu;
 nz  = gnsf.nz;
-
 nx1 = gnsf.nx1;
 nx2 = gnsf.nx2;
-% n_out = gnsf.n_out;
-% ny = gnsf.ny;
-% nuhat = gnsf.nuhat;
-
 
 % get model matrices
 A  = gnsf.A;
@@ -67,11 +62,19 @@ u = gnsf.u;
 y = gnsf.y;
 uhat = gnsf.uhat;
 
-% create functions
-impl_ode_fun = Function(['impl_ode_fun'], {x, xdot, u, z}, {model.f_impl_expr});
-phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
-f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z, u}, {gnsf.f_lo_expr});
-
+if isfield(model, 'p')
+    p = model.p;
+    np = length(p);
+    % create functions
+    impl_ode_fun = Function('impl_ode_fun', {x, xdot, u, z, p}, {model.f_impl_expr});
+    phi_fun = Function('phi_fun',{y,uhat, p}, {gnsf.phi_expr});
+    f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z, u, p}, {gnsf.f_lo_expr});
+else
+    % create functions
+    impl_ode_fun = Function(['impl_ode_fun'], {x, xdot, u, z}, {model.f_impl_expr});
+    phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
+    f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z, u}, {gnsf.f_lo_expr});
+end
 
 
 for i_check = 1:num_eval
@@ -82,22 +85,30 @@ for i_check = 1:num_eval
     z0    = rand(nz, 1);
     u0    = rand(nu, 1);
     
-    
-    % eval f_impl;
-    f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0));
-
-    % eval gnsf
     y0 = L_x * x0(I_x1) + L_xdot * x0dot(I_x1) + L_z * z0;
     uhat0 = L_u * u0;
+    
+    % eval functions
+    if isfield(model, 'p')
+        p0 = rand(np, 1);
+        f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0, p0));
+        phi_val = phi_fun( y0, uhat0, p0);
+        f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0, u0, p0);
+    else
+        f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0));
+        phi_val = phi_fun( y0, uhat0);
+        f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0, u0);
+    end
+    
 
+    
+    % eval gnsf
     gnsf_val1 = (A * x0(I_x1) + B * u0 + ...
-        C * phi_fun( y0, uhat0) + c) - E * [x0dot(I_x1); z0];
+        C * phi_val + c) - E * [x0dot(I_x1); z0];
     
     if nx2 > 0 % eval LOS
-%         gnsf_val2 = A_LO * x0(I_x2) + ...
-%             gnsf.f_lo_fun(x0(I_x1), x0dot(I_x1), z0, u0) - x0dot(I_x2);
         gnsf_val2 =  A_LO * x0(I_x2) + ...
-            f_lo_fun(x0(I_x1), x0dot(I_x1), z0, u0) - x0dot(I_x2);
+            f_lo_val - x0dot(I_x2);
         gnsf_val = full([gnsf_val1; gnsf_val2 ]);
     else
         gnsf_val = full(gnsf_val1);
@@ -110,9 +121,11 @@ for i_check = 1:num_eval
         abs_error = gnsf_val - f_impl_val;
         T = table(f_impl_val, gnsf_val, abs_error);
         disp(T)
-        return
-        error('transcription failed; rel_error > TOL');
-        check = 0;
+%         error('transcription failed; rel_error > TOL');
+%         check = 0;
+        disp('transcription failed; rel_error > TOL');
+        disp('you are in debug mode now: keyboard');
+        keyboard
     end            
 end
 

@@ -42,14 +42,14 @@ close all;
 
 %% Set options
 print_info = 1;
-generate_c_code = 0;
+generate_c_code = 1;
 
 
 %% define f_impl
-[ model ] = TEST_export_inverted_pendulum_dae_model();
-% [ model ] = TEST_export_inverted_pendulum_dae_model_MX();
-% [ model ] = TEST_export_crane_dae_test_problem();
-% [ model ] = TEST_export_stupid_test_problem();
+% model = TEST_export_inverted_pendulum_dae_model();
+% model = TEST_export_inverted_pendulum_dae_model_MX();
+% model = TEST_export_crane_dae_test_problem();
+model = TEST_export_stupid_test_problem();
 
 disp(' ');
 disp(['restructuring ', model.name, ' model'])
@@ -67,7 +67,7 @@ initial_model = model;
 
 structure_detection_print_summary(gnsf, initial_model, reordered_model);
 
-
+check_reformulation(reordered_model, gnsf, print_info);
 
 %% EXPORT C Code
 if generate_c_code
@@ -75,4 +75,5 @@ if generate_c_code
     generate_c_code_gnsf(gnsf)
     % generate implicit model
     generate_c_code_implicit_ode(reordered_model)
+    disp('Successfully generated C Code to simulate model with acados integrators IRK & GNSF');
 end

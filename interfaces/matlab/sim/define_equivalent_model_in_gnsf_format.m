@@ -70,6 +70,10 @@ gnsf.xdot = xdot;
 gnsf.z = z;
 gnsf.u = u;
 
+if isfield(model, 'p')
+    gnsf.p = model.p;
+end
+
 [ gnsf ] = determine_input_nonlinearity_function( gnsf );
     
 gnsf.A_LO = [];
