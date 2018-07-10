@@ -20,7 +20,7 @@
 %% Description
 % This script analyzes a CasADi expression f_impl in the symbolic CasADi
 % variables x, xdot, u, z, which all togehther represent an implicit ODE/
-% index-1 DAE.
+% index-1 DAE model.
 % The expression and the variables should be provided as in the example
 % file, export_inverted_pendulum_dae_model;
 % It will create a struct "gnsf" containing all information needed to use
@@ -44,36 +44,32 @@ close all;
 print_info = 1;
 generate_c_code = 1;
 
-
 %% define f_impl
 % model = TEST_export_inverted_pendulum_dae_model();
 % model = TEST_export_inverted_pendulum_dae_model_MX();
 % model = TEST_export_crane_dae_test_problem();
-model = TEST_export_stupid_test_problem();
+model = TEST_export_stupid_test_problem( );
 
-disp(' ');
-disp(['restructuring ', model.name, ' model'])
-disp(' ');
+%% transcribe model into gnsf & export
 
-initial_model = model;
 
 %% Reformulate implicit index-1 DAE into GNSF form
 % (Generalized nonlinear static feedback)
-[ gnsf ] = define_equivalent_model_in_gnsf_format(model, print_info);
+gnsf = define_equivalent_model_in_gnsf_format( model, print_info );
 
 [ gnsf, reordered_model] = reformulate_with_LOS( model, gnsf, print_info);
 
-[ gnsf ] = reformulate_with_invertible_E_mat(gnsf, reordered_model, print_info);
+gnsf = reformulate_with_invertible_E_mat( gnsf, reordered_model, print_info);
 
-structure_detection_print_summary(gnsf, initial_model, reordered_model);
+structure_detection_print_summary(gnsf, model, reordered_model);
 
-check_reformulation(reordered_model, gnsf, print_info);
+check_reformulation( reordered_model, gnsf, print_info );
 
 %% EXPORT C Code
 if generate_c_code
     % generate gnsf model
-    generate_c_code_gnsf(gnsf)
+    generate_c_code_gnsf( gnsf )
     % generate implicit model
-    generate_c_code_implicit_ode(reordered_model)
+    generate_c_code_implicit_ode( reordered_model )
     disp('Successfully generated C Code to simulate model with acados integrators IRK & GNSF');
 end

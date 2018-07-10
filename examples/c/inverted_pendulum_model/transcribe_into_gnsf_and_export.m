@@ -40,35 +40,31 @@ close all;
 addpath('../../../interfaces/matlab/sim/')
 
 %% Set options
-print_info = 0;
+print_info = 1;
 generate_c_code = 1;
 
 
 %% define f_impl
-[ model ] = export_inverted_pendulum_dae_model();
-
-disp(' ');
-disp(['restructuring ', model.name, ' model'])
-disp(' ');
-
+model = export_inverted_pendulum_dae_model();
 initial_model = model;
 
 %% Reformulate implicit index-1 DAE into GNSF form
 % (Generalized nonlinear static feedback)
-[ gnsf ] = define_equivalent_model_in_gnsf_format(model, print_info);
+gnsf = define_equivalent_model_in_gnsf_format(model, print_info);
 
-[ gnsf, reordered_model] = reformulate_with_LOS( model, gnsf, print_info);
+[ gnsf, reordered_model ] = reformulate_with_LOS( model, gnsf, print_info);
 
-[ gnsf ] = reformulate_with_invertible_E_mat(gnsf, reordered_model, print_info);
+gnsf = reformulate_with_invertible_E_mat(gnsf, reordered_model, print_info);
 
 structure_detection_print_summary(gnsf, initial_model, reordered_model);
 
-
+check_reformulation( reordered_model, gnsf, print_info );
 
 %% EXPORT C Code
 if generate_c_code
     % generate gnsf model
-    generate_c_code_gnsf(gnsf)
+    generate_c_code_gnsf( gnsf )
     % generate implicit model
-    generate_c_code_implicit_ode(reordered_model)
+    generate_c_code_implicit_ode( reordered_model )
+    disp('Successfully generated C Code to simulate model with acados integrators IRK & GNSF');
 end

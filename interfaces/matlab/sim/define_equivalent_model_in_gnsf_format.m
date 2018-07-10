@@ -33,6 +33,11 @@ else
 	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
 end
 
+% initial print
+disp('==========================================');
+disp(['restructuring ', model.name, ' model'])
+disp('==========================================');
+
 % load model
 f_impl_expr = model.f_impl_expr;
 
