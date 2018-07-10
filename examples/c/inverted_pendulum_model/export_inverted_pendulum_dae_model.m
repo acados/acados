@@ -50,11 +50,6 @@ function [ model ] = export_inverted_pendulum_dae_model()
     
     xdot = [xpos_dot; ypos_dot; alpha_dot; vx_dot; vy_dot; valpha_dot];
     
-    %% dimensions
-    nx = length(x);
-    nu = length(u);
-    nz = length(z);
-    
     %% Dynamics: implicit DAE formulation (index-1)
     % x = vertcat(xpos, ypos, alpha, vx, vy, valpha);
     % z = vertcat(ax, ay, aalpha, Fx, Fy);
@@ -73,17 +68,15 @@ function [ model ] = export_inverted_pendulum_dae_model()
     %                  ay - vx * vx - xpos * aalpha);
     
     %% initial value
-    x0 = [1; -5; 1; 0.1; -0.5; 0.1];
-    z0 = [-1.5; -0.3; -0.3; -3; 19];
-    u0 = 1;
-    
-    
+%     x0 = [1; -5; 1; 0.1; -0.5; 0.1];
+%     z0 = [-1.5; -0.3; -0.3; -3; 19];
+%     u0 = 1;
+
     model.f_impl_expr = f_impl;
     model.x = x;
     model.xdot = xdot;
     model.u = u;
     model.z = z;
     model.name = model_name_prefix;
-    
     
 end
