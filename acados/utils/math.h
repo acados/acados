@@ -80,6 +80,8 @@ void expm(int row, double *A);
 void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
                                      int *nvd, int *ned, int *nbd, int *ngd);
 
+void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d);
+
 void regularize(int_t dim, real_t *A);
 
 double minimum_of_doubles(double *x, int n);

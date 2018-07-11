@@ -28,7 +28,6 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
-#include "acados/utils/math.h"
 #include "acados/utils/mem.h"
 
 /************************************************
@@ -464,21 +463,6 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     // Add hessian contribution
     blasfeo_dgead(nx+nu, nx+nu, 1.0, &mem->hes, 0, 0, mem->RSQrq, 0, 0);
 
-    // Make symmetric
-    blasfeo_dtrtr_l(nx+nu, mem->RSQrq, 0, 0, mem->RSQrq, 0, 0);
-
-    // printf("\nBEFORE\n");
-    // blasfeo_print_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
-
-    // Regularize
-    double tmp_hess[(nx+nu)*(nx+nu)];
-    blasfeo_unpack_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0, tmp_hess, nx+nu);
-    regularize(nx+nu, tmp_hess);
-    blasfeo_pack_dmat(nx+nu, nx+nu, tmp_hess, nx+nu, mem->RSQrq, 0, 0);
-
-    // printf("\nAFTER\n");
-    // blasfeo_print_dmat(nx+nu, nx+nu, mem->RSQrq, 0, 0);
-    
     return;
 }
 

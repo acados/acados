@@ -1057,7 +1057,7 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e)
     }
 }
 
-static void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d)
+void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d)
 {
     real_t *e = (real_t *) calloc(dim, sizeof(real_t));
     for (int_t i = 0; i < dim; i++)

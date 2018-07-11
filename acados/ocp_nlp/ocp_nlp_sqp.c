@@ -34,6 +34,7 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_collocation_utils.h"  // TODO(all): remove ???
 #include "acados/sim/sim_common.h"
+#include "acados/utils/math.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -677,6 +678,89 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 
 
 
+static void regularize_hessian(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+                               ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts,
+                               ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
+{
+    // for (int i = 0; i <= dims->N; ++i)
+    // {
+    //     double tmp_hess[(nx+nu)*(nx+nu)];
+
+    //     // make symmetric
+    //     blasfeo_dtrtr_l(nx+nu, &work->qp_in->RSQrq[i], 0, 0, &work->qp_in->RSQrq[i], 0, 0);
+        
+    //     // regularize
+    //     blasfeo_unpack_dmat(nx+nu, nx+nu, &work->qp_in->RSQrq[i], 0, 0, tmp_hess, nx+nu);
+    //     regularize(nx+nu, tmp_hess);
+    //     blasfeo_pack_dmat(nx+nu, nx+nu, tmp_hess, nx+nu, &work->qp_in->RSQrq[i], 0, 0);
+    // }
+
+    double delta = 1e-4;
+    int N = dims->N;
+
+    int nx = dims->nx[N], nu = dims->nu[N];
+
+    struct blasfeo_dmat Q_tilde, Q_bar, BAQ, L;
+
+    int num_bytes = blasfeo_memsize_dmat(nx, nx);
+    void *raw_mem = malloc(num_bytes);
+    blasfeo_create_dmat(nx, nx, &Q_tilde, raw_mem);
+    blasfeo_dgese(nx, nx, 0.0, &Q_tilde, 0, 0);
+    
+    raw_mem = malloc(num_bytes);
+    blasfeo_create_dmat(nx, nx, &Q_bar, raw_mem);
+    blasfeo_dgese(nx, nx, 0.0, &Q_bar, 0, 0);
+
+    raw_mem = malloc(num_bytes);
+    blasfeo_create_dmat(nx+nu, nx, &BAQ, raw_mem);
+    blasfeo_dgese(nx+nu, nx, 0.0, &BAQ, 0, 0);
+
+    num_bytes = blasfeo_memsize_dmat(nu, nu);
+    raw_mem = malloc(num_bytes);
+    blasfeo_create_dmat(nu, nu, &L, raw_mem);
+    blasfeo_dgese(nu, nu, 0.0, &L, 0, 0);
+
+    blasfeo_ddiare(nx, delta, &Q_tilde, 0, 0);
+    blasfeo_dgecp(nx, nx, &work->qp_in->RSQrq[N], nu, nu, &Q_bar, 0, 0);
+    blasfeo_dgead(nx, nx, -1.0, &Q_tilde, 0, 0, &Q_bar, 0, 0);
+
+    // blasfeo_print_dmat(nx, nx, &Q_bar, 0, 0);
+
+    for (int i = N-1; i >= 0; --i)
+    {
+        int nx = dims->nx[i], nu = dims->nu[i];
+        blasfeo_dgemm_nt(nx+nu, nx, nx, 1.0, &work->qp_in->BAbt[i], 0, 0, &Q_bar, 0, 0, 0.0, &BAQ, 0, 0, &BAQ, 0, 0);
+        blasfeo_dsyrk_ln_mn(nx+nu+1, nx+nu, nx, 1.0, &work->qp_in->BAbt[i], 0, 0, &BAQ, 0, 0, 1.0, &work->qp_in->RSQrq[i], 0, 0, &work->qp_in->RSQrq[i], 0, 0);
+
+        // blasfeo_print_dmat(nx+nu+1, nx+nu, &work->qp_in->RSQrq[i], 0, 0);
+
+        double R[nu*nu], V[nu*nu], d[nu];
+        blasfeo_unpack_dmat(nu, nu, &work->qp_in->RSQrq[i], 0, 0, R, nu);
+        eigen_decomposition(nu, R, V, d);
+
+        bool needs_regularization = false;
+        for (int j = 0; j < nu; ++j)
+            if (d[j] < 1e-10)
+                needs_regularization  = true;
+        
+        if (needs_regularization)
+        {
+            double tmp_hess[(nx+nu)*(nx+nu)];
+            blasfeo_unpack_dmat(nx+nu, nx+nu, &work->qp_in->RSQrq[i], 0, 0, tmp_hess, nx+nu);       
+            regularize(nxu, R);
+            blasfeo_pack_dmat(nx+nu, nx+nu, tmp_hess, nx+nu, &work->qp_in->RSQrq[i], 0, 0);
+        }
+
+        blasfeo_dpotrf_l(nu, &work->qp_in->RSQrq[i], 0, 0, &L, 0, 0);
+        blasfeo_dtrsm_rltn(nx, nu, 1.0, &L, 0, 0, &work->qp_in->RSQrq[i], nu, 0, &Q_tilde, 0, 0);
+        blasfeo_dsyrk_ln(nx, nx, 1.0, &Q_tilde, 0, 0, &Q_tilde, 0, 0, 0.0, &Q_tilde, 0, 0, &Q_tilde, 0, 0);
+
+
+    }
+}
+
+
+
 // update QP rhs for SQP (step prim var, abs dual var)
 // TODO(all): move in dynamics, cost, constraints modules ???
 static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
@@ -834,6 +918,9 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
     {
         // linearizate NLP and update QP matrices
         linearize_update_qp_matrices(config, dims, nlp_in, nlp_out, opts, mem, work);
+
+        // regularize Hessian
+        regularize_hessian(config, dims, nlp_in, nlp_out, opts, mem, work);
 
         // update QP rhs for SQP (step prim var, abs dual var)
         sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
