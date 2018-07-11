@@ -84,8 +84,11 @@ for ii = 1:nx1
 end
 
 if print_info
-disp('==================================');
-disp('try to detect linear output system');
+disp(' ');
+disp('=================================================================');
+disp('=== the algorithm will now try to detect linear output system ===');
+disp('=================================================================');
+disp(' ');
 end
 
 %% determine components of Linear Output System
@@ -137,6 +140,10 @@ for ii = I_x2_candidates % ensured: xii_dot does not enter phi_expr
                     % candidates form a closed LOS
                     % -> candidates can be made part of LOS
                     I_x2 = unique([I_x2, candidates]);
+                    if print_info
+                    disp(['the following states form a LOS and are moved to x2']);
+                    disp(candidates);
+                    end
                     break;
                 else
                     % add new candidates

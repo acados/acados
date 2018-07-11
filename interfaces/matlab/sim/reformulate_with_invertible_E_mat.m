@@ -45,8 +45,6 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
     disp(['the script will try to reformulate the model with an invertible matrix instead']);
     disp(['NOTE: this feature is not super stable and might need more testing!!!!!!']);
     
-    pause(.1);
-    
     %% load models
     x = model.x;
     xdot = model.xdot;

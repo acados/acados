@@ -384,7 +384,6 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
     int nz = dims->nz;
     int n_out = dims->n_out;
     int ny = dims->ny;
-    // int nuhat      = dims->nuhat;
 
     int num_stages = opts->ns;
 
@@ -401,7 +400,6 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
     gnsf_pre_workspace *work = (gnsf_pre_workspace *) c_ptr;
     c_ptr += sizeof(gnsf_pre_workspace);
 
-    // int nz_nx1_max = nz>nx1 ? nz : nx1;
     assign_and_advance_int(nK1, &work->ipivEE1, &c_ptr);
     assign_and_advance_int(nZ, &work->ipivEE2, &c_ptr);
     assign_and_advance_int(nZ, &work->ipivQQ1, &c_ptr);
@@ -1421,9 +1419,6 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     assert(mem->dt == in->T / opts->num_steps &&
            "model->dt not equal to im_in.T/opts->num_steps, check initialization");
 
-    // printf("%d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t %d \t", nx, nu, nx1, nx2, nz,
-    // n_out, ny, nuhat, num_stages, num_steps);
-
     // assign variables from workspace
     double *Z_work = workspace->Z_work;
 
@@ -1868,8 +1863,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                                  &dZ_du, ii * nz, 0, 0.0, &aux_G2_u, ii * nx2, 0,
                                  &aux_G2_u, ii * nx2,  0);
                             // set ith block of aux_G2_u to - df_dz(k1_i, x1_i, z_i, u) * dzi_du
-                }  // check: aux_G2_x1u seems correct but should be tested with nontrivial values
-                   // i.e. not zeros..
+                }
 
                 // BUILD dK2_dwn // dK2_dx1
                 blasfeo_dgemm_nn(nK2, nx1, nK1, 1.0, &J_G2_K1, 0, 0, &dK1_dx1, 0, 0, 1.0,

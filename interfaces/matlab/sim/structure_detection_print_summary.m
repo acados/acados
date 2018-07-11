@@ -50,10 +50,10 @@ phi_current = gnsf.phi_expr;
 disp(' ');
 disp(['========================= STRUCTURE DETECTION SUMMARY ====================================']);
 disp(' ');
-disp(' successfully transcribed implicit ODE/ index-1 DAE into GNSF structure ');
+disp(' successfully transcribed dynamic system model into GNSF structure ');
 disp(' ');
-disp(['recuced dimension of nonlinearity phi from        ', sprintf('%6s', num2str(nx+nz)),      ' to ', sprintf('%6s', num2str(gnsf.n_out))]);
-disp(['recuced input dimension of nonlinearity phi from  ', sprintf('%6s', num2str(2*nx+nz+nu)), ' to ', sprintf('%6s', num2str(gnsf.ny + gnsf.nuhat))]);
+disp(['reduced dimension of nonlinearity phi from        ', sprintf('%6s', num2str(nx+nz)),      ' to ', sprintf('%6s', num2str(gnsf.n_out))]);
+disp(['reduced input dimension of nonlinearity phi from  ', sprintf('%6s', num2str(2*nx+nz+nu)), ' to ', sprintf('%6s', num2str(gnsf.ny + gnsf.nuhat))]);
 if gnsf.nx2 >0
     disp(' ');
     disp(['introduced Linear Output System of size           ', sprintf('%6s', num2str(gnsf.nx2)),'']);
@@ -63,7 +63,7 @@ if gnsf.nx2 >0
     disp(' ');
 end
 
-disp(['recuced number of nodes in CasADi expression of']);
+disp(['reduced number of nodes in CasADi expression of']);
 disp(['nonlinearity phi from                             '...
     , sprintf('%6s', num2str(n_nodes_initial)), ' to ', sprintf('%6s', num2str(phi_current.n_nodes()))]);
 
@@ -88,11 +88,12 @@ disp('NOTE: permuted implicit function, such that the implicit & GNSF model, hav
 disp(' ');
 disp(' OLD / initial state f_impl read as: ');
 disp(' ');
-print_casadi_function(f_impl_old);
+print_casadi_expression(f_impl_old);
 disp(' ');
 disp(' whereas NEW / permuted f_impl reads as: ');
 disp(' ');
-print_casadi_function(f_impl_expr);
+print_casadi_expression(f_impl_expr);
+disp(' ');
 end
 
 if ~ isempty(reordered_model.equ_changed_sign)
@@ -108,18 +109,8 @@ end
 disp('--------------------------------------------------------------------------------------------------------');
 disp(' ');
 disp('The dimensions of the GNSF reformulated model read as:');
+disp(' ');
 T_dim = table(nx, nu, nz, nx1, nx2, n_out, ny, nuhat);
 disp( T_dim )
-
-end
-
-
-%% auxilary function
-function print_casadi_function(f)
-
-
-for ii = 1:length(f)
-    disp(f(ii));
-end
 
 end

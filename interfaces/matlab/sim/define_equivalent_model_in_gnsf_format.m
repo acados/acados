@@ -83,6 +83,11 @@ end
     
 gnsf.A_LO = [];
 gnsf.f_lo_expr = [];
+
+if print_info
+disp(' ');
+disp(['set up equivalent GNSF model with trivial matrices']);
+end
 check_reformulation(model, gnsf, print_info);
 
 
@@ -104,7 +109,7 @@ for ii = 1:length(gnsf.phi_expr)
         else
             gnsf.A(ii, ix) = 0;
             if print_info
-                disp(['fii is NOT linear in x(ix) ii = ', num2str(ii),',  ix = ', num2str(ix)]);
+                disp(['fii is nonlinear in x(ix) ii = ', num2str(ii),',  ix = ', num2str(ix)]);
                 disp(fii)
                 disp('================================');
             end
@@ -149,7 +154,7 @@ for ii = 1:length(gnsf.phi_expr)
         else
             gnsf.B(ii, iu) = 0;
             if print_info
-                disp(['fii is NOT linear in u(iu) ii = ', num2str(ii),',  iu = ', num2str(iu)]);
+                disp(['fii is nonlinear in u(iu) ii = ', num2str(ii),',  iu = ', num2str(iu)]);
                 disp(fii)
                 disp('================================');
             end
@@ -191,7 +196,7 @@ for ii = 1:length(gnsf.phi_expr)
         else
             gnsf.E(ii, ik) = 0;
             if print_info
-                disp(['fii is NOT linear in k(ik) for ii = ', num2str(ii),',  ik = ', num2str(ik)]);
+                disp(['fii is nonlinear in k(ik) for ii = ', num2str(ii),',  ik = ', num2str(ik)]);
                 disp(fii)
                 disp('================================');
             end
@@ -287,7 +292,9 @@ if print_info
     disp(['reduced nonlinearity dimension n_out from  ', num2str(nx+nz),'   to  ', num2str(gnsf.n_out)]);
     disp(['reduced nodes in CasADi expr of nonlinearity from  ', num2str(n_nodes_current),...
           ' to ', num2str(n_nodes_next) ' nodes']);
-    disp(gnsf.phi_expr);
+    disp(' ');
+    disp('phi now reads as:')
+    print_casadi_expression(gnsf.phi_expr);
 end
 
 %% determine input of nonlinearity function

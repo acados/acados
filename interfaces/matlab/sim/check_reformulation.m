@@ -130,7 +130,9 @@ for i_check = 1:num_eval
 end
 
 if print_info
+    disp('');
     disp(['model reformulation checked: relative error <= TOL = ', num2str(TOL)]);
+    disp(' ');
 end
 check = 1;
     
