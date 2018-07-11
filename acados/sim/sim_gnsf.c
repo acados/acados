@@ -1860,9 +1860,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                     blasfeo_dgead(nx2, nx1, -1.0, &f_LO_jac_traj[ss], ii * nx2, nx1,
                                  &J_G2_K1, ii * nx2, ii * nx1);
                             //  add - df_dx1dot(k1_i, x1_i, z_i, u) to (i,i)th block
-                    blasfeo_dgemm_nn(nx2, nx1, nz, - 1.0, &f_LO_jac_traj[ss], ii * nx2, 2 * nx1 + nu,
-                                     &dZ_dx1, ii * nz, 0, 0.0, &aux_G2_x1, ii * nx2, 0,
-                                     &aux_G2_x1, ii * nx2, 0);
+                    blasfeo_dgemm_nn(nx2, nx1, nz, - 1.0, &f_LO_jac_traj[ss], ii * nx2,
+                                 2 * nx1 + nu, &dZ_dx1, ii * nz, 0, 0.0,
+                                 &aux_G2_x1, ii * nx2, 0, &aux_G2_x1, ii * nx2, 0);
                             // set ith block of aux_G2_x1 to - df_dz(k1_i, x1_i, z_i, u) * dzi_dx1
                     blasfeo_dgemm_nn(nx2, nu, nz, - 1.0, &f_LO_jac_traj[ss], ii * nx2, 2 * nx1 + nu,
                                  &dZ_du, ii * nz, 0, 0.0, &aux_G2_u, ii * nx2, 0,
