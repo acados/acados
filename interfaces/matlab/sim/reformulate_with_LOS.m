@@ -59,6 +59,14 @@ x1dot = xdot(1:nx1);
 
 phi_old = gnsf.phi_expr;
 
+if print_info
+disp(' ');
+disp('=================================================================');
+disp('=== the algorithm will now try to detect linear output system ===');
+disp('=================================================================');
+disp(' ');
+end
+
 %% build initial I_x1 and I_x2_candidates
 % I_x1: all components of x for which either xii or xdot_ii enters y;
 % I_x2_candidates: the remaining components
@@ -82,13 +90,8 @@ for ii = 1:nx1
         I_x2_candidates = [I_x2_candidates, ii];
     end
 end
-
 if print_info
-disp(' ');
-disp('=================================================================');
-disp('=== the algorithm will now try to detect linear output system ===');
-disp('=================================================================');
-disp(' ');
+disp([' ']);
 end
 
 %% determine components of Linear Output System
@@ -117,7 +120,7 @@ end
 I_x2 = [];
 for ii = I_x2_candidates % ensured: xii_dot does not enter phi_expr
     if print_info
-    disp(['============= candidate ii = ', num2str(ii), '  ===================']);
+    disp(['---------------- candidate ii = ', num2str(ii), '  ------------------']);
     end
     candidates = [ii];
     while 1
@@ -125,6 +128,7 @@ for ii = I_x2_candidates % ensured: xii_dot does not enter phi_expr
             I_x1 = unique([I_x1, ii]);
             if print_info
                 disp(['x1 depends on x_ii, ii = ', num2str(ii)])
+                disp(' ');
             end
             break;
         else

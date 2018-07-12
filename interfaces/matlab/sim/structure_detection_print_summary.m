@@ -50,22 +50,29 @@ phi_current = gnsf.phi_expr;
 disp(' ');
 disp(['========================= STRUCTURE DETECTION SUMMARY ====================================']);
 disp(' ');
+disp('-------- Nonlinear Static Feedback type system --------');
+disp(' ');
 disp(' successfully transcribed dynamic system model into GNSF structure ');
 disp(' ');
 disp(['reduced dimension of nonlinearity phi from        ', sprintf('%6s', num2str(nx+nz)),      ' to ', sprintf('%6s', num2str(gnsf.n_out))]);
+disp(' ');
 disp(['reduced input dimension of nonlinearity phi from  ', sprintf('%6s', num2str(2*nx+nz+nu)), ' to ', sprintf('%6s', num2str(gnsf.ny + gnsf.nuhat))]);
+disp(' ');
+disp(['reduced number of nodes in CasADi expression of']);
+disp(['nonlinearity phi from                             '...
+    , sprintf('%6s', num2str(n_nodes_initial)), ' to ', sprintf('%6s', num2str(phi_current.n_nodes()))]);
+disp(' ');
+disp('----------- Linear Output System (LOS) ---------------');
 if gnsf.nx2 >0
     disp(' ');
     disp(['introduced Linear Output System of size           ', sprintf('%6s', num2str(gnsf.nx2)),'']);
+    disp(' ');
     disp('consisting of the states:');
     disp(' ');
     disp(x(gnsf.nx1+1:gnsf.nx));
     disp(' ');
 end
 
-disp(['reduced number of nodes in CasADi expression of']);
-disp(['nonlinearity phi from                             '...
-    , sprintf('%6s', num2str(n_nodes_initial)), ' to ', sprintf('%6s', num2str(phi_current.n_nodes()))]);
 
 compare_x = (x_old == x);
 if ~compare_x.is_constant()
