@@ -34,6 +34,13 @@ import casadi.*
 ind_11 = 1:gnsf.nx1;
 ind_22 = gnsf.nx1+1 : gnsf.nx1+gnsf.nz;
 
+if print_info
+    disp(' ');
+    disp('----------------------------------------------------');
+    disp('checking rank of E11 and E22');
+    disp('----------------------------------------------------');
+end
+
 %% check if E11, E22 are invertible
 
 if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
@@ -106,6 +113,13 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
     end
     check_reformulation(model, gnsf, print_info);
     disp('successfully reformulated the model with invertible matrices E11, E22');
+else
+    if print_info
+        disp(' ');
+        disp('the rank of both E11 and E22 is  full after the reformulation ');
+        disp('==>  model reformulation finished');
+        disp(' ');
+    end
 end
 
 

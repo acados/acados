@@ -54,9 +54,9 @@ generate_reordered_model = transcribe_opts.generate_reordered_model;
 
 %% Reformulate implicit index-1 DAE into GNSF form
 % (Generalized nonlinear static feedback)
-gnsf = define_equivalent_model_in_gnsf_format( model, print_info );
+gnsf = determine_trivial_gnsf_transcription( model, print_info );
 
-gnsf = detect_affine_terms( gnsf, model, print_info );
+gnsf = detect_affine_terms_reduce_nonlinearity( gnsf, model, print_info );
 
 [ gnsf, reordered_model] = reformulate_with_LOS( model, gnsf, print_info);
 

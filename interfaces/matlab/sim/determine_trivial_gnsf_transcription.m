@@ -1,4 +1,4 @@
-function [ gnsf ] = define_equivalent_model_in_gnsf_format(model, print_info)
+function [ gnsf ] = determine_trivial_gnsf_transcription(model, print_info)
 
 %   This file is part of acados.
 %
@@ -22,7 +22,7 @@ function [ gnsf ] = define_equivalent_model_in_gnsf_format(model, print_info)
 % this function takes a model of an implicit ODE/ index-1 DAE and sets up
 % an equivalent model in the GNSF structure, with empty linear output
 % system and trivial model matrices, i.e. A, B, E, c are zeros, and C is
-% eye.
+% eye. - no structure is exploited
 
 % import CasADi
 import casadi.*

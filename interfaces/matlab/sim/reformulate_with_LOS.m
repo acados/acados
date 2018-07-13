@@ -73,14 +73,9 @@ end
 
 I_x1 = [];
 I_x2_candidates = [];
-
 for ii = 1:nx1
-    dy_dxii = jacobian(y,x1(ii));
-    dy_dxiidot = jacobian(y,x1dot(ii));
-    dy_dxii_sparsity = dy_dxii.sparsity;
-    dy_dxiidot_sparsity = dy_dxiidot.sparsity;
-    if or(dy_dxii_sparsity.nnz, dy_dxiidot_sparsity.nnz)
-        % i.e. xii or xiidot are part of y, i.e. enter phi_expr
+    if or(y.which_depends(x(ii)), y.which_depends(xdot(ii)))
+        % i.e. xii or xiidot are part of y, and enter phi_expr
         if print_info
             disp(['xii is part of x1, ii = ', num2str(ii)]);
         end
@@ -91,7 +86,7 @@ for ii = 1:nx1
     end
 end
 if print_info
-disp([' ']);
+disp(' ');
 end
 
 %% determine components of Linear Output System
@@ -100,17 +95,17 @@ end
 %% move successively entries from I_x2_candidates to I_x1, but only if needed..
 % idea: assuming x_ii is part of LOS: then xiidot cannot occur in any other
 %   equation
-% (Simplifying Assumption (SA): for the reformulation we assume that the
+% (Explicity Condition (EC): for the reformulation we assume that the
 %   derivatives of the states that belong to the LOS are given explicitly),
 %   i.e. they are of the form:
-%           E(i_eq, i_x2) * xdot(i_x2) = ...
-%                           A * x + B * u + C * phi + c;
+%   const1 * xdot_ii = vec * xdot_1 + vec * z + A*x + vec * u
+%                   + vec * f(y,u) +  const2 ;
 % also: x_ii can not occur in any eq, that defines x1dot, z;
 %    thus we will iterate through the candidates for the LOS
 %    (I_x2_candidates):
 %       - set candidates = [ii];
 %       *
-%       - check the SA for candidates;
+%       - check the EC for candidates;
 %           - if check failed: move ii to I_x1;
 %           - else: check if candidates form a closed LOS, i.e.
 %                  A(non_included_equ,candidates) == zero
@@ -132,20 +127,20 @@ for ii = I_x2_candidates % ensured: xii_dot does not enter phi_expr
             end
             break;
         else
-            check = check_SA(E, candidates);
-            if check  % check_SA passed
+            check = check_explicity_condition(E, candidates);
+            if check  % check_EC passed
                 candidates_dynamics = ...
-                    equations_defining_candidates( candidates, E);
+                    dynamics_of_candidates( candidates, E);
                 candidates_equs = ...
                     equations_candidates_enter_linearly( candidates, A);
                 all_equ = unique( [ candidates_dynamics, candidates_equs]);
-                
+ 
                 if length(candidates_dynamics) == length(all_equ)
                     % candidates form a closed LOS
                     % -> candidates can be made part of LOS
                     I_x2 = unique([I_x2, candidates]);
                     if print_info
-                    disp(['the following states form a LOS and are moved to x2']);
+                    disp('the following states form a LOS and are moved to x2');
                     disp(candidates);
                     end
                     break;
@@ -153,10 +148,10 @@ for ii = I_x2_candidates % ensured: xii_dot does not enter phi_expr
                     % add new candidates
                     candidates = xdot_components_of_equations(all_equ, E);
                 end
-            else % check_SA failed -> put ii into x1;
+            else % check_EC failed -> put ii into x1;
                 I_x1 = unique([I_x1, ii]);
                 if print_info
-                    disp(['check_SA failed for x_ii, ii = ', num2str(ii)])
+                    disp(['check_EC failed for x_ii, ii = ', num2str(ii)])
                     disp('move x_ii belongs to x1');
                 end
                 break;
@@ -201,7 +196,7 @@ I_z = nx1+1:nx1+nz;
 
 equ_changed_sign = [];
 for ii_x2 = I_x2
-    i_eq = equations_defining_candidates(ii_x2, E);
+    i_eq = dynamics_of_candidates(ii_x2, E);
     f_LO = vertcat(f_LO,...
         ( A(i_eq, I_x1) * x1 + B(i_eq, :) * u + C(i_eq, :) * gnsf.phi_expr + c(i_eq) ...
             -  E(i_eq, I_x1) * x1dot - E(i_eq, I_z) * z) / E(i_eq, ii_x2) );
@@ -220,7 +215,7 @@ f_LO = f_LO.simplify();
 % remove corresponding equations from NSF
 I_eq_x2 = []; % this must be ordered as I_x2 is; thus for loop
 for ii = I_x2
-    I_eq_x2 = [I_eq_x2, equations_defining_candidates(ii, E)];
+    I_eq_x2 = [I_eq_x2, dynamics_of_candidates(ii, E)];
 end
 
 I_eq_x1 = 1:nx1+nz;
@@ -280,22 +275,26 @@ end
 
 %% auxilary functions
 
-function [ check ] = check_SA(E, candidates)
-% (Simplifying Assumption (SA): for the reformulation we assume that the
-%   derivatives of the states that belong to the LOS are given as 
+function check = check_explicity_condition(E, candidates)
+% (Explicity Condition (EC): for the reformulation we assume that the
+%   derivative of a state x_ii that belong to the LOS is given as 
 
 % const1 * xdot_ii = vec * xdot_1 + vec * z + A*x + vec * u + vec * f(y,u) 
-%           +  const2 + E_vec * x1;
+%           +  const2 ;
 
 % xdot_ii does only occur in one equation 
-% whereby xii and xdot_ii cannot be part of y;
+% whereby xii and xdot_ii cannot be part of y; ( first criterion - already
+%   checked at this point)
 
-% check is 1, if SA holds for all candidates,
-% check is 0, if SA holds,
+% check is 1, if EC holds for all candidates,
+% check is 0, if EC does not hold,
     for ii = candidates
         eq_xiidot = find(E(:,ii))';
         % contains the indices of equations that xii_dot enters (linearly);
-        if length(eq_xiidot) > 1  % put xii into x1, due to (SA)
+        if length(eq_xiidot) > 1
+            % xdot_ii occurs in more than one equation
+            % => EC does NOT hold -> current candidates can not be made
+            % part of LOS
             check = 0;
             return;
         elseif isempty(eq_xiidot)
@@ -307,8 +306,8 @@ function [ check ] = check_SA(E, candidates)
 end
 
 function I_eq = equations_candidates_enter_linearly( candidates, A )
-% determine index set of components of x, for which either x_i or xdot_i
-% enters at least one of the equations corresponding to I_equ linearly.
+% determine index set I_eq of equations that at leas one of the candidates
+% enter linearly, i.e. through A.
 
 I_eq = [];
 for ii = candidates
@@ -319,9 +318,10 @@ I_eq = unique(I_eq);
 
 end
 
-function I_equ = equations_defining_candidates( candidates, E)
-% determine the index set of equations that the candidates or its
-% derivatives enter linearly, i.e. through A, E (as f is excluded)
+function I_equ = dynamics_of_candidates( candidates, E)
+% determine the index set of equations that define the dynamics of the
+% candidates, i.e. that enter equations through E linearly
+% Note:dependency of phi is excluded by construction of candidates
     I_equ = [];
     for ii = candidates
         % find indices of equations that xii enters
@@ -331,8 +331,9 @@ function I_equ = equations_defining_candidates( candidates, E)
     I_equ = unique(I_equ);
 end
 
-function I = xdot_components_of_equations(I_eq, E);
-
+function I = xdot_components_of_equations(I_eq, E)
+% determine the index set I of components of x, for which xdot_i enters at
+% least one of the equations I_eq linearly (i.e. through E);
 components = [];
 for ii = I_eq
     components = [components, find(E(ii,:))];

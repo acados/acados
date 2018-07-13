@@ -1,4 +1,4 @@
-function [ gnsf ] = detect_affine_terms( gnsf, model, print_info )
+function [ gnsf ] = detect_affine_terms_reduce_nonlinearity( gnsf, model, print_info )
 
 %   This file is part of acados.
 %
@@ -255,7 +255,7 @@ if print_info
 end
 
 %% determine input of nonlinearity function
-[ gnsf ] = determine_input_nonlinearity_function( gnsf );
+gnsf = determine_input_nonlinearity_function( gnsf );
 
 check_reformulation(model, gnsf, print_info);
 
