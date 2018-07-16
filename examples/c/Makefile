@@ -114,7 +114,6 @@ CRANE_GNSF_OBJS =
 CRANE_GNSF_OBJS += gnsf_crane_model/phi_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/phi_fun_jac_y.o
 CRANE_GNSF_OBJS += gnsf_crane_model/f_lo_fun_jac_x1k1uz.o
-CRANE_GNSF_OBJS += gnsf_crane_model/get_ints_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/get_matrices_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/phi_jac_y_uhat.o
 CRANE_GNSF_OBJS += sim_gnsf_crane.o
@@ -464,8 +463,10 @@ clean:
 clean_models:
 	rm -f chain_model/*.o
 	rm -f implicit_chain_model/*.o
-	rm -f crane/*.o
+	rm -f crane_model/*.o
+	rm -f gnsf_crane_model/*.o
 	rm -f wt_model_nx3/*.o
 	rm -f wt_model_nx6/*.o
 	rm -f wt_model_nx6/nx6p2/*.o
+	rm -f inverted_pendulum_model/*.o
 
