@@ -53,9 +53,9 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
     disp(['NOTE: this feature is not super stable and might need more testing!!!!!!']);
     
     %% load models
-    x = model.x;
-    xdot = model.xdot;
-    z = model.z;
+    x = gnsf.x;
+    xdot = gnsf.xdot;
+    z = gnsf.z;
     
     % % GNSF
     % get dimensions
@@ -92,7 +92,6 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
                         % add new nonlinearity entry
                         gnsf.C(sub_max, gnsf.n_out + 1) = 1;
                         gnsf.phi_expr = [gnsf.phi_expr; k(sub_max)];
-                        gnsf = determine_input_nonlinearity_function( gnsf );
                     else
                         ind_f = find(gnsf.C(sub_max,:));
                         % add term to corresponding nonlinearity entry
@@ -103,12 +102,11 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
                         else
                             gnsf.phi_expr(ind_f) = gnsf.phi_expr(ind_f) + k(sub_max) / ...
                                 gnsf.C(sub_max, ind_f);
-
-                            gnsf = determine_input_nonlinearity_function( gnsf );
                         end
                     end
                 end
             end
+            gnsf = determine_input_nonlinearity_function( gnsf );
         end
     end
     check_reformulation(model, gnsf, print_info);
@@ -116,7 +114,7 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
 else
     if print_info
         disp(' ');
-        disp('the rank of both E11 and E22 is  full after the reformulation ');
+        disp('the rank of both E11 and E22 is naturally full after the reformulation ');
         disp('==>  model reformulation finished');
         disp(' ');
     end

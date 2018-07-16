@@ -202,8 +202,7 @@ for ii_x2 = I_x2
             -  E(i_eq, I_x1) * x1dot - E(i_eq, I_z) * z) / E(i_eq, ii_x2) );
     i_LO = find( I_x2 == ii_x2 );
     A_LO(i_LO, :) = A(i_eq, I_x2) / E(i_eq, ii_x2) ;
-    E_entry = E(i_eq, ii_x2);
-    if E_entry < 0
+    if E(i_eq, ii_x2) < 0
         f_impl_expr( i_eq ) = - f_impl_expr( i_eq );
         equ_changed_sign = [equ_changed_sign, i_eq];
     end
@@ -248,8 +247,7 @@ gnsf.c = gnsf.c(I_eq_x1, :);
 C_new = [];
 phi_new = [];
 for ii = 1:size(gnsf.C, 2) % n_colums of C
-    if all(gnsf.C(:,ii) == 0) % if column == 0
-    else
+    if ~all(gnsf.C(:,ii) == 0) % if column ~= 0
         C_new = [C_new, gnsf.C(:,ii)];
         phi_new = [phi_new; gnsf.phi_expr(ii)];
     end
