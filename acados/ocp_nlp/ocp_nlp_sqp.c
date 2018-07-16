@@ -688,7 +688,7 @@ static void regularize_hessian(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nl
 
     //     // make symmetric
     //     blasfeo_dtrtr_l(nx+nu, &work->qp_in->RSQrq[i], 0, 0, &work->qp_in->RSQrq[i], 0, 0);
-        
+
     //     // regularize
     //     blasfeo_unpack_dmat(nx+nu, nx+nu, &work->qp_in->RSQrq[i], 0, 0, tmp_hess, nx+nu);
     //     regularize(nx+nu, tmp_hess);
@@ -700,13 +700,13 @@ static void regularize_hessian(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nl
 
     int nx = dims->nx[N], nu = dims->nu[N];
 
-    struct blasfeo_dmat Q_tilde, Q_bar, BAQ, L;
+    struct blasfeo_dmat Q_tilde, Q_bar, BAQ, L, delta_eye;
 
     int num_bytes = blasfeo_memsize_dmat(nx, nx);
     void *raw_mem = malloc(num_bytes);
     blasfeo_create_dmat(nx, nx, &Q_tilde, raw_mem);
     blasfeo_dgese(nx, nx, 0.0, &Q_tilde, 0, 0);
-    
+
     raw_mem = malloc(num_bytes);
     blasfeo_create_dmat(nx, nx, &Q_bar, raw_mem);
     blasfeo_dgese(nx, nx, 0.0, &Q_bar, 0, 0);
@@ -720,7 +720,13 @@ static void regularize_hessian(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nl
     blasfeo_create_dmat(nu, nu, &L, raw_mem);
     blasfeo_dgese(nu, nu, 0.0, &L, 0, 0);
 
-    blasfeo_ddiare(nx, delta, &Q_tilde, 0, 0);
+    num_bytes = blasfeo_memsize_dmat(nx, nx);
+    raw_mem = malloc(num_bytes);
+    blasfeo_create_dmat(nx, nx, &delta_eye, raw_mem);
+    blasfeo_dgese(nx, nx, 0.0, &delta_eye, 0, 0);
+
+    blasfeo_ddiare(nx, delta, &delta_eye, 0, 0);
+    blasfeo_dgecp(nx, nx, &delta_eye, 0, 0, &Q_tilde, 0, 0);
     blasfeo_dgecp(nx, nx, &work->qp_in->RSQrq[N], nu, nu, &Q_bar, 0, 0);
     blasfeo_dgead(nx, nx, -1.0, &Q_tilde, 0, 0, &Q_bar, 0, 0);
 
@@ -729,8 +735,10 @@ static void regularize_hessian(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nl
     for (int i = N-1; i >= 0; --i)
     {
         int nx = dims->nx[i], nu = dims->nu[i];
-        blasfeo_dgemm_nt(nx+nu, nx, nx, 1.0, &work->qp_in->BAbt[i], 0, 0, &Q_bar, 0, 0, 0.0, &BAQ, 0, 0, &BAQ, 0, 0);
-        blasfeo_dsyrk_ln_mn(nx+nu+1, nx+nu, nx, 1.0, &work->qp_in->BAbt[i], 0, 0, &BAQ, 0, 0, 1.0, &work->qp_in->RSQrq[i], 0, 0, &work->qp_in->RSQrq[i], 0, 0);
+        blasfeo_dgemm_nt(nx+nu, nx, nx, 1.0, &work->qp_in->BAbt[i], 0, 0, &Q_bar, 0, 0, 0.0,
+                         &BAQ, 0, 0, &BAQ, 0, 0);
+        blasfeo_dsyrk_ln_mn(nx+nu+1, nx+nu, nx, 1.0, &work->qp_in->BAbt[i], 0, 0, &BAQ, 0, 0, 1.0,
+                            &work->qp_in->RSQrq[i], 0, 0, &work->qp_in->RSQrq[i], 0, 0);
 
         // blasfeo_print_dmat(nx+nu+1, nx+nu, &work->qp_in->RSQrq[i], 0, 0);
 
@@ -741,20 +749,29 @@ static void regularize_hessian(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nl
         bool needs_regularization = false;
         for (int j = 0; j < nu; ++j)
             if (d[j] < 1e-10)
-                needs_regularization  = true;
-        
+                needs_regularization = true;
+
         if (needs_regularization)
         {
-            double tmp_hess[(nx+nu)*(nx+nu)];
-            blasfeo_unpack_dmat(nx+nu, nx+nu, &work->qp_in->RSQrq[i], 0, 0, tmp_hess, nx+nu);       
-            regularize(nxu, R);
+            double *tmp_hess = malloc((nx+nu)*(nx+nu) * sizeof(double));
+            blasfeo_unpack_dmat(nx+nu, nx+nu, &work->qp_in->RSQrq[i], 0, 0, tmp_hess, nx+nu);
+            regularize(nx+nu, tmp_hess);
             blasfeo_pack_dmat(nx+nu, nx+nu, tmp_hess, nx+nu, &work->qp_in->RSQrq[i], 0, 0);
+            free(tmp_hess);
         }
 
+        // R = L * L^T
         blasfeo_dpotrf_l(nu, &work->qp_in->RSQrq[i], 0, 0, &L, 0, 0);
+        // Q = S^T * L^-T
         blasfeo_dtrsm_rltn(nx, nu, 1.0, &L, 0, 0, &work->qp_in->RSQrq[i], nu, 0, &Q_tilde, 0, 0);
-        blasfeo_dsyrk_ln(nx, nx, 1.0, &Q_tilde, 0, 0, &Q_tilde, 0, 0, 0.0, &Q_tilde, 0, 0, &Q_tilde, 0, 0);
+        // Q = S^T * R^-1 * S
+        blasfeo_dsyrk_ln(nx, nx, 1.0, &Q_tilde, 0, 0, &Q_tilde, 0, 0, 1.0, &delta_eye, 0, 0,
+                         &Q_tilde, 0, 0);
 
+        blasfeo_dgecp(nx, nx, &work->qp_in->RSQrq[i], nu, nu, &Q_bar, 0, 0);
+        blasfeo_dgead(nx, nx, -1.0, &Q_tilde, 0, 0, &Q_bar, 0, 0);
+
+        blasfeo_dgecp(nx, nx, &Q_tilde, 0, 0, &work->qp_in->RSQrq[i], nu, nu);
 
     }
 }

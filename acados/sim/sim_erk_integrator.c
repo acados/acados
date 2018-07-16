@@ -743,8 +743,10 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             S_adj_out[i] = adj_tmp[i];
         // store hessian
         if (opts->sens_hess)
+        {
             for (i = 0; i < nhess; i++)
                 S_hess_out[i] = adj_tmp[nx + nu + i];
+        }
     }
 
     // store timings
