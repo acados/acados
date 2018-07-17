@@ -46,7 +46,7 @@ class casadi_module {
 
     external_function_casadi external_function_;
 
-    std::unique_ptr<void, int (*)(void *)> handle_;
+    std::unique_ptr<void, void (*)(void *)> handle_;
 
     std::string generated_header_;
 

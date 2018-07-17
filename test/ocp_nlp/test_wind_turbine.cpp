@@ -266,6 +266,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     int nq[NN+1] = {};
     int ns[NN+1] = {};
     int ny[NN+1] = {};
+    int nz[NN+1] = {};
 
     // TODO(dimitris): setup bounds on states and controls based on ACADO controller
     nx[0] = nx_;
@@ -279,6 +280,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     nh[0] = 0;
     ns[0] = 0;
     ny[0] = 4;  // ny_
+    nz[0] = 0;
 
     for (int i = 1; i < NN; i++)
     {
@@ -291,6 +293,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         nh[i] = 1;
         ns[i] = 1;
         ny[i] = 4;  // ny_
+        nz[i] = 0;
     }
 
     nx[NN] = nx_;
@@ -302,6 +305,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     nh[NN] = 0;
     ns[NN] = 0;
     ny[NN] = 2;
+    nz[NN] = 0;
 
     /************************************************
     * problem data
@@ -603,7 +607,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     ************************************************/
 
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-    ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, dims);
+    ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
 
     /************************************************
     * dynamics

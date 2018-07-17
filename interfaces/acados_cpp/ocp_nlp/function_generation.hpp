@@ -12,13 +12,13 @@ namespace acados
 {
 
 casadi_module generate_forward_vde(const casadi::Function& model, std::string output_dir =
-                                   "_casadi_generated");
+                                   "_autogen");
 
 casadi_module generate_ode_jacobian(const casadi::Function& model, std::string output_dir =
-                                    "_casadi_generated");
+                                    "_autogen");
 
 casadi_module generate_nls_residual(const casadi::Function& residual, std::string output_dir =
-                                "_casadi_generated");
+                                "_autogen");
 
 }  // namespace acados
 

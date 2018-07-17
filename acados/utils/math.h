@@ -31,6 +31,10 @@ extern "C" {
 
 #include "acados/utils/types.h"
 
+#if defined(__DSPACE__)
+double fmax(double a, double b);
+#endif
+
 void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb, double *C, int ldc);
 void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y);
 void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y);

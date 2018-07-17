@@ -9,3 +9,7 @@ target_sources(acados PRIVATE
 
 add_subdirectory(ocp_nlp)
 add_subdirectory(ocp_qp)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.hpp")

@@ -27,37 +27,33 @@ nlp.set_field('ubx', 0, x0);
 nlp.set_field('lbu', -8);
 nlp.set_field('ubu', +8);
 
-nlp.initialize_solver('sqp', struct('qp_solver', 'qpoases'));
+nlp.initialize_solver('sqp');
+
+%% Simulation
+x = SX.sym('x', nx); u = SX.sym('u', nu);
+pendulum = integrator('pendulum', 'cvodes', struct('x', x, 'p', u, 'ode', ode_fun(x, u)), struct('tf', Ts));
+sim_states = x0.'; sim_controls = [];
 
 output = nlp.solve(x0, 0);
 
 for i=1:99
 
-    states = output.states();
-    disp(states{1});
-
-    nlp.set_field('lbx', 0, states{2});
-    nlp.set_field('ubx', 0, states{2});
+    controls = output.controls();
+    sim_controls = [sim_controls; controls{1}.'];
+    
+    integrator_out = pendulum('x0', sim_states(end, :).', 'p', controls{1});
+    sim_states = [sim_states; full(integrator_out.xf).'];
+    
+    nlp.set_field('lbx', 0, sim_states(end, :).');
+    nlp.set_field('ubx', 0, sim_states(end, :).');
 
     output = nlp.solve();
 end
 
 %% Plotting
-
-states = output.states();
-X = [states{1}.'];
-for i=1:numel(states)-1
-    X = [X; states{i+1}.'];
-end
-
-controls = output.controls();
-U = [controls{1}.'];
-for i=1:numel(controls)-1
-    U = [U; controls{i+1}.'];
-end
-
+ 
 figure(1); clf;
 subplot(211)
-plot(X);
+plot(sim_states);
 subplot(212)
-plot(U);
+plot(sim_controls);

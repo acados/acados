@@ -53,7 +53,7 @@ int main() {
 
 	std::vector<int> nx(N+1, num_states), nu(N+1, num_controls), nbx(N+1, 0), nbu(N+1, 0),
 		nb(N+1, 0), ng(N+1, 0), nh(N+1, 0), np(N+1, 0),
-		ns(N+1, 0), nv(N+1, num_states+num_controls), ny(N+1, num_states+num_controls);
+		ns(N+1, 0), nz(N+1, 0), nv(N+1, num_states+num_controls), ny(N+1, num_states+num_controls);
 
 	nbx.at(0) = num_states;
 	nb.at(0) = num_states;
@@ -81,7 +81,7 @@ int main() {
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), np.data(), ns.data(), dims);
+	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), np.data(), ns.data(), nz.data(), dims);
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {

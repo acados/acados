@@ -18,10 +18,13 @@
 namespace acados
 {
 
-casadi_module::casadi_module() : function_(), external_function_(), handle_(nullptr, &dlclose) {}
+casadi_module::casadi_module() : function_(), external_function_(), handle_(nullptr, &free_handle)
+{
+
+}
 
 casadi_module::casadi_module(const casadi::Function& function, std::string output_folder = "tmp") :
-    function_(function), external_function_(), handle_(nullptr, &dlclose)
+    function_(function), external_function_(), handle_(nullptr, &free_handle)
 {
     load_functions(output_folder);
 }
@@ -29,7 +32,7 @@ casadi_module::casadi_module(const casadi::Function& function, std::string outpu
 casadi_module::casadi_module(casadi_module&& other) :
     function_(),
     external_function_(),
-    handle_(nullptr, &dlclose)
+    handle_(nullptr, &free_handle)
 {
     *this = std::move(other);
 }
