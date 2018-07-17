@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+// blasfeo
+#include "blasfeo/include/blasfeo_common.h"
+
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
@@ -43,8 +46,14 @@ typedef struct dense_qp_qpoases_opts_
 typedef struct dense_qp_qpoases_memory_
 {
     double *H;
+    double *HH;
     double *R;
     double *g;
+    double *gg;
+    double *Zl;
+    double *Zu;
+    double *zl;
+    double *zu;
     double *A;
     double *b;
     double *d_lb0;
@@ -52,9 +61,16 @@ typedef struct dense_qp_qpoases_memory_
     double *d_lb;
     double *d_ub;
     double *C;
+    double *CC;
+    double *d_lg0;
+    double *d_ug0;
     double *d_lg;
     double *d_ug;
+    double *d_ls;
+    double *d_us;
     int *idxb;
+    int *idxb_stacked;
+    int *idxs;
     double *prim_sol;
     double *dual_sol;
     void *QPB;       // NOTE(giaf): cast to QProblemB to use
@@ -62,6 +78,7 @@ typedef struct dense_qp_qpoases_memory_
     double cputime;  // cputime of qpoases
     int nwsr;        // performed number of working set recalculations
     int first_it;    // to be used with hotstart
+    dense_qp_in *qp_stacked;
 } dense_qp_qpoases_memory;
 
 int dense_qp_qpoases_opts_calculate_size(void *config, dense_qp_dims *dims);

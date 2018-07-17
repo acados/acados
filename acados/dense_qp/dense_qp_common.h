@@ -61,6 +61,7 @@ typedef struct
     double interface_time;
     double total_time;
     int num_iter;
+    int t_computed;
 } dense_qp_info;
 
 //
@@ -88,11 +89,18 @@ int dense_qp_res_workspace_calculate_size(dense_qp_dims *dims);
 //
 dense_qp_res_ws *dense_qp_res_workspace_assign(dense_qp_dims *dims, void *raw_memory);
 //
+void dense_qp_compute_t(dense_qp_in *qp_in, dense_qp_out *qp_out);
+//
 void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res,
                           dense_qp_res_ws *res_ws);
 //
 void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4]);
 //
+void dense_qp_stack_slacks_dims(dense_qp_dims *in, dense_qp_dims *out);
+//
+void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out);
+//
+void dense_qp_unstack_slacks(dense_qp_out *in, dense_qp_in *qp_out, dense_qp_out *out);
 
 #ifdef __cplusplus
 } /* extern "C" */

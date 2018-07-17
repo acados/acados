@@ -72,7 +72,7 @@ void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *op
 {
     dense_qp_hpipm_opts *opts = opts_;
 
-    d_set_default_dense_qp_ipm_arg(opts->hpipm_opts);
+    d_set_default_dense_qp_ipm_arg(BALANCE, opts->hpipm_opts);
     // overwrite some default options
     opts->hpipm_opts->res_g_max = 1e-6;
     opts->hpipm_opts->res_b_max = 1e-8;
@@ -163,6 +163,7 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     info->interface_time = 0;  // there are no conversions for hpipm
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = memory->hpipm_workspace->iter;
+    info->t_computed = 1;
 
     // check exit conditions
     int acados_status = hpipm_status;

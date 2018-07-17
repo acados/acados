@@ -126,7 +126,7 @@ static void select_dynamics_wt_casadi(int N,
 		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_sparsity_out;
 		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_in = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_n_in;
 		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_n_out;
-		
+
 		// GNSF functions
 		// phi_fun
 		phi_fun[ii].casadi_fun            = &wt_nx6p2_phi_fun;
@@ -511,8 +511,9 @@ int main()
 		plan->nlp_cost[i] = LINEAR_LS;
 
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
-// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
-// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QORE;
 
 	for (int i = 0; i < NN; i++)
 	{

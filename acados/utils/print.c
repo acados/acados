@@ -461,6 +461,10 @@ void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
         blasfeo_print_exp_tran_dvec(2 * ni[ii], &nlp_res->res_m[ii], 0);
     }
 
+    printf("inf norm res=\t%e\t%e\t%e\t%e\n", nlp_res->inf_norm_res_g, nlp_res->inf_norm_res_b,
+        nlp_res->inf_norm_res_d, nlp_res->inf_norm_res_m);
+
+
     return;
 }
 
@@ -665,6 +669,9 @@ void print_dense_qp_in(dense_qp_in *qp_in)
 {
     int nv = qp_in->dim->nv;
     int ne = qp_in->dim->ne;
+    int nb = qp_in->dim->nb;
+    int ng = qp_in->dim->ng;
+    int ns = qp_in->dim->ns;
 
     printf("H =\n");
     blasfeo_print_dmat(nv, nv, qp_in->Hv, 0, 0);
@@ -674,6 +681,10 @@ void print_dense_qp_in(dense_qp_in *qp_in)
     blasfeo_print_dmat(ne, nv, qp_in->A, 0, 0);
     printf("b =\n");
     blasfeo_print_dvec(ne, qp_in->b, 0);
+    printf("Ct =\n");
+    blasfeo_print_dmat(nv, ng, qp_in->Ct, 0, 0);
+    printf("d =\n");
+    blasfeo_print_dvec(2*nb+2*ng+2*ns, qp_in->d, 0);
 }
 
 void print_ocp_qp_info(ocp_qp_info *info)

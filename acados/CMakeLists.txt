@@ -62,6 +62,7 @@ target_include_directories(acados
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/source>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPCORE/include>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/hpipm/include>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/interfaces>
         $<INSTALL_INTERFACE:include>)
