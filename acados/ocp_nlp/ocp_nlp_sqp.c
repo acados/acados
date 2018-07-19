@@ -939,6 +939,13 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
 int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
+
+	// acados timer
+    acados_timer timer0, timer1;
+
+    // start timer
+    acados_tic(&timer0);
+
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_solver_config *config = config_;
     ocp_nlp_sqp_opts *opts = opts_;
@@ -950,6 +957,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_sqp_work *work = work_;
 
     ocp_nlp_sqp_cast_workspace(config, dims, work, mem, opts);
+
+	// zero timers
+    double total_time = 0.0;
+	mem->time_qp_sol = 0.0;
+	mem->time_lin = 0.0;
+	mem->time_tot = 0.0;
 
 	// extract dims
     int N = dims->N;
@@ -1017,18 +1030,20 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // initialize QP
     initialize_qp(config, dims, nlp_in, nlp_out, opts, mem, work);
 
-    // start timer
-    acados_timer timer;
-    double total_time = 0;
-    acados_tic(&timer);
-
     // main sqp loop
     int max_sqp_iterations = opts->maxIter;
     int sqp_iter = 0;
     for (; sqp_iter < max_sqp_iterations; sqp_iter++)
     {
+
+		// start timer
+		acados_tic(&timer1);
+
         // linearizate NLP and update QP matrices
         linearize_update_qp_matrices(config, dims, nlp_in, nlp_out, opts, mem, work);
+
+		// stop timer
+		mem->time_lin += acados_toc(&timer1);
 
         // update QP rhs for SQP (step prim var, abs dual var)
         sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
@@ -1061,8 +1076,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             nlp_out->sqp_iter = sqp_iter;
 
             // stop timer
-            total_time += acados_toc(&timer);
+            total_time += acados_toc(&timer0);
             nlp_out->total_time = total_time;
+			mem->time_tot = total_time;
 
 #if defined(ACADOS_WITH_OPENMP)
 	// restore number of threads
@@ -1074,9 +1090,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
         //  print_ocp_qp_in(work->qp_in);
 
+		// start timer
+		acados_tic(&timer1);
+
         int qp_status =
             qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
                                 mem->qp_solver_mem, work->qp_work);
+
+		// stop timer
+		mem->time_qp_sol += acados_toc(&timer1);
 
         nlp_out->qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
 
@@ -1088,6 +1110,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         if (qp_status != 0)
         {
             //   print_ocp_qp_in(work->qp_in);
+
+			// stop timer
+			total_time += acados_toc(&timer0);
+
+			mem->time_tot = total_time;
+			nlp_out->total_time = total_time;
 
             printf("QP solver returned error status %d in iteration %d\n", qp_status, sqp_iter);
 #if defined(ACADOS_WITH_OPENMP)
@@ -1119,12 +1147,14 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     }
 
     // stop timer
-    total_time += acados_toc(&timer);
+    total_time += acados_toc(&timer0);
 
     // ocp_nlp_out_print(nlp_out);
 
     // save sqp iterations number
     mem->sqp_iter = sqp_iter;
+	mem->time_tot = total_time;
+
     nlp_out->sqp_iter = sqp_iter;
     nlp_out->total_time = total_time;
 

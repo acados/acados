@@ -73,6 +73,9 @@ typedef struct
     // nlp memory
     ocp_nlp_memory *nlp_mem;
 
+	double time_qp_sol;
+	double time_lin;
+	double time_tot;
 } ocp_nlp_sqp_rti_memory;
 
 //
