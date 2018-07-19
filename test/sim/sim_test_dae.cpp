@@ -94,10 +94,10 @@ TEST_CASE("crane_dae_example", "[integrators]")
     const int nx = 9;
     const int nu = 2;
     const int nz = 2;
-    const int nx1 = 8;  // gnsf split
-    const int nx2 = 1;
+    const int nx1 = 5;  // gnsf split
+    const int nx2 = 4;
     const int n_out = 3;
-    const int ny = 6;
+    const int ny = 5;
     const int nuhat = 1;
 
     // generate x0, u_sim
@@ -107,7 +107,8 @@ TEST_CASE("crane_dae_example", "[integrators]")
     for (int ii = 0; ii < nx; ii++) {
         x0[ii] = 0.0;
     }
-    x0[2] = 0.8;
+    // x0[2] = 0.8; // old (manual) gnsf split
+    x0[0] = 0.8;  // value for xL
 
     u_sim[0] = 40.108149413030752;
     u_sim[1] = -50.446662212534974;
@@ -658,7 +659,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 std::cout  << "rel_error_alg    = " << rel_error_alg <<"\n";
 
                 // printf("tested algebraic sensitivities \n");
-                // d_print_e_mat(nz, NF, &out->S_algebraic[0], nz);
+                // d_print_e_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
 
             /************************************************
             * asserts on erors

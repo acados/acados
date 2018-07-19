@@ -52,8 +52,8 @@ int main()
     const int nu    = 1;
     const int nz    = 5;
 
-    const int nx1   = 6;  // gnsf split
-    const int nx2   = 0;
+    const int nx1   = 5;  // gnsf split
+    const int nx2   = 1;
     const int n_out = 3;
     const int ny    = 8;
     const int nuhat = 1;
@@ -64,12 +64,13 @@ int main()
     double x0[nx];
     double u_sim[nu];
 
-    x0[0] =  1.0000;
-    x0[1] = -5.0000;
-    x0[2] =  1.0000;
-    x0[3] =  0.1000;
-    x0[4] = -0.5000;
-    x0[5] =  0.1000;
+    x0[0] =  1.0000;  // xpos
+    x0[1] = -5.0000;  // ypos
+    x0[2] =  0.1000;  // vx
+    x0[3] = -0.5000;  // vy
+    x0[4] =  0.1000;  // valpha
+    x0[5] =  1.0000;  // alpha
+    
 
     u_sim[0] = 1;
 
