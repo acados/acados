@@ -169,7 +169,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->min_res_d = 1e-8;
     opts->min_res_m = 1e-8;
 
-	opts->reuse_workspace = 0;
+	opts->reuse_workspace = 1;
 	opts->num_threads = 4;
 
     // submodules opts
@@ -404,27 +404,58 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
 	int size_tmp = 0;
 	int tmp;
 
+	// sqp
     size += sizeof(ocp_nlp_sqp_work);
 
-#if defined(ACADOS_WITH_OPENMP)
-	assert(opts->reuse_workspace==0 && ACADOS_WITH_OPENMP);
-#endif
+	// array of pointers
+	// cost
+	size += (N + 1) * sizeof(void *);
+	// dynamics
+	size += N * sizeof(void *);
+	// constraints
+	size += (N + 1) * sizeof(void *);
+
+	// qp in
+	size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+
+	// qp out
+	size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
 
 	if (opts->reuse_workspace)
 	{
 
-		// qp in
-		size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+#if defined(ACADOS_WITH_OPENMP)
 
-		// qp out
-		size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
+		// qp solver
+		size += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+
+		// dynamics
+		for (ii = 0; ii < N; ii++)
+		{
+			size += dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii],
+														   opts->dynamics[ii]);
+		}
+
+		// cost
+		for (ii = 0; ii <= N; ii++)
+		{
+			size += cost[ii]->workspace_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+		}
+
+		// constraints
+		for (ii = 0; ii <= N; ii++)
+		{
+			size += constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii],
+															  opts->constraints[ii]);
+		}
+
+#else
 
 		// qp solver
 		tmp = qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 		size_tmp = tmp>size_tmp ? tmp : size_tmp;
 
 		// dynamics
-		size += N * sizeof(void *);
 		for (ii = 0; ii < N; ii++)
 		{
 			tmp = dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii],
@@ -433,7 +464,6 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
 		}
 
 		// cost
-		size += (N + 1) * sizeof(void *);
 		for (ii = 0; ii <= N; ii++)
 		{
 			tmp = cost[ii]->workspace_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
@@ -441,31 +471,26 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
 		}
 
 		// constraints
-		size += (N + 1) * sizeof(void *);
 		for (ii = 0; ii <= N; ii++)
 		{
 			tmp = constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii],
 															  opts->constraints[ii]);
 			size_tmp = tmp>size_tmp ? tmp : size_tmp;
 		}
+
 	
 		size += size_tmp;
+
+#endif
 	
 	}
 	else
 	{
 
-		// qp in
-		size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
-
-		// qp out
-		size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
-
 		// qp solver
 		size += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
 		// dynamics
-		size += N * sizeof(void *);
 		for (ii = 0; ii < N; ii++)
 		{
 			size += dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii],
@@ -473,14 +498,12 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
 		}
 
 		// cost
-		size += (N + 1) * sizeof(void *);
 		for (ii = 0; ii <= N; ii++)
 		{
 			size += cost[ii]->workspace_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
 		}
 
 		// constraints
-		size += (N + 1) * sizeof(void *);
 		for (ii = 0; ii <= N; ii++)
 		{
 			size += constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii],
@@ -535,6 +558,37 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
 	if (opts->reuse_workspace)
 	{
 
+#if defined(ACADOS_WITH_OPENMP)
+
+		// qp solver
+		work->qp_work = (void *) c_ptr;
+		c_ptr += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+
+		// dynamics
+		for (int ii = 0; ii < N; ii++)
+		{
+			work->dynamics[ii] = c_ptr;
+			c_ptr += dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii],
+															opts->dynamics[ii]);
+		}
+
+		// cost
+		for (int ii = 0; ii <= N; ii++)
+		{
+			work->cost[ii] = c_ptr;
+			c_ptr += cost[ii]->workspace_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+		}
+
+		// constraints
+		for (int ii = 0; ii <= N; ii++)
+		{
+			work->constraints[ii] = c_ptr;
+			c_ptr += constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii],
+															   opts->constraints[ii]);
+		}
+
+#else
+
 		// qp solver
 		work->qp_work = (void *) c_ptr;
 
@@ -555,6 +609,8 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
 		{
 			work->constraints[ii] = c_ptr;
 		}
+	
+#endif
 
 	}
 	else
