@@ -43,6 +43,7 @@ typedef struct
     void **constraints;  // constraints_opts
     int compute_dual_sol;
 	int reuse_workspace;
+	int num_threads;
 } ocp_nlp_sqp_rti_opts;
 
 //

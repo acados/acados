@@ -47,6 +47,7 @@ typedef struct
     double min_res_m;
     int maxIter;
 	int reuse_workspace;
+	int num_threads;
 } ocp_nlp_sqp_opts;
 
 //

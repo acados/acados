@@ -24,6 +24,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#if defined(ACADOS_WITH_OPENMP)
+#include <omp.h>
+#endif
 
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
@@ -162,7 +165,8 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
 
 //    opts->compute_dual_sol = 1;
 
-	opts->reuse_workspace = 1;
+	opts->reuse_workspace = 0;
+	opts->num_threads = 2;
 
     // submodules opts
 
@@ -397,6 +401,10 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
 	int tmp;
 
     size += sizeof(ocp_nlp_sqp_rti_work);
+
+#if defined(ACADOS_WITH_OPENMP)
+	assert(opts->reuse_workspace==0 && ACADOS_WITH_OPENMP);
+#endif
 
 	if (opts->reuse_workspace)
 	{
@@ -650,6 +658,11 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 
     /* stage-wise multiple shooting lagrangian evaluation */
 
+#if defined(ACADOS_WITH_OPENMP)
+	// set number of threads
+	omp_set_num_threads(opts->num_threads);
+	#pragma omp parallel for
+#endif
     for (i = 0; i < N; i++)
     {
         // cost
