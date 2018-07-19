@@ -37,15 +37,16 @@ extern "C" {
 
 typedef struct
 {
-    int maxIter;
-    double min_res_g;
-    double min_res_b;
-    double min_res_d;
-    double min_res_m;
     void *qp_solver_opts;
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
+    double min_res_g;
+    double min_res_b;
+    double min_res_d;
+    double min_res_m;
+    int maxIter;
+	int reuse_workspace;
 } ocp_nlp_sqp_opts;
 
 //

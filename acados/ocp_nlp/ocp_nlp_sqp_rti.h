@@ -42,6 +42,7 @@ typedef struct
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
     int compute_dual_sol;
+	int reuse_workspace;
 } ocp_nlp_sqp_rti_opts;
 
 //
