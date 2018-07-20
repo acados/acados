@@ -89,6 +89,7 @@ int main() {
 		qp_plan,
 		sim_plan.data(),
 		SQP_GN,
+		MIRROR,
 		cost_plan.data(),
 		dynamics_plan.data(),
 		constraints_plan.data(),
