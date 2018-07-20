@@ -776,23 +776,16 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
                       nlp_mem->dyn_adj + i + 1, nu[i + 1]);
     }
 
-    // nlp mem: ineq_fun
 #if defined(ACADOS_WITH_OPENMP)
 	#pragma omp parallel for
 #endif
     for (i = 0; i <= N; i++)
     {
+		// nlp mem: ineq_fun
         struct blasfeo_dvec *ineq_fun =
             config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
         blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
-    }
-
-    // nlp mem: ineq_adj
-#if defined(ACADOS_WITH_OPENMP)
-	#pragma omp parallel for
-#endif
-    for (i = 0; i <= N; i++)
-    {
+		// nlp mem: ineq_adj
         struct blasfeo_dvec *ineq_adj =
             config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
         blasfeo_dveccp(nv[i], ineq_adj, 0, nlp_mem->ineq_adj + i, 0);
@@ -841,30 +834,19 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 
     ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
-    // g
 #if defined(ACADOS_WITH_OPENMP)
 	#pragma omp parallel for
 #endif
     for (i = 0; i <= N; i++)
     {
+		// g
         blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, work->qp_in->rqz + i, 0);
-    }
 
-    // b
-#if defined(ACADOS_WITH_OPENMP)
-	#pragma omp parallel for
-#endif
-    for (i = 0; i < N; i++)
-    {
-        blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, work->qp_in->b + i, 0);
-    }
+		// b
+		if (i<N)
+			blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, work->qp_in->b + i, 0);
 
-    // d
-#if defined(ACADOS_WITH_OPENMP)
-	#pragma omp parallel for
-#endif
-    for (i = 0; i <= N; i++)
-    {
+		// d
         blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, work->qp_in->d + i, 0);
     }
 
@@ -896,38 +878,24 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
     //        }
     //    }
 
-    // (full) step in primal variables
 #if defined(ACADOS_WITH_OPENMP)
 	#pragma omp parallel for
 #endif
     for (i = 0; i <= N; i++)
     {
+		// (full) step in primal variables
+
         blasfeo_daxpy(nv[i], 1.0, work->qp_out->ux + i, 0, nlp_out->ux + i, 0, nlp_out->ux + i, 0);
-    }
 
-    // absolute in dual variables
-#if defined(ACADOS_WITH_OPENMP)
-	#pragma omp parallel for
-#endif
-    for (i = 0; i < N; i++)
-    {
-        blasfeo_dveccp(nx[i + 1], work->qp_out->pi + i, 0, nlp_out->pi + i, 0);
-    }
+		// absolute in dual variables
 
-#if defined(ACADOS_WITH_OPENMP)
-	#pragma omp parallel for
-#endif
-    for (i = 0; i <= N; i++)
-    {
+		if (i<N)
+			blasfeo_dveccp(nx[i + 1], work->qp_out->pi + i, 0, nlp_out->pi + i, 0);
+
         blasfeo_dveccp(2 * ni[i], work->qp_out->lam + i, 0, nlp_out->lam + i, 0);
-    }
 
-#if defined(ACADOS_WITH_OPENMP)
-	#pragma omp parallel for
-#endif
-    for (i = 0; i <= N; i++)
-    {
         blasfeo_dveccp(2 * ni[i], work->qp_out->t + i, 0, nlp_out->t + i, 0);
+
     }
 
     return;
