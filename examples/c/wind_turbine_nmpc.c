@@ -504,7 +504,7 @@ int main()
 
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
 
-//	plan->nlp_solver = SQP_GN;
+//	plan->nlp_solver = SQP;
 	plan->nlp_solver = SQP_RTI;
 
 	for (int i = 0; i <= NN; i++)
@@ -760,7 +760,7 @@ int main()
 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts;
 
 	// nlp opts
-	if (plan->nlp_solver == SQP_GN)
+	if (plan->nlp_solver == SQP)
 	{
 
 		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
@@ -878,7 +878,7 @@ int main()
 			// get sim_solver memory
 			ocp_nlp_dynamics_cont_memory *dynamics_mem;
 
-			if (plan->nlp_solver == SQP_GN)
+			if (plan->nlp_solver == SQP)
 			{
 				ocp_nlp_sqp_memory *sqp_mem = solver->mem;
 				dynamics_mem = sqp_mem->dynamics[i];
@@ -981,7 +981,7 @@ int main()
 			// print info
 			if (true)
 			{
-				if (plan->nlp_solver == SQP_GN)
+				if (plan->nlp_solver == SQP)
 				{
 					printf("\nproblem #%d, status %d, iters %d\n", idx, status, ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter);
 				}

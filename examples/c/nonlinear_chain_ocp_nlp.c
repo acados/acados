@@ -1121,7 +1121,7 @@ int main()
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
 
 	// TODO(dimitris): not necessarily GN, depends on cost module
-	plan->nlp_solver = SQP_GN;
+	plan->nlp_solver = SQP;
 
 	// NOTE(dimitris): switching between different objectives on each stage to test everything
 	for (int i = 0; i <= NN; i++)

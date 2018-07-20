@@ -78,7 +78,7 @@ int main() {
 	ocp_nlp_solver_plan plan = {
 		qp_plan,
 		sim_plan.data(),
-		SQP_GN,
+		SQP,
 		cost_plan.data()
 	};
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(plan, N);

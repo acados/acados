@@ -152,7 +152,7 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
     if (solver_name == "sqp")
     {
         ocp_nlp_sqp_config_initialize_default(config_.get());
-        plan_->nlp_solver = SQP_GN;
+        plan_->nlp_solver = SQP;
     }
     else
     {

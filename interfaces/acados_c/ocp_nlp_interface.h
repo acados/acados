@@ -33,7 +33,7 @@ extern "C" {
 
 typedef enum
 {
-    SQP_GN, // why _GN ??? exact hessian would use the same scheme
+    SQP,
     SQP_RTI,
 } ocp_nlp_solver_t;
 
