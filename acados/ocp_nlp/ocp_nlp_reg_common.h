@@ -44,19 +44,15 @@ typedef struct {
 } ocp_nlp_reg_opts;
 
 typedef struct {
-    int (*opts_calculate_size)(void *config);
-    void *(*opts_assign)(void *config, void *raw_memory);
+    int (*opts_calculate_size)(void);
+    void *(*opts_assign)(void *raw_memory);
 
-    int (*memory_calculate_size)(void *config, ocp_nlp_reg_dims *dims);
-    void *(*memory_assign)(void *config, ocp_nlp_reg_dims *dims, void *raw_memory);
+    int (*memory_calculate_size)(ocp_nlp_reg_dims *dims);
+    void *(*memory_assign)(ocp_nlp_reg_dims *dims, void *raw_memory);
 
-    int (*evaluate)(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in, ocp_nlp_reg_out *out,
+    void (*evaluate)(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in, ocp_nlp_reg_out *out,
                     ocp_nlp_reg_opts *opts, void *mem_);
 } ocp_nlp_reg_config;
-
-int ocp_nlp_reg_config_calculate_size(void);
-
-void *ocp_nlp_reg_config_assign(void *raw_memory);
 
 int ocp_nlp_reg_in_calculate_size();
 
@@ -65,6 +61,14 @@ void *ocp_nlp_reg_in_assign(void *raw_memory);
 int ocp_nlp_reg_out_calculate_size(void);
 
 void *ocp_nlp_reg_out_assign(void *raw_memory);
+
+int ocp_nlp_reg_opts_calculate_size(void);
+
+void *ocp_nlp_reg_opts_assign(void *raw_memory);
+
+int ocp_nlp_reg_config_calculate_size(void);
+
+void *ocp_nlp_reg_config_assign(void *raw_memory);
 
 #ifdef __cplusplus
 }

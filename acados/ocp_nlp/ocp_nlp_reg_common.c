@@ -21,16 +21,6 @@
 
 #include <assert.h>
 
-int ocp_nlp_reg_config_calculate_size(void)
-{
-    return sizeof(ocp_nlp_reg_config);
-}
-
-void *ocp_nlp_reg_config_assign(void *raw_memory)
-{
-    return raw_memory;
-}
-
 int ocp_nlp_reg_in_calculate_size(void)
 {
     int size = 0;
@@ -72,4 +62,22 @@ void *ocp_nlp_reg_out_assign(void *raw_memory)
     return out;
 }
 
+int ocp_nlp_reg_opts_calculate_size(void)
+{
+    return sizeof(ocp_nlp_reg_opts);
+}
 
+void *ocp_nlp_reg_opts_assign(void *raw_memory)
+{
+    return raw_memory;
+}
+
+int ocp_nlp_reg_config_calculate_size(void)
+{
+    return sizeof(ocp_nlp_reg_config);
+}
+
+void *ocp_nlp_reg_config_assign(void *raw_memory)
+{
+    return raw_memory;
+}

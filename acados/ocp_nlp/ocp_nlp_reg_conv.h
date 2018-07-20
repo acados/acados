@@ -44,6 +44,10 @@ typedef struct {
 
 int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims);
 
+void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory);
+
+void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config);
+
 #ifdef __cplusplus
 }
 #endif

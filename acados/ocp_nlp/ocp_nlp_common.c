@@ -143,6 +143,8 @@ int ocp_nlp_dims_calculate_size_self(int N)
     // qp solver
     size += ocp_qp_dims_calculate_size(N);
 
+    size += sizeof(ocp_nlp_reg_dims);
+
     size += 8;  // initial align
 
     return size;
@@ -162,8 +164,6 @@ int ocp_nlp_dims_calculate_size(void *config_)
 
     // self
     size += ocp_nlp_dims_calculate_size_self(N);
-
-    size += sizeof(ocp_nlp_reg_dims);
 
     // dynamics
     for (ii = 0; ii < N; ii++)

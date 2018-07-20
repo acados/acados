@@ -24,9 +24,17 @@
 extern "C" {
 #endif
 
+#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
+
 typedef struct {
     double *reg_hess;
 } ocp_nlp_reg_mirror_memory;
+
+int ocp_nlp_reg_mirror_memory_calculate_size(ocp_nlp_reg_dims *dims);
+
+void *ocp_nlp_reg_mirror_memory_assign(ocp_nlp_reg_dims *dims, void *raw_memory);
+
+void ocp_nlp_reg_mirror_config_initialize_default(ocp_nlp_reg_config *config);
 
 #ifdef __cplusplus
 }

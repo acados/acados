@@ -70,3 +70,13 @@ void ocp_nlp_reg_mirror(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in
         blasfeo_pack_dmat(nx+nu, nx+nu, mem->reg_hess, nx+nu, &in->RSQrq[i], 0, 0);
     }
 }
+
+void ocp_nlp_reg_mirror_config_initialize_default(ocp_nlp_reg_config *config)
+{
+    config->opts_calculate_size = &ocp_nlp_reg_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_reg_opts_assign;
+    config->memory_calculate_size = &ocp_nlp_reg_mirror_memory_calculate_size;
+    config->memory_assign = &ocp_nlp_reg_mirror_memory_assign;
+
+    config->evaluate = &ocp_nlp_reg_mirror;
+}

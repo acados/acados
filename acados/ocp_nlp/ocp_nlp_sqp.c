@@ -89,7 +89,8 @@ int ocp_nlp_sqp_opts_calculate_size(void *config_, ocp_nlp_dims *dims)
 
     size += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
 
-    size += config->regularization->opts_calculate_size(config->regularization);
+    if (config->regularization != NULL)
+        size += config->regularization->opts_calculate_size();
 
     // dynamics
     size += N * sizeof(void *);
@@ -136,8 +137,11 @@ void *ocp_nlp_sqp_opts_assign(void *config_, ocp_nlp_dims *dims, void *raw_memor
     opts->qp_solver_opts = qp_solver->opts_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
 
-    opts->reg_opts = config->regularization->opts_assign(config->regularization, c_ptr);
-    c_ptr += config->regularization->opts_calculate_size(config->regularization);
+    if (config->regularization != NULL)
+    {
+        opts->reg_opts = config->regularization->opts_assign(c_ptr);
+        c_ptr += config->regularization->opts_calculate_size();
+    }
 
     // dynamics
     opts->dynamics = (void **) c_ptr;
@@ -196,7 +200,8 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, ocp_nlp_dims *dims, void
 
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-    opts->reg_opts->delta = 0;
+    if (config->regularization != NULL)
+        opts->reg_opts->delta = 0;
 
     // dynamics
     for (ii = 0; ii < N; ii++)
@@ -286,7 +291,8 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, ocp_nlp_dims *dims, void *o
 
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-    size += config->regularization->memory_calculate_size(config, dims->reg_dims);
+    if (config->regularization != NULL)
+        size += config->regularization->memory_calculate_size(dims->reg_dims);
 
     // dynamics
     size += N * sizeof(void *);
@@ -353,6 +359,12 @@ void *ocp_nlp_sqp_memory_assign(void *config_, ocp_nlp_dims *dims, void *opts_, 
     mem->qp_solver_mem =
         qp_solver->memory_assign(qp_solver, dims->qp_solver, opts->qp_solver_opts, c_ptr);
     c_ptr += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+
+    if (config->regularization != NULL)
+    {
+        mem->reg_mem = config->regularization->memory_assign(dims->reg_dims, c_ptr);
+        c_ptr += config->regularization->memory_calculate_size(dims->reg_dims);
+    }
 
     // nlp res
     mem->nlp_res = ocp_nlp_res_assign(dims, c_ptr);
@@ -433,6 +445,12 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, ocp_nlp_dims *dims, void
     // qp solver
     size += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
+    if (config->regularization != NULL)
+    {
+        size += ocp_nlp_reg_in_calculate_size();
+        size += ocp_nlp_reg_out_calculate_size();
+    }
+
     // dynamics
     size += N * sizeof(void *);
     for (ii = 0; ii < N; ii++)
@@ -491,11 +509,14 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
     work->qp_work = (void *) c_ptr;
     c_ptr += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-    work->reg_in = ocp_nlp_reg_in_assign(c_ptr);
-    c_ptr += ocp_nlp_reg_in_calculate_size();
+    if (config->regularization != NULL)
+    {
+        work->reg_in = ocp_nlp_reg_in_assign(c_ptr);
+        c_ptr += ocp_nlp_reg_in_calculate_size();
 
-    work->reg_out = ocp_nlp_reg_out_assign(c_ptr);
-    c_ptr += ocp_nlp_reg_out_calculate_size();
+        work->reg_out = ocp_nlp_reg_out_assign(c_ptr);
+        c_ptr += ocp_nlp_reg_out_calculate_size();
+    }
 
     // dynamics
     work->dynamics = (void **) c_ptr;
@@ -582,6 +603,11 @@ static void initialize_regularization(void *config_, ocp_nlp_dims *dims, ocp_nlp
                                       ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts,
                                       ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
 {
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
+
+    if (config->regularization == NULL)
+        return;
+
     work->reg_in->RSQrq = &(work->qp_in->RSQrq[0]);
     work->reg_in->BAbt = &(work->qp_in->BAbt[0]);
 

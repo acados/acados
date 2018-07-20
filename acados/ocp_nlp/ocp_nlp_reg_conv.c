@@ -183,3 +183,13 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
 
     }
 }
+
+void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config)
+{
+    config->opts_calculate_size = &ocp_nlp_reg_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_reg_opts_assign;
+    config->memory_calculate_size = &ocp_nlp_reg_conv_calculate_memory_size;
+    config->memory_assign = &ocp_nlp_reg_conv_assign_memory;
+
+    config->evaluate = &ocp_nlp_reg_conv;
+}
