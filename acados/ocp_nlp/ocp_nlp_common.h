@@ -27,6 +27,7 @@ extern "C" {
 #include "acados/ocp_nlp/ocp_nlp_constraints_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/external_function_generic.h"
@@ -42,6 +43,8 @@ typedef struct
     void **dynamics;
     void **constraints;
     ocp_qp_dims *qp_solver;  // xcond solver instead ??
+    ocp_nlp_reg_dims *reg_dims;
+
     int *nv;  // number of primal variables (states+controls+slacks)
     int *nx;  // number of states
     int *nu;  // number of inputs
@@ -150,6 +153,7 @@ typedef struct
     ocp_nlp_dynamics_config **dynamics;
     ocp_nlp_cost_config **cost;
     ocp_nlp_constraints_config **constraints;
+    ocp_nlp_reg_config *regularization;
 
 } ocp_nlp_solver_config;
 
