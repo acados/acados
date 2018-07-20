@@ -586,7 +586,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         impl_ode_z_in.x = K;
         for (iter = 0; iter < newton_iter; iter++)
         {
-            if ((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse))
+            if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
             {
                 blasfeo_dgese(nK, nK, 0.0, dG_dK, 0,
                               0);  // if new jacobian gets computed, initialize dG_dK with zeros
@@ -615,16 +615,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 impl_ode_z_in.xi    = ns * nx + ii * nz;
                                               // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                 impl_ode_res_out.xi = ii * (nx + nz);  // store output in this posistion of rG
+
                 // compute the residual of implicit ode at time t_ii
-                if (!((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse)))
-                {
-                    acados_tic(&timer_ad);
-                    model->impl_ode_fun->evaluate(model->impl_ode_fun, impl_ode_type_in,
-                                                  impl_ode_in, impl_ode_fun_type_out,
-                                                  impl_ode_fun_out);
-                    timing_ad += acados_toc(&timer_ad);
-                }
-                else
+                if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
                 {  // evaluate the ode function & jacobian w.r.t. x, xdot; compute jacobian dG_dK;
                     acados_tic(&timer_ad);
                     model->impl_ode_fun_jac_x_xdot_z->evaluate(
@@ -651,6 +644,14 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         }
                     }  // end jj
                 }
+                else // only eval function (without jacobian)
+                {
+                    acados_tic(&timer_ad);
+                    model->impl_ode_fun->evaluate(model->impl_ode_fun, impl_ode_type_in,
+                                                  impl_ode_in, impl_ode_fun_type_out,
+                                                  impl_ode_fun_out);
+                    timing_ad += acados_toc(&timer_ad);
+                }
             }  // end ii
 
             acados_tic(&timer_la);
@@ -658,7 +659,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // using partial pivoting with row interchanges.
             // printf("dG_dK = (IRK) \n");
             // blasfeo_print_exp_dmat((nz+nx) *ns, (nz+nx) *ns, dG_dK, 0, 0);
-            if ((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse))
+            if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
             {
                 blasfeo_dgetrf_rowpivot(nK, nK, dG_dK, 0, 0, dG_dK, 0, 0, ipiv);
             }

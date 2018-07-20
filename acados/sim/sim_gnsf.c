@@ -1659,7 +1659,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             blasfeo_dgemv_n(nyy, nff, 1.0, &YYf, 0, 0, &ff_traj[ss], 0, 1.0, &yyss, nyy * ss,
                             &yy_traj[ss], 0);
 
-            if ((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse))
+            if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
             {
                 // set J_r_ff to unit matrix
                 blasfeo_dgese(nff, nff, 0.0, &J_r_ff, 0, 0);
@@ -1674,7 +1674,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 y_in.xi = ii * ny;
                 phi_fun_val_arg.xi = ii * n_out;
                 phi_jac_y_arg.ai = ii * n_out;
-                if ((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse))
+                if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
                 {
                     // evaluate
                     acados_tic(&casadi_timer);
@@ -1705,7 +1705,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
             acados_tic(&la_timer);
             // factorize J_r_ff
-            if ((opts->jac_reuse & (ss == 0) & (iter == 0)) | (!opts->jac_reuse))
+            if ((opts->jac_reuse && (ss == 0) & (iter == 0)) || (!opts->jac_reuse))
             {
                 blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv);
             }
