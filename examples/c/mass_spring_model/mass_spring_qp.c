@@ -120,7 +120,7 @@ static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, 
 ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, int ng_, int ngN)
 {
 
-	int nbu_ = nu_<nb_ ? nu_ : nb_;
+    int nbu_ = nu_<nb_ ? nu_ : nb_;
     int nbx_ = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
 
     int nx[N+1];
@@ -143,14 +143,14 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, in
     for (int ii = 0; ii < N; ii++)
     {
         nbu[ii] = nbu_;
-	}
-	nbu[N] = 0;
+    }
+    nbu[N] = 0;
 
     int nbx[N+1];
 #if defined(ELIMINATE_X0)
-	nbx[0] = 0;
+    nbx[0] = 0;
 #else
-	nbx[0] = nx_;
+    nbx[0] = nx_;
 #endif
     for (int ii = 1; ii <= N; ii++)
     {
@@ -168,94 +168,56 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, in
     }
     ng[N] = ngN;
 
-	int ns[N+1];
-	for (int ii = 0; ii <= N; ii++) {
+    int ns[N+1];
+    for (int ii = 0; ii <= N; ii++) {
         ns[ii] = 0;
     }
 
 
-	// dims
-	int dims_size = ocp_qp_dims_calculate_size(N);
-	void *dims_mem = malloc(dims_size);
-	ocp_qp_dims *dims = ocp_qp_dims_assign(N, dims_mem);
+    // dims
+    int dims_size = ocp_qp_dims_calculate_size(N);
+    void *dims_mem = malloc(dims_size);
+    ocp_qp_dims *dims = ocp_qp_dims_assign(N, dims_mem);
 
-	dims->N = N;
-	for (int ii=0; ii<=N; ii++)
-	{
-		dims->nx[ii] = nx[ii];
-		dims->nu[ii] = nu[ii];
-		dims->nb[ii] = nb[ii];
-		dims->ng[ii] = ng[ii];
-		dims->ns[ii] = ns[ii];
-		dims->nbu[ii] = nbu[ii];
-		dims->nbx[ii] = nbx[ii];
-	}
+    dims->N = N;
+    for (int ii=0; ii<=N; ii++)
+    {
+        dims->nx[ii] = nx[ii];
+        dims->nu[ii] = nu[ii];
+        dims->nb[ii] = nb[ii];
+        dims->ng[ii] = ng[ii];
+        dims->ns[ii] = ns[ii];
+        dims->nsbx[ii] = ns[ii];
+        dims->nsbu[ii] = ns[ii];
+        dims->nsg[ii] = ns[ii];
+        dims->nbu[ii] = nbu[ii];
+        dims->nbx[ii] = nbx[ii];
+    }
 
-	return dims;
+    return dims;
 
 }
 
 
 
-ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN)
+ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims)
 {
 
-	int nbu_ = nu_<nb_ ? nu_ : nb_;
-    int nbx_ = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
+    /************************************************
+    * extract dims
+    ************************************************/
 
-    int nx[N+1];
-#if defined(ELIMINATE_X0)
-    nx[0] = 0;
-#else
-    nx[0] = nx_;
-#endif
-    for (int ii = 1; ii <= N; ii++) {
-        nx[ii] = nx_;
-    }
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ns = dims->ns;
 
-    int nu[N+1];
-    for (int ii = 0; ii < N; ii++) {
-        nu[ii] = nu_;
-    }
-    nu[N] = 0;
-
-    int nbu[N+1];
-    for (int ii = 0; ii < N; ii++)
-    {
-        nbu[ii] = nbu_;
-	}
-	nbu[N] = 0;
-
-    int nbx[N+1];
-#if defined(ELIMINATE_X0)
-	nbx[0] = 0;
-#else
-	nbx[0] = nx_;
-#endif
-    for (int ii = 1; ii <= N; ii++)
-    {
-        nbx[ii] = nbx_;
-    }
-
-    int nb[N+1];
-    for (int ii = 0; ii <= N; ii++) {
-        nb[ii] = nbu[ii]+nbx[ii];
-    }
-
-    int ng[N+1];
-    for (int ii = 0; ii < N; ii++) {
-        ng[ii] = ng_;
-    }
-    ng[N] = ngN;
-
-	int ns[N+1];
-	for (int ii = 0; ii <= N; ii++) {
-        ns[ii] = 0;
-    }
-
-//    printf("Test problem: mass-spring system with %d masses and %d controls.\n\n", nx_ / 2, nu_);
-//   printf("MPC problem size: %d states, %d inputs, %d horizon length, %d two-sided box "
-//           "constraints, %d two-sided general constraints.\n\n", nx_, nu_, N, nb_, ng_);
+    int nx_ = nx[1];
+    int nu_ = nu[1];
+    int ng_ = ng[1];
+    int ngN = ng[N];
 
     /************************************************
     * dynamical system
@@ -519,20 +481,9 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, i
     hug[N] = ugN;
 
 
-    ocp_qp_dims dims;
+    ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);
 
-    dims.N = N;
-    dims.nx = nx;
-    dims.nu = nu;
-    dims.nb = nb;
-    dims.ng = ng;
-    dims.ns = ns;
-    dims.nbu = nbu;
-    dims.nbx = nbx;
-
-    ocp_qp_in *qp_in = ocp_qp_in_create(config, &dims);
-
-	d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
+    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
 
     // free objective
     free(Q);
@@ -585,7 +536,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, i
 ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_, int nb_, int ng_, int ngN)
 {
 
-	int nbu_ = nu_<nb_ ? nu_ : nb_;
+    int nbu_ = nu_<nb_ ? nu_ : nb_;
     int nbx_ = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
 
     int nx[N+1];
@@ -608,14 +559,14 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_,
     for (int ii = 0; ii < N; ii++)
     {
         nbu[ii] = nbu_;
-	}
-	nbu[N] = 0;
+    }
+    nbu[N] = 0;
 
     int nbx[N+1];
 #if defined(ELIMINATE_X0)
-	nbx[0] = 0;
+    nbx[0] = 0;
 #else
-	nbx[0] = nx_;
+    nbx[0] = nx_;
 #endif
     for (int ii = 1; ii <= N; ii++)
     {
@@ -633,101 +584,59 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_,
     }
     ng[N] = ngN;
 
-	int ns[N+1];
-	for (int ii = 0; ii <= N; ii++) {
+    int ns[N+1];
+    for (int ii = 0; ii <= N; ii++) {
         ns[ii] = nbx[ii]+ng[ii];
     }
 
 
 
-	// dims
-	int dims_size = ocp_qp_dims_calculate_size(N);
-	void *dims_mem = malloc(dims_size);
-	ocp_qp_dims *dims = ocp_qp_dims_assign(N, dims_mem);
+    // dims
+    int dims_size = ocp_qp_dims_calculate_size(N);
+    void *dims_mem = malloc(dims_size);
+    ocp_qp_dims *dims = ocp_qp_dims_assign(N, dims_mem);
 
-	dims->N = N;
-	for (int ii=0; ii<=N; ii++)
-	{
-		dims->nx[ii] = nx[ii];
-		dims->nu[ii] = nu[ii];
-		dims->nb[ii] = nb[ii];
-		dims->ng[ii] = ng[ii];
-		dims->ns[ii] = ns[ii];
-		dims->nbu[ii] = nbu[ii];
-		dims->nbx[ii] = nbx[ii];
-	}
+    dims->N = N;
+    for (int ii=0; ii<=N; ii++)
+    {
+        dims->nx[ii] = nx[ii];
+        dims->nu[ii] = nu[ii];
+        dims->nb[ii] = nb[ii];
+        dims->ng[ii] = ng[ii];
+        dims->ns[ii] = ns[ii];
+        dims->nsbx[ii] = nbx[ii];
+        dims->nsbu[ii] = 0;
+        dims->nsg[ii] = ng[ii];
+        dims->nbu[ii] = nbu[ii];
+        dims->nbx[ii] = nbx[ii];
+    }
 
-	return dims;
+    return dims;
 
 }
 
 
 
-ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN)
+ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *dims)
 {
 
-	int ii;
+    int ii;
 
     /************************************************
-    * dynamical system
+    * extract dims
     ************************************************/
 
-	int nbu_ = nu_<nb_ ? nu_ : nb_;
-    int nbx_ = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ns = dims->ns;
 
-    int nx[N+1];
-#if defined(ELIMINATE_X0)
-    nx[0] = 0;
-#else
-    nx[0] = nx_;
-#endif
-    for (int ii = 1; ii <= N; ii++) {
-        nx[ii] = nx_;
-    }
-
-    int nu[N+1];
-    for (int ii = 0; ii < N; ii++) {
-        nu[ii] = nu_;
-    }
-    nu[N] = 0;
-
-    int nbu[N+1];
-    for (int ii = 0; ii < N; ii++)
-    {
-        nbu[ii] = nbu_;
-	}
-	nbu[N] = 0;
-
-    int nbx[N+1];
-#if defined(ELIMINATE_X0)
-	nbx[0] = 0;
-#else
-	nbx[0] = nx_;
-#endif
-    for (int ii = 1; ii <= N; ii++)
-    {
-        nbx[ii] = nbx_;
-    }
-
-    int nb[N+1];
-    for (int ii = 0; ii <= N; ii++) {
-        nb[ii] = nbu[ii]+nbx[ii];
-    }
-
-    int ng[N+1];
-    for (int ii = 0; ii < N; ii++) {
-        ng[ii] = ng_;
-    }
-    ng[N] = ngN;
-
-	int ns[N+1];
-	for (int ii = 0; ii <= N; ii++) {
-        ns[ii] = nbx[ii]+ng[ii];
-    }
-
-//    printf("Test problem: mass-spring system with %d masses and %d controls.\n\n", nx_ / 2, nu_);
-//   printf("MPC problem size: %d states, %d inputs, %d horizon length, %d two-sided box "
-//           "constraints, %d two-sided general constraints.\n\n", nx_, nu_, N, nb_, ng_);
+    int nx_ = nx[1];
+    int nu_ = nu[1];
+    int ng_ = ng[1];
+    int ngN = ng[N];
 
     /************************************************
     * dynamical system
@@ -883,71 +792,71 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_
     * soft constraints
     ************************************************/
 
-	double *Zl0; d_zeros(&Zl0, ns[0], 1);
-	for(ii=0; ii<ns[0]; ii++)
-		Zl0[ii] = 1e3;
-	double *Zu0; d_zeros(&Zu0, ns[0], 1);
-	for(ii=0; ii<ns[0]; ii++)
-		Zu0[ii] = 1e3;
-	double *zl0; d_zeros(&zl0, ns[0], 1);
-	for(ii=0; ii<ns[0]; ii++)
-		zl0[ii] = 1e2;
-	double *zu0; d_zeros(&zu0, ns[0], 1);
-	for(ii=0; ii<ns[0]; ii++)
-		zu0[ii] = 1e2;
-	int *idxs0; int_zeros(&idxs0, ns[0], 1);
-	for(ii=0; ii<ns[0]; ii++)
-		idxs0[ii] = nu[0]+ii;
-	double *d_ls0; d_zeros(&d_ls0, ns[0], 1);
-	for(ii=0; ii<ns[0]; ii++)
-		d_ls0[ii] = 0.0;
-	double *d_us0; d_zeros(&d_us0, ns[0], 1);
-	for(ii=0; ii<ns[0]; ii++)
-		d_us0[ii] = 0.0;
+    double *Zl0; d_zeros(&Zl0, ns[0], 1);
+    for(ii=0; ii<ns[0]; ii++)
+        Zl0[ii] = 1e3;
+    double *Zu0; d_zeros(&Zu0, ns[0], 1);
+    for(ii=0; ii<ns[0]; ii++)
+        Zu0[ii] = 1e3;
+    double *zl0; d_zeros(&zl0, ns[0], 1);
+    for(ii=0; ii<ns[0]; ii++)
+        zl0[ii] = 1e2;
+    double *zu0; d_zeros(&zu0, ns[0], 1);
+    for(ii=0; ii<ns[0]; ii++)
+        zu0[ii] = 1e2;
+    int *idxs0; int_zeros(&idxs0, ns[0], 1);
+    for(ii=0; ii<ns[0]; ii++)
+        idxs0[ii] = nu[0]+ii;
+    double *d_ls0; d_zeros(&d_ls0, ns[0], 1);
+    for(ii=0; ii<ns[0]; ii++)
+        d_ls0[ii] = 0.0;
+    double *d_us0; d_zeros(&d_us0, ns[0], 1);
+    for(ii=0; ii<ns[0]; ii++)
+        d_us0[ii] = 0.0;
 
-	double *Zl1; d_zeros(&Zl1, ns[1], 1);
-	for(ii=0; ii<ns[1]; ii++)
-		Zl1[ii] = 1e3;
-	double *Zu1; d_zeros(&Zu1, ns[1], 1);
-	for(ii=0; ii<ns[1]; ii++)
-		Zu1[ii] = 1e3;
-	double *zl1; d_zeros(&zl1, ns[1], 1);
-	for(ii=0; ii<ns[1]; ii++)
-		zl1[ii] = 1e2;
-	double *zu1; d_zeros(&zu1, ns[1], 1);
-	for(ii=0; ii<ns[1]; ii++)
-		zu1[ii] = 1e2;
-	int *idxs1; int_zeros(&idxs1, ns[1], 1);
-	for(ii=0; ii<ns[1]; ii++)
-		idxs1[ii] = nu[1]+ii;
-	double *d_ls1; d_zeros(&d_ls1, ns[1], 1);
-	for(ii=0; ii<ns[1]; ii++)
-		d_ls1[ii] = 0.0;
-	double *d_us1; d_zeros(&d_us1, ns[1], 1);
-	for(ii=0; ii<ns[1]; ii++)
-		d_us1[ii] = 0.0;
+    double *Zl1; d_zeros(&Zl1, ns[1], 1);
+    for(ii=0; ii<ns[1]; ii++)
+        Zl1[ii] = 1e3;
+    double *Zu1; d_zeros(&Zu1, ns[1], 1);
+    for(ii=0; ii<ns[1]; ii++)
+        Zu1[ii] = 1e3;
+    double *zl1; d_zeros(&zl1, ns[1], 1);
+    for(ii=0; ii<ns[1]; ii++)
+        zl1[ii] = 1e2;
+    double *zu1; d_zeros(&zu1, ns[1], 1);
+    for(ii=0; ii<ns[1]; ii++)
+        zu1[ii] = 1e2;
+    int *idxs1; int_zeros(&idxs1, ns[1], 1);
+    for(ii=0; ii<ns[1]; ii++)
+        idxs1[ii] = nu[1]+ii;
+    double *d_ls1; d_zeros(&d_ls1, ns[1], 1);
+    for(ii=0; ii<ns[1]; ii++)
+        d_ls1[ii] = 0.0;
+    double *d_us1; d_zeros(&d_us1, ns[1], 1);
+    for(ii=0; ii<ns[1]; ii++)
+        d_us1[ii] = 0.0;
 
-	double *ZlN; d_zeros(&ZlN, ns[N], 1);
-	for(ii=0; ii<ns[N]; ii++)
-		ZlN[ii] = 1e3;
-	double *ZuN; d_zeros(&ZuN, ns[N], 1);
-	for(ii=0; ii<ns[N]; ii++)
-		ZuN[ii] = 1e3;
-	double *zlN; d_zeros(&zlN, ns[N], 1);
-	for(ii=0; ii<ns[N]; ii++)
-		zlN[ii] = 1e2;
-	double *zuN; d_zeros(&zuN, ns[N], 1);
-	for(ii=0; ii<ns[N]; ii++)
-		zuN[ii] = 1e2;
-	int *idxsN; int_zeros(&idxsN, ns[N], 1);
-	for(ii=0; ii<ns[N]; ii++)
-		idxsN[ii] = nu[N]+ii;
-	double *d_lsN; d_zeros(&d_lsN, ns[N], 1);
-	for(ii=0; ii<ns[N]; ii++)
-		d_lsN[ii] = 0.0;
-	double *d_usN; d_zeros(&d_usN, ns[N], 1);
-	for(ii=0; ii<ns[N]; ii++)
-		d_usN[ii] = 0.0;
+    double *ZlN; d_zeros(&ZlN, ns[N], 1);
+    for(ii=0; ii<ns[N]; ii++)
+        ZlN[ii] = 1e3;
+    double *ZuN; d_zeros(&ZuN, ns[N], 1);
+    for(ii=0; ii<ns[N]; ii++)
+        ZuN[ii] = 1e3;
+    double *zlN; d_zeros(&zlN, ns[N], 1);
+    for(ii=0; ii<ns[N]; ii++)
+        zlN[ii] = 1e2;
+    double *zuN; d_zeros(&zuN, ns[N], 1);
+    for(ii=0; ii<ns[N]; ii++)
+        zuN[ii] = 1e2;
+    int *idxsN; int_zeros(&idxsN, ns[N], 1);
+    for(ii=0; ii<ns[N]; ii++)
+        idxsN[ii] = nu[N]+ii;
+    double *d_lsN; d_zeros(&d_lsN, ns[N], 1);
+    for(ii=0; ii<ns[N]; ii++)
+        d_lsN[ii] = 0.0;
+    double *d_usN; d_zeros(&d_usN, ns[N], 1);
+    for(ii=0; ii<ns[N]; ii++)
+        d_usN[ii] = 0.0;
 
     /************************************************
     * cost function
@@ -1009,13 +918,13 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_
     double *hD[N+1];
     double *hlg[N+1];
     double *hug[N+1];
-	double *hZl[N+1];
-	double *hZu[N+1];
-	double *hzl[N+1];
-	double *hzu[N+1];
-	int *hidxs[N+1]; // XXX
-	double *hd_ls[N+1];
-	double *hd_us[N+1];
+    double *hZl[N+1];
+    double *hZu[N+1];
+    double *hzl[N+1];
+    double *hzu[N+1];
+    int *hidxs[N+1]; // XXX
+    double *hd_ls[N+1];
+    double *hd_us[N+1];
 
 #if defined(ELIMINATE_X0)
     hA[0] = A0;
@@ -1041,13 +950,13 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_
     hD[0] = D;
     hlg[0] = lg;
     hug[0] = ug;
-	hZl[0] = Zl0;
-	hZu[0] = Zu0;
-	hzl[0] = zl0;
-	hzu[0] = zu0;
-	hidxs[0] = idxs0;
-	hd_ls[0] = d_ls0;
-	hd_us[0] = d_us0;
+    hZl[0] = Zl0;
+    hZu[0] = Zu0;
+    hzl[0] = zl0;
+    hzu[0] = zu0;
+    hidxs[0] = idxs0;
+    hd_ls[0] = d_ls0;
+    hd_us[0] = d_us0;
     for (int ii = 1; ii < N; ii++) {
         hA[ii] = A;
         hB[ii] = B;
@@ -1064,13 +973,13 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_
         hD[ii] = D;
         hlg[ii] = lg;
         hug[ii] = ug;
-		hZl[ii] = Zl1;
-		hZu[ii] = Zu1;
-		hzl[ii] = zl1;
-		hzu[ii] = zu1;
-		hidxs[ii] = idxs1;
-		hd_ls[ii] = d_ls1;
-		hd_us[ii] = d_us1;
+        hZl[ii] = Zl1;
+        hZu[ii] = Zu1;
+        hzl[ii] = zl1;
+        hzu[ii] = zu1;
+        hidxs[ii] = idxs1;
+        hd_ls[ii] = d_ls1;
+        hd_us[ii] = d_us1;
     }
     hQ[N] = Q;  // or maybe initialize to the solution of the DARE???
     hq[N] = q;  // or maybe initialize to the solution of the DARE???
@@ -1080,29 +989,18 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_
     hC[N] = CN;
     hlg[N] = lgN;
     hug[N] = ugN;
-	hZl[N] = ZlN;
-	hZu[N] = ZuN;
-	hzl[N] = zlN;
-	hzu[N] = zuN;
-	hidxs[N] = idxsN;
-	hd_ls[N] = d_lsN;
-	hd_us[N] = d_usN;
+    hZl[N] = ZlN;
+    hZu[N] = ZuN;
+    hzl[N] = zlN;
+    hzu[N] = zuN;
+    hidxs[N] = idxsN;
+    hd_ls[N] = d_lsN;
+    hd_us[N] = d_usN;
 
 
-    ocp_qp_dims dims;
+    ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);
 
-    dims.N = N;
-    dims.nx = nx;
-    dims.nu = nu;
-    dims.nb = nb;
-    dims.ng = ng;
-    dims.ns = ns;
-    dims.nbu = nbu;
-    dims.nbx = nbx;
-
-    ocp_qp_in *qp_in = ocp_qp_in_create(config, &dims);
-
-	d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hZl, hZu, hzl, hzu, hidxs, hd_ls, hd_us, qp_in);
+    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hZl, hZu, hzl, hzu, hidxs, hd_ls, hd_us, qp_in);
 
     // free objective
     free(Q);
@@ -1148,27 +1046,27 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_
     free(ub1);
     free(ubN);
 
-	d_free(Zl0);
-	d_free(Zu0);
-	d_free(zl0);
-	d_free(zu0);
-	int_free(idxs0);
-	d_free(d_ls0);
-	d_free(d_us0);
-	d_free(Zl1);
-	d_free(Zu1);
-	d_free(zl1);
-	d_free(zu1);
-	int_free(idxs1);
-	d_free(d_ls1);
-	d_free(d_us1);
-	d_free(ZlN);
-	d_free(ZuN);
-	d_free(zlN);
-	d_free(zuN);
-	int_free(idxsN);
-	d_free(d_lsN);
-	d_free(d_usN);
+    d_free(Zl0);
+    d_free(Zu0);
+    d_free(zl0);
+    d_free(zu0);
+    int_free(idxs0);
+    d_free(d_ls0);
+    d_free(d_us0);
+    d_free(Zl1);
+    d_free(Zu1);
+    d_free(zl1);
+    d_free(zu1);
+    int_free(idxs1);
+    d_free(d_ls1);
+    d_free(d_us1);
+    d_free(ZlN);
+    d_free(ZuN);
+    d_free(zlN);
+    d_free(zuN);
+    int_free(idxsN);
+    d_free(d_lsN);
+    d_free(d_usN);
 
     return qp_in;
 }

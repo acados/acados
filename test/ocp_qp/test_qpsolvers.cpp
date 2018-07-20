@@ -29,8 +29,7 @@
 
 extern "C" {
 ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
-ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, int nb_, int ng_,
-                                        int ngN);
+ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims);
 }
 
 using std::vector;
@@ -133,7 +132,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
     ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring(N, nx_, nu_, nb_, ng_, ngN);
 
-    ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(NULL, N, nx_, nu_, nb_, ng_, ngN);
+    ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(NULL, qp_dims);
 
     ocp_qp_out *qp_out = ocp_qp_out_create(NULL, qp_dims);
 

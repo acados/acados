@@ -39,8 +39,13 @@ message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 
 enable_testing(true)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
     add_definitions(-D _GLIBCXX_USE_CXX11_ABI=0) # Needed for CasADi compatibility
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_SYSTEM_NAME MATCHES "Windows")
+    # MinGW, change to .lib such that mex recognizes it
+    set(CMAKE_STATIC_LIBRARY_SUFFIX ".lib")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")

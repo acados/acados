@@ -90,6 +90,7 @@ typedef struct
     double interface_time;
     double total_time;
     int num_iter;
+    int t_computed;
 } ocp_qp_info;
 
 //
@@ -129,6 +130,11 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
                         ocp_qp_res_ws *res_ws);
 //
 void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4]);
+//
+void ocp_qp_stack_slacks_dims(ocp_qp_dims *in, ocp_qp_dims *out);
+//
+void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out);
+//
 
 #ifdef __cplusplus
 } /* extern "C" */

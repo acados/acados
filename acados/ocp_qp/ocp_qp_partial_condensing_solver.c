@@ -346,6 +346,7 @@ int ocp_qp_partial_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out
     info->solve_QP_time = ((ocp_qp_info *) (memory->pcond_qp_out->misc))->solve_QP_time;
     info->interface_time = ((ocp_qp_info *) (memory->pcond_qp_out->misc))->interface_time;
     info->num_iter = ((ocp_qp_info *) (memory->pcond_qp_out->misc))->num_iter;
+    info->t_computed = ((ocp_qp_info *) (memory->pcond_qp_out->misc))->t_computed;
 
     return solver_status;
 }

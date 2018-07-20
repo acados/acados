@@ -271,7 +271,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
 
 
 void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng,
-                             int *nh, int *nq, int *ns, ocp_nlp_dims *dims)
+                             int *nh, int *nq, int *ns, int *nz, ocp_nlp_dims *dims)
 {
     ocp_nlp_solver_config *config = config_;
 
@@ -292,7 +292,7 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
     for (ii = 0; ii < N; ii++)
     {
         config->dynamics[ii]->dims_initialize(config->dynamics[ii], dims->dynamics[ii], nx[ii],
-                                              nu[ii], nx[ii + 1], nu[ii + 1]);
+                                              nu[ii], nx[ii + 1], nu[ii + 1], nz[ii]);
     }
 
     for (ii = 0; ii <= N; ii++)

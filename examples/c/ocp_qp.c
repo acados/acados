@@ -35,6 +35,9 @@ int main() {
     int nb[] = {2, 0, 0, 0, 0, 0};
     int ng[] = {0, 0, 0, 0, 0, 0};
     int ns[] = {0, 0, 0, 0, 0, 0};
+    int nsbx[] = {0, 0, 0, 0, 0, 0};
+    int nsbu[] = {0, 0, 0, 0, 0, 0};
+    int nsg[] = {0, 0, 0, 0, 0, 0};
     int nbx[] = {2, 0, 0, 0, 0, 0};
     int nbu[] = {0, 0, 0, 0, 0, 0};
 
@@ -44,6 +47,9 @@ int main() {
     dims.nb = nb;
     dims.ng = ng;
     dims.ns = ns;
+    dims.nsbx = nsbx;
+    dims.nsbu = nsbu;
+    dims.nsg = nsg;
     dims.nbx = nbx;
     dims.nbu = nbu;
 

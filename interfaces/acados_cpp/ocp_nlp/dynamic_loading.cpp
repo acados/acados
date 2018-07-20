@@ -18,7 +18,7 @@ void *compile_and_load_library(string output_folder, string source_name)
 {
 #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
     std::string dynamic_library_suffix {".dll"};
-    std::string compiler {"mex"};
+    std::string compiler {"gcc"};
 #else
     std::string dynamic_library_suffix {".so"};
     std::string compiler {"cc"};
@@ -47,7 +47,7 @@ void *compile_and_load_library(string output_folder, string source_name)
 void *load_function(std::string function_name, void *handle)
 {
 #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
-    return GetProcAddress((HMODULE) handle, function_name.c_str());
+    return (void *) GetProcAddress((HMODULE) handle, function_name.c_str());
 #else
     return dlsym(handle, function_name.c_str());
 #endif
@@ -55,7 +55,11 @@ void *load_function(std::string function_name, void *handle)
 
 void free_handle(void *handle)
 {
+#if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
+    FreeLibrary((HMODULE) handle);
+#else
     dlclose(handle);
+#endif
 }
 
 std::string load_error_message()
@@ -83,9 +87,11 @@ std::string load_error_message()
 
 void create_directory(std::string name)
 {
-    CreateDirectory(name.c_str(), NULL);
-    if (ERROR_ALREADY_EXISTS != GetLastError())
-        throw std::runtime_error("Could not create folder '" + name + "'.");
+    try {
+        CreateDirectory(name.c_str(), NULL);
+    } catch (...) {
+        throw;
+    }
 }
 
 #else

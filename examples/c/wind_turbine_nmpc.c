@@ -126,7 +126,7 @@ static void select_dynamics_wt_casadi(int N,
 		impl_ode_fun_jac_x_xdot_u[ii].casadi_sparsity_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_sparsity_out;
 		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_in = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_n_in;
 		impl_ode_fun_jac_x_xdot_u[ii].casadi_n_out = &wt_nx6p2_impl_ode_fun_jac_x_xdot_u_n_out;
-		
+
 		// GNSF functions
 		// phi_fun
 		phi_fun[ii].casadi_fun            = &wt_nx6p2_phi_fun;
@@ -226,6 +226,7 @@ int main()
     int nq[NN+1] = {};
     int ns[NN+1] = {};
 	int ny[NN+1] = {};
+	int nz[NN+1] = {};
 
 	// TODO(dimitris): setup bounds on states and controls based on ACADO controller
     nx[0] = nx_;
@@ -238,6 +239,7 @@ int main()
 	nh[0] = 0;
 	ns[0] = 0;
 	ny[0] = 4; // ny_
+	nz[0] = 0;
 
     for (int i = 1; i < NN; i++)
     {
@@ -250,6 +252,7 @@ int main()
 		nh[i] = 1;
 		ns[i] = 1;
 		ny[i] = 4; // ny_
+		nz[i] = 0;
     }
 
     nx[NN] = nx_;
@@ -261,6 +264,7 @@ int main()
 	nh[NN] = 0;
 	ns[NN] = 0;
 	ny[NN] = 2;
+	nz[NN] = 0;
 
     /************************************************
     * problem data
@@ -507,8 +511,9 @@ int main()
 		plan->nlp_cost[i] = LINEAR_LS;
 
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
-// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
-// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QORE;
 
 	for (int i = 0; i < NN; i++)
 	{
@@ -529,7 +534,7 @@ int main()
     ************************************************/
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, dims);
+	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
 
     /************************************************
     * dynamics

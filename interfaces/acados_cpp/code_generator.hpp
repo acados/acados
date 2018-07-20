@@ -35,6 +35,10 @@ class code_generator
 
     void generate_s_function_footer(std::ostream& out);
 
+    void generate_s_function_makefile(std::ostream& out, std::string name);
+
+    void generate_dspace_makefile(std::ostream& out, std::string name);
+
     ocp_nlp *nlp_;
 };
 

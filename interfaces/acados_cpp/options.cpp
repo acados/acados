@@ -16,10 +16,12 @@ void flatten(map<string, option_t *> &input, map<string, option_t *> &output)
     {
         if (opt.second->nested())
         {
-            for (auto nested_opt : *opt.second)
+            auto option_name = opt.first;
+            auto *nested_options = opt.second;
+            input.erase(opt.first);
+            for (auto nested_option : *nested_options)
             {
-                input.erase(opt.first);
-                input[opt.first + "." + nested_opt.first] = nested_opt.second;
+                input[option_name + "." + nested_option.first] = nested_option.second;
                 flatten(input, output);
             }
         }
