@@ -731,61 +731,53 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 
     /* collect stage-wise evaluations */
 
-    // nlp mem: cost_grad
 #if defined(ACADOS_WITH_OPENMP)
 	#pragma omp parallel for
 #endif
-    for (i = 0; i <= N; i++)
-    {
+	for (i=0; i<=N; i++)
+	{
+
+		// nlp mem: cost_grad
         struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
         blasfeo_dveccp(nv[i], cost_grad, 0, nlp_mem->cost_grad + i, 0);
-    }
 
-    // nlp mem: dyn_fun
-#if defined(ACADOS_WITH_OPENMP)
-	#pragma omp parallel for
-#endif
-    for (i = 0; i < N; i++)
-    {
-        struct blasfeo_dvec *dyn_fun = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
-        blasfeo_dveccp(nx[i + 1], dyn_fun, 0, nlp_mem->dyn_fun + i, 0);
-    }
+		// nlp mem: dyn_fun
+		if (i<N)
+		{
+			struct blasfeo_dvec *dyn_fun
+				= config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+			blasfeo_dveccp(nx[i + 1], dyn_fun, 0, nlp_mem->dyn_fun + i, 0);
+		}
 
-    // nlp mem: dyn_adj
-#if defined(ACADOS_WITH_OPENMP)
-	#pragma omp parallel for
-#endif
-    for (i = 0; i < N; i++)
-    {
-        struct blasfeo_dvec *dyn_adj = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
-        blasfeo_dveccp(nu[i] + nx[i], dyn_adj, 0, nlp_mem->dyn_adj + i, 0);
-    }
+		// nlp mem: dyn_adj
+		if (i<N)
+		{
+			struct blasfeo_dvec *dyn_adj
+				= config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
+			blasfeo_dveccp(nu[i] + nx[i], dyn_adj, 0, nlp_mem->dyn_adj + i, 0);
+		}
+		else
+		{
+			blasfeo_dvecse(nu[N] + nx[N], 0.0, nlp_mem->dyn_adj + N, 0);
+		}
+		if (i>0)
+		{
+			struct blasfeo_dvec *dyn_adj
+				= config->dynamics[i-1]->memory_get_adj_ptr(mem->dynamics[i-1]);
+			blasfeo_daxpy(nx[i], 1.0, dyn_adj, nu[i-1]+nx[i-1], nlp_mem->dyn_adj+i, nu[i],
+                nlp_mem->dyn_adj+i, nu[i]);
+		}
 
-    blasfeo_dvecse(nu[N] + nx[N], 0.0, nlp_mem->dyn_adj + N, 0);
-
-#if defined(ACADOS_WITH_OPENMP)
-	#pragma omp parallel for
-#endif
-    for (i = 0; i < N; i++)
-    {
-        struct blasfeo_dvec *dyn_adj = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
-        blasfeo_daxpy(nx[i + 1], 1.0, dyn_adj, nu[i] + nx[i], nlp_mem->dyn_adj + i + 1, nu[i + 1],
-                      nlp_mem->dyn_adj + i + 1, nu[i + 1]);
-    }
-
-#if defined(ACADOS_WITH_OPENMP)
-	#pragma omp parallel for
-#endif
-    for (i = 0; i <= N; i++)
-    {
 		// nlp mem: ineq_fun
         struct blasfeo_dvec *ineq_fun =
             config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
         blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
 		// nlp mem: ineq_adj
+
         struct blasfeo_dvec *ineq_adj =
             config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
         blasfeo_dveccp(nv[i], ineq_adj, 0, nlp_mem->ineq_adj + i, 0);
+
     }
 
     // TODO(all): still to clean !!!!!!!!!!!!!
