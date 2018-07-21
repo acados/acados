@@ -1871,15 +1871,20 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
                 blasfeo_dgead(nK2, nx1, -1.0, &f_LO_jac_traj[ss], 0, 0, &aux_G2_x1, 0, 0);
                         // add -df_dx1 (at stages concatenated) to aux_G2_x1
+                acados_tic(&la_timer);
                 blasfeo_dgemm_nn(nK2, nx1, nK2, -1.0, &M2inv, 0, 0, &aux_G2_x1, 0, 0, 0.0, &dK2_dx1,
                                  0, 0, &dK2_dx1, 0, 0);
+                out->info->LAtime += acados_toc(&la_timer);
+
                 // dK2_du
                 blasfeo_dgemm_nn(nK2, nu, nK1, 1.0, &J_G2_K1, 0, 0, &dK1_du, 0, 0, 1.0, &aux_G2_u,
                                  0, 0, &aux_G2_u, 0, 0);
                 blasfeo_dgead(nK2, nu, -1.0, &f_LO_jac_traj[ss], 0, 2 * nx1, &aux_G2_u, 0, 0);
                         // add - df_du (at stages concatenated) to aux_G2_u
+                acados_tic(&la_timer);
                 blasfeo_dgemm_nn(nK2, nu, nK2, -1.0, &M2inv, 0, 0, &aux_G2_u, 0, 0, 0.0, &dK2_du, 0,
                                  0, &dK2_du, 0, 0);
+                out->info->LAtime += acados_toc(&la_timer);
             }
             // BUILD dxf_dwn
             blasfeo_dgese(nx, nx + nu, 0.0, &dxf_dwn, 0, 0);  // Initialize as unit matrix
@@ -2070,12 +2075,14 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             blasfeo_dgead(nK2, nx1, -1.0, &f_LO_jac_traj[ss], 0, 0, &aux_G2_x1, 0, 0);
             blasfeo_dgead(nK2, nu, -1.0, &f_LO_jac_traj[ss], 0, 2 * nx1, &aux_G2_u, 0, 0);
 
+            acados_tic(&la_timer);
             blasfeo_dgemm_nn(nK2, nff, nK2, -1.0, &M2inv, 0, 0, &aux_G2_ff, 0, 0, 0.0, &dK2_dff, 0,
                              0, &dK2_dff, 0, 0);
             blasfeo_dgemm_nn(nK2, nx1, nK2, -1.0, &M2inv, 0, 0, &aux_G2_x1, 0, 0, 0.0, &dK2_dx1, 0,
                              0, &dK2_dx1, 0, 0);
             blasfeo_dgemm_nn(nK2, nu, nK2, -1.0, &M2inv, 0, 0, &aux_G2_u, 0, 0, 0.0, &dK2_du, 0, 0,
                              &dK2_du, 0, 0);
+            out->info->LAtime += acados_toc(&la_timer);
 
             blasfeo_dgese(nx, nff, 0.0, &dPsi_dff, 0, 0);  // initialize dPsi_d..
             blasfeo_dgese(nx, nx, 0.0, &dPsi_dx, 0, 0);
