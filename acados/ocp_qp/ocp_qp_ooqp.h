@@ -27,16 +27,17 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-enum TerminationCode
+enum ocp_qp_ooqp_termination_code
 {
-  SUCCESSFUL_TERMINATION = 0,
-  NOT_FINISHED,
-  MAX_ITS_EXCEEDED,
-  INFEASIBLE,
-  UNKNOWN
+  SPARSE_SUCCESSFUL_TERMINATION = 0,
+  SPARSE_NOT_FINISHED,
+  SPARSE_MAX_ITS_EXCEEDED,
+  SPARSE_INFEASIBLE,
+  SPARSE_UNKNOWN
 };
 
-typedef struct ocp_qp_ooqp_opts_ {
+typedef struct ocp_qp_ooqp_opts_
+{
     int printLevel;
     int useDiagonalWeights;  // TODO(dimitris): implement option
     int fixHessian;
@@ -47,7 +48,8 @@ typedef struct ocp_qp_ooqp_opts_ {
     int fixInequalitiesSparsity;
 } ocp_qp_ooqp_opts;
 
-typedef struct ocp_qp_ooqp_workspace_ {
+typedef struct ocp_qp_ooqp_workspace_
+{
     double *x;
     double *gamma;
     double *phi;
@@ -61,7 +63,8 @@ typedef struct ocp_qp_ooqp_workspace_ {
     // int ierr;
 } ocp_qp_ooqp_workspace;
 
-typedef struct ocp_qp_ooqp_memory_ {
+typedef struct ocp_qp_ooqp_memory_
+{
     int firstRun;
     double *c;
     int nx;
