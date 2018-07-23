@@ -42,7 +42,10 @@ typedef enum {
     FULL_CONDENSING_QPOASES,
 #endif
 #ifdef ACADOS_WITH_QORE
-    FULL_CONDENSING_QORE
+    FULL_CONDENSING_QORE,
+#endif
+#ifdef ACADOS_WITH_OOQP
+    FULL_CONDENSING_OOQP,
 #endif
 } ocp_qp_solver_t;
 

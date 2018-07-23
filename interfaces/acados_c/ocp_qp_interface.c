@@ -87,6 +87,11 @@ if (solver_name < FULL_CONDENSING_HPIPM)
             dense_qp_qore_config_initialize_default(solver_config->qp_solver);
 #endif
             break;
+#ifdef ACADOS_WITH_OOQP
+        case FULL_CONDENSING_OOQP:
+            dense_qp_ooqp_config_initialize_default(solver_config->qp_solver);
+#endif
+            break;
     }
 }
 

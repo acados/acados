@@ -113,14 +113,14 @@ int main() {
     // choose ocp qp solvers
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
-		PARTIAL_CONDENSING_HPIPM,
+		// PARTIAL_CONDENSING_HPIPM,
         #ifdef ACADOS_WITH_HPMPC
         // PARTIAL_CONDENSING_HPMPC,
         #endif
         #ifdef ACADOS_WITH_QPDUNES
         // PARTIAL_CONDENSING_QPDUNES,
         #endif
-        // FULL_CONDENSING_HPIPM,
+        FULL_CONDENSING_HPIPM,
         #ifdef ACADOS_WITH_QORE
         // FULL_CONDENSING_QORE,
         #endif
@@ -128,7 +128,8 @@ int main() {
         // FULL_CONDENSING_QPOASES,
         #endif
         #ifdef ACADOS_WITH_OOQP
-        PARTIAL_CONDENSING_OOQP
+        // PARTIAL_CONDENSING_OOQP,
+        FULL_CONDENSING_OOQP
         #endif
     };
 
@@ -247,6 +248,10 @@ int main() {
 #ifdef ACADOS_WITH_OOQP
                 case PARTIAL_CONDENSING_OOQP:
                     printf("\nPartial condensing + OOQP (N2 = %d):\n\n", N2);
+                    break;
+
+                case FULL_CONDENSING_OOQP:
+                    printf("\nFull condensing + OOQP:\n\n");
                     break;
 #endif
             }
