@@ -140,15 +140,15 @@ static void print_inputs(dense_qp_ooqp_memory *mem)
     printf("\n-----------------------------------\n\n");
 
     printf("\nOBJECTIVE FUNCTION:\n");
-    for(int jj=0; jj<mem->nx; jj++)
-	{
-	    for(int ii=0; ii<mem->nx; ii++)
-		{
-		    printf("%9.5f ", mem->dQ[ii+mem->nx*jj]);
-		}
-		printf("\n");
-	}
-	printf("\n");
+    for (int jj = 0; jj < mem->nx; jj++)
+    {
+        for (int ii = 0; ii < mem->nx; ii++)
+        {
+            printf("%9.5f ", mem->dQ[ii+mem->nx*jj]);
+        }
+        printf("\n");
+    }
+    printf("\n");
 
     for (int ii = 0; ii < mem->nx; ii++)
         printf("===> c[%d] = %f\n", ii + 1, mem->c[ii]);
@@ -163,16 +163,16 @@ static void print_inputs(dense_qp_ooqp_memory *mem)
             mem->xupp[ii]);
     }
 
-	printf("\n");
+    printf("\n");
     printf("\nINEQUALITY CONSTRAINTS:\n");
-    for(int ii=0; ii<mem->mz; ii++)
-	{
-	    for(int jj=0; jj<mem->nx; jj++)
-		{
-		    printf("%9.5f ", mem->dC[ii*mem->nx + jj]);
-		}
-		printf("\n");
-	}
+    for (int ii = 0; ii < mem->mz; ii++)
+    {
+        for (int jj = 0; jj < mem->nx; jj++)
+        {
+            printf("%9.5f ", mem->dC[ii*mem->nx + jj]);
+        }
+        printf("\n");
+    }
 
     for (int ii = 0; ii < mem->mz; ii++)
     {
@@ -181,7 +181,8 @@ static void print_inputs(dense_qp_ooqp_memory *mem)
     }
 }
 
-static void print_outputs(dense_qp_ooqp_memory *mem, dense_qp_ooqp_workspace *work, int return_value)
+static void print_outputs(dense_qp_ooqp_memory *mem, dense_qp_ooqp_workspace *work,
+                          int return_value)
 {
     int_t ii;
 
@@ -386,8 +387,8 @@ void dense_qp_ooqp_free_memory(void *mem_)
                    &mem->cupp, &mem->icupp);
 }
 
-int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_,
-                  void *work_)
+int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
+                    void *memory_, void *work_)
 {
     int ns = qp_in->dim->ns;
 

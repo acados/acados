@@ -89,14 +89,15 @@ void dense_qp_ooqp_opts_update(void *config_, dense_qp_dims *dims, void *opts_);
 //
 int dense_qp_ooqp_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_);
 //
-void *dense_qp_ooqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts_, void *raw_memory);
+void *dense_qp_ooqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts_,
+                                  void *raw_memory);
 //
 int dense_qp_ooqp_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *opts_);
 //
 void dense_qp_ooqp_free_memory(void *mem_);
 //
-int dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_,
-                void *work_);
+int dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
+                  void *memory_, void *work_);
 //
 void dense_qp_ooqp_destroy(void *mem_, void *work);
 //
