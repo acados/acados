@@ -110,7 +110,7 @@ class ocp_qp : private ocp
         {"hpmpc", {PARTIAL_CONDENSING_HPMPC}},
 #endif
 #ifdef ACADOS_WITH_OOQP
-        {"ooqp", {PARTIAL_CONDENSING_OOQP}}
+        {"ooqp", {PARTIAL_CONDENSING_OOQP}},
 #endif
 #ifdef ACADOS_WITH_QPDUNES
         {"qpdunes", {PARTIAL_CONDENSING_QPDUNES}},
