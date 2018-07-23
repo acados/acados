@@ -204,6 +204,7 @@ add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
 target_link_libraries(sim_gnsf_crane acados)
 add_test(sim_gnsf_crane sim_gnsf_crane)
 
+# -------------------- pendulum_scqp
 add_executable(pendulum_scqp pendulum_scqp.cpp
     pendulum_model/vde_forw_pendulum.c
     pendulum_model/constraint.c

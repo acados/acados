@@ -28,8 +28,6 @@ extern "C" {
 #define casadi_s0 CASADI_PREFIX(s0)
 #define casadi_s1 CASADI_PREFIX(s1)
 #define casadi_s2 CASADI_PREFIX(s2)
-#define casadi_s3 CASADI_PREFIX(s3)
-#define casadi_s4 CASADI_PREFIX(s4)
 
 /* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
@@ -46,14 +44,17 @@ extern "C" {
   #endif
 #endif
 
-static const casadi_int casadi_s0[10] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
-static const casadi_int casadi_s1[9] = {5, 1, 0, 5, 0, 1, 2, 3, 4};
-static const casadi_int casadi_s2[5] = {1, 1, 0, 1, 0};
-static const casadi_int casadi_s3[3] = {0, 0, 0};
-static const casadi_int casadi_s4[21] = {0, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const casadi_int casadi_s0[9] = {5, 1, 0, 5, 0, 1, 2, 3, 4};
+static const casadi_int casadi_s1[5] = {1, 1, 0, 1, 0};
+static const casadi_int casadi_s2[20] = {1, 16, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0};
 
-/* inv_pendulum_f_lo_fun_jac_x1k1uz:(i0[6],i1[6],i2[5],i3)->(o0[],o1[0x18]) */
+/* inv_pendulum_f_lo_fun_jac_x1k1uz:(i0[5],i1[5],i2[5],i3)->(o0,o1[1x16,1nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
+  casadi_real a0;
+  a0=arg[0] ? arg[0][4] : 0;
+  if (res[0]!=0) res[0][0]=a0;
+  a0=1.;
+  if (res[1]!=0) res[1][0]=a0;
   return 0;
 }
 
@@ -93,16 +94,16 @@ CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_f_lo_fun_jac_x1k1uz_sparsity
   switch (i) {
     case 0: return casadi_s0;
     case 1: return casadi_s0;
-    case 2: return casadi_s1;
-    case 3: return casadi_s2;
+    case 2: return casadi_s0;
+    case 3: return casadi_s1;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_f_lo_fun_jac_x1k1uz_sparsity_out(casadi_int i) {
   switch (i) {
-    case 0: return casadi_s3;
-    case 1: return casadi_s4;
+    case 0: return casadi_s1;
+    case 1: return casadi_s2;
     default: return 0;
   }
 }
