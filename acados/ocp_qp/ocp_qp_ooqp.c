@@ -17,14 +17,18 @@
  *
  */
 
-#include "acados/ocp_qp/ocp_qp_ooqp.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 
 #include "ooqp/cQpGenSparse.h"
 
+// blasfeo
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+
+// acados
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/print.h"
 

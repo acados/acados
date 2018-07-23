@@ -17,7 +17,7 @@
  *
  */
 
-#include "acados/dense_qp/dense_qp_ooqp.h"
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,6 +25,12 @@
 
 #include "ooqp/cQpGenDense.h"
 
+// blasfeo
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+
+// acados
+#include "acados/dense_qp/dense_qp_ooqp.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/print.h"
 
