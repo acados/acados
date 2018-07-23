@@ -161,9 +161,14 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
 
     string qp_solver_name;
     if (options.count("qp_solver"))
+    {
         qp_solver_name = to_string(options.at("qp_solver"));
+        options.erase("qp_solver");
+    }
     else
+    {
         qp_solver_name = "hpipm";
+    }
 
     if (qp_solver_name == "sparse_hpipm" || qp_solver_name == "hpipm")
     {
