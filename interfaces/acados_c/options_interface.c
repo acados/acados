@@ -142,7 +142,7 @@ bool set_option_int(void *args_, const char *option, const int value)
             token = strsep_acados(&ptr_to_option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args =
                 (ocp_qp_partial_condensing_solver_opts *) args_;
-            ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args *) sparse_args->qp_solver_opts;
+            ocp_qp_ooqp_opts *args = (ocp_qp_ooqp_opts *) sparse_args->qp_solver_opts;
             if (!strcmp(token, "print_level"))
                 args->printLevel = value;
             else

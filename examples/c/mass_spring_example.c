@@ -45,7 +45,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *d
 
 #define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
-#define SOFT_CONSTRAINTS
+// #define SOFT_CONSTRAINTS
 
 #define NREP 1
 
@@ -90,9 +90,9 @@ int main() {
 
     // choose values for N2 in partial condensing solvers
     int num_N2_values = 3;
-    int N2_values[3] = {15, 5, 3};
+    int N2_values[3] = {15,10,5};
 
-    int ii_max = 4;
+    int ii_max = 2;
 
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
@@ -106,7 +106,9 @@ int main() {
     #ifndef ACADOS_WITH_QPOASES
     ii_max--;
     #endif
-
+    #ifndef ACADOS_WITH_OOQP
+    ii_max--;
+    #endif
 
     // choose ocp qp solvers
     ocp_qp_solver_t ocp_qp_solvers[] =
@@ -118,12 +120,15 @@ int main() {
         #ifdef ACADOS_WITH_QPDUNES
         // PARTIAL_CONDENSING_QPDUNES,
         #endif
-        FULL_CONDENSING_HPIPM,
+        // FULL_CONDENSING_HPIPM,
         #ifdef ACADOS_WITH_QORE
-        FULL_CONDENSING_QORE,
+        // FULL_CONDENSING_QORE,
         #endif
         #ifdef ACADOS_WITH_QPOASES
-        FULL_CONDENSING_QPOASES,
+        // FULL_CONDENSING_QPOASES,
+        #endif
+        #ifdef ACADOS_WITH_OOQP
+        PARTIAL_CONDENSING_OOQP
         #endif
     };
 
@@ -241,6 +246,7 @@ int main() {
 #endif
 #ifdef ACADOS_WITH_OOQP
                 case PARTIAL_CONDENSING_OOQP:
+                    printf("\nPartial condensing + OOQP (N2 = %d):\n\n", N2);
                     break;
 #endif
             }
@@ -251,6 +257,8 @@ int main() {
 
             ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
             ocp_qp_info min_info;
+
+            // print_ocp_qp_in(qp_in);
 
             // run QP solver NREP times and record min timings
             for (int rep = 0; rep < NREP; rep++)
@@ -281,12 +289,6 @@ int main() {
             }
 
             /************************************************
-             * print solution
-             ************************************************/
-
-		    print_ocp_qp_out(qp_out);
-
-            /************************************************
              * compute infinity norm of residuals
              ************************************************/
 
@@ -298,8 +300,10 @@ int main() {
                 max_res = (res[ii] > max_res) ? res[ii] : max_res;
 
             /************************************************
-             * print stats
+             * print solutions and stats
              ************************************************/
+
+		    print_ocp_qp_out(qp_out);
 
             printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
 

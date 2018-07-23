@@ -109,7 +109,7 @@ if(ACADOS_WITH_QPDUNES)
 endif()
 
 if(ACADOS_WITH_OOQP)
-    target_compile_definitions(acados PRIVATE OOQP)
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_OOQP)
     target_link_libraries(acados PUBLIC ooqp)
 endif()
 

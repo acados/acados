@@ -66,7 +66,7 @@ if (solver_name < FULL_CONDENSING_HPIPM)
             break;
 #ifdef ACADOS_WITH_OOQP
         case PARTIAL_CONDENSING_OOQP:
-            // NOT IMPLEMENTED YET
+            ocp_qp_ooqp_config_initialize_default(solver_config->qp_solver);
             break;
 #endif
 #ifdef ACADOS_WITH_QPDUNES
