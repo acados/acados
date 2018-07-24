@@ -46,8 +46,8 @@ typedef struct
     double min_res_d;
     double min_res_m;
     int maxIter;
-	int reuse_workspace;
-	int num_threads;
+    int reuse_workspace;
+    int num_threads;
 } ocp_nlp_sqp_opts;
 
 //
@@ -80,9 +80,9 @@ typedef struct
 
     int sqp_iter;
 
-	double time_qp_sol;
-	double time_lin;
-	double time_tot;
+    double time_qp_sol;
+    double time_lin;
+    double time_tot;
 } ocp_nlp_sqp_memory;
 
 //
