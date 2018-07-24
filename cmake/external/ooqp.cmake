@@ -62,6 +62,7 @@ target_link_libraries(ooqp INTERFACE
     ooqpbase
     ma27
     openblas
+    lapack
     gfortran
     m)
 
