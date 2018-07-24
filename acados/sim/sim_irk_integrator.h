@@ -51,9 +51,8 @@ typedef struct
 
 typedef struct
 {
-    struct blasfeo_dmat *dG_dK;     // jacobian of G over K ((nx+nz)*ns, (nx+nz)*ns)
-    struct blasfeo_dmat *dG_dxu;     // jacobian of G over x and u ((nx+nz)*ns, nx+nu);
-    struct blasfeo_dmat *dK_dxu;     // jacobian of (K,Z) over x and u ((nx+nz)*ns, nx+nu);
+    struct blasfeo_dmat *dG_dK;   // jacobian of G over K ((nx+nz)*ns, (nx+nz)*ns)
+    struct blasfeo_dmat *dK_dxu;  // jacobian of (K,Z) over x and u ((nx+nz)*ns, nx+nu);
     struct blasfeo_dmat *S_forw;  // forward sensitivities (nx, nx+nu)
 
     struct blasfeo_dvec *rG;  // residuals of G (nx*ns)
@@ -64,7 +63,14 @@ typedef struct
     struct blasfeo_dvec xtdot;  // temporary xdot
 
     struct blasfeo_dvec *lambda;   // adjoint seed (nx+nu)
-    struct blasfeo_dvec *lambdaK;  // auxiliary variable ((nx+nz)*ns)
+
+    // lamdaK: if (!opts->sens_hess) - single blasfeo_dvec that is reused
+    //         if ( opts->sens_hess) - array of blasfeo_dvec to store intermediate results
+    struct blasfeo_dvec *lambdaK;  // auxiliary variable ((nx+nz)*ns) for adjoint propagation
+
+    // dG_dxu: if (!opts->sens_hess) - single blasfeo_dmat that is reused
+    //         if ( opts->sens_hess) - array of blasfeo_dmat to store intermediate results
+    struct blasfeo_dmat *dG_dxu;  // jacobian of G over x and u ((nx+nz)*ns, nx+nu)
 
     int *ipiv;  // index of pivot vector (ns * (nx + nz))
     int *ipiv_one_stage;  // index of pivot vector (nx+nz)
@@ -82,6 +88,11 @@ typedef struct
 
     struct blasfeo_dmat df_dxdotz;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
                         // used for algebraic sensitivity generation
+
+    // For Hessian propagation, TODO allocate only if option is used!
+    struct blasfeo_dmat H_x;   // temporary Hessian (nx, nx + nu)
+    struct blasfeo_dmat H_z;   // temporary Hessian (nx, ns * (nx + nz))
+
 } sim_irk_workspace;
 
 // get & set functions
