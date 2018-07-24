@@ -41,6 +41,10 @@
 #ifdef ACADOS_WITH_QPDUNES
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #endif
+#ifdef ACADOS_WITH_OOQP
+#include "acados/dense_qp/dense_qp_ooqp.h"
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
+#endif
 
 void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
                                                    ocp_qp_xcond_solver_config *solver_config)

@@ -425,7 +425,7 @@ void ocp_qp_stack_slacks_dims(ocp_qp_dims *in, ocp_qp_dims *out)
     int *ns   = in->ns;
     int *nsbx = in->nsbx;
     int *nsbu = in->nsbu;
-    int *nsg  = in->nsg;
+    // int *nsg  = in->nsg;
 
     out->N = N;
 
@@ -450,21 +450,21 @@ void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out)
     int *nx   = in->dim->nx;
     int *nu   = in->dim->nu;
     int *nb   = in->dim->nb;
-    int *nbx  = in->dim->nbx;
-    int *nbu  = in->dim->nbu;
+    // int *nbx  = in->dim->nbx;
+    // int *nbu  = in->dim->nbu;
     int *ng   = in->dim->ng;
     int *ns   = in->dim->ns;
-    int *nsbx = in->dim->nsbx;
-    int *nsbu = in->dim->nsbu;
-    int *nsg  = in->dim->nsg;
+    // int *nsbx = in->dim->nsbx;
+    // int *nsbu = in->dim->nsbu;
+    // int *nsg  = in->dim->nsg;
     int **idxb = in->idxb;
     int **idxs = in->idxs;
 
     int *nx2  = out->dim->nx;
     int *nu2  = out->dim->nu;
     int *nb2  = out->dim->nb;
-    int *nbx2 = out->dim->nbx;
-    int *nbu2 = out->dim->nbu;
+    // int *nbx2 = out->dim->nbx;
+    // int *nbu2 = out->dim->nbu;
     int *ng2  = out->dim->ng;
 
     for (int ii = 0; ii <= N; ii++)

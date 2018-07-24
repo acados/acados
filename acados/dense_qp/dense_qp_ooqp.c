@@ -310,10 +310,10 @@ int dense_qp_ooqp_memory_calculate_size(void *config_, dense_qp_dims *dims, void
     int nv = dims->nv;
     int ne = dims->ne;
     int ng = dims->ng;
-    int nb = dims->nb;
-    int ns = dims->ns;
-    int nsb = dims->nsb;
-    int nsg = dims->nsg;
+    // int nb = dims->nb;
+    // int ns = dims->ns;
+    // int nsb = dims->nsb;
+    // int nsg = dims->nsg;
 
     int size = 0;
     size += sizeof(dense_qp_ooqp_memory);
@@ -335,16 +335,16 @@ int dense_qp_ooqp_memory_calculate_size(void *config_, dense_qp_dims *dims, void
 
 void *dense_qp_ooqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts_, void *raw_memory)
 {
-    dense_qp_ooqp_opts *opts = (dense_qp_ooqp_opts *)opts_;
+    // dense_qp_ooqp_opts *opts = (dense_qp_ooqp_opts *)opts_;
     dense_qp_ooqp_memory *mem;
 
     int nv = dims->nv;
     int ne = dims->ne;
     int ng = dims->ng;
-    int nb = dims->nb;
-    int ns = dims->ns;
-    int nsb = dims->nsb;
-    int nsg = dims->nsg;
+    // int nb = dims->nb;
+    // int ns = dims->ns;
+    // int nsb = dims->nsb;
+    // int nsg = dims->nsg;
 
     // char pointer
     char *c_ptr = (char *) raw_memory;
@@ -385,7 +385,7 @@ void *dense_qp_ooqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
 int dense_qp_ooqp_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
-    dense_qp_ooqp_opts *opts = (dense_qp_ooqp_opts *)opts_;
+    // dense_qp_ooqp_opts *opts = (dense_qp_ooqp_opts *)opts_;
 
     int size = 0;
     int nx, my, mz;
@@ -495,12 +495,16 @@ void dense_qp_ooqp_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
 
-    config->opts_calculate_size = &dense_qp_ooqp_opts_calculate_size;
-    config->opts_assign = &dense_qp_ooqp_opts_assign;
-    config->opts_initialize_default = &dense_qp_ooqp_opts_initialize_default;
-    config->opts_update = &dense_qp_ooqp_opts_update;
-    config->memory_calculate_size = &dense_qp_ooqp_memory_calculate_size;
-    config->memory_assign = &dense_qp_ooqp_memory_assign;
-    config->workspace_calculate_size = &dense_qp_ooqp_workspace_calculate_size;
-    config->evaluate = &dense_qp_ooqp;
+    config->opts_calculate_size = (int (*)(void *, void *)) & dense_qp_ooqp_opts_calculate_size;
+    config->opts_assign = (void *(*) (void *, void *, void *) ) & dense_qp_ooqp_opts_assign;
+    config->opts_initialize_default =
+        (void (*)(void *, void *, void *)) & dense_qp_ooqp_opts_initialize_default;
+    config->opts_update = (void (*)(void *, void *, void *)) & dense_qp_ooqp_opts_update;
+    config->memory_calculate_size =
+        (int (*)(void *, void *, void *)) & dense_qp_ooqp_memory_calculate_size;
+    config->memory_assign =
+        (void *(*) (void *, void *, void *, void *) ) & dense_qp_ooqp_memory_assign;
+    config->workspace_calculate_size =
+        (int (*)(void *, void *, void *)) & dense_qp_ooqp_workspace_calculate_size;
+    config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_ooqp;
 }

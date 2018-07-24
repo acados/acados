@@ -185,7 +185,7 @@ static int get_nnzC(const ocp_qp_dims *dims)
 
 static void update_gradient(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem)
 {
-    int ii, kk, nn;
+    int kk, nn;
     ocp_qp_dims *dims = in->dim;
 
     nn = 0;
@@ -797,7 +797,7 @@ int ocp_qp_ooqp_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *op
     int nnzQ = get_nnzQ(dims);
     int nnzA = get_nnzA(dims);
     int nnzC = get_nnzC(dims);
-    int nnz = max_of_three(nnzQ, nnzA, nnzC);
+    // int nnz = max_of_three(nnzQ, nnzA, nnzC);
 
     int size = 0;
     size += sizeof(ocp_qp_ooqp_memory);
@@ -822,7 +822,7 @@ int ocp_qp_ooqp_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *op
 
 void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory)
 {
-    ocp_qp_ooqp_opts *opts = (ocp_qp_ooqp_opts *)opts_;
+    // ocp_qp_ooqp_opts *opts = (ocp_qp_ooqp_opts *)opts_;
     ocp_qp_ooqp_memory *mem;
 
     int nx = get_number_of_primal_vars(dims);
@@ -831,7 +831,7 @@ void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, v
     int nnzQ = get_nnzQ(dims);
     int nnzA = get_nnzA(dims);
     int nnzC = get_nnzC(dims);
-    int nnz = max_of_three(nnzQ, nnzA, nnzC);
+    // int nnz = max_of_three(nnzQ, nnzA, nnzC);
 
     // char pointer
     char *c_ptr = (char *) raw_memory;
@@ -890,7 +890,7 @@ void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, v
 
 int ocp_qp_ooqp_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
-    ocp_qp_ooqp_opts *opts = (ocp_qp_ooqp_opts *)opts_;
+    UNUSED(opts_);
 
     int size = 0;
     int nx, my, mz, nnzQ, nnzA, nnzC, nnz;
@@ -905,7 +905,7 @@ int ocp_qp_ooqp_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void 
 
     size += sizeof(ocp_qp_ooqp_workspace);
     size += sizeof(double) * (3 * nx + my + 3 * mz);
-    size += sizeof(double) * nnz;
+    size += sizeof(int) * nnz;
     size += sizeof(double) * nnz;
 
     return size;
@@ -930,8 +930,8 @@ static void ocp_qp_ooqp_cast_workspace(ocp_qp_ooqp_workspace *work, ocp_qp_ooqp_
     ptr += (mem->mz) * sizeof(double);
     work->pi = (double *)ptr;
     ptr += (mem->mz) * sizeof(double);
-    work->tmpInt = (double *)ptr;
-    ptr += (mem->nnz) * sizeof(double);
+    work->tmpInt = (int *)ptr;
+    ptr += (mem->nnz) * sizeof(int);
     work->tmpReal = (double *)ptr;
     // ptr += (mem->nnz)*sizeof(double);
 }
@@ -1003,12 +1003,16 @@ void ocp_qp_ooqp_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
 
-    config->opts_calculate_size = &ocp_qp_ooqp_opts_calculate_size;
-    config->opts_assign = &ocp_qp_ooqp_opts_assign;
-    config->opts_initialize_default = &ocp_qp_ooqp_opts_initialize_default;
-    config->opts_update = &ocp_qp_ooqp_opts_update;
-    config->memory_calculate_size = &ocp_qp_ooqp_memory_calculate_size;
-    config->memory_assign = &ocp_qp_ooqp_memory_assign;
-    config->workspace_calculate_size = &ocp_qp_ooqp_workspace_calculate_size;
-    config->evaluate = &ocp_qp_ooqp;
+    config->opts_calculate_size = (int (*)(void *, void *)) & ocp_qp_ooqp_opts_calculate_size;
+    config->opts_assign = (void *(*) (void *, void *, void *) ) & ocp_qp_ooqp_opts_assign;
+    config->opts_initialize_default =
+        (void (*)(void *, void *, void *)) & ocp_qp_ooqp_opts_initialize_default;
+    config->opts_update = (void (*)(void *, void *, void *)) & ocp_qp_ooqp_opts_update;
+    config->memory_calculate_size =
+        (int (*)(void *, void *, void *)) & ocp_qp_ooqp_memory_calculate_size;
+    config->memory_assign =
+        (void *(*) (void *, void *, void *, void *) ) & ocp_qp_ooqp_memory_assign;
+    config->workspace_calculate_size =
+        (int (*)(void *, void *, void *)) & ocp_qp_ooqp_workspace_calculate_size;
+    config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_ooqp;
 }

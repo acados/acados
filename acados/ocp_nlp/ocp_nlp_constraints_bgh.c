@@ -381,8 +381,8 @@ int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_,
     ocp_nlp_constraints_bgh_dims *dims = dims_;
 
     // extract dims
-    int nx = dims->nx;
-    int nu = dims->nu;
+    // int nx = dims->nx;
+    // int nu = dims->nu;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -408,8 +408,8 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
     ocp_nlp_constraints_bgh_workspace *work = work_;
 
     // extract dims
-    int nx = dims->nx;
-    int nu = dims->nu;
+    // int nx = dims->nx;
+    // int nu = dims->nu;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
