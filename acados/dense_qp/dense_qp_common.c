@@ -439,15 +439,18 @@ void dense_qp_unstack_slacks(dense_qp_out *in, dense_qp_in *qp_out, dense_qp_out
     int nb = qp_out->dim->nb;
     int ng = qp_out->dim->ng;
     int ns = qp_out->dim->ns;
-    // int nsb = qp_out->dim->nsb;
+    int nsb = qp_out->dim->nsb;
     // int nsg = qp_out->dim->nsg;
 
     int *idxs = qp_out->idxs;
 
-    // int nv2 = in->dim->nv;
+    int nv2 = in->dim->nv;
     // int ne2 = in->dim->ne;
     int nb2 = in->dim->nb;
     int ng2 = in->dim->ng;
+
+    UNUSED(nsb);
+    UNUSED(nv2);
 
     assert(nv2 == nv+2*ns && "Dimensions are wrong!");
     assert(nb2 == nb-nsb+2*ns && "Dimensions are wrong!");
