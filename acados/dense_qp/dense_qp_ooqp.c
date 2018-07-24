@@ -306,8 +306,29 @@ void dense_qp_ooqp_opts_update(void *config_, dense_qp_dims *dims, void *opts_)
 
 int dense_qp_ooqp_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
+    int nv = dims->nv;
+    int ne = dims->ne;
+    int ng = dims->ng;
+    int nb = dims->nb;
+    int ns = dims->ns;
+    int nsb = dims->nsb;
+    int nsg = dims->nsg;
+
     int size = 0;
     size += sizeof(dense_qp_ooqp_memory);
+
+    size += 1 * nv * nv * sizeof(double);  // dQ
+    size += 1 * nv * sizeof(double);       // c
+    size += 2 * nv * sizeof(char);         // ixlow, ixupp
+    size += 2 * nv * sizeof(double);       // xlow, xupp
+    size += 1 * nv * ne * sizeof(double);  // dA
+    size += 1 * ne * sizeof(double);       // bA
+    size += 1 * nv * ng * sizeof(double);  // dC
+    size += 2 * ng * sizeof(double);       // clow, cupp
+    size += 2 * ng * sizeof(char);         // iclow, icupp
+
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -316,29 +337,48 @@ void *dense_qp_ooqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     dense_qp_ooqp_opts *opts = (dense_qp_ooqp_opts *)opts_;
     dense_qp_ooqp_memory *mem;
 
+    int nv = dims->nv;
+    int ne = dims->ne;
+    int ng = dims->ng;
+    int nb = dims->nb;
+    int ns = dims->ns;
+    int nsb = dims->nsb;
+    int nsg = dims->nsg;
+
     // char pointer
     char *c_ptr = (char *) raw_memory;
 
     mem = (dense_qp_ooqp_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_ooqp_memory);
 
+    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
+    assign_and_advance_double(nv * nv, &mem->dQ, &c_ptr);
+    assign_and_advance_double(nv, &mem->c, &c_ptr);
+    assign_and_advance_double(nv, &mem->xlow, &c_ptr);
+    assign_and_advance_double(nv, &mem->xupp, &c_ptr);
+    assign_and_advance_double(nv * ne, &mem->dA, &c_ptr);
+    assign_and_advance_double(ne, &mem->bA, &c_ptr);
+    assign_and_advance_double(nv * ng, &mem->dC, &c_ptr);
+    assign_and_advance_double(ng, &mem->clow, &c_ptr);
+    assign_and_advance_double(ng, &mem->cupp, &c_ptr);
+
+    assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
+
+    assign_and_advance_char(nv, &mem->ixlow, &c_ptr);
+    assign_and_advance_char(nv, &mem->ixupp, &c_ptr);
+    assign_and_advance_char(ng, &mem->iclow, &c_ptr);
+    assign_and_advance_char(ng, &mem->icupp, &c_ptr);
+
     // initialize memory
     mem->firstRun = 1;
-    mem->nx = dims->nv;
-    mem->my = dims->ne;
-    mem->mz = dims->ng;
+    mem->nx = nv;
+    mem->my = ne;
+    mem->mz = ng;
 
-    int ooqp_failed;
-    newQpGenDense(&mem->c,    mem->nx,     &mem->dQ,
-                  &mem->xlow, &mem->ixlow,
-                  &mem->xupp, &mem->ixupp,
-                  &mem->dA,   mem->my,     &mem->bA,
-                  &mem->dC,   mem->mz,
-                  &mem->clow, &mem->iclow,
-                  &mem->cupp, &mem->icupp,
-                  &ooqp_failed);
+    assert((char *) raw_memory + dense_qp_ooqp_memory_calculate_size(config_, dims, opts_) >=
+           c_ptr);
 
-    if (ooqp_failed) return NULL;
     return mem;
 }
 
@@ -347,7 +387,7 @@ int dense_qp_ooqp_workspace_calculate_size(void *config_, dense_qp_dims *dims, v
     dense_qp_ooqp_opts *opts = (dense_qp_ooqp_opts *)opts_;
 
     int size = 0;
-    int nx, my, mz, nnzQ, nnzA, nnzC, nnz;
+    int nx, my, mz;
 
     nx = dims->nv;
     my = dims->ne;
@@ -378,19 +418,6 @@ static void dense_qp_ooqp_cast_workspace(dense_qp_ooqp_workspace *work, dense_qp
     ptr += (mem->mz) * sizeof(double);
     work->pi = (double *)ptr;
     ptr += (mem->mz) * sizeof(double);
-}
-
-void dense_qp_ooqp_free_memory(void *mem_)
-{
-    dense_qp_ooqp_memory *mem = (dense_qp_ooqp_memory *)mem_;
-
-    freeQpGenDense(&mem->c,    &mem->dQ,
-                   &mem->xlow, &mem->ixlow,
-                   &mem->xupp, &mem->ixupp,
-                   &mem->dA,   &mem->bA,
-                   &mem->dC,
-                   &mem->clow, &mem->iclow,
-                   &mem->cupp, &mem->icupp);
 }
 
 int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
@@ -460,7 +487,7 @@ int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, voi
 void dense_qp_ooqp_destroy(void *mem_, void *work)
 {
     free(work);
-    dense_qp_ooqp_free_memory(mem_);
+    free(mem_);
 }
 
 void dense_qp_ooqp_config_initialize_default(void *config_)

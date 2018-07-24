@@ -94,8 +94,6 @@ void *dense_qp_ooqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 //
 int dense_qp_ooqp_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *opts_);
 //
-void dense_qp_ooqp_free_memory(void *mem_);
-//
 int dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
                   void *memory_, void *work_);
 //
