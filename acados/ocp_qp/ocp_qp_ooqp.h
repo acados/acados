@@ -112,12 +112,8 @@ void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, v
 //
 int ocp_qp_ooqp_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
 //
-void ocp_qp_ooqp_free_memory(void *mem_);
-//
 int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *memory_,
                 void *work_);
-//
-// void ocp_qp_ooqp_initialize(const ocp_qp_in *qp_in, void *opts_, void **mem, void **work);
 //
 void ocp_qp_ooqp_destroy(void *mem_, void *work);
 //

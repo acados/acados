@@ -31,6 +31,7 @@
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/print.h"
+#include "acados/utils/mem.h"
 
 #define FLIP_BOUNDS
 
@@ -141,13 +142,10 @@ static int get_number_of_inequalities(const ocp_qp_dims *dims)
     return mz;
 }
 
-static int get_nnzQ(const ocp_qp_dims *dims, const ocp_qp_ooqp_opts *opts)
+static int get_nnzQ(const ocp_qp_dims *dims)
 {
     int kk;
     int nnzQ = 0;
-
-    // dummy command
-    if (opts->printLevel) kk = 0;
 
     for (kk = 0; kk <= dims->N; kk++)
     {
@@ -159,13 +157,10 @@ static int get_nnzQ(const ocp_qp_dims *dims, const ocp_qp_ooqp_opts *opts)
     return nnzQ;
 }
 
-static int get_nnzA(const ocp_qp_dims *dims, const ocp_qp_ooqp_opts *opts)
+static int get_nnzA(const ocp_qp_dims *dims)
 {
     int kk;
     int nnzA = 0;
-
-    // dummy command
-    if (opts->printLevel) kk = 0;
 
     for (kk = 0; kk < dims->N; kk++)
     {
@@ -175,13 +170,10 @@ static int get_nnzA(const ocp_qp_dims *dims, const ocp_qp_ooqp_opts *opts)
     return nnzA;
 }
 
-static int get_nnzC(const ocp_qp_dims *dims, const ocp_qp_ooqp_opts *opts)
+static int get_nnzC(const ocp_qp_dims *dims)
 {
     int kk;
     int nnzC = 0;
-
-    // dummy command
-    if (opts->printLevel) kk = 0;
 
     for (kk = 0; kk <= dims->N; kk++)
     {
@@ -799,8 +791,32 @@ void ocp_qp_ooqp_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
 
 int ocp_qp_ooqp_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
+    int nx = get_number_of_primal_vars(dims);
+    int my = get_number_of_equalities(dims);
+    int mz = get_number_of_inequalities(dims);
+    int nnzQ = get_nnzQ(dims);
+    int nnzA = get_nnzA(dims);
+    int nnzC = get_nnzC(dims);
+    int nnz = max_of_three(nnzQ, nnzA, nnzC);
+
     int size = 0;
     size += sizeof(ocp_qp_ooqp_memory);
+
+    size += 1 *   nx * sizeof(double);  // c
+    size += 1 * nnzQ * sizeof(double);  // dQ
+    size += 3 * nnzQ * sizeof(int);     // irowQ, jcolQ, orderQ
+    size += 2 *   nx * sizeof(double);  // xlow, xupp
+    size += 2 *   nx * sizeof(char);    // ixlow, ixupp
+    size += 1 * nnzA * sizeof(double);  // dA
+    size += 3 * nnzA * sizeof(int);     // irowA, jcolA, orderA
+    size += 1 *   my * sizeof(double);  // bA
+    size += 1 * nnzC * sizeof(double);  // dC
+    size += 3 * nnzC * sizeof(int);     // irowC, jcolC, orderC
+    size += 2 *   mz * sizeof(double);  // clow, cupp
+    size += 2 *   mz * sizeof(char);    // iclow, icupp
+
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
@@ -809,33 +825,66 @@ void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, v
     ocp_qp_ooqp_opts *opts = (ocp_qp_ooqp_opts *)opts_;
     ocp_qp_ooqp_memory *mem;
 
+    int nx = get_number_of_primal_vars(dims);
+    int my = get_number_of_equalities(dims);
+    int mz = get_number_of_inequalities(dims);
+    int nnzQ = get_nnzQ(dims);
+    int nnzA = get_nnzA(dims);
+    int nnzC = get_nnzC(dims);
+    int nnz = max_of_three(nnzQ, nnzA, nnzC);
+
     // char pointer
     char *c_ptr = (char *) raw_memory;
 
     mem = (ocp_qp_ooqp_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_ooqp_memory);
 
+    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
+    assign_and_advance_double(nx, &mem->c, &c_ptr);
+    assign_and_advance_double(nnzQ, &mem->dQ, &c_ptr);
+    assign_and_advance_double(nx, &mem->xlow, &c_ptr);
+    assign_and_advance_double(nx, &mem->xupp, &c_ptr);
+    assign_and_advance_double(nnzA, &mem->dA, &c_ptr);
+    assign_and_advance_double(my, &mem->bA, &c_ptr);
+    assign_and_advance_double(nnzC, &mem->dC, &c_ptr);
+    assign_and_advance_double(mz, &mem->clow, &c_ptr);
+    assign_and_advance_double(mz, &mem->cupp, &c_ptr);
+
+    assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
+
+    assign_and_advance_int(nnzQ, &mem->irowQ, &c_ptr);
+    assign_and_advance_int(nnzQ, &mem->jcolQ, &c_ptr);
+    assign_and_advance_int(nnzQ, &mem->orderQ, &c_ptr);
+    assign_and_advance_int(nnzA, &mem->irowA, &c_ptr);
+    assign_and_advance_int(nnzA, &mem->jcolA, &c_ptr);
+    assign_and_advance_int(nnzA, &mem->orderA, &c_ptr);
+    assign_and_advance_int(nnzC, &mem->irowC, &c_ptr);
+    assign_and_advance_int(nnzC, &mem->jcolC, &c_ptr);
+    assign_and_advance_int(nnzC, &mem->orderC, &c_ptr);
+
+    assign_and_advance_char(nx, &mem->ixlow, &c_ptr);
+    assign_and_advance_char(nx, &mem->ixupp, &c_ptr);
+    assign_and_advance_char(mz, &mem->iclow, &c_ptr);
+    assign_and_advance_char(mz, &mem->icupp, &c_ptr);
+
     // initialize memory
     mem->firstRun = 1;
-    mem->nx = get_number_of_primal_vars(dims);
-    mem->my = get_number_of_equalities(dims);
-    mem->mz = get_number_of_inequalities(dims);
-    mem->nnzQ = get_nnzQ(dims, opts);
-    mem->nnzA = get_nnzA(dims, opts);
-    mem->nnzC = get_nnzC(dims, opts);
-    mem->nnz = max_of_three(mem->nnzQ, mem->nnzA, mem->nnzC);
+    mem->nx = nx;
+    mem->my = my;
+    mem->mz = mz;
+    mem->nnzQ = nnzQ;
+    mem->nnzA = nnzA;
+    mem->nnzC = nnzC;
+    mem->nnz = max_of_three(nnzQ, nnzA, nnzC);
 
-    int ooqp_failed;
-    newQpGenSparse(&mem->c, mem->nx, &mem->irowQ, mem->nnzQ, &mem->jcolQ, &mem->dQ, &mem->xlow,
-                   &mem->ixlow, &mem->xupp, &mem->ixupp, &mem->irowA, mem->nnzA, &mem->jcolA,
-                   &mem->dA, &mem->bA, mem->my, &mem->irowC, mem->nnzC, &mem->jcolC, &mem->dC,
-                   &mem->clow, mem->mz, &mem->iclow, &mem->cupp, &mem->icupp, &ooqp_failed);
+    for (int ii = 0; ii < nnzQ; ii++) mem->orderQ[ii] = 0;
+    for (int ii = 0; ii < nnzA; ii++) mem->orderA[ii] = 0;
+    for (int ii = 0; ii < nnzC; ii++) mem->orderC[ii] = 0;
 
-    mem->orderQ = (int *)calloc(mem->nnzQ, sizeof(*mem->orderQ));
-    mem->orderA = (int *)calloc(mem->nnzA, sizeof(*mem->orderA));
-    mem->orderC = (int *)calloc(mem->nnzC, sizeof(*mem->orderC));
+    assert((char *) raw_memory + ocp_qp_ooqp_memory_calculate_size(config_, dims, opts_) >=
+           c_ptr);
 
-    if (ooqp_failed) return NULL;
     return mem;
 }
 
@@ -849,9 +898,9 @@ int ocp_qp_ooqp_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void 
     nx = get_number_of_primal_vars(dims);
     my = get_number_of_equalities(dims);
     mz = get_number_of_inequalities(dims);
-    nnzQ = get_nnzQ(dims, opts);
-    nnzA = get_nnzA(dims, opts);
-    nnzC = get_nnzC(dims, opts);
+    nnzQ = get_nnzQ(dims);
+    nnzA = get_nnzA(dims);
+    nnzC = get_nnzC(dims);
     nnz = max_of_three(nnzQ, nnzA, nnzC);
 
     size += sizeof(ocp_qp_ooqp_workspace);
@@ -885,20 +934,6 @@ static void ocp_qp_ooqp_cast_workspace(ocp_qp_ooqp_workspace *work, ocp_qp_ooqp_
     ptr += (mem->nnz) * sizeof(double);
     work->tmpReal = (double *)ptr;
     // ptr += (mem->nnz)*sizeof(double);
-}
-
-void ocp_qp_ooqp_free_memory(void *mem_)
-{
-    ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *)mem_;
-
-    freeQpGenSparse(&mem->c, &mem->irowQ, &mem->jcolQ, &mem->dQ, &mem->xlow, &mem->ixlow,
-                    &mem->xupp, &mem->ixupp, &mem->irowA, &mem->jcolA, &mem->dA, &mem->bA,
-                    &mem->irowC, &mem->jcolC, &mem->dC, &mem->clow, &mem->iclow, &mem->cupp,
-                    &mem->icupp);
-
-    free(mem->orderQ);
-    free(mem->orderA);
-    free(mem->orderC);
 }
 
 int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *memory_,
@@ -958,19 +993,10 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
     return acados_status;
 }
 
-// void ocp_qp_ooqp_initialize(const ocp_qp_in *qp_in, void *opts_, void **mem, void **work)
-// {
-//     ocp_qp_ooqp_opts *opts = (ocp_qp_ooqp_opts *)opts_;
-
-//     *mem = ocp_qp_ooqp_create_memory(qp_in, opts);
-//     int work_space_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, opts);
-//     *work = (void *)malloc(work_space_size);
-// }
-
 void ocp_qp_ooqp_destroy(void *mem_, void *work)
 {
     free(work);
-    ocp_qp_ooqp_free_memory(mem_);
+    free(mem_);
 }
 
 void ocp_qp_ooqp_config_initialize_default(void *config_)

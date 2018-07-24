@@ -33,6 +33,7 @@
 #include "acados/dense_qp/dense_qp_ooqp.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/print.h"
+#include "acados/utils/mem.h"
 
 static void update_gradient(const dense_qp_in *in, dense_qp_ooqp_memory *mem)
 {
@@ -318,14 +319,14 @@ int dense_qp_ooqp_memory_calculate_size(void *config_, dense_qp_dims *dims, void
     size += sizeof(dense_qp_ooqp_memory);
 
     size += 1 * nv * nv * sizeof(double);  // dQ
-    size += 1 * nv * sizeof(double);       // c
-    size += 2 * nv * sizeof(char);         // ixlow, ixupp
-    size += 2 * nv * sizeof(double);       // xlow, xupp
+    size += 1 * nv *      sizeof(double);  // c
+    size += 2 * nv *      sizeof(char);    // ixlow, ixupp
+    size += 2 * nv *      sizeof(double);  // xlow, xupp
     size += 1 * nv * ne * sizeof(double);  // dA
-    size += 1 * ne * sizeof(double);       // bA
+    size += 1 * ne *      sizeof(double);  // bA
     size += 1 * nv * ng * sizeof(double);  // dC
-    size += 2 * ng * sizeof(double);       // clow, cupp
-    size += 2 * ng * sizeof(char);         // iclow, icupp
+    size += 2 * ng *      sizeof(double);  // clow, cupp
+    size += 2 * ng *      sizeof(char);    // iclow, icupp
 
     make_int_multiple_of(8, &size);
 
