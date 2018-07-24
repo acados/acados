@@ -282,7 +282,6 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     int size = sizeof(sim_irk_workspace);
 
     size += 3 * sizeof(struct blasfeo_dmat);  // dG_dK, dK_dxu, S_forw
-    // size += steps*sizeof(struct blasfeo_dmat); // JG_traj
 
     size += 4 * sizeof(struct blasfeo_dvec);          // rG, K, xt, xn
     size += 1 * sizeof(struct blasfeo_dvec);          // lambda
@@ -359,35 +358,17 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     sim_irk_workspace *workspace = (sim_irk_workspace *) c_ptr;
     c_ptr += sizeof(sim_irk_workspace);
 
-    // assign_and_advance_blasfeo_dmat_structs(steps, &workspace->JG_traj, &c_ptr);
-
-    workspace->dG_dK = (struct blasfeo_dmat *) c_ptr;
-    c_ptr += sizeof(struct blasfeo_dmat);
-
-    workspace->dK_dxu = (struct blasfeo_dmat *) c_ptr;
-    c_ptr += sizeof(struct blasfeo_dmat);
-
-    workspace->S_forw = (struct blasfeo_dmat *) c_ptr;
-    c_ptr += sizeof(struct blasfeo_dmat);
+    assign_and_advance_blasfeo_dmat_structs(1, &workspace->dG_dK, &c_ptr);
+    assign_and_advance_blasfeo_dmat_structs(1, &workspace->dK_dxu, &c_ptr);
+    assign_and_advance_blasfeo_dmat_structs(1, &workspace->S_forw, &c_ptr);
 
     if (opts->sens_adj){
         assign_and_advance_blasfeo_dvec_structs(steps, &workspace->xn_traj, &c_ptr);
         assign_and_advance_blasfeo_dvec_structs(steps, &workspace->K_traj, &c_ptr);
     }
 
-    workspace->rG = (struct blasfeo_dvec *) c_ptr;
-    c_ptr += sizeof(struct blasfeo_dvec);
-
+    assign_and_advance_blasfeo_dvec_structs(1, &workspace->rG, &c_ptr);
     assign_and_advance_blasfeo_dvec_structs(1, &workspace->K, &c_ptr);
-
-    workspace->xt = (struct blasfeo_dvec *) c_ptr;
-    c_ptr += sizeof(struct blasfeo_dvec);
-
-    workspace->xn = (struct blasfeo_dvec *) c_ptr;
-    c_ptr += sizeof(struct blasfeo_dvec);
-
-    workspace->lambda = (struct blasfeo_dvec *) c_ptr;
-    c_ptr += sizeof(struct blasfeo_dvec);
 
     // lambdaK, dG_dxu
     if (!opts->sens_hess){
@@ -397,7 +378,11 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
         assign_and_advance_blasfeo_dvec_structs(steps, &workspace->lambdaK, &c_ptr);
         assign_and_advance_blasfeo_dmat_structs(steps, &workspace->dG_dxu, &c_ptr);
     }
+    assign_and_advance_blasfeo_dvec_structs(1, &workspace->xt, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(1, &workspace->xn, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(1, &workspace->lambda, &c_ptr);
 
+    /* algin c_ptr to 64 blasfeo_dmat_mem has to be assigned directly after that  */
     align_char_to(64, &c_ptr);
 
     if (!opts->sens_hess){
@@ -413,9 +398,6 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dmat_mem((nx + nz) * ns, (nx+nz) * ns, workspace->dG_dK, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem((nx + nz) * ns, nx + nu, workspace->dK_dxu, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, workspace->S_forw, &c_ptr);
-    // for (int i=0;i<steps;i++){
-    //     assign_and_advance_blasfeo_dmat_mem(nx*ns, nx*ns, &workspace->JG_traj[i], &c_ptr);
-    // }
 
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nx, &workspace->df_dx, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nx, &workspace->df_dxdot, &c_ptr);
@@ -526,7 +508,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dvec *lambdaK = workspace->lambdaK;
     struct blasfeo_dvec *xn_traj = workspace->xn_traj;
     struct blasfeo_dvec *K_traj = workspace->K_traj;
-    // struct blasfeo_dmat *JG_traj = workspace->JG_traj;
 
     double *x_out = out->xn;
     double *S_forw_out = out->S_forw;
@@ -781,9 +762,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             acados_tic(&timer_la);
             blasfeo_dgetrf_rowpivot(nK, nK, dG_dK, 0, 0, dG_dK, 0, 0, ipiv);
             timing_la += acados_toc(&timer_la);
-            // NOTE: it is possible to store the factorization and permutation of dG_dK and reuse it
-            // in the adjoint propagation, but as in common MPC schemes only one of those is needed,
-            // this is omited for now - JG_traj was used for this;
 
             // obtain dK_dxu
             // TODO(all): add the option to use VDE instead of dgemm ???
