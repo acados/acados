@@ -454,8 +454,8 @@ void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out)
     // int *nbu  = in->dim->nbu;
     int *ng   = in->dim->ng;
     int *ns   = in->dim->ns;
-    // int *nsbx = in->dim->nsbx;
-    // int *nsbu = in->dim->nsbu;
+    int *nsbx = in->dim->nsbx;
+    int *nsbu = in->dim->nsbu;
     // int *nsg  = in->dim->nsg;
     int **idxb = in->idxb;
     int **idxs = in->idxs;
@@ -466,6 +466,9 @@ void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out)
     // int *nbx2 = out->dim->nbx;
     // int *nbu2 = out->dim->nbu;
     int *ng2  = out->dim->ng;
+
+    UNUSED(nsbx);
+    UNUSED(nsbu);
 
     for (int ii = 0; ii <= N; ii++)
     {
