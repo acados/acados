@@ -73,7 +73,7 @@ typedef struct
     struct blasfeo_dmat *dG_dxu;  // jacobian of G over x and u ((nx+nz)*ns, nx+nu)
 
     int *ipiv;  // index of pivot vector (ns * (nx + nz))
-    int *ipiv_one_stage;  // index of pivot vector (nx+nz)
+    int *ipiv_one_stage;  // index of pivot vector (nx + nz)
     double *Z_work;  // used to perform computations to get out->zn (ns)
 
     // xn_traj, K_traj only available if( opts->sens_adj || opts->sens_hess )
