@@ -63,7 +63,7 @@ typedef struct
     struct blasfeo_dvec xtdot;  // temporary xdot
 
     // lambda: if (!opts->sens_hess) - single blasfeo_dvec that is reused
-    //         if ( opts->sens_hess) - array of blasfeo_dvec to store intermediate results
+    //         if ( opts->sens_hess) - array of (num_steps + 1) blasfeo_dvec to store intermediate results
     struct blasfeo_dvec *lambda;   // adjoint seed (nx + nu)
 
     // lamdaK: if (!opts->sens_hess) - single blasfeo_dvec that is reused
