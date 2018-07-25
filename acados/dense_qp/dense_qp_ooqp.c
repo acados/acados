@@ -473,11 +473,12 @@ int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, voi
     if (0) print_outputs(mem, work, ooqp_status);
     acados_tic(&interface_timer);
     fill_in_qp_out(qp_in, qp_out, work);
+    dense_qp_compute_t(qp_in, qp_out);
     info->interface_time += acados_toc(&interface_timer);
 
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = -1;
-    info->t_computed = 0;
+    info->t_computed = 1;
 
     int acados_status = ooqp_status;
     if (ooqp_status == DENSE_SUCCESSFUL_TERMINATION) acados_status = ACADOS_SUCCESS;

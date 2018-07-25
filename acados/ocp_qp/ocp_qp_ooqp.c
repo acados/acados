@@ -981,11 +981,12 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
     if (0) print_outputs(mem, work, ooqp_status);
     acados_tic(&interface_timer);
     fill_in_qp_out(qp_in, qp_out, work);
+    ocp_qp_compute_t(qp_in, qp_out);
     info->interface_time += acados_toc(&interface_timer);
 
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = -1;
-    info->t_computed = 0;
+    info->t_computed = 1;
 
     int acados_status = ooqp_status;
     if (ooqp_status == SPARSE_SUCCESSFUL_TERMINATION) acados_status = ACADOS_SUCCESS;
