@@ -76,10 +76,9 @@ typedef struct
     int *ipiv_one_stage;  // index of pivot vector (nx+nz)
     double *Z_work;  // used to perform computations to get out->zn (ns)
 
+    // xn_traj, K_traj only available if( opts->sens_adj || opts->sens_hess )
     struct blasfeo_dvec *xn_traj;  // xn trajectory
     struct blasfeo_dvec *K_traj;   // K trajectory
-    // todo: maybe remove? but could maybe be used for hessian propagation
-    // struct blasfeo_dmat *JG_traj; // dG_dK trajectory
 
     struct blasfeo_dmat df_dx;     // temporary Jacobian of ode w.r.t x (nx+nz, nx)
     struct blasfeo_dmat df_dxdot;  // temporary Jacobian of ode w.r.t xdot (nx+nz, nx)

@@ -276,6 +276,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     opts->sens_forw = true;
     opts->sens_adj = true;
     opts->sens_algebraic = true;
+    opts->sens_hess = false;
     opts->output_z = true;
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 8;  // number of newton iterations per integration step
@@ -493,6 +494,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 opts->sens_adj          = (bool) sens_adj;
                 opts->output_z          = (bool) output_z;
                 opts->sens_algebraic    = (bool) sens_alg;
+                opts->sens_hess         = true;
 
 
             /* sim in / out */

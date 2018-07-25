@@ -286,7 +286,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     size += 4 * sizeof(struct blasfeo_dvec);          // rG, K, xt, xn
     size += 1 * sizeof(struct blasfeo_dvec);          // lambda
 
-    if (opts->sens_adj){
+    if (opts->sens_adj || opts->sens_hess){
         size += 3 * steps * sizeof(struct blasfeo_dvec);  // **xn_traj, **K_traj, Ztraj
     }
 
@@ -317,7 +317,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
         size += steps * blasfeo_memsize_dmat((nx + nz) * ns, nx + nu);  // dG_dxu
     }
 
-    if (opts->sens_adj){
+    if ( opts->sens_adj || opts->sens_hess ){
         size += steps * blasfeo_memsize_dvec(nx);       // for xn_traj
         size += steps * blasfeo_memsize_dvec((nx + nz) * ns);  // for K_traj
     }
@@ -362,7 +362,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dmat_structs(1, &workspace->dK_dxu, &c_ptr);
     assign_and_advance_blasfeo_dmat_structs(1, &workspace->S_forw, &c_ptr);
 
-    if (opts->sens_adj){
+    if ( opts->sens_adj || opts->sens_hess ){
         assign_and_advance_blasfeo_dvec_structs(steps, &workspace->xn_traj, &c_ptr);
         assign_and_advance_blasfeo_dvec_structs(steps, &workspace->K_traj, &c_ptr);
     }
@@ -424,7 +424,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
         }
     }
 
-    if (opts->sens_adj){
+    if ( opts->sens_adj || opts->sens_hess ){
         for (int i = 0; i < steps; i++)
         {
             assign_and_advance_blasfeo_dvec_mem(nx, &workspace->xn_traj[i], &c_ptr);
@@ -609,7 +609,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                               0);  // if new jacobian gets computed, initialize dG_dK with zeros
             }
 
-            if (opts->sens_adj)
+            if ( opts->sens_adj || opts->sens_hess )
             {
                 blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
             }
@@ -701,7 +701,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             //       blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
         }
 
-        if (opts->sens_adj)
+        if ( opts->sens_adj || opts->sens_hess )
         {
             blasfeo_dveccp(nK, K, 0, &K_traj[ss], 0);
         }
@@ -1040,7 +1040,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                              0, lambda, 0);
         }  // end for num_steps
         blasfeo_unpack_dvec(nx + nu, lambda, 0, S_adj_out);
-    } // end if (opts->sens_adj && opts->sens_hess)
+    } // end if (opts->sens_hess)
 
 
 
