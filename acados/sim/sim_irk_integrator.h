@@ -74,7 +74,12 @@ typedef struct
     //         if ( opts->sens_hess) - array of blasfeo_dmat to store intermediate results
     struct blasfeo_dmat *dG_dxu;  // jacobian of G over x and u ((nx+nz)*ns, nx+nu)
 
-    int *ipiv;  // index of pivot vector (ns * (nx + nz))
+    // ipiv: index of pivot vector
+    //         if (!opts->sens_hess) - array (ns * (nx + nz)) that is reused
+    //         if ( opts->sens_hess) - array (ns * (nx + nz)) * num_steps, to store all
+    //              pivot vectors for dG_dxu
+    int *ipiv;  // index of pivot vector
+
     int *ipiv_one_stage;  // index of pivot vector (nx + nz)
     double *Z_work;  // used to perform computations to get out->zn (ns)
 
