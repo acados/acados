@@ -1023,25 +1023,25 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 }  // end jj
             }  // end ii
 
-            // set up right hand side in vector lambdaK
-            blasfeo_dvecse(nK, 0.0, lambdaK, 0);
+            // set up right hand side in vector &lambdaK[ss]
+            blasfeo_dvecse(nK, 0.0, &lambdaK[ss], 0);
             for (jj = 0; jj < ns; jj++)
-                blasfeo_dveccpsc(nx, -step * b_vec[jj], lambda, 0, lambdaK, jj * nx);
-                // lambdaK_jj = -step b_jj * lambda_x
+                blasfeo_dveccpsc(nx, -step * b_vec[jj], lambda, 0, &lambdaK[ss], jj * nx);
+                // &lambdaK[ss]_jj = -step b_jj * lambda_x
 
-            /*   obtain lambda_K by solving the linear system lambdaK <- (dG_dK)^(-T) lambdaK;   */
+            /*   obtain lambda_K by solving the linear system &lambdaK[ss] <- (dG_dK)^(-T) &lambdaK[ss];   */
             acados_tic(&timer_la);
             // factorize dG_dK
             blasfeo_dgetrf_rowpivot(nK, nK, &dG_dK[ss], 0, 0, &dG_dK[ss], 0, 0, ipiv);
             // solve linear system
-            blasfeo_dtrsv_utn(nK, &dG_dK[ss], 0, 0, lambdaK, 0, lambdaK, 0);
-            blasfeo_dtrsv_ltu(nK, &dG_dK[ss], 0, 0, lambdaK, 0, lambdaK, 0);
-            blasfeo_dvecpei(nK, ipiv, lambdaK, 0);
+            blasfeo_dtrsv_utn(nK, &dG_dK[ss], 0, 0, &lambdaK[ss], 0, &lambdaK[ss], 0);
+            blasfeo_dtrsv_ltu(nK, &dG_dK[ss], 0, 0, &lambdaK[ss], 0, &lambdaK[ss], 0);
+            blasfeo_dvecpei(nK, ipiv, &lambdaK[ss], 0);
             timing_la += acados_toc(&timer_la);
 
             /* update adjoint sensitivities lambda */
-            // lambda = 1 * lambda + 1 * dG_dxu' * lambdaK
-            blasfeo_dgemv_t(nK, nx + nu, 1.0, &dG_dxu[ss], 0, 0, lambdaK, 0, 1.0, lambda,
+            // lambda = 1 * lambda + 1 * dG_dxu' * &lambdaK[ss]
+            blasfeo_dgemv_t(nK, nx + nu, 1.0, &dG_dxu[ss], 0, 0, &lambdaK[ss], 0, 1.0, lambda,
                              0, lambda, 0);
         }  // end for num_steps
         blasfeo_unpack_dvec(nx + nu, lambda, 0, S_adj_out);
