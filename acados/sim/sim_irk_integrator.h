@@ -98,6 +98,8 @@ typedef struct
     struct blasfeo_dmat df_dxdotz;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
                         // used for algebraic sensitivity generation
 
+    /* the following variables are only available if (opts->sens_hess) */
+
     // For Hessian propagation, TODO allocate only if option is used!
     struct blasfeo_dmat H_x;   // temporary Hessian (nx, nx + nu)
     struct blasfeo_dmat H_z;   // temporary Hessian (nx, ns * (nx + nz))
@@ -106,7 +108,7 @@ typedef struct
     struct blasfeo_dmat f_hess;
 
     // second order derivative of G w.r.t K, in direction lambdaK
-    struct blasfeo_dmat dG_dKK_lambdaK;
+    struct blasfeo_dmat dG_dKK_lambdaK;  // (nK, nK)
 
 } sim_irk_workspace;
 
