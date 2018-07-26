@@ -47,7 +47,7 @@ typedef struct
     // jax_x & jac_xdot & jac_u & jac_z of implicit ode
     external_function_generic *impl_ode_jac_x_xdot_u_z;
     // hessian of implicit ode:
-    // TODO: describe format used here
+    // TODO(oj) describe format used here
     external_function_generic *impl_ode_hess;
 } irk_model;
 
@@ -65,7 +65,8 @@ typedef struct
     struct blasfeo_dvec xtdot;  // temporary xdot
 
     // lambda: if (!opts->sens_hess) - single blasfeo_dvec that is reused
-    //         if ( opts->sens_hess) - array of (num_steps + 1) blasfeo_dvec to store intermediate results
+    //         if ( opts->sens_hess) - array of (num_steps + 1)
+    //                          blasfeo_dvec to store intermediate results
     struct blasfeo_dvec *lambda;   // adjoint seed (nx + nu)
 
     // lamdaK: if (!opts->sens_hess) - single blasfeo_dvec that is reused
@@ -100,6 +101,12 @@ typedef struct
     // For Hessian propagation, TODO allocate only if option is used!
     struct blasfeo_dmat H_x;   // temporary Hessian (nx, nx + nu)
     struct blasfeo_dmat H_z;   // temporary Hessian (nx, ns * (nx + nz))
+
+    // temporary Hessian of ode w.r.t. x, xdot, z: ( 2 * nx + nz, nx * (2 * nx + nz) );
+    struct blasfeo_dmat f_hess;
+
+    // second order derivative of G w.r.t K, in direction lambdaK
+    struct blasfeo_dmat dG_dKK_lambdaK;
 
 } sim_irk_workspace;
 
