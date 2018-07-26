@@ -162,6 +162,7 @@ file(GLOB INV_PENDULUM_SRC
     inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot.c
     inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u.c
     inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_u.c
+    inverted_pendulum_model/inv_pendulum_impl_ode_hess.c
     inverted_pendulum_model/inv_pendulum_phi_fun.c
     inverted_pendulum_model/inv_pendulum_phi_fun_jac_y.c
     inverted_pendulum_model/inv_pendulum_phi_jac_y_uhat.c

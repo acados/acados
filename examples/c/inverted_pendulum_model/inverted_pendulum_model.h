@@ -76,6 +76,14 @@ const int *inv_pendulum_impl_ode_fun_jac_x_xdot_u_sparsity_out(int);
 int inv_pendulum_impl_ode_fun_jac_x_xdot_u_n_in();
 int inv_pendulum_impl_ode_fun_jac_x_xdot_u_n_out();
 
+// implicit ODE
+int inv_pendulum_impl_ode_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int inv_pendulum_impl_ode_hess_work(int *, int *, int *, int *);
+const int *inv_pendulum_impl_ode_hess_sparsity_in(int);
+const int *inv_pendulum_impl_ode_hess_sparsity_out(int);
+int inv_pendulum_impl_ode_hess_n_in();
+int inv_pendulum_impl_ode_hess_n_out();
+
 /* GNSF Functions */
 // used to import model matrices
 int        inv_pendulum_get_matrices_fun(const double** arg, double** res, int* iw, double* w, void *mem);

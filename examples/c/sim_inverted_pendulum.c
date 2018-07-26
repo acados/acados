@@ -131,6 +131,16 @@ int main()
     impl_ode_fun_jac_x_xdot_u.casadi_n_out = &inv_pendulum_impl_ode_fun_jac_x_xdot_u_n_out;
     external_function_casadi_create(&impl_ode_fun_jac_x_xdot_u);
 
+    // impl_ode_hess
+    external_function_casadi impl_ode_hess;
+    impl_ode_hess.casadi_fun = &inv_pendulum_impl_ode_hess;
+    impl_ode_hess.casadi_work = &inv_pendulum_impl_ode_hess_work;
+    impl_ode_hess.casadi_sparsity_in = &inv_pendulum_impl_ode_hess_sparsity_in;
+    impl_ode_hess.casadi_sparsity_out = &inv_pendulum_impl_ode_hess_sparsity_out;
+    impl_ode_hess.casadi_n_in = &inv_pendulum_impl_ode_hess_n_in;
+    impl_ode_hess.casadi_n_out = &inv_pendulum_impl_ode_hess_n_out;
+    external_function_casadi_create(&impl_ode_hess);
+
     /************************************************
     * external functions (Generalized Nonlinear Static Feedback (GNSF) model)
     ************************************************/
