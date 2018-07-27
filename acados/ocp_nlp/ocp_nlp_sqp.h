@@ -100,10 +100,6 @@ typedef struct
     ocp_qp_out *qp_out;
     void *qp_work;
 
-    // regularization
-    ocp_nlp_reg_in *reg_in;
-    ocp_nlp_reg_out *reg_out;
-
     void **dynamics;     // dynamics_workspace
     void **cost;         // cost_workspace
     void **constraints;  // constraints_workspace

@@ -20,6 +20,7 @@
 #include "acados/ocp_nlp/ocp_nlp_reg_conv.h"
 
 #include <assert.h>
+#include <math.h>
 #include <stdlib.h>
 
 #include "acados/utils/math.h"
@@ -30,7 +31,7 @@
 
 int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims)
 {
-    int nx = dims->nx, nu = dims->nu;
+    int nx = dims->nx[0], nu = dims->nu[0], N = dims->N;
 
     int size = 0;
 
@@ -40,6 +41,7 @@ int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims)
     size += nu*nu*sizeof(double);             // V
     size += nu*sizeof(double);                // d
     size += (nx+nu)*(nx+nu)*sizeof(double);   // reg_hess
+    size += (N+1) * sizeof(struct blasfeo_dmat *);
 
     size += 1 * 64;
 
@@ -50,12 +52,21 @@ int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims)
     size += blasfeo_memsize_dmat(nx, nx);     // delta_eye
     size += blasfeo_memsize_dmat(nx, nu);     // St_copy
 
+    size += blasfeo_memsize_dmat(nx+1, nx);
+    for (int i = N-1; i >= 0; --i)
+    {
+        size += blasfeo_memsize_dmat(nu+nx+1, nu+nx);
+    }
+
+    size += blasfeo_memsize_dvec(nx);
+    size += blasfeo_memsize_dvec(nx);
+
     return size;
 }
 
 void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory)
 {
-    int nx = dims->nx, nu = dims->nu;
+    int nx = dims->nx[0], nu = dims->nu[0], N = dims->N;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -75,6 +86,8 @@ void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory)
     mem->reg_hess = (double *) c_ptr;
     c_ptr += (nx+nu)*(nx+nu)*sizeof(double);
 
+    mem->original_RSQrq = calloc(N+1, sizeof(struct blasfeo_dmat));
+
     align_char_to(64, &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->Q_tilde, &c_ptr);
@@ -83,6 +96,15 @@ void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory)
     assign_and_advance_blasfeo_dmat_mem(nu, nu, &mem->L, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->delta_eye, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nu, &mem->St_copy, &c_ptr);
+
+    assign_and_advance_blasfeo_dmat_mem(nx+1, nx, &mem->original_RSQrq[N], &c_ptr);
+    for (int i = N-1; i >= 0; --i)
+    {
+        assign_and_advance_blasfeo_dmat_mem(nu+nx+1, nu+nx, &mem->original_RSQrq[i], &c_ptr);
+    }
+
+    assign_and_advance_blasfeo_dvec_mem(nx, &mem->grad, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx, &mem->b, &c_ptr);
 
     assert((char *)mem + ocp_nlp_reg_conv_calculate_memory_size(dims) >= c_ptr);
 
@@ -94,13 +116,15 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
 {
     int N = dims->N;
 
-    int nx = dims->nx, nu = dims->nu;
+    int nx = dims->nx[0], nu = dims->nu[0];
 
     double delta = opts->delta;
 
     ocp_nlp_reg_conv_memory *mem = (ocp_nlp_reg_conv_memory *) mem_;
 
     // Algorithm 6 from Verschueren2017
+
+    blasfeo_dgecp(nx+1, nx, &in->RSQrq[N], 0, 0, &mem->original_RSQrq[N], 0, 0);
 
     blasfeo_ddiare(nx, delta, &mem->delta_eye, 0, 0);
     blasfeo_dgecp(nx, nx, &mem->delta_eye, 0, 0, &mem->Q_tilde, 0, 0);
@@ -109,6 +133,7 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
 
     for (int i = N-1; i >= 0; --i)
     {
+        blasfeo_dgecp(nu+nx+1, nu+nx, &in->RSQrq[i], 0, 0, &mem->original_RSQrq[i], 0, 0);
 
         // printf("----------------\n");
         // printf("--- stage %d ---\n", i);
@@ -143,21 +168,9 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
         if (needs_regularization)
         {
             blasfeo_unpack_dmat(nx+nu, nx+nu, &in->RSQrq[i], 0, 0, mem->reg_hess, nx+nu);
-            regularize(nx+nu, mem->reg_hess);
+            mirror(nx+nu, mem->reg_hess, 1e-4);
             blasfeo_pack_dmat(nx+nu, nx+nu, mem->reg_hess, nx+nu, &in->RSQrq[i], 0, 0);
         }
-
-        // struct blasfeo_dvec *lam = &nlp_out->lam[i];
-
-        // printf("multipliers: %f, %f, diff: %f\n", BLASFEO_DVECEL(lam, 0),
-        //        BLASFEO_DVECEL(lam, dims->ni[i]),
-        //        fabs(BLASFEO_DVECEL(lam, 0) - BLASFEO_DVECEL(lam, dims->ni[i])));
-
-        // if (fabs(BLASFEO_DVECEL(lam, 0) - BLASFEO_DVECEL(lam, dims->ni[i])) > ACADOS_EPS)
-        // {
-        //     // active bound
-
-        // }
 
         // printf("QSR_hat\n");
         // blasfeo_print_dmat(nx+nu+1, nx+nu, &work->qp_in->RSQrq[i], 0, 0);
@@ -177,6 +190,21 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
 
         // printf("H_tilde\n");
         // blasfeo_print_dmat(nu+nx, nu+nx, &work->qp_in->RSQrq[i], 0, 0);
+
+        // make symmetric
+        blasfeo_dtrtr_l(nx, &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);
+
+        for (int k = 0; k < nx; ++k)
+            BLASFEO_DVECEL(&mem->b, k) = BLASFEO_DMATEL(&in->BAbt[i], nu+nx, k);
+
+        blasfeo_dgemv_n(nx, nx, 1.0, &mem->Q_bar, 0, 0, &mem->b, 0, 0.0,
+                        &mem->grad, 0, &mem->grad, 0);
+        blasfeo_dgemv_n(nu+nx, nx, 1.0, &in->BAbt[i], 0, 0, &mem->grad, 0, 0.0,
+                        &mem->b, 0, &mem->b, 0);
+
+        for (int k = 0; k < nu+nx; ++k)
+            BLASFEO_DMATEL(&in->RSQrq[i], nu+nx, k) = BLASFEO_DMATEL(&in->RSQrq[i], nu+nx, k)
+                                                      + BLASFEO_DVECEL(&mem->b, k);
 
         blasfeo_dgead(nx, nx, -1.0, &in->RSQrq[i], nu, nu, &mem->Q_bar, 0, 0);
         blasfeo_dtrtr_l(nx, &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);

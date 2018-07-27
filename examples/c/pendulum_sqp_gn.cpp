@@ -20,6 +20,7 @@
 #include <numeric>
 #include <cmath>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -57,7 +58,7 @@ int main() {
 	std::vector<double> b0_l {-F_max, 0, 0, M_PI, 0}, b0_u {F_max, 0, 0, M_PI, 0};
 	std::vector<double> Q {1e3, 1e-2, 1e3, 1e-2};
 
-	int max_num_sqp_iterations = 150;
+	int max_num_sqp_iterations = 1;
 
 	std::vector<int> nx(N+1, num_states), nu(N+1, num_controls), nbx(N+1, 0), nbu(N+1, 0),
 		nb(N+1, 0), ng(N+1, 0), nh(N+1, 0), nq(N+1, 0),
@@ -242,7 +243,7 @@ int main() {
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
 	std::vector<std::vector<double>> MPC_log;
-	std::vector<double> timings;
+	std::vector<double> timings, KKT_log;
 
 	// NLP solution
     acados_timer timer;
@@ -260,31 +261,43 @@ int main() {
 		// blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, 0);
 		// blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, nb[0]+ng[0]);
 
-		// while (kkt_norm_inf > 1e-9) {
+		while (kkt_norm_inf > 1e-9) {
 			acados_tic(&timer);
 			solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 			elapsed_time = acados_toc(&timer);
 			timings.push_back(elapsed_time);
 			kkt_norm_inf = nlp_out->inf_norm_res;
-			// printf(" iteration %d | time  %f |  ", iteration_number, elapsed_time);
+			KKT_log.push_back(kkt_norm_inf);
+			printf(" iteration %2d | time  %f |  KKT %e\n", iteration_number, elapsed_time, kkt_norm_inf);
 			// blasfeo_print_tran_dvec(nx.at(0)+nu.at(0), &nlp_out->ux[0], 0);
-			// std::vector<double> ux0(nx[0]+nu[0]);
-			// blasfeo_unpack_dvec(nx[0]+nu[0], &nlp_out->ux[0], 0, ux0.data());
-			// MPC_log.push_back(ux0);
+			std::vector<double> ux0(nx[0]+nu[0]);
+			for (int i = 0; i < N; ++i)
+			{
+				blasfeo_unpack_dvec(nu[i]+nx[i], &nlp_out->ux[i], 0, ux0.data());
+				MPC_log.push_back(ux0);
+			}
+			ux0.front() = 0;
+			blasfeo_unpack_dvec(nu[N]+nx[N], &nlp_out->ux[N], 0, ux0.data()+1);
+			MPC_log.push_back(ux0);
+
 			// blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, 0);
 			// blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, nb[0]+ng[0]);
-			// iteration_number++;
-		// }
+			iteration_number++;
+
+			if (iteration_number >= 100)
+				break;
+		}
 	// }
 
 	std::ofstream ostrm("states_controls.txt");
 	for (auto v : MPC_log)
-		ostrm << v;
+		ostrm << std::setprecision(std::numeric_limits<double>::digits10) << v;
 	
-	std::ofstream ostrm_timings("timings.txt");
+	std::ofstream ostrm_timings("timings.txt"), ostrm_KKT("KKT.txt");
 	ostrm_timings << timings;
+	ostrm_KKT << KKT_log;
 
-	printf("\nsolution\n");
+	printf("\n--- solution ---\n");
 	ocp_nlp_out_print(dims, nlp_out);
 
     printf("\n\nstatus = %i, avg time = %f ms, iters = %d\n\n", solver_status, std::accumulate(std::begin(timings), std::end(timings), 0.0)/iteration_number, nlp_out->sqp_iter);

@@ -217,10 +217,6 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     dims->qp_solver = ocp_qp_dims_assign(N, c_ptr);
     c_ptr += ocp_qp_dims_calculate_size(N);
 
-    // regularization
-    dims->reg_dims = (ocp_nlp_reg_dims *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_reg_dims);
-
     // N
     dims->N = N;
 
@@ -325,10 +321,6 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
         dims->qp_solver->ng[ii] = ng[ii] + nh[ii];
         dims->qp_solver->ns[ii] = ns[ii];
     }
-
-    dims->reg_dims->N = N;
-    dims->reg_dims->nx = nx[0];
-    dims->reg_dims->nu = nu[0];
 
     return;
 }

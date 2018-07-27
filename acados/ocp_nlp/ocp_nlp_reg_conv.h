@@ -40,6 +40,12 @@ typedef struct {
     struct blasfeo_dmat L;
     struct blasfeo_dmat delta_eye;
     struct blasfeo_dmat St_copy;
+
+    struct blasfeo_dmat *original_RSQrq;
+
+    struct blasfeo_dvec grad;
+    struct blasfeo_dvec b;
+
 } ocp_nlp_reg_conv_memory;
 
 int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims);

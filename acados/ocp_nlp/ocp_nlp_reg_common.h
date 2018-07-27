@@ -24,23 +24,17 @@
 extern "C" {
 #endif
 
-typedef struct {
-    int N;
-    int nx;
-    int nu;
-} ocp_nlp_reg_dims;
+#include "acados/ocp_qp/ocp_qp_common.h"
 
-typedef struct {
-    struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in ocp_qp_in
-    struct blasfeo_dmat *BAbt;   // pointer to ABbt in ocp_qp_in
-} ocp_nlp_reg_in;
+typedef ocp_qp_dims ocp_nlp_reg_dims;
 
-typedef struct {
-    struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in ocp_qp_in
-} ocp_nlp_reg_out;
+typedef ocp_qp_in ocp_nlp_reg_in;
+
+typedef ocp_qp_out ocp_nlp_reg_out;
 
 typedef struct {
     double delta;
+    double gamma;
 } ocp_nlp_reg_opts;
 
 typedef struct {
@@ -53,14 +47,6 @@ typedef struct {
     void (*evaluate)(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in, ocp_nlp_reg_out *out,
                     ocp_nlp_reg_opts *opts, void *mem_);
 } ocp_nlp_reg_config;
-
-int ocp_nlp_reg_in_calculate_size();
-
-void *ocp_nlp_reg_in_assign(void *raw_memory);
-
-int ocp_nlp_reg_out_calculate_size(void);
-
-void *ocp_nlp_reg_out_assign(void *raw_memory);
 
 int ocp_nlp_reg_opts_calculate_size(void);
 

@@ -19,49 +19,6 @@
 
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 
-#include <assert.h>
-
-int ocp_nlp_reg_in_calculate_size(void)
-{
-    int size = 0;
-
-    size += sizeof(ocp_nlp_reg_in);
-
-    return size;
-}
-
-void *ocp_nlp_reg_in_assign(void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_reg_in *in = (ocp_nlp_reg_in *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_reg_in);
-
-    assert((char *) in + ocp_nlp_reg_in_calculate_size() >= c_ptr);
-
-    return in;
-}
-
-int ocp_nlp_reg_out_calculate_size(void)
-{
-    int size = 0;
-
-    size += sizeof(ocp_nlp_reg_out);
-
-    return size;
-}
-
-void *ocp_nlp_reg_out_assign(void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_reg_out *out = (ocp_nlp_reg_out *) c_ptr;
-
-    assert((char *) out + ocp_nlp_reg_out_calculate_size() >= c_ptr);
-
-    return out;
-}
-
 int ocp_nlp_reg_opts_calculate_size(void)
 {
     return sizeof(ocp_nlp_reg_opts);
