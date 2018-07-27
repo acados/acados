@@ -285,7 +285,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 
     int size = sizeof(sim_irk_workspace);
 
-    size += 2 * sizeof(struct blasfeo_dmat);  // dK_dxu, S_forw
+    size += 1 * sizeof(struct blasfeo_dmat);  // S_forw
 
     size += 4 * sizeof(struct blasfeo_dvec);          // rG, K, xt, xn
 
@@ -293,16 +293,16 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
         size += 3 * steps * sizeof(struct blasfeo_dvec);  // **xn_traj, **K_traj, Ztraj
     }
 
-    size += blasfeo_memsize_dmat((nx+nz) * ns, nx + nu);  // dK_dxu
-    size += blasfeo_memsize_dmat(nx, nx + nu);           // S_forw
-
     if (!opts->sens_hess){
         size += 2 * sizeof(struct blasfeo_dvec);  // lambdaK, lambda
-        size += 2 * sizeof(struct blasfeo_dmat);  // dG_dxu, dG_dK
+        size += 3 * sizeof(struct blasfeo_dmat);  // dG_dxu, dG_dK, dK_dxu
     } else {
         size += (2 * steps + 1) * sizeof(struct blasfeo_dvec);  // lambdaK, lambda
-        size += 2 * steps * sizeof(struct blasfeo_dmat);  // dG_dxu, dG_dK
+        size += 3 * steps * sizeof(struct blasfeo_dmat);  // dG_dxu, dG_dK, dK_dxu
     }
+
+
+    size += blasfeo_memsize_dmat(nx, nx + nu);            // S_forw
 
     size += blasfeo_memsize_dvec((nx + nz) * ns);   // K
     size += blasfeo_memsize_dvec((nx + nz) * ns);   // rG
@@ -312,7 +312,8 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
         size += 1 * blasfeo_memsize_dvec(nx + nu);          // lambda
         size += 1 * blasfeo_memsize_dvec((nx + nz) * ns);     // lambdaK
         size += 1 * blasfeo_memsize_dmat((nx + nz) * ns, nx + nu);  // dG_dxu
-        size += 1 * blasfeo_memsize_dmat((nx + nz) * ns, (nx+nz) * ns);  // dG_dK
+        size += 1 * blasfeo_memsize_dmat((nx + nz) * ns, (nx + nz) * ns);  // dG_dK
+        size += 1 * blasfeo_memsize_dmat((nx  + nz) * ns, nx + nu);  // dK_dxu
         size += (nx + nz) * ns * sizeof(int);  // ipiv
 
     } else {
@@ -320,6 +321,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
         size += steps * blasfeo_memsize_dvec((nx + nz) * ns);     // lambdaK
         size += steps * blasfeo_memsize_dmat((nx + nz) * ns, nx + nu);  // dG_dxu
         size += steps * blasfeo_memsize_dmat((nx + nz) * ns, (nx+nz) * ns);  // dG_dK
+        size += steps * blasfeo_memsize_dmat((nx  + nz) * ns, nx + nu);  // dK_dxu
         size += steps * (nx + nz) * ns * sizeof(int);  // ipiv
         size += 1 * blasfeo_memsize_dmat(2 * nx + nz, (nx + nz) * (2 * nx + nz));  // f_hess
         size += 1 * blasfeo_memsize_dmat(nK, nK);  // dG_dKK_lambdaK
@@ -366,7 +368,6 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     sim_irk_workspace *workspace = (sim_irk_workspace *) c_ptr;
     c_ptr += sizeof(sim_irk_workspace);
 
-    assign_and_advance_blasfeo_dmat_structs(1, &workspace->dK_dxu, &c_ptr);
     assign_and_advance_blasfeo_dmat_structs(1, &workspace->S_forw, &c_ptr);
 
     if ( opts->sens_adj || opts->sens_hess ){
@@ -379,15 +380,17 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
 
     // lambdaK, dG_dxu
     if (!opts->sens_hess){
-        assign_and_advance_blasfeo_dvec_structs(1, &workspace->lambdaK, &c_ptr);
         assign_and_advance_blasfeo_dmat_structs(1, &workspace->dG_dxu, &c_ptr);
         assign_and_advance_blasfeo_dmat_structs(1, &workspace->dG_dK, &c_ptr);
+        assign_and_advance_blasfeo_dmat_structs(1, &workspace->dK_dxu, &c_ptr);
         assign_and_advance_blasfeo_dvec_structs(1, &workspace->lambda, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(1, &workspace->lambdaK, &c_ptr);
     } else {
-        assign_and_advance_blasfeo_dvec_structs(steps, &workspace->lambdaK, &c_ptr);
         assign_and_advance_blasfeo_dmat_structs(steps, &workspace->dG_dxu, &c_ptr);
         assign_and_advance_blasfeo_dmat_structs(steps, &workspace->dG_dK, &c_ptr);
+        assign_and_advance_blasfeo_dmat_structs(steps, &workspace->dK_dxu, &c_ptr);
         assign_and_advance_blasfeo_dvec_structs(steps + 1, &workspace->lambda, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(steps, &workspace->lambdaK, &c_ptr);
     }
     assign_and_advance_blasfeo_dvec_structs(1, &workspace->xt, &c_ptr);
     assign_and_advance_blasfeo_dvec_structs(1, &workspace->xn, &c_ptr);
@@ -399,21 +402,20 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
         assign_and_advance_blasfeo_dmat_mem(nK, nx + nu, workspace->dG_dxu, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(nK, nK,
                                                      workspace->dG_dK, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nK, nx + nu, workspace->dK_dxu, &c_ptr);
     }
     else
     {
         for (int ii = 0; ii < steps; ii++) {
-            assign_and_advance_blasfeo_dmat_mem(nK, nx + nu,
-                                                 &workspace->dG_dxu[ii], &c_ptr);
-            assign_and_advance_blasfeo_dmat_mem(nK, nK,
-                                                 &workspace->dG_dK[ii], &c_ptr);
+            assign_and_advance_blasfeo_dmat_mem(nK, nx + nu, &workspace->dG_dxu[ii], &c_ptr);
+            assign_and_advance_blasfeo_dmat_mem(nK, nK, &workspace->dG_dK[ii], &c_ptr);
+            assign_and_advance_blasfeo_dmat_mem(nK, nx + nu, &workspace->dK_dxu[ii], &c_ptr);
         }
         assign_and_advance_blasfeo_dmat_mem(2 * nx + nz, (nx + nz) * (2 * nx + nz),
                                              &workspace->f_hess, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(nK, nK,
                                              &workspace->dG_dKK_lambdaK, &c_ptr);
     }
-    assign_and_advance_blasfeo_dmat_mem(nK, nx + nu, workspace->dK_dxu, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, workspace->S_forw, &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nx, &workspace->df_dx, &c_ptr);
@@ -1159,6 +1161,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                              ii * nx, jj * nx);
                     }
                 }
+                printf("\ndG_dKK_lambdaK (in IRK), ii = %d \n", ii);
+                blasfeo_print_exp_dmat(nK, nK, &dG_dKK_lambdaK, 0, 0);
             }
         }
 

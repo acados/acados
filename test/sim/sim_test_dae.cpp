@@ -494,7 +494,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 opts->sens_adj          = (bool) sens_adj;
                 opts->output_z          = (bool) output_z;
                 opts->sens_algebraic    = (bool) sens_alg;
-                opts->sens_hess         = true;
+                opts->sens_hess         = false;
 
 
             /* sim in / out */

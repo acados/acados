@@ -53,16 +53,28 @@ typedef struct
 
 typedef struct
 {
+    struct blasfeo_dvec *rG;    // residuals of G (nx*ns)
+    struct blasfeo_dvec *K;     // internal K variables ((nx+nz)*ns)
+    struct blasfeo_dvec *xt;    // temporary x
+    struct blasfeo_dvec *xn;    // x at each integration step
+    struct blasfeo_dvec xtdot;  // temporary xdot
+
     struct blasfeo_dmat *dG_dK;   // jacobian of G over K ((nx+nz)*ns, (nx+nz)*ns)
-    struct blasfeo_dmat *dK_dxu;  // jacobian of (K,Z) over x and u ((nx+nz)*ns, nx+nu);
     struct blasfeo_dmat *S_forw;  // forward sensitivities (nx, nx+nu)
 
-    struct blasfeo_dvec *rG;  // residuals of G (nx*ns)
-    struct blasfeo_dvec *K;   // internal K variables ((nx+nz)*ns)
-    struct blasfeo_dvec *xt;  // temporary x
-    struct blasfeo_dvec *xn;  // x at each integration step
+    struct blasfeo_dmat df_dx;     // temporary Jacobian of ode w.r.t x (nx+nz, nx)
+    struct blasfeo_dmat df_dxdot;  // temporary Jacobian of ode w.r.t xdot (nx+nz, nx)
+    struct blasfeo_dmat df_du;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
+    struct blasfeo_dmat df_dz;     // temporary Jacobian of ode w.r.t z (nx+nz, nu)
 
-    struct blasfeo_dvec xtdot;  // temporary xdot
+    struct blasfeo_dmat df_dxdotz;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
+                        // used for algebraic sensitivity generation
+
+    // dK_dxu: if (!opts->sens_hess) - single blasfeo_dmat that is reused
+    //         if ( opts->sens_hess) - array of (num_steps) blasfeo_dmat
+    //                                  to store intermediate results
+    struct blasfeo_dmat *dK_dxu;  // jacobian of (K,Z) over x and u ((nx+nz)*ns, nx+nu);
+
 
     // lambda: if (!opts->sens_hess) - single blasfeo_dvec that is reused
     //         if ( opts->sens_hess) - array of (num_steps + 1)
@@ -90,14 +102,6 @@ typedef struct
     struct blasfeo_dvec *xn_traj;  // xn trajectory
     struct blasfeo_dvec *K_traj;   // K trajectory
 
-    struct blasfeo_dmat df_dx;     // temporary Jacobian of ode w.r.t x (nx+nz, nx)
-    struct blasfeo_dmat df_dxdot;  // temporary Jacobian of ode w.r.t xdot (nx+nz, nx)
-    struct blasfeo_dmat df_du;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
-    struct blasfeo_dmat df_dz;     // temporary Jacobian of ode w.r.t z (nx+nz, nu)
-
-    struct blasfeo_dmat df_dxdotz;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
-                        // used for algebraic sensitivity generation
-
     /* the following variables are only available if (opts->sens_hess) */
 
     // For Hessian propagation, TODO allocate only if option is used!
@@ -109,6 +113,7 @@ typedef struct
 
     // second order derivative of G w.r.t K, in direction lambdaK
     struct blasfeo_dmat dG_dKK_lambdaK;  // (nK, nK)
+    struct blasfeo_dmat dG_dKx_lambdaK;  // ()
 
 } sim_irk_workspace;
 
