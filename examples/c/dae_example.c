@@ -26,15 +26,14 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
-#include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/sim_common.h"
+#include "acados/sim/sim_irk_integrator.h"
 
 #include "acados_c/ocp_nlp_interface.h"
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 
-#include "pendulum_model/vde_forw_pendulum.h"
-#include "pendulum_model/constraint.h"
-#include "pendulum_model/position.h"
+#include "inverted_pendulum_model/inverted_pendulum_model_dae.h"
 
 #define PI 3.1415926535897932
 
@@ -95,10 +94,8 @@ int main() {
 	for (int i = 0; i < N; i++)
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-		plan->sim_solver_plan[i].sim_solver = ERK;
+		plan->sim_solver_plan[i].sim_solver = IRK;
 	}
-	for (int i = 0; i <= N; i++)
-		plan->nlp_constraints[i] = BGHP;
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
 
@@ -107,10 +104,10 @@ int main() {
 
 	external_function_casadi impl_ode_fun[N];
 	external_function_casadi impl_ode_fun_jac_x_xdot_z[N];
-	external_function_casadi impl_ode_fun_jac_x_xdot_z_u[N];
+	// external_function_casadi impl_ode_fun_jac_x_xdot_z_u[N];
 	external_function_casadi impl_ode_jac_x_xdot_z_u[N];
 
-	for (int i = 0; i < N; ++i) {
+	for (int ii = 0; ii < N; ++ii) {
         impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_pendulum_dae;
         impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_pendulum_dae_work;
         impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_pendulum_dae_sparsity_in;
@@ -125,12 +122,12 @@ int main() {
         impl_ode_fun_jac_x_xdot_z[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae_n_in;
         impl_ode_fun_jac_x_xdot_z[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae_n_out;
 
-        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae;
-        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_work;
-        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_sparsity_in;
-        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_sparsity_out;
-        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_n_in;
-        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_n_out;
+        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae;
+        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_work;
+        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_sparsity_in;
+        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_sparsity_out;
+        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_n_in;
+        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_n_out;
 
         impl_ode_jac_x_xdot_z_u[ii].casadi_fun = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae;
         impl_ode_jac_x_xdot_z_u[ii].casadi_work = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_work;
@@ -140,15 +137,57 @@ int main() {
         impl_ode_jac_x_xdot_z_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_n_out;
 	}
 
-	// NLP model: forward VDEs
-	int function_size = 0;
-	for (int i = 0; i < N; ++i)
-		function_size += external_function_casadi_calculate_size(forw_vde_casadi+i);
-
-	char *c_ptr = (char *) calloc(1, function_size);
-	for (int i = 0; i < N; ++i) {
-		external_function_casadi_assign(forw_vde_casadi+i, c_ptr);
-		c_ptr += external_function_casadi_calculate_size(forw_vde_casadi+i);
+	// impl_ode
+    int	tmp_size = 0;
+	for (int ii=0; ii<N; ii++)
+	{
+		tmp_size += external_function_casadi_calculate_size(impl_ode_fun+ii);
+	}
+	void *impl_ode_casadi_mem = malloc(tmp_size);
+	void *c_ptr = impl_ode_casadi_mem;
+	for (int ii=0; ii<N; ii++)
+	{
+		external_function_casadi_assign(impl_ode_fun+ii, c_ptr);
+		c_ptr += external_function_casadi_calculate_size(impl_ode_fun+ii);
+	}
+	//
+	tmp_size = 0;
+	for (int ii=0; ii<N; ii++)
+	{
+		tmp_size += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z+ii);
+	}
+	void *impl_ode_fun_jac_x_xdot_z_mem = malloc(tmp_size);
+	c_ptr = impl_ode_fun_jac_x_xdot_z_mem;
+	for (int ii=0; ii<N; ii++)
+	{
+		external_function_casadi_assign(impl_ode_fun_jac_x_xdot_z+ii, c_ptr);
+		c_ptr += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z+ii);
+	}
+	//
+	// tmp_size = 0;
+	// for (int ii=0; ii<N; ii++)
+	// {
+	// 	tmp_size += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z_u+ii);
+	// }
+	// void *impl_ode_fun_jac_x_xdot_z_u_mem = malloc(tmp_size);
+	// c_ptr = impl_ode_fun_jac_x_xdot_z_u_mem;
+	// for (int ii=0; ii<N; ii++)
+	// {
+	// 	external_function_casadi_assign(impl_ode_fun_jac_x_xdot_z_u+ii, c_ptr);
+	// 	c_ptr += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z_u+ii);
+	// }
+	//
+	tmp_size = 0;
+	for (int ii=0; ii<N; ii++)
+	{
+		tmp_size += external_function_casadi_calculate_size(impl_ode_jac_x_xdot_z_u+ii);
+	}
+	void *impl_ode_jac_x_xdot_z_u_mem = malloc(tmp_size);
+	c_ptr = impl_ode_jac_x_xdot_z_u_mem;
+	for (int ii=0; ii<N; ii++)
+	{
+		external_function_casadi_assign(impl_ode_jac_x_xdot_z_u+ii, c_ptr);
+		c_ptr += external_function_casadi_calculate_size(impl_ode_jac_x_xdot_z_u+ii);
 	}
 
 	ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
@@ -186,36 +225,25 @@ int main() {
 
 	// NLP dynamics
 	for (int i = 0; i < N; ++i) {
-		ocp_nlp_dynamics_cont_model *dynamics = (ocp_nlp_dynamics_cont_model *) nlp_in->dynamics[i];
-		erk_model *model = (erk_model *) dynamics->sim_model;
-		model->expl_vde_for = (external_function_generic *) &forw_vde_casadi[i];
+		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
+		irk_model *model = dynamics->sim_model;
+		model->impl_ode_fun = (external_function_generic *) &impl_ode_fun[i];
+		model->impl_ode_fun_jac_x_xdot_z = (external_function_generic *) &impl_ode_fun_jac_x_xdot_z[i];
+		model->impl_ode_jac_x_xdot_u_z = (external_function_generic *) &impl_ode_jac_x_xdot_z_u[i]; // TODO(zanellia): need to swapp z and u!!
 	}
 
-	// convex-composite constraint
-	external_function_casadi nonlinear_constraint;
-	nonlinear_constraint.casadi_fun = &constraint;
-	nonlinear_constraint.casadi_n_in = &constraint_n_in;
-	nonlinear_constraint.casadi_n_out = &constraint_n_out;
-	nonlinear_constraint.casadi_sparsity_in = &constraint_sparsity_in;
-	nonlinear_constraint.casadi_sparsity_out = &constraint_sparsity_out;
-	nonlinear_constraint.casadi_work = &constraint_work;
+	// // nonlinear part of convex-composite constraint
+	// external_function_casadi position_constraint;
+	// position_constraint.casadi_fun = &position;
+	// position_constraint.casadi_n_in = &position_n_in;
+	// position_constraint.casadi_n_out = &position_n_out;
+	// position_constraint.casadi_sparsity_in = &position_sparsity_in;
+	// position_constraint.casadi_sparsity_out = &position_sparsity_out;
+	// position_constraint.casadi_work = &position_work;
 
-	int constraint_size = external_function_casadi_calculate_size(&nonlinear_constraint);
-	void *ptr = malloc(constraint_size);
-	external_function_casadi_assign(&nonlinear_constraint, ptr);
-
-	// nonlinear part of convex-composite constraint
-	external_function_casadi position_constraint;
-	position_constraint.casadi_fun = &position;
-	position_constraint.casadi_n_in = &position_n_in;
-	position_constraint.casadi_n_out = &position_n_out;
-	position_constraint.casadi_sparsity_in = &position_sparsity_in;
-	position_constraint.casadi_sparsity_out = &position_sparsity_out;
-	position_constraint.casadi_work = &position_work;
-
-	constraint_size = external_function_casadi_calculate_size(&position_constraint);
-	ptr = malloc(constraint_size);
-	external_function_casadi_assign(&position_constraint, ptr);
+	// constraint_size = external_function_casadi_calculate_size(&position_constraint);
+	// ptr = malloc(constraint_size);
+	// external_function_casadi_assign(&position_constraint, ptr);
 
 	// bounds
 	ocp_nlp_constraints_bghp_model **constraints = (ocp_nlp_constraints_bghp_model **) nlp_in->constraints;
@@ -226,8 +254,8 @@ int main() {
 
 	blasfeo_pack_dvec(nh[N], &neg_inf, &constraints[N]->d, nb[N]+ng[N]);
 	blasfeo_pack_dvec(nh[N], &radius2, &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
-	constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
-	constraints[N]->p = (external_function_generic *) &position_constraint;
+	// constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
+	// constraints[N]->p = (external_function_generic *) &position_constraint;
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 

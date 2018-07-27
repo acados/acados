@@ -48,11 +48,11 @@ jac_z = SX.zeros(NX+NZ, NZ) + jacobian(ode_impl, dae.z);
 jac_u = SX.zeros(NX+NZ, NU) + jacobian(ode_impl, dae.u);
 
 impl_ode_fun = Function('casadi_impl_ode_fun_pendulum_dae', {dae.x, dae.xdot, dae.z, dae.u}, {ode_impl});
-impl_ode_fun_jac_x_xdot = Function('casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae', {dae.x, dae.xdot, dae.z, dae.u}, {ode_impl, jac_x, jac_xdot, jac_z});
-impl_ode_fun_jac_x_xdot_u = Function('casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae', {dae.x, dae.xdot, dae.z, dae.u}, {ode_impl, jac_x, jac_xdot, jac_z, jac_u});
-impl_ode_jac_x_xdot_u = Function('casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae', {dae.x, dae.xdot, dae.z, dae.u}, {jac_x, jac_xdot, jac_z, jac_u});
+impl_ode_fun_jac_x_xdot_z = Function('casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae', {dae.x, dae.xdot, dae.z, dae.u}, {ode_impl, jac_x, jac_xdot, jac_z});
+impl_ode_fun_jac_x_xdot_z_u = Function('casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae', {dae.x, dae.xdot, dae.z, dae.u}, {ode_impl, jac_x, jac_xdot, jac_z, jac_u});
+impl_ode_jac_x_xdot_z_u = Function('casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae', {dae.x, dae.xdot, dae.z, dae.u}, {jac_x, jac_xdot, jac_z, jac_u});
 
 impl_ode_fun.generate('impl_ode_fun_pendulum_dae', opts);
-impl_ode_fun_jac_x_xdot.generate('impl_ode_fun_jac_x_xdot_z_pendulum_dae', opts);
-impl_ode_fun_jac_x_xdot_u.generate('impl_ode_fun_jac_x_xdot_z_u_pendulum_dae', opts);
-impl_ode_jac_x_xdot_u.generate('impl_ode_jac_x_xdot_z_u_pendulum_dae', opts);
+impl_ode_fun_jac_x_xdot_z.generate('impl_ode_fun_jac_x_xdot_z_pendulum_dae', opts);
+impl_ode_fun_jac_x_xdot_z_u.generate('impl_ode_fun_jac_x_xdot_z_u_pendulum_dae', opts);
+impl_ode_jac_x_xdot_z_u.generate('impl_ode_jac_x_xdot_z_u_pendulum_dae', opts);

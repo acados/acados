@@ -214,9 +214,10 @@ add_test(pendulum_scqp pendulum_scqp)
 
 # -------------------- dae_example
 add_executable(dae_example dae_example.c
-    pendulum_model/vde_forw_pendulum.c
-    pendulum_model/constraint.c
-    pendulum_model/position.c)
+    inverted_pendulum_model/impl_ode_fun_pendulum_dae.c
+    inverted_pendulum_model/impl_ode_jac_x_xdot_z_u_pendulum_dae.c
+    inverted_pendulum_model/impl_ode_fun_jac_x_xdot_z_pendulum_dae.c)
+    
 target_link_libraries(dae_example acados)
 add_test(dae_example dae_example)
 
