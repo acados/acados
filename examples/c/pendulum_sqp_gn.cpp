@@ -291,7 +291,7 @@ int main() {
 
 	std::ofstream ostrm("states_controls.txt");
 	for (auto v : MPC_log)
-		ostrm << std::setprecision(std::numeric_limits<double>::digits10) << v;
+		ostrm << v;
 	
 	std::ofstream ostrm_timings("timings.txt"), ostrm_KKT("KKT.txt");
 	ostrm_timings << timings;
