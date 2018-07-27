@@ -626,10 +626,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double timing_la = 0.0;
 
     // initialize
-    blasfeo_dgese(nK, nK, 0.0, dG_dK, 0, 0);
-    blasfeo_dgese(nK, nx + nu, 0.0, dG_dxu, 0, 0);
-    blasfeo_dgese(nK, nx + nu, 0.0, dK_dxu, 0, 0);
-
     blasfeo_dvecse(nK, 0.0, rG, 0);
     blasfeo_dvecse(nK, 0.0, K, 0);
 
@@ -822,7 +818,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             timing_la += acados_toc(&timer_la);
 
             // obtain dK_dxu
-            // TODO(all): add the option to use VDE instead of dgemm ???
             // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw
             blasfeo_dgemm_nn(nK, nx + nu, nx, 1.0, dG_dxu, 0, 0, S_forw, 0,
                                  0, 0.0, dK_dxu, 0, 0, dK_dxu, 0, 0);
