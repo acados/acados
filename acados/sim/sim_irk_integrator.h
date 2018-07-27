@@ -113,7 +113,7 @@ typedef struct
 
     // second order derivative of G w.r.t K, in direction lambdaK
     struct blasfeo_dmat dG_dKK_lambdaK;  // (nK, nK)
-    struct blasfeo_dmat dG_dKx_lambdaK;  // ()
+    struct blasfeo_dmat dG_dKx_lambdaK;  // (nK, nx)
 
 } sim_irk_workspace;
 
