@@ -513,27 +513,30 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
         blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
     }
 
-    int hess_index = 0;
-    for (int j = 0; j < nx; j++) {
-        for (int k = j; k < nx; k++) {
-            BLASFEO_DMATEL(&mem->hes, nu+k, nu+j) = work->sim_out->S_hess[hess_index];
-            hess_index++;
+    if (opts->compute_hess)
+    {
+        int hess_index = 0;
+        for (int j = 0; j < nx; j++) {
+            for (int k = j; k < nx; k++) {
+                BLASFEO_DMATEL(&mem->hes, nu+k, nu+j) = work->sim_out->S_hess[hess_index];
+                hess_index++;
+            }
+            for (int k = 0; k < nu; k++) {
+                // S: nu x nx
+                BLASFEO_DMATEL(&mem->hes, nu+j, k) = work->sim_out->S_hess[hess_index];
+                hess_index++;
+            }
         }
-        for (int k = 0; k < nu; k++) {
-            BLASFEO_DMATEL(&mem->hes, nu+j, k) = work->sim_out->S_hess[hess_index];  // S: nu x nx
-            hess_index++;
+        for (int j = 0; j < nu; j++) {
+            for (int k = j; k < nu; k++) {
+                BLASFEO_DMATEL(&mem->hes, k, j) = work->sim_out->S_hess[hess_index];
+                hess_index++;
+            }
         }
-    }
-    for (int j = 0; j < nu; j++) {
-        for (int k = j; k < nu; k++) {
-            BLASFEO_DMATEL(&mem->hes, k, j) = work->sim_out->S_hess[hess_index];
-            hess_index++;
-        }
-    }
 
-    // Add hessian contribution
-    blasfeo_dgead(nx+nu, nx+nu, 1.0, &mem->hes, 0, 0, mem->RSQrq, 0, 0);
-
+        // Add hessian contribution
+        blasfeo_dgead(nx+nu, nx+nu, 1.0, &mem->hes, 0, 0, mem->RSQrq, 0, 0);
+    }
     return;
 }
 

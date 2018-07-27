@@ -68,6 +68,7 @@ typedef struct
 {
     void *sim_solver;
     int compute_adj;
+    int compute_hess;
 } ocp_nlp_dynamics_cont_opts;
 
 //

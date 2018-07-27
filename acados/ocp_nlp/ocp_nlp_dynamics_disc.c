@@ -280,6 +280,15 @@ void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *
 }
 
 
+void ocp_nlp_dynamics_disc_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_)
+{
+    ocp_nlp_dynamics_disc_memory *memory = memory_;
+
+    memory->RSQrq = RSQrq;
+
+    return;
+}
+
 
 /************************************************
  * workspace
@@ -487,6 +496,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->memory_set_ux1_ptr = &ocp_nlp_dynamics_disc_memory_set_ux1_ptr;
     config->memory_set_pi_ptr = &ocp_nlp_dynamics_disc_memory_set_pi_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_disc_memory_set_BAbt_ptr;
+    config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_disc_memory_set_RSQrq_ptr;
     config->workspace_calculate_size = &ocp_nlp_dynamics_disc_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_disc_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_disc_update_qp_matrices;

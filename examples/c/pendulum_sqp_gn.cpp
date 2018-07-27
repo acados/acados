@@ -227,6 +227,7 @@ int main() {
 	for (int i = 0; i < N; ++i)
 	{
 		sim_rk_opts *rk_opts = (sim_rk_opts *) ((ocp_nlp_dynamics_cont_opts *)sqp_opts->dynamics[i])->sim_solver;
+		((ocp_nlp_dynamics_cont_opts *)sqp_opts->dynamics[i])->compute_hess = true;
 		rk_opts->num_steps = 5;
 		rk_opts->sens_hess = true;
 		rk_opts->sens_adj = true;
