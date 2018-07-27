@@ -499,6 +499,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // declare
     double a;
     struct blasfeo_dmat *dG_dK_ss;
+    struct blasfeo_dmat *S_forw_old;
+    struct blasfeo_dmat *S_forw_new;
     int *ipiv_ss;
 
     int nx = dims->nx;
@@ -762,18 +764,31 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_dveccp(nK, K, 0, &K_traj[ss], 0);
         }
 
-        // evaluate forward sensitivities
+        /* evaluate forward sensitivities */
         if (opts->sens_forw)
         {
-            // decide if dG_dK is reused or stored
+            /* decide wheter results from forward sensitivity propagation should be is stored,
+                or if memory has to be reused --> set pointers accordingly */
+            // todo: also store dK_dxu; adapt adjoint scheme to use the forward results;
             if (opts->sens_hess){
                 dG_dK_ss = &dG_dK[ss];
                 ipiv_ss = &ipiv[ss*nK];
+                if (ss == 0)
+                {
+                    S_forw_old = S_forw;  // initial seed is copied here
+                } else {
+                    S_forw_old = &S_forw[ss-1];
+                }
+                S_forw_new = &S_forw[ss];
+                // copy current S_forw to S_forw_new
+                blasfeo_dgecp(nx, nx + nu, S_forw_old, 0, 0, S_forw_new, 0, 0);
             }
             else
             {
                 dG_dK_ss = dG_dK;
                 ipiv_ss = ipiv;
+                S_forw_old = S_forw;
+                S_forw_new = S_forw;
             }
             blasfeo_dgese(nK, nK, 0.0, dG_dK_ss, 0, 0);
                          // initialize dG_dK_ss with zeros
@@ -830,8 +845,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             timing_la += acados_toc(&timer_la);
 
             // obtain dK_dxu
-            // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw
-            blasfeo_dgemm_nn(nK, nx + nu, nx, 1.0, dG_dxu, 0, 0, S_forw, 0,
+            // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw_old
+            blasfeo_dgemm_nn(nK, nx + nu, nx, 1.0, dG_dxu, 0, 0, S_forw_old, 0,
                                  0, 0.0, dK_dxu, 0, 0, dK_dxu, 0, 0);
             // dK_du = dK_du + 1 * dG_du
             blasfeo_dgead(nK, nu, 1.0, dG_dxu, 0, nx, dK_dxu, 0, nx);
@@ -844,7 +859,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             // update forward sensitivity
             for (int jj = 0; jj < ns; jj++)
-                blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], dK_dxu, jj * nx, 0, S_forw, 0, 0);
+                blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], dK_dxu, jj * nx, 0, S_forw_new, 0, 0);
         }  // end if sens_forw
 
         // obtain x(n+1)
