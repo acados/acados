@@ -106,7 +106,7 @@ typedef struct
 
     // For Hessian propagation, TODO allocate only if option is used!
     struct blasfeo_dmat H_x;   // temporary Hessian (nx, nx + nu)
-    struct blasfeo_dmat H_z;   // temporary Hessian (nx, ns * (nx + nz))
+    struct blasfeo_dmat H_K;   // temporary Hessian (nK, nx + nu)
 
     // temporary Hessian of ode w.r.t. x, xdot, z: ( 2 * nx + nz, nx * (2 * nx + nz) );
     struct blasfeo_dmat f_hess;
