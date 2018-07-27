@@ -315,11 +315,14 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
     {
         dims->qp_solver->nx[ii] = nx[ii];
         dims->qp_solver->nu[ii] = nu[ii];
+        dims->qp_solver->nb[ii] = nbx[ii] + nbu[ii];
         dims->qp_solver->nbx[ii] = nbx[ii];
         dims->qp_solver->nbu[ii] = nbu[ii];
-        dims->qp_solver->nb[ii] = nbx[ii] + nbu[ii];
         dims->qp_solver->ng[ii] = ng[ii] + nh[ii];
         dims->qp_solver->ns[ii] = ns[ii];
+        dims->qp_solver->nsbx[ii] = 0;
+        dims->qp_solver->nsbu[ii] = 0;
+        dims->qp_solver->nsg[ii] = 0;
     }
 
     return;
