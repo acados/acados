@@ -1135,10 +1135,30 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 timing_ad += acados_toc(&timer_ad);
 
                 /* set up dG_dKK_lambdaK */
-                blasfeo_dgead(nx, nx, 1.0, &f_hess, 0, 0, &dG_dKK_lambdaK, ii * nx, ii * nx);
+                for (int jj = 0; jj < ns; jj++)
+                {
+                    for (int ll = 0; ll < nx + nz; ll++)  // loop over entries of impl_ode
+                    {
+                        double lambdaK_jj_ll = blasfeo_dvecex1(&lambdaK[ss], ll + jj * (nx + nz));
 
 
+                        a = step * A_mat[ii + ns * jj];
+                        if (ii == jj)
+                        {
+                            // + d2F_dkdx * (a * step) * lambdaK_jj_ll
+                            blasfeo_dgead(nx, nx, lambdaK_jj_ll * a, &f_hess, nx, ll * (2 * nx + nz),
+                                         &dG_dKK_lambdaK, ii * nx, jj * nx);
+                            // + d2F_dxdk * (a * step) * lambdaK_jj_ll
+                            blasfeo_dgead(nx, nx, lambdaK_jj_ll * a, &f_hess, 0, ll * (2 * nx + nz) + nx,
+                                         &dG_dKK_lambdaK, ii * nx, jj * nx);                            
 
+                        }
+                        a *= a;
+                        // + d2F_d2x * (a * step)^2 * lambdaK_jj_ll
+                        blasfeo_dgead(nx, nx, lambdaK_jj_ll * a, &f_hess, 0, ll * (2 * nx + nz), &dG_dKK_lambdaK,
+                                             ii * nx, jj * nx);
+                    }
+                }
             }
         }
 
