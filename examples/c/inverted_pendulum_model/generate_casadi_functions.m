@@ -40,21 +40,17 @@ NZ = 5
 dae = export_inverted_pendulum_dae_model();
 
 % Set up DAE
-dae.x_dot   = SX.sym('x_dot', NX, 1);
-dae.x_dot   = SX.sym('x_dot', NX, 1);
-dae.p       = SX.sym('u', NU, 1);
-
 ode_impl    = dae.f_impl_expr; 
 
 jac_x = SX.zeros(NX+NZ, NX) + jacobian(ode_impl, dae.x);
-jac_xdot = SX.zeros(NX+NZ, NX) + jacobian(ode_impl, dae.x_dot);
+jac_xdot = SX.zeros(NX+NZ, NX) + jacobian(ode_impl, dae.xdot);
 jac_z = SX.zeros(NX+NZ, NZ) + jacobian(ode_impl, dae.z);
-jac_u = SX.zeros(NX+NZ, NU) + jacobian(ode_impl, dae.p);
+jac_u = SX.zeros(NX+NZ, NU) + jacobian(ode_impl, dae.u);
 
-impl_ode_fun = Function('casadi_impl_ode_fun_pendulum_dae', {dae.x, dae.x_dot, dae.z, dae.p}, {ode_impl});
-impl_ode_fun_jac_x_xdot = Function('casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae', {dae.x, dae.x_dot, dae.z, dae.p}, {ode_impl, jac_x, jac_xdot, jac_z});
-impl_ode_fun_jac_x_xdot_u = Function('casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae', {dae.x, dae.x_dot, dae.z, dae.p}, {ode_impl, jac_x, jac_xdot, jac_z, jac_u});
-impl_ode_jac_x_xdot_u = Function('casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae', {dae.x, dae.x_dot, dae.z, dae.p}, {jac_x, jac_xdot, jac_z, jac_u});
+impl_ode_fun = Function('casadi_impl_ode_fun_pendulum_dae', {dae.x, dae.xdot, dae.z, dae.u}, {ode_impl});
+impl_ode_fun_jac_x_xdot = Function('casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae', {dae.x, dae.xdot, dae.z, dae.u}, {ode_impl, jac_x, jac_xdot, jac_z});
+impl_ode_fun_jac_x_xdot_u = Function('casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae', {dae.x, dae.xdot, dae.z, dae.u}, {ode_impl, jac_x, jac_xdot, jac_z, jac_u});
+impl_ode_jac_x_xdot_u = Function('casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae', {dae.x, dae.xdot, dae.z, dae.u}, {jac_x, jac_xdot, jac_z, jac_u});
 
 impl_ode_fun.generate('impl_ode_fun_pendulum_dae', opts);
 impl_ode_fun_jac_x_xdot.generate('impl_ode_fun_jac_x_xdot_z_pendulum_dae', opts);
