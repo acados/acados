@@ -26,6 +26,7 @@ extern "C" {
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
@@ -43,6 +44,7 @@ typedef struct
     double min_res_d;
     double min_res_m;
     void *qp_solver_opts;
+    ocp_nlp_reg_opts *reg_opts;
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
@@ -65,6 +67,8 @@ typedef struct
 {
     //    ocp_nlp_dims *dims;
     void *qp_solver_mem;
+
+    void *reg_mem;
 
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory

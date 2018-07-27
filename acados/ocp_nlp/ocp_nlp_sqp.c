@@ -31,8 +31,11 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_conv.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
+#include "acados/utils/math.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -87,6 +90,9 @@ int ocp_nlp_sqp_opts_calculate_size(void *config_, void *dims_)
 
     size += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
 
+    if (config->regularization != NULL)
+        size += config->regularization->opts_calculate_size();
+
     // dynamics
     size += N * sizeof(void *);
     for (int ii = 0; ii < N; ii++)
@@ -132,6 +138,12 @@ void *ocp_nlp_sqp_opts_assign(void *config_, void *dims_, void *raw_memory)
 
     opts->qp_solver_opts = qp_solver->opts_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
+
+    if (config->regularization != NULL)
+    {
+        opts->reg_opts = config->regularization->opts_assign(c_ptr);
+        c_ptr += config->regularization->opts_calculate_size();
+    }
 
     // dynamics
     opts->dynamics = (void **) c_ptr;
@@ -190,6 +202,12 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->min_res_m = 1e-8;
 
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+
+    if (config->regularization != NULL)
+    {
+        opts->reg_opts->delta = 1e-4;
+        opts->reg_opts->gamma = 0.0;
+    }
 
     // dynamics
     for (ii = 0; ii < N; ii++)
@@ -281,6 +299,9 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
 
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
+    if (config->regularization != NULL)
+        size += config->regularization->memory_calculate_size(dims->qp_solver);
+
     // dynamics
     size += N * sizeof(void *);
     for (int ii = 0; ii < N; ii++)
@@ -347,6 +368,12 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     mem->qp_solver_mem =
         qp_solver->memory_assign(qp_solver, dims->qp_solver, opts->qp_solver_opts, c_ptr);
     c_ptr += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+
+    if (config->regularization != NULL)
+    {
+        mem->reg_mem = config->regularization->memory_assign(dims->qp_solver, c_ptr);
+        c_ptr += config->regularization->memory_calculate_size(dims->qp_solver);
+    }
 
     // nlp res
     mem->nlp_res = ocp_nlp_res_assign(dims, c_ptr);
@@ -683,6 +710,21 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 
 
 
+static void regularize_hessian(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
+                               ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts,
+                               ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
+{
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
+
+    if (config->regularization == NULL)
+        return;
+
+    config->regularization->evaluate(config->regularization, dims->qp_solver, work->qp_in,
+                                     work->qp_out, opts->reg_opts, mem->reg_mem);
+}
+
+
+
 // update QP rhs for SQP (step prim var, abs dual var)
 // TODO(all): move in dynamics, cost, constraints modules ???
 static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
@@ -724,8 +766,9 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 
 
 
-static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts,
-                                 ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
+static void sqp_update_variables(void *config_, ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
+                                 ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem,
+                                 ocp_nlp_sqp_work *work)
 {
     // loop index
     int i;
@@ -734,8 +777,10 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
-    // int *nu = dims->nu;
+    int *nu = dims->nu;
     int *ni = dims->ni;
+
+    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
     // TODO(all): fix and move where appropriate
     //    for (i = 0; i < N; i++)
@@ -752,6 +797,41 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
     {
         blasfeo_daxpy(nv[i], 1.0, work->qp_out->ux + i, 0, nlp_out->ux + i, 0, nlp_out->ux + i, 0);
     }
+
+    // TODO(roversch): fix this code
+    // if (config->regularization != NULL)
+    // {
+    //     struct blasfeo_dmat *RSQrq = ((ocp_nlp_reg_conv_memory *) conv_mem_)->original_RSQrq;
+
+    //     // recover multipliers, Algorithm 5 in Verschueren2017
+    //     blasfeo_dgemv_n(nx[N], nx[N], 1.0, &RSQrq[N], nu[N], nu[N],
+    //                     &work->qp_out->ux[N], nu[N], 0.0, &work->qp_out->pi[N-1], 0,
+    //                     &work->qp_out->pi[N-1], 0);
+    //     // int nb = ((ocp_nlp_constraints_bgh_dims *) dims->constraints[N])->nb;
+    //     // blasfeo_dgemv_n(nx[N], nx[N], 1.0, &work->qp_in->DCt[N], nu[N], 0,
+    //     //                 &work->qp_out->lam[N], nb, 1.0, &work->qp_out->pi[N-1], 0,
+    //     //                 &work->qp_out->pi[N-1], 0);
+    //     for (int i = N-1; i >= 1; --i)
+    //     {
+    //         // Q times x
+    //         blasfeo_dgemv_n(nx[i], nx[i], 1.0, &RSQrq[i], nu[i], nu[i],
+    //                         &work->qp_out->ux[i], nu[i], 0.0, &work->qp_out->pi[i-1], 0,
+    //                         &work->qp_out->pi[i-1], 0);
+    //         // int nb = ((ocp_nlp_constraints_bgh_dims *) dims->constraints[i])->nb;
+    //         // Ct times lambda
+    //         // blasfeo_dgemv_n(nx[i], nx[i], 1.0, &work->qp_in->DCt[i], nu[i], 0,
+    //                         // &work->qp_out->lam[i], nb, 1.0, &work->qp_out->pi[i-1], 0,
+    //                         // &work->qp_out->pi[i-1], 0);
+    //         // St times u
+    //         blasfeo_dgemv_n(nx[i], nu[i], 1.0, &RSQrq[i], nu[i], 0,
+    //                         &work->qp_out->ux[i], 0, 1.0, &work->qp_out->pi[i-1], 0,
+    //                         &work->qp_out->pi[i-1], 0);
+    //         // At times pi
+    //         blasfeo_dgemv_n(nx[i], nx[i], 1.0, &work->qp_in->BAbt[i], nu[i], 0,
+    //                         &work->qp_out->pi[i], 0, 1.0, &work->qp_out->pi[i-1], 0,
+    //                         &work->qp_out->pi[i-1], 0);
+    //         }
+    // }
 
     // absolute in dual variables
     for (i = 0; i < N; i++)
@@ -799,6 +879,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->dynamics[ii]->memory_set_ux1_ptr(nlp_out->ux + ii + 1, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_pi_ptr(nlp_out->pi + ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_BAbt_ptr(work->qp_in->BAbt + ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii, mem->dynamics[ii]);
     }
 
     // alias to cost_memory
@@ -842,6 +923,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
         // linearizate NLP and update QP matrices
         linearize_update_qp_matrices(config, dims, nlp_in, nlp_out, opts, mem, work);
+
+        // regularize Hessian
+        regularize_hessian(config, dims, nlp_in, nlp_out, opts, mem, work);
 
         // update QP rhs for SQP (step prim var, abs dual var)
         sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
@@ -902,7 +986,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return -1;
         }
 
-        sqp_update_variables(dims, nlp_out, opts, mem, work);
+        sqp_update_variables(config, dims, nlp_out, opts, mem, work);
 
         // ocp_nlp_dims_print(nlp_out->dims);
         // ocp_nlp_out_print(nlp_out);
@@ -955,6 +1039,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp;
     config->config_initialize_default = &ocp_nlp_sqp_config_initialize_default;
+    config->regularization = NULL;
 
     return;
 }
