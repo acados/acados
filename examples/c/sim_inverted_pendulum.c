@@ -199,7 +199,7 @@ int main()
         2: IRK
         3: GNSF
                                 */
-	for (int nss = 2; nss < 4; nss++)
+	for (int nss = 2; nss < 3; nss++)
 	{
 		/************************************************
 		* sim plan & config
@@ -253,12 +253,13 @@ int main()
         opts->jac_reuse = false;        // jacobian reuse
         opts->newton_iter = 3;          // number of newton iterations per integration step
 
-        opts->ns                = 8;    // number of stages in rk integrator
+        opts->ns                = 1;    // number of stages in rk integrator
         opts->num_steps         = 1;    // number of steps
-        opts->sens_forw         = false;
+        opts->sens_forw         = true;
         opts->sens_adj          = false;
         opts->output_z          = true;
         opts->sens_algebraic    = true;
+        opts->sens_hess         = true;
 
     /* sim in / out */
 
@@ -276,6 +277,7 @@ int main()
                 sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
                         &impl_ode_fun_jac_x_xdot);
                 sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                sim_set_model(config, in, "impl_ode_hess", &impl_ode_hess);
                 break;
             }
             case GNSF:  // GNSF
@@ -403,11 +405,11 @@ int main()
 		double *S_forw_out = NULL;
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
-			// printf("S_forw_out: \n");
-			// d_print_e_mat(nx, NF, S_forw_out, nx);
+			printf("S_forw_out: \n");
+			d_print_e_mat(nx, NF, S_forw_out, nx);
 		}
 
-		if(opts->sens_adj){
+		if(opts->sens_adj || opts->sens_hess){
 			double *S_adj_out = out->S_adj;
 			printf("S_adj_out: \n");
 			d_print_e_mat(1, nx+nu, S_adj_out, 1);

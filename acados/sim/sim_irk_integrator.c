@@ -1141,24 +1141,40 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 {
                     for (int ll = 0; ll < nx + nz; ll++)  // loop over entries of impl_ode
                     {
-                        double lambdaK_jj_ll = blasfeo_dvecex1(&lambdaK[ss], ll + jj * (nx + nz));
+                        int ll_offset = ll * (2 * nx + nz);
+                        double lam_jj_ll = blasfeo_dvecex1(&lambdaK[ss], ll + jj * (nx + nz));
 
 
                         a = step * A_mat[ii + ns * jj];
                         if (ii == jj)
                         {
-                            // + d2F_dkdx * (a * step) * lambdaK_jj_ll
-                            blasfeo_dgead(nx, nx, lambdaK_jj_ll * a, &f_hess, nx, ll * (2 * nx + nz),
+                            // + d2F_dkdx * (a * step) * lam_jj_ll
+                            blasfeo_dgead(nx, nx, lam_jj_ll * a, &f_hess, nx, ll_offset,
                                          &dG_dKK_lambdaK, ii * nx, jj * nx);
-                            // + d2F_dxdk * (a * step) * lambdaK_jj_ll
-                            blasfeo_dgead(nx, nx, lambdaK_jj_ll * a, &f_hess, 0, ll * (2 * nx + nz) + nx,
-                                         &dG_dKK_lambdaK, ii * nx, jj * nx);                            
-
+                            // + d2F_dxdk * (a * step) * lam_jj_ll
+                            blasfeo_dgead(nx, nx, lam_jj_ll * a, &f_hess, 0, ll_offset + nx,
+                                         &dG_dKK_lambdaK, ii * nx, jj * nx);
+                            //// Z related blocks
+                            // + d2F_d2z
+                            blasfeo_dgead(nz, nz, lam_jj_ll, &f_hess, 2 * nx, ll_offset + 2 * nx,
+                                        &dG_dKK_lambdaK, ns * nx + ii * nz, ns * nx + ii * nz);
+                            // + d2F_dxdotdz
+                            blasfeo_dgead(nx, nz, lam_jj_ll, &f_hess, nx, ll_offset + 2 * nx,
+                                        &dG_dKK_lambdaK,  nx * ii, ns * nx + ii * nz);
+                            // + d2F_dzdxdot
+                            blasfeo_dgead(nz, nx, lam_jj_ll, &f_hess, 2 * nx, ll_offset + nx,
+                                        &dG_dKK_lambdaK,  nx * ns + ii * nz, nx * ii);
                         }
-                        a *= a;
-                        // + d2F_d2x * (a * step)^2 * lambdaK_jj_ll
-                        blasfeo_dgead(nx, nx, lambdaK_jj_ll * a, &f_hess, 0, ll * (2 * nx + nz), &dG_dKK_lambdaK,
-                                             ii * nx, jj * nx);
+                        // +  a * step * lam_jj_ll * d2F_dxdz
+                        blasfeo_dgead(nx, nz, lam_jj_ll * a, &f_hess, 0, ll_offset + 2 * nx,
+                                    &dG_dKK_lambdaK, jj * nx, ii * nz + ns * nx);
+                        // +  a * step * lam_jj_ll * d2F_dzdx
+                        blasfeo_dgead(nz, nx, lam_jj_ll * a, &f_hess, 2 * nx,
+                                     ll_offset, &dG_dKK_lambdaK, jj * nz + ns * nx, nx * ii);
+
+                        // + d2F_d2x * (a * step)^2 * lam_jj_ll
+                        blasfeo_dgead(nx, nx, lam_jj_ll * a * a, &f_hess, 0,
+                                 ll_offset, &dG_dKK_lambdaK, ii * nx, jj * nx);
                     }
                 }
                 printf("\ndG_dKK_lambdaK (in IRK), ii = %d \n", ii);
