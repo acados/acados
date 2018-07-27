@@ -304,27 +304,27 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     }
 
     /* blasfeo mem */
-    size += blasfeo_memsize_dvec((nx + nz) * ns);   // K
-    size += blasfeo_memsize_dvec((nx + nz) * ns);   // rG
+    size += blasfeo_memsize_dvec(nK);   // K
+    size += blasfeo_memsize_dvec(nK);   // rG
     size += 3 * blasfeo_memsize_dvec(nx);           // xt, xn, xtdot
 
     if (!opts->sens_hess){
         size += 1 * blasfeo_memsize_dvec(nx + nu);          // lambda
-        size += 1 * blasfeo_memsize_dvec((nx + nz) * ns);     // lambdaK
-        size += 1 * blasfeo_memsize_dmat((nx + nz) * ns, nx + nu);  // dG_dxu
-        size += 1 * blasfeo_memsize_dmat((nx + nz) * ns, (nx + nz) * ns);  // dG_dK
-        size += 1 * blasfeo_memsize_dmat((nx  + nz) * ns, nx + nu);  // dK_dxu
+        size += 1 * blasfeo_memsize_dvec(nK);     // lambdaK
+        size += 1 * blasfeo_memsize_dmat(nK, nx + nu);  // dG_dxu
+        size += 1 * blasfeo_memsize_dmat(nK, nK);  // dG_dK
+        size += 1 * blasfeo_memsize_dmat(nK, nx + nu);  // dK_dxu
         size += 1 * blasfeo_memsize_dmat(nx, nx + nu);            // S_forw
-        size += (nx + nz) * ns * sizeof(int);  // ipiv
+        size += nK * sizeof(int);  // ipiv
 
     } else {
-        size += (steps + 1) * blasfeo_memsize_dvec(nx + nu);            // lambda
-        size += steps * blasfeo_memsize_dvec((nx + nz) * ns);           // lambdaK
-        size += steps * blasfeo_memsize_dmat((nx + nz) * ns, nx + nu);  // dG_dxu
-        size += steps * blasfeo_memsize_dmat((nx + nz) * ns, (nx+nz) * ns);  // dG_dK
-        size += steps * blasfeo_memsize_dmat((nx  + nz) * ns, nx + nu);  // dK_dxu
-        size += steps * blasfeo_memsize_dmat(nx, nx + nu);              // S_forw
-        size += steps * (nx + nz) * ns * sizeof(int);  // ipiv
+        size += (steps + 1) * blasfeo_memsize_dvec(nx + nu);    // lambda
+        size += steps * blasfeo_memsize_dvec(nK);               // lambdaK
+        size += steps * blasfeo_memsize_dmat(nK, nx + nu);      // dG_dxu
+        size += steps * blasfeo_memsize_dmat(nK, nK);           // dG_dK
+        size += steps * blasfeo_memsize_dmat(nK, nx + nu);      // dK_dxu
+        size += steps * blasfeo_memsize_dmat(nx, nx + nu);      // S_forw
+        size += steps * nK * sizeof(int);  // ipiv
 
         size += 1 * blasfeo_memsize_dmat(2 * nx + nz, (nx + nz) * (2 * nx + nz));  // f_hess
         size += 1 * blasfeo_memsize_dmat(nK, nK);  // dG_dKK_lambdaK
@@ -335,7 +335,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 
     if ( opts->sens_adj || opts->sens_hess ){
         size += steps * blasfeo_memsize_dvec(nx);       // for xn_traj
-        size += steps * blasfeo_memsize_dvec((nx + nz) * ns);  // for K_traj
+        size += steps * blasfeo_memsize_dvec(nK);  // for K_traj
     }
 
     size += 2 * blasfeo_memsize_dmat(nx + nz, nx);  // df_dx, df_dxdot

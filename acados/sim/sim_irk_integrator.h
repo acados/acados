@@ -59,8 +59,6 @@ typedef struct
     struct blasfeo_dvec *xn;    // x at each integration step
     struct blasfeo_dvec xtdot;  // temporary xdot
 
-    struct blasfeo_dmat *dG_dK;   // jacobian of G over K ((nx+nz)*ns, (nx+nz)*ns)
-
     struct blasfeo_dmat df_dx;     // temporary Jacobian of ode w.r.t x (nx+nz, nx)
     struct blasfeo_dmat df_dxdot;  // temporary Jacobian of ode w.r.t xdot (nx+nz, nx)
     struct blasfeo_dmat df_du;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
@@ -91,6 +89,10 @@ typedef struct
     // dG_dxu: if (!opts->sens_hess) - single blasfeo_dmat that is reused
     //         if ( opts->sens_hess) - array of blasfeo_dmat to store intermediate results
     struct blasfeo_dmat *dG_dxu;  // jacobian of G over x and u ((nx+nz)*ns, nx+nu)
+
+    // dG_dK:  if (!opts->sens_hess) - single blasfeo_dmat that is reused
+    //         if ( opts->sens_hess) - array of blasfeo_dmat to store intermediate results
+    struct blasfeo_dmat *dG_dK;   // jacobian of G over K ((nx+nz)*ns, (nx+nz)*ns)
 
     // ipiv: index of pivot vector
     //         if (!opts->sens_hess) - array (ns * (nx + nz)) that is reused
