@@ -73,7 +73,7 @@ int main() {
         nh[i] = 0;
         np[i] = 0;
         ns[i] = 0;
-        nz[i] = 0;
+        nz[i] = 5;
         nv[i] = num_states + num_controls;
         ny[i] = num_states + num_controls;
     }
@@ -105,14 +105,39 @@ int main() {
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, np, ns, nz, dims);
 
-	external_function_casadi forw_vde_casadi[N];
+	external_function_casadi impl_ode_fun[N];
+	external_function_casadi impl_ode_fun_jac_x_xdot_z[N];
+	external_function_casadi impl_ode_fun_jac_x_xdot_z_u[N];
+	external_function_casadi impl_ode_jac_x_xdot_z_u[N];
+
 	for (int i = 0; i < N; ++i) {
-		forw_vde_casadi[i].casadi_fun = &vdeFun;
-		forw_vde_casadi[i].casadi_n_in = &vdeFun_n_in;
-		forw_vde_casadi[i].casadi_n_out = &vdeFun_n_out;
-		forw_vde_casadi[i].casadi_sparsity_in = &vdeFun_sparsity_in;
-		forw_vde_casadi[i].casadi_sparsity_out = &vdeFun_sparsity_out;
-		forw_vde_casadi[i].casadi_work = &vdeFun_work;
+        impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_pendulum_dae;
+        impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_pendulum_dae_work;
+        impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_pendulum_dae_sparsity_in;
+        impl_ode_fun[ii].casadi_sparsity_out = &casadi_impl_ode_fun_pendulum_dae_sparsity_out;
+        impl_ode_fun[ii].casadi_n_in = &casadi_impl_ode_fun_pendulum_dae_n_in;
+        impl_ode_fun[ii].casadi_n_out = &casadi_impl_ode_fun_pendulum_dae_n_out;
+
+        impl_ode_fun_jac_x_xdot_z[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae;
+        impl_ode_fun_jac_x_xdot_z[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae_work;
+        impl_ode_fun_jac_x_xdot_z[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae_sparsity_in;
+        impl_ode_fun_jac_x_xdot_z[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae_sparsity_out;
+        impl_ode_fun_jac_x_xdot_z[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae_n_in;
+        impl_ode_fun_jac_x_xdot_z[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae_n_out;
+
+        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae;
+        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_work;
+        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_sparsity_in;
+        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_sparsity_out;
+        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_n_in;
+        impl_ode_fun_jac_x_xdot_z_u[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_n_out;
+
+        impl_ode_jac_x_xdot_z_u[ii].casadi_fun = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae;
+        impl_ode_jac_x_xdot_z_u[ii].casadi_work = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_work;
+        impl_ode_jac_x_xdot_z_u[ii].casadi_sparsity_in = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_sparsity_in;
+        impl_ode_jac_x_xdot_z_u[ii].casadi_sparsity_out = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_sparsity_out;
+        impl_ode_jac_x_xdot_z_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_n_in;
+        impl_ode_jac_x_xdot_z_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_n_out;
 	}
 
 	// NLP model: forward VDEs
