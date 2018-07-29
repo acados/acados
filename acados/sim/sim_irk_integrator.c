@@ -403,8 +403,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
 
     if (!opts->sens_hess){
         assign_and_advance_blasfeo_dmat_mem(nK, nx + nu, workspace->dG_dxu, &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(nK, nK,
-                                                     workspace->dG_dK, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nK, nK,      workspace->dG_dK, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(nK, nx + nu, workspace->dK_dxu, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, workspace->S_forw, &c_ptr);
     }
@@ -499,8 +498,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // declare
     double a;
     struct blasfeo_dmat *dG_dK_ss;
-    struct blasfeo_dmat *S_forw_old;
-    struct blasfeo_dmat *S_forw_new;
+    struct blasfeo_dmat *dG_dxu_ss;
+    struct blasfeo_dmat *S_forw_ss;
     int *ipiv_ss;
 
     int nx = dims->nx;
@@ -772,23 +771,20 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // todo: also store dK_dxu; adapt adjoint scheme to use the forward results;
             if (opts->sens_hess){
                 dG_dK_ss = &dG_dK[ss];
+                dG_dxu_ss = &dG_dxu[ss];
                 ipiv_ss = &ipiv[ss*nK];
-                if (ss == 0)
-                {
-                    S_forw_old = S_forw;  // initial seed is copied here
-                } else {
-                    S_forw_old = &S_forw[ss-1];
+                S_forw_ss = &S_forw[ss];
+                // copy current S_forw into S_forw_ss
+                if (ss != 0) {
+                    blasfeo_dgecp(nx, nx + nu, &S_forw[ss-1], 0, 0, S_forw_ss, 0, 0);
                 }
-                S_forw_new = &S_forw[ss];
-                // copy current S_forw to S_forw_new
-                blasfeo_dgecp(nx, nx + nu, S_forw_old, 0, 0, S_forw_new, 0, 0);
             }
             else
             {
                 dG_dK_ss = dG_dK;
+                dG_dxu_ss = dG_dxu;
                 ipiv_ss = ipiv;
-                S_forw_old = S_forw;
-                S_forw_new = S_forw;
+                S_forw_ss = S_forw;
             }
             blasfeo_dgese(nK, nK, 0.0, dG_dK_ss, 0, 0);
                          // initialize dG_dK_ss with zeros
@@ -816,8 +812,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     impl_ode_jac_x_xdot_u_z_type_out, impl_ode_jac_x_xdot_u_z_out);
                 timing_ad += acados_toc(&timer_ad);
 
-                blasfeo_dgecp(nx + nz, nx, &df_dx, 0, 0, dG_dxu, ii * (nx + nz), 0);
-                blasfeo_dgecp(nx + nz, nu, &df_du, 0, 0, dG_dxu, ii * (nx + nz), nx);
+                blasfeo_dgecp(nx + nz, nx, &df_dx, 0, 0, dG_dxu_ss, ii * (nx + nz), 0);
+                blasfeo_dgecp(nx + nz, nu, &df_du, 0, 0, dG_dxu_ss, ii * (nx + nz), nx);
 
                 // compute the blocks of dG_dK_ss
                 for (int jj = 0; jj < ns; jj++)
@@ -846,10 +842,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             // obtain dK_dxu
             // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw_old
-            blasfeo_dgemm_nn(nK, nx + nu, nx, 1.0, dG_dxu, 0, 0, S_forw_old, 0,
+            blasfeo_dgemm_nn(nK, nx + nu, nx, 1.0, dG_dxu_ss, 0, 0, S_forw_ss, 0,
                                  0, 0.0, dK_dxu, 0, 0, dK_dxu, 0, 0);
             // dK_du = dK_du + 1 * dG_du
-            blasfeo_dgead(nK, nu, 1.0, dG_dxu, 0, nx, dK_dxu, 0, nx);
+            blasfeo_dgead(nK, nu, 1.0, dG_dxu_ss, 0, nx, dK_dxu, 0, nx);
 
             acados_tic(&timer_la);
             blasfeo_drowpe(nK, ipiv_ss, dK_dxu);
@@ -859,7 +855,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             // update forward sensitivity
             for (int jj = 0; jj < ns; jj++)
-                blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], dK_dxu, jj * nx, 0, S_forw_new, 0, 0);
+                blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], dK_dxu, jj * nx, 0, S_forw_ss, 0, 0);
         }  // end if sens_forw
 
         // obtain x(n+1)
