@@ -1034,74 +1034,14 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
 
     /************************************************
-    *  FORWARD OVER ADJOINT - HESSIAN PROPAGATION
+    *  HESSIAN PROPAGATION  -- Symmetric
+    *  Forward-backward ( Algorithm 2 from Quirynen2016 )
     ************************************************/
-    // evaluate backwards STORING all lambda, lambdaK, dG_dK, dG_dxu
+    // evaluate backwards reusing dG_dK, dG_dxu and storing lambda, lambdaK
     if (opts->sens_hess){
         blasfeo_dgese(nx, nx + nu, 0.0, &H_x, 0, 0);
         for (int ss = num_steps - 1; ss > -1; ss--)
         {
-            impl_ode_xdot_in.x = &K_traj[ss];              // use K values of step ss
-            impl_ode_z_in.x = &K_traj[ss];                 // use Z values of step ss
-
-            blasfeo_dgese(nK, nK, 0.0, &dG_dK[ss], 0, 0);
-                                                    // initialize &dG_dK[ss] with zeros
-            // printf("IRK - in sens_hess: \t ss = %d\n lambda[ss] = \n", ss);
-            // blasfeo_print_exp_dvec(nx + nu, &lambda[ss], 0);
-            // printf("IRK - in sens_hess: \t ss = %d\n lambda[ss+1] = \n", ss);
-            // blasfeo_print_exp_dvec(nx + nu, &lambda[ss+1], 0);
-
-            /* evaluate function at stage i and build corresponding blocks of
-                                     &dG_dxu[ss], &dG_dK[ss] */
-            for (int ii = 0; ii < ns; ii++)
-            {
-                /* set up input for impl_ode */
-                impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                impl_ode_z_in.xi    = ns * nx + ii * nz;
-                            // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-
-                // build stage value
-                blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);
-                for (int jj = 0; jj < ns; jj++)
-                {
-                    a = A_mat[ii + ns * jj];
-                    if (a != 0)
-                    {
-                        a *= step;
-                        blasfeo_daxpy(nx, a, &K_traj[ss], jj * nx, xt, 0, xt, 0);
-                    }
-                }
-                /* eval impl_ode */
-                acados_tic(&timer_ad);
-                model->impl_ode_jac_x_xdot_u_z->evaluate(
-                    model->impl_ode_jac_x_xdot_u_z, impl_ode_type_in, impl_ode_in,
-                    impl_ode_jac_x_xdot_u_z_type_out, impl_ode_jac_x_xdot_u_z_out);
-                timing_ad += acados_toc(&timer_ad);
-
-                /* build dG_dxu */
-                blasfeo_dgecp(nx + nz, nx, &df_dx, 0, 0, &dG_dxu[ss], ii * (nx + nz), 0);
-                blasfeo_dgecp(nx + nz, nu, &df_du, 0, 0, &dG_dxu[ss], ii * (nx + nz), nx);
-
-                /* build dG_dK */
-                for (int jj = 0; jj < ns; jj++)
-                {  // compute the block (ii,jj)th block of dG_dK
-                    a = A_mat[ii + ns * jj];
-                    if (a != 0)
-                    {
-                        a *= step;
-                        blasfeo_dgead(nx + nz, nx, a, &df_dx, 0, 0,
-                                            &dG_dK[ss], ii * (nx + nz), jj * nx);
-                    }
-                    if (jj == ii)
-                    {
-                        blasfeo_dgead(nx + nz, nx, 1, &df_dxdot, 0, 0,
-                                        &dG_dK[ss], ii * (nx + nz), jj * nx);
-                        blasfeo_dgead(nx + nz, nz, 1, &df_dz,    0, 0,
-                                        &dG_dK[ss], ii * (nx + nz), (nx * ns) + jj * nz);
-                    }
-                }  // end jj
-            }  // end ii
-
             // set up right hand side in vector &lambdaK[ss]
             blasfeo_dvecse(nK, 0.0, &lambdaK[ss], 0);
             for (int jj = 0; jj < ns; jj++)
@@ -1111,8 +1051,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             /*   obtain lambda_K by solving the linear system
                         &lambdaK[ss] <- (dG_dK)^(-T) &lambdaK[ss];   */
             acados_tic(&timer_la);
-            // factorize dG_dK
-            blasfeo_dgetrf_rowpivot(nK, nK, &dG_dK[ss], 0, 0, &dG_dK[ss], 0, 0, &ipiv[ss*nK]);
             // solve linear system
             blasfeo_dtrsv_utn(nK, &dG_dK[ss], 0, 0, &lambdaK[ss], 0, &lambdaK[ss], 0);
             blasfeo_dtrsv_ltu(nK, &dG_dK[ss], 0, 0, &lambdaK[ss], 0, &lambdaK[ss], 0);
