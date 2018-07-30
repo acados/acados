@@ -37,12 +37,15 @@ f_impl = model.f_impl_expr;
 model_name_prefix = model.name;
 
 %% generate hessian
+multiplier  = SX.sym('multiplier', length(x) + length(z));
 x_xdot_z = [x; xdot; z];
-HESS = [];
+
+HESS = SX.zeros( length(x_xdot_z), length(x_xdot_z));
+
 for ii = 1:length(f_impl)
     jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z);
     hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z);
-    HESS = [HESS, hess_x_xdot_z];
+    HESS = HESS + multiplier(ii) * hess_x_xdot_z;
 end
 HESS = HESS.simplify();
 
@@ -59,7 +62,7 @@ else
     impl_ode_fun_jac_x_xdot = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot'], {x, xdot, u, z}, {f_impl, jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, z)});
     impl_ode_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_jac_x_xdot_u'], {x, xdot, u, z}, {jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, u), jacobian(f_impl, z)});
     impl_ode_fun_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z}, {f_impl, jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, z)});
-    impl_ode_hess = Function([model_name_prefix,'impl_ode_hess'], {x, xdot, u, z}, {HESS});
+    impl_ode_hess = Function([model_name_prefix,'impl_ode_hess'], {x, xdot, u, z, multiplier}, {HESS});
 end
 
 %% generate C code

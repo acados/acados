@@ -113,7 +113,7 @@ typedef struct
     struct blasfeo_dmat H_x;   // temporary Hessian (nx, nx + nu)
     struct blasfeo_dmat H_K;   // temporary Hessian (nK, nx + nu)
 
-    // temporary Hessian of ode w.r.t. x, xdot, z: ( 2 * nx + nz, nx * (2 * nx + nz) );
+    // temporary Hessian of ode w.r.t. x, xdot, z, u: (2 * nx + nu + nz) x (2 * nx + nu + nz)
     struct blasfeo_dmat f_hess;
 
     // second order derivative of G w.r.t K, in direction lambdaK
