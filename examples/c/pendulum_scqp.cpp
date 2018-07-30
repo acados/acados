@@ -66,7 +66,7 @@ int main() {
 
 	// Make plan
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
-	plan->nlp_solver = SQP_GN;
+	plan->nlp_solver = SQP;
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = LINEAR_LS;

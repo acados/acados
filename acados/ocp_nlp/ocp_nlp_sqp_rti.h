@@ -42,6 +42,8 @@ typedef struct
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
     int compute_dual_sol;
+    int reuse_workspace;
+    int num_threads;
 } ocp_nlp_sqp_rti_opts;
 
 //
@@ -71,6 +73,9 @@ typedef struct
     // nlp memory
     ocp_nlp_memory *nlp_mem;
 
+    double time_qp_sol;
+    double time_lin;
+    double time_tot;
 } ocp_nlp_sqp_rti_memory;
 
 //
