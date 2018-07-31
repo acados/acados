@@ -92,7 +92,7 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15,10,5};
 
-    int ii_max = 3;
+    int ii_max = 2;
 
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
@@ -120,7 +120,7 @@ int main() {
         #ifdef ACADOS_WITH_QPDUNES
         // PARTIAL_CONDENSING_QPDUNES,
         #endif
-        FULL_CONDENSING_HPIPM,
+        // FULL_CONDENSING_HPIPM,
         #ifdef ACADOS_WITH_QORE
         // FULL_CONDENSING_QORE,
         #endif
@@ -248,6 +248,8 @@ int main() {
 #ifdef ACADOS_WITH_OOQP
                 case PARTIAL_CONDENSING_OOQP:
                     printf("\nPartial condensing + OOQP (N2 = %d):\n\n", N2);
+                    ok = set_option_int(opts, "sparse_ooqp.N2", N2);
+                    assert(ok = true && "specified option not found!");
                     break;
 
                 case FULL_CONDENSING_OOQP:
