@@ -718,10 +718,12 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
 
     acados_tic(&interface_timer);
     fill_in_qp_out(in, out, mem);
+    ocp_qp_compute_t(in, out);
     info->interface_time += acados_toc(&interface_timer);
 
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = mem->qpData.log.numIter;
+    info->t_computed = 1;
 
     int acados_status = qpdunes_status;
     if (qpdunes_status == QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) acados_status = ACADOS_SUCCESS;

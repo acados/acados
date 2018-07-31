@@ -275,7 +275,7 @@ static void update_hessian_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
         {
             for (ii = 0; ii < dims->nu[kk]; ii++)
             {
-                mem->dQ[nn++] = BLASFEO_DMATEL(&in->RSQrq[kk], ii, jj+dims->nu[kk]);
+                mem->dQ[nn++] = BLASFEO_DMATEL(&in->RSQrq[kk], jj+dims->nu[kk], ii);
             }
         }
         for (jj = 0; jj < dims->nu[kk]; jj++)
