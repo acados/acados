@@ -177,7 +177,17 @@ file(GLOB GNSF_CRANE_SRC
     gnsf_crane_model/get_matrices_fun.c
 )
 
+file(GLOB ENGINE_SRC
+    engine_model/engine_impl_dae_fun.c
+    engine_model/engine_impl_dae_fun_jac_x_xdot_z.c
+    engine_model/engine_impl_dae_jac_x_xdot_u_z.c
+)
+
 # Define examples
+
+# -------------------- two-staged turbocharged engine
+add_executable(engine_example engine_example.cpp ${ENGINE_SRC})
+target_link_libraries(engine_example acados)
 
 # -------------------- nonlinear_chain
 add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
