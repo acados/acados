@@ -20,7 +20,7 @@
 
 #include <stdlib.h>
 #include <vector>
-#include <xmmintrin.h>
+// #include <xmmintrin.h>
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
@@ -42,7 +42,7 @@
 
 int main()
 {
-    _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
+    // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
     const int n_sim = 100;
 
@@ -117,10 +117,10 @@ int main()
     config->opts_initialize_default(config, dims, opts);
 
     opts->jac_reuse = false;
-    opts->newton_iter = 100;         // number of newton iterations per integration step
+    opts->newton_iter = 5;         // number of newton iterations per integration step
 
     opts->ns                = 8;    // number of stages in rk integrator
-    opts->num_steps         = 100;  // number of steps
+    opts->num_steps         = 1;    // number of steps
     opts->sens_forw         = false;
     opts->sens_adj          = false;
     opts->output_z          = false;
@@ -166,7 +166,7 @@ int main()
     {
         in->x = x_sim[ii].data();
         in->u = u.data();
-        out->zn = z0.data();
+        in->z = z0.data();
 
         // execute simulation step with current input and state
         int acados_return = sim_solve(sim_solver, in, out);
