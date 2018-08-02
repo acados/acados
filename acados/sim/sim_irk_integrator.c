@@ -329,8 +329,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
         size += 1 * blasfeo_memsize_dmat(2 * nx + nu + nz, 2 * nx + nu + nz);  // f_hess
         size += 1 * blasfeo_memsize_dmat(nK, nK);  // dG_dKK_lambdaK
         size += 1 * blasfeo_memsize_dmat(nK, nx);  // dG_dKx_lambdaK,
-        size += 1 * blasfeo_memsize_dmat(nx, nx + nu);  // H_x
-        size += 1 * blasfeo_memsize_dmat(nK, nx + nu);  // H_K
+        size += 1 * blasfeo_memsize_dmat(nx + nu, nx + nu);  // Hess
     }
 
     if ( opts->sens_adj || opts->sens_hess ){
@@ -420,8 +419,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
 
         assign_and_advance_blasfeo_dmat_mem(nK, nK, &workspace->dG_dKK_lambdaK, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(nK, nx, &workspace->dG_dKx_lambdaK, &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, &workspace->H_x, &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(nK, nx + nu, &workspace->H_K, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx + nu, nx + nu, &workspace->Hess, &c_ptr);
     }
 
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nx, &workspace->df_dx, &c_ptr);
@@ -499,6 +497,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double a;
     struct blasfeo_dmat *dG_dK_ss;
     struct blasfeo_dmat *dG_dxu_ss;
+    struct blasfeo_dmat *dK_dxu_ss;
     struct blasfeo_dmat *S_forw_ss;
     int *ipiv_ss;
 
@@ -550,8 +549,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // for hessians only
     struct blasfeo_dmat dG_dKK_lambdaK = workspace->dG_dKK_lambdaK;
     struct blasfeo_dmat dG_dKx_lambdaK = workspace->dG_dKx_lambdaK;
-    struct blasfeo_dmat H_x = workspace->H_x;
-    struct blasfeo_dmat H_K = workspace->H_K;
+    struct blasfeo_dmat Hess = workspace->Hess;
 
     double *x_out = out->xn;
     double *S_forw_out = out->S_forw;
@@ -671,9 +669,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     for (int ss = 0; ss < num_steps; ss++)
     {
         // obtain Kn
-        // TODO(giaf): add exit condition on residuals ???
-        // inf_norm_K = 1.0;
-        // for(iter=0; inf_norm_K>tol_inf_norm_K & iter<newton_iter; iter++)
         impl_ode_xdot_in.x = K;
         impl_ode_z_in.x = K;
         for (int iter = 0; iter < newton_iter; iter++)
@@ -772,8 +767,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is
             // [DeltaK, DeltaZ]
             blasfeo_daxpy(nK, -1.0, rG, 0, K, 0, K, 0);
-            // inf norm of K
-            //       blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
         }
 
         if ( opts->sens_adj || opts->sens_hess )
@@ -786,8 +779,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         {
             /* decide wheter results from forward sensitivity propagation should be is stored,
                 or if memory has to be reused --> set pointers accordingly */
-            // todo: also store dK_dxu; adapt adjoint scheme to use the forward results;
             if (opts->sens_hess){
+                dK_dxu_ss = &dK_dxu[ss];
                 dG_dK_ss = &dG_dK[ss];
                 dG_dxu_ss = &dG_dxu[ss];
                 ipiv_ss = &ipiv[ss*nK];
@@ -799,6 +792,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             }
             else
             {
+                dK_dxu_ss = &dK_dxu;
                 dG_dK_ss = dG_dK;
                 dG_dxu_ss = dG_dxu;
                 ipiv_ss = ipiv;
@@ -1057,7 +1051,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     ************************************************/
     // evaluate backwards reusing dG_dK, dG_dxu and storing lambda, lambdaK
     if (opts->sens_hess){
-        blasfeo_dgese(nx, nx + nu, 0.0, &H_x, 0, 0);
+        blasfeo_dgese(nx + nu, nx + nu, 0.0, &Hess, 0, 0);
         for (int ss = num_steps - 1; ss > -1; ss--)
         {
             impl_ode_hess_lambda_in.x = &lambdaK[ss];
@@ -1081,7 +1075,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_dgemv_t(nK, nx + nu, 1.0, &dG_dxu[ss], 0, 0, &lambdaK[ss], 0,
                                     1.0, &lambda[ss+1], 0, &lambda[ss], 0);
 
-
+            /* evaluate second order derivatives and update Hessian
+                - HESSIAN PROPAGATION    */
             for (int ii = 0; ii < ns; ii++)
             {
                 /* set up input for impl_ode_hess */

@@ -110,8 +110,7 @@ typedef struct
     /* the following variables are only available if (opts->sens_hess) */
 
     // For Hessian propagation, TODO allocate only if option is used!
-    struct blasfeo_dmat H_x;   // temporary Hessian (nx, nx + nu)
-    struct blasfeo_dmat H_K;   // temporary Hessian (nK, nx + nu)
+    struct blasfeo_dmat Hess;   // temporary Hessian (nx + nu, nx + nu)
 
     // temporary Hessian of ode w.r.t. x, xdot, z, u: (2 * nx + nu + nz) x (2 * nx + nu + nz)
     struct blasfeo_dmat f_hess;
