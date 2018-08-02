@@ -81,7 +81,7 @@ typedef struct
     double *S_adj;   //
     double *S_hess;  //
 
-    double *zn;      // z - algebraic variables - value for start of simulation
+    double *zn;           // z - algebraic variables - reported at start of simulation interval
     double *S_algebraic;  // sensitivities of reported value of algebraic variables w.r.t.
                           // initial stat & control (x_n,u)
 
