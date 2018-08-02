@@ -64,8 +64,10 @@ typedef struct
     struct blasfeo_dmat df_du;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
     struct blasfeo_dmat df_dz;     // temporary Jacobian of ode w.r.t z (nx+nz, nu)
 
+    // df_dxdotz, dk0_dxu, only allocated if (opts->sens_algebraic)
+    //      used for algebraic sensitivity generation
     struct blasfeo_dmat df_dxdotz;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
-                        // used for algebraic sensitivity generation
+    struct blasfeo_dmat dk0_dxu;    // intermediate result
 
     // dK_dxu: if (!opts->sens_hess) - single blasfeo_dmat that is reused
     //         if ( opts->sens_hess) - array of (num_steps) blasfeo_dmat
@@ -109,9 +111,10 @@ typedef struct
 
     /* the following variables are only available if (opts->sens_hess) */
 
-    // For Hessian propagation, TODO allocate only if option is used!
+    // For Hessian propagation
     struct blasfeo_dmat Hess;   // temporary Hessian (nx + nu, nx + nu)
-
+    struct blasfeo_dmat Hess_times_forw; // to store intermediate result f_hess * d[x,u,k,z]_dw0
+                            // size (2 * nx + nu + nz) * (nx + nu)
     // temporary Hessian of ode w.r.t. x, xdot, z, u: (2 * nx + nu + nz) x (2 * nx + nu + nz)
     struct blasfeo_dmat f_hess;
 
