@@ -40,7 +40,8 @@ typedef struct
 typedef struct
 {
     /* external functions */
-    // implicit ode
+    // implicit fun - can either be fully implicit ode or dae
+    //          - i.e. dae has z as additional last argument & nz > 0
     external_function_generic *impl_ode_fun;
     // implicit ode & jac_x & jax_xdot & jac_z
     external_function_generic *impl_ode_fun_jac_x_xdot_z;
@@ -67,7 +68,7 @@ typedef struct
     // df_dxdotz, dk0_dxu, only allocated if (opts->sens_algebraic)
     //      used for algebraic sensitivity generation
     struct blasfeo_dmat df_dxdotz;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
-    struct blasfeo_dmat dk0_dxu;    // intermediate result
+    struct blasfeo_dmat dk0_dxu;    // intermediate result, (nx+nz, nx+nu)
 
     // dK_dxu: if (!opts->sens_hess) - single blasfeo_dmat that is reused
     //         if ( opts->sens_hess) - array of (num_steps) blasfeo_dmat
@@ -102,6 +103,7 @@ typedef struct
     //              pivot vectors for dG_dxu
     int *ipiv;  // index of pivot vector
 
+
     int *ipiv_one_stage;  // index of pivot vector (nx + nz)
     double *Z_work;  // used to perform computations to get out->zn (ns)
 
@@ -115,12 +117,9 @@ typedef struct
     struct blasfeo_dmat Hess;   // temporary Hessian (nx + nu, nx + nu)
     struct blasfeo_dmat Hess_times_forw; // to store intermediate result f_hess * d[x,u,k,z]_dw0
                             // size (2 * nx + nu + nz) * (nx + nu)
+    struct blasfeo_dmat dxii_dw0;  // intermediate result derivative of xii w.r.t x0, u, (nx, nx + nu)
     // temporary Hessian of ode w.r.t. x, xdot, z, u: (2 * nx + nu + nz) x (2 * nx + nu + nz)
     struct blasfeo_dmat f_hess;
-
-    // second order derivative of G w.r.t K, in direction lambdaK
-    struct blasfeo_dmat dG_dKK_lambdaK;  // (nK, nK)
-    struct blasfeo_dmat dG_dKx_lambdaK;  // (nK, nx)
 
 } sim_irk_workspace;
 
