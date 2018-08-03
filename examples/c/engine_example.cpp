@@ -164,9 +164,9 @@ int main()
     std::vector<std::vector<double>> x_sim = {x0};
     for (int ii = 0; ii < n_sim; ii++)
     {
-        in->x = x_sim[ii].data();
-        in->u = u.data();
-        in->z = z0.data();
+        for (int jj = 0; jj < nx; jj++) in->x[jj] = x_sim[ii][jj];
+        for (int jj = 0; jj < nu; jj++) in->u[jj] = u[jj];
+        for (int jj = 0; jj < nz; jj++) in->z[jj] = z0[jj];
 
         // execute simulation step with current input and state
         int acados_return = sim_solve(sim_solver, in, out);
