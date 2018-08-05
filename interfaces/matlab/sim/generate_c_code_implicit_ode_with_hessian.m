@@ -38,13 +38,13 @@ model_name_prefix = model.name;
 
 %% generate hessian
 multiplier  = SX.sym('multiplier', length(x) + length(z));
-x_xdot_z = [x; xdot; z];
+x_u_xdot_z = [x; u; xdot; z];
 
-HESS = SX.zeros( length(x_xdot_z), length(x_xdot_z));
+HESS = SX.zeros( length(x_u_xdot_z), length(x_u_xdot_z));
 
 for ii = 1:length(f_impl)
-    jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z);
-    hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z);
+    jac_x_xdot_z = jacobian(f_impl(ii), x_u_xdot_z);
+    hess_x_xdot_z = jacobian( jac_x_xdot_z, x_u_xdot_z);
     HESS = HESS + multiplier(ii) * hess_x_xdot_z;
 end
 HESS = HESS.simplify();
