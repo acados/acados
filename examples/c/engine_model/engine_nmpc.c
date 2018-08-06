@@ -66,10 +66,11 @@ static void mdlInitializeSizes(SimStruct *S)
 
     ssSetNumPWork(S, 6);
 
-    if (!ssSetNumOutputPorts(S, 3)) return;
+    if (!ssSetNumOutputPorts(S, 4)) return;
     ssSetOutputPortWidth(S, 0, NUM_CONTROLS);
     ssSetOutputPortWidth(S, 1, NUM_STATES);
     ssSetOutputPortWidth(S, 2, 1);
+    ssSetOutputPortWidth(S, 3, 1);
 
     ssSetNumSampleTimes(S, 1);
 }
@@ -331,10 +332,12 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     double *u0_opt = ssGetOutputPortRealSignal(S, 0);
     double *x1 = ssGetOutputPortRealSignal(S, 1);
     double *status_out = ssGetOutputPortRealSignal(S, 2);
+    double *comp_time = ssGetOutputPortRealSignal(S, 3);
 
     blasfeo_unpack_dvec(NUM_CONTROLS, &nlp_out->ux[0], 0, u0_opt);
     blasfeo_unpack_dvec(NUM_STATES, &nlp_out->ux[1], NUM_CONTROLS, x1);
     *status_out = (double) status;
+    *comp_time = nlp_out->total_time;
 }
 
 static void mdlTerminate(SimStruct *S)
