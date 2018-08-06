@@ -120,7 +120,7 @@ for fun in [engine_impl_dae_fun, engine_impl_dae_fun_jac_x_xdot_z, engine_impl_d
     fun.generate(fun.name(), codegen_opts)
 
 sim = integrator('sim', 'collocation', {'x': x, 'p': u, 'z': alg_states, 'ode': ode, 'alg': alg},
-                 {'tf': Ts, 'rootfinder': 'newton', 'number_of_finite_elements': 1, 'interpolation_order': 2})
+                 {'tf': Ts, 'rootfinder': 'newton',  'number_of_finite_elements': 1, 'interpolation_order': 2})
 
 V = struct_symMX([(
     entry('x', struct=x, repeat=N+1),
