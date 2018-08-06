@@ -100,7 +100,7 @@ typedef struct
     struct blasfeo_dvec *pi;     // pointer to pi in nlp_out at current stage
     struct blasfeo_dmat *BAbt;   // pointer to BAbt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
-    struct blasfeo_dmat *z;      // pointer to z
+    struct blasfeo_dvec *z;      // pointer to z
     void *sim_solver;            // sim solver memory
 } ocp_nlp_dynamics_cont_memory;
 
