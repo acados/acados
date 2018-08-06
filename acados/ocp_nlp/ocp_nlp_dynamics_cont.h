@@ -45,6 +45,7 @@ typedef struct
 {
     void *sim;
     int nx;   // number of states at the current stage
+    int nz;   // number of algebraic states at the current stage
     int nu;   // number of inputs at the current stage
     int nx1;  // number of states at the next stage
     int nu1;  // number of inputes at the next stage
@@ -99,6 +100,7 @@ typedef struct
     struct blasfeo_dvec *pi;     // pointer to pi in nlp_out at current stage
     struct blasfeo_dmat *BAbt;   // pointer to BAbt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
+    struct blasfeo_dmat *z;      // pointer to z
     void *sim_solver;            // sim solver memory
 } ocp_nlp_dynamics_cont_memory;
 

@@ -55,9 +55,9 @@ int main()
     double T = 0.05;
 
     // x: u1, u2, xD1, xD2
-    auto x0 = std::vector<double> {50, 50, 1.14275, 1.53787};
+    auto x0 = std::vector<double> {50, 50, 1.14275+1, 1.53787+1};
     // z: xA1, xA2
-    auto z0 = std::vector<double> {1.28976, 1.78264};
+    auto z0 = std::vector<double> {1.28976+1, 1.78264+1};
     // u: u1_r, u2_r
     auto u = std::vector<double> {0, 0};
 

@@ -142,6 +142,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
 typedef struct
 {
     struct blasfeo_dvec *ux;
+    struct blasfeo_dvec *z;
     struct blasfeo_dvec *pi;
     struct blasfeo_dvec *lam;
     struct blasfeo_dvec *t;

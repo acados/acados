@@ -181,12 +181,14 @@ file(GLOB ENGINE_SRC
     engine_model/engine_impl_dae_fun.c
     engine_model/engine_impl_dae_fun_jac_x_xdot_z.c
     engine_model/engine_impl_dae_jac_x_xdot_u_z.c
+    engine_model/engine_ls_cost.c
+    engine_model/engine_ls_cost_N.c
 )
 
 # Define examples
 
 # -------------------- two-staged turbocharged engine
-add_executable(engine_example engine_example.cpp ${ENGINE_SRC})
+add_executable(engine_example engine_example.c ${ENGINE_SRC})
 target_link_libraries(engine_example acados)
 
 # -------------------- nonlinear_chain

@@ -78,6 +78,7 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config_, void *dims_, int nx, i
     ocp_nlp_dynamics_cont_dims *dims = dims_;
 
     dims->nx = nx;
+    dims->nz = nz;
     dims->nu = nu;
     dims->nx1 = nx1;
     dims->nu1 = nu1;
@@ -333,6 +334,15 @@ void ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void
     return;
 }
 
+void ocp_nlp_dynamics_cont_memory_set_z_ptr(struct blasfeo_dvec *z, void *memory_)
+{
+    ocp_nlp_dynamics_cont_memory *memory = memory_;
+
+    memory->z = z;
+
+    return;
+}
+
 /************************************************
  * workspace
  ************************************************/
@@ -473,12 +483,15 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
     int nx1 = dims->nx1;
     int nu1 = dims->nu1;
 
     // setup model
     work->sim_in->model = model->sim_model;
     work->sim_in->T = model->T;
+
+    blasfeo_unpack_dvec(nz, mem->z, 0, work->sim_in->z);
 
     // pass state and control to integrator
     blasfeo_unpack_dvec(nu, mem->ux, 0, work->sim_in->u);
@@ -566,6 +579,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->memory_set_pi_ptr = &ocp_nlp_dynamics_cont_memory_set_pi_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_cont_memory_set_BAbt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr;
+    config->memory_set_z_ptr = &ocp_nlp_dynamics_cont_memory_set_z_ptr;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;
