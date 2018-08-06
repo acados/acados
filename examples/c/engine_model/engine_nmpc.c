@@ -84,9 +84,10 @@ static void mdlInitializeSampleTimes(SimStruct *S)
 #define MDL_START
 static void mdlStart(SimStruct *S)
 {
+    int i, j;
 
     int nx[NUM_STAGES+1], nu[NUM_STAGES+1], nz[NUM_STAGES+1], ny[NUM_STAGES+1], nb[NUM_STAGES+1], nbx[NUM_STAGES+1], nbu[NUM_STAGES+1], ng[NUM_STAGES+1], nh[NUM_STAGES+1], nq[NUM_STAGES+1], ns[NUM_STAGES+1];
-    for (int i = 0; i <= NUM_STAGES; ++i)
+    for (i = 0; i <= NUM_STAGES; ++i)
     {
         nx[i] = NUM_STATES;
         nu[i] = NUM_CONTROLS;
@@ -108,7 +109,7 @@ static void mdlStart(SimStruct *S)
     nb[NUM_STAGES] = nbx[NUM_STAGES] + nbu[NUM_STAGES];
 
     int idxb[nbu[0]+nbx[0]];
-    for (int i = 0; i < nbu[0]+nbx[0]; ++i)
+    for (i = 0; i < nbu[0]+nbx[0]; ++i)
         idxb[i] = i;
 
     // sampling time (s)
@@ -129,7 +130,7 @@ static void mdlStart(SimStruct *S)
 
     // weighting matrices
     double W[ny[0]*ny[0]];
-    for (int i = 0; i < ny[0]*ny[0]; ++i)
+    for (i = 0; i < ny[0]*ny[0]; ++i)
         W[i] = 0;
     W[0*(ny[0]+1)] = 100;
     W[1*(ny[0]+1)] = 1;
@@ -140,7 +141,7 @@ static void mdlStart(SimStruct *S)
     W[6*(ny[0]+1)] = 0.1;
 
     double W_N[ny[NUM_STAGES]*ny[NUM_STAGES]];
-    for (int i = 0; i < ny[NUM_STAGES]*ny[NUM_STAGES]; ++i)
+    for (i = 0; i < ny[NUM_STAGES]*ny[NUM_STAGES]; ++i)
         W_N[i] = 0;
     W_N[0*(ny[NUM_STAGES]+1)] = 100;
     W_N[1*(ny[NUM_STAGES]+1)] = 1;
@@ -161,18 +162,18 @@ static void mdlStart(SimStruct *S)
 
 	plan->nlp_solver = SQP_GN;
 
-	for (int i = 0; i <= NUM_STAGES; i++)
+	for (i = 0; i <= NUM_STAGES; i++)
 		plan->nlp_cost[i] = NONLINEAR_LS;
 
 	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
 
-	for (int i = 0; i < NUM_STAGES; i++)
+	for (i = 0; i < NUM_STAGES; i++)
     {
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 		plan->sim_solver_plan[i].sim_solver = IRK;
 	}
 
-	for (int i = 0; i <= NUM_STAGES; i++)
+	for (i = 0; i <= NUM_STAGES; i++)
 		plan->nlp_constraints[i] = BGH;
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NUM_STAGES);
@@ -224,13 +225,13 @@ static void mdlStart(SimStruct *S)
 
     // in
 	ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
-	for (int i = 0; i < NUM_STAGES; ++i)
+	for (i = 0; i < NUM_STAGES; ++i)
     	nlp_in->Ts[i] = T;
 
     // cost
     ocp_nlp_cost_nls_model **cost = (ocp_nlp_cost_nls_model **) nlp_in->cost;
 
-	for (int i = 0; i < NUM_STAGES; ++i) {
+	for (i = 0; i < NUM_STAGES; ++i) {
         cost[i]->nls_jac = (external_function_generic *) &nls_cost_residual;
         cost[i]->nls_hess = NULL;
         blasfeo_pack_dvec(ny[i], y_ref, &cost[i]->y_ref, 0);
@@ -243,7 +244,7 @@ static void mdlStart(SimStruct *S)
     blasfeo_pack_dmat(ny[NUM_STAGES], ny[NUM_STAGES], W_N, ny[NUM_STAGES], &cost[NUM_STAGES]->W, 0, 0);
 
     // dynamics
-    for (int i = 0; i < NUM_STAGES; ++i)
+    for (i = 0; i < NUM_STAGES; ++i)
     {
         if(nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_dae_fun)) exit(1);
         if(nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z)) exit(1);
@@ -256,20 +257,20 @@ static void mdlStart(SimStruct *S)
 
     nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lb", lb_0);
     nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ub", ub_0); 
-    for (int i = 0; i < nb[0]; ++i)
+    for (i = 0; i < nb[0]; ++i)
         constraints[0]->idxb[i] = idxb[i];
 
-    for (int i = 1; i < NUM_STAGES; ++i)
+    for (i = 1; i < NUM_STAGES; ++i)
     {
     	nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "lb", lb);
     	nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "ub", ub);
-        for (int j = 0; j < nb[i]; ++j)
+        for (j = 0; j < nb[i]; ++j)
             constraints[i]->idxb[j] = idxb[j];
     }
 
     nlp_bounds_bgh_set(constraints_dims[NUM_STAGES], constraints[NUM_STAGES], "lb", lb_N);
     nlp_bounds_bgh_set(constraints_dims[NUM_STAGES], constraints[NUM_STAGES], "ub", ub_N);  
-    for (int i = 0; i < nb[NUM_STAGES]; ++i)
+    for (i = 0; i < nb[NUM_STAGES]; ++i)
         constraints[NUM_STAGES]->idxb[i] = idxb[i];
 
     // options
@@ -283,7 +284,7 @@ static void mdlStart(SimStruct *S)
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
     // initialize
-    for (int i = 0; i < NUM_STAGES; ++i)
+    for (i = 0; i < NUM_STAGES; ++i)
     {
         blasfeo_pack_dvec(nu[i], u, nlp_out->ux+i, 0);
         blasfeo_pack_dvec(nx[i], x0, nlp_out->ux+i, nu[i]);
@@ -301,6 +302,8 @@ static void mdlStart(SimStruct *S)
 
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
+    int j;
+
     ocp_nlp_dims *nlp_dims = (ocp_nlp_dims *) ssGetPWork(S)[0];
     ocp_nlp_in *nlp_in = (ocp_nlp_in *) ssGetPWork(S)[1];
     ocp_nlp_out *nlp_out = (ocp_nlp_out *) ssGetPWork(S)[2];
@@ -316,7 +319,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // bounds
     double lb_0[] = {-10000, -10000, 50, 50, 1.14275, 1.53787};
     double ub_0[] = {+10000, +10000, 50, 50, 1.14275, 1.53787};
-    for (int j = 0; j < NUM_STATES; ++j) {
+    for (j = 0; j < NUM_STATES; ++j) {
         lb_0[NUM_CONTROLS+j] = x0[j];
         ub_0[NUM_CONTROLS+j] = x0[j];
     } 
@@ -324,7 +327,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lb", lb_0);
     nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ub", ub_0);
     
-    for (int j = 0; j <= NUM_STAGES; ++j)
+    for (j = 0; j <= NUM_STAGES; ++j)
         BLASFEO_DVECEL(&cost[j]->y_ref, 0) = *reference;
 
     int status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
