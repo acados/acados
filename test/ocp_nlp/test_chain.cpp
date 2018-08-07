@@ -1237,7 +1237,7 @@ void setup_and_solve_nlp(int NN,
     ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
 
     // TODO(dimitris): not necessarily GN, depends on cost module
-    plan->nlp_solver = SQP_GN;
+    plan->nlp_solver = SQP;
 
     ocp_nlp_cost_t cost_type = cost_enum(cost_str);
     switch (cost_type)
