@@ -121,8 +121,9 @@ typedef struct
     struct blasfeo_dmat Hess_times_forw_transp; // to store intermediate result f_hess * d[x,u,k,z]_dw0
                             // size (nx + nu) * (2 * nx + nu + nz)
     struct blasfeo_dmat dxii_dw0;  // intermediate result derivative of xii w.r.t x0, u, (nx, nx + nu)
-    // temporary Hessian of ode w.r.t. x, xdot, z, u;
-    struct blasfeo_dmat f_hess;  // size: (2 * nx + nu + nz) x (2 * nx + nu + nz)
+    // output of impl_ode_hess
+    struct blasfeo_dmat f_hess;  // size: (nx + nu, nx + nu)
+    struct blasfeo_dmat dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
 
 } sim_irk_workspace;
 

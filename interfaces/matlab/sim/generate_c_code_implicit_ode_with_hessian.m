@@ -36,18 +36,27 @@ z = model.z;
 f_impl = model.f_impl_expr;
 model_name_prefix = model.name;
 
+nx = length(x);
+nu = length(u);
+nz = length(z);
+
 %% generate hessian
 multiplier  = SX.sym('multiplier', length(x) + length(z));
-x_u_xdot_z = [x; u; xdot; z];
+multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
 
-HESS = SX.zeros( length(x_u_xdot_z), length(x_u_xdot_z));
+x_xdot_z_u = [x; xdot; z; u];
+
+HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 
 for ii = 1:length(f_impl)
-    jac_x_xdot_z = jacobian(f_impl(ii), x_u_xdot_z);
-    hess_x_xdot_z = jacobian( jac_x_xdot_z, x_u_xdot_z);
+    jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z_u);
+    hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
     HESS = HESS + multiplier(ii) * hess_x_xdot_z;
 end
 HESS = HESS.simplify();
+HESS_multiplied = multiply_mat' * HESS * multiply_mat;
+HESS_multiplied = HESS_multiplied.simplify();
+
 
 
 %% Set up functions
@@ -62,7 +71,8 @@ else
     impl_ode_fun_jac_x_xdot = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot'], {x, xdot, u, z}, {f_impl, jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, z)});
     impl_ode_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_jac_x_xdot_u'], {x, xdot, u, z}, {jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, u), jacobian(f_impl, z)});
     impl_ode_fun_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z}, {f_impl, jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, z)});
-    impl_ode_hess = Function([model_name_prefix,'impl_ode_hess'], {x, xdot, u, z, multiplier}, {HESS});
+    impl_ode_hess = Function([model.name, 'impl_ode_hess'], ...
+        {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
 end
 
 %% generate C code
@@ -71,6 +81,6 @@ impl_ode_fun_jac_x_xdot.generate([model_name_prefix,'impl_ode_fun_jac_x_xdot'], 
 impl_ode_jac_x_xdot_u.generate([model_name_prefix,'impl_ode_jac_x_xdot_u'], casadi_opts);
 impl_ode_fun_jac_x_xdot_u.generate([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'], casadi_opts);
 impl_ode_hess.generate([model_name_prefix,'impl_ode_hess'], casadi_opts);
-
+keyboard
 
 end
