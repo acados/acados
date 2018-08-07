@@ -57,6 +57,7 @@ function [ model ] = export_pendulum_ode_model()
     f_impl = xdot - f_expl;
     
     model.f_impl_expr = f_impl;
+    model.f_expl_expr = f_expl;
     model.x = x;
     model.xdot = xdot;
     model.u = u;
