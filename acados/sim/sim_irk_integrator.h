@@ -48,22 +48,29 @@ typedef struct
     // jax_x & jac_xdot & jac_u & jac_z of implicit ode
     external_function_generic *impl_ode_jac_x_xdot_u_z;
     // hessian of implicit ode:
-    // TODO(oj) describe format used here
     external_function_generic *impl_ode_hess;
 } irk_model;
 
 typedef struct
 {
-    struct blasfeo_dvec *rG;    // residuals of G (nx*ns)
-    struct blasfeo_dvec *K;     // internal K variables ((nx+nz)*ns)
-    struct blasfeo_dvec *xt;    // temporary x
-    struct blasfeo_dvec *xn;    // x at each integration step
-    struct blasfeo_dvec xtdot;  // temporary xdot
+    struct blasfeo_dvec *rG;        // residuals of G (nx*ns)
+    struct blasfeo_dvec *K;         // internal K variables ((nx+nz)*ns)
+    struct blasfeo_dvec *xt;        // temporary x
+    struct blasfeo_dvec *xn;        // x at each integration step
+    struct blasfeo_dvec xtdot;      // temporary xdot
+
+    struct blasfeo_dvec *lambda;    // adjoint sensitivities (nx + nu)
+    struct blasfeo_dvec *lambdaK;   // auxiliary variable ((nx+nz)*ns) for adjoint propagation
 
     struct blasfeo_dmat df_dx;     // temporary Jacobian of ode w.r.t x (nx+nz, nx)
     struct blasfeo_dmat df_dxdot;  // temporary Jacobian of ode w.r.t xdot (nx+nz, nx)
     struct blasfeo_dmat df_du;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
     struct blasfeo_dmat df_dz;     // temporary Jacobian of ode w.r.t z (nx+nz, nu)
+
+    int *ipiv_one_stage;  // index of pivot vector (nx + nz)
+    double *Z_work;  // used to perform computations to get out->zn (ns)
+
+    /* NOTE: the memory allocation corresponding to the following fields is CONDITIONAL */
 
     // df_dxdotz, dk0_dxu, only allocated if (opts->sens_algebraic)
     //      used for algebraic sensitivity generation
@@ -80,15 +87,6 @@ typedef struct
     //                                  to store intermediate results
     struct blasfeo_dmat *S_forw;  // forward sensitivities (nx, nx+nu)
 
-    // lambda: if (!opts->sens_hess) - single blasfeo_dvec that is reused
-    //         if ( opts->sens_hess) - array of (num_steps + 1)
-    //                          blasfeo_dvec to store intermediate results
-    struct blasfeo_dvec *lambda;   // adjoint seed (nx + nu)
-
-    // lamdaK: if (!opts->sens_hess) - single blasfeo_dvec that is reused
-    //         if ( opts->sens_hess) - array of blasfeo_dvec to store intermediate results
-    struct blasfeo_dvec *lambdaK;  // auxiliary variable ((nx+nz)*ns) for adjoint propagation
-
     // dG_dxu: if (!opts->sens_hess) - single blasfeo_dmat that is reused
     //         if ( opts->sens_hess) - array of blasfeo_dmat to store intermediate results
     struct blasfeo_dmat *dG_dxu;  // jacobian of G over x and u ((nx+nz)*ns, nx+nu)
@@ -103,24 +101,13 @@ typedef struct
     //              pivot vectors for dG_dxu
     int *ipiv;  // index of pivot vector
 
-
-    int *ipiv_one_stage;  // index of pivot vector (nx + nz)
-    double *Z_work;  // used to perform computations to get out->zn (ns)
-
     // xn_traj, K_traj only available if( opts->sens_adj || opts->sens_hess )
     struct blasfeo_dvec *xn_traj;  // xn trajectory
     struct blasfeo_dvec *K_traj;   // K trajectory
 
     /* the following variables are only available if (opts->sens_hess) */
-
     // For Hessian propagation
     struct blasfeo_dmat Hess;   // temporary Hessian (nx + nu, nx + nu)
-    struct blasfeo_dmat Hess_transp;   // temporary transposed Hessian (nx + nu, nx + nu)
-    struct blasfeo_dmat Hess_times_forw; // to store intermediate result f_hess * d[x,u,k,z]_dw0
-                            // size (2 * nx + nu + nz) * (nx + nu)
-    struct blasfeo_dmat Hess_times_forw_transp; // to store intermediate result f_hess * d[x,u,k,z]_dw0
-                            // size (nx + nu) * (2 * nx + nu + nz)
-    struct blasfeo_dmat dxii_dw0;  // intermediate result derivative of xii w.r.t x0, u, (nx, nx + nu)
     // output of impl_ode_hess
     struct blasfeo_dmat f_hess;  // size: (nx + nu, nx + nu)
     struct blasfeo_dmat dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
