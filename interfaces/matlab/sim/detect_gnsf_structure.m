@@ -77,11 +77,7 @@ end
 
 if generate_reordered_model
     % generate implicit model
-    if transcribe_opts.hessian
-        generate_c_code_implicit_ode_with_hessian( reordered_model );
-    else
-        generate_c_code_implicit_ode( reordered_model );
-    end
+    generate_c_code_implicit_ode( reordered_model );
     disp('Successfully generated C Code to simulate model with acados integrator IRK');
 end
 
