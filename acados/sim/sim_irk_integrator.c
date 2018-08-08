@@ -485,9 +485,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     int nK = (nx + nz) * ns;
 
-    double *x = in->x;
     double *u = in->u;
-    double *S_forw_in = in->S_forw;
 
     int newton_iter = opts->newton_iter;
     double *A_mat = opts->A_mat;
@@ -637,8 +635,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     }
 
     // pack
-    blasfeo_pack_dvec(nx, x, xn, 0);
-    blasfeo_pack_dmat(nx, nx + nu, S_forw_in, nx, S_forw, 0, 0);
+    blasfeo_pack_dvec(nx, in->x, xn, 0);
+    blasfeo_pack_dmat(nx, nx + nu, in->S_forw, nx, S_forw, 0, 0);
     blasfeo_pack_dvec(nx + nu, in->S_adj, lambda, 0);
 
     // TODO(dimitris, FreyJo): implement NF (number of forward sensis) properly, instead of nx+nu?
@@ -1148,6 +1146,16 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     {
         printf("Hess = (IRK) \n");
         blasfeo_print_exp_dmat(nx + nu, nx + nu, &Hess, 0, 0);
+        blasfeo_unpack_dmat(nx + nu, nx + nu, &Hess, 0, 0, out->S_hess, nx + nu);
+        // // extract lower triagonal
+        // int c = 0;
+        // for (int jj = 0; jj < nx + nu; jj++) {
+        //     for (int ii = jj; ii < nx + nu; ii++) {
+        //         out->S_hess[c] = blasfeo_dgeex1(&Hess, ii, jj);
+        //         c++;
+        //     }
+        // }
+
     }
 
 
