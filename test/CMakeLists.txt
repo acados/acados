@@ -181,14 +181,6 @@ set(TEST_SIM_HESS_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/sim/sim_test_hessian.cpp
 )
 
-# set(TEST_SIM_SRC
-#     ${CMAKE_CURRENT_SOURCE_DIR}/sim/pendulum/test_pendulum.cpp
-# )
-
-# set(TEST_UTILS_SRC
-#     ${PROJECT_SOURCE_DIR}/test/test_utils/read_matrix.cpp
-#     ${PROJECT_SOURCE_DIR}/test/test_utils/zeros.cpp
-# ) # TODO (dimitris): eliminate this at some point
 
 # Unit test executable
 add_executable(unit_tests

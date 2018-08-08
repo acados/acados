@@ -207,7 +207,7 @@ add_test(sim_gnsf_crane sim_gnsf_crane)
 
 # -------------------- pendulum_scqp
 add_executable(pendulum_scqp pendulum_scqp.cpp
-    pendulum_model/vde_forw_pendulum.c
+    pendulum_model/pendulum_ode_expl_vde_forw.c
     pendulum_model/constraint.c
     pendulum_model/position.c)
 target_link_libraries(pendulum_scqp acados)
