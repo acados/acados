@@ -647,7 +647,6 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     /************************************************
      * adjoint sweep
      ************************************************/
-
     if (opts->sens_adj || opts->sens_hess)
     {
         // initialize integrator variables
@@ -697,18 +696,25 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                             rhs_adj_in[nForw + i] += a * adj_traj[j * nAdj + i];
                     }
                 }
+                // TODO(oj): fix this whole file or write from scratch, not really readable :/
                 acados_tic(&timer_ad);
                 if (!opts->sens_hess)
                 {
                     ext_fun_type_in[0] = COLMAJ;
                     ext_fun_in[0] = rhs_adj_in + 0;  // x: nx
                     ext_fun_type_in[1] = COLMAJ;
-                    ext_fun_in[1] = rhs_adj_in + nx;  // lam: nx
+                    ext_fun_in[1] = rhs_adj_in + nx;  // Sx: nx*nx
                     ext_fun_type_in[2] = COLMAJ;
-                    ext_fun_in[2] = rhs_adj_in + nx + nx;  // u: nu
+                    ext_fun_in[2] = rhs_adj_in + nx + nx * nx;  // Su: nx*nu
+                    ext_fun_type_in[3] = COLMAJ;
+                    ext_fun_in[3] = rhs_adj_in + nx + nx * nx + nx * nu;  // lam: nx
+                    ext_fun_type_in[4] = COLMAJ;
+                    ext_fun_in[4] = rhs_adj_in + nx + nx * nx + nx * nu + nx;  // u: nu
 
                     ext_fun_type_out[0] = COLMAJ;
                     ext_fun_out[0] = adj_traj + s * nAdj + 0;  // adj: nx+nu
+                    ext_fun_type_out[1] = COLMAJ;
+                    ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
 
                     model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in,
                                                   ext_fun_type_out,
