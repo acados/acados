@@ -12,6 +12,9 @@
 #define NUM_CONTROLS 2
 #define HORIZON_LENGTH 1.0
 
+#define ACADOS_WITH_QPOASES
+#define ACADOS_WITH_HPMPC
+
 #include "simstruc.h"
 
 #include <stdlib.h>
@@ -126,28 +129,28 @@ static void mdlStart(SimStruct *S)
     double u[] = {0, 0};
 
     // reference
-    double y_ref[] = {1500, 50, 50, 1.14275, 1.53787, 0, 0};
+    double y_ref[] = {1.500, 50, 50, 1.14275, 1.53787, 0, 0};
 
     // weighting matrices
     double W[ny[0]*ny[0]];
     for (i = 0; i < ny[0]*ny[0]; ++i)
         W[i] = 0;
-    W[0*(ny[0]+1)] = 100;
-    W[1*(ny[0]+1)] = 1;
-    W[2*(ny[0]+1)] = 1;
-    W[3*(ny[0]+1)] = 1;
-    W[4*(ny[0]+1)] = 1;
-    W[5*(ny[0]+1)] = 0.1;
-    W[6*(ny[0]+1)] = 0.1;
+    W[0*(ny[0]+1)] = 1000;
+    W[1*(ny[0]+1)] = 1e-3;
+    W[2*(ny[0]+1)] = 1e-3;
+    W[3*(ny[0]+1)] = 1e-3;
+    W[4*(ny[0]+1)] = 1e-3;
+    W[5*(ny[0]+1)] = 0.1e-3;
+    W[6*(ny[0]+1)] = 0.1e-3;
 
     double W_N[ny[NUM_STAGES]*ny[NUM_STAGES]];
     for (i = 0; i < ny[NUM_STAGES]*ny[NUM_STAGES]; ++i)
         W_N[i] = 0;
-    W_N[0*(ny[NUM_STAGES]+1)] = 100;
-    W_N[1*(ny[NUM_STAGES]+1)] = 1;
-    W_N[2*(ny[NUM_STAGES]+1)] = 1;
-    W_N[3*(ny[NUM_STAGES]+1)] = 1;
-    W_N[4*(ny[NUM_STAGES]+1)] = 1;
+    W_N[0*(ny[NUM_STAGES]+1)] = 1000;
+    W_N[1*(ny[NUM_STAGES]+1)] = 1e-3;
+    W_N[2*(ny[NUM_STAGES]+1)] = 1e-3;
+    W_N[3*(ny[NUM_STAGES]+1)] = 1e-3;
+    W_N[4*(ny[NUM_STAGES]+1)] = 1e-3;
 
     double lb_0[] = {-10000, -10000, 50, 50, 1.14275, 1.53787};
     double ub_0[] = {+10000, +10000, 50, 50, 1.14275, 1.53787};
@@ -165,7 +168,7 @@ static void mdlStart(SimStruct *S)
 	for (i = 0; i <= NUM_STAGES; i++)
 		plan->nlp_cost[i] = NONLINEAR_LS;
 
-	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
 	for (i = 0; i < NUM_STAGES; i++)
     {
