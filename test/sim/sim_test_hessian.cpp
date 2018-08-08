@@ -80,7 +80,7 @@ double sim_solver_tolerance_hess(std::string const& inString)
 
 TEST_CASE("pendulum_hessians", "[integrators]")
 {
-    vector<std::string> solvers = {"IRK","ERK"}; //, "ERK"};//, "ERK"};
+    vector<std::string> solvers = {"IRK", "ERK"};  //, "ERK"};
     // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
 
@@ -141,7 +141,8 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     impl_ode_fun_jac_x_xdot.casadi_fun = &pendulum_ode_impl_ode_fun_jac_x_xdot;
     impl_ode_fun_jac_x_xdot.casadi_work = &pendulum_ode_impl_ode_fun_jac_x_xdot_work;
     impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_sparsity_in;
-    impl_ode_fun_jac_x_xdot.casadi_sparsity_out = &pendulum_ode_impl_ode_fun_jac_x_xdot_sparsity_out;
+    impl_ode_fun_jac_x_xdot.casadi_sparsity_out =
+                         &pendulum_ode_impl_ode_fun_jac_x_xdot_sparsity_out;
     impl_ode_fun_jac_x_xdot.casadi_n_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_n_in;
     impl_ode_fun_jac_x_xdot.casadi_n_out = &pendulum_ode_impl_ode_fun_jac_x_xdot_n_out;
     external_function_casadi_create(&impl_ode_fun_jac_x_xdot);
@@ -459,12 +460,10 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                         std::cout << "\n --->> NOT SUPPORTED -- corresponding test skipped \n";
                         break;
                     }
-                    
                     else
                     {
                         opts->num_steps *= 2;
                     }
-                    
                 }
 
 
