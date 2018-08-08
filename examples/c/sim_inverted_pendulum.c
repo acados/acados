@@ -253,8 +253,8 @@ int main()
         opts->jac_reuse = false;        // jacobian reuse
         opts->newton_iter = 3;          // number of newton iterations per integration step
 
-        opts->ns                = 1;    // number of stages in rk integrator
-        opts->num_steps         = 1;    // number of steps
+        opts->ns                = 3;    // number of stages in rk integrator
+        opts->num_steps         = 3;    // number of steps
         opts->sens_forw         = true;
         opts->sens_adj          = false;
         opts->output_z          = true;
@@ -358,7 +358,7 @@ int main()
 
     /* simulate */
 
-		int nsim0 = nsim;
+		// int nsim0 = nsim;
 
 		double cpu_time = 0.0;
 		double la_time = 0.0;

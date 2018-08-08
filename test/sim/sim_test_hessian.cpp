@@ -60,7 +60,7 @@ sim_solver_t hashitsim_hess(std::string const& inString)
     return (sim_solver_t) -1;
 }
 
-double sim_solver_tolerance(std::string const& inString)
+double sim_solver_tolerance_sim(std::string const& inString)
 {
     if (inString == "IRK")  return 1e-4;
     if (inString == "ERK") return 1e-3;
@@ -366,8 +366,8 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     // printf("reference adjoint sensitivities \n");
     // d_print_e_mat(1, nx + nu, &S_adj_ref_sol[0], 1);
 
-    printf("Reference Hessian \n");
-    d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
+    // printf("Reference Hessian \n");
+    // d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
     // double *S_hess_out;
     // if(opts->sens_hess)
     // {
@@ -423,7 +423,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
 
                 double tol_hess = sim_solver_tolerance_hess(solver);
-                double tol = sim_solver_tolerance(solver);
+                double tol = sim_solver_tolerance_sim(solver);
 
                 plan.sim_solver = hashitsim_hess(solver);
 
@@ -601,24 +601,24 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
                     std::cout  << "rel_error_hess   = " << rel_error_hess  << "\n";
 
-                    printf("Tested Hessian \n");
-                    // double *S_hess_out;
-                    if(opts->sens_hess)
-                    {
-                        d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
-                        // double zero = 0.0;
-                        // S_hess_out = out->S_hess;
-                        // for (int ii = 0;ii < NF; ii++){
-                        //     for (int jj = 0; jj < NF; jj++){
-                        //         if (jj > ii) {
-                        //             printf("%8.5e \t", zero);
-                        //         } else {
-                        //             printf("%8.5e \t", S_hess_out[jj*NF+ii]);
-                        //         }
-                        //     }
-                        //     printf("\n");
-                        // }
-                    }
+                //     printf("Tested Hessian \n");
+                //         d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
+                //     // double *S_hess_out;
+                //     if(opts->sens_hess)
+                //     {
+                //         // double zero = 0.0;
+                //         // S_hess_out = out->S_hess;
+                //         // for (int ii = 0;ii < NF; ii++){
+                //         //     for (int jj = 0; jj < NF; jj++){
+                //         //         if (jj > ii) {
+                //         //             printf("%8.5e \t", zero);
+                //         //         } else {
+                //         //             printf("%8.5e \t", S_hess_out[jj*NF+ii]);
+                //         //         }
+                //         //     }
+                //         //     printf("\n");
+                //         // }
+                //     }
                 }
             /************************************************
             * asserts on erors
