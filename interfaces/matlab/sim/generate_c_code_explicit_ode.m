@@ -43,6 +43,7 @@ Sx = SX.sym('Sx',nx,nx);
 Sp = SX.sym('Sp',nx,nu);
 lambdaX = SX.sym('lambdaX',nx,1);
 
+expl_ode_fun = Function([model_name_prefix,'expl_ode_fun'],{x,u},{f_expl});
 % TODO: Polish: get rid of SX.zeros
 vdeX = SX.zeros(nx,nx);
 vdeX = vdeX + jtimes(f_expl,x,Sx);
@@ -71,6 +72,7 @@ end
 expl_ode_hess = Function([model_name_prefix,'expl_ode_hess'],{x,Sx,Sp,lambdaX,u},{adj,hess2});
 
 %% generate C code
+expl_ode_fun.generate([model_name_prefix,'expl_ode_fun'], casadi_opts);
 expl_vde_forw.generate([model_name_prefix,'expl_vde_forw'], casadi_opts);
 expl_ode_jac.generate([model_name_prefix,'expl_ode_jac'], casadi_opts);
 expl_vde_adj.generate([model_name_prefix,'expl_vde_adj'], casadi_opts);
