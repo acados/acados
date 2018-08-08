@@ -1144,8 +1144,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         blasfeo_unpack_dvec(nx + nu, lambda, 0, S_adj_out);
     if  ( opts->sens_hess )
     {
-        printf("Hess = (IRK) \n");
-        blasfeo_print_exp_dmat(nx + nu, nx + nu, &Hess, 0, 0);
+        // printf("Hess = (IRK) \n");
+        // blasfeo_print_exp_dmat(nx + nu, nx + nu, &Hess, 0, 0);
         blasfeo_unpack_dmat(nx + nu, nx + nu, &Hess, 0, 0, out->S_hess, nx + nu);
         // // extract lower triagonal
         // int c = 0;

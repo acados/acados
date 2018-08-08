@@ -29,7 +29,6 @@
 
 // acados
 #include "acados/sim/sim_common.h"
-// #include "acados/sim/sim_gnsf.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/math.h"
 
@@ -57,38 +56,37 @@ sim_solver_t hashitsim_hess(std::string const& inString)
 {
     if (inString == "ERK") return ERK;
     if (inString == "IRK") return IRK;
-    if (inString == "LIFTED_IRK") return LIFTED_IRK;
-    if (inString == "GNSF") return GNSF;
-    if (inString == "NEW_LIFTED_IRK") return NEW_LIFTED_IRK;
 
     return (sim_solver_t) -1;
 }
 
-double sim_solver_tolerance_hess(std::string const& inString)
+double sim_solver_tolerance(std::string const& inString)
 {
     if (inString == "IRK")  return 1e-4;
+    if (inString == "ERK") return 1e-3;
+
+    return -1;
+}
+
+double sim_solver_tolerance_hess(std::string const& inString)
+{
+    if (inString == "IRK")  return 1e-1;
     // if (inString == "LIFTED_IRK") return 1e-3;
-    if (inString == "ERK") return 1e-4;
+    if (inString == "ERK") return 1e-1;
     // if (inString == "NEW_LIFTED_IRK") return 1e-3;
 
     return -1;
 }
 
-
 TEST_CASE("pendulum_hessians", "[integrators]")
 {
-    vector<std::string> solvers = {"IRK", "ERK"};
+    vector<std::string> solvers = {"IRK","ERK"}; //, "ERK"};//, "ERK"};
     // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
 
     const int nx = 4;
     const int nu = 1;
     const int nz = 0;
-    // const int nx1 = 5;  // gnsf split
-    // const int nx2 = 4;
-    // const int n_out = 3;
-    // const int ny = 5;
-    // const int nuhat = 1;
 
     // generate x0, u_sim
     double x0[nx];
@@ -103,22 +101,23 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
     int nsim0 = 1;  // nsim;
 
-    double T = 0.5;  // simulation time
-    // reduced for faster test
+    double T = 0.1;  // simulation time
+    // former value 0.5
 
     double x_sim[nx*(nsim0+2)];
 
     double x_ref_sol[nx];
     double S_forw_ref_sol[nx*NF];
     double S_adj_ref_sol[NF];
+    double S_hess_ref_sol[NF * NF];
 
     double error[nx];
     double error_z[nz];
     double error_S_forw[nx*NF];
     double error_S_adj[NF];
-    double error_S_alg[NF*nz];
+    double error_S_hess[NF * NF];
 
-    double norm_error, norm_error_forw, norm_error_adj, norm_error_z, norm_error_sens_alg;
+    double norm_error, norm_error_forw, norm_error_adj, norm_error_hess;
 
     for (int ii = 0; ii < nx; ii++)
         x_sim[ii] = x0[ii];
@@ -235,7 +234,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 ************************************************/
 
     sim_solver_plan plan;
-    plan.sim_solver = ERK;  // IRK
+    plan.sim_solver = IRK;  // IRK
 
     sim_solver_config *config = sim_config_create(plan);
 
@@ -260,17 +259,12 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 8;  // number of newton iterations per integration step
     opts->num_steps = 40;  // number of steps
-    opts->ns = 4;  // number of stages in rk integrator
+    opts->ns = 7;  // number of stages in rk integrator
 
     sim_in *in = sim_in_create(config, dims);
     sim_out *out = sim_out_create(config, dims);
 
     in->T = T;
-
-    // // import model matrices
-    // external_function_generic *get_model_matrices =
-    //         (external_function_generic *) &get_matrices_fun;
-    // gnsf_model *model = (gnsf_model *) in->model;
 
     // set model
     switch (plan.sim_solver)
@@ -352,12 +346,16 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     for (int jj = 0; jj < NF; jj++)
         S_adj_ref_sol[jj] = out->S_adj[jj];
 
+    for (int jj = 0; jj < NF * NF; jj++)
+        S_hess_ref_sol[jj] = out->S_hess[jj];
+
     // compute one norms
-    double norm_x_ref, norm_S_forw_ref, norm_S_adj_ref = 0;
+    double norm_x_ref, norm_S_forw_ref, norm_S_adj_ref, norm_S_hess_ref = 0;
 
     norm_x_ref = onenorm(nx, 1, x_ref_sol);
     norm_S_forw_ref = onenorm(nx, nx + nu, S_forw_ref_sol);
     norm_S_adj_ref = onenorm(1, nx + nu, S_adj_ref_sol);
+    norm_S_hess_ref = onenorm(nx + nu, nx + nu, S_hess_ref_sol);
 
     // printf("Reference xn \n");
     // d_print_e_mat(1, nx, &x_ref_sol[0], 1);
@@ -365,27 +363,27 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     // printf("Reference forward sensitivities \n");
     // d_print_e_mat(nx, NF, &S_forw_ref_sol[0], nx);
 
-    printf("reference adjoint sensitivities \n");
-    d_print_e_mat(1, nx + nu, &S_adj_ref_sol[0], 1);
+    // printf("reference adjoint sensitivities \n");
+    // d_print_e_mat(1, nx + nu, &S_adj_ref_sol[0], 1);
 
     printf("Reference Hessian \n");
-    double *S_hess_out;
-    if(opts->sens_hess)
-    {
-        double zero = 0.0;
-        S_hess_out = out->S_hess;
-        printf("\nS_hess_out: \n");
-        for (int ii = 0;ii < NF; ii++){
-            for (int jj = 0; jj < NF; jj++){
-                if (jj > ii) {
-                    printf("%8.5e \t", zero);
-                } else {
-                    printf("%8.5e \t", S_hess_out[jj*NF+ii]);
-                }
-            }
-            printf("\n");
-        }
-    }
+    d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
+    // double *S_hess_out;
+    // if(opts->sens_hess)
+    // {
+    //     double zero = 0.0;
+    //     S_hess_out = out->S_hess;
+    //     for (int ii = 0; ii < NF; ii++){
+    //         for (int jj = 0; jj < NF; jj++){
+    //             if (jj > ii) {
+    //                 printf("%8.5e \t", zero);
+    //             } else {
+    //                 printf("%8.5e \t", S_hess_out[jj*NF+ii]);
+    //             }
+    //         }
+    //         printf("\n");
+    //     }
+    // }
 
     /* free */
     free(config);
@@ -410,22 +408,22 @@ TEST_CASE("pendulum_hessians", "[integrators]")
         {
         SECTION("sens_adj = " + std::to_string((bool)sens_adj))
         {
-            for (int num_stages = 2; num_stages < 5; num_stages += 2)
-            {
-            SECTION("num_stages = " + std::to_string(num_stages))
-            {
-            for (int num_steps = 3; num_steps < 5; num_steps += 2)
-            {
-            SECTION("num_steps = " + std::to_string(num_steps))
-            {
-
             for (std::string solver : solvers)
             {
             SECTION(solver)
             {
+            for (int num_stages = 2; num_stages < 5; num_stages += 1)
+            {
+            SECTION("num_stages = " + std::to_string(num_stages))
+            {
+            for (int num_steps = 4; num_steps < 8; num_steps += 2)
+            {
+            SECTION("num_steps = " + std::to_string(num_steps))
+            {
 
 
-                double tol = sim_solver_tolerance_hess(solver);
+                double tol_hess = sim_solver_tolerance_hess(solver);
+                double tol = sim_solver_tolerance(solver);
 
                 plan.sim_solver = hashitsim_hess(solver);
 
@@ -445,7 +443,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                 config->opts_initialize_default(config, dims, opts);
 
                 opts->jac_reuse = false;        // jacobian reuse
-                opts->newton_iter = 2;          // number of newton iterations per integration step
+                opts->newton_iter = 4;          // number of newton iterations per integration step
 
                 opts->ns                = num_stages;          // number of stages in rk integrator
                 opts->num_steps         = num_steps;    // number of steps
@@ -453,7 +451,21 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                 opts->sens_adj          = (bool) sens_adj;
                 opts->output_z          = false;
                 opts->sens_algebraic    = false;
-                opts->sens_hess         = false;
+                opts->sens_hess         = true;
+
+                if (plan.sim_solver == ERK){
+                    if (!(num_stages == 4 || num_stages == 2 || num_stages == 1 )){
+                        std::cout << "\n\n ATTEMPTED to use ERK with num_stages not in {1,2,4}";
+                        std::cout << "\n --->> NOT SUPPORTED -- corresponding test skipped \n";
+                        break;
+                    }
+                    
+                    else
+                    {
+                        opts->num_steps *= 2;
+                    }
+                    
+                }
 
 
             /* sim in / out */
@@ -535,7 +547,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
             /************************************************
             * compute error w.r.t. reference solution
             ************************************************/
-                double rel_error_forw, rel_error_adj, rel_error_z, rel_error_alg;
+                double rel_error_forw, rel_error_adj, rel_error_hess;
 
                 // error sim
                 for (int jj = 0; jj < nx; jj++){
@@ -565,6 +577,14 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                     rel_error_adj = norm_error_adj / norm_S_adj_ref;
                 }
 
+                if ( opts->sens_hess ){               // error_S_hess
+                    for (int jj = 0; jj < (nx + nu) * (nx + nu); jj++){
+                        REQUIRE(std::isnan(out->S_hess[jj]) == 0);
+                        error_S_hess[jj] = S_hess_ref_sol[jj] - out->S_hess[jj];
+                    }
+                    norm_error_hess = onenorm(nx + nu, nx + nu, error_S_hess);
+                    rel_error_hess = norm_error_hess / norm_S_hess_ref;
+                }
 
 
 
@@ -577,7 +597,29 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                 std::cout  << "rel_error_forw   = " << rel_error_forw << "\n";
                 if ( opts->sens_adj )
                 std::cout  << "rel_error_adj    = " << rel_error_adj  << "\n";
+                if ( opts->sens_hess ){
 
+                    std::cout  << "rel_error_hess   = " << rel_error_hess  << "\n";
+
+                    printf("Tested Hessian \n");
+                    // double *S_hess_out;
+                    if(opts->sens_hess)
+                    {
+                        d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
+                        // double zero = 0.0;
+                        // S_hess_out = out->S_hess;
+                        // for (int ii = 0;ii < NF; ii++){
+                        //     for (int jj = 0; jj < NF; jj++){
+                        //         if (jj > ii) {
+                        //             printf("%8.5e \t", zero);
+                        //         } else {
+                        //             printf("%8.5e \t", S_hess_out[jj*NF+ii]);
+                        //         }
+                        //     }
+                        //     printf("\n");
+                        // }
+                    }
+                }
             /************************************************
             * asserts on erors
             ************************************************/
@@ -588,6 +630,9 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
                 if ( opts->sens_adj )
                     REQUIRE(rel_error_adj <= tol);
+
+                if ( opts->sens_hess )
+                    REQUIRE(rel_error_hess <= tol_hess);
 
             /************************************************
             * free tested solver
