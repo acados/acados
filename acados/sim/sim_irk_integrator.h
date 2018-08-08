@@ -67,10 +67,11 @@ typedef struct
     struct blasfeo_dmat df_du;     // temporary Jacobian of ode w.r.t u (nx+nz, nu)
     struct blasfeo_dmat df_dz;     // temporary Jacobian of ode w.r.t z (nx+nz, nu)
 
+    /* NOTE: the memory allocation corresponding to the following fields is CONDITIONAL */
+
+    // only allocated if (opts->sens_algebraic || opts->output_z)
     int *ipiv_one_stage;  // index of pivot vector (nx + nz)
     double *Z_work;  // used to perform computations to get out->zn (ns)
-
-    /* NOTE: the memory allocation corresponding to the following fields is CONDITIONAL */
 
     // df_dxdotz, dk0_dxu, only allocated if (opts->sens_algebraic)
     //      used for algebraic sensitivity generation
