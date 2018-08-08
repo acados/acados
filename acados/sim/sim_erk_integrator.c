@@ -648,7 +648,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
      * adjoint sweep
      ************************************************/
 
-    if (opts->sens_adj)
+    if (opts->sens_adj || opts->sens_hess)
     {
         // initialize integrator variables
         for (i = 0; i < nx; i++) adj_tmp[i] = S_adj_in[i];
@@ -698,7 +698,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     }
                 }
                 acados_tic(&timer_ad);
-                if (opts->sens_hess)
+                if (!opts->sens_hess)
                 {
                     ext_fun_type_in[0] = COLMAJ;
                     ext_fun_in[0] = rhs_adj_in + 0;  // x: nx
@@ -710,8 +710,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     ext_fun_type_out[0] = COLMAJ;
                     ext_fun_out[0] = adj_traj + s * nAdj + 0;  // adj: nx+nu
 
-                    model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in,
-                                                  ext_fun_type_out, ext_fun_out);
+                    model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in,
+                                                  ext_fun_type_out,
+                                                  ext_fun_out);  // adjoint VDE evaluation
                 }
                 else
                 {
@@ -731,9 +732,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     ext_fun_type_out[1] = COLMAJ;
                     ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
 
-                    model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in,
-                                                  ext_fun_type_out,
-                                                  ext_fun_out);  // adjoint VDE evaluation
+                    model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in,
+                                ext_fun_type_out, ext_fun_out);
+
                 }
                 timing_ad += acados_toc(&timer_ad);
 
@@ -750,7 +751,21 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         // store hessian
         if (opts->sens_hess)
         {
-            for (i = 0; i < nhess; i++) S_hess_out[i] = adj_tmp[nx + nu + i];
+            // former line for tridiagonal export was
+            //            for (i = 0; i < nhess; i++) S_hess_out[i] = adj_tmp[nx + nu + i];
+            int count_lower = 0;
+            for (int j = 0; j < nx + nu; j++) {
+                for (int i = 0; i < nx + nu; i++){
+                    // S_hess_out[i] = adj_tmp[nx + nu + i];
+                    if ( i >= j) {
+                        // printf("%e \n", adj_tmp[nx + nu + count_lower]);
+                        S_hess_out[i + (nf) * j] = adj_tmp[nx + nu + count_lower];
+                        S_hess_out[j + (nf) * i] = adj_tmp[nx + nu + count_lower];
+                                    // copy to upper part
+                        count_lower++;
+                    }
+                }
+            }
         }
     }
 
