@@ -63,47 +63,6 @@ function [ model ] = export_pendulum_ode_model()
     model.u = u;
     model.z = z;
     model.name = model_name_prefix;
+
 end
-% Sx = SX.sym('Sx',nx,nx);
-% Sp = SX.sym('Sp',nx,nu);
-% lambdaX = SX.sym('lambdaX',nx,1);
-% 
-% vdeX = SX.zeros(nx,nx);
-% vdeX = vdeX + jtimes(f_expl,x,Sx);
-% 
-% vdeP = SX.zeros(nx,nu) + jacobian(f_expl,u);
-% vdeP = vdeP + jtimes(f_expl,x,Sp);
-% 
-% vdeFun = Function('vdeFun',{x,Sx,Sp,u},{f_expl,vdeX,vdeP});
-% 
-% jacX = SX.zeros(nx,nx) + jacobian(f_expl,x);
-% jacFun = Function('jacFun',{x,u},{f_expl,jacX});
-% 
-% adj = jtimes(f_expl,[x;u],lambdaX,true);
-% 
-% adjFun = Function('adjFun',{x,lambdaX,u},{adj});
-% 
-% S_forw = vertcat(horzcat(Sx, Sp), horzcat(zeros(nu,nx), eye(nu)));
-% hess = S_forw.'*jtimes(adj,[x;u],S_forw);
-% hess2 = [];
-% for j = 1:nx+nu
-%     for i = j:nx+nu
-%         hess2 = [hess2; hess(i,j)];
-%     end
-% end
-% 
-% hessFun = Function('adjFun',{x,Sx,Sp,lambdaX,u},{adj,hess2});
-% 
-% opts = struct('mex', false, 'with_header', true, 'with_export', false, 'casadi_int', 'int');
-% vdeFun.generate(['vde_forw_pendulum'], opts);
-% jacFun.generate(['jac_pendulum'], opts);
-% adjFun.generate(['vde_adj_pendulum'], opts);
-% hessFun.generate(['vde_hess_pendulum'], opts);
-% 
-% p = vertcat(x1-l*sin(theta) - l, l*cos(theta) - l);
-% quad_constraint = Function('position', {x}, {p, jacobian(p, x).T});
-% quad_constraint.generate('position', opts);
-% 
-% h = mtimes(p.T, p);
-% constraint = Function('constraint', {x}, {h, jacobian(h, x).T});
-% constraint.generate('constraint', opts);
+
