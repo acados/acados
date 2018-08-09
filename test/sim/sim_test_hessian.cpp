@@ -44,6 +44,14 @@
 
 extern "C"
 {
+    // initialize dimensions
+    const int nx = 4;
+    const int nu = 1;
+    const int nz = 0;
+
+    // generate x0, u_sim
+    double x0[nx];
+    double u_sim[nu];
 
 }
 
@@ -82,15 +90,6 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 {
     vector<std::string> solvers = {"IRK", "ERK"};  //, "ERK"};
     // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
-    // initialize dimensions
-
-    const int nx = 4;
-    const int nu = 1;
-    const int nz = 0;
-
-    // generate x0, u_sim
-    double x0[nx];
-    double u_sim[nu];
 
     for (int ii = 0; ii < nx; ii++)
         x0[ii] = 0.0;
@@ -367,8 +366,8 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     // printf("reference adjoint sensitivities \n");
     // d_print_e_mat(1, nx + nu, &S_adj_ref_sol[0], 1);
 
-    // printf("Reference Hessian \n");
-    // d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
+    printf("Reference Hessian \n");
+    d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
     // double *S_hess_out;
     // if(opts->sens_hess)
     // {
@@ -600,8 +599,8 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
                     std::cout  << "rel_error_hess   = " << rel_error_hess  << "\n";
 
-                //     printf("Tested Hessian \n");
-                //         d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
+                // printf("Tested Hessian \n");
+                // d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
                 //     // double *S_hess_out;
                 //     if(opts->sens_hess)
                 //     {
@@ -659,6 +658,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     external_function_casadi_free(&impl_ode_fun_jac_x_xdot);
     external_function_casadi_free(&impl_ode_fun_jac_x_xdot_u);
     external_function_casadi_free(&impl_ode_jac_x_xdot_u);
+    external_function_casadi_free(&impl_ode_hess);
     // explicit model
     external_function_casadi_free(&expl_ode_fun);
     external_function_casadi_free(&expl_ode_jac);
@@ -667,3 +667,211 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     external_function_casadi_free(&expl_ode_hess);
 
 }  // END_TEST_CASE
+
+
+TEST_CASE("pendulum model hessians - Finite Differences", "compare against finite differences"){
+
+
+    for (int ii = 0; ii < nx; ii++)
+        x0[ii] = 0.0;
+
+    u_sim[0] = 0.1;
+
+    int NF = nx + nu;  // columns of forward seed
+
+    double T = 0.1;  // simulation time
+
+    double FD_EPS = 1e-10;
+    double S_adj_ref_sol[nx+nu];
+    double hess_FD[(nx+nu)*(nx+nu)];
+
+/************************************************
+* external functions
+************************************************/
+    /* IMPLICIT MODEL */
+    // impl_ode_fun
+    external_function_casadi impl_ode_fun;
+    impl_ode_fun.casadi_fun = &pendulum_ode_impl_ode_fun;
+    impl_ode_fun.casadi_work = &pendulum_ode_impl_ode_fun_work;
+    impl_ode_fun.casadi_sparsity_in = &pendulum_ode_impl_ode_fun_sparsity_in;
+    impl_ode_fun.casadi_sparsity_out = &pendulum_ode_impl_ode_fun_sparsity_out;
+    impl_ode_fun.casadi_n_in = &pendulum_ode_impl_ode_fun_n_in;
+    impl_ode_fun.casadi_n_out = &pendulum_ode_impl_ode_fun_n_out;
+    external_function_casadi_create(&impl_ode_fun);
+
+    // impl_ode_fun_jac_x_xdot
+    external_function_casadi impl_ode_fun_jac_x_xdot;
+    impl_ode_fun_jac_x_xdot.casadi_fun = &pendulum_ode_impl_ode_fun_jac_x_xdot;
+    impl_ode_fun_jac_x_xdot.casadi_work = &pendulum_ode_impl_ode_fun_jac_x_xdot_work;
+    impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_sparsity_in;
+    impl_ode_fun_jac_x_xdot.casadi_sparsity_out =
+                         &pendulum_ode_impl_ode_fun_jac_x_xdot_sparsity_out;
+    impl_ode_fun_jac_x_xdot.casadi_n_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_n_in;
+    impl_ode_fun_jac_x_xdot.casadi_n_out = &pendulum_ode_impl_ode_fun_jac_x_xdot_n_out;
+    external_function_casadi_create(&impl_ode_fun_jac_x_xdot);
+
+    // impl_ode_jac_x_xdot_u
+    external_function_casadi impl_ode_jac_x_xdot_u;
+    impl_ode_jac_x_xdot_u.casadi_fun = &pendulum_ode_impl_ode_jac_x_xdot_u;
+    impl_ode_jac_x_xdot_u.casadi_work = &pendulum_ode_impl_ode_jac_x_xdot_u_work;
+    impl_ode_jac_x_xdot_u.casadi_sparsity_in = &pendulum_ode_impl_ode_jac_x_xdot_u_sparsity_in;
+    impl_ode_jac_x_xdot_u.casadi_sparsity_out = &pendulum_ode_impl_ode_jac_x_xdot_u_sparsity_out;
+    impl_ode_jac_x_xdot_u.casadi_n_in = &pendulum_ode_impl_ode_jac_x_xdot_u_n_in;
+    impl_ode_jac_x_xdot_u.casadi_n_out = &pendulum_ode_impl_ode_jac_x_xdot_u_n_out;
+    external_function_casadi_create(&impl_ode_jac_x_xdot_u);
+
+    // impl_ode_jac_x_xdot_u
+    external_function_casadi impl_ode_fun_jac_x_xdot_u;
+    impl_ode_fun_jac_x_xdot_u.casadi_fun = &pendulum_ode_impl_ode_fun_jac_x_xdot_u;
+    impl_ode_fun_jac_x_xdot_u.casadi_work = &pendulum_ode_impl_ode_fun_jac_x_xdot_u_work;
+    impl_ode_fun_jac_x_xdot_u.casadi_sparsity_in =
+                            &pendulum_ode_impl_ode_fun_jac_x_xdot_u_sparsity_in;
+    impl_ode_fun_jac_x_xdot_u.casadi_sparsity_out =
+                            &pendulum_ode_impl_ode_fun_jac_x_xdot_u_sparsity_out;
+    impl_ode_fun_jac_x_xdot_u.casadi_n_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_u_n_in;
+    impl_ode_fun_jac_x_xdot_u.casadi_n_out = &pendulum_ode_impl_ode_fun_jac_x_xdot_u_n_out;
+    external_function_casadi_create(&impl_ode_fun_jac_x_xdot_u);
+
+    // impl_ode_hess
+    external_function_casadi impl_ode_hess;
+    impl_ode_hess.casadi_fun = &pendulum_ode_impl_ode_hess;
+    impl_ode_hess.casadi_work = &pendulum_ode_impl_ode_hess_work;
+    impl_ode_hess.casadi_sparsity_in = &pendulum_ode_impl_ode_hess_sparsity_in;
+    impl_ode_hess.casadi_sparsity_out = &pendulum_ode_impl_ode_hess_sparsity_out;
+    impl_ode_hess.casadi_n_in = &pendulum_ode_impl_ode_hess_n_in;
+    impl_ode_hess.casadi_n_out = &pendulum_ode_impl_ode_hess_n_out;
+    external_function_casadi_create(&impl_ode_hess);
+
+/* generate adjoint sensitivities */
+    sim_solver_plan plan;
+    plan.sim_solver = IRK;  // IRK
+
+    sim_solver_config *config = sim_config_create(plan);
+
+    void *dims = sim_dims_create(config);
+
+    /* set dimensions */
+    config->set_nx(dims, nx);
+    config->set_nu(dims, nu);
+    config->set_nz(dims, nz);
+
+    // set opts
+    void *opts_ = sim_opts_create(config, dims);
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    config->opts_initialize_default(config, dims, opts);
+
+    // opts reference solution
+    opts->sens_adj  = true;
+    opts->jac_reuse = false;  // jacobian reuse
+    opts->newton_iter = 8;  // number of newton iterations per integration step
+    opts->num_steps = 40;  // number of steps
+    opts->ns = 7;  // number of stages in rk integrator
+
+    sim_in *in = sim_in_create(config, dims);
+    sim_out *out = sim_out_create(config, dims);
+
+    in->T = T;
+
+    // set model
+    switch (plan.sim_solver)
+    {
+        case ERK:  // ERK
+        {
+            sim_set_model(config, in, "expl_ode_fun", &expl_ode_fun);
+            sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
+            sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
+            sim_set_model(config, in, "expl_ode_hess", &expl_ode_hess);
+            break;
+        }
+        case IRK:  // IRK
+        {
+            sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
+            sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
+                    &impl_ode_fun_jac_x_xdot);
+            sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+            sim_set_model(config, in, "impl_ode_hess", &impl_ode_hess);
+            break;
+        }
+        default :
+        {
+            printf("\nnot plan.sim_solver not supported!\n");
+            exit(1);
+        }
+    }
+
+    // seeds forw
+    for (int ii = 0; ii < nx * NF; ii++)
+        in->S_forw[ii] = 0.0;
+    for (int ii = 0; ii < nx; ii++)
+        in->S_forw[ii * (nx + 1)] = 1.0;
+
+    // seeds adj
+    for (int ii = 0; ii < nx; ii++)
+        in->S_adj[ii] = 1.0;
+    for (int ii = nx; ii < nx + nu; ii++)
+        in->S_adj[ii] = 0.0;
+
+    /************************************************
+    * sim solver
+    ************************************************/
+
+    sim_solver *sim_solver = sim_create(config, dims, opts);
+
+    int acados_return;
+
+
+    // x
+    for (int jj = 0; jj < nx; jj++)
+        in->x[jj] = x0[jj];
+
+    // u
+    for (int jj = 0; jj < nu; jj++)
+        in->u[jj] = u_sim[jj];
+
+    acados_return = sim_solve(sim_solver, in, out);
+    REQUIRE(acados_return == 0);
+
+    // store reference solution
+    for (int jj = 0; jj < NF; jj++)
+        S_adj_ref_sol[jj] = out->S_adj[jj];
+
+    /************************************************
+    * finite differences loop
+    ************************************************/
+
+    // hessian FD:
+    for (int s = 0; s < nx + nu; s++)
+    {
+        // set input
+        for (int jj = 0; jj < nx; jj++)
+            in->x[jj] = x0[jj];
+        for (int jj = 0; jj < nu; jj++)
+            in->u[jj] = u_sim[jj];
+
+        if (s < nx)
+        {
+            in->x[s] = in->x[s] + FD_EPS;
+        }
+        else
+        {
+            in->u[s - nx] = in->u[s - nx] + FD_EPS;
+        }
+
+        acados_return = sim_solve(sim_solver, in, out);
+
+        for (int i = 0; i < nx + nu; i++)
+            hess_FD[s * (nx + nu) + i] = (out->S_adj[i] - S_adj_ref_sol[i]) / FD_EPS;
+    }
+
+    printf("\n==================================================\n");
+    printf("Finite differences Hessian result =\n");
+    d_print_e_mat(nx+nu, nx+nu, hess_FD, nx+nu);
+
+
+    // implicit model
+    external_function_casadi_free(&impl_ode_fun);
+    external_function_casadi_free(&impl_ode_fun_jac_x_xdot);
+    external_function_casadi_free(&impl_ode_fun_jac_x_xdot_u);
+    external_function_casadi_free(&impl_ode_jac_x_xdot_u);
+    external_function_casadi_free(&impl_ode_hess);
+}
