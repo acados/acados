@@ -49,6 +49,8 @@ extern "C"
     const int nu = 1;
     const int nz = 0;
 
+    const bool PRINT_HESS_RESULTS = false;  // can be used for debugging
+
     // generate x0, u_sim
     double x0[nx];
     double u_sim[nu];
@@ -78,18 +80,16 @@ double sim_solver_tolerance_sim(std::string const& inString)
 
 double sim_solver_tolerance_hess(std::string const& inString)
 {
-    if (inString == "IRK")  return 1e-1;
-    // if (inString == "LIFTED_IRK") return 1e-3;
-    if (inString == "ERK") return 1e-1;
-    // if (inString == "NEW_LIFTED_IRK") return 1e-3;
+    if (inString == "IRK")  return 1e-8;
+    if (inString == "ERK") return 3e-1;
+    // TODO(OJ): this should obivously be smaller. ERK adjoints and Hessians should be checked!
 
     return -1;
 }
 
 TEST_CASE("pendulum_hessians", "[integrators]")
 {
-    vector<std::string> solvers = {"IRK", "ERK"};  //, "ERK"};
-    // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
+    vector<std::string> solvers = {"IRK", "ERK"};
 
     for (int ii = 0; ii < nx; ii++)
         x0[ii] = 0.0;
@@ -251,15 +251,15 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     config->opts_initialize_default(config, dims, opts);
 
     // opts reference solution
-    opts->sens_forw = true;
-    opts->sens_adj  = true;
-    opts->sens_algebraic = false;
-    opts->sens_hess = true;
-    opts->output_z = false;
-    opts->jac_reuse = false;  // jacobian reuse
-    opts->newton_iter = 8;  // number of newton iterations per integration step
-    opts->num_steps = 40;  // number of steps
-    opts->ns = 7;  // number of stages in rk integrator
+    opts->sens_forw         = true;
+    opts->sens_adj          = true;
+    opts->sens_algebraic    = false;
+    opts->sens_hess         = true;
+    opts->output_z          = false;
+    opts->jac_reuse         = false;  // jacobian reuse
+    opts->newton_iter       = 8;    // number of newton iterations per integration step
+    opts->num_steps         = 50;  // number of steps
+    opts->ns                = 4;    // number of stages in rk integrator
 
     sim_in *in = sim_in_create(config, dims);
     sim_out *out = sim_out_create(config, dims);
@@ -311,12 +311,6 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
     sim_solver *sim_solver = sim_create(config, dims, opts);
 
-    // if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
-    //     gnsf_model *model = (gnsf_model *) in->model;
-    //     sim_gnsf_precompute(config, gnsf_dim, model, opts,
-    //                 sim_solver->mem, sim_solver->work, in->T);
-    // }
-
     int acados_return;
 
     for (int ii = 0; ii < nsim0; ii++)
@@ -365,25 +359,10 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
     // printf("reference adjoint sensitivities \n");
     // d_print_e_mat(1, nx + nu, &S_adj_ref_sol[0], 1);
-
-    printf("Reference Hessian \n");
-    d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
-    // double *S_hess_out;
-    // if(opts->sens_hess)
-    // {
-    //     double zero = 0.0;
-    //     S_hess_out = out->S_hess;
-    //     for (int ii = 0; ii < NF; ii++){
-    //         for (int jj = 0; jj < NF; jj++){
-    //             if (jj > ii) {
-    //                 printf("%8.5e \t", zero);
-    //             } else {
-    //                 printf("%8.5e \t", S_hess_out[jj*NF+ii]);
-    //             }
-    //         }
-    //         printf("\n");
-    //     }
-    // }
+    if ( PRINT_HESS_RESULTS ){
+        printf("Reference Hessian \n");
+        d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
+    }
 
     /* free */
     free(config);
@@ -412,11 +391,11 @@ TEST_CASE("pendulum_hessians", "[integrators]")
             {
             SECTION(solver)
             {
-            for (int num_stages = 2; num_stages < 5; num_stages += 1)
+            for (int num_stages = 4; num_stages < 5; num_stages += 1)
             {
             SECTION("num_stages = " + std::to_string(num_stages))
             {
-            for (int num_steps = 4; num_steps < 8; num_steps += 2)
+            for (int num_steps = 1; num_steps < 20; num_steps += 2)
             {
             SECTION("num_steps = " + std::to_string(num_steps))
             {
@@ -596,28 +575,14 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                 if ( opts->sens_adj )
                 std::cout  << "rel_error_adj    = " << rel_error_adj  << "\n";
                 if ( opts->sens_hess ){
-
                     std::cout  << "rel_error_hess   = " << rel_error_hess  << "\n";
-
-                // printf("Tested Hessian \n");
-                // d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
-                //     // double *S_hess_out;
-                //     if(opts->sens_hess)
-                //     {
-                //         // double zero = 0.0;
-                //         // S_hess_out = out->S_hess;
-                //         // for (int ii = 0;ii < NF; ii++){
-                //         //     for (int jj = 0; jj < NF; jj++){
-                //         //         if (jj > ii) {
-                //         //             printf("%8.5e \t", zero);
-                //         //         } else {
-                //         //             printf("%8.5e \t", S_hess_out[jj*NF+ii]);
-                //         //         }
-                //         //     }
-                //         //     printf("\n");
-                //         // }
-                //     }
+                    if ( PRINT_HESS_RESULTS ){
+                        printf("Tested Hessian \n");
+                        d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
+                    }
                 }
+                // printf("Tested xn \n");
+                // d_print_e_mat(1, nx, out->xn, 1);
             /************************************************
             * asserts on erors
             ************************************************/
@@ -681,7 +646,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
 
     double T = 0.1;  // simulation time
 
-    double FD_EPS = 1e-10;
+    double FD_EPS = 1e-8;
     double S_adj_ref_sol[nx+nu];
     double hess_FD[(nx+nu)*(nx+nu)];
 
@@ -775,14 +740,6 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     // set model
     switch (plan.sim_solver)
     {
-        case ERK:  // ERK
-        {
-            sim_set_model(config, in, "expl_ode_fun", &expl_ode_fun);
-            sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-            sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
-            sim_set_model(config, in, "expl_ode_hess", &expl_ode_hess);
-            break;
-        }
         case IRK:  // IRK
         {
             sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
