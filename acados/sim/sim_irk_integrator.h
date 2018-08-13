@@ -84,7 +84,7 @@ typedef struct
     struct blasfeo_dmat *dK_dxu;  // jacobian of (K,Z) over x and u ((nx+nz)*ns, nx+nu);
 
     // S_forw: if (!opts->sens_hess) - single blasfeo_dmat that is reused
-    //         if ( opts->sens_hess) - array of (num_steps) blasfeo_dmat
+    //         if ( opts->sens_hess) - array of (num_steps + 1) blasfeo_dmat
     //                                  to store intermediate results
     struct blasfeo_dmat *S_forw;  // forward sensitivities (nx, nx+nu)
 
