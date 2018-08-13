@@ -150,10 +150,10 @@ int main() {
     // opts->b_vec[1] =     3.260788016404259e-01;
     // opts->b_vec[2] =     3.260666571808232e-01;
     // opts->b_vec[3] =     1.739354743418989e-01;
-    
+
     opts->ns = num_stages;
     opts->num_steps = num_steps;
-    
+
     sim_in *in = sim_in_create(config, dims);
 
     for (int ii = 0; ii < nx *(nx +nu); ii++) {
@@ -210,12 +210,12 @@ int main() {
     // PRINTING
     printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_iter, opts->num_steps);
     printf("xf =\n");
-    d_print_e_mat(1, nx, out->xn, 1);
+    d_print_exp_mat(1, nx, out->xn, 1);
     printf("forw_Sensitivities = \n");
-    d_print_e_mat(nx, nx + nu, out->S_forw, nx);
+    d_print_exp_mat(nx, nx + nu, out->S_forw, nx);
     printf("adj Sensitivities =\n");
-    d_print_e_mat(1, nx + nu, out->S_adj, 1);
-    
+    d_print_exp_mat(1, nx + nu, out->S_adj, 1);
+
     printf("gnsf_time  =  %f [ms]\n", gnsf_time*1000);
     printf("casadi_time =  %f [ms]\t minimum of %d executions \n", casadi_time*1000, NREP);
 

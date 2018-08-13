@@ -200,7 +200,7 @@ int main()
 		void *dims = sim_dims_create(config);
 		config->set_nx(dims, nx);
 		config->set_nu(dims, nu);
-		
+
 		/************************************************
 		* sim opts
 		************************************************/
@@ -295,19 +295,19 @@ int main()
 		************************************************/
 
 		printf("\nxn: \n");
-		d_print_e_mat(1, nx, &xn[0], 1);
+		d_print_exp_mat(1, nx, &xn[0], 1);
 
 		double *S_forw_out = NULL;
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");
-			d_print_e_mat(nx, NF, S_forw_out, nx);
+			d_print_exp_mat(nx, NF, S_forw_out, nx);
 		}
 
 		if(opts->sens_adj){
 			double *S_adj_out = out->S_adj;
 			printf("\nS_adj_out: \n");
-			d_print_e_mat(1, nx+nu, S_adj_out, 1);
+			d_print_exp_mat(1, nx+nu, S_adj_out, 1);
 		}
 
 		double *S_hess_out;
