@@ -52,8 +52,8 @@ extern "C"
     const bool PRINT_HESS_RESULTS = false;  // can be used for debugging
 
     // generate x0, u_sim
-    double x0[nx];
-    double u_sim[nu];
+    double x0_pendulum[nx];
+    double u_sim_pendulum[nu];
 
 }
 
@@ -92,9 +92,9 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     vector<std::string> solvers = {"IRK", "ERK"};
 
     for (int ii = 0; ii < nx; ii++)
-        x0[ii] = 0.0;
+        x0_pendulum[ii] = 0.0;
 
-    u_sim[0] = 0.1;
+    u_sim_pendulum[0] = 0.1;
 
     int NF = nx + nu;  // columns of forward seed
 
@@ -119,7 +119,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     double norm_error, norm_error_forw, norm_error_adj, norm_error_hess;
 
     for (int ii = 0; ii < nx; ii++)
-        x_sim[ii] = x0[ii];
+        x_sim[ii] = x0_pendulum[ii];
 
 /************************************************
 * external functions
@@ -321,7 +321,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
         // u
         for (int jj = 0; jj < nu; jj++)
-            in->u[jj] = u_sim[ii*nu+jj];
+            in->u[jj] = u_sim_pendulum[ii*nu+jj];
 
         acados_return = sim_solve(sim_solver, in, out);
         REQUIRE(acados_return == 0);
@@ -510,7 +510,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
                     // u
                     for (int jj = 0; jj < nu; jj++)
-                        in->u[jj] = u_sim[ii*nu+jj];
+                        in->u[jj] = u_sim_pendulum[ii*nu+jj];
 
                     acados_return = sim_solve(sim_solver, in, out);
                     REQUIRE(acados_return == 0);
@@ -638,9 +638,9 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
 
 
     for (int ii = 0; ii < nx; ii++)
-        x0[ii] = 0.0;
+        x0_pendulum[ii] = 0.0;
 
-    u_sim[0] = 0.1;
+    u_sim_pendulum[0] = 0.1;
 
     int NF = nx + nu;  // columns of forward seed
 
@@ -779,11 +779,11 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
 
     // x
     for (int jj = 0; jj < nx; jj++)
-        in->x[jj] = x0[jj];
+        in->x[jj] = x0_pendulum[jj];
 
     // u
     for (int jj = 0; jj < nu; jj++)
-        in->u[jj] = u_sim[jj];
+        in->u[jj] = u_sim_pendulum[jj];
 
     acados_return = sim_solve(sim_solver, in, out);
     REQUIRE(acados_return == 0);
@@ -801,9 +801,9 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     {
         // set input
         for (int jj = 0; jj < nx; jj++)
-            in->x[jj] = x0[jj];
+            in->x[jj] = x0_pendulum[jj];
         for (int jj = 0; jj < nu; jj++)
-            in->u[jj] = u_sim[jj];
+            in->u[jj] = u_sim_pendulum[jj];
 
         if (s < nx)
         {
