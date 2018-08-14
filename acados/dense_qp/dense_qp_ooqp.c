@@ -424,8 +424,6 @@ static void dense_qp_ooqp_cast_workspace(dense_qp_ooqp_workspace *work, dense_qp
 int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
                     void *memory_, void *work_)
 {
-    printf("\nInside dense_qp_ooqp...\n");
-
     int ns = qp_in->dim->ns;
 
     if (ns > 0)

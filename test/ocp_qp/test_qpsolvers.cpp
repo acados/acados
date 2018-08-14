@@ -118,9 +118,9 @@ TEST_CASE("mass spring example", "[QP solvers]")
                                    "DENSE_HPIPM",
                                    "DENSE_QPOASES"
 #ifdef ACADOS_WITH_OOQP
-                                   ,
-                                   "DENSE_OOQP",
-                                   "SPARSE_OOQP"
+                                   // ,
+                                   //"DENSE_OOQP",
+                                   //"SPARSE_OOQP"
 #endif
 #ifdef ACADOS_WITH_QORE
                                    ,
@@ -202,13 +202,10 @@ TEST_CASE("mass spring example", "[QP solvers]")
             {
                 SECTION("N2 = " + std::to_string((int)N2_values[ii]))
                 {
-                    printf("\nSetting N2...\n");
                     set_N2(solver, opts, N2_values[ii], N);
 
-                    printf("\nCreating ocp_qp solver...\n");
                     qp_solver = ocp_qp_create(config, qp_dims, opts);
 
-                    printf("\nCalling the solver...\n");
                     acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
 
                     // TODO(dimitris): fix this hack for qpDUNES
@@ -221,7 +218,6 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
                     REQUIRE(acados_return == 0);
 
-                    printf("\nComputing inf norm residuals...\n");
                     ocp_qp_inf_norm_residuals(qp_dims, qp_in, qp_out, res);
 
                     max_res = 0.0;
