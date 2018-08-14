@@ -49,12 +49,26 @@ extern "C"
     const int nu = 1;
     const int nz = 0;
 
+    const int NF = nx + nu;  // columns of forward seed
+
     const bool PRINT_HESS_RESULTS = false;  // can be used for debugging
+
+    int acados_return;
 
     // generate x0, u_sim
     double x0_pendulum[nx];
     double u_sim_pendulum[nu];
 
+    double x_ref_sol[nx];
+    double S_forw_ref_sol[nx*NF];
+    double S_adj_ref_sol[NF];
+    double S_hess_ref_sol[NF * NF];
+
+    double error[nx];
+    double error_z[nz];
+    double error_S_forw[nx*NF];
+    double error_S_adj[NF];
+    double error_S_hess[NF * NF];
 }
 
 using std::vector;
@@ -96,7 +110,6 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
     u_sim_pendulum[0] = 0.1;
 
-    int NF = nx + nu;  // columns of forward seed
 
     int nsim0 = 1;  // nsim;
 
@@ -104,17 +117,6 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     // former value 0.5
 
     double x_sim[nx*(nsim0+2)];
-
-    double x_ref_sol[nx];
-    double S_forw_ref_sol[nx*NF];
-    double S_adj_ref_sol[NF];
-    double S_hess_ref_sol[NF * NF];
-
-    double error[nx];
-    double error_z[nz];
-    double error_S_forw[nx*NF];
-    double error_S_adj[NF];
-    double error_S_hess[NF * NF];
 
     double norm_error, norm_error_forw, norm_error_adj, norm_error_hess;
 
@@ -258,7 +260,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     opts->output_z          = false;
     opts->jac_reuse         = false;  // jacobian reuse
     opts->newton_iter       = 8;    // number of newton iterations per integration step
-    opts->num_steps         = 50;  // number of steps
+    opts->num_steps         = 200;  // number of steps
     opts->ns                = 4;    // number of stages in rk integrator
 
     sim_in *in = sim_in_create(config, dims);
@@ -310,8 +312,6 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     ************************************************/
 
     sim_solver *sim_solver = sim_create(config, dims, opts);
-
-    int acados_return;
 
     for (int ii = 0; ii < nsim0; ii++)
     {
@@ -493,7 +493,6 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
             /* sim solver  */
                 sim_solver = sim_create(config, dims, opts);
-                int acados_return;
 
             /* print */
                 std::cout << "\n---> testing integrator " << solver;
@@ -647,7 +646,6 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     double T = 0.1;  // simulation time
 
     double FD_EPS = 1e-8;
-    double S_adj_ref_sol[nx+nu];
     double hess_FD[(nx+nu)*(nx+nu)];
 
 /************************************************
@@ -729,7 +727,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     opts->sens_adj  = true;
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 8;  // number of newton iterations per integration step
-    opts->num_steps = 40;  // number of steps
+    opts->num_steps = 100;  // number of steps
     opts->ns = 7;  // number of stages in rk integrator
 
     sim_in *in = sim_in_create(config, dims);
@@ -774,9 +772,6 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
 
     sim_solver *sim_solver = sim_create(config, dims, opts);
 
-    int acados_return;
-
-
     // x
     for (int jj = 0; jj < nx; jj++)
         in->x[jj] = x0_pendulum[jj];
@@ -820,15 +815,33 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
             hess_FD[s * (nx + nu) + i] = (out->S_adj[i] - S_adj_ref_sol[i]) / FD_EPS;
     }
 
+    // if ( PRINT_HESS_RESULTS )
     printf("\n==================================================\n");
     printf("Finite differences Hessian result =\n");
     d_print_e_mat(nx+nu, nx+nu, hess_FD, nx+nu);
 
+    printf("IRK IND Hessian result =\n");
+    d_print_e_mat(nx+nu, nx+nu, S_hess_ref_sol, nx+nu);
 
+    printf("ERROR Hessian (Finite differences vs IRK internal) =\n");
+    for (int jj = 0; jj < (nx + nu) * (nx + nu); jj++){
+        REQUIRE(std::isnan(out->S_hess[jj]) == 0);
+        error_S_hess[jj] = S_hess_ref_sol[jj] - hess_FD[jj];
+    }
+    d_print_e_mat(nx+nu, nx+nu, error_S_hess, nx+nu);
     // implicit model
     external_function_casadi_free(&impl_ode_fun);
     external_function_casadi_free(&impl_ode_fun_jac_x_xdot);
     external_function_casadi_free(&impl_ode_fun_jac_x_xdot_u);
     external_function_casadi_free(&impl_ode_jac_x_xdot_u);
     external_function_casadi_free(&impl_ode_hess);
+
+    // free solver
+    free(config);
+    free(dims);
+    free(opts);
+
+    free(in);
+    free(out);
+    free(sim_solver);
 }
