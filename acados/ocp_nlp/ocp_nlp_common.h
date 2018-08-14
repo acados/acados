@@ -94,6 +94,7 @@ typedef struct
     int *nx;  // number of states
     int *nu;  // number of inputs
     int *ni;  // number of two-sided inequality constraints TODO make one-sided ???
+    int *nz;
     int N;
 } ocp_nlp_dims;
 

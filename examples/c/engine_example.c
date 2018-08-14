@@ -88,9 +88,6 @@ int main()
     double x0[] = {50, 50, 1.14275, 1.53787};
     // z: xA1, xA2
     double z0[] = {1.28976, 1.78264};
-    struct blasfeo_dvec z0_dvec;
-    blasfeo_allocate_dvec(2, &z0_dvec);
-    blasfeo_pack_dvec(2, z0, &z0_dvec, 0);
     // u: u1_r, u2_r
     double u[] = {0, 0};
 
@@ -274,7 +271,7 @@ int main()
     {
         blasfeo_pack_dvec(nu[i], u, nlp_out->ux+i, 0);
         blasfeo_pack_dvec(nx[i], x0, nlp_out->ux+i, nu[i]);
-        nlp_out->z = &z0_dvec;
+        blasfeo_pack_dvec(nz[i], z0, nlp_out->z+i, 0);
     }
     blasfeo_pack_dvec(nx[N], x0, nlp_out->ux+N, nu[N]);
 
