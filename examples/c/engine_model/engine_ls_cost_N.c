@@ -77,8 +77,8 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   const casadi_int *cii;
   const casadi_real *cs;
   casadi_real w0, *w1=w+1, w2, *w3=w+6, *w4=w+12, *w5=w+15, *w6=w+19, *w7=w+23, *w8=w+25;
-  /* #0: @0 = 1 */
-  w0 = 1.;
+  /* #0: @0 = 1000 */
+  w0 = 1000.;
   /* #1: @1 = input[0][0] */
   casadi_copy(arg[0], 4, w1);
   /* #2: @2 = @1[2] */
@@ -95,8 +95,8 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[0]) casadi_copy(w1, 4, res[0]+1);
   /* #8: @3 = zeros(4x5,6nz) */
   casadi_fill(w3, 6, 0.);
-  /* #9: @0 = 1 */
-  w0 = 1.;
+  /* #9: @0 = 1000 */
+  w0 = 1000.;
   /* #10: @2 = @1[3] */
   for (rr=(&w2), ss=w1+3; ss!=w1+4; ss+=1) *rr++ = *ss;
   /* #11: @0 = (@0*@2) */
@@ -111,8 +111,8 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   for (rr=w6, ss=w5+0; ss!=w5+4; ss+=1) *rr++ = *ss;
   /* #15: (@3[0, 2, 3, 4] = @6) */
   for (cii=casadi_s0, rr=w3, ss=w6; cii!=casadi_s0+4; ++cii, ++ss) if (*cii>=0) rr[*cii] = *ss;
-  /* #16: @0 = 1 */
-  w0 = 1.;
+  /* #16: @0 = 1000 */
+  w0 = 1000.;
   /* #17: @2 = @1[2] */
   for (rr=(&w2), ss=w1+2; ss!=w1+3; ss+=1) *rr++ = *ss;
   /* #18: @0 = (@0*@2) */
