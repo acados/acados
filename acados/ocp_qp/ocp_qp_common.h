@@ -135,6 +135,7 @@ void ocp_qp_stack_slacks_dims(ocp_qp_dims *in, ocp_qp_dims *out);
 //
 void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out);
 //
+void ocp_qp_compute_t(ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 
 #ifdef __cplusplus
 } /* extern "C" */

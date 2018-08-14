@@ -29,9 +29,10 @@ if(NOT ACADOS_WITH_HPMPC)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_hpmpc.c")
 endif()
 
-# if(NOT ACADOS_WITH_OOQP)
-#     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
-# endif()
+if(NOT ACADOS_WITH_OOQP)
+    list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
+    list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/dense_qp/dense_qp_ooqp.c")
+endif()
 
 if(NOT ACADOS_WITH_QORE)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/dense_qp/dense_qp_qore.c")
@@ -109,7 +110,7 @@ if(ACADOS_WITH_QPDUNES)
 endif()
 
 if(ACADOS_WITH_OOQP)
-    target_compile_definitions(acados PRIVATE OOQP)
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_OOQP)
     target_link_libraries(acados PUBLIC ooqp)
 endif()
 

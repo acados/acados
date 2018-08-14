@@ -93,7 +93,7 @@ int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void
     int nb = dims->nb;
     int ns = dims->ns;
     int nsb = dims->nsb;
-    int nsg = dims->nsg;
+    // int nsg = dims->nsg;
     int nsmax = (2 * nv >= opts->nsmax) ? opts->nsmax : 2 * nv;
 
     int nv2 = nv + 2*ns;
@@ -145,7 +145,7 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     int nb = dims->nb;
     int ns = dims->ns;
     int nsb = dims->nsb;
-    int nsg = dims->nsg;
+    // int nsg = dims->nsg;
     int nsmax = (2 * nv >= opts->nsmax) ? opts->nsmax : 2 * nv;
 
     int nv2 = nv + 2*ns;
@@ -252,7 +252,7 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     double *CC = memory->CC;
     double *Ct = memory->Ct;
     double *CCt = memory->CCt;
-    double *g = memory->g;
+    // double *g = memory->g;
     double *gg = memory->gg;
     double *b = memory->b;
     double *d_lb0 = memory->d_lb0;
@@ -283,7 +283,7 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     int nb = qp_in->dim->nb;
     int ns = qp_in->dim->ns;
     int nsb = qp_in->dim->nsb;
-    int nsg = qp_in->dim->nsg;
+    // int nsg = qp_in->dim->nsg;
 
     int nv2 = nv + 2*ns;
     int ng2 = (ns > 0) ? ng + nsb : ng;

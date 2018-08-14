@@ -30,6 +30,7 @@ extern "C" {
 #define ACADOS_EPS 1e-12
 #define ACADOS_NEG_INFTY -1.0e9
 #define ACADOS_POS_INFTY +1.0e9
+#define UNUSED(x) ((void)(x))
 
 
 

@@ -122,7 +122,7 @@ int dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dims *dims, v
     int ng  = dims->ng;
     int nb  = dims->nb;
     int nsb = dims->nsb;
-    int nsg = dims->nsg;
+    // int nsg = dims->nsg;
     int ns  = dims->ns;
 
     int nv2 = nv + 2*ns;
@@ -179,7 +179,7 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     int ng  = dims->ng;
     int nb  = dims->nb;
     int nsb = dims->nsb;
-    int nsg = dims->nsg;
+    // int nsg = dims->nsg;
     int ns  = dims->ns;
 
     int nv2 = nv + 2*ns;
@@ -321,11 +321,11 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
     // extract dense qp size
     int nv  = qp_in->dim->nv;
-    int ne  = qp_in->dim->ne;
+    // int ne  = qp_in->dim->ne;
     int ng  = qp_in->dim->ng;
     int nb  = qp_in->dim->nb;
     int nsb = qp_in->dim->nsb;
-    int nsg = qp_in->dim->nsg;
+    // int nsg = qp_in->dim->nsg;
     int ns  = qp_in->dim->ns;
 
     int nv2 = nv + 2*ns;
