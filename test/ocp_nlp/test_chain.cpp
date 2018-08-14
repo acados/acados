@@ -1737,10 +1737,10 @@ void setup_and_solve_nlp(int NN,
     }
 
     sqp_opts->maxIter = MAX_SQP_ITERS;
-    sqp_opts->min_res_g = 1e-9;
-    sqp_opts->min_res_b = 1e-9;
-    sqp_opts->min_res_d = 1e-9;
-    sqp_opts->min_res_m = 1e-9;
+    sqp_opts->min_res_g = 1e-6;
+    sqp_opts->min_res_b = 1e-6;
+    sqp_opts->min_res_d = 1e-6;
+    sqp_opts->min_res_m = 1e-6;
 
     /************************************************
     * ocp_nlp out
