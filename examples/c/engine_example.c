@@ -187,7 +187,7 @@ int main()
 
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
 
-	plan->nlp_solver = SQP_GN;
+	plan->nlp_solver = SQP;
 
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = NONLINEAR_LS;
