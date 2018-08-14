@@ -1877,8 +1877,8 @@ TEST_CASE("chain example", "[NLP solver]")
                                             "DENSE_HPIPM",
                                             "DENSE_QPOASES"
 #ifdef ACADOS_WITH_OOQP
-                                            //, "DENSE_OOQP"
-                                            //, "SPARSE_OOQP"
+                                            // , "DENSE_OOQP"
+                                            // , "SPARSE_OOQP"
 #endif
 #ifdef ACADOS_WITH_QORE
                                             , "DENSE_QORE"
