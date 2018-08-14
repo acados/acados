@@ -92,7 +92,7 @@ ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
 
 void ocp_nlp_plan_initialize_default(int N, ocp_nlp_solver_plan *plan)
 {
-    plan->nlp_solver = SQP_GN;
+    plan->nlp_solver = SQP;
     plan->regularization = NO_REGULARIZATION;
     for (int ii = 0; ii <= N; ii++)
     {
@@ -154,7 +154,7 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
     void *config_mem = calloc(1, bytes);
     ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(N, config_mem);
 
-    if (plan.nlp_solver == SQP_GN)
+    if (plan.nlp_solver == SQP)
     {
         ocp_nlp_sqp_config_initialize_default(config);
     }

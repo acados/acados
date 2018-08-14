@@ -35,6 +35,9 @@ endif
 
 LIBS += -lblasfeo -lm -lblas -llapack
 
+ifeq ($(ACADOS_WITH_OPENMP), 1)
+LIBS += -fopenmp
+endif
 
 
 # Comment this out to enable using gprof

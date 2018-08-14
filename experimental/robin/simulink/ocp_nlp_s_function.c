@@ -115,7 +115,7 @@ static void mdlStart(SimStruct *S)
     nq[NUM_STAGES] = 0;
 
     ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NUM_STAGES);
-    plan->nlp_solver = SQP_GN;
+    plan->nlp_solver = SQP;
 
     for (int i = 0; i < NUM_STAGES; i++)
     {

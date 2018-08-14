@@ -52,7 +52,7 @@
 #include "examples/c/wt_model_nx6/setup.c"
 #define NN 40
 
-#define MAX_SQP_ITERS 1
+#define MAX_SQP_ITERS 10
 #define NREP 1
 
 
@@ -504,7 +504,7 @@ int main()
 
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
 
-//	plan->nlp_solver = SQP_GN;
+//	plan->nlp_solver = SQP;
 	plan->nlp_solver = SQP_RTI;
 
 	for (int i = 0; i <= NN; i++)
@@ -518,10 +518,10 @@ int main()
 	for (int i = 0; i < NN; i++)
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-        // plan->sim_solver_plan[i].sim_solver = ERK;
-		// plan->sim_solver_plan[i].sim_solver = IRK;
-		// plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
-		plan->sim_solver_plan[i].sim_solver = GNSF;
+//		plan->sim_solver_plan[i].sim_solver = ERK;
+		plan->sim_solver_plan[i].sim_solver = IRK;
+//		plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+//		plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
 	for (int i = 0; i <= NN; i++)
@@ -760,7 +760,7 @@ int main()
 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts;
 
 	// nlp opts
-	if (plan->nlp_solver == SQP_GN)
+	if (plan->nlp_solver == SQP)
 	{
 
 		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
@@ -837,7 +837,7 @@ int main()
 	// partial condensing opts
 	if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
 	{
-		pcond_solver_opts->pcond_opts->N2 = 10;
+		pcond_solver_opts->pcond_opts->N2 = 5;
 	}
 
 	// update opts after manual changes
@@ -878,7 +878,7 @@ int main()
 			// get sim_solver memory
 			ocp_nlp_dynamics_cont_memory *dynamics_mem = NULL;
 
-			if (plan->nlp_solver == SQP_GN)
+			if (plan->nlp_solver == SQP)
 			{
 				ocp_nlp_sqp_memory *sqp_mem = solver->mem;
 				dynamics_mem = sqp_mem->dynamics[i];
@@ -975,13 +975,15 @@ int main()
 			// print info
 			if (true)
 			{
-				if (plan->nlp_solver == SQP_GN)
+				if (plan->nlp_solver == SQP)
 				{
-					printf("\nproblem #%d, status %d, iters %d\n", idx, status, ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter);
+					ocp_nlp_sqp_memory *solver_mem = (ocp_nlp_sqp_memory *) solver->mem;
+					printf("\nproblem #%d, status %d, iters %d, time (total %f, lin %f, qp_sol %f) ms\n", idx, status, solver_mem->sqp_iter, solver_mem->time_tot*1e3, solver_mem->time_lin*1e3, solver_mem->time_qp_sol*1e3);
 				}
 				else if (plan->nlp_solver == SQP_RTI)
 				{
-					printf("\nproblem #%d, status %d\n", idx, status);
+					ocp_nlp_sqp_rti_memory *solver_mem = (ocp_nlp_sqp_rti_memory *) solver->mem;
+					printf("\nproblem #%d, status %d, time (total %f, lin %f, qp_sol %f) ms\n", idx, status, solver_mem->time_tot*1e3, solver_mem->time_lin*1e3, solver_mem->time_qp_sol*1e3);
 				}
 				printf("xsim = \n");
 				blasfeo_print_tran_dvec(dims->nx[0], &nlp_out->ux[0], dims->nu[0]);
