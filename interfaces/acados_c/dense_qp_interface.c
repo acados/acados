@@ -32,6 +32,9 @@
 #include "acados/dense_qp/dense_qp_qore.h"
 #endif
 #include "acados/dense_qp/dense_qp_qpoases.h"
+#ifdef ACADOS_WITH_OOQP
+#include "acados/dense_qp/dense_qp_ooqp.h"
+#endif
 
 qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
 {
@@ -56,6 +59,11 @@ qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
         case DENSE_QP_QORE:
 #ifdef ACADOS_WITH_QORE
             dense_qp_qore_config_initialize_default(solver_config);
+#endif
+            break;
+        case DENSE_QP_OOQP:
+#ifdef ACADOS_WITH_OOQP
+            dense_qp_ooqp_config_initialize_default(solver_config);
 #endif
             break;
     }

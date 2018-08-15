@@ -41,6 +41,10 @@
 #ifdef ACADOS_WITH_QPDUNES
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #endif
+#ifdef ACADOS_WITH_OOQP
+#include "acados/dense_qp/dense_qp_ooqp.h"
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
+#endif
 
 void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
                                                    ocp_qp_xcond_solver_config *solver_config)
@@ -66,7 +70,7 @@ if (solver_name < FULL_CONDENSING_HPIPM)
             break;
 #ifdef ACADOS_WITH_OOQP
         case PARTIAL_CONDENSING_OOQP:
-            // NOT IMPLEMENTED YET
+            ocp_qp_ooqp_config_initialize_default(solver_config->qp_solver);
             break;
 #endif
 #ifdef ACADOS_WITH_QPDUNES
@@ -85,6 +89,11 @@ if (solver_name < FULL_CONDENSING_HPIPM)
 #ifdef ACADOS_WITH_QORE
         case FULL_CONDENSING_QORE:
             dense_qp_qore_config_initialize_default(solver_config->qp_solver);
+#endif
+            break;
+#ifdef ACADOS_WITH_OOQP
+        case FULL_CONDENSING_OOQP:
+            dense_qp_ooqp_config_initialize_default(solver_config->qp_solver);
 #endif
             break;
     }
