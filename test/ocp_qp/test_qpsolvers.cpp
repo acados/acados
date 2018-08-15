@@ -48,6 +48,10 @@ ocp_qp_solver_t hashit(std::string const &inString)
 #ifdef ACADOS_WITH_QORE
     if (inString == "DENSE_QORE") return FULL_CONDENSING_QORE;
 #endif
+#ifdef ACADOS_WITH_OOQP
+    if (inString == "DENSE_OOQP") return FULL_CONDENSING_OOQP;
+    if (inString == "SPARSE_OOQP") return PARTIAL_CONDENSING_OOQP;
+#endif
 
     return (ocp_qp_solver_t) -1;
 }
@@ -61,6 +65,8 @@ double solver_tolerance(std::string const &inString)
     if (inString == "DENSE_HPIPM") return 1e-8;
     if (inString == "DENSE_QPOASES") return 1e-10;
     if (inString == "DENSE_QORE") return 1e-10;
+    if (inString == "SPARSE_OOQP") return 1e-5;
+    if (inString == "DENSE_OOQP") return 1e-5;
 
     return -1;
 }
@@ -96,6 +102,12 @@ void set_N2(std::string const &inString, void *opts, int N2, int N)
             REQUIRE(option_found == true);
         }
     }
+
+    if (inString == "SPARSE_OOQP")
+    {
+        option_found = set_option_int(opts, "sparse_ooqp.N2", N2);
+        REQUIRE(option_found == true);
+    }
 }
 
 TEST_CASE("mass spring example", "[QP solvers]")
@@ -105,6 +117,11 @@ TEST_CASE("mass spring example", "[QP solvers]")
                                    "SPARSE_QPDUNES",
                                    "DENSE_HPIPM",
                                    "DENSE_QPOASES"
+#ifdef ACADOS_WITH_OOQP
+                                   // ,
+                                   // "DENSE_OOQP",
+                                   // "SPARSE_OOQP"
+#endif
 #ifdef ACADOS_WITH_QORE
                                    ,
                                    "DENSE_QORE"};

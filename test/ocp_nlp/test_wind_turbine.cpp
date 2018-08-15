@@ -74,6 +74,10 @@ ocp_qp_solver_t qp_solver_en(std::string const& inString)
 #ifdef ACADOS_WITH_QORE
     if (inString == "DENSE_QORE") return FULL_CONDENSING_QORE;
 #endif
+#ifdef ACADOS_WITH_OOQP
+    if (inString == "DENSE_OOQP") return FULL_CONDENSING_OOQP;
+    if (inString == "SPARSE_QORE") return PARTIAL_CONDENSING_OOQP;
+#endif
 
     return (ocp_qp_solver_t) -1;
 }
@@ -1146,6 +1150,10 @@ TEST_CASE("wind turbine nmpc", "[NLP solver]")
                                             // "SPARSE_QPDUNES",
                                             "DENSE_HPIPM",
                                             // "DENSE_QPOASES"
+#ifdef ACADOS_WITH_OOQP
+                                            // "SPARSE_OOQP",
+                                            // "DENSE_OOQP"
+#endif
 #ifdef ACADOS_WITH_QORE
                                             // ,"DENSE_QORE"
                                             };

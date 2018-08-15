@@ -67,6 +67,9 @@ void assign_and_advance_blasfeo_dmat_structs(int n, struct blasfeo_dmat **sm, ch
 // allocate vector of pointers to vector of pointers to strmats and advance pointer
 void assign_and_advance_blasfeo_dmat_ptrs(int n, struct blasfeo_dmat ***sm, char **ptr);
 
+// allocate vector of chars and advance pointer
+void assign_and_advance_char(int n, char **v, char **ptr);
+
 // allocate vector of ints and advance pointer
 void assign_and_advance_int(int n, int **v, char **ptr);
 

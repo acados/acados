@@ -124,6 +124,17 @@ void assign_and_advance_blasfeo_dmat_ptrs(int n, struct blasfeo_dmat ***sm, char
 #endif
 }
 
+void assign_and_advance_char(int n, char **v, char **ptr)
+{
+#ifdef _USE_VALGRIND_
+    *v = (char *) acados_malloc(n, sizeof(char));
+    print_warning();
+#else
+    *v = (char *) *ptr;
+    *ptr += sizeof(char) * n;
+#endif
+}
+
 void assign_and_advance_int(int n, int **v, char **ptr)
 {
 #ifdef _USE_VALGRIND_
