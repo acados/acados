@@ -831,7 +831,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     norm_error_hess = onenorm(nx + nu, nx + nu, error_S_hess);
     rel_error_hess = norm_error_hess / norm_S_hess_ref;
 
-    printf("relative errror hessian (Finite differences vs IRK internal) = %e\n",rel_error_hess);
+    printf("relative errror hessian (Finite differences vs IRK internal) = %e\n", rel_error_hess);
 
     // implicit model
     external_function_casadi_free(&impl_ode_fun);
