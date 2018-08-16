@@ -17,7 +17,7 @@
  *
  */
 
-/*  This example shows how acados can be used to simulate index-1 DAEs   
+/*  This example shows how acados can be used to simulate index-1 DAEs
         using IRK integrators, either the standard sim_irk_integrator or
         the GNSF (generalized nonlinear static feedback) exploitingintegrator.
     Author: Jonathan Frey                                                   */
@@ -70,7 +70,7 @@ int main()
     x0[3] = -0.5000;  // vy
     x0[4] =  0.1000;  // valpha
     x0[5] =  1.0000;  // alpha
-    
+
 
     u_sim[0] = 1;
 
@@ -79,7 +79,7 @@ int main()
     int nsim0 = 1;  // nsim;
 
     double T = 0.01;
-    
+
 	double *x_sim = malloc(sizeof(double)*nx*(nsim+1));
 
     for (int ii = 0; ii < nx; ii++)
@@ -388,19 +388,19 @@ int main()
     * printing
 		************************************************/
 		printf("\nxn: \n");
-		d_print_e_mat(1, nx, &x_sim[nsim0*nx], 1);
+		d_print_exp_mat(1, nx, &x_sim[nsim0*nx], 1);
 
 		double *S_forw_out = NULL;
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			// printf("S_forw_out: \n");
-			// d_print_e_mat(nx, NF, S_forw_out, nx);
+			// d_print_exp_mat(nx, NF, S_forw_out, nx);
 		}
 
 		if(opts->sens_adj){
 			double *S_adj_out = out->S_adj;
 			printf("S_adj_out: \n");
-			d_print_e_mat(1, nx+nu, S_adj_out, 1);
+			d_print_exp_mat(1, nx+nu, S_adj_out, 1);
 		}
 
 		if(opts->sens_forw){		// debug adjoints
@@ -421,17 +421,17 @@ int main()
 
 			blasfeo_free_dmat(&S_forw_result);
 			blasfeo_free_dvec(&adjoint_seed);
-			blasfeo_free_dvec(&forw_times_seed);			
+			blasfeo_free_dvec(&forw_times_seed);
 		}
 
         if (opts->output_z){
             printf("zn \n");
-            d_print_e_mat(1, nz, &out->zn[0], 1);
+            d_print_exp_mat(1, nz, &out->zn[0], 1);
         }
 
         if (opts->sens_algebraic){
             printf("algebraic sensitivities \n");
-            d_print_e_mat(nz, NF, &out->S_algebraic[0], nz);
+            d_print_exp_mat(nz, NF, &out->S_algebraic[0], nz);
         }
 
     #if 0
