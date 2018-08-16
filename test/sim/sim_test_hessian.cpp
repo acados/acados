@@ -360,7 +360,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     // d_print_e_mat(1, nx + nu, &S_adj_ref_sol[0], 1);
     if ( PRINT_HESS_RESULTS ){
         printf("Reference Hessian \n");
-        d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
+        d_print_exp_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
     }
 
     /* free */
@@ -575,11 +575,11 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                     std::cout  << "rel_error_hess   = " << rel_error_hess  << "\n";
                     if ( PRINT_HESS_RESULTS ){
                         printf("Tested Hessian \n");
-                        d_print_e_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
+                        d_print_exp_mat(nx + nu, nx + nu, out->S_hess, nx + nu);
                     }
                 }
                 // printf("Tested xn \n");
-                // d_print_e_mat(1, nx, out->xn, 1);
+                // d_print_exp_mat(1, nx, out->xn, 1);
             /************************************************
             * asserts on erors
             ************************************************/
@@ -816,22 +816,24 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     // if ( PRINT_HESS_RESULTS )
     printf("\n================================================================\n");
     printf("Finite differences Hessian result =\n");
-    d_print_e_mat(nx+nu, nx+nu, hess_FD, nx+nu);
+    d_print_exp_mat(nx+nu, nx+nu, hess_FD, nx+nu);
 
     printf("IRK IND Hessian result =\n");
-    d_print_e_mat(nx+nu, nx+nu, S_hess_ref_sol, nx+nu);
+    d_print_exp_mat(nx+nu, nx+nu, S_hess_ref_sol, nx+nu);
 
     printf("ERROR Hessian (Finite differences vs IRK internal) =\n");
     for (int jj = 0; jj < (nx + nu) * (nx + nu); jj++){
         REQUIRE(std::isnan(out->S_hess[jj]) == 0);
         error_S_hess[jj] = S_hess_ref_sol[jj] - hess_FD[jj];
     }
-    d_print_e_mat(nx+nu, nx+nu, error_S_hess, nx+nu);
+    d_print_exp_mat(nx+nu, nx+nu, error_S_hess, nx+nu);
 
     norm_error_hess = onenorm(nx + nu, nx + nu, error_S_hess);
     rel_error_hess = norm_error_hess / norm_S_hess_ref;
 
     printf("relative errror hessian (Finite differences vs IRK internal) = %e\n", rel_error_hess);
+
+    REQUIRE( rel_error_hess < 1e-4 );
 
     // implicit model
     external_function_casadi_free(&impl_ode_fun);
