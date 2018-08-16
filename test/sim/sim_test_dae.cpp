@@ -396,16 +396,16 @@ TEST_CASE("crane_dae_example", "[integrators]")
     norm_S_alg_ref = onenorm(nz, nx + nu, S_alg_ref_sol);
 
     // printf("Reference xn \n");
-    // d_print_e_mat(1, nx, &x_ref_sol[0], 1);
+    // d_print_exp_mat(1, nx, &x_ref_sol[0], 1);
 
     // printf("Reference zn \n");
-    // d_print_e_mat(1, nz, &z_ref_sol[0], 1);
+    // d_print_exp_mat(1, nz, &z_ref_sol[0], 1);
 
     // printf("Reference forward sensitivities \n");
-    // d_print_e_mat(nx, NF, &S_forw_ref_sol[0], nx);
+    // d_print_exp_mat(nx, NF, &S_forw_ref_sol[0], nx);
 
     // printf("reference algebraic sensitivities \n");
-    // d_print_e_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
+    // d_print_exp_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
 
     /* free */
     free(config);
@@ -661,7 +661,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 std::cout  << "rel_error_alg    = " << rel_error_alg <<"\n";
 
                 // printf("tested algebraic sensitivities \n");
-                // d_print_e_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
+                // d_print_exp_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
 
             /************************************************
             * asserts on erors
