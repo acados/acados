@@ -4,6 +4,10 @@ matrix:
       osx_image: xcode9.4
       language: generic
       python: 3.5
+      env:
+        - SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/${TRAVIS_OS_NAME}"
 
-install: echo "TODO";
+install:
+  - travis_retry source "${SCRIPT_DIR}/install.sh"
+
 script: echo "TODO";
