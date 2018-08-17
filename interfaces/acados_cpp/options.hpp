@@ -54,7 +54,8 @@ class option_t
     virtual ~option_t() = default;
 };
 
-void flatten(std::map<std::string, option_t *> &input, std::map<std::string, option_t *> &output);
+void flatten(const std::map<std::string, option_t *> &input,
+             std::map<std::string, option_t *> &output);
 
 void process_options(std::string solver_name, std::map<std::string, option_t *> &options,
                      void *args);

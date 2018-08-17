@@ -15,8 +15,8 @@ extern "C" {
 int adjFun(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem);
 void adjFun_incref(void);
 void adjFun_decref(void);
-casadi_int adjFun_n_out(void);
 casadi_int adjFun_n_in(void);
+casadi_int adjFun_n_out(void);
 const char* adjFun_name_in(casadi_int i);
 const char* adjFun_name_out(casadi_int i);
 const casadi_int* adjFun_sparsity_in(casadi_int i);

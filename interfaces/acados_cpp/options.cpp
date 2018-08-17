@@ -10,20 +10,15 @@ namespace acados
 using std::map;
 using std::string;
 
-void flatten(map<string, option_t *> &input, map<string, option_t *> &output)
+void flatten(const map<string, option_t *> &input, map<string, option_t *> &output)
 {
     for (auto opt : input)
     {
         if (opt.second->nested())
         {
             auto option_name = opt.first;
-            auto *nested_options = opt.second;
-            input.erase(opt.first);
-            for (auto nested_option : *nested_options)
-            {
-                input[option_name + "." + nested_option.first] = nested_option.second;
-                flatten(input, output);
-            }
+            for (auto nested_option : opt.second->as_map())
+                flatten({{option_name + "." + nested_option.first, nested_option.second}}, output);
         }
         else
         {

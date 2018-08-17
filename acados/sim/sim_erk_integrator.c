@@ -698,7 +698,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     }
                 }
                 acados_tic(&timer_ad);
-                if (opts->sens_hess)
+                if (0)
                 {
                     ext_fun_type_in[0] = COLMAJ;
                     ext_fun_in[0] = rhs_adj_in + 0;  // x: nx
@@ -736,21 +736,20 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                                   ext_fun_out);  // adjoint VDE evaluation
                 }
                 timing_ad += acados_toc(&timer_ad);
-
-                // printf("\nadj_traj:\n");
-                // for (int ii=0;ii<ns*nAdj;ii++)
-                //     printf("%3.1f ", adj_traj[ii]);
             }
             for (s = 0; s < ns; s++)
-                for (i = 0; i < nAdj; i++) adj_tmp[i] += adj_traj[s * nAdj + i];  // ERK step
+                for (i = 0; i < nAdj; i++)
+                    adj_tmp[i] += adj_traj[s * nAdj + i];  // ERK step
         }
 
         // store adjoint sensitivities
-        for (i = 0; i < nx + nu; i++) S_adj_out[i] = adj_tmp[i];
+        for (i = 0; i < nx + nu; i++)
+            S_adj_out[i] = adj_tmp[i];
         // store hessian
         if (opts->sens_hess)
         {
-            for (i = 0; i < nhess; i++) S_hess_out[i] = adj_tmp[nx + nu + i];
+            for (i = 0; i < nhess; i++)
+                S_hess_out[i] = adj_tmp[nx + nu + i];
         }
     }
 
