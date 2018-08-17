@@ -6,6 +6,7 @@ matrix:
       python: 3.5
       env:
         - SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/${TRAVIS_OS_NAME}"
+        - SHARED_SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/shared"
 
 install:
   - travis_retry source "${SCRIPT_DIR}/install.sh"
