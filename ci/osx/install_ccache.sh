@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -e
 
 # Taken from: https://docs.travis-ci.com/user/caching/#ccache-cache
 brew install ccache;
