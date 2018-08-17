@@ -477,8 +477,8 @@ int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
 
     int size = sizeof(ocp_nlp_out);
 
-    size += 3 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux lam
-    size += 2 * N * sizeof(struct blasfeo_dvec);        // pi z
+    size += 4 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux lam z
+    size += 1 * N * sizeof(struct blasfeo_dvec);        // pi
 
     for (int ii = 0; ii < N; ii++)
     {
@@ -488,6 +488,7 @@ int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
         size += 2 * blasfeo_memsize_dvec(2 * ni[ii]);  // lam t
     }
     size += 1 * blasfeo_memsize_dvec(nv[N]);      // ux
+    size += 1 * blasfeo_memsize_dvec(nz[ii]);     // z
     size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // lam t
 
     size += 8;   // initial align
@@ -524,7 +525,7 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
     // ux
     assign_and_advance_blasfeo_dvec_structs(N + 1, &out->ux, &c_ptr);
     // z
-    assign_and_advance_blasfeo_dvec_structs(N, &out->z, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(N + 1, &out->z, &c_ptr);
     // pi
     assign_and_advance_blasfeo_dvec_structs(N, &out->pi, &c_ptr);
     // lam
@@ -542,7 +543,7 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
         assign_and_advance_blasfeo_dvec_mem(nv[ii], out->ux + ii, &c_ptr);
     }
     // z
-    for (int ii = 0; ii < N; ++ii)
+    for (int ii = 0; ii <= N; ++ii)
     {
         assign_and_advance_blasfeo_dvec_mem(nz[ii], out->z + ii, &c_ptr);
     }
