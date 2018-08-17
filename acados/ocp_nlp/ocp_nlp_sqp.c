@@ -1053,11 +1053,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // linearizate NLP and update QP matrices
         linearize_update_qp_matrices(config, dims, nlp_in, nlp_out, opts, mem, work);
 
-        // regularize Hessian
-        regularize_hessian(config, dims, nlp_in, nlp_out, opts, mem, work);
-
         // stop timer
         mem->time_lin += acados_toc(&timer1);
+
+        // regularize Hessian
+        regularize_hessian(config, dims, nlp_in, nlp_out, opts, mem, work);
 
         // update QP rhs for SQP (step prim var, abs dual var)
         sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
