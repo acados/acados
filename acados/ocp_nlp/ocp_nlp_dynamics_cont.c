@@ -528,7 +528,8 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     if (opts->compute_hess)
     {
         // unpack d*_d2u
-        blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx + nu, &mem->hes, 0, 0);
+        blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx + nu,
+                                     &mem->hes, 0, 0);
         // unpack d*_dux: mem-hess: nx x nu
         blasfeo_pack_dmat(nx, nu, &work->sim_out->S_hess[(nx + nu)*nx], nx + nu, &mem->hes, nu, 0);
         // unpack d*_d2x
