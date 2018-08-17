@@ -23,6 +23,10 @@ OBJS += acados/ocp_nlp/ocp_nlp_dynamics_cont.o
 OBJS += acados/ocp_nlp/ocp_nlp_dynamics_disc.o
 OBJS += acados/ocp_nlp/ocp_nlp_sqp.o
 OBJS += acados/ocp_nlp/ocp_nlp_sqp_rti.o
+OBJS += acados/ocp_nlp/ocp_nlp_reg_common.o
+OBJS += acados/ocp_nlp/ocp_nlp_reg_conv.o
+OBJS += acados/ocp_nlp/ocp_nlp_reg_mirror.o
+
 # dense qp
 OBJS += acados/dense_qp/dense_qp_common.o
 OBJS += acados/dense_qp/dense_qp_hpipm.o
