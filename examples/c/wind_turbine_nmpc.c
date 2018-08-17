@@ -876,7 +876,7 @@ int main()
 			sim_solver_config *sim_sol_config = (sim_solver_config *) config->dynamics[i]->sim_solver;
 
 			// get sim_solver memory
-			ocp_nlp_dynamics_cont_memory *dynamics_mem;
+			ocp_nlp_dynamics_cont_memory *dynamics_mem = NULL;
 
 			if (plan->nlp_solver == SQP)
 			{
@@ -885,15 +885,9 @@ int main()
 			}
 			else if (plan->nlp_solver == SQP_RTI)
 			{
-				ocp_nlp_sqp_memory *sqp_rti_mem = solver->mem;
+				ocp_nlp_sqp_rti_memory *sqp_rti_mem = solver->mem;
 				dynamics_mem = sqp_rti_mem->dynamics[i];
 			}
-
-			// XXX why this all ? dangerous !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//			ocp_nlp_sqp_memory *mem = solver->mem;
-//			ocp_nlp_dynamics_cont_memory* dynamics_mem = (ocp_nlp_dynamics_cont_memory *) mem->dynamics[i];
-//			char *mem_ptr = (char *) dynamics_mem;
-//			mem_ptr += sizeof(ocp_nlp_dynamics_cont_memory); // mem_ptr now points to the memory of the integrator;
 
 			// precompute
 //			sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts[i], mem_ptr, solver->work, nlp_in->Ts[i]);

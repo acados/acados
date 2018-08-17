@@ -15,8 +15,8 @@ extern "C" {
 int position(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem);
 void position_incref(void);
 void position_decref(void);
-casadi_int position_n_out(void);
 casadi_int position_n_in(void);
+casadi_int position_n_out(void);
 const char* position_name_in(casadi_int i);
 const char* position_name_out(casadi_int i);
 const casadi_int* position_sparsity_in(casadi_int i);

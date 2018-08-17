@@ -177,7 +177,19 @@ file(GLOB GNSF_CRANE_SRC
     gnsf_crane_model/get_matrices_fun.c
 )
 
+file(GLOB ENGINE_SRC
+    engine_model/engine_impl_dae_fun.c
+    engine_model/engine_impl_dae_fun_jac_x_xdot_z.c
+    engine_model/engine_impl_dae_jac_x_xdot_u_z.c
+    engine_model/engine_ls_cost.c
+    engine_model/engine_ls_cost_N.c
+)
+
 # Define examples
+
+# -------------------- two-staged turbocharged engine
+add_executable(engine_example engine_example.c ${ENGINE_SRC})
+target_link_libraries(engine_example acados)
 
 # -------------------- nonlinear_chain
 add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
@@ -211,6 +223,14 @@ add_executable(pendulum_scqp pendulum_scqp.cpp
     pendulum_model/position.c)
 target_link_libraries(pendulum_scqp acados)
 add_test(pendulum_scqp pendulum_scqp)
+
+add_executable(pendulum_sqp_gn pendulum_sqp_gn.cpp
+    pendulum_model/vde_forw_pendulum.c
+    pendulum_model/vde_hess_pendulum.c
+    pendulum_model/constraint.c
+    pendulum_model/position.c)
+target_link_libraries(pendulum_sqp_gn acados)
+add_test(pendulum_sqp_gn pendulum_sqp_gn)
 
 # -------------------- mass_spring
 add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)

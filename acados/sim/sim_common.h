@@ -56,6 +56,7 @@ typedef struct
 
     double *x;  // x[NX]
     double *u;  // u[NU]
+    double *z;  // z[NZ]
 
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed

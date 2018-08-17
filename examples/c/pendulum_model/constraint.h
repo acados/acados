@@ -15,8 +15,8 @@ extern "C" {
 int constraint(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem);
 void constraint_incref(void);
 void constraint_decref(void);
-casadi_int constraint_n_out(void);
 casadi_int constraint_n_in(void);
+casadi_int constraint_n_out(void);
 const char* constraint_name_in(casadi_int i);
 const char* constraint_name_out(casadi_int i);
 const casadi_int* constraint_sparsity_in(casadi_int i);

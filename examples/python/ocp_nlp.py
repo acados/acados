@@ -27,7 +27,7 @@ x0 = array([1, 1])
 nlp.set_field("lbx", 0, x0)
 nlp.set_field("ubx", 0, x0)
 
-nlp.initialize_solver("sqp")
+nlp.initialize_solver("sqp", {"qp_solver": "qpoases"})
 
 output = nlp.solve()
 
