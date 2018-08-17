@@ -329,7 +329,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
         S_adj_ref_sol[jj] = out->S_adj[jj];
 
     printf("Reference forward sensitivities \n");
-    d_print_e_mat(nx, NF, &S_forw_ref_sol[0], 1);
+    d_print_exp_mat(nx, NF, &S_forw_ref_sol[0], 1);
 
 
     free(config);

@@ -26,7 +26,7 @@ extern "C" {
 
 #include "acados/dense_qp/dense_qp_common.h"
 
-typedef enum { DENSE_QP_HPIPM, DENSE_QP_QORE, DENSE_QP_QPOASES } dense_qp_solver_t;
+typedef enum { DENSE_QP_HPIPM, DENSE_QP_QORE, DENSE_QP_QPOASES, DENSE_QP_OOQP } dense_qp_solver_t;
 
 typedef struct
 {
@@ -63,6 +63,14 @@ int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp
 //
 void dense_qp_inf_norm_residuals(dense_qp_dims *dims, dense_qp_in *qp_in, dense_qp_out *qp_out,
                                  double *res);
+//
+bool dense_qp_set_field_double_array(const char *field, double *arr, dense_qp_in *qp_in);
+//
+bool dense_qp_set_field_int_array(const char *field, int *arr, dense_qp_in *qp_in);
+//
+bool dense_qp_get_field_double_array(const char *field, dense_qp_in *qp_in, double *arr);
+//
+bool dense_qp_get_field_int_array(const char *field, dense_qp_in *qp_in, int *arr);
 
 #ifdef __cplusplus
 } /* extern "C" */

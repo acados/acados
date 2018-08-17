@@ -82,7 +82,7 @@ vector<vector<double>> ocp_qp_solution::states()
     for (int stage = 0; stage <= N; ++stage)
     {
         vector<double> tmp(qp_out->dim->nx[stage]);
-        d_cvt_ocp_qp_sol_to_colmaj_x(qp_out.get(), tmp.data(), stage);
+        d_cvt_ocp_qp_sol_to_colmaj_x(stage, qp_out.get(), tmp.data());
         result.push_back(tmp);
     }
     return result;
@@ -94,7 +94,7 @@ vector<vector<double>> ocp_qp_solution::controls()
     for (int stage = 0; stage <= N; ++stage)
     {
         vector<double> tmp(qp_out->dim->nu[stage]);
-        d_cvt_ocp_qp_sol_to_colmaj_u(qp_out.get(), tmp.data(), stage);
+        d_cvt_ocp_qp_sol_to_colmaj_u(stage, qp_out.get(), tmp.data());
         result.push_back(tmp);
     }
     return result;
@@ -106,7 +106,7 @@ vector<vector<double>> ocp_qp_solution::lag_mul_dynamics()
     for (int stage = 0; stage <= N - 1; ++stage)
     {
         vector<double> tmp(qp_out->dim->nx[stage + 1]);
-        d_cvt_ocp_qp_sol_to_colmaj_pi(qp_out.get(), tmp.data(), stage);
+        d_cvt_ocp_qp_sol_to_colmaj_pi(stage, qp_out.get(), tmp.data());
         result.push_back(tmp);
     }
     return result;
@@ -119,8 +119,8 @@ vector<vector<double>> ocp_qp_solution::lag_mul_bounds()
     {
         int nb = qp_out->dim->nb[stage];
         vector<double> tmp(2 * nb);
-        d_cvt_ocp_qp_sol_to_colmaj_lam_lb(qp_out.get(), tmp.data(), stage);
-        d_cvt_ocp_qp_sol_to_colmaj_lam_ub(qp_out.get(), tmp.data() + nb, stage);
+        d_cvt_ocp_qp_sol_to_colmaj_lam_lb(stage, qp_out.get(), tmp.data());
+        d_cvt_ocp_qp_sol_to_colmaj_lam_ub(stage, qp_out.get(), tmp.data() + nb);
         result.push_back(tmp);
     }
     return result;
@@ -133,8 +133,8 @@ vector<vector<double>> ocp_qp_solution::lag_mul_constraints()
     {
         int ng = qp_out->dim->ng[stage];
         vector<double> tmp(2 * ng);
-        d_cvt_ocp_qp_sol_to_colmaj_lam_lg(qp_out.get(), tmp.data(), stage);
-        d_cvt_ocp_qp_sol_to_colmaj_lam_ug(qp_out.get(), tmp.data() + ng, stage);
+        d_cvt_ocp_qp_sol_to_colmaj_lam_lg(stage, qp_out.get(), tmp.data());
+        d_cvt_ocp_qp_sol_to_colmaj_lam_ug(stage, qp_out.get(), tmp.data() + ng);
         result.push_back(tmp);
     }
     return result;

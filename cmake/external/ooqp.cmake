@@ -56,10 +56,13 @@ add_library(ooqp INTERFACE)
 target_link_libraries(ooqp INTERFACE
     ooqpgensparse
     ooqpsparse
+    ooqpgendense
+    ooqpdense
     ooqpgondzio
     ooqpbase
     ma27
     openblas
+    lapack
     gfortran
     m)
 
@@ -95,6 +98,18 @@ add_dependencies(ooqpsparse ooqp_project)
 set_property(TARGET ooqpsparse PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpsparse.a")
 set_property(TARGET ooqpsparse PROPERTY IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
 install(FILES "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpsparse.a" DESTINATION lib)
+
+add_library(ooqpgendense STATIC IMPORTED GLOBAL)
+add_dependencies(ooqpgendense ooqp_project)
+set_property(TARGET ooqpgendense PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpgendense.a")
+set_property(TARGET ooqpgendense PROPERTY IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
+install(FILES "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpgendense.a" DESTINATION lib)
+
+add_library(ooqpdense STATIC IMPORTED GLOBAL)
+add_dependencies(ooqpdense ooqp_project)
+set_property(TARGET ooqpdense PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpdense.a")
+set_property(TARGET ooqpdense PROPERTY IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
+install(FILES "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpdense.a" DESTINATION lib)
 
 add_library(ooqpgondzio STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpgondzio ooqp_project)

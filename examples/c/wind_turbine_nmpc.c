@@ -784,7 +784,7 @@ int main()
 	{
 
 		ocp_nlp_sqp_rti_opts *sqp_rti_opts = nlp_opts;
-	
+
 		for (int i = 0; i < NN; ++i)
 		{
 			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_rti_opts->dynamics[i];

@@ -290,7 +290,7 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
     int ng = in->dim->ng;
     int ns = in->dim->ns;
     int nsb = in->dim->nsb;
-    int nsg = in->dim->nsg;
+    // int nsg = in->dim->nsg;
     int *idxs = in->idxs;
     int *idxb = in->idxb;
 
@@ -344,8 +344,8 @@ void dense_qp_stack_slacks(dense_qp_in *in, dense_qp_in *out)
         {
             int js = idxs[ii];
 
-            int idx_v_ls0 = nv+ii;
-            int idx_v_us0 = nv+ns+ii;
+            // int idx_v_ls0 = nv+ii;
+            // int idx_v_us0 = nv+ns+ii;
             int idx_v_ls1 = nv+ii;
             int idx_v_us1 = nv+ns+ii;
 
@@ -440,14 +440,17 @@ void dense_qp_unstack_slacks(dense_qp_out *in, dense_qp_in *qp_out, dense_qp_out
     int ng = qp_out->dim->ng;
     int ns = qp_out->dim->ns;
     int nsb = qp_out->dim->nsb;
-    int nsg = qp_out->dim->nsg;
+    // int nsg = qp_out->dim->nsg;
 
     int *idxs = qp_out->idxs;
 
     int nv2 = in->dim->nv;
-    int ne2 = in->dim->ne;
+    // int ne2 = in->dim->ne;
     int nb2 = in->dim->nb;
     int ng2 = in->dim->ng;
+
+    UNUSED(nsb);
+    UNUSED(nv2);
 
     assert(nv2 == nv+2*ns && "Dimensions are wrong!");
     assert(nb2 == nb-nsb+2*ns && "Dimensions are wrong!");

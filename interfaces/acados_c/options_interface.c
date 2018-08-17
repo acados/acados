@@ -35,6 +35,7 @@
 #endif
 #ifdef ACADOS_WITH_OOQP
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
+#include "acados/dense_qp/dense_qp_ooqp.h"
 #endif
 #ifdef ACADOS_WITH_QPDUNES
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
@@ -137,12 +138,27 @@ bool set_option_int(void *args_, const char *option, const int value)
 #endif
 #ifdef ACADOS_WITH_OOQP
         }
-        else if (!strcmp(token, "ooqp"))
+        else if (!strcmp(token, "sparse_ooqp"))
         {
             token = strsep_acados(&ptr_to_option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args =
                 (ocp_qp_partial_condensing_solver_opts *) args_;
-            ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args *) sparse_args->qp_solver_opts;
+            ocp_qp_ooqp_opts *args = (ocp_qp_ooqp_opts *) sparse_args->qp_solver_opts;
+            ocp_qp_partial_condensing_opts *pcond_opts =
+                (ocp_qp_partial_condensing_opts *) sparse_args->pcond_opts;
+            if (!strcmp(token, "print_level"))
+                args->printLevel = value;
+            else if (!strcmp(token, "N2"))
+                pcond_opts->N2 = value;
+            else
+                return false;
+        }
+        else if (!strcmp(token, "condensing_ooqp"))
+        {
+            token = strsep_acados(&ptr_to_option_cpy, ".");
+            ocp_qp_partial_condensing_solver_opts *sparse_args =
+                (ocp_qp_partial_condensing_solver_opts *) args_;
+            dense_qp_ooqp_opts *args = (dense_qp_ooqp_opts *) sparse_args->qp_solver_opts;
             if (!strcmp(token, "print_level"))
                 args->printLevel = value;
             else
