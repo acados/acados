@@ -743,32 +743,30 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                 }
                 timing_ad += acados_toc(&timer_ad);
-
-                // printf("\nadj_traj:\n");
-                // for (int ii=0;ii<ns*nAdj;ii++)
-                //     printf("%3.1f ", adj_traj[ii]);
             }
             for (s = 0; s < ns; s++)
-                for (i = 0; i < nAdj; i++) adj_tmp[i] += adj_traj[s * nAdj + i];  // ERK step
+                for (i = 0; i < nAdj; i++)
+                    adj_tmp[i] += adj_traj[s * nAdj + i];  // ERK step
         }
 
         // store adjoint sensitivities
-        for (i = 0; i < nx + nu; i++) S_adj_out[i] = adj_tmp[i];
+        for (i = 0; i < nx + nu; i++)
+            S_adj_out[i] = adj_tmp[i];
         // store hessian
         if (opts->sens_hess)
         {
             // former line for tridiagonal export was
             //            for (i = 0; i < nhess; i++) S_hess_out[i] = adj_tmp[nx + nu + i];
-            int count_lower = 0;
+            int count_upper = 0;
             for (int j = 0; j < nx + nu; j++) {
                 for (int i = 0; i < nx + nu; i++){
                     // S_hess_out[i] = adj_tmp[nx + nu + i];
                     if ( i >= j ) {
-                        // printf("%e \n", adj_tmp[nx + nu + count_lower]);
-                        S_hess_out[i + (nf) * j] = adj_tmp[nx + nu + count_lower];
-                        S_hess_out[j + (nf) * i] = adj_tmp[nx + nu + count_lower];
+                        // printf("%e \n", adj_tmp[nx + nu + count_upper]);
+                        S_hess_out[i + (nf) * j] = adj_tmp[nx + nu + count_upper];
+                        S_hess_out[j + (nf) * i] = adj_tmp[nx + nu + count_upper];
                                     // copy to upper part
-                        count_lower++;
+                        count_upper++;
                     }
                 }
             }

@@ -651,6 +651,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 * Forward Sweep 
 *       - (simulation & forward sensitivities)
 ************************************************/
+    // initialize algebraic variables
+    for (int i = 0; i < ns; ++i)
+        blasfeo_pack_dvec(nz, in->z, K, nx*ns + i*nz);
+
+    // start the loop
     acados_tic(&timer);
     for (int ss = 0; ss < num_steps; ss++)
     {

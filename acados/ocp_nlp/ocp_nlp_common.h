@@ -27,6 +27,7 @@ extern "C" {
 #include "acados/ocp_nlp/ocp_nlp_constraints_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/external_function_generic.h"
@@ -38,11 +39,15 @@ extern "C" {
  * config
  ************************************************/
 
+/************************************************
+ * config
+ ************************************************/
+
 typedef struct
 {
     int N;  // number of stages
 
-    // all the others
+    // solver-specific implementations of memory management functions
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts_);
@@ -50,14 +55,21 @@ typedef struct
     int (*memory_calculate_size)(void *config, void *dims, void *opts_);
     void *(*memory_assign)(void *config, void *dims, void *opts_, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts_);
+
+    // evaluate solver
     int (*evaluate)(void *config, void *dims, void *qp_in, void *qp_out,
                     void *opts_, void *mem, void *work);
+
+    // initalize this struct with default values
     void (*config_initialize_default)(void *config);
+
+    // config structs of submodules
     ocp_qp_xcond_solver_config *qp_solver;
-    //    sim_solver_config **sim_solvers;
     ocp_nlp_dynamics_config **dynamics;
     ocp_nlp_cost_config **cost;
     ocp_nlp_constraints_config **constraints;
+    ocp_nlp_reg_config *regularization;
+
 } ocp_nlp_solver_config;
 
 //
@@ -77,10 +89,12 @@ typedef struct
     void **dynamics;
     void **constraints;
     ocp_qp_dims *qp_solver;  // xcond solver instead ??
+
     int *nv;  // number of primal variables (states+controls+slacks)
     int *nx;  // number of states
     int *nu;  // number of inputs
     int *ni;  // number of two-sided inequality constraints TODO make one-sided ???
+    int *nz;
     int N;
 } ocp_nlp_dims;
 
@@ -129,6 +143,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
 typedef struct
 {
     struct blasfeo_dvec *ux;
+    struct blasfeo_dvec *z;
     struct blasfeo_dvec *pi;
     struct blasfeo_dvec *lam;
     struct blasfeo_dvec *t;

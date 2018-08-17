@@ -27,7 +27,7 @@ nlp.set_field('ubx', 0, x0);
 nlp.set_field('lbu', -8);
 nlp.set_field('ubu', +8);
 
-nlp.initialize_solver('sqp');
+nlp.initialize_solver('sqp', struct('qp_solver', 'hpipm'));
 
 %% Simulation
 x = SX.sym('x', nx); u = SX.sym('u', nu);

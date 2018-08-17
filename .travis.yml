@@ -69,6 +69,7 @@ install:
       export MATLAB_ROOT=$(pwd)/matlab
     else
       echo "Skipping MATLAB installation"
+      export SWIG_MATLAB=OFF
     fi
     export MATLAB_ROOT=$(pwd)/matlab
   - popd

@@ -62,6 +62,8 @@ typedef struct
     void (*memory_set_ux1_ptr)(struct blasfeo_dvec *ux1, void *memory_);
     void (*memory_set_pi_ptr)(struct blasfeo_dvec *pi, void *memory_);
     void (*memory_set_BAbt_ptr)(struct blasfeo_dmat *BAbt, void *memory_);
+    void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory_);
+    void (*memory_set_z_ptr)(struct blasfeo_dvec *z, void *memory_);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
                        void *work_);

@@ -428,6 +428,7 @@ run_nonlinear_chain_ocp_nlp:
 
 PENDULUM_OBJS = 
 PENDULUM_OBJS += pendulum_model/pendulum_ode_expl_vde_forw.o
+PENDULUM_OBJS += pendulum_model/pendulum_ode_expl_ode_hess.o
 PENDULUM_OBJS += pendulum_model/constraint.o
 PENDULUM_OBJS += pendulum_model/position.o
 
