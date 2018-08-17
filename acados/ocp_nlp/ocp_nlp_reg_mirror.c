@@ -29,24 +29,36 @@
 
 int ocp_nlp_reg_mirror_memory_calculate_size(ocp_nlp_reg_dims *dims)
 {
+    int nx = dims->nx[0], nu = dims->nu[0];
+
     int size = 0;
 
     size += sizeof(ocp_nlp_reg_mirror_memory);
 
-    size += (dims->nx[0]+dims->nu[0])*(dims->nx[0]+dims->nu[0])*sizeof(double);
+    size += (nx+nu)*(nx+nu)*sizeof(double);  // reg_hess
+    size += (nx+nu)*(nx+nu)*sizeof(double);  // V
+    size += (nx+nu)*sizeof(double);          // d
 
     return size;
 }
 
 void *ocp_nlp_reg_mirror_memory_assign(ocp_nlp_reg_dims *dims, void *raw_memory)
 {
+    int nx = dims->nx[0], nu = dims->nu[0];
+
     char *c_ptr = (char *) raw_memory;
 
     ocp_nlp_reg_mirror_memory *mem = (ocp_nlp_reg_mirror_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_reg_mirror_memory);
 
     mem->reg_hess = (double *) c_ptr;
-    c_ptr += (dims->nx[0]+dims->nu[0])*(dims->nx[0]+dims->nu[0])*sizeof(double);
+    c_ptr += (nx+nu)*(nx+nu)*sizeof(double);  // reg_hess
+
+    mem->V = (double *) c_ptr;
+    c_ptr += (nx+nu)*(nx+nu)*sizeof(double);  // V
+
+    mem->d = (double *) c_ptr;
+    c_ptr += (nx+nu)*sizeof(double); // d
 
     assert((char *) mem + ocp_nlp_reg_mirror_memory_calculate_size(dims) >= c_ptr);
 
@@ -66,7 +78,7 @@ void ocp_nlp_reg_mirror(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in
 
         // regularize
         blasfeo_unpack_dmat(nx+nu, nx+nu, &in->RSQrq[i], 0, 0, mem->reg_hess, nx+nu);
-        project(nx+nu, mem->reg_hess, 1e-4);
+        project(nx+nu, mem->reg_hess, mem->V, mem->d, 1e-4);
         blasfeo_pack_dmat(nx+nu, nx+nu, mem->reg_hess, nx+nu, &in->RSQrq[i], 0, 0);
     }
 }

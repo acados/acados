@@ -28,6 +28,8 @@ extern "C" {
 
 typedef struct {
     double *reg_hess;
+    double *V;
+    double *d;
 } ocp_nlp_reg_mirror_memory;
 
 int ocp_nlp_reg_mirror_memory_calculate_size(ocp_nlp_reg_dims *dims);
