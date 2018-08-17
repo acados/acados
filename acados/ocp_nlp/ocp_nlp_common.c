@@ -488,7 +488,7 @@ int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
         size += 2 * blasfeo_memsize_dvec(2 * ni[ii]);  // lam t
     }
     size += 1 * blasfeo_memsize_dvec(nv[N]);      // ux
-    size += 1 * blasfeo_memsize_dvec(nz[ii]);     // z
+    size += 1 * blasfeo_memsize_dvec(nz[N]);     // z
     size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // lam t
 
     size += 8;   // initial align
