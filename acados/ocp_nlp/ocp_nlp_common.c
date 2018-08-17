@@ -129,7 +129,7 @@ int ocp_nlp_dims_calculate_size_self(int N)
     size += sizeof(ocp_nlp_dims);
 
     // nlp sizes
-    size += 5 * (N + 1) * sizeof(int);  // nv, nx, nu, ni
+    size += 5 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz
 
     // dynamics
     size += N * sizeof(void *);
@@ -323,6 +323,8 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
         dims->qp_solver->nbu[ii] = nbu[ii];
         dims->qp_solver->ng[ii] = ng[ii] + nh[ii];
         dims->qp_solver->ns[ii] = ns[ii];
+        // TODO(dimitris): values below are needed for reformulation of QP when soft constraints are
+        // note supported. Make this a bit more transparent as it clushes with nbx/nbu above.
         dims->qp_solver->nsbx[ii] = 0;
         dims->qp_solver->nsbu[ii] = 0;
         dims->qp_solver->nsg[ii] = 0;
