@@ -1,5 +1,5 @@
 #!/bin/bash -e
-CASADI_INSTALL_DIR="${CASADI_INSTALL_DIR}";
+CASADI_INSTALL_DIR="${CASADI_INSTALL_DIR:-${HOME}/casadi}";
 CASADI_VERSION='3.4.0';
 CASADI_DOWNLOAD_URL="https://github.com/casadi/casadi/archive/${CASADI_VERSION}.zip";
 
