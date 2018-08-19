@@ -19,3 +19,4 @@ if [ ! -d "${CASADI_INSTALL_DIR}" ]; then
 	popd;
 fi
 export PYTHONPATH="${CASADI_INSTALL_DIR}:$PYTHONPATH";
+export CASADIPATH="${CASADI_INSTALL_DIR}";
