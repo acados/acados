@@ -256,8 +256,6 @@ if print_info
         num2str(length(phi_old)), ' to ', num2str(length(gnsf.phi_expr))]);
 end
 
-keyboard
-
 end
 
 

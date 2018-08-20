@@ -32,7 +32,7 @@ import casadi.*
 
 % check invertibility of E11, E22; and reformulate if needed
 ind_11 = 1:gnsf.nx1;
-ind_22 = gnsf.nx1+1 : gnsf.nx1+gnsf.nz;
+ind_22 = gnsf.nx1+1 : gnsf.nx1+gnsf.nz1;
 
 if print_info
     disp(' ');
@@ -44,7 +44,7 @@ end
 %% check if E11, E22 are invertible
 
 if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
-        rank(gnsf.E( ind_22, ind_22)) ~= gnsf.nz ) 
+        rank(gnsf.E( ind_22, ind_22)) ~= gnsf.nz1 ) 
     
     % print warning (always)
     disp(['the rank of E11 or E22 is not full after the reformulation']);
@@ -67,7 +67,7 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
         if i == 1
             ind = 1:gnsf.nx1;
         else
-            ind = gnsf.nx1+1 : gnsf.nx1 + gnsf.nz;
+            ind = gnsf.nx1+1 : gnsf.nx1 + gnsf.nz1;
         end
         mat = gnsf.E(ind, ind);
         if rank(mat) < length(ind)

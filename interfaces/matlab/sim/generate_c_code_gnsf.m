@@ -42,6 +42,7 @@ L_u    = gnsf.L_u;
 
 
 A_LO = gnsf.A_LO;
+E_LO = gnsf.E_LO;
 
 % CasADi variables and expressions
 x1 = gnsf.x(1:gnsf.nx1);
@@ -80,8 +81,8 @@ end
 
 % get_matrices function
 dummy = x1(1);
-model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); A_LO(:); c(:)])) + ...
-    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); A_LO(:); c(:)];
+model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); A_LO(:); c(:); E_LO(:)])) + ...
+    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); A_LO(:); c(:); E_LO(:)];
 get_matrices_fun = Function([model_name_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
 
 
