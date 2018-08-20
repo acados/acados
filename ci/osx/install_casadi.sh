@@ -4,7 +4,7 @@ CASADI_VERSION='3.4.0';
 CASADI_DOWNLOAD_URL="https://github.com/casadi/casadi/archive/${CASADI_VERSION}.zip";
 
 # run only if casadi build was not cached
-if [ ! -d "${CASADIPATH}" ]; then
+if [ ! -d "${CASADIPATH}" -o -z "$(ls -A "${CASADIPATH}")" ]; then
 	pushd "${TRAVIS_BUILD_DIR}/external";
 		curl -o casadi.zip -Ls "${CASADI_DOWNLOAD_URL}";
 		unzip -qq casadi.zip;
