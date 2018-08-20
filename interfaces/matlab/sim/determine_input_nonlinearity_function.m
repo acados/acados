@@ -56,7 +56,7 @@ for ii = 1:gnsf.nx1
 end
 
 % components of z
-for ii = 1:gnsf.nz
+for ii = 1:gnsf.nz1
     jac_zi = jacobian(gnsf.phi_expr, gnsf.z(ii));
     if jac_zi.is_zero()  % i.e. f_current does not depend on z(ii);
         % xdot(ii) is not part of y
@@ -80,12 +80,14 @@ end
 %% generate gnsf.phi_expr_fun;
 % linear input matrices
 dummy = gnsf.x(1);
-L_x_fun     = Function('L_x_fun',{dummy}, ...
+L_x_fun     = Function('L_x_fun', {dummy}, ...
                     {jacobian( y, gnsf.x(1:gnsf.nx1)) });
-L_xdot_fun  = Function('L_xdot_fun',{dummy}, ...
+L_xdot_fun  = Function('L_xdot_fun', {dummy}, ...
                     {jacobian( y, gnsf.xdot(1:gnsf.nx1) )});
-L_z_fun     = Function('L_z_fun',{dummy},{jacobian(y, gnsf.z)});
-L_u_fun     = Function('L_u_fun',{dummy},{jacobian(uhat, gnsf.u)});
+L_z_fun     = Function('L_z_fun', {dummy},...
+                    {jacobian(y, gnsf.z(1:gnsf.nz1) )});
+L_u_fun     = Function('L_u_fun', {dummy},...
+                    {jacobian(uhat, gnsf.u)});
 
 gnsf.L_x = full(L_x_fun(0));
 gnsf.L_xdot = full(L_xdot_fun(0));

@@ -58,6 +58,7 @@ gnsf = determine_trivial_gnsf_transcription( model, print_info );
 
 gnsf = detect_affine_terms_reduce_nonlinearity( gnsf, model, print_info );
 
+% [ gnsf, reordered_model] = reformulate_with_LOS_old( model, gnsf, print_info);
 [ gnsf, reordered_model] = reformulate_with_LOS( model, gnsf, print_info);
 
 if check_E_invertibility

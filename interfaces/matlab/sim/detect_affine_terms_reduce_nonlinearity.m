@@ -92,8 +92,6 @@ end
 % assert(n_nodes_current >= n_nodes_next,'n_nodes_current >= n_nodes_next FAILED')
 gnsf.phi_expr = f_next;
 
-% keyboard % here it fails for MX
-
 check_reformulation(model, gnsf, print_info);
 
 
@@ -244,7 +242,7 @@ gnsf.n_out = length(gnsf.phi_expr);
 
 if print_info
     fprintf('\n')
-    disp(['determined matrix C:']);
+    disp('determined matrix C:');
     disp(gnsf.C)
     disp(['reduced nonlinearity dimension n_out from  ', num2str(nx+nz),'   to  ', num2str(gnsf.n_out)]);
     disp(['reduced nodes in CasADi expr of nonlinearity from  ', num2str(n_nodes_current),...
