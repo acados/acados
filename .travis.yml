@@ -16,7 +16,7 @@ cache:
       - "${CASADIPATH}"
 
 install:
-  - travis_retry source "${SCRIPT_DIR}/install.sh"
+  - source "${SCRIPT_DIR}/install.sh"
 
 script:
-  - travis_retry source "${SCRIPT_DIR}/script.sh"
+  - source "${SCRIPT_DIR}/script.sh"
