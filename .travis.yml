@@ -81,7 +81,7 @@ install:
 script:
   - cmake -E make_directory build
   - export RELEASES_PREFIX="$(pwd)"
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/local -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/local -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON -DBUILD_SHARED_LIBS=ON ..
   - cmake --build build --target install
   - tar -zcf acados.tar.gz ${HOME}/local/lib
   - cmake --build build --target lint
@@ -89,7 +89,7 @@ script:
   - cmake -E chdir build ctest --output-on-failure
   - rm -r -f build
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_PYTHON=$SWIG_PYTHON -DBUILD_SHARED_LIBS=ON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
   - export CXX="$CXX -std=c++11" # needed for octave
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
