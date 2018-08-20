@@ -7,13 +7,13 @@ matrix:
         - SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/${TRAVIS_OS_NAME}"
         - SHARED_SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/shared"
 
-        - CASADI_INSTALL_DIR="${HOME}/casadi"
+        - CASADIPATH="${HOME}/casadi"
         - ACADOS_INSTALL_DIR="${HOME}/acados"
 
 cache:
   ccache: true
   directories:
-      - "${CASADI_INSTALL_DIR}"
+      - "${CASADIPATH}"
 
 install:
   - travis_retry source "${SCRIPT_DIR}/install.sh"
