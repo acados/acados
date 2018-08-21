@@ -9,6 +9,7 @@ matrix:
 
         - CASADIPATH="${HOME}/casadi"
         - ACADOS_INSTALL_DIR="${HOME}/acados"
+        - DEPLOY_FOLDER="${HOME}/deploy"
 
 cache:
   ccache: true
@@ -20,3 +21,13 @@ install:
 
 script:
   - source "${SCRIPT_DIR}/script.sh"
+
+after_success:
+  - source "${SCRIPT_DIR}/after_success.sh"
+
+deploy:
+  provider: releases
+  api_key: "${GITHUB_OAUTH_TOKEN}"
+  file_glob: true
+  file: "${DEPLOY_FOLDER}/*"
+  skip_cleanup: true
