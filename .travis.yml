@@ -94,7 +94,7 @@ script:
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
   - cmake --build build --target install
-  - python -c "import acados" # check installation
+  # - python -c "import acados" # check installation
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
 
 deploy:
