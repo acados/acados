@@ -25,6 +25,7 @@ script:
   - source "${SCRIPT_DIR}/script.sh"
 
 after_success:
+  - mkdir -p "${DEPLOY_FOLDER}"
   - source "${SCRIPT_DIR}/after_success.sh"
 
 deploy:
