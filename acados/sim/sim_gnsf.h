@@ -47,6 +47,8 @@ typedef struct
     int nz;
     int nx1;
     int nx2;
+    int nz1;
+    int nz2;
     int n_out;
     int ny;
     int nuhat;
@@ -73,7 +75,9 @@ typedef struct
     double *L_xdot;
     double *L_z;
     double *L_u;
+
     double *A_LO;
+    double *E_LO;
 
     /* constant vector */
     double *c;
@@ -157,7 +161,7 @@ typedef struct
     struct blasfeo_dvec K1_val;
     struct blasfeo_dvec f_LO_val;
     struct blasfeo_dvec x1_stage_val;
-    struct blasfeo_dvec Z_val;
+    struct blasfeo_dvec Z1_val;
 
     struct blasfeo_dvec K1u;
     struct blasfeo_dvec Zu;
@@ -192,8 +196,8 @@ typedef struct
 
     // memory only available if (opts->sens_algebraic)
     struct blasfeo_dvec x0dot_1;
-    struct blasfeo_dvec z0;
-    struct blasfeo_dmat dz0_dx1u;  // (nz) * (nx1+nu);
+    struct blasfeo_dvec z0_1;
+    struct blasfeo_dmat dz10_dx1u;  // (nz1) * (nx1+nu);
     struct blasfeo_dmat dr0_dff0;  // (n_out * n_out)
     int *ipiv_ff0;
 
@@ -226,8 +230,6 @@ typedef struct
     struct blasfeo_dmat M2inv;
     struct blasfeo_dmat dK2_dx2;
 
-    struct blasfeo_dmat Lu;
-
     // for algebraic sensitivities
     struct blasfeo_dmat Z0x;
     struct blasfeo_dmat Z0u;
@@ -240,6 +242,7 @@ typedef struct
     struct blasfeo_dmat Lx;
     struct blasfeo_dmat Lxdot;
     struct blasfeo_dmat Lz;
+    struct blasfeo_dmat Lu;
 
     // precomputed vectors for constant term in NSF
     struct blasfeo_dvec KK0;
