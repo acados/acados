@@ -6,6 +6,5 @@ cmake -E chdir build cmake \
 		-D CMAKE_BUILD_TYPE=Release \
 		-D CMAKE_INSTALL_PREFIX="${ACADOS_INSTALL_DIR}" \
 		-D SWIG_PYTHON=ON \
-		-D BUILD_SHARED_LIBS=ON \
 		..;
 cmake --build build --target install;
