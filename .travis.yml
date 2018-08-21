@@ -1,15 +1,17 @@
+language: c
+env:
+  global:
+    - CASADIPATH="${HOME}/casadi"
+    - ACADOS_INSTALL_DIR="${HOME}/acados"
+    - DEPLOY_FOLDER="${HOME}/deploy"
+
 matrix:
   include:
     - os: osx
       osx_image: xcode9.4
-      language: c
       env:
         - SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/${TRAVIS_OS_NAME}"
         - SHARED_SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/shared"
-
-        - CASADIPATH="${HOME}/casadi"
-        - ACADOS_INSTALL_DIR="${HOME}/acados"
-        - DEPLOY_FOLDER="${HOME}/deploy"
 
 cache:
   ccache: true
