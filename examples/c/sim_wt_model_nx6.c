@@ -278,7 +278,7 @@ int main()
 				gnsf_dim->nx = nx;
 				gnsf_dim->nu = nu;
 				gnsf_dim->nx1= nx;
-				gnsf_dim->nx2= 0;
+				// gnsf_dim->nx2= 0;
 				gnsf_dim->ny = 5;
 				gnsf_dim->nuhat = 0;
 				gnsf_dim->n_out = 1;

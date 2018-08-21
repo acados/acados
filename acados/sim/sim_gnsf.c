@@ -62,9 +62,7 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory)
     dims->nu = 0;
     dims->nz = 0;
     dims->nz1 = 0;
-    dims->nz2 = 0;
     dims->nx1 = 0;
-    dims->nx2 = 0;
     dims->n_out = 0;
     dims->ny = 0;
     dims->nuhat = 0;
@@ -280,15 +278,16 @@ int sim_gnsf_model_calculate_size(void *config, void *dims_)
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
 
     // necessary integers
-    int nu = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz1 = dims->nz1;
-    int nz2 = dims->nz2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nx1     = dims->nx1;
+    int nz1     = dims->nz1;
+    int nz      = dims->nz;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+    int nx2     = nx - nx1;
+    int nz2     = nz - nz1;
 
     int size = 0;
     size += sizeof(gnsf_model);
@@ -316,16 +315,17 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
 
     // necessary integers
-    // int nx      = dims->nx;
-    int nu = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz1 = dims->nz1;
-    int nz2 = dims->nz2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nx1     = dims->nx1;
+    int nz1     = dims->nz1;
+    int nz      = dims->nz;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+    int nx2     = nx - nx1;
+    int nz2     = nz - nz1;
+
 
     // initial align
     align_char_to(8, &c_ptr);
@@ -388,14 +388,17 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    int nu = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int nz1 = dims->nz1;
-    int nz2 = nz - nz1;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
+
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nz      = dims->nz;
+    int nx1     = dims->nx1;
+    int nz1     = dims->nz1;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+    int nx2     = nx - nx1;
+    int nz2     = nz - nz1;
 
     int num_stages = opts->ns;
 
@@ -473,15 +476,19 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
 {
     acados_timer atimer;
     acados_tic(&atimer);
-    int nu = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int nz1 = dims->nz1;
-    int nz2 = nz - nz1;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
+
+    // dimension ints
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nz      = dims->nz;
+    int nx1     = dims->nx1;
+    int nz1     = dims->nz1;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+    int nx2     = nx - nx1;
+    int nz2     = nz - nz1;
+
     int num_stages = opts->ns;
     int num_steps = opts->num_steps;
 
@@ -667,7 +674,8 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
     {  // perform kronecker product
         for (int jj = 0; jj < num_stages; jj++)
         {
-            blasfeo_dgead(nz1, nx1, A_dt[ii * num_stages + jj], &A2, 0, 0, &DD2, jj * nz1, ii * nx1);
+            blasfeo_dgead(nz1, nx1, A_dt[ii * num_stages + jj], &A2, 0, 0,
+                             &DD2, jj * nz1, ii * nx1);
             blasfeo_dgead(nx1, nx1, -A_dt[ii * num_stages + jj], &A1, 0, 0, &EE1, jj * nx1,
                           ii * nx1);
             blasfeo_dgead(ny, nx1, A_dt[ii * num_stages + jj], &LLx, 0, 0, &LLK, jj * ny, ii * nx1);
@@ -967,15 +975,16 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
     sim_rk_opts *opts = opts_;
 
     // necessary integers
-    int nu = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int nz1 = dims->nz1;
-    int nz2 = nz - nz1;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nz      = dims->nz;
+    int nx1     = dims->nx1;
+    int nz1     = dims->nz1;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+    int nx2     = nx - nx1;
+    int nz2     = nz - nz1;
 
     int num_stages = opts->ns;
 
@@ -1043,15 +1052,16 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     sim_rk_opts *opts = opts_;
 
     // necessary integers
-    int nu = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int nz1 = dims->nz1;
-    int nz2 = nz - nz1;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nz      = dims->nz;
+    int nx1     = dims->nx1;
+    int nz1     = dims->nz1;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+    int nx2     = nx - nx1;
+    int nz2     = nz - nz1;
 
     int num_stages = opts->ns;
 
@@ -1122,17 +1132,17 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = opts_;
 
-    // necessary integers
-    int nx = dims->nx;
-    int nu = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int nz1 = dims->nz1;
-    int nz2 = nz - nz1;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
+    // dimension ints
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nz      = dims->nz;
+    int nx1     = dims->nx1;
+    int nz1     = dims->nz1;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+    int nx2     = nx - nx1;
+    int nz2     = nz - nz1;
 
     int num_stages = opts->ns;
     int num_steps = opts->num_steps;
@@ -1296,17 +1306,17 @@ static void *sim_gnsf_cast_workspace(void *config, void *dims_, void *opts_, voi
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = opts_;
 
-    // necessary integers
-    int nx = dims->nx;
-    int nu = dims->nu;
-    int nz = dims->nz;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz1 = dims->nz1;
-    int nz2 = nz - nz1;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
+    // dimension ints
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nz      = dims->nz;
+    int nx1     = dims->nx1;
+    int nz1     = dims->nz1;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+    int nx2     = nx - nx1;
+    int nz2     = nz - nz1;
 
     int num_stages = opts->ns;
     int num_steps = opts->num_steps;
@@ -1427,16 +1437,16 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         (gnsf_workspace *) sim_gnsf_cast_workspace(config, dims, opts, work_);
 
     // necessary integers
-    int nx = dims->nx;
-    int nu = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int nz1 = dims->nz1;
-    int nz2 = nz - nz1;
-    int n_out = dims->n_out;
-    int ny = dims->ny;
-    int nuhat = dims->nuhat;
+    int nx      = dims->nx;
+    int nu      = dims->nu;
+    int nz      = dims->nz;
+    int nx1     = dims->nx1;
+    int nz1     = dims->nz1;
+    int n_out   = dims->n_out;
+    int ny      = dims->ny;
+    int nuhat   = dims->nuhat;
+    int nx2     = nx - nx1;
+    int nz2     = nz - nz1;
 
     int num_stages = opts->ns;
     int num_steps  = opts->num_steps;
@@ -1817,8 +1827,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         {
             blasfeo_daxpy(nx1, b_dt[ii], &K1_val, ii * nx1, &x0_traj, nx * (ss + 1), &x0_traj,
                           nx * (ss + 1));
-            blasfeo_daxpy(nx2, b_dt[ii], &K2_val, ii * nxz2, &x0_traj, nx1 + nx * (ss + 1), &x0_traj,
-                          nx1 + nx * (ss + 1));
+            blasfeo_daxpy(nx2, b_dt[ii], &K2_val, ii * nxz2, &x0_traj, nx1 + nx * (ss + 1),
+                         &x0_traj, nx1 + nx * (ss + 1));
         }
 
         // Forward Sensitivities (via IND)
@@ -1898,9 +1908,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                                  2 * nx1 + nu, &dZ_dx1, ii * nz1, 0, 0.0,
                                  &aux_G2_x1, ii * nxz2, 0, &aux_G2_x1, ii * nxz2, 0);
                             // set ith block of aux_G2_x1 to - df_dz(k1_i, x1_i, z_i, u) * dzi_dx1
-                    blasfeo_dgemm_nn(nxz2, nu, nz1, - 1.0, &f_LO_jac_traj[ss], ii * nxz2, 2 * nx1 + nu,
-                                 &dZ_du, ii * nz1, 0, 0.0, &aux_G2_u, ii * nxz2, 0,
-                                 &aux_G2_u, ii * nxz2,  0);
+                    blasfeo_dgemm_nn(nxz2, nu, nz1, - 1.0, &f_LO_jac_traj[ss], ii * nxz2,
+                                 2 * nx1 + nu, &dZ_du, ii * nz1, 0, 0.0, &aux_G2_u,
+                                 ii * nxz2, 0, &aux_G2_u, ii * nxz2,  0);
                             // set ith block of aux_G2_u to - df_dz(k1_i, x1_i, z_i, u) * dzi_du
                 }
 

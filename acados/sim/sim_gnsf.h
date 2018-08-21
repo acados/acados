@@ -46,9 +46,7 @@ typedef struct
     int nu;
     int nz;
     int nx1;
-    int nx2;
     int nz1;
-    int nz2;
     int n_out;
     int ny;
     int nuhat;

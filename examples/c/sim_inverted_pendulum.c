@@ -238,7 +238,7 @@ int main()
         {
             gnsf_dim = (sim_gnsf_dims *) dims;
             gnsf_dim->nx1   = nx1;
-            gnsf_dim->nx2   = nx2;
+            // gnsf_dim->nx2   = nx2;
             gnsf_dim->ny    = ny;
             gnsf_dim->nuhat = nuhat;
             gnsf_dim->n_out = n_out;

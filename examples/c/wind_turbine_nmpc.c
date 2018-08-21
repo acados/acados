@@ -590,7 +590,6 @@ int main()
 
 			gnsf_dims->nx1 		= 8;
 			gnsf_dims->nz  		= 0;
-			gnsf_dims->nx2 		= 0;
 			gnsf_dims->n_out 	= 1;
 			gnsf_dims->ny 		= 5;
 			gnsf_dims->nuhat 	= 0;
