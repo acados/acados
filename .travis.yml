@@ -5,6 +5,11 @@ env:
     - ACADOS_INSTALL_DIR="${HOME}/acados"
     - DEPLOY_FOLDER="${HOME}/deploy"
 
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+
 matrix:
   include:
     - os: osx
