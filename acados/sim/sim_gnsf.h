@@ -123,9 +123,6 @@ typedef struct
     int *ipivM2;
 
     // for algebraic sensitivity propagation
-    struct blasfeo_dmat K0x;
-    struct blasfeo_dmat K0u;
-    struct blasfeo_dmat K0f;
     struct blasfeo_dmat Q1;
 
     // for constant term in NSF
@@ -237,6 +234,10 @@ typedef struct
     struct blasfeo_dmat Y0u;
     struct blasfeo_dmat Y0f;
 
+    struct blasfeo_dmat K0x;
+    struct blasfeo_dmat K0u;
+    struct blasfeo_dmat K0f;
+
     struct blasfeo_dmat Lx;
     struct blasfeo_dmat Lxdot;
     struct blasfeo_dmat Lz;
@@ -276,9 +277,6 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
 // import
 void sim_gnsf_import_matrices(sim_gnsf_dims *dims, gnsf_model *model,
                               external_function_generic *get_matrices_fun);
-// void gnsf_import_precomputed(sim_gnsf_dims* dims, gnsf_model *model, casadi_function_t
-// But_KK_YY_ZZ_LO_fun); void gnsf_get_dims( sim_gnsf_dims* dims, casadi_function_t get_ints_fun);
-// // maybe remove
 
 // precomputation
 void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, sim_rk_opts *opts,

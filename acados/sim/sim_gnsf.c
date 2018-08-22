@@ -147,17 +147,6 @@ void sim_gnsf_import_matrices(sim_gnsf_dims *dims_, gnsf_model *model,
                                ext_fun_out);
 }
 
-/************************************************
- * OUTDATED FUNCTIONS: the following functions were implemented
- * before some major changes were applied, maybe similar
- * functionalities will be implemented at some point:
- ************************************************/
-// void gnsf_get_dims( sim_gnsf_dims *dims, casadi_function_t get_ints_fun)
-
-// void gnsf_import_precomputed(sim_gnsf_dims* dims, gnsf_model *model, casadi_function_t
-// But_KK_YY_ZZ_LO_fun) this function can be used instead of import_matrices + precompute (not
-// working now, ATTENTION!!!)
-
 
 /************************************************
  * opts
@@ -458,9 +447,6 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
 
     if (opts->sens_algebraic){
         // for algebraic sensitivities
-        assign_and_advance_blasfeo_dmat_mem(nx1, nx1  , &work->K0x, &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(nx1, nu   , &work->K0u, &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(nx1, n_out, &work->K0f, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(nz1,  nz1,  &work->Q1, &c_ptr);
     }
 
@@ -497,7 +483,7 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
     int nff = num_stages * n_out;
     int nyy = num_stages * ny;
     int nK1 = num_stages * nx1;
-    int nK2 = num_stages * (nx2 + nz2);
+    int nK2 = num_stages * nxz2;
     int nZ1 = num_stages * nz1;
 
     // set up precomputation workspace
@@ -585,9 +571,9 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
     struct blasfeo_dmat Lxdot = mem->Lxdot;
     struct blasfeo_dmat Lz = mem->Lz;
 
-    struct blasfeo_dmat K0x = work->K0x;
-    struct blasfeo_dmat K0u = work->K0u;
-    struct blasfeo_dmat K0f = work->K0f;
+    struct blasfeo_dmat K0x = mem->K0x;
+    struct blasfeo_dmat K0u = mem->K0u;
+    struct blasfeo_dmat K0f = mem->K0f;
     struct blasfeo_dmat Q1  = work->Q1;
 
     struct blasfeo_dmat Z0x = mem->Z0x;
@@ -1024,13 +1010,17 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
 
     if (opts->sens_algebraic){
         // matrices only needed for algebraic sensitivities
-        size += blasfeo_memsize_dmat(nz1, nx1);       // Z0x
-        size += blasfeo_memsize_dmat(nz1, nu);        // Z0u
-        size += blasfeo_memsize_dmat(nz1, n_out);     // Z0f
+        size += blasfeo_memsize_dmat(nz1, nx1);     // Z0x
+        size += blasfeo_memsize_dmat(nz1, nu);      // Z0u
+        size += blasfeo_memsize_dmat(nz1, n_out);   // Z0f
 
-        size += blasfeo_memsize_dmat(ny, nx1);       // Y0x
-        size += blasfeo_memsize_dmat(ny, nu);        // Y0u
-        size += blasfeo_memsize_dmat(ny, n_out);     // Y0f
+        size += blasfeo_memsize_dmat(ny, nx1);      // Y0x
+        size += blasfeo_memsize_dmat(ny, nu);       // Y0u
+        size += blasfeo_memsize_dmat(ny, n_out);    // Y0f
+
+        size += blasfeo_memsize_dmat(nx1, nx1);     // K0x
+        size += blasfeo_memsize_dmat(nx1, nu);      // K0u
+        size += blasfeo_memsize_dmat(nx1, n_out);   // K0f
 
         size += 2 * blasfeo_memsize_dmat(ny, nx1);   // Lx, Lxdot
         size += blasfeo_memsize_dmat(ny, nz1);        // Lz
@@ -1115,6 +1105,10 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
         assign_and_advance_blasfeo_dmat_mem(ny,   nx1, &mem->Y0x, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(ny,   nu , &mem->Y0u, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(ny, n_out, &mem->Y0f, &c_ptr);
+
+        assign_and_advance_blasfeo_dmat_mem(nx1, nx1  , &mem->K0x, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx1, nu   , &mem->K0u, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx1, n_out, &mem->K0f, &c_ptr);
     }
 
     assign_and_advance_blasfeo_dvec_mem(nZ1, &mem->ZZ0, &c_ptr);  // ZZ0
@@ -1204,9 +1198,6 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
     pre_size += blasfeo_memsize_dvec(nZ1);  // cc2
 
     if (opts->sens_algebraic){
-        pre_size += blasfeo_memsize_dmat(nx1, nx1);     // K0x
-        pre_size += blasfeo_memsize_dmat(nx1, nu);      // K0u
-        pre_size += blasfeo_memsize_dmat(nx1, n_out);   // K0f
         pre_size += blasfeo_memsize_dmat(nz1, nz1);     // Q1
     }
 
@@ -1558,6 +1549,10 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     struct blasfeo_dmat Y0x = mem->Y0x;
     struct blasfeo_dmat Y0u = mem->Y0u;
     struct blasfeo_dmat Y0f = mem->Y0f;
+
+    struct blasfeo_dmat K0x = mem->K0x;
+    struct blasfeo_dmat K0u = mem->K0u;
+    struct blasfeo_dmat K0f = mem->K0f;
 
     struct blasfeo_dmat Lx = mem->Lx;
     struct blasfeo_dmat Lxdot = mem->Lxdot;
@@ -1975,9 +1970,19 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                     neville_algorithm(0.0, num_stages - 1, mem->c_butcher, Z_work, &out->zn[ii]);
                                 // eval polynomial through (c_i, Z_i) at 0.
                 }
+                for (int ii = 0; ii < nz2; ii++)  // ith component of z2
+                {
+                    for (int jj = 0; jj < num_stages; jj++)
+                    {
+                        Z_work[jj] = blasfeo_dvecex1(&K2_val, nxz2 * jj + nx2 + ii);
+                                // copy values of z_ii in first step, into Z_work
+                    }
+                    neville_algorithm(0.0, num_stages-1, mem->c_butcher, Z_work, &out->zn[ii+nz1]);
+                                // eval polynomial through (c_i, Z_i) at 0.
+                }
             }
 
-        /* propagate sensitivities of z */
+        /* propagate sensitivities of z1 */
             if (opts->sens_algebraic)
             {
                 for (int ii = 0; ii < nx1; ii++)  // ith component of x0dot_1
@@ -2075,6 +2080,11 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 // reset input for phi
                 phi_type_in[0] = BLASFEO_DVEC_ARGS;
                 phi_in[0] = &y_in;
+            }
+        /* propagate sensitivities of z2 */
+            if (opts->sens_algebraic && nz2)
+            {
+                // todo
             }
         }
     }  // end step loop: ss
