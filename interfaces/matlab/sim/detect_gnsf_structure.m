@@ -97,8 +97,11 @@ gnsf = determine_trivial_gnsf_transcription( model, print_info );
 
 gnsf = detect_affine_terms_reduce_nonlinearity( gnsf, model, print_info );
 
-% [ gnsf, reordered_model] = reformulate_with_LOS_old( model, gnsf, print_info);
-[ gnsf, reordered_model] = reformulate_with_LOS( model, gnsf, print_info);
+if detect_LOS
+    [ gnsf, reordered_model] = reformulate_with_LOS( model, gnsf, print_info);
+else
+    reordered_model = model;
+end
 
 if check_E_invertibility
     gnsf = reformulate_with_invertible_E_mat( gnsf, reordered_model, print_info);

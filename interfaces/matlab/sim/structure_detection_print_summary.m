@@ -67,13 +67,21 @@ disp(['nonlinearity phi from                             '...
     , sprintf('%6s', num2str(n_nodes_initial)), ' to ', sprintf('%6s', num2str(phi_current.n_nodes()))]);
 disp(' ');
 disp('----------- Linear Output System (LOS) ---------------');
+if gnsf.nx2 + gnsf.nz2 >0
+    disp(' ');
+    disp(['introduced Linear Output System of size           ', sprintf('%6s', num2str(gnsf.nx2 + gnsf.nz2)),'']);
+    disp(' ');
+end
 if gnsf.nx2 >0
-    disp(' ');
-    disp(['introduced Linear Output System of size           ', sprintf('%6s', num2str(gnsf.nx2)),'']);
-    disp(' ');
     disp('consisting of the states:');
     disp(' ');
     disp(x(gnsf.nx1+1:gnsf.nx));
+    disp(' ');
+end
+if gnsf.nz2 >0
+    disp('and algebraic variables:');
+    disp(' ');
+    disp(z(gnsf.nz1+1:gnsf.nz));
     disp(' ');
 end
 

@@ -32,7 +32,7 @@ if isfield(opts, 'generate_hess')
     generate_hess = opts.generate_hess;
 else
     generate_hess = 0;
-    if print_info
+    if opts.print_info
     disp('generate_hess option was not set - default is false')
     end
 end
