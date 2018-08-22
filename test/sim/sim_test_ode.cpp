@@ -328,8 +328,8 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     for (jj = 0; jj < NF; jj++)
         S_adj_ref_sol[jj] = out->S_adj[jj];
 
-    printf("Reference forward sensitivities \n");
-    d_print_exp_mat(nx, NF, &S_forw_ref_sol[0], 1);
+    // printf("Reference forward sensitivities \n");
+    // d_print_exp_mat(nx, NF, &S_forw_ref_sol[0], 1);
 
 
     free(config);
@@ -404,7 +404,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         // set additional dimensions
                         gnsf_dim = (sim_gnsf_dims *) dims;
                         gnsf_dim->nx1 = nx;
-                        gnsf_dim->nx2 = 0;
+                        gnsf_dim->nz1 = 0;
                         gnsf_dim->ny = nx;
                         gnsf_dim->nuhat = nu;
                         gnsf_dim->n_out = 1;
