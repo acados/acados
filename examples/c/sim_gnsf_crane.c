@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <fenv.h>
 
 // acados
 #include <acados/sim/sim_common.h>
@@ -37,7 +38,7 @@
 #include "examples/c/gnsf_crane_model/gnsf_crane_model.h"
 
 int main() {
-
+    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 /************************************************
 *   external functions
 ************************************************/
@@ -111,7 +112,7 @@ int main() {
 
     gnsf_dim->nx = nx;
     gnsf_dim->nx1 = 8;
-    // gnsf_dim->nx2 = 1;
+    gnsf_dim->nz1 = 1;
     gnsf_dim->nu = nu;
     gnsf_dim->n_out = 2;
     gnsf_dim->nz = 1;

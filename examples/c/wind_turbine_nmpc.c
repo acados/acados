@@ -589,6 +589,7 @@ int main()
 			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
 
 			gnsf_dims->nx1 		= 8;
+            gnsf_dims->nz1 		= 0;
 			gnsf_dims->nz  		= 0;
 			gnsf_dims->n_out 	= 1;
 			gnsf_dims->ny 		= 5;
