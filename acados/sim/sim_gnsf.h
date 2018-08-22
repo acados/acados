@@ -194,6 +194,8 @@ typedef struct
     struct blasfeo_dvec z0_1;
     struct blasfeo_dmat dz10_dx1u;  // (nz1) * (nx1+nu);
     struct blasfeo_dmat dr0_dff0;  // (n_out * n_out)
+    struct blasfeo_dmat f_LO_jac0; // (nx2+nz2) * (2*nx1 + nz1 + nu)
+    struct blasfeo_dmat sens_z2_rhs; // (nx2 + nz2) * (nx1 + nu)
     int *ipiv_ff0;
 
 
@@ -225,7 +227,8 @@ typedef struct
     struct blasfeo_dmat M2inv;
     struct blasfeo_dmat dK2_dx2;
 
-    // for algebraic sensitivities
+    // for algebraic sensitivities only;
+    // TODO(FreyJo): make these pointers instead such that structures are only created if needed.
     struct blasfeo_dmat Z0x;
     struct blasfeo_dmat Z0u;
     struct blasfeo_dmat Z0f;
@@ -237,6 +240,10 @@ typedef struct
     struct blasfeo_dmat K0x;
     struct blasfeo_dmat K0u;
     struct blasfeo_dmat K0f;
+
+    struct blasfeo_dmat ELO_LU;
+    int* ipiv_ELO;
+    struct blasfeo_dmat ELO_inv_ALO;
 
     struct blasfeo_dmat Lx;
     struct blasfeo_dmat Lxdot;
