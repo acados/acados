@@ -53,7 +53,6 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
     disp(['NOTE: this feature is not super stable and might need more testing!!!!!!']);
     
     %% load models
-    x = gnsf.x;
     xdot = gnsf.xdot;
     z = gnsf.z;
     
@@ -120,6 +119,19 @@ else
     end
 end
 
-
+if det(gnsf.E_LO) == 0
+    disp('_______________________________________________________________________________________________________');
+    disp(' ');
+    disp('TAKE CARE ');
+    disp('E_LO matrix is NOT regular after automatic transcription!');
+    disp('->> this means the model CANNOT be used with the gnsf integrator');    
+    disp('->> it probably means that one entry (of xdot or z) that was moved to the linear output type system');
+    disp('    does not appear in the model at all (zero row in E_LO)');
+    disp(' OR: the rows of E_LO are linearly dependent ');
+    disp(' ');
+    disp(' SOLUTIONs: a) go through your model & check equations the method wanted to move to LOS');
+    disp('            b) deactivate the detect_LOS option');
+    disp('_______________________________________________________________________________________________________');
+end
 
 end

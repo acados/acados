@@ -15,7 +15,7 @@
 %   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 %
 
-function generate_c_code_implicit_ode( model )
+function generate_c_code_implicit_ode( model, opts )
 
 %% import casadi
 import casadi.*
@@ -26,6 +26,15 @@ if CasadiMeta.version()=='3.4.0'
 else
 	% old casadi versions
 	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
+end
+
+if isfield(opts, 'generate_hess')
+    generate_hess = opts.generate_hess;
+else
+    generate_hess = 0;
+    if print_info
+    disp('generate_hess option was not set - default is false')
+    end
 end
 
 %% load model
@@ -100,7 +109,9 @@ impl_ode_fun.generate([model_name_prefix,'impl_ode_fun'], casadi_opts);
 impl_ode_fun_jac_x_xdot.generate([model_name_prefix,'impl_ode_fun_jac_x_xdot'], casadi_opts);
 impl_ode_jac_x_xdot_u.generate([model_name_prefix,'impl_ode_jac_x_xdot_u'], casadi_opts);
 impl_ode_fun_jac_x_xdot_u.generate([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'], casadi_opts);
-impl_ode_hess.generate([model_name_prefix,'impl_ode_hess'], casadi_opts);
+if generate_hess
+    impl_ode_hess.generate([model_name_prefix,'impl_ode_hess'], casadi_opts);
+end
 % keyboard
 
 end

@@ -81,12 +81,9 @@ end
 
 % get_matrices function
 dummy = x1(1);
-model_matrices = [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); ...
-    L_u(:); A_LO(:); c(:); E_LO(:)];
 
 get_matrices_fun = Function([model_name_prefix,'get_matrices_fun'], {dummy},...
      {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO});
-%     {A(:), B(:), C(:), E(:), L_x(:), L_xdot(:), L_z(:), L_u(:), A_LO(:), c(:), E_LO(:)});
 
 
 %% generate functions
