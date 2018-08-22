@@ -53,7 +53,7 @@ function [ model ] = export_crane_dae_model()
                   uCR^2 + xL^2 - z(1) + cos(xL)); % dynamics of quadrature state x2;
               
     f_impl = [(f_expl - xdot);
-            z - [((theta^2)/8 + xL);
+            z - [((theta^2)/8 + xL + 8 * q + sin(uLR) );
             cos(omega + 0.1) + (xdot(3) - uCR*vL)^2 - z(2)]];
 
     model.f_impl_expr = f_impl;
