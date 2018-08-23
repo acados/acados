@@ -80,12 +80,14 @@ for ii = 1:nx
         I_LOS_candidates = union(I_LOS_candidates, ii);
     end
 end
-
+if print_info
+    disp(' ');
+end
 for ii = 1:nz
     if y.which_depends(z(ii))
         % i.e. xii or xiidot are part of y, and enter phi_expr
         if print_info
-            disp(['zii is part of x1, ii = ', num2str(ii)]);
+            disp(['zii is part of z1, ii = ', num2str(ii)]);
         end
         I_nsf_components = union(I_nsf_components, ii + nx);
     else
@@ -257,29 +259,5 @@ if print_info
 end
 
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
