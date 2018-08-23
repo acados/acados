@@ -378,11 +378,11 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
 
 
-    for (int sens_forw = 1; sens_forw < 2; sens_forw++)
+    for (int sens_forw = 0; sens_forw < 2; sens_forw++)
     {
     SECTION("sens_forw = " + std::to_string((bool)sens_forw))
     {
-        for (int sens_adj = 1; sens_adj < 2; sens_adj++)
+        for (int sens_adj = 0; sens_adj < 2; sens_adj++)
         {
         SECTION("sens_adj = " + std::to_string((bool)sens_adj))
         {
@@ -437,9 +437,16 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                         std::cout << "\n --->> NOT SUPPORTED -- corresponding test skipped \n";
                         break;
                     }
+                    if ( sens_forw + sens_adj < 2 )
+                    {
+                        std::cout << "\n ERK hessians only tested with ";
+                        std::cout << "sens_forw and sens_adj == true \n other settings are buggy";
+                        std::cout << "\n --->> corresponding test skipped \n";
+                        break;
+                    }
                     else
                     {
-                        opts->num_steps *= 2;
+                        opts->num_steps *= 2;  // use more steps as explict RK has lower order
                     }
                 }
 
