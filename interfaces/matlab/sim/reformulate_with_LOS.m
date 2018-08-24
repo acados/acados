@@ -181,14 +181,35 @@ I_x2 = intersect(I_LOS_components, 1:nx);
 I_z2 = intersect(I_LOS_components, nx+1:nx+nz);
 I_z2 = I_z2 - nx;
 
-%% permute x, xdot
-x1 = x(I_x1);
-x2 = x(I_x2);
-x1dot = xdot(I_x1);
-x2dot = xdot(I_x2);
 
-z1 = z(I_z1);
-z2 = z(I_z2);
+%% permute x, xdot
+
+if isempty(I_x1)
+    x1 = [];
+    x1dot = [];
+else
+    x1 = x(I_x1);
+    x1dot = xdot(I_x1);
+end
+
+if isempty(I_x2)
+    x2 = [];
+    x2dot = [];
+else
+    x2 = x(I_x2);
+    x2dot = xdot(I_x2);
+end
+
+if isempty(I_z1)
+    z1 = [];
+else
+    z1 = z(I_z1);
+end
+if isempty(I_z2)
+    z2 = [];
+else
+    z2 = z(I_z2);
+end
 
 gnsf.xdot = [x1dot; x2dot];
 gnsf.x = [x1; x2];

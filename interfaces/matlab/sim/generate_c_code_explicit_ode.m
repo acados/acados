@@ -43,7 +43,7 @@ Sx = SX.sym('Sx',nx,nx);
 Sp = SX.sym('Sp',nx,nu);
 lambdaX = SX.sym('lambdaX',nx,1);
 
-expl_ode_fun = Function([model_name,'expl_ode_fun'],{x,u},{f_expl});
+expl_ode_fun = Function([model_name,'_expl_ode_fun'],{x,u},{f_expl});
 % TODO: Polish: get rid of SX.zeros
 vdeX = SX.zeros(nx,nx);
 vdeX = vdeX + jtimes(f_expl,x,Sx);
