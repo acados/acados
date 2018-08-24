@@ -9,6 +9,7 @@ addons:
   apt:
     sources:
     - ubuntu-toolchain-r-test
+    - deadsnakes
 
 matrix:
   include:
