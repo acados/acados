@@ -56,7 +56,7 @@ phi = gnsf.phi_expr;
 f_lo = gnsf.f_lo_expr;
 
 % name
-model_name_prefix = gnsf.name;
+model_name = gnsf.name;
 
 % generate functions
 jac_phi_y = jacobian(phi,y);
@@ -64,33 +64,33 @@ jac_phi_uhat = jacobian(phi,uhat);
 
 if isfield(gnsf, 'p')
     p = gnsf.p;
-    phi_fun = Function([model_name_prefix,'phi_fun'], {y, uhat, p}, {phi});
-    phi_fun_jac_y = Function([model_name_prefix,'phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y});
-    phi_jac_y_uhat = Function([model_name_prefix,'phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat});
+    phi_fun = Function([model_name,'_phi_fun'], {y, uhat, p}, {phi});
+    phi_fun_jac_y = Function([model_name,'_phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y});
+    phi_jac_y_uhat = Function([model_name,'_phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat});
 
-    f_lo_fun_jac_x1k1uz = Function([model_name_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u, p}, ...
+    f_lo_fun_jac_x1k1uz = Function([model_name,'_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u, p}, ...
         {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z)]});
 else
-    phi_fun = Function([model_name_prefix,'phi_fun'], {y, uhat}, {phi});
-    phi_fun_jac_y = Function([model_name_prefix,'phi_fun_jac_y'], {y, uhat}, {phi, jac_phi_y});
-    phi_jac_y_uhat = Function([model_name_prefix,'phi_jac_y_uhat'], {y, uhat}, {jac_phi_y, jac_phi_uhat});
+    phi_fun = Function([model_name,'_phi_fun'], {y, uhat}, {phi});
+    phi_fun_jac_y = Function([model_name,'_phi_fun_jac_y'], {y, uhat}, {phi, jac_phi_y});
+    phi_jac_y_uhat = Function([model_name,'_phi_jac_y_uhat'], {y, uhat}, {jac_phi_y, jac_phi_uhat});
 
-    f_lo_fun_jac_x1k1uz = Function([model_name_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u}, ...
+    f_lo_fun_jac_x1k1uz = Function([model_name,'_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u}, ...
         {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z)]});
 end
 
 % get_matrices function
 dummy = x1(1);
 
-get_matrices_fun = Function([model_name_prefix,'get_matrices_fun'], {dummy},...
+get_matrices_fun = Function([model_name,'_get_matrices_fun'], {dummy},...
      {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO});
 
 
 %% generate functions
-f_lo_fun_jac_x1k1uz.generate([model_name_prefix,'f_lo_fun_jac_x1k1uz'], casadi_opts);
-phi_fun.generate([model_name_prefix,'phi_fun'], casadi_opts);
-phi_fun_jac_y.generate([model_name_prefix,'phi_fun_jac_y'], casadi_opts);
-phi_jac_y_uhat.generate([model_name_prefix,'phi_jac_y_uhat'], casadi_opts);
-get_matrices_fun.generate([model_name_prefix,'get_matrices_fun'], casadi_opts);
+f_lo_fun_jac_x1k1uz.generate([model_name,'_f_lo_fun_jac_x1k1uz'], casadi_opts);
+phi_fun.generate([model_name,'_phi_fun'], casadi_opts);
+phi_fun_jac_y.generate([model_name,'_phi_fun_jac_y'], casadi_opts);
+phi_jac_y_uhat.generate([model_name,'_phi_jac_y_uhat'], casadi_opts);
+get_matrices_fun.generate([model_name,'_get_matrices_fun'], casadi_opts);
 
 end

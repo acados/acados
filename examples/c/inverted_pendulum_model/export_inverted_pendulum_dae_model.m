@@ -14,7 +14,7 @@ function [ model ] = export_inverted_pendulum_dae_model()
         % old casadi versions
         error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
     end
-    model_name_prefix = 'inv_pendulum_';
+    model_name_prefix = 'inv_pendulum';
     
     %% Parameters (taken from Rien Quirynens Master Thesis)
     m = 2;

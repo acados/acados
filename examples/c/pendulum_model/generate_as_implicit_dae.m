@@ -18,10 +18,11 @@
 %   Author: Jonathan Frey: jonathanpaulfrey(at)gmail.com
 
 clc;
-clear all;
+clearvars;
 close all;
 
 addpath('../../../interfaces/matlab/sim/')
-[ model ] = export_pendulum_ode_model();
+model = export_pendulum_ode_model();
 
-generate_c_code_implicit_ode( model );
+opts.generate_hess = 0;
+generate_c_code_implicit_ode( model, opts );

@@ -1,6 +1,6 @@
 function [ model ] = export_pendulum_ode_model()
     %% this function generates an implicit ODE / index-1 DAE model,
-    % which consists of a CasADi expression f_impl_expr
+    % which consists of a CasADi expression f_impl_expr, f_expl_expr
     % that depends on the symbolic CasADi variables x, xdot, u, z,
     % and a model name, which will be used as a prefix for generated C
     % functions later on;
@@ -15,7 +15,7 @@ function [ model ] = export_pendulum_ode_model()
         % old casadi versions
         error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
     end
-    model_name_prefix = 'pendulum_ode_';
+    model_name = 'pendulum_ode';
     
 
     %% Constants
@@ -62,7 +62,7 @@ function [ model ] = export_pendulum_ode_model()
     model.xdot = xdot;
     model.u = u;
     model.z = z;
-    model.name = model_name_prefix;
+    model.name = model_name;
 
 end
 

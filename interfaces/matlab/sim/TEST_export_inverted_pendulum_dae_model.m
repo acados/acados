@@ -5,7 +5,7 @@ function [ model ] = TEST_export_inverted_pendulum_dae_model()
 % and a model name, which will be used as a prefix for generated C
 % functions later on;
 
-model_name_prefix = 'inverted_pendulum_';
+model_name_prefix = 'inverted_pendulum';
 
 %% CasADi
 import casadi.*

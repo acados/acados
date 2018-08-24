@@ -8,7 +8,7 @@ function [ model ] = TEST_export_stupid_test_problem()
 %% set up f_impl (index 1 DAE)
 import casadi.*
 
-model_name_prefix = 'stupid_test_';
+model_name_prefix = 'stupid_test';
 
 % NOTE: this model has no physical meaning whatsoever;
 % It was just made up to test stuff..
