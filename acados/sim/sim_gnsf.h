@@ -138,7 +138,7 @@ typedef struct
 
     int *ipiv;  // index of pivot vector
 
-    struct blasfeo_dvec *ff_traj;
+    struct blasfeo_dvec *vv_traj;
     struct blasfeo_dvec *yy_traj;
     struct blasfeo_dmat *f_LO_jac_traj;
 
@@ -164,7 +164,7 @@ typedef struct
 
     struct blasfeo_dvec uhat;
 
-    struct blasfeo_dmat J_r_ff;
+    struct blasfeo_dmat J_r_vv;
     struct blasfeo_dmat J_r_x1u;
 
     struct blasfeo_dmat dK1_dx1;
@@ -177,13 +177,13 @@ typedef struct
 
     struct blasfeo_dmat dK2_dx1;
     struct blasfeo_dmat dK2_du;
-    struct blasfeo_dmat dK2_dff;
+    struct blasfeo_dmat dK2_dvv;
     struct blasfeo_dmat dxf_dwn;
     struct blasfeo_dmat S_forw_new;
     struct blasfeo_dmat S_forw;
 
-    struct blasfeo_dmat aux_G2_ff;
-    struct blasfeo_dmat dPsi_dff;
+    struct blasfeo_dmat aux_G2_vv;
+    struct blasfeo_dmat dPsi_dvv;
     struct blasfeo_dmat dPsi_dx;
     struct blasfeo_dmat dPsi_du;
 
@@ -193,10 +193,10 @@ typedef struct
     struct blasfeo_dvec x0dot_1;
     struct blasfeo_dvec z0_1;
     struct blasfeo_dmat dz10_dx1u;  // (nz1) * (nx1+nu);
-    struct blasfeo_dmat dr0_dff0;  // (n_out * n_out)
+    struct blasfeo_dmat dr0_dvv0;  // (n_out * n_out)
     struct blasfeo_dmat f_LO_jac0; // (nx2+nz2) * (2*nx1 + nz1 + nu)
     struct blasfeo_dmat sens_z2_rhs; // (nx2 + nz2) * (nx1 + nu)
-    int *ipiv_ff0;
+    int *ipiv_vv0;
 
 
 } gnsf_workspace;
@@ -211,15 +211,15 @@ typedef struct
     double dt;
 
     // precomputed matrices
-    struct blasfeo_dmat KKf;
+    struct blasfeo_dmat KKv;
     struct blasfeo_dmat KKx;
     struct blasfeo_dmat KKu;
 
-    struct blasfeo_dmat YYf;
+    struct blasfeo_dmat YYv;
     struct blasfeo_dmat YYx;
     struct blasfeo_dmat YYu;
 
-    struct blasfeo_dmat ZZf;
+    struct blasfeo_dmat ZZv;
     struct blasfeo_dmat ZZx;
     struct blasfeo_dmat ZZu;
 
@@ -227,33 +227,33 @@ typedef struct
     struct blasfeo_dmat M2inv;
     struct blasfeo_dmat dK2_dx2;
 
-    // for algebraic sensitivities only;
-    // TODO(FreyJo): make these pointers instead such that structures are only created if needed.
-    struct blasfeo_dmat Z0x;
-    struct blasfeo_dmat Z0u;
-    struct blasfeo_dmat Z0f;
-
-    struct blasfeo_dmat Y0x;
-    struct blasfeo_dmat Y0u;
-    struct blasfeo_dmat Y0f;
-
-    struct blasfeo_dmat K0x;
-    struct blasfeo_dmat K0u;
-    struct blasfeo_dmat K0f;
-
-    struct blasfeo_dmat ELO_LU;
-    int* ipiv_ELO;
-    struct blasfeo_dmat ELO_inv_ALO;
-
-    struct blasfeo_dmat Lx;
-    struct blasfeo_dmat Lxdot;
-    struct blasfeo_dmat Lz;
     struct blasfeo_dmat Lu;
 
     // precomputed vectors for constant term in NSF
     struct blasfeo_dvec KK0;
     struct blasfeo_dvec YY0;
     struct blasfeo_dvec ZZ0;
+
+    // for algebraic sensitivities only;
+    struct blasfeo_dmat *Z0x;
+    struct blasfeo_dmat *Z0u;
+    struct blasfeo_dmat *Z0v;
+
+    struct blasfeo_dmat *Y0x;
+    struct blasfeo_dmat *Y0u;
+    struct blasfeo_dmat *Y0v;
+
+    struct blasfeo_dmat *K0x;
+    struct blasfeo_dmat *K0u;
+    struct blasfeo_dmat *K0v;
+
+    struct blasfeo_dmat *ELO_LU;
+    int *ipiv_ELO;
+    struct blasfeo_dmat *ELO_inv_ALO;
+
+    struct blasfeo_dmat *Lx;
+    struct blasfeo_dmat *Lxdot;
+    struct blasfeo_dmat *Lz;
 
 } sim_gnsf_memory;
 
