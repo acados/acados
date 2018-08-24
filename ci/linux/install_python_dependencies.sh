@@ -1,2 +1,2 @@
 #!/bin/bash -e
-pip install numpy scipy matplotlib;
+pip install --user numpy scipy matplotlib;
