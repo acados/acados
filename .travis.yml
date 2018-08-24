@@ -12,9 +12,11 @@ addons:
 
 matrix:
   include:
-    - os: osx
+    - name: MacOS Python Interface Build
+      os: osx
       osx_image: xcode9.4
-    - os: linux
+    - name: Linux Python Interface Build
+      os: linux
       dist: trusty
       env:
         - CXX="g++-6" CC="gcc-6" SWIG_PYTHON=ON SWIG_MATLAB=OFF # no MATLAB support for gcc>=5
