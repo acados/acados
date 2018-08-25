@@ -1,3 +1,4 @@
 #!/bin/bash -e
 
+source "${SHARED_SCRIPT_DIR}/script_lint_acados.sh";
 source "${SHARED_SCRIPT_DIR}/script_acados_release.sh";
