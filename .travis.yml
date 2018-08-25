@@ -16,14 +16,15 @@ matrix:
     - name: MacOS Python Interface Build
       os: osx
       osx_image: xcode9.4
+      env:
+        - DEPLOY_NAME="osx-python"
     - name: Linux Python Interface Build
       os: linux
       dist: trusty
       env:
-        - CXX="g++-6" CC="gcc-6" SWIG_PYTHON=ON SWIG_MATLAB=OFF # no MATLAB support for gcc>=5
-        - CXX="g++-5" CC="gcc-5" SWIG_PYTHON=ON SWIG_MATLAB=OFF
-        - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=ON SWIG_MATLAB=ON COVERAGE="lcov"
-        - CXX="clang++-3.7" CC="clang-3.7" SWIG_PYTHON=ON SWIG_MATLAB=OFF
+        - DEPLOY_NAME="linux-python"
+        - CXX="g++-6"
+        - CC="gcc-6"
 
 cache:
   ccache: true
