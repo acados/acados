@@ -57,7 +57,9 @@ phi_old = gnsf.phi_expr;
 if print_info
 disp(' ');
 disp('=================================================================');
-disp('=== the algorithm will now try to detect linear output system ===');
+disp(' ');
+disp('================    Detect Linear Output System   ===============');
+disp(' ');
 disp('=================================================================');
 disp(' ');
 end
@@ -108,50 +110,77 @@ xdot_z = [xdot; z];
 %% determine components of Linear Output System
 % determine maximal index set I_x2
 % such that the components x(I_x2) can be written as a LOS
+Eq_map = [];
 while true
-    %% find equations corresponding to I_nsf_components
+    %% find equations corresponding to new_nsf_components
     for ii = new_nsf_components
+        current_var = xdot_z(ii);
+        var_name = current_var.name;
+
         I_eq = intersect(find(E(:,ii)), unsorted_dyn);
         if length(I_eq) == 1
             i_eq = I_eq;
         elseif length(I_eq) > 1 % x_ii_dot occurs in more than 1 eq linearly
+            % find the equation with least linear dependencies on
+            % I_LOS_cancidates
             number_of_eq = 1;
             candidate_dependencies = zeros(length(I_eq), 1);
+            I_x2_candidates = intersect(I_LOS_candidates, 1:nx);
             for eq = I_eq
+                depending_candidates = union( find(E(eq, I_LOS_candidates)), ...
+                    find(A(eq, I_x2_candidates)));
                 candidate_dependencies(number_of_eq) = ...
-                    length(find(E(eq, I_LOS_candidates)));
+                  + length(depending_candidates);
                 number_of_eq = number_of_eq + 1;
             end
             [~, number_of_eq] = min(candidate_dependencies);
             i_eq = I_eq(number_of_eq);
         else %% x_ii_dot does not occur linearly in any of the unsorted dynamics
-            % TODO; test this
+            for j = unsorted_dyn
+                phi_eq_j = gnsf.phi_expr(find(C(j,:)));
+                if phi_eq_j.which_depends(xdot_z(ii))
+                    I_eq = union(I_eq, j);
+                end
+            end
+            if isempty(I_eq)
+                I_eq = unsorted_dyn;
+            end
             % find the equation with least linear dependencies on
             % I_LOS_cancidates
-            candidate_dependencies = zeros(length(unsorted_dyn), 1);
+            number_of_eq = 1;
+            candidate_dependencies = zeros(length(I_eq), 1);
             I_x2_candidates = intersect(I_LOS_candidates, 1:nx);
-            for eq = unsorted_dyn
+            for eq = I_eq
+                depending_candidates = union( find(E(eq, I_LOS_candidates)), ...
+                    find(A(eq, I_x2_candidates)));
                 candidate_dependencies(number_of_eq) = ...
-                    length(find(E(eq, I_LOS_candidates)))
-                  + length(find(A(eq, I_x2_candidates)));
+                  + length(depending_candidates);
                 number_of_eq = number_of_eq + 1;
             end
             [~, number_of_eq] = min(candidate_dependencies);
-            i_eq = unsorted_dyn(number_of_eq);
+            i_eq = I_eq(number_of_eq);
             %% add 1 * [xdot,z](ii) to both sides of i_eq
-            E(i_eq, ii) = 1;
-            i_phi = find(C(i_eq,:));
+            if print_info
+                disp(['adding 1 * ', var_name, ' to both sides of equation ',...
+                    num2str( i_eq ) , '.']);
+            end
+            gnsf.E(i_eq, ii) = 1;
+            i_phi = find(gnsf.C(i_eq,:));
             if isempty(i_phi)
                 i_phi = length(gnsf.phi_expr) + 1;
-                C( i_eq, i_phi) = 1; % add columns to C with 1 entry
+                gnsf.C( i_eq, i_phi) = 1; % add column to C with 1 entry
             end
             gnsf.phi_expr(i_phi) = gnsf.phi_expr(i_phi) + ...
-                E(i_eq, ii) / C(i_eq, i_phi) * xdot_z(ii);
+                gnsf.E(i_eq, ii) / gnsf.C(i_eq, i_phi) * xdot_z(ii);
+        end
+        if print_info
+            disp(['detected equation ', num2str( i_eq ),...
+                ' to correspond to variable ', var_name]);
         end
         I_nsf_eq = union(I_nsf_eq, i_eq);
         % remove i_eq from unsorted_dyn
-        temp = find(unsorted_dyn == i_eq);
-        unsorted_dyn(temp) = [];
+        unsorted_dyn = setdiff(unsorted_dyn, i_eq);
+        Eq_map = [Eq_map, [ii; i_eq]];
     end
 
     %% add components to I_x1
@@ -161,14 +190,14 @@ while true
         I_nsf_components = union(I_linear_dependence, I_nsf_components);
     end
     %
-    new_nsf_components = intersect(I_LOS_candidates, I_nsf_components);    
-    
+    new_nsf_components = intersect(I_LOS_candidates, I_nsf_components);
     if isempty( new_nsf_components )
         break;
     end
     % remove new_nsf_components from candidates
     I_LOS_candidates = setdiff( I_LOS_candidates, new_nsf_components );
 end
+keyboard
 
 I_LOS_components = I_LOS_candidates;
 I_LOS_eq = setdiff( 1:nx+nz, I_nsf_eq );
@@ -252,27 +281,27 @@ gnsf.c = gnsf.c(I_nsf_eq, :);
 
 
 %% reduce phi, C
-C_new = [];
-phi_new = [];
+I_nonzero = [];
 for ii = 1:size(gnsf.C, 2) % n_colums of C
     if ~all(gnsf.C(:,ii) == 0) % if column ~= 0
-        C_new = [C_new, gnsf.C(:,ii)];
-        phi_new = [phi_new; gnsf.phi_expr(ii)];
+        I_nonzero = union(I_nonzero, ii);
     end
 end
 
-gnsf.C = C_new;
+gnsf.C = gnsf.C(:,I_nonzero);
+gnsf.phi_expr = gnsf.phi_expr(I_nonzero);
 
-gnsf.phi_expr = phi_new;
-gnsf.n_out = length(phi_new);
-
-[ gnsf ] = determine_input_nonlinearity_function( gnsf );
+gnsf = determine_input_nonlinearity_function( gnsf );
 
 check_reformulation(reordered_model, gnsf, print_info);
 
 
 if print_info
-    disp('Successfully detected Linear Output System');
+    disp('');
+    disp('---------------------------------------------------------------------------------');
+    disp('------------- Success: Linear Output System detected ----------------------------');
+    disp('---------------------------------------------------------------------------------');
+    disp('');
     disp(['==>>  moved  ', num2str(gnsf.nx2), ' differential states and ',...
         num2str(gnsf.nz2),' algebraic variables to the Linear Output System']);
     disp(['==>>  recuced output dimension of phi from  ',...

@@ -130,12 +130,15 @@ for i_check = 1:num_eval
 %         check = 0;
         disp('transcription failed; rel_error > TOL');
         disp('you are in debug mode now: keyboard');
+        
+        gnsf_expr = (A * x(I_x1) + B * u + ...
+        C * gnsf.phi_expr + c) - E * [xdot(I_x1); z(I_z1)];
         keyboard
     end            
 end
 
 if print_info
-    disp('');
+    disp(' ');
     disp(['model reformulation checked: relative error <= TOL = ', num2str(TOL)]);
     disp(' ');
 end

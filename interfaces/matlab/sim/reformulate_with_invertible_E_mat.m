@@ -50,7 +50,7 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
     disp(['the rank of E11 or E22 is not full after the reformulation']);
     disp(' ');
     disp(['the script will try to reformulate the model with an invertible matrix instead']);
-    disp(['NOTE: this feature is not super stable and might need more testing!!!!!!']);
+    disp(['NOTE: this feature is based on a heuristic, it should be used with care!!!']);
     
     %% load models
     xdot = gnsf.xdot;
@@ -69,7 +69,7 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
             ind = gnsf.nx1+1 : gnsf.nx1 + gnsf.nz1;
         end
         mat = gnsf.E(ind, ind);
-        if rank(mat) < length(ind)
+        while rank(mat) < length(ind)
             if print_info
                 disp(' ');
                 disp(['the rank of E',num2str(i),num2str(i),' is not full']);
@@ -126,8 +126,8 @@ if det(gnsf.E_LO) == 0
     disp('E_LO matrix is NOT regular after automatic transcription!');
     disp('->> this means the model CANNOT be used with the gnsf integrator');    
     disp('->> it probably means that one entry (of xdot or z) that was moved to the linear output type system');
-    disp('    does not appear in the model at all (zero row in E_LO)');
-    disp(' OR: the rows of E_LO are linearly dependent ');
+    disp('    does not appear in the model at all (zero column in E_LO)');
+    disp(' OR: the columns of E_LO are linearly dependent ');
     disp(' ');
     disp(' SOLUTIONs: a) go through your model & check equations the method wanted to move to LOS');
     disp('            b) deactivate the detect_LOS option');

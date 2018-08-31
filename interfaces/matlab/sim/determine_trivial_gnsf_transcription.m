@@ -90,11 +90,11 @@ gnsf.A_LO = [];
 gnsf.E_LO = [];
 gnsf.f_lo_expr = [];
 
-if print_info
-    disp(' ');
-    disp(['set up equivalent GNSF model with trivial matrices']);
-end
 check_reformulation(model, gnsf, print_info);
+if print_info
+    disp(['Success: Set up equivalent GNSF model with trivial matrices']);
+    disp(' ');
+end
 
 if print_info
     disp('-----------------------------------------------------------------------------------');

@@ -655,7 +655,7 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
         blasfeo_pack_dmat(ny, nx1, model->L_xdot, ny, &LLK, ii * ny, ii * nx1);
 
         blasfeo_pack_dmat(nxz2, nx2, A_LO, nxz2, &dK2_dx2_work, ii * nxz2,
-                          0);  // dK2_dx2 = repmat(s.ALO,opts.n_stages,1);
+                          0);  // dK2_dx2_work = repmat(s.ALO,opts.n_stages,1);
 
         blasfeo_pack_dvec(nx1, model->c, &cc1, ii * nx1);
         blasfeo_pack_dvec(nz1 , &model->c[nx1], &cc2, ii * nz1);
@@ -2180,7 +2180,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                          K0u, 0, 0, &dK1_du, 0, 0);
 
                 /* set up right hand side: sens_z2_rhs */
-                // sens_z2_rhs += dg2_dk1 * dk1_dx1u + dg2_dx1u
+                // sens_z2_rhs = dg2_dk1 * dk1_dx1u + dg2_dx1u
                 blasfeo_dgemm_nn(nxz2, nx1, nx1, 1.0, &f_LO_jac0, nx1, 0, &dK1_dx1,
                         0, 0, 1.0, &f_LO_jac0, 0, 0, &sens_z2_rhs, 0, 0);
                 blasfeo_dgemm_nn(nxz2, nu, nx1, 1.0, &f_LO_jac0, nx1, 0, &dK1_du,

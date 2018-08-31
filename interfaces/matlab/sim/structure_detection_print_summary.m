@@ -46,11 +46,18 @@ f_impl_old = initial_model.f_impl_expr;
 
 
 x = reordered_model.x;
+z = reordered_model.z;
 f_impl_expr = reordered_model.f_impl_expr;
 
 phi_current = gnsf.phi_expr;
 
 %% PRINT SUMMARY -- STRUCHTRE DETECTION
+disp(' ');
+disp('*********************************************************************************************');
+disp(' ');
+disp('******************        SUCCESS: GNSF STRUCTURE DETECTION COMPLETE !!!      **************');
+disp(' ');
+disp('*********************************************************************************************');
 disp(' ');
 disp(['========================= STRUCTURE DETECTION SUMMARY ====================================']);
 disp(' ');
