@@ -197,7 +197,9 @@ while true
     % remove new_nsf_components from candidates
     I_LOS_candidates = setdiff( I_LOS_candidates, new_nsf_components );
 end
-keyboard
+
+[~, new_eq_order] = sort(Eq_map(1,:));
+I_nsf_eq = Eq_map(2, new_eq_order );
 
 I_LOS_components = I_LOS_candidates;
 I_LOS_eq = setdiff( 1:nx+nz, I_nsf_eq );
