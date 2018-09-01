@@ -63,11 +63,12 @@ int sim_in_calculate_size(void *config_, void *dims)
     int size = sizeof(sim_in);
 
     int nx, nu, nz;
+
     config->get_nx(dims, &nx);
     config->get_nu(dims, &nu);
     config->get_nz(dims, &nz);
 
-    size += nx * sizeof(double);              // x
+    size += 2 * nx * sizeof(double);          // x, xdot
     size += nu * sizeof(double);              // u
     size += nz * sizeof(double);              // z
     size += nx * (nx + nu) * sizeof(double);  // S_forw (max dimension)
@@ -104,6 +105,14 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(nx, &in->x, &c_ptr);
     assign_and_advance_double(nu, &in->u, &c_ptr);
     assign_and_advance_double(nz, &in->z, &c_ptr);
+    assign_and_advance_double(nx, &in->xdot, &c_ptr);
+
+    // initialization of xdot, z is 0 if not changed
+    for (int ii = 0; ii < nx; ii++)
+        in->xdot[ii] = 0;
+    for (int ii = 0; ii < nz; ii++)
+        in->z[ii] = 0;
+
     assign_and_advance_double(nx * NF, &in->S_forw, &c_ptr);
     assign_and_advance_double(NF, &in->S_adj, &c_ptr);
 
