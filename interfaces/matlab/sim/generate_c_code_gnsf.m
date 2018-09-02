@@ -48,7 +48,7 @@ E_LO = gnsf.E_LO;
 x1 = gnsf.x(1:gnsf.nx1);
 x1dot = gnsf.xdot(1:gnsf.nx1);
 u = gnsf.u;
-z = gnsf.z;
+z1 = gnsf.z(1:gnsf.nz1);
 y = gnsf.y;
 uhat = gnsf.uhat;
 
@@ -68,15 +68,15 @@ if isfield(gnsf, 'p')
     phi_fun_jac_y = Function([model_name,'_phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y});
     phi_jac_y_uhat = Function([model_name,'_phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat});
 
-    f_lo_fun_jac_x1k1uz = Function([model_name,'_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u, p}, ...
-        {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z)]});
+    f_lo_fun_jac_x1k1uz = Function([model_name,'_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u, p}, ...
+        {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z1)]});
 else
     phi_fun = Function([model_name,'_phi_fun'], {y, uhat}, {phi});
     phi_fun_jac_y = Function([model_name,'_phi_fun_jac_y'], {y, uhat}, {phi, jac_phi_y});
     phi_jac_y_uhat = Function([model_name,'_phi_jac_y_uhat'], {y, uhat}, {jac_phi_y, jac_phi_uhat});
 
-    f_lo_fun_jac_x1k1uz = Function([model_name,'_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z, u}, ...
-        {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z)]});
+    f_lo_fun_jac_x1k1uz = Function([model_name,'_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u}, ...
+        {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z1)]});
 end
 
 % get_matrices function
