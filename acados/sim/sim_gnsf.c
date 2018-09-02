@@ -1633,11 +1633,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     blasfeo_pack_dvec(nx + nu, &in->S_adj[0], &lambda_old, 0);
     blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, &S_forw, 0, 0);
 
-    // initialize vv_traj
-    for (int ss = 0; ss < num_steps; ss++)
-    {
-        blasfeo_dvecse(nvv, 0, &vv_traj[ss], 0);
-    }
+    // initialize vv for first step, for further steps initialize with last vv value in step loop
+    blasfeo_dvecse(nvv, 0.0, &vv_traj[0], 0);
 
     /************************************************
      * Set up function input & outputs
@@ -1743,7 +1740,12 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
      ************************************************/
 
     for (int ss = 0; ss < num_steps; ss++)
-    {  // STEP LOOP
+    {
+        // STEP LOOP
+        // initialize lifted variables vv with solution of previous step
+        if (ss > 0)
+            blasfeo_dveccp(nvv, &vv_traj[ss-1], 0, &vv_traj[ss], 0);
+
         blasfeo_dgemv_n(nyy, nx1, 1.0, &YYx, 0, 0, &x0_traj, ss * nx, 1.0, &yyu, 0, &yyss,
                         nyy * ss);  // yyss = YY0 + YYu * u + YYx * x0(at_stage)
         // printf("yyss =  \n");
