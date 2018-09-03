@@ -17,8 +17,6 @@
 #
 #
 
-if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-
 configure_file(chain_model/chain_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/chain_model/chain_model.h @ONLY)
 
 # Define sources for models used in the examples
@@ -187,10 +185,6 @@ file(GLOB ENGINE_SRC
 
 # Define examples
 
-# -------------------- two-staged turbocharged engine
-add_executable(engine_example engine_example.c ${ENGINE_SRC})
-target_link_libraries(engine_example acados)
-
 # -------------------- nonlinear_chain
 add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
 target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
@@ -201,15 +195,23 @@ add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6P2_SR
 target_link_libraries(wind_turbine_nmpc_example acados)
 add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
 
+# -------------------- sim_wt_nx6
+add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
+target_link_libraries(sim_wt_model_nx6 acados)
+add_test(sim_wt_model_nx6 sim_wt_model_nx6)
+
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+
+# -------------------- two-staged turbocharged engine
+add_executable(engine_example engine_example.c ${ENGINE_SRC})
+target_link_libraries(engine_example acados)
+
+
 # -------------------- sim_inverted_pendulum
 add_executable(sim_inverted_pendulum sim_inverted_pendulum.c ${INV_PENDULUM_SRC})
 target_link_libraries(sim_inverted_pendulum acados)
 add_test(sim_inverted_pendulum sim_inverted_pendulum)
 
-# -------------------- sim_wt_nx6
-add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
-target_link_libraries(sim_wt_model_nx6 acados)
-add_test(sim_wt_model_nx6 sim_wt_model_nx6)
 
 # -------------------- sim_gnsf_crane
 add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})

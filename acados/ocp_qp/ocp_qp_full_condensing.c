@@ -108,6 +108,8 @@ int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_)
     size += sizeof(ocp_qp_full_condensing_memory);
     size += sizeof(struct d_cond_qp_ocp2dense_workspace);
     size += d_memsize_cond_qp_ocp2dense(dims, opts->hpipm_opts);
+    size += 1*8;
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -124,7 +126,7 @@ void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void 
     mem->hpipm_workspace = (struct d_cond_qp_ocp2dense_workspace *) c_ptr;
     c_ptr += sizeof(struct d_cond_qp_ocp2dense_workspace);
 
-    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    align_char_to(8, &c_ptr);
 
     // hpipm workspace
     d_create_cond_qp_ocp2dense(dims, opts->hpipm_opts, mem->hpipm_workspace, c_ptr);

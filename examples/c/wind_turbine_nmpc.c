@@ -216,17 +216,17 @@ int main()
     * problem dimensions
     ************************************************/
 
-    int nx[NN+1] = {};
-    int nu[NN+1] = {};
-    int nbx[NN+1] = {};
-    int nbu[NN+1] = {};
-    int nb[NN+1] = {};
-    int ng[NN+1] = {};
-    int nh[NN+1] = {};
-    int nq[NN+1] = {};
-    int ns[NN+1] = {};
-	int ny[NN+1] = {};
-	int nz[NN+1] = {};
+    int *nx = malloc((NN+1)*sizeof(int));
+    int *nu = malloc((NN+1)*sizeof(int));
+    int *nbx = malloc((NN+1)*sizeof(int));
+    int *nbu = malloc((NN+1)*sizeof(int));
+    int *nb = malloc((NN+1)*sizeof(int));
+    int *ng = malloc((NN+1)*sizeof(int));
+    int *nh = malloc((NN+1)*sizeof(int));
+    int *nq = malloc((NN+1)*sizeof(int));
+    int *ns = malloc((NN+1)*sizeof(int));
+	int *ny = malloc((NN+1)*sizeof(int));
+	int *nz = malloc((NN+1)*sizeof(int));
 
 	// TODO(dimitris): setup bounds on states and controls based on ACADO controller
     nx[0] = nx_;
@@ -963,7 +963,7 @@ int main()
 					BLASFEO_DVECEL(&cost[i]->y_ref, 3) = y_ref[(idx + i)*4+3];
 				}
 			}
-
+			
 			// solve NLP
         	status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
@@ -1098,6 +1098,19 @@ int main()
 
 	free(x_end);
 	free(u_end);
+
+	free(nx);
+	free(nu);
+	free(nbx);
+	free(nbu);
+	free(nb);
+	free(ng);
+	free(nh);
+	free(nq);
+	free(ns);
+	free(ny);
+	free(nz);
+
 
 	/************************************************
 	* return

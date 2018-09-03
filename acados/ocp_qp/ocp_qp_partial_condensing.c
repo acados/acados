@@ -139,6 +139,9 @@ int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opt
     size += d_memsize_cond_qp_ocp2ocp(dims, opts->block_size, opts->pcond_dims, opts->hpipm_opts);
 
     size += 1 * 8;
+
+    make_int_multiple_of(8, &size);
+
     return size;
 }
 
