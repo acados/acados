@@ -386,11 +386,7 @@ int main()
 
 		}
 
-		printf("BEFORE CREATE\n");  // DELETEME
-
 		sim_solver *sim_solver = sim_create(config, dims, opts);
-
-		printf("AFTER CREATE\n");  // DELETEME
 
 		int acados_return;
 

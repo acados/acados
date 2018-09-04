@@ -1048,8 +1048,6 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     assign_and_advance_double(num_stages, &mem->b_dt, &c_ptr);
     assign_and_advance_double(num_stages, &mem->c_butcher, &c_ptr);
 
-    printf("AFTER ASSIGNING DOUBLES \n");  // DELETEME
-
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
