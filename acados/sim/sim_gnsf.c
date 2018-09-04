@@ -968,9 +968,6 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
     size += num_stages * num_stages * sizeof(double);  // A_dt
     size += 2 * num_stages * sizeof(double);           // b_dt, c_butcher;
 
-    make_int_multiple_of(64, &size);
-    size += 1 * 64;
-
     // precomputed matrices
     size += blasfeo_memsize_dmat(nK1, nff);  // KKf
     size += blasfeo_memsize_dmat(nK1, nx1);  // KKx
@@ -1008,6 +1005,10 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
     size += blasfeo_memsize_dvec(nK1);  // KK0
     size += blasfeo_memsize_dvec(nyy);  // YY0
 
+    size += 1 * 64;
+    size += 1 * 8;
+    make_int_multiple_of(64, &size);
+
     return size;
 }
 
@@ -1040,13 +1041,11 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     sim_gnsf_memory *mem = (sim_gnsf_memory *) c_ptr;
     c_ptr += sizeof(sim_gnsf_memory);
 
-    printf("BEFORE ASSIGNING DOUBLES \n");  // DELETEME
+    align_char_to(8, &c_ptr);
 
     // assign scaled butcher table
     assign_and_advance_double(num_stages * num_stages, &mem->A_dt, &c_ptr);
-    printf("1 \n");  // DELETEME
     assign_and_advance_double(num_stages, &mem->b_dt, &c_ptr);
-    printf("2 \n");  // DELETEME
     assign_and_advance_double(num_stages, &mem->c_butcher, &c_ptr);
 
     printf("AFTER ASSIGNING DOUBLES \n");  // DELETEME
