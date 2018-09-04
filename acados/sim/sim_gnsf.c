@@ -1040,10 +1040,16 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     sim_gnsf_memory *mem = (sim_gnsf_memory *) c_ptr;
     c_ptr += sizeof(sim_gnsf_memory);
 
+    printf("BEFORE ASSIGNING DOUBLES \n");  // DELETEME
+
     // assign scaled butcher table
     assign_and_advance_double(num_stages * num_stages, &mem->A_dt, &c_ptr);
+    printf("1 \n");  // DELETEME
     assign_and_advance_double(num_stages, &mem->b_dt, &c_ptr);
+    printf("2 \n");  // DELETEME
     assign_and_advance_double(num_stages, &mem->c_butcher, &c_ptr);
+
+    printf("AFTER ASSIGNING DOUBLES \n");  // DELETEME
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
