@@ -1,6 +1,7 @@
 branches:
   only:
     - master
+    - win
 
 install:
   - call C:\Miniconda36-x64\Scripts\activate.bat
