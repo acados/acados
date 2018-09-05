@@ -186,6 +186,11 @@ file(GLOB ENGINE_SRC
 
 # Define examples
 
+# -------------------- nonlinear_chain
+add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
+target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
+add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
+
 # -------------------- wind turbine nmpc
 add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6P2_SRC})
 target_link_libraries(wind_turbine_nmpc_example acados)
@@ -198,15 +203,9 @@ add_test(sim_wt_model_nx6 sim_wt_model_nx6)
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
-# -------------------- nonlinear_chain
-add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
-target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
-add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
-
 # -------------------- two-staged turbocharged engine
 add_executable(engine_example engine_example.c ${ENGINE_SRC})
 target_link_libraries(engine_example acados)
-
 
 # -------------------- sim_inverted_pendulum
 add_executable(sim_inverted_pendulum sim_inverted_pendulum.c ${INV_PENDULUM_SRC})
