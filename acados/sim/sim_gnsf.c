@@ -1002,16 +1002,12 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
 
         size += nxz2 * sizeof(int); // ipiv_ELO
 
-        make_int_multiple_of(8, &size);
-        size += 8;
+        size += 8;  // corresponds to memory alignment
 
         size += 9 * sizeof(struct blasfeo_dmat);  // Z0*, K0*, Y0*, *in {x,u,v}
         size += 2 * sizeof(struct blasfeo_dmat); // ELO_LU, ELO_inv_ALO
         size += 3 * sizeof(struct blasfeo_dmat); // Lx, Lxdot, Lz
     }
-
-    make_int_multiple_of(64, &size);
-    size += 1 * 64;
 
     // precomputed matrices
     size += blasfeo_memsize_dmat(nK1, nvv);  // KKv
@@ -1053,9 +1049,12 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
         size += blasfeo_memsize_dmat(ny, nz1);        // Lz
     }
 
-    size += blasfeo_memsize_dvec(nZ1);   // ZZ0
+    size += blasfeo_memsize_dvec(nZ1);  // ZZ0
     size += blasfeo_memsize_dvec(nK1);  // KK0
     size += blasfeo_memsize_dvec(nyy);  // YY0
+
+    size += 1 * 64;  // corresponds to memory alignment
+    make_int_multiple_of(64, &size);
 
     return size;
 }

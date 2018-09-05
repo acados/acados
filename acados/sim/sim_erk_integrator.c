@@ -759,15 +759,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             //            for (i = 0; i < nhess; i++) S_hess_out[i] = adj_tmp[nx + nu + i];
             int count_upper = 0;
             for (int j = 0; j < nx + nu; j++) {
-                for (int i = 0; i < nx + nu; i++){
-                    // S_hess_out[i] = adj_tmp[nx + nu + i];
-                    if ( i >= j ) {
-                        // printf("%e \n", adj_tmp[nx + nu + count_upper]);
-                        S_hess_out[i + (nf) * j] = adj_tmp[nx + nu + count_upper];
-                        S_hess_out[j + (nf) * i] = adj_tmp[nx + nu + count_upper];
-                                    // copy to upper part
-                        count_upper++;
-                    }
+                for (int i = j; i < nx + nu; i++){
+                    S_hess_out[i + (nf) * j] = adj_tmp[nx + nu + count_upper];
+                    S_hess_out[j + (nf) * i] = adj_tmp[nx + nu + count_upper];
+                                // copy to upper part
+                    count_upper++;
                 }
             }
         }
