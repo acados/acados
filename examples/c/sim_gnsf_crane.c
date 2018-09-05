@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <fenv.h>
 
 // acados
 #include <acados/sim/sim_common.h>
@@ -38,7 +37,6 @@
 #include "examples/c/gnsf_crane_model/gnsf_crane_model.h"
 
 int main() {
-    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 /************************************************
 *   external functions
 ************************************************/

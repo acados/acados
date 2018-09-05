@@ -1498,7 +1498,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
     int num_stages = opts->ns;
     int num_steps  = opts->num_steps;
-    int newton_max = opts->newton_iter;
+    int newton_iter = opts->newton_iter;
 
     int nvv = num_stages * n_out;
     int nyy = num_stages * ny;
@@ -1759,7 +1759,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         f_lo_val_out.x = &f_LO_val;
         f_lo_jac_out.A = &f_LO_jac_traj[ss];
 
-        for (int iter = 0; iter < newton_max; iter++)
+        for (int iter = 0; iter < newton_iter; iter++)
         {  // NEWTON-ITERATION
             /* EVALUATE RESIDUAL FUNCTION & JACOBIAN */
 
