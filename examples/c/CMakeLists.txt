@@ -160,6 +160,7 @@ file(GLOB INV_PENDULUM_SRC
     inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot.c
     inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u.c
     inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_u.c
+    inverted_pendulum_model/inv_pendulum_impl_ode_hess.c
     inverted_pendulum_model/inv_pendulum_phi_fun.c
     inverted_pendulum_model/inv_pendulum_phi_fun_jac_y.c
     inverted_pendulum_model/inv_pendulum_phi_jac_y_uhat.c
@@ -220,15 +221,15 @@ add_test(sim_gnsf_crane sim_gnsf_crane)
 
 # -------------------- pendulum_scqp
 add_executable(pendulum_scqp pendulum_scqp.cpp
-    pendulum_model/vde_forw_pendulum.c
+    pendulum_model/pendulum_ode_expl_vde_forw.c
     pendulum_model/constraint.c
     pendulum_model/position.c)
 target_link_libraries(pendulum_scqp acados)
 add_test(pendulum_scqp pendulum_scqp)
 
 add_executable(pendulum_sqp_gn pendulum_sqp_gn.cpp
-    pendulum_model/vde_forw_pendulum.c
-    pendulum_model/vde_hess_pendulum.c
+    pendulum_model/pendulum_ode_expl_vde_forw.c
+    pendulum_model/pendulum_ode_expl_ode_hess.c
     pendulum_model/constraint.c
     pendulum_model/position.c)
 target_link_libraries(pendulum_sqp_gn acados)

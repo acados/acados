@@ -527,24 +527,13 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 
     if (opts->compute_hess)
     {
-        int hess_index = 0;
-        for (int j = 0; j < nx; j++) {
-            for (int k = j; k < nx; k++) {
-                BLASFEO_DMATEL(&mem->hes, nu+k, nu+j) = work->sim_out->S_hess[hess_index];
-                hess_index++;
-            }
-            for (int k = 0; k < nu; k++) {
-                // S: nu x nx
-                BLASFEO_DMATEL(&mem->hes, nu+j, k) = work->sim_out->S_hess[hess_index];
-                hess_index++;
-            }
-        }
-        for (int j = 0; j < nu; j++) {
-            for (int k = j; k < nu; k++) {
-                BLASFEO_DMATEL(&mem->hes, k, j) = work->sim_out->S_hess[hess_index];
-                hess_index++;
-            }
-        }
+        // unpack d*_d2u
+        blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx + nu,
+                                     &mem->hes, 0, 0);
+        // unpack d*_dux: mem-hess: nx x nu
+        blasfeo_pack_dmat(nx, nu, &work->sim_out->S_hess[(nx + nu)*nx], nx + nu, &mem->hes, nu, 0);
+        // unpack d*_d2x
+        blasfeo_pack_dmat(nx, nx, &work->sim_out->S_hess[0], nx + nu, &mem->hes, nu, nu);
 
         // Add hessian contribution
         blasfeo_dgead(nx+nu, nx+nu, 1.0, &mem->hes, 0, 0, mem->RSQrq, 0, 0);

@@ -647,8 +647,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     /************************************************
      * adjoint sweep
      ************************************************/
-
-    if (opts->sens_adj)
+    if (opts->sens_adj || opts->sens_hess)
     {
         // initialize integrator variables
         for (i = 0; i < nx; i++) adj_tmp[i] = S_adj_in[i];
@@ -697,23 +696,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                             rhs_adj_in[nForw + i] += a * adj_traj[j * nAdj + i];
                     }
                 }
+                // TODO(oj): fix this whole file or write from scratch, not really readable :/
                 acados_tic(&timer_ad);
-                if (0)
-                {
-                    ext_fun_type_in[0] = COLMAJ;
-                    ext_fun_in[0] = rhs_adj_in + 0;  // x: nx
-                    ext_fun_type_in[1] = COLMAJ;
-                    ext_fun_in[1] = rhs_adj_in + nx;  // lam: nx
-                    ext_fun_type_in[2] = COLMAJ;
-                    ext_fun_in[2] = rhs_adj_in + nx + nx;  // u: nu
-
-                    ext_fun_type_out[0] = COLMAJ;
-                    ext_fun_out[0] = adj_traj + s * nAdj + 0;  // adj: nx+nu
-
-                    model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in,
-                                                  ext_fun_type_out, ext_fun_out);
-                }
-                else
+                if (!opts->sens_hess)
                 {
                     ext_fun_type_in[0] = COLMAJ;
                     ext_fun_in[0] = rhs_adj_in + 0;  // x: nx
@@ -735,6 +720,28 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                                                   ext_fun_type_out,
                                                   ext_fun_out);  // adjoint VDE evaluation
                 }
+                else
+                {
+                    ext_fun_type_in[0] = COLMAJ;
+                    ext_fun_in[0] = rhs_adj_in + 0;  // x: nx
+                    ext_fun_type_in[1] = COLMAJ;
+                    ext_fun_in[1] = rhs_adj_in + nx;  // Sx: nx*nx
+                    ext_fun_type_in[2] = COLMAJ;
+                    ext_fun_in[2] = rhs_adj_in + nx + nx * nx;  // Su: nx*nu
+                    ext_fun_type_in[3] = COLMAJ;
+                    ext_fun_in[3] = rhs_adj_in + nx + nx * nx + nx * nu;  // lam: nx
+                    ext_fun_type_in[4] = COLMAJ;
+                    ext_fun_in[4] = rhs_adj_in + nx + nx * nx + nx * nu + nx;  // u: nu
+
+                    ext_fun_type_out[0] = COLMAJ;
+                    ext_fun_out[0] = adj_traj + s * nAdj + 0;  // adj: nx+nu
+                    ext_fun_type_out[1] = COLMAJ;
+                    ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
+
+                    model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in,
+                                ext_fun_type_out, ext_fun_out);
+
+                }
                 timing_ad += acados_toc(&timer_ad);
             }
             for (s = 0; s < ns; s++)
@@ -748,8 +755,21 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         // store hessian
         if (opts->sens_hess)
         {
-            for (i = 0; i < nhess; i++)
-                S_hess_out[i] = adj_tmp[nx + nu + i];
+            // former line for tridiagonal export was
+            //            for (i = 0; i < nhess; i++) S_hess_out[i] = adj_tmp[nx + nu + i];
+            int count_upper = 0;
+            for (int j = 0; j < nx + nu; j++) {
+                for (int i = 0; i < nx + nu; i++){
+                    // S_hess_out[i] = adj_tmp[nx + nu + i];
+                    if ( i >= j ) {
+                        // printf("%e \n", adj_tmp[nx + nu + count_upper]);
+                        S_hess_out[i + (nf) * j] = adj_tmp[nx + nu + count_upper];
+                        S_hess_out[j + (nf) * i] = adj_tmp[nx + nu + count_upper];
+                                    // copy to upper part
+                        count_upper++;
+                    }
+                }
+            }
         }
     }
 

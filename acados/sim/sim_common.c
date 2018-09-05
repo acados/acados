@@ -133,15 +133,15 @@ int sim_out_calculate_size(void *config_, void *dims)
     int NF = nx + nu;
     size += sizeof(sim_info);
 
-    size += nx * sizeof(double);                   // xn
-    size += nx * NF * sizeof(double);              // S_forw
-    size += (nx + nu) * sizeof(double);            // S_adj
-    size += ((NF + 1) * NF / 2) * sizeof(double);  // S_hess
+    size += nx * sizeof(double);                // xn
+    size += nx * NF * sizeof(double);           // S_forw
+    size += (nx + nu) * sizeof(double);         // S_adj
+    size += (NF * NF) * sizeof(double);         // S_hess
 
-    size += nz * sizeof(double);                   //  zn
-    size += nz * NF * sizeof(double);               // S_algebraic
+    size += nz * sizeof(double);                //  zn
+    size += nz * NF * sizeof(double);           // S_algebraic
 
-    size += NF * sizeof(double);                   // grad
+    size += NF * sizeof(double);                // grad
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -173,7 +173,7 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(nx, &out->xn, &c_ptr);
     assign_and_advance_double(nx * NF, &out->S_forw, &c_ptr);
     assign_and_advance_double(nx + nu, &out->S_adj, &c_ptr);
-    assign_and_advance_double((NF + 1) * NF / 2, &out->S_hess, &c_ptr);
+    assign_and_advance_double(NF * NF, &out->S_hess, &c_ptr);
     assign_and_advance_double(NF, &out->grad, &c_ptr);
 
     assign_and_advance_double(nz, &out->zn, &c_ptr);

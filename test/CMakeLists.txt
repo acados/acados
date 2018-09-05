@@ -167,20 +167,27 @@ set(TEST_SIM_DAE_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/sim/sim_test_dae.cpp
 )
 
-# set(TEST_SIM_SRC
-#     ${CMAKE_CURRENT_SOURCE_DIR}/sim/pendulum/test_pendulum.cpp
-# )
+set(TEST_SIM_HESS_SRC
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_ode_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_ode_jac.c
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_vde_forw.c
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_vde_adj.c
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_ode_hess.c
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_fun.c
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_fun_jac_x_xdot.c
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_jac_x_xdot_u.c
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_fun_jac_x_xdot_u.c
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_hess.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/sim/sim_test_hessian.cpp
+)
 
-# set(TEST_UTILS_SRC
-#     ${PROJECT_SOURCE_DIR}/test/test_utils/read_matrix.cpp
-#     ${PROJECT_SOURCE_DIR}/test/test_utils/zeros.cpp
-# ) # TODO (dimitris): eliminate this at some point
 
 # Unit test executable
 add_executable(unit_tests
     ${PROJECT_SOURCE_DIR}/test/all_tests.cpp
     # $<TARGET_OBJECTS:ocp_nlp_gen>
     # $<TARGET_OBJECTS:ocp_qp_gen>
+    ${TEST_SIM_HESS_SRC}
     ${TEST_SIM_DAE_SRC}
     ${TEST_SIM_ODE_SRC}
     ${TEST_OCP_QP_SRC}

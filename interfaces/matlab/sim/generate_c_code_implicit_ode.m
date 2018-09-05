@@ -15,7 +15,7 @@
 %   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 %
 
-function generate_c_code_implicit_ode(model)
+function generate_c_code_implicit_ode( model )
 
 %% import casadi
 import casadi.*
@@ -36,19 +36,63 @@ z = model.z;
 f_impl = model.f_impl_expr;
 model_name_prefix = model.name;
 
+%% get model dimensions
+nx = length(x);
+nu = length(u);
+nz = length(z);
+
+%% generate jacobians
+jac_x       = jacobian(f_impl, x);
+jac_xdot    = jacobian(f_impl, xdot);
+jac_u       = jacobian(f_impl, u);
+jac_z       = jacobian(f_impl, z);
+
+
+%% generate hessian
+multiplier  = SX.sym('multiplier', length(x) + length(z));
+multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
+
+x_xdot_z_u = [x; xdot; z; u];
+
+HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
+
+for ii = 1:length(f_impl)
+    jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z_u);
+    hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
+    HESS = HESS + multiplier(ii) * hess_x_xdot_z;
+end
+HESS = HESS.simplify();
+HESS_multiplied = multiply_mat' * HESS * multiply_mat;
+HESS_multiplied = HESS_multiplied.simplify();
+
+
 
 %% Set up functions
+% TODO(oj): fix namings such that jac_z is contained!
 if isfield(model, 'p')
     p = model.p;
-    impl_ode_fun = Function([model_name_prefix,'impl_ode_fun'], {x, xdot, u, z, p}, {f_impl});
-    impl_ode_fun_jac_x_xdot = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot'], {x, xdot, u, z, p}, {f_impl, jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, z)});
-    impl_ode_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_jac_x_xdot_u'], {x, xdot, u, z, p}, {jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, u), jacobian(f_impl, z)});
-    impl_ode_fun_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z, p}, {f_impl, jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, z)});
+    impl_ode_fun = Function([model_name_prefix,'impl_ode_fun'], {x, xdot, u, z, p},...
+                             {f_impl});
+    impl_ode_fun_jac_x_xdot = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot'],...
+         {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
+    impl_ode_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_jac_x_xdot_u'],...
+         {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
+    impl_ode_fun_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'],...
+         {x, xdot, u, z, p},...
+         {f_impl, jac_x, jac_xdot, jac_u});
+    impl_ode_hess = Function([model.name, 'impl_ode_hess'], ...
+         {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
 else
-    impl_ode_fun = Function([model_name_prefix,'impl_ode_fun'], {x, xdot, u, z}, {f_impl});
-    impl_ode_fun_jac_x_xdot = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot'], {x, xdot, u, z}, {f_impl, jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, z)});
-    impl_ode_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_jac_x_xdot_u'], {x, xdot, u, z}, {jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, u), jacobian(f_impl, z)});
-    impl_ode_fun_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z}, {f_impl, jacobian(f_impl, x), jacobian(f_impl, xdot), jacobian(f_impl, u), jacobian(f_impl, z)});
+    impl_ode_fun = Function([model_name_prefix,'impl_ode_fun'],...
+                 {x, xdot, u, z}, {f_impl});
+    impl_ode_fun_jac_x_xdot = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot'],...
+         {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_z});
+    impl_ode_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_jac_x_xdot_u'], {x, xdot, u, z},...
+             {jac_x, jac_xdot, jac_u, jac_z});
+    impl_ode_fun_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'],...
+         {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_u});
+    impl_ode_hess = Function([model.name, 'impl_ode_hess'], ...
+        {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
 end
 
 %% generate C code
@@ -56,6 +100,7 @@ impl_ode_fun.generate([model_name_prefix,'impl_ode_fun'], casadi_opts);
 impl_ode_fun_jac_x_xdot.generate([model_name_prefix,'impl_ode_fun_jac_x_xdot'], casadi_opts);
 impl_ode_jac_x_xdot_u.generate([model_name_prefix,'impl_ode_jac_x_xdot_u'], casadi_opts);
 impl_ode_fun_jac_x_xdot_u.generate([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'], casadi_opts);
-
+impl_ode_hess.generate([model_name_prefix,'impl_ode_hess'], casadi_opts);
+% keyboard
 
 end
