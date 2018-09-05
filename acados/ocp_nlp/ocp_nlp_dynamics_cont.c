@@ -46,6 +46,8 @@ int ocp_nlp_dynamics_cont_dims_calculate_size(void *config_)
 
     size += sim_sol_config->dims_calculate_size(sim_sol_config);
 
+    size += 1*8;
+
     return size;
 }
 
@@ -57,6 +59,7 @@ void *ocp_nlp_dynamics_cont_dims_assign(void *config_, void *raw_memory)
     sim_solver_config *sim_sol_config = (sim_solver_config *) dyn_config->sim_solver;
 
     char *c_ptr = (char *) raw_memory;
+    align_char_to(8, &c_ptr);
 
     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_cont_dims);
