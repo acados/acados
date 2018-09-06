@@ -35,6 +35,7 @@
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
+#include "acados/utils/mem.h"
 
 /************************************************
  * config
@@ -112,12 +113,16 @@ int ocp_qp_dims_calculate_size(int N)
 
     size += d_memsize_ocp_qp_dim(N);
 
+    size += 1*8;
+
     return size;
 }
 
 ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
+
+    align_char_to(8, &c_ptr);
 
     ocp_qp_dims *dims = (ocp_qp_dims *) c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
@@ -127,7 +132,7 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 
     dims->N = N;
 
-    assert((char *) raw_memory + ocp_qp_dims_calculate_size(N) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_dims_calculate_size(N) >= c_ptr);
 
     return dims;
 }
