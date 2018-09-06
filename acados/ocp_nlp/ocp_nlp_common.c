@@ -145,7 +145,7 @@ int ocp_nlp_dims_calculate_size_self(int N)
 
     size += sizeof(ocp_nlp_reg_dims);
 
-    size += 8;  // initial align
+    size += 2*8;
 
     return size;
 }
@@ -202,6 +202,8 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     assign_and_advance_int(N + 1, &dims->ni, &c_ptr);
     // nz
     assign_and_advance_int(N + 1, &dims->nz, &c_ptr);
+
+    align_char_to(8, &c_ptr);
 
     // dynamics
     dims->dynamics = (void **) c_ptr;

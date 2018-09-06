@@ -39,8 +39,8 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
-#include "pendulum_model/vde_forw_pendulum.h"
-#include "pendulum_model/vde_hess_pendulum.h"
+#include "pendulum_model/pendulum_model.h"
+// #include "pendulum_model/jac_constraint.h"
 #include "pendulum_model/constraint.h"
 
 std::ostream& operator<<(std::ostream& strm, std::vector<double> v) {
@@ -102,22 +102,22 @@ int main() {
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
-		forw_vde_casadi[i].casadi_fun = &vdeFun;
-		forw_vde_casadi[i].casadi_n_in = &vdeFun_n_in;
-		forw_vde_casadi[i].casadi_n_out = &vdeFun_n_out;
-		forw_vde_casadi[i].casadi_sparsity_in = &vdeFun_sparsity_in;
-		forw_vde_casadi[i].casadi_sparsity_out = &vdeFun_sparsity_out;
-		forw_vde_casadi[i].casadi_work = &vdeFun_work;
+		forw_vde_casadi[i].casadi_fun = &pendulum_ode_expl_vde_forw;
+		forw_vde_casadi[i].casadi_n_in = &pendulum_ode_expl_vde_forw_n_in;
+		forw_vde_casadi[i].casadi_n_out = &pendulum_ode_expl_vde_forw_n_out;
+		forw_vde_casadi[i].casadi_sparsity_in = &pendulum_ode_expl_vde_forw_sparsity_in;
+		forw_vde_casadi[i].casadi_sparsity_out = &pendulum_ode_expl_vde_forw_sparsity_out;
+		forw_vde_casadi[i].casadi_work = &pendulum_ode_expl_vde_forw_work;
 	}
 
 	external_function_casadi hess_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
-		hess_vde_casadi[i].casadi_fun = &adjFun;
-		hess_vde_casadi[i].casadi_n_in = &adjFun_n_in;
-		hess_vde_casadi[i].casadi_n_out = &adjFun_n_out;
-		hess_vde_casadi[i].casadi_sparsity_in = &adjFun_sparsity_in;
-		hess_vde_casadi[i].casadi_sparsity_out = &adjFun_sparsity_out;
-		hess_vde_casadi[i].casadi_work = &adjFun_work;
+		hess_vde_casadi[i].casadi_fun = &pendulum_ode_expl_ode_hess;
+		hess_vde_casadi[i].casadi_n_in = &pendulum_ode_expl_ode_hess_n_in;
+		hess_vde_casadi[i].casadi_n_out = &pendulum_ode_expl_ode_hess_n_out;
+		hess_vde_casadi[i].casadi_sparsity_in = &pendulum_ode_expl_ode_hess_sparsity_in;
+		hess_vde_casadi[i].casadi_sparsity_out = &pendulum_ode_expl_ode_hess_sparsity_out;
+		hess_vde_casadi[i].casadi_work = &pendulum_ode_expl_ode_hess_work;
 	}
 
 	// NLP model: forward VDEs
@@ -182,6 +182,7 @@ int main() {
 		erk_model *model = (erk_model *) dynamics->sim_model;
 		model->expl_vde_for = (external_function_generic *) &forw_vde_casadi[i];
 		model->expl_vde_adj = (external_function_generic *) &hess_vde_casadi[i];
+		model->expl_ode_hes = (external_function_generic *) &hess_vde_casadi[i];
 	}
 
 	// NLP constraints

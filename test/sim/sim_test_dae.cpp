@@ -56,11 +56,8 @@ using Eigen::Map;
 
 sim_solver_t hashitsim_dae(std::string const& inString)
 {
-    if (inString == "ERK") return ERK;
     if (inString == "IRK") return IRK;
-    if (inString == "LIFTED_IRK") return LIFTED_IRK;
     if (inString == "GNSF") return GNSF;
-    if (inString == "NEW_LIFTED_IRK") return NEW_LIFTED_IRK;
 
     return (sim_solver_t) -1;
 }
@@ -68,9 +65,7 @@ sim_solver_t hashitsim_dae(std::string const& inString)
 double sim_solver_tolerance_dae(std::string const& inString)
 {
     if (inString == "IRK")  return 1e-7;
-    // if (inString == "LIFTED_IRK") return 1e-3;
     if (inString == "GNSF") return 1e-7;
-    // if (inString == "NEW_LIFTED_IRK") return 1e-3;
 
     return -1;
 }
@@ -88,7 +83,6 @@ double sim_solver_tolerance_algebraic_dae(std::string const& inString)
 TEST_CASE("crane_dae_example", "[integrators]")
 {
     vector<std::string> solvers = {"IRK", "GNSF"};
-    // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
 
     const int nx = 9;
@@ -276,6 +270,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     opts->sens_forw = true;
     opts->sens_adj = true;
     opts->sens_algebraic = true;
+    opts->sens_hess = false;
     opts->output_z = true;
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 8;  // number of newton iterations per integration step
@@ -493,6 +488,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 opts->sens_adj          = (bool) sens_adj;
                 opts->output_z          = (bool) output_z;
                 opts->sens_algebraic    = (bool) sens_alg;
+                opts->sens_hess         = false;
 
 
             /* sim in / out */
@@ -528,13 +524,6 @@ TEST_CASE("crane_dae_example", "[integrators]")
                         sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
                         break;
                     }
-                    // case NEW_LIFTED_IRK:  // new_lifted_irk
-                    // {
-                    //     sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-                    //     sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u",
-                    //              &impl_ode_fun_jac_x_xdot_u);
-                    //     break;
-                    // }
                     default :
                     {
                         printf("\nnot enough sim solvers implemented!\n");

@@ -34,7 +34,7 @@
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 
-#include "pendulum_model/vde_forw_pendulum.h"
+#include "pendulum_model/pendulum_model.h"
 #include "pendulum_model/constraint.h"
 #include "pendulum_model/position.h"
 
@@ -85,12 +85,12 @@ int main() {
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
-		forw_vde_casadi[i].casadi_fun = &vdeFun;
-		forw_vde_casadi[i].casadi_n_in = &vdeFun_n_in;
-		forw_vde_casadi[i].casadi_n_out = &vdeFun_n_out;
-		forw_vde_casadi[i].casadi_sparsity_in = &vdeFun_sparsity_in;
-		forw_vde_casadi[i].casadi_sparsity_out = &vdeFun_sparsity_out;
-		forw_vde_casadi[i].casadi_work = &vdeFun_work;
+		forw_vde_casadi[i].casadi_fun = &pendulum_ode_expl_vde_forw;
+		forw_vde_casadi[i].casadi_n_in = &pendulum_ode_expl_vde_forw_n_in;
+		forw_vde_casadi[i].casadi_n_out = &pendulum_ode_expl_vde_forw_n_out;
+		forw_vde_casadi[i].casadi_sparsity_in = &pendulum_ode_expl_vde_forw_sparsity_in;
+		forw_vde_casadi[i].casadi_sparsity_out = &pendulum_ode_expl_vde_forw_sparsity_out;
+		forw_vde_casadi[i].casadi_work = &pendulum_ode_expl_vde_forw_work;
 	}
 
 	// NLP model: forward VDEs

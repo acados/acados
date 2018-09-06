@@ -131,6 +131,16 @@ int main()
     impl_ode_fun_jac_x_xdot_u.casadi_n_out = &inv_pendulum_impl_ode_fun_jac_x_xdot_u_n_out;
     external_function_casadi_create(&impl_ode_fun_jac_x_xdot_u);
 
+    // impl_ode_hess
+    external_function_casadi impl_ode_hess;
+    impl_ode_hess.casadi_fun = &inv_pendulum_impl_ode_hess;
+    impl_ode_hess.casadi_work = &inv_pendulum_impl_ode_hess_work;
+    impl_ode_hess.casadi_sparsity_in = &inv_pendulum_impl_ode_hess_sparsity_in;
+    impl_ode_hess.casadi_sparsity_out = &inv_pendulum_impl_ode_hess_sparsity_out;
+    impl_ode_hess.casadi_n_in = &inv_pendulum_impl_ode_hess_n_in;
+    impl_ode_hess.casadi_n_out = &inv_pendulum_impl_ode_hess_n_out;
+    external_function_casadi_create(&impl_ode_hess);
+
     /************************************************
     * external functions (Generalized Nonlinear Static Feedback (GNSF) model)
     ************************************************/
@@ -189,7 +199,7 @@ int main()
         2: IRK
         3: GNSF
                                 */
-	for (int nss = 2; nss < 4; nss++)
+	for (int nss = 2; nss < 3; nss++)
 	{
 		/************************************************
 		* sim plan & config
@@ -243,12 +253,13 @@ int main()
         opts->jac_reuse = false;        // jacobian reuse
         opts->newton_iter = 3;          // number of newton iterations per integration step
 
-        opts->ns                = 8;    // number of stages in rk integrator
-        opts->num_steps         = 1;    // number of steps
-        opts->sens_forw         = false;
+        opts->ns                = 3;    // number of stages in rk integrator
+        opts->num_steps         = 3;    // number of steps
+        opts->sens_forw         = true;
         opts->sens_adj          = false;
         opts->output_z          = true;
         opts->sens_algebraic    = true;
+        opts->sens_hess         = true;
 
     /* sim in / out */
 
@@ -266,6 +277,7 @@ int main()
                 sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
                         &impl_ode_fun_jac_x_xdot);
                 sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                sim_set_model(config, in, "impl_ode_hess", &impl_ode_hess);
                 break;
             }
             case GNSF:  // GNSF
@@ -346,7 +358,7 @@ int main()
 
     /* simulate */
 
-		int nsim0 = nsim;
+		// int nsim0 = nsim;
 
 		double cpu_time = 0.0;
 		double la_time = 0.0;
@@ -397,7 +409,7 @@ int main()
 			// d_print_exp_mat(nx, NF, S_forw_out, nx);
 		}
 
-		if(opts->sens_adj){
+		if(opts->sens_adj || opts->sens_hess){
 			double *S_adj_out = out->S_adj;
 			printf("S_adj_out: \n");
 			d_print_exp_mat(1, nx+nu, S_adj_out, 1);

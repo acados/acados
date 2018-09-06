@@ -104,7 +104,7 @@ int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
     size += blasfeo_memsize_dmat(nu + nx, ng);                        // DCt
 
     size += 64;  // blasfeo_mem align
-
+    size += 8;
     return size;
 }
 
@@ -123,6 +123,8 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     int ng = dims->ng;
     int nh = dims->nh;
     int ns = dims->ns;
+
+    align_char_to(8, &c_ptr);
 
     // struct
     ocp_nlp_constraints_bgh_model *model = (ocp_nlp_constraints_bgh_model *) c_ptr;

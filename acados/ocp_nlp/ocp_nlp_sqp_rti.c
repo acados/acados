@@ -89,6 +89,8 @@ int ocp_nlp_sqp_rti_opts_calculate_size(void *config_, void *dims_)
         size += constraints[ii]->opts_calculate_size(constraints[ii], dims->constraints[ii]);
     }
 
+    size += 1*8;
+
     return size;
 }
 
@@ -137,6 +139,8 @@ void *ocp_nlp_sqp_rti_opts_assign(void *config_, void *dims_, void *raw_memory)
         opts->cost[ii] = cost[ii]->opts_assign(cost[ii], dims->cost[ii], c_ptr);
         c_ptr += cost[ii]->opts_calculate_size(cost[ii], dims->cost[ii]);
     }
+
+    align_char_to(8, &c_ptr);
 
     // constraints
     opts->constraints = (void **) c_ptr;

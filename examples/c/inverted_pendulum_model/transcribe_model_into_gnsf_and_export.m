@@ -50,7 +50,6 @@ transcribe_opts = struct('print_info', print_info, 'check_E_invertibility',...
     check_E_invertibility, 'generate_reordered_model', generate_reordered_model, ...
     'generate_gnsf_model', generate_gnsf_model);
 
-
 %% define f_impl
 model = export_inverted_pendulum_dae_model();
 
