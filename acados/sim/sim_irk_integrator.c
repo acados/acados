@@ -645,15 +645,20 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     blasfeo_pack_dmat(nx, nx + nu, in->S_forw, nx, S_forw, 0, 0);
     blasfeo_pack_dvec(nx + nu, in->S_adj, lambda, 0);
 
+    // initialize integration variables
+    for (int i = 0; i < ns; ++i){
+        //  state derivatives
+        blasfeo_pack_dvec(nx, in->xdot, K, nx*i);
+        //  algebraic variables
+        blasfeo_pack_dvec(nz, in->z, K, nx*ns + i*nz);
+    }
+
     // TODO(dimitris, FreyJo): implement NF (number of forward sensis) properly, instead of nx+nu?
 
 /************************************************
 * Forward Sweep 
 *       - (simulation & forward sensitivities)
 ************************************************/
-    // initialize algebraic variables
-    for (int i = 0; i < ns; ++i)
-        blasfeo_pack_dvec(nz, in->z, K, nx*ns + i*nz);
 
     // start the loop
     acados_tic(&timer);

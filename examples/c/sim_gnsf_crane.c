@@ -37,7 +37,6 @@
 #include "examples/c/gnsf_crane_model/gnsf_crane_model.h"
 
 int main() {
-
 /************************************************
 *   external functions
 ************************************************/
@@ -111,7 +110,7 @@ int main() {
 
     gnsf_dim->nx = nx;
     gnsf_dim->nx1 = 8;
-    gnsf_dim->nx2 = 1;
+    gnsf_dim->nz1 = 1;
     gnsf_dim->nu = nu;
     gnsf_dim->n_out = 2;
     gnsf_dim->nz = 1;

@@ -137,8 +137,8 @@ phi_jac_y_uhat = Function([model_name_prefix,'phi_jac_y_uhat'], {y,uhat,p}, {jac
 phi_jac_y = Function([model_name_prefix,'phi_jac_y_uhat'], {y,uhat,p}, {jac_phi_y});
 
 % Linear output
-ALO = zeros(nx2);
-
+A_LO = zeros(nx2);
+E_LO = [];
 f = [];
 % f = uCR^2 + xL^2;
 jac_f_x1 = jacobian(f,x1);
@@ -154,10 +154,10 @@ f_lo_fun_jac_x1k1uz = Function([model_name_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x
     {f, [jac_f_x1, jac_f_k1, jac_f_z, jac_f_u]});
 
 % struct for matlab prototype
-s = struct('A', A, 'B', B, 'C', C, 'E', E, 'ALO',ALO, 'L_x', L_x, 'L_xdot', L_xdot, 'L_z', L_z, 'L_u', L_u, ...
-    'phi_fun_jac_y', phi_fun_jac_y, 'phi_jac_y_uhat', phi_jac_y_uhat, 'f_fun', f_fun, ...
-    'nx1', nx1, 'nx2', nx2, 'nu', nu, 'n_out', n_out, 'nx', nx, 'nz', nz, 'ny', ny, 'nuhat', nuhat,...
-    'f_lo_fun_jac_x1k1uz', f_lo_fun_jac_x1k1uz);
+% s = struct('A', A, 'B', B, 'C', C, 'E', E, 'ALO',ALO, 'L_x', L_x, 'L_xdot', L_xdot, 'L_z', L_z, 'L_u', L_u, ...
+%     'phi_fun_jac_y', phi_fun_jac_y, 'phi_jac_y_uhat', phi_jac_y_uhat, 'f_fun', f_fun, ...
+%     'nx1', nx1, 'nx2', nx2, 'nu', nu, 'n_out', n_out, 'nx', nx, 'nz', nz, 'ny', ny, 'nuhat', nuhat,...
+%     'f_lo_fun_jac_x1k1uz', f_lo_fun_jac_x1k1uz);
 
 
 %% generate functions
@@ -168,9 +168,8 @@ s = struct('A', A, 'B', B, 'C', C, 'E', E, 'ALO',ALO, 'L_x', L_x, 'L_xdot', L_xd
 % get matrices
 dummy = SX.sym('dummy');
 
-model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)])) + ...
-    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)];
-get_matrices_fun = Function([model_name_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
+get_matrices_fun = Function([model_name_prefix,'get_matrices_fun'],...
+    {dummy}, {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO});
 get_matrices_fun.generate([model_name_prefix,'get_matrices_fun'], casadi_opts);
 
 % generate Phi, f_LO

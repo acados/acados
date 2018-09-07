@@ -80,6 +80,9 @@ Thumbs.db
 *download_software
 *download_matlab
 
+# Matlab #
+*.m~
+
 # Misc #
 ########
 *.doc

@@ -27,8 +27,6 @@ extern "C" {
 #define casadi_f0 CASADI_PREFIX(f0)
 #define casadi_s0 CASADI_PREFIX(s0)
 #define casadi_s1 CASADI_PREFIX(s1)
-#define casadi_s2 CASADI_PREFIX(s2)
-#define casadi_sq CASADI_PREFIX(sq)
 
 /* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
@@ -45,50 +43,32 @@ extern "C" {
   #endif
 #endif
 
-static const casadi_int casadi_s0[9] = {5, 1, 0, 5, 0, 1, 2, 3, 4};
+static const casadi_int casadi_s0[8] = {4, 1, 0, 4, 0, 1, 2, 3};
 static const casadi_int casadi_s1[5] = {1, 1, 0, 1, 0};
-static const casadi_int casadi_s2[7] = {3, 1, 0, 3, 0, 1, 2};
 
-casadi_real casadi_sq(casadi_real x) { return x*x;}
-
-/* crane_dae_phi_fun:(i0[5],i1)->(o0[3]) */
+/* crane_dae_phi_fun:(i0[4],i1)->(o0) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
-  casadi_real a0, a1, a2, a3, a4, a5;
+  casadi_real a0, a1, a2;
   a0=4.7418203070092001e-02;
   a1=arg[1] ? arg[1][0] : 0;
   a0=(a0*a1);
-  a2=arg[0] ? arg[0][2] : 0;
-  a3=cos(a2);
-  a0=(a0*a3);
-  a3=9.8100000000000005e+00;
-  a4=sin(a2);
-  a3=(a3*a4);
-  a0=(a0+a3);
-  a3=2.;
-  a4=arg[0] ? arg[0][1] : 0;
-  a3=(a3*a4);
-  a5=arg[0] ? arg[0][3] : 0;
-  a3=(a3*a5);
-  a0=(a0+a3);
-  a3=arg[0] ? arg[0][0] : 0;
-  a0=(a0/a3);
+  a1=arg[0] ? arg[0][2] : 0;
+  a2=cos(a1);
+  a0=(a0*a2);
+  a2=9.8100000000000005e+00;
+  a1=sin(a1);
+  a2=(a2*a1);
+  a0=(a0+a2);
+  a2=2.;
+  a1=arg[0] ? arg[0][1] : 0;
+  a2=(a2*a1);
+  a1=arg[0] ? arg[0][3] : 0;
+  a2=(a2*a1);
+  a0=(a0+a2);
+  a2=arg[0] ? arg[0][0] : 0;
+  a0=(a0/a2);
   a0=(-a0);
   if (res[0]!=0) res[0][0]=a0;
-  a2=casadi_sq(a2);
-  a0=8.;
-  a2=(a2/a0);
-  a2=(-a2);
-  if (res[0]!=0) res[0][1]=a2;
-  a2=1.0000000000000001e-01;
-  a5=(a5+a2);
-  a5=cos(a5);
-  a2=arg[0] ? arg[0][4] : 0;
-  a1=(a1*a4);
-  a2=(a2-a1);
-  a2=casadi_sq(a2);
-  a5=(a5+a2);
-  a5=(-a5);
-  if (res[0]!=0) res[0][2]=a5;
   return 0;
 }
 
@@ -131,7 +111,7 @@ CASADI_SYMBOL_EXPORT const casadi_int* crane_dae_phi_fun_sparsity_in(casadi_int 
 
 CASADI_SYMBOL_EXPORT const casadi_int* crane_dae_phi_fun_sparsity_out(casadi_int i) {
   switch (i) {
-    case 0: return casadi_s2;
+    case 0: return casadi_s1;
     default: return 0;
   }
 }

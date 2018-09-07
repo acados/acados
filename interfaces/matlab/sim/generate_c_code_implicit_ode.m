@@ -15,7 +15,7 @@
 %   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 %
 
-function generate_c_code_implicit_ode( model )
+function generate_c_code_implicit_ode( model, opts )
 
 %% import casadi
 import casadi.*
@@ -28,13 +28,22 @@ else
 	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
 end
 
+if isfield(opts, 'generate_hess')
+    generate_hess = opts.generate_hess;
+else
+    generate_hess = 0;
+    if opts.print_info
+    disp('generate_hess option was not set - default is false')
+    end
+end
+
 %% load model
 x = model.x;
 xdot = model.xdot;
 u = model.u;
 z = model.z;
 f_impl = model.f_impl_expr;
-model_name_prefix = model.name;
+model_name = model.name;
 
 %% get model dimensions
 nx = length(x);
@@ -71,36 +80,38 @@ HESS_multiplied = HESS_multiplied.simplify();
 % TODO(oj): fix namings such that jac_z is contained!
 if isfield(model, 'p')
     p = model.p;
-    impl_ode_fun = Function([model_name_prefix,'impl_ode_fun'], {x, xdot, u, z, p},...
+    impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z, p},...
                              {f_impl});
-    impl_ode_fun_jac_x_xdot = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot'],...
+    impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'],...
          {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
-    impl_ode_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_jac_x_xdot_u'],...
+    impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'],...
          {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
-    impl_ode_fun_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'],...
+    impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'],...
          {x, xdot, u, z, p},...
          {f_impl, jac_x, jac_xdot, jac_u});
-    impl_ode_hess = Function([model.name, 'impl_ode_hess'], ...
+    impl_ode_hess = Function([model.name,'_impl_ode_hess'], ...
          {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
 else
-    impl_ode_fun = Function([model_name_prefix,'impl_ode_fun'],...
+    impl_ode_fun = Function([model_name,'_impl_ode_fun'],...
                  {x, xdot, u, z}, {f_impl});
-    impl_ode_fun_jac_x_xdot = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot'],...
+    impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'],...
          {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_z});
-    impl_ode_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_jac_x_xdot_u'], {x, xdot, u, z},...
+    impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z},...
              {jac_x, jac_xdot, jac_u, jac_z});
-    impl_ode_fun_jac_x_xdot_u = Function([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'],...
+    impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'],...
          {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_u});
-    impl_ode_hess = Function([model.name, 'impl_ode_hess'], ...
+    impl_ode_hess = Function([model.name,'_impl_ode_hess'], ...
         {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
 end
 
 %% generate C code
-impl_ode_fun.generate([model_name_prefix,'impl_ode_fun'], casadi_opts);
-impl_ode_fun_jac_x_xdot.generate([model_name_prefix,'impl_ode_fun_jac_x_xdot'], casadi_opts);
-impl_ode_jac_x_xdot_u.generate([model_name_prefix,'impl_ode_jac_x_xdot_u'], casadi_opts);
-impl_ode_fun_jac_x_xdot_u.generate([model_name_prefix,'impl_ode_fun_jac_x_xdot_u'], casadi_opts);
-impl_ode_hess.generate([model_name_prefix,'impl_ode_hess'], casadi_opts);
+impl_ode_fun.generate([model_name,'_impl_ode_fun'], casadi_opts);
+impl_ode_fun_jac_x_xdot.generate([model_name,'_impl_ode_fun_jac_x_xdot'], casadi_opts);
+impl_ode_jac_x_xdot_u.generate([model_name,'_impl_ode_jac_x_xdot_u'], casadi_opts);
+impl_ode_fun_jac_x_xdot_u.generate([model_name,'_impl_ode_fun_jac_x_xdot_u'], casadi_opts);
+if generate_hess
+    impl_ode_hess.generate([model_name,'_impl_ode_hess'], casadi_opts);
+end
 % keyboard
 
 end

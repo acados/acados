@@ -62,6 +62,8 @@ nu  = length(u);
 gnsf = struct('nx', nx, 'nu', nu, 'nz', nz);
 gnsf.nx1 = nx;
 gnsf.nx2 = 0;
+gnsf.nz1 = nz;
+gnsf.nz2 = 0;
 gnsf.nuhat = nu;
 gnsf.ny = 2 * nx + nz;
 
@@ -85,13 +87,14 @@ end
 gnsf = determine_input_nonlinearity_function( gnsf );
     
 gnsf.A_LO = [];
+gnsf.E_LO = [];
 gnsf.f_lo_expr = [];
 
-if print_info
-    disp(' ');
-    disp(['set up equivalent GNSF model with trivial matrices']);
-end
 check_reformulation(model, gnsf, print_info);
+if print_info
+    disp(['Success: Set up equivalent GNSF model with trivial matrices']);
+    disp(' ');
+end
 
 if print_info
     disp('-----------------------------------------------------------------------------------');

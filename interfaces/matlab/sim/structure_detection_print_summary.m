@@ -31,6 +31,10 @@ nz  = gnsf.nz;
 
 nx1 = gnsf.nx1;
 nx2 = gnsf.nx2;
+
+nz1 = gnsf.nz1;
+nz2 = gnsf.nz2;
+
 n_out = gnsf.n_out;
 ny = gnsf.ny;
 nuhat = gnsf.nuhat;
@@ -42,11 +46,18 @@ f_impl_old = initial_model.f_impl_expr;
 
 
 x = reordered_model.x;
+z = reordered_model.z;
 f_impl_expr = reordered_model.f_impl_expr;
 
 phi_current = gnsf.phi_expr;
 
 %% PRINT SUMMARY -- STRUCHTRE DETECTION
+disp(' ');
+disp('*********************************************************************************************');
+disp(' ');
+disp('******************        SUCCESS: GNSF STRUCTURE DETECTION COMPLETE !!!      **************');
+disp(' ');
+disp('*********************************************************************************************');
 disp(' ');
 disp(['========================= STRUCTURE DETECTION SUMMARY ====================================']);
 disp(' ');
@@ -63,13 +74,21 @@ disp(['nonlinearity phi from                             '...
     , sprintf('%6s', num2str(n_nodes_initial)), ' to ', sprintf('%6s', num2str(phi_current.n_nodes()))]);
 disp(' ');
 disp('----------- Linear Output System (LOS) ---------------');
+if gnsf.nx2 + gnsf.nz2 >0
+    disp(' ');
+    disp(['introduced Linear Output System of size           ', sprintf('%6s', num2str(gnsf.nx2 + gnsf.nz2)),'']);
+    disp(' ');
+end
 if gnsf.nx2 >0
-    disp(' ');
-    disp(['introduced Linear Output System of size           ', sprintf('%6s', num2str(gnsf.nx2)),'']);
-    disp(' ');
     disp('consisting of the states:');
     disp(' ');
     disp(x(gnsf.nx1+1:gnsf.nx));
+    disp(' ');
+end
+if gnsf.nz2 >0
+    disp('and algebraic variables:');
+    disp(' ');
+    disp(z(gnsf.nz1+1:gnsf.nz));
     disp(' ');
 end
 
@@ -103,21 +122,14 @@ print_casadi_expression(f_impl_expr);
 disp(' ');
 end
 
-if ~ isempty(reordered_model.equ_changed_sign)
-    disp(' ');
-    disp('--------------------------------------------------------------------------------------------------------');
-    disp(' ');
-    disp('During the reformulation we changed the signs (multiplied with -1) of the Equations with initial index');
-    disp(' ');
-    disp(reordered_model.equ_changed_sign);
-end
-
 %% print GNSF dimenstions
+format short
 disp('--------------------------------------------------------------------------------------------------------');
 disp(' ');
 disp('The dimensions of the GNSF reformulated model read as:');
 disp(' ');
-T_dim = table(nx, nu, nz, nx1, nx2, n_out, ny, nuhat);
+T_dim = table(nx, nu, nz, n_out, nx1, nz1, ny, nuhat, nx2, nz2);
 disp( T_dim )
+format short e
 
 end

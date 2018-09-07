@@ -52,8 +52,9 @@ static const casadi_int casadi_s2[20] = {1, 16, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0;
   a0=arg[0] ? arg[0][4] : 0;
+  a0=(-a0);
   if (res[0]!=0) res[0][0]=a0;
-  a0=1.;
+  a0=-1.;
   if (res[1]!=0) res[1][0]=a0;
   return 0;
 }

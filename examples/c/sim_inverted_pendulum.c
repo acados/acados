@@ -53,7 +53,7 @@ int main()
     const int nz    = 5;
 
     const int nx1   = 5;  // gnsf split
-    const int nx2   = 1;
+    const int nz1   = 5;
     const int n_out = 3;
     const int ny    = 8;
     const int nuhat = 1;
@@ -199,7 +199,7 @@ int main()
         2: IRK
         3: GNSF
                                 */
-	for (int nss = 2; nss < 3; nss++)
+	for (int nss = 2; nss < 4; nss++)
 	{
 		/************************************************
 		* sim plan & config
@@ -238,7 +238,7 @@ int main()
         {
             gnsf_dim = (sim_gnsf_dims *) dims;
             gnsf_dim->nx1   = nx1;
-            gnsf_dim->nx2   = nx2;
+            gnsf_dim->nz1   = nz1;
             gnsf_dim->ny    = ny;
             gnsf_dim->nuhat = nuhat;
             gnsf_dim->n_out = n_out;
@@ -256,7 +256,7 @@ int main()
         opts->ns                = 3;    // number of stages in rk integrator
         opts->num_steps         = 3;    // number of steps
         opts->sens_forw         = true;
-        opts->sens_adj          = false;
+        opts->sens_adj          = true;
         opts->output_z          = true;
         opts->sens_algebraic    = true;
         opts->sens_hess         = true;

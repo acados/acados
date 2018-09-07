@@ -32,7 +32,7 @@ import casadi.*
 
 % check invertibility of E11, E22; and reformulate if needed
 ind_11 = 1:gnsf.nx1;
-ind_22 = gnsf.nx1+1 : gnsf.nx1+gnsf.nz;
+ind_22 = gnsf.nx1+1 : gnsf.nx1+gnsf.nz1;
 
 if print_info
     disp(' ');
@@ -44,16 +44,15 @@ end
 %% check if E11, E22 are invertible
 
 if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
-        rank(gnsf.E( ind_22, ind_22)) ~= gnsf.nz ) 
+        rank(gnsf.E( ind_22, ind_22)) ~= gnsf.nz1 ) 
     
     % print warning (always)
     disp(['the rank of E11 or E22 is not full after the reformulation']);
     disp(' ');
     disp(['the script will try to reformulate the model with an invertible matrix instead']);
-    disp(['NOTE: this feature is not super stable and might need more testing!!!!!!']);
+    disp(['NOTE: this feature is based on a heuristic, it should be used with care!!!']);
     
     %% load models
-    x = gnsf.x;
     xdot = gnsf.xdot;
     z = gnsf.z;
     
@@ -67,10 +66,10 @@ if or( rank(gnsf.E( ind_11, ind_11)) ~= gnsf.nx1, ...
         if i == 1
             ind = 1:gnsf.nx1;
         else
-            ind = gnsf.nx1+1 : gnsf.nx1 + gnsf.nz;
+            ind = gnsf.nx1+1 : gnsf.nx1 + gnsf.nz1;
         end
         mat = gnsf.E(ind, ind);
-        if rank(mat) < length(ind)
+        while rank(mat) < length(ind)
             if print_info
                 disp(' ');
                 disp(['the rank of E',num2str(i),num2str(i),' is not full']);
@@ -120,6 +119,19 @@ else
     end
 end
 
-
+if det(gnsf.E_LO) == 0
+    disp('_______________________________________________________________________________________________________');
+    disp(' ');
+    disp('TAKE CARE ');
+    disp('E_LO matrix is NOT regular after automatic transcription!');
+    disp('->> this means the model CANNOT be used with the gnsf integrator');    
+    disp('->> it probably means that one entry (of xdot or z) that was moved to the linear output type system');
+    disp('    does not appear in the model at all (zero column in E_LO)');
+    disp(' OR: the columns of E_LO are linearly dependent ');
+    disp(' ');
+    disp(' SOLUTIONs: a) go through your model & check equations the method wanted to move to LOS');
+    disp('            b) deactivate the detect_LOS option');
+    disp('_______________________________________________________________________________________________________');
+end
 
 end

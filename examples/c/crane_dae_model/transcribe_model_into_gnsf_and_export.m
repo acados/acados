@@ -34,21 +34,23 @@
 % generated
 
 clc;
-clear all;
+clearvars;
 close all;
 
 addpath('../../../interfaces/matlab/sim/')
 
 %% Set options
-% default is 1 for all options
 print_info = 1;
 check_E_invertibility = 1;
+
 generate_reordered_model = 1;
 generate_gnsf_model = 1;
+generate_hess = 0;
 
 transcribe_opts = struct('print_info', print_info, 'check_E_invertibility',...
     check_E_invertibility, 'generate_reordered_model', generate_reordered_model, ...
     'generate_gnsf_model', generate_gnsf_model);
+transcribe_opts.generate_hess = generate_hess;
 
 
 %% define f_impl

@@ -31,9 +31,11 @@ import casadi.*
 
 if print_info
 disp(' ');
-disp('=================================================================');
-disp('========== Detect affine-linear dependencies   ==================');
-disp('=================================================================');
+disp('====================================================================');
+disp(' ');
+disp('============  Detect affine-linear dependencies   ==================');
+disp(' ');
+disp('====================================================================');
 disp(' ');
 end
 
@@ -58,8 +60,10 @@ n_nodes_current = gnsf.phi_expr.n_nodes();
 for ii = 1:length(gnsf.phi_expr)
     fii = gnsf.phi_expr(ii);
     for ix = 1:nx
+        var = x(ix);
+        varname = var.name;
         % symbolic jacobian of fii w.r.t. xi;
-        jac_fii_xi = jacobian(fii,x(ix));
+        jac_fii_xi = jacobian(fii,var);
         if jac_fii_xi.is_constant
             % jacobian value
             jac_fii_xi_fun = Function(['jac_fii_xi_fun'],...
@@ -69,7 +73,7 @@ for ii = 1:length(gnsf.phi_expr)
         else
             gnsf.A(ii, ix) = 0;
             if print_info
-                disp(['fii is nonlinear in x(ix) ii = ', num2str(ii),',  ix = ', num2str(ix)]);
+                disp(['phi(' num2str(ii) ') is nonlinear in x(', num2str(ix), ') = ' varname]);
                 disp(fii)
                 disp('-----------------------------------------------------');
             end
@@ -92,8 +96,6 @@ end
 % assert(n_nodes_current >= n_nodes_next,'n_nodes_current >= n_nodes_next FAILED')
 gnsf.phi_expr = f_next;
 
-% keyboard % here it fails for MX
-
 check_reformulation(model, gnsf, print_info);
 
 
@@ -103,9 +105,11 @@ n_nodes_current = gnsf.phi_expr.n_nodes();
 
 for ii = 1:length(gnsf.phi_expr)
     fii = gnsf.phi_expr(ii);
-    for iu = 1:length(u)
+    for iu = 1:nu
+        var = u(iu);
+        varname = var.name;
         % symbolic jacobian of fii w.r.t. ui;
-        jac_fii_ui = jacobian(fii, u(iu));
+        jac_fii_ui = jacobian(fii, var);
         if jac_fii_ui.is_constant % i.e. hessian is structural zero
             % jacobian value
             jac_fii_ui_fun = Function(['jac_fii_ui_fun'],...
@@ -114,7 +118,7 @@ for ii = 1:length(gnsf.phi_expr)
         else
             gnsf.B(ii, iu) = 0;
             if print_info
-                disp(['fii is nonlinear in u(iu) ii = ', num2str(ii),',  iu = ', num2str(iu)]);
+                disp(['phi(' num2str(ii) ') is nonlinear in u(', num2str(iu), ') = ' varname]);
                 disp(fii)
                 disp('-----------------------------------------------------');
             end
@@ -147,7 +151,9 @@ for ii = 1:length(gnsf.phi_expr)
     fii = gnsf.phi_expr(ii);
     for ik = 1:length(k)
         % symbolic jacobian of fii w.r.t. ui;
-        jac_fii_ki = jacobian(fii, k(ik));
+        var = k(ik);
+        varname = var.name;
+        jac_fii_ki = jacobian(fii, var);
         if jac_fii_ki.is_constant
             % jacobian value
             jac_fii_ki_fun = Function(['jac_fii_ki_fun'],...
@@ -156,7 +162,7 @@ for ii = 1:length(gnsf.phi_expr)
         else
             gnsf.E(ii, ik) = 0;
             if print_info
-                disp(['fii is nonlinear in k(ik) for ii = ', num2str(ii),',  ik = ', num2str(ik)]);
+                disp(['phi(' num2str(ii) ') is nonlinear in xdot_z(', num2str(ik), ') = ' varname]);
                 disp(fii)
                 disp('-----------------------------------------------------');
             end
@@ -192,16 +198,16 @@ for ii = 1:length(gnsf.phi_expr)
     else
         gnsf.c(ii) = 0;
         if print_info
-            disp(['fii is NOT constant for ii = ', num2str(ii)]);
+            disp(['phi(',num2str(ii),') is NOT constant']);
             disp(fii)
             disp('-----------------------------------------------------');
         end
     end
 end
 
-f_next = gnsf.phi_expr - gnsf.c;
-% f_next = f_next.simplify();
-n_nodes_next = f_next.n_nodes();
+gnsf.phi_expr = gnsf.phi_expr - gnsf.c;
+gnsf.phi_expr = gnsf.phi_expr.simplify();
+n_nodes_next = gnsf.phi_expr.n_nodes();
 
 if print_info
     fprintf('\n')
@@ -211,24 +217,22 @@ if print_info
           ' to ', num2str(n_nodes_next) ' nodes']);
 end
 
-gnsf.phi_expr = f_next;
 check_reformulation(model, gnsf, print_info);
 
 
 %% determine nonlinearity & corresponding matrix C
-%% Reduce dimension of f
+%% Reduce dimension of phi
 n_nodes_current = gnsf.phi_expr.n_nodes();
 ind_non_zero = [];
 for ii = 1:length(gnsf.phi_expr)
     fii = gnsf.phi_expr(ii);
     fii = fii.simplify();
     if ~fii.is_zero
-        ind_non_zero = [ind_non_zero, ii];
+        ind_non_zero = union(ind_non_zero, ii);
     end
 end
 
-clear f_next
-f_next = gnsf.phi_expr(ind_non_zero);
+gnsf.phi_expr = gnsf.phi_expr(ind_non_zero);
 
 % C
 gnsf.C = zeros(nx+nz, length(ind_non_zero));
@@ -236,16 +240,17 @@ for ii = 1:length(ind_non_zero)
     gnsf.C(ind_non_zero(ii), ii) = 1;
 end
 
-n_nodes_next = f_next.n_nodes();
+gnsf = determine_input_nonlinearity_function( gnsf );
+n_nodes_next = gnsf.phi_expr.n_nodes();
 
-% assert(n_nodes_current >= n_nodes_next,'n_nodes_current >= n_nodes_next FAILED')
-gnsf.phi_expr = f_next;
-gnsf.n_out = length(gnsf.phi_expr);
 
 if print_info
-    fprintf('\n')
-    disp(['determined matrix C:']);
+    disp(' ');
+    disp('determined matrix C:');
     disp(gnsf.C)
+    disp('---------------------------------------------------------------------------------');
+    disp('------------- Success: Affine linear terms detected -----------------------------');
+    disp('---------------------------------------------------------------------------------');
     disp(['reduced nonlinearity dimension n_out from  ', num2str(nx+nz),'   to  ', num2str(gnsf.n_out)]);
     disp(['reduced nodes in CasADi expr of nonlinearity from  ', num2str(n_nodes_current),...
           ' to ', num2str(n_nodes_next) ' nodes']);
@@ -255,7 +260,6 @@ if print_info
 end
 
 %% determine input of nonlinearity function
-gnsf = determine_input_nonlinearity_function( gnsf );
 
 check_reformulation(model, gnsf, print_info);
 
