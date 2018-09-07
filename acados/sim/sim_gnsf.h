@@ -204,11 +204,16 @@ typedef struct
 // memory
 typedef struct
 {
-    // scaled butcher table
+    // simulation time for one step
+    double dt;
+
+    // (scaled) butcher table
     double *A_dt;
     double *b_dt;
     double *c_butcher;
-    double dt;
+
+    // value used to initialize integration variables - corresponding to value of phi
+    double *phi_guess;  //  n_out
 
     // precomputed matrices
     struct blasfeo_dmat KKv;
