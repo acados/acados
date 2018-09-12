@@ -23,5 +23,6 @@ function build_acados {
 	[ "${BUILD_TYPE}" = 'Release' ] && cmake --build build --target install;
 }
 
-[ "${TRAVIS_OS_NAME}" = 'linux' ] && build_acados Debug;
+build_acados Debug;
+rm -r build;
 build_acados Release;
