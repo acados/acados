@@ -1,2 +1,2 @@
 #!/bin/bash -e
-pip3 install --user matplotlib;
+pip3 install --user numpy scipy matplotlib;
