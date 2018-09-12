@@ -4,7 +4,7 @@ ACADOS_INSTALL_DIR="${ACADOS_INSTALL_DIR:-${HOME}/acados}";
 function build_acados {
 	BUILD_TYPE="Debug";  # Release or Debug
 	UNIT_TESTS='ON';
-	if [ "${BUILD_TYPE}" = 'Release' ]; then
+	if [ "${1}" = 'Release' ]; then
 		BUILD_TYPE='Release';
 		UNIT_TESTS='OFF';
 	fi
