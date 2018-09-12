@@ -19,6 +19,7 @@ function build_acados {
 			..;
 	cmake --build build;
 	cmake -E chdir build ctest --output-on-failure;
+	[ $? -ne 0 ] && return 100;
 	# only install release version
 	[ "${BUILD_TYPE}" = 'Release' ] && cmake --build build --target install;
 }
