@@ -1,5 +1,2 @@
 #!/bin/bash -e
-which python;
-which pip3;
-python --version;
-pip install --user matplotlib;
+pip3 install --user matplotlib;
