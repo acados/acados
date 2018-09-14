@@ -37,31 +37,28 @@ import casadi.*
 y = [];
 % components of x1
 for ii = 1:gnsf.nx1
-    jac_xi = jacobian(gnsf.phi_expr, gnsf.x(ii));
-    if jac_xi.is_zero()  % i.e. f_current does not depend on x(ii);
-        % x(ii) is not part of y
-    else
+    if gnsf.phi_expr.which_depends(gnsf.x(ii))
         y = vertcat(y, gnsf.x(ii));
+    else
+        % x(ii) is not part of y
     end
 end
 
 % components of x1dot
 for ii = 1:gnsf.nx1
-    jac_xidot = jacobian(gnsf.phi_expr, gnsf.xdot(ii));
-    if jac_xidot.is_zero()  % i.e. f_current does not depend on xdot(ii);
-        % xdot(ii) is not part of y
-    else
+    if gnsf.phi_expr.which_depends(gnsf.xdot(ii))
         y = vertcat(y, gnsf.xdot(ii));
+    else
+        % xdot(ii) is not part of y
     end
 end
 
 % components of z
 for ii = 1:gnsf.nz1
-    jac_zi = jacobian(gnsf.phi_expr, gnsf.z(ii));
-    if jac_zi.is_zero()  % i.e. f_current does not depend on z(ii);
-        % xdot(ii) is not part of y
-    else
+    if gnsf.phi_expr.which_depends(gnsf.z(ii))
         y = vertcat(y, gnsf.z(ii));
+    else
+        % z(ii) is not part of y
     end
 end
 
@@ -69,11 +66,10 @@ end
 uhat = [];
 % components of u
 for ii = 1:gnsf.nu
-    jac_ui = jacobian(gnsf.phi_expr, gnsf.u(ii));
-    if jac_ui.is_zero()  % i.e. f_current does not depend on u(ii);
-        % u(ii) is not part of uhat
-    else
+    if gnsf.phi_expr.which_depends(gnsf.u(ii))
         uhat = vertcat(uhat, gnsf.u(ii));
+    else
+        % u(ii) is not part of uhat
     end
 end
 
