@@ -64,7 +64,7 @@ if class(x(1)) == 'casadi.SX'
     multiplier  = SX.sym('multiplier', length(x) + length(z));
     multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
     HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
-else if class(x(1)) == 'casadi.MX'
+elseif class(x(1)) == 'casadi.MX'
     multiplier  = MX.sym('multiplier', length(x) + length(z));
     multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
     HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
