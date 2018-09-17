@@ -20,6 +20,7 @@ matrix:
         - DEPLOY_NAME="osx-python"
     - name: Linux Python Interface Build
       os: linux
+      sudo: required
       dist: trusty
       env:
         - DEPLOY_NAME="linux-python"
