@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -e
+#!/bin/bash
 CASADI_VERSION='3.4.0';
 _CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
 CASADI_PYTHON_URL="${_CASADI_GITHUB_RELEASES}/casadi-linux-py35-v${CASADI_VERSION}-64bit.tar.gz";

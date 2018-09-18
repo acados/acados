@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 pushd "${TRAVIS_BUILD_DIR}/external/swig";
     ./autogen.sh;

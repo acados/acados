@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 ACADOS_INSTALL_DIR="${ACADOS_INSTALL_DIR:-${HOME}/acados}";
 DEPLOY_FOLDER="${DEPLOY_FOLDER:-${HOME}/deploy}";

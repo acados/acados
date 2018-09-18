@@ -1,4 +1,4 @@
-#!/usr/bin/env bash -e
+#!/bin/bash
 EIGEN_URL="http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz";
 
 pushd external;
