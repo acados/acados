@@ -114,13 +114,9 @@ typedef struct
     struct blasfeo_dmat LLx;
     struct blasfeo_dmat LLK;
 
-    struct blasfeo_dmat M2;
-    struct blasfeo_dmat dK2_dx2_work;
-
     int *ipivEE1;  // index of pivot vector
     int *ipivEE2;
     int *ipivQQ1;
-    int *ipivM2;
 
     // for algebraic sensitivity propagation
     struct blasfeo_dmat Q1;
@@ -229,7 +225,9 @@ typedef struct
     struct blasfeo_dmat ZZu;
 
     struct blasfeo_dmat ALO;
-    struct blasfeo_dmat M2inv;
+    struct blasfeo_dmat M2_LU;
+    int *ipivM2;
+
     struct blasfeo_dmat dK2_dx2;
 
     struct blasfeo_dmat Lu;
