@@ -22,11 +22,11 @@ function build_acados {
 			..;
 	if [ "${LINT}" = 'ON' ]; then
 		cmake --build build --target lint;
-		[ $? -ne 0 ] && return 110;
+		[ $? -ne 0 ] && exit 110;
 	fi
 	cmake --build build;
 	cmake -E chdir build ctest --output-on-failure;
-	[ $? -ne 0 ] && return 100;
+	[ $? -ne 0 ] && exit 100;
 	# only install release version
 	[ "${BUILD_TYPE}" = 'Release' ] && cmake --build build --target install;
 }
