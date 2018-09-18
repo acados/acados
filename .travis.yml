@@ -5,11 +5,15 @@ env:
     - ACADOS_INSTALL_DIR="${HOME}/acados"
     - DEPLOY_FOLDER="${HOME}/deploy"
 
+os: linux
+sudo: required
+dist: trusty
+
 addons:
   apt:
     sources:
-    - ubuntu-toolchain-r-test
-    - deadsnakes
+      - ubuntu-toolchain-r-test
+      - deadsnakes
 
 matrix:
   include:
@@ -18,14 +22,22 @@ matrix:
       osx_image: xcode9.4
       env:
         - DEPLOY_NAME="osx-python"
-    - name: Linux Python Interface Build
-      os: linux
-      sudo: required
-      dist: trusty
+    - name: Linux Python Interface Gcc6
       env:
         - DEPLOY_NAME="linux-python"
-        - CXX="g++-6"
-        - CC="gcc-6"
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+    - name: Linux Python Interface Gcc5
+      env:
+        - DEPLOY_NAME="linux-python"
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+    - name: Linux Python Interface Gcc4.9
+      env:
+        - DEPLOY_NAME="linux-python"
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+    - name: Linux Python Interface Clang
+      env:
+        - DEPLOY_NAME="linux-python"
+        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
 
 cache:
   ccache: true
@@ -33,6 +45,7 @@ cache:
       - "${CASADIPATH}"
 
 before_install:
+  - eval "${MATRIX_EVAL}"
   - SECTION='before_install'
   - export SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/${TRAVIS_OS_NAME}"
   - export SHARED_SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/shared"
