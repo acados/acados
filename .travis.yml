@@ -33,18 +33,23 @@ cache:
       - "${CASADIPATH}"
 
 before_install:
+  - SECTION='before_install'
   - export SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/${TRAVIS_OS_NAME}"
   - export SHARED_SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/shared"
+  - source "${SCRIPT_DIR}/dispatch.sh"
 
 install:
-  - source "${SCRIPT_DIR}/install.sh"
+  - SECTION='install'
+  - source "${SCRIPT_DIR}/dispatch.sh"
 
 script:
-  - source "${SCRIPT_DIR}/script.sh"
+  - SECTION='script'
+  - source "${SCRIPT_DIR}/dispatch.sh"
 
 after_success:
+  - SECTION='after_success'
   - mkdir -p "${DEPLOY_FOLDER}"
-  - source "${SCRIPT_DIR}/after_success.sh"
+  - source "${SCRIPT_DIR}/dispatch.sh"
 
 deploy:
   provider: releases
