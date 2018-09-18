@@ -167,8 +167,6 @@ typedef struct
     struct blasfeo_dmat dK1_du;
     struct blasfeo_dmat dZ_dx1;
     struct blasfeo_dmat dZ_du;
-    struct blasfeo_dmat aux_G2_x1;
-    struct blasfeo_dmat aux_G2_u;
     struct blasfeo_dmat J_G2_K1;
 
     struct blasfeo_dmat dK2_dx1;
@@ -178,7 +176,6 @@ typedef struct
     struct blasfeo_dmat S_forw_new;
     struct blasfeo_dmat S_forw;
 
-    struct blasfeo_dmat aux_G2_vv;
     struct blasfeo_dmat dPsi_dvv;
     struct blasfeo_dmat dPsi_dx;
     struct blasfeo_dmat dPsi_du;
@@ -193,7 +190,6 @@ typedef struct
     struct blasfeo_dmat f_LO_jac0; // (nx2+nz2) * (2*nx1 + nz1 + nu)
     struct blasfeo_dmat sens_z2_rhs; // (nx2 + nz2) * (nx1 + nu)
     int *ipiv_vv0;
-
 
 } gnsf_workspace;
 
