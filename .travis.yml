@@ -27,21 +27,21 @@ matrix:
         - DEPLOY_NAME="osx-python"
     - name: Linux Python Interface Gcc6
       env:
-        - DEPLOY_NAME="linux-python"
+        - DEPLOY_NAME="linux-python-gcc6"
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
     - name: Linux Python Interface Gcc5
       env:
-        - DEPLOY_NAME="linux-python"
+        - DEPLOY_NAME="linux-python-gcc5"
         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
     - name: Linux Python Interface Gcc4.9 and Matlab
       env:
-        - DEPLOY_NAME="linux-python"
+        - DEPLOY_NAME="linux-python-matlab-gcc49"
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
         - WITH_MATLAB="YES"
         - COVERAGE="lcov"
     - name: Linux Python Interface Clang
       env:
-        - DEPLOY_NAME="linux-python"
+        - DEPLOY_NAME="linux-python-clang37"
         - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
 
 cache:
