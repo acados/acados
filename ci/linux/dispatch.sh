@@ -12,5 +12,6 @@ elif [ "${SECTION}" = 'script' ]; then
 
 elif [ "${SECTION}" = 'after_success' ]; then
 	source "${SHARED_SCRIPT_DIR}/after_success_package_release.sh";
+	source "${SHARED_SCRIPT_DIR}/upload_coverage.sh";
 
 fi

@@ -1,5 +1,6 @@
 #!/bin/bash
 ACADOS_INSTALL_DIR="${ACADOS_INSTALL_DIR:-${HOME}/acados}";
+COVERAGE="${COVERAGE:-}";
 
 function build_acados {
 	BUILD_TYPE="Debug";  # Release or Debug
@@ -17,6 +18,7 @@ function build_acados {
 			-D CMAKE_BUILD_TYPE="${BUILD_TYPE}" \
 			-D UNIT_TESTS="${UNIT_TESTS}" \
 			-D CMAKE_INSTALL_PREFIX="${ACADOS_INSTALL_DIR}" \
+			-D COVERAGE="${COVERAGE}" \
 			-D SWIG_PYTHON=ON \
 			-D BUILD_SHARED_LIBS=ON \
 			..;
@@ -24,9 +26,14 @@ function build_acados {
 		cmake --build build --target lint;
 		[ $? -ne 0 ] && exit 110;
 	fi
+
 	cmake --build build;
 	cmake -E chdir build ctest --output-on-failure;
 	[ $? -ne 0 ] && exit 100;
+	if [ -n "${COVERAGE}" ]; then
+		cmake --build build --target acados_coverage || \
+		  echo "Coverage report not generated";
+	fi
 	# only install release version
 	[ "${BUILD_TYPE}" = 'Release' ] && cmake --build build --target install;
 }
