@@ -75,3 +75,5 @@ deploy:
   file_glob: true
   file: "${DEPLOY_FOLDER}/*"
   skip_cleanup: true
+  on:
+    tags: true
