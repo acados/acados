@@ -4,6 +4,8 @@ env:
     - CASADIPATH="${HOME}/casadi"
     - ACADOS_INSTALL_DIR="${HOME}/acados"
     - DEPLOY_FOLDER="${HOME}/deploy"
+    - secure: "B9Q1WeHmJcVETQAWiJUF8pvhSHaozsN2MnYTvknvnfU6nCVtHnA88fx/1mnLXhQV4dabhk9aaPztiTzV5BF/YXxInP6rfAmy4PRyaaXlkz115/TYXvcK33zbppDR0gSIYSLIUXT1RYT+r+MD2XOElbMTnyKlRR/tIAyLrk6Bhw6TE6TR/wuNs0RD6Qt3lquN3t9ZCrJ3E0Xc61LGheSGkMre0Rk1MHEMizBsQQcROdwF7T25n011tTodij/HouEVwz7KoplNcuZgYCaOfSLgnNG/dXBbJLw0jSn08ofRzXOxsO34DvWxW3uLN+qO/GOPEfEQGYeIgaQm5wHtLYHdDdailO+bITVNmkpyhOLnq2ZtV0iyIRPNrQyHKgC+sGadbsFD8dc4xDyG/mon7F+rfCkFpTs/NTr7u2vLMlDR3feCHH5q59Uo2+Z1PFDD2U9+inu8bHxxLiBe40vrso4kRmrWtTqZIpVtt0jKGCiJgZ/cc/lZr1Z+gonCO6ZZIqONUf6hWZ9rAb6iKgOmiuHHVArvlmsc9ccJ+ScOn/nkgNRdX35RRaD7cu6xFMDy3+LqQ9W+1fuUOBjAQzYE8VV2bCoji5njlQpMimyZ87s0/LYMtTVxoCjBtsTnT4iccsjOFMZaE5Y18cwA3nFaEbDmpNTDkMNm7mTTXPLFXM76VE4="
+    - secure: "Si4Cy1skAZfi8cex8ic7MhUEjDkYdwPmqLQTtaTMl3iM/K2agBXQTqn9seiG9L9TJXvRoK4YaTHAasQYCJNEGhM4dDJ/2yGAsfjNxhN053l6gYOJXDujZT/dozG/EnaHDmtfnO7YIZDvUunSwul7ivaIAPvwR2j6OtLzUo5QWSOYYWwzdyvoFy9g3lm2yf0RN7Mx2CCzkY1rmqPJwNF9yR2Rhbf20HDruJ2Ztk79sinoZ/q+gZFX50Sj7AoA+PrAOHmdMdG9wKnR7IX98gRBa+htdHPK0sr7uoFpXD+vfwPFh7LqFHdozdSZZlaCLW5tRB7WNNs9l6Lv+xMASRpfvV30iVqiG4KPxVg5/tJT35EEdSacFhXv9YIc9c4aa0ROFsoQKCAFxEjGzquoHPpQNZ5UNbIRRIxogvq+w+JiPhrwqTqVZX3ORSmMViY4kR/nPFgxvrRjiKxq+hsy8e1oLbosxZnj4uncRiJRwUBPQBK9WZAtRIdfoqWQAgIZ/xLUFdfVvXJaqrCMmUm82ssTSoksPJ0QOHpnN3N6XxZ/xUD7PHu5B4+jz9s01pim9A3hRCVEVODpN3kgnjcMTwKIQf/EDvZbqUFa88Ssq9XKwJn5ix6dnpkjO07Y6ZK7NiyoUc9wqZhlbNlZMn1UsHjC5g/EyUKGn/IvLhdmwIc2Rl0="
 
 os: linux
 sudo: required
@@ -31,10 +33,11 @@ matrix:
       env:
         - DEPLOY_NAME="linux-python"
         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
-    - name: Linux Python Interface Gcc4.9
+    - name: Linux Python Interface Gcc4.9 and Matlab
       env:
         - DEPLOY_NAME="linux-python"
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+        - WITH_MATLAB="YES"
         - COVERAGE="lcov"
     - name: Linux Python Interface Clang
       env:
