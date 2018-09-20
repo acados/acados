@@ -10,7 +10,6 @@ function build_acados {
 	LINT='ON';
 	if [ "${1}" = 'Release' ]; then
 		BUILD_TYPE='Release';
-		UNIT_TESTS='OFF';
 		LINT='OFF';
 	fi
 
