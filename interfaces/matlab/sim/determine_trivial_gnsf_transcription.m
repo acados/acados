@@ -57,9 +57,13 @@ nx = length(x);
 nz  = length(z);
 nu  = length(u);
 
+if isfield(model, 'p')
+    np = length(model.p);
+end
+
 %% initialize gnsf struct
 % dimensions
-gnsf = struct('nx', nx, 'nu', nu, 'nz', nz);
+gnsf = struct('nx', nx, 'nu', nu, 'nz', nz, 'np', np);
 gnsf.nx1 = nx;
 gnsf.nx2 = 0;
 gnsf.nz1 = nz;

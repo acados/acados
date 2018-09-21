@@ -35,6 +35,7 @@ nx2 = gnsf.nx2;
 nz1 = gnsf.nz1;
 nz2 = gnsf.nz2;
 
+np = gnsf.np;
 n_out = gnsf.n_out;
 ny = gnsf.ny;
 nuhat = gnsf.nuhat;
@@ -128,7 +129,7 @@ disp('--------------------------------------------------------------------------
 disp(' ');
 disp('The dimensions of the GNSF reformulated model read as:');
 disp(' ');
-T_dim = table(nx, nu, nz, n_out, nx1, nz1, ny, nuhat, nx2, nz2);
+T_dim = table(nx, nu, nz, np, nx1, nz1, n_out, ny, nuhat);
 disp( T_dim )
 format short e
 
