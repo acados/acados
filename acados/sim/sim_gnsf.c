@@ -386,8 +386,8 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
     int n_out   = dims->n_out;
     int ny      = dims->ny;
     // int nuhat   = dims->nuhat;
-    int nx2     = nx - nx1;
-    int nz2     = nz - nz1;
+    // int nx2     = nx - nx1;
+    // int nz2     = nz - nz1;
 
     int num_stages = opts->ns;
 
