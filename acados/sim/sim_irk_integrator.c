@@ -681,6 +681,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // copy last jacobian factorization into dG_dK_ss
             if (ss > 0 && opts->jac_reuse) {
                 blasfeo_dgecp(nK, nK, &dG_dK[ss-1], 0, 0, dG_dK_ss, 0, 0);
+                for (int ii = 0; ii < nK; ii++) {
+                    ipiv_ss[ii] = ipiv[nK*(ss-1) + ii];
+                }
             }
         }
         else

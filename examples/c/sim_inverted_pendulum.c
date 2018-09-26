@@ -250,7 +250,7 @@ int main()
         sim_rk_opts *opts = (sim_rk_opts *) opts_;
         config->opts_initialize_default(config, dims, opts);
 
-        opts->jac_reuse = false;        // jacobian reuse
+        opts->jac_reuse = true;        // jacobian reuse
         opts->newton_iter = 3;          // number of newton iterations per integration step
 
         opts->ns                = 3;    // number of stages in rk integrator
@@ -445,6 +445,12 @@ int main()
             printf("algebraic sensitivities \n");
             d_print_exp_mat(nz, NF, &out->S_algebraic[0], nz);
         }
+
+		if(opts->sens_hess){
+			double *S_hess = out->S_hess;
+			printf("S_hess: \n");
+			d_print_exp_mat(nx+nu, nx+nu, S_hess, nx+nu);
+		}
 
     #if 0
 		printf("\n");
