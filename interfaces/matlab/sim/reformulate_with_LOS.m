@@ -258,7 +258,8 @@ reordered_model.xdot = gnsf.xdot;
 reordered_model.z = gnsf.z;
 reordered_model.f_impl_expr = model.f_impl_expr([I_nsf_eq, I_LOS_eq]);
 
-f_LO = [];
+f_LO = SX.sym('f_LO',0,0);
+E_LO = [];
 %% rewrite I_LOS_eq as LOS
 for eq = I_LOS_eq
     i_LO = find( I_LOS_eq == eq );

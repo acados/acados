@@ -114,13 +114,9 @@ typedef struct
     struct blasfeo_dmat LLx;
     struct blasfeo_dmat LLK;
 
-    struct blasfeo_dmat M2;
-    struct blasfeo_dmat dK2_dx2_work;
-
     int *ipivEE1;  // index of pivot vector
     int *ipivEE2;
     int *ipivQQ1;
-    int *ipivM2;
 
     // for algebraic sensitivity propagation
     struct blasfeo_dmat Q1;
@@ -171,8 +167,6 @@ typedef struct
     struct blasfeo_dmat dK1_du;
     struct blasfeo_dmat dZ_dx1;
     struct blasfeo_dmat dZ_du;
-    struct blasfeo_dmat aux_G2_x1;
-    struct blasfeo_dmat aux_G2_u;
     struct blasfeo_dmat J_G2_K1;
 
     struct blasfeo_dmat dK2_dx1;
@@ -182,7 +176,6 @@ typedef struct
     struct blasfeo_dmat S_forw_new;
     struct blasfeo_dmat S_forw;
 
-    struct blasfeo_dmat aux_G2_vv;
     struct blasfeo_dmat dPsi_dvv;
     struct blasfeo_dmat dPsi_dx;
     struct blasfeo_dmat dPsi_du;
@@ -197,7 +190,6 @@ typedef struct
     struct blasfeo_dmat f_LO_jac0; // (nx2+nz2) * (2*nx1 + nz1 + nu)
     struct blasfeo_dmat sens_z2_rhs; // (nx2 + nz2) * (nx1 + nu)
     int *ipiv_vv0;
-
 
 } gnsf_workspace;
 
@@ -229,7 +221,9 @@ typedef struct
     struct blasfeo_dmat ZZu;
 
     struct blasfeo_dmat ALO;
-    struct blasfeo_dmat M2inv;
+    struct blasfeo_dmat M2_LU;
+    int *ipivM2;
+
     struct blasfeo_dmat dK2_dx2;
 
     struct blasfeo_dmat Lu;

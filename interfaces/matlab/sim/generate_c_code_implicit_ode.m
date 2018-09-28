@@ -58,18 +58,24 @@ jac_z       = jacobian(f_impl, z);
 
 
 %% generate hessian
-multiplier  = SX.sym('multiplier', length(x) + length(z));
-multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
-
 x_xdot_z_u = [x; xdot; z; u];
 
-HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
+if class(x(1)) == 'casadi.SX'
+    multiplier  = SX.sym('multiplier', length(x) + length(z));
+    multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
+    HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
+elseif class(x(1)) == 'casadi.MX'
+    multiplier  = MX.sym('multiplier', length(x) + length(z));
+    multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
+    HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
+end
 
 for ii = 1:length(f_impl)
     jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z_u);
     hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
     HESS = HESS + multiplier(ii) * hess_x_xdot_z;
 end
+
 HESS = HESS.simplify();
 HESS_multiplied = multiply_mat' * HESS * multiply_mat;
 HESS_multiplied = HESS_multiplied.simplify();

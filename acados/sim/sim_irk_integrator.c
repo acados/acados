@@ -659,6 +659,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 * Forward Sweep 
 *       - (simulation & forward sensitivities)
 ************************************************/
+    // set input for forward sweep
+    impl_ode_xdot_in.x = K;
+    impl_ode_z_in.x = K;
 
     // start the loop
     acados_tic(&timer);
@@ -674,6 +677,14 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             S_forw_ss = &S_forw[ss+1];
             // copy current S_forw into S_forw_ss
             blasfeo_dgecp(nx, nx + nu, &S_forw[ss], 0, 0, S_forw_ss, 0, 0);
+
+            // copy last jacobian factorization into dG_dK_ss
+            if (ss > 0 && opts->jac_reuse) {
+                blasfeo_dgecp(nK, nK, &dG_dK[ss-1], 0, 0, dG_dK_ss, 0, 0);
+                for (int ii = 0; ii < nK; ii++) {
+                    ipiv_ss[ii] = ipiv[nK*(ss-1) + ii];
+                }
+            }
         }
         else
         {
@@ -683,20 +694,16 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             ipiv_ss = ipiv;
             S_forw_ss = S_forw;
         }
-        // obtain Kn
-        impl_ode_xdot_in.x = K;
-        impl_ode_z_in.x = K;
+
+        if ( opts->sens_adj || opts->sens_hess )  // store current xn
+            blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
+
         for (int iter = 0; iter < newton_iter; iter++)
         {
             if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
             {
                 // if new jacobian gets computed, initialize dG_dK_ss with zeros
                 blasfeo_dgese(nK, nK, 0.0, dG_dK_ss, 0, 0);
-            }
-
-            if ( opts->sens_adj || opts->sens_hess )
-            {
-                blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
             }
 
             for (int ii = 0; ii < ns; ii++)
