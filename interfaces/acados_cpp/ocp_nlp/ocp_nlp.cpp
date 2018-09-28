@@ -10,6 +10,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 
 #include "acados_cpp/code_generator.hpp"
 #include "acados_cpp/ocp_bounds.hpp"
@@ -153,6 +154,11 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
     {
         ocp_nlp_sqp_config_initialize_default(config_.get());
         plan_->nlp_solver = SQP;
+    }
+    else if (solver_name == "rti")
+    {
+        ocp_nlp_sqp_rti_config_initialize_default(config_.get());
+        plan_->nlp_solver = SQP_RTI;
     }
     else
     {
