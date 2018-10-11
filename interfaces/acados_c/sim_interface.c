@@ -33,6 +33,10 @@
 
 #include "acados/utils/mem.h"
 
+
+
+/* config */
+
 sim_solver_config *sim_config_create(sim_solver_plan plan)
 {
     int bytes = sim_solver_config_calculate_size();
@@ -64,6 +68,31 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
     return solver_config;
 }
 
+
+
+void sim_config_set_nx(sim_solver_config *config, void *dims, int nx)
+{
+	config->set_nx(dims, nx);
+}
+
+
+
+void sim_config_set_nu(sim_solver_config *config, void *dims, int nu)
+{
+	config->set_nu(dims, nu);
+}
+
+
+
+void sim_config_free(void *config)
+{
+	free(config);
+}
+
+
+
+/* dims */
+
 void *sim_dims_create(void *config_)
 {
     sim_solver_config *config = (sim_solver_config *) config_;
@@ -76,6 +105,15 @@ void *sim_dims_create(void *config_)
     return dims;
 }
 
+
+
+void sim_dims_free(void *config)
+{
+	free(config);
+}
+
+
+
 sim_in *sim_in_create(sim_solver_config *config, void *dims)
 {
     int bytes = sim_in_calculate_size(config, dims);
@@ -87,12 +125,16 @@ sim_in *sim_in_create(sim_solver_config *config, void *dims)
     return in;
 }
 
+
+
 int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr)
 {
     int status = sim_set_model_internal(config, in->model, fun_type, fun_ptr);
 
     return status;
 }
+
+
 
 // NOTE(dimitris) not exposed to user, used by NLP interface too
 int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type,
@@ -137,6 +179,8 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
 
     return status;
 }
+
+
 
 sim_out *sim_out_create(sim_solver_config *config, void *dims)
 {
