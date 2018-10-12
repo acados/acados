@@ -4,6 +4,8 @@ import numpy as np
 from casadi import *
 from os import system
 
+from generate_wrapper import *
+
 #import faulthandler
 
 #faulthandler.enable()
@@ -61,17 +63,23 @@ class acados_integrator:
 		nu = 1
 
 		x = SX.sym('x', nx, 1)
-		ode_expr = -2*x
+		casadi_ode_expr = -2*x
 
 		# Form a function and generate C code
 		name = 'ode_expr'
-		ode_expr = Function(name, [x], [ode_expr], ['x'], ['ode_expr'])
-		cname = ode_expr.generate()
+		python_ode_expr = Function(name, [x], [casadi_ode_expr], ['x'], ['ode_expr'])
+		cname = python_ode_expr.generate()
+
+
+		## generate wrapper
+		generate_wrapper(name)
+
+
 
 		oname = 'model.so'
 #		system('gcc -fPIC -shared ' + cname + ' -o ' + oname)
 
-		system('gcc -fPIC -shared ode_expr.c wrapper.c -o ' + oname)
+		system('gcc -fPIC -shared '+name+'.c wrapper_'+name+'.c -o ' + oname)
 
 		## load model library
 		__model = CDLL('model.so')
