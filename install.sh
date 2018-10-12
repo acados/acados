@@ -18,9 +18,10 @@ tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave-v3.4.0
 wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
 mkdir -p casadi-py35-v3.4.0-64bit
 tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-py35-v3.4.0-64bit
-export PYTHONPATH=$(pwd)/casadi-py35-v3.4.0-64bit:$PYTHONPATH
+export CASADIPATH=$(pwd)/casadi-py35-v3.4.0-64bit
+export PYTHONPATH=$CASADIPATH:$PYTHONPATH
 # will not work with custom install dir
-export PYTHONPATH=~/local/lib:$PYTHONPATH
+export PYTHONPATH=/usr/local/lib:$PYTHONPATH
 
 wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
 mkdir -p casadi-matlabR2014b-v3.4.0
@@ -46,5 +47,5 @@ popd # external
 mkdir -p build
 pushd build
 cmake -D SWIG_MATLAB=1 -D SWIG_PYTHON=1 ..
-make install
+sudo make install
 popd # build
