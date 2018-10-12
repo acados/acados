@@ -145,6 +145,7 @@ class acados_integrator:
 		
 		self.__acados.sim_config_free(self.config)
 		self.__acados.sim_dims_free(self.dims)
+		self.__acados.external_function_casadi_free(self.ext_fun)
 
 
 
