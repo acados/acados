@@ -3,7 +3,7 @@ def generate_wrapper(user_name, acados_name):
 #	print(user_name)
 #	print(acados_name)
 
-	file = open("wrapper_"+user_name+".c", "w")
+	file = open("casadi_fun_ptr_getter.c", "w")
 
 	file.write("int "+user_name+"(const double** arg, double** res, int* iw, double* w, void* mem);\n")
 	file.write("int "+user_name+"_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);\n")
