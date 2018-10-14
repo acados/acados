@@ -12,20 +12,44 @@ from generate_wrapper import set_function_pointers
 
 
 
-#class acados_integrator_model:
-#	def __init__(self):
-#		
-#		self.type = 'explicit'
-#	
-#	def set(self, field, value):
-#		if field=='ode_expr':
-#			# call casadi codgen
-#		if field=='x':
-#			# set casadi variable x
-#		if field=='u':
-#			# set casadi variable u
-#		if field=='xdot':
-#			# set casadi variable xdot
+class acados_integrator_model:
+
+
+	def __init__(self):
+		
+		self.type = 'explicit'
+	
+
+	def set(self, field, value):
+
+		if field=='ode_expr':
+			self.ode_expr = value
+			self.user_fun_name = self.ode_expr.name()
+
+		if field=='x':
+			self.x = value
+
+		if field=='u':
+			self.u = value
+
+		if field=='xdot':
+			self.xdot = value
+	
+
+	def generate_lib(self, model_name):
+
+		self.lib_name = model_name + '.so'
+
+		# generate C code
+		casadi_opts = dict(casadi_int='int', casadi_real='double')
+		cname = self.ode_expr.generate(casadi_opts)
+
+		system('gcc -fPIC -shared ' + self.user_fun_name + '.c -o ' + self.lib_name)
+
+		## load model library
+		self.model = CDLL(self.lib_name)
+
+
 
 
 
@@ -49,7 +73,7 @@ from generate_wrapper import set_function_pointers
 
 class acados_integrator:
 #	def __init__(self, opts, model):
-	def __init__(self):
+	def __init__(self, model):
 		
 #		print(CasadiMeta.version())
 
@@ -62,23 +86,7 @@ class acados_integrator:
 		nx = 4
 		nu = 1
 
-		x = SX.sym('x', nx, 1)
-		casadi_ode_expr = -2*x
-
-		# Form a function and generate C code
-		user_fun_name = 'ode_expr'
-		python_ode_expr = Function(user_fun_name, [x], [casadi_ode_expr], ['x'], ['ode_expr'])
-		casadi_opts = dict(casadi_int='int', casadi_real='double')
-		cname = python_ode_expr.generate(casadi_opts)
-
-		model_name = 'model.so'
-		system('gcc -fPIC -shared '+user_fun_name+'.c -o ' + model_name)
-
-
-		## load model library
-		__model = CDLL(model_name)
-		self.__model = __model
-
+		self.__model = model.model
 
 
 		## external function
@@ -87,7 +95,7 @@ class acados_integrator:
 		self.ext_fun = ext_fun_struct
 
 		# set function pointers
-		set_function_pointers(__acados, model_name, user_fun_name, self.ext_fun)
+		set_function_pointers(__acados, model.lib_name, model.user_fun_name, self.ext_fun)
 
 		# create external function
 		__acados.external_function_casadi_create(self.ext_fun)
