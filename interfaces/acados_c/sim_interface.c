@@ -70,20 +70,6 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
 
 
 
-void sim_config_set_nx(sim_solver_config *config, void *dims, int nx)
-{
-	config->set_nx(dims, nx);
-}
-
-
-
-void sim_config_set_nu(sim_solver_config *config, void *dims, int nu)
-{
-	config->set_nu(dims, nu);
-}
-
-
-
 void sim_config_free(void *config)
 {
 	free(config);
@@ -107,12 +93,28 @@ void *sim_dims_create(void *config_)
 
 
 
-void sim_dims_free(void *config)
+void sim_dims_free(void *dims)
 {
-	free(config);
+	free(dims);
 }
 
 
+
+void sim_dims_set_nx(sim_solver_config *config, void *dims, int nx)
+{
+	config->set_nx(dims, nx);
+}
+
+
+
+void sim_dims_set_nu(sim_solver_config *config, void *dims, int nu)
+{
+	config->set_nu(dims, nu);
+}
+
+
+
+/* in */
 
 sim_in *sim_in_create(sim_solver_config *config, void *dims)
 {
@@ -123,6 +125,13 @@ sim_in *sim_in_create(sim_solver_config *config, void *dims)
     sim_in *in = sim_in_assign(config, dims, ptr);
 
     return in;
+}
+
+
+
+void sim_in_free(void *in)
+{
+	free(in);
 }
 
 
@@ -182,6 +191,30 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
 
 
 
+void sim_in_set_T(sim_solver_config *config, double T, sim_in *in)
+{
+
+	in->T = T;
+	return;
+
+}
+
+
+
+void sim_in_set_x(sim_solver_config *config, void *dims, double *x, sim_in *in)
+{
+	
+	int nx;
+	config->get_nx(dims, &nx);
+	int ii;
+	for (ii=0; ii<nx; ii++)
+		in->x[ii] = x[ii];
+	return;
+
+}
+
+
+
 sim_out *sim_out_create(sim_solver_config *config, void *dims)
 {
     int bytes = sim_out_calculate_size(config, dims);
@@ -192,6 +225,29 @@ sim_out *sim_out_create(sim_solver_config *config, void *dims)
 
     return out;
 }
+
+
+
+void sim_out_free(void *out)
+{
+	free(out);
+}
+
+
+
+void sim_out_get_xn(sim_solver_config *config, void *dims, sim_out *out, double *xn)
+{
+	
+	int nx;
+	config->get_nx(dims, &nx);
+	int ii;
+	for (ii=0; ii<nx; ii++)
+		xn[ii] = out->xn[ii];
+	return;
+
+}
+
+
 
 void *sim_opts_create(sim_solver_config *config, void *dims)
 {
@@ -206,6 +262,25 @@ void *sim_opts_create(sim_solver_config *config, void *dims)
     return opts;
 }
 
+
+
+void sim_opts_free(void *opts)
+{
+	free(opts);
+}
+
+
+
+void sim_opts_set_sens_forw(sim_rk_opts *opts, bool value)
+{
+
+	opts->sens_forw = value;
+	return;
+
+}
+
+
+
 int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 {
     int bytes = sizeof(sim_solver);
@@ -215,6 +290,8 @@ int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 
     return bytes;
 }
+
+
 
 sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void *raw_memory)
 {
@@ -240,6 +317,8 @@ sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void 
     return solver;
 }
 
+
+
 sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
 {
     // update Butcher tableau (needed if the user changed ns)
@@ -253,8 +332,18 @@ sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
     return solver;
 }
 
-int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out)
+
+
+void sim_free(void *solver)
 {
-    return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem,
+	free(solver);
+}
+
+
+
+int sim_solve(sim_solver *solver, sim_in *in, sim_out *out)
+{
+    int flag =  solver->config->evaluate(solver->config, in, out, solver->opts, solver->mem,
                                     solver->work);
+	return flag;
 }

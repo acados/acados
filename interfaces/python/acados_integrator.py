@@ -68,7 +68,8 @@ class acados_integrator:
 		# Form a function and generate C code
 		user_fun_name = 'ode_expr'
 		python_ode_expr = Function(user_fun_name, [x], [casadi_ode_expr], ['x'], ['ode_expr'])
-		cname = python_ode_expr.generate()
+		casadi_opts = dict(casadi_int='int', casadi_real='double')
+		cname = python_ode_expr.generate(casadi_opts)
 
 		model_name = 'model.so'
 		system('gcc -fPIC -shared '+user_fun_name+'.c -o ' + model_name)
@@ -102,25 +103,69 @@ class acados_integrator:
 		## dims
 		self.dims = cast(__acados.sim_dims_create(self.config), c_void_p)
 		print(self.dims)
-		__acados.sim_config_set_nx(self.config, self.dims, nx)
-		__acados.sim_config_set_nu(self.config, self.dims, nu)
+		__acados.sim_dims_set_nx(self.config, self.dims, nx)
+		__acados.sim_dims_set_nu(self.config, self.dims, nu)
 
 
 
 		## opts
-		self.opts = cast(__acados.sim_opts_create(self.config), c_void_p)
+		self.opts = cast(__acados.sim_opts_create(self.config, self.dims), c_void_p)
 		print(self.opts)
+		__acados.sim_opts_set_sens_forw(self.opts, 0)
 
 
-	
 
-	# TODO free stuff !!!!!!!!
+		## sim_in
+		self.sim_in = cast(__acados.sim_in_create(self.config, self.dims), c_void_p)
+		__acados.sim_in_set_T(self.config, c_double(0.05), self.sim_in)
+		__acados.sim_set_model(self.config, self.sim_in, "expl_ode_fun", self.ext_fun)
+		print(self.sim_in)
+
+
+
+		## sim_out
+		self.sim_out = cast(__acados.sim_out_create(self.config, self.dims), c_void_p)
+		print(self.sim_out)
+
+
+
+		## sim solver
+		self.solver = cast(__acados.sim_create(self.config, self.dims, self.opts), c_void_p)
+		print(self.solver)
+
+
+
+		# set x
+		x0 = np.array([1, 0, 2, -1])
+		print(x0)
+		tmp = np.ascontiguousarray(x0, dtype=np.float64)
+		tmp = cast(tmp.ctypes.data, POINTER(c_double))
+		__acados.sim_in_set_x(self.config, self.dims, tmp, self.sim_in)
+
+		# solve
+		flag = __acados.sim_solve(self.solver, self.sim_in, self.sim_out)
+		print(flag)
+
+		# get xn
+		xn = np.zeros((nx, 1))
+		tmp = cast(xn.ctypes.data, POINTER(c_double))
+		__acados.sim_out_get_xn(self.config, self.dims, self.sim_out, tmp)
+		print(xn)
+
+
+
+
+
+
 	def __del__(self):
 		
 		self.__acados.external_function_casadi_free(self.ext_fun)
 		self.__acados.sim_config_free(self.config)
-		self.__acados.sim_dims_free(self.dims)
-#		self.__acados.sim_opts_free(self.opts)
+		self.__acados.sim_dims_free(self.dims) # double free ???
+		self.__acados.sim_opts_free(self.opts)
+		self.__acados.sim_out_free(self.sim_in)
+		self.__acados.sim_in_free(self.sim_out)
+		self.__acados.sim_free(self.solver)
 
 
 
