@@ -4,7 +4,7 @@ import numpy as np
 from casadi import *
 from os import system
 
-from generate_wrapper import *
+from generate_wrapper import set_function_pointers
 
 #import faulthandler
 
@@ -66,16 +66,16 @@ class acados_integrator:
 		casadi_ode_expr = -2*x
 
 		# Form a function and generate C code
-		user_name = 'ode_expr'
-		python_ode_expr = Function(user_name, [x], [casadi_ode_expr], ['x'], ['ode_expr'])
+		user_fun_name = 'ode_expr'
+		python_ode_expr = Function(user_fun_name, [x], [casadi_ode_expr], ['x'], ['ode_expr'])
 		cname = python_ode_expr.generate()
 
-		oname = 'model.so'
-		system('gcc -fPIC -shared '+user_name+'.c -o ' + oname)
+		model_name = 'model.so'
+		system('gcc -fPIC -shared '+user_fun_name+'.c -o ' + model_name)
 
 
 		## load model library
-		__model = CDLL('model.so')
+		__model = CDLL(model_name)
 		self.__model = __model
 
 
@@ -85,53 +85,10 @@ class acados_integrator:
 		ext_fun_struct = cast(create_string_buffer(ext_fun_struct_size), c_void_p)
 		self.ext_fun = ext_fun_struct
 
-		## generate function pointers getter
-		acados_name = 'fun'
-		generate_wrapper(user_name, acados_name)
+		# set function pointers
+		set_function_pointers(__acados, model_name, user_fun_name, self.ext_fun)
 
-		oname = 'casadi_fun_getter.so'
-		system('gcc -fPIC -shared casadi_fun_ptr_getter.c -o ' + oname + ' -L. model.so')
-
-		__model_getter = CDLL('casadi_fun_getter.so')
-
-		# addressof does not work !
-#		tmp_ptr = cast(addressof(__model.expl_ode_fun_fun), c_void_p)
-#		print(tmp_ptr)
-		# pointer does not work !
-#		tmp_ptr = pointer(__model.expl_ode_fun_fun)
-#		print(tmp_ptr)
-#		print(addressof(tmp_ptr))
-		__model_getter.get_fun_fun.restype = c_void_p
-#		eval("__model.get_"+name+"_fun.restype = c_void_p")
-		tmp_ptr = __model_getter.get_fun_fun()
-		__acados.external_function_casadi_set_fun.argtypes = [c_void_p, c_void_p]
-		__acados.external_function_casadi_set_fun(self.ext_fun, tmp_ptr)
-
-		__model_getter.get_fun_work.restype = c_void_p
-		tmp_ptr = __model_getter.get_fun_work()
-		__acados.external_function_casadi_set_work.argtypes = [c_void_p, c_void_p]
-		__acados.external_function_casadi_set_work(self.ext_fun, tmp_ptr)
-
-		__model_getter.get_fun_sparsity_in.restype = c_void_p
-		tmp_ptr = __model_getter.get_fun_sparsity_in()
-		__acados.external_function_casadi_set_sparsity_in.argtypes = [c_void_p, c_void_p]
-		__acados.external_function_casadi_set_sparsity_in(self.ext_fun, tmp_ptr)
-
-		__model_getter.get_fun_sparsity_out.restype = c_void_p
-		tmp_ptr = __model_getter.get_fun_sparsity_out()
-		__acados.external_function_casadi_set_sparsity_out.argtypes = [c_void_p, c_void_p]
-		__acados.external_function_casadi_set_sparsity_out(self.ext_fun, tmp_ptr)
-
-		__model_getter.get_fun_n_in.restype = c_void_p
-		tmp_ptr = __model_getter.get_fun_n_in()
-		__acados.external_function_casadi_set_n_in.argtypes = [c_void_p, c_void_p]
-		__acados.external_function_casadi_set_n_in(self.ext_fun, tmp_ptr)
-
-		__model_getter.get_fun_n_out.restype = c_void_p
-		tmp_ptr = __model_getter.get_fun_n_out()
-		__acados.external_function_casadi_set_n_out.argtypes = [c_void_p, c_void_p]
-		__acados.external_function_casadi_set_n_out(self.ext_fun, tmp_ptr)
-
+		# create external function
 		__acados.external_function_casadi_create(self.ext_fun)
 
 
