@@ -18,13 +18,16 @@ class acados_integrator_model:
 	def __init__(self):
 		
 		self.type = 'explicit'
+		self.model_name = 'model'
+		self.x = SX.sym('x', 0, 1)
+		self.u = SX.sym('u', 0, 1)
+		self.xdot = SX.sym('xdot', 0, 1)
 	
 
 	def set(self, field, value):
 
 		if field=='ode_expr':
 			self.ode_expr = value
-			self.user_fun_name = self.ode_expr.name()
 
 		if field=='x':
 			self.x = value
@@ -34,20 +37,23 @@ class acados_integrator_model:
 
 		if field=='xdot':
 			self.xdot = value
+
+		if field=='model_name':
+			self.model_name = value
 	
 
-	def generate_lib(self, model_name):
-
-		self.lib_name = model_name + '.so'
-
-		# generate C code
-		casadi_opts = dict(casadi_int='int', casadi_real='double')
-		cname = self.ode_expr.generate(casadi_opts)
-
-		system('gcc -fPIC -shared ' + self.user_fun_name + '.c -o ' + self.lib_name)
-
-		## load model library
-		self.model = CDLL(self.lib_name)
+#	def generate_lib(self, model_name):
+#
+#		self.lib_name = model_name + '.so'
+#
+#		# generate C code
+#		casadi_opts = dict(casadi_int='int', casadi_real='double')
+#		cname = self.ode_expr.generate(casadi_opts)
+#
+#		system('gcc -fPIC -shared ' + self.user_fun_name + '.c -o ' + self.lib_name)
+#
+#		## load model library
+#		self.model = CDLL(self.lib_name)
 
 
 
@@ -82,11 +88,43 @@ class acados_integrator:
 		self.__acados = __acados
 
 
-		# nx
-		nx = 4
-		nu = 1
+		# sizes
+		nx = model.x.size()[0]
+		nu = model.u.size()[0]
 
-		self.__model = model.model
+
+		# define functions & generate C code
+		casadi_opts = dict(casadi_int='int', casadi_real='double')
+		c_sources = ' '
+
+		fun_name = 'expl_ode_fun'
+		fun = Function(fun_name, [model.x], [model.ode_expr])
+		fun.generate(casadi_opts)
+		c_sources = c_sources + fun_name + '.c '
+
+		jac_x_name = 'expl_ode_jac_x'
+		jac_x_expr = jacobian(model.ode_expr, model.x)
+		jac_x = Function(jac_x_name, [model.x], [jac_x_expr])
+		jac_x.generate(casadi_opts)
+		c_sources = c_sources + jac_x_name + '.c '
+
+		jac_u_name = 'expl_ode_jac_u'
+		jac_u_expr = jacobian(model.ode_expr, model.u)
+		jac_u = Function(jac_u_name, [model.u], [jac_u_expr])
+		jac_u.generate(casadi_opts)
+		c_sources = c_sources + jac_u_name + '.c '
+
+		# create model library
+		lib_name = model.model_name + '.so'
+		system('gcc -fPIC -shared ' + c_sources + ' -o ' + lib_name)
+
+		## load model library
+		self.__model = CDLL(lib_name)
+
+#		self.__model = model.model
+
+
+
 
 
 		## external function
@@ -95,7 +133,7 @@ class acados_integrator:
 		self.ext_fun = ext_fun_struct
 
 		# set function pointers
-		set_function_pointers(__acados, model.lib_name, model.user_fun_name, self.ext_fun)
+		set_function_pointers(__acados, lib_name, fun_name, self.ext_fun)
 
 		# create external function
 		__acados.external_function_casadi_create(self.ext_fun)
