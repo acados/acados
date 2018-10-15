@@ -193,24 +193,57 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
 
 void sim_in_set_T(sim_solver_config *config, double T, sim_in *in)
 {
-
 	in->T = T;
 	return;
-
 }
 
 
 
 void sim_in_set_x(sim_solver_config *config, void *dims, double *x, sim_in *in)
 {
-	
 	int nx;
 	config->get_nx(dims, &nx);
 	int ii;
 	for (ii=0; ii<nx; ii++)
 		in->x[ii] = x[ii];
 	return;
+}
 
+
+
+void sim_in_set_u(sim_solver_config *config, void *dims, double *u, sim_in *in)
+{
+	int nu;
+	config->get_nu(dims, &nu);
+	int ii;
+	for (ii=0; ii<nu; ii++)
+		in->u[ii] = u[ii];
+	return;
+}
+
+
+
+void sim_in_set_Sx(sim_solver_config *config, void *dims, double *Sx, sim_in *in)
+{
+	int nx;
+	config->get_nx(dims, &nx);
+	int ii;
+	for (ii=0; ii<nx*nx; ii++)
+		in->S_forw[ii] = Sx[ii];
+	return;
+}
+
+
+
+void sim_in_set_Su(sim_solver_config *config, void *dims, double *Su, sim_in *in)
+{
+	int nx, nu;
+	config->get_nx(dims, &nx);
+	config->get_nu(dims, &nu);
+	int ii;
+	for (ii=0; ii<nx*nu; ii++)
+		in->S_forw[nx*nx+ii] = Su[ii];
+	return;
 }
 
 
@@ -237,14 +270,37 @@ void sim_out_free(void *out)
 
 void sim_out_get_xn(sim_solver_config *config, void *dims, sim_out *out, double *xn)
 {
-	
 	int nx;
 	config->get_nx(dims, &nx);
 	int ii;
 	for (ii=0; ii<nx; ii++)
 		xn[ii] = out->xn[ii];
 	return;
+}
 
+
+
+void sim_out_get_Sxn(sim_solver_config *config, void *dims, sim_out *out, double *Sxn)
+{
+	int nx;
+	config->get_nx(dims, &nx);
+	int ii;
+	for (ii=0; ii<nx*nx; ii++)
+		Sxn[ii] = out->S_forw[ii];
+	return;
+}
+
+
+
+void sim_out_get_Sun(sim_solver_config *config, void *dims, sim_out *out, double *Sun)
+{
+	int nx, nu;
+	config->get_nx(dims, &nx);
+	config->get_nu(dims, &nu);
+	int ii;
+	for (ii=0; ii<nx*nu; ii++)
+		Sun[ii] = out->S_forw[nx*nx+ii];
+	return;
 }
 
 

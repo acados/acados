@@ -69,6 +69,12 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
                            void *fun_ptr);
 //
 void sim_in_set_x(sim_solver_config *config, void *dims, double *x, sim_in *in);
+//
+void sim_in_set_u(sim_solver_config *config, void *dims, double *u, sim_in *in);
+//
+void sim_in_set_Sx(sim_solver_config *config, void *dims, double *Sx, sim_in *in);
+//
+void sim_in_set_Su(sim_solver_config *config, void *dims, double *Su, sim_in *in);
 
 //
 sim_out *sim_out_create(sim_solver_config *config, void *dims);
@@ -76,6 +82,10 @@ sim_out *sim_out_create(sim_solver_config *config, void *dims);
 void sim_out_free(void *out);
 //
 void sim_out_get_xn(sim_solver_config *config, void *dims, sim_out *out, double *xn);
+//
+void sim_out_get_Sxn(sim_solver_config *config, void *dims, sim_out *out, double *Sxn);
+//
+void sim_out_get_Sun(sim_solver_config *config, void *dims, sim_out *out, double *Sun);
 
 //
 void *sim_opts_create(sim_solver_config *config, void *dims);

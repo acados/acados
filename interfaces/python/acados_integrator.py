@@ -94,10 +94,13 @@ class acados_integrator:
 			print('\nwrong opts scheme value!\n')
 			exit()
 
-		if not (opts.sens_forw=='false'):
+		if not ((opts.sens_forw=='true') | (opts.sens_forw=='false')):
 			print('\nwrong opts sens_forw value!\n')
 			exit()
 
+
+		self.scheme = opts.scheme
+		self.sens_forw = opts.sens_forw
 
 		
 #		print(CasadiMeta.version())
@@ -111,28 +114,35 @@ class acados_integrator:
 		self.nx = model.x.size()[0]
 		self.nu = model.u.size()[0]
 
+		nx = self.nx
+		nu = self.nu
+
 
 		# define functions & generate C code
-#		if opts.scheme=='erk'
 		casadi_opts = dict(casadi_int='int', casadi_real='double')
 		c_sources = ' '
 
-		fun_name = 'expl_ode_fun'
-		fun = Function(fun_name, [model.x], [model.ode_expr])
-		fun.generate(casadi_opts)
-		c_sources = c_sources + fun_name + '.c '
+		if opts.scheme=='erk':
 
-#		jac_x_name = 'expl_ode_jac_x'
-#		jac_x_expr = jacobian(model.ode_expr, model.x)
-#		jac_x = Function(jac_x_name, [model.x], [jac_x_expr])
-#		jac_x.generate(casadi_opts)
-#		c_sources = c_sources + jac_x_name + '.c '
+			if opts.sens_forw=='false':
 
-#		jac_u_name = 'expl_ode_jac_u'
-#		jac_u_expr = jacobian(model.ode_expr, model.u)
-#		jac_u = Function(jac_u_name, [model.u], [jac_u_expr])
-#		jac_u.generate(casadi_opts)
-#		c_sources = c_sources + jac_u_name + '.c '
+				fun_name = 'expl_ode_fun'
+				fun = Function(fun_name, [model.x, model.u], [model.ode_expr])
+				fun.generate(casadi_opts)
+				c_sources = c_sources + fun_name + '.c '
+
+			else:
+
+				fun_name = 'expl_vde_for'
+				Sx = SX.sym('Sx', nx, nx)
+				Su = SX.sym('Su', nx, nu)
+				vde_x = SX.zeros(nx, nx) + jtimes(model.ode_expr, model.x, Sx)
+
+				vde_u = SX.zeros(nx, nu) + jacobian(model.ode_expr, model.u) + jtimes(model.ode_expr, model.x, Su)
+				fun = Function(fun_name, [model.x, Sx, Su, model.u], [model.ode_expr, vde_x, vde_u])
+				fun.generate(casadi_opts)
+				c_sources = c_sources + fun_name + '.c '
+
 
 		# create model library
 		lib_name = model.model_name + '.so'
@@ -143,17 +153,30 @@ class acados_integrator:
 
 #		self.__model = model.model
 
-
 		## external function
-		ext_fun_struct_size = __acados.external_function_casadi_struct_size()
-		ext_fun_struct = cast(create_string_buffer(ext_fun_struct_size), c_void_p)
-		self.ext_fun = ext_fun_struct
+		if opts.scheme=='erk':
 
-		# set function pointers
-		set_function_pointers(__acados, lib_name, fun_name, self.ext_fun)
+			if opts.sens_forw=='false':
 
-		# create external function
-		__acados.external_function_casadi_create(self.ext_fun)
+				fun_name = 'expl_ode_fun'
+				ext_fun_struct_size = __acados.external_function_casadi_struct_size()
+				ext_fun_struct = cast(create_string_buffer(ext_fun_struct_size), c_void_p)
+				self.expl_ode_fun = ext_fun_struct
+				# set function pointers
+				set_function_pointers(__acados, lib_name, fun_name, self.expl_ode_fun)
+				# create external function
+				__acados.external_function_casadi_create(self.expl_ode_fun)
+
+			else:
+
+				fun_name = 'expl_vde_for'
+				ext_fun_struct_size = __acados.external_function_casadi_struct_size()
+				ext_fun_struct = cast(create_string_buffer(ext_fun_struct_size), c_void_p)
+				self.expl_vde_for = ext_fun_struct
+				# set function pointers
+				set_function_pointers(__acados, lib_name, fun_name, self.expl_vde_for)
+				# create external function
+				__acados.external_function_casadi_create(self.expl_vde_for)
 
 
 		## config
@@ -175,7 +198,22 @@ class acados_integrator:
 		## sim_in
 		self.sim_in = cast(__acados.sim_in_create(self.config, self.dims), c_void_p)
 		if opts.scheme=='erk':
-			__acados.sim_set_model(self.config, self.sim_in, "expl_ode_fun", self.ext_fun)
+			if opts.sens_forw=='false':
+				__acados.sim_set_model(self.config, self.sim_in, "expl_ode_fun", self.expl_ode_fun)
+			else:
+				__acados.sim_set_model(self.config, self.sim_in, "expl_vde_for", self.expl_vde_for)
+				# set Sx
+				Sx0 = np.zeros((nx, nx), order='F')
+				for ii in range(nx):
+					Sx0[ii][ii] = 1.0
+				tmp = np.ascontiguousarray(Sx0, dtype=np.float64)
+				tmp = cast(tmp.ctypes.data, POINTER(c_double))
+				self.__acados.sim_in_set_Sx(self.config, self.dims, tmp, self.sim_in)
+				# set Su
+				Su0 = np.zeros((nx, nu), order='F')
+				tmp = np.ascontiguousarray(Su0, dtype=np.float64)
+				tmp = cast(tmp.ctypes.data, POINTER(c_double))
+				self.__acados.sim_in_set_Su(self.config, self.dims, tmp, self.sim_in)
 
 		## sim_out
 		self.sim_out = cast(__acados.sim_out_create(self.config, self.dims), c_void_p)
@@ -213,15 +251,24 @@ class acados_integrator:
 			tmp = cast(value.ctypes.data, POINTER(c_double))
 			self.__acados.sim_out_get_xn(self.config, self.dims, self.sim_out, tmp)
 
+		if field=='Sxn':
+			value = np.zeros((self.nx, self.nx), order='F')
+			tmp = cast(value.ctypes.data, POINTER(c_double))
+			self.__acados.sim_out_get_Sxn(self.config, self.dims, self.sim_out, tmp)
+
 		return value
 
 
 
 	def __del__(self):
 		
-		self.__acados.external_function_casadi_free(self.ext_fun)
+		if self.scheme=='erk':
+			if self.sens_forw=='false':
+				self.__acados.external_function_casadi_free(self.expl_ode_fun)
+			else:
+				self.__acados.external_function_casadi_free(self.expl_vde_for)
 		self.__acados.sim_config_free(self.config)
-		self.__acados.sim_dims_free(self.dims) # double free ???
+		self.__acados.sim_dims_free(self.dims)
 		self.__acados.sim_opts_free(self.opts)
 		self.__acados.sim_out_free(self.sim_in)
 		self.__acados.sim_in_free(self.sim_out)

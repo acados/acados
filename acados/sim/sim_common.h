@@ -65,7 +65,7 @@ typedef struct
     double *xdot;   // xdot[NX] - initialization for state derivatives k within the integrator
     double *z;      // z[NZ] - initialization for algebraic variables z
 
-    double *S_forw;  // forward seed
+    double *S_forw;  // forward seed [Sx, Su]
     double *S_adj;   // backward seed
 
     void *model;

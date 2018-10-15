@@ -4,7 +4,7 @@ import time
 
 
 nx = 4
-nu = 1
+#nu = 0
 
 x = SX.sym('x', nx, 1)
 ode_expr = -2*x
@@ -27,7 +27,8 @@ start_time = time.time()    # start timer
 
 sim_opts = ai.acados_integrator_opts()
 sim_opts.set('scheme', 'erk')
-sim_opts.set('sens_forw', 'false')
+sim_opts.set('sens_forw', 'true')
+#sim_opts.set('sens_forw', 'false')
 
 end_time = time.time()      # stop timer
 print('sim_opts time {:e}'.format(end_time-start_time))
@@ -67,7 +68,9 @@ print(flag)
 start_time = time.time()    # start timer
 
 xn = sim.get('xn')
+Sxn = sim.get('Sxn')
 
 end_time = time.time()      # stop timer
 print('sim get xn time {:e}'.format(end_time-start_time))
 print(xn)
+print(Sxn)
