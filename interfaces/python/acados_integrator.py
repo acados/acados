@@ -199,9 +199,13 @@ class acados_integrator:
 		self.sim_in = cast(__acados.sim_in_create(self.config, self.dims), c_void_p)
 		if opts.scheme=='erk':
 			if opts.sens_forw=='false':
-				__acados.sim_set_model(self.config, self.sim_in, "expl_ode_fun", self.expl_ode_fun)
+				ext_fun = 'expl_ode_fun'
+				ext_fun_b = ext_fun.encode('utf-8')
+				flag = __acados.sim_set_model(self.config, self.sim_in, c_char_p(ext_fun_b), self.expl_ode_fun)
 			else:
-				__acados.sim_set_model(self.config, self.sim_in, "expl_vde_for", self.expl_vde_for)
+				ext_fun = 'expl_vde_for'
+				ext_fun_b = ext_fun.encode('utf-8')
+				flag = __acados.sim_set_model(self.config, self.sim_in, c_char_p(ext_fun_b), self.expl_vde_for)
 				# set Sx
 				Sx0 = np.zeros((nx, nx), order='F')
 				for ii in range(nx):
@@ -214,6 +218,9 @@ class acados_integrator:
 				tmp = np.ascontiguousarray(Su0, dtype=np.float64)
 				tmp = cast(tmp.ctypes.data, POINTER(c_double))
 				self.__acados.sim_in_set_Su(self.config, self.dims, tmp, self.sim_in)
+			if flag!=0:
+				print("\nwrong set model name in acados\n")
+				exit()
 
 		## sim_out
 		self.sim_out = cast(__acados.sim_out_create(self.config, self.dims), c_void_p)
