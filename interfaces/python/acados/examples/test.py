@@ -8,24 +8,22 @@ nx = 4
 #nu = 0
 
 x = SX.sym('x', nx, 1)
-ode_expr = -2*x
-    
-s_expr = ode_expr.serialize()
-import pdb; pdb.set_trace()
-file = open("serialized_fun.txt", "r") 
-serialized_fun = file.read() 
-deserialized_fun = Function.deserialize(serialized_fun)
-print(deserialized_fun)
-print(deserialized_fun(2))
-# pkl.dump( ode_expr, open( "save.p", "wb" ) )
+xdot = SX.sym('xdot', nx, 1)
+
+expl_ode_expr = -2*x
+impl_ode_expr = xdot - expl_ode_expr
 
 start_time = time.time()    # start timer
 
 sim_model = ai.acados_integrator_model()
-sim_model.set('type', 'explicit')
-sim_model.set('ode_expr', ode_expr)
+#sim_model.set('type', 'explicit')
+sim_model.set('type', 'implicit')
+#sim_model.set('ode_expr', expl_ode_expr)
+sim_model.set('ode_expr', impl_ode_expr)
 sim_model.set('x', x)
-sim_model.set('model_name', 'model')
+sim_model.set('xdot', xdot)
+#sim_model.set('model_name', 'expl_model')
+sim_model.set('model_name', 'impl_model')
 
 end_time = time.time()      # stop timer
 print('sim_model time {:e}'.format(end_time-start_time))
@@ -35,7 +33,8 @@ print('sim_model time {:e}'.format(end_time-start_time))
 start_time = time.time()    # start timer
 
 sim_opts = ai.acados_integrator_opts()
-sim_opts.set('scheme', 'erk')
+#sim_opts.set('scheme', 'erk')
+sim_opts.set('scheme', 'irk')
 sim_opts.set('sens_forw', 'true')
 #sim_opts.set('sens_forw', 'false')
 
@@ -56,7 +55,9 @@ print('sim create time {:e}'.format(end_time-start_time))
 start_time = time.time()    # start timer
 
 x0 = np.array([1, 0, 2, -1])
+xdot0 = x0 + 2*x0
 sim.set('x', x0)
+sim.set('xdot', xdot0)
 sim.set('t', 0.05)
 
 end_time = time.time()      # stop timer

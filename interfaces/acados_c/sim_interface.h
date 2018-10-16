@@ -70,6 +70,8 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
 //
 void sim_in_set_x(sim_solver_config *config, void *dims, double *x, sim_in *in);
 //
+void sim_in_set_xdot(sim_solver_config *config, void *dims, double *xdot, sim_in *in);
+//
 void sim_in_set_u(sim_solver_config *config, void *dims, double *u, sim_in *in);
 //
 void sim_in_set_Sx(sim_solver_config *config, void *dims, double *Sx, sim_in *in);

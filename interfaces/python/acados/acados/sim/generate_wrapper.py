@@ -15,6 +15,7 @@ def generate_getter(user_fun_name):
 	file.write("int "+user_fun_name+"_n_in(void);\n")
 	file.write("int "+user_fun_name+"_n_out(void);\n")
 	file.write("\n")
+#	file.write("void *get_fun_fun() { return &"+user_fun_name+"; }\n")
 	file.write("void *get_fun_fun() { return &"+user_fun_name+"; }\n")
 	file.write("void *get_fun_work() { return &"+user_fun_name+"_work; }\n")
 	file.write("void *get_fun_sparsity_in() { return &"+user_fun_name+"_sparsity_in; }\n")
@@ -29,17 +30,21 @@ def generate_getter(user_fun_name):
 
 def set_function_pointers(acados, model_name, user_fun_name, acados_ext_fun):
 	
+#	print(user_fun_name)
+
 	# generate function pointers getter
 	generate_getter(user_fun_name)
 
 	# compile and load shared library
-	model_getter_name = 'casadi_fun_getter.so'
+	model_getter_name = user_fun_name + '_getter.so'
+#	model_getter_name = 'fun_getter.so' # XXX it needs an unique name !!!
 	system('gcc -fPIC -shared casadi_fun_ptr_getter.c -o ' + model_getter_name + ' -L. ' + model_name)
 	model_getter = CDLL(model_getter_name)
 
 	# set up function pointers
 	model_getter.get_fun_fun.restype = c_void_p
 	tmp_ptr = model_getter.get_fun_fun()
+#	print(tmp_ptr)
 	acados.external_function_casadi_set_fun.argtypes = [c_void_p, c_void_p]
 	acados.external_function_casadi_set_fun(acados_ext_fun, tmp_ptr)
 
@@ -67,6 +72,9 @@ def set_function_pointers(acados, model_name, user_fun_name, acados_ext_fun):
 	tmp_ptr = model_getter.get_fun_n_out()
 	acados.external_function_casadi_set_n_out.argtypes = [c_void_p, c_void_p]
 	acados.external_function_casadi_set_n_out(acados_ext_fun, tmp_ptr)
+
+	system('rm casadi_fun_ptr_getter.c')
+	system('rm ' + model_getter_name)
 
 
 

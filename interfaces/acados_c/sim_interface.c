@@ -166,9 +166,9 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         /* implicit model */
     else if (!strcmp(fun_type, "impl_ode_fun"))
         status = config->model_set_function(model, IMPL_ODE_FUN, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot"))
+    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot")) // TODO update with z !!!
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u"))
+    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u")) // TODO update with z !!!
         status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot_u"))
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT_U, fun_ptr);
@@ -206,6 +206,18 @@ void sim_in_set_x(sim_solver_config *config, void *dims, double *x, sim_in *in)
 	int ii;
 	for (ii=0; ii<nx; ii++)
 		in->x[ii] = x[ii];
+	return;
+}
+
+
+
+void sim_in_set_xdot(sim_solver_config *config, void *dims, double *xdot, sim_in *in)
+{
+	int nx;
+	config->get_nx(dims, &nx);
+	int ii;
+	for (ii=0; ii<nx; ii++)
+		in->xdot[ii] = xdot[ii];
 	return;
 }
 
