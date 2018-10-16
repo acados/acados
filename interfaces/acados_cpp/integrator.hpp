@@ -7,7 +7,8 @@
 #include <vector>
 
 #include "acados/sim/sim_common.h"
-
+// TODO(oj): try to only use C interface, i.e. remove line above and use void pointers
+// @tobi: or what do u think?
 namespace acados
 {
 class integrator

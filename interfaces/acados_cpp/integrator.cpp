@@ -112,13 +112,14 @@ std::map<std::string, option_t *> integrator::integrate( std::map<std::string, o
 integrator::~integrator()
 {
     // @ tobi, do we need the special free functions that just wrap free basically?!
-    // sim_free((void *) _solver)
-    free(_config);
-    free(_dims);
-    free(_opts);
-    free(_in);
-    free(_out);
-    free(_solver);
+    // edit: talked with giaf about this. we should try to just use sim_interface basicalle
+    //      to decouple from core.
+    sim_config_free(_config);
+    sim_dims_free(_dims);
+    sim_opts_free(_opts);
+    sim_in_free(_in);
+    sim_out_free(_out);
+    sim_free(_solver);
 }
 
 // Todo: modify this, such that only expression is taken.
