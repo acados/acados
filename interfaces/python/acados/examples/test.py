@@ -1,5 +1,5 @@
 from casadi import *
-import acados_integrator as ai
+import acados.sim as ai
 import time
 
 
