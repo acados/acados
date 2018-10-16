@@ -14,7 +14,7 @@ classdef acados_integrator_model
 		end
 
 		function set(obj, field, value)
-            obj.py_acados_intergrator_model.set(field, value);
+            obj.py_acados_integrator_model.set(field, value);
 		end
 	end
 end
