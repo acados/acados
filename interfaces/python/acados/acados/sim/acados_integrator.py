@@ -4,7 +4,7 @@ import numpy as np
 from casadi import *
 from os import system
 
-from generate_wrapper import set_function_pointers
+from acados.sim.generate_wrapper import set_function_pointers
 
 #import faulthandler
 
