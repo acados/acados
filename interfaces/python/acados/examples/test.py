@@ -1,5 +1,6 @@
 from casadi import *
 import acados.sim as ai
+import pickle as pkl
 import time
 
 
@@ -8,7 +9,15 @@ nx = 4
 
 x = SX.sym('x', nx, 1)
 ode_expr = -2*x
-
+    
+s_expr = ode_expr.serialize()
+import pdb; pdb.set_trace()
+file = open("serialized_fun.txt", "r") 
+serialized_fun = file.read() 
+deserialized_fun = Function.deserialize(serialized_fun)
+print(deserialized_fun)
+print(deserialized_fun(2))
+# pkl.dump( ode_expr, open( "save.p", "wb" ) )
 
 start_time = time.time()    # start timer
 
