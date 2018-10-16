@@ -33,6 +33,10 @@
 
 #include "acados/utils/mem.h"
 
+
+
+/* config */
+
 sim_solver_config *sim_config_create(sim_solver_plan plan)
 {
     int bytes = sim_solver_config_calculate_size();
@@ -64,6 +68,17 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
     return solver_config;
 }
 
+
+
+void sim_config_free(void *config)
+{
+	free(config);
+}
+
+
+
+/* dims */
+
 void *sim_dims_create(void *config_)
 {
     sim_solver_config *config = (sim_solver_config *) config_;
@@ -76,6 +91,31 @@ void *sim_dims_create(void *config_)
     return dims;
 }
 
+
+
+void sim_dims_free(void *dims)
+{
+	free(dims);
+}
+
+
+
+void sim_dims_set_nx(sim_solver_config *config, void *dims, int nx)
+{
+	config->set_nx(dims, nx);
+}
+
+
+
+void sim_dims_set_nu(sim_solver_config *config, void *dims, int nu)
+{
+	config->set_nu(dims, nu);
+}
+
+
+
+/* in */
+
 sim_in *sim_in_create(sim_solver_config *config, void *dims)
 {
     int bytes = sim_in_calculate_size(config, dims);
@@ -87,12 +127,23 @@ sim_in *sim_in_create(sim_solver_config *config, void *dims)
     return in;
 }
 
+
+
+void sim_in_free(void *in)
+{
+	free(in);
+}
+
+
+
 int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr)
 {
     int status = sim_set_model_internal(config, in->model, fun_type, fun_ptr);
 
     return status;
 }
+
+
 
 // NOTE(dimitris) not exposed to user, used by NLP interface too
 int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type,
@@ -115,9 +166,9 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         /* implicit model */
     else if (!strcmp(fun_type, "impl_ode_fun"))
         status = config->model_set_function(model, IMPL_ODE_FUN, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot"))
+    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot")) // TODO update with z !!!
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u"))
+    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u")) // TODO update with z !!!
         status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot_u"))
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT_U, fun_ptr);
@@ -138,6 +189,77 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
     return status;
 }
 
+
+
+void sim_in_set_T(sim_solver_config *config, double T, sim_in *in)
+{
+	in->T = T;
+	return;
+}
+
+
+
+void sim_in_set_x(sim_solver_config *config, void *dims, double *x, sim_in *in)
+{
+	int nx;
+	config->get_nx(dims, &nx);
+	int ii;
+	for (ii=0; ii<nx; ii++)
+		in->x[ii] = x[ii];
+	return;
+}
+
+
+
+void sim_in_set_xdot(sim_solver_config *config, void *dims, double *xdot, sim_in *in)
+{
+	int nx;
+	config->get_nx(dims, &nx);
+	int ii;
+	for (ii=0; ii<nx; ii++)
+		in->xdot[ii] = xdot[ii];
+	return;
+}
+
+
+
+void sim_in_set_u(sim_solver_config *config, void *dims, double *u, sim_in *in)
+{
+	int nu;
+	config->get_nu(dims, &nu);
+	int ii;
+	for (ii=0; ii<nu; ii++)
+		in->u[ii] = u[ii];
+	return;
+}
+
+
+
+void sim_in_set_Sx(sim_solver_config *config, void *dims, double *Sx, sim_in *in)
+{
+	int nx;
+	config->get_nx(dims, &nx);
+	int ii;
+	for (ii=0; ii<nx*nx; ii++)
+		in->S_forw[ii] = Sx[ii];
+	return;
+}
+
+
+
+void sim_in_set_Su(sim_solver_config *config, void *dims, double *Su, sim_in *in)
+{
+	int nx, nu;
+	config->get_nx(dims, &nx);
+	config->get_nu(dims, &nu);
+	int ii;
+	for (ii=0; ii<nx*nu; ii++)
+		in->S_forw[nx*nx+ii] = Su[ii];
+	return;
+}
+
+
+
 sim_out *sim_out_create(sim_solver_config *config, void *dims)
 {
     int bytes = sim_out_calculate_size(config, dims);
@@ -148,6 +270,52 @@ sim_out *sim_out_create(sim_solver_config *config, void *dims)
 
     return out;
 }
+
+
+
+void sim_out_free(void *out)
+{
+	free(out);
+}
+
+
+
+void sim_out_get_xn(sim_solver_config *config, void *dims, sim_out *out, double *xn)
+{
+	int nx;
+	config->get_nx(dims, &nx);
+	int ii;
+	for (ii=0; ii<nx; ii++)
+		xn[ii] = out->xn[ii];
+	return;
+}
+
+
+
+void sim_out_get_Sxn(sim_solver_config *config, void *dims, sim_out *out, double *Sxn)
+{
+	int nx;
+	config->get_nx(dims, &nx);
+	int ii;
+	for (ii=0; ii<nx*nx; ii++)
+		Sxn[ii] = out->S_forw[ii];
+	return;
+}
+
+
+
+void sim_out_get_Sun(sim_solver_config *config, void *dims, sim_out *out, double *Sun)
+{
+	int nx, nu;
+	config->get_nx(dims, &nx);
+	config->get_nu(dims, &nu);
+	int ii;
+	for (ii=0; ii<nx*nu; ii++)
+		Sun[ii] = out->S_forw[nx*nx+ii];
+	return;
+}
+
+
 
 void *sim_opts_create(sim_solver_config *config, void *dims)
 {
@@ -162,6 +330,25 @@ void *sim_opts_create(sim_solver_config *config, void *dims)
     return opts;
 }
 
+
+
+void sim_opts_free(void *opts)
+{
+	free(opts);
+}
+
+
+
+void sim_opts_set_sens_forw(sim_rk_opts *opts, bool value)
+{
+
+	opts->sens_forw = value;
+	return;
+
+}
+
+
+
 int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 {
     int bytes = sizeof(sim_solver);
@@ -171,6 +358,8 @@ int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 
     return bytes;
 }
+
+
 
 sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void *raw_memory)
 {
@@ -196,6 +385,8 @@ sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void 
     return solver;
 }
 
+
+
 sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
 {
     // update Butcher tableau (needed if the user changed ns)
@@ -209,8 +400,18 @@ sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
     return solver;
 }
 
-int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out)
+
+
+void sim_free(void *solver)
 {
-    return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem,
+	free(solver);
+}
+
+
+
+int sim_solve(sim_solver *solver, sim_in *in, sim_out *out)
+{
+    int flag =  solver->config->evaluate(solver->config, in, out, solver->opts, solver->mem,
                                     solver->work);
+	return flag;
 }

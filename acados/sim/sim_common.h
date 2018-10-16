@@ -31,6 +31,8 @@
 // maximum number of integration stages
 #define NS_MAX 15
 
+
+
 typedef enum {
     // ERK and LIFTED_ERK
     EXPL_ODE_FUN,
@@ -51,6 +53,8 @@ typedef enum {
     LO_FUN
 } sim_function_t;
 
+
+
 typedef struct
 {
     void *dims;
@@ -61,7 +65,7 @@ typedef struct
     double *xdot;   // xdot[NX] - initialization for state derivatives k within the integrator
     double *z;      // z[NZ] - initialization for algebraic variables z
 
-    double *S_forw;  // forward seed
+    double *S_forw;  // forward seed [Sx, Su]
     double *S_adj;   // backward seed
 
     void *model;
@@ -70,12 +74,16 @@ typedef struct
 
 } sim_in;
 
+
+
 typedef struct
 {
     double CPUtime;  // in seconds
     double LAtime;   // in seconds
     double ADtime;   // in seconds
 } sim_info;
+
+
 
 typedef struct
 {
@@ -92,6 +100,8 @@ typedef struct
 
     sim_info *info;
 } sim_out;
+
+
 
 typedef struct
 {
@@ -123,6 +133,8 @@ typedef struct
 
 } sim_rk_opts;
 
+
+
 typedef struct
 {
     int (*evaluate)(void *config, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
@@ -140,6 +152,8 @@ typedef struct
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
     // getters & setters
+	// TODO add dim_ to the name!!!
+	// TODO getters returining int ???
     void (*get_nx)(void *dims_, int *nx);
     void (*get_nu)(void *dims_, int *nu);
     void (*get_nz)(void *dims_, int *nz);
@@ -147,6 +161,8 @@ typedef struct
     void (*set_nu)(void *dims_, int nu);
     void (*set_nz)(void *dims_, int nz);
 } sim_solver_config;
+
+
 
 //
 int sim_solver_config_calculate_size();
