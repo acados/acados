@@ -187,7 +187,7 @@ outputs:
 
 // function and jacobians of implicit ode model
 
-external function: impl_ode_fun_jac_x_xdot
+external function: impl_ode_fun_jac_x_xdot_z
 
 inputs:
 0) [x]    size: nx    type: BLASFEO_DVEC
@@ -199,12 +199,13 @@ outputs:
 0) [fun]        size: nx       type: BLASFEO_DVEC_ARGS
 1) [jac_x]      size: nx*nx    type: BLASFEO_DMAT
 2) [jac_xdot]   size: nx*nx    type: BLASFEO_DMAT
+2) [jac_z]      size: nx*nz    type: BLASFEO_DMAT
 
 
 
 // jacobians of implicit ode model
 
-external function: impl_ode_jac_x_xdot_u
+external function: impl_ode_jac_x_xdot_u_z
 
 inputs:
 0) [x]    size: nx    type: BLASFEO_DVEC
@@ -217,6 +218,7 @@ outputs:
 0) [jac_x]      size: nx*nx    type: BLASFEO_DMAT
 1) [jac_xdot]   size: nx*nx    type: BLASFEO_DMAT
 2) [jac_u]      size: nx*nu    type: BLASFEO_DMAT
+3) [jac_z]      size: nx*nz    type: BLASFEO_DMAT
 
 
 // hessian function of implicit ode model
