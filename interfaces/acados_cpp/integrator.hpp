@@ -19,7 +19,7 @@ class integrator
 
     virtual int num_stages() = 0;
 
-    virtual ~integrator() = 0;
+    ~integrator();
 
 private:
     sim_solver_config* _config;

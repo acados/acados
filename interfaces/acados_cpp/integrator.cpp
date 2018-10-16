@@ -13,6 +13,7 @@ using std::map;
 using std::string;
 using std::vector;
 
+/* CONSTRUCTOR */
 integrator::integrator(const casadi::Function &model_fun, std::map<std::string, option_t *> options = {})
 {
     if (!is_valid_model(model)) throw std::invalid_argument("Model is invalid.");
@@ -78,6 +79,7 @@ integrator::integrator(const casadi::Function &model_fun, std::map<std::string, 
     _out = sim_out_create(_config, dims);
 
     // TODO: generate and set model
+    // use external_function_generic stuff
 
 
     _solver = sim_create(config, dims, opts);
@@ -87,16 +89,39 @@ integrator::integrator(const casadi::Function &model_fun, std::map<std::string, 
 
 std::map<std::string, option_t *> integrator::integrate( std::map<std::string, option_t *> in )
 {
-    // TODO: set x0, u, [seeds]
+    // TODO: get all these doubles from the "in"
+    sim_in_set_xdot( _config, _dims, double *xdot,  _in)
+    sim_in_set_x(    _config, _dims, double *x,     _in)
+    sim_in_set_u(    _config, _dims, double *u,     _in)
+    sim_in_set_Sx(   _config, _dims, double *Sx,    _in)
+    sim_in_set_Su(   _config, _dims, double *Su,    _in)
 
     // cast in/out?!
     
     acados_return = sim_solve(sim_solver, _in, _out);
 
+    // new getters
+    sim_out_get_xn( _config, _dims, _out, double *xn)
+    sim_out_get_Sxn(_config, _dims, _out, double *Sxn)
+    sim_out_get_Sun(_config, _dims, _out, double *Sun)
+
 }
 
-// TODO: add destructor
 
+/* DESTRUCTOR */
+integrator::~integrator()
+{
+    // @ tobi, do we need the special free functions that just wrap free basically?!
+    // sim_free((void *) _solver)
+    free(_config);
+    free(_dims);
+    free(_opts);
+    free(_in);
+    free(_out);
+    free(_solver);
+}
+
+// Todo: modify this, such that only expression is taken.
 static bool is_valid_model(const casadi::Function &model)
 {
     if (model.n_in() != 2)
