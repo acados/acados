@@ -1,3 +1,7 @@
+import sys
+sys.path
+sys.path.append('/home/andrea/casadi-linux-py35-3e99c88-64bit')
+
 from ctypes import *
 import ctypes.util 
 import numpy as np
@@ -22,14 +26,19 @@ class acados_integrator_model:
 		
 		self.type = 'explicit'
 		self.model_name = 'model'
-		self.x = SX.sym('x', 0, 1)
-		self.u = SX.sym('u', 0, 1)
-		self.xdot = SX.sym('xdot', 0, 1)
-		self.z = SX.sym('z', 0, 1)
+		self.x = MX.sym('x', 0, 1)
+		self.u = MX.sym('u', 0, 1)
+		self.xdot = MX.sym('xdot', 0, 1)
+		self.z = MX.sym('z', 0, 1)
+		self.serialized_set_in = 0	
 	
 
 
 	def set(self, field, value):
+
+		if self.serialized_set_in == 1:
+			value = MX.deserialize(value)
+			self.serialized_set_in = 0
 
 		if field=='type':
 			self.type = value
@@ -51,6 +60,9 @@ class acados_integrator_model:
 
 		elif field=='model_name':
 			self.model_name = value
+
+		elif field=='serialized_set_in':
+			self.serialized_set_in = value
 
 		else:
 			disp('acados_integrator_model.set(): wrong field')

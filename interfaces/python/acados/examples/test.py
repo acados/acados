@@ -7,8 +7,8 @@ import time
 nx = 4
 #nu = 0
 
-x = SX.sym('x', nx, 1)
-xdot = SX.sym('xdot', nx, 1)
+x = MX.sym('x', nx, 1)
+xdot = MX.sym('xdot', nx, 1)
 
 expl_ode_expr = -2*x
 impl_ode_expr = xdot - expl_ode_expr

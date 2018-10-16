@@ -10,7 +10,7 @@ classdef acados_integrator_model
 		function obj = acados_integrator_model()
 			obj.np = py.importlib.import_module('numpy');
 			obj.ac = py.importlib.import_module('acados');
-			obj.py_acados_integrator_model = obj.ac.acados_integrator_model();
+			obj.py_acados_integrator_model = obj.ac.sim.acados_integrator_model();
 		end
 
 		function set(obj, field, value)
