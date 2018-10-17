@@ -298,16 +298,16 @@ class acados_integrator:
 			x = casadi.SX.sym('x', 0, 1)
 		else:
 			x = model.x
-		# u
-		if model.u==None:
-			u = casadi.SX.sym('u', 0, 1)
-		else:
-			u = model.u
 		# xdot
 		if model.xdot==None:
 			xdot = casadi.SX.sym('xdot', 0, 1)
 		else:
 			xdot = model.xdot
+		# u
+		if model.u==None:
+			u = casadi.SX.sym('u', 0, 1)
+		else:
+			u = model.u
 		# z
 		if model.z==None:
 			z = casadi.SX.sym('z', 0, 1)
