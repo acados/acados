@@ -78,7 +78,7 @@ integrator::integrator(const casadi::Function &model_fun, std::map<std::string, 
     _in  = sim_in_create(_config, dims);
     _out = sim_out_create(_config, dims);
 
-    // TODO: generate and set model
+    // TODO: generate and set model;
     // use external_function_generic stuff
 
 
@@ -97,7 +97,6 @@ std::map<std::string, option_t *> integrator::integrate( std::map<std::string, o
     sim_in_set_Su(   _config, _dims, double *Su,    _in)
 
     // cast in/out?!
-    
     acados_return = sim_solve(sim_solver, _in, _out);
 
     // new getters
@@ -135,8 +134,8 @@ static bool is_valid_model(const casadi::Function &model)
     int_t nx = x.size1();
     std::vector<casadi::SX> input{x, u};
 
-    casadi::SX rhs = casadi::SX::vertcat(model(input));
-    if (rhs.size1() != nx)
+    casadi::SX rhs = casadi::SX::vertcat(model(input)); // rhs = f_expl_expr
+    if (rhs.size1() != nx + nz)
         throw std::runtime_error("Length of right hand size should equal number of states");
     return true;
 }
