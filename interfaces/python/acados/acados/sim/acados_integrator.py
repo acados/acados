@@ -5,7 +5,7 @@ sys.path.append('/home/andrea/casadi-linux-py35-3e99c88-64bit')
 from ctypes import *
 import ctypes.util 
 import numpy as np
-from casadi import *
+import casadi as ca
 from os import system
 
 from acados.sim.generate_wrapper import set_function_pointers
@@ -26,10 +26,10 @@ class acados_integrator_model:
 		
 		self.type = 'explicit'
 		self.model_name = 'model'
-		self.x = MX.sym('x', 0, 1)
-		self.u = MX.sym('u', 0, 1)
-		self.xdot = MX.sym('xdot', 0, 1)
-		self.z = MX.sym('z', 0, 1)
+		self.x = ca.SX.sym('x', 0, 1)
+		self.u = ca.SX.sym('u', 0, 1)
+		self.xdot = ca.SX.sym('xdot', 0, 1)
+		self.z = ca.SX.sym('z', 0, 1)
 		self.serialized_set_in = 0	
 	
 
@@ -37,7 +37,7 @@ class acados_integrator_model:
 	def set(self, field, value):
 
 		if self.serialized_set_in == 1:
-			value = MX.deserialize(value)
+			value = ca.SX.deserialize(value)
 			self.serialized_set_in = 0
 
 		if field=='type':
@@ -153,44 +153,44 @@ class acados_integrator:
 			if opts.sens_forw=='false':
 
 				fun_name = 'expl_ode_fun'
-				fun = Function(fun_name, [model.x, model.u], [model.ode_expr])
+				fun = ca.Function(fun_name, [model.x, model.u], [model.ode_expr])
 				fun.generate(casadi_opts)
 				c_sources = c_sources + fun_name + '.c '
 
 			else:
 
 				fun_name = 'expl_vde_for'
-				Sx = SX.sym('Sx', nx, nx)
-				Su = SX.sym('Su', nx, nu)
-				vde_x = SX.zeros(nx, nx) + jtimes(model.ode_expr, model.x, Sx) # TODO try sparse !!!
-				vde_u = SX.zeros(nx, nu) + jacobian(model.ode_expr, model.u) + jtimes(model.ode_expr, model.x, Su) # TODO try sparse !!!
-				fun = Function(fun_name, [model.x, Sx, Su, model.u], [model.ode_expr, vde_x, vde_u])
+				Sx = ca.SX.sym('Sx', nx, nx)
+				Su = ca.SX.sym('Su', nx, nu)
+				vde_x = ca.SX.zeros(nx, nx) + ca.jtimes(model.ode_expr, model.x, Sx) # TODO try sparse !!!
+				vde_u = SX.zeros(nx, nu) + ca.jacobian(model.ode_expr, model.u) + ca.jtimes(model.ode_expr, model.x, Su) # TODO try sparse !!!
+				fun = ca.Function(fun_name, [model.x, Sx, Su, model.u], [model.ode_expr, vde_x, vde_u])
 				fun.generate(casadi_opts)
 				c_sources = c_sources + fun_name + '.c '
 
 		elif opts.scheme=='irk':
 
 			fun_name = 'impl_ode_fun'
-			fun = Function(fun_name, [model.x, model.xdot, model.u, model.z], [model.ode_expr])
+			fun = ca.Function(fun_name, [model.x, model.xdot, model.u, model.z], [model.ode_expr])
 			fun.generate(casadi_opts)
 			c_sources = c_sources + fun_name + '.c '
 
 			fun_name = 'impl_ode_fun_jac_x_xdot_z'
-			jac_x = SX.zeros(nx, nx) + jacobian(model.ode_expr, model.x) # TODO try sparse !!!
-			jac_xdot = SX.zeros(nx, nx) + jacobian(model.ode_expr, model.xdot) # TODO try sparse !!!
-			jac_z = SX.zeros(nx, nz) + jacobian(model.ode_expr, model.z) # TODO try sparse !!!
-			fun = Function(fun_name, [model.x, model.xdot, model.u, model.z], [model.ode_expr, jac_x, jac_xdot, jac_z])
+			jac_x = ca.SX.zeros(nx, nx) + ca.jacobian(model.ode_expr, model.x) # TODO try sparse !!!
+			jac_xdot = ca.SX.zeros(nx, nx) + ca.jacobian(model.ode_expr, model.xdot) # TODO try sparse !!!
+			jac_z = ca.SX.zeros(nx, nz) + ca.jacobian(model.ode_expr, model.z) # TODO try sparse !!!
+			fun = ca.Function(fun_name, [model.x, model.xdot, model.u, model.z], [model.ode_expr, jac_x, jac_xdot, jac_z])
 			fun.generate(casadi_opts)
 			c_sources = c_sources + fun_name + '.c '
 
 			if opts.sens_forw=='true':
 
 				fun_name = 'impl_ode_jac_x_xdot_u_z'
-				jac_x = SX.zeros(nx, nx) + jacobian(model.ode_expr, model.x) # TODO try sparse !!!
-				jac_xdot = SX.zeros(nx, nx) + jacobian(model.ode_expr, model.xdot) # TODO try sparse !!!
-				jac_u = SX.zeros(nx, nu) + jacobian(model.ode_expr, model.u) # TODO try sparse !!!
-				jac_z = SX.zeros(nx, nz) + jacobian(model.ode_expr, model.z) # TODO try sparse !!!
-				fun = Function(fun_name, [model.x, model.xdot, model.u, model.z], [jac_x, jac_xdot, jac_u, jac_z])
+				jac_x = ca.SX.zeros(nx, nx) + ca.jacobian(model.ode_expr, model.x) # TODO try sparse !!!
+				jac_xdot = ca.SX.zeros(nx, nx) + ca.jacobian(model.ode_expr, model.xdot) # TODO try sparse !!!
+				jac_u = ca.SX.zeros(nx, nu) + ca.jacobian(model.ode_expr, model.u) # TODO try sparse !!!
+				jac_z = ca.SX.zeros(nx, nz) + ca.jacobian(model.ode_expr, model.z) # TODO try sparse !!!
+				fun = ca.Function(fun_name, [model.x, model.xdot, model.u, model.z], [jac_x, jac_xdot, jac_u, jac_z])
 				fun.generate(casadi_opts)
 				c_sources = c_sources + fun_name + '.c '
 
