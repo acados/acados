@@ -149,7 +149,8 @@ typedef struct
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
     int (*model_set_function)(void *model, sim_function_t fun_type, void *fun);
     void (*config_initialize_default)(void *config);
-    int (*dims_calculate_size)(void *config);
+//    int (*dims_calculate_size)(void *config);
+    int (*dims_calculate_size)();
     void *(*dims_assign)(void *config, void *raw_memory);
     // getters & setters
 	// TODO add dim_ to the name!!!

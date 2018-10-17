@@ -82,7 +82,8 @@ void sim_config_free(void *config)
 void *sim_dims_create(void *config_)
 {
     sim_solver_config *config = (sim_solver_config *) config_;
-    int bytes = config->dims_calculate_size(config_);
+//    int bytes = config->dims_calculate_size(config_);
+    int bytes = config->dims_calculate_size();
 
     void *ptr = calloc(1, bytes);
 

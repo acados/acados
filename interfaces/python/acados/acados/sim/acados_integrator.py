@@ -2,6 +2,7 @@ from ctypes import *
 import ctypes.util 
 import numpy as np
 from os import system
+import sys
 
 from acados.sim.generate_wrapper import set_function_pointers
 
@@ -211,17 +212,20 @@ class acados_integrator:
 
 
 		## config
+		__acados.sim_config_create.restype = c_void_p
 		if opts.scheme=='erk':
 			self.config = cast(__acados.sim_config_create( 0 ), c_void_p)
 		elif opts.scheme=='irk':
 			self.config = cast(__acados.sim_config_create( 2 ), c_void_p)
 
 		## dims
+		__acados.sim_dims_create.restype = c_void_p
 		self.dims = cast(__acados.sim_dims_create(self.config), c_void_p)
 		__acados.sim_dims_set_nx(self.config, self.dims, self.nx)
 		__acados.sim_dims_set_nu(self.config, self.dims, self.nu)
 
 		## opts
+		__acados.sim_opts_create.restype = c_void_p
 		self.opts = cast(__acados.sim_opts_create(self.config, self.dims), c_void_p)
 		if opts.sens_forw=='false':
 			__acados.sim_opts_set_sens_forw(self.opts, 0)
@@ -229,6 +233,7 @@ class acados_integrator:
 			__acados.sim_opts_set_sens_forw(self.opts, 1)
 
 		## sim_in
+		__acados.sim_in_create.restype = c_void_p
 		self.sim_in = cast(__acados.sim_in_create(self.config, self.dims), c_void_p)
 		flag = 0
 
@@ -281,9 +286,11 @@ class acados_integrator:
 			self.__acados.sim_in_set_Su(self.config, self.dims, tmp, self.sim_in)
 
 		## sim_out
+		__acados.sim_out_create.restype = c_void_p
 		self.sim_out = cast(__acados.sim_out_create(self.config, self.dims), c_void_p)
 
 		## sim solver
+		__acados.sim_create.restype = c_void_p
 		self.solver = cast(__acados.sim_create(self.config, self.dims, self.opts), c_void_p)
 
 
@@ -398,7 +405,11 @@ class acados_integrator:
 	def solve(self):
 
 		# solve
+#		self.set('x', np.array([1, 0, -1, 2]))
+#		self.set('t', 0.05)
 		flag = self.__acados.sim_solve(self.solver, self.sim_in, self.sim_out)
+#		xn = self.get('xn')
+#		print(xn)
 
 		return flag
 	
