@@ -1,5 +1,6 @@
 from casadi import *
-import acados_integrator as ai
+import acados.sim as ai
+import pickle as pkl
 import time
 
 
@@ -11,7 +12,6 @@ xdot = SX.sym('xdot', nx, 1)
 
 expl_ode_expr = -2*x
 impl_ode_expr = xdot - expl_ode_expr
-
 
 start_time = time.time()    # start timer
 
