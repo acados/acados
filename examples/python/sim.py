@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from numpy import array, concatenate, cos, linspace, pi, reshape
 
-from acados import sim_solver
+from acados import integrator
 from models import pendulum_model
 
 ode_fun, nx, _ = pendulum_model()
@@ -9,7 +9,7 @@ ode_fun, nx, _ = pendulum_model()
 time_grid, dt = linspace(start=0, stop=10, num=51, retstep=True)
 sim_options = {'time_step': dt, 'order': 4}
 
-integrator = sim_solver('erk', ode_fun, sim_options)
+integrator = integrator('erk', ode_fun, sim_options)
 
 current_state = array([0.0, pi, 0.0, 0.0]) # pendulum hangs down
 simulation = [current_state]
