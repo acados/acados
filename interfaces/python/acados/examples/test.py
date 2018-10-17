@@ -37,6 +37,8 @@ sim_opts = ai.acados_integrator_opts()
 sim_opts.set('scheme', 'irk')
 sim_opts.set('sens_forw', 'true')
 #sim_opts.set('sens_forw', 'false')
+sim_opts.set('codgen_model', 'true')
+#sim_opts.set('codgen_model', 'false')
 
 end_time = time.time()      # stop timer
 print('sim_opts time {:e}'.format(end_time-start_time))
