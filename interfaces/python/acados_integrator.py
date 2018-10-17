@@ -1,7 +1,6 @@
 from ctypes import *
 import ctypes.util 
 import numpy as np
-from casadi import *
 from os import system
 
 from generate_wrapper import set_function_pointers
@@ -20,18 +19,25 @@ class acados_integrator_model:
 
 	def __init__(self):
 		
-		self.type = 'explicit'
 		self.model_name = 'model'
-		self.x = SX.sym('x', 0, 1)
-		self.u = SX.sym('u', 0, 1)
-		self.xdot = SX.sym('xdot', 0, 1)
-		self.z = SX.sym('z', 0, 1)
+		self.type = 'explicit'
+		self.ode_expr = None
+		self.x = None
+		self.u = None
+		self.xdot = None
+		self.z = None
+		self.nx = 0
+		self.nu = 0
+		self.nz = 0
 	
 
 
 	def set(self, field, value):
 
-		if field=='type':
+		if field=='model_name':
+			self.model_name = value
+
+		elif field=='type':
 			self.type = value
 
 		elif field=='ode_expr':
@@ -39,18 +45,27 @@ class acados_integrator_model:
 
 		elif field=='x':
 			self.x = value
+			self.nx = self.x.size()[0]
 
 		elif field=='u':
 			self.u = value
+			self.nu = self.u.size()[0]
 
 		elif field=='xdot':
 			self.xdot = value
 
 		elif field=='z':
 			self.z = value
+			self.nz = self.z.size()[0]
 
-		elif field=='model_name':
-			self.model_name = value
+		elif field=='nx':
+			self.nx = value
+
+		elif field=='nu':
+			self.nu = value
+
+		elif field=='nz':
+			self.nz = value
 
 		else:
 			disp('acados_integrator_model.set(): wrong field')
@@ -67,6 +82,7 @@ class acados_integrator_opts:
 
 		self.scheme = 'erk'
 		self.sens_forw = 'false'
+		self.codgen_model = 'true'
 
 
 
@@ -77,6 +93,9 @@ class acados_integrator_opts:
 		
 		if field=='sens_forw':
 			self.sens_forw = value
+
+		if field=='codgen_model':
+			self.codgen_model = value
 
 
 
@@ -111,6 +130,9 @@ class acados_integrator:
 			exit()
 
 
+		self.nx = model.nx
+		self.nu = model.nu
+		self.nz = model.nz
 		self.scheme = opts.scheme
 		self.sens_forw = opts.sens_forw
 
@@ -122,73 +144,15 @@ class acados_integrator:
 		self.__acados = __acados
 
 
-		# sizes
-		self.nx = model.x.size()[0]
-		self.nu = model.u.size()[0]
-		self.nz = model.z.size()[0]
+		# codgen model library
+		if opts.codgen_model=='true':
+			self.codgen_model(model, opts)
 
-		nx = self.nx
-		nu = self.nu
-		nz = self.nz
-
-
-		# define functions & generate C code
-		casadi_opts = dict(casadi_int='int', casadi_real='double')
-		c_sources = ' '
-
-		if opts.scheme=='erk':
-
-			if opts.sens_forw=='false':
-
-				fun_name = 'expl_ode_fun'
-				fun = Function(fun_name, [model.x, model.u], [model.ode_expr])
-				fun.generate(casadi_opts)
-				c_sources = c_sources + fun_name + '.c '
-
-			else:
-
-				fun_name = 'expl_vde_for'
-				Sx = SX.sym('Sx', nx, nx)
-				Su = SX.sym('Su', nx, nu)
-				vde_x = SX.zeros(nx, nx) + jtimes(model.ode_expr, model.x, Sx) # TODO try sparse !!!
-				vde_u = SX.zeros(nx, nu) + jacobian(model.ode_expr, model.u) + jtimes(model.ode_expr, model.x, Su) # TODO try sparse !!!
-				fun = Function(fun_name, [model.x, Sx, Su, model.u], [model.ode_expr, vde_x, vde_u])
-				fun.generate(casadi_opts)
-				c_sources = c_sources + fun_name + '.c '
-
-		elif opts.scheme=='irk':
-
-			fun_name = 'impl_ode_fun'
-			fun = Function(fun_name, [model.x, model.xdot, model.u, model.z], [model.ode_expr])
-			fun.generate(casadi_opts)
-			c_sources = c_sources + fun_name + '.c '
-
-			fun_name = 'impl_ode_fun_jac_x_xdot_z'
-			jac_x = SX.zeros(nx, nx) + jacobian(model.ode_expr, model.x) # TODO try sparse !!!
-			jac_xdot = SX.zeros(nx, nx) + jacobian(model.ode_expr, model.xdot) # TODO try sparse !!!
-			jac_z = SX.zeros(nx, nz) + jacobian(model.ode_expr, model.z) # TODO try sparse !!!
-			fun = Function(fun_name, [model.x, model.xdot, model.u, model.z], [model.ode_expr, jac_x, jac_xdot, jac_z])
-			fun.generate(casadi_opts)
-			c_sources = c_sources + fun_name + '.c '
-
-			if opts.sens_forw=='true':
-
-				fun_name = 'impl_ode_jac_x_xdot_u_z'
-				jac_x = SX.zeros(nx, nx) + jacobian(model.ode_expr, model.x) # TODO try sparse !!!
-				jac_xdot = SX.zeros(nx, nx) + jacobian(model.ode_expr, model.xdot) # TODO try sparse !!!
-				jac_u = SX.zeros(nx, nu) + jacobian(model.ode_expr, model.u) # TODO try sparse !!!
-				jac_z = SX.zeros(nx, nz) + jacobian(model.ode_expr, model.z) # TODO try sparse !!!
-				fun = Function(fun_name, [model.x, model.xdot, model.u, model.z], [jac_x, jac_xdot, jac_u, jac_z])
-				fun.generate(casadi_opts)
-				c_sources = c_sources + fun_name + '.c '
-
-
-		# create model library
-		lib_name = model.model_name + '.so'
-		system('gcc -fPIC -shared ' + c_sources + ' -o ' + lib_name)
 
 		## load model library
+		lib_name = model.model_name + '.so'
 		self.__model = CDLL(lib_name)
+
 
 #		self.__model = model.model
 
@@ -304,14 +268,14 @@ class acados_integrator:
 
 		if opts.sens_forw=='true':
 			# set Sx
-			Sx0 = np.zeros((nx, nx), order='F')
-			for ii in range(nx):
+			Sx0 = np.zeros((self.nx, self.nx), order='F')
+			for ii in range(self.nx):
 				Sx0[ii][ii] = 1.0
 			tmp = np.ascontiguousarray(Sx0, dtype=np.float64)
 			tmp = cast(tmp.ctypes.data, POINTER(c_double))
 			self.__acados.sim_in_set_Sx(self.config, self.dims, tmp, self.sim_in)
 			# set Su
-			Su0 = np.zeros((nx, nu), order='F')
+			Su0 = np.zeros((self.nx, self.nu), order='F')
 			tmp = np.ascontiguousarray(Su0, dtype=np.float64)
 			tmp = cast(tmp.ctypes.data, POINTER(c_double))
 			self.__acados.sim_in_set_Su(self.config, self.dims, tmp, self.sim_in)
@@ -321,6 +285,96 @@ class acados_integrator:
 
 		## sim solver
 		self.solver = cast(__acados.sim_create(self.config, self.dims, self.opts), c_void_p)
+
+
+
+	def codgen_model(self, model, opts):
+
+#		from casadi import * # syntax valid only for the entire module
+		import casadi
+
+		# x
+		if model.x==None:
+			x = casadi.SX.sym('x', 0, 1)
+		else:
+			x = model.x
+		# u
+		if model.u==None:
+			u = casadi.SX.sym('u', 0, 1)
+		else:
+			u = model.u
+		# xdot
+		if model.xdot==None:
+			xdot = casadi.SX.sym('xdot', 0, 1)
+		else:
+			xdot = model.xdot
+		# z
+		if model.z==None:
+			z = casadi.SX.sym('z', 0, 1)
+		else:
+			z = model.z
+
+		# fun
+		fun = model.ode_expr
+
+		# sizes
+		nx = model.nx
+		nu = model.nu
+		nz = model.nz
+
+		# define functions & generate C code
+		casadi_opts = dict(casadi_int='int', casadi_real='double')
+		c_sources = ' '
+
+		if opts.scheme=='erk':
+
+			if opts.sens_forw=='false':
+
+				fun_name = 'expl_ode_fun'
+				casadi_fun = casadi.Function(fun_name, [x, u], [fun])
+				casadi_fun.generate(casadi_opts)
+				c_sources = c_sources + fun_name + '.c '
+
+			else:
+
+				fun_name = 'expl_vde_for'
+				Sx = casadi.SX.sym('Sx', nx, nx)
+				Su = casadi.SX.sym('Su', nx, nu)
+				vde_x = casadi.jtimes(fun, x, Sx)
+				vde_u = casadi.jacobian(fun, u) + casadi.jtimes(fun, x, Su)
+				casadi_fun = casadi.Function(fun_name, [x, Sx, Su, u], [fun, vde_x, vde_u])
+				casadi_fun.generate(casadi_opts)
+				c_sources = c_sources + fun_name + '.c '
+
+		elif opts.scheme=='irk':
+
+			fun_name = 'impl_ode_fun'
+			casadi_fun = casadi.Function(fun_name, [x, xdot, u, z], [fun])
+			casadi_fun.generate(casadi_opts)
+			c_sources = c_sources + fun_name + '.c '
+
+			fun_name = 'impl_ode_fun_jac_x_xdot_z'
+			jac_x = casadi.jacobian(fun, x)
+			jac_xdot = casadi.jacobian(fun, xdot)
+			jac_z = casadi.jacobian(fun, z)
+			casadi_fun = casadi.Function(fun_name, [x, xdot, u, z], [fun, jac_x, jac_xdot, jac_z])
+			casadi_fun.generate(casadi_opts)
+			c_sources = c_sources + fun_name + '.c '
+
+			if opts.sens_forw=='true':
+
+				fun_name = 'impl_ode_jac_x_xdot_u_z'
+				jac_x = casadi.jacobian(fun, x)
+				jac_xdot = casadi.jacobian(fun, xdot)
+				jac_u = casadi.jacobian(fun, u)
+				jac_z = casadi.jacobian(fun, z)
+				casadi_fun = casadi.Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
+				casadi_fun.generate(casadi_opts)
+				c_sources = c_sources + fun_name + '.c '
+
+		# create model library
+		lib_name = model.model_name + '.so'
+		system('gcc -fPIC -shared ' + c_sources + ' -o ' + lib_name)
 
 
 
