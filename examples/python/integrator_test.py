@@ -1,45 +1,52 @@
-from casadi import *
-# from acados.sim import *
+# from casadi import *
+from acados import *
 # todo
 import time
+from models import pendulum_model
 
 
 nx = 4
 #nu = 0
 
 ## Define model
-x = SX.sym('x', nx, 1)
-xdot = SX.sym('xdot', nx, 1)
+# x = SX.sym('x', nx, 1)
+# xdot = SX.sym('xdot', nx, 1)
 
-expl_ode_expr = -2*x
-impl_ode_expr = xdot - expl_ode_expr
+# expl_ode_expr = -2*x
+# impl_ode_expr = xdot - expl_ode_expr
 
-start_time = time.time()    # start timer
+# start_time = time.time()    # start timer
 
-sim_model = acados_integrator_model()
-sim_model.set('type', 'explicit')
-# sim_model.set('type', 'implicit')
-#sim_model.set('ode_expr', expl_ode_expr)
-sim_model.set('ode_expr', impl_ode_expr)
-sim_model.set('x', x)
-sim_model.set('xdot', xdot)
-#sim_model.set('model_name', 'expl_model')
-sim_model.set('model_name', 'impl_model')
+# sim_model = acados_integrator_model()
+# sim_model.set('type', 'explicit')
+# # sim_model.set('type', 'implicit')
+# #sim_model.set('ode_expr', expl_ode_expr)
+# sim_model.set('ode_expr', impl_ode_expr)
+# sim_model.set('x', x)
+# sim_model.set('xdot', xdot)
+# #sim_model.set('model_name', 'expl_model')
+# sim_model.set('model_name', 'impl_model')
 
-end_time = time.time()      # stop timer
-print('sim_model time {:e}'.format(end_time-start_time))
+# print('sim_model time {:e}'.format(end_time-start_time))
 
-# alternative with dict
-model = {
-    "x": x,
-    "xdot": xdot 
-}
-print(model)
+# # alternative with dict
+# model = {
+#     "x": x,
+#     "xdot": xdot 
+# }
+# print(model)
 
-print('model = \n')
-for keys,values in model.items():
-    print(keys)
-    print(values)
+# print('model = \n')
+# for keys,values in model.items():
+#     print(keys)
+#     print(values)
+
+ode_fun, nx, _ = pendulum_model()
+
+# end_time = time.time()      # stop timer
+
+le_sim = integrator( ode_fun )
+
 
 ## Define opts
 start_time = time.time()    # start timer
