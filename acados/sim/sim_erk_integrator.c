@@ -142,8 +142,7 @@ int sim_erk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
         case EXPL_ODE_FUN:
             model->expl_ode_fun = (external_function_generic *) fun;
             break;
-        case EXPL_ODE_JAC:
-            model->expl_ode_jac = (external_function_generic *) fun;
+        case EXPL_ODE_JAC: // TODO(oj): remove NOT used!
             break;
         case EXPL_ODE_HES:
             model->expl_ode_hes = (external_function_generic *) fun;

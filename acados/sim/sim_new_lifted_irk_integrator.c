@@ -586,6 +586,8 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     blasfeo_pack_dvec(nx, x, xn_out, 0);
     blasfeo_dvecse(nx, 0.0, dxn, 0);
 
+    // TODO(FreyJo): xn probably unnecessary, can we use only xn_out?
+    // TODO(FeyJo): check again against Algorithm 5 in Riens PhD
 
     // start the loop
     acados_tic(&timer);
@@ -613,7 +615,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         for (ii = 0; ii < ns; ii++)  // ii-th row of tableau
         {
             // take x(n); copy a strvec into a strvec
-            blasfeo_dveccp(nx, xn, 0, xt, 0);
+            blasfeo_dveccp(nx, xn, 0, xt, 0);  // TODO(FreyJo): xn_out instead of xn here?!
 
             for (jj = 0; jj < ns; jj++)
             {  // jj-th col of tableau
