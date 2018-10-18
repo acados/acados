@@ -23,7 +23,7 @@ class integrator
  public:
     integrator(const casadi::Function& model, std::map<std::string, option_t*> options = {});
 
-    std::map<std::string, option_t*> integrate(std::vector<double> x, std::vector<double> u = {});
+    std::vector<double> integrate(std::vector<double> x, std::vector<double> u = {});
 
     virtual int num_stages() = 0;
 
