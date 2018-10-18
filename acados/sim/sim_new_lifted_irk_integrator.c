@@ -587,6 +587,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     blasfeo_dvecse(nx, 0.0, dxn, 0);
 
     // TODO(FreyJo): xn probably unnecessary, can we use only xn_out?
+    // TODO(FeyJo): check again against Algorithm 5 in Riens PhD
 
     // start the loop
     acados_tic(&timer);

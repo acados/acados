@@ -1,112 +1,79 @@
-dist: trusty
-sudo: required
-group: edge
-language: python
-python:
-  - 3.5
-
+language: c
 env:
-  - CXX="g++-6" CC="gcc-6" SWIG_PYTHON=ON SWIG_MATLAB=OFF # no MATLAB support for gcc>=5
-  - CXX="g++-5" CC="gcc-5" SWIG_PYTHON=ON SWIG_MATLAB=OFF
-  - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=ON SWIG_MATLAB=ON COVERAGE="lcov"
-  - CXX="clang++-3.7" CC="clang-3.7" SWIG_PYTHON=ON SWIG_MATLAB=OFF
+  global:
+    - CASADIPATH="${HOME}/casadi"
+    - ACADOS_INSTALL_DIR="${HOME}/acados"
+    - DEPLOY_FOLDER="${HOME}/deploy"
+    - secure: "YNhdXD3zhKsQeLVXHiZ3U6S1ERm+AHeUd7402ZHkxoIEefgVyvSy41XIPlgl5FKHq9PW8ecVktteFJldv7DLdXyK3mmKiyFmQWbtJabC4CGhXZ8eGWq95Hak1yW+t3qxmXRD/XDI7baPXryKopyX5epRFnpp2pB5Dmi1JVkJRXhhDtwsOAbolhdWrQ8SGq1wxejzjQa5XqKIDknZy6DTTUmZZYalmY8G3ETBEj2wamOiny6D2xQZQi1hOaRCTPLzSfvZIn3k9oT1kZ3gnI9e/Scg36EMIRlpkt0jUyNSB0IUv/RZdNFFAmn2xHr/sxAGtuyzYK9D4pZI0mc7WvXV3DpEyjbDCGA4RWhblOYFEfcDkqsTBQZ53zLCsx3MGcw2VOZ07FKtrI6JC2Z400UTFXDglpsc8e2MNZOUctkjUoMCn4GpbyZoY5csaUQrvylldZv7F/pYjoSHqcRI6ytq0kVhrXn4A7oYeQcIqdhvq9lf5vtmP68PUp/bBTXZkiHAhf5fMBTAMs9f/VRJ++JH2yu3zOM8VXa40xWSmszFeHlXx4xQrPrI5o7qGBxYGU0GdvJNYDsqAfqKc1bXl2ULQw3UHX2K7XPjUD2/n/W2JCVnTsX3xfEFoHFP4/pxH4G3l7rb82D803SQ3U7++2RATj02ZN4LBdTq9nnqjksC224="
+    - secure: "W8Z9V5SCq19cis+UpX3XPv8BPXpZeQmsDVzkGRdbAS3rd5rkBBIGHFJxEZLtoZtcbEFZkjBEZVZWlelUXwuDWDUyXfsE0HgidGfyLtHh+a86KsjNbmkG7tCAJkVWET0DKttVkzlDrNjqextrEIVCN1NsFC6xuCu1n9ZL9W6wPBB8o0P8Sa7Lu/pO2rm2nEP7dJG4bN18PxxXx/iK7zaEHiu9mVVQ9CXExa9E0Sy0uYdV0cAetb8Th+jJqCEtvi0gXEdhmqhecDPVLaP67Mkc32MTE4tDCyGXeJW/8B5ia8QwuKAFRhTufSgJfIULfe652abRWm26HgmWNr93/GU9MkmPdveBRLUNft74UrnLksnGVk3o5XBczK606dCJI5aejheyHIjNMED/z1NgYfdTtKy83hQxIbsbGg0/plrtGzAS0limsO0i8lIzYDiR/enikioRKZdhBe6m4lJhyObxTXps8tDG2yNtbk/sV9LUyNrk8w9JIdb/YEuDysHi4LrukZmRxazYhhPoISBHzEvxpBsnIPuvMmQqZFuxGQNc1Sms9qMCvbSBGDQzkSq5RQ0ICDgkD7ecm78cs7JPV87lZgZrYjLGjs0cS31ELgVS++VY1gBIzW1TJVn8qC/rLOHgHuOlrI40IntxJaQ/gdkPljxIHg4H+znh4y4/YzkfXOQ="
+
+os: linux
+sudo: required
+dist: trusty
 
 addons:
   apt:
     sources:
-    - llvm-toolchain-precise-3.7
-    - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.7
+      - ubuntu-toolchain-r-test
+      - deadsnakes
+
+matrix:
+  include:
+    - name: MacOS Python Interface Build
+      os: osx
+      osx_image: xcode9.4
+      env:
+        - DEPLOY_NAME="osx-python"
+    - name: Linux Python Interface Gcc6
+      env:
+        - DEPLOY_NAME="linux-python-gcc6"
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+    - name: Linux Python Interface Gcc5
+      env:
+        - DEPLOY_NAME="linux-python-gcc5"
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+    - name: Linux Python Interface Gcc4.9 and Matlab
+      env:
+        - DEPLOY_NAME="linux-python-matlab-gcc49"
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+        - WITH_MATLAB="YES"
+        - COVERAGE="lcov"
+    - name: Linux Python Interface Clang
+      env:
+        - DEPLOY_NAME="linux-python-clang37"
+        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
 
 cache:
+  ccache: true
   directories:
-    - /home/travis/external_software/
-    - /home/travis/octave_download/
+      - "${CASADIPATH}"
+
+before_install:
+  - eval "${MATRIX_EVAL}"
+  - SECTION='before_install'
+  - export SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/${TRAVIS_OS_NAME}"
+  - export SHARED_SCRIPT_DIR="${TRAVIS_BUILD_DIR}/ci/shared"
+  - source "${SCRIPT_DIR}/dispatch.sh"
 
 install:
-  - |
-    # directory empty
-    mkdir -p /home/travis/octave_download
-    pushd /home/travis/octave_download
-    [ ! -f optim-1.5.2.tar.gz ] && wget -q -O optim-1.5.2.tar.gz http://packages.octave.org/download/optim-1.5.2.tar.gz
-    [ ! -f struct-1.0.14.tar.gz ] && wget -q -O struct-1.0.14.tar.gz http://packages.octave.org/download/struct-1.0.14.tar.gz
-    popd
-  - |
-    mkdir -p /home/travis/external_software
-    pushd /home/travis/external_software
-    ls -l
-    if [ -n "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}" ]; then
-      echo 'Prepare to download external software';
-      if [ ! -f external.tar.gz ]; then
-        echo 'Download external software';
-        wget -q -O external.tar.gz "${EXTERNAL_SOFTWARE_DOWNLOAD_LINK}";
-      fi
-    fi
-    if [ -n "${MATLAB_DOWNLOAD_LINK}" ]; then
-      echo 'Prepare to download matlab software';
-      if [ ! -f matlab.tar.gz ]; then
-        echo 'Download matlab software';
-        wget -q -O matlab.tar.gz "${MATLAB_DOWNLOAD_LINK}";
-      fi
-    fi
-    ls -l
-    popd
-  - pushd external
-  - |
-    if [ -f /home/travis/external_software/external.tar.gz ]; then
-      tar -xf /home/travis/external_software/external.tar.gz > /dev/null;
-      pushd coinhsl;
-      chmod +x ./*;
-      popd;
-      pushd OOQP;
-      chmod +x ./*;
-      popd;
-    else
-      echo "Skipping installation of encrypted software";
-    fi
-  - |
-    if [ -f /home/travis/external_software/matlab.tar.gz -a "${SWIG_MATLAB}" = 'ON' ]; then
-      tar -xzf /home/travis/external_software/matlab.tar.gz > /dev/null
-      export MATLAB_ROOT=$(pwd)/matlab
-    else
-      echo "Skipping MATLAB installation"
-      export SWIG_MATLAB=OFF
-    fi
-    export MATLAB_ROOT=$(pwd)/matlab
-  - popd
-  - travis_retry source .travis_install.sh
-  - export MPLBACKEND=Agg # For matplotlib
-  - export MATLABPATH=$HOME/local/lib:$MATLABPATH
-  - export PYTHONPATH=$HOME/local/lib:$PYTHONPATH
+  - SECTION='install'
+  - source "${SCRIPT_DIR}/dispatch.sh"
 
 script:
-  - cmake -E make_directory build
-  - export RELEASES_PREFIX="$(pwd)"
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/local -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON -DBUILD_SHARED_LIBS=ON ..
-  - cmake --build build --target install
-  - tar -zcf acados.tar.gz ${HOME}/local/lib
-  - cmake --build build --target lint
-  - cmake --build build
-  - cmake -E chdir build ctest --output-on-failure
-  - rm -r -f build
-  - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DMatlab_ROOT_DIR=$MATLAB_ROOT -DSWIG_PYTHON=$SWIG_PYTHON -DBUILD_SHARED_LIBS=ON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
-  - export CXX="$CXX -std=c++11" # needed for octave
-  - cmake --build build
-  - cmake -E chdir build ctest --output-on-failure
-  - cmake --build build --target install
-  # - python -c "import acados" # check installation
-  - cmake --build build --target acados_coverage || echo "Coverage report not generated"
+  - SECTION='script'
+  - source "${SCRIPT_DIR}/dispatch.sh"
+
+after_success:
+  - SECTION='after_success'
+  - mkdir -p "${DEPLOY_FOLDER}"
+  - source "${SCRIPT_DIR}/dispatch.sh"
 
 deploy:
   provider: releases
   api_key: "${GITHUB_OAUTH_TOKEN}"
-  file: "${RELEASES_PREFIX}/acados.tar.gz"
+  file_glob: true
+  file: "${DEPLOY_FOLDER}/*"
   skip_cleanup: true
   on:
     tags: true
-
-
-after_success:
-  - pushd build
-  # Upload report to CodeCov
-  - if [ "$COVERAGE" == "lcov" ]; then bash <(curl -s https://codecov.io/bash); else echo "Codecov did not collect coverage reports"; fi
