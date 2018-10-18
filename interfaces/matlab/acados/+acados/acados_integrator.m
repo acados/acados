@@ -137,7 +137,7 @@ classdef acados_integrator
 
 				if(strcmp(opts.sens_forw, 'true'))
 
-					fun_name = 'impl_ode_jac_x_xdot_u_z'
+					fun_name = 'impl_ode_jac_x_xdot_u_z';
 					jac_x = jacobian(fun, x);
 					jac_xdot = jacobian(fun, xdot);
 					jac_u = jacobian(fun, u);
@@ -157,32 +157,35 @@ classdef acados_integrator
 		end
 
 
-%		function set(obj, field, value)
-%			
-%			if (field=='x' | field=='xdot')
-%				% TODO
-%			elseif (field=='t')
-%				% TODO
-%			end
-%
-%		end
-
-
-		function flag = solve(obj)
+		function set(obj, field, value)
 			
-			flag = int64(obj.py_sim.solve());
+			if (strcmp(field, 'x') | strcmp(field, 'xdot'))
+				% acados is the matlab module !!!
+				obj.py_sim.set(field, acados.m2py(value, obj.numpy));
+			elseif (field=='t')
+				obj.py_sim.set(field, double(value));
+			end
 
 		end
 
 
-%		function value = get(obj, field)
-%			
-%			if (field=='xn' | field=='Sxn')
-%				py_value = obj.py_sim.get(field);
-%				value = py2m(py_value, obj.numpy);
-%			end
-%
-%		end
+		function flag = solve(obj)
+			
+%			flag = int64(obj.py_sim.solve());
+			flag = double(obj.py_sim.solve());
+
+		end
+
+
+		function value = get(obj, field)
+			
+			if (strcmp(field, 'xn') | strcmp(field, 'Sxn'))
+				py_value = obj.py_sim.get(field);
+				% acados is the matlab module !!!
+				value = acados.py2m(py_value, obj.numpy);
+			end
+
+		end
 
 
 	end

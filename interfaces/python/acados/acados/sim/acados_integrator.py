@@ -1,5 +1,6 @@
 from ctypes import *
 import ctypes.util 
+import _ctypes
 import numpy as np
 from os import system
 import sys
@@ -293,6 +294,9 @@ class acados_integrator:
 		__acados.sim_create.restype = c_void_p
 		self.solver = cast(__acados.sim_create(self.config, self.dims, self.opts), c_void_p)
 
+		## unload model library
+#		_ctypes.dlclose(self.__model._handle)
+
 
 
 	def codgen_model(self, model, opts):
@@ -405,11 +409,10 @@ class acados_integrator:
 	def solve(self):
 
 		# solve
-#		self.set('x', np.array([1, 0, -1, 2]))
-#		self.set('t', 0.05)
 		flag = self.__acados.sim_solve(self.solver, self.sim_in, self.sim_out)
-#		xn = self.get('xn')
-#		print(xn)
+
+		## unload model library
+#		_ctypes.dlclose(self.__model._handle)
 
 		return flag
 	
@@ -448,6 +451,10 @@ class acados_integrator:
 		self.__acados.sim_out_free(self.sim_in)
 		self.__acados.sim_in_free(self.sim_out)
 		self.__acados.sim_free(self.solver)
+#		print(self.__model)
+#		print(self.__model._handle)
+		# on POSIX systems; on windows call FreeLibrary instead
+#		_ctypes.dlclose(self.__model._handle)
 
 
 

@@ -1,6 +1,6 @@
 from casadi import *
-import acados.sim as ai
-import pickle as pkl
+from acados.sim import *
+#import pickle as pkl
 import time
 
 
@@ -15,7 +15,7 @@ impl_ode_expr = xdot - expl_ode_expr
 
 start_time = time.time()    # start timer
 
-sim_model = ai.acados_integrator_model()
+sim_model = acados_integrator_model()
 #sim_model.set('type', 'explicit')
 sim_model.set('type', 'implicit')
 #sim_model.set('ode_expr', expl_ode_expr)
@@ -32,7 +32,7 @@ print('sim_model time {:e}'.format(end_time-start_time))
 
 start_time = time.time()    # start timer
 
-sim_opts = ai.acados_integrator_opts()
+sim_opts = acados_integrator_opts()
 #sim_opts.set('scheme', 'erk')
 sim_opts.set('scheme', 'irk')
 sim_opts.set('sens_forw', 'true')
@@ -47,7 +47,7 @@ print('sim_opts time {:e}'.format(end_time-start_time))
 
 start_time = time.time()    # start timer
 
-sim = ai.acados_integrator(sim_model, sim_opts)
+sim = acados_integrator(sim_model, sim_opts)
 
 end_time = time.time()      # stop timer
 print('sim create time {:e}'.format(end_time-start_time))

@@ -1,5 +1,6 @@
 from ctypes import *
 import ctypes.util 
+import _ctypes
 from os import system
 
 
@@ -39,6 +40,8 @@ def set_function_pointers(acados, model_name, user_fun_name, acados_ext_fun):
 	model_getter_name = user_fun_name + '_getter.so'
 #	model_getter_name = 'fun_getter.so' # XXX it needs an unique name !!!
 	system('gcc -fPIC -shared casadi_fun_ptr_getter.c -o ' + model_getter_name + ' -L. ' + model_name)
+#	print(model_name)
+#	system('nm ' + model_name)
 	model_getter = CDLL(model_getter_name)
 
 	# set up function pointers
@@ -73,6 +76,7 @@ def set_function_pointers(acados, model_name, user_fun_name, acados_ext_fun):
 	acados.external_function_casadi_set_n_out.argtypes = [c_void_p, c_void_p]
 	acados.external_function_casadi_set_n_out(acados_ext_fun, tmp_ptr)
 
+	_ctypes.dlclose(model_getter._handle)
 	system('rm casadi_fun_ptr_getter.c')
 	system('rm ' + model_getter_name)
 
