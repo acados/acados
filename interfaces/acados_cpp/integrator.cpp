@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "acados_c/sim_interface.h"
+#include "acados_cpp/ocp_nlp/function_generation.hpp"
 
 
 namespace acados
@@ -50,6 +51,8 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     else
         sim_plan.sim_solver = ERK;
 
+    // todo add check: modeltype and integrator type consistent
+
     config_ = sim_config_create(sim_plan);
 
     dims_ = sim_dims_create(config_);
@@ -92,9 +95,34 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
     // TODO: generate and set model;
     // use external_function_generic stuff
-
+    //std::map<std::string, option_t *> model_options = {};
+    //if (options.count("model_type")) model_options[model_type] = to_int(options.at("model_type"));
+    integrator::set_model(model, options);
 
     solver_ = sim_create(config_, dims_, opts_);
+}
+
+
+void integrator::set_model(const casadi::Function &model, std::map<std::string, option_t *> options)
+{
+    if (options.count("model_type")) model_type_ = (model_t) to_int(options.at("model_type"));
+
+    if (model_type_ == GNSF){
+        throw std::invalid_argument("Not supported model type.");
+    }
+    else if (model_type_ == IMPLICIT)
+    {
+        throw std::invalid_argument("Not supported model type.");
+    }
+    else // explicit default
+    {
+        module_["expl_vde_for"] = generate_forward_vde(model);
+
+        int status = sim_set_model_internal(config_, in_->model,
+            "expl_vde_for", (void *) module_["expl_vde_for"].as_external_function());
+    }
+    
+
 }
 
 

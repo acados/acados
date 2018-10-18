@@ -18,6 +18,15 @@
 // @tobi: or what do u think?
 namespace acados
 {
+
+typedef enum
+{
+    EXPLICIT=0,
+    IMPLICIT,
+    GNSF
+} model_t; 
+
+
 class integrator
 {
  public:
@@ -25,7 +34,10 @@ class integrator
 
     std::vector<double> integrate(std::vector<double> x, std::vector<double> u = {});
 
-    int num_stages() { return 0; }
+    void set_model(const casadi::Function &model, std::map<std::string, option_t *> options = {});
+
+
+    int num_stages() { return opts_->ns; }
 
     ~integrator();
 
@@ -39,6 +51,11 @@ class integrator
     size_t nx_;
     size_t nu_;
     size_t nz_;
+
+    model_t model_type_;
+
+    std::map<std::string, casadi_module> module_;
+
 };
 
 }  // namespace acados

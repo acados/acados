@@ -52,7 +52,9 @@ print(nx)
 print(nu)
 x0 = np.array([ 0, 0, 0, 0])
 u0 = np.array([1])
-le_sim.integrate(x0, u0)
+xn = le_sim.integrate(x0, u0)
+
+print(xn)
 
 ## Define opts
 start_time = time.time()    # start timer
