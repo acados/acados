@@ -76,3 +76,5 @@ namespace std {
 %feature("autodoc", "3");
 %include "ocp_qp.i"
 %include "ocp_nlp.i"
+
+%include "integrator.i"

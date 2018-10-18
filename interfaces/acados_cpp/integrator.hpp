@@ -25,7 +25,7 @@ class integrator
 
     std::vector<double> integrate(std::vector<double> x, std::vector<double> u = {});
 
-    virtual int num_stages() = 0;
+    int num_stages() { return 0; }
 
     ~integrator();
 
