@@ -19,7 +19,7 @@ impl_ode_expr = xdot - expl_ode_expr;
 tic
 
 sim_model = acados_integrator_model();
-sim_model = sim_model.set('type', 'explicit');
+sim_model.set('type', 'explicit');
 %sim_model = sim_model.set('type', 'implicit');
 sim_model = sim_model.set('ode_expr', expl_ode_expr);
 %sim_model = sim_model.set('ode_expr', impl_ode_expr);

@@ -157,7 +157,7 @@ classdef acados_integrator < handle
 		end
 
 
-		function set(obj, field, value)
+		function obj = set(obj, field, value)
 			
 			if (strcmp(field, 'x') | strcmp(field, 'xdot'))
 				% acados is the matlab module !!!
