@@ -1,4 +1,4 @@
-classdef acados_integrator_model
+classdef acados_integrator_model < handle
 	
 
 	properties
