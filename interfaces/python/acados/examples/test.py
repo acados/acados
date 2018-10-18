@@ -35,8 +35,8 @@ start_time = time.time()    # start timer
 sim_opts = acados_integrator_opts()
 #sim_opts.set('scheme', 'erk')
 sim_opts.set('scheme', 'irk')
-sim_opts.set('sens_forw', 'true')
-#sim_opts.set('sens_forw', 'false')
+#sim_opts.set('sens_forw', 'true')
+sim_opts.set('sens_forw', 'false')
 sim_opts.set('codgen_model', 'true')
 #sim_opts.set('codgen_model', 'false')
 

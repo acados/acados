@@ -1,3 +1,5 @@
+clear all
+
 import casadi.*
 import acados.*
 
@@ -91,3 +93,30 @@ sim_get_xn_time = toc;
 fprintf('sim get xn time %e\n', sim_get_xn_time);
 xn
 Sxn
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%sim_opts = sim_opts.set('sens_forw', 'true');
+%sim2 = acados_integrator(sim_model, sim_opts);
+%sim2.set('x', x0);
+%sim2.set('xdot', xdot0);
+%sim2.set('t', 0.05);
+%flag = sim2.solve();
+%xn = sim2.get('xn');
+%Sxn = sim2.get('Sxn');
+%xn
+%Sxn

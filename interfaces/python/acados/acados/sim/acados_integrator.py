@@ -434,8 +434,14 @@ class acados_integrator:
 
 
 
+#	def unload_model(self):
+#		_ctypes.dlclose(self.__model._handle)
+
+
+
 	def __del__(self):
 		
+#		print('\nin descruction\n')
 		if self.scheme=='erk':
 			if self.sens_forw=='false':
 				self.__acados.external_function_casadi_free(self.expl_ode_fun)
@@ -454,7 +460,7 @@ class acados_integrator:
 #		print(self.__model)
 #		print(self.__model._handle)
 		# on POSIX systems; on windows call FreeLibrary instead
-#		_ctypes.dlclose(self.__model._handle)
+		_ctypes.dlclose(self.__model._handle)
 
 
 

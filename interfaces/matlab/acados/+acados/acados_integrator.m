@@ -1,10 +1,10 @@
-classdef acados_integrator
+classdef acados_integrator < handle
 	
 
 
 	properties
 		numpy
-		acados
+		py_acados
 		py_model
 		py_opts
 		py_sim
@@ -18,7 +18,7 @@ classdef acados_integrator
 		function obj = acados_integrator(model, opts)
 
 			obj.numpy = py.importlib.import_module('numpy');
-			obj.acados = py.importlib.import_module('acados');
+			obj.py_acados = py.importlib.import_module('acados');
 
 			% checks
 
@@ -52,7 +52,7 @@ classdef acados_integrator
 
 			obj.codgen_model(model, opts);
 
-			obj.py_sim = obj.acados.sim.acados_integrator(obj.py_model, obj.py_opts);
+			obj.py_sim = obj.py_acados.sim.acados_integrator(obj.py_model, obj.py_opts);
 
 		end
 
@@ -186,6 +186,15 @@ classdef acados_integrator
 			end
 
 		end
+
+
+%		function delete(obj)
+%			disp('\nin delete\n')
+%			obj.py_sim.__del__();
+%			disp(obj);
+%			disp(obj.py_sim);
+%			obj.py_sim.unload_model();
+%		end
 
 
 	end
