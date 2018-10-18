@@ -1,6 +1,6 @@
 from casadi import *
-from acados.sim import *
-#import pickle as pkl
+# from acados.sim import *
+# todo
 import time
 
 
@@ -29,6 +29,17 @@ sim_model.set('model_name', 'impl_model')
 end_time = time.time()      # stop timer
 print('sim_model time {:e}'.format(end_time-start_time))
 
+# alternative with dict
+model = {
+    "x": x,
+    "xdot": xdot 
+}
+print(model)
+
+print('model = \n')
+for keys,values in model.items():
+    print(keys)
+    print(values)
 
 ## Define opts
 start_time = time.time()    # start timer
