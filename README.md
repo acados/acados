@@ -3,15 +3,17 @@
 [![Appveyor status](https://ci.appveyor.com/api/projects/status/q0b2nohk476u5clg?svg=true)](https://ci.appveyor.com/project/roversch/acados)
 [![codecov](https://codecov.io/gh/acados/acados/branch/master/graph/badge.svg)](https://codecov.io/gh/acados/acados)
 
-Fast and embedded optimal control problem solvers.
+Fast and embedded solvers for nonlinear optimal control.
 
 ### Installation
 If you are on Ubuntu (tested with 16.04), you can run `./install.sh`. You can also
 follow the [manual installation instructions](#manual-installation) below.
 
+* soon: binaries for all operating systems available for download (see Releases)
+
 ### Getting started
 
-#### MATLAB (DISCLAIMER: CURRENTLY ONLY QP INTERFACE IS WORKING)
+#### MATLAB
 First, add CasADi and acados to your MATLAB path. From a MATLAB command window
 ```
 addpath <path_to_acados_root_folder>/external/casadi-matlabR2014b-v3.4.0
@@ -24,7 +26,7 @@ Run an acados example, from `<path_to_acados_root_folder>/examples/matlab/`:
 ocp_qp_example.m
 ```
 
-#### Python (DISCLAIMER: CURRENTLY ONLY QP INTERFACE IS WORKING)
+#### Python
 
 acados only supports `Python3`. Add CasADi and acados to the `PYTHONPATH` environment variable (add those lines to your `.bashrc` or `.zshrc` to set the paths permanently):
 ```
