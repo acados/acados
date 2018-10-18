@@ -151,7 +151,24 @@ classdef acados_integrator < handle
 			end
 						
 			% create model library
-			lib_name = [model.model_name, '.so'];
+			lib_name = model.model_name;
+
+			if (strcmp(opts.scheme, 'erk'))
+				lib_name = [lib_name, '_erk'];
+			elseif (strcmp(opts.scheme, 'irk'))
+				lib_name = [lib_name, '_irk'];
+			end
+				
+			if(strcmp(opts.sens_forw, 'false'))
+				lib_name = [lib_name, '_0'];
+			else
+				lib_name = [lib_name, '_1'];
+			end
+
+			lib_name = [lib_name, '_', num2str(model.ode_expr_hash)];
+
+			lib_name = [lib_name, '.so'];
+
 			system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 
 		end

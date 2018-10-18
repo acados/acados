@@ -31,6 +31,7 @@ class acados_integrator_model:
 		self.nx = 0
 		self.nu = 0
 		self.nz = 0
+		self.ode_expr_hash = None
 	
 
 
@@ -44,6 +45,10 @@ class acados_integrator_model:
 
 		elif field=='ode_expr':
 			self.ode_expr = value
+			self.ode_expr_hash = hash(str(self.ode_expr))
+
+		elif field=='ode_expr_hash':
+			self.ode_expr_hash = value
 
 		elif field=='x':
 			self.x = value
@@ -70,7 +75,7 @@ class acados_integrator_model:
 			self.nz = value
 
 		else:
-			disp('acados_integrator_model.set(): wrong field')
+			print('acados_integrator_model.set(): wrong field')
 
 
 
@@ -109,6 +114,12 @@ class acados_integrator:
 
 	def __init__(self, model, opts):
 		
+#		print(id(self))
+		
+#		print(model.ode_expr)
+#		print(str(model.ode_expr))
+#		print(hash(str(model.ode_expr)))
+
 		# checks
 
 		if not ((model.type=='explicit') | (model.type=='implicit')):
@@ -152,8 +163,28 @@ class acados_integrator:
 
 
 		## load model library
-		lib_name = model.model_name + '.so'
+		lib_name = model.model_name
+
+#		lib_name = lib_name + '_' + str(id(self))
+
+		if opts.scheme=='erk':
+			lib_name = lib_name + '_erk'
+		elif opts.scheme=='irk':
+			lib_name = lib_name + '_irk'
+
+		if opts.sens_forw=='false':
+			lib_name = lib_name + '_0'
+		else:
+			lib_name = lib_name + '_1'
+
+		lib_name = lib_name + '_' + str(model.ode_expr_hash)
+
+		lib_name = lib_name + '.so'
+
+#		print(self.__model._handle)
 		self.__model = CDLL(lib_name)
+#		print(self.__model._handle)
+
 
 
 #		self.__model = model.model
@@ -384,7 +415,24 @@ class acados_integrator:
 				c_sources = c_sources + fun_name + '.c '
 
 		# create model library
-		lib_name = model.model_name + '.so'
+		lib_name = model.model_name
+
+#		lib_name = lib_name + '_' + str(id(self))
+
+		if opts.scheme=='erk':
+			lib_name = lib_name + '_erk'
+		elif opts.scheme=='irk':
+			lib_name = lib_name + '_irk'
+
+		if opts.sens_forw=='false':
+			lib_name = lib_name + '_0'
+		else:
+			lib_name = lib_name + '_1'
+
+		lib_name = lib_name + '_' + str(model.ode_expr_hash)
+
+		lib_name = lib_name + '.so'
+
 		system('gcc -fPIC -shared ' + c_sources + ' -o ' + lib_name)
 
 
@@ -460,6 +508,7 @@ class acados_integrator:
 #		print(self.__model)
 #		print(self.__model._handle)
 		# on POSIX systems; on windows call FreeLibrary instead
+#		print(self.__model._handle)
 		_ctypes.dlclose(self.__model._handle)
 
 

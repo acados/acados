@@ -14,6 +14,7 @@ classdef acados_integrator_model < handle
 		nx
 		nu
 		nz
+		ode_expr_hash
 	end
 
 
@@ -33,6 +34,7 @@ classdef acados_integrator_model < handle
 			obj.nx = 0;
 			obj.nu = 0;
 			obj.nz = 0;
+			obj.nz = [];
 		end
 		
 		function obj = set(obj, field, value)
@@ -44,6 +46,11 @@ classdef acados_integrator_model < handle
 				obj.py_model.set(field, value);
 			elseif (strcmp(field, 'ode_expr'))
 				obj.ode_expr = value;
+				obj.ode_expr_hash = int64(py.hash(str(value)));
+				obj.py_model.set('ode_expr_hash', int64(py.hash(str(value))));
+			elseif (strcmp(field, 'ode_expr_hash'))
+				obj.ode_expr_hash = value;
+				obj.py_model.set('ode_expr_hash', value);
 			elseif (strcmp(field, 'x'))
 				obj.x = value;
 				tmp = value.size();

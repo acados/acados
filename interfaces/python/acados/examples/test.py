@@ -4,6 +4,13 @@ from acados.sim import *
 import time
 
 
+
+
+
+## create one integrator
+
+print('\nfirst integrator\n')
+
 nx = 4
 #nu = 0
 
@@ -16,14 +23,14 @@ impl_ode_expr = xdot - expl_ode_expr
 start_time = time.time()    # start timer
 
 sim_model = acados_integrator_model()
+#sim_model.set('model_name', 'expl_model')
+sim_model.set('model_name', 'impl_model')
 #sim_model.set('type', 'explicit')
 sim_model.set('type', 'implicit')
 #sim_model.set('ode_expr', expl_ode_expr)
 sim_model.set('ode_expr', impl_ode_expr)
 sim_model.set('x', x)
 sim_model.set('xdot', xdot)
-#sim_model.set('model_name', 'expl_model')
-sim_model.set('model_name', 'impl_model')
 
 end_time = time.time()      # stop timer
 print('sim_model time {:e}'.format(end_time-start_time))
@@ -86,3 +93,48 @@ end_time = time.time()      # stop timer
 print('sim get xn time {:e}'.format(end_time-start_time))
 print(xn)
 print(Sxn)
+
+
+
+
+
+## create a sendond integrator
+
+print('\nsecond integrator\n')
+
+# update expression
+expl_ode_expr = -1*x
+impl_ode_expr = xdot - expl_ode_expr
+
+# update model
+#sim_model.set('model_name', 'new_impl_model')
+#sim_model.set('type', 'implicit')
+sim_model.set('ode_expr', impl_ode_expr)
+
+# update opts
+#sim_opts.set('scheme', 'irk')
+#sim_opts.set('sens_forw', 'true')
+#sim_opts.set('codgen_model', 'true')
+
+# new sim solver
+new_sim = acados_integrator(sim_model, sim_opts)
+
+new_sim.set('x', x0)
+new_sim.set('xdot', xdot0)
+new_sim.set('t', 0.05)
+
+flag = new_sim.solve()
+
+xn = new_sim.get('xn')
+Sxn = new_sim.get('Sxn')
+
+print(xn)
+print(Sxn)
+
+
+
+
+
+
+
+
