@@ -2,10 +2,11 @@
 from acados import *
 # todo
 import time
+import numpy as np
 from models import pendulum_model
 
 
-nx = 4
+# nx = 4
 #nu = 0
 
 ## Define model
@@ -41,67 +42,72 @@ nx = 4
 #     print(keys)
 #     print(values)
 
-ode_fun, nx, _ = pendulum_model()
+ode_fun, nx, nu = pendulum_model()
 
 # end_time = time.time()      # stop timer
 
 le_sim = integrator( ode_fun )
 
+print(nx)
+print(nu)
+x0 = np.array([ 0, 0, 0, 0])
+u0 = np.array([1])
+le_sim.integrate(x0, u0)
 
 ## Define opts
 start_time = time.time()    # start timer
 
-sim_opts = acados_integrator_opts()
-#sim_opts.set('scheme', 'erk')
-sim_opts.set('scheme', 'irk')
-#sim_opts.set('sens_forw', 'true')
-sim_opts.set('sens_forw', 'false')
-# sim_opts.set('codgen_model', 'true') # oj: maybe not needed..
-#sim_opts.set('codgen_model', 'false')
+# sim_opts = acados_integrator_opts()
+# #sim_opts.set('scheme', 'erk')
+# sim_opts.set('scheme', 'irk')
+# #sim_opts.set('sens_forw', 'true')
+# sim_opts.set('sens_forw', 'false')
+# # sim_opts.set('codgen_model', 'true') # oj: maybe not needed..
+# #sim_opts.set('codgen_model', 'false')
 
-end_time = time.time()      # stop timer
-print('sim_opts time {:e}'.format(end_time-start_time))
-
-
-## Create integrator
-start_time = time.time()    # start timer
-
-sim = acados_integrator(sim_model, sim_opts)
-
-end_time = time.time()      # stop timer
-print('sim create time {:e}'.format(end_time-start_time))
+# end_time = time.time()      # stop timer
+# print('sim_opts time {:e}'.format(end_time-start_time))
 
 
-## Set integrator inputs
-start_time = time.time()    # start timer
+# ## Create integrator
+# start_time = time.time()    # start timer
 
-x0 = np.array([1, 0, 2, -1])
-xdot0 = x0 + 2*x0
-sim.set('x', x0)
-sim.set('xdot', xdot0)
-sim.set('t', 0.05)
+# sim = acados_integrator(sim_model, sim_opts)
 
-end_time = time.time()      # stop timer
-print('sim set x time {:e}'.format(end_time-start_time))
+# end_time = time.time()      # stop timer
+# print('sim create time {:e}'.format(end_time-start_time))
 
 
-## Call integrator
-start_time = time.time()    # start timer
+# ## Set integrator inputs
+# start_time = time.time()    # start timer
 
-flag = sim.solve()
+# x0 = np.array([1, 0, 2, -1])
+# xdot0 = x0 + 2*x0
+# sim.set('x', x0)
+# sim.set('xdot', xdot0)
+# sim.set('t', 0.05)
 
-end_time = time.time()      # stop timer
-print('sim solve time {:e}'.format(end_time-start_time))
-print(flag)
+# end_time = time.time()      # stop timer
+# print('sim set x time {:e}'.format(end_time-start_time))
 
 
-## Get integrator output
-start_time = time.time()    # start timer
+# ## Call integrator
+# start_time = time.time()    # start timer
 
-xn = sim.get('xn')
-Sxn = sim.get('Sxn')
+# flag = sim.solve()
 
-end_time = time.time()      # stop timer
-print('sim get xn time {:e}'.format(end_time-start_time))
-print(xn)
-print(Sxn)
+# end_time = time.time()      # stop timer
+# print('sim solve time {:e}'.format(end_time-start_time))
+# print(flag)
+
+
+# ## Get integrator output
+# start_time = time.time()    # start timer
+
+# xn = sim.get('xn')
+# Sxn = sim.get('Sxn')
+
+# end_time = time.time()      # stop timer
+# print('sim get xn time {:e}'.format(end_time-start_time))
+# print(xn)
+# print(Sxn)
