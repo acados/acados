@@ -98,8 +98,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 }
 
 
-std::map<std::string, option_t *> integrator::integrate(std::vector<double> x,
-                                                        std::vector<double> u)
+std::vector<double> integrator::integrate(std::vector<double> x, std::vector<double> u)
 {
     /*
       if ( in.count("x") )
@@ -127,17 +126,21 @@ std::map<std::string, option_t *> integrator::integrate(std::vector<double> x,
     sim_in_set_xdot( _config, _dims, double *xdot,  _in)
     sim_in_set_Sx(   _config, _dims, double *Sx,    _in)
     sim_in_set_Su(   _config, _dims, double *Su,    _in)
+    */
 
     // cast in/out?!
-    acados_return = sim_solve(sim_solver, _in, _out);
+    int acados_return = sim_solve(solver_, in_, out_);
 
+    std::vector<double> xn(out_->xn, out_->xn + nx_);
+
+    /*
     // new getters
     sim_out_get_xn( _config, _dims, _out, double *xn)
     sim_out_get_Sxn(_config, _dims, _out, double *Sxn)
     sim_out_get_Sun(_config, _dims, _out, double *Sun)
     */
 
-    return {};
+    return xn;
 }
 
 
