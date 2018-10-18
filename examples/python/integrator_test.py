@@ -49,17 +49,12 @@ ode_fun, nx, nu = pendulum_model()
 le_sim = integrator( ode_fun )
 
 print(nx)
-<<<<<<< HEAD
 print(nu)
 x0 = np.array([ 0, 0, 0, 0])
 u0 = np.array([1])
 xn = le_sim.integrate(x0, u0)
 
 print(xn)
-=======
-x0 = [ 0, 0, 0, 0]
-le_sim.integrate(x0)
->>>>>>> 5e74636776107582576685dd6f926c5a345d3a88
 
 ## Define opts
 start_time = time.time()    # start timer
