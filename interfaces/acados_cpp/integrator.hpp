@@ -6,7 +6,14 @@
 #include <string>
 #include <vector>
 
-#include "acados/sim/sim_common.h"
+#include "acados/utils/types.h"
+#include "acados_c/ocp_nlp_interface.h"
+
+#include "acados_cpp/ocp.hpp"
+#include "acados_cpp/ocp_nlp/ocp_nlp_solution.hpp"
+#include "acados_cpp/ocp_nlp/casadi_module.hpp"
+#include "acados_cpp/options.hpp"
+
 // TODO(oj): try to only use C interface, i.e. remove line above and use void pointers
 // @tobi: or what do u think?
 namespace acados
@@ -14,20 +21,24 @@ namespace acados
 class integrator
 {
  public:
-    integrator(const casadi::Function &model_fun, std::map<std::string, option_t *> options = {});
+    integrator(const casadi::Function& model, std::map<std::string, option_t*> options = {});
 
-    std::map<std::string, option_t *> integrate( std::map<std::string, option_t *> in );
+    std::map<std::string, option_t*> integrate(std::vector<double> x, std::vector<double> u = {});
 
     virtual int num_stages() = 0;
 
     ~integrator();
 
-private:
-    sim_solver_config* _config;
-    sim_rk_opts* _opts;
-    sim_in* _in;
-    sim_out* _out;
-    sim_solver* _solver
+ private:
+    sim_solver_config* config_;
+    sim_rk_opts* opts_;
+    sim_in* in_;
+    sim_out* out_;
+    sim_solver* solver_;
+    void* dims_;
+    size_t nx_;
+    size_t nu_;
+    size_t nz_;
 };
 
 }  // namespace acados
