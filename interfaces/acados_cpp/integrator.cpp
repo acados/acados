@@ -33,7 +33,7 @@ static bool is_valid_model(const casadi::Function &model)
 }
 
 
-
+// TODO: generalize for MX!
 /* CONSTRUCTOR */
 integrator::integrator(const casadi::Function &model, std::map<std::string, option_t *> options)
 {
@@ -112,15 +112,28 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
     }
     else if (model_type_ == IMPLICIT)
     {
+        // module_["impl_ode_fun"] = generate_impl_ode_fun(model);
+        // int status = sim_set_model_internal(config_, in_->model,
+        //     "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
+
         throw std::invalid_argument("Not supported model type.");
     }
-    else // explicit default
+    /* explicit model default */
+    else
     {
-        module_["expl_vde_for"] = generate_forward_vde(model);
-
-        int status = sim_set_model_internal(config_, in_->model,
-            "expl_vde_for", (void *) module_["expl_vde_for"].as_external_function());
+        if (opts_->sens_forw){
+            module_["expl_vde_for"] = generate_forward_vde(model);
+            int status = sim_set_model_internal(config_, in_->model,
+                "expl_vde_for", (void *) module_["expl_vde_for"].as_external_function());
+        }
+        else
+        {
+            module_["expl_ode_fun"] = generate_expl_ode_fun(model);
+            int status = sim_set_model_internal(config_, in_->model,
+                "expl_ode_fun", (void *) module_["expl_ode_fun"].as_external_function());
+        }
     }
+    // todo: write generators for all types of functions
     
 
 }
