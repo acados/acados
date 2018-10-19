@@ -20,8 +20,7 @@ static bool is_valid_model(const casadi::Function &model)
     if (model.n_out() != 1)
         throw std::runtime_error("An ODE model should have 1 output: the right hand side");
 
-    // casadi::SX x = model.sx_in(0);
-    casadi::GenericMatrix x = model.sx_in(0);
+    casadi::SX x = model.sx_in(0);
     casadi::SX u = model.sx_in(1);
     int_t nx = x.size1();
     std::vector<casadi::SX> input{x, u};
@@ -114,44 +113,38 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
 {
     if (options.count("model_type")) model_type_ = (model_t) to_int(options.at("model_type"));
 
-    if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")>0);
+    if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")) > 0);
 
-    if (!use_MX_){
-        if (model_type_ == GNSF)
-        {
-            throw std::invalid_argument("Not supported model type.");
-        }
-        else if (model_type_ == IMPLICIT)
-        {
-            // module_["impl_ode_fun"] = generate_impl_ode_fun(model);
-            // int status = sim_set_model_internal(config_, in_->model,
-            //     "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
+    if (model_type_ == GNSF)
+    {
+        throw std::invalid_argument("Not supported model type.");
+    }
+    else if (model_type_ == IMPLICIT)
+    {
+        // module_["impl_ode_fun"] = generate_impl_ode_fun(model);
+        // int status = sim_set_model_internal(config_, in_->model,
+        //     "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
 
-            throw std::invalid_argument("Not supported model type.");
-        }
-        else  // explicit default
+        throw std::invalid_argument("Not supported model type.");
+    }
+    else  // explicit default
+    {
+        if (opts_->sens_forw)
         {
-            if (opts_->sens_forw)
-            {
-                module_["expl_vde_for"] = generate_forward_vde(model);
-                int status =
-                    sim_set_model_internal(config_, in_->model, "expl_vde_for",
-                                        (void *) module_["expl_vde_for"].as_external_function());
-            }
-            else
-            {
-                module_["expl_ode_fun"] = generate_expl_ode_fun(model);
-                int status =
-                    sim_set_model_internal(config_, in_->model, "expl_ode_fun",
-                                        (void *) module_["expl_ode_fun"].as_external_function());
-            }
+            module_["expl_vde_for"] = generate_forward_vde(model);
+            sim_set_model_internal(config_, in_->model, "expl_vde_for",
+                                   (void *) module_["expl_vde_for"].as_external_function());
+        }
+        else
+        {
+            module_["expl_ode_fun"] = generate_expl_ode_fun(model);
+            sim_set_model_internal(config_, in_->model, "expl_ode_fun",
+                                   (void *) module_["expl_ode_fun"].as_external_function());
         }
     }
-    else
 
-    // todo: write generators for all types of functions
+    // TODO write generators for all types of functions
 }
-
 
 void integrator::set_step(const double step) { in_->T = step; }
 
