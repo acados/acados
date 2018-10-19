@@ -5,14 +5,11 @@
 #include <string>
 #include <vector>
 
-//#include "casadi/casadi.hpp"
 
 #include "acados/utils/types.h"
-//#include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/sim_interface.h"
 
-//#include "acados_cpp/ocp.hpp"
-//#include "acados_cpp/ocp_nlp/ocp_nlp_solution.hpp"
+
 #include "acados_cpp/ocp_nlp/casadi_module.hpp"
 #include "acados_cpp/options.hpp"
 
@@ -57,6 +54,7 @@ class integrator
     size_t nz_;
 
     model_t model_type_;
+    bool use_MX_;
 
     std::map<std::string, casadi_module> module_;
 };
