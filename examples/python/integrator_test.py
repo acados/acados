@@ -59,6 +59,7 @@ for k in range(100):
     print(xn)
     x0 = np.array(xn)
 
+print(xn)
 
 ## Define opts
 start_time = time.time()    # start timer

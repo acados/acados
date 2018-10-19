@@ -508,9 +508,10 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     // assert - only use supported features
     assert(nz == 0 && "nz should be zero - DAEs are not (yet) supported for this integrator");
     assert(opts->output_z == false &&
-            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
-    assert(opts->sens_algebraic == false &&
-       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
+           "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
+    assert(
+        opts->sens_algebraic == false &&
+        "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
 
     int ii, jj, ss;
     double a;
@@ -586,6 +587,8 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     blasfeo_pack_dvec(nx, x, xn_out, 0);
     blasfeo_dvecse(nx, 0.0, dxn, 0);
 
+    // TODO(FreyJo): xn probably unnecessary, can we use only xn_out?
+    // TODO(FeyJo): check again against Algorithm 5 in Riens PhD
 
     // start the loop
     acados_tic(&timer);
@@ -613,7 +616,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         for (ii = 0; ii < ns; ii++)  // ii-th row of tableau
         {
             // take x(n); copy a strvec into a strvec
-            blasfeo_dveccp(nx, xn, 0, xt, 0);
+            blasfeo_dveccp(nx, xn, 0, xt, 0);  // TODO(FreyJo): xn_out instead of xn here?!
 
             for (jj = 0; jj < ns; jj++)
             {  // jj-th col of tableau

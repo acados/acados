@@ -33,10 +33,12 @@
 
 
 
-typedef enum {
+typedef enum
+{
     // ERK and LIFTED_ERK
     EXPL_ODE_FUN,
     EXPL_ODE_JAC,  // TODO(all): expl_ode_jac_x
+    // TODO(oj): EXPL_ODE_JAC only used in old lifted_irk -> REMOVE!
     EXPL_ODE_HES,  // wrt x and u ???
     EXPL_VDE_FOR,
     EXPL_VDE_ADJ,
@@ -62,8 +64,8 @@ typedef struct
     double *x;  // x[NX] - initial state value for simulation
     double *u;  // u[NU] - control - constant over simulation time
 
-    double *xdot;   // xdot[NX] - initialization for state derivatives k within the integrator
-    double *z;      // z[NZ] - initialization for algebraic variables z
+    double *xdot;  // xdot[NX] - initialization for state derivatives k within the integrator
+    double *z;     // z[NZ] - initialization for algebraic variables z
 
     double *S_forw;  // forward seed [Sx, Su]
     double *S_adj;   // backward seed
@@ -119,8 +121,8 @@ typedef struct
     bool sens_adj;
     bool sens_hess;
 
-    bool output_z;  // 1 -- if zn should be computed
-    bool sens_algebraic;    // 1 -- if S_algebraic should be computed
+    bool output_z;        // 1 -- if zn should be computed
+    bool sens_algebraic;  // 1 -- if S_algebraic should be computed
 
     // for explicit integrators: newton_iter == 0 && scheme == NULL
     // && jac_reuse=false
@@ -152,8 +154,8 @@ typedef struct
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
     // getters & setters
-	// TODO add dim_ to the name!!!
-	// TODO getters returining int ???
+    // TODO add dim_ to the name!!!
+    // TODO getters returining int ???
     void (*get_nx)(void *dims_, int *nx);
     void (*get_nu)(void *dims_, int *nu);
     void (*get_nz)(void *dims_, int *nz);

@@ -10,15 +10,19 @@
 
 namespace acados
 {
+// TODO: actually belongs more to integrator
+casadi_module generate_forward_vde(const casadi::Function& model,
+                                   std::string output_dir = "_autogen");
 
-casadi_module generate_forward_vde(const casadi::Function& model, std::string output_dir =
-                                   "_autogen");
+casadi_module generate_expl_ode_fun(const casadi::Function& model,
+                                    std::string output_dir = "_autogen");
 
-casadi_module generate_ode_jacobian(const casadi::Function& model, std::string output_dir =
-                                    "_autogen");
+casadi_module generate_ode_jacobian(const casadi::Function& model,
+                                    std::string output_dir = "_autogen");
 
-casadi_module generate_nls_residual(const casadi::Function& residual, std::string output_dir =
-                                "_autogen");
+// TODO: add more generate functions!
+casadi_module generate_nls_residual(const casadi::Function& residual,
+                                    std::string output_dir = "_autogen");
 
 }  // namespace acados
 

@@ -39,8 +39,6 @@ typedef struct
     /* external functions */
     // explicit ode
     external_function_generic *expl_ode_fun;
-    // jacobian explicit ode
-    external_function_generic *expl_ode_jac;
     // hessian explicit ode
     external_function_generic *expl_ode_hes;
     // forward explicit vde
