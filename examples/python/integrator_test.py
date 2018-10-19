@@ -33,7 +33,7 @@ from models import pendulum_model
 # # alternative with dict
 # model = {
 #     "x": x,
-#     "xdot": xdot 
+#     "xdot": xdot
 # }
 # print(model)
 
@@ -46,13 +46,18 @@ ode_fun, nx, nu = pendulum_model()
 
 # end_time = time.time()      # stop timer
 
-le_sim = integrator( ode_fun )
+opts = {'step': 0.1}
+le_sim = integrator(ode_fun, opts)
 
 print(nx)
 print(nu)
-x0 = np.array([ 0, 0, 0, 0])
+x0 = np.array([ 4.2, 0.42, 0, 0])
 u0 = np.array([1])
-xn = le_sim.integrate(x0, u0)
+for k in range(100):
+    xn = le_sim.integrate(x0, u0)
+    le_sim.set_step(le_sim.step()*0.99)
+    print(xn)
+    x0 = np.array(xn)
 
 print(xn)
 

@@ -508,9 +508,10 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     // assert - only use supported features
     assert(nz == 0 && "nz should be zero - DAEs are not (yet) supported for this integrator");
     assert(opts->output_z == false &&
-            "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
-    assert(opts->sens_algebraic == false &&
-       "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
+           "opts->output_z should be false - DAEs are not (yet) supported for this integrator");
+    assert(
+        opts->sens_algebraic == false &&
+        "opts->sens_algebraic should be false - DAEs are not (yet) supported for this integrator");
 
     int ii, jj, ss;
     double a;

@@ -5,7 +5,6 @@
 
 namespace acados
 {
-
 using std::string;
 using std::vector;
 
@@ -14,14 +13,14 @@ casadi_module generate_nls_residual(const casadi::Function& residual, string out
     casadi::SX x = residual.sx_in(0);
     casadi::SX u = residual.sx_in(1);
 
-    vector<casadi::SX> xu {x, u};
-    vector<casadi::SX> ux {u, x};
+    vector<casadi::SX> xu{x, u};
+    vector<casadi::SX> ux{u, x};
 
     casadi::SX r_new = casadi::SX::vertcat(residual(xu));
     casadi::SX r_jacT = casadi::SX::jacobian(r_new, casadi::SX::vertcat(ux)).T();
 
     casadi::Function r_fun(residual.name() + "_nls_res", {casadi::SX::vertcat(ux)},
-                                                         {r_new, r_jacT});
+                           {r_new, r_jacT});
 
     return casadi_module(r_fun, output_folder);
 }

@@ -1,6 +1,4 @@
-# Get all git submodules
-# git submodule update --recursive --init
-
+#!/bin/bash -xe
 
 # Install swig
 pushd external

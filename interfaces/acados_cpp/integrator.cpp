@@ -3,7 +3,6 @@
 
 #include <algorithm>
 
-#include "acados_c/sim_interface.h"
 #include "acados_cpp/ocp_nlp/function_generation.hpp"
 
 
@@ -51,7 +50,11 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     else
         sim_plan.sim_solver = ERK;
 
-    // todo add check: modeltype and integrator type consistent
+    if (!options.count("step")) throw std::invalid_argument("Expected 'step' as an option.");
+
+    // TODO set step
+
+    // TODO add check: modeltype and integrator type consistent
 
     config_ = sim_config_create(sim_plan);
 
@@ -93,10 +96,14 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     in_ = sim_in_create(config_, dims_);
     out_ = sim_out_create(config_, dims_);
 
+    // set step width
+    set_step(to_double(options.at("step")));
+
     // TODO: generate and set model;
     // use external_function_generic stuff
-    //std::map<std::string, option_t *> model_options = {};
-    //if (options.count("model_type")) model_options[model_type] = to_int(options.at("model_type"));
+    // std::map<std::string, option_t *> model_options = {};
+    // if (options.count("model_type")) model_options[model_type] =
+    // to_int(options.at("model_type"));
     integrator::set_model(model, options);
 
     solver_ = sim_create(config_, dims_, opts_);
@@ -107,7 +114,8 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
 {
     if (options.count("model_type")) model_type_ = (model_t) to_int(options.at("model_type"));
 
-    if (model_type_ == GNSF){
+    if (model_type_ == GNSF)
+    {
         throw std::invalid_argument("Not supported model type.");
     }
     else if (model_type_ == IMPLICIT)
@@ -118,25 +126,28 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
 
         throw std::invalid_argument("Not supported model type.");
     }
-    /* explicit model default */
-    else
+    else  // explicit default
     {
-        if (opts_->sens_forw){
+        if (opts_->sens_forw)
+        {
             module_["expl_vde_for"] = generate_forward_vde(model);
-            int status = sim_set_model_internal(config_, in_->model,
-                "expl_vde_for", (void *) module_["expl_vde_for"].as_external_function());
+            int status =
+                sim_set_model_internal(config_, in_->model, "expl_vde_for",
+                                       (void *) module_["expl_vde_for"].as_external_function());
         }
         else
         {
             module_["expl_ode_fun"] = generate_expl_ode_fun(model);
-            int status = sim_set_model_internal(config_, in_->model,
-                "expl_ode_fun", (void *) module_["expl_ode_fun"].as_external_function());
+            int status =
+                sim_set_model_internal(config_, in_->model, "expl_ode_fun",
+                                       (void *) module_["expl_ode_fun"].as_external_function());
         }
     }
     // todo: write generators for all types of functions
-    
-
 }
+
+
+void integrator::set_step(const double step) { in_->T = step; }
 
 
 std::vector<double> integrator::integrate(std::vector<double> x, std::vector<double> u)
@@ -170,7 +181,8 @@ std::vector<double> integrator::integrate(std::vector<double> x, std::vector<dou
     */
 
     // cast in/out?!
-    int acados_return = sim_solve(solver_, in_, out_);
+    // int acados_return = sim_solve(solver_, in_, out_);
+    sim_solve(solver_, in_, out_);
 
     std::vector<double> xn(out_->xn, out_->xn + nx_);
 

@@ -1,4 +1,3 @@
-
 #ifndef INTERFACES_ACADOS_CPP_INTEGRATOR_HPP_
 #define INTERFACES_ACADOS_CPP_INTEGRATOR_HPP_
 
@@ -6,11 +5,14 @@
 #include <string>
 #include <vector>
 
-#include "acados/utils/types.h"
-#include "acados_c/ocp_nlp_interface.h"
+//#include "casadi/casadi.hpp"
 
-#include "acados_cpp/ocp.hpp"
-#include "acados_cpp/ocp_nlp/ocp_nlp_solution.hpp"
+#include "acados/utils/types.h"
+//#include "acados_c/ocp_nlp_interface.h"
+#include "acados_c/sim_interface.h"
+
+//#include "acados_cpp/ocp.hpp"
+//#include "acados_cpp/ocp_nlp/ocp_nlp_solution.hpp"
 #include "acados_cpp/ocp_nlp/casadi_module.hpp"
 #include "acados_cpp/options.hpp"
 
@@ -18,13 +20,13 @@
 // @tobi: or what do u think?
 namespace acados
 {
-
 typedef enum
 {
-    EXPLICIT=0,
+    // TODO do we really need this (see definition of sim_solver_t)
+    EXPLICIT = 0,
     IMPLICIT,
     GNSF
-} model_t; 
+} model_t;
 
 
 class integrator
@@ -34,10 +36,12 @@ class integrator
 
     std::vector<double> integrate(std::vector<double> x, std::vector<double> u = {});
 
-    void set_model(const casadi::Function &model, std::map<std::string, option_t *> options = {});
+    void set_model(const casadi::Function& model, std::map<std::string, option_t*> options = {});
 
+    void set_step(const double step);
 
     int num_stages() { return opts_->ns; }
+    double step() { return in_->T; }
 
     ~integrator();
 
@@ -55,7 +59,6 @@ class integrator
     model_t model_type_;
 
     std::map<std::string, casadi_module> module_;
-
 };
 
 }  // namespace acados

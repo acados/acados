@@ -142,7 +142,7 @@ int sim_erk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
         case EXPL_ODE_FUN:
             model->expl_ode_fun = (external_function_generic *) fun;
             break;
-        case EXPL_ODE_JAC: // TODO(oj): remove NOT used!
+        case EXPL_ODE_JAC:  // TODO(oj): remove NOT used!
             break;
         case EXPL_ODE_HES:
             model->expl_ode_hes = (external_function_generic *) fun;
@@ -538,9 +538,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // assert - only use supported features
     assert(nz == 0 && "nz should be zero - DAEs are not supported for this integrator");
     assert(opts->output_z == false &&
-            "opts->output_z should be false - DAEs are not supported for this integrator");
+           "opts->output_z should be false - DAEs are not supported for this integrator");
     assert(opts->sens_algebraic == false &&
-       "opts->sens_algebraic should be false - DAEs are not supported for this integrator");
+           "opts->sens_algebraic should be false - DAEs are not supported for this integrator");
 
     int nf = opts->num_forw_sens;
     if (!opts->sens_forw) nf = 0;
@@ -767,30 +767,29 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
 
                     model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in,
-                                ext_fun_type_out, ext_fun_out);
-
+                                                  ext_fun_type_out, ext_fun_out);
                 }
                 timing_ad += acados_toc(&timer_ad);
             }
             for (s = 0; s < ns; s++)
-                for (i = 0; i < nAdj; i++)
-                    adj_tmp[i] += adj_traj[s * nAdj + i];  // ERK step
+                for (i = 0; i < nAdj; i++) adj_tmp[i] += adj_traj[s * nAdj + i];  // ERK step
         }
 
         // store adjoint sensitivities
-        for (i = 0; i < nx + nu; i++)
-            S_adj_out[i] = adj_tmp[i];
+        for (i = 0; i < nx + nu; i++) S_adj_out[i] = adj_tmp[i];
         // store hessian
         if (opts->sens_hess)
         {
             // former line for tridiagonal export was
             //            for (i = 0; i < nhess; i++) S_hess_out[i] = adj_tmp[nx + nu + i];
             int count_upper = 0;
-            for (int j = 0; j < nx + nu; j++) {
-                for (int i = j; i < nx + nu; i++){
-                    S_hess_out[i + (nf) * j] = adj_tmp[nx + nu + count_upper];
-                    S_hess_out[j + (nf) * i] = adj_tmp[nx + nu + count_upper];
-                                // copy to upper part
+            for (int j = 0; j < nx + nu; j++)
+            {
+                for (int i = j; i < nx + nu; i++)
+                {
+                    S_hess_out[i + (nf) *j] = adj_tmp[nx + nu + count_upper];
+                    S_hess_out[j + (nf) *i] = adj_tmp[nx + nu + count_upper];
+                    // copy to upper part
                     count_upper++;
                 }
             }
