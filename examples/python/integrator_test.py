@@ -3,7 +3,7 @@ from acados import *
 # todo
 import time
 import numpy as np
-from models import pendulum_model
+from models import pendulum_model, chen_model
 
 
 # nx = 4
@@ -47,19 +47,28 @@ ode_fun, nx, nu = pendulum_model()
 # end_time = time.time()      # stop timer
 
 opts = {'step': 0.1}
-le_sim = integrator(ode_fun, opts)
+sim1 = integrator(ode_fun, opts)
+
+opts = {'step': 0.2}
+ode_fun, nx, nu = chen_model()
+sim2 = integrator(ode_fun, opts)
 
 print(nx)
 print(nu)
-x0 = np.array([ 4.2, 0.42, 0, 0])
-u0 = np.array([1])
-for k in range(100):
-    xn = le_sim.integrate(x0, u0)
-    le_sim.set_step(le_sim.step()*0.99)
-    print(xn)
-    x0 = np.array(xn)
+x1 = np.array([ 4.2, 0.42, 0, 0])
+u = np.array([1])
 
-print(xn)
+x2 = np.array([ 4.2, 0])
+for k in range(100):
+    x1 = np.array(sim1.integrate(x1, u))
+    x2 = np.array(sim2.integrate(x2, u))
+    sim1.set_step(sim1.step()*0.99)
+    # xd = x1-x2
+    # print(np.linalg.norm(xd))
+    print(x1)
+    print(x2)
+
+# print(xd)
 
 ## Define opts
 start_time = time.time()    # start timer
