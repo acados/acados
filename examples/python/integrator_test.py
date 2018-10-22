@@ -46,7 +46,10 @@ ode_fun, nx, nu = pendulum_model()
 
 # end_time = time.time()      # stop timer
 
-opts1 = {'step': 0.1}
+opts1 = {'step'     : 0.1, # only mandatory argument
+         'sens_forw': 1,
+         'sens_adj' : 1,
+         'jac_reuse': 0}
 sim1 = integrator(ode_fun, opts1)
 
 opts2 = {'step': 0.2, 'use_MX': True}
