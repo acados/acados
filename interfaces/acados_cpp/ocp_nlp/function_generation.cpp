@@ -51,10 +51,10 @@ casadi_module generate_impl_ode_fun(const casadi::Function& model, string output
     casadi::Function fun;
     if (use_MX == false)
     {
-        casadi::SX x = model.sx_in(0);
-        casadi::SX xdot = model.sx_in(1);
-        casadi::SX u = model.sx_in(2);
-        casadi::SX z = model.sx_in(3);
+        casadi::SX x = model.sx_in("x");
+        casadi::SX xdot = model.sx_in("xdot");
+        casadi::SX u = model.sx_in("u");
+        casadi::SX z = model.sx_in("z");
 
         casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, xdot, u, z})));
 
@@ -62,10 +62,10 @@ casadi_module generate_impl_ode_fun(const casadi::Function& model, string output
     }
     else    // MX
     {
-        casadi::MX x = model.mx_in(0);
-        casadi::MX xdot = model.mx_in(1);
-        casadi::MX u = model.mx_in(2);
-        casadi::MX z = model.mx_in(3);
+        casadi::MX x = model.mx_in("x");
+        casadi::MX xdot = model.mx_in("xdot");
+        casadi::MX u = model.mx_in("u");
+        casadi::MX z = model.mx_in("z");
 
         casadi::MX rhs = casadi::MX::vertcat(model(vector<casadi::MX>({x, xdot, u, z})));
 
@@ -80,10 +80,10 @@ casadi_module generate_impl_ode_fun_jac_x_xdot_z(const casadi::Function& model,
     casadi::Function fun;
     if (use_MX == false)
     {
-        casadi::SX x = model.sx_in(0);
-        casadi::SX xdot = model.sx_in(1);
-        casadi::SX u = model.sx_in(2);
-        casadi::SX z = model.sx_in(3);
+        casadi::SX x = model.sx_in("x");
+        casadi::SX xdot = model.sx_in("xdot");
+        casadi::SX u = model.sx_in("u");
+        casadi::SX z = model.sx_in("z");
         casadi::SX w = casadi::SX::vertcat(vector<casadi::SX>({x, u}));
 
         casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, xdot, u, z})));
@@ -99,10 +99,10 @@ casadi_module generate_impl_ode_fun_jac_x_xdot_z(const casadi::Function& model,
     }
     else  // MX
     {
-        casadi::MX x = model.mx_in(0);
-        casadi::MX xdot = model.mx_in(1);
-        casadi::MX u = model.mx_in(2);
-        casadi::MX z = model.mx_in(3);
+        casadi::MX x = model.mx_in("x");
+        casadi::MX xdot = model.mx_in("xdot");
+        casadi::MX u = model.mx_in("u");
+        casadi::MX z = model.mx_in("z");
         casadi::MX w = casadi::MX::vertcat(vector<casadi::MX>({x, u}));
 
         casadi::MX rhs = casadi::MX::vertcat(model(vector<casadi::MX>({x, xdot, u, z})));
@@ -126,8 +126,8 @@ casadi_module generate_forward_vde(const casadi::Function& model, string output_
     casadi::Function vde_fun;
     if (use_MX == false)
     {
-        casadi::SX x = model.sx_in(0);
-        casadi::SX u = model.sx_in(1);
+        casadi::SX x = model.sx_in("x");
+        casadi::SX u = model.sx_in("u");
 
         int_t nx = x.size1();
         int_t nu = u.size1();
@@ -145,8 +145,8 @@ casadi_module generate_forward_vde(const casadi::Function& model, string output_
     }
     else  // MX
     {
-        casadi::MX x = model.mx_in(0);
-        casadi::MX u = model.mx_in(1);
+        casadi::MX x = model.mx_in("x");
+        casadi::MX u = model.mx_in("u");
 
         int_t nx = x.size1();
         int_t nu = u.size1();
@@ -173,8 +173,8 @@ casadi_module generate_expl_ode_fun(const casadi::Function& model, string output
     casadi::Function fun;
     if (use_MX == false)
     {
-        casadi::SX x = model.sx_in(0);
-        casadi::SX u = model.sx_in(1);
+        casadi::SX x = model.sx_in("x");
+        casadi::SX u = model.sx_in("u");
 
         // int_t nx = x.size1();
         // int_t nu = u.size1();
@@ -192,7 +192,7 @@ casadi_module generate_expl_ode_fun(const casadi::Function& model, string output
     else  // MX
     {
         casadi::MX x = model.mx_in("x");
-        casadi::MX u = model.mx_in(1);
+        casadi::MX u = model.mx_in("u");
 
         casadi::MX rhs = casadi::MX::vertcat(model(vector<casadi::MX>({x, u})));
 
@@ -209,8 +209,8 @@ casadi_module generate_expl_vde_adj(const casadi::Function& model, string output
     casadi::Function fun;
     if (use_MX == false)  // SX
     {
-        casadi::SX x = model.sx_in(0);
-        casadi::SX u = model.sx_in(1);
+        casadi::SX x = model.sx_in("x");
+        casadi::SX u = model.sx_in("u");
 
         casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, u})));
 
@@ -227,8 +227,8 @@ casadi_module generate_expl_vde_adj(const casadi::Function& model, string output
     }
     else  // MX
     {
-        casadi::MX x = model.mx_in(0);
-        casadi::MX u = model.mx_in(1);
+        casadi::MX x = model.mx_in("x");
+        casadi::MX u = model.mx_in("u");
 
         casadi::MX rhs = casadi::MX::vertcat(model(vector<casadi::MX>({x, u})));
 
@@ -251,8 +251,8 @@ casadi_module generate_ode_jacobian(const casadi::Function& model, string output
     casadi::Function jac_fun;
     if (use_MX == false)
     {
-        casadi::SX x = model.sx_in(0);
-        casadi::SX u = model.sx_in(1);
+        casadi::SX x = model.sx_in("x");
+        casadi::SX u = model.sx_in("u");
 
         int_t nx = x.size1();
         int_t nu = u.size1();
@@ -267,8 +267,8 @@ casadi_module generate_ode_jacobian(const casadi::Function& model, string output
     }
     else  // MX
     {
-        casadi::MX x = model.mx_in(0);
-        casadi::MX u = model.mx_in(1);
+        casadi::MX x = model.mx_in("x");
+        casadi::MX u = model.mx_in("u");
 
         int_t nx = x.size1();
         int_t nu = u.size1();
