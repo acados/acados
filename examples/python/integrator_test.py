@@ -46,15 +46,15 @@ ode_fun, nx, nu = pendulum_model()
 
 # end_time = time.time()      # stop timer
 
-opts = {'step'     : 0.1, # only mandatory argument
-        'sens_forw': 1,
-        'sens_adj' : 1,
-        'jac_reuse': 0}
-sim1 = integrator(ode_fun, opts)
+opts1 = {'step'     : 0.1, # only mandatory argument
+         'sens_forw': 1,
+         'sens_adj' : 1,
+         'jac_reuse': 0}
+sim1 = integrator(ode_fun, opts1)
 
-opts = {'step': 0.2}
+opts2 = {'step': 0.2, 'use_MX': True}
 ode_fun, nx, nu = chen_model()
-sim2 = integrator(ode_fun, opts)
+sim2 = integrator(ode_fun, opts2)
 
 print(nx)
 print(nu)
