@@ -13,22 +13,58 @@ using std::string;
 using std::vector;
 
 // Todo: modify this, such that only expression is taken.
-static bool is_valid_model(const casadi::Function &model)
+static bool is_valid_model(const casadi::Function &model, const bool use_MX = false)
 {
     if (model.n_in() != 2)
         throw std::invalid_argument("An ODE model should have 2 inputs: states and controls.");
     if (model.n_out() != 1)
         throw std::runtime_error("An ODE model should have 1 output: the right hand side");
 
-    casadi::SX x = model.sx_in(0);
-    casadi::SX u = model.sx_in(1);
-    int_t nx = x.size1();
-    std::vector<casadi::SX> input{x, u};
+    if (use_MX == false)
+    {
+        casadi::SX x = model.sx_in(0);
+        casadi::SX u = model.sx_in(1);
+        int_t nx = x.size1();
+        std::vector<casadi::SX> input{x, u};
 
-    casadi::SX rhs = casadi::SX::vertcat(model(input));  // rhs = f_expl_expr
-    if (rhs.size1() != nx)
-        throw std::runtime_error("Length of right hand size should equal number of states");
+        // rhs = f_expl_expr
+        casadi::SX rhs = casadi::SX::vertcat(model(input));
+        if (rhs.size1() != nx)
+            throw std::runtime_error("Length of right hand size should equal number of states");
+    }
+    else  // MX
+    {
+        casadi::MX x = model.mx_in(0);
+        casadi::MX u = model.mx_in(1);
+        int_t nx = x.size1();
+        std::vector<casadi::MX> input{x, u};
+
+        // rhs = f_expl_expr
+        casadi::MX rhs = casadi::MX::vertcat(model(input));
+        if (rhs.size1() != nx)
+            throw std::runtime_error("Length of right hand size should equal number of states");
+    }
+
     return true;
+}
+
+static void get_input_dims(const casadi::Function &model, size_t &nx, size_t &nu,
+                           const bool use_MX = false)
+{
+    if (use_MX == false)
+    {
+        casadi::SX x = model.sx_in(0);
+        casadi::SX u = model.sx_in(1);
+        nx = x.size1();
+        nu = u.size1();
+    }
+    else  // MX
+    {
+        casadi::MX x = model.mx_in(0);
+        casadi::MX u = model.mx_in(1);
+        nx = x.size1();
+        nu = u.size1();
+    }
 }
 
 
@@ -38,8 +74,11 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 {
     if (!is_valid_model(model)) throw std::invalid_argument("Model is invalid.");
 
+    if (!options.count("step")) throw std::invalid_argument("Expected 'step' as an option.");
+
     sim_solver_plan sim_plan;
 
+    // TODO add check: model type and integrator type consistent
     if (options.count("integrator"))
     {
         if (to_string(options.at("integrator")) == "ERK")
@@ -47,22 +86,19 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
         else
             throw std::invalid_argument("Invalid integrator.");
     }
-    else
+    else  // default integrator
         sim_plan.sim_solver = ERK;
 
-    if (!options.count("step")) throw std::invalid_argument("Expected 'step' as an option.");
-
-    // TODO add check: modeltype and integrator type consistent
+    // check variable type to use
+    use_MX_ = false;
+    if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")) > 0);
 
     config_ = sim_config_create(sim_plan);
 
     dims_ = sim_dims_create(config_);
 
     // get dimensions from model
-    casadi::SX x = model.sx_in(0);
-    casadi::SX u = model.sx_in(1);
-    nx_ = x.size1();
-    nu_ = u.size1();
+    get_input_dims(model, nx_, nu_, use_MX_);
 
     // set dimensions
     config_->set_nx(dims_, nx_);
@@ -90,30 +126,29 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
     if (options.count("stages")) opts_->ns = to_int(options.at("stages"));
 
-    // sim_in & sim_out in C
+    // sim_in & sim_out structs in C
     in_ = sim_in_create(config_, dims_);
     out_ = sim_out_create(config_, dims_);
 
     // set step width
     set_step(to_double(options.at("step")));
 
-    // TODO: generate and set model;
-    // use external_function_generic stuff
-    // std::map<std::string, option_t *> model_options = {};
-    // if (options.count("model_type")) model_options[model_type] =
-    // to_int(options.at("model_type"));
-    use_MX_ = false;
+    // generate and set model;
     integrator::set_model(model, options);
 
+    // create the integrator
     solver_ = sim_create(config_, dims_, opts_);
 }
 
 
 void integrator::set_model(const casadi::Function &model, std::map<std::string, option_t *> options)
 {
-    if (options.count("model_type")) model_type_ = (model_t) to_int(options.at("model_type"));
+    if (options.count("model_type"))
+        model_type_ = (model_t) to_int(options.at("model_type"));  // This is not a nice interface
 
     if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")) > 0);
+
+    string autogen_dir = "_autogen";
 
     if (model_type_ == GNSF)
     {
@@ -131,13 +166,13 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
     {
         if (opts_->sens_forw)
         {
-            module_["expl_vde_for"] = generate_forward_vde(model);
+            module_["expl_vde_for"] = generate_forward_vde(model, autogen_dir, use_MX_);
             sim_set_model_internal(config_, in_->model, "expl_vde_for",
                                    (void *) module_["expl_vde_for"].as_external_function());
         }
         else
         {
-            module_["expl_ode_fun"] = generate_expl_ode_fun(model);
+            module_["expl_ode_fun"] = generate_expl_ode_fun(model, autogen_dir, use_MX_);
             sim_set_model_internal(config_, in_->model, "expl_ode_fun",
                                    (void *) module_["expl_ode_fun"].as_external_function());
         }
