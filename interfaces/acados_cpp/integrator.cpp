@@ -121,13 +121,17 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
     }
     else if (model_type_ == IMPLICIT)
     {
+        // module_["impl_ode_fun_jac_x_xdot_z"] = generate_impl_ode_fun_jac_x_xdot_z(model);
+        // int status = sim_set_model_internal(config_, in_->model,
+        //     "impl_ode_fun_jac_x_xdot_z", (void *) module_["impl_ode_fun_jac_x_xdot_z"].as_external_function());
+
         // module_["impl_ode_fun"] = generate_impl_ode_fun(model);
         // int status = sim_set_model_internal(config_, in_->model,
         //     "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
 
         throw std::invalid_argument("Not supported model type.");
     }
-    else  // explicit default
+    else  // EXPLICIT default
     {
         if (opts_->sens_forw)
         {
@@ -140,6 +144,16 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
             module_["expl_ode_fun"] = generate_expl_ode_fun(model);
             sim_set_model_internal(config_, in_->model, "expl_ode_fun",
                                    (void *) module_["expl_ode_fun"].as_external_function());
+        }
+        
+        if (opts_->sens_adj && !opts_->sens_hess) {
+            module_["expl_vde_adj"] = generate_expl_vde_adj(model);
+            sim_set_model_internal(config_, in_->model, "expl_vde_adj",
+                                   (void *) module_["expl_vde_adj"].as_external_function());
+        }
+        else if (opts_->sens_hess)
+        {
+            throw std::invalid_argument("Hessians not supported by cpp interface");
         }
     }
 
