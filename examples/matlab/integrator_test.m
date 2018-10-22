@@ -20,10 +20,24 @@ u = 1;
 
 x2 = [ 4.2; 0];
 
-for k=1:100
+t1 = 0.0;
+t2 = 0.0;
+M = 100;
+
+for k=1:M
+    
+    tic
     x1 = cell2mat(sim1.integrate(x1, u));
+    t1 = t1 + toc;
+    
+    tic
     x2 = cell2mat(sim2.integrate(x2, u));
+    t2 = t2 + toc;
+    
     sim1.set_step(sim1.step()*0.99);
     disp(x1)
     disp(x2)
 end
+
+disp(['avg time sim1: ', num2str(t1/M)]);
+disp(['avg time sim2: ', num2str(t2/M)]);
