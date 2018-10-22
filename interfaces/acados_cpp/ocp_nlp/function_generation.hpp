@@ -11,8 +11,11 @@
 namespace acados
 {
 // TODO: actually belongs more to integrator
-// casadi_module generate_impl_ode_fun(const casadi::Function& model,
-//                                    std::string output_dir = "_autogen");
+casadi_module generate_impl_ode_fun_jac_x_xdot_z(const casadi::Function& model,
+                                   std::string output_dir = "_autogen");
+
+casadi_module generate_impl_ode_fun(const casadi::Function& model,
+                                   std::string output_dir = "_autogen");
 
 casadi_module generate_forward_vde(const casadi::Function& model,
                                    std::string output_dir = "_autogen", const bool use_MX = false);
