@@ -27,35 +27,41 @@ casadi_module generate_nls_residual(const casadi::Function& residual, string out
 
 
 /* IMPLICIT MODEL */
-// casadi_module generate_impl_ode_fun(const casadi::Function& model, string output_folder)
-// {
-//     casadi::SX x = model.sx_in(0);
-//     casadi::SX xdot = model.sx_in(1);
-//     casadi::SX u = model.sx_in(2);
-//     casadi::SX z = model.sx_in(3);
+casadi_module generate_impl_ode_fun(const casadi::Function& model, string output_folder)
+{
+    casadi::SX x = model.sx_in(0);
+    casadi::SX xdot = model.sx_in(1);
+    casadi::SX u = model.sx_in(2);
+    casadi::SX z = model.sx_in(3);
 
-//     casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, xdot, u, z})));
+    casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, xdot, u, z})));
 
-//     casadi::Function fun(model.name() + "_impl_ode_fun", {x, xdot, u, z}, {rhs});
+    casadi::Function fun(model.name() + "_impl_ode_fun", {x, xdot, u, z}, {rhs});
 
-//     return casadi_module(fun, output_folder);
-// }
+    return casadi_module(fun, output_folder);
+}
 
-// casadi_module generate_impl_ode_fun_jac_x_xdot_u(const casadi::Function& model, string output_folder)
-// {
-//     casadi::SX x = model.sx_in(0);
-//     casadi::SX xdot = model.sx_in(1);
-//     casadi::SX u = model.sx_in(2);
-//     casadi::SX z = model.sx_in(3);
-//     casadi::SX w = casadi::SX::vertcat(vector<casadi::SX>({x, u}));
+casadi_module generate_impl_ode_fun_jac_x_xdot_z(const casadi::Function& model, string output_folder)
+{
+    casadi::SX x = model.sx_in(0);
+    casadi::SX xdot = model.sx_in(1);
+    casadi::SX u = model.sx_in(2);
+    casadi::SX z = model.sx_in(3);
+    casadi::SX w = casadi::SX::vertcat(vector<casadi::SX>({x, u}));
+
+    casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, xdot, u, z})));
 
 
-//     casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, xdot, u, z})));
+    casadi::SX jac_x = casadi::SX::jacobian(rhs, x);
+    // casadi::SX jac_u = casadi::SX::jacobian(rhs, u);
+    casadi::SX jac_z = casadi::SX::jacobian(rhs, z);
+    casadi::SX jac_xdot = casadi::SX::jacobian(rhs, xdot);
 
-//     casadi::Function fun(model.name() + "_impl_ode_fun_jac_x_xdot_u", {x, xdot, u, z}, {rhs});
+    casadi::Function fun(model.name() + "_impl_ode_fun_jac_x_xdot_z",
+                        {x, xdot, u, z}, {jac_x, jac_xdot, jac_z});
 
-//     return casadi_module(fun, output_folder);
-// }
+    return casadi_module(fun, output_folder);
+}
 
 /* EXPLICIT MODEL */
 casadi_module generate_forward_vde(const casadi::Function& model, string output_folder)

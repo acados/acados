@@ -44,6 +44,8 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     {
         if (to_string(options.at("integrator")) == "ERK")
             sim_plan.sim_solver = ERK;
+        else if (to_string(options.at("integrator")) == "IRK")
+            sim_plan.sim_solver = IRK;
         else
             throw std::invalid_argument("Invalid integrator.");
     }
@@ -111,6 +113,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
 void integrator::set_model(const casadi::Function &model, std::map<std::string, option_t *> options)
 {
+    // TODO(oj): complete logic, check all options, implement more generate_* functions
     if (options.count("model_type")) model_type_ = (model_t) to_int(options.at("model_type"));
 
     if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")) > 0);
@@ -121,13 +124,13 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
     }
     else if (model_type_ == IMPLICIT)
     {
-        // module_["impl_ode_fun_jac_x_xdot_z"] = generate_impl_ode_fun_jac_x_xdot_z(model);
-        // int status = sim_set_model_internal(config_, in_->model,
-        //     "impl_ode_fun_jac_x_xdot_z", (void *) module_["impl_ode_fun_jac_x_xdot_z"].as_external_function());
+        module_["impl_ode_fun_jac_x_xdot_z"] = generate_impl_ode_fun_jac_x_xdot_z(model);
+        sim_set_model_internal(config_, in_->model,
+            "impl_ode_fun_jac_x_xdot_z", (void *) module_["impl_ode_fun_jac_x_xdot_z"].as_external_function());
 
-        // module_["impl_ode_fun"] = generate_impl_ode_fun(model);
-        // int status = sim_set_model_internal(config_, in_->model,
-        //     "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
+        module_["impl_ode_fun"] = generate_impl_ode_fun(model);
+        sim_set_model_internal(config_, in_->model,
+            "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
 
         throw std::invalid_argument("Not supported model type.");
     }
