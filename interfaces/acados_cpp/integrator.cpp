@@ -2,6 +2,7 @@
 #include "acados_cpp/integrator.hpp"
 
 #include <algorithm>
+#include <exception>
 
 #include "acados_cpp/ocp_nlp/function_generation.hpp"
 
@@ -12,73 +13,138 @@ using std::map;
 using std::string;
 using std::vector;
 
-// Todo: modify this, such that only expression is taken.
-static bool is_valid_model(const casadi::Function &model, const bool use_MX = false)
+static bool check_model(const casadi::Function &model, model_t model_type, const bool use_MX,
+                        size_t &nx, size_t &nu, size_t &nz)
 {
-    if (model.n_in() < 2 )
-        throw std::invalid_argument("An ODE model should have 2 inputs: states and controls.");
-    if (model.n_out() != 1)
-        throw std::runtime_error("An ODE model should have 1 output: the right hand side");
+    /* CHECK inputs */
+    int model_n_in = model.n_in();
+    if (model_n_in < 1 )
+        throw std::invalid_argument("An ODE model should have at least 1 input: differential states x");
+    // x
+    try {
+        int ix = model.index_in("x");
+    } catch (std::exception& e) {
+        throw std::invalid_argument("The dynamic system model should have the differential states x as an input \n please check that this input is named 'x'");
+    }
 
+    // u
+    try {
+        int iu = model.index_in("u");
+    } catch (std::exception& e) {
+        throw std::invalid_argument("The dynamic system model should have the control vector u as an input \n please check that this input is named 'u'");
+    }
+
+    bool isDAE = false;
+    if (model_type == IMPLICIT)
+    {
+        // xdot
+        try {
+            int ixdot = model.index_in("xdot");
+        } catch (std::exception& e) {
+            throw std::invalid_argument("An IMPLICIT dynamic system model should have the time derivatives of the differential states XDOT as an input \n please check that this input is named 'xdot'");        
+        }
+
+        // z
+        try {
+            int iz = model.index_in("z");
+            bool isDAE = true;
+        } catch (std::exception& e) {
+            isDAE = false;
+        }
+    }
+
+    /* GET DIMENSIONS */
     if (use_MX == false)
     {
-        casadi::SX x = model.sx_in(0);
-        casadi::SX u = model.sx_in(1);
-        int_t nx = x.size1();
-        std::vector<casadi::SX> input{x, u};
+        casadi::SX x = model.sx_in("x");
+        casadi::SX u = model.sx_in("u");
 
-        // rhs = f_expl_expr
-        casadi::SX rhs = casadi::SX::vertcat(model(input));
-        if (rhs.size1() != nx)
-            throw std::runtime_error("Length of right hand size should equal number of states");
+        nx = x.size1();
+        nu = u.size1();
+
+        if (model_type == IMPLICIT){
+            casadi::SX xdot = model.sx_in("xdot");
+        }
+        if (isDAE){
+            casadi::SX z = model.sx_in("z");
+            nz = z.size1();
+        }
+        else nz = 0;
     }
     else  // MX
     {
-        casadi::MX x = model.mx_in(0);
-        casadi::MX u = model.mx_in(1);
-        int_t nx = x.size1();
-        std::vector<casadi::MX> input{x, u};
+        casadi::MX x = model.mx_in("x");
+        casadi::MX u = model.mx_in("u");
 
-        // rhs = f_expl_expr
-        casadi::MX rhs = casadi::MX::vertcat(model(input));
-        if (rhs.size1() != nx)
-            throw std::runtime_error("Length of right hand size should equal number of states");
+        nx = x.size1();
+        nu = u.size1();
+    
+        if (model_type == IMPLICIT){
+            casadi::MX xdot = model.mx_in("xdot");
+        }
+        if (isDAE){
+            casadi::SX z = model.sx_in("z");
+            nz = z.size1();
+        }
+        else nz = 0;
     }
+
+
+
+
+    /* CHECK outputs */
+    if (model.n_out() != 1)
+        throw std::invalid_argument("An ODE model should have 1 output: the right hand side\n -- an explicit model has: xdot\n -- an implicit model has: rhs \n");
+
+    /* CHECK input/output consistency */
+    // TODO(oj): rewrite this
+    // if (use_MX == false)  // SX
+    // {
+    //     casadi::SX x = model.sx_in(0);
+    //     casadi::SX u = model.sx_in(1);
+    //     int_t nx = x.size1();
+    //     std::vector<casadi::SX> input{x, u};
+
+    //     // rhs = f_expl_expr
+    //     casadi::SX rhs = casadi::SX::vertcat(model(input));
+    //     if (rhs.size1() != nx)
+    //         throw std::runtime_error("Length of right hand size should equal number of states");
+    // }
+    // else  // MX
+    // {
+    //     casadi::MX x = model.mx_in(0);
+    //     casadi::MX u = model.mx_in(1);
+    //     int_t nx = x.size1();
+    //     std::vector<casadi::MX> input{x, u};
+
+    //     // rhs = f_expl_expr
+    //     casadi::MX rhs = casadi::MX::vertcat(model(input));
+    //     if (rhs.size1() != nx)
+    //         throw std::runtime_error("Length of right hand size should equal number of states");
+    // }
 
     return true;
 }
 
-static void get_input_dims(const casadi::Function &model, size_t &nx, size_t &nu,
-                           const bool use_MX = false)
-{
-    if (use_MX == false)
-    {
-        casadi::SX x = model.sx_in(0);
-        casadi::SX u = model.sx_in(1);
-        nx = x.size1();
-        nu = u.size1();
-    }
-    else  // MX
-    {
-        casadi::MX x = model.mx_in(0);
-        casadi::MX u = model.mx_in(1);
-        nx = x.size1();
-        nu = u.size1();
-    }
-}
 
 
 // TODO: generalize for MX!
 /* CONSTRUCTOR */
 integrator::integrator(const casadi::Function &model, std::map<std::string, option_t *> options)
 {
-    if (!is_valid_model(model)) throw std::invalid_argument("Model is invalid.");
+    if (options.count("model_type"))
+        model_type_ = (model_t) to_int(options.at("model_type"));  // This is not a nice interface
+    else
+        model_type_ = EXPLICIT;
 
-    if (!options.count("step")) throw std::invalid_argument("Expected 'step' as an option.");
+    // check variable type to use
+    use_MX_ = false;
+    if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")) > 0);
+
 
     sim_solver_plan sim_plan;
 
-    // TODO add check: model type and integrator type consistent
+    // TODO(oj) add check: model type and integrator type consistent
     if (options.count("integrator"))
     {
         if (to_string(options.at("integrator")) == "ERK")
@@ -91,16 +157,17 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     else  // default integrator
         sim_plan.sim_solver = ERK;
 
-    // check variable type to use
-    use_MX_ = false;
-    if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")) > 0);
+
+    if (!check_model(model, model_type_, use_MX_, nx_, nu_, nz_))
+        throw std::invalid_argument("Model is invalid.");
+
+    if (!options.count("step")) throw std::invalid_argument("Expected 'step' as an option.");
+
+
 
     config_ = sim_config_create(sim_plan);
 
     dims_ = sim_dims_create(config_);
-
-    // get dimensions from model
-    get_input_dims(model, nx_, nu_, use_MX_);
 
     // set dimensions
     config_->set_nx(dims_, nx_);

@@ -191,7 +191,7 @@ casadi_module generate_expl_ode_fun(const casadi::Function& model, string output
     }
     else  // MX
     {
-        casadi::MX x = model.mx_in(0);
+        casadi::MX x = model.mx_in("x");
         casadi::MX u = model.mx_in(1);
 
         casadi::MX rhs = casadi::MX::vertcat(model(vector<casadi::MX>({x, u})));

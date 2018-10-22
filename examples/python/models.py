@@ -7,7 +7,7 @@ def chen_model():
     u = SX.sym('u', nu)
     mu = 0.5
     rhs = vertcat(x[1] + u*(mu + (1.-mu)*x[0]), x[0] + u*(mu - 4.*(1.-mu)*x[1]))
-    return Function('chen', [x, u], [rhs]), nx, nu
+    return Function('chen', [x, u], [rhs], ['x', 'u'], ['xdot']), nx, nu
 
 def pendulum_model():
     """ Nonlinear inverse pendulum model. """
@@ -27,6 +27,6 @@ def pendulum_model():
                       (- l*m*sin(theta)*omega**2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)**2),
                       (- l*m*cos(theta)*sin(theta)*omega**2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)**2)))
 
-    return (Function('pendulum', [vertcat(p, theta, v, omega), F], [ode_rhs]),
+    return (Function('pendulum', [vertcat(p, theta, v, omega), F], [ode_rhs], ['x', 'u'], ['xdot']),
             4, # number of states
             1) # number of controls
