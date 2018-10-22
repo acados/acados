@@ -15,7 +15,7 @@ using std::vector;
 // Todo: modify this, such that only expression is taken.
 static bool is_valid_model(const casadi::Function &model, const bool use_MX = false)
 {
-    if (model.n_in() != 2)
+    if (model.n_in() < 2 )
         throw std::invalid_argument("An ODE model should have 2 inputs: states and controls.");
     if (model.n_out() != 1)
         throw std::runtime_error("An ODE model should have 1 output: the right hand side");
@@ -105,6 +105,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     // set dimensions
     config_->set_nx(dims_, nx_);
     config_->set_nu(dims_, nu_);
+    // config_->set_nz(dims_, nz_);
 
     // sim opts
     opts_ = static_cast<sim_rk_opts *>(sim_opts_create(config_, dims_));
