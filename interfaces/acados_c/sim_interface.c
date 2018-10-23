@@ -166,7 +166,9 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         /* implicit model */
     else if (!strcmp(fun_type, "impl_ode_fun"))
         status = config->model_set_function(model, IMPL_ODE_FUN, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot")) // TODO update with z !!!
+    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot")) // TODO(oj): remove this case and fix dependencies
+        status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot_z"))
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u")) // TODO update with z !!!
         status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
