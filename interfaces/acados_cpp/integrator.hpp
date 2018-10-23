@@ -33,7 +33,6 @@ class integrator
 
     std::vector<double> integrate(std::vector<double> x, std::vector<double> u = {});
 
-    void set_model(const casadi::Function& model, std::map<std::string, option_t*> options = {});
 
     void set_step(const double step);
 
@@ -43,6 +42,8 @@ class integrator
     ~integrator();
 
  private:
+    void set_model(const casadi::Function& model, std::map<std::string, option_t*> options = {});
+
     sim_solver_config* config_;
     sim_rk_opts* opts_;
     sim_in* in_;

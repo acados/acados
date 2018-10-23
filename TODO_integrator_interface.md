@@ -9,8 +9,8 @@ TODOs:
 - [T] try to compile on Windows
 
 For Presenting
-- [J] Minimal Python
-- [J] Mighty Python example with timings
+- [X] Minimal Python
+- [X] Mighty Python example with timings
 - [X] Matlab example with timings
 - [T] Design choices
 
@@ -19,3 +19,4 @@ After DEMO
 - [] output dict/struct
 - [J] Fix ocp_nlp
 - [] Cleanup & Refactor
+- [] .get_settings
