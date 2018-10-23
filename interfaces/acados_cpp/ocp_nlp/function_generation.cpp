@@ -43,7 +43,7 @@ casadi_module generate_nls_residual(const casadi::Function& residual, string out
     return casadi_module(r_fun, output_folder);
 }
 
-// TODO(oj): move the following one directory up
+// TODO(oj): move the following functions one directory up
 /* IMPLICIT MODEL */
 casadi_module generate_impl_ode_fun(const casadi::Function& model, string output_folder,
                                     const bool use_MX)
@@ -56,7 +56,10 @@ casadi_module generate_impl_ode_fun(const casadi::Function& model, string output
         casadi::SX u = model.sx_in("u");
         casadi::SX z = model.sx_in("z");
 
-        casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, xdot, u, z})));
+        casadi::SXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
+
+        casadi::SXDict rhs_dict = (model(arg_in));
+        casadi::SX rhs = rhs_dict.begin()->second;
 
         fun = casadi::Function(model.name() + "_impl_ode_fun", {x, xdot, u, z}, {rhs});
     }
@@ -84,10 +87,12 @@ casadi_module generate_impl_ode_fun_jac_x_xdot_z(const casadi::Function& model,
         casadi::SX xdot = model.sx_in("xdot");
         casadi::SX u = model.sx_in("u");
         casadi::SX z = model.sx_in("z");
-        casadi::SX w = casadi::SX::vertcat(vector<casadi::SX>({x, u}));
+        // casadi::SX w = casadi::SX::vertcat(vector<casadi::SX>({x, u}));
+        std::cout << "GENERATE IMPL MODEL- Got xuz" << std::endl;
+        casadi::SXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
 
-        casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, xdot, u, z})));
-
+        casadi::SXDict rhs_dict = (model(arg_in));
+        casadi::SX rhs = rhs_dict.begin()->second;
 
         casadi::SX jac_x = casadi::SX::jacobian(rhs, x);
         // casadi::SX jac_u = casadi::SX::jacobian(rhs, u);
@@ -95,7 +100,7 @@ casadi_module generate_impl_ode_fun_jac_x_xdot_z(const casadi::Function& model,
         casadi::SX jac_xdot = casadi::SX::jacobian(rhs, xdot);
 
         fun = casadi::Function(model.name() + "_impl_ode_fun_jac_x_xdot_z",
-                            {x, xdot, u, z}, {jac_x, jac_xdot, jac_z});
+                            {x, xdot, u, z}, {rhs, jac_x, jac_xdot, jac_z});
     }
     else  // MX
     {
@@ -103,7 +108,7 @@ casadi_module generate_impl_ode_fun_jac_x_xdot_z(const casadi::Function& model,
         casadi::MX xdot = model.mx_in("xdot");
         casadi::MX u = model.mx_in("u");
         casadi::MX z = model.mx_in("z");
-        casadi::MX w = casadi::MX::vertcat(vector<casadi::MX>({x, u}));
+        // casadi::MX w = casadi::MX::vertcat(vector<casadi::MX>({x, u}));
 
         casadi::MX rhs = casadi::MX::vertcat(model(vector<casadi::MX>({x, xdot, u, z})));
 

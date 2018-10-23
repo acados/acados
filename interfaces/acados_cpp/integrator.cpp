@@ -47,7 +47,7 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
         // z
         try {
             int iz = model.index_in("z");
-            bool isDAE = true;
+            isDAE = true;
         } catch (std::exception& e) {
             isDAE = false;
         }
@@ -123,6 +123,8 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
     //         throw std::runtime_error("Length of right hand size should equal number of states");
     // }
 
+    // std::cout << "MODEL is VALID" << std::endl;
+
     return true;
 }
 
@@ -150,7 +152,10 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
         if (to_string(options.at("integrator")) == "ERK")
             sim_plan.sim_solver = ERK;
         else if (to_string(options.at("integrator")) == "IRK")
+        {
             sim_plan.sim_solver = IRK;
+            // std::cout << "USING IRK" << std::endl;
+        }
         else
             throw std::invalid_argument("Invalid integrator.");
     }
@@ -200,11 +205,12 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     in_ = sim_in_create(config_, dims_);
     out_ = sim_out_create(config_, dims_);
 
+
     // set step width
     set_step(to_double(options.at("step")));
 
     // generate and set model;
-    integrator::set_model(model, options);
+    set_model(model, options);
 
     // create the integrator
     solver_ = sim_create(config_, dims_, opts_);
@@ -227,16 +233,20 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
     }
     else if (model_type_ == IMPLICIT)
     {
+        // std::cout << "GENERATE IMPL MODEL" << std::endl;
         module_["impl_ode_fun_jac_x_xdot_z"] = generate_impl_ode_fun_jac_x_xdot_z(model);
         sim_set_model_internal(config_, in_->model,
             "impl_ode_fun_jac_x_xdot_z",
             (void *) module_["impl_ode_fun_jac_x_xdot_z"].as_external_function());
 
+        // std::cout << "GENERATE IMPL MODEL - impl_ode_fun_jac_x_xdot_z done" << std::endl;
+
         module_["impl_ode_fun"] = generate_impl_ode_fun(model);
         sim_set_model_internal(config_, in_->model,
             "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
+        // std::cout << "GENERATE IMPL MODEL - impl_ode_fun done" << std::endl;
 
-        throw std::invalid_argument("Not supported model type.");
+        // throw std::invalid_argument("Not supported model type.");
     }
     else  // EXPLICIT default
     {

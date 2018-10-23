@@ -27,6 +27,12 @@ def pendulum_model():
                       (- l*m*sin(theta)*omega**2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)**2),
                       (- l*m*cos(theta)*sin(theta)*omega**2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)**2)))
 
+    nx = 4
+    # for IRK
+    xdot = SX.sym('xdot', nx, 1)
+    z = SX.sym('z',0,1)
     return (Function('pendulum', [vertcat(p, theta, v, omega), F], [ode_rhs], ['x', 'u'], ['xdot']),
-            4, # number of states
-            1) # number of controls
+            nx, # number of states
+            1,  # number of controls
+            Function('impl_pendulum', [vertcat(p, theta, v, omega), F, xdot, z], [ode_rhs-xdot],
+                                    ['x', 'u','xdot','z'], ['rhs']))
