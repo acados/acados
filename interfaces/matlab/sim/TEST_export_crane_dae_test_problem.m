@@ -8,7 +8,7 @@ function [ model ] = TEST_export_crane_dae_test_problem()
 import casadi.*
 
 % this should end with '_' to get nice C function names
-model_name_prefix = 'crane_dae_';
+model_name_prefix = 'crane_dae';
 
 %% Parameters (taken from Riens ACADO model)
 tau1 = 0.012790605943772;   a1   = 0.047418203070092;

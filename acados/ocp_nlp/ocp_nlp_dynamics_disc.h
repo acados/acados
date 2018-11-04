@@ -85,10 +85,11 @@ typedef struct
 {
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
-    struct blasfeo_dvec *ux;    // pointer to ux in nlp_out at current stage
-    struct blasfeo_dvec *ux1;   // pointer to ux in nlp_out at next stage
-    struct blasfeo_dvec *pi;    // pointer to pi in nlp_out at current stage
-    struct blasfeo_dmat *BAbt;  // pointer to BAbt in qp_in
+    struct blasfeo_dvec *ux;     // pointer to ux in nlp_out at current stage
+    struct blasfeo_dvec *ux1;    // pointer to ux in nlp_out at next stage
+    struct blasfeo_dvec *pi;     // pointer to pi in nlp_out at current stage
+    struct blasfeo_dmat *BAbt;   // pointer to BAbt in qp_in
+    struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
 } ocp_nlp_dynamics_disc_memory;
 
 //

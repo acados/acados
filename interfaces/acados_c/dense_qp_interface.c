@@ -23,6 +23,10 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
+// hpipm
+#include "hpipm/include/hpipm_d_dense_qp.h"
+
 // acados_c
 
 #include "acados/utils/mem.h"
@@ -32,6 +36,9 @@
 #include "acados/dense_qp/dense_qp_qore.h"
 #endif
 #include "acados/dense_qp/dense_qp_qpoases.h"
+#ifdef ACADOS_WITH_OOQP
+#include "acados/dense_qp/dense_qp_ooqp.h"
+#endif
 
 qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
 {
@@ -56,6 +63,11 @@ qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
         case DENSE_QP_QORE:
 #ifdef ACADOS_WITH_QORE
             dense_qp_qore_config_initialize_default(solver_config);
+#endif
+            break;
+        case DENSE_QP_OOQP:
+#ifdef ACADOS_WITH_OOQP
+            dense_qp_ooqp_config_initialize_default(solver_config);
 #endif
             break;
     }
@@ -187,4 +199,183 @@ void dense_qp_inf_norm_residuals(dense_qp_dims *dims, dense_qp_in *qp_in, dense_
     dense_qp_res_compute_nrm_inf(qp_res, res);
     free(qp_res);
     free(res_ws);
+}
+
+bool dense_qp_set_field_double_array(const char *field, double *arr, dense_qp_in *qp_in)
+{
+    if (!strcmp(field, "H"))
+    {
+        d_dense_qp_set_H(arr, qp_in);
+    }
+    else if (!strcmp(field, "g"))
+    {
+        d_dense_qp_set_g(arr, qp_in);
+    }
+    else if (!strcmp(field, "A"))
+    {
+        d_dense_qp_set_A(arr, qp_in);
+    }
+    else if (!strcmp(field, "b"))
+    {
+        d_dense_qp_set_b(arr, qp_in);
+    }
+    else if (!strcmp(field, "lb"))
+    {
+        d_dense_qp_set_lb(arr, qp_in);
+    }
+    else if (!strcmp(field, "ub"))
+    {
+        d_dense_qp_set_ub(arr, qp_in);
+    }
+    else if (!strcmp(field, "C"))
+    {
+        d_dense_qp_set_C(arr, qp_in);
+    }
+    else if (!strcmp(field, "lg"))
+    {
+        d_dense_qp_set_lg(arr, qp_in);
+    }
+    else if (!strcmp(field, "ug"))
+    {
+        d_dense_qp_set_ug(arr, qp_in);
+    }
+    else if (!strcmp(field, "Zl"))
+    {
+        d_dense_qp_set_Zl(arr, qp_in);
+    }
+    else if (!strcmp(field, "Zu"))
+    {
+        d_dense_qp_set_Zu(arr, qp_in);
+    }
+    else if (!strcmp(field, "zl"))
+    {
+        d_dense_qp_set_zl(arr, qp_in);
+    }
+    else if (!strcmp(field, "zu"))
+    {
+        d_dense_qp_set_zu(arr, qp_in);
+    }
+    else if (!strcmp(field, "ls"))
+    {
+        d_dense_qp_set_ls(arr, qp_in);
+    }
+    else if (!strcmp(field, "us"))
+    {
+        d_dense_qp_set_us(arr, qp_in);
+    }
+    else
+    {
+        printf("\n%s is an unknown double array field in dense_qp_in!\n", field);
+        return false;
+    }
+
+    return true;
+}
+
+bool dense_qp_set_field_int_array(const char *field, int *arr, dense_qp_in *qp_in)
+{
+    if (!strcmp(field, "idxb"))
+    {
+        d_dense_qp_set_idxb(arr, qp_in);
+    }
+    else if (!strcmp(field, "idxs"))
+    {
+        d_dense_qp_set_idxs(arr, qp_in);
+    }
+    else
+    {
+        printf("\n%s is an unknown int array field in dense_qp_in!\n", field);
+        return false;
+    }
+
+    return true;
+}
+
+bool dense_qp_get_field_double_array(const char *field, dense_qp_in *qp_in, double *arr)
+{
+    if (!strcmp(field, "H"))
+    {
+        d_dense_qp_get_H(qp_in, arr);
+    }
+    else if (!strcmp(field, "g"))
+    {
+        d_dense_qp_get_g(qp_in, arr);
+    }
+    else if (!strcmp(field, "A"))
+    {
+        d_dense_qp_get_A(qp_in, arr);
+    }
+    else if (!strcmp(field, "b"))
+    {
+        d_dense_qp_get_b(qp_in, arr);
+    }
+    else if (!strcmp(field, "lb"))
+    {
+        d_dense_qp_get_lb(qp_in, arr);
+    }
+    else if (!strcmp(field, "ub"))
+    {
+        d_dense_qp_get_ub(qp_in, arr);
+    }
+    else if (!strcmp(field, "C"))
+    {
+        d_dense_qp_get_C(qp_in, arr);
+    }
+    else if (!strcmp(field, "lg"))
+    {
+        d_dense_qp_get_lg(qp_in, arr);
+    }
+    else if (!strcmp(field, "ug"))
+    {
+        d_dense_qp_get_ug(qp_in, arr);
+    }
+    else if (!strcmp(field, "Zl"))
+    {
+        d_dense_qp_get_Zl(qp_in, arr);
+    }
+    else if (!strcmp(field, "Zu"))
+    {
+        d_dense_qp_get_Zu(qp_in, arr);
+    }
+    else if (!strcmp(field, "zl"))
+    {
+        d_dense_qp_get_zl(qp_in, arr);
+    }
+    else if (!strcmp(field, "zu"))
+    {
+        d_dense_qp_get_zu(qp_in, arr);
+    }
+    else if (!strcmp(field, "ls"))
+    {
+        d_dense_qp_get_ls(qp_in, arr);
+    }
+    else if (!strcmp(field, "us"))
+    {
+        d_dense_qp_get_us(qp_in, arr);
+    }
+    else
+    {
+        printf("\n%s is an unknown double array field in dense_qp_in!\n", field);
+        return false;
+    }
+
+    return true;
+}
+bool dense_qp_get_field_int_array(const char *field, dense_qp_in *qp_in, int *arr)
+{
+    if (!strcmp(field, "idxb"))
+    {
+        d_dense_qp_get_idxb(qp_in, arr);
+    }
+    else if (!strcmp(field, "idxs"))
+    {
+        d_dense_qp_get_idxs(qp_in, arr);
+    }
+    else
+    {
+        printf("\n%s is an unknown int array field in dense_qp_in!\n", field);
+        return false;
+    }
+
+    return true;
 }

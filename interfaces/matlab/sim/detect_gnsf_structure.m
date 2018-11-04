@@ -46,10 +46,49 @@ function [ gnsf, reordered_model] = detect_gnsf_structure(model, transcribe_opts
 
 
 %% load transcribe_opts
-print_info = transcribe_opts.print_info;
-check_E_invertibility = transcribe_opts.check_E_invertibility;
-generate_gnsf_model = transcribe_opts.generate_gnsf_model;
-generate_reordered_model = transcribe_opts.generate_reordered_model;
+if isfield(transcribe_opts, 'print_info')
+    print_info = transcribe_opts.print_info;
+else
+    print_info = 1;
+    disp('print_info option was not set - default is true')
+end
+
+if isfield(transcribe_opts, 'detect_LOS')
+    detect_LOS = transcribe_opts.detect_LOS;
+else
+    detect_LOS = 1;
+    if print_info
+    disp('detect_LOS option was not set - default is true')
+    end
+end
+
+
+if isfield(transcribe_opts, 'check_E_invertibility')
+    check_E_invertibility = transcribe_opts.check_E_invertibility;
+else
+    check_E_invertibility = 1;
+    if print_info
+    disp('check_E_invertibility option was not set - default is true')
+    end
+end
+
+if isfield(transcribe_opts, 'generate_gnsf_model')
+    generate_gnsf_model = transcribe_opts.generate_gnsf_model;
+else
+    generate_gnsf_model = 0;
+    if print_info
+    disp('generate_gnsf_model option was not set - default is false')
+    end
+end
+
+if isfield(transcribe_opts, 'generate_reordered_model')
+    generate_reordered_model = transcribe_opts.generate_reordered_model;
+else
+    generate_reordered_model = 0;
+    if print_info
+    disp('generate_reordered_model option was not set - default is false')
+    end
+end
 
 
 %% Reformulate implicit index-1 DAE into GNSF form
@@ -58,7 +97,11 @@ gnsf = determine_trivial_gnsf_transcription( model, print_info );
 
 gnsf = detect_affine_terms_reduce_nonlinearity( gnsf, model, print_info );
 
-[ gnsf, reordered_model] = reformulate_with_LOS( model, gnsf, print_info);
+if detect_LOS
+    [ gnsf, reordered_model] = reformulate_with_LOS( model, gnsf, print_info);
+else
+    reordered_model = model;
+end
 
 if check_E_invertibility
     gnsf = reformulate_with_invertible_E_mat( gnsf, reordered_model, print_info);
@@ -77,7 +120,7 @@ end
 
 if generate_reordered_model
     % generate implicit model
-    generate_c_code_implicit_ode( reordered_model );
+    generate_c_code_implicit_ode( reordered_model, transcribe_opts );
     disp('Successfully generated C Code to simulate model with acados integrator IRK');
 end
 

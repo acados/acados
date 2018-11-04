@@ -26,6 +26,7 @@ extern "C" {
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
@@ -37,15 +38,18 @@ extern "C" {
 
 typedef struct
 {
-    int maxIter;
+    void *qp_solver_opts;
+    ocp_nlp_reg_opts *reg_opts;
+    void **dynamics;     // dynamics_opts
+    void **cost;         // cost_opts
+    void **constraints;  // constraints_opts
     double min_res_g;
     double min_res_b;
     double min_res_d;
     double min_res_m;
-    void *qp_solver_opts;
-    void **dynamics;     // dynamics_opts
-    void **cost;         // cost_opts
-    void **constraints;  // constraints_opts
+    int maxIter;
+    int reuse_workspace;
+    int num_threads;
 } ocp_nlp_sqp_opts;
 
 //
@@ -66,6 +70,8 @@ typedef struct
     //    ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
+    void *reg_mem;
+
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory
     void **constraints;  // constraints memory
@@ -77,7 +83,10 @@ typedef struct
     ocp_nlp_memory *nlp_mem;
 
     int sqp_iter;
-    int dummy;  // NOTE(dimitris): make struct size multiple of 8
+
+    double time_qp_sol;
+    double time_lin;
+    double time_tot;
 } ocp_nlp_sqp_memory;
 
 //

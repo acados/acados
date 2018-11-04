@@ -27,6 +27,7 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/utils/mem.h"
+// #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
@@ -170,6 +171,7 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
 
     // solve ipm
     acados_tic(&qp_timer);
+    // print_ocp_qp_in(qp_in);
     int hpipm_status = d_solve_ocp_qp_ipm(qp_in, qp_out, opts->hpipm_opts, memory->hpipm_workspace);
 
     info->solve_QP_time = acados_toc(&qp_timer);

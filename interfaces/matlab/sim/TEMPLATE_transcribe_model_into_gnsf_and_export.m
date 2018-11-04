@@ -23,28 +23,31 @@
 % functions called within this script.
 
 clc;
-clear all;
+clearvars;
 close all;
 
 % TODO adjust path
 % addpath('../../../interfaces/matlab/sim/')
 
 %% Set options
-% default is 1 for all options
+% default is as initialized here
 print_info = 1;
 check_E_invertibility = 1;
 generate_reordered_model = 0;
 generate_gnsf_model = 0;
+generate_hess = 0;
+detect_LOS = 1;
 
 transcribe_opts = struct('print_info', print_info, 'check_E_invertibility',...
     check_E_invertibility, 'generate_reordered_model', generate_reordered_model, ...
     'generate_gnsf_model', generate_gnsf_model);
-
+transcribe_opts.generate_hess = generate_hess;
+transcribe_opts.detect_LOS = detect_LOS;
 %% define f_impl
-% model = TEST_export_inverted_pendulum_dae_model();
+model = TEST_export_inverted_pendulum_dae_model();
 % model = TEST_export_inverted_pendulum_dae_model_MX();
 % model = TEST_export_crane_dae_test_problem();
-model = TEST_export_stupid_test_problem( );
+% model = TEST_export_stupid_test_problem( );
 
 %% transcribe model into gnsf & export
 [ gnsf, reordered_model] = detect_gnsf_structure(model, transcribe_opts);

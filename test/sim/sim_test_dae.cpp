@@ -56,11 +56,8 @@ using Eigen::Map;
 
 sim_solver_t hashitsim_dae(std::string const& inString)
 {
-    if (inString == "ERK") return ERK;
     if (inString == "IRK") return IRK;
-    if (inString == "LIFTED_IRK") return LIFTED_IRK;
     if (inString == "GNSF") return GNSF;
-    if (inString == "NEW_LIFTED_IRK") return NEW_LIFTED_IRK;
 
     return (sim_solver_t) -1;
 }
@@ -68,17 +65,15 @@ sim_solver_t hashitsim_dae(std::string const& inString)
 double sim_solver_tolerance_dae(std::string const& inString)
 {
     if (inString == "IRK")  return 1e-7;
-    // if (inString == "LIFTED_IRK") return 1e-3;
     if (inString == "GNSF") return 1e-7;
-    // if (inString == "NEW_LIFTED_IRK") return 1e-3;
 
     return -1;
 }
 
 double sim_solver_tolerance_algebraic_dae(std::string const& inString)
 {
-    if (inString == "IRK")  return 1e-4;
-    if (inString == "GNSF") return 1e-4;
+    if (inString == "IRK")  return 3e-4;
+    if (inString == "GNSF") return 3e-4;
 
     return -1;
 }
@@ -88,17 +83,20 @@ double sim_solver_tolerance_algebraic_dae(std::string const& inString)
 TEST_CASE("crane_dae_example", "[integrators]")
 {
     vector<std::string> solvers = {"IRK", "GNSF"};
-    // {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
 
     const int nx = 9;
     const int nu = 2;
     const int nz = 2;
-    const int nx1 = 5;  // gnsf split
-    const int nx2 = 4;
-    const int n_out = 3;
-    const int ny = 5;
+    const int n_out = 1;    // gnsf split
+    const int ny = 4;
     const int nuhat = 1;
+
+    const int nx1 = 5;
+    const int nz1 = 0;
+    const int nx2 = 4;
+    const int nz2 = 2;
+
 
     // generate x0, u_sim
     double x0[nx];
@@ -261,7 +259,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     {
         gnsf_dim = (sim_gnsf_dims *) dims;
         gnsf_dim->nx1 = nx1;
-        gnsf_dim->nx2 = nx2;
+        gnsf_dim->nz1 = nz1;
         gnsf_dim->ny = ny;
         gnsf_dim->nuhat = nuhat;
         gnsf_dim->n_out = n_out;
@@ -276,11 +274,12 @@ TEST_CASE("crane_dae_example", "[integrators]")
     opts->sens_forw = true;
     opts->sens_adj = true;
     opts->sens_algebraic = true;
+    opts->sens_hess = false;
     opts->output_z = true;
     opts->jac_reuse = false;  // jacobian reuse
     opts->newton_iter = 8;  // number of newton iterations per integration step
     opts->num_steps = 100;  // number of steps
-    opts->ns = 8;  // number of stages in rk integrator
+    opts->ns = 4;  // number of stages in rk integrator
 
     sim_in *in = sim_in_create(config, dims);
     sim_out *out = sim_out_create(config, dims);
@@ -395,16 +394,16 @@ TEST_CASE("crane_dae_example", "[integrators]")
     norm_S_alg_ref = onenorm(nz, nx + nu, S_alg_ref_sol);
 
     // printf("Reference xn \n");
-    // d_print_e_mat(1, nx, &x_ref_sol[0], 1);
+    // d_print_exp_mat(1, nx, &x_ref_sol[0], 1);
 
     // printf("Reference zn \n");
-    // d_print_e_mat(1, nz, &z_ref_sol[0], 1);
+    // d_print_exp_mat(1, nz, &z_ref_sol[0], 1);
 
     // printf("Reference forward sensitivities \n");
-    // d_print_e_mat(nx, NF, &S_forw_ref_sol[0], nx);
+    // d_print_exp_mat(nx, NF, &S_forw_ref_sol[0], nx);
 
     // printf("reference algebraic sensitivities \n");
-    // d_print_e_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
+    // d_print_exp_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
 
     /* free */
     free(config);
@@ -437,7 +436,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
             {
             SECTION("sens_alg = " + std::to_string((bool)sens_alg))
             {
-            for (int num_stages = 3; num_stages < 6; num_stages++)
+            for (int num_stages = 3; num_stages < 4; num_stages++)
             {
             SECTION("num_stages = " + std::to_string(num_stages))
             {
@@ -471,9 +470,9 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 if (plan.sim_solver == GNSF)
                 {
                     gnsf_dim = (sim_gnsf_dims *) dims;
-                    gnsf_dim->nx1   = nx1;
-                    gnsf_dim->nx2   = nx2;
-                    gnsf_dim->ny    = ny;
+                    gnsf_dim->nx1 = nx1;
+                    gnsf_dim->nz1 = nz1;
+                    gnsf_dim->ny = ny;
                     gnsf_dim->nuhat = nuhat;
                     gnsf_dim->n_out = n_out;
                 }
@@ -493,6 +492,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 opts->sens_adj          = (bool) sens_adj;
                 opts->output_z          = (bool) output_z;
                 opts->sens_algebraic    = (bool) sens_alg;
+                opts->sens_hess         = false;
 
 
             /* sim in / out */
@@ -528,13 +528,6 @@ TEST_CASE("crane_dae_example", "[integrators]")
                         sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
                         break;
                     }
-                    // case NEW_LIFTED_IRK:  // new_lifted_irk
-                    // {
-                    //     sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-                    //     sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u",
-                    //              &impl_ode_fun_jac_x_xdot_u);
-                    //     break;
-                    // }
                     default :
                     {
                         printf("\nnot enough sim solvers implemented!\n");
@@ -634,7 +627,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
                 if ( opts->sens_algebraic ){        // error_S_alg
                     for (int jj = 0; jj < nz * (nx + nu); jj++){
-                        REQUIRE(std::isnan(out->S_algebraic[jj]) == 0);
+                        // REQUIRE(std::isnan(out->S_algebraic[jj]) == 0);
                         error_S_alg[jj] = fabs(out->S_algebraic[jj] - S_alg_ref_sol[jj]);
                     }
                     norm_error_sens_alg = onenorm(nz, nx + nu, error_S_alg);
@@ -659,24 +652,47 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 std::cout  << "rel_error_alg    = " << rel_error_alg <<"\n";
 
                 // printf("tested algebraic sensitivities \n");
-                // d_print_e_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
-
+                // d_print_exp_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
+                // printf("tested xn \n");
+                // d_print_exp_mat(1, nx, &out->xn[0], 1);
             /************************************************
             * asserts on erors
             ************************************************/
                 REQUIRE(rel_error_x <= tol);
 
-                if ( opts->sens_forw )
+                if ( opts->sens_forw ){
+                    // printf("tested forward sensitivities \n");
+                    // d_print_exp_mat(nx, nx + nu, &out->S_forw[0], nx);
+                    // printf("REF forward sensitivities \n");
+                    // d_print_exp_mat(nx, nx + nu, S_forw_ref_sol, nx);
+                    // printf("ERROR forward sensitivities \n");
+                    // d_print_exp_mat(nx, nx + nu, error_S_forw, nx);
                     REQUIRE(rel_error_forw <= tol);
+                }
 
-                if ( opts->sens_adj )
+                if ( opts->sens_adj ){
+                    // printf("tested adjoint sensitivities \n");
+                    // d_print_exp_mat(1, nx + nu, &out->S_adj[0], 1);
+                    // printf("REF adjoint sensitivities \n");
+                    // d_print_exp_mat(1, nx + nu, S_adj_ref_sol, 1);
                     REQUIRE(rel_error_adj <= tol);
+                }
 
-                if ( opts->output_z )
+                if ( opts->output_z ){
+                    // printf("tested z output \n");
+                    // d_print_exp_mat(1, nz, &out->zn[0], 1);
+                    // printf("REF z output \n");
+                    // d_print_exp_mat(1, nz, z_ref_sol, 1);
                     REQUIRE(rel_error_z <= tol_algebraic);
+                }
 
-                if ( opts->sens_algebraic )
+                if ( opts->sens_algebraic ){
+                    // printf("tested algebraic sensitivities \n");
+                    // d_print_exp_mat(nz, nx + nu, &out->S_algebraic[0], nz);
+                    // printf("reference algebraic sensitivities \n");
+                    // d_print_exp_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
                     REQUIRE(rel_error_alg <= tol_algebraic);
+                }
 
             /************************************************
             * free tested solver

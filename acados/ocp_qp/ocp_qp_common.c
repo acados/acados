@@ -289,47 +289,7 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 
     if (info->t_computed == 0)
     {
-        // loop index
-        int ii;
-
-        //
-        int N = qp_in->dim->N;
-        int *nx = qp_in->dim->nx;
-        int *nu = qp_in->dim->nu;
-        int *nb = qp_in->dim->nb;
-        int *ng = qp_in->dim->ng;
-
-        struct blasfeo_dmat *DCt = qp_in->DCt;
-        struct blasfeo_dvec *d = qp_in->d;
-        int **idxb = qp_in->idxb;
-
-        struct blasfeo_dvec *ux = qp_out->ux;
-        struct blasfeo_dvec *t = qp_out->t;
-
-        struct blasfeo_dvec *tmp_nbgM = res_ws->tmp_nbgM;
-
-        int nx_i, nu_i, nb_i, ng_i;
-
-        for (ii = 0; ii <= N; ii++)
-        {
-            nx_i = nx[ii];
-            nu_i = nu[ii];
-            nb_i = nb[ii];
-            ng_i = ng[ii];
-
-            // compute slacks for general constraints
-            blasfeo_dgemv_t(nu_i + nx_i, ng_i, 1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii, nb_i,
-                            t + ii, nb_i);
-            blasfeo_dgemv_t(nu_i + nx_i, ng_i, -1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii,
-                            2 * nb_i + ng_i, t + ii, 2 * nb_i + ng_i);
-
-            // compute slacks for bounds
-            blasfeo_dvecex_sp(nb_i, 1.0, idxb[ii], ux + ii, 0, tmp_nbgM + 0, 0);
-            blasfeo_daxpby(nb_i, 1.0, tmp_nbgM + 0, 0, -1.0, d + ii, 0, t + ii, 0);
-            blasfeo_daxpby(nb_i, -1.0, tmp_nbgM + 0, 0, -1.0, d + ii, nb_i + ng_i, t + ii,
-                nb_i + ng_i);
-        }
-
+        ocp_qp_compute_t(qp_in, qp_out);
         info->t_computed = 1;
     }
 
@@ -425,7 +385,7 @@ void ocp_qp_stack_slacks_dims(ocp_qp_dims *in, ocp_qp_dims *out)
     int *ns   = in->ns;
     int *nsbx = in->nsbx;
     int *nsbu = in->nsbu;
-    int *nsg  = in->nsg;
+    // int *nsg  = in->nsg;
 
     out->N = N;
 
@@ -450,22 +410,25 @@ void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out)
     int *nx   = in->dim->nx;
     int *nu   = in->dim->nu;
     int *nb   = in->dim->nb;
-    int *nbx  = in->dim->nbx;
-    int *nbu  = in->dim->nbu;
+    // int *nbx  = in->dim->nbx;
+    // int *nbu  = in->dim->nbu;
     int *ng   = in->dim->ng;
     int *ns   = in->dim->ns;
     int *nsbx = in->dim->nsbx;
     int *nsbu = in->dim->nsbu;
-    int *nsg  = in->dim->nsg;
+    // int *nsg  = in->dim->nsg;
     int **idxb = in->idxb;
     int **idxs = in->idxs;
 
     int *nx2  = out->dim->nx;
     int *nu2  = out->dim->nu;
     int *nb2  = out->dim->nb;
-    int *nbx2 = out->dim->nbx;
-    int *nbu2 = out->dim->nbu;
+    // int *nbx2 = out->dim->nbx;
+    // int *nbu2 = out->dim->nbu;
     int *ng2  = out->dim->ng;
+
+    UNUSED(nsbx);
+    UNUSED(nsbu);
 
     for (int ii = 0; ii <= N; ii++)
     {
@@ -597,5 +560,47 @@ void ocp_qp_stack_slacks(ocp_qp_in *in, ocp_qp_in *out)
             blasfeo_dveccp(2*nb[ii]+2*ng[ii], in->m+ii, 0, out->m+ii, 0);
             for (int jj = 0; jj < nb[ii]; jj++) out->idxb[ii][jj] = in->idxb[ii][jj];
         }
+    }
+}
+
+void ocp_qp_compute_t(ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+{
+    // loop index
+    int ii;
+
+    //
+    int N = qp_in->dim->N;
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
+
+    struct blasfeo_dmat *DCt = qp_in->DCt;
+    struct blasfeo_dvec *d = qp_in->d;
+    int **idxb = qp_in->idxb;
+
+    struct blasfeo_dvec *ux = qp_out->ux;
+    struct blasfeo_dvec *t = qp_out->t;
+
+    int nx_i, nu_i, nb_i, ng_i;
+
+    for (ii = 0; ii <= N; ii++)
+    {
+        nx_i = nx[ii];
+        nu_i = nu[ii];
+        nb_i = nb[ii];
+        ng_i = ng[ii];
+
+        // compute slacks for bounds
+        blasfeo_dvecex_sp(nb_i, 1.0, idxb[ii], ux + ii, 0, t+ii, nb_i + ng_i);
+        blasfeo_daxpby(nb_i, 1.0, t + ii, nb_i + ng_i, -1.0, d + ii, 0, t + ii, 0);
+        blasfeo_daxpby(nb_i, -1.0, t + ii, nb_i + ng_i, -1.0, d + ii, nb_i + ng_i, t + ii,
+            nb_i + ng_i);
+
+        // compute slacks for general constraints
+        blasfeo_dgemv_t(nu_i + nx_i, ng_i, 1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii, nb_i,
+                        t + ii, nb_i);
+        blasfeo_dgemv_t(nu_i + nx_i, ng_i, -1.0, DCt + ii, 0, 0, ux + ii, 0, -1.0, d + ii,
+                        2 * nb_i + ng_i, t + ii, 2 * nb_i + ng_i);
     }
 }

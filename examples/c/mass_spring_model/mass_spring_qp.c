@@ -212,7 +212,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims)
     int *nu = dims->nu;
     int *nb = dims->nb;
     int *ng = dims->ng;
-    int *ns = dims->ns;
+    // int *ns = dims->ns;
 
     int nx_ = nx[1];
     int nu_ = nu[1];

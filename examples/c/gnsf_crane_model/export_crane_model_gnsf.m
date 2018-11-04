@@ -122,7 +122,9 @@ phi_jac_y_uhat = Function([casadi_export_prefix,'phi_jac_y_uhat'], {y,uhat}, {ja
 phi_jac_y = Function([casadi_export_prefix,'phi_jac_y_uhat'], {y,uhat}, {[jac_phi_y]});
 
 % Linear output
-ALO = zeros(nx2);
+A_LO = zeros(nx2);
+nz2 = 0;
+E_LO = eye(nx2 + nz2);
 % A2(1,1) = 1;
 
 % f = uCR^2 + xL^2;
@@ -138,12 +140,6 @@ f_fun = Function('f_los', {x1_dot,x1,z,u}, {f});
 f_lo_fun_jac_x1k1uz = Function([casadi_export_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1_dot, z, u}, ...
     {f, [jac_f_x1, jac_f_k1, jac_f_z, jac_f_u]});
 
-% struct for matlab prototype
-s = struct('A', A, 'B', B, 'C', C, 'E', E, 'ALO',ALO, 'L_x', L_x, 'L_xdot', L_xdot, 'L_z', L_z, 'L_u', L_u, ...
-    'phi_fun_jac_y', phi_fun_jac_y, 'phi_jac_y_uhat', phi_jac_y_uhat, 'f_fun', f_fun, ...
-    'nx1', nx1, 'nx2', nx2, 'nu', nu, 'n_out', n_out, 'nx', nx, 'nz', nz, 'ny', ny, 'nuhat', nuhat,...
-    'f_lo_fun_jac_x1k1uz', f_lo_fun_jac_x1k1uz);
-
 
 %% generate functions
 % ints = SX.zeros(8,1) + [s.nx, s.nu, s.nz, s.nx1, s.nx2, q, n_steps, s.n_out]';
@@ -153,11 +149,8 @@ s = struct('A', A, 'B', B, 'C', C, 'E', E, 'ALO',ALO, 'L_x', L_x, 'L_xdot', L_xd
 % get matrices
 dummy = SX.sym('dummy');
 
-% model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)])) + ...
-%     [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)];
-% get_matrices_fun = Function([casadi_export_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
 get_matrices_fun = Function([casadi_export_prefix,'get_matrices_fun'], {dummy},...
-    {A, B, C, E, L_x, L_xdot, L_z, L_u, ALO, c});
+    {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO});
 get_matrices_fun.generate('get_matrices_fun', casadi_opts);
 
 % generate Phi, f_LO
@@ -173,8 +166,8 @@ phi_jac_y_uhat.generate(['phi_jac_y_uhat'], casadi_opts);
 % % get ints
 n_steps = 1;
 num_stages = 4;
-get_ints_fun = Function([casadi_export_prefix,'get_ints_fun'],{dummy},{[s.nx, s.nu, s.nz, s.nx1, s.nx2, n_out, ny, nuhat, num_stages, n_steps]});
-get_ints_fun.generate('get_ints_fun', casadi_opts);
+% get_ints_fun = Function([casadi_export_prefix,'get_ints_fun'],{dummy},{[s.nx, s.nu, s.nz, s.nx1, s.nx2, n_out, ny, nuhat, num_stages, n_steps]});
+% get_ints_fun.generate('get_ints_fun', casadi_opts);
 
 %% test model function
 y0 = [7.980440e-01    -7.476009e-02   -5.242442e-03   -1.573284e-01];

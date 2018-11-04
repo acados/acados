@@ -129,7 +129,7 @@ int ocp_nlp_dims_calculate_size_self(int N)
     size += sizeof(ocp_nlp_dims);
 
     // nlp sizes
-    size += 4 * (N + 1) * sizeof(int);  // nv, nx, nu, ni
+    size += 5 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz
 
     // dynamics
     size += N * sizeof(void *);
@@ -142,6 +142,8 @@ int ocp_nlp_dims_calculate_size_self(int N)
 
     // qp solver
     size += ocp_qp_dims_calculate_size(N);
+
+    size += sizeof(ocp_nlp_reg_dims);
 
     size += 8;  // initial align
 
@@ -198,6 +200,8 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     assign_and_advance_int(N + 1, &dims->nu, &c_ptr);
     // ni
     assign_and_advance_int(N + 1, &dims->ni, &c_ptr);
+    // nz
+    assign_and_advance_int(N + 1, &dims->nz, &c_ptr);
 
     // dynamics
     dims->dynamics = (void **) c_ptr;
@@ -286,6 +290,7 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
         dims->nx[ii] = nx[ii];
         dims->nu[ii] = nu[ii];
         dims->ni[ii] = nbx[ii] + nbu[ii] + ng[ii] + nh[ii] + ns[ii];
+        dims->nz[ii] = nz[ii];
     }
 
     // dynamics
@@ -313,11 +318,16 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
     {
         dims->qp_solver->nx[ii] = nx[ii];
         dims->qp_solver->nu[ii] = nu[ii];
+        dims->qp_solver->nb[ii] = nbx[ii] + nbu[ii];
         dims->qp_solver->nbx[ii] = nbx[ii];
         dims->qp_solver->nbu[ii] = nbu[ii];
-        dims->qp_solver->nb[ii] = nbx[ii] + nbu[ii];
         dims->qp_solver->ng[ii] = ng[ii] + nh[ii];
         dims->qp_solver->ns[ii] = ns[ii];
+        // TODO(dimitris): values below are needed for reformulation of QP when soft constraints are
+        // note supported. Make this a bit more transparent as it clushes with nbx/nbu above.
+        dims->qp_solver->nsbx[ii] = 0;
+        dims->qp_solver->nsbu[ii] = 0;
+        dims->qp_solver->nsg[ii] = 0;
     }
 
     return;
@@ -463,19 +473,22 @@ int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
     int *nx = dims->nx;
     // int *nu = dims->nu;
     int *ni = dims->ni;
+    int *nz = dims->nz;
 
     int size = sizeof(ocp_nlp_out);
 
-    size += 3 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux lam
+    size += 4 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux lam z
     size += 1 * N * sizeof(struct blasfeo_dvec);        // pi
 
     for (int ii = 0; ii < N; ii++)
     {
         size += 1 * blasfeo_memsize_dvec(nv[ii]);      // ux
+        size += 1 * blasfeo_memsize_dvec(nz[ii]);      // z
         size += 1 * blasfeo_memsize_dvec(nx[ii + 1]);  // pi
         size += 2 * blasfeo_memsize_dvec(2 * ni[ii]);  // lam t
     }
     size += 1 * blasfeo_memsize_dvec(nv[N]);      // ux
+    size += 1 * blasfeo_memsize_dvec(nz[N]);     // z
     size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // lam t
 
     size += 8;   // initial align
@@ -495,6 +508,7 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
     int *nx = dims->nx;
     // int *nu = dims->nu;
     int *ni = dims->ni;
+    int *nz = dims->nz;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -510,6 +524,8 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
     // blasfeo_dvec_struct
     // ux
     assign_and_advance_blasfeo_dvec_structs(N + 1, &out->ux, &c_ptr);
+    // z
+    assign_and_advance_blasfeo_dvec_structs(N + 1, &out->z, &c_ptr);
     // pi
     assign_and_advance_blasfeo_dvec_structs(N, &out->pi, &c_ptr);
     // lam
@@ -525,6 +541,11 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
     for (int ii = 0; ii <= N; ++ii)
     {
         assign_and_advance_blasfeo_dvec_mem(nv[ii], out->ux + ii, &c_ptr);
+    }
+    // z
+    for (int ii = 0; ii <= N; ++ii)
+    {
+        assign_and_advance_blasfeo_dvec_mem(nz[ii], out->z + ii, &c_ptr);
     }
     // pi
     for (int ii = 0; ii < N; ++ii)

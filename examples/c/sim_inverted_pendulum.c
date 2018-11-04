@@ -17,7 +17,7 @@
  *
  */
 
-/*  This example shows how acados can be used to simulate index-1 DAEs   
+/*  This example shows how acados can be used to simulate index-1 DAEs
         using IRK integrators, either the standard sim_irk_integrator or
         the GNSF (generalized nonlinear static feedback) exploitingintegrator.
     Author: Jonathan Frey                                                   */
@@ -53,7 +53,7 @@ int main()
     const int nz    = 5;
 
     const int nx1   = 5;  // gnsf split
-    const int nx2   = 1;
+    const int nz1   = 5;
     const int n_out = 3;
     const int ny    = 8;
     const int nuhat = 1;
@@ -70,7 +70,7 @@ int main()
     x0[3] = -0.5000;  // vy
     x0[4] =  0.1000;  // valpha
     x0[5] =  1.0000;  // alpha
-    
+
 
     u_sim[0] = 1;
 
@@ -79,7 +79,7 @@ int main()
     int nsim0 = 1;  // nsim;
 
     double T = 0.01;
-    
+
 	double *x_sim = malloc(sizeof(double)*nx*(nsim+1));
 
     for (int ii = 0; ii < nx; ii++)
@@ -130,6 +130,16 @@ int main()
     impl_ode_fun_jac_x_xdot_u.casadi_n_in = &inv_pendulum_impl_ode_fun_jac_x_xdot_u_n_in;
     impl_ode_fun_jac_x_xdot_u.casadi_n_out = &inv_pendulum_impl_ode_fun_jac_x_xdot_u_n_out;
     external_function_casadi_create(&impl_ode_fun_jac_x_xdot_u);
+
+    // impl_ode_hess
+    external_function_casadi impl_ode_hess;
+    impl_ode_hess.casadi_fun = &inv_pendulum_impl_ode_hess;
+    impl_ode_hess.casadi_work = &inv_pendulum_impl_ode_hess_work;
+    impl_ode_hess.casadi_sparsity_in = &inv_pendulum_impl_ode_hess_sparsity_in;
+    impl_ode_hess.casadi_sparsity_out = &inv_pendulum_impl_ode_hess_sparsity_out;
+    impl_ode_hess.casadi_n_in = &inv_pendulum_impl_ode_hess_n_in;
+    impl_ode_hess.casadi_n_out = &inv_pendulum_impl_ode_hess_n_out;
+    external_function_casadi_create(&impl_ode_hess);
 
     /************************************************
     * external functions (Generalized Nonlinear Static Feedback (GNSF) model)
@@ -228,7 +238,7 @@ int main()
         {
             gnsf_dim = (sim_gnsf_dims *) dims;
             gnsf_dim->nx1   = nx1;
-            gnsf_dim->nx2   = nx2;
+            gnsf_dim->nz1   = nz1;
             gnsf_dim->ny    = ny;
             gnsf_dim->nuhat = nuhat;
             gnsf_dim->n_out = n_out;
@@ -240,15 +250,16 @@ int main()
         sim_rk_opts *opts = (sim_rk_opts *) opts_;
         config->opts_initialize_default(config, dims, opts);
 
-        opts->jac_reuse = false;        // jacobian reuse
+        opts->jac_reuse = true;        // jacobian reuse
         opts->newton_iter = 3;          // number of newton iterations per integration step
 
-        opts->ns                = 8;    // number of stages in rk integrator
-        opts->num_steps         = 1;    // number of steps
-        opts->sens_forw         = false;
-        opts->sens_adj          = false;
+        opts->ns                = 3;    // number of stages in rk integrator
+        opts->num_steps         = 3;    // number of steps
+        opts->sens_forw         = true;
+        opts->sens_adj          = true;
         opts->output_z          = true;
         opts->sens_algebraic    = true;
+        opts->sens_hess         = true;
 
     /* sim in / out */
 
@@ -266,6 +277,7 @@ int main()
                 sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
                         &impl_ode_fun_jac_x_xdot);
                 sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                sim_set_model(config, in, "impl_ode_hess", &impl_ode_hess);
                 break;
             }
             case GNSF:  // GNSF
@@ -346,7 +358,7 @@ int main()
 
     /* simulate */
 
-		int nsim0 = nsim;
+		// int nsim0 = nsim;
 
 		double cpu_time = 0.0;
 		double la_time = 0.0;
@@ -388,19 +400,19 @@ int main()
     * printing
 		************************************************/
 		printf("\nxn: \n");
-		d_print_e_mat(1, nx, &x_sim[nsim0*nx], 1);
+		d_print_exp_mat(1, nx, &x_sim[nsim0*nx], 1);
 
 		double *S_forw_out = NULL;
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			// printf("S_forw_out: \n");
-			// d_print_e_mat(nx, NF, S_forw_out, nx);
+			// d_print_exp_mat(nx, NF, S_forw_out, nx);
 		}
 
-		if(opts->sens_adj){
+		if(opts->sens_adj || opts->sens_hess){
 			double *S_adj_out = out->S_adj;
 			printf("S_adj_out: \n");
-			d_print_e_mat(1, nx+nu, S_adj_out, 1);
+			d_print_exp_mat(1, nx+nu, S_adj_out, 1);
 		}
 
 		if(opts->sens_forw){		// debug adjoints
@@ -421,18 +433,24 @@ int main()
 
 			blasfeo_free_dmat(&S_forw_result);
 			blasfeo_free_dvec(&adjoint_seed);
-			blasfeo_free_dvec(&forw_times_seed);			
+			blasfeo_free_dvec(&forw_times_seed);
 		}
 
         if (opts->output_z){
             printf("zn \n");
-            d_print_e_mat(1, nz, &out->zn[0], 1);
+            d_print_exp_mat(1, nz, &out->zn[0], 1);
         }
 
         if (opts->sens_algebraic){
             printf("algebraic sensitivities \n");
-            d_print_e_mat(nz, NF, &out->S_algebraic[0], nz);
+            d_print_exp_mat(nz, NF, &out->S_algebraic[0], nz);
         }
+
+		if(opts->sens_hess){
+			double *S_hess = out->S_hess;
+			printf("S_hess: \n");
+			d_print_exp_mat(nx+nu, nx+nu, S_hess, nx+nu);
+		}
 
     #if 0
 		printf("\n");

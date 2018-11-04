@@ -108,7 +108,8 @@ phi_jac_y_uhat = Function([casadi_export_prefix,'phi_jac_y_uhat'], {y,uhat,p}, {
 phi_jac_y = Function([casadi_export_prefix,'phi_jac_y_uhat'], {y,uhat,p}, {[jac_phi_y]});
 
 % Linear output
-ALO = zeros(nx2);
+A_LO = zeros(nx2);
+E_LO = eye(nx2);
 % A2(1,1) = 1;
 
 f = [];
@@ -120,29 +121,16 @@ jac_f_k1 = jacobian(f,x1_dot);
 
 f_fun = Function('f_los', {x1_dot,x1,z,u}, {f});
 
-% jac_Phi_u_fun = Function('jac_Phi_u_fun', {y,u},{jac_Phi_u});
-
 f_lo_fun_jac_x1k1uz = Function([casadi_export_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1_dot, z, u}, ...
     {f, [jac_f_x1, jac_f_k1, jac_f_z, jac_f_u]});
 
-% struct for matlab prototype
-s = struct('A', A, 'B', B, 'C', C, 'E', E, 'ALO',ALO, 'L_x', L_x, 'L_xdot', L_xdot, 'L_z', L_z, 'L_u', L_u, ...
-    'phi_fun_jac_y', phi_fun_jac_y, 'phi_jac_y_uhat', phi_jac_y_uhat, 'f_fun', f_fun, ...
-    'nx1', nx1, 'nx2', nx2, 'nu', nu, 'n_out', n_out, 'nx', nx, 'nz', nz, 'ny', ny, 'nuhat', nuhat,...
-    'f_lo_fun_jac_x1k1uz', f_lo_fun_jac_x1k1uz);
-
 
 %% generate functions
-% ints = SX.zeros(8,1) + [s.nx, s.nu, s.nz, s.nx1, s.nx2, q, n_steps, s.n_out]';
-% get_ints_fun = Function('get_ints_fun',{x},{[s.nx, s.nu, s.nz, s.nx1, s.nx2, q, n_steps, s.n_out]});
-%     get_ints_fun.generate('get_ints_fun', casadi_opts);
-
 % get matrices
 dummy = SX.sym('dummy');
 
-model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)])) + ...
-    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:); c(:)];
-get_matrices_fun = Function([casadi_export_prefix,'get_matrices_fun'], {dummy}, {model_matrices(:)});
+get_matrices_fun = Function([casadi_export_prefix,'get_matrices_fun'], {dummy},...
+     {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO});
 get_matrices_fun.generate('get_matrices_fun', casadi_opts);
 
 % generate Phi, f_LO
@@ -152,7 +140,19 @@ phi_fun_jac_y.generate(['phi_fun_jac_y'], casadi_opts);
 phi_jac_y_uhat.generate(['phi_jac_y_uhat'], casadi_opts);
 
 
+%% to get value for IRK initialization equivalent to the GNSF 0 init.
+x0 = [1.353969828015453e+00, 3.228986350219792e-04, 1.799917898419573e+02, 4.306609995588871e-03, 8.269214720965625e+00, 4.010510098723469e+00]';
+% u0 = [8.169651470932033e+00, 4.024634365037572e+00]';
+u0 = [0;0];
+p0 = 1;
+
+format long e
+disp('value for equivalent irk initialization')
+xdot1_z1_0 = (E\(A*x0(1:nx1)+ B * u0 + c))'
+
+
 %% check if same result as in full_turbine_model.m
+disp('value to check if result is the same as in full_turbine_model.m')
 x0 = ones(nx,1);
 x0dot = ones(nx,1);
 u0 = ones(nu,1);

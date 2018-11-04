@@ -38,10 +38,13 @@ extern "C" {
 typedef struct
 {
     void *qp_solver_opts;
+    ocp_nlp_reg_opts *reg_opts;
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
     int compute_dual_sol;
+    int reuse_workspace;
+    int num_threads;
 } ocp_nlp_sqp_rti_opts;
 
 //
@@ -63,6 +66,7 @@ typedef struct
 {
     //    ocp_nlp_dims *dims;
     void *qp_solver_mem;
+    void *reg_mem;
 
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory
@@ -71,6 +75,9 @@ typedef struct
     // nlp memory
     ocp_nlp_memory *nlp_mem;
 
+    double time_qp_sol;
+    double time_lin;
+    double time_tot;
 } ocp_nlp_sqp_rti_memory;
 
 //

@@ -33,6 +33,8 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_conv.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_mirror.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/utils/mem.h"
@@ -90,7 +92,8 @@ ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
 
 void ocp_nlp_plan_initialize_default(int N, ocp_nlp_solver_plan *plan)
 {
-    plan->nlp_solver = SQP_GN;
+    plan->nlp_solver = SQP;
+    plan->regularization = NO_REGULARIZATION;
     for (int ii = 0; ii <= N; ii++)
     {
         plan->nlp_cost[ii] = NONLINEAR_LS;
@@ -117,6 +120,33 @@ ocp_nlp_solver_plan *ocp_nlp_plan_create(int N)
 
 
 
+static ocp_nlp_reg_config *ocp_nlp_reg_config_create(ocp_nlp_reg_t plan)
+{
+    int size = ocp_nlp_reg_config_calculate_size();
+    ocp_nlp_reg_config *config = malloc(size);
+
+    switch (plan)
+    {
+        case NO_REGULARIZATION:
+            free(config);
+            config = NULL;
+            break;
+        case MIRROR:
+            ocp_nlp_reg_mirror_config_initialize_default(config);
+            break;
+        case CONVEXIFICATION:
+            ocp_nlp_reg_conv_config_initialize_default(config);
+            break;
+        default:
+            printf("Regularization not available!\n");
+            exit(1);
+    }
+
+    return config;
+}
+
+
+
 // TODO(dimitris): this leaks memory! Either provide free config or calculate size should be nested
 ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 {
@@ -124,7 +154,7 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
     void *config_mem = calloc(1, bytes);
     ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(N, config_mem);
 
-    if (plan.nlp_solver == SQP_GN)
+    if (plan.nlp_solver == SQP)
     {
         ocp_nlp_sqp_config_initialize_default(config);
     }
@@ -140,6 +170,8 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 
     // QP solver
     config->qp_solver = ocp_qp_config_create(plan.ocp_qp_solver_plan);
+
+    config->regularization = ocp_nlp_reg_config_create(plan.regularization);
 
     // cost
     for (int i = 0; i <= N; ++i)

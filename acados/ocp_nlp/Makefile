@@ -17,6 +17,9 @@ OBJS += ocp_nlp_dynamics_cont.o
 OBJS += ocp_nlp_dynamics_disc.o
 OBJS += ocp_nlp_sqp.o
 OBJS += ocp_nlp_sqp_rti.o
+OBJS += ocp_nlp_reg_common.o
+OBJS += ocp_nlp_reg_conv.o
+OBJS += ocp_nlp_reg_mirror.o
 
 obj: $(OBJS)
 

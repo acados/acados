@@ -74,6 +74,10 @@ ocp_qp_solver_t qp_solver_en(std::string const& inString)
 #ifdef ACADOS_WITH_QORE
     if (inString == "DENSE_QORE") return FULL_CONDENSING_QORE;
 #endif
+#ifdef ACADOS_WITH_OOQP
+    if (inString == "DENSE_OOQP") return FULL_CONDENSING_OOQP;
+    if (inString == "SPARSE_QORE") return PARTIAL_CONDENSING_OOQP;
+#endif
 
     return (ocp_qp_solver_t) -1;
 }
@@ -525,7 +529,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
     ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
 
-    plan->nlp_solver = SQP_GN;
+    plan->nlp_solver = SQP;
 
     for (int i = 0; i <= NN; i++)
         plan->nlp_cost[i] = LINEAR_LS;
@@ -674,7 +678,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
             gnsf_dims->nx1 = 8;
             gnsf_dims->nz = 0;
-            gnsf_dims->nx2 = 0;
+            gnsf_dims->nz1 = 0;
             gnsf_dims->n_out = 1;
             gnsf_dims->ny = 5;
             gnsf_dims->nuhat = 0;
@@ -1146,6 +1150,10 @@ TEST_CASE("wind turbine nmpc", "[NLP solver]")
                                             // "SPARSE_QPDUNES",
                                             "DENSE_HPIPM",
                                             // "DENSE_QPOASES"
+#ifdef ACADOS_WITH_OOQP
+                                            // "SPARSE_OOQP",
+                                            // "DENSE_OOQP"
+#endif
 #ifdef ACADOS_WITH_QORE
                                             // ,"DENSE_QORE"
                                             };

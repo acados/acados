@@ -1057,7 +1057,7 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e)
     }
 }
 
-static void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d)
+void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d)
 {
     real_t *e = (real_t *) calloc(dim, sizeof(real_t));
     for (int_t i = 0; i < dim; i++)
@@ -1093,19 +1093,30 @@ reconstruct_A(A, V, d);
 }*/
 
 /* mirroring regularization */
-void regularize(int_t dim, real_t *A)
+void mirror(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon)
 {
-    real_t *V = (real_t *) calloc(dim * dim, sizeof(real_t));
-    real_t *d = (real_t *) calloc(dim, sizeof(real_t));
-
     eigen_decomposition(dim, A, V, d);
 
     for (int_t i = 0; i < dim; i++)
     {
-        if (d[i] >= -ACADOS_EPS && d[i] <= ACADOS_EPS)
-            d[i] = ACADOS_EPS;
+        if (d[i] >= -epsilon && d[i] <= epsilon)
+            d[i] = epsilon;
         else if (d[i] < 0)
             d[i] = -d[i];
+    }
+
+    reconstruct_A(dim, A, V, d);
+}
+
+/* projecting regularization */
+void project(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon)
+{
+    eigen_decomposition(dim, A, V, d);
+
+    for (int_t i = 0; i < dim; i++)
+    {
+        if (d[i] < epsilon)
+            d[i] = epsilon;
     }
 
     reconstruct_A(dim, A, V, d);

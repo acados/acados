@@ -62,7 +62,7 @@ int main()
     int nx = 6;
     int nu = 2;
 	int np = 1;
-	
+
 	int nsim = 1000;
 
     int NF = nx + nu; // columns of forward seed
@@ -278,7 +278,7 @@ int main()
 				gnsf_dim->nx = nx;
 				gnsf_dim->nu = nu;
 				gnsf_dim->nx1= nx;
-				gnsf_dim->nx2= 0;
+				// gnsf_dim->nx2= 0;
 				gnsf_dim->ny = 5;
 				gnsf_dim->nuhat = 0;
 				gnsf_dim->n_out = 1;
@@ -493,19 +493,19 @@ int main()
 		* printing
 		************************************************/
 		printf("\nxn: \n");
-		d_print_e_mat(1, nx, &x_sim[nsim0*nx], 1);
+		d_print_exp_mat(1, nx, &x_sim[nsim0*nx], 1);
 
 		double *S_forw_out = NULL;
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");
-			d_print_e_mat(nx, NF, S_forw_out, nx);
+			d_print_exp_mat(nx, NF, S_forw_out, nx);
 		}
 
 		if(opts->sens_adj){
 			double *S_adj_out = out->S_adj;
 			printf("\nS_adj_out: \n");
-			d_print_e_mat(1, nx+nu, S_adj_out, 1);
+			d_print_exp_mat(1, nx+nu, S_adj_out, 1);
 		}
 
 		if(opts->sens_forw){		// debug adjoints
@@ -526,7 +526,7 @@ int main()
 
 			blasfeo_free_dmat(&S_forw_result);
 			blasfeo_free_dvec(&adjoint_seed);
-			blasfeo_free_dvec(&forw_times_seed);			
+			blasfeo_free_dvec(&forw_times_seed);
 		}
 
     #if 0

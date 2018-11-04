@@ -35,6 +35,9 @@ endif
 
 LIBS += -lblasfeo -lm -lblas -llapack
 
+ifeq ($(ACADOS_WITH_OPENMP), 1)
+LIBS += -fopenmp
+endif
 
 
 # Comment this out to enable using gprof
@@ -233,6 +236,7 @@ INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun.o
 INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot.o
 INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u.o
 INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_u.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_hess.o
 INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_fun.o
 INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_fun_jac_y.o
 INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_jac_y_uhat.o
@@ -423,7 +427,8 @@ run_nonlinear_chain_ocp_nlp:
 #################################################
 
 PENDULUM_OBJS = 
-PENDULUM_OBJS += pendulum_model/vde_forw_pendulum.o 
+PENDULUM_OBJS += pendulum_model/pendulum_ode_expl_vde_forw.o
+PENDULUM_OBJS += pendulum_model/pendulum_ode_expl_ode_hess.o
 PENDULUM_OBJS += pendulum_model/constraint.o
 PENDULUM_OBJS += pendulum_model/position.o
 

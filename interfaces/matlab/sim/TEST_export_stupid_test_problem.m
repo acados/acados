@@ -8,7 +8,7 @@ function [ model ] = TEST_export_stupid_test_problem()
 %% set up f_impl (index 1 DAE)
 import casadi.*
 
-model_name_prefix = 'stupid_test_';
+model_name_prefix = 'stupid_test';
 
 % NOTE: this model has no physical meaning whatsoever;
 % It was just made up to test stuff..
@@ -22,9 +22,9 @@ p = SX.sym('parameters',2,1);
 f_impl_expr = vertcat(x(1)^2 + sin(xdot(3)),...
         x(2) * 42 - pi * u(1) + xdot(2) - 1337, ...
         xdot(5) - u(3)^2 + x(4), ...
-        x(2) + u(3) - xdot(1) - exp(z(1)),...
+        x(2) + u(3) - xdot(1),...
         xdot(4) - u(1)  - x(2) + p(2),...
-        x(2) + sqrt(x(1))  );
+        x(2) + sqrt(x(1)) - exp(z(1)) );
 
 model.f_impl_expr = f_impl_expr;
 model.x = x;

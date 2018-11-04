@@ -99,17 +99,20 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
                            void *fun_ptr)
 {
     int status = ACADOS_SUCCESS;
-
+        /* explicit model */
     if (!strcmp(fun_type, "expl_ode_fun"))
         status = config->model_set_function(model, EXPL_ODE_FUN, fun_ptr);
     else if (!strcmp(fun_type, "expl_ode_jac"))
         status = config->model_set_function(model, EXPL_ODE_JAC, fun_ptr);
-    else if (!strcmp(fun_type, "expl_ode_hes"))
+    else if (!strcmp(fun_type, "expl_ode_hes"))     // TODO(FreyJo): more consistent naming: hess
+        status = config->model_set_function(model, EXPL_ODE_HES, fun_ptr);
+    else if (!strcmp(fun_type, "expl_ode_hess"))
         status = config->model_set_function(model, EXPL_ODE_HES, fun_ptr);
     else if (!strcmp(fun_type, "expl_vde_for"))
         status = config->model_set_function(model, EXPL_VDE_FOR, fun_ptr);
     else if (!strcmp(fun_type, "expl_vde_adj"))
         status = config->model_set_function(model, EXPL_VDE_ADJ, fun_ptr);
+        /* implicit model */
     else if (!strcmp(fun_type, "impl_ode_fun"))
         status = config->model_set_function(model, IMPL_ODE_FUN, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot"))
@@ -118,7 +121,9 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot_u"))
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT_U, fun_ptr);
-    // GNSF functions
+    else if (!strcmp(fun_type, "impl_ode_hess"))
+        status = config->model_set_function(model, IMPL_ODE_HESS, fun_ptr);
+        /* GNSF model */
     else if (!strcmp(fun_type, "phi_fun"))
         status = config->model_set_function(model, PHI_FUN, fun_ptr);
     else if (!strcmp(fun_type, "phi_fun_jac_y"))

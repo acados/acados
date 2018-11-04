@@ -87,6 +87,10 @@ ocp_qp_solver_t qp_solver_enum(std::string const& inString)
 #ifdef ACADOS_WITH_QORE
     if (inString == "DENSE_QORE") return FULL_CONDENSING_QORE;
 #endif
+#ifdef ACADOS_WITH_OOQP
+    if (inString == "DENSE_OOQP") return FULL_CONDENSING_OOQP;
+    if (inString == "SPARSE_OOQP") return PARTIAL_CONDENSING_OOQP;
+#endif
 
     return (ocp_qp_solver_t) -1;
 }
@@ -1237,7 +1241,7 @@ void setup_and_solve_nlp(int NN,
     ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
 
     // TODO(dimitris): not necessarily GN, depends on cost module
-    plan->nlp_solver = SQP_GN;
+    plan->nlp_solver = SQP;
 
     ocp_nlp_cost_t cost_type = cost_enum(cost_str);
     switch (cost_type)
@@ -1733,10 +1737,10 @@ void setup_and_solve_nlp(int NN,
     }
 
     sqp_opts->maxIter = MAX_SQP_ITERS;
-    sqp_opts->min_res_g = 1e-9;
-    sqp_opts->min_res_b = 1e-9;
-    sqp_opts->min_res_d = 1e-9;
-    sqp_opts->min_res_m = 1e-9;
+    sqp_opts->min_res_g = 1e-6;
+    sqp_opts->min_res_b = 1e-6;
+    sqp_opts->min_res_d = 1e-6;
+    sqp_opts->min_res_m = 1e-6;
 
     /************************************************
     * ocp_nlp out
@@ -1763,8 +1767,6 @@ void setup_and_solve_nlp(int NN,
     // call nlp solver
     status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
-    REQUIRE(status == 0);
-
     double max_res = 0.0;
     double inf_norm_res_g = ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res->inf_norm_res_g;
     double inf_norm_res_b = ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res->inf_norm_res_b;
@@ -1776,7 +1778,7 @@ void setup_and_solve_nlp(int NN,
     max_res = (inf_norm_res_m > max_res) ? inf_norm_res_m : max_res;
 
     std::cout << "max residuals: " << max_res << std::endl;
-
+    REQUIRE(status == 0);
     REQUIRE(max_res <= TOL);
 
     /************************************************
@@ -1872,10 +1874,14 @@ TEST_CASE("chain example", "[NLP solver]")
     std::vector<std::string> qp_solvers = { "SPARSE_HPIPM",
                                             // "SPARSE_HPMPC",
                                             // "SPARSE_QPDUNES",
-                                            // "DENSE_HPIPM",
+                                            "DENSE_HPIPM",
                                             "DENSE_QPOASES"
+#ifdef ACADOS_WITH_OOQP
+                                            // , "DENSE_OOQP"
+                                            // , "SPARSE_OOQP"
+#endif
 #ifdef ACADOS_WITH_QORE
-                                            // ,"DENSE_QORE"
+                                            , "DENSE_QORE"
                                             };
 #else
     };

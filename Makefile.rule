@@ -57,6 +57,9 @@ QORE_PATH = $(EXT_PATH)/qore
 # QPDUNES path
 QPDUNES_PATH = $(EXT_PATH)/qpdunes
 
+# parallelize using openmp
+ACADOS_WITH_OPENMP = 0
+
 # include QPOASES
 ACADOS_WITH_QPOASES = 1
 
@@ -88,6 +91,9 @@ CFLAGS += -O2 -fPIC
 # debugging flags
 CFLAGS  += #-g -Wall -pedantic -Wfloat-equal #-pg
 
+ifeq ($(ACADOS_WITH_OPENMP), 1)
+CFLAGS += -DACADOS_WITH_OPENMP -fopenmp
+endif
 ifeq ($(ACADOS_WITH_QPOASES), 1)
 CFLAGS += -DACADOS_WITH_QPOASES
 endif

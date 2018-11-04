@@ -178,6 +178,7 @@ inputs:
 0) [x]    size: nx    type: BLASFEO_DVEC
 1) [K]    size: nx    type: BLASFEO_DVEC_ARGS
 2) [u]    size: nu    type: COLMAJ
+3) [z]    size: nz    type: BLASFEO_DVEC_ARGS
 
 outputs:
 0) [fun]    size: nx    type: BLASFEO_DVEC_ARGS
@@ -192,11 +193,12 @@ inputs:
 0) [x]    size: nx    type: BLASFEO_DVEC
 1) [K]    size: nx    type: BLASFEO_DVEC_ARGS
 2) [u]    size: nu    type: COLMAJ
+3) [z]    size: nz    type: BLASFEO_DVEC_ARGS
 
 outputs:
-0) [fun]    size: nx    type: BLASFEO_DVEC_ARGS
-1) [jac_x]    size: nx*nx    type: BLASFEO_DMAT
-2) [jac_xdot]    size: nx*nx    type: BLASFEO_DMAT
+0) [fun]        size: nx       type: BLASFEO_DVEC_ARGS
+1) [jac_x]      size: nx*nx    type: BLASFEO_DMAT
+2) [jac_xdot]   size: nx*nx    type: BLASFEO_DMAT
 
 
 
@@ -208,13 +210,29 @@ inputs:
 0) [x]    size: nx    type: BLASFEO_DVEC
 1) [K]    size: nx    type: BLASFEO_DVEC_ARGS
 2) [u]    size: nu    type: COLMAJ
+3) [z]    size: nz    type: BLASFEO_DVEC_ARGS
+
 
 outputs:
-0) [jac_x]    size: nx*nx    type: BLASFEO_DMAT
-1) [jac_xdot]    size: nx*nx    type: BLASFEO_DMAT
-2) [jac_u]    size: nx*nu    type: BLASFEO_DMAT
+0) [jac_x]      size: nx*nx    type: BLASFEO_DMAT
+1) [jac_xdot]   size: nx*nx    type: BLASFEO_DMAT
+2) [jac_u]      size: nx*nu    type: BLASFEO_DMAT
 
 
+// hessian function of implicit ode model
+
+external function: impl_ode_hess
+
+inputs:
+0) [x]          size: nx                    type: BLASFEO_DVEC
+1) [K]          size: nx                    type: BLASFEO_DVEC_ARGS
+2) [u]          size: nu                    type: COLMAJ
+3) [z]          size: nz                    type: BLASFEO_DVEC_ARGS
+4) [lam]        size: nx+nz                 type: BLASFEO_DVEC_ARGS
+5) [dxkzu_w0]   size: (2*nx+nz+nu, nx+nu)   type: BLASFEO_DMAT_ARGS
+
+outputs:
+0) [f_hess]     size: (nx+nu, nx+nu)        type: BLASFEO_DMAT
 
 /************************************************
 * sim_new_lifted_irk_integrator

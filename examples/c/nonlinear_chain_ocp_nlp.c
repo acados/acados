@@ -1121,7 +1121,7 @@ int main()
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
 
 	// TODO(dimitris): not necessarily GN, depends on cost module
-	plan->nlp_solver = SQP_GN;
+	plan->nlp_solver = SQP;
 
 	// NOTE(dimitris): switching between different objectives on each stage to test everything
 	for (int i = 0; i <= NN; i++)
@@ -1135,8 +1135,10 @@ int main()
 	}
 
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
-// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
-// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_OOQP;
+	// plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_OOQP;
 
 	// NOTE(dimitris): switching between different integrators on each stage to test everything
 	for (int i = 0; i < NN; i++)
@@ -1593,9 +1595,15 @@ int main()
 	printf("\nsolution\n");
 	ocp_nlp_out_print(dims, nlp_out);
 
-	int sqp_iter = ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter;
+	ocp_nlp_sqp_memory *solver_mem = (ocp_nlp_sqp_memory *) solver->mem;
 
-    printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n\n", status, MAX_SQP_ITERS, sqp_iter, time*1e3);
+	int sqp_iter = solver_mem->sqp_iter;
+
+    printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n", status, MAX_SQP_ITERS, sqp_iter, time*1e3);
+	printf("\nlinearization time = %f ms\n", solver_mem->time_lin*1e3);
+	printf("\nqp solution time   = %f ms\n", solver_mem->time_qp_sol*1e3);
+	printf("\ntotal time         = %f ms\n", solver_mem->time_tot*1e3);
+	printf("\n\n");
 
     for (int k =0; k < 3; k++) {
         printf("u[%d] = \n", k);

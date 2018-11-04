@@ -178,7 +178,7 @@ static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *spar
         {
             for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
             {
-                ptr[0] = BLASFEO_DMATEL(in, row[idx], nrow);
+                ptr[0] = BLASFEO_DMATEL(in, row[idx], jj);
                 ptr++;
             }
         }

@@ -35,7 +35,8 @@ nu  = gnsf.nu;
 nz  = gnsf.nz;
 nx1 = gnsf.nx1;
 nx2 = gnsf.nx2;
-
+nz1 = gnsf.nz1;
+nz2 = gnsf.nz2;
 % get model matrices
 A  = gnsf.A;
 B  = gnsf.B;
@@ -49,9 +50,13 @@ L_z    = gnsf.L_z;
 L_u    = gnsf.L_u;
 
 A_LO = gnsf.A_LO;
+E_LO = gnsf.E_LO;
 
 I_x1 = 1:nx1;
 I_x2 = nx1+1:nx;
+
+I_z1 = 1:nz1;
+I_z2 = nz1+1:nz;
 
 
 % get casadi variables
@@ -73,7 +78,7 @@ else
     % create functions
     impl_ode_fun = Function(['impl_ode_fun'], {x, xdot, u, z}, {model.f_impl_expr});
     phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
-    f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z, u}, {gnsf.f_lo_expr});
+    f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z(1:nz1), u}, {gnsf.f_lo_expr});
 end
 
 
@@ -85,7 +90,7 @@ for i_check = 1:num_eval
     z0    = rand(nz, 1);
     u0    = rand(nu, 1);
     
-    y0 = L_x * x0(I_x1) + L_xdot * x0dot(I_x1) + L_z * z0;
+    y0 = L_x * x0(I_x1) + L_xdot * x0dot(I_x1) + L_z * z0(I_z1);
     uhat0 = L_u * u0;
     
     % eval functions
@@ -93,22 +98,22 @@ for i_check = 1:num_eval
         p0 = rand(np, 1);
         f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0, p0));
         phi_val = phi_fun( y0, uhat0, p0);
-        f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0, u0, p0);
+        f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0(I_z1), u0, p0);
     else
         f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0));
         phi_val = phi_fun( y0, uhat0);
-        f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0, u0);
+        f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0(I_z1), u0);
     end
     
 
     
     % eval gnsf
     gnsf_val1 = (A * x0(I_x1) + B * u0 + ...
-        C * phi_val + c) - E * [x0dot(I_x1); z0];
+        C * phi_val + c) - E * [x0dot(I_x1); z0(I_z1)];
     
     if nx2 > 0 % eval LOS
         gnsf_val2 =  A_LO * x0(I_x2) + ...
-            f_lo_val - x0dot(I_x2);
+            f_lo_val - E_LO * [x0dot(I_x2); z0(I_z2)];
         gnsf_val = full([gnsf_val1; gnsf_val2 ]);
     else
         gnsf_val = full(gnsf_val1);
@@ -125,12 +130,15 @@ for i_check = 1:num_eval
 %         check = 0;
         disp('transcription failed; rel_error > TOL');
         disp('you are in debug mode now: keyboard');
+        
+        gnsf_expr = (A * x(I_x1) + B * u + ...
+        C * gnsf.phi_expr + c) - E * [xdot(I_x1); z(I_z1)];
         keyboard
     end            
 end
 
 if print_info
-    disp('');
+    disp(' ');
     disp(['model reformulation checked: relative error <= TOL = ', num2str(TOL)]);
     disp(' ');
 end

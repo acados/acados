@@ -33,7 +33,7 @@ extern "C" {
 
 typedef enum
 {
-    SQP_GN, // why _GN ??? exact hessian would use the same scheme
+    SQP,
     SQP_RTI,
 } ocp_nlp_solver_t;
 
@@ -64,11 +64,20 @@ typedef enum
 
 
 
+typedef enum
+{
+    NO_REGULARIZATION,
+    MIRROR,
+    CONVEXIFICATION,
+} ocp_nlp_reg_t;
+
+
 typedef struct
 {
     ocp_qp_solver_plan ocp_qp_solver_plan;
     sim_solver_plan *sim_solver_plan;
     ocp_nlp_solver_t nlp_solver;
+    ocp_nlp_reg_t regularization;
     ocp_nlp_cost_t *nlp_cost;
     ocp_nlp_dynamics_t *nlp_dynamics;
     ocp_nlp_constraints_t *nlp_constraints;
