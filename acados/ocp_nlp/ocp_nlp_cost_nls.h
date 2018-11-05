@@ -39,6 +39,7 @@ extern "C" {
 typedef struct
 {
     int nx;  // number of states
+    int nz;  // number of algebraic variables
     int nu;  // number of inputs
     int ny;  // number of outputs
     int ns;  // number of slacks
