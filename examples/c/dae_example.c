@@ -39,12 +39,18 @@
 
 int main() {
 
-	int num_states = 4, num_controls = 1, N = 20;
-	double Tf = 1.0, Q = 1e-10, R = 1e-4, QN = 1e-10;
-	int idxb_0[4] = {1, 2, 3, 4};
+	int num_states = 6, num_controls = 1, N = 20;
+	double Tf = 1.0, R = 1e-2, QN = 1e-10, F_max = 80;
+    double Q[6] = {1e-3, 1e-3, 1e-3, 1e-3, 1e2, 1e-2};
+	int idxb_0[6] = {1, 2, 3, 4, 5, 6};
 	double x0[num_states];
-    for(int i = 0; i < num_states; i++) x0[i] = 0.0;
-	x0[2] = PI;
+
+    x0[0] =  1.0000;  // xpos
+    x0[1] = -5.0000;  // ypos
+    x0[2] =  0.1000;  // vx
+    x0[3] = -0.5000;  // vy
+    x0[4] =  0.1000;  // valpha
+    x0[5] =  1.0000;  // alpha
 
 	double radius2 = 0.04, neg_inf = -1000000;
 	int max_num_sqp_iterations = 100;
@@ -72,7 +78,7 @@ int main() {
         nh[i] = 0;
         np[i] = 0;
         ns[i] = 0;
-        nz[i] = 5;
+        nz[i] = 0;
         nv[i] = num_states + num_controls;
         ny[i] = num_states + num_controls;
     }
@@ -80,14 +86,14 @@ int main() {
     nbx[0] = num_states;
     nb[0] = num_states;
     nu[N] = 0;
-    nh[N] = num_controls;
+    nh[N] = 0;
     np[N] = 2;
     nv[N] = num_states; 
     ny[N] = num_states;
 
 	// Make plan
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
-	plan->nlp_solver = SQP_GN;
+	plan->nlp_solver = SQP;
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = LINEAR_LS;
@@ -96,6 +102,9 @@ int main() {
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 		plan->sim_solver_plan[i].sim_solver = IRK;
 	}
+
+	for (int i = 0; i <= N; i++)
+		plan->nlp_constraints[i] = BGH;
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
 
@@ -210,7 +219,7 @@ int main() {
 	for (int i = 0; i < N; ++i) {
 		blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
         for (int j = 0; j < nx[i]; j++)
-            BLASFEO_DMATEL(&cost_ls[i]->W, j, j) = Q;
+            BLASFEO_DMATEL(&cost_ls[i]->W, j, j) = Q[j];
         for (int j = 0; j < nu[i]; j++)
             BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = R;
 	}
@@ -229,7 +238,7 @@ int main() {
 		irk_model *model = dynamics->sim_model;
 		model->impl_ode_fun = (external_function_generic *) &impl_ode_fun[i];
 		model->impl_ode_fun_jac_x_xdot_z = (external_function_generic *) &impl_ode_fun_jac_x_xdot_z[i];
-		model->impl_ode_jac_x_xdot_u_z = (external_function_generic *) &impl_ode_jac_x_xdot_z_u[i]; // TODO(zanellia): need to swapp z and u!!
+		model->impl_ode_jac_x_xdot_z_u = (external_function_generic *) &impl_ode_jac_x_xdot_z_u[i]; // TODO(zanellia): need to swapp z and u!!
 	}
 
 	// // nonlinear part of convex-composite constraint
@@ -246,14 +255,21 @@ int main() {
 	// external_function_casadi_assign(&position_constraint, ptr);
 
 	// bounds
-	ocp_nlp_constraints_bghp_model **constraints = (ocp_nlp_constraints_bghp_model **) nlp_in->constraints;
+	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
     constraints[0]->idxb = idxb_0;
 	blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, 0);
 	blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, nb[0]+ng[0]);
 
-	blasfeo_pack_dvec(nh[N], &neg_inf, &constraints[N]->d, nb[N]+ng[N]);
-	blasfeo_pack_dvec(nh[N], &radius2, &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
+	// double lbu[1] = {-F_max}, ubu[1] = {F_max};
+	// for (int i = 1; i < N; ++i)
+	// {
+	// 	constraints[i]->idxb[0] = 0;
+	// 	blasfeo_pack_dvec(nb[i], lbu, &constraints[i]->d, 0);
+	// 	blasfeo_pack_dvec(nb[i], ubu, &constraints[i]->d, nb[i]+ng[i]);
+	// }
+	// blasfeo_pack_dvec(nh[N], &neg_inf, &constraints[N]->d, nb[N]+ng[N]);
+	// blasfeo_pack_dvec(nh[N], &radius2, &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
 	// constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
 	// constraints[N]->p = (external_function_generic *) &position_constraint;
 

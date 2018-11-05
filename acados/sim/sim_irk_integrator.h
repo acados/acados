@@ -46,7 +46,7 @@ typedef struct
     // implicit ode & jac_x & jax_xdot & jac_z
     external_function_generic *impl_ode_fun_jac_x_xdot_z;
     // jax_x & jac_xdot & jac_u & jac_z of implicit ode
-    external_function_generic *impl_ode_jac_x_xdot_u_z;
+    external_function_generic *impl_ode_jac_x_xdot_z_u;
     // hessian of implicit ode:
     external_function_generic *impl_ode_hess;
 } irk_model;

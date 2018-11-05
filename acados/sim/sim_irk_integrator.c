@@ -135,7 +135,7 @@ int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
             model->impl_ode_fun_jac_x_xdot_z = (external_function_generic *) fun;
             break;
         case IMPL_ODE_JAC_X_XDOT_U:
-            model->impl_ode_jac_x_xdot_u_z = (external_function_generic *) fun;
+            model->impl_ode_jac_x_xdot_z_u = (external_function_generic *) fun;
             break;
         case IMPL_ODE_HESS:
             model->impl_ode_hess = (external_function_generic *) fun;
@@ -592,17 +592,17 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     impl_ode_fun_jac_x_xdot_z_type_out[3] = BLASFEO_DMAT;
     impl_ode_fun_jac_x_xdot_z_out[3] = &df_dz;
 
-    // impl_ode_jac_x_xdot_u_z
-    ext_fun_arg_t impl_ode_jac_x_xdot_u_z_type_out[4];
-    void *impl_ode_jac_x_xdot_u_z_out[4];
-    impl_ode_jac_x_xdot_u_z_type_out[0] = BLASFEO_DMAT;
-    impl_ode_jac_x_xdot_u_z_out[0] = &df_dx;
-    impl_ode_jac_x_xdot_u_z_type_out[1] = BLASFEO_DMAT;
-    impl_ode_jac_x_xdot_u_z_out[1] = &df_dxdot;
-    impl_ode_jac_x_xdot_u_z_type_out[2] = BLASFEO_DMAT;
-    impl_ode_jac_x_xdot_u_z_out[2] = &df_du;
-    impl_ode_jac_x_xdot_u_z_type_out[3] = BLASFEO_DMAT;
-    impl_ode_jac_x_xdot_u_z_out[3] = &df_dz;
+    // impl_ode_jac_x_xdot_z_u
+    ext_fun_arg_t impl_ode_jac_x_xdot_z_u_type_out[4];
+    void *impl_ode_jac_x_xdot_z_u_out[4];
+    impl_ode_jac_x_xdot_z_u_type_out[0] = BLASFEO_DMAT;
+    impl_ode_jac_x_xdot_z_u_out[0] = &df_dx;
+    impl_ode_jac_x_xdot_z_u_type_out[1] = BLASFEO_DMAT;
+    impl_ode_jac_x_xdot_z_u_out[1] = &df_dxdot;
+    impl_ode_jac_x_xdot_z_u_type_out[2] = BLASFEO_DMAT;
+    impl_ode_jac_x_xdot_z_u_out[2] = &df_dz;
+    impl_ode_jac_x_xdot_z_u_type_out[3] = BLASFEO_DMAT;
+    impl_ode_jac_x_xdot_z_u_out[3] = &df_du;
 
     // impl_ode_hess
     // INPUT: impl_ode_hess
@@ -821,9 +821,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 }
 
                 acados_tic(&timer_ad);
-                model->impl_ode_jac_x_xdot_u_z->evaluate(
-                    model->impl_ode_jac_x_xdot_u_z, impl_ode_type_in, impl_ode_in,
-                    impl_ode_jac_x_xdot_u_z_type_out, impl_ode_jac_x_xdot_u_z_out);
+                model->impl_ode_jac_x_xdot_z_u->evaluate(
+                    model->impl_ode_jac_x_xdot_z_u, impl_ode_type_in, impl_ode_in,
+                    impl_ode_jac_x_xdot_z_u_type_out, impl_ode_jac_x_xdot_z_u_out);
                 timing_ad += acados_toc(&timer_ad);
 
                 blasfeo_dgecp(nx + nz, nx, &df_dx, 0, 0, dG_dxu_ss, ii * (nx + nz), 0);
@@ -928,9 +928,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                 // eval jacobians at interpolated values
                 acados_tic(&timer_ad);
-                model->impl_ode_jac_x_xdot_u_z->evaluate(
-                        model->impl_ode_jac_x_xdot_u_z, impl_ode_type_in, impl_ode_in,
-                        impl_ode_jac_x_xdot_u_z_type_out, impl_ode_jac_x_xdot_u_z_out);
+                model->impl_ode_jac_x_xdot_z_u->evaluate(
+                        model->impl_ode_jac_x_xdot_z_u, impl_ode_type_in, impl_ode_in,
+                        impl_ode_jac_x_xdot_z_u_type_out, impl_ode_jac_x_xdot_z_u_out);
                 timing_ad += acados_toc(&timer_ad);
 
                 // set up df_dxdotz
@@ -1003,7 +1003,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             impl_ode_xdot_in.x = &K_traj[ss];              // use K values of step ss
             impl_ode_z_in.x = &K_traj[ss];                 // use Z values of step ss
 
-        /* evaluate impl_ode_jac_x_xdot_u_z -- build dG_dxu_ss, dG_dK_ss
+        /* evaluate impl_ode_jac_x_xdot_z_u -- build dG_dxu_ss, dG_dK_ss
                                     & factorize dG_dK_ss  */
             if ( !opts->sens_hess )
             {
@@ -1030,9 +1030,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     }
                     /* set up input for impl_ode jacobians */
                     acados_tic(&timer_ad);
-                    model->impl_ode_jac_x_xdot_u_z->evaluate(
-                        model->impl_ode_jac_x_xdot_u_z, impl_ode_type_in, impl_ode_in,
-                        impl_ode_jac_x_xdot_u_z_type_out, impl_ode_jac_x_xdot_u_z_out);
+                    model->impl_ode_jac_x_xdot_z_u->evaluate(
+                        model->impl_ode_jac_x_xdot_z_u, impl_ode_type_in, impl_ode_in,
+                        impl_ode_jac_x_xdot_z_u_type_out, impl_ode_jac_x_xdot_z_u_out);
                     timing_ad += acados_toc(&timer_ad);
 
                     /* build dG_dxu_ss */
