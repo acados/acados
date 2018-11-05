@@ -12,8 +12,10 @@ u = np.array([1])
 
 # create integrator
 opts2 = {'step': 0.01}
+start = time.time()
 sim2 = integrator(ode_fun, opts2)
-
+stop = time.time()
+print("time to create" + str(stop-start))
 # call integrator
 print("integrator result: " + str(sim2.integrate(x0, u)))
 input("press any key to continue")
@@ -36,8 +38,8 @@ opts1 = {'step'             : 0.01, # only mandatory argument
          'sens_algebraic'   : 0, # default in integrator
          'jac_reuse'        : 0, # default in integrator
         }
-sim1 = integrator(impl_ode_fun, opts1)
 
+sim1 = integrator(impl_ode_fun, opts1)
 
 
 # set experiment parameters
