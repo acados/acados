@@ -88,7 +88,7 @@ int ocp_nlp_cost_ls_model_calculate_size(void *config_, void *dims_)
     size += 1 * 64;  // blasfeo_mem align
 
     size += 1 * blasfeo_memsize_dmat(ny, ny);       // W
-    size += 1 * blasfeo_memsize_dmat(nx + nu, ny);  // Cyr
+    size += 1 * blasfeo_memsize_dmat(nx + nz + nu, ny);  // Cyr
     size += 1 * blasfeo_memsize_dvec(ny);           // y_ref
     size += 2 * blasfeo_memsize_dvec(2 * ns);       // Z, z
 
@@ -117,7 +117,7 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     // W
     assign_and_advance_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
     // Cyt
-    assign_and_advance_blasfeo_dmat_mem(nx + nu, ny, &model->Cyt, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx + nz + nu, ny, &model->Cyt, &c_ptr);
 
     // blasfeo_dvec
     // y_ref
@@ -182,6 +182,7 @@ int ocp_nlp_cost_ls_memory_calculate_size(void *config_, void *dims_, void *opts
 
     // extract dims
     int nx = dims->nx;
+    int nz = dims->nz;
     int nu = dims->nu;
     int ny = dims->ny;
     int ns = dims->ns;
@@ -190,10 +191,10 @@ int ocp_nlp_cost_ls_memory_calculate_size(void *config_, void *dims_, void *opts
 
     size += sizeof(ocp_nlp_cost_ls_memory);
 
-    size += 1 * blasfeo_memsize_dmat(nu + nx, nu + nx);  // hess
-    size += 1 * blasfeo_memsize_dmat(ny, ny);            // W_chol
-    size += 1 * blasfeo_memsize_dvec(ny);                // res
-    size += 1 * blasfeo_memsize_dvec(nu + nx + 2 * ns);  // grad
+    size += 1 * blasfeo_memsize_dmat(nu + nx + nz, nu +  nx + nz);  // hess
+    size += 1 * blasfeo_memsize_dmat(ny, ny);                       // W_chol
+    size += 1 * blasfeo_memsize_dvec(ny);                           // res
+    size += 1 * blasfeo_memsize_dvec(nu + nx + nz + 2 * ns);        // grad
 
     size += 1 * 64;  // blasfeo_mem align
 
@@ -208,6 +209,7 @@ void *ocp_nlp_cost_ls_memory_assign(void *config_, void *dims_, void *opts_, voi
 
     // extract dims
     int nx = dims->nx;
+    int nz = dims->nz;
     int nu = dims->nu;
     int ny = dims->ny;
     int ns = dims->ns;
@@ -220,13 +222,13 @@ void *ocp_nlp_cost_ls_memory_assign(void *config_, void *dims_, void *opts_, voi
     align_char_to(64, &c_ptr);
 
     // hess
-    assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &memory->hess, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nu + nx + nz, nu + nx + nz, &memory->hess, &c_ptr);
     // W_chol
     assign_and_advance_blasfeo_dmat_mem(ny, ny, &memory->W_chol, &c_ptr);
     // res
     assign_and_advance_blasfeo_dvec_mem(ny, &memory->res, &c_ptr);
     // grad
-    assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->grad, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nu + nx + nz + 2 * ns, &memory->grad, &c_ptr);
 
     assert((char *) raw_memory + ocp_nlp_cost_ls_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
@@ -272,6 +274,7 @@ int ocp_nlp_cost_ls_workspace_calculate_size(void *config_, void *dims_, void *o
 
     // extract dims
     int nx = dims->nx;
+    int nz = dims->nz;
     int nu = dims->nu;
     int ny = dims->ny;
 
@@ -279,7 +282,7 @@ int ocp_nlp_cost_ls_workspace_calculate_size(void *config_, void *dims_, void *o
 
     size += sizeof(ocp_nlp_cost_ls_workspace);
 
-    size += 1 * blasfeo_memsize_dmat(nu + nx, ny);  // tmp_nv_ny
+    size += 1 * blasfeo_memsize_dmat(nu + nx + nz, ny);  // tmp_nv_ny
     size += 1 * blasfeo_memsize_dvec(ny);           // tmp_ny
 
     size += 1 * 64;  // blasfeo_mem align
@@ -304,7 +307,7 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_, void *dims_, void *opt
     align_char_to(64, &c_ptr);
 
     // tmp_nv_ny
-    assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &work->tmp_nv_ny, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nu + nx + nz, ny, &work->tmp_nv_ny, &c_ptr);
 
     // tmp_ny
     assign_and_advance_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);
@@ -340,9 +343,9 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_, void *
     blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
     // TODO(all): avoid recomputing the Hessian if both W and Cyt do not change
-    blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt, 0, 0, &work->tmp_nv_ny,
+    blasfeo_dtrmm_rlnn(nu + nx + nz, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt, 0, 0, &work->tmp_nv_ny,
                        0, 0);
-    blasfeo_dsyrk_ln(nu + nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0,
+    blasfeo_dsyrk_ln(nu + nx + nz, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0,
                      &memory->hess, 0, 0, &memory->hess, 0, 0);
 
     blasfeo_dveccp(2 * ns, &model->Z, 0, memory->Z, 0);
@@ -367,21 +370,21 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     int ns = dims->ns;
 
     // initialize hessian of lagrangian with hessian of cost
-    blasfeo_dgecp(nu + nx, nu + nx, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
+    blasfeo_dgecp(nu + nx + nz, nu + nx + nz, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
 
     // compute gradient
-    blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0,
+    blasfeo_dgemv_t(nu + nx + nz, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0,
                     &memory->res, 0);
 
     // TODO(all): use lower triangular chol of W to save n_y^2 flops
     blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0,
                     &work->tmp_ny, 0);
-    blasfeo_dgemv_n(nu + nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0,
+    blasfeo_dgemv_n(nu + nx + nz, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0,
                     &memory->grad, 0);
 
     // slacks
-    blasfeo_dveccp(2 * ns, &model->z, 0, &memory->grad, nu + nx);
-    blasfeo_dvecmulacc(2 * ns, &model->Z, 0, memory->ux, nu + nx, &memory->grad, nu + nx);
+    blasfeo_dveccp(2 * ns, &model->z, 0, &memory->grad, nu + nx + nz);
+    blasfeo_dvecmulacc(2 * ns, &model->Z, 0, memory->ux, nu + nx + nz, &memory->grad, nu + nx + nz);
 
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
     // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
