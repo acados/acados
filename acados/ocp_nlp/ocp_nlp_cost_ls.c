@@ -53,11 +53,12 @@ void *ocp_nlp_cost_ls_dims_assign(void *config_, void *raw_memory)
     return dims;
 }
 
-void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns)
+void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx, int nz, int nu, int ny, int ns)
 {
     ocp_nlp_cost_ls_dims *dims = dims_;
 
     dims->nx = nx;
+    dims->nz = nz;
     dims->nu = nu;
     dims->ny = ny;
     dims->ns = ns;
@@ -75,6 +76,7 @@ int ocp_nlp_cost_ls_model_calculate_size(void *config_, void *dims_)
 
     // extract dims
     int nx = dims->nx;
+    int nz = dims->nz;
     int nu = dims->nu;
     int ny = dims->ny;
     int ns = dims->ns;
