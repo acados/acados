@@ -39,7 +39,7 @@ extern "C" {
 typedef struct
 {
     int nx;  // number of states
-    int nz;  // number of algebraic variables
+    int na;  // number of algebraic variables
     int nu;  // number of inputs
     int ny;  // number of outputs
     int ns;  // number of slacks
@@ -99,6 +99,8 @@ typedef struct
     struct blasfeo_dvec res;     // ls residual r(x)
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
+    struct blasfeo_dmat *a;      // pointer to a in sim_out
+    struct blasfeo_dmat *dzdux;  // pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
 } ocp_nlp_cost_ls_memory;
