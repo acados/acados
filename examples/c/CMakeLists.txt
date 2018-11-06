@@ -233,6 +233,14 @@ add_executable(pendulum_sqp_gn pendulum_sqp_gn.cpp
 target_link_libraries(pendulum_sqp_gn acados)
 add_test(pendulum_sqp_gn pendulum_sqp_gn)
 
+add_executable(template_example template_example.c
+    pendulum_model/pendulum_ode_expl_vde_forw.c
+    pendulum_model/pendulum_ode_expl_ode_hess.c
+    pendulum_model/constraint.c
+    pendulum_model/position.c)
+target_link_libraries(template_example acados)
+add_test(template_example template_example)
+
 # -------------------- mass_spring
 add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)
 target_link_libraries(mass_spring_example acados)
