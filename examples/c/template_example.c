@@ -65,8 +65,8 @@ int main() {
         nx[i] = num_states;
         nu[i] = num_controls;
         nbx[i] = 0;
-        nbu[i] = 0;
-        nb[i] = 0;
+        nbu[i] = num_controls;
+        nb[i] = num_controls;
         ng[i] = 0;
         nh[i] = 0;
         np[i] = 0;
@@ -77,17 +77,21 @@ int main() {
     }
 
     nbx[0] = num_states;
-    nb[0] = num_states;
+    nbu[0] = num_controls;
+    nb[0] = num_states + num_states;
     nu[N] = 0;
+    nx[N] = num_states;
     nh[N] = 0;
     np[N] = 0;
     nv[N] = num_states; 
     ny[N] = num_states;
+    nbu[N] = 0;
 
 	// Make plan
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
 	plan->nlp_solver = SQP;
-	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+	// plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = LINEAR_LS;
 	for (int i = 0; i < N; i++)
@@ -99,6 +103,7 @@ int main() {
 	for (int i = 0; i <= N; i++)
 		plan->nlp_constraints[i] = BGH;
 
+    plan->regularization = MIRROR;
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
@@ -289,7 +294,7 @@ int main() {
 	// }
 
 	printf("\n--- solution ---\n");
-	ocp_nlp_out_print(dims, nlp_out);
+	// ocp_nlp_out_print(dims, nlp_out);
 
 	return solver_status;
 }
