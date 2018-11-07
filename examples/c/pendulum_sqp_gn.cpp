@@ -100,6 +100,8 @@ int main() {
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), nq.data(), ns.data(), nz.data(), dims);
 
+    ocp_nlp_dims_print(dims);
+    // exit(1);
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
 		forw_vde_casadi[i].casadi_fun = &pendulum_ode_expl_vde_forw;

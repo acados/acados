@@ -78,7 +78,8 @@ int main() {
 
     nbx[0] = num_states;
     nbu[0] = num_controls;
-    nb[0] = num_states + num_states;
+    nb[0] = num_states + num_controls;
+
     nu[N] = 0;
     nx[N] = num_states;
     nh[N] = 0;
@@ -108,6 +109,8 @@ int main() {
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, np, ns, nz, dims);
+    // ocp_nlp_dims_print(dims);
+    // exit(1);
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
@@ -276,13 +279,13 @@ int main() {
 			kkt_norm_inf = nlp_out->inf_norm_res;
 			printf(" iteration %2d | time  %f |  KKT %e\n", iteration_number, elapsed_time, kkt_norm_inf);
 			// blasfeo_print_tran_dvec(nx.at(0)+nu.at(0), &nlp_out->ux[0], 0);
-			double ux0[nx[0]+nu[0]];
-			for (int i = 0; i < N; ++i)
-			{
-				blasfeo_unpack_dvec(nu[i]+nx[i], &nlp_out->ux[i], 0, ux0);
-			}
-			ux0[0] = 0;
-			blasfeo_unpack_dvec(nu[N]+nx[N], &nlp_out->ux[N], 0, ux0+1);
+			// double ux0[nx[0]+nu[0]];
+			// for (int i = 0; i < N; ++i)
+			// {
+			// 	blasfeo_unpack_dvec(nu[i]+nx[i], &nlp_out->ux[i], 0, ux0);
+			// }
+			// // ux0[0] = 0;
+			// blasfeo_unpack_dvec(nu[N]+nx[N], &nlp_out->ux[N], 0, ux0+1);
 
 			// blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, 0);
 			// blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, nb[0]+ng[0]);
@@ -294,7 +297,7 @@ int main() {
 	// }
 
 	printf("\n--- solution ---\n");
-	// ocp_nlp_out_print(dims, nlp_out);
+	ocp_nlp_out_print(dims, nlp_out);
 
 	return solver_status;
 }
