@@ -109,8 +109,6 @@ int main() {
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, np, ns, nz, dims);
-    // ocp_nlp_dims_print(dims);
-    // exit(1);
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
@@ -200,18 +198,6 @@ int main() {
 	// NLP constraints
 	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
-	// external_function_casadi nonlinear_constraint;
-	// nonlinear_constraint.casadi_fun = &constraint;
-	// nonlinear_constraint.casadi_n_in = &constraint_n_in;
-	// nonlinear_constraint.casadi_n_out = &constraint_n_out;
-	// nonlinear_constraint.casadi_sparsity_in = &constraint_sparsity_in;
-	// nonlinear_constraint.casadi_sparsity_out = &constraint_sparsity_out;
-	// nonlinear_constraint.casadi_work = &constraint_work;
-
-	// int constraint_size = external_function_casadi_calculate_size(&nonlinear_constraint);
-	// void *ptr = malloc(constraint_size);
-	// external_function_casadi_assign(&nonlinear_constraint, ptr);
-
 	// bounds
     constraints[0]->idxb = idxb_0;
 	blasfeo_pack_dvec(nb[0], b0_l, &constraints[0]->d, 0);
@@ -224,10 +210,6 @@ int main() {
 		blasfeo_pack_dvec(nb[i], lbu, &constraints[i]->d, 0);
 		blasfeo_pack_dvec(nb[i], ubu, &constraints[i]->d, nb[i]+ng[i]);
 	}
-
-    // constraints[N]->idxb = idxb_N.data();
-	// blasfeo_pack_dvec(nb[N], xN.data(), &constraints[N]->d, 0);
-	// blasfeo_pack_dvec(nb[N], xN.data(), &constraints[N]->d, nb[N]+ng[N]+nh[N]);
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
@@ -245,14 +227,10 @@ int main() {
 		rk_opts->sens_hess = true;
 		rk_opts->sens_adj = true;
 	}
-	// ((ocp_qp_partial_condensing_solver_opts *) sqp_opts->qp_solver_opts)->pcond_opts->N2 = 10;
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 	for (int i = 0; i <= N; ++i)
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
-
-	// for (int i = 0; i <= N; ++i)
-	// 	BLASFEO_DVECEL(nlp_out->ux+i, 3) = M_PI;
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
@@ -261,40 +239,18 @@ int main() {
 	double kkt_norm_inf = 1e12, elapsed_time;
 	
 	int solver_status = 0, iteration_number = 0;
-	// for (int j = 0; j < 100; ++j) {
-		// kkt_norm_inf = __builtin_inf(), elapsed_time = 0;
-		// solver_status = 0, iteration_number = 0;
-		// for (int i = 0; i <= N; ++i)
-			// blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
 
-		// for (int i = 0; i <= N; ++i)
-			// BLASFEO_DVECEL(nlp_out->ux+i, 3) = M_PI;
-		// blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, 0);
-		// blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, nb[0]+ng[0]);
+    while (kkt_norm_inf > 1e-9) {
+        acados_tic(&timer);
+        solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
+        elapsed_time = acados_toc(&timer);
+        kkt_norm_inf = nlp_out->inf_norm_res;
+        printf(" iteration %2d | time  %f |  KKT %e\n", iteration_number, elapsed_time, kkt_norm_inf);
+        iteration_number++;
 
-		while (kkt_norm_inf > 1e-9) {
-			acados_tic(&timer);
-			solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
-			elapsed_time = acados_toc(&timer);
-			kkt_norm_inf = nlp_out->inf_norm_res;
-			printf(" iteration %2d | time  %f |  KKT %e\n", iteration_number, elapsed_time, kkt_norm_inf);
-			// blasfeo_print_tran_dvec(nx.at(0)+nu.at(0), &nlp_out->ux[0], 0);
-			// double ux0[nx[0]+nu[0]];
-			// for (int i = 0; i < N; ++i)
-			// {
-			// 	blasfeo_unpack_dvec(nu[i]+nx[i], &nlp_out->ux[i], 0, ux0);
-			// }
-			// // ux0[0] = 0;
-			// blasfeo_unpack_dvec(nu[N]+nx[N], &nlp_out->ux[N], 0, ux0+1);
-
-			// blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, 0);
-			// blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, nb[0]+ng[0]);
-			iteration_number++;
-
-			if (iteration_number >= 100)
-				break;
-		}
-	// }
+        if (iteration_number >= 100)
+            break;
+    }
 
 	printf("\n--- solution ---\n");
 	ocp_nlp_out_print(dims, nlp_out);
