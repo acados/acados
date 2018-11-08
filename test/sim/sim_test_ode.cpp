@@ -59,7 +59,6 @@ sim_solver_t hashitsim(std::string const& inString)
 {
     if (inString == "ERK") return ERK;
     if (inString == "IRK") return IRK;
-    if (inString == "LIFTED_IRK") return LIFTED_IRK;
     if (inString == "GNSF") return GNSF;
     if (inString == "NEW_LIFTED_IRK") return NEW_LIFTED_IRK;
 
@@ -70,7 +69,6 @@ double sim_solver_tolerance(std::string const& inString)
 {
     if (inString == "ERK") return 1e-7;
     if (inString == "IRK") return 1e-7;
-    if (inString == "LIFTED_IRK") return 1e-5;
     if (inString == "GNSF") return 1e-7;
     if (inString == "NEW_LIFTED_IRK") return 1e-5;
 
@@ -82,7 +80,7 @@ double sim_solver_tolerance(std::string const& inString)
 
 TEST_CASE("wt_nx3_example", "[integrators]")
 {
-    vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
+    vector<std::string> solvers = {"ERK", "IRK", "GNSF", "NEW_LIFTED_IRK"};
     // initialize dimensions
     int ii, jj;
 
@@ -392,11 +390,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         opts->ns = 2;  // number of stages in rk integrator
                         break;
 
-                    case LIFTED_IRK:
-                         // lifted IRK
-                        opts->ns = 2;  // number of stages in rk integrator
-                        break;
-
                     case GNSF:
                         // GNSF
                         opts->ns = 2;  // number of stages in rk integrator
@@ -448,12 +441,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
                                 &impl_ode_fun_jac_x_xdot);
                         sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-                        break;
-                    }
-                    case LIFTED_IRK:  // lifted IRK
-                    {
-                        sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-                        sim_set_model(config, in, "expl_ode_jac", &expl_ode_jac);
                         break;
                     }
                     case GNSF:  // GNSF
@@ -572,7 +559,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 REQUIRE(max_error_forw <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
-                if ((plan.sim_solver != LIFTED_IRK) && (plan.sim_solver != NEW_LIFTED_IRK)){
+                if ((plan.sim_solver != NEW_LIFTED_IRK)){
                     std::cout  << "error_adj   = " << max_error_adj  << "\n";
                     REQUIRE(max_error_adj <= tol);
                 }

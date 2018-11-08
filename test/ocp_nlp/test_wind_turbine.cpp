@@ -87,7 +87,6 @@ ocp_qp_solver_t qp_solver_en(std::string const& inString)
 sim_solver_t integrator_en(std::string const& inString)
 {
     if (inString == "ERK") return ERK;
-    if (inString == "LIFTED_IRK") return LIFTED_IRK;
     if (inString == "IRK") return IRK;
     if (inString == "NEW_LIFTED_IRK") return NEW_LIFTED_IRK;
     if (inString == "GNSF") return GNSF;
@@ -554,14 +553,6 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             {
                 plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
                 plan->sim_solver_plan[i].sim_solver = ERK;
-            }
-            break;
-
-        case LIFTED_IRK:
-            for (int i = 0; i < NN; i++)
-            {
-                plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-                plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
             }
             break;
 

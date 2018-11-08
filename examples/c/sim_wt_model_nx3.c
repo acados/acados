@@ -209,7 +209,7 @@ int main()
 
 
 
-	int number_sim_solvers = 5;
+	int number_sim_solvers = 4;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
@@ -234,19 +234,16 @@ int main()
 				break;
 
 			case 2:
-				printf("\n\nsim solver: Lifted_IRK\n");
-				plan.sim_solver = LIFTED_IRK;
+				printf("\n\nsim solver: NEW_LIFTED_IRK\n");
+				plan.sim_solver = NEW_LIFTED_IRK;
 				break;
+
 
 			case 3:
 				printf("\n\nsim solver: GNSF\n");
 				plan.sim_solver = GNSF;
 				break;
 			
-			case 4:
-				printf("\n\nsim solver: NEW_LIFTED_IRK\n");
-				plan.sim_solver = NEW_LIFTED_IRK;
-				break;
 
 			default :
 				printf("\nnot enough sim solvers implemented!\n");

@@ -47,9 +47,6 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
         case ERK:
             sim_erk_config_initialize_default(solver_config);
             break;
-        case LIFTED_IRK:
-            sim_lifted_irk_config_initialize_default(solver_config);
-            break;
         case IRK:
             sim_irk_config_initialize_default(solver_config);
             break;
