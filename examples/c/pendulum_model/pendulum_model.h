@@ -34,14 +34,6 @@ int pendulum_ode_expl_vde_adj_n_in();
 int pendulum_ode_expl_vde_adj_n_out();
 
 // explicit adjoint ODE jac
-int pendulum_ode_expl_ode_jac(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int pendulum_ode_expl_ode_jac_work(int *, int *, int *, int *);
-const int *pendulum_ode_expl_ode_jac_sparsity_in(int);
-const int *pendulum_ode_expl_ode_jac_sparsity_out(int);
-int pendulum_ode_expl_ode_jac_n_in();
-int pendulum_ode_expl_ode_jac_n_out();
-
-// explicit adjoint ODE jac
 int pendulum_ode_expl_ode_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int pendulum_ode_expl_ode_hess_work(int *, int *, int *, int *);
 const int *pendulum_ode_expl_ode_hess_sparsity_in(int);

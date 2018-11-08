@@ -80,16 +80,6 @@ int main()
 	expl_ode_fun.casadi_n_out = &casadi_expl_ode_fun_n_out;
 	external_function_casadi_create(&expl_ode_fun);
 
-	// expl_ode_jac
-	external_function_casadi expl_ode_jac;
-	expl_ode_jac.casadi_fun = &casadi_expl_ode_jac;
-	expl_ode_jac.casadi_work = &casadi_expl_ode_jac_work;
-	expl_ode_jac.casadi_sparsity_in = &casadi_expl_ode_jac_sparsity_in;
-	expl_ode_jac.casadi_sparsity_out = &casadi_expl_ode_jac_sparsity_out;
-	expl_ode_jac.casadi_n_in = &casadi_expl_ode_jac_n_in;
-	expl_ode_jac.casadi_n_out = &casadi_expl_ode_jac_n_out;
-	external_function_casadi_create(&expl_ode_jac);
-
 	// expl_vde_for
 	external_function_casadi expl_vde_for;
 	expl_vde_for.casadi_fun = &casadi_expl_vde_for;
@@ -359,7 +349,6 @@ int main()
 			case 2: // lifted IRK
 			{
 				sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-				sim_set_model(config, in, "expl_ode_jac", &expl_ode_jac);
 				break;
 			}
 			case 3: // GNSF
@@ -550,7 +539,6 @@ int main()
     external_function_casadi_free(&expl_ode_fun);
 	external_function_casadi_free(&expl_vde_for);
 	external_function_casadi_free(&expl_vde_adj);
-	external_function_casadi_free(&expl_ode_jac);
 	// implicit model
 	external_function_casadi_free(&impl_ode_fun);
 	external_function_casadi_free(&impl_ode_fun_jac_x_xdot);

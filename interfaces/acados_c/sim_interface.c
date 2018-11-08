@@ -98,8 +98,6 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         /* explicit model */
     if (!strcmp(fun_type, "expl_ode_fun"))
         status = config->model_set_function(model, EXPL_ODE_FUN, fun_ptr);
-    else if (!strcmp(fun_type, "expl_ode_jac"))
-        status = config->model_set_function(model, EXPL_ODE_JAC, fun_ptr);
     else if (!strcmp(fun_type, "expl_ode_hes"))     // TODO(FreyJo): more consistent naming: hess
         status = config->model_set_function(model, EXPL_ODE_HES, fun_ptr);
     else if (!strcmp(fun_type, "expl_ode_hess"))

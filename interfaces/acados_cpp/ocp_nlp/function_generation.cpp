@@ -47,23 +47,4 @@ casadi_module generate_forward_vde(const casadi::Function& model, string output_
     return casadi_module(vde_fun, output_folder);
 }
 
-casadi_module generate_ode_jacobian(const casadi::Function& model, string output_folder)
-{
-    casadi::SX x = model.sx_in(0);
-    casadi::SX u = model.sx_in(1);
-
-    int_t nx = x.size1();
-    int_t nu = u.size1();
-
-    casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, u})));
-
-    casadi::SX Sx = casadi::SX::sym("Sx", nx, nx);
-    casadi::SX Su = casadi::SX::sym("Su", nx, nu);
-
-    casadi::SX jac_x = casadi::SX::jacobian(rhs, x);
-    casadi::Function jac_fun(model.name() + "_expl_ode_jac", {x, Sx, Su, u}, {rhs, jac_x});
-
-    return casadi_module(jac_fun, output_folder);
-}
-
 }  // namespace acados

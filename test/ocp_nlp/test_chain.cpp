@@ -1382,8 +1382,6 @@ void setup_and_solve_nlp(int NN,
     // explicit
     external_function_casadi *expl_vde_for = (external_function_casadi *)
                                               malloc(NN*sizeof(external_function_casadi));
-    external_function_casadi *expl_ode_jac = (external_function_casadi *)
-                                              malloc(NN*sizeof(external_function_casadi));
 
     // implicit
     external_function_casadi *impl_ode_fun = (external_function_casadi *)
@@ -1401,14 +1399,11 @@ void setup_and_solve_nlp(int NN,
     if (NMF < 4)
         erk4_casadi = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
 
-    select_dynamics_casadi(NN, NMF, expl_vde_for, expl_ode_jac, impl_ode_fun,
+    select_dynamics_casadi(NN, NMF, expl_vde_for, impl_ode_fun,
             impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
     // forw_vde
     external_function_casadi_create_array(NN, expl_vde_for);
-    // jac_ode
-    external_function_casadi_create_array(NN, expl_ode_jac);
-
     // impl_ode
     external_function_casadi_create_array(NN, impl_ode_fun);
     //
@@ -1594,9 +1589,6 @@ void setup_and_solve_nlp(int NN,
                     set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
                                                             "expl_vde_for", &expl_vde_for[i]);
                     if (set_fun_status != 0) exit(1);
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
-                                                            "expl_ode_jac", &expl_ode_jac[i]);
-                    if (set_fun_status != 0) exit(1);
                 }
                 else if (plan->sim_solver_plan[i].sim_solver == IRK)
                 {
@@ -1766,9 +1758,7 @@ void setup_and_solve_nlp(int NN,
 
     // TODO(dimitris): VALGRIND!
     external_function_casadi_free(expl_vde_for);
-    external_function_casadi_free(expl_ode_jac);
     free(expl_vde_for);
-    free(expl_ode_jac);
 
     external_function_casadi_free(impl_ode_fun);
     external_function_casadi_free(impl_ode_fun_jac_x_xdot);

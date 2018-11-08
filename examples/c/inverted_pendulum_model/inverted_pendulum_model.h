@@ -7,41 +7,6 @@ extern "C" {
 #endif
 
 // this is a crane model with an artificially added algebraic equation to test gnsf & dae integrators
-// /* explicit ODE */
-
-// // explicit ODE
-// int casadi_expl_ode_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-// int casadi_expl_ode_fun_work(int *, int *, int *, int *);
-// const int *casadi_expl_ode_fun_sparsity_in(int);
-// const int *casadi_expl_ode_fun_sparsity_out(int);
-// int casadi_expl_ode_fun_n_in();
-// int casadi_expl_ode_fun_n_out();
-
-// // explicit forward VDE
-// int casadi_expl_vde_for(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-// int casadi_expl_vde_for_work(int *, int *, int *, int *);
-// const int *casadi_expl_vde_for_sparsity_in(int);
-// const int *casadi_expl_vde_for_sparsity_out(int);
-// int casadi_expl_vde_for_n_in();
-// int casadi_expl_vde_for_n_out();
-
-// // explicit adjoint VDE
-// int casadi_expl_vde_adj(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-// int casadi_expl_vde_adj_work(int *, int *, int *, int *);
-// const int *casadi_expl_vde_adj_sparsity_in(int);
-// const int *casadi_expl_vde_adj_sparsity_out(int);
-// int casadi_expl_vde_adj_n_in();
-// int casadi_expl_vde_adj_n_out();
-
-// // explicit adjoint ODE jac
-// int casadi_expl_ode_jac(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-// int casadi_expl_ode_jac_work(int *, int *, int *, int *);
-// const int *casadi_expl_ode_jac_sparsity_in(int);
-// const int *casadi_expl_ode_jac_sparsity_out(int);
-// int casadi_expl_ode_jac_n_in();
-// int casadi_expl_ode_jac_n_out();
-
-
 /* implicit ODE */
 
 // implicit ODE

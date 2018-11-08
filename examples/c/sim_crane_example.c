@@ -94,18 +94,6 @@ int main()
 	external_function_casadi_create(&expl_vde_adj);
 
 
-	// jacobian explicit ODE
-
-	external_function_casadi expl_ode_jac;
-	expl_ode_jac.casadi_fun = &jacFun;
-	expl_ode_jac.casadi_work = &jacFun_work;
-	expl_ode_jac.casadi_sparsity_in = &jacFun_sparsity_in;
-	expl_ode_jac.casadi_sparsity_out = &jacFun_sparsity_out;
-	expl_ode_jac.casadi_n_in = &jacFun_n_in;
-	expl_ode_jac.casadi_n_out = &jacFun_n_out;
-	external_function_casadi_create(&expl_ode_jac);
-
-
 	// hessian explicit ODE
 
 	external_function_casadi expl_hess_ode;
@@ -358,7 +346,6 @@ int main()
 	// explicit model
 	external_function_casadi_free(&expl_vde_for);
 	external_function_casadi_free(&expl_vde_adj);
-	external_function_casadi_free(&expl_ode_jac);
 	external_function_casadi_free(&expl_hess_ode);
 	// implicit model
 	external_function_casadi_free(&impl_ode_fun);

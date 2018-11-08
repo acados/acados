@@ -205,7 +205,6 @@ run_wind_turbine_nmpc:
 
 WT_OBJS =
 WT_OBJS += wt_model_nx3/expl_ode_fun.o
-WT_OBJS += wt_model_nx3/expl_ode_jac.o
 WT_OBJS += wt_model_nx3/expl_vde_for.o
 WT_OBJS += wt_model_nx3/expl_vde_adj.o
 WT_OBJS += wt_model_nx3/impl_ode_fun.o
