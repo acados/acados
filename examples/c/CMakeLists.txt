@@ -254,10 +254,6 @@ add_executable(mass_spring_nmpc_example mass_spring_nmpc_example.c mass_spring_m
 target_link_libraries(mass_spring_nmpc_example acados)
 add_test(mass_spring_nmpc_example mass_spring_example)
 
-add_executable(mass_spring_example_no_interface mass_spring_example_no_interface.c mass_spring_model/mass_spring_qp.c)
-target_link_libraries(mass_spring_example_no_interface acados)
-add_test(mass_spring_example_no_interface mass_spring_example_no_interface)
-
 add_executable(sim_crane_example sim_crane_example.c ${CRANE_MODEL_SRC})
 target_link_libraries(sim_crane_example acados)
 add_test(sim_crane_example sim_crane_example)
