@@ -16,7 +16,8 @@
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
-
+/* OLD implementation removed from acados kernel, since there is a new implementation,
+    which is easier to maintain - FreyJo */
 #include "acados/sim/sim_lifted_irk_integrator.h"
 
 #include <assert.h>

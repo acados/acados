@@ -16,7 +16,8 @@
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
-
+/* OLD implementation removed from acados kernel, since there is a new implementation,
+    which is easier to maintain - FreyJo */
 #ifndef ACADOS_SIM_SIM_LIFTED_IRK_INTEGRATOR_H_
 #define ACADOS_SIM_SIM_LIFTED_IRK_INTEGRATOR_H_
 
