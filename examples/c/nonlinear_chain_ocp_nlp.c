@@ -142,7 +142,6 @@ void ls_cost_jac_nm4(external_function_generic *fun, double *in, double *out)
 
 static void select_dynamics_casadi(int N, int num_free_masses,
 	external_function_casadi *forw_vde,
-	external_function_casadi *jac_ode,
 	external_function_casadi *impl_ode_fun,
 	external_function_casadi *impl_ode_fun_jac_x_xdot,
 	external_function_casadi *impl_ode_fun_jac_x_xdot_u,
@@ -160,13 +159,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm2_sparsity_out;
 				forw_vde[ii].casadi_n_in = &vde_chain_nm2_n_in;
 				forw_vde[ii].casadi_n_out = &vde_chain_nm2_n_out;
-
-				jac_ode[ii].casadi_fun = &jac_chain_nm2;
-				jac_ode[ii].casadi_work = &jac_chain_nm2_work;
-				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm2_sparsity_in;
-				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm2_sparsity_out;
-				jac_ode[ii].casadi_n_in = &jac_chain_nm2_n_in;
-				jac_ode[ii].casadi_n_out = &jac_chain_nm2_n_out;
 
 				impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm2;
 				impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm2_work;
@@ -214,13 +206,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				forw_vde[ii].casadi_n_in = &vde_chain_nm3_n_in;
 				forw_vde[ii].casadi_n_out = &vde_chain_nm3_n_out;
 
-				jac_ode[ii].casadi_fun = &jac_chain_nm3;
-				jac_ode[ii].casadi_work = &jac_chain_nm3_work;
-				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm3_sparsity_in;
-				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm3_sparsity_out;
-				jac_ode[ii].casadi_n_in = &jac_chain_nm3_n_in;
-				jac_ode[ii].casadi_n_out = &jac_chain_nm3_n_out;
-
 				impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm3;
 				impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm3_work;
 				impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_chain_nm3_sparsity_in;
@@ -266,13 +251,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm4_sparsity_out;
 				forw_vde[ii].casadi_n_in = &vde_chain_nm4_n_in;
 				forw_vde[ii].casadi_n_out = &vde_chain_nm4_n_out;
-
-				jac_ode[ii].casadi_fun = &jac_chain_nm4;
-				jac_ode[ii].casadi_work = &jac_chain_nm4_work;
-				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm4_sparsity_in;
-				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm4_sparsity_out;
-				jac_ode[ii].casadi_n_in = &jac_chain_nm4_n_in;
-				jac_ode[ii].casadi_n_out = &jac_chain_nm4_n_out;
 
 				impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm4;
 				impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm4_work;
@@ -320,13 +298,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				forw_vde[ii].casadi_n_in = &vde_chain_nm5_n_in;
 				forw_vde[ii].casadi_n_out = &vde_chain_nm5_n_out;
 
-				jac_ode[ii].casadi_fun = &jac_chain_nm5;
-				jac_ode[ii].casadi_work = &jac_chain_nm5_work;
-				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm5_sparsity_in;
-				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm5_sparsity_out;
-				jac_ode[ii].casadi_n_in = &jac_chain_nm5_n_in;
-				jac_ode[ii].casadi_n_out = &jac_chain_nm5_n_out;
-
 				impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm5;
 				impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm5_work;
 				impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_chain_nm5_sparsity_in;
@@ -372,13 +343,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm6_sparsity_out;
 				forw_vde[ii].casadi_n_in = &vde_chain_nm6_n_in;
 				forw_vde[ii].casadi_n_out = &vde_chain_nm6_n_out;
-
-				jac_ode[ii].casadi_fun = &jac_chain_nm6;
-				jac_ode[ii].casadi_work = &jac_chain_nm6_work;
-				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm6_sparsity_in;
-				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm6_sparsity_out;
-				jac_ode[ii].casadi_n_in = &jac_chain_nm6_n_in;
-				jac_ode[ii].casadi_n_out = &jac_chain_nm6_n_out;
 
 				impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm6;
 				impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm6_work;

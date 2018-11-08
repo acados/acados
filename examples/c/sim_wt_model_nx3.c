@@ -283,9 +283,9 @@ int main()
 				break;
 
 			case 2:
-				// lifted IRK
+				// new lifted IRK
 				opts->ns = 2; // number of stages in rk integrator
-				opts->sens_adj = false; // not stable
+				opts->sens_adj = false; // not implemented yet
 				break;
 
 			case 3:
@@ -305,12 +305,6 @@ int main()
 				gnsf_dim->n_out = 1;
 				gnsf_dim->nz = 0;
 
-				break;
-
-			case 4:
-				// new lifted IRK
-				opts->ns = 2; // number of stages in rk integrator
-				opts->sens_adj = false; // not implemented yet
 				break;
 
 			default :
@@ -346,9 +340,10 @@ int main()
 				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
 				break;
 			}
-			case 2: // lifted IRK
+			case 2: // new_lifted_irk
 			{
-				sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
+				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
+				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u);
 				break;
 			}
 			case 3: // GNSF
@@ -362,12 +357,6 @@ int main()
 				// import model matrices
 				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
 				sim_gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);
-				break;
-			}
-			case 4: // new_lifted_irk
-			{
-				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u);
 				break;
 			}
 			default :
