@@ -200,7 +200,7 @@ outputs:
 0) [f_hess]     size: (nx+nu, nx+nu)        type: BLASFEO_DMAT
 
 /************************************************
-* sim_new_lifted_irk_integrator
+* sim_lifted_irk_integrator
 ************************************************/
 
 // function of implicit ode model

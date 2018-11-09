@@ -34,7 +34,7 @@ const int *crane_dae_impl_ode_jac_x_xdot_u_sparsity_out(int);
 int crane_dae_impl_ode_jac_x_xdot_u_n_in();
 int crane_dae_impl_ode_jac_x_xdot_u_n_out();
 
-// implicit ODE - for new_lifted_irk
+// implicit ODE - for lifted_irk
 int crane_dae_impl_ode_fun_jac_x_xdot_u(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int crane_dae_impl_ode_fun_jac_x_xdot_u_work(int *, int *, int *, int *);
 const int *crane_dae_impl_ode_fun_jac_x_xdot_u_sparsity_in(int);

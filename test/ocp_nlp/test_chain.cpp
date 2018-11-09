@@ -116,7 +116,7 @@ sim_solver_t integrator_enum(std::string const& inString)
 {
     if (inString == "ERK") return ERK;
     if (inString == "IRK") return IRK;
-    if (inString == "NEW_LIFTED_IRK") return NEW_LIFTED_IRK;
+    if (inString == "LIFTED_IRK") return LIFTED_IRK;
 
     return (sim_solver_t) -1;
 }
@@ -1294,11 +1294,11 @@ void setup_and_solve_nlp(int NN,
                         plan->sim_solver_plan[i].sim_solver = ERK;
                 }
                 break;
-            case NEW_LIFTED_IRK:
+            case LIFTED_IRK:
                 for (int i = 0; i < NN; i++)
                 {
                     if (plan->nlp_dynamics[i] == CONTINUOUS_MODEL)
-                        plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+                        plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
                 }
                 break;
             default:
@@ -1313,7 +1313,7 @@ void setup_and_solve_nlp(int NN,
                         else if (i%4 == 2)
                             plan->sim_solver_plan[i].sim_solver = IRK;
                         else if (i%4 == 3)
-                            plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+                            plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
                     }
                 }
                 break;
@@ -1566,7 +1566,7 @@ void setup_and_solve_nlp(int NN,
                                                 "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
                     if (set_fun_status != 0) exit(1);
                 }
-                else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+                else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
                 {
                     set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
                                                             "impl_ode_fun", &impl_ode_fun[i]);

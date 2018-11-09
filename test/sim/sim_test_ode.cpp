@@ -60,7 +60,7 @@ sim_solver_t hashitsim(std::string const& inString)
     if (inString == "ERK") return ERK;
     if (inString == "IRK") return IRK;
     if (inString == "GNSF") return GNSF;
-    if (inString == "NEW_LIFTED_IRK") return NEW_LIFTED_IRK;
+    if (inString == "LIFTED_IRK") return LIFTED_IRK;
 
     return (sim_solver_t) -1;
 }
@@ -70,7 +70,7 @@ double sim_solver_tolerance(std::string const& inString)
     if (inString == "ERK") return 1e-7;
     if (inString == "IRK") return 1e-7;
     if (inString == "GNSF") return 1e-7;
-    if (inString == "NEW_LIFTED_IRK") return 1e-5;
+    if (inString == "LIFTED_IRK") return 1e-5;
 
     return -1;
 }
@@ -80,7 +80,7 @@ double sim_solver_tolerance(std::string const& inString)
 
 TEST_CASE("wt_nx3_example", "[integrators]")
 {
-    vector<std::string> solvers = {"ERK", "IRK", "GNSF", "NEW_LIFTED_IRK"};
+    vector<std::string> solvers = {"ERK", "IRK", "GNSF", "LIFTED_IRK"};
     // initialize dimensions
     int ii, jj;
 
@@ -356,7 +356,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 void *opts_ = sim_opts_create(config, dims);
                 sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
-                if (plan.sim_solver != NEW_LIFTED_IRK)
+                if (plan.sim_solver != LIFTED_IRK)
                     opts->sens_adj = true;
                 else
                     opts->sens_adj = false;
@@ -395,7 +395,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                         break;
 
-                    case NEW_LIFTED_IRK:
+                    case LIFTED_IRK:
                         // new lifted IRK
                         opts->ns = 2;  // number of stages in rk integrator
                         break;
@@ -448,7 +448,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
                         break;
                     }
-                    case NEW_LIFTED_IRK:  // new_lifted_irk
+                    case LIFTED_IRK:  // lifted_irk
                     {
                         sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
                         sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u",
@@ -549,7 +549,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 REQUIRE(max_error_forw <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
-                if ((plan.sim_solver != NEW_LIFTED_IRK)){
+                if ((plan.sim_solver != LIFTED_IRK)){
                     std::cout  << "error_adj   = " << max_error_adj  << "\n";
                     REQUIRE(max_error_adj <= tol);
                 }

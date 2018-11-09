@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_SIM_SIM_NEW_LIFTED_IRK_INTEGRATOR_H_
-#define ACADOS_SIM_SIM_NEW_LIFTED_IRK_INTEGRATOR_H_
+#ifndef ACADOS_SIM_SIM_LIFTED_IRK_INTEGRATOR_H_
+#define ACADOS_SIM_SIM_LIFTED_IRK_INTEGRATOR_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,7 +32,7 @@ typedef struct
     int nx;
     int nu;
     int nz;
-} sim_new_lifted_irk_dims;
+} sim_lifted_irk_dims;
 
 
 typedef struct
@@ -43,7 +43,7 @@ typedef struct
     // implicit ode & jax_x & jac_xdot & jac_u implicit ode
     external_function_generic *impl_ode_fun_jac_x_xdot_u;
 
-} new_lifted_irk_model;
+} lifted_irk_model;
 
 
 typedef struct
@@ -62,7 +62,7 @@ typedef struct
 
     int *ipiv;  // index of pivot vector
 
-} sim_new_lifted_irk_workspace;
+} sim_lifted_irk_workspace;
 
 
 typedef struct
@@ -79,45 +79,45 @@ typedef struct
 
     int update_sens;
 
-} sim_new_lifted_irk_memory;
+} sim_lifted_irk_memory;
 
 // get & set functions
-void sim_new_lifted_irk_set_nx(void *dims_, int nx);
-void sim_new_lifted_irk_set_nu(void *dims_, int nu);
-void sim_new_lifted_irk_set_nz(void *dims_, int nz);
+void sim_lifted_irk_set_nx(void *dims_, int nx);
+void sim_lifted_irk_set_nu(void *dims_, int nu);
+void sim_lifted_irk_set_nz(void *dims_, int nz);
 
-void sim_new_lifted_irk_get_nx(void *dims_, int* nx);
-void sim_new_lifted_irk_get_nu(void *dims_, int* nu);
-void sim_new_lifted_irk_get_nz(void *dims_, int* nz);
+void sim_lifted_irk_get_nx(void *dims_, int* nx);
+void sim_lifted_irk_get_nu(void *dims_, int* nu);
+void sim_lifted_irk_get_nz(void *dims_, int* nz);
 
-int sim_new_lifted_irk_dims_calculate_size();
+int sim_lifted_irk_dims_calculate_size();
 //
-void *sim_new_lifted_irk_dims_assign(void* config_, void *raw_memory);
+void *sim_lifted_irk_dims_assign(void* config_, void *raw_memory);
 //
-int sim_new_lifted_irk_model_calculate_size(void *config, void *dims);
+int sim_lifted_irk_model_calculate_size(void *config, void *dims);
 //
-void *sim_new_lifted_irk_model_assign(void *config, void *dims, void *raw_memory);
+void *sim_lifted_irk_model_assign(void *config, void *dims, void *raw_memory);
 //
-int sim_new_lifted_irk_opts_calculate_size(void *config, void *dims);
+int sim_lifted_irk_opts_calculate_size(void *config, void *dims);
 //
-void *sim_new_lifted_irk_opts_assign(void *config, void *dims, void *raw_memory);
+void *sim_lifted_irk_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void sim_new_lifted_irk_opts_initialize_default(void *config, void *dims, void *opts_);
+void sim_lifted_irk_opts_initialize_default(void *config, void *dims, void *opts_);
 //
-void sim_new_lifted_irk_opts_update(void *config_, void *dims, void *opts_);
+void sim_lifted_irk_opts_update(void *config_, void *dims, void *opts_);
 //
-int sim_new_lifted_irk_memory_calculate_size(void *config, void *dims, void *opts_);
+int sim_lifted_irk_memory_calculate_size(void *config, void *dims, void *opts_);
 //
-void *sim_new_lifted_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+void *sim_lifted_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 //
-int sim_new_lifted_irk(void *config, sim_in *in, sim_out *out, void *opts_,
+int sim_lifted_irk(void *config, sim_in *in, sim_out *out, void *opts_,
         void *mem_, void *work_);
 //
-int sim_new_lifted_irk_workspace_calculate_size(void *config, void *dims, void *opts_);
+int sim_lifted_irk_workspace_calculate_size(void *config, void *dims, void *opts_);
 //
-void sim_new_lifted_irk_config_initialize_default(void *config);
+void sim_lifted_irk_config_initialize_default(void *config);
 //
-int sim_new_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun);
+int sim_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun);
 
 
 
@@ -125,4 +125,4 @@ int sim_new_lifted_irk_model_set_function(void *model_, sim_function_t fun_type,
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_SIM_SIM_NEW_LIFTED_IRK_INTEGRATOR_H_
+#endif  // ACADOS_SIM_SIM_LIFTED_IRK_INTEGRATOR_H_

@@ -224,8 +224,8 @@ int main()
 				break;
 
 			case 2:
-				printf("\n\nsim solver: NEW_LIFTED_IRK\n");
-				plan.sim_solver = NEW_LIFTED_IRK;
+				printf("\n\nsim solver: LIFTED_IRK\n");
+				plan.sim_solver = LIFTED_IRK;
 				break;
 
 
@@ -340,7 +340,7 @@ int main()
 				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
 				break;
 			}
-			case 2: // new_lifted_irk
+			case 2: // lifted_irk
 			{
 				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
 				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u);

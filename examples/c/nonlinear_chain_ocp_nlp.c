@@ -1111,13 +1111,13 @@ int main()
 		{
 			plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 			if (i < 3)
-				plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+				plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
 			else if (i%3 == 0)
 				plan->sim_solver_plan[i].sim_solver = IRK;
 			else if (i%3 == 1)
 				plan->sim_solver_plan[i].sim_solver = ERK;
 			else if (i%3 == 2)
-				plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+				plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
 		}
 		else
 		{
@@ -1390,7 +1390,7 @@ int main()
 					set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
 					if (set_fun_status != 0) exit(1);
 				}
-				else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+				else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 				{
 					set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
 					if (set_fun_status != 0) exit(1);
