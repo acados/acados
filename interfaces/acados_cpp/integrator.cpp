@@ -144,23 +144,23 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")) > 0);
 
 
-    sim_solver_plan sim_plan;
+    sim_solver_plan sim_plan_;
 
     // TODO(oj) add check: model type and integrator type consistent
     if (options.count("integrator"))
     {
         if (to_string(options.at("integrator")) == "ERK")
-            sim_plan.sim_solver = ERK;
+            sim_plan_.sim_solver = ERK;
         else if (to_string(options.at("integrator")) == "IRK")
         {
-            sim_plan.sim_solver = IRK;
+            sim_plan_.sim_solver = IRK;
             // std::cout << "USING IRK" << std::endl;
         }
         else
             throw std::invalid_argument("Invalid integrator.");
     }
     else  // default integrator
-        sim_plan.sim_solver = ERK;
+        sim_plan_.sim_solver = ERK;
 
 
     if (!check_model(model, model_type_, use_MX_, nx_, nu_, nz_))
@@ -170,7 +170,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
 
 
-    config_ = sim_config_create(sim_plan);
+    config_ = sim_config_create(sim_plan_);
 
     dims_ = sim_dims_create(config_);
 
@@ -227,12 +227,18 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
 
     string autogen_dir = "_autogen";
 
+    if (opts_->sens_hess)
+    {
+        throw std::invalid_argument("Not supported option: sens_hess.");
+    }
+
+    /* CHECK MODEL TYPE */
     if (model_type_ == GNSF)
     {
         throw std::invalid_argument("Not supported model type.");
     }
     else if (model_type_ == IMPLICIT)
-    {
+    {        
         // std::cout << "GENERATE IMPL MODEL" << std::endl;
         module_["impl_ode_fun_jac_x_xdot_z"] = generate_impl_ode_fun_jac_x_xdot_z(model);
         sim_set_model_internal(config_, in_->model,
@@ -246,6 +252,8 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
             "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
         // std::cout << "GENERATE IMPL MODEL - impl_ode_fun done" << std::endl;
 
+
+        // IRK: needed if (sens_forw & !sens_hess) || (sens_adj & !sens_hess) || (sens_algebraic)
         // throw std::invalid_argument("Not supported model type.");
     }
     else  // EXPLICIT default
