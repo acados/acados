@@ -22,7 +22,6 @@
 #include "acados/sim/sim_gnsf.h"
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
-#include "acados/sim/sim_new_lifted_irk_integrator.h"
 
 #include "acados_c/sim_interface.h"
 
@@ -52,17 +51,14 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
         case ERK:
             sim_erk_config_initialize_default(solver_config);
             break;
-        case LIFTED_IRK:
-            sim_lifted_irk_config_initialize_default(solver_config);
-            break;
         case IRK:
             sim_irk_config_initialize_default(solver_config);
             break;
         case GNSF:
             sim_gnsf_config_initialize_default(solver_config);
             break;
-        case NEW_LIFTED_IRK:
-            sim_new_lifted_irk_config_initialize_default(solver_config);
+        case LIFTED_IRK:
+            sim_lifted_irk_config_initialize_default(solver_config);
             break;
     }
     return solver_config;
@@ -153,8 +149,6 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         /* explicit model */
     if (!strcmp(fun_type, "expl_ode_fun"))
         status = config->model_set_function(model, EXPL_ODE_FUN, fun_ptr);
-    else if (!strcmp(fun_type, "expl_ode_jac"))
-        status = config->model_set_function(model, EXPL_ODE_JAC, fun_ptr);
     else if (!strcmp(fun_type, "expl_ode_hes"))     // TODO(FreyJo): more consistent naming: hess
         status = config->model_set_function(model, EXPL_ODE_HES, fun_ptr);
     else if (!strcmp(fun_type, "expl_ode_hess"))

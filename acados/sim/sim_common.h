@@ -37,8 +37,6 @@ typedef enum
 {
     // ERK and LIFTED_ERK
     EXPL_ODE_FUN,
-    EXPL_ODE_JAC,  // TODO(all): expl_ode_jac_x
-    // TODO(oj): EXPL_ODE_JAC only used in old lifted_irk -> REMOVE!
     EXPL_ODE_HES,  // wrt x and u ???
     EXPL_VDE_FOR,
     EXPL_VDE_ADJ,

@@ -295,13 +295,6 @@ int main()
                 sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
                 break;
             }
-            // case NEW_LIFTED_IRK:  // new_lifted_irk
-            // {
-            //     sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-            //     sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u",
-            //              &impl_ode_fun_jac_x_xdot_u);
-            //     break;
-            // }
             default :
             {
                 printf("\nnot enough sim solvers implemented!\n");

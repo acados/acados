@@ -80,16 +80,6 @@ int main()
 	expl_ode_fun.casadi_n_out = &casadi_expl_ode_fun_n_out;
 	external_function_casadi_create(&expl_ode_fun);
 
-	// expl_ode_jac
-	external_function_casadi expl_ode_jac;
-	expl_ode_jac.casadi_fun = &casadi_expl_ode_jac;
-	expl_ode_jac.casadi_work = &casadi_expl_ode_jac_work;
-	expl_ode_jac.casadi_sparsity_in = &casadi_expl_ode_jac_sparsity_in;
-	expl_ode_jac.casadi_sparsity_out = &casadi_expl_ode_jac_sparsity_out;
-	expl_ode_jac.casadi_n_in = &casadi_expl_ode_jac_n_in;
-	expl_ode_jac.casadi_n_out = &casadi_expl_ode_jac_n_out;
-	external_function_casadi_create(&expl_ode_jac);
-
 	// expl_vde_for
 	external_function_casadi expl_vde_for;
 	expl_vde_for.casadi_fun = &casadi_expl_vde_for;
@@ -209,7 +199,7 @@ int main()
 
 
 
-	int number_sim_solvers = 5;
+	int number_sim_solvers = 4;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
@@ -234,19 +224,16 @@ int main()
 				break;
 
 			case 2:
-				printf("\n\nsim solver: Lifted_IRK\n");
+				printf("\n\nsim solver: LIFTED_IRK\n");
 				plan.sim_solver = LIFTED_IRK;
 				break;
+
 
 			case 3:
 				printf("\n\nsim solver: GNSF\n");
 				plan.sim_solver = GNSF;
 				break;
 			
-			case 4:
-				printf("\n\nsim solver: NEW_LIFTED_IRK\n");
-				plan.sim_solver = NEW_LIFTED_IRK;
-				break;
 
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
@@ -296,9 +283,9 @@ int main()
 				break;
 
 			case 2:
-				// lifted IRK
+				// new lifted IRK
 				opts->ns = 2; // number of stages in rk integrator
-				opts->sens_adj = false; // not stable
+				opts->sens_adj = false; // not implemented yet
 				break;
 
 			case 3:
@@ -318,12 +305,6 @@ int main()
 				gnsf_dim->n_out = 1;
 				gnsf_dim->nz = 0;
 
-				break;
-
-			case 4:
-				// new lifted IRK
-				opts->ns = 2; // number of stages in rk integrator
-				opts->sens_adj = false; // not implemented yet
 				break;
 
 			default :
@@ -359,10 +340,10 @@ int main()
 				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
 				break;
 			}
-			case 2: // lifted IRK
+			case 2: // lifted_irk
 			{
-				sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-				sim_set_model(config, in, "expl_ode_jac", &expl_ode_jac);
+				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
+				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u);
 				break;
 			}
 			case 3: // GNSF
@@ -376,12 +357,6 @@ int main()
 				// import model matrices
 				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
 				sim_gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);
-				break;
-			}
-			case 4: // new_lifted_irk
-			{
-				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u);
 				break;
 			}
 			default :
@@ -553,7 +528,6 @@ int main()
     external_function_casadi_free(&expl_ode_fun);
 	external_function_casadi_free(&expl_vde_for);
 	external_function_casadi_free(&expl_vde_adj);
-	external_function_casadi_free(&expl_ode_jac);
 	// implicit model
 	external_function_casadi_free(&impl_ode_fun);
 	external_function_casadi_free(&impl_ode_fun_jac_x_xdot);
