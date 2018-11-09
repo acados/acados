@@ -193,16 +193,6 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     expl_ode_fun.casadi_n_out = &pendulum_ode_expl_ode_fun_n_out;
     external_function_casadi_create(&expl_ode_fun);
 
-    // expl_ode_jac
-    external_function_casadi expl_ode_jac;
-    expl_ode_jac.casadi_fun = &pendulum_ode_expl_ode_jac;
-    expl_ode_jac.casadi_work = &pendulum_ode_expl_ode_jac_work;
-    expl_ode_jac.casadi_sparsity_in = &pendulum_ode_expl_ode_jac_sparsity_in;
-    expl_ode_jac.casadi_sparsity_out = &pendulum_ode_expl_ode_jac_sparsity_out;
-    expl_ode_jac.casadi_n_in = &pendulum_ode_expl_ode_jac_n_in;
-    expl_ode_jac.casadi_n_out = &pendulum_ode_expl_ode_jac_n_out;
-    external_function_casadi_create(&expl_ode_jac);
-
     // expl_vde_for
     external_function_casadi expl_vde_for;
     expl_vde_for.casadi_fun = &pendulum_ode_expl_vde_forw;
@@ -630,7 +620,6 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     external_function_casadi_free(&impl_ode_hess);
     // explicit model
     external_function_casadi_free(&expl_ode_fun);
-    external_function_casadi_free(&expl_ode_jac);
     external_function_casadi_free(&expl_vde_for);
     external_function_casadi_free(&expl_vde_adj);
     external_function_casadi_free(&expl_ode_hess);

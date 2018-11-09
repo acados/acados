@@ -1,0 +1,33 @@
+
+/************************************************
+* sim_lifted_irk_integrator (OLD)
+************************************************/
+
+// function and jacobian of explicit ode model
+
+external function: expl_ode_jac
+
+inputs:
+0) [x]    size: nx    type: COLMAJ
+1) [u]    size: nu    type: COLMAJ
+
+outputs:
+0) [fun]    size: nx    type: COLMAJ
+1) [jac]    size: nx*ns    type: COLMAJ
+
+
+
+// function and jacobian-times-seeds (forward sensitivities) of explicit ode model, computed using vde model
+
+external function: expl_vde_for
+
+inputs:
+0) [x]    size: nx    type: COLMAJ
+1) [Sx]    size: nx*nx    type: COLMAJ
+2) [Su]    size: nx*nu    type: COLMAJ
+3) [u]    size: nu    type: COLMAJ
+
+outputs:
+0) [fun]    size: nx    type: COLMAJ
+1) [jac_x*Sx]    size: nx*nx    type: COLMAJ
+2) [jac_x*Su+jac_u]    size: nx*nu    type: COLMAJ

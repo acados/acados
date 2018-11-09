@@ -520,7 +520,7 @@ int main()
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 //		plan->sim_solver_plan[i].sim_solver = ERK;
 		plan->sim_solver_plan[i].sim_solver = IRK;
-//		plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+//		plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
 //		plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
@@ -670,7 +670,7 @@ int main()
 			if (set_fun_status != 0) exit(1);
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z", &f_lo_jac_x1_x1dot_u_z[i]);
 		}
-		else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 		{
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
 			if (set_fun_status != 0) exit(1);
@@ -820,7 +820,7 @@ int main()
 			sim_opts[i]->num_steps = 1;
 			sim_opts[i]->jac_reuse = true;
 		}
-		else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 		{
 			sim_opts[i]->ns = 4;
 			sim_opts[i]->num_steps = 1;
@@ -932,7 +932,7 @@ int main()
 				{
 					expl_vde_for[ii].set_param(expl_vde_for+ii, wind0_ref+idx+ii);
 				}
-				else if (plan->sim_solver_plan[ii].sim_solver == IRK || plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK)
+				else if (plan->sim_solver_plan[ii].sim_solver == IRK || plan->sim_solver_plan[ii].sim_solver == LIFTED_IRK)
 				{
 					impl_ode_fun[ii].set_param(impl_ode_fun+ii, wind0_ref+idx+ii);
 					impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);
