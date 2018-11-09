@@ -11,28 +11,31 @@
 namespace acados
 {
 // TODO(oj): move the following one directory up
+/* IMPLICIT MODEL */
 casadi_module generate_impl_ode_fun_jac_x_xdot_z(const casadi::Function& model,
-                                   std::string output_dir = "_autogen", const bool use_MX = false);
+                                std::string output_dir = "_autogen", const bool use_MX = false);
 
 casadi_module generate_impl_ode_fun(const casadi::Function& model,
-                                   std::string output_dir = "_autogen", const bool use_MX = false);
+                                std::string output_dir = "_autogen", const bool use_MX = false);
 
+casadi_module generate_impl_ode_fun_jac_x_xdot_u(const casadi::Function& model,
+                                std::string output_dir = "_autogen", const bool use_MX = false);
+
+casadi_module generate_impl_ode_jac_x_xdot_u_z(const casadi::Function& model,
+                                std::string output_dir = "_autogen", const bool use_MX = false);
+
+/* EXPLICIT MODEL */
 casadi_module generate_forward_vde(const casadi::Function& model,
-                                   std::string output_dir = "_autogen", const bool use_MX = false);
+                                std::string output_dir = "_autogen", const bool use_MX = false);
 
 casadi_module generate_expl_ode_fun(const casadi::Function& model,
-                                    std::string output_dir = "_autogen", const bool use_MX = false);
+                                std::string output_dir = "_autogen", const bool use_MX = false);
 
 casadi_module generate_expl_vde_adj(const casadi::Function& model,
-                                    std::string output_dir = "_autogen", const bool use_MX = false);
+                                std::string output_dir = "_autogen", const bool use_MX = false);
 
-
-casadi_module generate_ode_jacobian(const casadi::Function& model,
-                                    std::string output_dir = "_autogen", const bool use_MX = false);
-
-// TODO: add more generate functions!
 casadi_module generate_nls_residual(const casadi::Function& residual,
-                                    std::string output_dir = "_autogen", const bool use_MX = false);
+                                std::string output_dir = "_autogen", const bool use_MX = false);
 
 }  // namespace acados
 

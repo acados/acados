@@ -44,7 +44,9 @@ casadi_module generate_nls_residual(const casadi::Function& residual, string out
 }
 
 // TODO(oj): move the following functions one directory up
-/* IMPLICIT MODEL */
+/************************************************
+* IMPLICIT MODEL
+************************************************/
 casadi_module generate_impl_ode_fun(const casadi::Function& model, string output_folder,
                                     const bool use_MX)
 {
@@ -129,7 +131,132 @@ casadi_module generate_impl_ode_fun_jac_x_xdot_z(const casadi::Function& model,
     return casadi_module(fun, output_folder);
 }
 
-/* EXPLICIT MODEL */
+
+casadi_module generate_impl_ode_jac_x_xdot_u_z(const casadi::Function& model,
+                        string output_folder, const bool use_MX)
+{
+    casadi::Function fun;
+    if (use_MX == false)
+    {
+        casadi::SX x = model.sx_in("x");
+        casadi::SX xdot = model.sx_in("xdot");
+        casadi::SX u = model.sx_in("u");
+        casadi::SX z = model.sx_in("z");
+        // casadi::SX w = casadi::SX::vertcat(vector<casadi::SX>({x, u}));
+        casadi::SXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
+
+        casadi::SXDict rhs_dict = (model(arg_in));
+        casadi::SX rhs = rhs_dict.begin()->second;
+
+        casadi::SX jac_x = casadi::SX::jacobian(rhs, x);
+        casadi::SX jac_u = casadi::SX::jacobian(rhs, u);
+        casadi::SX jac_z = casadi::SX::jacobian(rhs, z);
+        casadi::SX jac_xdot = casadi::SX::jacobian(rhs, xdot);
+
+        fun = casadi::Function(model.name() + "_impl_ode_jac_x_xdot_u_z",
+                            {x, xdot, u, z}, {jac_x, jac_xdot, jac_u, jac_z});
+    }
+    else  // MX
+    {
+        casadi::MX x = model.mx_in("x");
+        casadi::MX xdot = model.mx_in("xdot");
+        casadi::MX u = model.mx_in("u");
+        casadi::MX z = model.mx_in("z");
+        // casadi::MX w = casadi::MX::vertcat(vector<casadi::MX>({x, u}));
+        casadi::MXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
+
+        casadi::MXDict rhs_dict = (model(arg_in));
+        casadi::MX rhs = rhs_dict.begin()->second;
+
+        casadi::MX jac_x = casadi::MX::jacobian(rhs, x);
+        casadi::MX jac_u = casadi::MX::jacobian(rhs, u);
+        casadi::MX jac_z = casadi::MX::jacobian(rhs, z);
+        casadi::MX jac_xdot = casadi::MX::jacobian(rhs, xdot);
+
+        fun = casadi::Function(model.name() + "_impl_ode_jac_x_xdot_u_z",
+                            {x, xdot, u, z}, {jac_x, jac_xdot, jac_u, jac_z});
+    }
+    return casadi_module(fun, output_folder);
+}
+
+
+casadi_module generate_impl_ode_fun_jac_x_xdot_u(const casadi::Function& model,
+                        string output_folder, const bool use_MX)
+{
+    casadi::Function fun;
+    if (use_MX == false)
+    {
+        casadi::SX x = model.sx_in("x");
+        casadi::SX xdot = model.sx_in("xdot");
+        casadi::SX u = model.sx_in("u");
+        casadi::SX z = model.sx_in("z");
+        casadi::SXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
+
+        casadi::SXDict rhs_dict = (model(arg_in));
+        casadi::SX rhs = rhs_dict.begin()->second;
+
+        casadi::SX jac_x = casadi::SX::jacobian(rhs, x);
+        casadi::SX jac_u = casadi::SX::jacobian(rhs, u);
+        // casadi::SX jac_z = casadi::SX::jacobian(rhs, z);
+        casadi::SX jac_xdot = casadi::SX::jacobian(rhs, xdot);
+
+        fun = casadi::Function(model.name() + "_impl_ode_fun_jac_x_xdot_u",
+                            {x, xdot, u, z}, {rhs, jac_x, jac_xdot, jac_u});
+    }
+    else  // MX
+    {
+        casadi::MX x = model.mx_in("x");
+        casadi::MX xdot = model.mx_in("xdot");
+        casadi::MX u = model.mx_in("u");
+        casadi::MX z = model.mx_in("z");
+        casadi::MXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
+
+        casadi::MXDict rhs_dict = (model(arg_in));
+        casadi::MX rhs = rhs_dict.begin()->second;
+
+        casadi::MX jac_x = casadi::MX::jacobian(rhs, x);
+        casadi::MX jac_u = casadi::MX::jacobian(rhs, u);
+        // casadi::MX jac_z = casadi::MX::jacobian(rhs, z);
+        casadi::MX jac_xdot = casadi::MX::jacobian(rhs, xdot);
+
+        fun = casadi::Function(model.name() + "_impl_ode_fun_jac_x_xdot_u",
+                            {x, xdot, u, z}, {rhs, jac_x, jac_xdot, jac_u});
+    }
+    return casadi_module(fun, output_folder);
+}
+// casadi_module generate_impl_ode_hess(const casadi::Function& model,
+//                         string output_folder, const bool use_MX)
+// {
+//     // Matlab Code -- TODO(oj): make this cpp
+// %% generate hessian
+// x_xdot_z_u = [x; xdot; z; u];
+
+// if class(x(1)) == 'casadi.SX'
+//     multiplier  = SX.sym('multiplier', length(x) + length(z));
+//     multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
+//     HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
+// elseif class(x(1)) == 'casadi.MX'
+//     multiplier  = MX.sym('multiplier', length(x) + length(z));
+//     multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
+//     HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
+// end
+
+// for ii = 1:length(f_impl)
+//     jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z_u);
+//     hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
+//     HESS = HESS + multiplier(ii) * hess_x_xdot_z;
+// end
+
+// HESS = HESS.simplify();
+// HESS_multiplied = multiply_mat' * HESS * multiply_mat;
+// HESS_multiplied = HESS_multiplied.simplify();
+
+// }
+
+
+/************************************************
+* EXPLICIT MODEL
+************************************************/
 casadi_module generate_forward_vde(const casadi::Function& model, string output_folder,
                                    const bool use_MX)
 {
@@ -253,5 +380,63 @@ casadi_module generate_expl_vde_adj(const casadi::Function& model, string output
 
     return casadi_module(fun, output_folder);
 }
+
+// TODO: only missing detail is how to transpose SX matrix.
+// casadi_module generate_expl_ode_hess(const casadi::Function& model, string output_folder,
+//                                     const bool use_MX)
+// {
+//     casadi::Function fun;
+//     if (use_MX == false)  // SX
+//     {
+//         casadi::SX x = model.sx_in("x");
+//         casadi::SX u = model.sx_in("u");
+
+//         casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, u})));
+
+//         int_t nx = x.size1();
+//         int_t nu = u.size1();
+
+//         casadi::SX Sx = casadi::SX::sym("Sx", nx, nx);
+//         casadi::SX Sp = casadi::SX::sym("Sp", nx, nu);
+//         casadi::SX lambdaX = casadi::SX::sym("lambdaX", nx, 1);
+
+//         casadi::SX w = casadi::SX::vertcat(vector<casadi::SX>({x, u}));
+//         casadi::SX adj = casadi::SX::jtimes(rhs, w, lambdaX, true);
+
+//         std::vector<casadi::SX> SxSp;
+//         SxSp[0] = Sx;
+//         SxSp[1] = Sp;
+//         std::vector<casadi::SX> aux;
+//         aux[0] = casadi::SX::zeros(nu, nx);
+//         aux[1] = casadi::SX::eye(nu);
+
+//         std::vector<casadi::SX> S_forw_vec;
+//         S_forw_vec[0] = casadi::SX::horzcat(SxSp);
+//         S_forw_vec[1] = casadi::SX::horzcat(aux);
+
+//         casadi::SX S_forw = casadi::SX::vertcat(S_forw_vec);
+//         casadi::SX hess = casadi::SX::transpose(S_forw) * casadi::SX::jtimes(adj, w, S_forw);
+
+//         casadi::SX hess2 = casadi::SX::sym("hess2", 0, 0);
+        
+//         for(int j = 0; j < nx+nu; j++)
+//         {
+//             for(int i = j; i < nx+nu; i++)
+//             {
+//                 std::vector<casadi::SX> to_concat;
+//                 to_concat[0] = hess2;
+//                 to_concat[1] = hess(i,j);
+//                 hess2 = casadi::SX::vertcat(to_concat);
+//             }
+//         }
+//         fun = casadi::Function(model.name() + "_expl_ode_hess", {x,Sx,Sp,lambdaX,u},{adj,hess2});
+//     }
+//     else  // MX
+//     {
+//         // TODO: like SX;
+//     }
+
+//     return casadi_module(fun, output_folder);
+// }
 
 }  // namespace acados
