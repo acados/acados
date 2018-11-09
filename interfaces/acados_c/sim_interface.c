@@ -68,7 +68,7 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
 
 void sim_config_free(void *config)
 {
-	free(config);
+    free(config);
 }
 
 
@@ -91,21 +91,21 @@ void *sim_dims_create(void *config_)
 
 void sim_dims_free(void *dims)
 {
-	free(dims);
+    free(dims);
 }
 
 
 
 void sim_dims_set_nx(sim_solver_config *config, void *dims, int nx)
 {
-	config->set_nx(dims, nx);
+    config->set_nx(dims, nx);
 }
 
 
 
 void sim_dims_set_nu(sim_solver_config *config, void *dims, int nu)
 {
-	config->set_nu(dims, nu);
+    config->set_nu(dims, nu);
 }
 
 
@@ -127,7 +127,7 @@ sim_in *sim_in_create(sim_solver_config *config, void *dims)
 
 void sim_in_free(void *in)
 {
-	free(in);
+    free(in);
 }
 
 
@@ -189,69 +189,69 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
 
 void sim_in_set_T(sim_solver_config *config, double T, sim_in *in)
 {
-	in->T = T;
-	return;
+    in->T = T;
+    return;
 }
 
 
 
 void sim_in_set_x(sim_solver_config *config, void *dims, double *x, sim_in *in)
 {
-	int nx;
-	config->get_nx(dims, &nx);
-	int ii;
-	for (ii=0; ii<nx; ii++)
-		in->x[ii] = x[ii];
-	return;
+    int nx;
+    config->get_nx(dims, &nx);
+    int ii;
+    for (ii=0; ii<nx; ii++)
+        in->x[ii] = x[ii];
+    return;
 }
 
 
 
 void sim_in_set_xdot(sim_solver_config *config, void *dims, double *xdot, sim_in *in)
 {
-	int nx;
-	config->get_nx(dims, &nx);
-	int ii;
-	for (ii=0; ii<nx; ii++)
-		in->xdot[ii] = xdot[ii];
-	return;
+    int nx;
+    config->get_nx(dims, &nx);
+    int ii;
+    for (ii=0; ii<nx; ii++)
+        in->xdot[ii] = xdot[ii];
+    return;
 }
 
 
 
 void sim_in_set_u(sim_solver_config *config, void *dims, double *u, sim_in *in)
 {
-	int nu;
-	config->get_nu(dims, &nu);
-	int ii;
-	for (ii=0; ii<nu; ii++)
-		in->u[ii] = u[ii];
-	return;
+    int nu;
+    config->get_nu(dims, &nu);
+    int ii;
+    for (ii=0; ii<nu; ii++)
+        in->u[ii] = u[ii];
+    return;
 }
 
 
 
 void sim_in_set_Sx(sim_solver_config *config, void *dims, double *Sx, sim_in *in)
 {
-	int nx;
-	config->get_nx(dims, &nx);
-	int ii;
-	for (ii=0; ii<nx*nx; ii++)
-		in->S_forw[ii] = Sx[ii];
-	return;
+    int nx;
+    config->get_nx(dims, &nx);
+    int ii;
+    for (ii=0; ii<nx*nx; ii++)
+        in->S_forw[ii] = Sx[ii];
+    return;
 }
 
 
 
 void sim_in_set_Su(sim_solver_config *config, void *dims, double *Su, sim_in *in)
 {
-	int nx, nu;
-	config->get_nx(dims, &nx);
-	config->get_nu(dims, &nu);
-	int ii;
-	for (ii=0; ii<nx*nu; ii++)
-		in->S_forw[nx*nx+ii] = Su[ii];
-	return;
+    int nx, nu;
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
+    int ii;
+    for (ii=0; ii<nx*nu; ii++)
+        in->S_forw[nx*nx+ii] = Su[ii];
+    return;
 }
 
 
@@ -271,44 +271,44 @@ sim_out *sim_out_create(sim_solver_config *config, void *dims)
 
 void sim_out_free(void *out)
 {
-	free(out);
+    free(out);
 }
 
 
 
 void sim_out_get_xn(sim_solver_config *config, void *dims, sim_out *out, double *xn)
 {
-	int nx;
-	config->get_nx(dims, &nx);
-	int ii;
-	for (ii=0; ii<nx; ii++)
-		xn[ii] = out->xn[ii];
-	return;
+    int nx;
+    config->get_nx(dims, &nx);
+    int ii;
+    for (ii=0; ii<nx; ii++)
+        xn[ii] = out->xn[ii];
+    return;
 }
 
 
 
 void sim_out_get_Sxn(sim_solver_config *config, void *dims, sim_out *out, double *Sxn)
 {
-	int nx;
-	config->get_nx(dims, &nx);
-	int ii;
-	for (ii=0; ii<nx*nx; ii++)
-		Sxn[ii] = out->S_forw[ii];
-	return;
+    int nx;
+    config->get_nx(dims, &nx);
+    int ii;
+    for (ii=0; ii<nx*nx; ii++)
+        Sxn[ii] = out->S_forw[ii];
+    return;
 }
 
 
 
 void sim_out_get_Sun(sim_solver_config *config, void *dims, sim_out *out, double *Sun)
 {
-	int nx, nu;
-	config->get_nx(dims, &nx);
-	config->get_nu(dims, &nu);
-	int ii;
-	for (ii=0; ii<nx*nu; ii++)
-		Sun[ii] = out->S_forw[nx*nx+ii];
-	return;
+    int nx, nu;
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
+    int ii;
+    for (ii=0; ii<nx*nu; ii++)
+        Sun[ii] = out->S_forw[nx*nx+ii];
+    return;
 }
 
 
@@ -330,7 +330,7 @@ void *sim_opts_create(sim_solver_config *config, void *dims)
 
 void sim_opts_free(void *opts)
 {
-	free(opts);
+    free(opts);
 }
 
 
@@ -338,8 +338,8 @@ void sim_opts_free(void *opts)
 void sim_opts_set_sens_forw(sim_rk_opts *opts, bool value)
 {
 
-	opts->sens_forw = value;
-	return;
+    opts->sens_forw = value;
+    return;
 
 }
 
@@ -400,7 +400,7 @@ sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
 
 void sim_free(void *solver)
 {
-	free(solver);
+    free(solver);
 }
 
 
@@ -409,5 +409,5 @@ int sim_solve(sim_solver *solver, sim_in *in, sim_out *out)
 {
     int flag =  solver->config->evaluate(solver->config, in, out, solver->opts, solver->mem,
                                     solver->work);
-	return flag;
+    return flag;
 }
