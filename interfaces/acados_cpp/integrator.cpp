@@ -149,12 +149,16 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     // TODO(oj) add check: model type and integrator type consistent
     if (options.count("integrator"))
     {
-        if (to_string(options.at("integrator")) == "ERK")
+        if (to_string(options.at("integrator")) == "ERK"){
             sim_plan_.sim_solver = ERK;
+            integrator_type_ = ERK;
+        }
         else if (to_string(options.at("integrator")) == "IRK")
         {
             sim_plan_.sim_solver = IRK;
-            // std::cout << "USING IRK" << std::endl;
+            integrator_type_ = IRK;
+            std::cout << "USING IRK" << std::endl;
+            std::cout << integrator_type_  << std::endl;
         }
         else
             throw std::invalid_argument("Invalid integrator.");
@@ -210,6 +214,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     set_step(to_double(options.at("step")));
 
     // generate and set model;
+    std::cout << sim_plan_.sim_solver  << std::endl;
     set_model(model, options);
 
     // create the integrator
@@ -219,9 +224,10 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
 void integrator::set_model(const casadi::Function &model, std::map<std::string, option_t *> options)
 {
-    // TODO(oj): complete logic, check all options, implement more generate_* functions
     if (options.count("model_type"))
         model_type_ = (model_t) to_int(options.at("model_type"));  // This is not a nice interface
+    else
+        model_type_ = EXPLICIT;
 
     if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")) > 0);
 
@@ -232,58 +238,90 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
         throw std::invalid_argument("Not supported option: sens_hess.");
     }
 
-    /* CHECK MODEL TYPE */
-    if (model_type_ == GNSF)
+    std::cout << sim_plan_.sim_solver  << std::endl;  // here solver type changed somehow @tobi?!
+    /* generate model functions depending on integrator type and options */
+    if (integrator_type_ == IRK)
     {
-        throw std::invalid_argument("Not supported model type.");
-    }
-    else if (model_type_ == IMPLICIT)
-    {        
-        // std::cout << "GENERATE IMPL MODEL" << std::endl;
-        module_["impl_ode_fun_jac_x_xdot_z"] = generate_impl_ode_fun_jac_x_xdot_z(model);
-        sim_set_model_internal(config_, in_->model,
-            "impl_ode_fun_jac_x_xdot_z",
-            (void *) module_["impl_ode_fun_jac_x_xdot_z"].as_external_function());
-
-        // std::cout << "GENERATE IMPL MODEL - impl_ode_fun_jac_x_xdot_z done" << std::endl;
-
-        module_["impl_ode_fun"] = generate_impl_ode_fun(model);
-        sim_set_model_internal(config_, in_->model,
-            "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
-        // std::cout << "GENERATE IMPL MODEL - impl_ode_fun done" << std::endl;
-
-
-        // IRK: needed if (sens_forw & !sens_hess) || (sens_adj & !sens_hess) || (sens_algebraic)
-        // throw std::invalid_argument("Not supported model type.");
-    }
-    else  // EXPLICIT default
-    {
-        if (opts_->sens_forw)
+        // TODO(oj): check all options
+        if (model_type_ == IMPLICIT)
         {
-            module_["expl_vde_for"] = generate_forward_vde(model, autogen_dir, use_MX_);
-            sim_set_model_internal(config_, in_->model, "expl_vde_for",
-                                   (void *) module_["expl_vde_for"].as_external_function());
+            // std::cout << "GENERATE IMPL MODEL" << std::endl;
+            module_["impl_ode_fun_jac_x_xdot_z"] = generate_impl_ode_fun_jac_x_xdot_z(model);
+            sim_set_model_internal(config_, in_->model,
+                "impl_ode_fun_jac_x_xdot_z",
+                (void *) module_["impl_ode_fun_jac_x_xdot_z"].as_external_function());
+
+            if (opts_->jac_reuse){
+                module_["impl_ode_fun"] = generate_impl_ode_fun(model);
+                sim_set_model_internal(config_, in_->model,
+                    "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
+            }
+            if ( opts_->sens_forw || opts_->sens_hess || opts_->sens_algebraic || opts_->sens_adj ){
+                module_["impl_ode_jac_x_xdot_u_z"] = generate_impl_ode_jac_x_xdot_u_z(model);
+                sim_set_model_internal(config_, in_->model,
+                    "impl_ode_jac_x_xdot_u_z", (void *) module_["impl_ode_jac_x_xdot_u_z"].as_external_function());
+            }
+            if ( opts_->sens_hess ){
+                throw std::invalid_argument("IRK cannot be used with hessians and cpp interface");
+                // TODO(oj): implement the following
+                // module_["impl_ode_hess"] = generate_impl_ode_hess(model);
+                // sim_set_model_internal(config_, in_->model,
+                //     "impl_ode_hess", (void *) module_["impl_ode_hess"].as_external_function());
+            }
+            // std::cout << "GENERATE IMPL MODEL - impl_ode_fun done" << std::endl;
+            // IRK: needed if (sens_forw & !sens_hess) || (sens_adj & !sens_hess) || (sens_algebraic)
+            // throw std::invalid_argument("Not supported model type.");
         }
         else
         {
-            module_["expl_ode_fun"] = generate_expl_ode_fun(model, autogen_dir, use_MX_);
-            sim_set_model_internal(config_, in_->model, "expl_ode_fun",
-                                   (void *) module_["expl_ode_fun"].as_external_function());
+            // TODO(oj): add support for explicit model
+            throw std::invalid_argument("IRK only supported with implicit model");
         }
+        
+    }
+    else if (sim_plan_.sim_solver == GNSF)
+    {
+        // TODO(oj): implement
+        throw std::invalid_argument("GNSF is not supported integrator type.");
+    }
+    else  // ERK
+    {
+        if (model_type_ == EXPLICIT)
+        {
+            // TODO(oj): check all options
+            if (opts_->sens_forw)
+            {
+                module_["expl_vde_for"] = generate_forward_vde(model, autogen_dir, use_MX_);
+                sim_set_model_internal(config_, in_->model, "expl_vde_for",
+                                    (void *) module_["expl_vde_for"].as_external_function());
+            }
+            else
+            {
+                module_["expl_ode_fun"] = generate_expl_ode_fun(model, autogen_dir, use_MX_);
+                sim_set_model_internal(config_, in_->model, "expl_ode_fun",
+                                    (void *) module_["expl_ode_fun"].as_external_function());
+            }
 
-        if (opts_->sens_adj && !opts_->sens_hess)
-        {
-            module_["expl_vde_adj"] = generate_expl_vde_adj(model);
-            sim_set_model_internal(config_, in_->model, "expl_vde_adj",
-                                   (void *) module_["expl_vde_adj"].as_external_function());
+            if (opts_->sens_adj && !opts_->sens_hess)
+            {
+                module_["expl_vde_adj"] = generate_expl_vde_adj(model);
+                sim_set_model_internal(config_, in_->model, "expl_vde_adj",
+                                    (void *) module_["expl_vde_adj"].as_external_function());
+            }
+            else if (opts_->sens_hess)
+            {
+                throw std::invalid_argument("ERK can only be used without hessians");
+                // TODO(oj): implement the following
+                // module_["expl_vde_hess"] = generate_expl_vde_hess(model);
+                // sim_set_model_internal(config_, in_->model, "expl_vde_hess",
+                // (void *) module_["expl_vde_hess"].as_external_function());
+            }
         }
-        else if (opts_->sens_hess)
+        else
         {
-            throw std::invalid_argument("Hessians not supported by cpp interface");
+            throw std::invalid_argument("ERK can only be used with explicit model");
         }
     }
-
-    // TODO write generators for all types of functions
 }
 
 void integrator::set_step(const double step) { in_->T = step; }

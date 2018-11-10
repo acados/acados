@@ -22,7 +22,7 @@ typedef enum
     // TODO do we really need this (see definition of sim_solver_t)
     EXPLICIT = 0,
     IMPLICIT,
-    GNSF
+    GNSF_MODEL
 } model_t;
 
 
@@ -56,6 +56,7 @@ class integrator
     size_t nz_;
 
     model_t model_type_;
+    sim_solver_t integrator_type_;
     bool use_MX_;
 
     std::map<std::string, casadi_module> module_;

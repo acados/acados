@@ -19,6 +19,8 @@ Complete integrator interface
         - [x] impl_ode_fun_jac_x_xdot_u
     - [] GNSF?!
 - [] add logic, which functions to generate for which settings
+    - [x] ERK
+    - [x] IRK
 - [] extend to non native model, i.e. IRK with expl model
 - [] add support for parameters in cpp function generation
 
