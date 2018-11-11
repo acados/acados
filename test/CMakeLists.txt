@@ -35,7 +35,6 @@ set(TEST_OCP_NLP_SRC
     ### explicit ###
     # 2 masses
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_chain_nm2.c
-    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/jac_chain_nm2.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_adj_chain_nm2.c
     #chain_model/vde_hess_chain_nm2.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_cost_nm2.c
@@ -43,7 +42,6 @@ set(TEST_OCP_NLP_SRC
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/casadi_erk4_chain_nm2.c
     # 3 masses
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_chain_nm3.c
-    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/jac_chain_nm3.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_adj_chain_nm3.c
     #chain_model/vde_hess_chain_nm3.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_cost_nm3.c
@@ -51,7 +49,6 @@ set(TEST_OCP_NLP_SRC
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/casadi_erk4_chain_nm3.c
     # 4 masses
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_chain_nm4.c
-    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/jac_chain_nm4.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_adj_chain_nm4.c
     #chain_model/vde_hess_chain_nm4.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_cost_nm4.c
@@ -59,7 +56,6 @@ set(TEST_OCP_NLP_SRC
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/casadi_erk4_chain_nm4.c
     # 5 masses
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_chain_nm5.c
-    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/jac_chain_nm5.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_adj_chain_nm5.c
     #chain_model/vde_hess_chain_nm5.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_cost_nm5.c
@@ -67,7 +63,6 @@ set(TEST_OCP_NLP_SRC
     #${CMAKE_SOURCE_DIR}/examples/c/chain_model/casadi_erk4_chain_nm5.c
     # 6 masses
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_chain_nm6.c
-    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/jac_chain_nm6.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/vde_adj_chain_nm6.c
     #chain_model/vde_hess_chain_nm6.c
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_cost_nm6.c
