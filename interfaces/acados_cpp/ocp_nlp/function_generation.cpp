@@ -224,6 +224,9 @@ casadi_module generate_impl_ode_fun_jac_x_xdot_u(const casadi::Function& model,
     }
     return casadi_module(fun, output_folder);
 }
+
+
+
 // casadi_module generate_impl_ode_hess(const casadi::Function& model,
 //                         string output_folder, const bool use_MX)
 // {
@@ -257,8 +260,8 @@ casadi_module generate_impl_ode_fun_jac_x_xdot_u(const casadi::Function& model,
 /************************************************
 * EXPLICIT MODEL
 ************************************************/
-casadi_module generate_forward_vde(const casadi::Function& model, string output_folder,
-                                   const bool use_MX)
+casadi_module generate_forward_vde(const casadi::Function& model,
+                             string output_folder, const bool use_MX)
 {
     casadi::Function vde_fun;
     if (use_MX == false)
@@ -381,62 +384,102 @@ casadi_module generate_expl_vde_adj(const casadi::Function& model, string output
     return casadi_module(fun, output_folder);
 }
 
-// TODO: only missing detail is how to transpose SX matrix.
-// casadi_module generate_expl_ode_hess(const casadi::Function& model, string output_folder,
-//                                     const bool use_MX)
-// {
-//     casadi::Function fun;
-//     if (use_MX == false)  // SX
-//     {
-//         casadi::SX x = model.sx_in("x");
-//         casadi::SX u = model.sx_in("u");
+casadi_module generate_expl_ode_hess(const casadi::Function& model, string output_folder,
+                                    const bool use_MX)
+{
+    casadi::Function fun;
+    if (use_MX == false)  // SX
+    {
+        casadi::SX x = model.sx_in("x");
+        casadi::SX u = model.sx_in("u");
 
-//         casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, u})));
+        casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, u})));
 
-//         int_t nx = x.size1();
-//         int_t nu = u.size1();
+        int_t nx = x.size1();
+        int_t nu = u.size1();
 
-//         casadi::SX Sx = casadi::SX::sym("Sx", nx, nx);
-//         casadi::SX Sp = casadi::SX::sym("Sp", nx, nu);
-//         casadi::SX lambdaX = casadi::SX::sym("lambdaX", nx, 1);
+        casadi::SX Sx = casadi::SX::sym("Sx", nx, nx);
+        casadi::SX Sp = casadi::SX::sym("Sp", nx, nu);
+        casadi::SX lambdaX = casadi::SX::sym("lambdaX", nx, 1);
 
-//         casadi::SX w = casadi::SX::vertcat(vector<casadi::SX>({x, u}));
-//         casadi::SX adj = casadi::SX::jtimes(rhs, w, lambdaX, true);
+        casadi::SX w = casadi::SX::vertcat(vector<casadi::SX>({x, u}));
+        casadi::SX adj = casadi::SX::jtimes(rhs, w, lambdaX, true);
 
-//         std::vector<casadi::SX> SxSp;
-//         SxSp[0] = Sx;
-//         SxSp[1] = Sp;
-//         std::vector<casadi::SX> aux;
-//         aux[0] = casadi::SX::zeros(nu, nx);
-//         aux[1] = casadi::SX::eye(nu);
+        std::vector<casadi::SX> SxSp;
+        SxSp[0] = Sx;
+        SxSp[1] = Sp;
+        std::vector<casadi::SX> aux;
+        aux[0] = casadi::SX::zeros(nu, nx);
+        aux[1] = casadi::SX::eye(nu);
 
-//         std::vector<casadi::SX> S_forw_vec;
-//         S_forw_vec[0] = casadi::SX::horzcat(SxSp);
-//         S_forw_vec[1] = casadi::SX::horzcat(aux);
+        std::vector<casadi::SX> S_forw_vec;
+        S_forw_vec[0] = casadi::SX::horzcat(SxSp);
+        S_forw_vec[1] = casadi::SX::horzcat(aux);
 
-//         casadi::SX S_forw = casadi::SX::vertcat(S_forw_vec);
-//         casadi::SX hess = casadi::SX::transpose(S_forw) * casadi::SX::jtimes(adj, w, S_forw);
+        casadi::SX S_forw = casadi::SX::vertcat(S_forw_vec);
+        casadi::SX hess = S_forw.T() * casadi::SX::jtimes(adj, w, S_forw);
 
-//         casadi::SX hess2 = casadi::SX::sym("hess2", 0, 0);
+        casadi::SX hess2 = casadi::SX::sym("hess2", 0, 0);
         
-//         for(int j = 0; j < nx+nu; j++)
-//         {
-//             for(int i = j; i < nx+nu; i++)
-//             {
-//                 std::vector<casadi::SX> to_concat;
-//                 to_concat[0] = hess2;
-//                 to_concat[1] = hess(i,j);
-//                 hess2 = casadi::SX::vertcat(to_concat);
-//             }
-//         }
-//         fun = casadi::Function(model.name() + "_expl_ode_hess", {x,Sx,Sp,lambdaX,u},{adj,hess2});
-//     }
-//     else  // MX
-//     {
-//         // TODO: like SX;
-//     }
+        for(int j = 0; j < nx+nu; j++)
+        {
+            for(int i = j; i < nx+nu; i++)
+            {
+                std::vector<casadi::SX> to_concat;
+                to_concat[0] = hess2;
+                to_concat[1] = hess(i,j);
+                hess2 = casadi::SX::vertcat(to_concat);
+            }
+        }
+        fun = casadi::Function(model.name() + "_expl_ode_hess", {x,Sx,Sp,lambdaX,u},{adj,hess2});
+    }
+    else  // MX
+    {
+        casadi::MX x = model.mx_in("x");
+        casadi::MX u = model.mx_in("u");
 
-//     return casadi_module(fun, output_folder);
-// }
+        casadi::MX rhs = casadi::MX::vertcat(model(vector<casadi::MX>({x, u})));
+
+        int_t nx = x.size1();
+        int_t nu = u.size1();
+
+        casadi::MX Sx = casadi::MX::sym("Sx", nx, nx);
+        casadi::MX Sp = casadi::MX::sym("Sp", nx, nu);
+        casadi::MX lambdaX = casadi::MX::sym("lambdaX", nx, 1);
+
+        casadi::MX w = casadi::MX::vertcat(vector<casadi::MX>({x, u}));
+        casadi::MX adj = casadi::MX::jtimes(rhs, w, lambdaX, true);
+
+        std::vector<casadi::MX> SxSp;
+        SxSp[0] = Sx;
+        SxSp[1] = Sp;
+        std::vector<casadi::MX> aux;
+        aux[0] = casadi::MX::zeros(nu, nx);
+        aux[1] = casadi::MX::eye(nu);
+
+        std::vector<casadi::MX> S_forw_vec;
+        S_forw_vec[0] = casadi::MX::horzcat(SxSp);
+        S_forw_vec[1] = casadi::MX::horzcat(aux);
+
+        casadi::MX S_forw = casadi::MX::vertcat(S_forw_vec);
+        casadi::MX hess = S_forw.T() * casadi::MX::jtimes(adj, w, S_forw);
+
+        casadi::MX hess2 = casadi::MX::sym("hess2", 0, 0);
+        
+        for(int j = 0; j < nx+nu; j++)
+        {
+            for(int i = j; i < nx+nu; i++)
+            {
+                std::vector<casadi::MX> to_concat;
+                to_concat[0] = hess2;
+                to_concat[1] = hess(i,j);
+                hess2 = casadi::MX::vertcat(to_concat);
+            }
+        }
+        fun = casadi::Function(model.name() + "_expl_ode_hess", {x,Sx,Sp,lambdaX,u},{adj,hess2});
+    }
+
+    return casadi_module(fun, output_folder);
+}
 
 }  // namespace acados

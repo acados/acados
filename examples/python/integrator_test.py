@@ -43,7 +43,7 @@ sim1 = integrator(impl_ode_fun, opts1)
 
 
 # set experiment parameters
-M = 100
+M = 6
 x1 = x0
 x2 = x0
 start_time = 0.0

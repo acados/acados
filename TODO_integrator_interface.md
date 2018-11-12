@@ -6,7 +6,7 @@ Complete integrator interface
 - [] add cpp generation for all integrator function
     - [] ERK
         - [x] expl_ode_fun
-        - [close] expl_ode_hes -- how to transpose SX matrix
+        - [] expl_ode_hes -- how to transpose SX matrix
         - [x] expl_vde_for
         - [x] expl_vde_adj
     - [] IRK
@@ -26,23 +26,16 @@ Complete integrator interface
 
 
 After DEMO
-- [J] IRK with EXPLICIT
 - [] output dict/struct
-- [x] Fix ocp_nlp
-- [JT] Cleanup & Refactor
+- [] Cleanup & Refactor
 - [] .get_settings
+
+- [T] try to compile on Windows
 
 Done
 =====
-TODOs:
 - [X] 2 integrators at the same time
 - [X] minimal MX support
 - [X] IRK support
 - [X] Matlab support
-- [T] try to compile on Windows
-
-For Presenting
-- [X] Minimal Python
-- [X] Mighty Python example with timings
-- [X] Matlab example with timings
-- [T] Design choices
+- [x] Fix ocp_nlp

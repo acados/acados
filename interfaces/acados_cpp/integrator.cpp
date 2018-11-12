@@ -233,10 +233,6 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
 
     string autogen_dir = "_autogen";
 
-    if (opts_->sens_hess)
-    {
-        throw std::invalid_argument("Not supported option: sens_hess.");
-    }
 
     std::cout << sim_plan_.sim_solver  << std::endl;  // here solver type changed somehow @tobi?!
     /* generate model functions depending on integrator type and options */
@@ -288,7 +284,6 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
     {
         if (model_type_ == EXPLICIT)
         {
-            // TODO(oj): check all options
             if (opts_->sens_forw)
             {
                 module_["expl_vde_for"] = generate_forward_vde(model, autogen_dir, use_MX_);
@@ -311,10 +306,9 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
             else if (opts_->sens_hess)
             {
                 throw std::invalid_argument("ERK can only be used without hessians");
-                // TODO(oj): implement the following
-                // module_["expl_vde_hess"] = generate_expl_vde_hess(model);
-                // sim_set_model_internal(config_, in_->model, "expl_vde_hess",
-                // (void *) module_["expl_vde_hess"].as_external_function());
+                module_["expl_vde_hess"] = generate_expl_ode_hess(model);
+                sim_set_model_internal(config_, in_->model, "expl_vde_hess",
+                (void *) module_["expl_vde_hess"].as_external_function());
             }
         }
         else
