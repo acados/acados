@@ -164,7 +164,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     if (!check_model(model, model_type_, use_MX_, nx_, nu_, nz_))
         throw std::invalid_argument("Model is invalid.");
 
-    if (!options.count("step")) throw std::invalid_argument("Expected 'step' as an option.");
+    if (!options.count("step_size")) throw std::invalid_argument("Expected 'step_size' as an option.");
 
 
 
@@ -205,7 +205,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
 
     // set step width
-    set_step(to_double(options.at("step")));
+    set_step_size(to_double(options.at("step_size")));
 
     // generate and set model;
     std::cout << sim_plan_.sim_solver  << std::endl;
@@ -223,7 +223,12 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
     else
         model_type_ = EXPLICIT;
 
-    if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")) > 0);
+    if (options.count("use_MX")) {
+        use_MX_ = (to_int(options.at("use_MX")) > 0);
+        std::cout << options.at("use_MX") << std::endl;
+    }    
+
+    std::cout << "use_MX_" << use_MX_ << std::endl;
 
     string autogen_dir = "_autogen";
 
@@ -236,23 +241,23 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
         if (model_type_ == IMPLICIT)
         {
             // std::cout << "GENERATE IMPL MODEL" << std::endl;
-            module_["impl_ode_fun_jac_x_xdot_z"] = generate_impl_ode_fun_jac_x_xdot_z(model);
+            module_["impl_ode_fun_jac_x_xdot_z"] = generate_impl_ode_fun_jac_x_xdot_z(model, autogen_dir, use_MX_);
             sim_set_model_internal(config_, in_->model,
                 "impl_ode_fun_jac_x_xdot_z",
                 (void *) module_["impl_ode_fun_jac_x_xdot_z"].as_external_function());
 
             if (opts_->jac_reuse){
-                module_["impl_ode_fun"] = generate_impl_ode_fun(model);
+                module_["impl_ode_fun"] = generate_impl_ode_fun(model, autogen_dir, use_MX_);
                 sim_set_model_internal(config_, in_->model,
                     "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
             }
             if ( opts_->sens_forw || opts_->sens_hess || opts_->sens_algebraic || opts_->sens_adj ){
-                module_["impl_ode_jac_x_xdot_u_z"] = generate_impl_ode_jac_x_xdot_u_z(model);
+                module_["impl_ode_jac_x_xdot_u_z"] = generate_impl_ode_jac_x_xdot_u_z(model, autogen_dir, use_MX_);
                 sim_set_model_internal(config_, in_->model,
                     "impl_ode_jac_x_xdot_u_z", (void *) module_["impl_ode_jac_x_xdot_u_z"].as_external_function());
             }
             if ( opts_->sens_hess ){
-                module_["impl_ode_hess"] = generate_impl_ode_hess(model);
+                module_["impl_ode_hess"] = generate_impl_ode_hess(model, autogen_dir, use_MX_);
                 sim_set_model_internal(config_, in_->model,
                     "impl_ode_hess", (void *) module_["impl_ode_hess"].as_external_function());
             }
@@ -307,10 +312,30 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
     }
 }
 
-void integrator::set_step(const double step) { in_->T = step; }
+
+void integrator::print_settings() const
+{
+    std::cout << "\nstep_size \t: " << in_->T
+              << "\nmodel_type \t: " << model_type_
+              << "\nintegrator \t: " << sim_plan_.sim_solver
+              << "\nuse_MX \t\t: " << use_MX_ 
+              << "\nns \t\t: " << opts_->ns    
+              << "\nnum_steps \t: " << opts_->num_steps
+              << "\nnewton_iter \t: " << opts_->newton_iter
+              << "\nsens_forw \t: " << opts_->sens_forw    
+              << "\nsens_adj \t: " << opts_->sens_adj    
+              << "\nsens_hess \t: " << opts_->sens_hess    
+              << "\nsens_algebraic \t: " << opts_->sens_algebraic    
+              << "\njac_reuse \t: " << opts_->jac_reuse
+              << std::endl;
+}
 
 
-std::vector<double> integrator::integrate(std::vector<double> x, std::vector<double> u)
+
+void integrator::set_step_size(const double step_size) { in_->T = step_size; }
+
+
+std::vector<double> integrator::integrate(std::vector<double> x, std::vector<double> u) const
 {
     /*
       if ( in.count("x") )

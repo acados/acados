@@ -11,7 +11,7 @@ x0 = np.array([ 4.2, 0.42, 0, 0])
 u = np.array([1])
 
 # create integrator
-opts2 = {'step': 0.01}
+opts2 = {'step_size': 0.01}
 start = time.time()
 sim2 = integrator(ode_fun, opts2)
 stop = time.time()
@@ -20,27 +20,32 @@ print("time to create" + str(stop-start))
 print("integrator result: " + str(sim2.integrate(x0, u)))
 input("press any key to continue")
 
+print("sim2 settings")
+sim2.print_settings()
+
+input("press any key to continue")
+
 
 # create another integrator
-opts1 = {'step'             : 0.01, # only mandatory argument
+opts1 = {'step_size'        : 0.01, # only mandatory argument
         ### OPTIONAL ARGUMENTS
-         'model_type'       : 0, # 0 - EXPLICIT (default)
+         'model_type'       : 1, # 0 - EXPLICIT (default)
                                  # 1 - IMPLICIT
-         'integrator'       : "ERK", # default (ERK)
+         'integrator'       : "IRK", # default (ERK)
          'use_MX'           : True,  # default (False)
          'ns'               : 3, # default in integrator
          'num_steps'        : 1, # default in integrator
          'newton_iter'      : 3, # default in integrator
          'output_z'         : 0, # default in integrator
          'sens_forw'        : 1, # default in integrator
-         'sens_adj'         : 1, # default in integrator
-         'sens_hess'        : 1, # default in integrator
+         'sens_adj'         : 0, # default in integrator
+         'sens_hess'        : 0, # default in integrator
          'sens_algebraic'   : 0, # default in integrator
          'jac_reuse'        : 0, # default in integrator
         }
 
-sim1 = integrator(ode_fun, opts1)
-
+sim1 = integrator(impl_ode_fun, opts1)
+sim1.print_settings()
 
 # set experiment parameters
 M = 6

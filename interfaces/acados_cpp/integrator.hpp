@@ -31,15 +31,17 @@ class integrator
  public:
     integrator(const casadi::Function& model, std::map<std::string, option_t*> options = {});
 
-    std::vector<double> integrate(std::vector<double> x, std::vector<double> u = {});
-
-
-    void set_step(const double step);
-
-    int num_stages() { return opts_->ns; }
-    double step() { return in_->T; }
-
     ~integrator();
+
+    std::vector<double> integrate(std::vector<double> x, std::vector<double> u = {}) const;
+
+    void print_settings() const;
+
+    void set_step_size(const double step_size);
+
+    int num_stages() const { return opts_->ns; }
+    double step_size() const { return in_->T; }
+
 
  private:
     void set_model(const casadi::Function& model, std::map<std::string, option_t*> options = {});
@@ -50,7 +52,9 @@ class integrator
     sim_out* out_;
     sim_solver* solver_;
     sim_solver_plan sim_plan_;
+
     void* dims_;
+
     size_t nx_;
     size_t nu_;
     size_t nz_;

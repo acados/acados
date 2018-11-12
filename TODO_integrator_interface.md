@@ -26,6 +26,12 @@ Complete integrator interface
     - [] ERK
     - [] IRK
     - [] LIFTED IRK
+
+CURRENT BUGS:
+    - ERK with hessian, might be C problem
+    - 
+
+FOR LATER
 - [] extend to non native model, i.e. IRK with expl model
 - [] add support for parameters in cpp function generation
 
@@ -33,7 +39,7 @@ Complete integrator interface
 After DEMO
 - [] output dict/struct
 - [] Cleanup & Refactor
-- [] .get_settings
+- [x] .get_settings
 
 - [T] try to compile on Windows
 
