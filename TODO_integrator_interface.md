@@ -29,18 +29,19 @@ Complete integrator interface
 
 CURRENT BUGS:
     - ERK with hessian, might be C problem
-    - 
-
-FOR LATER
-- [] extend to non native model, i.e. IRK with expl model
-- [] add support for parameters in cpp function generation
+    - IRK with forw
 
 
-After DEMO
+
+BEFORE MERGE
 - [] output dict/struct
 - [] Cleanup & Refactor
 - [x] .get_settings
 
+
+After MERGE
+- [] extend to non native model, i.e. IRK with expl model
+- [] add support for parameters in cpp function generation
 - [T] try to compile on Windows
 
 Done

@@ -151,8 +151,6 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
         else if (to_string(options.at("integrator")) == "IRK")
         {
             sim_plan_.sim_solver = IRK;
-            std::cout << "USING IRK" << std::endl;
-            // std::cout << integrator_type_  << std::endl;
         }
         else
             throw std::invalid_argument("Invalid integrator.");
@@ -208,7 +206,6 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     set_step_size(to_double(options.at("step_size")));
 
     // generate and set model;
-    std::cout << sim_plan_.sim_solver  << std::endl;
     set_model(model, options);
 
     // create the integrator
@@ -225,15 +222,10 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
 
     if (options.count("use_MX")) {
         use_MX_ = (to_int(options.at("use_MX")) > 0);
-        std::cout << options.at("use_MX") << std::endl;
     }    
-
-    std::cout << "use_MX_" << use_MX_ << std::endl;
 
     string autogen_dir = "_autogen";
 
-
-    std::cout << sim_plan_.sim_solver  << std::endl;  // here solver type changed somehow @tobi?!
     /* generate model functions depending on integrator type and options */
     if (sim_plan_.sim_solver == IRK)
     {
