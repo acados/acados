@@ -18,12 +18,12 @@ stop = time.time()
 print("time to create" + str(stop-start))
 # call integrator
 print("integrator result: " + str(sim2.integrate(x0, u)))
-input("press any key to continue")
+# input("press any key to continue")
 
 print("sim2 settings")
 sim2.print_settings()
 
-input("press any key to continue")
+# input("press any key to continue")
 
 
 # create another integrator
@@ -38,8 +38,8 @@ opts1 = {'step_size'        : 0.01, # only mandatory argument
          'newton_iter'      : 3, # default set in C implementation of integrator used
          'output_z'         : 0, # default set in C implementation of integrator used
          'sens_forw'        : 1, # default set in C implementation of integrator used
-         'sens_adj'         : 0, # default set in C implementation of integrator used
-         'sens_hess'        : 0, # default set in C implementation of integrator used
+         'sens_adj'         : 1, # default set in C implementation of integrator used
+         'sens_hess'        : 1, # default set in C implementation of integrator used
          'sens_algebraic'   : 0, # default set in C implementation of integrator used
          'jac_reuse'        : 0, # default set in C implementation of integrator used
         }

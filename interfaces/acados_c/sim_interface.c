@@ -164,7 +164,9 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot_z"))
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u")) // TODO update with z !!!
+    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u")) // TODO(oj): remove this and update with z everywhere
+        status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u_z"))
         status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot_u"))
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT_U, fun_ptr);

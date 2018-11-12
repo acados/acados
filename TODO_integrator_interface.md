@@ -29,9 +29,6 @@ Complete integrator interface
 
 CURRENT BUGS:
     - ERK with hessian, might be C problem
-    - IRK with forw
-
-
 
 BEFORE MERGE
 - [] output dict/struct

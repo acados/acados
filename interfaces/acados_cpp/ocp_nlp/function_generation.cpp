@@ -250,20 +250,26 @@ casadi_module generate_impl_ode_hess(const casadi::Function& model,
         casadi::SX jac_x_xdot_z;
         casadi::SX hess_x_xdot_z;
 
-        std::vector<casadi::SX> input{x, xdot, z, u};
+        casadi::SXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
 
-        casadi::SX model_expr = casadi::SX::vertcat(model(input));
+        casadi::SXDict model_dict = (model(arg_in));
+        casadi::SX model_expr = model_dict.begin()->second;
+
         for(int ii = 0; ii < nx+nz; ii++)
         {
-            jac_x_xdot_z = jacobian(model_expr, x_xdot_z_u);
+            jac_x_xdot_z = jacobian(model_expr(ii), x_xdot_z_u);
+            // std::cout << "size jac_x_xdot_z = " << jac_x_xdot_z.size1() <<"\t"<< jac_x_xdot_z.size2() << std::endl;
             hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
+            // std::cout << "size hess_x_xdot_z = " << hess_x_xdot_z.size1()<<"\t"<< hess_x_xdot_z.size2() << std::endl;
             HESS = HESS + multiplier(ii) * hess_x_xdot_z;
         }
         
+        std::cout << "multiply hess" << std::endl;
         // HESS = HESS.simplify();
-        casadi::SX HESS_multiplied = mult_mat.T() * HESS * mult_mat;
-        // HESS_multiplied = HESS_multiplied.simplify();
+        casadi::SX HESS_multiplied = mtimes( mult_mat.T() , mtimes(HESS, mult_mat));
 
+        std::cout << "multiplied hess" << std::endl;
+        // HESS_multiplied = HESS_multiplied;
         fun = casadi::Function(model.name() + "_impl_ode_hess",
             {x, xdot, u, z, multiplier, mult_mat}, {HESS_multiplied});
     }
@@ -287,18 +293,25 @@ casadi_module generate_impl_ode_hess(const casadi::Function& model,
         casadi::MX jac_x_xdot_z;
         casadi::MX hess_x_xdot_z;
 
-        std::vector<casadi::MX> input{x, xdot, z, u};
-        casadi::MX model_expr = casadi::MX::vertcat(model(input));
+        casadi::MXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
+
+        casadi::MXDict model_dict = (model(arg_in));
+        casadi::MX model_expr = model_dict.begin()->second;
 
         for(int ii = 0; ii < nx+nz; ii++)
         {
-            jac_x_xdot_z = jacobian(model_expr, x_xdot_z_u);
+            jac_x_xdot_z = jacobian(model_expr(ii), x_xdot_z_u);
+            // std::cout << "size jac_x_xdot_z = " << jac_x_xdot_z.size1() <<"\t"<< jac_x_xdot_z.size2() << std::endl;
             hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
+            // std::cout << "size hess_x_xdot_z = " << hess_x_xdot_z.size1()<<"\t"<< hess_x_xdot_z.size2() << std::endl;
             HESS = HESS + multiplier(ii) * hess_x_xdot_z;
         }
         
+        std::cout << "multiply hess" << std::endl;
         // HESS = HESS.simplify();
-        casadi::MX HESS_multiplied = mult_mat.T() * HESS * mult_mat;
+        casadi::MX HESS_multiplied = mtimes( mult_mat.T() , mtimes(HESS, mult_mat));
+
+        std::cout << "multiplied hess" << std::endl;
         // HESS_multiplied = HESS_multiplied;
         fun = casadi::Function(model.name() + "_impl_ode_hess",
             {x, xdot, u, z, multiplier, mult_mat}, {HESS_multiplied});
