@@ -130,7 +130,6 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
 
 
 
-// TODO: generalize for MX!
 /* CONSTRUCTOR */
 integrator::integrator(const casadi::Function &model, std::map<std::string, option_t *> options)
 {
@@ -144,21 +143,16 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")) > 0);
 
 
-    sim_solver_plan sim_plan_;
-
     // TODO(oj) add check: model type and integrator type consistent
     if (options.count("integrator"))
     {
-        if (to_string(options.at("integrator")) == "ERK"){
+        if (to_string(options.at("integrator")) == "ERK")
             sim_plan_.sim_solver = ERK;
-            integrator_type_ = ERK;
-        }
         else if (to_string(options.at("integrator")) == "IRK")
         {
             sim_plan_.sim_solver = IRK;
-            integrator_type_ = IRK;
             std::cout << "USING IRK" << std::endl;
-            std::cout << integrator_type_  << std::endl;
+            // std::cout << integrator_type_  << std::endl;
         }
         else
             throw std::invalid_argument("Invalid integrator.");
@@ -236,7 +230,7 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
 
     std::cout << sim_plan_.sim_solver  << std::endl;  // here solver type changed somehow @tobi?!
     /* generate model functions depending on integrator type and options */
-    if (integrator_type_ == IRK)
+    if (sim_plan_.sim_solver == IRK)
     {
         // TODO(oj): check all options
         if (model_type_ == IMPLICIT)
@@ -258,15 +252,10 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
                     "impl_ode_jac_x_xdot_u_z", (void *) module_["impl_ode_jac_x_xdot_u_z"].as_external_function());
             }
             if ( opts_->sens_hess ){
-                throw std::invalid_argument("IRK cannot be used with hessians and cpp interface");
-                // TODO(oj): implement the following
-                // module_["impl_ode_hess"] = generate_impl_ode_hess(model);
-                // sim_set_model_internal(config_, in_->model,
-                //     "impl_ode_hess", (void *) module_["impl_ode_hess"].as_external_function());
+                module_["impl_ode_hess"] = generate_impl_ode_hess(model);
+                sim_set_model_internal(config_, in_->model,
+                    "impl_ode_hess", (void *) module_["impl_ode_hess"].as_external_function());
             }
-            // std::cout << "GENERATE IMPL MODEL - impl_ode_fun done" << std::endl;
-            // IRK: needed if (sens_forw & !sens_hess) || (sens_adj & !sens_hess) || (sens_algebraic)
-            // throw std::invalid_argument("Not supported model type.");
         }
         else
         {
@@ -305,7 +294,7 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
             }
             else if (opts_->sens_hess)
             {
-                throw std::invalid_argument("ERK can only be used without hessians");
+                // throw std::invalid_argument("ERK can only be used without hessians");
                 module_["expl_vde_hess"] = generate_expl_ode_hess(model);
                 sim_set_model_internal(config_, in_->model, "expl_vde_hess",
                 (void *) module_["expl_vde_hess"].as_external_function());

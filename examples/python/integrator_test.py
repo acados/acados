@@ -24,22 +24,22 @@ input("press any key to continue")
 # create another integrator
 opts1 = {'step'             : 0.01, # only mandatory argument
         ### OPTIONAL ARGUMENTS
-         'model_type'       : 1, # 0 - EXPLICIT (default)
+         'model_type'       : 0, # 0 - EXPLICIT (default)
                                  # 1 - IMPLICIT
-         'integrator'       : "IRK", # default (ERK)
+         'integrator'       : "ERK", # default (ERK)
          'use_MX'           : True,  # default (False)
          'ns'               : 3, # default in integrator
          'num_steps'        : 1, # default in integrator
          'newton_iter'      : 3, # default in integrator
          'output_z'         : 0, # default in integrator
-         'sens_forw'        : 0, # default in integrator
-         'sens_adj'         : 0, # default in integrator
-         'sens_hess'        : 0, # default in integrator
+         'sens_forw'        : 1, # default in integrator
+         'sens_adj'         : 1, # default in integrator
+         'sens_hess'        : 1, # default in integrator
          'sens_algebraic'   : 0, # default in integrator
          'jac_reuse'        : 0, # default in integrator
         }
 
-sim1 = integrator(impl_ode_fun, opts1)
+sim1 = integrator(ode_fun, opts1)
 
 
 # set experiment parameters
@@ -60,7 +60,7 @@ for k in range(M):
     x2 = np.array(sim2.integrate(x2, u))
     t2 +=  time.time() - start_time
 
-    sim1.set_step(sim1.step()*0.99)
+#     sim1.set_step(sim1.step()*0.99)
     # step can be updated
     print("")
     print(x1)

@@ -227,34 +227,85 @@ casadi_module generate_impl_ode_fun_jac_x_xdot_u(const casadi::Function& model,
 
 
 
-// casadi_module generate_impl_ode_hess(const casadi::Function& model,
-//                         string output_folder, const bool use_MX)
-// {
-//     // Matlab Code -- TODO(oj): make this cpp
-// %% generate hessian
-// x_xdot_z_u = [x; xdot; z; u];
+casadi_module generate_impl_ode_hess(const casadi::Function& model,
+                        string output_folder, const bool use_MX)
+{
+    casadi::Function fun;
+    if (use_MX == false)
+    {
+        casadi::SX xdot = model.sx_in("xdot");
+        casadi::SX x = model.sx_in("x");
+        casadi::SX u = model.sx_in("u");
+        casadi::SX z = model.sx_in("z");
 
-// if class(x(1)) == 'casadi.SX'
-//     multiplier  = SX.sym('multiplier', length(x) + length(z));
-//     multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
-//     HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
-// elseif class(x(1)) == 'casadi.MX'
-//     multiplier  = MX.sym('multiplier', length(x) + length(z));
-//     multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
-//     HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
-// end
+        int_t nx = x.size1();
+        int_t nu = u.size1();
+        int_t nz = z.size1();
 
-// for ii = 1:length(f_impl)
-//     jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z_u);
-//     hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
-//     HESS = HESS + multiplier(ii) * hess_x_xdot_z;
-// end
+        casadi::SX x_xdot_z_u = casadi::SX::vertcat(vector<casadi::SX>({x, xdot, z, u}));
 
-// HESS = HESS.simplify();
-// HESS_multiplied = multiply_mat' * HESS * multiply_mat;
-// HESS_multiplied = HESS_multiplied.simplify();
+        casadi::SX multiplier  = casadi::SX::sym("multiplier", nx + nz, 1);
+        casadi::SX mult_mat  = casadi::SX::sym("mult_mat", 2*nx+nz+nu, nx + nu);
+        casadi::SX HESS = casadi::SX::zeros( 2*nx+nz+nu, 2*nx+nz+nu);
 
-// }
+        casadi::SX jac_x_xdot_z;
+        casadi::SX hess_x_xdot_z;
+
+        std::vector<casadi::SX> input{x, xdot, z, u};
+
+        casadi::SX model_expr = casadi::SX::vertcat(model(input));
+        for(int ii = 0; ii < nx+nz; ii++)
+        {
+            jac_x_xdot_z = jacobian(model_expr, x_xdot_z_u);
+            hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
+            HESS = HESS + multiplier(ii) * hess_x_xdot_z;
+        }
+        
+        // HESS = HESS.simplify();
+        casadi::SX HESS_multiplied = mult_mat.T() * HESS * mult_mat;
+        // HESS_multiplied = HESS_multiplied.simplify();
+
+        fun = casadi::Function(model.name() + "_impl_ode_hess",
+            {x, xdot, u, z, multiplier, mult_mat}, {HESS_multiplied});
+    }
+    else
+    {
+        casadi::MX xdot = model.mx_in("xdot");
+        casadi::MX x = model.mx_in("x");
+        casadi::MX u = model.mx_in("u");
+        casadi::MX z = model.mx_in("z");
+
+        int_t nx = x.size1();
+        int_t nu = u.size1();
+        int_t nz = z.size1();
+
+        casadi::MX x_xdot_z_u = casadi::MX::vertcat(vector<casadi::MX>({x, xdot, z, u}));
+
+        casadi::MX multiplier  = casadi::MX::sym("multiplier", nx + nz, 1);
+        casadi::MX mult_mat  = casadi::MX::sym("mult_mat", 2*nx+nz+nu, nx + nu);
+        casadi::MX HESS = casadi::MX::zeros( 2*nx+nz+nu, 2*nx+nz+nu);
+
+        casadi::MX jac_x_xdot_z;
+        casadi::MX hess_x_xdot_z;
+
+        std::vector<casadi::MX> input{x, xdot, z, u};
+        casadi::MX model_expr = casadi::MX::vertcat(model(input));
+
+        for(int ii = 0; ii < nx+nz; ii++)
+        {
+            jac_x_xdot_z = jacobian(model_expr, x_xdot_z_u);
+            hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
+            HESS = HESS + multiplier(ii) * hess_x_xdot_z;
+        }
+        
+        // HESS = HESS.simplify();
+        casadi::MX HESS_multiplied = mult_mat.T() * HESS * mult_mat;
+        // HESS_multiplied = HESS_multiplied;
+        fun = casadi::Function(model.name() + "_impl_ode_hess",
+            {x, xdot, u, z, multiplier, mult_mat}, {HESS_multiplied});
+    }
+    return casadi_module(fun, output_folder);
+}
 
 
 /************************************************
