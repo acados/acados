@@ -5,16 +5,11 @@
 #include <string>
 #include <vector>
 
-
-#include "acados/utils/types.h"
 #include "acados_c/sim_interface.h"
-
 
 #include "acados_cpp/ocp_nlp/casadi_module.hpp"
 #include "acados_cpp/options.hpp"
 
-// TODO(oj): try to only use C interface, i.e. remove line above and use void pointers
-// @tobi: or what do u think?
 namespace acados
 {
 typedef enum

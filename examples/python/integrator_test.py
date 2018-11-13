@@ -32,7 +32,7 @@ opts1 = {'step_size'        : 0.01, # only mandatory argument
          'model_type'       : 1, # 0 - EXPLICIT (default)
                                  # 1 - IMPLICIT
          'integrator'       : "IRK", # default (ERK)
-         'use_MX'           : True,  # default (False)
+         'use_MX'           : False,  # default (False)
          'ns'               : 4, # default set in C implementation of integrator used
          'num_steps'        : 1, # default set in C implementation of integrator used
          'newton_iter'      : 3, # default set in C implementation of integrator used

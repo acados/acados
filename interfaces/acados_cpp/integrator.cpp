@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <exception>
 
-#include "acados_cpp/ocp_nlp/function_generation.hpp"
+#include "acados_cpp/function_generation.hpp"
 
 
 namespace acados
@@ -96,41 +96,17 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
     }
 
 
-
-
     /* CHECK outputs */
     if (model.n_out() != 1)
         throw std::invalid_argument("An ODE model should have 1 output: the right hand side\n"
                 "-- an explicit model has: xdot\n -- an implicit model has: rhs \n");
 
     /* CHECK input/output consistency */
-    // TODO(oj): rewrite this
-    // if (use_MX == false)  // SX
-    // {
-    //     casadi::SX x = model.sx_in(0);
-    //     casadi::SX u = model.sx_in(1);
-    //     int_t nx = x.size1();
-    //     std::vector<casadi::SX> input{x, u};
+    int size_model_output = model.numel_out();
 
-    //     // rhs = f_expl_expr
-    //     casadi::SX rhs = casadi::SX::vertcat(model(input));
-    //     if (rhs.size1() != nx)
-    //         throw std::runtime_error("Length of right hand size should equal number of states");
-    // }
-    // else  // MX
-    // {
-    //     casadi::MX x = model.mx_in(0);
-    //     casadi::MX u = model.mx_in(1);
-    //     int_t nx = x.size1();
-    //     std::vector<casadi::MX> input{x, u};
-
-    //     // rhs = f_expl_expr
-    //     casadi::MX rhs = casadi::MX::vertcat(model(input));
-    //     if (rhs.size1() != nx)
-    //         throw std::runtime_error("Length of right hand size should equal number of states");
-    // }
-
-    // std::cout << "MODEL is VALID" << std::endl;
+    if (size_model_output != nx+nz)
+        throw std::invalid_argument("The ODE model should have one output,"
+               " a column vector of size nx + nz\n");
 
     return true;
 }
@@ -404,6 +380,7 @@ void integrator::set_step_size(const double step_size) { in_->T = step_size; }
 
 std::vector<double> integrator::integrate(std::vector<double> x, std::vector<double> u) const
 {
+    // TODO(mutard): use in/output dict
     /*
       if ( in.count("x") )
           double *x = to_double(in.count("x"));
@@ -452,9 +429,6 @@ std::vector<double> integrator::integrate(std::vector<double> x, std::vector<dou
 /* DESTRUCTOR */
 integrator::~integrator()
 {
-    // @ tobi, do we need the special free functions that just wrap free basically?!
-    // edit: talked with giaf about this. we should try to just use sim_interface basicalle
-    //      to decouple from core.
     sim_config_free(config_);
     sim_dims_free(dims_);
     sim_opts_free(opts_);

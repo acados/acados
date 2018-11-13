@@ -5,18 +5,17 @@ TODO: Complete integrator interface
 ==
 
 BEFORE MERGE
-- [] output dict/struct
+- [T] output dict/struct
 - [] Cleanup & Refactor
-    - [] move function generation
-    - [] generalize integrator class
 - [] fix dependencies
     - [] ctest
     - [] Matlab examples
     - [] travis
-
-After MERGE
 - [] extend to non native model, i.e. IRK with expl model
 - [] add support for parameters in cpp function generation
+
+After MERGE
+- [] generalize integrator class
 - [T] try to compile on Windows
 
 
@@ -30,6 +29,8 @@ Done
 - [X] Matlab support
 - [x] Fix ocp_nlp
 - [x] .get_settings
+- [x] add output check
+- [x] move function generation up
 
 - [x] add cpp generation for all integrator function
     - [x] ERK

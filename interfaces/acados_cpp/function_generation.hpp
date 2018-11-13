@@ -1,6 +1,6 @@
 
-#ifndef INTERFACES_ACADOS_CPP_OCP_NLP_FUNCTION_GENERATION_HPP_
-#define INTERFACES_ACADOS_CPP_OCP_NLP_FUNCTION_GENERATION_HPP_
+#ifndef INTERFACES_ACADOS_CPP_FUNCTION_GENERATION_HPP_
+#define INTERFACES_ACADOS_CPP_FUNCTION_GENERATION_HPP_
 
 #include <string>
 
@@ -10,7 +10,6 @@
 
 namespace acados
 {
-// TODO(oj): move the following one directory up
 /* IMPLICIT MODEL */
 casadi_module generate_impl_ode_fun_jac_x_xdot_z(const casadi::Function& model,
                                 std::string output_dir = "_autogen", const bool use_MX = false);
@@ -47,4 +46,4 @@ casadi_module generate_nls_residual(const casadi::Function& residual,
 
 }  // namespace acados
 
-#endif  // INTERFACES_ACADOS_CPP_OCP_NLP_FUNCTION_GENERATION_HPP_
+#endif  // INTERFACES_ACADOS_CPP_FUNCTION_GENERATION_HPP_
