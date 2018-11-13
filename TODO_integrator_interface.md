@@ -7,10 +7,6 @@ TODO: Complete integrator interface
 BEFORE MERGE
 - [T] output dict/struct
 - [] Cleanup & Refactor
-- [] fix dependencies
-    - [] ctest
-    - [] Matlab examples
-    - [] travis
 - [] add support for parameters in cpp function generation
 
 After MERGE
@@ -22,6 +18,8 @@ After MERGE
 
 Done
 =====
+- [x] fix dependencies
+    - [x] travis
 - [x] extend to non native model, i.e. IRK with expl model
 - [X] 2 integrators at the same time
 - [X] minimal MX support
