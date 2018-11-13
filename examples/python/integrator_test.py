@@ -31,17 +31,17 @@ opts1 = {'step_size'        : 0.01, # only mandatory argument
         ### OPTIONAL ARGUMENTS
          'model_type'       : 1, # 0 - EXPLICIT (default)
                                  # 1 - IMPLICIT
-         'integrator'       : "LIFTED_IRK", # default (ERK)
+         'integrator'       : "IRK", # default (ERK)
          'use_MX'           : True,  # default (False)
          'ns'               : 4, # default set in C implementation of integrator used
          'num_steps'        : 1, # default set in C implementation of integrator used
          'newton_iter'      : 3, # default set in C implementation of integrator used
          'output_z'         : 0, # default set in C implementation of integrator used
          'sens_forw'        : 1, # default set in C implementation of integrator used
-         'sens_adj'         : 0, # default set in C implementation of integrator used
+         'sens_adj'         : 1, # default set in C implementation of integrator used
          'sens_hess'        : 1, # default set in C implementation of integrator used
          'sens_algebraic'   : 0, # default set in C implementation of integrator used
-         'jac_reuse'        : 1, # default set in C implementation of integrator used
+         'jac_reuse'        : 0, # default set in C implementation of integrator used
         }
 
 sim1 = integrator(impl_ode_fun, opts1)

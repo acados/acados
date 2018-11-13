@@ -1,7 +1,7 @@
 Integrator Interface:
 =============
 
-Complete integrator interface
+TODO: Complete integrator interface
 ==
 
 BEFORE MERGE
@@ -9,13 +9,18 @@ BEFORE MERGE
 - [] Cleanup & Refactor
     - [] move function generation
     - [] generalize integrator class
-- [x] .get_settings
-
+- [] fix dependencies
+    - [] ctest
+    - [] Matlab examples
+    - [] travis
 
 After MERGE
 - [] extend to non native model, i.e. IRK with expl model
 - [] add support for parameters in cpp function generation
 - [T] try to compile on Windows
+
+
+
 
 Done
 =====
@@ -24,6 +29,7 @@ Done
 - [X] IRK support
 - [X] Matlab support
 - [x] Fix ocp_nlp
+- [x] .get_settings
 
 - [x] add cpp generation for all integrator function
     - [x] ERK
