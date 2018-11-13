@@ -276,7 +276,6 @@ casadi_module generate_impl_ode_fun_jac_x_xdot_u(const casadi::Function& model,
 
         casadi::SX jac_x = casadi::SX::jacobian(rhs, x);
         casadi::SX jac_u = casadi::SX::jacobian(rhs, u);
-        // casadi::SX jac_z = casadi::SX::jacobian(rhs, z);
         casadi::SX jac_xdot = casadi::SX::jacobian(rhs, xdot);
 
         fun = casadi::Function(model.name() + "_impl_ode_fun_jac_x_xdot_u",
@@ -295,9 +294,7 @@ casadi_module generate_impl_ode_fun_jac_x_xdot_u(const casadi::Function& model,
 
         casadi::MX jac_x = casadi::MX::jacobian(rhs, x);
         casadi::MX jac_u = casadi::MX::jacobian(rhs, u);
-        // casadi::MX jac_z = casadi::MX::jacobian(rhs, z);
         casadi::MX jac_xdot = casadi::MX::jacobian(rhs, xdot);
-
 
         fun = casadi::Function(model.name() + "_impl_ode_fun_jac_x_xdot_u",
                             {x, xdot, u, z}, {rhs, jac_x, jac_xdot, jac_u});
@@ -366,16 +363,7 @@ casadi_module generate_expl_ode_fun(const casadi::Function& model, string output
         casadi::SX x = model.sx_in("x");
         casadi::SX u = model.sx_in("u");
 
-        // int_t nx = x.size1();
-        // int_t nu = u.size1();
-
         casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, u})));
-
-        // casadi::SX Sx = casadi::SX::sym("Sx", nx, nx);
-        // casadi::SX Su = casadi::SX::sym("Su", nx, nu);
-
-        // casadi::SX vde_x = casadi::SX::jtimes(rhs, x, Sx);
-        // casadi::SX vde_u = casadi::SX::jacobian(rhs, u) + casadi::SX::jtimes(rhs, x, Su);
 
         fun = casadi::Function(model.name() + "_expl_ode_fun", {x, u}, {rhs});
     }
@@ -406,9 +394,6 @@ casadi_module generate_expl_vde_adj(const casadi::Function& model, string output
 
         int_t nx = x.size1();
 
-        // MATLAB Code:
-        // adj = jtimes(f_expl,[x;u],lambdaX,true);
-        // expl_vde_adj = Function([model_name,'_expl_vde_adj'],{x,lambdaX,u}, {adj});
         casadi::SX lambdaX = casadi::SX::sym("lambdaX", nx, 1);
         casadi::SX w = casadi::SX::vertcat(vector<casadi::SX>({x, u}));
         casadi::SX adj = casadi::SX::jtimes(rhs, w, lambdaX, true);
@@ -455,7 +440,6 @@ casadi_module generate_expl_ode_hess(const casadi::Function& model, string outpu
 
         casadi::SX w = casadi::SX::vertcat(vector<casadi::SX>({x, u}));
         casadi::SX adj = casadi::SX::jtimes(rhs, w, lambdaX, true);
-        std::cout << "\njtimes lauft\n"  << std::endl;
 
         std::vector<casadi::SX> SxSp = {Sx, Sp};
         std::vector<casadi::SX> aux = {casadi::SX::zeros(nu, nx), casadi::SX::eye(nu)};
@@ -495,7 +479,6 @@ casadi_module generate_expl_ode_hess(const casadi::Function& model, string outpu
 
         casadi::MX w = casadi::MX::vertcat(vector<casadi::MX>({x, u}));
         casadi::MX adj = casadi::MX::jtimes(rhs, w, lambdaX, true);
-        std::cout << "\njtimes lauft\n"  << std::endl;
 
         std::vector<casadi::MX> SxSp = {Sx, Sp};
         std::vector<casadi::MX> aux = {casadi::MX::zeros(nu, nx), casadi::MX::eye(nu)};

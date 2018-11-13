@@ -11,7 +11,6 @@ BEFORE MERGE
     - [] ctest
     - [] Matlab examples
     - [] travis
-- [] extend to non native model, i.e. IRK with expl model
 - [] add support for parameters in cpp function generation
 
 After MERGE
@@ -23,6 +22,7 @@ After MERGE
 
 Done
 =====
+- [x] extend to non native model, i.e. IRK with expl model
 - [X] 2 integrators at the same time
 - [X] minimal MX support
 - [X] IRK support

@@ -39,7 +39,9 @@ class integrator
 
 
  private:
-    void set_model(const casadi::Function& model, std::map<std::string, option_t*> options = {});
+    void set_model(casadi::Function& model, std::map<std::string, option_t*> options = {});
+
+    casadi::Function explicit2implicit(const casadi::Function &model);
 
     sim_solver_config* config_;
     sim_rk_opts* opts_;

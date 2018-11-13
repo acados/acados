@@ -17,13 +17,14 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
                         size_t &nx, size_t &nu, size_t &nz)
 {
     /* CHECK inputs */
+    int ix, iu, ixdot, iz = 0;
     int model_n_in = model.n_in();
     if (model_n_in < 1 )
         throw std::invalid_argument(
             "An ODE model should have at least 1 input: differential states x");
     // x
     try {
-        int ix = model.index_in("x");
+        ix = model.index_in("x");
     } catch (std::exception& e) {
         throw std::invalid_argument(
             "The dynamic system model should have the differential states x as an input"
@@ -32,7 +33,7 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
 
     // u
     try {
-        int iu = model.index_in("u");
+        iu = model.index_in("u");
     } catch (std::exception& e) {
         throw std::invalid_argument("The dynamic system model should have the control vector u"
                     "as an input \n please check that this input is named 'u'");
@@ -43,7 +44,7 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
     {
         // xdot
         try {
-            int ixdot = model.index_in("xdot");
+            ixdot = model.index_in("xdot");
         } catch (std::exception& e) {
             throw std::invalid_argument("An IMPLICIT dynamic system model should have the"
                         "time derivatives of the differential states XDOT as an input"
@@ -52,7 +53,7 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
 
         // z
         try {
-            int iz = model.index_in("z");
+            iz = model.index_in("z");
             isDAE = true;
         } catch (std::exception& e) {
             isDAE = false;
@@ -102,7 +103,7 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
                 "-- an explicit model has: xdot\n -- an implicit model has: rhs \n");
 
     /* CHECK input/output consistency */
-    int size_model_output = model.numel_out();
+    unsigned int size_model_output = model.numel_out();
 
     if (size_model_output != nx+nz)
         throw std::invalid_argument("The ODE model should have one output,"
@@ -184,6 +185,26 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
     if (options.count("stages")) opts_->ns = to_int(options.at("stages"));
 
+
+    if (options.count("model_type"))
+        model_type_ = (model_t) to_int(options.at("model_type"));
+    else
+        model_type_ = EXPLICIT;     // default
+
+
+    if (options.count("use_MX")) {
+        use_MX_ = (to_int(options.at("use_MX")) > 0);
+    }
+
+    // casadi::Function new_model = model;
+
+    casadi::Function integrator_model = model;
+    // reformulate as implicit model, if IMPLICIT integrator is used
+    if (model_type_ == EXPLICIT && (sim_plan_.sim_solver == IRK || sim_plan_.sim_solver == LIFTED_IRK))
+    {
+        integrator_model = explicit2implicit(model);
+    }
+
     // sim_in & sim_out structs in C
     in_ = sim_in_create(config_, dims_);
     out_ = sim_out_create(config_, dims_);
@@ -193,23 +214,59 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     set_step_size(to_double(options.at("step_size")));
 
     // generate and set model;
-    set_model(model, options);
+    set_model(integrator_model, options);
 
     // create the integrator
     solver_ = sim_create(config_, dims_, opts_);
 }
 
 
-void integrator::set_model(const casadi::Function &model, std::map<std::string, option_t *> options)
+casadi::Function integrator::explicit2implicit(const casadi::Function &model)
 {
-    if (options.count("model_type"))
-        model_type_ = (model_t) to_int(options.at("model_type"));  // This is not a nice interface
-    else
-        model_type_ = EXPLICIT;
+    casadi::Function integrator_model;
 
-    if (options.count("use_MX")) {
-        use_MX_ = (to_int(options.at("use_MX")) > 0);
+    if (use_MX_ == false)  // SX
+    {
+        casadi::SX x = model.sx_in("x");
+        casadi::SX u = model.sx_in("u");
+        int_t nx = x.size1();
+
+        casadi::SX rhs = casadi::SX::vertcat(model(vector<casadi::SX>({x, u})));
+
+        casadi::SX xdot = casadi::SX::sym("xdot", nx, 1);
+        casadi::SX z = casadi::SX::sym("z", 0, 1);
+        rhs = rhs - xdot;
+
+        integrator_model = casadi::Function(model.name(),
+                        {x, xdot, u, z}, 
+                        {rhs}, {"x", "xdot", "u", "z"}, {"rhs"});
     }
+    else
+    {
+        casadi::MX x = model.mx_in("x");
+        casadi::MX u = model.mx_in("u");
+        int_t nx = x.size1();
+
+        casadi::MX rhs = casadi::MX::vertcat(model(vector<casadi::MX>({x, u})));
+
+        casadi::MX xdot = casadi::MX::sym("xdot", nx, 1);
+        casadi::MX z = casadi::MX::sym("z", 0, 1);
+
+        rhs = rhs - xdot;
+
+        integrator_model = casadi::Function(model.name(),
+                        {x, xdot, u, z}, 
+                        {rhs}, {"x", "xdot", "u", "z"}, {"rhs"});
+    }
+
+    model_type_ = IMPLICIT;
+
+    return integrator_model;
+}
+
+
+void integrator::set_model(casadi::Function &model, std::map<std::string, option_t *> options)
+{
 
     string autogen_dir = "_autogen";
 

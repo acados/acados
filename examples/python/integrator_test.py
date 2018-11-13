@@ -29,7 +29,7 @@ sim2.print_settings()
 # create another integrator
 opts1 = {'step_size'        : 0.01, # only mandatory argument
         ### OPTIONAL ARGUMENTS
-         'model_type'       : 1, # 0 - EXPLICIT (default)
+         'model_type'       : 0, # 0 - EXPLICIT (default)
                                  # 1 - IMPLICIT
          'integrator'       : "IRK", # default (ERK)
          'use_MX'           : False,  # default (False)
@@ -44,7 +44,7 @@ opts1 = {'step_size'        : 0.01, # only mandatory argument
          'jac_reuse'        : 0, # default set in C implementation of integrator used
         }
 
-sim1 = integrator(impl_ode_fun, opts1)
+sim1 = integrator(ode_fun, opts1)
 print("sim1 created")
 
 sim1.print_settings()
