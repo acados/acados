@@ -152,8 +152,6 @@ typedef struct
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
     // getters & setters
-    // TODO add dim_ to the name!!!
-    // TODO getters returining int ???
     void (*get_nx)(void *dims_, int *nx);
     void (*get_nu)(void *dims_, int *nu);
     void (*get_nz)(void *dims_, int *nz);

@@ -19,7 +19,6 @@ namespace acados
 {
 typedef enum
 {
-    // TODO do we really need this (see definition of sim_solver_t)
     EXPLICIT = 0,
     IMPLICIT,
     GNSF_MODEL
@@ -29,7 +28,8 @@ typedef enum
 class integrator
 {
  public:
-    integrator(const casadi::Function& model, std::map<std::string, option_t*> options = {});
+    explicit integrator
+        (const casadi::Function& model, std::map<std::string, option_t*> options = {});
 
     ~integrator();
 

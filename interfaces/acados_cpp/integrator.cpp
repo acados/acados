@@ -19,19 +19,23 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
     /* CHECK inputs */
     int model_n_in = model.n_in();
     if (model_n_in < 1 )
-        throw std::invalid_argument("An ODE model should have at least 1 input: differential states x");
+        throw std::invalid_argument(
+            "An ODE model should have at least 1 input: differential states x");
     // x
     try {
         int ix = model.index_in("x");
     } catch (std::exception& e) {
-        throw std::invalid_argument("The dynamic system model should have the differential states x as an input \n please check that this input is named 'x'");
+        throw std::invalid_argument(
+            "The dynamic system model should have the differential states x as an input"
+             "\n please check that this input is named 'x'");
     }
 
     // u
     try {
         int iu = model.index_in("u");
     } catch (std::exception& e) {
-        throw std::invalid_argument("The dynamic system model should have the control vector u as an input \n please check that this input is named 'u'");
+        throw std::invalid_argument("The dynamic system model should have the control vector u"
+                    "as an input \n please check that this input is named 'u'");
     }
 
     bool isDAE = false;
@@ -41,7 +45,9 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
         try {
             int ixdot = model.index_in("xdot");
         } catch (std::exception& e) {
-            throw std::invalid_argument("An IMPLICIT dynamic system model should have the time derivatives of the differential states XDOT as an input \n please check that this input is named 'xdot'");        
+            throw std::invalid_argument("An IMPLICIT dynamic system model should have the"
+                        "time derivatives of the differential states XDOT as an input"
+                        "\n please check that this input is named 'xdot'");
         }
 
         // z
@@ -78,7 +84,7 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
 
         nx = x.size1();
         nu = u.size1();
-    
+
         if (model_type == IMPLICIT){
             casadi::MX xdot = model.mx_in("xdot");
         }
@@ -94,7 +100,8 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
 
     /* CHECK outputs */
     if (model.n_out() != 1)
-        throw std::invalid_argument("An ODE model should have 1 output: the right hand side\n -- an explicit model has: xdot\n -- an implicit model has: rhs \n");
+        throw std::invalid_argument("An ODE model should have 1 output: the right hand side\n"
+                "-- an explicit model has: xdot\n -- an implicit model has: rhs \n");
 
     /* CHECK input/output consistency */
     // TODO(oj): rewrite this
@@ -165,7 +172,8 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     if (!check_model(model, model_type_, use_MX_, nx_, nu_, nz_))
         throw std::invalid_argument("Model is invalid.");
 
-    if (!options.count("step_size")) throw std::invalid_argument("Expected 'step_size' as an option.");
+    if (!options.count("step_size"))
+        throw std::invalid_argument("Expected 'step_size' as an option.");
 
 
 
@@ -225,7 +233,7 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
 
     if (options.count("use_MX")) {
         use_MX_ = (to_int(options.at("use_MX")) > 0);
-    }    
+    }
 
     string autogen_dir = "_autogen";
 
@@ -236,13 +244,15 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
     {
         if (model_type_ == IMPLICIT)
         {
-            module_["impl_ode_fun_jac_x_xdot_z"] = generate_impl_ode_fun_jac_x_xdot_z(model, autogen_dir, use_MX_);
+            module_["impl_ode_fun_jac_x_xdot_z"] =
+                    generate_impl_ode_fun_jac_x_xdot_z(model, autogen_dir, use_MX_);
             set_model_status = sim_set_model_internal(config_, in_->model,
                 "impl_ode_fun_jac_x_xdot_z",
                 (void *) module_["impl_ode_fun_jac_x_xdot_z"].as_external_function());
 
-            if(set_model_status == ACADOS_FAILURE)
-                    throw std::runtime_error("couldnt set integrator function impl_ode_fun_jac_x_xdot_z correctly");
+            if (set_model_status == ACADOS_FAILURE)
+                    throw std::runtime_error("couldnt set integrator function"
+                     " impl_ode_fun_jac_x_xdot_z correctly");
 
             if (opts_->jac_reuse)
             {
@@ -250,17 +260,21 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
                 set_model_status = sim_set_model_internal(config_, in_->model,
                     "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
 
-                if(set_model_status == ACADOS_FAILURE)
-                    throw std::runtime_error("couldnt set integrator function impl_ode_fun correctly");
+                if (set_model_status == ACADOS_FAILURE)
+                    throw std::runtime_error("couldnt set integrator function"
+                            " impl_ode_fun correctly");
             }
             if ( opts_->sens_forw || opts_->sens_hess || opts_->sens_algebraic || opts_->sens_adj )
             {
-                module_["impl_ode_jac_x_xdot_u_z"] = generate_impl_ode_jac_x_xdot_u_z(model, autogen_dir, use_MX_);
+                module_["impl_ode_jac_x_xdot_u_z"] =
+                            generate_impl_ode_jac_x_xdot_u_z(model, autogen_dir, use_MX_);
                 set_model_status = sim_set_model_internal(config_, in_->model,
-                    "impl_ode_jac_x_xdot_u_z", (void *) module_["impl_ode_jac_x_xdot_u_z"].as_external_function());
-    
-                if(set_model_status == ACADOS_FAILURE)
-                    throw std::runtime_error("couldnt set integrator function impl_ode_jac_x_xdot_u_z correctly");
+                    "impl_ode_jac_x_xdot_u_z",
+                    (void *) module_["impl_ode_jac_x_xdot_u_z"].as_external_function());
+
+                if (set_model_status == ACADOS_FAILURE)
+                    throw std::runtime_error("couldnt set integrator function"
+                        " impl_ode_jac_x_xdot_u_z correctly");
             }
             if ( opts_->sens_hess )
             {
@@ -268,8 +282,9 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
                 set_model_status = sim_set_model_internal(config_, in_->model,
                     "impl_ode_hess", (void *) module_["impl_ode_hess"].as_external_function());
 
-                if(set_model_status == ACADOS_FAILURE)
-                    throw std::runtime_error("couldnt set integrator function impl_ode_hess correctly");
+                if (set_model_status == ACADOS_FAILURE)
+                    throw std::runtime_error("couldnt set integrator function "
+                        "impl_ode_hess correctly");
             }
         }
         else
@@ -277,7 +292,6 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
             // TODO(oj): add support for explicit model
             throw std::invalid_argument("IRK only supported with implicit model");
         }
-        
     }
     else if (sim_plan_.sim_solver == LIFTED_IRK)
     {
@@ -287,15 +301,18 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
             set_model_status = sim_set_model_internal(config_, in_->model,
                 "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
 
-            if(set_model_status == ACADOS_FAILURE)
+            if (set_model_status == ACADOS_FAILURE)
                 throw std::runtime_error("couldnt set integrator function impl_ode_fun correctly");
-            
-            module_["impl_ode_fun_jac_x_xdot_u"] = generate_impl_ode_fun_jac_x_xdot_u(model, autogen_dir, use_MX_);
-            set_model_status = sim_set_model_internal(config_, in_->model,
-                "impl_ode_fun_jac_x_xdot_u", (void *) module_["impl_ode_fun_jac_x_xdot_u"].as_external_function());
 
-            if(set_model_status == ACADOS_FAILURE)
-                throw std::runtime_error("couldnt set integrator function impl_ode_fun_jac_x_xdot_u correctly");
+            module_["impl_ode_fun_jac_x_xdot_u"] =
+                    generate_impl_ode_fun_jac_x_xdot_u(model, autogen_dir, use_MX_);
+            set_model_status = sim_set_model_internal(config_, in_->model,
+                "impl_ode_fun_jac_x_xdot_u",
+                (void *) module_["impl_ode_fun_jac_x_xdot_u"].as_external_function());
+
+            if (set_model_status == ACADOS_FAILURE)
+                throw std::runtime_error("couldnt set integrator function "
+                    "impl_ode_fun_jac_x_xdot_u correctly");
         }
         else
         {
@@ -318,8 +335,9 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
                 set_model_status = sim_set_model_internal(config_, in_->model, "expl_vde_for",
                                     (void *) module_["expl_vde_for"].as_external_function());
 
-                if(set_model_status == ACADOS_FAILURE)
-                    throw std::runtime_error("couldnt set integrator function expl_vde_for correctly");
+                if (set_model_status == ACADOS_FAILURE)
+                    throw std::runtime_error("couldnt set integrator function "
+                        "expl_vde_for correctly");
             }
             else
             {
@@ -327,8 +345,9 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
                 set_model_status = sim_set_model_internal(config_, in_->model, "expl_ode_fun",
                                     (void *) module_["expl_ode_fun"].as_external_function());
 
-                if(set_model_status == ACADOS_FAILURE)
-                    throw std::runtime_error("couldnt set integrator function expl_ode_fun correctly");
+                if (set_model_status == ACADOS_FAILURE)
+                    throw std::runtime_error("couldnt set integrator function "
+                        "expl_ode_fun correctly");
             }
 
             if (opts_->sens_adj && !opts_->sens_hess)
@@ -337,8 +356,9 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
                 set_model_status = sim_set_model_internal(config_, in_->model, "expl_vde_adj",
                                     (void *) module_["expl_vde_adj"].as_external_function());
 
-                if(set_model_status == ACADOS_FAILURE)
-                    throw std::runtime_error("couldnt set integrator function expl_vde_adj correctly");
+                if (set_model_status == ACADOS_FAILURE)
+                    throw std::runtime_error("couldnt set integrator function "
+                        "expl_vde_adj correctly");
             }
             else if (opts_->sens_hess)
             {
@@ -347,8 +367,9 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
                 set_model_status = sim_set_model_internal(config_, in_->model, "expl_ode_hess",
                                         (void *) module_["expl_ode_hess"].as_external_function());
 
-                if(set_model_status == ACADOS_FAILURE)
-                    throw std::runtime_error("couldnt set integrator function expl_ode_hess correctly");
+                if (set_model_status == ACADOS_FAILURE)
+                    throw std::runtime_error("couldnt set integrator function expl_ode_hess"
+                        " correctly");
             }
         }
         else
@@ -364,14 +385,14 @@ void integrator::print_settings() const
     std::cout << "\nstep_size \t: " << in_->T
               << "\nmodel_type \t: " << model_type_
               << "\nintegrator \t: " << sim_plan_.sim_solver
-              << "\nuse_MX \t\t: " << use_MX_ 
-              << "\nns \t\t: " << opts_->ns    
+              << "\nuse_MX \t\t: " << use_MX_
+              << "\nns \t\t: " << opts_->ns
               << "\nnum_steps \t: " << opts_->num_steps
               << "\nnewton_iter \t: " << opts_->newton_iter
-              << "\nsens_forw \t: " << opts_->sens_forw    
-              << "\nsens_adj \t: " << opts_->sens_adj    
-              << "\nsens_hess \t: " << opts_->sens_hess    
-              << "\nsens_algebraic \t: " << opts_->sens_algebraic    
+              << "\nsens_forw \t: " << opts_->sens_forw
+              << "\nsens_adj \t: " << opts_->sens_adj
+              << "\nsens_hess \t: " << opts_->sens_hess
+              << "\nsens_algebraic \t: " << opts_->sens_algebraic
               << "\njac_reuse \t: " << opts_->jac_reuse
               << std::endl;
 }
