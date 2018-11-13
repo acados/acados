@@ -156,10 +156,10 @@ vdeP = vdeP + jtimes(dae.ode,dae.x,Sp);
 vdeFun = Function(['vde_chain_nm' num2str(Nm)],{dae.x,Sx,Sp,dae.p},{dae.ode,vdeX,vdeP});
 
 jacX = SX.zeros(nx,nx) + jacobian(dae.ode,dae.x);
-jacFun = Function(['jac_chain_nm' num2str(Nm)],{dae.x,dae.p},{dae.ode,jacX});
+% jacFun = Function(['jac_chain_nm' num2str(Nm)],{dae.x,dae.p},{dae.ode,jacX});
 
 vdeFun.generate(['vde_chain_nm' num2str(Nm)], opts);
-jacFun.generate(['jac_chain_nm' num2str(Nm)], opts);
+% jacFun.generate(['jac_chain_nm' num2str(Nm)], opts);
 
 lambdaX = SX.sym('lambdaX', nx, 1);
 adj = jtimes(dae.ode, [dae.x; u], lambdaX, true);
