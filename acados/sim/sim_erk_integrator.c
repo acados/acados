@@ -154,6 +154,12 @@ int sim_erk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
         default:
             return ACADOS_FAILURE;
     }
+    // printf("expl_ode_hes\n");
+    // printf("%p\n",(void*)model->expl_ode_hes);
+    // printf("expl_ode_fun\n");
+    // printf("%p\n",(void*)model->expl_ode_fun);
+    // printf("expl_vde_for\n");
+    // printf("%p\n",(void*)model->expl_vde_for);
     return ACADOS_SUCCESS;
 }
 

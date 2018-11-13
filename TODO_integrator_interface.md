@@ -23,12 +23,9 @@ Complete integrator interface
     - [x] IRK
     - [] LIFTED IRK
 - [] TEST!
-    - [] ERK
-    - [] IRK
+    - [x] ERK
+    - [x] IRK
     - [] LIFTED IRK
-
-CURRENT BUGS:
-    - ERK with hessian, might be C problem
 
 BEFORE MERGE
 - [] output dict/struct
