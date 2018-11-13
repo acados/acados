@@ -178,54 +178,6 @@ casadi_module generate_impl_ode_jac_x_xdot_u_z(const casadi::Function& model,
 }
 
 
-casadi_module generate_impl_ode_fun_jac_x_xdot_u(const casadi::Function& model,
-                        string output_folder, const bool use_MX)
-{
-    casadi::Function fun;
-    if (use_MX == false)
-    {
-        casadi::SX x = model.sx_in("x");
-        casadi::SX xdot = model.sx_in("xdot");
-        casadi::SX u = model.sx_in("u");
-        casadi::SX z = model.sx_in("z");
-        casadi::SXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
-
-        casadi::SXDict rhs_dict = (model(arg_in));
-        casadi::SX rhs = rhs_dict.begin()->second;
-
-        casadi::SX jac_x = casadi::SX::jacobian(rhs, x);
-        casadi::SX jac_u = casadi::SX::jacobian(rhs, u);
-        // casadi::SX jac_z = casadi::SX::jacobian(rhs, z);
-        casadi::SX jac_xdot = casadi::SX::jacobian(rhs, xdot);
-
-        fun = casadi::Function(model.name() + "_impl_ode_fun_jac_x_xdot_u",
-                            {x, xdot, u, z}, {rhs, jac_x, jac_xdot, jac_u});
-    }
-    else  // MX
-    {
-        casadi::MX x = model.mx_in("x");
-        casadi::MX xdot = model.mx_in("xdot");
-        casadi::MX u = model.mx_in("u");
-        casadi::MX z = model.mx_in("z");
-        casadi::MXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
-
-        casadi::MXDict rhs_dict = (model(arg_in));
-        casadi::MX rhs = rhs_dict.begin()->second;
-
-        casadi::MX jac_x = casadi::MX::jacobian(rhs, x);
-        casadi::MX jac_u = casadi::MX::jacobian(rhs, u);
-        // casadi::MX jac_z = casadi::MX::jacobian(rhs, z);
-        casadi::MX jac_xdot = casadi::MX::jacobian(rhs, xdot);
-
-
-        fun = casadi::Function(model.name() + "_impl_ode_fun_jac_x_xdot_u",
-                            {x, xdot, u, z}, {rhs, jac_x, jac_xdot, jac_u});
-    }
-    return casadi_module(fun, output_folder);
-}
-
-
-
 casadi_module generate_impl_ode_hess(const casadi::Function& model,
                         string output_folder, const bool use_MX)
 {
@@ -318,6 +270,55 @@ casadi_module generate_impl_ode_hess(const casadi::Function& model,
     }
     return casadi_module(fun, output_folder);
 }
+
+
+/* for LIFTED_IRK */
+casadi_module generate_impl_ode_fun_jac_x_xdot_u(const casadi::Function& model,
+                        string output_folder, const bool use_MX)
+{
+    casadi::Function fun;
+    if (use_MX == false)
+    {
+        casadi::SX x = model.sx_in("x");
+        casadi::SX xdot = model.sx_in("xdot");
+        casadi::SX u = model.sx_in("u");
+        casadi::SX z = model.sx_in("z");
+        casadi::SXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
+
+        casadi::SXDict rhs_dict = (model(arg_in));
+        casadi::SX rhs = rhs_dict.begin()->second;
+
+        casadi::SX jac_x = casadi::SX::jacobian(rhs, x);
+        casadi::SX jac_u = casadi::SX::jacobian(rhs, u);
+        // casadi::SX jac_z = casadi::SX::jacobian(rhs, z);
+        casadi::SX jac_xdot = casadi::SX::jacobian(rhs, xdot);
+
+        fun = casadi::Function(model.name() + "_impl_ode_fun_jac_x_xdot_u",
+                            {x, xdot, u, z}, {rhs, jac_x, jac_xdot, jac_u});
+    }
+    else  // MX
+    {
+        casadi::MX x = model.mx_in("x");
+        casadi::MX xdot = model.mx_in("xdot");
+        casadi::MX u = model.mx_in("u");
+        casadi::MX z = model.mx_in("z");
+        casadi::MXDict arg_in =  {{"x", x}, {"xdot", xdot}, {"u", u}, {"z", z}};
+
+        casadi::MXDict rhs_dict = (model(arg_in));
+        casadi::MX rhs = rhs_dict.begin()->second;
+
+        casadi::MX jac_x = casadi::MX::jacobian(rhs, x);
+        casadi::MX jac_u = casadi::MX::jacobian(rhs, u);
+        // casadi::MX jac_z = casadi::MX::jacobian(rhs, z);
+        casadi::MX jac_xdot = casadi::MX::jacobian(rhs, xdot);
+
+
+        fun = casadi::Function(model.name() + "_impl_ode_fun_jac_x_xdot_u",
+                            {x, xdot, u, z}, {rhs, jac_x, jac_xdot, jac_u});
+    }
+    return casadi_module(fun, output_folder);
+}
+
 
 
 /************************************************

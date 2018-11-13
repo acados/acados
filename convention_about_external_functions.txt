@@ -213,7 +213,7 @@ outputs:
 // function of implicit ode model
 
 external function: impl_ode_fun
-
+        - needed   if (!update_sens)
 inputs:
 0) [x]    size: nx    type: BLASFEO_DVEC
 1) [K]    size: nx    type: BLASFEO_DVEC_ARGS
@@ -227,6 +227,7 @@ outputs:
 // function of implicit ode model + jacobians of implicit ode model
 
 external function: impl_ode_fun_jac_x_xdot_u
+        - needed   if (update_sens)
 
 inputs:
 0) [x]    size: nx    type: BLASFEO_DVEC

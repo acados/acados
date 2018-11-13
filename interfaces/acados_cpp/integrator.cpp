@@ -142,8 +142,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     use_MX_ = false;
     if (options.count("use_MX")) use_MX_ = (to_int(options.at("use_MX")) > 0);
 
-
-    // TODO(oj) add check: model type and integrator type consistent
+    // check integrator type - default is ERK
     if (options.count("integrator"))
     {
         if (to_string(options.at("integrator")) == "ERK")
@@ -151,6 +150,10 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
         else if (to_string(options.at("integrator")) == "IRK")
         {
             sim_plan_.sim_solver = IRK;
+        }
+        else if (to_string(options.at("integrator")) == "LIFTED_IRK")
+        {
+            sim_plan_.sim_solver = LIFTED_IRK;
         }
         else
             throw std::invalid_argument("Invalid integrator.");
@@ -231,7 +234,6 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
 
     if (sim_plan_.sim_solver == IRK)
     {
-        // TODO(oj): check all options
         if (model_type_ == IMPLICIT)
         {
             module_["impl_ode_fun_jac_x_xdot_z"] = generate_impl_ode_fun_jac_x_xdot_z(model, autogen_dir, use_MX_);
@@ -276,6 +278,30 @@ void integrator::set_model(const casadi::Function &model, std::map<std::string, 
             throw std::invalid_argument("IRK only supported with implicit model");
         }
         
+    }
+    else if (sim_plan_.sim_solver == LIFTED_IRK)
+    {
+        if (model_type_ == IMPLICIT)
+        {
+            module_["impl_ode_fun"] = generate_impl_ode_fun(model, autogen_dir, use_MX_);
+            set_model_status = sim_set_model_internal(config_, in_->model,
+                "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
+
+            if(set_model_status == ACADOS_FAILURE)
+                throw std::runtime_error("couldnt set integrator function impl_ode_fun correctly");
+            
+            module_["impl_ode_fun_jac_x_xdot_u"] = generate_impl_ode_fun_jac_x_xdot_u(model, autogen_dir, use_MX_);
+            set_model_status = sim_set_model_internal(config_, in_->model,
+                "impl_ode_fun_jac_x_xdot_u", (void *) module_["impl_ode_fun_jac_x_xdot_u"].as_external_function());
+
+            if(set_model_status == ACADOS_FAILURE)
+                throw std::runtime_error("couldnt set integrator function impl_ode_fun_jac_x_xdot_u correctly");
+        }
+        else
+        {
+            // TODO(oj): add support for explicit model
+            throw std::invalid_argument("LIFTED_IRK only supported with implicit model");
+        }
     }
     else if (sim_plan_.sim_solver == GNSF)
     {

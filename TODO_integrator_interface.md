@@ -3,33 +3,12 @@ Integrator Interface:
 
 Complete integrator interface
 ==
-- [] add cpp generation for all integrator function
-    - [x] ERK
-        - [x] expl_ode_fun
-        - [x] expl_ode_hes
-        - [x] expl_vde_for
-        - [x] expl_vde_adj
-    - [x] IRK
-        - [x] impl_ode_fun;
-        - [x] impl_ode_fun_jac_x_xdot_z;
-        - [x] impl_ode_jac_x_xdot_u_z;
-        - [x] impl_ode_hess
-    - [x] LIFTED_IRK
-        - [x] impl_ode_fun;
-        - [x] impl_ode_fun_jac_x_xdot_u
-    - [] GNSF?!
-- [] add logic, which functions to generate for which settings
-    - [x] ERK
-    - [x] IRK
-    - [] LIFTED IRK
-- [] TEST!
-    - [x] ERK
-    - [x] IRK
-    - [] LIFTED IRK
 
 BEFORE MERGE
 - [] output dict/struct
 - [] Cleanup & Refactor
+    - [] move function generation
+    - [] generalize integrator class
 - [x] .get_settings
 
 
@@ -45,3 +24,28 @@ Done
 - [X] IRK support
 - [X] Matlab support
 - [x] Fix ocp_nlp
+
+- [x] add cpp generation for all integrator function
+    - [x] ERK
+        - [x] expl_ode_fun
+        - [x] expl_ode_hes
+        - [x] expl_vde_for
+        - [x] expl_vde_adj
+    - [x] IRK
+        - [x] impl_ode_fun;
+        - [x] impl_ode_fun_jac_x_xdot_z;
+        - [x] impl_ode_jac_x_xdot_u_z;
+        - [x] impl_ode_hess
+    - [x] LIFTED_IRK
+        - [x] impl_ode_fun;
+        - [x] impl_ode_fun_jac_x_xdot_u
+    - [x] LIFTED IRK
+
+- [x] add logic, which functions to generate for which settings
+    - [x] ERK
+    - [x] IRK
+    - [x] LIFTED IRK
+
+- [x] TEST!
+    - [x] ERK
+    - [x] IRK

@@ -29,22 +29,22 @@ sim2.print_settings()
 # create another integrator
 opts1 = {'step_size'        : 0.01, # only mandatory argument
         ### OPTIONAL ARGUMENTS
-         'model_type'       : 0, # 0 - EXPLICIT (default)
+         'model_type'       : 1, # 0 - EXPLICIT (default)
                                  # 1 - IMPLICIT
-         'integrator'       : "ERK", # default (ERK)
+         'integrator'       : "LIFTED_IRK", # default (ERK)
          'use_MX'           : True,  # default (False)
          'ns'               : 4, # default set in C implementation of integrator used
          'num_steps'        : 1, # default set in C implementation of integrator used
          'newton_iter'      : 3, # default set in C implementation of integrator used
          'output_z'         : 0, # default set in C implementation of integrator used
          'sens_forw'        : 1, # default set in C implementation of integrator used
-         'sens_adj'         : 1, # default set in C implementation of integrator used
+         'sens_adj'         : 0, # default set in C implementation of integrator used
          'sens_hess'        : 1, # default set in C implementation of integrator used
          'sens_algebraic'   : 0, # default set in C implementation of integrator used
          'jac_reuse'        : 1, # default set in C implementation of integrator used
         }
 
-sim1 = integrator(ode_fun, opts1)
+sim1 = integrator(impl_ode_fun, opts1)
 print("sim1 created")
 
 sim1.print_settings()
@@ -60,7 +60,6 @@ t2 = 0.0
 # run experiment
 for k in range(M):
     start_time = time.time()    # start timer
-    print("1st sim1 call")
     x1 = np.array(sim1.integrate(x1, u))
     t1 +=  time.time() - start_time
 
