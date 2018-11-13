@@ -60,6 +60,11 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
         }
     }
 
+    // check on ix, iu, iz, ixdot
+    if (ix > 4 || iu > 4 || iz > 4 || ixdot > 4){
+        throw std::invalid_argument("The dynamic model seems to have too many inputs");
+    }
+
     /* GET DIMENSIONS */
     if (use_MX == false)
     {
@@ -200,7 +205,8 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
     casadi::Function integrator_model = model;
     // reformulate as implicit model, if IMPLICIT integrator is used
-    if (model_type_ == EXPLICIT && (sim_plan_.sim_solver == IRK || sim_plan_.sim_solver == LIFTED_IRK))
+    if (model_type_ == EXPLICIT &&
+             (sim_plan_.sim_solver == IRK || sim_plan_.sim_solver == LIFTED_IRK))
     {
         integrator_model = explicit2implicit(model);
     }
@@ -238,7 +244,7 @@ casadi::Function integrator::explicit2implicit(const casadi::Function &model)
         rhs = rhs - xdot;
 
         integrator_model = casadi::Function(model.name(),
-                        {x, xdot, u, z}, 
+                        {x, xdot, u, z},
                         {rhs}, {"x", "xdot", "u", "z"}, {"rhs"});
     }
     else
@@ -255,7 +261,7 @@ casadi::Function integrator::explicit2implicit(const casadi::Function &model)
         rhs = rhs - xdot;
 
         integrator_model = casadi::Function(model.name(),
-                        {x, xdot, u, z}, 
+                        {x, xdot, u, z},
                         {rhs}, {"x", "xdot", "u", "z"}, {"rhs"});
     }
 
