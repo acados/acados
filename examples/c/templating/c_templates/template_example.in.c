@@ -39,7 +39,7 @@
 
 int main() {
 
-	int num_states = {{nx}}, num_controls = 1, N = 100;
+	int num_states = {{ocp_nlp_dims.nx}}, num_controls = 1, N = 100;
 	double Tf = 1.0, R = 1e-2, F_max = 80;
 	int idxb_0[5] = {0, 1, 2, 3, 4};
 	double b0_l[5] = {-F_max, 0, 0, PI, 0};
@@ -62,30 +62,30 @@ int main() {
     int ny[N+1];
 
     for(int i = 0; i < N+1; i++) {
-        nx[i] = num_states;
-        nu[i] = num_controls;
+        nx[i]  = num_states;
+        nu[i]  = num_controls;
         nbx[i] = 0;
         nbu[i] = num_controls;
-        nb[i] = num_controls;
-        ng[i] = 0;
-        nh[i] = 0;
-        np[i] = 0;
-        ns[i] = 0;
-        nz[i] = 0;
-        nv[i] = num_states + num_controls;
-        ny[i] = num_states + num_controls;
+        nb[i]  = num_controls;
+        ng[i]  = 0;
+        nh[i]  = 0;
+        np[i]  = 0;
+        ns[i]  = 0;
+        nz[i]  = 0;
+        nv[i]  = num_states + num_controls;
+        ny[i]  = num_states + num_controls;
     }
 
     nbx[0] = num_states;
     nbu[0] = num_controls;
-    nb[0] = num_states + num_controls;
+    nb[0]  = num_states + num_controls;
 
-    nu[N] = 0;
-    nx[N] = num_states;
-    nh[N] = 0;
-    np[N] = 0;
-    nv[N] = num_states; 
-    ny[N] = num_states;
+    nu[N]  = 0;
+    nx[N]  = num_states;
+    nh[N]  = 0;
+    np[N]  = 0;
+    nv[N]  = num_states; 
+    ny[N]  = num_states;
     nbu[N] = 0;
 
 	// Make plan
