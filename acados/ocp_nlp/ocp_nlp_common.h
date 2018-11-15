@@ -39,10 +39,6 @@ extern "C" {
  * config
  ************************************************/
 
-/************************************************
- * config
- ************************************************/
-
 typedef struct
 {
     int N;  // number of stages
@@ -91,11 +87,11 @@ typedef struct
     ocp_qp_dims *qp_solver;  // xcond solver instead ??
 
     int *nv;  // number of primal variables (states+controls+slacks)
-    int *nx;  // number of states
+    int *nx;  // number of differential states
     int *nu;  // number of inputs
     int *ni;  // number of two-sided inequality constraints TODO make one-sided ???
-    int *nz;
-    int N;
+    int *nz;  // number of algebraic variables
+    int N;    // number of shooting nodes
 } ocp_nlp_dims;
 
 //
