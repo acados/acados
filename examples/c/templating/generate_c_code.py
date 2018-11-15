@@ -28,7 +28,6 @@ ra.constants = [const1]
 # set QP solver
 
 ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-# ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 
 # render template
 output = template.render(ra=ra)
