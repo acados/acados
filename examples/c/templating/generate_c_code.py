@@ -9,6 +9,8 @@ template = env.get_template('template_example.in.c')
 # set ocp_nlp_dimensions
 nlp_dims = ocp_nlp_dims()
 nlp_dims.nx = 4
+nlp_dims.nu = 1
+nlp_dims.N  = 100
 
 # render template
 output = template.render(ocp_nlp_dims=nlp_dims)
