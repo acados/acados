@@ -1,4 +1,5 @@
-def ode_model():
+from casadi import *
+class ode_model():
     def __init__(self):
         self.f_impl_expr = None
         self.f_expl_expr = None
@@ -8,23 +9,15 @@ def ode_model():
         self.z = None
         self.name = None
 
-def export_model()
-   # This function generates an implicit ODE / index-1 DAE model,
-   # which consists of a CasADi expression f_impl_expr, f_expl_expr
-   # that depends on the symbolic CasADi variables x, xdot, u, z,
-   # and a model name, which will be used as a prefix for generated C
-   # functions later on
+def export_ode_model():
+    # This function generates an implicit ODE / index-1 DAE model,
+    # which consists of a CasADi expression f_impl_expr, f_expl_expr
+    # that depends on the symbolic CasADi variables x, xdot, u, z,
+    # and a model name, which will be used as a prefix for generated C
+    # functions later on
 
     # This model is based on the explicit pendulum model
     # but formulated implicitly to test implicit integrators with it.
-    from casadi import *
-    if CasadiMeta.version() in not '3.4.0'
-        # casadi 3.4
-        casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double')
-    else
-        # old casadi versions
-        error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
-    end
 
     model_name = 'pendulum_ode'
 
@@ -40,7 +33,7 @@ def export_model()
     v1      = SX.sym('v1')
     dtheta  = SX.sym('dtheta')
     
-    x = [x1 v1 theta dtheta]
+    x = [x1, v1, theta, dtheta]
 
     # Controls
     F = SX.sym('F')
@@ -52,17 +45,14 @@ def export_model()
     v1_dot      = SX.sym('v1_dot')
     dtheta_dot  = SX.sym('dtheta_dot')
 
-    xdot = [ x1_dot; theta_dot; v1_dot; dtheta_dot ]
+    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
     
-    %% algebraic variables
+    ## algebraic variables
     z = []
     
-    %% Dynamics     
+    ## Dynamics     
     denominator = M + m - m*cos(theta)*cos(theta)
-    f_expl = [  v1; ...
-                (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator; ...
-                dtheta; ...
-                (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator)];
+    f_expl = vertcat(v1, (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator, dtheta, (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator))
     
     f_impl = xdot - f_expl
    
@@ -76,4 +66,14 @@ def export_model()
     model.z = z
     model.name = model_name
 
-    return model
+    model = export_ode_model();
+
+    # Implicit Model -- Generate C Code
+    opts.generate_hess = 0;  # set to 1 if you want to use exact hessian propagation
+
+    generate_c_code_implicit_ode( model, opts );
+
+    ## Explicit Model -- Generate C Code
+    generate_c_code_explicit_ode( model );
+
+    return 

@@ -1,5 +1,6 @@
 from jinja2 import Environment, FileSystemLoader
 from ocp_nlp_dims import *
+from export_ode_model import *
 
 # setting up loader and environment
 file_loader = FileSystemLoader('c_templates')
@@ -25,9 +26,12 @@ const1 = ocp_nlp_constant()
 const1.name  = 'PI'
 const1.value = 3.1415926535897932
 ra.constants = [const1]
-# set QP solver
 
+# set QP solver
 ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+
+# generate C code for ODE
+export_ode_model()
 
 # render template
 output = template.render(ra=ra)
