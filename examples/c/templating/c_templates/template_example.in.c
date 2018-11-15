@@ -39,7 +39,7 @@
 
 int main() {
 
-	int num_states = 4, num_controls = 1, N = 100;
+	int num_states = {{nx}}, num_controls = 1, N = 100;
 	double Tf = 1.0, R = 1e-2, F_max = 80;
 	int idxb_0[5] = {0, 1, 2, 3, 4};
 	double b0_l[5] = {-F_max, 0, 0, PI, 0};
