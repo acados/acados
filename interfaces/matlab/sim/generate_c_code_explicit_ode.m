@@ -54,7 +54,6 @@ vdeP = vdeP + jtimes(f_expl,x,Sp);
 expl_vde_forw = Function([model_name,'_expl_vde_forw'],{x,Sx,Sp,u},{f_expl,vdeX,vdeP});
 
 jacX = SX.zeros(nx,nx) + jacobian(f_expl,x);
-expl_ode_jac = Function([model_name,'_expl_ode_jac'],{x,u},{f_expl,jacX});
 
 adj = jtimes(f_expl,[x;u],lambdaX,true);
 
@@ -74,7 +73,6 @@ expl_ode_hess = Function([model_name,'_expl_ode_hess'],{x,Sx,Sp,lambdaX,u},{adj,
 %% generate C code
 expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);
 expl_vde_forw.generate([model_name,'_expl_vde_forw'], casadi_opts);
-expl_ode_jac.generate([model_name,'_expl_ode_jac'], casadi_opts);
 expl_vde_adj.generate([model_name,'_expl_vde_adj'], casadi_opts);
 expl_ode_hess.generate([model_name,'_expl_ode_hess'], casadi_opts);
 

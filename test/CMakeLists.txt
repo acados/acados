@@ -135,7 +135,6 @@ set(TEST_OCP_QP_SRC
 
 set(TEST_SIM_ODE_SRC
     ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_ode_fun.c
-    ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_ode_jac.c
     ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_vde_for.c
     ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/expl_vde_adj.c
     ${PROJECT_SOURCE_DIR}/examples/c/wt_model_nx3/impl_ode_fun.c
@@ -165,7 +164,6 @@ set(TEST_SIM_DAE_SRC
 
 set(TEST_SIM_HESS_SRC
     ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_ode_fun.c
-    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_ode_jac.c
     ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_vde_forw.c
     ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_vde_adj.c
     ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_ode_hess.c

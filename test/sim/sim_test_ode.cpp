@@ -59,9 +59,8 @@ sim_solver_t hashitsim(std::string const& inString)
 {
     if (inString == "ERK") return ERK;
     if (inString == "IRK") return IRK;
-    if (inString == "LIFTED_IRK") return LIFTED_IRK;
     if (inString == "GNSF") return GNSF;
-    if (inString == "NEW_LIFTED_IRK") return NEW_LIFTED_IRK;
+    if (inString == "LIFTED_IRK") return LIFTED_IRK;
 
     return (sim_solver_t) -1;
 }
@@ -70,9 +69,8 @@ double sim_solver_tolerance(std::string const& inString)
 {
     if (inString == "ERK") return 1e-7;
     if (inString == "IRK") return 1e-7;
-    if (inString == "LIFTED_IRK") return 1e-5;
     if (inString == "GNSF") return 1e-7;
-    if (inString == "NEW_LIFTED_IRK") return 1e-5;
+    if (inString == "LIFTED_IRK") return 1e-5;
 
     return -1;
 }
@@ -82,7 +80,7 @@ double sim_solver_tolerance(std::string const& inString)
 
 TEST_CASE("wt_nx3_example", "[integrators]")
 {
-    vector<std::string> solvers = {"ERK", "IRK", "LIFTED_IRK", "GNSF", "NEW_LIFTED_IRK"};
+    vector<std::string> solvers = {"ERK", "IRK", "GNSF", "LIFTED_IRK"};
     // initialize dimensions
     int ii, jj;
 
@@ -121,16 +119,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     expl_ode_fun.casadi_n_in = &casadi_expl_ode_fun_n_in;
     expl_ode_fun.casadi_n_out = &casadi_expl_ode_fun_n_out;
     external_function_casadi_create(&expl_ode_fun);
-
-    // expl_ode_jac
-    external_function_casadi expl_ode_jac;
-    expl_ode_jac.casadi_fun = &casadi_expl_ode_jac;
-    expl_ode_jac.casadi_work = &casadi_expl_ode_jac_work;
-    expl_ode_jac.casadi_sparsity_in = &casadi_expl_ode_jac_sparsity_in;
-    expl_ode_jac.casadi_sparsity_out = &casadi_expl_ode_jac_sparsity_out;
-    expl_ode_jac.casadi_n_in = &casadi_expl_ode_jac_n_in;
-    expl_ode_jac.casadi_n_out = &casadi_expl_ode_jac_n_out;
-    external_function_casadi_create(&expl_ode_jac);
 
     // expl_vde_for
     external_function_casadi expl_vde_for;
@@ -368,7 +356,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 void *opts_ = sim_opts_create(config, dims);
                 sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
-                if (plan.sim_solver != NEW_LIFTED_IRK)
+                if (plan.sim_solver != LIFTED_IRK)
                     opts->sens_adj = true;
                 else
                     opts->sens_adj = false;
@@ -392,11 +380,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         opts->ns = 2;  // number of stages in rk integrator
                         break;
 
-                    case LIFTED_IRK:
-                         // lifted IRK
-                        opts->ns = 2;  // number of stages in rk integrator
-                        break;
-
                     case GNSF:
                         // GNSF
                         opts->ns = 2;  // number of stages in rk integrator
@@ -412,7 +395,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                         break;
 
-                    case NEW_LIFTED_IRK:
+                    case LIFTED_IRK:
                         // new lifted IRK
                         opts->ns = 2;  // number of stages in rk integrator
                         break;
@@ -450,12 +433,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
                         break;
                     }
-                    case LIFTED_IRK:  // lifted IRK
-                    {
-                        sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-                        sim_set_model(config, in, "expl_ode_jac", &expl_ode_jac);
-                        break;
-                    }
                     case GNSF:  // GNSF
                     {
                         // set model funtions
@@ -471,7 +448,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
                         break;
                     }
-                    case NEW_LIFTED_IRK:  // new_lifted_irk
+                    case LIFTED_IRK:  // lifted_irk
                     {
                         sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
                         sim_set_model(config, in, "impl_ode_fun_jac_x_xdot_u",
@@ -572,7 +549,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 REQUIRE(max_error_forw <= tol);
 
                 // TODO(FreyJo): implement adjoint sensitivites for these integrators!!!
-                if ((plan.sim_solver != LIFTED_IRK) && (plan.sim_solver != NEW_LIFTED_IRK)){
+                if ((plan.sim_solver != LIFTED_IRK)){
                     std::cout  << "error_adj   = " << max_error_adj  << "\n";
                     REQUIRE(max_error_adj <= tol);
                 }
@@ -591,7 +568,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
     // explicit model
     external_function_casadi_free(&expl_ode_fun);
-    external_function_casadi_free(&expl_ode_jac);
     external_function_casadi_free(&expl_vde_for);
     external_function_casadi_free(&expl_vde_adj);
     // implicit model

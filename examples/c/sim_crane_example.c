@@ -94,18 +94,6 @@ int main()
 	external_function_casadi_create(&expl_vde_adj);
 
 
-	// jacobian explicit ODE
-
-	external_function_casadi expl_ode_jac;
-	expl_ode_jac.casadi_fun = &jacFun;
-	expl_ode_jac.casadi_work = &jacFun_work;
-	expl_ode_jac.casadi_sparsity_in = &jacFun_sparsity_in;
-	expl_ode_jac.casadi_sparsity_out = &jacFun_sparsity_out;
-	expl_ode_jac.casadi_n_in = &jacFun_n_in;
-	expl_ode_jac.casadi_n_out = &jacFun_n_out;
-	external_function_casadi_create(&expl_ode_jac);
-
-
 	// hessian explicit ODE
 
 	external_function_casadi expl_hess_ode;
@@ -155,7 +143,7 @@ int main()
 	impl_ode_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
 	external_function_casadi_create(&impl_ode_jac_x_xdot_u);
 
-	int number_sim_solvers = 3;
+	int number_sim_solvers = 2;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
@@ -177,11 +165,6 @@ int main()
 			case 1:
 				printf("\nim solver: IRK\n");
 				plan.sim_solver = IRK;
-				break;
-
-			case 2:
-				printf("\nsim solver: Lifted_IRK\n");
-				plan.sim_solver = LIFTED_IRK;
 				break;
 
 			default :
@@ -234,12 +217,6 @@ int main()
 				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
 				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
 				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-				break;
-			}
-			case 2:
-			{
-				sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-				sim_set_model(config, in, "expl_ode_jac", &expl_ode_jac);
 				break;
 			}
 			default :
@@ -369,7 +346,6 @@ int main()
 	// explicit model
 	external_function_casadi_free(&expl_vde_for);
 	external_function_casadi_free(&expl_vde_adj);
-	external_function_casadi_free(&expl_ode_jac);
 	external_function_casadi_free(&expl_hess_ode);
 	// implicit model
 	external_function_casadi_free(&impl_ode_fun);

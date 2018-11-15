@@ -87,9 +87,8 @@ ocp_qp_solver_t qp_solver_en(std::string const& inString)
 sim_solver_t integrator_en(std::string const& inString)
 {
     if (inString == "ERK") return ERK;
-    if (inString == "LIFTED_IRK") return LIFTED_IRK;
     if (inString == "IRK") return IRK;
-    if (inString == "NEW_LIFTED_IRK") return NEW_LIFTED_IRK;
+    if (inString == "LIFTED_IRK") return LIFTED_IRK;
     if (inString == "GNSF") return GNSF;
 
     return (sim_solver_t) -1;
@@ -565,14 +564,6 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             }
             break;
 
-        case NEW_LIFTED_IRK:
-            for (int i = 0; i < NN; i++)
-            {
-                plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-                plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
-            }
-            break;
-
         case GNSF:
             for (int i = 0; i < NN; i++)
             {
@@ -591,7 +582,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
                 else if (i%4 == 1)
                     plan->sim_solver_plan[i].sim_solver = ERK;
                 else if (i%4 == 2)
-                    plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+                    plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
                 else if (i%4 == 3)
                     plan->sim_solver_plan[i].sim_solver = GNSF;
 
@@ -769,7 +760,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
                 &f_lo_jac_x1_x1dot_u_z[i]);
         }
-        else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+        else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
             set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun",
                 &impl_ode_fun[i]);
@@ -861,7 +852,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             sim_opts->num_steps = 1;
             sim_opts->jac_reuse = true;
         }
-        else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+        else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
             sim_opts->ns = 4;
             sim_opts->num_steps = 1;
@@ -978,7 +969,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
                 expl_vde_for[ii].set_param(expl_vde_for+ii, wind0_ref+idx+ii);
             }
             else if ((plan->sim_solver_plan[ii].sim_solver == IRK) |
-                     (plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK))
+                     (plan->sim_solver_plan[ii].sim_solver == LIFTED_IRK))
             {
                 impl_ode_fun[ii].set_param(impl_ode_fun+ii, wind0_ref+idx+ii);
                 impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);
@@ -1144,7 +1135,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
 TEST_CASE("wind turbine nmpc", "[NLP solver]")
 {
-    std::vector<std::string> integrators = {"IRK", "ERK", "NEW_LIFTED_IRK", "GNSF", "MIXED"};
+    std::vector<std::string> integrators = {"IRK", "ERK", "LIFTED_IRK", "GNSF", "MIXED"};
     std::vector<std::string> qp_solvers = { "SPARSE_HPIPM",
                                             // "SPARSE_HPMPC",
                                             // "SPARSE_QPDUNES",

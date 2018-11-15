@@ -112,7 +112,6 @@ file(GLOB CRANE_MODEL_SRC
 
 file(GLOB WT_MODEL_NX3_SRC
     wt_model_nx3/expl_ode_fun.c
-    wt_model_nx3/expl_ode_jac.c
     wt_model_nx3/expl_vde_for.c
     wt_model_nx3/expl_vde_adj.c
     wt_model_nx3/impl_ode_fun.c
@@ -261,10 +260,6 @@ add_test(mass_spring_offline_fcond_qpoases_split mass_spring_example)
 add_executable(mass_spring_nmpc_example mass_spring_nmpc_example.c mass_spring_model/mass_spring_qp.c)
 target_link_libraries(mass_spring_nmpc_example acados)
 add_test(mass_spring_nmpc_example mass_spring_example)
-
-add_executable(mass_spring_example_no_interface mass_spring_example_no_interface.c mass_spring_model/mass_spring_qp.c)
-target_link_libraries(mass_spring_example_no_interface acados)
-add_test(mass_spring_example_no_interface mass_spring_example_no_interface)
 
 add_executable(sim_crane_example sim_crane_example.c ${CRANE_MODEL_SRC})
 target_link_libraries(sim_crane_example acados)
