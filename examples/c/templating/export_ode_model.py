@@ -1,4 +1,5 @@
 from casadi import *
+from generate_c_code_explicit_ode import *
 class ode_model():
     def __init__(self):
         self.f_impl_expr = None
@@ -33,11 +34,11 @@ def export_ode_model():
     v1      = SX.sym('v1')
     dtheta  = SX.sym('dtheta')
     
-    x = [x1, v1, theta, dtheta]
+    x = vertcat(x1, v1, theta, dtheta)
 
     # Controls
     F = SX.sym('F')
-    u = F
+    u = vertcat(F)
     
     # xdot
     x1_dot      = SX.sym('x1_dot')
@@ -66,14 +67,7 @@ def export_ode_model():
     model.z = z
     model.name = model_name
 
-    model = export_ode_model();
-
-    # Implicit Model -- Generate C Code
-    opts.generate_hess = 0;  # set to 1 if you want to use exact hessian propagation
-
-    generate_c_code_implicit_ode( model, opts );
-
-    ## Explicit Model -- Generate C Code
+    # Explicit Model -- Generate C Code
     generate_c_code_explicit_ode( model );
 
     return 

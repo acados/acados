@@ -15,16 +15,17 @@
 #   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-def generate_c_code_explicit_ode( model )
+from casadi import *
+import os
 
-    from casadi import *
+def generate_c_code_explicit_ode( model ):
 
-    if CasadiMeta.version() is '3.4.0':
-            # casadi 3.4
-            casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
-    else:
-            # old casadi versions
-            error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
+    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+    # if CasadiMeta.version() is '3.4.0':
+    #         # casadi 3.4
+    # else:
+    #         # old casadi versions
+    #         error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
 
     # load model
     x = model.x
@@ -33,15 +34,16 @@ def generate_c_code_explicit_ode( model )
     model_name = model.name
 
     ## get model dimensions
-    nx = length(x)
-    nu = length(u)
+    nx = x.size()[0]
+    nu = u.size()[0]
 
     ## set up functions to be exported
-    Sx = SX.sym('Sx',nx,nx)
-    Sp = SX.sym('Sp',nx,nu)
-    lambdaX = SX.sym('lambdaX',nx,1)
+    Sx = SX.sym('Sx', nx, nx)
+    Sp = SX.sym('Sp', nx, nu)
+    lambdaX = SX.sym('lambdaX', nx, 1)
 
-    expl_ode_fun = Function(model_name + '_expl_ode_fun', [x,u], [f_expl])
+    fun_name = model_name + '_expl_ode_fun'
+    expl_ode_fun = Function(fun_name, [x,u], [f_expl])
     # TODO: Polish: get rid of SX.zeros
     vdeX = SX.zeros(nx,nx)
     vdeX = vdeX + jtimes(f_expl,x,Sx)
@@ -49,29 +51,39 @@ def generate_c_code_explicit_ode( model )
     vdeP = SX.zeros(nx,nu) + jacobian(f_expl,u)
     vdeP = vdeP + jtimes(f_expl,x,Sp)
 
-    expl_vde_forw = Function([model_name,'_expl_vde_forw'],[x,Sx,Sp,u],[f_expl,vdeX,vdeP])
+    fun_name = model_name + '_expl_vde_forw'
+    expl_vde_forw = Function(fun_name, [x,Sx,Sp,u], [f_expl,vdeX,vdeP])
 
     jacX = SX.zeros(nx,nx) + jacobian(f_expl,x)
 
-    adj = jtimes(f_expl,[x, u],lambdaX,true)
+    adj = jtimes(f_expl, vertcat(x, u), lambdaX, True)
 
-    expl_vde_adj = Function([model_name,'_expl_vde_adj'],[x,lambdaX,u],[adj])
+    fun_name = model_name + '_expl_vde_adj'
+    expl_vde_adj = Function(fun_name, [x,lambdaX,u], [adj])
 
-    S_forw = vertcat(horzcat(Sx, Sp), horzcat(zeros(nu,nx), eye(nu)))
-    hess = S_forw.'*jtimes(adj,[x;u],S_forw)
+    S_forw = vertcat(horzcat(Sx, Sp), horzcat(DM.zeros(nu,nx), DM.eye(nu)))
+    hess = transpose(S_forw)*jtimes(adj, vertcat(x,u), S_forw)
     hess2 = []
-    for j = 1:nx+nu
-        for i = j:nx+nu
-            hess2 = [hess2; hess(i,j)]
-        end
-    end
+    for j in range(nx+nu):
+        for i in range(nx+nu):
+            hess2 = vertcat(hess2, hess[i,j])
 
-    expl_ode_hess = Function([model_name,'_expl_ode_hess'],[x,Sx,Sp,lambdaX,u],[adj,hess2])
+    fun_name = model_name + '_expl_ode_hess'
+    expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u], [adj, hess2])
 
     ## generate C code
-    expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts)
-    expl_vde_forw.generate([model_name,'_expl_vde_forw'], casadi_opts)
-    expl_vde_adj.generate([model_name,'_expl_vde_adj'], casadi_opts)
-    expl_ode_hess.generate([model_name,'_expl_ode_hess'], casadi_opts)
+    os.chdir('./model')
+    fun_name = model_name + '_expl_ode_fun'
+    expl_ode_fun.generate(fun_name, casadi_opts)
+
+    fun_name = model_name + '_expl_vde_forw'
+    expl_vde_forw.generate(fun_name, casadi_opts)
+    
+    fun_name = model_name + '_expl_vde_adj'
+    expl_vde_adj.generate(fun_name, casadi_opts)
+    
+    fun_name = model_name + '_expl_ode_hess'
+    expl_ode_hess.generate(fun_name, casadi_opts)
+    os.chdir('..')
 
     return
