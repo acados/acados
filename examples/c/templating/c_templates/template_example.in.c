@@ -32,16 +32,16 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
-#include "pendulum_model/pendulum_model.h"
-#include "pendulum_model/constraint.h"
-
-#define PI 3.1415926535897932
-
+#include "{{ ra.model_name }}_model/model.h"
+#include "{{ ra.model_name }}_model/constraint.h"
+{% for item in ra.constants %}
+#define {{ item.name }} {{ item.value }}
+{% endfor %}
 int main() {
 
-    int num_states = {{ocp_nlp_dims.nx}}; 
-    int num_controls = {{ocp_nlp_dims.nu}}; 
-    int N = {{ocp_nlp_dims.N}};
+    int num_states = {{ ra.dims.nx }}; 
+    int num_controls = {{ ra.dims.nu }}; 
+    int N = {{ ra.dims.N }};
 
     double Tf = 1.0, R = 1e-2, F_max = 80;
     int idxb_0[5] = {0, 1, 2, 3, 4};
@@ -94,8 +94,7 @@ int main() {
     // Make plan
     ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
     plan->nlp_solver = SQP;
-    // plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
-    plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+    plan->ocp_qp_solver_plan.qp_solver = {{ ra.solver_config.qp_solver }};
     for (int i = 0; i <= N; i++)
         plan->nlp_cost[i] = LINEAR_LS;
     for (int i = 0; i < N; i++)
@@ -115,22 +114,22 @@ int main() {
 
     external_function_casadi forw_vde_casadi[N];
     for (int i = 0; i < N; ++i) {
-        forw_vde_casadi[i].casadi_fun = &pendulum_ode_expl_vde_forw;
-        forw_vde_casadi[i].casadi_n_in = &pendulum_ode_expl_vde_forw_n_in;
-        forw_vde_casadi[i].casadi_n_out = &pendulum_ode_expl_vde_forw_n_out;
-        forw_vde_casadi[i].casadi_sparsity_in = &pendulum_ode_expl_vde_forw_sparsity_in;
-        forw_vde_casadi[i].casadi_sparsity_out = &pendulum_ode_expl_vde_forw_sparsity_out;
-        forw_vde_casadi[i].casadi_work = &pendulum_ode_expl_vde_forw_work;
+        forw_vde_casadi[i].casadi_fun = &{{ ra.model_name }}_ode_expl_vde_forw;
+        forw_vde_casadi[i].casadi_n_in = &{{ ra.model_name }}_ode_expl_vde_forw_n_in;
+        forw_vde_casadi[i].casadi_n_out = &{{ ra.model_name }}_ode_expl_vde_forw_n_out;
+        forw_vde_casadi[i].casadi_sparsity_in = &{{ ra.model_name }}_ode_expl_vde_forw_sparsity_in;
+        forw_vde_casadi[i].casadi_sparsity_out = &{{ ra.model_name }}_ode_expl_vde_forw_sparsity_out;
+        forw_vde_casadi[i].casadi_work = &{{ ra.model_name }}_ode_expl_vde_forw_work;
     }
 
     external_function_casadi hess_vde_casadi[N];
     for (int i = 0; i < N; ++i) {
-        hess_vde_casadi[i].casadi_fun = &pendulum_ode_expl_ode_hess;
-        hess_vde_casadi[i].casadi_n_in = &pendulum_ode_expl_ode_hess_n_in;
-        hess_vde_casadi[i].casadi_n_out = &pendulum_ode_expl_ode_hess_n_out;
-        hess_vde_casadi[i].casadi_sparsity_in = &pendulum_ode_expl_ode_hess_sparsity_in;
-        hess_vde_casadi[i].casadi_sparsity_out = &pendulum_ode_expl_ode_hess_sparsity_out;
-        hess_vde_casadi[i].casadi_work = &pendulum_ode_expl_ode_hess_work;
+        hess_vde_casadi[i].casadi_fun = &{{ ra.model_name }}_ode_expl_ode_hess;
+        hess_vde_casadi[i].casadi_n_in = &{{ ra.model_name }}_ode_expl_ode_hess_n_in;
+        hess_vde_casadi[i].casadi_n_out = &{{ ra.model_name }}_ode_expl_ode_hess_n_out;
+        hess_vde_casadi[i].casadi_sparsity_in = &{{ ra.model_name }}_ode_expl_ode_hess_sparsity_in;
+        hess_vde_casadi[i].casadi_sparsity_out = &{{ ra.model_name }}_ode_expl_ode_hess_sparsity_out;
+        hess_vde_casadi[i].casadi_work = &{{ ra.model_name }}_ode_expl_ode_hess_work;
     }
 
     // NLP model: forward VDEs
