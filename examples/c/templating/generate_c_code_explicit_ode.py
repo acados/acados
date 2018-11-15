@@ -72,7 +72,11 @@ def generate_c_code_explicit_ode( model ):
     expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u], [adj, hess2])
 
     ## generate C code
-    os.chdir('./model')
+    model_dir = model_name + '_model'
+    import pdb; pdb.set_trace()
+    os.mkdir(model_dir)
+    model_dir_location = './' + model_dir
+    os.chdir(model_dir_location)
     fun_name = model_name + '_expl_ode_fun'
     expl_ode_fun.generate(fun_name, casadi_opts)
 
