@@ -1,5 +1,4 @@
 from casadi import *
-from generate_c_code_explicit_ode import *
 class ode_model():
     def __init__(self):
         self.f_impl_expr = None
@@ -70,4 +69,4 @@ def export_ode_model():
     # Explicit Model -- Generate C Code
     generate_c_code_explicit_ode( model );
 
-    return 
+    return model 

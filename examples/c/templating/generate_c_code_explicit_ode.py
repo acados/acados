@@ -73,8 +73,8 @@ def generate_c_code_explicit_ode( model ):
 
     ## generate C code
     model_dir = model_name + '_model'
-    import pdb; pdb.set_trace()
-    os.mkdir(model_dir)
+    if not os.path.exists(model_dir):
+        os.mkdir(model_dir)
     model_dir_location = './' + model_dir
     os.chdir(model_dir_location)
     fun_name = model_name + '_expl_ode_fun'
