@@ -39,8 +39,37 @@ class ocp_nlp_dims:
 
 class ocp_nlp_solver_config:
     def __init__(self):
-        self.qp_solver      = None # qp solve to be used in the NLP solver
-        self.hessian_approx = None # hessian approximation
+        self._qp_solver      = 'PARTIAL_CONDENSING_HPIPM' # qp solver to be used in the NLP solver
+        self._hessian_approx = 'GAUSS_NEWTON' # hessian approximation
+
+    @property
+    def qp_solver(self):
+        return self._qp_solver
+
+    @property
+    def hessian_approx(self):
+        return self._hessian_approx
+
+    @qp_solver.setter
+    def qp_solver(self, qp_solver):
+        qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPOASES', \
+                'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_QPOASES')
+
+        if type(qp_solver) == str and qp_solver in qp_solvers:
+            self._qp_solver = qp_solver
+        else:
+            raise Exception('Invalid qp_solver value. Possible values are: ' \
+                    + qp_solvers + '. you have:' + qp_solver + '. Exiting.')
+
+    @hessian_approx.setter
+    def hessian_approx(self, hessian_approx):
+        hessian_approxs = ('GAUSS_NEWTON', 'EXACT')
+
+        if type(hessian_approx) == str and hessian_approx in hessian_approxs:
+            self._hessian_approx = hessian_approx
+        else:
+            raise Exception('Invalid hessian_approx value. Possible values are: ' \
+                    + hessian_approxs + '. you have:' + hessian_approx + '. Exiting.')
 
 class ocp_nlp_constant:
     def __init__(self):
