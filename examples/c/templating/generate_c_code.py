@@ -4,14 +4,6 @@ from export_ode_model import *
 from generate_c_code_explicit_ode import *
 
 def export_ode_model():
-    # This function generates an implicit ODE / index-1 DAE model,
-    # which consists of a CasADi expression f_impl_expr, f_expl_expr
-    # that depends on the symbolic CasADi variables x, xdot, u, z,
-    # and a model name, which will be used as a prefix for generated C
-    # functions later on
-
-    # This model is based on the explicit pendulum model
-    # but formulated implicitly to test implicit integrators with it.
 
     model_name = 'pendulum_ode'
 
@@ -70,13 +62,16 @@ template = env.get_template('template_example.in.c')
 # create render arguments
 ra = ocp_nlp_render_arguments()
 
+# export model 
+model = export_ode_model()
+
 # set model_name 
-ra.model_name = 'pendulum'
+ra.model_name = model.name
 
 # set ocp_nlp_dimensions
 nlp_dims = ra.dims
-nlp_dims.nx = 4
-nlp_dims.nu = 1
+nx = model.x.size()[0]
+nu = model.u.size()[0]
 nlp_dims.N  = 100
 
 # set weighting matrices
@@ -89,9 +84,7 @@ ra.constants = [const1]
 
 # set QP solver
 ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-
-# export model 
-model = export_ode_model()
+ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
 
 # explicit model -- generate C code
 generate_c_code_explicit_ode(model);
