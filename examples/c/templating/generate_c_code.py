@@ -94,8 +94,7 @@ ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 model = export_ode_model()
 
 # explicit model -- generate C code
-generate_c_code_explicit_ode( model );
-
+generate_c_code_explicit_ode(model);
 
 # render template
 output = template.render(ra=ra)

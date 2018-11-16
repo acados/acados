@@ -20,12 +20,13 @@ import os
 
 def generate_c_code_explicit_ode( model ):
 
+    casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
-    # if CasadiMeta.version() is '3.4.0':
-    #         # casadi 3.4
+    # if  casadi_version is '3.4.0':
+    #     # casadi 3.4
     # else:
     #         # old casadi versions
-    #         error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
+    #         raise Exception('Please download and install Casadi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
 
     # load model
     x = model.x
