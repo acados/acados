@@ -58,8 +58,8 @@ class ocp_nlp_solver_config:
         if type(qp_solver) == str and qp_solver in qp_solvers:
             self._qp_solver = qp_solver
         else:
-            raise Exception('Invalid qp_solver value. Possible values are: ' \
-                    + qp_solvers + '. you have:' + qp_solver + '. Exiting.')
+            raise Exception('Invalid qp_solver value. Possible values are:\n\n' \
+                    + ',\n'.join(qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\nExiting.')
 
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
@@ -68,8 +68,8 @@ class ocp_nlp_solver_config:
         if type(hessian_approx) == str and hessian_approx in hessian_approxs:
             self._hessian_approx = hessian_approx
         else:
-            raise Exception('Invalid hessian_approx value. Possible values are: ' \
-                    + hessian_approxs + '. you have:' + hessian_approx + '. Exiting.')
+            raise Exception('Invalid hessian_approx value. Possible values are:\n\n' \
+                    + ',\n'.join(hessian_approxs) + '.\n\nYou have: ' + hessian_approx + '.\n\nExiting.')
 
 class ocp_nlp_constant:
     def __init__(self):
