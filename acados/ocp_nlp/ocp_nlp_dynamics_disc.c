@@ -73,7 +73,74 @@ void ocp_nlp_dynamics_disc_dims_initialize(void *config_, void *dims_, int nx, i
     return;
 }
 
+// getters
+// static void ocp_nlp_dynamics_disc_get_nx(void *dims_, int *nx)
+// {
+//     ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+//     *nx = dims->nx;
+// }
 
+// static void ocp_nlp_dynamics_disc_get_nx1(void *dims_, int *nx1)
+// {
+//     ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+//     *nx1 = dims->nx1;
+// }
+
+// static void ocp_nlp_dynamics_disc_get_nu(void *dims_, int *nu)
+// {
+//     ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+//     *nu = dims->nu;
+// }
+
+// static void ocp_nlp_dynamics_disc_get_nu1(void *dims_, int *nu1)
+// {
+//     ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+//     *nu1 = dims->nu1;
+// }
+
+
+// setters
+static void ocp_nlp_dynamics_disc_set_nx(void *dims_, int *nx)
+{
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+    dims->nx = *nx;
+}
+
+static void ocp_nlp_dynamics_disc_set_nx1(void *dims_, int *nx1)
+{
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+    dims->nx1 = *nx1;
+}
+
+static void ocp_nlp_dynamics_disc_set_nu(void *dims_, int *nu)
+{
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+    dims->nu = *nu;
+}
+
+static void ocp_nlp_dynamics_disc_set_nu1(void *dims_, int *nu1)
+{
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+    dims->nu1 = *nu1;
+}
+
+void ocp_nlp_dynamics_disc_dims_set(void *dims_, const char *dim, int* value)
+{
+    if (!strcmp(dim, "nx"))
+        ocp_nlp_dynamics_disc_set_nx(dims_, value);
+    
+    else if (!strcmp(dim, "nx1"))
+        ocp_nlp_dynamics_disc_set_nx1(dims_, value);
+
+    else if (!strcmp(dim, "nu"))
+        ocp_nlp_dynamics_disc_set_nu(dims_, value);
+
+    else if (!strcmp(dim, "nu1"))
+        ocp_nlp_dynamics_disc_set_nu1(dims_, value);
+
+    else
+        assert(0 == 1);  // dimension type not available in module
+}
 
 /************************************************
  * options
@@ -486,6 +553,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_dynamics_disc_dims_calculate_size;
     config->dims_assign = &ocp_nlp_dynamics_disc_dims_assign;
     config->dims_initialize = &ocp_nlp_dynamics_disc_dims_initialize;
+    config->set_dims =  &ocp_nlp_dynamics_disc_dims_set;
     config->model_calculate_size = &ocp_nlp_dynamics_disc_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_disc_model_assign;
     config->model_set_T = &ocp_nlp_dynamics_disc_model_set_T;

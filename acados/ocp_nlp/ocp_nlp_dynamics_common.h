@@ -71,6 +71,7 @@ typedef struct
                                void *work_);
     void (*config_initialize_default)(void *config);
     sim_solver_config *sim_solver;
+    void (*set_dims)(void *dims_, const char dim, int *value);
 } ocp_nlp_dynamics_config;
 
 //
