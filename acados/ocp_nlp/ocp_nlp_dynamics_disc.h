@@ -53,7 +53,7 @@ void ocp_nlp_dynamics_disc_dims_initialize(void *config, void *dims, int nx, int
                                            int nu1, int nz);
 
 //
-void ocp_nlp_dynamics_disc_dims_set(void *dims_, const char *dim, int* value);
+void ocp_nlp_dynamics_disc_dims_set(void *dims_, char *dim, int* value);
 
 
 /************************************************

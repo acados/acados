@@ -158,31 +158,38 @@ static void ocp_nlp_dynamics_cont_set_nu1(void *dims_, int *nu1)
     dims->nu1 = *nu1;
 }
 
-void ocp_nlp_dynamics_cont_dims_set(void *dims_, const char *field, int* value)
+void ocp_nlp_dynamics_cont_dims_set(void *dims_, char *field, int* value)
 {
     // char *token;
-    char field_cpy[MAX_STR_LEN];
-    strcpy(field_cpy, field);
-    char *ptr_to_dim_cpy = &field_cpy[0];
+//    char field_cpy[MAX_STR_LEN];
+//    strcpy(field_cpy, field);
+//    char *ptr_to_dim_cpy = &field_cpy[0];
     // token = strsep_acados(&ptr_to_dim_cpy, ".");
     // int test = strcmp(dim, "nx");
     if (!strcmp(field, "nx"))
+	{
         ocp_nlp_dynamics_cont_set_nx(dims_, value);
-
+	}
     else if (!strcmp(field, "nx1"))
+	{
         ocp_nlp_dynamics_cont_set_nx1(dims_, value);
-
+	}
     else if (!strcmp(field, "nz"))
+	{
         ocp_nlp_dynamics_cont_set_nz(dims_, value);
-
+	}
     else if (!strcmp(field, "nu"))
+	{
         ocp_nlp_dynamics_cont_set_nu(dims_, value);
-
+	}
     else if (!strcmp(field, "nu1"))
+	{
         ocp_nlp_dynamics_cont_set_nu1(dims_, value);
-
+	}
     else
+	{
         assert(0 == 1);  // dimension type not available in module
+	}
 }
 
 /************************************************

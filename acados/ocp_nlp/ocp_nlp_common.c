@@ -296,8 +296,8 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
     // dynamics
     for (ii = 0; ii < N; ii++)
     {
-        char field[MAX_STR_LEN] = "nz";
-        printf(field);
+        char field[] = "nz";
+//        printf(field);
         config->dynamics[ii]->dims_initialize(config->dynamics[ii], dims->dynamics[ii], nx[ii],
                                               nu[ii], nx[ii + 1], nu[ii + 1], nz[ii]);
         config->dynamics[ii]->set_dims(dims->dynamics[ii], field, &nx[ii]);

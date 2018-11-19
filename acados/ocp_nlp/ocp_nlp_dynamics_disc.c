@@ -124,22 +124,37 @@ static void ocp_nlp_dynamics_disc_set_nu1(void *dims_, int *nu1)
     dims->nu1 = *nu1;
 }
 
-void ocp_nlp_dynamics_disc_dims_set(void *dims_, const char *dim, int* value)
+void ocp_nlp_dynamics_disc_dims_set(void *dims_, char *dim, int* value)
 {
     if (!strcmp(dim, "nx"))
+	{
         ocp_nlp_dynamics_disc_set_nx(dims_, value);
-    
+	}
     else if (!strcmp(dim, "nx1"))
+	{
         ocp_nlp_dynamics_disc_set_nx1(dims_, value);
-
+	}
+    else if (!strcmp(dim, "nz"))
+	{
+        //ocp_nlp_dynamics_cont_set_nz(dims_, value);
+		if(*value>0)
+			{
+			printf("\nerror: discrete dynamics with nz>0\n");
+			exit(1);
+			}
+	}
     else if (!strcmp(dim, "nu"))
+	{
         ocp_nlp_dynamics_disc_set_nu(dims_, value);
-
+	}
     else if (!strcmp(dim, "nu1"))
+	{
         ocp_nlp_dynamics_disc_set_nu1(dims_, value);
-
+	}
     else
+	{
         assert(0 == 1);  // dimension type not available in module
+	}
 }
 
 /************************************************
