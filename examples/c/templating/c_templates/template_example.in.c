@@ -39,6 +39,7 @@
 {% endfor %}
 int main() {
 
+    // solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
     int num_states = {{ ra.dims.nx }}; 
     int num_controls = {{ ra.dims.nu }}; 
     int N = {{ ra.dims.N }};
@@ -122,6 +123,7 @@ int main() {
         forw_vde_casadi[i].casadi_work = &{{ ra.model_name }}_ode_expl_vde_forw_work;
     }
 
+    {% if ra.solver_config.hessian_approx is 'EXACT': %} 
     external_function_casadi hess_vde_casadi[N];
     for (int i = 0; i < N; ++i) {
         hess_vde_casadi[i].casadi_fun = &{{ ra.model_name }}_ode_expl_ode_hess;
@@ -131,6 +133,7 @@ int main() {
         hess_vde_casadi[i].casadi_sparsity_out = &{{ ra.model_name }}_ode_expl_ode_hess_sparsity_out;
         hess_vde_casadi[i].casadi_work = &{{ ra.model_name }}_ode_expl_ode_hess_work;
     }
+    {% endif %}
 
     // NLP model: forward VDEs
     int function_size = 0;
@@ -143,6 +146,7 @@ int main() {
         c_ptr += external_function_casadi_calculate_size(forw_vde_casadi+i);
     }
 
+    {% if ra.solver_config.hessian_approx is 'EXACT': %} 
     // NLP model: hessian VDEs
     function_size = 0;
     for (int i = 0; i < N; ++i)
@@ -153,7 +157,7 @@ int main() {
         external_function_casadi_assign(hess_vde_casadi+i, c_ptr);
         c_ptr += external_function_casadi_calculate_size(hess_vde_casadi+i);
     }
-
+    {% endif %}
 
     ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
 
@@ -193,8 +197,10 @@ int main() {
         ocp_nlp_dynamics_cont_model *dynamics = (ocp_nlp_dynamics_cont_model *) nlp_in->dynamics[i];
         erk_model *model = (erk_model *) dynamics->sim_model;
         model->expl_vde_for = (external_function_generic *) &forw_vde_casadi[i];
+        {% if ra.solver_config.hessian_approx is 'EXACT': %} 
         model->expl_vde_adj = (external_function_generic *) &hess_vde_casadi[i];
         model->expl_ode_hes = (external_function_generic *) &hess_vde_casadi[i];
+        {% endif %}
     }
 
     // NLP constraints
@@ -224,10 +230,12 @@ int main() {
     for (int i = 0; i < N; ++i)
     {
         sim_rk_opts *rk_opts = (sim_rk_opts *) ((ocp_nlp_dynamics_cont_opts *)sqp_opts->dynamics[i])->sim_solver;
-        ((ocp_nlp_dynamics_cont_opts *)sqp_opts->dynamics[i])->compute_hess = true;
         rk_opts->num_steps = 5;
+        {% if ra.solver_config.hessian_approx is 'EXACT': %} 
+        ((ocp_nlp_dynamics_cont_opts *)sqp_opts->dynamics[i])->compute_hess = true;
         rk_opts->sens_hess = true;
         rk_opts->sens_adj = true;
+        {% endif %}
     }
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
@@ -256,6 +264,21 @@ int main() {
 
     printf("\n--- solution ---\n");
     ocp_nlp_out_print(dims, nlp_out);
+    
+    // free memory
+    free(dims);
+    free(config);
+    free(nlp_in);
+    free(nlp_out);
+    free(nlp_opts);
+    free(solver);
+    
+    // free external function 
+    external_function_casadi_free(&impl_dae_fun);
+    external_function_casadi_free(&impl_dae_fun_jac_x_xdot_z);
+    external_function_casadi_free(&impl_dae_jac_x_xdot_u_z);
+    external_function_casadi_free(&nls_cost_residual);
+    external_function_casadi_free(&nls_cost_N_residual);
 
     return solver_status;
 }
