@@ -75,7 +75,7 @@ outputs:
 // function of explicit ode model
         - needed if opts->sens_forw == false
 
-external functoin: expl_ode_fun
+external function: expl_ode_fun
 
 inputs:
 0) [x]    size: nx    type: COLMAJ
