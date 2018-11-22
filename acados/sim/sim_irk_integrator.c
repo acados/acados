@@ -139,6 +139,7 @@ int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
             break;
         case IMPL_ODE_HESS:
             model->impl_ode_hess = (external_function_generic *) fun;
+            break;
         default:
             return ACADOS_FAILURE;
     }

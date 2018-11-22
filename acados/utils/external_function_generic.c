@@ -472,6 +472,61 @@ static void d_cvt_dvec_args_to_casadi(struct blasfeo_dvec_args *in, double *out,
  * casadi external function
  ************************************************/
 
+int external_function_casadi_struct_size()
+{
+    return sizeof(external_function_casadi);
+}
+
+
+
+void external_function_casadi_set_fun(external_function_casadi *fun, void *value)
+{
+    fun->casadi_fun = value;
+    return;
+}
+
+
+
+void external_function_casadi_set_work(external_function_casadi *fun, void *value)
+{
+    fun->casadi_work = value;
+    return;
+}
+
+
+
+void external_function_casadi_set_sparsity_in(external_function_casadi *fun, void *value)
+{
+    fun->casadi_sparsity_in = value;
+    return;
+}
+
+
+
+void external_function_casadi_set_sparsity_out(external_function_casadi *fun, void *value)
+{
+    fun->casadi_sparsity_out = value;
+    return;
+}
+
+
+
+void external_function_casadi_set_n_in(external_function_casadi *fun, void *value)
+{
+    fun->casadi_n_in = value;
+    return;
+}
+
+
+
+void external_function_casadi_set_n_out(external_function_casadi *fun, void *value)
+{
+    fun->casadi_n_out = value;
+    return;
+}
+
+
+
 int external_function_casadi_calculate_size(external_function_casadi *fun)
 {
     // casadi wrapper as evaluate
@@ -518,6 +573,8 @@ int external_function_casadi_calculate_size(external_function_casadi *fun)
 
     return size;
 }
+
+
 
 void external_function_casadi_assign(external_function_casadi *fun, void *raw_memory)
 {
@@ -567,6 +624,8 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
 
     return;
 }
+
+
 
 void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in,
                                       ext_fun_arg_t *type_out, void **out)

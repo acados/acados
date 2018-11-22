@@ -52,6 +52,9 @@ int align_char_to(int num, char **c_ptr);
 // switch between malloc and calloc (for valgrinding)
 void *acados_malloc(size_t nitems, size_t size);
 
+// uses always calloc
+void *acados_calloc(size_t nitems, size_t size);
+
 // allocate vector of pointers to vectors of doubles and advance pointer
 void assign_and_advance_double_ptrs(int n, double ***v, char **ptr);
 

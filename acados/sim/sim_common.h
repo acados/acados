@@ -31,7 +31,10 @@
 // maximum number of integration stages
 #define NS_MAX 15
 
-typedef enum {
+
+
+typedef enum
+{
     // ERK and LIFTED_ERK
     EXPL_ODE_FUN,
     EXPL_ODE_HES,  // wrt x and u ???
@@ -50,6 +53,8 @@ typedef enum {
     LO_FUN
 } sim_function_t;
 
+
+
 typedef struct
 {
     void *dims;
@@ -57,10 +62,10 @@ typedef struct
     double *x;  // x[NX] - initial state value for simulation
     double *u;  // u[NU] - control - constant over simulation time
 
-    double *xdot;   // xdot[NX] - initialization for state derivatives k within the integrator
-    double *z;      // z[NZ] - initialization for algebraic variables z
+    double *xdot;  // xdot[NX] - initialization for state derivatives k within the integrator
+    double *z;     // z[NZ] - initialization for algebraic variables z
 
-    double *S_forw;  // forward seed
+    double *S_forw;  // forward seed [Sx, Su]
     double *S_adj;   // backward seed
 
     void *model;
@@ -69,12 +74,16 @@ typedef struct
 
 } sim_in;
 
+
+
 typedef struct
 {
     double CPUtime;  // in seconds
     double LAtime;   // in seconds
     double ADtime;   // in seconds
 } sim_info;
+
+
 
 typedef struct
 {
@@ -92,6 +101,8 @@ typedef struct
     sim_info *info;
 } sim_out;
 
+
+
 typedef struct
 {
     int ns;  // number of integration stages
@@ -108,8 +119,8 @@ typedef struct
     bool sens_adj;
     bool sens_hess;
 
-    bool output_z;  // 1 -- if zn should be computed
-    bool sens_algebraic;    // 1 -- if S_algebraic should be computed
+    bool output_z;        // 1 -- if zn should be computed
+    bool sens_algebraic;  // 1 -- if S_algebraic should be computed
 
     // for explicit integrators: newton_iter == 0 && scheme == NULL
     // && jac_reuse=false
@@ -121,6 +132,8 @@ typedef struct
     void *work;
 
 } sim_rk_opts;
+
+
 
 typedef struct
 {
@@ -146,6 +159,8 @@ typedef struct
     void (*set_nu)(void *dims_, int nu);
     void (*set_nz)(void *dims_, int nz);
 } sim_solver_config;
+
+
 
 //
 int sim_solver_config_calculate_size();

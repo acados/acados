@@ -334,7 +334,6 @@ CHAIN_OBJS =
 ### explicit ###
 # 2 masses
 CHAIN_OBJS += chain_model/vde_chain_nm2.o
-CHAIN_OBJS += chain_model/jac_chain_nm2.o
 CHAIN_OBJS += chain_model/vde_adj_chain_nm2.o
 #CHAIN_OBJS += chain_model/vde_hess_chain_nm2.o
 CHAIN_OBJS += chain_model/ls_cost_nm2.o
@@ -342,7 +341,6 @@ CHAIN_OBJS += chain_model/ls_costN_nm2.o
 CHAIN_OBJS += chain_model/casadi_erk4_chain_nm2.o
 # 3 masses
 CHAIN_OBJS += chain_model/vde_chain_nm3.o
-CHAIN_OBJS += chain_model/jac_chain_nm3.o
 CHAIN_OBJS += chain_model/vde_adj_chain_nm3.o
 #CHAIN_OBJS += chain_model/vde_hess_chain_nm3.o
 CHAIN_OBJS += chain_model/ls_cost_nm3.o
@@ -350,7 +348,6 @@ CHAIN_OBJS += chain_model/ls_costN_nm3.o
 CHAIN_OBJS += chain_model/casadi_erk4_chain_nm3.o
 # 4 masses
 CHAIN_OBJS += chain_model/vde_chain_nm4.o
-CHAIN_OBJS += chain_model/jac_chain_nm4.o
 CHAIN_OBJS += chain_model/vde_adj_chain_nm4.o
 #CHAIN_OBJS += chain_model/vde_hess_chain_nm4.o
 CHAIN_OBJS += chain_model/ls_cost_nm4.o
@@ -358,7 +355,6 @@ CHAIN_OBJS += chain_model/ls_costN_nm4.o
 CHAIN_OBJS += chain_model/casadi_erk4_chain_nm4.o
 # 5 masses
 CHAIN_OBJS += chain_model/vde_chain_nm5.o
-CHAIN_OBJS += chain_model/jac_chain_nm5.o
 CHAIN_OBJS += chain_model/vde_adj_chain_nm5.o
 #CHAIN_OBJS += chain_model/vde_hess_chain_nm5.o
 CHAIN_OBJS += chain_model/ls_cost_nm5.o
@@ -366,7 +362,6 @@ CHAIN_OBJS += chain_model/ls_costN_nm5.o
 CHAIN_OBJS += chain_model/casadi_erk4_chain_nm5.o
 # 6 masses
 CHAIN_OBJS += chain_model/vde_chain_nm6.o
-CHAIN_OBJS += chain_model/jac_chain_nm6.o
 CHAIN_OBJS += chain_model/vde_adj_chain_nm6.o
 #CHAIN_OBJS += chain_model/vde_hess_chain_nm6.o
 CHAIN_OBJS += chain_model/ls_cost_nm6.o

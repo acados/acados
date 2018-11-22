@@ -527,6 +527,7 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     int num_steps = opts->num_steps;
 
     double step = in->T / num_steps;
+    // TODO(FreyJo): this should be an option!
     int update_sens = memory->update_sens;
 
     int *ipiv = workspace->ipiv;
@@ -567,7 +568,7 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
     if (opts->sens_adj)
     {
-        printf("NOT IMPLEMENTED YET - EXITING.");
+        printf("LIFTED_IRK with ADJOINT SENSITIVITIES - NOT IMPLEMENTED YET - EXITING.");
         exit(1);
     }
 
