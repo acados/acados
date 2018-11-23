@@ -17,7 +17,10 @@ static bool check_model(const casadi::Function &model, model_t model_type, const
                         size_t &nx, size_t &nu, size_t &nz)
 {
     /* CHECK inputs */
-    int ix, iu, ixdot, iz = 0;
+    int ix = 0;
+    int iu = 0;
+    int ixdot = 0;
+    int iz = 0;
     int model_n_in = model.n_in();
     if (model_n_in < 1 )
         throw std::invalid_argument(
