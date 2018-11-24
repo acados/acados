@@ -96,88 +96,102 @@ int ocp_qp_osqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
     return size;
 }
 
-// void *ocp_qp_osqp_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
-// {
-//     ocp_qp_dims *dims = dims_;
-//     ocp_qp_osqp_opts *opts = opts_;
-//     ocp_qp_osqp_memory *mem;
 
-//     // char pointer
-//     char *c_ptr = (char *) raw_memory;
 
-//     mem = (ocp_qp_osqp_memory *) c_ptr;
-//     c_ptr += sizeof(ocp_qp_osqp_memory);
+void *ocp_qp_osqp_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
+{
+    ocp_qp_dims *dims = dims_;
+    ocp_qp_osqp_opts *opts = opts_;
+    ocp_qp_osqp_memory *mem;
 
-//     mem->osqp_workspace = (struct d_ocp_qp_ipm_workspace *) c_ptr;
-//     c_ptr += sizeof(struct d_ocp_qp_ipm_workspace);
+    // char pointer
+    char *c_ptr = (char *) raw_memory;
 
-//     struct d_ocp_qp_ipm_workspace *ipm_workspace = mem->osqp_workspace;
+    mem = (ocp_qp_osqp_memory *) c_ptr;
+    c_ptr += sizeof(ocp_qp_osqp_memory);
 
-//     align_char_to(8, &c_ptr);
-//     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    mem->osqp_data = (OSQPData *) c_ptr;
+    c_ptr += sizeof(OSQPData);
 
-//     // ipm workspace structure
-//     d_create_ocp_qp_ipm(dims, opts->osqp_opts, ipm_workspace, c_ptr);
-//     c_ptr += ipm_workspace->memsize;
+    mem->osqp_work = (OSQPWorkspace *) c_ptr;
+    c_ptr += sizeof(OSQPWorkspace);
 
-//    assert((char *)raw_memory + ocp_qp_osqp_memory_calculate_size(config_, dims, opts_) >= c_ptr);
+    // TODO(dimitris): implement
+    // mem->osqp_data->n = n;
+    // mem->osqp_data->m = m;
+    // mem->osqp_data->P = csc_matrix(data->n, data->n, P_nnz, P_x, P_i, P_p);
+    // mem->osqp_data->q = q;
+    // mem->osqp_data->A = csc_matrix(data->m, data->n, A_nnz, A_x, A_i, A_p);
+    // mem->osqp_data->l = l;
+    // mem->osqp_data->u = u;
 
-//     return mem;
-// }
+    mem->osqp_work = osqp_setup(mem->osqp_data, opts->osqp_opts);
 
-// /************************************************
-//  * workspace
-//  ************************************************/
+    assert((char *)raw_memory + ocp_qp_osqp_memory_calculate_size(config_, dims, opts_) == c_ptr);
 
-// int ocp_qp_osqp_workspace_calculate_size(void *config_, void *dims_, void *opts_) { return 0; }
-// /************************************************
-//  * functions
-//  ************************************************/
+    return mem;
+}
 
-// int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
-// {
-//     ocp_qp_in *qp_in = qp_in_;
-//     ocp_qp_out *qp_out = qp_out_;
+/************************************************
+ * workspace
+ ************************************************/
 
-//     ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
-//     acados_timer tot_timer, qp_timer;
+int ocp_qp_osqp_workspace_calculate_size(void *config_, void *dims_, void *opts_) { return 0; }
 
-//     acados_tic(&tot_timer);
-//     // cast data structures
-//     ocp_qp_osqp_opts *opts = (ocp_qp_osqp_opts *) opts_;
-//     ocp_qp_osqp_memory *memory = (ocp_qp_osqp_memory *) mem_;
+/************************************************
+ * functions
+ ************************************************/
 
-//     // solve ipm
-//     acados_tic(&qp_timer);
-//     // print_ocp_qp_in(qp_in);
-//     int osqp_status = ...
+int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
+{
+    ocp_qp_in *qp_in = qp_in_;
+    ocp_qp_out *qp_out = qp_out_;
 
-//     info->solve_QP_time = acados_toc(&qp_timer);
-//     info->interface_time = 0;  // there are no conversions for osqp
-//     info->total_time = acados_toc(&tot_timer);
-//     info->num_iter = memory->osqp_workspace->iter;
-//     info->t_computed = 1;
+    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    acados_timer tot_timer, qp_timer, interface_timer;
 
-//     // check exit conditions
-//     int acados_status = osqp_status;
-//     if (osqp_status == 0) acados_status = ACADOS_SUCCESS;
-//     if (osqp_status == 1) acados_status = ACADOS_MAXITER;
-//     if (osqp_status == 2) acados_status = ACADOS_MINSTEP;
-//     return acados_status;
-// }
+    acados_tic(&tot_timer);
+    // cast data structures
+    ocp_qp_osqp_opts *opts = (ocp_qp_osqp_opts *) opts_;
+    ocp_qp_osqp_memory *mem = (ocp_qp_osqp_memory *) mem_;
 
-// void ocp_qp_osqp_config_initialize_default(void *config_)
-// {
-//     qp_solver_config *config = config_;
+    acados_tic(&interface_timer);
+    // TODO(dimitris): convert data to OSQP format
+    info->interface_time = acados_toc(&interface_timer);
 
-//     config->opts_calculate_size = &ocp_qp_osqp_opts_calculate_size;
-//     config->opts_assign = &ocp_qp_osqp_opts_assign;
-//     config->opts_initialize_default = &ocp_qp_osqp_opts_initialize_default;
-//     config->opts_update = &ocp_qp_osqp_opts_update;
-//     config->memory_calculate_size = &ocp_qp_osqp_memory_calculate_size;
-//     config->memory_assign = &ocp_qp_osqp_memory_assign;
-//     config->workspace_calculate_size = &ocp_qp_osqp_workspace_calculate_size;
-//     config->evaluate = &ocp_qp_osqp;
+    acados_tic(&qp_timer);
+    // TODO(dimitris): use update functions to insert new data in OSQP
 
-//     return;
-// }
+    // solve OSQP
+    osqp_solve(mem->osqp_work);
+
+    info->solve_QP_time = acados_toc(&qp_timer);
+    info->total_time = acados_toc(&tot_timer);
+    info->num_iter = -1;  // TODO(dimitris): extract n_iter
+    info->t_computed = 0;
+
+    // // check exit conditions
+    // int acados_status = osqp_status;
+    // if (osqp_status == 0) acados_status = ACADOS_SUCCESS;
+    // if (osqp_status == 1) acados_status = ACADOS_MAXITER;
+    // if (osqp_status == 2) acados_status = ACADOS_MINSTEP;
+    // return acados_status;
+}
+
+
+
+void ocp_qp_osqp_config_initialize_default(void *config_)
+{
+    qp_solver_config *config = config_;
+
+    config->opts_calculate_size = &ocp_qp_osqp_opts_calculate_size;
+    config->opts_assign = &ocp_qp_osqp_opts_assign;
+    config->opts_initialize_default = &ocp_qp_osqp_opts_initialize_default;
+    config->opts_update = &ocp_qp_osqp_opts_update;
+    config->memory_calculate_size = &ocp_qp_osqp_memory_calculate_size;
+    config->memory_assign = &ocp_qp_osqp_memory_assign;
+    config->workspace_calculate_size = &ocp_qp_osqp_workspace_calculate_size;
+    config->evaluate = &ocp_qp_osqp;
+
+    return;
+}
