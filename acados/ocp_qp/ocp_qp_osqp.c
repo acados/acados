@@ -69,6 +69,47 @@ static int acados_osqp_num_constr(ocp_qp_dims *dims)
 
 
 
+static int acados_osqp_nnz_P(const ocp_qp_dims *dims)
+{
+    int nnz = 0;
+
+    for (int ii = 0; ii < dims->N + 1; ii++)
+    {
+        nnz += dims->nx[ii] * dims->nx[ii];  // Q
+        nnz += dims->nu[ii] * dims->nu[ii];  // R
+        nnz += dims->nx[ii] * dims->nu[ii];  // S
+    }
+
+    return nnz;
+}
+
+
+
+static int acados_osqp_nnz_A(const ocp_qp_dims *dims)
+{
+    int nnz = 0;
+
+    for (int ii = 0; ii < dims->N + 1; ii++)
+    {
+        // inequality constraints
+        nnz += dims->nb[ii];  // eye
+        nnz += dims->ng[ii]*dims->nx[ii]; // C
+        nnz += dims->ng[ii]*dims->nu[ii]; // D
+
+        // equality constraints
+        if (ii > 0)
+        {
+            nnz += dims->nx[ii] * dims->nx[ii-1];  // A
+            nnz += dims->nx[ii] * dims->nu[ii-1];  // B
+            nnz += dims->nx[ii];  // eye
+        }
+    }
+
+    return nnz;
+}
+
+
+
 static void acados_osqp_initialize_data(ocp_qp_dims *dims, ocp_qp_osqp_memory *mem)
 {
     OSQPData *data = mem->osqp_data;
@@ -148,15 +189,26 @@ int ocp_qp_osqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
     int n = acados_osqp_num_vars(dims);
     int m = acados_osqp_num_constr(dims);
 
+    int P_nnz = acados_osqp_nnz_P(dims);
+    int A_nnz = acados_osqp_nnz_A(dims);
+
     int size = 0;
     size += sizeof(ocp_qp_osqp_memory);
 
-    size += 1*n*sizeof(double);  // q
-    size += 2*m*sizeof(double);  // l, u
+    size += 1*n*sizeof(c_float);  // q
+    size += 2*m*sizeof(c_float);  // l, u
+
+    size += P_nnz*sizeof(c_float);  // P_x
+    size += P_nnz*sizeof(c_int);  // P_i
+    size += (n+1)*sizeof(c_int);  // P_p
+
+    size += A_nnz*sizeof(c_float);  // A_x
+    size += A_nnz*sizeof(c_int);  // A_i
+    size += (m+1)*sizeof(c_int);  // A_p
 
     size += sizeof(OSQPData);
 
-    size += 1 * 8;
+    size += 3 * 8;
 
     return size;
 }
@@ -178,14 +230,46 @@ void *ocp_qp_osqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     mem = (ocp_qp_osqp_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_osqp_memory);
 
+    mem->P_nnz = acados_osqp_nnz_P(dims);
+    mem->A_nnz = acados_osqp_nnz_A(dims);
+
     align_char_to(8, &c_ptr);
 
-    assign_and_advance_double(n, &mem->q, &c_ptr);
-    assign_and_advance_double(m, &mem->l, &c_ptr);
-    assign_and_advance_double(m, &mem->u, &c_ptr);
+    // doubles
+    mem->q = (c_float *) c_ptr;
+    c_ptr += n*sizeof(c_float);
+
+    mem->l = (c_float *) c_ptr;
+    c_ptr += m*sizeof(c_float);
+
+    mem->u = (c_float *) c_ptr;
+    c_ptr += m*sizeof(c_float);
+
+    mem->P_x = (c_float *) c_ptr;
+    c_ptr += (mem->P_nnz)*sizeof(c_float);
+
+    mem->A_x = (c_float *) c_ptr;
+    c_ptr += (mem->A_nnz)*sizeof(c_float);
+
+    // ints
+    mem->P_i = (c_int *) c_ptr;
+    c_ptr += (mem->P_nnz)*sizeof(c_int);
+
+    mem->P_p = (c_int *) c_ptr;
+    c_ptr += (n+1)*sizeof(c_int);
+
+    mem->A_i = (c_int *) c_ptr;
+    c_ptr += (mem->A_nnz)*sizeof(c_int);
+
+    mem->A_p = (c_int *) c_ptr;
+    c_ptr += (m+1)*sizeof(c_int);
+
+    align_char_to(8, &c_ptr);
 
     mem->osqp_data = (OSQPData *) c_ptr;
     c_ptr += sizeof(OSQPData);
+
+    align_char_to(8, &c_ptr);
 
     mem->osqp_work = (OSQPWorkspace *) c_ptr;
     c_ptr += sizeof(OSQPWorkspace);
