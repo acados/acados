@@ -39,6 +39,9 @@ typedef struct ocp_qp_osqp_opts_
 
 typedef struct ocp_qp_osqp_memory_
 {
+    double *q;
+    double *l;
+    double *u;
     OSQPData *osqp_data;
     OSQPWorkspace *osqp_work;
 } ocp_qp_osqp_memory;

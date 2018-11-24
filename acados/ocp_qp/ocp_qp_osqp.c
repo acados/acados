@@ -30,6 +30,61 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+
+/************************************************
+ * helper functions
+ ************************************************/
+
+static int acados_osqp_num_vars(ocp_qp_dims *dims)
+{
+    int n = 0;
+
+    for (int ii = 0; ii < dims->N + 1; ii++)
+    {
+        n += dims->nx[ii] + dims->nu[ii];
+    }
+
+    return n;
+}
+
+
+
+static int acados_osqp_num_constr(ocp_qp_dims *dims)
+{
+    int m = 0;
+
+    for (int ii = 0; ii < dims->N + 1; ii++)
+    {
+        m += dims->nb[ii];
+        m += dims->ng[ii];
+
+        if (ii > 0)
+        {
+            m += dims->nx[ii];
+        }
+    }
+
+    return m;
+}
+
+
+
+static void acados_osqp_initialize_data(ocp_qp_dims *dims, ocp_qp_osqp_memory *mem)
+{
+    OSQPData *data = mem->osqp_data;
+
+    data->n = acados_osqp_num_vars(dims);
+    data->m = acados_osqp_num_constr(dims);
+
+    mem->osqp_data->q = mem->q;
+    mem->osqp_data->l = mem->l;
+    mem->osqp_data->u = mem->u;
+
+    // mem->osqp_data->P = csc_matrix(data->n, data->n, P_nnz, P_x, P_i, P_p);
+    // mem->osqp_data->A = csc_matrix(data->m, data->n, A_nnz, A_x, A_i, A_p);
+}
+
+
 /************************************************
  * opts
  ************************************************/
@@ -88,10 +143,20 @@ void ocp_qp_osqp_opts_update(void *config_, void *dims_, void *opts_)
 
 int ocp_qp_osqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
+    ocp_qp_dims *dims = dims_;
+
+    int n = acados_osqp_num_vars(dims);
+    int m = acados_osqp_num_constr(dims);
+
     int size = 0;
     size += sizeof(ocp_qp_osqp_memory);
 
+    size += 1*n*sizeof(double);  // q
+    size += 2*m*sizeof(double);  // l, u
+
     size += sizeof(OSQPData);
+
+    size += 1 * 8;
 
     return size;
 }
@@ -104,11 +169,20 @@ void *ocp_qp_osqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     ocp_qp_osqp_opts *opts = opts_;
     ocp_qp_osqp_memory *mem;
 
+    int n = acados_osqp_num_vars(dims);
+    int m = acados_osqp_num_constr(dims);
+
     // char pointer
     char *c_ptr = (char *) raw_memory;
 
     mem = (ocp_qp_osqp_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_osqp_memory);
+
+    align_char_to(8, &c_ptr);
+
+    assign_and_advance_double(n, &mem->q, &c_ptr);
+    assign_and_advance_double(m, &mem->l, &c_ptr);
+    assign_and_advance_double(m, &mem->u, &c_ptr);
 
     mem->osqp_data = (OSQPData *) c_ptr;
     c_ptr += sizeof(OSQPData);
@@ -116,18 +190,12 @@ void *ocp_qp_osqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     mem->osqp_work = (OSQPWorkspace *) c_ptr;
     c_ptr += sizeof(OSQPWorkspace);
 
-    // TODO(dimitris): implement
-    // mem->osqp_data->n = n;
-    // mem->osqp_data->m = m;
-    // mem->osqp_data->P = csc_matrix(data->n, data->n, P_nnz, P_x, P_i, P_p);
-    // mem->osqp_data->q = q;
-    // mem->osqp_data->A = csc_matrix(data->m, data->n, A_nnz, A_x, A_i, A_p);
-    // mem->osqp_data->l = l;
-    // mem->osqp_data->u = u;
+    acados_osqp_initialize_data(dims, mem);
 
+    // TODO(dimitris): replace this function because it uses malloc internally
     mem->osqp_work = osqp_setup(mem->osqp_data, opts->osqp_opts);
 
-    assert((char *)raw_memory + ocp_qp_osqp_memory_calculate_size(config_, dims, opts_) == c_ptr);
+    assert((char *)raw_memory + ocp_qp_osqp_memory_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return mem;
 }
