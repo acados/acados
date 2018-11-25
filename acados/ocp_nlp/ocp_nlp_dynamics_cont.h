@@ -60,7 +60,7 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config, void *dims, int nx, int
                                            int nu1, int nz);
 
 //
-void ocp_nlp_dynamics_cont_dims_set(void *dims_, char *field, int* value);
+void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, char *field, int* value);
 
 /************************************************
  * options

@@ -65,25 +65,7 @@ typedef struct
                                void *work);
     void (*config_initialize_default)(void *config);
     // dimension setters
-    void (*set_nx)(void *dims_, int nx);
-    void (*set_nu)(void *dims_, int nu);
-    void (*set_nbx)(void *dims_, int nbx);
-    void (*set_nbu)(void *dims_, int nbu);
-    void (*set_ng)(void *dims_, int ng);
-    void (*set_nh)(void *dims_, int nh);
-    void (*set_ns)(void *dims_, int ns);
-    void (*set_np)(void *dims_, int np);
-    // dimension getters
-    void (*get_nx)(void *dims_, int *nx);
-    void (*get_nu)(void *dims_, int *nu);
-    void (*get_nbx)(void *dims_, int *nbx);
-    void (*get_nbu)(void *dims_, int *nbu);
-    void (*get_nb)(void *dims_, int *nb);
-    void (*get_ng)(void *dims_, int *ng);
-    void (*get_nh)(void *dims_, int *nh);
-    void (*get_ns)(void *dims_, int *ns);
-    void (*get_np)(void *dims_, int *np);
-
+    void (*set_dims)(void *config_, void *dims_, char *field, int *value);
 } ocp_nlp_constraints_config;
 
 //

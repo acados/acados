@@ -56,27 +56,6 @@ void *ocp_nlp_constraints_bgh_dims_assign(void *config, void *raw_memory);
 void ocp_nlp_constraints_bgh_dims_initialize(void *config, void *dims, int nx, int nu, int nbx,
                                          int nbu, int ng, int nh, int dummy0, int ns);
 
-// dimension setters
-void ocp_nlp_constraints_bgh_set_nx(void *dims_, int nx);
-void ocp_nlp_constraints_bgh_set_nu(void *dims_, int nu);
-void ocp_nlp_constraints_bgh_set_nz(void *dims_, int nz);
-void ocp_nlp_constraints_bgh_set_nbx(void *dims_, int nbx);
-void ocp_nlp_constraints_bgh_set_nbu(void *dims_, int nbu);
-void ocp_nlp_constraints_bgh_set_ng(void *dims_, int ng);
-void ocp_nlp_constraints_bgh_set_nh(void *dims_, int nh);
-void ocp_nlp_constraints_bgh_set_ns(void *dims_, int ns);
-void ocp_nlp_constraints_bgh_set_np(void *dims_, int np);
-// dimension getters
-void ocp_nlp_constraints_bgh_get_nx(void *dims_, int *nx);
-void ocp_nlp_constraints_bgh_get_nu(void *dims_, int *nu);
-void ocp_nlp_constraints_bgh_get_nz(void *dims_, int *nz);
-void ocp_nlp_constraints_bgh_get_nbx(void *dims_, int *nbx);
-void ocp_nlp_constraints_bgh_get_nbu(void *dims_, int *nbu);
-void ocp_nlp_constraints_bgh_get_nb(void *dims_, int *nb);
-void ocp_nlp_constraints_bgh_get_ng(void *dims_, int *ng);
-void ocp_nlp_constraints_bgh_get_nh(void *dims_, int *nh);
-void ocp_nlp_constraints_bgh_get_ns(void *dims_, int *ns);
-void ocp_nlp_constraints_bgh_get_np(void *dims_, int *np);
 
 /************************************************
  * model

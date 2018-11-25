@@ -93,102 +93,75 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config_, void *dims_, int nx, i
 }
 
 
-
-
-// getters
-// static void ocp_nlp_dynamics_cont_get_nx(void *dims_, int *nx)
-// {
-//     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-//     *nx = dims->nx;
-// }
-
-// static void ocp_nlp_dynamics_cont_get_nx1(void *dims_, int *nx1)
-// {
-//     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-//     *nx1 = dims->nx1;
-// }
-
-// static void ocp_nlp_dynamics_cont_get_nz(void *dims_, int *nz)
-// {
-//     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-//     *nz = dims->nz;
-// }
-
-// static void ocp_nlp_dynamics_cont_get_nu(void *dims_, int *nu)
-// {
-//     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-//     *nu = dims->nu;
-// }
-
-// static void ocp_nlp_dynamics_cont_get_nu1(void *dims_, int *nu1)
-// {
-//     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-//     *nu1 = dims->nu1;
-// }
-
-
 // setters
-static void ocp_nlp_dynamics_cont_set_nx(void *dims_, int *nx)
+static void ocp_nlp_dynamics_cont_set_nx(void *config_, void *dims_, int *nx)
 {
     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
     dims->nx = *nx;
+
+    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+    sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+    sim_config->set_nx(dims->sim, *nx);
 }
 
-static void ocp_nlp_dynamics_cont_set_nx1(void *dims_, int *nx1)
+static void ocp_nlp_dynamics_cont_set_nx1(void *config_, void *dims_, int *nx1)
 {
     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
     dims->nx1 = *nx1;
 }
 
-static void ocp_nlp_dynamics_cont_set_nz(void *dims_, int *nz)
+static void ocp_nlp_dynamics_cont_set_nz(void *config_, void *dims_, int *nz)
 {
     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
     dims->nz = *nz;
+
+    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+    sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+    sim_config->set_nz(dims->sim, *nz);
 }
 
-static void ocp_nlp_dynamics_cont_set_nu(void *dims_, int *nu)
+static void ocp_nlp_dynamics_cont_set_nu(void *config_, void *dims_, int *nu)
 {
     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
     dims->nu = *nu;
+
+    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+    sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+    sim_config->set_nu(dims->sim, *nu);
 }
 
-static void ocp_nlp_dynamics_cont_set_nu1(void *dims_, int *nu1)
+static void ocp_nlp_dynamics_cont_set_nu1(void *config_, void *dims_, int *nu1)
 {
     ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
     dims->nu1 = *nu1;
 }
 
-void ocp_nlp_dynamics_cont_dims_set(void *dims_, char *field, int* value)
+void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, char *field, int* value)
 {
-    // char *token;
-//    char field_cpy[MAX_STR_LEN];
-//    strcpy(field_cpy, field);
-//    char *ptr_to_dim_cpy = &field_cpy[0];
-    // token = strsep_acados(&ptr_to_dim_cpy, ".");
-    // int test = strcmp(dim, "nx");
     if (!strcmp(field, "nx"))
 	{
-        ocp_nlp_dynamics_cont_set_nx(dims_, value);
+        ocp_nlp_dynamics_cont_set_nx(config_, dims_, value);
 	}
     else if (!strcmp(field, "nx1"))
 	{
-        ocp_nlp_dynamics_cont_set_nx1(dims_, value);
+        ocp_nlp_dynamics_cont_set_nx1(config_, dims_, value);
 	}
     else if (!strcmp(field, "nz"))
 	{
-        ocp_nlp_dynamics_cont_set_nz(dims_, value);
+        ocp_nlp_dynamics_cont_set_nz(config_, dims_, value);
 	}
     else if (!strcmp(field, "nu"))
 	{
-        ocp_nlp_dynamics_cont_set_nu(dims_, value);
+        ocp_nlp_dynamics_cont_set_nu(config_, dims_, value);
 	}
     else if (!strcmp(field, "nu1"))
 	{
-        ocp_nlp_dynamics_cont_set_nu1(dims_, value);
+        ocp_nlp_dynamics_cont_set_nu1(config_, dims_, value);
 	}
     else
 	{
-        assert(0 == 1);  // dimension type not available in module
+        printf("\nerror: dimension type not available in module\n");
+        exit(1);
 	}
 }
 

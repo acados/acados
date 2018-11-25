@@ -296,11 +296,23 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
     // dynamics
     for (ii = 0; ii < N; ii++)
     {
-        char field[] = "nz";
-//        printf(field);
-        config->dynamics[ii]->dims_initialize(config->dynamics[ii], dims->dynamics[ii], nx[ii],
-                                              nu[ii], nx[ii + 1], nu[ii + 1], nz[ii]);
-        config->dynamics[ii]->set_dims(dims->dynamics[ii], field, &nx[ii]);
+        // config->dynamics[ii]->dims_initialize(config->dynamics[ii], dims->dynamics[ii], nx[ii],
+                                            //   nu[ii], nx[ii + 1], nu[ii + 1], nz[ii]);
+
+        char field[MAX_STR_LEN] = "nx";
+        config->dynamics[ii]->set_dims(config->dynamics[ii], dims->dynamics[ii], field, &nx[ii]);
+
+        strcpy(field, "nu");
+        config->dynamics[ii]->set_dims(config->dynamics[ii], dims->dynamics[ii], field, &nu[ii]);
+
+        strcpy(field, "nz");
+        config->dynamics[ii]->set_dims(config->dynamics[ii], dims->dynamics[ii], field, &nz[ii]);
+
+        strcpy(field, "nx1");
+        config->dynamics[ii]->set_dims(config->dynamics[ii], dims->dynamics[ii], field, &nx[ii+1]);
+
+        strcpy(field, "nu1");
+        config->dynamics[ii]->set_dims(config->dynamics[ii], dims->dynamics[ii], field, &nu[ii+1]);
     }
 
     // cost
@@ -315,15 +327,30 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
         // config->constraints[ii]->dims_initialize(config->constraints[ii], dims->constraints[ii],
         //                                          nx[ii], nu[ii], nbx[ii], nbu[ii], ng[ii], nh[ii],
         //                                          nq[ii], ns[ii]);
-        config->constraints[ii]->set_nx(dims->constraints[ii], nx[ii]);
-        config->constraints[ii]->set_nu(dims->constraints[ii], nu[ii]);
-        config->constraints[ii]->set_ng(dims->constraints[ii], ng[ii]);
-        config->constraints[ii]->set_nh(dims->constraints[ii], nh[ii]);
-        config->constraints[ii]->set_ns(dims->constraints[ii], ns[ii]);
-        config->constraints[ii]->set_nbx(dims->constraints[ii], nbx[ii]);
-        config->constraints[ii]->set_nbu(dims->constraints[ii], nbu[ii]);
-        config->constraints[ii]->set_np(dims->constraints[ii], nq[ii]);
 
+        char field[MAX_STR_LEN] = "nx";
+        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii], field, &nx[ii]);
+
+        strcpy(field, "nu");
+        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii], field, &nu[ii]);
+
+        strcpy(field, "nbx");
+        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii], field, &nbx[ii]);
+
+        strcpy(field, "nbu");
+        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii], field, &nbu[ii]);
+    
+        strcpy(field, "ng");
+        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii], field, &ng[ii]);
+
+        strcpy(field, "nh");
+        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii], field, &nh[ii]);
+
+        strcpy(field, "np");  // TODO(oj): naming inconcistency nq vs np
+        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii], field, &nq[ii]);
+
+        strcpy(field, "ns");
+        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii], field, &ns[ii]);
     }
 
     dims->qp_solver->N = N;
