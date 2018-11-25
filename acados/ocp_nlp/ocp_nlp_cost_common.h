@@ -39,6 +39,7 @@ typedef struct
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
     void (*dims_initialize)(void *config, void *dims, int nx, int nu, int ny, int ns);
+    void (*set_dims)(void *config_, void *dims_, char *field, int *value);
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
     int (*opts_calculate_size)(void *config, void *dims);

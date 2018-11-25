@@ -65,6 +65,61 @@ void ocp_nlp_cost_nls_dims_initialize(void *config_, void *dims_, int nx, int nu
     return;
 }
 
+
+static void ocp_nlp_cost_nls_set_nx(void *config_, void *dims_, int *nx)
+{
+    ocp_nlp_cost_nls_dims *dims = (ocp_nlp_cost_nls_dims *) dims_;
+    dims->nx = *nx;
+}
+
+
+static void ocp_nlp_cost_nls_set_nu(void *config_, void *dims_, int *nu)
+{
+    ocp_nlp_cost_nls_dims *dims = (ocp_nlp_cost_nls_dims *) dims_;
+    dims->nu = *nu;
+}
+
+
+static void ocp_nlp_cost_nls_set_ny(void *config_, void *dims_, int *ny)
+{
+    ocp_nlp_cost_nls_dims *dims = (ocp_nlp_cost_nls_dims *) dims_;
+    dims->ny = *ny;
+}
+
+
+static void ocp_nlp_cost_nls_set_ns(void *config_, void *dims_, int *ns)
+{
+    ocp_nlp_cost_nls_dims *dims = (ocp_nlp_cost_nls_dims *) dims_;
+    dims->ns = *ns;
+}
+
+
+void ocp_nlp_cost_nls_dims_set(void *config_, void *dims_, char *field, int* value)
+{
+    if (!strcmp(field, "nx"))
+    {
+        ocp_nlp_cost_nls_set_nx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        ocp_nlp_cost_nls_set_nu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "ny"))
+    {
+        ocp_nlp_cost_nls_set_ny(config_, dims_, value);
+    }
+    else if (!strcmp(field, "ns"))
+    {
+        ocp_nlp_cost_nls_set_ns(config_, dims_, value);
+    }
+    else
+    {
+        printf("\nerror: dimension type not available in module\n");
+        exit(1);
+    }
+}
+
+
 /************************************************
  * model
  ************************************************/
@@ -479,6 +534,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_cost_nls_dims_calculate_size;
     config->dims_assign = &ocp_nlp_cost_nls_dims_assign;
     config->dims_initialize = &ocp_nlp_cost_nls_dims_initialize;
+    config->set_dims = &ocp_nlp_cost_nls_dims_set;
     config->model_calculate_size = &ocp_nlp_cost_nls_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_nls_model_assign;
     config->opts_calculate_size = &ocp_nlp_cost_nls_opts_calculate_size;

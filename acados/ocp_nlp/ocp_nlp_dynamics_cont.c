@@ -139,30 +139,30 @@ static void ocp_nlp_dynamics_cont_set_nu1(void *config_, void *dims_, int *nu1)
 void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, char *field, int* value)
 {
     if (!strcmp(field, "nx"))
-	{
+    {
         ocp_nlp_dynamics_cont_set_nx(config_, dims_, value);
-	}
+    }
     else if (!strcmp(field, "nx1"))
-	{
+    {
         ocp_nlp_dynamics_cont_set_nx1(config_, dims_, value);
-	}
+    }
     else if (!strcmp(field, "nz"))
-	{
+    {
         ocp_nlp_dynamics_cont_set_nz(config_, dims_, value);
-	}
+    }
     else if (!strcmp(field, "nu"))
-	{
+    {
         ocp_nlp_dynamics_cont_set_nu(config_, dims_, value);
-	}
+    }
     else if (!strcmp(field, "nu1"))
-	{
+    {
         ocp_nlp_dynamics_cont_set_nu1(config_, dims_, value);
-	}
+    }
     else
-	{
+    {
         printf("\nerror: dimension type not available in module\n");
         exit(1);
-	}
+    }
 }
 
 /************************************************

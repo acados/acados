@@ -318,15 +318,27 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
     // cost
     for (ii = 0; ii <= N; ii++)
     {
-        config->cost[ii]->dims_initialize(config->cost[ii], dims->cost[ii], nx[ii], nu[ii], ny[ii],
-                                          ns[ii]);
+        // config->cost[ii]->dims_initialize(config->cost[ii], dims->cost[ii], nx[ii], nu[ii], ny[ii],
+        //                                   ns[ii]);
+
+        char field[MAX_STR_LEN] = "nx";
+        config->cost[ii]->set_dims(config->cost[ii], dims->cost[ii], field, &nx[ii]);
+
+        strcpy(field, "nu");
+        config->cost[ii]->set_dims(config->cost[ii], dims->cost[ii], field, &nu[ii]);
+
+        strcpy(field, "ny");
+        config->cost[ii]->set_dims(config->cost[ii], dims->cost[ii], field, &ny[ii]);
+
+        strcpy(field, "ns");
+        config->cost[ii]->set_dims(config->cost[ii], dims->cost[ii], field, &ns[ii]);
     }
 
     for (ii = 0; ii <= N; ii++)
     {
         // config->constraints[ii]->dims_initialize(config->constraints[ii], dims->constraints[ii],
-        //                                          nx[ii], nu[ii], nbx[ii], nbu[ii], ng[ii], nh[ii],
-        //                                          nq[ii], ns[ii]);
+                                                //  nx[ii], nu[ii], nbx[ii], nbu[ii], ng[ii],
+                                                //  nh[ii], nq[ii], ns[ii]);
 
         char field[MAX_STR_LEN] = "nx";
         config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii], field, &nx[ii]);
@@ -339,7 +351,7 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
 
         strcpy(field, "nbu");
         config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii], field, &nbu[ii]);
-    
+
         strcpy(field, "ng");
         config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii], field, &ng[ii]);
 

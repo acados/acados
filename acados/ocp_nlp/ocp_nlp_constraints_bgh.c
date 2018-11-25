@@ -136,42 +136,42 @@ static void ocp_nlp_constraints_bgh_set_np(void *config_, void *dims_, int *np)
 void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, char *field, int* value)
 {
     if (!strcmp(field, "nx"))
-	{
+    {
         ocp_nlp_constraints_bgh_set_nx(config_, dims_, value);
-	}
+    }
     else if (!strcmp(field, "nu"))
-	{
+    {
         ocp_nlp_constraints_bgh_set_nu(config_, dims_, value);
-	}
+    }
     else if (!strcmp(field, "nbx"))
-	{
+    {
         ocp_nlp_constraints_bgh_set_nbx(config_, dims_, value);
-	}
+    }
     else if (!strcmp(field, "nbu"))
-	{
+    {
         ocp_nlp_constraints_bgh_set_nbu(config_, dims_, value);
-	}
+    }
     else if (!strcmp(field, "ng"))
-	{
+    {
         ocp_nlp_constraints_bgh_set_ng(config_, dims_, value);
-	}
+    }
     else if (!strcmp(field, "nh"))
-	{
+    {
         ocp_nlp_constraints_bgh_set_nh(config_, dims_, value);
-	}
+    }
     else if (!strcmp(field, "ns"))
-	{
+    {
         ocp_nlp_constraints_bgh_set_ns(config_, dims_, value);
-	}
+    }
     else if (!strcmp(field, "np"))
-	{
+    {
         ocp_nlp_constraints_bgh_set_np(config_, dims_, value);
-	}
+    }
     else
-	{
+    {
         printf("\nerror: dimension type not available in module\n");
         exit(1);
-	}
+    }
 }
 
 /* dimension getters */
