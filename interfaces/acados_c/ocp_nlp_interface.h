@@ -95,12 +95,15 @@ typedef struct
 } ocp_nlp_solver;
 
 
-
-//
+/* plan */
 ocp_nlp_solver_plan *ocp_nlp_plan_create(int N);
+
+/* config */
 //
 ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N);
-//
+//  TODO(oj): implement
+void ocp_nlp_config_free(ocp_nlp_solver_plan plan, void *config_, int N);
+
 ocp_nlp_dims *ocp_nlp_dims_create(void *config);
 //
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);

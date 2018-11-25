@@ -99,6 +99,7 @@ if (solver_name < FULL_CONDENSING_HPIPM)
     }
 }
 
+
 ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan)
 {
     int bytes = ocp_qp_xcond_solver_config_calculate_size();
@@ -109,6 +110,13 @@ ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan)
 
     return solver_config;
 }
+
+
+void ocp_qp_config_free(void *config)
+{
+    free(config);
+}
+
 
 ocp_qp_dims *ocp_qp_dims_create(int N)
 {

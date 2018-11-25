@@ -42,11 +42,13 @@ typedef struct
     void *work;
 } sim_solver;
 
+/* config */
 //
 sim_solver_config *sim_config_create(sim_solver_plan plan);
 //
 void sim_config_free(void *config);
 
+/* dims */
 //
 void *sim_dims_create(void *config_);
 //

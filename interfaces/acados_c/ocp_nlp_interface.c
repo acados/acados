@@ -241,6 +241,31 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
     return config;
 }
 
+void ocp_nlp_config_free(ocp_nlp_solver_plan plan, void *config_, int N)
+{
+    ocp_nlp_solver_config *config = config_;
+    // qp
+    ocp_qp_config_free(config->qp_solver);
+    // Dynamics
+    for (int i = 0; i < N; ++i)
+    {
+        switch (plan.nlp_dynamics[i])
+        {
+            case CONTINUOUS_MODEL:
+                sim_config_free(config->dynamics[i]->sim_solver);
+                break;
+            case DISCRETE_MODEL:
+                break;
+            case 100:
+                printf("\nForgot to plan dynamics?\n\n");
+                exit(1);
+            default:
+                printf("Dynamics not available!\n");
+                exit(1);
+        }
+    }
+    free(config_);
+}
 
 /* ocp_nlp_dims */
 ocp_nlp_dims *ocp_nlp_dims_create(void *config_)

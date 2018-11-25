@@ -1590,7 +1590,7 @@ int main()
 	free(nlp_out);
 	free(solver);
 	free(dims);
-	free(config);
+	ocp_nlp_config_free(*plan, config, NN);
 
 	free(xref);
 	free(diag_cost_x);
