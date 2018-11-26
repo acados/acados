@@ -107,9 +107,13 @@ int main()
 
     // dimensions
     void *dims = sim_dims_create(config);
-    config->set_nx(dims, nx);
-    config->set_nu(dims, nu);
-    config->set_nz(dims, nz);
+
+    char field[MAX_STR_LEN] = "nx";
+    sim_dims_set(config, dims, field, &nx);
+    strcpy(field, "nu");
+    sim_dims_set(config, dims, field, &nu);
+    strcpy(field, "nz");
+    sim_dims_set(config, dims, field, &nz);
 
     // options
     void *opts_ = sim_opts_create(config, dims);

@@ -85,9 +85,12 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config_, void *dims_, int nx, i
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
     sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
 
-    sim_config->set_nx(dims->sim, nx);
-    sim_config->set_nu(dims->sim, nu);
-    sim_config->set_nz(dims->sim, nz);
+    char field[MAX_STR_LEN] = "nx";
+    sim_dims_set(sim_config, dims->sim, field, &nx);
+    strcpy(field, "nu");
+    sim_dims_set(sim_config, dims->sim, field, &nu);
+    strcpy(field, "nz");
+    sim_dims_set(sim_config, dims->sim, field, &nz);
 
     return;
 }
@@ -101,7 +104,9 @@ static void ocp_nlp_dynamics_cont_set_nx(void *config_, void *dims_, int *nx)
 
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
     sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
-    sim_config->set_nx(dims->sim, *nx);
+
+    char field[MAX_STR_LEN] = "nx";
+    sim_dims_set(sim_config, dims->sim, field, nx);
 }
 
 static void ocp_nlp_dynamics_cont_set_nx1(void *config_, void *dims_, int *nx1)
@@ -117,7 +122,9 @@ static void ocp_nlp_dynamics_cont_set_nz(void *config_, void *dims_, int *nz)
 
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
     sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
-    sim_config->set_nz(dims->sim, *nz);
+
+    char field[MAX_STR_LEN] = "nz";
+    sim_dims_set(sim_config, dims->sim, field, nz);
 }
 
 static void ocp_nlp_dynamics_cont_set_nu(void *config_, void *dims_, int *nu)
@@ -127,7 +134,9 @@ static void ocp_nlp_dynamics_cont_set_nu(void *config_, void *dims_, int *nu)
 
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
     sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
-    sim_config->set_nu(dims->sim, *nu);
+
+    char field[MAX_STR_LEN] = "nu";
+    sim_dims_set(sim_config, dims->sim, field, nu);
 }
 
 static void ocp_nlp_dynamics_cont_set_nu1(void *config_, void *dims_, int *nu1)

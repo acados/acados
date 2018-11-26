@@ -78,51 +78,51 @@ void ocp_nlp_constraints_bgh_dims_initialize(void *config_, void *dims_, int nx,
 
 
 /* dimension setters */
-static void ocp_nlp_constraints_bgh_set_nx(void *config_, void *dims_, int *nx)
+static void ocp_nlp_constraints_bgh_set_nx(void *config_, void *dims_, const int *nx)
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
     dims->nx = *nx;
 }
 
-static void ocp_nlp_constraints_bgh_set_nu(void *config_, void *dims_, int *nu)
+static void ocp_nlp_constraints_bgh_set_nu(void *config_, void *dims_, const int *nu)
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
     dims->nu = *nu;
 }
 
-static void ocp_nlp_constraints_bgh_set_nbx(void *config_, void *dims_, int *nbx)
+static void ocp_nlp_constraints_bgh_set_nbx(void *config_, void *dims_, const int *nbx)
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
     dims->nbx = *nbx;
     dims->nb = *nbx + dims->nbu;
 }
 
-static void ocp_nlp_constraints_bgh_set_nbu(void *config_, void *dims_, int *nbu)
+static void ocp_nlp_constraints_bgh_set_nbu(void *config_, void *dims_, const int *nbu)
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
     dims->nbu = *nbu;
     dims->nb = *nbu + dims->nbx;
 }
 
-static void ocp_nlp_constraints_bgh_set_ng(void *config_, void *dims_, int *ng)
+static void ocp_nlp_constraints_bgh_set_ng(void *config_, void *dims_, const int *ng)
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
     dims->ng = *ng;
 }
 
-static void ocp_nlp_constraints_bgh_set_nh(void *config_, void *dims_, int *nh)
+static void ocp_nlp_constraints_bgh_set_nh(void *config_, void *dims_, const int *nh)
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
     dims->nh = *nh;
 }
 
-static void ocp_nlp_constraints_bgh_set_ns(void *config_, void *dims_, int *ns)
+static void ocp_nlp_constraints_bgh_set_ns(void *config_, void *dims_, const int *ns)
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
     dims->ns = *ns;
 }
 
-static void ocp_nlp_constraints_bgh_set_np(void *config_, void *dims_, int *np)
+static void ocp_nlp_constraints_bgh_set_np(void *config_, void *dims_, const int *np)
 {
     if (*np != 0)
     {
@@ -133,7 +133,7 @@ static void ocp_nlp_constraints_bgh_set_np(void *config_, void *dims_, int *np)
     }
 }
 
-void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, char *field, int* value)
+void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, char *field, const int* value)
 {
     if (!strcmp(field, "nx"))
     {

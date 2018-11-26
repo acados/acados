@@ -58,30 +58,6 @@ void *sim_erk_dims_assign(void *config_, void *raw_memory)
 
 
 
-void sim_erk_set_nx(void *dims_, int nx)
-{
-    sim_erk_dims *dims = (sim_erk_dims *) dims_;
-    dims->nx = nx;
-}
-
-
-
-void sim_erk_set_nu(void *dims_, int nu)
-{
-    sim_erk_dims *dims = (sim_erk_dims *) dims_;
-    dims->nu = nu;
-}
-
-
-
-void sim_erk_set_nz(void *dims_, int nz)
-{
-    sim_erk_dims *dims = (sim_erk_dims *) dims_;
-    dims->nz = nz;
-}
-
-
-
 void sim_erk_get_nx(void *dims_, int *nx)
 {
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
@@ -102,6 +78,52 @@ void sim_erk_get_nz(void *dims_, int *nz)
 {
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
     *nz = dims->nz;
+}
+
+
+static void sim_erk_set_nu(void *config_, void *dims_, const int *nu)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    dims->nu = *nu;
+}
+
+static void sim_erk_set_nx(void *config_, void *dims_, const int *nx)
+{
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+    dims->nx = *nx;
+}
+
+static void sim_erk_set_nz(void *config_, void *dims_, const int *nz)
+{
+    if (*nz != 0)
+    {
+        printf("\nerror: nz != 0\n");
+        printf("algebraic variables not supported by ERK module\n");
+        exit(1);
+    }
+}
+
+
+
+void sim_erk_dims_set(void *config_, void *dims_, char *field, const int *value)
+{
+    if (!strcmp(field, "nx"))
+    {
+        sim_erk_set_nx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        sim_erk_set_nu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        sim_erk_set_nz(config_, dims_, value);
+    }
+    else
+    {
+        printf("\nerror: dimension type not available in module\n");
+        exit(1);
+    }
 }
 
 
@@ -827,9 +849,7 @@ void sim_erk_config_initialize_default(void *config_)
     config->config_initialize_default = &sim_erk_config_initialize_default;
     config->dims_calculate_size = &sim_erk_dims_calculate_size;
     config->dims_assign = &sim_erk_dims_assign;
-    config->set_nx = &sim_erk_set_nx;
-    config->set_nu = &sim_erk_set_nu;
-    config->set_nz = &sim_erk_set_nz;
+    config->set_dims = &sim_erk_dims_set;
     config->get_nx = &sim_erk_get_nx;
     config->get_nu = &sim_erk_get_nu;
     config->get_nz = &sim_erk_get_nz;

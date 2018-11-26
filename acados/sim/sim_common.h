@@ -151,13 +151,11 @@ typedef struct
     void (*config_initialize_default)(void *config);
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
-    // getters & setters
+    void (*set_dims)(void *config_, void *dims_, char *field, const int *value);
     void (*get_nx)(void *dims_, int *nx);
     void (*get_nu)(void *dims_, int *nu);
     void (*get_nz)(void *dims_, int *nz);
-    void (*set_nx)(void *dims_, int nx);
-    void (*set_nu)(void *dims_, int nu);
-    void (*set_nz)(void *dims_, int nz);
+
 } sim_solver_config;
 
 

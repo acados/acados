@@ -261,9 +261,7 @@ int sim_gnsf_dims_calculate_size();
 void *sim_gnsf_dims_assign(void *config_, void *raw_memory);
 
 // get & set functions
-void sim_gnsf_set_nx(void *dims_, int nx);
-void sim_gnsf_set_nu(void *dims_, int nu);
-void sim_gnsf_set_nz(void *dims_, int nz);
+void sim_gnsf_dims_set(void *config_, void *dims_, char *field, const int* value);
 
 void sim_gnsf_get_nx(void *dims_, int *nx);
 void sim_gnsf_get_nu(void *dims_, int *nu);

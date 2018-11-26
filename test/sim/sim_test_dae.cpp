@@ -85,17 +85,15 @@ TEST_CASE("crane_dae_example", "[integrators]")
     vector<std::string> solvers = {"IRK", "GNSF"};
     // initialize dimensions
 
-    const int nx = 9;
-    const int nu = 2;
-    const int nz = 2;
-    const int n_out = 1;    // gnsf split
-    const int ny = 4;
-    const int nuhat = 1;
+    int nx = 9;
+    int nu = 2;
+    int nz = 2;
+    int n_out = 1;    // gnsf split
+    int ny = 4;
+    int nuhat = 1;
 
-    const int nx1 = 5;
-    const int nz1 = 0;
-    const int nx2 = 4;
-    const int nz2 = 2;
+    int nx1 = 5;
+    int nz1 = 0;
 
 
     // generate x0, u_sim
@@ -249,9 +247,12 @@ TEST_CASE("crane_dae_example", "[integrators]")
     void *dims = sim_dims_create(config);
 
     /* set dimensions */
-    config->set_nx(dims, nx);
-    config->set_nu(dims, nu);
-    config->set_nz(dims, nz);
+    char field[MAX_STR_LEN] = "nx";
+    sim_dims_set(config, dims, field, &nx);
+    strcpy(field, "nu");
+    sim_dims_set(config, dims, field, &nu);
+    strcpy(field, "nz");
+    sim_dims_set(config, dims, field, &nz);
 
     // GNSF -- set additional dimensions
     sim_gnsf_dims *gnsf_dim;
@@ -406,13 +407,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
     // d_print_exp_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
 
     /* free */
-    free(config);
-    free(dims);
-    free(opts);
+    sim_config_free(config);
+    sim_dims_free(dims);
+    sim_opts_free(opts);
 
-    free(in);
-    free(out);
-    free(sim_solver);
+    sim_in_free(in);
+    sim_out_free(out);
+    sim_free(sim_solver);
 
 /************************************************
 * test solver loop
@@ -460,10 +461,12 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 sim_solver_config *config = sim_config_create(plan);
 
             /* sim dims */
-                void *dims = sim_dims_create(config);
-                config->set_nx(dims, nx);
-                config->set_nu(dims, nu);
-                config->set_nz(dims, nz);
+                char field[MAX_STR_LEN] = "nx";
+                sim_dims_set(config, dims, field, &nx);
+                strcpy(field, "nu");
+                sim_dims_set(config, dims, field, &nu);
+                strcpy(field, "nz");
+                sim_dims_set(config, dims, field, &nz);
 
                 // GNSF -- set additional dimensions
                 sim_gnsf_dims *gnsf_dim;
@@ -697,13 +700,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
             /************************************************
             * free tested solver
             ************************************************/
-                free(config);
-                free(dims);
-                free(opts);
+                sim_config_free(config);
+                sim_dims_free(dims);
+                sim_opts_free(opts);
 
-                free(in);
-                free(out);
-                free(sim_solver);
+                sim_in_free(in);
+                sim_out_free(out);
+                sim_free(sim_solver);
             }  // end SECTION
             }  // end for
             }  // end SECTION

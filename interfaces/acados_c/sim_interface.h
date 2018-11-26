@@ -54,11 +54,7 @@ void *sim_dims_create(void *config_);
 //
 void sim_dims_free(void *dims);
 //
-void sim_dims_set_nx(sim_solver_config *config, void *dims, int nx);
-//
-void sim_dims_set_nu(sim_solver_config *config, void *dims, int nu);
-//
-void sim_dims_set_nz(sim_solver_config *config, void *dims, int nz);
+void sim_dims_set(sim_solver_config *config, void *dims, char *field, const int* value);
 
 /* in */
 //

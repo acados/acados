@@ -904,10 +904,10 @@ static void sqp_update_variables(void *config_, ocp_nlp_dims *dims, ocp_nlp_out 
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
-    int *nu = dims->nu;
+    // int *nu = dims->nu;
     int *ni = dims->ni;
 
-    ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
+    // ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
     // TODO(all): fix and move where appropriate
     //    for (i = 0; i < N; i++)

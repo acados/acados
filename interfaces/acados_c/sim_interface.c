@@ -96,22 +96,9 @@ void sim_dims_free(void *dims)
 
 
 
-void sim_dims_set_nx(sim_solver_config *config, void *dims, int nx)
+void sim_dims_set(sim_solver_config *config, void *dims, char *field, const int* value)
 {
-    config->set_nx(dims, nx);
-}
-
-
-
-void sim_dims_set_nu(sim_solver_config *config, void *dims, int nu)
-{
-    config->set_nu(dims, nu);
-}
-
-
-void sim_dims_set_nz(sim_solver_config *config, void *dims, int nz)
-{
-    config->set_nz(dims, nz);
+    config->set_dims(config, dims, field, value);
 }
 
 

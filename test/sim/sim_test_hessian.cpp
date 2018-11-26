@@ -235,9 +235,12 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     void *dims = sim_dims_create(config);
 
     /* set dimensions */
-    config->set_nx(dims, nx);
-    config->set_nu(dims, nu);
-    config->set_nz(dims, nz);
+    char field[MAX_STR_LEN] = "nx";
+    sim_dims_set(config, dims, field, &nx);
+    strcpy(field, "nu");
+    sim_dims_set(config, dims, field, &nu);
+    strcpy(field, "nz");
+    sim_dims_set(config, dims, field, &nz);
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);
@@ -400,9 +403,13 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
             /* sim dims */
                 void *dims = sim_dims_create(config);
-                config->set_nx(dims, nx);
-                config->set_nu(dims, nu);
-                config->set_nz(dims, nz);
+                /* set dimensions */
+                char field[MAX_STR_LEN] = "nx";
+                sim_dims_set(config, dims, field, &nx);
+                strcpy(field, "nu");
+                sim_dims_set(config, dims, field, &nu);
+                strcpy(field, "nz");
+                sim_dims_set(config, dims, field, &nz);
 
             /* sim options */
 
@@ -708,9 +715,12 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     void *dims = sim_dims_create(config);
 
     /* set dimensions */
-    config->set_nx(dims, nx);
-    config->set_nu(dims, nu);
-    config->set_nz(dims, nz);
+    char field[MAX_STR_LEN] = "nx";
+    sim_dims_set(config, dims, field, &nx);
+    strcpy(field, "nu");
+    sim_dims_set(config, dims, field, &nu);
+    strcpy(field, "nz");
+    sim_dims_set(config, dims, field, &nz);
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);

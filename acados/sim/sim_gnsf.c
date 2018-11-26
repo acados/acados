@@ -75,22 +75,44 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory)
  * get & set functions
  ************************************************/
 
-void sim_gnsf_set_nx(void *dims_, int nx)
+static void sim_gnsf_set_nu(void *config_, void *dims_, const int *nu)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nx = nx;
+    dims->nu = *nu;
 }
 
-void sim_gnsf_set_nu(void *dims_, int nu)
+static void sim_gnsf_set_nx(void *config_, void *dims_, const int *nx)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nu = nu;
+    dims->nx = *nx;
 }
 
-void sim_gnsf_set_nz(void *dims_, int nz)
+static void sim_gnsf_set_nz(void *config_, void *dims_, const int *nz)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nz = nz;
+    dims->nz = *nz;
+}
+
+
+void sim_gnsf_dims_set(void *config_, void *dims_, char *field, const int* value)
+{
+    if (!strcmp(field, "nx"))
+    {
+        sim_gnsf_set_nx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        sim_gnsf_set_nu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        sim_gnsf_set_nz(config_, dims_, value);
+    }
+    else
+    {
+        printf("\nerror: dimension type not available in module\n");
+        exit(1);
+    }
 }
 
 void sim_gnsf_get_nx(void *dims_, int *nx)
@@ -378,9 +400,9 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
-    int nx      = dims->nx;
+    // int nx      = dims->nx;
     int nu      = dims->nu;
-    int nz      = dims->nz;
+    // int nz      = dims->nz;
     int nx1     = dims->nx1;
     int nz1     = dims->nz1;
     int n_out   = dims->n_out;
@@ -2379,9 +2401,7 @@ void sim_gnsf_config_initialize_default(void *config_)
     // dims
     config->dims_calculate_size = &sim_gnsf_dims_calculate_size;
     config->dims_assign = &sim_gnsf_dims_assign;
-    config->set_nx = &sim_gnsf_set_nx;
-    config->set_nu = &sim_gnsf_set_nu;
-    config->set_nz = &sim_gnsf_set_nz;
+    config->set_dims = &sim_gnsf_dims_set;
     config->get_nx = &sim_gnsf_get_nx;
     config->get_nu = &sim_gnsf_get_nu;
     config->get_nz = &sim_gnsf_get_nz;

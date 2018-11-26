@@ -61,22 +61,44 @@ void *sim_irk_dims_assign(void *config_, void *raw_memory)
     return dims;
 }
 
-void sim_irk_set_nx(void *dims_, int nx)
+static void sim_irk_set_nu(void *config_, void *dims_, const int *nu)
 {
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    dims->nx = nx;
+    dims->nu = *nu;
 }
 
-void sim_irk_set_nu(void *dims_, int nu)
+static void sim_irk_set_nx(void *config_, void *dims_, const int *nx)
 {
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    dims->nu = nu;
+    dims->nx = *nx;
 }
 
-void sim_irk_set_nz(void *dims_, int nz)
+static void sim_irk_set_nz(void *config_, void *dims_, const int *nz)
 {
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    dims->nz = nz;
+    dims->nz = *nz;
+}
+
+
+void sim_irk_dims_set(void *config_, void *dims_, char *field, const int* value)
+{
+    if (!strcmp(field, "nx"))
+    {
+        sim_irk_set_nx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        sim_irk_set_nu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        sim_irk_set_nz(config_, dims_, value);
+    }
+    else
+    {
+        printf("\nerror: dimension type not available in module\n");
+        exit(1);
+    }
 }
 
 void sim_irk_get_nx(void *dims_, int *nx)
@@ -1190,9 +1212,7 @@ void sim_irk_config_initialize_default(void *config_)
     config->model_set_function = &sim_irk_model_set_function;
     config->dims_calculate_size = &sim_irk_dims_calculate_size;
     config->dims_assign = &sim_irk_dims_assign;
-    config->set_nx = &sim_irk_set_nx;
-    config->set_nu = &sim_irk_set_nu;
-    config->set_nz = &sim_irk_set_nz;
+    config->set_dims = &sim_irk_dims_set;
     config->get_nx = &sim_irk_get_nx;
     config->get_nu = &sim_irk_get_nu;
     config->get_nz = &sim_irk_get_nz;
