@@ -1251,10 +1251,13 @@ int main()
 						ext_cost_generic[i].evaluate = &ext_cost_nm6;
 						break;
 					default:
-						printf("\next cost not implemented for this numer of masses\n\n");
+						printf("\nexternal cost not implemented for this numer of masses\n\n");
 						exit(1);
 				}
 				break;
+			default:
+				printf("\ninvalid cost module\n\n");
+				exit(1);	
 		}
 	}
 
@@ -1360,6 +1363,10 @@ int main()
 				assert(i < NN && "externally provided cost not implemented for last stage!");
 
 				break;
+
+			default:
+				printf("\ninvalid cost module\n\n");
+				exit(1);	
 		}
 	}
 
@@ -1398,6 +1405,10 @@ int main()
 			case DISCRETE_MODEL:
 				nlp_set_discrete_model_in_stage(config, nlp_in, i, &erk4_casadi[i]);
 				break;
+
+			default:
+				printf("\ninvalid dynamics module\n\n");
+				exit(1);	
 		}
 	}
 

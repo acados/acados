@@ -1428,6 +1428,10 @@ void setup_and_solve_nlp(int NN,
                         exit(1);
                 }
                 break;
+
+            default:
+                printf("\ncost not correctly specified\n\n");
+                exit(1);
         }
     }
 
@@ -1530,6 +1534,10 @@ void setup_and_solve_nlp(int NN,
                 stage_cost_external->ext_cost = &ext_cost_generic[i];
                 assert(i < NN && "externally provided cost not implemented for last stage!");
                 break;
+
+            default:
+                printf("\ncost not correctly specified\n\n");
+                exit(1);
         }
     }
 
@@ -1586,6 +1594,10 @@ void setup_and_solve_nlp(int NN,
                     dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
                 }
                 break;
+
+            default:
+                printf("\ndynamics not correctly specified\n\n");
+                exit(1);
         }
     }
 

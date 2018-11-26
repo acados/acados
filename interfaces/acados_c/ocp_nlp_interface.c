@@ -78,11 +78,11 @@ static ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
 
     // initialize to default value !=0 to detect empty plans
     for (ii=0; ii <= N; ii++)
-        plan->nlp_cost[ii] = 100;
+        plan->nlp_cost[ii] = INVALID_COST;
     for (ii=0; ii < N; ii++)
-        plan->nlp_dynamics[ii] = 100;
+        plan->nlp_dynamics[ii] = INVALID_MODEL;
     for (ii=0; ii <= N; ii++)
-        plan->nlp_constraints[ii] = 100;
+        plan->nlp_constraints[ii] = INVALID_CONSTRAINT;
 
     return plan;
 }
@@ -190,8 +190,8 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan)
             case EXTERNALLY_PROVIDED:
                 ocp_nlp_cost_external_config_initialize_default(config->cost[i]);
                 break;
-            case 100:
-                printf("\nForgot to plan cost?\n\n");
+            case INVALID_COST:
+                printf("\nInvalid cost module type\nForgot to initialize?\n\n");
                 exit(1);
             default:
                 printf("Cost not available!\n");
@@ -211,8 +211,8 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan)
             case DISCRETE_MODEL:
                 ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i]);
                 break;
-            case 100:
-                printf("\nForgot to plan dynamics?\n\n");
+            case INVALID_MODEL:
+                printf("\nInvalid dynamic module type\nForgot to initialize?\n\n");
                 exit(1);
             default:
                 printf("Dynamics not available!\n");
@@ -231,8 +231,8 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan)
             case BGHP:
                 ocp_nlp_constraints_bghp_config_initialize_default(config->constraints[i]);
                 break;
-            case 100:
-                printf("\nForgot to plan constraints?\n\n");
+            case INVALID_CONSTRAINT:
+                printf("\nInvalid constraint module type\nForgot to initialize?\n\n");
                 exit(1);
             default:
                 printf("\nConstraint not available!\n\n");
@@ -260,8 +260,8 @@ void ocp_nlp_config_free(ocp_nlp_solver_plan plan, void *config_)
                 break;
             case DISCRETE_MODEL:
                 break;
-            case 100:
-                printf("\nForgot to plan dynamics?\n\n");
+            case INVALID_MODEL:
+                printf("\nInvalid dynamics module type\nForgot to initialize?\n\n");
                 exit(1);
             default:
                 printf("Dynamics not available!\n");

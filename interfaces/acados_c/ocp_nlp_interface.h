@@ -35,6 +35,7 @@ typedef enum
 {
     SQP,
     SQP_RTI,
+    INVALID_SCHEME,
 } ocp_nlp_solver_t;
 
 
@@ -44,6 +45,7 @@ typedef enum
     LINEAR_LS,
     NONLINEAR_LS,
     EXTERNALLY_PROVIDED,
+    INVALID_COST,
 } ocp_nlp_cost_t;
 
 
@@ -52,6 +54,7 @@ typedef enum
 {
     CONTINUOUS_MODEL,
     DISCRETE_MODEL,
+    INVALID_MODEL,
 } ocp_nlp_dynamics_t;
 
 
@@ -60,6 +63,7 @@ typedef enum
 {
     BGH,
     BGHP,
+    INVALID_CONSTRAINT,
 } ocp_nlp_constraints_t;
 
 
