@@ -41,7 +41,6 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
 #include "examples/c/chain_model/chain_model.h"
@@ -1367,9 +1366,6 @@ int main()
 	/* dynamics */
 	int set_fun_status;
 
-	// TODO(dimitris): remove after setting function via nlp interface
-	ocp_nlp_dynamics_disc_model *dynamics;
-
 	for (int i=0; i<NN; i++)
 	{
 		switch (plan->nlp_dynamics[i])
@@ -1400,9 +1396,7 @@ int main()
 				break;
 
 			case DISCRETE_MODEL:
-				// TODO(dimitris): do this through the interface and remove header
-				dynamics = nlp_in->dynamics[i];
-				dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
+				nlp_set_discrete_model_in_stage(config, nlp_in, i, &erk4_casadi[i]);
 				break;
 		}
 	}

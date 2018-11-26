@@ -320,6 +320,18 @@ int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int st
 
 
 
+int nlp_set_discrete_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
+                                    void *fun_ptr)
+{
+
+    ocp_nlp_dynamics_disc_model *dynamics = in->dynamics[stage];
+    dynamics->discrete_model = (external_function_generic *) fun_ptr;
+
+    return ACADOS_SUCCESS;
+}
+
+
+
 int nlp_bounds_bgh_set(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
                        const char *identifier, double *values)
 {
