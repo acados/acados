@@ -179,7 +179,7 @@ static void mdlStart(SimStruct *S)
 	for (i = 0; i <= NUM_STAGES; i++)
 		plan->nlp_constraints[i] = BGH;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NUM_STAGES);
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
     // implicit dae
     impl_dae_fun.casadi_fun = &engine_impl_dae_fun;

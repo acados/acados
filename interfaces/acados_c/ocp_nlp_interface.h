@@ -81,6 +81,7 @@ typedef struct
     ocp_nlp_cost_t *nlp_cost;
     ocp_nlp_dynamics_t *nlp_dynamics;
     ocp_nlp_constraints_t *nlp_constraints;
+    int N;
 } ocp_nlp_solver_plan;
 
 
@@ -99,10 +100,9 @@ typedef struct
 ocp_nlp_solver_plan *ocp_nlp_plan_create(int N);
 
 /* config */
-// TODO(oj): suggest to put N into plan -> simplify calls
-ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N);
+ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan);
 //
-void ocp_nlp_config_free(ocp_nlp_solver_plan plan, void *config_, int N);
+void ocp_nlp_config_free(ocp_nlp_solver_plan plan, void *config_);
 
 /* dims */
 ocp_nlp_dims *ocp_nlp_dims_create(void *config_);

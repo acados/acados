@@ -93,6 +93,7 @@ static void ocp_nlp_plan_initialize_default(int N, ocp_nlp_solver_plan *plan)
 {
     plan->nlp_solver = SQP;
     plan->regularization = NO_REGULARIZATION;
+    plan->N = N;
 
     for (int ii = 0; ii <= N; ii++)
     {
@@ -148,8 +149,10 @@ static ocp_nlp_reg_config *ocp_nlp_reg_config_create(ocp_nlp_reg_t plan)
 
 
 /* ocp_nlp_solver_config */
-ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
+ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan)
 {
+    int N = plan.N;
+
     int bytes = ocp_nlp_solver_config_calculate_size(N);
     void *config_mem = acados_calloc(1, bytes);
     ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(N, config_mem);
@@ -240,8 +243,10 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
     return config;
 }
 
-void ocp_nlp_config_free(ocp_nlp_solver_plan plan, void *config_, int N)
+void ocp_nlp_config_free(ocp_nlp_solver_plan plan, void *config_)
 {
+    int N = plan.N;
+
     ocp_nlp_solver_config *config = config_;
     // qp
     ocp_qp_config_free(config->qp_solver);

@@ -1128,7 +1128,7 @@ int main()
 		plan->nlp_constraints[i] = BGH;
 
 	// TODO(dimitris): fix minor memory leak here
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
     * ocp_nlp_dims
@@ -1562,28 +1562,29 @@ int main()
     * free memory
     ************************************************/
 
+	// free memory of the external functions
  	external_function_casadi_free(expl_vde_for);
-	free(expl_vde_for);
-
-	external_function_casadi_free(impl_ode_fun);
-	external_function_casadi_free(impl_ode_fun_jac_x_xdot);
+	external_function_casadi_free_array(NN, impl_ode_fun);
+	external_function_casadi_free_array(NN, impl_ode_fun_jac_x_xdot);
 	external_function_casadi_free_array(NN, impl_ode_fun_jac_x_xdot_u);
-	external_function_casadi_free(impl_ode_jac_x_xdot_u);
-	// TODO(jonny): can 2nd free be avoided?!
+	external_function_casadi_free_array(NN, impl_ode_jac_x_xdot_u);
+	external_function_casadi_free_array(NN, erk4_casadi);
+
+	// free pointers to the external functions
+	free(expl_vde_for);
 	free(impl_ode_fun);
 	free(impl_ode_fun_jac_x_xdot);
 	free(impl_ode_fun_jac_x_xdot_u);
 	free(impl_ode_jac_x_xdot_u);
-
-	external_function_casadi_free(erk4_casadi);
 	free(erk4_casadi);
+
 
 	ocp_nlp_opts_free(nlp_opts);
 	ocp_nlp_in_free(nlp_in);
 	ocp_nlp_out_free(nlp_out);
 	ocp_nlp_free(solver);
 	ocp_nlp_dims_free(dims);
-	ocp_nlp_config_free(*plan, config, NN);
+	ocp_nlp_config_free(*plan, config);
 
 	free(xref);
 	free(diag_cost_x);

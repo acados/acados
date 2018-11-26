@@ -527,7 +527,7 @@ int main()
 	for (int i = 0; i <= NN; i++)
 		plan->nlp_constraints[i] = BGH;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
     * ocp_nlp_dims

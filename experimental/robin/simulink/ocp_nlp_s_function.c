@@ -127,7 +127,7 @@ static void mdlStart(SimStruct *S)
 
     plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
-    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NUM_STAGES);
+    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
     ocp_nlp_dims *nlp_dims = ocp_nlp_dims_create(config);
     ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, ns, nq, nlp_dims);

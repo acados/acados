@@ -183,7 +183,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\tplan->ocp_qp_solver_plan.qp_solver = " +
             std::to_string(nlp_->plan_->ocp_qp_solver_plan.qp_solver) + ";\n";
 
-    out << "\n\tocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NUM_STAGES);\n";
+    out << "\n\tocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);\n";
 
     out << "\n\tocp_nlp_dims *nlp_dims = ocp_nlp_dims_create(config);\n";
     out << "\tocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, ";

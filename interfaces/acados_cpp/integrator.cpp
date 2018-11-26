@@ -166,7 +166,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
     dims_ = sim_dims_create(config_);
 
-    // set dimensions
+    // set dimensions TODO(oj) replace with interface call
     config_->set_nx(dims_, nx_);
     config_->set_nu(dims_, nu_);
     config_->set_nz(dims_, nz_);

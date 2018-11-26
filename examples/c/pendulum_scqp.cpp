@@ -78,7 +78,7 @@ int main() {
 	for (int i = 0; i <= N; i++)
 		plan->nlp_constraints[i] = BGHP;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), np.data(), ns.data(), nz.data(), dims);

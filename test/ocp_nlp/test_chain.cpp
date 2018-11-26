@@ -1330,7 +1330,7 @@ void setup_and_solve_nlp(int NN,
 
     // TODO(dimitris): fix minor memory leak
     // here
-    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
+    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
     * ocp_nlp_dims
