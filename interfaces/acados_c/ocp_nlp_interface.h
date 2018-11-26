@@ -99,14 +99,20 @@ typedef struct
 ocp_nlp_solver_plan *ocp_nlp_plan_create(int N);
 
 /* config */
-//
+// TODO(oj): suggest to put N into plan -> simplify calls
 ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N);
-//  TODO(oj): implement
+//
 void ocp_nlp_config_free(ocp_nlp_solver_plan plan, void *config_, int N);
 
-ocp_nlp_dims *ocp_nlp_dims_create(void *config);
+/* dims */
+ocp_nlp_dims *ocp_nlp_dims_create(void *config_);
 //
+void ocp_nlp_dims_free(void *dims_);
+
+/* in */
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+void ocp_nlp_in_free(void *in);
 //
 int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
                            const char *fun_type, void *fun_ptr);
@@ -116,12 +122,24 @@ int nlp_bounds_bgh_set(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_b
 //
 int nlp_bounds_bgh_get(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
                        const char *identifier, double *values);
+
+/* out */
 //
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
+void ocp_nlp_out_free(void *out);
+
+/* opts */
+//
 void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
+void ocp_nlp_opts_free(void *opts);
+
+/* solver */
+//
 ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_);
+//
+void ocp_nlp_free(void *solver);
 //
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 

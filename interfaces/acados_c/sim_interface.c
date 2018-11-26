@@ -109,6 +109,11 @@ void sim_dims_set_nu(sim_solver_config *config, void *dims, int nu)
 }
 
 
+void sim_dims_set_nz(sim_solver_config *config, void *dims, int nz)
+{
+    config->set_nz(dims, nz);
+}
+
 
 /* in */
 

@@ -57,7 +57,10 @@ void sim_dims_free(void *dims);
 void sim_dims_set_nx(sim_solver_config *config, void *dims, int nx);
 //
 void sim_dims_set_nu(sim_solver_config *config, void *dims, int nu);
+//
+void sim_dims_set_nz(sim_solver_config *config, void *dims, int nz);
 
+/* in */
 //
 sim_in *sim_in_create(sim_solver_config *config, void *dims);
 //
@@ -80,6 +83,7 @@ void sim_in_set_Sx(sim_solver_config *config, void *dims, double *Sx, sim_in *in
 //
 void sim_in_set_Su(sim_solver_config *config, void *dims, double *Su, sim_in *in);
 
+/* out */
 //
 sim_out *sim_out_create(sim_solver_config *config, void *dims);
 //
@@ -91,6 +95,7 @@ void sim_out_get_Sxn(sim_solver_config *config, void *dims, sim_out *out, double
 //
 void sim_out_get_Sun(sim_solver_config *config, void *dims, sim_out *out, double *Sun);
 
+/* opts */
 //
 void *sim_opts_create(sim_solver_config *config, void *dims);
 //
@@ -98,6 +103,7 @@ void sim_opts_free(void *opts);
 //
 void sim_opts_set_sens_forw(sim_rk_opts *opts, bool value);
 
+/* solver */
 //
 int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_);
 //

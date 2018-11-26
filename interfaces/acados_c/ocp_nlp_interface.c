@@ -148,7 +148,6 @@ static ocp_nlp_reg_config *ocp_nlp_reg_config_create(ocp_nlp_reg_t plan)
 
 
 /* ocp_nlp_solver_config */
-// TODO(dimitris): this leaks memory! Either provide free config or calculate size should be nested
 ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 {
     int bytes = ocp_nlp_solver_config_calculate_size(N);
@@ -282,6 +281,12 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
 }
 
 
+void ocp_nlp_dims_free(void *dims_)
+{
+    free(dims_);
+}
+
+
 /* ocp_nlp_in */
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
@@ -294,6 +299,11 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
     return nlp_in;
 }
 
+
+void ocp_nlp_in_free(void *in)
+{
+    free(in);
+}
 
 
 int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
@@ -441,7 +451,7 @@ int nlp_bounds_bgh_get(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_b
 }
 
 
-
+/* out */
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
     int bytes = ocp_nlp_out_calculate_size(config, dims);
@@ -458,7 +468,12 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
 }
 
 
+void ocp_nlp_out_free(void *out)
+{
+    free(out);
+}
 
+/* opts */
 void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
     int bytes = config->opts_calculate_size(config, dims);
@@ -472,6 +487,11 @@ void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
     return opts;
 }
 
+
+void ocp_nlp_opts_free(void *opts)
+{
+    free(opts);
+}
 
 
 int ocp_nlp_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_)
@@ -523,6 +543,13 @@ ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
 
     return solver;
 }
+
+
+void ocp_nlp_free(void *solver)
+{
+    free(solver);
+}
+
 
 
 

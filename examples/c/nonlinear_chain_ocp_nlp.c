@@ -1568,15 +1568,14 @@ int main()
     * free memory
     ************************************************/
 
-	// TODO(dimitris): VALGRIND!
  	external_function_casadi_free(expl_vde_for);
 	free(expl_vde_for);
 
 	external_function_casadi_free(impl_ode_fun);
 	external_function_casadi_free(impl_ode_fun_jac_x_xdot);
-	external_function_casadi_free(impl_ode_fun_jac_x_xdot_u);
+	external_function_casadi_free_array(NN, impl_ode_fun_jac_x_xdot_u);
 	external_function_casadi_free(impl_ode_jac_x_xdot_u);
-
+	// TODO(jonny): can 2nd free be avoided?!
 	free(impl_ode_fun);
 	free(impl_ode_fun_jac_x_xdot);
 	free(impl_ode_fun_jac_x_xdot_u);
@@ -1585,11 +1584,11 @@ int main()
 	external_function_casadi_free(erk4_casadi);
 	free(erk4_casadi);
 
-	free(nlp_opts);
-	free(nlp_in);
-	free(nlp_out);
-	free(solver);
-	free(dims);
+	ocp_nlp_opts_free(nlp_opts);
+	ocp_nlp_in_free(nlp_in);
+	ocp_nlp_out_free(nlp_out);
+	ocp_nlp_free(solver);
+	ocp_nlp_dims_free(dims);
 	ocp_nlp_config_free(*plan, config, NN);
 
 	free(xref);
