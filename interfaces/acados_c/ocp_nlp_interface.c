@@ -243,9 +243,9 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan)
     return config;
 }
 
-void ocp_nlp_config_free(ocp_nlp_solver_plan plan, void *config_)
+void ocp_nlp_config_free(ocp_nlp_solver_plan *plan, void *config_)
 {
-    int N = plan.N;
+    int N = plan->N;
 
     ocp_nlp_solver_config *config = config_;
     // qp
@@ -253,7 +253,7 @@ void ocp_nlp_config_free(ocp_nlp_solver_plan plan, void *config_)
     // Dynamics
     for (int i = 0; i < N; ++i)
     {
-        switch (plan.nlp_dynamics[i])
+        switch (plan->nlp_dynamics[i])
         {
             case CONTINUOUS_MODEL:
                 sim_config_free(config->dynamics[i]->sim_solver);

@@ -1752,12 +1752,12 @@ void setup_and_solve_nlp(int NN,
         free(erk4_casadi);
     }
 
-    free(nlp_opts);
-    free(nlp_in);
-    free(nlp_out);
-    free(solver);
-    free(dims);
-    free(config);
+    ocp_nlp_opts_free(nlp_opts);
+    ocp_nlp_in_free(nlp_in);
+    ocp_nlp_out_free(nlp_out);
+    ocp_nlp_free(solver);
+    ocp_nlp_dims_free(dims);
+    ocp_nlp_config_free(plan, config);
 
     free(xref);
     free(diag_cost_x);

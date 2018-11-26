@@ -1595,7 +1595,7 @@ int main()
 	ocp_nlp_out_free(nlp_out);
 	ocp_nlp_free(solver);
 	ocp_nlp_dims_free(dims);
-	ocp_nlp_config_free(*plan, config);
+	ocp_nlp_config_free(plan, config);
 
 	free(xref);
 	free(diag_cost_x);

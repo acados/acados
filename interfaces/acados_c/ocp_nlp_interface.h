@@ -106,7 +106,7 @@ ocp_nlp_solver_plan *ocp_nlp_plan_create(int N);
 /* config */
 ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan);
 //
-void ocp_nlp_config_free(ocp_nlp_solver_plan plan, void *config_);
+void ocp_nlp_config_free(ocp_nlp_solver_plan *plan_, void *config_);
 
 /* dims */
 ocp_nlp_dims *ocp_nlp_dims_create(void *config_);
