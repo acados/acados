@@ -367,12 +367,17 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 else
                     opts->sens_adj = false;
 
-                sim_gnsf_dims *gnsf_dim;
-
                 opts->jac_reuse = true;  // jacobian reuse
                 opts->newton_iter = 1;  // number of newton iterations per integration step
                 opts->num_steps = num_steps;  // number of steps
 
+                // gnsf dimension
+                int nx1 = nx;
+                int nz1 = 0;
+                int ny = nx;
+                int nuhat = nu;
+                int nout = 1;
+                int nz = 0;
                 switch (plan.sim_solver)
                 {
 
@@ -391,13 +396,19 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         opts->ns = 2;  // number of stages in rk integrator
 
                         // set additional dimensions
-                        gnsf_dim = (sim_gnsf_dims *) dims;
-                        gnsf_dim->nx1 = nx;
-                        gnsf_dim->nz1 = 0;
-                        gnsf_dim->ny = nx;
-                        gnsf_dim->nuhat = nu;
-                        gnsf_dim->n_out = 1;
-                        gnsf_dim->nz = 0;
+
+                        strcpy(field, "nx1");
+                        sim_dims_set(config, dims, field, &nx1);
+                        strcpy(field, "nz");
+                        sim_dims_set(config, dims, field, &nz);
+                        strcpy(field, "nz1");
+                        sim_dims_set(config, dims, field, &nz1);
+                        strcpy(field, "nout");
+                        sim_dims_set(config, dims, field, &nout);
+                        strcpy(field, "ny");
+                        sim_dims_set(config, dims, field, &ny);
+                        strcpy(field, "nuhat");
+                        sim_dims_set(config, dims, field, &nuhat);
 
                         break;
 
@@ -451,7 +462,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         external_function_generic *get_model_matrices =
                                 (external_function_generic *) &get_matrices_fun;
                         gnsf_model *model = (gnsf_model *) in->model;
-                        sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
+                        sim_gnsf_import_matrices(dims, model, get_model_matrices);
                         break;
                     }
                     case LIFTED_IRK:  // lifted_irk
@@ -492,7 +503,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
                     gnsf_model *model = (gnsf_model *) in->model;
-                    sim_gnsf_precompute(config, gnsf_dim, model, opts,
+                    sim_gnsf_precompute(config, dims, model, opts,
                              sim_solver->mem, sim_solver->work, in->T);
                 }
                 for (ii=0; ii < nsim0; ii++)

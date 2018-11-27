@@ -64,6 +64,14 @@ int main()
     int nu = 2;
 	int np = 1;
 
+	// gnsf dims
+	int nx1 = 6;
+	int nz1 = 0;
+	int nz = 0;
+	int nout = 1;
+	int ny = 5;
+	int nuhat = 0;
+
 	int nsim = 1000;
 
     int NF = nx + nu; // columns of forward seed
@@ -254,8 +262,6 @@ int main()
 		opts->sens_adj = true;
 		opts->sens_forw = true;
 
-		sim_gnsf_dims *gnsf_dim;
-
 		switch (nss)
 		{
 
@@ -278,15 +284,19 @@ int main()
 
 			case 3://gnsf
 				// set additional dimensions
-				gnsf_dim = (sim_gnsf_dims *) dims; // declaration not allowed inside switch somehow
-				gnsf_dim->nx = nx;
-				gnsf_dim->nu = nu;
-				gnsf_dim->nx1= nx;
-				// gnsf_dim->nx2= 0;
-				gnsf_dim->ny = 5;
-				gnsf_dim->nuhat = 0;
-				gnsf_dim->n_out = 1;
-				gnsf_dim->nz = 0;
+
+				strcpy(field, "nx1");
+				sim_dims_set(config, dims, field, &nx1);
+				strcpy(field, "nz");
+				sim_dims_set(config, dims, field, &nz);
+				strcpy(field, "nz1");
+				sim_dims_set(config, dims, field, &nz1);
+				strcpy(field, "nout");
+				sim_dims_set(config, dims, field, &nout);
+				strcpy(field, "ny");
+				sim_dims_set(config, dims, field, &ny);
+				strcpy(field, "nuhat");
+				sim_dims_set(config, dims, field, &nuhat);
 
 				// set options
 				opts->ns = 8; // number of stages in rk integrator
@@ -338,7 +348,7 @@ int main()
 
 				// import model matrices
 				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
-				sim_gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);
+				sim_gnsf_import_matrices(dims, in->model, get_model_matrices);
 				break;
 			}
 			default :
@@ -395,7 +405,7 @@ int main()
 		int acados_return;
 
 		if (nss == 3) // for gnsf: perform precomputation
-			sim_gnsf_precompute(config, gnsf_dim, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
+			sim_gnsf_precompute(config, dims, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
 
 
 		acados_timer timer;

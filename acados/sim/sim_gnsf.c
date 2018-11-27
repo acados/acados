@@ -93,6 +93,36 @@ static void sim_gnsf_set_nz(void *config_, void *dims_, const int *nz)
     dims->nz = *nz;
 }
 
+static void sim_gnsf_set_ny(void *config_, void *dims_, const int *ny)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    dims->ny = *ny;
+}
+
+static void sim_gnsf_set_nuhat(void *config_, void *dims_, const int *nuhat)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    dims->nuhat = *nuhat;
+}
+
+static void sim_gnsf_set_nout(void *config_, void *dims_, const int *nout)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    dims->n_out = *nout;
+}
+
+static void sim_gnsf_set_nz1(void *config_, void *dims_, const int *nz1)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    dims->nz1 = *nz1;
+}
+
+static void sim_gnsf_set_nx1(void *config_, void *dims_, const int *nx1)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    dims->nx1 = *nx1;
+}
+
 
 void sim_gnsf_dims_set(void *config_, void *dims_, char *field, const int* value)
 {
@@ -107,6 +137,26 @@ void sim_gnsf_dims_set(void *config_, void *dims_, char *field, const int* value
     else if (!strcmp(field, "nz"))
     {
         sim_gnsf_set_nz(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nx1"))
+    {
+        sim_gnsf_set_nx1(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nz1"))
+    {
+        sim_gnsf_set_nz1(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nout"))
+    {
+        sim_gnsf_set_nout(config_, dims_, value);
+    }
+    else if (!strcmp(field, "ny"))
+    {
+        sim_gnsf_set_ny(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nuhat"))
+    {
+        sim_gnsf_set_nuhat(config_, dims_, value);
     }
     else
     {
@@ -137,9 +187,11 @@ void sim_gnsf_get_nz(void *dims_, int *nz)
  * import functions
  ************************************************/
 
-void sim_gnsf_import_matrices(sim_gnsf_dims *dims_, gnsf_model *model,
+void sim_gnsf_import_matrices(void *dims_, gnsf_model *model,
                               external_function_generic *get_matrices_fun)
 {
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+
     // calling the external function
     ext_fun_arg_t ext_fun_type_in[1];
     void *ext_fun_in[1];
@@ -475,11 +527,13 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
     return (void *) work;
 }  // cast pre_workspace
 
-void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, sim_rk_opts *opts,
+void sim_gnsf_precompute(void *config, void *dims_, gnsf_model *model, sim_rk_opts *opts,
                          void *mem_, void *work_, double T)
 {
     acados_timer atimer;
     acados_tic(&atimer);
+
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
 
     // dimension ints
     int nx      = dims->nx;

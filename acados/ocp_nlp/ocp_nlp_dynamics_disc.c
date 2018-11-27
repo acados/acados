@@ -111,7 +111,7 @@ void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, char *dim, int* 
     }
     else if (!strcmp(dim, "nz"))
     {
-        if(*value > 0)
+        if( *value > 0)
         {
             printf("\nerror: discrete dynamics with nz>0\n");
             exit(1);

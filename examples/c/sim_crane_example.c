@@ -337,12 +337,12 @@ int main()
 		printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
 		printf("========================\n");
 
-		free(sim_solver);
-		free(in);
-		free(out);
+		sim_free(sim_solver);
+		sim_in_free(in);
+		sim_out_free(out);
 
-		free(opts);
-		free(config);
+		sim_opts_free(opts);
+		sim_config_free(config);
 	}
 
 	// TODO(dimitris): free all external functions (or write a free_model)

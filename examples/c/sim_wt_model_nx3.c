@@ -38,11 +38,6 @@
 // wt model
 #include "examples/c/wt_model_nx3/wt_model.h"
 
-// blasfeo
-// #include "blasfeo/include/blasfeo_target.h"
-// #include "blasfeo/include/blasfeo_common.h"
-// #include "blasfeo/include/blasfeo_d_aux.h"
-
 // x0 and u for simulation
 #include "examples/c/wt_model_nx3/u_x0.c"
 
@@ -59,6 +54,7 @@ int main()
 
     int nx = 3;
     int nu = 4;
+	int nz = 0;
     int NF = nx + nu; // columns of forward seed
 
     double T = 0.05; // simulation time
@@ -255,6 +251,8 @@ int main()
 		sim_dims_set(config, dims, field, &nx);
 		strcpy(field, "nu");
 		sim_dims_set(config, dims, field, &nu);
+		strcpy(field, "nz");
+		sim_dims_set(config, dims, field, &nz);
 
 		/************************************************
 		* sim opts
@@ -267,8 +265,6 @@ int main()
 
 		opts->sens_forw = true;
 		opts->sens_adj = true;
-
-		sim_gnsf_dims *gnsf_dim;
 
 		switch (nss)
 		{
@@ -298,15 +294,22 @@ int main()
 				opts->newton_iter = 3; // number of newton iterations per integration step
 
 				// set additional dimensions
-				gnsf_dim = (sim_gnsf_dims *) dims; // declaration not allowed inside switch somehow
-				gnsf_dim->nx = nx;
-				gnsf_dim->nu = nu;
-				gnsf_dim->nx1= nx;
-				// gnsf_dim->nx2= 0;
-				gnsf_dim->ny = nx;
-				gnsf_dim->nuhat = nu;
-				gnsf_dim->n_out = 1;
-				gnsf_dim->nz = 0;
+				int nx1 = nx;
+				int nz1 = 0;
+				int nout = 1;
+				int ny = nx;
+				int nuhat = nu;
+
+				strcpy(field, "nx1");
+				sim_dims_set(config, dims, field, &nx1);
+				strcpy(field, "nz1");
+				sim_dims_set(config, dims, field, &nz1);
+				strcpy(field, "nout");
+				sim_dims_set(config, dims, field, &nout);
+				strcpy(field, "ny");
+				sim_dims_set(config, dims, field, &ny);
+				strcpy(field, "nuhat");
+				sim_dims_set(config, dims, field, &nuhat);
 
 				break;
 
@@ -359,7 +362,7 @@ int main()
 
 				// import model matrices
 				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
-				sim_gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);
+				sim_gnsf_import_matrices(dims, in->model, get_model_matrices);
 				break;
 			}
 			default :
@@ -388,7 +391,7 @@ int main()
 		int acados_return;
 
 		if (nss == 3) // for gnsf: perform precomputation
-			sim_gnsf_precompute(config, gnsf_dim, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
+			sim_gnsf_precompute(config, dims, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
 
     	acados_timer timer;
 		acados_tic(&timer);

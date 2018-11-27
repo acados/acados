@@ -212,6 +212,14 @@ int main()
 
 	int np = 1; // number of local parametrs for each dynamics model function
 
+	// dimensions gnsf model
+	// int gnsf_nx1 	= 8;
+	// int gnsf_nz1 	= 0;
+	// int gnsf_nz  	= 0;
+	// int gnsf_nout 	= 1;
+	// int gnsf_ny 	= 5;
+	// int gnsf_nuhat 	= 0;
+
     /************************************************
     * problem dimensions
     ************************************************/
@@ -586,6 +594,20 @@ int main()
 		{
 			/* initialize additional gnsf dimensions */
 			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
+			// ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config->dynamics[i];
+			// void *dims = dyn_dims->sim;
+
+			// char[MAX_STR_LEN] = "nx1";
+			// sim_dims_set(config, dims, field, &gnsf_nx1);
+			// strcpy(field, "nz1");
+			// sim_dims_set(config, dims, field, &gnsf_nz1);
+			// strcpy(field, "nout");
+			// sim_dims_set(config, dims, field, &gnsf_nout);
+			// strcpy(field, "ny");
+			// sim_dims_set(config, dims, field, &gnsf_ny);
+			// strcpy(field, "nuhat");
+			// sim_dims_set(config, dims, field, &gnsf_nuhat);
+
 			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
 
 			gnsf_dims->nx1 		= 8;

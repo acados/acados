@@ -279,11 +279,11 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory);
 int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun);
 
 // import
-void sim_gnsf_import_matrices(sim_gnsf_dims *dims, gnsf_model *model,
+void sim_gnsf_import_matrices(void *dims_, gnsf_model *model,
                               external_function_generic *get_matrices_fun);
 
 // precomputation
-void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, sim_rk_opts *opts,
+void sim_gnsf_precompute(void *config, void *dims_, gnsf_model *model, sim_rk_opts *opts,
                          void *mem_, void *work_, double T);
 
 // workspace & memory

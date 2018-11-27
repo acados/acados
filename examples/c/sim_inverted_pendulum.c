@@ -55,7 +55,7 @@ int main()
 
     const int nx1   = 5;  // gnsf split
     const int nz1   = 5;
-    const int n_out = 3;
+    const int nout  = 3;
     const int ny    = 8;
     const int nuhat = 1;
 
@@ -237,15 +237,18 @@ int main()
 		sim_dims_set(config, dims, field, &nz);
 
         // GNSF -- set additional dimensions
-        sim_gnsf_dims *gnsf_dim;
         if (plan.sim_solver == GNSF)
         {
-            gnsf_dim = (sim_gnsf_dims *) dims;
-            gnsf_dim->nx1   = nx1;
-            gnsf_dim->nz1   = nz1;
-            gnsf_dim->ny    = ny;
-            gnsf_dim->nuhat = nuhat;
-            gnsf_dim->n_out = n_out;
+            strcpy(field, "nx1");
+            sim_dims_set(config, dims, field, &nx1);
+            strcpy(field, "nz1");
+            sim_dims_set(config, dims, field, &nz1);
+            strcpy(field, "nout");
+            sim_dims_set(config, dims, field, &nout);
+            strcpy(field, "ny");
+            sim_dims_set(config, dims, field, &ny);
+            strcpy(field, "nuhat");
+            sim_dims_set(config, dims, field, &nuhat);
         }
 
     /* sim options */
@@ -296,7 +299,7 @@ int main()
                 external_function_generic *get_model_matrices =
                         (external_function_generic *) &get_matrices_fun;
                 gnsf_model *model = (gnsf_model *) in->model;
-                sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
+                sim_gnsf_import_matrices(dims, model, get_model_matrices);
                 break;
             }
             default :
@@ -324,7 +327,7 @@ int main()
 
         if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
             gnsf_model *model = (gnsf_model *) in->model;
-            sim_gnsf_precompute(config, gnsf_dim, model, opts,
+            sim_gnsf_precompute(config, dims, model, opts,
                         sim_solver->mem, sim_solver->work, in->T);
         }
 

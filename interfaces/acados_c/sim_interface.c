@@ -133,7 +133,6 @@ int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, v
 
 
 
-// NOTE(dimitris) not exposed to user, used by NLP interface too
 int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type,
                            void *fun_ptr)
 {
