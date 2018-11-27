@@ -21,6 +21,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
@@ -529,7 +530,7 @@ int main()
 //		plan->sim_solver_plan[i].sim_solver = ERK;
 		plan->sim_solver_plan[i].sim_solver = IRK;
 //		plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
-//		plan->sim_solver_plan[i].sim_solver = GNSF;
+		plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
 	for (int i = 0; i <= NN; i++)
@@ -593,21 +594,25 @@ int main()
 		if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
 			/* initialize additional gnsf dimensions */
-			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
+			// ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
 			// ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config->dynamics[i];
 			// void *dims = dyn_dims->sim;
 
-			// char[MAX_STR_LEN] = "nx1";
-			// sim_dims_set(config, dims, field, &gnsf_nx1);
+			// sim_solver_config *sim_config = config->dynamics[i]->sim_solver;
+			// char field[MAX_STR_LEN] = "nx1";
+			// sim_dims_set(sim_config, dims, field, &gnsf_nx1);
+			// strcpy(field, "nz");
+			// sim_dims_set(sim_config, dims, field, &gnsf_nz);
 			// strcpy(field, "nz1");
-			// sim_dims_set(config, dims, field, &gnsf_nz1);
+			// sim_dims_set(sim_config, dims, field, &gnsf_nz1);
 			// strcpy(field, "nout");
-			// sim_dims_set(config, dims, field, &gnsf_nout);
+			// sim_dims_set(sim_config, dims, field, &gnsf_nout);
 			// strcpy(field, "ny");
-			// sim_dims_set(config, dims, field, &gnsf_ny);
+			// sim_dims_set(sim_config, dims, field, &gnsf_ny);
 			// strcpy(field, "nuhat");
-			// sim_dims_set(config, dims, field, &gnsf_nuhat);
+			// sim_dims_set(sim_config, dims, field, &gnsf_nuhat);
 
+			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
 			sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
 
 			gnsf_dims->nx1 		= 8;

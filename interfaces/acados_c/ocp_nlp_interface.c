@@ -286,6 +286,13 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
 }
 
 
+// void ocp_nlp_dims_set(ocp_nlp_solver_config *config, void *dims, char *field,
+//                                                          const int* value_vector)
+// {
+//     // TODO(oj)
+// }
+
+
 void ocp_nlp_dims_free(void *dims_)
 {
     free(dims_);
@@ -314,7 +321,6 @@ void ocp_nlp_in_free(void *in)
 int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
                            const char *fun_type, void *fun_ptr)
 {
-    // NOTE(giaf) @dimitris, how do we do it with discrete model dynamics ?
     sim_solver_config *sim_config = config->dynamics[stage]->sim_solver;
     ocp_nlp_dynamics_cont_model *dynamics = in->dynamics[stage];
 
@@ -502,6 +508,12 @@ void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
     config->opts_initialize_default(config, dims, opts);
 
     return opts;
+}
+
+
+void ocp_nlp_opts_set(ocp_nlp_solver_config *config, void *opts_, char *field, const void* value)
+{
+    config->opts_set(config, opts_, field, value);
 }
 
 

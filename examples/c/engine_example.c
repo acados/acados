@@ -28,7 +28,6 @@
 // acados
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/math.h"
 #include "acados/utils/print.h"
@@ -257,8 +256,9 @@ int main()
         constraints[N]->idxb[i] = idxb[i];
 
     // options
-    ocp_nlp_sqp_opts *nlp_opts = ocp_nlp_opts_create(config, dims);
-    nlp_opts->maxIter = 1;
+    void *nlp_opts = ocp_nlp_opts_create(config, dims);
+    int maxIter = 1;
+    ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
 
     // out
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);

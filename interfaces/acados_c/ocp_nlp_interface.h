@@ -113,8 +113,8 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_);
 //
 void ocp_nlp_dims_free(void *dims_);
 //  TODO(oj): implement
-// void ocp_nlp_dims_set(ocp_nlp_solver_config *config, void *dims,
-//                       char *field, const int* value_vector);
+void ocp_nlp_dims_set(ocp_nlp_solver_config *config, void *dims,
+                      char *field, const int* value_vector);
 
 /* in */
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
@@ -144,6 +144,8 @@ void ocp_nlp_out_free(void *out);
 void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
 void ocp_nlp_opts_free(void *opts);
+//
+void ocp_nlp_opts_set(ocp_nlp_solver_config *config, void *opts_, char *field, const void* value);
 
 /* solver */
 //

@@ -51,6 +51,7 @@ typedef struct
     int (*memory_calculate_size)(void *config, void *dims, void *opts_);
     void *(*memory_assign)(void *config, void *dims, void *opts_, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts_);
+    void (*opts_set)(void *config_, void *opts_, char *field, const void* value);
 
     // evaluate solver
     int (*evaluate)(void *config, void *dims, void *qp_in, void *qp_out,

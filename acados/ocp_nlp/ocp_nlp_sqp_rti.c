@@ -22,6 +22,7 @@
 // external
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #if defined(ACADOS_WITH_OPENMP)
@@ -256,7 +257,31 @@ void ocp_nlp_sqp_rti_opts_update(void *config_, void *dims_, void *opts_)
     return;
 }
 
+static void ocp_nlp_sqp_rti_opts_set_maxIter(void *config_, void* opts_, const void* value)
+{
+    // ocp_nlp_sqp_rti_opts *opts = (ocp_nlp_sqp_rti_opts *) opts_;
+    int* maxIter = (int *) value;
+    // opts->maxIter = *maxIter;
+    if ( *maxIter>1 )
+    {
+        printf("\nerror: option type not available in module\n");
+        exit(1);
+    }
+}
 
+
+void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, char *field, const void* value)
+{
+    if (!strcmp(field, "maxIter"))
+    {
+        ocp_nlp_sqp_rti_opts_set_maxIter(config_, opts_, value);
+    }
+    else
+    {
+        printf("\nerror: option type not available in module\n");
+        exit(1);
+    }
+}
 
 /************************************************
  * memory
@@ -1119,6 +1144,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->opts_assign = &ocp_nlp_sqp_rti_opts_assign;
     config->opts_initialize_default = &ocp_nlp_sqp_rti_opts_initialize_default;
     config->opts_update = &ocp_nlp_sqp_rti_opts_update;
+    config->opts_set = &ocp_nlp_sqp_rti_opts_set;
     config->memory_calculate_size = &ocp_nlp_sqp_rti_memory_calculate_size;
     config->memory_assign = &ocp_nlp_sqp_rti_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_rti_workspace_calculate_size;

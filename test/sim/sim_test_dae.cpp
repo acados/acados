@@ -88,7 +88,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     int nx = 9;
     int nu = 2;
     int nz = 2;
-    int n_out = 1;    // gnsf split
+    int nout = 1;    // gnsf split
     int ny = 4;
     int nuhat = 1;
 
