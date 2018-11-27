@@ -124,7 +124,7 @@ static void sim_gnsf_set_nx1(void *config_, void *dims_, const int *nx1)
 }
 
 
-void sim_gnsf_dims_set(void *config_, void *dims_, char *field, const int* value)
+void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int* value)
 {
     if (!strcmp(field, "nx"))
     {
@@ -190,7 +190,7 @@ void sim_gnsf_get_nz(void *dims_, int *nz)
 void sim_gnsf_import_matrices(void *dims_, gnsf_model *model,
                               external_function_generic *get_matrices_fun)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    // sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
 
     // calling the external function
     ext_fun_arg_t ext_fun_type_in[1];

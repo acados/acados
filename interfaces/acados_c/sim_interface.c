@@ -96,7 +96,7 @@ void sim_dims_free(void *dims)
 
 
 
-void sim_dims_set(sim_solver_config *config, void *dims, char *field, const int* value)
+void sim_dims_set(sim_solver_config *config, void *dims, const char *field, const int* value)
 {
     config->set_dims(config, dims, field, value);
 }

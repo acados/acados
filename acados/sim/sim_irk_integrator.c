@@ -80,7 +80,7 @@ static void sim_irk_set_nz(void *config_, void *dims_, const int *nz)
 }
 
 
-void sim_irk_dims_set(void *config_, void *dims_, char *field, const int* value)
+void sim_irk_dims_set(void *config_, void *dims_, const char *field, const int* value)
 {
     if (!strcmp(field, "nx"))
     {

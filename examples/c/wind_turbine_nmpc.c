@@ -603,13 +603,13 @@ int main()
 			// sim_dims_set(sim_config, dims, field, &gnsf_nx1);
 			// strcpy(field, "nz");
 			// sim_dims_set(sim_config, dims, field, &gnsf_nz);
-			// strcpy(field, "nz1");
+			//
 			// sim_dims_set(sim_config, dims, field, &gnsf_nz1);
-			// strcpy(field, "nout");
+			//
 			// sim_dims_set(sim_config, dims, field, &gnsf_nout);
-			// strcpy(field, "ny");
+			//
 			// sim_dims_set(sim_config, dims, field, &gnsf_ny);
-			// strcpy(field, "nuhat");
+			//
 			// sim_dims_set(sim_config, dims, field, &gnsf_nuhat);
 
 			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];

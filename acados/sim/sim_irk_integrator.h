@@ -116,7 +116,7 @@ typedef struct
 } sim_irk_workspace;
 
 // get & set functions
-void sim_irk_dims_set(void *config_, void *dims_, char *field, const int* value);
+void sim_irk_dims_set(void *config_, void *dims_, const char *field, const int* value);
 
 void sim_irk_get_nx(void *dims_, int *nx);
 void sim_irk_get_nu(void *dims_, int *nu);

@@ -72,7 +72,7 @@ typedef struct
 int sim_erk_dims_calculate_size();
 void *sim_erk_dims_assign(void *config_, void *raw_memory);
 // get & set functions
-void sim_erk_dims_set(void *config_, void *dims_, char *field, const int* value);
+void sim_erk_dims_set(void *config_, void *dims_, const char *field, const int* value);
 
 void sim_erk_get_nx(void *dims_, int *nx);
 void sim_erk_get_nu(void *dims_, int *nu);

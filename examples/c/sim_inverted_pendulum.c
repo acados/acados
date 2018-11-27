@@ -229,26 +229,18 @@ int main()
     /* sim dims */
 
 		void *dims = sim_dims_create(config);
-        char field[MAX_STR_LEN] = "nx";
-		sim_dims_set(config, dims, field, &nx);
-		strcpy(field, "nu");
-		sim_dims_set(config, dims, field, &nu);
-		strcpy(field, "nz");
-		sim_dims_set(config, dims, field, &nz);
+		sim_dims_set(config, dims, "nx", &nx);
+		sim_dims_set(config, dims, "nu", &nu);
+		sim_dims_set(config, dims, "nz", &nz);
 
         // GNSF -- set additional dimensions
         if (plan.sim_solver == GNSF)
         {
-            strcpy(field, "nx1");
-            sim_dims_set(config, dims, field, &nx1);
-            strcpy(field, "nz1");
-            sim_dims_set(config, dims, field, &nz1);
-            strcpy(field, "nout");
-            sim_dims_set(config, dims, field, &nout);
-            strcpy(field, "ny");
-            sim_dims_set(config, dims, field, &ny);
-            strcpy(field, "nuhat");
-            sim_dims_set(config, dims, field, &nuhat);
+            sim_dims_set(config, dims, "nx1", &nx1);
+            sim_dims_set(config, dims, "nz1", &nz1);
+            sim_dims_set(config, dims, "nout", &nout);
+            sim_dims_set(config, dims, "ny", &ny);
+            sim_dims_set(config, dims, "nuhat", &nuhat);
         }
 
     /* sim options */

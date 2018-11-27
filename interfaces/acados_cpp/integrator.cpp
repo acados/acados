@@ -166,12 +166,9 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
     dims_ = sim_dims_create(config_);
 
-    char field[MAX_STR_LEN] = "nx";
-    sim_dims_set(sim_config, dims->sim, field, &nx_);
-    strcpy(field, "nu");
-    sim_dims_set(sim_config, dims->sim, field, &nu_);
-    strcpy(field, "nz");
-    sim_dims_set(sim_config, dims->sim, field, &nz_);
+    sim_dims_set(sim_config, dims->sim, "nx", &nx_);
+    sim_dims_set(sim_config, dims->sim, "nu", &nu_);
+    sim_dims_set(sim_config, dims->sim, "nz", &nz_);
 
     // sim opts
     opts_ = static_cast<sim_rk_opts *>(sim_opts_create(config_, dims_));

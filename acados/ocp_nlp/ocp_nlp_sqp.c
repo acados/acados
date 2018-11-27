@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #if defined(ACADOS_WITH_OPENMP)
 #include <omp.h>

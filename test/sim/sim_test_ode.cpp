@@ -250,10 +250,8 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     void *dims = sim_dims_create(config);
 
     /* set dimensions */
-    char field[MAX_STR_LEN] = "nx";
-    sim_dims_set(config, dims, field, &nx);
-    strcpy(field, "nu");
-    sim_dims_set(config, dims, field, &nu);
+    sim_dims_set(config, dims, "nx", &nx);
+    sim_dims_set(config, dims, "nu", &nu);
 
     void *opts_ = sim_opts_create(config, dims);
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
@@ -350,10 +348,8 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 void *dims = sim_dims_create(config);
                 /* set dimensions */
-                char field[MAX_STR_LEN] = "nx";
-                sim_dims_set(config, dims, field, &nx);
-                strcpy(field, "nu");
-                sim_dims_set(config, dims, field, &nu);
+                sim_dims_set(config, dims, "nx", &nx);
+                sim_dims_set(config, dims, "nu", &nu);
 
                 /************************************************
                 * sim opts
@@ -397,18 +393,13 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                         // set additional dimensions
 
-                        strcpy(field, "nx1");
-                        sim_dims_set(config, dims, field, &nx1);
-                        strcpy(field, "nz");
-                        sim_dims_set(config, dims, field, &nz);
-                        strcpy(field, "nz1");
-                        sim_dims_set(config, dims, field, &nz1);
-                        strcpy(field, "nout");
-                        sim_dims_set(config, dims, field, &nout);
-                        strcpy(field, "ny");
-                        sim_dims_set(config, dims, field, &ny);
-                        strcpy(field, "nuhat");
-                        sim_dims_set(config, dims, field, &nuhat);
+                       
+                        sim_dims_set(config, dims, "nx1", &nx1);
+                        sim_dims_set(config, dims, "nz", &nz);
+                        sim_dims_set(config, dims, "nz1", &nz1);
+                        sim_dims_set(config, dims, "nout", &nout);
+                        sim_dims_set(config, dims, "ny", &ny);
+                        sim_dims_set(config, dims, "nuhat", &nuhat);
 
                         break;
 
