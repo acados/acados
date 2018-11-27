@@ -143,6 +143,11 @@ void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, char *field, c
     {
         ocp_nlp_constraints_bgh_set_nu(config_, dims_, value);
     }
+    else if (!strcmp(field, "nz"))
+    {
+        // do nothing
+        // TODO(oj): implement constraints with daes
+    }
     else if (!strcmp(field, "nbx"))
     {
         ocp_nlp_constraints_bgh_set_nbx(config_, dims_, value);
@@ -175,6 +180,24 @@ void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, char *field, c
 }
 
 /* dimension getters */
+static void ocp_nlp_constraints_bgh_get_ni(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nbx + dims->nbu + dims->ng + dims->nh + dims->ns;
+}
+
+
+void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, char *field, int* value)
+{
+    if (!strcmp(field, "ni"))
+    {
+        ocp_nlp_constraints_bgh_get_ni(config_, dims_, value);
+    }
+    else
+    {
+        printf("error: attempt to get dimension from constraint model, that is not there");
+    }
+}
 // void ocp_nlp_constraints_bgh_get_nx(void *dims_, int *nx)
 // {
 //     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
@@ -721,6 +744,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_)
     config->dims_assign = &ocp_nlp_constraints_bgh_dims_assign;
     config->dims_initialize = &ocp_nlp_constraints_bgh_dims_initialize;
     config->set_dims = &ocp_nlp_constraints_bgh_dims_set;
+    config->get_dims = &ocp_nlp_constraints_bgh_dims_get;
     config->model_calculate_size = &ocp_nlp_constraints_bgh_model_calculate_size;
     config->model_assign = &ocp_nlp_constraints_bgh_model_assign;
     config->opts_calculate_size = &ocp_nlp_constraints_bgh_opts_calculate_size;

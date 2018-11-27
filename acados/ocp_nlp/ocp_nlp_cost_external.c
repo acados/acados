@@ -97,6 +97,11 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, char *field, int
     {
         ocp_nlp_cost_external_set_nx(config_, dims_, value);
     }
+    else if (!strcmp(field, "nz"))
+    {
+        // do nothing
+        // TODO(oj): implement constraints with daes
+    }
     else if (!strcmp(field, "nu"))
     {
         ocp_nlp_cost_external_set_nu(config_, dims_, value);

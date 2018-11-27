@@ -100,6 +100,11 @@ void ocp_nlp_cost_nls_dims_set(void *config_, void *dims_, char *field, int* val
     {
         ocp_nlp_cost_nls_set_nx(config_, dims_, value);
     }
+    else if (!strcmp(field, "nz"))
+    {
+        // do nothing
+        // TODO(oj): implement cost with daes
+    }
     else if (!strcmp(field, "nu"))
     {
         ocp_nlp_cost_nls_set_nu(config_, dims_, value);

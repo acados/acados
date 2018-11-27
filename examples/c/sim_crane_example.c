@@ -25,7 +25,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 // acados
 #include "acados/sim/sim_common.h"
@@ -182,9 +181,7 @@ int main()
 		************************************************/
 
 		void *dims = sim_dims_create(config);
-        char field[MAX_STR_LEN] = "nx";
 		sim_dims_set(config, dims, "nx", &nx);
-		strcpy(field, "nu");
 		sim_dims_set(config, dims, "nu", &nu);
 
 		/************************************************

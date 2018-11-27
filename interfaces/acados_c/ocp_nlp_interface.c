@@ -286,12 +286,6 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
 }
 
 
-// void ocp_nlp_dims_set(ocp_nlp_solver_config *config, void *dims, char *field,
-//                                                          const int* value_vector)
-// {
-//     // TODO(oj)
-// }
-
 
 void ocp_nlp_dims_free(void *dims_)
 {

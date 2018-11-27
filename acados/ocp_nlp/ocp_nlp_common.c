@@ -129,7 +129,7 @@ int ocp_nlp_dims_calculate_size_self(int N)
     size += sizeof(ocp_nlp_dims);
 
     // nlp sizes
-    size += 5 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz
+    size += 6 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz, ns
 
     // dynamics
     size += N * sizeof(void *);
@@ -202,6 +202,8 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     assign_and_advance_int(N + 1, &dims->ni, &c_ptr);
     // nz
     assign_and_advance_int(N + 1, &dims->nz, &c_ptr);
+    // ns
+    assign_and_advance_int(N + 1, &dims->ns, &c_ptr);
 
     // dynamics
     dims->dynamics = (void **) c_ptr;
@@ -273,32 +275,117 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
 }
 
 
-void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, char *field, const void* value_field)
+void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, char *field, const void* value_array)
 {
-    // to set dimension nx, nu, nz, ns (slacks)
+    // to set dimension nx, nu, nz, ns (number of slacks = number of soft constraints)
+    ocp_nlp_solver_config *config = config_;
+    ocp_nlp_dims *dims = dims_;
+
+    int N = config->N;
+    int *int_array = (int *) value_array;
+
+    /* set ocp_nlp dimension */
+    if (!strcmp(field, "nx"))
+    {
+        for (int ii = 0; ii <= N; ii++)
+        {
+            // set nx
+            dims->nx[ii] = int_array[ii];
+            // update nv
+            dims->nv[ii] = dims->nu[ii] + dims->nx[ii] + 2 * dims->ns[ii];
+        }
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        for (int ii = 0; ii <= N; ii++)
+        {
+            // set nu
+            dims->nu[ii] = int_array[ii];
+            // update nv
+            dims->nv[ii] = dims->nu[ii] + dims->nx[ii] + 2 * dims->ns[ii];
+        }
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        for (int ii = 0; ii <= N; ii++)
+        {
+            // set nz
+            dims->nz[ii] = int_array[ii];
+        }
+    }
+    else if (!strcmp(field, "ns"))
+    {
+        for (int ii = 0; ii <= N; ii++)
+        {
+            // set ns
+            dims->ns[ii] = int_array[ii];
+            // update nv
+            dims->nv[ii] = dims->nu[ii] + dims->nx[ii] + 2 * dims->ns[ii];
+        }
+    }
+    else
+    {
+        printf("error: attempt to set ocp_nlp dimension for opt variable, which is unsupported");
+        exit(1);
+    }
+
+
+    /* set ocp_nlp submodule dimensions */
+    if (strcmp(field, "ns"))  //  dynamics do not contain slack/soft constraints
+    {
+        for (int i = 0; i < N; i++)
+        {
+            config->dynamics[i]->set_dims(config->dynamics[i], dims->dynamics[i], field, &int_array[i]);
+        }
+    }
+
+    for (int i = 0; i <= N; i++)
+    {
+        config->cost[i]->set_dims(config->cost[i], dims->cost[i], field, &int_array[i]);
+    }
+
+    for (int i = 0; i <= N; i++)
+    {
+        config->constraints[i]->set_dims(config->constraints[i], dims->constraints[i],
+                                             field, &int_array[i]);
+    }
+}
+
+
+
+void ocp_nlp_dims_set_constraints(void *config_, void *dims_, char *field, const void* value_field)
+{
+    // to set dimension nbx, nbu, ng, nh, nq (quadratic over nonlinear)
     ocp_nlp_solver_config *config = config_;
     ocp_nlp_dims *dims = dims_;
 
     int N = config->N;
     int *value = (int *) value_field;
 
-    for (int i = 0; i < N; i++) {
-        config->dynamics[i]->set_dims(config->dynamics[i], dims->dynamics[i], field, &value[i]);
-    }
-    for (int i = 0; i <= N; i++) {
-        config->cost[i]->set_dims(config->cost[i], dims->cost[i], field, &value[i]);
-    }
-    for (int i = 0; i <= N; i++) {
+    for (int i = 0; i <= N; i++)
+    {
         config->constraints[i]->set_dims(config->constraints[i], dims->constraints[i], field, &value[i]);
+        // updated ni in ocp_nlp dimensions
+        config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i], "ni", &dims->ni[i]);
     }
-
 }
 
-// static void ocp_nlp_dynamics_dims_set(void *config_, void dims_, char *field, const void* value)
-// {
-//     ocp_nlp_dynamics_config *config = config_;
-//     config->set_dims(config, dims, field, value);
-// }
+
+void ocp_nlp_dims_set_cost(void *config_, void *dims_, char *field, const void* value_field)
+{
+    // to set dimension ny (output), ns (slacks)
+    ocp_nlp_solver_config *config = config_;
+    ocp_nlp_dims *dims = dims_;
+
+    int N = config->N;
+    int *value = (int *) value_field;
+
+    for (int i = 0; i <= N; i++)
+    {
+        config->cost[i]->set_dims(config->cost[i], dims->cost[i], field, &value[i]);
+    }
+}
+
 
 
 void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng,

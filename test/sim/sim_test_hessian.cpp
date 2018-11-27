@@ -401,11 +401,8 @@ TEST_CASE("pendulum_hessians", "[integrators]")
             /* sim dims */
                 void *dims = sim_dims_create(config);
                 /* set dimensions */
-                char field[MAX_STR_LEN] = "nx";
                 sim_dims_set(config, dims, "nx", &nx);
-                strcpy(field, "nu");
                 sim_dims_set(config, dims, "nu", &nu);
-                strcpy(field, "nz");
                 sim_dims_set(config, dims, "nz", &nz);
 
             /* sim options */
