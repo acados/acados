@@ -177,6 +177,7 @@ void dense_qp_hpipm_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
 
+    config->dims_set = &dense_qp_dims_set;
     config->opts_calculate_size = &dense_qp_hpipm_opts_calculate_size;
     config->opts_assign = &dense_qp_hpipm_opts_assign;
     config->opts_initialize_default = &dense_qp_hpipm_opts_initialize_default;

@@ -132,6 +132,14 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
     return dims;
 }
 
+
+void ocp_qp_dims_set(void *config_, void *dims_, int stage, const char *field, const int* value)
+{
+    ocp_qp_dims *dims = (ocp_qp_dims *) dims_;
+
+    d_set_ocp_qp_dim(field, stage, *value, dims);
+}
+
 /************************************************
  * in
  ************************************************/

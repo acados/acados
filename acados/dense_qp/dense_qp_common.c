@@ -26,6 +26,8 @@
 #include "hpipm/include/hpipm_d_dense_qp_kkt.h"
 #include "hpipm/include/hpipm_d_dense_qp_res.h"
 #include "hpipm/include/hpipm_d_dense_qp_sol.h"
+#include "hpipm/include/hpipm_d_dense_qp_dim.h"
+
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
@@ -83,6 +85,15 @@ dense_qp_dims *dense_qp_dims_assign(void *raw_memory)
     assert((char *) raw_memory + dense_qp_dims_calculate_size() == c_ptr);
 
     return dims;
+}
+
+
+void dense_qp_dims_set(void *config_, void *dims_, const char *field, const int* value)
+{
+    // wrap hpipm function
+    // void s_set_dense_qp_dim(const char *field_name, int value, struct s_dense_qp_dim *dim);
+    dense_qp_dims *dims = (dense_qp_dims *) dims_;
+    d_set_dense_qp_dim(field, *value, dims);
 }
 
 /************************************************

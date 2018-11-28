@@ -202,7 +202,7 @@ int main()
 
     // dimensions
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
+	// ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
     ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
     ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
     ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);

@@ -44,8 +44,7 @@ typedef struct d_ocp_qp_res_workspace ocp_qp_res_ws;
 typedef struct
 {
     // TODO(dimitris): pass dims to evaluate?
-    // TODO(oj): @giaf, we need such a dims_set function for the c interface
-    void (*dims_set)(void *config_, void *dims_, char *field, const int* value);
+    void (*set_dims)(void *config_, void *dims_, int stage, const char *field, const int* value);
     int (*evaluate)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
@@ -73,6 +72,7 @@ typedef struct
 
 typedef struct
 {
+    void (*set_dims)(void *config_, void *dims_, int stage, const char *field, const int* value);
     int (*evaluate)(void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem,
                     void *work);
     int (*opts_calculate_size)(void *config, ocp_qp_dims *dims);
@@ -95,6 +95,7 @@ typedef struct
     int t_computed;
 } ocp_qp_info;
 
+/* config */
 //
 int ocp_qp_solver_config_calculate_size();
 //
@@ -107,10 +108,17 @@ ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory);
 int ocp_qp_condensing_config_calculate_size();
 //
 ocp_qp_condensing_config *ocp_qp_condensing_config_assign(void *raw_memory);
+
+/* dims */
 //
 int ocp_qp_dims_calculate_size(int N);
 //
 ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory);
+//
+void ocp_qp_dims_set(void *config_, void *dims_, int stage, const char *field, const int* value);
+
+
+/* in */
 //
 int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims);
 //

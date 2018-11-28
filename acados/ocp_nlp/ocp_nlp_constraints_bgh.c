@@ -186,6 +186,24 @@ static void ocp_nlp_constraints_bgh_get_ni(void *config_, void *dims_, int* valu
     *value = dims->nbx + dims->nbu + dims->ng + dims->nh + dims->ns;
 }
 
+static void ocp_nlp_constraints_bgh_get_nb(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nb;
+}
+
+static void ocp_nlp_constraints_bgh_get_ng(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->ng;
+}
+
+static void ocp_nlp_constraints_bgh_get_nh(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nh;
+}
+
 
 void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *field, int* value)
 {
@@ -193,9 +211,22 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
     {
         ocp_nlp_constraints_bgh_get_ni(config_, dims_, value);
     }
+    else if (!strcmp(field, "nb"))
+    {
+        ocp_nlp_constraints_bgh_get_nb(config_, dims_, value);
+    }
+    else if (!strcmp(field, "ng"))
+    {
+        ocp_nlp_constraints_bgh_get_ng(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nh"))
+    {
+        ocp_nlp_constraints_bgh_get_nh(config_, dims_, value);
+    }
     else
     {
         printf("error: attempt to get dimension from constraint model, that is not there");
+        exit(1);
     }
 }
 
