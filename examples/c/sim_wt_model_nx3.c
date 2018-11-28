@@ -27,7 +27,6 @@
 #include <stdlib.h>
 
 // acados
-#include "acados/sim/sim_common.h"
 #include "acados/sim/sim_gnsf.h"
 #include "acados/utils/external_function_generic.h"
 
@@ -48,8 +47,6 @@ int main()
 /************************************************
 * initialize common stuff (for all integrators)
 ************************************************/
-    int ii;
-    int jj;
 
     int nx = 3;
     int nu = 4;
@@ -59,7 +56,7 @@ int main()
     double T = 0.05; // simulation time
 
 	double x_sim[nx*(nsim+1)];
-	for (ii=0; ii<nx; ii++)
+	for (int ii = 0; ii < nx; ii++)
 		x_sim[ii] = x0[ii];
 
 	/************************************************
@@ -307,7 +304,6 @@ int main()
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
 				exit(1);
-
 		}
 
 
@@ -364,13 +360,13 @@ int main()
 		}
 
 		// seeds forw
-		for (ii = 0; ii < nx * NF; ii++)
+		for (int ii = 0; ii < nx * NF; ii++)
 			in->S_forw[ii] = 0.0;
-		for (ii = 0; ii < nx; ii++)
+		for (int ii = 0; ii < nx; ii++)
 			in->S_forw[ii * (nx + 1)] = 1.0;
 
 		// seeds adj
-		for (ii = 0; ii < nx; ii++)
+		for (int ii = 0; ii < nx; ii++)
 			in->S_adj[ii] = 1.0;
 
 		/************************************************
@@ -396,19 +392,15 @@ int main()
 		printf("\n---> testing integrator %d (num_steps = %d, num_stages = %d, jac_reuse = %d, newton_iter = %d )\n",
 					nss, opts->num_steps, opts->ns, opts->jac_reuse, opts->newton_iter);
 
-// 	for (ii=0; ii<nsim; ii++)
-		for (ii=0; ii<nsim0; ii++)
+		for (int ii = 0; ii < nsim0; ii++)
 		{
 			// x
-			for (jj = 0; jj < nx; jj++)
+			for (int jj = 0; jj < nx; jj++)
 				in->x[jj] = x_sim[ii*nx+jj];
 
 			// u
-			for (jj = 0; jj < nu; jj++)
+			for (int jj = 0; jj < nu; jj++)
 				in->u[jj] = u_sim[ii*nu+jj];
-
-// 		d_print_mat(1, nx, in->x, 1);
-// 		d_print_mat(1, nu, in->u, 1);
 
 		    acados_return = sim_solve(sim_solver, in, out);
 			if (acados_return != 0)
@@ -418,10 +410,8 @@ int main()
 			la_time += out->info->LAtime;
 			ad_time += out->info->ADtime;
 
-// 		d_print_mat(1, nx, out->xn, 1);
-
 			// x_out
-			for (jj = 0; jj < nx; jj++)
+			for (int jj = 0; jj < nx; jj++)
 				x_sim[(ii+1)*nx+jj] = out->xn[jj];
 
 		}
@@ -432,7 +422,7 @@ int main()
 		************************************************/
 
 		printf("\nxn: \n");
-		for (ii=0; ii<nx; ii++)
+		for (int ii = 0; ii < nx; ii++)
 			printf("%8.5f ", x_sim[nsim0*nx+ii]);
 		printf("\n");
 
@@ -441,8 +431,8 @@ int main()
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");
-			for (ii=0;ii<nx;ii++){
-				for (jj=0;jj<NF;jj++)
+			for (int ii = 0; ii < nx; ii++){
+				for (int jj = 0; jj < NF; jj++)
 					printf("%8.5f ", S_forw_out[jj*nx+ii]);
 				printf("\n");
 			}
@@ -453,7 +443,7 @@ int main()
 		{
 			S_adj_out = out->S_adj;
 			printf("\nS_adj_out: \n");
-			for (ii=0;ii<nx+nu;ii++){
+			for (int ii = 0; ii < nx + nu; ii++){
 				printf("%8.5f ", S_adj_out[ii]);
 			}
 			printf("\n");

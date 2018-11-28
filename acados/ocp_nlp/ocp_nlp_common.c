@@ -417,7 +417,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, char *field, const
     {
         for (int i = 0; i <= N; i++)
         {
-            // TODO(oj): how to decide if ocp_qp or dense? plan not available here..
+            // TODO(oj): @giaf how to decide if ocp_qp or dense? plan not available here..
             // if( is_ocp_qp_solver )
             // {
                 // set nbx, respectively nbu in qp_solver

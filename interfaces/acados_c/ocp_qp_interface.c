@@ -130,6 +130,13 @@ ocp_qp_dims *ocp_qp_dims_create(int N)
     return dims;
 }
 
+void ocp_qp_dims_free(void *dims_)
+{
+    free(dims_);
+}
+
+
+/* in */
 ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
 {
     int bytes = ocp_qp_in_calculate_size(config, dims);
@@ -141,6 +148,13 @@ ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dim
     return in;
 }
 
+void ocp_qp_in_free(void *in_)
+{
+    free(in_);
+}
+
+
+/* out */
 ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
 {
     int bytes = ocp_qp_out_calculate_size(config, dims);
@@ -152,6 +166,13 @@ ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *d
     return out;
 }
 
+
+void ocp_qp_out_free(void *out_)
+{
+    free(out_);
+}
+
+/* opts */
 void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
 {
     int bytes = config->opts_calculate_size(config, dims);
@@ -164,6 +185,15 @@ void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
 
     return opts;
 }
+
+
+void ocp_qp_opts_free(void *opts_)
+{
+    free(opts_);
+}
+
+
+/* solver */
 
 int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_)
 {
