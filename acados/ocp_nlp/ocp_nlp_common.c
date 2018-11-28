@@ -185,6 +185,8 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
+    int ii;
+
     // initial align
     align_char_to(8, &c_ptr);
 
@@ -220,6 +222,18 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     // qp solver
     dims->qp_solver = ocp_qp_dims_assign(N, c_ptr);
     c_ptr += ocp_qp_dims_calculate_size(N);
+
+    /* initialize qp_solver dimensions */
+    dims->qp_solver->N = N;
+    for (ii = 0; ii <= N; ii++)
+    {
+        // NOTE(oj): @giaf, I moved this here from the dims_initialize, since we want to get rid of it.
+        // TODO(dimitris): values below are needed for reformulation of QP when soft constraints are
+        // note supported. Make this a bit more transparent as it clushes with nbx/nbu above.
+        dims->qp_solver->nsbx[ii] = 0;
+        dims->qp_solver->nsbu[ii] = 0;
+        dims->qp_solver->nsg[ii] = 0;
+    }
 
     // N
     dims->N = N;
@@ -266,18 +280,6 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
         dims->constraints[ii] =
             config->constraints[ii]->dims_assign(config->constraints[ii], c_ptr);
         c_ptr += config->constraints[ii]->dims_calculate_size(config->constraints[ii]);
-    }
-
-    /* initialize qp_solver dimensions */
-    dims->qp_solver->N = N;
-    for (ii = 0; ii <= N; ii++)
-    {
-        // NOTE(oj): @giaf, I moved this here from the dims_initialize, since we want to get rid of it.
-        // TODO(dimitris): values below are needed for reformulation of QP when soft constraints are
-        // note supported. Make this a bit more transparent as it clushes with nbx/nbu above.
-        dims->qp_solver->nsbx[ii] = 0;
-        dims->qp_solver->nsbu[ii] = 0;
-        dims->qp_solver->nsg[ii] = 0;
     }
 
     // assert
@@ -418,6 +420,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, char *field, const
         for (int i = 0; i <= N; i++)
         {
             // TODO(oj): how to decide if ocp_qp or dense? plan not available here..
+			// GIAF: the NLP solver always calls a xcond_solver, so only its dimensions should be set now
             // if( is_ocp_qp_solver )
             // {
                 // set nbx, respectively nbu in qp_solver
