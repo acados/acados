@@ -28,8 +28,8 @@
 #include "acados_c/external_function_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
 
-// TODO(dimitris): use only the strictly necessary includes here
 
+// TODO(dimitris): use only the strictly necessary includes here
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -43,6 +43,7 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
+// model
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
 
@@ -1127,7 +1128,6 @@ int main()
 	for (int i = 0; i <= NN; i++)
 		plan->nlp_constraints[i] = BGH;
 
-	// TODO(dimitris): fix minor memory leak here
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
@@ -1318,17 +1318,18 @@ int main()
 
 				// Cyt
 				blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
-					for (int j = 0; j < nu[i]; j++)
-				BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, nx[i]+j) = 1.0;
-					for (int j = 0; j < nx[i]; j++)
-				BLASFEO_DMATEL(&stage_cost_ls->Cyt, nu[i]+j, j) = 1.0;
+
+				for (int j = 0; j < nu[i]; j++)
+					BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, nx[i]+j) = 1.0;
+				for (int j = 0; j < nx[i]; j++)
+					BLASFEO_DMATEL(&stage_cost_ls->Cyt, nu[i]+j, j) = 1.0;
 
 				// W
 				blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_ls->W, 0, 0);
-					for (int j = 0; j < nx[i]; j++)
-				BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = diag_cost_x[j];
-					for (int j = 0; j < nu[i]; j++)
-				BLASFEO_DMATEL(&stage_cost_ls->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
+				for (int j = 0; j < nx[i]; j++)
+					BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = diag_cost_x[j];
+				for (int j = 0; j < nu[i]; j++)
+					BLASFEO_DMATEL(&stage_cost_ls->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
 
 				// y_ref
 				blasfeo_pack_dvec(nx[i], xref, &stage_cost_ls->y_ref, 0);
@@ -1589,7 +1590,7 @@ int main()
 	free(impl_ode_jac_x_xdot_u);
 	free(erk4_casadi);
 
-
+	// free ocp_nlp module
 	ocp_nlp_opts_free(nlp_opts);
 	ocp_nlp_in_free(nlp_in);
 	ocp_nlp_out_free(nlp_out);
@@ -1597,6 +1598,7 @@ int main()
 	ocp_nlp_dims_free(dims);
 	ocp_nlp_config_free(plan, config);
 
+	// free memory allocated in main
 	free(xref);
 	free(diag_cost_x);
 	free(lb0);
@@ -1621,11 +1623,11 @@ int main()
 		}
 	}
 
+	ocp_nlp_plan_free(plan);
 
 	free(ls_cost_jac_casadi);
 	free(ext_cost_generic);
 
-	free(plan);
 
 	/************************************************
 	* return

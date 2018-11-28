@@ -191,6 +191,39 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     return model;
 }
 
+
+static void ocp_nlp_cost_ls_set_Cyt(void *config_, void* dims_, void *model_, void *value_)
+{
+    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int ny = dims->ny;
+
+    double* double_values = (double *) value_;
+
+    ocp_nlp_cost_ls_model *model = (ocp_nlp_cost_ls_model *) model_;
+
+    blasfeo_pack_dmat(nx + nu, ny, double_values, nx + nu, &model->Cyt, 0, 0);
+}
+
+
+
+void ocp_nlp_cost_ls_set_model(void *config_, void* dims_, void *model_, const char *field, void *value_)
+{
+    if (!strcmp(field, "Cyt"))
+    {
+        ocp_nlp_cost_ls_set_Cyt(config_, dims_, model_, value_);
+    }
+    else
+    {
+        printf("\nerror: field not available in ls cost model\n");
+        exit(1);
+    }
+}
+
+
+
 /************************************************
  * options
  ************************************************/

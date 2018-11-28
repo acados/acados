@@ -43,6 +43,8 @@ typedef struct d_dense_qp_res_workspace dense_qp_res_ws;
 typedef struct
 {
     // TODO(dimitris): pass dims to evaluate?
+    // TODO(oj): @giaf, we need such a dims_set function for the c interface
+    void (*dims_set)(void *config_, void *dims_, char *field, const int* value);
     int (*evaluate)(void *config, void *qp_in, void *qp_out, void *args, void *mem, void *work);
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);

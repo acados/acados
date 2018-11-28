@@ -120,6 +120,11 @@ ocp_nlp_solver_plan *ocp_nlp_plan_create(int N)
     return plan;
 }
 
+void ocp_nlp_plan_free(void* plan_)
+{
+    free(plan_);
+}
+
 
 /* ocp_nlp_reg - regularization */
 static ocp_nlp_reg_config *ocp_nlp_reg_config_create(ocp_nlp_reg_t plan)

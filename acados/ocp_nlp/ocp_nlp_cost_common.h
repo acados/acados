@@ -42,6 +42,8 @@ typedef struct
     void (*set_dims)(void *config_, void *dims_, char *field, int *value);
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
+    // TODO(oj): implement this
+    void (*set_model)(void *config_, void* dims_, void *model_, char *field, void *value_);
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);

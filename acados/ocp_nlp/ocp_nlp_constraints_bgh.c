@@ -133,7 +133,7 @@ static void ocp_nlp_constraints_bgh_set_np(void *config_, void *dims_, const int
     }
 }
 
-void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, char *field, const int* value)
+void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *field, const int* value)
 {
     if (!strcmp(field, "nx"))
     {
@@ -187,7 +187,7 @@ static void ocp_nlp_constraints_bgh_get_ni(void *config_, void *dims_, int* valu
 }
 
 
-void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, char *field, int* value)
+void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *field, int* value)
 {
     if (!strcmp(field, "ni"))
     {
@@ -198,60 +198,7 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, char *field, i
         printf("error: attempt to get dimension from constraint model, that is not there");
     }
 }
-// void ocp_nlp_constraints_bgh_get_nx(void *dims_, int *nx)
-// {
-//     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
-//     *nx = dims->nx;
-// }
 
-// void ocp_nlp_constraints_bgh_get_nu(void *dims_, int *nu)
-// {
-//     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
-//     *nu = dims->nu;
-// }
-
-// void ocp_nlp_constraints_bgh_get_nbx(void *dims_, int *nbx)
-// {
-//     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
-//     *nbx = dims->nbx;
-// }
-
-// void ocp_nlp_constraints_bgh_get_nbu(void *dims_, int *nbu)
-// {
-//     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
-//     *nbu = dims->nbu;
-// }
-
-// void ocp_nlp_constraints_bgh_get_nb(void *dims_, int *nb)
-// {
-//     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
-//     *nb = dims->nb;
-// }
-
-// void ocp_nlp_constraints_bgh_get_ng(void *dims_, int *ng)
-// {
-//     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
-//     *ng = dims->ng;
-// }
-
-// void ocp_nlp_constraints_bgh_get_nh(void *dims_, int *nh)
-// {
-//     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
-//     *nh = dims->nh;
-// }
-
-// void ocp_nlp_constraints_bgh_get_ns(void *dims_, int *ns)
-// {
-//     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
-//     *ns = dims->ns;
-// }
-
-// void ocp_nlp_constraints_bgh_get_np(void *dims_, int *np)
-// {
-//     // np, dimension of nonlinear function in quadratic_over_nonlinear constraint
-//     // must be zero for this constraints modul
-//     *np = 0;
-// }
 
 
 /************************************************

@@ -102,6 +102,8 @@ typedef struct
 
 /* plan */
 ocp_nlp_solver_plan *ocp_nlp_plan_create(int N);
+//
+void ocp_nlp_plan_free(void* plan_);
 
 /* config */
 ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan);

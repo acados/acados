@@ -83,7 +83,7 @@ typedef struct
     void *(*memory_assign)(void *config, ocp_qp_dims *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, ocp_qp_dims *dims, void *opts);
     qp_solver_config *qp_solver;  // either ocp_qp_solver or dense_solver
-} ocp_qp_xcond_solver_config;
+} ocp_qp_xcond_solver_config;  // pcond - partial condensing or fcond - full condensing
 
 typedef struct
 {
