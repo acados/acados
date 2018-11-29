@@ -9,4 +9,6 @@ setup(name='acados_template',
    author='Andrea Zanelli',
    license='LGPL',
    packages = find_packages(),
+   include_package_data = True,
+   package_data={'': ['c_templates/template_example.in.c']},
    zip_safe=False)
