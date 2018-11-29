@@ -74,8 +74,8 @@ ra.model_name = model.name
 
 # set ocp_nlp_dimensions
 nlp_dims = ra.dims
-nx = model.x.size()[0]
-nu = model.u.size()[0]
+nlp_dims.nx = model.x.size()[0]
+nlp_dims.nu = model.u.size()[0]
 nlp_dims.N  = 100
 
 # set weighting matrices
