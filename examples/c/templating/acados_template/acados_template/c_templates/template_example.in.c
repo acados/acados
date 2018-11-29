@@ -19,22 +19,22 @@
 
 #include <stdio.h>
 
-#include "acados/utils/print.h"
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
-#include "acados/sim/sim_erk_integrator.h"
+#include <acados/utils/print.h>
+#include <acados/ocp_qp/ocp_qp_partial_condensing_solver.h>
+#include <acados/ocp_nlp/ocp_nlp_constraints_bgh.h>
+#include <acados/ocp_nlp/ocp_nlp_cost_ls.h>
+#include <acados/ocp_nlp/ocp_nlp_dynamics_cont.h>
+#include <acados/ocp_nlp/ocp_nlp_sqp.h>
+#include <acados/sim/sim_erk_integrator.h>
 
-#include "acados_c/ocp_nlp_interface.h"
+#include <acados_c/ocp_nlp_interface.h>
 
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include <blasfeo/include/blasfeo_d_aux.h>
+#include <blasfeo/include/blasfeo_d_aux_ext_dep.h>
 
-#include "{{ ra.model_name }}_model/model.h"
-#include "{{ ra.model_name }}_model/constraint.h"
-{% for item in ra.constants %}
+#include "{{ ra.model_name }}_model/{{ ra.model_name }}_model.h"
+// #include "{{ ra.model_name }}_model/{{ ra.model_name }}_constraint.h"
+// {% for item in ra.constants %}
 #define {{ item.name }} {{ item.value }}
 {% endfor %}
 int main() {
@@ -115,23 +115,23 @@ int main() {
 
     external_function_casadi forw_vde_casadi[N];
     for (int i = 0; i < N; ++i) {
-        forw_vde_casadi[i].casadi_fun = &{{ ra.model_name }}_ode_expl_vde_forw;
-        forw_vde_casadi[i].casadi_n_in = &{{ ra.model_name }}_ode_expl_vde_forw_n_in;
-        forw_vde_casadi[i].casadi_n_out = &{{ ra.model_name }}_ode_expl_vde_forw_n_out;
-        forw_vde_casadi[i].casadi_sparsity_in = &{{ ra.model_name }}_ode_expl_vde_forw_sparsity_in;
-        forw_vde_casadi[i].casadi_sparsity_out = &{{ ra.model_name }}_ode_expl_vde_forw_sparsity_out;
-        forw_vde_casadi[i].casadi_work = &{{ ra.model_name }}_ode_expl_vde_forw_work;
+        forw_vde_casadi[i].casadi_fun = &{{ ra.model_name }}_expl_vde_forw;
+        forw_vde_casadi[i].casadi_n_in = &{{ ra.model_name }}_expl_vde_forw_n_in;
+        forw_vde_casadi[i].casadi_n_out = &{{ ra.model_name }}_expl_vde_forw_n_out;
+        forw_vde_casadi[i].casadi_sparsity_in = &{{ ra.model_name }}_expl_vde_forw_sparsity_in;
+        forw_vde_casadi[i].casadi_sparsity_out = &{{ ra.model_name }}_expl_vde_forw_sparsity_out;
+        forw_vde_casadi[i].casadi_work = &{{ ra.model_name }}_expl_vde_forw_work;
     }
 
     {% if ra.solver_config.hessian_approx == 'EXACT': %} 
     external_function_casadi hess_vde_casadi[N];
     for (int i = 0; i < N; ++i) {
-        hess_vde_casadi[i].casadi_fun = &{{ ra.model_name }}_ode_expl_ode_hess;
-        hess_vde_casadi[i].casadi_n_in = &{{ ra.model_name }}_ode_expl_ode_hess_n_in;
-        hess_vde_casadi[i].casadi_n_out = &{{ ra.model_name }}_ode_expl_ode_hess_n_out;
-        hess_vde_casadi[i].casadi_sparsity_in = &{{ ra.model_name }}_ode_expl_ode_hess_sparsity_in;
-        hess_vde_casadi[i].casadi_sparsity_out = &{{ ra.model_name }}_ode_expl_ode_hess_sparsity_out;
-        hess_vde_casadi[i].casadi_work = &{{ ra.model_name }}_ode_expl_ode_hess_work;
+        hess_vde_casadi[i].casadi_fun = &{{ ra.model_name }}_expl_ode_hess;
+        hess_vde_casadi[i].casadi_n_in = &{{ ra.model_name }}_expl_ode_hess_n_in;
+        hess_vde_casadi[i].casadi_n_out = &{{ ra.model_name }}_expl_ode_hess_n_out;
+        hess_vde_casadi[i].casadi_sparsity_in = &{{ ra.model_name }}_expl_ode_hess_sparsity_in;
+        hess_vde_casadi[i].casadi_sparsity_out = &{{ ra.model_name }}_expl_ode_hess_sparsity_out;
+        hess_vde_casadi[i].casadi_work = &{{ ra.model_name }}_expl_ode_hess_work;
     }
     {% endif %}
 
@@ -265,20 +265,20 @@ int main() {
     printf("\n--- solution ---\n");
     ocp_nlp_out_print(dims, nlp_out);
     
-    // free memory
-    free(dims);
-    free(config);
-    free(nlp_in);
-    free(nlp_out);
-    free(nlp_opts);
-    free(solver);
+    // // free memory
+    // free(dims);
+    // free(config);
+    // free(nlp_in);
+    // free(nlp_out);
+    // free(nlp_opts);
+    // free(solver);
     
-    // free external function 
-    external_function_casadi_free(&impl_dae_fun);
-    external_function_casadi_free(&impl_dae_fun_jac_x_xdot_z);
-    external_function_casadi_free(&impl_dae_jac_x_xdot_u_z);
-    external_function_casadi_free(&nls_cost_residual);
-    external_function_casadi_free(&nls_cost_N_residual);
+    // // free external function 
+    // external_function_casadi_free(&impl_dae_fun);
+    // external_function_casadi_free(&impl_dae_fun_jac_x_xdot_z);
+    // external_function_casadi_free(&impl_dae_jac_x_xdot_u_z);
+    // external_function_casadi_free(&nls_cost_residual);
+    // external_function_casadi_free(&nls_cost_N_residual);
 
     return solver_status;
 }

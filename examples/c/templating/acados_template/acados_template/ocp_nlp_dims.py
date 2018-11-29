@@ -41,6 +41,7 @@ class ocp_nlp_solver_config:
     def __init__(self):
         self._qp_solver      = 'PARTIAL_CONDENSING_HPIPM' # qp solver to be used in the NLP solver
         self._hessian_approx = 'GAUSS_NEWTON' # hessian approximation
+        self._integrator_type = 'ERK' # integrator type
 
     @property
     def qp_solver(self):
@@ -49,6 +50,10 @@ class ocp_nlp_solver_config:
     @property
     def hessian_approx(self):
         return self._hessian_approx
+
+    @property
+    def integrator_type(self):
+        return self._integrator_type
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
@@ -71,6 +76,15 @@ class ocp_nlp_solver_config:
             raise Exception('Invalid hessian_approx value. Possible values are:\n\n' \
                     + ',\n'.join(hessian_approxs) + '.\n\nYou have: ' + hessian_approx + '.\n\nExiting.')
 
+    @integrator_type.setter
+    def integrator_type(self, integrator_type):
+        integrator_types = ('ERK')
+
+        if type(integrator_type) == str and integrator_type in integrator_types:
+            self._integrator_type = integrator_type
+        else:
+            raise Exception('Invalid integrator_type value. Possible values are:\n\n' \
+                    + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\nExiting.')
 class ocp_nlp_constant:
     def __init__(self):
         self.name  = None # constant name
@@ -82,3 +96,4 @@ class ocp_nlp_render_arguments:
         self.solver_config = ocp_nlp_solver_config()
         self.model_name = None 
         self.constants = []
+        self.acados_include_path = []

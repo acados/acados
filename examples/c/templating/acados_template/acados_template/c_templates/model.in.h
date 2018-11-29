@@ -1,10 +1,11 @@
 #ifndef {{ ra.model_name.upper() }}_MODEL
-#define {{ ra.model_name.uppper() }}_MODEL
+#define {{ ra.model_name.upper() }}_MODEL
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+{% if ra.solver_config.integrator_type != 'ERK' %}
 // implicit ODE
 int {{ ra.model_name }}_impl_ode_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ ra.model_name }}_impl_ode_fun_work(int *, int *, int *, int *);
@@ -86,8 +87,45 @@ const int *{{ ra.model_name }}_f_lo_fun_jac_x1k1uz_sparsity_out(int);
 int        {{ ra.model_name }}_f_lo_fun_jac_x1k1uz_n_in();
 int        {{ ra.model_name }}_f_lo_fun_jac_x1k1uz_n_out();
 
+{% else %}
+/* explicit ODE */
+
+// explicit ODE
+int {{ ra.model_name }}_expl_ode_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ ra.model_name }}_expl_ode_fun_work(int *, int *, int *, int *);
+const int *{{ ra.model_name }}_expl_ode_fun_sparsity_in(int);
+const int *{{ ra.model_name }}_expl_ode_fun_sparsity_out(int);
+int {{ ra.model_name }}_expl_ode_fun_n_in();
+int {{ ra.model_name }}_expl_ode_fun_n_out();
+
+// explicit forward VDE
+int {{ ra.model_name }}_expl_vde_forw(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ ra.model_name }}_expl_vde_forw_work(int *, int *, int *, int *);
+const int *{{ ra.model_name }}_expl_vde_forw_sparsity_in(int);
+const int *{{ ra.model_name }}_expl_vde_forw_sparsity_out(int);
+int {{ ra.model_name }}_expl_vde_forw_n_in();
+int {{ ra.model_name }}_expl_vde_forw_n_out();
+
+// explicit adjoint VDE
+int {{ ra.model_name }}_expl_vde_adj(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ ra.model_name }}_expl_vde_adj_work(int *, int *, int *, int *);
+const int *{{ ra.model_name }}_expl_vde_adj_sparsity_in(int);
+const int *{{ ra.model_name }}_expl_vde_adj_sparsity_out(int);
+int {{ ra.model_name }}_expl_vde_adj_n_in();
+int {{ ra.model_name }}_expl_vde_adj_n_out();
+
+// explicit adjoint ODE jac
+int {{ ra.model_name }}_expl_ode_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ ra.model_name }}_expl_ode_hess_work(int *, int *, int *, int *);
+const int *{{ ra.model_name }}_expl_ode_hess_sparsity_in(int);
+const int *{{ ra.model_name }}_expl_ode_hess_sparsity_out(int);
+int {{ ra.model_name }}_expl_ode_hess_n_in();
+int {{ ra.model_name }}_expl_ode_hess_n_out();
+
+{% endif %}
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // EXAMPLES_C_INV_PENDULUM
+#endif  // {{ ra.model_name.upper() }}_MODEL

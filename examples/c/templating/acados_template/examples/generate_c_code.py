@@ -6,13 +6,13 @@ def export_ode_model():
 
     model_name = 'pendulum_ode'
 
-    ## Constants
+    ## constants
     M = 1
     m = 0.1
     g = 9.81
     l = 0.8
 
-    ## Set up States & Controls
+    ## set up States & Controls
     x1      = SX.sym('x1')
     theta   = SX.sym('theta')
     v1      = SX.sym('v1')
@@ -20,7 +20,7 @@ def export_ode_model():
     
     x = vertcat(x1, v1, theta, dtheta)
 
-    # Controls
+    # controls
     F = SX.sym('F')
     u = vertcat(F)
     
@@ -35,7 +35,7 @@ def export_ode_model():
     ## algebraic variables
     z = []
     
-    ## Dynamics     
+    ## dynamics     
     denominator = M + m - m*cos(theta)*cos(theta)
     f_expl = vertcat(v1, (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator, dtheta, (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator))
     
@@ -59,10 +59,6 @@ file_loader = FileSystemLoader(acados_path + '/c_templates')
 env = Environment(loader = file_loader)
 template = env.get_template('template_example.in.c')
 
-# file_loader = FileSystemLoader('c_templates')
-# env = Environment(loader = file_loader)
-# template = env.get_template('template_example.in.c')
-
 # create render arguments
 ra = ocp_nlp_render_arguments()
 
@@ -79,6 +75,7 @@ nlp_dims.nu = model.u.size()[0]
 nlp_dims.N  = 100
 
 # set weighting matrices
+# TODO(andrea)
 
 # set constants
 const1 = ocp_nlp_constant()
@@ -89,14 +86,24 @@ ra.constants = [const1]
 # set QP solver
 ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
+ra.solver_config.integrator_type = 'ERK'
 
 # explicit model -- generate C code
 generate_c_code_explicit_ode(model);
 
-# render template
-output = template.render(ra=ra)
+# set header path
+ra.acados_include_path = '/usr/local/include'
 
+# render source template
+output = template.render(ra=ra)
 # output file
 out_file = open('./c_generated_code/template_example.c', 'w+')
+out_file.write(output)
+
+# render header template
+template = env.get_template('model.in.h')
+output = template.render(ra=ra)
+# output file
+out_file = open('./c_generated_code/' + model.name + '_model/' + model.name + '_model.h', 'w+')
 out_file.write(output)
 
