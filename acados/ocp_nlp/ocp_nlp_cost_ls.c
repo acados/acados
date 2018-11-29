@@ -192,34 +192,49 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
 }
 
 
-static void ocp_nlp_cost_ls_set_Cyt(void *config_, void* dims_, void *model_, void *value_)
+
+
+int ocp_nlp_cost_ls_set_model(void *config_, void *dims_, void *model_, const char *field, void *value_)
 {
-    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
+    int status = ACADOS_SUCCESS;
 
-    int nx = dims->nx;
-    int nu = dims->nu;
-    int ny = dims->ny;
+    if ( !config_ || !dims_ || !model_ || !value_ )
+        status = ACADOS_FAILURE;
 
-    double* double_values = (double *) value_;
+    ocp_nlp_cost_ls_dims *dims = dims_;
+    ocp_nlp_cost_ls_model *model = model_;
 
-    ocp_nlp_cost_ls_model *model = (ocp_nlp_cost_ls_model *) model_;
-
-    blasfeo_pack_dmat(nx + nu, ny, double_values, nx + nu, &model->Cyt, 0, 0);
-}
-
-
-
-void ocp_nlp_cost_ls_set_model(void *config_, void* dims_, void *model_, const char *field, void *value_)
-{
-    if (!strcmp(field, "Cyt"))
+    if (!strcmp(field, "W"))
     {
-        ocp_nlp_cost_ls_set_Cyt(config_, dims_, model_, value_);
+        double *W_col_maj = (double *) value_;
+        blasfeo_pack_dmat(dims->ny, dims->ny, W_col_maj, dims->ny, &model->W, 0, 0);
+    }
+    else if (!strcmp(field, "Cyt"))
+    {
+        double *Cyt_col_maj = (double *) value_;
+        blasfeo_pack_dmat(dims->nx + dims->nu, dims->ny, Cyt_col_maj, dims->ny, &model->Cyt, 0, 0);
+    }
+    else if (!strcmp(field, "y_ref"))
+    {
+        double *y_ref = (double *) value_;
+        blasfeo_pack_dvec(dims->ny, y_ref, &model->y_ref, 0);
+    }
+    else if (!strcmp(field, "Z "))
+    {
+        double *Z = (double *) value_;
+        blasfeo_pack_dvec(2 * dims->ns, Z, &model->Z, 0);
+    }
+    else if (!strcmp(field, "z"))
+    {
+        double *z = (double *) value_;
+        blasfeo_pack_dvec(2 * dims->ns, z, &model->z, 0);
     }
     else
     {
-        printf("\nerror: field not available in ls cost model\n");
-        exit(1);
+        printf("\nerror: model entry: %s not available in module ocp_nlp_cost_nls\n", field);
+        status = ACADOS_FAILURE;
     }
+    return status;
 }
 
 
@@ -492,6 +507,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
     config->set_dims = &ocp_nlp_cost_ls_dims_set;
     config->model_calculate_size = &ocp_nlp_cost_ls_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_ls_model_assign;
+    config->set_model = &ocp_nlp_cost_ls_set_model;
     config->opts_calculate_size = &ocp_nlp_cost_ls_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_ls_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_ls_opts_initialize_default;

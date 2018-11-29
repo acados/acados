@@ -224,11 +224,11 @@ int ocp_nlp_cost_nls_set_model(void *config_, void *dims_, void *model_, const c
     }
     else if (!strcmp(field, "nls_jac"))
     {
-        // TODO(oj): implement
+        model->nls_jac = (external_function_generic *) value_;
     }
     else if (!strcmp(field, "nls_hess"))
     {
-        // TODO(oj): implement
+        model->nls_hess = (external_function_generic *) value_;
     }
     else
     {
@@ -488,7 +488,6 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     int ny = dims->ny;
     int ns = dims->ns;
 
-    // XXX large enough ?
     ext_fun_arg_t ext_fun_type_in[3];
     void *ext_fun_in[3];
     ext_fun_arg_t ext_fun_type_out[3];

@@ -59,7 +59,7 @@ void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int
 
 typedef struct
 {
-    struct blasfeo_dmat Cyt;            // output matrix: Cy * [x, u] = y;
+    struct blasfeo_dmat Cyt;            // output matrix: Cy * [x, u] = y; in transposed form
     struct blasfeo_dmat W;              // ls norm corresponding to this matrix
     struct blasfeo_dvec y_ref;          // yref
     struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector
@@ -70,6 +70,8 @@ typedef struct
 int ocp_nlp_cost_ls_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_cost_ls_model_assign(void *config, void *dims, void *raw_memory);
+//
+int ocp_nlp_cost_ls_set_model(void *config_, void *dims_, void *model_, const char *field, void *value_);
 
 /************************************************
  * options

@@ -39,7 +39,6 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
@@ -1318,7 +1317,6 @@ int main()
 	/* cost */
 	ocp_nlp_cost_ls_model *stage_cost_ls;
 	ocp_nlp_cost_nls_model *stage_cost_nls;
-	ocp_nlp_cost_external_model *stage_cost_external;
 
 	for (int i = 0; i <= NN; i++)
 	{
@@ -1369,9 +1367,7 @@ int main()
 
 			case EXTERNALLY_PROVIDED:
 
-				stage_cost_external = (ocp_nlp_cost_external_model *) nlp_in->cost[i];
-
-				stage_cost_external->ext_cost = &ext_cost_generic[i];
+				ocp_nlp_cost_set_model(config, dims, nlp_in, i, "ext_cost", &ext_cost_generic[i]);
 
 				assert(i < NN && "externally provided cost not implemented for last stage!");
 

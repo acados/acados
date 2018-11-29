@@ -178,6 +178,39 @@ void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_m
     return model;
 }
 
+
+int ocp_nlp_cost_external_set_model(void *config_, void *dims_, void *model_, const char *field, void *value_)
+{
+    int status = ACADOS_SUCCESS;
+
+    if ( !config_ || !dims_ || !model_ || !value_ )
+        status = ACADOS_FAILURE;
+
+    ocp_nlp_cost_external_dims *dims = dims_;
+    ocp_nlp_cost_external_model *model = model_;
+
+    if (!strcmp(field, "ext_cost"))
+    {
+        model->ext_cost = (external_function_generic *) value_;
+    }
+    else if (!strcmp(field, "Z "))
+    {
+        double *Z = (double *) value_;
+        blasfeo_pack_dvec(2 * dims->ns, Z, &model->Z, 0);
+    }
+    else if (!strcmp(field, "z"))
+    {
+        double *z = (double *) value_;
+        blasfeo_pack_dvec(2 * dims->ns, z, &model->z, 0);
+    }
+    else
+    {
+        printf("\nerror: model entry: %s not available in module ocp_nlp_cost_nls\n", field);
+        status = ACADOS_FAILURE;
+    }
+    return status;
+}
+
 /************************************************
  * options
  ************************************************/
@@ -459,6 +492,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->set_dims = &ocp_nlp_cost_external_dims_set;
     config->model_calculate_size = &ocp_nlp_cost_external_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_external_model_assign;
+    config->set_model = &ocp_nlp_cost_external_set_model;
     config->opts_calculate_size = &ocp_nlp_cost_external_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_external_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_external_opts_initialize_default;

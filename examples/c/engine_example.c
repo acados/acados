@@ -222,19 +222,20 @@ int main()
 
     // cost
     ocp_nlp_cost_nls_model **cost = (ocp_nlp_cost_nls_model **) nlp_in->cost;
+    int status = ACADOS_SUCCESS;
 
 	for (int i = 0; i < N; ++i) {
-        cost[i]->nls_jac = (external_function_generic *) &nls_cost_residual;
-        // blasfeo_pack_dvec(ny[i], y_ref, &cost[i]->y_ref, 0);
-        ocp_nlp_cost_set_model(config, dims, nlp_in, i, "y_ref", y_ref);
-        // blasfeo_pack_dmat(ny[i], ny[i], W, ny[i], &cost[i]->W, 0, 0);
-        ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W);
+        status = ocp_nlp_cost_set_model(config, dims, nlp_in, i, "nls_jac", &nls_cost_residual);
+        status = ocp_nlp_cost_set_model(config, dims, nlp_in, i, "y_ref", y_ref);
+        status = ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W);
     }
 
-    cost[N]->nls_jac = (external_function_generic *) &nls_cost_N_residual;
-    cost[N]->nls_hess = NULL;
-    blasfeo_pack_dvec(ny[N], y_ref, &cost[N]->y_ref, 0);
-    blasfeo_pack_dmat(ny[N], ny[N], W_N, ny[N], &cost[N]->W, 0, 0);
+    status = ocp_nlp_cost_set_model(config, dims, nlp_in, N, "nls_jac", &nls_cost_N_residual);
+    status = ocp_nlp_cost_set_model(config, dims, nlp_in, N, "y_ref", y_ref);
+    status = ocp_nlp_cost_set_model(config, dims, nlp_in, N, "W", W_N);
+
+    if (status == ACADOS_FAILURE)
+        printf("\nerror: setting cost model\n");
 
     // dynamics
     for (int i = 0; i < N; ++i)

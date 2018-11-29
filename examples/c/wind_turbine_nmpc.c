@@ -475,6 +475,12 @@ int main()
 	W[2+ny_*2] = 0.01;
 	W[3+ny_*3] = 0.001;
 
+	double *W_N = malloc((ny[NN]*ny[NN])*sizeof(double));
+	W_N[0+ny[NN]*0] = 1.5114;
+	W_N[1+ny[NN]*0] = -0.0649;
+	W_N[0+ny[NN]*1] = -0.0649;
+	W_N[1+ny[NN]*1] = 0.0180;
+
 	/* slacks */
 
 	// first stage
@@ -605,6 +611,7 @@ int main()
 		if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
 			/* initialize additional gnsf dimensions */
+			// TODO(oj): implement this
 			// ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
 			// ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config->dynamics[i];
 			// void *dims = dyn_dims->sim;
@@ -655,6 +662,8 @@ int main()
 	// linear ls
 	ocp_nlp_cost_ls_model **cost = (ocp_nlp_cost_ls_model **) nlp_in->cost;
 
+	int status = ACADOS_SUCCESS;
+
 	for (int i = 0; i <= NN; i++)
 	{
 		// Cyt
@@ -662,11 +671,12 @@ int main()
 		blasfeo_pack_tran_dmat(ny[i], nx[i], Vx, ny_, &cost[i]->Cyt, nu[i], 0);
 
 		// W
-		blasfeo_pack_dmat(ny[i], ny[i], W, ny_, &cost[i]->W, 0, 0);
+		ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W);
 
 // 	blasfeo_print_dmat(nu[i]+nx[i], ny[i], &cost[i]->Cyt, 0, 0);
-// 	blasfeo_print_dmat(ny[i], ny[i], &cost[i]->W, 0, 0);
+//  blasfeo_print_dmat(ny[i], ny[i], &cost[i]->W, 0, 0);
 	}
+	status = ocp_nlp_cost_set_model(config, dims, nlp_in, NN, "W", W_N);
 
 	// slacks (middle stages)
 	for (int ii=1; ii<NN; ii++)
@@ -941,8 +951,6 @@ int main()
     ************************************************/
 
 	int nmpc_problems = 40;
-
-    int status;
 
     acados_timer timer;
     acados_tic(&timer);
