@@ -25,7 +25,6 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 // acados
-#include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/math.h"
 #include "acados/utils/print.h"
@@ -33,6 +32,7 @@
 #include "acados_c/external_function_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
 
+// example specific includes
 #include "examples/c/engine_model/engine_impl_dae_fun.h"
 #include "examples/c/engine_model/engine_impl_dae_fun_jac_x_xdot_z.h"
 #include "examples/c/engine_model/engine_impl_dae_jac_x_xdot_u_z.h"
@@ -221,7 +221,7 @@ int main()
     	nlp_in->Ts[i] = T;
 
     // cost
-    ocp_nlp_cost_nls_model **cost = (ocp_nlp_cost_nls_model **) nlp_in->cost;
+    // ocp_nlp_cost_nls_model **cost = (ocp_nlp_cost_nls_model **) nlp_in->cost;
     int status = ACADOS_SUCCESS;
 
 	for (int i = 0; i < N; ++i) {
@@ -293,9 +293,9 @@ int main()
         y_ref[0] = reference[i];
 
         for (int j = 0; j <= N; ++j)
-            blasfeo_pack_dvec(ny[j], y_ref, &cost[j]->y_ref, 0);
+            status = ocp_nlp_cost_set_model(config, dims, nlp_in, j, "y_ref", y_ref);
 
-        int status = ocp_nlp_solve(solver, nlp_in, nlp_out);
+        status = ocp_nlp_solve(solver, nlp_in, nlp_out);
         
         blasfeo_print_to_file_dvec(out_file, nu[0]+nx[0], nlp_out->ux, 0);
 
@@ -308,15 +308,16 @@ int main()
         printf("iter %d, status: %d, res = %g\n", i, status, nlp_out->inf_norm_res);
     }
 
-    // ocp_nlp_out_print(dims, nlp_out);
+    fclose(out_file);
 
     // free memory
-    free(dims);
-    free(config);
-    free(nlp_in);
-    free(nlp_out);
-    free(nlp_opts);
-    free(solver);
+    ocp_nlp_free(solver);
+    ocp_nlp_out_free(nlp_out);
+    ocp_nlp_opts_free(nlp_opts);
+    ocp_nlp_in_free(nlp_in);
+    ocp_nlp_dims_free(dims);
+    ocp_nlp_config_free(plan, config);
+    ocp_nlp_plan_free(plan);
     
     /* free external function */
     // implicit model
