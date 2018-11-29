@@ -1,7 +1,6 @@
 from jinja2 import Environment, FileSystemLoader
 from acados_template import *
 import acados_template as at
-import pkgutil
 
 def export_ode_model():
 
@@ -55,13 +54,14 @@ def export_ode_model():
     return model 
 
 # setting up loader and environment
-const1 = ocp_nlp_constant()
-import pdb; pdb.set_trace()
 acados_path = os.path.dirname(os.path.abspath(at.__file__))
-# file_loader = FileSystemLoader(acados_path + '/c_templates')
-file_loader = FileSystemLoader('.')
+file_loader = FileSystemLoader(acados_path + '/c_templates')
 env = Environment(loader = file_loader)
 template = env.get_template('template_example.in.c')
+
+# file_loader = FileSystemLoader('c_templates')
+# env = Environment(loader = file_loader)
+# template = env.get_template('template_example.in.c')
 
 # create render arguments
 ra = ocp_nlp_render_arguments()

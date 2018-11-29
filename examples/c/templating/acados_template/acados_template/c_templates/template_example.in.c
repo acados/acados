@@ -123,7 +123,7 @@ int main() {
         forw_vde_casadi[i].casadi_work = &{{ ra.model_name }}_ode_expl_vde_forw_work;
     }
 
-    {% if ra.solver_config.hessian_approx is 'EXACT': %} 
+    {% if ra.solver_config.hessian_approx == 'EXACT': %} 
     external_function_casadi hess_vde_casadi[N];
     for (int i = 0; i < N; ++i) {
         hess_vde_casadi[i].casadi_fun = &{{ ra.model_name }}_ode_expl_ode_hess;
@@ -146,7 +146,7 @@ int main() {
         c_ptr += external_function_casadi_calculate_size(forw_vde_casadi+i);
     }
 
-    {% if ra.solver_config.hessian_approx is 'EXACT': %} 
+    {% if ra.solver_config.hessian_approx == 'EXACT': %} 
     // NLP model: hessian VDEs
     function_size = 0;
     for (int i = 0; i < N; ++i)
@@ -197,7 +197,7 @@ int main() {
         ocp_nlp_dynamics_cont_model *dynamics = (ocp_nlp_dynamics_cont_model *) nlp_in->dynamics[i];
         erk_model *model = (erk_model *) dynamics->sim_model;
         model->expl_vde_for = (external_function_generic *) &forw_vde_casadi[i];
-        {% if ra.solver_config.hessian_approx is 'EXACT': %} 
+        {% if ra.solver_config.hessian_approx == 'EXACT': %} 
         model->expl_vde_adj = (external_function_generic *) &hess_vde_casadi[i];
         model->expl_ode_hes = (external_function_generic *) &hess_vde_casadi[i];
         {% endif %}
@@ -231,7 +231,7 @@ int main() {
     {
         sim_rk_opts *rk_opts = (sim_rk_opts *) ((ocp_nlp_dynamics_cont_opts *)sqp_opts->dynamics[i])->sim_solver;
         rk_opts->num_steps = 5;
-        {% if ra.solver_config.hessian_approx is 'EXACT': %} 
+        {% if ra.solver_config.hessian_approx == 'EXACT': %} 
         ((ocp_nlp_dynamics_cont_opts *)sqp_opts->dynamics[i])->compute_hess = true;
         rk_opts->sens_hess = true;
         rk_opts->sens_adj = true;
