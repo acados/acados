@@ -1,7 +1,8 @@
 from jinja2 import Environment, FileSystemLoader
-from ocp_nlp_dims import *
-from export_ode_model import *
-from generate_c_code_explicit_ode import *
+from acados_template import *
+from acados_template.ocp_nlp_dims import *
+from acados_template.export_ode_model import *
+from acados_template.generate_c_code_explicit_ode import *
 
 def export_ode_model():
 
