@@ -93,6 +93,7 @@ generate_c_code_explicit_ode(model);
 
 # set header path
 ra.acados_include_path = '/usr/local/include'
+ra.acados_lib_path = '../../../../../../build'
 
 # render source template
 output = template.render(ra=ra)
@@ -107,3 +108,9 @@ output = template.render(ra=ra)
 out_file = open('./c_generated_code/' + model.name + '_model/' + model.name + '_model.h', 'w+')
 out_file.write(output)
 
+# render Makefile template
+template = env.get_template('Makefile.in')
+output = template.render(ra=ra)
+# output file
+out_file = open('./c_generated_code/Makefile', 'w+')
+out_file.write(output)

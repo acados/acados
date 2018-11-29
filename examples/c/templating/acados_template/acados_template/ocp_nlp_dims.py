@@ -97,3 +97,4 @@ class ocp_nlp_render_arguments:
         self.model_name = None 
         self.constants = []
         self.acados_include_path = []
+        self.acados_lib_path = []
