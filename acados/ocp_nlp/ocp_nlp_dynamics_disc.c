@@ -99,7 +99,7 @@ static void ocp_nlp_dynamics_disc_set_nu1(void *config_, void *dims_, int *nu1)
     dims->nu1 = *nu1;
 }
 
-void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, char *dim, int* value)
+void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim, int* value)
 {
     if (!strcmp(dim, "nx"))
     {

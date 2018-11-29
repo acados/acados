@@ -122,6 +122,7 @@ ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory)
  * dims
  ************************************************/
 
+// TODO(oj): should be static, but used by current ocp_nlp c++ interface
 int ocp_nlp_dims_calculate_size_self(int N)
 {
     int size = 0;
@@ -151,7 +152,6 @@ int ocp_nlp_dims_calculate_size_self(int N)
 }
 
 
-
 int ocp_nlp_dims_calculate_size(void *config_)
 {
     ocp_nlp_solver_config *config = config_;
@@ -179,7 +179,7 @@ int ocp_nlp_dims_calculate_size(void *config_)
     return size;
 }
 
-
+// TODO(oj): should be static, but used by current ocp_nlp c++ interface
 ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
@@ -288,7 +288,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
 }
 
 
-void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, char *field, const void* value_array)
+void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field, const void* value_array)
 {
     // to set dimension nx, nu, nz, ns (number of slacks = number of soft constraints)
     ocp_nlp_solver_config *config = config_;
@@ -389,7 +389,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, char *field, const vo
 
 
 
-void ocp_nlp_dims_set_constraints(void *config_, void *dims_, char *field, const void* value_field)
+void ocp_nlp_dims_set_constraints(void *config_, void *dims_, const char *field, const void* value_field)
 {
     // to set dimension nbx, nbu, ng, nh, nq (quadratic over nonlinear)
     ocp_nlp_solver_config *config = config_;
@@ -445,7 +445,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, char *field, const
 }
 
 
-void ocp_nlp_dims_set_cost(void *config_, void *dims_, char *field, const void* value_field)
+void ocp_nlp_dims_set_cost(void *config_, void *dims_, const char *field, const void* value_field)
 {
     // to set dimension ny (output)
     ocp_nlp_solver_config *config = config_;
@@ -461,7 +461,7 @@ void ocp_nlp_dims_set_cost(void *config_, void *dims_, char *field, const void* 
 }
 
 
-
+// TODO(oj): outdated, can be removed, is replaced by the ocp_nlp_dims_set* functions above
 void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng,
                              int *nh, int *nq, int *ns, int *nz, ocp_nlp_dims *dims)
 {
