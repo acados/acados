@@ -23,7 +23,6 @@
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
@@ -226,9 +225,10 @@ int main()
 
 	for (int i = 0; i < N; ++i) {
         cost[i]->nls_jac = (external_function_generic *) &nls_cost_residual;
-        cost[i]->nls_hess = NULL;
-        blasfeo_pack_dvec(ny[i], y_ref, &cost[i]->y_ref, 0);
-        blasfeo_pack_dmat(ny[i], ny[i], W, ny[i], &cost[i]->W, 0, 0);
+        // blasfeo_pack_dvec(ny[i], y_ref, &cost[i]->y_ref, 0);
+        ocp_nlp_cost_set_model(config, dims, nlp_in, i, "y_ref", y_ref);
+        // blasfeo_pack_dmat(ny[i], ny[i], W, ny[i], &cost[i]->W, 0, 0);
+        ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W);
     }
 
     cost[N]->nls_jac = (external_function_generic *) &nls_cost_N_residual;
@@ -239,9 +239,9 @@ int main()
     // dynamics
     for (int i = 0; i < N; ++i)
     {
-        if(nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_dae_fun)) exit(1);
-        if(nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z)) exit(1);
-        if(nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
+        if(ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun", &impl_dae_fun)) exit(1);
+        if(ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z)) exit(1);
+        if(ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
     }
 
     // bounds

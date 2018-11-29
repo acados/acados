@@ -93,7 +93,7 @@ static void ocp_nlp_cost_ls_set_ns(void *config_, void *dims_, int *ns)
 }
 
 
-void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, char *field, int* value)
+void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int* value)
 {
     if (!strcmp(field, "nx"))
     {

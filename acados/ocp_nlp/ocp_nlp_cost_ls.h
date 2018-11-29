@@ -51,7 +51,7 @@ void *ocp_nlp_cost_ls_dims_assign(void *config, void *raw_memory);
 //
 void ocp_nlp_cost_ls_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns);
 //
-void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, char *field, int* value);
+void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int* value);
 
 /************************************************
  * model
@@ -59,11 +59,11 @@ void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, char *field, int* valu
 
 typedef struct
 {
-    struct blasfeo_dmat Cyt;
-    struct blasfeo_dmat W;
-    struct blasfeo_dvec y_ref;
-    struct blasfeo_dvec Z;
-    struct blasfeo_dvec z;
+    struct blasfeo_dmat Cyt;            // output matrix: Cy * [x, u] = y;
+    struct blasfeo_dmat W;              // ls norm corresponding to this matrix
+    struct blasfeo_dvec y_ref;          // yref
+    struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector
+    struct blasfeo_dvec z;              // gradient of slacks as vector
 } ocp_nlp_cost_ls_model;
 
 //

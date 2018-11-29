@@ -171,7 +171,7 @@ static void mdlStart(SimStruct *S)
 
     for (int i = 0; i < NUM_STAGES; ++i)
     {
-        nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
+        ocp_nlp_dynamics_set_model(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
     }
 
     ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
