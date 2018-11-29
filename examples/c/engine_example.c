@@ -25,10 +25,7 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 // acados
-#include "acados/utils/external_function_generic.h"
-#include "acados/utils/math.h"
 #include "acados/utils/print.h"
-
 #include "acados_c/external_function_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
 
@@ -225,17 +222,14 @@ int main()
     int status = ACADOS_SUCCESS;
 
 	for (int i = 0; i < N; ++i) {
-        status = ocp_nlp_cost_set_model(config, dims, nlp_in, i, "nls_jac", &nls_cost_residual);
-        status = ocp_nlp_cost_set_model(config, dims, nlp_in, i, "y_ref", y_ref);
-        status = ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W);
+        if(ocp_nlp_cost_set_model(config, dims, nlp_in, i, "nls_jac", &nls_cost_residual)) exit(1);
+        if(ocp_nlp_cost_set_model(config, dims, nlp_in, i, "y_ref", y_ref)) exit(1);
+        if(ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W)) exit(1);
     }
 
-    status = ocp_nlp_cost_set_model(config, dims, nlp_in, N, "nls_jac", &nls_cost_N_residual);
-    status = ocp_nlp_cost_set_model(config, dims, nlp_in, N, "y_ref", y_ref);
-    status = ocp_nlp_cost_set_model(config, dims, nlp_in, N, "W", W_N);
-
-    if (status == ACADOS_FAILURE)
-        printf("\nerror: setting cost model\n");
+    if(ocp_nlp_cost_set_model(config, dims, nlp_in, N, "nls_jac", &nls_cost_N_residual)) exit(1);
+    if(ocp_nlp_cost_set_model(config, dims, nlp_in, N, "y_ref", y_ref)) exit(1);
+    if(ocp_nlp_cost_set_model(config, dims, nlp_in, N, "W", W_N)) exit(1);
 
     // dynamics
     for (int i = 0; i < N; ++i)
@@ -247,23 +241,24 @@ int main()
 
     // bounds
 	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-	ocp_nlp_constraints_bgh_dims **constraints_dims = (ocp_nlp_constraints_bgh_dims **) dims->constraints;
 
-    nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lb", lb_0);
-    nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ub", ub_0);   
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb_0);
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub_0);
+
     for (int i = 0; i < nb[0]; ++i)
         constraints[0]->idxb[i] = idxb[i];
     
     for (int i = 1; i < N; ++i)
     {
-    	nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "lb", lb);
-    	nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "ub", ub);
+        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lb", lb);
+        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ub", ub);
+
         for (int j = 0; j < nb[i]; ++j)
             constraints[i]->idxb[j] = idxb[j];
     }
 
-    nlp_bounds_bgh_set(constraints_dims[N], constraints[N], "lb", lb_N);
-    nlp_bounds_bgh_set(constraints_dims[N], constraints[N], "ub", ub_N);  
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, N, "lb", lb_N);
+    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, N, "ub", ub_N);
     for (int i = 0; i < nb[N]; ++i)
         constraints[N]->idxb[i] = idxb[i];
 
@@ -302,8 +297,9 @@ int main()
         blasfeo_unpack_dvec(nx[1], nlp_out->ux+1, nu[1], &lb_0[nu[1]]);
         blasfeo_unpack_dvec(nx[1], nlp_out->ux+1, nu[1], &ub_0[nu[1]]);
 
-        nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lb", lb_0);
-        nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ub", ub_0);   
+        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb_0);
+        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub_0);
+
 
         printf("iter %d, status: %d, res = %g\n", i, status, nlp_out->inf_norm_res);
     }

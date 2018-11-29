@@ -43,6 +43,7 @@ typedef struct
                             int nh, int nq, int ns);
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
+    int (*bounds_set)(void *config_, void *dims_, void *model_, const char *field, void *value);
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);

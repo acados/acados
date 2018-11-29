@@ -312,6 +312,68 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     return model;
 }
 
+int ocp_nlp_constraints_bgh_bounds_set(void *config_, void *dims_,
+                         void *model_, const char *field, void *value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    ocp_nlp_constraints_bgh_model *model = (ocp_nlp_constraints_bgh_model *) model_;
+
+    int status = ACADOS_FAILURE;
+
+    if (!dims || !model || !field || !value) return ACADOS_FAILURE;
+
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
+    // TODO(oj): document which strings mean what! - adapted from prev implementation..
+    if (!strcmp(field, "lb"))
+    {
+        blasfeo_pack_dvec(nb, value, &model->d, 0);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "ub"))
+    {
+        blasfeo_pack_dvec(nb, value, &model->d, nb+ng+nh);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "lg"))
+    {
+        blasfeo_pack_dvec(ng, value, &model->d, nb);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "ug"))
+    {
+        blasfeo_pack_dvec(ng, value, &model->d, 2*nb+ng+nh);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "lh"))
+    {
+        blasfeo_pack_dvec(nh, value, &model->d, nb+ng);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "uh"))
+    {
+        blasfeo_pack_dvec(nh, value, &model->d, 2*nb+2*ng+nh);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "ls"))
+    {
+        blasfeo_pack_dvec(ns, value, &model->d, 2*nb+2*ng+2*nh);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "us"))
+    {
+        blasfeo_pack_dvec(ns, value, &model->d, 2*nb+2*ng+2*nh+ns);
+        status = ACADOS_SUCCESS;
+    }
+    else
+    {
+        printf("Array identifier not implemented!\n");
+    }
+
+    return status;
+}
 
 
 /************************************************
@@ -725,6 +787,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_)
     config->get_dims = &ocp_nlp_constraints_bgh_dims_get;
     config->model_calculate_size = &ocp_nlp_constraints_bgh_model_calculate_size;
     config->model_assign = &ocp_nlp_constraints_bgh_model_assign;
+    config->bounds_set = &ocp_nlp_constraints_bgh_bounds_set;
     config->opts_calculate_size = &ocp_nlp_constraints_bgh_opts_calculate_size;
     config->opts_assign = &ocp_nlp_constraints_bgh_opts_assign;
     config->opts_initialize_default = &ocp_nlp_constraints_bgh_opts_initialize_default;

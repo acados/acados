@@ -366,11 +366,21 @@ int nlp_set_discrete_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *i
 }
 
 
+int ocp_nlp_constraints_bounds_set(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+             ocp_nlp_in *in, int stage, const char *field, void *value)
+{
+    ocp_nlp_constraints_config *constr_config = config->constraints[stage];
+    void *constr_dims = dims->constraints[stage];
 
+    return constr_config->bounds_set(constr_config, constr_dims,
+                                      in->constraints[stage], field, value);
+}
+
+// TODO(oj): remove this, it should be replaced by the function above
 int nlp_bounds_bgh_set(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
                        const char *identifier, double *values)
 {
-    int status = 0;
+    int status = ACADOS_FAILURE;
     char key[MAX_STR_LEN];
 
     if (!dims || !model || !identifier || !values) return status;
@@ -386,42 +396,42 @@ int nlp_bounds_bgh_set(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_b
     if (strcmp(key, "lb") == 0)
     {
         blasfeo_pack_dvec(nb, values, &model->d, 0);
-        status = 1;
+        status = ACADOS_SUCCESS;
     }
     else if (strcmp(key, "ub") == 0)
     {
         blasfeo_pack_dvec(nb, values, &model->d, nb+ng+nh);
-        status = 1;
+        status = ACADOS_SUCCESS;
     }
     else if (strcmp(key, "lg") == 0)
     {
         blasfeo_pack_dvec(ng, values, &model->d, nb);
-        status = 1;
+        status = ACADOS_SUCCESS;
     }
     else if (strcmp(key, "ug") == 0)
     {
         blasfeo_pack_dvec(ng, values, &model->d, 2*nb+ng+nh);
-        status = 1;
+        status = ACADOS_SUCCESS;
     }
     else if (strcmp(key, "lh") == 0)
     {
         blasfeo_pack_dvec(nh, values, &model->d, nb+ng);
-        status = 1;
+        status = ACADOS_SUCCESS;
     }
     else if (strcmp(key, "uh") == 0)
     {
         blasfeo_pack_dvec(nh, values, &model->d, 2*nb+2*ng+nh);
-        status = 1;
+        status = ACADOS_SUCCESS;
     }
     else if (strcmp(key, "ls") == 0)
     {
         blasfeo_pack_dvec(ns, values, &model->d, 2*nb+2*ng+2*nh);
-        status = 1;
+        status = ACADOS_SUCCESS;
     }
     else if (strcmp(key, "us") == 0)
     {
         blasfeo_pack_dvec(ns, values, &model->d, 2*nb+2*ng+2*nh+ns);
-        status = 1;
+        status = ACADOS_SUCCESS;
     }
     else
     {

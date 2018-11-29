@@ -137,6 +137,9 @@ int nlp_bounds_bgh_get(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_b
 //
 int ocp_nlp_cost_set_model(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
                            const char *field, void *value);
+//
+int ocp_nlp_constraints_bounds_set(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+                                     ocp_nlp_in *in, int stage, const char *field, void *value);
 
 /* out */
 //

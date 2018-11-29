@@ -138,7 +138,6 @@ ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory);
 ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
 
 
-
 /************************************************
  * out
  ************************************************/
