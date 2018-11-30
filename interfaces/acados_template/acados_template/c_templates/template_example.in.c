@@ -44,11 +44,12 @@ int main() {
     int num_controls = {{ ra.dims.nu }}; 
     int N = {{ ra.dims.N }};
 
-    double Tf = 1.0, R = 1e-2, F_max = 80;
+    double Tf = 1.0, F_max = 80;
     int idxb_0[5] = {0, 1, 2, 3, 4};
     double b0_l[5] = {-F_max, 0, 0, PI, 0};
     double b0_u[5] = {F_max, 0, 0, PI, 0};
-    double Q[4] = {1e3, 1e-2, 1e3, 1e-2};
+    double Q[{{ ra.dims.nx }}] = {1e3, 1e-2, 1e3, 1e-2};
+    double R[{{ ra.dims.nu }}] = {1e-2};
 
     int max_num_sqp_iterations = 1;
 
