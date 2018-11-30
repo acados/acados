@@ -28,7 +28,7 @@
 
 // acados
 // TODO(dimitris): remove most includes
-#include "acados/sim/sim_common.h"
+// #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_gnsf.h"
 
 #include "acados/utils/external_function_generic.h"
@@ -252,31 +252,48 @@ int main()
 		* sim opts
 		************************************************/
 
-		sim_rk_opts *opts = sim_opts_create(config, dims);
+		void *opts_ = sim_opts_create(config, dims);
+		sim_rk_opts *opts = opts_;
 
-	//		opts->ns = 4; // number of stages in rk integrator
-	//		opts->num_steps = 5; // number of integration steps
-		opts->sens_adj = true;
-		opts->sens_forw = true;
+		bool sens_adj = true;
+		bool sens_forw = true;
+
+		sim_opts_set(config, opts_, "sens_adj", &sens_adj);
+		sim_opts_set(config, opts_, "sens_forw", &sens_forw);
+
+		int ns, num_steps, newton_iter;
+		bool jac_reuse;
 
 		switch (nss)
 		{
 
 			case 0:
-				opts->ns = 4; // number of stages in rk integrator
-				opts->num_steps = 10; // number of integration steps
+				ns = 4;
+				num_steps = 10;
+				sim_opts_set(config, opts_, "ns", &ns);
+				sim_opts_set(config, opts_, "num_steps", &num_steps);
+
 				break;
 
 			case 1:
-				opts->ns = 2; // number of stages in rk integrator
-				opts->num_steps = 6; // number of integration steps
+
+				ns = 2;
+				num_steps = 6;
+				sim_opts_set(config, opts_, "ns", &ns);
+				sim_opts_set(config, opts_, "num_steps", &num_steps);
 				break;
 
 			case 2:
-				opts->ns = 8; // number of stages in rk integrator
-				opts->num_steps = 1; // number of integration steps
-				opts->jac_reuse = true; // jacobian reuse
-				opts->newton_iter = 3; // number of newton iterations per integration step
+				ns = 8;
+				num_steps = 1;
+				newton_iter = 3;
+				jac_reuse = true;
+
+				sim_opts_set(config, opts_, "ns", &ns);
+				sim_opts_set(config, opts_, "num_steps", &num_steps);
+				sim_opts_set(config, opts_, "newton_iter", &newton_iter);
+				sim_opts_set(config, opts_, "jac_reuse", &jac_reuse);
+
 				break;
 
 			case 3://gnsf
@@ -290,10 +307,16 @@ int main()
 				sim_dims_set(config, dims, "nuhat", &nuhat);
 
 				// set options
-				opts->ns = 8; // number of stages in rk integrator
-				opts->num_steps = 1; // number of integration steps
-				opts->jac_reuse = true; // jacobian reuse
-				opts->newton_iter = 3; // number of newton iterations per integration step
+
+				ns = 8;
+				num_steps = 1;
+				newton_iter = 3;
+				jac_reuse = true;
+
+				sim_opts_set(config, opts_, "ns", &ns);
+				sim_opts_set(config, opts_, "num_steps", &num_steps);
+				sim_opts_set(config, opts_, "newton_iter", &newton_iter);
+				sim_opts_set(config, opts_, "jac_reuse", &jac_reuse);
 				break;
 
 			default:

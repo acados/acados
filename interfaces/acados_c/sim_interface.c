@@ -329,6 +329,13 @@ void sim_opts_free(void *opts)
 }
 
 
+int sim_opts_set(sim_solver_config *config, void *opts, const char *field,
+                           void *value)
+{
+    return config->opts_set(config, opts, field, value);
+}
+
+
 
 void sim_opts_set_sens_forw(sim_rk_opts *opts, bool value)
 {

@@ -98,7 +98,9 @@ void *sim_opts_create(sim_solver_config *config, void *dims);
 void sim_opts_free(void *opts);
 //
 void sim_opts_set_sens_forw(sim_rk_opts *opts, bool value);
-
+//
+int sim_opts_set(sim_solver_config *config, void *opts, const char *field,
+                           void *value);
 /* solver */
 //
 int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_);

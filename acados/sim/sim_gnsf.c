@@ -1558,7 +1558,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     gnsf_workspace *workspace =
         (gnsf_workspace *) sim_gnsf_cast_workspace(config, dims, opts, work_);
 
-    if ( opts->ns == opts->tableau_size )
+    if ( opts->ns != opts->tableau_size )
     {
         printf("Error in sim_gnsf: the Butcher tableau size does not match ns");
         return ACADOS_FAILURE;
