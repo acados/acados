@@ -1424,7 +1424,6 @@ int main()
 
     /* constraints */
 	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-	ocp_nlp_constraints_bgh_dims **constraints_dims = (ocp_nlp_constraints_bgh_dims **) dims->constraints;
 
 	// fist stage
 #if CONSTRAINTS==0 // box constraints
