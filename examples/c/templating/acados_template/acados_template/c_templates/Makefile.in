@@ -1,3 +1,7 @@
+ACADOS_FLAGS = 
+{% if  'QPOASES' in ra.solver_config.qp_solver: %}
+ACADOS_FLAGS += -DACADOS_WITH_QPOASES
+{% endif %}
 OBJ = 
 OBJ+= template_example.o
 OBJ+= {{ ra.model_name }}_model/{{ ra.model_name }}_expl_ode_fun.o
@@ -12,11 +16,11 @@ casadi_fun:
 	( cd {{ ra.model_name }}_model; $(MAKE) {{ ra.model_name }}_expl_ode_fun.o {{ ra.model_name }}_expl_vde_forw.o )
 
 main:
-	gcc -c template_example.c -I $(INCLUDE_PATH)/blasfeo/include/ \
+	gcc $(ACADOS_FLAGS) -c template_example.c -I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/ 
 
 example: 
-	gcc -o template_example $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -o template_example $(OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
 	-L $(LIB_PATH)/external/qpoases/lib \
