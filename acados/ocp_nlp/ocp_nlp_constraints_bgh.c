@@ -133,7 +133,8 @@ static void ocp_nlp_constraints_bgh_set_np(void *config_, void *dims_, const int
     }
 }
 
-void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *field, const int* value)
+void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *field,
+                                             const int* value)
 {
     if (!strcmp(field, "nx"))
     {

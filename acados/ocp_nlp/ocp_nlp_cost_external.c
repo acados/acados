@@ -179,7 +179,8 @@ void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_m
 }
 
 
-int ocp_nlp_cost_external_set_model(void *config_, void *dims_, void *model_, const char *field, void *value_)
+int ocp_nlp_cost_external_set_model(void *config_, void *dims_, void *model_,
+                                         const char *field, void *value_)
 {
     int status = ACADOS_SUCCESS;
 

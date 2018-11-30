@@ -176,56 +176,56 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     if (options.count("sens_forw"))
     {
         bool sens_forw = (to_int(options.at("sens_forw")) >= 1);
-		sim_opts_set(config_, opts_, "sens_forw", &sens_forw);
+        sim_opts_set(config_, opts_, "sens_forw", &sens_forw);
     }
 
     if (options.count("sens_adj"))
     {
         bool sens_adj = (to_int(options.at("sens_adj")) >= 1);
-		sim_opts_set(config_, opts_, "sens_adj", &sens_adj);
+        sim_opts_set(config_, opts_, "sens_adj", &sens_adj);
     }
 
     if (options.count("sens_hess"))
     {
         bool sens_hess = (to_int(options.at("sens_hess")) >= 1);
-		sim_opts_set(config_, opts_, "sens_hess", &sens_hess);
+        sim_opts_set(config_, opts_, "sens_hess", &sens_hess);
     }
 
     if (options.count("jac_reuse"))
     {
         bool jac_reuse = (to_int(options.at("jac_reuse")) >= 1);
-		sim_opts_set(config_, opts_, "jac_reuse", &jac_reuse);
+        sim_opts_set(config_, opts_, "jac_reuse", &jac_reuse);
     }
 
     if (options.count("sens_algebraic"))
     {
         bool sens_algebraic = (to_int(options.at("sens_algebraic")) >= 1);
-		sim_opts_set(config_, opts_, "sens_algebraic", &sens_algebraic);
+        sim_opts_set(config_, opts_, "sens_algebraic", &sens_algebraic);
     }
 
     if (options.count("output_z"))
     {
         bool output_z = (to_int(options.at("output_z")) >= 1);
-		sim_opts_set(config_, opts_, "output_z", &output_z);
+        sim_opts_set(config_, opts_, "output_z", &output_z);
     }
 
 
     if (options.count("newton_iter"))
     {
         int newton_iter = to_int(options.at("newton_iter"));
-		sim_opts_set(config_, opts_, "newton_iter", &newton_iter);
+        sim_opts_set(config_, opts_, "newton_iter", &newton_iter);
     }
 
     if (options.count("num_steps"))
     {
         int num_steps = to_int(options.at("num_steps"));
-		sim_opts_set(config_, opts_, "num_steps", &num_steps);
+        sim_opts_set(config_, opts_, "num_steps", &num_steps);
     }
 
     if (options.count("stages"))
     {
         int stages = to_int(options.at("stages"));
-		sim_opts_set(config_, opts_, "num_stages", &stages);
+        sim_opts_set(config_, opts_, "num_stages", &stages);
     }
 
     if (options.count("model_type"))

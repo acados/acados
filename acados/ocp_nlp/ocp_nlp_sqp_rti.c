@@ -263,7 +263,7 @@ static void ocp_nlp_sqp_rti_opts_set_maxIter(void *config_, void* opts_, const v
     // ocp_nlp_sqp_rti_opts *opts = (ocp_nlp_sqp_rti_opts *) opts_;
     int* maxIter = (int *) value;
     // opts->maxIter = *maxIter;
-    if ( *maxIter>1 )
+    if ( *maxIter > 1 )
     {
         printf("\nerror: option type not available in module\n");
         exit(1);

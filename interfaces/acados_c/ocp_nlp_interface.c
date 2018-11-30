@@ -329,8 +329,9 @@ int ocp_nlp_dynamics_set_model(ocp_nlp_solver_config *config, ocp_nlp_in *in, in
 }
 
 
-static int ocp_nlp_cost_set_model_internal(ocp_nlp_cost_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-                           const char *field, void *value)
+static int ocp_nlp_cost_set_model_internal(ocp_nlp_cost_config *config,
+                                           ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+                                           const char *field, void *value)
 {
     void *cost_model = in->cost[stage];
     void *cost_dims = dims->cost[stage];
@@ -341,7 +342,8 @@ static int ocp_nlp_cost_set_model_internal(ocp_nlp_cost_config *config, ocp_nlp_
 }
 
 
-int ocp_nlp_cost_set_model(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+int ocp_nlp_cost_set_model(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+                           ocp_nlp_in *in, int stage,
                            const char *field, void *value)
 {
     ocp_nlp_cost_config *cost_config = config->cost[stage];

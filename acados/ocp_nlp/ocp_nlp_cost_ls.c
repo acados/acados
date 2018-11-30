@@ -194,7 +194,8 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
 
 
 
-int ocp_nlp_cost_ls_set_model(void *config_, void *dims_, void *model_, const char *field, void *value_)
+int ocp_nlp_cost_ls_set_model(void *config_, void *dims_, void *model_,
+                                 const char *field, void *value_)
 {
     int status = ACADOS_SUCCESS;
 

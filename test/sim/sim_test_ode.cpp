@@ -392,8 +392,6 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         opts->ns = 2;  // number of stages in rk integrator
 
                         // set additional dimensions
-
-                       
                         sim_dims_set(config, dims, "nx1", &nx1);
                         sim_dims_set(config, dims, "nz", &nz);
                         sim_dims_set(config, dims, "nz1", &nz1);
