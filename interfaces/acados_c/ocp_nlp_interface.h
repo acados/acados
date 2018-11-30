@@ -151,7 +151,10 @@ void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 void ocp_nlp_opts_free(void *opts);
 //
 void ocp_nlp_opts_set(ocp_nlp_solver_config *config, void *opts_, char *field, const void* value);
-
+//
+int ocp_nlp_dynamics_opts_set(ocp_nlp_solver_config *config, void *opts_, int stage,
+                                         const char *field, void *value);
+ 
 /* solver */
 //
 ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_);

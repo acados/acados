@@ -533,9 +533,9 @@ int main()
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 //		plan->sim_solver_plan[i].sim_solver = ERK;
-		plan->sim_solver_plan[i].sim_solver = IRK;
-//		plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
-		plan->sim_solver_plan[i].sim_solver = GNSF;
+		// plan->sim_solver_plan[i].sim_solver = IRK;
+		plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
+		// plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
 	for (int i = 0; i <= NN; i++)
@@ -864,24 +864,48 @@ int main()
 		{
 			sim_opts[i]->ns = 4;
 			sim_opts[i]->num_steps = 10;
+			// int ns = 4;
+			// int num_steps = 10;
+			// ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+			// ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == IRK)
 		{
-			sim_opts[i]->ns = 4;
-			sim_opts[i]->num_steps = 1;
-			sim_opts[i]->jac_reuse = true;
+			// sim_opts[i]->ns = 4;
+			// sim_opts[i]->num_steps = 1;
+			// sim_opts[i]->jac_reuse = true;
+			int num_steps = 1;
+			int ns = 4;
+			bool jac_reuse = true;
+			// int newton_iter = 1;
+
+			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
+			// ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "newton_iter", &newton_iter);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 		{
-			sim_opts[i]->ns = 4;
-			sim_opts[i]->num_steps = 1;
+			// sim_opts[i]->ns = 4;
+			// sim_opts[i]->num_steps = 1;
+
+			int num_steps = 1;
+			int ns = 4;
+
+			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
-			sim_opts[i]->ns = 4;
-			sim_opts[i]->num_steps = 1;
-			sim_opts[i]->newton_iter = 1;
-			sim_opts[i]->jac_reuse = true;
+			int num_steps = 1;
+			int ns = 4;
+			int newton_iter = 1;
+			bool jac_reuse = true;
+
+			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
+			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "newton_iter", &newton_iter);
 		}
 	}
 

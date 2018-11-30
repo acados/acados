@@ -376,7 +376,7 @@ int ocp_nlp_constraints_bounds_set(ocp_nlp_solver_config *config, ocp_nlp_dims *
                                       in->constraints[stage], field, value);
 }
 
-
+// NOTE(oj): not used atm, probably also not needed..
 int nlp_bounds_bgh_get(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
                        const char *identifier, double *values)
 {
@@ -482,6 +482,16 @@ void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 void ocp_nlp_opts_set(ocp_nlp_solver_config *config, void *opts_, char *field, const void* value)
 {
     config->opts_set(config, opts_, field, value);
+}
+
+
+int ocp_nlp_dynamics_opts_set(ocp_nlp_solver_config *config, void *opts_, int stage,
+                                         const char *field, void *value)
+{
+    // ocp_nlp_dynamics_config *dyn_config = config->dynamics[stage];
+    // ocp_nlp_opts
+    // dyn_config->opts_set(dyn_config, opts_, stage, field, value);
+    return config->dynamics_opts_set(config, opts_, stage, field, value);
 }
 
 

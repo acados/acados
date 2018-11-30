@@ -1144,7 +1144,11 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
 
-    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
+    if ( opts->ns == opts->tableau_size )
+    {
+        printf("Error in sim_lifted_irk: the Butcher tableau size does not match ns");
+        return ACADOS_FAILURE;
+    }
 
     int ns = opts->ns;
 

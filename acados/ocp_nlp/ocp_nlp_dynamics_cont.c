@@ -236,25 +236,35 @@ void ocp_nlp_dynamics_cont_opts_update(void *config_, void *dims_, void *opts_)
 
 
 
-void ocp_nlp_dynamics_cont_opts_set(void *config_, void *dims_, void *opts_, enum acados_opts name,
-    void *ptr_value)
+// void ocp_nlp_dynamics_cont_opts_set(void *config_, void *dims_, void *opts_, ,
+//     void *ptr_value)
+// {
+
+//     ocp_nlp_dynamics_cont_opts *opts = opts_;
+
+//     if (name == COMPUTE_ADJ)
+//     {
+//         int *compute_adj = ptr_value;
+//         opts->compute_adj = *compute_adj;
+//     }
+//     else
+//     {
+//         // TODO(fuck_you_lint): something better tha this print-and-exit
+//         printf("\nocp_nlp_dynamics_cont_opts_set: unknown opts name !\n");
+//         exit(1);
+//     }
+
+//     return;
+
+// }
+
+int ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
-
+    ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
+    sim_solver_config *sim_config = config->sim_solver;
 
-    if (name == COMPUTE_ADJ)
-    {
-        int *compute_adj = ptr_value;
-        opts->compute_adj = *compute_adj;
-    }
-    else
-    {
-        // TODO(fuck_you_lint): something better tha this print-and-exit
-        printf("\nocp_nlp_dynamics_cont_opts_set: unknown opts name !\n");
-        exit(1);
-    }
-
-    return;
+    return sim_config->opts_set(sim_config, opts->sim_solver, field, value);
 
 }
 
