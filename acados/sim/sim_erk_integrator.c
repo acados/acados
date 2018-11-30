@@ -234,6 +234,13 @@ void *sim_erk_opts_assign(void *config_, void *dims, void *raw_memory)
 }
 
 
+int sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    return sim_rk_opts_set(opts, field, value);
+}
+
+
 
 void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
@@ -545,8 +552,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
 
-    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
-
+    if ( opts->ns == opts->tableau_size )
+    {
+        printf("Error in sim_erk: the Butcher tableau size does not match ns");
+        return ACADOS_FAILURE;
+    }
     int ns = opts->ns;
 
     void *dims_ = in->dims;
@@ -839,6 +849,7 @@ void sim_erk_config_initialize_default(void *config_)
     config->opts_assign = &sim_erk_opts_assign;
     config->opts_initialize_default = &sim_erk_opts_initialize_default;
     config->opts_update = &sim_erk_opts_update;
+    config->opts_set = &sim_erk_opts_set;
     config->memory_calculate_size = &sim_erk_memory_calculate_size;
     config->memory_assign = &sim_erk_memory_assign;
     config->workspace_calculate_size = &sim_erk_workspace_calculate_size;

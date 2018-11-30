@@ -286,6 +286,12 @@ void sim_lifted_irk_opts_update(void *config_, void *dims, void *opts_)
 }
 
 
+int sim_lifted_irk_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    return sim_rk_opts_set(opts, field, value);
+}
+
 
 /************************************************
 * memory
@@ -525,8 +531,11 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
     int ns = opts->ns;
 
-    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
-
+    if ( opts->ns == opts->tableau_size )
+    {
+        printf("Error in sim_lifted_irk: the Butcher tableau size does not match ns");
+        return ACADOS_FAILURE;
+    }
     // assert - only use supported features
     assert(nz == 0 && "nz should be zero - DAEs are not (yet) supported for this integrator");
     assert(opts->output_z == false &&
@@ -803,6 +812,7 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     config->opts_assign = &sim_lifted_irk_opts_assign;
     config->opts_initialize_default = &sim_lifted_irk_opts_initialize_default;
     config->opts_update = &sim_lifted_irk_opts_update;
+    config->opts_set = &sim_lifted_irk_opts_set;
     config->memory_calculate_size = &sim_lifted_irk_memory_calculate_size;
     config->memory_assign = &sim_lifted_irk_memory_assign;
     config->workspace_calculate_size = &sim_lifted_irk_workspace_calculate_size;

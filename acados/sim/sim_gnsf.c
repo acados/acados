@@ -311,6 +311,7 @@ void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
     return;
 }
 
+
 void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
 {
     sim_rk_opts *opts = opts_;
@@ -329,6 +330,12 @@ void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
     butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
 
     return;
+}
+
+int sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    return sim_rk_opts_set(opts, field, value);
 }
 
 /************************************************
@@ -1551,6 +1558,12 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     gnsf_workspace *workspace =
         (gnsf_workspace *) sim_gnsf_cast_workspace(config, dims, opts, work_);
 
+    if ( opts->ns == opts->tableau_size )
+    {
+        printf("Error in sim_gnsf: the Butcher tableau size does not match ns");
+        return ACADOS_FAILURE;
+    }
+
     // necessary integers
     int nx      = dims->nx;
     int nu      = dims->nu;
@@ -2444,6 +2457,7 @@ void sim_gnsf_config_initialize_default(void *config_)
     config->opts_assign = &sim_gnsf_opts_assign;
     config->opts_initialize_default = &sim_gnsf_opts_initialize_default;
     config->opts_update = &sim_gnsf_opts_update;
+    config->opts_set = &sim_gnsf_opts_set;
     // memory & workspace
     config->memory_calculate_size = &sim_gnsf_memory_calculate_size;
     config->memory_assign = &sim_gnsf_memory_assign;

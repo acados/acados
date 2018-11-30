@@ -104,6 +104,8 @@ void sim_lifted_irk_opts_initialize_default(void *config, void *dims, void *opts
 //
 void sim_lifted_irk_opts_update(void *config_, void *dims, void *opts_);
 //
+int sim_lifted_irk_opts_set(void *config_, void *opts_, const char *field, void *value);
+//
 int sim_lifted_irk_memory_calculate_size(void *config, void *dims, void *opts_);
 //
 void *sim_lifted_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);

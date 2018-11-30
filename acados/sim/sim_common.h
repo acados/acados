@@ -111,6 +111,8 @@ typedef struct
     int num_forw_sens;
 
     int tableau_size;  // check that is consistent with ns
+            // only update when butcher tableau is changed
+            // kind of private -> no setter!
     double *A_mat;
     double *c_vec;
     double *b_vec;
@@ -137,11 +139,12 @@ typedef struct
 
 typedef struct
 {
-    int (*evaluate)(void *config, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
-    int (*opts_calculate_size)(void *config, void *dims);
-    void *(*opts_assign)(void *config, void *dims, void *raw_memory);
-    void (*opts_initialize_default)(void *config, void *dims, void *opts);
-    void (*opts_update)(void *config, void *dims, void *opts);
+    int (*evaluate)(void *config_, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
+    int (*opts_calculate_size)(void *config_, void *dims);
+    void *(*opts_assign)(void *config_, void *dims, void *raw_memory);
+    void (*opts_initialize_default)(void *config_, void *dims, void *opts);
+    void (*opts_update)(void *config_, void *dims, void *opts);
+    int (*opts_set)(void *config_, void *opts_, const char *field, void *value);
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
@@ -172,5 +175,8 @@ sim_in *sim_in_assign(void *config, void *dims, void *raw_memory);
 int sim_out_calculate_size(void *config, void *dims);
 //
 sim_out *sim_out_assign(void *config, void *dims, void *raw_memory);
+//
+int sim_rk_opts_set(sim_rk_opts *opts, const char *field, void *value);
+
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_
