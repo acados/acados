@@ -59,6 +59,8 @@ nu  = length(u);
 
 if isfield(model, 'p')
     np = length(model.p);
+else
+    np = 0;
 end
 
 %% initialize gnsf struct

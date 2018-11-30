@@ -102,6 +102,20 @@ typedef struct
 } external_function_casadi;
 
 //
+int external_function_casadi_struct_size();
+//
+void external_function_casadi_set_fun(external_function_casadi *fun, void *value);
+//
+void external_function_casadi_set_work(external_function_casadi *fun, void *value);
+//
+void external_function_casadi_set_sparsity_in(external_function_casadi *fun, void *value);
+//
+void external_function_casadi_set_sparsity_out(external_function_casadi *fun, void *value);
+//
+void external_function_casadi_set_n_in(external_function_casadi *fun, void *value);
+//
+void external_function_casadi_set_n_out(external_function_casadi *fun, void *value);
+//
 int external_function_casadi_calculate_size(external_function_casadi *fun);
 //
 void external_function_casadi_assign(external_function_casadi *fun, void *mem);

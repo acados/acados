@@ -10,7 +10,7 @@ nx, nu = 2, 1
 x = SX.sym('x', nx)
 u = SX.sym('u', nu)
 
-ode_fun = Function('ode_fun', [x, u], [vertcat(x[1], u)])
+ode_fun = Function('ode_fun', [x, u], [vertcat(x[1], u)], ['x', 'u'], ['rhs'])
 
 N = 15
 

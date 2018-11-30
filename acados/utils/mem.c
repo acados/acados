@@ -59,6 +59,12 @@ void *acados_malloc(size_t nitems, size_t size)
     return ptr;
 }
 
+void *acados_calloc(size_t nitems, size_t size)
+{
+    void *ptr = calloc(nitems, size);
+    return ptr;
+}
+
 void assign_and_advance_double_ptrs(int n, double ***v, char **ptr)
 {
 #ifndef WINDOWS_SKIP_PTR_ALIGNMENT_CHECK

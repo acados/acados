@@ -16,7 +16,7 @@
 #include "acados_cpp/ocp_bounds.hpp"
 #include "acados_cpp/ocp_dimensions.hpp"
 #include "acados_cpp/utils.hpp"
-#include "acados_cpp/ocp_nlp/function_generation.hpp"
+#include "acados_cpp/function_generation.hpp"
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 
