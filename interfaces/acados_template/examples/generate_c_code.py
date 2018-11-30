@@ -1,6 +1,7 @@
 from jinja2 import Environment, FileSystemLoader
 from acados_template import *
 import acados_template as at
+import numpy as np
 
 def export_ode_model():
 
@@ -75,7 +76,18 @@ nlp_dims.nu = model.u.size()[0]
 nlp_dims.N  = 100
 
 # set weighting matrices
-# TODO(andrea)
+nlp_cost = ra.cost
+Q = np.eye(4)
+Q[0,0] = 1e3
+Q[1,1] = 1e-2
+Q[2,2] = 1e3
+Q[3,3] = 1e-2
+
+R = np.eye(1)
+R[0,0] = 1e-2
+
+nlp_cost.Q = Q 
+nlp_cost.R = R
 
 # set constants
 const1 = ocp_nlp_constant()

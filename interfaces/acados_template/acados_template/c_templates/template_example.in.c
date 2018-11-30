@@ -48,8 +48,20 @@ int main() {
     int idxb_0[5] = {0, 1, 2, 3, 4};
     double b0_l[5] = {-F_max, 0, 0, PI, 0};
     double b0_u[5] = {F_max, 0, 0, PI, 0};
-    double Q[{{ ra.dims.nx }}] = {1e3, 1e-2, 1e3, 1e-2};
-    double R[{{ ra.dims.nu }}] = {1e-2};
+    double Q[{{ ra.dims.nx }}*{{ ra.dims.nx }}]; 
+    double R[{{ ra.dims.nu }}*{{ ra.dims.nu }}]; 
+
+    {% for i in range(ra.dims.nx): %}
+        {%- for j in range(ra.dims.nx): %}
+    Q[{{i}}*{{ra.dims.nx}} + {{j}}] = {{ ra.cost.Q[i,j] }}; 
+        {%- endfor %}
+    {%- endfor %}
+
+    {% for i in range(ra.dims.nu): %}
+        {%- for j in range(ra.dims.nu): %}
+    R[{{i}}*{{ra.dims.nu}} + {{j}}] = {{ ra.cost.R[i,j] }}; 
+        {%- endfor %}
+    {%- endfor %}
 
     int max_num_sqp_iterations = 1;
 
@@ -180,14 +192,17 @@ int main() {
     for (int i = 0; i < N; ++i) {
         blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
         for (int j = 0; j < nx[i]; j++)
-            BLASFEO_DMATEL(&cost_ls[i]->W, j, j) = Q[j];
+            for (int k = 0; k < nx[i]; k++)
+                BLASFEO_DMATEL(&cost_ls[i]->W, j, k) = Q[j*nx[i] + k];
         for (int j = 0; j < nu[i]; j++)
-            BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = R;
+            for (int k = 0; k < nu[i]; k++)
+                BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+k) = R[j*nu[i] + k];
     }
     // WN
     blasfeo_dgese(ny[N], ny[N], 0.0, &cost_ls[N]->W, 0, 0);
     for (int j = 0; j < nx[N]; j++)
-        BLASFEO_DMATEL(&cost_ls[N]->W, j, j) = Q[j];
+        for (int k = 0; k < nx[N]; k++)
+            BLASFEO_DMATEL(&cost_ls[N]->W, j, k) = Q[j*nx[N] + k];
 
     // y_ref
     for (int i = 0; i <= N; ++i)

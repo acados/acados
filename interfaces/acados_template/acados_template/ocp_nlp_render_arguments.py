@@ -1,3 +1,5 @@
+import numpy as np
+
 class ocp_nlp_dims:
     def __init__(self):
         self._nx = None  # number of states
@@ -36,6 +38,33 @@ class ocp_nlp_dims:
             self._N = N
         else:
             raise Exception('Invalid N value. Exiting.')
+
+class ocp_nlp_cost:
+    def __init__(self):
+        self._Q = None  # state weight matrix
+        self._R = None  # input weight matrix
+
+    @property
+    def Q(self):
+        return self._Q
+
+    @property
+    def R(self):
+        return self._R
+
+    @Q.setter
+    def Q(self, Q):
+        if type(Q) == np.ndarray:
+            self._Q = Q
+        else:
+            raise Exception('Invalid Q value. Exiting.')
+
+    @R.setter
+    def R(self, R):
+        if type(R) == np.ndarray:
+            self._R = R
+        else:
+            raise Exception('Invalid R value. Exiting.')
 
 class ocp_nlp_solver_config:
     def __init__(self):
@@ -85,6 +114,7 @@ class ocp_nlp_solver_config:
         else:
             raise Exception('Invalid integrator_type value. Possible values are:\n\n' \
                     + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\nExiting.')
+
 class ocp_nlp_constant:
     def __init__(self):
         self.name  = None # constant name
@@ -93,6 +123,7 @@ class ocp_nlp_constant:
 class ocp_nlp_render_arguments:
     def __init__(self):
         self.dims = ocp_nlp_dims()
+        self.cost = ocp_nlp_cost()
         self.solver_config = ocp_nlp_solver_config()
         self.model_name = None 
         self.constants = []
