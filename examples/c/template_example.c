@@ -28,6 +28,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 
 #include "acados_c/ocp_nlp_interface.h"
+#include "acados_c/ocp_qp_interface.h"
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
