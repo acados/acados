@@ -72,6 +72,9 @@ def generate_c_code_explicit_ode( model ):
     expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u], [adj, hess2])
 
     ## generate C code
+    if not os.path.exists('c_generated_code'):
+        os.mkdir('c_generated_code')
+
     os.chdir('c_generated_code')
     model_dir = model_name + '_model'
     if not os.path.exists(model_dir):
