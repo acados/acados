@@ -27,8 +27,6 @@
 #include <stdlib.h>
 
 // acados
-// TODO(dimitris): remove most includes
-// #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_gnsf.h"
 
 #include "acados/utils/external_function_generic.h"
@@ -37,11 +35,11 @@
 #include "acados_c/sim_interface.h"
 
 // blasfeo
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
-#include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
+// #include "blasfeo/include/blasfeo_common.h"
+// #include "blasfeo/include/blasfeo_d_aux.h"
+// #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+// #include "blasfeo/include/blasfeo_d_blas.h"
+// #include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
 
 // wt model
 #include "examples/c/wt_model_nx6/wt_model.h"

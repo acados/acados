@@ -34,7 +34,9 @@
 
 
 
-/* config */
+/************************************************
+* config
+************************************************/
 
 sim_solver_config *sim_config_create(sim_solver_plan plan)
 {
@@ -44,8 +46,6 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
 
     sim_solver_t solver_name = plan.sim_solver;
 
-    // TODO(dimitris): cath error if solver not compiled
-    // printf("\n\nSpecified solver interface not compiled with acados!\n\n");
     switch (solver_name)
     {
         case ERK:
@@ -60,6 +60,9 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
         case LIFTED_IRK:
             sim_lifted_irk_config_initialize_default(solver_config);
             break;
+        default:
+            printf("\n\nSpecified integrator not available in acados C interface!\n\n");
+            exit(1);
     }
     return solver_config;
 }
@@ -73,7 +76,9 @@ void sim_config_free(void *config)
 
 
 
-/* dims */
+/************************************************
+* dims
+************************************************/
 
 void *sim_dims_create(void *config_)
 {
@@ -102,7 +107,9 @@ void sim_dims_set(sim_solver_config *config, void *dims, const char *field, cons
 }
 
 
-/* in */
+/************************************************
+* in
+************************************************/
 
 sim_in *sim_in_create(sim_solver_config *config, void *dims)
 {
@@ -249,6 +256,9 @@ void sim_in_set_Su(sim_solver_config *config, void *dims, double *Su, sim_in *in
     return;
 }
 
+/************************************************
+* out
+************************************************/
 
 
 sim_out *sim_out_create(sim_solver_config *config, void *dims)
@@ -307,6 +317,9 @@ void sim_out_get_Sun(sim_solver_config *config, void *dims, sim_out *out, double
 }
 
 
+/************************************************
+* options
+************************************************/
 
 void *sim_opts_create(sim_solver_config *config, void *dims)
 {
@@ -336,16 +349,9 @@ int sim_opts_set(sim_solver_config *config, void *opts, const char *field,
 }
 
 
-
-void sim_opts_set_sens_forw(sim_rk_opts *opts, bool value)
-{
-
-    opts->sens_forw = value;
-    return;
-
-}
-
-
+/************************************************
+* solver
+************************************************/
 
 int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 {
