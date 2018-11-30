@@ -1430,8 +1430,10 @@ int main()
 #if CONSTRAINTS==0 // box constraints
 	// blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
 	// blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
-	nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lb", lb0);
-	nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ub", ub0);
+	// nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lb", lb0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb0);
+	// nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ub", ub0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub0);
     constraints[0]->idxb = idxb0;
 #elif CONSTRAINTS==1 // general constraints
 	double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
@@ -1446,8 +1448,10 @@ int main()
 	blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
 	// blasfeo_pack_dvec(ng[0], lb0, &constraints[0]->d, nb[0]);
 	// blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]);
-	nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lg", lb0);
-	nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ug", ub0);
+	// nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lg", lb0);
+	// nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ug", ub0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lg", lb0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ug", ub0);
 
 	d_free(Cu0);
 	d_free(Cx0);
@@ -1466,16 +1470,16 @@ int main()
 	// other stages
     for (int i = 1; i < NN; i++)
 	{
-		// blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
-		// blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]);
-		nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "lb", lb1);
-		nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "ub", ub1);
+		// nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "lb", lb1);
+		// nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "ub", ub1);
+		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lb", lb1);
+		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ub", ub1);
         constraints[i]->idxb = idxb1;
     }
-	// blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
-	// blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
-	nlp_bounds_bgh_set(constraints_dims[NN], constraints[NN], "lb", lbN);
-	nlp_bounds_bgh_set(constraints_dims[NN], constraints[NN], "ub", ubN);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "lb", lbN);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "ub", ubN);
+	// nlp_bounds_bgh_set(constraints_dims[NN], constraints[NN], "lb", lbN);
+	// nlp_bounds_bgh_set(constraints_dims[NN], constraints[NN], "ub", ubN);
     constraints[NN]->idxb = idxbN;
 
 #if 0

@@ -744,23 +744,23 @@ int main()
 	// fist stage
 	// blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
 	// blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]+nh[0]);
-	nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lb", lb0);
-	nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ub", ub0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub0);
     for (int ii=0; ii<nb[0]; ii++) constraints[0]->idxb[ii] = idxb0[ii];
 	// middle stages
     for (int i = 1; i < NN; i++)
 	{
 		// blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
 		// blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]+nh[i]);
-		nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "lb", lb1);
-		nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "ub", ub1);
+		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lb", lb1);
+		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ub", ub1);
 		for (int ii=0; ii<nb[i]; ii++) constraints[i]->idxb[ii] = idxb1[ii];
     }
 	// last stage
 	// blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
 	// blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]+nh[NN]);
-	nlp_bounds_bgh_set(constraints_dims[NN], constraints[NN], "lb", lbN);
-	nlp_bounds_bgh_set(constraints_dims[NN], constraints[NN], "ub", ubN);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "lb", lbN);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "ub", ubN);
     for (int ii=0; ii<nb[NN]; ii++) constraints[NN]->idxb[ii] = idxbN[ii];
 
 	/* nonlinear constraints */
@@ -772,8 +772,10 @@ int main()
 		{
 			// blasfeo_pack_dvec(nh[i], lh1, &constraints[i]->d, nb[i]+ng[i]);
 			// blasfeo_pack_dvec(nh[i], uh1, &constraints[i]->d, 2*nb[i]+2*ng[i]+nh[i]);
-			nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "lh", lh1);
-			nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "uh", uh1);
+			// nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "lh", lh1);
+			// nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "uh", uh1);
+			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lh", lh1);
+			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "uh", uh1);
 			constraints[i]->h = &h1;
 		}
     }
@@ -787,8 +789,10 @@ int main()
 		{
 			// blasfeo_pack_dvec(ns[i], ls1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]);
 			// blasfeo_pack_dvec(ns[i], us1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]+ns[i]);
-			nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "ls", ls1);
-			nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "us", us1);
+			// nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "ls", ls1);
+			// nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "us", us1);
+			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ls", ls1);
+			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "us", us1);
 			for (int ii=0; ii<ns[i]; ii++) constraints[i]->idxs[ii] = idxs1[ii];
 		}
     }
