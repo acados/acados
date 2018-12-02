@@ -147,7 +147,7 @@ void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *fi
     else if (!strcmp(field, "nz"))
     {
         // do nothing
-        // TODO(oj): implement constraints with daes
+        // TODO(all): implement constraints with daes
     }
     else if (!strcmp(field, "nbx"))
     {

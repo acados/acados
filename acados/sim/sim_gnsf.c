@@ -138,23 +138,23 @@ void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int*
     {
         sim_gnsf_set_nz(config_, dims_, value);
     }
-    else if (!strcmp(field, "nx1"))
+    else if (!strcmp(field, "nx1") || !strcmp(field, "gnsf_nx1"))
     {
         sim_gnsf_set_nx1(config_, dims_, value);
     }
-    else if (!strcmp(field, "nz1"))
+    else if (!strcmp(field, "nz1") || !strcmp(field, "gnsf_nz1"))
     {
         sim_gnsf_set_nz1(config_, dims_, value);
     }
-    else if (!strcmp(field, "nout"))
+    else if (!strcmp(field, "nout") || !strcmp(field, "gnsf_nout"))
     {
         sim_gnsf_set_nout(config_, dims_, value);
     }
-    else if (!strcmp(field, "ny"))
+    else if (!strcmp(field, "ny") || !strcmp(field, "gnsf_ny"))
     {
         sim_gnsf_set_ny(config_, dims_, value);
     }
-    else if (!strcmp(field, "nuhat"))
+    else if (!strcmp(field, "nuhat") || !strcmp(field, "gnsf_nuhat"))
     {
         sim_gnsf_set_nuhat(config_, dims_, value);
     }

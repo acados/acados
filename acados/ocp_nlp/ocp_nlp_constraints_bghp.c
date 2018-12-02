@@ -321,7 +321,6 @@ int ocp_nlp_constraints_bghp_bounds_set(void *config_, void *dims_,
     int ng = dims->ng;
     int nh = dims->nh;
     int ns = dims->ns;
-    // TODO(oj): document which strings mean what! - adapted from prev implementation..
     if (!strcmp(field, "lb"))
     {
         blasfeo_pack_dvec(nb, value, &model->d, 0);

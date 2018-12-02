@@ -670,23 +670,24 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
     external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
 
-    for (int i = 0; i < NN; i++)
-    {
-        if (plan->sim_solver_plan[i].sim_solver == GNSF)
-        {
-            /* initialize additional gnsf dimensions */
-            ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
-            sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
+	/* initialize additional gnsf dimensions */			
+	int gnsf_nx1 = 8;
+	int gnsf_nz1 = 0;
+	int gnsf_nout = 1;
+	int gnsf_ny = 5;
+	int gnsf_nuhat = 0;
 
-            gnsf_dims->nx1 = 8;
-            gnsf_dims->nz = 0;
-            gnsf_dims->nz1 = 0;
-            gnsf_dims->n_out = 1;
-            gnsf_dims->ny = 5;
-            gnsf_dims->nuhat = 0;
-        }
-    }
-
+	for (int i = 0; i < NN; i++)
+	{
+		if (plan->sim_solver_plan[i].sim_solver == GNSF)
+		{
+			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nx1", i, &gnsf_nx1);
+			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nz1", i, &gnsf_nz1);
+			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nout", i, &gnsf_nout);
+			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_ny", i, &gnsf_ny);
+			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nuhat", i, &gnsf_nuhat);
+		}
+	}
 
     /************************************************
     * nlp_in

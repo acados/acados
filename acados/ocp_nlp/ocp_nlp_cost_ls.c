@@ -102,7 +102,7 @@ void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int
     else if (!strcmp(field, "nz"))
     {
         // do nothing
-        // TODO(oj): implement cost with daes
+        // TODO(all): implement cost with daes
     }
     else if (!strcmp(field, "nu"))
     {
