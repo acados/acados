@@ -166,9 +166,12 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
     dims_ = sim_dims_create(config_);
 
-    sim_dims_set(sim_config, dims_, "nx", &nx_);
-    sim_dims_set(sim_config, dims_, "nu", &nu_);
-    sim_dims_set(sim_config, dims_, "nz", &nz_);
+    int n_dim = (int) nx_;
+    sim_dims_set(config_, dims_, "nx", &n_dim);
+    n_dim = (int) nu_;
+    sim_dims_set(config_, dims_, "nu", &n_dim);
+    n_dim = (int) nz_;
+    sim_dims_set(config_, dims_, "nz", &n_dim);
 
 
     // sim opts
