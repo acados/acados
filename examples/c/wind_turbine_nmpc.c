@@ -932,7 +932,10 @@ int main()
 			}
 
 			// precompute
-			sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts[i], dynamics_mem->sim_solver, solver->work, nlp_in->Ts[i]);
+			// TODO(oj): propagate upwards
+			// sim_precompute(sim_solver, in, out);
+
+			// sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts[i], dynamics_mem->sim_solver, solver->work, nlp_in->Ts[i]);
 			// NOTE; solver->work can be used, as it is for sure larger than the workspace
 			//		 needed to precompute, as the latter is part of the first.
 		}

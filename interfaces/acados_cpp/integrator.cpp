@@ -390,7 +390,6 @@ void integrator::set_model(casadi::Function &model, std::map<std::string, option
         }
         else
         {
-            // TODO(oj): add support for explicit model
             throw std::invalid_argument("IRK only supported with implicit model");
         }
     }
@@ -417,7 +416,6 @@ void integrator::set_model(casadi::Function &model, std::map<std::string, option
         }
         else
         {
-            // TODO(oj): add support for explicit model
             throw std::invalid_argument("LIFTED_IRK only supported with implicit model");
         }
     }

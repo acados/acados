@@ -493,6 +493,12 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     return (void *) workspace;
 }
 
+int sim_irk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
+                       void *work_)
+{
+    return ACADOS_SUCCESS;
+}
+
 /************************************************
  * integrator
  ************************************************/
@@ -1210,6 +1216,7 @@ void sim_irk_config_initialize_default(void *config_)
     sim_solver_config *config = config_;
 
     config->evaluate = &sim_irk;
+    config->precompute = &sim_irk_precompute;
     config->opts_calculate_size = &sim_irk_opts_calculate_size;
     config->opts_assign = &sim_irk_opts_assign;
     config->opts_initialize_default = &sim_irk_opts_initialize_default;

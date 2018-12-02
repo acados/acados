@@ -942,8 +942,10 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             mem_ptr += sizeof(ocp_nlp_dynamics_cont_memory);
 
             // precompute
-            sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts, mem_ptr, solver->work,
-                nlp_in->Ts[i]);
+            // sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts, mem_ptr, solver->work,
+            //     nlp_in->Ts[i]);
+            // TODO(oj): propagate upwards
+			// sim_precompute(sim_solver, in, out);
             // NOTE; solver->work can be used, as it is for sure larger than the workspace
             //       needed to precompute, as the latter is part of the first.
         }

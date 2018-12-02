@@ -416,9 +416,9 @@ int main()
 
 		int acados_return;
 
-		if (nss == 3) // for gnsf: perform precomputation
-			sim_gnsf_precompute(config, dims, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
-
+		// if (nss == 3) // for gnsf: perform precomputation
+		// 	sim_gnsf_precompute(config, dims, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
+	    sim_precompute(sim_solver, in, out);
 
 		acados_timer timer;
 		acados_tic(&timer);

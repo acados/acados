@@ -316,11 +316,7 @@ int main()
         sim_solver *sim_solver = sim_create(config, dims, opts);
         int acados_return;
 
-        if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
-            gnsf_model *model = (gnsf_model *) in->model;
-            sim_gnsf_precompute(config, dims, model, opts,
-                        sim_solver->mem, sim_solver->work, in->T);
-        }
+        sim_precompute(sim_solver, in, out);
 
     /* print solver info */
         switch (plan.sim_solver)

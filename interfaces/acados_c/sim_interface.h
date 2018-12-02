@@ -110,6 +110,8 @@ sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_);
 void sim_free(void *solver);
 //
 int sim_solve(sim_solver *solver, sim_in *in, sim_out *out);
+//
+int sim_precompute(sim_solver *solver, sim_in *in, sim_out *out);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -284,8 +284,8 @@ void sim_gnsf_import_matrices(void *dims_, gnsf_model *model,
                               external_function_generic *get_matrices_fun);
 
 // precomputation
-void sim_gnsf_precompute(void *config, void *dims_, gnsf_model *model, sim_rk_opts *opts,
-                         void *mem_, void *work_, double T);
+int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
+                       void *work_);
 
 // workspace & memory
 int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args);

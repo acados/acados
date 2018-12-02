@@ -415,7 +415,13 @@ void sim_free(void *solver)
 
 int sim_solve(sim_solver *solver, sim_in *in, sim_out *out)
 {
-    int flag =  solver->config->evaluate(solver->config, in, out, solver->opts, solver->mem,
+    int status = solver->config->evaluate(solver->config, in, out, solver->opts, solver->mem,
                                     solver->work);
-    return flag;
+    return status;
+}
+
+int sim_precompute(sim_solver *solver, sim_in *in, sim_out *out)
+{
+    return solver->config->precompute(solver->config, in, out, solver->opts, solver->mem,
+                                    solver->work);
 }

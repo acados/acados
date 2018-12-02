@@ -547,6 +547,12 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
  * functions
  ************************************************/
 
+int sim_erk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
+                       void *work_)
+{
+    return ACADOS_SUCCESS;
+}
+
 int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
     sim_solver_config *config = config_;
@@ -857,6 +863,7 @@ void sim_erk_config_initialize_default(void *config_)
     config->model_assign = &sim_erk_model_assign;
     config->model_set_function = &sim_erk_model_set_function;
     config->evaluate = &sim_erk;
+    config->precompute = &sim_erk_precompute;
     config->config_initialize_default = &sim_erk_config_initialize_default;
     config->dims_calculate_size = &sim_erk_dims_calculate_size;
     config->dims_assign = &sim_erk_dims_assign;

@@ -140,6 +140,7 @@ typedef struct
 typedef struct
 {
     int (*evaluate)(void *config_, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
+    int (*precompute)(void *config_, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
     int (*opts_calculate_size)(void *config_, void *dims);
     void *(*opts_assign)(void *config_, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config_, void *dims, void *opts);

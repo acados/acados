@@ -190,7 +190,7 @@ void sim_gnsf_get_nz(void *dims_, int *nz)
 void sim_gnsf_import_matrices(void *dims_, gnsf_model *model,
                               external_function_generic *get_matrices_fun)
 {
-    // sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    // external_function_generic *get_matrices_fun = model->get_matrices_fun;
 
     // calling the external function
     ext_fun_arg_t ext_fun_type_in[1];
@@ -534,13 +534,19 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
     return (void *) work;
 }  // cast pre_workspace
 
-void sim_gnsf_precompute(void *config, void *dims_, gnsf_model *model, sim_rk_opts *opts,
-                         void *mem_, void *work_, double T)
+
+
+int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
+                       void *work_)
 {
     acados_timer atimer;
     acados_tic(&atimer);
 
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) in->dims;
+    sim_rk_opts *opts = opts_;
+    gnsf_model *model = in->model;
+
+    // sim_gnsf_import_matrices(dims, model, get_model_matrices);
 
     // dimension ints
     int nx      = dims->nx;
@@ -567,11 +573,11 @@ void sim_gnsf_precompute(void *config, void *dims_, gnsf_model *model, sim_rk_op
 
     // set up precomputation workspace
     gnsf_pre_workspace *work =
-        (gnsf_pre_workspace *) gnsf_cast_pre_workspace(config, dims, opts, work_);
+        (gnsf_pre_workspace *) gnsf_cast_pre_workspace(config_, dims, opts, work_);
     // set up memory
     sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
 
-    double dt = T / num_steps;
+    double dt = in->T / num_steps;
     mem->dt = dt;
 
     double *A_mat = opts->A_mat;
@@ -1026,7 +1032,7 @@ void sim_gnsf_precompute(void *config, void *dims_, gnsf_model *model, sim_rk_op
         blasfeo_dtrsm_lunn(nxz2, nx2, 1.0, ELO_LU, 0, 0, ELO_inv_ALO,
                                 0, 0, ELO_inv_ALO, 0, 0);
     }
-
+    return ACADOS_SUCCESS;
     // double precomputation_time = acados_toc(&atimer) * 1000;
     // printf("time 2 precompute = %f [ms]\n", precomputation_time);
 }
@@ -1589,8 +1595,11 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     int nxz2 = nx2 + nz2;
 
     // assert - only use supported features
-    assert(mem->dt == in->T / opts->num_steps &&
-           "model->dt not equal to im_in.T/opts->num_steps, check initialization");
+    if(mem->dt != in->T / opts->num_steps)
+    {
+        printf("model->dt not equal to in.T/opts->num_steps, check initialization");
+        return ACADOS_FAILURE;
+    }
 
     // assign variables from workspace
     double *Z_work = workspace->Z_work;
@@ -2452,6 +2461,7 @@ void sim_gnsf_config_initialize_default(void *config_)
 {
     sim_solver_config *config = config_;
     config->evaluate = &sim_gnsf;
+    config->precompute = &sim_gnsf_precompute;
     // opts
     config->opts_calculate_size = &sim_gnsf_opts_calculate_size;
     config->opts_assign = &sim_gnsf_opts_assign;

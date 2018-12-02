@@ -182,12 +182,11 @@ int main() {
 
     sim_solver *sim_solver = sim_create(config, dims, opts);
 
-    sim_gnsf_precompute(config, gnsf_dim, model, opts, sim_solver->mem, sim_solver->work, in->T);
-
-    // gnsf_import_precomputed(gnsf_dim, model, But_KK_YY_ZZ_LO_fun);
-
     // set up sim_out
     sim_out *out = sim_out_create(config, dims);
+
+    // precompute
+    sim_precompute(sim_solver, in, out);
 
     int NREP = 100;
     double casadi_times[NREP];

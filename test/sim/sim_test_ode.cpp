@@ -490,11 +490,8 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 int acados_return;
 
-                if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
-                    gnsf_model *model = (gnsf_model *) in->model;
-                    sim_gnsf_precompute(config, dims, model, opts,
-                             sim_solver->mem, sim_solver->work, in->T);
-                }
+    			sim_precompute(sim_solver, in, out);
+
                 for (ii=0; ii < nsim0; ii++)
                 {
                     // x

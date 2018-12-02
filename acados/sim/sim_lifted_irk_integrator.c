@@ -505,6 +505,11 @@ static void *sim_lifted_irk_cast_workspace(void *config_, void *dims_, void *opt
 }
 
 
+int sim_lifted_irk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
+                       void *work_)
+{
+    return ACADOS_SUCCESS;
+}
 
 /************************************************
 * functions
@@ -808,6 +813,7 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     sim_solver_config *config = config_;
 
     config->evaluate = &sim_lifted_irk;
+    config->precompute = &sim_lifted_irk_precompute;
     config->opts_calculate_size = &sim_lifted_irk_opts_calculate_size;
     config->opts_assign = &sim_lifted_irk_opts_assign;
     config->opts_initialize_default = &sim_lifted_irk_opts_initialize_default;

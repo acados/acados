@@ -339,11 +339,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
     sim_solver *sim_solver = sim_create(config, dims, opts);
 
 
-    if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
-        gnsf_model *model = (gnsf_model *) in->model;
-        sim_gnsf_precompute(config, dims, model, opts,
-                    sim_solver->mem, sim_solver->work, in->T);
-    }
+    // if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
+    //     gnsf_model *model = (gnsf_model *) in->model;
+    //     sim_gnsf_precompute(config, dims, model, opts,
+    //                 sim_solver->mem, sim_solver->work, in->T);
+    // }
+    // TODO(oj): propagate upwards
+    // sim_precompute(sim_solver, in, out);
 
     int acados_return;
 
@@ -544,11 +546,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 sim_solver = sim_create(config, dims, opts);
                 int acados_return;
 
-                if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
-                    gnsf_model *model = (gnsf_model *) in->model;
-                    sim_gnsf_precompute(config, dims, model, opts,
-                             sim_solver->mem, sim_solver->work, in->T);
-                }
+                // if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
+                //     gnsf_model *model = (gnsf_model *) in->model;
+                //     sim_gnsf_precompute(config, dims, model, opts,
+                //              sim_solver->mem, sim_solver->work, in->T);
+                // }
+                // TODO(oj): propagate upwards
+			// sim_precompute(sim_solver, in, out);
 
             /* print */
                 std::cout << "\n---> testing integrator " << solver;
