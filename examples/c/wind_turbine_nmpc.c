@@ -593,7 +593,7 @@ int main()
     get_matrices_fun.casadi_n_out          = &wt_nx6p2_get_matrices_fun_n_out;
 	external_function_casadi_create(&get_matrices_fun);
 
-	external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
+	// external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
 
 	/* initialize additional gnsf dimensions */			
 	int gnsf_nx1 = 8;
@@ -689,6 +689,9 @@ int main()
 			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "phi_jac_y_uhat", &phi_jac_y_uhat[i]);
 			if (set_fun_status != 0) exit(1);
 			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z", &f_lo_jac_x1_x1dot_u_z[i]);
+			if (set_fun_status != 0) exit(1);
+			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "get_gnsf_matrices", &get_matrices_fun);
+			if (set_fun_status != 0) exit(1);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 		{
@@ -912,7 +915,7 @@ int main()
 			void *gnsf_dims = dyn_dims->sim;
 
 			// import model matrices
-			sim_gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
+			// sim_gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
 
 			// get sim_solver_config
 			void *sim_sol_config = config->dynamics[i]->sim_solver;

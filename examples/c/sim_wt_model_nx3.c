@@ -346,10 +346,7 @@ int main()
 				sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
 				sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
 				sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
-				// sim_set_model(config, in, "gnsf_get_model_matrices", &get_model_matrices)
-				// import model matrices
-				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
-				sim_gnsf_import_matrices(dims, in->model, get_model_matrices);
+				sim_set_model(config, in, "get_gnsf_matrices", &get_matrices_fun);
 				break;
 			}
 			default :

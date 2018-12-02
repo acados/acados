@@ -187,10 +187,9 @@ void sim_gnsf_get_nz(void *dims_, int *nz)
  * import functions
  ************************************************/
 
-void sim_gnsf_import_matrices(void *dims_, gnsf_model *model,
-                              external_function_generic *get_matrices_fun)
+static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
 {
-    // external_function_generic *get_matrices_fun = model->get_matrices_fun;
+    external_function_generic *get_matrices_fun = model->get_gnsf_matrices;
 
     // calling the external function
     ext_fun_arg_t ext_fun_type_in[1];
@@ -443,6 +442,9 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
         case LO_FUN:
             model->f_lo_fun_jac_x1_x1dot_u_z = (external_function_generic *) fun;
             break;
+        case GET_GNSF_MATRICES:
+            model->get_gnsf_matrices = (external_function_generic *) fun;
+            break;            
         default:
             return ACADOS_FAILURE;
     }
@@ -546,7 +548,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     sim_rk_opts *opts = opts_;
     gnsf_model *model = in->model;
 
-    // sim_gnsf_import_matrices(dims, model, get_model_matrices);
+    sim_gnsf_import_matrices(dims, model);
 
     // dimension ints
     int nx      = dims->nx;

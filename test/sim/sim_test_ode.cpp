@@ -33,7 +33,6 @@
 
 // acados
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_gnsf.h"
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
@@ -446,12 +445,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                         sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
                         sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
                         sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
-
-                        // import model matrices
-                        external_function_generic *get_model_matrices =
-                                (external_function_generic *) &get_matrices_fun;
-                        gnsf_model *model = (gnsf_model *) in->model;
-                        sim_gnsf_import_matrices(dims, model, get_model_matrices);
+                        sim_set_model(config, in, "get_gnsf_matrices", &get_matrices_fun);
                         break;
                     }
                     case LIFTED_IRK:  // lifted_irk

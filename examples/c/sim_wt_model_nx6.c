@@ -29,17 +29,15 @@
 // acados
 #include "acados/sim/sim_gnsf.h"
 
-#include "acados/utils/external_function_generic.h"
-
 #include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"
 
 // blasfeo
-// #include "blasfeo/include/blasfeo_common.h"
-// #include "blasfeo/include/blasfeo_d_aux.h"
-// #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-// #include "blasfeo/include/blasfeo_d_blas.h"
-// #include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
 
 // wt model
 #include "examples/c/wt_model_nx6/wt_model.h"
@@ -357,10 +355,7 @@ int main()
 				sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
 				sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
 				sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
-
-				// import model matrices
-				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
-				sim_gnsf_import_matrices(dims, in->model, get_model_matrices);
+				sim_set_model(config, in, "get_gnsf_matrices", &get_matrices_fun);
 				break;
 			}
 			default :
@@ -416,8 +411,6 @@ int main()
 
 		int acados_return;
 
-		// if (nss == 3) // for gnsf: perform precomputation
-		// 	sim_gnsf_precompute(config, dims, in->model, opts, sim_solver->mem, sim_solver->work, in->T);
 	    sim_precompute(sim_solver, in, out);
 
 		acados_timer timer;

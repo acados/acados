@@ -772,6 +772,9 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             if (set_fun_status != 0) exit(1);
             set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
                 &f_lo_jac_x1_x1dot_u_z[i]);
+            set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "get_gnsf_matrices",
+                                                        &get_model_matrices);
+			if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
@@ -926,7 +929,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             sim_rk_opts *sim_opts = (sim_rk_opts *) dynamics_stage_opts->sim_solver;
 
             // import model matrices
-            sim_gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
+            // sim_gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
 
             // get sim_solver_config
             sim_solver_config *sim_sol_config =

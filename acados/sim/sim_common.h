@@ -50,7 +50,8 @@ typedef enum
     PHI_FUN,
     PHI_FUN_JAC_Y,
     PHI_JAC_Y_UHAT,
-    LO_FUN
+    LO_FUN,
+    GET_GNSF_MATRICES
 } sim_function_t;
 
 
