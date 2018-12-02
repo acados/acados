@@ -60,10 +60,15 @@ adj = jtimes(f_expl,[x;u],lambdaX,true);
 expl_vde_adj = Function([model_name,'_expl_vde_adj'],{x,lambdaX,u},{adj});
 
 S_forw = vertcat(horzcat(Sx, Sp), horzcat(zeros(nu,nx), eye(nu)));
-hess = S_forw.'*jtimes(adj,[x;u],S_forw);
+temp = jtimes(adj,[x;u],S_forw)
+% hess = S_forw.'*jtimes(adj,[x;u],S_forw);
+hess = mtimes(S_forw.',jtimes(adj,[x;u],S_forw));
 hess2 = [];
 for j = 1:nx+nu
     for i = j:nx+nu
+        i
+        j
+        hess(i,j)
         hess2 = [hess2; hess(i,j)];
     end
 end

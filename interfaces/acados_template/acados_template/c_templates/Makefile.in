@@ -19,8 +19,10 @@ casadi_fun:
 	( cd {{ ra.model_name }}_model; \
 	$(MAKE) {{ ra.model_name }}_expl_ode_fun.o \
 	{{ ra.model_name }}_expl_vde_forw.o \
+	{% if ra.solver_config.hessian_approx == 'EXACT': -%} 
 	{{ ra.model_name }}_expl_ode_hess.o \
-		) 
+	{% endif -%}
+	) 
 
 main:
 	gcc $(ACADOS_FLAGS) -c template_example.c -I $(INCLUDE_PATH)/blasfeo/include/ \

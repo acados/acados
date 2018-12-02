@@ -8,7 +8,7 @@ def export_ode_model():
     model_name = 'pendulum_ode'
 
     ## constants
-    M = 1
+    M = 1.
     m = 0.1
     g = 9.81
     l = 0.8

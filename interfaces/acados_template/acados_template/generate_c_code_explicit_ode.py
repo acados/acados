@@ -62,10 +62,10 @@ def generate_c_code_explicit_ode( model ):
     expl_vde_adj = Function(fun_name, [x,lambdaX,u], [adj])
 
     S_forw = vertcat(horzcat(Sx, Sp), horzcat(DM.zeros(nu,nx), DM.eye(nu)))
-    hess = transpose(S_forw)*jtimes(adj, vertcat(x,u), S_forw)
+    hess = mtimes(transpose(S_forw),jtimes(adj, vertcat(x,u), S_forw))
     hess2 = []
     for j in range(nx+nu):
-        for i in range(nx+nu):
+        for i in range(j,nx+nu):
             hess2 = vertcat(hess2, hess[i,j])
 
     fun_name = model_name + '_expl_ode_hess'
