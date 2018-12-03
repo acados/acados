@@ -35,6 +35,9 @@ def export_ode_model():
     
     ## algebraic variables
     z = []
+
+    # parameters
+    p = []
     
     ## dynamics     
     denominator = M + m - m*cos(theta)*cos(theta)
@@ -50,6 +53,7 @@ def export_ode_model():
     model.xdot = xdot
     model.u = u
     model.z = z
+    model.p = p
     model.name = model_name
 
     return model 
@@ -99,16 +103,24 @@ ra.constants = [const1]
 # ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 # ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
-# ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
-ra.solver_config.hessian_approx = 'EXACT'
+ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
+# ra.solver_config.hessian_approx = 'EXACT'
 ra.solver_config.integrator_type = 'ERK'
+# ra.solver_config.integrator_type = 'IRK'
 
 # explicit model -- generate C code
 generate_c_code_explicit_ode(model);
 
+# implicit model -- generate C code
+opts = dict(generate_hess=1)
+generate_c_code_implicit_ode(model, opts);
+
 # set header path
 ra.acados_include_path = '/usr/local/include'
 ra.acados_lib_path = '../../../../../../build'
+
+# check render arguments
+check_ra(ra)
 
 # render source template
 output = template.render(ra=ra)

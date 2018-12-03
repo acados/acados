@@ -114,7 +114,8 @@ int main() {
     for (int i = 0; i < N; i++)
     {
         plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-        plan->sim_solver_plan[i].sim_solver = ERK;
+        plan->sim_solver_plan[i].sim_solver = {{ ra.solver_config.integrator_type}};
+
     }
 
     for (int i = 0; i <= N; i++)
@@ -126,6 +127,8 @@ int main() {
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
     ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, np, ns, nz, dims);
 
+    {% if ra.solver_config.integrator_type == 'ERK': %}
+    // explicit ode
     external_function_casadi forw_vde_casadi[N];
     for (int i = 0; i < N; ++i) {
         forw_vde_casadi[i].casadi_fun = &{{ ra.model_name }}_expl_vde_forw;
@@ -136,7 +139,7 @@ int main() {
         forw_vde_casadi[i].casadi_work = &{{ ra.model_name }}_expl_vde_forw_work;
     }
 
-    {% if ra.solver_config.hessian_approx == 'EXACT': %} 
+    {% if ra.solver_config.integrator_type == 'ERK': %} 
     external_function_casadi hess_vde_casadi[N];
     for (int i = 0; i < N; ++i) {
         hess_vde_casadi[i].casadi_fun = &{{ ra.model_name }}_expl_ode_hess;
@@ -147,30 +150,66 @@ int main() {
         hess_vde_casadi[i].casadi_work = &{{ ra.model_name }}_expl_ode_hess_work;
     }
     {% endif %}
-
-    // NLP model: forward VDEs
-    int function_size = 0;
-    for (int i = 0; i < N; ++i)
-        function_size += external_function_casadi_calculate_size(forw_vde_casadi+i);
-
-    char *c_ptr = (char *) calloc(1, function_size);
+    {% elif ra.solver_config.integrator_type == 'IRK': %}
+    // implicit dae
+    external_function_casadi impl_dae_fun[N];
     for (int i = 0; i < N; ++i) {
-        external_function_casadi_assign(forw_vde_casadi+i, c_ptr);
-        c_ptr += external_function_casadi_calculate_size(forw_vde_casadi+i);
+        impl_dae_fun[i].casadi_fun = &{{ ra.model_name }}_impl_dae_fun;
+        impl_dae_fun[i].casadi_work = &{{ ra.model_name }}_impl_dae_fun_work;
+        impl_dae_fun[i].casadi_sparsity_in = &{{ ra.model_name }}_impl_dae_fun_sparsity_in;
+        impl_dae_fun[i].casadi_sparsity_out = &{{ ra.model_name }}_impl_dae_fun_sparsity_out;
+        impl_dae_fun[i].casadi_n_in = &{{ ra.model_name }}_impl_dae_fun_n_in;
+        impl_dae_fun[i].casadi_n_out = &{{ ra.model_name }}_impl_dae_fun_n_out;
+        external_function_casadi_create(&impl_dae_fun[i]);
     }
 
-    {% if ra.solver_config.hessian_approx == 'EXACT': %} 
-    // NLP model: hessian VDEs
-    function_size = 0;
-    for (int i = 0; i < N; ++i)
-        function_size += external_function_casadi_calculate_size(hess_vde_casadi+i);
-
-    c_ptr = (char *) calloc(1, function_size);
+    external_function_casadi impl_dae_fun_jac_x_xdot_z[N];
     for (int i = 0; i < N; ++i) {
-        external_function_casadi_assign(hess_vde_casadi+i, c_ptr);
-        c_ptr += external_function_casadi_calculate_size(hess_vde_casadi+i);
+        impl_dae_fun_jac_x_xdot_z[i].casadi_fun = &{{ ra.model_name }}_impl_dae_fun_jac_x_xdot_z;
+        impl_dae_fun_jac_x_xdot_z[i].casadi_work = &{{ ra.model_name }}_impl_dae_fun_jac_x_xdot_z_work;
+        impl_dae_fun_jac_x_xdot_z[i].casadi_sparsity_in = &{{ ra.model_name }}_impl_dae_fun_jac_x_xdot_z_sparsity_in;
+        impl_dae_fun_jac_x_xdot_z[i].casadi_sparsity_out = &{{ ra.model_name }}_impl_dae_fun_jac_x_xdot_z_sparsity_out;
+        impl_dae_fun_jac_x_xdot_z[i].casadi_n_in = &{{ ra.model_name }}_impl_dae_fun_jac_x_xdot_z_n_in;
+        impl_dae_fun_jac_x_xdot_z[i].casadi_n_out = &{{ ra.model_name }}_impl_dae_fun_jac_x_xdot_z_n_out;
+        external_function_casadi_create(&impl_dae_fun_jac_x_xdot_z[i]);
+    }
+
+    external_function_casadi impl_dae_jac_x_xdot_u_z;
+    for (int i = 0; i < N; ++i) {
+        impl_dae_jac_x_xdot_u_z[i].casadi_fun = &{{ ra.model_name }}_impl_dae_jac_x_xdot_u_z;
+        impl_dae_jac_x_xdot_u_z[i].casadi_work = &{{ ra.model_name }}_impl_dae_jac_x_xdot_u_z_work;
+        impl_dae_jac_x_xdot_u_z[i].casadi_sparsity_in = &{{ ra.model_name }}_impl_dae_jac_x_xdot_u_z_sparsity_in;
+        impl_dae_jac_x_xdot_u_z[i].casadi_sparsity_out = &{{ ra.model_name }}_impl_dae_jac_x_xdot_u_z_sparsity_out;
+        impl_dae_jac_x_xdot_u_z[i].casadi_n_in = &{{ ra.model_name }}_impl_dae_jac_x_xdot_u_z_n_in;
+        impl_dae_jac_x_xdot_u_z[i].casadi_n_out = &{{ ra.model_name }}_impl_dae_jac_x_xdot_u_z_n_out;
+        external_function_casadi_create(&impl_dae_jac_x_xdot_u_z[i]);
     }
     {% endif %}
+
+    // // NLP model: forward VDEs
+    // int function_size = 0;
+    // for (int i = 0; i < N; ++i)
+    //     function_size += external_function_casadi_calculate_size(forw_vde_casadi+i);
+
+    // char *c_ptr = (char *) calloc(1, function_size);
+    // for (int i = 0; i < N; ++i) {
+    //     external_function_casadi_assign(forw_vde_casadi+i, c_ptr);
+    //     c_ptr += external_function_casadi_calculate_size(forw_vde_casadi+i);
+    // }
+
+    // {% if ra.solver_config.hessian_approx == 'EXACT': %} 
+    
+    // // NLP model: hessian VDEs
+    // function_size = 0;
+    // for (int i = 0; i < N; ++i)
+    //     function_size += external_function_casadi_calculate_size(hess_vde_casadi+i);
+
+    // c_ptr = (char *) calloc(1, function_size);
+    // for (int i = 0; i < N; ++i) {
+    //     external_function_casadi_assign(hess_vde_casadi+i, c_ptr);
+    //     c_ptr += external_function_casadi_calculate_size(hess_vde_casadi+i);
+    // }
+    // {% endif %}
 
     ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
 
@@ -209,13 +248,22 @@ int main() {
         blasfeo_dvecse(ny[i], 0.0, &cost_ls[i]->y_ref, 0);
 
     // NLP dynamics
+    int set_fun_status;
     for (int i = 0; i < N; ++i) {
-        ocp_nlp_dynamics_cont_model *dynamics = (ocp_nlp_dynamics_cont_model *) nlp_in->dynamics[i];
-        erk_model *model = (erk_model *) dynamics->sim_model;
-        model->expl_vde_for = (external_function_generic *) &forw_vde_casadi[i];
+        {% if ra.solver_config.integrator_type == 'ERK': %} 
+        set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
+        if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
         {% if ra.solver_config.hessian_approx == 'EXACT': %} 
-        model->expl_vde_adj = (external_function_generic *) &hess_vde_casadi[i];
-        model->expl_ode_hes = (external_function_generic *) &hess_vde_casadi[i];
+        set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
+        if (set_fun_status != 0) { printf("Error while setting expl_ode_hes[%i]\n", i);  exit(1); }
+        {% elif ra.solver_config.integrator_type == 'IRK': %} 
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
+			if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot[i]);
+			if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
+			if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
+        {% endif %}
         {% endif %}
     }
 

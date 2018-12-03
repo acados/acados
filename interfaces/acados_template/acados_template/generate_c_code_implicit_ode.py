@@ -89,51 +89,51 @@ def generate_c_code_implicit_ode( model, opts ):
     # TODO(oj): fix namings such that jac_z is contained!
     if np != 0:
         p = model.p
-        fun_name = model_name + '_impl_ode_fun'
-        impl_ode_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
+        fun_name = model_name + '_impl_dae_fun'
+        impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
 
-        fun_name = model_name + '_impl_ode_fun_jac_x_xdot'
-        impl_ode_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
+        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
+        impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
 
-        fun_name = model_name + '_impl_ode_jac_x_xdot_u'
-        impl_ode_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
+        fun_name = model_name + '_impl_dae_jac_x_xdot_u'
+        impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
         
-        fun_name = model_name + '_impl_ode_fun_jac_x_xdot_u'
-        impl_ode_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
+        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
+        impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
         
-        fun_name = model_name + '_impl_ode_hess'
-        impl_ode_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
+        fun_name = model_name + '_impl_dae_hess'
+        impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
     else:
-        fun_name = model_name + '_impl_ode_fun'
-        impl_ode_fun = Function(fun_name, [x, xdot, u, z], [f_impl])
+        fun_name = model_name + '_impl_dae_fun'
+        impl_dae_fun = Function(fun_name, [x, xdot, u, z], [f_impl])
         
-        fun_name = model_name + '_impl_ode_fun_jac_x_xdot'
-        impl_ode_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_z])
+        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
+        impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_z])
         
-        fun_name = model_name + '_impl_ode_jac_x_xdot_u'
-        impl_ode_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
+        # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
+        # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
         
-        fun_name = model_name + '_impl_ode_fun_jac_x_xdot_u'
-        impl_ode_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u])
+        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
+        impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u])
         
-        fun_name = model_name + '_impl_ode_hess'
-        impl_ode_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat], [HESS_multiplied])
+        fun_name = model_name + '_impl_dae_hess'
+        impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat], [HESS_multiplied])
 
     ## generate C code
     import pdb; pdb.set_trace()
-    fun_name = model_name + '_impl_ode_hess'
-    impl_ode_fun.generate(fun_name, casadi_opts)
+    fun_name = model_name + '_impl_dae_hess'
+    impl_dae_fun.generate(fun_name, casadi_opts)
 
-    fun_name = model_name + '_impl_ode_fun_jac_x_xdot'
-    impl_ode_fun_jac_x_xdot.generate(fun_name, casadi_opts)
+    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
+    impl_dae_fun_jac_x_xdot.generate(fun_name, casadi_opts)
 
-    fun_name = model_name + '_impl_ode_jac_x_xdot_u'
-    impl_ode_jac_x_xdot_u.generate(fun_name, casadi_opts)
+    # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
+    # impl_dae_jac_x_xdot_u.generate(fun_name, casadi_opts)
     
-    fun_name = model_name + '_impl_ode_fun_jac_x_xdot_u'
-    impl_ode_fun_jac_x_xdot_u.generate(fun_name, casadi_opts)
+    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
+    impl_dae_fun_jac_x_xdot_u.generate(fun_name, casadi_opts)
 
     if generate_hess:
-        fun_name = model_name + '_impl_ode_hess'
-        impl_ode_hess.generate(fun_name, casadi_opts)
+        fun_name = model_name + '_impl_dae_hess'
+        impl_dae_hess.generate(fun_name, casadi_opts)
 

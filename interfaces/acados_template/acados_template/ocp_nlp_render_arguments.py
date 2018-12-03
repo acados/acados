@@ -107,7 +107,7 @@ class ocp_nlp_solver_config:
 
     @integrator_type.setter
     def integrator_type(self, integrator_type):
-        integrator_types = ('ERK')
+        integrator_types = ('ERK', 'IRK')
 
         if type(integrator_type) == str and integrator_type in integrator_types:
             self._integrator_type = integrator_type
@@ -129,3 +129,7 @@ class ocp_nlp_render_arguments:
         self.constants = []
         self.acados_include_path = []
         self.acados_lib_path = []
+
+def check_ra(ra):
+    if ra.solver_config.hessian_approx == 'EXACT' and ra.solver_config.integrator_type == 'IRK':
+        raise Exception('Exact Hessians not yet supported with IRK integrators.')
