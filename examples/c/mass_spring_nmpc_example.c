@@ -22,6 +22,7 @@
 #include <stdlib.h>
 
 // #include <xmmintrin.h>
+#include "acados_c/ocp_nlp_interface.h"
 
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
@@ -703,20 +704,17 @@ int main() {
     }
 
 
+    int maxIter = MAX_SQP_ITERS;
+    double min_res_g = 1e-6;
+    double min_res_b = 1e-9;
+    double min_res_d = 1e-9;
+    double min_res_m = 1e-9;
 
-	// XXX hack: overwrite config with hand-setted one
-// nlp_opts->qp_solver = &config_qp;
-// nlp_opts->sim_solvers = config_sim_ptrs;
-// for (int ii=0; ii<N; ii++)
-// 	nlp_opts->sim_solvers[ii] = config_sim_ptrs[ii];
-
-
-
-    nlp_opts->maxIter = MAX_SQP_ITERS;
-    nlp_opts->min_res_g = 1e-6;
-    nlp_opts->min_res_b = 1e-9;
-    nlp_opts->min_res_d = 1e-9;
-    nlp_opts->min_res_m = 1e-9;
+	ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_m", &min_res_m);
 
 	// update after user-defined options
 	ocp_nlp_sqp_opts_update(config, dims, nlp_opts);

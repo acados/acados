@@ -555,7 +555,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     {
         printf("sim_gnsf error: get_gnsf_matrices function seems to be unset!\n");
         status = ACADOS_FAILURE;
-        break;
+        return status;
     }
 
     sim_gnsf_import_matrices(dims, model);
@@ -594,7 +594,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     {
         printf("sim_gnsf error: simulation time = 0; seems to be unset!\n");
         status = ACADOS_FAILURE;
-        break;
+        return status;
     }
     mem->dt = dt;
 

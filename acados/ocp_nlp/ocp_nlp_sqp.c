@@ -259,23 +259,41 @@ void ocp_nlp_sqp_opts_update(void *config_, void *dims_, void *opts_)
 
 
 
-static void ocp_nlp_sqp_opts_set_maxIter(void *config_, void* opts_, const void* value)
-{
-    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
-    int* maxIter = (int *) value;
-    opts->maxIter = *maxIter;
-}
-
-
-void ocp_nlp_sqp_opts_set(void *config_, void *opts_, char *field, const void* value)
+void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, const void* value)
 {
     if (!strcmp(field, "maxIter"))
     {
-        ocp_nlp_sqp_opts_set_maxIter(config_, opts_, value);
+        ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
+        int* maxIter = (int *) value;
+        opts->maxIter = *maxIter;
+    }
+    else if (!strcmp(field, "min_res_g"))
+    {
+        ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
+        double* min_res_g = (double *) value;
+        opts->min_res_g = *min_res_g;
+    }
+    else if (!strcmp(field, "min_res_b"))
+    {
+        ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
+        double* min_res_b = (double *) value;
+        opts->min_res_b = *min_res_b;
+    }
+    else if (!strcmp(field, "min_res_d"))
+    {
+        ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
+        double* min_res_d = (double *) value;
+        opts->min_res_d = *min_res_d;
+    }
+    else if (!strcmp(field, "min_res_m"))
+    {
+        ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
+        double* min_res_m = (double *) value;
+        opts->min_res_m = *min_res_m;
     }
     else
     {
-        printf("\nerror: option type not available in module\n");
+        printf("\nerror: option type %s not available in module\n", field);
         exit(1);
     }
 }

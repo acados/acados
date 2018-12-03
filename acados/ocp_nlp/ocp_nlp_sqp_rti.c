@@ -271,7 +271,7 @@ static void ocp_nlp_sqp_rti_opts_set_maxIter(void *config_, void* opts_, const v
 }
 
 
-void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, char *field, const void* value)
+void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, const void* value)
 {
     if (!strcmp(field, "maxIter"))
     {
@@ -1155,9 +1155,9 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
     ocp_nlp_sqp_rti_opts *opts = opts_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
     ocp_nlp_in *nlp_in = nlp_in_;
-    ocp_nlp_out *nlp_out = nlp_out_;
+    // ocp_nlp_out *nlp_out = nlp_out_;
 
-    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_sqp_rti_work *work = work_;
 
     ocp_nlp_sqp_rti_cast_workspace(config, dims, work, mem, opts);

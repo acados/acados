@@ -519,10 +519,10 @@ int main()
 	for (int i = 0; i < NN; i++)
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-//		plan->sim_solver_plan[i].sim_solver = ERK;
+		plan->sim_solver_plan[i].sim_solver = ERK;
 		// plan->sim_solver_plan[i].sim_solver = IRK;
 		// plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
-		plan->sim_solver_plan[i].sim_solver = GNSF;
+		// plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
 	for (int i = 0; i <= NN; i++)
@@ -642,9 +642,6 @@ int main()
 
 		// W
 		ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W);
-
-// 	blasfeo_print_dmat(nu[i]+nx[i], ny[i], &cost[i]->Cyt, 0, 0);
-//  blasfeo_print_dmat(ny[i], ny[i], &cost[i]->W, 0, 0);
 	}
 	status = ocp_nlp_cost_set_model(config, dims, nlp_in, NN, "W", W_N);
 
@@ -714,23 +711,17 @@ int main()
 	/* box constraints */
 
 	// fist stage
-	// blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
-	// blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]+nh[0]);
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb0);
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub0);
     for (int ii=0; ii<nb[0]; ii++) constraints[0]->idxb[ii] = idxb0[ii];
 	// middle stages
     for (int i = 1; i < NN; i++)
 	{
-		// blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
-		// blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]+nh[i]);
 		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lb", lb1);
 		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ub", ub1);
 		for (int ii=0; ii<nb[i]; ii++) constraints[i]->idxb[ii] = idxb1[ii];
     }
 	// last stage
-	// blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
-	// blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]+nh[NN]);
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "lb", lbN);
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "ub", ubN);
     for (int ii=0; ii<nb[NN]; ii++) constraints[NN]->idxb[ii] = idxbN[ii];
@@ -742,10 +733,6 @@ int main()
 	{
 		if(nh[i]>0)
 		{
-			// blasfeo_pack_dvec(nh[i], lh1, &constraints[i]->d, nb[i]+ng[i]);
-			// blasfeo_pack_dvec(nh[i], uh1, &constraints[i]->d, 2*nb[i]+2*ng[i]+nh[i]);
-			// nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "lh", lh1);
-			// nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "uh", uh1);
 			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lh", lh1);
 			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "uh", uh1);
 			constraints[i]->h = &h1;
@@ -757,20 +744,14 @@ int main()
 	// middle stages
     for (int i = 1; i < NN; i++)
 	{
-		if(ns[i]>0)
+		if (ns[i]>0)
 		{
-			// blasfeo_pack_dvec(ns[i], ls1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]);
-			// blasfeo_pack_dvec(ns[i], us1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]+ns[i]);
-			// nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "ls", ls1);
-			// nlp_bounds_bgh_set(constraints_dims[i], constraints[i], "us", us1);
 			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ls", ls1);
 			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "us", us1);
 			for (int ii=0; ii<ns[i]; ii++) constraints[i]->idxs[ii] = idxs1[ii];
 		}
     }
 
-//    for (int i = 0; i <= NN; i++)
-// 	int_print_mat(1, ns[i], constraints[i]->idxs, 1);
 
     /************************************************
     * sqp opts
@@ -780,7 +761,6 @@ int main()
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
 	// extract opts
-	sim_rk_opts *sim_opts[NN+1];
 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts;
 
 	// nlp opts
@@ -789,17 +769,17 @@ int main()
 
 		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
 
-		sqp_opts->maxIter = MAX_SQP_ITERS;
-		sqp_opts->min_res_g = 1e-6;
-		sqp_opts->min_res_b = 1e-8;
-		sqp_opts->min_res_d = 1e-8;
-		sqp_opts->min_res_m = 1e-8;
+		int maxIter = MAX_SQP_ITERS;
+		double min_res_g = 1e-6;
+		double min_res_b = 1e-8;
+		double min_res_d = 1e-8;
+		double min_res_m = 1e-8;
 
-		for (int i = 0; i < NN; ++i)
-		{
-			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_opts->dynamics[i];
-			sim_opts[i] = dynamics_stage_opts->sim_solver;
-		}
+		ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+		ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
+		ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
+		ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
+		ocp_nlp_opts_set(config, nlp_opts, "min_res_m", &min_res_m);
 
 		pcond_solver_opts = sqp_opts->qp_solver_opts;
 
@@ -809,12 +789,11 @@ int main()
 
 		ocp_nlp_sqp_rti_opts *sqp_rti_opts = nlp_opts;
 
-		for (int i = 0; i < NN; ++i)
-		{
-			ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_rti_opts->dynamics[i];
+		// for (int i = 0; i < NN; ++i)
+		// {
+			// ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_rti_opts->dynamics[i];
 //			dynamics_stage_opts->compute_adj = 0;
-			sim_opts[i] = dynamics_stage_opts->sim_solver;
-		}
+		// }
 
 //		for (int i = 0; i < NN; ++i)
 //		{
@@ -835,33 +814,23 @@ int main()
 
 		if (plan->sim_solver_plan[i].sim_solver == ERK)
 		{
-			sim_opts[i]->ns = 4;
-			sim_opts[i]->num_steps = 10;
-			// int ns = 4;
-			// int num_steps = 10;
-			// ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-			// ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+			int ns = 4;
+			int num_steps = 10;
+			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == IRK)
 		{
-			// sim_opts[i]->ns = 4;
-			// sim_opts[i]->num_steps = 1;
-			// sim_opts[i]->jac_reuse = true;
 			int num_steps = 1;
 			int ns = 4;
 			bool jac_reuse = true;
-			// int newton_iter = 1;
 
 			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
 			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
 			ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
-			// ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "newton_iter", &newton_iter);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 		{
-			// sim_opts[i]->ns = 4;
-			// sim_opts[i]->num_steps = 1;
-
 			int num_steps = 1;
 			int ns = 4;
 

@@ -481,7 +481,8 @@ void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 }
 
 
-void ocp_nlp_opts_set(ocp_nlp_solver_config *config, void *opts_, char *field, const void* value)
+void ocp_nlp_opts_set(ocp_nlp_solver_config *config, void *opts_,
+                      const char *field, const void* value)
 {
     config->opts_set(config, opts_, field, value);
 }

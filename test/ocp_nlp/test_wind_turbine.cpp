@@ -851,42 +851,60 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     void *nlp_opts = ocp_nlp_opts_create(config, dims);
     ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
 
+    // sim opts
     for (int i = 0; i < NN; ++i)
     {
-        ocp_nlp_dynamics_cont_opts *dynamics_stage_opts =
-            (ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i];
-        sim_rk_opts *sim_opts = (sim_rk_opts *) dynamics_stage_opts->sim_solver;
 
         if (plan->sim_solver_plan[i].sim_solver == ERK)
         {
-            sim_opts->ns = 4;
-            sim_opts->num_steps = 10;
+            int ns = 4;
+            int num_steps = 10;
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
         }
         else if (plan->sim_solver_plan[i].sim_solver == IRK)
         {
-            sim_opts->ns = 4;
-            sim_opts->num_steps = 1;
-            sim_opts->jac_reuse = true;
+            int num_steps = 1;
+            int ns = 4;
+            bool jac_reuse = true;
+
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
         }
         else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
-            sim_opts->ns = 4;
-            sim_opts->num_steps = 1;
+            int num_steps = 1;
+            int ns = 4;
+
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
         }
         else if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
-            sim_opts->ns = 4;
-            sim_opts->num_steps = 1;
-            sim_opts->newton_iter = 1;
-            sim_opts->jac_reuse = true;
+            int num_steps = 1;
+            int ns = 4;
+            int newton_iter = 1;
+            bool jac_reuse = true;
+
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "newton_iter", &newton_iter);
         }
     }
 
-    sqp_opts->maxIter = MAX_SQP_ITERS;
-    sqp_opts->min_res_g = 1e-6;
-    sqp_opts->min_res_b = 1e-8;
-    sqp_opts->min_res_d = 1e-8;
-    sqp_opts->min_res_m = 1e-8;
+    int maxIter = MAX_SQP_ITERS;
+    double min_res_g = 1e-6;
+    double min_res_b = 1e-8;
+    double min_res_d = 1e-8;
+    double min_res_m = 1e-8;
+
+    ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_m", &min_res_m);
 
     // partial condensing
     if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
