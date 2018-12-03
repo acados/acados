@@ -110,26 +110,37 @@ def generate_c_code_implicit_ode( model, opts ):
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
         impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_z])
         
-        # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
-        # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
+        fun_name = model_name + '_impl_dae_jac_x_xdot_u'
+        impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
         
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
         impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u])
+
+        fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
+        impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u])
         
         fun_name = model_name + '_impl_dae_hess'
         impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat], [HESS_multiplied])
 
-    ## generate C code
-    import pdb; pdb.set_trace()
-    fun_name = model_name + '_impl_dae_hess'
+    # generate C code
+    os.chdir('c_generated_code')
+    model_dir = model_name + '_model'
+    if not os.path.exists(model_dir):
+        os.mkdir(model_dir)
+    model_dir_location = './' + model_dir
+    os.chdir(model_dir_location)
+    fun_name = model_name + '_impl_dae_fun'
     impl_dae_fun.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
     impl_dae_fun_jac_x_xdot.generate(fun_name, casadi_opts)
 
-    # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
-    # impl_dae_jac_x_xdot_u.generate(fun_name, casadi_opts)
+    fun_name = model_name + '_impl_dae_jac_x_xdot_u'
+    impl_dae_jac_x_xdot_u.generate(fun_name, casadi_opts)
     
+    fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
+    impl_dae_jac_x_xdot_u.generate(fun_name, casadi_opts)
+
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
     impl_dae_fun_jac_x_xdot_u.generate(fun_name, casadi_opts)
 
@@ -137,3 +148,4 @@ def generate_c_code_implicit_ode( model, opts ):
         fun_name = model_name + '_impl_dae_hess'
         impl_dae_hess.generate(fun_name, casadi_opts)
 
+    os.chdir('../..')
