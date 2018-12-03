@@ -105,19 +105,22 @@ def generate_c_code_implicit_ode( model, opts ):
         impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
     else:
         fun_name = model_name + '_impl_dae_fun'
-        impl_dae_fun = Function(fun_name, [x, xdot, u, z], [f_impl])
+        if nz > 0:
+            impl_dae_fun = Function(fun_name, [x, xdot, u, z], [f_impl])
+        else:
+            impl_dae_fun = Function(fun_name, [x, xdot, u], [f_impl])
         
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
         impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_z])
         
-        fun_name = model_name + '_impl_dae_jac_x_xdot_u'
-        impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
+        # fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
+        # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
         
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-        impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u])
+        impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
 
         fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-        impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u])
+        impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
         
         fun_name = model_name + '_impl_dae_hess'
         impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat], [HESS_multiplied])
@@ -129,14 +132,15 @@ def generate_c_code_implicit_ode( model, opts ):
         os.mkdir(model_dir)
     model_dir_location = './' + model_dir
     os.chdir(model_dir_location)
+
     fun_name = model_name + '_impl_dae_fun'
     impl_dae_fun.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
     impl_dae_fun_jac_x_xdot.generate(fun_name, casadi_opts)
 
-    fun_name = model_name + '_impl_dae_jac_x_xdot_u'
-    impl_dae_jac_x_xdot_u.generate(fun_name, casadi_opts)
+    # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
+    # impl_dae_jac_x_xdot_u.generate(fun_name, casadi_opts)
     
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
     impl_dae_jac_x_xdot_u.generate(fun_name, casadi_opts)

@@ -288,19 +288,19 @@ int main() {
     int set_fun_status;
     for (int i = 0; i < N; ++i) {
         {% if ra.solver_config.integrator_type == 'ERK': %} 
-        set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
-        if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
-        {% if ra.solver_config.hessian_approx == 'EXACT': %} 
-        set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
-        if (set_fun_status != 0) { printf("Error while setting expl_ode_hes[%i]\n", i);  exit(1); }
+            set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
+            if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
+            {% if ra.solver_config.hessian_approx == 'EXACT': %} 
+                set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
+                if (set_fun_status != 0) { printf("Error while setting expl_ode_hes[%i]\n", i);  exit(1); }
+            {% endif %}
         {% elif ra.solver_config.integrator_type == 'IRK': %} 
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
 			if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot[i]);
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z[i]);
 			if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z[i]);
 			if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
-        {% endif %}
         {% endif %}
     }
 
