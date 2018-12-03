@@ -273,14 +273,15 @@ static void ocp_nlp_sqp_rti_opts_set_maxIter(void *config_, void* opts_, const v
 
 void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, const void* value)
 {
+    ocp_nlp_sqp_rti_opts *opts = (ocp_nlp_sqp_rti_opts *) opts_;
+    ocp_nlp_solver_config *config = config_;
     if (!strcmp(field, "maxIter"))
     {
         ocp_nlp_sqp_rti_opts_set_maxIter(config_, opts_, value);
     }
     else
     {
-        printf("\nerror: option type not available in module\n");
-        exit(1);
+        config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
     }
 }
 

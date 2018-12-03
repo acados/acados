@@ -491,9 +491,6 @@ void ocp_nlp_opts_set(ocp_nlp_solver_config *config, void *opts_,
 int ocp_nlp_dynamics_opts_set(ocp_nlp_solver_config *config, void *opts_, int stage,
                                          const char *field, void *value)
 {
-    // ocp_nlp_dynamics_config *dyn_config = config->dynamics[stage];
-    // ocp_nlp_opts
-    // dyn_config->opts_set(dyn_config, opts_, stage, field, value);
     return config->dynamics_opts_set(config, opts_, stage, field, value);
 }
 

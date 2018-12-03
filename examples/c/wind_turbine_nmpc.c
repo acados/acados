@@ -35,8 +35,6 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
@@ -760,14 +758,9 @@ int main()
 	// create opts
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
-	// extract opts
-	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts;
-
 	// nlp opts
 	if (plan->nlp_solver == SQP)
 	{
-
-		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
 
 		int maxIter = MAX_SQP_ITERS;
 		double min_res_g = 1e-6;
@@ -780,14 +773,11 @@ int main()
 		ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
 		ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
 		ocp_nlp_opts_set(config, nlp_opts, "min_res_m", &min_res_m);
-
-		pcond_solver_opts = sqp_opts->qp_solver_opts;
-
 	}
 	else if (plan->nlp_solver == SQP_RTI)
 	{
 
-		ocp_nlp_sqp_rti_opts *sqp_rti_opts = nlp_opts;
+		// ocp_nlp_sqp_rti_opts *sqp_rti_opts = nlp_opts;
 
 		// for (int i = 0; i < NN; ++i)
 		// {
@@ -803,9 +793,6 @@ int main()
 //				constr_stage_opts->compute_adj = 0;
 //			}
 //		}
-
-		pcond_solver_opts = sqp_rti_opts->qp_solver_opts;
-
 	}
 
 	// sim opts
@@ -854,7 +841,8 @@ int main()
 	// partial condensing opts
 	if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
 	{
-		pcond_solver_opts->pcond_opts->N2 = 5;
+        int pcond_N2 = 5;
+        ocp_nlp_opts_set(config, nlp_opts, "pcond_N2", &pcond_N2);
 	}
 
 	// update opts after manual changes
@@ -951,6 +939,7 @@ int main()
 			{
 				if (plan->nlp_solver == SQP)
 				{
+                    // TODO(oj): write getters
 					ocp_nlp_sqp_memory *solver_mem = (ocp_nlp_sqp_memory *) solver->mem;
 					printf("\nproblem #%d, status %d, iters %d, time (total %f, lin %f, qp_sol %f) ms\n", idx, status, solver_mem->sqp_iter, solver_mem->time_tot*1e3, solver_mem->time_lin*1e3, solver_mem->time_qp_sol*1e3);
 				}
@@ -997,7 +986,6 @@ int main()
     * free memory
     ************************************************/
 
-	// TODO(dimitris): VALGRIND!
 	external_function_casadi_free(&get_matrices_fun);
 
  	external_function_param_casadi_free(expl_vde_for);
@@ -1021,41 +1009,13 @@ int main()
 	free(phi_jac_y_uhat);
 	free(f_lo_jac_x1_x1dot_u_z);
 
-
-	free(nlp_opts);
-	free(nlp_in);
-	free(nlp_out);
-	free(solver);
-	free(dims);
-	free(config);
-	free(plan);
-
-	free(lb0);
-	free(ub0);
-	free(lb1);
-	free(ub1);
-	free(lbN);
-	free(ubN);
-
-	free(lh1);
-	free(uh1);
-	free(Vx);
-	free(Vu);
-	free(W);
-
-	free(idxb0);
-	free(idxb1);
-	free(idxbN);
-
-	free(ls0);
-	free(us0);
-	free(ls1);
-	free(us1);
-	free(lsN);
-	free(usN);
-	free(idxs0);
-	free(idxs1);
-	free(idxsN);
+	ocp_nlp_opts_free(nlp_opts);
+	ocp_nlp_in_free(nlp_in);
+	ocp_nlp_out_free(nlp_out);
+	ocp_nlp_free(solver);
+	ocp_nlp_dims_free(dims);
+	ocp_nlp_config_free(plan, config);
+	ocp_nlp_plan_free(plan);
 
 	free(lZ0);
 	free(uZ0);
@@ -1069,6 +1029,37 @@ int main()
 	free(uZN);
 	free(lzN);
 	free(uzN);
+
+    free(W_N);
+	free(W);
+	free(Vx);
+	free(Vu);
+	free(lh1);
+	free(uh1);
+
+	free(lbN);
+	free(ubN);
+	free(idxbN);
+
+	free(lb1);
+	free(ub1);
+	free(idxb1);
+
+	free(lb0);
+	free(ub0);
+	free(idxb0);
+
+	free(lsN);
+	free(usN);
+	free(idxsN);
+
+	free(idxs1);
+	free(ls1);
+	free(us1);
+
+	free(us0);
+	free(ls0);
+	free(idxs0);
 
 	free(x_end);
 	free(u_end);

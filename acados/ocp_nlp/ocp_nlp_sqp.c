@@ -261,40 +261,47 @@ void ocp_nlp_sqp_opts_update(void *config_, void *dims_, void *opts_)
 
 void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, const void* value)
 {
+    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
+    ocp_nlp_solver_config *config = config_;
+
     if (!strcmp(field, "maxIter"))
     {
-        ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
         int* maxIter = (int *) value;
         opts->maxIter = *maxIter;
     }
+    if (!strcmp(field, "reuse_workspace"))
+    {
+        int* reuse_workspace = (int *) value;
+        opts->reuse_workspace = *reuse_workspace;
+    }
+    if (!strcmp(field, "num_threads"))
+    {
+        int* num_threads = (int *) value;
+        opts->num_threads = *num_threads;
+    }
     else if (!strcmp(field, "min_res_g"))
     {
-        ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
         double* min_res_g = (double *) value;
         opts->min_res_g = *min_res_g;
     }
     else if (!strcmp(field, "min_res_b"))
     {
-        ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
         double* min_res_b = (double *) value;
         opts->min_res_b = *min_res_b;
     }
     else if (!strcmp(field, "min_res_d"))
     {
-        ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
         double* min_res_d = (double *) value;
         opts->min_res_d = *min_res_d;
     }
     else if (!strcmp(field, "min_res_m"))
     {
-        ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
         double* min_res_m = (double *) value;
         opts->min_res_m = *min_res_m;
     }
     else
     {
-        printf("\nerror: option type %s not available in module\n", field);
-        exit(1);
+        config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
     }
 }
 

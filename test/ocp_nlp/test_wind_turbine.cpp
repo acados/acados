@@ -1043,7 +1043,6 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     * free memory
     ************************************************/
 
-    // TODO(dimitris): VALGRIND!
     external_function_casadi_free(&get_matrices_fun);
 
     external_function_param_casadi_free(expl_vde_for);
@@ -1067,14 +1066,13 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     free(phi_jac_y_uhat);
     free(f_lo_jac_x1_x1dot_u_z);
 
-
-    free(nlp_opts);
-    free(nlp_in);
-    free(nlp_out);
-    free(solver);
-    free(dims);
-    free(config);
-    free(plan);
+	ocp_nlp_opts_free(nlp_opts);
+	ocp_nlp_in_free(nlp_in);
+	ocp_nlp_out_free(nlp_out);
+	ocp_nlp_free(solver);
+	ocp_nlp_dims_free(dims);
+	ocp_nlp_config_free(plan, config);
+	ocp_nlp_plan_free(plan);
 
     free(lb0);
     free(ub0);
