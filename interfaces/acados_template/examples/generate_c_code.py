@@ -117,7 +117,7 @@ generate_c_code_implicit_ode(model, opts);
 
 # set header path
 ra.acados_include_path = '/usr/local/include'
-ra.acados_lib_path = '../../../../../../build'
+ra.acados_lib_path = '/use/local/lib'
 
 # check render arguments
 check_ra(ra)
