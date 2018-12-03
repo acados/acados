@@ -43,8 +43,6 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 
-#include "acados/sim/sim_gnsf.h"
-
 #include "examples/c/wt_model_nx6/nx6p2/wt_model.h"
 #include "examples/c/wt_model_nx6/setup.c"
 #define NN 40
@@ -905,45 +903,7 @@ int main()
 	* 	precomputation (after all options are set)
 	************************************************/
 
-	for (int i=0; i<NN; i++){
-		if (plan->sim_solver_plan[i].sim_solver == GNSF)
-		{
-			ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
-			gnsf_model* model = (gnsf_model *)dynamics->sim_model;
-
-			ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
-			void *gnsf_dims = dyn_dims->sim;
-
-			// import model matrices
-			// sim_gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
-
-			// get sim_solver_config
-			void *sim_sol_config = config->dynamics[i]->sim_solver;
-
-			// get sim_solver memory
-			ocp_nlp_dynamics_cont_memory *dynamics_mem = NULL;
-
-			if (plan->nlp_solver == SQP)
-			{
-				ocp_nlp_sqp_memory *sqp_mem = solver->mem;
-				dynamics_mem = sqp_mem->dynamics[i];
-			}
-			else if (plan->nlp_solver == SQP_RTI)
-			{
-				ocp_nlp_sqp_rti_memory *sqp_rti_mem = solver->mem;
-				dynamics_mem = sqp_rti_mem->dynamics[i];
-			}
-
-			// precompute
-			// TODO(oj): propagate upwards
-			// sim_precompute(sim_solver, in, out);
-
-			// sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts[i], dynamics_mem->sim_solver, solver->work, nlp_in->Ts[i]);
-			// NOTE; solver->work can be used, as it is for sure larger than the workspace
-			//		 needed to precompute, as the latter is part of the first.
-		}
-	}
-
+	status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
     /************************************************
     * sqp solve

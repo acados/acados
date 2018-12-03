@@ -243,6 +243,7 @@ int main() {
 	// 	BLASFEO_DVECEL(nlp_out->ux+i, 3) = M_PI;
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+	solver_status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
 	std::vector<std::vector<double>> MPC_log;
 	std::vector<double> timings, KKT_log;

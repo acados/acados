@@ -29,7 +29,6 @@
 
 // acados
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_gnsf.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/math.h"
 
@@ -39,6 +38,12 @@
 // crane dae model
 #include "examples/c/inverted_pendulum_model/inverted_pendulum_model.h"
 
+// blasfeo
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
 
 
 int main()

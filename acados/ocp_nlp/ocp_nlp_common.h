@@ -57,7 +57,9 @@ typedef struct
     // evaluate solver
     int (*evaluate)(void *config, void *dims, void *qp_in, void *qp_out,
                     void *opts_, void *mem, void *work);
-
+    // prepare memory
+    int (*precompute)(void *config, void *dims, void *qp_in, void *qp_out,
+                void *opts_, void *mem, void *work);
     // initalize this struct with default values
     void (*config_initialize_default)(void *config);
 

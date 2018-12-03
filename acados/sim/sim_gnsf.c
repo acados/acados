@@ -444,7 +444,7 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
             break;
         case GET_GNSF_MATRICES:
             model->get_gnsf_matrices = (external_function_generic *) fun;
-            break;            
+            break;
         default:
             return ACADOS_FAILURE;
     }
@@ -544,9 +544,19 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     acados_timer atimer;
     acados_tic(&atimer);
 
+    int status = ACADOS_SUCCESS;
+
     sim_gnsf_dims *dims = (sim_gnsf_dims *) in->dims;
     sim_rk_opts *opts = opts_;
     gnsf_model *model = in->model;
+
+
+    if (model->get_gnsf_matrices == NULL)
+    {
+        printf("sim_gnsf error: get_gnsf_matrices function seems to be unset!\n");
+        status = ACADOS_FAILURE;
+        break;
+    }
 
     sim_gnsf_import_matrices(dims, model);
 
@@ -580,6 +590,12 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
 
     double dt = in->T / num_steps;
+    if (dt == 0.0)
+    {
+        printf("sim_gnsf error: simulation time = 0; seems to be unset!\n");
+        status = ACADOS_FAILURE;
+        break;
+    }
     mem->dt = dt;
 
     double *A_mat = opts->A_mat;
@@ -1034,7 +1050,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
         blasfeo_dtrsm_lunn(nxz2, nx2, 1.0, ELO_LU, 0, 0, ELO_inv_ALO,
                                 0, 0, ELO_inv_ALO, 0, 0);
     }
-    return ACADOS_SUCCESS;
+    return status;
     // double precomputation_time = acados_toc(&atimer) * 1000;
     // printf("time 2 precompute = %f [ms]\n", precomputation_time);
 }
@@ -1597,9 +1613,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     int nxz2 = nx2 + nz2;
 
     // assert - only use supported features
-    if(mem->dt != in->T / opts->num_steps)
+    if (mem->dt != in->T / opts->num_steps)
     {
-        printf("model->dt not equal to in.T/opts->num_steps, check initialization");
+        printf("ERROR sim_gnsf: mem->dt n!= in->T/opts->num_steps, check initialization\n");
         return ACADOS_FAILURE;
     }
 

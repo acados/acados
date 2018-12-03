@@ -94,7 +94,6 @@ TEST_CASE("crane_dae_example", "[integrators]")
     int nx1 = 5;
     int nz1 = 0;
 
-
     // generate x0, u_sim
     double x0[nx];
     double u_sim[nu];
@@ -327,15 +326,6 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
     sim_solver *sim_solver = sim_create(config, dims, opts);
 
-
-    // if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
-    //     gnsf_model *model = (gnsf_model *) in->model;
-    //     sim_gnsf_precompute(config, dims, model, opts,
-    //                 sim_solver->mem, sim_solver->work, in->T);
-    // }
-    // TODO(oj): propagate upwards
-    // sim_precompute(sim_solver, in, out);
-
     int acados_return;
 
     for (int ii = 0; ii < nsim0; ii++)
@@ -537,7 +527,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 //              sim_solver->mem, sim_solver->work, in->T);
                 // }
                 // TODO(oj): propagate upwards
-			// sim_precompute(sim_solver, in, out);
+                // sim_precompute(sim_solver, in, out);
 
             /* print */
                 std::cout << "\n---> testing integrator " << solver;

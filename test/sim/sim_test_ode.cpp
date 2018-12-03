@@ -484,7 +484,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
                 int acados_return;
 
-    			sim_precompute(sim_solver, in, out);
+                sim_precompute(sim_solver, in, out);
 
                 for (ii=0; ii < nsim0; ii++)
                 {

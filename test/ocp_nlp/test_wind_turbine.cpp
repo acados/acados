@@ -51,8 +51,6 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
-#include "acados/sim/sim_gnsf.h"
-
 #include "examples/c/wt_model_nx6/nx6p2/wt_model.h"
 #include "examples/c/wt_model_nx6/setup.c"
 
@@ -668,26 +666,24 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     get_matrices_fun.casadi_n_out          = &wt_nx6p2_get_matrices_fun_n_out;
     external_function_casadi_create(&get_matrices_fun);
 
-    external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
+    /* initialize additional gnsf dimensions */
+    int gnsf_nx1 = 8;
+    int gnsf_nz1 = 0;
+    int gnsf_nout = 1;
+    int gnsf_ny = 5;
+    int gnsf_nuhat = 0;
 
-	/* initialize additional gnsf dimensions */			
-	int gnsf_nx1 = 8;
-	int gnsf_nz1 = 0;
-	int gnsf_nout = 1;
-	int gnsf_ny = 5;
-	int gnsf_nuhat = 0;
-
-	for (int i = 0; i < NN; i++)
-	{
-		if (plan->sim_solver_plan[i].sim_solver == GNSF)
-		{
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nx1", i, &gnsf_nx1);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nz1", i, &gnsf_nz1);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nout", i, &gnsf_nout);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_ny", i, &gnsf_ny);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nuhat", i, &gnsf_nuhat);
-		}
-	}
+    for (int i = 0; i < NN; i++)
+    {
+        if (plan->sim_solver_plan[i].sim_solver == GNSF)
+        {
+            ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nx1", i, &gnsf_nx1);
+            ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nz1", i, &gnsf_nz1);
+            ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nout", i, &gnsf_nout);
+            ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_ny", i, &gnsf_ny);
+            ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nuhat", i, &gnsf_nuhat);
+        }
+    }
 
     /************************************************
     * nlp_in
@@ -772,9 +768,12 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             if (set_fun_status != 0) exit(1);
             set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
                 &f_lo_jac_x1_x1dot_u_z[i]);
+            REQUIRE(set_fun_status == 0);
+            if (set_fun_status != 0) exit(1);
             set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "get_gnsf_matrices",
-                                                        &get_model_matrices);
-			if (set_fun_status != 0) exit(1);
+                                                        &get_matrices_fun);
+            REQUIRE(set_fun_status == 0);
+            if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
@@ -909,59 +908,16 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
     /************************************************
-    * 	precomputation (after all options are set)
+    *     precomputation (after all options are set)
     ************************************************/
 
-    for (int i = 0; i < NN; i++){
-        if (plan->sim_solver_plan[i].sim_solver == GNSF)
-        {
-            ocp_nlp_dynamics_cont_model *dynamics =
-                (ocp_nlp_dynamics_cont_model *) nlp_in->dynamics[i];
-            gnsf_model* model = (gnsf_model *)dynamics->sim_model;
-
-            // get gnsf_dims
-            ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
-            sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
-
-            // get sim opts
-            ocp_nlp_dynamics_cont_opts *dynamics_stage_opts =
-                (ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i];
-            sim_rk_opts *sim_opts = (sim_rk_opts *) dynamics_stage_opts->sim_solver;
-
-            // import model matrices
-            // sim_gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
-
-            // get sim_solver_config
-            sim_solver_config *sim_sol_config =
-                (sim_solver_config *) config->dynamics[i]->sim_solver;
-
-            // get sim_solver memory
-            ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *) solver->mem;
-            ocp_nlp_dynamics_cont_memory* dynamics_mem =
-                (ocp_nlp_dynamics_cont_memory *) mem->dynamics[i];
-            char *mem_ptr = (char *) dynamics_mem;
-
-            // mem_ptr now points to the memory of the integrator;
-            mem_ptr += sizeof(ocp_nlp_dynamics_cont_memory);
-
-            // precompute
-            // sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts, mem_ptr, solver->work,
-            //     nlp_in->Ts[i]);
-            // TODO(oj): propagate upwards
-			// sim_precompute(sim_solver, in, out);
-            // NOTE; solver->work can be used, as it is for sure larger than the workspace
-            //       needed to precompute, as the latter is part of the first.
-        }
-    }
-
+    int status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
     /************************************************
     * sqp solve
     ************************************************/
 
     int nmpc_problems = 40;
-
-    int status;
 
     acados_timer timer;
     acados_tic(&timer);

@@ -74,7 +74,8 @@ void ocp_nlp_dynamics_disc_opts_initialize_default(void *config, void *dims, voi
 //
 void ocp_nlp_dynamics_disc_opts_update(void *config, void *dims, void *opts);
 //
-
+int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, void *opts_,
+                                        void *mem_, void *work_);
 
 
 /************************************************

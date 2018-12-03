@@ -521,6 +521,12 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
     return;
 }
 
+int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, void *opts_,
+                                        void *mem_, void *work_)
+{
+    return ACADOS_SUCCESS;
+}
+
 
 
 void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
@@ -552,6 +558,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_nlp_dynamics_disc_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_disc_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_disc_update_qp_matrices;
+    config->precompute = &ocp_nlp_dynamics_disc_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_disc_config_initialize_default;
 
     return;

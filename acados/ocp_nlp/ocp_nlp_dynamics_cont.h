@@ -170,7 +170,9 @@ void ocp_nlp_dynamics_cont_initialize(void *config_, void *dims, void *model_, v
 //
 void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims, void *model_, void *opts,
                                               void *mem, void *work_);
-
+//
+int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims, void *model_, void *opts_,
+                                        void *mem_, void *work_);
 
 
 #ifdef __cplusplus

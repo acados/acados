@@ -200,12 +200,13 @@ int main() {
 		// BLASFEO_DVECEL(nlp_out->ux+i, 3) = PI;
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+    int solver_status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
 	// NLP solution
     acados_timer timer;
     acados_tic(&timer);
 
-	int solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
+	solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
     double elapsed_time = acados_toc(&timer);
 

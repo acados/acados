@@ -282,6 +282,8 @@ int main()
     }
     blasfeo_pack_dvec(nx[N], x0, nlp_out->ux+N, nu[N]);
 
+    status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
+
     for (int i = 0; i < n_sim; ++i)
     {
         printf("\n-----\n");

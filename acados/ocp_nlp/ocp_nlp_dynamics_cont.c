@@ -607,7 +607,25 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     return;
 }
 
+int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, void *opts_,
+                                        void *mem_, void *work_)
+{
+    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_);
 
+    ocp_nlp_dynamics_config *config = config_;
+    // ocp_nlp_dynamics_cont_dims *dims = dims_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+    ocp_nlp_dynamics_cont_workspace *work = work_;
+    ocp_nlp_dynamics_cont_memory *mem = mem_;
+    ocp_nlp_dynamics_cont_model *model = model_;
+    work->sim_in->model = model->sim_model;
+    work->sim_in->T = model->T;
+
+    // call integrator
+    int status = config->sim_solver->precompute(config->sim_solver, work->sim_in, work->sim_out,
+                                   opts->sim_solver, mem->sim_solver, work->sim_solver);
+    return status;
+}
 
 void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
 {
@@ -638,6 +656,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;
+    config->precompute = &ocp_nlp_dynamics_cont_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_cont_config_initialize_default;
 
     return;
