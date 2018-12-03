@@ -66,8 +66,6 @@ hess = mtimes(S_forw.',jtimes(adj,[x;u],S_forw));
 hess2 = [];
 for j = 1:nx+nu
     for i = j:nx+nu
-        i
-        j
         hess(i,j)
         hess2 = [hess2; hess(i,j)];
     end
