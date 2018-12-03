@@ -114,9 +114,7 @@ void ocp_nlp_config_free(ocp_nlp_solver_plan *plan_, void *config_);
 ocp_nlp_dims *ocp_nlp_dims_create(void *config_);
 //
 void ocp_nlp_dims_free(void *dims_);
-// TODO(oj): implement
-void ocp_nlp_dims_set(ocp_nlp_solver_config *config, void *dims,
-                      char *field, const int* value_vector);
+//
 
 /* in */
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
@@ -168,6 +166,10 @@ void ocp_nlp_free(void *solver);
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 //
 int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
+
+/* get */
+void ocp_nlp_get(ocp_nlp_solver_config *config, ocp_nlp_solver *solver,
+                 const char *field, void *return_value_);
 
 #ifdef __cplusplus
 } /* extern "C" */

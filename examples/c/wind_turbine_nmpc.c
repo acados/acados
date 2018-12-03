@@ -28,15 +28,11 @@
 #include "acados_c/external_function_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
 
-// TODO(dimitris): use only the strictly necessary includes here
-
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
-#include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
@@ -503,8 +499,8 @@ int main()
 
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
 
-//	plan->nlp_solver = SQP;
-	plan->nlp_solver = SQP_RTI;
+	plan->nlp_solver = SQP;
+	// plan->nlp_solver = SQP_RTI;
 
 	for (int i = 0; i <= NN; i++)
 		plan->nlp_cost[i] = LINEAR_LS;
@@ -517,10 +513,10 @@ int main()
 	for (int i = 0; i < NN; i++)
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-		plan->sim_solver_plan[i].sim_solver = ERK;
+		// plan->sim_solver_plan[i].sim_solver = ERK;
 		// plan->sim_solver_plan[i].sim_solver = IRK;
 		// plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
-		// plan->sim_solver_plan[i].sim_solver = GNSF;
+		plan->sim_solver_plan[i].sim_solver = GNSF;
 	}
 
 	for (int i = 0; i <= NN; i++)
@@ -937,28 +933,29 @@ int main()
 			// print info
 			if (true)
 			{
-				if (plan->nlp_solver == SQP)
-				{
-                    // TODO(oj): write getters
-					ocp_nlp_sqp_memory *solver_mem = (ocp_nlp_sqp_memory *) solver->mem;
-					printf("\nproblem #%d, status %d, iters %d, time (total %f, lin %f, qp_sol %f) ms\n", idx, status, solver_mem->sqp_iter, solver_mem->time_tot*1e3, solver_mem->time_lin*1e3, solver_mem->time_qp_sol*1e3);
-				}
-				else if (plan->nlp_solver == SQP_RTI)
-				{
-					ocp_nlp_sqp_rti_memory *solver_mem = (ocp_nlp_sqp_rti_memory *) solver->mem;
-					printf("\nproblem #%d, status %d, time (total %f, lin %f, qp_sol %f) ms\n", idx, status, solver_mem->time_tot*1e3, solver_mem->time_lin*1e3, solver_mem->time_qp_sol*1e3);
-				}
-				printf("xsim = \n");
+                int sqp_iter;
+                double time_lin, time_qp_sol, time_tot;
+
+                ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
+                ocp_nlp_get(config, solver, "time_tot", &time_tot);
+                ocp_nlp_get(config, solver, "time_qp_sol", &time_qp_sol);
+                ocp_nlp_get(config, solver, "time_lin", &time_lin);
+
+                printf("\nproblem #%d, status %d, iters %d, time (total %f, lin %f, qp_sol %f) ms\n",
+                    idx, status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+
+                printf("xsim = \n");
 				blasfeo_print_tran_dvec(dims->nx[0], &nlp_out->ux[0], dims->nu[0]);
 				printf("electrical power = %f\n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7));
 			}
-
 			if (status!=0)
 			{
-				if (!(status == 1 && MAX_SQP_ITERS == 1))  // if not RTI
+				if (plan->nlp_solver == SQP)  // RTI has no residual
 				{
+                    ocp_nlp_res *residual;
+                    ocp_nlp_get(config, solver, "nlp_res", &residual);
 					printf("\nresiduals\n");
-					ocp_nlp_res_print(dims, ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res);
+					ocp_nlp_res_print(dims, residual);
 					exit(1);
 				}
 			}

@@ -62,7 +62,8 @@ typedef struct
                 void *opts_, void *mem, void *work);
     // initalize this struct with default values
     void (*config_initialize_default)(void *config);
-
+    // general getter
+    void (*get)(void *config_, void *mem_, const char *field, void *return_value_);
     // config structs of submodules
     ocp_qp_xcond_solver_config *qp_solver;
     ocp_nlp_dynamics_config **dynamics;

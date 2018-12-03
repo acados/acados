@@ -572,3 +572,9 @@ int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *
     return solver->config->precompute(solver->config, solver->dims, nlp_in, nlp_out, solver->opts,
                                     solver->mem, solver->work);
 }
+
+void ocp_nlp_get(ocp_nlp_solver_config *config, ocp_nlp_solver *solver,
+                 const char *field, void *return_value_)
+{
+    solver->config->get(solver->config, solver->mem, field, return_value_);
+}

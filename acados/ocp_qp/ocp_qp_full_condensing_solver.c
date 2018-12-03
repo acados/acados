@@ -130,7 +130,8 @@ void ocp_qp_full_condensing_solver_opts_set(void *config_, void *opts_,
     }
     else
     {
-        printf("\nerror: option type %s not available in ocp_nlp_sqp module\n", field);
+        printf("\nerror: option type %s not available in ocp_qp_full_condensing_solver module\n",
+               field);
         exit(1);
     }
 }

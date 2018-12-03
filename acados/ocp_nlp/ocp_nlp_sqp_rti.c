@@ -1178,6 +1178,39 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
 }
 
 
+void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *return_value_)
+{
+    // ocp_nlp_solver_config *config = config_;
+    ocp_nlp_sqp_rti_memory *mem = mem_;
+
+    if (!strcmp("sqp_iter", field))
+    {
+        int *value = return_value_;
+        *value = 1;
+    }
+    else if (!strcmp("time_tot", field) || !strcmp("tot_time", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_tot;
+    }
+    else if (!strcmp("time_qp_sol", field) || !strcmp("time_qp", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_qp_sol;
+    }
+    else if (!strcmp("time_lin", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_lin;
+    }
+    else
+    {
+        printf("\nerror: output type %s not available in ocp_nlp_sqp_rti module\n", field);
+        exit(1);
+    }
+}
+
+
 void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
 {
     ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
@@ -1195,6 +1228,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->config_initialize_default = &ocp_nlp_sqp_rti_config_initialize_default;
     config->regularization = NULL;
     config->precompute = &ocp_nlp_sqp_rti_precompute;
+    config->get = &ocp_nlp_sqp_rti_get;
 
     return;
 }

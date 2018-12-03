@@ -269,12 +269,12 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, const v
         int* maxIter = (int *) value;
         opts->maxIter = *maxIter;
     }
-    if (!strcmp(field, "reuse_workspace"))
+    else if (!strcmp(field, "reuse_workspace"))
     {
         int* reuse_workspace = (int *) value;
         opts->reuse_workspace = *reuse_workspace;
     }
-    if (!strcmp(field, "num_threads"))
+    else if (!strcmp(field, "num_threads"))
     {
         int* num_threads = (int *) value;
         opts->num_threads = *num_threads;
@@ -1273,6 +1273,45 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
     return status;
 }
 
+void ocp_nlp_sqp_get(void *config_, void *mem_, const char *field, void *return_value_)
+{
+    // ocp_nlp_solver_config *config = config_;
+    ocp_nlp_sqp_memory *mem = mem_;
+
+    if (!strcmp("sqp_iter", field))
+    {
+        int *value = return_value_;
+        *value = mem->sqp_iter;
+    }
+    else if (!strcmp("time_tot", field) || !strcmp("tot_time", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_tot;
+    }
+    else if (!strcmp("time_qp_sol", field) || !strcmp("time_qp", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_qp_sol;
+    }
+    else if (!strcmp("time_lin", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_lin;
+    }
+    else if (!strcmp("nlp_res", field))
+    {
+        ocp_nlp_res **value = return_value_;
+        *value = mem->nlp_res;
+    }
+    else
+    {
+        printf("\nerror: output type %s not available in ocp_nlp_sqp module\n", field);
+        exit(1);
+    }
+
+}
+
+
 
 void ocp_nlp_sqp_config_initialize_default(void *config_)
 {
@@ -1291,6 +1330,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->config_initialize_default = &ocp_nlp_sqp_config_initialize_default;
     config->regularization = NULL;
     config->precompute = &ocp_nlp_sqp_precompute;
+    config->get = &ocp_nlp_sqp_get;
 
     return;
 }
