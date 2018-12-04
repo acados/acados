@@ -466,6 +466,27 @@ void ocp_nlp_out_free(void *out)
     free(out);
 }
 
+void ocp_nlp_out_get(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+                     int stage, const char *field, void *value)
+{
+    if (!strcmp(field, "x"))
+    {
+        double *double_values = value;
+        blasfeo_unpack_dvec(dims->nx[stage], &out->ux[stage], dims->nu[stage], double_values);
+    }
+    else if (!strcmp(field, "u"))
+    {
+        double *double_values = value;
+        blasfeo_unpack_dvec(dims->nu[stage], &out->ux[stage], 0, double_values);
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_out: field %s not available, attempt to get\n", field);
+        exit(1);
+    }
+}
+
+
 /* opts */
 void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
@@ -482,7 +503,7 @@ void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 
 
 void ocp_nlp_opts_set(ocp_nlp_solver_config *config, void *opts_,
-                      const char *field, const void* value)
+                      const char *field, const void *value)
 {
     config->opts_set(config, opts_, field, value);
 }

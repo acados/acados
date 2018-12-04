@@ -141,6 +141,9 @@ int ocp_nlp_constraints_bounds_set(ocp_nlp_solver_config *config, ocp_nlp_dims *
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
 void ocp_nlp_out_free(void *out);
+//
+void ocp_nlp_out_get(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+                     int stage, const char *field, void *value);
 
 /* opts */
 //

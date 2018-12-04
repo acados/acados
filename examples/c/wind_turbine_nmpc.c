@@ -38,6 +38,7 @@
 // example specific
 #include "examples/c/wt_model_nx6/nx6p2/wt_model.h"
 #include "examples/c/wt_model_nx6/setup.c"
+
 #define NN 40
 
 #define MAX_SQP_ITERS 10
@@ -386,6 +387,10 @@ int main()
 	lbN[2] = M_gen_min;
 	ubN[2] = M_gen_max;
 
+	// to shift
+	double *specific_u = malloc(nu_*sizeof(double));
+	double *specific_x = malloc(nx_*sizeof(double));
+
 #if 0
 	int_print_mat(1, nb[0], idxb0, 1);
 	d_print_mat(1, nb[0], lb0, 1);
@@ -726,6 +731,7 @@ int main()
 	// fist stage
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb0);
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub0);
+	// TODO(giaf): write setter for these guys
     for (int ii=0; ii<nb[0]; ii++) constraints[0]->idxb[ii] = idxb0[ii];
 	// middle stages
     for (int i = 1; i < NN; i++)
@@ -888,6 +894,8 @@ int main()
 
     for (int rep = 0; rep < NREP; rep++)
     {
+		// TODO(oj): @giaf how should this be done? using the ocp_nlp_out_set()
+		//    seems unintuitive for warmstarting
 		// warm start output initial guess of solution
 		for (int i=0; i<=NN; i++)
 		{
@@ -896,9 +904,9 @@ int main()
 			blasfeo_pack_dvec(nx[i], x0_ref, nlp_out->ux+i, nu[i]);
 		}
 
-		// update x0 as box constraint
-		blasfeo_pack_dvec(nx[0], x0_ref, &constraints[0]->d, nbu[0]);
-		blasfeo_pack_dvec(nx[0], x0_ref, &constraints[0]->d, nb[0]+ng[0]+nh[0]+nbu[0]);
+		// set x0 as box constraint
+        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbx", x0_ref);
+        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubx", x0_ref);
 
    	 	for (int idx = 0; idx < nmpc_problems; idx++)
 		{
@@ -940,8 +948,9 @@ int main()
 
 			// update initial condition
 			// TODO(dimitris): maybe simulate system instead of passing x[1] as next state
-			blasfeo_dveccp(nx_, &nlp_out->ux[1], nu_, &constraints[0]->d, nbu[0]);
-			blasfeo_dveccp(nx_, &nlp_out->ux[1], nu_, &constraints[0]->d, nbu[0]+nb[0]+ng[0]);
+			ocp_nlp_out_get(config, dims, nlp_out, 1, "x", specific_x);
+			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbx", specific_x);
+			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubx", specific_x);
 
 			// print info
 			if (true)
@@ -958,8 +967,9 @@ int main()
                     idx, status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
 
                 printf("xsim = \n");
-				blasfeo_print_tran_dvec(dims->nx[0], &nlp_out->ux[0], dims->nu[0]);
-				printf("electrical power = %f\n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7));
+				ocp_nlp_out_get(config, dims, nlp_out, 0, "x", x_end);
+				d_print_mat(1, nx[0], x_end, 1);
+				printf("electrical power = %f\n", 0.944*97/100* x_end[0] * x_end[5]);
 			}
 			if (status!=0)
 			{
@@ -976,15 +986,13 @@ int main()
 			// shift trajectories
 			if (true)
 			{
-				blasfeo_unpack_dvec(dims->nx[NN], &nlp_out->ux[NN-1], dims->nu[NN-1], x_end);
-				blasfeo_unpack_dvec(dims->nu[NN-1], &nlp_out->ux[NN-2], dims->nu[NN-2], u_end);
+                ocp_nlp_out_get(config, dims, nlp_out, NN-1, "u", u_end);
+				ocp_nlp_out_get(config, dims, nlp_out, NN-1, "x", x_end);
 
 				shift_states(dims, nlp_out, x_end);
 				shift_controls(dims, nlp_out, u_end);
 			}
-
 		}
-
     }
 
     double time = acados_toc(&timer)/NREP;
@@ -1026,6 +1034,9 @@ int main()
 	ocp_nlp_dims_free(dims);
 	ocp_nlp_config_free(plan, config);
 	ocp_nlp_plan_free(plan);
+
+	free(specific_x);
+	free(specific_u);
 
 	free(lZ0);
 	free(uZ0);

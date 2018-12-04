@@ -327,10 +327,22 @@ int ocp_nlp_constraints_bgh_bounds_set(void *config_, void *dims_,
     int ng = dims->ng;
     int nh = dims->nh;
     int ns = dims->ns;
+    int nbx = dims->nbx;
+    int nbu = dims->nbu;
     // TODO(oj): document which strings mean what! - adapted from prev implementation..
     if (!strcmp(field, "lb"))
     {
         blasfeo_pack_dvec(nb, value, &model->d, 0);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "lbx"))
+    {
+        blasfeo_pack_dvec(nbx, value, &model->d, nbu);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "ubx"))
+    {
+        blasfeo_pack_dvec(nbx, value, &model->d, nb + ng + nh + nbu);
         status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "ub"))
