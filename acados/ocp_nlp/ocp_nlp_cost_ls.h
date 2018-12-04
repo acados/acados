@@ -62,8 +62,8 @@ typedef struct
     struct blasfeo_dmat Cyt;            // output matrix: Cy * [x, u] = y; in transposed form
     struct blasfeo_dmat W;              // ls norm corresponding to this matrix
     struct blasfeo_dvec y_ref;          // yref
-    struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector
-    struct blasfeo_dvec z;              // gradient of slacks as vector
+    struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector (lower and upper)
+    struct blasfeo_dvec z;              // gradient of slacks as vector (lower and upper)
 } ocp_nlp_cost_ls_model;
 
 //

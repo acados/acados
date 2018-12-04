@@ -17,26 +17,25 @@
  *
  */
 
+// std
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+// blasfeo
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
+// acados
 #include "acados_c/external_function_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
-
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
-
+// example specific
 #include "examples/c/wt_model_nx6/nx6p2/wt_model.h"
 #include "examples/c/wt_model_nx6/setup.c"
 #define NN 40
@@ -446,6 +445,21 @@ int main()
 	Vu[2+ny_*0] = 1.0;
 	Vu[3+ny_*1] = 1.0;
 
+	double *VxN = malloc((ny[NN]*nx[NN])*sizeof(double));
+	for (int ii=0; ii<ny[NN]*nx[NN]; ii++)
+		VxN[ii] = 0.0;
+	VxN[0+ny[NN]*0] = 1.0;
+	VxN[1+ny[NN]*4] = 1.0;
+
+
+	double *Cyt = malloc((ny_*(nx_+nu_))*sizeof(double));
+	for (int ii=0; ii<(ny_*(nx_+nu_)); ii++)
+		Cyt[ii] = 0.0;
+    Cyt[2] = 1.0;
+    Cyt[(nx_+nu_)+6] = 1.0;
+    Cyt[2*(nx_+nu_)] = 1.0;
+    Cyt[3*(nx_+nu_)+1] = 1.0;
+
 	double *W = malloc((ny_*ny_)*sizeof(double));
 	for (int ii=0; ii<ny_*ny_; ii++)
 		W[ii] = 0.0;
@@ -624,15 +638,20 @@ int main()
 	/* cost */
 
 	// linear ls
-	ocp_nlp_cost_ls_model **cost = (ocp_nlp_cost_ls_model **) nlp_in->cost;
-
 	int status = ACADOS_SUCCESS;
 
 	for (int i = 0; i <= NN; i++)
 	{
 		// Cyt
-		blasfeo_pack_tran_dmat(ny[i], nu[i], Vu, ny_, &cost[i]->Cyt, 0, 0);
-		blasfeo_pack_tran_dmat(ny[i], nx[i], Vx, ny_, &cost[i]->Cyt, nu[i], 0);
+		// blasfeo_pack_tran_dmat(ny[i], nu[i], Vu, ny_, &cost[i]->Cyt, 0, 0);
+		// blasfeo_pack_tran_dmat(ny[i], nx[i], Vx, ny_, &cost[i]->Cyt, nu[i], 0);
+        ocp_nlp_cost_set_model(config, dims, nlp_in, i, "Vu", Vu);
+        if (i < NN)
+            ocp_nlp_cost_set_model(config, dims, nlp_in, i, "Vx", Vx);
+        else
+            ocp_nlp_cost_set_model(config, dims, nlp_in, i, "Vx", VxN);
+        // printf("setted Cyt x=\n");
+        // blasfeo_print_dmat(nx[i]+ nu[i], ny[i], &cost[i]->Cyt,0, 0);
 
 		// W
 		ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W);
@@ -642,10 +661,10 @@ int main()
 	// slacks (middle stages)
 	for (int ii=1; ii<NN; ii++)
 	{
-		blasfeo_pack_dvec(ns[ii], lZ1, &cost[ii]->Z, 0);
-		blasfeo_pack_dvec(ns[ii], uZ1, &cost[ii]->Z, ns[ii]);
-		blasfeo_pack_dvec(ns[ii], lz1, &cost[ii]->z, 0);
-		blasfeo_pack_dvec(ns[ii], uz1, &cost[ii]->z, ns[ii]);
+        ocp_nlp_cost_set_model(config, dims, nlp_in, ii, "lZ1", lZ1);
+        ocp_nlp_cost_set_model(config, dims, nlp_in, ii, "uZ1", uZ1);
+        ocp_nlp_cost_set_model(config, dims, nlp_in, ii, "lz1", lz1);
+        ocp_nlp_cost_set_model(config, dims, nlp_in, ii, "uz1", uz1);
 	}
 
 
@@ -842,7 +861,7 @@ int main()
 	}
 
 	// update opts after manual changes
-	config->opts_update(config, dims, nlp_opts);
+	ocp_nlp_opts_update(config, dims, nlp_opts);
 
     /************************************************
     * ocp_nlp out
@@ -913,13 +932,7 @@ int main()
 			// update reference
 			for (int i = 0; i <= NN; i++)
 			{
-				BLASFEO_DVECEL(&cost[i]->y_ref, 0) = y_ref[(idx + i)*4+0];
-				BLASFEO_DVECEL(&cost[i]->y_ref, 1) = y_ref[(idx + i)*4+1];
-				if (i < NN)
-				{
-					BLASFEO_DVECEL(&cost[i]->y_ref, 2) = y_ref[(idx + i)*4+2];
-					BLASFEO_DVECEL(&cost[i]->y_ref, 3) = y_ref[(idx + i)*4+3];
-				}
+                ocp_nlp_cost_set_model(config, dims, nlp_in, i, "yref", &y_ref[(idx + i)*4]);
 			}
 
 			// solve NLP
@@ -1029,8 +1042,10 @@ int main()
 
     free(W_N);
 	free(W);
+    free(VxN);
 	free(Vx);
 	free(Vu);
+    free(Cyt);
 	free(lh1);
 	free(uh1);
 
