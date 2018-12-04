@@ -527,7 +527,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 //              sim_solver->mem, sim_solver->work, in->T);
                 // }
                 // TODO(oj): propagate upwards
-                // sim_precompute(sim_solver, in, out);
+                sim_precompute(sim_solver, in, out);
 
             /* print */
                 std::cout << "\n---> testing integrator " << solver;

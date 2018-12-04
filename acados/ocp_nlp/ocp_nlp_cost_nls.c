@@ -221,12 +221,12 @@ int ocp_nlp_cost_nls_set_model(void *config_, void *dims_, void *model_,
     else if (!strcmp(field, "lZ1"))
     {
         double *lZ1_col_maj = (double *) value_;
-		blasfeo_pack_dvec(dims->ns, lZ1_col_maj, &model->Z, 0);
+        blasfeo_pack_dvec(dims->ns, lZ1_col_maj, &model->Z, 0);
     }
     else if (!strcmp(field, "uZ1"))
     {
         double *uZ1_col_maj = (double *) value_;
-		blasfeo_pack_dvec(dims->ns, uZ1_col_maj, &model->Z, dims->ns);
+        blasfeo_pack_dvec(dims->ns, uZ1_col_maj, &model->Z, dims->ns);
     }
     else if (!strcmp(field, "z"))
     {
@@ -236,12 +236,12 @@ int ocp_nlp_cost_nls_set_model(void *config_, void *dims_, void *model_,
     else if (!strcmp(field, "lz1"))
     {
         double *lz1_col_maj = (double *) value_;
-		blasfeo_pack_dvec(dims->ns, lz1_col_maj, &model->z, 0);
+        blasfeo_pack_dvec(dims->ns, lz1_col_maj, &model->z, 0);
     }
     else if (!strcmp(field, "uz1"))
     {
         double *uz1_col_maj = (double *) value_;
-		blasfeo_pack_dvec(dims->ns, uz1_col_maj, &model->z, dims->ns);
+        blasfeo_pack_dvec(dims->ns, uz1_col_maj, &model->z, dims->ns);
     }
     else if (!strcmp(field, "nls_jac"))
     {

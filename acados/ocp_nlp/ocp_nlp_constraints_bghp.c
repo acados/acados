@@ -178,7 +178,7 @@ static void ocp_nlp_constraints_bghp_get_ni(void *config_, void *dims_, int* val
 {
     ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
     *value = dims->nbx + dims->nbu + dims->ng + dims->nh + dims->ns;
-    // TODO(oj): @giaf: + nq;
+    // TODO(oj): @giaf or robin: + nq?!;
 }
 
 static void ocp_nlp_constraints_bghp_get_nb(void *config_, void *dims_, int* value)

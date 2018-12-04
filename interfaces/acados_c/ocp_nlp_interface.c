@@ -41,7 +41,10 @@
 #include "acados/utils/mem.h"
 
 
-/* ocp_nlp_plan */
+/************************************************
+* plan
+************************************************/
+
 static int ocp_nlp_plan_calculate_size(int N)
 {
     // N - number of shooting nodes
@@ -125,8 +128,10 @@ void ocp_nlp_plan_free(void* plan_)
     free(plan_);
 }
 
+/************************************************
+* regularization
+************************************************/
 
-/* ocp_nlp_reg - regularization */
 static ocp_nlp_reg_config *ocp_nlp_reg_config_create(ocp_nlp_reg_t plan)
 {
     int size = ocp_nlp_reg_config_calculate_size();
@@ -152,8 +157,10 @@ static ocp_nlp_reg_config *ocp_nlp_reg_config_create(ocp_nlp_reg_t plan)
     return config;
 }
 
+/************************************************
+* config
+************************************************/
 
-/* ocp_nlp_solver_config */
 ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan)
 {
     int N = plan.N;
@@ -276,7 +283,11 @@ void ocp_nlp_config_free(ocp_nlp_solver_plan *plan, void *config_)
     free(config_);
 }
 
-/* ocp_nlp_dims */
+
+/************************************************
+* dims
+************************************************/
+
 ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
 {
     ocp_nlp_solver_config *config = config_;
@@ -298,7 +309,11 @@ void ocp_nlp_dims_free(void *dims_)
 }
 
 
-/* ocp_nlp_in */
+
+/************************************************
+* input
+************************************************/
+
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
     int bytes = ocp_nlp_in_calculate_size(config, dims);
@@ -355,8 +370,6 @@ int ocp_nlp_cost_set_model(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
 
 
 
-
-
 int nlp_set_discrete_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
                                     void *fun_ptr)
 {
@@ -378,73 +391,10 @@ int ocp_nlp_constraints_bounds_set(ocp_nlp_solver_config *config, ocp_nlp_dims *
                                       in->constraints[stage], field, value);
 }
 
-// NOTE(oj): not used atm, probably also not needed..
-int nlp_bounds_bgh_get(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
-                       const char *identifier, double *values)
-{
-    int status = 0;
-    char key[MAX_STR_LEN];
+/************************************************
+* out
+************************************************/
 
-    if (!dims || !model || !identifier || !values) return status;
-
-    int nb = dims->nb;
-    int ng = dims->ng;
-    int nh = dims->nh;
-    int ns = dims->ns;
-
-    strcpy(key, identifier);
-    for (int i = 0; key[i]; i++) key[i] = tolower(key[i]);
-
-    if (strcmp(key, "lb") == 0)
-    {
-        blasfeo_unpack_dvec(nb, &model->d, 0, values);
-        status = 1;
-    }
-    else if (strcmp(key, "ub") == 0)
-    {
-        blasfeo_unpack_dvec(nb, &model->d, nb+ng+nh, values);
-        status = 1;
-    }
-    else if (strcmp(key, "lg") == 0)
-    {
-        blasfeo_unpack_dvec(ng, &model->d, nb, values);
-        status = 1;
-    }
-    else if (strcmp(key, "ug") == 0)
-    {
-        blasfeo_unpack_dvec(ng, &model->d, 2*nb+ng+nh, values);
-        status = 1;
-    }
-    else if (strcmp(key, "lh") == 0)
-    {
-        blasfeo_unpack_dvec(nh, &model->d, nb+ng, values);
-        status = 1;
-    }
-    else if (strcmp(key, "uh") == 0)
-    {
-        blasfeo_unpack_dvec(nh, &model->d, 2*nb+2*ng+nh, values);
-        status = 1;
-    }
-    else if (strcmp(key, "ls") == 0)
-    {
-        blasfeo_unpack_dvec(ns, &model->d, 2*nb+2*ng+2*nh, values);
-        status = 1;
-    }
-    else if (strcmp(key, "us") == 0)
-    {
-        blasfeo_unpack_dvec(ns, &model->d, 2*nb+2*ng+2*nh+ns, values);
-        status = 1;
-    }
-    else
-    {
-        printf("Array identifier not implemented!\n");
-    }
-
-    return status;
-}
-
-
-/* out */
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
     int bytes = ocp_nlp_out_calculate_size(config, dims);
@@ -487,7 +437,10 @@ void ocp_nlp_out_get(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_
 }
 
 
-/* opts */
+/************************************************
+* opts
+************************************************/
+
 void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
     int bytes = config->opts_calculate_size(config, dims);
@@ -528,7 +481,11 @@ void ocp_nlp_opts_free(void *opts)
 }
 
 
-int ocp_nlp_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_)
+/************************************************
+* solver
+************************************************/
+
+static int ocp_nlp_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_)
 {
     int bytes = sizeof(ocp_nlp_solver);
 
@@ -540,8 +497,8 @@ int ocp_nlp_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, vo
 
 
 
-ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_,
-                               void *raw_memory)
+static ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+                                      void *opts_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -583,7 +540,6 @@ void ocp_nlp_free(void *solver)
 {
     free(solver);
 }
-
 
 
 
