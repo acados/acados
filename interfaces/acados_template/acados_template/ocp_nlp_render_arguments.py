@@ -2,9 +2,12 @@ import numpy as np
 
 class ocp_nlp_dims:
     def __init__(self):
-        self._nx = None  # number of states
-        self._nu = None  # number of inputs
-        self._N  = None  # prediction horizon 
+        self._nx  = None  # number of states
+        self._nu  = None  # number of inputs
+        self._nbx = None  # number of state bounds 
+        self._nbu = None  # number of input bounds
+        self._nu  = None  # number of inputs
+        self._N   = None  # prediction horizon 
 
     @property
     def nx(self):
@@ -14,6 +17,14 @@ class ocp_nlp_dims:
     def nu(self):
         return self._nu
 
+    @property
+    def nbx(self):
+        return self._nbx
+
+    @property
+    def nbu(self):
+        return self._nbu
+    
     @property
     def N(self):
         return self._N
@@ -31,6 +42,20 @@ class ocp_nlp_dims:
             self._nu = nu
         else:
             raise Exception('Invalid nu value. Exiting.')
+
+    @nbu.setter
+    def nbu(self, nbu):
+        if type(nbu) == int and nbu > -1:
+            self._nbu = nbu
+        else:
+            raise Exception('Invalid nbu value. Exiting.')
+
+    @nbx.setter
+    def nbx(self, nbx):
+        if type(nbx) == int and nbx > -1:
+            self._nbx = nbx
+        else:
+            raise Exception('Invalid nbx value. Exiting.')
 
     @N.setter
     def N(self, N):
@@ -66,11 +91,75 @@ class ocp_nlp_cost:
         else:
             raise Exception('Invalid R value. Exiting.')
 
+class ocp_nlp_constraints:
+    def __init__(self):
+        self._lbx = None  
+        self._lbu = None  
+        self._ubx = None  
+        self._ubu = None  
+        self._x0 = None  
+
+    @property
+    def lbx(self):
+        return self._lbx
+
+    @property
+    def lbu(self):
+        return self._lbu
+    
+    @property
+    def ubx(self):
+        return self._ubx
+
+    @property
+    def ubu(self):
+        return self._ubu
+
+    @property
+    def x0(self):
+        return self._x0
+
+    @lbx.setter
+    def lbx(self, lbx):
+        if type(lbx) == np.ndarray:
+            self._lbx = lbx
+        else:
+            raise Exception('Invalid lbx value. Exiting.')
+
+    @lbu.setter
+    def lbu(self, lbu):
+        if type(lbu) == np.ndarray:
+            self._lbu = lbu
+        else:
+            raise Exception('Invalid lbu value. Exiting.')
+
+    @ubx.setter
+    def ubx(self, ubx):
+        if type(ubx) == np.ndarray:
+            self._ubx = ubx
+        else:
+            raise Exception('Invalid ubx value. Exiting.')
+
+    @ubu.setter
+    def ubu(self, ubu):
+        if type(ubu) == np.ndarray:
+            self._ubu = ubu
+        else:
+            raise Exception('Invalid ubu value. Exiting.')
+
+    @x0.setter
+    def x0(self, x0):
+        if type(x0) == np.ndarray:
+            self._x0 = x0
+        else:
+            raise Exception('Invalid x0 value. Exiting.')
+
 class ocp_nlp_solver_config:
     def __init__(self):
         self._qp_solver      = 'PARTIAL_CONDENSING_HPIPM' # qp solver to be used in the NLP solver
         self._hessian_approx = 'GAUSS_NEWTON' # hessian approximation
         self._integrator_type = 'ERK' # integrator type
+        self._tf = None # prediction horizon
 
     @property
     def qp_solver(self):
@@ -94,6 +183,9 @@ class ocp_nlp_solver_config:
         else:
             raise Exception('Invalid qp_solver value. Possible values are:\n\n' \
                     + ',\n'.join(qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\nExiting.')
+    @property
+    def tf(self):
+        return self._tf
 
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
@@ -115,6 +207,10 @@ class ocp_nlp_solver_config:
             raise Exception('Invalid integrator_type value. Possible values are:\n\n' \
                     + ',\n'.join(integrator_types) + '.\n\nYou have: ' + integrator_type + '.\n\nExiting.')
 
+    @tf.setter
+    def tf(self, tf):
+        self._tf = tf
+
 class ocp_nlp_constant:
     def __init__(self):
         self.name  = None # constant name
@@ -124,6 +220,7 @@ class ocp_nlp_render_arguments:
     def __init__(self):
         self.dims = ocp_nlp_dims()
         self.cost = ocp_nlp_cost()
+        self.constraints = ocp_nlp_constraints()
         self.solver_config = ocp_nlp_solver_config()
         self.model_name = None 
         self.constants = []

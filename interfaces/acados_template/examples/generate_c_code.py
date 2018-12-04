@@ -62,7 +62,7 @@ def export_ode_model():
 acados_path = os.path.dirname(os.path.abspath(at.__file__))
 file_loader = FileSystemLoader(acados_path + '/c_templates')
 env = Environment(loader = file_loader)
-template = env.get_template('template_example.in.c')
+template = env.get_template('main.in.c')
 
 # create render arguments
 ra = ocp_nlp_render_arguments()
@@ -76,6 +76,8 @@ ra.model_name = model.name
 # set ocp_nlp_dimensions
 nlp_dims = ra.dims
 nlp_dims.nx = model.x.size()[0]
+nlp_dims.nbx = 0
+nlp_dims.nbu = model.u.size()[0]
 nlp_dims.nu = model.u.size()[0]
 nlp_dims.N  = 100
 
@@ -93,6 +95,13 @@ R[0,0] = 1e-2
 nlp_cost.Q = Q 
 nlp_cost.R = R
 
+# setting bounds
+Fmax = 80.0
+nlp_con = ra.constraints
+nlp_con.lbu = np.array([-Fmax])
+nlp_con.ubu = np.array([+Fmax])
+nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
+
 # set constants
 const1 = ocp_nlp_constant()
 const1.name  = 'PI'
@@ -102,11 +111,13 @@ ra.constants = [const1]
 # set QP solver
 # ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
-# ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
 # ra.solver_config.hessian_approx = 'EXACT'
-# ra.solver_config.integrator_type = 'ERK'
-ra.solver_config.integrator_type = 'IRK'
+ra.solver_config.integrator_type = 'ERK'
+# ra.solver_config.integrator_type = 'IRK'
+
+# set prediction horizon
+ra.solver_config.tf = 1.0
 
 # explicit model -- generate C code
 generate_c_code_explicit_ode(model);
@@ -125,7 +136,7 @@ check_ra(ra)
 # render source template
 output = template.render(ra=ra)
 # output file
-out_file = open('./c_generated_code/template_example.c', 'w+')
+out_file = open('./c_generated_code/main_' + model.name + '.c', 'w+')
 out_file.write(output)
 
 # render header template

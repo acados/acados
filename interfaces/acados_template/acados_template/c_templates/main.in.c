@@ -34,20 +34,62 @@
 
 #include "{{ ra.model_name }}_model/{{ ra.model_name }}_model.h"
 // #include "{{ ra.model_name }}_model/{{ ra.model_name }}_constraint.h"
-// {% for item in ra.constants %}
+{% for item in ra.constants %}
 #define {{ item.name }} {{ item.value }}
 {% endfor %}
 int main() {
 
-    // solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
     int num_states = {{ ra.dims.nx }}; 
     int num_controls = {{ ra.dims.nu }}; 
     int N = {{ ra.dims.N }};
 
-    double Tf = 1.0, F_max = 80;
-    int idxb_0[5] = {0, 1, 2, 3, 4};
-    double b0_l[5] = {-F_max, 0, 0, PI, 0};
-    double b0_u[5] = {F_max, 0, 0, PI, 0};
+    double Tf = {{ ra.solver_config.tf }};
+    
+    // set up bounds for stage 0 
+    int idxb_0[{{ ra.dims.nbu }} + {{ ra.dims.nx }}];
+    {% for i in range(ra.dims.nbu + ra.dims.nx): %}
+    idxb_0[{{i}}] = {{i}};
+    {%- endfor %}
+    double lb0[{{ ra.dims.nbu }} + {{ ra.dims.nx }}]; 
+    double ub0[{{ ra.dims.nbu }} + {{ ra.dims.nx }}];
+    {% for i in range(ra.dims.nbu): %}
+    lb0[{{i}}] = {{ra.constraints.lbu[i]}};
+    ub0[{{i}}] = {{ra.constraints.ubu[i]}};
+    {%- endfor %}
+
+    {% for i in range(ra.dims.nbu, ra.dims.nx + ra.dims.nbu): %}
+    lb0[{{i}}] = {{ra.constraints.x0[i - ra.dims.nbu]}};
+    ub0[{{i}}] = {{ra.constraints.x0[i - ra.dims.nbu]}};
+    {%- endfor %}
+
+    // set up bounds for intermediate stages
+    int idxb[{{ ra.dims.nbu }} + {{ ra.dims.nx }}];
+    {% for i in range(ra.dims.nbu + ra.dims.nbx): %}
+    idxb_0[{{i}}] = {{i}};
+    {%- endfor %}
+    double lb[{{ ra.dims.nbu }} + {{ ra.dims.nbx }}]; 
+    double ub[{{ ra.dims.nbu }} + {{ ra.dims.nbx }}]; 
+    {% for i in range(ra.dims.nbu): %}
+    lb[{{i}}] = {{ra.constraints.lbu[i]}};
+    ub[{{i}}] = {{ra.constraints.ubu[i]}};
+    {%- endfor %}
+    {% for i in range(ra.dims.nbu, ra.dims.nbx + ra.dims.nbu): %}
+    lb[{{i}}] = {{ra.constraints.lbx[i]}};
+    ub[{{i}}] = {{ra.constraints.ubx[i]}};
+    {%- endfor %}
+
+    // set up bounds for last stage
+    int idxb_N[{{ ra.dims.nbu }} + {{ ra.dims.nx }}];
+    {% for i in range(ra.dims.nbx): %}
+    idxb_N[{{i}}] = {{i}};
+    {%- endfor %}
+    double lbN[{{ ra.dims.nbx }}]; 
+    double ubN[{{ ra.dims.nbx }}]; 
+    {% for i in range(ra.dims.nbx): %}
+    lbN[{{i}}] = {{ra.constraints.lbx[i]}};
+    ubN[{{i}}] = {{ra.constraints.ubx[i]}};
+    {%- endfor %}
+
     double Q[{{ ra.dims.nx }}*{{ ra.dims.nx }}]; 
     double R[{{ ra.dims.nu }}*{{ ra.dims.nu }}]; 
 
@@ -309,16 +351,19 @@ int main() {
 
     // bounds
     constraints[0]->idxb = idxb_0;
-    blasfeo_pack_dvec(nb[0], b0_l, &constraints[0]->d, 0);
-    blasfeo_pack_dvec(nb[0], b0_u, &constraints[0]->d, nb[0]+ng[0]);
+    blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
+    blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
 
-    double lbu[1] = {-F_max}, ubu[1] = {F_max};
     for (int i = 1; i < N; ++i)
     {
-        constraints[i]->idxb[0] = 0;
-        blasfeo_pack_dvec(nb[i], lbu, &constraints[i]->d, 0);
-        blasfeo_pack_dvec(nb[i], ubu, &constraints[i]->d, nb[i]+ng[i]);
+        constraints[i]->idxb = idxb;
+        blasfeo_pack_dvec(nb[i], lb, &constraints[i]->d, 0);
+        blasfeo_pack_dvec(nb[i], ub, &constraints[i]->d, nb[i]+ng[i]);
     }
+
+    constraints[N]->idxb = idxb_N;
+    blasfeo_pack_dvec(nb[N], lbN, &constraints[N]->d, 0);
+    blasfeo_pack_dvec(nb[N], ubN, &constraints[N]->d, nb[0]+ng[0]);
 
     void *nlp_opts = ocp_nlp_opts_create(config, dims);
 

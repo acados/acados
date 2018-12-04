@@ -3,7 +3,7 @@ ACADOS_FLAGS =
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 {% endif %}
 OBJ = 
-OBJ+= template_example.o
+OBJ+= main_{{ ra.model_name }}.o
 {% if  ra.solver_config.integrator_type == 'ERK': %}
 OBJ+= {{ ra.model_name }}_model/{{ ra.model_name }}_expl_ode_fun.o
 OBJ+= {{ ra.model_name }}_model/{{ ra.model_name }}_expl_vde_forw.o
@@ -37,11 +37,11 @@ casadi_fun:
 	) 
 
 main:
-	gcc $(ACADOS_FLAGS) -c template_example.c -I $(INCLUDE_PATH)/blasfeo/include/ \
+	gcc $(ACADOS_FLAGS) -c main_{{ ra.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/ 
 
 example: 
-	gcc $(ACADOS_FLAGS) -o template_example $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -o main_{{ ra.model_name}} $(OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
 	-L $(LIB_PATH)/external/qpoases/lib \
