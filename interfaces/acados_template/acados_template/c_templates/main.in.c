@@ -163,7 +163,9 @@ int main() {
     for (int i = 0; i <= N; i++)
         plan->nlp_constraints[i] = BGH;
 
-    plan->regularization = MIRROR;
+    {% if ra.solver_config.hessian_approx == 'EXACT': %} 
+    plan->regularization = CONVEXIFICATION;
+    {% endif %}
     ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
 
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
