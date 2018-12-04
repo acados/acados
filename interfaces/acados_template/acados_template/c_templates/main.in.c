@@ -415,19 +415,27 @@ int main() {
     ocp_nlp_out_print(dims, nlp_out);
     
     // // free memory
-    // free(dims);
-    // free(config);
-    // free(nlp_in);
-    // free(nlp_out);
-    // free(nlp_opts);
-    // free(solver);
+    free(dims);
+    free(config);
+    free(nlp_in);
+    free(nlp_out);
+    free(nlp_opts);
+    free(solver);
     
-    // // free external function 
-    // external_function_casadi_free(&impl_dae_fun);
-    // external_function_casadi_free(&impl_dae_fun_jac_x_xdot_z);
-    // external_function_casadi_free(&impl_dae_jac_x_xdot_u_z);
-    // external_function_casadi_free(&nls_cost_residual);
-    // external_function_casadi_free(&nls_cost_N_residual);
-
+    // free external function 
+    {% if ra.solver_config.integrator_type == 'IRK': %}
+    for(int i = 0; i < N; i++) {
+        external_function_casadi_free(&impl_dae_fun[i]);
+        external_function_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
+        external_function_casadi_free(&impl_dae_jac_x_xdot_u_z[i]);
+    }
+    {% else: %}
+    for(int i = 0; i < N; i++) {
+        external_function_casadi_free(&forw_vde_casadi[i]);
+    {% if ra.solver_config.hessian_approx == 'EXACT': %}
+        external_function_casadi_free(&hess_vde_casadi[i]);
+    {% endif %}
+    }
+    {% endif %}
     return solver_status;
 }
