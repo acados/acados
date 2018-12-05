@@ -25,20 +25,14 @@
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
-{% if ra.solver_config.nlp_solver_type == 'SQP': %}
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
-{% else: %}
-#include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
-{% endif %}
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/sim/sim_erk_integrator.h"
 
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
-#include <blasfeo/include/blasfeo_d_aux.h>
-#include <blasfeo/include/blasfeo_d_aux_ext_dep.h>
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 #include "{{ ra.model_name }}_model/{{ ra.model_name }}_model.h"
 // #include "{{ ra.model_name }}_model/{{ ra.model_name }}_constraint.h"
@@ -182,8 +176,20 @@ int main() {
     {% endif %}
     ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
-    ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-    ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, np, ns, nz, dims);
+    /* create and set ocp_nlp_dims */
+	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
+
+    ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
+    ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
+
+    ocp_nlp_dims_set_cost(config, dims, "ny", ny);
+
+    ocp_nlp_dims_set_constraints(config, dims, "nbx", nbx);
+    ocp_nlp_dims_set_constraints(config, dims, "nbu", nbu);
+    ocp_nlp_dims_set_constraints(config, dims, "ng", ng);
+    ocp_nlp_dims_set_constraints(config, dims, "nh", nh);
 
     {% if ra.solver_config.integrator_type == 'ERK': %}
         // explicit ode
@@ -304,13 +310,12 @@ int main() {
     }
 
     // NLP constraints
+    // TODO(oj): remove this when idxb setter available
     ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 	ocp_nlp_constraints_bgh_dims **constraints_dims = (ocp_nlp_constraints_bgh_dims **) dims->constraints;
 
     // bounds
     constraints[0]->idxb = idxb_0;
-    // nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lb", lb0);
-    // nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ub", ub0);   
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb0);
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub0);
 
@@ -324,29 +329,40 @@ int main() {
     constraints[N]->idxb = idxb_N;
     ocp_nlp_constraints_bounds_set(config, dims, nlp_in, N, "lb", lbN);
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, N, "ub", ubN);
-    // nlp_bounds_bgh_set(constraints_dims[N], constraints[N], "lb", lbN);
-    // nlp_bounds_bgh_set(constraints_dims[N], constraints[N], "ub", ubN);  
 
     void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
     {% if ra.solver_config.nlp_solver_type == 'SQP': %}
-    ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
-    sqp_opts->maxIter = max_num_sqp_iterations;
-    sqp_opts->min_res_g = 1e-9;
-    sqp_opts->min_res_b = 1e-9;
-    sqp_opts->min_res_d = 1e-9;
-    sqp_opts->min_res_m = 1e-9;
+
+    int maxIter = max_num_sqp_iterations;
+    double min_res_g = 1e-9;
+    double min_res_b = 1e-9;
+    double min_res_d = 1e-9;
+    double min_res_m = 1e-9;
+
+    ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_m", &min_res_m);
+
+
     {% else: %}
     ocp_nlp_sqp_rti_opts *sqp_opts = (ocp_nlp_sqp_rti_opts *) nlp_opts;
     {% endif %}
     for (int i = 0; i < N; ++i)
     {
-        sim_rk_opts *rk_opts = (sim_rk_opts *) ((ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i])->sim_solver;
-        rk_opts->num_steps = 5;
-        {% if ra.solver_config.hessian_approx == 'EXACT': %} 
-        ((ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i])->compute_hess = true;
-        rk_opts->sens_hess = true;
-        rk_opts->sens_adj = true;
+        {% if ra.solver_config.hessian_approx == 'EXACT': %}
+        // TODO(oj): is the following needed, and what does it do? do we
+        // ((ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i])->compute_hess = true;
+        int num_steps = 5;
+        bool sens_hess = true;
+        bool sens_adj = true;
+
+        ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+        // ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+        ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "sens_hess", &sens_hess);
+        ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "sens_adj", &sens_adj);
         {% endif %}
     }
 
@@ -382,12 +398,13 @@ int main() {
     ocp_nlp_out_print(dims, nlp_out);
     
     // free memory
-    free(dims);
-    free(config);
-    free(nlp_in);
-    free(nlp_out);
-    free(nlp_opts);
-    free(solver);
+	ocp_nlp_opts_free(nlp_opts);
+	ocp_nlp_in_free(nlp_in);
+	ocp_nlp_out_free(nlp_out);
+	ocp_nlp_free(solver);
+	ocp_nlp_dims_free(dims);
+	ocp_nlp_config_free(plan, config);
+	ocp_nlp_plan_free(plan);
     
     // free external function 
     {% if ra.solver_config.integrator_type == 'IRK': %}
