@@ -24,6 +24,11 @@
 #include <acados/ocp_nlp/ocp_nlp_constraints_bgh.h>
 #include <acados/ocp_nlp/ocp_nlp_cost_ls.h>
 #include <acados/ocp_nlp/ocp_nlp_dynamics_cont.h>
+{% if ra.solver_config.nlp_solver_type == 'SQP': %}
+#include <acados/ocp_nlp/ocp_nlp_sqp.h>
+{% else: %}
+#include <acados/ocp_nlp/ocp_nlp_sqp_rti.h>
+{% endif %}
 #include <acados/ocp_nlp/ocp_nlp_sqp.h>
 #include <acados/sim/sim_erk_integrator.h>
 
@@ -151,7 +156,11 @@ int main() {
 
     // Make plan
     ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
+    {% if ra.solver_config.nlp_solver_type == 'SQP': %}
     plan->nlp_solver = SQP;
+    {% else: %}
+    plan->nlp_solver = SQP_RTI;
+    {% endif %}
     plan->ocp_qp_solver_plan.qp_solver = {{ ra.solver_config.qp_solver }};
     for (int i = 0; i <= N; i++)
         plan->nlp_cost[i] = LINEAR_LS;
@@ -313,18 +322,22 @@ int main() {
 
     void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
+    {% if ra.solver_config.nlp_solver_type == 'SQP': %}
     ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
     sqp_opts->maxIter = max_num_sqp_iterations;
     sqp_opts->min_res_g = 1e-9;
     sqp_opts->min_res_b = 1e-9;
     sqp_opts->min_res_d = 1e-9;
     sqp_opts->min_res_m = 1e-9;
+    {% else: %}
+    ocp_nlp_sqp_rti_opts *sqp_opts = (ocp_nlp_sqp_rti_opts *) nlp_opts;
+    {% endif %}
     for (int i = 0; i < N; ++i)
     {
-        sim_rk_opts *rk_opts = (sim_rk_opts *) ((ocp_nlp_dynamics_cont_opts *)sqp_opts->dynamics[i])->sim_solver;
+        sim_rk_opts *rk_opts = (sim_rk_opts *) ((ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i])->sim_solver;
         rk_opts->num_steps = 5;
         {% if ra.solver_config.hessian_approx == 'EXACT': %} 
-        ((ocp_nlp_dynamics_cont_opts *)sqp_opts->dynamics[i])->compute_hess = true;
+        ((ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i])->compute_hess = true;
         rk_opts->sens_hess = true;
         rk_opts->sens_adj = true;
         {% endif %}
@@ -342,6 +355,7 @@ int main() {
     
     int solver_status = 0, iteration_number = 0;
 
+    {% if ra.solver_config.nlp_solver_type == 'SQP': %}
     while (kkt_norm_inf > 1e-9) {
         acados_tic(&timer);
         solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
@@ -353,11 +367,14 @@ int main() {
         if (iteration_number >= 100)
             break;
     }
+    {% else: %}
+    solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
+    {% endif %}
 
     printf("\n--- solution ---\n");
     ocp_nlp_out_print(dims, nlp_out);
     
-    // // free memory
+    // free memory
     free(dims);
     free(config);
     free(nlp_in);

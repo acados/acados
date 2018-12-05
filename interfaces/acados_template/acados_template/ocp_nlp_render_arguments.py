@@ -156,10 +156,11 @@ class ocp_nlp_constraints:
 
 class ocp_nlp_solver_config:
     def __init__(self):
-        self._qp_solver      = 'PARTIAL_CONDENSING_HPIPM' # qp solver to be used in the NLP solver
-        self._hessian_approx = 'GAUSS_NEWTON' # hessian approximation
-        self._integrator_type = 'ERK' # integrator type
-        self._tf = None # prediction horizon
+        self._qp_solver      = 'PARTIAL_CONDENSING_HPIPM'   # qp solver to be used in the NLP solver
+        self._hessian_approx = 'GAUSS_NEWTON'               # hessian approximation
+        self._integrator_type = 'ERK'                       # integrator type
+        self._tf = None                                     # prediction horizon
+        self._nlp_solver_tpye = 'SQP_RTI'                   # NLP solver 
 
     @property
     def qp_solver(self):
@@ -172,6 +173,10 @@ class ocp_nlp_solver_config:
     @property
     def integrator_type(self):
         return self._integrator_type
+
+    @property
+    def nlp_solver_type(self):
+        return self._nlp_solver_type
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
@@ -210,6 +215,16 @@ class ocp_nlp_solver_config:
     @tf.setter
     def tf(self, tf):
         self._tf = tf
+
+    @nlp_solver_type.setter
+    def nlp_solver_type(self, nlp_solver_type):
+        nlp_solver_types = ('SQP', 'SQP_RTI')
+
+        if type(nlp_solver_type) == str and nlp_solver_type in nlp_solver_types:
+            self._nlp_solver_type = nlp_solver_type
+        else:
+            raise Exception('Invalid nlp_solver_type value. Possible values are:\n\n' \
+                    + ',\n'.join(nlp_solver_types) + '.\n\nYou have: ' + nlp_solver_type + '.\n\nExiting.')
 
 class ocp_nlp_constant:
     def __init__(self):
