@@ -118,6 +118,7 @@ ra.solver_config.integrator_type = 'IRK'
 
 # set prediction horizon
 ra.solver_config.tf = 1.0
+ra.solver_config.nlp_solver_type = 'SQP'
 
 # explicit model -- generate C code
 generate_c_code_explicit_ode(model);
@@ -127,8 +128,8 @@ opts = dict(generate_hess=1)
 generate_c_code_implicit_ode(model, opts);
 
 # set header path
-ra.acados_include_path = '~/.local/include'
-ra.acados_lib_path = '~/.local/lib'
+ra.acados_include_path = '/usr/local/include'
+ra.acados_lib_path = '/usr/local/lib'
 
 # check render arguments
 check_ra(ra)

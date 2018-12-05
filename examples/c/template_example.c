@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "acados/utils/print.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
@@ -106,7 +107,7 @@ int main() {
 		plan->nlp_constraints[i] = BGH;
 
     plan->regularization = MIRROR;
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, np, ns, nz, dims);
