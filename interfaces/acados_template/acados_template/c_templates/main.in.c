@@ -312,18 +312,18 @@ int main() {
     // nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "lb", lb0);
     // nlp_bounds_bgh_set(constraints_dims[0], constraints[0], "ub", ub0);   
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb0);
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", lb0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub0);
 
     for (int i = 1; i < N; ++i)
     {
         constraints[i]->idxb = idxb;
         ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lb", lb);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ub", lb);
+        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ub", ub);
     }
 
     constraints[N]->idxb = idxb_N;
     ocp_nlp_constraints_bounds_set(config, dims, nlp_in, N, "lb", lbN);
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, N, "ub", lbN);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, N, "ub", ubN);
     // nlp_bounds_bgh_set(constraints_dims[N], constraints[N], "lb", lbN);
     // nlp_bounds_bgh_set(constraints_dims[N], constraints[N], "ub", ubN);  
 
