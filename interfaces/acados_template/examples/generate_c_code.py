@@ -127,8 +127,8 @@ opts = dict(generate_hess=1)
 generate_c_code_implicit_ode(model, opts);
 
 # set header path
-ra.acados_include_path = '/usr/local/include'
-ra.acados_lib_path = '/use/local/lib'
+ra.acados_include_path = '/home/andrea/.local/include'
+ra.acados_lib_path = '/home/andrea/.local/lib'
 
 # check render arguments
 check_ra(ra)

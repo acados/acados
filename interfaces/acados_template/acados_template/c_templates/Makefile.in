@@ -38,7 +38,7 @@ casadi_fun:
 
 main:
 	gcc $(ACADOS_FLAGS) -c main_{{ ra.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ \
-	-I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/ 
+	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/ 
 
 example: 
 	gcc $(ACADOS_FLAGS) -o main_{{ ra.model_name}} $(OBJ) -L $(LIB_PATH)/acados \
@@ -47,6 +47,7 @@ example:
 	-L $(LIB_PATH)/external/qpoases/lib \
 	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
+	-I $(INCLUDE_PATH) \
 	-I $(INCLUDE_PATH)/acados/ \
 	-I $(INCLUDE_PATH)/qpOASES_e/  
 
