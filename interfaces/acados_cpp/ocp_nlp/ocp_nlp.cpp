@@ -437,7 +437,7 @@ void ocp_nlp::set_dynamics(const casadi::Function &model, std::map<std::string, 
     cached_model_ = module_["expl_vde_for"].name();
 
     for (int stage = 0; stage < N; ++stage)
-        nlp_set_model_in_stage(config_.get(), nlp_.get(), stage, "expl_vde_for",
+        ocp_nlp_dynamics_set_model(config_.get(), nlp_.get(), stage, "expl_vde_for",
                                (void *) module_["expl_vde_for"].as_external_function());
 
 };

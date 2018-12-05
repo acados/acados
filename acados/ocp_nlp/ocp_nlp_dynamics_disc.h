@@ -52,6 +52,8 @@ void *ocp_nlp_dynamics_disc_dims_assign(void *config, void *raw_memory);
 void ocp_nlp_dynamics_disc_dims_initialize(void *config, void *dims, int nx, int nu, int nx1,
                                            int nu1, int nz);
 
+//
+void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim, int* value);
 
 
 /************************************************
@@ -72,9 +74,8 @@ void ocp_nlp_dynamics_disc_opts_initialize_default(void *config, void *dims, voi
 //
 void ocp_nlp_dynamics_disc_opts_update(void *config, void *dims, void *opts);
 //
-void ocp_nlp_dynamics_cont_opts_set(void *config_, void *dims_, void *opts_, enum acados_opts name,
-    void *ptr_value);
-
+int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, void *opts_,
+                                        void *mem_, void *work_);
 
 
 /************************************************

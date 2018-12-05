@@ -50,6 +50,8 @@ int ocp_nlp_cost_nls_dims_calculate_size(void *config);
 void *ocp_nlp_cost_nls_dims_assign(void *config, void *raw_memory);
 //
 void ocp_nlp_cost_nls_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns);
+//
+void ocp_nlp_cost_nls_dims_set(void *config_, void *dims_, const char *field, int* value);
 
 /************************************************
  * model
@@ -57,18 +59,23 @@ void ocp_nlp_cost_nls_dims_initialize(void *config, void *dims, int nx, int nu, 
 
 typedef struct
 {
+    // nls_fun(x,u) rplaces Cy * [x,u] in ls_cost
+    // slack penalty has the form z^T * s + .5 * s^T * Z * s
     external_function_generic *nls_jac;   // evaluation and jacobian of ls residuals
     external_function_generic *nls_hess;  // hessian*seeds of ls residuals
-    struct blasfeo_dmat W;
+    struct blasfeo_dmat W;                //
     struct blasfeo_dvec y_ref;
-    struct blasfeo_dvec Z;
-    struct blasfeo_dvec z;
+    struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector
+    struct blasfeo_dvec z;              // gradient of slacks as vector
 } ocp_nlp_cost_nls_model;
 
 //
 int ocp_nlp_cost_nls_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_cost_nls_model_assign(void *config, void *dims, void *raw_memory);
+//
+int ocp_nlp_cost_nls_set_model(void *config_, void *dims_, void *model_,
+                               const char *field, void *value_);
 //
 void ocp_nlp_cost_nls_config_initialize_default(void *config);
 

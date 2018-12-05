@@ -42,18 +42,24 @@ extern "C" {
 
 typedef struct
 {
+    void (*config_initialize_default)(void *config);
+    sim_solver_config *sim_solver;
+    /* dims */
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
     void (*dims_initialize)(void *config, void *dims, int nx, int nu, int nx1, int nu1, int nz);
+    void (*set_dims)(void *config_, void *dims_, const char *field, int *value);
+    /* model */
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
     void (*model_set_T)(double T, void *model);
+    /* opts */
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
-    void (*opts_set)(void *config_, void *dims_, void *opts_, enum acados_opts name,
-        void *ptr_value);
+    int (*opts_set)(void *config_, void *opts_, const char *field, void *value);
     void (*opts_update)(void *config, void *dims, void *opts);
+    /* memory */
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory_);
@@ -64,13 +70,14 @@ typedef struct
     void (*memory_set_BAbt_ptr)(struct blasfeo_dmat *BAbt, void *memory_);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory_);
     void (*memory_set_z_ptr)(struct blasfeo_dvec *z, void *memory_);
+    /* workspace */
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
                        void *work_);
     void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
                                void *work_);
-    void (*config_initialize_default)(void *config);
-    sim_solver_config *sim_solver;
+    int (*precompute)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
+                               void *work_);
 } ocp_nlp_dynamics_config;
 
 //

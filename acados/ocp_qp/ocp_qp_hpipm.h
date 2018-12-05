@@ -30,14 +30,12 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-// TODO(roversch): why not make this a typedef of the underlying struct?
 // struct of arguments to the solver
 typedef struct ocp_qp_hpipm_opts_
 {
     struct d_ocp_qp_ipm_arg *hpipm_opts;
 } ocp_qp_hpipm_opts;
 
-// TODO(roversch): why not make this a typedef of the underlying struct?
 // struct of the solver memory
 typedef struct ocp_qp_hpipm_memory_
 {

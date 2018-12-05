@@ -181,8 +181,8 @@ int main()
 		************************************************/
 
 		void *dims = sim_dims_create(config);
-		config->set_nx(dims, nx);
-		config->set_nu(dims, nu);
+		sim_dims_set(config, dims, "nx", &nx);
+		sim_dims_set(config, dims, "nu", &nu);
 
 		/************************************************
 		* sim opts
@@ -334,12 +334,12 @@ int main()
 		printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
 		printf("========================\n");
 
-		free(sim_solver);
-		free(in);
-		free(out);
+		sim_free(sim_solver);
+		sim_in_free(in);
+		sim_out_free(out);
 
-		free(opts);
-		free(config);
+		sim_opts_free(opts);
+		sim_config_free(config);
 	}
 
 	// TODO(dimitris): free all external functions (or write a free_model)

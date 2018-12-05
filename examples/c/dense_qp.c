@@ -15,21 +15,21 @@
 
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
-static dense_qp_res *dense_qp_res_create(dense_qp_dims *dims)
-{
-    int size = dense_qp_res_calculate_size(dims);
-    void *ptr = acados_malloc(size, 1);
-    dense_qp_res *qp_res = dense_qp_res_assign(dims, ptr);
-    return qp_res;
-}
+// static dense_qp_res *dense_qp_res_create(dense_qp_dims *dims)
+// {
+//     int size = dense_qp_res_calculate_size(dims);
+//     void *ptr = acados_malloc(size, 1);
+//     dense_qp_res *qp_res = dense_qp_res_assign(dims, ptr);
+//     return qp_res;
+// }
 
-static dense_qp_res_ws *dense_qp_res_workspace_create(dense_qp_dims *dims)
-{
-    int size = dense_qp_res_workspace_calculate_size(dims);
-    void *ptr = acados_malloc(size, 1);
-    dense_qp_res_ws *res_ws = dense_qp_res_workspace_assign(dims, ptr);
-    return res_ws;
-}
+// static dense_qp_res_ws *dense_qp_res_workspace_create(dense_qp_dims *dims)
+// {
+//     int size = dense_qp_res_workspace_calculate_size(dims);
+//     void *ptr = acados_malloc(size, 1);
+//     dense_qp_res_ws *res_ws = dense_qp_res_workspace_assign(dims, ptr);
+//     return res_ws;
+// }
 
 int main() {
 

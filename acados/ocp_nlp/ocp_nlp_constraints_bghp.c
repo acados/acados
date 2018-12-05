@@ -75,6 +75,156 @@ void ocp_nlp_constraints_bghp_dims_initialize(void *config_, void *dims_, int nx
     return;
 }
 
+/* dimension setters */
+static void ocp_nlp_constraints_bghp_set_nx(void *config_, void *dims_, const int *nx)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    dims->nx = *nx;
+}
+
+static void ocp_nlp_constraints_bghp_set_nu(void *config_, void *dims_, const int *nu)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    dims->nu = *nu;
+}
+
+static void ocp_nlp_constraints_bghp_set_nbx(void *config_, void *dims_, const int *nbx)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    dims->nbx = *nbx;
+    dims->nb = *nbx + dims->nbu;
+}
+
+static void ocp_nlp_constraints_bghp_set_nbu(void *config_, void *dims_, const int *nbu)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    dims->nbu = *nbu;
+    dims->nb = *nbu + dims->nbx;
+}
+
+static void ocp_nlp_constraints_bghp_set_ng(void *config_, void *dims_, const int *ng)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    dims->ng = *ng;
+}
+
+static void ocp_nlp_constraints_bghp_set_nh(void *config_, void *dims_, const int *nh)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    dims->nh = *nh;
+}
+
+static void ocp_nlp_constraints_bghp_set_ns(void *config_, void *dims_, const int *ns)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    dims->ns = *ns;
+}
+
+static void ocp_nlp_constraints_bghp_set_np(void *config_, void *dims_, const int *np)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    dims->np = *np;
+}
+
+void ocp_nlp_constraints_bghp_dims_set(void *config_, void *dims_,
+                                       const char *field, const int* value)
+{
+    if (!strcmp(field, "nx"))
+    {
+        ocp_nlp_constraints_bghp_set_nx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        // do nothing
+        // TODO(oj): implement constraints with daes
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        ocp_nlp_constraints_bghp_set_nu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nbx"))
+    {
+        ocp_nlp_constraints_bghp_set_nbx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nbu"))
+    {
+        ocp_nlp_constraints_bghp_set_nbu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "ng"))
+    {
+        ocp_nlp_constraints_bghp_set_ng(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nh"))
+    {
+        ocp_nlp_constraints_bghp_set_nh(config_, dims_, value);
+    }
+    else if (!strcmp(field, "ns"))
+    {
+        ocp_nlp_constraints_bghp_set_ns(config_, dims_, value);
+    }
+    else if (!strcmp(field, "np"))
+    {
+        ocp_nlp_constraints_bghp_set_np(config_, dims_, value);
+    }
+    else
+    {
+        printf("\nerror: dimension type not available in module\n");
+        exit(1);
+    }
+}
+
+/* dimension getters */
+static void ocp_nlp_constraints_bghp_get_ni(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    *value = dims->nbx + dims->nbu + dims->ng + dims->nh + dims->ns;
+    // TODO(oj): @giaf or robin: + nq?!;
+}
+
+static void ocp_nlp_constraints_bghp_get_nb(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    *value = dims->nb;
+}
+
+
+static void ocp_nlp_constraints_bghp_get_ng(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    *value = dims->ng;
+}
+
+static void ocp_nlp_constraints_bghp_get_nh(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    *value = dims->nh;
+}
+
+
+void ocp_nlp_constraints_bghp_dims_get(void *config_, void *dims_, const char *field, int* value)
+{
+    if (!strcmp(field, "ni"))
+    {
+        ocp_nlp_constraints_bghp_get_ni(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nb"))
+    {
+        ocp_nlp_constraints_bghp_get_nb(config_, dims_, value);
+    }
+    else if (!strcmp(field, "ng"))
+    {
+        ocp_nlp_constraints_bghp_get_ng(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nh"))
+    {
+        ocp_nlp_constraints_bghp_get_nh(config_, dims_, value);
+    }
+    else
+    {
+        printf("error: attempt to get dimension from constraint model, that is not there");
+        exit(1);
+    }
+}
 
 
 /* model */
@@ -153,6 +303,70 @@ void *ocp_nlp_constraints_bghp_model_assign(void *config, void *dims_, void *raw
            c_ptr);
 
     return model;
+}
+
+
+int ocp_nlp_constraints_bghp_bounds_set(void *config_, void *dims_,
+                         void *model_, const char *field, void *value)
+{
+    // NOTE(oj): this is adapted from the bgh module, maybe something has to be changed here.
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    ocp_nlp_constraints_bghp_model *model = (ocp_nlp_constraints_bghp_model *) model_;
+
+    int status = ACADOS_FAILURE;
+
+    if (!dims || !model || !field || !value) return ACADOS_FAILURE;
+
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
+    if (!strcmp(field, "lb"))
+    {
+        blasfeo_pack_dvec(nb, value, &model->d, 0);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "ub"))
+    {
+        blasfeo_pack_dvec(nb, value, &model->d, nb+ng+nh);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "lg"))
+    {
+        blasfeo_pack_dvec(ng, value, &model->d, nb);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "ug"))
+    {
+        blasfeo_pack_dvec(ng, value, &model->d, 2*nb+ng+nh);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "lh"))
+    {
+        blasfeo_pack_dvec(nh, value, &model->d, nb+ng);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "uh"))
+    {
+        blasfeo_pack_dvec(nh, value, &model->d, 2*nb+2*ng+nh);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "ls"))
+    {
+        blasfeo_pack_dvec(ns, value, &model->d, 2*nb+2*ng+2*nh);
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "us"))
+    {
+        blasfeo_pack_dvec(ns, value, &model->d, 2*nb+2*ng+2*nh+ns);
+        status = ACADOS_SUCCESS;
+    }
+    else
+    {
+        printf("Array identifier not implemented!\n");
+    }
+
+    return status;
 }
 
 
@@ -595,8 +809,11 @@ void ocp_nlp_constraints_bghp_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_constraints_bghp_dims_calculate_size;
     config->dims_assign = &ocp_nlp_constraints_bghp_dims_assign;
     config->dims_initialize = &ocp_nlp_constraints_bghp_dims_initialize;
+    config->set_dims = &ocp_nlp_constraints_bghp_dims_set;
+    config->get_dims = &ocp_nlp_constraints_bghp_dims_get;
     config->model_calculate_size = &ocp_nlp_constraints_bghp_model_calculate_size;
     config->model_assign = &ocp_nlp_constraints_bghp_model_assign;
+    config->bounds_set = &ocp_nlp_constraints_bghp_bounds_set;
     config->opts_calculate_size = &ocp_nlp_constraints_bghp_opts_calculate_size;
     config->opts_assign = &ocp_nlp_constraints_bghp_opts_assign;
     config->opts_initialize_default = &ocp_nlp_constraints_bghp_opts_initialize_default;
@@ -616,6 +833,7 @@ void ocp_nlp_constraints_bghp_config_initialize_default(void *config_)
     config->initialize = &ocp_nlp_constraints_bghp_initialize;
     config->update_qp_matrices = &ocp_nlp_constraints_bghp_update_qp_matrices;
     config->config_initialize_default = &ocp_nlp_constraints_bghp_config_initialize_default;
+
 
     return;
 }

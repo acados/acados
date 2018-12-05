@@ -65,6 +65,63 @@ void ocp_nlp_cost_external_dims_initialize(void *config_, void *dims_, int nx, i
     return;
 }
 
+static void ocp_nlp_cost_external_set_nx(void *config_, void *dims_, int *nx)
+{
+    ocp_nlp_cost_external_dims *dims = (ocp_nlp_cost_external_dims *) dims_;
+    dims->nx = *nx;
+}
+
+
+static void ocp_nlp_cost_external_set_nu(void *config_, void *dims_, int *nu)
+{
+    ocp_nlp_cost_external_dims *dims = (ocp_nlp_cost_external_dims *) dims_;
+    dims->nu = *nu;
+}
+
+
+static void ocp_nlp_cost_external_set_ns(void *config_, void *dims_, int *ns)
+{
+    ocp_nlp_cost_external_dims *dims = (ocp_nlp_cost_external_dims *) dims_;
+    dims->ns = *ns;
+}
+
+static void ocp_nlp_cost_external_set_ny(void *config_, void *dims_, int *ny)
+{
+    // NOTE(oj): @giaf/all what to do here?! throw error?
+}
+
+
+void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *field, int* value)
+{
+    if (!strcmp(field, "nx"))
+    {
+        ocp_nlp_cost_external_set_nx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        // do nothing
+        // TODO(oj): implement constraints with daes
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        ocp_nlp_cost_external_set_nu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "ns"))
+    {
+        ocp_nlp_cost_external_set_ns(config_, dims_, value);
+    }
+    else if (!strcmp(field, "ny"))
+    {
+        ocp_nlp_cost_external_set_ny(config_, dims_, value);
+    }
+    else
+    {
+        printf("\nerror: dimension type not available in module\n");
+        exit(1);
+    }
+}
+
+
 /************************************************
  * model
  ************************************************/
@@ -119,6 +176,40 @@ void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_m
            c_ptr);
 
     return model;
+}
+
+
+int ocp_nlp_cost_external_set_model(void *config_, void *dims_, void *model_,
+                                         const char *field, void *value_)
+{
+    int status = ACADOS_SUCCESS;
+
+    if ( !config_ || !dims_ || !model_ || !value_ )
+        status = ACADOS_FAILURE;
+
+    ocp_nlp_cost_external_dims *dims = dims_;
+    ocp_nlp_cost_external_model *model = model_;
+
+    if (!strcmp(field, "ext_cost"))
+    {
+        model->ext_cost = (external_function_generic *) value_;
+    }
+    else if (!strcmp(field, "Z "))
+    {
+        double *Z = (double *) value_;
+        blasfeo_pack_dvec(2 * dims->ns, Z, &model->Z, 0);
+    }
+    else if (!strcmp(field, "z"))
+    {
+        double *z = (double *) value_;
+        blasfeo_pack_dvec(2 * dims->ns, z, &model->z, 0);
+    }
+    else
+    {
+        printf("\nerror: model entry: %s not available in module ocp_nlp_cost_nls\n", field);
+        status = ACADOS_FAILURE;
+    }
+    return status;
 }
 
 /************************************************
@@ -399,8 +490,10 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_cost_external_dims_calculate_size;
     config->dims_assign = &ocp_nlp_cost_external_dims_assign;
     config->dims_initialize = &ocp_nlp_cost_external_dims_initialize;
+    config->set_dims = &ocp_nlp_cost_external_dims_set;
     config->model_calculate_size = &ocp_nlp_cost_external_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_external_model_assign;
+    config->set_model = &ocp_nlp_cost_external_set_model;
     config->opts_calculate_size = &ocp_nlp_cost_external_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_external_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_external_opts_initialize_default;

@@ -29,7 +29,6 @@
 
 // acados
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_gnsf.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/math.h"
 
@@ -39,6 +38,12 @@
 // crane dae model
 #include "examples/c/inverted_pendulum_model/inverted_pendulum_model.h"
 
+// blasfeo
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
 
 
 int main()
@@ -54,7 +59,7 @@ int main()
 
     const int nx1   = 5;  // gnsf split
     const int nz1   = 5;
-    const int n_out = 3;
+    const int nout  = 3;
     const int ny    = 8;
     const int nuhat = 1;
 
@@ -228,20 +233,18 @@ int main()
     /* sim dims */
 
 		void *dims = sim_dims_create(config);
-		config->set_nx(dims, nx);
-		config->set_nu(dims, nu);
-        config->set_nz(dims, nz);
+		sim_dims_set(config, dims, "nx", &nx);
+		sim_dims_set(config, dims, "nu", &nu);
+		sim_dims_set(config, dims, "nz", &nz);
 
         // GNSF -- set additional dimensions
-        sim_gnsf_dims *gnsf_dim;
         if (plan.sim_solver == GNSF)
         {
-            gnsf_dim = (sim_gnsf_dims *) dims;
-            gnsf_dim->nx1   = nx1;
-            gnsf_dim->nz1   = nz1;
-            gnsf_dim->ny    = ny;
-            gnsf_dim->nuhat = nuhat;
-            gnsf_dim->n_out = n_out;
+            sim_dims_set(config, dims, "nx1", &nx1);
+            sim_dims_set(config, dims, "nz1", &nz1);
+            sim_dims_set(config, dims, "nout", &nout);
+            sim_dims_set(config, dims, "ny", &ny);
+            sim_dims_set(config, dims, "nuhat", &nuhat);
         }
 
     /* sim options */
@@ -287,12 +290,8 @@ int main()
                 sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
                 sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
                 sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+                sim_set_model(config, in, "get_gnsf_matrices", &get_matrices_fun);
 
-                // import model matrices
-                external_function_generic *get_model_matrices =
-                        (external_function_generic *) &get_matrices_fun;
-                gnsf_model *model = (gnsf_model *) in->model;
-                sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
                 break;
             }
             default :
@@ -318,11 +317,7 @@ int main()
         sim_solver *sim_solver = sim_create(config, dims, opts);
         int acados_return;
 
-        if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
-            gnsf_model *model = (gnsf_model *) in->model;
-            sim_gnsf_precompute(config, gnsf_dim, model, opts,
-                        sim_solver->mem, sim_solver->work, in->T);
-        }
+        sim_precompute(sim_solver, in, out);
 
     /* print solver info */
         switch (plan.sim_solver)

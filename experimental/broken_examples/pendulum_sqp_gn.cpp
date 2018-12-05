@@ -95,7 +95,7 @@ int main() {
 		dynamics_plan.data(),
 		constraints_plan.data()
 	};
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(plan, N);
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(plan);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), nq.data(), ns.data(), nz.data(), dims);
@@ -219,12 +219,19 @@ int main() {
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
-	ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
-    sqp_opts->maxIter = max_num_sqp_iterations;
-    sqp_opts->min_res_g = 1e-9;
-    sqp_opts->min_res_b = 1e-9;
-    sqp_opts->min_res_d = 1e-9;
-    sqp_opts->min_res_m = 1e-9;
+
+    int maxIter = max_num_sqp_iterations;
+    double min_res_g = 1e-9;
+    double min_res_b = 1e-9;
+    double min_res_d = 1e-9;
+    double min_res_m = 1e-9;
+
+	ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_m", &min_res_m);
+
 	for (int i = 0; i < N; ++i)
 	{
 		sim_rk_opts *rk_opts = (sim_rk_opts *) ((ocp_nlp_dynamics_cont_opts *)sqp_opts->dynamics[i])->sim_solver;
@@ -243,6 +250,7 @@ int main() {
 	// 	BLASFEO_DVECEL(nlp_out->ux+i, 3) = M_PI;
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+	solver_status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
 	std::vector<std::vector<double>> MPC_log;
 	std::vector<double> timings, KKT_log;

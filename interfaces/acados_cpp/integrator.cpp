@@ -166,10 +166,13 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
     dims_ = sim_dims_create(config_);
 
-    // set dimensions
-    config_->set_nx(dims_, nx_);
-    config_->set_nu(dims_, nu_);
-    config_->set_nz(dims_, nz_);
+    int n_dim = (int) nx_;
+    sim_dims_set(config_, dims_, "nx", &n_dim);
+    n_dim = (int) nu_;
+    sim_dims_set(config_, dims_, "nu", &n_dim);
+    n_dim = (int) nz_;
+    sim_dims_set(config_, dims_, "nz", &n_dim);
+
 
     // sim opts
     opts_ = static_cast<sim_rk_opts *>(sim_opts_create(config_, dims_));
@@ -193,6 +196,62 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
     if (options.count("stages")) opts_->ns = to_int(options.at("stages"));
 
+    // sim opts using a void pointer..
+    // opts_ = sim_opts_create(config_, dims_);
+    // if (options.count("sens_forw"))
+    // {
+    //     bool sens_forw = (to_int(options.at("sens_forw")) >= 1);
+    //     sim_opts_set(config_, opts_, "sens_forw", &sens_forw);
+    // }
+
+    // if (options.count("sens_adj"))
+    // {
+    //     bool sens_adj = (to_int(options.at("sens_adj")) >= 1);
+    //     sim_opts_set(config_, opts_, "sens_adj", &sens_adj);
+    // }
+
+    // if (options.count("sens_hess"))
+    // {
+    //     bool sens_hess = (to_int(options.at("sens_hess")) >= 1);
+    //     sim_opts_set(config_, opts_, "sens_hess", &sens_hess);
+    // }
+
+    // if (options.count("jac_reuse"))
+    // {
+    //     bool jac_reuse = (to_int(options.at("jac_reuse")) >= 1);
+    //     sim_opts_set(config_, opts_, "jac_reuse", &jac_reuse);
+    // }
+
+    // if (options.count("sens_algebraic"))
+    // {
+    //     bool sens_algebraic = (to_int(options.at("sens_algebraic")) >= 1);
+    //     sim_opts_set(config_, opts_, "sens_algebraic", &sens_algebraic);
+    // }
+
+    // if (options.count("output_z"))
+    // {
+    //     bool output_z = (to_int(options.at("output_z")) >= 1);
+    //     sim_opts_set(config_, opts_, "output_z", &output_z);
+    // }
+
+
+    // if (options.count("newton_iter"))
+    // {
+    //     int newton_iter = to_int(options.at("newton_iter"));
+    //     sim_opts_set(config_, opts_, "newton_iter", &newton_iter);
+    // }
+
+    // if (options.count("num_steps"))
+    // {
+    //     int num_steps = to_int(options.at("num_steps"));
+    //     sim_opts_set(config_, opts_, "num_steps", &num_steps);
+    // }
+
+    // if (options.count("stages"))
+    // {
+    //     int stages = to_int(options.at("stages"));
+    //     sim_opts_set(config_, opts_, "num_stages", &stages);
+    // }
 
     if (options.count("model_type"))
         model_type_ = (model_t) to_int(options.at("model_type"));
@@ -331,7 +390,6 @@ void integrator::set_model(casadi::Function &model, std::map<std::string, option
         }
         else
         {
-            // TODO(oj): add support for explicit model
             throw std::invalid_argument("IRK only supported with implicit model");
         }
     }
@@ -358,7 +416,6 @@ void integrator::set_model(casadi::Function &model, std::map<std::string, option
         }
         else
         {
-            // TODO(oj): add support for explicit model
             throw std::invalid_argument("LIFTED_IRK only supported with implicit model");
         }
     }

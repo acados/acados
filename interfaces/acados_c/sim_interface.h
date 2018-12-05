@@ -42,20 +42,21 @@ typedef struct
     void *work;
 } sim_solver;
 
+/* config */
 //
 sim_solver_config *sim_config_create(sim_solver_plan plan);
 //
 void sim_config_free(void *config);
 
+/* dims */
 //
 void *sim_dims_create(void *config_);
 //
 void sim_dims_free(void *dims);
 //
-void sim_dims_set_nx(sim_solver_config *config, void *dims, int nx);
-//
-void sim_dims_set_nu(sim_solver_config *config, void *dims, int nu);
+void sim_dims_set(sim_solver_config *config, void *dims, const char *field, const int* value);
 
+/* in */
 //
 sim_in *sim_in_create(sim_solver_config *config, void *dims);
 //
@@ -78,6 +79,7 @@ void sim_in_set_Sx(sim_solver_config *config, void *dims, double *Sx, sim_in *in
 //
 void sim_in_set_Su(sim_solver_config *config, void *dims, double *Su, sim_in *in);
 
+/* out */
 //
 sim_out *sim_out_create(sim_solver_config *config, void *dims);
 //
@@ -89,13 +91,15 @@ void sim_out_get_Sxn(sim_solver_config *config, void *dims, sim_out *out, double
 //
 void sim_out_get_Sun(sim_solver_config *config, void *dims, sim_out *out, double *Sun);
 
+/* opts */
 //
 void *sim_opts_create(sim_solver_config *config, void *dims);
 //
 void sim_opts_free(void *opts);
 //
-void sim_opts_set_sens_forw(sim_rk_opts *opts, bool value);
-
+int sim_opts_set(sim_solver_config *config, void *opts, const char *field,
+                           void *value);
+/* solver */
 //
 int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_);
 //
@@ -106,6 +110,8 @@ sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_);
 void sim_free(void *solver);
 //
 int sim_solve(sim_solver *solver, sim_in *in, sim_out *out);
+//
+int sim_precompute(sim_solver *solver, sim_in *in, sim_out *out);
 
 #ifdef __cplusplus
 } /* extern "C" */

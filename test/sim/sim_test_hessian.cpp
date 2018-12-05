@@ -235,9 +235,9 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     void *dims = sim_dims_create(config);
 
     /* set dimensions */
-    config->set_nx(dims, nx);
-    config->set_nu(dims, nu);
-    config->set_nz(dims, nz);
+    sim_dims_set(config, dims, "nx", &nx);
+    sim_dims_set(config, dims, "nu", &nu);
+    sim_dims_set(config, dims, "nz", &nz);
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);
@@ -400,9 +400,10 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
             /* sim dims */
                 void *dims = sim_dims_create(config);
-                config->set_nx(dims, nx);
-                config->set_nu(dims, nu);
-                config->set_nz(dims, nz);
+                /* set dimensions */
+                sim_dims_set(config, dims, "nx", &nx);
+                sim_dims_set(config, dims, "nu", &nu);
+                sim_dims_set(config, dims, "nz", &nz);
 
             /* sim options */
 
@@ -708,9 +709,9 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     void *dims = sim_dims_create(config);
 
     /* set dimensions */
-    config->set_nx(dims, nx);
-    config->set_nu(dims, nu);
-    config->set_nz(dims, nz);
+    sim_dims_set(config, dims, "nx", &nx);
+    sim_dims_set(config, dims, "nu", &nu);
+    sim_dims_set(config, dims, "nz", &nz);
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);

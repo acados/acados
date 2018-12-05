@@ -50,7 +50,6 @@ int ocp_nlp_dynamics_cont_dims_calculate_size(void *config_)
 }
 
 
-
 void *ocp_nlp_dynamics_cont_dims_assign(void *config_, void *raw_memory)
 {
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
@@ -86,14 +85,92 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config_, void *dims_, int nx, i
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
     sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
 
-    sim_config->set_nx(dims->sim, nx);
-    sim_config->set_nu(dims->sim, nu);
-    sim_config->set_nz(dims->sim, nz);
+    sim_dims_set(sim_config, dims->sim, "nx", &nx);
+    sim_dims_set(sim_config, dims->sim, "nu", &nu);
+    sim_dims_set(sim_config, dims->sim, "nz", &nz);
 
     return;
 }
 
 
+// setters
+static void ocp_nlp_dynamics_cont_set_nx(void *config_, void *dims_, int *nx)
+{
+    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
+    dims->nx = *nx;
+
+    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+    sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+
+    sim_dims_set(sim_config, dims->sim, "nx", nx);
+}
+
+static void ocp_nlp_dynamics_cont_set_nx1(void *config_, void *dims_, int *nx1)
+{
+    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
+    dims->nx1 = *nx1;
+}
+
+static void ocp_nlp_dynamics_cont_set_nz(void *config_, void *dims_, int *nz)
+{
+    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
+    dims->nz = *nz;
+
+    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+    sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+
+    sim_dims_set(sim_config, dims->sim, "nz", nz);
+}
+
+static void ocp_nlp_dynamics_cont_set_nu(void *config_, void *dims_, int *nu)
+{
+    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
+    dims->nu = *nu;
+
+    ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+    sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+
+    sim_dims_set(sim_config, dims->sim, "nu", nu);
+}
+
+static void ocp_nlp_dynamics_cont_set_nu1(void *config_, void *dims_, int *nu1)
+{
+    ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
+    dims->nu1 = *nu1;
+}
+
+void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *field, int* value)
+{
+    if (!strcmp(field, "nx"))
+    {
+        ocp_nlp_dynamics_cont_set_nx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nx1"))
+    {
+        ocp_nlp_dynamics_cont_set_nx1(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        ocp_nlp_dynamics_cont_set_nz(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        ocp_nlp_dynamics_cont_set_nu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nu1"))
+    {
+        ocp_nlp_dynamics_cont_set_nu1(config_, dims_, value);
+    }
+    else
+    {
+        // set GNSF dims just within integrator module
+        ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+        ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
+        sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+
+        sim_dims_set(sim_config, dims->sim, field, value);
+    }
+}
 
 /************************************************
  * options
@@ -163,25 +240,14 @@ void ocp_nlp_dynamics_cont_opts_update(void *config_, void *dims_, void *opts_)
 
 
 
-void ocp_nlp_dynamics_cont_opts_set(void *config_, void *dims_, void *opts_, enum acados_opts name,
-    void *ptr_value)
+
+int ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
-
+    ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
+    sim_solver_config *sim_config = config->sim_solver;
 
-    if (name == COMPUTE_ADJ)
-    {
-        int *compute_adj = ptr_value;
-        opts->compute_adj = *compute_adj;
-    }
-    else
-    {
-        // TODO(fuck_you_lint): something better tha this print-and-exit
-        printf("\nocp_nlp_dynamics_cont_opts_set: unknown opts name !\n");
-        exit(1);
-    }
-
-    return;
+    return sim_config->opts_set(sim_config, opts->sim_solver, field, value);
 
 }
 
@@ -541,7 +607,25 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     return;
 }
 
+int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, void *opts_,
+                                        void *mem_, void *work_)
+{
+    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_);
 
+    ocp_nlp_dynamics_config *config = config_;
+    // ocp_nlp_dynamics_cont_dims *dims = dims_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+    ocp_nlp_dynamics_cont_workspace *work = work_;
+    ocp_nlp_dynamics_cont_memory *mem = mem_;
+    ocp_nlp_dynamics_cont_model *model = model_;
+    work->sim_in->model = model->sim_model;
+    work->sim_in->T = model->T;
+
+    // call integrator
+    int status = config->sim_solver->precompute(config->sim_solver, work->sim_in, work->sim_out,
+                                   opts->sim_solver, mem->sim_solver, work->sim_solver);
+    return status;
+}
 
 void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
 {
@@ -549,6 +633,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
 
     config->dims_calculate_size = &ocp_nlp_dynamics_cont_dims_calculate_size;
     config->dims_assign = &ocp_nlp_dynamics_cont_dims_assign;
+    config->set_dims = &ocp_nlp_dynamics_cont_dims_set;
     config->dims_initialize = &ocp_nlp_dynamics_cont_dims_initialize;
     config->model_calculate_size = &ocp_nlp_dynamics_cont_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_cont_model_assign;
@@ -571,6 +656,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;
+    config->precompute = &ocp_nlp_dynamics_cont_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_cont_config_initialize_default;
 
     return;

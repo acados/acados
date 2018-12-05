@@ -61,22 +61,44 @@ void *sim_irk_dims_assign(void *config_, void *raw_memory)
     return dims;
 }
 
-void sim_irk_set_nx(void *dims_, int nx)
+static void sim_irk_set_nu(void *config_, void *dims_, const int *nu)
 {
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    dims->nx = nx;
+    dims->nu = *nu;
 }
 
-void sim_irk_set_nu(void *dims_, int nu)
+static void sim_irk_set_nx(void *config_, void *dims_, const int *nx)
 {
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    dims->nu = nu;
+    dims->nx = *nx;
 }
 
-void sim_irk_set_nz(void *dims_, int nz)
+static void sim_irk_set_nz(void *config_, void *dims_, const int *nz)
 {
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    dims->nz = nz;
+    dims->nz = *nz;
+}
+
+
+void sim_irk_dims_set(void *config_, void *dims_, const char *field, const int* value)
+{
+    if (!strcmp(field, "nx"))
+    {
+        sim_irk_set_nx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        sim_irk_set_nu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        sim_irk_set_nz(config_, dims_, value);
+    }
+    else
+    {
+        printf("\nerror: dimension type not available in module\n");
+        exit(1);
+    }
 }
 
 void sim_irk_get_nx(void *dims_, int *nx)
@@ -253,6 +275,13 @@ void sim_irk_opts_update(void *config_, void *dims, void *opts_)
     butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
 
     return;
+}
+
+
+int sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    return sim_rk_opts_set(opts, field, value);
 }
 
 /************************************************
@@ -464,6 +493,12 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     return (void *) workspace;
 }
 
+int sim_irk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
+                       void *work_)
+{
+    return ACADOS_SUCCESS;
+}
+
 /************************************************
  * integrator
  ************************************************/
@@ -475,8 +510,11 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
 
-    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
-
+    if ( opts->ns != opts->tableau_size )
+    {
+        printf("Error in sim_irk: the Butcher tableau size does not match ns");
+        return ACADOS_FAILURE;
+    }
     int ns = opts->ns;
 
     void *dims_ = in->dims;
@@ -1170,7 +1208,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         timing_la;  // note: this is the time for factorization and solving the linear systems
     out->info->ADtime = timing_ad;
 
-    return 0;
+    return ACADOS_SUCCESS;
 }
 
 void sim_irk_config_initialize_default(void *config_)
@@ -1178,10 +1216,12 @@ void sim_irk_config_initialize_default(void *config_)
     sim_solver_config *config = config_;
 
     config->evaluate = &sim_irk;
+    config->precompute = &sim_irk_precompute;
     config->opts_calculate_size = &sim_irk_opts_calculate_size;
     config->opts_assign = &sim_irk_opts_assign;
     config->opts_initialize_default = &sim_irk_opts_initialize_default;
     config->opts_update = &sim_irk_opts_update;
+    config->opts_set = &sim_irk_opts_set;
     config->memory_calculate_size = &sim_irk_memory_calculate_size;
     config->memory_assign = &sim_irk_memory_assign;
     config->workspace_calculate_size = &sim_irk_workspace_calculate_size;
@@ -1190,9 +1230,7 @@ void sim_irk_config_initialize_default(void *config_)
     config->model_set_function = &sim_irk_model_set_function;
     config->dims_calculate_size = &sim_irk_dims_calculate_size;
     config->dims_assign = &sim_irk_dims_assign;
-    config->set_nx = &sim_irk_set_nx;
-    config->set_nu = &sim_irk_set_nu;
-    config->set_nz = &sim_irk_set_nz;
+    config->set_dims = &sim_irk_dims_set;
     config->get_nx = &sim_irk_get_nx;
     config->get_nu = &sim_irk_get_nu;
     config->get_nz = &sim_irk_get_nz;

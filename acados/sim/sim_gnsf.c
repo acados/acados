@@ -75,22 +75,94 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory)
  * get & set functions
  ************************************************/
 
-void sim_gnsf_set_nx(void *dims_, int nx)
+static void sim_gnsf_set_nu(void *config_, void *dims_, const int *nu)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nx = nx;
+    dims->nu = *nu;
 }
 
-void sim_gnsf_set_nu(void *dims_, int nu)
+static void sim_gnsf_set_nx(void *config_, void *dims_, const int *nx)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nu = nu;
+    dims->nx = *nx;
 }
 
-void sim_gnsf_set_nz(void *dims_, int nz)
+static void sim_gnsf_set_nz(void *config_, void *dims_, const int *nz)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nz = nz;
+    dims->nz = *nz;
+}
+
+static void sim_gnsf_set_ny(void *config_, void *dims_, const int *ny)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    dims->ny = *ny;
+}
+
+static void sim_gnsf_set_nuhat(void *config_, void *dims_, const int *nuhat)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    dims->nuhat = *nuhat;
+}
+
+static void sim_gnsf_set_nout(void *config_, void *dims_, const int *nout)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    dims->n_out = *nout;
+}
+
+static void sim_gnsf_set_nz1(void *config_, void *dims_, const int *nz1)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    dims->nz1 = *nz1;
+}
+
+static void sim_gnsf_set_nx1(void *config_, void *dims_, const int *nx1)
+{
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+    dims->nx1 = *nx1;
+}
+
+
+void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int* value)
+{
+    if (!strcmp(field, "nx"))
+    {
+        sim_gnsf_set_nx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        sim_gnsf_set_nu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        sim_gnsf_set_nz(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nx1") || !strcmp(field, "gnsf_nx1"))
+    {
+        sim_gnsf_set_nx1(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nz1") || !strcmp(field, "gnsf_nz1"))
+    {
+        sim_gnsf_set_nz1(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nout") || !strcmp(field, "gnsf_nout"))
+    {
+        sim_gnsf_set_nout(config_, dims_, value);
+    }
+    else if (!strcmp(field, "ny") || !strcmp(field, "gnsf_ny"))
+    {
+        sim_gnsf_set_ny(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nuhat") || !strcmp(field, "gnsf_nuhat"))
+    {
+        sim_gnsf_set_nuhat(config_, dims_, value);
+    }
+    else
+    {
+        printf("\nerror: dimension type not available in module\n");
+        exit(1);
+    }
 }
 
 void sim_gnsf_get_nx(void *dims_, int *nx)
@@ -115,9 +187,10 @@ void sim_gnsf_get_nz(void *dims_, int *nz)
  * import functions
  ************************************************/
 
-void sim_gnsf_import_matrices(sim_gnsf_dims *dims_, gnsf_model *model,
-                              external_function_generic *get_matrices_fun)
+static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
 {
+    external_function_generic *get_matrices_fun = model->get_gnsf_matrices;
+
     // calling the external function
     ext_fun_arg_t ext_fun_type_in[1];
     void *ext_fun_in[1];
@@ -237,6 +310,7 @@ void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
     return;
 }
 
+
 void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
 {
     sim_rk_opts *opts = opts_;
@@ -255,6 +329,12 @@ void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
     butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
 
     return;
+}
+
+int sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    return sim_rk_opts_set(opts, field, value);
 }
 
 /************************************************
@@ -362,6 +442,9 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
         case LO_FUN:
             model->f_lo_fun_jac_x1_x1dot_u_z = (external_function_generic *) fun;
             break;
+        case GET_GNSF_MATRICES:
+            model->get_gnsf_matrices = (external_function_generic *) fun;
+            break;
         default:
             return ACADOS_FAILURE;
     }
@@ -378,9 +461,9 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
-    int nx      = dims->nx;
+    // int nx      = dims->nx;
     int nu      = dims->nu;
-    int nz      = dims->nz;
+    // int nz      = dims->nz;
     int nx1     = dims->nx1;
     int nz1     = dims->nz1;
     int n_out   = dims->n_out;
@@ -453,11 +536,29 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
     return (void *) work;
 }  // cast pre_workspace
 
-void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, sim_rk_opts *opts,
-                         void *mem_, void *work_, double T)
+
+
+int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
+                       void *work_)
 {
     acados_timer atimer;
     acados_tic(&atimer);
+
+    int status = ACADOS_SUCCESS;
+
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) in->dims;
+    sim_rk_opts *opts = opts_;
+    gnsf_model *model = in->model;
+
+
+    if (model->get_gnsf_matrices == NULL)
+    {
+        printf("sim_gnsf error: get_gnsf_matrices function seems to be unset!\n");
+        status = ACADOS_FAILURE;
+        return status;
+    }
+
+    sim_gnsf_import_matrices(dims, model);
 
     // dimension ints
     int nx      = dims->nx;
@@ -484,11 +585,17 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
 
     // set up precomputation workspace
     gnsf_pre_workspace *work =
-        (gnsf_pre_workspace *) gnsf_cast_pre_workspace(config, dims, opts, work_);
+        (gnsf_pre_workspace *) gnsf_cast_pre_workspace(config_, dims, opts, work_);
     // set up memory
     sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
 
-    double dt = T / num_steps;
+    double dt = in->T / num_steps;
+    if (dt == 0.0)
+    {
+        printf("sim_gnsf error: simulation time = 0; seems to be unset!\n");
+        status = ACADOS_FAILURE;
+        return status;
+    }
     mem->dt = dt;
 
     double *A_mat = opts->A_mat;
@@ -943,7 +1050,7 @@ void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, s
         blasfeo_dtrsm_lunn(nxz2, nx2, 1.0, ELO_LU, 0, 0, ELO_inv_ALO,
                                 0, 0, ELO_inv_ALO, 0, 0);
     }
-
+    return status;
     // double precomputation_time = acados_toc(&atimer) * 1000;
     // printf("time 2 precompute = %f [ms]\n", precomputation_time);
 }
@@ -1475,6 +1582,12 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     gnsf_workspace *workspace =
         (gnsf_workspace *) sim_gnsf_cast_workspace(config, dims, opts, work_);
 
+    if ( opts->ns != opts->tableau_size )
+    {
+        printf("Error in sim_gnsf: the Butcher tableau size does not match ns");
+        return ACADOS_FAILURE;
+    }
+
     // necessary integers
     int nx      = dims->nx;
     int nu      = dims->nu;
@@ -1500,8 +1613,11 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     int nxz2 = nx2 + nz2;
 
     // assert - only use supported features
-    assert(mem->dt == in->T / opts->num_steps &&
-           "model->dt not equal to im_in.T/opts->num_steps, check initialization");
+    if (mem->dt != in->T / opts->num_steps)
+    {
+        printf("ERROR sim_gnsf: mem->dt n!= in->T/opts->num_steps, check initialization\n");
+        return ACADOS_FAILURE;
+    }
 
     // assign variables from workspace
     double *Z_work = workspace->Z_work;
@@ -2363,11 +2479,13 @@ void sim_gnsf_config_initialize_default(void *config_)
 {
     sim_solver_config *config = config_;
     config->evaluate = &sim_gnsf;
+    config->precompute = &sim_gnsf_precompute;
     // opts
     config->opts_calculate_size = &sim_gnsf_opts_calculate_size;
     config->opts_assign = &sim_gnsf_opts_assign;
     config->opts_initialize_default = &sim_gnsf_opts_initialize_default;
     config->opts_update = &sim_gnsf_opts_update;
+    config->opts_set = &sim_gnsf_opts_set;
     // memory & workspace
     config->memory_calculate_size = &sim_gnsf_memory_calculate_size;
     config->memory_assign = &sim_gnsf_memory_assign;
@@ -2379,9 +2497,7 @@ void sim_gnsf_config_initialize_default(void *config_)
     // dims
     config->dims_calculate_size = &sim_gnsf_dims_calculate_size;
     config->dims_assign = &sim_gnsf_dims_assign;
-    config->set_nx = &sim_gnsf_set_nx;
-    config->set_nu = &sim_gnsf_set_nu;
-    config->set_nz = &sim_gnsf_set_nz;
+    config->set_dims = &sim_gnsf_dims_set;
     config->get_nx = &sim_gnsf_get_nx;
     config->get_nu = &sim_gnsf_get_nu;
     config->get_nz = &sim_gnsf_get_nz;

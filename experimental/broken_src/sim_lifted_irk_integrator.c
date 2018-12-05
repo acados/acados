@@ -1144,7 +1144,11 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
 
-    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
+    if ( opts->ns != opts->tableau_size )
+    {
+        printf("Error in sim_lifted_irk: the Butcher tableau size does not match ns");
+        return ACADOS_FAILURE;
+    }
 
     int ns = opts->ns;
 
@@ -1792,9 +1796,7 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     config->model_set_function = &sim_lifted_irk_model_set_function;
     config->dims_calculate_size = &sim_lifted_irk_dims_calculate_size;
     config->dims_assign = &sim_lifted_irk_dims_assign;
-    config->set_nx = &sim_lifted_irk_set_nx;
-    config->set_nu = &sim_lifted_irk_set_nu;
-    config->set_nz = &sim_lifted_irk_set_nz;
+
     config->get_nx = &sim_lifted_irk_get_nx;
     config->get_nu = &sim_lifted_irk_get_nu;
     config->get_nz = &sim_lifted_irk_get_nz;

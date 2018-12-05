@@ -54,7 +54,8 @@ void *ocp_nlp_constraints_bghp_dims_assign(void *config, void *raw_memory);
 //
 void ocp_nlp_constraints_bghp_dims_initialize(void *config, void *dims, int nx, int nu, int nbx,
                                          int nbu, int ng, int nh, int nq, int ns);
-
+//
+void ocp_nlp_constraints_bghp_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 
 /* model */
@@ -74,6 +75,9 @@ typedef struct
 int ocp_nlp_constraints_bghp_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_constraints_bghp_assign(void *config, void *dims, void *raw_memory);
+//
+int ocp_nlp_constraints_bghp_bounds_set(void *config_, void *dims_,
+                         void *model_, const char *field, void *value);
 
 /* options */
 
