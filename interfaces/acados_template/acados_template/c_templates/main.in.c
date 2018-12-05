@@ -65,7 +65,7 @@ int main() {
     // set up bounds for intermediate stages
     int idxb[{{ ra.dims.nbu }} + {{ ra.dims.nx }}];
     {% for i in range(ra.dims.nbu + ra.dims.nbx): %}
-    idxb_0[{{i}}] = {{i}};
+    idxb[{{i}}] = {{i}};
     {%- endfor %}
     double lb[{{ ra.dims.nbu }} + {{ ra.dims.nbx }}]; 
     double ub[{{ ra.dims.nbu }} + {{ ra.dims.nbx }}]; 
@@ -79,7 +79,7 @@ int main() {
     {%- endfor %}
 
     // set up bounds for last stage
-    int idxb_N[{{ ra.dims.nbu }} + {{ ra.dims.nx }}];
+    int idxb_N[{{ ra.dims.nbx }}];
     {% for i in range(ra.dims.nbx): %}
     idxb_N[{{i}}] = {{i}};
     {%- endfor %}
@@ -123,9 +123,9 @@ int main() {
     for(int i = 0; i < N+1; i++) {
         nx[i]  = num_states;
         nu[i]  = num_controls;
-        nbx[i] = 0;
-        nbu[i] = num_controls;
-        nb[i]  = num_controls;
+        nbx[i] = {{ra.dims.nbx}};
+        nbu[i] = {{ra.dims.nbu}};
+        nb[i]  = {{ra.dims.nbu}} + {{ra.dims.nbx}};
         ng[i]  = 0;
         nh[i]  = 0;
         np[i]  = 0;
@@ -146,6 +146,8 @@ int main() {
     nv[N]  = num_states; 
     ny[N]  = num_states;
     nbu[N] = 0;
+    nbx[N] = {{ra.dims.nbx}};
+    nb[N]  = {{ra.dims.nbx}};
 
     // Make plan
     ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
