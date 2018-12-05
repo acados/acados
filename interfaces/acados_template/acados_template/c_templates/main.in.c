@@ -17,25 +17,26 @@
  *
  */
 
+// standard
 #include <stdio.h>
 #include <stdlib.h>
-
+// acados
 #include "acados/utils/print.h"
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
-#include "acados/sim/sim_erk_integrator.h"
-
-#include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
+// TODO(oj): remove, when setters for Q,R,idxb available
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
+
+// blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
+// example specific
 #include "{{ ra.model_name }}_model/{{ ra.model_name }}_model.h"
 // #include "{{ ra.model_name }}_model/{{ ra.model_name }}_constraint.h"
+
 {% for item in ra.constants %}
 #define {{ item.name }} {{ item.value }}
 {% endfor %}
@@ -94,6 +95,12 @@ int main() {
 
     double Q[{{ ra.dims.nx }}*{{ ra.dims.nx }}]; 
     double R[{{ ra.dims.nu }}*{{ ra.dims.nu }}]; 
+    double yref[{{ ra.dims.nx }}+{{ ra.dims.nu }}];
+
+    for (int ii = 0; ii < num_controls + num_states; ii++) {
+        yref[ii] = 0.0;     
+    } 
+
 
     {% for i in range(ra.dims.nx): %}
         {%- for j in range(ra.dims.nx): %}
@@ -165,7 +172,6 @@ int main() {
     {
         plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
         plan->sim_solver_plan[i].sim_solver = {{ ra.solver_config.integrator_type}};
-
     }
 
     for (int i = 0; i <= N; i++)
@@ -268,7 +274,7 @@ int main() {
         for (int j = 0; j < nx[i]; j++)
             BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
     }
-
+    // TODO(oj): provide Q,R setters; currently only W available
     // W
     for (int i = 0; i < N; ++i) {
         blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
@@ -280,14 +286,11 @@ int main() {
                 BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+k) = R[j*nu[i] + k];
     }
     // WN
-    blasfeo_dgese(ny[N], ny[N], 0.0, &cost_ls[N]->W, 0, 0);
-    for (int j = 0; j < nx[N]; j++)
-        for (int k = 0; k < nx[N]; k++)
-            BLASFEO_DMATEL(&cost_ls[N]->W, j, k) = Q[j*nx[N] + k];
+    ocp_nlp_cost_set_model(config, dims, nlp_in, N, "W", Q);
 
     // y_ref
     for (int i = 0; i <= N; ++i)
-        blasfeo_dvecse(ny[i], 0.0, &cost_ls[i]->y_ref, 0);
+        ocp_nlp_cost_set_model(config, dims, nlp_in, i, "yref", yref);
 
     // NLP dynamics
     int set_fun_status;
