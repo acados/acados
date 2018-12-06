@@ -33,7 +33,7 @@ extern "C" {
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
-#include "interfaces/acados_c/sim_interface.h"
+#include "acados_c/sim_interface.h"
 
 
 
