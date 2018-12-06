@@ -25,7 +25,7 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
-// TODO(oj): remove, when setters for Q,R,idxb available
+// TODO(oj): remove, when setters for Cyt,idxb available
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 
@@ -47,7 +47,8 @@ int main() {
     int N = {{ ra.dims.N }};
 
     double Tf = {{ ra.solver_config.tf }};
-    
+
+    int ny_ = num_controls + num_states;
     // set up bounds for stage 0 
     int idxb_0[{{ ra.dims.nbu }} + {{ ra.dims.nx }}];
     {% for i in range(ra.dims.nbu + ra.dims.nx): %}
@@ -93,14 +94,13 @@ int main() {
     ubN[{{i}}] = {{ra.constraints.ubx[i]}};
     {%- endfor %}
 
-    double Q[{{ ra.dims.nx }}*{{ ra.dims.nx }}]; 
-    double R[{{ ra.dims.nu }}*{{ ra.dims.nu }}]; 
     double yref[{{ ra.dims.nx }}+{{ ra.dims.nu }}];
+    double Q[{{ ra.dims.nx }}*{{ ra.dims.nx }}]; 
+    double R[{{ ra.dims.nu }}*{{ ra.dims.nu }}];
+    double W[(num_states + num_controls)*(num_states + num_controls)];
 
-    for (int ii = 0; ii < num_controls + num_states; ii++) {
-        yref[ii] = 0.0;     
-    } 
-
+    for (int ii = 0; ii < num_controls + num_states; ii++)
+        yref[ii] = 0.0;
 
     {% for i in range(ra.dims.nx): %}
         {%- for j in range(ra.dims.nx): %}
@@ -113,6 +113,22 @@ int main() {
     R[{{i}}*{{ra.dims.nu}} + {{j}}] = {{ ra.cost.R[i,j] }}; 
         {%- endfor %}
     {%- endfor %}
+
+    for (int ii = 0; ii < ny_ * ny_; ii++)
+        W[ii] = 0.0;
+
+    {% for j in range(ra.dims.nx): %}
+        {%- for k in range(ra.dims.nx): %}
+    W[{{j}}+({{ra.dims.nx}} + {{ra.dims.nu}}) * {{k}}] = {{ ra.cost.Q[j,k] }}; 
+        {%- endfor %}
+    {%- endfor %}
+
+    {% for j in range(ra.dims.nx,ra.dims.nx+ra.dims.nu): %}
+        {%- for k in range(ra.dims.nx,ra.dims.nx+ra.dims.nu): %}
+    W[{{j}}+({{ra.dims.nx}} + {{ra.dims.nu}}) * {{k}}] = {{ ra.cost.R[j-ra.dims.nx,k-ra.dims.nx] }}; 
+        {%- endfor %}
+    {%- endfor %}
+
 
     int max_num_sqp_iterations = 1;
 
@@ -265,7 +281,8 @@ int main() {
         nlp_in->Ts[i] = Tf/N;
 
     // NLP cost: linear least squares
-    // C
+    // C  // TODO(oj): this can be done using
+    // // ocp_nlp_cost_set_model(config, dims, nlp_in, i, "Cyt", Cyt);
     ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
     for (int i = 0; i <= N; ++i) {
         blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
@@ -274,16 +291,9 @@ int main() {
         for (int j = 0; j < nx[i]; j++)
             BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
     }
-    // TODO(oj): provide Q,R setters; currently only W available
     // W
     for (int i = 0; i < N; ++i) {
-        blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
-        for (int j = 0; j < nx[i]; j++)
-            for (int k = 0; k < nx[i]; k++)
-                BLASFEO_DMATEL(&cost_ls[i]->W, j, k) = Q[j*nx[i] + k];
-        for (int j = 0; j < nu[i]; j++)
-            for (int k = 0; k < nu[i]; k++)
-                BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+k) = R[j*nu[i] + k];
+        ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W);
     }
     // WN
     ocp_nlp_cost_set_model(config, dims, nlp_in, N, "W", Q);
@@ -315,7 +325,6 @@ int main() {
     // NLP constraints
     // TODO(oj): remove this when idxb setter available
     ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-	ocp_nlp_constraints_bgh_dims **constraints_dims = (ocp_nlp_constraints_bgh_dims **) dims->constraints;
 
     // bounds
     constraints[0]->idxb = idxb_0;
