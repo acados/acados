@@ -10,5 +10,5 @@ setup(name='acados_template',
    license='LGPL',
    packages = find_packages(),
    include_package_data = True,
-   package_data={'': ['c_templates/template_example.in.c', 'c_templates/Makefile.in', 'c_templates/model.in.h']},
+   package_data={'': ['c_templates/main.in.c', 'c_templates/Makefile.in', 'c_templates/model.in.h']},
    zip_safe=False)
