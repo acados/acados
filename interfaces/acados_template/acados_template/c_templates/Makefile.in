@@ -1,4 +1,4 @@
-ACADOS_FLAGS = 
+ACADOS_FLAGS = -fPIC 
 {% if  'QPOASES' in ra.solver_config.qp_solver: %}
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 {% endif %}
@@ -50,6 +50,13 @@ example:
 	-I $(INCLUDE_PATH) \
 	-I $(INCLUDE_PATH)/acados/ \
 	-I $(INCLUDE_PATH)/qpOASES_e/  
+
+shared_lib: casadi_fun main
+	gcc $(ACADOS_FLAGS) -shared -o main_pendulum_ode.so $(OBJ) -L $(LIB_PATH)/acados \
+	-L $(LIB_PATH)/external/blasfeo \
+	-L $(LIB_PATH)/external/hpipm  \
+	-L $(LIB_PATH)/external/qpoases/lib \
+	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
 
 clean:
 	rm -f *.o

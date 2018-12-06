@@ -113,8 +113,8 @@ ra.constants = [const1]
 ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
 # ra.solver_config.hessian_approx = 'EXACT'
-ra.solver_config.integrator_type = 'ERK'
-# ra.solver_config.integrator_type = 'IRK'
+# ra.solver_config.integrator_type = 'ERK'
+ra.solver_config.integrator_type = 'IRK'
 
 # set prediction horizon
 ra.solver_config.tf = 1.0
@@ -150,6 +150,7 @@ out_file.write(output)
 # render Makefile template
 template = env.get_template('Makefile.in')
 output = template.render(ra=ra)
+
 # output file
 out_file = open('./c_generated_code/Makefile', 'w+')
 out_file.write(output)
