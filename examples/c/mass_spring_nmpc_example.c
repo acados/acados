@@ -343,12 +343,18 @@ int main() {
         nq[ii] = 0;
     }
 
-	int ns[N+1];
-	ns[0] = 0;
+	int nsbx[N+1];
+	nsbx[0] = 0;
 	for (int ii = 1; ii <= N; ii++)
 	{
-//        ns[ii] = 0;
-        ns[ii] = nx[ii];
+//        nsbx[ii] = 0;
+        nsbx[ii] = nx[ii];
+    }
+
+	int ns[N+1];
+	for (int ii = 0; ii <= N; ii++)
+	{
+        ns[ii] = nsbx[ii];
     }
 
     int ny[N+1];
@@ -420,13 +426,13 @@ int main() {
 
 	for (int i = 0; i <= N; i++)
     {
-        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
+//        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
 
         ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
-        ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nsbx", &nsbx[i]);
     }
 
     /************************************************
@@ -749,6 +755,17 @@ int main() {
 
     int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts);
     void *nlp_work = acados_malloc(workspace_size, 1);
+
+    /************************************************
+    * sqp precompute (after all optinos are set)
+    ************************************************/
+
+	status = ocp_nlp_sqp_precompute(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+	if (status!=ACADOS_SUCCESS)
+		{
+		printf("\nfailure in precompute\n");
+		exit(1);
+		}
 
     /************************************************
     * sqp solve

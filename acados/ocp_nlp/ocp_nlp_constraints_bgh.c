@@ -486,12 +486,12 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
         model->h = value;
         status = ACADOS_SUCCESS;
     }
-    else if (!strcmp(field, "lh"))
+    else if (!strcmp(field, "lh")) // TODO remove
     {
         blasfeo_pack_dvec(nh, value, &model->d, nb+ng);
         status = ACADOS_SUCCESS;
     }
-    else if (!strcmp(field, "uh"))
+    else if (!strcmp(field, "uh")) // TODO remove
     {
         blasfeo_pack_dvec(nh, value, &model->d, 2*nb+2*ng+nh);
         status = ACADOS_SUCCESS;
