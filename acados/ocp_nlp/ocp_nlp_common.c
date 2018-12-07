@@ -462,7 +462,7 @@ void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage,
     config->cost[stage]->dims_set(config->cost[stage], dims->cost[stage], field, int_value);
 }
 
-void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage, 
+void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage,
                                const char *field, const void* value)
 {
     // mainly for gnsf dimensions

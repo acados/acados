@@ -600,12 +600,13 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     ************************************************/
 
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
+
     ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
     ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
     ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
     ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
 
-	for (int i = 0; i <= NN; i++)
+    for (int i = 0; i <= NN; i++)
     {
         ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
 
