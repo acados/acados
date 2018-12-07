@@ -576,7 +576,8 @@ int ocp_nlp_constraints_bghp_model_set(void *config_, void *dims_,
     }
     else
     {
-        printf("\nerror: model field not available in module ocp_nlp_constraints_bghp: %s\n", field);
+        printf("\nerror: model field not available in module ocp_nlp_constraints_bghp:
+            %s\n", field);
         exit(1);
     }
 
