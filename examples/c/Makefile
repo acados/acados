@@ -66,6 +66,7 @@ EXAMPLES += wind_turbine_nmpc
 examples: $(EXAMPLES)
 
 
+# run all
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_dense_qp
 RUN_EXAMPLES += run_pendulum_scqp
@@ -84,6 +85,10 @@ RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 # RUN_EXAMPLES += run_mass_spring_example_no_interface
 # RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
 RUN_EXAMPLES += run_wind_turbine_nmpc
+
+# overwrite to run just one
+#RUN_EXAMPLES = run_wind_turbine_nmpc
+#RUN_EXAMPLES = run_mass_spring_nmpc_example
 
 run_examples: $(RUN_EXAMPLES)
 

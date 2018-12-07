@@ -304,7 +304,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     /* set ocp_nlp dimension */
     if (!strcmp(field, "nx"))
     {
-		// opt var
+        // opt var
         for (int ii = 0; ii <= N; ii++)
         {
             // set nx
@@ -312,13 +312,13 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
             // update nv
             dims->nv[ii] = dims->nu[ii] + dims->nx[ii] + 2 * dims->ns[ii];
         }
-		// cost
-		for (int i = 0; i <= N; i++)
-		{
-			config->cost[i]->dims_set(config->cost[i],
-									  dims->cost[i], "nx", &int_array[i]);
-		}
-		// dynamics
+        // cost
+        for (int i = 0; i <= N; i++)
+        {
+            config->cost[i]->dims_set(config->cost[i],
+                                      dims->cost[i], "nx", &int_array[i]);
+        }
+        // dynamics
         for (int i = 0; i < N; i++)
         {
             config->dynamics[i]->dims_set(config->dynamics[i],
@@ -329,13 +329,13 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
             config->dynamics[i]->dims_set(config->dynamics[i],
                                            dims->dynamics[i], "nx1", &int_array[i+1]);
         }
-		// constraints
-		for (int i = 0; i <= N; i++)
-		{
-			config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
-												 "nx", &int_array[i]);
-		}
-		// qp solver
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
+                                                 "nx", &int_array[i]);
+        }
+        // qp solver
         for (int i = 0; i <= N; i++)
         {
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nx",
@@ -344,7 +344,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     }
     else if (!strcmp(field, "nu"))
     {
-		// nlp opt var
+        // nlp opt var
         for (int ii = 0; ii <= N; ii++)
         {
             // set nu
@@ -352,13 +352,13 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
             // update nv
             dims->nv[ii] = dims->nu[ii] + dims->nx[ii] + 2 * dims->ns[ii];
         }
-		// cost
-		for (int i = 0; i <= N; i++)
-		{
-			config->cost[i]->dims_set(config->cost[i],
-									  dims->cost[i], "nu", &int_array[i]);
-		}
-		// dynamics
+        // cost
+        for (int i = 0; i <= N; i++)
+        {
+            config->cost[i]->dims_set(config->cost[i],
+                                      dims->cost[i], "nu", &int_array[i]);
+        }
+        // dynamics
         for (int i = 0; i < N; i++)
         {
             config->dynamics[i]->dims_set(config->dynamics[i],
@@ -369,13 +369,13 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
             config->dynamics[i]->dims_set(config->dynamics[i],
                                            dims->dynamics[i], "nu1", &int_array[i+1]);
         }
-		// constraints
-		for (int i = 0; i <= N; i++)
-		{
-			config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
-												 "nu", &int_array[i]);
-		}
-		// qp solver
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
+                                                 "nu", &int_array[i]);
+        }
+        // qp solver
         for (int i = 0; i <= N; i++)
         {
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nu",
@@ -384,34 +384,34 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     }
     else if (!strcmp(field, "nz"))
     {
-		// nlp opt var
+        // nlp opt var
         for (int ii = 0; ii <= N; ii++)
         {
             // set nz
             dims->nz[ii] = int_array[ii];
         }
-		// cost
-		for (int i = 0; i <= N; i++)
-		{
-			config->cost[i]->dims_set(config->cost[i],
-									  dims->cost[i], "nz", &int_array[i]);
-		}
-		// dynamics
+        // cost
+        for (int i = 0; i <= N; i++)
+        {
+            config->cost[i]->dims_set(config->cost[i],
+                                      dims->cost[i], "nz", &int_array[i]);
+        }
+        // dynamics
         for (int i = 0; i < N; i++)
         {
             config->dynamics[i]->dims_set(config->dynamics[i],
                                           dims->dynamics[i], "nz", &int_array[i]);
         }
-		// constraints
-		for (int i = 0; i <= N; i++)
-		{
-			config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
-												 "nz", &int_array[i]);
-		}
+        // constraints
+        for (int i = 0; i <= N; i++)
+        {
+            config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
+                                                 "nz", &int_array[i]);
+        }
     }
     else if (!strcmp(field, "ns"))
     {
-		// nlp opt var
+        // nlp opt var
         for (int ii = 0; ii <= N; ii++)
         {
             // set ns
@@ -419,13 +419,13 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
             // update nv
             dims->nv[ii] = dims->nu[ii] + dims->nx[ii] + 2 * dims->ns[ii];
         }
-		// cost
-		for (int i = 0; i <= N; i++)
-		{
-			config->cost[i]->dims_set(config->cost[i],
-									  dims->cost[i], "ns", &int_array[i]);
-		}
-		// qp solver
+        // cost
+        for (int i = 0; i <= N; i++)
+        {
+            config->cost[i]->dims_set(config->cost[i],
+                                      dims->cost[i], "ns", &int_array[i]);
+        }
+        // qp solver
         for (int i = 0; i <= N; i++)
         {
             config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ns",
@@ -489,7 +489,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     }
 #endif
 
-	return;
+    return;
 
 }
 
