@@ -71,9 +71,10 @@ typedef struct
     //  ocp_nlp_constraints_bgh_dims *dims;
     int *idxb;
     int *idxs;
-    struct blasfeo_dvec d;
-    struct blasfeo_dmat DCt;
-    external_function_generic *h;
+    struct blasfeo_dvec d;  // gathers bounds
+    struct blasfeo_dmat DCt;  // general linear constraint matrix
+            // lg <= [D, C] * [u; x] <= ug
+    external_function_generic *h;  // nonlinear: lh <= h(x,u) <= uh
 } ocp_nlp_constraints_bgh_model;
 
 //
