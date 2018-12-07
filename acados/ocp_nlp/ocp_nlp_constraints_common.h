@@ -66,7 +66,7 @@ typedef struct
                                void *work);
     void (*config_initialize_default)(void *config);
     // dimension setters
-    void (*set_dims)(void *config_, void *dims_, const char *field, const int *value);
+    void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);
     void (*get_dims)(void *config_, void *dims_, const char *field, int* value);
 } ocp_nlp_constraints_config;
 

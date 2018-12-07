@@ -867,7 +867,7 @@ void sim_erk_config_initialize_default(void *config_)
     config->config_initialize_default = &sim_erk_config_initialize_default;
     config->dims_calculate_size = &sim_erk_dims_calculate_size;
     config->dims_assign = &sim_erk_dims_assign;
-    config->set_dims = &sim_erk_dims_set;
+    config->dims_set = &sim_erk_dims_set;
     config->get_nx = &sim_erk_get_nx;
     config->get_nu = &sim_erk_get_nu;
     config->get_nz = &sim_erk_get_nz;

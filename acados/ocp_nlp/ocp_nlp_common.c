@@ -348,7 +348,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     {
         for (int i = 0; i < N; i++)
         {
-            config->dynamics[i]->set_dims(config->dynamics[i],
+            config->dynamics[i]->dims_set(config->dynamics[i],
                                           dims->dynamics[i], field, &int_array[i]);
         }
     }
@@ -357,7 +357,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     {
         for (int i = 0; i < N; i++)
         {
-            config->dynamics[i]->set_dims(config->dynamics[i],
+            config->dynamics[i]->dims_set(config->dynamics[i],
                                            dims->dynamics[i], "nu1", &int_array[i+1]);
         }
     }
@@ -365,20 +365,20 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     {
         for (int i = 0; i < N; i++)
         {
-            config->dynamics[i]->set_dims(config->dynamics[i],
+            config->dynamics[i]->dims_set(config->dynamics[i],
                                            dims->dynamics[i], "nx1", &int_array[i+1]);
         }
     }
 
     for (int i = 0; i <= N; i++)  // cost
     {
-        config->cost[i]->set_dims(config->cost[i],
+        config->cost[i]->dims_set(config->cost[i],
                                   dims->cost[i], field, &int_array[i]);
     }
 
     for (int i = 0; i <= N; i++)  // constraints
     {
-        config->constraints[i]->set_dims(config->constraints[i], dims->constraints[i],
+        config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
                                              field, &int_array[i]);
     }
 
@@ -386,7 +386,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     {
         for (int i = 0; i <= N; i++)  // qp_solver
         {
-            config->qp_solver->set_dims(config->qp_solver, dims->qp_solver, i, field,
+            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field,
                                         &int_array[i]);
         }
     }
@@ -407,7 +407,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, const char *field,
     for (int i = 0; i <= N; i++)
     {
         // set in constraint module
-        config->constraints[i]->set_dims(config->constraints[i], dims->constraints[i],
+        config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
                                          field, &value[i]);
         // update ni in ocp_nlp dimensions
         config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i],
@@ -419,7 +419,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, const char *field,
         //  dynamics do not contain slack/soft constraints
         for (int i = 0; i <= N; i++)
         {
-            config->qp_solver->set_dims(config->qp_solver, dims->qp_solver, i,
+            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i,
                                         field, &value[i]);
             // Note(oj): how to decide if ocp_qp or dense? plan not available here..
             // Note(giaf): the NLP solver always calls a xcond_solver,
@@ -428,7 +428,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, const char *field,
             // {
                 // set nbx, respectively nbu in qp_solver
                 // nb in qp_solver gets updated in the setter
-            // config->qp_solver->set_dims(config->qp_solver, dims->qp_solver, i,field, &value[i]);
+            // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i,field, &value[i]);
             // }
             // else  // dense_qp
             // {
@@ -436,7 +436,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, const char *field,
             //     int nb;
             //     config->constraints[i]->get_dims(config->constraints[i],
             //                            dims->constraints[i], "nb", &nb);
-            //     config->qp_solver->set_dims(config->qp_solver, dims->qp_solver, i, "nb", &nb);
+            //     config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nb", &nb);
             // }
         }
     }
@@ -454,7 +454,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, const char *field,
 
             ng_qp_solver = ng + nh;
 
-            config->qp_solver->set_dims(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
+            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
         }
     }
 }
@@ -471,7 +471,7 @@ void ocp_nlp_dims_set_cost(void *config_, void *dims_, const char *field, const 
 
     for (int i = 0; i <= N; i++)
     {
-        config->cost[i]->set_dims(config->cost[i], dims->cost[i], field, &value[i]);
+        config->cost[i]->dims_set(config->cost[i], dims->cost[i], field, &value[i]);
     }
 }
 
@@ -484,7 +484,7 @@ void ocp_nlp_dims_set_dynamics_in_stage(void *config_, void *dims_, const char *
 
     int *int_value = (int *) value;
 
-    config->dynamics[stage]->set_dims(config->dynamics[stage],
+    config->dynamics[stage]->dims_set(config->dynamics[stage],
                                   dims->dynamics[stage], field, int_value);
 }
 
@@ -513,25 +513,25 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
     {
         // config->dynamics[ii]->dims_initialize(config->dynamics[ii], dims->dynamics[ii], nx[ii],
                                             //   nu[ii], nx[ii + 1], nu[ii + 1], nz[ii]);
-        config->dynamics[ii]->set_dims(config->dynamics[ii],
+        config->dynamics[ii]->dims_set(config->dynamics[ii],
                                        dims->dynamics[ii], "nx", &nx[ii]);
-        config->dynamics[ii]->set_dims(config->dynamics[ii],
+        config->dynamics[ii]->dims_set(config->dynamics[ii],
                                        dims->dynamics[ii], "nu", &nu[ii]);
-        config->dynamics[ii]->set_dims(config->dynamics[ii],
+        config->dynamics[ii]->dims_set(config->dynamics[ii],
                                        dims->dynamics[ii], "nz", &nz[ii]);
-        config->dynamics[ii]->set_dims(config->dynamics[ii],
+        config->dynamics[ii]->dims_set(config->dynamics[ii],
                                        dims->dynamics[ii], "nx1", &nx[ii+1]);
-        config->dynamics[ii]->set_dims(config->dynamics[ii],
+        config->dynamics[ii]->dims_set(config->dynamics[ii],
                                        dims->dynamics[ii], "nu1", &nu[ii+1]);
     }
 
     // cost
     for (ii = 0; ii <= N; ii++)
     {
-        config->cost[ii]->set_dims(config->cost[ii], dims->cost[ii], "nx", &nx[ii]);
-        config->cost[ii]->set_dims(config->cost[ii], dims->cost[ii], "nu", &nu[ii]);
-        config->cost[ii]->set_dims(config->cost[ii], dims->cost[ii], "ny", &ny[ii]);
-        config->cost[ii]->set_dims(config->cost[ii], dims->cost[ii], "ns", &ns[ii]);
+        config->cost[ii]->dims_set(config->cost[ii], dims->cost[ii], "nx", &nx[ii]);
+        config->cost[ii]->dims_set(config->cost[ii], dims->cost[ii], "nu", &nu[ii]);
+        config->cost[ii]->dims_set(config->cost[ii], dims->cost[ii], "ny", &ny[ii]);
+        config->cost[ii]->dims_set(config->cost[ii], dims->cost[ii], "ns", &ns[ii]);
     }
 
     for (ii = 0; ii <= N; ii++)
@@ -539,22 +539,22 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
         // config->constraints[ii]->dims_initialize(config->constraints[ii], dims->constraints[ii],
                                                 //  nx[ii], nu[ii], nbx[ii], nbu[ii], ng[ii],
                                                 //  nh[ii], nq[ii], ns[ii]);
-        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii],
+        config->constraints[ii]->dims_set(config->constraints[ii], dims->constraints[ii],
                                           "nx", &nx[ii]);
-        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii],
+        config->constraints[ii]->dims_set(config->constraints[ii], dims->constraints[ii],
                                           "nu", &nu[ii]);
-        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii],
+        config->constraints[ii]->dims_set(config->constraints[ii], dims->constraints[ii],
                                           "nbx", &nbx[ii]);
-        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii],
+        config->constraints[ii]->dims_set(config->constraints[ii], dims->constraints[ii],
                                           "nbu", &nbu[ii]);
-        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii],
+        config->constraints[ii]->dims_set(config->constraints[ii], dims->constraints[ii],
                                           "ng", &ng[ii]);
-        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii],
+        config->constraints[ii]->dims_set(config->constraints[ii], dims->constraints[ii],
                                           "nh", &nh[ii]);
 // TODO(oj): naming inconcistency nq vs np
-        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii],
+        config->constraints[ii]->dims_set(config->constraints[ii], dims->constraints[ii],
                                           "np", &nq[ii]);
-        config->constraints[ii]->set_dims(config->constraints[ii], dims->constraints[ii],
+        config->constraints[ii]->dims_set(config->constraints[ii], dims->constraints[ii],
                                           "ns", &ns[ii]);
     }
 

@@ -81,7 +81,7 @@ int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims, void *raw_memory);
 //
-int ocp_nlp_constraints_bgh_bounds_set(void *config_, void *dims_,
+int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
                          void *model_, const char *field, void *value);
 
 

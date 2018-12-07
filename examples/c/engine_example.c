@@ -222,21 +222,21 @@ int main()
     int status = ACADOS_SUCCESS;
 
 	for (int i = 0; i < N; ++i) {
-        if(ocp_nlp_cost_set_model(config, dims, nlp_in, i, "nls_jac", &nls_cost_residual)) exit(1);
-        if(ocp_nlp_cost_set_model(config, dims, nlp_in, i, "y_ref", y_ref)) exit(1);
-        if(ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W)) exit(1);
+        if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "nls_jac", &nls_cost_residual)) exit(1);
+        if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "y_ref", y_ref)) exit(1);
+        if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "W", W)) exit(1);
     }
 
-    if(ocp_nlp_cost_set_model(config, dims, nlp_in, N, "nls_jac", &nls_cost_N_residual)) exit(1);
-    if(ocp_nlp_cost_set_model(config, dims, nlp_in, N, "y_ref", y_ref)) exit(1);
-    if(ocp_nlp_cost_set_model(config, dims, nlp_in, N, "W", W_N)) exit(1);
+    if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "nls_jac", &nls_cost_N_residual)) exit(1);
+    if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "y_ref", y_ref)) exit(1);
+    if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "W", W_N)) exit(1);
 
     // dynamics
     for (int i = 0; i < N; ++i)
     {
-        if(ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun", &impl_dae_fun)) exit(1);
-        if(ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z)) exit(1);
-        if(ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun", &impl_dae_fun)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
     }
 
     // bounds
@@ -290,7 +290,7 @@ int main()
         y_ref[0] = reference[i];
 
         for (int j = 0; j <= N; ++j)
-            status = ocp_nlp_cost_set_model(config, dims, nlp_in, j, "y_ref", y_ref);
+            status = ocp_nlp_cost_model_set(config, dims, nlp_in, j, "y_ref", y_ref);
 
         status = ocp_nlp_solve(solver, nlp_in, nlp_out);
         

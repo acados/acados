@@ -313,7 +313,7 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     return model;
 }
 
-int ocp_nlp_constraints_bgh_bounds_set(void *config_, void *dims_,
+int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
                          void *model_, const char *field, void *value)
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
@@ -796,11 +796,11 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_constraints_bgh_dims_calculate_size;
     config->dims_assign = &ocp_nlp_constraints_bgh_dims_assign;
     config->dims_initialize = &ocp_nlp_constraints_bgh_dims_initialize;
-    config->set_dims = &ocp_nlp_constraints_bgh_dims_set;
+    config->dims_set = &ocp_nlp_constraints_bgh_dims_set;
     config->get_dims = &ocp_nlp_constraints_bgh_dims_get;
     config->model_calculate_size = &ocp_nlp_constraints_bgh_model_calculate_size;
     config->model_assign = &ocp_nlp_constraints_bgh_model_assign;
-    config->bounds_set = &ocp_nlp_constraints_bgh_bounds_set;
+    config->bounds_set = &ocp_nlp_constraints_bgh_model_set;
     config->opts_calculate_size = &ocp_nlp_constraints_bgh_opts_calculate_size;
     config->opts_assign = &ocp_nlp_constraints_bgh_opts_assign;
     config->opts_initialize_default = &ocp_nlp_constraints_bgh_opts_initialize_default;

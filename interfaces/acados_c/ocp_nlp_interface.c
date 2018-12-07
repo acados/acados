@@ -332,38 +332,38 @@ void ocp_nlp_in_free(void *in)
 }
 
 
-int ocp_nlp_dynamics_set_model(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
+int ocp_nlp_dynamics_model_set(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
                            const char *fun_type, void *fun_ptr)
 {
     sim_solver_config *sim_config = config->dynamics[stage]->sim_solver;
     ocp_nlp_dynamics_cont_model *dynamics = in->dynamics[stage];
 
-    int status = sim_set_model_internal(sim_config, dynamics->sim_model, fun_type, fun_ptr);
+    int status = sim_model_set_internal(sim_config, dynamics->sim_model, fun_type, fun_ptr);
 
     return status;
 }
 
 
-static int ocp_nlp_cost_set_model_internal(ocp_nlp_cost_config *config,
+static int ocp_nlp_cost_model_set_internal(ocp_nlp_cost_config *config,
                                            ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
                                            const char *field, void *value)
 {
     void *cost_model = in->cost[stage];
     void *cost_dims = dims->cost[stage];
 
-    int status = config->set_model(config, cost_dims, cost_model, field, value);
+    int status = config->model_set(config, cost_dims, cost_model, field, value);
 
     return status;
 }
 
 
-int ocp_nlp_cost_set_model(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+int ocp_nlp_cost_model_set(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
                            ocp_nlp_in *in, int stage,
                            const char *field, void *value)
 {
     ocp_nlp_cost_config *cost_config = config->cost[stage];
 
-    int status = ocp_nlp_cost_set_model_internal(cost_config, dims, in, stage, field, value);
+    int status = ocp_nlp_cost_model_set_internal(cost_config, dims, in, stage, field, value);
 
     return status;
 }

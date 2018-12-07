@@ -2497,7 +2497,7 @@ void sim_gnsf_config_initialize_default(void *config_)
     // dims
     config->dims_calculate_size = &sim_gnsf_dims_calculate_size;
     config->dims_assign = &sim_gnsf_dims_assign;
-    config->set_dims = &sim_gnsf_dims_set;
+    config->dims_set = &sim_gnsf_dims_set;
     config->get_nx = &sim_gnsf_get_nx;
     config->get_nu = &sim_gnsf_get_nu;
     config->get_nz = &sim_gnsf_get_nz;
