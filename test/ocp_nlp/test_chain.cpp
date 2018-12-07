@@ -1343,7 +1343,7 @@ void setup_and_solve_nlp(int NN,
     ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
     ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
 
-	for (int i = 0; i <= NN; i++)
+    for (int i = 0; i <= NN; i++)
     {
         if (plan->nlp_cost[i] != EXTERNALLY_PROVIDED)
         {
