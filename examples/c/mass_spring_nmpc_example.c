@@ -373,6 +373,8 @@ int main() {
 	void *config_mem = malloc(config_size);
 	ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(N, config_mem);
 
+	ocp_nlp_sqp_config_initialize_default(config);
+
 #if XCOND==2
 	// full condensing HPIPM
 	ocp_qp_full_condensing_solver_config_initialize_default(config->qp_solver);
