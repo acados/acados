@@ -85,10 +85,6 @@ static void ocp_nlp_cost_external_set_ns(void *config_, void *dims_, int *ns)
     dims->ns = *ns;
 }
 
-static void ocp_nlp_cost_external_set_ny(void *config_, void *dims_, int *ny)
-{
-    // NOTE(oj): @giaf/all what to do here?! throw error?
-}
 
 
 void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *field, int* value)
@@ -109,10 +105,6 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
     else if (!strcmp(field, "ns"))
     {
         ocp_nlp_cost_external_set_ns(config_, dims_, value);
-    }
-    else if (!strcmp(field, "ny"))
-    {
-        ocp_nlp_cost_external_set_ny(config_, dims_, value);
     }
     else
     {
@@ -179,7 +171,7 @@ void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_m
 }
 
 
-int ocp_nlp_cost_external_set_model(void *config_, void *dims_, void *model_,
+int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
                                          const char *field, void *value_)
 {
     int status = ACADOS_SUCCESS;
@@ -490,10 +482,10 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_cost_external_dims_calculate_size;
     config->dims_assign = &ocp_nlp_cost_external_dims_assign;
     config->dims_initialize = &ocp_nlp_cost_external_dims_initialize;
-    config->set_dims = &ocp_nlp_cost_external_dims_set;
+    config->dims_set = &ocp_nlp_cost_external_dims_set;
     config->model_calculate_size = &ocp_nlp_cost_external_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_external_model_assign;
-    config->set_model = &ocp_nlp_cost_external_set_model;
+    config->model_set = &ocp_nlp_cost_external_model_set;
     config->opts_calculate_size = &ocp_nlp_cost_external_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_external_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_external_opts_initialize_default;

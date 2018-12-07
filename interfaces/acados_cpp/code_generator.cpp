@@ -208,7 +208,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\t\tnlp_in->Ts[i] = LEN_INTERVAL;\n";
 
     out << "\n\tfor (i = 0; i < NUM_STAGES; ++i)\n";
-    out << "\t\tocp_nlp_dynamics_set_model(config, nlp_in, i, \"expl_vde_for\"";
+    out << "\t\tocp_nlp_dynamics_model_set(config, nlp_in, i, \"expl_vde_for\"";
     out << ", &expl_vde_for[i]);\n";
 
     generate_ls_cost_initialization(out);

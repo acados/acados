@@ -536,7 +536,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_dynamics_disc_dims_calculate_size;
     config->dims_assign = &ocp_nlp_dynamics_disc_dims_assign;
     config->dims_initialize = &ocp_nlp_dynamics_disc_dims_initialize;
-    config->set_dims =  &ocp_nlp_dynamics_disc_dims_set;
+    config->dims_set =  &ocp_nlp_dynamics_disc_dims_set;
     config->model_calculate_size = &ocp_nlp_dynamics_disc_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_disc_model_assign;
     config->model_set_T = &ocp_nlp_dynamics_disc_model_set_T;

@@ -44,7 +44,7 @@ typedef struct d_ocp_qp_res_workspace ocp_qp_res_ws;
 typedef struct
 {
     // TODO(dimitris): pass dims to evaluate?
-    void (*set_dims)(void *config_, void *dims_, int stage, const char *field, const int* value);
+    void (*dims_set)(void *config_, void *dims_, int stage, const char *field, const int* value);
     int (*evaluate)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
@@ -74,7 +74,7 @@ typedef struct
 
 typedef struct
 {
-    void (*set_dims)(void *config_, void *dims_, int stage, const char *field, const int* value);
+    void (*dims_set)(void *config_, void *dims_, int stage, const char *field, const int* value);
     int (*evaluate)(void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem,
                     void *work);
     int (*opts_calculate_size)(void *config, ocp_qp_dims *dims);

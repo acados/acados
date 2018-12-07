@@ -93,8 +93,9 @@ dense_qp_dims *dense_qp_dims_assign(void *raw_memory)
 void dense_qp_dims_set(void *config_, void *dims_, const char *field, const int* value)
 {
     // wrap hpipm function
-    char field_copy[MAX_STR_LEN];
-    strcpy(field_copy, field);
+    // char field_copy[MAX_STR_LEN];
+    // strcpy(field_copy, field);
+    char *field_copy = (char *) field;
 
     dense_qp_dims *dims = (dense_qp_dims *) dims_;
 

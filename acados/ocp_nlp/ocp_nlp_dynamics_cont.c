@@ -633,7 +633,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
 
     config->dims_calculate_size = &ocp_nlp_dynamics_cont_dims_calculate_size;
     config->dims_assign = &ocp_nlp_dynamics_cont_dims_assign;
-    config->set_dims = &ocp_nlp_dynamics_cont_dims_set;
+    config->dims_set = &ocp_nlp_dynamics_cont_dims_set;
     config->dims_initialize = &ocp_nlp_dynamics_cont_dims_initialize;
     config->model_calculate_size = &ocp_nlp_dynamics_cont_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_cont_model_assign;

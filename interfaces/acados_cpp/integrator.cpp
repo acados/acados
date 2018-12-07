@@ -282,7 +282,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     set_step_size(to_double(options.at("step_size")));
 
     // generate and set model;
-    set_model(integrator_model, options);
+    model_set(integrator_model, options);
 
     // create the integrator
     solver_ = sim_create(config_, dims_, opts_);
@@ -333,13 +333,13 @@ casadi::Function integrator::explicit2implicit(const casadi::Function &model)
 }
 
 
-void integrator::set_model(casadi::Function &model, std::map<std::string, option_t *> options)
+void integrator::model_set(casadi::Function &model, std::map<std::string, option_t *> options)
 {
 
     string autogen_dir = "_autogen";
 
     /* generate model functions depending on integrator type and options */
-    int set_model_status;
+    int model_set_status;
 
     if (sim_plan_.sim_solver == IRK)
     {
@@ -347,21 +347,21 @@ void integrator::set_model(casadi::Function &model, std::map<std::string, option
         {
             module_["impl_ode_fun_jac_x_xdot_z"] =
                     generate_impl_ode_fun_jac_x_xdot_z(model, autogen_dir, use_MX_);
-            set_model_status = sim_set_model_internal(config_, in_->model,
+            model_set_status = sim_model_set_internal(config_, in_->model,
                 "impl_ode_fun_jac_x_xdot_z",
                 (void *) module_["impl_ode_fun_jac_x_xdot_z"].as_external_function());
 
-            if (set_model_status == ACADOS_FAILURE)
+            if (model_set_status == ACADOS_FAILURE)
                     throw std::runtime_error("couldnt set integrator function"
                      " impl_ode_fun_jac_x_xdot_z correctly");
 
             if (opts_->jac_reuse)
             {
                 module_["impl_ode_fun"] = generate_impl_ode_fun(model, autogen_dir, use_MX_);
-                set_model_status = sim_set_model_internal(config_, in_->model,
+                model_set_status = sim_model_set_internal(config_, in_->model,
                     "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
 
-                if (set_model_status == ACADOS_FAILURE)
+                if (model_set_status == ACADOS_FAILURE)
                     throw std::runtime_error("couldnt set integrator function"
                             " impl_ode_fun correctly");
             }
@@ -369,21 +369,21 @@ void integrator::set_model(casadi::Function &model, std::map<std::string, option
             {
                 module_["impl_ode_jac_x_xdot_u_z"] =
                             generate_impl_ode_jac_x_xdot_u_z(model, autogen_dir, use_MX_);
-                set_model_status = sim_set_model_internal(config_, in_->model,
+                model_set_status = sim_model_set_internal(config_, in_->model,
                     "impl_ode_jac_x_xdot_u_z",
                     (void *) module_["impl_ode_jac_x_xdot_u_z"].as_external_function());
 
-                if (set_model_status == ACADOS_FAILURE)
+                if (model_set_status == ACADOS_FAILURE)
                     throw std::runtime_error("couldnt set integrator function"
                         " impl_ode_jac_x_xdot_u_z correctly");
             }
             if ( opts_->sens_hess )
             {
                 module_["impl_ode_hess"] = generate_impl_ode_hess(model, autogen_dir, use_MX_);
-                set_model_status = sim_set_model_internal(config_, in_->model,
+                model_set_status = sim_model_set_internal(config_, in_->model,
                     "impl_ode_hess", (void *) module_["impl_ode_hess"].as_external_function());
 
-                if (set_model_status == ACADOS_FAILURE)
+                if (model_set_status == ACADOS_FAILURE)
                     throw std::runtime_error("couldnt set integrator function "
                         "impl_ode_hess correctly");
             }
@@ -398,19 +398,19 @@ void integrator::set_model(casadi::Function &model, std::map<std::string, option
         if (model_type_ == IMPLICIT)
         {
             module_["impl_ode_fun"] = generate_impl_ode_fun(model, autogen_dir, use_MX_);
-            set_model_status = sim_set_model_internal(config_, in_->model,
+            model_set_status = sim_model_set_internal(config_, in_->model,
                 "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
 
-            if (set_model_status == ACADOS_FAILURE)
+            if (model_set_status == ACADOS_FAILURE)
                 throw std::runtime_error("couldnt set integrator function impl_ode_fun correctly");
 
             module_["impl_ode_fun_jac_x_xdot_u"] =
                     generate_impl_ode_fun_jac_x_xdot_u(model, autogen_dir, use_MX_);
-            set_model_status = sim_set_model_internal(config_, in_->model,
+            model_set_status = sim_model_set_internal(config_, in_->model,
                 "impl_ode_fun_jac_x_xdot_u",
                 (void *) module_["impl_ode_fun_jac_x_xdot_u"].as_external_function());
 
-            if (set_model_status == ACADOS_FAILURE)
+            if (model_set_status == ACADOS_FAILURE)
                 throw std::runtime_error("couldnt set integrator function "
                     "impl_ode_fun_jac_x_xdot_u correctly");
         }
@@ -431,20 +431,20 @@ void integrator::set_model(casadi::Function &model, std::map<std::string, option
             if (opts_->sens_forw)
             {
                 module_["expl_vde_for"] = generate_forward_vde(model, autogen_dir, use_MX_);
-                set_model_status = sim_set_model_internal(config_, in_->model, "expl_vde_for",
+                model_set_status = sim_model_set_internal(config_, in_->model, "expl_vde_for",
                                     (void *) module_["expl_vde_for"].as_external_function());
 
-                if (set_model_status == ACADOS_FAILURE)
+                if (model_set_status == ACADOS_FAILURE)
                     throw std::runtime_error("couldnt set integrator function "
                         "expl_vde_for correctly");
             }
             else
             {
                 module_["expl_ode_fun"] = generate_expl_ode_fun(model, autogen_dir, use_MX_);
-                set_model_status = sim_set_model_internal(config_, in_->model, "expl_ode_fun",
+                model_set_status = sim_model_set_internal(config_, in_->model, "expl_ode_fun",
                                     (void *) module_["expl_ode_fun"].as_external_function());
 
-                if (set_model_status == ACADOS_FAILURE)
+                if (model_set_status == ACADOS_FAILURE)
                     throw std::runtime_error("couldnt set integrator function "
                         "expl_ode_fun correctly");
             }
@@ -452,10 +452,10 @@ void integrator::set_model(casadi::Function &model, std::map<std::string, option
             if (opts_->sens_adj && !opts_->sens_hess)
             {
                 module_["expl_vde_adj"] = generate_expl_vde_adj(model);
-                set_model_status = sim_set_model_internal(config_, in_->model, "expl_vde_adj",
+                model_set_status = sim_model_set_internal(config_, in_->model, "expl_vde_adj",
                                     (void *) module_["expl_vde_adj"].as_external_function());
 
-                if (set_model_status == ACADOS_FAILURE)
+                if (model_set_status == ACADOS_FAILURE)
                     throw std::runtime_error("couldnt set integrator function "
                         "expl_vde_adj correctly");
             }
@@ -463,10 +463,10 @@ void integrator::set_model(casadi::Function &model, std::map<std::string, option
             {
                 // throw std::invalid_argument("ERK can only be used without hessians");
                 module_["expl_ode_hess"] = generate_expl_ode_hess(model);
-                set_model_status = sim_set_model_internal(config_, in_->model, "expl_ode_hess",
+                model_set_status = sim_model_set_internal(config_, in_->model, "expl_ode_hess",
                                         (void *) module_["expl_ode_hess"].as_external_function());
 
-                if (set_model_status == ACADOS_FAILURE)
+                if (model_set_status == ACADOS_FAILURE)
                     throw std::runtime_error("couldnt set integrator function expl_ode_hess"
                         " correctly");
             }

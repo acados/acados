@@ -192,7 +192,7 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
 }
 
 
-int ocp_nlp_cost_nls_set_model(void *config_, void *dims_, void *model_,
+int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
                                          const char *field, void *value_)
 {
     int status = ACADOS_SUCCESS;
@@ -610,10 +610,10 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_cost_nls_dims_calculate_size;
     config->dims_assign = &ocp_nlp_cost_nls_dims_assign;
     config->dims_initialize = &ocp_nlp_cost_nls_dims_initialize;
-    config->set_dims = &ocp_nlp_cost_nls_dims_set;
+    config->dims_set = &ocp_nlp_cost_nls_dims_set;
     config->model_calculate_size = &ocp_nlp_cost_nls_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_nls_model_assign;
-    config->set_model = &ocp_nlp_cost_nls_set_model;
+    config->model_set = &ocp_nlp_cost_nls_model_set;
     config->opts_calculate_size = &ocp_nlp_cost_nls_opts_calculate_size;
     config->opts_assign = &ocp_nlp_cost_nls_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_nls_opts_initialize_default;

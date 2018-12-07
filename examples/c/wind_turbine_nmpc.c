@@ -558,13 +558,16 @@ int main()
     ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
     ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
 
-    ocp_nlp_dims_set_cost(config, dims, "ny", ny);
+	for (int i = 0; i <= NN; i++)
+    {
+        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
 
-    ocp_nlp_dims_set_constraints(config, dims, "nbx", nbx);
-    ocp_nlp_dims_set_constraints(config, dims, "nbu", nbu);
-    ocp_nlp_dims_set_constraints(config, dims, "ng", ng);
-    ocp_nlp_dims_set_constraints(config, dims, "nh", nh);
-    ocp_nlp_dims_set_constraints(config, dims, "np", nq);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
+    }
 
     /************************************************
     * dynamics
@@ -621,11 +624,11 @@ int main()
 	{
 		if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nx1", i, &gnsf_nx1);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nz1", i, &gnsf_nz1);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nout", i, &gnsf_nout);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_ny", i, &gnsf_ny);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nuhat", i, &gnsf_nuhat);
+			ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nx1", &gnsf_nx1);
+			ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nz1", &gnsf_nz1);
+			ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nout", &gnsf_nout);
+			ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_ny", &gnsf_ny);
+			ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nuhat", &gnsf_nuhat);
 		}
 	}
 
@@ -654,26 +657,26 @@ int main()
 		// Cyt
 		// blasfeo_pack_tran_dmat(ny[i], nu[i], Vu, ny_, &cost[i]->Cyt, 0, 0);
 		// blasfeo_pack_tran_dmat(ny[i], nx[i], Vx, ny_, &cost[i]->Cyt, nu[i], 0);
-        ocp_nlp_cost_set_model(config, dims, nlp_in, i, "Vu", Vu);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vu", Vu);
         if (i < NN)
-            ocp_nlp_cost_set_model(config, dims, nlp_in, i, "Vx", Vx);
+            ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vx", Vx);
         else
-            ocp_nlp_cost_set_model(config, dims, nlp_in, i, "Vx", VxN);
+            ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vx", VxN);
         // printf("setted Cyt x=\n");
         // blasfeo_print_dmat(nx[i]+ nu[i], ny[i], &cost[i]->Cyt,0, 0);
 
 		// W
-		ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W);
+		ocp_nlp_cost_model_set(config, dims, nlp_in, i, "W", W);
 	}
-	status = ocp_nlp_cost_set_model(config, dims, nlp_in, NN, "W", W_N);
+	status = ocp_nlp_cost_model_set(config, dims, nlp_in, NN, "W", W_N);
 
 	// slacks (middle stages)
 	for (int ii=1; ii<NN; ii++)
 	{
-        ocp_nlp_cost_set_model(config, dims, nlp_in, ii, "lZ1", lZ1);
-        ocp_nlp_cost_set_model(config, dims, nlp_in, ii, "uZ1", uZ1);
-        ocp_nlp_cost_set_model(config, dims, nlp_in, ii, "lz1", lz1);
-        ocp_nlp_cost_set_model(config, dims, nlp_in, ii, "uz1", uz1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lZ1", lZ1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uZ1", uZ1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lz1", lz1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uz1", uz1);
 	}
 
 
@@ -685,36 +688,36 @@ int main()
 	{
 		if (plan->sim_solver_plan[i].sim_solver == ERK)
 		{
-			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
+			set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
 			if (set_fun_status != 0) exit(1);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == IRK)
 		{
-			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
+			set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot[i]);
+			set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
+			set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
 			if (set_fun_status != 0) exit(1);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
-			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "phi_fun", &phi_fun[i]);
+			set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_fun", &phi_fun[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "phi_fun_jac_y", &phi_fun_jac_y[i]);
+			set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_fun_jac_y", &phi_fun_jac_y[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "phi_jac_y_uhat", &phi_jac_y_uhat[i]);
+			set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_jac_y_uhat", &phi_jac_y_uhat[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z", &f_lo_jac_x1_x1dot_u_z[i]);
+			set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z", &f_lo_jac_x1_x1dot_u_z[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "get_gnsf_matrices", &get_matrices_fun);
+			set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "get_gnsf_matrices", &get_matrices_fun);
 			if (set_fun_status != 0) exit(1);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 		{
-			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
+			set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
 			if (set_fun_status != 0) exit(1);
-			set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u[i]);
+			set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u[i]);
 			if (set_fun_status != 0) exit(1);
 		}
 		else
@@ -946,7 +949,7 @@ int main()
 			// update reference
 			for (int i = 0; i <= NN; i++)
 			{
-                ocp_nlp_cost_set_model(config, dims, nlp_in, i, "yref", &y_ref[(idx + i)*4]);
+                ocp_nlp_cost_model_set(config, dims, nlp_in, i, "yref", &y_ref[(idx + i)*4]);
 			}
 
 			// solve NLP
