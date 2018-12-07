@@ -62,6 +62,7 @@ EXAMPLES += nonlinear_chain_ocp_nlp
 # EXAMPLES += mass_spring_example_no_interface
 # EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
 EXAMPLES += wind_turbine_nmpc
+#EXAMPLES += engine_example
 
 examples: $(EXAMPLES)
 
@@ -85,6 +86,7 @@ RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 # RUN_EXAMPLES += run_mass_spring_example_no_interface
 # RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
 RUN_EXAMPLES += run_wind_turbine_nmpc
+#RUN_EXAMPLES += run_engine_example
 
 # overwrite to run just one
 #RUN_EXAMPLES = run_wind_turbine_nmpc
@@ -457,6 +459,29 @@ dense_qp: $(DENSE_QP) dense_qp.o
 
 run_dense_qp:
 	./dense_qp.out
+
+
+
+
+#################################################
+# pendulum model
+#################################################
+
+ENGINE_OBJS = 
+ENGINE_OBJS += engine_model/engine_impl_dae_fun.o
+ENGINE_OBJS += engine_model/engine_impl_dae_fun_jac_x_xdot_z.o
+ENGINE_OBJS += engine_model/engine_impl_dae_jac_x_xdot_u_z.o
+ENGINE_OBJS += engine_model/engine_ls_cost.o
+ENGINE_OBJS += engine_model/engine_ls_cost_N.o
+
+engine_example: $(ENGINE_OBJS) engine_example.o
+	$(CXX) -o engine_example.out $(ENGINE_OBJS) engine_example.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example engine_example build complete."
+	@echo
+
+run_engine_example:
+	./engine_example.out
 
 
 

@@ -49,7 +49,7 @@ int main()
     const int n_sim = 601;
     const int N = 20;
 
-    int nx[N+1], nu[N+1], nz[N+1], ny[N+1], nb[N+1], nbx[N+1], nbu[N+1], ng[N+1], nh[N+1], nq[N+1], ns[N+1];
+    int nx[N+1], nu[N+1], nz[N+1], ny[N+1], nb[N+1], nbx[N+1], nbu[N+1], ng[N+1], nh[N+1], ns[N+1];
     for (int i = 0; i <= N; ++i)
     {
         nx[i] = 4;
@@ -61,7 +61,6 @@ int main()
         nb[i] = nbx[i] + nbu[i];
         ng[i] = 0;
         nh[i] = 0;
-        nq[i] = 0;
         ns[i] = 0;
     }
 
@@ -212,7 +211,6 @@ int main()
         ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
-        ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
     }
 
 
@@ -246,23 +244,23 @@ int main()
     // bounds
 	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb_0);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub_0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lb", lb_0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ub", ub_0);
 
     for (int i = 0; i < nb[0]; ++i)
         constraints[0]->idxb[i] = idxb[i];
     
     for (int i = 1; i < N; ++i)
     {
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lb", lb);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ub", ub);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lb", lb);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ub", ub);
 
         for (int j = 0; j < nb[i]; ++j)
             constraints[i]->idxb[j] = idxb[j];
     }
 
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, N, "lb", lb_N);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, N, "ub", ub_N);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, N, "lb", lb_N);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, N, "ub", ub_N);
     for (int i = 0; i < nb[N]; ++i)
         constraints[N]->idxb[i] = idxb[i];
 
@@ -303,8 +301,8 @@ int main()
         blasfeo_unpack_dvec(nx[1], nlp_out->ux+1, nu[1], &lb_0[nu[1]]);
         blasfeo_unpack_dvec(nx[1], nlp_out->ux+1, nu[1], &ub_0[nu[1]]);
 
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb_0);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub_0);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lb", lb_0);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ub", ub_0);
 
 
         printf("iter %d, status: %d, res = %g\n", i, status, nlp_out->inf_norm_res);
