@@ -1,4 +1,4 @@
-function [ model ] = TEST_simple_test_model()
+function [ model ] = TEST_simple_model()
 %% this function generates an explicit ODE test model,
 % represented as a Matlab struct "model".
 % It consists of a CasADi expression f_expl_expr
@@ -16,23 +16,23 @@ tau2 = 0.024695192379264;   a2   = 0.034087337273386;
 g = 9.81;
 
 %% Set up States & Controls
-xC = SX.sym('xC');     %States
-vC = SX.sym('vC');
-xL = SX.sym('xL');     
-vL = SX.sym('vL');
-uC = SX.sym('uC');
-uL = SX.sym('uL');
-theta = SX.sym('theta');
-omega = SX.sym('omega');
-q = SX.sym('q');
+xC = MX.sym('xC');     %States
+vC = MX.sym('vC');
+xL = MX.sym('xL');     
+vL = MX.sym('vL');
+uC = MX.sym('uC');
+uL = MX.sym('uL');
+theta = MX.sym('theta');
+omega = MX.sym('omega');
+q = MX.sym('q');
 
-uCR = SX.sym('uCR');  % Controls
-uLR = SX.sym('uLR');
+uCR = MX.sym('uCR');  % Controls
+uLR = MX.sym('uLR');
 
 x = vertcat(xC, vC, xL, vL, uC, uL, theta, omega, q);
 u = vertcat(uCR, uLR);
 
-xdot = SX.sym('xdot',size(x)); %state derivatives
+xdot = MX.sym('xdot',size(x)); %state derivatives
 
 %% explicit ODE formulation
 f_expl = vertcat(vC, ...
