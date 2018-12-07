@@ -475,3 +475,10 @@ int acados_free() {
     
     return 0;
 }
+
+void * acados_get_nlp_in() { return (void*) nlp_in; }
+void * acados_get_nlp_out() { return (void*) nlp_out; }
+void * acados_get_nlp_solver() { return (void*) nlp_solver; }
+void * acados_get_nlp_config() { return (void*) nlp_config; }
+void * acados_get_nlp_opts() { return (void*) nlp_opts; }
+void * acados_get_nlp_dims() { return (void*) nlp_dims; }

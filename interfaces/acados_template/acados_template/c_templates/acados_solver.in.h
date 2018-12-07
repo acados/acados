@@ -16,4 +16,11 @@ int acados_create();
 int acados_solve();
 int acados_free();
 
+void * acados_get_nlp_in();
+void * acados_get_nlp_out();
+void * acados_get_nlp_solver();
+void * acados_get_nlp_config();
+void * acados_get_nlp_opts();
+void * acados_get_nlp_dims();
+
 #endif  // ACADOS_SOLVER_{{ra.model_name.upper()}}_H_

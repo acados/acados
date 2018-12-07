@@ -2,7 +2,8 @@ from acados_template import *
 import acados_template as at
 import numpy as np
 from ctypes import *
-import subprocess as sp
+import matplotlib
+import matplotlib.pyplot as plt
 
 def export_ode_model():
 
@@ -68,13 +69,18 @@ model = export_ode_model()
 # set model_name 
 ra.model_name = model.name
 
+Tf = 1.0
+nx = model.x.size()[0]
+nu = model.u.size()[0]
+N = 50
+
 # set ocp_nlp_dimensions
 nlp_dims = ra.dims
-nlp_dims.nx = model.x.size()[0]
+nlp_dims.nx = nx 
 nlp_dims.nbx = 0
-nlp_dims.nbu = model.u.size()[0]
+nlp_dims.nbu = nu 
 nlp_dims.nu = model.u.size()[0]
-nlp_dims.N  = 100
+nlp_dims.N  = 10
 
 # set weighting matrices
 nlp_cost = ra.cost
@@ -112,7 +118,7 @@ ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
 ra.solver_config.integrator_type = 'IRK'
 
 # set prediction horizon
-ra.solver_config.tf = 1.0
+ra.solver_config.tf = Tf
 ra.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
@@ -127,8 +133,71 @@ os.system('make')
 os.system('make shared_lib')
 os.chdir('..')
 
+import pdb; pdb.set_trace()
 acados   = CDLL('c_generated_code/acados_solver_pendulum_ode.so')
+
 acados.acados_create()
-acados.acados_solve()
+
+nlp_opts = acados.acados_get_nlp_opts()
+nlp_dims = acados.acados_get_nlp_dims()
+nlp_config = acados.acados_get_nlp_config()
+nlp_out = acados.acados_get_nlp_out()
+nlp_in = acados.acados_get_nlp_in()
+
+# closed loop simulation TODO(add proper simulation)
+Nsim = 100
+
+lb0 = np.ascontiguousarray(np.zeros((5,1)), dtype=np.float64)
+ub0 = np.ascontiguousarray(np.zeros((5,1)), dtype=np.float64)
+lb0 = cast(lb0.ctypes.data, POINTER(c_double))
+ub0 = cast(ub0.ctypes.data, POINTER(c_double))
+
+x0 = np.ascontiguousarray(np.zeros((4,1)), dtype=np.float64)
+x0 = cast(x0.ctypes.data, POINTER(c_double))
+u0 = np.ascontiguousarray(np.zeros((1,1)), dtype=np.float64)
+u0 = cast(u0.ctypes.data, POINTER(c_double))
+
+simX = np.ndarray((Nsim, nx))
+simU = np.ndarray((Nsim, nu))
+
+for i in range(Nsim):
+    acados.acados_solve()
+
+    # get solution
+    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "x", x0);
+    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", u0);
+    
+    for j in range(nx):
+        simX[i,j] = x0[j]
+    for j in range(nu):
+        simU[i,j] = u0[j]
+    
+    # update initial condition
+    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, "x", x0);
+    acados.ocp_nlp_constraints_bounds_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_double)]
+    field_name = "lbx"
+    arg = field_name.encode('utf-8')
+    acados.ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0);
+    field_name = "ubx"
+    arg = field_name.encode('utf-8')
+    acados.ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0);
+
+# plot results
+t = np.linspace(0.0, Tf/N, Nsim)
+plt.subplot(2, 1, 1)
+plt.step(t, simU, 'r')
+plt.title('closed-loop simulation')
+plt.ylabel('u')
+plt.xlabel('t')
+plt.grid(True)
+plt.subplot(2, 1, 2)
+plt.plot(t, simX[:,2])
+plt.ylabel('theta')
+plt.xlabel('t')
+plt.grid(True)
+plt.show()
+
+# free memory
 acados.acados_free()
+
 
