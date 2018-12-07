@@ -738,32 +738,29 @@ int main()
 
     /* constraints */
 
-    ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-
-
     /* box constraints */
 
     // fist stage
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "idxbu", idxbu0);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbu", lbu0);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubu", ubu0);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "idxbx", idxbx0);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbx", lbx0);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubx", ubx0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "idxbu", idxbu0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbu", lbu0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubu", ubu0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "idxbx", idxbx0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", lbx0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", ubx0);
     // middle stages
     for (int i = 1; i < NN; i++)
     {
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "idxbu", idxbu1);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lbu", lbu1);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ubu", ubu1);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "idxbx", idxbx1);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lbx", lbx1);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ubx", ubx1);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "idxbu", idxbu1);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbu", lbu1);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubu", ubu1);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "idxbx", idxbx1);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbx", lbx1);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubx", ubx1);
     }
     // last stage
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "idxbx", idxbxN);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "lbx", lbxN);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "ubx", ubxN);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "idxbx", idxbxN);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "lbx", lbxN);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "ubx", ubxN);
 
     /* nonlinear constraints */
 
@@ -772,9 +769,9 @@ int main()
     {
         if(nh[i]>0)
         {
-            ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lh", lh1);
-            ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "uh", uh1);
-            ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "h", &h1);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lh", lh1);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "uh", uh1);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "h", &h1);
         }
     }
 
@@ -785,9 +782,9 @@ int main()
     {
         if (ns[i]>0)
         {
-            ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lsh", lsh1);
-            ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ush", ush1);
-            ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "idxsh", idxsh1);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lsh", lsh1);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ush", ush1);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "idxsh", idxsh1);
         }
     }
 
@@ -925,8 +922,8 @@ int main()
         }
 
         // set x0 as box constraint
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbx", x0_ref);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubx", x0_ref);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0_ref);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0_ref);
 
             for (int idx = 0; idx < nmpc_problems; idx++)
         {
@@ -969,8 +966,8 @@ int main()
             // update initial condition
             // TODO(dimitris): maybe simulate system instead of passing x[1] as next state
             ocp_nlp_out_get(config, dims, nlp_out, 1, "x", specific_x);
-            ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbx", specific_x);
-            ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubx", specific_x);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", specific_x);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", specific_x);
 
             // print info
             if (true)

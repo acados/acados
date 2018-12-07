@@ -81,7 +81,25 @@ int main() {
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), np.data(), ns.data(), nz.data(), dims);
+//	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), np.data(), ns.data(), nz.data(), dims);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx.data());
+    ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu.data());
+    ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz.data());
+    ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns.data());
+
+    for (int i = 0; i <= N; i++)
+    {
+        ocp_nlp_dims_set_cost(config, dims, i, "ny", ny.data()+i);
+
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbx", nbx.data()+i);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbu", nbu.data()+i);
+        ocp_nlp_dims_set_constraints(config, dims, i, "ng", ng.data()+i);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", nh.data()+i);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", nh.data()+i);
+        ocp_nlp_dims_set_constraints(config, dims, i, "np", np.data()+i);
+    }
+
+
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {

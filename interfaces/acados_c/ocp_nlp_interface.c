@@ -381,13 +381,13 @@ int nlp_set_discrete_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *i
 }
 
 
-int ocp_nlp_constraints_bounds_set(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+int ocp_nlp_constraints_model_set(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
              ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     ocp_nlp_constraints_config *constr_config = config->constraints[stage];
     void *constr_dims = dims->constraints[stage];
 
-    return constr_config->bounds_set(constr_config, constr_dims,
+    return constr_config->model_set(constr_config, constr_dims,
                                       in->constraints[stage], field, value);
 }
 

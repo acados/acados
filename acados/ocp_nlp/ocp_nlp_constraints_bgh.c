@@ -566,7 +566,8 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     }
     else
     {
-        printf("Array identifier not implemented!\n");
+        printf("\nerror: model field not available in module ocp_nlp_constraints_bgh: %s\n", field);
+        exit(1);
     }
 
     return status;
@@ -984,7 +985,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_)
     config->get_dims = &ocp_nlp_constraints_bgh_dims_get;
     config->model_calculate_size = &ocp_nlp_constraints_bgh_model_calculate_size;
     config->model_assign = &ocp_nlp_constraints_bgh_model_assign;
-    config->bounds_set = &ocp_nlp_constraints_bgh_model_set;
+    config->model_set = &ocp_nlp_constraints_bgh_model_set;
     config->opts_calculate_size = &ocp_nlp_constraints_bgh_opts_calculate_size;
     config->opts_assign = &ocp_nlp_constraints_bgh_opts_assign;
     config->opts_initialize_default = &ocp_nlp_constraints_bgh_opts_initialize_default;

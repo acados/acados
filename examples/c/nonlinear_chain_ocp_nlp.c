@@ -1453,8 +1453,8 @@ int main()
 
 	// fist stage
 #if CONSTRAINTS==0 // box constraints
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb0);
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lb", lb0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ub", ub0);
     constraints[0]->idxb = idxb0;
 #elif CONSTRAINTS==1 // general constraints
 	double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
@@ -1467,8 +1467,8 @@ int main()
 
 	blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
 	blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lg", lb0);
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ug", ub0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lg", lb0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ug", ub0);
 
 	d_free(Cu0);
 	d_free(Cx0);
@@ -1480,21 +1480,21 @@ int main()
     ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 	nl_constr[0]->h = &nonlin_constr_generic;
 
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lg", lb0);
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ug", ub0);
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lh", &lb0[ng[0]]);
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "uh", &ub0[ng[0]]);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lg", lb0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ug", ub0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lh", &lb0[ng[0]]);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "uh", &ub0[ng[0]]);
 	#endif
 
 	// other stages
     for (int i = 1; i < NN; i++)
 	{
-		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lb", lb1);
-		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ub", ub1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lb", lb1);
+		ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ub", ub1);
         constraints[i]->idxb = idxb1;
     }
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "lb", lbN);
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "ub", ubN);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "lb", lbN);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, NN, "ub", ubN);
 
     constraints[NN]->idxb = idxbN;
 
