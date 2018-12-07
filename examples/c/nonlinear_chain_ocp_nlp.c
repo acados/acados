@@ -28,14 +28,12 @@
 #include "acados_c/external_function_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
 
-
 // TODO(dimitris): use only the strictly necessary includes here
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
@@ -1111,6 +1109,9 @@ int main()
 	for (int j = 0; j < NX; j++)
 		WN[j + NX * j] = diag_cost_x[j];
 
+	double *specific_u = malloc(NU*sizeof(double));
+	double *specific_x = malloc(NX*sizeof(double));
+
     /************************************************
     * plan + config
     ************************************************/
@@ -1576,31 +1577,44 @@ int main()
 
     double time = acados_toc(&timer)/NREP;
 
-	printf("\nresiduals\n");
-	ocp_nlp_res_print(dims, ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res);
+    ocp_nlp_res *residual;
+    ocp_nlp_get(config, solver, "nlp_res", &residual);
+    printf("\nresiduals\n");
+    ocp_nlp_res_print(dims, residual);
+
 	printf("\nsolution\n");
 	ocp_nlp_out_print(dims, nlp_out);
 
-	ocp_nlp_sqp_memory *solver_mem = (ocp_nlp_sqp_memory *) solver->mem;
+	int sqp_iter;
+    double time_lin, time_qp_sol, time_tot;
 
-	int sqp_iter = solver_mem->sqp_iter;
+    ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
+    ocp_nlp_get(config, solver, "time_tot", &time_tot);
+    ocp_nlp_get(config, solver, "time_qp_sol", &time_qp_sol);
+    ocp_nlp_get(config, solver, "time_lin", &time_lin);
 
     printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n", status, MAX_SQP_ITERS, sqp_iter, time*1e3);
-	printf("\nlinearization time = %f ms\n", solver_mem->time_lin*1e3);
-	printf("\nqp solution time   = %f ms\n", solver_mem->time_qp_sol*1e3);
-	printf("\ntotal time         = %f ms\n", solver_mem->time_tot*1e3);
+	printf("\nlinearization time = %f ms\n", time_lin*1e3);
+	printf("\nqp solution time   = %f ms\n", time_qp_sol*1e3);
+	printf("\ntotal time         = %f ms\n", time_tot*1e3);
 	printf("\n\n");
 
     for (int k =0; k < 3; k++) {
         printf("u[%d] = \n", k);
-		blasfeo_print_tran_dvec(nu[k], nlp_out->ux+k, 0);
+        ocp_nlp_out_get(config, dims, nlp_out, k, "u", specific_u);
+        d_print_mat(1, NU, specific_u, 1);
+
         printf("x[%d] = \n", k);
-		blasfeo_print_tran_dvec(nx[k], nlp_out->ux+k, nu[k]);
+        ocp_nlp_out_get(config, dims, nlp_out, k, "x", specific_x);
+        d_print_mat(1, NX, specific_x, 1);
     }
     printf("u[N-1] = \n");
-	blasfeo_print_tran_dvec(nu[NN-1], nlp_out->ux+NN-1, 0);
+    ocp_nlp_out_get(config, dims, nlp_out, NN-1, "u", specific_u);
+    d_print_mat(1, NU, specific_u, 1);
+
     printf("x[N] = \n");
-	blasfeo_print_tran_dvec(nx[NN], nlp_out->ux+NN, nu[NN]);
+    ocp_nlp_out_get(config, dims, nlp_out, NN, "x", specific_x);
+    d_print_mat(1, NX, specific_x, 1);
 
     /************************************************
     * free memory
@@ -1647,6 +1661,8 @@ int main()
 	free(Cyt);
 	free(WN);
 	free(W);
+    free(specific_x);
+    free(specific_u);
 
 	for (int i = 0; i <= NN; i++)
 	{
