@@ -53,6 +53,10 @@ if(ACADOS_WITH_QPOASES)
     add_subdirectory(qpoases)
 endif()
 
+if(ACADOS_WITH_OSQP)
+    add_subdirectory(osqp)
+endif()
+
 if (ACADOS_WITH_OOQP)
     include(external/ooqp)
 endif()
