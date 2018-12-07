@@ -62,7 +62,6 @@ def export_ode_model():
 acados_path = os.path.dirname(os.path.abspath(at.__file__))
 file_loader = FileSystemLoader(acados_path + '/c_templates')
 env = Environment(loader = file_loader)
-template = env.get_template('main.in.c')
 
 # create render arguments
 ra = ocp_nlp_render_arguments()
@@ -135,9 +134,24 @@ ra.acados_lib_path = '/usr/local/lib'
 check_ra(ra)
 
 # render source template
+template = env.get_template('main.in.c')
 output = template.render(ra=ra)
 # output file
 out_file = open('./c_generated_code/main_' + model.name + '.c', 'w+')
+out_file.write(output)
+
+# render source template
+template = env.get_template('acados_solver.in.c')
+output = template.render(ra=ra)
+# output file
+out_file = open('./c_generated_code/acados_solver_' + model.name + '.c', 'w+')
+out_file.write(output)
+
+# render source template
+template = env.get_template('acados_solver.in.h')
+output = template.render(ra=ra)
+# output file
+out_file = open('./c_generated_code/acados_solver_' + model.name + '.h', 'w+')
 out_file.write(output)
 
 # render header template
@@ -154,3 +168,4 @@ output = template.render(ra=ra)
 # output file
 out_file = open('./c_generated_code/Makefile', 'w+')
 out_file.write(output)
+
