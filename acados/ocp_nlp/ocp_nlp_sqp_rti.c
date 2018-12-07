@@ -1173,6 +1173,7 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
                                             nlp_in->dynamics[ii], opts->dynamics[ii],
                                             mem->dynamics[ii], work->dynamics[ii]);
         if (status != ACADOS_SUCCESS) return status;
+        // TODO check that ns in opt_var == ns in constraints
     }
     return status;
 }

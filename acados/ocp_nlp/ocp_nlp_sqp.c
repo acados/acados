@@ -1244,6 +1244,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 }
 
 
+
 int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
@@ -1269,9 +1270,12 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
                                             nlp_in->dynamics[ii], opts->dynamics[ii],
                                             mem->dynamics[ii], work->dynamics[ii]);
         if (status != ACADOS_SUCCESS) return status;
+        // TODO check that ns in opt_var == ns in constraints
     }
     return status;
 }
+
+
 
 void ocp_nlp_sqp_get(void *config_, void *mem_, const char *field, void *return_value_)
 {

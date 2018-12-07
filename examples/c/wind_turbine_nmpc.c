@@ -205,17 +205,20 @@ int main()
     * problem dimensions
     ************************************************/
 
-    int nx[NN+1] = {};
-    int nu[NN+1] = {};
-    int nbx[NN+1] = {};
-    int nbu[NN+1] = {};
+	// optimization variables
+    int nx[NN+1] = {}; // states
+    int nu[NN+1] = {}; // inputs
+	int nz[NN+1] = {}; // algebraic variables
+    int ns[NN+1] = {}; // slacks
+	// cost
+	int ny[NN+1] = {}; // measurements
+	// constraints
+    int nbx[NN+1] = {}; // state bounds
+    int nbu[NN+1] = {}; // input bounds
     int nb[NN+1] = {}; // TODO remove !!!
-    int ng[NN+1] = {};
-    int nh[NN+1] = {};
-    int nq[NN+1] = {};
-    int ns[NN+1] = {};
-	int ny[NN+1] = {};
-	int nz[NN+1] = {};
+    int ng[NN+1] = {}; // general linear constraints
+    int nh[NN+1] = {}; // nonlinear constraints
+    int nsh[NN+1] = {}; // softed nonlinear constraints
 
 	// TODO(dimitris): setup bounds on states and controls based on ACADO controller
     nx[0] = nx_;
@@ -226,8 +229,9 @@ int main()
 	ng[0] = 0;
 	// TODO(dimitris): add bilinear constraints later
 	nh[0] = 0;
-	ns[0] = 0;
-	ny[0] = 4; // ny_
+	nsh[0] = 0;
+	ns[0] = nsh[0];
+	ny[0] = 4;
 	nz[0] = 0;
 
     for (int i = 1; i < NN; i++)
@@ -239,8 +243,9 @@ int main()
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
 		nh[i] = 1;
-		ns[i] = 1;
-		ny[i] = 4; // ny_
+		nsh[i] = 1;
+		ns[i] = nsh[i];
+		ny[i] = 4;
 		nz[i] = 0;
     }
 
@@ -251,7 +256,8 @@ int main()
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
 	nh[NN] = 0;
-	ns[NN] = 0;
+	nsh[NN] = 0;
+	ns[NN] = nsh[NN];
 	ny[NN] = 2;
 	nz[NN] = 0;
 
@@ -292,20 +298,10 @@ int main()
 
 	/* soft constraints */
 
-	// first stage
-	int *idxs0 = malloc(ns[0]*sizeof(int));
-	double *ls0 = malloc((ns[0])*sizeof(double));
-	double *us0 = malloc((ns[0])*sizeof(double));
-
 	// middle stage
-	int *idxs1 = malloc(ns[1]*sizeof(int));
-	double *ls1 = malloc((ns[1])*sizeof(double));
-	double *us1 = malloc((ns[1])*sizeof(double));
-
-	// last stage
-	int *idxsN = malloc(ns[NN]*sizeof(int));
-	double *lsN = malloc((ns[NN])*sizeof(double));
-	double *usN = malloc((ns[NN])*sizeof(double));
+	int *idxsh1 = malloc(nsh[1]*sizeof(int));
+	double *lsh1 = malloc((nsh[1])*sizeof(double));
+	double *ush1 = malloc((nsh[1])*sizeof(double));
 
 
 	/* box constraints */
@@ -314,82 +310,94 @@ int main()
 	double acados_inf = 1e8;
 
 	// first stage
-	int *idxb0 = malloc(nb[0]*sizeof(int));
-	double *lbu0 = malloc((nbu[0])*sizeof(double));
-	double *ubu0 = malloc((nbu[0])*sizeof(double));
-	double *lbx0 = malloc((nbx[0])*sizeof(double));
-	double *ubx0 = malloc((nbx[0])*sizeof(double));
 
 	// input bounds
+	int *idxbu0 = malloc(nbu[0]*sizeof(int));
+	double *lbu0 = malloc((nbu[0])*sizeof(double));
+	double *ubu0 = malloc((nbu[0])*sizeof(double));
 
 	// pitch angle rate
-	idxb0[0] = 0;
+	idxbu0[0] = 0;
 	lbu0[0] = dbeta_min;
 	ubu0[0] = dbeta_max;
 
 	// generator torque
-	idxb0[1] = 1;
+	idxbu0[1] = 1;
 	lbu0[1] = dM_gen_min;
 	ubu0[1] = dM_gen_max;
 
-	// dummy state bounds
+	// state bounds
+	int *idxbx0 = malloc(nbx[0]*sizeof(int));
+	double *lbx0 = malloc((nbx[0])*sizeof(double));
+	double *ubx0 = malloc((nbx[0])*sizeof(double));
+
+	// dummy
 	for (int ii=0; ii<nbx[0]; ii++)
 	{
-		idxb0[nbu[0]+ii] = nbu[0]+ii;
+		idxbx0[ii] = ii;
 		lbx0[ii] = - acados_inf;
 		ubx0[ii] =   acados_inf;
 	}
 
 
 	// middle stages
-	int *idxb1 = malloc(nb[1]*sizeof(int));
-	double *lb1 = malloc((nb[1])*sizeof(double));
-	double *ub1 = malloc((nb[1])*sizeof(double));
+
+	// input bounds
+	int *idxbu1 = malloc(nbu[1]*sizeof(int));
+	double *lbu1 = malloc((nbu[1])*sizeof(double));
+	double *ubu1 = malloc((nbu[1])*sizeof(double));
 
 	// pitch angle rate
-	idxb1[0] = 0;
-	lb1[0] = dbeta_min;
-	ub1[0] = dbeta_max;
+	idxbu1[0] = 0;
+	lbu1[0] = dbeta_min;
+	ubu1[0] = dbeta_max;
 
 	// generator torque rate
-	idxb1[1] = 1;
-	lb1[1] = dM_gen_min;
-	ub1[1] = dM_gen_max;
+	idxbu1[1] = 1;
+	lbu1[1] = dM_gen_min;
+	ubu1[1] = dM_gen_max;
+
+	// state bounds
+	int *idxbx1 = malloc(nbx[1]*sizeof(int));
+	double *lbx1 = malloc((nbx[1])*sizeof(double));
+	double *ubx1 = malloc((nbx[1])*sizeof(double));
 
 	// generator angular velocity
-	idxb1[2] = 2;
-	lb1[2] = OmegaR_min;
-	ub1[2] = OmegaR_max;
+	idxbx1[0] = 0;
+	lbx1[0] = OmegaR_min;
+	ubx1[0] = OmegaR_max;
 
 	// pitch angle
-	idxb1[3] = 8;
-	lb1[3] = beta_min;
-	ub1[3] = beta_max;
+	idxbx1[1] = 6;
+	lbx1[1] = beta_min;
+	ubx1[1] = beta_max;
 
 	// generator torque
-	idxb1[4] = 9;
-	lb1[4] = M_gen_min;
-	ub1[4] = M_gen_max;
+	idxbx1[2] = 7;
+	lbx1[2] = M_gen_min;
+	ubx1[2] = M_gen_max;
 
 	// last stage
-	int *idxbN = malloc(nb[NN]*sizeof(int));
-	double *lbN = malloc((nb[NN])*sizeof(double));
-	double *ubN = malloc((nb[NN])*sizeof(double));
+
+	// state bounds
+	int *idxbxN = malloc(nbx[NN]*sizeof(int));
+	double *lbxN = malloc((nbx[NN])*sizeof(double));
+	double *ubxN = malloc((nbx[NN])*sizeof(double));
 
 	// generator angular velocity
-	idxbN[0] = 0;
-	lbN[0] = OmegaR_min;
-	ubN[0] = OmegaR_max;
+	idxbxN[0] = 0;
+	lbxN[0] = OmegaR_min;
+	ubxN[0] = OmegaR_max;
 
 	// pitch angle
-	idxbN[1] = 6;
-	lbN[1] = beta_min;
-	ubN[1] = beta_max;
+	idxbxN[1] = 6;
+	lbxN[1] = beta_min;
+	ubxN[1] = beta_max;
 
 	// generator torque
-	idxbN[2] = 7;
-	lbN[2] = M_gen_min;
-	ubN[2] = M_gen_max;
+	idxbxN[2] = 7;
+	lbxN[2] = M_gen_min;
+	ubxN[2] = M_gen_max;
 
 	// to shift
 	double *specific_u = malloc(nu_*sizeof(double));
@@ -427,11 +435,11 @@ int main()
 		uh1[0] = Pel_max;
 	}
 	// softed
-	if (ns[1]>0)
+	if (nsh[1]>0)
 	{
-		idxs1[0] = nb[1]+ng[1];
-		ls1[0] = 0.0;
-		us1[0] = 0.0;
+		idxsh1[0] = 0;
+		lsh1[0] = 0.0;
+		ush1[0] = 0.0;
 	}
 
 
@@ -566,7 +574,7 @@ int main()
         ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
-        ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nsh", &nsh[i]);
     }
 
     /************************************************
@@ -736,23 +744,26 @@ int main()
 	/* box constraints */
 
 	// fist stage
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "idxbu", idxbu0);
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbu", lbu0);
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubu", ubu0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "idxbx", idxbx0);
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbx", lbx0);
 	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubx", ubx0);
-	// TODO(giaf): write setter for these guys
-    for (int ii=0; ii<nb[0]; ii++) constraints[0]->idxb[ii] = idxb0[ii];
 	// middle stages
     for (int i = 1; i < NN; i++)
 	{
-		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lb", lb1);
-		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ub", ub1);
-		for (int ii=0; ii<nb[i]; ii++) constraints[i]->idxb[ii] = idxb1[ii];
+		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "idxbu", idxbu1);
+		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lbu", lbu1);
+		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ubu", ubu1);
+		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "idxbx", idxbx1);
+		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lbx", lbx1);
+		ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ubx", ubx1);
     }
 	// last stage
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "lb", lbN);
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "ub", ubN);
-    for (int ii=0; ii<nb[NN]; ii++) constraints[NN]->idxb[ii] = idxbN[ii];
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "idxbx", idxbxN);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "lbx", lbxN);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, NN, "ubx", ubxN);
 
 	/* nonlinear constraints */
 
@@ -763,7 +774,7 @@ int main()
 		{
 			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lh", lh1);
 			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "uh", uh1);
-			constraints[i]->h = &h1;
+			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "h", &h1);
 		}
     }
 
@@ -774,9 +785,9 @@ int main()
 	{
 		if (ns[i]>0)
 		{
-			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ls", ls1);
-			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "us", us1);
-			for (int ii=0; ii<ns[i]; ii++) constraints[i]->idxs[ii] = idxs1[ii];
+			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lsh", lsh1);
+			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ush", ush1);
+			ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "idxsh", idxsh1);
 		}
     }
 
@@ -1069,31 +1080,27 @@ int main()
 	free(lh1);
 	free(uh1);
 
-	free(lbN);
-	free(ubN);
-	free(idxbN);
-
-	free(lb1);
-	free(ub1);
-	free(idxb1);
-
+	free(idxbu0);
 	free(lbu0);
 	free(ubu0);
+	free(idxbx0);
 	free(lbx0);
 	free(ubx0);
-	free(idxb0);
 
-	free(lsN);
-	free(usN);
-	free(idxsN);
+	free(idxbx1);
+	free(lbu1);
+	free(ubu1);
+	free(idxbu1);
+	free(lbx1);
+	free(ubx1);
 
-	free(idxs1);
-	free(ls1);
-	free(us1);
+	free(idxbxN);
+	free(lbxN);
+	free(ubxN);
 
-	free(us0);
-	free(ls0);
-	free(idxs0);
+	free(idxsh1);
+	free(lsh1);
+	free(ush1);
 
 	free(x_end);
 	free(u_end);
