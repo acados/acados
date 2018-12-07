@@ -394,89 +394,76 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
 
 
 
-void ocp_nlp_dims_set_constraints(void *config_, void *dims_, const char *field,
-                                  const void* value_field)
+void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const char *field,
+                                  const void* value_)
 {
     // to set dimension nbx, nbu, ng, nh, nq (quadratic over nonlinear)
     ocp_nlp_solver_config *config = config_;
     ocp_nlp_dims *dims = dims_;
 
-    int N = config->N;
-    int *value = (int *) value_field;
+    int *int_value = (int *) value_;
+    int i = stage;
 
-    for (int i = 0; i <= N; i++)
-    {
-        // set in constraint module
-        config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
-                                         field, &value[i]);
-        // update ni in ocp_nlp dimensions
-        config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i],
-                                         "ni", &dims->ni[i]);
-    }
+    // set in constraint module
+    config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
+                                        field, int_value);
+    // update ni in ocp_nlp dimensions
+    config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i],
+                                        "ni", &dims->ni[i]);
+
     // update qp_solver dims
     if ( (!strcmp(field, "nbx")) || (!strcmp(field, "nbu")) )
     {
-        //  dynamics do not contain slack/soft constraints
-        for (int i = 0; i <= N; i++)
-        {
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i,
-                                        field, &value[i]);
-            // Note(oj): how to decide if ocp_qp or dense? plan not available here..
-            // Note(giaf): the NLP solver always calls a xcond_solver,
-            //             so only its dimensions should be set now
-            // if( is_ocp_qp_solver )
-            // {
-                // set nbx, respectively nbu in qp_solver
-                // nb in qp_solver gets updated in the setter
-            // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i,field, &value[i]);
-            // }
-            // else  // dense_qp
-            // {
-            //     // update nb in qp_solver
-            //     int nb;
-            //     config->constraints[i]->get_dims(config->constraints[i],
-            //                            dims->constraints[i], "nb", &nb);
-            //     config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nb", &nb);
-            // }
-        }
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i,
+                                    field, int_value);
+        // Note(oj): how to decide if ocp_qp or dense? plan not available here..
+        // Note(giaf): the NLP solver always calls a xcond_solver,
+        //             so only its dimensions should be set now
+        // if( is_ocp_qp_solver )
+        // {
+            // set nbx, respectively nbu in qp_solver
+            // nb in qp_solver gets updated in the setter
+        // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i,field, &value[i]);
+        // }
+        // else  // dense_qp
+        // {
+        //     // update nb in qp_solver
+        //     int nb;
+        //     config->constraints[i]->get_dims(config->constraints[i],
+        //                            dims->constraints[i], "nb", &nb);
+        //     config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nb", &nb);
+        // }
     }
     if ( (!strcmp(field, "ng")) || (!strcmp(field, "nh")) )
     {
-        //  dynamics do not contain slack/soft constraints
-        for (int i = 0; i <= N; i++)
-        {
-            // update ng_qp_solver in qp_solver
-            int ng, nh, ng_qp_solver;
-            config->constraints[i]->get_dims(config->constraints[i],
-                                             dims->constraints[i], "ng", &ng);
-            config->constraints[i]->get_dims(config->constraints[i],
-                                             dims->constraints[i], "nh", &nh);
+        // update ng_qp_solver in qp_solver
+        int ng, nh, ng_qp_solver;
+        config->constraints[i]->get_dims(config->constraints[i],
+                                            dims->constraints[i], "ng", &ng);
+        config->constraints[i]->get_dims(config->constraints[i],
+                                            dims->constraints[i], "nh", &nh);
 
-            ng_qp_solver = ng + nh;
+        ng_qp_solver = ng + nh;
 
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
-        }
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
     }
 }
 
 
-void ocp_nlp_dims_set_cost(void *config_, void *dims_, const char *field, const void* value_field)
+void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage,
+                           const char *field, const void* value_)
 {
     // to set dimension ny (output)
     ocp_nlp_solver_config *config = config_;
     ocp_nlp_dims *dims = dims_;
 
-    int N = config->N;
-    int *value = (int *) value_field;
+    int *int_value = (int *) value_;
 
-    for (int i = 0; i <= N; i++)
-    {
-        config->cost[i]->dims_set(config->cost[i], dims->cost[i], field, &value[i]);
-    }
+    config->cost[stage]->dims_set(config->cost[stage], dims->cost[stage], field, int_value);
 }
 
-void ocp_nlp_dims_set_dynamics_in_stage(void *config_, void *dims_, const char *field,
-                                        int stage, const void* value)
+void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage, 
+                               const char *field, const void* value)
 {
     // mainly for gnsf dimensions
     ocp_nlp_solver_config *config = config_;

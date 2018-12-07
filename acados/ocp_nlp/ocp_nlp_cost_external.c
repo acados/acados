@@ -85,10 +85,6 @@ static void ocp_nlp_cost_external_set_ns(void *config_, void *dims_, int *ns)
     dims->ns = *ns;
 }
 
-static void ocp_nlp_cost_external_set_ny(void *config_, void *dims_, int *ny)
-{
-    // NOTE(oj): @giaf/all what to do here?! throw error?
-}
 
 
 void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *field, int* value)
@@ -109,10 +105,6 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
     else if (!strcmp(field, "ns"))
     {
         ocp_nlp_cost_external_set_ns(config_, dims_, value);
-    }
-    else if (!strcmp(field, "ny"))
-    {
-        ocp_nlp_cost_external_set_ny(config_, dims_, value);
     }
     else
     {

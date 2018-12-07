@@ -554,13 +554,16 @@ int main()
     ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
     ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
 
-    ocp_nlp_dims_set_cost(config, dims, "ny", ny);
+	for (int i = 0; i <= NN; i++)
+    {
+        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
 
-    ocp_nlp_dims_set_constraints(config, dims, "nbx", nbx);
-    ocp_nlp_dims_set_constraints(config, dims, "nbu", nbu);
-    ocp_nlp_dims_set_constraints(config, dims, "ng", ng);
-    ocp_nlp_dims_set_constraints(config, dims, "nh", nh);
-    ocp_nlp_dims_set_constraints(config, dims, "np", nq);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
+    }
 
     /************************************************
     * dynamics
@@ -617,11 +620,11 @@ int main()
 	{
 		if (plan->sim_solver_plan[i].sim_solver == GNSF)
 		{
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nx1", i, &gnsf_nx1);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nz1", i, &gnsf_nz1);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nout", i, &gnsf_nout);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_ny", i, &gnsf_ny);
-			ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nuhat", i, &gnsf_nuhat);
+			ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nx1", &gnsf_nx1);
+			ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nz1", &gnsf_nz1);
+			ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nout", &gnsf_nout);
+			ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_ny", &gnsf_ny);
+			ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nuhat", &gnsf_nuhat);
 		}
 	}
 

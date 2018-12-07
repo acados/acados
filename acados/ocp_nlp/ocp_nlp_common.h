@@ -115,13 +115,14 @@ void ocp_nlp_dims_initialize(void *config, int *nx, int *nu, int *ny, int *nbx, 
 void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_,
                                const char *field, const void* value_array);
 //
-void ocp_nlp_dims_set_constraints(void *config_, void *dims_,
+void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage,
                                   const char *field, const void* value_field);
 //
-void ocp_nlp_dims_set_cost(void *config_, void *dims_, const char *field, const void* value_field);
+void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage, const char *field,
+                           const void* value_field);
 //
-void ocp_nlp_dims_set_dynamics_in_stage(void *config_, void *dims_, const char *field,
-                                        int stage, const void* value);
+void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage, const char *field,
+                               const void* value);
 
 /************************************************
  * in
