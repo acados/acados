@@ -1,4 +1,14 @@
-def generate_solver(model, ra)
+from jinja2 import Environment, FileSystemLoader
+from .generate_c_code_explicit_ode import *
+from .generate_c_code_implicit_ode import *
+from .ocp_nlp_render_arguments import *
+
+def generate_solver(model, ra):
+    # setting up loader and environment
+    acados_path = os.path.dirname(os.path.abspath(__file__))
+    file_loader = FileSystemLoader(acados_path + '/c_templates')
+    env = Environment(loader = file_loader)
+
     # explicit model -- generate C code
     generate_c_code_explicit_ode(model);
 
