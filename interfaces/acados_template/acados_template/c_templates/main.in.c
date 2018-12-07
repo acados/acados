@@ -29,22 +29,19 @@
 int main() {
 
     int status = 0;
-    status = acados_create(&nlp_solver, &nlp_in, &nlp_out, &nlp_opts, 
-            &nlp_config, &nlp_solver_plan, &nlp_dims);
+    status = acados_create();
 
     if (status) { 
         printf("acados_create() returned status %d. Exiting.\n", status); 
         exit(1); }
 
-    status = acados_solve(nlp_solver, nlp_in, nlp_out, nlp_opts, 
-            nlp_config, nlp_solver_plan, nlp_dims);
+    status = acados_solve();
 
     if (status) { 
         printf("acados_solve() returned status %d. Exiting.\n", status); 
         exit(1); }
 
-    status = acados_free(nlp_solver, nlp_in, nlp_out, nlp_opts, 
-            nlp_config, nlp_solver_plan, nlp_dims);
+    status = acados_free();
 
     if (status) { 
         printf("acados_free() returned status %d. Exiting.\n", status); 
