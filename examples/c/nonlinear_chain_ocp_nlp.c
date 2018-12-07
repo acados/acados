@@ -70,13 +70,13 @@
 
 
 // TODO(dimitris): DOES THIS EVEN WORK ATM?
-enum sensitivities_scheme {
-    EXACT_NEWTON,
-    INEXACT_NEWTON,
-    INIS,
-    FROZEN_INEXACT_NEWTON,
-    FROZEN_INIS
-};
+//enum sensitivities_scheme {
+//    EXACT_NEWTON,
+//    INEXACT_NEWTON,
+//    INIS,
+//    FROZEN_INEXACT_NEWTON,
+//    FROZEN_INIS
+//};
 
 
 

@@ -209,7 +209,7 @@ int main()
     int nu[NN+1] = {};
     int nbx[NN+1] = {};
     int nbu[NN+1] = {};
-    int nb[NN+1] = {};
+    int nb[NN+1] = {}; // TODO remove !!!
     int ng[NN+1] = {};
     int nh[NN+1] = {};
     int nq[NN+1] = {};
@@ -315,25 +315,29 @@ int main()
 
 	// first stage
 	int *idxb0 = malloc(nb[0]*sizeof(int));
-	double *lb0 = malloc((nb[0])*sizeof(double));
-	double *ub0 = malloc((nb[0])*sizeof(double));
+	double *lbu0 = malloc((nbu[0])*sizeof(double));
+	double *ubu0 = malloc((nbu[0])*sizeof(double));
+	double *lbx0 = malloc((nbx[0])*sizeof(double));
+	double *ubx0 = malloc((nbx[0])*sizeof(double));
+
+	// input bounds
 
 	// pitch angle rate
 	idxb0[0] = 0;
-	lb0[0] = dbeta_min;
-	ub0[0] = dbeta_max;
+	lbu0[0] = dbeta_min;
+	ubu0[0] = dbeta_max;
 
 	// generator torque
 	idxb0[1] = 1;
-	lb0[1] = dM_gen_min;
-	ub0[1] = dM_gen_max;
+	lbu0[1] = dM_gen_min;
+	ubu0[1] = dM_gen_max;
 
 	// dummy state bounds
 	for (int ii=0; ii<nbx[0]; ii++)
 	{
 		idxb0[nbu[0]+ii] = nbu[0]+ii;
-		lb0[nbu[0]+ii] = - acados_inf;
-		ub0[nbu[0]+ii] =   acados_inf;
+		lbx0[ii] = - acados_inf;
+		ubx0[ii] =   acados_inf;
 	}
 
 
@@ -729,8 +733,10 @@ int main()
 	/* box constraints */
 
 	// fist stage
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb0);
-	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbu", lbu0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubu", ubu0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lbx", lbx0);
+	ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ubx", ubx0);
 	// TODO(giaf): write setter for these guys
     for (int ii=0; ii<nb[0]; ii++) constraints[0]->idxb[ii] = idxb0[ii];
 	// middle stages
@@ -1068,8 +1074,10 @@ int main()
 	free(ub1);
 	free(idxb1);
 
-	free(lb0);
-	free(ub0);
+	free(lbu0);
+	free(ubu0);
+	free(lbx0);
+	free(ubx0);
 	free(idxb0);
 
 	free(lsN);
