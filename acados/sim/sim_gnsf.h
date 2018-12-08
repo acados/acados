@@ -62,6 +62,8 @@ typedef struct
     external_function_generic *phi_jac_y_uhat;
     // f_lo: linear output function
     external_function_generic *f_lo_fun_jac_x1_x1dot_u_z;
+    // to import model matrices
+    external_function_generic *get_gnsf_matrices;
 
     /* model defining matrices */
     double *A;
@@ -261,9 +263,7 @@ int sim_gnsf_dims_calculate_size();
 void *sim_gnsf_dims_assign(void *config_, void *raw_memory);
 
 // get & set functions
-void sim_gnsf_set_nx(void *dims_, int nx);
-void sim_gnsf_set_nu(void *dims_, int nu);
-void sim_gnsf_set_nz(void *dims_, int nz);
+void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int* value);
 
 void sim_gnsf_get_nx(void *dims_, int *nx);
 void sim_gnsf_get_nu(void *dims_, int *nu);
@@ -274,19 +274,16 @@ int sim_gnsf_opts_calculate_size(void *config, void *dims);
 void *sim_gnsf_opts_assign(void *config, void *dims, void *raw_memory);
 void sim_gnsf_opts_initialize_default(void *config, void *dims, void *opts_);
 void sim_gnsf_opts_update(void *config_, void *dims, void *opts_);
+int sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value);
 
 // model
 int sim_gnsf_model_calculate_size(void *config, void *dims_);
 void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory);
 int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun);
 
-// import
-void sim_gnsf_import_matrices(sim_gnsf_dims *dims, gnsf_model *model,
-                              external_function_generic *get_matrices_fun);
-
 // precomputation
-void sim_gnsf_precompute(void *config, sim_gnsf_dims *dims, gnsf_model *model, sim_rk_opts *opts,
-                         void *mem_, void *work_, double T);
+int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
+                       void *work_);
 
 // workspace & memory
 int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *args);

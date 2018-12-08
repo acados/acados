@@ -28,20 +28,37 @@ else
 	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
 end
 
-if isfield(opts, 'generate_hess')
-    generate_hess = opts.generate_hess;
+if nargin > 1
+    if isfield(opts, 'generate_hess')
+        generate_hess = opts.generate_hess;
+    else
+        generate_hess = 0;
+        if opts.print_info
+        disp('generate_hess option was not set - default is false')
+        end
+    end
 else
     generate_hess = 0;
-    if opts.print_info
-    disp('generate_hess option was not set - default is false')
-    end
 end
 
 %% load model
 x = model.x;
+if class(x(1)) == 'casadi.SX'
+    isSX = true;
+else
+    isSX = false;
+end
 xdot = model.xdot;
 u = model.u;
-z = model.z;
+if isfield(model, 'z')
+    z = model.z;
+else
+    if class(x(1)) == 'casadi.SX'
+        z = SX.sym('z',0, 0);
+    else
+        z = MX.sym('z',0, 0);
+    end
+end
 f_impl = model.f_impl_expr;
 model_name = model.name;
 
@@ -60,11 +77,11 @@ jac_z       = jacobian(f_impl, z);
 %% generate hessian
 x_xdot_z_u = [x; xdot; z; u];
 
-if class(x(1)) == 'casadi.SX'
+if isSX
     multiplier  = SX.sym('multiplier', length(x) + length(z));
     multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
     HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
-elseif class(x(1)) == 'casadi.MX'
+else
     multiplier  = MX.sym('multiplier', length(x) + length(z));
     multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
     HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));

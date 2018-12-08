@@ -47,7 +47,7 @@ print()
 
 # # ODE Model
 # step = 0.1
-# nlp.set_model(ode_fun, step)
+# nlp.model_set(ode_fun, step)
 
 # # Cost function
 # Q = diag([1.0, 1.0])

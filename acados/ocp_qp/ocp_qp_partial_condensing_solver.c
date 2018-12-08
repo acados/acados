@@ -19,6 +19,9 @@
 
 // external
 #include <assert.h>
+#include <string.h>
+#include <stdlib.h>
+
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"
@@ -103,6 +106,32 @@ void ocp_qp_partial_condensing_solver_opts_update(void *config_, ocp_qp_dims *di
     // qp solver opts
     qp_solver->opts_update(qp_solver, dims, opts->qp_solver_opts);
 }
+
+
+void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_,
+                                            const char *field, const void* value)
+{
+    ocp_qp_partial_condensing_solver_opts *opts = (ocp_qp_partial_condensing_solver_opts *) opts_;
+    // ocp_qp_xcond_solver_config *config = config_;
+
+    if (!strcmp(field, "N2") || !strcmp(field, "pcond_N2"))
+    {
+        int* N2 = (int *) value;
+        opts->pcond_opts->N2 = *N2;
+    }
+    else if (!strcmp(field, "N2_bkp") || !strcmp(field, "pcond_N2_bkp"))
+    {
+        int* N2_bkp = (int *) value;
+        opts->pcond_opts->N2_bkp = *N2_bkp;
+    }
+    else
+    {
+        printf("\nerror: option type %s not available in ocp_qp_partial_condense solver module\n",
+               field);
+        exit(1);
+    }
+}
+
 
 /************************************************
  * memory
@@ -355,10 +384,12 @@ void ocp_qp_partial_condensing_solver_config_initialize_default(void *config_)
 {
     ocp_qp_xcond_solver_config *config = config_;
 
+    config->dims_set = &ocp_qp_dims_set;
     config->opts_calculate_size = &ocp_qp_partial_condensing_solver_opts_calculate_size;
     config->opts_assign = &ocp_qp_partial_condensing_solver_opts_assign;
     config->opts_initialize_default = &ocp_qp_partial_condensing_solver_opts_initialize_default;
     config->opts_update = &ocp_qp_partial_condensing_solver_opts_update;
+    config->opts_set = &ocp_qp_partial_condensing_solver_opts_set;
     config->memory_calculate_size = &ocp_qp_partial_condensing_solver_memory_calculate_size;
     config->memory_assign = &ocp_qp_partial_condensing_solver_memory_assign;
     config->workspace_calculate_size = &ocp_qp_partial_condensing_solver_workspace_calculate_size;

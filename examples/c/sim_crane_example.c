@@ -181,8 +181,8 @@ int main()
 		************************************************/
 
 		void *dims = sim_dims_create(config);
-		config->set_nx(dims, nx);
-		config->set_nu(dims, nu);
+		sim_dims_set(config, dims, "nx", &nx);
+		sim_dims_set(config, dims, "nu", &nu);
 
 		/************************************************
 		* sim opts
@@ -208,15 +208,15 @@ int main()
 		{
 			case 0:
 			{
-				sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-				sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
+				sim_model_set(config, in, "expl_vde_for", &expl_vde_for);
+				sim_model_set(config, in, "expl_vde_adj", &expl_vde_adj);
 				break;
 			}
 			case 1:
 			{
-				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
-				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+				sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
+				sim_model_set(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
+				sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
 				break;
 			}
 			default :
@@ -334,12 +334,12 @@ int main()
 		printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
 		printf("========================\n");
 
-		free(sim_solver);
-		free(in);
-		free(out);
+		sim_free(sim_solver);
+		sim_in_free(in);
+		sim_out_free(out);
 
-		free(opts);
-		free(config);
+		sim_opts_free(opts);
+		sim_config_free(config);
 	}
 
 	// TODO(dimitris): free all external functions (or write a free_model)

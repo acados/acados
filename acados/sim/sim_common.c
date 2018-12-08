@@ -192,3 +192,73 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 
     return out;
 }
+
+
+/************************************************
+* sim_rk_opts
+************************************************/
+
+int sim_rk_opts_set(sim_rk_opts *opts, const char *field, void *value)
+{
+    int status = ACADOS_FAILURE;
+    if (!strcmp(field, "ns") ||!strcmp(field, "num_stages"))
+    {
+        int *ns = (int *) value;
+        opts->ns = *ns;
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "num_steps"))
+    {
+        int *num_steps = (int *) value;
+        opts->num_steps = *num_steps;
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "newton_iter"))
+    {
+        int *newton_iter = (int *) value;
+        opts->newton_iter = *newton_iter;
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "jac_reuse"))
+    {
+        bool *jac_reuse = (bool *) value;
+        opts->jac_reuse = *jac_reuse;
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "sens_forw"))
+    {
+        bool *sens_forw = (bool *) value;
+        opts->sens_forw = *sens_forw;
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "sens_adj"))
+    {
+        bool *sens_adj = (bool *) value;
+        opts->sens_adj = *sens_adj;
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "sens_hess"))
+    {
+        bool *sens_hess = (bool *) value;
+        opts->sens_hess = *sens_hess;
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "output_z"))
+    {
+        bool *output_z = (bool *) value;
+        opts->output_z = *output_z;
+        status = ACADOS_SUCCESS;
+    }
+    else if (!strcmp(field, "sens_algebraic"))
+    {
+        bool *sens_algebraic = (bool *) value;
+        opts->sens_algebraic = *sens_algebraic;
+        status = ACADOS_SUCCESS;
+    }
+    else
+    {
+        printf("\nerror: option type not available for RK integrator\n");
+        exit(1);
+    }
+    return status;
+}

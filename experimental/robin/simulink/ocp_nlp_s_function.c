@@ -127,7 +127,7 @@ static void mdlStart(SimStruct *S)
 
     plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
-    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NUM_STAGES);
+    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
     ocp_nlp_dims *nlp_dims = ocp_nlp_dims_create(config);
     ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, ns, nq, nlp_dims);
@@ -171,7 +171,7 @@ static void mdlStart(SimStruct *S)
 
     for (int i = 0; i < NUM_STAGES; ++i)
     {
-        nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
+        ocp_nlp_dynamics_model_set(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
     }
 
     ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
