@@ -183,7 +183,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\tplan->ocp_qp_solver_plan.qp_solver = " +
             std::to_string(nlp_->plan_->ocp_qp_solver_plan.qp_solver) + ";\n";
 
-    out << "\n\tocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NUM_STAGES);\n";
+    out << "\n\tocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);\n";
 
     out << "\n\tocp_nlp_dims *nlp_dims = ocp_nlp_dims_create(config);\n";
     out << "\tocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, ";
@@ -208,7 +208,8 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\t\tnlp_in->Ts[i] = LEN_INTERVAL;\n";
 
     out << "\n\tfor (i = 0; i < NUM_STAGES; ++i)\n";
-    out << "\t\tnlp_set_model_in_stage(config, nlp_in, i, \"expl_vde_for\", &expl_vde_for[i]);\n";
+    out << "\t\tocp_nlp_dynamics_model_set(config, nlp_in, i, \"expl_vde_for\"";
+    out << ", &expl_vde_for[i]);\n";
 
     generate_ls_cost_initialization(out);
 

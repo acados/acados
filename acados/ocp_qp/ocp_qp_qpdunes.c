@@ -735,6 +735,7 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
 
+    config->dims_set = &ocp_qp_dims_set;
     config->opts_calculate_size = (int (*)(void *, void *)) & ocp_qp_qpdunes_opts_calculate_size;
     config->opts_assign = (void *(*) (void *, void *, void *) ) & ocp_qp_qpdunes_opts_assign;
     config->opts_initialize_default =

@@ -74,6 +74,62 @@ void ocp_nlp_dynamics_disc_dims_initialize(void *config_, void *dims_, int nx, i
 }
 
 
+// setters
+static void ocp_nlp_dynamics_disc_set_nx(void *config_, void *dims_, int *nx)
+{
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+    dims->nx = *nx;
+}
+
+static void ocp_nlp_dynamics_disc_set_nx1(void *config_, void *dims_, int *nx1)
+{
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+    dims->nx1 = *nx1;
+}
+
+static void ocp_nlp_dynamics_disc_set_nu(void *config_, void *dims_, int *nu)
+{
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+    dims->nu = *nu;
+}
+
+static void ocp_nlp_dynamics_disc_set_nu1(void *config_, void *dims_, int *nu1)
+{
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+    dims->nu1 = *nu1;
+}
+
+void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim, int* value)
+{
+    if (!strcmp(dim, "nx"))
+    {
+        ocp_nlp_dynamics_disc_set_nx(config_, dims_, value);
+    }
+    else if (!strcmp(dim, "nx1"))
+    {
+        ocp_nlp_dynamics_disc_set_nx1(config_, dims_, value);
+    }
+    else if (!strcmp(dim, "nz"))
+    {
+        if ( *value > 0)
+        {
+            printf("\nerror: discrete dynamics with nz>0\n");
+            exit(1);
+        }
+    }
+    else if (!strcmp(dim, "nu"))
+    {
+        ocp_nlp_dynamics_disc_set_nu(config_, dims_, value);
+    }
+    else if (!strcmp(dim, "nu1"))
+    {
+        ocp_nlp_dynamics_disc_set_nu1(config_, dims_, value);
+    }
+    else
+    {
+        assert(0 == 1);  // dimension type not available in module
+    }
+}
 
 /************************************************
  * options
@@ -132,25 +188,13 @@ void ocp_nlp_dynamics_disc_opts_update(void *config_, void *dims_, void *opts_)
 
 
 
-void ocp_nlp_dynamics_disc_opts_set(void *config_, void *dims_, void *opts_, enum acados_opts name,
-    void *ptr_value)
+int ocp_nlp_dynamics_disc_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
+    // TODO(all): implement option setters, which?!
 
-    ocp_nlp_dynamics_disc_opts *opts = opts_;
 
-    if (name == COMPUTE_ADJ)
-    {
-        int *compute_adj = ptr_value;
-        opts->compute_adj = *compute_adj;
-    }
-    else
-    {
-        // TODO(fuck_you_lint): something better tha this print-and-exit
-        printf("\nocp_nlp_dynamics_disc_opts_set: unknown opts name !\n");
-        exit(1);
-    }
-
-    return;
+    printf("\nocp_nlp_dynamics_disc_opts_set: no options to be set !\n");
+    return ACADOS_FAILURE;
 
 }
 
@@ -477,6 +521,12 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
     return;
 }
 
+int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, void *opts_,
+                                        void *mem_, void *work_)
+{
+    return ACADOS_SUCCESS;
+}
+
 
 
 void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
@@ -486,6 +536,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_dynamics_disc_dims_calculate_size;
     config->dims_assign = &ocp_nlp_dynamics_disc_dims_assign;
     config->dims_initialize = &ocp_nlp_dynamics_disc_dims_initialize;
+    config->dims_set =  &ocp_nlp_dynamics_disc_dims_set;
     config->model_calculate_size = &ocp_nlp_dynamics_disc_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_disc_model_assign;
     config->model_set_T = &ocp_nlp_dynamics_disc_model_set_T;
@@ -507,6 +558,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_nlp_dynamics_disc_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_disc_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_disc_update_qp_matrices;
+    config->precompute = &ocp_nlp_dynamics_disc_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_disc_config_initialize_default;
 
     return;

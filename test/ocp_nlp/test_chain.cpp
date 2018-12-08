@@ -1330,14 +1330,31 @@ void setup_and_solve_nlp(int NN,
 
     // TODO(dimitris): fix minor memory leak
     // here
-    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
+    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
     * ocp_nlp_dims
     ************************************************/
 
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-    ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
+
+    ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
+    ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
+
+    for (int i = 0; i <= NN; i++)
+    {
+        if (plan->nlp_cost[i] != EXTERNALLY_PROVIDED)
+        {
+            ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
+        }
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
+    }
 
     /************************************************
     * dynamics
@@ -1428,6 +1445,10 @@ void setup_and_solve_nlp(int NN,
                         exit(1);
                 }
                 break;
+
+            default:
+                printf("\ncost not correctly specified\n\n");
+                exit(1);
         }
     }
 
@@ -1530,6 +1551,10 @@ void setup_and_solve_nlp(int NN,
                 stage_cost_external->ext_cost = &ext_cost_generic[i];
                 assert(i < NN && "externally provided cost not implemented for last stage!");
                 break;
+
+            default:
+                printf("\ncost not correctly specified\n\n");
+                exit(1);
         }
     }
 
@@ -1550,28 +1575,28 @@ void setup_and_solve_nlp(int NN,
 
                 if (plan->sim_solver_plan[i].sim_solver == ERK)
                 {
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                                             "expl_vde_for", &expl_vde_for[i]);
                     if (set_fun_status != 0) exit(1);
                 }
                 else if (plan->sim_solver_plan[i].sim_solver == IRK)
                 {
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                                             "impl_ode_fun", &impl_ode_fun[i]);
                     if (set_fun_status != 0) exit(1);
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                             "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot[i]);
                     if (set_fun_status != 0) exit(1);
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                                 "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
                     if (set_fun_status != 0) exit(1);
                 }
                 else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
                 {
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                                             "impl_ode_fun", &impl_ode_fun[i]);
                     if (set_fun_status != 0) exit(1);
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                         "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u[i]);
                     if (set_fun_status != 0) exit(1);
                 }
@@ -1586,6 +1611,10 @@ void setup_and_solve_nlp(int NN,
                     dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
                 }
                 break;
+
+            default:
+                printf("\ndynamics not correctly specified\n\n");
+                exit(1);
         }
     }
 
@@ -1670,12 +1699,17 @@ void setup_and_solve_nlp(int NN,
             }
         }
     }
+    int maxIter = MAX_SQP_ITERS;
+    double min_res_g = 1e-6;
+    double min_res_b = 1e-6;
+    double min_res_d = 1e-6;
+    double min_res_m = 1e-6;
 
-    sqp_opts->maxIter = MAX_SQP_ITERS;
-    sqp_opts->min_res_g = 1e-6;
-    sqp_opts->min_res_b = 1e-6;
-    sqp_opts->min_res_d = 1e-6;
-    sqp_opts->min_res_m = 1e-6;
+    ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_m", &min_res_m);
 
     /************************************************
     * ocp_nlp out
@@ -1740,12 +1774,12 @@ void setup_and_solve_nlp(int NN,
         free(erk4_casadi);
     }
 
-    free(nlp_opts);
-    free(nlp_in);
-    free(nlp_out);
-    free(solver);
-    free(dims);
-    free(config);
+    ocp_nlp_opts_free(nlp_opts);
+    ocp_nlp_in_free(nlp_in);
+    ocp_nlp_out_free(nlp_out);
+    ocp_nlp_free(solver);
+    ocp_nlp_dims_free(dims);
+    ocp_nlp_config_free(plan, config);
 
     free(xref);
     free(diag_cost_x);

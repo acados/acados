@@ -20,6 +20,9 @@
 // external
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -109,6 +112,32 @@ void ocp_qp_full_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims,
     qp_solver->opts_update(qp_solver, NULL, opts->qp_solver_opts);  // TODO(all): pass dense_qp_dims
 }
 
+void ocp_qp_full_condensing_solver_opts_set(void *config_, void *opts_,
+                                            const char *field, const void* value)
+{
+    ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *) opts_;
+    // ocp_qp_xcond_solver_config *config = config_;
+
+    if (!strcmp(field, "condense_rhs_only"))
+    {
+        int* condense_rhs_only = (int *) value;
+        opts->cond_opts->condense_rhs_only = *condense_rhs_only;
+    }
+    else if (!strcmp(field, "expand_primal_sol_only"))
+    {
+        int* expand_primal_sol_only = (int *) value;
+        opts->cond_opts->expand_primal_sol_only = *expand_primal_sol_only;
+    }
+    else
+    {
+        printf("\nerror: option type %s not available in ocp_qp_full_condensing_solver module\n",
+               field);
+        exit(1);
+    }
+}
+
+
+
 /************************************************
  * memory
  ************************************************/
@@ -181,7 +210,7 @@ void *ocp_qp_full_condensing_solver_memory_assign(void *config_, ocp_qp_dims *di
 }
 
 /************************************************
- * workspac3
+ * workspace
  ************************************************/
 
 int ocp_qp_full_condensing_solver_workspace_calculate_size(void *config_, ocp_qp_dims *dims,
@@ -280,8 +309,10 @@ void ocp_qp_full_condensing_solver_config_initialize_default(void *config_)
 {
     ocp_qp_xcond_solver_config *config = config_;
 
+    config->dims_set = &ocp_qp_dims_set;
     config->opts_calculate_size = &ocp_qp_full_condensing_solver_opts_calculate_size;
     config->opts_assign = &ocp_qp_full_condensing_solver_opts_assign;
+    config->opts_set = &ocp_qp_full_condensing_solver_opts_set;
     config->opts_initialize_default = &ocp_qp_full_condensing_solver_opts_initialize_default;
     config->opts_update = &ocp_qp_full_condensing_solver_opts_update;
     config->memory_calculate_size = &ocp_qp_full_condensing_solver_memory_calculate_size;
