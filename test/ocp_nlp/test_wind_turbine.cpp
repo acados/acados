@@ -51,8 +51,6 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
-#include "acados/sim/sim_gnsf.h"
-
 #include "examples/c/wt_model_nx6/nx6p2/wt_model.h"
 #include "examples/c/wt_model_nx6/setup.c"
 
@@ -87,9 +85,8 @@ ocp_qp_solver_t qp_solver_en(std::string const& inString)
 sim_solver_t integrator_en(std::string const& inString)
 {
     if (inString == "ERK") return ERK;
-    if (inString == "LIFTED_IRK") return LIFTED_IRK;
     if (inString == "IRK") return IRK;
-    if (inString == "NEW_LIFTED_IRK") return NEW_LIFTED_IRK;
+    if (inString == "LIFTED_IRK") return LIFTED_IRK;
     if (inString == "GNSF") return GNSF;
 
     return (sim_solver_t) -1;
@@ -565,14 +562,6 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             }
             break;
 
-        case NEW_LIFTED_IRK:
-            for (int i = 0; i < NN; i++)
-            {
-                plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-                plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
-            }
-            break;
-
         case GNSF:
             for (int i = 0; i < NN; i++)
             {
@@ -591,7 +580,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
                 else if (i%4 == 1)
                     plan->sim_solver_plan[i].sim_solver = ERK;
                 else if (i%4 == 2)
-                    plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+                    plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
                 else if (i%4 == 3)
                     plan->sim_solver_plan[i].sim_solver = GNSF;
 
@@ -604,14 +593,29 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         plan->nlp_constraints[i] = BGH;
     }
 
-    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
+    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
     * ocp_nlp_dims
     ************************************************/
 
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-    ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
+
+    ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
+    ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
+
+    for (int i = 0; i <= NN; i++)
+    {
+        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
+
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
+    }
 
     /************************************************
     * dynamics
@@ -666,25 +670,24 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     get_matrices_fun.casadi_n_out          = &wt_nx6p2_get_matrices_fun_n_out;
     external_function_casadi_create(&get_matrices_fun);
 
-    external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
+    /* initialize additional gnsf dimensions */
+    int gnsf_nx1 = 8;
+    int gnsf_nz1 = 0;
+    int gnsf_nout = 1;
+    int gnsf_ny = 5;
+    int gnsf_nuhat = 0;
 
     for (int i = 0; i < NN; i++)
     {
         if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
-            /* initialize additional gnsf dimensions */
-            ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
-            sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
-
-            gnsf_dims->nx1 = 8;
-            gnsf_dims->nz = 0;
-            gnsf_dims->nz1 = 0;
-            gnsf_dims->n_out = 1;
-            gnsf_dims->ny = 5;
-            gnsf_dims->nuhat = 0;
+            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nx1", &gnsf_nx1);
+            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nz1", &gnsf_nz1);
+            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nout", &gnsf_nout);
+            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_ny", &gnsf_ny);
+            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nuhat", &gnsf_nuhat);
         }
     }
-
 
     /************************************************
     * nlp_in
@@ -733,50 +736,58 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     {
         if (plan->sim_solver_plan[i].sim_solver == ERK)
         {
-            set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "expl_vde_for",
                 &expl_vde_for[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == IRK)
         {
-            set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun",
                 &impl_ode_fun[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot",
-                &impl_ode_fun_jac_x_xdot[i]);
+            set_fun_status =
+                ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot",
+                                           &impl_ode_fun_jac_x_xdot[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_xdot_u",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_jac_x_xdot_u",
                 &impl_ode_jac_x_xdot_u[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
-            set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "phi_fun", &phi_fun[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_fun", &phi_fun[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "phi_fun_jac_y",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_fun_jac_y",
                 &phi_fun_jac_y[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "phi_jac_y_uhat",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_jac_y_uhat",
                 &phi_jac_y_uhat[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
                 &f_lo_jac_x1_x1dot_u_z[i]);
+            REQUIRE(set_fun_status == 0);
+            if (set_fun_status != 0) exit(1);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "get_gnsf_matrices",
+                                                        &get_matrices_fun);
+            REQUIRE(set_fun_status == 0);
+            if (set_fun_status != 0) exit(1);
         }
-        else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+        else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
-            set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun",
                 &impl_ode_fun[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u",
-                &impl_ode_fun_jac_x_xdot_u[i]);
+            set_fun_status =
+                ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u",
+                                            &impl_ode_fun_jac_x_xdot_u[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
@@ -844,42 +855,60 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     void *nlp_opts = ocp_nlp_opts_create(config, dims);
     ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
 
+    // sim opts
     for (int i = 0; i < NN; ++i)
     {
-        ocp_nlp_dynamics_cont_opts *dynamics_stage_opts =
-            (ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i];
-        sim_rk_opts *sim_opts = (sim_rk_opts *) dynamics_stage_opts->sim_solver;
 
         if (plan->sim_solver_plan[i].sim_solver == ERK)
         {
-            sim_opts->ns = 4;
-            sim_opts->num_steps = 10;
+            int ns = 4;
+            int num_steps = 10;
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
         }
         else if (plan->sim_solver_plan[i].sim_solver == IRK)
         {
-            sim_opts->ns = 4;
-            sim_opts->num_steps = 1;
-            sim_opts->jac_reuse = true;
+            int num_steps = 1;
+            int ns = 4;
+            bool jac_reuse = true;
+
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
         }
-        else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+        else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
-            sim_opts->ns = 4;
-            sim_opts->num_steps = 1;
+            int num_steps = 1;
+            int ns = 4;
+
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
         }
         else if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
-            sim_opts->ns = 4;
-            sim_opts->num_steps = 1;
-            sim_opts->newton_iter = 1;
-            sim_opts->jac_reuse = true;
+            int num_steps = 1;
+            int ns = 4;
+            int newton_iter = 1;
+            bool jac_reuse = true;
+
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
+            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "newton_iter", &newton_iter);
         }
     }
 
-    sqp_opts->maxIter = MAX_SQP_ITERS;
-    sqp_opts->min_res_g = 1e-6;
-    sqp_opts->min_res_b = 1e-8;
-    sqp_opts->min_res_d = 1e-8;
-    sqp_opts->min_res_m = 1e-8;
+    int maxIter = MAX_SQP_ITERS;
+    double min_res_g = 1e-6;
+    double min_res_b = 1e-8;
+    double min_res_d = 1e-8;
+    double min_res_m = 1e-8;
+
+    ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_m", &min_res_m);
 
     // partial condensing
     if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
@@ -901,57 +930,16 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
     /************************************************
-    * 	precomputation (after all options are set)
+    *     precomputation (after all options are set)
     ************************************************/
 
-    for (int i = 0; i < NN; i++){
-        if (plan->sim_solver_plan[i].sim_solver == GNSF)
-        {
-            ocp_nlp_dynamics_cont_model *dynamics =
-                (ocp_nlp_dynamics_cont_model *) nlp_in->dynamics[i];
-            gnsf_model* model = (gnsf_model *)dynamics->sim_model;
-
-            // get gnsf_dims
-            ocp_nlp_dynamics_cont_dims *dyn_dims = (ocp_nlp_dynamics_cont_dims *) dims->dynamics[i];
-            sim_gnsf_dims *gnsf_dims = (sim_gnsf_dims *) dyn_dims->sim;
-
-            // get sim opts
-            ocp_nlp_dynamics_cont_opts *dynamics_stage_opts =
-                (ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i];
-            sim_rk_opts *sim_opts = (sim_rk_opts *) dynamics_stage_opts->sim_solver;
-
-            // import model matrices
-            sim_gnsf_import_matrices(gnsf_dims, model, get_model_matrices);
-
-            // get sim_solver_config
-            sim_solver_config *sim_sol_config =
-                (sim_solver_config *) config->dynamics[i]->sim_solver;
-
-            // get sim_solver memory
-            ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *) solver->mem;
-            ocp_nlp_dynamics_cont_memory* dynamics_mem =
-                (ocp_nlp_dynamics_cont_memory *) mem->dynamics[i];
-            char *mem_ptr = (char *) dynamics_mem;
-
-            // mem_ptr now points to the memory of the integrator;
-            mem_ptr += sizeof(ocp_nlp_dynamics_cont_memory);
-
-            // precompute
-            sim_gnsf_precompute(sim_sol_config, gnsf_dims, model, sim_opts, mem_ptr, solver->work,
-                nlp_in->Ts[i]);
-            // NOTE; solver->work can be used, as it is for sure larger than the workspace
-            //       needed to precompute, as the latter is part of the first.
-        }
-    }
-
+    int status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
     /************************************************
     * sqp solve
     ************************************************/
 
     int nmpc_problems = 40;
-
-    int status;
 
     acados_timer timer;
     acados_tic(&timer);
@@ -978,7 +966,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
                 expl_vde_for[ii].set_param(expl_vde_for+ii, wind0_ref+idx+ii);
             }
             else if ((plan->sim_solver_plan[ii].sim_solver == IRK) |
-                     (plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK))
+                     (plan->sim_solver_plan[ii].sim_solver == LIFTED_IRK))
             {
                 impl_ode_fun[ii].set_param(impl_ode_fun+ii, wind0_ref+idx+ii);
                 impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);
@@ -1059,7 +1047,6 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     * free memory
     ************************************************/
 
-    // TODO(dimitris): VALGRIND!
     external_function_casadi_free(&get_matrices_fun);
 
     external_function_param_casadi_free(expl_vde_for);
@@ -1083,14 +1070,13 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     free(phi_jac_y_uhat);
     free(f_lo_jac_x1_x1dot_u_z);
 
-
-    free(nlp_opts);
-    free(nlp_in);
-    free(nlp_out);
-    free(solver);
-    free(dims);
-    free(config);
-    free(plan);
+    ocp_nlp_opts_free(nlp_opts);
+    ocp_nlp_in_free(nlp_in);
+    ocp_nlp_out_free(nlp_out);
+    ocp_nlp_free(solver);
+    ocp_nlp_dims_free(dims);
+    ocp_nlp_config_free(plan, config);
+    ocp_nlp_plan_free(plan);
 
     free(lb0);
     free(ub0);
@@ -1144,7 +1130,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
 TEST_CASE("wind turbine nmpc", "[NLP solver]")
 {
-    std::vector<std::string> integrators = {"IRK", "ERK", "NEW_LIFTED_IRK", "GNSF", "MIXED"};
+    std::vector<std::string> integrators = {"IRK", "ERK", "LIFTED_IRK", "GNSF", "MIXED"};
     std::vector<std::string> qp_solvers = { "SPARSE_HPIPM",
                                             // "SPARSE_HPMPC",
                                             // "SPARSE_QPDUNES",

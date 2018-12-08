@@ -30,7 +30,6 @@
 #include <acados/sim/sim_common.h>
 #include <acados/sim/sim_erk_integrator.h>
 #include "acados/sim/sim_irk_integrator.h"
-#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/external_function_generic.h"
 
 // wt model
@@ -220,8 +219,8 @@ int main()
 				config->ns = 2; // number of integration stages
 				break;
 
-			case 2: // lifted_irk
-				printf("\n\nsim solver: Lifted_IRK\n");
+			case 2: // old_lifted_irk
+				printf("\n\nsim solver: Old_Lifted_IRK\n");
 				sim_lifted_irk_config_initialize_default(config);
 				config->ns = 2; // number of integration stages
 				break;
@@ -300,7 +299,7 @@ int main()
 				model->jac_u_ode_impl = (external_function_generic *) &exfun_jac_u_ode;
 				break;
 			}
-			case 2: // lifted_irk
+			case 2: // old_lifted_irk
 			{
 				lifted_irk_model *model = in->model;
 				model->forw_vde_expl = (external_function_generic *) &exfun_forw_vde;

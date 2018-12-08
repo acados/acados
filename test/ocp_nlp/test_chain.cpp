@@ -115,9 +115,8 @@ ocp_nlp_dynamics_t nlp_dynamics_enum(std::string const& inString)
 sim_solver_t integrator_enum(std::string const& inString)
 {
     if (inString == "ERK") return ERK;
-    if (inString == "LIFTED_IRK") return LIFTED_IRK;
     if (inString == "IRK") return IRK;
-    if (inString == "NEW_LIFTED_IRK") return NEW_LIFTED_IRK;
+    if (inString == "LIFTED_IRK") return LIFTED_IRK;
 
     return (sim_solver_t) -1;
 }
@@ -134,7 +133,6 @@ ocp_nlp_cost_t cost_enum(std::string const& inString)
 
 static void select_dynamics_casadi(int N, int num_free_masses,
     external_function_casadi *forw_vde,
-    external_function_casadi *jac_ode,
     external_function_casadi *impl_ode_fun,
     external_function_casadi *impl_ode_fun_jac_x_xdot,
     external_function_casadi *impl_ode_fun_jac_x_xdot_u,
@@ -152,13 +150,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
                 forw_vde[ii].casadi_sparsity_out = &vde_chain_nm2_sparsity_out;
                 forw_vde[ii].casadi_n_in = &vde_chain_nm2_n_in;
                 forw_vde[ii].casadi_n_out = &vde_chain_nm2_n_out;
-
-                jac_ode[ii].casadi_fun = &jac_chain_nm2;
-                jac_ode[ii].casadi_work = &jac_chain_nm2_work;
-                jac_ode[ii].casadi_sparsity_in = &jac_chain_nm2_sparsity_in;
-                jac_ode[ii].casadi_sparsity_out = &jac_chain_nm2_sparsity_out;
-                jac_ode[ii].casadi_n_in = &jac_chain_nm2_n_in;
-                jac_ode[ii].casadi_n_out = &jac_chain_nm2_n_out;
 
                 impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm2;
                 impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm2_work;
@@ -224,13 +215,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
                 forw_vde[ii].casadi_n_in = &vde_chain_nm3_n_in;
                 forw_vde[ii].casadi_n_out = &vde_chain_nm3_n_out;
 
-                jac_ode[ii].casadi_fun = &jac_chain_nm3;
-                jac_ode[ii].casadi_work = &jac_chain_nm3_work;
-                jac_ode[ii].casadi_sparsity_in = &jac_chain_nm3_sparsity_in;
-                jac_ode[ii].casadi_sparsity_out = &jac_chain_nm3_sparsity_out;
-                jac_ode[ii].casadi_n_in = &jac_chain_nm3_n_in;
-                jac_ode[ii].casadi_n_out = &jac_chain_nm3_n_out;
-
                 impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm3;
                 impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm3_work;
                 impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_chain_nm3_sparsity_in;
@@ -295,13 +279,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
                 forw_vde[ii].casadi_n_in = &vde_chain_nm4_n_in;
                 forw_vde[ii].casadi_n_out = &vde_chain_nm4_n_out;
 
-                jac_ode[ii].casadi_fun = &jac_chain_nm4;
-                jac_ode[ii].casadi_work = &jac_chain_nm4_work;
-                jac_ode[ii].casadi_sparsity_in = &jac_chain_nm4_sparsity_in;
-                jac_ode[ii].casadi_sparsity_out = &jac_chain_nm4_sparsity_out;
-                jac_ode[ii].casadi_n_in = &jac_chain_nm4_n_in;
-                jac_ode[ii].casadi_n_out = &jac_chain_nm4_n_out;
-
                 impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm4;
                 impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm4_work;
                 impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_chain_nm4_sparsity_in;
@@ -365,13 +342,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
                 forw_vde[ii].casadi_n_in = &vde_chain_nm5_n_in;
                 forw_vde[ii].casadi_n_out = &vde_chain_nm5_n_out;
 
-                jac_ode[ii].casadi_fun = &jac_chain_nm5;
-                jac_ode[ii].casadi_work = &jac_chain_nm5_work;
-                jac_ode[ii].casadi_sparsity_in = &jac_chain_nm5_sparsity_in;
-                jac_ode[ii].casadi_sparsity_out = &jac_chain_nm5_sparsity_out;
-                jac_ode[ii].casadi_n_in = &jac_chain_nm5_n_in;
-                jac_ode[ii].casadi_n_out = &jac_chain_nm5_n_out;
-
                 impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm5;
                 impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm5_work;
                 impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_chain_nm5_sparsity_in;
@@ -433,13 +403,6 @@ static void select_dynamics_casadi(int N, int num_free_masses,
                 forw_vde[ii].casadi_sparsity_out = &vde_chain_nm6_sparsity_out;
                 forw_vde[ii].casadi_n_in = &vde_chain_nm6_n_in;
                 forw_vde[ii].casadi_n_out = &vde_chain_nm6_n_out;
-
-                jac_ode[ii].casadi_fun = &jac_chain_nm6;
-                jac_ode[ii].casadi_work = &jac_chain_nm6_work;
-                jac_ode[ii].casadi_sparsity_in = &jac_chain_nm6_sparsity_in;
-                jac_ode[ii].casadi_sparsity_out = &jac_chain_nm6_sparsity_out;
-                jac_ode[ii].casadi_n_in = &jac_chain_nm6_n_in;
-                jac_ode[ii].casadi_n_out = &jac_chain_nm6_n_out;
 
                 impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm6;
                 impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm6_work;
@@ -1338,13 +1301,6 @@ void setup_and_solve_nlp(int NN,
                         plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
                 }
                 break;
-            case NEW_LIFTED_IRK:
-                for (int i = 0; i < NN; i++)
-                {
-                    if (plan->nlp_dynamics[i] == CONTINUOUS_MODEL)
-                        plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
-                }
-                break;
             default:
                 for (int i = 0; i < NN; i++)
                 {
@@ -1355,9 +1311,9 @@ void setup_and_solve_nlp(int NN,
                         else if (i%4 == 1)
                             plan->sim_solver_plan[i].sim_solver = ERK;
                         else if (i%4 == 2)
-                            plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
+                            plan->sim_solver_plan[i].sim_solver = IRK;
                         else if (i%4 == 3)
-                            plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
+                            plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
                     }
                 }
                 break;
@@ -1374,14 +1330,31 @@ void setup_and_solve_nlp(int NN,
 
     // TODO(dimitris): fix minor memory leak
     // here
-    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
+    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
     * ocp_nlp_dims
     ************************************************/
 
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-    ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
+
+    ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
+    ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
+
+    for (int i = 0; i <= NN; i++)
+    {
+        if (plan->nlp_cost[i] != EXTERNALLY_PROVIDED)
+        {
+            ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
+        }
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
+    }
 
     /************************************************
     * dynamics
@@ -1389,8 +1362,6 @@ void setup_and_solve_nlp(int NN,
 
     // explicit
     external_function_casadi *expl_vde_for = (external_function_casadi *)
-                                              malloc(NN*sizeof(external_function_casadi));
-    external_function_casadi *expl_ode_jac = (external_function_casadi *)
                                               malloc(NN*sizeof(external_function_casadi));
 
     // implicit
@@ -1409,14 +1380,11 @@ void setup_and_solve_nlp(int NN,
     if (NMF < 4)
         erk4_casadi = (external_function_casadi *)malloc(NN*sizeof(external_function_casadi));
 
-    select_dynamics_casadi(NN, NMF, expl_vde_for, expl_ode_jac, impl_ode_fun,
+    select_dynamics_casadi(NN, NMF, expl_vde_for, impl_ode_fun,
             impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
     // forw_vde
     external_function_casadi_create_array(NN, expl_vde_for);
-    // jac_ode
-    external_function_casadi_create_array(NN, expl_ode_jac);
-
     // impl_ode
     external_function_casadi_create_array(NN, impl_ode_fun);
     //
@@ -1477,6 +1445,10 @@ void setup_and_solve_nlp(int NN,
                         exit(1);
                 }
                 break;
+
+            default:
+                printf("\ncost not correctly specified\n\n");
+                exit(1);
         }
     }
 
@@ -1579,6 +1551,10 @@ void setup_and_solve_nlp(int NN,
                 stage_cost_external->ext_cost = &ext_cost_generic[i];
                 assert(i < NN && "externally provided cost not implemented for last stage!");
                 break;
+
+            default:
+                printf("\ncost not correctly specified\n\n");
+                exit(1);
         }
     }
 
@@ -1599,40 +1575,28 @@ void setup_and_solve_nlp(int NN,
 
                 if (plan->sim_solver_plan[i].sim_solver == ERK)
                 {
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                                             "expl_vde_for", &expl_vde_for[i]);
-                    if (set_fun_status != 0) exit(1);
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
-                                                            "expl_ode_jac", &expl_ode_jac[i]);
-                    if (set_fun_status != 0) exit(1);
-                }
-                else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
-                {
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
-                                                            "expl_vde_for", &expl_vde_for[i]);
-                    if (set_fun_status != 0) exit(1);
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
-                                                            "expl_ode_jac", &expl_ode_jac[i]);
                     if (set_fun_status != 0) exit(1);
                 }
                 else if (plan->sim_solver_plan[i].sim_solver == IRK)
                 {
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                                             "impl_ode_fun", &impl_ode_fun[i]);
                     if (set_fun_status != 0) exit(1);
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                             "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot[i]);
                     if (set_fun_status != 0) exit(1);
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                                 "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
                     if (set_fun_status != 0) exit(1);
                 }
-                else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+                else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
                 {
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                                             "impl_ode_fun", &impl_ode_fun[i]);
                     if (set_fun_status != 0) exit(1);
-                    set_fun_status = nlp_set_model_in_stage(config, nlp_in, i,
+                    set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i,
                                         "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u[i]);
                     if (set_fun_status != 0) exit(1);
                 }
@@ -1647,6 +1611,10 @@ void setup_and_solve_nlp(int NN,
                     dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
                 }
                 break;
+
+            default:
+                printf("\ndynamics not correctly specified\n\n");
+                exit(1);
         }
     }
 
@@ -1724,10 +1692,6 @@ void setup_and_solve_nlp(int NN,
             {
                 sim_opts->ns = 4;
             }
-            else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
-            {
-                sim_opts->ns = 2;
-            }
             else if (plan->sim_solver_plan[i].sim_solver == IRK)
             {
                 sim_opts->ns = 2;
@@ -1735,12 +1699,17 @@ void setup_and_solve_nlp(int NN,
             }
         }
     }
+    int maxIter = MAX_SQP_ITERS;
+    double min_res_g = 1e-6;
+    double min_res_b = 1e-6;
+    double min_res_d = 1e-6;
+    double min_res_m = 1e-6;
 
-    sqp_opts->maxIter = MAX_SQP_ITERS;
-    sqp_opts->min_res_g = 1e-6;
-    sqp_opts->min_res_b = 1e-6;
-    sqp_opts->min_res_d = 1e-6;
-    sqp_opts->min_res_m = 1e-6;
+    ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
+    ocp_nlp_opts_set(config, nlp_opts, "min_res_m", &min_res_m);
 
     /************************************************
     * ocp_nlp out
@@ -1787,9 +1756,7 @@ void setup_and_solve_nlp(int NN,
 
     // TODO(dimitris): VALGRIND!
     external_function_casadi_free(expl_vde_for);
-    external_function_casadi_free(expl_ode_jac);
     free(expl_vde_for);
-    free(expl_ode_jac);
 
     external_function_casadi_free(impl_ode_fun);
     external_function_casadi_free(impl_ode_fun_jac_x_xdot);
@@ -1807,12 +1774,12 @@ void setup_and_solve_nlp(int NN,
         free(erk4_casadi);
     }
 
-    free(nlp_opts);
-    free(nlp_in);
-    free(nlp_out);
-    free(solver);
-    free(dims);
-    free(config);
+    ocp_nlp_opts_free(nlp_opts);
+    ocp_nlp_in_free(nlp_in);
+    ocp_nlp_out_free(nlp_out);
+    ocp_nlp_free(solver);
+    ocp_nlp_dims_free(dims);
+    ocp_nlp_config_free(plan, config);
 
     free(xref);
     free(diag_cost_x);

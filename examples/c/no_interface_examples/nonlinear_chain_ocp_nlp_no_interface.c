@@ -32,7 +32,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
-#include "acados/sim/sim_new_lifted_irk_integrator.h"
+#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -77,9 +77,9 @@
 #define NREP 1
 
 #define NUM_FREE_MASSES 3
-#define NEW_LIFTED 1
+#define LIFTED 1
 
-// dynamics: 0 erk, 1 lifted_irk, 2 irk, 3 discrete_model, 4 new_lifted_irk
+// dynamics: 0 erk, 1 old_lifted_irk, 2 irk, 3 discrete_model, 4 lifted_irk
 #define DYNAMICS 4
 
 // cost: 0 ls, 1 nls, 2 external
@@ -1263,11 +1263,11 @@ int main() {
 		ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii]);
     }
 #elif DYNAMICS==4
-	// dynamics: new lifted IRK
+	// dynamics: lifted IRK
     for (int ii = 0; ii < NN; ii++)
     {
 		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
-		sim_new_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
+		sim_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 #endif
 
@@ -1708,7 +1708,7 @@ int main() {
 	for (int i=0; i<NN; i++)
 	{
 		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
-		new_lifted_irk_model *model = dynamics->sim_model;
+		lifted_irk_model *model = dynamics->sim_model;
 		model->impl_ode_fun = (external_function_generic *) &impl_ode_fun[i];
 		model->impl_ode_fun_jac_x_xdot_u = (external_function_generic *) &impl_ode_fun_jac_x_xdot_u[i];
 	}
@@ -1862,7 +1862,7 @@ int main() {
 #elif DYNAMICS==4
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
-		// dynamics: new lifterd IRK GL2
+		// dynamics: lifterd IRK GL2
 		sim_opts->ns = 4;
 #endif
     }

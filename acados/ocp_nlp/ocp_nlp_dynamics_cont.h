@@ -31,9 +31,9 @@ extern "C" {
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
-#include "acados/sim/sim_common.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
+#include "acados_c/sim_interface.h"
 
 
 
@@ -59,7 +59,8 @@ void *ocp_nlp_dynamics_cont_dims_assign(void *config, void *raw_memory);
 void ocp_nlp_dynamics_cont_dims_initialize(void *config, void *dims, int nx, int nu, int nx1,
                                            int nu1, int nz);
 
-
+//
+void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *field, int* value);
 
 /************************************************
  * options
@@ -81,8 +82,7 @@ void ocp_nlp_dynamics_cont_opts_initialize_default(void *config, void *dims, voi
 //
 void ocp_nlp_dynamics_cont_opts_update(void *config, void *dims, void *opts);
 //
-void ocp_nlp_dynamics_cont_opts_set(void *config_, void *dims_, void *opts_, enum acados_opts name,
-    void *ptr_value);
+int ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *field, void* value);
 
 
 
@@ -170,7 +170,9 @@ void ocp_nlp_dynamics_cont_initialize(void *config_, void *dims, void *model_, v
 //
 void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims, void *model_, void *opts,
                                               void *mem, void *work_);
-
+//
+int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims, void *model_, void *opts_,
+                                        void *mem_, void *work_);
 
 
 #ifdef __cplusplus

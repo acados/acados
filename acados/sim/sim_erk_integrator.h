@@ -39,8 +39,6 @@ typedef struct
     /* external functions */
     // explicit ode
     external_function_generic *expl_ode_fun;
-    // jacobian explicit ode
-    external_function_generic *expl_ode_jac;
     // hessian explicit ode
     external_function_generic *expl_ode_hes;
     // forward explicit vde
@@ -69,18 +67,16 @@ typedef struct
 
 } sim_erk_workspace;
 
-// get & set functions
-void sim_erk_set_nx(void *dims_, int nx);
-void sim_erk_set_nu(void *dims_, int nu);
-void sim_erk_set_nz(void *dims_, int nz);
-
-void sim_erk_get_nx(void *dims_, int *nx);
-void sim_erk_get_nu(void *dims_, int *nu);
-void sim_erk_get_nz(void *dims_, int *nz);
 
 // dims
 int sim_erk_dims_calculate_size();
 void *sim_erk_dims_assign(void *config_, void *raw_memory);
+// get & set functions
+void sim_erk_dims_set(void *config_, void *dims_, const char *field, const int* value);
+
+void sim_erk_get_nx(void *dims_, int *nx);
+void sim_erk_get_nu(void *dims_, int *nu);
+void sim_erk_get_nz(void *dims_, int *nz);
 
 // model
 int sim_erk_model_calculate_size(void *config, void *dims);
@@ -95,6 +91,9 @@ void sim_erk_opts_update(void *config_, void *dims, void *opts_);
 void *sim_erk_opts_assign(void *config, void *dims, void *raw_memory);
 //
 void sim_erk_opts_initialize_default(void *config, void *dims, void *opts_);
+//
+int sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value);
+
 
 // memory
 int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_);

@@ -22,7 +22,6 @@
 #include "acados/sim/sim_gnsf.h"
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
-#include "acados/sim/sim_new_lifted_irk_integrator.h"
 
 #include "acados_c/sim_interface.h"
 
@@ -35,7 +34,9 @@
 
 
 
-/* config */
+/************************************************
+* config
+************************************************/
 
 sim_solver_config *sim_config_create(sim_solver_plan plan)
 {
@@ -45,15 +46,10 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
 
     sim_solver_t solver_name = plan.sim_solver;
 
-    // TODO(dimitris): cath error if solver not compiled
-    // printf("\n\nSpecified solver interface not compiled with acados!\n\n");
     switch (solver_name)
     {
         case ERK:
             sim_erk_config_initialize_default(solver_config);
-            break;
-        case LIFTED_IRK:
-            sim_lifted_irk_config_initialize_default(solver_config);
             break;
         case IRK:
             sim_irk_config_initialize_default(solver_config);
@@ -61,9 +57,12 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
         case GNSF:
             sim_gnsf_config_initialize_default(solver_config);
             break;
-        case NEW_LIFTED_IRK:
-            sim_new_lifted_irk_config_initialize_default(solver_config);
+        case LIFTED_IRK:
+            sim_lifted_irk_config_initialize_default(solver_config);
             break;
+        default:
+            printf("\n\nSpecified integrator not available in acados C interface!\n\n");
+            exit(1);
     }
     return solver_config;
 }
@@ -72,12 +71,14 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
 
 void sim_config_free(void *config)
 {
-	free(config);
+    free(config);
 }
 
 
 
-/* dims */
+/************************************************
+* dims
+************************************************/
 
 void *sim_dims_create(void *config_)
 {
@@ -96,26 +97,20 @@ void *sim_dims_create(void *config_)
 
 void sim_dims_free(void *dims)
 {
-	free(dims);
+    free(dims);
 }
 
 
 
-void sim_dims_set_nx(sim_solver_config *config, void *dims, int nx)
+void sim_dims_set(sim_solver_config *config, void *dims, const char *field, const int* value)
 {
-	config->set_nx(dims, nx);
+    config->dims_set(config, dims, field, value);
 }
 
 
-
-void sim_dims_set_nu(sim_solver_config *config, void *dims, int nu)
-{
-	config->set_nu(dims, nu);
-}
-
-
-
-/* in */
+/************************************************
+* in
+************************************************/
 
 sim_in *sim_in_create(sim_solver_config *config, void *dims)
 {
@@ -132,30 +127,27 @@ sim_in *sim_in_create(sim_solver_config *config, void *dims)
 
 void sim_in_free(void *in)
 {
-	free(in);
+    free(in);
 }
 
 
 
-int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr)
+int sim_model_set(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr)
 {
-    int status = sim_set_model_internal(config, in->model, fun_type, fun_ptr);
+    int status = sim_model_set_internal(config, in->model, fun_type, fun_ptr);
 
     return status;
 }
 
 
 
-// NOTE(dimitris) not exposed to user, used by NLP interface too
-int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type,
+int sim_model_set_internal(sim_solver_config *config, void *model, const char *fun_type,
                            void *fun_ptr)
 {
     int status = ACADOS_SUCCESS;
         /* explicit model */
     if (!strcmp(fun_type, "expl_ode_fun"))
         status = config->model_set_function(model, EXPL_ODE_FUN, fun_ptr);
-    else if (!strcmp(fun_type, "expl_ode_jac"))
-        status = config->model_set_function(model, EXPL_ODE_JAC, fun_ptr);
     else if (!strcmp(fun_type, "expl_ode_hes"))     // TODO(FreyJo): more consistent naming: hess
         status = config->model_set_function(model, EXPL_ODE_HES, fun_ptr);
     else if (!strcmp(fun_type, "expl_ode_hess"))
@@ -167,9 +159,15 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         /* implicit model */
     else if (!strcmp(fun_type, "impl_ode_fun"))
         status = config->model_set_function(model, IMPL_ODE_FUN, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot")) // TODO update with z !!!
+    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot"))
+        // TODO(oj): remove this case and fix dependencies
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT, fun_ptr);
-    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u")) // TODO update with z !!!
+    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot_z"))
+        status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u"))
+        // TODO(oj): remove this and update with z everywhere
+        status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u_z"))
         status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot_u"))
         status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT_U, fun_ptr);
@@ -184,6 +182,8 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         status = config->model_set_function(model, PHI_JAC_Y_UHAT, fun_ptr);
     else if (!strcmp(fun_type, "f_lo_jac_x1_x1dot_u_z"))
         status = config->model_set_function(model, LO_FUN, fun_ptr);
+    else if (!strcmp(fun_type, "get_gnsf_matrices"))
+        status = config->model_set_function(model, GET_GNSF_MATRICES, fun_ptr);
     else
         return ACADOS_FAILURE;
 
@@ -194,71 +194,74 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
 
 void sim_in_set_T(sim_solver_config *config, double T, sim_in *in)
 {
-	in->T = T;
-	return;
+    in->T = T;
+    return;
 }
 
 
 
 void sim_in_set_x(sim_solver_config *config, void *dims, double *x, sim_in *in)
 {
-	int nx;
-	config->get_nx(dims, &nx);
-	int ii;
-	for (ii=0; ii<nx; ii++)
-		in->x[ii] = x[ii];
-	return;
+    int nx;
+    config->get_nx(dims, &nx);
+    int ii;
+    for (ii=0; ii < nx; ii++)
+        in->x[ii] = x[ii];
+    return;
 }
 
 
 
 void sim_in_set_xdot(sim_solver_config *config, void *dims, double *xdot, sim_in *in)
 {
-	int nx;
-	config->get_nx(dims, &nx);
-	int ii;
-	for (ii=0; ii<nx; ii++)
-		in->xdot[ii] = xdot[ii];
-	return;
+    int nx;
+    config->get_nx(dims, &nx);
+    int ii;
+    for (ii=0; ii < nx; ii++)
+        in->xdot[ii] = xdot[ii];
+    return;
 }
 
 
 
 void sim_in_set_u(sim_solver_config *config, void *dims, double *u, sim_in *in)
 {
-	int nu;
-	config->get_nu(dims, &nu);
-	int ii;
-	for (ii=0; ii<nu; ii++)
-		in->u[ii] = u[ii];
-	return;
+    int nu;
+    config->get_nu(dims, &nu);
+    int ii;
+    for (ii=0; ii < nu; ii++)
+        in->u[ii] = u[ii];
+    return;
 }
 
 
 
 void sim_in_set_Sx(sim_solver_config *config, void *dims, double *Sx, sim_in *in)
 {
-	int nx;
-	config->get_nx(dims, &nx);
-	int ii;
-	for (ii=0; ii<nx*nx; ii++)
-		in->S_forw[ii] = Sx[ii];
-	return;
+    int nx;
+    config->get_nx(dims, &nx);
+    int ii;
+    for (ii=0; ii < nx*nx; ii++)
+        in->S_forw[ii] = Sx[ii];
+    return;
 }
 
 
 
 void sim_in_set_Su(sim_solver_config *config, void *dims, double *Su, sim_in *in)
 {
-	int nx, nu;
-	config->get_nx(dims, &nx);
-	config->get_nu(dims, &nu);
-	int ii;
-	for (ii=0; ii<nx*nu; ii++)
-		in->S_forw[nx*nx+ii] = Su[ii];
-	return;
+    int nx, nu;
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
+    int ii;
+    for (ii=0; ii < nx*nu; ii++)
+        in->S_forw[nx*nx+ii] = Su[ii];
+    return;
 }
 
+/************************************************
+* out
+************************************************/
 
 
 sim_out *sim_out_create(sim_solver_config *config, void *dims)
@@ -276,47 +279,50 @@ sim_out *sim_out_create(sim_solver_config *config, void *dims)
 
 void sim_out_free(void *out)
 {
-	free(out);
+    free(out);
 }
 
 
 
 void sim_out_get_xn(sim_solver_config *config, void *dims, sim_out *out, double *xn)
 {
-	int nx;
-	config->get_nx(dims, &nx);
-	int ii;
-	for (ii=0; ii<nx; ii++)
-		xn[ii] = out->xn[ii];
-	return;
+    int nx;
+    config->get_nx(dims, &nx);
+    int ii;
+    for (ii=0; ii < nx; ii++)
+        xn[ii] = out->xn[ii];
+    return;
 }
 
 
 
 void sim_out_get_Sxn(sim_solver_config *config, void *dims, sim_out *out, double *Sxn)
 {
-	int nx;
-	config->get_nx(dims, &nx);
-	int ii;
-	for (ii=0; ii<nx*nx; ii++)
-		Sxn[ii] = out->S_forw[ii];
-	return;
+    int nx;
+    config->get_nx(dims, &nx);
+    int ii;
+    for (ii=0; ii < nx*nx; ii++)
+        Sxn[ii] = out->S_forw[ii];
+    return;
 }
 
 
 
 void sim_out_get_Sun(sim_solver_config *config, void *dims, sim_out *out, double *Sun)
 {
-	int nx, nu;
-	config->get_nx(dims, &nx);
-	config->get_nu(dims, &nu);
-	int ii;
-	for (ii=0; ii<nx*nu; ii++)
-		Sun[ii] = out->S_forw[nx*nx+ii];
-	return;
+    int nx, nu;
+    config->get_nx(dims, &nx);
+    config->get_nu(dims, &nu);
+    int ii;
+    for (ii=0; ii < nx*nu; ii++)
+        Sun[ii] = out->S_forw[nx*nx+ii];
+    return;
 }
 
 
+/************************************************
+* options
+************************************************/
 
 void *sim_opts_create(sim_solver_config *config, void *dims)
 {
@@ -335,20 +341,20 @@ void *sim_opts_create(sim_solver_config *config, void *dims)
 
 void sim_opts_free(void *opts)
 {
-	free(opts);
+    free(opts);
 }
 
 
-
-void sim_opts_set_sens_forw(sim_rk_opts *opts, bool value)
+int sim_opts_set(sim_solver_config *config, void *opts, const char *field,
+                           void *value)
 {
-
-	opts->sens_forw = value;
-	return;
-
+    return config->opts_set(config, opts, field, value);
 }
 
 
+/************************************************
+* solver
+************************************************/
 
 int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_)
 {
@@ -405,14 +411,20 @@ sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
 
 void sim_free(void *solver)
 {
-	free(solver);
+    free(solver);
 }
 
 
 
 int sim_solve(sim_solver *solver, sim_in *in, sim_out *out)
 {
-    int flag =  solver->config->evaluate(solver->config, in, out, solver->opts, solver->mem,
+    int status = solver->config->evaluate(solver->config, in, out, solver->opts, solver->mem,
                                     solver->work);
-	return flag;
+    return status;
+}
+
+int sim_precompute(sim_solver *solver, sim_in *in, sim_out *out)
+{
+    return solver->config->precompute(solver->config, in, out, solver->opts, solver->mem,
+                                    solver->work);
 }

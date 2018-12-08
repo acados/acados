@@ -60,6 +60,11 @@ void *ocp_nlp_sqp_opts_assign(void *config, void *dims, void *raw_memory);
 void ocp_nlp_sqp_opts_initialize_default(void *config, void *dims, void *opts);
 //
 void ocp_nlp_sqp_opts_update(void *config, void *dims, void *opts);
+//
+void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, const void* value);
+//
+int ocp_nlp_sqp_dyanimcs_opts_set(void *config_, void *opts_, int stage,
+                                     const char *field, void *value);
 
 /************************************************
  * memory
@@ -123,6 +128,9 @@ int ocp_nlp_sqp(void *config, void *dims, void *nlp_in, void *nlp_out,
                 void *args, void *mem, void *work_);
 //
 void ocp_nlp_sqp_config_initialize_default(void *config_);
+//
+int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
+                void *opts_, void *mem_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

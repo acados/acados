@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#include "acados/ocp_qp/ocp_qp_common.h"
+// #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp_interface.h"
 
