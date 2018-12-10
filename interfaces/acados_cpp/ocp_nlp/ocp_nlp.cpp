@@ -198,26 +198,26 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
 
     squeeze_dimensions(cached_bounds);
 
-    ocp_nlp_dims_initialize(config_.get(), d_["nx"].data(), d_["nu"].data(),
-                            d_["ny"].data(), d_["nbx"].data(),
-                            d_["nbu"].data(), d_["ng"].data(),
-                            d_["nh"].data(), std::vector<int>(N + 1, 0).data(),
-                            d_["ns"].data(), d_["nz"].data(), dims_.get());
+    // ocp_nlp_dims_initialize(config_.get(), d_["nx"].data(), d_["nu"].data(),
+    //                         d_["ny"].data(), d_["nbx"].data(),
+    //                         d_["nbu"].data(), d_["ng"].data(),
+    //                         d_["nh"].data(), std::vector<int>(N + 1, 0).data(),
+    //                         d_["ns"].data(), d_["nz"].data(), dims_.get());
 
-    ocp_nlp_dims_set_opt_vars(config, dims_.get(), "nx", d_["nx"].data());
-    ocp_nlp_dims_set_opt_vars(config, dims_.get(), "nu", d_["nu"].data());
-    ocp_nlp_dims_set_opt_vars(config, dims_.get(), "nz", d_["nx"].data());
-    ocp_nlp_dims_set_opt_vars(config, dims_.get(), "ns", d_["ns"].data());
+    ocp_nlp_dims_set_opt_vars(config_.get(), dims_.get(), "nx", d_["nx"].data());
+    ocp_nlp_dims_set_opt_vars(config_.get(), dims_.get(), "nu", d_["nu"].data());
+    ocp_nlp_dims_set_opt_vars(config_.get(), dims_.get(), "nz", d_["nx"].data());
+    ocp_nlp_dims_set_opt_vars(config_.get(), dims_.get(), "ns", d_["ns"].data());
 
-    for (int i = 0; i <= NN; i++)
+    for (int i = 0; i <= N; i++)
     {
-        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
+        ocp_nlp_dims_set_cost(config_.get(), dims_.get(), i, "ny", &ny[i]);
 
-        ocp_nlp_dims_set_constraints(config, dims_.get(), i, "nbx", &d_["nbx"].data()[i]);
-        ocp_nlp_dims_set_constraints(config, dims_.get(), i, "nbu", &d_["nbu"].data()[i]);
-        ocp_nlp_dims_set_constraints(config, dims_.get(), i, "ng", &d_["ng"].data()[i]);
-        ocp_nlp_dims_set_constraints(config, dims_.get(), i, "nh", &d_["nh"].data()[i]);
-        ocp_nlp_dims_set_constraints(config, dims_.get(), i, "nsh", &d_["ns"].data()[i]);
+        ocp_nlp_dims_set_constraints(config_.get(), dims_.get(), i, "nbx", &d_["nbx"].data()[i]);
+        ocp_nlp_dims_set_constraints(config_.get(), dims_.get(), i, "nbu", &d_["nbu"].data()[i]);
+        ocp_nlp_dims_set_constraints(config_.get(), dims_.get(), i, "ng", &d_["ng"].data()[i]);
+        ocp_nlp_dims_set_constraints(config_.get(), dims_.get(), i, "nh", &d_["nh"].data()[i]);
+        ocp_nlp_dims_set_constraints(config_.get(), dims_.get(), i, "nsh", &d_["ns"].data()[i]);
 
     }
 
