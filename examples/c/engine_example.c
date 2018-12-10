@@ -49,7 +49,7 @@ int main()
     const int n_sim = 601;
     const int N = 20;
 
-    int nx[N+1], nu[N+1], nz[N+1], ny[N+1], nb[N+1], nbx[N+1], nbu[N+1], ng[N+1], nh[N+1], nq[N+1], ns[N+1];
+    int nx[N+1], nu[N+1], nz[N+1], ny[N+1], nb[N+1], nbx[N+1], nbu[N+1], ng[N+1], nh[N+1], ns[N+1];
     for (int i = 0; i <= N; ++i)
     {
         nx[i] = 4;
@@ -61,7 +61,6 @@ int main()
         nb[i] = nbx[i] + nbu[i];
         ng[i] = 0;
         nh[i] = 0;
-        nq[i] = 0;
         ns[i] = 0;
     }
 
@@ -204,13 +203,16 @@ int main()
     ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
     ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
 
-    ocp_nlp_dims_set_cost(config, dims, "ny", ny);
+	for (int i = 0; i <= N; i++)
+    {
+        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
 
-    ocp_nlp_dims_set_constraints(config, dims, "nbx", nbx);
-    ocp_nlp_dims_set_constraints(config, dims, "nbu", nbu);
-    ocp_nlp_dims_set_constraints(config, dims, "ng", ng);
-    ocp_nlp_dims_set_constraints(config, dims, "nh", nh);
-    ocp_nlp_dims_set_constraints(config, dims, "np", nq);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
+    }
+
 
     // in
 	ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
@@ -222,43 +224,43 @@ int main()
     int status = ACADOS_SUCCESS;
 
 	for (int i = 0; i < N; ++i) {
-        if(ocp_nlp_cost_set_model(config, dims, nlp_in, i, "nls_jac", &nls_cost_residual)) exit(1);
-        if(ocp_nlp_cost_set_model(config, dims, nlp_in, i, "y_ref", y_ref)) exit(1);
-        if(ocp_nlp_cost_set_model(config, dims, nlp_in, i, "W", W)) exit(1);
+        if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "nls_jac", &nls_cost_residual)) exit(1);
+        if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "y_ref", y_ref)) exit(1);
+        if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "W", W)) exit(1);
     }
 
-    if(ocp_nlp_cost_set_model(config, dims, nlp_in, N, "nls_jac", &nls_cost_N_residual)) exit(1);
-    if(ocp_nlp_cost_set_model(config, dims, nlp_in, N, "y_ref", y_ref)) exit(1);
-    if(ocp_nlp_cost_set_model(config, dims, nlp_in, N, "W", W_N)) exit(1);
+    if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "nls_jac", &nls_cost_N_residual)) exit(1);
+    if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "y_ref", y_ref)) exit(1);
+    if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "W", W_N)) exit(1);
 
     // dynamics
     for (int i = 0; i < N; ++i)
     {
-        if(ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun", &impl_dae_fun)) exit(1);
-        if(ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z)) exit(1);
-        if(ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun", &impl_dae_fun)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
     }
 
     // bounds
 	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb_0);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub_0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lb", lb_0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ub", ub_0);
 
     for (int i = 0; i < nb[0]; ++i)
         constraints[0]->idxb[i] = idxb[i];
     
     for (int i = 1; i < N; ++i)
     {
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "lb", lb);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, i, "ub", ub);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lb", lb);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ub", ub);
 
         for (int j = 0; j < nb[i]; ++j)
             constraints[i]->idxb[j] = idxb[j];
     }
 
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, N, "lb", lb_N);
-    ocp_nlp_constraints_bounds_set(config, dims, nlp_in, N, "ub", ub_N);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, N, "lb", lb_N);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, N, "ub", ub_N);
     for (int i = 0; i < nb[N]; ++i)
         constraints[N]->idxb[i] = idxb[i];
 
@@ -290,7 +292,7 @@ int main()
         y_ref[0] = reference[i];
 
         for (int j = 0; j <= N; ++j)
-            status = ocp_nlp_cost_set_model(config, dims, nlp_in, j, "y_ref", y_ref);
+            status = ocp_nlp_cost_model_set(config, dims, nlp_in, j, "y_ref", y_ref);
 
         status = ocp_nlp_solve(solver, nlp_in, nlp_out);
         
@@ -299,8 +301,8 @@ int main()
         blasfeo_unpack_dvec(nx[1], nlp_out->ux+1, nu[1], &lb_0[nu[1]]);
         blasfeo_unpack_dvec(nx[1], nlp_out->ux+1, nu[1], &ub_0[nu[1]]);
 
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "lb", lb_0);
-        ocp_nlp_constraints_bounds_set(config, dims, nlp_in, 0, "ub", ub_0);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lb", lb_0);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ub", ub_0);
 
 
         printf("iter %d, status: %d, res = %g\n", i, status, nlp_out->inf_norm_res);

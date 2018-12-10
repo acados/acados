@@ -1166,7 +1166,18 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
     // extract dims
     int N = dims->N;
     int status = ACADOS_SUCCESS;
-    for (int ii = 0; ii < N; ii++)
+
+    int ii;
+
+    // TODO(fuck_lint) checks
+    // TODO(fuck_lint) flag to enable/disable checks
+    for (ii = 0; ii <= N; ii++)
+    {
+        // TODO(fuck_lint) check that ns in opt_var == ns in constraints
+    }
+
+    // precompute
+    for (ii = 0; ii < N; ii++)
     {
         config->dynamics[ii]->model_set_T(nlp_in->Ts[ii], nlp_in->dynamics[ii]);
         status = config->dynamics[ii]->precompute(config->dynamics[ii], dims->dynamics[ii],

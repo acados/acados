@@ -276,21 +276,21 @@ int main()
         {
             case IRK:  // IRK
             {
-                sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-                sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
+                sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
+                sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
                         &impl_ode_fun_jac_x_xdot);
-                sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-                sim_set_model(config, in, "impl_ode_hess", &impl_ode_hess);
+                sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                sim_model_set(config, in, "impl_ode_hess", &impl_ode_hess);
                 break;
             }
             case GNSF:  // GNSF
             {
                 // set model funtions
-                sim_set_model(config, in, "phi_fun", &phi_fun);
-                sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
-                sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
-                sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
-                sim_set_model(config, in, "get_gnsf_matrices", &get_matrices_fun);
+                sim_model_set(config, in, "phi_fun", &phi_fun);
+                sim_model_set(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
+                sim_model_set(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
+                sim_model_set(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+                sim_model_set(config, in, "get_gnsf_matrices", &get_matrices_fun);
 
                 break;
             }

@@ -121,19 +121,16 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 //
 void ocp_nlp_in_free(void *in);
 //
-int ocp_nlp_dynamics_set_model(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
+int ocp_nlp_dynamics_model_set(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
                            const char *fun_type, void *fun_ptr);
 //
 int nlp_set_discrete_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
                                     void *fun_ptr);
 //
-int nlp_bounds_bgh_get(ocp_nlp_constraints_bgh_dims *dims, ocp_nlp_constraints_bgh_model *model,
-                       const char *identifier, double *values);
-//
-int ocp_nlp_cost_set_model(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+int ocp_nlp_cost_model_set(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                            int stage, const char *field, void *value);
 //
-int ocp_nlp_constraints_bounds_set(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+int ocp_nlp_constraints_model_set(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
                                      ocp_nlp_in *in, int stage, const char *field, void *value);
 
 /* out */

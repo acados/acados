@@ -31,11 +31,13 @@ extern "C" {
 #include "acados/utils/types.h"
 
 // struct of arguments to the solver
+// TODO(roversch): why not make this a typedef of the underlying struct?
 typedef struct ocp_qp_hpipm_opts_
 {
     struct d_ocp_qp_ipm_arg *hpipm_opts;
 } ocp_qp_hpipm_opts;
 
+// TODO(roversch): why not make this a typedef of the underlying struct?
 // struct of the solver memory
 typedef struct ocp_qp_hpipm_memory_
 {

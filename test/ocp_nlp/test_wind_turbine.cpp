@@ -600,18 +600,22 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     ************************************************/
 
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
+
     ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
     ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
     ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
     ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
 
-    ocp_nlp_dims_set_cost(config, dims, "ny", ny);
+    for (int i = 0; i <= NN; i++)
+    {
+        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
 
-    ocp_nlp_dims_set_constraints(config, dims, "nbx", nbx);
-    ocp_nlp_dims_set_constraints(config, dims, "nbu", nbu);
-    ocp_nlp_dims_set_constraints(config, dims, "ng", ng);
-    ocp_nlp_dims_set_constraints(config, dims, "nh", nh);
-    ocp_nlp_dims_set_constraints(config, dims, "np", nq);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
+    }
 
     /************************************************
     * dynamics
@@ -677,11 +681,11 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     {
         if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
-            ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nx1", i, &gnsf_nx1);
-            ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nz1", i, &gnsf_nz1);
-            ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nout", i, &gnsf_nout);
-            ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_ny", i, &gnsf_ny);
-            ocp_nlp_dims_set_dynamics_in_stage(config, dims, "gnsf_nuhat", i, &gnsf_nuhat);
+            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nx1", &gnsf_nx1);
+            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nz1", &gnsf_nz1);
+            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nout", &gnsf_nout);
+            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_ny", &gnsf_ny);
+            ocp_nlp_dims_set_dynamics(config, dims, i, "gnsf_nuhat", &gnsf_nuhat);
         }
     }
 
@@ -732,57 +736,57 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     {
         if (plan->sim_solver_plan[i].sim_solver == ERK)
         {
-            set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "expl_vde_for",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "expl_vde_for",
                 &expl_vde_for[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == IRK)
         {
-            set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun",
                 &impl_ode_fun[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
             set_fun_status =
-                ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun_jac_x_xdot",
+                ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot",
                                            &impl_ode_fun_jac_x_xdot[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_jac_x_xdot_u",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_jac_x_xdot_u",
                 &impl_ode_jac_x_xdot_u[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
-            set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "phi_fun", &phi_fun[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_fun", &phi_fun[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "phi_fun_jac_y",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_fun_jac_y",
                 &phi_fun_jac_y[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "phi_jac_y_uhat",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_jac_y_uhat",
                 &phi_jac_y_uhat[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
                 &f_lo_jac_x1_x1dot_u_z[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "get_gnsf_matrices",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "get_gnsf_matrices",
                                                         &get_matrices_fun);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
-            set_fun_status = ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun",
                 &impl_ode_fun[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
             set_fun_status =
-                ocp_nlp_dynamics_set_model(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u",
+                ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u",
                                             &impl_ode_fun_jac_x_xdot_u[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);

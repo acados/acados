@@ -1244,6 +1244,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 }
 
 
+
 int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
@@ -1262,9 +1263,22 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
     // extract dims
     int N = dims->N;
     int status = ACADOS_SUCCESS;
-    for (int ii = 0; ii < N; ii++)
+
+    int ii;
+
+    // TODO(fuck_lint) checks
+    // TODO(fuck_lint) flag to enable/disable checks
+    for (ii = 0; ii <= N; ii++)
     {
+        // TODO(fuck_lint) check that ns in opt_var == ns in constraints
+    }
+
+    // precompute
+    for (ii = 0; ii < N; ii++)
+    {
+        // set T
         config->dynamics[ii]->model_set_T(nlp_in->Ts[ii], nlp_in->dynamics[ii]);
+        // dynamics precompute
         status = config->dynamics[ii]->precompute(config->dynamics[ii], dims->dynamics[ii],
                                             nlp_in->dynamics[ii], opts->dynamics[ii],
                                             mem->dynamics[ii], work->dynamics[ii]);
@@ -1272,6 +1286,8 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
     }
     return status;
 }
+
+
 
 void ocp_nlp_sqp_get(void *config_, void *mem_, const char *field, void *return_value_)
 {

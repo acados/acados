@@ -1230,7 +1230,7 @@ void sim_irk_config_initialize_default(void *config_)
     config->model_set_function = &sim_irk_model_set_function;
     config->dims_calculate_size = &sim_irk_dims_calculate_size;
     config->dims_assign = &sim_irk_dims_assign;
-    config->set_dims = &sim_irk_dims_set;
+    config->dims_set = &sim_irk_dims_set;
     config->get_nx = &sim_irk_get_nx;
     config->get_nu = &sim_irk_get_nu;
     config->get_nz = &sim_irk_get_nz;

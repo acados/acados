@@ -64,9 +64,9 @@ void sim_in_free(void *out);
 //
 void sim_in_set_T(sim_solver_config *config, double T, sim_in *in);
 //
-int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr);
+int sim_model_set(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr);
 //
-int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type,
+int sim_model_set_internal(sim_solver_config *config, void *model, const char *fun_type,
                            void *fun_ptr);
 //
 void sim_in_set_x(sim_solver_config *config, void *dims, double *x, sim_in *in);

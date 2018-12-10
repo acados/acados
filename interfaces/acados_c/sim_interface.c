@@ -103,7 +103,7 @@ void sim_dims_free(void *dims)
 
 void sim_dims_set(sim_solver_config *config, void *dims, const char *field, const int* value)
 {
-    config->set_dims(config, dims, field, value);
+    config->dims_set(config, dims, field, value);
 }
 
 
@@ -131,16 +131,16 @@ void sim_in_free(void *in)
 
 
 
-int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr)
+int sim_model_set(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr)
 {
-    int status = sim_set_model_internal(config, in->model, fun_type, fun_ptr);
+    int status = sim_model_set_internal(config, in->model, fun_type, fun_ptr);
 
     return status;
 }
 
 
 
-int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type,
+int sim_model_set_internal(sim_solver_config *config, void *model, const char *fun_type,
                            void *fun_ptr)
 {
     int status = ACADOS_SUCCESS;
