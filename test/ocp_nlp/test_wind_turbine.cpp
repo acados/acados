@@ -38,8 +38,6 @@
 #include "acados_c/external_function_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
-
 
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -980,8 +978,6 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0_ref);
     ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0_ref);
 
-    ocp_nlp_cost_ls_model **cost = (ocp_nlp_cost_ls_model **) nlp_in->cost;
-
     for (int idx = 0; idx < nmpc_problems; idx++)
     {
         // update wind distrurbance as external function parameter
@@ -1016,13 +1012,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         // update reference
         for (int i = 0; i <= NN; i++)
         {
-            BLASFEO_DVECEL(&cost[i]->y_ref, 0) = y_ref[(idx + i)*4+0];
-            BLASFEO_DVECEL(&cost[i]->y_ref, 1) = y_ref[(idx + i)*4+1];
-            if (i < NN)
-            {
-                BLASFEO_DVECEL(&cost[i]->y_ref, 2) = y_ref[(idx + i)*4+2];
-                BLASFEO_DVECEL(&cost[i]->y_ref, 3) = y_ref[(idx + i)*4+3];
-            }
+            ocp_nlp_cost_model_set(config, dims, nlp_in, i, "yref", &y_ref[(idx + i)*4]);
         }
 
         // solve NLP

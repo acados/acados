@@ -226,13 +226,6 @@ void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *fi
     {
         ocp_nlp_constraints_bgh_set_nsh(config_, dims_, value);
     }
-    // else if (!strcmp(field, "np"))
-    // {
-    //     if (*value != 0) {
-    //         printf("\nerror: attempt to set np>0 in module ocp_nlp_constraints_bgh\n");
-    //         exit(1);
-    //     }
-    // }
     else
     {
         printf("\nerror: dims type not available in module ocp_nlp_constraints_bgh: %s\n", field);
