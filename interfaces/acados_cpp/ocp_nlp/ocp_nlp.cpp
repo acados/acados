@@ -47,6 +47,7 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
     d_["nh"] = nh;
     d_["ns"] = ns;
     d_["ny"] = vector<int>(N+1);
+    // TODO(oj): initialize?!
     d_["nz"] = vector<int>(N+1);
 
     int config_size = ocp_nlp_solver_config_calculate_size(N);
@@ -197,12 +198,6 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
     }
 
     squeeze_dimensions(cached_bounds);
-
-    // ocp_nlp_dims_initialize(config_.get(), d_["nx"].data(), d_["nu"].data(),
-    //                         d_["ny"].data(), d_["nbx"].data(),
-    //                         d_["nbu"].data(), d_["ng"].data(),
-    //                         d_["nh"].data(), std::vector<int>(N + 1, 0).data(),
-    //                         d_["ns"].data(), d_["nz"].data(), dims_.get());
 
     ocp_nlp_dims_set_opt_vars(config_.get(), dims_.get(), "nx", d_["nx"].data());
     ocp_nlp_dims_set_opt_vars(config_.get(), dims_.get(), "nu", d_["nu"].data());
