@@ -188,6 +188,8 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
 int sim_out_calculate_size(void *config, void *dims);
 //
 sim_out *sim_out_assign(void *config, void *dims, void *raw_memory);
+//
+int sim_out_get(void *config, void *dims, sim_out *out, char *field, void *value);
 
 /* opts */
 //

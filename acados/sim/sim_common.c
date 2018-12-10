@@ -143,7 +143,7 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
 
     if (!strcmp(field, "T"))
     {
-        int *T = value;
+        double *T = value;
         in->T = T[0];
     }
     else if (!strcmp(field, "x"))
@@ -203,7 +203,6 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
     }
     else
     {
-//        printf("\nsim_in_set other\n");
         status = config->model_set(in->model, field, value);
     }
 
@@ -280,6 +279,32 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 
     return out;
 }
+
+
+
+int sim_out_get(void *config_, void *dims_, sim_out *out, char *field, void *value)
+{
+    sim_solver_config *config = config_;
+	
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "xn"))
+    {
+        int nx;
+        config->get_nx(dims_, &nx);
+        int ii;
+        double *xn = value;
+        for (ii=0; ii < nx; ii++)
+            xn[ii] = out->xn[ii];
+    }
+    else
+    {
+        status = ACADOS_FAILURE;
+    }
+
+	return status;
+}
+
 
 
 /************************************************
