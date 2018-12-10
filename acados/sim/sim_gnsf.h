@@ -279,6 +279,8 @@ int sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value
 // model
 int sim_gnsf_model_calculate_size(void *config, void *dims_);
 void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory);
+int sim_gnsf_model_set(void *model_, char *field, void *value);
+// TODO(*) remove
 int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun);
 
 // precomputation

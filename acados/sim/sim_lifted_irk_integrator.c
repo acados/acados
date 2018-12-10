@@ -152,6 +152,29 @@ void *sim_lifted_irk_model_assign(void *config, void *dims, void *raw_memory)
 
 
 
+int sim_lifted_irk_model_set(void *model_, char *field, void *value)
+{
+    lifted_irk_model *model = model_;
+
+    if (!strcmp(field, "impl_ode_fun"))
+    {
+        model->impl_ode_fun = value;
+    }
+    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot_u"))
+    {
+        model->impl_ode_fun_jac_x_xdot_u = value;
+    }
+    else
+    {
+        printf("\nerror: sim_lifted_irk_model_set_function: wrong field: %s\n", field);
+        return ACADOS_FAILURE;
+    }
+
+    return ACADOS_SUCCESS;
+}
+
+
+
 int sim_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
 {
     lifted_irk_model *model = model_;
@@ -169,6 +192,9 @@ int sim_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, voi
     }
     return ACADOS_SUCCESS;
 }
+
+
+
 /************************************************
 * opts
 ************************************************/
@@ -825,6 +851,7 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     config->model_calculate_size = &sim_lifted_irk_model_calculate_size;
     config->model_assign = &sim_lifted_irk_model_assign;
     config->model_set_function = &sim_lifted_irk_model_set_function;
+    config->model_set = &sim_lifted_irk_model_set;
     config->dims_calculate_size = &sim_lifted_irk_dims_calculate_size;
     config->dims_assign = &sim_lifted_irk_dims_assign;
     config->dims_set = &sim_lifted_irk_dims_set;

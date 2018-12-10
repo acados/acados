@@ -132,6 +132,8 @@ int sim_irk_model_calculate_size(void *config, void *dims)
     return size;
 }
 
+
+
 void *sim_irk_model_assign(void *config, void *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
@@ -143,6 +145,49 @@ void *sim_irk_model_assign(void *config, void *dims, void *raw_memory)
 
     return data;
 }
+
+
+
+int sim_irk_model_set(void *model_, char *field, void *value)
+{
+    irk_model *model = model_;
+
+    if (!strcmp(field, "impl_ode_fun"))
+    {
+        model->impl_ode_fun = value;
+    }
+    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot"))
+    {
+        // TODO(oj): remove this case and fix dependencies
+        model->impl_ode_fun_jac_x_xdot_z = value;
+    }
+    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot_z"))
+    {
+        model->impl_ode_fun_jac_x_xdot_z = value;
+    }
+    else if (!strcmp(field, "impl_ode_jac_x_xdot_u"))
+    {
+        // TODO(oj): remove this and update with z everywhere
+        model->impl_ode_jac_x_xdot_u_z = value;
+    }
+    else if (!strcmp(field, "impl_ode_jac_x_xdot_u_z"))
+    {
+        model->impl_ode_jac_x_xdot_u_z = value;
+    }
+    else if (!strcmp(field, "impl_ode_hes"))
+    {
+        model->impl_ode_hess = value;
+    }
+    else
+    {
+        printf("\nerror: sim_irk_model_set_function: wrong field: %s\n", field);
+        return ACADOS_FAILURE;
+    }
+
+    return ACADOS_SUCCESS;
+}
+
+
 
 int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
 {
@@ -167,6 +212,8 @@ int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
     }
     return ACADOS_SUCCESS;
 }
+
+
 
 /************************************************
  * opts
@@ -1227,6 +1274,7 @@ void sim_irk_config_initialize_default(void *config_)
     config->workspace_calculate_size = &sim_irk_workspace_calculate_size;
     config->model_calculate_size = &sim_irk_model_calculate_size;
     config->model_assign = &sim_irk_model_assign;
+    config->model_set = &sim_irk_model_set;
     config->model_set_function = &sim_irk_model_set_function;
     config->dims_calculate_size = &sim_irk_dims_calculate_size;
     config->dims_assign = &sim_irk_dims_assign;

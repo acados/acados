@@ -81,6 +81,8 @@ void sim_erk_get_nz(void *dims_, int *nz);
 // model
 int sim_erk_model_calculate_size(void *config, void *dims);
 void *sim_erk_model_assign(void *config, void *dims, void *raw_memory);
+int sim_erk_model_set(void *model, char *field, void *value);
+// TODO(*) remove
 int sim_erk_model_set_function(void *model, sim_function_t fun_type, void *fun);
 
 // opts

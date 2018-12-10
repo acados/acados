@@ -155,6 +155,39 @@ void *sim_erk_model_assign(void *config, void *dims, void *raw_memory)
 
 
 
+int sim_erk_model_set(void *model_, char *field, void *value)
+{
+//    printf("\nsim_erk_model_set\n");
+    erk_model *model = model_;
+
+    if (!strcmp(field, "expl_ode_fun"))
+    {
+//    printf("\nsim_erk_model_set expl_ode_fun\n");
+        model->expl_ode_fun = value;
+    }
+    else if (!strcmp(field, "expl_vde_for"))
+    {
+        model->expl_vde_for = value;
+    }
+    else if (!strcmp(field, "expl_vde_adj"))
+    {
+        model->expl_vde_adj = value;
+    }
+    else if (!strcmp(field, "expl_ode_hes"))
+    {
+        model->expl_ode_hes = value;
+    }
+    else
+    {
+        printf("\nerror: sim_erk_model_set_function: wrong field: %s\n", field);
+        return ACADOS_FAILURE;
+    }
+
+    return ACADOS_SUCCESS;
+}
+
+
+
 int sim_erk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
 {
     erk_model *model = model_;
@@ -861,6 +894,7 @@ void sim_erk_config_initialize_default(void *config_)
     config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
     config->model_calculate_size = &sim_erk_model_calculate_size;
     config->model_assign = &sim_erk_model_assign;
+    config->model_set = &sim_erk_model_set;
     config->model_set_function = &sim_erk_model_set_function;
     config->evaluate = &sim_erk;
     config->precompute = &sim_erk_precompute;

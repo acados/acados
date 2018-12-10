@@ -129,6 +129,8 @@ void *sim_irk_dims_assign(void *config_, void *raw_memory);
 // model
 int sim_irk_model_calculate_size(void *config, void *dims);
 void *sim_irk_model_assign(void *config, void *dims, void *raw_memory);
+int sim_irk_model_set(void *model, char *field, void *value);
+// TODO(*) remove
 int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun);
 
 // opts

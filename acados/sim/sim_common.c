@@ -27,6 +27,8 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 
+
+
 /************************************************
  * config
  ************************************************/
@@ -40,6 +42,8 @@ int sim_solver_config_calculate_size()
     return size;
 }
 
+
+
 sim_solver_config *sim_solver_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
@@ -51,6 +55,8 @@ sim_solver_config *sim_solver_config_assign(void *raw_memory)
 
     return config;
 }
+
+
 
 /************************************************
  * in
@@ -81,6 +87,8 @@ int sim_in_calculate_size(void *config_, void *dims)
 
     return size;
 }
+
+
 
 sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 {
@@ -123,6 +131,86 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 
     return in;
 }
+
+
+
+int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
+{
+//    printf("\nsim_in_set\n");
+    sim_solver_config *config = config_;
+
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "T"))
+    {
+        int *T = value;
+        in->T = T[0];
+    }
+    else if (!strcmp(field, "x"))
+    {
+        int nx;
+        config->get_nx(dims_, &nx);
+        int ii;
+        double *x = value;
+        for (ii=0; ii < nx; ii++)
+            in->x[ii] = x[ii];
+    }
+    else if (!strcmp(field, "xdot"))
+    {
+        int nx;
+        config->get_nx(dims_, &nx);
+        int ii;
+        double *xdot = value;
+        for (ii=0; ii < nx; ii++)
+            in->xdot[ii] = xdot[ii];
+    }
+    else if (!strcmp(field, "u"))
+    {
+        int nu;
+        config->get_nu(dims_, &nu);
+        int ii;
+        double *u = value;
+        for (ii=0; ii < nu; ii++)
+            in->u[ii] = u[ii];
+    }
+    else if (!strcmp(field, "z"))
+    {
+        int nz;
+        config->get_nz(dims_, &nz);
+        int ii;
+        double *z = value;
+        for (ii=0; ii < nz; ii++)
+            in->z[ii] = z[ii];
+    }
+    else if (!strcmp(field, "Sx"))
+    {
+        int nx;
+        config->get_nx(dims_, &nx);
+        int ii;
+        double *Sx = value;
+        for (ii=0; ii < nx*nx; ii++)
+            in->S_forw[ii] = Sx[ii];
+    }
+    else if (!strcmp(field, "Su"))
+    {
+        int nx, nu;
+        config->get_nx(dims_, &nx);
+        config->get_nu(dims_, &nu);
+        int ii;
+        double *Su = value;
+        for (ii=0; ii < nx*nu; ii++)
+            in->S_forw[nx*nx+ii] = Su[ii];
+    }
+    else
+    {
+//        printf("\nsim_in_set other\n");
+        status = config->model_set(in->model, field, value);
+    }
+
+    return status;
+}
+
+
 
 /************************************************
  * out

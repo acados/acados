@@ -42,6 +42,8 @@
 // #include "blasfeo/include/blasfeo_d_aux_ext_dep.h" // can be included for printing while
 // debugging
 
+
+
 /************************************************
  * dims
  ************************************************/
@@ -70,6 +72,8 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory)
     assert((char *) raw_memory + sim_gnsf_dims_calculate_size() == c_ptr);
     return dims;
 }
+
+
 
 /************************************************
  * get & set functions
@@ -183,6 +187,8 @@ void sim_gnsf_get_nz(void *dims_, int *nz)
     *nz = dims->nz;
 }
 
+
+
 /************************************************
  * import functions
  ************************************************/
@@ -219,6 +225,7 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
     get_matrices_fun->evaluate(get_matrices_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
                                ext_fun_out);
 }
+
 
 
 /************************************************
@@ -337,6 +344,8 @@ int sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value
     return sim_rk_opts_set(opts, field, value);
 }
 
+
+
 /************************************************
  * model
  ************************************************/
@@ -375,6 +384,8 @@ int sim_gnsf_model_calculate_size(void *config, void *dims_)
 
     return size;
 }
+
+
 
 void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
 {
@@ -424,6 +435,43 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
     return model;
 }
 
+
+
+int sim_gnsf_model_set(void *model_, char *field, void *value)
+{
+    gnsf_model *model = model_;
+
+    if (!strcmp(field, "phi_fun"))
+	{
+		model->phi_fun = value;
+	}
+    else if (!strcmp(field, "phi_fun_jac_y"))
+	{
+		model->phi_fun_jac_y = value;
+	}
+    else if (!strcmp(field, "phi_jac_y_uhat"))
+	{
+		model->phi_jac_y_uhat = value;
+	}
+    else if (!strcmp(field, "f_lo_jac_x1_x1dot_u_z"))
+	{
+		model->f_lo_fun_jac_x1_x1dot_u_z = value;
+	}
+    else if (!strcmp(field, "get_gnsf_matrices"))
+	{
+		model->get_gnsf_matrices = value;
+	}
+    else
+    {
+        printf("\nerror: sim_gnsf_model_set_function: wrong field: %s\n", field);
+        return ACADOS_FAILURE;
+    }
+
+    return ACADOS_SUCCESS;
+}
+
+
+
 int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun)
 {
     gnsf_model *model = model_;
@@ -450,6 +498,8 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
     }
     return ACADOS_SUCCESS;
 }
+
+
 
 /************************************************
  * GNSF PRECOMPUTATION
@@ -2493,6 +2543,7 @@ void sim_gnsf_config_initialize_default(void *config_)
     // model
     config->model_calculate_size = &sim_gnsf_model_calculate_size;
     config->model_assign = &sim_gnsf_model_assign;
+    config->model_set = &sim_gnsf_model_set;
     config->model_set_function = &sim_gnsf_model_set_function;
     // dims
     config->dims_calculate_size = &sim_gnsf_dims_calculate_size;
