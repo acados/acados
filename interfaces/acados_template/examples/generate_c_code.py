@@ -15,7 +15,7 @@ def export_ode_model():
     g = 9.81
     l = 0.8
 
-    # set up States & Controls
+    # set up states & controls
     x1      = SX.sym('x1')
     theta   = SX.sym('theta')
     v1      = SX.sym('v1')
@@ -41,7 +41,7 @@ def export_ode_model():
     # parameters
     p = []
     
-    ## dynamics     
+    # dynamics     
     denominator = M + m - m*cos(theta)*cos(theta)
     f_expl = vertcat(v1, (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator, dtheta, (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator))
     
@@ -173,6 +173,7 @@ for i in range(Nsim):
         simU[i,j] = u0[j]
     
     # update initial condition
+    import pdb; pdb.set_trace()
     acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, "x", x0);
     acados.ocp_nlp_constraints_bounds_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_double)]
     field_name = "lbx"
