@@ -54,3 +54,11 @@ def generate_solver(model, ra):
     # output file
     out_file = open('./c_generated_code/Makefile', 'w+')
     out_file.write(output)
+
+    # render S-Function template
+    template = env.get_template('acados_solver.in.c')
+    output = template.render(ra=ra)
+
+    # output file
+    out_file = open('./c_generated_code/acados_solver_'  + model.name + '.c', 'w+')
+    out_file.write(output)
