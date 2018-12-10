@@ -23,12 +23,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* RHS */
 
 	// model
+
 	int nu = mxGetScalar( mxGetField( prhs[0], 0, "nu" ) );
 //	mexPrintf("\n%d\n", nu);
 	int nx = mxGetScalar( mxGetField( prhs[0], 0, "nx" ) );
 //	mexPrintf("\n%d\n", nx);
 
-	// opts
+
+	// opts_struct
+
 	int num_stages = mxGetScalar( mxGetField( prhs[1], 0, "num_stages" ) );
 	int num_steps = mxGetScalar( mxGetField( prhs[1], 0, "num_steps" ) );
 	bool sens_forw = mxGetScalar( mxGetField( prhs[1], 0, "sens_forw" ) );

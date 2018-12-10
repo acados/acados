@@ -5,6 +5,8 @@
 mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_create.c
 mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_destroy.c
 %mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_ext_fun_create.c
+%mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_ext_fun_destroy.c
+mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_set_in_model.c
 
 
 

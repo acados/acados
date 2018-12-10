@@ -45,9 +45,13 @@ classdef acados_integrator < handle
 					c_sources = [c_sources, 'model_expl_ode_hes.c ']; 
 					lib_name = ['model_expl.so'];
 					system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
+					% compile mex wrappers for external functions
 					mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo model_expl.so sim_ext_fun_create.c
 					mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo model_expl.so sim_ext_fun_destroy.c
+					% get pointers for external functions in model
 					obj.C_sim_ext_fun = sim_ext_fun_create(obj.opts_struct);
+					% set in model ( = casadi functions )
+					sim_set_in_model(obj.opts_struct, obj.C_sim, obj.C_sim_ext_fun);
 				else
 					fprintf('\nscheme not supported: %s\n', obj.opts.scheme);
 				end
