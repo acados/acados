@@ -204,6 +204,23 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
                             d_["nh"].data(), std::vector<int>(N + 1, 0).data(),
                             d_["ns"].data(), d_["nz"].data(), dims_.get());
 
+    ocp_nlp_dims_set_opt_vars(config, dims_.get(), "nx", d_["nx"].data());
+    ocp_nlp_dims_set_opt_vars(config, dims_.get(), "nu", d_["nu"].data());
+    ocp_nlp_dims_set_opt_vars(config, dims_.get(), "nz", d_["nx"].data());
+    ocp_nlp_dims_set_opt_vars(config, dims_.get(), "ns", d_["ns"].data());
+
+    for (int i = 0; i <= NN; i++)
+    {
+        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
+
+        ocp_nlp_dims_set_constraints(config, dims_.get(), i, "nbx", &d_["nbx"].data()[i]);
+        ocp_nlp_dims_set_constraints(config, dims_.get(), i, "nbu", &d_["nbu"].data()[i]);
+        ocp_nlp_dims_set_constraints(config, dims_.get(), i, "ng", &d_["ng"].data()[i]);
+        ocp_nlp_dims_set_constraints(config, dims_.get(), i, "nh", &d_["nh"].data()[i]);
+        ocp_nlp_dims_set_constraints(config, dims_.get(), i, "nsh", &d_["ns"].data()[i]);
+
+    }
+
     solver_options_.reset(ocp_nlp_opts_create(config_.get(), dims_.get()));
 
     process_options(solver_name, options, solver_options_.get());
