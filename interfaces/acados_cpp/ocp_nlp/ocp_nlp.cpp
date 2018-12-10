@@ -211,7 +211,7 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
 
     for (int i = 0; i <= N; i++)
     {
-        ocp_nlp_dims_set_cost(config_.get(), dims_.get(), i, "ny", &ny[i]);
+        ocp_nlp_dims_set_cost(config_.get(), dims_.get(), i, "ny", &d_["ny"].data()[i]);
 
         ocp_nlp_dims_set_constraints(config_.get(), dims_.get(), i, "nbx", &d_["nbx"].data()[i]);
         ocp_nlp_dims_set_constraints(config_.get(), dims_.get(), i, "nbu", &d_["nbu"].data()[i]);

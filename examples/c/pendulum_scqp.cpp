@@ -81,7 +81,6 @@ int main() {
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-//	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), np.data(), ns.data(), nz.data(), dims);
     ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx.data());
     ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu.data());
     ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz.data());
