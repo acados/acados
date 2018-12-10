@@ -19,8 +19,8 @@
 
 find_package(PythonInterp 3)
 if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
-    add_test(NAME ocp_nlp_py
-        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp.py)
+    # add_test(NAME ocp_nlp_py
+    #     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp.py)
 
     add_test(NAME ocp_qp_py
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp.py)
@@ -28,7 +28,7 @@ if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
     # add_test(NAME sim_py
         # COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/sim.py)
 
-    set_tests_properties(ocp_qp_py ocp_nlp_py
+    set_tests_properties(ocp_qp_py
         PROPERTIES
             ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/swig/python/:$ENV{PYTHONPATH}")
 
