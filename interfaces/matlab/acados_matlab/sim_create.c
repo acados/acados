@@ -15,6 +15,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 //	mexPrintf("\nin sim_create\n");
 
+	// sizeof(long long) == sizeof(void *) = 64 !!!
+	long long *ptr;
+
+
+
 	/* RHS */
 
 	// model
@@ -30,6 +35,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //	mexPrintf("\n%d\n", sens_forw);
 	char *scheme = mxArrayToString( mxGetField( prhs[1], 0, "scheme" ) );
 //	mexPrintf("\n%s\n", scheme);
+
+
+
+	/* LHS */
+
+	// field names of output struct
+	char *fieldnames[5];
+	fieldnames[0] = (char*)mxMalloc(50);
+	fieldnames[1] = (char*)mxMalloc(50);
+	fieldnames[2] = (char*)mxMalloc(50);
+	fieldnames[3] = (char*)mxMalloc(50);
+	fieldnames[4] = (char*)mxMalloc(50);
+
+	memcpy(fieldnames[0],"config",sizeof("config"));
+	memcpy(fieldnames[1],"dims",sizeof("dims"));
+	memcpy(fieldnames[2],"opts",sizeof("opts"));
+	memcpy(fieldnames[3],"in",sizeof("in"));
+	memcpy(fieldnames[4],"out",sizeof("out"));
+
+	// create output struct
+	plhs[0] = mxCreateStructMatrix(1, 1, 5, (const char **) fieldnames);
+
+	mxFree( fieldnames[0] );
+	mxFree( fieldnames[1] );
+	mxFree( fieldnames[2] );
+	mxFree( fieldnames[3] );
+	mxFree( fieldnames[4] );
+
 
 
 	/* plan & config */
@@ -69,34 +102,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	sim_out *out = sim_out_create(config, dims);
 
 
-	/* LHS */
 
-	// field names of output struct
-	char *fieldnames[5];
-	fieldnames[0] = (char*)mxMalloc(20);
-	fieldnames[1] = (char*)mxMalloc(20);
-	fieldnames[2] = (char*)mxMalloc(20);
-	fieldnames[3] = (char*)mxMalloc(20);
-	fieldnames[4] = (char*)mxMalloc(20);
-
-	memcpy(fieldnames[0],"config",sizeof("config"));
-	memcpy(fieldnames[1],"dims",sizeof("dims"));
-	memcpy(fieldnames[2],"opts",sizeof("opts"));
-	memcpy(fieldnames[3],"in",sizeof("in"));
-	memcpy(fieldnames[4],"out",sizeof("out"));
-
-	// create output struct
-	plhs[0] = mxCreateStructMatrix(1, 1, 5, (const char **) fieldnames);
-
-	mxFree( fieldnames[0] );
-	mxFree( fieldnames[1] );
-	mxFree( fieldnames[2] );
-	mxFree( fieldnames[3] );
-	mxFree( fieldnames[4] );
-
-	// populate output struct
-	// sizeof(long long) == sizeof(void *) = 64 !!!
-	long long *ptr;
+	/* populate output struct */
 
 	// config
 	mxArray *config_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
@@ -128,6 +135,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	ptr[0] = (long long) out;
 	mxSetField(plhs[0], 0, "out", out_mat);
 
+
+
+	/* return */
 	return;
 
 	}

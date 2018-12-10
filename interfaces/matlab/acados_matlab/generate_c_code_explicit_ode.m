@@ -65,7 +65,7 @@ vdeX = vdeX + jtimes(f_expl,x,Sx);
 
 vdeP = vdeP + jtimes(f_expl,x,Sp);
 
-expl_vde_forw = Function([model_name,'_expl_vde_forw'],{x,Sx,Sp,u},{f_expl,vdeX,vdeP});
+expl_vde_for = Function([model_name,'_expl_vde_for'],{x,Sx,Sp,u},{f_expl,vdeX,vdeP});
 
 adj = jtimes(f_expl,[x;u],lambdaX,true);
 
@@ -80,12 +80,12 @@ for j = 1:nx+nu
     end
 end
 
-expl_ode_hess = Function([model_name,'_expl_ode_hess'],{x,Sx,Sp,lambdaX,u},{adj,hess2});
+expl_ode_hes = Function([model_name,'_expl_ode_hes'],{x,Sx,Sp,lambdaX,u},{adj,hess2});
 
 %% generate C code
 expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);
-expl_vde_forw.generate([model_name,'_expl_vde_forw'], casadi_opts);
+expl_vde_for.generate([model_name,'_expl_vde_for'], casadi_opts);
 expl_vde_adj.generate([model_name,'_expl_vde_adj'], casadi_opts);
-expl_ode_hess.generate([model_name,'_expl_ode_hess'], casadi_opts);
+expl_ode_hes.generate([model_name,'_expl_ode_hes'], casadi_opts);
 
 end

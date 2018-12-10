@@ -4,11 +4,12 @@
 %mex libacore.so libhpipm.so libblasfeo.so sim_create.c
 mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_create.c
 mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_destroy.c
+%mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_ext_fun_create.c
 
 
 
 %% model
-model_name = 'crane_model';
+model_name = 'model';
 sim_model = crane_model_expl(model_name);
 
 

@@ -4,8 +4,10 @@ classdef acados_integrator < handle
 
 	properties
 		C_sim
+		C_sim_ext_fun
 		model
 		opts
+		opts_struct
 	end % properties
 
 
@@ -17,16 +19,16 @@ classdef acados_integrator < handle
 			obj.model = model;
 			obj.opts = opts;
 			% create opts struct
-			opts_struct = struct;
-			opts_struct.num_stages = opts.num_stages;
-			opts_struct.num_steps = opts.num_steps;
+			obj.opts_struct = struct;
+			obj.opts_struct.num_stages = opts.num_stages;
+			obj.opts_struct.num_steps = opts.num_steps;
 			if (strcmp(opts.sens_forw, 'true'))
-				opts_struct.sens_forw = 1;
+				obj.opts_struct.sens_forw = 1;
 			else
-				opts_struct.sens_forw = 0;
+				obj.opts_struct.sens_forw = 0;
 			end
-			opts_struct.scheme = opts.scheme;
-			obj.C_sim = sim_create(model, opts_struct);
+			obj.opts_struct.scheme = opts.scheme;
+			obj.C_sim = sim_create(model, obj.opts_struct);
 		end
 
 
@@ -37,12 +39,15 @@ classdef acados_integrator < handle
 					generate_c_code_explicit_ode(obj.model);
 					% compile the code in a shared library
 					c_sources = ' ';
-					c_sources = [c_sources, obj.model.name, '_expl_ode_fun.c ']; 
-					c_sources = [c_sources, obj.model.name, '_expl_vde_forw.c ']; 
-					c_sources = [c_sources, obj.model.name, '_expl_vde_adj.c ']; 
-					c_sources = [c_sources, obj.model.name, '_expl_ode_hess.c ']; 
-					lib_name = [obj.model.name, '_expl.so'];
+					c_sources = [c_sources, 'model_expl_ode_fun.c ']; 
+					c_sources = [c_sources, 'model_expl_vde_for.c ']; 
+					c_sources = [c_sources, 'model_expl_vde_adj.c ']; 
+					c_sources = [c_sources, 'model_expl_ode_hes.c ']; 
+					lib_name = ['model_expl.so'];
 					system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
+					mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo model_expl.so sim_ext_fun_create.c
+					mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo model_expl.so sim_ext_fun_destroy.c
+					obj.C_sim_ext_fun = sim_ext_fun_create(obj.opts_struct);
 				else
 					fprintf('\nscheme not supported: %s\n', obj.opts.scheme);
 				end
@@ -57,6 +62,7 @@ classdef acados_integrator < handle
 		function delete(obj)
 %			fprintf('\nin delete\n');
 			sim_destroy(obj.C_sim)
+			sim_ext_fun_destroy(obj.opts_struct, obj.C_sim_ext_fun)
 		end
 
 
