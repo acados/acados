@@ -173,7 +173,7 @@ for i in range(Nsim):
         simU[i,j] = u0[j]
     
     # update initial condition
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, "x", x0);
     acados.ocp_nlp_constraints_bounds_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_double)]
     field_name = "lbx"
