@@ -15,7 +15,7 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	{
 
-	mexPrintf("\nin sim_set_in_model\n");
+//	mexPrintf("\nin sim_set_model\n");
 
 	long long *ptr;
 
@@ -66,7 +66,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nscheme not supported %s\n", scheme);
+		mexPrintf("\nsim_set_model: scheme not supported %s\n", scheme);
 		return;
 		}
 

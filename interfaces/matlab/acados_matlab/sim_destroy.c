@@ -41,6 +41,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// out
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "out" ) );
 	sim_out *out = (sim_out *) ptr[0];
+	// solver
+	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "solver" ) );
+	sim_solver *solver = (sim_solver *) ptr[0];
 
 
 
@@ -51,6 +54,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	sim_opts_free(opts);
 	sim_in_free(in);
 	sim_out_free(out);
+//	sim_solver_free(sim_solver);
+	sim_free(solver);
 
 
 

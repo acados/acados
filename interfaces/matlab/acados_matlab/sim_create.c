@@ -44,27 +44,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* LHS */
 
 	// field names of output struct
-	char *fieldnames[5];
+	char *fieldnames[6];
 	fieldnames[0] = (char*)mxMalloc(50);
 	fieldnames[1] = (char*)mxMalloc(50);
 	fieldnames[2] = (char*)mxMalloc(50);
 	fieldnames[3] = (char*)mxMalloc(50);
 	fieldnames[4] = (char*)mxMalloc(50);
+	fieldnames[5] = (char*)mxMalloc(50);
 
 	memcpy(fieldnames[0],"config",sizeof("config"));
 	memcpy(fieldnames[1],"dims",sizeof("dims"));
 	memcpy(fieldnames[2],"opts",sizeof("opts"));
 	memcpy(fieldnames[3],"in",sizeof("in"));
 	memcpy(fieldnames[4],"out",sizeof("out"));
+	memcpy(fieldnames[5],"solver",sizeof("solver"));
 
 	// create output struct
-	plhs[0] = mxCreateStructMatrix(1, 1, 5, (const char **) fieldnames);
+	plhs[0] = mxCreateStructMatrix(1, 1, 6, (const char **) fieldnames);
 
 	mxFree( fieldnames[0] );
 	mxFree( fieldnames[1] );
 	mxFree( fieldnames[2] );
 	mxFree( fieldnames[3] );
 	mxFree( fieldnames[4] );
+	mxFree( fieldnames[5] );
 
 
 
@@ -105,6 +108,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	sim_out *out = sim_out_create(config, dims);
 
 
+	/* solver */
+//	sim_solver *solver = sim_solver_create(config, dims, opts);
+	sim_solver *solver = sim_create(config, dims, opts);
+
+
 
 	/* populate output struct */
 
@@ -137,6 +145,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	ptr = mxGetData(out_mat);
 	ptr[0] = (long long) out;
 	mxSetField(plhs[0], 0, "out", out_mat);
+
+	// solver
+	mxArray *solver_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+	ptr = mxGetData(solver_mat);
+	ptr[0] = (long long) solver;
+	mxSetField(plhs[0], 0, "solver", solver_mat);
 
 
 

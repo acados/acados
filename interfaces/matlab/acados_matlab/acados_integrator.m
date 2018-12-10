@@ -34,7 +34,7 @@ classdef acados_integrator < handle
 
 		function codegen_model(obj)
 			if obj.opts.codgen_model
-				if obj.opts.scheme=='erk'
+				if (strcmp(obj.opts.scheme, 'erk'))
 					% generate c for function and derivatives using casadi
 					generate_c_code_explicit_ode(obj.model);
 					% compile the code in a shared library
@@ -51,22 +51,32 @@ classdef acados_integrator < handle
 					% get pointers for external functions in model
 					obj.C_sim_ext_fun = sim_ext_fun_create(obj.opts_struct);
 					% set in model ( = casadi functions )
-					sim_set_in_model(obj.opts_struct, obj.C_sim, obj.C_sim_ext_fun);
+					sim_set_model(obj.opts_struct, obj.C_sim, obj.C_sim_ext_fun);
 				else
-					fprintf('\nscheme not supported: %s\n', obj.opts.scheme);
+					fprintf('\ncodegen_model: scheme not supported: %s\n', obj.opts.scheme);
 				end
 			end
 		end
 
 
 		function set(obj, field, value)
+			sim_set(obj.C_sim, field, value);
 		end
 
-	
+
+		function solve(obj)
+			sim_solve(obj.C_sim);
+		end
+
+
+		function get(obj, field, value)
+			sim_get(obj.C_sim, field, value);
+		end
+
 		function delete(obj)
 %			fprintf('\nin delete\n');
-			sim_destroy(obj.C_sim)
-			sim_ext_fun_destroy(obj.opts_struct, obj.C_sim_ext_fun)
+			sim_destroy(obj.C_sim);
+			sim_ext_fun_destroy(obj.opts_struct, obj.C_sim_ext_fun);
 		end
 
 
