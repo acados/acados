@@ -16,7 +16,7 @@ wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-octave-v3.4.0.ta
 mkdir -p casadi-octave-v3.4.0
 tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave-v3.4.0
 
-wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
+wget -q -nc https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
 mkdir -p casadi-py35-v3.4.0-64bit
 tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-py35-v3.4.0-64bit
 export CASADIPATH=$(pwd)/casadi-py35-v3.4.0-64bit

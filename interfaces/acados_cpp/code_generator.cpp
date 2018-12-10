@@ -186,6 +186,7 @@ void code_generator::generate_mdl_start(std::ostream& out)
     out << "\n\tocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);\n";
 
     out << "\n\tocp_nlp_dims *nlp_dims = ocp_nlp_dims_create(config);\n";
+    // TODO(oj): this cant work anymore, check if can be fixed
     out << "\tocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, ";
     out << "nlp_dims);\n";
 

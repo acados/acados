@@ -337,12 +337,6 @@ int main() {
         nh[ii] = nh_;
     }
 
-    int nq[N+1];
-    for (int ii = 0; ii <= N; ii++)
-    {
-        nq[ii] = 0;
-    }
-
     int nsbx[N+1];
     nsbx[0] = 0;
     for (int ii = 1; ii <= N; ii++)
@@ -355,12 +349,6 @@ int main() {
     for (int ii = 0; ii <= N; ii++)
     {
         ns[ii] = nsbx[ii];
-    }
-
-    int ny[N+1];
-    for (int ii = 0; ii <= N; ii++)
-    {
-        ny[ii] = 0;
     }
 
     int nz[N+1];
@@ -417,7 +405,6 @@ int main() {
     int dims_size = ocp_nlp_dims_calculate_size(config);
     void *dims_mem = malloc(dims_size);
     ocp_nlp_dims *dims = ocp_nlp_dims_assign(config, dims_mem);
-    // ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, nz, dims);
 
     ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
     ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
@@ -426,8 +413,6 @@ int main() {
 
     for (int i = 0; i <= N; i++)
     {
-//        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
-
         ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
