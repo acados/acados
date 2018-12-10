@@ -3,8 +3,22 @@
 
 #define MDL_START
 
-#include "acado_common.h"
-#include "acado_auxiliary_functions.h"
+// acados
+#include "acados/utils/print.h"
+#include "acados_c/ocp_nlp_interface.h"
+#include "acados_c/external_function_interface.h"
+
+// TODO(oj): remove, when setters for Cyt,idxb available
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
+
+// blasfeo
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+
+// example specific
+#include "{{ ra.model_name }}_model/{{ ra.model_name }}_model.h"
+
 #include "simstruc.h"
 
 #define SAMPLINGTIME -1
