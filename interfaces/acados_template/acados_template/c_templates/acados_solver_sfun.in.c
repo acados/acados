@@ -87,6 +87,14 @@ static void mdlStart(SimStruct *S)
 
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
+    // get pointers to acados internal structures
+    ocp_nlp_in * _nlp_in = (ocp_nlp_in *) acados_get_nlp_in();
+    ocp_nlp_out * _nlp_out = (ocp_nlp_out *) acados_get_nlp_out();
+    ocp_nlp_solver * _nlp_solver = (ocp_nlp_solver *) acados_get_nlp_solver();
+    void * _nlp_opts = (void *) acados_get_nlp_opts();
+    ocp_nlp_solver_config * _nlp_config = (ocp_nlp_in *) acados_get_nlp_config();
+    ocp_nlp_dims * _nlp_dims = (ocp_nlp_in *) acados_get_nlp_dims();
+
     // get input signals
     InputRealPtrsType in_x0;
 

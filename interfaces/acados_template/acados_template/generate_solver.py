@@ -62,3 +62,11 @@ def generate_solver(model, ra):
     # output file
     out_file = open('./c_generated_code/acados_solver_sfunction_'  + model.name + '.c', 'w+')
     out_file.write(output)
+
+    # render MATLAB make script
+    template = env.get_template('make_sfun.in.m')
+    output = template.render(ra=ra)
+
+    # output file
+    out_file = open('./c_generated_code/make_sfun.m', 'w+')
+    out_file.write(output)

@@ -16,5 +16,6 @@ setup(name='acados_template',
        'c_templates/acados_solver.in.c', 
        'c_templates/acados_solver_sfun.in.c', 
        'c_templates/acados_solver.in.h', 
+       'c_templates/make_sfun.in.m', 
        ]},
    zip_safe=False)
