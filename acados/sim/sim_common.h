@@ -153,17 +153,12 @@ typedef struct
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
     int (*model_set)(void *model, char *field, void *value);
-    // TODO(*) remove
-    int (*model_set_function)(void *model, sim_function_t fun_type, void *fun);
     void (*config_initialize_default)(void *config);
 //    int (*dims_calculate_size)(void *config);
     int (*dims_calculate_size)();
     void *(*dims_assign)(void *config, void *raw_memory);
-    void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);
-	// TODO(*) dims_set instead of single getters
-    void (*get_nx)(void *dims_, int *nx);
-    void (*get_nu)(void *dims_, int *nu);
-    void (*get_nz)(void *dims_, int *nz);
+    void (*dims_set)(void *config, void *dims, const char *field, int *value);
+    void (*dims_get)(void *config, void *dims, const char *field, int *value);
 
 } sim_solver_config;
 

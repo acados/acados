@@ -49,13 +49,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* free memory */
 
-	sim_config_free(config);
-	sim_dims_free(dims);
-	sim_opts_free(opts);
-	sim_in_free(in);
-	sim_out_free(out);
-//	sim_solver_free(sim_solver);
-	sim_free(solver);
+	sim_config_destroy(config);
+	sim_dims_destroy(dims);
+	sim_opts_destroy(opts);
+	sim_in_destroy(in);
+	sim_out_destroy(out);
+	sim_solver_destroy(solver);
 
 
 

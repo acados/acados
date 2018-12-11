@@ -152,7 +152,7 @@ int main()
         in->S_adj[ii] = 0.0;
 
     // solver
-    sim_solver *sim_solver = sim_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
     acados_timer timer;
     acados_tic(&timer);

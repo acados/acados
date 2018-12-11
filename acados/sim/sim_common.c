@@ -70,9 +70,9 @@ int sim_in_calculate_size(void *config_, void *dims)
 
     int nx, nu, nz;
 
-    config->get_nx(dims, &nx);
-    config->get_nu(dims, &nu);
-    config->get_nz(dims, &nz);
+    config->dims_get(config_, dims, "nx", &nx);
+    config->dims_get(config_, dims, "nu", &nu);
+    config->dims_get(config_, dims, "nz", &nz);
 
     size += 2 * nx * sizeof(double);          // x, xdot
     size += nu * sizeof(double);              // u
@@ -102,9 +102,9 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
     in->dims = dims;
 
     int nx, nu, nz;
-    config->get_nx(dims, &nx);
-    config->get_nu(dims, &nu);
-    config->get_nz(dims, &nz);
+    config->dims_get(config_, dims, "nx", &nx);
+    config->dims_get(config_, dims, "nu", &nu);
+    config->dims_get(config_, dims, "nz", &nz);
 
     int NF = nx + nu;
 
@@ -149,7 +149,7 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
     else if (!strcmp(field, "x"))
     {
         int nx;
-        config->get_nx(dims_, &nx);
+        config->dims_get(config_, dims_, "nx", &nx);
         int ii;
         double *x = value;
         for (ii=0; ii < nx; ii++)
@@ -158,7 +158,7 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
     else if (!strcmp(field, "xdot"))
     {
         int nx;
-        config->get_nx(dims_, &nx);
+        config->dims_get(config_, dims_, "nx", &nx);
         int ii;
         double *xdot = value;
         for (ii=0; ii < nx; ii++)
@@ -167,7 +167,7 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
     else if (!strcmp(field, "u"))
     {
         int nu;
-        config->get_nu(dims_, &nu);
+        config->dims_get(config_, dims_, "nu", &nu);
         int ii;
         double *u = value;
         for (ii=0; ii < nu; ii++)
@@ -176,7 +176,7 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
     else if (!strcmp(field, "z"))
     {
         int nz;
-        config->get_nz(dims_, &nz);
+        config->dims_get(config_, dims_, "nz", &nz);
         int ii;
         double *z = value;
         for (ii=0; ii < nz; ii++)
@@ -186,7 +186,7 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
     {
         // note: this assumes nf = nu+nx !!!
         int nx;
-        config->get_nx(dims_, &nx);
+        config->dims_get(config_, dims_, "nx", &nx);
         int ii;
         double *Sx = value;
         for (ii=0; ii < nx*nx; ii++)
@@ -196,8 +196,8 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
     {
         // note: this assumes nf = nu+nx !!!
         int nx, nu;
-        config->get_nx(dims_, &nx);
-        config->get_nu(dims_, &nu);
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
         int ii;
         double *Su = value;
         for (ii=0; ii < nx*nu; ii++)
@@ -207,8 +207,8 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
     {
         // note: this assumes nf = nu+nx !!!
         int nx, nu;
-        config->get_nx(dims_, &nx);
-        config->get_nu(dims_, &nu);
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
         int ii;
         double *S_forw = value;
         for (ii=0; ii < nx*(nu+nx); ii++)
@@ -218,8 +218,8 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
     {
         // note: this assumes nf = nu+nx !!!
         int nx, nu;
-        config->get_nx(dims_, &nx);
-        config->get_nu(dims_, &nu);
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
         int ii;
         double *S_adj = value;
         for (ii=0; ii < nu+nx; ii++)
@@ -246,9 +246,9 @@ int sim_out_calculate_size(void *config_, void *dims)
     int size = sizeof(sim_out);
 
     int nx, nu, nz;
-    config->get_nx(dims, &nx);
-    config->get_nu(dims, &nu);
-    config->get_nz(dims, &nz);
+    config->dims_get(config_, dims, "nx", &nx);
+    config->dims_get(config_, dims, "nu", &nu);
+    config->dims_get(config_, dims, "nz", &nz);
 
     int NF = nx + nu;
     size += sizeof(sim_info);
@@ -276,9 +276,9 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
     char *c_ptr = (char *) raw_memory;
 
     int nx, nu, nz;
-    config->get_nx(dims, &nx);
-    config->get_nu(dims, &nu);
-    config->get_nz(dims, &nz);
+    config->dims_get(config_, dims, "nx", &nx);
+    config->dims_get(config_, dims, "nu", &nu);
+    config->dims_get(config_, dims, "nz", &nz);
 
     int NF = nx + nu;
 
@@ -315,7 +315,7 @@ int sim_out_get(void *config_, void *dims_, sim_out *out, char *field, void *val
     if (!strcmp(field, "xn"))
     {
         int nx;
-        config->get_nx(dims_, &nx);
+        config->dims_get(config_, dims_, "nx", &nx);
         int ii;
         double *xn = value;
         for (ii=0; ii < nx; ii++)
@@ -325,8 +325,8 @@ int sim_out_get(void *config_, void *dims_, sim_out *out, char *field, void *val
     {
         // note: this assumes nf = nu+nx !!!
         int nx, nu;
-        config->get_nx(dims_, &nx);
-        config->get_nu(dims_, &nu);
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
         int ii;
         double *S_forw = value;
         for (ii=0; ii < nx*(nu+nx); ii++)
@@ -336,8 +336,8 @@ int sim_out_get(void *config_, void *dims_, sim_out *out, char *field, void *val
     {
         // note: this assumes nf = nu+nx !!!
         int nx, nu;
-        config->get_nx(dims_, &nx);
-        config->get_nu(dims_, &nu);
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
         int ii;
         double *S_adj = value;
         for (ii=0; ii < nu+nx; ii++)
@@ -347,8 +347,8 @@ int sim_out_get(void *config_, void *dims_, sim_out *out, char *field, void *val
     {
         // note: this assumes nf = nu+nx !!!
         int nx, nu;
-        config->get_nx(dims_, &nx);
-        config->get_nu(dims_, &nu);
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
         int ii;
         double *S_hess = value;
         for (ii=0; ii < (nu+nx)*(nu+nx); ii++)

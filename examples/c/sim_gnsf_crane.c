@@ -179,7 +179,7 @@ int main() {
     model->phi_jac_y_uhat = (external_function_generic *) &phi_jac_y_uhat;
     model->get_gnsf_matrices = (external_function_generic *) &get_matrices_fun;
 
-    sim_solver *sim_solver = sim_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
     // set up sim_out
     sim_out *out = sim_out_create(config, dims);

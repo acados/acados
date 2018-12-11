@@ -12,7 +12,7 @@ sudo apt-get install python3-scipy python3-numpy python3-matplotlib
 
 # Get CasADi for octave, python and matlab
 pushd external
-wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
+wget -q -nc https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
 mkdir -p casadi-octave-v3.4.0
 tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave-v3.4.0
 
@@ -24,7 +24,7 @@ export PYTHONPATH=$CASADIPATH:$PYTHONPATH
 # will not work with custom install dir
 export PYTHONPATH=$INSTALLPATH/lib:$PYTHONPATH
 
-wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
+wget -q -nc https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
 mkdir -p casadi-matlabR2014b-v3.4.0
 tar -xf casadi-linux-matlabR2014b-v3.4.0.tar.gz -C casadi-matlabR2014b-v3.4.0
 export MATLABPATH=$(pwd)/casadi-matlabR2014b-v3.4.0:$MATLABPATH
