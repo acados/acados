@@ -268,7 +268,7 @@ void ocp_nlp_config_free(ocp_nlp_solver_plan *plan, void *config_)
         switch (plan->nlp_dynamics[i])
         {
             case CONTINUOUS_MODEL:
-                sim_config_free(config->dynamics[i]->sim_solver);
+                sim_config_destroy(config->dynamics[i]->sim_solver);
                 break;
             case DISCRETE_MODEL:
                 break;

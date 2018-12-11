@@ -611,11 +611,21 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int nz = dims->nz;
 
     // assert - only use supported features
-    assert(nz == 0 && "nz should be zero - DAEs are not supported for this integrator");
-    assert(opts->output_z == false &&
-           "opts->output_z should be false - DAEs are not supported for this integrator");
-    assert(opts->sens_algebraic == false &&
-           "opts->sens_algebraic should be false - DAEs are not supported for this integrator");
+    if (nz != 0)
+    {
+        printf("nz should be zero - DAEs are not supported by the ERK integrator");
+        return ACADOS_FAILURE;
+    }
+    if (opts->output_z)
+    {
+        printf("opts->output_z should be false - DAEs are not supported for the ERK integrator");
+        return ACADOS_FAILURE;
+    }
+    if (opts->sens_algebraic)
+    {
+        printf("opts->sens_algebraic should be false - DAEs are not supported for the ERK integrator");
+        return ACADOS_FAILURE;
+    }
 
     int nf = opts->num_forw_sens;
     if (!opts->sens_forw) nf = 0;

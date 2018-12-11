@@ -24,14 +24,14 @@ add_test(NAME ocp_qp_matlab
     COMMAND ${Matlab_MAIN_PROGRAM} "-noFigureWindows" "-nodesktop" "-nosplash" "-nosoftwareopengl" "-r"
         "addpath('${CMAKE_CURRENT_SOURCE_DIR}'); try, ocp_qp_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
 
-add_test(NAME ocp_nlp_matlab
-    COMMAND ${Matlab_MAIN_PROGRAM} "-noFigureWindows" "-nodesktop" "-nosplash" "-nosoftwareopengl" "-r"
-        "addpath('${CMAKE_CURRENT_SOURCE_DIR}'); try, ocp_nlp_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
+# add_test(NAME ocp_nlp_matlab
+#     COMMAND ${Matlab_MAIN_PROGRAM} "-noFigureWindows" "-nodesktop" "-nosplash" "-nosoftwareopengl" "-r"
+#         "addpath('${CMAKE_CURRENT_SOURCE_DIR}'); try, ocp_nlp_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
 
 # add_test(NAME sim_matlab
     # COMMAND ${Matlab_MAIN_PROGRAM} "-noFigureWindows" "-nodesktop" "-nosplash" "-nosoftwareopengl" "-r"
         # "addpath('${CMAKE_CURRENT_SOURCE_DIR}'); try, sim_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
 
-set_tests_properties(ocp_qp_matlab ocp_nlp_matlab
+set_tests_properties(ocp_qp_matlab
     PROPERTIES
         ENVIRONMENT "MATLABPATH=${CMAKE_BINARY_DIR}/swig/matlab/:$ENV{MATLABPATH}")

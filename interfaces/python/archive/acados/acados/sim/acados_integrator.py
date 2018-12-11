@@ -323,7 +323,7 @@ class acados_integrator:
 
 		## sim solver
 		__acados.sim_create.restype = c_void_p
-		self.solver = cast(__acados.sim_create(self.config, self.dims, self.opts), c_void_p)
+		self.solver = cast(__acados.sim_solver_create(self.config, self.dims, self.opts), c_void_p)
 
 		## unload model library
 #		_ctypes.dlclose(self.__model._handle)
@@ -499,12 +499,12 @@ class acados_integrator:
 			if self.sens_forw=='false':
 				self.__acados.external_function_casadi_free(self.impl_ode_fun)
 				self.__acados.external_function_casadi_free(self.impl_ode_fun_jac_x_xdot_z)
-		self.__acados.sim_config_free(self.config)
-		self.__acados.sim_dims_free(self.dims)
-		self.__acados.sim_opts_free(self.opts)
-		self.__acados.sim_out_free(self.sim_in)
-		self.__acados.sim_in_free(self.sim_out)
-		self.__acados.sim_free(self.solver)
+		self.__acados.sim_config_destroy(self.config)
+		self.__acados.sim_dims_destroy(self.dims)
+		self.__acados.sim_opts_destroy(self.opts)
+		self.__acados.sim_out_destroy(self.sim_in)
+		self.__acados.sim_in_destroy(self.sim_out)
+		self.__acados.sim_solver_destroy(self.solver)
 #		print(self.__model)
 #		print(self.__model._handle)
 		# on POSIX systems; on windows call FreeLibrary instead
