@@ -29,38 +29,57 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //	mexPrintf("\n%s\n", scheme);
 
 
-	// C_sim_ext_fun
-
-	// expl_ode_fun
-	ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "expl_ode_fun" ) );
-	external_function_casadi *expl_ode_fun = (external_function_casadi *) ptr[0];
-//	mexPrintf("\n%p\n", expl_ode_fun);
-	// expl_vde_for
-	ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "expl_vde_for" ) );
-	external_function_casadi *expl_vde_for = (external_function_casadi *) ptr[0];
-	// expl_vde_adj
-	ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "expl_vde_adj" ) );
-	external_function_casadi *expl_vde_adj = (external_function_casadi *) ptr[0];
-	// impl_ode_fun
-	ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "impl_ode_fun" ) );
-	external_function_casadi *impl_ode_fun = (external_function_casadi *) ptr[0];
-	// impl_ode_fun_jac_x_xdot
-	ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "impl_ode_fun_jac_x_xdot" ) );
-	external_function_casadi *impl_ode_fun_jac_x_xdot = (external_function_casadi *) ptr[0];
-	// impl_ode_jac_x_xdot_u
-	ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "impl_ode_jac_x_xdot_u" ) );
-	external_function_casadi *impl_ode_jac_x_xdot_u = (external_function_casadi *) ptr[0];
-
+	// TODO check for empty struct member
 
 
 	/* free memory */
 
 	if(!strcmp(scheme, "erk"))
 		{
+		// C_sim_ext_fun
+
+		// expl_ode_fun
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "expl_ode_fun" ) );
+		external_function_casadi *expl_ode_fun = (external_function_casadi *) ptr[0];
+		// expl_vde_for
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "expl_vde_for" ) );
+		external_function_casadi *expl_vde_for = (external_function_casadi *) ptr[0];
+		// expl_vde_adj
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "expl_vde_adj" ) );
+
+		// free external functions
+		external_function_casadi *expl_vde_adj = (external_function_casadi *) ptr[0];
 		external_function_casadi_free(expl_ode_fun);
 		external_function_casadi_free(expl_vde_for);
 		free(expl_ode_fun);
 		free(expl_vde_for);
+		}
+	else if(!strcmp(scheme, "irk"))
+		{
+		// C_sim_ext_fun
+
+		// impl_ode_fun
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "impl_ode_fun" ) );
+		external_function_casadi *impl_ode_fun = (external_function_casadi *) ptr[0];
+		// impl_ode_fun_jac_x_xdot
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "impl_ode_fun_jac_x_xdot" ) );
+		external_function_casadi *impl_ode_fun_jac_x_xdot = (external_function_casadi *) ptr[0];
+		// impl_ode_jac_x_xdot_u
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "impl_ode_jac_x_xdot_u" ) );
+
+		// free external functions
+		external_function_casadi *impl_ode_jac_x_xdot_u = (external_function_casadi *) ptr[0];
+		external_function_casadi_free(impl_ode_fun);
+		external_function_casadi_free(impl_ode_fun_jac_x_xdot);
+		external_function_casadi_free(impl_ode_jac_x_xdot_u);
+		free(impl_ode_fun);
+		free(impl_ode_fun_jac_x_xdot);
+		free(impl_ode_jac_x_xdot_u);
+		}
+	else
+		{
+		mexPrintf("\nscheme not supported %s\n", scheme);
+		return;
 		}
 
 

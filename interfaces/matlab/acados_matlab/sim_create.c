@@ -80,6 +80,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //		mexPrintf("\n%s\n", scheme);
 		plan.sim_solver = ERK;
 		}
+	else if(!strcmp(scheme, "irk"))
+		{
+//		mexPrintf("\n%s\n", scheme);
+		plan.sim_solver = IRK;
+		}
 	else
 		{
 		mexPrintf("\nscheme not supported %s\n", scheme);

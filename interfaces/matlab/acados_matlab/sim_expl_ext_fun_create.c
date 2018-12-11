@@ -110,12 +110,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nscheme not supported %s\n", scheme);
+		mexPrintf("\nsim_expl_ext_fun_create: scheme not supported %s\n", scheme);
 		return;
 		}
 	
 	return;
 
 	}
+
 
 

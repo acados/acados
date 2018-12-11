@@ -15,6 +15,7 @@ acados_lib_path = ['-L' acados_folder, 'lib'];
 
 mex_files ={'sim_create.c',
 	'sim_destroy.c',
+	'sim_ext_fun_destroy.c',
 	'sim_solve.c',
 	'sim_set.c',
 	'sim_get.c',
@@ -26,6 +27,7 @@ end
 
 
 %% model
+% only 'model' supported as model_name at the moment !!!
 model_name = 'model';
 %sim_model = crane_model_expl(model_name);
 sim_model = linear_model(model_name);
@@ -39,7 +41,7 @@ sim_opts = acados_integrator_opts();
 sim_opts.set('codgen_model', 'true');
 sim_opts.set('num_stages', 4);
 sim_opts.set('num_steps', 3);
-sim_opts.set('scheme', 'erk');
+sim_opts.set('scheme', 'irk');
 sim_opts.set('sens_forw', 'true');
 
 
