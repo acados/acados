@@ -1353,7 +1353,7 @@ void setup_and_solve_nlp(int NN,
         ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
-        ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
+        // ocp_nlp_dims_set_constraints(config, dims, i, "np", &nq[i]);
     }
 
     /************************************************

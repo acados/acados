@@ -215,7 +215,6 @@ int main()
     // constraints
     int nbx[NN+1] = {}; // state bounds
     int nbu[NN+1] = {}; // input bounds
-    int nb[NN+1] = {}; // TODO remove !!!
     int ng[NN+1] = {}; // general linear constraints
     int nh[NN+1] = {}; // nonlinear constraints
     int nsh[NN+1] = {}; // softed nonlinear constraints
@@ -225,7 +224,6 @@ int main()
     nu[0] = nu_;
     nbx[0] = nx_;
     nbu[0] = nu_;
-    nb[0] = nbu[0]+nbx[0];
     ng[0] = 0;
     // TODO(dimitris): add bilinear constraints later
     nh[0] = 0;
@@ -240,7 +238,6 @@ int main()
         nu[i] = nu_;
         nbx[i] = 3;
         nbu[i] = nu_;
-        nb[i] = nbu[i]+nbx[i];
         ng[i] = 0;
         nh[i] = 1;
         nsh[i] = 1;
@@ -253,7 +250,6 @@ int main()
     nu[NN] = 0;
     nbx[NN] = 3;
     nbu[NN] = 0;
-    nb[NN] = nbu[NN]+nbx[NN];
     ng[NN] = 0;
     nh[NN] = 0;
     nsh[NN] = 0;
@@ -469,14 +465,6 @@ int main()
     VxN[1+ny[NN]*4] = 1.0;
 
 
-    double *Cyt = malloc((ny_*(nx_+nu_))*sizeof(double));
-    for (int ii=0; ii<(ny_*(nx_+nu_)); ii++)
-        Cyt[ii] = 0.0;
-    Cyt[2] = 1.0;
-    Cyt[(nx_+nu_)+6] = 1.0;
-    Cyt[2*(nx_+nu_)] = 1.0;
-    Cyt[3*(nx_+nu_)+1] = 1.0;
-
     double *W = malloc((ny_*ny_)*sizeof(double));
     for (int ii=0; ii<ny_*ny_; ii++)
         W[ii] = 0.0;
@@ -663,8 +651,6 @@ int main()
     for (int i = 0; i <= NN; i++)
     {
         // Cyt
-        // blasfeo_pack_tran_dmat(ny[i], nu[i], Vu, ny_, &cost[i]->Cyt, 0, 0);
-        // blasfeo_pack_tran_dmat(ny[i], nx[i], Vx, ny_, &cost[i]->Cyt, nu[i], 0);
         ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vu", Vu);
         if (i < NN)
             ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vx", Vx);
@@ -1027,7 +1013,7 @@ int main()
      external_function_param_casadi_free(impl_ode_fun);
      external_function_param_casadi_free(impl_ode_fun_jac_x_xdot);
      external_function_param_casadi_free(impl_ode_jac_x_xdot_u);
-    external_function_param_casadi_free(impl_ode_fun_jac_x_xdot_u);
+     external_function_param_casadi_free(impl_ode_fun_jac_x_xdot_u);
      external_function_param_casadi_free(phi_fun);
      external_function_param_casadi_free(phi_fun_jac_y);
      external_function_param_casadi_free(phi_jac_y_uhat);
@@ -1073,7 +1059,6 @@ int main()
     free(VxN);
     free(Vx);
     free(Vu);
-    free(Cyt);
     free(lh1);
     free(uh1);
 

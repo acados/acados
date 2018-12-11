@@ -340,6 +340,7 @@ void integrator::model_set(casadi::Function &model, std::map<std::string, option
 
     /* generate model functions depending on integrator type and options */
     int model_set_status;
+    std::map<std::string, casadi_module> module_;
 
     if (sim_plan_.sim_solver == IRK)
     {
