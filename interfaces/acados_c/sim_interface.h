@@ -54,42 +54,21 @@ void *sim_dims_create(void *config_);
 //
 void sim_dims_free(void *dims);
 //
-void sim_dims_set(sim_solver_config *config, void *dims, const char *field, const int* value);
+void sim_dims_set(sim_solver_config *config, void *dims, const char *field, int* value);
+//
+void sim_dims_get(sim_solver_config *config, void *dims, const char *field, int* value);
 
 /* in */
 //
 sim_in *sim_in_create(sim_solver_config *config, void *dims);
 //
 void sim_in_free(void *out);
-//
-void sim_in_set_T(sim_solver_config *config, double T, sim_in *in);
-//
-int sim_model_set(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr);
-//
-int sim_model_set_internal(sim_solver_config *config, void *model, const char *fun_type,
-                           void *fun_ptr);
-//
-void sim_in_set_x(sim_solver_config *config, void *dims, double *x, sim_in *in);
-//
-void sim_in_set_xdot(sim_solver_config *config, void *dims, double *xdot, sim_in *in);
-//
-void sim_in_set_u(sim_solver_config *config, void *dims, double *u, sim_in *in);
-//
-void sim_in_set_Sx(sim_solver_config *config, void *dims, double *Sx, sim_in *in);
-//
-void sim_in_set_Su(sim_solver_config *config, void *dims, double *Su, sim_in *in);
 
 /* out */
 //
 sim_out *sim_out_create(sim_solver_config *config, void *dims);
 //
 void sim_out_free(void *out);
-//
-void sim_out_get_xn(sim_solver_config *config, void *dims, sim_out *out, double *xn);
-//
-void sim_out_get_Sxn(sim_solver_config *config, void *dims, sim_out *out, double *Sxn);
-//
-void sim_out_get_Sun(sim_solver_config *config, void *dims, sim_out *out, double *Sun);
 
 /* opts */
 //

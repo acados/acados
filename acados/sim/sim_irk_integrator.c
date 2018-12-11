@@ -61,63 +61,57 @@ void *sim_irk_dims_assign(void *config_, void *raw_memory)
     return dims;
 }
 
-static void sim_irk_set_nu(void *config_, void *dims_, const int *nu)
-{
-    sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    dims->nu = *nu;
-}
-
-static void sim_irk_set_nx(void *config_, void *dims_, const int *nx)
-{
-    sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    dims->nx = *nx;
-}
-
-static void sim_irk_set_nz(void *config_, void *dims_, const int *nz)
-{
-    sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    dims->nz = *nz;
-}
 
 
-void sim_irk_dims_set(void *config_, void *dims_, const char *field, const int* value)
+void sim_irk_dims_set(void *config_, void *dims_, const char *field, int *value)
 {
+    sim_irk_dims *dims = dims_;
+
     if (!strcmp(field, "nx"))
     {
-        sim_irk_set_nx(config_, dims_, value);
+        dims->nx = *value;
     }
     else if (!strcmp(field, "nu"))
     {
-        sim_irk_set_nu(config_, dims_, value);
+        dims->nu = *value;
     }
     else if (!strcmp(field, "nz"))
     {
-        sim_irk_set_nz(config_, dims_, value);
+        dims->nz = *value;
     }
     else
     {
-        printf("\nerror: dimension type not available in module\n");
+        printf("\nerror: sim_irk_dims_set: field not available: %s\n", field);
         exit(1);
     }
 }
 
-void sim_irk_get_nx(void *dims_, int *nx)
+
+
+void sim_irk_dims_get(void *config_, void *dims_, const char *field, int *value)
 {
-    sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    *nx = dims->nx;
+    sim_irk_dims *dims = dims_;
+
+    if (!strcmp(field, "nx"))
+    {
+        *value = dims->nx;
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        *value = dims->nu;
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        *value = dims->nz;
+    }
+    else
+    {
+        printf("\nerror: sim_irk_dims_get: field not available: %s\n", field);
+        exit(1);
+    }
 }
 
-void sim_irk_get_nu(void *dims_, int *nu)
-{
-    sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    *nu = dims->nu;
-}
 
-void sim_irk_get_nz(void *dims_, int *nz)
-{
-    sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    *nz = dims->nz;
-}
 
 /************************************************
  * model
@@ -174,42 +168,16 @@ int sim_irk_model_set(void *model_, char *field, void *value)
     {
         model->impl_ode_jac_x_xdot_u_z = value;
     }
-    else if (!strcmp(field, "impl_ode_hes"))
+    else if (!strcmp(field, "impl_ode_hes") | !strcmp(field, "impl_ode_hess"))
     {
         model->impl_ode_hess = value;
     }
     else
     {
-        printf("\nerror: sim_irk_model_set_function: wrong field: %s\n", field);
+        printf("\nerror: sim_irk_model_set: wrong field: %s\n", field);
         return ACADOS_FAILURE;
     }
 
-    return ACADOS_SUCCESS;
-}
-
-
-
-int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
-{
-    irk_model *model = model_;
-
-    switch (fun_type)
-    {
-        case IMPL_ODE_FUN:
-            model->impl_ode_fun = (external_function_generic *) fun;
-            break;
-        case IMPL_ODE_FUN_JAC_X_XDOT:
-            model->impl_ode_fun_jac_x_xdot_z = (external_function_generic *) fun;
-            break;
-        case IMPL_ODE_JAC_X_XDOT_U:
-            model->impl_ode_jac_x_xdot_u_z = (external_function_generic *) fun;
-            break;
-        case IMPL_ODE_HESS:
-            model->impl_ode_hess = (external_function_generic *) fun;
-            break;
-        default:
-            return ACADOS_FAILURE;
-    }
     return ACADOS_SUCCESS;
 }
 
@@ -1275,12 +1243,9 @@ void sim_irk_config_initialize_default(void *config_)
     config->model_calculate_size = &sim_irk_model_calculate_size;
     config->model_assign = &sim_irk_model_assign;
     config->model_set = &sim_irk_model_set;
-    config->model_set_function = &sim_irk_model_set_function;
     config->dims_calculate_size = &sim_irk_dims_calculate_size;
     config->dims_assign = &sim_irk_dims_assign;
     config->dims_set = &sim_irk_dims_set;
-    config->get_nx = &sim_irk_get_nx;
-    config->get_nu = &sim_irk_get_nu;
-    config->get_nz = &sim_irk_get_nz;
+    config->dims_get = &sim_irk_dims_get;
     return;
 }

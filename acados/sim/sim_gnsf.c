@@ -79,112 +79,72 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory)
  * get & set functions
  ************************************************/
 
-static void sim_gnsf_set_nu(void *config_, void *dims_, const int *nu)
+void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, int *value)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nu = *nu;
-}
+    sim_gnsf_dims *dims = dims_;
 
-static void sim_gnsf_set_nx(void *config_, void *dims_, const int *nx)
-{
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nx = *nx;
-}
-
-static void sim_gnsf_set_nz(void *config_, void *dims_, const int *nz)
-{
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nz = *nz;
-}
-
-static void sim_gnsf_set_ny(void *config_, void *dims_, const int *ny)
-{
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->ny = *ny;
-}
-
-static void sim_gnsf_set_nuhat(void *config_, void *dims_, const int *nuhat)
-{
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nuhat = *nuhat;
-}
-
-static void sim_gnsf_set_nout(void *config_, void *dims_, const int *nout)
-{
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->n_out = *nout;
-}
-
-static void sim_gnsf_set_nz1(void *config_, void *dims_, const int *nz1)
-{
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nz1 = *nz1;
-}
-
-static void sim_gnsf_set_nx1(void *config_, void *dims_, const int *nx1)
-{
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    dims->nx1 = *nx1;
-}
-
-
-void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int* value)
-{
     if (!strcmp(field, "nx"))
     {
-        sim_gnsf_set_nx(config_, dims_, value);
+        dims->nx = *value;
     }
     else if (!strcmp(field, "nu"))
     {
-        sim_gnsf_set_nu(config_, dims_, value);
+        dims->nu = *value;
     }
     else if (!strcmp(field, "nz"))
     {
-        sim_gnsf_set_nz(config_, dims_, value);
+        dims->nz = *value;
     }
     else if (!strcmp(field, "nx1") || !strcmp(field, "gnsf_nx1"))
     {
-        sim_gnsf_set_nx1(config_, dims_, value);
+        dims->nx1 = *value;
     }
     else if (!strcmp(field, "nz1") || !strcmp(field, "gnsf_nz1"))
     {
-        sim_gnsf_set_nz1(config_, dims_, value);
+        dims->nz1 = *value;
     }
     else if (!strcmp(field, "nout") || !strcmp(field, "gnsf_nout"))
     {
-        sim_gnsf_set_nout(config_, dims_, value);
+        dims->n_out = *value;
     }
     else if (!strcmp(field, "ny") || !strcmp(field, "gnsf_ny"))
     {
-        sim_gnsf_set_ny(config_, dims_, value);
+        dims->ny = *value;
     }
     else if (!strcmp(field, "nuhat") || !strcmp(field, "gnsf_nuhat"))
     {
-        sim_gnsf_set_nuhat(config_, dims_, value);
+        dims->nuhat = *value;
     }
     else
     {
-        printf("\nerror: dimension type not available in module\n");
+        printf("\nerror: sim_gnsf_dims_set: field not available: %s\n", field);
         exit(1);
     }
 }
 
-void sim_gnsf_get_nx(void *dims_, int *nx)
-{
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    *nx = dims->nx;
-}
 
-void sim_gnsf_get_nu(void *dims_, int *nu)
-{
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    *nu = dims->nu;
-}
 
-void sim_gnsf_get_nz(void *dims_, int *nz)
+void sim_gnsf_dims_get(void *config_, void *dims_, const char *field, int *value)
 {
-    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    *nz = dims->nz;
+    sim_gnsf_dims *dims = dims_;
+
+    if (!strcmp(field, "nx"))
+    {
+        *value = dims->nx;
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        *value = dims->nu;
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        *value = dims->nz;
+    }
+    else
+    {
+        printf("\nerror: sim_gnsf_dims_get: field not available: %s\n", field);
+        exit(1);
+    }
 }
 
 
@@ -463,39 +423,10 @@ int sim_gnsf_model_set(void *model_, char *field, void *value)
 	}
     else
     {
-        printf("\nerror: sim_gnsf_model_set_function: wrong field: %s\n", field);
+        printf("\nerror: sim_gnsf_model_set: wrong field: %s\n", field);
         return ACADOS_FAILURE;
     }
 
-    return ACADOS_SUCCESS;
-}
-
-
-
-int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun)
-{
-    gnsf_model *model = model_;
-
-    switch (fun_type)
-    {
-        case PHI_FUN:
-            model->phi_fun = (external_function_generic *) fun;
-            break;
-        case PHI_FUN_JAC_Y:
-            model->phi_fun_jac_y = (external_function_generic *) fun;
-            break;
-        case PHI_JAC_Y_UHAT:
-            model->phi_jac_y_uhat = (external_function_generic *) fun;
-            break;
-        case LO_FUN:
-            model->f_lo_fun_jac_x1_x1dot_u_z = (external_function_generic *) fun;
-            break;
-        case GET_GNSF_MATRICES:
-            model->get_gnsf_matrices = (external_function_generic *) fun;
-            break;
-        default:
-            return ACADOS_FAILURE;
-    }
     return ACADOS_SUCCESS;
 }
 
@@ -2544,13 +2475,10 @@ void sim_gnsf_config_initialize_default(void *config_)
     config->model_calculate_size = &sim_gnsf_model_calculate_size;
     config->model_assign = &sim_gnsf_model_assign;
     config->model_set = &sim_gnsf_model_set;
-    config->model_set_function = &sim_gnsf_model_set_function;
     // dims
     config->dims_calculate_size = &sim_gnsf_dims_calculate_size;
     config->dims_assign = &sim_gnsf_dims_assign;
     config->dims_set = &sim_gnsf_dims_set;
-    config->get_nx = &sim_gnsf_get_nx;
-    config->get_nu = &sim_gnsf_get_nu;
-    config->get_nz = &sim_gnsf_get_nz;
+    config->dims_get = &sim_gnsf_dims_get;
     return;
 }

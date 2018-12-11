@@ -35,6 +35,7 @@ typedef struct
 } sim_lifted_irk_dims;
 
 
+
 typedef struct
 {
     /* external functions */
@@ -44,6 +45,7 @@ typedef struct
     external_function_generic *impl_ode_fun_jac_x_xdot_u;
 
 } lifted_irk_model;
+
 
 
 typedef struct
@@ -65,6 +67,7 @@ typedef struct
 } sim_lifted_irk_workspace;
 
 
+
 typedef struct
 {
     // memory for lifted integrators
@@ -81,12 +84,11 @@ typedef struct
 
 } sim_lifted_irk_memory;
 
+
+
 /* dims */
-void sim_lifted_irk_dims_set(void *config_, void *dims_, const char *field, const int* value);
-//
-void sim_lifted_irk_get_nx(void *dims_, int* nx);
-void sim_lifted_irk_get_nu(void *dims_, int* nu);
-void sim_lifted_irk_get_nz(void *dims_, int* nz);
+void sim_lifted_irk_dims_set(void *config_, void *dims_, const char *field, int* value);
+void sim_lifted_irk_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 int sim_lifted_irk_dims_calculate_size();
 //
@@ -99,8 +101,6 @@ int sim_lifted_irk_model_calculate_size(void *config, void *dims);
 void *sim_lifted_irk_model_assign(void *config, void *dims, void *raw_memory);
 //
 int sim_lifted_irk_model_set(void *model_, char *field, void *value);
-// TODO(*) remove
-int sim_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun);
 
 /* opts */
 //
