@@ -45,7 +45,7 @@ classdef acados_integrator < handle
 
 					system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 
-					acados_folder = getenv("ACADOS_FOLDER");
+					acados_folder = getenv('ACADOS_FOLDER');
 
 					if length(acados_folder) == 0
 						acados_folder = '../../../';

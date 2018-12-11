@@ -3,7 +3,7 @@
 %mex -v GCC='/usr/bin/gcc-4.9' ../../../lib/libacore.so ../../../lib/libhpipm.so ../../../lib/libblasfeo.so -lm mex_sim.c
 %mex libacore.so libhpipm.so libblasfeo.so sim_create.c
 
-acados_folder = getenv("ACADOS_FOLDER");
+acados_folder = getenv('ACADOS_FOLDER');
 
 if length(acados_folder) == 0
 	acados_folder = '../../../';
