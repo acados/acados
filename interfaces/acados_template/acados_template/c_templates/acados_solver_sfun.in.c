@@ -42,10 +42,10 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, 0, {{ ra.dims.nx }});
 
     // specify dimension information for the output ports 
-    ssSetOutputPortVectorDimension(S,  0, {{ ra.dims.nu }} ); // optimal input
+    ssSetOutputPortVectorDimension(S, 0, {{ ra.dims.nu }} ); // optimal input
     ssSetOutputPortVectorDimension(S, 1, 1 );                // solver status
     ssSetOutputPortVectorDimension(S, 2, 1 );                // KKT residuals
-    ssSetOutputPortVectorDimension(S,  3, {{ ra.dims.nx }} ); // first state
+    ssSetOutputPortVectorDimension(S, 3, {{ ra.dims.nx }} ); // first state
 
     // specify the direct feedthrough status 
     ssSetInputPortDirectFeedThrough(S, 0, 1); // current state x0
@@ -98,13 +98,31 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_dims * _nlp_dims =  acados_get_nlp_dims();
 
     // get input signals
-    InputRealPtrsType in_x0;
+    InputRealPtrsType in_x0_sign;
+    
+    // local buffers
+    real_t in_x0[{{ ra.dims.nx }}];
 
-    in_x0 = ssGetInputPortRealSignalPtrs(S, 0);
+    in_x0_sign = ssGetInputPortRealSignalPtrs(S, 0);
+
+    // copy signals into local buffers
+    for (int i = 0; i < {{ ra.dims.nx }}; i++) in_x0[i] = (double)(*in_x0_sign[i]);
+
+    for (int i = 0; i < 4; i++) ssPrintf("x0[%d] = %f\n", i, in_x0[i]);
+    ssPrintf("\n");
+
+    // set initial condition
+    ocp_nlp_constraints_bounds_set(_nlp_config, _nlp_dims, _nlp_in, 0, "lbx", in_x0);
+    ocp_nlp_constraints_bounds_set(_nlp_config, _nlp_dims, _nlp_in, 0, "ubx", in_x0);
     
     // assign pointers to output signals 
     real_t *out_u0, *out_status, *out_KKT_res, *out_x1;
 
+    out_u0      = ssGetOutputPortRealSignal(S, 0);
+    out_status  = ssGetOutputPortRealSignal(S, 1);
+    out_KKT_res = ssGetOutputPortRealSignal(S, 2);
+    out_x1      = ssGetOutputPortRealSignal(S, 3);
+    
     // get pointers to acados structures 
     _nlp_opts = acados_get_nlp_opts();
     _nlp_dims = acados_get_nlp_dims();
@@ -116,20 +134,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     acados_solve();
     
     // get solution
-    ssPrintf("%p\n", (void*)in_x0);
     ssPrintf("%p\n",(void*)_nlp_config);
     ssPrintf("%p\n",(void*)_nlp_dims);
     ssPrintf("%p\n",(void*)_nlp_out);
-    ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, 0, "x", (void *)in_x0);
-    // ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, 0, "u", out_u0);
+    ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, 0, "u", (void *) out_u0);
 
-    // // get next state
-    // ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, 0, "x", out_x1);
+    // get next state
+    ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, 1, "x", (void *) out_x1);
 
-    // out_u0      = ssGetOutputPortRealSignal(S, 0);
-    // out_status  = ssGetOutputPortRealSignal(S, 1);
-    // out_KKT_res = ssGetOutputPortRealSignal(S, 2);
-    // out_x1      = ssGetOutputPortRealSignal(S, 3);
 }
 
 static void mdlTerminate(SimStruct *S)
