@@ -2,12 +2,23 @@
 
 %mex -v GCC='/usr/bin/gcc-4.9' ../../../lib/libacore.so ../../../lib/libhpipm.so ../../../lib/libblasfeo.so -lm mex_sim.c
 %mex libacore.so libhpipm.so libblasfeo.so sim_create.c
-mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_create.c
-mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_destroy.c
-%mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_ext_fun_create.c
-%mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_ext_fun_destroy.c
-mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo sim_set_in_model.c
+% strcat(pwd, /../../../acados/)
 
+acados_folder = '../../../'
+
+header_acados = ['-I' acados_folder];
+header_interfaces = ['-I' acados_folder, 'interfaces'];
+acados_lib_path = ['-L' acados_folder, 'lib'];
+
+mex_files = [
+	'sim_create.c',
+	'sim_destroy.c',
+	'sim_set_model.c'
+]
+
+for mex_file = mex_files
+	mex(include_acados, include_interfaces, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_file)
+end
 
 
 %% model

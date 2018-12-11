@@ -1,5 +1,15 @@
+
+
+value = getenv('ACADOS_FOLDER')
+
+acados_folder = '../../../'
+
+header_acados = ['-I' acados_folder];
+header_interfaces = ['-I' acados_folder, 'interfaces'];
+acados_lib_path = ['-L' acados_folder, 'lib'];
+
 classdef acados_integrator < handle
-	
+
 
 
 	properties
@@ -39,15 +49,14 @@ classdef acados_integrator < handle
 					generate_c_code_explicit_ode(obj.model);
 					% compile the code in a shared library
 					c_sources = ' ';
-					c_sources = [c_sources, 'model_expl_ode_fun.c ']; 
-					c_sources = [c_sources, 'model_expl_vde_for.c ']; 
-					c_sources = [c_sources, 'model_expl_vde_adj.c ']; 
-					c_sources = [c_sources, 'model_expl_ode_hes.c ']; 
+					c_sources = [c_sources, 'model_expl_ode_fun.c '];
+					c_sources = [c_sources, 'model_expl_vde_for.c '];
+					c_sources = [c_sources, 'model_expl_vde_adj.c '];
+					c_sources = [c_sources, 'model_expl_ode_hes.c '];
 					lib_name = ['model_expl.so'];
 					system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
-					% compile mex wrappers for external functions
-					mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo model_expl.so sim_ext_fun_create.c
-					mex -I/home/gianluca/acados/ -I/home/gianluca/acados/interfaces -L/home/gianluca/acados/lib -lacados_c -lacore -lhpipm -lblasfeo model_expl.so sim_ext_fun_destroy.c
+					mex(include_acados, include_interfaces, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', 'model_expl.so', 'sim_ext_fun_create.c')
+					mex(include_acados, include_interfaces, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', 'model_expl.so', 'sim_ext_fun_destroy.c')
 					% get pointers for external functions in model
 					obj.C_sim_ext_fun = sim_ext_fun_create(obj.opts_struct);
 					% set in model ( = casadi functions )
