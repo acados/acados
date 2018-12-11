@@ -303,7 +303,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     * sim solver
     ************************************************/
 
-    sim_solver *sim_solver = sim_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
     for (int ii = 0; ii < nsim0; ii++)
     {
@@ -489,7 +489,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                     in->S_adj[ii] = 0.0;
 
             /* sim solver  */
-                sim_solver = sim_create(config, dims, opts);
+                sim_solver = sim_solver_create(config, dims, opts);
 
             /* print */
                 std::cout << "\n---> testing integrator " << solver;
@@ -765,7 +765,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     * sim solver
     ************************************************/
 
-    sim_solver *sim_solver = sim_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
     // x
     for (int jj = 0; jj < nx; jj++)

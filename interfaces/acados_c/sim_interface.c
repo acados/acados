@@ -69,7 +69,7 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
 
 
 
-void sim_config_free(void *config)
+void sim_config_destroy(void *config)
 {
     free(config);
 }
@@ -95,7 +95,7 @@ void *sim_dims_create(void *config_)
 
 
 
-void sim_dims_free(void *dims)
+void sim_dims_destroy(void *dims)
 {
     free(dims);
 }
@@ -133,7 +133,7 @@ sim_in *sim_in_create(sim_solver_config *config, void *dims)
 
 
 
-void sim_in_free(void *in)
+void sim_in_destroy(void *in)
 {
     free(in);
 }
@@ -158,7 +158,7 @@ sim_out *sim_out_create(sim_solver_config *config, void *dims)
 
 
 
-void sim_out_free(void *out)
+void sim_out_destroy(void *out)
 {
     free(out);
 }
@@ -184,7 +184,7 @@ void *sim_opts_create(sim_solver_config *config, void *dims)
 
 
 
-void sim_opts_free(void *opts)
+void sim_opts_destroy(void *opts)
 {
     free(opts);
 }
@@ -239,7 +239,7 @@ sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void 
 
 
 
-sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
+sim_solver *sim_solver_create(sim_solver_config *config, void *dims, void *opts_)
 {
     // update Butcher tableau (needed if the user changed ns)
     config->opts_update(config, dims, opts_);
@@ -254,7 +254,7 @@ sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_)
 
 
 
-void sim_free(void *solver)
+void sim_solver_destroy(void *solver)
 {
     free(solver);
 }

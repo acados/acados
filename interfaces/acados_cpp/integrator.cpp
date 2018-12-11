@@ -285,7 +285,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     model_set(integrator_model, options);
 
     // create the integrator
-    solver_ = sim_create(config_, dims_, opts_);
+    solver_ = sim_solver_create(config_, dims_, opts_);
 }
 
 
@@ -553,12 +553,12 @@ std::vector<double> integrator::integrate(std::vector<double> x, std::vector<dou
 /* DESTRUCTOR */
 integrator::~integrator()
 {
-    sim_config_free(config_);
-    sim_dims_free(dims_);
-    sim_opts_free(opts_);
-    sim_in_free(in_);
-    sim_out_free(out_);
-    sim_free(solver_);
+    sim_config_destroy(config_);
+    sim_dims_destroy(dims_);
+    sim_opts_destroy(opts_);
+    sim_in_destroy(in_);
+    sim_out_destroy(out_);
+    sim_solver_destroy(solver_);
 }
 
 

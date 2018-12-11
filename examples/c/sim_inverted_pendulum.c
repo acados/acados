@@ -314,7 +314,7 @@ int main()
             in->S_adj[ii] = 0.0;
 
     /* sim solver  */
-        sim_solver *sim_solver = sim_create(config, dims, opts);
+        sim_solver *sim_solver = sim_solver_create(config, dims, opts);
         int acados_return;
 
         sim_precompute(sim_solver, in, out);

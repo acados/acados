@@ -268,7 +268,7 @@ void ocp_nlp_config_free(ocp_nlp_solver_plan *plan, void *config_)
         switch (plan->nlp_dynamics[i])
         {
             case CONTINUOUS_MODEL:
-                sim_config_free(config->dynamics[i]->sim_solver);
+                sim_config_destroy(config->dynamics[i]->sim_solver);
                 break;
             case DISCRETE_MODEL:
                 break;
@@ -338,7 +338,6 @@ int ocp_nlp_dynamics_model_set(ocp_nlp_solver_config *config, ocp_nlp_in *in, in
     sim_solver_config *sim_config = config->dynamics[stage]->sim_solver;
     ocp_nlp_dynamics_cont_model *dynamics = in->dynamics[stage];
 
-//    int status = sim_model_set_internal(sim_config, dynamics->sim_model, fun_type, fun_ptr);
     int status = sim_config->model_set(dynamics->sim_model, (char *) fun_type, fun_ptr);
 
     return status;

@@ -324,7 +324,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     * sim solver
     ************************************************/
 
-    sim_solver *sim_solver = sim_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
     int acados_return;
 
@@ -383,13 +383,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
     // d_print_exp_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
 
     /* free */
-    sim_config_free(config);
-    sim_dims_free(dims);
-    sim_opts_free(opts);
+    sim_config_destroy(config);
+    sim_dims_destroy(dims);
+    sim_opts_destroy(opts);
 
-    sim_in_free(in);
-    sim_out_free(out);
-    sim_free(sim_solver);
+    sim_in_destroy(in);
+    sim_out_destroy(out);
+    sim_solver_destroy(sim_solver);
 
 /************************************************
 * test solver loop
@@ -518,7 +518,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     in->S_adj[ii] = 0.0;
 
             /* sim solver  */
-                sim_solver = sim_create(config, dims, opts);
+                sim_solver = sim_solver_create(config, dims, opts);
                 int acados_return;
 
                 // if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
@@ -669,13 +669,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
             /************************************************
             * free tested solver
             ************************************************/
-                sim_config_free(config);
-                sim_dims_free(dims);
-                sim_opts_free(opts);
+                sim_config_destroy(config);
+                sim_dims_destroy(dims);
+                sim_opts_destroy(opts);
 
-                sim_in_free(in);
-                sim_out_free(out);
-                sim_free(sim_solver);
+                sim_in_destroy(in);
+                sim_out_destroy(out);
+                sim_solver_destroy(sim_solver);
             }  // end SECTION
             }  // end for
             }  // end SECTION

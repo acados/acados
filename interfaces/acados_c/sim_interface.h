@@ -46,13 +46,13 @@ typedef struct
 //
 sim_solver_config *sim_config_create(sim_solver_plan plan);
 //
-void sim_config_free(void *config);
+void sim_config_destroy(void *config);
 
 /* dims */
 //
 void *sim_dims_create(void *config_);
 //
-void sim_dims_free(void *dims);
+void sim_dims_destroy(void *dims);
 //
 void sim_dims_set(sim_solver_config *config, void *dims, const char *field, int* value);
 //
@@ -62,19 +62,19 @@ void sim_dims_get(sim_solver_config *config, void *dims, const char *field, int*
 //
 sim_in *sim_in_create(sim_solver_config *config, void *dims);
 //
-void sim_in_free(void *out);
+void sim_in_destroy(void *out);
 
 /* out */
 //
 sim_out *sim_out_create(sim_solver_config *config, void *dims);
 //
-void sim_out_free(void *out);
+void sim_out_destroy(void *out);
 
 /* opts */
 //
 void *sim_opts_create(sim_solver_config *config, void *dims);
 //
-void sim_opts_free(void *opts);
+void sim_opts_destroy(void *opts);
 //
 int sim_opts_set(sim_solver_config *config, void *opts, const char *field,
                            void *value);
@@ -84,9 +84,9 @@ int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_);
 //
 sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void *raw_memory);
 //
-sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_);
+sim_solver *sim_solver_create(sim_solver_config *config, void *dims, void *opts_);
 //
-void sim_free(void *solver);
+void sim_solver_destroy(void *solver);
 //
 int sim_solve(sim_solver *solver, sim_in *in, sim_out *out);
 //
