@@ -54,17 +54,29 @@ int main()
 
     int NREP = 500;
 
-    int ii;
-    int jj;
+    int ii, jj;
 
     int nx = 4;
     int nu = 1;
     int NF = nx + nu; // columns of forward seed
 
     double T = 0.05;
-    double *xref;
-    xref = (double*)calloc(nx, sizeof(double));
+
+    double *xref = calloc(nx, sizeof(double));
     xref[1] = M_PI;
+
+	double *uref = calloc(nu, sizeof(double));
+	for (ii=0; ii<nu; ii++) uref[ii] = 1.0;
+
+	double *Sx = calloc(nx*nx, sizeof(double));
+	for (ii = 0; ii < nx; ii++)
+		Sx[ii*(nx+1)] = 1.0;
+
+	double *Su = calloc(nx*nu, sizeof(double));
+
+	double *S_adj = calloc(nx+nu, sizeof(double));
+	for (ii = 0; ii < nx; ii++)
+		S_adj[ii] = 1.0;
 
     /************************************************
     * external functions (explicit model)
@@ -206,22 +218,28 @@ int main()
 
         sim_in *in = sim_in_create(config, dims);
 
-        in->T = T;
+		// matrices
+		sim_in_set(config, dims, in, "T", &T);
+		sim_in_set(config, dims, in, "x", xref);
+		sim_in_set(config, dims, in, "u", uref);
+		sim_in_set(config, dims, in, "Sx", Sx);
+		sim_in_set(config, dims, in, "Su", Su);
+		sim_in_set(config, dims, in, "S_adj", S_adj);
 
         // external functions
         switch (nss)
         {
             case 0:
             {
-                sim_model_set(config, in, "expl_vde_for", &expl_vde_for);
-                sim_model_set(config, in, "expl_vde_adj", &expl_vde_adj);
+                sim_in_set(config, dims, in, "expl_vde_for", &expl_vde_for);
+                sim_in_set(config, dims, in, "expl_vde_adj", &expl_vde_adj);
                 break;
             }
             case 1:
             {
-                sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-                sim_model_set(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
-                sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+                sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
+                sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
                 break;
             }
             default :
@@ -230,26 +248,6 @@ int main()
                 exit(1);
             }
         }
-
-        // x
-        for (ii = 0; ii < nx; ii++)
-            in->x[ii] = xref[ii];
-
-        // p
-        for (ii = 0;ii < nu; ii++)
-            in->u[ii] = 1.0;
-
-        // seeds forw
-        for (ii = 0; ii < nx * NF; ii++)
-            in->S_forw[ii] = 0.0;
-        for (ii = 0; ii < nx; ii++)
-            in->S_forw[ii * (nx + 1)] = 1.0;
-
-        // seeds adj
-        for (ii = 0; ii < nx; ii++)
-            in->S_adj[ii] = 1.0;
-        for (ii = 0; ii < nu; ii++)
-            in->S_adj[ii+nx] = 0.0;
 
         /************************************************
         * sim out
@@ -276,38 +274,38 @@ int main()
         }
         // double cpu_time = acados_toc(&timer)/NREP;
 
-        double *xn = out->xn;
-
         /************************************************
         * printing
         ************************************************/
 
+        double *xn_out = calloc(nx, sizeof(double));
+		sim_out_get(config, dims, out, "xn", xn_out);
         printf("\nxn: \n");
-        d_print_exp_mat(1, nx, &xn[0], 1);
+        d_print_exp_mat(1, nx, xn_out, 1);
 
-        double *S_forw_out = NULL;
+	    double *S_forw_out = calloc(nx*(nx+nu), sizeof(double));
         if(opts->sens_forw){
-            S_forw_out = out->S_forw;
+		    sim_out_get(config, dims, out, "S_forw", S_forw_out);
             printf("\nS_forw_out: \n");
             d_print_exp_mat(nx, NF, S_forw_out, nx);
         }
 
+	    double *S_adj_out = calloc(nx+nu, sizeof(double));
         if(opts->sens_adj){
-            double *S_adj_out = out->S_adj;
+		    sim_out_get(config, dims, out, "S_adj", S_adj_out);
             printf("\nS_adj_out: \n");
             d_print_exp_mat(1, nx+nu, S_adj_out, 1);
         }
 
-        double *S_hess_out;
+        double *S_hess_out = calloc((nu+nx)*(nu+nx), sizeof(double));
         if(opts->sens_hess)
         {
-            double zero = 0.0;
-            S_hess_out = out->S_hess;
+		    sim_out_get(config, dims, out, "S_hess", S_hess_out);
             printf("\nS_hess_out: \n");
             for (ii=0;ii<NF;ii++){
                 for (jj=0;jj<NF;jj++){
                     if (jj>ii){
-                        printf("%8.5f ", zero);
+                        printf("%8.5f ", 0.0);
                     }else{
                         printf("%8.5f ", S_hess_out[jj*NF+ii]);
                     }
@@ -345,16 +343,25 @@ int main()
         printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
         printf("========================\n");
 
+		free(xn_out);
+		free(S_forw_out);
+		free(S_adj_out);
+		free(S_hess_out);
+
         sim_free(sim_solver);
         sim_in_free(in);
         sim_out_free(out);
-
         sim_opts_free(opts);
         sim_dims_free(dims);
         sim_config_free(config);
     }
 
-    // TODO(dimitris): free all external functions (or write a free_model)
+	free(xref);
+	free(uref);
+	free(Sx);
+	free(Su);
+	free(S_adj);
+
     // explicit model
     external_function_casadi_free(&expl_vde_for);
     external_function_casadi_free(&expl_vde_adj);
