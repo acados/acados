@@ -184,6 +184,7 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
     }
     else if (!strcmp(field, "Sx"))
     {
+        // note: this assumes nf = nu+nx !!!
         int nx;
         config->get_nx(dims_, &nx);
         int ii;
@@ -193,6 +194,7 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
     }
     else if (!strcmp(field, "Su"))
     {
+        // note: this assumes nf = nu+nx !!!
         int nx, nu;
         config->get_nx(dims_, &nx);
         config->get_nu(dims_, &nu);
@@ -200,6 +202,28 @@ int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
         double *Su = value;
         for (ii=0; ii < nx*nu; ii++)
             in->S_forw[nx*nx+ii] = Su[ii];
+    }
+    else if (!strcmp(field, "S_forw"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->get_nx(dims_, &nx);
+        config->get_nu(dims_, &nu);
+        int ii;
+        double *S_forw = value;
+        for (ii=0; ii < nx*(nu+nx); ii++)
+            in->S_forw[ii] = S_forw[ii];
+    }
+    else if (!strcmp(field, "S_adj"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->get_nx(dims_, &nx);
+        config->get_nu(dims_, &nu);
+        int ii;
+        double *S_adj = value;
+        for (ii=0; ii < nu+nx; ii++)
+            in->S_adj[ii] = S_adj[ii];
     }
     else
     {
@@ -296,6 +320,39 @@ int sim_out_get(void *config_, void *dims_, sim_out *out, char *field, void *val
         double *xn = value;
         for (ii=0; ii < nx; ii++)
             xn[ii] = out->xn[ii];
+    }
+    else if (!strcmp(field, "S_forw"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->get_nx(dims_, &nx);
+        config->get_nu(dims_, &nu);
+        int ii;
+        double *S_forw = value;
+        for (ii=0; ii < nx*(nu+nx); ii++)
+            S_forw[ii] = out->S_forw[ii];
+    }
+    else if (!strcmp(field, "S_adj"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->get_nx(dims_, &nx);
+        config->get_nu(dims_, &nu);
+        int ii;
+        double *S_adj = value;
+        for (ii=0; ii < nu+nx; ii++)
+            S_adj[ii] = out->S_adj[ii];
+    }
+    else if (!strcmp(field, "S_hess"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->get_nx(dims_, &nx);
+        config->get_nu(dims_, &nu);
+        int ii;
+        double *S_hess = value;
+        for (ii=0; ii < (nu+nx)*(nu+nx); ii++)
+            S_hess[ii] = out->S_hess[ii];
     }
     else
     {
