@@ -109,7 +109,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 	/* solver */
-//	sim_solver *solver = sim_solver_create(config, dims, opts);
 	sim_solver *solver = sim_solver_create(config, dims, opts);
 
 

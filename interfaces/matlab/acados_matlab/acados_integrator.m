@@ -28,7 +28,7 @@ classdef acados_integrator < handle
 				obj.opts_struct.sens_forw = 0;
 			end
 			obj.opts_struct.scheme = opts.scheme;
-			obj.C_sim = sim_solver_create(model, obj.opts_struct);
+			obj.C_sim = sim_create(model, obj.opts_struct);
 		end
 
 

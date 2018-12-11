@@ -54,7 +54,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	sim_opts_destroy(opts);
 	sim_in_destroy(in);
 	sim_out_destroy(out);
-//	sim_solver_free(sim_solver);
 	sim_solver_destroy(solver);
 
 
