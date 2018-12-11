@@ -56,7 +56,7 @@ def generate_solver(model, ra):
     out_file.write(output)
 
     # render S-Function template
-    template = env.get_template('acados_solver.in.c')
+    template = env.get_template('acados_solver_sfun.in.c')
     output = template.render(ra=ra)
 
     # output file

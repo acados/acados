@@ -133,7 +133,6 @@ os.system('make')
 os.system('make shared_lib')
 os.chdir('..')
 
-import pdb; pdb.set_trace()
 acados   = CDLL('c_generated_code/acados_solver_pendulum_ode.so')
 
 acados.acados_create()
