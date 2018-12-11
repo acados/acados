@@ -43,6 +43,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		double *xn = mxGetPr( prhs[2] );
 		sim_out_get(config, dims, out, "xn", xn);
 		}
+	else if(!strcmp(field, "S_forw"))
+		{
+		double *S_forw = mxGetPr( prhs[2] );
+		sim_out_get(config, dims, out, "S_forw", S_forw);
+		}
+	else if(!strcmp(field, "Sx"))
+		{
+		double *Sx = mxGetPr( prhs[2] );
+		sim_out_get(config, dims, out, "Sx", Sx);
+		}
+	else if(!strcmp(field, "Su"))
+		{
+		double *Su = mxGetPr( prhs[2] );
+		sim_out_get(config, dims, out, "Su", Su);
+		}
 	else
 		{
 		mexPrintf("\nsim_get: field not supported: %s\n", field);

@@ -332,6 +332,27 @@ int sim_out_get(void *config_, void *dims_, sim_out *out, char *field, void *val
         for (ii=0; ii < nx*(nu+nx); ii++)
             S_forw[ii] = out->S_forw[ii];
     }
+    else if (!strcmp(field, "Sx"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx;
+        config->dims_get(config_, dims_, "nx", &nx);
+        int ii;
+        double *Sx = value;
+        for (ii=0; ii < nx*nx; ii++)
+            Sx[ii] = out->S_forw[ii];
+    }
+    else if (!strcmp(field, "Su"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
+        int ii;
+        double *Su = value;
+        for (ii=0; ii < nx*nu; ii++)
+            Su[ii] = out->S_forw[nx*nx+ii];
+    }
     else if (!strcmp(field, "S_adj"))
     {
         // note: this assumes nf = nu+nx !!!

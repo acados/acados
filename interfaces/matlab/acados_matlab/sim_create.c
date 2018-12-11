@@ -17,6 +17,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// sizeof(long long) == sizeof(void *) = 64 !!!
 	long long *ptr;
+	int ii;
 
 
 
@@ -102,6 +103,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* in */
 	sim_in *in = sim_in_create(config, dims);
+	if(sens_forw==true)
+		{
+//		mexPrintf("\nsens forw true!\n");
+		double *Sx = calloc(nx*nx, sizeof(double));
+		for(ii=0; ii<nx; ii++)
+			Sx[ii*(nx+1)] = 1.0;
+		double *Su = calloc(nx*nu, sizeof(double));
+//		d_print_mat(nx, nx, Sx, nx);
+//		d_print_mat(nx, nu, Su, nx);
+		sim_in_set(config, dims, in, "Sx", Sx);
+		sim_in_set(config, dims, in, "Su", Su);
+		free(Sx);
+		free(Su);
+		}
 
 
 	/* out */

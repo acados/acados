@@ -30,6 +30,9 @@ model_name = 'model';
 %sim_model = crane_model_expl(model_name);
 sim_model = linear_model(model_name);
 
+nx = sim_model.nx;
+nu = sim_model.nu;
+
 
 %% acados integrator opts
 sim_opts = acados_integrator_opts();
@@ -37,7 +40,7 @@ sim_opts.set('codgen_model', 'true');
 sim_opts.set('num_stages', 4);
 sim_opts.set('num_steps', 3);
 sim_opts.set('scheme', 'erk');
-sim_opts.set('sens_forw', 'false');
+sim_opts.set('sens_forw', 'true');
 
 
 %% acados integrator
@@ -53,7 +56,7 @@ tic;
 sim.set('x', x0);
 time_set_x = toc
 
-u = ones(sim_model.nu, 1);
+u = ones(nu, 1);
 sim.set('u', u);
 
 % solve
@@ -63,9 +66,22 @@ time_solve = toc
 
 
 % get TODO with return value !!!!!
-xn = zeros(sim_model.nx, 1);
+% xn
+xn = zeros(nx, 1);
 sim.get('xn', xn);
 xn
+% S_forw
+S_forw = zeros(nx, nx+nu);
+sim.get('S_forw', S_forw);
+S_forw
+% Sx
+Sx = zeros(nx, nx);
+sim.get('Sx', Sx);
+Sx
+% Su
+Su = zeros(nx, nu);
+sim.get('Su', Su);
+Su
 
 
 fprintf('\nsuccess!\n\n');
