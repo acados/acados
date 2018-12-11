@@ -1,16 +1,4 @@
-
-
-value = getenv('ACADOS_FOLDER')
-
-acados_folder = '../../../'
-
-header_acados = ['-I' acados_folder];
-header_interfaces = ['-I' acados_folder, 'interfaces'];
-acados_lib_path = ['-L' acados_folder, 'lib'];
-
 classdef acados_integrator < handle
-
-
 
 	properties
 		C_sim
@@ -53,10 +41,24 @@ classdef acados_integrator < handle
 					c_sources = [c_sources, 'model_expl_vde_for.c '];
 					c_sources = [c_sources, 'model_expl_vde_adj.c '];
 					c_sources = [c_sources, 'model_expl_ode_hes.c '];
-					lib_name = ['model_expl.so'];
+					lib_name = ['libmodel_expl.so'];
+
 					system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
-					mex(include_acados, include_interfaces, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', 'model_expl.so', 'sim_ext_fun_create.c')
-					mex(include_acados, include_interfaces, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', 'model_expl.so', 'sim_ext_fun_destroy.c')
+
+					acados_folder = getenv("ACADOS_FOLDER");
+
+					if length(acados_folder) == 0
+						acados_folder = '../../../';
+					end
+
+					include_acados = ['-I' acados_folder];
+					include_interfaces = ['-I' acados_folder, 'interfaces'];
+					acados_lib_path = ['-L' acados_folder, 'lib'];
+					acados_matlab_lib_path = ['-L' acados_folder, 'interfaces/matlab/acados_matlab/'];
+
+					mex(include_acados, include_interfaces, acados_lib_path, acados_matlab_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lmodel_expl', 'sim_ext_fun_create.c');
+					mex(include_acados, include_interfaces, acados_lib_path, acados_matlab_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lmodel_expl', 'sim_ext_fun_destroy.c');
+
 					% get pointers for external functions in model
 					obj.C_sim_ext_fun = sim_ext_fun_create(obj.opts_struct);
 					% set in model ( = casadi functions )

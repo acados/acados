@@ -3,23 +3,25 @@
 %mex -v GCC='/usr/bin/gcc-4.9' ../../../lib/libacore.so ../../../lib/libhpipm.so ../../../lib/libblasfeo.so -lm mex_sim.c
 %mex libacore.so libhpipm.so libblasfeo.so sim_create.c
 
-acados_folder = '../../../'
+acados_folder = getenv("ACADOS_FOLDER");
 
-header_acados = ['-I' acados_folder];
-header_interfaces = ['-I' acados_folder, 'interfaces'];
+if length(acados_folder) == 0
+	acados_folder = '../../../';
+end
+
+include_acados = ['-I' acados_folder];
+include_interfaces = ['-I' acados_folder, 'interfaces'];
 acados_lib_path = ['-L' acados_folder, 'lib'];
 
-mex_files = [
-	'sim_create.c',
+mex_files ={'sim_create.c',
 	'sim_destroy.c',
 	'sim_solve.c',
 	'sim_set.c',
 	'sim_get.c',
-	'sim_set_model.c'
-]
+	'sim_set_model.c'} ;
 
-for mex_file = mex_files
-	mex(include_acados, include_interfaces, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_file)
+for ii=1:length(mex_files)
+	mex(include_acados, include_interfaces, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
 end
 
 
