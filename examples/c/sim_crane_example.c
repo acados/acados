@@ -202,9 +202,6 @@ int main()
 
         sim_rk_opts *opts = sim_opts_create(config, dims);
 
-//        opts->ns = 4; // number of stages in rk integrator
-//        opts->num_steps = 5; // number of integration steps
-//        opts->sens_adj = true;
         int ns = 4; // number of stages in rk integrator
         int num_steps = 5; // number of integration steps
         bool sens_adj = true;
@@ -259,7 +256,7 @@ int main()
         * sim solver
         ************************************************/
 
-        sim_solver *sim_solver = sim_create(config, dims, opts);
+        sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
         int acados_return;
 
@@ -284,21 +281,21 @@ int main()
         d_print_exp_mat(1, nx, xn_out, 1);
 
 	    double *S_forw_out = calloc(nx*(nx+nu), sizeof(double));
-        if(opts->sens_forw){
+        if (opts->sens_forw){
 		    sim_out_get(config, dims, out, "S_forw", S_forw_out);
             printf("\nS_forw_out: \n");
             d_print_exp_mat(nx, NF, S_forw_out, nx);
         }
 
 	    double *S_adj_out = calloc(nx+nu, sizeof(double));
-        if(opts->sens_adj){
+        if (opts->sens_adj){
 		    sim_out_get(config, dims, out, "S_adj", S_adj_out);
             printf("\nS_adj_out: \n");
             d_print_exp_mat(1, nx+nu, S_adj_out, 1);
         }
 
         double *S_hess_out = calloc((nu+nx)*(nu+nx), sizeof(double));
-        if(opts->sens_hess)
+        if (opts->sens_hess)
         {
 		    sim_out_get(config, dims, out, "S_hess", S_hess_out);
             printf("\nS_hess_out: \n");
@@ -348,12 +345,12 @@ int main()
 		free(S_adj_out);
 		free(S_hess_out);
 
-        sim_free(sim_solver);
-        sim_in_free(in);
-        sim_out_free(out);
-        sim_opts_free(opts);
-        sim_dims_free(dims);
-        sim_config_free(config);
+        sim_solver_destroy(sim_solver);
+        sim_in_destroy(in);
+        sim_out_destroy(out);
+        sim_opts_destroy(opts);
+        sim_dims_destroy(dims);
+        sim_config_destroy(config);
     }
 
 	free(xref);

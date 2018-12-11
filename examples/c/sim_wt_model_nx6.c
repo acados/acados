@@ -405,7 +405,7 @@ int main()
 
 		}
 
-		sim_solver *sim_solver = sim_create(config, dims, opts);
+		sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
 		int acados_return;
 
