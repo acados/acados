@@ -87,7 +87,7 @@ typedef struct
 
 
 /* dims */
-void sim_lifted_irk_dims_set(void *config_, void *dims_, const char *field, int* value);
+void sim_lifted_irk_dims_set(void *config_, void *dims_, const char *field, const int *value);
 void sim_lifted_irk_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 int sim_lifted_irk_dims_calculate_size();
@@ -100,7 +100,7 @@ int sim_lifted_irk_model_calculate_size(void *config, void *dims);
 //
 void *sim_lifted_irk_model_assign(void *config, void *dims, void *raw_memory);
 //
-int sim_lifted_irk_model_set(void *model_, char *field, void *value);
+int sim_lifted_irk_model_set(void *model_, const char *field, void *value);
 
 /* opts */
 //

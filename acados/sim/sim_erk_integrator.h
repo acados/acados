@@ -78,13 +78,13 @@ typedef struct
 // dims
 int sim_erk_dims_calculate_size();
 void *sim_erk_dims_assign(void *config_, void *raw_memory);
-void sim_erk_dims_set(void *config_, void *dims_, const char *field, int* value);
+void sim_erk_dims_set(void *config_, void *dims_, const char *field, const int* value);
 void sim_erk_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 // model
 int sim_erk_model_calculate_size(void *config, void *dims);
 void *sim_erk_model_assign(void *config, void *dims, void *raw_memory);
-int sim_erk_model_set(void *model, char *field, void *value);
+int sim_erk_model_set(void *model, const char *field, void *value);
 
 // opts
 int sim_erk_opts_calculate_size(void *config, void *dims);

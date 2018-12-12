@@ -122,7 +122,7 @@ typedef struct
 
 
 // get & set functions
-void sim_irk_dims_set(void *config_, void *dims_, const char *field, int* value);
+void sim_irk_dims_set(void *config_, void *dims_, const char *field, const int *value);
 void sim_irk_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 // dims
@@ -132,7 +132,7 @@ void *sim_irk_dims_assign(void *config_, void *raw_memory);
 // model
 int sim_irk_model_calculate_size(void *config, void *dims);
 void *sim_irk_model_assign(void *config, void *dims, void *raw_memory);
-int sim_irk_model_set(void *model, char *field, void *value);
+int sim_irk_model_set(void *model, const char *field, void *value);
 
 // opts
 int sim_irk_opts_calculate_size(void *config, void *dims);

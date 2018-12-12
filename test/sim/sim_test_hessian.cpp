@@ -33,7 +33,7 @@
 #include "acados/utils/math.h"
 
 #include "acados_c/external_function_interface.h"
-#include "interfaces/acados_c/sim_interface.h"
+#include "acados_c/sim_interface.h"
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
@@ -265,19 +265,19 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     {
         case ERK:  // ERK
         {
-            sim_model_set(config, in, "expl_ode_fun", &expl_ode_fun);
-            sim_model_set(config, in, "expl_vde_for", &expl_vde_for);
-            sim_model_set(config, in, "expl_vde_adj", &expl_vde_adj);
-            sim_model_set(config, in, "expl_ode_hess", &expl_ode_hess);
+            sim_in_set(config, dims, in, "expl_ode_fun", &expl_ode_fun);
+            sim_in_set(config, dims, in, "expl_vde_for", &expl_vde_for);
+            sim_in_set(config, dims, in, "expl_vde_adj", &expl_vde_adj);
+            sim_in_set(config, dims, in, "expl_ode_hess", &expl_ode_hess);
             break;
         }
         case IRK:  // IRK
         {
-            sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-            sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
+            sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+            sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
                     &impl_ode_fun_jac_x_xdot);
-            sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-            sim_model_set(config, in, "impl_ode_hess", &impl_ode_hess);
+            sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+            sim_in_set(config, dims, in, "impl_ode_hess", &impl_ode_hess);
             break;
         }
         default :
@@ -454,19 +454,19 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                 {
                     case ERK:  // ERK
                     {
-                        sim_model_set(config, in, "expl_ode_fun", &expl_ode_fun);
-                        sim_model_set(config, in, "expl_vde_for", &expl_vde_for);
-                        sim_model_set(config, in, "expl_vde_adj", &expl_vde_adj);
-                        sim_model_set(config, in, "expl_ode_hess", &expl_ode_hess);
+                        sim_in_set(config, dims, in, "expl_ode_fun", &expl_ode_fun);
+                        sim_in_set(config, dims, in, "expl_vde_for", &expl_vde_for);
+                        sim_in_set(config, dims, in, "expl_vde_adj", &expl_vde_adj);
+                        sim_in_set(config, dims, in, "expl_ode_hes", &expl_ode_hess);
                         break;
                     }
                     case IRK:  // IRK
                     {
-                        sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-                        sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
+                        sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+                        sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
                                 &impl_ode_fun_jac_x_xdot);
-                        sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-                        sim_model_set(config, in, "impl_ode_hess", &impl_ode_hess);
+                        sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                        sim_in_set(config, dims, in, "impl_ode_hes", &impl_ode_hess);
                         break;
                     }
                     default :
@@ -735,11 +735,11 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     {
         case IRK:  // IRK
         {
-            sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-            sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
+            sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+            sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
                     &impl_ode_fun_jac_x_xdot);
-            sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-            sim_model_set(config, in, "impl_ode_hess", &impl_ode_hess);
+            sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+            sim_in_set(config, dims, in, "impl_ode_hess", &impl_ode_hess);
             break;
         }
         default :

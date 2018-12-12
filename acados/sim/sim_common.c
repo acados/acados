@@ -134,7 +134,7 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 
 
 
-int sim_in_set(void *config_, void *dims_, sim_in *in, char *field, void *value)
+int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void *value)
 {
 //    printf("\nsim_in_set\n");
     sim_solver_config *config = config_;
@@ -306,7 +306,7 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 
 
 
-int sim_out_get(void *config_, void *dims_, sim_out *out, char *field, void *value)
+int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, void *value)
 {
     sim_solver_config *config = config_;
 	
