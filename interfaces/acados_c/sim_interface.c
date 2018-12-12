@@ -102,7 +102,7 @@ void sim_dims_destroy(void *dims)
 
 
 
-void sim_dims_set(sim_solver_config *config, void *dims, const char *field, int* value)
+void sim_dims_set(sim_solver_config *config, void *dims, const char *field, const int* value)
 {
     config->dims_set(config, dims, field, value);
 }
@@ -140,6 +140,13 @@ void sim_in_destroy(void *in)
 
 
 
+int sim_in_set(void *config_, void *dims_, sim_in *in, const char *field, void *value)
+{
+    return sim_in_set_(config_, dims_, in, field, value);
+}
+
+
+
 /************************************************
 * out
 ************************************************/
@@ -163,6 +170,12 @@ void sim_out_destroy(void *out)
     free(out);
 }
 
+
+
+int sim_out_get(void *config, void *dims, sim_out *out, const char *field, void *value)
+{
+    return sim_out_get_(config, dims, out, field, value);
+}
 
 
 /************************************************

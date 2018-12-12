@@ -63,7 +63,7 @@ void *sim_irk_dims_assign(void *config_, void *raw_memory)
 
 
 
-void sim_irk_dims_set(void *config_, void *dims_, const char *field, int *value)
+void sim_irk_dims_set(void *config_, void *dims_, const char *field, const int *value)
 {
     sim_irk_dims *dims = dims_;
 
@@ -142,7 +142,7 @@ void *sim_irk_model_assign(void *config, void *dims, void *raw_memory)
 
 
 
-int sim_irk_model_set(void *model_, char *field, void *value)
+int sim_irk_model_set(void *model_, const char *field, void *value)
 {
     irk_model *model = model_;
 

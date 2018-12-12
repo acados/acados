@@ -79,7 +79,7 @@ void *sim_gnsf_dims_assign(void *config_, void *raw_memory)
  * get & set functions
  ************************************************/
 
-void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, int *value)
+void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int *value)
 {
     sim_gnsf_dims *dims = dims_;
 
@@ -397,7 +397,7 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
 
 
 
-int sim_gnsf_model_set(void *model_, char *field, void *value)
+int sim_gnsf_model_set(void *model_, const char *field, void *value)
 {
     gnsf_model *model = model_;
 
