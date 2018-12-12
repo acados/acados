@@ -1,18 +1,20 @@
 %% test of native matlab interface
 
-%mex -v GCC='/usr/bin/gcc-4.9' ../../../lib/libacore.so ../../../lib/libhpipm.so ../../../lib/libblasfeo.so -lm mex_sim.c
-%mex libacore.so libhpipm.so libblasfeo.so sim_create.c
+%% compile mex files
+% mex -v GCC='/usr/bin/gcc-4.9' ... (-v for verbose, GCC=... to change compiler)
 
+% get acados folder (if set)
 acados_folder = getenv('ACADOS_FOLDER');
-
+% default folder
 if length(acados_folder) == 0
 	acados_folder = '../../../';
 end
-
-include_acados = ['-I' acados_folder];
-include_interfaces = ['-I' acados_folder, 'interfaces'];
+% set paths
+acados_include = ['-I' acados_folder];
+acados_interfaces_include = ['-I' acados_folder, 'interfaces'];
 acados_lib_path = ['-L' acados_folder, 'lib'];
 
+% compile mex
 mex_files ={'sim_create.c',
 	'sim_destroy.c',
 	'sim_ext_fun_destroy.c',
@@ -22,27 +24,69 @@ mex_files ={'sim_create.c',
 	'sim_set_model.c'} ;
 
 for ii=1:length(mex_files)
-	mex(include_acados, include_interfaces, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
+	mex(acados_include, acados_interfaces_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
 end
 
 
-%% model
-% only 'model' supported as model_name at the moment !!!
-model_name = 'model';
-%sim_model = crane_model_expl(model_name);
-sim_model = linear_model(model_name);
 
-nx = sim_model.nx;
-nu = sim_model.nu;
+%% arguments
+scheme = 'irk';
+sens_forw = 'true';
+num_stages = 4;
+num_steps = 3;
+codgen_model = 'true';
+
+
+
+%% model
+%model = linear_model;
+model = linear_mass_spring_model;
+%model = crane_model;
+
+nx = model.nx;
+nu = model.nu;
+
+
+
+%% acados integrator model
+sim_model = acados_integrator_model();
+if (strcmp(scheme, 'erk'))
+	sim_model.set('type', 'expl');
+	sim_model.set('expr', model.expr_expl);
+	sim_model.set('x', model.x);
+	if isfield(model, 'u')
+		sim_model.set('u', model.u);
+	end
+	sim_model.set('nx', model.nx);
+	sim_model.set('nu', model.nu);
+else % irk
+	sim_model.set('type', 'impl');
+	sim_model.set('expr', model.expr_impl);
+	sim_model.set('x', model.x);
+	sim_model.set('xdot', model.xdot);
+	if isfield(model, 'u')
+		sim_model.set('u', model.u);
+	end
+%	if isfield(model, 'z')
+%		sim_model.set('z', model.z);
+%	end
+	sim_model.set('nx', model.nx);
+	sim_model.set('nu', model.nu);
+%	sim_model.set('nz', model.nz);
+end
+%sim_model.model_struct
+
+
 
 
 %% acados integrator opts
 sim_opts = acados_integrator_opts();
-sim_opts.set('codgen_model', 'true');
-sim_opts.set('num_stages', 4);
-sim_opts.set('num_steps', 3);
-sim_opts.set('scheme', 'irk');
-sim_opts.set('sens_forw', 'true');
+sim_opts.set('codgen_model', codgen_model);
+sim_opts.set('num_stages', num_stages);
+sim_opts.set('num_steps', num_steps);
+sim_opts.set('scheme', scheme);
+sim_opts.set('sens_forw', sens_forw);
+
 
 
 %% acados integrator

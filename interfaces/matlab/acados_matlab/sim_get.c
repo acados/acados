@@ -13,7 +13,7 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	{
 
-//	mexPrintf("\nin sim_set\n");
+//	mexPrintf("\nin sim_get\n");
 
 	long long *ptr;
 

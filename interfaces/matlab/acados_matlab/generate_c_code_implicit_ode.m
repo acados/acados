@@ -42,30 +42,45 @@ else
 end
 
 %% load model
+% x
 x = model.x;
+nx = length(x);
+% check type
 if class(x(1)) == 'casadi.SX'
     isSX = true;
 else
     isSX = false;
 end
+% xdot
 xdot = model.xdot;
-u = model.u;
+% u
+if isfield(model, 'u')
+    u = model.u;
+	nu = length(u);
+else
+    if isSX
+        u = SX.sym('u',0, 0);
+    else
+        u = MX.sym('u',0, 0);
+    end
+	nu = 0;
+end
+% z
 if isfield(model, 'z')
     z = model.z;
+	nz = length(z);
 else
-    if class(x(1)) == 'casadi.SX'
+    if isSX
         z = SX.sym('z',0, 0);
     else
         z = MX.sym('z',0, 0);
     end
+	nz = 0;
 end
-f_impl = model.f_impl_expr;
-model_name = model.name;
 
-%% get model dimensions
-nx = length(x);
-nu = length(u);
-nz = length(z);
+f_impl = model.expr;
+
+model_name = model.name;
 
 %% generate jacobians
 jac_x       = jacobian(f_impl, x);

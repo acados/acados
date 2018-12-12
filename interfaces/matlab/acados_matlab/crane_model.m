@@ -1,4 +1,5 @@
-function [ model ] = crane_model_expl(model_name)
+function model = crane_model()
+
 %% this function generates an explicit ODE test model,
 % represented as a Matlab struct "model".
 % It consists of a CasADi expression f_expl_expr
@@ -32,30 +33,27 @@ uLR = MX.sym('uLR');
 x = vertcat(xC, vC, xL, vL, uC, uL, theta, omega, q);
 u = vertcat(uCR, uLR);
 
+nx = length(x);
+nu = length(u);
+
 xdot = MX.sym('xdot',size(x)); %state derivatives
 
-%% explicit ODE formulation
-f_expl = vertcat(vC, ...
-                  - 1/tau1 * (vC - a1 * uC), ...
-                  vL,...
-                  - 1/tau2 * (vL - a2 * uL), ...
-                  uCR,...
-                  uLR,...
-                  omega, ...
-                  - (a1 * uCR * cos(theta) + g* sin(theta) + 2*vL*omega) / xL, ...
-                  uCR^2 + xL^2); % dynamics of quadrature state x2;
+expr_expl = vertcat(vC, ...
+                    - 1/tau1 * (vC - a1 * uC), ...
+                    vL,...
+                    - 1/tau2 * (vL - a2 * uL), ...
+                    uCR,...
+                    uLR,...
+                    omega, ...
+                    - (a1 * uCR * cos(theta) + g* sin(theta) + 2*vL*omega) / xL, ...
+                    uCR^2 + xL^2); % dynamics of quadrature state x2;
+expr_impl = expr_expl - xdot;
 
-
-%% set up equivalent implicit model
-
-%% populate model
-model.f_expl_expr = f_expl;
-model.f_impl_expr = f_expl - xdot;
+model.nx = nx;
+model.nu = nu;
 model.x = x;
-model.xdot = xdot;
 model.u = u;
-model.name = model_name;
-model.nx = length(model.x);
-model.nu = length(model.u);
+model.xdot = xdot;
+model.expr_expl = expr_expl;
+model.expr_impl = expr_impl;
 
-end

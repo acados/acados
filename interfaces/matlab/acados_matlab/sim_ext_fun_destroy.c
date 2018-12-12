@@ -46,9 +46,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		external_function_casadi *expl_vde_for = (external_function_casadi *) ptr[0];
 		// expl_vde_adj
 		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "expl_vde_adj" ) );
+		external_function_casadi *expl_vde_adj = (external_function_casadi *) ptr[0];
 
 		// free external functions
-		external_function_casadi *expl_vde_adj = (external_function_casadi *) ptr[0];
 		external_function_casadi_free(expl_ode_fun);
 		external_function_casadi_free(expl_vde_for);
 		free(expl_ode_fun);

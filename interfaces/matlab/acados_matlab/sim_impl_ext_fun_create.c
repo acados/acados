@@ -18,7 +18,7 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	{
 
-//	mexPrintf("\nin sim_ext_fun_create\n");
+//	mexPrintf("\nin sim_impl_ext_fun_create\n");
 
 	// sizeof(long long) == sizeof(void *) = 64 !!!
 	long long *ptr;
