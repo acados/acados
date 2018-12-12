@@ -59,7 +59,7 @@ else
         z = MX.sym('z',0, 0);
     end
 end
-f_impl = model.f_impl_expr;
+f_impl = model.expr;
 model_name = model.name;
 
 %% get model dimensions

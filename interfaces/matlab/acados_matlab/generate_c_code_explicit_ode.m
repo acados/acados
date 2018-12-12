@@ -37,7 +37,7 @@ else
     isSX = false;
 end
 
-f_expl = model.f_expl_expr;
+f_expl = model.expr;
 model_name = model.name;
 
 %% get model dimensions

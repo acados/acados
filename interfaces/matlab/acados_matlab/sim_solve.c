@@ -38,21 +38,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 
-#if 0
-	// config
-	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "config" ) );
-	sim_solver_config *config = (sim_solver_config *) ptr[0];
-	// dims
-	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "dims" ) );
-	void *dims = (void *) ptr[0];
-	int nx;
-	config->get_nx(dims, &nx);
-	mexPrintf("\nnx %d\n", nx);
-	d_print_mat(1, nx, out->xn, 1);
-#endif
-
-
-
 	/* return */
 
 	return;

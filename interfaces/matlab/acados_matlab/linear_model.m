@@ -1,4 +1,9 @@
-function [ model ] = linear_model(model_name)
+%% this function generates an explicit ODE test model,
+% represented as a Matlab struct "model".
+% It consists of a CasADi expression f_expl_expr
+% that depends on the symbolic CasADi variables x, xdot, u (also part of
+% "model"), a model name, which will be used as a prefix for the name of 
+% generated C functions to use the model with acados.
 
 import casadi.*
 
@@ -9,16 +14,6 @@ x = MX.sym('x', nx, 1); % states
 u = MX.sym('u', nu, nu); % controls
 xdot = MX.sym('xdot',size(x)); %state derivatives
 
-f_expl = [1.0; -1.0; 0.5; 0.1].*x;
-
-%% populate model
-model.f_expl_expr = f_expl;
-model.f_impl_expr = f_expl - xdot;
-model.x = x;
-model.xdot = xdot;
-model.u = u;
-model.name = model_name;
-model.nx = nx;
-model.nu = nu;
-
+expr_expl = [1.0; -1.0; 0.5; 0.1].*x;
+expr_impl = expr_expl - xdot;
 
