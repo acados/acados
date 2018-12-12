@@ -29,20 +29,31 @@ else
 end
 
 %% load model
+% x
 x = model.x;
-u = model.u;
+nx = length(x);
+% check type
 if class(x(1)) == 'casadi.SX'
     isSX = true;
 else
     isSX = false;
 end
+% u
+if isfield(model, 'u')
+    u = model.u;
+	nu = length(u);
+else
+    if isSX
+        u = SX.sym('u',0, 0);
+    else
+        u = MX.sym('u',0, 0);
+    end
+	nu = 0;
+end
 
 f_expl = model.expr;
-model_name = model.name;
 
-%% get model dimensions
-nx = length(x);
-nu = length(u);
+model_name = model.name;
 
 %% set up functions to be exported
 if isSX

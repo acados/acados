@@ -1,3 +1,5 @@
+function model = crane_model()
+
 %% this function generates an explicit ODE test model,
 % represented as a Matlab struct "model".
 % It consists of a CasADi expression f_expl_expr
@@ -46,3 +48,12 @@ expr_expl = vertcat(vC, ...
                     - (a1 * uCR * cos(theta) + g* sin(theta) + 2*vL*omega) / xL, ...
                     uCR^2 + xL^2); % dynamics of quadrature state x2;
 expr_impl = expr_expl - xdot;
+
+model.nx = nx;
+model.nu = nu;
+model.x = x;
+model.u = u;
+model.xdot = xdot;
+model.expr_expl = expr_expl;
+model.expr_impl = expr_impl;
+

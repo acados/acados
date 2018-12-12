@@ -39,8 +39,12 @@ codgen_model = 'true';
 
 
 %% model
-linear_model;
-%crane_model;
+%model = linear_model;
+model = linear_mass_spring_model;
+%model = crane_model;
+
+nx = model.nx;
+nu = model.nu;
 
 
 
@@ -48,21 +52,29 @@ linear_model;
 sim_model = acados_integrator_model();
 if (strcmp(scheme, 'erk'))
 	sim_model.set('type', 'expl');
-	sim_model.set('expr', expr_expl);
-	sim_model.set('x', x);
-	sim_model.set('u', u);
-	sim_model.set('nx', nx);
-	sim_model.set('nu', nu);
+	sim_model.set('expr', model.expr_expl);
+	sim_model.set('x', model.x);
+	if isfield(model, 'u')
+		sim_model.set('u', model.u);
+	end
+	sim_model.set('nx', model.nx);
+	sim_model.set('nu', model.nu);
 else % irk
 	sim_model.set('type', 'impl');
-	sim_model.set('expr', expr_impl);
-	sim_model.set('x', x);
-	sim_model.set('u', u);
-	sim_model.set('xdot', xdot);
-	sim_model.set('nx', nx);
-	sim_model.set('nu', nu);
+	sim_model.set('expr', model.expr_impl);
+	sim_model.set('x', model.x);
+	sim_model.set('xdot', model.xdot);
+	if isfield(model, 'u')
+		sim_model.set('u', model.u);
+	end
+%	if isfield(model, 'z')
+%		sim_model.set('z', model.z);
+%	end
+	sim_model.set('nx', model.nx);
+	sim_model.set('nu', model.nu);
+%	sim_model.set('nz', model.nz);
 end
-sim_model.model_struct
+%sim_model.model_struct
 
 
 
