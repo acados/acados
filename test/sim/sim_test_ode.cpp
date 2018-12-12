@@ -36,7 +36,7 @@
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
-#include "interfaces/acados_c/sim_interface.h"
+#include "acados_c/sim_interface.h"
 
 // wt model
 #include "examples/c/wt_model_nx3/wt_model.h"
@@ -268,9 +268,9 @@ TEST_CASE("wt_nx3_example", "[integrators]")
 
     in->T = T;
 
-    sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-    sim_model_set(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
-    sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+    sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+    sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
+    sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
 
     // seeds forw
     for (ii = 0; ii < nx * NF; ii++)
@@ -425,33 +425,33 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 {
                     case ERK:  // ERK
                     {
-                        sim_model_set(config, in, "expl_ode_fun", &expl_ode_fun);
-                        sim_model_set(config, in, "expl_vde_for", &expl_vde_for);
-                        sim_model_set(config, in, "expl_vde_adj", &expl_vde_adj);
+                        sim_in_set(config, dims, in, "expl_ode_fun", &expl_ode_fun);
+                        sim_in_set(config, dims, in, "expl_vde_for", &expl_vde_for);
+                        sim_in_set(config, dims, in, "expl_vde_adj", &expl_vde_adj);
                         break;
                     }
                     case IRK:  // IRK
                     {
-                        sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-                        sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
+                        sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+                        sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
                                 &impl_ode_fun_jac_x_xdot);
-                        sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                        sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
                         break;
                     }
                     case GNSF:  // GNSF
                     {
                         // set model funtions
-                        sim_model_set(config, in, "phi_fun", &phi_fun);
-                        sim_model_set(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
-                        sim_model_set(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
-                        sim_model_set(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
-                        sim_model_set(config, in, "get_gnsf_matrices", &get_matrices_fun);
+                        sim_in_set(config, dims, in, "phi_fun", &phi_fun);
+                        sim_in_set(config, dims, in, "phi_fun_jac_y", &phi_fun_jac_y);
+                        sim_in_set(config, dims, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
+                        sim_in_set(config, dims, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+                        sim_in_set(config, dims, in, "get_gnsf_matrices", &get_matrices_fun);
                         break;
                     }
                     case LIFTED_IRK:  // lifted_irk
                     {
-                        sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-                        sim_model_set(config, in, "impl_ode_fun_jac_x_xdot_u",
+                        sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+                        sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot_u",
                                  &impl_ode_fun_jac_x_xdot_u);
                         break;
                     }

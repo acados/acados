@@ -54,7 +54,7 @@ void *sim_dims_create(void *config_);
 //
 void sim_dims_destroy(void *dims);
 //
-void sim_dims_set(sim_solver_config *config, void *dims, const char *field, int* value);
+void sim_dims_set(sim_solver_config *config, void *dims, const char *field, const int* value);
 //
 void sim_dims_get(sim_solver_config *config, void *dims, const char *field, int* value);
 
@@ -63,12 +63,17 @@ void sim_dims_get(sim_solver_config *config, void *dims, const char *field, int*
 sim_in *sim_in_create(sim_solver_config *config, void *dims);
 //
 void sim_in_destroy(void *out);
+//
+int sim_in_set(void *config_, void *dims_, sim_in *in, const char *field, void *value);
+
 
 /* out */
 //
 sim_out *sim_out_create(sim_solver_config *config, void *dims);
 //
 void sim_out_destroy(void *out);
+//
+int sim_out_get(void *config, void *dims, sim_out *out, const char *field, void *value);
 
 /* opts */
 //
