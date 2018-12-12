@@ -12,16 +12,16 @@ import casadi.*
 nx = 4;
 nu = 0;
 
-x = MX.sym('x', nx, 1); % states
-xdot = MX.sym('xdot',size(x)); %state derivatives
+sym_x = MX.sym('x', nx, 1); % states
+sym_xdot = MX.sym('xdot',size(sym_x)); %state derivatives
 
-expr_expl = [1.0; -1.0; 0.5; 0.1].*x;
-expr_impl = expr_expl - xdot;
+expr_expl = [1.0; -1.0; 0.5; 0.1].*sym_x;
+expr_impl = expr_expl - sym_xdot;
 
 model.nx = nx;
 model.nu = nu;
-model.x = x;
-model.xdot = xdot;
+model.sym_x = sym_x;
+model.sym_xdot = sym_xdot;
 model.expr_expl = expr_expl;
 model.expr_impl = expr_impl;
 

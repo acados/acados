@@ -22,18 +22,18 @@ for ii=1:nu
 	Bc(num_mass+ii, ii) = 1.0;
 end
 
-x = MX.sym('x', nx, 1); % states
-u = MX.sym('u', nu, 1); % controls
-xdot = MX.sym('xdot',size(x)); %state derivatives
+sym_x = MX.sym('x', nx, 1); % states
+sym_u = MX.sym('u', nu, 1); % controls
+sym_xdot = MX.sym('xdot',size(sym_x)); %state derivatives
 
-expr_expl = Ac*x + Bc*u;
-expr_impl = expr_expl - xdot;
+expr_expl = Ac*sym_x + Bc*sym_u;
+expr_impl = expr_expl - sym_xdot;
 
 model.nx = nx;
 model.nu = nu;
-model.x = x;
-model.xdot = xdot;
-model.u = u;
+model.sym_x = sym_x;
+model.sym_xdot = sym_xdot;
+model.sym_u = sym_u;
 model.expr_expl = expr_expl;
 model.expr_impl = expr_impl;
 

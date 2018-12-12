@@ -6,13 +6,14 @@ classdef acados_integrator_model < handle
 		name
 		type
 		expr
-		x
-		u
-		xdot
-		z
+		sym_x
+		sym_u
+		sym_xdot
+		sym_z
 		nx
 		nu
 		nz
+		T
 		model_struct
 	end %properties
 
@@ -25,11 +26,14 @@ classdef acados_integrator_model < handle
 			obj.name = 'model';
 			obj.type = 0;
 			obj.expr = 0;
-			obj.x = 0;
-			obj.u = 0;
-			obj.xdot = 0;
+			obj.sym_x = 0;
+			obj.sym_u = 0;
+			obj.sym_xdot = 0;
+			obj.sym_z = 0;
 			obj.nx = 0;
 			obj.nu = 0;
+			obj.nz = 0;
+			obj.T = 0;
 			obj.model_struct = struct;
 			obj.model_struct.name = obj.name;
 		end
@@ -42,18 +46,18 @@ classdef acados_integrator_model < handle
 			elseif (strcmp(field, 'expr'))
 				obj.expr = value;
 				obj.model_struct.expr = value;
-			elseif (strcmp(field, 'x'))
-				obj.x = value;
-				obj.model_struct.x = value;
-			elseif (strcmp(field, 'u'))
-				obj.u = value;
-				obj.model_struct.u = value;
-			elseif (strcmp(field, 'xdot'))
-				obj.xdot = value;
-				obj.model_struct.xdot = value;
-			elseif (strcmp(field, 'z'))
-				obj.z = value;
-				obj.model_struct.z = value;
+			elseif (strcmp(field, 'sym_x'))
+				obj.sym_x = value;
+				obj.model_struct.sym_x = value;
+			elseif (strcmp(field, 'sym_xdot'))
+				obj.sym_xdot = value;
+				obj.model_struct.sym_xdot = value;
+			elseif (strcmp(field, 'sym_u'))
+				obj.sym_u = value;
+				obj.model_struct.sym_u = value;
+			elseif (strcmp(field, 'sym_z'))
+				obj.sym_z = value;
+				obj.model_struct.sym_z = value;
 			elseif (strcmp(field, 'nx'))
 				obj.nx = value;
 				obj.model_struct.nx = value;
@@ -63,6 +67,9 @@ classdef acados_integrator_model < handle
 			elseif (strcmp(field, 'nz'))
 				obj.nz = value;
 				obj.model_struct.nz = value;
+			elseif (strcmp(field, 'T'))
+				obj.T = value;
+				obj.model_struct.T = value;
 			else
 				disp('acados_integrator_model: set: wrong field');
 			end

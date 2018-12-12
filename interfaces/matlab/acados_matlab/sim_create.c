@@ -25,10 +25,42 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// model
 
-	int nu = mxGetScalar( mxGetField( prhs[0], 0, "nu" ) );
-//	mexPrintf("\n%d\n", nu);
-	int nx = mxGetScalar( mxGetField( prhs[0], 0, "nx" ) );
-//	mexPrintf("\n%d\n", nx);
+	bool
+		set_nu = false,
+		set_nx = false,
+		set_T = false,
+		set_x = false,
+		set_u = false;
+
+	int nu, nx;
+	double T;
+	double *x, *u;
+
+	if(mxGetField( prhs[0], 0, "nu" )!=NULL)
+		{
+		set_nu = true;
+		nu = mxGetScalar( mxGetField( prhs[0], 0, "nu" ) );
+		}
+	if(mxGetField( prhs[0], 0, "nx" )!=NULL)
+		{
+		set_nx = true;
+		nx = mxGetScalar( mxGetField( prhs[0], 0, "nx" ) );
+		}
+	if(mxGetField( prhs[0], 0, "T" )!=NULL)
+		{
+		set_T = true;
+		T = mxGetScalar( mxGetField( prhs[0], 0, "T" ) );
+		}
+	if(mxGetField( prhs[0], 0, "x" )!=NULL)
+		{
+		set_x = true;
+		x = mxGetPr( mxGetField( prhs[0], 0, "x" ) );
+		}
+	if(mxGetField( prhs[0], 0, "u" )!=NULL)
+		{
+		set_u = true;
+		u = mxGetPr( mxGetField( prhs[0], 0, "u" ) );
+		}
 
 
 	// opts_struct
@@ -96,8 +128,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* dims */
 	void *dims = sim_dims_create(config);
-	sim_dims_set(config, dims, "nx", &nx);
-	sim_dims_set(config, dims, "nu", &nu);
+	if(set_nx)
+		sim_dims_set(config, dims, "nx", &nx);
+	if(set_nu)
+		sim_dims_set(config, dims, "nu", &nu);
 
 
 	/* opts */
@@ -122,6 +156,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		free(Sx);
 		free(Su);
 		}
+	if(set_T)
+		sim_in_set(config, dims, in, "T", &T);
+	if(set_x)
+		sim_in_set(config, dims, in, "x", x);
+	if(set_u)
+		sim_in_set(config, dims, in, "u", u);
 
 
 	/* out */

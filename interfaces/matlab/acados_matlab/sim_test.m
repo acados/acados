@@ -50,25 +50,26 @@ nu = model.nu;
 
 %% acados integrator model
 sim_model = acados_integrator_model();
+sim_model.set('T', 0.5);
 if (strcmp(scheme, 'erk'))
 	sim_model.set('type', 'expl');
 	sim_model.set('expr', model.expr_expl);
-	sim_model.set('x', model.x);
-	if isfield(model, 'u')
-		sim_model.set('u', model.u);
+	sim_model.set('sym_x', model.sym_x);
+	if isfield(model, 'sym_u')
+		sim_model.set('sym_u', model.sym_u);
 	end
 	sim_model.set('nx', model.nx);
 	sim_model.set('nu', model.nu);
 else % irk
 	sim_model.set('type', 'impl');
 	sim_model.set('expr', model.expr_impl);
-	sim_model.set('x', model.x);
-	sim_model.set('xdot', model.xdot);
-	if isfield(model, 'u')
-		sim_model.set('u', model.u);
+	sim_model.set('sym_x', model.sym_x);
+	sim_model.set('sym_xdot', model.sym_xdot);
+	if isfield(model, 'sym_u')
+		sim_model.set('sym_u', model.sym_u);
 	end
-%	if isfield(model, 'z')
-%		sim_model.set('z', model.z);
+%	if isfield(model, 'sym_z')
+%		sim_model.set('sym_z', model.sym_z);
 %	end
 	sim_model.set('nx', model.nx);
 	sim_model.set('nu', model.nu);
@@ -94,8 +95,8 @@ sim_opts.set('sens_forw', sens_forw);
 sim = acados_integrator(sim_model, sim_opts);
 % generate model C functions
 sim.codegen_model();
-% set input
-sim.set('T', 0.5);
+% (re)set numerical part of model
+%sim.set('T', 0.5);
 
 x0 = ones(sim_model.nx, 1); %x0(1) = 2.0;
 tic;

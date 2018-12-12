@@ -30,13 +30,13 @@ q = MX.sym('q');
 uCR = MX.sym('uCR');  % Controls
 uLR = MX.sym('uLR');
 
-x = vertcat(xC, vC, xL, vL, uC, uL, theta, omega, q);
-u = vertcat(uCR, uLR);
+sym_x = vertcat(xC, vC, xL, vL, uC, uL, theta, omega, q);
+sym_u = vertcat(uCR, uLR);
 
-nx = length(x);
-nu = length(u);
+nx = length(sym_x);
+nu = length(sym_u);
 
-xdot = MX.sym('xdot',size(x)); %state derivatives
+sym_xdot = MX.sym('xdot',size(sym_x)); %state derivatives
 
 expr_expl = vertcat(vC, ...
                     - 1/tau1 * (vC - a1 * uC), ...
@@ -47,13 +47,13 @@ expr_expl = vertcat(vC, ...
                     omega, ...
                     - (a1 * uCR * cos(theta) + g* sin(theta) + 2*vL*omega) / xL, ...
                     uCR^2 + xL^2); % dynamics of quadrature state x2;
-expr_impl = expr_expl - xdot;
+expr_impl = expr_expl - sym_xdot;
 
 model.nx = nx;
 model.nu = nu;
-model.x = x;
-model.u = u;
-model.xdot = xdot;
+model.sym_x = sym_x;
+model.sym_u = sym_u;
+model.sym_xdot = sym_xdot;
 model.expr_expl = expr_expl;
 model.expr_impl = expr_impl;
 

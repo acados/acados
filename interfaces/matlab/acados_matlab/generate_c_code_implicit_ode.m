@@ -43,7 +43,7 @@ end
 
 %% load model
 % x
-x = model.x;
+x = model.sym_x;
 nx = length(x);
 % check type
 if class(x(1)) == 'casadi.SX'
@@ -52,10 +52,10 @@ else
     isSX = false;
 end
 % xdot
-xdot = model.xdot;
+xdot = model.sym_xdot;
 % u
-if isfield(model, 'u')
-    u = model.u;
+if isfield(model, 'sym_u')
+    u = model.sym_u;
 	nu = length(u);
 else
     if isSX
@@ -66,8 +66,8 @@ else
 	nu = 0;
 end
 % z
-if isfield(model, 'z')
-    z = model.z;
+if isfield(model, 'sym_z')
+    z = model.sym_z;
 	nz = length(z);
 else
     if isSX

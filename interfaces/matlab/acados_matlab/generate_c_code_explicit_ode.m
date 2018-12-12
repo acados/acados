@@ -30,7 +30,7 @@ end
 
 %% load model
 % x
-x = model.x;
+x = model.sym_x;
 nx = length(x);
 % check type
 if class(x(1)) == 'casadi.SX'
@@ -39,8 +39,8 @@ else
     isSX = false;
 end
 % u
-if isfield(model, 'u')
-    u = model.u;
+if isfield(model, 'sym_u')
+    u = model.sym_u;
 	nu = length(u);
 else
     if isSX
