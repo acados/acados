@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 // acados
-#include "acados/sim/sim_common.h" // remove ???
-#include "acados_c/sim_interface.h"
+#include "acados_c/ocp_nlp_interface.h"
 // mex
 #include "mex.h"
 
@@ -26,16 +25,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// model
 
 	bool
-		set_nu = false,
+		set_N = false,
+		set_Ts = false,
 		set_nx = false,
-		set_T = false,
-		set_x = false,
-		set_u = false;
+		set_nu = false,
+		set_nbx = false,
+		set_nbu = false,
 
-	int nu, nx;
-	double T;
-	double *x, *u;
+	int N, nu, nx, nbx, nbu;
+	double Ts;
 
+	if(mxGetField( prhs[0], 0, "N" )!=NULL)
+		{
+		set_N = true;
+		N = mxGetScalar( mxGetField( prhs[0], 0, "N" ) );
+		}
+	if(mxGetField( prhs[0], 0, "Ts" )!=NULL)
+		{
+		set_Ts = true;
+		Ts = mxGetScalar( mxGetField( prhs[0], 0, "Ts" ) );
+		}
 	if(mxGetField( prhs[0], 0, "nx" )!=NULL)
 		{
 		set_nx = true;
@@ -46,30 +55,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		set_nu = true;
 		nu = mxGetScalar( mxGetField( prhs[0], 0, "nu" ) );
 		}
-	if(mxGetField( prhs[0], 0, "T" )!=NULL)
+	if(mxGetField( prhs[0], 0, "nbx" )!=NULL)
 		{
-		set_T = true;
-		T = mxGetScalar( mxGetField( prhs[0], 0, "T" ) );
+		set_nbx = true;
+		nbx = mxGetScalar( mxGetField( prhs[0], 0, "nbx" ) );
 		}
-	if(mxGetField( prhs[0], 0, "x" )!=NULL)
+	if(mxGetField( prhs[0], 0, "nbu" )!=NULL)
 		{
-		set_x = true;
-		x = mxGetPr( mxGetField( prhs[0], 0, "x" ) );
-		}
-	if(mxGetField( prhs[0], 0, "u" )!=NULL)
-		{
-		set_u = true;
-		u = mxGetPr( mxGetField( prhs[0], 0, "u" ) );
+		set_nbu = true;
+		nbu = mxGetScalar( mxGetField( prhs[0], 0, "nbu" ) );
 		}
 
 
 	// opts_struct
 
-	int num_stages = mxGetScalar( mxGetField( prhs[1], 0, "num_stages" ) );
-	int num_steps = mxGetScalar( mxGetField( prhs[1], 0, "num_steps" ) );
-	bool sens_forw = mxGetScalar( mxGetField( prhs[1], 0, "sens_forw" ) );
+//	int num_stages = mxGetScalar( mxGetField( prhs[1], 0, "num_stages" ) );
+//	int num_steps = mxGetScalar( mxGetField( prhs[1], 0, "num_steps" ) );
+//	bool sens_forw = mxGetScalar( mxGetField( prhs[1], 0, "sens_forw" ) );
 //	mexPrintf("\n%d\n", sens_forw);
-	char *scheme = mxArrayToString( mxGetField( prhs[1], 0, "scheme" ) );
+//	char *scheme = mxArrayToString( mxGetField( prhs[1], 0, "scheme" ) );
 //	mexPrintf("\n%s\n", scheme);
 
 
@@ -105,7 +109,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 	/* plan & config */
-	sim_solver_plan plan;
+	ocp_nlp_plan *plan = ocp_nlp_plan_create(N);
+
+	plan->nlp_solver = SQP;
+//	plan->nlp_solver = SQP_RTI;
+	
+	ocp_nlp_plan_destroy(plan);
+	
+#if 0
+	for(ii=0; ii<
 
 	if(!strcmp(scheme, "erk"))
 		{
@@ -210,6 +222,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	ptr = mxGetData(solver_mat);
 	ptr[0] = (long long) solver;
 	mxSetField(plhs[0], 0, "solver", solver_mat);
+#endif
 
 
 
@@ -217,3 +230,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	return;
 
 	}
+

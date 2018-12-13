@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 // acados
-#include "acados/sim/sim_common.h"
-#include "acados_c/sim_interface.h"
+#include "acados_c/ocp_nlp_interface.h"
 // mex
 #include "mex.h"
 
@@ -25,9 +24,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* RHS */
 
+#if 0
 	// config
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "config" ) );
-	sim_config *config = (sim_config *) ptr[0];
+	ocp_nlp_config *config = (sim_config *) ptr[0];
 //	mexPrintf("\n%lld %p\n", config_mat[0], config_mat[0]);
 	// dims
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "dims" ) );
@@ -49,12 +49,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* free memory */
 
-	sim_config_destroy(config);
-	sim_dims_destroy(dims);
-	sim_opts_destroy(opts);
-	sim_in_destroy(in);
-	sim_out_destroy(out);
-	sim_solver_destroy(solver);
+	ocp_nlp_config_destroy(config);
+	ocp_nlp_dims_destroy(dims);
+	ocp_nlp_opts_destroy(opts);
+	ocp_nlp_in_destroy(in);
+	ocp_nlp_out_destroy(out);
+	ocp_nlp_solver_destroy(solver);
+#endif
 
 
 
@@ -63,3 +64,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	return;
 
 	}
+

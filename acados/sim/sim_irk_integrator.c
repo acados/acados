@@ -193,7 +193,7 @@ int sim_irk_opts_calculate_size(void *config_, void *dims)
 
     int size = 0;
 
-    size += sizeof(sim_rk_opts);
+    size += sizeof(sim_opts);
 
     size += ns_max * ns_max * sizeof(double);  // A_mat
     size += ns_max * sizeof(double);           // b_vec
@@ -216,8 +216,8 @@ void *sim_irk_opts_assign(void *config_, void *dims, void *raw_memory)
 
     char *c_ptr = (char *) raw_memory;
 
-    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
-    c_ptr += sizeof(sim_rk_opts);
+    sim_opts *opts = (sim_opts *) c_ptr;
+    c_ptr += sizeof(sim_opts);
 
     align_char_to(8, &c_ptr);
 
@@ -240,7 +240,7 @@ void *sim_irk_opts_assign(void *config_, void *dims, void *raw_memory)
 void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     opts->ns = 3;  // GL 3
     int ns = opts->ns;
@@ -274,7 +274,7 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 
 void sim_irk_opts_update(void *config_, void *dims, void *opts_)
 {
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     int ns = opts->ns;
 
@@ -295,8 +295,8 @@ void sim_irk_opts_update(void *config_, void *dims, void *opts_)
 
 int sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    return sim_rk_opts_set(opts, field, value);
+    sim_opts *opts = (sim_opts *) opts_;
+    return sim_opts_set_(opts, field, value);
 }
 
 /************************************************
@@ -316,7 +316,7 @@ void *sim_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_mem
 int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     int ns = opts->ns;
 
@@ -397,7 +397,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 
 static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
 
     int ns = opts->ns;
@@ -522,8 +522,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 {
 /* Get variables from workspace, etc; -- 
     cast pointers */
-    sim_solver_config *config = config_;
-    sim_rk_opts *opts = opts_;
+    sim_config *config = config_;
+    sim_opts *opts = opts_;
 
     if ( opts->ns != opts->tableau_size )
     {
@@ -1228,7 +1228,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
 void sim_irk_config_initialize_default(void *config_)
 {
-    sim_solver_config *config = config_;
+    sim_config *config = config_;
 
     config->evaluate = &sim_irk;
     config->precompute = &sim_irk_precompute;

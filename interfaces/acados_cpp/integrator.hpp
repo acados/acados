@@ -43,8 +43,8 @@ class integrator
 
     casadi::Function explicit2implicit(const casadi::Function &model);
 
-    sim_solver_config* config_;
-    sim_rk_opts* opts_;
+    sim_config* config_;
+    sim_opts* opts_;
     sim_in* in_;
     sim_out* out_;
     sim_solver* solver_;

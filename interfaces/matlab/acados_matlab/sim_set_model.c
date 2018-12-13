@@ -36,7 +36,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// config
 	ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "config" ) );
-	sim_solver_config *config = (sim_solver_config *) ptr[0];
+	sim_config *config = (sim_config *) ptr[0];
 	// dims
 	ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "dims" ) );
 	void *dims = (void *) ptr[0];

@@ -228,7 +228,7 @@ int main()
 		}
 
 		// create correct config based on plan
-		sim_solver_config *config = sim_config_create(plan);
+		sim_config *config = sim_config_create(plan);
 
     /* sim dims */
 
@@ -250,7 +250,7 @@ int main()
     /* sim options */
 
         void *opts_ = sim_opts_create(config, dims);
-        sim_rk_opts *opts = (sim_rk_opts *) opts_;
+        sim_opts *opts = (sim_opts *) opts_;
         config->opts_initialize_default(config, dims, opts);
 
         opts->jac_reuse = true;        // jacobian reuse

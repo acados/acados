@@ -175,7 +175,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
 
     // sim opts
-    opts_ = static_cast<sim_rk_opts *>(sim_opts_create(config_, dims_));
+    opts_ = static_cast<sim_opts *>(sim_opts_create(config_, dims_));
 
     if (options.count("sens_forw")) opts_->sens_forw = (to_int(options.at("sens_forw")) >= 1);
 

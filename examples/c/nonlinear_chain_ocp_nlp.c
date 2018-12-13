@@ -1116,7 +1116,7 @@ int main()
     * plan + config
     ************************************************/
 
-	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
+	ocp_nlp_plan *plan = ocp_nlp_plan_create(NN);
 
 	// TODO(dimitris): not necessarily GN, depends on cost module
 	plan->nlp_solver = SQP;
@@ -1162,7 +1162,7 @@ int main()
 	for (int i = 0; i <= NN; i++)
 		plan->nlp_constraints[i] = BGH;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
+	ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
     * ocp_nlp_dims
@@ -1552,7 +1552,7 @@ int main()
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
 	int status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
     /************************************************
@@ -1637,12 +1637,12 @@ int main()
 	free(erk4_casadi);
 
 	// free ocp_nlp module
-	ocp_nlp_opts_free(nlp_opts);
-	ocp_nlp_in_free(nlp_in);
-	ocp_nlp_out_free(nlp_out);
-	ocp_nlp_free(solver);
-	ocp_nlp_dims_free(dims);
-	ocp_nlp_config_free(plan, config);
+	ocp_nlp_opts_destroy(nlp_opts);
+	ocp_nlp_in_destroy(nlp_in);
+	ocp_nlp_out_destroy(nlp_out);
+	ocp_nlp_solver_destroy(solver);
+	ocp_nlp_dims_destroy(dims);
+	ocp_nlp_config_destroy(plan, config);
 
 	// free memory allocated in main
 	free(xref);
@@ -1676,7 +1676,7 @@ int main()
 		}
 	}
 
-	ocp_nlp_plan_free(plan);
+	ocp_nlp_plan_destroy(plan);
 
 	free(ls_cost_jac_casadi);
 	free(ext_cost_generic);

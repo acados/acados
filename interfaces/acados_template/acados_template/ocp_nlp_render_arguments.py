@@ -154,7 +154,7 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid x0 value. Exiting.')
 
-class ocp_nlp_solver_config:
+class ocp_nlp_config:
     def __init__(self):
         self._qp_solver      = 'PARTIAL_CONDENSING_HPIPM'   # qp solver to be used in the NLP solver
         self._hessian_approx = 'GAUSS_NEWTON'               # hessian approximation
@@ -236,7 +236,7 @@ class ocp_nlp_render_arguments:
         self.dims = ocp_nlp_dims()
         self.cost = ocp_nlp_cost()
         self.constraints = ocp_nlp_constraints()
-        self.solver_config = ocp_nlp_solver_config()
+        self.solver_config = ocp_nlp_config()
         self.model_name = None 
         self.constants = []
         self.acados_include_path = []

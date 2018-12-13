@@ -175,7 +175,7 @@ int main()
     nls_cost_N_residual.casadi_n_out = &engine_ls_cost_N_n_out;
     external_function_casadi_create(&nls_cost_N_residual);
 
-	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
+	ocp_nlp_plan *plan = ocp_nlp_plan_create(N);
 
 	plan->nlp_solver = SQP;
 
@@ -193,7 +193,7 @@ int main()
 	for (int i = 0; i <= N; i++)
 		plan->nlp_constraints[i] = BGH;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
+	ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
     // dimensions
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);

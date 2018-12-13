@@ -198,7 +198,7 @@ int sim_gnsf_opts_calculate_size(void *config_, void *dims)
 
     int size = 0;
 
-    size += sizeof(sim_rk_opts);
+    size += sizeof(sim_opts);
 
     size += ns_max * ns_max * sizeof(double);  // A_mat
     size += ns_max * sizeof(double);           // b_vec
@@ -221,8 +221,8 @@ void *sim_gnsf_opts_assign(void *config_, void *dims, void *raw_memory)
 
     char *c_ptr = (char *) raw_memory;
 
-    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
-    c_ptr += sizeof(sim_rk_opts);
+    sim_opts *opts = (sim_opts *) c_ptr;
+    c_ptr += sizeof(sim_opts);
 
     align_char_to(8, &c_ptr);
 
@@ -245,7 +245,7 @@ void *sim_gnsf_opts_assign(void *config_, void *dims, void *raw_memory)
 void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     opts->ns = 3;  // GL 3
     int ns = opts->ns;
@@ -280,7 +280,7 @@ void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
 
 void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
 {
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     int ns = opts->ns;
 
@@ -300,8 +300,8 @@ void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
 
 int sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    return sim_rk_opts_set(opts, field, value);
+    sim_opts *opts = (sim_opts *) opts_;
+    return sim_opts_set_(opts, field, value);
 }
 
 
@@ -440,7 +440,7 @@ static void *gnsf_cast_pre_workspace(void *config_, sim_gnsf_dims *dims_, void *
                                      void *raw_memory)
 {
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_opts *opts = (sim_opts *) opts_;
 
     // int nx      = dims->nx;
     int nu      = dims->nu;
@@ -528,7 +528,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     int status = ACADOS_SUCCESS;
 
     sim_gnsf_dims *dims = (sim_gnsf_dims *) in->dims;
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
     gnsf_model *model = in->model;
 
 
@@ -1044,7 +1044,7 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
 {
     // typecast
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     // necessary integers
     int nx      = dims->nx;
@@ -1142,7 +1142,7 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
 
     // typecast
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     // necessary integers
     int nx      = dims->nx;
@@ -1266,7 +1266,7 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
 {
     // typecast
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     // dimension ints
     int nx      = dims->nx;
@@ -1432,7 +1432,7 @@ static void *sim_gnsf_cast_workspace(void *config, void *dims_, void *opts_, voi
 {
     // typecast
     sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     // dimension ints
     int nx      = dims->nx;
@@ -1557,7 +1557,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
     // typecast
     sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
-    sim_rk_opts *opts = (sim_rk_opts *) args;
+    sim_opts *opts = (sim_opts *) args;
     sim_gnsf_dims *dims = (sim_gnsf_dims *) in->dims;
     gnsf_model *model = in->model;
     gnsf_workspace *workspace =
@@ -2458,7 +2458,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
 void sim_gnsf_config_initialize_default(void *config_)
 {
-    sim_solver_config *config = config_;
+    sim_config *config = config_;
     config->evaluate = &sim_gnsf;
     config->precompute = &sim_gnsf_precompute;
     // opts

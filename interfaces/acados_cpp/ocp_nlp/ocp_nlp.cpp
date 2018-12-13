@@ -50,9 +50,9 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
     // TODO(oj): initialize?!
     d_["nz"] = vector<int>(N+1);
 
-    int config_size = ocp_nlp_solver_config_calculate_size(N);
+    int config_size = ocp_nlp_config_calculate_size(N);
     void *raw_memory = malloc(config_size);
-    config_.reset(ocp_nlp_solver_config_assign(N, raw_memory));
+    config_.reset(ocp_nlp_sonfig_assign(N, raw_memory));
 
     for (int i = 0; i <= N; ++i)
         ocp_nlp_constraints_bgh_config_initialize_default(config_->constraints[i]);
@@ -222,7 +222,7 @@ void ocp_nlp::initialize_solver(std::string solver_name, std::map<std::string, o
 
     result_.reset(ocp_nlp_out_create(config_.get(), dims_.get()));
 
-    solver_.reset(ocp_nlp_create(config_.get(), dims_.get(), solver_options_.get()));
+    solver_.reset(ocp_nlp_solver_create(config_.get(), dims_.get(), solver_options_.get()));
 }
 
 ocp_nlp_solution ocp_nlp::solve(vector<double> x_guess, vector<double> u_guess)

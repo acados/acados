@@ -363,9 +363,9 @@ int main() {
     * config
     ************************************************/
 
-    int config_size = ocp_nlp_solver_config_calculate_size(N);
+    int config_size = ocp_nlp_config_calculate_size(N);
     void *config_mem = malloc(config_size);
-    ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(N, config_mem);
+    ocp_nlp_config *config = ocp_nlp_config_assign(N, config_mem);
 
     ocp_nlp_sqp_config_initialize_default(config);
 

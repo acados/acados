@@ -134,7 +134,7 @@ typedef struct
     // workspace
     void *work;
 
-} sim_rk_opts;
+} sim_opts;
 
 
 
@@ -160,15 +160,15 @@ typedef struct
     void (*dims_set)(void *config, void *dims, const char *field, const int *value);
     void (*dims_get)(void *config, void *dims, const char *field, int *value);
 
-} sim_solver_config;
+} sim_config;
 
 
 
 /* config */
 //
-int sim_solver_config_calculate_size();
+int sim_config_calculate_size();
 //
-sim_solver_config *sim_solver_config_assign(void *raw_memory);
+sim_config *sim_config_assign(void *raw_memory);
 
 /* in */
 //
@@ -188,7 +188,7 @@ int sim_out_get_(void *config, void *dims, sim_out *out, const char *field, void
 
 /* opts */
 //
-int sim_rk_opts_set(sim_rk_opts *opts, const char *field, void *value);
+int sim_opts_set_(sim_opts *opts, const char *field, void *value);
 
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

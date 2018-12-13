@@ -161,7 +161,7 @@ static void mdlStart(SimStruct *S)
     double lb_N[] = {0, 0, 0.5, 0.5};
     double ub_N[] = {100, 100, 1.757, 2.125};
 
-    ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NUM_STAGES);
+    ocp_nlp_plan *plan = ocp_nlp_plan_create(NUM_STAGES);
 
 	plan->nlp_solver = SQP_GN;
 
@@ -179,7 +179,7 @@ static void mdlStart(SimStruct *S)
 	for (i = 0; i <= NUM_STAGES; i++)
 		plan->nlp_constraints[i] = BGH;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
+	ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
     // implicit dae
     impl_dae_fun.casadi_fun = &engine_impl_dae_fun;
