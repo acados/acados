@@ -52,7 +52,7 @@ ocp_nlp::ocp_nlp(std::vector<int> nx, std::vector<int> nu, std::vector<int> ng, 
 
     int config_size = ocp_nlp_config_calculate_size(N);
     void *raw_memory = malloc(config_size);
-    config_.reset(ocp_nlp_sonfig_assign(N, raw_memory));
+    config_.reset(ocp_nlp_config_assign(N, raw_memory));
 
     for (int i = 0; i <= N; ++i)
         ocp_nlp_constraints_bgh_config_initialize_default(config_->constraints[i]);
