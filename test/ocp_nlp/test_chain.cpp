@@ -1779,7 +1779,7 @@ void setup_and_solve_nlp(int NN,
     ocp_nlp_out_destroy(nlp_out);
     ocp_nlp_solver_destroy(solver);
     ocp_nlp_dims_destroy(dims);
-    ocp_nlp_config_destroy(plan, config);
+    ocp_nlp_config_destroy(config);
 
     free(xref);
     free(diag_cost_x);
