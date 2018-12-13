@@ -40,9 +40,13 @@
 
 sim_config *sim_config_create(sim_solver_plan plan)
 {
+	/* calculate_size & malloc & assign */
+
     int bytes = sim_config_calculate_size();
     void *ptr = calloc(1, bytes);
     sim_config *solver_config = sim_config_assign(ptr);
+
+	/* initialize config according plan */
 
     sim_solver_t solver_name = plan.sim_solver;
 

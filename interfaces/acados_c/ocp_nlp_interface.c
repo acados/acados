@@ -166,9 +166,13 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 {
     int N = plan.N;
 
+	/* calculate_size & malloc & assign */
+
     int bytes = ocp_nlp_config_calculate_size(N);
     void *config_mem = acados_calloc(1, bytes);
     ocp_nlp_config *config = ocp_nlp_config_assign(N, config_mem);
+
+	/* initialize config according plan */
 
     if (plan.nlp_solver == SQP)
     {
@@ -185,8 +189,8 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
     }
 
     // QP solver
-    config->qp_solver = ocp_qp_config_create(plan.ocp_qp_solver_plan);
-//    ocp_qp_xcond_solver_config_initialize_default(plan.ocp_qp_solver_plan, config->qp_solver);
+//    config->qp_solver = ocp_qp_config_create(plan.ocp_qp_solver_plan);
+    ocp_qp_xcond_solver_config_initialize_default(plan.ocp_qp_solver_plan.qp_solver, config->qp_solver);
 
 	// TODO DESTROY THIS!!!
     config->regularization = ocp_nlp_reg_config_create(plan.regularization);
@@ -221,7 +225,28 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
         {
             case CONTINUOUS_MODEL:
                 ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[i]);
-                config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver_plan[i]);
+//                config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver_plan[i]);
+				sim_solver_t solver_name = plan.sim_solver_plan[i].sim_solver;
+
+				switch (solver_name)
+				{
+					case ERK:
+						sim_erk_config_initialize_default(config->dynamics[i]->sim_solver);
+						break;
+					case IRK:
+						sim_irk_config_initialize_default(config->dynamics[i]->sim_solver);
+						break;
+					case GNSF:
+						sim_gnsf_config_initialize_default(config->dynamics[i]->sim_solver);
+						break;
+					case LIFTED_IRK:
+						sim_lifted_irk_config_initialize_default(config->dynamics[i]->sim_solver);
+						break;
+					default:
+						printf("\n\nSpecified integrator not available in acados C interface!\n\n");
+						exit(1);
+				}
+
                 break;
             case DISCRETE_MODEL:
                 ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i]);
@@ -258,31 +283,10 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
     return config;
 }
 
-void ocp_nlp_config_destroy(ocp_nlp_plan *plan, void *config_)
-{
-    int N = plan->N;
 
-    ocp_nlp_config *config = config_;
-    // qp
-    ocp_qp_config_free(config->qp_solver);
-    // Dynamics
-    for (int i = 0; i < N; ++i)
-    {
-        switch (plan->nlp_dynamics[i])
-        {
-            case CONTINUOUS_MODEL:
-                sim_config_destroy(config->dynamics[i]->sim_solver);
-                break;
-            case DISCRETE_MODEL:
-                break;
-            case INVALID_MODEL:
-                printf("\nInvalid dynamics module type\nForgot to initialize?\n\n");
-                exit(1);
-            default:
-                printf("Dynamics not available!\n");
-                exit(1);
-        }
-    }
+
+void ocp_nlp_config_destroy(void *config_)
+{
     free(config_);
 }
 
