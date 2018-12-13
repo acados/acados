@@ -43,10 +43,15 @@ int ocp_nlp_config_calculate_size(int N)
 
     int size = 0;
 
-    // qp solver
+    // self
     size += sizeof(ocp_nlp_config);
 
+    // qp solver
     size += 1 * ocp_qp_xcond_solver_config_calculate_size();
+
+    // regularization
+    size += ocp_nlp_reg_config_calculate_size();
+
 
     // dynamics
     size += N * sizeof(ocp_nlp_dynamics_config *);
@@ -82,6 +87,10 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory)
     // qp solver
     config->qp_solver = ocp_qp_xcond_solver_config_assign(c_ptr);
     c_ptr += ocp_qp_xcond_solver_config_calculate_size();
+
+    // regularization
+    config->regularization = ocp_nlp_reg_config_assign(c_ptr);
+    c_ptr += ocp_nlp_reg_config_calculate_size();
 
     // dynamics
     config->dynamics = (ocp_nlp_dynamics_config **) c_ptr;

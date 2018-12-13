@@ -64,7 +64,7 @@ static void d_cvt_casadi_to_colmaj(double *in, int *sparsity_in, double *out)
     int ncol = sparsity_in[1];
     int dense = sparsity_in[2];
 
-    if (nrow<=0 | ncol<=0)
+    if ((nrow<=0 )| (ncol<=0))
         return;
 
     if (dense)
@@ -101,7 +101,7 @@ static void d_cvt_colmaj_to_casadi(double *in, double *out, int *sparsity_out)
     int ncol = sparsity_out[1];
     int dense = sparsity_out[2];
 
-    if (nrow<=0 | ncol<=0)
+    if ((nrow<=0 )| (ncol<=0))
         return;
 
     if (dense)
@@ -136,7 +136,7 @@ static void d_cvt_casadi_to_dmat(double *in, int *sparsity_in, struct blasfeo_dm
     int ncol = sparsity_in[1];
     int dense = sparsity_in[2];
 
-    if (nrow<=0 | ncol<=0)
+    if ((nrow<=0 )| (ncol<=0))
         return;
 
     if (dense)
@@ -173,7 +173,7 @@ static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *spar
     int ncol = sparsity_out[1];
     int dense = sparsity_out[2];
 
-    if (nrow<=0 | ncol<=0)
+    if ((nrow<=0 )| (ncol<=0))
         return;
 
     if (dense)
@@ -277,7 +277,7 @@ static void d_cvt_casadi_to_colmaj_args(double *in, int *sparsity_in, struct col
     int ncol = sparsity_in[1];
     int dense = sparsity_in[2];
 
-    if (nrow<=0 | ncol<=0)
+    if ((nrow<=0 )| (ncol<=0))
         return;
 
     double *A = out->A;
@@ -318,7 +318,7 @@ static void d_cvt_colmaj_args_to_casadi(struct colmaj_args *in, double *out, int
     int ncol = sparsity_out[1];
     int dense = sparsity_out[2];
 
-    if (nrow<=0 | ncol<=0)
+    if ((nrow<=0 )| (ncol<=0))
         return;
 
     double *A = in->A;
@@ -357,7 +357,7 @@ static void d_cvt_casadi_to_dmat_args(double *in, int *sparsity_in, struct blasf
     int ncol = sparsity_in[1];
     int dense = sparsity_in[2];
 
-    if (nrow<=0 | ncol<=0)
+    if ((nrow<=0 )| (ncol<=0))
         return;
 
     struct blasfeo_dmat *A = out->A;
@@ -398,7 +398,7 @@ static void d_cvt_dmat_args_to_casadi(struct blasfeo_dmat_args *in, double *out,
     int ncol = sparsity_out[1];
     int dense = sparsity_out[2];
 
-    if (nrow<=0 | ncol<=0)
+    if ((nrow<=0 )| (ncol<=0))
         return;
 
     struct blasfeo_dmat *A = in->A;
