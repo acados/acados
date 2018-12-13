@@ -8,6 +8,8 @@ classdef acados_ocp_opts < handle
 		qp_solver
 		qp_solver_N_pcond
 		sim_solver
+		sim_solver_num_stages
+		sim_solver_num_steps
 		opts_struct
 	end % properties
 
@@ -22,6 +24,8 @@ classdef acados_ocp_opts < handle
 			qp_solver = 0;
 			qp_solver_N_pcond = 0;
 			obj.sim_solver = 0;
+			obj.sim_solver_num_stages = 0;
+			obj.sim_solver_num_steps = 0;
 			obj.opts_struct = struct;
 			obj.opts_struct.codgen_model = obj.codgen_model;
 		end
@@ -43,6 +47,12 @@ classdef acados_ocp_opts < handle
 			elseif (strcmp(field, 'sim_solver'))
 				obj.sim_solver = value;
 				obj.opts_struct.sim_solver = value;
+			elseif (strcmp(field, 'sim_solver_num_stages'))
+				obj.sim_solver_num_stages = value;
+				obj.opts_struct.sim_solver_num_stages = value;
+			elseif (strcmp(field, 'sim_solver_num_steps'))
+				obj.sim_solver_num_steps = value;
+				obj.opts_struct.sim_solver_num_steps = value;
 			else
 				disp('acados_ocp_opts: set: wrong field');
 			end

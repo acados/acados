@@ -10,6 +10,8 @@ classdef acados_ocp_model < handle
 		nx
 		nu
 		nz
+		nyl
+		nym
 		nbx
 		nbu
 		dyn_type
@@ -18,6 +20,8 @@ classdef acados_ocp_model < handle
 		sym_u
 		sym_xdot
 		sym_z
+		Wl
+		Wm
 		model_struct
 	end %properties
 
@@ -34,6 +38,8 @@ classdef acados_ocp_model < handle
 			obj.nx = 0;
 			obj.nu = 0;
 			obj.nz = 0;
+			obj.nyl = 0;
+			obj.nym = 0;
 			obj.nbx = 0;
 			obj.nux = 0;
 			obj.dyn_type = 0;
@@ -42,6 +48,8 @@ classdef acados_ocp_model < handle
 			obj.sym_u = 0;
 			obj.sym_xdot = 0;
 			obj.sym_z = 0;
+			obj.Wl = 0;
+			obj.Wm = 0;
 			% model structure
 			obj.model_struct = struct;
 			% fixed field values
@@ -66,6 +74,12 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'nz'))
 				obj.nz = value;
 				obj.model_struct.nz = value;
+			elseif (strcmp(field, 'nyl'))
+				obj.nyl = value;
+				obj.model_struct.nyl = value;
+			elseif (strcmp(field, 'nym'))
+				obj.nym = value;
+				obj.model_struct.nym = value;
 			elseif (strcmp(field, 'nbx'))
 				obj.nbx = value;
 				obj.model_struct.nbx = value;
@@ -93,6 +107,12 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'sym_z'))
 				obj.sym_z = value;
 				obj.model_struct.sym_z = value;
+			elseif (strcmp(field, 'Wl'))
+				obj.Wl = value;
+				obj.model_struct.Wl = value;
+			elseif (strcmp(field, 'Wm'))
+				obj.Wm = value;
+				obj.model_struct.Wm = value;
 			else
 				disp('acados_integrator_model: set: wrong field');
 			end

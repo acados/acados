@@ -55,8 +55,13 @@ Ts = 0.5;
 N = 10;
 nx = dyn_model.nx;
 nu = dyn_model.nu;
+nyl = nu+nx; % number of outputs in lagrange term
+nym = nx; % number of outputs in mayer term
 nbx = nx/2;
 nbu = nu;
+
+Wl = eye(nyl); for ii=1:nu Wl(ii,ii)=2.0; end
+Wm = eye(nym);
 
 
 
@@ -66,8 +71,12 @@ ocp_model.set('N', N);
 ocp_model.set('Ts', Ts);
 ocp_model.set('nx', nx);
 ocp_model.set('nu', nu);
+ocp_model.set('nyl', nyl);
+ocp_model.set('nym', nym);
 ocp_model.set('nbx', nbx);
 ocp_model.set('nbu', nbu);
+ocp_model.set('Wl', Wl);
+ocp_model.set('Wm', Wm);
 ocp_model.model_struct
 
 
@@ -79,6 +88,8 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
 ocp_opts.set('sim_solver', sim_solver);
+ocp_opts.set('sim_solver_num_stages', sim_solver_num_stages);
+ocp_opts.set('sim_solver_num_steps', sim_solver_num_steps);
 ocp_opts.opts_struct
 
 
