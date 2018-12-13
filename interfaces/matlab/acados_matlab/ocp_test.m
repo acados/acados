@@ -12,12 +12,14 @@ end
 % set paths
 acados_include = ['-I' acados_folder];
 acados_interfaces_include = ['-I' acados_folder, 'interfaces'];
+external_include = ['-I' acados_folder, 'external'];
+blasfeo_include = ['-I' acados_folder, 'external/blasfeo/include'];
 acados_lib_path = ['-L' acados_folder, 'lib'];
 
 % compile mex
 mex_files ={
-%	'sim_create.c',
-%	'sim_destroy.c',
+	'ocp_create.c',
+	'ocp_destroy.c',
 %	'sim_ext_fun_destroy.c',
 %	'sim_solve.c',
 %	'sim_set.c',
@@ -26,7 +28,7 @@ mex_files ={
 	} ;
 
 for ii=1:length(mex_files)
-	mex(acados_include, acados_interfaces_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
+	mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
 end
 
 
@@ -63,3 +65,21 @@ ocp_model.model_struct
 
 
 
+% acados ocp opts
+ocp_opts = acados_ocp_opts();
+ocp_opts.set('codgen_model', codgen_model);
+ocp_opts.set('sim_scheme', sim_scheme);
+ocp_opts.opts_struct
+
+
+
+ocp = acados_ocp(ocp_model, ocp_opts);
+ocp
+ocp.C_ocp
+
+
+
+fprintf('\nsuccess!\n\n');
+
+
+return;

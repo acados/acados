@@ -88,6 +88,7 @@ classdef acados_integrator < handle
 			sim_get(obj.C_sim, field, value);
 		end
 
+
 		function delete(obj)
 %			fprintf('\nin delete\n');
 			sim_destroy(obj.C_sim);
@@ -100,8 +101,4 @@ classdef acados_integrator < handle
 
 
 end % class
-
-
-
-
 
