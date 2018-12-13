@@ -316,7 +316,7 @@ int main()
     ocp_nlp_opts_destroy(nlp_opts);
     ocp_nlp_in_destroy(nlp_in);
     ocp_nlp_dims_destroy(dims);
-    ocp_nlp_config_free(plan, config);
+    ocp_nlp_config_destroy(plan, config);
     ocp_nlp_plan_destroy(plan);
     
     /* free external function */
