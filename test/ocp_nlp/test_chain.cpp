@@ -1201,7 +1201,7 @@ void setup_and_solve_nlp(int NN,
     * plan + config
     ************************************************/
 
-    ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
+    ocp_nlp_plan *plan = ocp_nlp_plan_create(NN);
 
     // TODO(dimitris): not necessarily GN, depends on cost module
     plan->nlp_solver = SQP;
@@ -1330,7 +1330,7 @@ void setup_and_solve_nlp(int NN,
 
     // TODO(dimitris): fix minor memory leak
     // here
-    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
+    ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
     * ocp_nlp_dims
@@ -1686,16 +1686,16 @@ void setup_and_solve_nlp(int NN,
         {
             ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = (ocp_nlp_dynamics_cont_opts *)
                                                               sqp_opts->dynamics[i];
-            sim_rk_opts *sim_opts = (sim_rk_opts *)dynamics_stage_opts->sim_solver;
+            sim_opts *sim_opts_ = (sim_opts *) dynamics_stage_opts->sim_solver;
 
             if (plan->sim_solver_plan[i].sim_solver == ERK)
             {
-                sim_opts->ns = 4;
+                sim_opts_->ns = 4;
             }
             else if (plan->sim_solver_plan[i].sim_solver == IRK)
             {
-                sim_opts->ns = 2;
-                sim_opts->jac_reuse = true;
+                sim_opts_->ns = 2;
+                sim_opts_->jac_reuse = true;
             }
         }
     }
@@ -1717,7 +1717,7 @@ void setup_and_solve_nlp(int NN,
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-    ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
 
     /************************************************
     * sqp solve
@@ -1774,12 +1774,12 @@ void setup_and_solve_nlp(int NN,
         free(erk4_casadi);
     }
 
-    ocp_nlp_opts_free(nlp_opts);
-    ocp_nlp_in_free(nlp_in);
-    ocp_nlp_out_free(nlp_out);
-    ocp_nlp_free(solver);
-    ocp_nlp_dims_free(dims);
-    ocp_nlp_config_free(plan, config);
+    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_in_destroy(nlp_in);
+    ocp_nlp_out_destroy(nlp_out);
+    ocp_nlp_solver_destroy(solver);
+    ocp_nlp_dims_destroy(dims);
+    ocp_nlp_config_destroy(plan, config);
 
     free(xref);
     free(diag_cost_x);
