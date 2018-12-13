@@ -539,7 +539,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     * plan + config
     ************************************************/
 
-    ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
+    ocp_nlp_plan *plan = ocp_nlp_plan_create(NN);
 
     plan->nlp_solver = SQP;
 
@@ -608,7 +608,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         plan->nlp_constraints[i] = BGH;
     }
 
-    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
+    ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
     * ocp_nlp_dims
@@ -949,7 +949,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-    ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
 
     /************************************************
     *     precomputation (after all options are set)
@@ -1099,13 +1099,13 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     free(phi_jac_y_uhat);
     free(f_lo_jac_x1_x1dot_u_z);
 
-    ocp_nlp_opts_free(nlp_opts);
-    ocp_nlp_in_free(nlp_in);
-    ocp_nlp_out_free(nlp_out);
-    ocp_nlp_free(solver);
-    ocp_nlp_dims_free(dims);
-    ocp_nlp_config_free(plan, config);
-    ocp_nlp_plan_free(plan);
+    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_in_destroy(nlp_in);
+    ocp_nlp_out_destroy(nlp_out);
+    ocp_nlp_solver_destroy(solver);
+    ocp_nlp_dims_destroy(dims);
+    ocp_nlp_config_destroy(config);
+    ocp_nlp_plan_destroy(plan);
 
     free(lZ0);
     free(uZ0);

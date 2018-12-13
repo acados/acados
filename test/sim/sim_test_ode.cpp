@@ -244,7 +244,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     sim_solver_plan plan;
     plan.sim_solver = IRK;
 
-    sim_solver_config *config = sim_config_create(plan);
+    sim_config *config = sim_config_create(plan);
 
     void *dims = sim_dims_create(config);
 
@@ -253,7 +253,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
     sim_dims_set(config, dims, "nu", &nu);
 
     void *opts_ = sim_opts_create(config, dims);
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_opts *opts = (sim_opts *) opts_;
 
     opts->sens_forw = true;
     opts->sens_adj = true;
@@ -339,7 +339,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 plan.sim_solver = hashitsim(solver);
 
                 // create correct config based on plan
-                sim_solver_config *config = sim_config_create(plan);
+                sim_config *config = sim_config_create(plan);
 
                 /************************************************
                 * sim dims
@@ -355,7 +355,7 @@ TEST_CASE("wt_nx3_example", "[integrators]")
                 ************************************************/
 
                 void *opts_ = sim_opts_create(config, dims);
-                sim_rk_opts *opts = (sim_rk_opts *) opts_;
+                sim_opts *opts = (sim_opts *) opts_;
 
                 if (plan.sim_solver != LIFTED_IRK)
                     opts->sens_adj = true;
