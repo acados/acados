@@ -230,7 +230,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     sim_solver_plan plan;
     plan.sim_solver = IRK;  // IRK
 
-    sim_solver_config *config = sim_config_create(plan);
+    sim_config *config = sim_config_create(plan);
 
     void *dims = sim_dims_create(config);
 
@@ -241,7 +241,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_opts *opts = (sim_opts *) opts_;
     config->opts_initialize_default(config, dims, opts);
 
     // opts reference solution
@@ -396,7 +396,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                 plan.sim_solver = hashitsim_hess(solver);
 
                 // create correct config based on plan
-                sim_solver_config *config = sim_config_create(plan);
+                sim_config *config = sim_config_create(plan);
 
             /* sim dims */
                 void *dims = sim_dims_create(config);
@@ -408,7 +408,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
             /* sim options */
 
                 void *opts_ = sim_opts_create(config, dims);
-                sim_rk_opts *opts = (sim_rk_opts *) opts_;
+                sim_opts *opts = (sim_opts *) opts_;
                 config->opts_initialize_default(config, dims, opts);
 
                 opts->jac_reuse = false;        // jacobian reuse
@@ -704,7 +704,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     sim_solver_plan plan;
     plan.sim_solver = IRK;  // IRK
 
-    sim_solver_config *config = sim_config_create(plan);
+    sim_config *config = sim_config_create(plan);
 
     void *dims = sim_dims_create(config);
 
@@ -715,7 +715,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_opts *opts = (sim_opts *) opts_;
     config->opts_initialize_default(config, dims, opts);
 
     // opts reference solution
