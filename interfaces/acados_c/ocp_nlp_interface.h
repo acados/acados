@@ -27,6 +27,10 @@ extern "C" {
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/sim_irk_integrator.h"
+#include "acados/sim/sim_lifted_irk_integrator.h"
+#include "acados/sim/sim_gnsf.h"
 // acados_c
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/sim_interface.h"
@@ -108,7 +112,7 @@ void ocp_nlp_plan_destroy(void* plan_);
 /* config */
 ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan);
 //
-void ocp_nlp_config_destroy(ocp_nlp_plan *plan_, void *config_);
+void ocp_nlp_config_destroy(void *config_);
 
 /* dims */
 ocp_nlp_dims *ocp_nlp_dims_create(void *config_);
