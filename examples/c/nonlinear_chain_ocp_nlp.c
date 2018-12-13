@@ -1120,6 +1120,7 @@ int main()
 
 	// TODO(dimitris): not necessarily GN, depends on cost module
 	plan->nlp_solver = SQP;
+	plan->regularization = NO_REGULARIZATION;
 
 	// NOTE(dimitris): switching between different objectives on each stage to test everything
 	for (int i = 0; i <= NN; i++)
