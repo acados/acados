@@ -192,7 +192,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 //    config->qp_solver = ocp_qp_config_create(plan.ocp_qp_solver_plan);
     ocp_qp_xcond_solver_config_initialize_default(plan.ocp_qp_solver_plan.qp_solver, config->qp_solver);
 
-	// TODO DESTROY THIS!!!
+	// TODO NUKE THIS!!! (i.e. update ocp_nlp_config_calculate_size for the needed memory, and just initialize_default here!!!)
     config->regularization = ocp_nlp_reg_config_create(plan.regularization);
 
     // cost
