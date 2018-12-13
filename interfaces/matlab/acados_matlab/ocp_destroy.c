@@ -31,8 +31,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "dims" ) );
 	ocp_nlp_dims *dims = (ocp_nlp_dims *) ptr[0];
 	// opts
-//	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "opts" ) );
-//	void *opts = (void *) ptr[0];
+	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "opts" ) );
+	void *opts = (void *) ptr[0];
 #if 0
 	// in
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "in" ) );
@@ -51,7 +51,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	ocp_nlp_config_destroy(config);
 	ocp_nlp_dims_destroy(dims);
-//	ocp_nlp_opts_destroy(opts);
+	ocp_nlp_opts_destroy(opts);
 #if 0
 	ocp_nlp_in_destroy(in);
 	ocp_nlp_out_destroy(out);

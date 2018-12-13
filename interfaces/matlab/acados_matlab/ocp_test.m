@@ -35,7 +35,14 @@ end
 
 %% arguments
 codgen_model = 'true';
-sim_scheme = 'erk';
+nlp_solver = 'sqp';
+%nlp_solver = 'sqp_rti';
+qp_solver = 'partial_condensing_hpipm';
+%qp_solver = 'full_condensing_hpipm';
+qp_solver_N_pcond = 5;
+sim_solver = 'erk';
+sim_solver_num_stages = 4; % TODO
+sim_solver_num_steps = 3; % TODO
 
 
 
@@ -68,7 +75,10 @@ ocp_model.model_struct
 % acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('codgen_model', codgen_model);
-ocp_opts.set('sim_scheme', sim_scheme);
+ocp_opts.set('nlp_solver', nlp_solver);
+ocp_opts.set('qp_solver', qp_solver);
+ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
+ocp_opts.set('sim_solver', sim_solver);
 ocp_opts.opts_struct
 
 

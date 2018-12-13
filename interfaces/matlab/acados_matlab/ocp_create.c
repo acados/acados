@@ -36,6 +36,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int N, nu, nx, nbx, nbu;
 	double Ts;
 
+	// N
 	if(mxGetField( prhs[0], 0, "N" )!=NULL)
 		{
 		set_N = true;
@@ -46,11 +47,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mexPrintf("\nerror: ocp_create: N not set!\n");
 		return;
 		}
+	// Ts
 	if(mxGetField( prhs[0], 0, "Ts" )!=NULL)
 		{
 		set_Ts = true;
 		Ts = mxGetScalar( mxGetField( prhs[0], 0, "Ts" ) );
 		}
+	// nx
 	if(mxGetField( prhs[0], 0, "nx" )!=NULL)
 		{
 		set_nx = true;
@@ -61,6 +64,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mexPrintf("\nerror: ocp_create: nx not set!\n");
 		return;
 		}
+	// nu
 	if(mxGetField( prhs[0], 0, "nu" )!=NULL)
 		{
 		set_nu = true;
@@ -71,11 +75,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mexPrintf("\nerror: ocp_create: nu not set!\n");
 		return;
 		}
+	// nbx
 	if(mxGetField( prhs[0], 0, "nbx" )!=NULL)
 		{
 		set_nbx = true;
 		nbx = mxGetScalar( mxGetField( prhs[0], 0, "nbx" ) );
 		}
+	// nbu
 	if(mxGetField( prhs[0], 0, "nbu" )!=NULL)
 		{
 		set_nbu = true;
@@ -85,12 +91,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// opts_struct
 
+	bool
+		set_qp_solver_N_pcond = false;
+
+	int qp_solver_N_pcond;
+
 //	int num_stages = mxGetScalar( mxGetField( prhs[1], 0, "num_stages" ) );
 //	int num_steps = mxGetScalar( mxGetField( prhs[1], 0, "num_steps" ) );
 //	bool sens_forw = mxGetScalar( mxGetField( prhs[1], 0, "sens_forw" ) );
-//	mexPrintf("\n%d\n", sens_forw);
-	char *sim_scheme = mxArrayToString( mxGetField( prhs[1], 0, "sim_scheme" ) );
-//	mexPrintf("\n%s\n", scheme);
+	// nlp_solver
+	char *nlp_solver = mxArrayToString( mxGetField( prhs[1], 0, "nlp_solver" ) );
+	// qp_solver
+	char *qp_solver = mxArrayToString( mxGetField( prhs[1], 0, "qp_solver" ) );
+	// N_part_cond
+	if(mxGetField( prhs[1], 0, "qp_solver_N_pcond" )!=NULL)
+		{
+		set_qp_solver_N_pcond = true;
+		qp_solver_N_pcond = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_N_pcond" ) );
+		}
+	// sim_scheme
+	char *sim_solver = mxArrayToString( mxGetField( prhs[1], 0, "sim_solver" ) );
 
 
 
@@ -129,8 +149,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	ocp_nlp_plan *plan = ocp_nlp_plan_create(N);
 
 	// nlp solver
-	plan->nlp_solver = SQP;
-//	plan->nlp_solver = SQP_RTI;
+	if(!strcmp(nlp_solver, "sqp"))
+		{
+		plan->nlp_solver = SQP;
+		}
+	else if(!strcmp(nlp_solver, "sqp_rti"))
+		{
+		plan->nlp_solver = SQP_RTI;
+		}
+	else
+		{
+		mexPrintf("\nnlp_solver not supported %s\n", nlp_solver);
+		return;
+		}
 	
 	// cost
 	for(ii=0; ii<=N; ii++)
@@ -145,28 +176,46 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //		plan->nlp_dynamics[ii] = DISCRETE_MODEL;
 		plan->nlp_dynamics[ii] = CONTINUOUS_MODEL;
 		// TODO opts for that!!!
-		if(!strcmp(sim_scheme, "erk"))
+		if(!strcmp(sim_solver, "erk"))
 			{
 			plan->sim_solver_plan[ii].sim_solver = ERK;
 			}
-		else if(!strcmp(sim_scheme, "irk"))
+		else if(!strcmp(sim_solver, "irk"))
 			{
 			plan->sim_solver_plan[ii].sim_solver = IRK;
 			}
 		else
 			{
-			mexPrintf("\nsim_scheme not supported %s\n", sim_scheme);
+			mexPrintf("\nsim_scheme not supported %s\n", sim_solver);
 			return;
 			}
 //		plan->sim_solver_plan[ii].sim_solver = LIFTED_IRK;
 //		plan->sim_solver_plan[ii].sim_solver = GNSF;
 		}
 	
+	// constraints
 	for(ii=0; ii<=N; ii++)
 		{
 		plan->nlp_constraints[ii] = BGH;
 //		plan->nlp_constraints[ii] = BGHP;
 		}
+
+	// qp solver
+	if(!strcmp(qp_solver, "partial_condensing_hpipm"))
+		{
+		plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+		}
+	else if(!strcmp(qp_solver, "full_condensing_hpipm"))
+		{
+		plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
+		}
+	else
+		{
+		mexPrintf("\nqp_solver not supported %s\n", qp_solver);
+		return;
+		}
+
+	// TODO checks on initialization of plan !!!!!!!!
 
     ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
@@ -208,8 +257,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 	/* opts */
-//	void *opts = ocp_nlp_opts_create(config, dims);
-//	ocp_nlp_opts_destroy(opts);
+	void *opts = ocp_nlp_opts_create(config, dims);
+
+	if(set_qp_solver_N_pcond)
+		{
+		ocp_nlp_opts_set(config, opts, "pcond_N2", &qp_solver_N_pcond);
+		}
+
+
+
 #if 0
 	sim_opts_set(opts, "num_stages", &num_stages);
 	sim_opts_set(opts, "num_steps", &num_steps);
@@ -264,10 +320,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mxSetField(plhs[0], 0, "dims", dims_mat);
 
 	// opts
-//	mxArray *opts_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-//	l_ptr = mxGetData(opts_mat);
-//	l_ptr[0] = (long long) opts;
-//	mxSetField(plhs[0], 0, "opts", opts_mat);
+	mxArray *opts_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+	l_ptr = mxGetData(opts_mat);
+	l_ptr[0] = (long long) opts;
+	mxSetField(plhs[0], 0, "opts", opts_mat);
 
 #if 0
 	// in
