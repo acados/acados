@@ -19,7 +19,12 @@ generate_c_code_implicit_ode(model);
 
 %% COST
 % for NLS cost
+% specify cost for intermediate stages
 cost.nls_expr = [model.x; model.u];
-cost.name = model.name
+cost.name = model.name;
+generate_c_code_nls_cost( model, cost);
 
-generate_c_code_nls_cost( model, cost );
+% specify and generate cost for final stage
+opts.is_terminal = 1;
+cost.nls_expr = model.x + ones(size(model.x));
+generate_c_code_nls_cost( model, cost, opts);

@@ -1,5 +1,5 @@
 % generate_c_code_nls
-function generate_c_code_nls_cost( model, cost )
+function generate_c_code_nls_cost( model, cost, opts )
 
     %% import casadi
     import casadi.*
@@ -12,18 +12,27 @@ function generate_c_code_nls_cost( model, cost )
         error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
     end
 
+
     % load cost, model
+    if nargin > 2 && opts.is_terminal == 1 %% TERMINAL stage
+        x = model.x;
+        u = [];
+        name = [cost.name, '_final'];
+    else  %% INTERMEDIATE stage
+        x = model.x;
+        u = model.u;
+        name = cost.name;
+    end
+
     nls_cost = cost.nls_expr;
-    name = model.name;
-    x = model.x;
-    u = model.u;
+
 
     nls_cost_jac = jacobian(nls_cost, [x; u]);
 
     
-    nls_cost = Function( [name, '_nls_cost_fun_jac'], {[u; x]}, ...
+    nls_cost_fun = Function( [name, '_nls_cost_fun_jac'], {[u; x]}, ...
         { nls_cost, nls_cost_jac });
-    nls_cost.generate( [name, '_nls_cost_fun_jac'], casadi_opts );
+    nls_cost_fun.generate( [name, '_nls_cost_fun_jac'], casadi_opts );
 
     
 

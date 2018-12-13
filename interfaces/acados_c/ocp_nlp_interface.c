@@ -128,35 +128,6 @@ void ocp_nlp_plan_destroy(void* plan_)
     free(plan_);
 }
 
-/************************************************
-* regularization
-************************************************/
-
-static ocp_nlp_reg_config *ocp_nlp_reg_config_create(ocp_nlp_reg_t plan)
-{
-    int size = ocp_nlp_reg_config_calculate_size();
-    ocp_nlp_reg_config *config = acados_malloc(1, size);
-
-    switch (plan)
-    {
-        case NO_REGULARIZATION:
-// NOTE(giaf) what is that ?!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            free(config);
-            config = NULL;
-            break;
-        case MIRROR:
-            ocp_nlp_reg_mirror_config_initialize_default(config);
-            break;
-        case CONVEXIFICATION:
-            ocp_nlp_reg_conv_config_initialize_default(config);
-            break;
-        default:
-            printf("Regularization option not available!\n");
-            exit(1);
-    }
-
-    return config;
-}
 
 /************************************************
 * config
@@ -189,11 +160,24 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
     }
 
     // QP solver
-//    config->qp_solver = ocp_qp_config_create(plan.ocp_qp_solver_plan);
     ocp_qp_xcond_solver_config_initialize_default(plan.ocp_qp_solver_plan.qp_solver, config->qp_solver);
 
-	// TODO NUKE THIS!!! (i.e. update ocp_nlp_config_calculate_size for the needed memory, and just initialize_default here!!!)
-    config->regularization = ocp_nlp_reg_config_create(plan.regularization);
+    // regularization
+    switch (plan.regularization)
+    {
+        case NO_REGULARIZATION:
+            config->regularization = NULL;  // Note(oj): this is maybe a bit dirty
+            break;
+        case MIRROR:
+            ocp_nlp_reg_mirror_config_initialize_default(config->regularization);
+            break;
+        case CONVEXIFICATION:
+            ocp_nlp_reg_conv_config_initialize_default(config->regularization);
+            break;
+        default:
+            printf("Regularization option not available!\n");
+            exit(1); 
+    }
 
     // cost
     for (int i = 0; i <= N; ++i)

@@ -528,9 +528,9 @@ std::vector<double> integrator::integrate(std::vector<double> x, std::vector<dou
         _opts->sens_forw = (to_int(options.at("sens_forw")) >= 1);
 
         // optional parameters
-    sim_in_set_xdot( _config, _dims, double *xdot,  _in)
-    sim_in_set_Sx(   _config, _dims, double *Sx,    _in)
-    sim_in_set_Su(   _config, _dims, double *Su,    _in)
+    sim_in_set(config_, dims_, in_, "xdot",  _in);
+    sim_in_set(config_, dims_, in_, "Sx"  ,  _in);
+    sim_in_set(config_, dims_, in_, "Su"  ,  _in);
     */
 
     // cast in/out?!
