@@ -527,7 +527,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
                              ext_fun_out);
 
     /* gradient */
-
+    // res = res - y_ref
     blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
 
     // printf("W\n");
@@ -537,8 +537,10 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     // blasfeo_print_dvec(ny, &memory->res, 0);
 
     // TODO(all): use lower triangular chol of W to save n_y^2 flops
+    // tmp_ny = W * res
     blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0,
                     &work->tmp_ny, 0);
+    // grad = Jt * tmp_ny
     blasfeo_dgemv_n(nu + nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0,
                     &memory->grad, 0);
 
@@ -557,12 +559,13 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     if (opts->gauss_newton_hess)
     {
         // gauss-newton approximation of hessian of ls cost
-
+        // tmp_nv_ny = Jt * W_chol,     where W_chol is lower triangular
         blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
                            &work->tmp_nv_ny, 0, 0);
 
         // blasfeo_print_dmat(nu + nx, ny, &work->tmp_nv_ny, 0, 0);
 
+        // RSQrq = tmp_nv_ny * tmp_nv_ny^T
         blasfeo_dsyrk_ln(nu + nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0,
                          memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 
@@ -571,7 +574,8 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     else
     {
         // exact hessian of ls cost
-
+        printf("NLS_COST: whayt is it doing?\n");
+        exit(1);
         ext_fun_type_in[0] = BLASFEO_DVEC;
         ext_fun_in[0] = memory->ux;  // ux: nu+nx
         ext_fun_type_in[1] = BLASFEO_DVEC;
@@ -585,8 +589,10 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
                                   ext_fun_out);
 
         // gauss-newton component update
+        // tmp_nv_ny = Jt * W_chol, where W_chol is lower triangular
         blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
                            &work->tmp_nv_ny, 0, 0);
+        // RSQrq = RSQrq + tmp_nv_ny * tmp_nv_ny^T
         blasfeo_dsyrk_ln(nu + nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 1.0,
                          memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
     }
