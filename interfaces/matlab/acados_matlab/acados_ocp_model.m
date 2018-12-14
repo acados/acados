@@ -12,6 +12,7 @@ classdef acados_ocp_model < handle
 		nym
 		nbx
 		nbu
+		ng
 		dyn_type
 		dyn_expr
 		sym_x
@@ -34,6 +35,10 @@ classdef acados_ocp_model < handle
 		Jbu
 		lbu
 		ubu
+		C
+		D
+		lg
+		ug
 		% structure
 		model_struct
 	end %properties
@@ -78,6 +83,9 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'nbu'))
 				obj.nbu = value;
 				obj.model_struct.nbu = value;
+			elseif (strcmp(field, 'ng'))
+				obj.ng = value;
+				obj.model_struct.ng = value;
 			elseif (strcmp(field, 'dyn_type'))
 				obj.dyn_type = value;
 				obj.model_struct.dyn_type = value;
@@ -138,6 +146,18 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'ubu'))
 				obj.ubu = value;
 				obj.model_struct.ubu = value;
+			elseif (strcmp(field, 'C'))
+				obj.C = value;
+				obj.model_struct.C = value;
+			elseif (strcmp(field, 'D'))
+				obj.D = value;
+				obj.model_struct.D = value;
+			elseif (strcmp(field, 'lg'))
+				obj.lg = value;
+				obj.model_struct.lg = value;
+			elseif (strcmp(field, 'ug'))
+				obj.ug = value;
+				obj.model_struct.ug = value;
 			else
 				disp(['acados_integrator_model: set: wrong field: ', field]);
 			end

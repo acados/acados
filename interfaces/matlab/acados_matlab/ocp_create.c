@@ -34,6 +34,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int nym;		bool set_nym = false;
 	int nbx;		bool set_nbx = false;
 	int nbu;		bool set_nbu = false;
+	int ng;			bool set_ng = false;
 	// cost
 	double *Vul;	bool set_Vul = false;
 	double *Vxl;	bool set_Vxl = false;
@@ -50,6 +51,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double *Jbu;	bool set_Jbu = false;
 	double *lbu;	bool set_lbu = false;
 	double *ubu;	bool set_ubu = false;
+	double *C;		bool set_C = false;
+	double *D;		bool set_D = false;
+	double *lg;		bool set_lg = false;
+	double *ug;		bool set_ug = false;
 
 	// T
 	if(mxGetField( prhs[0], 0, "T" )!=NULL)
@@ -107,6 +112,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_nbu = true;
 		nbu = mxGetScalar( mxGetField( prhs[0], 0, "nbu" ) );
+		}
+	// ng
+	if(mxGetField( prhs[0], 0, "ng" )!=NULL)
+		{
+		set_ng = true;
+		ng = mxGetScalar( mxGetField( prhs[0], 0, "ng" ) );
 		}
 	// Vul
 	if(mxGetField( prhs[0], 0, "Vul" )!=NULL)
@@ -191,6 +202,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_ubu = true;
 		ubu = mxGetPr( mxGetField( prhs[0], 0, "ubu" ) );
+		}
+	// C
+	if(mxGetField( prhs[0], 0, "C" )!=NULL)
+		{
+		set_C = true;
+		C = mxGetPr( mxGetField( prhs[0], 0, "C" ) );
+		}
+	// D
+	if(mxGetField( prhs[0], 0, "D" )!=NULL)
+		{
+		set_D = true;
+		D = mxGetPr( mxGetField( prhs[0], 0, "D" ) );
+		}
+	// lg
+	if(mxGetField( prhs[0], 0, "lg" )!=NULL)
+		{
+		set_lg = true;
+		lg = mxGetPr( mxGetField( prhs[0], 0, "lg" ) );
+		}
+	// ug
+	if(mxGetField( prhs[0], 0, "ug" )!=NULL)
+		{
+		set_ug = true;
+		ug = mxGetPr( mxGetField( prhs[0], 0, "ug" ) );
 		}
 
 
@@ -396,6 +431,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		for(ii=0; ii<N; ii++)
 			ocp_nlp_dims_set_constraints(config, dims, ii, "nbu", &nbu);
 		}
+	// ng
+	if(set_ng)
+		{
+		for(ii=0; ii<N; ii++)
+			ocp_nlp_dims_set_constraints(config, dims, ii, "ng", &ng);
+		}
 			
 
 
@@ -558,6 +599,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		for(ii=0; ii<N; ii++)
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "ubu", ubu);
+			}
+		}
+	if(set_C)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "C", C);
+			}
+		}
+	if(set_D)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "D", D);
+			}
+		}
+	if(set_lg)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "lg", lg);
+			}
+		}
+	if(set_ug)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "ug", ug);
 			}
 		}
 

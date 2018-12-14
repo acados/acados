@@ -49,7 +49,6 @@ sim_solver_num_steps = 3;
 
 
 %% create model entries
-%model_funs = linear_model;
 dyn_model = linear_mass_spring_model;
 %model_funs = crane_model;
 
@@ -59,8 +58,15 @@ nx = dyn_model.nx;
 nu = dyn_model.nu;
 nyl = nu+nx; % number of outputs in lagrange term
 nym = nx; % number of outputs in mayer term
-nbx = nx/2;
-nbu = nu;
+if 1
+	nbx = nx/2;
+	nbu = nu;
+	ng = 0;
+else
+	nbx = 0;
+	nbu = 0;
+	ng = nu+nx/2;
+end
 % cost
 Vul = zeros(nu, nyl); for ii=1:nu Vul(ii,ii)=1.0; end % input-to-output matrix in lagrange term
 Vxl = zeros(nx, nyl); for ii=1:nx Vxl(ii,nu+ii)=1.0; end % state-to-output matrix in lagrange term
@@ -71,12 +77,19 @@ yrl = zeros(nyl, 1); % output reference in lagrange term
 yrm = zeros(nym, 1); % output reference in mayer term
 % constraints
 x0 = zeros(nx, 1); x0(1)=2.5; x0(2)=2.5;
-Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
-lbx = -4*ones(nx, 1);
-ubx =  4*ones(nx, 1);
-Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
-lbu = -0.5*ones(nu, 1);
-ubu =  0.5*ones(nu, 1);
+if(ng==0)
+	Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
+	lbx = -4*ones(nx, 1);
+	ubx =  4*ones(nx, 1);
+	Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
+	lbu = -0.5*ones(nu, 1);
+	ubu =  0.5*ones(nu, 1);
+else
+	D = zeros(ng, nu); for ii=1:nu D(ii,ii)=1.0; end
+	C = zeros(ng, nx); for ii=1:nx/2 C(nu+ii,ii)=1.0; end
+	lg = zeros(ng, 1); for ii=1:nu lg(ii)=-0.5; end; for ii=1:nx/2 lg(nu+ii)=-4.0; end
+	ug = zeros(ng, 1); for ii=1:nu ug(ii)= 0.5; end; for ii=1:nx/2 ug(nu+ii)= 4.0; end
+end
 
 
 
@@ -89,8 +102,12 @@ ocp_model.set('nx', nx);
 ocp_model.set('nu', nu);
 ocp_model.set('nyl', nyl);
 ocp_model.set('nym', nym);
-ocp_model.set('nbx', nbx);
-ocp_model.set('nbu', nbu);
+if(ng==0)
+	ocp_model.set('nbx', nbx);
+	ocp_model.set('nbu', nbu);
+else
+	ocp_model.set('ng', ng);
+end
 % cost
 ocp_model.set('Vul', Vul);
 ocp_model.set('Vxl', Vxl);
@@ -118,12 +135,19 @@ else % irk
 end
 % constraints
 ocp_model.set('x0', x0);
-ocp_model.set('Jbx', Jbx);
-ocp_model.set('lbx', lbx);
-ocp_model.set('ubx', ubx);
-ocp_model.set('Jbu', Jbu);
-ocp_model.set('lbu', lbu);
-ocp_model.set('ubu', ubu);
+if(ng==0)
+	ocp_model.set('Jbx', Jbx);
+	ocp_model.set('lbx', lbx);
+	ocp_model.set('ubx', ubx);
+	ocp_model.set('Jbu', Jbu);
+	ocp_model.set('lbu', lbu);
+	ocp_model.set('ubu', ubu);
+else
+	ocp_model.set('C', C);
+	ocp_model.set('D', D);
+	ocp_model.set('lg', lg);
+	ocp_model.set('ug', ug);
+end
 
 ocp_model.model_struct
 
