@@ -92,7 +92,7 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15,10,5};
 
-    int ii_max = 4;
+    int ii_max = 2;
 
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
@@ -109,6 +109,9 @@ int main() {
     #ifndef ACADOS_WITH_OOQP
     ii_max--;
     #endif
+    #ifndef ACADOS_WITH_OSQP
+    ii_max--;
+    #endif
 
     // choose ocp qp solvers
     ocp_qp_solver_t ocp_qp_solvers[] =
@@ -120,7 +123,7 @@ int main() {
         #ifdef ACADOS_WITH_QPDUNES
         // PARTIAL_CONDENSING_QPDUNES,
         #endif
-        FULL_CONDENSING_HPIPM,
+        // FULL_CONDENSING_HPIPM,
         #ifdef ACADOS_WITH_QORE
         // FULL_CONDENSING_QORE,
         #endif
@@ -128,8 +131,11 @@ int main() {
         // FULL_CONDENSING_QPOASES,
         #endif
         #ifdef ACADOS_WITH_OOQP
-        PARTIAL_CONDENSING_OOQP,
-        FULL_CONDENSING_OOQP
+        // PARTIAL_CONDENSING_OOQP,
+        // FULL_CONDENSING_OOQP,
+        #endif
+        #ifdef ACADOS_WITH_OSQP
+        PARTIAL_CONDENSING_OSQP,
         #endif
     };
 
@@ -255,6 +261,14 @@ int main() {
                 case FULL_CONDENSING_OOQP:
                     printf("\nFull condensing + OOQP:\n\n");
                     break;
+#endif
+#ifdef ACADOS_WITH_OSQP
+                case PARTIAL_CONDENSING_OSQP:
+                    printf("\nPartial condensing + OSQP (N2 = %d):\n\n", N2);
+                    ok = set_option_int(opts, "sparse_ooqp.N2", N2);
+                    assert(ok = true && "specified option not found!");
+                    break;
+
 #endif
             }
 
