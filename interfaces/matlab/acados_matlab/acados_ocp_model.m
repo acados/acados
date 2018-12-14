@@ -43,7 +43,7 @@ classdef acados_ocp_model < handle
 	methods
 		
 
-		function obj = acados_integrator_model()
+		function obj = acados_ocp_model()
 			% default values
 			obj.name = 'model';
 			% model structure
@@ -79,11 +79,11 @@ classdef acados_ocp_model < handle
 				obj.nbu = value;
 				obj.model_struct.nbu = value;
 			elseif (strcmp(field, 'dyn_type'))
-				obj.type = value;
-				obj.model_struct.type = value;
+				obj.dyn_type = value;
+				obj.model_struct.dyn_type = value;
 			elseif (strcmp(field, 'dyn_expr'))
-				obj.expr = value;
-				obj.model_struct.expr = value;
+				obj.dyn_expr = value;
+				obj.model_struct.dyn_expr = value;
 			elseif (strcmp(field, 'sym_x'))
 				obj.sym_x = value;
 				obj.model_struct.sym_x = value;

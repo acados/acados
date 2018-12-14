@@ -20,11 +20,11 @@ acados_lib_path = ['-L' acados_folder, 'lib'];
 mex_files ={
 	'ocp_create.c',
 	'ocp_destroy.c',
-%	'sim_ext_fun_destroy.c',
-%	'sim_solve.c',
+	'ocp_ext_fun_destroy.c',
+	'ocp_solve.c',
 %	'sim_set.c',
-%	'sim_get.c',
-%	'sim_set_model.c'
+	'ocp_get.c',
+	'ocp_set_model.c'
 	} ;
 
 for ii=1:length(mex_files)
@@ -36,7 +36,7 @@ end
 %% arguments
 codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
-param_scheme_N = 10;
+N = 20;
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 qp_solver = 'partial_condensing_hpipm';
@@ -54,7 +54,7 @@ dyn_model = linear_mass_spring_model;
 %model_funs = crane_model;
 
 % dims
-T = 5.0; % horizon length time
+T = 10.0; % horizon length time
 nx = dyn_model.nx;
 nu = dyn_model.nu;
 nyl = nu+nx; % number of outputs in lagrange term
@@ -99,6 +99,23 @@ ocp_model.set('Wl', Wl);
 ocp_model.set('Wm', Wm);
 ocp_model.set('yrl', yrl);
 ocp_model.set('yrm', yrm);
+% dynamics
+if (strcmp(sim_solver, 'erk'))
+	ocp_model.set('dyn_type', 'expl');
+	ocp_model.set('dyn_expr', dyn_model.expr_expl);
+	ocp_model.set('sym_x', dyn_model.sym_x);
+	if isfield(dyn_model, 'sym_u')
+		ocp_model.set('sym_u', dyn_model.sym_u);
+	end
+else % irk
+	ocp_model.set('dyn_type', 'impl');
+	ocp_model.set('dyn_expr', dyn_model.expr_impl);
+	ocp_model.set('sym_x', dyn_model.sym_x);
+	ocp_model.set('sym_xdot', dyn_model.sym_xdot);
+	if isfield(dyn_model, 'sym_u')
+		ocp_model.set('sym_u', dyn_model.sym_u);
+	end
+end
 % constraints
 ocp_model.set('x0', x0);
 ocp_model.set('Jbx', Jbx);
@@ -112,11 +129,11 @@ ocp_model.model_struct
 
 
 
-% acados ocp opts
+%% acados ocp opts
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
-ocp_opts.set('param_scheme_N', param_scheme_N);
+ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
@@ -128,9 +145,33 @@ ocp_opts.opts_struct
 
 
 
+%% acados ocp
+% create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
+% generate model C functions
+ocp.codegen_model();
 ocp
 ocp.C_ocp
+ocp.C_ocp_ext_fun
+
+
+
+% solve
+tic;
+ocp.solve();
+time_solve = toc
+
+
+
+% get solution
+x = zeros(nx, N+1);
+u = zeros(nu, N);
+ocp.get('x', x);
+ocp.get('u', u);
+
+u
+x
+
 
 
 

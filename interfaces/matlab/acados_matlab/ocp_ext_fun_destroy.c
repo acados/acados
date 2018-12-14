@@ -13,7 +13,7 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	{
 
-//	mexPrintf("\nin sim_ext_fun_destroy\n");
+//	mexPrintf("\nin ocp_ext_fun_destroy\n");
 
 	long long *ptr;
 
@@ -24,10 +24,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// opts_struct
 
 	// TODO use them !!!
-	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
+//	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
 //	mexPrintf("\n%d\n", sens_forw);
-	char *scheme = mxArrayToString( mxGetField( prhs[0], 0, "scheme" ) );
-//	mexPrintf("\n%s\n", scheme);
+	char *sim_solver = mxArrayToString( mxGetField( prhs[0], 0, "sim_solver" ) );
+//	mexPrintf("\n%s\n", sim_solver);
 
 
 	// TODO check for empty struct member
@@ -35,9 +35,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* free memory */
 
-	if(!strcmp(scheme, "erk"))
+	if(!strcmp(sim_solver, "erk"))
 		{
-		// C_sim_ext_fun
+		// C_ocp_ext_fun
 
 		// expl_ode_fun
 		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "expl_ode_fun" ) );
@@ -55,9 +55,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		free(expl_ode_fun);
 		free(expl_vde_for);
 		}
-	else if(!strcmp(scheme, "irk"))
+	else if(!strcmp(sim_solver, "irk"))
 		{
-		// C_sim_ext_fun
+		// C_ocp_ext_fun
 
 		// impl_ode_fun
 		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "impl_ode_fun" ) );
@@ -79,7 +79,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nscheme not supported %s\n", scheme);
+		mexPrintf("\nocp_ext_fun_destroy: sim_solver not supported %s\n", sim_solver);
 		return;
 		}
 
@@ -91,4 +91,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	return;
 
 	}
+
 

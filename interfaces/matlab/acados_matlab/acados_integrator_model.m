@@ -4,8 +4,8 @@ classdef acados_integrator_model < handle
 
 	properties
 		name
-		type
-		expr
+		dyn_type
+		dyn_expr
 		sym_x
 		sym_u
 		sym_xdot
@@ -24,8 +24,8 @@ classdef acados_integrator_model < handle
 
 		function obj = acados_integrator_model()
 			obj.name = 'model';
-			obj.type = 0;
-			obj.expr = 0;
+			obj.dyn_type = 0;
+			obj.dyn_expr = 0;
 			obj.sym_x = 0;
 			obj.sym_u = 0;
 			obj.sym_xdot = 0;
@@ -40,12 +40,12 @@ classdef acados_integrator_model < handle
 
 
 		function obj = set(obj, field, value)
-			if (strcmp(field, 'type'))
-				obj.type = value;
-				obj.model_struct.type = value;
-			elseif (strcmp(field, 'expr'))
-				obj.expr = value;
-				obj.model_struct.expr = value;
+			if (strcmp(field, 'dyn_type'))
+				obj.dyn_type = value;
+				obj.model_struct.dyn_type = value;
+			elseif (strcmp(field, 'dyn_expr'))
+				obj.dyn_expr = value;
+				obj.model_struct.dyn_expr = value;
 			elseif (strcmp(field, 'sym_x'))
 				obj.sym_x = value;
 				obj.model_struct.sym_x = value;

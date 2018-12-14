@@ -432,6 +432,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	ocp_nlp_in *in = ocp_nlp_in_create(config, dims);
 
+	// shooting nodes
+	double Ts = T/N;
+	for(ii=0; ii<N; ii++)
+		{
+		// TODO make setter for this
+		in->Ts[ii] = Ts;
+		}
+
 	// cost: ls
 
 	// lagrange term

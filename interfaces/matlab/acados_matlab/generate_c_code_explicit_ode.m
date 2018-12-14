@@ -51,7 +51,7 @@ else
 	nu = 0;
 end
 
-f_expl = model.expr;
+f_expl = model.dyn_expr;
 
 model_name = model.name;
 
