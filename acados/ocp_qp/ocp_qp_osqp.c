@@ -486,8 +486,10 @@ static void ocp_qp_osqp_update_memory(const ocp_qp_in *in, const ocp_qp_osqp_opt
         mem->osqp_data->l = mem->l;
         mem->osqp_data->u = mem->u;
 
-        mem->osqp_data->P = csc_matrix(data->n, data->n, mem->P_nnzmax, mem->P_x, mem->P_i, mem->P_p);
-        mem->osqp_data->A = csc_matrix(data->m, data->n, mem->A_nnzmax, mem->A_x, mem->A_i, mem->A_p);
+        mem->osqp_data->P = csc_matrix(data->n, data->n, mem->P_nnzmax,
+                                       mem->P_x, mem->P_i, mem->P_p);
+        mem->osqp_data->A = csc_matrix(data->m, data->n, mem->A_nnzmax,
+                                       mem->A_x, mem->A_i, mem->A_p);
 
         update_bounds(in, mem);
         update_gradient(in, mem);
@@ -703,7 +705,8 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_mem
     mm = 0;
     for (kk = 0; kk <= dims->N; kk++)
     {
-        for (ii = 0; ii < 2 * dims->nb[kk] + 2 * dims->ng[kk] + 2 * dims->ns[kk]; ii++) out->lam[kk].pa[ii] = 0.0;
+        for (ii = 0; ii < 2 * dims->nb[kk] + 2 * dims->ng[kk] + 2 * dims->ns[kk]; ii++)
+            out->lam[kk].pa[ii] = 0.0;
 
         for (ii = 0; ii < dims->nb[kk]; ii++)
         {
@@ -754,7 +757,8 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     if (!mem->first_run)
     {
         osqp_update_lin_cost(mem->osqp_work, mem->q);
-        osqp_update_P_A(mem->osqp_work, mem->P_x, NULL, mem->P_nnzmax, mem->A_x, NULL, mem->A_nnzmax);
+        osqp_update_P_A(mem->osqp_work, mem->P_x, NULL, mem->P_nnzmax,
+                        mem->A_x, NULL, mem->A_nnzmax);
         osqp_update_bounds(mem->osqp_work, mem->l, mem->u);
     }
 
