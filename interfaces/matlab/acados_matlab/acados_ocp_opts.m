@@ -4,6 +4,8 @@ classdef acados_ocp_opts < handle
 
 	properties
 		codgen_model
+		param_scheme
+		param_scheme_N
 		nlp_solver
 		qp_solver
 		qp_solver_N_pcond
@@ -19,15 +21,14 @@ classdef acados_ocp_opts < handle
 		
 
 		function obj = acados_ocp_opts()
+			% default values
 			obj.codgen_model = 'true';
-			nlp_solver = 0;
-			qp_solver = 0;
-			qp_solver_N_pcond = 0;
-			obj.sim_solver = 0;
-			obj.sim_solver_num_stages = 0;
-			obj.sim_solver_num_steps = 0;
+			param_scheme = 'multiple_shooting_unif_grid';
+			% model stuct
 			obj.opts_struct = struct;
+			% initialize model stuct
 			obj.opts_struct.codgen_model = obj.codgen_model;
+			obj.opts_struct.param_scheme = obj.param_scheme;
 		end
 
 
@@ -35,6 +36,12 @@ classdef acados_ocp_opts < handle
 			if (strcmp(field, 'codgen_model'))
 				obj.codgen_model = value;
 				obj.opts_struct.codgen_model = value;
+			elseif (strcmp(field, 'param_scheme'))
+				obj.param_scheme = value;
+				obj.opts_struct.param_scheme = value;
+			elseif (strcmp(field, 'param_scheme_N'))
+				obj.param_scheme_N = value;
+				obj.opts_struct.param_scheme_N = value;
 			elseif (strcmp(field, 'nlp_solver'))
 				obj.nlp_solver = value;
 				obj.opts_struct.nlp_solver = value;

@@ -25,37 +25,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// model
 
-	bool set_N = false;
-	bool set_Ts = false;
-	bool set_nx = false;
-	bool set_nu = false;
-	bool set_nyl = false;
-	bool set_nym = false;
-	bool set_nbx = false;
-	bool set_nbu = false;
-	bool set_Wl = false;
-	bool set_Wm = false;
+	double T;		bool set_T = false;
+	int nx;			bool set_nx = false;
+	int nu;			bool set_nu = false;
+	int nyl;		bool set_nyl = false;
+	int nym;		bool set_nym = false;
+	int nbx;		bool set_nbx = false;
+	int nbu;		bool set_nbu = false;
+	double *Vul;	bool set_Vul = false;
+	double *Vxl;	bool set_Vxl = false;
+	double *Vxm;	bool set_Vxm = false;
+	double *Wl;		bool set_Wl = false;
+	double *Wm;		bool set_Wm = false;
+	double *yrl;	bool set_yrl = false;
+	double *yrm;	bool set_yrm = false;
 
-	int N, nu, nx, nyl, nym, nbx, nbu;
-	double Ts;
-	double *Wl, *Wm;
-
-	// N
-	if(mxGetField( prhs[0], 0, "N" )!=NULL)
+	// T
+	if(mxGetField( prhs[0], 0, "T" )!=NULL)
 		{
-		set_N = true;
-		N = mxGetScalar( mxGetField( prhs[0], 0, "N" ) );
+		set_T = true;
+		T = mxGetScalar( mxGetField( prhs[0], 0, "T" ) );
 		}
 	else
 		{
-		mexPrintf("\nerror: ocp_create: N not set!\n");
+		mexPrintf("\nerror: ocp_create: T not set!\n");
 		return;
-		}
-	// Ts
-	if(mxGetField( prhs[0], 0, "Ts" )!=NULL)
-		{
-		set_Ts = true;
-		Ts = mxGetScalar( mxGetField( prhs[0], 0, "Ts" ) );
 		}
 	// nx
 	if(mxGetField( prhs[0], 0, "nx" )!=NULL)
@@ -103,6 +97,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		set_nbu = true;
 		nbu = mxGetScalar( mxGetField( prhs[0], 0, "nbu" ) );
 		}
+	// Vul
+	if(mxGetField( prhs[0], 0, "Vul" )!=NULL)
+		{
+		set_Vul = true;
+		Vul = mxGetPr( mxGetField( prhs[0], 0, "Vul" ) );
+		}
+	// Vxl
+	if(mxGetField( prhs[0], 0, "Vxl" )!=NULL)
+		{
+		set_Vxl = true;
+		Vxl = mxGetPr( mxGetField( prhs[0], 0, "Vxl" ) );
+		}
+	// Vxm
+	if(mxGetField( prhs[0], 0, "Vxm" )!=NULL)
+		{
+		set_Vxm = true;
+		Vxm = mxGetPr( mxGetField( prhs[0], 0, "Vxm" ) );
+		}
 	// Wl
 	if(mxGetField( prhs[0], 0, "Wl" )!=NULL)
 		{
@@ -115,24 +127,47 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		set_Wm = true;
 		Wm = mxGetPr( mxGetField( prhs[0], 0, "Wm" ) );
 		}
+	// yrl
+	if(mxGetField( prhs[0], 0, "yrl" )!=NULL)
+		{
+		set_yrl = true;
+		yrl = mxGetPr( mxGetField( prhs[0], 0, "yrl" ) );
+		}
+	// yrm
+	if(mxGetField( prhs[0], 0, "yrm" )!=NULL)
+		{
+		set_yrm = true;
+		yrm = mxGetPr( mxGetField( prhs[0], 0, "yrm" ) );
+		}
 
 
 	// opts_struct
 
-	bool
-		set_qp_solver_N_pcond = false,
-		set_sim_solver_num_stages = false,
-		set_sim_solver_num_steps = false;
+	int N;							bool set_param_scheme_N = false;
+	char * nlp_solver;
+	char * qp_solver;
+	int qp_solver_N_pcond;			bool set_qp_solver_N_pcond = false;
+	char *sim_solver;
+	int sim_solver_num_stages;		bool set_sim_solver_num_stages = false;
+	int sim_solver_num_steps;		bool set_sim_solver_num_steps = false;
 
-	int qp_solver_N_pcond, sim_solver_num_stages, sim_solver_num_steps;
-
-//	int num_stages = mxGetScalar( mxGetField( prhs[1], 0, "num_stages" ) );
-//	int num_steps = mxGetScalar( mxGetField( prhs[1], 0, "num_steps" ) );
-//	bool sens_forw = mxGetScalar( mxGetField( prhs[1], 0, "sens_forw" ) );
+	// param_scheme_NN
+	if(mxGetField( prhs[1], 0, "param_scheme_N" )!=NULL)
+		{
+		set_param_scheme_N = true;
+		N = mxGetScalar( mxGetField( prhs[1], 0, "param_scheme_N" ) );
+		}
+	else
+		{
+		mexPrintf("\nerror: ocp_create: param_scheme_N not set!\n");
+		return;
+		}
 	// nlp_solver
-	char *nlp_solver = mxArrayToString( mxGetField( prhs[1], 0, "nlp_solver" ) );
+	// TODO check
+	nlp_solver = mxArrayToString( mxGetField( prhs[1], 0, "nlp_solver" ) );
 	// qp_solver
-	char *qp_solver = mxArrayToString( mxGetField( prhs[1], 0, "qp_solver" ) );
+	// TODO check
+	qp_solver = mxArrayToString( mxGetField( prhs[1], 0, "qp_solver" ) );
 	// N_part_cond
 	if(mxGetField( prhs[1], 0, "qp_solver_N_pcond" )!=NULL)
 		{
@@ -140,7 +175,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		qp_solver_N_pcond = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_N_pcond" ) );
 		}
 	// sim_solver
-	char *sim_solver = mxArrayToString( mxGetField( prhs[1], 0, "sim_solver" ) );
+	// TODO check
+	sim_solver = mxArrayToString( mxGetField( prhs[1], 0, "sim_solver" ) );
 	// sim_solver_num_stages
 	if(mxGetField( prhs[1], 0, "sim_solver_num_stages" )!=NULL)
 		{
@@ -343,18 +379,40 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	ocp_nlp_in *in = ocp_nlp_in_create(config, dims);
 
-	// Wl
-	if(set_Wl)
+	// linear least squares
+
+	// lagrange term
+	for(ii=0; ii<N; ii++)
 		{
-		for(ii=0; ii<N; ii++)
+		if(set_Vul)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, ii, "Vu", Vul);
+			}
+		if(set_Vxl)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, ii, "Vx", Vxl);
+			}
+		if(set_Wl)
 			{
 			ocp_nlp_cost_model_set(config, dims, in, ii, "W", Wl);
 			}
+		if(set_yrl)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yrl);
+			}
 		}
-	// Wm
+	// mayer term
+	if(set_Vxm)
+		{
+		ocp_nlp_cost_model_set(config, dims, in, N, "Vx", Vxm);
+		}
 	if(set_Wm)
 		{
 		ocp_nlp_cost_model_set(config, dims, in, N, "W", Wm);
+		}
+	if(set_yrm)
+		{
+		ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yrm);
 		}
 
 

@@ -4,9 +4,7 @@ classdef acados_ocp_model < handle
 
 	properties
 		name
-		param_type
-		N
-		Ts
+		T
 		nx
 		nu
 		nz
@@ -20,8 +18,13 @@ classdef acados_ocp_model < handle
 		sym_u
 		sym_xdot
 		sym_z
+		Vul
+		Vxl
+		Vxm
 		Wl
 		Wm
+		yrl
+		yrm
 		model_struct
 	end %properties
 
@@ -31,40 +34,19 @@ classdef acados_ocp_model < handle
 		
 
 		function obj = acados_integrator_model()
+			% default values
 			obj.name = 'model';
-			obj.param_type = 'mult_shoot';
-			obj.N = 0;
-			obj.Ts = 0; % (uniform) sampling time
-			obj.nx = 0;
-			obj.nu = 0;
-			obj.nz = 0;
-			obj.nyl = 0;
-			obj.nym = 0;
-			obj.nbx = 0;
-			obj.nux = 0;
-			obj.dyn_type = 0;
-			obj.dyn_expr = 0;
-			obj.sym_x = 0;
-			obj.sym_u = 0;
-			obj.sym_xdot = 0;
-			obj.sym_z = 0;
-			obj.Wl = 0;
-			obj.Wm = 0;
 			% model structure
 			obj.model_struct = struct;
-			% fixed field values
+			% initialize model struct
 			obj.model_struct.name = obj.name;
-			obj.model_struct.param_type = obj.param_type;
 		end
 
 
 		function obj = set(obj, field, value)
-			if (strcmp(field, 'N'))
-				obj.N = value;
-				obj.model_struct.N = value;
-			elseif (strcmp(field, 'Ts'))
-				obj.Ts = value;
-				obj.model_struct.Ts = value;
+			if (strcmp(field, 'T'))
+				obj.T = value;
+				obj.model_struct.T = value;
 			elseif (strcmp(field, 'nx'))
 				obj.nx = value;
 				obj.model_struct.nx = value;
@@ -86,9 +68,6 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'nbu'))
 				obj.nbu = value;
 				obj.model_struct.nbu = value;
-			elseif (strcmp(field, 'T'))
-				obj.T = value;
-				obj.model_struct.T = value;
 			elseif (strcmp(field, 'dyn_type'))
 				obj.type = value;
 				obj.model_struct.type = value;
@@ -107,14 +86,29 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'sym_z'))
 				obj.sym_z = value;
 				obj.model_struct.sym_z = value;
+			elseif (strcmp(field, 'Vul'))
+				obj.Vul = value;
+				obj.model_struct.Vul = value;
+			elseif (strcmp(field, 'Vxl'))
+				obj.Vxl = value;
+				obj.model_struct.Vxl = value;
+			elseif (strcmp(field, 'Vxm'))
+				obj.Vxm = value;
+				obj.model_struct.Vxm = value;
 			elseif (strcmp(field, 'Wl'))
 				obj.Wl = value;
 				obj.model_struct.Wl = value;
 			elseif (strcmp(field, 'Wm'))
 				obj.Wm = value;
 				obj.model_struct.Wm = value;
+			elseif (strcmp(field, 'yrl'))
+				obj.yrl = value;
+				obj.model_struct.yrl = value;
+			elseif (strcmp(field, 'yrm'))
+				obj.yrm = value;
+				obj.model_struct.yrm = value;
 			else
-				disp('acados_integrator_model: set: wrong field');
+				disp(['acados_integrator_model: set: wrong field: ', field]);
 			end
 		end
 
