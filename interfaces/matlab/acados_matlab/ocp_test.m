@@ -69,6 +69,14 @@ Wl = eye(nyl); for ii=1:nu Wl(ii,ii)=2.0; end % weight matrix in lagrange term
 Wm = eye(nym); % weight matrix in mayer term
 yrl = zeros(nyl, 1); % output reference in lagrange term
 yrm = zeros(nym, 1); % output reference in mayer term
+% constraints
+x0 = zeros(nx, 1); x0(1)=2.5; x0(2)=2.5;
+Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
+lbx = -4*ones(nx, 1);
+ubx =  4*ones(nx, 1);
+Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
+lbu = -0.5*ones(nu, 1);
+ubu =  0.5*ones(nu, 1);
 
 
 
@@ -91,7 +99,14 @@ ocp_model.set('Wl', Wl);
 ocp_model.set('Wm', Wm);
 ocp_model.set('yrl', yrl);
 ocp_model.set('yrm', yrm);
-% dynamics
+% constraints
+ocp_model.set('x0', x0);
+ocp_model.set('Jbx', Jbx);
+ocp_model.set('lbx', lbx);
+ocp_model.set('ubx', ubx);
+ocp_model.set('Jbu', Jbu);
+ocp_model.set('lbu', lbu);
+ocp_model.set('ubu', ubu);
 
 ocp_model.model_struct
 

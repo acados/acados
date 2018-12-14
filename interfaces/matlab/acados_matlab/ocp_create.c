@@ -16,8 +16,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// sizeof(long long) == sizeof(void *) = 64 !!!
 	long long *l_ptr;
+	int *i_ptr;
 
-	int ii;
+	int ii, jj, idx;
 
 
 
@@ -25,6 +26,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// model
 
+	// dims
 	double T;		bool set_T = false;
 	int nx;			bool set_nx = false;
 	int nu;			bool set_nu = false;
@@ -32,6 +34,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int nym;		bool set_nym = false;
 	int nbx;		bool set_nbx = false;
 	int nbu;		bool set_nbu = false;
+	// cost
 	double *Vul;	bool set_Vul = false;
 	double *Vxl;	bool set_Vxl = false;
 	double *Vxm;	bool set_Vxm = false;
@@ -39,6 +42,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double *Wm;		bool set_Wm = false;
 	double *yrl;	bool set_yrl = false;
 	double *yrm;	bool set_yrm = false;
+	// constraints
+	double *x0;		bool set_x0 = false;
+	double *Jbx;	bool set_Jbx = false;
+	double *lbx;	bool set_lbx = false;
+	double *ubx;	bool set_ubx = false;
+	double *Jbu;	bool set_Jbu = false;
+	double *lbu;	bool set_lbu = false;
+	double *ubu;	bool set_ubu = false;
 
 	// T
 	if(mxGetField( prhs[0], 0, "T" )!=NULL)
@@ -138,6 +149,48 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_yrm = true;
 		yrm = mxGetPr( mxGetField( prhs[0], 0, "yrm" ) );
+		}
+	// x0
+	if(mxGetField( prhs[0], 0, "x0" )!=NULL)
+		{
+		set_x0 = true;
+		x0 = mxGetPr( mxGetField( prhs[0], 0, "x0" ) );
+		}
+	// Jbx
+	if(mxGetField( prhs[0], 0, "Jbx" )!=NULL)
+		{
+		set_Jbx = true;
+		Jbx = mxGetPr( mxGetField( prhs[0], 0, "Jbx" ) );
+		}
+	// lbx
+	if(mxGetField( prhs[0], 0, "lbx" )!=NULL)
+		{
+		set_lbx = true;
+		lbx = mxGetPr( mxGetField( prhs[0], 0, "lbx" ) );
+		}
+	// ubx
+	if(mxGetField( prhs[0], 0, "ubx" )!=NULL)
+		{
+		set_ubx = true;
+		ubx = mxGetPr( mxGetField( prhs[0], 0, "ubx" ) );
+		}
+	// Jbu
+	if(mxGetField( prhs[0], 0, "Jbu" )!=NULL)
+		{
+		set_Jbu = true;
+		Jbu = mxGetPr( mxGetField( prhs[0], 0, "Jbu" ) );
+		}
+	// lbu
+	if(mxGetField( prhs[0], 0, "lbu" )!=NULL)
+		{
+		set_lbu = true;
+		lbu = mxGetPr( mxGetField( prhs[0], 0, "lbu" ) );
+		}
+	// ubu
+	if(mxGetField( prhs[0], 0, "ubu" )!=NULL)
+		{
+		set_ubu = true;
+		ubu = mxGetPr( mxGetField( prhs[0], 0, "ubu" ) );
 		}
 
 
@@ -305,7 +358,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 	// allocate tmp
-	int *i_ptr = (int *) malloc((N+1)*sizeof(int));
+	i_ptr = (int *) malloc((N+1)*sizeof(int));
 	// nx
 	for(ii=0; ii<=N; ii++)
 		i_ptr[ii] = nx;
@@ -379,7 +432,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	ocp_nlp_in *in = ocp_nlp_in_create(config, dims);
 
-	// linear least squares
+	// cost: ls
 
 	// lagrange term
 	for(ii=0; ii<N; ii++)
@@ -413,6 +466,91 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(set_yrm)
 		{
 		ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yrm);
+		}
+	
+	// constraints: b
+
+	if(set_x0)
+		{
+		i_ptr = malloc(nx*sizeof(int));
+		for(ii=0; ii<nx; ii++)
+			{
+			i_ptr[ii] = ii;
+			}
+		ocp_nlp_constraints_model_set(config, dims, in, 0, "idxbx", i_ptr);
+		free(i_ptr);
+		ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", x0);
+		ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", x0);
+		}
+	if(set_Jbx)
+		{
+		i_ptr = malloc(nbx*sizeof(int));
+		for(ii=0; ii<nbx; ii++)
+			{
+			idx = -1;
+			for(jj=0; jj<nx; jj++)
+				{
+				if(Jbx[ii+nbx*jj]!=0.0)
+					{
+					i_ptr[ii] = jj;
+					idx = jj;
+					}
+				}
+			}
+		for(ii=1; ii<=N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxbx", i_ptr);
+			}
+		free(i_ptr);
+		}
+	if(set_lbx)
+		{
+		for(ii=1; ii<=N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "lbx", lbx);
+			}
+		}
+	if(set_ubx)
+		{
+		for(ii=1; ii<=N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "ubx", ubx);
+			}
+		}
+	if(set_Jbu)
+		{
+		i_ptr = malloc(nbu*sizeof(int));
+		for(ii=0; ii<nbu; ii++)
+			{
+			idx = -1;
+			for(jj=0; jj<nu; jj++)
+				{
+				if(Jbu[ii+nbu*jj]!=0.0)
+					{
+					i_ptr[ii] = jj;
+					idx = jj;
+					}
+				}
+			}
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxbu", i_ptr);
+			}
+		free(i_ptr);
+		}
+	if(set_lbu)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "lbu", lbu);
+			}
+		}
+	if(set_ubu)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "ubu", ubu);
+			}
 		}
 
 

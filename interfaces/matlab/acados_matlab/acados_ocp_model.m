@@ -18,6 +18,7 @@ classdef acados_ocp_model < handle
 		sym_u
 		sym_xdot
 		sym_z
+		% cost
 		Vul
 		Vxl
 		Vxm
@@ -25,6 +26,15 @@ classdef acados_ocp_model < handle
 		Wm
 		yrl
 		yrm
+		% constraints
+		x0
+		Jbx
+		lbx
+		ubx
+		Jbu
+		lbu
+		ubu
+		% structure
 		model_struct
 	end %properties
 
@@ -107,6 +117,27 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'yrm'))
 				obj.yrm = value;
 				obj.model_struct.yrm = value;
+			elseif (strcmp(field, 'x0'))
+				obj.x0 = value;
+				obj.model_struct.x0 = value;
+			elseif (strcmp(field, 'Jbx'))
+				obj.Jbx = value;
+				obj.model_struct.Jbx = value;
+			elseif (strcmp(field, 'lbx'))
+				obj.lbx = value;
+				obj.model_struct.lbx = value;
+			elseif (strcmp(field, 'ubx'))
+				obj.ubx = value;
+				obj.model_struct.ubx = value;
+			elseif (strcmp(field, 'Jbu'))
+				obj.Jbu = value;
+				obj.model_struct.Jbu = value;
+			elseif (strcmp(field, 'lbu'))
+				obj.lbu = value;
+				obj.model_struct.lbu = value;
+			elseif (strcmp(field, 'ubu'))
+				obj.ubu = value;
+				obj.model_struct.ubu = value;
 			else
 				disp(['acados_integrator_model: set: wrong field: ', field]);
 			end
