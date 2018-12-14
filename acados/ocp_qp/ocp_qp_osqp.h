@@ -33,22 +33,25 @@ extern "C" {
 
 typedef struct ocp_qp_osqp_opts_
 {
+    c_int verbose; // enable or disable printing
     OSQPSettings *osqp_opts;
 } ocp_qp_osqp_opts;
 
 
 typedef struct ocp_qp_osqp_memory_
 {
+    c_int first_run;
+
     c_float *q;
     c_float *l;
     c_float *u;
 
-    c_int P_nnz;
+    c_int P_nnzmax;
     c_int *P_i;
     c_int *P_p;
     c_float *P_x;
 
-    c_int A_nnz;
+    c_int A_nnzmax;
     c_int *A_i;
     c_int *A_p;
     c_float *A_x;
