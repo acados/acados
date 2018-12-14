@@ -45,6 +45,9 @@
 #include "acados/dense_qp/dense_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #endif
+#ifdef ACADOS_WITH_OSQP
+#include "acados/ocp_qp/ocp_qp_osqp.h"
+#endif
 
 void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
                                                    ocp_qp_xcond_solver_config *solver_config)
@@ -71,6 +74,11 @@ if (solver_name < FULL_CONDENSING_HPIPM)
 #ifdef ACADOS_WITH_OOQP
         case PARTIAL_CONDENSING_OOQP:
             ocp_qp_ooqp_config_initialize_default(solver_config->qp_solver);
+            break;
+#endif
+#ifdef ACADOS_WITH_OSQP
+        case PARTIAL_CONDENSING_OSQP:
+            ocp_qp_osqp_config_initialize_default(solver_config->qp_solver);
             break;
 #endif
 #ifdef ACADOS_WITH_QPDUNES
