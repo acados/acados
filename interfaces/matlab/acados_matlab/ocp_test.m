@@ -1,39 +1,9 @@
 %% test of native matlab interface
 
-%% compile mex files
-% mex -v GCC='/usr/bin/gcc-4.9' ... (-v for verbose, GCC=... to change compiler)
-
-% get acados folder (if set)
-acados_folder = getenv('ACADOS_FOLDER');
-% default folder
-if length(acados_folder) == 0
-	acados_folder = '../../../';
-end
-% set paths
-acados_include = ['-I' acados_folder];
-acados_interfaces_include = ['-I' acados_folder, 'interfaces'];
-external_include = ['-I' acados_folder, 'external'];
-blasfeo_include = ['-I' acados_folder, 'external/blasfeo/include'];
-acados_lib_path = ['-L' acados_folder, 'lib'];
-
-% compile mex
-mex_files ={
-	'ocp_create.c',
-	'ocp_destroy.c',
-	'ocp_ext_fun_destroy.c',
-	'ocp_solve.c',
-%	'sim_set.c',
-	'ocp_get.c',
-	'ocp_set_model.c'
-	} ;
-
-for ii=1:length(mex_files)
-	mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
-end
-
 
 
 %% arguments
+compile_mex = 'true';
 codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
 N = 20;
@@ -155,6 +125,7 @@ ocp_model.model_struct
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
+ocp_opts.set('compile_mex', compile_mex);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
@@ -173,7 +144,6 @@ ocp_opts.opts_struct
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
 % generate model C functions
-ocp.codegen_model();
 ocp
 ocp.C_ocp
 ocp.C_ocp_ext_fun

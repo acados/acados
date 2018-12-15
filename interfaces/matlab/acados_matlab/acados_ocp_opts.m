@@ -3,6 +3,7 @@ classdef acados_ocp_opts < handle
 
 
 	properties
+		compile_mex
 		codgen_model
 		param_scheme
 		param_scheme_N
@@ -33,7 +34,10 @@ classdef acados_ocp_opts < handle
 
 
 		function obj = set(obj, field, value)
-			if (strcmp(field, 'codgen_model'))
+			if (strcmp(field, 'compile_mex'))
+				obj.compile_mex = value;
+				obj.opts_struct.compile_mex = value;
+			elseif (strcmp(field, 'codgen_model'))
 				obj.codgen_model = value;
 				obj.opts_struct.codgen_model = value;
 			elseif (strcmp(field, 'param_scheme'))

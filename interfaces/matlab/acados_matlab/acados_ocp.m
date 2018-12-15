@@ -15,13 +15,14 @@ classdef acados_ocp < handle
 		function obj = acados_ocp(model, opts)
 			obj.model_struct = model.model_struct;
 			obj.opts_struct = opts.opts_struct;
+
+			if (strcmp(obj.opts_struct.compile_mex, 'true'))
+				ocp_compile_mex();
+			end
+
 			obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
-		end
 
-
-
-		function codegen_model(obj)
-			if obj.opts_struct.codgen_model
+			if (strcmp(obj.opts_struct.codgen_model, 'true'))
 				c_sources = ' ';
 				if (strcmp(obj.opts_struct.sim_solver, 'erk'))
 					% generate c for function and derivatives using casadi
@@ -47,29 +48,20 @@ classdef acados_ocp < handle
 				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
 
-			% get acados folder (if set)
-			acados_folder = getenv('ACADOS_FOLDER');
-			% default folder
-			if length(acados_folder) == 0
-				acados_folder = '../../../';
+			if (strcmp(obj.opts_struct.compile_mex, 'true'))
+				ocp_compile_mex_model_dep(obj.opts_struct);
 			end
-			% set paths
-			acados_include = ['-I' acados_folder];
-			acados_interfaces_include = ['-I' acados_folder, 'interfaces'];
-			acados_lib_path = ['-L' acados_folder, 'lib'];
-			acados_matlab_lib_path = ['-L' acados_folder, 'interfaces/matlab/acados_matlab/'];
 
 			% get pointers for external functions in model
 			if (strcmp(obj.opts_struct.sim_solver, 'erk'))
-				mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lmodel', 'ocp_expl_ext_fun_create.c');
 				obj.C_ocp_ext_fun = ocp_expl_ext_fun_create(obj.opts_struct);
 			elseif (strcmp(obj.opts_struct.sim_solver, 'irk'))
-				mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lmodel', 'ocp_impl_ext_fun_create.c');
 				obj.C_ocp_ext_fun = ocp_impl_ext_fun_create(obj.opts_struct);
 			else
 				fprintf('\ncodegen_model: sim_solver not supported: %s\n', obj.opts_struct.sim_solver);
 				return;
 			end
+
 			% set in model ( = casadi functions )
 			ocp_set_model(obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun);
 		end

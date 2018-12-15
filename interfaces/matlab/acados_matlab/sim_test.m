@@ -93,8 +93,6 @@ sim_opts.set('sens_forw', sens_forw);
 %% acados integrator
 % create integrator
 sim = acados_integrator(sim_model, sim_opts);
-% generate model C functions
-sim.codegen_model();
 % (re)set numerical part of model
 %sim.set('T', 0.5);
 

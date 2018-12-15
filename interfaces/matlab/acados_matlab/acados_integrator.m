@@ -15,11 +15,9 @@ classdef acados_integrator < handle
 		function obj = acados_integrator(model, opts)
 			obj.model_struct = model.model_struct;
 			obj.opts_struct = opts.opts_struct;
+
 			obj.C_sim = sim_create(obj.model_struct, obj.opts_struct);
-		end
 
-
-		function codegen_model(obj)
 			if obj.opts_struct.codgen_model
 				c_sources = ' ';
 				if (strcmp(obj.opts_struct.scheme, 'erk'))
