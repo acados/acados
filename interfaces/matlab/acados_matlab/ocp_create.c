@@ -35,6 +35,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int nbx;		bool set_nbx = false;
 	int nbu;		bool set_nbu = false;
 	int ng;			bool set_ng = false;
+	int nh;			bool set_nh = false;
 	// cost
 	double *Vul;	bool set_Vul = false;
 	double *Vxl;	bool set_Vxl = false;
@@ -55,6 +56,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double *D;		bool set_D = false;
 	double *lg;		bool set_lg = false;
 	double *ug;		bool set_ug = false;
+	double *lh;		bool set_lh = false;
+	double *uh;		bool set_uh = false;
 
 	// T
 	if(mxGetField( prhs[0], 0, "T" )!=NULL)
@@ -118,6 +121,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_ng = true;
 		ng = mxGetScalar( mxGetField( prhs[0], 0, "ng" ) );
+		}
+	// nh
+	if(mxGetField( prhs[0], 0, "nh" )!=NULL)
+		{
+		set_nh = true;
+		nh = mxGetScalar( mxGetField( prhs[0], 0, "nh" ) );
 		}
 	// Vul
 	if(mxGetField( prhs[0], 0, "Vul" )!=NULL)
@@ -226,6 +235,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_ug = true;
 		ug = mxGetPr( mxGetField( prhs[0], 0, "ug" ) );
+		}
+	// lh
+	if(mxGetField( prhs[0], 0, "lh" )!=NULL)
+		{
+		set_lh = true;
+		lh = mxGetPr( mxGetField( prhs[0], 0, "lh" ) );
+		}
+	// uh
+	if(mxGetField( prhs[0], 0, "uh" )!=NULL)
+		{
+		set_uh = true;
+		uh = mxGetPr( mxGetField( prhs[0], 0, "uh" ) );
 		}
 
 
@@ -437,6 +458,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		for(ii=0; ii<N; ii++)
 			ocp_nlp_dims_set_constraints(config, dims, ii, "ng", &ng);
 		}
+	// nh
+	if(set_ng)
+		{
+		for(ii=0; ii<N; ii++)
+			ocp_nlp_dims_set_constraints(config, dims, ii, "nh", &nh);
+		}
 			
 
 
@@ -627,6 +654,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		for(ii=0; ii<N; ii++)
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "ug", ug);
+			}
+		}
+	if(set_lh)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "lh", lh);
+			}
+		}
+	if(set_uh)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "uh", uh);
 			}
 		}
 

@@ -48,15 +48,17 @@ classdef acados_ocp < handle
 				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
 
+			obj.C_ocp_ext_fun = ocp_create_ext_fun();
+
 			if (strcmp(obj.opts_struct.compile_mex, 'true'))
 				ocp_compile_mex_model_dep(obj.opts_struct);
 			end
 
 			% get pointers for external functions in model
 			if (strcmp(obj.opts_struct.sim_solver, 'erk'))
-				obj.C_ocp_ext_fun = ocp_expl_ext_fun_create(obj.opts_struct);
+				ocp_set_ext_fun_expl(obj.C_ocp_ext_fun, obj.opts_struct);
 			elseif (strcmp(obj.opts_struct.sim_solver, 'irk'))
-				obj.C_ocp_ext_fun = ocp_impl_ext_fun_create(obj.opts_struct);
+				ocp_set_ext_fun_impl(obj.C_ocp_ext_fun, obj.opts_struct);
 			else
 				fprintf('\ncodegen_model: sim_solver not supported: %s\n', obj.opts_struct.sim_solver);
 				return;
@@ -83,7 +85,7 @@ classdef acados_ocp < handle
 		function delete(obj)
 %			fprintf('\nin delete\n');
 			ocp_destroy(obj.C_ocp);
-			ocp_ext_fun_destroy(obj.opts_struct, obj.C_ocp_ext_fun);
+			ocp_destroy_ext_fun(obj.C_ocp_ext_fun);
 		end
 
 

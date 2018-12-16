@@ -1,4 +1,4 @@
-function compile_mex()
+function ocp_compile_mex()
 
 % get acados folder (if set)
 acados_folder = getenv('ACADOS_FOLDER');
@@ -14,10 +14,11 @@ blasfeo_include = ['-I' acados_folder, 'external/blasfeo/include'];
 acados_lib_path = ['-L' acados_folder, 'lib'];
 
 % compile mex
-mex_files ={
+mex_files = {
 	'ocp_create.c',
 	'ocp_destroy.c',
-	'ocp_ext_fun_destroy.c',
+	'ocp_create_ext_fun.c',
+	'ocp_destroy_ext_fun.c',
 	'ocp_solve.c',
 %	'sim_set.c',
 	'ocp_get.c',
@@ -25,7 +26,6 @@ mex_files ={
 	} ;
 
 mex_flags = 'GCC=/usr/bin/gcc-4.9';
-
 
 for ii=1:length(mex_files)
 	mex(mex_flags, acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})

@@ -7,6 +7,7 @@ compile_mex = 'true';
 codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
 N = 20;
+
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 qp_solver = 'partial_condensing_hpipm';
@@ -19,23 +20,30 @@ sim_solver_num_steps = 3;
 
 
 %% create model entries
-dyn_model = linear_mass_spring_model;
+model = linear_mass_spring_model;
 %model_funs = crane_model;
 
 % dims
 T = 10.0; % horizon length time
-nx = dyn_model.nx;
-nu = dyn_model.nu;
+nx = model.nx;
+nu = model.nu;
 nyl = nu+nx; % number of outputs in lagrange term
 nym = nx; % number of outputs in mayer term
 if 1
 	nbx = nx/2;
 	nbu = nu;
 	ng = 0;
-else
+	nh = 0;
+elseif 0
 	nbx = 0;
 	nbu = 0;
 	ng = nu+nx/2;
+	nh = 0;
+else
+	nbx = 0;
+	nbu = 0;
+	ng = 0;
+	nh = nu+nx;
 end
 % cost
 Vul = zeros(nu, nyl); for ii=1:nu Vul(ii,ii)=1.0; end % input-to-output matrix in lagrange term
@@ -47,18 +55,21 @@ yrl = zeros(nyl, 1); % output reference in lagrange term
 yrm = zeros(nym, 1); % output reference in mayer term
 % constraints
 x0 = zeros(nx, 1); x0(1)=2.5; x0(2)=2.5;
-if(ng==0)
+if (ng>0)
+	D = zeros(ng, nu); for ii=1:nu D(ii,ii)=1.0; end
+	C = zeros(ng, nx); for ii=1:nx/2 C(nu+ii,ii)=1.0; end
+	lg = zeros(ng, 1); for ii=1:nu lg(ii)=-0.5; end; for ii=1:nx/2 lg(nu+ii)=-4.0; end
+	ug = zeros(ng, 1); for ii=1:nu ug(ii)= 0.5; end; for ii=1:nx/2 ug(nu+ii)= 4.0; end
+elseif (nh>0)
+	lh = zeros(nh, 1); for ii=1:nu lh(ii)=-0.5; end; for ii=1:nx lh(nu+ii)=-4.0; end
+	uh = zeros(nh, 1); for ii=1:nu uh(ii)= 0.5; end; for ii=1:nx uh(nu+ii)= 4.0; end
+else
 	Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
 	lbx = -4*ones(nx, 1);
 	ubx =  4*ones(nx, 1);
 	Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
 	lbu = -0.5*ones(nu, 1);
 	ubu =  0.5*ones(nu, 1);
-else
-	D = zeros(ng, nu); for ii=1:nu D(ii,ii)=1.0; end
-	C = zeros(ng, nx); for ii=1:nx/2 C(nu+ii,ii)=1.0; end
-	lg = zeros(ng, 1); for ii=1:nu lg(ii)=-0.5; end; for ii=1:nx/2 lg(nu+ii)=-4.0; end
-	ug = zeros(ng, 1); for ii=1:nu ug(ii)= 0.5; end; for ii=1:nx/2 ug(nu+ii)= 4.0; end
 end
 
 
@@ -72,11 +83,13 @@ ocp_model.set('nx', nx);
 ocp_model.set('nu', nu);
 ocp_model.set('nyl', nyl);
 ocp_model.set('nym', nym);
-if(ng==0)
+if (ng>0)
+	ocp_model.set('ng', ng);
+elseif (nh>0)
+	ocp_model.set('nh', nh);
+else
 	ocp_model.set('nbx', nbx);
 	ocp_model.set('nbu', nbu);
-else
-	ocp_model.set('ng', ng);
 end
 % cost
 ocp_model.set('Vul', Vul);
@@ -89,34 +102,38 @@ ocp_model.set('yrm', yrm);
 % dynamics
 if (strcmp(sim_solver, 'erk'))
 	ocp_model.set('dyn_type', 'expl');
-	ocp_model.set('dyn_expr', dyn_model.expr_expl);
-	ocp_model.set('sym_x', dyn_model.sym_x);
-	if isfield(dyn_model, 'sym_u')
-		ocp_model.set('sym_u', dyn_model.sym_u);
+	ocp_model.set('dyn_expr', model.expr_expl);
+	ocp_model.set('sym_x', model.sym_x);
+	if isfield(model, 'sym_u')
+		ocp_model.set('sym_u', model.sym_u);
 	end
 else % irk
 	ocp_model.set('dyn_type', 'impl');
-	ocp_model.set('dyn_expr', dyn_model.expr_impl);
-	ocp_model.set('sym_x', dyn_model.sym_x);
-	ocp_model.set('sym_xdot', dyn_model.sym_xdot);
-	if isfield(dyn_model, 'sym_u')
-		ocp_model.set('sym_u', dyn_model.sym_u);
+	ocp_model.set('dyn_expr', model.expr_impl);
+	ocp_model.set('sym_x', model.sym_x);
+	ocp_model.set('sym_xdot', model.sym_xdot);
+	if isfield(model, 'sym_u')
+		ocp_model.set('sym_u', model.sym_u);
 	end
 end
 % constraints
 ocp_model.set('x0', x0);
-if(ng==0)
+if (ng>0)
+	ocp_model.set('C', C);
+	ocp_model.set('D', D);
+	ocp_model.set('lg', lg);
+	ocp_model.set('ug', ug);
+elseif (nh>0)
+	ocp_model.set('constr_expr_h', model.expr_h);
+	ocp_model.set('lh', lh);
+	ocp_model.set('uh', uh);
+else
 	ocp_model.set('Jbx', Jbx);
 	ocp_model.set('lbx', lbx);
 	ocp_model.set('ubx', ubx);
 	ocp_model.set('Jbu', Jbu);
 	ocp_model.set('lbu', lbu);
 	ocp_model.set('ubu', ubu);
-else
-	ocp_model.set('C', C);
-	ocp_model.set('D', D);
-	ocp_model.set('lg', lg);
-	ocp_model.set('ug', ug);
 end
 
 ocp_model.model_struct
