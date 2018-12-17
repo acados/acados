@@ -49,8 +49,8 @@ nu = model.nu;
 
 
 
-%% acados integrator model
-sim_model = acados_integrator_model();
+%% acados sim model
+sim_model = acados_sim_model();
 sim_model.set('T', 0.5);
 if (strcmp(scheme, 'erk'))
 	sim_model.set('dyn_type', 'expl');
@@ -81,8 +81,8 @@ end
 
 
 
-%% acados integrator opts
-sim_opts = acados_integrator_opts();
+%% acados sim opts
+sim_opts = acados_sim_opts();
 sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
@@ -91,9 +91,9 @@ sim_opts.set('sens_forw', sens_forw);
 
 
 
-%% acados integrator
-% create integrator
-sim = acados_integrator(sim_model, sim_opts);
+%% acados sim
+% create sim
+sim = acados_sim(sim_model, sim_opts);
 % (re)set numerical part of model
 %sim.set('T', 0.5);
 

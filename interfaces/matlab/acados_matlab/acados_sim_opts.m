@@ -1,4 +1,4 @@
-classdef acados_integrator_opts < handle
+classdef acados_sim_opts < handle
 	
 
 
@@ -16,7 +16,7 @@ classdef acados_integrator_opts < handle
 	methods
 		
 
-		function obj = acados_integrator_opts()
+		function obj = acados_sim_opts()
 			obj.codgen_model = 'true';
 			obj.num_stages = 0;
 			obj.num_steps = 0;

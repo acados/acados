@@ -1,4 +1,4 @@
-classdef acados_integrator_model < handle
+classdef acados_sim_model < handle
 	
 
 
@@ -22,7 +22,7 @@ classdef acados_integrator_model < handle
 	methods
 		
 
-		function obj = acados_integrator_model()
+		function obj = acados_sim_model()
 			obj.name = 'sim_model';
 			obj.dyn_type = 0;
 			obj.dyn_expr = 0;

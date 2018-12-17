@@ -1,4 +1,4 @@
-classdef acados_integrator < handle
+classdef acados_sim < handle
 
 	properties
 		C_sim
@@ -12,7 +12,7 @@ classdef acados_integrator < handle
 	methods
 
 
-		function obj = acados_integrator(model, opts)
+		function obj = acados_sim(model, opts)
 			obj.model_struct = model.model_struct;
 			obj.opts_struct = opts.opts_struct;
 
