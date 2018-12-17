@@ -52,6 +52,9 @@ ocp_qp_solver_t hashit(std::string const &inString)
     if (inString == "DENSE_OOQP") return FULL_CONDENSING_OOQP;
     if (inString == "SPARSE_OOQP") return PARTIAL_CONDENSING_OOQP;
 #endif
+#ifdef ACADOS_WITH_OSQP
+    if (inString == "SPARSE_OSQP") return PARTIAL_CONDENSING_OSQP;
+#endif
 
     return (ocp_qp_solver_t) -1;
 }
@@ -67,6 +70,7 @@ double solver_tolerance(std::string const &inString)
     if (inString == "DENSE_QORE") return 1e-10;
     if (inString == "SPARSE_OOQP") return 1e-5;
     if (inString == "DENSE_OOQP") return 1e-5;
+    if (inString == "SPARSE_OSQP") return 1e-4;
 
     return -1;
 }
@@ -108,6 +112,12 @@ void set_N2(std::string const &inString, void *opts, int N2, int N)
         option_found = set_option_int(opts, "sparse_ooqp.N2", N2);
         REQUIRE(option_found == true);
     }
+
+    if (inString == "SPARSE_OSQP")
+    {
+        option_found = set_option_int(opts, "sparse_osqp.N2", N2);
+        REQUIRE(option_found == true);
+    }
 }
 
 TEST_CASE("mass spring example", "[QP solvers]")
@@ -121,6 +131,10 @@ TEST_CASE("mass spring example", "[QP solvers]")
                                    // ,
                                    // "DENSE_OOQP",
                                    // "SPARSE_OOQP"
+#endif
+#ifdef ACADOS_WITH_OSQP
+                                    ,
+                                   "SPARSE_OSQP"
 #endif
 #ifdef ACADOS_WITH_QORE
                                    ,
@@ -145,7 +159,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
     int ngN = 0;  // number of general constraints at last stage
 
-    double N2_values[] = {15, 5, 3};  // horizon of partially condensed QP for sparse solvers
+    double N2_values[] = {15, 5};  // horizon of partially condensed QP for sparse solvers
 
     ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring(N, nx_, nu_, nb_, ng_, ngN);
 
@@ -189,7 +203,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
             if (sparse_solver)
             {
-                N2_length = 3;
+                N2_length = 2;
                 if (plan.qp_solver == PARTIAL_CONDENSING_HPMPC)
                     N2_length = 1;  // TODO(dimitris): fix this
             }
