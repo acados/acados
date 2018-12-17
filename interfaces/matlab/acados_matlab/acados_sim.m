@@ -44,24 +44,13 @@ classdef acados_sim < handle
 				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
 
-			% get acados folder (if set)
-			acados_folder = getenv('ACADOS_FOLDER');
-			% default folder
-			if length(acados_folder) == 0
-				acados_folder = '../../../';
-			end
-			% set paths
-			acados_include = ['-I' acados_folder];
-			acados_interfaces_include = ['-I' acados_folder, 'interfaces'];
-			acados_lib_path = ['-L' acados_folder, 'lib'];
-			acados_matlab_lib_path = ['-L' acados_folder, 'interfaces/matlab/acados_matlab/'];
+			% compile mex with model dependency
+			sim_compile_mex_model_dep(obj.model_struct, obj.opts_struct);
 
 			% get pointers for external functions in model
 			if (strcmp(obj.opts_struct.scheme, 'erk'))
-				mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lsim_model', 'sim_expl_ext_fun_create.c');
 				obj.C_sim_ext_fun = sim_expl_ext_fun_create(obj.opts_struct);
 			elseif (strcmp(obj.opts_struct.scheme, 'irk'))
-				mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lsim_model', 'sim_impl_ext_fun_create.c');
 				obj.C_sim_ext_fun = sim_impl_ext_fun_create(obj.opts_struct);
 			else
 				fprintf('\ncodegen_model: scheme not supported: %s\n', obj.opts_struct.scheme);

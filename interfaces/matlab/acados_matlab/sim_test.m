@@ -2,31 +2,7 @@
 clear all
 
 %% compile mex files
-% mex -v GCC='/usr/bin/gcc-4.9' ... (-v for verbose, GCC=... to change compiler)
-
-% get acados folder (if set)
-acados_folder = getenv('ACADOS_FOLDER');
-% default folder
-if length(acados_folder) == 0
-	acados_folder = '../../../';
-end
-% set paths
-acados_include = ['-I' acados_folder];
-acados_interfaces_include = ['-I' acados_folder, 'interfaces'];
-acados_lib_path = ['-L' acados_folder, 'lib'];
-
-% compile mex
-mex_files ={'sim_create.c',
-	'sim_destroy.c',
-	'sim_ext_fun_destroy.c',
-	'sim_solve.c',
-	'sim_set.c',
-	'sim_get.c',
-	'sim_set_model.c'} ;
-
-for ii=1:length(mex_files)
-	mex(acados_include, acados_interfaces_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
-end
+sim_compile_mex();
 
 
 
