@@ -90,6 +90,12 @@ classdef acados_ocp < handle
 
 
 
+		function set(obj, field, value)
+			ocp_set(obj.C_ocp, field, value);
+		end
+
+
+
 		function get(obj, field, value)
 			ocp_get(obj.C_ocp, field, value);
 		end

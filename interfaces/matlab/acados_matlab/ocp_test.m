@@ -177,6 +177,15 @@ ocp.solve();
 time_solve = toc
 
 
+x0(1) = 1.5;
+ocp.set('x0', x0);
+
+
+tic;
+ocp.solve();
+time_solve = toc
+
+
 
 % get solution
 x = zeros(nx, N+1);

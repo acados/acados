@@ -20,7 +20,7 @@ mex_files = {
 	'ocp_create_ext_fun.c',
 	'ocp_destroy_ext_fun.c',
 	'ocp_solve.c',
-%	'sim_set.c', % TODO
+	'ocp_set.c',
 	'ocp_get.c',
 	'ocp_set_model.c'
 	} ;
