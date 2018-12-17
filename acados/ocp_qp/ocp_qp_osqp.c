@@ -31,44 +31,45 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/print.h"
 
 
 /************************************************
  * helper functions
  ************************************************/
 
-static void print_csc_as_dns(csc *M)
-{
-    c_int i, j = 0; // Predefine row index and column index
-    c_int idx;
+// static void print_csc_as_dns(csc *M)
+// {
+//     c_int i, j = 0; // Predefine row index and column index
+//     c_int idx;
 
-    // Initialize matrix of zeros
-    c_float *A = (c_float *)c_calloc(M->m * M->n, sizeof(c_float));
+//     // Initialize matrix of zeros
+//     c_float *A = (c_float *)c_calloc(M->m * M->n, sizeof(c_float));
 
-    // Allocate elements
-    for (idx = 0; idx < M->p[M->n]; idx++)
-    {
-        // Get row index i (starting from 1)
-        i = M->i[idx];
+//     // Allocate elements
+//     for (idx = 0; idx < M->p[M->n]; idx++)
+//     {
+//         // Get row index i (starting from 1)
+//         i = M->i[idx];
 
-        // Get column index j (increase if necessary) (starting from 1)
-        while (M->p[j + 1] <= idx) j++;
+//         // Get column index j (increase if necessary) (starting from 1)
+//         while (M->p[j + 1] <= idx) j++;
 
-        // Assign values to A
-        A[j * (M->m) + i] = M->x[idx];
-    }
+//         // Assign values to A
+//         A[j * (M->m) + i] = M->x[idx];
+//     }
 
-    for (i = 0; i < M->m; i++)
-    {
-        for (j = 0; j < M->n; j++)
-        {
-            printf("%f ", A[j * (M->m) + i]);
-        }
-        printf("\n");
-    }
+//     for (i = 0; i < M->m; i++)
+//     {
+//         for (j = 0; j < M->n; j++)
+//         {
+//             printf("%f ", A[j * (M->m) + i]);
+//         }
+//         printf("\n");
+//     }
 
-    free(A);
-}
+//     free(A);
+// }
 
 
 
@@ -82,12 +83,20 @@ static void print_inputs(ocp_qp_osqp_memory *mem)
     printf("\n-----------------------------------\n\n");
 
     int ii;
-    printf("\nOBJECTIVE FUNCTION:\n");
-    print_csc_matrix(mem->osqp_data->P, "Matrix P");
-    for (ii = 0; ii < mem->osqp_data->n; ii++)
-        printf("=====> q[%d] = %f\n", ii + 1, mem->q[ii]);
 
-    print_csc_as_dns(mem->osqp_data->A);
+    printf("\nOBJECTIVE FUNCTION:\n");
+    // for (ii = 0; ii < mem->P_nnzmax; ii++)
+    //     printf("=====> P_x[%d] = %f, P_i[%d] = %d\n", ii + 1, mem->P_x[ii], ii+1, mem->P_i[ii]);
+
+    // for (ii = 0; ii < mem->A_nnzmax; ii++)
+        // printf("=====> A_x[%d] = %f, A_i[%d] = %d\n", ii + 1, mem->A_x[ii], ii+1, mem->A_i[ii]);
+    print_csc_matrix(mem->osqp_data->P, "Matrix P");
+    // for (ii = 0; ii < mem->osqp_data->n; ii++)
+    //     printf("=====> q[%d] = %f\n", ii + 1, mem->q[ii]);
+    // for (ii = 0; ii < mem->osqp_data->n+1; ii++)
+    //     printf("=====> P_p[%d] = %d\n", ii + 1, mem->P_p[ii]);
+
+    // print_csc_as_dns(mem->osqp_data->P);
 
     printf("\nBOUNDS:\n");
     for (ii = 0; ii < mem->osqp_data->m; ii++)
@@ -95,6 +104,12 @@ static void print_inputs(ocp_qp_osqp_memory *mem)
 
     printf("\nCONSTRAINTS MATRIX:\n");
     print_csc_matrix(mem->osqp_data->A, "Matrix A");
+    // print_csc_as_dns(mem->osqp_data->A);
+    // for (ii = 0; ii < mem->A_nnzmax; ii++)
+    //     printf("=====> A_x[%d] = %f, A_i[%d] = %d\n", ii + 1, mem->A_x[ii], ii+1, mem->A_i[ii]);
+    // for (ii = 0; ii < mem->osqp_data->n+1; ii++)
+    //     printf("=====> A_p[%d] = %d\n", ii + 1, mem->A_p[ii]);
+
 }
 
 
@@ -122,9 +137,9 @@ static int acados_osqp_num_constr(ocp_qp_dims *dims)
         m += dims->nb[ii];
         m += dims->ng[ii];
 
-        if (ii > 0)
+        if (ii < dims->N)
         {
-            m += dims->nx[ii];
+            m += dims->nx[ii+1];
         }
     }
 
@@ -153,7 +168,7 @@ static int acados_osqp_nnzmax_A(const ocp_qp_dims *dims)
 {
     int nnz = 0;
 
-    for (int ii = 0; ii < dims->N + 1; ii++)
+    for (int ii = 0; ii <= dims->N; ii++)
     {
         // inequality constraints
         nnz += dims->nb[ii];  // eye
@@ -161,11 +176,11 @@ static int acados_osqp_nnzmax_A(const ocp_qp_dims *dims)
         nnz += dims->ng[ii]*dims->nu[ii]; // D
 
         // equality constraints
-        if (ii > 0)
+        if (ii < dims->N)
         {
-            nnz += dims->nx[ii] * dims->nx[ii-1];  // A
-            nnz += dims->nx[ii] * dims->nu[ii-1];  // B
-            nnz += dims->nx[ii];  // eye
+            nnz += dims->nx[ii+1] * dims->nx[ii];  // A
+            nnz += dims->nx[ii+1] * dims->nu[ii];  // B
+            nnz += dims->nx[ii+1];  // eye
         }
     }
 
@@ -190,7 +205,7 @@ static void update_gradient(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
 
 static void update_hessian_structure(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
 {
-    int ii, jj, kk, nn = 0, offset = 0, col = 0;
+    c_int ii, jj, kk, nn = 0, offset = 0, col = 0;
     ocp_qp_dims *dims = in->dim;
 
     // CSC format: P_i are row indices and P_p are column pointers
@@ -218,7 +233,7 @@ static void update_hessian_structure(const ocp_qp_in *in, ocp_qp_osqp_memory *me
 
 static void update_hessian_data(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
 {
-    int ii, jj, kk, nn = 0;
+    c_int ii, jj, kk, nn = 0;
     ocp_qp_dims *dims = in->dim;
 
     // Traversing the matrix in column-major order
@@ -242,9 +257,9 @@ static void update_hessian_data(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
 
 static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
 {
-    int ii, jj, kk, nn = 0, col = 0, col_offset = 0;
-    int con_start = 0, bnd_start = 0;
-    int row_offset_dyn = 0, row_offset_con = 0, row_offset_bnd = 0;
+    c_int ii, jj, kk, nn = 0, col = 0;
+    c_int con_start = 0, bnd_start = 0;
+    c_int row_offset_dyn = 0, row_offset_con = 0, row_offset_bnd = 0;
     ocp_qp_dims *dims = in->dim;
 
     for (kk = 0; kk <= dims->N; kk++)
@@ -319,9 +334,9 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
             // write bound on x
             for (ii = 0; ii < dims->nb[kk]; ii++)
             {
-                if (in->idxb[kk][ii] == jj)
+                if (in->idxb[kk][ii] == jj + dims->nu[kk])
                 {
-                    mem->A_i[nn++] = ii + nbu + bnd_start + row_offset_bnd;
+                    mem->A_i[nn++] = ii + bnd_start + row_offset_bnd;
                     break;
                 }
             }
@@ -339,7 +354,7 @@ static void update_constraints_matrix_structure(const ocp_qp_in *in, ocp_qp_osqp
 
 static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
 {
-    int ii, jj, kk, nn = 0;
+    c_int ii, jj, kk, nn = 0;
     ocp_qp_dims *dims = in->dim;
 
     // Traverse matrix in column-major order
@@ -402,7 +417,7 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
             // write bound on x
             for (ii = 0; ii < dims->nb[kk]; ii++)
             {
-                if (in->idxb[kk][ii] == jj)
+                if (in->idxb[kk][ii] == jj + dims->nu[kk])
                 {
                     mem->A_x[nn++] = 1.0;
                 }
@@ -472,8 +487,6 @@ static void ocp_qp_osqp_update_memory(const ocp_qp_in *in, const ocp_qp_osqp_opt
 {
     if (mem->first_run)
     {
-        mem->first_run = 0;
-
         update_hessian_structure(in, mem);
         update_constraints_matrix_structure(in, mem);
 
@@ -495,9 +508,6 @@ static void ocp_qp_osqp_update_memory(const ocp_qp_in *in, const ocp_qp_osqp_opt
         update_gradient(in, mem);
         update_hessian_data(in, mem);
         update_constraints_matrix_data(in, mem);
-
-        // print_inputs(mem);
-        mem->osqp_work = osqp_setup(mem->osqp_data, opts->osqp_opts);
     }
     else
     {
@@ -739,6 +749,22 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     ocp_qp_in *qp_in = qp_in_;
     ocp_qp_out *qp_out = qp_out_;
 
+    int N = qp_in->dim->N;
+    int *ns = qp_in->dim->ns;
+
+    // print_ocp_qp_dims(qp_in->dim);
+
+    for (int ii = 0; ii <= N; ii++)
+    {
+        if (ns[ii] > 0)
+        {
+            printf("\nOSQP interface can not handle ns>0 yet: what about implementing it? :)\n");
+            return ACADOS_FAILURE;
+        }
+    }
+
+    // print_ocp_qp_in(qp_in);
+
     ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
 
@@ -753,6 +779,8 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
 
     acados_tic(&qp_timer);
 
+    // print_inputs(mem);
+
     // update osqp workspace with new data
     if (!mem->first_run)
     {
@@ -760,6 +788,11 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
         osqp_update_P_A(mem->osqp_work, mem->P_x, NULL, mem->P_nnzmax,
                         mem->A_x, NULL, mem->A_nnzmax);
         osqp_update_bounds(mem->osqp_work, mem->l, mem->u);
+    }
+    else
+    {
+        mem->osqp_work = osqp_setup(mem->osqp_data, opts->osqp_opts);
+        mem->first_run = 0;
     }
 
     // solve OSQP
