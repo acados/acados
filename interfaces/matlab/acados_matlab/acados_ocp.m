@@ -30,18 +30,18 @@ classdef acados_ocp < handle
 					% generate c for function and derivatives using casadi
 					generate_c_code_explicit_ode(obj.model_struct, obj.opts_struct);
 					% sources list
-					c_sources = [c_sources, 'model_expl_ode_fun.c '];
-					c_sources = [c_sources, 'model_expl_vde_for.c '];
-					c_sources = [c_sources, 'model_expl_vde_adj.c '];
-					c_sources = [c_sources, 'model_expl_ode_hes.c '];
+					c_sources = [c_sources, 'ocp_model_expl_ode_fun.c '];
+					c_sources = [c_sources, 'ocp_model_expl_vde_for.c '];
+					c_sources = [c_sources, 'ocp_model_expl_vde_adj.c '];
+					c_sources = [c_sources, 'ocp_model_expl_ode_hes.c '];
 				elseif (strcmp(obj.opts_struct.sim_solver, 'irk'))
 					% generate c for function and derivatives using casadi
 					generate_c_code_implicit_ode(obj.model_struct, obj.opts_struct);
 					% sources list
-					c_sources = [c_sources, 'model_impl_ode_fun.c '];
-					c_sources = [c_sources, 'model_impl_ode_fun_jac_x_xdot.c '];
-					c_sources = [c_sources, 'model_impl_ode_fun_jac_x_xdot_u.c '];
-					c_sources = [c_sources, 'model_impl_ode_jac_x_xdot_u.c '];
+					c_sources = [c_sources, 'ocp_model_impl_ode_fun.c '];
+					c_sources = [c_sources, 'ocp_model_impl_ode_fun_jac_x_xdot.c '];
+					c_sources = [c_sources, 'ocp_model_impl_ode_fun_jac_x_xdot_u.c '];
+					c_sources = [c_sources, 'ocp_model_impl_ode_jac_x_xdot_u.c '];
 				else
 					fprintf('\ncodegen_model: sim solver not supported: %s\n', obj.opts_struct.sim_solver);
 					return;
@@ -51,9 +51,9 @@ classdef acados_ocp < handle
 					% generate c for function and derivatives using casadi
 					generate_c_code_nonlinear_constr(obj.model_struct, obj.opts_struct);
 					% sources list
-					c_sources = [c_sources, 'model_h_fun_jac_ut_xt.c '];
+					c_sources = [c_sources, 'ocp_model_h_fun_jac_ut_xt.c '];
 				end
-				lib_name = ['libmodel.so'];
+				lib_name = ['libocp_model.so'];
 				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
 
@@ -75,7 +75,6 @@ classdef acados_ocp < handle
 			end
 			% nonlinear constraints
 			if ((isfield(obj.model_struct, 'nh') && obj.model_struct.nh>0))
-				disp('before set h')
 				ocp_set_ext_fun_h(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 

@@ -24,23 +24,23 @@ classdef acados_integrator < handle
 					% generate c for function and derivatives using casadi
 					generate_c_code_explicit_ode(obj.model_struct);
 					% compile the code in a shared library
-					c_sources = [c_sources, 'model_expl_ode_fun.c '];
-					c_sources = [c_sources, 'model_expl_vde_for.c '];
-					c_sources = [c_sources, 'model_expl_vde_adj.c '];
-					c_sources = [c_sources, 'model_expl_ode_hes.c '];
+					c_sources = [c_sources, 'sim_model_expl_ode_fun.c '];
+					c_sources = [c_sources, 'sim_model_expl_vde_for.c '];
+					c_sources = [c_sources, 'sim_model_expl_vde_adj.c '];
+					c_sources = [c_sources, 'sim_model_expl_ode_hes.c '];
 				elseif (strcmp(obj.opts_struct.scheme, 'irk'))
 					% generate c for function and derivatives using casadi
 					generate_c_code_implicit_ode(obj.model_struct);
 					% compile the code in a shared library
-					c_sources = [c_sources, 'model_impl_ode_fun.c '];
-					c_sources = [c_sources, 'model_impl_ode_fun_jac_x_xdot.c '];
-					c_sources = [c_sources, 'model_impl_ode_fun_jac_x_xdot_u.c '];
-					c_sources = [c_sources, 'model_impl_ode_jac_x_xdot_u.c '];
+					c_sources = [c_sources, 'sim_model_impl_ode_fun.c '];
+					c_sources = [c_sources, 'sim_model_impl_ode_fun_jac_x_xdot.c '];
+					c_sources = [c_sources, 'sim_model_impl_ode_fun_jac_x_xdot_u.c '];
+					c_sources = [c_sources, 'sim_model_impl_ode_jac_x_xdot_u.c '];
 				else
 					fprintf('\ncodegen_model: scheme not supported: %s\n', obj.opts_struct.scheme);
 					return;
 				end
-				lib_name = ['libmodel.so'];
+				lib_name = ['libsim_model.so'];
 				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
 
@@ -58,10 +58,10 @@ classdef acados_integrator < handle
 
 			% get pointers for external functions in model
 			if (strcmp(obj.opts_struct.scheme, 'erk'))
-				mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lmodel', 'sim_expl_ext_fun_create.c');
+				mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lsim_model', 'sim_expl_ext_fun_create.c');
 				obj.C_sim_ext_fun = sim_expl_ext_fun_create(obj.opts_struct);
 			elseif (strcmp(obj.opts_struct.scheme, 'irk'))
-				mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lmodel', 'sim_impl_ext_fun_create.c');
+				mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lsim_model', 'sim_impl_ext_fun_create.c');
 				obj.C_sim_ext_fun = sim_impl_ext_fun_create(obj.opts_struct);
 			else
 				fprintf('\ncodegen_model: scheme not supported: %s\n', obj.opts_struct.scheme);

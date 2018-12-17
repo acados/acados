@@ -108,7 +108,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	if (mxGetField( prhs[0], 0, "h_fun_jac_ut_xt" )!=NULL)
 		{
-		mexPrintf("\nset h\n");
 		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "h_fun_jac_ut_xt" ) );
 		ext_fun_ptr = (external_function_casadi *) ptr[0];
 		for(ii=0; ii<N; ii++)

@@ -1,4 +1,5 @@
 %% test of native matlab interface
+clear all
 
 %% compile mex files
 % mex -v GCC='/usr/bin/gcc-4.9' ... (-v for verbose, GCC=... to change compiler)
@@ -30,7 +31,7 @@ end
 
 
 %% arguments
-scheme = 'irk';
+scheme = 'erk';
 sens_forw = 'true';
 num_stages = 4;
 num_steps = 3;
@@ -52,8 +53,8 @@ nu = model.nu;
 sim_model = acados_integrator_model();
 sim_model.set('T', 0.5);
 if (strcmp(scheme, 'erk'))
-	sim_model.set('type', 'expl');
-	sim_model.set('expr', model.expr_expl);
+	sim_model.set('dyn_type', 'expl');
+	sim_model.set('dyn_expr', model.expr_expl);
 	sim_model.set('sym_x', model.sym_x);
 	if isfield(model, 'sym_u')
 		sim_model.set('sym_u', model.sym_u);
@@ -61,8 +62,8 @@ if (strcmp(scheme, 'erk'))
 	sim_model.set('nx', model.nx);
 	sim_model.set('nu', model.nu);
 else % irk
-	sim_model.set('type', 'impl');
-	sim_model.set('expr', model.expr_impl);
+	sim_model.set('dyn_type', 'impl');
+	sim_model.set('dyn_expr', model.expr_impl);
 	sim_model.set('sym_x', model.sym_x);
 	sim_model.set('sym_xdot', model.sym_xdot);
 	if isfield(model, 'sym_u')

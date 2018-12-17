@@ -23,7 +23,7 @@ classdef acados_integrator_model < handle
 		
 
 		function obj = acados_integrator_model()
-			obj.name = 'model';
+			obj.name = 'sim_model';
 			obj.dyn_type = 0;
 			obj.dyn_expr = 0;
 			obj.sym_x = 0;
@@ -71,7 +71,7 @@ classdef acados_integrator_model < handle
 				obj.T = value;
 				obj.model_struct.T = value;
 			else
-				disp('acados_integrator_model: set: wrong field');
+				disp(['acados_integrator_model: set: wrong field: ', field]);
 			end
 		end
 

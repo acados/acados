@@ -1,4 +1,5 @@
 %% test of native matlab interface
+clear all
 
 
 
@@ -12,8 +13,9 @@ nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
-qp_solver_N_pcond = N;%5;
-sim_solver = 'erk';
+qp_solver_N_pcond = 5;
+%sim_solver = 'erk';
+sim_solver = 'irk';
 sim_solver_num_stages = 4;
 sim_solver_num_steps = 3;
 
@@ -29,7 +31,7 @@ nx = model.nx;
 nu = model.nu;
 nyl = nu+nx; % number of outputs in lagrange term
 nym = nx; % number of outputs in mayer term
-if 0
+if 1
 	nbx = nx/2;
 	nbu = nu;
 	ng = 0;
@@ -148,7 +150,9 @@ ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('qp_solver', qp_solver);
-ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
+if (strcmp(qp_solver, 'partial_condensing_hpipm'))
+	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
+end
 ocp_opts.set('sim_solver', sim_solver);
 ocp_opts.set('sim_solver_num_stages', sim_solver_num_stages);
 ocp_opts.set('sim_solver_num_steps', sim_solver_num_steps);

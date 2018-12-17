@@ -136,9 +136,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* opts */
 	sim_opts *opts = sim_opts_create(config, dims);
-	sim_opts_set(opts, "num_stages", &num_stages);
-	sim_opts_set(opts, "num_steps", &num_steps);
-	sim_opts_set(opts, "sens_forw", &sens_forw);
+	sim_opts_set(config, opts, "num_stages", &num_stages);
+	sim_opts_set(config, opts, "num_steps", &num_steps);
+	sim_opts_set(config, opts, "sens_forw", &sens_forw);
 
 	/* in */
 	sim_in *in = sim_in_create(config, dims);
