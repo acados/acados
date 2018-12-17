@@ -24,15 +24,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* RHS */
 
-	// opts_struct
-
-//	int num_stages = mxGetScalar( mxGetField( prhs[0], 0, "num_stages" ) );
-//	int num_steps = mxGetScalar( mxGetField( prhs[0], 0, "num_steps" ) );
-//	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
-//	mexPrintf("\n%d\n", sens_forw);
-	char *sim_solver = mxArrayToString( mxGetField( prhs[0], 0, "sim_solver" ) );
-//	mexPrintf("\n%s\n", sim_solver);
-
 
 	// C_ocp
 
@@ -59,56 +50,71 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* set in model */
 
-	if(!strcmp(sim_solver, "erk"))
+	external_function_casadi *ext_fun_ptr;
+
+	if (mxGetField( prhs[0], 0, "expl_ode_fun" )!=NULL)
 		{
-//		mexPrintf("\n%s\n", sim_solver);
-
-		// expl_ode_fun
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "expl_ode_fun" ) );
-		external_function_casadi *expl_ode_fun = (external_function_casadi *) ptr[0];
-		// expl_vde_for
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "expl_vde_for" ) );
-		external_function_casadi *expl_vde_for = (external_function_casadi *) ptr[0];
-		// expl_vde_adj
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "expl_vde_adj" ) );
-		external_function_casadi *expl_vde_adj = (external_function_casadi *) ptr[0];
-
-//		sim_in_set(config, dims, in, "expl_ode_fun", expl_ode_fun);
-//		sim_in_set(config, dims, in, "expl_vde_for", expl_vde_for);
+		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "expl_ode_fun" ) );
+		ext_fun_ptr = (external_function_casadi *) ptr[0];
 		for(ii=0; ii<N; ii++)
 			{
-//			status = ocp_nlp_dynamics_model_set(config, in, ii, "expl_ode_fun", &expl_ode_fun[ii]); // not needed as sens_forw=1
-			status = ocp_nlp_dynamics_model_set(config, in, ii, "expl_vde_for", expl_vde_for);
+			status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_ode_fun", ext_fun_ptr); // NOTE not needed as sens_forw=1
 			}
 		}
-	else if(!strcmp(sim_solver, "irk"))
+	if (mxGetField( prhs[0], 0, "expl_vde_for" )!=NULL)
 		{
-//		mexPrintf("\n%s\n", sim_solver);
-
-		// impl_ode_fun
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "impl_ode_fun" ) );
-		external_function_casadi *impl_ode_fun = (external_function_casadi *) ptr[0];
-		// impl_ode_fun_jac_x_xdot
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "impl_ode_fun_jac_x_xdot" ) );
-		external_function_casadi *impl_ode_fun_jac_x_xdot = (external_function_casadi *) ptr[0];
-		// impl_ode_jac_x_xdot_u
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "impl_ode_jac_x_xdot_u" ) );
-		external_function_casadi *impl_ode_jac_x_xdot_u = (external_function_casadi *) ptr[0];
-
-//		sim_in_set(config, dims, in, "impl_ode_fun", impl_ode_fun);
-//		sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot", impl_ode_fun_jac_x_xdot);
-//		sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", impl_ode_jac_x_xdot_u);
+		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "expl_vde_for" ) );
+		ext_fun_ptr = (external_function_casadi *) ptr[0];
 		for(ii=0; ii<N; ii++)
 			{
-			status = ocp_nlp_dynamics_model_set(config, in, ii, "impl_ode_fun", impl_ode_fun);
-			status = ocp_nlp_dynamics_model_set(config, in, ii, "impl_ode_fun_jac_x_xdot", impl_ode_fun_jac_x_xdot);
-			status = ocp_nlp_dynamics_model_set(config, in, ii, "impl_ode_jac_x_xdot_u", impl_ode_jac_x_xdot_u);
+			status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_vde_for", ext_fun_ptr);
 			}
 		}
-	else
+	if (mxGetField( prhs[0], 0, "expl_vde_adj" )!=NULL)
 		{
-		mexPrintf("\nsim_set_model: sim_solver not supported %s\n", sim_solver);
-		return;
+		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "expl_vde_adj" ) );
+		ext_fun_ptr = (external_function_casadi *) ptr[0];
+		for(ii=0; ii<N; ii++)
+			{
+			status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_vde_adj", ext_fun_ptr);
+			}
+		}
+	if (mxGetField( prhs[0], 0, "impl_ode_fun" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "impl_ode_fun" ) );
+		ext_fun_ptr = (external_function_casadi *) ptr[0];
+		for(ii=0; ii<N; ii++)
+			{
+			status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "impl_ode_fun", ext_fun_ptr);
+			}
+		}
+	if (mxGetField( prhs[0], 0, "impl_ode_fun_jac_x_xdot" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "impl_ode_fun_jac_x_xdot" ) );
+		ext_fun_ptr = (external_function_casadi *) ptr[0];
+		for(ii=0; ii<N; ii++)
+			{
+			status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "impl_ode_fun_jac_x_xdot", ext_fun_ptr);
+			}
+		}
+	if (mxGetField( prhs[0], 0, "impl_ode_jac_x_xdot_u" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "impl_ode_jac_x_xdot_u" ) );
+		ext_fun_ptr = (external_function_casadi *) ptr[0];
+		for(ii=0; ii<N; ii++)
+			{
+			status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "impl_ode_jac_x_xdot_u", ext_fun_ptr);
+			}
+		}
+	if (mxGetField( prhs[0], 0, "h_fun_jac_ut_xt" )!=NULL)
+		{
+		mexPrintf("\nset h\n");
+		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "h_fun_jac_ut_xt" ) );
+		ext_fun_ptr = (external_function_casadi *) ptr[0];
+		for(ii=0; ii<N; ii++)
+			{
+			status = ocp_nlp_constraints_model_set(config, dims, in, ii, "h", ext_fun_ptr);
+			}
 		}
 
 

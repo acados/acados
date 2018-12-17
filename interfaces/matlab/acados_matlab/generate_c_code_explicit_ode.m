@@ -15,7 +15,7 @@
 %   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 %
 
-function generate_c_code_explicit_ode( model )
+function generate_c_code_explicit_ode( model, opts )
 
 %% import casadi
 import casadi.*
@@ -27,6 +27,8 @@ else
 	% old casadi versions
 	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
 end
+
+% TODO check for hessian
 
 %% load model
 % x

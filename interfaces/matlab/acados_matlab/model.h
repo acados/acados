@@ -40,3 +40,12 @@ const int *model_impl_ode_jac_x_xdot_u_sparsity_out(int);
 int model_impl_ode_jac_x_xdot_u_n_in();
 int model_impl_ode_jac_x_xdot_u_n_out();
 
+// nonlinear constraints h
+int model_h_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int model_h_fun_jac_ut_xt_work(int *, int *, int *, int *);
+const int *model_h_fun_jac_ut_xt_sparsity_in(int);
+const int *model_h_fun_jac_ut_xt_sparsity_out(int);
+int model_h_fun_jac_ut_xt_n_in();
+int model_h_fun_jac_ut_xt_n_out();
+
+

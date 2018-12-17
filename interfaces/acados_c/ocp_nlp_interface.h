@@ -125,9 +125,10 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
 //
 void ocp_nlp_in_destroy(void *in);
 //
-int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_in *in, int stage,
-                           const char *fun_type, void *fun_ptr);
+int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+                           int stage, const char *fun_type, void *fun_ptr);
 //
+// TODO ???
 int nlp_set_discrete_model_in_stage(ocp_nlp_config *config, ocp_nlp_in *in, int stage,
                                     void *fun_ptr);
 //

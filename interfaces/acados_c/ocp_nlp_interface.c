@@ -323,8 +323,8 @@ void ocp_nlp_in_destroy(void *in)
 }
 
 
-int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_in *in, int stage,
-                           const char *fun_type, void *fun_ptr)
+int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+                           int stage, const char *fun_type, void *fun_ptr)
 {
     sim_config *sim_config = config->dynamics[stage]->sim_solver;
     ocp_nlp_dynamics_cont_model *dynamics = in->dynamics[stage];

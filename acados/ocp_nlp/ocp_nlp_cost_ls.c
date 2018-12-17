@@ -205,63 +205,65 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     ocp_nlp_cost_ls_dims *dims = dims_;
     ocp_nlp_cost_ls_model *model = model_;
 
+	int nx = dims->nx;
+	int nu = dims->nu;
+	int ny = dims->ny;
+	int ns = dims->ns;
+
     if (!strcmp(field, "W"))
     {
         double *W_col_maj = (double *) value_;
-        blasfeo_pack_dmat(dims->ny, dims->ny, W_col_maj, dims->ny, &model->W, 0, 0);
+        blasfeo_pack_dmat(ny, ny, W_col_maj, ny, &model->W, 0, 0);
     }
     else if (!strcmp(field, "Cyt"))
     {
         double *Cyt_col_maj = (double *) value_;
-        blasfeo_pack_dmat(dims->nx + dims->nu, dims->ny, Cyt_col_maj, dims->nx + dims->nu,
-                          &model->Cyt, 0, 0);
+        blasfeo_pack_dmat(nx + nu, dims->ny, Cyt_col_maj, nx + nu, &model->Cyt, 0, 0);
     }
     else if (!strcmp(field, "Vx"))
     {
         double *Vx_col_maj = (double *) value_;
-        blasfeo_pack_tran_dmat(dims->ny, dims->nx, Vx_col_maj, dims->ny,
-                               &model->Cyt, dims->nu, 0);
+        blasfeo_pack_tran_dmat(ny, nx, Vx_col_maj, ny, &model->Cyt, nu, 0);
     }
     else if (!strcmp(field, "Vu"))
     {
         double *Vu_col_maj = (double *) value_;
-        blasfeo_pack_tran_dmat(dims->ny, dims->nu, Vu_col_maj,
-                          dims->ny, &model->Cyt, 0, 0);
+        blasfeo_pack_tran_dmat(ny, nu, Vu_col_maj, ny, &model->Cyt, 0, 0);
     }
     else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
     {
         double *y_ref = (double *) value_;
-        blasfeo_pack_dvec(dims->ny, y_ref, &model->y_ref, 0);
+        blasfeo_pack_dvec(ny, y_ref, &model->y_ref, 0);
     }
     else if (!strcmp(field, "Z"))
     {
         double *Z = (double *) value_;
-        blasfeo_pack_dvec(2 * dims->ns, Z, &model->Z, 0);
+        blasfeo_pack_dvec(2 * ns, Z, &model->Z, 0);
     }
     else if (!strcmp(field, "lZ1"))
     {
         double *lZ1_col_maj = (double *) value_;
-        blasfeo_pack_dvec(dims->ns, lZ1_col_maj, &model->Z, 0);
+        blasfeo_pack_dvec(ns, lZ1_col_maj, &model->Z, 0);
     }
     else if (!strcmp(field, "uZ1"))
     {
         double *uZ1_col_maj = (double *) value_;
-        blasfeo_pack_dvec(dims->ns, uZ1_col_maj, &model->Z, dims->ns);
+        blasfeo_pack_dvec(ns, uZ1_col_maj, &model->Z, ns);
     }
     else if (!strcmp(field, "z"))
     {
         double *z = (double *) value_;
-        blasfeo_pack_dvec(2 * dims->ns, z, &model->z, 0);
+        blasfeo_pack_dvec(2 * ns, z, &model->z, 0);
     }
     else if (!strcmp(field, "lz1"))
     {
         double *lz1_col_maj = (double *) value_;
-        blasfeo_pack_dvec(dims->ns, lz1_col_maj, &model->z, 0);
+        blasfeo_pack_dvec(ns, lz1_col_maj, &model->z, 0);
     }
     else if (!strcmp(field, "uz1"))
     {
         double *uz1_col_maj = (double *) value_;
-        blasfeo_pack_dvec(dims->ns, uz1_col_maj, &model->z, dims->ns);
+        blasfeo_pack_dvec(ns, uz1_col_maj, &model->z, ns);
     }
     else
     {

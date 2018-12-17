@@ -459,7 +459,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ocp_nlp_dims_set_constraints(config, dims, ii, "ng", &ng);
 		}
 	// nh
-	if(set_ng)
+	if(set_nh)
 		{
 		for(ii=0; ii<N; ii++)
 			ocp_nlp_dims_set_constraints(config, dims, ii, "nh", &nh);

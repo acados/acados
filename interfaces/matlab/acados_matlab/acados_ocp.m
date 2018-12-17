@@ -23,19 +23,21 @@ classdef acados_ocp < handle
 			obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
 
 			if (strcmp(obj.opts_struct.codgen_model, 'true'))
+				% select files to compile
 				c_sources = ' ';
+				% dynamics
 				if (strcmp(obj.opts_struct.sim_solver, 'erk'))
 					% generate c for function and derivatives using casadi
-					generate_c_code_explicit_ode(obj.model_struct);
-					% compile the code in a shared library
+					generate_c_code_explicit_ode(obj.model_struct, obj.opts_struct);
+					% sources list
 					c_sources = [c_sources, 'model_expl_ode_fun.c '];
 					c_sources = [c_sources, 'model_expl_vde_for.c '];
 					c_sources = [c_sources, 'model_expl_vde_adj.c '];
 					c_sources = [c_sources, 'model_expl_ode_hes.c '];
 				elseif (strcmp(obj.opts_struct.sim_solver, 'irk'))
 					% generate c for function and derivatives using casadi
-					generate_c_code_implicit_ode(obj.model_struct);
-					% compile the code in a shared library
+					generate_c_code_implicit_ode(obj.model_struct, obj.opts_struct);
+					% sources list
 					c_sources = [c_sources, 'model_impl_ode_fun.c '];
 					c_sources = [c_sources, 'model_impl_ode_fun_jac_x_xdot.c '];
 					c_sources = [c_sources, 'model_impl_ode_fun_jac_x_xdot_u.c '];
@@ -44,6 +46,13 @@ classdef acados_ocp < handle
 					fprintf('\ncodegen_model: sim solver not supported: %s\n', obj.opts_struct.sim_solver);
 					return;
 				end
+				% nonlinear constraints
+				if ((isfield(obj.model_struct, 'nh') && obj.model_struct.nh>0))
+					% generate c for function and derivatives using casadi
+					generate_c_code_nonlinear_constr(obj.model_struct, obj.opts_struct);
+					% sources list
+					c_sources = [c_sources, 'model_h_fun_jac_ut_xt.c '];
+				end
 				lib_name = ['libmodel.so'];
 				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
@@ -51,21 +60,27 @@ classdef acados_ocp < handle
 			obj.C_ocp_ext_fun = ocp_create_ext_fun();
 
 			if (strcmp(obj.opts_struct.compile_mex, 'true'))
-				ocp_compile_mex_model_dep(obj.opts_struct);
+				ocp_compile_mex_model_dep(obj.model_struct, obj.opts_struct);
 			end
 
 			% get pointers for external functions in model
+			% dynamics
 			if (strcmp(obj.opts_struct.sim_solver, 'erk'))
-				ocp_set_ext_fun_expl(obj.C_ocp_ext_fun, obj.opts_struct);
+				ocp_set_ext_fun_expl(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			elseif (strcmp(obj.opts_struct.sim_solver, 'irk'))
-				ocp_set_ext_fun_impl(obj.C_ocp_ext_fun, obj.opts_struct);
+				ocp_set_ext_fun_impl(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			else
 				fprintf('\ncodegen_model: sim_solver not supported: %s\n', obj.opts_struct.sim_solver);
 				return;
 			end
+			% nonlinear constraints
+			if ((isfield(obj.model_struct, 'nh') && obj.model_struct.nh>0))
+				disp('before set h')
+				ocp_set_ext_fun_h(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+			end
 
-			% set in model ( = casadi functions )
-			ocp_set_model(obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun);
+			% set in model
+			ocp_set_model(obj.C_ocp_ext_fun, obj.C_ocp);
 		end
 
 

@@ -28,19 +28,6 @@ else
 	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
 end
 
-if nargin > 1
-    if isfield(opts, 'generate_hess')
-        generate_hess = opts.generate_hess;
-    else
-        generate_hess = 0;
-        if opts.print_info
-        disp('generate_hess option was not set - default is false')
-        end
-    end
-else
-    generate_hess = 0;
-end
-
 %% load model
 % x
 x = model.sym_x;
@@ -53,6 +40,7 @@ else
 end
 % u
 u = model.sym_u;
+nu = length(u);
 
 h = model.constr_expr_h;
 
@@ -63,7 +51,7 @@ jac_x       = jacobian(h, x);
 jac_u       = jacobian(h, u);
 
 %% Set up functions
-h_fun_jac_ut_xt = Function([model_name,'_h_fun_jac_ut_xt'], {u, x}, {h, [jac_u'; jax_x']});
+h_fun_jac_ut_xt = Function([model_name,'_h_fun_jac_ut_xt'], {[u; x]}, {h, [jac_u'; jac_x']});
 
 %% generate C code
 h_fun_jac_ut_xt.generate([model_name,'_h_fun_jac_ut_xt'], casadi_opts);

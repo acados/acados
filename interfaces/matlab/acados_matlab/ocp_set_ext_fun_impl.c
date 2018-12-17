@@ -29,11 +29,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// C_ocp_ext_fun
 
+	// model
+
 	// opts
 
 //	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
 //	mexPrintf("\n%d\n", sens_forw);
-	char *sim_solver = mxArrayToString( mxGetField( prhs[1], 0, "sim_solver" ) );
+	char *sim_solver = mxArrayToString( mxGetField( prhs[2], 0, "sim_solver" ) );
 //	mexPrintf("\n%s\n", sim_solver);
 
 

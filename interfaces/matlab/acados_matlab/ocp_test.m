@@ -12,7 +12,7 @@ nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
-qp_solver_N_pcond = 5;
+qp_solver_N_pcond = N;%5;
 sim_solver = 'erk';
 sim_solver_num_stages = 4;
 sim_solver_num_steps = 3;
@@ -29,7 +29,7 @@ nx = model.nx;
 nu = model.nu;
 nyl = nu+nx; % number of outputs in lagrange term
 nym = nx; % number of outputs in mayer term
-if 1
+if 0
 	nbx = nx/2;
 	nbu = nu;
 	ng = 0;
@@ -46,9 +46,9 @@ else
 	nh = nu+nx;
 end
 % cost
-Vul = zeros(nu, nyl); for ii=1:nu Vul(ii,ii)=1.0; end % input-to-output matrix in lagrange term
-Vxl = zeros(nx, nyl); for ii=1:nx Vxl(ii,nu+ii)=1.0; end % state-to-output matrix in lagrange term
-Vxm = zeros(nx, nym); for ii=1:nx Vxm(ii,ii)=1.0; end % state-to-output matrix in mayer term
+Vul = zeros(nyl, nu); for ii=1:nu Vul(ii,ii)=1.0; end % input-to-output matrix in lagrange term
+Vxl = zeros(nyl, nx); for ii=1:nx Vxl(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
+Vxm = zeros(nym, nx); for ii=1:nx Vxm(ii,ii)=1.0; end % state-to-output matrix in mayer term
 Wl = eye(nyl); for ii=1:nu Wl(ii,ii)=2.0; end % weight matrix in lagrange term
 Wm = eye(nym); % weight matrix in mayer term
 yrl = zeros(nyl, 1); % output reference in lagrange term
