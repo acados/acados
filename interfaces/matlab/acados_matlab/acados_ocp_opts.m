@@ -23,13 +23,23 @@ classdef acados_ocp_opts < handle
 
 		function obj = acados_ocp_opts()
 			% default values
+			obj.compile_mex = 'true';
 			obj.codgen_model = 'true';
-			param_scheme = 'multiple_shooting_unif_grid';
+			obj.param_scheme = 'multiple_shooting_unif_grid';
+			obj.param_scheme_N = 10;
+			obj.nlp_solver = 'sqp';
+			obj.qp_solver = 'qp_solver';
+			obj.sim_solver = 'irk';
 			% model stuct
 			obj.opts_struct = struct;
 			% initialize model stuct
+			obj.opts_struct.compile_mex = obj.compile_mex;
 			obj.opts_struct.codgen_model = obj.codgen_model;
 			obj.opts_struct.param_scheme = obj.param_scheme;
+			obj.opts_struct.param_scheme_N = obj.param_scheme_N;
+			obj.opts_struct.qp_solver = obj.qp_solver;
+			obj.opts_struct.nlp_solver = obj.nlp_solver;
+			obj.opts_struct.sim_solver = obj.sim_solver;
 		end
 
 
