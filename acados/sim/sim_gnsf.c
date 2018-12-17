@@ -402,25 +402,25 @@ int sim_gnsf_model_set(void *model_, const char *field, void *value)
     gnsf_model *model = model_;
 
     if (!strcmp(field, "phi_fun"))
-	{
-		model->phi_fun = value;
-	}
+    {
+        model->phi_fun = value;
+    }
     else if (!strcmp(field, "phi_fun_jac_y"))
-	{
-		model->phi_fun_jac_y = value;
-	}
+    {
+        model->phi_fun_jac_y = value;
+    }
     else if (!strcmp(field, "phi_jac_y_uhat"))
-	{
-		model->phi_jac_y_uhat = value;
-	}
+    {
+        model->phi_jac_y_uhat = value;
+    }
     else if (!strcmp(field, "f_lo_jac_x1_x1dot_u_z"))
-	{
-		model->f_lo_fun_jac_x1_x1dot_u_z = value;
-	}
+    {
+        model->f_lo_fun_jac_x1_x1dot_u_z = value;
+    }
     else if (!strcmp(field, "get_gnsf_matrices"))
-	{
-		model->get_gnsf_matrices = value;
-	}
+    {
+        model->get_gnsf_matrices = value;
+    }
     else
     {
         printf("\nerror: sim_gnsf_model_set: wrong field: %s\n", field);

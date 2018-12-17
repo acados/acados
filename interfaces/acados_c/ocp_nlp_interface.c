@@ -137,13 +137,13 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 {
     int N = plan.N;
 
-	/* calculate_size & malloc & assign */
+    /* calculate_size & malloc & assign */
 
     int bytes = ocp_nlp_config_calculate_size(N);
     void *config_mem = acados_calloc(1, bytes);
     ocp_nlp_config *config = ocp_nlp_config_assign(N, config_mem);
 
-	/* initialize config according plan */
+    /* initialize config according plan */
 
     if (plan.nlp_solver == SQP)
     {
@@ -210,26 +210,26 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             case CONTINUOUS_MODEL:
                 ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[i]);
 //                config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver_plan[i]);
-				sim_solver_t solver_name = plan.sim_solver_plan[i].sim_solver;
+                sim_solver_t solver_name = plan.sim_solver_plan[i].sim_solver;
 
-				switch (solver_name)
-				{
-					case ERK:
-						sim_erk_config_initialize_default(config->dynamics[i]->sim_solver);
-						break;
-					case IRK:
-						sim_irk_config_initialize_default(config->dynamics[i]->sim_solver);
-						break;
-					case GNSF:
-						sim_gnsf_config_initialize_default(config->dynamics[i]->sim_solver);
-						break;
-					case LIFTED_IRK:
-						sim_lifted_irk_config_initialize_default(config->dynamics[i]->sim_solver);
-						break;
-					default:
-						printf("\n\nSpecified integrator not available in acados C interface!\n\n");
-						exit(1);
-				}
+                switch (solver_name)
+                {
+                    case ERK:
+                        sim_erk_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    case IRK:
+                        sim_irk_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    case GNSF:
+                        sim_gnsf_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    case LIFTED_IRK:
+                        sim_lifted_irk_config_initialize_default(config->dynamics[i]->sim_solver);
+                        break;
+                    default:
+                        printf("\n\nSpecified integrator not available in acados C interface!\n\n");
+                        exit(1);
+                }
 
                 break;
             case DISCRETE_MODEL:
