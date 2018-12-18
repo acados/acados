@@ -205,10 +205,10 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     ocp_nlp_cost_ls_dims *dims = dims_;
     ocp_nlp_cost_ls_model *model = model_;
 
-	int nx = dims->nx;
-	int nu = dims->nu;
-	int ny = dims->ny;
-	int ns = dims->ns;
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int ny = dims->ny;
+    int ns = dims->ns;
 
     if (!strcmp(field, "W"))
     {

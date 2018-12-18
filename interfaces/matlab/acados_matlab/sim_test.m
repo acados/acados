@@ -1,40 +1,15 @@
 %% test of native matlab interface
-
-%% compile mex files
-% mex -v GCC='/usr/bin/gcc-4.9' ... (-v for verbose, GCC=... to change compiler)
-
-% get acados folder (if set)
-acados_folder = getenv('ACADOS_FOLDER');
-% default folder
-if length(acados_folder) == 0
-	acados_folder = '../../../';
-end
-% set paths
-acados_include = ['-I' acados_folder];
-acados_interfaces_include = ['-I' acados_folder, 'interfaces'];
-acados_lib_path = ['-L' acados_folder, 'lib'];
-
-% compile mex
-mex_files ={'sim_create.c',
-	'sim_destroy.c',
-	'sim_ext_fun_destroy.c',
-	'sim_solve.c',
-	'sim_set.c',
-	'sim_get.c',
-	'sim_set_model.c'} ;
-
-for ii=1:length(mex_files)
-	mex(acados_include, acados_interfaces_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
-end
+clear all
 
 
 
 %% arguments
-scheme = 'irk';
-sens_forw = 'true';
-num_stages = 4;
-num_steps = 3;
+compile_mex = 'true';
 codgen_model = 'true';
+method = 'irk';
+sens_forw = 'false';
+num_stages = 4;
+num_steps = 4;
 
 
 
@@ -48,12 +23,12 @@ nu = model.nu;
 
 
 
-%% acados integrator model
-sim_model = acados_integrator_model();
+%% acados sim model
+sim_model = acados_sim_model();
 sim_model.set('T', 0.5);
-if (strcmp(scheme, 'erk'))
-	sim_model.set('type', 'expl');
-	sim_model.set('expr', model.expr_expl);
+if (strcmp(method, 'erk'))
+	sim_model.set('dyn_type', 'expl');
+	sim_model.set('dyn_expr', model.expr_expl);
 	sim_model.set('sym_x', model.sym_x);
 	if isfield(model, 'sym_u')
 		sim_model.set('sym_u', model.sym_u);
@@ -61,8 +36,8 @@ if (strcmp(scheme, 'erk'))
 	sim_model.set('nx', model.nx);
 	sim_model.set('nu', model.nu);
 else % irk
-	sim_model.set('type', 'impl');
-	sim_model.set('expr', model.expr_impl);
+	sim_model.set('dyn_type', 'impl');
+	sim_model.set('dyn_expr', model.expr_impl);
 	sim_model.set('sym_x', model.sym_x);
 	sim_model.set('sym_xdot', model.sym_xdot);
 	if isfield(model, 'sym_u')
@@ -75,24 +50,28 @@ else % irk
 	sim_model.set('nu', model.nu);
 %	sim_model.set('nz', model.nz);
 end
-%sim_model.model_struct
+
+sim_model.model_struct
 
 
 
 
-%% acados integrator opts
-sim_opts = acados_integrator_opts();
+%% acados sim opts
+sim_opts = acados_sim_opts();
+sim_opts.set('compile_mex', compile_mex);
 sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
-sim_opts.set('scheme', scheme);
+sim_opts.set('method', method);
 sim_opts.set('sens_forw', sens_forw);
 
+sim_opts.opts_struct
 
 
-%% acados integrator
-% create integrator
-sim = acados_integrator(sim_model, sim_opts);
+
+%% acados sim
+% create sim
+sim = acados_sim(sim_model, sim_opts);
 % (re)set numerical part of model
 %sim.set('T', 0.5);
 

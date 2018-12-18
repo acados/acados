@@ -33,9 +33,9 @@ if nargin > 1
         generate_hess = opts.generate_hess;
     else
         generate_hess = 0;
-        if opts.print_info
-        disp('generate_hess option was not set - default is false')
-        end
+%        if opts.print_info
+%        disp('generate_hess option was not set - default is false')
+%        end
     end
 else
     generate_hess = 0;

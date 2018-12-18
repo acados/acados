@@ -309,7 +309,7 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, void *value)
 {
     sim_config *config = config_;
-	
+
     int status = ACADOS_SUCCESS;
 
     if (!strcmp(field, "xn"))
@@ -380,7 +380,7 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
         status = ACADOS_FAILURE;
     }
 
-	return status;
+    return status;
 }
 
 
@@ -440,7 +440,7 @@ int sim_opts_set_(sim_opts *opts, const char *field, void *value)
     else
     {
         printf("\nerror: option type not available for RK integrator\n");
-		status = ACADOS_FAILURE;
+        status = ACADOS_FAILURE;
         exit(1);
     }
     return status;

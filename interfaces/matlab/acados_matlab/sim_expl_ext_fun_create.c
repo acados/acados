@@ -11,7 +11,7 @@
 
 
 // casadi functions for the model
-#include "model.h"
+#include "sim_model.h"
 
 
 
@@ -32,8 +32,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// TODO use them !!!
 	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
 //	mexPrintf("\n%d\n", sens_forw);
-	char *scheme = mxArrayToString( mxGetField( prhs[0], 0, "scheme" ) );
-//	mexPrintf("\n%s\n", scheme);
+	char *method = mxArrayToString( mxGetField( prhs[0], 0, "method" ) );
+//	mexPrintf("\n%s\n", method);
 
 
 
@@ -77,16 +77,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 	// TODO templetize the casadi function names !!!
-	if(!strcmp(scheme, "erk"))
+	if(!strcmp(method, "erk"))
 		{
 		// expl_ode_fun
 		expl_ode_fun = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
-		expl_ode_fun->casadi_fun = &model_expl_ode_fun;
-		expl_ode_fun->casadi_work = &model_expl_ode_fun_work;
-		expl_ode_fun->casadi_sparsity_in = &model_expl_ode_fun_sparsity_in;
-		expl_ode_fun->casadi_sparsity_out = &model_expl_ode_fun_sparsity_out;
-		expl_ode_fun->casadi_n_in = &model_expl_ode_fun_n_in;
-		expl_ode_fun->casadi_n_out = &model_expl_ode_fun_n_out;
+		expl_ode_fun->casadi_fun = &sim_model_expl_ode_fun;
+		expl_ode_fun->casadi_work = &sim_model_expl_ode_fun_work;
+		expl_ode_fun->casadi_sparsity_in = &sim_model_expl_ode_fun_sparsity_in;
+		expl_ode_fun->casadi_sparsity_out = &sim_model_expl_ode_fun_sparsity_out;
+		expl_ode_fun->casadi_n_in = &sim_model_expl_ode_fun_n_in;
+		expl_ode_fun->casadi_n_out = &sim_model_expl_ode_fun_n_out;
 		external_function_casadi_create(expl_ode_fun);
 		// populate output struct
 		mxArray *expl_ode_fun_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
@@ -96,12 +96,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 		// expl_vde_for
 		expl_vde_for = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
-		expl_vde_for->casadi_fun = &model_expl_vde_for;
-		expl_vde_for->casadi_work = &model_expl_vde_for_work;
-		expl_vde_for->casadi_sparsity_in = &model_expl_vde_for_sparsity_in;
-		expl_vde_for->casadi_sparsity_out = &model_expl_vde_for_sparsity_out;
-		expl_vde_for->casadi_n_in = &model_expl_vde_for_n_in;
-		expl_vde_for->casadi_n_out = &model_expl_vde_for_n_out;
+		expl_vde_for->casadi_fun = &sim_model_expl_vde_for;
+		expl_vde_for->casadi_work = &sim_model_expl_vde_for_work;
+		expl_vde_for->casadi_sparsity_in = &sim_model_expl_vde_for_sparsity_in;
+		expl_vde_for->casadi_sparsity_out = &sim_model_expl_vde_for_sparsity_out;
+		expl_vde_for->casadi_n_in = &sim_model_expl_vde_for_n_in;
+		expl_vde_for->casadi_n_out = &sim_model_expl_vde_for_n_out;
 		external_function_casadi_create(expl_vde_for);
 		// populate output struct
 		mxArray *expl_vde_for_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
@@ -111,7 +111,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nsim_expl_ext_fun_create: scheme not supported %s\n", scheme);
+		mexPrintf("\nsim_expl_ext_fun_create: method not supported %s\n", method);
 		return;
 		}
 	

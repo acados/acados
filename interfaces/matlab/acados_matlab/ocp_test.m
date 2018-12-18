@@ -1,4 +1,5 @@
 %% test of native matlab interface
+clear all
 
 
 
@@ -12,10 +13,11 @@ nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
-qp_solver_N_pcond = N;%5;
-sim_solver = 'erk';
-sim_solver_num_stages = 4;
-sim_solver_num_steps = 3;
+qp_solver_N_pcond = 5;
+%sim_method = 'erk';
+sim_method = 'irk';
+sim_method_num_stages = 4;
+sim_method_num_steps = 3;
 
 
 
@@ -29,7 +31,7 @@ nx = model.nx;
 nu = model.nu;
 nyl = nu+nx; % number of outputs in lagrange term
 nym = nx; % number of outputs in mayer term
-if 0
+if 1
 	nbx = nx/2;
 	nbu = nu;
 	ng = 0;
@@ -100,7 +102,7 @@ ocp_model.set('Wm', Wm);
 ocp_model.set('yrl', yrl);
 ocp_model.set('yrm', yrm);
 % dynamics
-if (strcmp(sim_solver, 'erk'))
+if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'expl');
 	ocp_model.set('dyn_expr', model.expr_expl);
 	ocp_model.set('sym_x', model.sym_x);
@@ -148,10 +150,12 @@ ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('qp_solver', qp_solver);
-ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
-ocp_opts.set('sim_solver', sim_solver);
-ocp_opts.set('sim_solver_num_stages', sim_solver_num_stages);
-ocp_opts.set('sim_solver_num_steps', sim_solver_num_steps);
+if (strcmp(qp_solver, 'partial_condensing_hpipm'))
+	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
+end
+ocp_opts.set('sim_method', sim_method);
+ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
+ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 
 ocp_opts.opts_struct
 
@@ -160,7 +164,6 @@ ocp_opts.opts_struct
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-% generate model C functions
 ocp
 ocp.C_ocp
 ocp.C_ocp_ext_fun
@@ -168,6 +171,15 @@ ocp.C_ocp_ext_fun
 
 
 % solve
+tic;
+ocp.solve();
+time_solve = toc
+
+
+x0(1) = 1.5;
+ocp.set('x0', x0);
+
+
 tic;
 ocp.solve();
 time_solve = toc

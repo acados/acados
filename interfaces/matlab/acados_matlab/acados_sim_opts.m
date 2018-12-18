@@ -1,12 +1,13 @@
-classdef acados_integrator_opts < handle
+classdef acados_sim_opts < handle
 	
 
 
 	properties
+		compile_mex
 		codgen_model
 		num_stages
 		num_steps
-		scheme
+		method
 		sens_forw
 		opts_struct
 	end % properties
@@ -16,19 +17,24 @@ classdef acados_integrator_opts < handle
 	methods
 		
 
-		function obj = acados_integrator_opts()
+		function obj = acados_sim_opts()
+			obj.compile_mex = 'true';
 			obj.codgen_model = 'true';
-			obj.num_stages = 0;
-			obj.num_steps = 0;
-			obj.scheme = 0;
-			obj.sens_forw = 0;
+			obj.method = 'irk';
+			obj.sens_forw = 'false';
 			obj.opts_struct = struct;
+			obj.opts_struct.compile_mex = obj.compile_mex;
 			obj.opts_struct.codgen_model = obj.codgen_model;
+			obj.opts_struct.method = obj.method;
+			obj.opts_struct.sens_forw = obj.sens_forw;
 		end
 
 
 		function obj = set(obj, field, value)
-			if (strcmp(field, 'codgen_model'))
+			if (strcmp(field, 'compile_mex'))
+				obj.compile_mex = value;
+				obj.opts_struct.compile_mex = value;
+			elseif (strcmp(field, 'codgen_model'))
 				obj.codgen_model = value;
 				obj.opts_struct.codgen_model = value;
 			elseif (strcmp(field, 'num_stages'))
@@ -37,18 +43,14 @@ classdef acados_integrator_opts < handle
 			elseif (strcmp(field, 'num_steps'))
 				obj.num_steps = value;
 				obj.opts_struct.num_steps = value;
-			elseif (strcmp(field, 'scheme'))
-				obj.scheme = value;
-				obj.opts_struct.scheme = value;
+			elseif (strcmp(field, 'method'))
+				obj.method = value;
+				obj.opts_struct.method = value;
 			elseif (strcmp(field, 'sens_forw'))
 				obj.sens_forw = value;
-				if (strcmp(value, 'true'))
-					obj.opts_struct.sens_forw = 1;
-				else
-					obj.opts_struct.sens_forw = 0;
-				end
+				obj.opts_struct.sens_forw = value;
 			else
-				disp('acados_integrator_opts: set: wrong field');
+				disp(['acados_sim_opts: set: wrong field: ', field]);
 			end
 		end
 

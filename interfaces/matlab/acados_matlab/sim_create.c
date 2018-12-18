@@ -65,12 +65,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// opts_struct
 
+	//
 	int num_stages = mxGetScalar( mxGetField( prhs[1], 0, "num_stages" ) );
+	//
 	int num_steps = mxGetScalar( mxGetField( prhs[1], 0, "num_steps" ) );
-	bool sens_forw = mxGetScalar( mxGetField( prhs[1], 0, "sens_forw" ) );
+	//
+	bool sens_forw;
+	char *c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "sens_forw" ) );
+	if (!strcmp(c_ptr, "true"))
+		sens_forw = true;
+	else
+		sens_forw = false;
 //	mexPrintf("\n%d\n", sens_forw);
-	char *scheme = mxArrayToString( mxGetField( prhs[1], 0, "scheme" ) );
-//	mexPrintf("\n%s\n", scheme);
+	//
+	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
+//	mexPrintf("\n%s\n", method);
 
 
 
@@ -107,19 +116,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* plan & config */
 	sim_solver_plan plan;
 
-	if(!strcmp(scheme, "erk"))
+	if(!strcmp(method, "erk"))
 		{
-//		mexPrintf("\n%s\n", scheme);
+//		mexPrintf("\n%s\n", method);
 		plan.sim_solver = ERK;
 		}
-	else if(!strcmp(scheme, "irk"))
+	else if(!strcmp(method, "irk"))
 		{
-//		mexPrintf("\n%s\n", scheme);
+//		mexPrintf("\n%s\n", method);
 		plan.sim_solver = IRK;
 		}
 	else
 		{
-		mexPrintf("\nscheme not supported %s\n", scheme);
+		mexPrintf("\nmethod not supported %s\n", method);
 		return;
 		}
 
@@ -136,9 +145,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* opts */
 	sim_opts *opts = sim_opts_create(config, dims);
-	sim_opts_set(opts, "num_stages", &num_stages);
-	sim_opts_set(opts, "num_steps", &num_steps);
-	sim_opts_set(opts, "sens_forw", &sens_forw);
+	sim_opts_set(config, opts, "num_stages", &num_stages);
+	sim_opts_set(config, opts, "num_steps", &num_steps);
+	sim_opts_set(config, opts, "sens_forw", &sens_forw);
 
 	/* in */
 	sim_in *in = sim_in_create(config, dims);
@@ -157,11 +166,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		free(Su);
 		}
 	if(set_T)
+		{
 		sim_in_set(config, dims, in, "T", &T);
+		}
 	if(set_x)
+		{
 		sim_in_set(config, dims, in, "x", x);
+		}
 	if(set_u)
+		{
 		sim_in_set(config, dims, in, "u", u);
+		}
 
 
 	/* out */

@@ -54,7 +54,7 @@ classdef acados_ocp_model < handle
 
 		function obj = acados_ocp_model()
 			% default values
-			obj.name = 'model';
+			obj.name = 'ocp_model';
 			% model structure
 			obj.model_struct = struct;
 			% initialize model struct

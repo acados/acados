@@ -28,8 +28,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int num_steps = mxGetScalar( mxGetField( prhs[0], 0, "num_steps" ) );
 	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
 //	mexPrintf("\n%d\n", sens_forw);
-	char *scheme = mxArrayToString( mxGetField( prhs[0], 0, "scheme" ) );
-//	mexPrintf("\n%s\n", scheme);
+	char *method = mxArrayToString( mxGetField( prhs[0], 0, "method" ) );
+//	mexPrintf("\n%s\n", method);
 
 
 	// C_sim
@@ -53,9 +53,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* set in model */
 
-	if(!strcmp(scheme, "erk"))
+	if(!strcmp(method, "erk"))
 		{
-//		mexPrintf("\n%s\n", scheme);
+//		mexPrintf("\n%s\n", method);
 
 		// expl_ode_fun
 		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "expl_ode_fun" ) );
@@ -70,9 +70,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		sim_in_set(config, dims, in, "expl_ode_fun", expl_ode_fun);
 		sim_in_set(config, dims, in, "expl_vde_for", expl_vde_for);
 		}
-	else if(!strcmp(scheme, "irk"))
+	else if(!strcmp(method, "irk"))
 		{
-//		mexPrintf("\n%s\n", scheme);
+//		mexPrintf("\n%s\n", method);
 
 		// impl_ode_fun
 		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "impl_ode_fun" ) );
@@ -90,7 +90,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nsim_set_model: scheme not supported %s\n", scheme);
+		mexPrintf("\nsim_set_model: method not supported %s\n", method);
 		return;
 		}
 
