@@ -6,10 +6,10 @@ clear all
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
-method = 'erk';
-sens_forw = 'true';
+method = 'irk';
+sens_forw = 'false';
 num_stages = 4;
-num_steps = 3;
+num_steps = 4;
 
 
 
@@ -50,7 +50,8 @@ else % irk
 	sim_model.set('nu', model.nu);
 %	sim_model.set('nz', model.nz);
 end
-%sim_model.model_struct
+
+sim_model.model_struct
 
 
 
@@ -63,6 +64,8 @@ sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
 sim_opts.set('method', method);
 sim_opts.set('sens_forw', sens_forw);
+
+sim_opts.opts_struct
 
 
 

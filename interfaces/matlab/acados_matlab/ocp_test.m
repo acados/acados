@@ -164,7 +164,6 @@ ocp_opts.opts_struct
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-% generate model C functions
 ocp
 ocp.C_ocp
 ocp.C_ocp_ext_fun

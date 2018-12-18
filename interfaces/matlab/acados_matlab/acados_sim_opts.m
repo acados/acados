@@ -31,7 +31,10 @@ classdef acados_sim_opts < handle
 
 
 		function obj = set(obj, field, value)
-			if (strcmp(field, 'codgen_model'))
+			if (strcmp(field, 'compile_mex'))
+				obj.compile_mex = value;
+				obj.opts_struct.compile_mex = value;
+			elseif (strcmp(field, 'codgen_model'))
 				obj.codgen_model = value;
 				obj.opts_struct.codgen_model = value;
 			elseif (strcmp(field, 'num_stages'))
@@ -47,7 +50,7 @@ classdef acados_sim_opts < handle
 				obj.sens_forw = value;
 				obj.opts_struct.sens_forw = value;
 			else
-				disp('acados_integrator_opts: set: wrong field');
+				disp(['acados_sim_opts: set: wrong field: ', field]);
 			end
 		end
 

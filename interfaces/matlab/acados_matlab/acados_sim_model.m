@@ -71,7 +71,7 @@ classdef acados_sim_model < handle
 				obj.T = value;
 				obj.model_struct.T = value;
 			else
-				disp(['acados_integrator_model: set: wrong field: ', field]);
+				disp(['acados_sim_model: set: wrong field: ', field]);
 			end
 		end
 
