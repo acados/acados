@@ -26,3 +26,4 @@
 [submodule "external/osqp"]
 	path = external/osqp
 	url = https://github.com/oxfordcontrol/osqp.git
+	branch = develop
