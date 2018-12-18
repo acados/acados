@@ -27,6 +27,7 @@
 #include "osqp/include/scaling.h"
 #include "osqp/include/types.h"
 #include "osqp/include/util.h"
+#include "osqp/include/lin_sys.h"
 
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -156,21 +157,21 @@ static void cpy_osqp_settings(OSQPSettings *from, OSQPSettings *to)
 
 
 
-static void print_inputs(OSQPData *data)
-{
-    printf("\n----------> OSQP INPUTS <----------\n\n");
-    printf("NUMBER OF VARIABLES: %d\n", data->n);
-    printf("NUMBER OF CONSTRAINTS: %d\n", data->m);
-    printf("NUMBER OF NON-ZEROS in HESSIAN: %d\n", data->P->nzmax);
-    printf("NUMBER OF NON-ZEROS in CONSTRAINTS: %d\n", data->A->nzmax);
-    printf("\n-----------------------------------\n\n");
+// static void print_inputs(OSQPData *data)
+// {
+    // printf("\n----------> OSQP INPUTS <----------\n\n");
+    // printf("NUMBER OF VARIABLES: %d\n", data->n);
+    // printf("NUMBER OF CONSTRAINTS: %d\n", data->m);
+    // printf("NUMBER OF NON-ZEROS in HESSIAN: %d\n", data->P->nzmax);
+    // printf("NUMBER OF NON-ZEROS in CONSTRAINTS: %d\n", data->A->nzmax);
+    // printf("\n-----------------------------------\n\n");
 
-    int ii;
+    // int ii;
 
-    printf("\nOBJECTIVE FUNCTION:\n");
-    for (ii = 0; ii < data->P->nzmax; ii++)
-        printf("=====> P_x[%d] = %f, P_i[%d] = %d\n", ii + 1, data->P->x[ii], ii + 1,
-               data->P->i[ii]);
+    // printf("\nOBJECTIVE FUNCTION:\n");
+    // for (ii = 0; ii < data->P->nzmax; ii++)
+    //     printf("=====> P_x[%d] = %f, P_i[%d] = %d\n", ii + 1, data->P->x[ii], ii + 1,
+    //            data->P->i[ii]);
 
     // for (ii = 0; ii < mem->A_nnzmax; ii++)
     // printf("=====> A_x[%d] = %f, A_i[%d] = %d\n", ii + 1, mem->A_x[ii], ii+1, mem->A_i[ii]);
@@ -182,19 +183,19 @@ static void print_inputs(OSQPData *data)
 
     // print_csc_as_dns(mem->osqp_data->P);
 
-    printf("\nBOUNDS:\n");
-    for (ii = 0; ii < data->m; ii++)
-        printf("=====> l[%d] = %f, u[%d] = %f\n", ii + 1, data->l[ii], ii + 1, data->u[ii]);
+    // printf("\nBOUNDS:\n");
+    // for (ii = 0; ii < data->m; ii++)
+    //     printf("=====> l[%d] = %f, u[%d] = %f\n", ii + 1, data->l[ii], ii + 1, data->u[ii]);
 
-    printf("\nCONSTRAINTS MATRIX:\n");
+    // printf("\nCONSTRAINTS MATRIX:\n");
     // print_csc_matrix(data->A, "Matrix A");
     // print_csc_as_dns(mem->osqp_data->A);
-    for (ii = 0; ii < data->A->nzmax; ii++)
-        printf("=====> A_x[%d] = %f, A_i[%d] = %d\n", ii + 1, data->A->x[ii], ii + 1,
-               data->A->i[ii]);
+    // for (ii = 0; ii < data->A->nzmax; ii++)
+    //     printf("=====> A_x[%d] = %f, A_i[%d] = %d\n", ii + 1, data->A->x[ii], ii + 1,
+    //            data->A->i[ii]);
     // for (ii = 0; ii < mem->osqp_data->n+1; ii++)
     //     printf("=====> A_p[%d] = %d\n", ii + 1, mem->A_p[ii]);
-}
+// }
 
 
 
@@ -514,7 +515,7 @@ static void update_constraints_matrix_data(const ocp_qp_in *in, ocp_qp_osqp_memo
 
 static void update_bounds(const ocp_qp_in *in, ocp_qp_osqp_memory *mem)
 {
-    int ii, jj, kk, nn = 0;
+    int ii, kk, nn = 0;
     ocp_qp_dims *dims = in->dim;
 
     // write -b to l and u
@@ -609,8 +610,7 @@ void *ocp_qp_osqp_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts->osqp_opts = (OSQPSettings *) c_ptr;
     c_ptr += sizeof(OSQPSettings);
 
-    opts->verbose = 1;  // default value, disable printing
-    opts->osqp_opts->polish = 1; // polish ON
+    opts->verbose = 0;  // default value, disable printing
 
     assert((char *) raw_memory + ocp_qp_osqp_opts_calculate_size(config_, dims_) == c_ptr);
 
@@ -977,7 +977,12 @@ static int osqp_init_data(OSQPData *data, OSQPSettings *settings, OSQPWorkspace 
     set_rho_vec(work);
 
     // Load linear system solver
-    if (load_linsys_solver(work->settings->linsys_solver)) return 0;
+    if (load_linsys_solver(work->settings->linsys_solver))
+    {
+        c_eprint("%s linear system solver not available.\nTried to obtain it from shared library",
+        LINSYS_SOLVER_NAME[work->settings->linsys_solver]);
+        return 0;
+    }
 
     // Initialize linear system solver structure
     work->linsys_solver = init_linsys_solver(work->data->P, work->data->A, work->settings->sigma,
@@ -1025,8 +1030,9 @@ static int osqp_init_data(OSQPData *data, OSQPSettings *settings, OSQPWorkspace 
 
 void *ocp_qp_osqp_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
+    UNUSED(opts_);
+
     ocp_qp_dims *dims = dims_;
-    ocp_qp_osqp_opts *opts = opts_;
     ocp_qp_osqp_memory *mem;
 
     int n = acados_osqp_num_vars(dims);
@@ -1118,7 +1124,7 @@ int ocp_qp_osqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
 
 static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_osqp_memory *mem)
 {
-    int ii, jj, kk, nn = 0, mm, con_start = 0, bnd_start = 0;
+    int ii, kk, nn = 0, mm, con_start = 0, bnd_start = 0;
     ocp_qp_dims *dims = in->dim;
     OSQPSolution *sol = mem->osqp_work->solution;
 
