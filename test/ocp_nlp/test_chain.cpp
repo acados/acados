@@ -1816,7 +1816,7 @@ TEST_CASE("chain example", "[NLP solver]")
                                             // , "DENSE_OOQP"
                                             // , "SPARSE_OOQP"
 #endif
-#ifdef ACADOS_WITH_OOQP
+#ifdef ACADOS_WITH_OSQP
                                             , "SPARSE_OSQP"
 #endif
 #ifdef ACADOS_WITH_QORE
