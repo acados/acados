@@ -181,13 +181,15 @@ sim.C_sim_ext_fun
 
 
 %% closed loop simulation
-n_sim = 10;
+n_sim = 100;
 x_sim = zeros(nx, n_sim+1);
 x_sim(:,1) = zeros(nx,1); x_sim(1:2,1) = [3.5; 3.5];
 u_sim = zeros(nu, n_sim);
 
 x_traj = zeros(nx, ocp_N+1);
 u_traj = zeros(nu, ocp_N);
+
+xn_sim = zeros(nx, 1);
 
 tic;
 for ii=1:n_sim
@@ -204,14 +206,11 @@ for ii=1:n_sim
 	% simulate state
 	% TODO
 	%x_sim(:,ii+1) = x_traj(:,2);
-	x_sim(:,ii)
 	sim.set('x', x_sim(:,ii));
-	u_sim(:,ii)
 	sim.set('u', u_sim(:,ii));
 	sim.solve();
-	sim.get('xn', x_sim(:,ii+1));
-	x_sim(:,ii+1)
-	break
+	sim.get('xn', xn_sim);
+	x_sim(:,ii+1) = xn_sim;
 end
 avg_time_solve = toc/n_sim
 

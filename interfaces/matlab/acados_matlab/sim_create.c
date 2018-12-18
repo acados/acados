@@ -73,9 +73,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	bool sens_forw;
 	char *c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "sens_forw" ) );
 	if (!strcmp(c_ptr, "true"))
-		sens_forw = 1;
+		sens_forw = true;
 	else
-		sens_forw = 0;
+		sens_forw = false;
 //	mexPrintf("\n%d\n", sens_forw);
 	//
 	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
@@ -166,11 +166,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		free(Su);
 		}
 	if(set_T)
+		{
 		sim_in_set(config, dims, in, "T", &T);
+		}
 	if(set_x)
+		{
 		sim_in_set(config, dims, in, "x", x);
+		}
 	if(set_u)
+		{
 		sim_in_set(config, dims, in, "u", u);
+		}
 
 
 	/* out */
