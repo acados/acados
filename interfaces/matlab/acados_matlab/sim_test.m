@@ -7,7 +7,7 @@ clear all
 compile_mex = 'true';
 codgen_model = 'true';
 method = 'irk';
-sens_forw = 'false';
+sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
 
@@ -91,20 +91,16 @@ time_solve = toc
 
 % get TODO with return value !!!!!
 % xn
-xn = zeros(nx, 1);
-sim.get('xn', xn);
+xn = sim.get('xn');
 xn
 % S_forw
-S_forw = zeros(nx, nx+nu);
-sim.get('S_forw', S_forw);
+S_forw = sim.get('S_forw');
 S_forw
 % Sx
-Sx = zeros(nx, nx);
-sim.get('Sx', Sx);
+Sx = sim.get('Sx');
 Sx
 % Su
-Su = zeros(nx, nu);
-sim.get('Su', Su);
+Su = sim.get('Su');
 Su
 
 

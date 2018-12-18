@@ -44,17 +44,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 
-	// TODO implement with LHS !!!!!
-	// value
 	if(!strcmp(field, "x"))
 		{
-		double *x = mxGetPr( prhs[2] );
+		plhs[0] = mxCreateNumericMatrix(nx, N+1, mxDOUBLE_CLASS, mxREAL);
+		double *x = mxGetPr( plhs[0] );
 		for(ii=0; ii<=N; ii++)
 			ocp_nlp_out_get(config, dims, out, ii, "x", x+ii*nx);
 		}
 	else if(!strcmp(field, "u"))
 		{
-		double *u = mxGetPr( prhs[2] );
+		plhs[0] = mxCreateNumericMatrix(nu, N, mxDOUBLE_CLASS, mxREAL);
+		double *u = mxGetPr( plhs[0] );
 		for(ii=0; ii<N; ii++)
 			ocp_nlp_out_get(config, dims, out, ii, "u", u+ii*nu);
 		}

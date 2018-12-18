@@ -98,8 +98,8 @@ classdef acados_ocp < handle
 
 
 
-		function get(obj, field, value)
-			ocp_get(obj.C_ocp, field, value);
+		function value = get(obj, field)
+			value = ocp_get(obj.C_ocp, field);
 		end
 
 

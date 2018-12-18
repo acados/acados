@@ -18,7 +18,7 @@ ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_hpipm';
 ocp_qp_solver_N_pcond = 5;
 %ocp_sim_method = 'erk';
-ocp_sim_method = 'irk';
+ocp_sim_method = 'erk';
 ocp_sim_method_num_stages = 2;
 ocp_sim_method_num_steps = 2;
 
@@ -186,31 +186,26 @@ x_sim = zeros(nx, n_sim+1);
 x_sim(:,1) = zeros(nx,1); x_sim(1:2,1) = [3.5; 3.5];
 u_sim = zeros(nu, n_sim);
 
-x_traj = zeros(nx, ocp_N+1);
-u_traj = zeros(nu, ocp_N);
-
-xn_sim = zeros(nx, 1);
-
 tic;
 for ii=1:n_sim
 	% set x0
 	ocp.set('x0', x_sim(:,ii));
+	% set trajectory initialization
+	% TODO
 	% solver OCP
 	ocp.solve();
 	% get solution
 	% TODO get only one stage
-	ocp.get('x', x_traj);
-	ocp.get('u', u_traj);
+	x_traj = ocp.get('x');
+	u_traj = ocp.get('u');
 	% extract input
 	u_sim(:,ii) = u_traj(:,1);
 	% simulate state
-	% TODO
 	%x_sim(:,ii+1) = x_traj(:,2);
 	sim.set('x', x_sim(:,ii));
 	sim.set('u', u_sim(:,ii));
 	sim.solve();
-	sim.get('xn', xn_sim);
-	x_sim(:,ii+1) = xn_sim;
+	x_sim(:,ii+1) = sim.get('xn');
 end
 avg_time_solve = toc/n_sim
 

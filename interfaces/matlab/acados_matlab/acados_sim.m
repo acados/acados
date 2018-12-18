@@ -78,8 +78,8 @@ classdef acados_sim < handle
 		end
 
 
-		function get(obj, field, value)
-			sim_get(obj.C_sim, field, value);
+		function value = get(obj, field)
+			value = sim_get(obj.C_sim, field);
 		end
 
 

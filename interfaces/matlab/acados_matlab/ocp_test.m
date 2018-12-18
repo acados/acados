@@ -187,10 +187,8 @@ time_solve = toc
 
 
 % get solution
-x = zeros(nx, N+1);
-u = zeros(nu, N);
-ocp.get('x', x);
-ocp.get('u', u);
+x = ocp.get('x');
+u = ocp.get('u');
 
 u
 x
