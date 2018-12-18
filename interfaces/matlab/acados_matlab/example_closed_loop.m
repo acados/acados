@@ -186,12 +186,16 @@ x_sim = zeros(nx, n_sim+1);
 x_sim(:,1) = zeros(nx,1); x_sim(1:2,1) = [3.5; 3.5];
 u_sim = zeros(nu, n_sim);
 
+x_traj_init = zeros(nx, ocp_N+1);
+u_traj_init = zeros(nu, ocp_N);
+
 tic;
 for ii=1:n_sim
 	% set x0
 	ocp.set('x0', x_sim(:,ii));
 	% set trajectory initialization
-	% TODO
+	ocp.set('x_init', x_traj_init);
+	ocp.set('u_init', u_traj_init);
 	% solver OCP
 	ocp.solve();
 	% get solution
