@@ -14,10 +14,10 @@ nlp_solver = 'sqp';
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_N_pcond = 5;
-%sim_solver = 'erk';
-sim_solver = 'irk';
-sim_solver_num_stages = 4;
-sim_solver_num_steps = 3;
+%sim_method = 'erk';
+sim_method = 'irk';
+sim_method_num_stages = 4;
+sim_method_num_steps = 3;
 
 
 
@@ -102,7 +102,7 @@ ocp_model.set('Wm', Wm);
 ocp_model.set('yrl', yrl);
 ocp_model.set('yrm', yrm);
 % dynamics
-if (strcmp(sim_solver, 'erk'))
+if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'expl');
 	ocp_model.set('dyn_expr', model.expr_expl);
 	ocp_model.set('sym_x', model.sym_x);
@@ -153,9 +153,9 @@ ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
 end
-ocp_opts.set('sim_solver', sim_solver);
-ocp_opts.set('sim_solver_num_stages', sim_solver_num_stages);
-ocp_opts.set('sim_solver_num_steps', sim_solver_num_steps);
+ocp_opts.set('sim_method', sim_method);
+ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
+ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 
 ocp_opts.opts_struct
 

@@ -15,16 +15,16 @@ acados_matlab_lib_path = ['-L' acados_folder, 'interfaces/matlab/acados_matlab/'
 %% select files to compile
 mex_files = {};
 % dynamics
-if (strcmp(opts_struct.scheme, 'erk'))
+if (strcmp(opts_struct.method, 'erk'))
 	mex_files = {mex_files{:},
 		'sim_expl_ext_fun_create.c' % TODO create sim_set_ext_fun_expl
 		};
-elseif (strcmp(opts_struct.scheme, 'irk'))
+elseif (strcmp(opts_struct.method, 'irk'))
 	mex_files = {mex_files{:},
 		'sim_impl_ext_fun_create.c' % TODO create sim_set_ext_fun_impl
 		};
 else
-	fprintf('\ncodegen_model: scheme not supported: %s\n', opts_struct.scheme);
+	fprintf('\ncodegen_model: method not supported: %s\n', opts_struct.method);
 end
 
 % to avoid warining on R2017a

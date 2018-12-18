@@ -65,12 +65,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// opts_struct
 
+	//
 	int num_stages = mxGetScalar( mxGetField( prhs[1], 0, "num_stages" ) );
+	//
 	int num_steps = mxGetScalar( mxGetField( prhs[1], 0, "num_steps" ) );
-	bool sens_forw = mxGetScalar( mxGetField( prhs[1], 0, "sens_forw" ) );
+	//
+	bool sens_forw;
+	char *c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "sens_forw" ) );
+	if (!strcmp(c_ptr, "true"))
+		sens_forw = 1;
+	else
+		sens_forw = 0;
 //	mexPrintf("\n%d\n", sens_forw);
-	char *scheme = mxArrayToString( mxGetField( prhs[1], 0, "scheme" ) );
-//	mexPrintf("\n%s\n", scheme);
+	//
+	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
+//	mexPrintf("\n%s\n", method);
 
 
 
@@ -107,19 +116,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* plan & config */
 	sim_solver_plan plan;
 
-	if(!strcmp(scheme, "erk"))
+	if(!strcmp(method, "erk"))
 		{
-//		mexPrintf("\n%s\n", scheme);
+//		mexPrintf("\n%s\n", method);
 		plan.sim_solver = ERK;
 		}
-	else if(!strcmp(scheme, "irk"))
+	else if(!strcmp(method, "irk"))
 		{
-//		mexPrintf("\n%s\n", scheme);
+//		mexPrintf("\n%s\n", method);
 		plan.sim_solver = IRK;
 		}
 	else
 		{
-		mexPrintf("\nscheme not supported %s\n", scheme);
+		mexPrintf("\nmethod not supported %s\n", method);
 		return;
 		}
 

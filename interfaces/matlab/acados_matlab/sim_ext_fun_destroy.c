@@ -26,8 +26,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// TODO use them !!!
 	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
 //	mexPrintf("\n%d\n", sens_forw);
-	char *scheme = mxArrayToString( mxGetField( prhs[0], 0, "scheme" ) );
-//	mexPrintf("\n%s\n", scheme);
+	char *method = mxArrayToString( mxGetField( prhs[0], 0, "method" ) );
+//	mexPrintf("\n%s\n", method);
 
 
 	// TODO check for empty struct member
@@ -35,7 +35,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* free memory */
 
-	if(!strcmp(scheme, "erk"))
+	if(!strcmp(method, "erk"))
 		{
 		// C_sim_ext_fun
 
@@ -55,7 +55,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		free(expl_ode_fun);
 		free(expl_vde_for);
 		}
-	else if(!strcmp(scheme, "irk"))
+	else if(!strcmp(method, "irk"))
 		{
 		// C_sim_ext_fun
 
@@ -79,7 +79,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nscheme not supported %s\n", scheme);
+		mexPrintf("\nmethod not supported %s\n", method);
 		return;
 		}
 

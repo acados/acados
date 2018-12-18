@@ -256,9 +256,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	char * nlp_solver;
 	char * qp_solver;
 	int qp_solver_N_pcond;			bool set_qp_solver_N_pcond = false;
-	char *sim_solver;
-	int sim_solver_num_stages;		bool set_sim_solver_num_stages = false;
-	int sim_solver_num_steps;		bool set_sim_solver_num_steps = false;
+	char *sim_method;
+	int sim_method_num_stages;		bool set_sim_method_num_stages = false;
+	int sim_method_num_steps;		bool set_sim_method_num_steps = false;
 
 	// param_scheme_NN
 	if(mxGetField( prhs[1], 0, "param_scheme_N" )!=NULL)
@@ -283,20 +283,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		set_qp_solver_N_pcond = true;
 		qp_solver_N_pcond = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_N_pcond" ) );
 		}
-	// sim_solver
+	// sim_method
 	// TODO check
-	sim_solver = mxArrayToString( mxGetField( prhs[1], 0, "sim_solver" ) );
-	// sim_solver_num_stages
-	if(mxGetField( prhs[1], 0, "sim_solver_num_stages" )!=NULL)
+	sim_method = mxArrayToString( mxGetField( prhs[1], 0, "sim_method" ) );
+	// sim_method_num_stages
+	if(mxGetField( prhs[1], 0, "sim_method_num_stages" )!=NULL)
 		{
-		set_sim_solver_num_stages = true;
-		sim_solver_num_stages = mxGetScalar( mxGetField( prhs[1], 0, "sim_solver_num_stages" ) );
+		set_sim_method_num_stages = true;
+		sim_method_num_stages = mxGetScalar( mxGetField( prhs[1], 0, "sim_method_num_stages" ) );
 		}
-	// sim_solver_num_steps
-	if(mxGetField( prhs[1], 0, "sim_solver_num_steps" )!=NULL)
+	// sim_method_num_steps
+	if(mxGetField( prhs[1], 0, "sim_method_num_steps" )!=NULL)
 		{
-		set_sim_solver_num_steps = true;
-		sim_solver_num_steps = mxGetScalar( mxGetField( prhs[1], 0, "sim_solver_num_steps" ) );
+		set_sim_method_num_steps = true;
+		sim_method_num_steps = mxGetScalar( mxGetField( prhs[1], 0, "sim_method_num_steps" ) );
 		}
 
 
@@ -362,17 +362,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 //		plan->nlp_dynamics[ii] = DISCRETE_MODEL;
 		plan->nlp_dynamics[ii] = CONTINUOUS_MODEL;
-		if(!strcmp(sim_solver, "erk"))
+		if(!strcmp(sim_method, "erk"))
 			{
 			plan->sim_solver_plan[ii].sim_solver = ERK;
 			}
-		else if(!strcmp(sim_solver, "irk"))
+		else if(!strcmp(sim_method, "irk"))
 			{
 			plan->sim_solver_plan[ii].sim_solver = IRK;
 			}
 		else
 			{
-			mexPrintf("\nsim_scheme not supported %s\n", sim_solver);
+			mexPrintf("\nsim_method not supported %s\n", sim_method);
 			return;
 			}
 //		plan->sim_solver_plan[ii].sim_solver = LIFTED_IRK;
@@ -476,20 +476,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		ocp_nlp_opts_set(config, opts, "pcond_N2", &qp_solver_N_pcond);
 		}
-	// sim_solver_num_stages
-	if(set_sim_solver_num_stages)
+	// sim_method_num_stages
+	if(set_sim_method_num_stages)
 		{
 		for(ii=0; ii<N; ii++)
 			{
-			ocp_nlp_dynamics_opts_set(config, opts, ii, "num_stages", &sim_solver_num_stages);
+			ocp_nlp_dynamics_opts_set(config, opts, ii, "num_stages", &sim_method_num_stages);
 			}
 		}
-	// sim_solver_num_steps
-	if(set_sim_solver_num_steps)
+	// sim_method_num_steps
+	if(set_sim_method_num_steps)
 		{
 		for(ii=0; ii<N; ii++)
 			{
-			ocp_nlp_dynamics_opts_set(config, opts, ii, "num_steps", &sim_solver_num_steps);
+			ocp_nlp_dynamics_opts_set(config, opts, ii, "num_steps", &sim_method_num_steps);
 			}
 		}
 

@@ -15,16 +15,16 @@ acados_matlab_lib_path = ['-L' acados_folder, 'interfaces/matlab/acados_matlab/'
 %% select files to compile
 mex_files = {};
 % dynamics
-if (strcmp(opts_struct.sim_solver, 'erk'))
+if (strcmp(opts_struct.sim_method, 'erk'))
 	mex_files = {mex_files{:},
 		'ocp_set_ext_fun_expl.c'
 		};
-elseif (strcmp(opts_struct.sim_solver, 'irk'))
+elseif (strcmp(opts_struct.sim_method, 'irk'))
 	mex_files = {mex_files{:},
 		'ocp_set_ext_fun_impl.c'
 		};
 else
-	fprintf('\ncodegen_model: sim_solver not supported: %s\n', opts_struct.sim_solver);
+	fprintf('\ncodegen_model: sim_method not supported: %s\n', opts_struct.sim_method);
 end
 % nonlinear constraints
 if ((isfield(model_struct, 'nh') && model_struct.nh>0))

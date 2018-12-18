@@ -1,17 +1,15 @@
 %% test of native matlab interface
 clear all
 
-%% compile mex files
-sim_compile_mex();
-
 
 
 %% arguments
-scheme = 'erk';
+compile_mex = 'true';
+codgen_model = 'true';
+method = 'erk';
 sens_forw = 'true';
 num_stages = 4;
 num_steps = 3;
-codgen_model = 'true';
 
 
 
@@ -28,7 +26,7 @@ nu = model.nu;
 %% acados sim model
 sim_model = acados_sim_model();
 sim_model.set('T', 0.5);
-if (strcmp(scheme, 'erk'))
+if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'expl');
 	sim_model.set('dyn_expr', model.expr_expl);
 	sim_model.set('sym_x', model.sym_x);
@@ -59,10 +57,11 @@ end
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
+sim_opts.set('compile_mex', compile_mex);
 sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
-sim_opts.set('scheme', scheme);
+sim_opts.set('method', method);
 sim_opts.set('sens_forw', sens_forw);
 
 

@@ -31,8 +31,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
 //	mexPrintf("\n%d\n", sens_forw);
-	char *scheme = mxArrayToString( mxGetField( prhs[0], 0, "scheme" ) );
-//	mexPrintf("\n%s\n", scheme);
+	char *method = mxArrayToString( mxGetField( prhs[0], 0, "method" ) );
+//	mexPrintf("\n%s\n", method);
 
 
 
@@ -76,7 +76,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 	// TODO templetize the casadi function names !!!
-	if(!strcmp(scheme, "irk"))
+	if(!strcmp(method, "irk"))
 		{
 		// impl_ode_fun
 		impl_ode_fun = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
@@ -125,7 +125,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nsim_impl_ext_fun_create: scheme not supported %s\n", scheme);
+		mexPrintf("\nsim_impl_ext_fun_create: method not supported %s\n", method);
 		return;
 		}
 	

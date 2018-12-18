@@ -43,8 +43,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 //	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
 //	mexPrintf("\n%d\n", sens_forw);
-//	char *sim_solver = mxArrayToString( mxGetField( prhs[2], 0, "sim_solver" ) );
-//	mexPrintf("\n%s\n", sim_solver);
+//	char *sim_method = mxArrayToString( mxGetField( prhs[2], 0, "sim_method" ) );
+//	mexPrintf("\n%s\n", sim_method);
 
 
 

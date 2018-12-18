@@ -35,8 +35,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 //	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
 //	mexPrintf("\n%d\n", sens_forw);
-	char *sim_solver = mxArrayToString( mxGetField( prhs[2], 0, "sim_solver" ) );
-//	mexPrintf("\n%s\n", sim_solver);
+	char *sim_method = mxArrayToString( mxGetField( prhs[2], 0, "sim_method" ) );
+//	mexPrintf("\n%s\n", sim_method);
 
 
 
@@ -50,7 +50,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	external_function_casadi *ext_fun_ptr;
 
 	// TODO templetize the casadi function names !!!
-	if(!strcmp(sim_solver, "irk"))
+	if(!strcmp(sim_method, "irk"))
 		{
 		// impl_ode_fun
 		ext_fun_ptr = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
@@ -99,7 +99,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nocp_set_ext_fun_impl: sim_solver not supported %s\n", sim_solver);
+		mexPrintf("\nocp_set_ext_fun_impl: sim_method not supported %s\n", sim_method);
 		return;
 		}
 	
