@@ -611,6 +611,7 @@ void *ocp_qp_osqp_opts_assign(void *config_, void *dims_, void *raw_memory)
     c_ptr += sizeof(OSQPSettings);
 
     opts->verbose = 0;  // default value, disable printing
+    opts->polish = 1; // default value, enable polishing
 
     assert((char *) raw_memory + ocp_qp_osqp_opts_calculate_size(config_, dims_) == c_ptr);
 
@@ -625,6 +626,7 @@ void ocp_qp_osqp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     osqp_set_default_settings(opts->osqp_opts);
     opts->osqp_opts->verbose = opts->verbose;
+    opts->osqp_opts->polish = opts->polish;
 
     return;
 }
