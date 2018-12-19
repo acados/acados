@@ -321,6 +321,43 @@ int casadi_erk4_chain_nm7_n_out();
 int casadi_erk4_chain_nm8_n_out();
 int casadi_erk4_chain_nm9_n_out();
 
+/* external cost */
+int chain_nm_2_external_cost(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int chain_nm_3_external_cost(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int chain_nm_4_external_cost(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int chain_nm_5_external_cost(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int chain_nm_6_external_cost(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+
+int chain_nm_2_external_cost_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+int chain_nm_3_external_cost_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+int chain_nm_4_external_cost_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+int chain_nm_5_external_cost_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+int chain_nm_6_external_cost_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+
+const int* chain_nm_2_external_cost_sparsity_in(int i);
+const int* chain_nm_3_external_cost_sparsity_in(int i);
+const int* chain_nm_4_external_cost_sparsity_in(int i);
+const int* chain_nm_5_external_cost_sparsity_in(int i);
+const int* chain_nm_6_external_cost_sparsity_in(int i);
+
+const int* chain_nm_2_external_cost_sparsity_out(int i);
+const int* chain_nm_3_external_cost_sparsity_out(int i);
+const int* chain_nm_4_external_cost_sparsity_out(int i);
+const int* chain_nm_5_external_cost_sparsity_out(int i);
+const int* chain_nm_6_external_cost_sparsity_out(int i);
+
+int chain_nm_2_external_cost_n_in();
+int chain_nm_3_external_cost_n_in();
+int chain_nm_4_external_cost_n_in();
+int chain_nm_5_external_cost_n_in();
+int chain_nm_6_external_cost_n_in();
+
+int chain_nm_2_external_cost_n_out();
+int chain_nm_3_external_cost_n_out();
+int chain_nm_4_external_cost_n_out();
+int chain_nm_5_external_cost_n_out();
+int chain_nm_6_external_cost_n_out();
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
