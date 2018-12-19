@@ -98,8 +98,22 @@ classdef acados_ocp < handle
 
 
 
-		function value = get(obj, field)
-			value = ocp_get(obj.C_ocp, field);
+%		function value = get(obj, field)
+%			value = ocp_get(obj.C_ocp, field);
+%		end
+		function value = get(varargin)
+			if nargin==2
+				obj = varargin{1};
+				field = varargin{2};
+				value = ocp_get(obj.C_ocp, field);
+			elseif nargin==3
+				obj = varargin{1};
+				field = varargin{2};
+				stage = varargin{3};
+				value = ocp_get(obj.C_ocp, field, stage);
+			else
+				disp('acados_ocp.get: wrong number of input arguments (1 or 2 allowed)');
+			end
 		end
 
 

@@ -190,27 +190,36 @@ x_traj_init = zeros(nx, ocp_N+1);
 u_traj_init = zeros(nu, ocp_N);
 
 tic;
+
 for ii=1:n_sim
+
 	% set x0
 	ocp.set('x0', x_sim(:,ii));
+
 	% set trajectory initialization
 	ocp.set('x_init', x_traj_init);
 	ocp.set('u_init', u_traj_init);
-	% solver OCP
+
+	% solve OCP
 	ocp.solve();
+
 	% get solution
-	% TODO get only one stage
-	x_traj = ocp.get('x');
-	u_traj = ocp.get('u');
-	% extract input
-	u_sim(:,ii) = u_traj(:,1);
-	% simulate state
-	%x_sim(:,ii+1) = x_traj(:,2);
+	%x_traj = ocp.get('x');
+	%u_traj = ocp.get('u');
+	u_sim(:,ii) = ocp.get('u', 0);
+
+	% set initial state of sim
 	sim.set('x', x_sim(:,ii));
+	% set input in sim
 	sim.set('u', u_sim(:,ii));
+
+	% simulate state
 	sim.solve();
+
+	% get new state
 	x_sim(:,ii+1) = sim.get('xn');
 end
+
 avg_time_solve = toc/n_sim
 
 
