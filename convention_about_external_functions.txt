@@ -13,11 +13,11 @@ This file contains the description of all external functions interfaced to acado
 external function: ext_cost
 
 inputs:
-0) [u; x]    size: nu+nx    type: COLMAJ
-
+0) [x]    size: nx    type: BLASFEO_DVEC_ARGS
+1) [u]    size: nu    type: BLASFEO_DVEC_ARGS
 outputs:
-0) [grad_u; grad_x]    size: nu+nx    type: COLMAJ
-1) [hess_uu, hess_ux; hess_xu; hess_xx]    size: (nu+nx)*(nu+nx)    type: COLMAJ
+0) [grad_u; grad_x]    size: nu+nx    type: BLASFEO_DVEC
+1) [hess_uu, hess_ux; hess_xu; hess_xx]    size: (nu+nx)*(nu+nx)    type: BLASFEO_DMAT
 
 
 

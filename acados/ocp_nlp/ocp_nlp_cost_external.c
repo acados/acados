@@ -400,15 +400,25 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     int ns = dims->ns;
 
     /* specify input types and pointers for external cost function */
-    ext_fun_arg_t ext_fun_type_in[3];
-    void *ext_fun_in[3];
-    ext_fun_arg_t ext_fun_type_out[3];
-    void *ext_fun_out[3];
+    // TODO(oj): add z
+    ext_fun_arg_t ext_fun_type_in[2];
+    void *ext_fun_in[2];
+    ext_fun_arg_t ext_fun_type_out[2];
+    void *ext_fun_out[2];
 
 
     // INPUT
-    ext_fun_type_in[0] = BLASFEO_DVEC;
-    ext_fun_in[0] = memory->ux;  // ux: nu+nx
+    struct blasfeo_dvec_args u_in;  // input u
+    u_in.x = memory->ux;
+    u_in.xi = 0;
+    struct blasfeo_dvec_args x_in;  // input x
+    x_in.x = memory->ux;
+    x_in.xi = nu;
+
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &x_in;
+    ext_fun_in[1] = &u_in;
 
     // OUTPUT
     ext_fun_type_out[0] = BLASFEO_DVEC;
@@ -428,7 +438,6 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
     // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
     // blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
-    // exit(1);
 
     return;
 }
