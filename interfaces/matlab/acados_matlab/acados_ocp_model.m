@@ -22,13 +22,16 @@ classdef acados_ocp_model < handle
 		sym_z
 		% cost
 		cost_type
-		Vul
-		Vxl
-		Vxm
-		Wl
-		Wm
-		yrl
-		yrm
+		cost_e_type
+		expr_y
+		expr_y_e
+		Vu
+		Vx
+		Vx_e
+		W
+		W_e
+		yr
+		yr_e
 		% dynamics
 		dyn_type
 		expr_f
@@ -60,11 +63,17 @@ classdef acados_ocp_model < handle
 		function obj = acados_ocp_model()
 			% default values
 			obj.name = 'ocp_model';
+			obj.cost_type = 'ls';
+			obj.cost_e_type = 'ls';
+			obj.dyn_type = 'implicit';
 			obj.constr_type = 'bgh';
 			% model structure
 			obj.model_struct = struct;
 			% initialize model struct
 			obj.model_struct.name = obj.name;
+			obj.model_struct.cost_type = obj.cost_type;
+			obj.model_struct.cost_e_type = obj.cost_type;
+			obj.model_struct.dyn_type = obj.dyn_type;
 			obj.model_struct.constr_type = obj.constr_type;
 		end
 
@@ -118,27 +127,36 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'cost_type'))
 				obj.cost_type = value;
 				obj.model_struct.cost_type = value;
-			elseif (strcmp(field, 'Vul'))
-				obj.Vul = value;
-				obj.model_struct.Vul = value;
-			elseif (strcmp(field, 'Vxl'))
-				obj.Vxl = value;
-				obj.model_struct.Vxl = value;
-			elseif (strcmp(field, 'Vxm'))
-				obj.Vxm = value;
-				obj.model_struct.Vxm = value;
-			elseif (strcmp(field, 'Wl'))
-				obj.Wl = value;
-				obj.model_struct.Wl = value;
-			elseif (strcmp(field, 'Wm'))
-				obj.Wm = value;
-				obj.model_struct.Wm = value;
-			elseif (strcmp(field, 'yrl'))
-				obj.yrl = value;
-				obj.model_struct.yrl = value;
-			elseif (strcmp(field, 'yrm'))
-				obj.yrm = value;
-				obj.model_struct.yrm = value;
+			elseif (strcmp(field, 'cost_e_type'))
+				obj.cost_e_type = value;
+				obj.model_struct.cost_e_type = value;
+			elseif (strcmp(field, 'expr_y'))
+				obj.expr_y = value;
+				obj.model_struct.expr_y = value;
+			elseif (strcmp(field, 'expr_y_e'))
+				obj.expr_y_e = value;
+				obj.model_struct.expr_y_e = value;
+			elseif (strcmp(field, 'Vu'))
+				obj.Vu = value;
+				obj.model_struct.Vu = value;
+			elseif (strcmp(field, 'Vx'))
+				obj.Vx = value;
+				obj.model_struct.Vx = value;
+			elseif (strcmp(field, 'Vx_e'))
+				obj.Vx_e = value;
+				obj.model_struct.Vx_e = value;
+			elseif (strcmp(field, 'W'))
+				obj.W = value;
+				obj.model_struct.W = value;
+			elseif (strcmp(field, 'W_e'))
+				obj.W_e = value;
+				obj.model_struct.W_e = value;
+			elseif (strcmp(field, 'yr'))
+				obj.yr = value;
+				obj.model_struct.yr = value;
+			elseif (strcmp(field, 'yr_e'))
+				obj.yr_e = value;
+				obj.model_struct.yr_e = value;
 			% dynamics
 			elseif (strcmp(field, 'dyn_type'))
 				obj.dyn_type = value;
@@ -147,6 +165,9 @@ classdef acados_ocp_model < handle
 				obj.expr_f = value;
 				obj.model_struct.expr_f = value;
 			% constraints
+			elseif (strcmp(field, 'constr_type'))
+				obj.constr_type = value;
+				obj.model_struct.constr_type = value;
 			elseif (strcmp(field, 'x0'))
 				obj.x0 = value;
 				obj.model_struct.x0 = value;

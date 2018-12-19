@@ -18,6 +18,7 @@ qp_solver_N_pcond = 5;
 sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
+cost_type = 'ls';
 
 
 
@@ -48,13 +49,13 @@ else
 	nh = nu+nx;
 end
 % cost
-Vul = zeros(nyl, nu); for ii=1:nu Vul(ii,ii)=1.0; end % input-to-output matrix in lagrange term
-Vxl = zeros(nyl, nx); for ii=1:nx Vxl(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
-Vxm = zeros(nym, nx); for ii=1:nx Vxm(ii,ii)=1.0; end % state-to-output matrix in mayer term
-Wl = eye(nyl); for ii=1:nu Wl(ii,ii)=2.0; end % weight matrix in lagrange term
-Wm = eye(nym); % weight matrix in mayer term
-yrl = zeros(nyl, 1); % output reference in lagrange term
-yrm = zeros(nym, 1); % output reference in mayer term
+Vu = zeros(nyl, nu); for ii=1:nu Vul(ii,ii)=1.0; end % input-to-output matrix in lagrange term
+Vx = zeros(nyl, nx); for ii=1:nx Vxl(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
+Vx_e = zeros(nym, nx); for ii=1:nx Vxm(ii,ii)=1.0; end % state-to-output matrix in mayer term
+W = eye(nyl); for ii=1:nu Wl(ii,ii)=2.0; end % weight matrix in lagrange term
+W_e = eye(nym); % weight matrix in mayer term
+yr = zeros(nyl, 1); % output reference in lagrange term
+yr_e = zeros(nym, 1); % output reference in mayer term
 % constraints
 x0 = zeros(nx, 1); x0(1)=2.5; x0(2)=2.5;
 if (ng>0)
@@ -102,20 +103,22 @@ if isfield(model, 'sym_xdot')
 	ocp_model.set('sym_xdot', model.sym_xdot);
 end
 % cost
-ocp_model.set('Vul', Vul);
-ocp_model.set('Vxl', Vxl);
-ocp_model.set('Vxm', Vxm);
-ocp_model.set('Wl', Wl);
-ocp_model.set('Wm', Wm);
-ocp_model.set('yrl', yrl);
-ocp_model.set('yrm', yrm);
+ocp_model.set('cost_type', cost_type);
+ocp_model.set('cost_e_type', cost_type);
+ocp_model.set('Vu', Vu);
+ocp_model.set('Vx', Vx);
+ocp_model.set('Vx_e', Vx_e);
+ocp_model.set('W', W);
+ocp_model.set('W_e', W_e);
+ocp_model.set('yr', yr);
+ocp_model.set('yr_e', yr_e);
 % dynamics
 if (strcmp(sim_method, 'erk'))
-	ocp_model.set('dyn_type', 'expl');
-	ocp_model.set('expr_f', model.expr_expl);
+	ocp_model.set('dyn_type', 'explicit');
+	ocp_model.set('expr_f', model.expr_f_expl);
 else % irk
-	ocp_model.set('dyn_type', 'impl');
-	ocp_model.set('expr_f', model.expr_impl);
+	ocp_model.set('dyn_type', 'implicit');
+	ocp_model.set('expr_f', model.expr_f_impl);
 end
 % constraints
 ocp_model.set('x0', x0);

@@ -48,4 +48,19 @@ const int *ocp_model_h_fun_jac_ut_xt_sparsity_out(int);
 int ocp_model_h_fun_jac_ut_xt_n_in();
 int ocp_model_h_fun_jac_ut_xt_n_out();
 
+// nonlinear least squares y
+int ocp_model_y_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ocp_model_y_fun_jac_ut_xt_work(int *, int *, int *, int *);
+const int *ocp_model_y_fun_jac_ut_xt_sparsity_in(int);
+const int *ocp_model_y_fun_jac_ut_xt_sparsity_out(int);
+int ocp_model_y_fun_jac_ut_xt_n_in();
+int ocp_model_y_fun_jac_ut_xt_n_out();
+
+// nonlinear least squares y_e
+int ocp_model_y_e_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ocp_model_y_e_fun_jac_ut_xt_work(int *, int *, int *, int *);
+const int *ocp_model_y_e_fun_jac_ut_xt_sparsity_in(int);
+const int *ocp_model_y_e_fun_jac_ut_xt_sparsity_out(int);
+int ocp_model_y_e_fun_jac_ut_xt_n_in();
+int ocp_model_y_e_fun_jac_ut_xt_n_out();
 

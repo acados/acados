@@ -15,13 +15,13 @@ nu = 0;
 sym_x = MX.sym('x', nx, 1); % states
 sym_xdot = MX.sym('xdot',size(sym_x)); %state derivatives
 
-expr_expl = [1.0; -1.0; 0.5; 0.1].*sym_x;
-expr_impl = expr_expl - sym_xdot;
+expr_f_expl = [1.0; -1.0; 0.5; 0.1].*sym_x;
+expr_f_impl = expr_f_expl - sym_xdot;
 
 model.nx = nx;
 model.nu = nu;
 model.sym_x = sym_x;
 model.sym_xdot = sym_xdot;
-model.expr_expl = expr_expl;
-model.expr_impl = expr_impl;
+model.expr_f_expl = expr_f_expl;
+model.expr_f_impl = expr_f_impl;
 

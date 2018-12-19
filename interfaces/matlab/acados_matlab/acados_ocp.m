@@ -48,12 +48,21 @@ classdef acados_ocp < handle
 					return;
 				end
 				% nonlinear constraints
-				if ((isfield(obj.model_struct, 'nh') && obj.model_struct.nh>0))
+				if (strcmp(obj.model_struct.constr_type, 'bgh') && (isfield(obj.model_struct, 'nh') && obj.model_struct.nh>0))
 					% generate c for function and derivatives using casadi
 					generate_c_code_nonlinear_constr(obj.model_struct, obj.opts_struct);
 					% sources list
 					c_sources = [c_sources, 'ocp_model_h_fun_jac_ut_xt.c '];
 				end
+				% nonlinear least squares
+				if (strcmp(obj.model_struct.cost_type, 'nls') || strcmp(obj.model_struct.cost_type, 'nls'))
+					% generate c for function and derivatives using casadi
+					generate_c_code_nonlinear_least_squares(obj.model_struct, obj.opts_struct);
+					% sources list
+					c_sources = [c_sources, 'ocp_model_y_fun_jac_ut_xt.c '];
+					c_sources = [c_sources, 'ocp_model_y_e_fun_jac_ut_xt.c '];
+				end
+				% TODO
 				lib_name = ['libocp_model.so'];
 				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
@@ -76,8 +85,12 @@ classdef acados_ocp < handle
 				return;
 			end
 			% nonlinear constraints
-			if ((isfield(obj.model_struct, 'nh') && obj.model_struct.nh>0))
+			if (strcmp(obj.model_struct.constr_type, 'bgh') && (isfield(obj.model_struct, 'nh') && obj.model_struct.nh>0))
 				ocp_set_ext_fun_h(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+			end
+			% nonlinear least squares
+			if (strcmp(obj.model_struct.cost_type, 'nls') || strcmp(obj.model_struct.cost_type, 'nls'))
+				ocp_set_ext_fun_y(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 
 			% set in model

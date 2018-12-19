@@ -58,7 +58,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	external_function_casadi *ext_fun_ptr;
 
 	// TODO templetize the casadi function names !!!
-	if (set_h && nh>0)
+	if(set_h && nh>0)
 		{
 		// h_fun_jac_ut_xt
 		ext_fun_ptr = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
@@ -74,7 +74,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		ptr = mxGetData(h_fun_jac_ut_xt_mat);
 		ptr[0] = (long long) ext_fun_ptr;
 		mxSetField((mxArray*) prhs[0], 0, "h_fun_jac_ut_xt", h_fun_jac_ut_xt_mat);
-
 		}
 	
 	return;

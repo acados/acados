@@ -27,8 +27,8 @@ nu = model.nu;
 sim_model = acados_sim_model();
 sim_model.set('T', 0.5);
 if (strcmp(method, 'erk'))
-	sim_model.set('dyn_type', 'expl');
-	sim_model.set('expr_f', model.expr_expl);
+	sim_model.set('dyn_type', 'explicit');
+	sim_model.set('expr_f', model.expr_f_expl);
 	sim_model.set('sym_x', model.sym_x);
 	if isfield(model, 'sym_u')
 		sim_model.set('sym_u', model.sym_u);
@@ -36,8 +36,8 @@ if (strcmp(method, 'erk'))
 	sim_model.set('nx', model.nx);
 	sim_model.set('nu', model.nu);
 else % irk
-	sim_model.set('dyn_type', 'impl');
-	sim_model.set('expr_f', model.expr_impl);
+	sim_model.set('dyn_type', 'implicit');
+	sim_model.set('expr_f', model.expr_f_impl);
 	sim_model.set('sym_x', model.sym_x);
 	sim_model.set('sym_xdot', model.sym_xdot);
 	if isfield(model, 'sym_u')

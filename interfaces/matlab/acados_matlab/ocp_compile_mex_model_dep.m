@@ -27,9 +27,15 @@ else
 	fprintf('\ncodegen_model: sim_method not supported: %s\n', opts_struct.sim_method);
 end
 % nonlinear constraints
-if ((isfield(model_struct, 'nh') && model_struct.nh>0))
+if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'nh') && model_struct.nh>0))
 	mex_files = {mex_files{:},
 		'ocp_set_ext_fun_h.c'
+		};
+end
+% nonlinear least squares
+if (strcmp(model_struct.cost_type, 'nls'))
+	mex_files = {mex_files{:},
+		'ocp_set_ext_fun_y.c'
 		};
 end
 

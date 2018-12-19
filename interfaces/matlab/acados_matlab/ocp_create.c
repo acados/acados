@@ -37,14 +37,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int ng;			bool set_ng = false;
 	int nh;			bool set_nh = false;
 	// cost
-	double *Vul;	bool set_Vul = false;
-	double *Vxl;	bool set_Vxl = false;
-	double *Vxm;	bool set_Vxm = false;
-	double *Wl;		bool set_Wl = false;
-	double *Wm;		bool set_Wm = false;
-	double *yrl;	bool set_yrl = false;
-	double *yrm;	bool set_yrm = false;
+	char *cost_type;
+	char *cost_e_type;
+	double *Vu;		bool set_Vu = false;
+	double *Vx;		bool set_Vx = false;
+	double *Vx_e;	bool set_Vx_e = false;
+	double *W;		bool set_W = false;
+	double *W_e;	bool set_W_e = false;
+	double *yr;		bool set_yr = false;
+	double *yr_e;	bool set_yr_e = false;
 	// constraints
+	char *constr_type;
 	double *x0;		bool set_x0 = false;
 	double *Jbx;	bool set_Jbx = false;
 	double *lbx;	bool set_lbx = false;
@@ -58,10 +61,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double *ug;		bool set_ug = false;
 	double *lh;		bool set_lh = false;
 	double *uh;		bool set_uh = false;
+	// constraints
+	char *dyn_type;
 	// trajectory initialization
 	double *x_init; bool set_x_init = false;
 	double *u_init; bool set_u_init = false;
 
+	// dims
 	// T
 	if(mxGetField( prhs[0], 0, "T" )!=NULL)
 		{
@@ -131,47 +137,64 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		set_nh = true;
 		nh = mxGetScalar( mxGetField( prhs[0], 0, "nh" ) );
 		}
-	// Vul
-	if(mxGetField( prhs[0], 0, "Vul" )!=NULL)
+	// cost
+	// cost e_type
+	if(mxGetField( prhs[0], 0, "cost_e_type" )!=NULL)
 		{
-		set_Vul = true;
-		Vul = mxGetPr( mxGetField( prhs[0], 0, "Vul" ) );
+		cost_e_type = mxArrayToString( mxGetField( prhs[0], 0, "cost_e_type" ) );
 		}
-	// Vxl
-	if(mxGetField( prhs[0], 0, "Vxl" )!=NULL)
+	// cost type
+	if(mxGetField( prhs[0], 0, "cost_type" )!=NULL)
 		{
-		set_Vxl = true;
-		Vxl = mxGetPr( mxGetField( prhs[0], 0, "Vxl" ) );
+		cost_type = mxArrayToString( mxGetField( prhs[0], 0, "cost_type" ) );
 		}
-	// Vxm
-	if(mxGetField( prhs[0], 0, "Vxm" )!=NULL)
+	// Vu
+	if(mxGetField( prhs[0], 0, "Vu" )!=NULL)
 		{
-		set_Vxm = true;
-		Vxm = mxGetPr( mxGetField( prhs[0], 0, "Vxm" ) );
+		set_Vu = true;
+		Vu = mxGetPr( mxGetField( prhs[0], 0, "Vu" ) );
 		}
-	// Wl
-	if(mxGetField( prhs[0], 0, "Wl" )!=NULL)
+	// Vx
+	if(mxGetField( prhs[0], 0, "Vx" )!=NULL)
 		{
-		set_Wl = true;
-		Wl = mxGetPr( mxGetField( prhs[0], 0, "Wl" ) );
+		set_Vx = true;
+		Vx = mxGetPr( mxGetField( prhs[0], 0, "Vx" ) );
 		}
-	// Wm
-	if(mxGetField( prhs[0], 0, "Wm" )!=NULL)
+	// Vx_e
+	if(mxGetField( prhs[0], 0, "Vx_e" )!=NULL)
 		{
-		set_Wm = true;
-		Wm = mxGetPr( mxGetField( prhs[0], 0, "Wm" ) );
+		set_Vx_e = true;
+		Vx_e = mxGetPr( mxGetField( prhs[0], 0, "Vx_e" ) );
 		}
-	// yrl
-	if(mxGetField( prhs[0], 0, "yrl" )!=NULL)
+	// W
+	if(mxGetField( prhs[0], 0, "W" )!=NULL)
 		{
-		set_yrl = true;
-		yrl = mxGetPr( mxGetField( prhs[0], 0, "yrl" ) );
+		set_W = true;
+		W = mxGetPr( mxGetField( prhs[0], 0, "W" ) );
 		}
-	// yrm
-	if(mxGetField( prhs[0], 0, "yrm" )!=NULL)
+	// W_e
+	if(mxGetField( prhs[0], 0, "W_e" )!=NULL)
 		{
-		set_yrm = true;
-		yrm = mxGetPr( mxGetField( prhs[0], 0, "yrm" ) );
+		set_W_e = true;
+		W_e = mxGetPr( mxGetField( prhs[0], 0, "W_e" ) );
+		}
+	// yr
+	if(mxGetField( prhs[0], 0, "yr" )!=NULL)
+		{
+		set_yr = true;
+		yr = mxGetPr( mxGetField( prhs[0], 0, "yr" ) );
+		}
+	// yr_e
+	if(mxGetField( prhs[0], 0, "yr_e" )!=NULL)
+		{
+		set_yr_e = true;
+		yr_e = mxGetPr( mxGetField( prhs[0], 0, "yr_e" ) );
+		}
+	// constr
+	// constr type
+	if(mxGetField( prhs[0], 0, "constr_type" )!=NULL)
+		{
+		constr_type = mxArrayToString( mxGetField( prhs[0], 0, "constr_type" ) );
 		}
 	// x0
 	if(mxGetField( prhs[0], 0, "x0" )!=NULL)
@@ -257,6 +280,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		set_x_init = true;
 		x_init = mxGetPr( mxGetField( prhs[0], 0, "x_init" ) );
 		}
+	// dyn
+	// dyn type
+	if(mxGetField( prhs[0], 0, "dyn_type" )!=NULL)
+		{
+		dyn_type = mxArrayToString( mxGetField( prhs[0], 0, "dyn_type" ) );
+		}
+	// trajectory initialization
 	// u_init
 	if(mxGetField( prhs[0], 0, "u_init" )!=NULL)
 		{
@@ -361,44 +391,104 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nnlp_solver not supported %s\n", nlp_solver);
+		mexPrintf("\nnlp_solver not supported: %s\n", nlp_solver);
 		return;
 		}
 	
 	// cost
-	for(ii=0; ii<=N; ii++)
+	if(!strcmp(cost_type, "ls"))
 		{
-		plan->nlp_cost[ii] = LINEAR_LS;
-//		plan->nlp_cost[ii] = NONLINEAR_LS;
+		for(ii=0; ii<N; ii++)
+			{
+			plan->nlp_cost[ii] = LINEAR_LS;
+			}
 		}
-	
-	// dynamics
-	for(ii=0; ii<N; ii++)
+	else if(!strcmp(cost_type, "nls"))
 		{
-//		plan->nlp_dynamics[ii] = DISCRETE_MODEL;
-		plan->nlp_dynamics[ii] = CONTINUOUS_MODEL;
+		for(ii=0; ii<N; ii++)
+			{
+			plan->nlp_cost[ii] = NONLINEAR_LS;
+			}
+		}
+	else
+		{
+		mexPrintf("\ncost_type not supported: %s\n", cost_type);
+		return;
+		}
+	if(!strcmp(cost_e_type, "ls"))
+		{
+		plan->nlp_cost[N] = LINEAR_LS;
+		}
+	else if(!strcmp(cost_e_type, "nls"))
+		{
+		plan->nlp_cost[N] = NONLINEAR_LS;
+		}
+	else
+		{
+		mexPrintf("\ncost_e_type not supported: %s\n", cost_e_type);
+		return;
+		}
+
+	// dynamics
+	if(!strcmp(dyn_type, "explicit"))
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			plan->nlp_dynamics[ii] = CONTINUOUS_MODEL;
+			}
 		if(!strcmp(sim_method, "erk"))
 			{
-			plan->sim_solver_plan[ii].sim_solver = ERK;
-			}
-		else if(!strcmp(sim_method, "irk"))
-			{
-			plan->sim_solver_plan[ii].sim_solver = IRK;
+			for(ii=0; ii<N; ii++)
+				{
+				plan->sim_solver_plan[ii].sim_solver = ERK;
+				}
 			}
 		else
 			{
-			mexPrintf("\nsim_method not supported %s\n", sim_method);
+			mexPrintf("\nsim_method not supported for explicit dynamics: %s\n", sim_method);
+			return;
+			}
+		}
+	else if(!strcmp(dyn_type, "implicit"))
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			plan->nlp_dynamics[ii] = CONTINUOUS_MODEL;
+			}
+		if(!strcmp(sim_method, "irk"))
+			{
+			for(ii=0; ii<N; ii++)
+				{
+				plan->sim_solver_plan[ii].sim_solver = IRK;
+				}
+			}
+		else
+			{
+			mexPrintf("\nsim_method not supported for implicit dynamics: %s\n", sim_method);
 			return;
 			}
 //		plan->sim_solver_plan[ii].sim_solver = LIFTED_IRK;
+		}
+	else // TODO gnsf / discrete / linear
+		{
+//		plan->nlp_dynamics[ii] = DISCRETE_MODEL;
 //		plan->sim_solver_plan[ii].sim_solver = GNSF;
+		mexPrintf("\ndyn_type not supported %s\n", dyn_type);
+		return;
 		}
 	
 	// constraints
-	for(ii=0; ii<=N; ii++)
+	if(!strcmp(constr_type, "bgh"))
 		{
-		plan->nlp_constraints[ii] = BGH;
-//		plan->nlp_constraints[ii] = BGHP;
+		for(ii=0; ii<=N; ii++)
+			{
+			plan->nlp_constraints[ii] = BGH;
+			}
+		}
+	else
+		{
+		mexPrintf("\nconstr_type not supported: %s\n", constr_type);
+		return;
 		}
 
 	// qp solver
@@ -412,7 +502,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nqp_solver not supported %s\n", qp_solver);
+		mexPrintf("\nqp_solver not supported: %s\n", qp_solver);
 		return;
 		}
 
@@ -519,47 +609,81 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double Ts = T/N;
 	for(ii=0; ii<N; ii++)
 		{
-		// TODO make setter for this
+		// TODO make setter for this !!!!!!!!!!!!!!!!!!!!!!!
 		in->Ts[ii] = Ts;
 		}
 
 	// cost: ls
+	if(!strcmp(cost_type, "ls"))
+		{
+		// lagrange term
+		for(ii=0; ii<N; ii++)
+			{
+			if(set_Vu)
+				{
+				ocp_nlp_cost_model_set(config, dims, in, ii, "Vu", Vu);
+				}
+			if(set_Vx)
+				{
+				ocp_nlp_cost_model_set(config, dims, in, ii, "Vx", Vx);
+				}
+			if(set_W)
+				{
+				ocp_nlp_cost_model_set(config, dims, in, ii, "W", W);
+				}
+			if(set_yr)
+				{
+				ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
+				}
+			}
+		}
+	if(!strcmp(cost_e_type, "ls"))
+		{
+		// mayer term
+		if(set_Vx_e)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, N, "Vx", Vx_e);
+			}
+		if(set_W_e)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, N, "W", W_e);
+			}
+		if(set_yr_e)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
+			}
 
-	// lagrange term
-	for(ii=0; ii<N; ii++)
+		}
+	// cost: nls
+	if(!strcmp(cost_type, "nls"))
 		{
-		if(set_Vul)
+		// lagrange term
+		for(ii=0; ii<N; ii++)
 			{
-			ocp_nlp_cost_model_set(config, dims, in, ii, "Vu", Vul);
-			}
-		if(set_Vxl)
-			{
-			ocp_nlp_cost_model_set(config, dims, in, ii, "Vx", Vxl);
-			}
-		if(set_Wl)
-			{
-			ocp_nlp_cost_model_set(config, dims, in, ii, "W", Wl);
-			}
-		if(set_yrl)
-			{
-			ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yrl);
+			if(set_W)
+				{
+				ocp_nlp_cost_model_set(config, dims, in, ii, "W", W);
+				}
+			if(set_yr)
+				{
+				ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
+				}
 			}
 		}
-	// mayer term
-	if(set_Vxm)
+	if(!strcmp(cost_e_type, "nls"))
 		{
-		ocp_nlp_cost_model_set(config, dims, in, N, "Vx", Vxm);
+		// mayer term
+		if(set_W_e)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, N, "W", W_e);
+			}
+		if(set_yr_e)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
+			}
 		}
-	if(set_Wm)
-		{
-		ocp_nlp_cost_model_set(config, dims, in, N, "W", Wm);
-		}
-	if(set_yrm)
-		{
-		ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yrm);
-		}
-	
-	// constraints: b
+
+	// constraints: bgh
 
 	if(set_x0)
 		{
@@ -686,29 +810,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			}
 		}
 
-
-#if 0
-	if(sens_forw==true)
-		{
-//		mexPrintf("\nsens forw true!\n");
-		double *Sx = calloc(nx*nx, sizeof(double));
-		for(ii=0; ii<nx; ii++)
-			Sx[ii*(nx+1)] = 1.0;
-		double *Su = calloc(nx*nu, sizeof(double));
-//		d_print_mat(nx, nx, Sx, nx);
-//		d_print_mat(nx, nu, Su, nx);
-		sim_in_set(config, dims, in, "Sx", Sx);
-		sim_in_set(config, dims, in, "Su", Su);
-		free(Sx);
-		free(Su);
-		}
-	if(set_T)
-		sim_in_set(config, dims, in, "T", &T);
-	if(set_x)
-		sim_in_set(config, dims, in, "x", x);
-	if(set_u)
-		sim_in_set(config, dims, in, "u", u);
-#endif
 
 
 	/* out */
