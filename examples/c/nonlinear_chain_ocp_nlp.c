@@ -17,14 +17,17 @@
  *
  */
 
+// standard
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+// blasfeo
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
+// acados
 #include "acados_c/external_function_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
 
@@ -383,6 +386,93 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 }
 
 
+static void select_external_stage_cost_casadi(int indx, int N, int num_free_masses, external_function_casadi *external_cost)
+{
+	switch (num_free_masses)
+	{
+		case 1:
+			if (indx < N)
+			{
+				external_cost->casadi_fun = &chain_nm_2_external_cost;
+				external_cost->casadi_work = &chain_nm_2_external_cost_work;
+				external_cost->casadi_sparsity_in = &chain_nm_2_external_cost_sparsity_in;
+				external_cost->casadi_sparsity_out = &chain_nm_2_external_cost_sparsity_out;
+				external_cost->casadi_n_in = &chain_nm_2_external_cost_n_in;
+				external_cost->casadi_n_out = &chain_nm_2_external_cost_n_out;
+			}
+			else
+			{
+				printf("external cost not implemented for final stage");
+				exit(1);
+			}
+			break;
+		case 2:
+			if (indx < N)
+			{
+				external_cost->casadi_fun = &chain_nm_3_external_cost;
+				external_cost->casadi_work = &chain_nm_3_external_cost_work;
+				external_cost->casadi_sparsity_in = &chain_nm_3_external_cost_sparsity_in;
+				external_cost->casadi_sparsity_out = &chain_nm_3_external_cost_sparsity_out;
+				external_cost->casadi_n_in = &chain_nm_3_external_cost_n_in;
+				external_cost->casadi_n_out = &chain_nm_3_external_cost_n_out;
+			}
+			else
+			{
+				printf("external cost not implemented for final stage");
+				exit(1);
+			}
+			break;
+		case 3:
+			if (indx < N)
+			{
+				external_cost->casadi_fun = &chain_nm_4_external_cost;
+				external_cost->casadi_work = &chain_nm_4_external_cost_work;
+				external_cost->casadi_sparsity_in = &chain_nm_4_external_cost_sparsity_in;
+				external_cost->casadi_sparsity_out = &chain_nm_4_external_cost_sparsity_out;
+				external_cost->casadi_n_in = &chain_nm_4_external_cost_n_in;
+				external_cost->casadi_n_out = &chain_nm_4_external_cost_n_out;
+			}
+			else
+			{
+				printf("external cost not implemented for final stage");
+				exit(1);
+			}
+			break;
+		case 4:
+			if (indx < N)
+			{
+				external_cost->casadi_fun = &chain_nm_5_external_cost;
+				external_cost->casadi_work = &chain_nm_5_external_cost_work;
+				external_cost->casadi_sparsity_in = &chain_nm_5_external_cost_sparsity_in;
+				external_cost->casadi_sparsity_out = &chain_nm_5_external_cost_sparsity_out;
+				external_cost->casadi_n_in = &chain_nm_5_external_cost_n_in;
+				external_cost->casadi_n_out = &chain_nm_5_external_cost_n_out;
+			}
+			else
+			{
+				printf("external cost not implemented for final stage");
+				exit(1);
+			}
+			break;
+		case 5:
+			if (indx < N)
+			{
+				external_cost->casadi_fun = &chain_nm_6_external_cost;
+				external_cost->casadi_work = &chain_nm_6_external_cost_work;
+				external_cost->casadi_sparsity_in = &chain_nm_6_external_cost_sparsity_in;
+				external_cost->casadi_sparsity_out = &chain_nm_6_external_cost_sparsity_out;
+				external_cost->casadi_n_in = &chain_nm_6_external_cost_n_in;
+				external_cost->casadi_n_out = &chain_nm_6_external_cost_n_out;
+			}
+			else
+			{
+				printf("external cost not implemented for final stage");
+				exit(1);
+			}
+			break;
+	}
+}
+
 
 static void select_ls_stage_cost_jac_casadi(int indx, int N, int num_free_masses, external_function_casadi *ls_cost_jac)
 {
@@ -569,202 +659,6 @@ void read_final_state(const int nx, const int num_free_masses, double *xN)
 }
 
 
-
-// hand-generated external function for externally provided hessian and gradient
-void ext_cost_nm2(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-{
-
-	int ii;
-
-	int nu = 3;
-	int nx = 6;
-
-	int nv = nu+nx;
-
-	// ref
-	double *ref = calloc(nx+nu, sizeof(double));
-	for (ii=0; ii<nu; ii++)
-		ref[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		ref[nu+ii] = xN_nm2[ii];
-
-	// Hessian
-	double *hess = out[1];
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
-	for (ii=0; ii<nu; ii++)
-		hess[ii*(nv+1)] = 1.0;
-	for (; ii<nu+nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-
-	// gradient
-	double *ux = in[0];
-	double *grad = out[0];
-	for (ii=0; ii<nv; ii++)
-		grad[ii] = 0.0;
-	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
-
-    free(ref);
-	return;
-
-}
-
-void ext_cost_nm3(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-{
-
-	int ii;
-
-	int nu = 3;
-	int nx = 12;
-
-	int nv = nu+nx;
-
-	// ref
-    double *ref = calloc(nx+nu, sizeof(double));
-	for (ii=0; ii<nu; ii++)
-		ref[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		ref[nu+ii] = xN_nm3[ii];
-
-	// Hessian
-	double *hess = out[1];
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
-	for (ii=0; ii<nu; ii++)
-		hess[ii*(nv+1)] = 1.0;
-	for (; ii<nu+nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-
-	// gradient
-	double *ux = in[0];
-	double *grad = out[0];
-	for (ii=0; ii<nv; ii++)
-		grad[ii] = 0.0;
-	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
-
-    free(ref);
-	return;
-
-}
-
-void ext_cost_nm4(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-{
-
-	int ii;
-
-	int nu = 3;
-	int nx = 18;
-
-	int nv = nu+nx;
-
-	// ref
-    double *ref = calloc(nx+nu, sizeof(double));
-	for (ii=0; ii<nu; ii++)
-		ref[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		ref[nu+ii] = xN_nm4[ii];
-
-	// Hessian
-	double *hess = out[1];
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
-	for (ii=0; ii<nu; ii++)
-		hess[ii*(nv+1)] = 1.0;
-	for (; ii<nu+nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-
-	// gradient
-	double *ux = in[0];
-	double *grad = out[0];
-	for (ii=0; ii<nv; ii++)
-		grad[ii] = 0.0;
-	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
-
-    free(ref);
-	return;
-
-}
-
-void ext_cost_nm5(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-{
-
-	int ii;
-
-	int nu = 3;
-	int nx = 24;
-
-	int nv = nu+nx;
-
-	// ref
-    double *ref = calloc(nx+nu, sizeof(double));
-	for (ii=0; ii<nu; ii++)
-		ref[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		ref[nu+ii] = xN_nm5[ii];
-
-	// Hessian
-	double *hess = out[1];
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
-	for (ii=0; ii<nu; ii++)
-		hess[ii*(nv+1)] = 1.0;
-	for (; ii<nu+nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-
-	// gradient
-	double *ux = in[0];
-	double *grad = out[0];
-	for (ii=0; ii<nv; ii++)
-		grad[ii] = 0.0;
-	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
-
-    free(ref);
-	return;
-
-}
-
-void ext_cost_nm6(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-{
-
-	int ii;
-
-	int nu = 3;
-	int nx = 30;
-
-	int nv = nu+nx;
-
-	// ref
-    double *ref = calloc(nx+nu, sizeof(double));
-	for (ii=0; ii<nu; ii++)
-		ref[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		ref[nu+ii] = xN_nm6[ii];
-
-	// Hessian
-	double *hess = out[1];
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
-	for (ii=0; ii<nu; ii++)
-		hess[ii*(nv+1)] = 1.0;
-	for (; ii<nu+nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-
-	// gradient
-	double *ux = in[0];
-	double *grad = out[0];
-	for (ii=0; ii<nv; ii++)
-		grad[ii] = 0.0;
-	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
-
-    free(ref);
-	return;
-
-}
 
 
 
@@ -1237,7 +1131,8 @@ int main()
 	// discrete model
 	external_function_casadi *erk4_casadi = malloc(NN*sizeof(external_function_casadi));
 
-	select_dynamics_casadi(NN, NMF, expl_vde_for, impl_ode_fun, impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
+	select_dynamics_casadi(NN, NMF, expl_vde_for, impl_ode_fun, impl_ode_fun_jac_x_xdot,
+	                       impl_ode_fun_jac_x_xdot_u, impl_ode_jac_x_xdot_u, erk4_casadi);
 
 	// forw_vde
 	external_function_casadi_create_array(NN, expl_vde_for);
@@ -1268,7 +1163,7 @@ int main()
     ************************************************/
 
 	external_function_casadi *ls_cost_jac_casadi = malloc((NN+1)*sizeof(external_function_casadi));
-	external_function_generic *ext_cost_generic = malloc(NN*sizeof(external_function_casadi));
+	external_function_casadi *external_cost = malloc(NN*sizeof(external_function_casadi));
 
 	for (int i = 0; i <= NN; i++)
 	{
@@ -1284,29 +1179,10 @@ int main()
 				break;
 
 			case EXTERNALLY_PROVIDED:
-				// TODO(dimitris): move inside select_ls_stage_cost_jac_casadi?
-				switch(NMF)
-				{
-					case 1:
-						ext_cost_generic[i].evaluate = &ext_cost_nm2;
-						break;
-					case 2:
-						ext_cost_generic[i].evaluate = &ext_cost_nm3;
-						break;
-					case 3:
-						ext_cost_generic[i].evaluate = &ext_cost_nm4;
-						break;
-					case 4:
-						ext_cost_generic[i].evaluate = &ext_cost_nm5;
-						break;
-					case 5:
-						ext_cost_generic[i].evaluate = &ext_cost_nm6;
-						break;
-					default:
-						printf("\nexternal cost not implemented for this numer of masses\n\n");
-						exit(1);
-				}
+				select_external_stage_cost_casadi(i, NN, NMF, &external_cost[i]);
+				external_function_casadi_create(&external_cost[i]);
 				break;
+
 			default:
 				printf("\ninvalid cost module\n\n");
 				exit(1);	
@@ -1394,7 +1270,7 @@ int main()
 
 			case EXTERNALLY_PROVIDED:
 
-				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "ext_cost", &ext_cost_generic[i]);
+				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "ext_cost", &external_cost[i]);
 
 				assert(i < NN && "externally provided cost not implemented for last stage!");
 
@@ -1672,6 +1548,8 @@ int main()
 			case NONLINEAR_LS:
 				external_function_casadi_free(&ls_cost_jac_casadi[i]);
 				break;
+			case EXTERNALLY_PROVIDED:
+				external_function_casadi_free(&external_cost[i]);
 			default:
 				break;
 		}
@@ -1680,7 +1558,7 @@ int main()
 	ocp_nlp_plan_destroy(plan);
 
 	free(ls_cost_jac_casadi);
-	free(ext_cost_generic);
+	free(external_cost);
 
 
 	/************************************************
