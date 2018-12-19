@@ -15,7 +15,7 @@
 %   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 %
 
-function generate_c_code_nonlinear_constr( model, opts )
+function generate_c_code_nonlinear_least_squares( model, opts )
 
 %% import casadi
 import casadi.*
@@ -42,16 +42,17 @@ end
 u = model.sym_u;
 nu = length(u);
 
-h = model.expr_h;
+y = model.expr_y;
 
 model_name = model.name;
 
 %% generate jacobians
-jac_x       = jacobian(h, x);
-jac_u       = jacobian(h, u);
+jac_x       = jacobian(y, x);
+jac_u       = jacobian(y, u);
 
 %% Set up functions
-h_fun_jac_ut_xt = Function([model_name,'_h_fun_jac_ut_xt'], {[u; x]}, {h, [jac_u'; jac_x']});
+y_fun_jac_ut_xt = Function([model_name,'_y_fun_jac_ut_xt'], {[u; x]}, {y, [jac_u'; jac_x']});
 
 %% generate C code
-h_fun_jac_ut_xt.generate([model_name,'_h_fun_jac_ut_xt'], casadi_opts);
+y_fun_jac_ut_xt.generate([model_name,'_y_fun_jac_ut_xt'], casadi_opts);
+

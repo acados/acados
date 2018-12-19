@@ -78,7 +78,7 @@ else
 	nz = 0;
 end
 
-f_impl = model.dyn_expr;
+f_impl = model.expr_f;
 
 model_name = model.name;
 

@@ -402,10 +402,35 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 }
 
 
+
 void ocp_nlp_out_destroy(void *out)
 {
     free(out);
 }
+
+
+
+void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+                     int stage, const char *field, void *value)
+{
+    if (!strcmp(field, "x"))
+    {
+        double *double_values = value;
+        blasfeo_pack_dvec(dims->nx[stage], double_values, &out->ux[stage], dims->nu[stage]);
+    }
+    else if (!strcmp(field, "u"))
+    {
+        double *double_values = value;
+        blasfeo_pack_dvec(dims->nu[stage], double_values, &out->ux[stage], 0);
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_out: field %s not available, attempt to get\n", field);
+        exit(1);
+    }
+}
+
+
 
 void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
                      int stage, const char *field, void *value)
@@ -426,6 +451,7 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         exit(1);
     }
 }
+
 
 
 /************************************************

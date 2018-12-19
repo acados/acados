@@ -7,7 +7,7 @@ clear all
 compile_mex = 'true';
 codgen_model = 'true';
 method = 'irk';
-sens_forw = 'false';
+sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
 
@@ -28,7 +28,7 @@ sim_model = acados_sim_model();
 sim_model.set('T', 0.5);
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'expl');
-	sim_model.set('dyn_expr', model.expr_expl);
+	sim_model.set('expr_f', model.expr_expl);
 	sim_model.set('sym_x', model.sym_x);
 	if isfield(model, 'sym_u')
 		sim_model.set('sym_u', model.sym_u);
@@ -37,7 +37,7 @@ if (strcmp(method, 'erk'))
 	sim_model.set('nu', model.nu);
 else % irk
 	sim_model.set('dyn_type', 'impl');
-	sim_model.set('dyn_expr', model.expr_impl);
+	sim_model.set('expr_f', model.expr_impl);
 	sim_model.set('sym_x', model.sym_x);
 	sim_model.set('sym_xdot', model.sym_xdot);
 	if isfield(model, 'sym_u')
@@ -91,20 +91,16 @@ time_solve = toc
 
 % get TODO with return value !!!!!
 % xn
-xn = zeros(nx, 1);
-sim.get('xn', xn);
+xn = sim.get('xn');
 xn
 % S_forw
-S_forw = zeros(nx, nx+nu);
-sim.get('S_forw', S_forw);
+S_forw = sim.get('S_forw');
 S_forw
 % Sx
-Sx = zeros(nx, nx);
-sim.get('Sx', Sx);
+Sx = sim.get('Sx');
 Sx
 % Su
-Su = zeros(nx, nu);
-sim.get('Su', Su);
+Su = sim.get('Su');
 Su
 
 

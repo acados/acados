@@ -28,7 +28,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// config
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "config" ) );
 	sim_config *config = (sim_config *) ptr[0];
-//	mexPrintf("\n%lld %p\n", config_mat[0], config_mat[0]);
 	// dims
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "dims" ) );
 	void *dims = (void *) ptr[0];

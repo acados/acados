@@ -34,28 +34,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// field
 	char *field = mxArrayToString( prhs[1] );
 //	mexPrintf("\n%s\n", field);
+	
+
+	int nx; sim_dims_get(config, dims, "nx", &nx);
+	int nu; sim_dims_get(config, dims, "nu", &nu);
 
 
-	// TODO implement with LHS !!!!!
-	// value
 	if(!strcmp(field, "xn"))
 		{
-		double *xn = mxGetPr( prhs[2] );
+		plhs[0] = mxCreateNumericMatrix(nx, 1, mxDOUBLE_CLASS, mxREAL);
+		double *xn = mxGetPr( plhs[0] );
 		sim_out_get(config, dims, out, "xn", xn);
 		}
 	else if(!strcmp(field, "S_forw"))
 		{
-		double *S_forw = mxGetPr( prhs[2] );
+		plhs[0] = mxCreateNumericMatrix(nx, nu+nx, mxDOUBLE_CLASS, mxREAL);
+		double *S_forw = mxGetPr( plhs[0] );
 		sim_out_get(config, dims, out, "S_forw", S_forw);
 		}
 	else if(!strcmp(field, "Sx"))
 		{
-		double *Sx = mxGetPr( prhs[2] );
+		plhs[0] = mxCreateNumericMatrix(nx, nx, mxDOUBLE_CLASS, mxREAL);
+		double *Sx = mxGetPr( plhs[0] );
 		sim_out_get(config, dims, out, "Sx", Sx);
 		}
 	else if(!strcmp(field, "Su"))
 		{
-		double *Su = mxGetPr( prhs[2] );
+		plhs[0] = mxCreateNumericMatrix(nx, nu, mxDOUBLE_CLASS, mxREAL);
+		double *Su = mxGetPr( plhs[0] );
 		sim_out_get(config, dims, out, "Su", Su);
 		}
 	else

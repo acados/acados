@@ -98,14 +98,24 @@ classdef acados_ocp < handle
 
 
 
-		function get(obj, field, value)
-			ocp_get(obj.C_ocp, field, value);
+		function value = get(varargin)
+			if nargin==2
+				obj = varargin{1};
+				field = varargin{2};
+				value = ocp_get(obj.C_ocp, field);
+			elseif nargin==3
+				obj = varargin{1};
+				field = varargin{2};
+				stage = varargin{3};
+				value = ocp_get(obj.C_ocp, field, stage);
+			else
+				disp('acados_ocp.get: wrong number of input arguments (1 or 2 allowed)');
+			end
 		end
 
 
 
 		function delete(obj)
-%			fprintf('\nin delete\n');
 			ocp_destroy(obj.C_ocp);
 			ocp_destroy_ext_fun(obj.C_ocp_ext_fun);
 		end

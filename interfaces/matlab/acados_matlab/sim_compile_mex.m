@@ -14,7 +14,7 @@ acados_lib_path = ['-L' acados_folder, 'lib'];
 % compile mex
 mex_files ={'sim_create.c',
 	'sim_destroy.c',
-	'sim_ext_fun_destroy.c',
+	'sim_destroy_ext_fun.c',
 	'sim_solve.c',
 	'sim_set.c',
 	'sim_get.c',

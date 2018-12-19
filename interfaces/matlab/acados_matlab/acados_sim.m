@@ -78,15 +78,14 @@ classdef acados_sim < handle
 		end
 
 
-		function get(obj, field, value)
-			sim_get(obj.C_sim, field, value);
+		function value = get(obj, field)
+			value = sim_get(obj.C_sim, field);
 		end
 
 
 		function delete(obj)
-%			fprintf('\nin delete\n');
 			sim_destroy(obj.C_sim);
-			sim_ext_fun_destroy(obj.opts_struct, obj.C_sim_ext_fun);
+			sim_destroy_ext_fun(obj.C_sim_ext_fun);
 		end
 
 

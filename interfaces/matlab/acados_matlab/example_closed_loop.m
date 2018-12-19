@@ -17,8 +17,8 @@ ocp_nlp_solver = 'sqp';
 ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_hpipm';
 ocp_qp_solver_N_pcond = 5;
-%ocp_sim_method = 'erk';
-ocp_sim_method = 'irk';
+ocp_sim_method = 'erk';
+%ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 2;
 ocp_sim_method_num_steps = 2;
 
@@ -64,6 +64,14 @@ ocp_model.set('nyl', nyl);
 ocp_model.set('nym', nym);
 ocp_model.set('nbx', nbx);
 ocp_model.set('nbu', nbu);
+% symbolics
+ocp_model.set('sym_x', model.sym_x);
+if isfield(model, 'sym_u')
+	ocp_model.set('sym_u', model.sym_u);
+end
+if isfield(model, 'sym_xdot')
+	ocp_model.set('sym_xdot', model.sym_xdot);
+end
 % cost
 ocp_model.set('Vul', Vul);
 ocp_model.set('Vxl', Vxl);
@@ -75,19 +83,10 @@ ocp_model.set('yrm', yrm);
 % dynamics
 if (strcmp(ocp_sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'expl');
-	ocp_model.set('dyn_expr', model.expr_expl);
-	ocp_model.set('sym_x', model.sym_x);
-	if isfield(model, 'sym_u')
-		ocp_model.set('sym_u', model.sym_u);
-	end
+	ocp_model.set('expr_f', model.expr_expl);
 else % irk
 	ocp_model.set('dyn_type', 'impl');
-	ocp_model.set('dyn_expr', model.expr_impl);
-	ocp_model.set('sym_x', model.sym_x);
-	ocp_model.set('sym_xdot', model.sym_xdot);
-	if isfield(model, 'sym_u')
-		ocp_model.set('sym_u', model.sym_u);
-	end
+	ocp_model.set('expr_f', model.expr_impl);
 end
 % constraints
 ocp_model.set('x0', x0);
@@ -132,26 +131,25 @@ ocp.C_ocp_ext_fun
 
 %% acados sim model
 sim_model = acados_sim_model();
+% dims
+sim_model.set('nx', nx);
+sim_model.set('nu', nu);
+% symbolics
+sim_model.set('sym_x', model.sym_x);
+if isfield(model, 'sym_u')
+	sim_model.set('sym_u', model.sym_u);
+end
+if isfield(model, 'sym_xdot')
+	sim_model.set('sym_xdot', model.sym_xdot);
+end
+% model
 sim_model.set('T', T/ocp_N);
 if (strcmp(sim_method, 'erk'))
 	sim_model.set('dyn_type', 'expl');
-	sim_model.set('dyn_expr', model.expr_expl);
-	sim_model.set('sym_x', model.sym_x);
-	if isfield(model, 'sym_u')
-		sim_model.set('sym_u', model.sym_u);
-	end
-	sim_model.set('nx', model.nx);
-	sim_model.set('nu', model.nu);
+	sim_model.set('expr_f', model.expr_expl);
 else % irk
 	sim_model.set('dyn_type', 'impl');
-	sim_model.set('dyn_expr', model.expr_impl);
-	sim_model.set('sym_x', model.sym_x);
-	sim_model.set('sym_xdot', model.sym_xdot);
-	if isfield(model, 'sym_u')
-		sim_model.set('sym_u', model.sym_u);
-	end
-	sim_model.set('nx', model.nx);
-	sim_model.set('nu', model.nu);
+	sim_model.set('expr_f', model.expr_impl);
 end
 
 sim_model.model_struct
@@ -186,32 +184,40 @@ x_sim = zeros(nx, n_sim+1);
 x_sim(:,1) = zeros(nx,1); x_sim(1:2,1) = [3.5; 3.5];
 u_sim = zeros(nu, n_sim);
 
-x_traj = zeros(nx, ocp_N+1);
-u_traj = zeros(nu, ocp_N);
-
-xn_sim = zeros(nx, 1);
+x_traj_init = zeros(nx, ocp_N+1);
+u_traj_init = zeros(nu, ocp_N);
 
 tic;
+
 for ii=1:n_sim
+
 	% set x0
 	ocp.set('x0', x_sim(:,ii));
-	% solver OCP
+
+	% set trajectory initialization
+	ocp.set('x_init', x_traj_init);
+	ocp.set('u_init', u_traj_init);
+
+	% solve OCP
 	ocp.solve();
+
 	% get solution
-	% TODO get only one stage
-	ocp.get('x', x_traj);
-	ocp.get('u', u_traj);
-	% extract input
-	u_sim(:,ii) = u_traj(:,1);
-	% simulate state
-	% TODO
-	%x_sim(:,ii+1) = x_traj(:,2);
+	%x_traj = ocp.get('x');
+	%u_traj = ocp.get('u');
+	u_sim(:,ii) = ocp.get('u', 0);
+
+	% set initial state of sim
 	sim.set('x', x_sim(:,ii));
+	% set input in sim
 	sim.set('u', u_sim(:,ii));
+
+	% simulate state
 	sim.solve();
-	sim.get('xn', xn_sim);
-	x_sim(:,ii+1) = xn_sim;
+
+	% get new state
+	x_sim(:,ii+1) = sim.get('xn');
 end
+
 avg_time_solve = toc/n_sim
 
 
