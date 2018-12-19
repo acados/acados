@@ -93,6 +93,14 @@ else
 	ocp_model.set('nbx', nbx);
 	ocp_model.set('nbu', nbu);
 end
+% symbolics
+ocp_model.set('sym_x', model.sym_x);
+if isfield(model, 'sym_u')
+	ocp_model.set('sym_u', model.sym_u);
+end
+if isfield(model, 'sym_xdot')
+	ocp_model.set('sym_xdot', model.sym_xdot);
+end
 % cost
 ocp_model.set('Vul', Vul);
 ocp_model.set('Vxl', Vxl);
@@ -104,19 +112,10 @@ ocp_model.set('yrm', yrm);
 % dynamics
 if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'expl');
-	ocp_model.set('dyn_expr', model.expr_expl);
-	ocp_model.set('sym_x', model.sym_x);
-	if isfield(model, 'sym_u')
-		ocp_model.set('sym_u', model.sym_u);
-	end
+	ocp_model.set('expr_f', model.expr_expl);
 else % irk
 	ocp_model.set('dyn_type', 'impl');
-	ocp_model.set('dyn_expr', model.expr_impl);
-	ocp_model.set('sym_x', model.sym_x);
-	ocp_model.set('sym_xdot', model.sym_xdot);
-	if isfield(model, 'sym_u')
-		ocp_model.set('sym_u', model.sym_u);
-	end
+	ocp_model.set('expr_f', model.expr_impl);
 end
 % constraints
 ocp_model.set('x0', x0);
@@ -126,7 +125,7 @@ if (ng>0)
 	ocp_model.set('lg', lg);
 	ocp_model.set('ug', ug);
 elseif (nh>0)
-	ocp_model.set('constr_expr_h', model.expr_h);
+	ocp_model.set('expr_h', model.expr_h);
 	ocp_model.set('lh', lh);
 	ocp_model.set('uh', uh);
 else
@@ -170,6 +169,13 @@ ocp.C_ocp_ext_fun
 
 
 
+% set trajectory initialization
+x_traj_init = zeros(nx, N+1);
+u_traj_init = zeros(nu, N);
+ocp.set('x_init', x_traj_init);
+ocp.set('u_init', u_traj_init);
+
+
 % solve
 tic;
 ocp.solve();
@@ -180,6 +186,9 @@ x0(1) = 1.5;
 ocp.set('x0', x0);
 
 
+% if not set, the trajectory is initialized with the previous solution
+
+
 tic;
 ocp.solve();
 time_solve = toc
@@ -187,8 +196,8 @@ time_solve = toc
 
 
 % get solution
-x = ocp.get('x');
 u = ocp.get('u');
+x = ocp.get('x');
 
 u
 x

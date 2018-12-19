@@ -59,8 +59,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double *lh;		bool set_lh = false;
 	double *uh;		bool set_uh = false;
 	// trajectory initialization
-	double *x_init; bool set_x_init;
-	double *u_init; bool set_u_init;
+	double *x_init; bool set_x_init = false;
+	double *u_init; bool set_u_init = false;
 
 	// T
 	if(mxGetField( prhs[0], 0, "T" )!=NULL)
@@ -717,17 +717,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	if(set_x_init)
 		{
-		for (ii=0; ii<=N; ii++)
+		for(ii=0; ii<=N; ii++)
 			{
 			ocp_nlp_out_set(config, dims, out, ii, "x", x_init+ii*nx);
 			}
 		}
+	else // initialize to zero
+		{
+		double *x_init = calloc(nx, sizeof(double));
+		for(ii=0; ii<=N; ii++)
+			{
+			ocp_nlp_out_set(config, dims, out, ii, "x", x_init);
+			}
+		free(x_init);
+		}
 	if(set_u_init)
 		{
-		for (ii=0; ii<N; ii++)
+		for(ii=0; ii<N; ii++)
 			{
 			ocp_nlp_out_set(config, dims, out, ii, "u", u_init+ii*nu);
 			}
+		}
+	else // initialize to zero
+		{
+		double *u_init = calloc(nu, sizeof(double));
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_out_set(config, dims, out, ii, "u", u_init);
+			}
+		free(u_init);
 		}
 
 

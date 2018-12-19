@@ -46,7 +46,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	if(!strcmp(field, "x"))
 		{
-		if(nrhs==1)
+		if(nrhs==2)
 			{
 			plhs[0] = mxCreateNumericMatrix(nx, N+1, mxDOUBLE_CLASS, mxREAL);
 			double *x = mxGetPr( plhs[0] );
@@ -55,7 +55,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				ocp_nlp_out_get(config, dims, out, ii, "x", x+ii*nx);
 				}
 			}
-		else if(nrhs==2)
+		else if(nrhs==3)
 			{
 			plhs[0] = mxCreateNumericMatrix(nx, 1, mxDOUBLE_CLASS, mxREAL);
 			double *x = mxGetPr( plhs[0] );

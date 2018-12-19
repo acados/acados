@@ -13,7 +13,7 @@ sym_x = MX.sym('x', nx, 1); % states
 sym_u = MX.sym('u', nu, 1); % controls
 sym_xdot = MX.sym('xdot',size(sym_x)); %state derivatives
 
-% dynamics
+%% dynamics
 Ac = zeros(nx, nx);
 for ii=1:num_mass
 	Ac(ii,num_mass+ii) = 1.0;
@@ -34,6 +34,9 @@ expr_impl = expr_expl - sym_xdot;
 
 %% constraints
 expr_h = [sym_u; sym_x];
+
+%% nonlnear least squares
+expr_y = [sym_u; sym_x];
 
 %% populate structure
 model.nx = nx;
