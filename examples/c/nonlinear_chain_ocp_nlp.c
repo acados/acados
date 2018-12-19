@@ -1182,6 +1182,7 @@ int main()
 				select_external_stage_cost_casadi(i, NN, NMF, &external_cost[i]);
 				external_function_casadi_create(&external_cost[i]);
 				break;
+
 			default:
 				printf("\ninvalid cost module\n\n");
 				exit(1);	
