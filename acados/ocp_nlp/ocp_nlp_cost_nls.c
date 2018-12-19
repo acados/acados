@@ -573,9 +573,10 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     }
     else
     {
+        // TODO(oj): test this
+        // NOTE(oj): this should add the non-Gauss-Newton term to RSQrq, the product < r, d2_d[x,u] r >,
+        //  where the cost is 0.5 * norm2(r(x,u))^2
         // exact hessian of ls cost
-        printf("NLS_COST: whayt is it doing?\n");
-        exit(1);
         ext_fun_type_in[0] = BLASFEO_DVEC;
         ext_fun_in[0] = memory->ux;  // ux: nu+nx
         ext_fun_type_in[1] = BLASFEO_DVEC;

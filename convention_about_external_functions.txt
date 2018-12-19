@@ -44,7 +44,7 @@ external function: nls_hess
 
 inputs:
 0) [u; x]    size: nu+nx    type: BLASFEO_DVEC
-1) [fun]    size: ny    type: BLASFEO_DVEC
+1) [fun]     size: ny       type: BLASFEO_DVEC
 
 outputs:
 0) [hess_uu, hess_ux; hess_xu; hess_xx]    size: (nu+nx)*(nu+nx)    type: BLASFEO_DMAT
