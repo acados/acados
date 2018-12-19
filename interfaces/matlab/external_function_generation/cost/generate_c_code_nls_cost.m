@@ -27,7 +27,7 @@ function generate_c_code_nls_cost( model, cost, opts )
     nls_cost = cost.nls_expr;
 
 
-    nls_cost_jac = jacobian(nls_cost, [x; u]);
+    nls_cost_jac = jacobian(nls_cost, [u; x]);
 
     
     nls_cost_fun = Function( [name, '_nls_cost_fun_jac'], {[u; x]}, ...
