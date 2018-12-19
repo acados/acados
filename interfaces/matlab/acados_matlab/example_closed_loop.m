@@ -6,7 +6,7 @@
 compile_mex = 'true';
 codgen_model = 'true';
 % simulation
-sim_method = 'irk';
+sim_method = 'erk';
 sim_sens_forw = 'false';
 sim_num_stages = 4;
 sim_num_steps = 4;

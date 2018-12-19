@@ -98,9 +98,6 @@ classdef acados_ocp < handle
 
 
 
-%		function value = get(obj, field)
-%			value = ocp_get(obj.C_ocp, field);
-%		end
 		function value = get(varargin)
 			if nargin==2
 				obj = varargin{1};
@@ -119,7 +116,6 @@ classdef acados_ocp < handle
 
 
 		function delete(obj)
-%			fprintf('\nin delete\n');
 			ocp_destroy(obj.C_ocp);
 			ocp_destroy_ext_fun(obj.C_ocp_ext_fun);
 		end

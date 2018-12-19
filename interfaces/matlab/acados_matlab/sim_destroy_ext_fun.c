@@ -13,7 +13,7 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	{
 
-//	mexPrintf("\nin ocp_ext_fun_destroy\n");
+//	mexPrintf("\nin sim_ext_fun_destroy\n");
 
 	long long *ptr;
 
@@ -21,7 +21,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* RHS */
 
-	// C_ocp_ext_fun
+	// C_sim_ext_fun
 
 	external_function_casadi *ext_fun_ptr;
 
@@ -67,13 +67,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		external_function_casadi_free(ext_fun_ptr);
 		free(ext_fun_ptr);
 		}
-	if(mxGetField( prhs[0], 0, "h_fun_jac_ut_xt" )!=NULL)
-		{
-		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "h_fun_jac_ut_xt" ) );
-		ext_fun_ptr = (external_function_casadi *) ptr[0];
-		external_function_casadi_free(ext_fun_ptr);
-		free(ext_fun_ptr);
-		}
 
 
 
@@ -82,5 +75,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	return;
 
 	}
-
 
