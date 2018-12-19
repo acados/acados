@@ -52,13 +52,19 @@ classdef acados_ocp < handle
 					% generate c for function and derivatives using casadi
 					generate_c_code_nonlinear_constr(obj.model_struct, obj.opts_struct);
 					% sources list
-					c_sources = [c_sources, 'ocp_model_h_fun_jac_ut_xt.c '];
+					if isfield(obj.model_struct, 'expr_h')
+						c_sources = [c_sources, 'ocp_model_h_fun_jac_ut_xt.c '];
+					end
+					if isfield(obj.model_struct, 'expr_h_e')
+						c_sources = [c_sources, 'ocp_model_h_e_fun_jac_ut_xt.c '];
+					end
 				end
 				% nonlinear least squares
 				if (strcmp(obj.model_struct.cost_type, 'nls') || strcmp(obj.model_struct.cost_type, 'nls'))
 					% generate c for function and derivatives using casadi
 					generate_c_code_nonlinear_least_squares(obj.model_struct, obj.opts_struct);
 					% sources list
+					% TODO check with isfield !!!!!!!!!!!!!!!!!!!!
 					c_sources = [c_sources, 'ocp_model_y_fun_jac_ut_xt.c '];
 					c_sources = [c_sources, 'ocp_model_y_e_fun_jac_ut_xt.c '];
 				end
@@ -87,6 +93,9 @@ classdef acados_ocp < handle
 			% nonlinear constraints
 			if (strcmp(obj.model_struct.constr_type, 'bgh') && (isfield(obj.model_struct, 'nh') && obj.model_struct.nh>0))
 				ocp_set_ext_fun_h(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+			end
+			if (strcmp(obj.model_struct.constr_type, 'bgh') && (isfield(obj.model_struct, 'nh_e') && obj.model_struct.nh_e>0))
+				ocp_set_ext_fun_h_e(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			% nonlinear least squares
 			if (strcmp(obj.model_struct.cost_type, 'nls') || strcmp(obj.model_struct.cost_type, 'nls'))

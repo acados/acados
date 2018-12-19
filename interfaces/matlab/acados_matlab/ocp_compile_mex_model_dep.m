@@ -16,11 +16,11 @@ acados_matlab_lib_path = ['-L' acados_folder, 'interfaces/matlab/acados_matlab/'
 mex_files = {};
 % dynamics
 if (strcmp(opts_struct.sim_method, 'erk'))
-	mex_files = {mex_files{:},
+	mex_files = {mex_files{:}, ...
 		'ocp_set_ext_fun_expl.c'
 		};
 elseif (strcmp(opts_struct.sim_method, 'irk'))
-	mex_files = {mex_files{:},
+	mex_files = {mex_files{:}, ...
 		'ocp_set_ext_fun_impl.c'
 		};
 else
@@ -28,13 +28,18 @@ else
 end
 % nonlinear constraints
 if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'nh') && model_struct.nh>0))
-	mex_files = {mex_files{:},
+	mex_files = {mex_files{:}, ...
 		'ocp_set_ext_fun_h.c'
+		};
+end
+if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'nh_e') && model_struct.nh_e>0))
+	mex_files = {mex_files{:}, ...
+		'ocp_set_ext_fun_h_e.c'
 		};
 end
 % nonlinear least squares
 if (strcmp(model_struct.cost_type, 'nls'))
-	mex_files = {mex_files{:},
+	mex_files = {mex_files{:}, ...
 		'ocp_set_ext_fun_y.c'
 		};
 end

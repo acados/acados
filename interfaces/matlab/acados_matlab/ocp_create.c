@@ -30,12 +30,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double T;		bool set_T = false;
 	int nx;			bool set_nx = false;
 	int nu;			bool set_nu = false;
-	int nyl;		bool set_nyl = false;
-	int nym;		bool set_nym = false;
+	int ny;			bool set_ny = false;
+	int ny_e;		bool set_ny_e = false;
 	int nbx;		bool set_nbx = false;
 	int nbu;		bool set_nbu = false;
 	int ng;			bool set_ng = false;
 	int nh;			bool set_nh = false;
+	int nh_e;		bool set_nh_e = false;
 	// cost
 	char *cost_type;
 	char *cost_e_type;
@@ -61,6 +62,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double *ug;		bool set_ug = false;
 	double *lh;		bool set_lh = false;
 	double *uh;		bool set_uh = false;
+	double *lh_e;	bool set_lh_e = false;
+	double *uh_e;	bool set_uh_e = false;
 	// constraints
 	char *dyn_type;
 	// trajectory initialization
@@ -101,17 +104,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mexPrintf("\nerror: ocp_create: nu not set!\n");
 		return;
 		}
-	// nyl
-	if(mxGetField( prhs[0], 0, "nyl" )!=NULL)
+	// ny
+	if(mxGetField( prhs[0], 0, "ny" )!=NULL)
 		{
-		set_nyl = true;
-		nyl = mxGetScalar( mxGetField( prhs[0], 0, "nyl" ) );
+		set_ny = true;
+		ny = mxGetScalar( mxGetField( prhs[0], 0, "ny" ) );
 		}
-	// nym
-	if(mxGetField( prhs[0], 0, "nym" )!=NULL)
+	// ny_e
+	if(mxGetField( prhs[0], 0, "ny_e" )!=NULL)
 		{
-		set_nym = true;
-		nym = mxGetScalar( mxGetField( prhs[0], 0, "nym" ) );
+		set_ny_e = true;
+		ny_e = mxGetScalar( mxGetField( prhs[0], 0, "ny_e" ) );
 		}
 	// nbx
 	if(mxGetField( prhs[0], 0, "nbx" )!=NULL)
@@ -136,6 +139,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_nh = true;
 		nh = mxGetScalar( mxGetField( prhs[0], 0, "nh" ) );
+		}
+	// nh_e
+	if(mxGetField( prhs[0], 0, "nh_e" )!=NULL)
+		{
+		set_nh_e = true;
+		nh_e = mxGetScalar( mxGetField( prhs[0], 0, "nh_e" ) );
 		}
 	// cost
 	// cost e_type
@@ -274,11 +283,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		set_uh = true;
 		uh = mxGetPr( mxGetField( prhs[0], 0, "uh" ) );
 		}
-	// x_init
-	if(mxGetField( prhs[0], 0, "x_init" )!=NULL)
+	// lh_e
+	if(mxGetField( prhs[0], 0, "lh_e" )!=NULL)
 		{
-		set_x_init = true;
-		x_init = mxGetPr( mxGetField( prhs[0], 0, "x_init" ) );
+		set_lh_e = true;
+		lh_e = mxGetPr( mxGetField( prhs[0], 0, "lh_e" ) );
+		}
+	// uh_e
+	if(mxGetField( prhs[0], 0, "uh_e" )!=NULL)
+		{
+		set_uh_e = true;
+		uh_e = mxGetPr( mxGetField( prhs[0], 0, "uh_e" ) );
 		}
 	// dyn
 	// dyn type
@@ -292,6 +307,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_u_init = true;
 		u_init = mxGetPr( mxGetField( prhs[0], 0, "u_init" ) );
+		}
+	// x_init
+	if(mxGetField( prhs[0], 0, "x_init" )!=NULL)
+		{
+		set_x_init = true;
+		x_init = mxGetPr( mxGetField( prhs[0], 0, "x_init" ) );
 		}
 
 
@@ -531,18 +552,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	ocp_nlp_dims_set_opt_vars(config, dims, "nu", i_ptr);
 	// free tmp
 	free(i_ptr);
-	// nyl
-	if(set_nyl)
+	// ny
+	if(set_ny)
 		{
 		for(ii=0; ii<N; ii++)
 			{
-			ocp_nlp_dims_set_cost(config, dims, ii, "ny", &nyl);
+			ocp_nlp_dims_set_cost(config, dims, ii, "ny", &ny);
 			}
 		}
-	// nym
-	if(set_nym)
+	// ny_e
+	if(set_ny_e)
 		{
-		ocp_nlp_dims_set_cost(config, dims, N, "ny", &nym);
+		ocp_nlp_dims_set_cost(config, dims, N, "ny", &ny_e);
 		}
 	// nbx
 	ocp_nlp_dims_set_constraints(config, dims, 0, "nbx", &nx);
@@ -568,6 +589,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		for(ii=0; ii<N; ii++)
 			ocp_nlp_dims_set_constraints(config, dims, ii, "nh", &nh);
+		}
+	// nh_e
+	if(set_nh_e)
+		{
+		ocp_nlp_dims_set_constraints(config, dims, N, "nh", &nh_e);
 		}
 			
 
@@ -802,12 +828,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "lh", lh);
 			}
 		}
+	if(set_lh_e)
+		{
+		ocp_nlp_constraints_model_set(config, dims, in, N, "lh", lh_e);
+		}
 	if(set_uh)
 		{
 		for(ii=0; ii<N; ii++)
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "uh", uh);
 			}
+		}
+	if(set_uh_e)
+		{
+		ocp_nlp_constraints_model_set(config, dims, in, N, "uh", uh_e);
 		}
 
 

@@ -42,6 +42,7 @@ end
 u = model.sym_u;
 nu = length(u);
 
+% TODO check with isfield !!!!!!!!!!!!!!!!!!!
 y = model.expr_y;
 y_e = model.expr_y_e;
 
@@ -54,7 +55,7 @@ jac_x_e     = jacobian(y_e, x);
 
 %% Set up functions
 y_fun_jac_ut_xt = Function([model_name,'_y_fun_jac_ut_xt'], {[u; x]}, {y, [jac_u'; jac_x']});
-y_e_fun_jac_ut_xt = Function([model_name,'_y_e_fun_jac_ut_xt'], {x}, {y_e, [jac_x_e']});
+y_e_fun_jac_ut_xt = Function([model_name,'_y_e_fun_jac_ut_xt'], {x}, {y_e, jac_x_e'});
 
 %% generate C code
 y_fun_jac_ut_xt.generate([model_name,'_y_fun_jac_ut_xt'], casadi_opts);

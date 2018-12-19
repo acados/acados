@@ -34,6 +34,7 @@ expr_f_impl = expr_f_expl - sym_xdot;
 
 %% constraints
 expr_h = [sym_u; sym_x];
+expr_h_e = [sym_x];
 
 %% nonlnear least squares
 expr_y = [sym_u; sym_x];
@@ -48,6 +49,7 @@ model.sym_u = sym_u;
 model.expr_f_expl = expr_f_expl;
 model.expr_f_impl = expr_f_impl;
 model.expr_h = expr_h;
+model.expr_h_e = expr_h_e;
 model.expr_y = expr_y;
 model.expr_y_e = expr_y_e;
 

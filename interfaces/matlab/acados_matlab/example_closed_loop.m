@@ -33,18 +33,18 @@ model = linear_mass_spring_model;
 T = 10.0; % horizon length time
 nx = model.nx; % number of states
 nu = model.nu; % number of inputs
-nyl = nu+nx; % number of outputs in lagrange term
-nym = nx; % number of outputs in mayer term
+ny = nu+nx; % number of outputs in lagrange term
+ny_e = nx; % number of outputs in mayer term
 nbx = nx/2; % number of state bounds
 nbu = nu; % number of input bounds
 % cost
-Vu = zeros(nyl, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
-Vx = zeros(nyl, nx); for ii=1:nx Vx(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
-Vx_e = zeros(nym, nx); for ii=1:nx Vx_e(ii,ii)=1.0; end % state-to-output matrix in mayer term
-W = eye(nyl); for ii=1:nu W(ii,ii)=2.0; end % weight matrix in lagrange term
-W_e = eye(nym); % weight matrix in mayer term
-yr = zeros(nyl, 1); % output reference in lagrange term
-yr_e = zeros(nym, 1); % output reference in mayer term
+Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
+Vx = zeros(ny, nx); for ii=1:nx Vx(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
+Vx_e = zeros(ny_e, nx); for ii=1:nx Vx_e(ii,ii)=1.0; end % state-to-output matrix in mayer term
+W = eye(ny); for ii=1:nu W(ii,ii)=2.0; end % weight matrix in lagrange term
+W_e = eye(ny_e); % weight matrix in mayer term
+yr = zeros(ny, 1); % output reference in lagrange term
+yr_e = zeros(ny_e, 1); % output reference in mayer term
 % constraints
 x0 = zeros(nx, 1); x0(1)=2.5; x0(2)=2.5;
 Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
@@ -62,8 +62,8 @@ ocp_model = acados_ocp_model();
 ocp_model.set('T', T);
 ocp_model.set('nx', nx);
 ocp_model.set('nu', nu);
-ocp_model.set('nyl', nyl);
-ocp_model.set('nym', nym);
+ocp_model.set('ny', ny);
+ocp_model.set('ny_e', ny_e);
 ocp_model.set('nbx', nbx);
 ocp_model.set('nbu', nbu);
 % symbolics

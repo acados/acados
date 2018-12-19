@@ -30,9 +30,9 @@ model = linear_mass_spring_model;
 T = 10.0; % horizon length time
 nx = model.nx;
 nu = model.nu;
-nyl = nu+nx; % number of outputs in lagrange term
-nym = nx; % number of outputs in mayer term
-if 1
+ny = nu+nx; % number of outputs in lagrange term
+ny_e = nx; % number of outputs in mayer term
+if 0
 	nbx = nx/2;
 	nbu = nu;
 	ng = 0;
@@ -47,15 +47,16 @@ else
 	nbu = 0;
 	ng = 0;
 	nh = nu+nx;
+	nh_e = nx;
 end
 % cost
-Vu = zeros(nyl, nu); for ii=1:nu Vul(ii,ii)=1.0; end % input-to-output matrix in lagrange term
-Vx = zeros(nyl, nx); for ii=1:nx Vxl(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
-Vx_e = zeros(nym, nx); for ii=1:nx Vxm(ii,ii)=1.0; end % state-to-output matrix in mayer term
-W = eye(nyl); for ii=1:nu Wl(ii,ii)=2.0; end % weight matrix in lagrange term
-W_e = eye(nym); % weight matrix in mayer term
-yr = zeros(nyl, 1); % output reference in lagrange term
-yr_e = zeros(nym, 1); % output reference in mayer term
+Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
+Vx = zeros(ny, nx); for ii=1:nx Vx(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
+Vx_e = zeros(ny_e, nx); for ii=1:nx Vx_e(ii,ii)=1.0; end % state-to-output matrix in mayer term
+W = eye(ny); for ii=1:nu W(ii,ii)=2.0; end % weight matrix in lagrange term
+W_e = eye(ny_e); % weight matrix in mayer term
+yr = zeros(ny, 1); % output reference in lagrange term
+yr_e = zeros(ny_e, 1); % output reference in mayer term
 % constraints
 x0 = zeros(nx, 1); x0(1)=2.5; x0(2)=2.5;
 if (ng>0)
@@ -66,6 +67,8 @@ if (ng>0)
 elseif (nh>0)
 	lh = zeros(nh, 1); for ii=1:nu lh(ii)=-0.5; end; for ii=1:nx lh(nu+ii)=-4.0; end
 	uh = zeros(nh, 1); for ii=1:nu uh(ii)= 0.5; end; for ii=1:nx uh(nu+ii)= 4.0; end
+	lh_e = zeros(nh_e, 1); for ii=1:nh_e lh_e(ii)=-4.0; end
+	uh_e = zeros(nh_e, 1); for ii=1:nh_e uh_e(ii)= 4.0; end
 else
 	Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
 	lbx = -4*ones(nx, 1);
@@ -84,12 +87,13 @@ ocp_model = acados_ocp_model();
 ocp_model.set('T', T);
 ocp_model.set('nx', nx);
 ocp_model.set('nu', nu);
-ocp_model.set('nyl', nyl);
-ocp_model.set('nym', nym);
+ocp_model.set('ny', ny);
+ocp_model.set('ny_e', ny_e);
 if (ng>0)
 	ocp_model.set('ng', ng);
 elseif (nh>0)
 	ocp_model.set('nh', nh);
+	ocp_model.set('nh_e', nh_e);
 else
 	ocp_model.set('nbx', nbx);
 	ocp_model.set('nbu', nbu);
@@ -131,6 +135,9 @@ elseif (nh>0)
 	ocp_model.set('expr_h', model.expr_h);
 	ocp_model.set('lh', lh);
 	ocp_model.set('uh', uh);
+	ocp_model.set('expr_h_e', model.expr_h_e);
+	ocp_model.set('lh_e', lh_e);
+	ocp_model.set('uh_e', uh_e);
 else
 	ocp_model.set('Jbx', Jbx);
 	ocp_model.set('lbx', lbx);
@@ -202,9 +209,18 @@ time_solve = toc
 u = ocp.get('u');
 x = ocp.get('x');
 
-u
-x
 
+
+% plot result
+figure()
+subplot(2, 1, 1)
+plot(0:N, x);
+title('closed loop simulation')
+ylabel('x')
+subplot(2, 1, 2)
+plot(1:N, u);
+ylabel('u')
+xlabel('sample')
 
 
 

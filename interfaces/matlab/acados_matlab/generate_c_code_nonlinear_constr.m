@@ -42,16 +42,25 @@ end
 u = model.sym_u;
 nu = length(u);
 
-h = model.expr_h;
-
 model_name = model.name;
 
-%% generate jacobians
-jac_x       = jacobian(h, x);
-jac_u       = jacobian(h, u);
+if isfield(model, 'expr_h')
+	h = model.expr_h;
+	% generate jacobians
+	jac_x       = jacobian(h, x);
+	jac_u       = jacobian(h, u);
+	% Set up functions
+	h_fun_jac_ut_xt = Function([model_name,'_h_fun_jac_ut_xt'], {[u; x]}, {h, [jac_u'; jac_x']});
+	% generate C code
+	h_fun_jac_ut_xt.generate([model_name,'_h_fun_jac_ut_xt'], casadi_opts);
+end
 
-%% Set up functions
-h_fun_jac_ut_xt = Function([model_name,'_h_fun_jac_ut_xt'], {[u; x]}, {h, [jac_u'; jac_x']});
-
-%% generate C code
-h_fun_jac_ut_xt.generate([model_name,'_h_fun_jac_ut_xt'], casadi_opts);
+if isfield(model, 'expr_h_e')
+	h_e = model.expr_h_e;
+	% generate jacobians
+	jac_x_e     = jacobian(h_e, x);
+	% Set up functions
+	h_e_fun_jac_ut_xt = Function([model_name,'_h_e_fun_jac_ut_xt'], {x}, {h_e, jac_x_e'});
+	% generate C code
+	h_e_fun_jac_ut_xt.generate([model_name,'_h_e_fun_jac_ut_xt'], casadi_opts);
+end

@@ -115,6 +115,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			status = ocp_nlp_constraints_model_set(config, dims, in, ii, "h", ext_fun_ptr);
 			}
 		}
+	if (mxGetField( prhs[0], 0, "h_e_fun_jac_ut_xt" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "h_e_fun_jac_ut_xt" ) );
+		ext_fun_ptr = (external_function_casadi *) ptr[0];
+		status = ocp_nlp_constraints_model_set(config, dims, in, N, "h", ext_fun_ptr);
+		}
 	if (mxGetField( prhs[0], 0, "y_fun_jac_ut_xt" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "y_fun_jac_ut_xt" ) );

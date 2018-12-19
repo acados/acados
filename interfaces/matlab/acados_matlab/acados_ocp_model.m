@@ -9,12 +9,13 @@ classdef acados_ocp_model < handle
 		nx
 		nu
 		nz
-		nyl
-		nym
+		ny
+		ny_e
 		nbx
 		nbu
 		ng
 		nh
+		nh_e
 		% symbolics
 		sym_x
 		sym_u
@@ -51,6 +52,9 @@ classdef acados_ocp_model < handle
 		expr_h
 		lh
 		uh
+		expr_h_e
+		lh_e
+		uh_e
 		% structure
 		model_struct
 	end %properties
@@ -92,12 +96,12 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'nz'))
 				obj.nz = value;
 				obj.model_struct.nz = value;
-			elseif (strcmp(field, 'nyl'))
-				obj.nyl = value;
-				obj.model_struct.nyl = value;
-			elseif (strcmp(field, 'nym'))
-				obj.nym = value;
-				obj.model_struct.nym = value;
+			elseif (strcmp(field, 'ny'))
+				obj.ny = value;
+				obj.model_struct.ny = value;
+			elseif (strcmp(field, 'ny_e'))
+				obj.ny_e = value;
+				obj.model_struct.ny_e = value;
 			elseif (strcmp(field, 'nbx'))
 				obj.nbx = value;
 				obj.model_struct.nbx = value;
@@ -110,6 +114,9 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'nh'))
 				obj.nh = value;
 				obj.model_struct.nh = value;
+			elseif (strcmp(field, 'nh_e'))
+				obj.nh_e = value;
+				obj.model_struct.nh_e = value;
 			% symbolics
 			elseif (strcmp(field, 'sym_x'))
 				obj.sym_x = value;
@@ -210,6 +217,15 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'uh'))
 				obj.uh = value;
 				obj.model_struct.uh = value;
+			elseif (strcmp(field, 'expr_h_e'))
+				obj.expr_h_e = value;
+				obj.model_struct.expr_h_e = value;
+			elseif (strcmp(field, 'lh_e'))
+				obj.lh_e = value;
+				obj.model_struct.lh_e = value;
+			elseif (strcmp(field, 'uh_e'))
+				obj.uh_e = value;
+				obj.model_struct.uh_e = value;
 			else
 				disp(['acados_integrator_model: set: wrong field: ', field]);
 			end
