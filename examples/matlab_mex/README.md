@@ -4,7 +4,7 @@ This interface uses the shared libraries created using the make command from the
 make acados_c_shared
 ```
 
-To run the examples, navigate into the selected folder, and there run the run the command
+To run the examples, navigate into the selected folder, and there run the command
 ```
 source ./setenv.sh
 ```
