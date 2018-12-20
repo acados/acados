@@ -2,6 +2,7 @@ function ocp_compile_mex()
 
 % get acados folder
 acados_folder = getenv('ACADOS_FOLDER');
+mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
 acados_mex_folder = [acados_folder, '/interfaces/matlab/acados_matlab/'];
@@ -22,8 +23,6 @@ mex_files = { ...
 	[acados_mex_folder, 'ocp_get.c'], ...
 	[acados_mex_folder, 'ocp_set_model.c'] ...
 	} ;
-
-mex_flags = 'GCC=/usr/bin/gcc-4.9';
 
 for ii=1:length(mex_files)
 	mex(mex_flags, acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})

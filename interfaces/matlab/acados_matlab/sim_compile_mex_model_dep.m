@@ -2,6 +2,7 @@ function sim_compile_mex_model_dep(model_struct, opts_struct)
 
 % get acados folder
 acados_folder = getenv('ACADOS_FOLDER');
+mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
 acados_mex_folder = [acados_folder, '/interfaces/matlab/acados_matlab/'];
@@ -25,9 +26,6 @@ elseif (strcmp(opts_struct.method, 'irk'))
 else
 	fprintf('\ncodegen_model: method not supported: %s\n', opts_struct.method);
 end
-
-% to avoid warining on R2017a
-mex_flags = 'GCC=/usr/bin/gcc-4.9';
 
 %% get pointers for external functions in model
 for ii=1:length(mex_files)
