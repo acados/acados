@@ -676,8 +676,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double Ts = T/N;
 	for(ii=0; ii<N; ii++)
 		{
-		// TODO make setter for this !!!!!!!!!!!!!!!!!!!!!!!
-		in->Ts[ii] = Ts;
+		ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
 		}
 
 	// cost: ls

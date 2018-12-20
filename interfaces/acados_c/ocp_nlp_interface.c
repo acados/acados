@@ -317,10 +317,35 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 }
 
 
+
 void ocp_nlp_in_destroy(void *in)
 {
     free(in);
 }
+
+
+
+void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+        const char *field, void *value)
+{
+	int ii;
+
+	int N = dims->N;
+
+    if (!strcmp(field, "Ts"))
+    {
+        double *Ts_values = value;
+		for (ii=0; ii<N; ii++)
+			in->Ts[ii] = *Ts_values;
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_in_set: field %s not available\n", field);
+        exit(1);
+    }
+	return;
+}
+
 
 
 int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
@@ -335,32 +360,23 @@ int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
 }
 
 
-static int ocp_nlp_cost_model_set_internal(ocp_nlp_cost_config *config,
-                                           ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-                                           const char *field, void *value)
-{
-    void *cost_model = in->cost[stage];
-    void *cost_dims = dims->cost[stage];
-
-    int status = config->model_set(config, cost_dims, cost_model, field, value);
-
-    return status;
-}
-
 
 int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
                            ocp_nlp_in *in, int stage,
                            const char *field, void *value)
 {
     ocp_nlp_cost_config *cost_config = config->cost[stage];
+    void *cost_model = in->cost[stage];
+    void *cost_dims = dims->cost[stage];
 
-    int status = ocp_nlp_cost_model_set_internal(cost_config, dims, in, stage, field, value);
+    int status = cost_config->model_set(cost_config, cost_dims, cost_model, field, value);
 
     return status;
 }
 
 
 
+// TODO remove and use ocp_nlp_dynamics_model_set instead !!!
 int nlp_set_discrete_model_in_stage(ocp_nlp_config *config, ocp_nlp_in *in, int stage,
                                     void *fun_ptr)
 {
@@ -425,7 +441,7 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     }
     else
     {
-        printf("\nerror: ocp_nlp_out: field %s not available, attempt to get\n", field);
+        printf("\nerror: ocp_nlp_out_set: field %s not available\n", field);
         exit(1);
     }
 }
@@ -447,7 +463,7 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     }
     else
     {
-        printf("\nerror: ocp_nlp_out: field %s not available, attempt to get\n", field);
+        printf("\nerror: ocp_nlp_out_get: field %s not available\n", field);
         exit(1);
     }
 }
