@@ -14,6 +14,7 @@ classdef acados_ocp_model < handle
 		nbx
 		nbu
 		ng
+		ng_e
 		nh
 		nh_e
 		% symbolics
@@ -38,7 +39,7 @@ classdef acados_ocp_model < handle
 		expr_f
 		% constraints
 		constr_type
-		x0 % TODO if not x0, use lbx and ubx also on first stage !!!!!
+		x0
 		Jbx
 		lbx
 		ubx
@@ -49,6 +50,9 @@ classdef acados_ocp_model < handle
 		D
 		lg
 		ug
+		C_e
+		lg_e
+		ug_e
 		expr_h
 		lh
 		uh
@@ -111,6 +115,9 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'ng'))
 				obj.ng = value;
 				obj.model_struct.ng = value;
+			elseif (strcmp(field, 'ng_e'))
+				obj.ng_e = value;
+				obj.model_struct.ng_e = value;
 			elseif (strcmp(field, 'nh'))
 				obj.nh = value;
 				obj.model_struct.nh = value;
@@ -208,6 +215,15 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'ug'))
 				obj.ug = value;
 				obj.model_struct.ug = value;
+			elseif (strcmp(field, 'C_e'))
+				obj.C_e = value;
+				obj.model_struct.C_e = value;
+			elseif (strcmp(field, 'lg_e'))
+				obj.lg_e = value;
+				obj.model_struct.lg_e = value;
+			elseif (strcmp(field, 'ug_e'))
+				obj.ug_e = value;
+				obj.model_struct.ug_e = value;
 			elseif (strcmp(field, 'expr_h'))
 				obj.expr_h = value;
 				obj.model_struct.expr_h = value;

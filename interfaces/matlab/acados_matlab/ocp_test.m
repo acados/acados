@@ -37,10 +37,11 @@ if 0
 	nbu = nu;
 	ng = 0;
 	nh = 0;
-elseif 0
+elseif 1
 	nbx = 0;
 	nbu = 0;
 	ng = nu+nx/2;
+	ng_e = nx;
 	nh = 0;
 else
 	nbx = 0;
@@ -61,9 +62,12 @@ yr_e = zeros(ny_e, 1); % output reference in mayer term
 x0 = zeros(nx, 1); x0(1)=2.5; x0(2)=2.5;
 if (ng>0)
 	D = zeros(ng, nu); for ii=1:nu D(ii,ii)=1.0; end
-	C = zeros(ng, nx); for ii=1:nx/2 C(nu+ii,ii)=1.0; end
-	lg = zeros(ng, 1); for ii=1:nu lg(ii)=-0.5; end; for ii=1:nx/2 lg(nu+ii)=-4.0; end
-	ug = zeros(ng, 1); for ii=1:nu ug(ii)= 0.5; end; for ii=1:nx/2 ug(nu+ii)= 4.0; end
+	C = zeros(ng, nx); for ii=1:ng-nu C(nu+ii,ii)=1.0; end
+	lg = zeros(ng, 1); for ii=1:nu lg(ii)=-0.5; end; for ii=1:ng-nu lg(nu+ii)=-4.0; end
+	ug = zeros(ng, 1); for ii=1:nu ug(ii)= 0.5; end; for ii=1:ng-nu ug(nu+ii)= 4.0; end
+	C_e = zeros(ng_e, nx); for ii=1:ng_e C_e(ii,ii)=1.0; end
+	lg_e = zeros(ng_e, 1); for ii=1:ng_e lg_e(ii)=-4.0; end
+	ug_e = zeros(ng_e, 1); for ii=1:ng_e ug_e(ii)= 4.0; end
 elseif (nh>0)
 	lh = zeros(nh, 1); for ii=1:nu lh(ii)=-0.5; end; for ii=1:nx lh(nu+ii)=-4.0; end
 	uh = zeros(nh, 1); for ii=1:nu uh(ii)= 0.5; end; for ii=1:nx uh(nu+ii)= 4.0; end
@@ -91,6 +95,7 @@ ocp_model.set('ny', ny);
 ocp_model.set('ny_e', ny_e);
 if (ng>0)
 	ocp_model.set('ng', ng);
+	ocp_model.set('ng_e', ng_e);
 elseif (nh>0)
 	ocp_model.set('nh', nh);
 	ocp_model.set('nh_e', nh_e);
@@ -131,6 +136,9 @@ if (ng>0)
 	ocp_model.set('D', D);
 	ocp_model.set('lg', lg);
 	ocp_model.set('ug', ug);
+	ocp_model.set('C_e', C_e);
+	ocp_model.set('lg_e', lg_e);
+	ocp_model.set('ug_e', ug_e);
 elseif (nh>0)
 	ocp_model.set('expr_h', model.expr_h);
 	ocp_model.set('lh', lh);

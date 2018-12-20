@@ -35,6 +35,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int nbx;		bool set_nbx = false;
 	int nbu;		bool set_nbu = false;
 	int ng;			bool set_ng = false;
+	int ng_e;		bool set_ng_e = false;
 	int nh;			bool set_nh = false;
 	int nh_e;		bool set_nh_e = false;
 	// cost
@@ -60,6 +61,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double *D;		bool set_D = false;
 	double *lg;		bool set_lg = false;
 	double *ug;		bool set_ug = false;
+	double *C_e;	bool set_C_e = false;
+	double *lg_e;	bool set_lg_e = false;
+	double *ug_e;	bool set_ug_e = false;
 	double *lh;		bool set_lh = false;
 	double *uh;		bool set_uh = false;
 	double *lh_e;	bool set_lh_e = false;
@@ -133,6 +137,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_ng = true;
 		ng = mxGetScalar( mxGetField( prhs[0], 0, "ng" ) );
+		}
+	// ng_e
+	if(mxGetField( prhs[0], 0, "ng_e" )!=NULL)
+		{
+		set_ng_e = true;
+		ng_e = mxGetScalar( mxGetField( prhs[0], 0, "ng_e" ) );
 		}
 	// nh
 	if(mxGetField( prhs[0], 0, "nh" )!=NULL)
@@ -270,6 +280,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_ug = true;
 		ug = mxGetPr( mxGetField( prhs[0], 0, "ug" ) );
+		}
+	// C_e
+	if(mxGetField( prhs[0], 0, "C_e" )!=NULL)
+		{
+		set_C_e = true;
+		C_e = mxGetPr( mxGetField( prhs[0], 0, "C_e" ) );
+		}
+	// lg_e
+	if(mxGetField( prhs[0], 0, "lg_e" )!=NULL)
+		{
+		set_lg_e = true;
+		lg_e = mxGetPr( mxGetField( prhs[0], 0, "lg_e" ) );
+		}
+	// ug_e
+	if(mxGetField( prhs[0], 0, "ug_e" )!=NULL)
+		{
+		set_ug_e = true;
+		ug_e = mxGetPr( mxGetField( prhs[0], 0, "ug_e" ) );
 		}
 	// lh
 	if(mxGetField( prhs[0], 0, "lh" )!=NULL)
@@ -570,25 +598,38 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(set_nbx)
 		{
 		for(ii=1; ii<=N; ii++)
+			{
 			ocp_nlp_dims_set_constraints(config, dims, ii, "nbx", &nbx);
+			}
 		}
 	// nbu
 	if(set_nbu)
 		{
 		for(ii=0; ii<N; ii++)
+			{
 			ocp_nlp_dims_set_constraints(config, dims, ii, "nbu", &nbu);
+			}
 		}
 	// ng
 	if(set_ng)
 		{
 		for(ii=0; ii<N; ii++)
+			{
 			ocp_nlp_dims_set_constraints(config, dims, ii, "ng", &ng);
+			}
+		}
+	// ng_e
+	if(set_ng_e)
+		{
+		ocp_nlp_dims_set_constraints(config, dims, N, "ng", &ng_e);
 		}
 	// nh
 	if(set_nh)
 		{
 		for(ii=0; ii<N; ii++)
+			{
 			ocp_nlp_dims_set_constraints(config, dims, ii, "nh", &nh);
+			}
 		}
 	// nh_e
 	if(set_nh_e)
@@ -738,7 +779,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 					}
 				}
 			}
-		for(ii=1; ii<=N; ii++)
+		if(!set_x0)
+			{
+			ii = 0;
+			}
+		else
+			{
+			ii = 1;
+			}
+		for(; ii<=N; ii++)
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxbx", i_ptr);
 			}
@@ -746,14 +795,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	if(set_lbx)
 		{
-		for(ii=1; ii<=N; ii++)
+		if(!set_x0)
+			{
+			ii = 0;
+			}
+		else
+			{
+			ii = 1;
+			}
+		for(; ii<=N; ii++)
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "lbx", lbx);
 			}
 		}
 	if(set_ubx)
 		{
-		for(ii=1; ii<=N; ii++)
+		if(!set_x0)
+			{
+			ii = 0;
+			}
+		else
+			{
+			ii = 1;
+			}
+		for(; ii<=N; ii++)
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "ubx", ubx);
 			}
@@ -820,6 +885,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "ug", ug);
 			}
+		}
+	if(set_C_e)
+		{
+		ocp_nlp_constraints_model_set(config, dims, in, N, "C", C_e);
+		}
+	if(set_lg_e)
+		{
+		ocp_nlp_constraints_model_set(config, dims, in, N, "lg", lg_e);
+		}
+	if(set_ug_e)
+		{
+		ocp_nlp_constraints_model_set(config, dims, in, N, "ug", ug_e);
 		}
 	if(set_lh)
 		{
