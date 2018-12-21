@@ -157,15 +157,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		nh_e = mxGetScalar( mxGetField( prhs[0], 0, "nh_e" ) );
 		}
 	// cost
-	// cost e_type
-	if(mxGetField( prhs[0], 0, "cost_e_type" )!=NULL)
-		{
-		cost_e_type = mxArrayToString( mxGetField( prhs[0], 0, "cost_e_type" ) );
-		}
 	// cost type
 	if(mxGetField( prhs[0], 0, "cost_type" )!=NULL)
 		{
 		cost_type = mxArrayToString( mxGetField( prhs[0], 0, "cost_type" ) );
+		}
+	// cost e_type
+	if(mxGetField( prhs[0], 0, "cost_e_type" )!=NULL)
+		{
+		cost_e_type = mxArrayToString( mxGetField( prhs[0], 0, "cost_e_type" ) );
 		}
 	// Vu
 	if(mxGetField( prhs[0], 0, "Vu" )!=NULL)
@@ -445,14 +445,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	
 	// cost
-	if(!strcmp(cost_type, "ls"))
+	if(!strcmp(cost_type, "linear_ls"))
 		{
 		for(ii=0; ii<N; ii++)
 			{
 			plan->nlp_cost[ii] = LINEAR_LS;
 			}
 		}
-	else if(!strcmp(cost_type, "nls"))
+	else if(!strcmp(cost_type, "nonlinear_ls"))
 		{
 		for(ii=0; ii<N; ii++)
 			{
@@ -464,11 +464,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mexPrintf("\ncost_type not supported: %s\n", cost_type);
 		return;
 		}
-	if(!strcmp(cost_e_type, "ls"))
+	if(!strcmp(cost_e_type, "linear_ls"))
 		{
 		plan->nlp_cost[N] = LINEAR_LS;
 		}
-	else if(!strcmp(cost_e_type, "nls"))
+	else if(!strcmp(cost_e_type, "nonlinear_ls"))
 		{
 		plan->nlp_cost[N] = NONLINEAR_LS;
 		}
@@ -680,7 +680,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 
 	// cost: ls
-	if(!strcmp(cost_type, "ls"))
+	if(!strcmp(cost_type, "linear_ls"))
 		{
 		// lagrange term
 		for(ii=0; ii<N; ii++)
@@ -703,7 +703,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				}
 			}
 		}
-	if(!strcmp(cost_e_type, "ls"))
+	if(!strcmp(cost_e_type, "linear_ls"))
 		{
 		// mayer term
 		if(set_Vx_e)
@@ -721,7 +721,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 		}
 	// cost: nls
-	if(!strcmp(cost_type, "nls"))
+	if(!strcmp(cost_type, "nonlinear_ls"))
 		{
 		// lagrange term
 		for(ii=0; ii<N; ii++)
@@ -736,7 +736,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				}
 			}
 		}
-	if(!strcmp(cost_e_type, "nls"))
+	if(!strcmp(cost_e_type, "nonlinear_ls"))
 		{
 		// mayer term
 		if(set_W_e)

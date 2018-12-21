@@ -71,8 +71,8 @@ classdef acados_ocp_model < handle
 		function obj = acados_ocp_model()
 			% default values
 			obj.name = 'ocp_model';
-			obj.cost_type = 'ls';
-			obj.cost_e_type = 'ls';
+			obj.cost_type = 'linear_ls';
+			obj.cost_e_type = 'linear_ls';
 			obj.dyn_type = 'implicit';
 			obj.constr_type = 'bgh';
 			% model structure

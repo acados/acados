@@ -18,7 +18,7 @@ qp_solver_N_pcond = 5;
 sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
-cost_type = 'ls';
+cost_type = 'linear_ls';
 
 
 

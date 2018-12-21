@@ -60,7 +60,7 @@ classdef acados_ocp < handle
 					end
 				end
 				% nonlinear least squares
-				if (strcmp(obj.model_struct.cost_type, 'nls') || strcmp(obj.model_struct.cost_type, 'nls'))
+				if (strcmp(obj.model_struct.cost_type, 'nonlinear_ls') || strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
 					% generate c for function and derivatives using casadi
 					generate_c_code_nonlinear_least_squares(obj.model_struct, obj.opts_struct);
 					% sources list
@@ -98,7 +98,7 @@ classdef acados_ocp < handle
 				ocp_set_ext_fun_h_e(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			% nonlinear least squares
-			if (strcmp(obj.model_struct.cost_type, 'nls') || strcmp(obj.model_struct.cost_type, 'nls'))
+			if (strcmp(obj.model_struct.cost_type, 'nonlinear_ls') || strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
 				ocp_set_ext_fun_y(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 

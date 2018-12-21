@@ -21,8 +21,8 @@ ocp_sim_method = 'erk';
 %ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 2;
 ocp_sim_method_num_steps = 2;
-%ocp_cost_type = 'ls';
-ocp_cost_type = 'nls';
+%ocp_cost_type = 'linear_ls';
+ocp_cost_type = 'nonlinear_ls';
 
 
 

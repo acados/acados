@@ -38,7 +38,7 @@ if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'nh_e') &&
 		};
 end
 % nonlinear least squares
-if (strcmp(model_struct.cost_type, 'nls'))
+if (strcmp(model_struct.cost_type, 'nonlinear_ls'))
 	mex_files = {mex_files{:}, ...
 		[acados_mex_folder, 'ocp_set_ext_fun_y.c']
 		};

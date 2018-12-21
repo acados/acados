@@ -18,7 +18,7 @@ sim_method = 'erk';
 %sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 2;
-cost_type = 'ls';
+cost_type = 'linear_ls';
 
 
 
