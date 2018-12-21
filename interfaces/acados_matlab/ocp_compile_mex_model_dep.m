@@ -5,11 +5,11 @@ acados_folder = getenv('ACADOS_FOLDER');
 mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
-acados_mex_folder = [acados_folder, '/interfaces/matlab/acados_matlab/'];
+acados_mex_folder = [acados_folder, '/interfaces/acados_matlab/'];
 acados_include = ['-I' acados_folder];
 acados_interfaces_include = ['-I' acados_folder, '/interfaces'];
 acados_lib_path = ['-L' acados_folder, '/lib'];
-acados_matlab_lib_path = ['-L' acados_folder, '/interfaces/matlab/acados_matlab/'];
+acados_matlab_lib_path = ['-L' acados_folder, '/interfaces/acados_matlab/'];
 model_lib_path = ['-L', pwd];
 
 %% select files to compile
