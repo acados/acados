@@ -1,6 +1,6 @@
 dummy:
 
 clean:
-	rm *.so
-	rm *.mexa64
-	rm *.c
+	rm -f *.so
+	rm -f *.mexa64
+	rm -f *.c

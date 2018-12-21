@@ -7,7 +7,7 @@ clear all
 compile_mex = 'true';
 codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
-N = 15;
+N = 40;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
@@ -23,10 +23,12 @@ cost_type = 'ls';
 
 
 %% create model entries
-nfm = 2;    % number of free masses
+nfm = 3;    % number of free masses
 nm = nfm+1; % number of masses
-model = masses_chain_model; % TODO make as function of nm or nfm
+model = masses_chain_model(nfm); % TODO make as function of nm or nfm
+wall = -0.01;
 
+if 0
 x_start = [
 0.000000e+00,
 7.515916e-01,
@@ -56,11 +58,14 @@ x_end = [
 0.000000e+00,
 0.000000e+00
 ];
-
+else
+x_start = model.x0;
+x_end = model.x_ref;
+end
 
 
 % dims
-T = 3.75; % horizon length time
+T = 8.0; % horizon length time
 nx = model.nx; % 6*nfm
 nu = model.nu; % 3
 ny = nu+nx; % number of outputs in lagrange term
@@ -76,16 +81,16 @@ nh_e = 0;
 Vx = zeros(ny, nx); for ii=1:nx Vx(ii,ii)=1.0; end % state-to-output matrix in lagrange term
 Vu = zeros(ny, nu); for ii=1:nu Vu(nx+ii,ii)=1.0; end % input-to-output matrix in lagrange term
 Vx_e = zeros(ny_e, nx); for ii=1:nx Vx_e(ii,ii)=1.0; end % state-to-output matrix in mayer term
-W = 1e-2*eye(ny); for ii=1:nu W(nx+ii,nx+ii)=1.0; end % weight matrix in lagrange term
-W_e = 1e-2*eye(ny_e); % weight matrix in mayer term
+W = 1.0*eye(ny); for ii=1:nu W(nx+ii,nx+ii)=1e-2; end % weight matrix in lagrange term
+W_e = 1.0*eye(ny_e); % weight matrix in mayer term
 yr = [x_end; zeros(nu, 1)]; % output reference in lagrange term
 yr_e = x_end; % output reference in mayer term
 
 % constraints
 x0 = x_start;
 Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,2+6*(ii-1))=1.0; end
-lbx = -1e-2*ones(nbx, 1);
-ubx =  1e+4*ones(nbx, 1);
+lbx = wall*ones(nbx, 1);
+ubx = 1e+4*ones(nbx, 1);
 Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
 lbu = -10.0*ones(nbu, 1);
 ubu =  10.0*ones(nbu, 1);
@@ -162,7 +167,7 @@ else
 	ocp_model.set('ubu', ubu);
 end
 
-ocp_model.model_struct
+%ocp_model.model_struct
 
 
 
@@ -181,16 +186,16 @@ ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 
-ocp_opts.opts_struct
+%ocp_opts.opts_struct
 
 
 
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-ocp
-ocp.C_ocp
-ocp.C_ocp_ext_fun
+%ocp
+%ocp.C_ocp
+%ocp.C_ocp_ext_fun
 
 
 
@@ -202,7 +207,7 @@ ocp.set('u_init', u_traj_init);
 
 
 % solve
-nrep = 100;
+nrep = 10;
 tic;
 for rep=1:nrep
 	ocp.solve();
@@ -211,8 +216,8 @@ time_solve = toc/nrep
 
 
 % get solution
-u = ocp.get('u')
-x = ocp.get('x')
+u = ocp.get('u');
+x = ocp.get('x');
 
 
 
@@ -226,6 +231,12 @@ x = ocp.get('x')
 %plot(1:N, u);
 %ylabel('u')
 %xlabel('sample')
+
+
+for ii=1:N
+	cur_pos = x(:,ii);
+	visualize;
+end
 
 
 
