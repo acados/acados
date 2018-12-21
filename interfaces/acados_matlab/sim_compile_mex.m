@@ -22,7 +22,7 @@ mex_files ={ ...
 	} ;
 
 for ii=1:length(mex_files)
-	mex(mex_flags, acados_include, acados_interfaces_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
+	mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99', acados_include, acados_interfaces_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
 end
 
 
