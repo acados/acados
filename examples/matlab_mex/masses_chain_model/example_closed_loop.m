@@ -3,8 +3,8 @@ clear all
 
 
 %% handy arguments
-compile_mex = 'false';
-codgen_model = 'false';
+compile_mex = 'true';
+codgen_model = 'true';
 % simulation
 sim_method = 'irk';
 sim_sens_forw = 'false';
