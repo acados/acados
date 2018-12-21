@@ -1,24 +1,28 @@
-%% test of native matlab interface
+%% example of closed loop simulation
 clear all
 
 
-
-%% arguments
-compile_mex = 'true';
-codgen_model = 'true';
-param_scheme = 'multiple_shooting_unif_grid';
-N = 40;
-
-nlp_solver = 'sqp';
-%nlp_solver = 'sqp_rti';
-qp_solver = 'partial_condensing_hpipm';
-%qp_solver = 'full_condensing_hpipm';
-qp_solver_N_pcond = 5;
-sim_method = 'erk';
-%sim_method = 'irk';
-sim_method_num_stages = 4;
-sim_method_num_steps = 2;
-cost_type = 'ls';
+%% handy arguments
+compile_mex = 'false';
+codgen_model = 'false';
+% simulation
+sim_method = 'irk';
+sim_sens_forw = 'false';
+sim_num_stages = 4;
+sim_num_steps = 4;
+% ocp
+ocp_N = 40;
+ocp_param_scheme = 'multiple_shooting_unif_grid';
+%ocp_nlp_solver = 'sqp';
+ocp_nlp_solver = 'sqp_rti';
+ocp_qp_solver = 'partial_condensing_hpipm';
+%ocp_qp_solver = 'full_condensing_hpipm';
+ocp_qp_solver_N_pcond = 5;
+ocp_sim_method = 'erk';
+%ocp_sim_method = 'irk';
+ocp_sim_method_num_stages = 4;
+ocp_sim_method_num_steps = 2;
+ocp_cost_type = 'ls';
 
 
 
@@ -90,8 +94,8 @@ if isfield(model, 'sym_xdot')
 	ocp_model.set('sym_xdot', model.sym_xdot);
 end
 % cost
-ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_e_type', cost_type);
+ocp_model.set('cost_type', ocp_cost_type);
+ocp_model.set('cost_e_type', ocp_cost_type);
 ocp_model.set('Vu', Vu);
 ocp_model.set('Vx', Vx);
 ocp_model.set('Vx_e', Vx_e);
@@ -100,7 +104,7 @@ ocp_model.set('W_e', W_e);
 ocp_model.set('yr', yr);
 ocp_model.set('yr_e', yr_e);
 % dynamics
-if (strcmp(sim_method, 'erk'))
+if (strcmp(ocp_sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
 	ocp_model.set('expr_f', model.expr_f_expl);
 else % irk
@@ -141,16 +145,16 @@ end
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_mex', compile_mex);
 ocp_opts.set('codgen_model', codgen_model);
-ocp_opts.set('param_scheme', param_scheme);
-ocp_opts.set('param_scheme_N', N);
-ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('qp_solver', qp_solver);
-if (strcmp(qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
+ocp_opts.set('param_scheme', ocp_param_scheme);
+ocp_opts.set('param_scheme_N', ocp_N);
+ocp_opts.set('nlp_solver', ocp_nlp_solver);
+ocp_opts.set('qp_solver', ocp_qp_solver);
+if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
+	ocp_opts.set('qp_solver_N_pcond', ocp_qp_solver_N_pcond);
 end
-ocp_opts.set('sim_method', sim_method);
-ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
-ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+ocp_opts.set('sim_method', ocp_sim_method);
+ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
+ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 
 %ocp_opts.opts_struct
 
@@ -165,49 +169,112 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 
 
 
-% set trajectory initialization
-x_traj_init = repmat(model.x_ref, 1, N+1);
-u_traj_init = zeros(nu, N);
+%% acados sim model
+sim_model = acados_sim_model();
+% dims
+sim_model.set('nx', nx);
+sim_model.set('nu', nu);
+% symbolics
+sim_model.set('sym_x', model.sym_x);
+if isfield(model, 'sym_u')
+	sim_model.set('sym_u', model.sym_u);
+end
+if isfield(model, 'sym_xdot')
+	sim_model.set('sym_xdot', model.sym_xdot);
+end
+% model
+sim_model.set('T', T/ocp_N);
+if (strcmp(sim_method, 'erk'))
+	sim_model.set('dyn_type', 'explicit');
+	sim_model.set('expr_f', model.expr_f_expl);
+else % irk
+	sim_model.set('dyn_type', 'implicit');
+	sim_model.set('expr_f', model.expr_f_impl);
+end
+
+%sim_model.model_struct
+
+
+
+%% acados sim opts
+sim_opts = acados_sim_opts();
+sim_opts.set('compile_mex', compile_mex);
+sim_opts.set('codgen_model', codgen_model);
+sim_opts.set('num_stages', sim_num_stages);
+sim_opts.set('num_steps', sim_num_steps);
+sim_opts.set('method', sim_method);
+sim_opts.set('sens_forw', sim_sens_forw);
+
+%sim_opts.opts_struct
+
+
+
+%% acados sim
+% create sim
+sim = acados_sim(sim_model, sim_opts);
+%sim
+%sim.C_sim
+%sim.C_sim_ext_fun
+
+
+
+%% closed loop simulation
+n_sim = 50;
+x_sim = zeros(nx, n_sim+1);
+x_sim(:,1) = model.x0; % initial state
+u_sim = zeros(nu, n_sim);
+
+x_traj_init = repmat(model.x_ref, 1, ocp_N+1);
+u_traj_init = zeros(nu, ocp_N);
 ocp.set('x_init', x_traj_init);
 ocp.set('u_init', u_traj_init);
 
-
-% solve
-nrep = 10;
 tic;
-for rep=1:nrep
+
+for ii=1:n_sim
+
+	% set x0
+	ocp.set('x0', x_sim(:,ii));
+
+	% set trajectory initialization (if not, set internally using previous solution)
+%	ocp.set('x_init', x_traj_init);
+%	ocp.set('u_init', u_traj_init);
+
+	% solve OCP
 	ocp.solve();
+
+	% get solution
+	%x_traj = ocp.get('x');
+	%u_traj = ocp.get('u');
+	u_sim(:,ii) = ocp.get('u', 0);
+
+	% set initial state of sim
+	sim.set('x', x_sim(:,ii));
+	% set input in sim
+	sim.set('u', u_sim(:,ii));
+
+	% simulate state
+	sim.solve();
+
+	% get new state
+	x_sim(:,ii+1) = sim.get('xn');
+
 end
-time_solve = toc/nrep
 
+avg_time_solve = toc/n_sim
 
-% get solution
-u = ocp.get('u');
-x = ocp.get('x');
-
-
-
-% plot result
-%figure()
-%subplot(2, 1, 1)
-%plot(0:N, x);
-%title('closed loop simulation')
-%ylabel('x')
-%subplot(2, 1, 2)
-%plot(1:N, u);
-%ylabel('u')
-%xlabel('sample')
 
 
 % print solution
-for ii=1:N
-	cur_pos = x(:,ii);
+for ii=1:n_sim+1
+	cur_pos = x_sim(:,ii);
 	visualize;
 end
 
 
 
 fprintf('\nsuccess!\n\n');
+
 
 
 return;

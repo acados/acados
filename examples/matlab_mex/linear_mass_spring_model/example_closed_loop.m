@@ -1,4 +1,5 @@
 %% example of closed loop simulation
+clear all
 
 
 %% handy arguments
