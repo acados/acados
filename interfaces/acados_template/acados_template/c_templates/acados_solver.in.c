@@ -219,12 +219,13 @@ int acados_create() {
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "nz", nz);
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "ns", ns);
 
-    ocp_nlp_dims_set_cost(nlp_config, nlp_dims, "ny", ny);
-
-    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, "nbx", nbx);
-    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, "nbu", nbu);
-    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, "ng", ng);
-    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, "nh", nh);
+    for (int i = 0; i <= N; i++) {
+        ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", ny);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbx", nbx);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbu", nbu);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "ng", ng);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", nh);
+    }
 
     {% if ra.solver_config.integrator_type == 'ERK': %}
     // explicit ode
@@ -310,31 +311,31 @@ int acados_create() {
     }
     // W
     for (int i = 0; i < N; ++i) {
-        ocp_nlp_cost_set_model(nlp_config, nlp_dims, nlp_in, i, "W", W);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
     }
     // WN
-    ocp_nlp_cost_set_model(nlp_config, nlp_dims, nlp_in, N, "W", Q);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W);
 
     // y_ref
     for (int i = 0; i <= N; ++i)
-        ocp_nlp_cost_set_model(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
 
     // NLP dynamics
     int set_fun_status;
     for (int i = 0; i < N; ++i) {
     {% if ra.solver_config.integrator_type == 'ERK': %} 
-        set_fun_status = ocp_nlp_dynamics_set_model(nlp_config, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
+        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
         if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
         {% if ra.solver_config.hessian_approx == 'EXACT': %} 
-            set_fun_status = ocp_nlp_dynamics_set_model(nlp_config, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
             if (set_fun_status != 0) { printf("Error while setting expl_ode_hes[%i]\n", i);  exit(1); }
         {% endif %}
     {% elif ra.solver_config.integrator_type == 'IRK': %} 
-        set_fun_status = ocp_nlp_dynamics_set_model(nlp_config, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
+        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun[%i]\n", i);  exit(1); }
-        set_fun_status = ocp_nlp_dynamics_set_model(nlp_config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z[i]);
+        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun_jac_x_xdot_z[%i]\n", i);  exit(1); }
-        set_fun_status = ocp_nlp_dynamics_set_model(nlp_config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z[i]);
+        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_jac_x_xdot_u_z[%i]\n", i);  exit(1); }
     {% endif %}
     }
@@ -347,21 +348,28 @@ int acados_create() {
     // bounds
     for (int i = 0; i < nb[0]; ++i)
         constraints[0]->idxb[i] = idxb_0[i];
-	ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, "lb", lb0);
-	ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, "ub", ub0);
+
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lb", lb0);
+	// ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, "lb", lb0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ub", ub0);
+	// ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, "ub", ub0);
 
     for (int i = 1; i < N; ++i)
     {
         for (int j = 0; j < nb[i]; ++j)
             constraints[i]->idxb[j] = idxb[j];
-        ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, i, "lb", lb);
-        ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, i, "ub", ub);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lb", lb);
+        // ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, i, "lb", lb);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ub", ub);
+        // ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, i, "ub", ub);
     }
 
     for (int j = 0; j < nb[N]; ++j)
         constraints[N]->idxb[j] = idxb[j];
-    ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, N, "lb", lbN);
-	ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, N, "ub", ubN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lb", lbN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ub", ubN);
+    // ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, N, "lb", lbN);
+	// ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, N, "ub", ubN);
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);
 

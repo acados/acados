@@ -1167,6 +1167,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // start timer
         acados_tic(&timer1);
 
+        print_ocp_qp_in(work->qp_in);
+        exit(1);
         int qp_status =
             qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
                                 mem->qp_solver_mem, work->qp_work);
