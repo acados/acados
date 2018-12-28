@@ -220,11 +220,11 @@ int acados_create() {
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "ns", ns);
 
     for (int i = 0; i <= N; i++) {
-        ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", ny);
-        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbx", nbx);
-        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbu", nbu);
-        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "ng", ng);
-        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", nh);
+        ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", &ny[i]);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbx", &nbx[i]);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbu", &nbu[i]);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "ng", &ng[i]);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
     }
 
     {% if ra.solver_config.integrator_type == 'ERK': %}
@@ -365,7 +365,7 @@ int acados_create() {
     }
 
     for (int j = 0; j < nb[N]; ++j)
-        constraints[N]->idxb[j] = idxb[j];
+        constraints[N]->idxb[j] = idxb_N[j];
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lb", lbN);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ub", ubN);
     // ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, N, "lb", lbN);
