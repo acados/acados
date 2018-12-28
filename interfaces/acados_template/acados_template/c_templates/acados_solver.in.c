@@ -45,14 +45,6 @@
 
 int acados_create() {
 
-    // ocp_nlp_solver * nlp_solver;
-    // ocp_nlp_in * nlp_in;
-    // ocp_nlp_out * nlp_out;
-    // void *nlp_opts;
-    // ocp_nlp_solver_config *config;
-    // ocp_nlp_solver_plan *plan;
-    // ocp_nlp_dims *dims;
-
     int status = 0;
 
     int num_states = {{ ra.dims.nx }}; 
@@ -350,26 +342,20 @@ int acados_create() {
         constraints[0]->idxb[i] = idxb_0[i];
 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lb", lb0);
-	// ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, "lb", lb0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ub", ub0);
-	// ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, "ub", ub0);
 
     for (int i = 1; i < N; ++i)
     {
         for (int j = 0; j < nb[i]; ++j)
             constraints[i]->idxb[j] = idxb[j];
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lb", lb);
-        // ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, i, "lb", lb);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ub", ub);
-        // ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, i, "ub", ub);
     }
 
     for (int j = 0; j < nb[N]; ++j)
         constraints[N]->idxb[j] = idxb_N[j];
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lb", lbN);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ub", ubN);
-    // ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, N, "lb", lbN);
-	// ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, N, "ub", ubN);
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);
 
@@ -401,7 +387,6 @@ int acados_create() {
         bool sens_adj = true;
 
         ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps);
-        // ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "ns", &ns);
         ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_hess", &sens_hess);
         ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_adj", &sens_adj);
         {% endif %}
@@ -412,14 +397,6 @@ int acados_create() {
         blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
 
     nlp_solver = ocp_nlp_create(nlp_config, nlp_dims, nlp_opts);
-
-    // *_nlp_solver = nlp_solver;
-    // *_nlp_in = nlp_in; 
-    // *_nlp_out = nlp_out;
-    // *_nlp_opts = nlp_opts;
-    // *_nlp_config = nlp_config;
-    // *_solver_plan = plan;
-    // *_nlp_dims = nlp_dims;
 
     return status;
 }
