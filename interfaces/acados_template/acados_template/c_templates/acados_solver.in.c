@@ -375,7 +375,7 @@ int acados_create() {
 
 
     {% else: %}
-    ocp_nlp_sqp_rti_opts *sqp_opts = (ocp_nlp_sqp_rti_opts *) nlp_opts;
+    // ocp_nlp_sqp_rti_opts *sqp_opts = (ocp_nlp_sqp_rti_opts *) nlp_opts;
     {% endif %}
     for (int i = 0; i < N; ++i)
     {
