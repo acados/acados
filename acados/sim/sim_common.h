@@ -31,10 +31,12 @@
 // maximum number of integration stages
 #define NS_MAX 15
 
-typedef enum {
+
+
+typedef enum
+{
     // ERK and LIFTED_ERK
     EXPL_ODE_FUN,
-    EXPL_ODE_JAC,  // TODO(all): expl_ode_jac_x
     EXPL_ODE_HES,  // wrt x and u ???
     EXPL_VDE_FOR,
     EXPL_VDE_ADJ,
@@ -48,8 +50,11 @@ typedef enum {
     PHI_FUN,
     PHI_FUN_JAC_Y,
     PHI_JAC_Y_UHAT,
-    LO_FUN
+    LO_FUN,
+    GET_GNSF_MATRICES
 } sim_function_t;
+
+
 
 typedef struct
 {
@@ -58,10 +63,10 @@ typedef struct
     double *x;  // x[NX] - initial state value for simulation
     double *u;  // u[NU] - control - constant over simulation time
 
-    double *xdot;   // xdot[NX] - initialization for state derivatives k within the integrator
-    double *z;      // z[NZ] - initialization for algebraic variables z
+    double *xdot;  // xdot[NX] - initialization for state derivatives k within the integrator
+    double *z;     // z[NZ] - initialization for algebraic variables z
 
-    double *S_forw;  // forward seed
+    double *S_forw;  // forward seed [Sx, Su]
     double *S_adj;   // backward seed
 
     void *model;
@@ -70,12 +75,16 @@ typedef struct
 
 } sim_in;
 
+
+
 typedef struct
 {
     double CPUtime;  // in seconds
     double LAtime;   // in seconds
     double ADtime;   // in seconds
 } sim_info;
+
+
 
 typedef struct
 {
@@ -93,6 +102,8 @@ typedef struct
     sim_info *info;
 } sim_out;
 
+
+
 typedef struct
 {
     int ns;  // number of integration stages
@@ -101,6 +112,8 @@ typedef struct
     int num_forw_sens;
 
     int tableau_size;  // check that is consistent with ns
+            // only update when butcher tableau is changed
+            // kind of private -> no setter!
     double *A_mat;
     double *c_vec;
     double *b_vec;
@@ -109,8 +122,8 @@ typedef struct
     bool sens_adj;
     bool sens_hess;
 
-    bool output_z;  // 1 -- if zn should be computed
-    bool sens_algebraic;    // 1 -- if S_algebraic should be computed
+    bool output_z;        // 1 -- if zn should be computed
+    bool sens_algebraic;  // 1 -- if S_algebraic should be computed
 
     // for explicit integrators: newton_iter == 0 && scheme == NULL
     // && jac_reuse=false
@@ -123,13 +136,17 @@ typedef struct
 
 } sim_rk_opts;
 
+
+
 typedef struct
 {
-    int (*evaluate)(void *config, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
-    int (*opts_calculate_size)(void *config, void *dims);
-    void *(*opts_assign)(void *config, void *dims, void *raw_memory);
-    void (*opts_initialize_default)(void *config, void *dims, void *opts);
-    void (*opts_update)(void *config, void *dims, void *opts);
+    int (*evaluate)(void *config_, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
+    int (*precompute)(void *config_, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
+    int (*opts_calculate_size)(void *config_, void *dims);
+    void *(*opts_assign)(void *config_, void *dims, void *raw_memory);
+    void (*opts_initialize_default)(void *config_, void *dims, void *opts);
+    void (*opts_update)(void *config_, void *dims, void *opts);
+    int (*opts_set)(void *config_, void *opts_, const char *field, void *value);
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
@@ -139,14 +156,14 @@ typedef struct
     void (*config_initialize_default)(void *config);
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
-    // getters & setters
+    void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);
     void (*get_nx)(void *dims_, int *nx);
     void (*get_nu)(void *dims_, int *nu);
     void (*get_nz)(void *dims_, int *nz);
-    void (*set_nx)(void *dims_, int nx);
-    void (*set_nu)(void *dims_, int nu);
-    void (*set_nz)(void *dims_, int nz);
+
 } sim_solver_config;
+
+
 
 //
 int sim_solver_config_calculate_size();
@@ -160,5 +177,8 @@ sim_in *sim_in_assign(void *config, void *dims, void *raw_memory);
 int sim_out_calculate_size(void *config, void *dims);
 //
 sim_out *sim_out_assign(void *config, void *dims, void *raw_memory);
+//
+int sim_rk_opts_set(sim_rk_opts *opts, const char *field, void *value);
+
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

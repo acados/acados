@@ -7,23 +7,23 @@
 extern "C" {
 #endif
 
-#define X0_NM2_FILE "/home/oj/Git/acados/examples/c/chain_model/x0_nm2.txt"
-#define X0_NM3_FILE "/home/oj/Git/acados/examples/c/chain_model/x0_nm3.txt"
-#define X0_NM4_FILE "/home/oj/Git/acados/examples/c/chain_model/x0_nm4.txt"
-#define X0_NM5_FILE "/home/oj/Git/acados/examples/c/chain_model/x0_nm5.txt"
-#define X0_NM6_FILE "/home/oj/Git/acados/examples/c/chain_model/x0_nm6.txt"
-#define X0_NM7_FILE "/home/oj/Git/acados/examples/c/chain_model/x0_nm7.txt"
-#define X0_NM8_FILE "/home/oj/Git/acados/examples/c/chain_model/x0_nm8.txt"
-#define X0_NM9_FILE "/home/oj/Git/acados/examples/c/chain_model/x0_nm9.txt"
+#define X0_NM2_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm2.txt"
+#define X0_NM3_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm3.txt"
+#define X0_NM4_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm4.txt"
+#define X0_NM5_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm5.txt"
+#define X0_NM6_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm6.txt"
+#define X0_NM7_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm7.txt"
+#define X0_NM8_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm8.txt"
+#define X0_NM9_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm9.txt"
 
-#define XN_NM2_FILE "/home/oj/Git/acados/examples/c/chain_model/xN_nm2.txt"
-#define XN_NM3_FILE "/home/oj/Git/acados/examples/c/chain_model/xN_nm3.txt"
-#define XN_NM4_FILE "/home/oj/Git/acados/examples/c/chain_model/xN_nm4.txt"
-#define XN_NM5_FILE "/home/oj/Git/acados/examples/c/chain_model/xN_nm5.txt"
-#define XN_NM6_FILE "/home/oj/Git/acados/examples/c/chain_model/xN_nm6.txt"
-#define XN_NM7_FILE "/home/oj/Git/acados/examples/c/chain_model/xN_nm7.txt"
-#define XN_NM8_FILE "/home/oj/Git/acados/examples/c/chain_model/xN_nm8.txt"
-#define XN_NM9_FILE "/home/oj/Git/acados/examples/c/chain_model/xN_nm9.txt"
+#define XN_NM2_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm2.txt"
+#define XN_NM3_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm3.txt"
+#define XN_NM4_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm4.txt"
+#define XN_NM5_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm5.txt"
+#define XN_NM6_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm6.txt"
+#define XN_NM7_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm7.txt"
+#define XN_NM8_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm8.txt"
+#define XN_NM9_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm9.txt"
 
 /* forward vde */
 int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
@@ -80,60 +80,6 @@ int vde_chain_nm7_n_out();
 int vde_chain_nm8_n_out();
 int vde_chain_nm9_n_out();
 
-/* jacobian ode */
-int jac_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
-int jac_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
-int jac_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
-int jac_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
-int jac_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
-int jac_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
-int jac_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
-int jac_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
-
-int jac_chain_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
-int jac_chain_nm3_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
-int jac_chain_nm4_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
-int jac_chain_nm5_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
-int jac_chain_nm6_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
-int jac_chain_nm7_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
-int jac_chain_nm8_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
-int jac_chain_nm9_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
-
-const int* jac_chain_nm2_sparsity_in(int i);
-const int* jac_chain_nm3_sparsity_in(int i);
-const int* jac_chain_nm4_sparsity_in(int i);
-const int* jac_chain_nm5_sparsity_in(int i);
-const int* jac_chain_nm6_sparsity_in(int i);
-const int* jac_chain_nm7_sparsity_in(int i);
-const int* jac_chain_nm8_sparsity_in(int i);
-const int* jac_chain_nm9_sparsity_in(int i);
-
-const int* jac_chain_nm2_sparsity_out(int i);
-const int* jac_chain_nm3_sparsity_out(int i);
-const int* jac_chain_nm4_sparsity_out(int i);
-const int* jac_chain_nm5_sparsity_out(int i);
-const int* jac_chain_nm6_sparsity_out(int i);
-const int* jac_chain_nm7_sparsity_out(int i);
-const int* jac_chain_nm8_sparsity_out(int i);
-const int* jac_chain_nm9_sparsity_out(int i);
-
-int jac_chain_nm2_n_in();
-int jac_chain_nm3_n_in();
-int jac_chain_nm4_n_in();
-int jac_chain_nm5_n_in();
-int jac_chain_nm6_n_in();
-int jac_chain_nm7_n_in();
-int jac_chain_nm8_n_in();
-int jac_chain_nm9_n_in();
-
-int jac_chain_nm2_n_out();
-int jac_chain_nm3_n_out();
-int jac_chain_nm4_n_out();
-int jac_chain_nm5_n_out();
-int jac_chain_nm6_n_out();
-int jac_chain_nm7_n_out();
-int jac_chain_nm8_n_out();
-int jac_chain_nm9_n_out();
 
 /* adjoint vde */
 int vde_adj_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);

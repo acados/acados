@@ -78,10 +78,27 @@ int main() {
 	for (int i = 0; i <= N; i++)
 		plan->nlp_constraints[i] = BGHP;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), np.data(), ns.data(), nz.data(), dims);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx.data());
+    ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu.data());
+    ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz.data());
+    ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns.data());
+
+    for (int i = 0; i <= N; i++)
+    {
+        ocp_nlp_dims_set_cost(config, dims, i, "ny", ny.data()+i);
+
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbx", nbx.data()+i);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbu", nbu.data()+i);
+        ocp_nlp_dims_set_constraints(config, dims, i, "ng", ng.data()+i);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", nh.data()+i);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", nh.data()+i);
+        ocp_nlp_dims_set_constraints(config, dims, i, "np", np.data()+i);
+    }
+
+
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
@@ -184,12 +201,19 @@ int main() {
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
+    int maxIter = max_num_sqp_iterations;
+    double min_res_g = 1e-9;
+    double min_res_b = 1e-9;
+    double min_res_d = 1e-9;
+    double min_res_m = 1e-9;
+
+	ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
+	ocp_nlp_opts_set(config, nlp_opts, "min_res_m", &min_res_m);
+
 	ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
-    sqp_opts->maxIter = max_num_sqp_iterations;
-    sqp_opts->min_res_g = 1e-9;
-    sqp_opts->min_res_b = 1e-9;
-    sqp_opts->min_res_d = 1e-9;
-    sqp_opts->min_res_m = 1e-9;
 	((ocp_qp_partial_condensing_solver_opts *) sqp_opts->qp_solver_opts)->pcond_opts->N2 = N;
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
@@ -200,12 +224,13 @@ int main() {
 		// BLASFEO_DVECEL(nlp_out->ux+i, 3) = PI;
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+    int solver_status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
 	// NLP solution
     acados_timer timer;
     acados_tic(&timer);
 
-	int solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
+	solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
     double elapsed_time = acados_toc(&timer);
 

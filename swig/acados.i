@@ -40,6 +40,7 @@ typedef PyObject LangObject;
 %include "std_vector.i"
 namespace std {
     %template(vector_i) vector<int>;
+    %template(vector_d) vector<double>;
     %template(vector_string) vector<string>;
     %template(vector_O) vector<LangObject *>;
 };
@@ -76,3 +77,5 @@ namespace std {
 %feature("autodoc", "3");
 %include "ocp_qp.i"
 %include "ocp_nlp.i"
+
+%include "integrator.i"

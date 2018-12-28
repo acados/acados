@@ -41,11 +41,15 @@ typedef struct
     int nx;
     int nu;
     int nb;  // nbx + nbu
-    int nbx;
     int nbu;
+    int nbx;
     int ng;  // number of general linear constraints
     int nh;  // number of nonlinear path constraints
-    int ns;  // number of soft constraints
+    int ns;  // nsbu + nsbx + nsg + nsh
+    int nsbu;  // number of softed input bounds
+    int nsbx;  // number of softed state bounds
+    int nsg;  // number of softed general linear constraints
+    int nsh;  // number of softed nonlinear constraints
 } ocp_nlp_constraints_bgh_dims;
 
 //
@@ -55,7 +59,11 @@ void *ocp_nlp_constraints_bgh_dims_assign(void *config, void *raw_memory);
 //
 void ocp_nlp_constraints_bgh_dims_initialize(void *config, void *dims, int nx, int nu, int nbx,
                                          int nbu, int ng, int nh, int dummy0, int ns);
-
+//
+void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *field, int* value);
+//
+void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_,
+                                      const char *field, const int* value);
 
 
 /************************************************
@@ -67,15 +75,19 @@ typedef struct
     //  ocp_nlp_constraints_bgh_dims *dims;
     int *idxb;
     int *idxs;
-    struct blasfeo_dvec d;
-    struct blasfeo_dmat DCt;
-    external_function_generic *h;
+    struct blasfeo_dvec d;  // gathers bounds
+    struct blasfeo_dmat DCt;  // general linear constraint matrix
+            // lg <= [D, C] * [u; x] <= ug
+    external_function_generic *h;  // nonlinear: lh <= h(x,u) <= uh
 } ocp_nlp_constraints_bgh_model;
 
 //
 int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims, void *raw_memory);
+//
+int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
+                         void *model_, const char *field, void *value);
 
 
 

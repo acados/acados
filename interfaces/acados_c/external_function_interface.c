@@ -38,6 +38,8 @@ void external_function_casadi_create(external_function_casadi *fun)
     return;
 }
 
+
+
 void external_function_casadi_create_array(int size, external_function_casadi *funs)
 {
     // loop index
@@ -73,12 +75,16 @@ void external_function_casadi_create_array(int size, external_function_casadi *f
     return;
 }
 
+
+
 void external_function_casadi_free(external_function_casadi *fun)
 {
     free(fun->ptr_ext_mem);
 
     return;
 }
+
+
 
 void external_function_casadi_free_array(int size, external_function_casadi *funs)
 {
@@ -87,8 +93,10 @@ void external_function_casadi_free_array(int size, external_function_casadi *fun
     return;
 }
 
+
+
 /************************************************
- * casadi external paramteric function
+ * casadi external parametric function
  ************************************************/
 
 void external_function_param_casadi_create(external_function_param_casadi *fun, int np)

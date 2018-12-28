@@ -107,3 +107,6 @@ build*
 *.asv
 *.swo
 *.autosave
+_autogen
+tags
+compile_commands.json

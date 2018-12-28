@@ -43,6 +43,7 @@ typedef struct
                             int nh, int nq, int ns);
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
+    int (*model_set)(void *config_, void *dims_, void *model_, const char *field, void *value);
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
@@ -64,6 +65,9 @@ typedef struct
     void (*update_qp_matrices)(void *config, void *dims, void *model, void *opts, void *mem,
                                void *work);
     void (*config_initialize_default)(void *config);
+    // dimension setters
+    void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);
+    void (*get_dims)(void *config_, void *dims_, const char *field, int* value);
 } ocp_nlp_constraints_config;
 
 //

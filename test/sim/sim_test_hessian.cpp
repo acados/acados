@@ -193,16 +193,6 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     expl_ode_fun.casadi_n_out = &pendulum_ode_expl_ode_fun_n_out;
     external_function_casadi_create(&expl_ode_fun);
 
-    // expl_ode_jac
-    external_function_casadi expl_ode_jac;
-    expl_ode_jac.casadi_fun = &pendulum_ode_expl_ode_jac;
-    expl_ode_jac.casadi_work = &pendulum_ode_expl_ode_jac_work;
-    expl_ode_jac.casadi_sparsity_in = &pendulum_ode_expl_ode_jac_sparsity_in;
-    expl_ode_jac.casadi_sparsity_out = &pendulum_ode_expl_ode_jac_sparsity_out;
-    expl_ode_jac.casadi_n_in = &pendulum_ode_expl_ode_jac_n_in;
-    expl_ode_jac.casadi_n_out = &pendulum_ode_expl_ode_jac_n_out;
-    external_function_casadi_create(&expl_ode_jac);
-
     // expl_vde_for
     external_function_casadi expl_vde_for;
     expl_vde_for.casadi_fun = &pendulum_ode_expl_vde_forw;
@@ -245,9 +235,9 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     void *dims = sim_dims_create(config);
 
     /* set dimensions */
-    config->set_nx(dims, nx);
-    config->set_nu(dims, nu);
-    config->set_nz(dims, nz);
+    sim_dims_set(config, dims, "nx", &nx);
+    sim_dims_set(config, dims, "nu", &nu);
+    sim_dims_set(config, dims, "nz", &nz);
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);
@@ -275,19 +265,19 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     {
         case ERK:  // ERK
         {
-            sim_set_model(config, in, "expl_ode_fun", &expl_ode_fun);
-            sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-            sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
-            sim_set_model(config, in, "expl_ode_hess", &expl_ode_hess);
+            sim_model_set(config, in, "expl_ode_fun", &expl_ode_fun);
+            sim_model_set(config, in, "expl_vde_for", &expl_vde_for);
+            sim_model_set(config, in, "expl_vde_adj", &expl_vde_adj);
+            sim_model_set(config, in, "expl_ode_hess", &expl_ode_hess);
             break;
         }
         case IRK:  // IRK
         {
-            sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-            sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
+            sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
+            sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
                     &impl_ode_fun_jac_x_xdot);
-            sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-            sim_set_model(config, in, "impl_ode_hess", &impl_ode_hess);
+            sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+            sim_model_set(config, in, "impl_ode_hess", &impl_ode_hess);
             break;
         }
         default :
@@ -410,9 +400,10 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
             /* sim dims */
                 void *dims = sim_dims_create(config);
-                config->set_nx(dims, nx);
-                config->set_nu(dims, nu);
-                config->set_nz(dims, nz);
+                /* set dimensions */
+                sim_dims_set(config, dims, "nx", &nx);
+                sim_dims_set(config, dims, "nu", &nu);
+                sim_dims_set(config, dims, "nz", &nz);
 
             /* sim options */
 
@@ -463,19 +454,19 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                 {
                     case ERK:  // ERK
                     {
-                        sim_set_model(config, in, "expl_ode_fun", &expl_ode_fun);
-                        sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
-                        sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
-                        sim_set_model(config, in, "expl_ode_hess", &expl_ode_hess);
+                        sim_model_set(config, in, "expl_ode_fun", &expl_ode_fun);
+                        sim_model_set(config, in, "expl_vde_for", &expl_vde_for);
+                        sim_model_set(config, in, "expl_vde_adj", &expl_vde_adj);
+                        sim_model_set(config, in, "expl_ode_hess", &expl_ode_hess);
                         break;
                     }
                     case IRK:  // IRK
                     {
-                        sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-                        sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
+                        sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
+                        sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
                                 &impl_ode_fun_jac_x_xdot);
-                        sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-                        sim_set_model(config, in, "impl_ode_hess", &impl_ode_hess);
+                        sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                        sim_model_set(config, in, "impl_ode_hess", &impl_ode_hess);
                         break;
                     }
                     default :
@@ -630,7 +621,6 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     external_function_casadi_free(&impl_ode_hess);
     // explicit model
     external_function_casadi_free(&expl_ode_fun);
-    external_function_casadi_free(&expl_ode_jac);
     external_function_casadi_free(&expl_vde_for);
     external_function_casadi_free(&expl_vde_adj);
     external_function_casadi_free(&expl_ode_hess);
@@ -719,9 +709,9 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     void *dims = sim_dims_create(config);
 
     /* set dimensions */
-    config->set_nx(dims, nx);
-    config->set_nu(dims, nu);
-    config->set_nz(dims, nz);
+    sim_dims_set(config, dims, "nx", &nx);
+    sim_dims_set(config, dims, "nu", &nu);
+    sim_dims_set(config, dims, "nz", &nz);
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);
@@ -745,11 +735,11 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     {
         case IRK:  // IRK
         {
-            sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-            sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
+            sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
+            sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
                     &impl_ode_fun_jac_x_xdot);
-            sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-            sim_set_model(config, in, "impl_ode_hess", &impl_ode_hess);
+            sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+            sim_model_set(config, in, "impl_ode_hess", &impl_ode_hess);
             break;
         }
         default :

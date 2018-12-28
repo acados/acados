@@ -22,8 +22,8 @@
 - [x] lifted IRK
 - [x] collocation integrators GL
 - [ ] collocation integrators Radau
-- [ ] discrete-time systems
-- [ ] second order sensitivities
+- [x] discrete-time systems
+- [x] second order sensitivities
 
 #### `general`
 - [ ] allow for models with varying state and control dimensions

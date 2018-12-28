@@ -39,12 +39,16 @@ typedef struct
     int nx;
     int nu;
     int nb;  // nbx + nbu
-    int nbx;
     int nbu;
+    int nbx;
     int ng;  // number of general linear constraints
     int nh;  // number of nonlinear path constraints
+    int ns;  // nsbu + nsbx + nsg + nsh
+    int nsbu;  // number of softed input bounds
+    int nsbx;  // number of softed state bounds
+    int nsg;  // number of softed general linear constraints
+    int nsh;  // number of softed nonlinear constraints
     int np;  // dimension of nonlinear function in quadratic_over_nonlinear constraint
-    int ns;  // number of soft constraints
 } ocp_nlp_constraints_bghp_dims;
 
 //
@@ -54,7 +58,8 @@ void *ocp_nlp_constraints_bghp_dims_assign(void *config, void *raw_memory);
 //
 void ocp_nlp_constraints_bghp_dims_initialize(void *config, void *dims, int nx, int nu, int nbx,
                                          int nbu, int ng, int nh, int nq, int ns);
-
+//
+void ocp_nlp_constraints_bghp_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 
 /* model */
@@ -74,6 +79,9 @@ typedef struct
 int ocp_nlp_constraints_bghp_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_constraints_bghp_assign(void *config, void *dims, void *raw_memory);
+//
+int ocp_nlp_constraints_bghp_model_set(void *config_, void *dims_,
+                         void *model_, const char *field, void *value);
 
 /* options */
 

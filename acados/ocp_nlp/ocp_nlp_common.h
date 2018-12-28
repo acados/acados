@@ -39,10 +39,6 @@ extern "C" {
  * config
  ************************************************/
 
-/************************************************
- * config
- ************************************************/
-
 typedef struct
 {
     int N;  // number of stages
@@ -55,14 +51,19 @@ typedef struct
     int (*memory_calculate_size)(void *config, void *dims, void *opts_);
     void *(*memory_assign)(void *config, void *dims, void *opts_, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts_);
-
+    void (*opts_set)(void *config_, void *opts_, const char *field, const void* value);
+    int (*dynamics_opts_set)(void *config, void *opts_, int stage,
+                                     const char *field, void *value);
     // evaluate solver
     int (*evaluate)(void *config, void *dims, void *qp_in, void *qp_out,
                     void *opts_, void *mem, void *work);
-
+    // prepare memory
+    int (*precompute)(void *config, void *dims, void *qp_in, void *qp_out,
+                void *opts_, void *mem, void *work);
     // initalize this struct with default values
     void (*config_initialize_default)(void *config);
-
+    // general getter
+    void (*get)(void *config_, void *mem_, const char *field, void *return_value_);
     // config structs of submodules
     ocp_qp_xcond_solver_config *qp_solver;
     ocp_nlp_dynamics_config **dynamics;
@@ -91,11 +92,12 @@ typedef struct
     ocp_qp_dims *qp_solver;  // xcond solver instead ??
 
     int *nv;  // number of primal variables (states+controls+slacks)
-    int *nx;  // number of states
+    int *nx;  // number of differential states
     int *nu;  // number of inputs
     int *ni;  // number of two-sided inequality constraints TODO make one-sided ???
-    int *nz;
-    int N;
+    int *nz;  // number of algebraic variables
+    int *ns;  // number of slack variables
+    int N;    // number of shooting nodes
 } ocp_nlp_dims;
 
 //
@@ -107,10 +109,17 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_dims_initialize(void *config, int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng,
-                             int *nh, int *nq, int *ns, int *nz, ocp_nlp_dims *dims);
-
-
+void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_,
+                               const char *field, const void* value_array);
+//
+void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage,
+                                  const char *field, const void* value_field);
+//
+void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage, const char *field,
+                           const void* value_field);
+//
+void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage, const char *field,
+                               const void* value);
 
 /************************************************
  * in
@@ -133,7 +142,6 @@ int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory);
 //
 ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
-
 
 
 /************************************************

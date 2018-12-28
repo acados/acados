@@ -63,20 +63,35 @@ typedef struct
     void *work;
 } ocp_qp_solver;
 
-//
+/* config */
 void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
                                                    ocp_qp_xcond_solver_config *solver_config);
 //
 ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan);
 //
+void ocp_qp_config_free(void *config_);
+
+/* dims */
 ocp_qp_dims *ocp_qp_dims_create(int N);
 //
+void ocp_qp_dims_free(void *dims_);
+
+/* in */
 ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
 //
+void ocp_qp_in_free(void *in_);
+
+/* out */
 ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
 //
+void ocp_qp_out_free(void *out_);
+
+/* opts */
 void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
 //
+void ocp_qp_opts_free(void *opts_);
+
+/* solver */
 int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_);
 //
 ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_,

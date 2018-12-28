@@ -22,6 +22,6 @@ x = vertcat(p, theta, v, omega);
 nx = length(x);
 nu = 1;
 
-ode_model = Function('pendulum', {x, F}, {ode_rhs});
+ode_model = Function('pendulum', {x, F}, {ode_rhs}, {'x', 'u'}, {'rhs'});
 
 end

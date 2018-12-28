@@ -31,6 +31,12 @@ end
 %% load model
 x = model.x;
 u = model.u;
+if class(x(1)) == 'casadi.SX'
+    isSX = true;
+else
+    isSX = false;
+end
+
 f_expl = model.f_expl_expr;
 model_name = model.name;
 
@@ -39,29 +45,35 @@ nx = length(x);
 nu = length(u);
 
 %% set up functions to be exported
-Sx = SX.sym('Sx',nx,nx);
-Sp = SX.sym('Sp',nx,nu);
-lambdaX = SX.sym('lambdaX',nx,1);
-
+if isSX
+    Sx = SX.sym('Sx',nx,nx);
+    Sp = SX.sym('Sp',nx,nu);
+    lambdaX = SX.sym('lambdaX',nx,1);
+    vdeX = SX.zeros(nx,nx);
+    vdeP = SX.zeros(nx,nu) + jacobian(f_expl,u);
+else
+    Sx = MX.sym('Sx',nx,nx);
+    Sp = MX.sym('Sp',nx,nu);
+    lambdaX = MX.sym('lambdaX',nx,1);
+    vdeX = MX.zeros(nx,nx);
+    vdeP = MX.zeros(nx,nu) + jacobian(f_expl,u);
+end
 expl_ode_fun = Function([model_name,'_expl_ode_fun'],{x,u},{f_expl});
 % TODO: Polish: get rid of SX.zeros
-vdeX = SX.zeros(nx,nx);
+
 vdeX = vdeX + jtimes(f_expl,x,Sx);
 
-vdeP = SX.zeros(nx,nu) + jacobian(f_expl,u);
 vdeP = vdeP + jtimes(f_expl,x,Sp);
 
 expl_vde_forw = Function([model_name,'_expl_vde_forw'],{x,Sx,Sp,u},{f_expl,vdeX,vdeP});
-
-jacX = SX.zeros(nx,nx) + jacobian(f_expl,x);
-expl_ode_jac = Function([model_name,'_expl_ode_jac'],{x,u},{f_expl,jacX});
 
 adj = jtimes(f_expl,[x;u],lambdaX,true);
 
 expl_vde_adj = Function([model_name,'_expl_vde_adj'],{x,lambdaX,u},{adj});
 
 S_forw = vertcat(horzcat(Sx, Sp), horzcat(zeros(nu,nx), eye(nu)));
-hess = S_forw.'*jtimes(adj,[x;u],S_forw);
+temp = jtimes(adj,[x;u],S_forw)
+hess = mtimes(S_forw.',jtimes(adj,[x;u],S_forw));
 hess2 = [];
 for j = 1:nx+nu
     for i = j:nx+nu
@@ -74,7 +86,6 @@ expl_ode_hess = Function([model_name,'_expl_ode_hess'],{x,Sx,Sp,lambdaX,u},{adj,
 %% generate C code
 expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);
 expl_vde_forw.generate([model_name,'_expl_vde_forw'], casadi_opts);
-expl_ode_jac.generate([model_name,'_expl_ode_jac'], casadi_opts);
 expl_vde_adj.generate([model_name,'_expl_vde_adj'], casadi_opts);
 expl_ode_hess.generate([model_name,'_expl_ode_hess'], casadi_opts);
 

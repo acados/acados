@@ -33,7 +33,6 @@
 
 // acados
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_gnsf.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/math.h"
 
@@ -85,18 +84,15 @@ TEST_CASE("crane_dae_example", "[integrators]")
     vector<std::string> solvers = {"IRK", "GNSF"};
     // initialize dimensions
 
-    const int nx = 9;
-    const int nu = 2;
-    const int nz = 2;
-    const int n_out = 1;    // gnsf split
-    const int ny = 4;
-    const int nuhat = 1;
+    int nx = 9;
+    int nu = 2;
+    int nz = 2;
+    int nout = 1;    // gnsf split
+    int ny = 4;
+    int nuhat = 1;
 
-    const int nx1 = 5;
-    const int nz1 = 0;
-    const int nx2 = 4;
-    const int nz2 = 2;
-
+    int nx1 = 5;
+    int nz1 = 0;
 
     // generate x0, u_sim
     double x0[nx];
@@ -249,20 +245,18 @@ TEST_CASE("crane_dae_example", "[integrators]")
     void *dims = sim_dims_create(config);
 
     /* set dimensions */
-    config->set_nx(dims, nx);
-    config->set_nu(dims, nu);
-    config->set_nz(dims, nz);
+    sim_dims_set(config, dims, "nx", &nx);
+    sim_dims_set(config, dims, "nu", &nu);
+    sim_dims_set(config, dims, "nz", &nz);
 
     // GNSF -- set additional dimensions
-    sim_gnsf_dims *gnsf_dim;
     if (plan.sim_solver == GNSF)
     {
-        gnsf_dim = (sim_gnsf_dims *) dims;
-        gnsf_dim->nx1 = nx1;
-        gnsf_dim->nz1 = nz1;
-        gnsf_dim->ny = ny;
-        gnsf_dim->nuhat = nuhat;
-        gnsf_dim->n_out = n_out;
+        sim_dims_set(config, dims, "nx1", &nx1);
+        sim_dims_set(config, dims, "nz1", &nz1);
+        sim_dims_set(config, dims, "nout", &nout);
+        sim_dims_set(config, dims, "ny", &ny);
+        sim_dims_set(config, dims, "nuhat", &nuhat);
     }
 
     // set opts
@@ -286,35 +280,25 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
     in->T = T;
 
-    // import model matrices
-    external_function_generic *get_model_matrices =
-            (external_function_generic *) &get_matrices_fun;
-    gnsf_model *model = (gnsf_model *) in->model;
-
     // set model
     switch (plan.sim_solver)
     {
         case IRK:  // IRK
         {
-            sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-            sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
+            sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
+            sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
                     &impl_ode_fun_jac_x_xdot);
-            sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+            sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
             break;
         }
         case GNSF:  // GNSF
         {
             // set model funtions
-            sim_set_model(config, in, "phi_fun", &phi_fun);
-            sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
-            sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
-            sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
-
-            // import model matrices
-            external_function_generic *get_model_matrices =
-                    (external_function_generic *) &get_matrices_fun;
-            gnsf_model *model = (gnsf_model *) in->model;
-            sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
+            sim_model_set(config, in, "phi_fun", &phi_fun);
+            sim_model_set(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
+            sim_model_set(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
+            sim_model_set(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+            sim_model_set(config, in, "get_gnsf_matrices", &get_matrices_fun);
             break;
         }
         default :
@@ -341,13 +325,6 @@ TEST_CASE("crane_dae_example", "[integrators]")
     ************************************************/
 
     sim_solver *sim_solver = sim_create(config, dims, opts);
-
-
-    if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
-        gnsf_model *model = (gnsf_model *) in->model;
-        sim_gnsf_precompute(config, gnsf_dim, model, opts,
-                    sim_solver->mem, sim_solver->work, in->T);
-    }
 
     int acados_return;
 
@@ -406,13 +383,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
     // d_print_exp_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
 
     /* free */
-    free(config);
-    free(dims);
-    free(opts);
+    sim_config_free(config);
+    sim_dims_free(dims);
+    sim_opts_free(opts);
 
-    free(in);
-    free(out);
-    free(sim_solver);
+    sim_in_free(in);
+    sim_out_free(out);
+    sim_free(sim_solver);
 
 /************************************************
 * test solver loop
@@ -460,21 +437,18 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 sim_solver_config *config = sim_config_create(plan);
 
             /* sim dims */
-                void *dims = sim_dims_create(config);
-                config->set_nx(dims, nx);
-                config->set_nu(dims, nu);
-                config->set_nz(dims, nz);
+                sim_dims_set(config, dims, "nx", &nx);
+                sim_dims_set(config, dims, "nu", &nu);
+                sim_dims_set(config, dims, "nz", &nz);
 
                 // GNSF -- set additional dimensions
-                sim_gnsf_dims *gnsf_dim;
                 if (plan.sim_solver == GNSF)
                 {
-                    gnsf_dim = (sim_gnsf_dims *) dims;
-                    gnsf_dim->nx1 = nx1;
-                    gnsf_dim->nz1 = nz1;
-                    gnsf_dim->ny = ny;
-                    gnsf_dim->nuhat = nuhat;
-                    gnsf_dim->n_out = n_out;
+                    sim_dims_set(config, dims, "nx1", &nx1);
+                    sim_dims_set(config, dims, "nz1", &nz1);
+                    sim_dims_set(config, dims, "nout", &nout);
+                    sim_dims_set(config, dims, "ny", &ny);
+                    sim_dims_set(config, dims, "nuhat", &nuhat);
                 }
 
             /* sim options */
@@ -507,25 +481,21 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 {
                     case IRK:  // IRK
                     {
-                        sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
-                        sim_set_model(config, in, "impl_ode_fun_jac_x_xdot",
+                        sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
+                        sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
                                 &impl_ode_fun_jac_x_xdot);
-                        sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                        sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
                         break;
                     }
                     case GNSF:  // GNSF
                     {
                         // set model funtions
-                        sim_set_model(config, in, "phi_fun", &phi_fun);
-                        sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
-                        sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
-                        sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+                        sim_model_set(config, in, "phi_fun", &phi_fun);
+                        sim_model_set(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
+                        sim_model_set(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
+                        sim_model_set(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+                        sim_model_set(config, in, "get_gnsf_matrices", &get_matrices_fun);
 
-                        // import model matrices
-                        external_function_generic *get_model_matrices =
-                                (external_function_generic *) &get_matrices_fun;
-                        gnsf_model *model = (gnsf_model *) in->model;
-                        sim_gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
                         break;
                     }
                     default :
@@ -551,11 +521,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 sim_solver = sim_create(config, dims, opts);
                 int acados_return;
 
-                if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
-                    gnsf_model *model = (gnsf_model *) in->model;
-                    sim_gnsf_precompute(config, gnsf_dim, model, opts,
-                             sim_solver->mem, sim_solver->work, in->T);
-                }
+                // if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
+                //     gnsf_model *model = (gnsf_model *) in->model;
+                //     sim_gnsf_precompute(config, dims, model, opts,
+                //              sim_solver->mem, sim_solver->work, in->T);
+                // }
+                // TODO(oj): propagate upwards
+                sim_precompute(sim_solver, in, out);
 
             /* print */
                 std::cout << "\n---> testing integrator " << solver;
@@ -697,13 +669,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
             /************************************************
             * free tested solver
             ************************************************/
-                free(config);
-                free(dims);
-                free(opts);
+                sim_config_free(config);
+                sim_dims_free(dims);
+                sim_opts_free(opts);
 
-                free(in);
-                free(out);
-                free(sim_solver);
+                sim_in_free(in);
+                sim_out_free(out);
+                sim_free(sim_solver);
             }  // end SECTION
             }  // end for
             }  // end SECTION

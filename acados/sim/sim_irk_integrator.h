@@ -116,9 +116,7 @@ typedef struct
 } sim_irk_workspace;
 
 // get & set functions
-void sim_irk_set_nx(void *dims_, int nx);
-void sim_irk_set_nu(void *dims_, int nu);
-void sim_irk_set_nz(void *dims_, int nz);
+void sim_irk_dims_set(void *config_, void *dims_, const char *field, const int* value);
 
 void sim_irk_get_nx(void *dims_, int *nx);
 void sim_irk_get_nu(void *dims_, int *nu);
@@ -138,6 +136,7 @@ int sim_irk_opts_calculate_size(void *config, void *dims);
 void *sim_irk_opts_assign(void *config, void *dims, void *raw_memory);
 void sim_irk_opts_initialize_default(void *config, void *dims, void *opts_);
 void sim_irk_opts_update(void *config_, void *dims, void *opts_);
+int sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value);
 
 // memory
 int sim_irk_memory_calculate_size(void *config, void *dims, void *opts_);
