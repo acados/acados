@@ -39,8 +39,8 @@
 
 int main() {
 
-	int num_states = 6, num_controls = 1, N = 20;
-	double Tf = 1.0, R = 1e-2, QN = 1e-10, F_max = 80;
+	int num_states = 6, num_controls = 1, N = 10;
+	double Tf = 1.0, R = 1e-2, QN = 1e1, F_max = 80;
     double Q[6] = {1e-3, 1e-3, 1e-3, 1e-3, 1e2, 1e-2};
 	int idxb_0[6] = {1, 2, 3, 4, 5, 6};
 	double x0[num_states];
@@ -87,14 +87,15 @@ int main() {
     nb[0] = num_states;
     nu[N] = 0;
     nh[N] = 0;
-    np[N] = 2;
+    np[N] = 0;
     nv[N] = num_states; 
     ny[N] = num_states;
 
 	// Make plan
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
 	plan->nlp_solver = SQP;
-	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+	// plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = LINEAR_LS;
 	for (int i = 0; i < N; i++)
