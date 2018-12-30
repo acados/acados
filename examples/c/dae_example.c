@@ -78,7 +78,7 @@ int main() {
         nh[i] = 0;
         np[i] = 0;
         ns[i] = 0;
-        nz[i] = 0;
+        nz[i] = 5;
         nv[i] = num_states + num_controls;
         ny[i] = num_states + num_controls;
     }
@@ -106,10 +106,23 @@ int main() {
 	for (int i = 0; i <= N; i++)
 		plan->nlp_constraints[i] = BGH;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, np, ns, nz, dims);
+	// ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, np, ns, nz, dims);
+
+    ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
+    ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
+    ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
+
+    for (int i = 0; i <= N; i++) {
+        ocp_nlp_dims_set_cost(config, dims, i, "ny", &ny[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
+    }
 
 	external_function_casadi impl_ode_fun[N];
 	external_function_casadi impl_ode_fun_jac_x_xdot_z[N];
@@ -238,21 +251,8 @@ int main() {
 		irk_model *model = dynamics->sim_model;
 		model->impl_ode_fun = (external_function_generic *) &impl_ode_fun[i];
 		model->impl_ode_fun_jac_x_xdot_z = (external_function_generic *) &impl_ode_fun_jac_x_xdot_z[i];
-		model->impl_ode_jac_x_xdot_z_u = (external_function_generic *) &impl_ode_jac_x_xdot_z_u[i]; // TODO(zanellia): need to swapp z and u!!
+		model->impl_ode_jac_x_xdot_z_u = (external_function_generic *) &impl_ode_jac_x_xdot_z_u[i]; // TODO(zanellia): need to swap z and u!!
 	}
-
-	// // nonlinear part of convex-composite constraint
-	// external_function_casadi position_constraint;
-	// position_constraint.casadi_fun = &position;
-	// position_constraint.casadi_n_in = &position_n_in;
-	// position_constraint.casadi_n_out = &position_n_out;
-	// position_constraint.casadi_sparsity_in = &position_sparsity_in;
-	// position_constraint.casadi_sparsity_out = &position_sparsity_out;
-	// position_constraint.casadi_work = &position_work;
-
-	// constraint_size = external_function_casadi_calculate_size(&position_constraint);
-	// ptr = malloc(constraint_size);
-	// external_function_casadi_assign(&position_constraint, ptr);
 
 	// bounds
 	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
@@ -260,18 +260,6 @@ int main() {
     constraints[0]->idxb = idxb_0;
 	blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, 0);
 	blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, nb[0]+ng[0]);
-
-	// double lbu[1] = {-F_max}, ubu[1] = {F_max};
-	// for (int i = 1; i < N; ++i)
-	// {
-	// 	constraints[i]->idxb[0] = 0;
-	// 	blasfeo_pack_dvec(nb[i], lbu, &constraints[i]->d, 0);
-	// 	blasfeo_pack_dvec(nb[i], ubu, &constraints[i]->d, nb[i]+ng[i]);
-	// }
-	// blasfeo_pack_dvec(nh[N], &neg_inf, &constraints[N]->d, nb[N]+ng[N]);
-	// blasfeo_pack_dvec(nh[N], &radius2, &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
-	// constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
-	// constraints[N]->p = (external_function_generic *) &position_constraint;
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
@@ -284,11 +272,10 @@ int main() {
 	((ocp_qp_partial_condensing_solver_opts *) sqp_opts->qp_solver_opts)->pcond_opts->N2 = N;
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
-	for (int i = 0; i <= N; ++i)
+	for (int i = 0; i <= N; ++i) {
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
-
-	// for (int i = 0; i <= N; ++i)
-		// BLASFEO_DVECEL(nlp_out->ux+i, 3) = PI;
+		blasfeo_dvecse(1, 0.1, nlp_out->ux+i, 0);
+    }
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 

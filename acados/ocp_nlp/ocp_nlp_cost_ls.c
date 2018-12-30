@@ -79,7 +79,7 @@ void *ocp_nlp_cost_ls_dims_assign(void *config_, void *raw_memory)
     return dims;
 }
 
-void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns)
+void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns, int na)
 {
     ocp_nlp_cost_ls_dims *dims = dims_;
 
@@ -87,6 +87,7 @@ void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx, int nu,
     dims->nu = nu;
     dims->ny = ny;
     dims->ns = ns;
+    dims->na = na;
 
     return;
 }
@@ -428,18 +429,18 @@ void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
     memory->ux = ux;
 }
 
-void ocp_nlp_cost_ls_memory_set_a_ptr(struct blasfeo_dvec *ux, void *memory_)
+void ocp_nlp_cost_ls_memory_set_a_ptr(struct blasfeo_dvec *a, void *memory_)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
     memory->a = a;
 }
 
-void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
+void ocp_nlp_cost_ls_memory_set_dzdux_ptr(struct blasfeo_dvec *dadux, void *memory_)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
-    memory->dzdux = dzdux;
+    memory->dadux = dadux;
 }
 
 /************************************************

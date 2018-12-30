@@ -220,6 +220,15 @@ add_executable(dae_example dae_example.c
 target_link_libraries(dae_example acados)
 add_test(dae_example dae_example)
 
+# -------------------- simple dae_example
+add_executable(simple_dae_example simple_dae_example.c
+    simple_dae_model/impl_ode_fun_simple_dae.c
+    simple_dae_model/impl_ode_jac_x_xdot_z_u_simple_dae.c
+    simple_dae_model/impl_ode_fun_jac_x_xdot_z_simple_dae.c)
+    
+target_link_libraries(simple_dae_example acados)
+add_test(simple_dae_example simple_dae_example)
+
 add_executable(template_example template_example.c
     pendulum_model/pendulum_ode_expl_vde_forw.c
     pendulum_model/pendulum_ode_expl_ode_hess.c

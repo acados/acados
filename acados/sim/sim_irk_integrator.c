@@ -596,8 +596,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     impl_ode_type_in[0] = BLASFEO_DVEC;       // xt
     impl_ode_type_in[1] = BLASFEO_DVEC_ARGS;  // k_i
-    impl_ode_type_in[2] = COLMAJ;             // u
-    impl_ode_type_in[3] = BLASFEO_DVEC_ARGS;  // z_i
+    impl_ode_type_in[2] = BLASFEO_DVEC_ARGS;  // z_i
+    impl_ode_type_in[3] = COLMAJ;             // u
 
     struct blasfeo_dvec_args impl_ode_xdot_in;
     struct blasfeo_dvec_args impl_ode_z_in;
@@ -605,8 +605,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     impl_ode_in[0] = xt;  // 1st input is always xt
     impl_ode_in[1] =
         &impl_ode_xdot_in;  // 2nd input is part of K[ss], always update impl_ode_xdot_in
-    impl_ode_in[2] = u;     // 3rd input is u (always)
-    impl_ode_in[3] = &impl_ode_z_in;     // 4th input is part of Z[ss]
+    impl_ode_in[2] = &impl_ode_z_in;     // 4th input is part of Z[ss]
+    impl_ode_in[3] = u;     // 3rd input is u (always)
 
     // OUTPUT:
     // impl_ode_fun
@@ -706,7 +706,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     acados_tic(&timer);
     for (int ss = 0; ss < num_steps; ss++)
     {
-        /* decide wheter results from forward sensitivity propagation are stored,
+        /* decide whether results from forward sensitivity propagation are stored,
             or if memory has to be reused --> set pointers accordingly */
         if (opts->sens_hess){
             dK_dxu_ss = &dK_dxu[ss];
@@ -762,7 +762,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                 impl_ode_z_in.xi    = ns * nx + ii * nz;
                                               // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                impl_ode_res_out.xi = ii * (nx + nz);  // store output in this posistion of rG
+                impl_ode_res_out.xi = ii * (nx + nz);  // store output in this position of rG
 
                 // compute the residual of implicit ode at time t_ii
                 if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))
