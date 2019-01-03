@@ -47,7 +47,7 @@ int main() {
     x0[0] =  1.0;  
     x0[1] =  -1.0;  
 
-	int max_num_sqp_iterations = 3;
+	int max_num_sqp_iterations = 10;
 
 	int nx[N+1];
     int nu[N+1];

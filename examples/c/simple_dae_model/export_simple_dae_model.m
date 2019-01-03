@@ -47,9 +47,9 @@ function [ model ] = export_simple_dae_model()
                      z2-x2);
     
     %% initial value
-%     x0 = [0.1; -0.1];
-%     z0 = [0.0, 0.0];
-%     u0 = 0;
+    %     x0 = [0.1; -0.1];
+    %     z0 = [0.0, 0.0];
+    %     u0 = 0;
 
     model.f_impl_expr = f_impl;
     model.x = x;

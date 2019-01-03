@@ -79,7 +79,7 @@ void *ocp_nlp_cost_ls_dims_assign(void *config_, void *raw_memory)
     return dims;
 }
 
-void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns, int na)
+void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns, int nz)
 {
     ocp_nlp_cost_ls_dims *dims = dims_;
 
@@ -87,7 +87,7 @@ void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx, int nu,
     dims->nu = nu;
     dims->ny = ny;
     dims->ns = ns;
-    dims->na = na;
+    dims->nz = nz;
 
     return;
 }
@@ -187,6 +187,7 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     char *c_ptr = (char *) raw_memory;
 
     int nx = dims->nx;
+    int nz = dims->nz;
     int nu = dims->nu;
     int ny = dims->ny;
     int ns = dims->ns;
@@ -202,7 +203,7 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     // W
     assign_and_advance_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
     // Cyt
-    assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &model->Cyt, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nu + nx + nz, ny, &model->Cyt, &c_ptr);
 
     // blasfeo_dvec
     // y_ref
@@ -248,6 +249,12 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
         double *Vx_col_maj = (double *) value_;
         blasfeo_pack_tran_dmat(dims->ny, dims->nx, Vx_col_maj, dims->ny,
                                &model->Cyt, dims->nu, 0);
+    }
+    else if (!strcmp(field, "Vz"))
+    {
+        double *Vz_col_maj = (double *) value_;
+        blasfeo_pack_tran_dmat(dims->ny, dims->nz, Vz_col_maj, dims->ny,
+                               &model->Cyt, dims->nu + dims->nx, 0);
     }
     else if (!strcmp(field, "Vu"))
     {
@@ -429,18 +436,18 @@ void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
     memory->ux = ux;
 }
 
-void ocp_nlp_cost_ls_memory_set_a_ptr(struct blasfeo_dvec *a, void *memory_)
+void ocp_nlp_cost_ls_memory_set_z_ptr(struct blasfeo_dvec *z, void *memory_)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
-    memory->a = a;
+    memory->z = z;
 }
 
-void ocp_nlp_cost_ls_memory_set_dzdux_ptr(struct blasfeo_dvec *dadux, void *memory_)
+void ocp_nlp_cost_ls_memory_set_dzdux_ptr(struct blasfeo_dvec *dzdux, void *memory_)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
-    memory->dadux = dadux;
+    memory->dzdux = dzdux;
 }
 
 /************************************************

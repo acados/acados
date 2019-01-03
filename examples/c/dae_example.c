@@ -39,7 +39,7 @@
 
 int main() {
 
-	int num_states = 6, num_controls = 1, N = 10;
+	int num_states = 6, num_controls = 1, N = 100;
 	double Tf = 1.0, R = 1e-2, QN = 1e1, F_max = 80;
     double Q[6] = {1e-3, 1e-3, 1e-3, 1e-3, 1e2, 1e-2};
 	int idxb_0[6] = {1, 2, 3, 4, 5, 6};

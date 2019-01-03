@@ -39,7 +39,7 @@ extern "C" {
 typedef struct
 {
     int nx;  // number of states
-    int na;  // number of algebraic variables
+    int nz;  // number of algebraic variables
     int nu;  // number of inputs
     int ny;  // number of outputs
     int ns;  // number of slacks
@@ -50,7 +50,7 @@ int ocp_nlp_cost_ls_dims_calculate_size(void *config);
 //
 void *ocp_nlp_cost_ls_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_cost_ls_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns, int na);
+void ocp_nlp_cost_ls_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns, int nz);
 //
 void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int* value);
 
@@ -104,8 +104,8 @@ typedef struct
     struct blasfeo_dvec res;     // ls residual r(x)
     struct blasfeo_dvec grad;    // gradient of cost function
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
-    struct blasfeo_dmat *a;      // pointer to a in sim_out
-    struct blasfeo_dmat *dadux;  // pointer to sensitivity of a wrt ux in sim_out
+    struct blasfeo_dmat *z;      // pointer to z in sim_out
+    struct blasfeo_dmat *dzdux;  // pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
 } ocp_nlp_cost_ls_memory;
@@ -123,6 +123,9 @@ void ocp_nlp_cost_ls_memory_set_Z_ptr(struct blasfeo_dvec *Z, void *memory);
 //
 void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
 
+void ocp_nlp_cost_ls_memory_set_z_ptr(struct blasfeo_dvec *z, void *memory_);
+
+void ocp_nlp_cost_ls_memory_set_dzdux_ptr(struct blasfeo_dvec *dzdux, void *memory_);
 /************************************************
  * workspace
  ************************************************/
