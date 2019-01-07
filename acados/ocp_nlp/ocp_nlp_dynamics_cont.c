@@ -578,9 +578,12 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_pack_tran_dmat(nx1, nu, work->sim_out->S_forw + nx1 * nx, nx1, mem->BAbt, 0, 0);
     // A
     blasfeo_pack_tran_dmat(nx1, nx, work->sim_out->S_forw + 0, nx1, mem->BAbt, nu, 0);
+    // dzdux_tran
+    blasfeo_pack_tran_dmat(nz, nu + nx, work->sim_out->S_algebraic + 0, nz, mem->dzdux_tran, nu + nx, 0);
 
     // fun
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
+    blasfeo_pack_dvec(nz, work->sim_out->zn, &mem->z_out, 0);
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
 
     // adj TODO if not computed by the integrator

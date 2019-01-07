@@ -1066,6 +1066,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     for (int ii = 0; ii <= N; ii++)
     {
         config->cost[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->cost[ii]);
+        // config->cost[ii]->memory_set_z_ptr(nlp_in->ux + ii, mem->cost[ii]);
+        // config->cost[ii]->memory_set_dzdux_ptr(nlp_out->ux + ii, mem->cost[ii]);
         config->cost[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii, mem->cost[ii]);
         config->cost[ii]->memory_set_Z_ptr(work->qp_in->Z + ii, mem->cost[ii]);
     }

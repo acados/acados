@@ -52,7 +52,7 @@ int main() {
     int nx_ = num_states;
     int nz_ = num_alg_states;
     int nu_ = num_controls;
-    int ny_ = nx_ + nu_;
+    int ny_ = nx_ + nu_ + nz_;
 
 	int nx[N+1];
     int nu[N+1];
@@ -88,7 +88,7 @@ int main() {
     nh[N] = 0;
     np[N] = 0;
     nv[N] = nx_; 
-    ny[N] = nx_;
+    ny[N] = nx_ + nz_;
 
     /* linear least squares */
 
@@ -109,12 +109,12 @@ int main() {
     Vu[2+ny_*0] = 1.0;
     Vu[3+ny_*1] = 1.0;
 
-    // double *Vz = malloc((ny_*nz_)*sizeof(double));
-    // for (int ii=0; ii < nz_*nz_; ii++)
-    //     Vz[ii] = 0.0;
+    double *Vz = malloc((ny_*nz_)*sizeof(double));
+    for (int ii=0; ii < nz_*nz_; ii++)
+        Vz[ii] = 0.0;
 
-    // Vz[4+ny_*0] = 1.0;
-    // Vz[5+ny_*1] = 1.0;
+    Vz[4+ny_*0] = 1.0;
+    Vz[5+ny_*1] = 1.0;
 
     double *VxN = malloc((ny[N]*nx_)*sizeof(double));
     for (int ii=0; ii < ny[N]*nx_; ii++)
@@ -123,12 +123,12 @@ int main() {
     VxN[0+ny[N]*0] = 1.0;
     VxN[1+ny[N]*1] = 1.0;
 
-    // double *VzN = malloc((ny[N]*nz_)*sizeof(double));
-    // for (int ii=0; ii < ny[N]*nz_; ii++)
-    //     VzN[ii] = 0.0;
+    double *VzN = malloc((ny[N]*nz_)*sizeof(double));
+    for (int ii=0; ii < ny[N]*nz_; ii++)
+        VzN[ii] = 0.0;
 
-    // VzN[2+ny[N]*0] = 1.0;
-    // VzN[3+ny[N]*1] = 1.0;
+    VzN[2+ny[N]*0] = 1.0;
+    VzN[3+ny[N]*1] = 1.0;
 
     double *W = malloc((ny_*ny_)*sizeof(double));
     for (int ii=0; ii<ny_*ny_; ii++)
@@ -264,9 +264,11 @@ int main() {
 	for (int i = 0; i < N; ++i) {
         ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vx", Vx);
         ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vu", Vu);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vz", Vz);
 	}
 
     ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vx", VxN);
+    ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vz", VzN);
     
 	// for (int i = 0; i <= N; ++i) {
 	// 	blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);

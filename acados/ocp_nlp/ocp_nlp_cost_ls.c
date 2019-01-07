@@ -552,11 +552,18 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
 
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
     int ny = dims->ny;
     int ns = dims->ns;
 
     // initialize hessian of lagrangian with hessian of cost
     blasfeo_dgecp(nu + nx, nu + nx, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
+
+    // eliminate algebraic variables and update Cyt and y_ref
+    // if (nz > 0) {
+    //     // update Cyt
+    //     blasfeo_dgead(ny, nu + nx, 1.0, struct blasfeo_dmat *sA, int ai, int aj, struct blasfeo_dmat *sC, int ci, int cj)
+    // }
 
     // compute gradient
     // blasfeo_print_dmat(nu+nx, nu+nx, &model->Cyt, 0, 0);
@@ -600,6 +607,8 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_cost_ls_memory_assign;
     config->memory_get_grad_ptr = &ocp_nlp_cost_ls_memory_get_grad_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_ls_memory_set_ux_ptr;
+    config->memory_set_z_ptr = &ocp_nlp_cost_ls_memory_set_z_ptr;
+    config->memory_set_dzdux_ptr = &ocp_nlp_cost_ls_memory_set_dzdux_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_ls_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_ls_memory_set_Z_ptr;
     config->workspace_calculate_size = &ocp_nlp_cost_ls_workspace_calculate_size;
