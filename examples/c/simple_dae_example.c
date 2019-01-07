@@ -37,9 +37,9 @@
 
 int main() {
 
-	int num_states = 2, num_controls = 2, N = 10;
+	int num_states = 2, num_controls = 2, N = 2;
 	int num_alg_states = 2;
-	double Tf = 1, R[2] = {1e-1, 1e-1}, QN = 1e1;
+	double Tf = 1, R[2] = {1e-1, 1e-1}, QN[2] = {1e1, 1e1};
     double Q[2] = {1e1, 1e1};
 	int idxb_0[2] = {1, 2};
 	double x0[num_states];
@@ -48,6 +48,11 @@ int main() {
     x0[1] =  -1.0;  
 
 	int max_num_sqp_iterations = 10;
+
+    int nx_ = num_states;
+    int nz_ = num_alg_states;
+    int nu_ = num_controls;
+    int ny_ = nx_ + nu_;
 
 	int nx[N+1];
     int nu[N+1];
@@ -63,8 +68,8 @@ int main() {
     int ny[N+1];
 
     for(int i = 0; i < N+1; i++) {
-        nx[i] = num_states;
-        nu[i] = num_controls;
+        nx[i] = nx_;
+        nu[i] = nu_;
         nbx[i] = 0;
         nbu[i] = 0;
         nb[i] = 0;
@@ -72,18 +77,71 @@ int main() {
         nh[i] = 0;
         np[i] = 0;
         ns[i] = 0;
-        nz[i] = num_alg_states;
-        nv[i] = num_states + num_controls;
-        ny[i] = num_states + num_controls;
+        nz[i] = nz_;
+        nv[i] = nx_ + nu_;
+        ny[i] = ny_;
     }
 
-    nbx[0] = num_states;
-    nb[0] = num_states;
+    nbx[0] = nx_;
+    nb[0] = nx_;
     nu[N] = 0;
     nh[N] = 0;
     np[N] = 0;
-    nv[N] = num_states; 
-    ny[N] = num_states;
+    nv[N] = nx_; 
+    ny[N] = nx_;
+
+    /* linear least squares */
+
+    // output definition
+    // y  = Vx * x + Vu * u + Vz * z
+
+    double *Vx = malloc((ny_*nx_)*sizeof(double));
+    for (int ii=0; ii < ny_*nx_; ii++)
+        Vx[ii] = 0.0;
+
+    Vx[0+ny_*0] = 1.0;
+    Vx[1+ny_*1] = 1.0;
+
+    double *Vu = malloc((ny_*nu_)*sizeof(double));
+    for (int ii=0; ii < ny_*nu_; ii++)
+        Vu[ii] = 0.0;
+
+    Vu[2+ny_*0] = 1.0;
+    Vu[3+ny_*1] = 1.0;
+
+    // double *Vz = malloc((ny_*nz_)*sizeof(double));
+    // for (int ii=0; ii < nz_*nz_; ii++)
+    //     Vz[ii] = 0.0;
+
+    // Vz[4+ny_*0] = 1.0;
+    // Vz[5+ny_*1] = 1.0;
+
+    double *VxN = malloc((ny[N]*nx_)*sizeof(double));
+    for (int ii=0; ii < ny[N]*nx_; ii++)
+        VxN[ii] = 0.0;
+
+    VxN[0+ny[N]*0] = 1.0;
+    VxN[1+ny[N]*1] = 1.0;
+
+    // double *VzN = malloc((ny[N]*nz_)*sizeof(double));
+    // for (int ii=0; ii < ny[N]*nz_; ii++)
+    //     VzN[ii] = 0.0;
+
+    // VzN[2+ny[N]*0] = 1.0;
+    // VzN[3+ny[N]*1] = 1.0;
+
+    double *W = malloc((ny_*ny_)*sizeof(double));
+    for (int ii=0; ii<ny_*ny_; ii++)
+        W[ii] = 0.0;
+
+    W[0+ny_*0] = Q[0];
+    W[1+ny_*1] = Q[1];
+    W[2+ny_*2] = R[0];
+    W[3+ny_*3] = R[1];
+
+    double *WN = malloc((ny[N]*ny[N])*sizeof(double));
+    WN[0+ny[N]*0] = QN[0];
+    WN[1+ny[N]*1] = QN[1];
 
 	// Make plan
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
@@ -202,26 +260,38 @@ int main() {
 	// NLP cost: linear least squares
     // C
 	ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
-	for (int i = 0; i <= N; ++i) {
-		blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
-        for (int j = 0; j < nu[i]; j++)
-            BLASFEO_DMATEL(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
-        for (int j = 0; j < nx[i]; j++)
-            BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
+
+	for (int i = 0; i < N; ++i) {
+        ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vx", Vx);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vu", Vu);
 	}
 
+    ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vx", VxN);
+    
+	// for (int i = 0; i <= N; ++i) {
+	// 	blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
+        // for (int j = 0; j < nu[i]; j++)
+            // BLASFEO_DMATEL(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
+        // for (int j = 0; j < nx[i]; j++)
+            // BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
+	// }
+
 	// W
-	for (int i = 0; i < N; ++i) {
-		blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
-        for (int j = 0; j < nx[i]; j++)
-            BLASFEO_DMATEL(&cost_ls[i]->W, j, j) = Q[j];
-        for (int j = 0; j < nu[i]; j++)
-            BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = R[j];
-	}
+	for (int i = 0; i < N; ++i) ocp_nlp_cost_model_set(config, dims, nlp_in, i, "W", W);
+	// for (int i = 0; i < N; ++i) {
+	// 	blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
+        // for (int j = 0; j < nx[i]; j++)
+            // BLASFEO_DMATEL(&cost_ls[i]->W, j, j) = Q[j];
+        // for (int j = 0; j < nu[i]; j++)
+            // BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = R[j];
+	// }
+    
 	// WN
-	blasfeo_dgese(ny[N], ny[N], 0.0, &cost_ls[N]->W, 0, 0);
-	for (int j = 0; j < nx[N]; j++)
-		BLASFEO_DMATEL(&cost_ls[N]->W, j, j) = QN;
+    ocp_nlp_cost_model_set(config, dims, nlp_in, N, "W", WN);
+
+	// blasfeo_dgese(ny[N], ny[N], 0.0, &cost_ls[N]->W, 0, 0);
+	// for (int j = 0; j < nx[N]; j++)
+	// 	BLASFEO_DMATEL(&cost_ls[N]->W, j, j) = QN[j];
 
 	// y_ref
     for (int i = 0; i <= N; ++i)
@@ -233,7 +303,7 @@ int main() {
 		irk_model *model = dynamics->sim_model;
 		model->impl_ode_fun = (external_function_generic *) &impl_ode_fun[i];
 		model->impl_ode_fun_jac_x_xdot_z = (external_function_generic *) &impl_ode_fun_jac_x_xdot_z[i];
-		model->impl_ode_jac_x_xdot_z_u = (external_function_generic *) &impl_ode_jac_x_xdot_z_u[i]; // TODO(zanellia): need to swap z and u!!
+		model->impl_ode_jac_x_xdot_z_u = (external_function_generic *) &impl_ode_jac_x_xdot_z_u[i]; 
 	}
 
 	// bounds
@@ -278,6 +348,14 @@ int main() {
 	ocp_nlp_out_print(dims, nlp_out);
 
     printf("\n\nstatus = %i, avg time = %f ms, iters = %d\n\n", solver_status, elapsed_time, nlp_out->sqp_iter);
+
+    free(Vx);
+    free(Vu);
+    // free(Vz);
+    free(VxN);
+    // free(VzN);
+    free(W);
+    free(WN);
 
 	return solver_status;
 }

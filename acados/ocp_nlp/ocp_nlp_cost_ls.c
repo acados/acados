@@ -241,7 +241,7 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     else if (!strcmp(field, "Cyt"))
     {
         double *Cyt_col_maj = (double *) value_;
-        blasfeo_pack_dmat(dims->nx + dims->nu, dims->ny, Cyt_col_maj, dims->nx + dims->nu,
+        blasfeo_pack_dmat(dims->nx + dims->nu + dims->nz, dims->ny, Cyt_col_maj, dims->nx + dims->nu,
                           &model->Cyt, 0, 0);
     }
     else if (!strcmp(field, "Vx"))
@@ -250,17 +250,18 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
         blasfeo_pack_tran_dmat(dims->ny, dims->nx, Vx_col_maj, dims->ny,
                                &model->Cyt, dims->nu, 0);
     }
-    else if (!strcmp(field, "Vz"))
-    {
-        double *Vz_col_maj = (double *) value_;
-        blasfeo_pack_tran_dmat(dims->ny, dims->nz, Vz_col_maj, dims->ny,
-                               &model->Cyt, dims->nu + dims->nx, 0);
-    }
     else if (!strcmp(field, "Vu"))
     {
         double *Vu_col_maj = (double *) value_;
         blasfeo_pack_tran_dmat(dims->ny, dims->nu, Vu_col_maj,
                           dims->ny, &model->Cyt, 0, 0);
+    }
+    // TODO(andrea): inconsistent order x, u, z. Make x, z, u later!
+    else if (!strcmp(field, "Vz"))
+    {
+        double *Vz_col_maj = (double *) value_;
+        blasfeo_pack_tran_dmat(dims->ny, dims->nz, Vz_col_maj, dims->ny,
+                &model->Cyt, dims->nu + dims->nx, 0);
     }
     else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
     {
@@ -526,6 +527,7 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_, void *
 
     // TODO(all): recompute factorization only if W are re-tuned ???
     blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
+    blasfeo_print_dmat(4, 4, &model->W, 0, 0);
 
     // TODO(all): avoid recomputing the Hessian if both W and Cyt do not change
     blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt, 0, 0, &work->tmp_nv_ny,
@@ -558,6 +560,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     blasfeo_dgecp(nu + nx, nu + nx, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
 
     // compute gradient
+    blasfeo_print_dmat(nu+nx, nu+nx, &model->Cyt, 0, 0);
     blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0,
                     &memory->res, 0);
 
@@ -571,7 +574,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     blasfeo_dveccp(2 * ns, &model->z, 0, &memory->grad, nu + nx);
     blasfeo_dvecmulacc(2 * ns, &model->Z, 0, memory->ux, nu + nx, &memory->grad, nu + nx);
 
-    // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
+    blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
     // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
     // blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
     // exit(1);
