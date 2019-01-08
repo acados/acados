@@ -27,7 +27,7 @@ outputs:
 
 // function and jacobian_transposed of residuals of nonlinear least-squares
 
-external function: nls_jac
+external function: nls_res_jac
 
 inputs:
 0) [x]    size: nx    type: BLASFEO_DVEC_ARGS
@@ -44,8 +44,9 @@ outputs:
 external function: nls_hess
 
 inputs:
-0) [u; x]    size: nu+nx    type: BLASFEO_DVEC
-1) [fun]     size: ny       type: BLASFEO_DVEC
+0) [x]    size: nx    type: BLASFEO_DVEC_ARGS
+1) [u]    size: nu    type: BLASFEO_DVEC_ARGS
+2) [fun]  size: ny    type: BLASFEO_DVEC
 
 outputs:
 0) [hess_uu, hess_ux; hess_xu; hess_xx]    size: (nu+nx)*(nu+nx)    type: BLASFEO_DMAT
@@ -61,7 +62,8 @@ outputs:
 external function: h
 
 inputs:
-0) [u; x]    size: nu+nx    type: BLASFEO_DVEC
+0) [x]    size: nx    type: BLASFEO_DVEC_ARGS
+1) [u]    size: nu    type: BLASFEO_DVEC_ARGS
 
 outputs:
 0) [fun]    size: nh    type: BLASFEO_DVEC_ARGS
