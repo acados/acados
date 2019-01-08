@@ -1265,7 +1265,7 @@ int main()
 // 		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
 
 //     ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-// 	nl_constr[0]->h = &nonlin_constr_generic;
+// 	nl_constr[0]->nl_constr_h_fun_jac = &nonlin_constr_generic;
 
 // 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lg", lb0);
 // 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ug", ub0);

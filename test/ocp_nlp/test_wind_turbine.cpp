@@ -863,7 +863,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         {
             ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lh", lh1);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "uh", uh1);
-            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "h", &h1);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "nl_constr_h_fun_jac", &h1);
         }
     }
 

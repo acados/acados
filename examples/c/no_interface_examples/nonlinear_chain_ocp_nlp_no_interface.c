@@ -1795,7 +1795,7 @@ int main() {
 		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
 
     ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-	nl_constr[0]->h = &nonlin_constr_generic;
+	nl_constr[0]->nl_constr_h_fun_jac = &nonlin_constr_generic;
 
 	blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);
 	blasfeo_pack_dvec(ng[0]+nh[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]+nh[0]);

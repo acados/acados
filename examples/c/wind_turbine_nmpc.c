@@ -765,7 +765,7 @@ int main()
         {
             ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lh", lh1);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "uh", uh1);
-            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "h", &h1);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "nl_constr_h_fun_jac", &h1);
         }
     }
 

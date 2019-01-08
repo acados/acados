@@ -71,7 +71,7 @@ typedef struct
     int *idxs;
     struct blasfeo_dvec d;
     struct blasfeo_dmat DCt;
-    external_function_generic *h;
+    external_function_generic *nl_constr_h_fun_jac;
     external_function_generic *p;
 } ocp_nlp_constraints_bghp_model;
 
