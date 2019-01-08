@@ -444,11 +444,11 @@ void ocp_nlp_cost_ls_memory_set_z_ptr(struct blasfeo_dvec *z, void *memory_)
     memory->z = z;
 }
 
-void ocp_nlp_cost_ls_memory_set_dzdux_ptr(struct blasfeo_dvec *dzdux, void *memory_)
+void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dvec *dzdux_tran, void *memory_)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
-    memory->dzdux = dzdux;
+    memory->dzdux_tran = dzdux_tran;
 }
 
 /************************************************
@@ -608,7 +608,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
     config->memory_get_grad_ptr = &ocp_nlp_cost_ls_memory_get_grad_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_ls_memory_set_ux_ptr;
     config->memory_set_z_ptr = &ocp_nlp_cost_ls_memory_set_z_ptr;
-    config->memory_set_dzdux_ptr = &ocp_nlp_cost_ls_memory_set_dzdux_ptr;
+    config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_ls_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_ls_memory_set_Z_ptr;
     config->workspace_calculate_size = &ocp_nlp_cost_ls_workspace_calculate_size;

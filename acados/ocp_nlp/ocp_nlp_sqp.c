@@ -35,6 +35,7 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_conv.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -1066,8 +1067,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     for (int ii = 0; ii <= N; ii++)
     {
         config->cost[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->cost[ii]);
-        config->cost[ii]->memory_set_z_ptr(nlp_in->ux + ii, mem->cost[ii]);
-        config->cost[ii]->memory_set_dzdux_ptr(nlp_out->ux + ii, mem->cost[ii]);
+        config->cost[ii]->memory_set_z_ptr(&((ocp_nlp_dynamics_cont_memory *) mem->dynamics)[ii].z_out, mem->cost[ii]);
+        config->cost[ii]->memory_set_dzdux_tran_ptr(&((ocp_nlp_dynamics_cont_memory *) mem->dynamics)[ii].dzdux_tran, mem->cost[ii]);
         config->cost[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii, mem->cost[ii]);
         config->cost[ii]->memory_set_Z_ptr(work->qp_in->Z + ii, mem->cost[ii]);
     }
