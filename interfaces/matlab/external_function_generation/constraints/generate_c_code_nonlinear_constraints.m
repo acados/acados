@@ -1,5 +1,6 @@
 % generate_c_code_nls
 function generate_c_code_nonlinear_constraints( model, constraints, opts )
+%% TODO: test this
 
     %% import casadi
     import casadi.*
@@ -24,10 +25,10 @@ function generate_c_code_nonlinear_constraints( model, constraints, opts )
         name = constraints.name;
     end
 
-    nonl_constr = constraints.nls_expr;
+    nonl_constr = constraints.constraint_expr;
 
 
-    nonl_constr_jac_tran = jacobian(nonl_constr, [u; x]);
+    nonl_constr_jac_tran = jacobian(nonl_constr, [u; x])';
 
     
     nonl_constr_fun_jac_tran = Function( [name, '_nonl_constr_fun_jac_tran'], {x, u}, ...
