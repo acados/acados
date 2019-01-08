@@ -249,13 +249,13 @@ static void mdlStart(SimStruct *S)
     ocp_nlp_cost_nls_model **cost = (ocp_nlp_cost_nls_model **) nlp_in->cost;
 
 	for (i = 0; i < NUM_STAGES; ++i) {
-        cost[i]->nls_jac = (external_function_generic *) &nls_cost_residual;
+        cost[i]->nls_res_jac = (external_function_generic *) &nls_cost_residual;
         cost[i]->nls_hess = NULL;
         blasfeo_pack_dvec(ny[i], y_ref, &cost[i]->y_ref, 0);
         blasfeo_pack_dmat(ny[i], ny[i], W, ny[i], &cost[i]->W, 0, 0);
     }
 
-    cost[NUM_STAGES]->nls_jac = (external_function_generic *) &nls_cost_N_residual;
+    cost[NUM_STAGES]->nls_res_jac = (external_function_generic *) &nls_cost_N_residual;
     cost[NUM_STAGES]->nls_hess = NULL;
     blasfeo_pack_dvec(ny[NUM_STAGES], y_ref, &cost[NUM_STAGES]->y_ref, 0);
     blasfeo_pack_dmat(ny[NUM_STAGES], ny[NUM_STAGES], W_N, ny[NUM_STAGES], &cost[NUM_STAGES]->W, 0, 0);

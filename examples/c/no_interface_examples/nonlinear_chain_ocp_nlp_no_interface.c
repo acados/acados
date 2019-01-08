@@ -1597,9 +1597,9 @@ int main() {
 
     ocp_nlp_cost_nls_model **cost_ls = (ocp_nlp_cost_nls_model **) nlp_in->cost;
 
-	// nls_jac
+	// nls_res_jac
 	for (int i=0; i<=NN; i++)
-		cost_ls[i]->nls_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
+		cost_ls[i]->nls_res_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
 
 	// nls_hess at first stage
 	cost_ls[0]->nls_hess = &ls_cost_hess_generic;
@@ -1611,7 +1611,7 @@ int main() {
 		for (int i=0; i<NN; i++)
 		{
 			ls_cost_jac_generic[i].evaluate = &ls_cost_jac_nm4;
-			cost_ls->nls_jac[i] = &ls_cost_jac_generic[i];
+			cost_ls->nls_res_jac[i] = &ls_cost_jac_generic[i];
 		}
 	}
 #endif

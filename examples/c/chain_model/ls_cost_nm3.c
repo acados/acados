@@ -27,6 +27,8 @@ extern "C" {
 #define casadi_f0 CASADI_PREFIX(f0)
 #define casadi_s0 CASADI_PREFIX(s0)
 #define casadi_s1 CASADI_PREFIX(s1)
+#define casadi_s2 CASADI_PREFIX(s2)
+#define casadi_s3 CASADI_PREFIX(s3)
 
 /* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
@@ -43,41 +45,43 @@ extern "C" {
   #endif
 #endif
 
-static const casadi_int casadi_s0[19] = {15, 1, 0, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-static const casadi_int casadi_s1[33] = {15, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0, 1, 2};
+static const casadi_int casadi_s0[16] = {12, 1, 0, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+static const casadi_int casadi_s1[7] = {3, 1, 0, 3, 0, 1, 2};
+static const casadi_int casadi_s2[19] = {15, 1, 0, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+static const casadi_int casadi_s3[33] = {15, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0, 1, 2};
 
-/* ls_cost_nm3:(i0[15])->(o0[15],o1[15x15,15nz]) */
+/* ls_cost_nm3:(i0[12],i1[3])->(o0[15],o1[15x15,15nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0;
-  a0=arg[0] ? arg[0][3] : 0;
-  if (res[0]!=0) res[0][0]=a0;
-  a0=arg[0] ? arg[0][4] : 0;
-  if (res[0]!=0) res[0][1]=a0;
-  a0=arg[0] ? arg[0][5] : 0;
-  if (res[0]!=0) res[0][2]=a0;
-  a0=arg[0] ? arg[0][6] : 0;
-  if (res[0]!=0) res[0][3]=a0;
-  a0=arg[0] ? arg[0][7] : 0;
-  if (res[0]!=0) res[0][4]=a0;
-  a0=arg[0] ? arg[0][8] : 0;
-  if (res[0]!=0) res[0][5]=a0;
-  a0=arg[0] ? arg[0][9] : 0;
-  if (res[0]!=0) res[0][6]=a0;
-  a0=arg[0] ? arg[0][10] : 0;
-  if (res[0]!=0) res[0][7]=a0;
-  a0=arg[0] ? arg[0][11] : 0;
-  if (res[0]!=0) res[0][8]=a0;
-  a0=arg[0] ? arg[0][12] : 0;
-  if (res[0]!=0) res[0][9]=a0;
-  a0=arg[0] ? arg[0][13] : 0;
-  if (res[0]!=0) res[0][10]=a0;
-  a0=arg[0] ? arg[0][14] : 0;
-  if (res[0]!=0) res[0][11]=a0;
   a0=arg[0] ? arg[0][0] : 0;
-  if (res[0]!=0) res[0][12]=a0;
+  if (res[0]!=0) res[0][0]=a0;
   a0=arg[0] ? arg[0][1] : 0;
-  if (res[0]!=0) res[0][13]=a0;
+  if (res[0]!=0) res[0][1]=a0;
   a0=arg[0] ? arg[0][2] : 0;
+  if (res[0]!=0) res[0][2]=a0;
+  a0=arg[0] ? arg[0][3] : 0;
+  if (res[0]!=0) res[0][3]=a0;
+  a0=arg[0] ? arg[0][4] : 0;
+  if (res[0]!=0) res[0][4]=a0;
+  a0=arg[0] ? arg[0][5] : 0;
+  if (res[0]!=0) res[0][5]=a0;
+  a0=arg[0] ? arg[0][6] : 0;
+  if (res[0]!=0) res[0][6]=a0;
+  a0=arg[0] ? arg[0][7] : 0;
+  if (res[0]!=0) res[0][7]=a0;
+  a0=arg[0] ? arg[0][8] : 0;
+  if (res[0]!=0) res[0][8]=a0;
+  a0=arg[0] ? arg[0][9] : 0;
+  if (res[0]!=0) res[0][9]=a0;
+  a0=arg[0] ? arg[0][10] : 0;
+  if (res[0]!=0) res[0][10]=a0;
+  a0=arg[0] ? arg[0][11] : 0;
+  if (res[0]!=0) res[0][11]=a0;
+  a0=arg[1] ? arg[1][0] : 0;
+  if (res[0]!=0) res[0][12]=a0;
+  a0=arg[1] ? arg[1][1] : 0;
+  if (res[0]!=0) res[0][13]=a0;
+  a0=arg[1] ? arg[1][2] : 0;
   if (res[0]!=0) res[0][14]=a0;
   a0=1.;
   if (res[1]!=0) res[1][0]=a0;
@@ -108,13 +112,14 @@ CASADI_SYMBOL_EXPORT void ls_cost_nm3_incref(void) {
 CASADI_SYMBOL_EXPORT void ls_cost_nm3_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT casadi_int ls_cost_nm3_n_in(void) { return 1;}
+CASADI_SYMBOL_EXPORT casadi_int ls_cost_nm3_n_in(void) { return 2;}
 
 CASADI_SYMBOL_EXPORT casadi_int ls_cost_nm3_n_out(void) { return 2;}
 
 CASADI_SYMBOL_EXPORT const char* ls_cost_nm3_name_in(casadi_int i){
   switch (i) {
     case 0: return "i0";
+    case 1: return "i1";
     default: return 0;
   }
 }
@@ -130,20 +135,21 @@ CASADI_SYMBOL_EXPORT const char* ls_cost_nm3_name_out(casadi_int i){
 CASADI_SYMBOL_EXPORT const casadi_int* ls_cost_nm3_sparsity_in(casadi_int i) {
   switch (i) {
     case 0: return casadi_s0;
+    case 1: return casadi_s1;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT const casadi_int* ls_cost_nm3_sparsity_out(casadi_int i) {
   switch (i) {
-    case 0: return casadi_s0;
-    case 1: return casadi_s1;
+    case 0: return casadi_s2;
+    case 1: return casadi_s3;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT int ls_cost_nm3_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
-  if (sz_arg) *sz_arg = 1;
+  if (sz_arg) *sz_arg = 2;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;
   if (sz_w) *sz_w = 0;

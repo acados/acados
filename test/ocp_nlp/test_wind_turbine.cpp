@@ -212,13 +212,21 @@ void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *typ
     double alpha = 0.944*97/100;
 
     // ux
-    struct blasfeo_dvec *ux = (struct blasfeo_dvec *) in[0];
+    // struct blasfeo_dvec *ux = in[0];
+    struct blasfeo_dvec_args *x_args = (struct blasfeo_dvec_args *) in[0];
+    // struct blasfeo_dvec_args *u_args = in[1];
+
+    struct blasfeo_dvec *x = x_args->x;
+    // struct blasfeo_dvec *u = u_args->x;
+
+    int x_offset = x_args->xi;
+    // int u_offset = u_args->xi;
 
     // h
     struct blasfeo_dvec_args *h_args = (struct blasfeo_dvec_args *) out[0];
     struct blasfeo_dvec *h = h_args->x;
     int xi = h_args->xi;
-    BLASFEO_DVECEL(h, xi) = alpha * BLASFEO_DVECEL(ux, nu+0) * BLASFEO_DVECEL(ux, nu+5);
+    BLASFEO_DVECEL(h, xi) = alpha * BLASFEO_DVECEL(x, x_offset) * BLASFEO_DVECEL(x, x_offset+5);
 
     // jac
     struct blasfeo_dmat_args *jac_args = (struct blasfeo_dmat_args *) out[1];
@@ -226,8 +234,8 @@ void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *typ
     int ai = jac_args->ai;
     int aj = jac_args->aj;
     blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    BLASFEO_DMATEL(jac, ai+nu+0, aj) = alpha * BLASFEO_DVECEL(ux, nu+5);
-    BLASFEO_DMATEL(jac, ai+nu+5, aj) = alpha * BLASFEO_DVECEL(ux, nu+0);
+    BLASFEO_DMATEL(jac, ai+nu+0, aj) = alpha * BLASFEO_DVECEL(x, x_offset+5);
+    BLASFEO_DMATEL(jac, ai+nu+5, aj) = alpha * BLASFEO_DVECEL(x, x_offset+0);
 
     return;
 

@@ -63,8 +63,8 @@
 #define MAX_SQP_ITERS 10
 #define NREP 10
 
-// constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
-#define CONSTRAINTS 2
+// constraints (at stage 0): 0 box, 1 general
+#define CONSTRAINTS 1
 
 
 // TODO(dimitris): DOES THIS EVEN WORK ATM?
@@ -662,156 +662,66 @@ void read_final_state(const int nx, const int num_free_masses, double *xN)
 
 
 
-// hand-wirtten box constraints on states as nonlinear constraints
-void nonlin_constr_nm2(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-{
+// // hand-wirtten box constraints on states as nonlinear constraints
+// void nonlin_constr_nm2(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
+// {
 
-	int ii;
+// 	int ii;
 
-	int nu = 3;
-	int nx = 6;
+// 	int nu = 3;
+// 	int nx = 6;
 
-	int nh = nx;
+// 	int nh = nx;
 
-	// fun
-	struct blasfeo_dvec_args *fun_args = out[0];
-	struct blasfeo_dvec *fun = fun_args->x;
-	int xi = fun_args->xi;
-	struct blasfeo_dvec *ux = in[0];
-	blasfeo_dveccp(nx, ux, nu, fun, xi);
+// 	// fun
+// 	struct blasfeo_dvec_args *fun_args = out[0];
+// 	struct blasfeo_dvec *fun = fun_args->x;
+// 	int xi = fun_args->xi;
+// 	struct blasfeo_dvec *ux = in[0];
+// 	blasfeo_dveccp(nx, ux, nu, fun, xi);
 
-	// jacobian
-	struct blasfeo_dmat_args *jac_args = out[1];
-	struct blasfeo_dmat *jac = jac_args->A;
-	int ai = jac_args->ai;
-	int aj = jac_args->aj;
-	blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-	for (ii=0; ii<nh; ii++)
-		BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
+// 	// jacobian
+// 	struct blasfeo_dmat_args *jac_args = out[1];
+// 	struct blasfeo_dmat *jac = jac_args->A;
+// 	int ai = jac_args->ai;
+// 	int aj = jac_args->aj;
+// 	blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
+// 	for (ii=0; ii<nh; ii++)
+// 		BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
 
-	return;
+// 	return;
 
-}
+// }
 
-void nonlin_constr_nm3(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-{
+// void nonlin_constr_nm3(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
+// {
 
-	int ii;
+// 	int ii;
 
-	int nu = 3;
-	int nx = 12;
+// 	int nu = 3;
+// 	int nx = 12;
 
-	int nh = nx;
+// 	int nh = nx;
 
-	// fun
-	struct blasfeo_dvec_args *fun_args = out[0];
-	struct blasfeo_dvec *fun = fun_args->x;
-	int xi = fun_args->xi;
-	struct blasfeo_dvec *ux = in[0];
-	blasfeo_dveccp(nx, ux, nu, fun, xi);
+// 	// fun
+// 	struct blasfeo_dvec_args *fun_args = out[0];
+// 	struct blasfeo_dvec *fun = fun_args->x;
+// 	int xi = fun_args->xi;
+// 	struct blasfeo_dvec *ux = in[0];
+// 	blasfeo_dveccp(nx, ux, nu, fun, xi);
 
-	// jacobian
-	struct blasfeo_dmat_args *jac_args = out[1];
-	struct blasfeo_dmat *jac = jac_args->A;
-	int ai = jac_args->ai;
-	int aj = jac_args->aj;
-	blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-	for (ii=0; ii<nh; ii++)
-		BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
+// 	// jacobian
+// 	struct blasfeo_dmat_args *jac_args = out[1];
+// 	struct blasfeo_dmat *jac = jac_args->A;
+// 	int ai = jac_args->ai;
+// 	int aj = jac_args->aj;
+// 	blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
+// 	for (ii=0; ii<nh; ii++)
+// 		BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
 
-	return;
+// 	return;
 
-}
-
-void nonlin_constr_nm4(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-{
-
-	int ii;
-
-	int nu = 3;
-	int nx = 18;
-
-	int nh = nx;
-
-	// fun
-	struct blasfeo_dvec_args *fun_args = out[0];
-	struct blasfeo_dvec *fun = fun_args->x;
-	int xi = fun_args->xi;
-	struct blasfeo_dvec *ux = in[0];
-	blasfeo_dveccp(nx, ux, nu, fun, xi);
-
-	// jacobian
-	struct blasfeo_dmat_args *jac_args = out[1];
-	struct blasfeo_dmat *jac = jac_args->A;
-	int ai = jac_args->ai;
-	int aj = jac_args->aj;
-	blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-	for (ii=0; ii<nh; ii++)
-		BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
-
-	return;
-
-}
-
-void nonlin_constr_nm5(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-{
-
-	int ii;
-
-	int nu = 3;
-	int nx = 24;
-
-	int nh = nx;
-
-	// fun
-	struct blasfeo_dvec_args *fun_args = out[0];
-	struct blasfeo_dvec *fun = fun_args->x;
-	int xi = fun_args->xi;
-	struct blasfeo_dvec *ux = in[0];
-	blasfeo_dveccp(nx, ux, nu, fun, xi);
-
-	// jacobian
-	struct blasfeo_dmat_args *jac_args = out[1];
-	struct blasfeo_dmat *jac = jac_args->A;
-	int ai = jac_args->ai;
-	int aj = jac_args->aj;
-	blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-	for (ii=0; ii<nh; ii++)
-		BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
-
-	return;
-
-}
-
-void nonlin_constr_nm6(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
-{
-
-	int ii;
-
-	int nu = 3;
-	int nx = 30;
-
-	int nh = nx;
-
-	// fun
-	struct blasfeo_dvec_args *fun_args = out[0];
-	struct blasfeo_dvec *fun = fun_args->x;
-	int xi = fun_args->xi;
-	struct blasfeo_dvec *ux = in[0];
-	blasfeo_dveccp(nx, ux, nu, fun, xi);
-
-	// jacobian
-	struct blasfeo_dmat_args *jac_args = out[1];
-	struct blasfeo_dmat *jac = jac_args->A;
-	int ai = jac_args->ai;
-	int aj = jac_args->aj;
-	blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-	for (ii=0; ii<nh; ii++)
-		BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
-
-	return;
-
-}
+// }
 
 
 
@@ -1189,35 +1099,35 @@ int main()
 		}
 	}
 
-    /************************************************
-    * nonlinear constraints
-    ************************************************/
+//     /************************************************
+//     * nonlinear constraints
+//     ************************************************/
 
-#if CONSTRAINTS==2
-	external_function_generic nonlin_constr_generic;
+// #if CONSTRAINTS==2
+// 	external_function_generic nonlin_constr_generic;
 
-	switch(NMF)
-	{
-		case 1:
-			nonlin_constr_generic.evaluate = &nonlin_constr_nm2;
-			break;
-		case 2:
-			nonlin_constr_generic.evaluate = &nonlin_constr_nm3;
-			break;
-		case 3:
-			nonlin_constr_generic.evaluate = &nonlin_constr_nm4;
-			break;
-		case 4:
-			nonlin_constr_generic.evaluate = &nonlin_constr_nm5;
-			break;
-		case 5:
-			nonlin_constr_generic.evaluate = &nonlin_constr_nm6;
-			break;
-		default:
-			printf("\nnonlin constr not implemented for this numer of masses\n\n");
-			exit(1);
-	}
-#endif
+// 	switch(NMF)
+// 	{
+// 		case 1:
+// 			nonlin_constr_generic.evaluate = &nonlin_constr_nm2;
+// 			break;
+// 		case 2:
+// 			nonlin_constr_generic.evaluate = &nonlin_constr_nm3;
+// 			break;
+// 		case 3:
+// 			nonlin_constr_generic.evaluate = &nonlin_constr_nm4;
+// 			break;
+// 		case 4:
+// 			nonlin_constr_generic.evaluate = &nonlin_constr_nm5;
+// 			break;
+// 		case 5:
+// 			nonlin_constr_generic.evaluate = &nonlin_constr_nm6;
+// 			break;
+// 		default:
+// 			printf("\nnonlin constr not implemented for this numer of masses\n\n");
+// 			exit(1);
+// 	}
+// #endif
 
     /************************************************
     * nlp_in
@@ -1255,8 +1165,8 @@ int main()
 				break;
 
 			case NONLINEAR_LS:
-				// nls_jac
-				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "nls_jac", &ls_cost_jac_casadi[i]);
+				// nls_res_jac
+				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "nls_res_jac", &ls_cost_jac_casadi[i]);
 
 				// W
 				if (i < NN)
@@ -1349,19 +1259,19 @@ int main()
 
 	d_free(Cu0);
 	d_free(Cx0);
-#else // general + nonlinear constraints
-	blasfeo_dgese(nu[0]+nx[0], ng[0], 0.0, &constraints[0]->DCt, 0, 0);
-	for (int ii=0; ii<ng[0]; ii++)
-		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
+// #else // general + nonlinear constraints
+// 	blasfeo_dgese(nu[0]+nx[0], ng[0], 0.0, &constraints[0]->DCt, 0, 0);
+// 	for (int ii=0; ii<ng[0]; ii++)
+// 		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
 
-    ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-	nl_constr[0]->h = &nonlin_constr_generic;
+//     ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
+// 	nl_constr[0]->h = &nonlin_constr_generic;
 
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lg", lb0);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ug", ub0);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lh", &lb0[ng[0]]);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "uh", &ub0[ng[0]]);
-	#endif
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lg", lb0);
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ug", ub0);
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lh", &lb0[ng[0]]);
+// 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "uh", &ub0[ng[0]]);
+#endif
 
 	// other stages
     for (int i = 1; i < NN; i++)

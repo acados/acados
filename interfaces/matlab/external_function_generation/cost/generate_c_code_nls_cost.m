@@ -30,7 +30,7 @@ function generate_c_code_nls_cost( model, cost, opts )
     nls_cost_jac = jacobian(nls_cost, [u; x]);
 
     
-    nls_cost_fun = Function( [name, '_nls_cost_fun_jac'], {[u; x]}, ...
+    nls_cost_fun = Function( [name, '_nls_cost_fun_jac'], {x, u}, ...
         { nls_cost, nls_cost_jac });
     nls_cost_fun.generate( [name, '_nls_cost_fun_jac'], casadi_opts );
 

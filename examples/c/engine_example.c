@@ -224,12 +224,12 @@ int main()
     int status = ACADOS_SUCCESS;
 
 	for (int i = 0; i < N; ++i) {
-        if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "nls_jac", &nls_cost_residual)) exit(1);
+        if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "nls_res_jac", &nls_cost_residual)) exit(1);
         if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "y_ref", y_ref)) exit(1);
         if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "W", W)) exit(1);
     }
 
-    if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "nls_jac", &nls_cost_N_residual)) exit(1);
+    if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "nls_res_jac", &nls_cost_N_residual)) exit(1);
     if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "y_ref", y_ref)) exit(1);
     if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "W", W_N)) exit(1);
 

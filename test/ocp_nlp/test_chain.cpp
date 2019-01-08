@@ -99,7 +99,7 @@ constraints_t constraints_enum(std::string const& inString)
 {
     if (inString == "BOX") return BOX;
     if (inString == "GENERAL") return GENERAL;
-    if (inString == "NONLINEAR+GENERAL") return GENERAL_NONLINEAR;
+    // if (inString == "NONLINEAR+GENERAL") return GENERAL_NONLINEAR;
 
     return (constraints_t) -1;
 }
@@ -734,176 +734,7 @@ void read_final_state(const int nx, const int num_free_masses, double *xN)
 
 
 // hand-wirtten box constraints on states as nonlinear constraints
-void nonlin_constr_nm2(void *evaluate,
-    ext_fun_arg_t *type_in,
-    void **in,
-    ext_fun_arg_t *type_out,
-    void **out)
-{
-
-    int ii;
-
-    int nu = 3;
-    int nx = 6;
-
-    int nh = nx;
-
-    // fun
-    struct blasfeo_dvec_args *fun_args = (struct blasfeo_dvec_args *)out[0];
-    struct blasfeo_dvec *fun = fun_args->x;
-    int xi = fun_args->xi;
-    struct blasfeo_dvec *ux = (struct blasfeo_dvec *)in[0];
-    blasfeo_dveccp(nx, ux, nu, fun, xi);
-
-    // jacobian
-    struct blasfeo_dmat_args *jac_args = (struct blasfeo_dmat_args *)out[1];
-    struct blasfeo_dmat *jac = jac_args->A;
-    int ai = jac_args->ai;
-    int aj = jac_args->aj;
-    blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    for (ii = 0; ii < nh; ii++)
-        BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
-
-    return;
-
-}
-
-void nonlin_constr_nm3(void *evaluate,
-    ext_fun_arg_t *type_in,
-    void **in,
-    ext_fun_arg_t *type_out,
-    void **out)
-{
-
-    int ii;
-
-    int nu = 3;
-    int nx = 12;
-
-    int nh = nx;
-
-    // fun
-    struct blasfeo_dvec_args *fun_args = (struct blasfeo_dvec_args *)out[0];
-    struct blasfeo_dvec *fun = fun_args->x;
-    int xi = fun_args->xi;
-    struct blasfeo_dvec *ux = (struct blasfeo_dvec *)in[0];
-    blasfeo_dveccp(nx, ux, nu, fun, xi);
-
-    // jacobian
-    struct blasfeo_dmat_args *jac_args = (struct blasfeo_dmat_args *)out[1];
-    struct blasfeo_dmat *jac = jac_args->A;
-    int ai = jac_args->ai;
-    int aj = jac_args->aj;
-    blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    for (ii = 0; ii < nh; ii++)
-        BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
-
-    return;
-
-}
-
-void nonlin_constr_nm4(void *evaluate,
-    ext_fun_arg_t *type_in,
-    void **in,
-    ext_fun_arg_t *type_out,
-    void **out)
-{
-
-    int ii;
-
-    int nu = 3;
-    int nx = 18;
-
-    int nh = nx;
-
-    // fun
-    struct blasfeo_dvec_args *fun_args = (struct blasfeo_dvec_args *)out[0];
-    struct blasfeo_dvec *fun = fun_args->x;
-    int xi = fun_args->xi;
-    struct blasfeo_dvec *ux = (struct blasfeo_dvec *)in[0];
-    blasfeo_dveccp(nx, ux, nu, fun, xi);
-
-    // jacobian
-    struct blasfeo_dmat_args *jac_args = (struct blasfeo_dmat_args *)out[1];
-    struct blasfeo_dmat *jac = jac_args->A;
-    int ai = jac_args->ai;
-    int aj = jac_args->aj;
-    blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    for (ii = 0; ii < nh; ii++)
-        BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
-
-    return;
-
-}
-
-void nonlin_constr_nm5(void *evaluate,
-    ext_fun_arg_t *type_in,
-    void **in,
-    ext_fun_arg_t *type_out,
-    void **out)
-{
-
-    int ii;
-
-    int nu = 3;
-    int nx = 24;
-
-    int nh = nx;
-
-    // fun
-    struct blasfeo_dvec_args *fun_args = (struct blasfeo_dvec_args *)out[0];
-    struct blasfeo_dvec *fun = fun_args->x;
-    int xi = fun_args->xi;
-    struct blasfeo_dvec *ux = (struct blasfeo_dvec *)in[0];
-    blasfeo_dveccp(nx, ux, nu, fun, xi);
-
-    // jacobian
-    struct blasfeo_dmat_args *jac_args = (struct blasfeo_dmat_args *)out[1];
-    struct blasfeo_dmat *jac = jac_args->A;
-    int ai = jac_args->ai;
-    int aj = jac_args->aj;
-    blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    for (ii = 0; ii < nh; ii++)
-        BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
-
-    return;
-
-}
-
-void nonlin_constr_nm6(void *evaluate,
-    ext_fun_arg_t *type_in,
-    void **in,
-    ext_fun_arg_t *type_out,
-    void **out)
-{
-
-    int ii;
-
-    int nu = 3;
-    int nx = 30;
-
-    int nh = nx;
-
-    // fun
-    struct blasfeo_dvec_args *fun_args = (struct blasfeo_dvec_args *)out[0];
-    struct blasfeo_dvec *fun = fun_args->x;
-    int xi = fun_args->xi;
-    struct blasfeo_dvec *ux = (struct blasfeo_dvec *)in[0];
-    blasfeo_dveccp(nx, ux, nu, fun, xi);
-
-    // jacobian
-    struct blasfeo_dmat_args *jac_args = (struct blasfeo_dmat_args *)out[1];
-    struct blasfeo_dmat *jac = jac_args->A;
-    int ai = jac_args->ai;
-    int aj = jac_args->aj;
-    blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    for (ii = 0; ii < nh; ii++)
-        BLASFEO_DMATEL(jac, ai+nu+ii, aj+ii) = 1.0;
-
-    return;
-
-}
-
+// BROKEN & removed since external function convention changed, input is x, u now.
 
 
 void setup_and_solve_nlp(int NN,
@@ -1304,30 +1135,30 @@ void setup_and_solve_nlp(int NN,
     ************************************************/
     external_function_generic nonlin_constr_generic;
 
-    if (con_type == GENERAL_NONLINEAR)
-    {
-        switch (NMF)
-        {
-            case 1:
-                nonlin_constr_generic.evaluate = &nonlin_constr_nm2;
-                break;
-            case 2:
-                nonlin_constr_generic.evaluate = &nonlin_constr_nm3;
-                break;
-            case 3:
-                nonlin_constr_generic.evaluate = &nonlin_constr_nm4;
-                break;
-            case 4:
-                nonlin_constr_generic.evaluate = &nonlin_constr_nm5;
-                break;
-            case 5:
-                nonlin_constr_generic.evaluate = &nonlin_constr_nm6;
-                break;
-            default:
-                printf("\nnonlin constr not implemented for this number of masses\n\n");
-                exit(1);
-        }
-    }
+    // if (con_type == GENERAL_NONLINEAR)
+    // {
+    //     switch (NMF)
+    //     {
+    //         case 1:
+    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm2;
+    //             break;
+    //         case 2:
+    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm3;
+    //             break;
+    //         case 3:
+    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm4;
+    //             break;
+    //         case 4:
+    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm5;
+    //             break;
+    //         case 5:
+    //             nonlin_constr_generic.evaluate = &nonlin_constr_nm6;
+    //             break;
+    //         default:
+    //             printf("\nnonlin constr not implemented for this number of masses\n\n");
+    //             exit(1);
+    //     }
+    // }
 
 
     /************************************************
@@ -1377,8 +1208,8 @@ void setup_and_solve_nlp(int NN,
 
                 stage_cost_nls = (ocp_nlp_cost_nls_model *) nlp_in->cost[i];
 
-                // nls_jac
-                stage_cost_nls->nls_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
+                // nls_res_jac
+                stage_cost_nls->nls_res_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
 
                 // W
                 blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_nls->W, 0, 0);
@@ -1707,7 +1538,7 @@ TEST_CASE("chain example", "[NLP solver]")
     {
         horizon_lenghts = {20};
         num_masses = {2, 3, 4};
-        cons = {"BOX", "GENERAL", "NONLINEAR+GENERAL"};
+        cons = {"BOX", "GENERAL"};  //, "NONLINEAR+GENERAL"};
         models = {"DISCRETE", "CONTINUOUS", "MIXED"};
         integrators = {"MIXED"};
         costs = {"MIXED"};
@@ -1716,7 +1547,8 @@ TEST_CASE("chain example", "[NLP solver]")
     {
         horizon_lenghts = {20, 25};
         num_masses = {2, 3, 4};
-        cons = {"NONLINEAR+GENERAL"};
+        cons = {"BOX", "GENERAL"};
+        // cons = {"NONLINEAR+GENERAL"};
         models = {"DISCRETE", "CONTINUOUS", "MIXED"};
         integrators = {"MIXED"};
         costs = {"MIXED"};

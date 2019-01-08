@@ -381,7 +381,7 @@ void ocp_nlp::set_stage_cost(int stage, const casadi::Function& residual, vector
     module_["nls_residual"] = generate_nls_residual(residual);
 
     ocp_nlp_cost_nls_model *model = (ocp_nlp_cost_nls_model *) nlp_->cost[stage];
-    model->nls_jac = (external_function_generic *) module_["nls_residual"].as_external_function();
+    model->nls_res_jac = (external_function_generic *) module_["nls_residual"].as_external_function();
     blasfeo_pack_dmat(ny, ny, W.data(), ny, &model->W, 0, 0);
     blasfeo_pack_dvec(ny, y_ref.data(), &model->y_ref, 0);
 }

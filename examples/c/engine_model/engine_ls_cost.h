@@ -15,8 +15,8 @@ extern "C" {
 int engine_ls_cost(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem);
 void engine_ls_cost_incref(void);
 void engine_ls_cost_decref(void);
-casadi_int engine_ls_cost_n_in(void);
 casadi_int engine_ls_cost_n_out(void);
+casadi_int engine_ls_cost_n_in(void);
 const char* engine_ls_cost_name_in(casadi_int i);
 const char* engine_ls_cost_name_out(casadi_int i);
 const casadi_int* engine_ls_cost_sparsity_in(casadi_int i);

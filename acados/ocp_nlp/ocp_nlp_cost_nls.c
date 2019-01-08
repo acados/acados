@@ -168,7 +168,7 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
     c_ptr += sizeof(ocp_nlp_cost_nls_model);
 
     model->nls_hess = NULL;
-    model->nls_jac  = NULL;
+    model->nls_res_jac  = NULL;
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -243,9 +243,9 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
         double *uz1_col_maj = (double *) value_;
         blasfeo_pack_dvec(dims->ns, uz1_col_maj, &model->z, dims->ns);
     }
-    else if (!strcmp(field, "nls_jac"))
+    else if (!strcmp(field, "nls_res_jac"))
     {
-        model->nls_jac = (external_function_generic *) value_;
+        model->nls_res_jac = (external_function_generic *) value_;
     }
     else if (!strcmp(field, "nls_hess"))
     {
@@ -514,8 +514,20 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     ext_fun_arg_t ext_fun_type_out[3];
     void *ext_fun_out[3];
 
-    ext_fun_type_in[0] = BLASFEO_DVEC;
-    ext_fun_in[0] = memory->ux;  // ux: nu+nx
+    struct blasfeo_dvec_args x_in;  // input x of external fun;
+    struct blasfeo_dvec_args u_in;  // input u of external fun;
+
+    x_in.x = memory->ux;
+    u_in.x = memory->ux;
+
+    x_in.xi = nu;
+    u_in.xi = 0;
+
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &x_in;
+
+    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[1] = &u_in;
 
     ext_fun_type_out[0] = BLASFEO_DVEC;
     ext_fun_out[0] = &memory->res;  // fun: ny
@@ -523,7 +535,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     ext_fun_out[1] = &memory->Jt;  // jac': (nu+nx) * ny
 
     // evaluate external function
-    model->nls_jac->evaluate(model->nls_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
+    model->nls_res_jac->evaluate(model->nls_res_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
                              ext_fun_out);
 
     /* gradient */
@@ -577,10 +589,10 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         // NOTE(oj): this should add the non-Gauss-Newton term to RSQrq, the product < r, d2_d[x,u] r >,
         //  where the cost is 0.5 * norm2(r(x,u))^2
         // exact hessian of ls cost
-        ext_fun_type_in[0] = BLASFEO_DVEC;
-        ext_fun_in[0] = memory->ux;  // ux: nu+nx
-        ext_fun_type_in[1] = BLASFEO_DVEC;
-        ext_fun_in[1] = &work->tmp_ny;  // fun: ny
+
+        // ext_fun_[type_]in 0,1 are the same as before.
+        ext_fun_type_in[2] = BLASFEO_DVEC;
+        ext_fun_in[2] = &work->tmp_ny;  // fun: ny
 
         ext_fun_type_out[0] = BLASFEO_DMAT;
         ext_fun_out[0] = memory->RSQrq;  // hess: (nu+nx) * (nu+nx)
