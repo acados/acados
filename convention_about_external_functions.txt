@@ -59,7 +59,7 @@ outputs:
 
 // function and jacobian_transposed of nonlinear constraints
 
-external function: h
+external function: nl_constr_h_fun_jac
 
 inputs:
 0) [x]    size: nx    type: BLASFEO_DVEC_ARGS
@@ -70,6 +70,8 @@ outputs:
 1) [jac_u'; jac_x']    size: (nu+nx)*nh    type: BLASFEO_DMAT_ARGS
 
 
+// TODO(whoever): add documentation; split input into x, u;
+external function: p
 
 /************************************************
 * sim_erk_integrator

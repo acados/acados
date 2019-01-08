@@ -391,7 +391,7 @@ void *ocp_nlp_constraints_bghp_model_assign(void *config, void *dims_, void *raw
     assign_and_advance_int(ns, &model->idxs, &c_ptr);
 
     // h
-    //  model->h = NULL;
+    //  model->nl_constr_h_fun_jac = NULL;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_constraints_bghp_model_calculate_size(config, dims) >=
@@ -491,9 +491,9 @@ int ocp_nlp_constraints_bghp_model_set(void *config_, void *dims_,
         blasfeo_pack_dvec(ng, value, &model->d, 2*nb+ng+nh);
         status = ACADOS_SUCCESS;
     }
-    else if (!strcmp(field, "h"))
+    else if (!strcmp(field, "nl_constr_h_fun_jac"))
     {
-        model->h = value;
+        model->nl_constr_h_fun_jac = value;
         status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "lh")) // TODO(fuck_lint) remove
@@ -964,7 +964,7 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
         Jht_args.aj = ng;
         ext_fun_out[1] = &Jht_args;  // jac': (nu+nx) * nh
 
-        model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+        model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
     }
 
     if (np > 0)
