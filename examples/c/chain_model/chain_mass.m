@@ -51,7 +51,7 @@ cost_ux = [cost_u; cost_x];
 cost_y = [cost_x; cost_u];
 cost_jac_y = jacobian(cost_y, cost_ux);
 
-ls_cost = Function(['ls_cost_nm' num2str(Nm)], {[cost_u; cost_x]}, {cost_y, cost_jac_y'});
+ls_cost = Function(['ls_cost_nm' num2str(Nm)], {cost_x, cost_u}, {cost_y, cost_jac_y'});
 ls_cost.generate(['ls_cost_nm' num2str(Nm)], opts);
 
 % Trivial terminal LS cost function

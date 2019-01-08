@@ -30,7 +30,8 @@ outputs:
 external function: nls_jac
 
 inputs:
-0) [u; x]    size: nu+nx    type: BLASFEO_DVEC
+0) [x]    size: nx    type: BLASFEO_DVEC_ARGS
+1) [u]    size: nu    type: BLASFEO_DVEC_ARGS
 
 outputs:
 0) [fun]    size: ny    type: BLASFEO_DVEC
