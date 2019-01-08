@@ -265,6 +265,7 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
 
     // extract dims
     int nx = dims->nx;
+    int nz = dims->nz;
     int nu = dims->nu;
     int nx1 = dims->nx1;
 
@@ -273,11 +274,15 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
     size += sizeof(ocp_nlp_dynamics_cont_memory);
 
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
-    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // hes
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
+    size += 1 * blasfeo_memsize_dvec(nz);             // z at t = 0
+    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // hes
+    size += 1 * blasfeo_memsize_dmat(nz, nu + nx);    // dzdux_tran
 
     size +=
         config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+
+
 
     size += 1*64;  // blasfeo_mem align
 
@@ -296,6 +301,7 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
 
     // extract dims
     int nx = dims->nx;
+    int nz = dims->nz;
     int nu = dims->nu;
     int nx1 = dims->nx1;
 
@@ -312,15 +318,21 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
-    // hes
-    assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &memory->hes, &c_ptr);
 
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
 
     // fun
     assign_and_advance_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
+    
+    // z
+    assign_and_advance_blasfeo_dvec_mem(nz, &memory->z_out, &c_ptr);
 
+    // hes
+    assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &memory->hes, &c_ptr);
+    
+    // dzdux_tran
+    assign_and_advance_blasfeo_dmat_mem(nu + nx, nz, &memory->dzdux_tran, &c_ptr);
     assert((char *) raw_memory +
                ocp_nlp_dynamics_cont_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
@@ -579,7 +591,7 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     // A
     blasfeo_pack_tran_dmat(nx1, nx, work->sim_out->S_forw + 0, nx1, mem->BAbt, nu, 0);
     // dzdux_tran
-    blasfeo_pack_tran_dmat(nz, nu + nx, work->sim_out->S_algebraic + 0, nz, mem->dzdux_tran, nu + nx, 0);
+    blasfeo_pack_tran_dmat(nz, nu + nx, work->sim_out->S_algebraic + 0, nz, &mem->dzdux_tran, nu + nx, 0);
 
     // fun
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
