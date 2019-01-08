@@ -99,7 +99,7 @@ int main() {
     sim_solver_plan plan;
 
     plan.sim_solver = GNSF;
-    sim_solver_config *config = sim_config_create(plan);
+    sim_config *config = sim_config_create(plan);
 
     void *dims = sim_dims_create(config);
     sim_gnsf_dims *gnsf_dim = (sim_gnsf_dims *) dims;
@@ -124,7 +124,7 @@ int main() {
     // set up gnsf_opts
     int opts_size = config->opts_calculate_size(config, dims);
 	void *opts_mem = malloc(opts_size);
-    sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
+    sim_opts *opts = config->opts_assign(config, dims, opts_mem);
     config->opts_initialize_default(config, dims, opts);
     opts->sens_adj = true;
 

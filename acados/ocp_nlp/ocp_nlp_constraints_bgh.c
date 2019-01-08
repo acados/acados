@@ -431,7 +431,7 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         ptr_i = (int *) value;
         for (ii=0; ii < nbx; ii++)
-            model->idxb[nbu+ii] = nbu+ptr_i[ii];
+            model->idxb[nbu+ii] = nu+ptr_i[ii];
         status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "lbx"))
@@ -906,7 +906,6 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
     int nh = dims->nh;
     int ns = dims->ns;
 
-    // XXX large enough ?
     ext_fun_arg_t ext_fun_type_in[2];
     void *ext_fun_in[2];
     ext_fun_arg_t ext_fun_type_out[2];
@@ -922,9 +921,20 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
     // nonlinear
     if (nh > 0)
     {
-        //
-        ext_fun_type_in[0] = BLASFEO_DVEC;
-        ext_fun_in[0] = memory->ux;  // ux: nu+nx
+        struct blasfeo_dvec_args x_in;  // input x of external fun;
+        struct blasfeo_dvec_args u_in;  // input u of external fun;
+
+        x_in.x = memory->ux;
+        u_in.x = memory->ux;
+
+        x_in.xi = nu;
+        u_in.xi = 0;
+
+        ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[0] = &x_in;
+
+        ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[1] = &u_in;
 
         //
         ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;

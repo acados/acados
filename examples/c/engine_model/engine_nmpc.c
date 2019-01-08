@@ -161,7 +161,7 @@ static void mdlStart(SimStruct *S)
     double lb_N[] = {0, 0, 0.5, 0.5};
     double ub_N[] = {100, 100, 1.757, 2.125};
 
-    ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NUM_STAGES);
+    ocp_nlp_plan *plan = ocp_nlp_plan_create(NUM_STAGES);
 
 	plan->nlp_solver = SQP_GN;
 
@@ -179,7 +179,7 @@ static void mdlStart(SimStruct *S)
 	for (i = 0; i <= NUM_STAGES; i++)
 		plan->nlp_constraints[i] = BGH;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
+	ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
     // implicit dae
     impl_dae_fun.casadi_fun = &engine_impl_dae_fun;
@@ -249,13 +249,13 @@ static void mdlStart(SimStruct *S)
     ocp_nlp_cost_nls_model **cost = (ocp_nlp_cost_nls_model **) nlp_in->cost;
 
 	for (i = 0; i < NUM_STAGES; ++i) {
-        cost[i]->nls_jac = (external_function_generic *) &nls_cost_residual;
+        cost[i]->nls_res_jac = (external_function_generic *) &nls_cost_residual;
         cost[i]->nls_hess = NULL;
         blasfeo_pack_dvec(ny[i], y_ref, &cost[i]->y_ref, 0);
         blasfeo_pack_dmat(ny[i], ny[i], W, ny[i], &cost[i]->W, 0, 0);
     }
 
-    cost[NUM_STAGES]->nls_jac = (external_function_generic *) &nls_cost_N_residual;
+    cost[NUM_STAGES]->nls_res_jac = (external_function_generic *) &nls_cost_N_residual;
     cost[NUM_STAGES]->nls_hess = NULL;
     blasfeo_pack_dvec(ny[NUM_STAGES], y_ref, &cost[NUM_STAGES]->y_ref, 0);
     blasfeo_pack_dmat(ny[NUM_STAGES], ny[NUM_STAGES], W_N, ny[NUM_STAGES], &cost[NUM_STAGES]->W, 0, 0);
@@ -263,9 +263,9 @@ static void mdlStart(SimStruct *S)
     // dynamics
     for (i = 0; i < NUM_STAGES; ++i)
     {
-        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun", &impl_dae_fun)) exit(1);
-        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z)) exit(1);
-        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun", &impl_dae_fun)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
     }
 
     // bounds

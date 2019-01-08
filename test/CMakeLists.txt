@@ -69,6 +69,13 @@ set(TEST_OCP_NLP_SRC
     ${CMAKE_SOURCE_DIR}/examples/c/chain_model/ls_costN_nm6.c
     #${CMAKE_SOURCE_DIR}/examples/c/chain_model/casadi_erk4_chain_nm6.c
 
+    # external cost
+    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/chain_nm_2_external_cost.c
+    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/chain_nm_3_external_cost.c
+    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/chain_nm_4_external_cost.c
+    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/chain_nm_5_external_cost.c
+    ${CMAKE_SOURCE_DIR}/examples/c/chain_model/chain_nm_6_external_cost.c
+
     ### implicit ###
     # 2 masses
     ${CMAKE_SOURCE_DIR}/examples/c/implicit_chain_model/impl_ode_fun_chain_nm2.c

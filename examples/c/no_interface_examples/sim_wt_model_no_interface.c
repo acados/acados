@@ -200,9 +200,9 @@ int main()
 * sim config
 ************************************************/
 
-		int config_size = sim_solver_config_calculate_size();
+		int config_size = sim_config_calculate_size();
 		void *config_mem = malloc(config_size);
-		sim_solver_config *config = sim_solver_config_assign(config_mem);
+		sim_config *config = sim_config_assign(config_mem);
 
 		switch (nss)
 		{
@@ -248,7 +248,7 @@ int main()
 
 		int opts_size = config->opts_calculate_size(config, dims);
 		void *opts_mem = malloc(opts_size);
-		sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
+		sim_opts *opts = config->opts_assign(config, dims, opts_mem);
 		config->opts_initialize_default(config, dims, opts);
 
 		opts->num_steps = 10; // integration steps

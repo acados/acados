@@ -43,7 +43,7 @@ extern "C" {
 typedef struct
 {
     void (*config_initialize_default)(void *config);
-    sim_solver_config *sim_solver;
+    sim_config *sim_solver;
     /* dims */
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);

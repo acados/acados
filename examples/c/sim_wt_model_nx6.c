@@ -231,7 +231,7 @@ int main()
 		}
 
 		// create correct config based on plan
-		sim_solver_config *config = sim_config_create(plan);
+		sim_config *config = sim_config_create(plan);
 
 		/************************************************
 		* sim dims
@@ -247,7 +247,7 @@ int main()
 		************************************************/
 
 		void *opts_ = sim_opts_create(config, dims);
-		sim_rk_opts *opts = opts_;
+		sim_opts *opts = opts_;
 
 		bool sens_adj = true;
 		bool sens_forw = true;

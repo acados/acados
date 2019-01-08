@@ -240,7 +240,7 @@ int main()
 		}
 
 		// create correct config based on plan
-		sim_solver_config *config = sim_config_create(plan);
+		sim_config *config = sim_config_create(plan);
 
 		/************************************************
 		* sim dims
@@ -256,7 +256,7 @@ int main()
 		* sim opts
 		************************************************/
 
-		sim_rk_opts *opts = sim_opts_create(config, dims);
+		sim_opts *opts = sim_opts_create(config, dims);
 
 		// opts->ns = 4; // number of stages in rk integrator
 		// opts->num_steps = 3; // number of integration steps

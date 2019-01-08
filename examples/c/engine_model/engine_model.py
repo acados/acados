@@ -111,7 +111,7 @@ engine_impl_dae_jac_x_xdot_u_z = Function('engine_impl_dae_jac_x_xdot_u_z', inpu
 # only needed for lifted IRK
 engine_impl_dae_fun_jac_x_xdot_u_z = Function('engine_impl_dae_fun_jac_x_xdot_u_z', inputs, [impl_dae, jac_x, jac_d_x, jac_u, jac_z])
 # objective residual
-engine_ls_cost = Function('engine_ls_cost', [vertcat(u, x)], [output(x, u), jacobian(output(x, u), vertcat(u, x)).T])
+engine_ls_cost = Function('engine_ls_cost', [x,u], [output(x, u), jacobian(output(x, u), vertcat(u, x)).T])
 engine_ls_cost_N = Function('engine_ls_cost_N', [x], [output_N(x), jacobian(output_N(x), x).T])
 
 codegen_opts = {'mex': False, 'casadi_int': 'int', 'with_header': True}

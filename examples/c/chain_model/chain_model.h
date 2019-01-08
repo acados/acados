@@ -7,23 +7,23 @@
 extern "C" {
 #endif
 
-#define X0_NM2_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm2.txt"
-#define X0_NM3_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm3.txt"
-#define X0_NM4_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm4.txt"
-#define X0_NM5_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm5.txt"
-#define X0_NM6_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm6.txt"
-#define X0_NM7_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm7.txt"
-#define X0_NM8_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm8.txt"
-#define X0_NM9_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/x0_nm9.txt"
+#define X0_NM2_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm2.txt"
+#define X0_NM3_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm3.txt"
+#define X0_NM4_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm4.txt"
+#define X0_NM5_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm5.txt"
+#define X0_NM6_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm6.txt"
+#define X0_NM7_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm7.txt"
+#define X0_NM8_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm8.txt"
+#define X0_NM9_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm9.txt"
 
-#define XN_NM2_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm2.txt"
-#define XN_NM3_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm3.txt"
-#define XN_NM4_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm4.txt"
-#define XN_NM5_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm5.txt"
-#define XN_NM6_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm6.txt"
-#define XN_NM7_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm7.txt"
-#define XN_NM8_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm8.txt"
-#define XN_NM9_FILE "/home/gianluca/acados_jonny/examples/c/chain_model/xN_nm9.txt"
+#define XN_NM2_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm2.txt"
+#define XN_NM3_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm3.txt"
+#define XN_NM4_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm4.txt"
+#define XN_NM5_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm5.txt"
+#define XN_NM6_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm6.txt"
+#define XN_NM7_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm7.txt"
+#define XN_NM8_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm8.txt"
+#define XN_NM9_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm9.txt"
 
 /* forward vde */
 int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
@@ -320,6 +320,43 @@ int casadi_erk4_chain_nm6_n_out();
 int casadi_erk4_chain_nm7_n_out();
 int casadi_erk4_chain_nm8_n_out();
 int casadi_erk4_chain_nm9_n_out();
+
+/* external cost */
+int chain_nm_2_external_cost(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int chain_nm_3_external_cost(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int chain_nm_4_external_cost(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int chain_nm_5_external_cost(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int chain_nm_6_external_cost(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+
+int chain_nm_2_external_cost_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+int chain_nm_3_external_cost_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+int chain_nm_4_external_cost_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+int chain_nm_5_external_cost_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+int chain_nm_6_external_cost_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+
+const int* chain_nm_2_external_cost_sparsity_in(int i);
+const int* chain_nm_3_external_cost_sparsity_in(int i);
+const int* chain_nm_4_external_cost_sparsity_in(int i);
+const int* chain_nm_5_external_cost_sparsity_in(int i);
+const int* chain_nm_6_external_cost_sparsity_in(int i);
+
+const int* chain_nm_2_external_cost_sparsity_out(int i);
+const int* chain_nm_3_external_cost_sparsity_out(int i);
+const int* chain_nm_4_external_cost_sparsity_out(int i);
+const int* chain_nm_5_external_cost_sparsity_out(int i);
+const int* chain_nm_6_external_cost_sparsity_out(int i);
+
+int chain_nm_2_external_cost_n_in();
+int chain_nm_3_external_cost_n_in();
+int chain_nm_4_external_cost_n_in();
+int chain_nm_5_external_cost_n_in();
+int chain_nm_6_external_cost_n_in();
+
+int chain_nm_2_external_cost_n_out();
+int chain_nm_3_external_cost_n_out();
+int chain_nm_4_external_cost_n_out();
+int chain_nm_5_external_cost_n_out();
+int chain_nm_6_external_cost_n_out();
 
 #ifdef __cplusplus
 } /* extern "C" */
