@@ -99,6 +99,13 @@ static void ocp_nlp_cost_ls_set_nx(void *config_, void *dims_, int *nx)
 }
 
 
+static void ocp_nlp_cost_ls_set_nz(void *config_, void *dims_, int *nz)
+{
+    ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
+    dims->nz = *nz;
+}
+
+
 static void ocp_nlp_cost_ls_set_nu(void *config_, void *dims_, int *nu)
 {
     ocp_nlp_cost_ls_dims *dims = (ocp_nlp_cost_ls_dims *) dims_;
@@ -129,7 +136,7 @@ void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int
     else if (!strcmp(field, "nz"))
     {
         // do nothing
-        // TODO(all): implement cost with daes
+        ocp_nlp_cost_ls_set_nz(config_, dims_, value);
     }
     else if (!strcmp(field, "nu"))
     {
@@ -162,6 +169,7 @@ int ocp_nlp_cost_ls_model_calculate_size(void *config_, void *dims_)
 
     // extract dims
     int nx = dims->nx;
+    int nz = dims->nz;
     int nu = dims->nu;
     int ny = dims->ny;
     int ns = dims->ns;
@@ -173,7 +181,7 @@ int ocp_nlp_cost_ls_model_calculate_size(void *config_, void *dims_)
     size += 1 * 64;  // blasfeo_mem align
 
     size += 1 * blasfeo_memsize_dmat(ny, ny);           // W
-    size += 1 * blasfeo_memsize_dmat(nu + nx, ny); // Cyr
+    size += 1 * blasfeo_memsize_dmat(nu + nx + nz, ny); // Cyr
     size += 1 * blasfeo_memsize_dvec(ny);               // y_ref
     size += 2 * blasfeo_memsize_dvec(2 * ns);           // Z, z
 
@@ -560,10 +568,11 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     blasfeo_dgecp(nu + nx, nu + nx, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
 
     // eliminate algebraic variables and update Cyt and y_ref
-    // if (nz > 0) {
-    //     // update Cyt
-    //     blasfeo_dgead(ny, nu + nx, 1.0, struct blasfeo_dmat *sA, int ai, int aj, struct blasfeo_dmat *sC, int ci, int cj)
-    // }
+    double dummy = 1;
+    if (nz > 0) {
+        // update Cyt
+        // blasfeo_dgead(ny, nu + nx, 1.0, struct blasfeo_dmat *sA, int ai, int aj, struct blasfeo_dmat *sC, int ci, int cj)
+    }
 
     // compute gradient
     // blasfeo_print_dmat(nu+nx, nu+nx, &model->Cyt, 0, 0);

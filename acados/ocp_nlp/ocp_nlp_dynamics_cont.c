@@ -318,7 +318,6 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
-
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
 
@@ -591,7 +590,7 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     // A
     blasfeo_pack_tran_dmat(nx1, nx, work->sim_out->S_forw + 0, nx1, mem->BAbt, nu, 0);
     // dzdux_tran
-    blasfeo_pack_tran_dmat(nz, nu + nx, work->sim_out->S_algebraic + 0, nz, &mem->dzdux_tran, nu + nx, 0);
+    blasfeo_pack_tran_dmat(nz, nu + nx, work->sim_out->S_algebraic + 0, nz, &mem->dzdux_tran, 0, 0);
 
     // fun
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
