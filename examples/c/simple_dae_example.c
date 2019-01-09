@@ -35,13 +35,13 @@
 
 #include "simple_dae_model/simple_dae_model.h"
 
-#define FORMULATION 0 // 0 without Vz*z term 1 with Vz*z and without Vx*x
+#define FORMULATION 1 // 0 without Vz*z term 1 with Vz*z and without Vx*x
 
 int main() {
 
 	int num_states = 2, num_controls = 2, N = 2;
 	int num_alg_states = 2;
-	double Tf = 1, R[2] = {1e-1, 1e-1}, QN[2] = {1e1, 1e1};
+	double Tf = 0.1, R[2] = {1e-1, 1e-1}, QN[2] = {1e1, 1e1};
     double Q[2] = {1e1, 1e1};
 	int idxb_0[2] = {1, 2};
 	double x0[num_states];
@@ -55,6 +55,7 @@ int main() {
     int nz_ = num_alg_states;
     int nu_ = num_controls;
     int ny_;
+
     if (FORMULATION == 0) {
         ny_ = nu_ + nx_;
     } else {
@@ -141,13 +142,6 @@ int main() {
     VxN[0+ny[N]*0] = 1.0;
     VxN[1+ny[N]*1] = 1.0;
 
-    // double *VzN = malloc((ny[N]*nz_)*sizeof(double));
-    // for (int ii=0; ii < ny[N]*nz_; ii++)
-    //     VzN[ii] = 0.0;
-
-    // VzN[2+ny[N]*0] = 0.0;
-    // VzN[3+ny[N]*1] = 0.0;
-
     double *W = malloc((ny_*ny_)*sizeof(double));
     for (int ii=0; ii<ny_*ny_; ii++)
         W[ii] = 0.0;
@@ -180,7 +174,6 @@ int main() {
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	// ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, np, ns, nz, dims);
 
     ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
     ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
@@ -197,7 +190,6 @@ int main() {
 
 	external_function_casadi impl_ode_fun[N];
 	external_function_casadi impl_ode_fun_jac_x_xdot_z[N];
-	// external_function_casadi impl_ode_fun_jac_x_xdot_z_u[N];
 	external_function_casadi impl_ode_jac_x_xdot_z_u[N];
 
 	for (int ii = 0; ii < N; ++ii) {
@@ -214,13 +206,6 @@ int main() {
         impl_ode_fun_jac_x_xdot_z[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_z_simple_dae_sparsity_out;
         impl_ode_fun_jac_x_xdot_z[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_z_simple_dae_n_in;
         impl_ode_fun_jac_x_xdot_z[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_z_simple_dae_n_out;
-
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_z_u_simple_dae;
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_z_u_simple_dae_work;
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_z_u_simple_dae_sparsity_in;
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_z_u_simple_dae_sparsity_out;
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_z_u_simple_dae_n_in;
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_z_u_simple_dae_n_out;
 
         impl_ode_jac_x_xdot_z_u[ii].casadi_fun = &casadi_impl_ode_jac_x_xdot_z_u_simple_dae;
         impl_ode_jac_x_xdot_z_u[ii].casadi_work = &casadi_impl_ode_jac_x_xdot_z_u_simple_dae_work;
@@ -282,36 +267,17 @@ int main() {
 	for (int i = 0; i < N; ++i) {
         ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vx", Vx);
         ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vu", Vu);
-        // ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vz", Vz);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vz", Vz);
 	}
 
     ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vx", VxN);
     // ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vz", Vz);
     
-	// for (int i = 0; i <= N; ++i) {
-	// 	blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
-        // for (int j = 0; j < nu[i]; j++)
-            // BLASFEO_DMATEL(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
-        // for (int j = 0; j < nx[i]; j++)
-            // BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
-	// }
-
 	// W
 	for (int i = 0; i < N; ++i) ocp_nlp_cost_model_set(config, dims, nlp_in, i, "W", W);
-	// for (int i = 0; i < N; ++i) {
-	// 	blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
-        // for (int j = 0; j < nx[i]; j++)
-            // BLASFEO_DMATEL(&cost_ls[i]->W, j, j) = Q[j];
-        // for (int j = 0; j < nu[i]; j++)
-            // BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = R[j];
-	// }
     
 	// WN
     ocp_nlp_cost_model_set(config, dims, nlp_in, N, "W", WN);
-
-	// blasfeo_dgese(ny[N], ny[N], 0.0, &cost_ls[N]->W, 0, 0);
-	// for (int j = 0; j < nx[N]; j++)
-	// 	BLASFEO_DMATEL(&cost_ls[N]->W, j, j) = QN[j];
 
 	// y_ref
     for (int i = 0; i <= N; ++i)
@@ -338,9 +304,11 @@ int main() {
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
     bool reuse_val = true; 
+    int num_steps_val = 1; 
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "sens_algebraic", &sens_algebraic_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &reuse_val);
+    for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps_val);
 
 	ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
     sqp_opts->maxIter = max_num_sqp_iterations;

@@ -135,7 +135,10 @@ typedef struct
 {
     struct blasfeo_dmat tmp_nv_ny;
     struct blasfeo_dmat Cyt_tilde;
+    struct blasfeo_dmat dzdux_tran;
     struct blasfeo_dvec tmp_ny;
+    struct blasfeo_dvec tmp_nz;
+    struct blasfeo_dvec y_ref_tilde;
 } ocp_nlp_cost_ls_workspace;
 
 //
