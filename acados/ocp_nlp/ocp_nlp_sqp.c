@@ -1182,7 +1182,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         nlp_out->qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
 
         // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
-        //  print_ocp_qp_out(work->qp_out);
+        // print_ocp_qp_out(work->qp_out);
         //  if(sqp_iter==1)
         //  exit(1);
 
