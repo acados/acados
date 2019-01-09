@@ -61,6 +61,7 @@ void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int
 typedef struct
 {
     struct blasfeo_dmat Cyt;            // output matrix: Cy * [x, u] = y; in transposed form
+    struct blasfeo_dmat Vz;             // Vz in ls cost Vx*x + Vu*u + Vz*z
     struct blasfeo_dmat W;              // ls norm corresponding to this matrix
     struct blasfeo_dvec y_ref;          // yref
     struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector (lower and upper)
@@ -133,6 +134,7 @@ void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dvec *dzdux_tran, 
 typedef struct
 {
     struct blasfeo_dmat tmp_nv_ny;
+    struct blasfeo_dmat Cyt_tilde;
     struct blasfeo_dvec tmp_ny;
 } ocp_nlp_cost_ls_workspace;
 

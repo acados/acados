@@ -181,7 +181,8 @@ int ocp_nlp_cost_ls_model_calculate_size(void *config_, void *dims_)
     size += 1 * 64;  // blasfeo_mem align
 
     size += 1 * blasfeo_memsize_dmat(ny, ny);           // W
-    size += 1 * blasfeo_memsize_dmat(nu + nx + nz, ny); // Cyr
+    size += 1 * blasfeo_memsize_dmat(nu + nx, ny);      // Cyt
+    size += 1 * blasfeo_memsize_dmat(nz, ny);           // Vz
     size += 1 * blasfeo_memsize_dvec(ny);               // y_ref
     size += 2 * blasfeo_memsize_dvec(2 * ns);           // Z, z
 
@@ -211,7 +212,10 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     // W
     assign_and_advance_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
     // Cyt
-    assign_and_advance_blasfeo_dmat_mem(nu + nx + nz, ny, &model->Cyt, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &model->Cyt, &c_ptr);
+    
+    // Vz
+    assign_and_advance_blasfeo_dmat_mem(nz, ny, &model->Vz, &c_ptr);
 
     // blasfeo_dvec
     // y_ref
@@ -268,8 +272,8 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     else if (!strcmp(field, "Vz"))
     {
         double *Vz_col_maj = (double *) value_;
-        blasfeo_pack_tran_dmat(dims->ny, dims->nz, Vz_col_maj, dims->ny,
-                &model->Cyt, dims->nu + dims->nx, 0);
+        blasfeo_pack_dmat(dims->ny, dims->nz, Vz_col_maj, dims->ny,
+                &model->Vz, 0, 0);
     }
     else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
     {
@@ -477,6 +481,7 @@ int ocp_nlp_cost_ls_workspace_calculate_size(void *config_, void *dims_, void *o
     size += sizeof(ocp_nlp_cost_ls_workspace);
 
     size += 1 * blasfeo_memsize_dmat(nu + nx, ny);  // tmp_nv_ny
+    size += 1 * blasfeo_memsize_dmat(nu + nx, ny);  // Cyt_tilde
     size += 1 * blasfeo_memsize_dvec(ny);           // tmp_ny
 
     size += 1 * 64;  // blasfeo_mem align
@@ -503,6 +508,9 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_, void *dims_, void *opt
     // tmp_nv_ny
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &work->tmp_nv_ny, &c_ptr);
 
+    // Cyt_tilde
+    assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &work->Cyt_tilde, &c_ptr);
+    
     // tmp_ny
     assign_and_advance_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);
 
@@ -567,22 +575,29 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     // initialize hessian of lagrangian with hessian of cost
     blasfeo_dgecp(nu + nx, nu + nx, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
 
-    // eliminate algebraic variables and update Cyt and y_ref
-    double dummy = 1;
-    if (nz > 0) {
-        // update Cyt
-        // blasfeo_dgead(ny, nu + nx, 1.0, struct blasfeo_dmat *sA, int ai, int aj, struct blasfeo_dmat *sC, int ci, int cj)
+    // copy Cyt into Cyt_tilde
+    blasfeo_dgecp(nu + nx, ny, &model->Cyt, 0, 0, &work->Cyt_tilde, 0, 0);
+    printf("Cyt_tilde = ");
+    blasfeo_print_dmat(nu+nx, ny, &work->Cyt_tilde, 0, 0);
+    printf("Vz = ");
+    blasfeo_print_dmat(ny, nz, &model->Vz, 0, 0);
+    if (nz > 0) { // eliminate algebraic variables and update Cyt and y_ref
+        // update Cyt: Cyt_tilde = Cyt + dzdux_tran*Vz^T
+        blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0, &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
+
     }
+    printf("Cyt_tilde = ");
+    blasfeo_print_dmat(nu+nx, ny, &work->Cyt_tilde, 0, 0);
 
     // compute gradient
     // blasfeo_print_dmat(nu+nx, nu+nx, &model->Cyt, 0, 0);
-    blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0,
+    blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0,
                     &memory->res, 0);
 
     // TODO(all): use lower triangular chol of W to save n_y^2 flops
     blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0,
                     &work->tmp_ny, 0);
-    blasfeo_dgemv_n(nu + nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0,
+    blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0,
                     &memory->grad, 0);
 
     // slacks

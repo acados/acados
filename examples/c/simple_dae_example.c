@@ -35,6 +35,8 @@
 
 #include "simple_dae_model/simple_dae_model.h"
 
+#define FORMULATION 0 // 0 without Vz*z term 1 with Vz*z and without Vx*x
+
 int main() {
 
 	int num_states = 2, num_controls = 2, N = 2;
@@ -52,7 +54,12 @@ int main() {
     int nx_ = num_states;
     int nz_ = num_alg_states;
     int nu_ = num_controls;
-    int ny_ = nx_ + nu_ + nz_;
+    int ny_;
+    if (FORMULATION == 0) {
+        ny_ = nu_ + nx_;
+    } else {
+        ny_ = nu_ + nz_;
+    }
 
 	int nx[N+1];
     int nu[N+1];
@@ -88,7 +95,8 @@ int main() {
     nh[N] = 0;
     np[N] = 0;
     nv[N] = nx_; 
-    ny[N] = nx_ + nz_;
+    ny[N] = nx_;
+    nz[N] = 0;
 
     /* linear least squares */
 
@@ -99,8 +107,13 @@ int main() {
     for (int ii=0; ii < ny_*nx_; ii++)
         Vx[ii] = 0.0;
 
-    Vx[0+ny_*0] = 1.0;
-    Vx[1+ny_*1] = 1.0;
+    if (FORMULATION == 0) {
+        Vx[0+ny_*0] = 1.0;
+        Vx[1+ny_*1] = 1.0;
+    } else {
+        Vx[0+ny_*0] = 0.0;
+        Vx[1+ny_*1] = 0.0;
+    }
 
     double *Vu = malloc((ny_*nu_)*sizeof(double));
     for (int ii=0; ii < ny_*nu_; ii++)
@@ -113,8 +126,13 @@ int main() {
     for (int ii=0; ii < nz_*nz_; ii++)
         Vz[ii] = 0.0;
 
-    Vz[4+ny_*0] = 1.0;
-    Vz[5+ny_*1] = 1.0;
+    if (FORMULATION == 0) {
+        Vz[0+ny_*0] = 0.0;
+        Vz[1+ny_*1] = 0.0;
+    } else {
+        Vz[0+ny_*0] = 1.0;
+        Vz[1+ny_*1] = 1.0;
+    }
 
     double *VxN = malloc((ny[N]*nx_)*sizeof(double));
     for (int ii=0; ii < ny[N]*nx_; ii++)
@@ -123,12 +141,12 @@ int main() {
     VxN[0+ny[N]*0] = 1.0;
     VxN[1+ny[N]*1] = 1.0;
 
-    double *VzN = malloc((ny[N]*nz_)*sizeof(double));
-    for (int ii=0; ii < ny[N]*nz_; ii++)
-        VzN[ii] = 0.0;
+    // double *VzN = malloc((ny[N]*nz_)*sizeof(double));
+    // for (int ii=0; ii < ny[N]*nz_; ii++)
+    //     VzN[ii] = 0.0;
 
-    VzN[2+ny[N]*0] = 1.0;
-    VzN[3+ny[N]*1] = 1.0;
+    // VzN[2+ny[N]*0] = 0.0;
+    // VzN[3+ny[N]*1] = 0.0;
 
     double *W = malloc((ny_*ny_)*sizeof(double));
     for (int ii=0; ii<ny_*ny_; ii++)
@@ -264,11 +282,11 @@ int main() {
 	for (int i = 0; i < N; ++i) {
         ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vx", Vx);
         ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vu", Vu);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vz", Vz);
+        // ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vz", Vz);
 	}
 
     ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vx", VxN);
-    ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vz", VzN);
+    // ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vz", Vz);
     
 	// for (int i = 0; i <= N; ++i) {
 	// 	blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
@@ -319,17 +337,17 @@ int main() {
    
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
-    bool reuse_val = false; 
+    bool reuse_val = true; 
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "sens_algebraic", &sens_algebraic_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &reuse_val);
 
 	ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
     sqp_opts->maxIter = max_num_sqp_iterations;
-    sqp_opts->min_res_g = 1e-9;
-    sqp_opts->min_res_b = 1e-9;
-    sqp_opts->min_res_d = 1e-9;
-    sqp_opts->min_res_m = 1e-9;
+    sqp_opts->min_res_g = 1e-6;
+    sqp_opts->min_res_b = 1e-6;
+    sqp_opts->min_res_d = 1e-6;
+    sqp_opts->min_res_m = 1e-6;
 	((ocp_qp_partial_condensing_solver_opts *) sqp_opts->qp_solver_opts)->pcond_opts->N2 = N;
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
