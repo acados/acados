@@ -593,10 +593,6 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     blasfeo_dgecp(nu + nx, ny, &model->Cyt, 0, 0, &work->Cyt_tilde, 0, 0);
     // copy y_ref into y_ref_tilde
     blasfeo_dveccp(ny, &model->y_ref, 0, &work->y_ref_tilde, 0);
-    printf("Cyt_tilde = \n");
-    blasfeo_print_dmat(nu+nx, ny, &work->Cyt_tilde, 0, 0);
-    printf("Vz = ");
-    blasfeo_print_dmat(ny, nz, &model->Vz, 0, 0);
     if (nz > 0) { // eliminate algebraic variables and update Cyt and y_ref
         // swap dzdu and dzdx
         blasfeo_dgecp(nx, ny, memory->dzdux_tran, 0, 0, &work->dzdux_tran, nu, 0);
@@ -607,11 +603,6 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
         blasfeo_dveccp(nz, &memory->z, 0, &work->tmp_nz, 0);
         blasfeo_dgemv_t(nz, nx + nu, 1.0, &work->dzdux_tran, 0, 0, memory->ux, 0, -1.0, &work->tmp_nz, 0, &work->tmp_nz, 0);
         blasfeo_dgemv_n(ny, nz, 1.0, &model->Vz, 0, 0, &work->tmp_nz, 0, 1.0, &work->y_ref_tilde, 0, &work->y_ref_tilde, 0);
-        printf("dzdux_tran = \n");
-        blasfeo_print_dmat(nx + nu, nz, memory->dzdux_tran, 0, 0);
-        printf("Cyt_tilde = \n");
-        blasfeo_print_dmat(nu+nx, ny, &work->Cyt_tilde, 0, 0);
-        // TODO(all): avoid recomputing the Hessian if both W and Cyt do not change
         blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny,
                            0, 0);
         blasfeo_dsyrk_ln(nu + nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0,
@@ -620,7 +611,6 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     }
 
     // compute gradient
-    // blasfeo_print_dmat(nu+nx, nu+nx, &model->Cyt, 0, 0);
     blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux, 0, -1.0, &work->y_ref_tilde, 0,
                     &memory->res, 0);
 
@@ -633,11 +623,6 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     // slacks
     blasfeo_dveccp(2 * ns, &model->z, 0, &memory->grad, nu + nx);
     blasfeo_dvecmulacc(2 * ns, &model->Z, 0, memory->ux, nu + nx, &memory->grad, nu + nx);
-
-    // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
-    // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
-    // blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
-    // exit(1);
 
     return;
 }
