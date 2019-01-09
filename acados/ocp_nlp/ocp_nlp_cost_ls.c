@@ -456,11 +456,11 @@ void ocp_nlp_cost_ls_memory_set_z_ptr(struct blasfeo_dvec *z, void *memory_)
     memory->z = z;
 }
 
-void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dvec *dzdux_tran, void *memory_)
+void ocp_nlp_cost_ls_memory_set_dzdxu_tran_ptr(struct blasfeo_dvec *dzdxu_tran, void *memory_)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
-    memory->dzdux_tran = dzdux_tran;
+    memory->dzdxu_tran = dzdxu_tran;
 }
 
 /************************************************
@@ -595,8 +595,8 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     blasfeo_dveccp(ny, &model->y_ref, 0, &work->y_ref_tilde, 0);
     if (nz > 0) { // eliminate algebraic variables and update Cyt and y_ref
         // swap dzdu and dzdx
-        blasfeo_dgecp(nx, ny, memory->dzdux_tran, 0, 0, &work->dzdux_tran, nu, 0);
-        blasfeo_dgecp(nu, ny, memory->dzdux_tran, nx, 0, &work->dzdux_tran, 0, 0);
+        blasfeo_dgecp(nx, ny, memory->dzdxu_tran, 0, 0, &work->dzdux_tran, nu, 0);
+        blasfeo_dgecp(nu, ny, memory->dzdxu_tran, nx, 0, &work->dzdux_tran, 0, 0);
         // update Cyt: Cyt_tilde = Cyt + dzdux_tran*Vz^T
         blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, &work->dzdux_tran, 0, 0, &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
         // update y_ref: y_ref_tilde = y_ref + Vz*x + Vz*u - Vz*z
@@ -647,7 +647,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
     config->memory_get_grad_ptr = &ocp_nlp_cost_ls_memory_get_grad_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_ls_memory_set_ux_ptr;
     config->memory_set_z_ptr = &ocp_nlp_cost_ls_memory_set_z_ptr;
-    config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr;
+    config->memory_set_dzdxu_tran_ptr = &ocp_nlp_cost_ls_memory_set_dzdxu_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_ls_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_ls_memory_set_Z_ptr;
     config->workspace_calculate_size = &ocp_nlp_cost_ls_workspace_calculate_size;
