@@ -85,7 +85,7 @@ nlp_dims.nyN = nyN
 nlp_dims.nbx = 0
 nlp_dims.nbu = nu 
 nlp_dims.nu  = model.u.size()[0]
-nlp_dims.N   = 10
+nlp_dims.N   = N
 
 # set weighting matrices
 nlp_cost = ra.cost
@@ -143,12 +143,12 @@ ra.constants = [const1]
 ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
 # ra.solver_config.hessian_approx = 'EXACT'
-# ra.solver_config.integrator_type = 'ERK'
-ra.solver_config.integrator_type = 'IRK'
+ra.solver_config.integrator_type = 'ERK'
+# ra.solver_config.integrator_type = 'IRK'
 
 # set prediction horizon
 ra.solver_config.tf = Tf
-ra.solver_config.nlp_solver_type = 'SQP_RTI'
+ra.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
 ra.acados_include_path = '/usr/local/include'

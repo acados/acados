@@ -1089,7 +1089,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
 
     // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
-    //  print_ocp_qp_in(work->qp_in);
+    // print_ocp_qp_in(work->qp_in);
+    // exit(1);
 
     // start timer
     acados_tic(&timer1);
