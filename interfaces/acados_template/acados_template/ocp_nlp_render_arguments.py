@@ -3,9 +3,12 @@ import numpy as np
 class ocp_nlp_dims:
     def __init__(self):
         self._nx  = None  # number of states
+        self._nz  = 0     # number of algebraic variables
         self._nu  = None  # number of inputs
-        self._nbx = None  # number of state bounds 
-        self._nbu = None  # number of input bounds
+        self._ny  = None  # number of residuals in Lagrange term
+        self._nyN = None  # number of residuals in Mayer term
+        self._nbx = 0     # number of state bounds 
+        self._nbu = 0     # number of input bounds
         self._nu  = None  # number of inputs
         self._N   = None  # prediction horizon 
 
@@ -14,8 +17,20 @@ class ocp_nlp_dims:
         return self._nx
 
     @property
+    def nz(self):
+        return self._nz
+
+    @property
     def nu(self):
         return self._nu
+
+    @property
+    def ny(self):
+        return self._ny
+
+    @property
+    def nyN(self):
+        return self._nyN
 
     @property
     def nbx(self):
@@ -35,6 +50,27 @@ class ocp_nlp_dims:
             self._nx = nx
         else:
             raise Exception('Invalid nx value. Exiting.')
+
+    @nz.setter
+    def nz(self, nz):
+        if type(nz) == int and nz > 0:
+            self._nz = nz
+        else:
+            raise Exception('Invalid nz value. Exiting.')
+
+    @ny.setter
+    def ny(self, ny):
+        if type(ny) == int and ny > 0:
+            self._ny = ny
+        else:
+            raise Exception('Invalid ny value. Exiting.')
+
+    @nyN.setter
+    def nyN(self, nyN):
+        if type(nyN) == int and nyN > 0:
+            self._nyN = nyN
+        else:
+            raise Exception('Invalid nyN value. Exiting.')
 
     @nu.setter
     def nu(self, nu):
@@ -65,32 +101,109 @@ class ocp_nlp_dims:
             raise Exception('Invalid N value. Exiting.')
 
 class ocp_nlp_cost:
+    # linear least-squares cost: || Vx*x + Vu*x + Vz*z ||^2_W
     def __init__(self):
-        self._Q = None  # state weight matrix
-        self._R = None  # input weight matrix
+        # Lagrange term
+        self._W     = None  # weight matrix
+        self._Vx    = None  # x matrix coefficient
+        self._Vu    = None  # u matrix coefficient
+        self._Vz    = None  # z matrix coefficient
+        self._yref  = None  # reference
+        # Mayer term
+        self._WN    = None  # weight matrix
+        self._VxN   = None  # x matrix coefficient
+        self._yrefN = None  # reference
+
+    # Lagrange term
+    @property
+    def W(self):
+        return self._W
 
     @property
-    def Q(self):
-        return self._Q
+    def Vx(self):
+        return self._Vx
 
     @property
-    def R(self):
-        return self._R
+    def Vu(self):
+        return self._Vu
 
-    @Q.setter
-    def Q(self, Q):
-        if type(Q) == np.ndarray:
-            self._Q = Q
+    @property
+    def Vz(self):
+        return self._Vz
+
+    @property
+    def yref(self):
+        return self._yref
+
+    @W.setter
+    def W(self, W):
+        if type(W) == np.ndarray:
+            self._W = W
         else:
-            raise Exception('Invalid Q value. Exiting.')
-
-    @R.setter
-    def R(self, R):
-        if type(R) == np.ndarray:
-            self._R = R
+            raise Exception('Invalid W value. Exiting.')
+    
+    @Vx.setter
+    def Vx(self, Vx):
+        if type(Vx) == np.ndarray:
+            self._Vx = Vx
         else:
-            raise Exception('Invalid R value. Exiting.')
+            raise Exception('Invalid Vx value. Exiting.')
+    
+    @Vu.setter
+    def Vu(self, Vu):
+        if type(Vu) == np.ndarray:
+            self._Vu = Vu
+        else:
+            raise Exception('Invalid Vu value. Exiting.')
 
+    @Vz.setter
+    def Vz(self, Vz):
+        if type(Vz) == np.ndarray:
+            self._Vz = Vz
+        else:
+            raise Exception('Invalid W value. Exiting.')
+
+    @yref.setter
+    def yref(self, yref):
+        if type(yref) == np.ndarray:
+            self._yref = yref
+        else:
+            raise Exception('Invalid yref value. Exiting.')
+
+    # Mayer term
+    @property
+    def WN(self):
+        return self._WN
+
+    @property
+    def VxN(self):
+        return self._VxN
+
+    @property
+    def yrefN(self):
+        return self._yrefN
+
+    @WN.setter
+    def WN(self, WN):
+        if type(WN) == np.ndarray:
+            self._WN = WN
+        else:
+            raise Exception('Invalid WN value. Exiting.')
+    
+    @VxN.setter
+    def VxN(self, VxN):
+        if type(VxN) == np.ndarray:
+            self._VxN = VxN
+        else:
+            raise Exception('Invalid VxN value. Exiting.')
+
+    @yrefN.setter
+    def yrefN(self, yrefN):
+        if type(yrefN) == np.ndarray:
+            self._yrefN = yrefN
+        else:
+            raise Exception('Invalid yrefN value. Exiting.')
+    
 class ocp_nlp_constraints:
     def __init__(self):
         self._lbx = None  

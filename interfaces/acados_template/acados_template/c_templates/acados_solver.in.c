@@ -99,41 +99,64 @@ int acados_create() {
     ubN[{{i}}] = {{ra.constraints.ubx[i]}};
     {%- endfor %}
 
-    double yref[{{ ra.dims.nx }}+{{ ra.dims.nu }}];
-    double Q[{{ ra.dims.nx }}*{{ ra.dims.nx }}]; 
-    double R[{{ ra.dims.nu }}*{{ ra.dims.nu }}];
-    double W[(num_states + num_controls)*(num_states + num_controls)];
+    double yref[{{ ra.dims.ny }}];
+    double W[{{ ra.dims.ny }}*{{ ra.dims.ny }}];
 
+    double Vx[{{ ra.dims.ny }}*{{ ra.dims.nx }}];
+    double Vu[{{ ra.dims.ny }}*{{ ra.dims.nu }}];
+    double Vz[{{ ra.dims.ny }}*{{ ra.dims.nz }}];
+
+    double yrefN[{{ ra.dims.nyN }}];
+    double WN[{{ ra.dims.nyN }}*{{ ra.dims.nyN }}];
+
+    double VxN[{{ ra.dims.nyN }}*{{ ra.dims.nx }}];
+    
     for (int ii = 0; ii < num_controls + num_states; ii++)
         yref[ii] = 0.0;
 
-    {% for i in range(ra.dims.nx): %}
-        {%- for j in range(ra.dims.nx): %}
-    Q[{{i}}*{{ra.dims.nx}} + {{j}}] = {{ ra.cost.Q[i,j] }}; 
+    {% for j in range(ra.dims.ny): %}
+        {%- for k in range(ra.dims.ny): %}
+    W[{{j}}+({{ra.dims.ny}}) * {{k}}] = {{ ra.cost.W[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
-    {% for i in range(ra.dims.nu): %}
-        {%- for j in range(ra.dims.nu): %}
-    R[{{i}}*{{ra.dims.nu}} + {{j}}] = {{ ra.cost.R[i,j] }}; 
-        {%- endfor %}
-    {%- endfor %}
-
-    for (int ii = 0; ii < ny_ * ny_; ii++)
-        W[ii] = 0.0;
-
-    {% for j in range(ra.dims.nx): %}
+    {% for j in range(ra.dims.ny): %}
         {%- for k in range(ra.dims.nx): %}
-    W[{{j}}+({{ra.dims.nx}} + {{ra.dims.nu}}) * {{k}}] = {{ ra.cost.Q[j,k] }}; 
+    Vx[{{j}}+({{ra.dims.ny}}) * {{k}}] = {{ ra.cost.Vx[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
-    {% for j in range(ra.dims.nx,ra.dims.nx+ra.dims.nu): %}
-        {%- for k in range(ra.dims.nx,ra.dims.nx+ra.dims.nu): %}
-    W[{{j}}+({{ra.dims.nx}} + {{ra.dims.nu}}) * {{k}}] = {{ ra.cost.R[j-ra.dims.nx,k-ra.dims.nx] }}; 
+    {% for j in range(ra.dims.ny): %}
+        {%- for k in range(ra.dims.nu): %}
+    Vu[{{j}}+({{ra.dims.ny}}) * {{k}}] = {{ ra.cost.Vu[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
+    {% for j in range(ra.dims.ny): %}
+        {%- for k in range(ra.dims.nz): %}
+    Vz[{{j}}+({{ra.dims.ny}}) * {{k}}] = {{ ra.cost.Vz[j,k] }}; 
+        {%- endfor %}
+    {%- endfor %}
+
+    {% for j in range(ra.dims.ny): %}
+    yref[{{j}}] = {{ ra.cost.yref[j][0] }}; 
+    {%- endfor %}
+
+    {% for j in range(ra.dims.nyN): %}
+        {%- for k in range(ra.dims.nyN): %}
+    WN[{{j}}+({{ra.dims.nyN}}) * {{k}}] = {{ ra.cost.W[j,k] }}; 
+        {%- endfor %}
+    {%- endfor %}
+
+    {% for j in range(ra.dims.nyN): %}
+        {%- for k in range(ra.dims.nx): %}
+    VxN[{{j}}+({{ra.dims.nyN}}) * {{k}}] = {{ ra.cost.VxN[j,k] }}; 
+        {%- endfor %}
+    {%- endfor %}
+
+    {% for j in range(ra.dims.nyN): %}
+    yrefN[{{j}}] = {{ ra.cost.yrefN[j][0] }}; 
+    {%- endfor %}
 
     int max_num_sqp_iterations = 1;
 
@@ -160,21 +183,22 @@ int acados_create() {
         nh[i]  = 0;
         np[i]  = 0;
         ns[i]  = 0;
-        nz[i]  = 0;
+        nz[i]  = {{ra.dims.nz}};
         nv[i]  = num_states + num_controls;
-        ny[i]  = num_states + num_controls;
+        ny[i]  = {{ra.dims.ny}};
     }
 
     nbx[0] = num_states;
     nbu[0] = num_controls;
-    nb[0]  = num_states + num_controls;
+    nb[0]  = num_states + {{ ra.dims.nbu }};
 
     nu[N]  = 0;
     nx[N]  = num_states;
+    nz[N]  = 0;
     nh[N]  = 0;
     np[N]  = 0;
     nv[N]  = num_states; 
-    ny[N]  = num_states;
+    ny[N]  = {{ra.dims.nyN}};
     nbu[N] = 0;
     nbx[N] = {{ra.dims.nbx}};
     nb[N]  = {{ra.dims.nbx}};
@@ -293,24 +317,31 @@ int acados_create() {
     // NLP cost: linear least squares
     // C  // TODO(oj): this can be done using
     // // ocp_nlp_cost_set_model(nlp_config, nlp_dims, nlp_in, i, "Cyt", Cyt);
-    ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
-    for (int i = 0; i <= N; ++i) {
-        blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
-        for (int j = 0; j < nu[i]; j++)
-            BLASFEO_DMATEL(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
-        for (int j = 0; j < nx[i]; j++)
-            BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
-    }
+    // ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
+    // for (int i = 0; i <= N; ++i) {
+    //     blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
+    //     for (int j = 0; j < nu[i]; j++)
+    //         BLASFEO_DMATEL(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
+    //     for (int j = 0; j < nx[i]; j++)
+    //         BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
+    // }
     // W
     for (int i = 0; i < N; ++i) {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
     }
     // WN
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", WN);
 
-    // y_ref
-    for (int i = 0; i <= N; ++i)
+
+	for (int i = 0; i < N; ++i) {
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vx", Vx);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vu", Vu);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vz", Vz);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
+	}
+
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", VxN);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yrefN);
 
     // NLP dynamics
     int set_fun_status;

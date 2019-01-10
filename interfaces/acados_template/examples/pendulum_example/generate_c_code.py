@@ -4,6 +4,7 @@ import numpy as np
 from ctypes import *
 import matplotlib
 import matplotlib.pyplot as plt
+import scipy.linalg
 
 def export_ode_model():
 
@@ -72,15 +73,19 @@ ra.model_name = model.name
 Tf = 1.0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
-N = 50
+ny = nx + nu
+nyN = nx
+N = 10
 
 # set ocp_nlp_dimensions
-nlp_dims = ra.dims
-nlp_dims.nx = nx 
+nlp_dims     = ra.dims
+nlp_dims.nx  = nx 
+nlp_dims.ny  = ny 
+nlp_dims.nyN = nyN 
 nlp_dims.nbx = 0
 nlp_dims.nbu = nu 
-nlp_dims.nu = model.u.size()[0]
-nlp_dims.N  = 10
+nlp_dims.nu  = model.u.size()[0]
+nlp_dims.N   = 10
 
 # set weighting matrices
 nlp_cost = ra.cost
@@ -93,8 +98,32 @@ Q[3,3] = 1e-2
 R = np.eye(1)
 R[0,0] = 1e-2
 
-nlp_cost.Q = Q 
-nlp_cost.R = R
+nlp_cost.W = scipy.linalg.block_diag(Q, R) 
+
+Vx = np.zeros((ny, nx))
+Vx[0,0] = 1.0
+Vx[1,1] = 1.0
+Vx[2,2] = 1.0
+Vx[3,3] = 1.0
+
+nlp_cost.Vx = Vx
+
+Vu = np.zeros((ny, nu))
+Vu[4,0] = 1.0
+nlp_cost.Vu = Vu
+
+nlp_cost.WN = Q 
+
+VxN = np.zeros((ny, nx))
+VxN[0,0] = 1.0
+VxN[1,1] = 1.0
+VxN[2,2] = 1.0
+VxN[3,3] = 1.0
+
+nlp_cost.VxN = VxN
+
+nlp_cost.yref  = np.zeros((ny, 1))
+nlp_cost.yrefN = np.zeros((nyN, 1))
 
 # setting bounds
 Fmax = 80.0
