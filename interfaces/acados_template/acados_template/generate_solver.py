@@ -9,12 +9,13 @@ def generate_solver(model, ra):
     file_loader = FileSystemLoader(acados_path + '/c_templates')
     env = Environment(loader = file_loader)
 
-    # explicit model -- generate C code
-    generate_c_code_explicit_ode(model);
-
-    # implicit model -- generate C code
-    opts = dict(generate_hess=1)
-    generate_c_code_implicit_ode(model, opts);
+    if ra.solver_config.integrator_type is 'ERK':
+        # explicit model -- generate C code
+        generate_c_code_explicit_ode(model)
+    else:
+        # implicit model -- generate C code
+        opts = dict(generate_hess=1)
+        generate_c_code_implicit_ode(model, opts)
 
     # check render arguments
     check_ra(ra)

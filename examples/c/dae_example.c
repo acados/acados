@@ -127,8 +127,8 @@ int main() {
 
 	external_function_casadi impl_ode_fun[N];
 	external_function_casadi impl_ode_fun_jac_x_xdot_z[N];
-	// external_function_casadi impl_ode_fun_jac_x_xdot_z_u[N];
-	external_function_casadi impl_ode_jac_x_xdot_z_u[N];
+	// external_function_casadi impl_ode_fun_jac_x_xdot_u_z[N];
+	external_function_casadi impl_ode_jac_x_xdot_u_z[N];
 
 	for (int ii = 0; ii < N; ++ii) {
         impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_pendulum_dae;
@@ -145,19 +145,19 @@ int main() {
         impl_ode_fun_jac_x_xdot_z[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae_n_in;
         impl_ode_fun_jac_x_xdot_z[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae_n_out;
 
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae;
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_work;
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_sparsity_in;
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_sparsity_out;
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_n_in;
-        // impl_ode_fun_jac_x_xdot_z_u[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_z_u_pendulum_dae_n_out;
+        // impl_ode_fun_jac_x_xdot_u_z[ii].casadi_fun = &casadi_impl_ode_fun_jac_x_xdot_u_z_pendulum_dae;
+        // impl_ode_fun_jac_x_xdot_u_z[ii].casadi_work = &casadi_impl_ode_fun_jac_x_xdot_u_z_pendulum_dae_work;
+        // impl_ode_fun_jac_x_xdot_u_z[ii].casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_u_z_pendulum_dae_sparsity_in;
+        // impl_ode_fun_jac_x_xdot_u_z[ii].casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_u_z_pendulum_dae_sparsity_out;
+        // impl_ode_fun_jac_x_xdot_u_z[ii].casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_u_z_pendulum_dae_n_in;
+        // impl_ode_fun_jac_x_xdot_u_z[ii].casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_u_z_pendulum_dae_n_out;
 
-        impl_ode_jac_x_xdot_z_u[ii].casadi_fun = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae;
-        impl_ode_jac_x_xdot_z_u[ii].casadi_work = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_work;
-        impl_ode_jac_x_xdot_z_u[ii].casadi_sparsity_in = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_sparsity_in;
-        impl_ode_jac_x_xdot_z_u[ii].casadi_sparsity_out = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_sparsity_out;
-        impl_ode_jac_x_xdot_z_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_n_in;
-        impl_ode_jac_x_xdot_z_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_z_u_pendulum_dae_n_out;
+        impl_ode_jac_x_xdot_u_z[ii].casadi_fun = &casadi_impl_ode_jac_x_xdot_u_z_pendulum_dae;
+        impl_ode_jac_x_xdot_u_z[ii].casadi_work = &casadi_impl_ode_jac_x_xdot_u_z_pendulum_dae_work;
+        impl_ode_jac_x_xdot_u_z[ii].casadi_sparsity_in = &casadi_impl_ode_jac_x_xdot_u_z_pendulum_dae_sparsity_in;
+        impl_ode_jac_x_xdot_u_z[ii].casadi_sparsity_out = &casadi_impl_ode_jac_x_xdot_u_z_pendulum_dae_sparsity_out;
+        impl_ode_jac_x_xdot_u_z[ii].casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_z_pendulum_dae_n_in;
+        impl_ode_jac_x_xdot_u_z[ii].casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_z_pendulum_dae_n_out;
 	}
 
 	// impl_ode
@@ -190,27 +190,27 @@ int main() {
 	// tmp_size = 0;
 	// for (int ii=0; ii<N; ii++)
 	// {
-	// 	tmp_size += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z_u+ii);
+	// 	tmp_size += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_u_z+ii);
 	// }
-	// void *impl_ode_fun_jac_x_xdot_z_u_mem = malloc(tmp_size);
-	// c_ptr = impl_ode_fun_jac_x_xdot_z_u_mem;
+	// void *impl_ode_fun_jac_x_xdot_u_z_mem = malloc(tmp_size);
+	// c_ptr = impl_ode_fun_jac_x_xdot_u_z_mem;
 	// for (int ii=0; ii<N; ii++)
 	// {
-	// 	external_function_casadi_assign(impl_ode_fun_jac_x_xdot_z_u+ii, c_ptr);
-	// 	c_ptr += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z_u+ii);
+	// 	external_function_casadi_assign(impl_ode_fun_jac_x_xdot_u_z+ii, c_ptr);
+	// 	c_ptr += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_u_z+ii);
 	// }
 	//
 	tmp_size = 0;
 	for (int ii=0; ii<N; ii++)
 	{
-		tmp_size += external_function_casadi_calculate_size(impl_ode_jac_x_xdot_z_u+ii);
+		tmp_size += external_function_casadi_calculate_size(impl_ode_jac_x_xdot_u_z+ii);
 	}
-	void *impl_ode_jac_x_xdot_z_u_mem = malloc(tmp_size);
-	c_ptr = impl_ode_jac_x_xdot_z_u_mem;
+	void *impl_ode_jac_x_xdot_u_z_mem = malloc(tmp_size);
+	c_ptr = impl_ode_jac_x_xdot_u_z_mem;
 	for (int ii=0; ii<N; ii++)
 	{
-		external_function_casadi_assign(impl_ode_jac_x_xdot_z_u+ii, c_ptr);
-		c_ptr += external_function_casadi_calculate_size(impl_ode_jac_x_xdot_z_u+ii);
+		external_function_casadi_assign(impl_ode_jac_x_xdot_u_z+ii, c_ptr);
+		c_ptr += external_function_casadi_calculate_size(impl_ode_jac_x_xdot_u_z+ii);
 	}
 
 	ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
@@ -252,7 +252,7 @@ int main() {
 		irk_model *model = dynamics->sim_model;
 		model->impl_ode_fun = (external_function_generic *) &impl_ode_fun[i];
 		model->impl_ode_fun_jac_x_xdot_z = (external_function_generic *) &impl_ode_fun_jac_x_xdot_z[i];
-		model->impl_ode_jac_x_xdot_z_u = (external_function_generic *) &impl_ode_jac_x_xdot_z_u[i]; // TODO(zanellia): need to swap z and u!!
+		model->impl_ode_jac_x_xdot_u_z = (external_function_generic *) &impl_ode_jac_x_xdot_u_z[i]; // TODO(zanellia): need to swap z and u!!
 	}
 
 	// bounds
