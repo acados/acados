@@ -35,17 +35,43 @@ int main() {
         printf("acados_create() returned status %d. Exiting.\n", status); 
         exit(1); }
 
+    // set initial condition
+    double x0[{{ra.dims.nx}}];
+    {% for i in range(ra.dims.nx): %}
+    x0[{{i}}] = {{ra.constraints.x0[i]}};
+    {%- endfor %}
+    
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", x0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x0);
+
+    {% if ra.dims.np > -1:%}
+    double p[{{ra.dims.np}}];
+    {% for i in range(ra.dims.nx): %}
+    p[{{i}}] = {{ra.constraints.p[i]}};
+    {%- endfor %}
+    {% endif %}
+    
+    {% if ra.dims.np > -1:%}
+    {% if ra.solver_config.integrator_type == 'IRK': %}
+    for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
+    impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
+    impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun+ii, p);
+    impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_fun+ii, p);
+    }
+    {% endif %}
+    {% endif %}
+
     status = acados_solve();
 
     if (status) { 
-        printf("acados_solve() returned status %d. Exiting.\n", status); 
-        exit(1); }
+        printf("acados_solve() returned status %d.\n", status); 
+    }
 
     status = acados_free();
 
     if (status) { 
-        printf("acados_free() returned status %d. Exiting.\n", status); 
-        exit(1); }
+        printf("acados_free() returned status %d. \n", status); 
+    }
 
     return status;
 }

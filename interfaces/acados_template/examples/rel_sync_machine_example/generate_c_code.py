@@ -1,6 +1,6 @@
 from acados_template import *
 import acados_template as at
-import numpy as np
+import numpy as nmp
 from ctypes import *
 import matplotlib
 import matplotlib.pyplot as plt
@@ -33,7 +33,7 @@ def export_dae_model():
     theta = 0.0352
     Rs = 0.4
     m_load = 0.0
-    J = np.array([[0, -1], [1, 0]])
+    J = nmp.array([[0, -1], [1, 0]])
 
     # set up states 
     psi_d = SX.sym('psi_d')
@@ -56,17 +56,18 @@ def export_dae_model():
     xdot = vertcat(psi_d_dot, psi_q_dot)
 
     # set up parameters
-    w = SX.sym('w')
-    p = vertcat(w)
-    # p = []
+    w      = SX.sym('w') # speed
+    dist_d = SX.sym('dist_d') # d disturbance
+    dist_q = SX.sym('dist_q') # q disturbance
+    p      = vertcat(w, dist_d, dist_q)
 
     # build flux expression
     Psi = vertcat(psi_d_num(i_d, i_q), psi_q_num(i_d, i_q))
     
     # dynamics     
     # TODO(andrea): need to add w as parameter!!!!
-    f_impl = vertcat(   psi_d_dot - u_d + Rs*i_d - w*psi_q, \
-                        psi_q_dot - u_q + Rs*i_q + w*psi_d, \
+    f_impl = vertcat(   psi_d_dot - u_d + Rs*i_d - w*psi_q - dist_d, \
+                        psi_q_dot - u_q + Rs*i_q + w*psi_d - dist_q, \
                         psi_d - Psi[0], \
                         psi_q - Psi[1])
 
@@ -101,7 +102,7 @@ Tf  = 0.005
 nx  = model.x.size()[0]
 nu  = model.u.size()[0]
 nz  = model.z.size()[0]
-# nz  = 0
+np  = model.p.size()[0]
 ny  = nu + nx
 nyN = nx
 N   = 2
@@ -114,33 +115,34 @@ nlp_dims.ny  = ny
 nlp_dims.nyN = nyN 
 nlp_dims.nbx = 0
 nlp_dims.nbu = 2 
-nlp_dims.nu  = model.u.size()[0]
+nlp_dims.nu  = nu
+nlp_dims.np  = np
 nlp_dims.N   = N
 
 # set weighting matrices
 nlp_cost = ra.cost
-Q = np.eye(nx)
+Q = nmp.eye(nx)
 Q[0,0] = 1e1
 Q[1,1] = 1e1
 
-R = np.eye(nu)
+R = nmp.eye(nu)
 R[0,0] = 1e-1
 R[1,1] = 1e-1
 
 nlp_cost.W = scipy.linalg.block_diag(Q, R) 
 
-Vx = np.zeros((ny, nx))
+Vx = nmp.zeros((ny, nx))
 Vx[0,0] = 0.0
 Vx[1,1] = 0.0
 
 nlp_cost.Vx = Vx
 
-Vu = np.zeros((ny, nu))
+Vu = nmp.zeros((ny, nu))
 Vu[2,0] = 1.0
 Vu[3,1] = 1.0
 nlp_cost.Vu = Vu
 
-Vz = np.zeros((ny, nz))
+Vz = nmp.zeros((ny, nz))
 Vz[0,0] = 1.0
 Vz[1,1] = 1.0
 
@@ -148,20 +150,21 @@ nlp_cost.Vz = Vz
 
 nlp_cost.WN = Q 
 
-VxN = np.zeros((ny, nx))
+VxN = nmp.zeros((ny, nx))
 VxN[0,0] = 1.0
 VxN[1,1] = 1.0
 
 nlp_cost.VxN = VxN
 
-nlp_cost.yref  = np.zeros((ny, 1))
-nlp_cost.yrefN = np.zeros((nyN, 1))
+nlp_cost.yref  = nmp.zeros((ny, 1))
+nlp_cost.yrefN = nmp.zeros((nyN, 1))
 
 # setting bounds
 nlp_con = ra.constraints
-nlp_con.lbu = np.array([-u_max, -u_max])
-nlp_con.ubu = np.array([+u_max, +u_max])
-nlp_con.x0 = np.array([1.0, -1.0])
+nlp_con.lbu = nmp.array([-u_max, -u_max])
+nlp_con.ubu = nmp.array([+u_max, +u_max])
+nlp_con.x0 = nmp.array([1.0, -1.0])
+nlp_con.p = nmp.array([10.0, 0.0, 0.0])
 
 # set constants
 ra.constants = []
@@ -206,8 +209,10 @@ Nsim = 100
 x0 = cast(create_string_buffer(nx*sizeof(c_double)), c_void_p)
 u0 = cast(create_string_buffer(nu*sizeof(c_double)), c_void_p)
 
-simX = np.ndarray((Nsim, nx))
-simU = np.ndarray((Nsim, nu))
+simX = nmp.ndarray((Nsim, nx))
+simU = nmp.ndarray((Nsim, nu))
+
+
 
 for i in range(Nsim):
     acados.acados_solve()
@@ -246,7 +251,7 @@ for i in range(Nsim):
     acados.ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0)
 
 # plot results
-t = np.linspace(0.0, Tf/N, Nsim)
+t = nmp.linspace(0.0, Tf/N, Nsim)
 plt.subplot(4, 1, 1)
 plt.step(t, simU[:,0], 'r')
 plt.title('closed-loop simulation')

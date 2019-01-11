@@ -5,6 +5,7 @@ class ocp_nlp_dims:
         self._nx  = None  # number of states
         self._nz  = 0     # number of algebraic variables
         self._nu  = None  # number of inputs
+        self._np  = None  # number of parameters
         self._ny  = None  # number of residuals in Lagrange term
         self._nyN = None  # number of residuals in Mayer term
         self._nbx = 0     # number of state bounds 
@@ -23,6 +24,10 @@ class ocp_nlp_dims:
     @property
     def nu(self):
         return self._nu
+
+    @property
+    def np(self):
+        return self._np
 
     @property
     def ny(self):
@@ -58,6 +63,20 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nz value. Exiting.')
 
+    @nu.setter
+    def nu(self, nu):
+        if type(nu) == int and nu > 0:
+            self._nu = nu
+        else:
+            raise Exception('Invalid nu value. Exiting.')
+
+    @np.setter
+    def np(self, np):
+        if type(np) == int and np > -1:
+            self._np = np
+        else:
+            raise Exception('Invalid np value. Exiting.')
+
     @ny.setter
     def ny(self, ny):
         if type(ny) == int and ny > 0:
@@ -71,13 +90,6 @@ class ocp_nlp_dims:
             self._nyN = nyN
         else:
             raise Exception('Invalid nyN value. Exiting.')
-
-    @nu.setter
-    def nu(self, nu):
-        if type(nu) == int and nu > 0:
-            self._nu = nu
-        else:
-            raise Exception('Invalid nu value. Exiting.')
 
     @nbu.setter
     def nbu(self, nbu):
@@ -210,7 +222,8 @@ class ocp_nlp_constraints:
         self._lbu = None  
         self._ubx = None  
         self._ubu = None  
-        self._x0 = None  
+        self._x0  = None  
+        self._p   = None  
 
     @property
     def lbx(self):
@@ -231,6 +244,10 @@ class ocp_nlp_constraints:
     @property
     def x0(self):
         return self._x0
+
+    @property
+    def p(self):
+        return self._p
 
     @lbx.setter
     def lbx(self, lbx):
@@ -266,6 +283,13 @@ class ocp_nlp_constraints:
             self._x0 = x0
         else:
             raise Exception('Invalid x0 value. Exiting.')
+
+    @p.setter
+    def p(self, p):
+        if type(p) == np.ndarray:
+            self._p = p
+        else:
+            raise Exception('Invalid p value. Exiting.')
 
 class ocp_nlp_solver_config:
     def __init__(self):

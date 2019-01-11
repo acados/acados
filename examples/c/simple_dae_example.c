@@ -304,7 +304,7 @@ int main() {
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
     bool reuse_val = true; 
-    int num_steps_val = 1; 
+    int num_steps_val = 5; 
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "sens_algebraic", &sens_algebraic_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &reuse_val);

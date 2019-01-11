@@ -11,6 +11,30 @@ void * nlp_opts;
 ocp_nlp_solver_plan * nlp_solver_plan;
 ocp_nlp_solver_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
+{% if ra.solver_config.integrator_type == 'ERK': %}
+{% if ra.dims.np < 1: %}
+external_function_casadi * forw_vde_casadi;
+{% else: %}
+external_function_param_casadi * forw_vde_casadi;
+{% endif %}
+{% if ra.solver_config.hessian_approx == 'EXACT': %} 
+{% if ra.dims.np < 1: %}
+external_function_casadi * hess_vde_casadi;
+{% else: %}
+external_function_param_casadi * hess_vde_casadi;
+{% endif %}
+{% endif %}
+{% elif ra.solver_config.integrator_type == 'IRK': %}
+{% if ra.dims.np < 1: %}
+external_function_casadi * impl_dae_fun;
+external_function_casadi * impl_dae_fun_jac_x_xdot_z;
+external_function_casadi * impl_dae_jac_x_xdot_u_z;
+{% else: %}
+external_function_param_casadi * impl_dae_fun;
+external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
+external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
+{% endif %}
+{% endif %}
 
 int acados_create();
 int acados_solve();

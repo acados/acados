@@ -112,8 +112,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ssPrintf("\n");
 
     // set initial condition
-    ocp_nlp_constraints_bounds_set(_nlp_config, _nlp_dims, _nlp_in, 0, "lbx", in_x0);
-    ocp_nlp_constraints_bounds_set(_nlp_config, _nlp_dims, _nlp_in, 0, "ubx", in_x0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", in_x0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", in_x0);
     
     // assign pointers to output signals 
     real_t *out_u0, *out_status, *out_KKT_res, *out_x1;
