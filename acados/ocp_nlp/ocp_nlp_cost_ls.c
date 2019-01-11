@@ -20,26 +20,7 @@
 /* 
  * Description: linear least-squares (LLS) cost module (ocp_nlp)
  *
- * min_w (C*w - y_ref)^T*W*(C*w - y_ref),
- *
- * where w = (u, x, z) and C = [C_ux, C_z].
- *
- * Notes: the algebraic variables are eliminated using
- * the sensitivity of z wrt u and x (dzdux):
- *
- * z = \hat{z} + dzdux*(z - \hat{z}), with \hat{z} = \hat{z}(\hat{ux}),
- *
- * where \hat{ux} is the current linearization point and \hat{z} is
- * the solution to the DAE at \hat{ux}.
- *
- * The elimination leads to the following form:
- *
- * min_v (\tilde{C}*v - \tilde{y}_ref)^T*W*(\tilde{C}*v - \tilde{y}_ref),
- *
- * where v = (u, x), \tilde{C} = C_ux + C_z*dzdu and \tilde{y}_ref = y_ref - C_z*\hat{z}
- *
- * Notice that the QPs are assumed to be in "delta" form, so \tilde{y}_ref will be
- * further updated as \tilde{y}_ref -> \tilde{y_ref} - C_ux*\hat{ux}
+ * min_w (Vx*x + Vu*u + Vz*z - yref)^T*W*(Vx*x + Vu*u + Vz*z - yref),
  *
  */
 
