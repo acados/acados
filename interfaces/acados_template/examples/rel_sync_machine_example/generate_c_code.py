@@ -58,23 +58,17 @@ def export_dae_model():
     # set up parameters
     w = SX.sym('w')
     p = vertcat(w)
-    p = []
+    # p = []
 
     # build flux expression
     Psi = vertcat(psi_d_num(i_d, i_q), psi_q_num(i_d, i_q))
     
     # dynamics     
     # TODO(andrea): need to add w as parameter!!!!
-    # f_impl = vertcat(   psi_d_dot - u_d + 0*Rs*i_d - 10*psi_q, \
-    #                     psi_q_dot - u_q + 0*Rs*i_q + 10*psi_d, \
-    #                     psi_d - Psi[0], \
-    #                     psi_q - Psi[1])
-
-    f_impl = vertcat(   psi_d_dot+psi_d-0.1*i_q-u_d, \
-                        psi_q_dot+psi_q-0.1*i_d-u_q, \
-                        i_d-psi_d, \
-                        i_q-psi_q)
-    # f_impl = vertcat(psi_d_dot-u_d+psi_d,psi_q_dot-u_q+psi_q)
+    f_impl = vertcat(   psi_d_dot - u_d + Rs*i_d - w*psi_q, \
+                        psi_q_dot - u_q + Rs*i_q + w*psi_d, \
+                        psi_d - Psi[0], \
+                        psi_q - Psi[1])
 
     model = ode_model()
 
@@ -103,14 +97,14 @@ u_max = udc/sqrt(3)
 i_max = 10.0
 psi_max = 0.1
 
-Tf  = 1.0
+Tf  = 0.005
 nx  = model.x.size()[0]
 nu  = model.u.size()[0]
 nz  = model.z.size()[0]
 # nz  = 0
 ny  = nu + nx
 nyN = nx
-N   = 20
+N   = 2
 
 # set ocp_nlp_dimensions
 nlp_dims     = ra.dims
@@ -136,8 +130,8 @@ R[1,1] = 1e-1
 nlp_cost.W = scipy.linalg.block_diag(Q, R) 
 
 Vx = np.zeros((ny, nx))
-Vx[0,0] = 1.0
-Vx[1,1] = 1.0
+Vx[0,0] = 0.0
+Vx[1,1] = 0.0
 
 nlp_cost.Vx = Vx
 
@@ -147,8 +141,8 @@ Vu[3,1] = 1.0
 nlp_cost.Vu = Vu
 
 Vz = np.zeros((ny, nz))
-Vz[0,0] = 0.0
-Vz[1,1] = 0.0
+Vz[0,0] = 1.0
+Vz[1,1] = 1.0
 
 nlp_cost.Vz = Vz
 
@@ -261,7 +255,6 @@ plt.xlabel('t')
 plt.grid(True)
 plt.subplot(4, 1, 2)
 plt.step(t, simU[:,1], 'r')
-plt.title('closed-loop simulation')
 plt.ylabel('uq')
 plt.xlabel('t')
 plt.grid(True)
