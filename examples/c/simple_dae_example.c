@@ -35,15 +35,15 @@
 
 #include "simple_dae_model/simple_dae_model.h"
 
-#define FORMULATION 1 // 0 without Vz*z term 1 with Vz*z and without Vx*x
+#define FORMULATION 0 // 0 without Vz*z term 1 with Vz*z and without Vx*x
 
 int main() {
 
-	int num_states = 2, num_controls = 2, N = 2;
+	int num_states = 2, num_controls = 2, N = 20;
 	int num_alg_states = 2;
-	double Tf = 0.1, R[2] = {1e-1, 1e-1}, QN[2] = {1e1, 1e1};
+	double Tf = 1.0, R[2] = {1e-1, 1e-1}, QN[2] = {1e1, 1e1};
     double Q[2] = {1e1, 1e1};
-	int idxb_0[2] = {1, 2};
+	int idxb_0[2] = {2, 3};
 	double x0[num_states];
 
     x0[0] =  1.0;  

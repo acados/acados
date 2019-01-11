@@ -72,7 +72,7 @@ int acados_create() {
     {%- endfor %}
 
     // set up bounds for intermediate stages
-    int idxb[{{ ra.dims.nbu }} + {{ ra.dims.nx }}];
+    int idxb[{{ ra.dims.nbu }} + {{ ra.dims.nbx }}];
     {% for i in range(ra.dims.nbu + ra.dims.nbx): %}
     idxb[{{i}}] = {{i}};
     {%- endfor %}
@@ -393,10 +393,10 @@ int acados_create() {
     {% if ra.solver_config.nlp_solver_type == 'SQP': %}
 
     int maxIter = max_num_sqp_iterations;
-    double min_res_g = 1e-9;
-    double min_res_b = 1e-9;
-    double min_res_d = 1e-9;
-    double min_res_m = 1e-9;
+    double min_res_g = 1e-6;
+    double min_res_b = 1e-6;
+    double min_res_d = 1e-6;
+    double min_res_m = 1e-6;
 
     ocp_nlp_opts_set(nlp_config, nlp_opts, "maxIter", &maxIter);
     ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_g", &min_res_g);
@@ -408,9 +408,9 @@ int acados_create() {
     {% else: %}
     // ocp_nlp_sqp_rti_opts *sqp_opts = (ocp_nlp_sqp_rti_opts *) nlp_opts;
     {% endif %}
+    {% if ra.solver_config.hessian_approx == 'EXACT': %}
     for (int i = 0; i < N; ++i)
     {
-        {% if ra.solver_config.hessian_approx == 'EXACT': %}
         // TODO(oj): is the following needed, and what does it do? do we
         // ((ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i])->compute_hess = true;
         int num_steps = 5;
@@ -420,8 +420,8 @@ int acados_create() {
         ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps);
         ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_hess", &sens_hess);
         ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_adj", &sens_adj);
-        {% endif %}
     }
+    {% endif %}
 
     nlp_out = ocp_nlp_out_create(nlp_config, nlp_dims);
     for (int i = 0; i <= N; ++i)
@@ -441,17 +441,22 @@ int acados_solve() {
     int solver_status = 0, iteration_number = 0;
 
     {% if ra.solver_config.nlp_solver_type == 'SQP': %}
-    while (kkt_norm_inf > 1e-9) {
-        acados_tic(&timer);
-        solver_status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
-        elapsed_time = acados_toc(&timer);
-        kkt_norm_inf = nlp_out->inf_norm_res;
-        printf(" iteration %2d | time  %f |  KKT %e\n", iteration_number, elapsed_time, kkt_norm_inf);
-        iteration_number++;
+    // while (kkt_norm_inf > 1e-9) {
+    //     acados_tic(&timer);
+    //     solver_status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
+    //     elapsed_time = acados_toc(&timer);
+    //     kkt_norm_inf = nlp_out->inf_norm_res;
+    //     printf(" iteration %2d | time  %f |  KKT %e\n", iteration_number, elapsed_time, kkt_norm_inf);
+    //     iteration_number++;
 
-        if (iteration_number >= 100)
-            break;
-    }
+    //     if (iteration_number >= 1)
+    //         break;
+    // }
+    acados_tic(&timer);
+    solver_status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
+    elapsed_time = acados_toc(&timer);
+    kkt_norm_inf = nlp_out->inf_norm_res;
+    printf(" iterations %2d | time  %f |  KKT %e\n", nlp_out->sqp_iter, elapsed_time, kkt_norm_inf);
     {% else: %}
     solver_status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
     {% endif %}

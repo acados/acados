@@ -35,6 +35,7 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/mem.h"
@@ -1036,6 +1037,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     for (int ii = 0; ii <= N; ii++)
     {
         config->cost[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->cost[ii]);
+        config->cost[ii]->memory_set_z_ptr(&(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->z_out), mem->cost[ii]);
+        config->cost[ii]->memory_set_dzdxu_tran_ptr(&(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->dzdxu_tran), mem->cost[ii]);
         config->cost[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii, mem->cost[ii]);
         config->cost[ii]->memory_set_Z_ptr(work->qp_in->Z + ii, mem->cost[ii]);
     }

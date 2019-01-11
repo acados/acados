@@ -30,16 +30,10 @@ def export_dae_model():
     model_name = 'rsm'
 
     # constants
-    p = 2
     theta = 0.0352
     Rs = 0.4
     m_load = 0.0
-    udc = 580
-    u_max = udc/sqrt(3)
-    i_max = 10
-    psi_max = 0.1
     J = np.array([[0, -1], [1, 0]])
-    kappa = 2/3
 
     # set up states 
     psi_d = SX.sym('psi_d')
@@ -71,10 +65,16 @@ def export_dae_model():
     
     # dynamics     
     # TODO(andrea): need to add w as parameter!!!!
-    f_impl = vertcat(   psi_d_dot - u_d + Rs*i_d - 0*psi_q, \
-                        psi_q_dot - u_q + Rs*i_q + 0*psi_d, \
-                        psi_d - Psi[0], \
-                        psi_q - Psi[1])
+    # f_impl = vertcat(   psi_d_dot - u_d + 0*Rs*i_d - 10*psi_q, \
+    #                     psi_q_dot - u_q + 0*Rs*i_q + 10*psi_d, \
+    #                     psi_d - Psi[0], \
+    #                     psi_q - Psi[1])
+
+    f_impl = vertcat(   psi_d_dot+psi_d-0.1*i_q-u_d, \
+                        psi_q_dot+psi_q-0.1*i_d-u_q, \
+                        i_d-psi_d, \
+                        i_q-psi_q)
+    # f_impl = vertcat(psi_d_dot-u_d+psi_d,psi_q_dot-u_q+psi_q)
 
     model = ode_model()
 
@@ -98,13 +98,19 @@ model = export_dae_model()
 # set model_name 
 ra.model_name = model.name
 
-Tf  = 0.005
+udc = 580
+u_max = udc/sqrt(3)
+i_max = 10.0
+psi_max = 0.1
+
+Tf  = 1.0
 nx  = model.x.size()[0]
 nu  = model.u.size()[0]
 nz  = model.z.size()[0]
-ny  = nu + nz
+# nz  = 0
+ny  = nu + nx
 nyN = nx
-N   = 10
+N   = 20
 
 # set ocp_nlp_dimensions
 nlp_dims     = ra.dims
@@ -113,7 +119,7 @@ nlp_dims.nz  = nz
 nlp_dims.ny  = ny 
 nlp_dims.nyN = nyN 
 nlp_dims.nbx = 0
-nlp_dims.nbu = 0 
+nlp_dims.nbu = 2 
 nlp_dims.nu  = model.u.size()[0]
 nlp_dims.N   = N
 
@@ -124,19 +130,20 @@ Q[0,0] = 1e1
 Q[1,1] = 1e1
 
 R = np.eye(nu)
-R[0,0] = 1e-2
-R[1,1] = 1e-2
+R[0,0] = 1e-1
+R[1,1] = 1e-1
 
 nlp_cost.W = scipy.linalg.block_diag(Q, R) 
 
 Vx = np.zeros((ny, nx))
-Vx[0,0] = 0.0
-Vx[1,1] = 0.0
+Vx[0,0] = 1.0
+Vx[1,1] = 1.0
 
 nlp_cost.Vx = Vx
 
 Vu = np.zeros((ny, nu))
 Vu[2,0] = 1.0
+Vu[3,1] = 1.0
 nlp_cost.Vu = Vu
 
 Vz = np.zeros((ny, nz))
@@ -148,8 +155,8 @@ nlp_cost.Vz = Vz
 nlp_cost.WN = Q 
 
 VxN = np.zeros((ny, nx))
-VxN[0,0] = 0.0
-VxN[1,1] = 0.0
+VxN[0,0] = 1.0
+VxN[1,1] = 1.0
 
 nlp_cost.VxN = VxN
 
@@ -157,11 +164,10 @@ nlp_cost.yref  = np.zeros((ny, 1))
 nlp_cost.yrefN = np.zeros((nyN, 1))
 
 # setting bounds
-Fmax = 80.0
 nlp_con = ra.constraints
-nlp_con.lbu = np.array([-Fmax])
-nlp_con.ubu = np.array([+Fmax])
-nlp_con.x0 = np.array([0.0, 0.0])
+nlp_con.lbu = np.array([-u_max, -u_max])
+nlp_con.ubu = np.array([+u_max, +u_max])
+nlp_con.x0 = np.array([1.0, -1.0])
 
 # set constants
 ra.constants = []
@@ -203,15 +209,8 @@ nlp_in = acados.acados_get_nlp_in()
 # closed loop simulation TODO(add proper simulation)
 Nsim = 100
 
-lb0 = np.ascontiguousarray(np.zeros((5,1)), dtype=np.float64)
-ub0 = np.ascontiguousarray(np.zeros((5,1)), dtype=np.float64)
-lb0 = cast(lb0.ctypes.data, POINTER(c_double))
-ub0 = cast(ub0.ctypes.data, POINTER(c_double))
-
-x0 = np.ascontiguousarray(np.zeros((4,1)), dtype=np.float64)
-x0 = cast(x0.ctypes.data, POINTER(c_double))
-u0 = np.ascontiguousarray(np.zeros((1,1)), dtype=np.float64)
-u0 = cast(u0.ctypes.data, POINTER(c_double))
+x0 = cast(create_string_buffer(nx*sizeof(c_double)), c_void_p)
+u0 = cast(create_string_buffer(nu*sizeof(c_double)), c_void_p)
 
 simX = np.ndarray((Nsim, nx))
 simU = np.ndarray((Nsim, nu))
@@ -219,41 +218,62 @@ simU = np.ndarray((Nsim, nu))
 for i in range(Nsim):
     acados.acados_solve()
 
+    import pdb; pdb.set_trace()
     # get solution
-    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "x", x0)
-    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", u0)
-    
+    field_name = "x"
+    arg = field_name.encode('utf-8')
+    x0 = cast((u0), c_void_p)
+    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, field_name, x0)
+    x0 = cast((x0), POINTER(c_double))
+
     for j in range(nx):
         simX[i,j] = x0[j]
+
+    field_name = "u"
+    arg = field_name.encode('utf-8')
+    u0 = cast((u0), c_void_p)
+    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, field_name, u0)
+    u0 = cast((u0), POINTER(c_double))
+
     for j in range(nu):
         simU[i,j] = u0[j]
     
     # update initial condition
-    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, "x", x0)
+    field_name = "x"
+    arg = field_name.encode('utf-8')
+    x0 = cast((u0), c_void_p)
+    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, field_name, x0)
 
-    # ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lb", lb0)
-
-    acados.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_double)]
+    # acados.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_double)]
     field_name = "lbx"
     arg = field_name.encode('utf-8')
-    # acados.ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0)
     acados.ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0)
     field_name = "ubx"
     arg = field_name.encode('utf-8')
-    # acados.ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0)
     acados.ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0)
 
 # plot results
 t = np.linspace(0.0, Tf/N, Nsim)
-plt.subplot(2, 1, 1)
-plt.step(t, simU, 'r')
+plt.subplot(4, 1, 1)
+plt.step(t, simU[:,0], 'r')
 plt.title('closed-loop simulation')
-plt.ylabel('u')
+plt.ylabel('ud')
 plt.xlabel('t')
 plt.grid(True)
-plt.subplot(2, 1, 2)
-plt.plot(t, simX[:,2])
-plt.ylabel('theta')
+plt.subplot(4, 1, 2)
+plt.step(t, simU[:,1], 'r')
+plt.title('closed-loop simulation')
+plt.ylabel('uq')
+plt.xlabel('t')
+plt.grid(True)
+plt.subplot(4, 1, 3)
+plt.plot(t, simX[:,0])
+plt.ylabel('psi_d')
+plt.xlabel('t')
+plt.grid(True)
+plt.subplot(4, 1, 4)
+plt.plot(t, simX[:,1])
+plt.ylabel('psi_q')
 plt.xlabel('t')
 plt.grid(True)
 plt.show()

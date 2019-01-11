@@ -53,7 +53,7 @@ class ocp_nlp_dims:
 
     @nz.setter
     def nz(self, nz):
-        if type(nz) == int and nz > 0:
+        if type(nz) == int and nz > -1:
             self._nz = nz
         else:
             raise Exception('Invalid nz value. Exiting.')

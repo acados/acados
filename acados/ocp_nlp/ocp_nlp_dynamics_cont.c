@@ -315,8 +315,6 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     c_ptr +=
         config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
 
-    // blasfeo_mem align
-    align_char_to(64, &c_ptr);
 
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
@@ -326,6 +324,9 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     
     // z
     assign_and_advance_blasfeo_dvec_mem(nz, &memory->z_out, &c_ptr);
+
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
 
     // hes
     assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &memory->hes, &c_ptr);

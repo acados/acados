@@ -244,7 +244,7 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     // default options
     opts->newton_iter = 3;
     opts->scheme = NULL;
-    opts->num_steps = 2;
+    opts->num_steps = 1;
     opts->num_forw_sens = dims->nx + dims->nu;
     opts->sens_forw = true;
     opts->sens_adj = false;
@@ -596,8 +596,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     impl_ode_type_in[0] = BLASFEO_DVEC;       // xt
     impl_ode_type_in[1] = BLASFEO_DVEC_ARGS;  // k_i
-    impl_ode_type_in[2] = BLASFEO_DVEC_ARGS;  // z_i
-    impl_ode_type_in[3] = COLMAJ;             // u
+    impl_ode_type_in[2] = COLMAJ;             // u
+    impl_ode_type_in[3] = BLASFEO_DVEC_ARGS;  // z_i
 
     struct blasfeo_dvec_args impl_ode_xdot_in;
     struct blasfeo_dvec_args impl_ode_z_in;
@@ -605,8 +605,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     impl_ode_in[0] = xt;  // 1st input is always xt
     impl_ode_in[1] =
         &impl_ode_xdot_in;  // 2nd input is part of K[ss], always update impl_ode_xdot_in
-    impl_ode_in[2] = &impl_ode_z_in;     // 4th input is part of Z[ss]
-    impl_ode_in[3] = u;     // 3rd input is u (always)
+    impl_ode_in[2] = u;     // 3rd input is u (always)
+    impl_ode_in[3] = &impl_ode_z_in;     // 4th input is part of Z[ss]
 
     // OUTPUT:
     // impl_ode_fun
