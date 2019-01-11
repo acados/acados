@@ -420,7 +420,7 @@ int acados_create() {
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);
     
-    {% if ra.dims.nz > -1: %}
+    {% if ra.dims.nz > 0: %}
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
     int num_steps_val = 1; 
@@ -468,8 +468,8 @@ int acados_create() {
 
     nlp_solver = ocp_nlp_create(nlp_config, nlp_dims, nlp_opts);
 
-    // initialize parameters to 0.0
-    {% if ra.dims.np > -1:%}
+    // initialize parameters to nominal value
+    {% if ra.dims.np > 0:%}
     double p[{{ra.dims.np}}];
     {% for i in range(ra.dims.nx): %}
     p[{{i}}] = {{ra.constraints.p[i]}};
@@ -479,6 +479,10 @@ int acados_create() {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_fun+ii, p);
+    }
+    {% else: %}
+    for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
+    expl_vde_for[ii].set_param(expl_vde_for+ii, p);
     }
     {% endif %}
     {% endif %}

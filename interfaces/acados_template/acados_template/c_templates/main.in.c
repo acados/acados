@@ -44,19 +44,23 @@ int main() {
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", x0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x0);
 
-    {% if ra.dims.np > -1:%}
+    {% if ra.dims.np > 0:%}
     double p[{{ra.dims.np}}];
     {% for i in range(ra.dims.nx): %}
     p[{{i}}] = {{ra.constraints.p[i]}};
     {%- endfor %}
     {% endif %}
     
-    {% if ra.dims.np > -1:%}
+    {% if ra.dims.np > 0:%}
     {% if ra.solver_config.integrator_type == 'IRK': %}
     for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_fun+ii, p);
+    }
+    {% else: %}
+    for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
+    expl_vde_for[ii].set_param(expl_vde_for+ii, p);
     }
     {% endif %}
     {% endif %}

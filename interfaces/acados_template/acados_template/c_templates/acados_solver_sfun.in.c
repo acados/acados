@@ -31,7 +31,11 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetNumDiscStates(S, 0);
 
     // specify the number of input ports 
+    {% if ra.dims.np > 0: %}
+    if ( !ssSetNumInputPorts(S, 2) )
+    {% else: %}
     if ( !ssSetNumInputPorts(S, 1) )
+    {% endif %}
         return;
 
     // specify the number of output ports 
@@ -40,6 +44,9 @@ static void mdlInitializeSizes (SimStruct *S)
 
     // specify dimension information for the input ports 
     ssSetInputPortVectorDimension(S, 0, {{ ra.dims.nx }});
+    {% if ra.dims.np > 0: %}
+    ssSetInputPortVectorDimension(S, 1, {{ ra.dims.np }});
+    {% endif %}
 
     // specify dimension information for the output ports 
     ssSetOutputPortVectorDimension(S, 0, {{ ra.dims.nu }} ); // optimal input
@@ -49,6 +56,9 @@ static void mdlInitializeSizes (SimStruct *S)
 
     // specify the direct feedthrough status 
     ssSetInputPortDirectFeedThrough(S, 0, 1); // current state x0
+    {% if ra.dims.np > 0: %}
+    ssSetInputPortDirectFeedThrough(S, 1, 1); // parameter
+    {% endif %}
 
     // one sample time 
     ssSetNumSampleTimes(S, 1);
@@ -89,31 +99,50 @@ static void mdlStart(SimStruct *S)
 
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-    // get pointers to acados internal structures
-    ocp_nlp_in * _nlp_in =  acados_get_nlp_in();
-    ocp_nlp_out * _nlp_out =  acados_get_nlp_out();
-    ocp_nlp_solver * _nlp_solver =  acados_get_nlp_solver();
-    void * _nlp_opts =  acados_get_nlp_opts();
-    ocp_nlp_solver_config * _nlp_config =  acados_get_nlp_config();
-    ocp_nlp_dims * _nlp_dims =  acados_get_nlp_dims();
-
     // get input signals
     InputRealPtrsType in_x0_sign;
+    {% if ra.dims.np > 0: %}
+    InputRealPtrsType in_p_sign;
+    {% endif %}
     
     // local buffers
     real_t in_x0[{{ ra.dims.nx }}];
+    {% if ra.dims.np > 0: %}
+    real_t in_p[{{ ra.dims.np }}];
+    {% endif %}
 
     in_x0_sign = ssGetInputPortRealSignalPtrs(S, 0);
+    {% if ra.dims.np > 0: %}
+    in_p_sign = ssGetInputPortRealSignalPtrs(S, 1);
+    {% endif %}
 
     // copy signals into local buffers
     for (int i = 0; i < {{ ra.dims.nx }}; i++) in_x0[i] = (double)(*in_x0_sign[i]);
+    {% if ra.dims.np > 0: %}
+    for (int i = 0; i < {{ ra.dims.np }}; i++) in_p[i] = (double)(*in_p_sign[i]);
+    {% endif %}
 
-    for (int i = 0; i < 4; i++) ssPrintf("x0[%d] = %f\n", i, in_x0[i]);
-    ssPrintf("\n");
+    // for (int i = 0; i < 4; i++) ssPrintf("x0[%d] = %f\n", i, in_x0[i]);
+    // ssPrintf("\n");
 
     // set initial condition
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", in_x0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", in_x0);
+
+    // update value of parameters
+    {% if ra.dims.np > 0:%}
+    {% if ra.solver_config.integrator_type == 'IRK': %}
+    for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
+    impl_dae_fun[ii].set_param(impl_dae_fun+ii, in_p);
+    impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun+ii, in_p);
+    impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_fun+ii, in_p);
+    }
+    {% else: %}
+    for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
+    expl_vde_for[ii].set_param(expl_vde_for+ii, in_p);
+    }
+    {% endif %}
+    {% endif %}
     
     // assign pointers to output signals 
     real_t *out_u0, *out_status, *out_KKT_res, *out_x1;
@@ -123,24 +152,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     out_KKT_res = ssGetOutputPortRealSignal(S, 2);
     out_x1      = ssGetOutputPortRealSignal(S, 3);
     
-    // get pointers to acados structures 
-    _nlp_opts = acados_get_nlp_opts();
-    _nlp_dims = acados_get_nlp_dims();
-    _nlp_config = acados_get_nlp_config();
-    _nlp_out = acados_get_nlp_out();
-    _nlp_in = acados_get_nlp_in();
-
     // call acados_solve()
     acados_solve();
     
     // get solution
-    ssPrintf("%p\n",(void*)_nlp_config);
-    ssPrintf("%p\n",(void*)_nlp_dims);
-    ssPrintf("%p\n",(void*)_nlp_out);
-    ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, 0, "u", (void *) out_u0);
+    ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", (void *) out_u0);
 
     // get next state
-    ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, 1, "x", (void *) out_x1);
+    ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, "x", (void *) out_x1);
 
 }
 
