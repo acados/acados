@@ -218,7 +218,6 @@ simU = np.ndarray((Nsim, nu))
 for i in range(Nsim):
     acados.acados_solve()
 
-    import pdb; pdb.set_trace()
     # get solution
     field_name = "x"
     arg = field_name.encode('utf-8')
