@@ -251,7 +251,7 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_hess = false;
     opts->jac_reuse = true;
 
-    if(dims->nz > 0) { 
+    if (dims->nz > 0) {
         opts->output_z = true;
         opts->sens_algebraic = true;
     } else {

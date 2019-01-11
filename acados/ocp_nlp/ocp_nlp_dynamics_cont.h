@@ -93,7 +93,7 @@ int ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *field
 typedef struct
 {
     struct blasfeo_dvec fun;
-    struct blasfeo_dvec z_out;          // output z at t = 0 
+    struct blasfeo_dvec z_out;          // output z at t = 0
     struct blasfeo_dvec adj;
     struct blasfeo_dmat hes;
     struct blasfeo_dmat dzdxu_tran;     // dzdxu transposed

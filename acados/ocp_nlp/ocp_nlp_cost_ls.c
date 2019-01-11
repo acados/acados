@@ -60,7 +60,8 @@ void *ocp_nlp_cost_ls_dims_assign(void *config_, void *raw_memory)
     return dims;
 }
 
-void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns, int nz)
+void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx,
+        int nu, int ny, int ns, int nz)
 {
     ocp_nlp_cost_ls_dims *dims = dims_;
 
@@ -194,7 +195,7 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     assign_and_advance_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
     // Cyt
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &model->Cyt, &c_ptr);
-    
+
     // Vz
     assign_and_advance_blasfeo_dmat_mem(nz, ny, &model->Vz, &c_ptr);
 
@@ -234,7 +235,8 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     else if (!strcmp(field, "Cyt"))
     {
         double *Cyt_col_maj = (double *) value_;
-        blasfeo_pack_dmat(dims->nx + dims->nu + dims->nz, dims->ny, Cyt_col_maj, dims->nx + dims->nu,
+        blasfeo_pack_dmat(dims->nx + dims->nu + dims->nz,
+               dims->ny, Cyt_col_maj, dims->nx + dims->nu,
                           &model->Cyt, 0, 0);
     }
     else if (!strcmp(field, "Vx"))
@@ -496,16 +498,16 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_, void *dims_, void *opt
 
     // Cyt_tilde
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &work->Cyt_tilde, &c_ptr);
-    
+
     // dzdux_tran
     assign_and_advance_blasfeo_dmat_mem(nu + nx, nz, &work->dzdux_tran, &c_ptr);
-    
+
     // tmp_ny
     assign_and_advance_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);
-    
+
     // tmp_nz
     assign_and_advance_blasfeo_dvec_mem(nz, &work->tmp_nz, &c_ptr);
-    
+
     // y_ref_tilde
     assign_and_advance_blasfeo_dvec_mem(ny, &work->y_ref_tilde, &c_ptr);
 
@@ -576,15 +578,22 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     blasfeo_dveccp(ny, &model->y_ref, 0, &work->y_ref_tilde, 0);
     if (nz > 0) { // eliminate algebraic variables and update Cyt and y_ref
         // swap dzdu and dzdx
-        blasfeo_dgecp(nx, ny, memory->dzdxu_tran, 0, 0, &work->dzdux_tran, nu, 0);
+        blasfeo_dgecp(nx, ny, memory->dzdxu_tran, 0, 0,  &work->dzdux_tran, nu, 0);
         blasfeo_dgecp(nu, ny, memory->dzdxu_tran, nx, 0, &work->dzdux_tran, 0, 0);
         // update Cyt: Cyt_tilde = Cyt + dzdux_tran*Vz^T
-        blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, &work->dzdux_tran, 0, 0, &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
+        blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, &work->dzdux_tran, 0, 0,
+                &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
+
         // update y_ref: y_ref_tilde = y_ref + Vz*x + Vz*u - Vz*z
         blasfeo_dveccp(nz, &memory->z, 0, &work->tmp_nz, 0);
-        blasfeo_dgemv_t(nz, nx + nu, 1.0, &work->dzdux_tran, 0, 0, memory->ux, 0, -1.0, &work->tmp_nz, 0, &work->tmp_nz, 0);
-        blasfeo_dgemv_n(ny, nz, 1.0, &model->Vz, 0, 0, &work->tmp_nz, 0, 1.0, &work->y_ref_tilde, 0, &work->y_ref_tilde, 0);
-        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny,
+        blasfeo_dgemv_t(nz, nx + nu, 1.0, &work->dzdux_tran,
+                0, 0, memory->ux, 0, -1.0, &work->tmp_nz, 0, &work->tmp_nz, 0);
+
+        blasfeo_dgemv_n(ny, nz, 1.0, &model->Vz,
+                0, 0, &work->tmp_nz, 0, 1.0, &work->y_ref_tilde, 0, &work->y_ref_tilde, 0);
+
+        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol,
+                0, 0, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny,
                            0, 0);
         blasfeo_dsyrk_ln(nu + nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0,
                          memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
@@ -592,14 +601,15 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     }
 
     // compute gradient
-    blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux, 0, -1.0, &work->y_ref_tilde, 0,
-                    &memory->res, 0);
+    blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
+            0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
 
     // TODO(all): use lower triangular chol of W to save n_y^2 flops
-    blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0,
-                    &work->tmp_ny, 0);
-    blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0,
-                    &memory->grad, 0);
+    blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res,
+            0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+
+    blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
+            0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
     // slacks
     blasfeo_dveccp(2 * ns, &model->z, 0, &memory->grad, nu + nx);

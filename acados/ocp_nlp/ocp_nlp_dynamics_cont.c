@@ -321,7 +321,7 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
 
     // fun
     assign_and_advance_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
-    
+
     // z
     assign_and_advance_blasfeo_dvec_mem(nz, &memory->z_out, &c_ptr);
 
@@ -330,7 +330,7 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
 
     // hes
     assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &memory->hes, &c_ptr);
-    
+
     // dzdxu_tran
     assign_and_advance_blasfeo_dmat_mem(nu + nx, nz, &memory->dzdxu_tran, &c_ptr);
     assert((char *) raw_memory +
