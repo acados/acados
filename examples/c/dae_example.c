@@ -90,6 +90,7 @@ int main() {
     np[N] = 0;
     nv[N] = num_states; 
     ny[N] = num_states;
+    nz[N] = 0;
 
 	// Make plan
 	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);

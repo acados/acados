@@ -5,7 +5,7 @@ class ocp_nlp_dims:
         self._nx  = None  # number of states
         self._nz  = 0     # number of algebraic variables
         self._nu  = None  # number of inputs
-        self._np  = None  # number of parameters
+        self._np  = 0     # number of parameters
         self._ny  = None  # number of residuals in Lagrange term
         self._nyN = None  # number of residuals in Mayer term
         self._nbx = 0     # number of state bounds 

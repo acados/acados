@@ -211,14 +211,14 @@ add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
 target_link_libraries(sim_gnsf_crane acados)
 add_test(sim_gnsf_crane sim_gnsf_crane)
 
-# -------------------- dae_example
-add_executable(dae_example dae_example.c
-    inverted_pendulum_model/impl_ode_fun_pendulum_dae.c
-    inverted_pendulum_model/impl_ode_jac_x_xdot_u_z_pendulum_dae.c
-    inverted_pendulum_model/impl_ode_fun_jac_x_xdot_z_pendulum_dae.c)
+# # -------------------- dae_example
+# add_executable(dae_example dae_example.c
+#     inverted_pendulum_model/impl_ode_fun_pendulum_dae.c
+#     inverted_pendulum_model/impl_ode_jac_x_xdot_u_z_pendulum_dae.c
+#     inverted_pendulum_model/impl_ode_fun_jac_x_xdot_z_pendulum_dae.c)
     
-target_link_libraries(dae_example acados)
-add_test(dae_example dae_example)
+# target_link_libraries(dae_example acados)
+# add_test(dae_example dae_example)
 
 # -------------------- simple dae_example
 add_executable(simple_dae_example simple_dae_example.c
@@ -229,13 +229,13 @@ add_executable(simple_dae_example simple_dae_example.c
 target_link_libraries(simple_dae_example acados)
 add_test(simple_dae_example simple_dae_example)
 
-add_executable(template_example template_example.c
-    pendulum_model/pendulum_ode_expl_vde_forw.c
-    pendulum_model/pendulum_ode_expl_ode_hess.c
-    pendulum_model/constraint.c
-    pendulum_model/position.c)
-target_link_libraries(template_example acados)
-add_test(template_example template_example)
+# add_executable(template_example template_example.c
+#     pendulum_model/pendulum_ode_expl_vde_forw.c
+#     pendulum_model/pendulum_ode_expl_ode_hess.c
+#     pendulum_model/constraint.c
+#     pendulum_model/position.c)
+# target_link_libraries(template_example acados)
+# add_test(template_example template_example)
 
 # -------------------- mass_spring
 add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)
