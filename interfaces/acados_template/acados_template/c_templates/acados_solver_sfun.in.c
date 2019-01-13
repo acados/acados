@@ -32,9 +32,9 @@ static void mdlInitializeSizes (SimStruct *S)
 
     // specify the number of input ports 
     {% if ra.dims.np > 0: %}
-    if ( !ssSetNumInputPorts(S, 2) )
+    if ( !ssSetNumInputPorts(S, 4) )
     {% else: %}
-    if ( !ssSetNumInputPorts(S, 1) )
+    if ( !ssSetNumInputPorts(S, 3) )
     {% endif %}
         return;
 
@@ -44,8 +44,10 @@ static void mdlInitializeSizes (SimStruct *S)
 
     // specify dimension information for the input ports 
     ssSetInputPortVectorDimension(S, 0, {{ ra.dims.nx }});
+    ssSetInputPortVectorDimension(S, 1, {{ ra.dims.ny }});
+    ssSetInputPortVectorDimension(S, 2, {{ ra.dims.nyN }});
     {% if ra.dims.np > 0: %}
-    ssSetInputPortVectorDimension(S, 1, {{ ra.dims.np }});
+    ssSetInputPortVectorDimension(S, 3, {{ ra.dims.np }});
     {% endif %}
 
     // specify dimension information for the output ports 
@@ -56,8 +58,10 @@ static void mdlInitializeSizes (SimStruct *S)
 
     // specify the direct feedthrough status 
     ssSetInputPortDirectFeedThrough(S, 0, 1); // current state x0
+    ssSetInputPortDirectFeedThrough(S, 1, 1); // y_ref
+    ssSetInputPortDirectFeedThrough(S, 2, 1); // y_ref_N
     {% if ra.dims.np > 0: %}
-    ssSetInputPortDirectFeedThrough(S, 1, 1); // parameter
+    ssSetInputPortDirectFeedThrough(S, 3, 1); // parameter
     {% endif %}
 
     // one sample time 
@@ -101,23 +105,31 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 {
     // get input signals
     InputRealPtrsType in_x0_sign;
+    InputRealPtrsType in_y_ref_sign;
+    InputRealPtrsType in_y_ref_N_sign;
     {% if ra.dims.np > 0: %}
     InputRealPtrsType in_p_sign;
     {% endif %}
     
     // local buffers
     real_t in_x0[{{ ra.dims.nx }}];
+    real_t in_y_ref[{{ ra.dims.ny }}];
+    real_t in_y_ref_N[{{ ra.dims.nyN }}];
     {% if ra.dims.np > 0: %}
     real_t in_p[{{ ra.dims.np }}];
     {% endif %}
 
     in_x0_sign = ssGetInputPortRealSignalPtrs(S, 0);
+    in_y_ref_sign = ssGetInputPortRealSignalPtrs(S, 1);
+    in_y_ref_N_sign = ssGetInputPortRealSignalPtrs(S, 2);
     {% if ra.dims.np > 0: %}
-    in_p_sign = ssGetInputPortRealSignalPtrs(S, 1);
+    in_p_sign = ssGetInputPortRealSignalPtrs(S, 3);
     {% endif %}
 
     // copy signals into local buffers
     for (int i = 0; i < {{ ra.dims.nx }}; i++) in_x0[i] = (double)(*in_x0_sign[i]);
+    for (int i = 0; i < {{ ra.dims.ny }}; i++) in_y_ref[i] = (double)(*in_y_ref_sign[i]);
+    for (int i = 0; i < {{ ra.dims.nyN }}; i++) in_y_ref_N[i] = (double)(*in_y_ref_N_sign[i]);
     {% if ra.dims.np > 0: %}
     for (int i = 0; i < {{ ra.dims.np }}; i++) in_p[i] = (double)(*in_p_sign[i]);
     {% endif %}
@@ -128,6 +140,12 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // set initial condition
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", in_x0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", in_x0);
+
+    // update reference
+    for (int ii = 0; ii < {{ra.dims.N}}; ii++)
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) in_y_ref);
+
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ra.dims.N}}, "yref", (void *) in_y_ref_N);
 
     // update value of parameters
     {% if ra.dims.np > 0:%}
@@ -153,7 +171,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     out_x1      = ssGetOutputPortRealSignal(S, 3);
     
     // call acados_solve()
-    acados_solve();
+    int acados_status = acados_solve();
+
+    *out_status = (real_t) acados_status;
+    *out_KKT_res = (real_t) nlp_out->inf_norm_res;
     
     // get solution
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", (void *) out_u0);
