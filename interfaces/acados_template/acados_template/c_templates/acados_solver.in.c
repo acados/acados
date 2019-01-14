@@ -493,35 +493,8 @@ int acados_create() {
 
 int acados_solve() {
 
-    // NLP solution
-    acados_timer timer;
-    double kkt_norm_inf = 1e12, elapsed_time;
-    
-    int solver_status = 0, iteration_number = 0;
-
-    {% if ra.solver_config.nlp_solver_type == 'SQP': %}
-    // while (kkt_norm_inf > 1e-9) {
-    //     acados_tic(&timer);
-    //     solver_status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
-    //     elapsed_time = acados_toc(&timer);
-    //     kkt_norm_inf = nlp_out->inf_norm_res;
-    //     printf(" iteration %2d | time  %f |  KKT %e\n", iteration_number, elapsed_time, kkt_norm_inf);
-    //     iteration_number++;
-
-    //     if (iteration_number >= 1)
-    //         break;
-    // }
-    acados_tic(&timer);
-    solver_status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
-    elapsed_time = acados_toc(&timer);
-    kkt_norm_inf = nlp_out->inf_norm_res;
-    printf(" iterations %2d | time  %f |  KKT %e\n", nlp_out->sqp_iter, elapsed_time, kkt_norm_inf);
-    {% else: %}
-    solver_status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
-    {% endif %}
-
-    printf("\n--- solution ---\n");
-    ocp_nlp_out_print(nlp_solver->dims, nlp_out);
+    // solve NLP 
+    int solver_status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
 
     return solver_status;
 }

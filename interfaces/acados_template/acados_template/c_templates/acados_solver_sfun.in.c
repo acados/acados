@@ -39,7 +39,7 @@ static void mdlInitializeSizes (SimStruct *S)
         return;
 
     // specify the number of output ports 
-    if ( !ssSetNumOutputPorts(S, 4) )
+    if ( !ssSetNumOutputPorts(S, 5) )
         return;
 
     // specify dimension information for the input ports 
@@ -55,6 +55,7 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetOutputPortVectorDimension(S, 1, 1 );                // solver status
     ssSetOutputPortVectorDimension(S, 2, 1 );                // KKT residuals
     ssSetOutputPortVectorDimension(S, 3, {{ ra.dims.nx }} ); // first state
+    ssSetOutputPortVectorDimension(S, 4, 1); // computation times
 
     // specify the direct feedthrough status 
     ssSetInputPortDirectFeedThrough(S, 0, 1); // current state x0
@@ -163,18 +164,20 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     {% endif %}
     
     // assign pointers to output signals 
-    real_t *out_u0, *out_status, *out_KKT_res, *out_x1;
+    real_t *out_u0, *out_status, *out_KKT_res, *out_x1, *out_cpu_time;
 
-    out_u0      = ssGetOutputPortRealSignal(S, 0);
-    out_status  = ssGetOutputPortRealSignal(S, 1);
-    out_KKT_res = ssGetOutputPortRealSignal(S, 2);
-    out_x1      = ssGetOutputPortRealSignal(S, 3);
+    out_u0          = ssGetOutputPortRealSignal(S, 0);
+    out_status      = ssGetOutputPortRealSignal(S, 1);
+    out_KKT_res     = ssGetOutputPortRealSignal(S, 2);
+    out_x1          = ssGetOutputPortRealSignal(S, 3);
+    out_cpu_time    = ssGetOutputPortRealSignal(S, 4);
     
     // call acados_solve()
     int acados_status = acados_solve();
 
     *out_status = (real_t) acados_status;
     *out_KKT_res = (real_t) nlp_out->inf_norm_res;
+    *out_cpu_time = (real_t) nlp_out->total_time;
     
     // get solution
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", (void *) out_u0);

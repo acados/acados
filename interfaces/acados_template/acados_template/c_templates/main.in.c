@@ -65,8 +65,17 @@ int main() {
     {% endif %}
     {% endif %}
 
+    double kkt_norm_inf = 1e12, elapsed_time;
+
     status = acados_solve();
 
+    status = acados_solve();
+    kkt_norm_inf = nlp_out->inf_norm_res;
+    elapsed_time = nlp_out->total_time;
+    printf(" iterations %2d | time  %f |  KKT %e\n", nlp_out->sqp_iter, elapsed_time, kkt_norm_inf);
+
+    printf("\n--- solution ---\n");
+    ocp_nlp_out_print(nlp_solver->dims, nlp_out);
     if (status) { 
         printf("acados_solve() returned status %d.\n", status); 
     }
