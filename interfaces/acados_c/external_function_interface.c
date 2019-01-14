@@ -25,6 +25,8 @@
 
 #include "acados/utils/external_function_generic.h"
 
+#include "acados/utils/mem.h"
+
 /************************************************
  * casadi external function
  ************************************************/
@@ -48,7 +50,8 @@ void external_function_casadi_create_array(int size, external_function_casadi *f
     char *c_ptr;
 
     // create size array
-    int *funs_size = acados_malloc(1, size * sizeof(int));
+    int *funs_size = (int *) acados_malloc(1, size * sizeof(int));
+    // int *funs_size = malloc(size * sizeof(int));
     int funs_size_tot = 0;
 
     // compute sizes
@@ -117,7 +120,8 @@ void external_function_param_casadi_create_array(int size, external_function_par
     char *c_ptr;
 
     // create size array
-    int *funs_size = acados_malloc(1, size * sizeof(int));
+    int *funs_size = (int *) acados_malloc(1, size * sizeof(int));
+    // int *funs_size = malloc(size * sizeof(int));
     int funs_size_tot = 0;
 
     // compute sizes
