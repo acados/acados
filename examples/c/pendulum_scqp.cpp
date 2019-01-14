@@ -196,7 +196,7 @@ int main() {
 
 	blasfeo_pack_dvec(nh[N], &neg_inf, &constraints[N]->d, nb[N]+ng[N]);
 	blasfeo_pack_dvec(nh[N], &radius2, &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
-	constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
+	constraints[N]->nl_constr_h_fun_jac = (external_function_generic *) &nonlinear_constraint;
 	constraints[N]->p = (external_function_generic *) &position_constraint;
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
