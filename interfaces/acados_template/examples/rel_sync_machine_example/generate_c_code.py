@@ -112,14 +112,14 @@ u_max = udc/sqrt(3)
 i_max = 10.0
 psi_max = 0.1
 
-Ts  = 0.0004
+Ts  = 0.0012
 nx  = model.x.size()[0]
 nu  = model.u.size()[0]
 nz  = model.z.size()[0]
 np  = model.p.size()[0]
 ny  = nu + nx
 nyN = nx
-N   = 10
+N   = 2
 Tf  = N*Ts
 
 # set ocp_nlp_dimensions
@@ -137,12 +137,12 @@ nlp_dims.N   = N
 # set weighting matrices
 nlp_cost = ra.cost
 Q = nmp.eye(nx)
-Q[0,0] = 2e1
-Q[1,1] = 2e1
+Q[0,0] = 1e2*Tf/N
+Q[1,1] = 1e2*Tf/N
 
 R = nmp.eye(nu)
-R[0,0] = 1e-6
-R[1,1] = 1e-6
+R[0,0] = 1e-4*Tf/N
+R[1,1] = 1e-4*Tf/N
 # R[0,0] = 1e1
 # R[1,1] = 1e1
 
@@ -165,11 +165,14 @@ Vz[1,1] = 0.0
 
 nlp_cost.Vz = Vz
 
-nlp_cost.WN = Q 
+QN = nmp.eye(nx)
+QN[0,0] = 1e2
+QN[1,1] = 1e2
+nlp_cost.WN = QN 
 
 VxN = nmp.zeros((ny, nx))
-VxN[0,0] = 2e3
-VxN[1,1] = 2e3
+VxN[0,0] = 1.0
+VxN[1,1] = 1.0
 
 nlp_cost.VxN = VxN
 
@@ -202,8 +205,8 @@ ra.solver_config.integrator_type = 'IRK'
 
 # set prediction horizon
 ra.solver_config.tf = Tf
-ra.solver_config.nlp_solver_type = 'SQP_RTI'
-# ra.solver_config.nlp_solver_type = 'SQP'
+# ra.solver_config.nlp_solver_type = 'SQP_RTI'
+ra.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
 ra.acados_include_path = '/usr/local/include'
@@ -312,3 +315,5 @@ plt.show()
 
 # free memory
 acados.acados_free()
+
+
