@@ -6,6 +6,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 import scipy.linalg
 
+CODE_GEN = 1
+
+i_d_ref = 1.484
+i_q_ref = 1.429
+w_val   = 200
+
 # fitted psi_d map
 
 def psi_d_num(x,y):
@@ -24,6 +30,14 @@ def psi_q_num(x,y):
     psi_q_expression = y*1.04488335702649e-2+exp(x**2*(-1.0/7.2e1))*atan(y)*6.649036351062812e-2
 
     return psi_q_expression
+
+psi_d_ref = psi_d_num(i_d_ref, i_q_ref)
+psi_q_ref = psi_q_num(i_d_ref, i_q_ref)
+
+# compute steady-state u
+Rs      = 0.4
+u_d_ref = Rs*i_d_ref - w_val*psi_q_ref
+u_q_ref = Rs*i_q_ref + w_val*psi_d_ref
 
 def export_dae_model():
 
@@ -98,14 +112,15 @@ u_max = udc/sqrt(3)
 i_max = 10.0
 psi_max = 0.1
 
-Tf  = 0.005
+Ts  = 0.0004
 nx  = model.x.size()[0]
 nu  = model.u.size()[0]
 nz  = model.z.size()[0]
 np  = model.p.size()[0]
 ny  = nu + nx
 nyN = nx
-N   = 2
+N   = 10
+Tf  = N*Ts
 
 # set ocp_nlp_dimensions
 nlp_dims     = ra.dims
@@ -122,18 +137,20 @@ nlp_dims.N   = N
 # set weighting matrices
 nlp_cost = ra.cost
 Q = nmp.eye(nx)
-Q[0,0] = 1e1
-Q[1,1] = 1e1
+Q[0,0] = 2e1
+Q[1,1] = 2e1
 
 R = nmp.eye(nu)
-R[0,0] = 1e-1
-R[1,1] = 1e-1
+R[0,0] = 1e-6
+R[1,1] = 1e-6
+# R[0,0] = 1e1
+# R[1,1] = 1e1
 
 nlp_cost.W = scipy.linalg.block_diag(Q, R) 
 
 Vx = nmp.zeros((ny, nx))
-Vx[0,0] = 0.0
-Vx[1,1] = 0.0
+Vx[0,0] = 1.0
+Vx[1,1] = 1.0
 
 nlp_cost.Vx = Vx
 
@@ -143,28 +160,34 @@ Vu[3,1] = 1.0
 nlp_cost.Vu = Vu
 
 Vz = nmp.zeros((ny, nz))
-Vz[0,0] = 1.0
-Vz[1,1] = 1.0
+Vz[0,0] = 0.0
+Vz[1,1] = 0.0
 
 nlp_cost.Vz = Vz
 
 nlp_cost.WN = Q 
 
 VxN = nmp.zeros((ny, nx))
-VxN[0,0] = 1.0
-VxN[1,1] = 1.0
+VxN[0,0] = 2e3
+VxN[1,1] = 2e3
 
 nlp_cost.VxN = VxN
 
 nlp_cost.yref  = nmp.zeros((ny, 1))
+nlp_cost.yref[0]  = psi_d_ref 
+nlp_cost.yref[1]  = psi_q_ref 
+nlp_cost.yref[2]  = u_d_ref
+nlp_cost.yref[3]  = u_q_ref
 nlp_cost.yrefN = nmp.zeros((nyN, 1))
+nlp_cost.yrefN[0]  = psi_d_ref
+nlp_cost.yrefN[1]  = psi_q_ref
 
 # setting bounds
 nlp_con = ra.constraints
 nlp_con.lbu = nmp.array([-u_max, -u_max])
 nlp_con.ubu = nmp.array([+u_max, +u_max])
-nlp_con.x0 = nmp.array([1.0, -1.0])
-nlp_con.p = nmp.array([10.0, 0.0, 0.0])
+nlp_con.x0 = nmp.array([0.0, -0.0])
+nlp_con.p = nmp.array([w_val, 0.0, 0.0])
 
 # set constants
 ra.constants = []
@@ -179,13 +202,16 @@ ra.solver_config.integrator_type = 'IRK'
 
 # set prediction horizon
 ra.solver_config.tf = Tf
-ra.solver_config.nlp_solver_type = 'SQP'
+ra.solver_config.nlp_solver_type = 'SQP_RTI'
+# ra.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
 ra.acados_include_path = '/usr/local/include'
 ra.acados_lib_path = '/usr/local/lib'
 
-generate_solver(model, ra)
+if CODE_GEN == 1:
+    # import pdb; pdb.set_trace()
+    generate_solver(model, ra)
 
 # make 
 os.chdir('c_generated_code')
@@ -220,12 +246,9 @@ for i in range(Nsim):
     # get solution
     field_name = "x"
     arg = field_name.encode('utf-8')
-    x0 = cast((u0), c_void_p)
+    x0 = cast((x0), c_void_p)
     acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, field_name, x0)
     x0 = cast((x0), POINTER(c_double))
-
-    for j in range(nx):
-        simX[i,j] = x0[j]
 
     field_name = "u"
     arg = field_name.encode('utf-8')
@@ -233,13 +256,22 @@ for i in range(Nsim):
     acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, field_name, u0)
     u0 = cast((u0), POINTER(c_double))
 
+    for j in range(nx):
+        simX[i,j] = x0[j]
+
+    print('x0 = ')
+    print(simX[i, :])
     for j in range(nu):
         simU[i,j] = u0[j]
     
+    print('u0 = ')
+    print(simU[i, :])
+    # import pdb; pdb.set_trace()
+    field_name = "u"
     # update initial condition
     field_name = "x"
     arg = field_name.encode('utf-8')
-    x0 = cast((u0), c_void_p)
+    x0 = cast((x0), c_void_p)
     acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, field_name, x0)
 
     field_name = "lbx"
@@ -250,25 +282,29 @@ for i in range(Nsim):
     acados.ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0)
 
 # plot results
-t = nmp.linspace(0.0, Tf/N, Nsim)
+t = nmp.linspace(0.0, Ts*Nsim, Nsim)
 plt.subplot(4, 1, 1)
 plt.step(t, simU[:,0], 'r')
+plt.plot([0, Ts*Nsim], [nlp_cost.yref[2], nlp_cost.yref[2]], '--')
 plt.title('closed-loop simulation')
-plt.ylabel('ud')
+plt.ylabel('u_d')
 plt.xlabel('t')
 plt.grid(True)
 plt.subplot(4, 1, 2)
 plt.step(t, simU[:,1], 'r')
-plt.ylabel('uq')
+plt.plot([0, Ts*Nsim], [nlp_cost.yref[3], nlp_cost.yref[3]], '--')
+plt.ylabel('u_q')
 plt.xlabel('t')
 plt.grid(True)
 plt.subplot(4, 1, 3)
 plt.plot(t, simX[:,0])
+plt.plot([0, Ts*Nsim], [nlp_cost.yref[0], nlp_cost.yref[0]], '--')
 plt.ylabel('psi_d')
 plt.xlabel('t')
 plt.grid(True)
 plt.subplot(4, 1, 4)
 plt.plot(t, simX[:,1])
+plt.plot([0, Ts*Nsim], [nlp_cost.yref[1], nlp_cost.yref[1]], '--')
 plt.ylabel('psi_q')
 plt.xlabel('t')
 plt.grid(True)
@@ -276,5 +312,3 @@ plt.show()
 
 # free memory
 acados.acados_free()
-
-
