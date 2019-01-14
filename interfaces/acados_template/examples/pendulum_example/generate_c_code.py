@@ -148,7 +148,7 @@ ra.solver_config.integrator_type = 'ERK'
 
 # set prediction horizon
 ra.solver_config.tf = Tf
-ra.solver_config.nlp_solver_type = 'SQP_RTI'
+ra.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
 ra.acados_include_path = '/usr/local/include'

@@ -32,7 +32,7 @@
 void external_function_casadi_create(external_function_casadi *fun)
 {
     int fun_size = external_function_casadi_calculate_size(fun);
-    void *fun_mem = malloc(fun_size);
+    void *fun_mem = acados_malloc(1, fun_size);
     external_function_casadi_assign(fun, fun_mem);
 
     return;
@@ -48,7 +48,7 @@ void external_function_casadi_create_array(int size, external_function_casadi *f
     char *c_ptr;
 
     // create size array
-    int *funs_size = malloc(size * sizeof(int));
+    int *funs_size = acados_malloc(1, size * sizeof(int));
     int funs_size_tot = 0;
 
     // compute sizes
@@ -59,7 +59,7 @@ void external_function_casadi_create_array(int size, external_function_casadi *f
     }
 
     // allocate memory
-    void *funs_mem = malloc(funs_size_tot);
+    void *funs_mem = acados_malloc(1, funs_size_tot);
 
     // assign
     c_ptr = funs_mem;
@@ -102,7 +102,7 @@ void external_function_casadi_free_array(int size, external_function_casadi *fun
 void external_function_param_casadi_create(external_function_param_casadi *fun, int np)
 {
     int fun_size = external_function_param_casadi_calculate_size(fun, np);
-    void *fun_mem = malloc(fun_size);
+    void *fun_mem = acados_malloc(1, fun_size);
     external_function_param_casadi_assign(fun, fun_mem);
 
     return;
@@ -117,7 +117,7 @@ void external_function_param_casadi_create_array(int size, external_function_par
     char *c_ptr;
 
     // create size array
-    int *funs_size = malloc(size * sizeof(int));
+    int *funs_size = acados_malloc(1, size * sizeof(int));
     int funs_size_tot = 0;
 
     // compute sizes
@@ -128,7 +128,7 @@ void external_function_param_casadi_create_array(int size, external_function_par
     }
 
     // allocate memory
-    void *funs_mem = malloc(funs_size_tot);
+    void *funs_mem = acados_malloc(1, funs_size_tot);
 
     // assign
     c_ptr = funs_mem;

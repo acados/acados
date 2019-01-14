@@ -463,15 +463,16 @@ int acados_create() {
     {% endif %}
 
     nlp_out = ocp_nlp_out_create(nlp_config, nlp_dims);
-    for (int i = 0; i <= N; ++i)
+    for (int i = 0; i <= N; ++i) {
         blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
-
+    }
+    
     nlp_solver = ocp_nlp_create(nlp_config, nlp_dims, nlp_opts);
 
     // initialize parameters to nominal value
     {% if ra.dims.np > 0:%}
     double p[{{ra.dims.np}}];
-    {% for i in range(ra.dims.nx): %}
+    {% for i in range(ra.dims.np): %}
     p[{{i}}] = {{ra.constraints.p[i]}};
     {%- endfor %}
     {% if ra.solver_config.integrator_type == 'IRK': %}
