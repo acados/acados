@@ -43,24 +43,30 @@
 #define {{ item.name }} {{ item.value }}
 {% endfor %}
 
+#define NX   {{ ra.dims.nx }}
+#define NZ   {{ ra.dims.nz }}
+#define NU   {{ ra.dims.nu }}
+#define NP   {{ ra.dims.np }}
+#define NBX  {{ ra.dims.nbx }}
+#define NBU  {{ ra.dims.nbu }}
+#define NBXN {{ ra.dims.nbxN }}
+#define NY   {{ ra.dims.ny }}
+#define NYN  {{ ra.dims.nyN }}
+#define N    {{ ra.dims.N }}
+
 int acados_create() {
 
     int status = 0;
 
-    int num_states = {{ ra.dims.nx }}; 
-    int num_controls = {{ ra.dims.nu }}; 
-    int N = {{ ra.dims.N }};
-
     double Tf = {{ ra.solver_config.tf }};
 
-    int ny_ = num_controls + num_states;
     // set up bounds for stage 0 
-    int idxb_0[{{ ra.dims.nbu }} + {{ ra.dims.nx }}];
+    int idxb_0[NBU + NX];
     {% for i in range(ra.dims.nbu + ra.dims.nx): %}
     idxb_0[{{i}}] = {{i}};
     {%- endfor %}
-    double lb0[{{ ra.dims.nbu }} + {{ ra.dims.nx }}]; 
-    double ub0[{{ ra.dims.nbu }} + {{ ra.dims.nx }}];
+    double lb0[NBU + NX]; 
+    double ub0[NBU + NX];
     {% for i in range(ra.dims.nbu): %}
     lb0[{{i}}] = {{ra.constraints.lbu[i]}};
     ub0[{{i}}] = {{ra.constraints.ubu[i]}};
@@ -72,69 +78,72 @@ int acados_create() {
     {%- endfor %}
 
     // set up bounds for intermediate stages
-    int idxb[{{ ra.dims.nbu }} + {{ ra.dims.nbx }}];
-    {% for i in range(ra.dims.nbu + ra.dims.nbx): %}
-    idxb[{{i}}] = {{i}};
+    int idxb[NBU + NBX];
+    {% for i in range(ra.dims.nbu): %}
+    idxb[{{i}}] = {{ ra.constraints.idxbu[i] }};
     {%- endfor %}
-    double lb[{{ ra.dims.nbu }} + {{ ra.dims.nbx }}]; 
-    double ub[{{ ra.dims.nbu }} + {{ ra.dims.nbx }}]; 
+    {% for i in range(ra.dims.nbu, ra.dims.nbu + ra.dims.nbx): %}
+    idxb[{{i}}] = {{ ra.constraints.idxbx[i] }};
+    {%- endfor %}
+    double lb[NBU + NBX]; 
+    double ub[NBU + NBX]; 
     {% for i in range(ra.dims.nbu): %}
     lb[{{i}}] = {{ra.constraints.lbu[i]}};
     ub[{{i}}] = {{ra.constraints.ubu[i]}};
     {%- endfor %}
-    {% for i in range(ra.dims.nbu, ra.dims.nbx + ra.dims.nbu): %}
+    {% for i in range(ra.dims.nbu, ra.dims.nbu + ra.dims.nbx): %}
     lb[{{i}}] = {{ra.constraints.lbx[i]}};
     ub[{{i}}] = {{ra.constraints.ubx[i]}};
     {%- endfor %}
 
     // set up bounds for last stage
-    int idxb_N[{{ ra.dims.nbx }}];
-    {% for i in range(ra.dims.nbx): %}
-    idxb_N[{{i}}] = {{i}};
+    int idxb_N[{{ ra.dims.nbxN }}];
+    {% for i in range(ra.dims.nbxN): %}
+    idxb_N[{{i}}] = {{ ra.constraints.idxbxN[i] }};
     {%- endfor %}
-    double lbN[{{ ra.dims.nbx }}]; 
-    double ubN[{{ ra.dims.nbx }}]; 
-    {% for i in range(ra.dims.nbx): %}
-    lbN[{{i}}] = {{ra.constraints.lbx[i]}};
-    ubN[{{i}}] = {{ra.constraints.ubx[i]}};
+    double lbN[{{ ra.dims.nbxN }}]; 
+    double ubN[{{ ra.dims.nbxN }}]; 
+    {% for i in range(ra.dims.nbxN): %}
+    lbN[{{i}}] = {{ra.constraints.lbxN[i]}};
+    ubN[{{i}}] = {{ra.constraints.ubxN[i]}};
     {%- endfor %}
 
-    double yref[{{ ra.dims.ny }}];
-    double W[{{ ra.dims.ny }}*{{ ra.dims.ny }}];
+    double yref[NY];
+    double W[NY*NY];
 
-    double Vx[{{ ra.dims.ny }}*{{ ra.dims.nx }}];
-    double Vu[{{ ra.dims.ny }}*{{ ra.dims.nu }}];
-    double Vz[{{ ra.dims.ny }}*{{ ra.dims.nz }}];
+    double Vx[NY*NX];
+    double Vu[NY*NU];
+    double Vz[NY*NZ];
 
-    double yrefN[{{ ra.dims.nyN }}];
-    double WN[{{ ra.dims.nyN }}*{{ ra.dims.nyN }}];
+    double yrefN[NYN];
+    double WN[NYN*NYN];
 
-    double VxN[{{ ra.dims.nyN }}*{{ ra.dims.nx }}];
+    double VxN[NYN*NX];
     
-    for (int ii = 0; ii < num_controls + num_states; ii++)
+    for (int ii = 0; ii < NU + NX; ii++)
         yref[ii] = 0.0;
 
     {% for j in range(ra.dims.ny): %}
         {%- for k in range(ra.dims.ny): %}
-    W[{{j}}+({{ra.dims.ny}}) * {{k}}] = {{ ra.cost.W[j,k] }}; 
+    W[{{j}}+(NY) * {{k}}] = {{ ra.cost.W[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(ra.dims.ny): %}
         {%- for k in range(ra.dims.nx): %}
-    Vx[{{j}}+({{ra.dims.ny}}) * {{k}}] = {{ ra.cost.Vx[j,k] }}; 
+    Vx[{{j}}+(NY) * {{k}}] = {{ ra.cost.Vx[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(ra.dims.ny): %}
         {%- for k in range(ra.dims.nu): %}
-    Vu[{{j}}+({{ra.dims.ny}}) * {{k}}] = {{ ra.cost.Vu[j,k] }}; 
+    Vu[{{j}}+(NY) * {{k}}] = {{ ra.cost.Vu[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(ra.dims.ny): %}
         {%- for k in range(ra.dims.nz): %}
-    Vz[{{j}}+({{ra.dims.ny}}) * {{k}}] = {{ ra.cost.Vz[j,k] }}; 
+    Vz[{{j}}+(NY) * {{k}}] = {{ ra.cost.Vz[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
@@ -144,13 +153,13 @@ int acados_create() {
 
     {% for j in range(ra.dims.nyN): %}
         {%- for k in range(ra.dims.nyN): %}
-    WN[{{j}}+({{ra.dims.nyN}}) * {{k}}] = {{ ra.cost.W[j,k] }}; 
+    WN[{{j}}+(NYN) * {{k}}] = {{ ra.cost.W[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(ra.dims.nyN): %}
         {%- for k in range(ra.dims.nx): %}
-    VxN[{{j}}+({{ra.dims.nyN}}) * {{k}}] = {{ ra.cost.VxN[j,k] }}; 
+    VxN[{{j}}+(NYN) * {{k}}] = {{ ra.cost.VxN[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
@@ -174,34 +183,34 @@ int acados_create() {
     int ny[N+1];
 
     for(int i = 0; i < N+1; i++) {
-        nx[i]  = num_states;
-        nu[i]  = num_controls;
-        nbx[i] = {{ra.dims.nbx}};
-        nbu[i] = {{ra.dims.nbu}};
-        nb[i]  = {{ra.dims.nbu}} + {{ra.dims.nbx}};
+        nx[i]  = NX;
+        nu[i]  = NU;
+        nbx[i] = NBX;
+        nbu[i] = NBU;
+        nb[i]  = NBU + NBX;
         ng[i]  = 0;
         nh[i]  = 0;
         np[i]  = 0;
         ns[i]  = 0;
-        nz[i]  = {{ra.dims.nz}};
-        nv[i]  = num_states + num_controls;
-        ny[i]  = {{ra.dims.ny}};
+        nz[i]  = NZ;
+        nv[i]  = NX + NU;
+        ny[i]  = NY;
     }
 
-    nbx[0] = num_states;
-    nbu[0] = num_controls;
-    nb[0]  = num_states + {{ ra.dims.nbu }};
+    nbx[0] = NX;
+    nbu[0] = NU;
+    nb[0]  = NX + NBU;
 
     nu[N]  = 0;
-    nx[N]  = num_states;
+    nx[N]  = NX;
     nz[N]  = 0;
     nh[N]  = 0;
     np[N]  = 0;
-    nv[N]  = num_states; 
-    ny[N]  = {{ra.dims.nyN}};
+    nv[N]  = NX; 
+    ny[N]  = NYN;
     nbu[N] = 0;
-    nbx[N] = {{ra.dims.nbx}};
-    nb[N]  = {{ra.dims.nbx}};
+    nbx[N] = NBXN;
+    nb[N]  = NBXN;
 
     // Make plan
     nlp_solver_plan = ocp_nlp_plan_create(N);

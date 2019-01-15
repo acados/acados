@@ -67,9 +67,21 @@ int main() {
 
     double kkt_norm_inf = 1e12, elapsed_time;
 
+#if 1
+    int NTIMINGS = 100000;
+    double min_time = 1e12;
+    for (int ii = 0; ii < NTIMINGS; ii ++) {
+        for (int i = 0; i <= nlp_dims->N; ++i) {
+            blasfeo_dvecse(nlp_dims->nu[i]+nlp_dims->nx[i], 0.0, nlp_out->ux+i, 0);
+        }
+        status = acados_solve();
+        elapsed_time = nlp_out->total_time;
+        if (elapsed_time < min_time) min_time = elapsed_time;
+    }
+    elapsed_time = min_time;
+#else
     status = acados_solve();
-
-    status = acados_solve();
+#endif
     kkt_norm_inf = nlp_out->inf_norm_res;
     elapsed_time = nlp_out->total_time;
     printf(" iterations %2d | time  %f |  KKT %e\n", nlp_out->sqp_iter, elapsed_time, kkt_norm_inf);

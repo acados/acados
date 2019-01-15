@@ -2,16 +2,18 @@ import numpy as np
 
 class ocp_nlp_dims:
     def __init__(self):
-        self._nx  = None  # number of states
-        self._nz  = 0     # number of algebraic variables
-        self._nu  = None  # number of inputs
-        self._np  = 0     # number of parameters
-        self._ny  = None  # number of residuals in Lagrange term
-        self._nyN = None  # number of residuals in Mayer term
-        self._nbx = 0     # number of state bounds 
-        self._nbu = 0     # number of input bounds
-        self._nu  = None  # number of inputs
-        self._N   = None  # prediction horizon 
+        self._nx   = None  # number of states
+        self._nz   = 0     # number of algebraic variables
+        self._nu   = None  # number of inputs
+        self._np   = 0     # number of parameters
+        self._ny   = None  # number of residuals in Lagrange term
+        self._nyN  = None  # number of residuals in Mayer term
+        self._nbx  = 0     # number of state bounds 
+        self._nbu  = 0     # number of input bounds
+        self._ng   = 0     # number of general constraints
+        self._nbxN = 0     # number of state bounds in last stage 
+        self._ngN  = 0     # number of general constraints in last stage
+        self._N    = None  # prediction horizon 
 
     @property
     def nx(self):
@@ -44,7 +46,19 @@ class ocp_nlp_dims:
     @property
     def nbu(self):
         return self._nbu
+
+    @property
+    def ng(self):
+        return self._ng
+
+    @property
+    def nbxN(self):
+        return self._nbxN
     
+    @property
+    def ngN(self):
+        return self._ngN
+
     @property
     def N(self):
         return self._N
@@ -104,6 +118,27 @@ class ocp_nlp_dims:
             self._nbx = nbx
         else:
             raise Exception('Invalid nbx value. Exiting.')
+
+    @ng.setter
+    def ng(self, ng):
+        if type(ng) == int and ng > -1:
+            self._ng = ng
+        else:
+            raise Exception('Invalid ng value. Exiting.')
+
+    @nbxN.setter
+    def nbxN(self, nbxN):
+        if type(nbxN) == int and nbxN > -1:
+            self._nbxN = nbxN
+        else:
+            raise Exception('Invalid nbxN value. Exiting.')
+
+    @ngN.setter
+    def ngN(self, ngN):
+        if type(ngN) == int and ngN > -1:
+            self._ngN = ngN
+        else:
+            raise Exception('Invalid ngN value. Exiting.')
 
     @N.setter
     def N(self, N):
@@ -218,12 +253,16 @@ class ocp_nlp_cost:
     
 class ocp_nlp_constraints:
     def __init__(self):
-        self._lbx = None  
-        self._lbu = None  
-        self._ubx = None  
-        self._ubu = None  
-        self._x0  = None  
-        self._p   = None  
+        self._lbx  = None  
+        self._lbu  = None  
+        self._ubx  = None  
+        self._ubu  = None  
+        self._lg   = None  
+        self._ug   = None  
+        self._C    = None  
+        self._D    = None  
+        self._ubxN = None  
+        self._x0   = None  
 
     @property
     def lbx(self):
@@ -242,6 +281,22 @@ class ocp_nlp_constraints:
         return self._ubu
 
     @property
+    def lg(self):
+        return self._lg
+
+    @property
+    def ug(self):
+        return self._ug
+
+    @property
+    def lbxN(self):
+        return self._lbxN
+
+    @property
+    def ubxN(self):
+        return self._ubxN
+
+    @property
     def x0(self):
         return self._x0
 
@@ -256,13 +311,6 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid lbx value. Exiting.')
 
-    @lbu.setter
-    def lbu(self, lbu):
-        if type(lbu) == np.ndarray:
-            self._lbu = lbu
-        else:
-            raise Exception('Invalid lbu value. Exiting.')
-
     @ubx.setter
     def ubx(self, ubx):
         if type(ubx) == np.ndarray:
@@ -270,12 +318,47 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid ubx value. Exiting.')
 
+    @lbu.setter
+    def lbu(self, lbu):
+        if type(lbu) == np.ndarray:
+            self._lbu = lbu
+        else:
+            raise Exception('Invalid lbu value. Exiting.')
+
     @ubu.setter
     def ubu(self, ubu):
         if type(ubu) == np.ndarray:
             self._ubu = ubu
         else:
             raise Exception('Invalid ubu value. Exiting.')
+
+    @lg.setter
+    def lg(self, lg):
+        if type(lg) == np.ndarray:
+            self._lg = lg
+        else:
+            raise Exception('Invalid lg value. Exiting.')
+
+    @ug.setter
+    def ug(self, ug):
+        if type(ug) == np.ndarray:
+            self._ug = ug
+        else:
+            raise Exception('Invalid ug value. Exiting.')
+
+    @lbxN.setter
+    def lbxN(self, lbxN):
+        if type(lbxN) == np.ndarray:
+            self._lbxN = lbxN
+        else:
+            raise Exception('Invalid lbxN value. Exiting.')
+
+    @ubxN.setter
+    def ubxN(self, ubxN):
+        if type(ubxN) == np.ndarray:
+            self._ubxN = ubxN
+        else:
+            raise Exception('Invalid ubxN value. Exiting.')
 
     @x0.setter
     def x0(self, x0):
@@ -318,7 +401,7 @@ class ocp_nlp_solver_config:
     @qp_solver.setter
     def qp_solver(self, qp_solver):
         qp_solvers = ('PARTIAL_CONDENSING_HPIPM', 'PARTIAL_CONDENSING_QPOASES', \
-                'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_QPOASES')
+                'FULL_CONDENSING_QPOASES', 'FULL_CONDENSING_HPIPM')
 
         if type(qp_solver) == str and qp_solver in qp_solvers:
             self._qp_solver = qp_solver
