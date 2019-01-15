@@ -253,23 +253,23 @@ class ocp_nlp_cost:
     
 class ocp_nlp_constraints:
     def __init__(self):
-        self._lbx   = None  
-        self._lbu   = None  
+        self._lbx    = None  
+        self._lbu    = None  
         self._idxbx  = None
-        self._ubx   = None  
-        self._ubu   = None  
+        self._ubx    = None  
+        self._ubu    = None  
         self._idxbu  = None
-        self._lg    = None  
-        self._ug    = None  
-        self._D     = None  
-        self._C     = None  
-        self._lbxN  = None  
-        self._ubxN  = None  
+        self._lg     = None  
+        self._ug     = None  
+        self._D      = None  
+        self._C      = None  
+        self._lbxN   = None  
+        self._ubxN   = None  
         self._idxbxN = None
-        self._CN    = None  
-        self._lgN   = None  
-        self._ugN   = None  
-        self._x0    = None  
+        self._CN     = None  
+        self._lgN    = None  
+        self._ugN    = None  
+        self._x0     = None  
 
     @property
     def lbx(self):
