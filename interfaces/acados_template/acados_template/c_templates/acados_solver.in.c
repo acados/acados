@@ -42,14 +42,15 @@
 {% for item in ra.constants %}
 #define {{ item.name }} {{ item.value }}
 {% endfor %}
-
 #define NX   {{ ra.dims.nx }}
 #define NZ   {{ ra.dims.nz }}
 #define NU   {{ ra.dims.nu }}
 #define NP   {{ ra.dims.np }}
 #define NBX  {{ ra.dims.nbx }}
 #define NBU  {{ ra.dims.nbu }}
+#define NG   {{ ra.dims.ng }}
 #define NBXN {{ ra.dims.nbxN }}
+#define NGN  {{ ra.dims.ngN }}
 #define NY   {{ ra.dims.ny }}
 #define NYN  {{ ra.dims.nyN }}
 #define N    {{ ra.dims.N }}
@@ -61,52 +62,114 @@ int acados_create() {
     double Tf = {{ ra.solver_config.tf }};
 
     // set up bounds for stage 0 
-    int idxb_0[NBU + NX];
-    {% for i in range(ra.dims.nbu + ra.dims.nx): %}
-    idxb_0[{{i}}] = {{i}};
-    {%- endfor %}
-    double lb0[NBU + NX]; 
-    double ub0[NBU + NX];
+    // u
+    int idxbu0[NBU];
     {% for i in range(ra.dims.nbu): %}
-    lb0[{{i}}] = {{ra.constraints.lbu[i]}};
-    ub0[{{i}}] = {{ra.constraints.ubu[i]}};
+    idxbu0[{{i}}] = {{ra.constraints.idxbu[i]}};
+    {%- endfor %}
+    double lbu0[NX]; 
+    double ubu0[NX];
+    {% for i in range(ra.dims.nbu): %}
+    lbu0[{{i}}] = {{ ra.constraints.lbu[i] }};
+    ubu0[{{i}}] = {{ ra.constraints.ubu[i] }};
+    {%- endfor %}
+    
+    // x
+    int idxbx0[NX];
+    {% for i in range(ra.dims.nx): %}
+    idxbx0[{{i}}] = {{i}};
+    {%- endfor %}
+    double lbx0[NX]; 
+    double ubx0[NX];
+    {% for i in range(ra.dims.nx): %}
+    lbx0[{{i}}] = {{ ra.constraints.x0[i] }};
+    ubx0[{{i}}] = {{ ra.constraints.x0[i] }};
     {%- endfor %}
 
-    {% for i in range(ra.dims.nbu, ra.dims.nx + ra.dims.nbu): %}
-    lb0[{{i}}] = {{ra.constraints.x0[i - ra.dims.nbu]}};
-    ub0[{{i}}] = {{ra.constraints.x0[i - ra.dims.nbu]}};
-    {%- endfor %}
 
     // set up bounds for intermediate stages
-    int idxb[NBU + NBX];
+    // u
+    int idxbu[NBU];
     {% for i in range(ra.dims.nbu): %}
-    idxb[{{i}}] = {{ ra.constraints.idxbu[i] }};
+    idxbu[{{i}}] = {{ra.constraints.idxbu[i]}};
     {%- endfor %}
-    {% for i in range(ra.dims.nbu, ra.dims.nbu + ra.dims.nbx): %}
-    idxb[{{i}}] = {{ ra.constraints.idxbx[i] }};
-    {%- endfor %}
-    double lb[NBU + NBX]; 
-    double ub[NBU + NBX]; 
+    double lbu[NX]; 
+    double ubu[NX];
     {% for i in range(ra.dims.nbu): %}
-    lb[{{i}}] = {{ra.constraints.lbu[i]}};
-    ub[{{i}}] = {{ra.constraints.ubu[i]}};
+    lbu[{{i}}] = {{ ra.constraints.lbu[i] }};
+    ubu[{{i}}] = {{ ra.constraints.ubu[i] }};
     {%- endfor %}
-    {% for i in range(ra.dims.nbu, ra.dims.nbu + ra.dims.nbx): %}
-    lb[{{i}}] = {{ra.constraints.lbx[i]}};
-    ub[{{i}}] = {{ra.constraints.ubx[i]}};
+    
+    // x
+    int idxbx[NBX];
+    {% for i in range(ra.dims.nbx): %}
+    idxbx[{{i}}] = {{ra.constraints.idxbx[i]}};
+    {%- endfor %}
+    double lbx[NBX]; 
+    double ubx[NBX];
+    {% for i in range(ra.dims.nbx): %}
+    lbx[{{i}}] = {{ ra.constraints.lbx[i] }};
+    ubx[{{i}}] = {{ ra.constraints.ubx[i] }};
+    {%- endfor %}
+
+    // set up general constraints for stage 0 to N-1 
+    double D[NG*NU];
+    double C[NG*NX];
+    double lg[NG];
+    double ug[NG];
+
+    {% for j in range(ra.dims.ng): %}
+        {%- for k in range(ra.dims.nx): %}
+    D[{{j}}+NG * {{k}}] = {{ ra.constraints.D[j,k] }}; 
+        {%- endfor %}
+    {%- endfor %}
+
+    {% for j in range(ra.dims.ng): %}
+        {%- for k in range(ra.dims.nu): %}
+    C[{{j}}+NG * {{k}}] = {{ ra.constraints.C[j,k] }}; 
+        {%- endfor %}
+    {%- endfor %}
+
+    {% for i in range(ra.dims.ng): %}
+    lg[{{i}}] = {{ ra.constraints.lg[i] }};
+    {%- endfor %}
+
+    {% for i in range(ra.dims.ng): %}
+    ug[{{i}}] = {{ ra.constraints.ug[i] }};
     {%- endfor %}
 
     // set up bounds for last stage
-    int idxb_N[{{ ra.dims.nbxN }}];
+    // x
+    int idxbxN[NBXN];
     {% for i in range(ra.dims.nbxN): %}
-    idxb_N[{{i}}] = {{ ra.constraints.idxbxN[i] }};
+    idxbxN[{{i}}] = {{ra.constraints.idxbxN[i]}};
     {%- endfor %}
-    double lbN[{{ ra.dims.nbxN }}]; 
-    double ubN[{{ ra.dims.nbxN }}]; 
+    double lbxN[NBXN]; 
+    double ubxN[NBXN];
     {% for i in range(ra.dims.nbxN): %}
-    lbN[{{i}}] = {{ra.constraints.lbxN[i]}};
-    ubN[{{i}}] = {{ra.constraints.ubxN[i]}};
+    lbxN[{{i}}] = {{ ra.constraints.lbxN[i] }};
+    ubxN[{{i}}] = {{ ra.constraints.ubxN[i] }};
     {%- endfor %}
+    
+    // set up general constraints for last stage 
+    double CN[NGN*NX];
+    double lgN[NGN];
+    double ugN[NGN];
+
+    {% for j in range(ra.dims.ngN): %}
+        {%- for k in range(ra.dims.nu): %}
+    CN[{{j}}+NG * {{k}}] = {{ ra.constraints.CN[j,k] }}; 
+        {%- endfor %}
+    {%- endfor %}
+
+    {% for i in range(ra.dims.ngN): %}
+    lgN[{{i}}] = {{ ra.constraints.lgN[i] }};
+    {%- endfor %}
+
+    {% for i in range(ra.dims.ngN): %}
+    ugN[{{i}}] = {{ ra.constraints.ugN[i] }};
+    {%- endfor %}
+
 
     double yref[NY];
     double W[NY*NY];
@@ -188,7 +251,7 @@ int acados_create() {
         nbx[i] = NBX;
         nbu[i] = NBU;
         nb[i]  = NBU + NBX;
-        ng[i]  = 0;
+        ng[i]  = NG;
         nh[i]  = 0;
         np[i]  = 0;
         ns[i]  = 0;
@@ -210,6 +273,7 @@ int acados_create() {
     ny[N]  = NYN;
     nbu[N] = 0;
     nbx[N] = NBXN;
+    ng[N] = NGN;
     nb[N]  = NBXN;
 
     // Make plan
@@ -407,25 +471,52 @@ int acados_create() {
     ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 	ocp_nlp_constraints_bgh_dims **constraints_dims = (ocp_nlp_constraints_bgh_dims **) nlp_dims->constraints;
 
-    // bounds
-    for (int i = 0; i < nb[0]; ++i)
-        constraints[0]->idxb[i] = idxb_0[i];
+    // bounds for stage 0
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", ubx0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbu", idxbu0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbu", lbu0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubu", ubu0);
 
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lb", lb0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ub", ub0);
-
+    // bounds for intermediate stages
     for (int i = 1; i < N; ++i)
     {
-        for (int j = 0; j < nb[i]; ++j)
-            constraints[i]->idxb[j] = idxb[j];
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lb", lb);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ub", ub);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxbx", idxbx);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lbx", lbx);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubx", ubx);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxbu", idxbu);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lbu", lbu);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubu", ubu);
     }
+   
+    {% if ra.dims.ng > -1: %} 
+    // general constraints for stages 0 to N-1
+    for (int i = 1; i < N; ++i)
+    {
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "D", D);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "C", C);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lg", lg);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ug", ug);
+    }
+    {% endif %}
 
-    for (int j = 0; j < nb[N]; ++j)
-        constraints[N]->idxb[j] = idxb_N[j];
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lb", lbN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ub", ubN);
+    {% if ra.dims.nbxN > -1: %} 
+    // bounds for last
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbxN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbxN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubxN);
+    {% endif %}
+    
+    {% if ra.dims.ngN > -1: %} 
+    // general constraints for last stage
+    for (int i = 1; i < N; ++i)
+    {
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "C", CN);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lg", lgN);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ug", ugN);
+    }
+    {% endif %}
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);
     

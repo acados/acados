@@ -253,16 +253,23 @@ class ocp_nlp_cost:
     
 class ocp_nlp_constraints:
     def __init__(self):
-        self._lbx  = None  
-        self._lbu  = None  
-        self._ubx  = None  
-        self._ubu  = None  
-        self._lg   = None  
-        self._ug   = None  
-        self._C    = None  
-        self._D    = None  
-        self._ubxN = None  
-        self._x0   = None  
+        self._lbx   = None  
+        self._lbu   = None  
+        self._idxbx  = None
+        self._ubx   = None  
+        self._ubu   = None  
+        self._idxbu  = None
+        self._lg    = None  
+        self._ug    = None  
+        self._D     = None  
+        self._C     = None  
+        self._lbxN  = None  
+        self._ubxN  = None  
+        self._idxbxN = None
+        self._CN    = None  
+        self._lgN   = None  
+        self._ugN   = None  
+        self._x0    = None  
 
     @property
     def lbx(self):
@@ -281,6 +288,14 @@ class ocp_nlp_constraints:
         return self._ubu
 
     @property
+    def idxbx(self):
+        return self._idxbx
+
+    @property
+    def idxbu(self):
+        return self._idxbu
+
+    @property
     def lg(self):
         return self._lg
 
@@ -289,12 +304,37 @@ class ocp_nlp_constraints:
         return self._ug
 
     @property
+    def D(self):
+        return self._D
+
+    @property
+    def C(self):
+        return self._C
+
+    @property
     def lbxN(self):
         return self._lbxN
 
     @property
     def ubxN(self):
         return self._ubxN
+
+    @property
+    def idxbxN(self):
+        return self._idxbxN
+
+    @property
+    def CN(self):
+        return self._CN
+
+    @property
+    def lgN(self):
+        return self._lgN
+
+    @property
+    def ugN(self):
+        return self._ugN
+
 
     @property
     def x0(self):
@@ -318,6 +358,13 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid ubx value. Exiting.')
 
+    @idxbx.setter
+    def idxbx(self, idxbx):
+        if type(idxbx) == np.ndarray:
+            self._idxbx = idxbx
+        else:
+            raise Exception('Invalid idxbx value. Exiting.')
+
     @lbu.setter
     def lbu(self, lbu):
         if type(lbu) == np.ndarray:
@@ -331,6 +378,13 @@ class ocp_nlp_constraints:
             self._ubu = ubu
         else:
             raise Exception('Invalid ubu value. Exiting.')
+    
+    @idxbu.setter
+    def idxbu(self, idxbu):
+        if type(idxbu) == np.ndarray:
+            self._idxbu = idxbu
+        else:
+            raise Exception('Invalid idxbu value. Exiting.')
 
     @lg.setter
     def lg(self, lg):
@@ -346,6 +400,27 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid ug value. Exiting.')
 
+    @D.setter
+    def D(self, D):
+        if type(D) == np.ndarray:
+            self._D = D
+        else:
+            raise Exception('Invalid D value. Exiting.')
+
+    @C.setter
+    def C(self, C):
+        if type(C) == np.ndarray:
+            self._C = C
+        else:
+            raise Exception('Invalid C value. Exiting.')
+
+    @CN.setter
+    def CN(self, CN):
+        if type(CN) == np.ndarray:
+            self._CN = CN
+        else:
+            raise Exception('Invalid CN value. Exiting.')
+
     @lbxN.setter
     def lbxN(self, lbxN):
         if type(lbxN) == np.ndarray:
@@ -359,6 +434,13 @@ class ocp_nlp_constraints:
             self._ubxN = ubxN
         else:
             raise Exception('Invalid ubxN value. Exiting.')
+
+    @idxbxN.setter
+    def idxbxN(self, idxbxN):
+        if type(idxbxN) == np.ndarray:
+            self._idxbxN = idxbxN
+        else:
+            raise Exception('Invalid idxbxN value. Exiting.')
 
     @x0.setter
     def x0(self, x0):
