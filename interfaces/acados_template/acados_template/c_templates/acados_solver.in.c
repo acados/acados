@@ -216,7 +216,7 @@ int acados_create() {
 
     {% for j in range(ra.dims.nyN): %}
         {%- for k in range(ra.dims.nyN): %}
-    WN[{{j}}+(NYN) * {{k}}] = {{ ra.cost.W[j,k] }}; 
+    WN[{{j}}+(NYN) * {{k}}] = {{ ra.cost.WN[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
