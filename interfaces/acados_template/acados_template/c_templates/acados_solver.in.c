@@ -67,8 +67,8 @@ int acados_create() {
     {% for i in range(ra.dims.nbu): %}
     idxbu0[{{i}}] = {{ra.constraints.idxbu[i]}};
     {%- endfor %}
-    double lbu0[NX]; 
-    double ubu0[NX];
+    double lbu0[NBU]; 
+    double ubu0[NBU];
     {% for i in range(ra.dims.nbu): %}
     lbu0[{{i}}] = {{ ra.constraints.lbu[i] }};
     ubu0[{{i}}] = {{ ra.constraints.ubu[i] }};
@@ -93,8 +93,8 @@ int acados_create() {
     {% for i in range(ra.dims.nbu): %}
     idxbu[{{i}}] = {{ra.constraints.idxbu[i]}};
     {%- endfor %}
-    double lbu[NX]; 
-    double ubu[NX];
+    double lbu[NBU]; 
+    double ubu[NBU];
     {% for i in range(ra.dims.nbu): %}
     lbu[{{i}}] = {{ ra.constraints.lbu[i] }};
     ubu[{{i}}] = {{ ra.constraints.ubu[i] }};
@@ -261,7 +261,7 @@ int acados_create() {
     }
 
     nbx[0] = NX;
-    nbu[0] = NU;
+    nbu[0] = NBU;
     nb[0]  = NX + NBU;
 
     nu[N]  = 0;

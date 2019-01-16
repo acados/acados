@@ -431,7 +431,8 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     {
         ptr_i = (int *) value;
         for (ii=0; ii < nbx; ii++)
-            model->idxb[nbu+ii] = nbu+ptr_i[ii];
+            // model->idxb[nbu+ii] = nbu+ptr_i[ii];
+            model->idxb[nbu+ii] = nu+ptr_i[ii];
         status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "lbx"))
