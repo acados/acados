@@ -2,6 +2,12 @@
 
 
 
+# default make target
+all: acados_static acados_c_static
+
+
+
+# include config & tailored rules
 include ./Makefile.rule
 include ./Makefile.osqp
 
@@ -96,8 +102,6 @@ CLEAN_DEPS += osqp_clean
 endif
 
 
-
-all: acados_static acados_c_static
 
 acados_static: $(STATIC_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
