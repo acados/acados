@@ -54,7 +54,7 @@ jac_u       = jacobian(y, u);
 jac_x_e     = jacobian(y_e, x);
 
 %% Set up functions
-y_fun_jac_ut_xt = Function([model_name,'_y_fun_jac_ut_xt'], {[u; x]}, {y, [jac_u'; jac_x']});
+y_fun_jac_ut_xt = Function([model_name,'_y_fun_jac_ut_xt'], {x, u}, {y, [jac_u'; jac_x']});
 y_e_fun_jac_ut_xt = Function([model_name,'_y_e_fun_jac_ut_xt'], {x}, {y_e, jac_x_e'});
 
 %% generate C code

@@ -50,7 +50,7 @@ if isfield(model, 'expr_h')
 	jac_x       = jacobian(h, x);
 	jac_u       = jacobian(h, u);
 	% Set up functions
-	h_fun_jac_ut_xt = Function([model_name,'_h_fun_jac_ut_xt'], {[u; x]}, {h, [jac_u'; jac_x']});
+	h_fun_jac_ut_xt = Function([model_name,'_h_fun_jac_ut_xt'], {x, u}, {h, [jac_u'; jac_x']});
 	% generate C code
 	h_fun_jac_ut_xt.generate([model_name,'_h_fun_jac_ut_xt'], casadi_opts);
 end
