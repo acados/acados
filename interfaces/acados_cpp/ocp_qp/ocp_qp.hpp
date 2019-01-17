@@ -112,6 +112,9 @@ class ocp_qp : private ocp
 #ifdef ACADOS_WITH_OOQP
         {"ooqp", {PARTIAL_CONDENSING_OOQP}},
 #endif
+#ifdef ACADOS_WITH_OSQP
+        {"osqp", {PARTIAL_CONDENSING_OSQP}},
+#endif
 #ifdef ACADOS_WITH_QPDUNES
         {"qpdunes", {PARTIAL_CONDENSING_QPDUNES}},
 #endif

@@ -29,6 +29,7 @@ set(BLASFEO_HEADERS_INSTALLATION_DIRECTORY "include/blasfeo/include" CACHE STRIN
 set(HPIPM_HEADERS_INSTALLATION_DIRECTORY "include/hpipm/include" CACHE STRING "")
 set(HPMPC_HEADERS_INSTALLATION_DIRECTORY "include/hpmpc/include" CACHE STRING "")
 
+
 if(CMAKE_SYSTEM_NAME MATCHES "dSpace")
     set(USE_C99_MATH OFF CACHE BOOL "fmax is not implemented for dSpace.")
 endif()
@@ -51,6 +52,12 @@ endif()
 
 if(ACADOS_WITH_QPOASES)
     add_subdirectory(qpoases)
+endif()
+
+if(ACADOS_WITH_OSQP)
+    set(PROFILING OFF CACHE BOOL "Turn off profiling in OSQP")
+    set(CTRLC OFF CACHE BOOL "Turn off CTRLC in OSQP")
+    add_subdirectory(osqp)
 endif()
 
 if (ACADOS_WITH_OOQP)

@@ -33,6 +33,10 @@ ifeq ($(ACADOS_WITH_QORE), 1)
 LIBS += -lqore_dense
 endif
 
+ifeq ($(ACADOS_WITH_OSQP), 1)
+LIBS += -losqp -ldl
+endif
+
 LIBS += -lblasfeo -lm -lblas -llapack
 
 ifeq ($(ACADOS_WITH_OPENMP), 1)
