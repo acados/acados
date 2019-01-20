@@ -586,10 +586,10 @@ int sim_algebraic_solver(void *config_, sim_in *in, sim_out *out, void *opts_, v
     acados_timer timer, timer_ad, timer_la;
 
     double a;
-    struct blasfeo_dmat *dG_dK;
-    struct blasfeo_dmat *dG_dxu;
-    struct blasfeo_dmat *dK_dxu;
-    struct blasfeo_dmat *S_forw;
+    // struct blasfeo_dmat *dG_dK;
+    // struct blasfeo_dmat *dG_dxu;
+    // struct blasfeo_dmat *dK_dxu;
+    // struct blasfeo_dmat *S_forw;
     int *ipiv_ss;
 
 
@@ -691,7 +691,7 @@ int sim_algebraic_solver(void *config_, sim_in *in, sim_out *out, void *opts_, v
 
     // initialize integration variables
     //  state derivatives
-    blasfeo_pack_dvec(nx, in->xdot, K);
+    blasfeo_pack_dvec(nx, in->xdot, K, 0);
     //  algebraic variables
     blasfeo_pack_dvec(nz, in->z, K, nx);
 
@@ -709,34 +709,9 @@ int sim_algebraic_solver(void *config_, sim_in *in, sim_out *out, void *opts_, v
     acados_tic(&timer);
     /* decide whether results from forward sensitivity propagation are stored,
         or if memory has to be reused --> set pointers accordingly */
-    if (opts->sens_hess){
-        dK_dxu = &dK_dxu[ss];
-        dG_dK = &dG_dK[ss];
-        dG_dxu = &dG_dxu[ss];
-        ipiv_ss = &ipiv[ss*nK];
-        S_forw = &S_forw[ss+1];
-        // copy current S_forw into S_forw
-        blasfeo_dgecp(nx, nx + nu, &S_forw[ss], 0, 0, S_forw, 0, 0);
-
-        // copy last jacobian factorization into dG_dK
-        if (ss > 0 && opts->jac_reuse) {
-            blasfeo_dgecp(nK, nK, &dG_dK[ss-1], 0, 0, dG_dK, 0, 0);
-            for (int ii = 0; ii < nK; ii++) {
-                ipiv_ss[ii] = ipiv[nK*(ss-1) + ii];
-            }
-        }
-    }
-    else
-    {
-        dK_dxu = dK_dxu;
-        dG_dK = dG_dK;
-        dG_dxu = dG_dxu;
-        ipiv_ss = ipiv;
-        S_forw = S_forw;
-    }
 
     if ( opts->sens_adj || opts->sens_hess )  // store current xn
-        blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
+        assert(1 && "opts->sens_adj =1 and opts->sens_hess = 1  not implemented yet!");
 
     for (int iter = 0; iter < newton_iter; iter++)
     {
@@ -746,41 +721,38 @@ int sim_algebraic_solver(void *config_, sim_in *in, sim_out *out, void *opts_, v
             blasfeo_dgese(nK, nK, 0.0, dG_dK, 0, 0);
         }
 
-        for (int ii = 0; ii < ns; ii++)
-        {  // ii-th row of tableau
-            // take x(n); copy a strvec into a strvec
-            blasfeo_dveccp(nx, xn, 0, xt, 0);
+        // take x(n); copy a strvec into a strvec
+        blasfeo_dveccp(nx, xn, 0, xt, 0);
 
-            impl_ode_xdot_in.xi = 0;  // use k_i of K = (k_1 ,z_1)
-            impl_ode_z_in.xi    = nx;
-                                          // use z_i of K = (k_1, z_1)
-            impl_ode_res_out.xi = 0;  // store output in this position of rG
+        impl_ode_xdot_in.xi = 0;  // use k_i of K = (k_1 ,z_1)
+        impl_ode_z_in.xi    = nx;
+                                      // use z_i of K = (k_1, z_1)
+        impl_ode_res_out.xi = 0;  // store output in this position of rG
 
-            // compute the residual of implicit ode at time t_ii
-            if ((opts->jac_reuse && (iter == 0)) || (!opts->jac_reuse))
-            {   // evaluate the ode function & jacobian w.r.t. x, xdot;
-                //    &  compute jacobian dG_dK;
-                acados_tic(&timer_ad);
-                model->impl_ode_fun_jac_x_xdot_z->evaluate(
-                    model->impl_ode_fun_jac_x_xdot_z, impl_ode_type_in, impl_ode_in,
-                    impl_ode_fun_jac_x_xdot_z_type_out, impl_ode_fun_jac_x_xdot_z_out);
-                timing_ad += acados_toc(&timer_ad);
+        // compute the residual of implicit ode at time t_ii
+        if ((opts->jac_reuse && (iter == 0)) || (!opts->jac_reuse))
+        {   // evaluate the ode function & jacobian w.r.t. x, xdot;
+            //    &  compute jacobian dG_dK;
+            acados_tic(&timer_ad);
+            model->impl_ode_fun_jac_x_xdot_z->evaluate(
+                model->impl_ode_fun_jac_x_xdot_z, impl_ode_type_in, impl_ode_in,
+                impl_ode_fun_jac_x_xdot_z_type_out, impl_ode_fun_jac_x_xdot_z_out);
+            timing_ad += acados_toc(&timer_ad);
 
-                // compute the blocks of dG_dK
-                blasfeo_dgead(nx + nz, nx, 1, &df_dxdot, 0, 0,
-                              dG_dK, 0, 0);
-                blasfeo_dgead(nx + nz, nz, 1, &df_dz,    0, 0,
-                              dG_dK, 0, 0);
-            }
-            else // only eval function (without jacobian)
-            {
-                acados_tic(&timer_ad);
-                model->impl_ode_fun->evaluate(model->impl_ode_fun, impl_ode_type_in,
-                                              impl_ode_in, impl_ode_fun_type_out,
-                                              impl_ode_fun_out);
-                timing_ad += acados_toc(&timer_ad);
-            }
-        }  // end ii
+            // compute the blocks of dG_dK
+            blasfeo_dgead(nx + nz, nx, 1, &df_dxdot, 0, 0,
+                          dG_dK, 0, 0);
+            blasfeo_dgead(nx + nz, nz, 1, &df_dz,    0, 0,
+                          dG_dK, 0, 0);
+        }
+        else // only eval function (without jacobian)
+        {
+            acados_tic(&timer_ad);
+            model->impl_ode_fun->evaluate(model->impl_ode_fun, impl_ode_type_in,
+                                          impl_ode_in, impl_ode_fun_type_out,
+                                          impl_ode_fun_out);
+            timing_ad += acados_toc(&timer_ad);
+        }
 
         acados_tic(&timer_la);
         // DGETRF computes an LU factorization of a general M-by-N matrix A
@@ -812,7 +784,7 @@ int sim_algebraic_solver(void *config_, sim_in *in, sim_out *out, void *opts_, v
 
     if ( opts->sens_adj || opts->sens_hess )
     {
-        blasfeo_dveccp(nK, K, 0, &K_traj[ss], 0);
+        assert(1 && "opts->sens_adj =1 and opts->sens_hess = 1  not implemented yet!");
     }
     
 
@@ -930,7 +902,7 @@ int sim_algebraic_solver(void *config_, sim_in *in, sim_out *out, void *opts_, v
 
     if ( opts->sens_adj  || opts->sens_hess )
     {
-        assert(1, "opts->sens_adj =1 and opts->sens_hess = 1  not implemented yet!");
+        assert(1 && "opts->sens_adj =1 and opts->sens_hess = 1  not implemented yet!");
     }  // end if ( opts->sens_adj  || opts->sens_hess )
 
     out->info->CPUtime = acados_toc(&timer);
