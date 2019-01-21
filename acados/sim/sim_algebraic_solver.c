@@ -761,11 +761,11 @@ int sim_algebraic_solver(void *config_, sim_in *in, sim_out *out, void *opts_, v
         // blasfeo_print_exp_dmat((nz+nx) *ns, (nz+nx) *ns, dG_dK, 0, 0);
         if ((opts->jac_reuse && (iter == 0)) || (!opts->jac_reuse))
         {
-            blasfeo_dgetrf_rowpivot(nK, nK, dG_dK, 0, 0, dG_dK, 0, 0, ipiv_ss);
+            blasfeo_dgetrf_rowpivot(nK, nK, dG_dK, 0, 0, dG_dK, 0, 0, ipiv);
         }
 
         // permute also the r.h.s
-        blasfeo_dvecpe(nK, ipiv_ss, rG, 0);
+        blasfeo_dvecpe(nK, ipiv, rG, 0);
 
         // solve dG_dK * y = rG, dG_dK on the (l)eft, (l)ower-trian, (n)o-trans
         //                    (u)nit trian
@@ -846,7 +846,7 @@ int sim_algebraic_solver(void *config_, sim_in *in, sim_out *out, void *opts_, v
     // generate z output
     
     // copy corresponding values to out->zn
-    blasfeo_unpack_dvec(nz, nx, K, &out->zn);
+    blasfeo_unpack_dvec(nz, K, nx, out->zn);
 
     // set input for impl_ode
     impl_ode_type_in[0] = COLMAJ;

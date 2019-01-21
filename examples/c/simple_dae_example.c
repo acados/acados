@@ -268,7 +268,7 @@ int main() {
 	}
 	void *impl_ode_jac_x_xdot_u_z_mem = malloc(tmp_size);
 	c_ptr = impl_ode_jac_x_xdot_u_z_mem;
-	for (int ii=0; ii<N; ii++)
+	for (int ii=0; ii < N_tilde; ii++)
 	{
 		external_function_casadi_assign(impl_ode_jac_x_xdot_u_z+ii, c_ptr);
 		c_ptr += external_function_casadi_calculate_size(impl_ode_jac_x_xdot_u_z+ii);
