@@ -337,8 +337,8 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         if (config->dynamics[N] != NULL) {
             config->dynamics[N]->dims_set(config->dynamics[N],
                                           dims->dynamics[N], "nx", &int_array[N]);
-            config->dynamics[N]->dims_set(config->dynamics[N],
-                    dims->dynamics[N], "nx1", &int_array[N+1]);
+            // config->dynamics[N]->dims_set(config->dynamics[N],
+            //         dims->dynamics[N], "nx1", &0);
         }
         
         // constraints

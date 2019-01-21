@@ -74,11 +74,14 @@ int ocp_nlp_sqp_opts_calculate_size(void *config_, void *dims_)
         size += config->regularization->opts_calculate_size();
 
     // dynamics
-    size += N * sizeof(void *);
+    size += (N + 1) * sizeof(void *);
     for (int ii = 0; ii < N; ii++)
     {
         size += dynamics[ii]->opts_calculate_size(dynamics[ii], dims->dynamics[ii]);
     }
+        
+    if (config->dynamics[N] != NULL) 
+        size += dynamics[N]->opts_calculate_size(dynamics[N], dims->dynamics[N]);
 
     // cost
     size += (N + 1) * sizeof(void *);
@@ -127,11 +130,17 @@ void *ocp_nlp_sqp_opts_assign(void *config_, void *dims_, void *raw_memory)
 
     // dynamics
     opts->dynamics = (void **) c_ptr;
-    c_ptr += N * sizeof(void *);
+    c_ptr += (N + 1) * sizeof(void *);
     for (int ii = 0; ii < N; ii++)
     {
         opts->dynamics[ii] = dynamics[ii]->opts_assign(dynamics[ii], dims->dynamics[ii], c_ptr);
         c_ptr += dynamics[ii]->opts_calculate_size(dynamics[ii], dims->dynamics[ii]);
+    }
+
+    if (config->dynamics[N] != NULL) 
+    {
+        opts->dynamics[N] = dynamics[N]->opts_assign(dynamics[N], dims->dynamics[N], c_ptr);
+        c_ptr += dynamics[N]->opts_calculate_size(dynamics[N], dims->dynamics[N]);
     }
 
     // cost
@@ -202,6 +211,9 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
         dynamics[ii]->opts_initialize_default(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
     }
 
+    if (config->dynamics[N] != NULL) 
+        dynamics[N]->opts_initialize_default(dynamics[N], dims->dynamics[N], opts->dynamics[N]);
+
     // cost
     for (ii = 0; ii <= N; ii++)
     {
@@ -242,6 +254,9 @@ void ocp_nlp_sqp_opts_update(void *config_, void *dims_, void *opts_)
     {
         dynamics[ii]->opts_update(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
     }
+
+    if (config->dynamics[N] != NULL) 
+        dynamics[N]->opts_update(dynamics[N], dims->dynamics[N], opts->dynamics[N]);
 
     // cost
     for (ii = 0; ii <= N; ii++)
@@ -349,12 +364,16 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
         size += config->regularization->memory_calculate_size(dims->qp_solver);
 
     // dynamics
-    size += N * sizeof(void *);
+    size += (N + 1)* sizeof(void *);
     for (int ii = 0; ii < N; ii++)
     {
         size += dynamics[ii]->memory_calculate_size(dynamics[ii], dims->dynamics[ii],
                                                     opts->dynamics[ii]);
     }
+
+    if (config->dynamics[N] != NULL) 
+        size += dynamics[N]->memory_calculate_size(dynamics[N], dims->dynamics[N],
+                                                    opts->dynamics[N]);
 
     // cost
     size += (N + 1) * sizeof(void *);
@@ -431,13 +450,21 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 
     // dynamics
     mem->dynamics = (void **) c_ptr;
-    c_ptr += N * sizeof(void *);
+    c_ptr += (N + 1) * sizeof(void *);
     for (int ii = 0; ii < N; ii++)
     {
         mem->dynamics[ii] = dynamics[ii]->memory_assign(dynamics[ii], dims->dynamics[ii],
                                                         opts->dynamics[ii], c_ptr);
         c_ptr += dynamics[ii]->memory_calculate_size(dynamics[ii], dims->dynamics[ii],
                                                      opts->dynamics[ii]);
+    }
+
+    if (config->dynamics[N] != NULL) 
+    {
+        mem->dynamics[N] = dynamics[N]->memory_assign(dynamics[N], dims->dynamics[N],
+                                                        opts->dynamics[N], c_ptr);
+        c_ptr += dynamics[N]->memory_calculate_size(dynamics[N], dims->dynamics[N],
+                                                     opts->dynamics[N]);
     }
 
     // cost
@@ -525,6 +552,10 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
                                                            opts->dynamics[ii]);
         }
 
+        if (config->dynamics[N] != NULL) 
+            size += dynamics[N]->workspace_calculate_size(dynamics[N], dims->dynamics[N],
+                                                           opts->dynamics[N]);
+
         // cost
         for (ii = 0; ii <= N; ii++)
         {
@@ -549,6 +580,13 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
         {
             tmp = dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii],
                                                            opts->dynamics[ii]);
+            size_tmp = tmp > size_tmp ? tmp : size_tmp;
+        }
+
+        if (config->dynamics[N] != NULL) 
+        {
+            tmp = dynamics[N]->workspace_calculate_size(dynamics[N], dims->dynamics[N],
+                                                           opts->dynamics[N]);
             size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
 
@@ -586,6 +624,10 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
             size += dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii],
                                                            opts->dynamics[ii]);
         }
+
+        if (config->dynamics[N] != NULL) 
+            size += dynamics[N]->workspace_calculate_size(dynamics[N], dims->dynamics[N],
+                                                           opts->dynamics[N]);
 
         // cost
         for (ii = 0; ii <= N; ii++)
@@ -629,7 +671,7 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
     // array of pointers
     //
     work->dynamics = (void **) c_ptr;
-    c_ptr += N * sizeof(void *);
+    c_ptr += (N + 1)* sizeof(void *);
     //
     work->cost = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
@@ -663,6 +705,13 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
                                                             opts->dynamics[ii]);
         }
 
+        if (config->dynamics[N] != NULL) 
+        {
+            work->dynamics[N] = c_ptr;
+            c_ptr += dynamics[N]->workspace_calculate_size(dynamics[N], dims->dynamics[N],
+                                                            opts->dynamics[N]);
+        }
+
         // cost
         for (int ii = 0; ii <= N; ii++)
         {
@@ -688,6 +737,9 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
         {
             work->dynamics[ii] = c_ptr;
         }
+
+        if (config->dynamics[N] != NULL) 
+            work->dynamics[N] = c_ptr;
 
         // cost
         for (int ii = 0; ii <= N; ii++)
@@ -718,6 +770,13 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
             work->dynamics[ii] = c_ptr;
             c_ptr += dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii],
                                                             opts->dynamics[ii]);
+        }
+
+        if (config->dynamics[N] != NULL) 
+        {
+            work->dynamics[N] = c_ptr;
+            c_ptr += dynamics[N]->workspace_calculate_size(dynamics[N], dims->dynamics[N],
+                                                            opts->dynamics[N]);
         }
 
         // cost
@@ -774,6 +833,10 @@ static void initialize_qp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
             config->dynamics[ii]->initialize(config->dynamics[ii], dims->dynamics[ii],
                                          nlp_in->dynamics[ii], opts->dynamics[ii],
                                          mem->dynamics[ii], work->dynamics[ii]);
+        if (config->dynamics[N] != NULL) 
+            config->dynamics[N]->initialize(config->dynamics[N], dims->dynamics[N],
+                                         nlp_in->dynamics[N], opts->dynamics[N],
+                                         mem->dynamics[N], work->dynamics[N]);
         // constraints
         config->constraints[ii]->initialize(config->constraints[ii], dims->constraints[ii],
                                             nlp_in->constraints[ii], opts->constraints[ii],
@@ -815,6 +878,10 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
             config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i],
                                                 nlp_in->dynamics[i], opts->dynamics[i],
                                                 mem->dynamics[i], work->dynamics[i]);
+        if (config->dynamics[N] != NULL) 
+            config->dynamics[N]->update_qp_matrices(config->dynamics[N], dims->dynamics[N],
+                                                nlp_in->dynamics[N], opts->dynamics[N],
+                                                mem->dynamics[N], work->dynamics[N]);
         // cost
         config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i],
                 opts->cost[i], mem->cost[i], work->cost[i]);
@@ -845,6 +912,13 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
             blasfeo_dveccp(nx[i + 1], dyn_fun, 0, nlp_mem->dyn_fun + i, 0);
         }
 
+        if (config->dynamics[N] != NULL) 
+        {
+            struct blasfeo_dvec *dyn_fun
+                = config->dynamics[N]->memory_get_fun_ptr(mem->dynamics[N]);
+            blasfeo_dveccp(nx[N + 1], dyn_fun, 0, nlp_mem->dyn_fun + N, 0);
+        }
+
         // nlp mem: dyn_adj
         if (i < N)
         {
@@ -852,16 +926,29 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
                 = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
             blasfeo_dveccp(nu[i] + nx[i], dyn_adj, 0, nlp_mem->dyn_adj + i, 0);
         }
+        if (config->dynamics[N] != NULL) {
+            struct blasfeo_dvec *dyn_adj
+                = config->dynamics[N]->memory_get_adj_ptr(mem->dynamics[N]);
+            blasfeo_dveccp(nu[N] + nx[N], dyn_adj, 0, nlp_mem->dyn_adj + N, 0);
+        } 
         else
         {
             blasfeo_dvecse(nu[N] + nx[N], 0.0, nlp_mem->dyn_adj + N, 0);
         }
+
         if (i > 0)
         {
             struct blasfeo_dvec *dyn_adj
                 = config->dynamics[i-1]->memory_get_adj_ptr(mem->dynamics[i-1]);
             blasfeo_daxpy(nx[i], 1.0, dyn_adj, nu[i-1]+nx[i-1], nlp_mem->dyn_adj+i, nu[i],
                 nlp_mem->dyn_adj+i, nu[i]);
+        }
+
+        if (config->dynamics[N] != NULL) {
+            struct blasfeo_dvec *dyn_adj
+                = config->dynamics[N-1]->memory_get_adj_ptr(mem->dynamics[N-1]);
+            blasfeo_daxpy(nx[N], 1.0, dyn_adj, nu[N-1]+nx[N-1], nlp_mem->dyn_adj+N, nu[N],
+                nlp_mem->dyn_adj+N, nu[N]);
         }
 
         // nlp mem: ineq_fun
@@ -1061,11 +1148,21 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->dynamics[ii]->memory_set_z_ptr(nlp_out->z, mem->dynamics[ii]);
     }
 
+    if (config->dynamics[N] != NULL)
+    {
+        config->dynamics[N]->memory_set_ux_ptr(nlp_out->ux + N, mem->dynamics[N]);
+        config->dynamics[N]->memory_set_ux1_ptr(nlp_out->ux + N + 1, mem->dynamics[N]);
+        config->dynamics[N]->memory_set_pi_ptr(nlp_out->pi + N, mem->dynamics[N]);
+        config->dynamics[N]->memory_set_BAbt_ptr(work->qp_in->BAbt + N, mem->dynamics[N]);
+        config->dynamics[N]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + N, mem->dynamics[N]);
+        config->dynamics[N]->memory_set_z_ptr(nlp_out->z, mem->dynamics[N]);
+    }
+
     // alias to cost_memory
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for
 #endif
-    for (int ii = 0; ii <= N; ii++)
+    for (int ii = 0; ii < N; ii++)
     {
         config->cost[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->cost[ii]);
         if (dims->nz[ii] > 0) {
@@ -1078,6 +1175,21 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
         config->cost[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii, mem->cost[ii]);
         config->cost[ii]->memory_set_Z_ptr(work->qp_in->Z + ii, mem->cost[ii]);
+    }
+
+    if (config->dynamics[N] != NULL)
+    {
+        config->cost[N]->memory_set_ux_ptr(nlp_out->ux + N, mem->cost[N]);
+        if (dims->nz[N] > 0) {
+            config->cost[N]->memory_set_z_ptr(
+                    &(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[N])->z_out),
+                    mem->cost[N]);
+            config->cost[N]->memory_set_dzdxu_tran_ptr(
+                    &(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[N])->dzdxu_tran),
+                    mem->cost[N]);
+        }
+        config->cost[N]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + N, mem->cost[N]);
+        config->cost[N]->memory_set_Z_ptr(work->qp_in->Z + N, mem->cost[N]);
     }
 
     // alias to constraints_memory
@@ -1293,6 +1405,17 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
         status = config->dynamics[ii]->precompute(config->dynamics[ii], dims->dynamics[ii],
                                             nlp_in->dynamics[ii], opts->dynamics[ii],
                                             mem->dynamics[ii], work->dynamics[ii]);
+        if (status != ACADOS_SUCCESS) return status;
+    }
+
+    if (config->dynamics[N] != NULL)
+    {
+        // set T
+        config->dynamics[N]->model_set_T(nlp_in->Ts[N], nlp_in->dynamics[N]);
+        // dynamics precompute
+        status = config->dynamics[N]->precompute(config->dynamics[N], dims->dynamics[N],
+                                            nlp_in->dynamics[N], opts->dynamics[N],
+                                            mem->dynamics[N], work->dynamics[N]);
         if (status != ACADOS_SUCCESS) return status;
     }
     return status;
