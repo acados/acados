@@ -49,10 +49,10 @@ static int ocp_nlp_plan_calculate_size(int N)
 {
     // N - number of shooting nodes
     int bytes = sizeof(ocp_nlp_solver_plan);
-    bytes += N * sizeof(sim_solver_plan);
+    bytes += (N + 1) * sizeof(sim_solver_plan);
     bytes += (N + 1) * sizeof(ocp_nlp_cost_t);
-    bytes += N * sizeof(ocp_nlp_dynamics_t);
-    bytes += (N+1) * sizeof(ocp_nlp_constraints_t);
+    bytes += (N + 1) * sizeof(ocp_nlp_dynamics_t);
+    bytes += (N + 1) * sizeof(ocp_nlp_constraints_t);
     return bytes;
 }
 
@@ -68,13 +68,13 @@ static ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
     c_ptr += sizeof(ocp_nlp_solver_plan);
 
     plan->sim_solver_plan = (sim_solver_plan *) c_ptr;
-    c_ptr += N * sizeof(sim_solver_plan);
+    c_ptr += (N + 1) * sizeof(sim_solver_plan);
 
     plan->nlp_cost = (ocp_nlp_cost_t *) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_cost_t);
 
     plan->nlp_dynamics = (ocp_nlp_dynamics_t *) c_ptr;
-    c_ptr += N * sizeof(ocp_nlp_dynamics_t);
+    c_ptr += (N +1) * sizeof(ocp_nlp_dynamics_t);
 
     plan->nlp_constraints = (ocp_nlp_constraints_t *) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_constraints_t);
@@ -82,7 +82,7 @@ static ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
     // initialize to default value !=0 to detect empty plans
     for (ii=0; ii <= N; ii++)
         plan->nlp_cost[ii] = INVALID_COST;
-    for (ii=0; ii < N; ii++)
+    for (ii=0; ii <= N; ii++)
         plan->nlp_dynamics[ii] = INVALID_MODEL;
     for (ii=0; ii <= N; ii++)
         plan->nlp_constraints[ii] = INVALID_CONSTRAINT;
@@ -107,6 +107,8 @@ static void ocp_nlp_plan_initialize_default(int N, ocp_nlp_solver_plan *plan)
     {
         plan->sim_solver_plan[ii].sim_solver = ERK;
     }
+
+    plan->sim_solver_plan[N].sim_solver = NO_SIM_SOLVER;
 }
 
 
@@ -191,6 +193,7 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan)
     // cost
     for (int i = 0; i <= N; ++i)
     {
+        printf("i = %i\n", i);
         switch (plan.nlp_cost[i])
         {
             case LINEAR_LS:
@@ -214,6 +217,12 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan)
     // Dynamics
     for (int i = 0; i < N; ++i)
     {
+
+        if (plan.sim_solver_plan[i].sim_solver == ALGEBRAIC_SOLVER) {
+            printf("\n Algebraic solver can only be used in terminal stage!\n");
+            exit(1);
+        }
+
         switch (plan.nlp_dynamics[i])
         {
             case CONTINUOUS_MODEL:
@@ -230,6 +239,12 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan)
                 printf("Dynamics not available!\n");
                 exit(1);
         }
+    }
+
+    if (plan.nlp_dynamics[N] == CONTINUOUS_MODEL && plan.sim_solver_plan[N].sim_solver == ALGEBRAIC_SOLVER) {
+        ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[N]);
+        config->dynamics[N]->sim_solver = sim_config_create(plan.sim_solver_plan[N]);
+
     }
 
     // Constraints

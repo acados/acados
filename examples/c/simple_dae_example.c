@@ -35,7 +35,8 @@
 
 #include "simple_dae_model/simple_dae_model.h"
 
-#define FORMULATION 0 // 0 without Vz*z term 1 with Vz*z and without Vx*x
+#define FORMULATION 2 // 0 without Vz*z term 1 with Vz*z and without Vx*x
+                      // 2 with Vz*z and terminal ls term Vz_N*z_N
 
 int main() {
 
@@ -97,7 +98,11 @@ int main() {
     np[N] = 0;
     nv[N] = nx_; 
     ny[N] = nx_;
-    nz[N] = 0;
+    if (FORMULATION == 2) {
+        nz[N] = nz_;
+    } else {
+        nz[N] = 0;
+    }
 
     /* linear least squares */
 
@@ -108,7 +113,7 @@ int main() {
     for (int ii=0; ii < ny_*nx_; ii++)
         Vx[ii] = 0.0;
 
-    if (FORMULATION == 0) {
+    if (FORMULATION < 1) {
         Vx[0+ny_*0] = 1.0;
         Vx[1+ny_*1] = 1.0;
     } else {
@@ -127,7 +132,7 @@ int main() {
     for (int ii=0; ii < nz_*nz_; ii++)
         Vz[ii] = 0.0;
 
-    if (FORMULATION == 0) {
+    if (FORMULATION < 1) {
         Vz[0+ny_*0] = 0.0;
         Vz[1+ny_*1] = 0.0;
     } else {
@@ -162,11 +167,18 @@ int main() {
 	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = LINEAR_LS;
+
 	for (int i = 0; i < N; i++)
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 		plan->sim_solver_plan[i].sim_solver = IRK;
 	}
+
+    if (FORMULATION == 2) {
+        plan->nlp_dynamics[N] = CONTINUOUS_MODEL;
+        plan->sim_solver_plan[N].sim_solver = ALGEBRAIC_SOLVER;
+		// plan->sim_solver_plan[N].sim_solver = IRK;
+    }
 
 	for (int i = 0; i <= N; i++)
 		plan->nlp_constraints[i] = BGH;
@@ -187,12 +199,19 @@ int main() {
         ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
     }
+   
+    int N_tilde; 
+    if (FORMULATION == 2) { 
+        N_tilde = N+1;
+    } else {
+        N_tilde = N;
+    }
 
-	external_function_casadi impl_ode_fun[N];
-	external_function_casadi impl_ode_fun_jac_x_xdot_z[N];
-	external_function_casadi impl_ode_jac_x_xdot_u_z[N];
+	external_function_casadi impl_ode_fun[N_tilde];
+	external_function_casadi impl_ode_fun_jac_x_xdot_z[N_tilde];
+	external_function_casadi impl_ode_jac_x_xdot_u_z[N_tilde];
 
-	for (int ii = 0; ii < N; ++ii) {
+	for (int ii = 0; ii < N_tilde; ++ii) {
         impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_simple_dae;
         impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_simple_dae_work;
         impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_simple_dae_sparsity_in;
@@ -217,33 +236,33 @@ int main() {
 
 	// impl_ode
     int	tmp_size = 0;
-	for (int ii=0; ii<N; ii++)
+	for (int ii=0; ii < N_tilde; ii++)
 	{
 		tmp_size += external_function_casadi_calculate_size(impl_ode_fun+ii);
 	}
 	void *impl_ode_casadi_mem = malloc(tmp_size);
 	void *c_ptr = impl_ode_casadi_mem;
-	for (int ii=0; ii<N; ii++)
+	for (int ii=0; ii < N_tilde; ii++)
 	{
 		external_function_casadi_assign(impl_ode_fun+ii, c_ptr);
 		c_ptr += external_function_casadi_calculate_size(impl_ode_fun+ii);
 	}
 	//
 	tmp_size = 0;
-	for (int ii=0; ii<N; ii++)
+	for (int ii=0; ii < N_tilde; ii++)
 	{
 		tmp_size += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z+ii);
 	}
 	void *impl_ode_fun_jac_x_xdot_z_mem = malloc(tmp_size);
 	c_ptr = impl_ode_fun_jac_x_xdot_z_mem;
-	for (int ii=0; ii<N; ii++)
+	for (int ii=0; ii < N_tilde; ii++)
 	{
 		external_function_casadi_assign(impl_ode_fun_jac_x_xdot_z+ii, c_ptr);
 		c_ptr += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z+ii);
 	}
 
 	tmp_size = 0;
-	for (int ii=0; ii<N; ii++)
+	for (int ii=0; ii < N_tilde; ii++)
 	{
 		tmp_size += external_function_casadi_calculate_size(impl_ode_jac_x_xdot_u_z+ii);
 	}
@@ -270,8 +289,11 @@ int main() {
         ocp_nlp_cost_model_set(config, dims, nlp_in, i, "Vz", Vz);
 	}
 
-    ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vx", VxN);
-    // ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vz", Vz);
+    if (FORMULATION == 2) {
+        ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vz", Vz);
+    } else {
+        ocp_nlp_cost_model_set(config, dims, nlp_in, N, "Vx", VxN);
+    }
     
 	// W
 	for (int i = 0; i < N; ++i) ocp_nlp_cost_model_set(config, dims, nlp_in, i, "W", W);
@@ -284,7 +306,7 @@ int main() {
 		blasfeo_dvecse(ny[i], 0.0, &cost_ls[i]->y_ref, 0);
 
 	// NLP dynamics
-	for (int i = 0; i < N; ++i) {
+	for (int i = 0; i < N_tilde; ++i) {
 		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		irk_model *model = dynamics->sim_model;
 		model->impl_ode_fun = (external_function_generic *) &impl_ode_fun[i];

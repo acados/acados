@@ -49,9 +49,9 @@ int ocp_nlp_solver_config_calculate_size(int N)
     size += 1 * ocp_qp_xcond_solver_config_calculate_size();
 
     // dynamics
-    size += N * sizeof(ocp_nlp_dynamics_config *);
+    size += (N + 1) * sizeof(ocp_nlp_dynamics_config *);
 
-    for (ii = 0; ii < N; ii++) size += ocp_nlp_dynamics_config_calculate_size();
+    for (ii = 0; ii <= N; ii++) size += ocp_nlp_dynamics_config_calculate_size();
 
     // cost
     size += (N + 1) * sizeof(ocp_nlp_cost_config *);
@@ -85,9 +85,9 @@ ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory)
 
     // dynamics
     config->dynamics = (ocp_nlp_dynamics_config **) c_ptr;
-    c_ptr += N * sizeof(ocp_nlp_dynamics_config *);
+    c_ptr += (N + 1) * sizeof(ocp_nlp_dynamics_config *);
 
-    for (ii = 0; ii < N; ii++)
+    for (ii = 0; ii <= N; ii++)
     {
         config->dynamics[ii] = ocp_nlp_dynamics_config_assign(c_ptr);
         c_ptr += ocp_nlp_dynamics_config_calculate_size();
@@ -133,7 +133,7 @@ int ocp_nlp_dims_calculate_size_self(int N)
     size += 6 * (N + 1) * sizeof(int);  // nv, nx, nu, ni, nz, ns
 
     // dynamics
-    size += N * sizeof(void *);
+    size += (N + 1) * sizeof(void *);
 
     // cost
     size += (N + 1) * sizeof(void *);
@@ -167,7 +167,7 @@ int ocp_nlp_dims_calculate_size(void *config_)
     size += ocp_nlp_dims_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii < N; ii++)
+    for (ii = 0; ii <= N; ii++)
         size += config->dynamics[ii]->dims_calculate_size(config->dynamics[ii]);
 
     // cost
@@ -211,7 +211,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
 
     // dynamics
     dims->dynamics = (void **) c_ptr;
-    c_ptr += N * sizeof(void *);
+    c_ptr += (N + 1) * sizeof(void *);
 
     // cost
     dims->cost = (void **) c_ptr;
@@ -262,7 +262,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
     c_ptr += ocp_nlp_dims_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii < N; ii++)
+    for (ii = 0; ii <= N; ii++)
     {
         dims->dynamics[ii] = config->dynamics[ii]->dims_assign(config->dynamics[ii], c_ptr);
         c_ptr += config->dynamics[ii]->dims_calculate_size(config->dynamics[ii]);
@@ -319,12 +319,12 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
                                       dims->cost[i], "nx", &int_array[i]);
         }
         // dynamics
-        for (int i = 0; i < N; i++)
+        for (int i = 0; i <= N; i++)
         {
             config->dynamics[i]->dims_set(config->dynamics[i],
                                           dims->dynamics[i], "nx", &int_array[i]);
         }
-        for (int i = 0; i < N; i++)
+        for (int i = 0; i <= N; i++)
         {
             config->dynamics[i]->dims_set(config->dynamics[i],
                                            dims->dynamics[i], "nx1", &int_array[i+1]);
@@ -397,7 +397,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
                                       dims->cost[i], "nz", &int_array[i]);
         }
         // dynamics
-        for (int i = 0; i < N; i++)
+        for (int i = 0; i <= N; i++)
         {
             config->dynamics[i]->dims_set(config->dynamics[i],
                                           dims->dynamics[i], "nz", &int_array[i]);
@@ -589,7 +589,7 @@ int ocp_nlp_in_calculate_size_self(int N)
 
     size += N * sizeof(double);  // Ts
 
-    size += N * sizeof(void *);  // dynamics
+    size += (N + 1) * sizeof(void *);  // dynamics
 
     size += (N + 1) * sizeof(void *);  // cost
 
@@ -607,7 +607,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
     int size = ocp_nlp_in_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii < N; ii++)
+    for (ii = 0; ii <= N; ii++)
     {
         size +=
             config->dynamics[ii]->model_calculate_size(config->dynamics[ii], dims->dynamics[ii]);
@@ -650,7 +650,7 @@ ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory)
 
     // dynamics
     in->dynamics = (void **) c_ptr;
-    c_ptr += N * sizeof(void *);
+    c_ptr += (N + 1) * sizeof(void *);
 
     // cost
     in->cost = (void **) c_ptr;
@@ -676,7 +676,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
     c_ptr += ocp_nlp_in_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii < N; ii++)
+    for (ii = 0; ii <= N; ii++)
     {
         in->dynamics[ii] =
             config->dynamics[ii]->model_assign(config->dynamics[ii], dims->dynamics[ii], c_ptr);

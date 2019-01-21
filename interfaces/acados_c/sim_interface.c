@@ -60,8 +60,11 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
         case LIFTED_IRK:
             sim_lifted_irk_config_initialize_default(solver_config);
             break;
+        case ALGEBRAIC_SOLVER:
+            sim_algebraic_solver_config_initialize_default(solver_config);
+            break;
         default:
-            printf("\n\nSpecified integrator not available in acados C interface!\n\n");
+            printf("\n\nSpecified sim_solver not available in acados C interface!\n\n");
             exit(1);
     }
     return solver_config;
