@@ -167,9 +167,11 @@ int ocp_nlp_dims_calculate_size(void *config_)
     size += ocp_nlp_dims_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii <= N; ii++)
+    for (ii = 0; ii < N; ii++)
         size += config->dynamics[ii]->dims_calculate_size(config->dynamics[ii]);
 
+    if (config->dynamics[N] != NULL)
+        size += config->dynamics[N]->dims_calculate_size(config->dynamics[ii]);
     // cost
     for (ii = 0; ii <= N; ii++) size += config->cost[ii]->dims_calculate_size(config->cost[ii]);
 
@@ -262,10 +264,15 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
     c_ptr += ocp_nlp_dims_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii <= N; ii++)
+    for (ii = 0; ii < N; ii++)
     {
         dims->dynamics[ii] = config->dynamics[ii]->dims_assign(config->dynamics[ii], c_ptr);
         c_ptr += config->dynamics[ii]->dims_calculate_size(config->dynamics[ii]);
+    }
+
+    if (config->dynamics[N] != NULL) {
+        dims->dynamics[N] = config->dynamics[N]->dims_assign(config->dynamics[N], c_ptr);
+        c_ptr += config->dynamics[N]->dims_calculate_size(config->dynamics[N]);
     }
 
     // cost
@@ -319,16 +326,21 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
                                       dims->cost[i], "nx", &int_array[i]);
         }
         // dynamics
-        for (int i = 0; i <= N; i++)
+        for (int i = 0; i < N; i++)
         {
             config->dynamics[i]->dims_set(config->dynamics[i],
                                           dims->dynamics[i], "nx", &int_array[i]);
-        }
-        for (int i = 0; i <= N; i++)
-        {
             config->dynamics[i]->dims_set(config->dynamics[i],
-                                           dims->dynamics[i], "nx1", &int_array[i+1]);
+                    dims->dynamics[i], "nx1", &int_array[i+1]);
         }
+
+        if (config->dynamics[N] != NULL) {
+            config->dynamics[N]->dims_set(config->dynamics[N],
+                                          dims->dynamics[N], "nx", &int_array[N]);
+            config->dynamics[N]->dims_set(config->dynamics[N],
+                    dims->dynamics[N], "nx1", &int_array[N+1]);
+        }
+        
         // constraints
         for (int i = 0; i <= N; i++)
         {
@@ -397,11 +409,18 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
                                       dims->cost[i], "nz", &int_array[i]);
         }
         // dynamics
-        for (int i = 0; i <= N; i++)
+        for (int i = 0; i < N; i++)
         {
             config->dynamics[i]->dims_set(config->dynamics[i],
                                           dims->dynamics[i], "nz", &int_array[i]);
         }
+
+        if (config->dynamics[N] != NULL)
+        {
+            config->dynamics[N]->dims_set(config->dynamics[N],
+                                          dims->dynamics[N], "nz", &int_array[N]);
+        }
+
         // constraints
         for (int i = 0; i <= N; i++)
         {
@@ -607,10 +626,15 @@ int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
     int size = ocp_nlp_in_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii <= N; ii++)
+    for (ii = 0; ii < N; ii++)
     {
         size +=
             config->dynamics[ii]->model_calculate_size(config->dynamics[ii], dims->dynamics[ii]);
+    }
+
+    if (config->dynamics[N] != NULL) {
+        size +=
+            config->dynamics[N]->model_calculate_size(config->dynamics[N], dims->dynamics[N]);
     }
 
     // cost
@@ -676,12 +700,20 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
     c_ptr += ocp_nlp_in_calculate_size_self(N);
 
     // dynamics
-    for (ii = 0; ii <= N; ii++)
+    for (ii = 0; ii < N; ii++)
     {
         in->dynamics[ii] =
             config->dynamics[ii]->model_assign(config->dynamics[ii], dims->dynamics[ii], c_ptr);
         c_ptr +=
             config->dynamics[ii]->model_calculate_size(config->dynamics[ii], dims->dynamics[ii]);
+    }
+
+    if (config->dynamics[N] != NULL) 
+    {
+        in->dynamics[N] =
+            config->dynamics[N]->model_assign(config->dynamics[N], dims->dynamics[N], c_ptr);
+        c_ptr +=
+            config->dynamics[N]->model_calculate_size(config->dynamics[N], dims->dynamics[N]);
     }
 
     // cost

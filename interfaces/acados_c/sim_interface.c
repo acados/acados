@@ -63,6 +63,9 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
         case ALGEBRAIC_SOLVER:
             sim_algebraic_solver_config_initialize_default(solver_config);
             break;
+        case NO_SIM_SOLVER:
+            // do nothing
+            break;
         default:
             printf("\n\nSpecified sim_solver not available in acados C interface!\n\n");
             exit(1);

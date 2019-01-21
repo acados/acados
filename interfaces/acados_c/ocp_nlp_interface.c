@@ -193,7 +193,6 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan)
     // cost
     for (int i = 0; i <= N; ++i)
     {
-        printf("i = %i\n", i);
         switch (plan.nlp_cost[i])
         {
             case LINEAR_LS:
@@ -245,6 +244,9 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan)
         ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[N]);
         config->dynamics[N]->sim_solver = sim_config_create(plan.sim_solver_plan[N]);
 
+    } else { 
+        // TODO(andrea): need to do something better here?
+        config->dynamics[N] = NULL;
     }
 
     // Constraints
