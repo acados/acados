@@ -35,7 +35,7 @@ typedef struct
 
 typedef struct
 {
-    sim_solver_config *config;
+    sim_config *config;
     void *dims;
     void *opts;
     void *mem;
@@ -44,70 +44,54 @@ typedef struct
 
 /* config */
 //
-sim_solver_config *sim_config_create(sim_solver_plan plan);
+sim_config *sim_config_create(sim_solver_plan plan);
 //
-void sim_config_free(void *config);
+void sim_config_destroy(void *config);
 
 /* dims */
 //
 void *sim_dims_create(void *config_);
 //
-void sim_dims_free(void *dims);
+void sim_dims_destroy(void *dims);
 //
-void sim_dims_set(sim_solver_config *config, void *dims, const char *field, const int* value);
+void sim_dims_set(sim_config *config, void *dims, const char *field, const int* value);
+//
+void sim_dims_get(sim_config *config, void *dims, const char *field, int* value);
 
 /* in */
 //
-sim_in *sim_in_create(sim_solver_config *config, void *dims);
+sim_in *sim_in_create(sim_config *config, void *dims);
 //
-void sim_in_free(void *out);
+void sim_in_destroy(void *out);
 //
-void sim_in_set_T(sim_solver_config *config, double T, sim_in *in);
-//
-int sim_model_set(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr);
-//
-int sim_model_set_internal(sim_solver_config *config, void *model, const char *fun_type,
-                           void *fun_ptr);
-//
-void sim_in_set_x(sim_solver_config *config, void *dims, double *x, sim_in *in);
-//
-void sim_in_set_xdot(sim_solver_config *config, void *dims, double *xdot, sim_in *in);
-//
-void sim_in_set_u(sim_solver_config *config, void *dims, double *u, sim_in *in);
-//
-void sim_in_set_Sx(sim_solver_config *config, void *dims, double *Sx, sim_in *in);
-//
-void sim_in_set_Su(sim_solver_config *config, void *dims, double *Su, sim_in *in);
+int sim_in_set(void *config_, void *dims_, sim_in *in, const char *field, void *value);
+
 
 /* out */
 //
-sim_out *sim_out_create(sim_solver_config *config, void *dims);
+sim_out *sim_out_create(sim_config *config, void *dims);
 //
-void sim_out_free(void *out);
+void sim_out_destroy(void *out);
 //
-void sim_out_get_xn(sim_solver_config *config, void *dims, sim_out *out, double *xn);
-//
-void sim_out_get_Sxn(sim_solver_config *config, void *dims, sim_out *out, double *Sxn);
-//
-void sim_out_get_Sun(sim_solver_config *config, void *dims, sim_out *out, double *Sun);
+int sim_out_get(void *config, void *dims, sim_out *out, const char *field, void *value);
 
 /* opts */
 //
-void *sim_opts_create(sim_solver_config *config, void *dims);
+void *sim_opts_create(sim_config *config, void *dims);
 //
-void sim_opts_free(void *opts);
+void sim_opts_destroy(void *opts);
 //
-int sim_opts_set(sim_solver_config *config, void *opts, const char *field,
+int sim_opts_set(sim_config *config, void *opts, const char *field,
                            void *value);
 /* solver */
 //
-int sim_calculate_size(sim_solver_config *config, void *dims, void *opts_);
+int sim_calculate_size(sim_config *config, void *dims, void *opts_);
 //
-sim_solver *sim_assign(sim_solver_config *config, void *dims, void *opts_, void *raw_memory);
+sim_solver *sim_assign(sim_config *config, void *dims, void *opts_, void *raw_memory);
 //
-sim_solver *sim_create(sim_solver_config *config, void *dims, void *opts_);
+sim_solver *sim_solver_create(sim_config *config, void *dims, void *opts_);
 //
-void sim_free(void *solver);
+void sim_solver_destroy(void *solver);
 //
 int sim_solve(sim_solver *solver, sim_in *in, sim_out *out);
 //

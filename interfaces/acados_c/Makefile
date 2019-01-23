@@ -16,7 +16,7 @@ static_library: $(OBJS)
 	@echo
 
 shared_library: $(OBJS)
-	gcc -L../../lib -shared -o libacados_c.so $(OBJS) -lacore -lhpipm -lblasfeo
+	gcc -L../../lib -shared -o libacados_c.so $(OBJS) -lacore -lhpipm -lblasfeo -lm
 	@echo
 	@echo " libacados_c.so shared library build complete."
 	@echo

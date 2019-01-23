@@ -134,7 +134,7 @@ typedef struct
     // workspace
     void *work;
 
-} sim_rk_opts;
+} sim_opts;
 
 
 
@@ -152,33 +152,43 @@ typedef struct
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
-    int (*model_set_function)(void *model, sim_function_t fun_type, void *fun);
+    int (*model_set)(void *model, const char *field, void *value);
     void (*config_initialize_default)(void *config);
-    int (*dims_calculate_size)(void *config);
+//    int (*dims_calculate_size)(void *config);
+    int (*dims_calculate_size)();
     void *(*dims_assign)(void *config, void *raw_memory);
-    void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);
-    void (*get_nx)(void *dims_, int *nx);
-    void (*get_nu)(void *dims_, int *nu);
-    void (*get_nz)(void *dims_, int *nz);
+    void (*dims_set)(void *config, void *dims, const char *field, const int *value);
+    void (*dims_get)(void *config, void *dims, const char *field, int *value);
 
-} sim_solver_config;
+} sim_config;
 
 
 
+/* config */
 //
-int sim_solver_config_calculate_size();
+int sim_config_calculate_size();
 //
-sim_solver_config *sim_solver_config_assign(void *raw_memory);
+sim_config *sim_config_assign(void *raw_memory);
+
+/* in */
 //
 int sim_in_calculate_size(void *config, void *dims);
 //
 sim_in *sim_in_assign(void *config, void *dims, void *raw_memory);
 //
+int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void *value);
+
+/* out */
+//
 int sim_out_calculate_size(void *config, void *dims);
 //
 sim_out *sim_out_assign(void *config, void *dims, void *raw_memory);
 //
-int sim_rk_opts_set(sim_rk_opts *opts, const char *field, void *value);
+int sim_out_get_(void *config, void *dims, sim_out *out, const char *field, void *value);
+
+/* opts */
+//
+int sim_opts_set_(sim_opts *opts, const char *field, void *value);
 
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

@@ -40,6 +40,8 @@ extern "C" {
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_target.h"
 
+
+
 typedef struct
 {
     int nx;
@@ -52,6 +54,8 @@ typedef struct
     int nuhat;
 
 } sim_gnsf_dims;
+
+
 
 typedef struct
 {
@@ -263,11 +267,8 @@ int sim_gnsf_dims_calculate_size();
 void *sim_gnsf_dims_assign(void *config_, void *raw_memory);
 
 // get & set functions
-void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int* value);
-
-void sim_gnsf_get_nx(void *dims_, int *nx);
-void sim_gnsf_get_nu(void *dims_, int *nu);
-void sim_gnsf_get_nz(void *dims_, int *nz);
+void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int *value);
+void sim_gnsf_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 // opts
 int sim_gnsf_opts_calculate_size(void *config, void *dims);
@@ -279,7 +280,7 @@ int sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value
 // model
 int sim_gnsf_model_calculate_size(void *config, void *dims_);
 void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory);
-int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun);
+int sim_gnsf_model_set(void *model_, const char *field, void *value);
 
 // precomputation
 int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,

@@ -117,8 +117,7 @@ void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
 
 typedef struct
 {
-    double *ext_cost_in;
-    double *ext_cost_out;
+    int dummy; // struct can't be void
 } ocp_nlp_cost_external_workspace;
 
 //

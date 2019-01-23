@@ -33,7 +33,9 @@
 #ifdef ACADOS_WITH_QORE
 #include "acados/dense_qp/dense_qp_qore.h"
 #endif
+#ifdef ACADOS_WITH_QPOASES
 #include "acados/dense_qp/dense_qp_qpoases.h"
+#endif
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #ifdef ACADOS_WITH_HPMPC
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
@@ -52,6 +54,7 @@
 void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
                                                    ocp_qp_xcond_solver_config *solver_config)
 {
+// NOTE: this only works if solvers are ordered in the enum !!!!!!!!!!!!!!!!
 if (solver_name < FULL_CONDENSING_HPIPM)
     {
         ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
@@ -69,8 +72,8 @@ if (solver_name < FULL_CONDENSING_HPIPM)
 #ifdef ACADOS_WITH_HPMPC
         case PARTIAL_CONDENSING_HPMPC:
             ocp_qp_hpmpc_config_initialize_default(solver_config->qp_solver);
-#endif
             break;
+#endif
 #ifdef ACADOS_WITH_OOQP
         case PARTIAL_CONDENSING_OOQP:
             ocp_qp_ooqp_config_initialize_default(solver_config->qp_solver);
@@ -84,25 +87,29 @@ if (solver_name < FULL_CONDENSING_HPIPM)
 #ifdef ACADOS_WITH_QPDUNES
         case PARTIAL_CONDENSING_QPDUNES:
             ocp_qp_qpdunes_config_initialize_default(solver_config->qp_solver);
-#endif
             break;
+#endif
         case FULL_CONDENSING_HPIPM:
             dense_qp_hpipm_config_initialize_default(solver_config->qp_solver);
             break;
 #ifdef ACADOS_WITH_QPOASES
         case FULL_CONDENSING_QPOASES:
             dense_qp_qpoases_config_initialize_default(solver_config->qp_solver);
-#endif
             break;
+#endif
 #ifdef ACADOS_WITH_QORE
         case FULL_CONDENSING_QORE:
             dense_qp_qore_config_initialize_default(solver_config->qp_solver);
-#endif
             break;
+#endif
 #ifdef ACADOS_WITH_OOQP
         case FULL_CONDENSING_OOQP:
             dense_qp_ooqp_config_initialize_default(solver_config->qp_solver);
+            break;
 #endif
+        default:
+            printf("\nerror: ocp_qp_config_create: unsupported plan->qp_solver\n");
+            exit(1);
             break;
     }
 }

@@ -1,6 +1,12 @@
 # Linter
 find_package(PythonInterp 3)
 
+# XXX temporarely disable lint !!!!!!!!!!!
+set(LINT_COMMAND echo lint is disabled!)
+add_custom_target(lint ${LINT_COMMAND})
+return()
+# XXX end of temporarely disable lint !!!!!!!!!!!
+
 if(NOT PYTHONINTERP_FOUND OR CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "dSpace")
     message(STATUS "Disabling lint")
     return()

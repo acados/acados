@@ -49,8 +49,8 @@ int acados_create() {
     // ocp_nlp_in * nlp_in;
     // ocp_nlp_out * nlp_out;
     // void *nlp_opts;
-    // ocp_nlp_solver_config *config;
-    // ocp_nlp_solver_plan *plan;
+    // ocp_nlp_config *config;
+    // ocp_nlp_plan *plan;
     // ocp_nlp_dims *dims;
 
     int status = 0;
@@ -403,7 +403,7 @@ int acados_create() {
     for (int i = 0; i <= N; ++i)
         blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
 
-    nlp_solver = ocp_nlp_create(nlp_config, nlp_dims, nlp_opts);
+    nlp_solver = ocp_nlp_solver_create(nlp_config, nlp_dims, nlp_opts);
 
     // *_nlp_solver = nlp_solver;
     // *_nlp_in = nlp_in; 

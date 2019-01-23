@@ -39,7 +39,7 @@
 int ocp_nlp_dynamics_cont_dims_calculate_size(void *config_)
 {
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-    sim_solver_config *sim_sol_config = (sim_solver_config *) dyn_config->sim_solver;
+    sim_config *sim_sol_config = (sim_config *) dyn_config->sim_solver;
     int size = 0;
 
     size += sizeof(ocp_nlp_dynamics_cont_dims);
@@ -53,7 +53,7 @@ int ocp_nlp_dynamics_cont_dims_calculate_size(void *config_)
 void *ocp_nlp_dynamics_cont_dims_assign(void *config_, void *raw_memory)
 {
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-    sim_solver_config *sim_sol_config = (sim_solver_config *) dyn_config->sim_solver;
+    sim_config *sim_sol_config = (sim_config *) dyn_config->sim_solver;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -83,11 +83,11 @@ void ocp_nlp_dynamics_cont_dims_initialize(void *config_, void *dims_, int nx, i
     dims->nu1 = nu1;
 
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-    sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+    sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
 
-    sim_dims_set(sim_config, dims->sim, "nx", &nx);
-    sim_dims_set(sim_config, dims->sim, "nu", &nu);
-    sim_dims_set(sim_config, dims->sim, "nz", &nz);
+    sim_config_->dims_set(sim_config_, dims->sim, "nx", &nx);
+    sim_config_->dims_set(sim_config_, dims->sim, "nu", &nu);
+    sim_config_->dims_set(sim_config_, dims->sim, "nz", &nz);
 
     return;
 }
@@ -100,9 +100,9 @@ static void ocp_nlp_dynamics_cont_set_nx(void *config_, void *dims_, int *nx)
     dims->nx = *nx;
 
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-    sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+    sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
 
-    sim_dims_set(sim_config, dims->sim, "nx", nx);
+    sim_config_->dims_set(sim_config_, dims->sim, "nx", nx);
 }
 
 static void ocp_nlp_dynamics_cont_set_nx1(void *config_, void *dims_, int *nx1)
@@ -117,9 +117,9 @@ static void ocp_nlp_dynamics_cont_set_nz(void *config_, void *dims_, int *nz)
     dims->nz = *nz;
 
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-    sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+    sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
 
-    sim_dims_set(sim_config, dims->sim, "nz", nz);
+    sim_config_->dims_set(sim_config_, dims->sim, "nz", nz);
 }
 
 static void ocp_nlp_dynamics_cont_set_nu(void *config_, void *dims_, int *nu)
@@ -128,9 +128,9 @@ static void ocp_nlp_dynamics_cont_set_nu(void *config_, void *dims_, int *nu)
     dims->nu = *nu;
 
     ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
-    sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+    sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
 
-    sim_dims_set(sim_config, dims->sim, "nu", nu);
+    sim_config_->dims_set(sim_config_, dims->sim, "nu", nu);
 }
 
 static void ocp_nlp_dynamics_cont_set_nu1(void *config_, void *dims_, int *nu1)
@@ -166,9 +166,9 @@ void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *fiel
         // set GNSF dims just within integrator module
         ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
         ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
-        sim_solver_config *sim_config = (sim_solver_config *) dyn_config->sim_solver;
+        sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
 
-        sim_dims_set(sim_config, dims->sim, field, value);
+        sim_config_->dims_set(sim_config_, dims->sim, field, value);
     }
 }
 
@@ -245,9 +245,9 @@ int ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *field
 {
     ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
-    sim_solver_config *sim_config = config->sim_solver;
+    sim_config *sim_config_ = config->sim_solver;
 
-    return sim_config->opts_set(sim_config, opts->sim_solver, field, value);
+    return sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
 
 }
 

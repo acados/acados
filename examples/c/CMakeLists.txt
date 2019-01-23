@@ -61,6 +61,13 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/ls_costN_nm6.c
     # chain_model/casadi_erk4_chain_nm6.c
 
+    # external cost
+    chain_model/chain_nm_2_external_cost.c
+    chain_model/chain_nm_3_external_cost.c
+    chain_model/chain_nm_4_external_cost.c
+    chain_model/chain_nm_5_external_cost.c
+    chain_model/chain_nm_6_external_cost.c
+
     ### implicit ###
     # 2 masses
     implicit_chain_model/impl_ode_fun_chain_nm2.c
@@ -92,6 +99,7 @@ file(GLOB CHAIN_MODEL_SRC
     implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm6.c
     implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.c
     implicit_chain_model/impl_ode_jac_x_u_chain_nm6.c
+
 )
 
 file(GLOB CRANE_MODEL_SRC

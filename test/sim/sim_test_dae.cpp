@@ -240,7 +240,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     sim_solver_plan plan;
     plan.sim_solver = GNSF;  // IRK; -- works but super slow
 
-    sim_solver_config *config = sim_config_create(plan);
+    sim_config *config = sim_config_create(plan);
 
     void *dims = sim_dims_create(config);
 
@@ -261,7 +261,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_opts *opts = (sim_opts *) opts_;
     config->opts_initialize_default(config, dims, opts);
 
     // opts reference solution
@@ -324,7 +324,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     * sim solver
     ************************************************/
 
-    sim_solver *sim_solver = sim_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
     int acados_return;
 
@@ -383,13 +383,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
     // d_print_exp_mat(nz, nx + nu, &S_alg_ref_sol[0], nz);
 
     /* free */
-    sim_config_free(config);
-    sim_dims_free(dims);
-    sim_opts_free(opts);
+    sim_config_destroy(config);
+    sim_dims_destroy(dims);
+    sim_opts_destroy(opts);
 
-    sim_in_free(in);
-    sim_out_free(out);
-    sim_free(sim_solver);
+    sim_in_destroy(in);
+    sim_out_destroy(out);
+    sim_solver_destroy(sim_solver);
 
 /************************************************
 * test solver loop
@@ -434,7 +434,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 plan.sim_solver = hashitsim_dae(solver);
 
                 // create correct config based on plan
-                sim_solver_config *config = sim_config_create(plan);
+                sim_config *config = sim_config_create(plan);
 
             /* sim dims */
                 sim_dims_set(config, dims, "nx", &nx);
@@ -454,7 +454,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
             /* sim options */
 
                 void *opts_ = sim_opts_create(config, dims);
-                sim_rk_opts *opts = (sim_rk_opts *) opts_;
+                sim_opts *opts = (sim_opts *) opts_;
                 config->opts_initialize_default(config, dims, opts);
 
                 opts->jac_reuse = false;        // jacobian reuse
@@ -518,7 +518,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
                     in->S_adj[ii] = 0.0;
 
             /* sim solver  */
-                sim_solver = sim_create(config, dims, opts);
+                sim_solver = sim_solver_create(config, dims, opts);
                 int acados_return;
 
                 // if (plan.sim_solver == GNSF){  // for gnsf: perform precomputation
@@ -669,13 +669,13 @@ TEST_CASE("crane_dae_example", "[integrators]")
             /************************************************
             * free tested solver
             ************************************************/
-                sim_config_free(config);
-                sim_dims_free(dims);
-                sim_opts_free(opts);
+                sim_config_destroy(config);
+                sim_dims_destroy(dims);
+                sim_opts_destroy(opts);
 
-                sim_in_free(in);
-                sim_out_free(out);
-                sim_free(sim_solver);
+                sim_in_destroy(in);
+                sim_out_destroy(out);
+                sim_solver_destroy(sim_solver);
             }  // end SECTION
             }  // end for
             }  // end SECTION

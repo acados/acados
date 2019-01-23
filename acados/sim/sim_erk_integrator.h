@@ -34,6 +34,8 @@ typedef struct
     int nz;
 } sim_erk_dims;
 
+
+
 typedef struct
 {
     /* external functions */
@@ -48,11 +50,15 @@ typedef struct
 
 } erk_model;
 
+
+
 typedef struct
 {
     // no memory
     void *dummy;
 } sim_erk_memory;
+
+
 
 typedef struct
 {
@@ -68,20 +74,17 @@ typedef struct
 } sim_erk_workspace;
 
 
+
 // dims
 int sim_erk_dims_calculate_size();
 void *sim_erk_dims_assign(void *config_, void *raw_memory);
-// get & set functions
 void sim_erk_dims_set(void *config_, void *dims_, const char *field, const int* value);
-
-void sim_erk_get_nx(void *dims_, int *nx);
-void sim_erk_get_nu(void *dims_, int *nu);
-void sim_erk_get_nz(void *dims_, int *nz);
+void sim_erk_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 // model
 int sim_erk_model_calculate_size(void *config, void *dims);
 void *sim_erk_model_assign(void *config, void *dims, void *raw_memory);
-int sim_erk_model_set_function(void *model, sim_function_t fun_type, void *fun);
+int sim_erk_model_set(void *model, const char *field, void *value);
 
 // opts
 int sim_erk_opts_calculate_size(void *config, void *dims);

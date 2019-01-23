@@ -175,7 +175,7 @@ int main()
     nls_cost_N_residual.casadi_n_out = &engine_ls_cost_N_n_out;
     external_function_casadi_create(&nls_cost_N_residual);
 
-	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
+	ocp_nlp_plan *plan = ocp_nlp_plan_create(N);
 
 	plan->nlp_solver = SQP;
 
@@ -193,7 +193,7 @@ int main()
 	for (int i = 0; i <= N; i++)
 		plan->nlp_constraints[i] = BGH;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
+	ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
     // dimensions
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
@@ -224,21 +224,21 @@ int main()
     int status = ACADOS_SUCCESS;
 
 	for (int i = 0; i < N; ++i) {
-        if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "nls_jac", &nls_cost_residual)) exit(1);
+        if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "nls_res_jac", &nls_cost_residual)) exit(1);
         if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "y_ref", y_ref)) exit(1);
         if(ocp_nlp_cost_model_set(config, dims, nlp_in, i, "W", W)) exit(1);
     }
 
-    if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "nls_jac", &nls_cost_N_residual)) exit(1);
+    if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "nls_res_jac", &nls_cost_N_residual)) exit(1);
     if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "y_ref", y_ref)) exit(1);
     if(ocp_nlp_cost_model_set(config, dims, nlp_in, N, "W", W_N)) exit(1);
 
     // dynamics
     for (int i = 0; i < N; ++i)
     {
-        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun", &impl_dae_fun)) exit(1);
-        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z)) exit(1);
-        if(ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun", &impl_dae_fun)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z)) exit(1);
+        if(ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
     }
 
     // bounds
@@ -273,7 +273,7 @@ int main()
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
     // solver
-	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
 
     // initialize
     for (int i = 0; i < N; ++i)
@@ -311,13 +311,13 @@ int main()
     fclose(out_file);
 
     // free memory
-    ocp_nlp_free(solver);
-    ocp_nlp_out_free(nlp_out);
-    ocp_nlp_opts_free(nlp_opts);
-    ocp_nlp_in_free(nlp_in);
-    ocp_nlp_dims_free(dims);
-    ocp_nlp_config_free(plan, config);
-    ocp_nlp_plan_free(plan);
+    ocp_nlp_solver_destroy(solver);
+    ocp_nlp_out_destroy(nlp_out);
+    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_in_destroy(nlp_in);
+    ocp_nlp_dims_destroy(dims);
+    ocp_nlp_config_destroy(config);
+    ocp_nlp_plan_destroy(plan);
     
     /* free external function */
     // implicit model

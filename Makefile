@@ -79,6 +79,7 @@ OBJS += acados/utils/external_function_generic.o
 
 # acados dependencies
 STATIC_DEPS = blasfeo_static hpipm_static
+SHARED_DEPS = blasfeo_shared hpipm_shared
 CLEAN_DEPS = blasfeo_clean hpipm_clean
 ifeq ($(ACADOS_WITH_QPOASES), 1)
 STATIC_DEPS += qpoases_static
@@ -112,12 +113,29 @@ acados_static: $(STATIC_DEPS)
 	@echo " libacore.a static library build complete."
 	@echo
 
+acados_shared: $(SHARED_DEPS)
+	( cd acados; $(MAKE) obj TOP=$(TOP) )
+	ar rcs libacore.a $(OBJS)
+	$(CC) -L./lib -shared -o libacore.so $(OBJS) -lblasfeo -lhpipm -lm
+	mkdir -p lib
+	mv libacore.so lib
+	@echo
+	@echo " libacore.so shared library build complete."
+	@echo
+
 blasfeo_static:
-	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) )
+	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) BLAS_API=0 )
 	mkdir -p include/blasfeo/include
 	mkdir -p lib
 	cp $(BLASFEO_PATH)/include/*.h include/blasfeo/include
 	cp $(BLASFEO_PATH)/lib/libblasfeo.a lib
+
+blasfeo_shared:
+	( cd $(BLASFEO_PATH); $(MAKE) shared_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) BLAS_API=0 )
+	mkdir -p include/blasfeo/include
+	mkdir -p lib
+	cp $(BLASFEO_PATH)/include/*.h include/blasfeo/include
+	cp $(BLASFEO_PATH)/lib/libblasfeo.so lib
 
 hpipm_static: blasfeo_static
 	( cd $(HPIPM_PATH); $(MAKE) static_library CC=$(CC) TARGET=$(HPIPM_TARGET) BLASFEO_PATH=$(BLASFEO_PATH) )
@@ -125,6 +143,13 @@ hpipm_static: blasfeo_static
 	mkdir -p lib
 	cp $(HPIPM_PATH)/include/*.h include/hpipm/include
 	cp $(HPIPM_PATH)/lib/libhpipm.a lib
+
+hpipm_shared: blasfeo_shared
+	( cd $(HPIPM_PATH); $(MAKE) shared_library CC=$(CC) TARGET=$(HPIPM_TARGET) BLASFEO_PATH=$(BLASFEO_PATH) )
+	mkdir -p include/hpipm/include
+	mkdir -p lib
+	cp $(HPIPM_PATH)/include/*.h include/hpipm/include
+	cp $(HPIPM_PATH)/lib/libhpipm.so lib
 
 hpmpc_static: blasfeo_static
 	( cd $(HPMPC_PATH); $(MAKE) static_library CC=$(CC) TARGET=$(HPMPC_TARGET) BLASFEO_PATH=$(BLASFEO_PATH)  )
@@ -178,6 +203,15 @@ ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
 	mkdir -p lib
 	cp -r interfaces/acados_c/*.h include/acados_c
 	mv interfaces/acados_c/libacados_c.a lib
+endif
+
+acados_c_shared: acados_shared
+ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
+	( cd interfaces/acados_c; $(MAKE) shared_library CC=$(CC) TOP=$(TOP) )
+	mkdir -p include/acados_c
+	mkdir -p lib
+	cp -r interfaces/acados_c/*.h include/acados_c
+	mv interfaces/acados_c/libacados_c.so lib
 endif
 
 examples_c: acados_c_static

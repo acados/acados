@@ -53,15 +53,15 @@ int main()
 	* initialization
 	************************************************/
 
-    const int nx    = 6;
-    const int nu    = 1;
-    const int nz    = 5;
+    int nx    = 6;
+    int nu    = 1;
+    int nz    = 5;
 
-    const int nx1   = 5;  // gnsf split
-    const int nz1   = 5;
-    const int nout  = 3;
-    const int ny    = 8;
-    const int nuhat = 1;
+    int nx1   = 5;  // gnsf split
+    int nz1   = 5;
+    int nout  = 3;
+    int ny    = 8;
+    int nuhat = 1;
 
 	int nsim = 1;
 
@@ -228,7 +228,7 @@ int main()
 		}
 
 		// create correct config based on plan
-		sim_solver_config *config = sim_config_create(plan);
+		sim_config *config = sim_config_create(plan);
 
     /* sim dims */
 
@@ -250,7 +250,7 @@ int main()
     /* sim options */
 
         void *opts_ = sim_opts_create(config, dims);
-        sim_rk_opts *opts = (sim_rk_opts *) opts_;
+        sim_opts *opts = (sim_opts *) opts_;
         config->opts_initialize_default(config, dims, opts);
 
         opts->jac_reuse = true;        // jacobian reuse
@@ -276,21 +276,21 @@ int main()
         {
             case IRK:  // IRK
             {
-                sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-                sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
+                config->model_set(in->model, "impl_ode_fun", &impl_ode_fun);
+                config->model_set(in->model, "impl_ode_fun_jac_x_xdot",
                         &impl_ode_fun_jac_x_xdot);
-                sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-                sim_model_set(config, in, "impl_ode_hess", &impl_ode_hess);
+                config->model_set(in->model, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                config->model_set(in->model, "impl_ode_hess", &impl_ode_hess);
                 break;
             }
             case GNSF:  // GNSF
             {
                 // set model funtions
-                sim_model_set(config, in, "phi_fun", &phi_fun);
-                sim_model_set(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
-                sim_model_set(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
-                sim_model_set(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
-                sim_model_set(config, in, "get_gnsf_matrices", &get_matrices_fun);
+                config->model_set(in->model, "phi_fun", &phi_fun);
+                config->model_set(in->model, "phi_fun_jac_y", &phi_fun_jac_y);
+                config->model_set(in->model, "phi_jac_y_uhat", &phi_jac_y_uhat);
+                config->model_set(in->model, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+                config->model_set(in->model, "get_gnsf_matrices", &get_matrices_fun);
 
                 break;
             }
@@ -314,7 +314,7 @@ int main()
             in->S_adj[ii] = 0.0;
 
     /* sim solver  */
-        sim_solver *sim_solver = sim_create(config, dims, opts);
+        sim_solver *sim_solver = sim_solver_create(config, dims, opts);
         int acados_return;
 
         sim_precompute(sim_solver, in, out);
