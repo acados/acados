@@ -24,26 +24,47 @@
 extern "C" {
 #endif
 
+#define HPIPM_SP
+
+
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp_ipm.h"
+
+#ifdef HPIPM_SP
+#include "hpipm/include/hpipm_s_ocp_qp_ipm.h"
+#endif
+
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
 // struct of arguments to the solver
 // TODO(roversch): why not make this a typedef of the underlying struct?
+#ifdef HPIPM_SP
+typedef struct ocp_qp_hpipm_opts_
+{
+    struct s_ocp_qp_ipm_arg *hpipm_opts;
+} ocp_qp_hpipm_opts;
+#else
 typedef struct ocp_qp_hpipm_opts_
 {
     struct d_ocp_qp_ipm_arg *hpipm_opts;
 } ocp_qp_hpipm_opts;
+#endif
 
 // TODO(roversch): why not make this a typedef of the underlying struct?
 // struct of the solver memory
+#ifdef HPIPM_SP
+typedef struct ocp_qp_hpipm_memory_
+{
+    struct s_ocp_qp_ipm_workspace *hpipm_workspace;
+} ocp_qp_hpipm_memory;
+#else
 typedef struct ocp_qp_hpipm_memory_
 {
     struct d_ocp_qp_ipm_workspace *hpipm_workspace;
 } ocp_qp_hpipm_memory;
-
+#endif
 //
 int ocp_qp_hpipm_opts_calculate_size(void *config, void *dims);
 //

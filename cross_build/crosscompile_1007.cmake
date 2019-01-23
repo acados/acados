@@ -15,7 +15,7 @@ set(CMAKE_ASM_COMPILER "C:/Program\ Files/dSPACE\ RCPHIL\ 2017-A/Compiler/QNX650
 set(CMAKE_ASM_COMPILER "C:/Program\ Files/dSPACE\ RCPHIL\ 2017-A/Compiler/QNX650_520/host/win32/x86/usr/bin/ntoppc-ar.exe") #  # ntoppc-gcc-5.2.0.exe
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -x c" CACHE STRING "" FORCE) # needed when using ntoppcg++ as done in dspace makefile
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mpowerpc -mcpu=e500mc  -mcpu=e500mc -mtune=e500mc64 -mhard-float -mdouble-float -EB " CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mpowerpc -mcpu=e500mc  -mcpu=e500mc -mtune=e500mc64 -mhard-float -mdouble-float  -EB " CACHE STRING "" FORCE)
 
 set(CMAKE_C_COMPILER_WORKS 1 CACHE INTERNAL "")
 set(CMAKE_CXX_COMPILER_WORKS 1 CACHE INTERNAL "")
