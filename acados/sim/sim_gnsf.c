@@ -758,7 +758,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
      *   Compute QQ1 KK*, ZZ* via QQ1
      ************************************************/
     // SOLVE EE1 \ DD1, ... EE1 \ AA1;
-    blasfeo_dgetrf_rowpivot(nK1, nK1, &EE1, 0, 0, &EE1, 0, 0, ipivEE1);  // factorize EE1
+    blasfeo_dgetrf_rp(nK1, nK1, &EE1, 0, 0, &EE1, 0, 0, ipivEE1);  // factorize EE1
 
     blasfeo_drowpe(nK1, ipivEE1, &AA1);  // permute also rhs
     blasfeo_dtrsm_llnu(nK1, nx1, 1.0, &EE1, 0, 0, &AA1, 0, 0, &AA1, 0, 0);
@@ -788,7 +788,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     // cc1 now contains EE1\cc1
 
     // SOLVE EE2 \ DD2, ... EE2 \ AA2;
-    blasfeo_dgetrf_rowpivot(nZ1, nZ1, &EE2, 0, 0, &EE2, 0, 0, ipivEE2);  // factorize EE2
+    blasfeo_dgetrf_rp(nZ1, nZ1, &EE2, 0, 0, &EE2, 0, 0, ipivEE2);  // factorize EE2
 
     blasfeo_drowpe(nZ1, ipivEE2, &AA2);  // permute also rhs
     blasfeo_dtrsm_llnu(nZ1, nx1, 1.0, &EE2, 0, 0, &AA2, 0, 0, &AA2, 0, 0);
@@ -819,7 +819,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     blasfeo_dgemm_nn(nZ1, nZ1, nK1, -1.0, &DD2, 0, 0, &DD1, 0, 0, 0.0, &QQ1, 0, 0, &QQ1, 0,
                      0);                                               // QQ1 = -DD2*DD1
     blasfeo_ddiare(nZ1, 1.0, &QQ1, 0, 0);                               // add eye(nZ1) to QQ1
-    blasfeo_dgetrf_rowpivot(nZ1, nZ1, &QQ1, 0, 0, &QQ1, 0, 0, ipivQQ1);  // factorize QQ1
+    blasfeo_dgetrf_rp(nZ1, nZ1, &QQ1, 0, 0, &QQ1, 0, 0, ipivQQ1);  // factorize QQ1
 
     /* build ZZv */
     blasfeo_dgemm_nn(nZ1, nvv, nK1, 1.0, &DD2, 0, 0, &CC1, 0, 0, 0.0, &ZZv, 0, 0, &ZZv, 0,
@@ -898,7 +898,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
         }
     }
     // factorize M2 in M2_LU
-    blasfeo_dgetrf_rowpivot(nK2, nK2, &M2_LU, 0, 0, &M2_LU, 0, 0, ipivM2);
+    blasfeo_dgetrf_rp(nK2, nK2, &M2_LU, 0, 0, &M2_LU, 0, 0, ipivM2);
 
     // solve dK2_dx2 = M2 \ dK2_dx2 to obtain dK2_dx2
     blasfeo_drowpe(nK2, ipivM2, &dK2_dx2);  // permute rhs dK2_dx2
@@ -915,7 +915,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
         blasfeo_pack_dmat(ny, nz1, model->L_z, ny, Lz, 0, 0);
 
         // SOLVE E11 \ A1,   E11 \ B1,      E11 \ C1,   E11\E12;
-        blasfeo_dgetrf_rowpivot(nx1, nx1, &E11, 0, 0, &E11, 0, 0, ipivEE1);  // factorize E11
+        blasfeo_dgetrf_rp(nx1, nx1, &E11, 0, 0, &E11, 0, 0, ipivEE1);  // factorize E11
 
         blasfeo_drowpe(nx1, ipivEE1, &A1);  // permute also rhs
         blasfeo_dtrsm_llnu(nx1, nx1, 1.0, &E11, 0, 0, &A1, 0, 0, &A1, 0, 0);
@@ -938,7 +938,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
 
 
         // SOLVE E22 \ A2,   E22 \ B2,      E22 \ C2,   E22\E21;
-        blasfeo_dgetrf_rowpivot(nz1, nz1, &E22, 0, 0, &E22, 0, 0, ipivEE2);  // factorize E22
+        blasfeo_dgetrf_rp(nz1, nz1, &E22, 0, 0, &E22, 0, 0, ipivEE2);  // factorize E22
 
         blasfeo_drowpe(nz1, ipivEE2, &A2);  // permute also rhs
         blasfeo_dtrsm_llnu(nz1, nx1, 1.0, &E22, 0, 0, &A2, 0, 0, &A2, 0, 0);
@@ -964,7 +964,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
         blasfeo_dgemm_nn(nz1, nz1, nx1, -1.0, &E21, 0, 0, &E12, 0, 0, 0.0, &Q1, 0, 0, &Q1, 0,
                         0);                                               // Q1 = -E21*E12
         blasfeo_ddiare(nz1, 1.0, &Q1, 0, 0);                               // add eye(nz1) to Q1
-        blasfeo_dgetrf_rowpivot(nz1, nz1, &Q1, 0, 0, &Q1, 0, 0, ipivQQ1);  // factorize Q1
+        blasfeo_dgetrf_rp(nz1, nz1, &Q1, 0, 0, &Q1, 0, 0, ipivQQ1);  // factorize Q1
 
         /* build Z0v */
         blasfeo_dgemm_nn(nz1, n_out, nx1, 1.0, &E21, 0, 0, &C1, 0, 0, 1.0, &C2, 0, 0, Z0v, 0,
@@ -1021,7 +1021,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
 
         /** for z2 **/           // factorize ELO
         blasfeo_pack_dmat(nxz2, nxz2, model->E_LO, nxz2, ELO_LU, 0, 0);
-        blasfeo_dgetrf_rowpivot(nxz2, nxz2, ELO_LU, 0, 0, ELO_LU, 0, 0, ipiv_ELO);
+        blasfeo_dgetrf_rp(nxz2, nxz2, ELO_LU, 0, 0, ELO_LU, 0, 0, ipiv_ELO);
         //
         // blasfeo_print_dmat(nxz2, nxz2, ELO_LU, )
         blasfeo_pack_dmat(nxz2, nx2, model->A_LO, nxz2, ELO_inv_ALO, 0, 0);
@@ -1904,7 +1904,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             // factorize J_r_vv
             if ((opts->jac_reuse && (ss == 0) & (iter == 0)) || (!opts->jac_reuse))
             {
-                blasfeo_dgetrf_rowpivot(nvv, nvv, &J_r_vv, 0, 0, &J_r_vv, 0, 0, ipiv);
+                blasfeo_dgetrf_rp(nvv, nvv, &J_r_vv, 0, 0, &J_r_vv, 0, 0, ipiv);
             }
 
             /* Solve linear system and update vv */
@@ -2023,7 +2023,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                                  nx1);  // + dPhi_duhat * L_u;
             }
             acados_tic(&la_timer);
-            blasfeo_dgetrf_rowpivot(nvv, nvv, &J_r_vv, 0, 0, &J_r_vv, 0, 0,
+            blasfeo_dgetrf_rp(nvv, nvv, &J_r_vv, 0, 0, &J_r_vv, 0, 0,
                                     ipiv);        // factorize J_r_vv
             // printf("dPHI_dyuhat = (forward, ss = %d) \n", ss);
             // blasfeo_print_exp_dmat(nvv, ny+nuhat, &dPHI_dyuhat, 0, 0);
@@ -2211,7 +2211,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
                 /* solve dvv0_dxn1u = - dr0_dvv0 \ dr0_dxn1u */
                 acados_tic(&la_timer);
-                blasfeo_dgetrf_rowpivot(n_out, n_out, &dr0_dvv0, 0, 0, &dr0_dvv0, 0, 0,
+                blasfeo_dgetrf_rp(n_out, n_out, &dr0_dvv0, 0, 0, &dr0_dvv0, 0, 0,
                                         ipiv_vv0);        // factorize dr0_dvv0
 
                 blasfeo_drowpe(n_out, ipiv_vv0, &J_r_x1u);  // permute also rhs
@@ -2422,7 +2422,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                                  nx1);  // + dPhi_duhat * L_u;
             }
             acados_tic(&la_timer);
-            blasfeo_dgetrf_rowpivot(nvv, nvv, &J_r_vv, 0, 0, &J_r_vv, 0, 0,
+            blasfeo_dgetrf_rp(nvv, nvv, &J_r_vv, 0, 0, &J_r_vv, 0, 0,
                                     ipiv);  // factorize J_r_vv
             out->info->LAtime += acados_toc(&la_timer);
 
