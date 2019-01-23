@@ -524,9 +524,11 @@ int acados_create() {
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
     int num_steps_val = 1; 
+    int ns_val = 1; 
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_algebraic", &sens_algebraic_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps_val);
+    for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "ns", &ns_val);
     {% endif %}
 
     {% if ra.solver_config.nlp_solver_type == 'SQP': %}

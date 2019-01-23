@@ -321,7 +321,7 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, const v
     }
 }
 
-int ocp_nlp_sqp_dyanimcs_opts_set(void *config_, void *opts_, int stage,
+int ocp_nlp_sqp_dynamics_opts_set(void *config_, void *opts_, int stage,
                                      const char *field, void *value)
 {
     ocp_nlp_solver_config *config = config_;
@@ -1188,9 +1188,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                     &(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[N])->dzdxu_tran),
                     mem->cost[N]);
         }
-        config->cost[N]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + N, mem->cost[N]);
-        config->cost[N]->memory_set_Z_ptr(work->qp_in->Z + N, mem->cost[N]);
     }
+
+    config->cost[N]->memory_set_ux_ptr(nlp_out->ux + N, mem->cost[N]);
+    config->cost[N]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + N, mem->cost[N]);
+    config->cost[N]->memory_set_Z_ptr(work->qp_in->Z + N, mem->cost[N]);
 
     // alias to constraints_memory
 #if defined(ACADOS_WITH_OPENMP)
@@ -1472,7 +1474,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_nlp_sqp_opts_initialize_default;
     config->opts_update = &ocp_nlp_sqp_opts_update;
     config->opts_set = &ocp_nlp_sqp_opts_set;
-    config->dynamics_opts_set = &ocp_nlp_sqp_dyanimcs_opts_set;
+    config->dynamics_opts_set = &ocp_nlp_sqp_dynamics_opts_set;
     config->memory_calculate_size = &ocp_nlp_sqp_memory_calculate_size;
     config->memory_assign = &ocp_nlp_sqp_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;
