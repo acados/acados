@@ -91,6 +91,9 @@ ocp_qp_solver_t qp_solver_enum(std::string const& inString)
     if (inString == "DENSE_OOQP") return FULL_CONDENSING_OOQP;
     if (inString == "SPARSE_OOQP") return PARTIAL_CONDENSING_OOQP;
 #endif
+#ifdef ACADOS_WITH_OSQP
+    if (inString == "SPARSE_OSQP") return PARTIAL_CONDENSING_OSQP;
+#endif
 
     return (ocp_qp_solver_t) -1;
 }
@@ -1526,6 +1529,9 @@ TEST_CASE("chain example", "[NLP solver]")
 #ifdef ACADOS_WITH_OOQP
                                             // , "DENSE_OOQP"
                                             // , "SPARSE_OOQP"
+#endif
+#ifdef ACADOS_WITH_OSQP
+                                            , "SPARSE_OSQP"
 #endif
 #ifdef ACADOS_WITH_QORE
                                             , "DENSE_QORE"

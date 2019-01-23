@@ -13,6 +13,9 @@ endif
 ifeq ($(ACADOS_WITH_QPDUNES), 1)
 OBJS += ocp_qp_qpdunes.o
 endif
+ifeq ($(ACADOS_WITH_OSQP), 1)
+OBJS += ocp_qp_osqp.o
+endif
 OBJS += ocp_qp_partial_condensing.o
 OBJS += ocp_qp_full_condensing.o
 OBJS += ocp_qp_partial_condensing_solver.o
