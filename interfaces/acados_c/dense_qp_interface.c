@@ -72,10 +72,10 @@ qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
             dense_qp_ooqp_config_initialize_default(solver_config);
             break;
 #endif
-		default:
-			printf("\nerror: dense_qp_config_create: unsupported plan->qp_solver\n");
-			exit(1);
-			break;
+        default:
+            printf("\nerror: dense_qp_config_create: unsupported plan->qp_solver\n");
+            exit(1);
+            break;
     }
     return solver_config;
 }

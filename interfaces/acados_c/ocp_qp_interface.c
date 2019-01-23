@@ -107,10 +107,10 @@ if (solver_name < FULL_CONDENSING_HPIPM)
             dense_qp_ooqp_config_initialize_default(solver_config->qp_solver);
             break;
 #endif
-		default:
-			printf("\nerror: ocp_qp_config_create: unsupported plan->qp_solver\n");
-			exit(1);
-			break;
+        default:
+            printf("\nerror: ocp_qp_config_create: unsupported plan->qp_solver\n");
+            exit(1);
+            break;
     }
 }
 
