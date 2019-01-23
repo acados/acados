@@ -979,12 +979,13 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
+ 
 
     // acados timer
     acados_timer timer0, timer1;
 
     // start timer
-    acados_tic(&timer0);
+    // acados_tic(&timer0);
 
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_solver_config *config = config_;
@@ -1080,16 +1081,18 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // initialize QP
     initialize_qp(config, dims, nlp_in, nlp_out, opts, mem, work);
 
+        
+
     // SQP body
 
     // start timer
-    acados_tic(&timer1);
+    // acados_tic(&timer1);
 
     // linearizate NLP and update QP matrices
     linearize_update_qp_matrices(config, dims, nlp_in, nlp_out, opts, mem, work);
 
     // stop timer
-    mem->time_lin += acados_toc(&timer1);
+    // mem->time_lin += acados_toc(&timer1);
 
     // regularize Hessian
     regularize_hessian(config, dims, nlp_in, nlp_out, opts, mem, work);
@@ -1097,19 +1100,20 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // update QP rhs for SQP (step prim var, abs dual var)
     sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
 
+    // printf("in acados ocp_nlp_sqp_rti!\n");
     // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
     // print_ocp_qp_in(work->qp_in);
     // exit(1);
 
     // start timer
-    acados_tic(&timer1);
+    // acados_tic(&timer1);
 
     int qp_status =
         qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
                             mem->qp_solver_mem, work->qp_work);
 
     // stop timer
-    mem->time_qp_sol += acados_toc(&timer1);
+    // mem->time_qp_sol += acados_toc(&timer1);
 
     // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
     //  print_ocp_qp_out(work->qp_out);
@@ -1121,7 +1125,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         //   print_ocp_qp_in(work->qp_in);
 
         // stop timer
-        total_time += acados_toc(&timer0);
+        // total_time += acados_toc(&timer0);
 
         mem->time_tot = total_time;
         nlp_out->total_time = total_time;
@@ -1141,7 +1145,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // exit(1);
 
     // stop timer
-    total_time += acados_toc(&timer0);
+    // total_time += acados_toc(&timer0);
 
     mem->time_tot = total_time;
     nlp_out->total_time = total_time;
@@ -1154,6 +1158,9 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
 #endif
+    return 0;
+    #if 0
+    #endif
     return 0;
 }
 
@@ -1195,6 +1202,7 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
                                             mem->dynamics[ii], work->dynamics[ii]);
         if (status != ACADOS_SUCCESS) return status;
     }
+
     return status;
 }
 

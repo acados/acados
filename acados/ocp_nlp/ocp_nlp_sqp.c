@@ -1011,6 +1011,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
 
+    #if 1
     // acados timer
     acados_timer timer0, timer1;
 
@@ -1251,6 +1252,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
 #endif
+    #endif
     return 1;
 }
 
