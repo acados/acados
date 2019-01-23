@@ -80,6 +80,7 @@ endif()
 if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
     set(ACADOS_WITH_QPOASES ON CACHE BOOL "Add qpOASES solver")
     set(ACADOS_WITH_QPDUNES ON CACHE BOOL "Add qpDUNES solver")
+    set(ACADOS_WITH_OSQP ON CACHE BOOL "Add OSQP solver")
 endif()
 
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
@@ -111,7 +112,7 @@ configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake"
     IMMEDIATE @ONLY)
-add_custom_target(uninstall
+add_custom_target(acados_uninstall # NOTE(dimitris): uninstall name clashes with submodules
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
 
 # Cpplint

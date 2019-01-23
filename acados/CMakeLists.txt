@@ -46,6 +46,10 @@ if(NOT ACADOS_WITH_QPDUNES)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_qpdunes.c")
 endif()
 
+if(NOT ACADOS_WITH_OSQP)
+    list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_osqp.c")
+endif()
+
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/sim/sim_discrete_model.c")
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/broken_src/ocp_nlp_sm_gn.c")
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/broken_src/ocp_nlp_sqp_bkp.c")
@@ -85,6 +89,10 @@ if(ACADOS_WITH_QPDUNES)
     target_link_libraries(acados PUBLIC qpdunes)
 endif()
 
+if(ACADOS_WITH_OSQP)
+    target_link_libraries(acados PUBLIC osqp)
+endif()
+
 target_link_libraries(acados PUBLIC hpipm blasfeo)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -107,6 +115,12 @@ endif()
 if(ACADOS_WITH_QPDUNES)
     target_compile_definitions(acados PUBLIC ACADOS_WITH_QPDUNES)
     target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES)
+endif()
+
+if(ACADOS_WITH_OSQP)
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_OSQP)
+    # TODO(dimitris): needed or not?
+    # target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES)
 endif()
 
 if(ACADOS_WITH_OOQP)

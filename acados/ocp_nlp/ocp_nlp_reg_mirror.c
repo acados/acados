@@ -78,7 +78,7 @@ void ocp_nlp_reg_mirror(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in
 
         // regularize
         blasfeo_unpack_dmat(nx+nu, nx+nu, &in->RSQrq[i], 0, 0, mem->reg_hess, nx+nu);
-        project(nx+nu, mem->reg_hess, mem->V, mem->d, 1e-4);
+        acados_project(nx+nu, mem->reg_hess, mem->V, mem->d, 1e-4);
         blasfeo_pack_dmat(nx+nu, nx+nu, mem->reg_hess, nx+nu, &in->RSQrq[i], 0, 0);
     }
 }

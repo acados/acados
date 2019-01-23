@@ -96,7 +96,7 @@ void external_function_casadi_free_array(int size, external_function_casadi *fun
 
 
 /************************************************
- * casadi external paramteric function
+ * casadi external parametric function
  ************************************************/
 
 void external_function_param_casadi_create(external_function_param_casadi *fun, int np)

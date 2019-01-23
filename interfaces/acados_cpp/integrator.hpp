@@ -59,7 +59,7 @@ class integrator
     model_t model_type_;
     bool use_MX_;
 
-    std::map<std::string, casadi_module> module_;
+    // std::map<std::string, casadi_module> module_;
 };
 
 }  // namespace acados

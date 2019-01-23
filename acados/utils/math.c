@@ -1109,7 +1109,7 @@ void mirror(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon)
 }
 
 /* projecting regularization */
-void project(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon)
+void acados_project(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon)
 {
     eigen_decomposition(dim, A, V, d);
 

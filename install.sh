@@ -1,4 +1,5 @@
 #!/bin/bash -xe
+INSTALLPATH=/usr/local
 
 # Install dependencies
 # sudo add-apt-repository ppa:george-edison55/cmake-3.x
@@ -15,13 +16,13 @@ wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-octave-v3.4.0.ta
 mkdir -p casadi-octave-v3.4.0
 tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave-v3.4.0
 
-wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
+wget -q -nc https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
 mkdir -p casadi-py35-v3.4.0-64bit
 tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-py35-v3.4.0-64bit
 export CASADIPATH=$(pwd)/casadi-py35-v3.4.0-64bit
 export PYTHONPATH=$CASADIPATH:$PYTHONPATH
 # will not work with custom install dir
-export PYTHONPATH=~/.local/lib:$PYTHONPATH
+export PYTHONPATH=$INSTALLPATH/lib:$PYTHONPATH
 
 wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
 mkdir -p casadi-matlabR2014b-v3.4.0
@@ -46,7 +47,7 @@ popd # external
 # Build acados
 mkdir -p build
 pushd build
-cmake -D SWIG_MATLAB=1 -D SWIG_PYTHON=1 -D ACADOS_INSTALL_DIR=~/.local ..
+cmake -D SWIG_MATLAB=1 -D SWIG_PYTHON=1 -D ACADOS_INSTALL_DIR=$INSTALLPATH ..
 make -j4 -l4
 make install
 popd # build
