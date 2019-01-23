@@ -24,17 +24,20 @@
 #include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
 
-int_t sim_discrete_model(const sim_in *in, sim_out *out, void *args, void *mem, void *work)
+int sim_discrete_model(const sim_in *in, sim_out *out, void *args, void *mem, void *work)
 {
-    int_t nx = in->nx;
-    int_t nu = in->nu;
-    real_t *in_array, *out_array;
-    in_array = calloc(nx + nu, sizeof(real_t));
-    out_array = calloc(nx + nx * nu, sizeof(real_t));
-    for (int_t i = 0; i < nx; i++) in_array[i] = in->x[i];
-    for (int_t i = 0; i < nu; i++) in_array[nx + i] = in->u[i];
+    int nx = in->nx;
+    int nu = in->nu;
+    double *in_array, *out_array;
+	// TODO use memory instead of calloc !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    in_array = calloc(nx + nu, sizeof(double));
+    out_array = calloc(nx + nx * nu, sizeof(double));
+    for (int i = 0; i < nx; i++) in_array[i] = in->x[i];
+    for (int i = 0; i < nu; i++) in_array[nx + i] = in->u[i];
     discrete_model_fun(in->nx, in->nu, in_array, out_array, in->discrete_model);
-    for (int_t i = 0; i < nx; i++) out->xn[i] = out_array[i];
-    for (int_t i = 0; i < nx * (nx + nu); i++) out->S_forw[i] = out_array[nx + i];
+    for (int i = 0; i < nx; i++) out->xn[i] = out_array[i];
+    for (int i = 0; i < nx * (nx + nu); i++) out->S_forw[i] = out_array[nx + i];
+	free(in_array);
+	free(out_array);
     return 0;
 }
