@@ -49,6 +49,8 @@ classdef acados_sim < handle
 				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
 
+			obj.C_sim_ext_fun = sim_create_ext_fun();
+
 			% compile mex with model dependency
 			if (strcmp(obj.opts_struct.compile_mex, 'true'))
 				sim_compile_mex_model_dep(obj.model_struct, obj.opts_struct);
@@ -56,9 +58,9 @@ classdef acados_sim < handle
 
 			% get pointers for external functions in model
 			if (strcmp(obj.opts_struct.method, 'erk'))
-				obj.C_sim_ext_fun = sim_expl_ext_fun_create(obj.opts_struct);
+				sim_set_ext_fun_expl(obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
 			elseif (strcmp(obj.opts_struct.method, 'irk'))
-				obj.C_sim_ext_fun = sim_impl_ext_fun_create(obj.opts_struct);
+				sim_set_ext_fun_impl(obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
 			else
 				fprintf('\ncodegen_model: method not supported: %s\n', obj.opts_struct.method);
 				return;

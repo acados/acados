@@ -29,40 +29,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// opts
 
-	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
+//	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
 //	mexPrintf("\n%d\n", sens_forw);
-	char *method = mxArrayToString( mxGetField( prhs[0], 0, "method" ) );
+	char *method = mxArrayToString( mxGetField( prhs[2], 0, "method" ) );
 //	mexPrintf("\n%s\n", method);
 
 
 
 	/* LHS */
 
-	// field names of output struct
-	char *fieldnames[6];
-	fieldnames[0] = (char*)mxMalloc(50);
-	fieldnames[1] = (char*)mxMalloc(50);
-	fieldnames[2] = (char*)mxMalloc(50);
-	fieldnames[3] = (char*)mxMalloc(50);
-	fieldnames[4] = (char*)mxMalloc(50);
-	fieldnames[5] = (char*)mxMalloc(50);
-
-	memcpy(fieldnames[0],"expl_ode_fun",sizeof("expl_ode_fun"));
-	memcpy(fieldnames[1],"expl_vde_for",sizeof("expl_vde_for"));
-	memcpy(fieldnames[2],"expl_vde_adj",sizeof("expl_vde_adj"));
-	memcpy(fieldnames[3],"impl_ode_fun",sizeof("impl_ode_fun"));
-	memcpy(fieldnames[4],"impl_ode_fun_jac_x_xdot",sizeof("impl_ode_fun_jac_x_xdot"));
-	memcpy(fieldnames[5],"impl_ode_jac_x_xdot_u",sizeof("impl_ode_jac_x_xdot_u"));
-
-	// create output struct
-	plhs[0] = mxCreateStructMatrix(1, 1, 6, (const char **) fieldnames);
-
-	mxFree( fieldnames[0] );
-	mxFree( fieldnames[1] );
-	mxFree( fieldnames[2] );
-	mxFree( fieldnames[3] );
-	mxFree( fieldnames[4] );
-	mxFree( fieldnames[5] );
 
 
 
@@ -84,7 +59,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mxArray *impl_ode_fun_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 		ptr = mxGetData(impl_ode_fun_mat);
 		ptr[0] = (long long) ext_fun_ptr;
-		mxSetField(plhs[0], 0, "impl_ode_fun", impl_ode_fun_mat);
+		mxSetField((mxArray*) prhs[0], 0, "impl_ode_fun", impl_ode_fun_mat);
 
 		// impl_ode_fun_jac_x_xdot
 		ext_fun_ptr = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
@@ -99,7 +74,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mxArray *impl_ode_fun_jac_x_xdot_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 		ptr = mxGetData(impl_ode_fun_jac_x_xdot_mat);
 		ptr[0] = (long long) ext_fun_ptr;
-		mxSetField(plhs[0], 0, "impl_ode_fun_jac_x_xdot", impl_ode_fun_jac_x_xdot_mat);
+		mxSetField((mxArray*) prhs[0], 0, "impl_ode_fun_jac_x_xdot", impl_ode_fun_jac_x_xdot_mat);
 
 		// impl_ode_jac_x_xdot_u
 		ext_fun_ptr = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
@@ -114,7 +89,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mxArray *impl_ode_jac_x_xdot_u_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 		ptr = mxGetData(impl_ode_jac_x_xdot_u_mat);
 		ptr[0] = (long long) ext_fun_ptr;
-		mxSetField(plhs[0], 0, "impl_ode_jac_x_xdot_u", impl_ode_jac_x_xdot_u_mat);
+		mxSetField((mxArray*) prhs[0], 0, "impl_ode_jac_x_xdot_u", impl_ode_jac_x_xdot_u_mat);
 		}
 	else
 		{
