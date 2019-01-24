@@ -62,12 +62,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		// h_fun_jac_ut_xt
 		ext_fun_ptr = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
-		ext_fun_ptr->casadi_fun = &ocp_model_h_fun_jac_ut_xt;
-		ext_fun_ptr->casadi_work = &ocp_model_h_fun_jac_ut_xt_work;
-		ext_fun_ptr->casadi_sparsity_in = &ocp_model_h_fun_jac_ut_xt_sparsity_in;
-		ext_fun_ptr->casadi_sparsity_out = &ocp_model_h_fun_jac_ut_xt_sparsity_out;
-		ext_fun_ptr->casadi_n_in = &ocp_model_h_fun_jac_ut_xt_n_in;
-		ext_fun_ptr->casadi_n_out = &ocp_model_h_fun_jac_ut_xt_n_out;
+		external_function_casadi_set_fun(ext_fun_ptr, &ocp_model_h_fun_jac_ut_xt);
+		external_function_casadi_set_work(ext_fun_ptr, &ocp_model_h_fun_jac_ut_xt_work);
+		external_function_casadi_set_sparsity_in(ext_fun_ptr, &ocp_model_h_fun_jac_ut_xt_sparsity_in);
+		external_function_casadi_set_sparsity_out(ext_fun_ptr, &ocp_model_h_fun_jac_ut_xt_sparsity_out);
+		external_function_casadi_set_n_in(ext_fun_ptr, &ocp_model_h_fun_jac_ut_xt_n_in);
+		external_function_casadi_set_n_out(ext_fun_ptr, &ocp_model_h_fun_jac_ut_xt_n_out);
 		external_function_casadi_create(ext_fun_ptr);
 		// populate output struct
 		mxArray *h_fun_jac_ut_xt_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
