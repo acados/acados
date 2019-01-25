@@ -492,7 +492,7 @@ int acados_create() {
    
     {% if ra.dims.ng > -1: %} 
     // general constraints for stages 0 to N-1
-    for (int i = 1; i < N; ++i)
+    for (int i = 0; i < N; ++i)
     {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "D", D);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "C", C);
@@ -510,12 +510,9 @@ int acados_create() {
     
     {% if ra.dims.ngN > -1: %} 
     // general constraints for last stage
-    for (int i = 1; i < N; ++i)
-    {
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "C", CN);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lg", lgN);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ug", ugN);
-    }
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "C", CN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", lgN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ugN);
     {% endif %}
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);

@@ -122,8 +122,8 @@ def get_general_constraints_DC(u_max):
     D = nmp.transpose(nmp.array([[1, m1],[1, -m1]]))
     C = nmp.transpose(nmp.array([[0, 0], [0, 0]]))
     
-    lg  = nmp.array([-q1, -q1])
-    ug  = nmp.array([+q1, +q1])
+    lg  = nmp.array([+q1, +q1])
+    ug  = nmp.array([-q1, -q1])
     lbu = nmp.array([-q2]) 
     ubu = nmp.array([+q2]) 
     
