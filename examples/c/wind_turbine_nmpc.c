@@ -919,7 +919,7 @@ int main()
         ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0_ref);
         ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0_ref);
 
-            for (int idx = 0; idx < nmpc_problems; idx++)
+        for (int idx = 0; idx < nmpc_problems; idx++)
         {
             // update wind distrurbance as external function parameter
             for (int ii=0; ii<NN; ii++)

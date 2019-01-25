@@ -71,7 +71,7 @@ classdef acados_sim < handle
 
 
 		function set(obj, field, value)
-			sim_set(obj.C_sim, field, value);
+			sim_set(obj.model_struct, obj.opts_struct, obj.C_sim, obj.C_sim_ext_fun, field, value);
 		end
 
 
@@ -87,7 +87,7 @@ classdef acados_sim < handle
 
 		function delete(obj)
 			sim_destroy(obj.C_sim);
-			sim_destroy_ext_fun(obj.C_sim_ext_fun);
+			sim_destroy_ext_fun(obj.C_sim_ext_fun, obj.model_struct);
 		end
 
 
