@@ -128,7 +128,7 @@ HESS_multiplied = HESS_multiplied.simplify();
 
 %% Set up functions
 % TODO(oj): fix namings such that jac_z is contained!
-if (strcmp(model.param, 'true'))
+if (strcmp(model.param_f, 'true'))
     impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z, p}, {f_impl});
     impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
     impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});

@@ -23,7 +23,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// model
 	// TODO bool instead !!!
-	char *param = mxArrayToString( mxGetField( prhs[0], 0, "param" ) );
+	char *param_f = mxArrayToString( mxGetField( prhs[0], 0, "param_f" ) );
 
 	// opts
 	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
@@ -63,7 +63,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else if(!strcmp(field, "p"))
 		{
-		if(!strcmp(param, "true")) // TODO bool
+		if(!strcmp(param_f, "true")) // TODO bool
 			{
 			double *p = mxGetPr( prhs[5] );
 			// TODO check for param in opts or the like !!!!!!!!!!!!!!!!!!!!!!!
@@ -106,7 +106,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			}
 		else
 			{
-			mexPrintf("\nsim_set: can not set p for non-param models\n");
+			mexPrintf("\nsim_set: can not set p for non-param f\n");
 			return;
 			}
 		}

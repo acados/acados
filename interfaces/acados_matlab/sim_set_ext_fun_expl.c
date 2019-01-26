@@ -30,7 +30,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// model
 
 	// TODO bool instead !!!
-	char *param = mxArrayToString( mxGetField( prhs[1], 0, "param" ) );
+	char *param_f = mxArrayToString( mxGetField( prhs[1], 0, "param_f" ) );
 	int np = mxGetScalar( mxGetField( prhs[1], 0, "np" ) );
 
 	// opts
@@ -51,7 +51,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// TODO templetize the casadi function names !!!
 	if(!strcmp(method, "erk"))
 		{
-		if(!strcmp(param, "true")) // TODO bool
+		if(!strcmp(param_f, "true")) // TODO bool
 			{
 			// expl_ode_fun
 			ext_fun_param_ptr = (external_function_param_casadi *) malloc(1*sizeof(external_function_param_casadi));

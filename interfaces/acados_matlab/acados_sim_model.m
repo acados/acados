@@ -17,8 +17,8 @@ classdef acados_sim_model < handle
 		sym_p
 		% model
 		dyn_type
-		param
 		expr_f
+		param_f
 		T
 		model_struct
 	end %properties
@@ -33,10 +33,10 @@ classdef acados_sim_model < handle
 			obj.name = 'sim_model';
 			% default values
 			obj.model_struct = struct;
-			obj.param = 'false';
+			obj.param_f = 'false';
 			% initialize model struct
 			obj.model_struct.name = obj.name;
-			obj.model_struct.param = obj.param;
+			obj.model_struct.param_f = obj.param_f;
 		end
 
 
@@ -74,9 +74,9 @@ classdef acados_sim_model < handle
 			elseif (strcmp(field, 'dyn_type'))
 				obj.dyn_type = value;
 				obj.model_struct.dyn_type = value;
-			elseif (strcmp(field, 'param'))
-				obj.param = value;
-				obj.model_struct.param = value;
+			elseif (strcmp(field, 'param_f'))
+				obj.param_f = value;
+				obj.model_struct.param_f = value;
 			elseif (strcmp(field, 'expr_f'))
 				obj.expr_f = value;
 				obj.model_struct.expr_f = value;

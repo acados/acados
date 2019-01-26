@@ -83,7 +83,7 @@ else
     vdeX = MX.zeros(nx, nx);
     vdeU = MX.zeros(nx, nu) + jacobian(f_expl, u);
 end
-if (strcmp(model.param, 'true'))
+if (strcmp(model.param_f, 'true'))
 	expl_ode_fun = Function([model_name,'_expl_ode_fun'], {x, u, p}, {f_expl});
 else
 	expl_ode_fun = Function([model_name,'_expl_ode_fun'], {x, u}, {f_expl});
@@ -94,7 +94,7 @@ vdeX = vdeX + jtimes(f_expl, x, Sx);
 
 vdeU = vdeU + jtimes(f_expl, x, Su);
 
-if (strcmp(model.param, 'true'))
+if (strcmp(model.param_f, 'true'))
 	expl_vde_for = Function([model_name,'_expl_vde_for'], {x, Sx, Su, u, p}, {f_expl, vdeX, vdeU});
 else
 	expl_vde_for = Function([model_name,'_expl_vde_for'], {x, Sx, Su, u}, {f_expl, vdeX, vdeU});
@@ -102,7 +102,7 @@ end
 
 adj = jtimes(f_expl, [x;u], lambdaX,true);
 
-if (strcmp(model.param, 'true'))
+if (strcmp(model.param_f, 'true'))
 	expl_vde_adj = Function([model_name,'_expl_vde_adj'], {x, lambdaX, u, p}, {adj});
 else
 	expl_vde_adj = Function([model_name,'_expl_vde_adj'], {x, lambdaX, u}, {adj});
@@ -117,7 +117,7 @@ for j = 1:nx+nu
     end
 end
 
-if (strcmp(model.param, 'true'))
+if (strcmp(model.param_f, 'true'))
 	expl_ode_hes = Function([model_name,'_expl_ode_hes'], {x, Sx, Su, lambdaX, u, p}, {adj, hess2});
 else
 	expl_ode_hes = Function([model_name,'_expl_ode_hes'], {x, Sx, Su, lambdaX, u}, {adj, hess2});

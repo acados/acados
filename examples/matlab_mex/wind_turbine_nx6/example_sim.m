@@ -35,7 +35,7 @@ sim_model = acados_sim_model();
 sim_model.set('T', Ts);
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('param', 'true');
+	sim_model.set('param_f', 'true');
 	sim_model.set('expr_f', model.expr_f_expl);
 	sim_model.set('sym_x', model.sym_x);
 	if isfield(model, 'sym_u')
@@ -49,7 +49,7 @@ if (strcmp(method, 'erk'))
 	sim_model.set('np', model.np);
 else % irk
 	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('param', 'true');
+	sim_model.set('param_f', 'true');
 	sim_model.set('expr_f', model.expr_f_impl);
 	sim_model.set('sym_x', model.sym_x);
 	sim_model.set('sym_xdot', model.sym_xdot);

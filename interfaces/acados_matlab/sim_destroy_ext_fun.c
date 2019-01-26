@@ -24,7 +24,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// model
 
 	// TODO bool instead !!!
-	char *param = mxArrayToString( mxGetField( prhs[1], 0, "param" ) );
+	char *param_f = mxArrayToString( mxGetField( prhs[1], 0, "param_f" ) );
 
 	// C_sim_ext_fun
 
@@ -34,7 +34,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(mxGetField( prhs[0], 0, "expl_ode_fun" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "expl_ode_fun" ) );
-		if(!strcmp(param, "true")) // TODO bool
+		if(!strcmp(param_f, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
 			external_function_param_casadi_free(ext_fun_param_ptr);
@@ -50,7 +50,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(mxGetField( prhs[0], 0, "expl_vde_for" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "expl_vde_for" ) );
-		if(!strcmp(param, "true")) // TODO bool
+		if(!strcmp(param_f, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
 			external_function_param_casadi_free(ext_fun_param_ptr);
@@ -66,7 +66,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(mxGetField( prhs[0], 0, "expl_vde_adj" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "expl_vde_adj" ) );
-		if(!strcmp(param, "true")) // TODO bool
+		if(!strcmp(param_f, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
 			external_function_param_casadi_free(ext_fun_param_ptr);
@@ -82,7 +82,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(mxGetField( prhs[0], 0, "impl_ode_fun" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "impl_ode_fun" ) );
-		if(!strcmp(param, "true")) // TODO bool
+		if(!strcmp(param_f, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
 			external_function_param_casadi_free(ext_fun_param_ptr);
@@ -98,7 +98,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(mxGetField( prhs[0], 0, "impl_ode_fun_jac_x_xdot" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "impl_ode_fun_jac_x_xdot" ) );
-		if(!strcmp(param, "true")) // TODO bool
+		if(!strcmp(param_f, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
 			external_function_param_casadi_free(ext_fun_param_ptr);
@@ -114,7 +114,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(mxGetField( prhs[0], 0, "impl_ode_jac_x_xdot_u" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "impl_ode_jac_x_xdot_u" ) );
-		if(!strcmp(param, "true")) // TODO bool
+		if(!strcmp(param_f, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
 			external_function_param_casadi_free(ext_fun_param_ptr);
