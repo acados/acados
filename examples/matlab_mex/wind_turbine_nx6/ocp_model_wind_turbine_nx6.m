@@ -1,4 +1,4 @@
-function model = wind_turbine_nx6p2_model()
+function model = ocp_model_wind_turbine_nx6()
 
 import casadi.*
 

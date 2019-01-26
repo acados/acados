@@ -911,7 +911,7 @@ int main()
         for (int i=0; i<=NN; i++)
         {
             blasfeo_pack_dvec(2, u0_ref, nlp_out->ux+i, 0);
-            blasfeo_pack_dvec(1, wind0_ref+i, nlp_out->ux+i, 2);
+//            blasfeo_pack_dvec(1, wind0_ref+i, nlp_out->ux+i, 2);
             blasfeo_pack_dvec(nx[i], x0_ref, nlp_out->ux+i, nu[i]);
         }
 

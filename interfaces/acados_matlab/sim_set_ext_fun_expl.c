@@ -77,7 +77,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxSetField((mxArray*) prhs[0], 0, "expl_ode_fun", expl_ode_fun_mat);
 
 			// expl_vde_for
-			ext_fun_param_ptr = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
+			ext_fun_param_ptr = (external_function_param_casadi *) malloc(1*sizeof(external_function_param_casadi));
 			external_function_param_casadi_set_fun(ext_fun_param_ptr, &sim_model_expl_vde_for);
 			external_function_param_casadi_set_work(ext_fun_param_ptr, &sim_model_expl_vde_for_work);
 			external_function_param_casadi_set_sparsity_in(ext_fun_param_ptr, &sim_model_expl_vde_for_sparsity_in);
