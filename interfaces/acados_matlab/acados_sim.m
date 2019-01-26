@@ -87,7 +87,7 @@ classdef acados_sim < handle
 
 		function delete(obj)
 			sim_destroy(obj.C_sim);
-			sim_destroy_ext_fun(obj.C_sim_ext_fun, obj.model_struct);
+			sim_destroy_ext_fun(obj.model_struct, obj.C_sim_ext_fun);
 		end
 
 

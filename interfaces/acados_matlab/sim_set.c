@@ -63,40 +63,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else if(!strcmp(field, "p"))
 		{
+		double *p = mxGetPr( prhs[5] );
+		external_function_param_casadi *ext_fun_param_ptr;
 		if(!strcmp(param_f, "true")) // TODO bool
 			{
-			double *p = mxGetPr( prhs[5] );
-			// TODO check for param in opts or the like !!!!!!!!!!!!!!!!!!!!!!!
 			if(!strcmp(method, "erk"))
 				{
 				// expl_ode_fun
 				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "expl_ode_fun" ) );
-				external_function_param_casadi *expl_ode_fun = (external_function_param_casadi *) ptr[0];
+				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
 				// expl_vde_for
 				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "expl_vde_for" ) );
-				external_function_param_casadi *expl_vde_for = (external_function_param_casadi *) ptr[0];
-				// expl_vde_adj
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "expl_vde_adj" ) );
-				external_function_param_casadi *expl_vde_adj = (external_function_param_casadi *) ptr[0];
-
-				expl_ode_fun->set_param(expl_ode_fun, p);
-				expl_vde_for->set_param(expl_vde_for, p);
+				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
 				}
 			else if(!strcmp(method, "irk"))
 				{
 				// impl_ode_fun
 				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "impl_ode_fun" ) );
-				external_function_param_casadi *impl_ode_fun = (external_function_param_casadi *) ptr[0];
+				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
 				// impl_ode_fun_jac_x_xdot
 				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "impl_ode_fun_jac_x_xdot" ) );
-				external_function_param_casadi *impl_ode_fun_jac_x_xdot = (external_function_param_casadi *) ptr[0];
+				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
 				// impl_ode_jac_x_xdot_u
 				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "impl_ode_jac_x_xdot_u" ) );
-				external_function_param_casadi *impl_ode_jac_x_xdot_u = (external_function_param_casadi *) ptr[0];
-
-				impl_ode_fun->set_param(impl_ode_fun, p);
-				impl_ode_fun_jac_x_xdot->set_param(impl_ode_fun_jac_x_xdot, p);
-				impl_ode_jac_x_xdot_u->set_param(impl_ode_jac_x_xdot_u, p);
+				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
 				}
 			else
 				{

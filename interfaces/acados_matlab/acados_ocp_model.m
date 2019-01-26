@@ -17,16 +17,21 @@ classdef acados_ocp_model < handle
 		ng_e
 		nh
 		nh_e
+		np
+%		np_e
 		% symbolics
 		sym_x
 		sym_u
 		sym_xdot
 		sym_z
+		sym_p
 		% cost
 		cost_type
 		cost_e_type
 		expr_y
+		param_y
 		expr_y_e
+		param_y_e
 		Vu
 		Vx
 		Vx_e
@@ -37,6 +42,7 @@ classdef acados_ocp_model < handle
 		% dynamics
 		dyn_type
 		expr_f
+		param_f
 		% constraints
 		constr_type
 		x0
@@ -54,9 +60,11 @@ classdef acados_ocp_model < handle
 		lg_e
 		ug_e
 		expr_h
+		param_h
 		lh
 		uh
 		expr_h_e
+		param_h_e
 		lh_e
 		uh_e
 		% structure
@@ -75,6 +83,11 @@ classdef acados_ocp_model < handle
 			obj.cost_e_type = 'linear_ls';
 			obj.dyn_type = 'implicit';
 			obj.constr_type = 'bgh';
+			obj.param_y = 'false';
+			obj.param_y_e = 'false';
+			obj.param_f = 'false';
+			obj.param_h = 'false';
+			obj.param_h_e = 'false';
 			% model structure
 			obj.model_struct = struct;
 			% initialize model struct
@@ -83,6 +96,11 @@ classdef acados_ocp_model < handle
 			obj.model_struct.cost_e_type = obj.cost_type;
 			obj.model_struct.dyn_type = obj.dyn_type;
 			obj.model_struct.constr_type = obj.constr_type;
+			obj.model_struct.param_y = obj.param_y;
+			obj.model_struct.param_y_e = obj.param_y_e;
+			obj.model_struct.param_f = obj.param_f;
+			obj.model_struct.param_h = obj.param_h;
+			obj.model_struct.param_h_e = obj.param_h_e;
 		end
 
 
@@ -124,6 +142,9 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'nh_e'))
 				obj.nh_e = value;
 				obj.model_struct.nh_e = value;
+			elseif (strcmp(field, 'np'))
+				obj.np = value;
+				obj.model_struct.np = value;
 			% symbolics
 			elseif (strcmp(field, 'sym_x'))
 				obj.sym_x = value;
@@ -137,6 +158,9 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'sym_z'))
 				obj.sym_z = value;
 				obj.model_struct.sym_z = value;
+			elseif (strcmp(field, 'sym_p'))
+				obj.sym_p = value;
+				obj.model_struct.sym_p = value;
 			% cost
 			elseif (strcmp(field, 'cost_type'))
 				obj.cost_type = value;
@@ -147,9 +171,15 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'expr_y'))
 				obj.expr_y = value;
 				obj.model_struct.expr_y = value;
+			elseif (strcmp(field, 'param_y'))
+				obj.param_y = value;
+				obj.model_struct.param_y = value;
 			elseif (strcmp(field, 'expr_y_e'))
 				obj.expr_y_e = value;
 				obj.model_struct.expr_y_e = value;
+			elseif (strcmp(field, 'param_y_e'))
+				obj.param_y_e = value;
+				obj.model_struct.param_y_e = value;
 			elseif (strcmp(field, 'Vu'))
 				obj.Vu = value;
 				obj.model_struct.Vu = value;
@@ -178,6 +208,9 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'expr_f'))
 				obj.expr_f = value;
 				obj.model_struct.expr_f = value;
+			elseif (strcmp(field, 'param_f'))
+				obj.param_f = value;
+				obj.model_struct.param_f = value;
 			% constraints
 			elseif (strcmp(field, 'constr_type'))
 				obj.constr_type = value;
@@ -227,6 +260,9 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'expr_h'))
 				obj.expr_h = value;
 				obj.model_struct.expr_h = value;
+			elseif (strcmp(field, 'param_h'))
+				obj.param_h = value;
+				obj.model_struct.param_h = value;
 			elseif (strcmp(field, 'lh'))
 				obj.lh = value;
 				obj.model_struct.lh = value;
@@ -236,6 +272,9 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'expr_h_e'))
 				obj.expr_h_e = value;
 				obj.model_struct.expr_h_e = value;
+			elseif (strcmp(field, 'param_h_e'))
+				obj.param_h_e = value;
+				obj.model_struct.param_h_e = value;
 			elseif (strcmp(field, 'lh_e'))
 				obj.lh_e = value;
 				obj.model_struct.lh_e = value;

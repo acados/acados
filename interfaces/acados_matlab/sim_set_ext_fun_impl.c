@@ -29,13 +29,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// model
 
-	// TODO bool instead !!!
-	char *param_f = mxArrayToString( mxGetField( prhs[1], 0, "param_f" ) );
 	int np = 0;
 	if(mxGetField( prhs[1], 0, "np" )!=NULL) // TODO bool
 		{
 		np = mxGetScalar( mxGetField( prhs[1], 0, "np" ) );
 		}
+	// TODO bool instead !!!
+	char *param_f = mxArrayToString( mxGetField( prhs[1], 0, "param_f" ) );
 
 
 	// opts
