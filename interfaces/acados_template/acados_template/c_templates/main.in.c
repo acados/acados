@@ -54,9 +54,9 @@ int main() {
     {% if ra.dims.np > 0:%}
     {% if ra.solver_config.integrator_type == 'IRK': %}
     for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
-    impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
-    impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun+ii, p);
-    impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_fun+ii, p);
+    impl_dae_fun[ii].set_param(impl_dae_fun+ii, in_p);
+    impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, in_p);
+    impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, in_p);
     }
     {% else: %}
     for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
