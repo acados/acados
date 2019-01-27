@@ -82,7 +82,7 @@ void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hid
 
 void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d);
 
-void project(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon);
+void acados_project(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon);
 
 void mirror(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon);
 

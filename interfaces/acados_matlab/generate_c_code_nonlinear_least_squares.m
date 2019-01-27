@@ -41,23 +41,47 @@ end
 % u
 u = model.sym_u;
 nu = length(u);
-
-% TODO check with isfield !!!!!!!!!!!!!!!!!!!
-y = model.expr_y;
-y_e = model.expr_y_e;
+% p
+if isfield(model, 'sym_p')
+    p = model.sym_p;
+	np = length(p);
+else
+    if isSX
+        p = SX.sym('p',0, 0);
+    else
+        p = MX.sym('p',0, 0);
+    end
+	np = 0;
+end
 
 model_name = model.name;
 
-%% generate jacobians
-jac_x       = jacobian(y, x);
-jac_u       = jacobian(y, u);
-jac_x_e     = jacobian(y_e, x);
+if isfield(model, 'expr_y')
+	y = model.expr_y;
+	% generate jacobians
+	jac_x       = jacobian(y, x);
+	jac_u       = jacobian(y, u);
+	% Set up functions
+	if (strcmp(model.param_y, 'true'))
+		y_fun_jac_ut_xt = Function([model_name,'_y_fun_jac_ut_xt'], {x, u, p}, {y, [jac_u'; jac_x']});
+	else
+		y_fun_jac_ut_xt = Function([model_name,'_y_fun_jac_ut_xt'], {x, u}, {y, [jac_u'; jac_x']});
+	end
+	% generate C code
+	y_fun_jac_ut_xt.generate([model_name,'_y_fun_jac_ut_xt'], casadi_opts);
+end
 
-%% Set up functions
-y_fun_jac_ut_xt = Function([model_name,'_y_fun_jac_ut_xt'], {[u; x]}, {y, [jac_u'; jac_x']});
-y_e_fun_jac_ut_xt = Function([model_name,'_y_e_fun_jac_ut_xt'], {x}, {y_e, jac_x_e'});
-
-%% generate C code
-y_fun_jac_ut_xt.generate([model_name,'_y_fun_jac_ut_xt'], casadi_opts);
-y_e_fun_jac_ut_xt.generate([model_name,'_y_e_fun_jac_ut_xt'], casadi_opts);
+if isfield(model, 'expr_y_e')
+	y_e = model.expr_y_e;
+	% generate jacobians
+	jac_x_e     = jacobian(y_e, x);
+	% Set up functions
+	if (strcmp(model.param_y_e, 'true'))
+		y_e_fun_jac_ut_xt = Function([model_name,'_y_e_fun_jac_ut_xt'], {x, p}, {y_e, jac_x_e'});
+	else
+		y_e_fun_jac_ut_xt = Function([model_name,'_y_e_fun_jac_ut_xt'], {x}, {y_e, jac_x_e'});
+	end
+	% generate C code
+	y_e_fun_jac_ut_xt.generate([model_name,'_y_e_fun_jac_ut_xt'], casadi_opts);
+end
 

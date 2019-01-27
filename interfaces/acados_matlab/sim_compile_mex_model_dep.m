@@ -17,11 +17,11 @@ mex_files = {};
 % dynamics
 if (strcmp(opts_struct.method, 'erk'))
 	mex_files = {mex_files{:},
-		[acados_mex_folder, 'sim_expl_ext_fun_create.c'] % TODO create sim_set_ext_fun_expl
+		[acados_mex_folder, 'sim_set_ext_fun_expl.c']
 		};
 elseif (strcmp(opts_struct.method, 'irk'))
 	mex_files = {mex_files{:},
-		[acados_mex_folder, 'sim_impl_ext_fun_create.c'] % TODO create sim_set_ext_fun_impl
+		[acados_mex_folder, 'sim_set_ext_fun_impl.c']
 		};
 else
 	fprintf('\ncodegen_model: method not supported: %s\n', opts_struct.method);

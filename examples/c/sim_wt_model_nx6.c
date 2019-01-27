@@ -568,6 +568,8 @@ int main()
 		free(config);
 	}
 
+//	d_print_mat(nx, 16, x_sim, nx);
+
 	free(x_sim);
 
 	// explicit model

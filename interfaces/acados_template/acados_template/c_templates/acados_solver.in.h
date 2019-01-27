@@ -16,11 +16,11 @@ int acados_create();
 int acados_solve();
 int acados_free();
 
-void * acados_get_nlp_in();
-void * acados_get_nlp_out();
-void * acados_get_nlp_solver();
-void * acados_get_nlp_config();
+ocp_nlp_in * acados_get_nlp_in();
+ocp_nlp_out * acados_get_nlp_out();
+ocp_nlp_solver * acados_get_nlp_solver();
+ocp_nlp_solver_config * acados_get_nlp_config();
 void * acados_get_nlp_opts();
-void * acados_get_nlp_dims();
+ocp_nlp_dims * acados_get_nlp_dims();
 
 #endif  // ACADOS_SOLVER_{{ra.model_name.upper()}}_H_

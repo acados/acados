@@ -136,7 +136,6 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 
 int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void *value)
 {
-//    printf("\nsim_in_set\n");
     sim_config *config = config_;
 
     int status = ACADOS_SUCCESS;

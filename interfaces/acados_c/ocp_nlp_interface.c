@@ -328,22 +328,22 @@ void ocp_nlp_in_destroy(void *in)
 void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
         const char *field, void *value)
 {
-	int ii;
+    int ii;
 
-	int N = dims->N;
+    int N = dims->N;
 
     if (!strcmp(field, "Ts"))
     {
         double *Ts_values = value;
-		for (ii=0; ii<N; ii++)
-			in->Ts[ii] = *Ts_values;
+        for (ii=0; ii<N; ii++)
+            in->Ts[ii] = *Ts_values;
     }
     else
     {
         printf("\nerror: ocp_nlp_in_set: field %s not available\n", field);
         exit(1);
     }
-	return;
+    return;
 }
 
 

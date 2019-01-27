@@ -459,6 +459,8 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
                                                         opts->constraints[ii]);
     }
 
+	mem->status = ACADOS_READY;
+
     assert((char *) raw_memory + ocp_nlp_sqp_memory_calculate_size(config, dims, opts) >= c_ptr);
 
     return mem;
@@ -1158,7 +1160,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
 #endif
-            return 0;
+			mem->status = ACADOS_SUCCESS;
+            return mem->status;
         }
 
         // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
@@ -1196,7 +1199,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
 #endif
-            return -1;
+			mem->status = ACADOS_QP_FAILURE;
+            return mem->status;
         }
 
         sqp_update_variables(config, dims, nlp_out, opts, mem, work);
@@ -1240,7 +1244,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
 #endif
-    return 1;
+	mem->status = ACADOS_MAXITER;
+    return mem->status;
 }
 
 
@@ -1299,6 +1304,11 @@ void ocp_nlp_sqp_get(void *config_, void *mem_, const char *field, void *return_
         int *value = return_value_;
         *value = mem->sqp_iter;
     }
+    else if (!strcmp("status", field))
+    {
+        int *value = return_value_;
+        *value = mem->status;
+    }
     else if (!strcmp("time_tot", field) || !strcmp("tot_time", field))
     {
         double *value = return_value_;
@@ -1344,7 +1354,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp;
     config->config_initialize_default = &ocp_nlp_sqp_config_initialize_default;
-    config->regularization = NULL;
+    config->regularization = NULL; // XXX what is this ?????????????
     config->precompute = &ocp_nlp_sqp_precompute;
     config->get = &ocp_nlp_sqp_get;
 

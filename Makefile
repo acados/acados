@@ -2,7 +2,14 @@
 
 
 
+# default make target
+all: acados_static acados_c_static
+
+
+
+# include config & tailored rules
 include ./Makefile.rule
+include ./Makefile.osqp
 
 
 
@@ -46,6 +53,9 @@ endif
 ifeq ($(ACADOS_WITH_QPDUNES), 1)
 OBJS += acados/ocp_qp/ocp_qp_qpdunes.o
 endif
+ifeq ($(ACADOS_WITH_OSQP), 1)
+OBJS += acados/ocp_qp/ocp_qp_osqp.o
+endif
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing_solver.o
@@ -87,10 +97,12 @@ ifeq ($(ACADOS_WITH_QORE), 1)
 STATIC_DEPS += qore_static
 CLEAN_DEPS += qore_clean
 endif
+ifeq ($(ACADOS_WITH_OSQP), 1)
+STATIC_DEPS += osqp_static
+CLEAN_DEPS += osqp_clean
+endif
 
 
-
-all: acados_static acados_c_static
 
 acados_static: $(STATIC_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
@@ -112,14 +124,14 @@ acados_shared: $(SHARED_DEPS)
 	@echo
 
 blasfeo_static:
-	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) )
+	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) BLAS_API=0 )
 	mkdir -p include/blasfeo/include
 	mkdir -p lib
 	cp $(BLASFEO_PATH)/include/*.h include/blasfeo/include
 	cp $(BLASFEO_PATH)/lib/libblasfeo.a lib
 
 blasfeo_shared:
-	( cd $(BLASFEO_PATH); $(MAKE) shared_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) )
+	( cd $(BLASFEO_PATH); $(MAKE) shared_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) BLAS_API=0 )
 	mkdir -p include/blasfeo/include
 	mkdir -p lib
 	cp $(BLASFEO_PATH)/include/*.h include/blasfeo/include
@@ -177,6 +189,12 @@ qpdunes_static:
 	cp -r $(QPDUNES_PATH)/include/* include/qpdunes/include
 	cp $(QPDUNES_PATH)/src/libqpdunes.a lib
 	cp $(QPDUNES_PATH)/externals/qpOASES-3.0beta/bin/libqpOASES.a lib
+	
+osqp_static: $(OSQP_LIB_STATIC)
+	mkdir -p include/osqp/include
+	mkdir -p lib
+	cp -r $(OSQP_PATH)/include/* include/osqp/include
+	mv libosqp.a lib
 
 acados_c_static: acados_static
 ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
@@ -224,6 +242,11 @@ qore_clean:
 
 qpdunes_clean:
 	( cd $(QPDUNES_PATH); $(MAKE) clean )
+	
+osqp_clean:
+	@$(RM) $(OSQP_ALL_OBJ)
+	@$(RM) $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@$(RM) $(OSQP_INC_DIR)osqp_configure.h
 
 deep_clean: clean $(CLEAN_DEPS)
 	( cd examples/c; $(MAKE) clean )

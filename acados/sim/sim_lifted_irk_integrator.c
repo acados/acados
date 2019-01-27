@@ -161,7 +161,8 @@ int sim_lifted_irk_model_set(void *model_, const char *field, void *value)
     else
     {
         printf("\nerror: sim_lifted_irk_model_set: wrong field: %s\n", field);
-        return ACADOS_FAILURE;
+		exit(1);
+//        return ACADOS_FAILURE;
     }
 
     return ACADOS_SUCCESS;
@@ -757,7 +758,7 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
         if (update_sens)
         {
-            blasfeo_dgetrf_rowpivot(nx * ns, nx * ns, JGK, 0, 0, JGK, 0, 0, ipiv);
+            blasfeo_dgetrf_rp(nx * ns, nx * ns, JGK, 0, 0, JGK, 0, 0, ipiv);
         }
 
         // update r.h.s (6.23, Quirynen2017)

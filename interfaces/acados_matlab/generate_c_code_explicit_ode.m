@@ -52,6 +52,18 @@ else
     end
 	nu = 0;
 end
+% p
+if isfield(model, 'sym_p')
+    p = model.sym_p;
+	np = length(p);
+else
+    if isSX
+        p = SX.sym('p',0, 0);
+    else
+        p = MX.sym('p',0, 0);
+    end
+	np = 0;
+end
 
 f_expl = model.expr_f;
 
@@ -59,33 +71,45 @@ model_name = model.name;
 
 %% set up functions to be exported
 if isSX
-    Sx = SX.sym('Sx',nx,nx);
-    Sp = SX.sym('Sp',nx,nu);
+    Sx = SX.sym('Sx', nx, nx);
+    Su = SX.sym('Su', nx, nu);
     lambdaX = SX.sym('lambdaX',nx,1);
-    vdeX = SX.zeros(nx,nx);
-    vdeP = SX.zeros(nx,nu) + jacobian(f_expl,u);
+    vdeX = SX.zeros(nx, nx);
+    vdeU = SX.zeros(nx, nu) + jacobian(f_expl, u);
 else
-    Sx = MX.sym('Sx',nx,nx);
-    Sp = MX.sym('Sp',nx,nu);
-    lambdaX = MX.sym('lambdaX',nx,1);
-    vdeX = MX.zeros(nx,nx);
-    vdeP = MX.zeros(nx,nu) + jacobian(f_expl,u);
+    Sx = MX.sym('Sx', nx, nx);
+    Su = MX.sym('Su', nx, nu);
+    lambdaX = MX.sym('lambdaX', nx, 1);
+    vdeX = MX.zeros(nx, nx);
+    vdeU = MX.zeros(nx, nu) + jacobian(f_expl, u);
 end
-expl_ode_fun = Function([model_name,'_expl_ode_fun'],{x,u},{f_expl});
+if (strcmp(model.param_f, 'true'))
+	expl_ode_fun = Function([model_name,'_expl_ode_fun'], {x, u, p}, {f_expl});
+else
+	expl_ode_fun = Function([model_name,'_expl_ode_fun'], {x, u}, {f_expl});
+end
 % TODO: Polish: get rid of SX.zeros
 
-vdeX = vdeX + jtimes(f_expl,x,Sx);
+vdeX = vdeX + jtimes(f_expl, x, Sx);
 
-vdeP = vdeP + jtimes(f_expl,x,Sp);
+vdeU = vdeU + jtimes(f_expl, x, Su);
 
-expl_vde_for = Function([model_name,'_expl_vde_for'],{x,Sx,Sp,u},{f_expl,vdeX,vdeP});
+if (strcmp(model.param_f, 'true'))
+	expl_vde_for = Function([model_name,'_expl_vde_for'], {x, Sx, Su, u, p}, {f_expl, vdeX, vdeU});
+else
+	expl_vde_for = Function([model_name,'_expl_vde_for'], {x, Sx, Su, u}, {f_expl, vdeX, vdeU});
+end
 
-adj = jtimes(f_expl,[x;u],lambdaX,true);
+adj = jtimes(f_expl, [x;u], lambdaX,true);
 
-expl_vde_adj = Function([model_name,'_expl_vde_adj'],{x,lambdaX,u},{adj});
+if (strcmp(model.param_f, 'true'))
+	expl_vde_adj = Function([model_name,'_expl_vde_adj'], {x, lambdaX, u, p}, {adj});
+else
+	expl_vde_adj = Function([model_name,'_expl_vde_adj'], {x, lambdaX, u}, {adj});
+end
 
-S_forw = vertcat(horzcat(Sx, Sp), horzcat(zeros(nu,nx), eye(nu)));
-hess = S_forw.'*jtimes(adj,[x;u],S_forw);
+S_forw = vertcat(horzcat(Sx, Su), horzcat(zeros(nu,nx), eye(nu)));
+hess = S_forw.'*jtimes(adj, [x;u], S_forw);
 hess2 = [];
 for j = 1:nx+nu
     for i = j:nx+nu
@@ -93,7 +117,11 @@ for j = 1:nx+nu
     end
 end
 
-expl_ode_hes = Function([model_name,'_expl_ode_hes'],{x,Sx,Sp,lambdaX,u},{adj,hess2});
+if (strcmp(model.param_f, 'true'))
+	expl_ode_hes = Function([model_name,'_expl_ode_hes'], {x, Sx, Su, lambdaX, u, p}, {adj, hess2});
+else
+	expl_ode_hes = Function([model_name,'_expl_ode_hes'], {x, Sx, Su, lambdaX, u}, {adj, hess2});
+end
 
 %% generate C code
 expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);
