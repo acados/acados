@@ -95,6 +95,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			return;
 			}
 		}
+	else if(!strcmp(field, "status"))
+		{
+		plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+		double *mat_ptr = mxGetPr( plhs[0] );
+		int status;
+		ocp_nlp_get(config, solver, "status", &status);
+		*mat_ptr = (double) status;
+		}
 	else if(!strcmp(field, "sqp_iter"))
 		{
 		plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);

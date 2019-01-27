@@ -222,12 +222,13 @@ x = ocp.get('x');
 x(:,1)'
 electrical_power = 0.944*97/100*x(1,1)*x(6,1)
 
+status = ocp.get('status');
 sqp_iter = ocp.get('sqp_iter');
 time_tot = ocp.get('time_tot');
 time_lin = ocp.get('time_lin');
 time_qp_sol = ocp.get('time_qp_sol');
 
-fprintf('\nsqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+fprintf('\nstatus = %d, sqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
 
 
 
