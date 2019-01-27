@@ -525,6 +525,9 @@ int acados_create() {
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_algebraic", &sens_algebraic_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps_val);
     {% endif %}
+    // CUSTOM CODE: for the RSM application, it seems to be necessary not to reuse Jacobians!
+    bool jac_reuse = false;
+    for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "jac_reuse", &jac_reuse_val);
 
     {% if ra.solver_config.nlp_solver_type == 'SQP': %}
 
