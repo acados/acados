@@ -59,7 +59,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 
-	// TODO implement with LHS !!!!!
+	// TODO implement with LHS ?????
 	// value
 	if (!strcmp(field, "x0"))
 		{

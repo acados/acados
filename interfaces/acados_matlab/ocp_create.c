@@ -17,6 +17,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// sizeof(long long) == sizeof(void *) = 64 !!!
 	long long *l_ptr;
 	int *i_ptr;
+	int *tmp_idx;
 	double *d_ptr;
 
 	int ii, jj, idx;
@@ -33,7 +34,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int nu;			bool set_nu = false;
 	int ny;			bool set_ny = false;
 	int ny_e;		bool set_ny_e = false;
-	int nbx;		bool set_nbx = false;
+	int nbx = 0;	bool set_nbx = false;
 	int nbu;		bool set_nbu = false;
 	int ng;			bool set_ng = false;
 	int ng_e;		bool set_ng_e = false;
@@ -782,9 +783,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", d_ptr);
 		free(d_ptr);
 		}
+	tmp_idx = malloc(nbx*sizeof(int));
 	if(set_Jbx)
 		{
-		i_ptr = malloc(nbx*sizeof(int));
 		for(ii=0; ii<nbx; ii++)
 			{
 			idx = -1;
@@ -792,7 +793,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				{
 				if(Jbx[ii+nbx*jj]!=0.0)
 					{
-					i_ptr[ii] = jj;
+					tmp_idx[ii] = jj;
 					idx = jj;
 					}
 				}
@@ -800,15 +801,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		ii = 1;
 		for(; ii<=N; ii++)
 			{
-			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxbx", i_ptr);
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxbx", tmp_idx);
 			}
-		free(i_ptr);
 		}
 	if(set_lbx)
 		{
 		if(!set_x0)
 			{
-			// TODO
+			d_ptr = malloc(nx*sizeof(double));
+			for(ii=0; ii<nx; ii++)
+				{
+				d_ptr[ii] = - acados_inf;
+				}
+			for(ii=0; ii<nbx; ii++)
+				{
+				d_ptr[tmp_idx[ii]] = lbx[ii];
+				}
+			ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", d_ptr);
+			free(d_ptr);
 			}
 		ii = 1;
 		for(; ii<=N; ii++)
@@ -820,7 +830,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		if(!set_x0)
 			{
-			// TODO
+			d_ptr = malloc(nx*sizeof(double));
+			for(ii=0; ii<nx; ii++)
+				{
+				d_ptr[ii] = acados_inf;
+				}
+			for(ii=0; ii<nbx; ii++)
+				{
+				d_ptr[tmp_idx[ii]] = ubx[ii];
+				}
+			ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", d_ptr);
+			free(d_ptr);
 			}
 		ii = 1;
 		for(; ii<=N; ii++)
@@ -828,6 +848,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "ubx", ubx);
 			}
 		}
+	free(tmp_idx);
 	if(set_Jbu)
 		{
 		i_ptr = malloc(nbu*sizeof(int));
