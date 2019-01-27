@@ -1,7 +1,7 @@
 function sim_compile_mex()
 
 % get acados folder
-acados_folder = getenv('ACADOS_FOLDER');
+acados_folder = getenv('ACADOS_INSTALL_DIR');
 mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
