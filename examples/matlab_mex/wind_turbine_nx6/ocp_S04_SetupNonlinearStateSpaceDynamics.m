@@ -84,12 +84,24 @@ fi = dx - fe;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% OUTPUT EQUATION
+% output equation
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%y = [GEN_agvelSt BLD_agPtchActSt BLD_agPtchGradDes GEN_trqGradDes];% MgenSlack betaSlack];
+%y_e = [GEN_agvelSt BLD_agPtchActSt];
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% nonlinear constraints
 %
 % y = h(x,u)
 % yN = hN(xN)
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                                                       % all variables are scaled to stay within [-1..1]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%h = [GEN_agvelSt BLD_agPtchActSt BLD_agPtchGradDes GEN_trqGradDes];% MgenSlack betaSlack];
-%hN = [GEN_agvelSt BLD_agPtchActSt];
+alpha = 0.944*97/100;
+
+h = alpha * GEN_agvelSt * GEN_trqActSt;
+h_e = alpha * GEN_agvelSt * GEN_trqActSt;

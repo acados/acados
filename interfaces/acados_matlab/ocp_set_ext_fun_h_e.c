@@ -67,7 +67,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// TODO templetize the casadi function names !!!
 	if(set_h_e && nh_e>0)
 		{
-		if(!strcmp(param_h, "true")) // TODO bool
+		if(!strcmp(param_h_e, "true")) // TODO bool
 			{
 			// h_e_fun_jac_ut_xt
 			ext_fun_param_ptr = (external_function_param_casadi *) malloc(1*sizeof(external_function_param_casadi));

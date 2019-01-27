@@ -8,7 +8,6 @@ compile_mex = 'true';
 codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
 N = 40;
-
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 qp_solver = 'partial_condensing_hpipm';
@@ -38,8 +37,8 @@ nbx = 3;
 nbu = nu;
 ng = 0;
 ng_e = 0;
-nh = 0; % 1
-nh_e = 0;
+nh = 1;
+nh_e = 1;
 np = model.np; % 1
 
 %% cost
@@ -69,8 +68,10 @@ W_e(1, 1) =  1.5114;
 W_e(2, 1) = -0.0649;
 W_e(1, 2) = -0.0649;
 W_e(2, 2) =  0.0180;
-%yr = [model.x_ref; zeros(nu, 1)]; % output reference in lagrange term
-%yr_e = model.x_ref; % output reference in mayer term
+% output reference in lagrange term
+%yr = ... ;
+% output reference in mayer term
+%yr_e = ... ;
 
 %% constraints
 % constants
@@ -85,7 +86,7 @@ beta_max = 35.0;
 M_gen_min = 0.0;
 M_gen_max = 5.0;
 Pel_min = 0.0;
-Pel_max = 5.0;
+Pel_max = 6.2; % 5.0
 
 %acados_inf = 1e8;
 
@@ -100,13 +101,16 @@ ubx = [OmegaR_max; beta_max; M_gen_max];
 Jbu = eye(nu);
 lbu = [dbeta_min; dM_gen_min];
 ubu = [dbeta_max; dM_gen_max];
-% TODO power constraint h
+% nonlinear constraints (power constraint)
+lh = Pel_min;
+uh = Pel_max;
+lh_e = Pel_min;
+uh_e = Pel_max;
 
 % shift
 x_end = zeros(nx, 1);
 u_end = zeros(nu, 1);
 
-% TODO
 
 
 %% acados ocp model
@@ -119,8 +123,8 @@ ocp_model.set('ny', ny);
 ocp_model.set('ny_e', ny_e);
 ocp_model.set('nbx', nbx);
 ocp_model.set('nbu', nbu);
-%ocp_model.set('nh', nh);
-%ocp_model.set('nh_e', nh_e);
+ocp_model.set('nh', nh);
+ocp_model.set('nh_e', nh_e);
 ocp_model.set('np', np);
 %% symbolics
 ocp_model.set('sym_x', model.sym_x);
@@ -145,18 +149,21 @@ else % irk
 end
 ocp_model.set('param_f', 'true');
 %% constraints
-%ocp_model.set('expr_h', model.expr_h);
-%ocp_model.set('lh', lh);
-%ocp_model.set('uh', uh);
-%ocp_model.set('expr_h_e', model.expr_h_e);
-%ocp_model.set('lh_e', lh_e);
-%ocp_model.set('uh_e', uh_e);
+% state bounds
 ocp_model.set('Jbx', Jbx);
 ocp_model.set('lbx', lbx);
 ocp_model.set('ubx', ubx);
+% input bounds
 ocp_model.set('Jbu', Jbu);
 ocp_model.set('lbu', lbu);
 ocp_model.set('ubu', ubu);
+% nonlinear constraints
+ocp_model.set('expr_h', model.expr_h);
+ocp_model.set('lh', lh);
+ocp_model.set('uh', uh);
+ocp_model.set('expr_h_e', model.expr_h_e);
+ocp_model.set('lh_e', lh_e);
+ocp_model.set('uh_e', uh_e);
 
 ocp_model.model_struct
 
@@ -220,6 +227,7 @@ u = ocp.get('u');
 x = ocp.get('x');
 
 x(:,1)'
+u(:,1)'
 electrical_power = 0.944*97/100*x(1,1)*x(6,1)
 
 status = ocp.get('status');
@@ -232,7 +240,11 @@ fprintf('\nstatus = %d, sqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], t
 
 
 
-fprintf('\nsuccess!\n\n');
+if status==0
+	fprintf('\nsuccess!\n\n');
+else
+	fprintf('\nsolution failed!\n\n');
+end
 
 
 

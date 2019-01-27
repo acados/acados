@@ -33,8 +33,8 @@ model.sym_u = u;
 model.sym_p = p;
 model.expr_f_expl = fe;
 model.expr_f_impl = fi;
-%model.expr_h = h;
-%model.expr_h_e = hN;
-%model.expr_y = expr_y;
-%model.expr_y_e = expr_y_e;
+model.expr_h = h;
+model.expr_h_e = h_e;
+%model.expr_y = y;
+%model.expr_y_e = y_e;
 
