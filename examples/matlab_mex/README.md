@@ -6,8 +6,11 @@ make acados_c_shared
 
 To run the examples, navigate into the selected folder, and there run the command
 ```
-source ./setenv.sh
+export ACADOS_INSTALL_DIR="<your acados repo dir>"
+# from example directory
+source env.sh
 ```
+
 to set the necessary environment variables.
 Afterwards, launch matlab from the same shell.
 
