@@ -17,6 +17,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// sizeof(long long) == sizeof(void *) = 64 !!!
 	long long *l_ptr;
 	int *i_ptr;
+	double *d_ptr;
 
 	int ii, jj, idx;
 
@@ -751,17 +752,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// constraints: bgh
 
+	double acados_inf = 1e8;
+
+	// x0 is always bounded on all components !!!
+	i_ptr = malloc(nx*sizeof(int));
+	for(ii=0; ii<nx; ii++)
+		{
+		i_ptr[ii] = ii;
+		}
+	ocp_nlp_constraints_model_set(config, dims, in, 0, "idxbx", i_ptr);
+	free(i_ptr);
 	if(set_x0)
 		{
-		i_ptr = malloc(nx*sizeof(int));
-		for(ii=0; ii<nx; ii++)
-			{
-			i_ptr[ii] = ii;
-			}
-		ocp_nlp_constraints_model_set(config, dims, in, 0, "idxbx", i_ptr);
-		free(i_ptr);
 		ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", x0);
 		ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", x0);
+		}
+	else
+		{
+		d_ptr = malloc(nx*sizeof(double));
+		for(ii=0; ii<nx; ii++)
+			{
+			d_ptr[ii] = - acados_inf;
+			}
+		ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", d_ptr);
+		for(ii=0; ii<nx; ii++)
+			{
+			d_ptr[ii] = acados_inf;
+			}
+		ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", d_ptr);
+		free(d_ptr);
 		}
 	if(set_Jbx)
 		{
@@ -778,14 +797,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 					}
 				}
 			}
-		if(!set_x0)
-			{
-			ii = 0;
-			}
-		else
-			{
-			ii = 1;
-			}
+		ii = 1;
 		for(; ii<=N; ii++)
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxbx", i_ptr);
@@ -796,12 +808,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		if(!set_x0)
 			{
-			ii = 0;
+			// TODO
 			}
-		else
-			{
-			ii = 1;
-			}
+		ii = 1;
 		for(; ii<=N; ii++)
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "lbx", lbx);
@@ -811,12 +820,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		if(!set_x0)
 			{
-			ii = 0;
+			// TODO
 			}
-		else
-			{
-			ii = 1;
-			}
+		ii = 1;
 		for(; ii<=N; ii++)
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "ubx", ubx);

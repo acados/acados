@@ -17,7 +17,7 @@ qp_solver_N_pcond = 5;
 %sim_method = 'erk';
 sim_method = 'irk';
 sim_method_num_stages = 4;
-sim_method_num_steps = 2;
+sim_method_num_steps = 1;
 cost_type = 'linear_ls';
 
 
@@ -135,8 +135,6 @@ ocp_model.set('Vx', Vx);
 ocp_model.set('Vx_e', Vx_e);
 ocp_model.set('W', W);
 ocp_model.set('W_e', W_e);
-%ocp_model.set('yr', yr);
-%ocp_model.set('yr_e', yr_e);
 %% dynamics
 if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
@@ -147,7 +145,6 @@ else % irk
 end
 ocp_model.set('param_f', 'true');
 %% constraints
-%ocp_model.set('x0', x0);
 %ocp_model.set('expr_h', model.expr_h);
 %ocp_model.set('lh', lh);
 %ocp_model.set('uh', uh);
@@ -193,56 +190,49 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 
 
 
-%% get references
-compute_setup
-
-
-
-return
+%% solution
+% get references
+compute_setup;
 
 % set trajectory initialization
-x_traj_init = repmat(model.x_ref, 1, N+1);
-u_traj_init = zeros(nu, N);
+x_traj_init = repmat(x0_ref, 1, N+1);
+u_traj_init = repmat(u0_ref, 1, N);
+
 ocp.set('x_init', x_traj_init);
 ocp.set('u_init', u_traj_init);
 
+% set x0
+ocp.set('x0', x0_ref);
+
+% set parameter
+nn = 1;
+ocp.set('p', wind0_ref(:,nn));
+
+% set reference
+ocp.set('yr', y_ref);
+ocp.set('yr_e', y_ref);
 
 % solve
-nrep = 10;
-tic;
-for rep=1:nrep
-	ocp.solve();
-end
-time_solve = toc/nrep
-
+ocp.solve();
 
 % get solution
 u = ocp.get('u');
 x = ocp.get('x');
 
+x(:,1)'
+electrical_power = 0.944*97/100*x(1,1)*x(6,1)
 
+sqp_iter = ocp.get('sqp_iter');
+time_tot = ocp.get('time_tot');
+time_lin = ocp.get('time_lin');
+time_qp_sol = ocp.get('time_qp_sol');
 
-% plot result
-%figure()
-%subplot(2, 1, 1)
-%plot(0:N, x);
-%title('closed loop simulation')
-%ylabel('x')
-%subplot(2, 1, 2)
-%plot(1:N, u);
-%ylabel('u')
-%xlabel('sample')
-
-
-% print solution
-for ii=1:N
-	cur_pos = x(:,ii);
-	visualize;
-end
+fprintf('\nsqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
 
 
 
 fprintf('\nsuccess!\n\n');
+
 
 
 return;

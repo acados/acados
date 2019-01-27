@@ -62,13 +62,18 @@ u0_ref = U0';
 wind0_ref = VwindSim(1:nsim);
 y_ref = y(1:nsim,:)';
 
-size(x0_ref)
-size(u0_ref)
-size(wind0_ref)
-size(y_ref)
+%size(x0_ref)
+%size(u0_ref)
+%size(wind0_ref)
+%size(y_ref)
 
 
 return;
+
+
+
+
+
 
 
 %% print to file

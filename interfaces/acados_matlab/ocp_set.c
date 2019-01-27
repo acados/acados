@@ -67,6 +67,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", x0);
 		ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", x0);
 		}
+	else if (!strcmp(field, "yr"))
+		{
+		double *yr = mxGetPr( prhs[5] );
+		for (ii=0; ii<N; ii++)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
+			}
+		}
+	else if (!strcmp(field, "yr_e"))
+		{
+		double *yr_e = mxGetPr( prhs[5] );
+		ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
+		}
 	else if (!strcmp(field, "x_init"))
 		{
 		double *x_init = mxGetPr( prhs[5] );
