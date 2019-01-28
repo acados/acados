@@ -9,8 +9,8 @@ codgen_model = 'true';
 % simulation
 sim_method = 'irk';
 sim_sens_forw = 'false';
-sim_num_stages = 6;
-sim_num_steps = 4;
+sim_num_stages = 4;
+sim_num_steps = 1;
 % ocp
 ocp_param_scheme = 'multiple_shooting_unif_grid';
 ocp_N = 40;
@@ -286,7 +286,11 @@ sim = acados_sim(sim_model, sim_opts);
 % get references
 compute_setup;
 
-n_sim = 20;
+n_sim = 40;
+n_sim_max = length(wind0_ref);
+if n_sim>n_sim_max
+	n_sim = s_sim_max;
+end
 x_sim = zeros(nx, n_sim+1);
 x_sim(:,1) = x0_ref; % initial state
 u_sim = zeros(nu, n_sim);
@@ -295,25 +299,38 @@ u_sim = zeros(nu, n_sim);
 x_traj_init = repmat(x0_ref, 1, ocp_N+1);
 u_traj_init = repmat(u0_ref, 1, ocp_N);
 
-ocp.set('x_init', x_traj_init);
-ocp.set('u_init', u_traj_init);
-
 for ii=1:n_sim
+
+%	fprintf('\nsimulation step %d\n', ii);
 
 	% set x0
 	ocp.set('x0', x_sim(:,ii));
 	% set parameter
+	% TODO different parameter at each stage !!!!!
 	ocp.set('p', wind0_ref(:,ii));
 	% set reference
+	% TODO different reference at each stage !!!!!
 	ocp.set('yr', y_ref(:,ii));
 	ocp.set('yr_e', y_ref(:,ii));
+
+	% initialize trajectory
+	ocp.set('x_init', x_traj_init);
+	ocp.set('u_init', u_traj_init);
+
+%	x_traj_init
+%	u_traj_init
 
 	% solve
 	ocp.solve();
 
 	% get solution
-	u = ocp.get('u');
 	x = ocp.get('x');
+	u = ocp.get('u');
+
+%	x
+%	u
+
+	% store first input
 	u_sim(:,ii) = ocp.get('u', 0);
 
 	% set initial state of sim
@@ -330,10 +347,16 @@ for ii=1:n_sim
 	x_sim(:,ii+1) = sim.get('xn');
 %	x_sim(:,ii+1) = x(:,2);
 
+%	(x(:,2) - sim.get('xn'))'
+
+	% shift initialization
+	x_traj_init = [x(:,2:N+1), zeros(nx, 1)];
+	u_traj_init = [u(:,2:N), zeros(nu, 1)];
+
 %	x(:,1)'
 %	u(:,1)'
+
 	electrical_power = 0.944*97/100*x(1,1)*x(6,1);
-%	electrical_power = 0.944*97/100*x(1,:).*x(6,:)
 
 	status = ocp.get('status');
 	sqp_iter = ocp.get('sqp_iter');
@@ -343,12 +366,10 @@ for ii=1:n_sim
 
 	fprintf('\nstatus = %d, sqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
 
-	% TODO shift initialization !!!!!!!!
-%	ocp.set('x_init', x_traj_init);
-%	ocp.set('u_init', u_traj_init);
-
 end
 
+%u_sim
+%x_sim
 
 if status==0
 	fprintf('\nsuccess!\n\n');

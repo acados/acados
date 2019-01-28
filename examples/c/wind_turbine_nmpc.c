@@ -675,10 +675,10 @@ int main()
     // slacks (middle stages)
     for (int ii=1; ii<NN; ii++)
     {
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lZ", lZ1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uZ", uZ1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lz", lz1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uz", uz1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "Zl", lZ1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "Zu", uZ1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "zl", lz1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "zu", uz1);
     }
 
 
@@ -898,7 +898,10 @@ int main()
     * sqp solve
     ************************************************/
 
-    int nmpc_problems = 40;
+    int n_sim = 40;
+
+	double *x_sim = malloc(nx_*(n_sim+1)*sizeof(double));
+	double *u_sim = malloc(nu_*(n_sim+0)*sizeof(double));
 
     acados_timer timer;
     acados_tic(&timer);
@@ -919,7 +922,10 @@ int main()
         ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0_ref);
         ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0_ref);
 
-        for (int idx = 0; idx < nmpc_problems; idx++)
+		// store x0
+		for(int ii=0; ii<nx_; ii++) x_sim[ii] = x0_ref[ii];
+
+        for (int idx = 0; idx < n_sim; idx++)
         {
             // update wind distrurbance as external function parameter
             for (int ii=0; ii<NN; ii++)
@@ -962,6 +968,10 @@ int main()
             ocp_nlp_out_get(config, dims, nlp_out, 1, "x", specific_x);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", specific_x);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", specific_x);
+
+			// store trajectory
+            ocp_nlp_out_get(config, dims, nlp_out, 1, "x", x_sim+(idx+1)*nx_);
+            ocp_nlp_out_get(config, dims, nlp_out, 0, "u", u_sim+idx*nu_);
 
             // print info
             if (true)
@@ -1008,8 +1018,12 @@ int main()
 
     double time = acados_toc(&timer)/NREP;
 
-    printf("\n\ntotal time (including printing) = %f ms (time per SQP = %f)\n\n", time*1e3, time*1e3/nmpc_problems);
+    printf("\n\ntotal time (including printing) = %f ms (time per SQP = %f)\n\n", time*1e3, time*1e3/n_sim);
 
+#if 0
+	d_print_mat(nx_, n_sim+1, x_sim, nx_);
+	d_print_mat(nu_, n_sim, u_sim, nu_);
+#endif
 
     /************************************************
     * free memory
@@ -1048,6 +1062,9 @@ int main()
 
     free(specific_x);
     free(specific_u);
+
+	free(x_sim);
+	free(u_sim);
 
     free(lZ0);
     free(uZ0);
