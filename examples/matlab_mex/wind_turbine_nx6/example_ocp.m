@@ -39,6 +39,10 @@ ng = 0;
 ng_e = 0;
 nh = 1;
 nh_e = 1;
+ns = 1;
+ns_e = 1;
+nsh = 1;
+nsh_e = 1;
 np = model.np; % 1
 
 %% cost
@@ -72,6 +76,15 @@ W_e(2, 2) =  0.0180;
 %yr = ... ;
 % output reference in mayer term
 %yr_e = ... ;
+% slacks
+Zl = 1e2;
+Zl_e = 1e2;
+Zu = 1e2;
+Zu_e = 1e2;
+zl = 0e2;
+zl_e = 0e2;
+zu = 0e2;
+zu_e = 0e2;
 
 %% constraints
 % constants
@@ -86,7 +99,7 @@ beta_max = 35.0;
 M_gen_min = 0.0;
 M_gen_max = 5.0;
 Pel_min = 0.0;
-Pel_max = 6.2; % 5.0
+Pel_max = 5.0; % 5.0
 
 %acados_inf = 1e8;
 
@@ -106,6 +119,15 @@ lh = Pel_min;
 uh = Pel_max;
 lh_e = Pel_min;
 uh_e = Pel_max;
+% soft nonlinear constraints
+Jsh = zeros(nh, nsh);
+Jsh(1, 1) = 1.0;
+lsh = zeros(nsh);
+ush = zeros(nsh);
+Jsh_e = zeros(nh_e, nsh_e);
+Jsh_e(1, 1) = 1.0;
+lsh_e = zeros(nsh_e);
+ush_e = zeros(nsh_e);
 
 % shift
 x_end = zeros(nx, 1);
@@ -125,6 +147,10 @@ ocp_model.set('nbx', nbx);
 ocp_model.set('nbu', nbu);
 ocp_model.set('nh', nh);
 ocp_model.set('nh_e', nh_e);
+ocp_model.set('ns', ns);
+ocp_model.set('ns_e', ns_e);
+ocp_model.set('nsh', nsh);
+ocp_model.set('nsh_e', nsh_e);
 ocp_model.set('np', np);
 %% symbolics
 ocp_model.set('sym_x', model.sym_x);
@@ -139,6 +165,14 @@ ocp_model.set('Vx', Vx);
 ocp_model.set('Vx_e', Vx_e);
 ocp_model.set('W', W);
 ocp_model.set('W_e', W_e);
+ocp_model.set('Zl', Zl);
+ocp_model.set('Zl_e', Zl_e);
+ocp_model.set('Zu', Zu);
+ocp_model.set('Zu_e', Zu_e);
+ocp_model.set('zl', zl);
+ocp_model.set('zl_e', zl_e);
+ocp_model.set('zu', zu);
+ocp_model.set('zu_e', zu_e);
 %% dynamics
 if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
@@ -164,6 +198,13 @@ ocp_model.set('uh', uh);
 ocp_model.set('expr_h_e', model.expr_h_e);
 ocp_model.set('lh_e', lh_e);
 ocp_model.set('uh_e', uh_e);
+% soft nonlinear constraints
+ocp_model.set('Jsh', Jsh);
+ocp_model.set('lsh', lsh);
+ocp_model.set('ush', ush);
+ocp_model.set('Jsh_e', Jsh_e);
+ocp_model.set('lsh_e', lsh_e);
+ocp_model.set('ush_e', ush_e);
 
 ocp_model.model_struct
 
@@ -228,7 +269,8 @@ x = ocp.get('x');
 
 x(:,1)'
 u(:,1)'
-electrical_power = 0.944*97/100*x(1,1)*x(6,1)
+%electrical_power = 0.944*97/100*x(1,1)*x(6,1)
+electrical_power = 0.944*97/100*x(1,:).*x(6,:)
 
 status = ocp.get('status');
 sqp_iter = ocp.get('sqp_iter');

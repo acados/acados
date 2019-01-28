@@ -675,10 +675,10 @@ int main()
     // slacks (middle stages)
     for (int ii=1; ii<NN; ii++)
     {
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lZ1", lZ1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uZ1", uZ1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lz1", lz1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uz1", uz1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lZ", lZ1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uZ", uZ1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lz", lz1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uz", uz1);
     }
 
 

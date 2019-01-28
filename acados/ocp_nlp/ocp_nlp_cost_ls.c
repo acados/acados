@@ -240,35 +240,36 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
         double *Z = (double *) value_;
         blasfeo_pack_dvec(2 * ns, Z, &model->Z, 0);
     }
-    else if (!strcmp(field, "lZ1"))
+    else if (!strcmp(field, "lZ"))
     {
-        double *lZ1_col_maj = (double *) value_;
-        blasfeo_pack_dvec(ns, lZ1_col_maj, &model->Z, 0);
+        double *lZ_col_maj = (double *) value_;
+        blasfeo_pack_dvec(ns, lZ_col_maj, &model->Z, 0);
     }
-    else if (!strcmp(field, "uZ1"))
+    else if (!strcmp(field, "uZ"))
     {
-        double *uZ1_col_maj = (double *) value_;
-        blasfeo_pack_dvec(ns, uZ1_col_maj, &model->Z, ns);
+        double *uZ_col_maj = (double *) value_;
+        blasfeo_pack_dvec(ns, uZ_col_maj, &model->Z, ns);
     }
     else if (!strcmp(field, "z"))
     {
         double *z = (double *) value_;
         blasfeo_pack_dvec(2 * ns, z, &model->z, 0);
     }
-    else if (!strcmp(field, "lz1"))
+    else if (!strcmp(field, "lz"))
     {
-        double *lz1_col_maj = (double *) value_;
-        blasfeo_pack_dvec(ns, lz1_col_maj, &model->z, 0);
+        double *lz_col_maj = (double *) value_;
+        blasfeo_pack_dvec(ns, lz_col_maj, &model->z, 0);
     }
-    else if (!strcmp(field, "uz1"))
+    else if (!strcmp(field, "uz"))
     {
-        double *uz1_col_maj = (double *) value_;
-        blasfeo_pack_dvec(ns, uz1_col_maj, &model->z, ns);
+        double *uz_col_maj = (double *) value_;
+        blasfeo_pack_dvec(ns, uz_col_maj, &model->z, ns);
     }
     else
     {
         printf("\nerror: model entry: %s not available in module ocp_nlp_cost_ls\n", field);
-        status = ACADOS_FAILURE;
+		exit(1);
+//        status = ACADOS_FAILURE;
     }
     return status;
 }
