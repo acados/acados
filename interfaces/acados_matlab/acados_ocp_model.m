@@ -47,10 +47,14 @@ classdef acados_ocp_model < handle
 		W_e
 		yr
 		yr_e
+		Z
+		Z_e
 		Zl
 		Zl_e
 		Zu
 		Zu_e
+		z
+		z_e
 		zl
 		zl_e
 		zu
@@ -84,23 +88,23 @@ classdef acados_ocp_model < handle
 		lh_e
 		uh_e
 		Jsbu
-		lsbu
-		usbu
+%		lsbu
+%		usbu
 		Jsbx
-		lsbx
-		usbx
+%		lsbx
+%		usbx
 		Jsg
-		lsg
-		usg
+%		lsg
+%		usg
 		Jsg_e
-		lsg_e
-		usg_e
+%		lsg_e
+%		usg_e
 		Jsh
-		lsh
-		ush
+%		lsh
+%		ush
 		Jsh_e
-		lsh_e
-		ush_e
+%		lsh_e
+%		ush_e
 		% structure
 		model_struct
 	end %properties
@@ -259,6 +263,12 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'yr_e'))
 				obj.yr_e = value;
 				obj.model_struct.yr_e = value;
+			elseif (strcmp(field, 'Z'))
+				obj.Z = value;
+				obj.model_struct.Z = value;
+			elseif (strcmp(field, 'Z_e'))
+				obj.Z_e = value;
+				obj.model_struct.Z_e = value;
 			elseif (strcmp(field, 'Zl'))
 				obj.Zl = value;
 				obj.model_struct.Zl = value;
@@ -277,6 +287,12 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'zl_e'))
 				obj.zl_e = value;
 				obj.model_struct.zl_e = value;
+			elseif (strcmp(field, 'z'))
+				obj.z = value;
+				obj.model_struct.z = value;
+			elseif (strcmp(field, 'z_e'))
+				obj.z_e = value;
+				obj.model_struct.z_e = value;
 			elseif (strcmp(field, 'zu'))
 				obj.zu = value;
 				obj.model_struct.zu = value;
@@ -366,57 +382,57 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'Jsbu'))
 				obj.Jsbu = value;
 				obj.model_struct.Jsbu = value;
-			elseif (strcmp(field, 'lsbu'))
-				obj.lsbu = value;
-				obj.model_struct.lsbu = value;
-			elseif (strcmp(field, 'usbu'))
-				obj.usbu = value;
-				obj.model_struct.usbu = value;
+%			elseif (strcmp(field, 'lsbu'))
+%				obj.lsbu = value;
+%				obj.model_struct.lsbu = value;
+%			elseif (strcmp(field, 'usbu'))
+%				obj.usbu = value;
+%				obj.model_struct.usbu = value;
 			elseif (strcmp(field, 'Jsbx'))
 				obj.Jsbx = value;
 				obj.model_struct.Jsbx = value;
-			elseif (strcmp(field, 'lsbx'))
-				obj.lsbx = value;
-				obj.model_struct.lsbx = value;
-			elseif (strcmp(field, 'usbx'))
-				obj.usbx = value;
-				obj.model_struct.usbx = value;
+%			elseif (strcmp(field, 'lsbx'))
+%				obj.lsbx = value;
+%				obj.model_struct.lsbx = value;
+%			elseif (strcmp(field, 'usbx'))
+%				obj.usbx = value;
+%				obj.model_struct.usbx = value;
 			elseif (strcmp(field, 'Jsg'))
 				obj.Jsg = value;
 				obj.model_struct.Jsg = value;
-			elseif (strcmp(field, 'lsg'))
-				obj.lsg = value;
-				obj.model_struct.lsg = value;
-			elseif (strcmp(field, 'usg'))
-				obj.usg = value;
-				obj.model_struct.usg = value;
+%			elseif (strcmp(field, 'lsg'))
+%				obj.lsg = value;
+%				obj.model_struct.lsg = value;
+%			elseif (strcmp(field, 'usg'))
+%				obj.usg = value;
+%				obj.model_struct.usg = value;
 			elseif (strcmp(field, 'Jsg_e'))
 				obj.Jsg_e = value;
 				obj.model_struct.Jsg_e = value;
-			elseif (strcmp(field, 'lsg_e'))
-				obj.lsg_e = value;
-				obj.model_struct.lsg_e = value;
-			elseif (strcmp(field, 'usg_e'))
-				obj.usg_e = value;
-				obj.model_struct.usg_e = value;
+%			elseif (strcmp(field, 'lsg_e'))
+%				obj.lsg_e = value;
+%				obj.model_struct.lsg_e = value;
+%			elseif (strcmp(field, 'usg_e'))
+%				obj.usg_e = value;
+%				obj.model_struct.usg_e = value;
 			elseif (strcmp(field, 'Jsh'))
 				obj.Jsh = value;
 				obj.model_struct.Jsh = value;
-			elseif (strcmp(field, 'lsh'))
-				obj.lsh = value;
-				obj.model_struct.lsh = value;
-			elseif (strcmp(field, 'ush'))
-				obj.ush = value;
-				obj.model_struct.ush = value;
+%			elseif (strcmp(field, 'lsh'))
+%				obj.lsh = value;
+%				obj.model_struct.lsh = value;
+%			elseif (strcmp(field, 'ush'))
+%				obj.ush = value;
+%				obj.model_struct.ush = value;
 			elseif (strcmp(field, 'Jsh_e'))
 				obj.Jsh_e = value;
 				obj.model_struct.Jsh_e = value;
-			elseif (strcmp(field, 'lsh_e'))
-				obj.lsh_e = value;
-				obj.model_struct.lsh_e = value;
-			elseif (strcmp(field, 'ush_e'))
-				obj.ush_e = value;
-				obj.model_struct.ush_e = value;
+%			elseif (strcmp(field, 'lsh_e'))
+%				obj.lsh_e = value;
+%				obj.model_struct.lsh_e = value;
+%			elseif (strcmp(field, 'ush_e'))
+%				obj.ush_e = value;
+%				obj.model_struct.ush_e = value;
 			else
 				disp(['acados_integrator_model: set: wrong field: ', field]);
 			end

@@ -77,14 +77,10 @@ W_e(2, 2) =  0.0180;
 % output reference in mayer term
 %yr_e = ... ;
 % slacks
-Zl = 1e2;
-Zl_e = 1e2;
-Zu = 1e2;
-Zu_e = 1e2;
-zl = 0e2;
-zl_e = 0e2;
-zu = 0e2;
-zu_e = 0e2;
+Z = 1e2;
+Z_e = 1e2;
+z = 0e2;
+z_e = 0e2;
 
 %% constraints
 % constants
@@ -122,12 +118,8 @@ uh_e = Pel_max;
 % soft nonlinear constraints
 Jsh = zeros(nh, nsh);
 Jsh(1, 1) = 1.0;
-lsh = zeros(nsh);
-ush = zeros(nsh);
 Jsh_e = zeros(nh_e, nsh_e);
 Jsh_e(1, 1) = 1.0;
-lsh_e = zeros(nsh_e);
-ush_e = zeros(nsh_e);
 
 % shift
 x_end = zeros(nx, 1);
@@ -165,14 +157,10 @@ ocp_model.set('Vx', Vx);
 ocp_model.set('Vx_e', Vx_e);
 ocp_model.set('W', W);
 ocp_model.set('W_e', W_e);
-ocp_model.set('Zl', Zl);
-ocp_model.set('Zl_e', Zl_e);
-ocp_model.set('Zu', Zu);
-ocp_model.set('Zu_e', Zu_e);
-ocp_model.set('zl', zl);
-ocp_model.set('zl_e', zl_e);
-ocp_model.set('zu', zu);
-ocp_model.set('zu_e', zu_e);
+ocp_model.set('Z', Z);
+ocp_model.set('Z_e', Z_e);
+ocp_model.set('z', z);
+ocp_model.set('z_e', z_e);
 %% dynamics
 if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
@@ -200,11 +188,7 @@ ocp_model.set('lh_e', lh_e);
 ocp_model.set('uh_e', uh_e);
 % soft nonlinear constraints
 ocp_model.set('Jsh', Jsh);
-ocp_model.set('lsh', lsh);
-ocp_model.set('ush', ush);
 ocp_model.set('Jsh_e', Jsh_e);
-ocp_model.set('lsh_e', lsh_e);
-ocp_model.set('ush_e', ush_e);
 
 ocp_model.model_struct
 
