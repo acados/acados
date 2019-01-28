@@ -847,7 +847,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	i_ptr[N] = 0;
 	ocp_nlp_dims_set_opt_vars(config, dims, "nu", i_ptr);
 	// ns
-	mexPrintf("\nns %d %d %d %d\n", ns, ns_e, nsh, nsh_e);
 	if(ns!=nsbu+nsbx+nsg+nsh)
 		{
 		mexPrintf("\nerror: ns!=nsbu+nsbx+nsg+nsh\n");

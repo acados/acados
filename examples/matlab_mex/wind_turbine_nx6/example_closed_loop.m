@@ -6,17 +6,23 @@ clear all
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
-param_scheme = 'multiple_shooting_unif_grid';
-N = 40;
-nlp_solver = 'sqp';
-%nlp_solver = 'sqp_rti';
-qp_solver = 'partial_condensing_hpipm';
-%qp_solver = 'full_condensing_hpipm';
-qp_solver_N_pcond = 5;
-%sim_method = 'erk';
+% simulation
 sim_method = 'irk';
-sim_method_num_stages = 4;
-sim_method_num_steps = 1;
+sim_sens_forw = 'false';
+sim_num_stages = 6;
+sim_num_steps = 4;
+% ocp
+ocp_param_scheme = 'multiple_shooting_unif_grid';
+ocp_N = 40;
+ocp_nlp_solver = 'sqp';
+%ocp_nlp_solver = 'sqp_rti';
+ocp_qp_solver = 'partial_condensing_hpipm';
+%ocp_qp_solver = 'full_condensing_hpipm';
+ocp_qp_solver_N_pcond = 5;
+%ocp_sim_method = 'erk';
+ocp_sim_method = 'irk';
+ocp_sim_method_num_stages = 4;
+ocp_sim_method_num_steps = 1;
 cost_type = 'linear_ls';
 
 
@@ -28,7 +34,7 @@ model = ocp_model_wind_turbine_nx6;
 
 %% dims
 Ts = 0.2; % samplig time
-T = N*Ts; %8.0; % horizon length time [s]
+T = ocp_N*Ts; %8.0; % horizon length time [s]
 nx = model.nx; % 8
 nu = model.nu; % 2
 ny = 4; % number of outputs in lagrange term
@@ -162,7 +168,7 @@ ocp_model.set('Z_e', Z_e);
 ocp_model.set('z', z);
 ocp_model.set('z_e', z_e);
 %% dynamics
-if (strcmp(sim_method, 'erk'))
+if (strcmp(ocp_sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
 	ocp_model.set('expr_f', model.expr_f_expl);
 else % irk
@@ -198,16 +204,16 @@ ocp_model.model_struct
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_mex', compile_mex);
 ocp_opts.set('codgen_model', codgen_model);
-ocp_opts.set('param_scheme', param_scheme);
-ocp_opts.set('param_scheme_N', N);
-ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('qp_solver', qp_solver);
-if (strcmp(qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
+ocp_opts.set('param_scheme', ocp_param_scheme);
+ocp_opts.set('param_scheme_N', ocp_N);
+ocp_opts.set('nlp_solver', ocp_nlp_solver);
+ocp_opts.set('qp_solver', ocp_qp_solver);
+if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
+	ocp_opts.set('qp_solver_N_pcond', ocp_qp_solver_N_pcond);
 end
-ocp_opts.set('sim_method', sim_method);
-ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
-ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+ocp_opts.set('sim_method', ocp_sim_method);
+ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
+ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 
 ocp_opts.opts_struct
 
@@ -222,48 +228,126 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 
 
 
-%% solution
+%% acados sim model
+sim_model = acados_sim_model();
+% dims
+sim_model.set('nx', nx);
+sim_model.set('nu', nu);
+sim_model.set('np', np);
+% symbolics
+sim_model.set('sym_x', model.sym_x);
+if isfield(model, 'sym_u')
+	sim_model.set('sym_u', model.sym_u);
+end
+if isfield(model, 'sym_xdot')
+	sim_model.set('sym_xdot', model.sym_xdot);
+end
+if isfield(model, 'sym_p')
+	sim_model.set('sym_p', model.sym_p);
+end
+% model
+sim_model.set('T', T/ocp_N);
+sim_model.set('param_f', 'true');
+if (strcmp(sim_method, 'erk'))
+	sim_model.set('dyn_type', 'explicit');
+	sim_model.set('expr_f', model.expr_f_expl);
+else % irk
+	sim_model.set('dyn_type', 'implicit');
+	sim_model.set('expr_f', model.expr_f_impl);
+end
+
+%sim_model.model_struct
+
+
+
+%% acados sim opts
+sim_opts = acados_sim_opts();
+sim_opts.set('compile_mex', compile_mex);
+sim_opts.set('codgen_model', codgen_model);
+sim_opts.set('num_stages', sim_num_stages);
+sim_opts.set('num_steps', sim_num_steps);
+sim_opts.set('method', sim_method);
+sim_opts.set('sens_forw', sim_sens_forw);
+
+%sim_opts.opts_struct
+
+
+
+%% acados sim
+% create sim
+sim = acados_sim(sim_model, sim_opts);
+%sim
+%sim.C_sim
+%sim.C_sim_ext_fun
+
+
+
+%% closed loop simulation
 % get references
 compute_setup;
 
+n_sim = 20;
+x_sim = zeros(nx, n_sim+1);
+x_sim(:,1) = x0_ref; % initial state
+u_sim = zeros(nu, n_sim);
+
 % set trajectory initialization
-x_traj_init = repmat(x0_ref, 1, N+1);
-u_traj_init = repmat(u0_ref, 1, N);
+x_traj_init = repmat(x0_ref, 1, ocp_N+1);
+u_traj_init = repmat(u0_ref, 1, ocp_N);
 
 ocp.set('x_init', x_traj_init);
 ocp.set('u_init', u_traj_init);
 
-% set x0
-ocp.set('x0', x0_ref);
+for ii=1:n_sim
 
-% set parameter
-nn = 1;
-ocp.set('p', wind0_ref(:,nn));
+	% set x0
+	ocp.set('x0', x_sim(:,ii));
+	% set parameter
+	ocp.set('p', wind0_ref(:,ii));
+	% set reference
+	ocp.set('yr', y_ref(:,ii));
+	ocp.set('yr_e', y_ref(:,ii));
 
-% set reference
-ocp.set('yr', y_ref(:,nn));
-ocp.set('yr_e', y_ref(:,nn));
+	% solve
+	ocp.solve();
 
-% solve
-ocp.solve();
+	% get solution
+	u = ocp.get('u');
+	x = ocp.get('x');
+	u_sim(:,ii) = ocp.get('u', 0);
 
-% get solution
-u = ocp.get('u');
-x = ocp.get('x');
+	% set initial state of sim
+	sim.set('x', x_sim(:,ii));
+	% set input in sim
+	sim.set('u', u_sim(:,ii));
+	% set parameter
+	sim.set('p', wind0_ref(:,ii));
 
-x(:,1)'
-u(:,1)'
-%electrical_power = 0.944*97/100*x(1,1)*x(6,1)
-electrical_power = 0.944*97/100*x(1,:).*x(6,:)
+	% simulate state
+	sim.solve();
 
-status = ocp.get('status');
-sqp_iter = ocp.get('sqp_iter');
-time_tot = ocp.get('time_tot');
-time_lin = ocp.get('time_lin');
-time_qp_sol = ocp.get('time_qp_sol');
+	% get new state
+	x_sim(:,ii+1) = sim.get('xn');
+%	x_sim(:,ii+1) = x(:,2);
 
-fprintf('\nstatus = %d, sqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+%	x(:,1)'
+%	u(:,1)'
+	electrical_power = 0.944*97/100*x(1,1)*x(6,1);
+%	electrical_power = 0.944*97/100*x(1,:).*x(6,:)
 
+	status = ocp.get('status');
+	sqp_iter = ocp.get('sqp_iter');
+	time_tot = ocp.get('time_tot');
+	time_lin = ocp.get('time_lin');
+	time_qp_sol = ocp.get('time_qp_sol');
+
+	fprintf('\nstatus = %d, sqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
+
+	% TODO shift initialization !!!!!!!!
+%	ocp.set('x_init', x_traj_init);
+%	ocp.set('u_init', u_traj_init);
+
+end
 
 
 if status==0
@@ -275,3 +359,4 @@ end
 
 
 return;
+
