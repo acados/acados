@@ -31,6 +31,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// out
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "out" ) );
 	ocp_nlp_out *out = (ocp_nlp_out *) ptr[0];
+	// solver
+	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "solver" ) );
+	ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
 
 	// field
 	char *field = mxArrayToString( prhs[1] );
@@ -91,6 +94,40 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mexPrintf("\nocp_get: wrong nrhs: %d\n", nrhs);
 			return;
 			}
+		}
+	else if(!strcmp(field, "status"))
+		{
+		plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+		double *mat_ptr = mxGetPr( plhs[0] );
+		int status;
+		ocp_nlp_get(config, solver, "status", &status);
+		*mat_ptr = (double) status;
+		}
+	else if(!strcmp(field, "sqp_iter"))
+		{
+		plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+		double *mat_ptr = mxGetPr( plhs[0] );
+		int sqp_iter;
+		ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
+		*mat_ptr = (double) sqp_iter;
+		}
+	else if(!strcmp(field, "time_tot"))
+		{
+		plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+		double *mat_ptr = mxGetPr( plhs[0] );
+		ocp_nlp_get(config, solver, "time_tot", mat_ptr);
+		}
+	else if(!strcmp(field, "time_lin"))
+		{
+		plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+		double *mat_ptr = mxGetPr( plhs[0] );
+		ocp_nlp_get(config, solver, "time_lin", mat_ptr);
+		}
+	else if(!strcmp(field, "time_qp_sol"))
+		{
+		plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+		double *mat_ptr = mxGetPr( plhs[0] );
+		ocp_nlp_get(config, solver, "time_qp_sol", mat_ptr);
 		}
 	else
 		{

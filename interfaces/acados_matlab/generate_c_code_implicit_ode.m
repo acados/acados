@@ -77,6 +77,18 @@ else
     end
 	nz = 0;
 end
+% p
+if isfield(model, 'sym_p')
+    p = model.sym_p;
+	np = length(p);
+else
+    if isSX
+        p = SX.sym('p',0, 0);
+    else
+        p = MX.sym('p',0, 0);
+    end
+	np = 0;
+end
 
 f_impl = model.expr_f;
 
@@ -116,30 +128,18 @@ HESS_multiplied = HESS_multiplied.simplify();
 
 %% Set up functions
 % TODO(oj): fix namings such that jac_z is contained!
-if isfield(model, 'p')
-    p = model.p;
-    impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z, p},...
-                             {f_impl});
-    impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'],...
-         {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
-    impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'],...
-         {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
-    impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'],...
-         {x, xdot, u, z, p},...
-         {f_impl, jac_x, jac_xdot, jac_u});
-    impl_ode_hess = Function([model.name,'_impl_ode_hess'], ...
-         {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
+if (strcmp(model.param_f, 'true'))
+    impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z, p}, {f_impl});
+    impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
+    impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
+    impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_u});
+    impl_ode_hess = Function([model.name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
 else
-    impl_ode_fun = Function([model_name,'_impl_ode_fun'],...
-                 {x, xdot, u, z}, {f_impl});
-    impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'],...
-         {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_z});
-    impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z},...
-             {jac_x, jac_xdot, jac_u, jac_z});
-    impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'],...
-         {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_u});
-    impl_ode_hess = Function([model.name,'_impl_ode_hess'], ...
-        {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
+    impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z}, {f_impl});
+    impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'], {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_z});
+    impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z}, {jac_x, jac_xdot, jac_u, jac_z});
+    impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_u});
+    impl_ode_hess = Function([model.name,'_impl_ode_hess'], {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
 end
 
 %% generate C code

@@ -17,6 +17,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// sizeof(long long) == sizeof(void *) = 64 !!!
 	long long *l_ptr;
 	int *i_ptr;
+	int *tmp_idx;
+	double *d_ptr;
 
 	int ii, jj, idx;
 
@@ -32,12 +34,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int nu;			bool set_nu = false;
 	int ny;			bool set_ny = false;
 	int ny_e;		bool set_ny_e = false;
-	int nbx;		bool set_nbx = false;
+	int nbx = 0;	bool set_nbx = false;
 	int nbu;		bool set_nbu = false;
 	int ng;			bool set_ng = false;
 	int ng_e;		bool set_ng_e = false;
 	int nh;			bool set_nh = false;
 	int nh_e;		bool set_nh_e = false;
+	int ns = 0;		bool set_ns = false;
+	int ns_e = 0;	bool set_ns_e = false;
+	int nsbu = 0;	bool set_nsbu = false;
+	int nsbx = 0;	bool set_nsbx = false;
+	int nsg = 0;	bool set_nsg = false;
+	int nsg_e = 0;	bool set_nsg_e = false;
+	int nsh = 0;	bool set_nsh = false;
+	int nsh_e = 0;	bool set_nsh_e = false;
 	// cost
 	char *cost_type;
 	char *cost_e_type;
@@ -48,6 +58,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double *W_e;	bool set_W_e = false;
 	double *yr;		bool set_yr = false;
 	double *yr_e;	bool set_yr_e = false;
+	double *Z;		bool set_Z = false;
+	double *Z_e;	bool set_Z_e = false;
+	double *Zl;		bool set_Zl = false;
+	double *Zl_e;	bool set_Zl_e = false;
+	double *Zu;		bool set_Zu = false;
+	double *Zu_e;	bool set_Zu_e = false;
+	double *z;		bool set_z = false;
+	double *z_e;	bool set_z_e = false;
+	double *zl;		bool set_zl = false;
+	double *zl_e;	bool set_zl_e = false;
+	double *zu;		bool set_zu = false;
+	double *zu_e;	bool set_zu_e = false;
 	// constraints
 	char *constr_type;
 	double *x0;		bool set_x0 = false;
@@ -68,7 +90,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double *uh;		bool set_uh = false;
 	double *lh_e;	bool set_lh_e = false;
 	double *uh_e;	bool set_uh_e = false;
-	// constraints
+	double *Jsbu;	bool set_Jsbu = false;
+//	double *lsbu;	bool set_lsbu = false;
+//	double *usbu;	bool set_usbu = false;
+	double *Jsbx;	bool set_Jsbx = false;
+//	double *lsbx;	bool set_lsbx = false;
+//	double *usbx;	bool set_usbx = false;
+	double *Jsg;	bool set_Jsg = false;
+//	double *lsg;	bool set_lsg = false;
+//	double *usg;	bool set_usg = false;
+	double *Jsg_e;	bool set_Jsg_e = false;
+//	double *lsg_e;	bool set_lsg_e = false;
+//	double *usg_e;	bool set_usg_e = false;
+	double *Jsh;	bool set_Jsh = false;
+//	double *lsh;	bool set_lsh = false;
+//	double *ush;	bool set_ush = false;
+	double *Jsh_e;	bool set_Jsh_e = false;
+//	double *lsh_e;	bool set_lsh_e = false;
+//	double *ush_e;	bool set_ush_e = false;
+	// dynamics
 	char *dyn_type;
 	// trajectory initialization
 	double *x_init; bool set_x_init = false;
@@ -156,6 +196,54 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		set_nh_e = true;
 		nh_e = mxGetScalar( mxGetField( prhs[0], 0, "nh_e" ) );
 		}
+	// ns
+	if(mxGetField( prhs[0], 0, "ns" )!=NULL)
+		{
+		set_ns = true;
+		ns = mxGetScalar( mxGetField( prhs[0], 0, "ns" ) );
+		}
+	// ns_e
+	if(mxGetField( prhs[0], 0, "ns_e" )!=NULL)
+		{
+		set_ns_e = true;
+		ns_e = mxGetScalar( mxGetField( prhs[0], 0, "ns_e" ) );
+		}
+	// nsbu
+	if(mxGetField( prhs[0], 0, "nsbu" )!=NULL)
+		{
+		set_nsbu = true;
+		nsbu = mxGetScalar( mxGetField( prhs[0], 0, "nsbu" ) );
+		}
+	// nsbx
+	if(mxGetField( prhs[0], 0, "nsbx" )!=NULL)
+		{
+		set_nsbx = true;
+		nsbx = mxGetScalar( mxGetField( prhs[0], 0, "nsbx" ) );
+		}
+	// nsg
+	if(mxGetField( prhs[0], 0, "nsg" )!=NULL)
+		{
+		set_nsg = true;
+		nsg = mxGetScalar( mxGetField( prhs[0], 0, "nsg" ) );
+		}
+	// nsg_e
+	if(mxGetField( prhs[0], 0, "nsg_e" )!=NULL)
+		{
+		set_nsg_e = true;
+		nsg_e = mxGetScalar( mxGetField( prhs[0], 0, "nsg_e" ) );
+		}
+	// nsh
+	if(mxGetField( prhs[0], 0, "nsh" )!=NULL)
+		{
+		set_nsh = true;
+		nsh = mxGetScalar( mxGetField( prhs[0], 0, "nsh" ) );
+		}
+	// nsh_e
+	if(mxGetField( prhs[0], 0, "nsh_e" )!=NULL)
+		{
+		set_nsh_e = true;
+		nsh_e = mxGetScalar( mxGetField( prhs[0], 0, "nsh_e" ) );
+		}
 	// cost
 	// cost type
 	if(mxGetField( prhs[0], 0, "cost_type" )!=NULL)
@@ -208,6 +296,78 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_yr_e = true;
 		yr_e = mxGetPr( mxGetField( prhs[0], 0, "yr_e" ) );
+		}
+	// Z
+	if(mxGetField( prhs[0], 0, "Z" )!=NULL)
+		{
+		set_Z = true;
+		Z = mxGetPr( mxGetField( prhs[0], 0, "Z" ) );
+		}
+	// Z_e
+	if(mxGetField( prhs[0], 0, "Z_e" )!=NULL)
+		{
+		set_Z_e = true;
+		Z_e = mxGetPr( mxGetField( prhs[0], 0, "Z_e" ) );
+		}
+	// Zl
+	if(mxGetField( prhs[0], 0, "Zl" )!=NULL)
+		{
+		set_Zl = true;
+		Zl = mxGetPr( mxGetField( prhs[0], 0, "Zl" ) );
+		}
+	// Zl_e
+	if(mxGetField( prhs[0], 0, "Zl_e" )!=NULL)
+		{
+		set_Zl_e = true;
+		Zl_e = mxGetPr( mxGetField( prhs[0], 0, "Zl_e" ) );
+		}
+	// Zu
+	if(mxGetField( prhs[0], 0, "Zu" )!=NULL)
+		{
+		set_Zu = true;
+		Zu = mxGetPr( mxGetField( prhs[0], 0, "Zu" ) );
+		}
+	// Zu_e
+	if(mxGetField( prhs[0], 0, "Zu_e" )!=NULL)
+		{
+		set_Zu_e = true;
+		Zu_e = mxGetPr( mxGetField( prhs[0], 0, "Zu_e" ) );
+		}
+	// z
+	if(mxGetField( prhs[0], 0, "z" )!=NULL)
+		{
+		set_z = true;
+		z = mxGetPr( mxGetField( prhs[0], 0, "z" ) );
+		}
+	// z_e
+	if(mxGetField( prhs[0], 0, "z_e" )!=NULL)
+		{
+		set_z_e = true;
+		z_e = mxGetPr( mxGetField( prhs[0], 0, "z_e" ) );
+		}
+	// zl
+	if(mxGetField( prhs[0], 0, "zl" )!=NULL)
+		{
+		set_zl = true;
+		zl = mxGetPr( mxGetField( prhs[0], 0, "zl" ) );
+		}
+	// zl_e
+	if(mxGetField( prhs[0], 0, "zl_e" )!=NULL)
+		{
+		set_zl_e = true;
+		zl_e = mxGetPr( mxGetField( prhs[0], 0, "zl_e" ) );
+		}
+	// zu
+	if(mxGetField( prhs[0], 0, "zu" )!=NULL)
+		{
+		set_zu = true;
+		zu = mxGetPr( mxGetField( prhs[0], 0, "zu" ) );
+		}
+	// zu_e
+	if(mxGetField( prhs[0], 0, "zu_e" )!=NULL)
+		{
+		set_zu_e = true;
+		zu_e = mxGetPr( mxGetField( prhs[0], 0, "zu_e" ) );
 		}
 	// constr
 	// constr type
@@ -323,6 +483,114 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		set_uh_e = true;
 		uh_e = mxGetPr( mxGetField( prhs[0], 0, "uh_e" ) );
 		}
+	// Jsbu
+	if(mxGetField( prhs[0], 0, "Jsbu" )!=NULL)
+		{
+		set_Jsbu = true;
+		Jsbu = mxGetPr( mxGetField( prhs[0], 0, "Jsbu" ) );
+		}
+	// lsbu
+//	if(mxGetField( prhs[0], 0, "lsbu" )!=NULL)
+//		{
+//		set_lsbu = true;
+//		lsbu = mxGetPr( mxGetField( prhs[0], 0, "lsbu" ) );
+//		}
+	// usbu
+//	if(mxGetField( prhs[0], 0, "usbu" )!=NULL)
+//		{
+//		set_usbu = true;
+//		usbu = mxGetPr( mxGetField( prhs[0], 0, "usbu" ) );
+//		}
+	// Jsbx
+	if(mxGetField( prhs[0], 0, "Jsbx" )!=NULL)
+		{
+		set_Jsbx = true;
+		Jsbx = mxGetPr( mxGetField( prhs[0], 0, "Jsbx" ) );
+		}
+	// lsbx
+//	if(mxGetField( prhs[0], 0, "lsbx" )!=NULL)
+//		{
+//		set_lsbx = true;
+//		lsbx = mxGetPr( mxGetField( prhs[0], 0, "lsbx" ) );
+//		}
+	// usbx
+//	if(mxGetField( prhs[0], 0, "usbx" )!=NULL)
+//		{
+//		set_usbx = true;
+//		usbx = mxGetPr( mxGetField( prhs[0], 0, "usbx" ) );
+//		}
+	// Jsg
+	if(mxGetField( prhs[0], 0, "Jsg" )!=NULL)
+		{
+		set_Jsg = true;
+		Jsg = mxGetPr( mxGetField( prhs[0], 0, "Jsg" ) );
+		}
+	// lsg
+//	if(mxGetField( prhs[0], 0, "lsg" )!=NULL)
+//		{
+//		set_lsg = true;
+//		lsg = mxGetPr( mxGetField( prhs[0], 0, "lsg" ) );
+//		}
+	// usg
+//	if(mxGetField( prhs[0], 0, "usg" )!=NULL)
+//		{
+//		set_usg = true;
+//		usg = mxGetPr( mxGetField( prhs[0], 0, "usg" ) );
+//		}
+	// Jsg_e
+	if(mxGetField( prhs[0], 0, "Jsg_e" )!=NULL)
+		{
+		set_Jsg_e = true;
+		Jsg_e = mxGetPr( mxGetField( prhs[0], 0, "Jsg_e" ) );
+		}
+	// lsg_e
+//	if(mxGetField( prhs[0], 0, "lsg_e" )!=NULL)
+//		{
+//		set_lsg_e = true;
+//		lsg_e = mxGetPr( mxGetField( prhs[0], 0, "lsg_e" ) );
+//		}
+	// usg_e
+//	if(mxGetField( prhs[0], 0, "usg_e" )!=NULL)
+//		{
+//		set_usg_e = true;
+//		usg_e = mxGetPr( mxGetField( prhs[0], 0, "usg_e" ) );
+//		}
+	// Jsh
+	if(mxGetField( prhs[0], 0, "Jsh" )!=NULL)
+		{
+		set_Jsh = true;
+		Jsh = mxGetPr( mxGetField( prhs[0], 0, "Jsh" ) );
+		}
+	// lsh
+//	if(mxGetField( prhs[0], 0, "lsh" )!=NULL)
+//		{
+//		set_lsh = true;
+//		lsh = mxGetPr( mxGetField( prhs[0], 0, "lsh" ) );
+//		}
+	// ush
+//	if(mxGetField( prhs[0], 0, "ush" )!=NULL)
+//		{
+//		set_ush = true;
+//		ush = mxGetPr( mxGetField( prhs[0], 0, "ush" ) );
+//		}
+	// Jsh_e
+	if(mxGetField( prhs[0], 0, "Jsh_e" )!=NULL)
+		{
+		set_Jsh_e = true;
+		Jsh_e = mxGetPr( mxGetField( prhs[0], 0, "Jsh_e" ) );
+		}
+	// lsh_e
+//	if(mxGetField( prhs[0], 0, "lsh_e" )!=NULL)
+//		{
+//		set_lsh_e = true;
+//		lsh_e = mxGetPr( mxGetField( prhs[0], 0, "lsh_e" ) );
+//		}
+	// ush_e
+//	if(mxGetField( prhs[0], 0, "ush_e" )!=NULL)
+//		{
+//		set_ush_e = true;
+//		ush_e = mxGetPr( mxGetField( prhs[0], 0, "ush_e" ) );
+//		}
 	// dyn
 	// dyn type
 	if(mxGetField( prhs[0], 0, "dyn_type" )!=NULL)
@@ -578,6 +846,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		i_ptr[ii] = nu;
 	i_ptr[N] = 0;
 	ocp_nlp_dims_set_opt_vars(config, dims, "nu", i_ptr);
+	// ns
+	if(ns!=nsbu+nsbx+nsg+nsh)
+		{
+		mexPrintf("\nerror: ns!=nsbu+nsbx+nsg+nsh\n");
+		return;
+		}
+	if(ns_e!=nsbx+nsg_e+nsh_e)
+		{
+		mexPrintf("\nerror: ns_e!=nsbx+nsg_e+nsh_e\n");
+		return;
+		}
+	// TODO fix stage 0 !!!!!!!!
+	i_ptr[0] = nsbu+nsg+nsh; // XXX not nsbx !!!!!!!!!!
+	for(ii=1; ii<N; ii++)
+		i_ptr[ii] = ns;
+	i_ptr[N] = ns_e;
+	ocp_nlp_dims_set_opt_vars(config, dims, "ns", i_ptr);
 	// free tmp
 	free(i_ptr);
 	// ny
@@ -636,6 +921,49 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		ocp_nlp_dims_set_constraints(config, dims, N, "nh", &nh_e);
 		}
+	// nsbx
+	if(set_nsbx)
+		{
+//		for(ii=0; ii<=N; ii++)
+		for(ii=1; ii<=N; ii++) // TODO fix stage 0 !!!!!
+			{
+			ocp_nlp_dims_set_constraints(config, dims, ii, "nsbx", &nsbx);
+			}
+		}
+	// nsbu
+	if(set_nsbu)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_dims_set_constraints(config, dims, ii, "nsbu", &nsbu);
+			}
+		}
+	// nsg
+	if(set_nsg)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_dims_set_constraints(config, dims, ii, "nsg", &nsg);
+			}
+		}
+	// nsg_e
+	if(set_nsg_e)
+		{
+		ocp_nlp_dims_set_constraints(config, dims, N, "nsg", &nsg_e);
+		}
+	// nsh
+	if(set_nsh)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_dims_set_constraints(config, dims, ii, "nsh", &nsh);
+			}
+		}
+	// nsh_e
+	if(set_nsh_e)
+		{
+		ocp_nlp_dims_set_constraints(config, dims, N, "nsh", &nsh_e);
+		}
 			
 
 
@@ -683,21 +1011,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(!strcmp(cost_type, "linear_ls"))
 		{
 		// lagrange term
-		for(ii=0; ii<N; ii++)
+		if(set_Vu)
 			{
-			if(set_Vu)
+			for(ii=0; ii<N; ii++)
 				{
 				ocp_nlp_cost_model_set(config, dims, in, ii, "Vu", Vu);
 				}
-			if(set_Vx)
+			}
+		if(set_Vx)
+			{
+			for(ii=0; ii<N; ii++)
 				{
 				ocp_nlp_cost_model_set(config, dims, in, ii, "Vx", Vx);
 				}
-			if(set_W)
+			}
+		if(set_W)
+			{
+			for(ii=0; ii<N; ii++)
 				{
 				ocp_nlp_cost_model_set(config, dims, in, ii, "W", W);
 				}
-			if(set_yr)
+			}
+		if(set_yr)
+			{
+			for(ii=0; ii<N; ii++)
 				{
 				ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
 				}
@@ -718,19 +1055,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			{
 			ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
 			}
-
 		}
 	// cost: nls
 	if(!strcmp(cost_type, "nonlinear_ls"))
 		{
 		// lagrange term
-		for(ii=0; ii<N; ii++)
+		if(set_W)
 			{
-			if(set_W)
+			for(ii=0; ii<N; ii++)
 				{
 				ocp_nlp_cost_model_set(config, dims, in, ii, "W", W);
 				}
-			if(set_yr)
+			}
+		if(set_yr)
+			{
+			for(ii=0; ii<N; ii++)
 				{
 				ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
 				}
@@ -748,24 +1087,145 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
 			}
 		}
+	// slacks
+	if(set_Z)
+		{
+		d_ptr = malloc(ns*sizeof(double));
+		for(ii=0; ii<ns; ii++)
+			{
+			d_ptr[ii] = Z[ii+ns*ii];
+			}
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, ii, "Z", d_ptr);
+			}
+		free(d_ptr);
+		}
+	if(set_Z_e)
+		{
+		d_ptr = malloc(ns*sizeof(double));
+		for(ii=0; ii<ns; ii++)
+			{
+			d_ptr[ii] = Z_e[ii+ns*ii];
+			}
+		ocp_nlp_cost_model_set(config, dims, in, N, "Z", d_ptr);
+		free(d_ptr);
+		}
+	if(set_Zl)
+		{
+		d_ptr = malloc(ns*sizeof(double));
+		for(ii=0; ii<ns; ii++)
+			{
+			d_ptr[ii] = Zl[ii+ns*ii];
+			}
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, ii, "Zl", d_ptr);
+			}
+		free(d_ptr);
+		}
+	if(set_Zl_e)
+		{
+		d_ptr = malloc(ns*sizeof(double));
+		for(ii=0; ii<ns; ii++)
+			{
+			d_ptr[ii] = Zl_e[ii+ns*ii];
+			}
+		ocp_nlp_cost_model_set(config, dims, in, N, "Zl", d_ptr);
+		free(d_ptr);
+		}
+	if(set_Zu)
+		{
+		d_ptr = malloc(ns*sizeof(double));
+		for(ii=0; ii<ns; ii++)
+			{
+			d_ptr[ii] = Zu[ii+ns*ii];
+			}
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, ii, "Zu", d_ptr);
+			}
+		free(d_ptr);
+		}
+	if(set_Zu_e)
+		{
+		d_ptr = malloc(ns*sizeof(double));
+		for(ii=0; ii<ns; ii++)
+			{
+			d_ptr[ii] = Zu_e[ii+ns*ii];
+			}
+		ocp_nlp_cost_model_set(config, dims, in, N, "Zu", d_ptr);
+		free(d_ptr);
+		}
+	if(set_z)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, ii, "z", z);
+			}
+		}
+	if(set_z_e)
+		{
+		ocp_nlp_cost_model_set(config, dims, in, N, "z", z_e);
+		}
+	if(set_zl)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, ii, "zl", zl);
+			}
+		}
+	if(set_zl_e)
+		{
+		ocp_nlp_cost_model_set(config, dims, in, N, "zl", zl_e);
+		}
+	if(set_zu)
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_cost_model_set(config, dims, in, ii, "zu", zu);
+			}
+		}
+	if(set_zu_e)
+		{
+		ocp_nlp_cost_model_set(config, dims, in, N, "zu", zu_e);
+		}
 
 	// constraints: bgh
 
+	double acados_inf = 1e8;
+
+	// x0 is always bounded on all components !!!
+	i_ptr = malloc(nx*sizeof(int));
+	for(ii=0; ii<nx; ii++)
+		{
+		i_ptr[ii] = ii;
+		}
+	ocp_nlp_constraints_model_set(config, dims, in, 0, "idxbx", i_ptr);
+	free(i_ptr);
 	if(set_x0)
 		{
-		i_ptr = malloc(nx*sizeof(int));
-		for(ii=0; ii<nx; ii++)
-			{
-			i_ptr[ii] = ii;
-			}
-		ocp_nlp_constraints_model_set(config, dims, in, 0, "idxbx", i_ptr);
-		free(i_ptr);
 		ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", x0);
 		ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", x0);
 		}
+	else
+		{
+		d_ptr = malloc(nx*sizeof(double));
+		for(ii=0; ii<nx; ii++)
+			{
+			d_ptr[ii] = - acados_inf;
+			}
+		ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", d_ptr);
+		for(ii=0; ii<nx; ii++)
+			{
+			d_ptr[ii] = acados_inf;
+			}
+		ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", d_ptr);
+		free(d_ptr);
+		}
+	tmp_idx = malloc(nbx*sizeof(int));
 	if(set_Jbx)
 		{
-		i_ptr = malloc(nbx*sizeof(int));
 		for(ii=0; ii<nbx; ii++)
 			{
 			idx = -1;
@@ -773,35 +1233,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				{
 				if(Jbx[ii+nbx*jj]!=0.0)
 					{
-					i_ptr[ii] = jj;
+					tmp_idx[ii] = jj;
 					idx = jj;
 					}
 				}
 			}
-		if(!set_x0)
-			{
-			ii = 0;
-			}
-		else
-			{
-			ii = 1;
-			}
+		ii = 1;
 		for(; ii<=N; ii++)
 			{
-			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxbx", i_ptr);
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxbx", tmp_idx);
 			}
-		free(i_ptr);
 		}
 	if(set_lbx)
 		{
 		if(!set_x0)
 			{
-			ii = 0;
+			d_ptr = malloc(nx*sizeof(double));
+			for(ii=0; ii<nx; ii++)
+				{
+				d_ptr[ii] = - acados_inf;
+				}
+			for(ii=0; ii<nbx; ii++)
+				{
+				d_ptr[tmp_idx[ii]] = lbx[ii];
+				}
+			ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", d_ptr);
+			free(d_ptr);
 			}
-		else
-			{
-			ii = 1;
-			}
+		ii = 1;
 		for(; ii<=N; ii++)
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "lbx", lbx);
@@ -811,17 +1270,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		if(!set_x0)
 			{
-			ii = 0;
+			d_ptr = malloc(nx*sizeof(double));
+			for(ii=0; ii<nx; ii++)
+				{
+				d_ptr[ii] = acados_inf;
+				}
+			for(ii=0; ii<nbx; ii++)
+				{
+				d_ptr[tmp_idx[ii]] = ubx[ii];
+				}
+			ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", d_ptr);
+			free(d_ptr);
 			}
-		else
-			{
-			ii = 1;
-			}
+		ii = 1;
 		for(; ii<=N; ii++)
 			{
 			ocp_nlp_constraints_model_set(config, dims, in, ii, "ubx", ubx);
 			}
 		}
+	free(tmp_idx);
 	if(set_Jbu)
 		{
 		i_ptr = malloc(nbu*sizeof(int));
@@ -919,6 +1386,201 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		ocp_nlp_constraints_model_set(config, dims, in, N, "uh", uh_e);
 		}
+	if(set_Jsbu)
+		{
+		i_ptr = malloc(nsbu*sizeof(int));
+		for(ii=0; ii<nsbu; ii++)
+			{
+			idx = -1;
+			for(jj=0; jj<nbu; jj++)
+				{
+				if(Jsbu[jj+nbu*ii]!=0.0)
+					{
+					i_ptr[ii] = jj;
+					idx = jj;
+					}
+				}
+			}
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxsbu", i_ptr);
+			}
+		free(i_ptr);
+		}
+//	if(set_lsbu)
+//		{
+//		for(ii=0; ii<N; ii++)
+//			{
+//			ocp_nlp_constraints_model_set(config, dims, in, ii, "lsbu", lsbu);
+//			}
+//		}
+//	if(set_usbu)
+//		{
+//		for(ii=0; ii<N; ii++)
+//			{
+//			ocp_nlp_constraints_model_set(config, dims, in, ii, "usbu", usbu);
+//			}
+//		}
+	if(set_Jsbx)
+		{
+		i_ptr = malloc(nsbx*sizeof(int));
+		for(ii=0; ii<nsbx; ii++)
+			{
+			idx = -1;
+			for(jj=0; jj<nbx; jj++)
+				{
+				if(Jsbx[jj+nbx*ii]!=0.0)
+					{
+					i_ptr[ii] = jj;
+					idx = jj;
+					}
+				}
+			}
+//		for(ii=0; ii<=N; ii++)
+		for(ii=1; ii<=N; ii++) // TODO stage 0 !!!!!!!!!!
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxsbx", i_ptr);
+			}
+		free(i_ptr);
+		}
+//	if(set_lsbx)
+//		{
+//		for(ii=0; ii<=N; ii++)
+//		for(ii=1; ii<=N; ii++) // TODO stage 0 !!!!!!!!!!
+//			{
+//			ocp_nlp_constraints_model_set(config, dims, in, ii, "lsbx", lsbx);
+//			}
+//		}
+//	if(set_usbx)
+//		{
+//		for(ii=0; ii<=N; ii++)
+//		for(ii=1; ii<=N; ii++) // TODO stage 0 !!!!!!!!!!
+//			{
+//			ocp_nlp_constraints_model_set(config, dims, in, ii, "usbx", usbx);
+//			}
+//		}
+	if(set_Jsg)
+		{
+		i_ptr = malloc(nsg*sizeof(int));
+		for(ii=0; ii<nsg; ii++)
+			{
+			idx = -1;
+			for(jj=0; jj<ng; jj++)
+				{
+				if(Jsg[jj+ng*ii]!=0.0)
+					{
+					i_ptr[ii] = jj;
+					idx = jj;
+					}
+				}
+			}
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxsg", i_ptr);
+			}
+		free(i_ptr);
+		}
+//	if(set_lsg)
+//		{
+//		for(ii=0; ii<N; ii++)
+//			{
+//			ocp_nlp_constraints_model_set(config, dims, in, ii, "lsg", lsg);
+//			}
+//		}
+//	if(set_usg)
+//		{
+//		for(ii=0; ii<N; ii++)
+//			{
+//			ocp_nlp_constraints_model_set(config, dims, in, ii, "usg", usg);
+//			}
+//		}
+	if(set_Jsg_e)
+		{
+		i_ptr = malloc(nsg_e*sizeof(int));
+		for(ii=0; ii<nsg_e; ii++)
+			{
+			idx = -1;
+			for(jj=0; jj<ng_e; jj++)
+				{
+				if(Jsg_e[jj+ng_e*ii]!=0.0)
+					{
+					i_ptr[ii] = jj;
+					idx = jj;
+					}
+				}
+			}
+		ocp_nlp_constraints_model_set(config, dims, in, N, "idxsg", i_ptr);
+		free(i_ptr);
+		}
+//	if(set_lsg_e)
+//		{
+//		ocp_nlp_constraints_model_set(config, dims, in, N, "lsg", lsg_e);
+//		}
+//	if(set_usg_e)
+//		{
+//		ocp_nlp_constraints_model_set(config, dims, in, N, "usg", usg_e);
+//		}
+	if(set_Jsh)
+		{
+		i_ptr = malloc(nsh*sizeof(int));
+		for(ii=0; ii<nsh; ii++)
+			{
+			idx = -1;
+			for(jj=0; jj<nh; jj++)
+				{
+				if(Jsh[jj+nh*ii]!=0.0)
+					{
+					i_ptr[ii] = jj;
+					idx = jj;
+					}
+				}
+			}
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_constraints_model_set(config, dims, in, ii, "idxsh", i_ptr);
+			}
+		free(i_ptr);
+		}
+//	if(set_lsh)
+//		{
+//		for(ii=0; ii<N; ii++)
+//			{
+//			ocp_nlp_constraints_model_set(config, dims, in, ii, "lsh", lsh);
+//			}
+//		}
+//	if(set_ush)
+//		{
+//		for(ii=0; ii<N; ii++)
+//			{
+//			ocp_nlp_constraints_model_set(config, dims, in, ii, "ush", ush);
+//			}
+//		}
+	if(set_Jsh_e)
+		{
+		i_ptr = malloc(nsh_e*sizeof(int));
+		for(ii=0; ii<nsh_e; ii++)
+			{
+			idx = -1;
+			for(jj=0; jj<nh_e; jj++)
+				{
+				if(Jsh_e[jj+nh_e*ii]!=0.0)
+					{
+					i_ptr[ii] = jj;
+					idx = jj;
+					}
+				}
+			}
+		ocp_nlp_constraints_model_set(config, dims, in, N, "idxsh", i_ptr);
+		free(i_ptr);
+		}
+//	if(set_lsh_e)
+//		{
+//		ocp_nlp_constraints_model_set(config, dims, in, N, "lsh", lsh_e);
+//		}
+//	if(set_ush_e)
+//		{
+//		ocp_nlp_constraints_model_set(config, dims, in, N, "ush", ush_e);
+//		}
 
 
 

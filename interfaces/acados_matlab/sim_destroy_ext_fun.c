@@ -21,51 +21,111 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* RHS */
 
+	// model
+
+	// TODO bool instead !!!
+	char *param_f = mxArrayToString( mxGetField( prhs[0], 0, "param_f" ) );
+
 	// C_sim_ext_fun
 
 	external_function_casadi *ext_fun_ptr;
+	external_function_param_casadi *ext_fun_param_ptr;
 
-	if(mxGetField( prhs[0], 0, "expl_ode_fun" )!=NULL)
+	if(mxGetField( prhs[1], 0, "expl_ode_fun" )!=NULL)
 		{
-		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "expl_ode_fun" ) );
-		ext_fun_ptr = (external_function_casadi *) ptr[0];
-		external_function_casadi_free(ext_fun_ptr);
-		free(ext_fun_ptr);
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "expl_ode_fun" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
 		}
-	if(mxGetField( prhs[0], 0, "expl_vde_for" )!=NULL)
+	if(mxGetField( prhs[1], 0, "expl_vde_for" )!=NULL)
 		{
-		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "expl_vde_for" ) );
-		ext_fun_ptr = (external_function_casadi *) ptr[0];
-		external_function_casadi_free(ext_fun_ptr);
-		free(ext_fun_ptr);
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "expl_vde_for" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
 		}
-	if(mxGetField( prhs[0], 0, "expl_vde_adj" )!=NULL)
+	if(mxGetField( prhs[1], 0, "expl_vde_adj" )!=NULL)
 		{
-		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "expl_vde_adj" ) );
-		ext_fun_ptr = (external_function_casadi *) ptr[0];
-		external_function_casadi_free(ext_fun_ptr);
-		free(ext_fun_ptr);
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "expl_vde_adj" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
 		}
-	if(mxGetField( prhs[0], 0, "impl_ode_fun" )!=NULL)
+	if(mxGetField( prhs[1], 0, "impl_ode_fun" )!=NULL)
 		{
-		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "impl_ode_fun" ) );
-		ext_fun_ptr = (external_function_casadi *) ptr[0];
-		external_function_casadi_free(ext_fun_ptr);
-		free(ext_fun_ptr);
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "impl_ode_fun" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
 		}
-	if(mxGetField( prhs[0], 0, "impl_ode_fun_jac_x_xdot" )!=NULL)
+	if(mxGetField( prhs[1], 0, "impl_ode_fun_jac_x_xdot" )!=NULL)
 		{
-		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "impl_ode_fun_jac_x_xdot" ) );
-		ext_fun_ptr = (external_function_casadi *) ptr[0];
-		external_function_casadi_free(ext_fun_ptr);
-		free(ext_fun_ptr);
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "impl_ode_fun_jac_x_xdot" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
 		}
-	if(mxGetField( prhs[0], 0, "impl_ode_jac_x_xdot_u" )!=NULL)
+	if(mxGetField( prhs[1], 0, "impl_ode_jac_x_xdot_u" )!=NULL)
 		{
-		ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "impl_ode_jac_x_xdot_u" ) );
-		ext_fun_ptr = (external_function_casadi *) ptr[0];
-		external_function_casadi_free(ext_fun_ptr);
-		free(ext_fun_ptr);
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "impl_ode_jac_x_xdot_u" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
 		}
 
 

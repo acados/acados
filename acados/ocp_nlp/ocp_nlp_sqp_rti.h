@@ -78,6 +78,8 @@ typedef struct
     // nlp memory
     ocp_nlp_memory *nlp_mem;
 
+	int status;
+
     double time_qp_sol;
     double time_lin;
     double time_tot;

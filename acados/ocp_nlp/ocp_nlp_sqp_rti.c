@@ -1121,7 +1121,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // restore number of threads
         omp_set_num_threads(num_threads_bkp);
 #endif
-        return -1;
+		mem->status = ACADOS_QP_FAILURE;
+		return mem->status;
     }
 
     sqp_update_variables(dims, nlp_out, opts, mem, work);
@@ -1144,7 +1145,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
 #endif
-    return 0;
+	mem->status = ACADOS_SUCCESS;
+	return mem->status;
 }
 
 
@@ -1198,6 +1200,11 @@ void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *ret
     {
         int *value = return_value_;
         *value = 1;
+    }
+    else if (!strcmp("status", field))
+    {
+        int *value = return_value_;
+        *value = mem->status;
     }
     else if (!strcmp("time_tot", field) || !strcmp("tot_time", field))
     {
