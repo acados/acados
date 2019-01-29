@@ -120,8 +120,24 @@ classdef acados_ocp < handle
 
 
 
-		function set(obj, field, value)
-			ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
+%		function set(obj, field, value)
+%			ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
+%		end
+		function set(varargin)
+			if nargin==3
+				obj = varargin{1};
+				field = varargin{2};
+				value = varargin{3};
+				ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
+			elseif nargin==4
+				obj = varargin{1};
+				field = varargin{2};
+				stage = varargin{3};
+				value = varargin{4};
+				ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
+			else
+				disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
+			end
 		end
 
 

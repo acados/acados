@@ -69,10 +69,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else if (!strcmp(field, "yr"))
 		{
-		double *yr = mxGetPr( prhs[5] );
-		for (ii=0; ii<N; ii++)
+		if(nrhs==6)
 			{
-			ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
+			double *yr = mxGetPr( prhs[5] );
+			for (ii=0; ii<N; ii++)
+				{
+				ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
+				}
+			}
+		else if(nrhs==7)
+			{
+			double *yr = mxGetPr( prhs[5] );
+			int stage = mxGetScalar( prhs[6] );
+			ocp_nlp_cost_model_set(config, dims, in, stage, "y_ref", yr);
+			}
+		else
+			{
+			mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
+			return;
 			}
 		}
 	else if (!strcmp(field, "yr_e"))
