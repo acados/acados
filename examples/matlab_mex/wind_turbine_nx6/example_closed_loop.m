@@ -23,7 +23,8 @@ ocp_qp_solver_N_pcond = 5;
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
 ocp_sim_method_num_steps = 1;
-cost_type = 'linear_ls';
+%cost_type = 'linear_ls';
+cost_type = 'nonlinear_ls';
 
 
 
@@ -158,9 +159,14 @@ ocp_model.set('sym_p', model.sym_p);
 %% cost
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_e_type', cost_type);
-ocp_model.set('Vu', Vu);
-ocp_model.set('Vx', Vx);
-ocp_model.set('Vx_e', Vx_e);
+if (strcmp(cost_type, 'linear_ls'))
+	ocp_model.set('Vu', Vu);
+	ocp_model.set('Vx', Vx);
+	ocp_model.set('Vx_e', Vx_e);
+else % nonlinear_ls
+	ocp_model.set('expr_y', model.expr_y);
+	ocp_model.set('expr_y_e', model.expr_y_e);
+end
 ocp_model.set('W', W);
 ocp_model.set('W_e', W_e);
 ocp_model.set('Z', Z);
@@ -287,7 +293,7 @@ sim = acados_sim(sim_model, sim_opts);
 compute_setup;
 
 n_sim = 40;
-n_sim_max = length(wind0_ref);
+n_sim_max = length(wind0_ref) - ocp_N;
 if n_sim>n_sim_max
 	n_sim = s_sim_max;
 end
@@ -303,15 +309,20 @@ for ii=1:n_sim
 
 %	fprintf('\nsimulation step %d\n', ii);
 
+	tic
+
 	% set x0
 	ocp.set('x0', x_sim(:,ii));
 	% set parameter
 	% TODO different parameter at each stage !!!!!
 	ocp.set('p', wind0_ref(:,ii));
-	% set reference
-	% TODO different reference at each stage !!!!!
+	% set reference (different at each stage)
 	ocp.set('yr', y_ref(:,ii));
 	ocp.set('yr_e', y_ref(:,ii));
+%	for jj=0:ocp_N-1
+%		ocp.set('yr', jj, y_ref(:,ii+jj));
+%	end
+%	ocp.set('yr_e', y_ref(:,ii+ocp_N));
 
 	% initialize trajectory
 	ocp.set('x_init', x_traj_init);
@@ -350,8 +361,10 @@ for ii=1:n_sim
 %	(x(:,2) - sim.get('xn'))'
 
 	% shift initialization
-	x_traj_init = [x(:,2:N+1), zeros(nx, 1)];
-	u_traj_init = [u(:,2:N), zeros(nu, 1)];
+	x_traj_init = [x(:,2:ocp_N+1), zeros(nx, 1)];
+	u_traj_init = [u(:,2:ocp_N), zeros(nu, 1)];
+
+	time_ext = toc;
 
 %	x(:,1)'
 %	u(:,1)'
@@ -364,7 +377,7 @@ for ii=1:n_sim
 	time_lin = ocp.get('time_lin');
 	time_qp_sol = ocp.get('time_qp_sol');
 
-	fprintf('\nstatus = %d, sqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
+	fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
 
 end
 
