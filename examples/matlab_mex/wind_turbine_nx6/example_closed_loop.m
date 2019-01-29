@@ -293,7 +293,7 @@ sim = acados_sim(sim_model, sim_opts);
 compute_setup;
 
 n_sim = 40;
-n_sim_max = length(wind0_ref) - N_ocp;
+n_sim_max = length(wind0_ref) - ocp_N;
 if n_sim>n_sim_max
 	n_sim = s_sim_max;
 end
@@ -317,10 +317,12 @@ for ii=1:n_sim
 	% TODO different parameter at each stage !!!!!
 	ocp.set('p', wind0_ref(:,ii));
 	% set reference (different at each stage)
-	for jj=0:ocp_N-1
-		ocp.set('yr', jj, y_ref(:,ii+jj));
-	end
-	ocp.set('yr_e', y_ref(:,ii+N_ocp));
+	ocp.set('yr', y_ref(:,ii));
+	ocp.set('yr_e', y_ref(:,ii));
+%	for jj=0:ocp_N-1
+%		ocp.set('yr', jj, y_ref(:,ii+jj));
+%	end
+%	ocp.set('yr_e', y_ref(:,ii+ocp_N));
 
 	% initialize trajectory
 	ocp.set('x_init', x_traj_init);
