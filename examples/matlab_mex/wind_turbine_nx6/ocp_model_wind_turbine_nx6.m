@@ -35,6 +35,6 @@ model.expr_f_expl = fe;
 model.expr_f_impl = fi;
 model.expr_h = h;
 model.expr_h_e = h_e;
-%model.expr_y = y;
-%model.expr_y_e = y_e;
+model.expr_y = y;
+model.expr_y_e = y_e;
 

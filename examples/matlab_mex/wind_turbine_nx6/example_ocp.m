@@ -17,7 +17,8 @@ qp_solver_N_pcond = 5;
 sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 1;
-cost_type = 'linear_ls';
+%cost_type = 'linear_ls';
+cost_type = 'nonlinear_ls';
 
 
 
@@ -152,9 +153,14 @@ ocp_model.set('sym_p', model.sym_p);
 %% cost
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_e_type', cost_type);
-ocp_model.set('Vu', Vu);
-ocp_model.set('Vx', Vx);
-ocp_model.set('Vx_e', Vx_e);
+if (strcmp(cost_type, 'linear_ls'))
+	ocp_model.set('Vu', Vu);
+	ocp_model.set('Vx', Vx);
+	ocp_model.set('Vx_e', Vx_e);
+else % nonlinear_ls
+	ocp_model.set('expr_y', model.expr_y);
+	ocp_model.set('expr_y_e', model.expr_y_e);
+end
 ocp_model.set('W', W);
 ocp_model.set('W_e', W_e);
 ocp_model.set('Z', Z);
