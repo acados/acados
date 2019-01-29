@@ -236,6 +236,8 @@ compute_setup;
 x_traj_init = repmat(x0_ref, 1, N+1);
 u_traj_init = repmat(u0_ref, 1, N);
 
+tic
+
 ocp.set('x_init', x_traj_init);
 ocp.set('u_init', u_traj_init);
 
@@ -257,6 +259,8 @@ ocp.solve();
 u = ocp.get('u');
 x = ocp.get('x');
 
+time_ext = toc;
+
 x(:,1)'
 u(:,1)'
 %electrical_power = 0.944*97/100*x(1,1)*x(6,1)
@@ -268,7 +272,7 @@ time_tot = ocp.get('time_tot');
 time_lin = ocp.get('time_lin');
 time_qp_sol = ocp.get('time_qp_sol');
 
-fprintf('\nstatus = %d, sqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
 
 
 

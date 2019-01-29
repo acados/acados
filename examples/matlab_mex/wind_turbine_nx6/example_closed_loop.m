@@ -309,6 +309,8 @@ for ii=1:n_sim
 
 %	fprintf('\nsimulation step %d\n', ii);
 
+	tic
+
 	% set x0
 	ocp.set('x0', x_sim(:,ii));
 	% set parameter
@@ -360,6 +362,8 @@ for ii=1:n_sim
 	x_traj_init = [x(:,2:ocp_N+1), zeros(nx, 1)];
 	u_traj_init = [u(:,2:ocp_N), zeros(nu, 1)];
 
+	time_ext = toc;
+
 %	x(:,1)'
 %	u(:,1)'
 
@@ -371,7 +375,7 @@ for ii=1:n_sim
 	time_lin = ocp.get('time_lin');
 	time_qp_sol = ocp.get('time_qp_sol');
 
-	fprintf('\nstatus = %d, sqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
+	fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
 
 end
 
