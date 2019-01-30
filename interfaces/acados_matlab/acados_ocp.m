@@ -86,30 +86,30 @@ classdef acados_ocp < handle
 			% get pointers for external functions in model
 			% dynamics
 			if (strcmp(obj.opts_struct.sim_method, 'erk'))
-				ocp_set_ext_fun_expl(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_expl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			elseif (strcmp(obj.opts_struct.sim_method, 'irk'))
-				ocp_set_ext_fun_impl(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_impl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			else
 				fprintf('\ncodegen_model: sim_method not supported: %s\n', obj.opts_struct.sim_method);
 				return;
 			end
 			% nonlinear constraints
 			if (strcmp(obj.model_struct.constr_type, 'bgh') && isfield(obj.model_struct, 'expr_h'))
-				ocp_set_ext_fun_h(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_h(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			if (strcmp(obj.model_struct.constr_type, 'bgh') && isfield(obj.model_struct, 'expr_h_e'))
-				ocp_set_ext_fun_h_e(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_h_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			% nonlinear least squares
 			if (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
-				ocp_set_ext_fun_y(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_y(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			if (strcmp(obj.model_struct.cost_e_type, 'nonlinear_ls'))
-				ocp_set_ext_fun_y_e(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_y_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 
 			% set in model
-			ocp_set_model(obj.C_ocp_ext_fun, obj.C_ocp);
+			ocp_set_model(obj.model_struct, obj.C_ocp_ext_fun, obj.C_ocp);
 		end
 
 
@@ -160,8 +160,8 @@ classdef acados_ocp < handle
 
 
 		function delete(obj)
+			ocp_destroy_ext_fun(obj.model_struct, obj.C_ocp, obj.C_ocp_ext_fun);
 			ocp_destroy(obj.C_ocp);
-			ocp_destroy_ext_fun(obj.model_struct, obj.C_ocp_ext_fun);
 		end
 
 

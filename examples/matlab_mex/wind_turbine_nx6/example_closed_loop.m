@@ -315,14 +315,17 @@ for ii=1:n_sim
 	ocp.set('x0', x_sim(:,ii));
 	% set parameter
 	% TODO different parameter at each stage !!!!!
-	ocp.set('p', wind0_ref(:,ii));
+%	ocp.set('p', wind0_ref(:,ii));
+	for jj=0:ocp_N-1
+		ocp.set('p', jj, wind0_ref(:,ii+jj));
+	end
 	% set reference (different at each stage)
-	ocp.set('yr', y_ref(:,ii));
-	ocp.set('yr_e', y_ref(:,ii));
-%	for jj=0:ocp_N-1
-%		ocp.set('yr', jj, y_ref(:,ii+jj));
-%	end
-%	ocp.set('yr_e', y_ref(:,ii+ocp_N));
+%	ocp.set('yr', y_ref(:,ii));
+%	ocp.set('yr_e', y_ref(:,ii));
+	for jj=0:ocp_N-1
+		ocp.set('yr', jj, y_ref(:,ii+jj));
+	end
+	ocp.set('yr_e', y_ref(:,ii+ocp_N));
 
 	% initialize trajectory
 	ocp.set('x_init', x_traj_init);

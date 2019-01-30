@@ -25,6 +25,7 @@ mex_files = { ...
 	} ;
 
 for ii=1:length(mex_files)
+	disp(['compiling ', mex_files{ii}])
 	mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
 end
 

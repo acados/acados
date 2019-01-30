@@ -8,6 +8,8 @@ mex_flags = getenv('ACADOS_MEX_FLAGS');
 acados_mex_folder = [acados_folder, '/interfaces/acados_matlab/'];
 acados_include = ['-I' acados_folder];
 acados_interfaces_include = ['-I' acados_folder, '/interfaces'];
+external_include = ['-I' acados_folder, '/external'];
+blasfeo_include = ['-I' acados_folder, '/external/blasfeo/include'];
 acados_lib_path = ['-L' acados_folder, '/lib'];
 acados_matlab_lib_path = ['-L' acados_folder, '/interfaces/acados_matlab/'];
 model_lib_path = ['-L', pwd];
@@ -51,6 +53,7 @@ end
 
 %% get pointers for external functions in model
 for ii=1:length(mex_files)
-	mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{ii});
+	disp(['compiling ', mex_files{ii}])
+	mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{ii});
 end
 
