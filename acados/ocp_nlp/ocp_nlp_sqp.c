@@ -183,7 +183,9 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->min_res_m = 1e-8;
 
     opts->reuse_workspace = 1;
-    opts->num_threads = 4;
+#if defined(ACADOS_WITH_OPENMP)
+    opts->num_threads = ACADOS_NUM_THREADS;
+#endif
 
     // submodules opts
 

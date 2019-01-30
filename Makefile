@@ -116,7 +116,7 @@ acados_static: $(STATIC_DEPS)
 acados_shared: $(SHARED_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
-	$(CC) -L./lib -shared -o libacore.so $(OBJS) -lblasfeo -lhpipm -lm
+	$(CC) -L./lib -shared -o libacore.so $(OBJS) -lblasfeo -lhpipm -lm -fopenmp
 	mkdir -p lib
 	mv libacore.so lib
 	@echo

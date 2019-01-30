@@ -51,6 +51,6 @@ end
 
 %% get pointers for external functions in model
 for ii=1:length(mex_files)
-	mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99', acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{ii});
+	mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{ii});
 end
 
