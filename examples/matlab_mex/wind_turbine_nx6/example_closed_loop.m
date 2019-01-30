@@ -363,9 +363,24 @@ for ii=1:n_sim
 
 %	(x(:,2) - sim.get('xn'))'
 
+	% simulate to initialize last stage
+	% set initial state of sim
+%	sim.set('x', x(:,ocp_N+1));
+	% set input in sim
+%	sim.set('u', zeros(nu, 1));
+%	sim.set('u', u(:,ocp_N));
+	% set parameter
+%	sim.set('p', wind0_ref(:,ii+ocp_N));
+
+	% simulate state
+%	sim.solve();
+
 	% shift initialization
-	x_traj_init = [x(:,2:ocp_N+1), zeros(nx, 1)];
-	u_traj_init = [u(:,2:ocp_N), zeros(nu, 1)];
+%	x_traj_init = [x(:,2:ocp_N+1), zeros(nx, 1)];
+	x_traj_init = [x(:,2:ocp_N+1), x(:,ocp_N+1)];
+%	x_traj_init = [x(:,2:ocp_N+1), sim.get('xn')];
+%	u_traj_init = [u(:,2:ocp_N), zeros(nu, 1)];
+	u_traj_init = [u(:,2:ocp_N), u(:,ocp_N)];
 
 	time_ext = toc;
 
