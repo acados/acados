@@ -22,7 +22,8 @@ ocp_sim_method = 'erk';
 ocp_sim_method_num_stages = 2;
 ocp_sim_method_num_steps = 2;
 %ocp_cost_type = 'linear_ls';
-ocp_cost_type = 'nonlinear_ls';
+%ocp_cost_type = 'nonlinear_ls';
+ocp_cost_type = 'ext_cost';
 
 
 
@@ -62,8 +63,10 @@ ocp_model = acados_ocp_model();
 ocp_model.set('T', T);
 ocp_model.set('nx', nx);
 ocp_model.set('nu', nu);
-ocp_model.set('ny', ny);
-ocp_model.set('ny_e', ny_e);
+if (strcmp(ocp_cost_type, 'linear_ls') | strcmp(ocp_cost_type, 'nonlinear_ls'))
+	ocp_model.set('ny', ny);
+	ocp_model.set('ny_e', ny_e);
+end
 ocp_model.set('nbx', nbx);
 ocp_model.set('nbu', nbu);
 % symbolics
@@ -77,15 +80,25 @@ end
 % cost
 ocp_model.set('cost_type', ocp_cost_type);
 ocp_model.set('cost_e_type', ocp_cost_type);
-ocp_model.set('expr_y', model.expr_y);
-ocp_model.set('expr_y_e', model.expr_y_e);
-ocp_model.set('Vu', Vu);
-ocp_model.set('Vx', Vx);
-ocp_model.set('Vx_e', Vx_e);
-ocp_model.set('W', W);
-ocp_model.set('W_e', W_e);
-ocp_model.set('yr', yr);
-ocp_model.set('yr_e', yr_e);
+if (strcmp(ocp_cost_type, 'linear_ls'))
+	ocp_model.set('Vu', Vu);
+	ocp_model.set('Vx', Vx);
+	ocp_model.set('Vx_e', Vx_e);
+	ocp_model.set('W', W);
+	ocp_model.set('W_e', W_e);
+	ocp_model.set('yr', yr);
+	ocp_model.set('yr_e', yr_e);
+elseif (strcmp(ocp_cost_type, 'nonlinear_ls'))
+	ocp_model.set('expr_y', model.expr_y);
+	ocp_model.set('expr_y_e', model.expr_y_e);
+	ocp_model.set('W', W);
+	ocp_model.set('W_e', W_e);
+	ocp_model.set('yr', yr);
+	ocp_model.set('yr_e', yr_e);
+else % if (strcmp(ocp_cost_type, 'ext_cost'))
+	ocp_model.set('expr_ext_cost', model.expr_ext_cost);
+	ocp_model.set('expr_ext_cost_e', model.expr_ext_cost_e);
+end
 % dynamics
 if (strcmp(ocp_sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');

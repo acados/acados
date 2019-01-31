@@ -33,6 +33,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	char *param_h_e = mxArrayToString( mxGetField( prhs[0], 0, "param_h_e" ) );
 	char *param_y = mxArrayToString( mxGetField( prhs[0], 0, "param_y" ) );
 	char *param_y_e = mxArrayToString( mxGetField( prhs[0], 0, "param_y_e" ) );
+	char *param_ext_cost = mxArrayToString( mxGetField( prhs[0], 0, "param_ext_cost" ) );
+	char *param_ext_cost_e = mxArrayToString( mxGetField( prhs[0], 0, "param_ext_cost_e" ) );
 
 	// C_ocp
 
@@ -239,7 +241,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if (mxGetField( prhs[1], 0, "y_e_fun_jac_ut_xt" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "y_e_fun_jac_ut_xt" ) );
-		if(!strcmp(param_f, "true")) // TODO bool
+		if(!strcmp(param_y_e, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
 			status = ocp_nlp_cost_model_set(config, dims, in, N, "nls_res_jac", ext_fun_param_ptr);
@@ -248,6 +250,40 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			status = ocp_nlp_cost_model_set(config, dims, in, N, "nls_res_jac", ext_fun_ptr);
+			}
+		}
+	if (mxGetField( prhs[1], 0, "ext_cost_jac_hes" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "ext_cost_jac_hes" ) );
+		if(!strcmp(param_ext_cost, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_cost_model_set(config, dims, in, ii, "ext_cost_jac_hes", ext_fun_param_ptr+ii);
+				}
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_cost_model_set(config, dims, in, ii, "ext_cost_jac_hes", ext_fun_ptr+ii);
+				}
+			}
+		}
+	if (mxGetField( prhs[1], 0, "ext_cost_e_jac_hes" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "ext_cost_e_jac_hes" ) );
+		if(!strcmp(param_ext_cost_e, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			status = ocp_nlp_cost_model_set(config, dims, in, N, "ext_cost_jac_hes", ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			status = ocp_nlp_cost_model_set(config, dims, in, N, "ext_cost_jac_hes", ext_fun_ptr);
 			}
 		}
 

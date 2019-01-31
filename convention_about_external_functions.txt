@@ -10,7 +10,7 @@ This file contains the description of all external functions interfaced to acado
 
 // complete gradient and hessian of cost, computed externally
 
-external function: ext_cost
+external function: ext_cost_jac_hes
 
 inputs:
 0) [x]    size: nx    type: BLASFEO_DVEC_ARGS

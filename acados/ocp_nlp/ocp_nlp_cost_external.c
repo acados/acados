@@ -108,7 +108,7 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
     }
     else
     {
-        printf("\nerror: dimension type not available in module\n");
+        printf("\nerror: dimension type %s not available in module ocp_nlp_cost_external\n", field);
         exit(1);
     }
 }
@@ -184,7 +184,7 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
 
     int ns = dims->ns;
 
-    if (!strcmp(field, "ext_cost"))
+    if (!strcmp(field, "ext_cost_jac_hes"))
     {
         model->ext_cost = (external_function_generic *) value_;
     }
@@ -222,7 +222,7 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     }
     else
     {
-        printf("\nerror: model entry: %s not available in module ocp_nlp_cost_nls\n", field);
+        printf("\nerror: model entry: %s not available in module ocp_nlp_cost_external\n", field);
 		exit(1);
 //        status = ACADOS_FAILURE;
     }

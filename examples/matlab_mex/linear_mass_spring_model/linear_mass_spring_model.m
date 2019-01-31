@@ -40,6 +40,18 @@ expr_h_e = [sym_x];
 expr_y = [sym_u; sym_x];
 expr_y_e = [sym_x];
 
+%% external cost
+yr_u = zeros(nu, 1);
+yr_x = zeros(nx, 1);
+dWu = 2*ones(nu, 1);
+dWx = ones(nx, 1);
+
+ymyr = [sym_u; sym_x] - [yr_u; yr_x];
+ymyr_e = sym_x - yr_x;
+
+expr_ext_cost = 0.5 * ymyr' * ([dWu; dWx] .* ymyr);
+expr_ext_cost_e = 0.5 * ymyr_e' * (dWx .* ymyr_e);
+
 %% populate structure
 model.nx = nx;
 model.nu = nu;
@@ -52,4 +64,6 @@ model.expr_h = expr_h;
 model.expr_h_e = expr_h_e;
 model.expr_y = expr_y;
 model.expr_y_e = expr_y_e;
+model.expr_ext_cost = expr_ext_cost;
+model.expr_ext_cost_e = expr_ext_cost_e;
 

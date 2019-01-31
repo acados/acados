@@ -50,6 +50,17 @@ if (strcmp(model_struct.cost_e_type, 'nonlinear_ls'))
 		[acados_mex_folder, 'ocp_set_ext_fun_y_e.c']
 		};
 end
+% external cost
+if (strcmp(model_struct.cost_type, 'ext_cost'))
+	mex_files = {mex_files{:}, ...
+		[acados_mex_folder, 'ocp_set_ext_fun_ext_cost.c']
+		};
+end
+if (strcmp(model_struct.cost_e_type, 'ext_cost'))
+	mex_files = {mex_files{:}, ...
+		[acados_mex_folder, 'ocp_set_ext_fun_ext_cost_e.c']
+		};
+end
 
 %% get pointers for external functions in model
 for ii=1:length(mex_files)

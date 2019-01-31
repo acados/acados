@@ -727,6 +727,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			plan->nlp_cost[ii] = NONLINEAR_LS;
 			}
 		}
+	else if(!strcmp(cost_type, "ext_cost"))
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			plan->nlp_cost[ii] = EXTERNALLY_PROVIDED;
+			}
+		}
 	else
 		{
 		mexPrintf("\ncost_type not supported: %s\n", cost_type);
@@ -739,6 +746,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	else if(!strcmp(cost_e_type, "nonlinear_ls"))
 		{
 		plan->nlp_cost[N] = NONLINEAR_LS;
+		}
+	else if(!strcmp(cost_e_type, "ext_cost"))
+		{
+		plan->nlp_cost[N] = EXTERNALLY_PROVIDED;
 		}
 	else
 		{

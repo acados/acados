@@ -71,7 +71,18 @@ classdef acados_ocp < handle
 						c_sources = [c_sources, 'ocp_model_y_e_fun_jac_ut_xt.c '];
 					end
 				end
-				% TODO
+				% external cost
+				if (strcmp(obj.model_struct.cost_type, 'ext_cost') || strcmp(obj.model_struct.cost_e_type, 'ext_cost'))
+					% generate c for function and derivatives using casadi
+					generate_c_code_ext_cost(obj.model_struct, obj.opts_struct);
+					% sources list
+					if isfield(obj.model_struct, 'expr_ext_cost')
+						c_sources = [c_sources, 'ocp_model_ext_cost_jac_hes.c '];
+					end
+					if isfield(obj.model_struct, 'expr_ext_cost_e')
+						c_sources = [c_sources, 'ocp_model_ext_cost_e_jac_hes.c '];
+					end
+				end
 				lib_name = ['libocp_model.so'];
 				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
@@ -106,6 +117,13 @@ classdef acados_ocp < handle
 			end
 			if (strcmp(obj.model_struct.cost_e_type, 'nonlinear_ls'))
 				ocp_set_ext_fun_y_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+			end
+			% external cost
+			if (strcmp(obj.model_struct.cost_type, 'ext_cost'))
+				ocp_set_ext_fun_ext_cost(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+			end
+			if (strcmp(obj.model_struct.cost_e_type, 'ext_cost'))
+				ocp_set_ext_fun_ext_cost_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 
 			% set in model
