@@ -18,7 +18,7 @@
 from casadi import *
 import os
 
-def generate_c_code_explicit_ode( model ):
+def generate_c_code_constraint( model ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -30,7 +30,7 @@ def generate_c_code_explicit_ode( model ):
     # load model
     x = model.x
     u = model.u
-    f_expl = model.f_expl_expr
+    f_expl = model.expr
     model_name = model.name
 
     ## get model dimensions

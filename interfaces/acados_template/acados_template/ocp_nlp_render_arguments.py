@@ -8,6 +8,8 @@ class ocp_nlp_dims:
         self._np   = 0     # number of parameters
         self._ny   = None  # number of residuals in Lagrange term
         self._nyN  = None  # number of residuals in Mayer term
+        self._npd  = 0     # number of positive definite constraints
+        self._npdN = 0     # number of positive definite constraints in last stage
         self._nbx  = 0     # number of state bounds 
         self._nbu  = 0     # number of input bounds
         self._ng   = 0     # number of general constraints
@@ -34,6 +36,14 @@ class ocp_nlp_dims:
     @property
     def ny(self):
         return self._ny
+
+    @property
+    def npd(self):
+        return self._npd
+
+    @property
+    def npdN(self):
+        return self._npdN
 
     @property
     def nyN(self):
@@ -104,6 +114,20 @@ class ocp_nlp_dims:
             self._nyN = nyN
         else:
             raise Exception('Invalid nyN value. Exiting.')
+
+    @npd.setter
+    def npd(self, npd):
+        if type(npd) == int and npd > 0:
+            self._npd = npd
+        else:
+            raise Exception('Invalid npd value. Exiting.')
+
+    @npdN.setter
+    def npdN(self, npdN):
+        if type(npdN) == int and npdN > 0:
+            self._npdN = npdN
+        else:
+            raise Exception('Invalid npdN value. Exiting.')
 
     @nbu.setter
     def nbu(self, nbu):

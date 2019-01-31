@@ -54,6 +54,8 @@
 #define NY   {{ ra.dims.ny }}
 #define NYN  {{ ra.dims.nyN }}
 #define N    {{ ra.dims.N }}
+#define NPD  {{ ra.dims.npd }}
+#define NPDN {{ ra.dims.npdN }}
 
 int acados_create() {
 
@@ -239,11 +241,13 @@ int acados_create() {
     int nb[N+1];
     int ng[N+1];
     int nh[N+1];
-    int np[N+1];
+    int npd[N+1];
     int ns[N+1];
     int nz[N+1];
     int nv[N+1];
     int ny[N+1];
+    int npd[N+1];
+    int npdN[N+1];
 
     for(int i = 0; i < N+1; i++) {
         nx[i]  = NX;
@@ -253,7 +257,7 @@ int acados_create() {
         nb[i]  = NBU + NBX;
         ng[i]  = NG;
         nh[i]  = 0;
-        np[i]  = 0;
+        npd[i] = NPD;
         ns[i]  = 0;
         nz[i]  = NZ;
         nv[i]  = NX + NU;
@@ -268,12 +272,12 @@ int acados_create() {
     nx[N]  = NX;
     nz[N]  = 0;
     nh[N]  = 0;
-    np[N]  = 0;
+    npd[N]  = NPDN;
     nv[N]  = NX; 
     ny[N]  = NYN;
     nbu[N] = 0;
     nbx[N] = NBXN;
-    ng[N] = NGN;
+    ng[N]  = NGN;
     nb[N]  = NBXN;
 
     // Make plan
@@ -292,8 +296,19 @@ int acados_create() {
         nlp_solver_plan->sim_solver_plan[i].sim_solver = {{ ra.solver_config.integrator_type}};
     }
 
-    for (int i = 0; i <= N; i++)
+    for (int i = 0; i < N; i++) {
+        {% if ra.dims.npd > 0: %}
+        nlp_solver_plan->nlp_constraints[i] = BGHP;
+        {% else: %}
         nlp_solver_plan->nlp_constraints[i] = BGH;
+        {% endif %}
+    }
+
+    {% if ra.dims.npdN > 0: %}
+    nlp_solver_plan->nlp_constraints[N] = BGHP;
+    {% else: %}
+    nlp_solver_plan->nlp_constraints[N] = BGH;
+    {% endif %}
 
     {% if ra.solver_config.hessian_approx == 'EXACT': %} 
     nlp_solver_plan->regularization = CONVEXIFICATION;
@@ -314,7 +329,36 @@ int acados_create() {
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "np", &npd[i]);
     }
+
+    {% if ra.dims.npd > 0: }
+    p_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
+    for (int i = 0; i < N; ++i) {
+        // nonlinear part of convex-composite constraint
+        p_constraint[i].casadi_fun = &{{ ra.model_name }}_p_constraint;
+        p_constraint[i].casadi_n_in = &{{ ra.model_name }}_p_constraint_n_in;
+        p_constraint[i].casadi_n_out = &{{ ra.model_name }}_p_constraint_n_out;
+        p_constraint[i].casadi_sparsity_in = &{{ ra.model_name }}_p_constraint_sparsity_in;
+        p_constraint[i].casadi_sparsity_out = &{{ ra.model_name }}_p_constraint_sparsity_out;
+        p_constraint[i].casadi_work = &{{ ra.model_name }}_p_constraint_work;
+
+        external_function_casadi_create(&p_constraint[i]);
+    }
+    {% endif %}
+
+    {% if ra.dims.npdN > 0: }
+	// nonlinear part of convex-composite constraint
+	external_function_casadi p_constraint_N;
+	p_constraint_N.casadi_fun = &{{ ra.model_name }}_p_constraint_N;
+	p_constraint_N.casadi_n_in = &{{ ra.model_name }}_p_constraint_N_n_in;
+	p_constraint_N.casadi_n_out = &{{ ra.model_name }}_p_constraint_N_n_out;
+	p_constraint_N.casadi_sparsity_in = &{{ ra.model_name }}_p_constraint_N_sparsity_in;
+	p_constraint_N.casadi_sparsity_out = &{{ ra.model_name }}_p_constraint_N_sparsity_out;
+	p_constraint_N.casadi_work = &{{ ra.model_name }}_p_constraint_N_work;
+
+    external_function_casadi_create(p_constraint_N);
+    {% endif %}
 
     {% if ra.solver_config.integrator_type == 'ERK': %}
     // explicit ode
@@ -501,18 +545,30 @@ int acados_create() {
     }
     {% endif %}
 
-    {% if ra.dims.nbxN > -1: %} 
+    {% if ra.dims.nbxN > 0: %} 
     // bounds for last
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbxN);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbxN);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubxN);
     {% endif %}
     
-    {% if ra.dims.ngN > -1: %} 
+    {% if ra.dims.ngN > 0: %} 
     // general constraints for last stage
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "C", CN);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", lgN);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ugN);
+    {% endif %}
+
+    
+    {% if ra.dims.npd > 0: %}
+    // convex-composite constraints for stages 0 to N-1
+    for (int i = 0; i < N; ++i)
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "p", &p_constraint[i]);
+    {% endif %}
+
+    {% if ra.dims.npdN > 0: %}
+    // convex-composite constraints for stage N
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_constraint_N[i]);
     {% endif %}
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);
