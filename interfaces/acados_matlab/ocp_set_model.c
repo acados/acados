@@ -33,6 +33,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	char *param_h_e = mxArrayToString( mxGetField( prhs[0], 0, "param_h_e" ) );
 	char *param_y = mxArrayToString( mxGetField( prhs[0], 0, "param_y" ) );
 	char *param_y_e = mxArrayToString( mxGetField( prhs[0], 0, "param_y_e" ) );
+	char *param_ext_cost = mxArrayToString( mxGetField( prhs[0], 0, "param_ext_cost" ) );
+	char *param_ext_cost_e = mxArrayToString( mxGetField( prhs[0], 0, "param_ext_cost_e" ) );
 
 	// C_ocp
 
@@ -78,7 +80,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			for(ii=0; ii<N; ii++)
 				{
-				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_ode_fun", ext_fun_ptr); // NOTE not needed as sens_forw=1
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_ode_fun", ext_fun_ptr+ii); // NOTE not needed as sens_forw=1
 				}
 			}
 		}
@@ -98,7 +100,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			for(ii=0; ii<N; ii++)
 				{
-				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_vde_for", ext_fun_ptr);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_vde_for", ext_fun_ptr+ii);
 				}
 			}
 		}
@@ -118,7 +120,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			for(ii=0; ii<N; ii++)
 				{
-				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_vde_adj", ext_fun_ptr);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_vde_adj", ext_fun_ptr+ii);
 				}
 			}
 		}
@@ -138,7 +140,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			for(ii=0; ii<N; ii++)
 				{
-				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "impl_ode_fun", ext_fun_ptr);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "impl_ode_fun", ext_fun_ptr+ii);
 				}
 			}
 		}
@@ -158,7 +160,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			for(ii=0; ii<N; ii++)
 				{
-				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "impl_ode_fun_jac_x_xdot", ext_fun_ptr);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "impl_ode_fun_jac_x_xdot", ext_fun_ptr+ii);
 				}
 			}
 		}
@@ -178,7 +180,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			for(ii=0; ii<N; ii++)
 				{
-				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "impl_ode_jac_x_xdot_u", ext_fun_ptr);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "impl_ode_jac_x_xdot_u", ext_fun_ptr+ii);
 				}
 			}
 		}
@@ -198,7 +200,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			for(ii=0; ii<N; ii++)
 				{
-				status = ocp_nlp_constraints_model_set(config, dims, in, ii, "nl_constr_h_fun_jac", ext_fun_ptr);
+				status = ocp_nlp_constraints_model_set(config, dims, in, ii, "nl_constr_h_fun_jac", ext_fun_ptr+ii);
 				}
 			}
 		}
@@ -232,14 +234,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			for(ii=0; ii<N; ii++)
 				{
-				status = ocp_nlp_cost_model_set(config, dims, in, ii, "nls_res_jac", ext_fun_ptr);
+				status = ocp_nlp_cost_model_set(config, dims, in, ii, "nls_res_jac", ext_fun_ptr+ii);
 				}
 			}
 		}
 	if (mxGetField( prhs[1], 0, "y_e_fun_jac_ut_xt" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "y_e_fun_jac_ut_xt" ) );
-		if(!strcmp(param_f, "true")) // TODO bool
+		if(!strcmp(param_y_e, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
 			status = ocp_nlp_cost_model_set(config, dims, in, N, "nls_res_jac", ext_fun_param_ptr);
@@ -248,6 +250,40 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			status = ocp_nlp_cost_model_set(config, dims, in, N, "nls_res_jac", ext_fun_ptr);
+			}
+		}
+	if (mxGetField( prhs[1], 0, "ext_cost_jac_hes" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "ext_cost_jac_hes" ) );
+		if(!strcmp(param_ext_cost, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_cost_model_set(config, dims, in, ii, "ext_cost_jac_hes", ext_fun_param_ptr+ii);
+				}
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_cost_model_set(config, dims, in, ii, "ext_cost_jac_hes", ext_fun_ptr+ii);
+				}
+			}
+		}
+	if (mxGetField( prhs[1], 0, "ext_cost_e_jac_hes" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "ext_cost_e_jac_hes" ) );
+		if(!strcmp(param_ext_cost_e, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			status = ocp_nlp_cost_model_set(config, dims, in, N, "ext_cost_jac_hes", ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			status = ocp_nlp_cost_model_set(config, dims, in, N, "ext_cost_jac_hes", ext_fun_ptr);
 			}
 		}
 

@@ -113,14 +113,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		else
 			{
 			// expl_ode_fun
-			ext_fun_ptr = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
-			external_function_casadi_set_fun(ext_fun_ptr, &ocp_model_expl_ode_fun);
-			external_function_casadi_set_work(ext_fun_ptr, &ocp_model_expl_ode_fun_work);
-			external_function_casadi_set_sparsity_in(ext_fun_ptr, &ocp_model_expl_ode_fun_sparsity_in);
-			external_function_casadi_set_sparsity_out(ext_fun_ptr, &ocp_model_expl_ode_fun_sparsity_out);
-			external_function_casadi_set_n_in(ext_fun_ptr, &ocp_model_expl_ode_fun_n_in);
-			external_function_casadi_set_n_out(ext_fun_ptr, &ocp_model_expl_ode_fun_n_out);
-			external_function_casadi_create(ext_fun_ptr);
+			ext_fun_ptr = (external_function_casadi *) malloc(N*sizeof(external_function_casadi));
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_set_fun(ext_fun_ptr+ii, &ocp_model_expl_ode_fun);
+				external_function_casadi_set_work(ext_fun_ptr+ii, &ocp_model_expl_ode_fun_work);
+				external_function_casadi_set_sparsity_in(ext_fun_ptr+ii, &ocp_model_expl_ode_fun_sparsity_in);
+				external_function_casadi_set_sparsity_out(ext_fun_ptr+ii, &ocp_model_expl_ode_fun_sparsity_out);
+				external_function_casadi_set_n_in(ext_fun_ptr+ii, &ocp_model_expl_ode_fun_n_in);
+				external_function_casadi_set_n_out(ext_fun_ptr+ii, &ocp_model_expl_ode_fun_n_out);
+				external_function_casadi_create(ext_fun_ptr+ii);
+				}
 			// populate output struct
 			mxArray *expl_ode_fun_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(expl_ode_fun_mat);
@@ -128,14 +131,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxSetField((mxArray*) prhs[1], 0, "expl_ode_fun", expl_ode_fun_mat);
 
 			// expl_vde_for
-			ext_fun_ptr = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
-			external_function_casadi_set_fun(ext_fun_ptr, &ocp_model_expl_vde_for);
-			external_function_casadi_set_work(ext_fun_ptr, &ocp_model_expl_vde_for_work);
-			external_function_casadi_set_sparsity_in(ext_fun_ptr, &ocp_model_expl_vde_for_sparsity_in);
-			external_function_casadi_set_sparsity_out(ext_fun_ptr, &ocp_model_expl_vde_for_sparsity_out);
-			external_function_casadi_set_n_in(ext_fun_ptr, &ocp_model_expl_vde_for_n_in);
-			external_function_casadi_set_n_out(ext_fun_ptr, &ocp_model_expl_vde_for_n_out);
-			external_function_casadi_create(ext_fun_ptr);
+			ext_fun_ptr = (external_function_casadi *) malloc(N*sizeof(external_function_casadi));
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_set_fun(ext_fun_ptr+ii, &ocp_model_expl_vde_for);
+				external_function_casadi_set_work(ext_fun_ptr+ii, &ocp_model_expl_vde_for_work);
+				external_function_casadi_set_sparsity_in(ext_fun_ptr+ii, &ocp_model_expl_vde_for_sparsity_in);
+				external_function_casadi_set_sparsity_out(ext_fun_ptr+ii, &ocp_model_expl_vde_for_sparsity_out);
+				external_function_casadi_set_n_in(ext_fun_ptr+ii, &ocp_model_expl_vde_for_n_in);
+				external_function_casadi_set_n_out(ext_fun_ptr+ii, &ocp_model_expl_vde_for_n_out);
+				external_function_casadi_create(ext_fun_ptr+ii);
+				}
 			// populate output struct
 			mxArray *expl_vde_for_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(expl_vde_for_mat);

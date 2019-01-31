@@ -61,7 +61,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		else
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
-			external_function_casadi_free(ext_fun_ptr);
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
 			free(ext_fun_ptr);
 			}
 		}
@@ -80,7 +83,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		else
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
-			external_function_casadi_free(ext_fun_ptr);
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
 			free(ext_fun_ptr);
 			}
 		}
@@ -99,7 +105,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		else
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
-			external_function_casadi_free(ext_fun_ptr);
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
 			free(ext_fun_ptr);
 			}
 		}
@@ -118,7 +127,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		else
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
-			external_function_casadi_free(ext_fun_ptr);
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
 			free(ext_fun_ptr);
 			}
 		}
@@ -137,7 +149,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		else
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
-			external_function_casadi_free(ext_fun_ptr);
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
 			free(ext_fun_ptr);
 			}
 		}
@@ -156,7 +171,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		else
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
-			external_function_casadi_free(ext_fun_ptr);
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
 			free(ext_fun_ptr);
 			}
 		}
@@ -175,7 +193,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		else
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
-			external_function_casadi_free(ext_fun_ptr);
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
 			free(ext_fun_ptr);
 			}
 		}
@@ -210,7 +231,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		else
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
-			external_function_casadi_free(ext_fun_ptr);
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
 			free(ext_fun_ptr);
 			}
 		}

@@ -72,3 +72,19 @@ const int *ocp_model_y_e_fun_jac_ut_xt_sparsity_out(int);
 int ocp_model_y_e_fun_jac_ut_xt_n_in();
 int ocp_model_y_e_fun_jac_ut_xt_n_out();
 
+// external cost
+int ocp_model_ext_cost_jac_hes(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ocp_model_ext_cost_jac_hes_work(int *, int *, int *, int *);
+const int *ocp_model_ext_cost_jac_hes_sparsity_in(int);
+const int *ocp_model_ext_cost_jac_hes_sparsity_out(int);
+int ocp_model_ext_cost_jac_hes_n_in();
+int ocp_model_ext_cost_jac_hes_n_out();
+
+// external cost e
+int ocp_model_ext_cost_e_jac_hes(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ocp_model_ext_cost_e_jac_hes_work(int *, int *, int *, int *);
+const int *ocp_model_ext_cost_e_jac_hes_sparsity_in(int);
+const int *ocp_model_ext_cost_e_jac_hes_sparsity_out(int);
+int ocp_model_ext_cost_e_jac_hes_n_in();
+int ocp_model_ext_cost_e_jac_hes_n_out();
+

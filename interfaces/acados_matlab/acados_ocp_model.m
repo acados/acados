@@ -40,6 +40,10 @@ classdef acados_ocp_model < handle
 		param_y
 		expr_y_e
 		param_y_e
+		expr_ext_cost
+		param_ext_cost
+		expr_ext_cost_e
+		param_ext_cost_e
 		Vu
 		Vx
 		Vx_e
@@ -126,6 +130,8 @@ classdef acados_ocp_model < handle
 			obj.param_f = 'false';
 			obj.param_h = 'false';
 			obj.param_h_e = 'false';
+			obj.param_ext_cost = 'false';
+			obj.param_ext_cost_e = 'false';
 			% model structure
 			obj.model_struct = struct;
 			% initialize model struct
@@ -139,6 +145,8 @@ classdef acados_ocp_model < handle
 			obj.model_struct.param_f = obj.param_f;
 			obj.model_struct.param_h = obj.param_h;
 			obj.model_struct.param_h_e = obj.param_h_e;
+			obj.model_struct.param_ext_cost = obj.param_ext_cost;
+			obj.model_struct.param_ext_cost_e = obj.param_ext_cost_e;
 		end
 
 
@@ -242,6 +250,18 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'param_y_e'))
 				obj.param_y_e = value;
 				obj.model_struct.param_y_e = value;
+			elseif (strcmp(field, 'expr_ext_cost'))
+				obj.expr_ext_cost = value;
+				obj.model_struct.expr_ext_cost = value;
+			elseif (strcmp(field, 'param_ext_cost'))
+				obj.param_ext_cost = value;
+				obj.model_struct.param_ext_cost = value;
+			elseif (strcmp(field, 'expr_ext_cost_e'))
+				obj.expr_ext_cost_e = value;
+				obj.model_struct.expr_ext_cost_e = value;
+			elseif (strcmp(field, 'param_ext_cost_e'))
+				obj.param_ext_cost_e = value;
+				obj.model_struct.param_ext_cost_e = value;
 			elseif (strcmp(field, 'Vu'))
 				obj.Vu = value;
 				obj.model_struct.Vu = value;

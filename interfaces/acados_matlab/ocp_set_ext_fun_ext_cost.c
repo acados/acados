@@ -50,7 +50,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		np = mxGetScalar( mxGetField( prhs[2], 0, "np" ) );
 		}
 	// TODO bool instead !!!
-	char *param_y = mxArrayToString( mxGetField( prhs[2], 0, "param_y" ) );
+	char *param_ext_cost = mxArrayToString( mxGetField( prhs[2], 0, "param_ext_cost" ) );
 
 
 	// opts
@@ -76,53 +76,54 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	external_function_param_casadi *ext_fun_param_ptr;
 
 	// TODO templetize the casadi function names !!!
-	if(!strcmp(cost_type, "nonlinear_ls"))
+	if(!strcmp(cost_type, "ext_cost"))
 		{
-		if(!strcmp(param_y, "true")) // TODO bool
+		if(!strcmp(param_ext_cost, "true")) // TODO bool
 			{
-			// y_fun_jac_ut_xt
+			// ext_cost_jac_hes
 			ext_fun_param_ptr = (external_function_param_casadi *) malloc(N*sizeof(external_function_param_casadi));
 			for(ii=0; ii<N; ii++)
 				{
-				external_function_param_casadi_set_fun(ext_fun_param_ptr+ii, &ocp_model_y_fun_jac_ut_xt);
-				external_function_param_casadi_set_work(ext_fun_param_ptr+ii, &ocp_model_y_fun_jac_ut_xt_work);
-				external_function_param_casadi_set_sparsity_in(ext_fun_param_ptr+ii, &ocp_model_y_fun_jac_ut_xt_sparsity_in);
-				external_function_param_casadi_set_sparsity_out(ext_fun_param_ptr+ii, &ocp_model_y_fun_jac_ut_xt_sparsity_out);
-				external_function_param_casadi_set_n_in(ext_fun_param_ptr+ii, &ocp_model_y_fun_jac_ut_xt_n_in);
-				external_function_param_casadi_set_n_out(ext_fun_param_ptr+ii, &ocp_model_y_fun_jac_ut_xt_n_out);
+				external_function_param_casadi_set_fun(ext_fun_param_ptr+ii, &ocp_model_ext_cost_jac_hes);
+				external_function_param_casadi_set_work(ext_fun_param_ptr+ii, &ocp_model_ext_cost_jac_hes_work);
+				external_function_param_casadi_set_sparsity_in(ext_fun_param_ptr+ii, &ocp_model_ext_cost_jac_hes_sparsity_in);
+				external_function_param_casadi_set_sparsity_out(ext_fun_param_ptr+ii, &ocp_model_ext_cost_jac_hes_sparsity_out);
+				external_function_param_casadi_set_n_in(ext_fun_param_ptr+ii, &ocp_model_ext_cost_jac_hes_n_in);
+				external_function_param_casadi_set_n_out(ext_fun_param_ptr+ii, &ocp_model_ext_cost_jac_hes_n_out);
 				external_function_param_casadi_create(ext_fun_param_ptr+ii, np);
 				}
 			// populate output struct
-			mxArray *y_fun_jac_ut_xt_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-			ptr = mxGetData(y_fun_jac_ut_xt_mat);
+			mxArray *ext_cost_jac_hes_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+			ptr = mxGetData(ext_cost_jac_hes_mat);
 			ptr[0] = (long long) ext_fun_param_ptr;
-			mxSetField((mxArray*) prhs[1], 0, "y_fun_jac_ut_xt", y_fun_jac_ut_xt_mat);
+			mxSetField((mxArray*) prhs[1], 0, "ext_cost_jac_hes", ext_cost_jac_hes_mat);
 			}
 		else
 			{
-			// y_fun_jac_ut_xt
+			// ext_cost_jac_hes
 			ext_fun_ptr = (external_function_casadi *) malloc(N*sizeof(external_function_casadi));
 			for(ii=0; ii<N; ii++)
 				{
-				external_function_casadi_set_fun(ext_fun_ptr+ii, &ocp_model_y_fun_jac_ut_xt);
-				external_function_casadi_set_work(ext_fun_ptr+ii, &ocp_model_y_fun_jac_ut_xt_work);
-				external_function_casadi_set_sparsity_in(ext_fun_ptr+ii, &ocp_model_y_fun_jac_ut_xt_sparsity_in);
-				external_function_casadi_set_sparsity_out(ext_fun_ptr+ii, &ocp_model_y_fun_jac_ut_xt_sparsity_out);
-				external_function_casadi_set_n_in(ext_fun_ptr+ii, &ocp_model_y_fun_jac_ut_xt_n_in);
-				external_function_casadi_set_n_out(ext_fun_ptr+ii, &ocp_model_y_fun_jac_ut_xt_n_out);
+				external_function_casadi_set_fun(ext_fun_ptr+ii, &ocp_model_ext_cost_jac_hes);
+				external_function_casadi_set_work(ext_fun_ptr+ii, &ocp_model_ext_cost_jac_hes_work);
+				external_function_casadi_set_sparsity_in(ext_fun_ptr+ii, &ocp_model_ext_cost_jac_hes_sparsity_in);
+				external_function_casadi_set_sparsity_out(ext_fun_ptr+ii, &ocp_model_ext_cost_jac_hes_sparsity_out);
+				external_function_casadi_set_n_in(ext_fun_ptr+ii, &ocp_model_ext_cost_jac_hes_n_in);
+				external_function_casadi_set_n_out(ext_fun_ptr+ii, &ocp_model_ext_cost_jac_hes_n_out);
 				external_function_casadi_create(ext_fun_ptr+ii);
 				}
 			// populate output struct
-			mxArray *y_fun_jac_ut_xt_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-			ptr = mxGetData(y_fun_jac_ut_xt_mat);
+			mxArray *ext_cost_jac_hes_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+			ptr = mxGetData(ext_cost_jac_hes_mat);
 			ptr[0] = (long long) ext_fun_ptr;
-			mxSetField((mxArray*) prhs[1], 0, "y_fun_jac_ut_xt", y_fun_jac_ut_xt_mat);
+			mxSetField((mxArray*) prhs[1], 0, "ext_cost_jac_hes", ext_cost_jac_hes_mat);
 			}
 		}
 	
 	return;
 
 	}
+
 
 
 
