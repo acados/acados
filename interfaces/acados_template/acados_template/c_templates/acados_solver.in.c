@@ -490,7 +490,7 @@ int acados_create() {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubu", ubu);
     }
    
-    {% if ra.dims.ng > -1: %} 
+    {% if ra.dims.ng > 0: %} 
     // general constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
     {
