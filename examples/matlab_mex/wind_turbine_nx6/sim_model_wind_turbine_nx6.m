@@ -12,6 +12,8 @@ sim_S03_SetupSysParameters;
 % aerodynamic torque coefficient for FAST 5MW reference turbine
 load('CmDataSpline.mat')
 c_StVek = c_St';
+
+% bspline by CasADi default are cubic
 splineCMBL = interpolant('Spline','bspline',{y_St,x_St},c_StVek(:));
 clear x_St y_St c_St c_StVek
 
