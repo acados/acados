@@ -43,6 +43,6 @@ model.expr_f_expl = f_expl;
 model.expr_f_impl = f_impl;
 model.expr_h = h;
 model.expr_h_e = h_e;
-%model.expr_y = y;
-%model.expr_y_e = y_e;
+model.expr_y = y;
+model.expr_y_e = y_e;
 

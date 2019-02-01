@@ -108,7 +108,7 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
     }
     else
     {
-        printf("\nerror: dimension type not available in module\n");
+        printf("\nerror: dimension type %s not available in module ocp_nlp_cost_external\n", field);
         exit(1);
     }
 }
@@ -182,24 +182,49 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_model *model = model_;
 
-    if (!strcmp(field, "ext_cost"))
+    int ns = dims->ns;
+
+    if (!strcmp(field, "ext_cost_jac_hes"))
     {
         model->ext_cost = (external_function_generic *) value_;
     }
-    else if (!strcmp(field, "Z "))
+    else if (!strcmp(field, "Z"))
     {
         double *Z = (double *) value_;
-        blasfeo_pack_dvec(2 * dims->ns, Z, &model->Z, 0);
+        blasfeo_pack_dvec(ns, Z, &model->Z, 0);
+        blasfeo_pack_dvec(ns, Z, &model->Z, ns);
+    }
+    else if (!strcmp(field, "Zl"))
+    {
+        double *Zl = (double *) value_;
+        blasfeo_pack_dvec(ns, Zl, &model->Z, 0);
+    }
+    else if (!strcmp(field, "Zu"))
+    {
+        double *Zu = (double *) value_;
+        blasfeo_pack_dvec(ns, Zu, &model->Z, ns);
     }
     else if (!strcmp(field, "z"))
     {
         double *z = (double *) value_;
-        blasfeo_pack_dvec(2 * dims->ns, z, &model->z, 0);
+        blasfeo_pack_dvec(ns, z, &model->z, 0);
+        blasfeo_pack_dvec(ns, z, &model->z, ns);
+    }
+    else if (!strcmp(field, "zl"))
+    {
+        double *zl = (double *) value_;
+        blasfeo_pack_dvec(ns, zl, &model->z, 0);
+    }
+    else if (!strcmp(field, "zu"))
+    {
+        double *zu = (double *) value_;
+        blasfeo_pack_dvec(ns, zu, &model->z, ns);
     }
     else
     {
-        printf("\nerror: model entry: %s not available in module ocp_nlp_cost_nls\n", field);
-        status = ACADOS_FAILURE;
+        printf("\nerror: model entry: %s not available in module ocp_nlp_cost_external\n", field);
+		exit(1);
+//        status = ACADOS_FAILURE;
     }
     return status;
 }

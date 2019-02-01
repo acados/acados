@@ -17,7 +17,8 @@ qp_solver_N_pcond = 5;
 sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 1;
-cost_type = 'linear_ls';
+%cost_type = 'linear_ls';
+cost_type = 'nonlinear_ls';
 
 
 
@@ -39,6 +40,10 @@ ng = 0;
 ng_e = 0;
 nh = 1;
 nh_e = 1;
+ns = 1;
+ns_e = 1;
+nsh = 1;
+nsh_e = 1;
 np = model.np; % 1
 
 %% cost
@@ -72,6 +77,11 @@ W_e(2, 2) =  0.0180;
 %yr = ... ;
 % output reference in mayer term
 %yr_e = ... ;
+% slacks
+Z = 1e2;
+Z_e = 1e2;
+z = 0e2;
+z_e = 0e2;
 
 %% constraints
 % constants
@@ -86,7 +96,7 @@ beta_max = 35.0;
 M_gen_min = 0.0;
 M_gen_max = 5.0;
 Pel_min = 0.0;
-Pel_max = 6.2; % 5.0
+Pel_max = 5.0; % 5.0
 
 %acados_inf = 1e8;
 
@@ -106,6 +116,11 @@ lh = Pel_min;
 uh = Pel_max;
 lh_e = Pel_min;
 uh_e = Pel_max;
+% soft nonlinear constraints
+Jsh = zeros(nh, nsh);
+Jsh(1, 1) = 1.0;
+Jsh_e = zeros(nh_e, nsh_e);
+Jsh_e(1, 1) = 1.0;
 
 % shift
 x_end = zeros(nx, 1);
@@ -125,6 +140,10 @@ ocp_model.set('nbx', nbx);
 ocp_model.set('nbu', nbu);
 ocp_model.set('nh', nh);
 ocp_model.set('nh_e', nh_e);
+ocp_model.set('ns', ns);
+ocp_model.set('ns_e', ns_e);
+ocp_model.set('nsh', nsh);
+ocp_model.set('nsh_e', nsh_e);
 ocp_model.set('np', np);
 %% symbolics
 ocp_model.set('sym_x', model.sym_x);
@@ -134,11 +153,20 @@ ocp_model.set('sym_p', model.sym_p);
 %% cost
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_e_type', cost_type);
-ocp_model.set('Vu', Vu);
-ocp_model.set('Vx', Vx);
-ocp_model.set('Vx_e', Vx_e);
+if (strcmp(cost_type, 'linear_ls'))
+	ocp_model.set('Vu', Vu);
+	ocp_model.set('Vx', Vx);
+	ocp_model.set('Vx_e', Vx_e);
+else % nonlinear_ls
+	ocp_model.set('expr_y', model.expr_y);
+	ocp_model.set('expr_y_e', model.expr_y_e);
+end
 ocp_model.set('W', W);
 ocp_model.set('W_e', W_e);
+ocp_model.set('Z', Z);
+ocp_model.set('Z_e', Z_e);
+ocp_model.set('z', z);
+ocp_model.set('z_e', z_e);
 %% dynamics
 if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
@@ -164,6 +192,9 @@ ocp_model.set('uh', uh);
 ocp_model.set('expr_h_e', model.expr_h_e);
 ocp_model.set('lh_e', lh_e);
 ocp_model.set('uh_e', uh_e);
+% soft nonlinear constraints
+ocp_model.set('Jsh', Jsh);
+ocp_model.set('Jsh_e', Jsh_e);
 
 ocp_model.model_struct
 
@@ -205,6 +236,8 @@ compute_setup;
 x_traj_init = repmat(x0_ref, 1, N+1);
 u_traj_init = repmat(u0_ref, 1, N);
 
+tic
+
 ocp.set('x_init', x_traj_init);
 ocp.set('u_init', u_traj_init);
 
@@ -216,8 +249,8 @@ nn = 1;
 ocp.set('p', wind0_ref(:,nn));
 
 % set reference
-ocp.set('yr', y_ref);
-ocp.set('yr_e', y_ref);
+ocp.set('yr', y_ref(:,nn));
+ocp.set('yr_e', y_ref(:,nn));
 
 % solve
 ocp.solve();
@@ -226,9 +259,12 @@ ocp.solve();
 u = ocp.get('u');
 x = ocp.get('x');
 
+time_ext = toc;
+
 x(:,1)'
 u(:,1)'
-electrical_power = 0.944*97/100*x(1,1)*x(6,1)
+%electrical_power = 0.944*97/100*x(1,1)*x(6,1)
+electrical_power = 0.944*97/100*x(1,:).*x(6,:)
 
 status = ocp.get('status');
 sqp_iter = ocp.get('sqp_iter');
@@ -236,7 +272,7 @@ time_tot = ocp.get('time_tot');
 time_lin = ocp.get('time_lin');
 time_qp_sol = ocp.get('time_qp_sol');
 
-fprintf('\nstatus = %d, sqp_iter = %d, time_tot = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
 
 
 

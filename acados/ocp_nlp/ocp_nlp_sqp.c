@@ -183,7 +183,9 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->min_res_m = 1e-8;
 
     opts->reuse_workspace = 1;
-    opts->num_threads = 4;
+#if defined(ACADOS_WITH_OPENMP)
+    opts->num_threads = ACADOS_NUM_THREADS;
+#endif
 
     // submodules opts
 
@@ -1153,19 +1155,22 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
             // stop timer
             total_time += acados_toc(&timer0);
+
+			// save time
             nlp_out->total_time = total_time;
             mem->time_tot = total_time;
 
 #if defined(ACADOS_WITH_OPENMP)
-    // restore number of threads
-    omp_set_num_threads(num_threads_bkp);
+			// restore number of threads
+			omp_set_num_threads(num_threads_bkp);
 #endif
 			mem->status = ACADOS_SUCCESS;
             return mem->status;
         }
 
-        // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
-        //  print_ocp_qp_in(work->qp_in);
+//        printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
+//       print_ocp_qp_in(work->qp_in);
+//		exit(1);
 
         // start timer
         acados_tic(&timer1);
@@ -1179,25 +1184,30 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         nlp_out->qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
 
-        // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
-        //  print_ocp_qp_out(work->qp_out);
-        //  if(sqp_iter==1)
-        //  exit(1);
+//        printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
+//        print_ocp_qp_out(work->qp_out);
+//        if(sqp_iter==1)
+//        exit(1);
 
         if (qp_status != 0)
         {
             //   print_ocp_qp_in(work->qp_in);
 
+			// save sqp iterations number
+			mem->sqp_iter = sqp_iter;
+			nlp_out->sqp_iter = sqp_iter;
+
             // stop timer
             total_time += acados_toc(&timer0);
 
+			// save time
             mem->time_tot = total_time;
             nlp_out->total_time = total_time;
 
             printf("QP solver returned error status %d in iteration %d\n", qp_status, sqp_iter);
 #if defined(ACADOS_WITH_OPENMP)
-    // restore number of threads
-    omp_set_num_threads(num_threads_bkp);
+			// restore number of threads
+			omp_set_num_threads(num_threads_bkp);
 #endif
 			mem->status = ACADOS_QP_FAILURE;
             return mem->status;
@@ -1231,9 +1241,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // save sqp iterations number
     mem->sqp_iter = sqp_iter;
-    mem->time_tot = total_time;
-
     nlp_out->sqp_iter = sqp_iter;
+
+	// save time
+    mem->time_tot = total_time;
     nlp_out->total_time = total_time;
 
     // printf("%d sqp iterations\n", sqp_iter);

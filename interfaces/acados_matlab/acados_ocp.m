@@ -71,7 +71,18 @@ classdef acados_ocp < handle
 						c_sources = [c_sources, 'ocp_model_y_e_fun_jac_ut_xt.c '];
 					end
 				end
-				% TODO
+				% external cost
+				if (strcmp(obj.model_struct.cost_type, 'ext_cost') || strcmp(obj.model_struct.cost_e_type, 'ext_cost'))
+					% generate c for function and derivatives using casadi
+					generate_c_code_ext_cost(obj.model_struct, obj.opts_struct);
+					% sources list
+					if isfield(obj.model_struct, 'expr_ext_cost')
+						c_sources = [c_sources, 'ocp_model_ext_cost_jac_hes.c '];
+					end
+					if isfield(obj.model_struct, 'expr_ext_cost_e')
+						c_sources = [c_sources, 'ocp_model_ext_cost_e_jac_hes.c '];
+					end
+				end
 				lib_name = ['libocp_model.so'];
 				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
@@ -86,30 +97,37 @@ classdef acados_ocp < handle
 			% get pointers for external functions in model
 			% dynamics
 			if (strcmp(obj.opts_struct.sim_method, 'erk'))
-				ocp_set_ext_fun_expl(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_expl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			elseif (strcmp(obj.opts_struct.sim_method, 'irk'))
-				ocp_set_ext_fun_impl(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_impl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			else
 				fprintf('\ncodegen_model: sim_method not supported: %s\n', obj.opts_struct.sim_method);
 				return;
 			end
 			% nonlinear constraints
 			if (strcmp(obj.model_struct.constr_type, 'bgh') && isfield(obj.model_struct, 'expr_h'))
-				ocp_set_ext_fun_h(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_h(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			if (strcmp(obj.model_struct.constr_type, 'bgh') && isfield(obj.model_struct, 'expr_h_e'))
-				ocp_set_ext_fun_h_e(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_h_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			% nonlinear least squares
 			if (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
-				ocp_set_ext_fun_y(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_y(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			if (strcmp(obj.model_struct.cost_e_type, 'nonlinear_ls'))
-				ocp_set_ext_fun_y_e(obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				ocp_set_ext_fun_y_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+			end
+			% external cost
+			if (strcmp(obj.model_struct.cost_type, 'ext_cost'))
+				ocp_set_ext_fun_ext_cost(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+			end
+			if (strcmp(obj.model_struct.cost_e_type, 'ext_cost'))
+				ocp_set_ext_fun_ext_cost_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 
 			% set in model
-			ocp_set_model(obj.C_ocp_ext_fun, obj.C_ocp);
+			ocp_set_model(obj.model_struct, obj.C_ocp_ext_fun, obj.C_ocp);
 		end
 
 
@@ -120,8 +138,24 @@ classdef acados_ocp < handle
 
 
 
-		function set(obj, field, value)
-			ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
+%		function set(obj, field, value)
+%			ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
+%		end
+		function set(varargin)
+			if nargin==3
+				obj = varargin{1};
+				field = varargin{2};
+				value = varargin{3};
+				ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
+			elseif nargin==4
+				obj = varargin{1};
+				field = varargin{2};
+				stage = varargin{3};
+				value = varargin{4};
+				ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
+			else
+				disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
+			end
 		end
 
 
@@ -144,8 +178,8 @@ classdef acados_ocp < handle
 
 
 		function delete(obj)
+			ocp_destroy_ext_fun(obj.model_struct, obj.C_ocp, obj.C_ocp_ext_fun);
 			ocp_destroy(obj.C_ocp);
-			ocp_destroy_ext_fun(obj.model_struct, obj.C_ocp_ext_fun);
 		end
 
 

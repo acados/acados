@@ -17,6 +17,14 @@ classdef acados_ocp_model < handle
 		ng_e
 		nh
 		nh_e
+		ns
+		ns_e
+		nsbu
+		nsbx
+		nsg
+		nsg_e
+		nsh
+		nsh_e
 		np
 %		np_e
 		% symbolics
@@ -32,6 +40,10 @@ classdef acados_ocp_model < handle
 		param_y
 		expr_y_e
 		param_y_e
+		expr_ext_cost
+		param_ext_cost
+		expr_ext_cost_e
+		param_ext_cost_e
 		Vu
 		Vx
 		Vx_e
@@ -39,6 +51,18 @@ classdef acados_ocp_model < handle
 		W_e
 		yr
 		yr_e
+		Z
+		Z_e
+		Zl
+		Zl_e
+		Zu
+		Zu_e
+		z
+		z_e
+		zl
+		zl_e
+		zu
+		zu_e
 		% dynamics
 		dyn_type
 		expr_f
@@ -67,6 +91,24 @@ classdef acados_ocp_model < handle
 		param_h_e
 		lh_e
 		uh_e
+		Jsbu
+%		lsbu
+%		usbu
+		Jsbx
+%		lsbx
+%		usbx
+		Jsg
+%		lsg
+%		usg
+		Jsg_e
+%		lsg_e
+%		usg_e
+		Jsh
+%		lsh
+%		ush
+		Jsh_e
+%		lsh_e
+%		ush_e
 		% structure
 		model_struct
 	end %properties
@@ -88,6 +130,8 @@ classdef acados_ocp_model < handle
 			obj.param_f = 'false';
 			obj.param_h = 'false';
 			obj.param_h_e = 'false';
+			obj.param_ext_cost = 'false';
+			obj.param_ext_cost_e = 'false';
 			% model structure
 			obj.model_struct = struct;
 			% initialize model struct
@@ -101,6 +145,8 @@ classdef acados_ocp_model < handle
 			obj.model_struct.param_f = obj.param_f;
 			obj.model_struct.param_h = obj.param_h;
 			obj.model_struct.param_h_e = obj.param_h_e;
+			obj.model_struct.param_ext_cost = obj.param_ext_cost;
+			obj.model_struct.param_ext_cost_e = obj.param_ext_cost_e;
 		end
 
 
@@ -142,6 +188,30 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'nh_e'))
 				obj.nh_e = value;
 				obj.model_struct.nh_e = value;
+			elseif (strcmp(field, 'ns'))
+				obj.ns = value;
+				obj.model_struct.ns = value;
+			elseif (strcmp(field, 'ns_e'))
+				obj.ns_e = value;
+				obj.model_struct.ns_e = value;
+			elseif (strcmp(field, 'nsbu'))
+				obj.nsbu = value;
+				obj.model_struct.nsbu = value;
+			elseif (strcmp(field, 'nsbx'))
+				obj.nsbx = value;
+				obj.model_struct.nsbx = value;
+			elseif (strcmp(field, 'nsg'))
+				obj.nsg = value;
+				obj.model_struct.nsg = value;
+			elseif (strcmp(field, 'nsg_e'))
+				obj.nsg_e = value;
+				obj.model_struct.nsg_e = value;
+			elseif (strcmp(field, 'nsh'))
+				obj.nsh = value;
+				obj.model_struct.nsh = value;
+			elseif (strcmp(field, 'nsh_e'))
+				obj.nsh_e = value;
+				obj.model_struct.nsh_e = value;
 			elseif (strcmp(field, 'np'))
 				obj.np = value;
 				obj.model_struct.np = value;
@@ -180,6 +250,18 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'param_y_e'))
 				obj.param_y_e = value;
 				obj.model_struct.param_y_e = value;
+			elseif (strcmp(field, 'expr_ext_cost'))
+				obj.expr_ext_cost = value;
+				obj.model_struct.expr_ext_cost = value;
+			elseif (strcmp(field, 'param_ext_cost'))
+				obj.param_ext_cost = value;
+				obj.model_struct.param_ext_cost = value;
+			elseif (strcmp(field, 'expr_ext_cost_e'))
+				obj.expr_ext_cost_e = value;
+				obj.model_struct.expr_ext_cost_e = value;
+			elseif (strcmp(field, 'param_ext_cost_e'))
+				obj.param_ext_cost_e = value;
+				obj.model_struct.param_ext_cost_e = value;
 			elseif (strcmp(field, 'Vu'))
 				obj.Vu = value;
 				obj.model_struct.Vu = value;
@@ -201,6 +283,42 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'yr_e'))
 				obj.yr_e = value;
 				obj.model_struct.yr_e = value;
+			elseif (strcmp(field, 'Z'))
+				obj.Z = value;
+				obj.model_struct.Z = value;
+			elseif (strcmp(field, 'Z_e'))
+				obj.Z_e = value;
+				obj.model_struct.Z_e = value;
+			elseif (strcmp(field, 'Zl'))
+				obj.Zl = value;
+				obj.model_struct.Zl = value;
+			elseif (strcmp(field, 'Zl_e'))
+				obj.Zl_e = value;
+				obj.model_struct.Zl_e = value;
+			elseif (strcmp(field, 'Zu'))
+				obj.Zu = value;
+				obj.model_struct.Zu = value;
+			elseif (strcmp(field, 'Zu_e'))
+				obj.Zu_e = value;
+				obj.model_struct.Zu_e = value;
+			elseif (strcmp(field, 'zl'))
+				obj.zl = value;
+				obj.model_struct.zl = value;
+			elseif (strcmp(field, 'zl_e'))
+				obj.zl_e = value;
+				obj.model_struct.zl_e = value;
+			elseif (strcmp(field, 'z'))
+				obj.z = value;
+				obj.model_struct.z = value;
+			elseif (strcmp(field, 'z_e'))
+				obj.z_e = value;
+				obj.model_struct.z_e = value;
+			elseif (strcmp(field, 'zu'))
+				obj.zu = value;
+				obj.model_struct.zu = value;
+			elseif (strcmp(field, 'zu_e'))
+				obj.zu_e = value;
+				obj.model_struct.zu_e = value;
 			% dynamics
 			elseif (strcmp(field, 'dyn_type'))
 				obj.dyn_type = value;
@@ -281,6 +399,60 @@ classdef acados_ocp_model < handle
 			elseif (strcmp(field, 'uh_e'))
 				obj.uh_e = value;
 				obj.model_struct.uh_e = value;
+			elseif (strcmp(field, 'Jsbu'))
+				obj.Jsbu = value;
+				obj.model_struct.Jsbu = value;
+%			elseif (strcmp(field, 'lsbu'))
+%				obj.lsbu = value;
+%				obj.model_struct.lsbu = value;
+%			elseif (strcmp(field, 'usbu'))
+%				obj.usbu = value;
+%				obj.model_struct.usbu = value;
+			elseif (strcmp(field, 'Jsbx'))
+				obj.Jsbx = value;
+				obj.model_struct.Jsbx = value;
+%			elseif (strcmp(field, 'lsbx'))
+%				obj.lsbx = value;
+%				obj.model_struct.lsbx = value;
+%			elseif (strcmp(field, 'usbx'))
+%				obj.usbx = value;
+%				obj.model_struct.usbx = value;
+			elseif (strcmp(field, 'Jsg'))
+				obj.Jsg = value;
+				obj.model_struct.Jsg = value;
+%			elseif (strcmp(field, 'lsg'))
+%				obj.lsg = value;
+%				obj.model_struct.lsg = value;
+%			elseif (strcmp(field, 'usg'))
+%				obj.usg = value;
+%				obj.model_struct.usg = value;
+			elseif (strcmp(field, 'Jsg_e'))
+				obj.Jsg_e = value;
+				obj.model_struct.Jsg_e = value;
+%			elseif (strcmp(field, 'lsg_e'))
+%				obj.lsg_e = value;
+%				obj.model_struct.lsg_e = value;
+%			elseif (strcmp(field, 'usg_e'))
+%				obj.usg_e = value;
+%				obj.model_struct.usg_e = value;
+			elseif (strcmp(field, 'Jsh'))
+				obj.Jsh = value;
+				obj.model_struct.Jsh = value;
+%			elseif (strcmp(field, 'lsh'))
+%				obj.lsh = value;
+%				obj.model_struct.lsh = value;
+%			elseif (strcmp(field, 'ush'))
+%				obj.ush = value;
+%				obj.model_struct.ush = value;
+			elseif (strcmp(field, 'Jsh_e'))
+				obj.Jsh_e = value;
+				obj.model_struct.Jsh_e = value;
+%			elseif (strcmp(field, 'lsh_e'))
+%				obj.lsh_e = value;
+%				obj.model_struct.lsh_e = value;
+%			elseif (strcmp(field, 'ush_e'))
+%				obj.ush_e = value;
+%				obj.model_struct.ush_e = value;
 			else
 				disp(['acados_integrator_model: set: wrong field: ', field]);
 			end

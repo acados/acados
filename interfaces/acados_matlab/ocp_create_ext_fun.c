@@ -27,7 +27,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* LHS */
 
 	// field names of output struct
-	char *fieldnames[10];
+	char *fieldnames[12];
 	fieldnames[0] = (char*)mxMalloc(50);
 	fieldnames[1] = (char*)mxMalloc(50);
 	fieldnames[2] = (char*)mxMalloc(50);
@@ -38,6 +38,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	fieldnames[7] = (char*)mxMalloc(50);
 	fieldnames[8] = (char*)mxMalloc(50);
 	fieldnames[9] = (char*)mxMalloc(50);
+	fieldnames[10] = (char*)mxMalloc(50);
+	fieldnames[11] = (char*)mxMalloc(50);
 
 	memcpy(fieldnames[0],"expl_ode_fun",sizeof("expl_ode_fun"));
 	memcpy(fieldnames[1],"expl_vde_for",sizeof("expl_vde_for"));
@@ -49,9 +51,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	memcpy(fieldnames[7],"h_e_fun_jac_ut_xt",sizeof("h_e_fun_jac_ut_xt"));
 	memcpy(fieldnames[8],"y_fun_jac_ut_xt",sizeof("y_fun_jac_ut_xt"));
 	memcpy(fieldnames[9],"y_e_fun_jac_ut_xt",sizeof("y_e_fun_jac_ut_xt"));
+	memcpy(fieldnames[10],"ext_cost_jac_hes",sizeof("ext_cost_jac_hes"));
+	memcpy(fieldnames[11],"ext_cost_e_jac_hes",sizeof("ext_cost_e_jac_hes"));
 
 	// create output struct
-	plhs[0] = mxCreateStructMatrix(1, 1, 10, (const char **) fieldnames);
+	plhs[0] = mxCreateStructMatrix(1, 1, 12, (const char **) fieldnames);
 
 	mxFree( fieldnames[0] );
 	mxFree( fieldnames[1] );
@@ -63,6 +67,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mxFree( fieldnames[7] );
 	mxFree( fieldnames[8] );
 	mxFree( fieldnames[9] );
+	mxFree( fieldnames[10] );
+	mxFree( fieldnames[11] );
 
 
 

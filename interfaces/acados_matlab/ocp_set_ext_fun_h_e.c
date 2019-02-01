@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 // acados
+#include "acados_c/ocp_nlp_interface.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados_c/external_function_interface.h"
 // mex
@@ -27,29 +28,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* RHS */
 
+	// C_ocp
+
 	// C_ocp_ext_fun
 
 	// model
 
 	int nh_e;		bool set_h_e = false;
-	if (mxGetField( prhs[1], 0, "nh_e" )!=NULL)
+	if (mxGetField( prhs[2], 0, "nh_e" )!=NULL)
 		{
 		set_h_e = true;
-		nh_e = mxGetScalar( mxGetField( prhs[1], 0, "nh_e" ) );
+		nh_e = mxGetScalar( mxGetField( prhs[2], 0, "nh_e" ) );
 		}
 	int np = 0;
-	if(mxGetField( prhs[1], 0, "np" )!=NULL) // TODO bool
+	if(mxGetField( prhs[2], 0, "np" )!=NULL) // TODO bool
 		{
-		np = mxGetScalar( mxGetField( prhs[1], 0, "np" ) );
+		np = mxGetScalar( mxGetField( prhs[2], 0, "np" ) );
 		}
 	// TODO bool instead !!!
-	char *param_h_e = mxArrayToString( mxGetField( prhs[1], 0, "param_h_e" ) );
+	char *param_h_e = mxArrayToString( mxGetField( prhs[2], 0, "param_h_e" ) );
 
 	// opts
 
-//	bool sens_forw = mxGetScalar( mxGetField( prhs[0], 0, "sens_forw" ) );
+//	bool sens_forw = mxGetScalar( mxGetField( prhs[3], 0, "sens_forw" ) );
 //	mexPrintf("\n%d\n", sens_forw);
-//	char *sim_method = mxArrayToString( mxGetField( prhs[2], 0, "sim_method" ) );
+//	char *sim_method = mxArrayToString( mxGetField( prhs[3], 0, "sim_method" ) );
 //	mexPrintf("\n%s\n", sim_method);
 
 
@@ -82,7 +85,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxArray *h_e_fun_jac_ut_xt_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(h_e_fun_jac_ut_xt_mat);
 			ptr[0] = (long long) ext_fun_param_ptr;
-			mxSetField((mxArray*) prhs[0], 0, "h_e_fun_jac_ut_xt", h_e_fun_jac_ut_xt_mat);
+			mxSetField((mxArray*) prhs[1], 0, "h_e_fun_jac_ut_xt", h_e_fun_jac_ut_xt_mat);
 			}
 		else
 			{
@@ -99,7 +102,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxArray *h_e_fun_jac_ut_xt_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(h_e_fun_jac_ut_xt_mat);
 			ptr[0] = (long long) ext_fun_ptr;
-			mxSetField((mxArray*) prhs[0], 0, "h_e_fun_jac_ut_xt", h_e_fun_jac_ut_xt_mat);
+			mxSetField((mxArray*) prhs[1], 0, "h_e_fun_jac_ut_xt", h_e_fun_jac_ut_xt_mat);
 			}
 		}
 	

@@ -88,8 +88,8 @@ f_impl = dx - f_expl;
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%y = [GEN_agvelSt BLD_agPtchActSt BLD_agPtchGradDes GEN_trqGradDes];% MgenSlack betaSlack];
-%y_e = [GEN_agvelSt BLD_agPtchActSt];
+y = [GEN_agvelSt; BLD_agPtchActSt; BLD_agPtchGradDes; GEN_trqGradDes];% ; MgenSlack; betaSlack];
+y_e = [GEN_agvelSt; BLD_agPtchActSt];
 
 
 
