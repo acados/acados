@@ -5,12 +5,12 @@ acados_folder = getenv('ACADOS_INSTALL_DIR');
 mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
-acados_mex_folder = [acados_folder, '/interfaces/acados_matlab/']
-acados_include = ['-I', acados_folder]
-acados_interfaces_include = ['-I', acados_folder, '/interfaces']
-external_include = ['-I', acados_folder, '/external']
-blasfeo_include = ['-I', acados_folder, '/external/blasfeo/include']
-acados_lib_path = ['-L', acados_folder, '/lib']
+acados_mex_folder = [acados_folder, '/interfaces/acados_matlab/'];
+acados_include = ['-I', acados_folder];
+acados_interfaces_include = ['-I', acados_folder, '/interfaces'];
+external_include = ['-I', acados_folder, '/external'];
+blasfeo_include = ['-I', acados_folder, '/external/blasfeo/include'];
+acados_lib_path = ['-L', acados_folder, '/lib'];
 
 % compile mex
 mex_files = { ...
