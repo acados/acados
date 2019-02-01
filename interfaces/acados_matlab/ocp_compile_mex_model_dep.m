@@ -1,7 +1,7 @@
 function ocp_compile_mex_model_dep(model_struct, opts_struct)
 
 % get acados folder
-acados_folder = getenv('ACADOS_FOLDER');
+acados_folder = getenv('ACADOS_INSTALL_DIR');
 mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths

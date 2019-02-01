@@ -4,7 +4,7 @@ function model = crane_model()
 % represented as a Matlab struct "model".
 % It consists of a CasADi expression f_expl_expr
 % that depends on the symbolic CasADi variables x, xdot, u (also part of
-% "model"), a model name, which will be used as a prefix for the name of 
+% "model"), a model name, which will be used as a prefix for the name of
 % generated C functions to use the model with acados.
 
 import casadi.*
@@ -19,7 +19,7 @@ g = 9.81;
 %% Set up States & Controls
 xC = MX.sym('xC');     %States
 vC = MX.sym('vC');
-xL = MX.sym('xL');     
+xL = MX.sym('xL');
 vL = MX.sym('vL');
 uC = MX.sym('uC');
 uL = MX.sym('uL');

@@ -1,7 +1,7 @@
 function sim_compile_mex_model_dep(model_struct, opts_struct)
 
 % get acados folder
-acados_folder = getenv('ACADOS_FOLDER');
+acados_folder = getenv('ACADOS_INSTALL_DIR');
 mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
@@ -31,4 +31,3 @@ end
 for ii=1:length(mex_files)
 	mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lsim_model', mex_files{ii});
 end
-
