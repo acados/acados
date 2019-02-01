@@ -46,7 +46,7 @@ classdef acados_sim < handle
 					return;
 				end
 				lib_name = ['libsim_model.so'];
-				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
+				system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
 
 			obj.C_sim_ext_fun = sim_create_ext_fun();

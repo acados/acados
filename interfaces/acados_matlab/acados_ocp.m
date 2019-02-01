@@ -84,7 +84,7 @@ classdef acados_ocp < handle
 					end
 				end
 				lib_name = ['libocp_model.so'];
-				system(['gcc -fPIC -shared ', c_sources, ' -o ', lib_name]);
+				system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 			end
 
 			obj.C_ocp_ext_fun = ocp_create_ext_fun();
