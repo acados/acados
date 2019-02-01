@@ -1016,6 +1016,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	for(ii=0; ii<N; ii++)
 		{
 		ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
+		ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
 		}
 
 	// cost: ls
