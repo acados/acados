@@ -133,3 +133,4 @@ CFLAGS += -I$(TOP) -I$(TOP)/interfaces -I$(TOP)/include -I$(BLASFEO_PATH)/includ
 LDFLAGS += -L$(TOP)/lib
 
 CXXFLAGS = $(CFLAGS) -std=c++11
+CFLAGS += -std=c99
