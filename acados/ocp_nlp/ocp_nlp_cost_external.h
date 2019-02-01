@@ -61,6 +61,7 @@ typedef struct
     external_function_generic *ext_cost;  // gradient and hessian
     struct blasfeo_dvec Z;
     struct blasfeo_dvec z;
+	double scaling;
 } ocp_nlp_cost_external_model;
 
 //
@@ -74,7 +75,7 @@ void *ocp_nlp_cost_external_model_assign(void *config, void *dims, void *raw_mem
 
 typedef struct
 {
-    int dummy;
+    int dummy; // struct can't be void
 } ocp_nlp_cost_external_opts;
 
 //

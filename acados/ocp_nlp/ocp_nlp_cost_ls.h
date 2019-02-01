@@ -65,6 +65,7 @@ typedef struct
     struct blasfeo_dvec y_ref;          // yref
     struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector (lower and upper)
     struct blasfeo_dvec z;              // gradient of slacks as vector (lower and upper)
+	double scaling;
 } ocp_nlp_cost_ls_model;
 
 //
@@ -81,7 +82,7 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
 
 typedef struct
 {
-    int dummy;
+    int dummy; // struct can't be void
 } ocp_nlp_cost_ls_opts;
 
 //
