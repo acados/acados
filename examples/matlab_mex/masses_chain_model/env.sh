@@ -11,7 +11,7 @@ else
 fi
 
 # if acados folder not specified assume parent of this folder
-ACADOS_INSTALL_DIR=${ACADOS_INSTALL_DIR:-"$(pwd)/../.."}
+ACADOS_INSTALL_DIR=${ACADOS_INSTALL_DIR:-"$(pwd)/../../.."}
 export ACADOS_INSTALL_DIR
 echo
 echo "ACADOS_INSTALL_DIR=$ACADOS_INSTALL_DIR"
