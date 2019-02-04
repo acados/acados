@@ -103,28 +103,28 @@ class ocp_nlp_dims:
 
     @ny.setter
     def ny(self, ny):
-        if type(ny) == int and ny > 0:
+        if type(ny) == int and ny > -1:
             self._ny = ny
         else:
             raise Exception('Invalid ny value. Exiting.')
 
     @nyN.setter
     def nyN(self, nyN):
-        if type(nyN) == int and nyN > 0:
+        if type(nyN) == int and nyN > -1:
             self._nyN = nyN
         else:
             raise Exception('Invalid nyN value. Exiting.')
 
     @npd.setter
     def npd(self, npd):
-        if type(npd) == int and npd > 0:
+        if type(npd) == int and npd > -1:
             self._npd = npd
         else:
             raise Exception('Invalid npd value. Exiting.')
 
     @npdN.setter
     def npdN(self, npdN):
-        if type(npdN) == int and npdN > 0:
+        if type(npdN) == int and npdN > -1:
             self._npdN = npdN
         else:
             raise Exception('Invalid npdN value. Exiting.')
@@ -564,6 +564,10 @@ class ocp_nlp_render_arguments:
         self.constraints = ocp_nlp_constraints()
         self.solver_config = ocp_nlp_solver_config()
         self.model_name = None 
+        self.con_p_name = None 
+        self.con_pN_name = None 
+        self.con_h_name = None 
+        self.con_hN_name = None 
         self.constants = []
         self.acados_include_path = []
         self.acados_lib_path = []

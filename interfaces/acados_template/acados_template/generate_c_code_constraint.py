@@ -18,7 +18,7 @@
 from casadi import *
 import os
 
-def generate_c_code_p_constraint( p_constraint ):
+def generate_c_code_constraint( constraint, suffix_name ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -28,31 +28,34 @@ def generate_c_code_p_constraint( p_constraint ):
         raise Exception('Please download and install Casadi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
 
     # load constraint variables and expression
-    x = p_contraint.x
-    u = p_constraint.u
-    np = p_constraint.np
-    p_exp = p_constraint.expr
-    con_name = p_constraint.name
+    x = constraint.x
+    u = constraint.u
+    # nc = nh or np 
+    nc = constraint.nc 
+    con_exp = constraint.expr
+    con_name = constraint.name
 
-    ## get dimensions
+    # get dimensions
     nx = x.size()[0]
     nu = u.size()[0]
 
-    ## set up functions to be exported
+    # set up functions to be exported
     fun_name = con_name
     # TODO(andrea): first output seems to be ignored in the C code
-    p_constraint_fun_jac = Function(fun_name, [x,u], [p_exp, SX.zeros(nx+nu, np) + jacobian(p_exp, vertcat(x, u))])
+    constraint_fun_jac_tran = Function(fun_name, [x,u], [con_exp, SX.zeros(nx+nu, nc)+transpose(jacobian(con_exp, vertcat(x, u)))])
 
-    ## generate C code
+    # generate C code
     if not os.path.exists('c_generated_code'):
         os.mkdir('c_generated_code')
 
     os.chdir('c_generated_code')
-    gen_dir = con_name 
+    gen_dir = con_name + suffix_name 
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
     gen_dir_location = './' + gen_dir
     os.chdir(gen_dir_location)
-    p_constraint_fun_jac.generate(gen_name, casadi_opts)
+    file_name = con_name + suffix_name
+    constraint_fun_jac_tran.generate(file_name, casadi_opts)
+    os.chdir('../..')
 
     return

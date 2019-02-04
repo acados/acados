@@ -1,9 +1,10 @@
 from jinja2 import Environment, FileSystemLoader
 from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
+from .generate_c_code_constraint import *
 from .ocp_nlp_render_arguments import *
 
-def generate_solver(model, ra):
+def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None):
     # setting up loader and environment
     acados_path = os.path.dirname(os.path.abspath(__file__))
     file_loader = FileSystemLoader(acados_path + '/c_templates')
@@ -16,6 +17,17 @@ def generate_solver(model, ra):
         # implicit model -- generate C code
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
+    
+    if con_p is not None and con_h is None:
+            raise Exception('Nonlinear part of constraints missing!')
+
+    if con_h is not None:
+        # nonlinear part of nonlinear constraints 
+        generate_c_code_constraint(con_h, '_p_constraint')
+
+    if con_p is None:
+        # convex part of nonlinear constraints 
+        generate_c_code_constraint(con_p, '_h_constraint')
 
     # check render arguments
     check_ra(ra)
@@ -41,12 +53,20 @@ def generate_solver(model, ra):
     out_file = open('./c_generated_code/acados_solver_' + model.name + '.h', 'w+')
     out_file.write(output)
 
-    # render header template
+    # render header templates
     template = env.get_template('model.in.h')
     output = template.render(ra=ra)
     # output file
     out_file = open('./c_generated_code/' + model.name + '_model/' + model.name + '_model.h', 'w+')
     out_file.write(output)
+
+    if ra.dims.npd > 0:
+        # render header templates
+        template = env.get_template('p_constraint.in.h')
+        output = template.render(ra=ra)
+        # output file
+        out_file = open('./c_generated_code/' + ra.con_p_name + '_p_constraint/' + ra.con_p_name + '_p_constraint.h', 'w+')
+        out_file.write(output)
 
     # render Makefile template
     template = env.get_template('Makefile.in')

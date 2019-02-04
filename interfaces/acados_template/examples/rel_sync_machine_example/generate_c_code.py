@@ -87,7 +87,7 @@ def export_dae_model():
                         psi_d - Psi[0], \
                         psi_q - Psi[1])
 
-    model = ode_model()
+    model = acados_dae()
 
     model.f_impl_expr = f_impl
     model.f_expl_expr = []
@@ -99,6 +99,31 @@ def export_dae_model():
     model.name = model_name
 
     return model 
+
+def export_voltage_sphere_con():
+    
+    con_name = 'v_sphere'
+
+    # set up states 
+    psi_d = SX.sym('psi_d')
+    psi_q = SX.sym('psi_q')
+    x = vertcat(psi_d, psi_q)
+
+    # set up controls 
+    u_d = SX.sym('u_d')
+    u_q = SX.sym('u_q')
+    u = vertcat(u_d, u_q)
+
+    # voltage sphere
+    constraint = acados_constraint()
+
+    constraint.expr = u_d**2 + u_q**2 
+    constraint.x = x
+    constraint.u = u
+    constraint.nc = 1
+    constraint.name = con_name
+
+    return constraint 
 
 def get_general_constraints_DC(u_max):
     
@@ -151,8 +176,13 @@ ra = ocp_nlp_render_arguments()
 # export model 
 model = export_dae_model()
 
+# export constraint description
+constraint = export_voltage_sphere_con()
+
 # set model_name 
 ra.model_name = model.name
+# constraints name 
+ra.con_p_name = constraint.name
 
 udc = 580
 # udc = 10
@@ -191,6 +221,8 @@ nlp_dims.nbxN = 0
 nlp_dims.nu   = nu
 nlp_dims.np   = np
 nlp_dims.N    = N
+nlp_dims.npd  = 1
+nlp_dims.npdN = 0
 
 # set weighting matrices
 nlp_cost = ra.cost
@@ -300,7 +332,7 @@ ra.acados_lib_path = '/usr/local/lib'
 
 if CODE_GEN == 1:
     # import pdb; pdb.set_trace()
-    generate_solver(model, ra)
+    generate_solver(model, ra, con_p=constraint, con_h=constraint)
 
 # make 
 os.chdir('c_generated_code')
