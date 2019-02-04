@@ -40,9 +40,11 @@ def generate_c_code_constraint( constraint, suffix_name ):
     nu = u.size()[0]
 
     # set up functions to be exported
-    fun_name = con_name
+    fun_name = con_name + suffix_name
     # TODO(andrea): first output seems to be ignored in the C code
-    constraint_fun_jac_tran = Function(fun_name, [x,u], [con_exp, SX.zeros(nx+nu, nc)+transpose(jacobian(con_exp, vertcat(x, u)))])
+    jac_x = jacobian(con_exp, x);
+    jac_u = jacobian(con_exp, u);
+    constraint_fun_jac_tran = Function(fun_name, [vertcat(u,x)], [con_exp, vertcat(transpose(jac_u), transpose(jac_x))])
 
     # generate C code
     if not os.path.exists('c_generated_code'):

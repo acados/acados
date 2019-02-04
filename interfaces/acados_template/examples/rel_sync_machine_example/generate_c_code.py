@@ -182,7 +182,7 @@ constraint = export_voltage_sphere_con()
 # set model_name 
 ra.model_name = model.name
 # constraints name 
-ra.con_p_name = constraint.name
+ra.con_h_name = constraint.name
 
 udc = 580
 # udc = 10
@@ -215,14 +215,18 @@ nlp_dims.nbx  = 0
 nlp_dims.nbu  = 1 
 # nlp_dims.nbu  = 2 
 nlp_dims.ng   = 2 
+# nlp_dims.ng   = 2 
 # nlp_dims.ng   = 0 
 nlp_dims.ngN  = 0 
 nlp_dims.nbxN = 0
 nlp_dims.nu   = nu
 nlp_dims.np   = np
 nlp_dims.N    = N
-nlp_dims.npd  = 1
-nlp_dims.npdN = 0
+# nlp_dims.npd  = 1
+# nlp_dims.npdN = 0
+# nlp_dims.nh  = 1
+nlp_dims.nh  = 1
+nlp_dims.nhN = 0
 
 # set weighting matrices
 nlp_cost = ra.cost
@@ -283,7 +287,6 @@ lg = res["lg"]
 ug = res["ug"]
 lbu = res["lbu"]
 ubu = res["ubu"]
-# import pdb; pdb.set_trace()
 
 # setting bounds
 # lbu <= u <= ubu and lbx <= x <= ubx
@@ -323,16 +326,15 @@ ra.solver_config.integrator_type = 'IRK'
 
 # set prediction horizon
 ra.solver_config.tf = Tf
-ra.solver_config.nlp_solver_type = 'SQP_RTI'
-# ra.solver_config.nlp_solver_type = 'SQP'
+# ra.solver_config.nlp_solver_type = 'SQP_RTI'
+ra.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
 ra.acados_include_path = '/usr/local/include'
 ra.acados_lib_path = '/usr/local/lib'
 
 if CODE_GEN == 1:
-    # import pdb; pdb.set_trace()
-    generate_solver(model, ra, con_p=constraint, con_h=constraint)
+    generate_solver(model, ra, con_h=constraint)
 
 # make 
 os.chdir('c_generated_code')

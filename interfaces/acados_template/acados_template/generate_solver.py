@@ -23,11 +23,11 @@ def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None)
 
     if con_h is not None:
         # nonlinear part of nonlinear constraints 
-        generate_c_code_constraint(con_h, '_p_constraint')
+        generate_c_code_constraint(con_h, '_h_constraint')
 
-    if con_p is None:
+    if con_p is not None:
         # convex part of nonlinear constraints 
-        generate_c_code_constraint(con_p, '_h_constraint')
+        generate_c_code_constraint(con_p, '_p_constraint')
 
     # check render arguments
     check_ra(ra)
@@ -66,6 +66,14 @@ def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None)
         output = template.render(ra=ra)
         # output file
         out_file = open('./c_generated_code/' + ra.con_p_name + '_p_constraint/' + ra.con_p_name + '_p_constraint.h', 'w+')
+        out_file.write(output)
+
+    if ra.dims.nh > 0:
+        # render header templates
+        template = env.get_template('h_constraint.in.h')
+        output = template.render(ra=ra)
+        # output file
+        out_file = open('./c_generated_code/' + ra.con_h_name + '_h_constraint/' + ra.con_h_name + '_h_constraint.h', 'w+')
         out_file.write(output)
 
     # render Makefile template

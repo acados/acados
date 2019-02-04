@@ -964,7 +964,7 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     {
         if (nh != 1)
         {
-            printf("Not implemented");
+            printf("BGHP-type constraint: nh!=1 not implemented. Exiting.");
             exit(1);
         }
         //
