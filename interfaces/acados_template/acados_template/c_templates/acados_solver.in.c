@@ -35,7 +35,12 @@
 
 // example specific
 #include "{{ ra.model_name }}_model/{{ ra.model_name }}_model.h"
-// #include "{{ ra.model_name }}_model/{{ ra.model_name }}_constraint.h"
+{% if ra.dims.npd > 0: %}
+#include "{{ ra.con_p_name }}_p_constraint/{{ ra.con_p_name }}_p_constraint.h"
+{% endif %}
+{% if ra.dims.nh > 0: %}
+#include "{{ ra.con_h_name }}_h_constraint/{{ ra.con_h_name }}_h_constraint.h"
+{% endif %}
 
 #include "acados_solver_{{ra.model_name}}.h"
 
@@ -56,6 +61,8 @@
 #define N    {{ ra.dims.N }}
 #define NPD  {{ ra.dims.npd }}
 #define NPDN {{ ra.dims.npdN }}
+#define NH   {{ ra.dims.nh }}
+#define NHN  {{ ra.dims.nhN }}
 
 int acados_create() {
 
@@ -255,7 +262,7 @@ int acados_create() {
         nbu[i] = NBU;
         nb[i]  = NBU + NBX;
         ng[i]  = NG;
-        nh[i]  = 0;
+        nh[i]  = NH;
         npd[i] = NPD;
         ns[i]  = 0;
         nz[i]  = NZ;
@@ -270,7 +277,7 @@ int acados_create() {
     nu[N]  = 0;
     nx[N]  = NX;
     nz[N]  = 0;
-    nh[N]  = 0;
+    nh[N]  = NHN;
     npd[N]  = NPDN;
     nv[N]  = NX; 
     ny[N]  = NYN;
@@ -331,12 +338,11 @@ int acados_create() {
     }
 
     {% if ra.dims.npd > 0: %}
-    for (int i = 0; i <= N; i++) 
+    for (int i = 0; i < N; i++) 
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "np", &npd[i]);
     {% endif %}
-
-    {% if ra.dims.npd > 0: %}
-        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "np", &npd[i]);
+    {% if ra.dims.npdN > 0: %}
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "np", &npd[N]);
     {% endif %}
 
     {% if ra.dims.npd > 0: %}
@@ -365,6 +371,34 @@ int acados_create() {
 	p_constraint_N.casadi_work = &{{ ra.con_pN_name }}_p_constraint_N_work;
 
     external_function_casadi_create(p_constraint_N);
+    {% endif %}
+
+    {% if ra.dims.nh > 0: %}
+    h_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
+    for (int i = 0; i < N; ++i) {
+        // nonlinear constraint
+        h_constraint[i].casadi_fun = &{{ ra.con_h_name }}_h_constraint;
+        h_constraint[i].casadi_n_in = &{{ ra.con_h_name }}_h_constraint_n_in;
+        h_constraint[i].casadi_n_out = &{{ ra.con_h_name }}_h_constraint_n_out;
+        h_constraint[i].casadi_sparsity_in = &{{ ra.con_h_name }}_h_constraint_sparsity_in;
+        h_constraint[i].casadi_sparsity_out = &{{ ra.con_h_name }}_h_constraint_sparsity_out;
+        h_constraint[i].casadi_work = &{{ ra.con_h_name }}_h_constraint_work;
+
+        external_function_casadi_create(&h_constraint[i]);
+    }
+    {% endif %}
+
+    {% if ra.dims.nhN > 0: %}
+	// nonlinear constraint
+	external_function_casadi h_constraint_N;
+	h_constraint_N.casadi_fun = &{{ ra.con_hN_name }}_h_constraint_N;
+	h_constraint_N.casadi_n_in = &{{ ra.con_hN_name }}_h_constraint_N_n_in;
+	h_constraint_N.casadi_n_out = &{{ ra.con_hN_name }}_h_constraint_N_n_out;
+	h_constraint_N.casadi_sparsity_in = &{{ ra.con_hN_name }}_h_constraint_N_sparsity_in;
+	h_constraint_N.casadi_sparsity_out = &{{ ra.con_hN_name }}_h_constraint_N_sparsity_out;
+	p_constraint_N.casadi_work = &{{ ra.con_hN_name }}_h_constraint_N_work;
+
+    external_function_casadi_create(h_constraint_N);
     {% endif %}
 
     {% if ra.solver_config.integrator_type == 'ERK': %}
@@ -576,6 +610,17 @@ int acados_create() {
     {% if ra.dims.npdN > 0: %}
     // convex-composite constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_constraint_N[i]);
+    {% endif %}
+
+    {% if ra.dims.nh > 0: %}
+    // nonlinear constraints for stages 0 to N-1
+    for (int i = 0; i < N; ++i)
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "h", &h_constraint[i]);
+    {% endif %}
+
+    {% if ra.dims.nhN > 0: %}
+    // nonlinear constraints for stage N
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "h", &h_constraint_N[i]);
     {% endif %}
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);

@@ -48,10 +48,16 @@ extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
 {% if ra.dims.npd > 0: %}
-extern external_function_param_casadi * p_constraint;
+extern external_function_casadi * p_constraint;
 {% endif %}
 {% if ra.dims.npdN > 0: %}
-extern external_function_param_casadi * p_constraint_N;
+extern external_function_casadi * p_constraint_N;
+{% endif %}
+{% if ra.dims.nh > 0: %}
+extern external_function_casadi * h_constraint;
+{% endif %}
+{% if ra.dims.nhN > 0: %}
+extern external_function_casadi * h_constraint_N;
 {% endif %}
 
 
