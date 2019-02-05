@@ -309,6 +309,8 @@ class ocp_nlp_constraints:
         self._idxbu  = None
         self._lg     = None  
         self._ug     = None  
+        self._lh     = None  
+        self._uh     = None  
         self._D      = None  
         self._C      = None  
         self._lbxN   = None  
@@ -317,6 +319,8 @@ class ocp_nlp_constraints:
         self._CN     = None  
         self._lgN    = None  
         self._ugN    = None  
+        self._lhN    = None  
+        self._uhN    = None  
         self._x0     = None  
 
     @property
@@ -352,6 +356,14 @@ class ocp_nlp_constraints:
         return self._ug
 
     @property
+    def lh(self):
+        return self._lh
+
+    @property
+    def uh(self):
+        return self._uh
+
+    @property
     def D(self):
         return self._D
 
@@ -383,6 +395,13 @@ class ocp_nlp_constraints:
     def ugN(self):
         return self._ugN
 
+    @property
+    def lgN(self):
+        return self._lgN
+
+    @property
+    def ugN(self):
+        return self._ugN
 
     @property
     def x0(self):
@@ -447,6 +466,20 @@ class ocp_nlp_constraints:
             self._ug = ug
         else:
             raise Exception('Invalid ug value. Exiting.')
+
+    @lh.setter
+    def lh(self, lh):
+        if type(lh) == np.ndarray:
+            self._lh = lh
+        else:
+            raise Exception('Invalid lh value. Exiting.')
+
+    @uh.setter
+    def uh(self, uh):
+        if type(uh) == np.ndarray:
+            self._uh = uh
+        else:
+            raise Exception('Invalid uh value. Exiting.')
 
     @D.setter
     def D(self, D):

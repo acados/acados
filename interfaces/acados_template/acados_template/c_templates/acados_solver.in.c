@@ -147,6 +147,18 @@ int acados_create() {
     ug[{{i}}] = {{ ra.constraints.ug[i] }};
     {%- endfor %}
 
+    // set up nonlinear constraints for stage 0 to N-1 
+    double lh[NH];
+    double uh[NH];
+
+    {% for i in range(ra.dims.nh): %}
+    lh[{{i}}] = {{ ra.constraints.lh[i] }};
+    {%- endfor %}
+
+    {% for i in range(ra.dims.nh): %}
+    uh[{{i}}] = {{ ra.constraints.uh[i] }};
+    {%- endfor %}
+    
     // set up bounds for last stage
     // x
     int idxbxN[NBXN];
@@ -179,6 +191,17 @@ int acados_create() {
     ugN[{{i}}] = {{ ra.constraints.ugN[i] }};
     {%- endfor %}
 
+    // set up nonlinear constraints for last stage 
+    double lhN[NHN];
+    double uhN[NHN];
+
+    {% for i in range(ra.dims.nhN): %}
+    lhN[{{i}}] = {{ ra.constraints.lhN[i] }};
+    {%- endfor %}
+
+    {% for i in range(ra.dims.nhN): %}
+    uhN[{{i}}] = {{ ra.constraints.uhN[i] }};
+    {%- endfor %}
 
     double yref[NY];
     double W[NY*NY];
@@ -615,12 +638,18 @@ int acados_create() {
     {% if ra.dims.nh > 0: %}
     // nonlinear constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
+    {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "h", &h_constraint[i]);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lh", lh);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uh", uh);
+    }
     {% endif %}
 
     {% if ra.dims.nhN > 0: %}
     // nonlinear constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "h", &h_constraint_N[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lhN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uhN);
     {% endif %}
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);

@@ -101,7 +101,7 @@ def export_dae_model():
 
     return model 
 
-def export_voltage_sphere_con():
+def export_voltage_sphere_con(u_max):
     
     con_name = 'v_sphere'
 
@@ -119,7 +119,7 @@ def export_voltage_sphere_con():
     constraint = acados_constraint()
 
     constraint.expr = u_d**2 + u_q**2  
-    # constraint.expr = sin(0.1*u_d) - u_q 
+    # constraint.expr = u_d + u_q  
     constraint.x = x
     constraint.u = u
     constraint.nc = 1
@@ -175,11 +175,14 @@ def get_general_constraints_DC(u_max):
 # create render arguments
 ra = ocp_nlp_render_arguments()
 
+udc = 580
+u_max = 2/3*udc
+
 # export model 
 model = export_dae_model()
 
 # export constraint description
-constraint = export_voltage_sphere_con()
+constraint = export_voltage_sphere_con(u_max)
 
 # set model_name 
 ra.model_name = model.name
@@ -192,12 +195,6 @@ if FORMULATION == 2:
     # constraints name 
     ra.con_h_name = constraint.name
     ra.con_p_name = constraint.name
-
-udc = 580
-# udc = 10
-u_max = 2/3*udc
-i_max = 10.0
-psi_max = 0.1
 
 # Ts  = 0.0016
 # Ts  = 0.0012
@@ -227,11 +224,11 @@ if FORMULATION == 0:
     nlp_dims.ng   = 2 
 
 if FORMULATION == 1:
-    nlp_dims.ng  = 1 
+    nlp_dims.ng  = 0 
     nlp_dims.nh  = 1
 
 if FORMULATION == 2:
-    nlp_dims.ng  = 1 
+    nlp_dims.ng  = 0 
     nlp_dims.npd  = 1
     nlp_dims.nh  = 1
     nlp_dims.nhN = 0
@@ -314,8 +311,14 @@ nlp_con = ra.constraints
 # nlp_con.lbu = nmp.array([-u_max, -u_max])
 # nlp_con.ubu = nmp.array([+u_max, +u_max])
 nlp_con.idxbu = nmp.array([1])
+
 nlp_con.lbu = lbu
 nlp_con.ubu = ubu
+
+if FORMULATION > 0:
+    nlp_con.lh = nmp.array([-1.0e8])
+    nlp_con.uh = nmp.array([u_max**2])
+
 nlp_con.x0 = nmp.array([0.0, -0.0])
 
 if FORMULATION == 0:
@@ -351,8 +354,8 @@ ra.solver_config.integrator_type = 'IRK'
 
 # set prediction horizon
 ra.solver_config.tf = Tf
-# ra.solver_config.nlp_solver_type = 'SQP_RTI'
-ra.solver_config.nlp_solver_type = 'SQP'
+ra.solver_config.nlp_solver_type = 'SQP_RTI'
+# ra.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
 ra.acados_include_path = '/usr/local/include'
