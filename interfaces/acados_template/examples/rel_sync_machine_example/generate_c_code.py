@@ -118,7 +118,7 @@ def export_voltage_sphere_con():
     # voltage sphere
     constraint = acados_constraint()
 
-    constraint.expr = u_d**2 + u_q**2 
+    constraint.expr = u_d**2 + u_q**2  
     # constraint.expr = sin(0.1*u_d) - u_q 
     constraint.x = x
     constraint.u = u

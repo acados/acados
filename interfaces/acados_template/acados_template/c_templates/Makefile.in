@@ -62,7 +62,8 @@ solver:
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/ 
 
 example: 
-	gcc $(ACADOS_FLAGS) -o main_{{ ra.model_name}} $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -o main_{{ ra.model_name}} $(OBJ) -L $(LIB_PATH) \
+	-L $(LIB_PATH)/acados \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
 	-L $(LIB_PATH)/external/qpoases/lib \
