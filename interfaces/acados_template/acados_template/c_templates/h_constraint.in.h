@@ -1,5 +1,5 @@
-#ifndef {{ ra.con_h_name.upper() }}_MODEL
-#define {{ ra.con_h_name.upper() }}_MODEL
+#ifndef {{ ra.con_h_name.upper() }}_H_CONSTRAINT
+#define {{ ra.con_h_name.upper() }}_H_CONSTRAINT
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,4 +19,4 @@ int {{ ra.con_h_name }}_h_constraint_n_out();
 } /* extern "C" */
 #endif
 
-#endif  // {{ ra.con_h_name.upper() }}_MODEL
+#endif  // {{ ra.con_h_name.upper() }}_H_CONSTRAINT

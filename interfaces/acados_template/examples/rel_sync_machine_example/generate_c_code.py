@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import scipy.linalg
 
 CODE_GEN = 1
+FORMULATION = 1 # 0 for hexagon 1 for sphere 2 SCQP sphere
 
 i_d_ref = 1.484
 i_q_ref = 1.429
@@ -118,6 +119,7 @@ def export_voltage_sphere_con():
     constraint = acados_constraint()
 
     constraint.expr = u_d**2 + u_q**2 
+    # constraint.expr = sin(0.1*u_d) - u_q 
     constraint.x = x
     constraint.u = u
     constraint.nc = 1
@@ -181,8 +183,15 @@ constraint = export_voltage_sphere_con()
 
 # set model_name 
 ra.model_name = model.name
-# constraints name 
-ra.con_h_name = constraint.name
+
+if FORMULATION == 1:
+    # constraints name 
+    ra.con_h_name = constraint.name
+
+if FORMULATION == 2:
+    # constraints name 
+    ra.con_h_name = constraint.name
+    ra.con_p_name = constraint.name
 
 udc = 580
 # udc = 10
@@ -212,9 +221,22 @@ nlp_dims.ny   = ny
 nlp_dims.nyN  = nyN 
 nlp_dims.nbx  = 0
 # nlp_dims.nbu  = 0 
-nlp_dims.nbu  = 1 
+
+if FORMULATION == 0:
+    nlp_dims.nbu  = 1 
+    nlp_dims.ng   = 2 
+
+if FORMULATION == 1:
+    nlp_dims.ng  = 1 
+    nlp_dims.nh  = 1
+
+if FORMULATION == 2:
+    nlp_dims.ng  = 1 
+    nlp_dims.npd  = 1
+    nlp_dims.nh  = 1
+    nlp_dims.nhN = 0
+
 # nlp_dims.nbu  = 2 
-nlp_dims.ng   = 2 
 # nlp_dims.ng   = 2 
 # nlp_dims.ng   = 0 
 nlp_dims.ngN  = 0 
@@ -222,11 +244,8 @@ nlp_dims.nbxN = 0
 nlp_dims.nu   = nu
 nlp_dims.np   = np
 nlp_dims.N    = N
-# nlp_dims.npd  = 1
 # nlp_dims.npdN = 0
 # nlp_dims.nh  = 1
-nlp_dims.nh  = 1
-nlp_dims.nhN = 0
 
 # set weighting matrices
 nlp_cost = ra.cost
@@ -299,15 +318,21 @@ nlp_con.lbu = lbu
 nlp_con.ubu = ubu
 nlp_con.x0 = nmp.array([0.0, -0.0])
 
-# setting general constraints
-# lg <= D*u + C*u <= ug
-nlp_con.D   = D
-nlp_con.C   = C 
-nlp_con.lg  = lg
-nlp_con.ug  = ug 
-# nlp_con.CN  = ... 
-# nlp_con.lgN = ... 
-# nlp_con.ugN = ...
+if FORMULATION == 0:
+    # setting general constraints
+    # lg <= D*u + C*u <= ug
+    nlp_con.D   = D
+    nlp_con.C   = C 
+    nlp_con.lg  = lg
+    nlp_con.ug  = ug 
+    # nlp_con.CN  = ... 
+    # nlp_con.lgN = ... 
+    # nlp_con.ugN = ...
+else:
+    nlp_con.D   = nmp.zeros((2,2))
+    nlp_con.C   = nmp.zeros((2,2))
+    nlp_con.lg  = 0*nmp.array([-1.0e8])
+    nlp_con.ug  = 0*nmp.array([u_max])
 
 # setting parameters
 nlp_con.p = nmp.array([w_val, 0.0, 0.0])
@@ -334,7 +359,12 @@ ra.acados_include_path = '/usr/local/include'
 ra.acados_lib_path = '/usr/local/lib'
 
 if CODE_GEN == 1:
-    generate_solver(model, ra, con_h=constraint)
+    if FORMULATION == 0:
+        generate_solver(model, ra)
+    if FORMULATION == 1:
+        generate_solver(model, ra, con_h=constraint)
+    if FORMULATION == 2:
+        generate_solver(model, ra, con_h=constraint, con_p=constraint)
 
 # make 
 os.chdir('c_generated_code')
