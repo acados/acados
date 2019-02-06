@@ -17,7 +17,7 @@ i_d_ref = -20
 i_q_ref = 20
 w_val   = 300
 
-udc = 0.5*580
+udc = 580
 u_max = 2/3*udc
 
 # fitted psi_d map
@@ -358,11 +358,6 @@ if FORMULATION == 0:
     # nlp_con.CN  = ... 
     # nlp_con.lgN = ... 
     # nlp_con.ugN = ...
-else:
-    nlp_con.D   = nmp.zeros((2,2))
-    nlp_con.C   = nmp.zeros((2,2))
-    nlp_con.lg  = 0*nmp.array([-1.0e8])
-    nlp_con.ug  = 0*nmp.array([u_max])
 
 # setting parameters
 nlp_con.p = nmp.array([w_val, 0.0, 0.0])
