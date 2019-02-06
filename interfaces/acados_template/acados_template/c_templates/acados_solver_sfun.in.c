@@ -61,6 +61,12 @@ external_function_casadi * p_constraint;
 {% if ra.dims.npdN > 0: %}
 external_function_casadi * p_constraint_N;
 {% endif %}
+{% if ra.dims.nh > 0: %}
+external_function_casadi * h_constraint;
+{% endif %}
+{% if ra.dims.nhN > 0: %}
+external_function_casadi * h_constraint_N;
+{% endif %}
 
 
 static void mdlInitializeSizes (SimStruct *S)
