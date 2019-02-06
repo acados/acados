@@ -56,10 +56,10 @@ external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
 {% if ra.dims.npd > 0: %}
-external_function_param_casadi * p_constraint;
+external_function_casadi * p_constraint;
 {% endif %}
 {% if ra.dims.npdN > 0: %}
-external_function_param_casadi * p_constraint_N;
+external_function_casadi * p_constraint_N;
 {% endif %}
 
 
