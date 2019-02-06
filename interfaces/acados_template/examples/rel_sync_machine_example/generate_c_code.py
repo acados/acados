@@ -7,15 +7,18 @@ import matplotlib.pyplot as plt
 import scipy.linalg
 
 CODE_GEN = 1
-FORMULATION = 1 # 0 for hexagon 1 for sphere 2 SCQP sphere
+FORMULATION = 2 # 0 for hexagon 1 for sphere 2 SCQP sphere
 
 i_d_ref = 1.484
 i_q_ref = 1.429
 w_val   = 200
 
-i_d_ref = -10
+i_d_ref = -20
 i_q_ref = 20
 w_val   = 300
+
+udc = 0.5*580
+u_max = 2/3*udc
 
 # fitted psi_d map
 def psi_d_num(x,y):
@@ -101,7 +104,7 @@ def export_dae_model():
 
     return model 
 
-def export_voltage_sphere_con(u_max):
+def export_voltage_sphere_con():
     
     con_name = 'v_sphere'
 
@@ -127,6 +130,31 @@ def export_voltage_sphere_con(u_max):
 
     return constraint 
 
+def export_nonlinear_part_voltage_constraint():
+    
+    con_name = 'v_sphere_nl'
+
+    # set up states 
+    psi_d = SX.sym('psi_d')
+    psi_q = SX.sym('psi_q')
+    x = vertcat(psi_d, psi_q)
+
+    # set up controls 
+    u_d = SX.sym('u_d')
+    u_q = SX.sym('u_q')
+    u = vertcat(u_d, u_q)
+
+    # voltage sphere
+    constraint = acados_constraint()
+
+    constraint.expr = vertcat(u_d, u_q)
+    # constraint.expr = u_d + u_q  
+    constraint.x = x
+    constraint.u = u
+    constraint.nc = 2
+    constraint.name = con_name
+
+    return constraint 
 def get_general_constraints_DC(u_max):
     
     # polytopic constraint on the input
@@ -175,14 +203,13 @@ def get_general_constraints_DC(u_max):
 # create render arguments
 ra = ocp_nlp_render_arguments()
 
-udc = 580
-u_max = 2/3*udc
 
 # export model 
 model = export_dae_model()
 
 # export constraint description
-constraint = export_voltage_sphere_con(u_max)
+constraint = export_voltage_sphere_con()
+constraint_nl = export_nonlinear_part_voltage_constraint()
 
 # set model_name 
 ra.model_name = model.name
@@ -194,7 +221,7 @@ if FORMULATION == 1:
 if FORMULATION == 2:
     # constraints name 
     ra.con_h_name = constraint.name
-    ra.con_p_name = constraint.name
+    ra.con_p_name = constraint_nl.name
 
 # Ts  = 0.0016
 # Ts  = 0.0012
@@ -229,7 +256,7 @@ if FORMULATION == 1:
 
 if FORMULATION == 2:
     nlp_dims.ng  = 0 
-    nlp_dims.npd  = 1
+    nlp_dims.npd  = 2
     nlp_dims.nh  = 1
     nlp_dims.nhN = 0
 
@@ -367,7 +394,7 @@ if CODE_GEN == 1:
     if FORMULATION == 1:
         generate_solver(model, ra, con_h=constraint)
     if FORMULATION == 2:
-        generate_solver(model, ra, con_h=constraint, con_p=constraint)
+        generate_solver(model, ra, con_h=constraint, con_p=constraint_nl)
 
 # make 
 os.chdir('c_generated_code')
@@ -395,7 +422,10 @@ simX = nmp.ndarray((Nsim, nx))
 simU = nmp.ndarray((Nsim, nu))
 
 for i in range(Nsim):
-    acados.acados_solve()
+    status = acados.acados_solve()
+    
+    if status is not 0:
+        print('max number of iterations reached!')
 
     # get solution
     field_name = "x"
@@ -493,6 +523,8 @@ plt.grid(True)
 ax = plt.gca()
 ax.set_xlim([-1.5*u_max, 1.5*u_max])
 ax.set_ylim([-1.5*u_max, 1.5*u_max])
+circle = plt.Circle((0, 0), u_max, color='red', fill=False)
+ax.add_artist(circle)
 plt.show()
 
 # free memory

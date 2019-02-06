@@ -26,7 +26,11 @@
 #include "acados_c/external_function_interface.h"
 
 // TODO(oj): remove, when setters for Cyt,idxb available
-#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
+// {% if ra.dims.npd > 0: %}
+// #include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
+// {% else: %}
+// #include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
+// {% endif %}
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 
 // blasfeo
@@ -576,8 +580,6 @@ int acados_create() {
 
     // NLP constraints
     // TODO(oj): remove this when idxb setter available
-    ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-	ocp_nlp_constraints_bgh_dims **constraints_dims = (ocp_nlp_constraints_bgh_dims **) nlp_dims->constraints;
 
     // bounds for stage 0
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);

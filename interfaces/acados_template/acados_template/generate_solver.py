@@ -19,7 +19,7 @@ def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None)
         generate_c_code_implicit_ode(model, opts)
     
     if con_p is not None and con_h is None:
-        raise Exception('Nonlinear part of constraints missing!')
+        raise Exception('h constraint is missing!')
 
     if con_h is not None:
         # nonlinear part of nonlinear constraints 
