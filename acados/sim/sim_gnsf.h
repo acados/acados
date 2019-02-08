@@ -44,14 +44,14 @@ extern "C" {
 
 typedef struct
 {
-    int nx;
-    int nu;
-    int nz;
-    int nx1;
-    int nz1;
-    int n_out;
-    int ny;
-    int nuhat;
+    int nx; // total number of differential states
+    int nu; // total number of inputs
+    int nz; // total number of algebraic states
+    int nx1; // number of differential states in NSF part
+    int nz1; // number of algebraic states in NSF part
+    int n_out; // output dimension of phi
+    int ny; // dimension of first input of phi
+    int nuhat; // dimension of second input of phi
 
 } sim_gnsf_dims;
 
@@ -81,6 +81,7 @@ typedef struct
     double *L_u;
 
     double *A_LO;
+//    double *B_LO;
     double *E_LO;
 
     /* constant vector */
