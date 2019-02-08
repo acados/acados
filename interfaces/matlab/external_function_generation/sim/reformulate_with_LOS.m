@@ -70,32 +70,37 @@ end
 
 I_nsf_components = [];
 I_LOS_candidates = [];
-for ii = 1:nx
-    if or(y.which_depends(x(ii)), y.which_depends(xdot(ii)))
-        % i.e. xii or xiidot are part of y, and enter phi_expr
-        if print_info
-            disp(['xii is part of x1, ii = ', num2str(ii)]);
+
+if gnsf.ny > 0
+    for ii = 1:nx
+        if or(y.which_depends(x(ii)), y.which_depends(xdot(ii)))
+            % i.e. xii or xiidot are part of y, and enter phi_expr
+            if print_info
+                disp(['xii is part of x1, ii = ', num2str(ii)]);
+            end
+            I_nsf_components = union(I_nsf_components, ii);
+        else
+            % i.e. neither xii nor xiidot are part of y, i.e. enter phi_expr
+            I_LOS_candidates = union(I_LOS_candidates, ii);
         end
-        I_nsf_components = union(I_nsf_components, ii);
-    else
-        % i.e. neither xii nor xiidot are part of y, i.e. enter phi_expr
-        I_LOS_candidates = union(I_LOS_candidates, ii);
     end
-end
-if print_info
-    disp(' ');
-end
-for ii = 1:nz
-    if y.which_depends(z(ii))
-        % i.e. xii or xiidot are part of y, and enter phi_expr
-        if print_info
-            disp(['zii is part of z1, ii = ', num2str(ii)]);
+    if print_info
+        disp(' ');
+    end
+    for ii = 1:nz
+        if y.which_depends(z(ii))
+            % i.e. xii or xiidot are part of y, and enter phi_expr
+            if print_info
+                disp(['zii is part of z1, ii = ', num2str(ii)]);
+            end
+            I_nsf_components = union(I_nsf_components, ii + nx);
+        else
+            % i.e. neither xii nor xiidot are part of y, i.e. enter phi_expr
+            I_LOS_candidates = union(I_LOS_candidates, ii + nx);
         end
-        I_nsf_components = union(I_nsf_components, ii + nx);
-    else
-        % i.e. neither xii nor xiidot are part of y, i.e. enter phi_expr
-        I_LOS_candidates = union(I_LOS_candidates, ii + nx);
     end
+else
+    I_LOS_candidates = 1:nx;
 end
 
 if print_info
@@ -198,8 +203,12 @@ while true
     I_LOS_candidates = setdiff( I_LOS_candidates, new_nsf_components );
 end
 
-[~, new_eq_order] = sort(Eq_map(1,:));
-I_nsf_eq = Eq_map(2, new_eq_order );
+if ~isempty(Eq_map)
+    [~, new_eq_order] = sort(Eq_map(1,:));
+    I_nsf_eq = Eq_map(2, new_eq_order );
+else
+    I_nsf_eq = [];
+end
 
 I_LOS_components = I_LOS_candidates;
 I_LOS_eq = setdiff( 1:nx+nz, I_nsf_eq );
@@ -260,14 +269,37 @@ reordered_model.f_impl_expr = model.f_impl_expr([I_nsf_eq, I_LOS_eq]);
 
 f_LO = SX.sym('f_LO',0,0);
 E_LO = [];
+% keyboard
 %% rewrite I_LOS_eq as LOS
+if gnsf.n_out == 0
+    C_phi = zeros(gnsf.nx+gnsf.nz,1);
+else
+    C_phi = C * phi_old;
+end
+
+if gnsf.nx1 == 0
+    Ax1 = zeros(gnsf.nx+gnsf.nz,1);
+else
+    Ax1 = A(:,I_x1) * x1;
+end
+
+if gnsf.nx1 + gnsf.nz1 == 0
+    lhs_nsf = zeros(gnsf.nx+gnsf.nz,1);
+else
+    lhs_nsf = E(:,I_nsf_components) * [x1; z1];
+end
+
 for eq = I_LOS_eq
     i_LO = find( I_LOS_eq == eq );
     f_LO = vertcat(f_LO, ...
-            A(eq, I_x1) * x1 + B(eq, :) * u + c(eq) + C(eq,:) * phi_old...
-            - E(eq, I_nsf_components) * [x1; z1]);
+            Ax1(eq) + B(eq, :) * u + c(eq) + C_phi(eq)...
+            - lhs_nsf(eq)) ;
     E_LO(i_LO, :) = E(eq, I_LOS_components);
-    A_LO(i_LO, :) = A(eq, I_x2);    
+    A_LO(i_LO, :) = A(eq, I_x2);
+end
+% keyboard
+if any(size(f_LO) == 0)
+    f_LO = SX.zeros(gnsf.nx2 + gnsf.nz2,1);
 end
 
 f_LO = f_LO.simplify();
