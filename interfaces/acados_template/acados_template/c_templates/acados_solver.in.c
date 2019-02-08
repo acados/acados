@@ -24,13 +24,6 @@
 #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
-
-// TODO(oj): remove, when setters for Cyt,idxb available
-// {% if ra.dims.npd > 0: %}
-// #include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
-// {% else: %}
-// #include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
-// {% endif %}
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 
 // blasfeo
@@ -610,7 +603,7 @@ int acados_create() {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ug", ug);
     }
     {% endif %}
-
+    
     {% if ra.dims.nbxN > 0: %} 
     // bounds for last
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbxN);
@@ -660,9 +653,11 @@ int acados_create() {
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
     int num_steps_val = 1; 
+    int ns_val = 1; 
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_algebraic", &sens_algebraic_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps_val);
+    for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "ns", &ns_val);
     {% endif %}
     // CUSTOM CODE: for the RSM application, it seems to be necessary not to reuse Jacobians!
     bool jac_reuse_val = false;
