@@ -374,6 +374,9 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
     gnsf_model *model = (gnsf_model *) c_ptr;
     c_ptr += sizeof(gnsf_model);
 
+    // set default
+    model->auto_import_gnsf = true;
+
     // assign model matrices
     assign_and_advance_double((nx1 + nz1) * nx1, &model->A, &c_ptr);
     assign_and_advance_double((nx1 + nz1) * nu, &model->B, &c_ptr);
@@ -533,14 +536,15 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     gnsf_model *model = in->model;
 
 
-    if (model->get_gnsf_matrices == NULL)
+    if (model->get_gnsf_matrices == NULL && model->auto_import_gnsf)
     {
         printf("sim_gnsf error: get_gnsf_matrices function seems to be unset!\n");
         status = ACADOS_FAILURE;
         return status;
     }
 
-    sim_gnsf_import_matrices(dims, model);
+    if (model->auto_import_gnsf)
+        sim_gnsf_import_matrices(dims, model);
 
     // dimension ints
     int nx      = dims->nx;

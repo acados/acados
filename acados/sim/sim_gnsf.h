@@ -40,7 +40,13 @@ extern "C" {
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_target.h"
 
+/* 
+GNSF - Generalized Nonlinear Static Feedback Model
+has the following form
 
+https://github.com/acados/acados/files/2318322/gnsf_structure.pdf
+More details can be found in Master thesis of Jonathan Frey
+*/
 
 typedef struct
 {
@@ -64,12 +70,19 @@ typedef struct
     external_function_generic *phi_fun;
     external_function_generic *phi_fun_jac_y;
     external_function_generic *phi_jac_y_uhat;
+
     // f_lo: linear output function
     external_function_generic *f_lo_fun_jac_x1_x1dot_u_z;
+
     // to import model matrices
     external_function_generic *get_gnsf_matrices;
 
+    // flag indicating, if model defining matrices are imported via external (casadi) function,
+    //    [default]: true -> auto;
+    bool auto_import_gnsf;
+
     /* model defining matrices */
+    // TODO: add setters to set manually
     double *A;
     double *B;
     double *C;
@@ -81,8 +94,11 @@ typedef struct
     double *L_u;
 
     double *A_LO;
-//    double *B_LO;
     double *E_LO;
+
+//    double *B_LO; idea, maybe detect linear dependency on controlls to treat
+// fully linear systems more efficiently
+
 
     /* constant vector */
     double *c;
