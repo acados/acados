@@ -75,20 +75,27 @@ end
 
 %% generate gnsf.phi_expr_fun;
 % linear input matrices
-dummy = gnsf.x(1);
-L_x_fun     = Function('L_x_fun', {dummy}, ...
-                    {jacobian( y, gnsf.x(1:gnsf.nx1)) });
-L_xdot_fun  = Function('L_xdot_fun', {dummy}, ...
-                    {jacobian( y, gnsf.xdot(1:gnsf.nx1) )});
-L_z_fun     = Function('L_z_fun', {dummy},...
-                    {jacobian(y, gnsf.z(1:gnsf.nz1) )});
-L_u_fun     = Function('L_u_fun', {dummy},...
-                    {jacobian(uhat, gnsf.u)});
+if isempty(y)
+    gnsf.L_x = [];
+    gnsf.L_xdot = [];
+    gnsf.L_u = [];
+    gnsf.L_z = [];
+else
+    dummy = SX.sym('dummy_input',0);
+    L_x_fun     = Function('L_x_fun', {dummy}, ...
+                        {jacobian( y, gnsf.x(1:gnsf.nx1)) });
+    L_xdot_fun  = Function('L_xdot_fun', {dummy}, ...
+                        {jacobian( y, gnsf.xdot(1:gnsf.nx1) )});
+    L_z_fun     = Function('L_z_fun', {dummy},...
+                        {jacobian(y, gnsf.z(1:gnsf.nz1) )});
+    L_u_fun     = Function('L_u_fun', {dummy},...
+                        {jacobian(uhat, gnsf.u)});
 
-gnsf.L_x = full(L_x_fun(0));
-gnsf.L_xdot = full(L_xdot_fun(0));
-gnsf.L_u = full(L_u_fun(0));
-gnsf.L_z = full(L_z_fun(0));
+    gnsf.L_x = full(L_x_fun(0));
+    gnsf.L_xdot = full(L_xdot_fun(0));
+    gnsf.L_u = full(L_u_fun(0));
+    gnsf.L_z = full(L_z_fun(0));
+end
 
 gnsf.y = y;
 gnsf.uhat = uhat;

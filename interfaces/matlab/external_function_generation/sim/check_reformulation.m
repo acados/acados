@@ -37,6 +37,8 @@ nx1 = gnsf.nx1;
 nx2 = gnsf.nx2;
 nz1 = gnsf.nz1;
 nz2 = gnsf.nz2;
+n_out = gnsf.n_out;
+
 % get model matrices
 A  = gnsf.A;
 B  = gnsf.B;
@@ -90,9 +92,18 @@ for i_check = 1:num_eval
     z0    = rand(nz, 1);
     u0    = rand(nu, 1);
     
-    y0 = L_x * x0(I_x1) + L_xdot * x0dot(I_x1) + L_z * z0(I_z1);
-    uhat0 = L_u * u0;
-    
+    if gnsf.ny>0
+        y0 = L_x * x0(I_x1) + L_xdot * x0dot(I_x1) + L_z * z0(I_z1);
+    else
+        y0 = [];
+    end
+    if gnsf.nuhat>0
+        uhat0 = L_u * u0;
+    else
+        uhat0 = [];
+    end
+
+
     % eval functions
     if isfield(model, 'p')
         p0 = rand(np, 1);
@@ -108,8 +119,14 @@ for i_check = 1:num_eval
 
     
     % eval gnsf
-    gnsf_val1 = (A * x0(I_x1) + B * u0 + ...
-        C * phi_val + c) - E * [x0dot(I_x1); z0(I_z1)];
+    if n_out > 0
+        C_phi = C * phi_val;
+    else
+        C_phi = zeros(nx1 + nz1, 1);
+    end
+    gnsf_val1 = A * x0(I_x1) + B * u0 + ...
+        C_phi + c - E * [x0dot(I_x1); z0(I_z1)];
+
     
     if nx2 > 0 % eval LOS
         gnsf_val2 =  A_LO * x0(I_x2) + ...
@@ -130,10 +147,13 @@ for i_check = 1:num_eval
 %         check = 0;
         disp('transcription failed; rel_error > TOL');
         disp('you are in debug mode now: keyboard');
-        
-        gnsf_expr = (A * x(I_x1) + B * u + ...
-        C * gnsf.phi_expr + c) - E * [xdot(I_x1); z(I_z1)];
+
+
         keyboard
+        lo_expr =  A_LO * x(I_x2) + ...
+            gnsf.f_lo_expr - E_LO * [xdot(I_x2)];
+        nsf_expr = (A * x(I_x1) + B * u + ...
+            C * gnsf.phi_expr + c) - E * [xdot(I_x1); z(I_z1)];
     end            
 end
 

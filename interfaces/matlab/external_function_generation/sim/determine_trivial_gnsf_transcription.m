@@ -54,8 +54,19 @@ z = model.z;
 
 % model dimensions
 nx = length(x);
-nz  = length(z);
-nu  = length(u);
+
+if any( size(z) == 0)
+    nz = 0;
+else
+    nz = length(z);
+end
+
+if any( size(u) == 0)
+    nu = 0;
+else
+    nu = length(u);
+end
+
 
 if isfield(model, 'p')
     np = length(model.p);

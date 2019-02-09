@@ -15,7 +15,7 @@
 - [x] qpDUNES
 - [x] HPMPC
 - [ ] FORCES
-- [ ] OSQP
+- [x] OSQP
 
 #### `sim`
 - [x] explicit Runge-Kutta
