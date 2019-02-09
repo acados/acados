@@ -27,6 +27,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	char *param_y_e = mxArrayToString( mxGetField( prhs[0], 0, "param_y_e" ) );
 	char *param_h = mxArrayToString( mxGetField( prhs[0], 0, "param_h" ) );
 	char *param_h_e = mxArrayToString( mxGetField( prhs[0], 0, "param_h_e" ) );
+	char *param_ext_cost = mxArrayToString( mxGetField( prhs[0], 0, "param_ext_cost" ) );
+	char *param_ext_cost_e = mxArrayToString( mxGetField( prhs[0], 0, "param_ext_cost_e" ) );
 
 	// opts
 	// TODO
@@ -50,6 +52,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// field
 	char *field = mxArrayToString( prhs[4] );
 //	mexPrintf("\n%s\n", field);
+
+
+
+#if 0
+	char *module = NULL;
+
+	char *char_dot = strchr(field, '.');
+	if(char_dot!=NULL)
+		{
+		int size = char_dot-field;
+		mexPrintf("\nyep dot found %d\n", size);
+		module = malloc((size+1)*sizeof(char));
+//		strncpy(field, module, size);
+		for(ii=0; ii<size; ii++)
+			{
+			module[ii] = field[ii];
+			}
+		module[size] = '\0'; // add end of string
+		mexPrintf("\nmodule: %s\n", module);
+		}
+	else
+		{
+		mexPrintf("\nno dot found\n");
+		}
+#endif
 
 
 
@@ -86,7 +113,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		else
 			{
 			mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
-			return;
+			goto end;
 			}
 		}
 	else if (!strcmp(field, "yr_e"))
@@ -151,7 +178,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				else
 					{
 					mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
-					return;
+					goto end;
 					}
 				}
 			else if(!strcmp(sim_method, "irk"))
@@ -200,13 +227,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				else
 					{
 					mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
-					return;
+					goto end;
 					}
 				}
 			else
 				{
 				mexPrintf("\nocp_set: sim_method not supported %s\n", sim_method);
-				return;
+				goto end;
 				}
 			}
 		if(!strcmp(param_h, "true")) // TODO bool
@@ -232,7 +259,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			else
 				{
 				mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
-				return;
+				goto end;
 				}
 			}
 		if(!strcmp(param_h_e, "true")) // TODO bool
@@ -265,7 +292,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			else
 				{
 				mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
-				return;
+				goto end;
 				}
 			}
 		if(!strcmp(param_y_e, "true")) // TODO bool
@@ -275,21 +302,60 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
 			ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
 			}
+		if(!strcmp(param_ext_cost, "true")) // TODO bool
+			{
+			if(nrhs==6)
+				{
+				// y_fun_jac_ut_xt
+				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "ext_cost_jac_hes" ) );
+				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+				for(ii=0; ii<N; ii++)
+					{
+					(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
+					}
+				}
+			else if(nrhs==7)
+				{
+				int stage = mxGetScalar( prhs[6] );
+				// y_fun_jac_ut_xt
+				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "ext_cost_jac_hes" ) );
+				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+				(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
+				}
+			else
+				{
+				mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
+				goto end;
+				}
+			}
+		if(!strcmp(param_ext_cost_e, "true")) // TODO bool
+			{
+			// y_e_fun_jac_ut_xt
+			ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "ext_cost_e_jac_hes" ) );
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
+			}
 //		else
 //			{
 //			mexPrintf("\nocp_set: can not set p for non-param f, y, y_e, h or h_e\n");
-//			return;
+//			goto end;
 //			}
 		}
 	else
 		{
 		mexPrintf("\nocp_set: field not supported: %s\n", field);
-		return;
+		goto end;
 		}
-
-
+	
 
 	/* return */
+end:
+#if 0
+	if(module!=NULL)
+		{
+		free(module);
+		}
+#endif
 
 	return;
 
