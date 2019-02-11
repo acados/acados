@@ -61,14 +61,14 @@ ubu =  0.5*ones(nu, 1);
 ocp_model = acados_ocp_model();
 % dims
 ocp_model.set('T', T);
-ocp_model.set('nx', nx);
-ocp_model.set('nu', nu);
+ocp_model.set('dim_nx', nx);
+ocp_model.set('dim_nu', nu);
 if (strcmp(ocp_cost_type, 'linear_ls') | strcmp(ocp_cost_type, 'nonlinear_ls'))
-	ocp_model.set('ny', ny);
-	ocp_model.set('ny_e', ny_e);
+	ocp_model.set('dim_ny', ny);
+	ocp_model.set('dim_ny_e', ny_e);
 end
-ocp_model.set('nbx', nbx);
-ocp_model.set('nbu', nbu);
+ocp_model.set('dim_nbx', nbx);
+ocp_model.set('dim_nbu', nbu);
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
@@ -79,42 +79,42 @@ if isfield(model, 'sym_xdot')
 end
 % cost
 ocp_model.set('cost_type', ocp_cost_type);
-ocp_model.set('cost_e_type', ocp_cost_type);
+ocp_model.set('cost_type_e', ocp_cost_type);
 if (strcmp(ocp_cost_type, 'linear_ls'))
-	ocp_model.set('Vu', Vu);
-	ocp_model.set('Vx', Vx);
-	ocp_model.set('Vx_e', Vx_e);
-	ocp_model.set('W', W);
-	ocp_model.set('W_e', W_e);
-	ocp_model.set('yr', yr);
-	ocp_model.set('yr_e', yr_e);
+	ocp_model.set('cost_Vu', Vu);
+	ocp_model.set('cost_Vx', Vx);
+	ocp_model.set('cost_Vx_e', Vx_e);
+	ocp_model.set('cost_W', W);
+	ocp_model.set('cost_W_e', W_e);
+	ocp_model.set('cost_yr', yr);
+	ocp_model.set('cost_yr_e', yr_e);
 elseif (strcmp(ocp_cost_type, 'nonlinear_ls'))
-	ocp_model.set('expr_y', model.expr_y);
-	ocp_model.set('expr_y_e', model.expr_y_e);
-	ocp_model.set('W', W);
-	ocp_model.set('W_e', W_e);
-	ocp_model.set('yr', yr);
-	ocp_model.set('yr_e', yr_e);
+	ocp_model.set('cost_expr_y', model.expr_y);
+	ocp_model.set('cost_expr_y_e', model.expr_y_e);
+	ocp_model.set('cost_W', W);
+	ocp_model.set('cost_W_e', W_e);
+	ocp_model.set('cost_yr', yr);
+	ocp_model.set('cost_yr_e', yr_e);
 else % if (strcmp(ocp_cost_type, 'ext_cost'))
-	ocp_model.set('expr_ext_cost', model.expr_ext_cost);
-	ocp_model.set('expr_ext_cost_e', model.expr_ext_cost_e);
+	ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 end
 % dynamics
 if (strcmp(ocp_sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('expr_f', model.expr_f_expl);
+	ocp_model.set('dyn_expr_f', model.expr_f_expl);
 else % irk
 	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('expr_f', model.expr_f_impl);
+	ocp_model.set('dyn_expr_f', model.expr_f_impl);
 end
 % constraints
-ocp_model.set('x0', x0);
-ocp_model.set('Jbx', Jbx);
-ocp_model.set('lbx', lbx);
-ocp_model.set('ubx', ubx);
-ocp_model.set('Jbu', Jbu);
-ocp_model.set('lbu', lbu);
-ocp_model.set('ubu', ubu);
+ocp_model.set('constr_x0', x0);
+ocp_model.set('constr_Jbx', Jbx);
+ocp_model.set('constr_lbx', lbx);
+ocp_model.set('constr_ubx', ubx);
+ocp_model.set('constr_Jbu', Jbu);
+ocp_model.set('constr_lbu', lbu);
+ocp_model.set('constr_ubu', ubu);
 
 ocp_model.model_struct
 
@@ -253,7 +253,14 @@ xlabel('sample')
 
 
 
-fprintf('\nsuccess!\n\n');
+status = ocp.get('status');
+
+if status==0
+	fprintf('\nsuccess!\n\n');
+else
+	fprintf('\nsolution failed!\n\n');
+end
+
 
 
 
