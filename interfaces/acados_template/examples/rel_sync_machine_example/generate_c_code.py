@@ -8,6 +8,7 @@ import scipy.linalg
 
 CODE_GEN = 1
 FORMULATION = 2 # 0 for hexagon 1 for sphere 2 SCQP sphere
+USE_JSON_DUMP = 1
 
 i_d_ref = 1.484
 i_q_ref = 1.429
@@ -383,6 +384,25 @@ ra.solver_config.nlp_solver_type = 'SQP_RTI'
 ra.acados_include_path = '/usr/local/include'
 ra.acados_lib_path = '/usr/local/lib'
 
+import pdb; pdb.set_trace()
+if USE_JSON_DUMP == 1: 
+    import json 
+    name_file = 'acados_ocp'
+    ocp_nlp = ra
+    ocp_nlp.cost = ra.cost.__dict__
+    ocp_nlp.constraints = ra.constraints.__dict__
+    ocp_nlp.solver_config = ra.solver_config.__dict__
+    ocp_nlp.dims = ra.dims.__dict__
+    ocp_nlp = ocp_nlp.__dict__
+    with open(name_file, 'w') as f:
+        json.dump(ocp_nlp, f, default=np_array_to_list)
+    ra = ocp_nlp_as_object(ocp_nlp)
+    ra.cost = ocp_nlp_as_object(ra.cost)
+    ra.constraints = ocp_nlp_as_object(ra.constraints)
+    ra.solver_config = ocp_nlp_as_object(ra.solver_config)
+    ra.dims = ocp_nlp_as_object(ra.dims)
+
+import pdb; pdb.set_trace()
 if CODE_GEN == 1:
     if FORMULATION == 0:
         generate_solver(model, ra)
@@ -390,6 +410,7 @@ if CODE_GEN == 1:
         generate_solver(model, ra, con_h=constraint)
     if FORMULATION == 2:
         generate_solver(model, ra, con_h=constraint, con_p=constraint_nl)
+
 
 # make 
 os.chdir('c_generated_code')
