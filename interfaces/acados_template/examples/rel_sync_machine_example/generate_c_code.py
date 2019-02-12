@@ -396,13 +396,13 @@ if USE_JSON_DUMP == 1:
     ocp_nlp = ocp_nlp.__dict__
     with open(name_file, 'w') as f:
         json.dump(ocp_nlp, f, default=np_array_to_list)
+    import pdb; pdb.set_trace()
     ra = ocp_nlp_as_object(ocp_nlp)
-    ra.cost = ocp_nlp_as_object(ra.cost)
-    ra.constraints = ocp_nlp_as_object(ra.constraints)
-    ra.solver_config = ocp_nlp_as_object(ra.solver_config)
-    ra.dims = ocp_nlp_as_object(ra.dims)
+    # ra.cost = ocp_nlp_as_object(ra.cost)
+    # ra.constraints = ocp_nlp_as_object(ra.constraints)
+    # ra.solver_config = ocp_nlp_as_object(ra.solver_config)
+    # ra.dims = ocp_nlp_as_object(ra.dims)
 
-import pdb; pdb.set_trace()
 if CODE_GEN == 1:
     if FORMULATION == 0:
         generate_solver(model, ra)
