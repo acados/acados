@@ -140,11 +140,11 @@ run_sim_crane_example:
 
 
 CRANE_GNSF_OBJS =
-CRANE_GNSF_OBJS += gnsf_crane_model/phi_fun.o
-CRANE_GNSF_OBJS += gnsf_crane_model/phi_fun_jac_y.o
-CRANE_GNSF_OBJS += gnsf_crane_model/f_lo_fun_jac_x1k1uz.o
-CRANE_GNSF_OBJS += gnsf_crane_model/get_matrices_fun.o
-CRANE_GNSF_OBJS += gnsf_crane_model/phi_jac_y_uhat.o
+CRANE_GNSF_OBJS += crane_nx9_model/crane_nx9_phi_fun.o
+CRANE_GNSF_OBJS += crane_nx9_model/crane_nx9_phi_fun_jac_y.o
+CRANE_GNSF_OBJS += crane_nx9_model/crane_nx9_f_lo_fun_jac_x1k1uz.o
+CRANE_GNSF_OBJS += crane_nx9_model/crane_nx9_get_matrices_fun.o
+CRANE_GNSF_OBJS += crane_nx9_model/crane_nx9_phi_jac_y_uhat.o
 CRANE_GNSF_OBJS += sim_gnsf_crane.o
 
 sim_gnsf_crane: $(CRANE_GNSF_OBJS)
@@ -509,7 +509,7 @@ clean_models:
 	rm -f chain_model/*.o
 	rm -f implicit_chain_model/*.o
 	rm -f crane_model/*.o
-	rm -f gnsf_crane_model/*.o
+	rm -f crane_nx9_model/*.o
 	rm -f wt_model_nx3/*.o
 	rm -f wt_model_nx6/*.o
 	rm -f wt_model_nx6/nx6p2/*.o

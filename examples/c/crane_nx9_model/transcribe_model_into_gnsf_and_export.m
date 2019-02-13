@@ -54,7 +54,7 @@ transcribe_opts.generate_hess = generate_hess;
 
 
 %% define f_impl
-model = export_crane_dae_model();
+model = export_crane_nx9_model();
 
 %% transcribe model into gnsf & export
 [ gnsf, reordered_model] = detect_gnsf_structure(model, transcribe_opts);
