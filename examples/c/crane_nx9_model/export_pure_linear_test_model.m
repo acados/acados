@@ -1,4 +1,4 @@
-function [ model ] = export_linear_test_model()
+function [ model ] = export_pure_linear_test_model()
     %% this function generates an implicit ODE / index-1 DAE model,
     % which consists of a CasADi expression f_impl_expr
     % that depends on the symbolic CasADi variables x, xdot, u, z,
@@ -14,7 +14,7 @@ function [ model ] = export_linear_test_model()
         % old casadi versions
         error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
     end
-    model_name_prefix = 'crane_dae';
+    model_name_prefix = 'crane_nx9';
     
 
     %% Set up States & Controls
