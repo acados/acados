@@ -21,6 +21,7 @@ clear all;
 close all;
 
 % addpath('/home/andrea/casadi-linux-octave-v3.4.0') 
+% addpath('../../../interaces/sim/matlab/external_function_generation/') 
 % addpath('~/casadi/swig/octave')
 
 import casadi.*
@@ -44,17 +45,18 @@ dae = export_simple_dae_model();
 % Set up DAE
 ode_impl    = dae.f_impl_expr; 
 
-jac_x = SX.zeros(NX+NZ, NX) + jacobian(ode_impl, dae.x);
-jac_xdot = SX.zeros(NX+NZ, NX) + jacobian(ode_impl, dae.xdot);
-jac_z = SX.zeros(NX+NZ, NZ) + jacobian(ode_impl, dae.z);
-jac_u = SX.zeros(NX+NZ, NU) + jacobian(ode_impl, dae.u);
+% PLZ use script
+% jac_x = SX.zeros(NX+NZ, NX) + jacobian(ode_impl, dae.x);
+% jac_xdot = SX.zeros(NX+NZ, NX) + jacobian(ode_impl, dae.xdot);
+% jac_z = SX.zeros(NX+NZ, NZ) + jacobian(ode_impl, dae.z);
+% jac_u = SX.zeros(NX+NZ, NU) + jacobian(ode_impl, dae.u);
 
-impl_ode_fun = Function('casadi_impl_ode_fun_simple_dae', {dae.x, dae.xdot, dae.u, dae.z}, {ode_impl});
-impl_ode_fun_jac_x_xdot_z = Function('casadi_impl_ode_fun_jac_x_xdot_z_simple_dae', {dae.x, dae.xdot, dae.u, dae.z}, {ode_impl, jac_x, jac_xdot, jac_z});
-impl_ode_fun_jac_x_xdot_u_z = Function('casadi_impl_ode_fun_jac_x_xdot_u_z_simple_dae', {dae.x, dae.xdot, dae.u, dae.z}, {ode_impl, jac_x, jac_xdot, jac_u, jac_z});
-impl_ode_jac_x_xdot_u_z = Function('casadi_impl_ode_jac_x_xdot_u_z_simple_dae', {dae.x, dae.xdot, dae.u, dae.z}, {jac_x, jac_xdot, jac_u, jac_z});
+% impl_ode_fun = Function('casadi_impl_ode_fun_simple_dae', {dae.x, dae.xdot, dae.u, dae.z}, {ode_impl});
+% impl_ode_fun_jac_x_xdot_z = Function('casadi_impl_ode_fun_jac_x_xdot_z_simple_dae', {dae.x, dae.xdot, dae.u, dae.z}, {ode_impl, jac_x, jac_xdot, jac_z});
+% impl_ode_fun_jac_x_xdot_u_z = Function('casadi_impl_ode_fun_jac_x_xdot_u_z_simple_dae', {dae.x, dae.xdot, dae.u, dae.z}, {ode_impl, jac_x, jac_xdot, jac_u, jac_z});
+% impl_ode_jac_x_xdot_u_z = Function('casadi_impl_ode_jac_x_xdot_u_z_simple_dae', {dae.x, dae.xdot, dae.u, dae.z}, {jac_x, jac_xdot, jac_u, jac_z});
 
-impl_ode_fun.generate('impl_ode_fun_simple_dae', opts);
-impl_ode_fun_jac_x_xdot_z.generate('impl_ode_fun_jac_x_xdot_z_simple_dae', opts);
-impl_ode_fun_jac_x_xdot_u_z.generate('impl_ode_fun_jac_x_xdot_u_z_simple_dae', opts);
-impl_ode_jac_x_xdot_u_z.generate('impl_ode_jac_x_xdot_u_z_simple_dae', opts);
+% impl_ode_fun.generate('impl_ode_fun_simple_dae', opts);
+% impl_ode_fun_jac_x_xdot_z.generate('impl_ode_fun_jac_x_xdot_z_simple_dae', opts);
+% impl_ode_fun_jac_x_xdot_u_z.generate('impl_ode_fun_jac_x_xdot_u_z_simple_dae', opts);
+% impl_ode_jac_x_xdot_u_z.generate('impl_ode_jac_x_xdot_u_z_simple_dae', opts);
