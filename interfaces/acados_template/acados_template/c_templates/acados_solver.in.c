@@ -555,18 +555,18 @@ int acados_create() {
     int set_fun_status;
     for (int i = 0; i < N; ++i) {
     {% if ra.solver_config.integrator_type == 'ERK': %} 
-        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
+        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
         if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
         {% if ra.solver_config.hessian_approx == 'EXACT': %} 
-            set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
             if (set_fun_status != 0) { printf("Error while setting expl_ode_hes[%i]\n", i);  exit(1); }
         {% endif %}
     {% elif ra.solver_config.integrator_type == 'IRK': %} 
-        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
+        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun[%i]\n", i);  exit(1); }
-        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z[i]);
+        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun_jac_x_xdot_z[%i]\n", i);  exit(1); }
-        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z[i]);
+        set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_jac_x_xdot_u_z[%i]\n", i);  exit(1); }
     {% endif %}
     }
@@ -653,14 +653,13 @@ int acados_create() {
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
     int num_steps_val = 1; 
-    int ns_val = 1; 
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_algebraic", &sens_algebraic_val);
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps_val);
     {% endif %}
+    int ns_val = 1; 
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "ns", &ns_val);
-    // CUSTOM CODE: for the RSM application, it seems to be necessary not to reuse Jacobians!
-    bool jac_reuse_val = false;
+    bool jac_reuse_val = true;
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "jac_reuse", &jac_reuse_val);
 
     {% if ra.solver_config.nlp_solver_type == 'SQP': %}
@@ -736,13 +735,13 @@ int acados_solve() {
 int acados_free() {
 
     // free memory
-    ocp_nlp_opts_free(nlp_opts);
-    ocp_nlp_in_free(nlp_in);
-    ocp_nlp_out_free(nlp_out);
-    ocp_nlp_free(nlp_solver);
-    ocp_nlp_dims_free(nlp_dims);
-    ocp_nlp_config_free(nlp_solver_plan, nlp_config);
-    ocp_nlp_plan_free(nlp_solver_plan);
+    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_in_destroy(nlp_in);
+    ocp_nlp_out_destroy(nlp_out);
+    ocp_nlp_solver_destroy(nlp_solver);
+    ocp_nlp_dims_destroy(nlp_dims);
+    ocp_nlp_config_destroy(nlp_config);
+    ocp_nlp_plan_destroy(nlp_solver_plan);
 
     // free external function 
     {% if ra.solver_config.integrator_type == 'IRK': %}
@@ -780,6 +779,6 @@ int acados_free() {
 ocp_nlp_in * acados_get_nlp_in() { return  nlp_in; }
 ocp_nlp_out * acados_get_nlp_out() { return  nlp_out; }
 ocp_nlp_solver * acados_get_nlp_solver() { return  nlp_solver; }
-ocp_nlp_solver_config * acados_get_nlp_config() { return  nlp_config; }
+ocp_nlp_config * acados_get_nlp_config() { return  nlp_config; }
 void * acados_get_nlp_opts() { return  nlp_opts; }
 ocp_nlp_dims * acados_get_nlp_dims() { return  nlp_dims; }

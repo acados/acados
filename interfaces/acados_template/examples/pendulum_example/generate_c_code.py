@@ -48,7 +48,7 @@ def export_ode_model():
     
     f_impl = xdot - f_expl
    
-    model = ode_model()
+    model = acados_dae()
 
     model.f_impl_expr = f_impl
     model.f_expl_expr = f_expl
@@ -131,6 +131,7 @@ nlp_con = ra.constraints
 nlp_con.lbu = np.array([-Fmax])
 nlp_con.ubu = np.array([+Fmax])
 nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
+nlp_con.idxbu = np.array([1])
 
 # set constants
 const1 = ocp_nlp_constant()
@@ -139,8 +140,8 @@ const1.value = 3.1415926535897932
 ra.constants = [const1]
 
 # set QP solver
-# ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
+ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+# ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
 # ra.solver_config.hessian_approx = 'EXACT'
 ra.solver_config.integrator_type = 'ERK'
