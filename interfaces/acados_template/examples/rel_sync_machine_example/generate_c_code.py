@@ -8,7 +8,7 @@ import scipy.linalg
 
 CODE_GEN = 1
 FORMULATION = 2 # 0 for hexagon 1 for sphere 2 SCQP sphere
-USE_JSON_DUMP = 1
+USE_JSON_DUMP = 0
 
 i_d_ref = 1.484
 i_q_ref = 1.429
@@ -384,9 +384,7 @@ ra.solver_config.nlp_solver_type = 'SQP_RTI'
 ra.acados_include_path = '/usr/local/include'
 ra.acados_lib_path = '/usr/local/lib'
 
-import pdb; pdb.set_trace()
 if USE_JSON_DUMP == 1: 
-    import json 
     name_file = 'acados_ocp'
     ocp_nlp = ra
     ocp_nlp.cost = ra.cost.__dict__
@@ -396,7 +394,6 @@ if USE_JSON_DUMP == 1:
     ocp_nlp = ocp_nlp.__dict__
     with open(name_file, 'w') as f:
         json.dump(ocp_nlp, f, default=np_array_to_list)
-    import pdb; pdb.set_trace()
     ra = ocp_nlp_as_object(ocp_nlp)
     # ra.cost = ocp_nlp_as_object(ra.cost)
     # ra.constraints = ocp_nlp_as_object(ra.constraints)
@@ -462,7 +459,6 @@ for i in range(Nsim):
     for j in range(nu):
         simU[i,j] = u0[j]
     
-    # import pdb; pdb.set_trace()
     field_name = "u"
     # update initial condition
     field_name = "x"
