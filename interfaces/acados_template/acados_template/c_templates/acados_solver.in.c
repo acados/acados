@@ -634,7 +634,7 @@ int acados_create() {
     // nonlinear constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
     {
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "h", &h_constraint[i]);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_h_fun_jac", &h_constraint[i]);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lh", lh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uh", uh);
     }
@@ -642,7 +642,7 @@ int acados_create() {
 
     {% if ra.dims.nhN > 0: %}
     // nonlinear constraints for stage N
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "h", &h_constraint_N[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_constraint_N[i]);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lhN);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uhN);
     {% endif %}
