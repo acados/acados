@@ -35,7 +35,7 @@
 
 #include "simple_dae_model/simple_dae_model.h"
 
-#define FORMULATION 0 // 0 without Vz*z term 1 with Vz*z and without Vx*x
+#define FORMULATION 3 // 0 without Vz*z term 1 with Vz*z and without Vx*x
 
 int main() {
 
@@ -156,7 +156,7 @@ int main() {
     WN[1+ny[N]*1] = QN[1];
 
 	// Make plan
-	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
+	ocp_nlp_plan *plan = ocp_nlp_plan_create(N);
 	plan->nlp_solver = SQP;
 	// plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
@@ -171,7 +171,7 @@ int main() {
 	for (int i = 0; i <= N; i++)
 		plan->nlp_constraints[i] = BGH;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
+	ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 
@@ -324,7 +324,7 @@ int main() {
 		blasfeo_dvecse(2, 0.0, nlp_out->ux+i, 0);
     }
 
-	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
 
 	// NLP solution
     acados_timer timer;

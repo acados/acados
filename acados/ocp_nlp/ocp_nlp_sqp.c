@@ -1015,7 +1015,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
 
-    #if 1
     // acados timer
     acados_timer timer0, timer1;
 
@@ -1195,17 +1194,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         nlp_out->qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
 
-<<<<<<< HEAD
-        // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
-        // print_ocp_qp_out(work->qp_out);
-        //  if(sqp_iter==1)
-        //  exit(1);
-=======
 //        printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
 //        print_ocp_qp_out(work->qp_out);
 //        if(sqp_iter==1)
 //        exit(1);
->>>>>>> 59e5cc70243181de9a583bc4b8d7b10c15108c63
 
         if (qp_status != 0)
         {
@@ -1273,13 +1265,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
 #endif
-<<<<<<< HEAD
-    #endif
-    return 1;
-=======
 	mem->status = ACADOS_MAXITER;
     return mem->status;
->>>>>>> 59e5cc70243181de9a583bc4b8d7b10c15108c63
 }
 
 
