@@ -481,16 +481,11 @@ int ocp_nlp_constraints_bghp_model_set(void *config_, void *dims_,
     {
         model->nl_constr_h_fun_jac = value;
     }
-<<<<<<< HEAD
     else if (!strcmp(field, "p"))
     {
         model->p = value;
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "lh")) // TODO(fuck_lint) remove
-=======
-    else if (!strcmp(field, "lh"))
->>>>>>> 59e5cc70243181de9a583bc4b8d7b10c15108c63
     {
         blasfeo_pack_dvec(nh, value, &model->d, nb+ng);
     }
