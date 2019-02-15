@@ -40,18 +40,28 @@ extern "C" {
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_target.h"
 
+/* 
+GNSF - Generalized Nonlinear Static Feedback Model
+has the following form
+
+https://github.com/acados/acados/files/2318322/gnsf_structure.pdf
+More details can be found in Master thesis of Jonathan Frey
+*/
+
 typedef struct
 {
-    int nx;
-    int nu;
-    int nz;
-    int nx1;
-    int nz1;
-    int n_out;
-    int ny;
-    int nuhat;
+    int nx; // total number of differential states
+    int nu; // total number of inputs
+    int nz; // total number of algebraic states
+    int nx1; // number of differential states in NSF part
+    int nz1; // number of algebraic states in NSF part
+    int n_out; // output dimension of phi
+    int ny; // dimension of first input of phi
+    int nuhat; // dimension of second input of phi
 
 } sim_gnsf_dims;
+
+
 
 typedef struct
 {
@@ -60,12 +70,19 @@ typedef struct
     external_function_generic *phi_fun;
     external_function_generic *phi_fun_jac_y;
     external_function_generic *phi_jac_y_uhat;
+
     // f_lo: linear output function
     external_function_generic *f_lo_fun_jac_x1_x1dot_u_z;
+
     // to import model matrices
     external_function_generic *get_gnsf_matrices;
 
+    // flag indicating, if model defining matrices are imported via external (casadi) function,
+    //    [default]: true -> auto;
+    bool auto_import_gnsf;
+
     /* model defining matrices */
+    // TODO: add setters to set manually
     double *A;
     double *B;
     double *C;
@@ -78,6 +95,10 @@ typedef struct
 
     double *A_LO;
     double *E_LO;
+
+//    double *B_LO; idea, maybe detect linear dependency on controlls to treat
+// fully linear systems more efficiently
+
 
     /* constant vector */
     double *c;
@@ -263,11 +284,8 @@ int sim_gnsf_dims_calculate_size();
 void *sim_gnsf_dims_assign(void *config_, void *raw_memory);
 
 // get & set functions
-void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int* value);
-
-void sim_gnsf_get_nx(void *dims_, int *nx);
-void sim_gnsf_get_nu(void *dims_, int *nu);
-void sim_gnsf_get_nz(void *dims_, int *nz);
+void sim_gnsf_dims_set(void *config_, void *dims_, const char *field, const int *value);
+void sim_gnsf_dims_get(void *config_, void *dims_, const char *field, int* value);
 
 // opts
 int sim_gnsf_opts_calculate_size(void *config, void *dims);
@@ -279,7 +297,7 @@ int sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value
 // model
 int sim_gnsf_model_calculate_size(void *config, void *dims_);
 void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory);
-int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun);
+int sim_gnsf_model_set(void *model_, const char *field, void *value);
 
 // precomputation
 int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,

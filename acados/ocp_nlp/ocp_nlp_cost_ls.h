@@ -61,12 +61,14 @@ void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int
 
 typedef struct
 {
+    // slack penalty has the form z^T * s + .5 * s^T * Z * s
     struct blasfeo_dmat Cyt;            // output matrix: Cy * [x, u] = y; in transposed form
     struct blasfeo_dmat Vz;             // Vz in ls cost Vx*x + Vu*u + Vz*z
     struct blasfeo_dmat W;              // ls norm corresponding to this matrix
     struct blasfeo_dvec y_ref;          // yref
     struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector (lower and upper)
     struct blasfeo_dvec z;              // gradient of slacks as vector (lower and upper)
+	double scaling;
 } ocp_nlp_cost_ls_model;
 
 //
@@ -83,7 +85,7 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
 
 typedef struct
 {
-    int dummy;
+    int dummy; // struct can't be void
 } ocp_nlp_cost_ls_opts;
 
 //

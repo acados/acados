@@ -165,13 +165,21 @@ void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *typ
     double alpha = 0.944*97/100;
 
     // ux
-    struct blasfeo_dvec *ux = in[0];
+    // struct blasfeo_dvec *ux = in[0];
+    struct blasfeo_dvec_args *x_args = in[0];
+    // struct blasfeo_dvec_args *u_args = in[1];
+
+    struct blasfeo_dvec *x = x_args->x;
+    // struct blasfeo_dvec *u = u_args->x;
+
+    int x_offset = x_args->xi;
+    // int u_offset = u_args->xi;
 
     // h
     struct blasfeo_dvec_args *h_args = out[0];
     struct blasfeo_dvec *h = h_args->x;
     int xi = h_args->xi;
-    BLASFEO_DVECEL(h, xi) = alpha * BLASFEO_DVECEL(ux, nu+0) * BLASFEO_DVECEL(ux, nu+5);
+    BLASFEO_DVECEL(h, xi) = alpha * BLASFEO_DVECEL(x, x_offset) * BLASFEO_DVECEL(x, x_offset+5);
 
     // jac
     struct blasfeo_dmat_args *jac_args = out[1];
@@ -179,8 +187,8 @@ void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *typ
     int ai = jac_args->ai;
     int aj = jac_args->aj;
     blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    BLASFEO_DMATEL(jac, ai+nu+0, aj) = alpha * BLASFEO_DVECEL(ux, nu+5);
-    BLASFEO_DMATEL(jac, ai+nu+5, aj) = alpha * BLASFEO_DVECEL(ux, nu+0);
+    BLASFEO_DMATEL(jac, ai+nu+0, aj) = alpha * BLASFEO_DVECEL(x, x_offset+5);
+    BLASFEO_DMATEL(jac, ai+nu+5, aj) = alpha * BLASFEO_DVECEL(x, x_offset+0);
 
     return;
 
@@ -516,7 +524,7 @@ int main()
     * plan + config
     ************************************************/
 
-    ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
+    ocp_nlp_plan *plan = ocp_nlp_plan_create(NN);
 
     plan->nlp_solver = SQP;
     // plan->nlp_solver = SQP_RTI;
@@ -541,7 +549,7 @@ int main()
     for (int i = 0; i <= NN; i++)
         plan->nlp_constraints[i] = BGH;
 
-    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
+    ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
     * ocp_nlp_dims
@@ -667,10 +675,10 @@ int main()
     // slacks (middle stages)
     for (int ii=1; ii<NN; ii++)
     {
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lZ1", lZ1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uZ1", uZ1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lz1", lz1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uz1", uz1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "Zl", lZ1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "Zu", uZ1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "zl", lz1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "zu", uz1);
     }
 
 
@@ -682,36 +690,36 @@ int main()
     {
         if (plan->sim_solver_plan[i].sim_solver == ERK)
         {
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == IRK)
         {
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot[i]);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u[i]);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_fun", &phi_fun[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "phi_fun", &phi_fun[i]);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_fun_jac_y", &phi_fun_jac_y[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "phi_fun_jac_y", &phi_fun_jac_y[i]);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_jac_y_uhat", &phi_jac_y_uhat[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "phi_jac_y_uhat", &phi_jac_y_uhat[i]);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z", &f_lo_jac_x1_x1dot_u_z[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "f_lo_jac_x1_x1dot_u_z", &f_lo_jac_x1_x1dot_u_z[i]);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "get_gnsf_matrices", &get_matrices_fun);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "get_gnsf_matrices", &get_matrices_fun);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun_jac_x_xdot_u", &impl_ode_fun_jac_x_xdot_u[i]);
             if (set_fun_status != 0) exit(1);
         }
         else
@@ -757,7 +765,7 @@ int main()
         {
             ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lh", lh1);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "uh", uh1);
-            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "h", &h1);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "nl_constr_h_fun_jac", &h1);
         }
     }
 
@@ -878,7 +886,7 @@ int main()
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-    ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
 
     /************************************************
     *     precomputation (after all options are set)
@@ -890,7 +898,10 @@ int main()
     * sqp solve
     ************************************************/
 
-    int nmpc_problems = 40;
+    int n_sim = 40;
+
+	double *x_sim = malloc(nx_*(n_sim+1)*sizeof(double));
+	double *u_sim = malloc(nu_*(n_sim+0)*sizeof(double));
 
     acados_timer timer;
     acados_tic(&timer);
@@ -903,7 +914,7 @@ int main()
         for (int i=0; i<=NN; i++)
         {
             blasfeo_pack_dvec(2, u0_ref, nlp_out->ux+i, 0);
-            blasfeo_pack_dvec(1, wind0_ref+i, nlp_out->ux+i, 2);
+//            blasfeo_pack_dvec(1, wind0_ref+i, nlp_out->ux+i, 2);
             blasfeo_pack_dvec(nx[i], x0_ref, nlp_out->ux+i, nu[i]);
         }
 
@@ -911,7 +922,10 @@ int main()
         ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0_ref);
         ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0_ref);
 
-            for (int idx = 0; idx < nmpc_problems; idx++)
+		// store x0
+		for(int ii=0; ii<nx_; ii++) x_sim[ii] = x0_ref[ii];
+
+        for (int idx = 0; idx < n_sim; idx++)
         {
             // update wind distrurbance as external function parameter
             for (int ii=0; ii<NN; ii++)
@@ -954,6 +968,10 @@ int main()
             ocp_nlp_out_get(config, dims, nlp_out, 1, "x", specific_x);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", specific_x);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", specific_x);
+
+			// store trajectory
+            ocp_nlp_out_get(config, dims, nlp_out, 1, "x", x_sim+(idx+1)*nx_);
+            ocp_nlp_out_get(config, dims, nlp_out, 0, "u", u_sim+idx*nu_);
 
             // print info
             if (true)
@@ -1000,8 +1018,12 @@ int main()
 
     double time = acados_toc(&timer)/NREP;
 
-    printf("\n\ntotal time (including printing) = %f ms (time per SQP = %f)\n\n", time*1e3, time*1e3/nmpc_problems);
+    printf("\n\ntotal time (including printing) = %f ms (time per SQP = %f)\n\n", time*1e3, time*1e3/n_sim);
 
+#if 0
+	d_print_mat(nx_, n_sim+1, x_sim, nx_);
+	d_print_mat(nu_, n_sim, u_sim, nu_);
+#endif
 
     /************************************************
     * free memory
@@ -1030,16 +1052,19 @@ int main()
     free(phi_jac_y_uhat);
     free(f_lo_jac_x1_x1dot_u_z);
 
-    ocp_nlp_opts_free(nlp_opts);
-    ocp_nlp_in_free(nlp_in);
-    ocp_nlp_out_free(nlp_out);
-    ocp_nlp_free(solver);
-    ocp_nlp_dims_free(dims);
-    ocp_nlp_config_free(plan, config);
-    ocp_nlp_plan_free(plan);
+    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_in_destroy(nlp_in);
+    ocp_nlp_out_destroy(nlp_out);
+    ocp_nlp_solver_destroy(solver);
+    ocp_nlp_dims_destroy(dims);
+    ocp_nlp_config_destroy(config);
+    ocp_nlp_plan_destroy(plan);
 
     free(specific_x);
     free(specific_u);
+
+	free(x_sim);
+	free(u_sim);
 
     free(lZ0);
     free(uZ0);

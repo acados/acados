@@ -33,6 +33,10 @@ ifeq ($(ACADOS_WITH_QORE), 1)
 LIBS += -lqore_dense
 endif
 
+ifeq ($(ACADOS_WITH_OSQP), 1)
+LIBS += -losqp -ldl
+endif
+
 LIBS += -lblasfeo -lm -lblas -llapack
 
 ifeq ($(ACADOS_WITH_OPENMP), 1)
@@ -374,6 +378,12 @@ CHAIN_OBJS += chain_model/vde_adj_chain_nm6.o
 CHAIN_OBJS += chain_model/ls_cost_nm6.o
 CHAIN_OBJS += chain_model/ls_costN_nm6.o
 CHAIN_OBJS += chain_model/casadi_erk4_chain_nm6.o
+# external cost
+CHAIN_OBJS += chain_model/chain_nm_2_external_cost.o
+CHAIN_OBJS += chain_model/chain_nm_3_external_cost.o
+CHAIN_OBJS += chain_model/chain_nm_4_external_cost.o
+CHAIN_OBJS += chain_model/chain_nm_5_external_cost.o
+CHAIN_OBJS += chain_model/chain_nm_6_external_cost.o
 ### implicit ###
 # 2 masses
 CHAIN_OBJS += implicit_chain_model/impl_ode_fun_chain_nm2.o
@@ -400,6 +410,7 @@ CHAIN_OBJS += implicit_chain_model/impl_ode_fun_chain_nm6.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm6.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm6.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.o
+
 
 nonlinear_chain_ocp_nlp_no_interface: $(CHAIN_OBJS) nonlinear_chain_ocp_nlp_no_interface.o
 	$(CCC) -o nonlinear_chain_ocp_nlp_no_interface.out $(CHAIN_OBJS) nonlinear_chain_ocp_nlp_no_interface.o $(LDFLAGS) $(LIBS)

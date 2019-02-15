@@ -35,7 +35,9 @@
 #ifdef ACADOS_WITH_QORE
 #include "acados/dense_qp/dense_qp_qore.h"
 #endif
+#ifdef ACADOS_WITH_QPOASES
 #include "acados/dense_qp/dense_qp_qpoases.h"
+#endif
 #ifdef ACADOS_WITH_OOQP
 #include "acados/dense_qp/dense_qp_ooqp.h"
 #endif
@@ -55,20 +57,24 @@ qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
         case DENSE_QP_HPIPM:
             dense_qp_hpipm_config_initialize_default(solver_config);
             break;
-        case DENSE_QP_QPOASES:
 #ifdef ACADOS_WITH_QPOASES
+        case DENSE_QP_QPOASES:
             dense_qp_qpoases_config_initialize_default(solver_config);
-#endif
             break;
-        case DENSE_QP_QORE:
+#endif
 #ifdef ACADOS_WITH_QORE
+        case DENSE_QP_QORE:
             dense_qp_qore_config_initialize_default(solver_config);
-#endif
             break;
-        case DENSE_QP_OOQP:
-#ifdef ACADOS_WITH_OOQP
-            dense_qp_ooqp_config_initialize_default(solver_config);
 #endif
+#ifdef ACADOS_WITH_OOQP
+        case DENSE_QP_OOQP:
+            dense_qp_ooqp_config_initialize_default(solver_config);
+            break;
+#endif
+        default:
+            printf("\nerror: dense_qp_config_create: unsupported plan->qp_solver\n");
+            exit(1);
             break;
     }
     return solver_config;

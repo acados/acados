@@ -33,7 +33,7 @@
 #include "acados/utils/math.h"
 
 #include "acados_c/external_function_interface.h"
-#include "interfaces/acados_c/sim_interface.h"
+#include "acados_c/sim_interface.h"
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
@@ -230,7 +230,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     sim_solver_plan plan;
     plan.sim_solver = IRK;  // IRK
 
-    sim_solver_config *config = sim_config_create(plan);
+    sim_config *config = sim_config_create(plan);
 
     void *dims = sim_dims_create(config);
 
@@ -241,7 +241,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_opts *opts = (sim_opts *) opts_;
     config->opts_initialize_default(config, dims, opts);
 
     // opts reference solution
@@ -265,19 +265,19 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     {
         case ERK:  // ERK
         {
-            sim_model_set(config, in, "expl_ode_fun", &expl_ode_fun);
-            sim_model_set(config, in, "expl_vde_for", &expl_vde_for);
-            sim_model_set(config, in, "expl_vde_adj", &expl_vde_adj);
-            sim_model_set(config, in, "expl_ode_hess", &expl_ode_hess);
+            sim_in_set(config, dims, in, "expl_ode_fun", &expl_ode_fun);
+            sim_in_set(config, dims, in, "expl_vde_for", &expl_vde_for);
+            sim_in_set(config, dims, in, "expl_vde_adj", &expl_vde_adj);
+            sim_in_set(config, dims, in, "expl_ode_hess", &expl_ode_hess);
             break;
         }
         case IRK:  // IRK
         {
-            sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-            sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
+            sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+            sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
                     &impl_ode_fun_jac_x_xdot);
-            sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-            sim_model_set(config, in, "impl_ode_hess", &impl_ode_hess);
+            sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+            sim_in_set(config, dims, in, "impl_ode_hess", &impl_ode_hess);
             break;
         }
         default :
@@ -303,7 +303,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
     * sim solver
     ************************************************/
 
-    sim_solver *sim_solver = sim_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
     for (int ii = 0; ii < nsim0; ii++)
     {
@@ -396,7 +396,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                 plan.sim_solver = hashitsim_hess(solver);
 
                 // create correct config based on plan
-                sim_solver_config *config = sim_config_create(plan);
+                sim_config *config = sim_config_create(plan);
 
             /* sim dims */
                 void *dims = sim_dims_create(config);
@@ -408,7 +408,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
             /* sim options */
 
                 void *opts_ = sim_opts_create(config, dims);
-                sim_rk_opts *opts = (sim_rk_opts *) opts_;
+                sim_opts *opts = (sim_opts *) opts_;
                 config->opts_initialize_default(config, dims, opts);
 
                 opts->jac_reuse = false;        // jacobian reuse
@@ -454,19 +454,19 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                 {
                     case ERK:  // ERK
                     {
-                        sim_model_set(config, in, "expl_ode_fun", &expl_ode_fun);
-                        sim_model_set(config, in, "expl_vde_for", &expl_vde_for);
-                        sim_model_set(config, in, "expl_vde_adj", &expl_vde_adj);
-                        sim_model_set(config, in, "expl_ode_hess", &expl_ode_hess);
+                        sim_in_set(config, dims, in, "expl_ode_fun", &expl_ode_fun);
+                        sim_in_set(config, dims, in, "expl_vde_for", &expl_vde_for);
+                        sim_in_set(config, dims, in, "expl_vde_adj", &expl_vde_adj);
+                        sim_in_set(config, dims, in, "expl_ode_hes", &expl_ode_hess);
                         break;
                     }
                     case IRK:  // IRK
                     {
-                        sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-                        sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
+                        sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+                        sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
                                 &impl_ode_fun_jac_x_xdot);
-                        sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-                        sim_model_set(config, in, "impl_ode_hess", &impl_ode_hess);
+                        sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                        sim_in_set(config, dims, in, "impl_ode_hes", &impl_ode_hess);
                         break;
                     }
                     default :
@@ -489,7 +489,7 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                     in->S_adj[ii] = 0.0;
 
             /* sim solver  */
-                sim_solver = sim_create(config, dims, opts);
+                sim_solver = sim_solver_create(config, dims, opts);
 
             /* print */
                 std::cout << "\n---> testing integrator " << solver;
@@ -704,7 +704,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     sim_solver_plan plan;
     plan.sim_solver = IRK;  // IRK
 
-    sim_solver_config *config = sim_config_create(plan);
+    sim_config *config = sim_config_create(plan);
 
     void *dims = sim_dims_create(config);
 
@@ -715,7 +715,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
 
     // set opts
     void *opts_ = sim_opts_create(config, dims);
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_opts *opts = (sim_opts *) opts_;
     config->opts_initialize_default(config, dims, opts);
 
     // opts reference solution
@@ -735,11 +735,11 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     {
         case IRK:  // IRK
         {
-            sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-            sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
+            sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+            sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
                     &impl_ode_fun_jac_x_xdot);
-            sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
-            sim_model_set(config, in, "impl_ode_hess", &impl_ode_hess);
+            sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+            sim_in_set(config, dims, in, "impl_ode_hess", &impl_ode_hess);
             break;
         }
         default :
@@ -765,7 +765,7 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
     * sim solver
     ************************************************/
 
-    sim_solver *sim_solver = sim_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
     // x
     for (int jj = 0; jj < nx; jj++)

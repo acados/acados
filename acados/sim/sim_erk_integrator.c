@@ -58,70 +58,55 @@ void *sim_erk_dims_assign(void *config_, void *raw_memory)
 
 
 
-void sim_erk_get_nx(void *dims_, int *nx)
+void sim_erk_dims_set(void *config_, void *dims_, const char *field, const int *value)
 {
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
-    *nx = dims->nx;
-}
 
-
-
-void sim_erk_get_nu(void *dims_, int *nu)
-{
-    sim_erk_dims *dims = (sim_erk_dims *) dims_;
-    *nu = dims->nu;
-}
-
-
-
-void sim_erk_get_nz(void *dims_, int *nz)
-{
-    sim_erk_dims *dims = (sim_erk_dims *) dims_;
-    *nz = dims->nz;
-}
-
-
-static void sim_erk_set_nu(void *config_, void *dims_, const int *nu)
-{
-    sim_erk_dims *dims = (sim_erk_dims *) dims_;
-    dims->nu = *nu;
-}
-
-static void sim_erk_set_nx(void *config_, void *dims_, const int *nx)
-{
-    sim_erk_dims *dims = (sim_erk_dims *) dims_;
-    dims->nx = *nx;
-}
-
-static void sim_erk_set_nz(void *config_, void *dims_, const int *nz)
-{
-    if (*nz != 0)
+    if (!strcmp(field, "nx"))
     {
-        printf("\nerror: nz != 0\n");
-        printf("algebraic variables not supported by ERK module\n");
+        dims->nx = *value;
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        dims->nu = *value;
+    }
+    else if (!strcmp(field, "nz"))
+    {
+        if (*value != 0)
+        {
+            printf("\nerror: nz != 0\n");
+            printf("algebraic variables not supported by ERK module\n");
+            exit(1);
+        }
+    }
+    else
+    {
+        printf("\nerror: sim_erk_dims_set: dim type not available: %s\n", field);
         exit(1);
     }
 }
 
 
 
-void sim_erk_dims_set(void *config_, void *dims_, const char *field, const int *value)
+void sim_erk_dims_get(void *config_, void *dims_, const char *field, int *value)
 {
+    sim_erk_dims *dims = (sim_erk_dims *) dims_;
+
     if (!strcmp(field, "nx"))
     {
-        sim_erk_set_nx(config_, dims_, value);
+        *value = dims->nx;
     }
     else if (!strcmp(field, "nu"))
     {
-        sim_erk_set_nu(config_, dims_, value);
+        *value = dims->nu;
     }
     else if (!strcmp(field, "nz"))
     {
-        sim_erk_set_nz(config_, dims_, value);
+        *value = 0;
     }
     else
     {
-        printf("\nerror: dimension type not available in module\n");
+        printf("\nerror: sim_erk_dims_get: dim type not available: %s\n", field);
         exit(1);
     }
 }
@@ -155,33 +140,35 @@ void *sim_erk_model_assign(void *config, void *dims, void *raw_memory)
 
 
 
-int sim_erk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
+int sim_erk_model_set(void *model_, const char *field, void *value)
 {
+//    printf("\nsim_erk_model_set\n");
     erk_model *model = model_;
 
-    switch (fun_type)
+    if (!strcmp(field, "expl_ode_fun"))
     {
-        case EXPL_ODE_FUN:
-            model->expl_ode_fun = (external_function_generic *) fun;
-            break;
-        case EXPL_ODE_HES:
-            model->expl_ode_hes = (external_function_generic *) fun;
-            break;
-        case EXPL_VDE_FOR:
-            model->expl_vde_for = (external_function_generic *) fun;
-            break;
-        case EXPL_VDE_ADJ:
-            model->expl_vde_adj = (external_function_generic *) fun;
-            break;
-        default:
-            return ACADOS_FAILURE;
+//    printf("\nsim_erk_model_set expl_ode_fun\n");
+        model->expl_ode_fun = value;
     }
-    // printf("expl_ode_hes\n");
-    // printf("%p\n",(void*)model->expl_ode_hes);
-    // printf("expl_ode_fun\n");
-    // printf("%p\n",(void*)model->expl_ode_fun);
-    // printf("expl_vde_for\n");
-    // printf("%p\n",(void*)model->expl_vde_for);
+    else if (!strcmp(field, "expl_vde_for"))
+    {
+        model->expl_vde_for = value;
+    }
+    else if (!strcmp(field, "expl_vde_adj"))
+    {
+        model->expl_vde_adj = value;
+    }
+    else if (!strcmp(field, "expl_ode_hes"))
+    {
+        model->expl_ode_hes = value;
+    }
+    else
+    {
+        printf("\nerror: sim_erk_model_set: wrong field: %s\n", field);
+		exit(1);
+//        return ACADOS_FAILURE;
+    }
+
     return ACADOS_SUCCESS;
 }
 
@@ -195,7 +182,7 @@ int sim_erk_opts_calculate_size(void *config_, void *dims)
 {
     int ns_max = NS_MAX;
 
-    int size = sizeof(sim_rk_opts);
+    int size = sizeof(sim_opts);
 
     size += ns_max * ns_max * sizeof(double);  // A_mat
     size += ns_max * sizeof(double);           // b_vec
@@ -215,8 +202,8 @@ void *sim_erk_opts_assign(void *config_, void *dims, void *raw_memory)
 
     char *c_ptr = (char *) raw_memory;
 
-    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
-    c_ptr += sizeof(sim_rk_opts);
+    sim_opts *opts = (sim_opts *) c_ptr;
+    c_ptr += sizeof(sim_opts);
 
     align_char_to(8, &c_ptr);
 
@@ -234,17 +221,18 @@ void *sim_erk_opts_assign(void *config_, void *dims, void *raw_memory)
 }
 
 
+
 int sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    return sim_rk_opts_set(opts, field, value);
+    sim_opts *opts = (sim_opts *) opts_;
+    return sim_opts_set_(opts, field, value);
 }
 
 
 
 void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     opts->ns = 4;  // ERK 4
@@ -339,7 +327,7 @@ void sim_erk_opts_initialize_default(void *config_, void *dims_, void *opts_)
 
 void sim_erk_opts_update(void *config_, void *dims, void *opts_)
 {
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
 
     int ns = opts->ns;
 
@@ -443,7 +431,7 @@ void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_mem
 
 int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     int ns = opts->ns;
@@ -492,7 +480,7 @@ int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 
 static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
-    sim_rk_opts *opts = opts_;
+    sim_opts *opts = opts_;
     sim_erk_dims *dims = (sim_erk_dims *) dims_;
 
     int ns = opts->ns;
@@ -555,8 +543,8 @@ int sim_erk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
 int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
-    sim_solver_config *config = config_;
-    sim_rk_opts *opts = opts_;
+    sim_config *config = config_;
+    sim_opts *opts = opts_;
 
     if ( opts->ns != opts->tableau_size )
     {
@@ -578,11 +566,21 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     int nz = dims->nz;
 
     // assert - only use supported features
-    assert(nz == 0 && "nz should be zero - DAEs are not supported for this integrator");
-    assert(opts->output_z == false &&
-           "opts->output_z should be false - DAEs are not supported for this integrator");
-    assert(opts->sens_algebraic == false &&
-           "opts->sens_algebraic should be false - DAEs are not supported for this integrator");
+    if (nz != 0)
+    {
+        printf("nz should be zero - DAEs are not supported by the ERK integrator");
+        return ACADOS_FAILURE;
+    }
+    if (opts->output_z)
+    {
+        printf("opts->output_z should be false - DAEs are not supported for the ERK integrator");
+        return ACADOS_FAILURE;
+    }
+    if (opts->sens_algebraic)
+    {
+        printf("opts->sens_algebraic should be false - DAEs are not supported for the ERK integrator");
+        return ACADOS_FAILURE;
+    }
 
     int nf = opts->num_forw_sens;
     if (!opts->sens_forw) nf = 0;
@@ -849,7 +847,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
 void sim_erk_config_initialize_default(void *config_)
 {
-    sim_solver_config *config = config_;
+    sim_config *config = config_;
 
     config->opts_calculate_size = &sim_erk_opts_calculate_size;
     config->opts_assign = &sim_erk_opts_assign;
@@ -861,15 +859,13 @@ void sim_erk_config_initialize_default(void *config_)
     config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
     config->model_calculate_size = &sim_erk_model_calculate_size;
     config->model_assign = &sim_erk_model_assign;
-    config->model_set_function = &sim_erk_model_set_function;
+    config->model_set = &sim_erk_model_set;
     config->evaluate = &sim_erk;
     config->precompute = &sim_erk_precompute;
     config->config_initialize_default = &sim_erk_config_initialize_default;
     config->dims_calculate_size = &sim_erk_dims_calculate_size;
     config->dims_assign = &sim_erk_dims_assign;
     config->dims_set = &sim_erk_dims_set;
-    config->get_nx = &sim_erk_get_nx;
-    config->get_nu = &sim_erk_get_nu;
-    config->get_nz = &sim_erk_get_nz;
+    config->dims_get = &sim_erk_dims_get;
     return;
 }

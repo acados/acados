@@ -10,14 +10,14 @@ This file contains the description of all external functions interfaced to acado
 
 // complete gradient and hessian of cost, computed externally
 
-external function: ext_cost
+external function: ext_cost_jac_hes
 
 inputs:
-0) [u; x]    size: nu+nx    type: COLMAJ
-
+0) [x]    size: nx    type: BLASFEO_DVEC_ARGS
+1) [u]    size: nu    type: BLASFEO_DVEC_ARGS
 outputs:
-0) [grad_u; grad_x]    size: nu+nx    type: COLMAJ
-1) [hess_uu, hess_ux; hess_xu; hess_xx]    size: (nu+nx)*(nu+nx)    type: COLMAJ
+0) [grad_u; grad_x]    size: nu+nx    type: BLASFEO_DVEC
+1) [hess_uu, hess_ux; hess_xu; hess_xx]    size: (nu+nx)*(nu+nx)    type: BLASFEO_DMAT
 
 
 
@@ -27,10 +27,11 @@ outputs:
 
 // function and jacobian_transposed of residuals of nonlinear least-squares
 
-external function: nls_jac
+external function: nls_res_jac
 
 inputs:
-0) [u; x]    size: nu+nx    type: BLASFEO_DVEC
+0) [x]    size: nx    type: BLASFEO_DVEC_ARGS
+1) [u]    size: nu    type: BLASFEO_DVEC_ARGS
 
 outputs:
 0) [fun]    size: ny    type: BLASFEO_DVEC
@@ -43,8 +44,9 @@ outputs:
 external function: nls_hess
 
 inputs:
-0) [u; x]    size: nu+nx    type: BLASFEO_DVEC
-1) [fun]    size: ny    type: BLASFEO_DVEC
+0) [x]    size: nx    type: BLASFEO_DVEC_ARGS
+1) [u]    size: nu    type: BLASFEO_DVEC_ARGS
+2) [fun]  size: ny    type: BLASFEO_DVEC
 
 outputs:
 0) [hess_uu, hess_ux; hess_xu; hess_xx]    size: (nu+nx)*(nu+nx)    type: BLASFEO_DMAT
@@ -57,16 +59,19 @@ outputs:
 
 // function and jacobian_transposed of nonlinear constraints
 
-external function: h
+external function: nl_constr_h_fun_jac
 
 inputs:
-0) [u; x]    size: nu+nx    type: BLASFEO_DVEC
+0) [x]    size: nx    type: BLASFEO_DVEC_ARGS
+1) [u]    size: nu    type: BLASFEO_DVEC_ARGS
 
 outputs:
 0) [fun]    size: nh    type: BLASFEO_DVEC_ARGS
 1) [jac_u'; jac_x']    size: (nu+nx)*nh    type: BLASFEO_DMAT_ARGS
 
 
+// TODO(whoever): add documentation; split input into x, u;
+external function: p
 
 /************************************************
 * sim_erk_integrator

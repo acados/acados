@@ -147,27 +147,39 @@ void ext_cost(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_
 
     int nv = nu+nx;
 
+	// extract inputs
+	// 0: [x], size: nx, type: BLASFEO_DVEC_ARGS
+	struct blasfeo_dvec_args *x_args = in[0];
+	struct blasfeo_dvec *x = x_args->x;
+	int xi = x_args->xi;
+	// 1: [u], size: nu, type: BLASFEO_DVEC_ARGS
+	struct blasfeo_dvec_args *u_args = in[1];
+	struct blasfeo_dvec *u = u_args->x;
+	int ui = u_args->xi;
+	// extract outputs
+	// 0: [grad_u; grad_x], size: nu+nx, type: BLASFEO_DVEC
+	struct blasfeo_dvec *grad = out[0];
+	// 0: [hess_uu, hess_ux; hess_xu, hess_xx], size: (nu+nx)*(nu+nx), type: BLASFEO_DMAT
+	struct blasfeo_dmat *hess = out[1];
+
     // Hessian
-    double *hess = out[1];
-    for (ii=0; ii<nv*nv; ii++)
-        hess[ii] = 0.0;
-    for (ii=0; ii<nu; ii++)
-        hess[ii*(nv+1)] = 2.0; // R
-    for (; ii<nu+nx; ii++)
-        hess[ii*(nv+1)] = 1.0; // Q
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
+	for(ii=0; ii<nu; ii++)
+		BLASFEO_DMATEL(hess, ii, ii) = 2.0; // R
+	for(; ii<nu+nx; ii++)
+		BLASFEO_DMATEL(hess, ii, ii) = 1.0; // Q
 
     // gradient
-    double *ux = in[0];
-    double *grad = out[0];
-    for (ii=0; ii<nu; ii++)
-        grad[ii] = 0.0 + hess[ii*(nv+1)]*ux[ii]; // r
-    for (; ii<nu+nx; ii++)
-        grad[ii] = 0.0 + hess[ii*(nv+1)]*ux[ii]; // q
-
+    for(ii=0; ii<nu; ii++)
+        BLASFEO_DVECEL(grad, ii) = BLASFEO_DMATEL(hess, ii, ii) * BLASFEO_DVECEL(u, ui+ii); // r
+    for(ii=0; ii<nx; ii++)
+        BLASFEO_DVECEL(grad, nu+ii) = BLASFEO_DMATEL(hess, nu+ii, nu+ii) * BLASFEO_DVECEL(x, xi+ii); // q
 
     return;
 
 }
+
+
 
 void ext_costN(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
@@ -179,26 +191,39 @@ void ext_costN(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type
 
     int nv = nu+nx;
 
+	// extract inputs
+	// 0: [x], size: nx, type: BLASFEO_DVEC_ARGS
+	struct blasfeo_dvec_args *x_args = in[0];
+	struct blasfeo_dvec *x = x_args->x;
+	int xi = x_args->xi;
+	// 1: [u], size: nu, type: BLASFEO_DVEC_ARGS
+	struct blasfeo_dvec_args *u_args = in[1];
+	struct blasfeo_dvec *u = u_args->x;
+	int ui = u_args->xi;
+	// extract outputs
+	// 0: [grad_u; grad_x], size: nu+nx, type: BLASFEO_DVEC
+	struct blasfeo_dvec *grad = out[0];
+	// 0: [hess_uu, hess_ux; hess_xu, hess_xx], size: (nu+nx)*(nu+nx), type: BLASFEO_DMAT
+	struct blasfeo_dmat *hess = out[1];
+
     // Hessian
-    double *hess = out[1];
-    for (ii=0; ii<nv*nv; ii++)
-        hess[ii] = 0.0;
-    for (ii=0; ii<nu; ii++)
-        hess[ii*(nv+1)] = 2.0; // R
-    for (; ii<nu+nx; ii++)
-        hess[ii*(nv+1)] = 1.0; // Q
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
+	for(ii=0; ii<nu; ii++)
+		BLASFEO_DMATEL(hess, ii, ii) = 2.0; // R
+	for(; ii<nu+nx; ii++)
+		BLASFEO_DMATEL(hess, ii, ii) = 1.0; // Q
 
     // gradient
-    double *ux = in[0];
-    double *grad = out[0];
-    for (ii=0; ii<nu; ii++)
-        grad[ii] = 0.0 + hess[ii*(nv+1)]*ux[ii]; // r
-    for (; ii<nu+nx; ii++)
-        grad[ii] = 0.0 + hess[ii*(nv+1)]*ux[ii]; // q
+    for(ii=0; ii<nu; ii++)
+        BLASFEO_DVECEL(grad, ii) = BLASFEO_DMATEL(hess, ii, ii) * BLASFEO_DVECEL(u, ui+ii); // r
+    for(ii=0; ii<nx; ii++)
+        BLASFEO_DVECEL(grad, nu+ii) = BLASFEO_DMATEL(hess, nu+ii, nu+ii) * BLASFEO_DVECEL(x, xi+ii); // q
 
     return;
 
 }
+
+
 
 void disc_model(void *fun0, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
@@ -363,9 +388,9 @@ int main() {
     * config
     ************************************************/
 
-    int config_size = ocp_nlp_solver_config_calculate_size(N);
+    int config_size = ocp_nlp_config_calculate_size(N);
     void *config_mem = malloc(config_size);
-    ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(N, config_mem);
+    ocp_nlp_config *config = ocp_nlp_config_assign(N, config_mem);
 
     ocp_nlp_sqp_config_initialize_default(config);
 

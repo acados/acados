@@ -27,30 +27,36 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 
+
+
 /************************************************
  * config
  ************************************************/
 
-int sim_solver_config_calculate_size()
+int sim_config_calculate_size()
 {
     int size = 0;
 
-    size += sizeof(sim_solver_config);
+    size += sizeof(sim_config);
 
     return size;
 }
 
-sim_solver_config *sim_solver_config_assign(void *raw_memory)
+
+
+sim_config *sim_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    sim_solver_config *config = (sim_solver_config *) c_ptr;
-    c_ptr += sizeof(sim_solver_config);
+    sim_config *config = (sim_config *) c_ptr;
+    c_ptr += sizeof(sim_config);
 
-    assert((char *) raw_memory + sim_solver_config_calculate_size() >= c_ptr);
+    assert((char *) raw_memory + sim_config_calculate_size() >= c_ptr);
 
     return config;
 }
+
+
 
 /************************************************
  * in
@@ -58,15 +64,15 @@ sim_solver_config *sim_solver_config_assign(void *raw_memory)
 
 int sim_in_calculate_size(void *config_, void *dims)
 {
-    sim_solver_config *config = config_;
+    sim_config *config = config_;
 
     int size = sizeof(sim_in);
 
     int nx, nu, nz;
 
-    config->get_nx(dims, &nx);
-    config->get_nu(dims, &nu);
-    config->get_nz(dims, &nz);
+    config->dims_get(config_, dims, "nx", &nx);
+    config->dims_get(config_, dims, "nu", &nu);
+    config->dims_get(config_, dims, "nz", &nz);
 
     size += 2 * nx * sizeof(double);          // x, xdot
     size += nu * sizeof(double);              // u
@@ -82,9 +88,11 @@ int sim_in_calculate_size(void *config_, void *dims)
     return size;
 }
 
+
+
 sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 {
-    sim_solver_config *config = config_;
+    sim_config *config = config_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -94,9 +102,9 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
     in->dims = dims;
 
     int nx, nu, nz;
-    config->get_nx(dims, &nx);
-    config->get_nu(dims, &nu);
-    config->get_nz(dims, &nz);
+    config->dims_get(config_, dims, "nx", &nx);
+    config->dims_get(config_, dims, "nu", &nu);
+    config->dims_get(config_, dims, "nz", &nz);
 
     int NF = nx + nu;
 
@@ -124,20 +132,122 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
     return in;
 }
 
+
+
+int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void *value)
+{
+    sim_config *config = config_;
+
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "T"))
+    {
+        double *T = value;
+        in->T = T[0];
+    }
+    else if (!strcmp(field, "x"))
+    {
+        int nx;
+        config->dims_get(config_, dims_, "nx", &nx);
+        int ii;
+        double *x = value;
+        for (ii=0; ii < nx; ii++)
+            in->x[ii] = x[ii];
+    }
+    else if (!strcmp(field, "xdot"))
+    {
+        int nx;
+        config->dims_get(config_, dims_, "nx", &nx);
+        int ii;
+        double *xdot = value;
+        for (ii=0; ii < nx; ii++)
+            in->xdot[ii] = xdot[ii];
+    }
+    else if (!strcmp(field, "u"))
+    {
+        int nu;
+        config->dims_get(config_, dims_, "nu", &nu);
+        int ii;
+        double *u = value;
+        for (ii=0; ii < nu; ii++)
+            in->u[ii] = u[ii];
+    }
+    else if (!strcmp(field, "z"))
+    {
+        int nz;
+        config->dims_get(config_, dims_, "nz", &nz);
+        int ii;
+        double *z = value;
+        for (ii=0; ii < nz; ii++)
+            in->z[ii] = z[ii];
+    }
+    else if (!strcmp(field, "Sx"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx;
+        config->dims_get(config_, dims_, "nx", &nx);
+        int ii;
+        double *Sx = value;
+        for (ii=0; ii < nx*nx; ii++)
+            in->S_forw[ii] = Sx[ii];
+    }
+    else if (!strcmp(field, "Su"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
+        int ii;
+        double *Su = value;
+        for (ii=0; ii < nx*nu; ii++)
+            in->S_forw[nx*nx+ii] = Su[ii];
+    }
+    else if (!strcmp(field, "S_forw"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
+        int ii;
+        double *S_forw = value;
+        for (ii=0; ii < nx*(nu+nx); ii++)
+            in->S_forw[ii] = S_forw[ii];
+    }
+    else if (!strcmp(field, "S_adj"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
+        int ii;
+        double *S_adj = value;
+        for (ii=0; ii < nu+nx; ii++)
+            in->S_adj[ii] = S_adj[ii];
+    }
+    else
+    {
+        status = config->model_set(in->model, field, value);
+    }
+
+    return status;
+}
+
+
+
 /************************************************
  * out
  ************************************************/
 
 int sim_out_calculate_size(void *config_, void *dims)
 {
-    sim_solver_config *config = config_;
+    sim_config *config = config_;
 
     int size = sizeof(sim_out);
 
     int nx, nu, nz;
-    config->get_nx(dims, &nx);
-    config->get_nu(dims, &nu);
-    config->get_nz(dims, &nz);
+    config->dims_get(config_, dims, "nx", &nx);
+    config->dims_get(config_, dims, "nu", &nu);
+    config->dims_get(config_, dims, "nz", &nz);
 
     int NF = nx + nu;
     size += sizeof(sim_info);
@@ -160,14 +270,14 @@ int sim_out_calculate_size(void *config_, void *dims)
 
 sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 {
-    sim_solver_config *config = config_;
+    sim_config *config = config_;
 
     char *c_ptr = (char *) raw_memory;
 
     int nx, nu, nz;
-    config->get_nx(dims, &nx);
-    config->get_nu(dims, &nu);
-    config->get_nz(dims, &nz);
+    config->dims_get(config_, dims, "nx", &nx);
+    config->dims_get(config_, dims, "nu", &nu);
+    config->dims_get(config_, dims, "nz", &nz);
 
     int NF = nx + nu;
 
@@ -194,70 +304,142 @@ sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 }
 
 
+
+int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, void *value)
+{
+    sim_config *config = config_;
+
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "xn"))
+    {
+        int nx;
+        config->dims_get(config_, dims_, "nx", &nx);
+        int ii;
+        double *xn = value;
+        for (ii=0; ii < nx; ii++)
+            xn[ii] = out->xn[ii];
+    }
+    else if (!strcmp(field, "S_forw"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
+        int ii;
+        double *S_forw = value;
+        for (ii=0; ii < nx*(nu+nx); ii++)
+            S_forw[ii] = out->S_forw[ii];
+    }
+    else if (!strcmp(field, "Sx"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx;
+        config->dims_get(config_, dims_, "nx", &nx);
+        int ii;
+        double *Sx = value;
+        for (ii=0; ii < nx*nx; ii++)
+            Sx[ii] = out->S_forw[ii];
+    }
+    else if (!strcmp(field, "Su"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
+        int ii;
+        double *Su = value;
+        for (ii=0; ii < nx*nu; ii++)
+            Su[ii] = out->S_forw[nx*nx+ii];
+    }
+    else if (!strcmp(field, "S_adj"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
+        int ii;
+        double *S_adj = value;
+        for (ii=0; ii < nu+nx; ii++)
+            S_adj[ii] = out->S_adj[ii];
+    }
+    else if (!strcmp(field, "S_hess"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu;
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
+        int ii;
+        double *S_hess = value;
+        for (ii=0; ii < (nu+nx)*(nu+nx); ii++)
+            S_hess[ii] = out->S_hess[ii];
+    }
+    else
+    {
+        status = ACADOS_FAILURE;
+    }
+
+    return status;
+}
+
+
+
 /************************************************
-* sim_rk_opts
+* sim_opts
 ************************************************/
 
-int sim_rk_opts_set(sim_rk_opts *opts, const char *field, void *value)
+int sim_opts_set_(sim_opts *opts, const char *field, void *value)
 {
-    int status = ACADOS_FAILURE;
+    int status = ACADOS_SUCCESS;
     if (!strcmp(field, "ns") ||!strcmp(field, "num_stages"))
     {
         int *ns = (int *) value;
         opts->ns = *ns;
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "num_steps"))
     {
         int *num_steps = (int *) value;
         opts->num_steps = *num_steps;
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "newton_iter"))
     {
         int *newton_iter = (int *) value;
         opts->newton_iter = *newton_iter;
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "jac_reuse"))
     {
         bool *jac_reuse = (bool *) value;
         opts->jac_reuse = *jac_reuse;
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "sens_forw"))
     {
         bool *sens_forw = (bool *) value;
         opts->sens_forw = *sens_forw;
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "sens_adj"))
     {
         bool *sens_adj = (bool *) value;
         opts->sens_adj = *sens_adj;
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "sens_hess"))
     {
         bool *sens_hess = (bool *) value;
         opts->sens_hess = *sens_hess;
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "output_z"))
     {
         bool *output_z = (bool *) value;
         opts->output_z = *output_z;
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "sens_algebraic"))
     {
         bool *sens_algebraic = (bool *) value;
         opts->sens_algebraic = *sens_algebraic;
-        status = ACADOS_SUCCESS;
     }
     else
     {
         printf("\nerror: option type not available for RK integrator\n");
+        status = ACADOS_FAILURE;
         exit(1);
     }
     return status;

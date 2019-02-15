@@ -1,0 +1,171 @@
+# ==============================================================================
+#  options 
+# ==============================================================================
+
+OSQP_PRINTING = 1
+OSQP_DLONG = 1
+OSQP_DFLOAT = 0
+OSQP_ENABLE_MKL_PARDISO = 1
+
+OSQP_CFLAGS = -fPIC -O3
+
+# ==============================================================================
+#  dirs 
+# ==============================================================================
+
+OSQP_DIR = $(CURDIR)/external/osqp/
+
+OSQP_INC_DIR = $(OSQP_DIR)include/
+OSQP_SRC_DIR = $(OSQP_DIR)src/
+
+OSQP_LIN_SYS_DIR = $(OSQP_DIR)lin_sys/
+
+OSQP_PARDISO_DIR = $(OSQP_DIR)lin_sys/direct/pardiso/
+
+OSQP_QDLDL_DIR = $(OSQP_DIR)lin_sys/direct/qdldl/
+
+OSQP_QDLDL_INC_DIR = $(OSQP_QDLDL_DIR)qdldl_sources/include/
+OSQP_QDLDL_SRC_DIR = $(OSQP_QDLDL_DIR)qdldl_sources/src/
+
+OSQP_AMD_INC_DIR = $(OSQP_QDLDL_DIR)amd/include/
+OSQP_AMD_SRC_DIR = $(OSQP_QDLDL_DIR)amd/src/
+
+OSQP_EXAMPLES_DIR = $(OSQP_DIR)/examples/
+OSQP_EXAMPLES = $(OSQP_EXAMPLES_DIR)osqp_demo
+
+# ==============================================================================
+#  lib 
+# ==============================================================================
+
+OSQP_LIB_STATIC = libosqp.a
+			
+# ==============================================================================
+#  objs
+# ==============================================================================
+
+OSQP_QDLDL_OBJ = $(OSQP_QDLDL_SRC_DIR)qdldl.o
+
+OSQP_QDLDL_INTERFACE_OBJ = $(OSQP_QDLDL_DIR)qdldl_interface.o
+
+OSQP_AMD_OBJ = $(OSQP_AMD_SRC_DIR)amd_1.o \
+		  $(OSQP_AMD_SRC_DIR)amd_2.o \
+		  $(OSQP_AMD_SRC_DIR)amd_aat.o \
+		  $(OSQP_AMD_SRC_DIR)amd_control.o \
+		  $(OSQP_AMD_SRC_DIR)amd_defaults.o \
+		  $(OSQP_AMD_SRC_DIR)amd_info.o \
+		  $(OSQP_AMD_SRC_DIR)amd_order.o \
+		  $(OSQP_AMD_SRC_DIR)amd_post_tree.o \
+		  $(OSQP_AMD_SRC_DIR)amd_postorder.o \
+		  $(OSQP_AMD_SRC_DIR)amd_preprocess.o \
+		  $(OSQP_AMD_SRC_DIR)amd_valid.o \
+		  $(OSQP_AMD_SRC_DIR)SuiteSparse_config.o \
+		  
+OSQP_PARDISO_OBJ = $(OSQP_PARDISO_DIR)pardiso_interface.o \
+			  $(OSQP_PARDISO_DIR)pardiso_loader.o \
+			  
+OSQP_LIN_SYS_OBJ = $(OSQP_LIN_SYS_DIR)lib_handler.o \
+
+OSQP_OBJ = $(OSQP_SRC_DIR)auxil.o \
+           $(OSQP_SRC_DIR)cs.o \
+           $(OSQP_SRC_DIR)ctrlc.o \
+           $(OSQP_SRC_DIR)kkt.o \
+           $(OSQP_SRC_DIR)lin_alg.o \
+           $(OSQP_SRC_DIR)lin_sys.o \
+           $(OSQP_SRC_DIR)osqp.o \
+           $(OSQP_SRC_DIR)polish.o \
+           $(OSQP_SRC_DIR)proj.o \
+           $(OSQP_SRC_DIR)scaling.o \
+           $(OSQP_SRC_DIR)util.o \
+			  
+OSQP_ALL_OBJ = $(OSQP_QDLDL_OBJ) $(OSQP_AMD_OBJ) $(OSQP_QDLDL_INTERFACE_OBJ) $(OSQP_PARDISO_OBJ) $(OSQP_LIN_SYS_OBJ) $(OSQP_OBJ)
+
+
+
+# ==============================================================================
+#  OSQP make build system
+# ==============================================================================
+	
+$(OSQP_LIB_STATIC): osqp_config $(OSQP_ALL_OBJ)
+	$(AR) rcs $@ $(OSQP_ALL_OBJ)
+	
+# compile all object files
+$(OSQP_QDLDL_SRC_DIR)%.o: $(OSQP_QDLDL_SRC_DIR)%.c
+	@echo "Compiling object file" $@
+	@$(CC) $(OSQP_CFLAGS) -I$(OSQP_QDLDL_INC_DIR) -c $< -o $@
+	
+$(OSQP_AMD_SRC_DIR)%.o: $(OSQP_AMD_SRC_DIR)%.c
+	@echo "Compiling object file" $@
+	@$(CC) $(OSQP_CFLAGS) -I$(OSQP_AMD_INC_DIR) -I$(OSQP_INC_DIR) -c $< -o $@
+	
+$(OSQP_QDLDL_DIR)%.o: $(OSQP_QDLDL_DIR)%.c
+	@echo "Compiling object file" $@
+	@$(CC) $(OSQP_CFLAGS) -I$(OSQP_QDLDL_DIR) -I$(OSQP_QDLDL_INC_DIR) -I$(OSQP_INC_DIR) -I$(OSQP_AMD_INC_DIR) -c $< -o $@
+	
+$(OSQP_PARDISO_DIR)%.o: $(OSQP_PARDISO_DIR)%.c
+	@echo "Compiling object file" $@
+	@$(CC) $(OSQP_CFLAGS) -I$(OSQP_PARDISO_DIR) -I$(OSQP_INC_DIR) -I$(OSQP_LIN_SYS_DIR) -c $< -o $@
+	
+$(OSQP_LIN_SYS_DIR)%.o: $(OSQP_LIN_SYS_DIR)%.c
+	@echo "Compiling object file" $@
+	@$(CC) $(OSQP_CFLAGS) -I$(OSQP_LIN_SYS_DIR) -I$(OSQP_INC_DIR) -I$(OSQP_QDLDL_INC_DIR) -c $< -o $@
+	
+$(OSQP_SRC_DIR)%.o: $(OSQP_SRC_DIR)%.c
+	@echo "Compiling object file" $@
+	@$(CC) $(OSQP_CFLAGS) -I$(OSQP_INC_DIR) -I$(OSQP_QDLDL_DIR) -I$(OSQP_QDLDL_INC_DIR) -I$(OSQP_PARDISO_DIR) -c $< -o $@
+	
+osqp_config:
+	@touch $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@echo "#ifndef QDLDL_TYPES_H" > $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@echo "# define QDLDL_TYPES_H" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@echo "# ifdef __cplusplus" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@echo "extern "C" {" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@echo "# endif /* ifdef __cplusplus */" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@echo "// QDLDL integer and float types" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+ifeq ($(OSQP_DLONG), 1)
+	@echo "typedef long long    QDLDL_int;   /* for indices */" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+else
+	@echo "typedef int    QDLDL_int;   /* for indices */" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+endif
+ifeq ($(OSQP_DFLOAT), 1)
+	@echo "typedef float  QDLDL_float; /* for numerical values  */" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+else
+	@echo "typedef double  QDLDL_float; /* for numerical values  */" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+endif
+	@echo "typedef unsigned char   QDLDL_bool;  /* for boolean values  */" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@echo "# ifdef __cplusplus" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@echo "}" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@echo "# endif /* ifdef __cplusplus */" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@echo "#endif /* ifndef QDLDL_TYPES_H */" >> $(OSQP_QDLDL_INC_DIR)qdldl_types.h
+	@touch $(OSQP_INC_DIR)osqp_configure.h
+	@echo "#ifndef OSQP_CONFIGURE_H" > $(OSQP_INC_DIR)osqp_configure.h
+	@echo "# define OSQP_CONFIGURE_H" >> $(OSQP_INC_DIR)osqp_configure.h
+	@echo "# ifdef __cplusplus" >> $(OSQP_INC_DIR)osqp_configure.h
+	@echo "extern "C" {" >> $(OSQP_INC_DIR)osqp_configure.h
+	@echo "# endif /* ifdef __cplusplus */" >> $(OSQP_INC_DIR)osqp_configure.h
+	@echo "/* Operative system */" >> $(OSQP_INC_DIR)osqp_configure.h
+ifeq ($(OS), LINUX)
+	@echo "#define IS_LINUX" >> $(OSQP_INC_DIR)osqp_configure.h
+endif
+ifeq ($(OS), MAC)
+	@echo "#define IS_MAC" >> $(OSQP_INC_DIR)osqp_configure.h
+endif
+ifeq ($(OS), WINDOWS)
+	@echo "#define IS_WINDOWS" >> $(OSQP_INC_DIR)osqp_configure.h
+endif
+ifeq ($(OSQP_PRINTING), 1)
+	@echo "/* PRINTING */" >> $(OSQP_INC_DIR)osqp_configure.h
+	@echo "#define PRINTING" >> $(OSQP_INC_DIR)osqp_configure.h
+endif
+ifeq ($(OSQP_DLONG), 1)
+	@echo "/* DLONG */" >> $(OSQP_INC_DIR)osqp_configure.h
+	@echo "#define DLONG" >> $(OSQP_INC_DIR)osqp_configure.h
+endif
+ifeq ($(OSQP_ENABLE_MKL_PARDISO),1)
+	@echo "/* ENABLE_MKL_PARDISO */" >> $(OSQP_INC_DIR)osqp_configure.h
+	@echo "#define ENABLE_MKL_PARDISO" >> $(OSQP_INC_DIR)osqp_configure.h
+endif
+	@echo "# ifdef __cplusplus" >> $(OSQP_INC_DIR)osqp_configure.h
+	@echo "}" >> $(OSQP_INC_DIR)osqp_configure.h
+	@echo "# endif /* ifdef __cplusplus */" >> $(OSQP_INC_DIR)osqp_configure.h
+	@echo "#endif /* ifndef OSQP_CONFIGURE_H */" >> $(OSQP_INC_DIR)osqp_configure.h
+	

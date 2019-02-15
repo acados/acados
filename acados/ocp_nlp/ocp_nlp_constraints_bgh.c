@@ -380,7 +380,7 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     assign_and_advance_int(ns, &model->idxs, &c_ptr);
 
     // h
-    //  model->h = NULL;
+    //  model->nl_constr_h_fun_jac = NULL;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_constraints_bgh_model_calculate_size(config, dims) >=
@@ -396,8 +396,6 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
     ocp_nlp_constraints_bgh_model *model = (ocp_nlp_constraints_bgh_model *) model_;
-
-    int status = ACADOS_FAILURE;
 
     int ii;
     int *ptr_i;
@@ -416,154 +414,128 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
     int nsh = dims->nsh;
     int nbx = dims->nbx;
     int nbu = dims->nbu;
+
     // TODO(oj): document which strings mean what! - adapted from prev implementation..
     if (!strcmp(field, "lb")) // TODO(fuck_lint) remove !!!
     {
         blasfeo_pack_dvec(nb, value, &model->d, 0);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "ub")) // TODO(fuck_lint) remove !!!
     {
         blasfeo_pack_dvec(nb, value, &model->d, nb+ng+nh);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "idxbx"))
     {
         ptr_i = (int *) value;
         for (ii=0; ii < nbx; ii++)
-            // model->idxb[nbu+ii] = nbu+ptr_i[ii];
             model->idxb[nbu+ii] = nu+ptr_i[ii];
         status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "lbx"))
     {
         blasfeo_pack_dvec(nbx, value, &model->d, nbu);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "ubx"))
     {
         blasfeo_pack_dvec(nbx, value, &model->d, nb + ng + nh + nbu);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "idxbu"))
     {
         ptr_i = (int *) value;
         for (ii=0; ii < nbu; ii++)
             model->idxb[ii] = ptr_i[ii];
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "lbu"))
     {
         blasfeo_pack_dvec(nbu, value, &model->d, 0);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "ubu"))
     {
         blasfeo_pack_dvec(nbu, value, &model->d, nb + ng + nh);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "C"))
     {
         blasfeo_pack_tran_dmat(ng, nx, value, ng, &model->DCt, nu, 0);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "D"))
     {
         blasfeo_pack_tran_dmat(ng, nu, value, ng, &model->DCt, 0, 0);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "lg"))
     {
         blasfeo_pack_dvec(ng, value, &model->d, nb);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "ug"))
     {
         blasfeo_pack_dvec(ng, value, &model->d, 2*nb+ng+nh);
-        status = ACADOS_SUCCESS;
     }
-    else if (!strcmp(field, "h"))
+    else if (!strcmp(field, "nl_constr_h_fun_jac"))
     {
-        model->h = value;
-        status = ACADOS_SUCCESS;
+        model->nl_constr_h_fun_jac = value;
     }
-    else if (!strcmp(field, "lh")) // TODO(fuck_lint) remove
+    else if (!strcmp(field, "lh"))
     {
         blasfeo_pack_dvec(nh, value, &model->d, nb+ng);
-        status = ACADOS_SUCCESS;
     }
-    else if (!strcmp(field, "uh")) // TODO(fuck_lint) remove
+    else if (!strcmp(field, "uh"))
     {
         blasfeo_pack_dvec(nh, value, &model->d, 2*nb+2*ng+nh);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "idxsbu"))
     {
         ptr_i = (int *) value;
         for (ii=0; ii < nsbu; ii++)
             model->idxs[ii] = ptr_i[ii];
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "lsbu"))
     {
         blasfeo_pack_dvec(nsbu, value, &model->d, 2*nb+2*ng+2*nh);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "usbu"))
     {
         blasfeo_pack_dvec(nsbu, value, &model->d, 2*nb+2*ng+2*nh+ns);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "idxsbx"))
     {
         ptr_i = (int *) value;
         for (ii=0; ii < nsbx; ii++)
             model->idxs[nsbu+ii] = nbu+ptr_i[ii];
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "lsbx"))
     {
         blasfeo_pack_dvec(nsbx, value, &model->d, 2*nb+2*ng+2*nh+nsbu);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "usbx"))
     {
         blasfeo_pack_dvec(nsbx, value, &model->d, 2*nb+2*ng+2*nh+ns+nsbu);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "idxsg"))
     {
         ptr_i = (int *) value;
         for (ii=0; ii < nsg; ii++)
             model->idxs[nsbu+nsbx+ii] = nbu+nbx+ptr_i[ii];
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "lsg"))
     {
         blasfeo_pack_dvec(nsg, value, &model->d, 2*nb+2*ng+2*nh+nsbu+nsbx);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "usg"))
     {
         blasfeo_pack_dvec(nsg, value, &model->d, 2*nb+2*ng+2*nh+ns+nsbu+nsbx);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "idxsh"))
     {
         ptr_i = (int *) value;
         for (ii=0; ii < nsh; ii++)
             model->idxs[nsbu+nsbx+nsg+ii] = nbu+nbx+ng+ptr_i[ii];
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "lsh"))
     {
         blasfeo_pack_dvec(nsh, value, &model->d, 2*nb+2*ng+2*nh+nsbu+nsbx+nsg);
-        status = ACADOS_SUCCESS;
     }
     else if (!strcmp(field, "ush"))
     {
         blasfeo_pack_dvec(nsh, value, &model->d, 2*nb+2*ng+2*nh+ns+nsbu+nsbx+nsg);
-        status = ACADOS_SUCCESS;
     }
     else
     {
@@ -571,7 +543,7 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
         exit(1);
     }
 
-    return status;
+    return ACADOS_SUCCESS;
 }
 
 
@@ -907,7 +879,6 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
     int nh = dims->nh;
     int ns = dims->ns;
 
-    // XXX large enough ?
     ext_fun_arg_t ext_fun_type_in[2];
     void *ext_fun_in[2];
     ext_fun_arg_t ext_fun_type_out[2];
@@ -923,9 +894,20 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
     // nonlinear
     if (nh > 0)
     {
-        //
-        ext_fun_type_in[0] = BLASFEO_DVEC;
-        ext_fun_in[0] = memory->ux;  // ux: nu+nx
+        struct blasfeo_dvec_args x_in;  // input x of external fun;
+        struct blasfeo_dvec_args u_in;  // input u of external fun;
+
+        x_in.x = memory->ux;
+        u_in.x = memory->ux;
+
+        x_in.xi = nu;
+        u_in.xi = 0;
+
+        ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[0] = &x_in;
+
+        ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[1] = &u_in;
 
         //
         ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
@@ -941,7 +923,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         Jht_args.aj = ng;
         ext_fun_out[1] = &Jht_args;  // jac': (nu+nx) * nh
 
-        model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+        model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
     }
 
     blasfeo_daxpy(nb + ng + nh, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);

@@ -701,7 +701,7 @@ int acados_create() {
         blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
     }
     
-    nlp_solver = ocp_nlp_create(nlp_config, nlp_dims, nlp_opts);
+    nlp_solver = ocp_nlp_solver_create(nlp_config, nlp_dims, nlp_opts);
 
     // initialize parameters to nominal value
     {% if ra.dims.np > 0:%}

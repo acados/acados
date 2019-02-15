@@ -231,7 +231,7 @@ int main()
 		}
 
 		// create correct config based on plan
-		sim_solver_config *config = sim_config_create(plan);
+		sim_config *config = sim_config_create(plan);
 
 		/************************************************
 		* sim dims
@@ -247,7 +247,7 @@ int main()
 		************************************************/
 
 		void *opts_ = sim_opts_create(config, dims);
-		sim_rk_opts *opts = opts_;
+		sim_opts *opts = opts_;
 
 		bool sens_adj = true;
 		bool sens_forw = true;
@@ -333,27 +333,27 @@ int main()
 		{
 			case 0:
 			{
-				sim_model_set(config, in, "expl_ode_fun", &expl_ode_fun);
-				sim_model_set(config, in, "expl_vde_for", &expl_vde_for);
-				sim_model_set(config, in, "expl_vde_adj", &expl_vde_adj);
+				config->model_set(in->model, "expl_ode_fun", &expl_ode_fun);
+				config->model_set(in->model, "expl_vde_for", &expl_vde_for);
+				config->model_set(in->model, "expl_vde_adj", &expl_vde_adj);
 				break;
 			}
 			case 1:
 			case 2: // IRK
 			{
-				sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-				sim_model_set(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
-				sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+				config->model_set(in->model, "impl_ode_fun", &impl_ode_fun);
+				config->model_set(in->model, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
+				config->model_set(in->model, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
 				break;
 			}
 			case 3: // gnsf
 			{
 				// set model funtions
-				sim_model_set(config, in, "phi_fun", &phi_fun);
-				sim_model_set(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
-				sim_model_set(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
-				sim_model_set(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
-				sim_model_set(config, in, "get_gnsf_matrices", &get_matrices_fun);
+				config->model_set(in->model, "phi_fun", &phi_fun);
+				config->model_set(in->model, "phi_fun_jac_y", &phi_fun_jac_y);
+				config->model_set(in->model, "phi_jac_y_uhat", &phi_jac_y_uhat);
+				config->model_set(in->model, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+				config->model_set(in->model, "get_gnsf_matrices", &get_matrices_fun);
 				break;
 			}
 			default :
@@ -405,7 +405,7 @@ int main()
 
 		}
 
-		sim_solver *sim_solver = sim_create(config, dims, opts);
+		sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
 		int acados_return;
 
@@ -567,6 +567,8 @@ int main()
 		free(opts);
 		free(config);
 	}
+
+//	d_print_mat(nx, 16, x_sim, nx);
 
 	free(x_sim);
 

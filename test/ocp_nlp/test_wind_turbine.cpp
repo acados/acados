@@ -212,13 +212,21 @@ void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *typ
     double alpha = 0.944*97/100;
 
     // ux
-    struct blasfeo_dvec *ux = (struct blasfeo_dvec *) in[0];
+    // struct blasfeo_dvec *ux = in[0];
+    struct blasfeo_dvec_args *x_args = (struct blasfeo_dvec_args *) in[0];
+    // struct blasfeo_dvec_args *u_args = in[1];
+
+    struct blasfeo_dvec *x = x_args->x;
+    // struct blasfeo_dvec *u = u_args->x;
+
+    int x_offset = x_args->xi;
+    // int u_offset = u_args->xi;
 
     // h
     struct blasfeo_dvec_args *h_args = (struct blasfeo_dvec_args *) out[0];
     struct blasfeo_dvec *h = h_args->x;
     int xi = h_args->xi;
-    BLASFEO_DVECEL(h, xi) = alpha * BLASFEO_DVECEL(ux, nu+0) * BLASFEO_DVECEL(ux, nu+5);
+    BLASFEO_DVECEL(h, xi) = alpha * BLASFEO_DVECEL(x, x_offset) * BLASFEO_DVECEL(x, x_offset+5);
 
     // jac
     struct blasfeo_dmat_args *jac_args = (struct blasfeo_dmat_args *) out[1];
@@ -226,8 +234,8 @@ void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *typ
     int ai = jac_args->ai;
     int aj = jac_args->aj;
     blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
-    BLASFEO_DMATEL(jac, ai+nu+0, aj) = alpha * BLASFEO_DVECEL(ux, nu+5);
-    BLASFEO_DMATEL(jac, ai+nu+5, aj) = alpha * BLASFEO_DVECEL(ux, nu+0);
+    BLASFEO_DMATEL(jac, ai+nu+0, aj) = alpha * BLASFEO_DVECEL(x, x_offset+5);
+    BLASFEO_DMATEL(jac, ai+nu+5, aj) = alpha * BLASFEO_DVECEL(x, x_offset+0);
 
     return;
 
@@ -539,7 +547,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     * plan + config
     ************************************************/
 
-    ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NN);
+    ocp_nlp_plan *plan = ocp_nlp_plan_create(NN);
 
     plan->nlp_solver = SQP;
 
@@ -608,7 +616,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         plan->nlp_constraints[i] = BGH;
     }
 
-    ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
+    ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
     /************************************************
     * ocp_nlp_dims
@@ -738,10 +746,10 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     // slacks (middle stages)
     for (int ii = 1; ii < NN; ii++)
     {
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lZ1", lZ1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uZ1", uZ1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "lz1", lz1);
-        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "uz1", uz1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "Zl", lZ1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "Zu", uZ1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "zl", lz1);
+        ocp_nlp_cost_model_set(config, dims, nlp_in, ii, "zu", uz1);
     }
 
 
@@ -753,57 +761,57 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     {
         if (plan->sim_solver_plan[i].sim_solver == ERK)
         {
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "expl_vde_for",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "expl_vde_for",
                 &expl_vde_for[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == IRK)
         {
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun",
                 &impl_ode_fun[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
             set_fun_status =
-                ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot",
+                ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun_jac_x_xdot",
                                            &impl_ode_fun_jac_x_xdot[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_jac_x_xdot_u",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_jac_x_xdot_u",
                 &impl_ode_jac_x_xdot_u[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_fun", &phi_fun[i]);
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "phi_fun", &phi_fun[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_fun_jac_y",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "phi_fun_jac_y",
                 &phi_fun_jac_y[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "phi_jac_y_uhat",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "phi_jac_y_uhat",
                 &phi_jac_y_uhat[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "f_lo_jac_x1_x1dot_u_z",
                 &f_lo_jac_x1_x1dot_u_z[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "get_gnsf_matrices",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "get_gnsf_matrices",
                                                         &get_matrices_fun);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
         }
         else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
-            set_fun_status = ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun",
+            set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun",
                 &impl_ode_fun[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
             set_fun_status =
-                ocp_nlp_dynamics_model_set(config, nlp_in, i, "impl_ode_fun_jac_x_xdot_u",
+                ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_fun_jac_x_xdot_u",
                                             &impl_ode_fun_jac_x_xdot_u[i]);
             REQUIRE(set_fun_status == 0);
             if (set_fun_status != 0) exit(1);
@@ -855,7 +863,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         {
             ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lh", lh1);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "uh", uh1);
-            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "h", &h1);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "nl_constr_h_fun_jac", &h1);
         }
     }
 
@@ -949,7 +957,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 
-    ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
 
     /************************************************
     *     precomputation (after all options are set)
@@ -1099,13 +1107,13 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     free(phi_jac_y_uhat);
     free(f_lo_jac_x1_x1dot_u_z);
 
-    ocp_nlp_opts_free(nlp_opts);
-    ocp_nlp_in_free(nlp_in);
-    ocp_nlp_out_free(nlp_out);
-    ocp_nlp_free(solver);
-    ocp_nlp_dims_free(dims);
-    ocp_nlp_config_free(plan, config);
-    ocp_nlp_plan_free(plan);
+    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_in_destroy(nlp_in);
+    ocp_nlp_out_destroy(nlp_out);
+    ocp_nlp_solver_destroy(solver);
+    ocp_nlp_dims_destroy(dims);
+    ocp_nlp_config_destroy(config);
+    ocp_nlp_plan_destroy(plan);
 
     free(lZ0);
     free(uZ0);

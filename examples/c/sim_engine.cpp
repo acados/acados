@@ -103,7 +103,7 @@ int main()
     // plan for integrator
     sim_solver_plan plan;
 	plan.sim_solver = IRK;
-    sim_solver_config *config = sim_config_create(plan);
+    sim_config *config = sim_config_create(plan);
 
     // dimensions
     void *dims = sim_dims_create(config);
@@ -114,7 +114,7 @@ int main()
 
     // options
     void *opts_ = sim_opts_create(config, dims);
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_opts *opts = (sim_opts *) opts_;
     config->opts_initialize_default(config, dims, opts);
 
     opts->jac_reuse = false;
@@ -152,7 +152,7 @@ int main()
         in->S_adj[ii] = 0.0;
 
     // solver
-    sim_solver *sim_solver = sim_create(config, dims, opts);
+    sim_solver *sim_solver = sim_solver_create(config, dims, opts);
 
     acados_timer timer;
     acados_tic(&timer);

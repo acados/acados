@@ -65,7 +65,7 @@ int main() {
 	np.at(N) = 2;
 
 	// Make plan
-	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
+	ocp_nlp_plan *plan = ocp_nlp_plan_create(N);
 	plan->nlp_solver = SQP;
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 	for (int i = 0; i <= N; i++)
@@ -78,7 +78,7 @@ int main() {
 	for (int i = 0; i <= N; i++)
 		plan->nlp_constraints[i] = BGHP;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan);
+	ocp_nlp_config *config = ocp_nlp_config_create(*plan);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
     ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx.data());
@@ -196,7 +196,7 @@ int main() {
 
 	blasfeo_pack_dvec(nh[N], &neg_inf, &constraints[N]->d, nb[N]+ng[N]);
 	blasfeo_pack_dvec(nh[N], &radius2, &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
-	constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
+	constraints[N]->nl_constr_h_fun_jac = (external_function_generic *) &nonlinear_constraint;
 	constraints[N]->p = (external_function_generic *) &position_constraint;
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
@@ -223,7 +223,7 @@ int main() {
 	// for (int i = 0; i <= N; ++i)
 		// BLASFEO_DVECEL(nlp_out->ux+i, 3) = PI;
 
-	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
+	ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
     int solver_status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
 
 	// NLP solution

@@ -1196,9 +1196,9 @@ int main() {
     * config
     ************************************************/
 
-	int config_size = ocp_nlp_solver_config_calculate_size(NN);
+	int config_size = ocp_nlp_config_calculate_size(NN);
 	void *config_mem = malloc(config_size);
-	ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(NN, config_mem);
+	ocp_nlp_config *config = ocp_nlp_config_assign(NN, config_mem);
 
 #if XCOND==2
 	// full condensing HPIPM
@@ -1597,9 +1597,9 @@ int main() {
 
     ocp_nlp_cost_nls_model **cost_ls = (ocp_nlp_cost_nls_model **) nlp_in->cost;
 
-	// nls_jac
+	// nls_res_jac
 	for (int i=0; i<=NN; i++)
-		cost_ls[i]->nls_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
+		cost_ls[i]->nls_res_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
 
 	// nls_hess at first stage
 	cost_ls[0]->nls_hess = &ls_cost_hess_generic;
@@ -1611,7 +1611,7 @@ int main() {
 		for (int i=0; i<NN; i++)
 		{
 			ls_cost_jac_generic[i].evaluate = &ls_cost_jac_nm4;
-			cost_ls->nls_jac[i] = &ls_cost_jac_generic[i];
+			cost_ls->nls_res_jac[i] = &ls_cost_jac_generic[i];
 		}
 	}
 #endif
@@ -1795,7 +1795,7 @@ int main() {
 		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
 
     ocp_nlp_constraints_bgh_model **nl_constr = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-	nl_constr[0]->h = &nonlin_constr_generic;
+	nl_constr[0]->nl_constr_h_fun_jac = &nonlin_constr_generic;
 
 	blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);
 	blasfeo_pack_dvec(ng[0]+nh[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]+nh[0]);
@@ -1841,18 +1841,18 @@ int main() {
 	{
 #if DYNAMICS==0
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
-        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
+        sim_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: ERK 4
 		sim_opts->ns = 4;
 		sim_opts->num_steps = 10;
 #elif DYNAMICS==1
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
-        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
+        sim_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: lifted IRK GL2
 		sim_opts->ns = 3;
 #elif DYNAMICS==2
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
-        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
+        sim_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: IRK GL2
 		sim_opts->ns = 3;
 		sim_opts->jac_reuse = true;
@@ -1861,7 +1861,7 @@ int main() {
 		// no options
 #elif DYNAMICS==4
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
-        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
+        sim_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: lifterd IRK GL2
 		sim_opts->ns = 4;
 #endif

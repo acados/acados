@@ -27,6 +27,10 @@ extern "C" {
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/sim_irk_integrator.h"
+#include "acados/sim/sim_lifted_irk_integrator.h"
+#include "acados/sim/sim_gnsf.h"
 // acados_c
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/sim_interface.h"
@@ -86,13 +90,13 @@ typedef struct
     ocp_nlp_dynamics_t *nlp_dynamics;
     ocp_nlp_constraints_t *nlp_constraints;
     int N;
-} ocp_nlp_solver_plan;
+} ocp_nlp_plan;
 
 
 
 typedef struct
 {
-    ocp_nlp_solver_config *config;
+    ocp_nlp_config *config;
     void *dims;
     void *opts;
     void *mem;
@@ -101,74 +105,81 @@ typedef struct
 
 
 /* plan */
-ocp_nlp_solver_plan *ocp_nlp_plan_create(int N);
+ocp_nlp_plan *ocp_nlp_plan_create(int N);
 //
-void ocp_nlp_plan_free(void* plan_);
+void ocp_nlp_plan_destroy(void* plan_);
 
 /* config */
-ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan);
+ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan);
 //
-void ocp_nlp_config_free(ocp_nlp_solver_plan *plan_, void *config_);
+void ocp_nlp_config_destroy(void *config_);
 
 /* dims */
 ocp_nlp_dims *ocp_nlp_dims_create(void *config_);
 //
-void ocp_nlp_dims_free(void *dims_);
+void ocp_nlp_dims_destroy(void *dims_);
 //
 
 /* in */
-ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
 //
-void ocp_nlp_in_free(void *in);
+void ocp_nlp_in_destroy(void *in);
 //
-int ocp_nlp_dynamics_model_set(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
-                           const char *fun_type, void *fun_ptr);
+void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
+        const char *field, void *value);
 //
-int nlp_set_discrete_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage,
+int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+                           int stage, const char *fun_type, void *fun_ptr);
+//
+// TODO remove and use ocp_nlp_dynamics_model_set instead !!!
+int nlp_set_discrete_model_in_stage(ocp_nlp_config *config, ocp_nlp_in *in, int stage,
                                     void *fun_ptr);
 //
-int ocp_nlp_cost_model_set(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
+int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                            int stage, const char *field, void *value);
 //
-int ocp_nlp_constraints_model_set(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
+int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                      ocp_nlp_in *in, int stage, const char *field, void *value);
 
 /* out */
 //
-ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
 //
-void ocp_nlp_out_free(void *out);
+void ocp_nlp_out_destroy(void *out);
 //
-void ocp_nlp_out_get(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+                     int stage, const char *field, void *value);
+//
+void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
                      int stage, const char *field, void *value);
 
 /* opts */
 //
-void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
 //
-void ocp_nlp_opts_free(void *opts);
+void ocp_nlp_opts_destroy(void *opts);
 //
-void ocp_nlp_opts_set(ocp_nlp_solver_config *config, void *opts_,
+void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
                       const char *field, const void* value);
 //
-int ocp_nlp_dynamics_opts_set(ocp_nlp_solver_config *config, void *opts_, int stage,
+int ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
                                          const char *field, void *value);
 //
-void ocp_nlp_opts_update(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_);
+void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
 
 
 /* solver */
 //
-ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_);
+ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
 //
-void ocp_nlp_free(void *solver);
+void ocp_nlp_solver_destroy(void *solver);
 //
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 //
 int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
 /* get */
-void ocp_nlp_get(ocp_nlp_solver_config *config, ocp_nlp_solver *solver,
+void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
                  const char *field, void *return_value_);
 
 #ifdef __cplusplus

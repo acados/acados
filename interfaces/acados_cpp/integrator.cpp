@@ -175,7 +175,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
 
 
     // sim opts
-    opts_ = static_cast<sim_rk_opts *>(sim_opts_create(config_, dims_));
+    opts_ = static_cast<sim_opts *>(sim_opts_create(config_, dims_));
 
     if (options.count("sens_forw")) opts_->sens_forw = (to_int(options.at("sens_forw")) >= 1);
 
@@ -285,7 +285,7 @@ integrator::integrator(const casadi::Function &model, std::map<std::string, opti
     model_set(integrator_model, options);
 
     // create the integrator
-    solver_ = sim_create(config_, dims_, opts_);
+    solver_ = sim_solver_create(config_, dims_, opts_);
 }
 
 
@@ -348,7 +348,7 @@ void integrator::model_set(casadi::Function &model, std::map<std::string, option
         {
             module_["impl_ode_fun_jac_x_xdot_z"] =
                     generate_impl_ode_fun_jac_x_xdot_z(model, autogen_dir, use_MX_);
-            model_set_status = sim_model_set_internal(config_, in_->model,
+            model_set_status = sim_in_set(config_, dims_, in_,
                 "impl_ode_fun_jac_x_xdot_z",
                 (void *) module_["impl_ode_fun_jac_x_xdot_z"].as_external_function());
 
@@ -359,7 +359,7 @@ void integrator::model_set(casadi::Function &model, std::map<std::string, option
             if (opts_->jac_reuse)
             {
                 module_["impl_ode_fun"] = generate_impl_ode_fun(model, autogen_dir, use_MX_);
-                model_set_status = sim_model_set_internal(config_, in_->model,
+                model_set_status = sim_in_set(config_, dims_, in_,
                     "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
 
                 if (model_set_status == ACADOS_FAILURE)
@@ -370,7 +370,7 @@ void integrator::model_set(casadi::Function &model, std::map<std::string, option
             {
                 module_["impl_ode_jac_x_xdot_u_z"] =
                             generate_impl_ode_jac_x_xdot_u_z(model, autogen_dir, use_MX_);
-                model_set_status = sim_model_set_internal(config_, in_->model,
+                model_set_status = sim_in_set(config_, dims_, in_,
                     "impl_ode_jac_x_xdot_u_z",
                     (void *) module_["impl_ode_jac_x_xdot_u_z"].as_external_function());
 
@@ -381,7 +381,7 @@ void integrator::model_set(casadi::Function &model, std::map<std::string, option
             if ( opts_->sens_hess )
             {
                 module_["impl_ode_hess"] = generate_impl_ode_hess(model, autogen_dir, use_MX_);
-                model_set_status = sim_model_set_internal(config_, in_->model,
+                model_set_status = sim_in_set(config_, dims_, in_,
                     "impl_ode_hess", (void *) module_["impl_ode_hess"].as_external_function());
 
                 if (model_set_status == ACADOS_FAILURE)
@@ -399,7 +399,7 @@ void integrator::model_set(casadi::Function &model, std::map<std::string, option
         if (model_type_ == IMPLICIT)
         {
             module_["impl_ode_fun"] = generate_impl_ode_fun(model, autogen_dir, use_MX_);
-            model_set_status = sim_model_set_internal(config_, in_->model,
+            model_set_status = sim_in_set(config_, dims_, in_,
                 "impl_ode_fun", (void *) module_["impl_ode_fun"].as_external_function());
 
             if (model_set_status == ACADOS_FAILURE)
@@ -407,7 +407,7 @@ void integrator::model_set(casadi::Function &model, std::map<std::string, option
 
             module_["impl_ode_fun_jac_x_xdot_u"] =
                     generate_impl_ode_fun_jac_x_xdot_u(model, autogen_dir, use_MX_);
-            model_set_status = sim_model_set_internal(config_, in_->model,
+            model_set_status = sim_in_set(config_, dims_, in_,
                 "impl_ode_fun_jac_x_xdot_u",
                 (void *) module_["impl_ode_fun_jac_x_xdot_u"].as_external_function());
 
@@ -432,7 +432,7 @@ void integrator::model_set(casadi::Function &model, std::map<std::string, option
             if (opts_->sens_forw)
             {
                 module_["expl_vde_for"] = generate_forward_vde(model, autogen_dir, use_MX_);
-                model_set_status = sim_model_set_internal(config_, in_->model, "expl_vde_for",
+                model_set_status = sim_in_set(config_, dims_, in_, "expl_vde_for",
                                     (void *) module_["expl_vde_for"].as_external_function());
 
                 if (model_set_status == ACADOS_FAILURE)
@@ -442,7 +442,7 @@ void integrator::model_set(casadi::Function &model, std::map<std::string, option
             else
             {
                 module_["expl_ode_fun"] = generate_expl_ode_fun(model, autogen_dir, use_MX_);
-                model_set_status = sim_model_set_internal(config_, in_->model, "expl_ode_fun",
+                model_set_status = sim_in_set(config_, dims_, in_, "expl_ode_fun",
                                     (void *) module_["expl_ode_fun"].as_external_function());
 
                 if (model_set_status == ACADOS_FAILURE)
@@ -453,7 +453,7 @@ void integrator::model_set(casadi::Function &model, std::map<std::string, option
             if (opts_->sens_adj && !opts_->sens_hess)
             {
                 module_["expl_vde_adj"] = generate_expl_vde_adj(model);
-                model_set_status = sim_model_set_internal(config_, in_->model, "expl_vde_adj",
+                model_set_status = sim_in_set(config_, dims_, in_, "expl_vde_adj",
                                     (void *) module_["expl_vde_adj"].as_external_function());
 
                 if (model_set_status == ACADOS_FAILURE)
@@ -464,7 +464,7 @@ void integrator::model_set(casadi::Function &model, std::map<std::string, option
             {
                 // throw std::invalid_argument("ERK can only be used without hessians");
                 module_["expl_ode_hess"] = generate_expl_ode_hess(model);
-                model_set_status = sim_model_set_internal(config_, in_->model, "expl_ode_hess",
+                model_set_status = sim_in_set(config_, dims_, in_, "expl_ode_hess",
                                         (void *) module_["expl_ode_hess"].as_external_function());
 
                 if (model_set_status == ACADOS_FAILURE)
@@ -520,17 +520,17 @@ std::vector<double> integrator::integrate(std::vector<double> x, std::vector<dou
     if (u.size() != nu_) throw std::invalid_argument("Input u has wrong size.");
 
     // mandatory parameters
-    sim_in_set_x(config_, dims_, x.data(), in_);
-    sim_in_set_u(config_, dims_, u.data(), in_);
+    sim_in_set(config_, dims_, in_, "x", x.data());
+    sim_in_set(config_, dims_, in_, "u", u.data());
 
     /*
     if ( options.count("sens_forw") )
         _opts->sens_forw = (to_int(options.at("sens_forw")) >= 1);
 
         // optional parameters
-    sim_in_set_xdot( _config, _dims, double *xdot,  _in)
-    sim_in_set_Sx(   _config, _dims, double *Sx,    _in)
-    sim_in_set_Su(   _config, _dims, double *Su,    _in)
+    sim_in_set(config_, dims_, in_, "xdot",  _in);
+    sim_in_set(config_, dims_, in_, "Sx"  ,  _in);
+    sim_in_set(config_, dims_, in_, "Su"  ,  _in);
     */
 
     // cast in/out?!
@@ -553,12 +553,12 @@ std::vector<double> integrator::integrate(std::vector<double> x, std::vector<dou
 /* DESTRUCTOR */
 integrator::~integrator()
 {
-    sim_config_free(config_);
-    sim_dims_free(dims_);
-    sim_opts_free(opts_);
-    sim_in_free(in_);
-    sim_out_free(out_);
-    sim_free(solver_);
+    sim_config_destroy(config_);
+    sim_dims_destroy(dims_);
+    sim_opts_destroy(opts_);
+    sim_in_destroy(in_);
+    sim_out_destroy(out_);
+    sim_solver_destroy(solver_);
 }
 
 

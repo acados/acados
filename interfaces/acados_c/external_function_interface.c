@@ -111,6 +111,8 @@ void external_function_param_casadi_create(external_function_param_casadi *fun, 
     return;
 }
 
+
+
 void external_function_param_casadi_create_array(int size, external_function_param_casadi *funs,
                                                  int np)
 {
@@ -148,12 +150,16 @@ void external_function_param_casadi_create_array(int size, external_function_par
     return;
 }
 
+
+
 void external_function_param_casadi_free(external_function_param_casadi *fun)
 {
     free(fun->ptr_ext_mem);
 
     return;
 }
+
+
 
 void external_function_param_casadi_free_array(int size, external_function_param_casadi *funs)
 {
