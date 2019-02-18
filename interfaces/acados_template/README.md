@@ -1,4 +1,7 @@
 acados_template is an (experimental) Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them. The framework is based on templated C files which are rendered from Python using the templating engine Jinja2. Notice that, at the moment only few options are supported. 
+## problem formulation 
+
+![alt text](https://github.com/zanellia/acados/blob/master/interfaces/acados_template/docs/acados_template_docs-crop.png)
 
 ## interface
 
