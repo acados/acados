@@ -3,7 +3,5 @@ acados_template is an (experimental) Python package that can be used to specify 
 
 ![alt text](https://github.com/zanellia/acados/blob/master/interfaces/acados_template/docs/acados_template_docs-crop.png)
 
-## interface
-
 ## usage
 You can check out the examples folder to learn about  how to use acados_template. First of all, you will need to install it by running 'pip install .' from the root folder. The you should be able to import it as a Python module and specify the problem formulation as in examples/<example_name>/generate_c_code.py
