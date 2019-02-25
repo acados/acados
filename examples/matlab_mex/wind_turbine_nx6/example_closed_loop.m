@@ -312,7 +312,7 @@ for ii=1:n_sim
 	tic
 
 	% set x0
-	ocp.set('x0', x_sim(:,ii));
+	ocp.set('constr_x0', x_sim(:,ii));
 	% set parameter
 	% TODO different parameter at each stage !!!!!
 %	ocp.set('p', wind0_ref(:,ii));
@@ -323,13 +323,13 @@ for ii=1:n_sim
 %	ocp.set('yr', y_ref(:,ii));
 %	ocp.set('yr_e', y_ref(:,ii));
 	for jj=0:ocp_N-1
-		ocp.set('yr', jj, y_ref(:,ii+jj));
+		ocp.set('cost_yr', jj, y_ref(:,ii+jj));
 	end
-	ocp.set('yr_e', y_ref(:,ii+ocp_N));
+	ocp.set('cost_yr_e', y_ref(:,ii+ocp_N));
 
 	% initialize trajectory
-	ocp.set('x_init', x_traj_init);
-	ocp.set('u_init', u_traj_init);
+	ocp.set('init_x', x_traj_init);
+	ocp.set('init_u', u_traj_init);
 
 %	x_traj_init
 %	u_traj_init

@@ -14,8 +14,8 @@ nlp_solver = 'sqp';
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_N_pcond = 5;
-%sim_method = 'erk';
-sim_method = 'irk';
+sim_method = 'erk';
+%sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 %cost_type = 'linear_ls';
@@ -34,7 +34,7 @@ nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
-if 0
+if 1
 	nbx = nx/2;
 	nbu = nu;
 	ng = 0;
@@ -77,11 +77,11 @@ elseif (nh>0)
 	uh_e = zeros(nh_e, 1); for ii=1:nh_e uh_e(ii)= 4.0; end
 else
 	Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
-	lbx = -4*ones(nx, 1);
-	ubx =  4*ones(nx, 1);
+	lbx = -4*ones(nbx, 1);
+	ubx =  4*ones(nbx, 1);
 	Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
-	lbu = -0.5*ones(nu, 1);
-	ubu =  0.5*ones(nu, 1);
+	lbu = -0.5*ones(nbu, 1);
+	ubu =  0.5*ones(nbu, 1);
 end
 
 
@@ -199,28 +199,28 @@ ocp.C_ocp_ext_fun
 % set trajectory initialization
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
-ocp.set('x_init', x_traj_init);
-ocp.set('u_init', u_traj_init);
+ocp.set('init_x', x_traj_init);
+ocp.set('init_u', u_traj_init);
 
 
 % solve
 tic;
 ocp.solve();
-time_solve = toc
+time_ext = toc
 
 
-x0(1) = 1.5;
-ocp.set('x0', x0);  % TODO constr_
+%x0(1) = 1.5;
+%ocp.set('constr_x0', x0);
 
 
-ocp.set('cost_yr', 1);
+%ocp.set('cost_yr', 1);
 
 % if not set, the trajectory is initialized with the previous solution
 
 
-tic;
-ocp.solve();
-time_solve = toc
+%tic;
+%ocp.solve();
+%time_ext = toc
 
 
 
@@ -244,6 +244,14 @@ xlabel('sample')
 
 
 status = ocp.get('status');
+sqp_iter = ocp.get('sqp_iter');
+time_tot = ocp.get('time_tot');
+time_lin = ocp.get('time_lin');
+time_qp_sol = ocp.get('time_qp_sol');
+
+fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+
+
 
 if status==0
 	fprintf('\nsuccess!\n\n');

@@ -127,122 +127,122 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		return;
 		}
 	// nx
-	if(mxGetField( prhs[0], 0, "nx" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nx" )!=NULL)
 		{
 		set_nx = true;
-		nx = mxGetScalar( mxGetField( prhs[0], 0, "nx" ) );
+		nx = mxGetScalar( mxGetField( prhs[0], 0, "dim_nx" ) );
 		}
 	else
 		{
-		mexPrintf("\nerror: ocp_create: nx not set!\n");
+		mexPrintf("\nerror: ocp_create: dim_nx not set!\n");
 		return;
 		}
 	// nu
-	if(mxGetField( prhs[0], 0, "nu" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nu" )!=NULL)
 		{
 		set_nu = true;
-		nu = mxGetScalar( mxGetField( prhs[0], 0, "nu" ) );
+		nu = mxGetScalar( mxGetField( prhs[0], 0, "dim_nu" ) );
 		}
 	else
 		{
-		mexPrintf("\nerror: ocp_create: nu not set!\n");
+		mexPrintf("\nerror: ocp_create: dim_nu not set!\n");
 		return;
 		}
 	// ny
-	if(mxGetField( prhs[0], 0, "ny" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_ny" )!=NULL)
 		{
 		set_ny = true;
-		ny = mxGetScalar( mxGetField( prhs[0], 0, "ny" ) );
+		ny = mxGetScalar( mxGetField( prhs[0], 0, "dim_ny" ) );
 		}
 	// ny_e
-	if(mxGetField( prhs[0], 0, "ny_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_ny_e" )!=NULL)
 		{
 		set_ny_e = true;
-		ny_e = mxGetScalar( mxGetField( prhs[0], 0, "ny_e" ) );
+		ny_e = mxGetScalar( mxGetField( prhs[0], 0, "dim_ny_e" ) );
 		}
 	// nbx
-	if(mxGetField( prhs[0], 0, "nbx" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nbx" )!=NULL)
 		{
 		set_nbx = true;
-		nbx = mxGetScalar( mxGetField( prhs[0], 0, "nbx" ) );
+		nbx = mxGetScalar( mxGetField( prhs[0], 0, "dim_nbx" ) );
 		}
 	// nbu
-	if(mxGetField( prhs[0], 0, "nbu" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nbu" )!=NULL)
 		{
 		set_nbu = true;
-		nbu = mxGetScalar( mxGetField( prhs[0], 0, "nbu" ) );
+		nbu = mxGetScalar( mxGetField( prhs[0], 0, "dim_nbu" ) );
 		}
 	// ng
-	if(mxGetField( prhs[0], 0, "ng" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_ng" )!=NULL)
 		{
 		set_ng = true;
-		ng = mxGetScalar( mxGetField( prhs[0], 0, "ng" ) );
+		ng = mxGetScalar( mxGetField( prhs[0], 0, "dim_ng" ) );
 		}
 	// ng_e
-	if(mxGetField( prhs[0], 0, "ng_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_ng_e" )!=NULL)
 		{
 		set_ng_e = true;
-		ng_e = mxGetScalar( mxGetField( prhs[0], 0, "ng_e" ) );
+		ng_e = mxGetScalar( mxGetField( prhs[0], 0, "dim_ng_e" ) );
 		}
 	// nh
-	if(mxGetField( prhs[0], 0, "nh" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nh" )!=NULL)
 		{
 		set_nh = true;
-		nh = mxGetScalar( mxGetField( prhs[0], 0, "nh" ) );
+		nh = mxGetScalar( mxGetField( prhs[0], 0, "dim_nh" ) );
 		}
 	// nh_e
-	if(mxGetField( prhs[0], 0, "nh_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nh_e" )!=NULL)
 		{
 		set_nh_e = true;
-		nh_e = mxGetScalar( mxGetField( prhs[0], 0, "nh_e" ) );
+		nh_e = mxGetScalar( mxGetField( prhs[0], 0, "dim_nh_e" ) );
 		}
 	// ns
-	if(mxGetField( prhs[0], 0, "ns" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_ns" )!=NULL)
 		{
 		set_ns = true;
-		ns = mxGetScalar( mxGetField( prhs[0], 0, "ns" ) );
+		ns = mxGetScalar( mxGetField( prhs[0], 0, "dim_ns" ) );
 		}
 	// ns_e
-	if(mxGetField( prhs[0], 0, "ns_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_ns_e" )!=NULL)
 		{
 		set_ns_e = true;
-		ns_e = mxGetScalar( mxGetField( prhs[0], 0, "ns_e" ) );
+		ns_e = mxGetScalar( mxGetField( prhs[0], 0, "dim_ns_e" ) );
 		}
 	// nsbu
-	if(mxGetField( prhs[0], 0, "nsbu" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nsbu" )!=NULL)
 		{
 		set_nsbu = true;
-		nsbu = mxGetScalar( mxGetField( prhs[0], 0, "nsbu" ) );
+		nsbu = mxGetScalar( mxGetField( prhs[0], 0, "dim_nsbu" ) );
 		}
 	// nsbx
-	if(mxGetField( prhs[0], 0, "nsbx" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nsbx" )!=NULL)
 		{
 		set_nsbx = true;
-		nsbx = mxGetScalar( mxGetField( prhs[0], 0, "nsbx" ) );
+		nsbx = mxGetScalar( mxGetField( prhs[0], 0, "dim_nsbx" ) );
 		}
 	// nsg
-	if(mxGetField( prhs[0], 0, "nsg" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nsg" )!=NULL)
 		{
 		set_nsg = true;
-		nsg = mxGetScalar( mxGetField( prhs[0], 0, "nsg" ) );
+		nsg = mxGetScalar( mxGetField( prhs[0], 0, "dim_nsg" ) );
 		}
 	// nsg_e
-	if(mxGetField( prhs[0], 0, "nsg_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nsg_e" )!=NULL)
 		{
 		set_nsg_e = true;
-		nsg_e = mxGetScalar( mxGetField( prhs[0], 0, "nsg_e" ) );
+		nsg_e = mxGetScalar( mxGetField( prhs[0], 0, "dim_nsg_e" ) );
 		}
 	// nsh
-	if(mxGetField( prhs[0], 0, "nsh" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nsh" )!=NULL)
 		{
 		set_nsh = true;
-		nsh = mxGetScalar( mxGetField( prhs[0], 0, "nsh" ) );
+		nsh = mxGetScalar( mxGetField( prhs[0], 0, "dim_nsh" ) );
 		}
 	// nsh_e
-	if(mxGetField( prhs[0], 0, "nsh_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nsh_e" )!=NULL)
 		{
 		set_nsh_e = true;
-		nsh_e = mxGetScalar( mxGetField( prhs[0], 0, "nsh_e" ) );
+		nsh_e = mxGetScalar( mxGetField( prhs[0], 0, "dim_nsh_e" ) );
 		}
 	// cost
 	// cost type
@@ -251,123 +251,123 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		cost_type = mxArrayToString( mxGetField( prhs[0], 0, "cost_type" ) );
 		}
 	// cost e_type
-	if(mxGetField( prhs[0], 0, "cost_e_type" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_type_e" )!=NULL)
 		{
-		cost_e_type = mxArrayToString( mxGetField( prhs[0], 0, "cost_e_type" ) );
+		cost_e_type = mxArrayToString( mxGetField( prhs[0], 0, "cost_type_e" ) );
 		}
 	// Vu
-	if(mxGetField( prhs[0], 0, "Vu" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_Vu" )!=NULL)
 		{
 		set_Vu = true;
-		Vu = mxGetPr( mxGetField( prhs[0], 0, "Vu" ) );
+		Vu = mxGetPr( mxGetField( prhs[0], 0, "cost_Vu" ) );
 		}
 	// Vx
-	if(mxGetField( prhs[0], 0, "Vx" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_Vx" )!=NULL)
 		{
 		set_Vx = true;
-		Vx = mxGetPr( mxGetField( prhs[0], 0, "Vx" ) );
+		Vx = mxGetPr( mxGetField( prhs[0], 0, "cost_Vx" ) );
 		}
 	// Vx_e
-	if(mxGetField( prhs[0], 0, "Vx_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_Vx_e" )!=NULL)
 		{
 		set_Vx_e = true;
-		Vx_e = mxGetPr( mxGetField( prhs[0], 0, "Vx_e" ) );
+		Vx_e = mxGetPr( mxGetField( prhs[0], 0, "cost_Vx_e" ) );
 		}
 	// W
-	if(mxGetField( prhs[0], 0, "W" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_W" )!=NULL)
 		{
 		set_W = true;
-		W = mxGetPr( mxGetField( prhs[0], 0, "W" ) );
+		W = mxGetPr( mxGetField( prhs[0], 0, "cost_W" ) );
 		}
 	// W_e
-	if(mxGetField( prhs[0], 0, "W_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_W_e" )!=NULL)
 		{
 		set_W_e = true;
-		W_e = mxGetPr( mxGetField( prhs[0], 0, "W_e" ) );
+		W_e = mxGetPr( mxGetField( prhs[0], 0, "cost_W_e" ) );
 		}
 	// yr
-	if(mxGetField( prhs[0], 0, "yr" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_yr" )!=NULL)
 		{
 		set_yr = true;
-		yr = mxGetPr( mxGetField( prhs[0], 0, "yr" ) );
+		yr = mxGetPr( mxGetField( prhs[0], 0, "cost_yr" ) );
 		}
 	// yr_e
-	if(mxGetField( prhs[0], 0, "yr_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_yr_e" )!=NULL)
 		{
 		set_yr_e = true;
-		yr_e = mxGetPr( mxGetField( prhs[0], 0, "yr_e" ) );
+		yr_e = mxGetPr( mxGetField( prhs[0], 0, "cost_yr_e" ) );
 		}
 	// Z
-	if(mxGetField( prhs[0], 0, "Z" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_Z" )!=NULL)
 		{
 		set_Z = true;
-		Z = mxGetPr( mxGetField( prhs[0], 0, "Z" ) );
+		Z = mxGetPr( mxGetField( prhs[0], 0, "cost_Z" ) );
 		}
 	// Z_e
-	if(mxGetField( prhs[0], 0, "Z_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_Z_e" )!=NULL)
 		{
 		set_Z_e = true;
-		Z_e = mxGetPr( mxGetField( prhs[0], 0, "Z_e" ) );
+		Z_e = mxGetPr( mxGetField( prhs[0], 0, "cost_Z_e" ) );
 		}
 	// Zl
-	if(mxGetField( prhs[0], 0, "Zl" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_Zl" )!=NULL)
 		{
 		set_Zl = true;
-		Zl = mxGetPr( mxGetField( prhs[0], 0, "Zl" ) );
+		Zl = mxGetPr( mxGetField( prhs[0], 0, "cost_Zl" ) );
 		}
 	// Zl_e
-	if(mxGetField( prhs[0], 0, "Zl_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_Zl_e" )!=NULL)
 		{
 		set_Zl_e = true;
-		Zl_e = mxGetPr( mxGetField( prhs[0], 0, "Zl_e" ) );
+		Zl_e = mxGetPr( mxGetField( prhs[0], 0, "cost_Zl_e" ) );
 		}
 	// Zu
-	if(mxGetField( prhs[0], 0, "Zu" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_Zu" )!=NULL)
 		{
 		set_Zu = true;
-		Zu = mxGetPr( mxGetField( prhs[0], 0, "Zu" ) );
+		Zu = mxGetPr( mxGetField( prhs[0], 0, "cost_Zu" ) );
 		}
 	// Zu_e
-	if(mxGetField( prhs[0], 0, "Zu_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_Zu_e" )!=NULL)
 		{
 		set_Zu_e = true;
-		Zu_e = mxGetPr( mxGetField( prhs[0], 0, "Zu_e" ) );
+		Zu_e = mxGetPr( mxGetField( prhs[0], 0, "cost_Zu_e" ) );
 		}
 	// z
-	if(mxGetField( prhs[0], 0, "z" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_z" )!=NULL)
 		{
 		set_z = true;
-		z = mxGetPr( mxGetField( prhs[0], 0, "z" ) );
+		z = mxGetPr( mxGetField( prhs[0], 0, "cost_z" ) );
 		}
 	// z_e
-	if(mxGetField( prhs[0], 0, "z_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_z_e" )!=NULL)
 		{
 		set_z_e = true;
-		z_e = mxGetPr( mxGetField( prhs[0], 0, "z_e" ) );
+		z_e = mxGetPr( mxGetField( prhs[0], 0, "cost_z_e" ) );
 		}
 	// zl
-	if(mxGetField( prhs[0], 0, "zl" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_zl" )!=NULL)
 		{
 		set_zl = true;
-		zl = mxGetPr( mxGetField( prhs[0], 0, "zl" ) );
+		zl = mxGetPr( mxGetField( prhs[0], 0, "cost_zl" ) );
 		}
 	// zl_e
-	if(mxGetField( prhs[0], 0, "zl_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_zl_e" )!=NULL)
 		{
 		set_zl_e = true;
-		zl_e = mxGetPr( mxGetField( prhs[0], 0, "zl_e" ) );
+		zl_e = mxGetPr( mxGetField( prhs[0], 0, "cost_zl_e" ) );
 		}
 	// zu
-	if(mxGetField( prhs[0], 0, "zu" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_zu" )!=NULL)
 		{
 		set_zu = true;
-		zu = mxGetPr( mxGetField( prhs[0], 0, "zu" ) );
+		zu = mxGetPr( mxGetField( prhs[0], 0, "cost_zu" ) );
 		}
 	// zu_e
-	if(mxGetField( prhs[0], 0, "zu_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "cost_zu_e" )!=NULL)
 		{
 		set_zu_e = true;
-		zu_e = mxGetPr( mxGetField( prhs[0], 0, "zu_e" ) );
+		zu_e = mxGetPr( mxGetField( prhs[0], 0, "cost_zu_e" ) );
 		}
 	// constr
 	// constr type
@@ -376,220 +376,220 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		constr_type = mxArrayToString( mxGetField( prhs[0], 0, "constr_type" ) );
 		}
 	// x0
-	if(mxGetField( prhs[0], 0, "x0" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_x0" )!=NULL)
 		{
 		set_x0 = true;
-		x0 = mxGetPr( mxGetField( prhs[0], 0, "x0" ) );
+		x0 = mxGetPr( mxGetField( prhs[0], 0, "constr_x0" ) );
 		}
 	// Jbx
-	if(mxGetField( prhs[0], 0, "Jbx" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_Jbx" )!=NULL)
 		{
 		set_Jbx = true;
-		Jbx = mxGetPr( mxGetField( prhs[0], 0, "Jbx" ) );
+		Jbx = mxGetPr( mxGetField( prhs[0], 0, "constr_Jbx" ) );
 		}
 	// lbx
-	if(mxGetField( prhs[0], 0, "lbx" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_lbx" )!=NULL)
 		{
 		set_lbx = true;
-		lbx = mxGetPr( mxGetField( prhs[0], 0, "lbx" ) );
+		lbx = mxGetPr( mxGetField( prhs[0], 0, "constr_lbx" ) );
 		}
 	// ubx
-	if(mxGetField( prhs[0], 0, "ubx" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_ubx" )!=NULL)
 		{
 		set_ubx = true;
-		ubx = mxGetPr( mxGetField( prhs[0], 0, "ubx" ) );
+		ubx = mxGetPr( mxGetField( prhs[0], 0, "constr_ubx" ) );
 		}
 	// Jbu
-	if(mxGetField( prhs[0], 0, "Jbu" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_Jbu" )!=NULL)
 		{
 		set_Jbu = true;
-		Jbu = mxGetPr( mxGetField( prhs[0], 0, "Jbu" ) );
+		Jbu = mxGetPr( mxGetField( prhs[0], 0, "constr_Jbu" ) );
 		}
 	// lbu
-	if(mxGetField( prhs[0], 0, "lbu" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_lbu" )!=NULL)
 		{
 		set_lbu = true;
-		lbu = mxGetPr( mxGetField( prhs[0], 0, "lbu" ) );
+		lbu = mxGetPr( mxGetField( prhs[0], 0, "constr_lbu" ) );
 		}
 	// ubu
-	if(mxGetField( prhs[0], 0, "ubu" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_ubu" )!=NULL)
 		{
 		set_ubu = true;
-		ubu = mxGetPr( mxGetField( prhs[0], 0, "ubu" ) );
+		ubu = mxGetPr( mxGetField( prhs[0], 0, "constr_ubu" ) );
 		}
 	// C
-	if(mxGetField( prhs[0], 0, "C" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_C" )!=NULL)
 		{
 		set_C = true;
-		C = mxGetPr( mxGetField( prhs[0], 0, "C" ) );
+		C = mxGetPr( mxGetField( prhs[0], 0, "constr_C" ) );
 		}
 	// D
-	if(mxGetField( prhs[0], 0, "D" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_D" )!=NULL)
 		{
 		set_D = true;
-		D = mxGetPr( mxGetField( prhs[0], 0, "D" ) );
+		D = mxGetPr( mxGetField( prhs[0], 0, "constr_D" ) );
 		}
 	// lg
-	if(mxGetField( prhs[0], 0, "lg" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_lg" )!=NULL)
 		{
 		set_lg = true;
-		lg = mxGetPr( mxGetField( prhs[0], 0, "lg" ) );
+		lg = mxGetPr( mxGetField( prhs[0], 0, "constr_lg" ) );
 		}
 	// ug
-	if(mxGetField( prhs[0], 0, "ug" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_ug" )!=NULL)
 		{
 		set_ug = true;
-		ug = mxGetPr( mxGetField( prhs[0], 0, "ug" ) );
+		ug = mxGetPr( mxGetField( prhs[0], 0, "constr_ug" ) );
 		}
 	// C_e
-	if(mxGetField( prhs[0], 0, "C_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_C_e" )!=NULL)
 		{
 		set_C_e = true;
-		C_e = mxGetPr( mxGetField( prhs[0], 0, "C_e" ) );
+		C_e = mxGetPr( mxGetField( prhs[0], 0, "constr_C_e" ) );
 		}
 	// lg_e
-	if(mxGetField( prhs[0], 0, "lg_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_lg_e" )!=NULL)
 		{
 		set_lg_e = true;
-		lg_e = mxGetPr( mxGetField( prhs[0], 0, "lg_e" ) );
+		lg_e = mxGetPr( mxGetField( prhs[0], 0, "constr_lg_e" ) );
 		}
 	// ug_e
-	if(mxGetField( prhs[0], 0, "ug_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_ug_e" )!=NULL)
 		{
 		set_ug_e = true;
-		ug_e = mxGetPr( mxGetField( prhs[0], 0, "ug_e" ) );
+		ug_e = mxGetPr( mxGetField( prhs[0], 0, "constr_ug_e" ) );
 		}
 	// lh
-	if(mxGetField( prhs[0], 0, "lh" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_lh" )!=NULL)
 		{
 		set_lh = true;
-		lh = mxGetPr( mxGetField( prhs[0], 0, "lh" ) );
+		lh = mxGetPr( mxGetField( prhs[0], 0, "constr_lh" ) );
 		}
 	// uh
-	if(mxGetField( prhs[0], 0, "uh" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_uh" )!=NULL)
 		{
 		set_uh = true;
-		uh = mxGetPr( mxGetField( prhs[0], 0, "uh" ) );
+		uh = mxGetPr( mxGetField( prhs[0], 0, "constr_uh" ) );
 		}
 	// lh_e
-	if(mxGetField( prhs[0], 0, "lh_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_lh_e" )!=NULL)
 		{
 		set_lh_e = true;
-		lh_e = mxGetPr( mxGetField( prhs[0], 0, "lh_e" ) );
+		lh_e = mxGetPr( mxGetField( prhs[0], 0, "constr_lh_e" ) );
 		}
 	// uh_e
-	if(mxGetField( prhs[0], 0, "uh_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_uh_e" )!=NULL)
 		{
 		set_uh_e = true;
-		uh_e = mxGetPr( mxGetField( prhs[0], 0, "uh_e" ) );
+		uh_e = mxGetPr( mxGetField( prhs[0], 0, "constr_uh_e" ) );
 		}
 	// Jsbu
-	if(mxGetField( prhs[0], 0, "Jsbu" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_Jsbu" )!=NULL)
 		{
 		set_Jsbu = true;
-		Jsbu = mxGetPr( mxGetField( prhs[0], 0, "Jsbu" ) );
+		Jsbu = mxGetPr( mxGetField( prhs[0], 0, "constr_Jsbu" ) );
 		}
 	// lsbu
-//	if(mxGetField( prhs[0], 0, "lsbu" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_lsbu" )!=NULL)
 //		{
 //		set_lsbu = true;
-//		lsbu = mxGetPr( mxGetField( prhs[0], 0, "lsbu" ) );
+//		lsbu = mxGetPr( mxGetField( prhs[0], 0, "constr_lsbu" ) );
 //		}
 	// usbu
-//	if(mxGetField( prhs[0], 0, "usbu" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_usbu" )!=NULL)
 //		{
 //		set_usbu = true;
-//		usbu = mxGetPr( mxGetField( prhs[0], 0, "usbu" ) );
+//		usbu = mxGetPr( mxGetField( prhs[0], 0, "constr_usbu" ) );
 //		}
 	// Jsbx
-	if(mxGetField( prhs[0], 0, "Jsbx" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_Jsbx" )!=NULL)
 		{
 		set_Jsbx = true;
-		Jsbx = mxGetPr( mxGetField( prhs[0], 0, "Jsbx" ) );
+		Jsbx = mxGetPr( mxGetField( prhs[0], 0, "constr_Jsbx" ) );
 		}
 	// lsbx
-//	if(mxGetField( prhs[0], 0, "lsbx" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_lsbx" )!=NULL)
 //		{
 //		set_lsbx = true;
-//		lsbx = mxGetPr( mxGetField( prhs[0], 0, "lsbx" ) );
+//		lsbx = mxGetPr( mxGetField( prhs[0], 0, "constr_lsbx" ) );
 //		}
 	// usbx
-//	if(mxGetField( prhs[0], 0, "usbx" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_usbx" )!=NULL)
 //		{
 //		set_usbx = true;
-//		usbx = mxGetPr( mxGetField( prhs[0], 0, "usbx" ) );
+//		usbx = mxGetPr( mxGetField( prhs[0], 0, "constr_usbx" ) );
 //		}
 	// Jsg
-	if(mxGetField( prhs[0], 0, "Jsg" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_Jsg" )!=NULL)
 		{
 		set_Jsg = true;
-		Jsg = mxGetPr( mxGetField( prhs[0], 0, "Jsg" ) );
+		Jsg = mxGetPr( mxGetField( prhs[0], 0, "constr_Jsg" ) );
 		}
 	// lsg
-//	if(mxGetField( prhs[0], 0, "lsg" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_lsg" )!=NULL)
 //		{
 //		set_lsg = true;
-//		lsg = mxGetPr( mxGetField( prhs[0], 0, "lsg" ) );
+//		lsg = mxGetPr( mxGetField( prhs[0], 0, "constr_lsg" ) );
 //		}
 	// usg
-//	if(mxGetField( prhs[0], 0, "usg" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_usg" )!=NULL)
 //		{
 //		set_usg = true;
-//		usg = mxGetPr( mxGetField( prhs[0], 0, "usg" ) );
+//		usg = mxGetPr( mxGetField( prhs[0], 0, "constr_usg" ) );
 //		}
 	// Jsg_e
-	if(mxGetField( prhs[0], 0, "Jsg_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_Jsg_e" )!=NULL)
 		{
 		set_Jsg_e = true;
-		Jsg_e = mxGetPr( mxGetField( prhs[0], 0, "Jsg_e" ) );
+		Jsg_e = mxGetPr( mxGetField( prhs[0], 0, "constr_Jsg_e" ) );
 		}
 	// lsg_e
-//	if(mxGetField( prhs[0], 0, "lsg_e" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_lsg_e" )!=NULL)
 //		{
 //		set_lsg_e = true;
-//		lsg_e = mxGetPr( mxGetField( prhs[0], 0, "lsg_e" ) );
+//		lsg_e = mxGetPr( mxGetField( prhs[0], 0, "constr_lsg_e" ) );
 //		}
 	// usg_e
-//	if(mxGetField( prhs[0], 0, "usg_e" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_usg_e" )!=NULL)
 //		{
 //		set_usg_e = true;
-//		usg_e = mxGetPr( mxGetField( prhs[0], 0, "usg_e" ) );
+//		usg_e = mxGetPr( mxGetField( prhs[0], 0, "constr_usg_e" ) );
 //		}
 	// Jsh
-	if(mxGetField( prhs[0], 0, "Jsh" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_Jsh" )!=NULL)
 		{
 		set_Jsh = true;
-		Jsh = mxGetPr( mxGetField( prhs[0], 0, "Jsh" ) );
+		Jsh = mxGetPr( mxGetField( prhs[0], 0, "constr_Jsh" ) );
 		}
 	// lsh
-//	if(mxGetField( prhs[0], 0, "lsh" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_lsh" )!=NULL)
 //		{
 //		set_lsh = true;
-//		lsh = mxGetPr( mxGetField( prhs[0], 0, "lsh" ) );
+//		lsh = mxGetPr( mxGetField( prhs[0], 0, "constr_lsh" ) );
 //		}
 	// ush
-//	if(mxGetField( prhs[0], 0, "ush" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_ush" )!=NULL)
 //		{
 //		set_ush = true;
-//		ush = mxGetPr( mxGetField( prhs[0], 0, "ush" ) );
+//		ush = mxGetPr( mxGetField( prhs[0], 0, "constr_ush" ) );
 //		}
 	// Jsh_e
-	if(mxGetField( prhs[0], 0, "Jsh_e" )!=NULL)
+	if(mxGetField( prhs[0], 0, "constr_Jsh_e" )!=NULL)
 		{
 		set_Jsh_e = true;
-		Jsh_e = mxGetPr( mxGetField( prhs[0], 0, "Jsh_e" ) );
+		Jsh_e = mxGetPr( mxGetField( prhs[0], 0, "constr_Jsh_e" ) );
 		}
 	// lsh_e
-//	if(mxGetField( prhs[0], 0, "lsh_e" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_lsh_e" )!=NULL)
 //		{
 //		set_lsh_e = true;
-//		lsh_e = mxGetPr( mxGetField( prhs[0], 0, "lsh_e" ) );
+//		lsh_e = mxGetPr( mxGetField( prhs[0], 0, "constr_lsh_e" ) );
 //		}
 	// ush_e
-//	if(mxGetField( prhs[0], 0, "ush_e" )!=NULL)
+//	if(mxGetField( prhs[0], 0, "constr_ush_e" )!=NULL)
 //		{
 //		set_ush_e = true;
-//		ush_e = mxGetPr( mxGetField( prhs[0], 0, "ush_e" ) );
+//		ush_e = mxGetPr( mxGetField( prhs[0], 0, "constr_ush_e" ) );
 //		}
 	// dyn
 	// dyn type

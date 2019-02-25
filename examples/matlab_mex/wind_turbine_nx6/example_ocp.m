@@ -238,19 +238,19 @@ u_traj_init = repmat(u0_ref, 1, N);
 
 tic
 
-ocp.set('x_init', x_traj_init);
-ocp.set('u_init', u_traj_init);
+ocp.set('init_x', x_traj_init);
+ocp.set('init_u', u_traj_init);
 
 % set x0
-ocp.set('x0', x0_ref);
+ocp.set('constr_x0', x0_ref);
 
 % set parameter
 nn = 1;
 ocp.set('p', wind0_ref(:,nn));
 
 % set reference
-ocp.set('yr', y_ref(:,nn));
-ocp.set('yr_e', y_ref(:,nn));
+ocp.set('cost_yr', y_ref(:,nn));
+ocp.set('cost_yr_e', y_ref(:,nn));
 
 % solve
 ocp.solve();

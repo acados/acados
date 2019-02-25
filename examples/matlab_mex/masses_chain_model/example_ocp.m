@@ -168,8 +168,8 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 % set trajectory initialization
 x_traj_init = repmat(model.x_ref, 1, N+1);
 u_traj_init = zeros(nu, N);
-ocp.set('x_init', x_traj_init);
-ocp.set('u_init', u_traj_init);
+ocp.set('init_x', x_traj_init);
+ocp.set('init_u', u_traj_init);
 
 
 % solve

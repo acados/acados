@@ -56,31 +56,31 @@ end
 
 model_name = model.name;
 
-if isfield(model, 'expr_h')
-	h = model.expr_h;
+if isfield(model, 'constr_expr_h')
+	h = model.constr_expr_h;
 	% generate jacobians
 	jac_x       = jacobian(h, x);
 	jac_u       = jacobian(h, u);
 	% Set up functions
-	if (strcmp(model.param_h, 'true'))
-		h_fun_jac_ut_xt = Function([model_name,'_h_fun_jac_ut_xt'], {x, u, p}, {h, [jac_u'; jac_x']});
+	if (strcmp(model.constr_param_h, 'true'))
+		h_fun_jac_ut_xt = Function([model_name,'_constr_h_fun_jac_ut_xt'], {x, u, p}, {h, [jac_u'; jac_x']});
 	else
-		h_fun_jac_ut_xt = Function([model_name,'_h_fun_jac_ut_xt'], {x, u}, {h, [jac_u'; jac_x']});
+		h_fun_jac_ut_xt = Function([model_name,'_constr_h_fun_jac_ut_xt'], {x, u}, {h, [jac_u'; jac_x']});
 	end
 	% generate C code
-	h_fun_jac_ut_xt.generate([model_name,'_h_fun_jac_ut_xt'], casadi_opts);
+	h_fun_jac_ut_xt.generate([model_name,'_constr_h_fun_jac_ut_xt'], casadi_opts);
 end
 
-if isfield(model, 'expr_h_e')
-	h_e = model.expr_h_e;
+if isfield(model, 'constr_expr_h_e')
+	h_e = model.constr_expr_h_e;
 	% generate jacobians
 	jac_x_e     = jacobian(h_e, x);
 	% Set up functions
-	if (strcmp(model.param_h, 'true'))
-		h_e_fun_jac_ut_xt = Function([model_name,'_h_e_fun_jac_ut_xt'], {x, p}, {h_e, jac_x_e'});
+	if (strcmp(model.constr_param_h, 'true'))
+		h_e_fun_jac_ut_xt = Function([model_name,'_constr_h_e_fun_jac_ut_xt'], {x, p}, {h_e, jac_x_e'});
 	else
-		h_e_fun_jac_ut_xt = Function([model_name,'_h_e_fun_jac_ut_xt'], {x}, {h_e, jac_x_e'});
+		h_e_fun_jac_ut_xt = Function([model_name,'_constr_h_e_fun_jac_ut_xt'], {x}, {h_e, jac_x_e'});
 	end
 	% generate C code
-	h_e_fun_jac_ut_xt.generate([model_name,'_h_e_fun_jac_ut_xt'], casadi_opts);
+	h_e_fun_jac_ut_xt.generate([model_name,'_constr_h_e_fun_jac_ut_xt'], casadi_opts);
 end

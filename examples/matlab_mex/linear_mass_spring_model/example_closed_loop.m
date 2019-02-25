@@ -22,8 +22,8 @@ ocp_sim_method = 'erk';
 ocp_sim_method_num_stages = 2;
 ocp_sim_method_num_steps = 2;
 %ocp_cost_type = 'linear_ls';
-%ocp_cost_type = 'nonlinear_ls';
-ocp_cost_type = 'ext_cost';
+ocp_cost_type = 'nonlinear_ls';
+%ocp_cost_type = 'ext_cost';
 
 
 
@@ -210,11 +210,11 @@ tic;
 for ii=1:n_sim
 
 	% set x0
-	ocp.set('x0', x_sim(:,ii));
+	ocp.set('constr_x0', x_sim(:,ii));
 
 	% set trajectory initialization
-	ocp.set('x_init', x_traj_init);
-	ocp.set('u_init', u_traj_init);
+	ocp.set('init_x', x_traj_init);
+	ocp.set('init_u', u_traj_init);
 
 	% solve OCP
 	ocp.solve();
