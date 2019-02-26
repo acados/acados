@@ -35,12 +35,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	fieldnames[4] = (char*)mxMalloc(50);
 	fieldnames[5] = (char*)mxMalloc(50);
 
-	memcpy(fieldnames[0],"expl_ode_fun",sizeof("expl_ode_fun"));
-	memcpy(fieldnames[1],"expl_vde_for",sizeof("expl_vde_for"));
-	memcpy(fieldnames[2],"expl_vde_adj",sizeof("expl_vde_adj"));
-	memcpy(fieldnames[3],"impl_ode_fun",sizeof("impl_ode_fun"));
-	memcpy(fieldnames[4],"impl_ode_fun_jac_x_xdot",sizeof("impl_ode_fun_jac_x_xdot"));
-	memcpy(fieldnames[5],"impl_ode_jac_x_xdot_u",sizeof("impl_ode_jac_x_xdot_u"));
+	memcpy(fieldnames[0],"dyn_expl_ode_fun",sizeof("dyn_expl_ode_fun"));
+	memcpy(fieldnames[1],"dyn_expl_vde_for",sizeof("dyn_expl_vde_for"));
+	memcpy(fieldnames[2],"dyn_expl_vde_adj",sizeof("dyn_expl_vde_adj"));
+	memcpy(fieldnames[3],"dyn_impl_ode_fun",sizeof("dyn_impl_ode_fun"));
+	memcpy(fieldnames[4],"dyn_impl_ode_fun_jac_x_xdot",sizeof("dyn_impl_ode_fun_jac_x_xdot"));
+	memcpy(fieldnames[5],"dyn_impl_ode_jac_x_xdot_u",sizeof("dyn_impl_ode_jac_x_xdot_u"));
 
 	// create output struct
 	plhs[0] = mxCreateStructMatrix(1, 1, 6, (const char **) fieldnames);

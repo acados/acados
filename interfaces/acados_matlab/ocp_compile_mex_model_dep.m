@@ -19,46 +19,46 @@ mex_files = {};
 % dynamics
 if (strcmp(opts_struct.sim_method, 'erk'))
 	mex_files = {mex_files{:}, ...
-		[acados_mex_folder, 'ocp_set_ext_fun_expl.c']
+		[acados_mex_folder, 'ocp_set_ext_fun_dyn_expl.c']
 		};
 elseif (strcmp(opts_struct.sim_method, 'irk'))
 	mex_files = {mex_files{:}, ...
-		[acados_mex_folder, 'ocp_set_ext_fun_impl.c']
+		[acados_mex_folder, 'ocp_set_ext_fun_dyn_impl.c']
 		};
 else
-	fprintf('\ncodegen_model: sim_method not supported: %s\n', opts_struct.sim_method);
+	fprintf('\nocp_compile_mex_mode_dep: sim_method not supported: %s\n', opts_struct.sim_method);
 end
 % nonlinear constraints
-if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'nh') && model_struct.nh>0))
+if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'dim_nh') && model_struct.dim_nh>0))
 	mex_files = {mex_files{:}, ...
-		[acados_mex_folder, 'ocp_set_ext_fun_h.c']
+		[acados_mex_folder, 'ocp_set_ext_fun_constr_h.c']
 		};
 end
-if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'nh_e') && model_struct.nh_e>0))
+if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'dim_nh_e') && model_struct.dim_nh_e>0))
 	mex_files = {mex_files{:}, ...
-		[acados_mex_folder, 'ocp_set_ext_fun_h_e.c']
+		[acados_mex_folder, 'ocp_set_ext_fun_constr_h_e.c']
 		};
 end
 % nonlinear least squares
 if (strcmp(model_struct.cost_type, 'nonlinear_ls'))
 	mex_files = {mex_files{:}, ...
-		[acados_mex_folder, 'ocp_set_ext_fun_y.c']
+		[acados_mex_folder, 'ocp_set_ext_fun_cost_y.c']
 		};
 end
-if (strcmp(model_struct.cost_e_type, 'nonlinear_ls'))
+if (strcmp(model_struct.cost_type_e, 'nonlinear_ls'))
 	mex_files = {mex_files{:}, ...
-		[acados_mex_folder, 'ocp_set_ext_fun_y_e.c']
+		[acados_mex_folder, 'ocp_set_ext_fun_cost_y_e.c']
 		};
 end
 % external cost
 if (strcmp(model_struct.cost_type, 'ext_cost'))
 	mex_files = {mex_files{:}, ...
-		[acados_mex_folder, 'ocp_set_ext_fun_ext_cost.c']
+		[acados_mex_folder, 'ocp_set_ext_fun_cost_ext_cost.c']
 		};
 end
-if (strcmp(model_struct.cost_e_type, 'ext_cost'))
+if (strcmp(model_struct.cost_type_e, 'ext_cost'))
 	mex_files = {mex_files{:}, ...
-		[acados_mex_folder, 'ocp_set_ext_fun_ext_cost_e.c']
+		[acados_mex_folder, 'ocp_set_ext_fun_cost_ext_cost_e.c']
 		};
 end
 

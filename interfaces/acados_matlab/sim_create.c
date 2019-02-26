@@ -36,15 +36,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double T;
 	double *x, *u;
 
-	if(mxGetField( prhs[0], 0, "nx" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nx" )!=NULL)
 		{
 		set_nx = true;
-		nx = mxGetScalar( mxGetField( prhs[0], 0, "nx" ) );
+		nx = mxGetScalar( mxGetField( prhs[0], 0, "dim_nx" ) );
 		}
-	if(mxGetField( prhs[0], 0, "nu" )!=NULL)
+	if(mxGetField( prhs[0], 0, "dim_nu" )!=NULL)
 		{
 		set_nu = true;
-		nu = mxGetScalar( mxGetField( prhs[0], 0, "nu" ) );
+		nu = mxGetScalar( mxGetField( prhs[0], 0, "dim_nu" ) );
 		}
 	if(mxGetField( prhs[0], 0, "T" )!=NULL)
 		{
