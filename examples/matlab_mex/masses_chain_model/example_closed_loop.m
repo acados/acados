@@ -172,8 +172,8 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 %% acados sim model
 sim_model = acados_sim_model();
 % dims
-sim_model.set('nx', nx);
-sim_model.set('nu', nu);
+sim_model.set('dim_nx', nx);
+sim_model.set('dim_nu', nu);
 % symbolics
 sim_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
@@ -186,10 +186,10 @@ end
 sim_model.set('T', T/ocp_N);
 if (strcmp(sim_method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('expr_f', model.expr_f_expl);
+	sim_model.set('dyn_expr_f', model.expr_f_expl);
 else % irk
 	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('expr_f', model.expr_f_impl);
+	sim_model.set('dyn_expr_f', model.expr_f_impl);
 end
 
 %sim_model.model_struct

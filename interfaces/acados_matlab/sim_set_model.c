@@ -58,13 +58,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //		mexPrintf("\n%s\n", method);
 
 		// expl_ode_fun
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "expl_ode_fun" ) );
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_expl_ode_fun" ) );
 		external_function_casadi *expl_ode_fun = (external_function_casadi *) ptr[0];
 		// expl_vde_for
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "expl_vde_for" ) );
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_expl_vde_for" ) );
 		external_function_casadi *expl_vde_for = (external_function_casadi *) ptr[0];
 		// expl_vde_adj
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "expl_vde_adj" ) );
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_expl_vde_adj" ) );
 		external_function_casadi *expl_vde_adj = (external_function_casadi *) ptr[0];
 
 		sim_in_set(config, dims, in, "expl_ode_fun", expl_ode_fun);
@@ -75,13 +75,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //		mexPrintf("\n%s\n", method);
 
 		// impl_ode_fun
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "impl_ode_fun" ) );
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_impl_ode_fun" ) );
 		external_function_casadi *impl_ode_fun = (external_function_casadi *) ptr[0];
 		// impl_ode_fun_jac_x_xdot
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "impl_ode_fun_jac_x_xdot" ) );
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_impl_ode_fun_jac_x_xdot" ) );
 		external_function_casadi *impl_ode_fun_jac_x_xdot = (external_function_casadi *) ptr[0];
 		// impl_ode_jac_x_xdot_u
-		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "impl_ode_jac_x_xdot_u" ) );
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_impl_ode_jac_x_xdot_u" ) );
 		external_function_casadi *impl_ode_jac_x_xdot_u = (external_function_casadi *) ptr[0];
 
 		sim_in_set(config, dims, in, "impl_ode_fun", impl_ode_fun);
