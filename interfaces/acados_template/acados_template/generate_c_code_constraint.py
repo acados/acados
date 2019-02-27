@@ -44,7 +44,7 @@ def generate_c_code_constraint( constraint, suffix_name ):
     # TODO(andrea): first output seems to be ignored in the C code
     jac_x = jacobian(con_exp, x);
     jac_u = jacobian(con_exp, u);
-    constraint_fun_jac_tran = Function(fun_name, [vertcat(u,x)], [con_exp, vertcat(transpose(jac_u), transpose(jac_x))])
+    constraint_fun_jac_tran = Function(fun_name, [x, u], [con_exp, vertcat(transpose(jac_u), transpose(jac_x))])
 
     # generate C code
     if not os.path.exists('c_generated_code'):
