@@ -6,7 +6,7 @@ clear all
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
-method = 'irk';
+method = 'erk';
 sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
@@ -72,6 +72,10 @@ sim_opts.opts_struct
 sim = acados_sim(sim_model, sim_opts);
 % (re)set numerical part of model
 %sim.set('T', 0.5);
+sim.C_sim
+sim.C_sim_ext_fun
+
+
 
 x0 = ones(nx, 1); %x0(1) = 2.0;
 tic;

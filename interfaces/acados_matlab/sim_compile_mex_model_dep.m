@@ -16,12 +16,12 @@ model_lib_path = ['-L', pwd];
 mex_files = {};
 % dynamics
 if (strcmp(opts_struct.method, 'erk'))
-	mex_files = {mex_files{:},
-		[acados_mex_folder, 'sim_set_ext_fun_dyn_expl.c']
+	mex_files = {mex_files{:}, ...
+		[acados_mex_folder, 'sim_set_ext_fun_dyn_expl.c'] ...
 		};
 elseif (strcmp(opts_struct.method, 'irk'))
-	mex_files = {mex_files{:},
-		[acados_mex_folder, 'sim_set_ext_fun_dyn_impl.c']
+	mex_files = {mex_files{:}, ...
+		[acados_mex_folder, 'sim_set_ext_fun_dyn_impl.c'] ...
 		};
 else
 	fprintf('\ncodegen_model: method not supported: %s\n', opts_struct.method);
@@ -29,5 +29,7 @@ end
 
 %% get pointers for external functions in model
 for ii=1:length(mex_files)
-	mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lsim_model', mex_files{ii});
+	disp(['compiling ', mex_files{ii}])
+%	mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lsim_model', mex_files{ii});
+	mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lsim_model', mex_files{ii});
 end

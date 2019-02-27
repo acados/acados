@@ -59,10 +59,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* LHS */
 
+	plhs[0] = (mxArray *) prhs[1];
 
 
 
-	/* populate input struc */
+	/* populate new fields */
 
 	external_function_casadi *ext_fun_ptr;
 	external_function_param_casadi *ext_fun_param_ptr;
@@ -85,7 +86,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxArray *y_e_fun_jac_ut_xt_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(y_e_fun_jac_ut_xt_mat);
 			ptr[0] = (long long) ext_fun_param_ptr;
-			mxSetField((mxArray*) prhs[1], 0, "cost_y_e_fun_jac_ut_xt", y_e_fun_jac_ut_xt_mat);
+			mxSetField(plhs[0], 0, "cost_y_e_fun_jac_ut_xt", y_e_fun_jac_ut_xt_mat);
 			}
 		else
 			{
@@ -102,7 +103,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxArray *y_e_fun_jac_ut_xt_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(y_e_fun_jac_ut_xt_mat);
 			ptr[0] = (long long) ext_fun_ptr;
-			mxSetField((mxArray*) prhs[1], 0, "cost_y_e_fun_jac_ut_xt", y_e_fun_jac_ut_xt_mat);
+			mxSetField(plhs[0], 0, "cost_y_e_fun_jac_ut_xt", y_e_fun_jac_ut_xt_mat);
 			}
 		}
 	

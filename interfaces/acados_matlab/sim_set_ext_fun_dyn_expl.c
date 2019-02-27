@@ -49,9 +49,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* LHS */
 
+	/* copy input as output */
+
+	plhs[0] = (mxArray *) prhs[0];
 
 
-	/* populate input struc */
+
+	/* populate new fields */
 
 	external_function_casadi *ext_fun_ptr;
 	external_function_param_casadi *ext_fun_param_ptr;
@@ -74,7 +78,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxArray *expl_ode_fun_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(expl_ode_fun_mat);
 			ptr[0] = (long long) ext_fun_param_ptr;
-			mxSetField((mxArray*) prhs[0], 0, "dyn_expl_ode_fun", expl_ode_fun_mat);
+			mxSetField(plhs[0], 0, "dyn_expl_ode_fun", expl_ode_fun_mat);
 
 			// expl_vde_for
 			ext_fun_param_ptr = (external_function_param_casadi *) malloc(1*sizeof(external_function_param_casadi));
@@ -89,7 +93,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxArray *expl_vde_for_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(expl_vde_for_mat);
 			ptr[0] = (long long) ext_fun_param_ptr;
-			mxSetField((mxArray*) prhs[0], 0, "dyn_expl_vde_for", expl_vde_for_mat);
+			mxSetField(plhs[0], 0, "dyn_expl_vde_for", expl_vde_for_mat);
 			}
 		else
 			{
@@ -106,7 +110,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxArray *expl_ode_fun_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(expl_ode_fun_mat);
 			ptr[0] = (long long) ext_fun_ptr;
-			mxSetField((mxArray*) prhs[0], 0, "dyn_expl_ode_fun", expl_ode_fun_mat);
+			mxSetField(plhs[0], 0, "dyn_expl_ode_fun", expl_ode_fun_mat);
 
 			// expl_vde_for
 			ext_fun_ptr = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
@@ -121,7 +125,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxArray *expl_vde_for_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(expl_vde_for_mat);
 			ptr[0] = (long long) ext_fun_ptr;
-			mxSetField((mxArray*) prhs[0], 0, "dyn_expl_vde_for", expl_vde_for_mat);
+			mxSetField(plhs[0], 0, "dyn_expl_vde_for", expl_vde_for_mat);
 			}
 		}
 	else
