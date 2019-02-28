@@ -52,6 +52,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mxFree( fieldnames[4] );
 	mxFree( fieldnames[5] );
 
+//	mxSetField(plhs[0], 0, "dyn_impl_ode_fun", NULL );
 
 
 	return;

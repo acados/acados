@@ -67,7 +67,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* LHS */
 
-	plhs[0] = (mxArray *) prhs[1];
+	/* copy existing fields */
+
+//	plhs[0] = mxCreateSharedDataCopy(prhs[1]);
+	plhs[0] = mxDuplicateArray(prhs[1]);
 
 
 
