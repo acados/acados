@@ -34,7 +34,7 @@
 #include "acados_c/sim_interface.h"
 
 // model
-#include "examples/c/gnsf_crane_model/gnsf_crane_model.h"
+#include "examples/c/crane_nx9_model/crane_nx9_model.h"
 
 int main() {
 /************************************************
@@ -43,53 +43,53 @@ int main() {
 
     // phi_fun
     external_function_casadi phi_fun;
-    phi_fun.casadi_fun            = &casadi_phi_fun;
-    phi_fun.casadi_work           = &casadi_phi_fun_work;
-    phi_fun.casadi_sparsity_in    = &casadi_phi_fun_sparsity_in;
-    phi_fun.casadi_sparsity_out   = &casadi_phi_fun_sparsity_out;
-    phi_fun.casadi_n_in           = &casadi_phi_fun_n_in;
-    phi_fun.casadi_n_out          = &casadi_phi_fun_n_out;
+    phi_fun.casadi_fun            = &crane_nx9_phi_fun;
+    phi_fun.casadi_work           = &crane_nx9_phi_fun_work;
+    phi_fun.casadi_sparsity_in    = &crane_nx9_phi_fun_sparsity_in;
+    phi_fun.casadi_sparsity_out   = &crane_nx9_phi_fun_sparsity_out;
+    phi_fun.casadi_n_in           = &crane_nx9_phi_fun_n_in;
+    phi_fun.casadi_n_out          = &crane_nx9_phi_fun_n_out;
 	external_function_casadi_create(&phi_fun);
 
     // phi_fun_jac_y
     external_function_casadi phi_fun_jac_y;
-    phi_fun_jac_y.casadi_fun            = &casadi_phi_fun_jac_y;
-    phi_fun_jac_y.casadi_work           = &casadi_phi_fun_jac_y_work;
-    phi_fun_jac_y.casadi_sparsity_in    = &casadi_phi_fun_jac_y_sparsity_in;
-    phi_fun_jac_y.casadi_sparsity_out   = &casadi_phi_fun_jac_y_sparsity_out;
-    phi_fun_jac_y.casadi_n_in           = &casadi_phi_fun_jac_y_n_in;
-    phi_fun_jac_y.casadi_n_out          = &casadi_phi_fun_jac_y_n_out;
+    phi_fun_jac_y.casadi_fun            = &crane_nx9_phi_fun_jac_y;
+    phi_fun_jac_y.casadi_work           = &crane_nx9_phi_fun_jac_y_work;
+    phi_fun_jac_y.casadi_sparsity_in    = &crane_nx9_phi_fun_jac_y_sparsity_in;
+    phi_fun_jac_y.casadi_sparsity_out   = &crane_nx9_phi_fun_jac_y_sparsity_out;
+    phi_fun_jac_y.casadi_n_in           = &crane_nx9_phi_fun_jac_y_n_in;
+    phi_fun_jac_y.casadi_n_out          = &crane_nx9_phi_fun_jac_y_n_out;
 	external_function_casadi_create(&phi_fun_jac_y);
 
     // phi_jac_y_uhat
     external_function_casadi phi_jac_y_uhat;
-    phi_jac_y_uhat.casadi_fun                = &casadi_phi_jac_y_uhat;
-    phi_jac_y_uhat.casadi_work               = &casadi_phi_jac_y_uhat_work;
-    phi_jac_y_uhat.casadi_sparsity_in        = &casadi_phi_jac_y_uhat_sparsity_in;
-    phi_jac_y_uhat.casadi_sparsity_out       = &casadi_phi_jac_y_uhat_sparsity_out;
-    phi_jac_y_uhat.casadi_n_in               = &casadi_phi_jac_y_uhat_n_in;
-    phi_jac_y_uhat.casadi_n_out              = &casadi_phi_jac_y_uhat_n_out;
+    phi_jac_y_uhat.casadi_fun                = &crane_nx9_phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_work               = &crane_nx9_phi_jac_y_uhat_work;
+    phi_jac_y_uhat.casadi_sparsity_in        = &crane_nx9_phi_jac_y_uhat_sparsity_in;
+    phi_jac_y_uhat.casadi_sparsity_out       = &crane_nx9_phi_jac_y_uhat_sparsity_out;
+    phi_jac_y_uhat.casadi_n_in               = &crane_nx9_phi_jac_y_uhat_n_in;
+    phi_jac_y_uhat.casadi_n_out              = &crane_nx9_phi_jac_y_uhat_n_out;
 
 	external_function_casadi_create(&phi_jac_y_uhat);
 
     // f_lo_fun_jac_x1k1uz
     external_function_casadi f_lo_fun_jac_x1k1uz;
-    f_lo_fun_jac_x1k1uz.casadi_fun            = &casadi_f_lo_fun_jac_x1k1uz;
-    f_lo_fun_jac_x1k1uz.casadi_work           = &casadi_f_lo_fun_jac_x1k1uz_work;
-    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &casadi_f_lo_fun_jac_x1k1uz_sparsity_in;
-    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &casadi_f_lo_fun_jac_x1k1uz_sparsity_out;
-    f_lo_fun_jac_x1k1uz.casadi_n_in           = &casadi_f_lo_fun_jac_x1k1uz_n_in;
-    f_lo_fun_jac_x1k1uz.casadi_n_out          = &casadi_f_lo_fun_jac_x1k1uz_n_out;
+    f_lo_fun_jac_x1k1uz.casadi_fun            = &crane_nx9_f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_work           = &crane_nx9_f_lo_fun_jac_x1k1uz_work;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &crane_nx9_f_lo_fun_jac_x1k1uz_sparsity_in;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &crane_nx9_f_lo_fun_jac_x1k1uz_sparsity_out;
+    f_lo_fun_jac_x1k1uz.casadi_n_in           = &crane_nx9_f_lo_fun_jac_x1k1uz_n_in;
+    f_lo_fun_jac_x1k1uz.casadi_n_out          = &crane_nx9_f_lo_fun_jac_x1k1uz_n_out;
 	external_function_casadi_create(&f_lo_fun_jac_x1k1uz);
 
     // get_matrices_fun
     external_function_casadi get_matrices_fun;
-    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
-    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
-    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
-    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
-    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
-    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
+    get_matrices_fun.casadi_fun            = &crane_nx9_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &crane_nx9_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &crane_nx9_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &crane_nx9_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &crane_nx9_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &crane_nx9_get_matrices_fun_n_out;
 	external_function_casadi_create(&get_matrices_fun);
 
 /************************************************
@@ -109,11 +109,11 @@ int main() {
     int num_steps = 1;
 
     gnsf_dim->nx = nx;
-    gnsf_dim->nx1 = 8;
-    gnsf_dim->nz1 = 1;
+    gnsf_dim->nx1 = 5;
+    gnsf_dim->nz1 = 0;
     gnsf_dim->nu = nu;
-    gnsf_dim->n_out = 2;
-    gnsf_dim->nz = 1;
+    gnsf_dim->n_out = 1;
+    gnsf_dim->nz = 0;
     gnsf_dim->ny = 4;
     gnsf_dim->nuhat = 1;
 
@@ -165,7 +165,7 @@ int main() {
     for (int ii = 0; ii < nx; ii++) {
         in->S_adj[ii] = 1.0;
     }
-    in->x[2] = 0.8;
+    in->x[0] = 0.8;  // xL_0 ; note gnsf transcription script permutes state vector
     in->u[0] = 40.108149413030752;
     in->u[1] = -50.446662212534974;
     in->T = 0.1;

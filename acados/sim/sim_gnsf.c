@@ -569,6 +569,9 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     int nK2 = num_stages * nxz2;
     int nZ1 = num_stages * nz1;
 
+    // printf("imported A\n");
+    // d_print_exp_mat(nx1, nx1, model->A, nx1);
+
     // set up precomputation workspace
     gnsf_pre_workspace *work =
         (gnsf_pre_workspace *) gnsf_cast_pre_workspace(config_, dims, opts, work_);
@@ -902,8 +905,10 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
                          &M2_LU, jj * nxz2, ii * nxz2);
         }
     }
+
     // factorize M2 in M2_LU
     blasfeo_dgetrf_rp(nK2, nK2, &M2_LU, 0, 0, &M2_LU, 0, 0, ipivM2);
+
 
     // solve dK2_dx2 = M2 \ dK2_dx2 to obtain dK2_dx2
     blasfeo_drowpe(nK2, ipivM2, &dK2_dx2);  // permute rhs dK2_dx2
