@@ -14,8 +14,8 @@ nlp_solver = 'sqp';
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_N_pcond = 5;
-%sim_method = 'erk';
-sim_method = 'irk';
+sim_method = 'erk';
+%sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 %cost_type = 'linear_ls';
@@ -34,7 +34,7 @@ nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
-if 0
+if 1
 	nbx = nx/2;
 	nbu = nu;
 	ng = 0;
@@ -77,11 +77,11 @@ elseif (nh>0)
 	uh_e = zeros(nh_e, 1); for ii=1:nh_e uh_e(ii)= 4.0; end
 else
 	Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
-	lbx = -4*ones(nx, 1);
-	ubx =  4*ones(nx, 1);
+	lbx = -4*ones(nbx, 1);
+	ubx =  4*ones(nbx, 1);
 	Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
-	lbu = -0.5*ones(nu, 1);
-	ubu =  0.5*ones(nu, 1);
+	lbu = -0.5*ones(nbu, 1);
+	ubu =  0.5*ones(nbu, 1);
 end
 
 
@@ -91,21 +91,21 @@ end
 ocp_model = acados_ocp_model();
 % dims
 ocp_model.set('T', T);
-ocp_model.set('nx', nx);
-ocp_model.set('nu', nu);
+ocp_model.set('dim_nx', nx);
+ocp_model.set('dim_nu', nu);
 if (strcmp(cost_type, 'linear_ls'))
-	ocp_model.set('ny', ny);
-	ocp_model.set('ny_e', ny_e);
+	ocp_model.set('dim_ny', ny);
+	ocp_model.set('dim_ny_e', ny_e);
 end
 if (ng>0)
-	ocp_model.set('ng', ng);
-	ocp_model.set('ng_e', ng_e);
+	ocp_model.set('dim_ng', ng);
+	ocp_model.set('dim_ng_e', ng_e);
 elseif (nh>0)
-	ocp_model.set('nh', nh);
-	ocp_model.set('nh_e', nh_e);
+	ocp_model.set('dim_nh', nh);
+	ocp_model.set('dim_nh_e', nh_e);
 else
-	ocp_model.set('nbx', nbx);
-	ocp_model.set('nbu', nbu);
+	ocp_model.set('dim_nbx', nbx);
+	ocp_model.set('dim_nbu', nbu);
 end
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
@@ -117,51 +117,51 @@ if isfield(model, 'sym_xdot')
 end
 % cost
 ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_e_type', cost_type);
+ocp_model.set('cost_type_e', cost_type);
 if (strcmp(cost_type, 'linear_ls'))
-	ocp_model.set('Vu', Vu);
-	ocp_model.set('Vx', Vx);
-	ocp_model.set('Vx_e', Vx_e);
-	ocp_model.set('W', W);
-	ocp_model.set('W_e', W_e);
-	ocp_model.set('yr', yr);
-	ocp_model.set('yr_e', yr_e);
+	ocp_model.set('cost_Vu', Vu);
+	ocp_model.set('cost_Vx', Vx);
+	ocp_model.set('cost_Vx_e', Vx_e);
+	ocp_model.set('cost_W', W);
+	ocp_model.set('cost_W_e', W_e);
+	ocp_model.set('cost_yr', yr);
+	ocp_model.set('cost_yr_e', yr_e);
 else % if (strcmp(cost_type, 'ext_cost'))
-	ocp_model.set('expr_ext_cost', model.expr_ext_cost);
-	ocp_model.set('expr_ext_cost_e', model.expr_ext_cost_e);
+	ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 end
 % dynamics
 if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('expr_f', model.expr_f_expl);
+	ocp_model.set('dyn_expr_f', model.expr_f_expl);
 else % irk
 	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('expr_f', model.expr_f_impl);
+	ocp_model.set('dyn_expr_f', model.expr_f_impl);
 end
 % constraints
-ocp_model.set('x0', x0);
+ocp_model.set('constr_x0', x0);
 if (ng>0)
-	ocp_model.set('C', C);
-	ocp_model.set('D', D);
-	ocp_model.set('lg', lg);
-	ocp_model.set('ug', ug);
-	ocp_model.set('C_e', C_e);
-	ocp_model.set('lg_e', lg_e);
-	ocp_model.set('ug_e', ug_e);
+	ocp_model.set('constr_C', C);
+	ocp_model.set('constr_D', D);
+	ocp_model.set('constr_lg', lg);
+	ocp_model.set('constr_ug', ug);
+	ocp_model.set('constr_C_e', C_e);
+	ocp_model.set('constr_lg_e', lg_e);
+	ocp_model.set('constr_ug_e', ug_e);
 elseif (nh>0)
-	ocp_model.set('expr_h', model.expr_h);
-	ocp_model.set('lh', lh);
-	ocp_model.set('uh', uh);
-	ocp_model.set('expr_h_e', model.expr_h_e);
-	ocp_model.set('lh_e', lh_e);
-	ocp_model.set('uh_e', uh_e);
+	ocp_model.set('constr_expr_h', model.expr_h);
+	ocp_model.set('constr_lh', lh);
+	ocp_model.set('constr_uh', uh);
+	ocp_model.set('constr_expr_h_e', model.expr_h_e);
+	ocp_model.set('constr_lh_e', lh_e);
+	ocp_model.set('constr_uh_e', uh_e);
 else
-	ocp_model.set('Jbx', Jbx);
-	ocp_model.set('lbx', lbx);
-	ocp_model.set('ubx', ubx);
-	ocp_model.set('Jbu', Jbu);
-	ocp_model.set('lbu', lbu);
-	ocp_model.set('ubu', ubu);
+	ocp_model.set('constr_Jbx', Jbx);
+	ocp_model.set('constr_lbx', lbx);
+	ocp_model.set('constr_ubx', ubx);
+	ocp_model.set('constr_Jbu', Jbu);
+	ocp_model.set('constr_lbu', lbu);
+	ocp_model.set('constr_ubu', ubu);
 end
 
 ocp_model.model_struct
@@ -199,26 +199,28 @@ ocp.C_ocp_ext_fun
 % set trajectory initialization
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
-ocp.set('x_init', x_traj_init);
-ocp.set('u_init', u_traj_init);
+ocp.set('init_x', x_traj_init);
+ocp.set('init_u', u_traj_init);
 
 
 % solve
 tic;
 ocp.solve();
-time_solve = toc
+time_ext = toc
 
 
-x0(1) = 1.5;
-ocp.set('x0', x0);
+%x0(1) = 1.5;
+%ocp.set('constr_x0', x0);
 
+
+%ocp.set('cost_yr', 1);
 
 % if not set, the trajectory is initialized with the previous solution
 
 
-tic;
-ocp.solve();
-time_solve = toc
+%tic;
+%ocp.solve();
+%time_ext = toc
 
 
 
@@ -241,7 +243,22 @@ xlabel('sample')
 
 
 
-fprintf('\nsuccess!\n\n');
+status = ocp.get('status');
+sqp_iter = ocp.get('sqp_iter');
+time_tot = ocp.get('time_tot');
+time_lin = ocp.get('time_lin');
+time_qp_sol = ocp.get('time_qp_sol');
+
+fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+
+
+
+if status==0
+	fprintf('\nsuccess!\n\n');
+else
+	fprintf('\nsolution failed!\n\n');
+end
+
 
 
 return;

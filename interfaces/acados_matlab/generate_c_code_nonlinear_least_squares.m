@@ -56,32 +56,32 @@ end
 
 model_name = model.name;
 
-if isfield(model, 'expr_y')
-	y = model.expr_y;
+if isfield(model, 'cost_expr_y')
+	y = model.cost_expr_y;
 	% generate jacobians
 	jac_x       = jacobian(y, x);
 	jac_u       = jacobian(y, u);
 	% Set up functions
-	if (strcmp(model.param_y, 'true'))
-		y_fun_jac_ut_xt = Function([model_name,'_y_fun_jac_ut_xt'], {x, u, p}, {y, [jac_u'; jac_x']});
+	if (strcmp(model.cost_param_y, 'true'))
+		y_fun_jac_ut_xt = Function([model_name,'_cost_y_fun_jac_ut_xt'], {x, u, p}, {y, [jac_u'; jac_x']});
 	else
-		y_fun_jac_ut_xt = Function([model_name,'_y_fun_jac_ut_xt'], {x, u}, {y, [jac_u'; jac_x']});
+		y_fun_jac_ut_xt = Function([model_name,'_cost_y_fun_jac_ut_xt'], {x, u}, {y, [jac_u'; jac_x']});
 	end
 	% generate C code
-	y_fun_jac_ut_xt.generate([model_name,'_y_fun_jac_ut_xt'], casadi_opts);
+	y_fun_jac_ut_xt.generate([model_name,'_cost_y_fun_jac_ut_xt'], casadi_opts);
 end
 
-if isfield(model, 'expr_y_e')
-	y_e = model.expr_y_e;
+if isfield(model, 'cost_expr_y_e')
+	y_e = model.cost_expr_y_e;
 	% generate jacobians
 	jac_x_e     = jacobian(y_e, x);
 	% Set up functions
-	if (strcmp(model.param_y_e, 'true'))
-		y_e_fun_jac_ut_xt = Function([model_name,'_y_e_fun_jac_ut_xt'], {x, p}, {y_e, jac_x_e'});
+	if (strcmp(model.cost_param_y_e, 'true'))
+		y_e_fun_jac_ut_xt = Function([model_name,'_cost_y_e_fun_jac_ut_xt'], {x, p}, {y_e, jac_x_e'});
 	else
-		y_e_fun_jac_ut_xt = Function([model_name,'_y_e_fun_jac_ut_xt'], {x}, {y_e, jac_x_e'});
+		y_e_fun_jac_ut_xt = Function([model_name,'_cost_y_e_fun_jac_ut_xt'], {x}, {y_e, jac_x_e'});
 	end
 	% generate C code
-	y_e_fun_jac_ut_xt.generate([model_name,'_y_e_fun_jac_ut_xt'], casadi_opts);
+	y_e_fun_jac_ut_xt.generate([model_name,'_cost_y_e_fun_jac_ut_xt'], casadi_opts);
 end
 

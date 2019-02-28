@@ -35,8 +35,8 @@ sim_model = acados_sim_model();
 sim_model.set('T', Ts);
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('param_f', 'true');
-	sim_model.set('expr_f', model.expr_f_expl);
+	sim_model.set('dyn_param_f', 'true');
+	sim_model.set('dyn_expr_f', model.expr_f_expl);
 	sim_model.set('sym_x', model.sym_x);
 	if isfield(model, 'sym_u')
 		sim_model.set('sym_u', model.sym_u);
@@ -44,13 +44,13 @@ if (strcmp(method, 'erk'))
 	if isfield(model, 'sym_p')
 		sim_model.set('sym_p', model.sym_p);
 	end
-	sim_model.set('nx', model.nx);
-	sim_model.set('nu', model.nu);
-	sim_model.set('np', model.np);
+	sim_model.set('dim_nx', model.nx);
+	sim_model.set('dim_nu', model.nu);
+	sim_model.set('dim_np', model.np);
 else % irk
 	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('param_f', 'true');
-	sim_model.set('expr_f', model.expr_f_impl);
+	sim_model.set('dyn_param_f', 'true');
+	sim_model.set('dyn_expr_f', model.expr_f_impl);
 	sim_model.set('sym_x', model.sym_x);
 	sim_model.set('sym_xdot', model.sym_xdot);
 	if isfield(model, 'sym_u')
@@ -62,10 +62,10 @@ else % irk
 	if isfield(model, 'sym_p')
 		sim_model.set('sym_p', model.sym_p);
 	end
-	sim_model.set('nx', model.nx);
-	sim_model.set('nu', model.nu);
-%	sim_model.set('nz', model.nz);
-	sim_model.set('np', model.np);
+	sim_model.set('dim_nx', model.nx);
+	sim_model.set('dim_nu', model.nu);
+%	sim_model.set('dim_nz', model.nz);
+	sim_model.set('dim_np', model.np);
 end
 
 sim_model.model_struct

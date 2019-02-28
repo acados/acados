@@ -10,7 +10,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else
-  #define CASADI_PREFIX(ID) phi_jac_y_uhat_ ## ID
+  #define CASADI_PREFIX(ID) crane_nx9_phi_jac_y_uhat_ ## ID
 #endif
 
 #include <math.h>
@@ -28,7 +28,6 @@ extern "C" {
 #define casadi_s0 CASADI_PREFIX(s0)
 #define casadi_s1 CASADI_PREFIX(s1)
 #define casadi_s2 CASADI_PREFIX(s2)
-#define casadi_s3 CASADI_PREFIX(s3)
 
 /* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
@@ -47,10 +46,9 @@ extern "C" {
 
 static const casadi_int casadi_s0[8] = {4, 1, 0, 4, 0, 1, 2, 3};
 static const casadi_int casadi_s1[5] = {1, 1, 0, 1, 0};
-static const casadi_int casadi_s2[12] = {2, 4, 0, 1, 2, 4, 5, 0, 0, 0, 1, 0};
-static const casadi_int casadi_s3[5] = {2, 1, 0, 1, 0};
+static const casadi_int casadi_s2[11] = {1, 4, 0, 1, 2, 3, 4, 0, 0, 0, 0};
 
-/* casadi_phi_jac_y_uhat:(i0[4],i1)->(o0[2x4,5nz],o1[2x1,1nz]) */
+/* crane_nx9_phi_jac_y_uhat:(i0[4],i1)->(o0[1x4],o1) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2, a3, a4, a5, a6, a7, a8, a9;
   a0=4.7418203070092001e-02;
@@ -73,25 +71,21 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a4=(a4/a9);
   a4=(a4/a9);
   if (res[0]!=0) res[0][0]=a4;
+  a8=(a8/a9);
   a6=(a6*a8);
-  a6=(a6/a9);
   a6=(-a6);
   if (res[0]!=0) res[0][1]=a6;
-  a6=cos(a2);
-  a5=(a5*a6);
   a6=sin(a2);
-  a1=(a1*a6);
-  a5=(a5-a1);
+  a1=(a1/a9);
+  a6=(a6*a1);
+  a2=cos(a2);
   a5=(a5/a9);
-  a5=(-a5);
-  if (res[0]!=0) res[0][2]=a5;
-  a5=1.2500000000000000e-01;
-  a2=(a2+a2);
-  a5=(a5*a2);
-  if (res[0]!=0) res[0][3]=a5;
+  a2=(a2*a5);
+  a6=(a6-a2);
+  if (res[0]!=0) res[0][2]=a6;
   a7=(a7/a9);
   a7=(-a7);
-  if (res[0]!=0) res[0][4]=a7;
+  if (res[0]!=0) res[0][3]=a7;
   a0=(a0*a3);
   a0=(a0/a9);
   a0=(-a0);
@@ -99,21 +93,21 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT int casadi_phi_jac_y_uhat(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
+CASADI_SYMBOL_EXPORT int crane_nx9_phi_jac_y_uhat(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
   return casadi_f0(arg, res, iw, w, mem);
 }
 
-CASADI_SYMBOL_EXPORT void casadi_phi_jac_y_uhat_incref(void) {
+CASADI_SYMBOL_EXPORT void crane_nx9_phi_jac_y_uhat_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void casadi_phi_jac_y_uhat_decref(void) {
+CASADI_SYMBOL_EXPORT void crane_nx9_phi_jac_y_uhat_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT casadi_int casadi_phi_jac_y_uhat_n_in(void) { return 2;}
+CASADI_SYMBOL_EXPORT casadi_int crane_nx9_phi_jac_y_uhat_n_in(void) { return 2;}
 
-CASADI_SYMBOL_EXPORT casadi_int casadi_phi_jac_y_uhat_n_out(void) { return 2;}
+CASADI_SYMBOL_EXPORT casadi_int crane_nx9_phi_jac_y_uhat_n_out(void) { return 2;}
 
-CASADI_SYMBOL_EXPORT const char* casadi_phi_jac_y_uhat_name_in(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* crane_nx9_phi_jac_y_uhat_name_in(casadi_int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -121,7 +115,7 @@ CASADI_SYMBOL_EXPORT const char* casadi_phi_jac_y_uhat_name_in(casadi_int i){
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* casadi_phi_jac_y_uhat_name_out(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* crane_nx9_phi_jac_y_uhat_name_out(casadi_int i){
   switch (i) {
     case 0: return "o0";
     case 1: return "o1";
@@ -129,7 +123,7 @@ CASADI_SYMBOL_EXPORT const char* casadi_phi_jac_y_uhat_name_out(casadi_int i){
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* casadi_phi_jac_y_uhat_sparsity_in(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* crane_nx9_phi_jac_y_uhat_sparsity_in(casadi_int i) {
   switch (i) {
     case 0: return casadi_s0;
     case 1: return casadi_s1;
@@ -137,15 +131,15 @@ CASADI_SYMBOL_EXPORT const casadi_int* casadi_phi_jac_y_uhat_sparsity_in(casadi_
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* casadi_phi_jac_y_uhat_sparsity_out(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* crane_nx9_phi_jac_y_uhat_sparsity_out(casadi_int i) {
   switch (i) {
     case 0: return casadi_s2;
-    case 1: return casadi_s3;
+    case 1: return casadi_s1;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT int casadi_phi_jac_y_uhat_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
+CASADI_SYMBOL_EXPORT int crane_nx9_phi_jac_y_uhat_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 2;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;

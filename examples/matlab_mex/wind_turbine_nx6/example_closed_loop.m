@@ -138,19 +138,19 @@ u_end = zeros(nu, 1);
 ocp_model = acados_ocp_model();
 %% dims
 ocp_model.set('T', T);
-ocp_model.set('nx', nx);
-ocp_model.set('nu', nu);
-ocp_model.set('ny', ny);
-ocp_model.set('ny_e', ny_e);
-ocp_model.set('nbx', nbx);
-ocp_model.set('nbu', nbu);
-ocp_model.set('nh', nh);
-ocp_model.set('nh_e', nh_e);
-ocp_model.set('ns', ns);
-ocp_model.set('ns_e', ns_e);
-ocp_model.set('nsh', nsh);
-ocp_model.set('nsh_e', nsh_e);
-ocp_model.set('np', np);
+ocp_model.set('dim_nx', nx);
+ocp_model.set('dim_nu', nu);
+ocp_model.set('dim_ny', ny);
+ocp_model.set('dim_ny_e', ny_e);
+ocp_model.set('dim_nbx', nbx);
+ocp_model.set('dim_nbu', nbu);
+ocp_model.set('dim_nh', nh);
+ocp_model.set('dim_nh_e', nh_e);
+ocp_model.set('dim_ns', ns);
+ocp_model.set('dim_ns_e', ns_e);
+ocp_model.set('dim_nsh', nsh);
+ocp_model.set('dim_nsh_e', nsh_e);
+ocp_model.set('dim_np', np);
 %% symbolics
 ocp_model.set('sym_x', model.sym_x);
 ocp_model.set('sym_u', model.sym_u);
@@ -158,49 +158,49 @@ ocp_model.set('sym_xdot', model.sym_xdot);
 ocp_model.set('sym_p', model.sym_p);
 %% cost
 ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_e_type', cost_type);
+ocp_model.set('cost_type_e', cost_type);
 if (strcmp(cost_type, 'linear_ls'))
-	ocp_model.set('Vu', Vu);
-	ocp_model.set('Vx', Vx);
-	ocp_model.set('Vx_e', Vx_e);
+	ocp_model.set('cost_Vu', Vu);
+	ocp_model.set('cost_Vx', Vx);
+	ocp_model.set('cost_Vx_e', Vx_e);
 else % nonlinear_ls
-	ocp_model.set('expr_y', model.expr_y);
-	ocp_model.set('expr_y_e', model.expr_y_e);
+	ocp_model.set('cost_expr_y', model.expr_y);
+	ocp_model.set('cost_expr_y_e', model.expr_y_e);
 end
-ocp_model.set('W', W);
-ocp_model.set('W_e', W_e);
-ocp_model.set('Z', Z);
-ocp_model.set('Z_e', Z_e);
-ocp_model.set('z', z);
-ocp_model.set('z_e', z_e);
+ocp_model.set('cost_W', W);
+ocp_model.set('cost_W_e', W_e);
+ocp_model.set('cost_Z', Z);
+ocp_model.set('cost_Z_e', Z_e);
+ocp_model.set('cost_z', z);
+ocp_model.set('cost_z_e', z_e);
 %% dynamics
 if (strcmp(ocp_sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('expr_f', model.expr_f_expl);
+	ocp_model.set('dyn_expr_f', model.expr_f_expl);
 else % irk
 	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('expr_f', model.expr_f_impl);
+	ocp_model.set('dyn_expr_f', model.expr_f_impl);
 end
-ocp_model.set('param_f', 'true');
+ocp_model.set('dyn_param_f', 'true');
 %% constraints
 % state bounds
-ocp_model.set('Jbx', Jbx);
-ocp_model.set('lbx', lbx);
-ocp_model.set('ubx', ubx);
+ocp_model.set('constr_Jbx', Jbx);
+ocp_model.set('constr_lbx', lbx);
+ocp_model.set('constr_ubx', ubx);
 % input bounds
-ocp_model.set('Jbu', Jbu);
-ocp_model.set('lbu', lbu);
-ocp_model.set('ubu', ubu);
+ocp_model.set('constr_Jbu', Jbu);
+ocp_model.set('constr_lbu', lbu);
+ocp_model.set('constr_ubu', ubu);
 % nonlinear constraints
-ocp_model.set('expr_h', model.expr_h);
-ocp_model.set('lh', lh);
-ocp_model.set('uh', uh);
-ocp_model.set('expr_h_e', model.expr_h_e);
-ocp_model.set('lh_e', lh_e);
-ocp_model.set('uh_e', uh_e);
+ocp_model.set('constr_expr_h', model.expr_h);
+ocp_model.set('constr_lh', lh);
+ocp_model.set('constr_uh', uh);
+ocp_model.set('constr_expr_h_e', model.expr_h_e);
+ocp_model.set('constr_lh_e', lh_e);
+ocp_model.set('constr_uh_e', uh_e);
 % soft nonlinear constraints
-ocp_model.set('Jsh', Jsh);
-ocp_model.set('Jsh_e', Jsh_e);
+ocp_model.set('constr_Jsh', Jsh);
+ocp_model.set('constr_Jsh_e', Jsh_e);
 
 ocp_model.model_struct
 
@@ -237,9 +237,9 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 %% acados sim model
 sim_model = acados_sim_model();
 % dims
-sim_model.set('nx', nx);
-sim_model.set('nu', nu);
-sim_model.set('np', np);
+sim_model.set('dim_nx', nx);
+sim_model.set('dim_nu', nu);
+sim_model.set('dim_np', np);
 % symbolics
 sim_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
@@ -253,13 +253,13 @@ if isfield(model, 'sym_p')
 end
 % model
 sim_model.set('T', T/ocp_N);
-sim_model.set('param_f', 'true');
+sim_model.set('dyn_param_f', 'true');
 if (strcmp(sim_method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('expr_f', model.expr_f_expl);
+	sim_model.set('dyn_expr_f', model.expr_f_expl);
 else % irk
 	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('expr_f', model.expr_f_impl);
+	sim_model.set('dyn_expr_f', model.expr_f_impl);
 end
 
 %sim_model.model_struct
@@ -312,7 +312,7 @@ for ii=1:n_sim
 	tic
 
 	% set x0
-	ocp.set('x0', x_sim(:,ii));
+	ocp.set('constr_x0', x_sim(:,ii));
 	% set parameter
 	% TODO different parameter at each stage !!!!!
 %	ocp.set('p', wind0_ref(:,ii));
@@ -323,13 +323,13 @@ for ii=1:n_sim
 %	ocp.set('yr', y_ref(:,ii));
 %	ocp.set('yr_e', y_ref(:,ii));
 	for jj=0:ocp_N-1
-		ocp.set('yr', jj, y_ref(:,ii+jj));
+		ocp.set('cost_yr', jj, y_ref(:,ii+jj));
 	end
-	ocp.set('yr_e', y_ref(:,ii+ocp_N));
+	ocp.set('cost_yr_e', y_ref(:,ii+ocp_N));
 
 	% initialize trajectory
-	ocp.set('x_init', x_traj_init);
-	ocp.set('u_init', u_traj_init);
+	ocp.set('init_x', x_traj_init);
+	ocp.set('init_u', u_traj_init);
 
 %	x_traj_init
 %	u_traj_init

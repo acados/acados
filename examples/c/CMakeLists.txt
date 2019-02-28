@@ -173,11 +173,11 @@ file(GLOB INV_PENDULUM_SRC
 )
 
 file(GLOB GNSF_CRANE_SRC
-    gnsf_crane_model/phi_fun.c
-    gnsf_crane_model/phi_fun_jac_y.c
-    gnsf_crane_model/phi_jac_y_uhat.c
-    gnsf_crane_model/f_lo_fun_jac_x1k1uz.c
-    gnsf_crane_model/get_matrices_fun.c
+    crane_nx9_model/crane_nx9_phi_fun.c
+    crane_nx9_model/crane_nx9_phi_fun_jac_y.c
+    crane_nx9_model/crane_nx9_phi_jac_y_uhat.c
+    crane_nx9_model/crane_nx9_f_lo_fun_jac_x1k1uz.c
+    crane_nx9_model/crane_nx9_get_matrices_fun.c
 )
 
 file(GLOB ENGINE_SRC
