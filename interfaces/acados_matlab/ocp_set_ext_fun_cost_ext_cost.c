@@ -67,10 +67,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* LHS */
 
+	/* copy existing fields */
+
+//	plhs[0] = mxCreateSharedDataCopy(prhs[1]);
+	plhs[0] = mxDuplicateArray(prhs[1]);
 
 
 
-	/* populate input struc */
+	/* populate new fields */
 
 	external_function_casadi *ext_fun_ptr;
 	external_function_param_casadi *ext_fun_param_ptr;
@@ -96,7 +100,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxArray *ext_cost_jac_hes_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(ext_cost_jac_hes_mat);
 			ptr[0] = (long long) ext_fun_param_ptr;
-			mxSetField((mxArray*) prhs[1], 0, "cost_ext_cost_jac_hes", ext_cost_jac_hes_mat);
+			mxSetField(plhs[0], 0, "cost_ext_cost_jac_hes", ext_cost_jac_hes_mat);
 			}
 		else
 			{
@@ -116,7 +120,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxArray *ext_cost_jac_hes_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(ext_cost_jac_hes_mat);
 			ptr[0] = (long long) ext_fun_ptr;
-			mxSetField((mxArray*) prhs[1], 0, "cost_ext_cost_jac_hes", ext_cost_jac_hes_mat);
+			mxSetField(plhs[0], 0, "cost_ext_cost_jac_hes", ext_cost_jac_hes_mat);
 			}
 		}
 	

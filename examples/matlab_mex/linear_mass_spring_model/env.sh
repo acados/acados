@@ -16,10 +16,15 @@ export ACADOS_INSTALL_DIR
 echo
 echo "ACADOS_INSTALL_DIR=$ACADOS_INSTALL_DIR"
 
-# export casadi folder and matlab mex folder
+# export casadi folder and matlab/octave mex folder
+# MATLAB case
 export MATLABPATH=$MATLABPATH:$ACADOS_INSTALL_DIR/external/casadi-matlabR2014b-v3.4.0/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab/
 echo
 echo "MATLABPATH=$MATLABPATH"
+# Octave case
+export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave-v3.4.0/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab/
+echo
+echo "OCTAVE_PATH=$OCTAVE_PATH"
 
 # export acados mex flags
 #export ACADOS_MEX_FLAGS="GCC=/usr/bin/gcc-4.9"

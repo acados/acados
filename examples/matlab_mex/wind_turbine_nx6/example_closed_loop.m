@@ -14,8 +14,8 @@ sim_num_steps = 1;
 % ocp
 ocp_param_scheme = 'multiple_shooting_unif_grid';
 ocp_N = 40;
-ocp_nlp_solver = 'sqp';
-%ocp_nlp_solver = 'sqp_rti';
+%ocp_nlp_solver = 'sqp';
+ocp_nlp_solver = 'sqp_rti';
 ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_hpipm';
 ocp_qp_solver_N_pcond = 5;
