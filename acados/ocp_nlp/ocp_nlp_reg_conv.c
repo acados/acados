@@ -29,6 +29,8 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
 
+
+
 int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims)
 {
     int nx = dims->nx[0], nu = dims->nu[0], N = dims->N;
@@ -41,7 +43,7 @@ int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims)
     size += nu*nu*sizeof(double);             // V
     size += nu*sizeof(double);                // d
     size += (nx+nu)*(nx+nu)*sizeof(double);   // reg_hess
-    size += (N+1) * sizeof(struct blasfeo_dmat *);
+    size += (N+1)*sizeof(struct blasfeo_dmat); // original_RSQrq
 
     size += 1 * 64;
 
@@ -63,6 +65,8 @@ int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims)
 
     return size;
 }
+
+
 
 void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory)
 {
@@ -86,7 +90,8 @@ void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory)
     mem->reg_hess = (double *) c_ptr;
     c_ptr += (nx+nu)*(nx+nu)*sizeof(double);
 
-    mem->original_RSQrq = calloc(N+1, sizeof(struct blasfeo_dmat));
+    mem->original_RSQrq = (struct blasfeo_dmat *) c_ptr;
+    c_ptr += (N+1)*sizeof(struct blasfeo_dmat);
 
     align_char_to(64, &c_ptr);
 
@@ -110,6 +115,8 @@ void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory)
 
     return mem;
 }
+
+
 
 void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
                       ocp_nlp_reg_out *out, ocp_nlp_reg_opts *opts, void *mem_)
@@ -212,12 +219,13 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
     }
 }
 
+
+
 void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config)
 {
     config->opts_calculate_size = &ocp_nlp_reg_opts_calculate_size;
     config->opts_assign = &ocp_nlp_reg_opts_assign;
     config->memory_calculate_size = &ocp_nlp_reg_conv_calculate_memory_size;
     config->memory_assign = &ocp_nlp_reg_conv_assign_memory;
-
     config->evaluate = &ocp_nlp_reg_conv;
 }

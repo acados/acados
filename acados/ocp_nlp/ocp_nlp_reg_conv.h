@@ -28,6 +28,8 @@ extern "C" {
 
 #include "blasfeo/include/blasfeo_common.h"
 
+
+
 typedef struct {
     double *R;
     double *V;
@@ -48,9 +50,15 @@ typedef struct {
 
 } ocp_nlp_reg_conv_memory;
 
+
+
 int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims);
 
+
+
 void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory);
+
+
 
 void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config);
 
