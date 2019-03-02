@@ -27,6 +27,8 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
 
+
+
 int ocp_nlp_reg_mirror_memory_calculate_size(ocp_nlp_reg_dims *dims)
 {
     int nx = dims->nx[0], nu = dims->nu[0];
@@ -37,10 +39,12 @@ int ocp_nlp_reg_mirror_memory_calculate_size(ocp_nlp_reg_dims *dims)
 
     size += (nx+nu)*(nx+nu)*sizeof(double);  // reg_hess
     size += (nx+nu)*(nx+nu)*sizeof(double);  // V
-    size += (nx+nu)*sizeof(double);          // d
+    size += 2*(nx+nu)*sizeof(double);        // d, e
 
     return size;
 }
+
+
 
 void *ocp_nlp_reg_mirror_memory_assign(ocp_nlp_reg_dims *dims, void *raw_memory)
 {
@@ -60,10 +64,75 @@ void *ocp_nlp_reg_mirror_memory_assign(ocp_nlp_reg_dims *dims, void *raw_memory)
     mem->d = (double *) c_ptr;
     c_ptr += (nx+nu)*sizeof(double); // d
 
+    mem->e = (double *) c_ptr;
+    c_ptr += (nx+nu)*sizeof(double); // e
+
     assert((char *) mem + ocp_nlp_reg_mirror_memory_calculate_size(dims) >= c_ptr);
 
     return mem;
 }
+
+
+
+// reconstruct A = V * d * V'
+static void acados_reconstruct_A(int dim, double *A, double *V, double *d)
+{
+	int i, j, k;
+
+    for (i=0; i<dim; i++)
+    {
+        for (j=0; j<=i; j++)
+        {
+            A[i*dim+j] = 0.0;
+            for (k=0; k<dim; k++)
+                A[i*dim+j] += V[i*dim+k] * d[k] * V[j*dim+k];
+            A[j*dim+i] = A[i*dim+j];
+        }
+    }
+}
+
+
+
+// mirroring regularization
+static void acados_mirror(int dim, double *A, double *V, double *d, double *e, double epsilon)
+{
+	int i;
+
+    acados_eigen_decomposition(dim, A, V, d, e);
+
+    for (i = 0; i < dim; i++)
+    {
+		// project
+        if (d[i] >= -epsilon && d[i] <= epsilon)
+            d[i] = epsilon;
+		// mirror
+        else if (d[i] < 0)
+            d[i] = -d[i];
+    }
+
+    acados_reconstruct_A(dim, A, V, d);
+}
+
+
+
+// projecting regularization
+static void acados_project(int dim, double *A, double *V, double *d, double *e, double epsilon)
+{
+	int i;
+
+    acados_eigen_decomposition(dim, A, V, d, e);
+
+	// project
+    for (i = 0; i < dim; i++)
+    {
+        if (d[i] < epsilon)
+            d[i] = epsilon;
+    }
+
+    acados_reconstruct_A(dim, A, V, d);
+}
+
+
 
 void ocp_nlp_reg_mirror(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
                         ocp_nlp_reg_out *out, ocp_nlp_reg_opts *opts, void *mem_)
@@ -78,10 +147,13 @@ void ocp_nlp_reg_mirror(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in
 
         // regularize
         blasfeo_unpack_dmat(nx+nu, nx+nu, &in->RSQrq[i], 0, 0, mem->reg_hess, nx+nu);
-        acados_project(nx+nu, mem->reg_hess, mem->V, mem->d, 1e-4);
+//        acados_mirror(nx+nu, mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
+        acados_project(nx+nu, mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
         blasfeo_pack_dmat(nx+nu, nx+nu, mem->reg_hess, nx+nu, &in->RSQrq[i], 0, 0);
     }
 }
+
+
 
 void ocp_nlp_reg_mirror_config_initialize_default(ocp_nlp_reg_config *config)
 {
