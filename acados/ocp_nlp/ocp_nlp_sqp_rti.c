@@ -1008,6 +1008,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // extract dims
     int N = dims->N;
 
+	int ii;
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -1021,38 +1023,37 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for nowait
 #endif
-    for (int ii = 0; ii < N; ii++)
+    for (ii = 0; ii < N; ii++)
     {
-        config->dynamics[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_ux1_ptr(nlp_out->ux + ii + 1, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_pi_ptr(nlp_out->pi + ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_BAbt_ptr(work->qp_in->BAbt + ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_z_ptr(nlp_out->z, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_ux_ptr(nlp_out->ux+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_ux1_ptr(nlp_out->ux+ii+1, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_pi_ptr(nlp_out->pi+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_BAbt_ptr(work->qp_in->BAbt+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_z_ptr(nlp_out->z+ii, mem->dynamics[ii]);
     }
 
     // alias to cost_memory
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for nowait
 #endif
-    for (int ii = 0; ii <= N; ii++)
+    for (ii = 0; ii <= N; ii++)
     {
-        config->cost[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->cost[ii]);
-        config->cost[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii, mem->cost[ii]);
-        config->cost[ii]->memory_set_Z_ptr(work->qp_in->Z + ii, mem->cost[ii]);
+        config->cost[ii]->memory_set_ux_ptr(nlp_out->ux+ii, mem->cost[ii]);
+        config->cost[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq+ii, mem->cost[ii]);
+        config->cost[ii]->memory_set_Z_ptr(work->qp_in->Z+ii, mem->cost[ii]);
     }
 
     // alias to constraints_memory
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for nowait
 #endif
-    for (int ii = 0; ii <= N; ii++)
+    for (ii = 0; ii <= N; ii++)
     {
-        config->constraints[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->constraints[ii]);
-        config->constraints[ii]->memory_set_lam_ptr(nlp_out->lam + ii, mem->constraints[ii]);
-        config->constraints[ii]->memory_set_DCt_ptr(work->qp_in->DCt + ii, mem->constraints[ii]);
-        config->constraints[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii,
-                                                      mem->constraints[ii]);
+        config->constraints[ii]->memory_set_ux_ptr(nlp_out->ux+ii, mem->constraints[ii]);
+        config->constraints[ii]->memory_set_lam_ptr(nlp_out->lam+ii, mem->constraints[ii]);
+        config->constraints[ii]->memory_set_DCt_ptr(work->qp_in->DCt+ii, mem->constraints[ii]);
+        config->constraints[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq+ii, mem->constraints[ii]);
         config->constraints[ii]->memory_set_idxb_ptr(work->qp_in->idxb[ii], mem->constraints[ii]);
         config->constraints[ii]->memory_set_idxs_ptr(work->qp_in->idxs[ii], mem->constraints[ii]);
     }
