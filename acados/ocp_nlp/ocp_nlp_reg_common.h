@@ -34,12 +34,18 @@ typedef ocp_qp_in ocp_nlp_reg_in;
 
 typedef ocp_qp_out ocp_nlp_reg_out;
 
-typedef struct {
+
+
+typedef struct
+{
     double delta;
     double gamma;
 } ocp_nlp_reg_opts;
 
-typedef struct {
+
+
+typedef struct
+{
     int (*opts_calculate_size)(void);
     void *(*opts_assign)(void *raw_memory);
 

@@ -28,7 +28,8 @@ extern "C" {
 
 
 
-typedef struct {
+typedef struct
+{
     double *reg_hess;
     double *V;
     double *d;
