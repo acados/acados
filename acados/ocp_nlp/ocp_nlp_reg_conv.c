@@ -40,8 +40,8 @@ int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims)
     size += sizeof(ocp_nlp_reg_conv_memory);
 
     size += nu*nu*sizeof(double);             // R
-    size += nu*nu*sizeof(double);             // V
-    size += nu*sizeof(double);                // d
+    size += (nu+nx)*(nu+nx)*sizeof(double);   // V
+    size += 2*(nu+nx)*sizeof(double);         // d e
     size += (nx+nu)*(nx+nu)*sizeof(double);   // reg_hess
     size += (N+1)*sizeof(struct blasfeo_dmat); // original_RSQrq
 
@@ -82,10 +82,13 @@ void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory)
     c_ptr += nu*nu*sizeof(double);
 
     mem->V = (double *) c_ptr;
-    c_ptr += nu*nu*sizeof(double);
+    c_ptr += (nu+nx)*(nu+nx)*sizeof(double);
 
     mem->d = (double *) c_ptr;
-    c_ptr += nu*sizeof(double);
+    c_ptr += (nu+nx)*sizeof(double);
+
+    mem->e = (double *) c_ptr;
+    c_ptr += (nu+nx)*sizeof(double);
 
     mem->reg_hess = (double *) c_ptr;
     c_ptr += (nx+nu)*(nx+nu)*sizeof(double);
@@ -165,7 +168,7 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
         // blasfeo_print_dmat(nx+nu, nx, &BAQ, 0, 0);
 
         blasfeo_unpack_dmat(nu, nu, &in->RSQrq[i], 0, 0, mem->R, nu);
-        eigen_decomposition(nu, mem->R, mem->V, mem->d);
+        acados_eigen_decomposition(nu, mem->R, mem->V, mem->d, mem->e);
 
         bool needs_regularization = false;
         for (int j = 0; j < nu; ++j)
@@ -175,7 +178,7 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
         if (needs_regularization)
         {
             blasfeo_unpack_dmat(nx+nu, nx+nu, &in->RSQrq[i], 0, 0, mem->reg_hess, nx+nu);
-            mirror(nx+nu, mem->reg_hess, mem->V, mem->d, 1e-4);
+            acados_mirror(nx+nu, mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
             blasfeo_pack_dmat(nx+nu, nx+nu, mem->reg_hess, nx+nu, &in->RSQrq[i], 0, 0);
         }
 

@@ -34,6 +34,7 @@ typedef struct {
     double *R;
     double *V;
     double *d;
+    double *e;
     double *reg_hess;
 
     struct blasfeo_dmat Q_tilde;

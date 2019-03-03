@@ -26,6 +26,8 @@ extern "C" {
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 
+
+
 typedef ocp_qp_dims ocp_nlp_reg_dims;
 
 typedef ocp_qp_in ocp_nlp_reg_in;
@@ -48,6 +50,8 @@ typedef struct {
                     ocp_nlp_reg_opts *opts, void *mem_);
 } ocp_nlp_reg_config;
 
+
+
 int ocp_nlp_reg_opts_calculate_size(void);
 
 void *ocp_nlp_reg_opts_assign(void *raw_memory);
@@ -55,6 +59,13 @@ void *ocp_nlp_reg_opts_assign(void *raw_memory);
 int ocp_nlp_reg_config_calculate_size(void);
 
 void *ocp_nlp_reg_config_assign(void *raw_memory);
+
+/* regularization help functions */
+void acados_reconstruct_A(int dim, double *A, double *V, double *d);
+void acados_mirror(int dim, double *A, double *V, double *d, double *e, double epsilon);
+void acados_project(int dim, double *A, double *V, double *d, double *e, double epsilon);
+
+
 
 #ifdef __cplusplus
 }
