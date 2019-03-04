@@ -17,11 +17,80 @@
  *
  */
 
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "acados/utils/math.h"
 
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 
 
+
+/************************************************
+ * dims
+ ************************************************/
+
+int ocp_nlp_reg_dims_calculate_size(int N)
+{
+    int size = sizeof(ocp_nlp_reg_dims);
+
+    size += 2*(N+1)*sizeof(int); // nx nu
+
+    return size;
+}
+
+
+
+ocp_nlp_reg_dims *ocp_nlp_reg_dims_assign(int N, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+	// dims
+    ocp_nlp_reg_dims *dims = (ocp_nlp_reg_dims *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_reg_dims);
+	// nx
+	dims->nx = (int *) c_ptr;
+	c_ptr += (N+1)*sizeof(int);
+	// nu
+	dims->nu = (int *) c_ptr;
+	c_ptr += (N+1)*sizeof(int);
+
+    dims->N = N;
+
+    assert((char *) raw_memory + ocp_nlp_reg_dims_calculate_size(N) >= c_ptr);
+
+    return dims;
+}
+
+
+
+void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char *field, int* value)
+{
+
+    if (!strcmp(field, "nx"))
+    {
+		dims->nx[stage] = *value;
+    }
+    else if (!strcmp(field, "nu"))
+    {
+		dims->nu[stage] = *value;
+    }
+    else
+    {
+        printf("\nerror: dimension type %s not available in module ocp_nlp_reg\n", field);
+        exit(1);
+    }
+
+	return;
+}
+
+
+
+/************************************************
+ * opts
+ ************************************************/
 
 int ocp_nlp_reg_opts_calculate_size(void)
 {
@@ -37,6 +106,10 @@ void *ocp_nlp_reg_opts_assign(void *raw_memory)
 
 
 
+/************************************************
+ * config
+ ************************************************/
+
 int ocp_nlp_reg_config_calculate_size(void)
 {
     return sizeof(ocp_nlp_reg_config);
@@ -51,7 +124,9 @@ void *ocp_nlp_reg_config_assign(void *raw_memory)
 
 
 
-/* regularization help functions */
+/************************************************
+ * regularization help functions
+ ************************************************/
 
 // reconstruct A = V * d * V'
 void acados_reconstruct_A(int dim, double *A, double *V, double *d)

@@ -28,7 +28,27 @@ extern "C" {
 
 
 
-typedef ocp_qp_dims ocp_nlp_reg_dims;
+/* dims */
+
+//typedef ocp_qp_dims ocp_nlp_reg_dims;
+typedef struct
+{
+	int *nx;
+	int *nu;
+	int N;
+} ocp_nlp_reg_dims;
+
+//
+int ocp_nlp_reg_dims_calculate_size(int N);
+//
+ocp_nlp_reg_dims *ocp_nlp_reg_dims_assign(int N, void *raw_memory);
+//
+void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char *field, int* value);
+
+
+
+
+/* othere stuff */
 
 typedef ocp_qp_in ocp_nlp_reg_in;
 
@@ -46,6 +66,10 @@ typedef struct
 
 typedef struct
 {
+    /* dims */
+    int (*dims_calculate_size)(int N);
+    ocp_nlp_reg_dims *(*dims_assign)(int N, void *raw_memory);
+	void (*dims_set)(void *config, ocp_nlp_reg_dims *dims, int stage, char *field, int *value);
     /* opts */
     int (*opts_calculate_size)(void);
     void *(*opts_assign)(void *raw_memory);

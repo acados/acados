@@ -255,10 +255,17 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
 
 void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config)
 {
+	// dims
+    config->dims_calculate_size = &ocp_nlp_reg_dims_calculate_size;
+    config->dims_assign = &ocp_nlp_reg_dims_assign;
+    config->dims_set = &ocp_nlp_reg_dims_set;
+	// opts
     config->opts_calculate_size = &ocp_nlp_reg_opts_calculate_size;
     config->opts_assign = &ocp_nlp_reg_opts_assign;
+	// memory
     config->memory_calculate_size = &ocp_nlp_reg_conv_calculate_memory_size;
     config->memory_assign = &ocp_nlp_reg_conv_assign_memory;
     config->memory_set_RSQrq_ptr = &ocp_nlp_reg_conv_memory_set_RSQrq_ptr;
+	// functions
     config->evaluate = &ocp_nlp_reg_conv;
 }
