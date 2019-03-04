@@ -29,6 +29,24 @@
 
 
 /************************************************
+ * config
+ ************************************************/
+
+int ocp_nlp_reg_config_calculate_size(void)
+{
+    return sizeof(ocp_nlp_reg_config);
+}
+
+
+
+void *ocp_nlp_reg_config_assign(void *raw_memory)
+{
+    return raw_memory;
+}
+
+
+
+/************************************************
  * dims
  ************************************************/
 
@@ -146,27 +164,6 @@ void ocp_nlp_reg_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, ch
     }
 
 	return;
-}
-
-
-
-
-
-
-/************************************************
- * config
- ************************************************/
-
-int ocp_nlp_reg_config_calculate_size(void)
-{
-    return sizeof(ocp_nlp_reg_config);
-}
-
-
-
-void *ocp_nlp_reg_config_assign(void *raw_memory)
-{
-    return raw_memory;
 }
 
 

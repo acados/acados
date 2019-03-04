@@ -191,7 +191,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
     if (config->regularization != NULL)
     {
         opts->reg_opts->delta = 1e-4;
-        opts->reg_opts->gamma = 0.0;
+//        opts->reg_opts->gamma = 0.0;
     }
 
     // dynamics
