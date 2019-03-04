@@ -55,17 +55,29 @@ int main()
 		config->dims_set(config, dims, ii, "nu", nu+ii);
 	}
 
+    /************************************************
+     * opts
+     ************************************************/
+
+	int opts_size = config->opts_calculate_size();
+	void * opts_mem = malloc(opts_size);
+	ocp_nlp_reg_opts *opts = config->opts_assign(opts_mem);
+
+	config->opts_initialize_default(config, dims, opts);
+
+	double delta = 1e-4;
+	config->opts_set(config, dims, opts, "delta", &delta);
 
 
 
-	/* free memory */
+    /************************************************
+     * free memory & return
+     ************************************************/
 
 	free(nx);
 	free(nu);
 	free(config_mem);
 	free(dims_mem);
-
-	/* return */
 
 	printf("\nsuccess !\n\n");
 

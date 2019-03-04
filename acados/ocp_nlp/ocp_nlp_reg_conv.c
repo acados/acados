@@ -262,6 +262,8 @@ void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config)
 	// opts
     config->opts_calculate_size = &ocp_nlp_reg_opts_calculate_size;
     config->opts_assign = &ocp_nlp_reg_opts_assign;
+    config->opts_initialize_default = &ocp_nlp_reg_opts_initialize_default;
+    config->opts_set = &ocp_nlp_reg_opts_set;
 	// memory
     config->memory_calculate_size = &ocp_nlp_reg_conv_calculate_memory_size;
     config->memory_assign = &ocp_nlp_reg_conv_assign_memory;

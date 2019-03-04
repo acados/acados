@@ -79,7 +79,7 @@ void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char
     }
     else
     {
-        printf("\nerror: dimension type %s not available in module ocp_nlp_reg\n", field);
+        printf("\nerror: field %s not available in module ocp_nlp_reg_dims_set\n", field);
         exit(1);
     }
 
@@ -89,7 +89,7 @@ void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char
 
 
 /************************************************
- * opts
+ * opts TODO move in instances !!!
  ************************************************/
 
 int ocp_nlp_reg_opts_calculate_size(void)
@@ -103,6 +103,53 @@ void *ocp_nlp_reg_opts_assign(void *raw_memory)
 {
     return raw_memory;
 }
+
+
+
+void ocp_nlp_reg_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
+{
+	ocp_nlp_reg_opts *opts = opts_;
+
+	opts->delta = 1e-4;
+//	opts->gamma = 0.0;
+	opts->epsilon = 1e-4;
+
+	return;
+}
+
+
+
+void ocp_nlp_reg_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value)
+{
+
+	ocp_nlp_reg_opts *opts = opts_;
+
+    if (!strcmp(field, "delta"))
+    {
+		double *d_ptr = value;
+		opts->delta = *d_ptr;
+    }
+//    else if (!strcmp(field, "gamma"))
+//    {
+//		double *d_ptr = value;
+//		opts->gamma = *d_ptr;
+//    }
+    else if (!strcmp(field, "epsilon"))
+    {
+		double *d_ptr = value;
+		opts->epsilon = *d_ptr;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in module ocp_nlp_reg_opts_set\n", field);
+        exit(1);
+    }
+
+	return;
+}
+
+
+
 
 
 

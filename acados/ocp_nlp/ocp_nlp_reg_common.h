@@ -47,6 +47,25 @@ void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char
 
 
 
+/* opts TODO move in instances !!! */
+
+typedef struct
+{
+    double delta;
+//    double gamma; // unused !!!
+	double epsilon;
+} ocp_nlp_reg_opts;
+
+//
+int ocp_nlp_reg_opts_calculate_size(void);
+//
+void *ocp_nlp_reg_opts_assign(void *raw_memory);
+//
+void ocp_nlp_reg_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
+//
+void ocp_nlp_reg_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value);
+
+
 
 /* othere stuff */
 
@@ -54,13 +73,6 @@ typedef ocp_qp_in ocp_nlp_reg_in;
 
 typedef ocp_qp_out ocp_nlp_reg_out;
 
-
-
-typedef struct
-{
-    double delta;
-    double gamma;
-} ocp_nlp_reg_opts;
 
 
 
@@ -73,6 +85,8 @@ typedef struct
     /* opts */
     int (*opts_calculate_size)(void);
     void *(*opts_assign)(void *raw_memory);
+	void (*opts_initialize_default)(void *config, ocp_nlp_reg_dims *dims, void *opts);
+	void (*opts_set)(void *config, ocp_nlp_reg_dims *dims, void *opts, char *field, void* value);
     /* memory */
     int (*memory_calculate_size)(ocp_nlp_reg_dims *dims);
     void *(*memory_assign)(ocp_nlp_reg_dims *dims, void *raw_memory);
@@ -83,10 +97,6 @@ typedef struct
 } ocp_nlp_reg_config;
 
 
-
-int ocp_nlp_reg_opts_calculate_size(void);
-
-void *ocp_nlp_reg_opts_assign(void *raw_memory);
 
 int ocp_nlp_reg_config_calculate_size(void);
 
