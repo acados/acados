@@ -36,7 +36,6 @@
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
-#include "acados/ocp_nlp/ocp_nlp_reg_conv.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/math.h"
@@ -1089,6 +1088,12 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->constraints[ii]->memory_set_idxb_ptr(work->qp_in->idxb[ii], mem->constraints[ii]);
         config->constraints[ii]->memory_set_idxs_ptr(work->qp_in->idxs[ii], mem->constraints[ii]);
     }
+
+	// alias to reg memory
+    if (config->regularization != NULL)
+	{
+		config->regularization->memory_set_RSQrq_ptr(N, work->qp_in->RSQrq, mem->reg_mem);
+	}
 
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)

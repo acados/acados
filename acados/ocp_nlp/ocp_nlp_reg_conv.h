@@ -24,18 +24,38 @@
 extern "C" {
 #endif
 
-#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 
+
+// blasfeo
 #include "blasfeo/include/blasfeo_common.h"
 
+// acados
+#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 
+
+
+/************************************************
+ * dims
+ ************************************************/
+
+ // TODO
+
+/************************************************
+ * options
+ ************************************************/
+
+ // TODO
+
+/************************************************
+ * memory
+ ************************************************/
 
 typedef struct {
     double *R;
-    double *V;
-    double *d;
-    double *e;
-    double *reg_hess;
+    double *V; // TODO move to workspace
+    double *d; // TODO move to workspace
+    double *e; // TODO move to workspace
+    double *reg_hess; // TODO move to workspace
 
     struct blasfeo_dmat Q_tilde;
     struct blasfeo_dmat Q_bar;
@@ -49,18 +69,27 @@ typedef struct {
     struct blasfeo_dvec grad;
     struct blasfeo_dvec b;
 
+	// giaf's
+    struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in
+
 } ocp_nlp_reg_conv_memory;
 
-
-
+//
 int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims);
-
-
-
+//
 void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory);
 
+/************************************************
+ * workspace
+ ************************************************/
 
+ // TODO
 
+/************************************************
+ * functions
+ ************************************************/
+
+//
 void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config);
 
 #ifdef __cplusplus

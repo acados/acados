@@ -29,6 +29,10 @@
 
 
 
+/************************************************
+ * memory
+ ************************************************/
+
 int ocp_nlp_reg_mirror_memory_calculate_size(ocp_nlp_reg_dims *dims)
 {
     int *nx = dims->nx;
@@ -50,6 +54,7 @@ int ocp_nlp_reg_mirror_memory_calculate_size(ocp_nlp_reg_dims *dims)
     size += nuxM*nuxM*sizeof(double);  // reg_hess
     size += nuxM*nuxM*sizeof(double);  // V
     size += 2*nuxM*sizeof(double);     // d e
+	size += (N+1)*sizeof(struct blasfeo_dmat *); // RSQrq
 
     return size;
 }
@@ -87,12 +92,35 @@ void *ocp_nlp_reg_mirror_memory_assign(ocp_nlp_reg_dims *dims, void *raw_memory)
     mem->e = (double *) c_ptr;
     c_ptr += nuxM*sizeof(double); // e
 
+	mem->RSQrq = (struct blasfeo_dmat **) c_ptr;
+	c_ptr += (N+1)*sizeof(struct blasfeo_dmat *); // RSQrq
+
     assert((char *) mem + ocp_nlp_reg_mirror_memory_calculate_size(dims) >= c_ptr);
 
     return mem;
 }
 
 
+
+void ocp_nlp_reg_mirror_memory_set_RSQrq_ptr(int N, struct blasfeo_dmat *RSQrq, void *memory_)
+{
+    ocp_nlp_reg_mirror_memory *memory = memory_;
+
+	int ii;
+
+	for(ii=0; ii<=N; ii++)
+	{
+		memory->RSQrq[ii] = RSQrq+ii;
+	}
+
+    return;
+}
+
+
+
+/************************************************
+ * functions
+ ************************************************/
 
 void ocp_nlp_reg_mirror(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
                         ocp_nlp_reg_out *out, ocp_nlp_reg_opts *opts, void *mem_)
@@ -126,5 +154,6 @@ void ocp_nlp_reg_mirror_config_initialize_default(ocp_nlp_reg_config *config)
     config->opts_assign = &ocp_nlp_reg_opts_assign;
     config->memory_calculate_size = &ocp_nlp_reg_mirror_memory_calculate_size;
     config->memory_assign = &ocp_nlp_reg_mirror_memory_assign;
+    config->memory_set_RSQrq_ptr = &ocp_nlp_reg_mirror_memory_set_RSQrq_ptr;
     config->evaluate = &ocp_nlp_reg_mirror;
 }

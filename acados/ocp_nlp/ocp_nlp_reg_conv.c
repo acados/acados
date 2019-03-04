@@ -31,6 +31,10 @@
 
 
 
+/************************************************
+ * memory
+ ************************************************/
+
 int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims)
 {
     int nx = dims->nx[0], nu = dims->nu[0], N = dims->N;
@@ -62,6 +66,8 @@ int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims)
 
     size += blasfeo_memsize_dvec(nx);
     size += blasfeo_memsize_dvec(nx);
+
+	size += (N+1)*sizeof(struct blasfeo_dmat *); // RSQrq
 
     return size;
 }
@@ -96,6 +102,9 @@ void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory)
     mem->original_RSQrq = (struct blasfeo_dmat *) c_ptr;
     c_ptr += (N+1)*sizeof(struct blasfeo_dmat);
 
+	mem->RSQrq = (struct blasfeo_dmat **) c_ptr;
+	c_ptr += (N+1)*sizeof(struct blasfeo_dmat *); // RSQrq
+
     align_char_to(64, &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &mem->Q_tilde, &c_ptr);
@@ -120,6 +129,26 @@ void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory)
 }
 
 
+
+void ocp_nlp_reg_conv_memory_set_RSQrq_ptr(int N, struct blasfeo_dmat *RSQrq, void *memory_)
+{
+    ocp_nlp_reg_conv_memory *memory = memory_;
+
+	int ii;
+
+	for(ii=0; ii<=N; ii++)
+	{
+		memory->RSQrq[ii] = RSQrq+ii;
+	}
+
+    return;
+}
+
+
+
+/************************************************
+ * functions
+ ************************************************/
 
 void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
                       ocp_nlp_reg_out *out, ocp_nlp_reg_opts *opts, void *mem_)
@@ -230,5 +259,6 @@ void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config)
     config->opts_assign = &ocp_nlp_reg_opts_assign;
     config->memory_calculate_size = &ocp_nlp_reg_conv_calculate_memory_size;
     config->memory_assign = &ocp_nlp_reg_conv_assign_memory;
+    config->memory_set_RSQrq_ptr = &ocp_nlp_reg_conv_memory_set_RSQrq_ptr;
     config->evaluate = &ocp_nlp_reg_conv;
 }

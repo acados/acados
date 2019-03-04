@@ -35,6 +35,7 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/mem.h"
@@ -1058,6 +1059,12 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->constraints[ii]->memory_set_idxs_ptr(work->qp_in->idxs[ii], mem->constraints[ii]);
     }
 
+	// alias to reg memory
+    if (config->regularization != NULL)
+	{
+		config->regularization->memory_set_RSQrq_ptr(N, work->qp_in->RSQrq, mem->reg_mem);
+	}
+
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for nowait
@@ -1247,7 +1254,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_nlp_sqp_rti_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp_rti;
     config->config_initialize_default = &ocp_nlp_sqp_rti_config_initialize_default;
-    config->regularization = NULL;
+    config->regularization = NULL; // XXX what is this ?????????????
     config->precompute = &ocp_nlp_sqp_rti_precompute;
     config->get = &ocp_nlp_sqp_rti_get;
 

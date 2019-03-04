@@ -24,24 +24,59 @@
 extern "C" {
 #endif
 
+
+
+// blasfeo
+#include "blasfeo/include/blasfeo_common.h"
+
+// acados
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 
 
 
+/************************************************
+ * dims
+ ************************************************/
+
+ // TODO
+
+/************************************************
+ * options
+ ************************************************/
+
+ // TODO
+
+/************************************************
+ * memory
+ ************************************************/
+
 typedef struct
 {
-    double *reg_hess;
-    double *V;
-    double *d;
-    double *e;
+    double *reg_hess; // TODO move to workspace
+    double *V; // TODO move to workspace
+    double *d; // TODO move to workspace
+    double *e; // TODO move to workspace
+
+	// giaf's
+    struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in
 } ocp_nlp_reg_mirror_memory;
 
-
-
+//
 int ocp_nlp_reg_mirror_memory_calculate_size(ocp_nlp_reg_dims *dims);
-
+//
 void *ocp_nlp_reg_mirror_memory_assign(ocp_nlp_reg_dims *dims, void *raw_memory);
 
+/************************************************
+ * workspace
+ ************************************************/
+
+ // TODO
+
+/************************************************
+ * functions
+ ************************************************/
+
+//
 void ocp_nlp_reg_mirror_config_initialize_default(ocp_nlp_reg_config *config);
 
 

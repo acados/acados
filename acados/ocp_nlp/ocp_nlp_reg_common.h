@@ -46,12 +46,14 @@ typedef struct
 
 typedef struct
 {
+    /* opts */
     int (*opts_calculate_size)(void);
     void *(*opts_assign)(void *raw_memory);
-
+    /* memory */
     int (*memory_calculate_size)(ocp_nlp_reg_dims *dims);
     void *(*memory_assign)(ocp_nlp_reg_dims *dims, void *raw_memory);
-
+    void (*memory_set_RSQrq_ptr)(int N, struct blasfeo_dmat *RSQrq, void *memory_);
+    /* functions */
     void (*evaluate)(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in, ocp_nlp_reg_out *out,
                     ocp_nlp_reg_opts *opts, void *mem_);
 } ocp_nlp_reg_config;
