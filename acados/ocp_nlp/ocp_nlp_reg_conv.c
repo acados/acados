@@ -19,9 +19,11 @@
 
 #include "acados/ocp_nlp/ocp_nlp_reg_conv.h"
 
-#include <assert.h>
-#include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <assert.h>
 
 #include "acados/utils/math.h"
 #include "acados/utils/mem.h"
@@ -130,17 +132,38 @@ void *ocp_nlp_reg_conv_assign_memory(void *config_, ocp_nlp_reg_dims *dims, void
 
 
 
-void ocp_nlp_reg_conv_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *RSQrq, void *memory_)
+void ocp_nlp_reg_conv_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *memory_, char *field, void *value)
 {
     ocp_nlp_reg_conv_memory *memory = memory_;
 
 	int ii;
 
 	int N = dims->N;
+//	int *nx = dims->nx;
+//	int *nu = dims->nu;
 
-	for(ii=0; ii<=N; ii++)
+	if(!strcmp(field, "RSQrq_ptr"))
 	{
-		memory->RSQrq[ii] = RSQrq+ii;
+		struct blasfeo_dmat *RSQrq = value;
+		for(ii=0; ii<=N; ii++)
+		{
+			memory->RSQrq[ii] = RSQrq+ii;
+//			blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], memory->RSQrq[ii], 0, 0);
+		}
+	}
+	if(!strcmp(field, "BAbt_ptr"))
+	{
+		struct blasfeo_dmat *BAbt = value;
+		for(ii=0; ii<N; ii++)
+		{
+			memory->BAbt[ii] = BAbt+ii;
+//			blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], memory->BAbt[ii], 0, 0);
+		}
+	}
+	else
+	{
+		printf("\nerror: field %s not available in ocp_nlp_reg_conv_set\n", field);
+		exit(1);
 	}
 
     return;
@@ -269,7 +292,7 @@ void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config)
 	// memory
     config->memory_calculate_size = &ocp_nlp_reg_conv_calculate_memory_size;
     config->memory_assign = &ocp_nlp_reg_conv_assign_memory;
-    config->memory_set_RSQrq_ptr = &ocp_nlp_reg_conv_memory_set_RSQrq_ptr;
+    config->memory_set = &ocp_nlp_reg_conv_memory_set;
 	// functions
     config->evaluate = &ocp_nlp_reg_conv;
 }

@@ -90,9 +90,9 @@ typedef struct
     /* memory */
     int (*memory_calculate_size)(void *config, ocp_nlp_reg_dims *dims, void *opts);
     void *(*memory_assign)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
-    void (*memory_set_RSQrq_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *RSQrq, void *memory_);
+    void (*memory_set)(void *config, ocp_nlp_reg_dims *dims, void *memory, char *field, void* value);
     /* functions */
-    void (*evaluate)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *mem);
+    void (*evaluate)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *memory);
 } ocp_nlp_reg_config;
 
 

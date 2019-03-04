@@ -159,7 +159,7 @@ void ocp_nlp_reg_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, ch
     }
     else
     {
-        printf("\nerror: field %s not available in module ocp_nlp_reg_opts_set\n", field);
+        printf("\nerror: field %s not available in ocp_nlp_reg_opts_set\n", field);
         exit(1);
     }
 
