@@ -71,13 +71,14 @@ typedef struct {
 
 	// giaf's
     struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in
+    struct blasfeo_dmat **BAbt;  // pointer to BAbt in qp_in TODO
 
 } ocp_nlp_reg_conv_memory;
 
 //
-int ocp_nlp_reg_conv_calculate_memory_size(ocp_nlp_reg_dims *dims);
+int ocp_nlp_reg_conv_calculate_memory_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
 //
-void *ocp_nlp_reg_conv_assign_memory(ocp_nlp_reg_dims *dims, void *raw_memory);
+void *ocp_nlp_reg_conv_assign_memory(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
 
 /************************************************
  * workspace

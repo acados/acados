@@ -88,12 +88,11 @@ typedef struct
 	void (*opts_initialize_default)(void *config, ocp_nlp_reg_dims *dims, void *opts);
 	void (*opts_set)(void *config, ocp_nlp_reg_dims *dims, void *opts, char *field, void* value);
     /* memory */
-    int (*memory_calculate_size)(ocp_nlp_reg_dims *dims);
-    void *(*memory_assign)(ocp_nlp_reg_dims *dims, void *raw_memory);
-    void (*memory_set_RSQrq_ptr)(int N, struct blasfeo_dmat *RSQrq, void *memory_);
+    int (*memory_calculate_size)(void *config, ocp_nlp_reg_dims *dims, void *opts);
+    void *(*memory_assign)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
+    void (*memory_set_RSQrq_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *RSQrq, void *memory_);
     /* functions */
-    void (*evaluate)(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in, ocp_nlp_reg_out *out,
-                    ocp_nlp_reg_opts *opts, void *mem_);
+    void (*evaluate)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *mem);
 } ocp_nlp_reg_config;
 
 

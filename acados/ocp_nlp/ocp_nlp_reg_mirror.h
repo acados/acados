@@ -62,9 +62,9 @@ typedef struct
 } ocp_nlp_reg_mirror_memory;
 
 //
-int ocp_nlp_reg_mirror_memory_calculate_size(ocp_nlp_reg_dims *dims);
+int ocp_nlp_reg_mirror_memory_calculate_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
 //
-void *ocp_nlp_reg_mirror_memory_assign(ocp_nlp_reg_dims *dims, void *raw_memory);
+void *ocp_nlp_reg_mirror_memory_assign(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
 
 /************************************************
  * workspace

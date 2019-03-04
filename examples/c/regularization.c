@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// blasfeo
+#include <blasfeo/include/blasfeo.h>
+
 // acados
 #include <acados/ocp_nlp/ocp_nlp_reg_common.h>
 #include <acados/ocp_nlp/ocp_nlp_reg_mirror.h>
@@ -14,7 +17,7 @@ int main()
 	
 	printf("\nregularization example\n\n");
 
-	int ii;
+	int ii, jj;
 
     /************************************************
      * config
@@ -68,7 +71,40 @@ int main()
 	double delta = 1e-4;
 	config->opts_set(config, dims, opts, "delta", &delta);
 
+    /************************************************
+     * memory
+     ************************************************/
 
+	int memory_size = config->memory_calculate_size(config, dims, opts);
+	void * memory_mem = malloc(memory_size);
+	void *memory = config->memory_assign(config, dims, opts, memory_mem);
+
+	struct blasfeo_dmat *RSQrq = malloc((N+1)*sizeof(struct blasfeo_dmat));
+	for(ii=0; ii<=N; ii++)
+	{
+		blasfeo_allocate_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], RSQrq+ii);
+		for(jj=0; jj<nu[ii]; jj++)
+			BLASFEO_DMATEL(RSQrq+ii, jj, jj) = 2*ii;
+		for(jj=0; jj<nx[ii]; jj++)
+			BLASFEO_DMATEL(RSQrq+ii, nu[ii]+jj, nu[ii]+jj) = -ii;
+	}
+
+	config->memory_set_RSQrq_ptr(dims, RSQrq, memory);
+
+    /************************************************
+     * regularize function
+     ************************************************/
+
+	printf("\nbefore regularization\n\n");
+	for(ii=0; ii<=N; ii++)
+		blasfeo_print_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], RSQrq+ii, 0, 0);
+
+	// regularization
+	config->evaluate(config, dims, opts, memory);
+
+	printf("\nafter regularization\n\n");
+	for(ii=0; ii<=N; ii++)
+		blasfeo_print_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], RSQrq+ii, 0, 0);
 
     /************************************************
      * free memory & return
@@ -78,6 +114,11 @@ int main()
 	free(nu);
 	free(config_mem);
 	free(dims_mem);
+	free(opts_mem);
+	free(memory_mem);
+	for(ii=0; ii<=N; ii++)
+		blasfeo_free_dmat(RSQrq+ii);
+	free(RSQrq);
 
 	printf("\nsuccess !\n\n");
 

@@ -326,7 +326,7 @@ int ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
     if (config->regularization != NULL)
-        size += config->regularization->memory_calculate_size(dims->qp_solver);
+        size += config->regularization->memory_calculate_size(NULL, dims->qp_solver, NULL);
 
     // dynamics
     size += N * sizeof(void *);
@@ -395,8 +395,8 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, voi
     // regularization
     if (config->regularization != NULL)
     {
-        mem->reg_mem = config->regularization->memory_assign(dims->qp_solver, c_ptr);
-        c_ptr += config->regularization->memory_calculate_size(dims->qp_solver);
+        mem->reg_mem = config->regularization->memory_assign(NULL, dims->qp_solver, NULL, c_ptr);
+        c_ptr += config->regularization->memory_calculate_size(NULL, dims->qp_solver, NULL);
     }
 
     // nlp mem

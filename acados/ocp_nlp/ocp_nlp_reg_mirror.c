@@ -33,7 +33,7 @@
  * memory
  ************************************************/
 
-int ocp_nlp_reg_mirror_memory_calculate_size(ocp_nlp_reg_dims *dims)
+int ocp_nlp_reg_mirror_memory_calculate_size(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
 {
     int *nx = dims->nx;
 	int *nu = dims->nu;
@@ -61,7 +61,7 @@ int ocp_nlp_reg_mirror_memory_calculate_size(ocp_nlp_reg_dims *dims)
 
 
 
-void *ocp_nlp_reg_mirror_memory_assign(ocp_nlp_reg_dims *dims, void *raw_memory)
+void *ocp_nlp_reg_mirror_memory_assign(void *config_, ocp_nlp_reg_dims *dims, void *opts_, void *raw_memory)
 {
     int *nx = dims->nx;
 	int *nu = dims->nu;
@@ -95,22 +95,27 @@ void *ocp_nlp_reg_mirror_memory_assign(ocp_nlp_reg_dims *dims, void *raw_memory)
 	mem->RSQrq = (struct blasfeo_dmat **) c_ptr;
 	c_ptr += (N+1)*sizeof(struct blasfeo_dmat *); // RSQrq
 
-    assert((char *) mem + ocp_nlp_reg_mirror_memory_calculate_size(dims) >= c_ptr);
+    assert((char *) mem + ocp_nlp_reg_mirror_memory_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return mem;
 }
 
 
 
-void ocp_nlp_reg_mirror_memory_set_RSQrq_ptr(int N, struct blasfeo_dmat *RSQrq, void *memory_)
+void ocp_nlp_reg_mirror_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *RSQrq, void *memory_)
 {
     ocp_nlp_reg_mirror_memory *memory = memory_;
 
 	int ii;
 
+	int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+
 	for(ii=0; ii<=N; ii++)
 	{
 		memory->RSQrq[ii] = RSQrq+ii;
+//		blasfeo_print_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], memory->RSQrq[ii], 0, 0);
 	}
 
     return;
@@ -122,10 +127,10 @@ void ocp_nlp_reg_mirror_memory_set_RSQrq_ptr(int N, struct blasfeo_dmat *RSQrq, 
  * functions
  ************************************************/
 
-void ocp_nlp_reg_mirror(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in,
-                        ocp_nlp_reg_out *out, ocp_nlp_reg_opts *opts, void *mem_)
+void ocp_nlp_reg_mirror(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
     ocp_nlp_reg_mirror_memory *mem = (ocp_nlp_reg_mirror_memory *) mem_;
+    ocp_nlp_reg_opts *opts = opts_;
 
 	int ii;
 
@@ -136,13 +141,13 @@ void ocp_nlp_reg_mirror(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in
     for(ii=0; ii<=dims->N; ii++)
     {
         // make symmetric
-        blasfeo_dtrtr_l(nu[ii]+nx[ii], &in->RSQrq[ii], 0, 0, &in->RSQrq[ii], 0, 0);
+        blasfeo_dtrtr_l(nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
 
         // regularize
-        blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], &in->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
-//        acados_mirror(nx+nu, mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
-        acados_project(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
-        blasfeo_pack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->reg_hess, nu[ii]+nx[ii], &in->RSQrq[ii], 0, 0);
+        blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
+//        acados_mirror(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, opts->epsilon);
+        acados_project(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, opts->epsilon);
+        blasfeo_pack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->reg_hess, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
     }
 }
 
