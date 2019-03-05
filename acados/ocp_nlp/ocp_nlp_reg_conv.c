@@ -34,6 +34,62 @@
 
 
 /************************************************
+ * opts
+ ************************************************/
+
+int ocp_nlp_reg_conv_opts_calculate_size(void)
+{
+    return sizeof(ocp_nlp_reg_conv_opts);
+}
+
+
+
+void *ocp_nlp_reg_conv_opts_assign(void *raw_memory)
+{
+    return raw_memory;
+}
+
+
+
+void ocp_nlp_reg_conv_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
+{
+	ocp_nlp_reg_conv_opts *opts = opts_;
+
+	opts->delta = 1e-4;
+	opts->epsilon = 1e-4;
+
+	return;
+}
+
+
+
+void ocp_nlp_reg_conv_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value)
+{
+
+	ocp_nlp_reg_conv_opts *opts = opts_;
+
+    if (!strcmp(field, "delta"))
+    {
+		double *d_ptr = value;
+		opts->delta = *d_ptr;
+    }
+    else if (!strcmp(field, "epsilon"))
+    {
+		double *d_ptr = value;
+		opts->epsilon = *d_ptr;
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_reg_conv_opts_set\n", field);
+        exit(1);
+    }
+
+	return;
+}
+
+
+
+/************************************************
  * memory
  ************************************************/
 
@@ -205,7 +261,7 @@ void ocp_nlp_reg_conv_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *me
 void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
     ocp_nlp_reg_conv_memory *mem = mem_;
-    ocp_nlp_reg_opts *opts = opts_;
+    ocp_nlp_reg_conv_opts *opts = opts_;
 
     int N = dims->N;
 
@@ -312,10 +368,10 @@ void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config)
     config->dims_assign = &ocp_nlp_reg_dims_assign;
     config->dims_set = &ocp_nlp_reg_dims_set;
 	// opts
-    config->opts_calculate_size = &ocp_nlp_reg_opts_calculate_size;
-    config->opts_assign = &ocp_nlp_reg_opts_assign;
-    config->opts_initialize_default = &ocp_nlp_reg_opts_initialize_default;
-    config->opts_set = &ocp_nlp_reg_opts_set;
+    config->opts_calculate_size = &ocp_nlp_reg_conv_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_reg_conv_opts_assign;
+    config->opts_initialize_default = &ocp_nlp_reg_conv_opts_initialize_default;
+    config->opts_set = &ocp_nlp_reg_conv_opts_set;
 	// memory
     config->memory_calculate_size = &ocp_nlp_reg_conv_calculate_memory_size;
     config->memory_assign = &ocp_nlp_reg_conv_assign_memory;

@@ -64,12 +64,14 @@ int main()
 
 	int opts_size = config->opts_calculate_size();
 	void * opts_mem = malloc(opts_size);
-	ocp_nlp_reg_opts *opts = config->opts_assign(opts_mem);
+	void *opts = config->opts_assign(opts_mem);
 
 	config->opts_initialize_default(config, dims, opts);
 
 	double delta = 1e-4;
-	config->opts_set(config, dims, opts, "delta", &delta);
+	double epsilon = 1e-4;
+//	config->opts_set(config, dims, opts, "delta", &delta);
+	config->opts_set(config, dims, opts, "epsilon", &epsilon);
 
     /************************************************
      * memory

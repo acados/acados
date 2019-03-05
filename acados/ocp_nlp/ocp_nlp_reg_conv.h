@@ -38,13 +38,28 @@ extern "C" {
  * dims
  ************************************************/
 
- // TODO
+ // TODO ???
 
 /************************************************
  * options
  ************************************************/
 
- // TODO
+typedef struct
+{
+    double delta;
+	double epsilon;
+} ocp_nlp_reg_conv_opts;
+
+//
+int ocp_nlp_reg_conv_opts_calculate_size(void);
+//
+void *ocp_nlp_reg_conv_opts_assign(void *raw_memory);
+//
+void ocp_nlp_reg_conv_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
+//
+void ocp_nlp_reg_conv_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value);
+
+
 
 /************************************************
  * memory

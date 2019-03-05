@@ -168,6 +168,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
+	ocp_nlp_reg_config *regularize = config->regularization;
 
     int ii;
 
@@ -192,7 +193,8 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     if (config->regularization != NULL)
     {
-        opts->reg_opts->delta = 1e-4;
+		regularize->opts_initialize_default(regularize, dims->qp_solver, opts->reg_opts);
+//        opts->reg_opts->delta = 1e-4;
 //        opts->reg_opts->gamma = 0.0;
     }
 

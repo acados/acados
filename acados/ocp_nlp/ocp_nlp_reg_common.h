@@ -47,34 +47,7 @@ void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char
 
 
 
-/* opts TODO move in instances !!! */
-
-typedef struct
-{
-    double delta;
-//    double gamma; // unused !!!
-	double epsilon;
-} ocp_nlp_reg_opts;
-
-//
-int ocp_nlp_reg_opts_calculate_size(void);
-//
-void *ocp_nlp_reg_opts_assign(void *raw_memory);
-//
-void ocp_nlp_reg_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
-//
-void ocp_nlp_reg_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value);
-
-
-
-/* othere stuff */
-
-typedef ocp_qp_in ocp_nlp_reg_in;
-
-typedef ocp_qp_out ocp_nlp_reg_out;
-
-
-
+/* config */
 
 typedef struct
 {
@@ -97,11 +70,12 @@ typedef struct
     void (*evaluate)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *memory);
 } ocp_nlp_reg_config;
 
-
-
+//
 int ocp_nlp_reg_config_calculate_size(void);
-
+//
 void *ocp_nlp_reg_config_assign(void *raw_memory);
+
+
 
 /* regularization help functions */
 void acados_reconstruct_A(int dim, double *A, double *V, double *d);

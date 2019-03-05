@@ -39,7 +39,7 @@ extern "C" {
 typedef struct
 {
     void *qp_solver_opts;
-    ocp_nlp_reg_opts *reg_opts;
+    void *reg_opts;
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
