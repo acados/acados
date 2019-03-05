@@ -97,7 +97,7 @@ RUN_EXAMPLES += run_regularization
 # overwrite to run just one
 #RUN_EXAMPLES = run_wind_turbine_nmpc
 #RUN_EXAMPLES = run_mass_spring_nmpc_example
-RUN_EXAMPLES = run_regularization
+#RUN_EXAMPLES = run_regularization
 
 run_examples: $(RUN_EXAMPLES)
 

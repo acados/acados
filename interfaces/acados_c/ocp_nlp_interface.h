@@ -162,7 +162,7 @@ void ocp_nlp_opts_destroy(void *opts);
 void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
                       const char *field, const void* value);
 //
-int ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
                                          const char *field, void *value);
 //
 void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);

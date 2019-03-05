@@ -200,9 +200,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
     for (ii = 0; ii < N; ii++)
     {
         dynamics[ii]->opts_initialize_default(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
-        // dynamics[ii]->opts_set(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii], COMPUTE_ADJ,
-        //     &compute_adj);
-        // TODO(oj): commented this out, check if this did anything!
+        dynamics[ii]->opts_set(dynamics[ii], opts->dynamics[ii], "compute_adj", &compute_adj);
     }
 
     // cost
@@ -216,8 +214,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
     {
         constraints[ii]->opts_initialize_default(constraints[ii], dims->constraints[ii],
             opts->constraints[ii]);
-        constraints[ii]->opts_set(constraints[ii], dims->constraints[ii], opts->constraints[ii],
-            COMPUTE_ADJ, &compute_adj);
+        constraints[ii]->opts_set(constraints[ii], opts->constraints[ii], "compute_adj", &compute_adj);
     }
 
     return;
@@ -263,26 +260,17 @@ void ocp_nlp_sqp_rti_opts_update(void *config_, void *dims_, void *opts_)
     return;
 }
 
-static void ocp_nlp_sqp_rti_opts_set_maxIter(void *config_, void* opts_, const void* value)
-{
-    // ocp_nlp_sqp_rti_opts *opts = (ocp_nlp_sqp_rti_opts *) opts_;
-    int* maxIter = (int *) value;
-    // opts->maxIter = *maxIter;
-    if ( *maxIter > 1 )
-    {
-        printf("\nerror: option type not available in module\n");
-        exit(1);
-    }
-}
 
 
 void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, const void* value)
 {
     ocp_nlp_sqp_rti_opts *opts = (ocp_nlp_sqp_rti_opts *) opts_;
     ocp_nlp_config *config = config_;
-    if (!strcmp(field, "maxIter"))
+
+    if (!strcmp(field, "num_threads"))
     {
-        ocp_nlp_sqp_rti_opts_set_maxIter(config_, opts_, value);
+        int* num_threads = (int *) value;
+        opts->num_threads = *num_threads;
     }
     else
     {
@@ -290,16 +278,22 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, con
     }
 }
 
-int ocp_nlp_sqp_rti_dyanimcs_opts_set(void *config_, void *opts_, int stage,
+
+
+void ocp_nlp_sqp_rti_dynamics_opts_set(void *config_, void *opts_, int stage,
                                      const char *field, void *value)
 {
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_rti_opts *opts = opts_;
     ocp_nlp_dynamics_config *dyn_config = config->dynamics[stage];
 
-    return dyn_config->opts_set(dyn_config, opts->dynamics[stage], field, value);
+    dyn_config->opts_set(dyn_config, opts->dynamics[stage], field, value);
+
+	return;
 
 }
+
+
 
 /************************************************
  * memory
@@ -1249,7 +1243,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_nlp_sqp_rti_opts_initialize_default;
     config->opts_update = &ocp_nlp_sqp_rti_opts_update;
     config->opts_set = &ocp_nlp_sqp_rti_opts_set;
-    config->dynamics_opts_set = &ocp_nlp_sqp_rti_dyanimcs_opts_set;
+    config->dynamics_opts_set = &ocp_nlp_sqp_rti_dynamics_opts_set;
     config->memory_calculate_size = &ocp_nlp_sqp_rti_memory_calculate_size;
     config->memory_assign = &ocp_nlp_sqp_rti_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_rti_workspace_calculate_size;

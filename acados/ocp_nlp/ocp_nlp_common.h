@@ -52,8 +52,7 @@ typedef struct
     void *(*memory_assign)(void *config, void *dims, void *opts_, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts_);
     void (*opts_set)(void *config_, void *opts_, const char *field, const void* value);
-    int (*dynamics_opts_set)(void *config, void *opts_, int stage,
-                                     const char *field, void *value);
+    void (*dynamics_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
     // evaluate solver
     int (*evaluate)(void *config, void *dims, void *qp_in, void *qp_out,
                     void *opts_, void *mem, void *work);

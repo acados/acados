@@ -495,10 +495,11 @@ void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
 }
 
 
-int ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
                                          const char *field, void *value)
 {
-    return config->dynamics_opts_set(config, opts_, stage, field, value);
+    config->dynamics_opts_set(config, opts_, stage, field, value);
+	return;
 }
 
 void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
