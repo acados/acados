@@ -89,7 +89,10 @@ int main()
 			BLASFEO_DMATEL(RSQrq+ii, nu[ii]+jj, nu[ii]+jj) = -ii;
 	}
 
-	config->memory_set(config, dims, memory, "RSQrq_ptr", RSQrq);
+//	config->memory_set(config, dims, memory, "RSQrq_ptr", RSQrq);
+//	config->memory_set(config, dims, memory, "BAbt_ptr", NULL);
+	config->memory_set_RSQrq_ptr(dims, RSQrq, memory);
+	config->memory_set_BAbt_ptr(dims, NULL, memory);
 
     /************************************************
      * regularize function

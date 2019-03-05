@@ -883,8 +883,7 @@ static void regularize_hessian(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nl
     if (config->regularization == NULL)
         return;
 
-    config->regularization->evaluate(config->regularization, dims->qp_solver, work->qp_in,
-                                     work->qp_out, opts->reg_opts, mem->reg_mem);
+    config->regularization->evaluate(config->regularization, dims->qp_solver, opts->reg_opts, mem->reg_mem);
 }
 
 

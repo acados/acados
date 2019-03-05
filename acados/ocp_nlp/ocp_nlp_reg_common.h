@@ -91,6 +91,8 @@ typedef struct
     int (*memory_calculate_size)(void *config, ocp_nlp_reg_dims *dims, void *opts);
     void *(*memory_assign)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
     void (*memory_set)(void *config, ocp_nlp_reg_dims *dims, void *memory, char *field, void* value);
+    void (*memory_set_RSQrq_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *mat, void *memory);
+    void (*memory_set_BAbt_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *mat, void *memory);
     /* functions */
     void (*evaluate)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *memory);
 } ocp_nlp_reg_config;
