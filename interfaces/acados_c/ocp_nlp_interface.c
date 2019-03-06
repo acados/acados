@@ -191,14 +191,14 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
     switch (plan.regularization)
     {
         case NO_REGULARIZATION:
-//            ocp_nlp_reg_noreg_config_initialize_default(config->regularization);
-			config->regularization = NULL; // TODO remove once fixed reg !!!!!!!!
+            ocp_nlp_reg_noreg_config_initialize_default(config->regularize);
+//			config->regularize = NULL; // TODO remove once fixed reg !!!!!!!!
             break;
         case MIRROR:
-            ocp_nlp_reg_mirror_config_initialize_default(config->regularization);
+            ocp_nlp_reg_mirror_config_initialize_default(config->regularize);
             break;
         case CONVEXIFICATION:
-            ocp_nlp_reg_conv_config_initialize_default(config->regularization);
+            ocp_nlp_reg_conv_config_initialize_default(config->regularize);
             break;
         default:
             printf("\nerror: ocp_nlp_config_create: unsupported plan->regularization\n");

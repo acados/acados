@@ -68,8 +68,7 @@ int ocp_nlp_sqp_opts_calculate_size(void *config_, void *dims_)
 
     size += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
 
-    if (config->regularization != NULL)
-        size += config->regularization->opts_calculate_size();
+    size += config->regularize->opts_calculate_size();
 
     // dynamics
     size += N * sizeof(void *);
@@ -117,11 +116,8 @@ void *ocp_nlp_sqp_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts->qp_solver_opts = qp_solver->opts_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
 
-    if (config->regularization != NULL)
-    {
-        opts->reg_opts = config->regularization->opts_assign(c_ptr);
-        c_ptr += config->regularization->opts_calculate_size();
-    }
+	opts->regularize = config->regularize->opts_assign(c_ptr);
+	c_ptr += config->regularize->opts_calculate_size();
 
     // dynamics
     opts->dynamics = (void **) c_ptr;
@@ -168,7 +164,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
-	ocp_nlp_reg_config *regularize = config->regularization;
+	ocp_nlp_reg_config *regularize = config->regularize;
 
     int ii;
 
@@ -189,14 +185,11 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     // submodules opts
 
+	// qp solver
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-    if (config->regularization != NULL)
-    {
-		regularize->opts_initialize_default(regularize, dims->qp_solver, opts->reg_opts);
-//        opts->reg_opts->delta = 1e-4;
-//        opts->reg_opts->gamma = 0.0;
-    }
+	// regularization
+	regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
 
     // dynamics
     for (ii = 0; ii < N; ii++)
@@ -351,8 +344,7 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
 
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-    if (config->regularization != NULL)
-        size += config->regularization->memory_calculate_size(NULL, dims->qp_solver, NULL);
+	size += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
 
     // dynamics
     size += N * sizeof(void *);
@@ -421,11 +413,8 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
         qp_solver->memory_assign(qp_solver, dims->qp_solver, opts->qp_solver_opts, c_ptr);
     c_ptr += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-    if (config->regularization != NULL)
-    {
-        mem->reg_mem = config->regularization->memory_assign(NULL, dims->qp_solver, NULL, c_ptr);
-        c_ptr += config->regularization->memory_calculate_size(NULL, dims->qp_solver, NULL);
-    }
+	mem->reg_mem = config->regularize->memory_assign(config->regularize, dims->regularize, opts->regularize, c_ptr);
+	c_ptr += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
 
     // nlp res
     mem->nlp_res = ocp_nlp_res_assign(dims, c_ptr);
@@ -914,10 +903,9 @@ static void regularize_hessian(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nl
 {
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
 
-    if (config->regularization == NULL)
-        return;
+    config->regularize->evaluate(config->regularize, dims->regularize, opts->regularize, mem->reg_mem);
 
-    config->regularization->evaluate(config->regularization, dims->qp_solver, opts->reg_opts, mem->reg_mem);
+	return;
 }
 
 
@@ -1095,10 +1083,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     }
 
 	// alias to reg memory
-    if (config->regularization != NULL)
-	{
-		config->regularization->memory_set_RSQrq_ptr(dims->qp_solver, work->qp_in->RSQrq, mem->reg_mem);
-	}
+	config->regularize->memory_set_RSQrq_ptr(dims->regularize, work->qp_in->RSQrq, mem->reg_mem);
 
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
@@ -1376,7 +1361,6 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp;
     config->config_initialize_default = &ocp_nlp_sqp_config_initialize_default;
-    config->regularization = NULL; // XXX what is this ?????????????
     config->precompute = &ocp_nlp_sqp_precompute;
     config->get = &ocp_nlp_sqp_get;
 

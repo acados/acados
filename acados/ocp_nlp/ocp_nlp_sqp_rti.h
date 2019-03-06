@@ -38,7 +38,7 @@ extern "C" {
 typedef struct
 {
     void *qp_solver_opts;
-    void *reg_opts;
+    void *regularize;
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts

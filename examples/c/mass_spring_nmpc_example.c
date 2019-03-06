@@ -45,6 +45,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 
 // temp
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
@@ -422,6 +423,9 @@ int main() {
     {
         ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[ii]);
     }
+
+	// regularization
+	ocp_nlp_reg_noreg_config_initialize_default(config->regularize);
 
     /************************************************
     * ocp_nlp_dims

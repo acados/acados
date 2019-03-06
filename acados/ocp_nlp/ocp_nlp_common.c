@@ -89,7 +89,7 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory)
     c_ptr += ocp_qp_xcond_solver_config_calculate_size();
 
     // regularization
-    config->regularization = ocp_nlp_reg_config_assign(c_ptr);
+    config->regularize = ocp_nlp_reg_config_assign(c_ptr);
     c_ptr += ocp_nlp_reg_config_calculate_size();
 
     // dynamics
@@ -152,6 +152,9 @@ int ocp_nlp_dims_calculate_size_self(int N)
 
     // qp solver
     size += ocp_qp_dims_calculate_size(N);
+
+	// regularization
+	size += ocp_nlp_reg_dims_calculate_size(N);
 
     size += sizeof(ocp_nlp_reg_dims);
 
@@ -234,6 +237,10 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     dims->qp_solver = ocp_qp_dims_assign(N, c_ptr);
     c_ptr += ocp_qp_dims_calculate_size(N);
 
+    // regularization
+    dims->regularize = ocp_nlp_reg_dims_assign(N, c_ptr);
+    c_ptr += ocp_nlp_reg_dims_calculate_size(N);
+
     /* initialize qp_solver dimensions */
     dims->qp_solver->N = N;
     for (ii = 0; ii <= N; ii++)
@@ -307,6 +314,8 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     ocp_nlp_config *config = config_;
     ocp_nlp_dims *dims = dims_;
 
+	int ii;
+
     int N = config->N;
     int *int_array = (int *) value_array;
 
@@ -314,7 +323,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     if (!strcmp(field, "nx"))
     {
         // opt var
-        for (int ii = 0; ii <= N; ii++)
+        for (ii = 0; ii <= N; ii++)
         {
             // set nx
             dims->nx[ii] = int_array[ii];
@@ -347,8 +356,12 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         // qp solver
         for (int i = 0; i <= N; i++)
         {
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nx",
-                                        &int_array[i]);
+            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nx", &int_array[i]);
+        }
+        // regularization
+        for (ii = 0; ii <= N; ii++)
+        {
+            config->regularize->dims_set(config->regularize, dims->regularize, ii, "nx", &int_array[ii]);
         }
     }
     else if (!strcmp(field, "nu"))
@@ -387,8 +400,12 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
         // qp solver
         for (int i = 0; i <= N; i++)
         {
-            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nu",
-                                        &int_array[i]);
+            config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nu", &int_array[i]);
+        }
+        // regularization
+        for (ii = 0; ii <= N; ii++)
+        {
+            config->regularize->dims_set(config->regularize, dims->regularize, ii, "nu", &int_array[ii]);
         }
     }
     else if (!strcmp(field, "nz"))

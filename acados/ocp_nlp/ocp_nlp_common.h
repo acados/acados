@@ -68,7 +68,7 @@ typedef struct
     ocp_nlp_dynamics_config **dynamics;
     ocp_nlp_cost_config **cost;
     ocp_nlp_constraints_config **constraints;
-    ocp_nlp_reg_config *regularization;
+    ocp_nlp_reg_config *regularize;
 
 } ocp_nlp_config;
 
@@ -89,6 +89,7 @@ typedef struct
     void **dynamics;
     void **constraints;
     ocp_qp_dims *qp_solver;  // xcond solver instead ??
+	ocp_nlp_reg_dims *regularize;
 
     int *nv;  // number of primal variables (states+controls+slacks)
     int *nx;  // number of differential states
