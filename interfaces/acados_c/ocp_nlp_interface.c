@@ -36,6 +36,7 @@
 #include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_conv.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_mirror.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/utils/mem.h"
@@ -79,34 +80,49 @@ static ocp_nlp_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
     plan->nlp_constraints = (ocp_nlp_constraints_t *) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_constraints_t);
 
-    // initialize to default value !=0 to detect empty plans
-    for (ii=0; ii <= N; ii++)
-        plan->nlp_cost[ii] = INVALID_COST;
-    for (ii=0; ii < N; ii++)
-        plan->nlp_dynamics[ii] = INVALID_MODEL;
-    for (ii=0; ii <= N; ii++)
-        plan->nlp_constraints[ii] = INVALID_CONSTRAINT;
+	plan->N = N;
 
     return plan;
 }
 
 
 
-static void ocp_nlp_plan_initialize_default(int N, ocp_nlp_plan *plan)
+static void ocp_nlp_plan_initialize_default(ocp_nlp_plan *plan)
 {
-    plan->nlp_solver = SQP;
+	int ii;
+
+	int N = plan->N;
+
+    // initialize to default value !=0 to detect empty plans
+	// cost
+    for (ii=0; ii <= N; ii++)
+	{
+        plan->nlp_cost[ii] = INVALID_COST;
+	}
+	// dynamics
+    for (ii=0; ii < N; ii++)
+	{
+        plan->nlp_dynamics[ii] = INVALID_DYNAMICS;
+	}
+	// constraints
+    for (ii=0; ii <= N; ii++)
+	{
+        plan->nlp_constraints[ii] = INVALID_CONSTRAINT;
+	}
+	// nlp solver
+	plan->nlp_solver = INVALID_NLP_SOLVER;
+	// qp solver
+	// sim
+
+	// regularization
     plan->regularization = NO_REGULARIZATION;
-    plan->N = N;
 
-    for (int ii = 0; ii <= N; ii++)
-    {
-        plan->nlp_cost[ii] = NONLINEAR_LS;
-    }
+//    for (ii = 0; ii < N; ii++)
+//    {
+//        plan->sim_solver_plan[ii].sim_solver = ERK;
+//    }
 
-    for (int ii = 0; ii < N; ii++)
-    {
-        plan->sim_solver_plan[ii].sim_solver = ERK;
-    }
+	return;
 }
 
 
@@ -118,15 +134,18 @@ ocp_nlp_plan *ocp_nlp_plan_create(int N)
 
     ocp_nlp_plan *plan = ocp_nlp_plan_assign(N, ptr);
 
-    ocp_nlp_plan_initialize_default(N, plan);
+    ocp_nlp_plan_initialize_default(plan);
 
     return plan;
 }
+
+
 
 void ocp_nlp_plan_destroy(void* plan_)
 {
     free(plan_);
 }
+
 
 
 /************************************************
@@ -155,7 +174,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
     }
     else
     {
-        printf("Solver not available!\n");
+        printf("Error: ocp_nlp_config_create: NLP solver not available!\n");
         exit(1);
     }
 
@@ -166,7 +185,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
     switch (plan.regularization)
     {
         case NO_REGULARIZATION:
-            config->regularization = NULL;  // Note(oj): this is maybe a bit dirty
+            ocp_nlp_reg_noreg_config_initialize_default(config->regularization);
             break;
         case MIRROR:
             ocp_nlp_reg_mirror_config_initialize_default(config->regularization);
@@ -194,7 +213,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
                 ocp_nlp_cost_external_config_initialize_default(config->cost[i]);
                 break;
             case INVALID_COST:
-                printf("\nInvalid cost module type\nForgot to initialize?\n\n");
+                printf("\nInvalid cost module type\nForgot to initialize the plan?\n\n");
                 exit(1);
             default:
                 printf("Cost not available!\n");
@@ -235,7 +254,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             case DISCRETE_MODEL:
                 ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i]);
                 break;
-            case INVALID_MODEL:
+            case INVALID_DYNAMICS:
                 printf("\nInvalid dynamic module type\nForgot to initialize?\n\n");
                 exit(1);
             default:

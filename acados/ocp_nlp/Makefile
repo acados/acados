@@ -20,6 +20,7 @@ OBJS += ocp_nlp_sqp_rti.o
 OBJS += ocp_nlp_reg_common.o
 OBJS += ocp_nlp_reg_conv.o
 OBJS += ocp_nlp_reg_mirror.o
+OBJS += ocp_nlp_reg_noreg.o
 
 obj: $(OBJS)
 

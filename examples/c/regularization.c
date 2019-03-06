@@ -9,6 +9,7 @@
 #include <acados/ocp_nlp/ocp_nlp_reg_common.h>
 #include <acados/ocp_nlp/ocp_nlp_reg_mirror.h>
 #include <acados/ocp_nlp/ocp_nlp_reg_conv.h>
+#include <acados/ocp_nlp/ocp_nlp_reg_noreg.h>
 
 
 
@@ -29,6 +30,7 @@ int main()
 
 	ocp_nlp_reg_mirror_config_initialize_default(config);
 //	ocp_nlp_reg_conv_config_initialize_default(config);
+//	ocp_nlp_reg_noreg_config_initialize_default(config);
 
     /************************************************
      * dims
