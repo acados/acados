@@ -78,6 +78,7 @@ typedef enum
 {
     NO_REGULARIZATION,
     MIRROR,
+    PROJECT,
     CONVEXIFICATION,
     INVALID_REGULARIZATION,
 } ocp_nlp_reg_t;

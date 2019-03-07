@@ -28,9 +28,10 @@ int main()
 	void * config_mem = malloc(config_size);
 	ocp_nlp_reg_config *config = ocp_nlp_reg_config_assign(config_mem);
 
-	ocp_nlp_reg_mirror_config_initialize_default(config);
-//	ocp_nlp_reg_conv_config_initialize_default(config);
 //	ocp_nlp_reg_noreg_config_initialize_default(config);
+//	ocp_nlp_reg_mirror_config_initialize_default(config);
+	ocp_nlp_reg_project_config_initialize_default(config);
+//	ocp_nlp_reg_conv_config_initialize_default(config);
 
     /************************************************
      * dims

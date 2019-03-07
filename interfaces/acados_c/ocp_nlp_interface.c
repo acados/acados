@@ -36,6 +36,7 @@
 #include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_conv.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_mirror.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_project.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
@@ -192,10 +193,12 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
     {
         case NO_REGULARIZATION:
             ocp_nlp_reg_noreg_config_initialize_default(config->regularize);
-//			config->regularize = NULL; // TODO remove once fixed reg !!!!!!!!
             break;
         case MIRROR:
             ocp_nlp_reg_mirror_config_initialize_default(config->regularize);
+            break;
+        case PROJECT:
+            ocp_nlp_reg_project_config_initialize_default(config->regularize);
             break;
         case CONVEXIFICATION:
             ocp_nlp_reg_conv_config_initialize_default(config->regularize);

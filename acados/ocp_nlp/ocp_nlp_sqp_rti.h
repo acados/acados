@@ -69,7 +69,7 @@ typedef struct
 {
     //    ocp_nlp_dims *dims;
     void *qp_solver_mem;
-    void *reg_mem;
+    void *regularize_mem;
 
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory

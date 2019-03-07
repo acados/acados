@@ -33,6 +33,7 @@ OBJS += acados/ocp_nlp/ocp_nlp_sqp_rti.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_common.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_conv.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_mirror.o
+OBJS += acados/ocp_nlp/ocp_nlp_reg_project.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_noreg.o
 
 # dense qp

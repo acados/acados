@@ -46,6 +46,7 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
 
 // temp
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
