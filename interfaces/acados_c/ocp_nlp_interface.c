@@ -121,7 +121,7 @@ static void ocp_nlp_plan_initialize_default(ocp_nlp_plan *plan)
     }
 
 	// regularization: no reg by default
-    plan->regularization = NO_REGULARIZATION;
+    plan->regularization = NO_REGULARIZE;
 
 
 	return;
@@ -191,7 +191,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
     // regularization
     switch (plan.regularization)
     {
-        case NO_REGULARIZATION:
+        case NO_REGULARIZE:
             ocp_nlp_reg_noreg_config_initialize_default(config->regularize);
             break;
         case MIRROR:
@@ -200,7 +200,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
         case PROJECT:
             ocp_nlp_reg_project_config_initialize_default(config->regularize);
             break;
-        case CONVEXIFICATION:
+        case CONVEXIFY:
             ocp_nlp_reg_conv_config_initialize_default(config->regularize);
             break;
         default:

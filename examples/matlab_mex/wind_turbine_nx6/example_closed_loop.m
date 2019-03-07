@@ -274,6 +274,7 @@ sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
 sim_opts.set('method', sim_method);
 sim_opts.set('sens_forw', sim_sens_forw);
+ocp_opts.set('regularize_method', 'no_regularize');
 
 %sim_opts.opts_struct
 

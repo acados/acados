@@ -76,11 +76,11 @@ typedef enum
 
 typedef enum
 {
-    NO_REGULARIZATION,
+    NO_REGULARIZE,
     MIRROR,
     PROJECT,
-    CONVEXIFICATION,
-    INVALID_REGULARIZATION,
+    CONVEXIFY,
+    INVALID_REGULARIZE,
 } ocp_nlp_reg_t;
 
 

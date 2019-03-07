@@ -621,6 +621,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	char *sim_method;
 	int sim_method_num_stages;		bool set_sim_method_num_stages = false;
 	int sim_method_num_steps;		bool set_sim_method_num_steps = false;
+	char *regularize_method;		bool set_regularize_method = false;
 
 	// param_scheme_NN
 	if(mxGetField( prhs[1], 0, "param_scheme_N" )!=NULL)
@@ -659,6 +660,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_sim_method_num_steps = true;
 		sim_method_num_steps = mxGetScalar( mxGetField( prhs[1], 0, "sim_method_num_steps" ) );
+		}
+	// regularize_method
+	if(mxGetField( prhs[1], 0, "regularize_method" )!=NULL)
+		{
+		set_regularize_method = true;
+		regularize_method = mxArrayToString( mxGetField( prhs[1], 0, "regularize_method" ) );
 		}
 
 
@@ -831,6 +838,29 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	else
 		{
 		mexPrintf("\nqp_solver not supported: %s\n", qp_solver);
+		return;
+		}
+	
+	// regularization
+	if(!strcmp(regularize_method, "no_regularize"))
+		{
+		plan->regularization = NO_REGULARIZE;
+		}
+	else if(!strcmp(regularize_method, "mirror"))
+		{
+		plan->regularization = MIRROR;
+		}
+	else if(!strcmp(regularize_method, "project"))
+		{
+		plan->regularization = PROJECT;
+		}
+	else if(!strcmp(regularize_method, "convexify"))
+		{
+		plan->regularization = CONVEXIFY;
+		}
+	else
+		{
+		mexPrintf("\nregularize_method not supported: %s\n", regularize_method);
 		return;
 		}
 
