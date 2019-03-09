@@ -48,6 +48,7 @@ typedef struct
 {
     double delta;
 	double epsilon;
+//	double gamma; // 0.0
 } ocp_nlp_reg_conv_opts;
 
 //
@@ -82,11 +83,13 @@ typedef struct {
     struct blasfeo_dmat *original_RSQrq;
 
     struct blasfeo_dvec grad;
-    struct blasfeo_dvec b;
+    struct blasfeo_dvec b2;
 
 	// giaf's
     struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in
-    struct blasfeo_dmat **BAbt;  // pointer to BAbt in qp_in TODO
+    struct blasfeo_dvec **rq;  // pointer to rq in qp_in
+    struct blasfeo_dmat **BAbt;  // pointer to BAbt in qp_in
+    struct blasfeo_dvec **b;  // pointer to b in qp_in
 
 } ocp_nlp_reg_conv_memory;
 

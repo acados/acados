@@ -143,10 +143,11 @@ int ocp_nlp_reg_conv_calculate_memory_size(void *config_, ocp_nlp_reg_dims *dims
         size += blasfeo_memsize_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]); // original_RSQrq
     }
 
-    size += 2*blasfeo_memsize_dvec(nxM); // grad b
+    size += 2*blasfeo_memsize_dvec(nxM); // grad b2
 
 	// giaf's
-	size += 2*(N+1)*sizeof(struct blasfeo_dmat *); // RSQrq BAbt
+	size += ((N+1)+N)*sizeof(struct blasfeo_dmat *); // RSQrq BAbt
+	size += ((N+1)+N)*sizeof(struct blasfeo_dvec *); // rq b
 
     return size;
 }
@@ -207,6 +208,15 @@ void *ocp_nlp_reg_conv_assign_memory(void *config_, ocp_nlp_reg_dims *dims, void
 	mem->RSQrq = (struct blasfeo_dmat **) c_ptr;
 	c_ptr += (N+1)*sizeof(struct blasfeo_dmat *);
 
+	mem->BAbt = (struct blasfeo_dmat **) c_ptr;
+	c_ptr += N*sizeof(struct blasfeo_dmat *);
+
+	mem->rq = (struct blasfeo_dvec **) c_ptr;
+	c_ptr += (N+1)*sizeof(struct blasfeo_dvec *);
+
+	mem->b = (struct blasfeo_dvec **) c_ptr;
+	c_ptr += N*sizeof(struct blasfeo_dvec *);
+
     align_char_to(64, &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nxM, nxM, &mem->Q_tilde, &c_ptr);
@@ -222,7 +232,7 @@ void *ocp_nlp_reg_conv_assign_memory(void *config_, ocp_nlp_reg_dims *dims, void
     }
 
     assign_and_advance_blasfeo_dvec_mem(nxM, &mem->grad, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(nxM, &mem->b, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nxM, &mem->b2, &c_ptr);
 
     assert((char *)mem + ocp_nlp_reg_conv_calculate_memory_size(config_, dims, opts_) >= c_ptr);
 
@@ -252,6 +262,27 @@ void ocp_nlp_reg_conv_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims, struct blasfe
 
 
 
+void ocp_nlp_reg_conv_memory_set_rq_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *rq, void *memory_)
+{
+    ocp_nlp_reg_conv_memory *memory = memory_;
+
+	int ii;
+
+	int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+
+	for(ii=0; ii<=N; ii++)
+	{
+		memory->rq[ii] = rq+ii;
+//		blasfeo_print_dvec(nu[ii]+nx[ii], memory->rq[ii], 0);
+	}
+
+    return;
+}
+
+
+
 void ocp_nlp_reg_conv_memory_set_BAbt_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *BAbt, void *memory_)
 {
     ocp_nlp_reg_conv_memory *memory = memory_;
@@ -265,7 +296,28 @@ void ocp_nlp_reg_conv_memory_set_BAbt_ptr(ocp_nlp_reg_dims *dims, struct blasfeo
 	for(ii=0; ii<N; ii++)
 	{
 		memory->BAbt[ii] = BAbt+ii;
-//		blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], memory->BAbt[ii], 0, 0);
+//		blasfeo_print_dmat(nu[ii]+nx[ii]+1, nx[ii+1], memory->BAbt[ii], 0, 0);
+	}
+
+    return;
+}
+
+
+
+void ocp_nlp_reg_conv_memory_set_b_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *b, void *memory_)
+{
+    ocp_nlp_reg_conv_memory *memory = memory_;
+
+	int ii;
+
+	int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+
+	for(ii=0; ii<N; ii++)
+	{
+		memory->b[ii] = b+ii;
+//		blasfeo_print_dvec(nx[ii=1], memory->b[ii], 0);
 	}
 
     return;
@@ -281,10 +333,20 @@ void ocp_nlp_reg_conv_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *me
 		struct blasfeo_dmat *RSQrq = value;
 		ocp_nlp_reg_conv_memory_set_RSQrq_ptr(dims, RSQrq, memory_);
 	}
+	if(!strcmp(field, "rq_ptr"))
+	{
+		struct blasfeo_dvec *rq = value;
+		ocp_nlp_reg_conv_memory_set_rq_ptr(dims, rq, memory_);
+	}
 	if(!strcmp(field, "BAbt_ptr"))
 	{
 		struct blasfeo_dmat *BAbt = value;
 		ocp_nlp_reg_conv_memory_set_BAbt_ptr(dims, BAbt, memory_);
+	}
+	if(!strcmp(field, "b_ptr"))
+	{
+		struct blasfeo_dvec *b = value;
+		ocp_nlp_reg_conv_memory_set_b_ptr(dims, b, memory_);
 	}
 	else
 	{
@@ -389,15 +451,15 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *m
 
 		// TODO take from b !!!!!!
         for (jj = 0; jj < nx[ii+1]; jj++)
-            BLASFEO_DVECEL(&mem->b, jj) = BLASFEO_DMATEL(mem->BAbt[ii], nu[ii]+nx[ii], jj);
+            BLASFEO_DVECEL(&mem->b2, jj) = BLASFEO_DMATEL(mem->BAbt[ii], nu[ii]+nx[ii], jj);
 
 		// TODO nx stage is not consistent with above !!!!!!!
-        blasfeo_dgemv_n(nx[ii+1], nx[ii+1], 1.0, &mem->Q_bar, 0, 0, &mem->b, 0, 0.0, &mem->grad, 0, &mem->grad, 0);
-        blasfeo_dgemv_n(nu[ii]+nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->grad, 0, 0.0, &mem->b, 0, &mem->b, 0);
+        blasfeo_dgemv_n(nx[ii+1], nx[ii+1], 1.0, &mem->Q_bar, 0, 0, &mem->b2, 0, 0.0, &mem->grad, 0, &mem->grad, 0);
+        blasfeo_dgemv_n(nu[ii]+nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->grad, 0, 0.0, &mem->b2, 0, &mem->b2, 0);
 
         for (jj = 0; jj < nu[ii]+nx[ii]; jj++)
 			// TODO maybe 'b' is a bad naming...
-            BLASFEO_DMATEL(mem->RSQrq[ii], nu[ii]+nx[ii], jj) = BLASFEO_DMATEL(mem->RSQrq[ii], nu[ii]+nx[ii], jj) + BLASFEO_DVECEL(&mem->b, jj);
+            BLASFEO_DMATEL(mem->RSQrq[ii], nu[ii]+nx[ii], jj) = BLASFEO_DMATEL(mem->RSQrq[ii], nu[ii]+nx[ii], jj) + BLASFEO_DVECEL(&mem->b2, jj);
 
         blasfeo_dgead(nx[ii], nx[ii], -1.0, mem->RSQrq[ii], nu[ii], nu[ii], &mem->Q_bar, 0, 0);
         blasfeo_dtrtr_l(nx[ii], &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);

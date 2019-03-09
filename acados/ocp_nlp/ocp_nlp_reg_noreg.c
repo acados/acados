@@ -95,7 +95,21 @@ void ocp_nlp_reg_noreg_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims, struct blasf
 
 
 
+void ocp_nlp_reg_noreg_memory_set_rq_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *rq, void *memory_)
+{
+    return;
+}
+
+
+
 void ocp_nlp_reg_noreg_memory_set_BAbt_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *BAbt, void *memory_)
+{
+    return;
+}
+
+
+
+void ocp_nlp_reg_noreg_memory_set_b_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *b, void *memory_)
 {
     return;
 }
@@ -140,7 +154,9 @@ void ocp_nlp_reg_noreg_config_initialize_default(ocp_nlp_reg_config *config)
     config->memory_assign = &ocp_nlp_reg_noreg_memory_assign;
     config->memory_set = &ocp_nlp_reg_noreg_memory_set;
     config->memory_set_RSQrq_ptr = &ocp_nlp_reg_noreg_memory_set_RSQrq_ptr;
+    config->memory_set_rq_ptr = &ocp_nlp_reg_noreg_memory_set_rq_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_reg_noreg_memory_set_BAbt_ptr;
+    config->memory_set_b_ptr = &ocp_nlp_reg_noreg_memory_set_b_ptr;
 	// functions
     config->evaluate = &ocp_nlp_reg_noreg;
 }

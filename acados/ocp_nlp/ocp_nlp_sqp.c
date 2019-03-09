@@ -1085,8 +1085,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->constraints[ii]->memory_set_idxs_ptr(work->qp_in->idxs[ii], mem->constraints[ii]);
     }
 
-	// alias to reg memory
+	// alias to regularize memory
 	config->regularize->memory_set_RSQrq_ptr(dims->regularize, work->qp_in->RSQrq, mem->regularize_mem);
+	config->regularize->memory_set_rq_ptr(dims->regularize, work->qp_in->rqz, mem->regularize_mem);
+	config->regularize->memory_set_BAbt_ptr(dims->regularize, work->qp_in->BAbt, mem->regularize_mem);
+	config->regularize->memory_set_b_ptr(dims->regularize, work->qp_in->b, mem->regularize_mem);
 
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
