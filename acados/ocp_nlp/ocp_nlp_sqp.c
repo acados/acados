@@ -1119,9 +1119,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // stop timer
         mem->time_lin += acados_toc(&timer1);
 
-        // regularize Hessian
-        regularize_hessian(config, dims, nlp_in, nlp_out, opts, mem, work);
-
         // update QP rhs for SQP (step prim var, abs dual var)
         sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
 
@@ -1166,6 +1163,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 			mem->status = ACADOS_SUCCESS;
             return mem->status;
         }
+
+        // regularize Hessian
+        regularize_hessian(config, dims, nlp_in, nlp_out, opts, mem, work);
 
 //        printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
 //       print_ocp_qp_in(work->qp_in);
