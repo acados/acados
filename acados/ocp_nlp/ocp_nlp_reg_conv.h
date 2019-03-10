@@ -82,8 +82,8 @@ typedef struct {
 
     struct blasfeo_dmat *original_RSQrq;
 
-    struct blasfeo_dvec grad;
-    struct blasfeo_dvec b2;
+//    struct blasfeo_dvec grad;
+//    struct blasfeo_dvec b2;
 
 	// giaf's
     struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in

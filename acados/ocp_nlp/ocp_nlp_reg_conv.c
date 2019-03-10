@@ -143,7 +143,7 @@ int ocp_nlp_reg_conv_calculate_memory_size(void *config_, ocp_nlp_reg_dims *dims
         size += blasfeo_memsize_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]); // original_RSQrq
     }
 
-    size += 2*blasfeo_memsize_dvec(nxM); // grad b2
+//    size += 2*blasfeo_memsize_dvec(nxM); // grad b2
 
 	// giaf's
 	size += ((N+1)+N)*sizeof(struct blasfeo_dmat *); // RSQrq BAbt
@@ -231,8 +231,8 @@ void *ocp_nlp_reg_conv_assign_memory(void *config_, ocp_nlp_reg_dims *dims, void
         assign_and_advance_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &mem->original_RSQrq[ii], &c_ptr);
     }
 
-    assign_and_advance_blasfeo_dvec_mem(nxM, &mem->grad, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(nxM, &mem->b2, &c_ptr);
+//    assign_and_advance_blasfeo_dvec_mem(nxM, &mem->grad, &c_ptr);
+//    assign_and_advance_blasfeo_dvec_mem(nxM, &mem->b2, &c_ptr);
 
     assert((char *)mem + ocp_nlp_reg_conv_calculate_memory_size(config_, dims, opts_) >= c_ptr);
 
@@ -386,9 +386,13 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *m
     blasfeo_dgecp(nx[N], nx[N], &mem->delta_eye, 0, 0, &mem->Q_tilde, 0, 0);
     blasfeo_dgecp(nx[N], nx[N], mem->RSQrq[N], 0, 0, &mem->Q_bar, 0, 0);
     blasfeo_dgead(nx[N], nx[N], -1.0, &mem->Q_tilde, 0, 0, &mem->Q_bar, 0, 0);
+	blasfeo_dtrtr_l(nx[N], &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);
 
     for (ii = N-1; ii >= 0; --ii)
     {
+		blasfeo_drowin(nx[ii+1], 1.0, mem->b[ii], 0, mem->BAbt[ii], nu[ii]+nx[ii], 0);
+		blasfeo_drowin(nu[ii]+nx[ii], 1.0, mem->rq[ii], 0, mem->RSQrq[ii], nu[ii]+nx[ii], 0);
+
         blasfeo_dgecp(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->original_RSQrq[ii], 0, 0);
 
         // printf("----------------\n");
@@ -404,9 +408,8 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *m
         // printf("BAbt\n");
         // blasfeo_print_dmat(nx+nu, nx, &work->qp_in->BAbt[i], 0, 0);
 
+		// TODO implement using cholesky
         blasfeo_dgemm_nt(nu[ii]+nx[ii], nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->Q_bar, 0, 0, 0.0, &mem->BAQ, 0, 0, &mem->BAQ, 0, 0);
-
-		// TODO copy from rq to RSQrq !!!
 
         blasfeo_dsyrk_ln_mn(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->BAQ, 0, 0, 1.0, mem->RSQrq[ii], 0, 0, mem->RSQrq[ii], 0, 0);
 
@@ -447,21 +450,23 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *m
         // blasfeo_print_dmat(nu+nx, nu+nx, &work->qp_in->RSQrq[i], 0, 0);
 
         // make symmetric
-        blasfeo_dtrtr_l(nx[ii], &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);
+//        blasfeo_dtrtr_l(nx[ii], &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);
 
 		// TODO take from b !!!!!!
-        for (jj = 0; jj < nx[ii+1]; jj++)
-            BLASFEO_DVECEL(&mem->b2, jj) = BLASFEO_DMATEL(mem->BAbt[ii], nu[ii]+nx[ii], jj);
+//        for (jj = 0; jj < nx[ii+1]; jj++)
+//            BLASFEO_DVECEL(&mem->b2, jj) = BLASFEO_DMATEL(mem->BAbt[ii], nu[ii]+nx[ii], jj);
 
 		// TODO nx stage is not consistent with above !!!!!!!
-        blasfeo_dgemv_n(nx[ii+1], nx[ii+1], 1.0, &mem->Q_bar, 0, 0, &mem->b2, 0, 0.0, &mem->grad, 0, &mem->grad, 0);
-        blasfeo_dgemv_n(nu[ii]+nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->grad, 0, 0.0, &mem->b2, 0, &mem->b2, 0);
+//        blasfeo_dgemv_n(nx[ii+1], nx[ii+1], 1.0, &mem->Q_bar, 0, 0, &mem->b2, 0, 0.0, &mem->grad, 0, &mem->grad, 0);
+//        blasfeo_dgemv_n(nu[ii]+nx[ii], nx[ii+1], 1.0, mem->BAbt[ii], 0, 0, &mem->grad, 0, 0.0, &mem->b2, 0, &mem->b2, 0);
 
-        for (jj = 0; jj < nu[ii]+nx[ii]; jj++)
+//        for (jj = 0; jj < nu[ii]+nx[ii]; jj++)
 			// TODO maybe 'b' is a bad naming...
-            BLASFEO_DMATEL(mem->RSQrq[ii], nu[ii]+nx[ii], jj) = BLASFEO_DMATEL(mem->RSQrq[ii], nu[ii]+nx[ii], jj) + BLASFEO_DVECEL(&mem->b2, jj);
+//            BLASFEO_DMATEL(mem->RSQrq[ii], nu[ii]+nx[ii], jj) = BLASFEO_DMATEL(mem->RSQrq[ii], nu[ii]+nx[ii], jj) + BLASFEO_DVECEL(&mem->b2, jj);
 
         blasfeo_dgead(nx[ii], nx[ii], -1.0, mem->RSQrq[ii], nu[ii], nu[ii], &mem->Q_bar, 0, 0);
+
+        // make symmetric
         blasfeo_dtrtr_l(nx[ii], &mem->Q_bar, 0, 0, &mem->Q_bar, 0, 0);
 
     }
