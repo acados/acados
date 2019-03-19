@@ -10,7 +10,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else
-  #define CASADI_PREFIX(ID) impl_ode_fun_simple_dae_ ## ID
+  #define CASADI_PREFIX(ID) simple_dae_impl_ode_fun_ ## ID
 #endif
 
 #include <math.h>
@@ -46,7 +46,7 @@ extern "C" {
 static const casadi_int casadi_s0[6] = {2, 1, 0, 2, 0, 1};
 static const casadi_int casadi_s1[8] = {4, 1, 0, 4, 0, 1, 2, 3};
 
-/* casadi_impl_ode_fun_simple_dae:(i0[2],i1[2],i2[2],i3[2])->(o0[4]) */
+/* simple_dae_impl_ode_fun:(i0[2],i1[2],i2[2],i3[2])->(o0[4]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2, a3, a4, a5;
   a0=arg[1] ? arg[1][0] : 0;
@@ -75,21 +75,21 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT int casadi_impl_ode_fun_simple_dae(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
+CASADI_SYMBOL_EXPORT int simple_dae_impl_ode_fun(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
   return casadi_f0(arg, res, iw, w, mem);
 }
 
-CASADI_SYMBOL_EXPORT void casadi_impl_ode_fun_simple_dae_incref(void) {
+CASADI_SYMBOL_EXPORT void simple_dae_impl_ode_fun_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void casadi_impl_ode_fun_simple_dae_decref(void) {
+CASADI_SYMBOL_EXPORT void simple_dae_impl_ode_fun_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT casadi_int casadi_impl_ode_fun_simple_dae_n_in(void) { return 4;}
+CASADI_SYMBOL_EXPORT casadi_int simple_dae_impl_ode_fun_n_in(void) { return 4;}
 
-CASADI_SYMBOL_EXPORT casadi_int casadi_impl_ode_fun_simple_dae_n_out(void) { return 1;}
+CASADI_SYMBOL_EXPORT casadi_int simple_dae_impl_ode_fun_n_out(void) { return 1;}
 
-CASADI_SYMBOL_EXPORT const char* casadi_impl_ode_fun_simple_dae_name_in(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* simple_dae_impl_ode_fun_name_in(casadi_int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -99,14 +99,14 @@ CASADI_SYMBOL_EXPORT const char* casadi_impl_ode_fun_simple_dae_name_in(casadi_i
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* casadi_impl_ode_fun_simple_dae_name_out(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* simple_dae_impl_ode_fun_name_out(casadi_int i){
   switch (i) {
     case 0: return "o0";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* casadi_impl_ode_fun_simple_dae_sparsity_in(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* simple_dae_impl_ode_fun_sparsity_in(casadi_int i) {
   switch (i) {
     case 0: return casadi_s0;
     case 1: return casadi_s0;
@@ -116,14 +116,14 @@ CASADI_SYMBOL_EXPORT const casadi_int* casadi_impl_ode_fun_simple_dae_sparsity_i
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* casadi_impl_ode_fun_simple_dae_sparsity_out(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* simple_dae_impl_ode_fun_sparsity_out(casadi_int i) {
   switch (i) {
     case 0: return casadi_s1;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT int casadi_impl_ode_fun_simple_dae_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
+CASADI_SYMBOL_EXPORT int simple_dae_impl_ode_fun_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 4;
   if (sz_res) *sz_res = 1;
   if (sz_iw) *sz_iw = 0;
