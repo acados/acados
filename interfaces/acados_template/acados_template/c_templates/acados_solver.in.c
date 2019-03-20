@@ -44,22 +44,118 @@
 {% for item in ra.constants %}
 #define {{ item.name }} {{ item.value }}
 {% endfor %}
-#define NX   {{ ra.dims.nx }}
-#define NZ   {{ ra.dims.nz }}
-#define NU   {{ ra.dims.nu }}
-#define NP   {{ ra.dims.np }}
-#define NBX  {{ ra.dims.nbx }}
-#define NBU  {{ ra.dims.nbu }}
-#define NG   {{ ra.dims.ng }}
-#define NBXN {{ ra.dims.nbxN }}
-#define NGN  {{ ra.dims.ngN }}
-#define NY   {{ ra.dims.ny }}
-#define NYN  {{ ra.dims.nyN }}
-#define N    {{ ra.dims.N }}
-#define NPD  {{ ra.dims.npd }}
-#define NPDN {{ ra.dims.npdN }}
-#define NH   {{ ra.dims.nh }}
-#define NHN  {{ ra.dims.nhN }}
+#define NX_   {{ ra.dims.nx }}
+#define NZ_   {{ ra.dims.nz }}
+#define NU_   {{ ra.dims.nu }}
+#define NP_   {{ ra.dims.np }}
+#define NBX_  {{ ra.dims.nbx }}
+#define NBU_  {{ ra.dims.nbu }}
+#define NG_   {{ ra.dims.ng }}
+#define NBXN_ {{ ra.dims.nbxN }}
+#define NGN_  {{ ra.dims.ngN }}
+#define NY_   {{ ra.dims.ny }}
+#define NYN_  {{ ra.dims.nyN }}
+#define N_    {{ ra.dims.N }}
+#define NPD_  {{ ra.dims.npd }}
+#define NPDN_ {{ ra.dims.npdN }}
+#define NH_   {{ ra.dims.nh }}
+#define NHN_  {{ ra.dims.nhN }}
+
+#if NX_ < 1
+#define NX   1
+#else
+#define NX   NX_
+#endif
+
+#if NZ_ < 1
+#define NZ   1
+#else
+#define NZ   NZ_
+#endif
+
+#if NU_ < 1
+#define NU   1
+#else
+#define NU   NU_
+#endif
+
+#if NP_ < 1
+#define NP   1
+#else
+#define NP   NP_
+#endif
+
+#if NBX_ < 1
+#define NBX   1
+#else
+#define NBX   NBX_
+#endif
+
+#if NBU_ < 1
+#define NBU   1
+#else
+#define NBU   NBU_
+#endif
+
+#if NG_ < 1
+#define NG   1
+#else
+#define NG   NG_
+#endif
+
+#if NBXN_ < 1
+#define NBXN   1
+#else
+#define NBXN   NBXN_
+#endif
+
+#if NGN_ < 1
+#define NGN   1
+#else
+#define NGN  NGN_
+#endif
+
+#if NY_ < 1
+#define NY   1
+#else
+#define NY   NY_
+#endif
+
+#if NYN_ < 1
+#define NYN   1
+#else
+#define NYN   NYN_
+#endif
+
+#if N_ < 1
+#define N   1
+#else
+#define N   N_
+#endif
+
+#if NPD_ < 1
+#define NPD   1
+#else
+#define NPD   NPD_
+#endif
+
+#if NPDN_ < 1
+#define NPDN   1
+#else
+#define NPDN   NPDN_
+#endif
+
+#if NH_ < 1
+#define NH   1
+#else
+#define NH   NH_
+#endif
+
+#if NHN_ < 1
+#define NHN   1
+#else
+#define NHN   NHN_
+#endif
 
 int acados_create() {
 
@@ -276,35 +372,35 @@ int acados_create() {
     int npdN[N+1];
 
     for(int i = 0; i < N+1; i++) {
-        nx[i]  = NX;
-        nu[i]  = NU;
-        nbx[i] = NBX;
-        nbu[i] = NBU;
-        nb[i]  = NBU + NBX;
-        ng[i]  = NG;
-        nh[i]  = NH;
-        npd[i] = NPD;
+        nx[i]  = NX_;
+        nu[i]  = NU_;
+        nbx[i] = NBX_;
+        nbu[i] = NBU_;
+        nb[i]  = NBU_ + NBX_;
+        ng[i]  = NG_;
+        nh[i]  = NH_;
+        npd[i] = NPD_;
         ns[i]  = 0;
-        nz[i]  = NZ;
-        nv[i]  = NX + NU;
-        ny[i]  = NY;
+        nz[i]  = NZ_;
+        nv[i]  = NX_ + NU_;
+        ny[i]  = NY_;
     }
 
-    nbx[0] = NX;
-    nbu[0] = NBU;
-    nb[0]  = NX + NBU;
+    nbx[0] = NX_;
+    nbu[0] = NBU_;
+    nb[0]  = NX_ + NBU_;
 
     nu[N]  = 0;
-    nx[N]  = NX;
+    nx[N]  = NX_;
     nz[N]  = 0;
-    nh[N]  = NHN;
-    npd[N]  = NPDN;
-    nv[N]  = NX; 
-    ny[N]  = NYN;
+    nh[N]  = NHN_;
+    npd[N]  = NPDN_;
+    nv[N]  = NX_; 
+    ny[N]  = NYN_;
     nbu[N] = 0;
-    nbx[N] = NBXN;
-    ng[N]  = NGN;
-    nb[N]  = NBXN;
+    nbx[N] = NBXN_;
+    ng[N]  = NGN_;
+    nb[N]  = NBXN_;
 
     // Make plan
     nlp_solver_plan = ocp_nlp_plan_create(N);
