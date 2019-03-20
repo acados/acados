@@ -14,7 +14,7 @@ function [ model ] = export_simple_dae_model()
         % old casadi versions
         error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
     end
-    model_name_prefix = 'inv_pendulum';
+    model_name_prefix = 'simple_dae';
        
     %% parameters
     alpha = 1.0;
