@@ -97,33 +97,33 @@ classdef acados_ocp < handle
 			% get pointers for external functions in model
 			% dynamics
 			if (strcmp(obj.opts_struct.sim_method, 'erk'))
-				ocp_set_ext_fun_dyn_expl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				obj.C_ocp_ext_fun = ocp_set_ext_fun_dyn_expl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			elseif (strcmp(obj.opts_struct.sim_method, 'irk'))
-				ocp_set_ext_fun_dyn_impl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				obj.C_ocp_ext_fun = ocp_set_ext_fun_dyn_impl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			else
 				fprintf('\ncodegen_model: sim_method not supported: %s\n', obj.opts_struct.sim_method);
 				return;
 			end
 			% nonlinear constraints
 			if (strcmp(obj.model_struct.constr_type, 'bgh') && isfield(obj.model_struct, 'constr_expr_h'))
-				ocp_set_ext_fun_constr_h(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				obj.C_ocp_ext_fun = ocp_set_ext_fun_constr_h(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			if (strcmp(obj.model_struct.constr_type, 'bgh') && isfield(obj.model_struct, 'constr_expr_h_e'))
-				ocp_set_ext_fun_constr_h_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				obj.C_ocp_ext_fun = ocp_set_ext_fun_constr_h_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			% nonlinear least squares
 			if (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
-				ocp_set_ext_fun_cost_y(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				obj.C_ocp_ext_fun = ocp_set_ext_fun_cost_y(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			if (strcmp(obj.model_struct.cost_type_e, 'nonlinear_ls'))
-				ocp_set_ext_fun_cost_y_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				obj.C_ocp_ext_fun = ocp_set_ext_fun_cost_y_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			% external cost
 			if (strcmp(obj.model_struct.cost_type, 'ext_cost'))
-				ocp_set_ext_fun_cost_ext_cost(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				obj.C_ocp_ext_fun = ocp_set_ext_fun_cost_ext_cost(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 			if (strcmp(obj.model_struct.cost_type_e, 'ext_cost'))
-				ocp_set_ext_fun_cost_ext_cost_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+				obj.C_ocp_ext_fun = ocp_set_ext_fun_cost_ext_cost_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
 
 			% set in model

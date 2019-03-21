@@ -1,6 +1,7 @@
 % script to visualize the chain of masses
 
-drawnow update
+%drawnow update
+drawnow('expose')
 
 figure(1), set(gcf, 'Color','white');
 clf
