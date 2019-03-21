@@ -26,16 +26,16 @@ sim_model = acados_sim_model();
 sim_model.set('T', 0.5);
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('expr_f', model.expr_f_expl);
+	sim_model.set('dyn_expr_f', model.expr_f_expl);
 	sim_model.set('sym_x', model.sym_x);
 	if isfield(model, 'sym_u')
 		sim_model.set('sym_u', model.sym_u);
 	end
-	sim_model.set('nx', model.nx);
-	sim_model.set('nu', model.nu);
+	sim_model.set('dim_nx', model.nx);
+	sim_model.set('dim_nu', model.nu);
 else % irk
 	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('expr_f', model.expr_f_impl);
+	sim_model.set('dyn_expr_f', model.expr_f_impl);
 	sim_model.set('sym_x', model.sym_x);
 	sim_model.set('sym_xdot', model.sym_xdot);
 	if isfield(model, 'sym_u')
@@ -44,8 +44,8 @@ else % irk
 %	if isfield(model, 'sym_z')
 %		sim_model.set('sym_z', model.sym_z);
 %	end
-	sim_model.set('nx', model.nx);
-	sim_model.set('nu', model.nu);
+	sim_model.set('dim_nx', model.nx);
+	sim_model.set('dim_nu', model.nu);
 %	sim_model.set('nz', model.nz);
 end
 
@@ -72,8 +72,12 @@ sim_opts.opts_struct
 sim = acados_sim(sim_model, sim_opts);
 % (re)set numerical part of model
 %sim.set('T', 0.5);
+sim.C_sim
+sim.C_sim_ext_fun
 
-x0 = ones(sim_model.nx, 1); %x0(1) = 2.0;
+
+
+x0 = ones(nx, 1); %x0(1) = 2.0;
 tic;
 sim.set('x', x0);
 time_set_x = toc

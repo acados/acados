@@ -113,7 +113,7 @@ int main() {
     double kkt_norm_inf = 1e12, elapsed_time;
 
 #if 1
-    int NTIMINGS = 100000;
+    int NTIMINGS = 100;
     double min_time = 1e12;
     for (int ii = 0; ii < NTIMINGS; ii ++) {
         for (int i = 0; i <= nlp_dims->N; ++i) {

@@ -1,4 +1,4 @@
-function model = mass_chain_model(nfm)
+function model = masses_chain_model(nfm)
 
 import casadi.*
 

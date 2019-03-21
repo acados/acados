@@ -6,7 +6,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import scipy.linalg
 
-CODE_GEN = 0
+CODE_GEN = 1
+COMPILE = 1
+
 FORMULATION = 2 # 0 for hexagon 1 for sphere 2 SCQP sphere
 USE_JSON_DUMP = 0
 
@@ -408,12 +410,12 @@ if CODE_GEN == 1:
     if FORMULATION == 2:
         generate_solver(model, ra, con_h=constraint, con_p=constraint_nl)
 
-
-# make
-os.chdir('c_generated_code')
-os.system('make')
-os.system('make shared_lib')
-os.chdir('..')
+if COMPILE == 1:
+    # make 
+    os.chdir('c_generated_code')
+    os.system('make')
+    os.system('make shared_lib')
+    os.chdir('..')
 
 acados   = CDLL('c_generated_code/acados_solver_rsm.so')
 

@@ -173,11 +173,11 @@ file(GLOB INV_PENDULUM_SRC
 )
 
 file(GLOB GNSF_CRANE_SRC
-    gnsf_crane_model/phi_fun.c
-    gnsf_crane_model/phi_fun_jac_y.c
-    gnsf_crane_model/phi_jac_y_uhat.c
-    gnsf_crane_model/f_lo_fun_jac_x1k1uz.c
-    gnsf_crane_model/get_matrices_fun.c
+    crane_nx9_model/crane_nx9_phi_fun.c
+    crane_nx9_model/crane_nx9_phi_fun_jac_y.c
+    crane_nx9_model/crane_nx9_phi_jac_y_uhat.c
+    crane_nx9_model/crane_nx9_f_lo_fun_jac_x1k1uz.c
+    crane_nx9_model/crane_nx9_get_matrices_fun.c
 )
 
 file(GLOB ENGINE_SRC
@@ -219,20 +219,11 @@ add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
 target_link_libraries(sim_gnsf_crane acados)
 add_test(sim_gnsf_crane sim_gnsf_crane)
 
-# # -------------------- dae_example
-# add_executable(dae_example dae_example.c
-#     inverted_pendulum_model/impl_ode_fun_pendulum_dae.c
-#     inverted_pendulum_model/impl_ode_jac_x_xdot_u_z_pendulum_dae.c
-#     inverted_pendulum_model/impl_ode_fun_jac_x_xdot_z_pendulum_dae.c)
-    
-# target_link_libraries(dae_example acados)
-# add_test(dae_example dae_example)
-
 # -------------------- simple dae_example
 add_executable(simple_dae_example simple_dae_example.c
-    simple_dae_model/impl_ode_fun_simple_dae.c
-    simple_dae_model/impl_ode_jac_x_xdot_u_z_simple_dae.c
-    simple_dae_model/impl_ode_fun_jac_x_xdot_z_simple_dae.c)
+    simple_dae_model/simple_dae_impl_ode_fun.c
+    simple_dae_model/simple_dae_impl_ode_jac_x_xdot_u_z.c
+    simple_dae_model/simple_dae_impl_ode_fun_jac_x_xdot_z.c)
     
 target_link_libraries(simple_dae_example acados)
 add_test(simple_dae_example simple_dae_example)

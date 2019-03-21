@@ -56,8 +56,8 @@ end
 
 model_name = model.name;
 
-if isfield(model, 'expr_ext_cost')
-	ext_cost = model.expr_ext_cost;
+if isfield(model, 'cost_expr_ext_cost')
+	ext_cost = model.cost_expr_ext_cost;
 	% generate jacobians
 	jac_x = jacobian(ext_cost, x);
 	jac_u = jacobian(ext_cost, u);
@@ -67,29 +67,29 @@ if isfield(model, 'expr_ext_cost')
 	hes_ux = jacobian(jac_x', u);
 	hes_xx = jacobian(jac_x', x);
 	% Set up functions
-	if (strcmp(model.param_ext_cost, 'true'))
-		ext_cost_jac_hes = Function([model_name,'_ext_cost_jac_hes'], {x, u, p}, {[jac_u'; jac_x'], [hes_uu, hes_xu; hes_ux, hes_xx]});
+	if (strcmp(model.cost_param_ext_cost, 'true'))
+		ext_cost_jac_hes = Function([model_name,'_cost_ext_cost_jac_hes'], {x, u, p}, {[jac_u'; jac_x'], [hes_uu, hes_xu; hes_ux, hes_xx]});
 	else
-		ext_cost_jac_hes = Function([model_name,'_ext_cost_jac_hes'], {x, u}, {[jac_u'; jac_x'], [hes_uu, hes_xu; hes_ux, hes_xx]});
+		ext_cost_jac_hes = Function([model_name,'_cost_ext_cost_jac_hes'], {x, u}, {[jac_u'; jac_x'], [hes_uu, hes_xu; hes_ux, hes_xx]});
 	end
 	% generate C code
-	ext_cost_jac_hes.generate([model_name,'_ext_cost_jac_hes'], casadi_opts);
+	ext_cost_jac_hes.generate([model_name,'_cost_ext_cost_jac_hes'], casadi_opts);
 end
 
-if isfield(model, 'expr_ext_cost_e')
-	ext_cost_e = model.expr_ext_cost_e;
+if isfield(model, 'cost_expr_ext_cost_e')
+	ext_cost_e = model.cost_expr_ext_cost_e;
 	% generate jacobians
 	jac_x_e = jacobian(ext_cost_e, x);
 	% generate hessians
 	hes_xx_e = jacobian(jac_x', x);
 	% Set up functions
-	if (strcmp(model.param_ext_cost_e, 'true'))
-		ext_cost_e_jac_hes = Function([model_name,'_ext_cost_e_jac_hes'], {x, p}, {jac_x_e', hes_xx_e});
+	if (strcmp(model.cost_param_ext_cost_e, 'true'))
+		ext_cost_e_jac_hes = Function([model_name,'_cost_ext_cost_e_jac_hes'], {x, p}, {jac_x_e', hes_xx_e});
 	else
-		ext_cost_e_jac_hes = Function([model_name,'_ext_cost_e_jac_hes'], {x}, {jac_x_e', hes_xx_e});
+		ext_cost_e_jac_hes = Function([model_name,'_cost_ext_cost_e_jac_hes'], {x}, {jac_x_e', hes_xx_e});
 	end
 	% generate C code
-	ext_cost_e_jac_hes.generate([model_name,'_ext_cost_e_jac_hes'], casadi_opts);
+	ext_cost_e_jac_hes.generate([model_name,'_cost_ext_cost_e_jac_hes'], casadi_opts);
 end
 
 

@@ -23,6 +23,7 @@ matrix:
     - name: MacOS Python Interface Build
       os: osx
       osx_image: xcode9.4
+      # osx_image: xcode10.1
       env:
         - DEPLOY_NAME="osx-python"
     - name: Linux Python Interface Gcc6
