@@ -54,6 +54,7 @@ Both a CMake and a Makefile based build system are supported at the moment.
     When using the Makefile-based build sytem:
     ```
     make acados_shared
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_acados_folder>/lib
     make examples_c
     make run_examples_c
     ```
