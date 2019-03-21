@@ -8,6 +8,7 @@ import scipy.linalg
 
 CODE_GEN = 1
 COMPILE = 1
+
 FORMULATION = 2 # 0 for hexagon 1 for sphere 2 SCQP sphere
 USE_JSON_DUMP = 0
 
@@ -49,7 +50,7 @@ u_d_ref = Rs*i_d_ref - w_val*psi_q_ref
 u_q_ref = Rs*i_q_ref + w_val*psi_d_ref
 
 def export_dae_model():
-    
+
     model_name = 'rsm'
 
     # constants
@@ -58,22 +59,22 @@ def export_dae_model():
     m_load = 0.0
     J = nmp.array([[0, -1], [1, 0]])
 
-    # set up states 
+    # set up states
     psi_d = SX.sym('psi_d')
     psi_q = SX.sym('psi_q')
     x = vertcat(psi_d, psi_q)
 
-    # set up controls 
+    # set up controls
     u_d = SX.sym('u_d')
     u_q = SX.sym('u_q')
     u = vertcat(u_d, u_q)
 
-    # set up algebraic variables 
+    # set up algebraic variables
     i_d = SX.sym('i_d')
     i_q = SX.sym('i_q')
     z = vertcat(i_d, i_q)
-    
-    # set up xdot 
+
+    # set up xdot
     psi_d_dot = SX.sym('psi_d_dot')
     psi_q_dot = SX.sym('psi_q_dot')
     xdot = vertcat(psi_d_dot, psi_q_dot)
@@ -86,8 +87,8 @@ def export_dae_model():
 
     # build flux expression
     Psi = vertcat(psi_d_num(i_d, i_q), psi_q_num(i_d, i_q))
-    
-    # dynamics     
+
+    # dynamics
     f_impl = vertcat(   psi_d_dot - u_d + Rs*i_d - w*psi_q - dist_d, \
                         psi_q_dot - u_q + Rs*i_q + w*psi_d - dist_q, \
                         psi_d - Psi[0], \
@@ -104,18 +105,18 @@ def export_dae_model():
     model.p = p
     model.name = model_name
 
-    return model 
+    return model
 
 def export_voltage_sphere_con():
-    
+
     con_name = 'v_sphere'
 
-    # set up states 
+    # set up states
     psi_d = SX.sym('psi_d')
     psi_q = SX.sym('psi_q')
     x = vertcat(psi_d, psi_q)
 
-    # set up controls 
+    # set up controls
     u_d = SX.sym('u_d')
     u_q = SX.sym('u_q')
     u = vertcat(u_d, u_q)
@@ -123,25 +124,25 @@ def export_voltage_sphere_con():
     # voltage sphere
     constraint = acados_constraint()
 
-    constraint.expr = u_d**2 + u_q**2  
-    # constraint.expr = u_d + u_q  
+    constraint.expr = u_d**2 + u_q**2
+    # constraint.expr = u_d + u_q
     constraint.x = x
     constraint.u = u
     constraint.nc = 1
     constraint.name = con_name
 
-    return constraint 
+    return constraint
 
 def export_nonlinear_part_voltage_constraint():
-    
+
     con_name = 'v_sphere_nl'
 
-    # set up states 
+    # set up states
     psi_d = SX.sym('psi_d')
     psi_q = SX.sym('psi_q')
     x = vertcat(psi_d, psi_q)
 
-    # set up controls 
+    # set up controls
     u_d = SX.sym('u_d')
     u_q = SX.sym('u_q')
     u = vertcat(u_d, u_q)
@@ -150,15 +151,15 @@ def export_nonlinear_part_voltage_constraint():
     constraint = acados_constraint()
 
     constraint.expr = vertcat(u_d, u_q)
-    # constraint.expr = u_d + u_q  
+    # constraint.expr = u_d + u_q
     constraint.x = x
     constraint.u = u
     constraint.nc = 2
     constraint.name = con_name
 
-    return constraint 
+    return constraint
 def get_general_constraints_DC(u_max):
-    
+
     # polytopic constraint on the input
     r = u_max
 
@@ -178,7 +179,7 @@ def get_general_constraints_DC(u_max):
     q2 = r*sin(pi/3)
     # -q2 <= uq  <= q2
 
-    # form D and C matrices 
+    # form D and C matrices
     # (acados C interface works with column major format)
     D = nmp.transpose(nmp.array([[1, m1],[1, -m1]]))
     # D = nmp.array([[1, m1],[1, -m1]])
@@ -186,12 +187,12 @@ def get_general_constraints_DC(u_max):
     # D = nmp.transpose(nmp.array([[m1, 1],[-m1, 1]]))
     D = nmp.array([[m1, 1],[-m1, 1]])
     C = nmp.transpose(nmp.array([[0, 0], [0, 0]]))
-    
+
     ug  = nmp.array([-q1, -q1])
     lg  = nmp.array([+q1, +q1])
-    lbu = nmp.array([-q2]) 
-    ubu = nmp.array([+q2]) 
-    
+    lbu = nmp.array([-q2])
+    ubu = nmp.array([+q2])
+
     res = dict()
     res["D"] = D
     res["C"] = C
@@ -200,28 +201,28 @@ def get_general_constraints_DC(u_max):
     res["lbu"] = lbu
     res["ubu"] = ubu
 
-    return res 
+    return res
 
 # create render arguments
 ra = ocp_nlp_render_arguments()
 
 
-# export model 
+# export model
 model = export_dae_model()
 
 # export constraint description
 constraint = export_voltage_sphere_con()
 constraint_nl = export_nonlinear_part_voltage_constraint()
 
-# set model_name 
+# set model_name
 ra.model_name = model.name
 
 if FORMULATION == 1:
-    # constraints name 
+    # constraints name
     ra.con_h_name = constraint.name
 
 if FORMULATION == 2:
-    # constraints name 
+    # constraints name
     ra.con_h_name = constraint.name
     ra.con_p_name = constraint_nl.name
 
@@ -241,31 +242,31 @@ Tf  = N*Ts
 
 # set ocp_nlp_dimensions
 nlp_dims      = ra.dims
-nlp_dims.nx   = nx 
-nlp_dims.nz   = nz 
-nlp_dims.ny   = ny 
-nlp_dims.nyN  = nyN 
+nlp_dims.nx   = nx
+nlp_dims.nz   = nz
+nlp_dims.ny   = ny
+nlp_dims.nyN  = nyN
 nlp_dims.nbx  = 0
-# nlp_dims.nbu  = 0 
+# nlp_dims.nbu  = 0
 
 if FORMULATION == 0:
-    nlp_dims.nbu  = 1 
-    nlp_dims.ng   = 2 
+    nlp_dims.nbu  = 1
+    nlp_dims.ng   = 2
 
 if FORMULATION == 1:
-    nlp_dims.ng  = 0 
+    nlp_dims.ng  = 0
     nlp_dims.nh  = 1
 
 if FORMULATION == 2:
-    nlp_dims.ng  = 0 
+    nlp_dims.ng  = 0
     nlp_dims.npd  = 2
     nlp_dims.nh  = 1
     nlp_dims.nhN = 0
 
-# nlp_dims.nbu  = 2 
-# nlp_dims.ng   = 2 
-# nlp_dims.ng   = 0 
-nlp_dims.ngN  = 0 
+# nlp_dims.nbu  = 2
+# nlp_dims.ng   = 2
+# nlp_dims.ng   = 0
+nlp_dims.ngN  = 0
 nlp_dims.nbxN = 0
 nlp_dims.nu   = nu
 nlp_dims.np   = np
@@ -285,7 +286,7 @@ R[1,1] = 1e-4*Tf/N
 # R[0,0] = 1e1
 # R[1,1] = 1e1
 
-nlp_cost.W = scipy.linalg.block_diag(Q, R) 
+nlp_cost.W = scipy.linalg.block_diag(Q, R)
 
 Vx = nmp.zeros((ny, nx))
 Vx[0,0] = 1.0
@@ -307,7 +308,7 @@ nlp_cost.Vz = Vz
 QN = nmp.eye(nx)
 QN[0,0] = 1e-3
 QN[1,1] = 1e-3
-nlp_cost.WN = QN 
+nlp_cost.WN = QN
 
 VxN = nmp.zeros((ny, nx))
 VxN[0,0] = 1.0
@@ -316,8 +317,8 @@ VxN[1,1] = 1.0
 nlp_cost.VxN = VxN
 
 nlp_cost.yref  = nmp.zeros((ny, 1))
-nlp_cost.yref[0]  = psi_d_ref 
-nlp_cost.yref[1]  = psi_q_ref 
+nlp_cost.yref[0]  = psi_d_ref
+nlp_cost.yref[1]  = psi_q_ref
 nlp_cost.yref[2]  = u_d_ref
 nlp_cost.yref[3]  = u_q_ref
 nlp_cost.yrefN = nmp.zeros((nyN, 1))
@@ -354,11 +355,11 @@ if FORMULATION == 0:
     # setting general constraints
     # lg <= D*u + C*u <= ug
     nlp_con.D   = D
-    nlp_con.C   = C 
+    nlp_con.C   = C
     nlp_con.lg  = lg
-    nlp_con.ug  = ug 
-    # nlp_con.CN  = ... 
-    # nlp_con.lgN = ... 
+    nlp_con.ug  = ug
+    # nlp_con.CN  = ...
+    # nlp_con.lgN = ...
     # nlp_con.ugN = ...
 
 # setting parameters
@@ -409,7 +410,6 @@ if CODE_GEN == 1:
     if FORMULATION == 2:
         generate_solver(model, ra, con_h=constraint, con_p=constraint_nl)
 
-
 if COMPILE == 1:
     # make 
     os.chdir('c_generated_code')
@@ -422,10 +422,21 @@ acados   = CDLL('c_generated_code/acados_solver_rsm.so')
 acados.acados_create()
 
 nlp_opts = acados.acados_get_nlp_opts()
+
+acados.acados_get_nlp_dims.restype = c_void_p
 nlp_dims = acados.acados_get_nlp_dims()
+
+acados.acados_get_nlp_config.restype = c_void_p
 nlp_config = acados.acados_get_nlp_config()
+
+acados.acados_get_nlp_out.restype = c_void_p
 nlp_out = acados.acados_get_nlp_out()
+
+acados.acados_get_nlp_in.restype = c_void_p
 nlp_in = acados.acados_get_nlp_in()
+
+
+nlp_dims
 
 # closed loop simulation TODO(add proper simulation)
 Nsim = 100
@@ -438,7 +449,7 @@ simU = nmp.ndarray((Nsim, nu))
 
 for i in range(Nsim):
     status = acados.acados_solve()
-    
+
     if status is not 0:
         print('max number of iterations reached!')
 
@@ -446,6 +457,8 @@ for i in range(Nsim):
     field_name = "x"
     arg = field_name.encode('utf-8')
     x0 = cast((x0), c_void_p)
+
+    acados.ocp_nlp_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_wchar_p, c_void_p]
     acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, field_name, x0)
     x0 = cast((x0), POINTER(c_double))
 
@@ -460,7 +473,7 @@ for i in range(Nsim):
 
     for j in range(nu):
         simU[i,j] = u0[j]
-    
+
     field_name = "u"
     # update initial condition
     field_name = "x"
@@ -470,6 +483,7 @@ for i in range(Nsim):
 
     field_name = "lbx"
     arg = field_name.encode('utf-8')
+    acados.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_void_p, c_void_p]
     acados.ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0)
     field_name = "ubx"
     arg = field_name.encode('utf-8')

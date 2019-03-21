@@ -298,7 +298,7 @@ class ocp_nlp_cost:
             self._yrefN = yrefN
         else:
             raise Exception('Invalid yrefN value. Exiting.')
-    
+
 class ocp_nlp_constraints:
     def __init__(self):
         self._lbx    = None  
