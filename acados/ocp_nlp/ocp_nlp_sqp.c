@@ -900,19 +900,6 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 
 
 
-static void regularize_hessian(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
-                               ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts,
-                               ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
-{
-    ocp_nlp_config *config = (ocp_nlp_config *) config_;
-
-    config->regularize->evaluate(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
-
-	return;
-}
-
-
-
 // update QP rhs for SQP (step prim var, abs dual var)
 // TODO(all): move in dynamics, cost, constraints modules ???
 static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
@@ -1168,7 +1155,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         }
 
         // regularize Hessian
-        regularize_hessian(config, dims, nlp_in, nlp_out, opts, mem, work);
+		config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
 
 //        printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
 //       print_ocp_qp_in(work->qp_in);

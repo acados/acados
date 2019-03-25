@@ -363,7 +363,7 @@ void ocp_nlp_reg_conv_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *me
  * functions
  ************************************************/
 
-void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
+void ocp_nlp_reg_conv_regularize_hessian(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
     ocp_nlp_reg_conv_memory *mem = mem_;
     ocp_nlp_reg_conv_opts *opts = opts_;
@@ -380,9 +380,9 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *m
 
     blasfeo_dgecp(nu[N]+nx[N]+1, nu[N]+nx[N], mem->RSQrq[N], 0, 0, &mem->original_RSQrq[N], 0, 0);
 
-	// TODO fix this paragraph !!!!
-	blasfeo_dgese(nu[N]+nx[N], nu[N]+nx[N], 0.0, &mem->delta_eye, 0, 0);
-    blasfeo_ddiare(nu[N]+nx[N], delta, &mem->delta_eye, 0, 0);
+	// TODO regularize R at last stage if needed !!!
+	blasfeo_dgese(nx[N], nu[N]+nx[N], 0.0, &mem->delta_eye, 0, 0);
+    blasfeo_ddiare(nx[N], delta, &mem->delta_eye, 0, 0);
     blasfeo_dgecp(nx[N], nx[N], &mem->delta_eye, 0, 0, &mem->Q_tilde, 0, 0);
     blasfeo_dgecp(nx[N], nx[N], mem->RSQrq[N], 0, 0, &mem->Q_bar, 0, 0);
     blasfeo_dgead(nx[N], nx[N], -1.0, &mem->Q_tilde, 0, 0, &mem->Q_bar, 0, 0);
@@ -476,6 +476,14 @@ void ocp_nlp_reg_conv(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *m
 
 
 
+void ocp_nlp_reg_conv_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
+{
+	// TODO
+	return;
+}
+
+
+
 void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config)
 {
 	// dims
@@ -494,5 +502,6 @@ void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config)
     config->memory_set_RSQrq_ptr = &ocp_nlp_reg_conv_memory_set_RSQrq_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_reg_conv_memory_set_BAbt_ptr;
 	// functions
-    config->evaluate = &ocp_nlp_reg_conv;
+    config->regularize_hessian = &ocp_nlp_reg_conv_regularize_hessian;
+    config->correct_dual_sol = &ocp_nlp_reg_conv_correct_dual_sol;
 }

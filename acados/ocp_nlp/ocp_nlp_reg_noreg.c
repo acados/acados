@@ -131,7 +131,13 @@ void ocp_nlp_reg_noreg_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *m
  * functions
  ************************************************/
 
-void ocp_nlp_reg_noreg(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
+void ocp_nlp_reg_noreg_regularize_hessian(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
+{
+	return;
+}
+
+
+void ocp_nlp_reg_noreg_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
 	return;
 }
@@ -158,6 +164,7 @@ void ocp_nlp_reg_noreg_config_initialize_default(ocp_nlp_reg_config *config)
     config->memory_set_BAbt_ptr = &ocp_nlp_reg_noreg_memory_set_BAbt_ptr;
     config->memory_set_b_ptr = &ocp_nlp_reg_noreg_memory_set_b_ptr;
 	// functions
-    config->evaluate = &ocp_nlp_reg_noreg;
+    config->regularize_hessian = &ocp_nlp_reg_noreg_regularize_hessian;
+    config->correct_dual_sol = &ocp_nlp_reg_noreg_correct_dual_sol;
 }
 
