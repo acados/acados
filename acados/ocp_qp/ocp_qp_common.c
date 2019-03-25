@@ -116,6 +116,8 @@ int ocp_qp_dims_calculate_size(int N)
     return size;
 }
 
+
+
 ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
@@ -134,6 +136,7 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 }
 
 
+
 void ocp_qp_dims_set(void *config_, void *dims_, int stage, const char *field, const int* value)
 {
     ocp_qp_dims *dims = (ocp_qp_dims *) dims_;
@@ -142,6 +145,8 @@ void ocp_qp_dims_set(void *config_, void *dims_, int stage, const char *field, c
 
     d_set_ocp_qp_dim(field_copy, stage, *value, dims);
 }
+
+
 
 /************************************************
  * in

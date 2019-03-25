@@ -26,12 +26,25 @@ extern "C" {
 
 #include "acados/sim/sim_common.h"
 
-typedef enum { ERK, IRK, GNSF, LIFTED_IRK } sim_solver_t;
+
+
+typedef enum
+{
+	ERK,
+	IRK,
+	GNSF,
+	LIFTED_IRK,
+	INVALID_SIM_SOLVER,
+} sim_solver_t;
+
+
 
 typedef struct
 {
     sim_solver_t sim_solver;
 } sim_solver_plan;
+
+
 
 typedef struct
 {
@@ -41,6 +54,8 @@ typedef struct
     void *mem;
     void *work;
 } sim_solver;
+
+
 
 /* config */
 //

@@ -73,35 +73,13 @@ void ocp_nlp_cost_external_dims_initialize(void *config_, void *dims_, int nx, i
 
 
 
-static void ocp_nlp_cost_external_set_nx(void *config_, void *dims_, int *nx)
-{
-    ocp_nlp_cost_external_dims *dims = (ocp_nlp_cost_external_dims *) dims_;
-    dims->nx = *nx;
-}
-
-
-
-static void ocp_nlp_cost_external_set_nu(void *config_, void *dims_, int *nu)
-{
-    ocp_nlp_cost_external_dims *dims = (ocp_nlp_cost_external_dims *) dims_;
-    dims->nu = *nu;
-}
-
-
-
-static void ocp_nlp_cost_external_set_ns(void *config_, void *dims_, int *ns)
-{
-    ocp_nlp_cost_external_dims *dims = (ocp_nlp_cost_external_dims *) dims_;
-    dims->ns = *ns;
-}
-
-
-
 void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *field, int* value)
 {
+    ocp_nlp_cost_external_dims *dims = (ocp_nlp_cost_external_dims *) dims_;
+
     if (!strcmp(field, "nx"))
     {
-        ocp_nlp_cost_external_set_nx(config_, dims_, value);
+		dims->nx = *value;
     }
     else if (!strcmp(field, "nz"))
     {
@@ -110,17 +88,19 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
     }
     else if (!strcmp(field, "nu"))
     {
-        ocp_nlp_cost_external_set_nu(config_, dims_, value);
+		dims->nu = *value;
     }
     else if (!strcmp(field, "ns"))
     {
-        ocp_nlp_cost_external_set_ns(config_, dims_, value);
+		dims->ns = *value;
     }
     else
     {
         printf("\nerror: dimension type %s not available in module ocp_nlp_cost_external\n", field);
         exit(1);
     }
+
+	return;
 }
 
 

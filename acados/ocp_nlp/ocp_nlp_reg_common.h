@@ -26,35 +26,68 @@ extern "C" {
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 
-typedef ocp_qp_dims ocp_nlp_reg_dims;
 
-typedef ocp_qp_in ocp_nlp_reg_in;
 
-typedef ocp_qp_out ocp_nlp_reg_out;
+/* dims */
 
-typedef struct {
-    double delta;
-    double gamma;
-} ocp_nlp_reg_opts;
+//typedef ocp_qp_dims ocp_nlp_reg_dims;
+typedef struct
+{
+	int *nx;
+	int *nu;
+	int N;
+} ocp_nlp_reg_dims;
 
-typedef struct {
+//
+int ocp_nlp_reg_dims_calculate_size(int N);
+//
+ocp_nlp_reg_dims *ocp_nlp_reg_dims_assign(int N, void *raw_memory);
+//
+void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char *field, int* value);
+
+
+
+/* config */
+
+typedef struct
+{
+    /* dims */
+    int (*dims_calculate_size)(int N);
+    ocp_nlp_reg_dims *(*dims_assign)(int N, void *raw_memory);
+	void (*dims_set)(void *config, ocp_nlp_reg_dims *dims, int stage, char *field, int *value);
+    /* opts */
     int (*opts_calculate_size)(void);
     void *(*opts_assign)(void *raw_memory);
-
-    int (*memory_calculate_size)(ocp_nlp_reg_dims *dims);
-    void *(*memory_assign)(ocp_nlp_reg_dims *dims, void *raw_memory);
-
-    void (*evaluate)(void *config, ocp_nlp_reg_dims *dims, ocp_nlp_reg_in *in, ocp_nlp_reg_out *out,
-                    ocp_nlp_reg_opts *opts, void *mem_);
+	void (*opts_initialize_default)(void *config, ocp_nlp_reg_dims *dims, void *opts);
+	void (*opts_set)(void *config, ocp_nlp_reg_dims *dims, void *opts, char *field, void* value);
+    /* memory */
+    int (*memory_calculate_size)(void *config, ocp_nlp_reg_dims *dims, void *opts);
+    void *(*memory_assign)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
+    void (*memory_set)(void *config, ocp_nlp_reg_dims *dims, void *memory, char *field, void* value);
+    void (*memory_set_RSQrq_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *mat, void *memory);
+    void (*memory_set_rq_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *vec, void *memory);
+    void (*memory_set_BAbt_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *mat, void *memory);
+    void (*memory_set_b_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *vec, void *memory);
+    void (*memory_set_ux_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *vec, void *memory);
+    void (*memory_set_pi_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *vec, void *memory);
+    /* functions */
+    void (*regularize_hessian)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *memory);
+    void (*correct_dual_sol)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *memory);
 } ocp_nlp_reg_config;
 
-int ocp_nlp_reg_opts_calculate_size(void);
-
-void *ocp_nlp_reg_opts_assign(void *raw_memory);
-
+//
 int ocp_nlp_reg_config_calculate_size(void);
-
+//
 void *ocp_nlp_reg_config_assign(void *raw_memory);
+
+
+
+/* regularization help functions */
+void acados_reconstruct_A(int dim, double *A, double *V, double *d);
+void acados_mirror(int dim, double *A, double *V, double *d, double *e, double epsilon);
+void acados_project(int dim, double *A, double *V, double *d, double *e, double epsilon);
+
+
 
 #ifdef __cplusplus
 }

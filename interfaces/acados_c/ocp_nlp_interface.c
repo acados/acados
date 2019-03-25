@@ -34,8 +34,10 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
-#include "acados/ocp_nlp/ocp_nlp_reg_conv.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_convexify.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_mirror.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_project.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/utils/mem.h"
@@ -79,34 +81,50 @@ static ocp_nlp_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
     plan->nlp_constraints = (ocp_nlp_constraints_t *) c_ptr;
     c_ptr += (N + 1) * sizeof(ocp_nlp_constraints_t);
 
-    // initialize to default value !=0 to detect empty plans
-    for (ii=0; ii <= N; ii++)
-        plan->nlp_cost[ii] = INVALID_COST;
-    for (ii=0; ii < N; ii++)
-        plan->nlp_dynamics[ii] = INVALID_MODEL;
-    for (ii=0; ii <= N; ii++)
-        plan->nlp_constraints[ii] = INVALID_CONSTRAINT;
+	plan->N = N;
 
     return plan;
 }
 
 
 
-static void ocp_nlp_plan_initialize_default(int N, ocp_nlp_plan *plan)
+static void ocp_nlp_plan_initialize_default(ocp_nlp_plan *plan)
 {
-    plan->nlp_solver = SQP;
-    plan->regularization = NO_REGULARIZATION;
-    plan->N = N;
+	int ii;
 
-    for (int ii = 0; ii <= N; ii++)
+	int N = plan->N;
+
+    // initialize to default value !=0 to detect empty plans
+	// cost
+    for (ii=0; ii <= N; ii++)
+	{
+        plan->nlp_cost[ii] = INVALID_COST;
+	}
+	// dynamics
+    for (ii=0; ii < N; ii++)
+	{
+        plan->nlp_dynamics[ii] = INVALID_DYNAMICS;
+	}
+	// constraints
+    for (ii=0; ii <= N; ii++)
+	{
+        plan->nlp_constraints[ii] = INVALID_CONSTRAINT;
+	}
+	// nlp solver
+	plan->nlp_solver = INVALID_NLP_SOLVER;
+	// qp solver
+	plan->ocp_qp_solver_plan.qp_solver = INVALID_QP_SOLVER;
+	// sim solver
+    for (ii = 0; ii < N; ii++)
     {
-        plan->nlp_cost[ii] = NONLINEAR_LS;
+        plan->sim_solver_plan[ii].sim_solver = INVALID_SIM_SOLVER;
     }
 
-    for (int ii = 0; ii < N; ii++)
-    {
-        plan->sim_solver_plan[ii].sim_solver = ERK;
-    }
+	// regularization: no reg by default
+    plan->regularization = NO_REGULARIZE;
+
+
+	return;
 }
 
 
@@ -118,15 +136,18 @@ ocp_nlp_plan *ocp_nlp_plan_create(int N)
 
     ocp_nlp_plan *plan = ocp_nlp_plan_assign(N, ptr);
 
-    ocp_nlp_plan_initialize_default(N, plan);
+    ocp_nlp_plan_initialize_default(plan);
 
     return plan;
 }
+
+
 
 void ocp_nlp_plan_destroy(void* plan_)
 {
     free(plan_);
 }
+
 
 
 /************************************************
@@ -145,19 +166,24 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 
     /* initialize config according plan */
 
-    if (plan.nlp_solver == SQP)
-    {
-        ocp_nlp_sqp_config_initialize_default(config);
-    }
-    else if (plan.nlp_solver == SQP_RTI)
-    {
-        ocp_nlp_sqp_rti_config_initialize_default(config);
-    }
-    else
-    {
-        printf("Solver not available!\n");
-        exit(1);
-    }
+	// NLP solver
+    switch (plan.nlp_solver)
+	{
+		case SQP:
+			ocp_nlp_sqp_config_initialize_default(config);
+			break;
+		case SQP_RTI:
+			ocp_nlp_sqp_rti_config_initialize_default(config);
+			break;
+		case INVALID_NLP_SOLVER:
+			break;
+            printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_solver\n");
+            exit(1);
+			break;
+		default:
+            printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_solver\n");
+            exit(1);
+	}
 
     // QP solver
     ocp_qp_xcond_solver_config_initialize_default(plan.ocp_qp_solver_plan.qp_solver, config->qp_solver);
@@ -165,17 +191,20 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
     // regularization
     switch (plan.regularization)
     {
-        case NO_REGULARIZATION:
-            config->regularization = NULL;  // Note(oj): this is maybe a bit dirty
+        case NO_REGULARIZE:
+            ocp_nlp_reg_noreg_config_initialize_default(config->regularize);
             break;
         case MIRROR:
-            ocp_nlp_reg_mirror_config_initialize_default(config->regularization);
+            ocp_nlp_reg_mirror_config_initialize_default(config->regularize);
             break;
-        case CONVEXIFICATION:
-            ocp_nlp_reg_conv_config_initialize_default(config->regularization);
+        case PROJECT:
+            ocp_nlp_reg_project_config_initialize_default(config->regularize);
+            break;
+        case CONVEXIFY:
+            ocp_nlp_reg_convexify_config_initialize_default(config->regularize);
             break;
         default:
-            printf("Regularization option not available!\n");
+            printf("\nerror: ocp_nlp_config_create: unsupported plan->regularization\n");
             exit(1); 
     }
 
@@ -194,10 +223,11 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
                 ocp_nlp_cost_external_config_initialize_default(config->cost[i]);
                 break;
             case INVALID_COST:
-                printf("\nInvalid cost module type\nForgot to initialize?\n\n");
+				printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_cost\n");
                 exit(1);
+				break;
             default:
-                printf("Cost not available!\n");
+				printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_cost\n");
                 exit(1);
         }
     }
@@ -209,7 +239,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
         {
             case CONTINUOUS_MODEL:
                 ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[i]);
-//                config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver_plan[i]);
+//                config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver[i]);
                 sim_solver_t solver_name = plan.sim_solver_plan[i].sim_solver;
 
                 switch (solver_name)
@@ -227,7 +257,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
                         sim_lifted_irk_config_initialize_default(config->dynamics[i]->sim_solver);
                         break;
                     default:
-                        printf("\n\nSpecified integrator not available in acados C interface!\n\n");
+						printf("\nerror: ocp_nlp_config_create: unsupported plan->sim_solver\n");
                         exit(1);
                 }
 
@@ -235,11 +265,12 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             case DISCRETE_MODEL:
                 ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i]);
                 break;
-            case INVALID_MODEL:
-                printf("\nInvalid dynamic module type\nForgot to initialize?\n\n");
+            case INVALID_DYNAMICS:
+				printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_dynamics\n");
                 exit(1);
+                break;
             default:
-                printf("Dynamics not available!\n");
+				printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_dynamics\n");
                 exit(1);
         }
     }
@@ -256,10 +287,11 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
                 ocp_nlp_constraints_bghp_config_initialize_default(config->constraints[i]);
                 break;
             case INVALID_CONSTRAINT:
-                printf("\nInvalid constraint module type\nForgot to initialize?\n\n");
+				printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_constraints\n");
                 exit(1);
+                break;
             default:
-                printf("\nConstraint not available!\n\n");
+				printf("\nerror: ocp_nlp_config_create: unsupported plan->nlp_constraints\n");
                 exit(1);
         }
     }
@@ -495,10 +527,11 @@ void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
 }
 
 
-int ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
                                          const char *field, void *value)
 {
-    return config->dynamics_opts_set(config, opts_, stage, field, value);
+    config->dynamics_opts_set(config, opts_, stage, field, value);
+	return;
 }
 
 void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)

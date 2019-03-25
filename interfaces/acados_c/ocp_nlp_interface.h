@@ -35,11 +35,13 @@ extern "C" {
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/sim_interface.h"
 
+
+
 typedef enum
 {
     SQP,
     SQP_RTI,
-    INVALID_SCHEME,
+    INVALID_NLP_SOLVER,
 } ocp_nlp_solver_t;
 
 
@@ -58,7 +60,7 @@ typedef enum
 {
     CONTINUOUS_MODEL,
     DISCRETE_MODEL,
-    INVALID_MODEL,
+    INVALID_DYNAMICS,
 } ocp_nlp_dynamics_t;
 
 
@@ -74,9 +76,11 @@ typedef enum
 
 typedef enum
 {
-    NO_REGULARIZATION,
+    NO_REGULARIZE,
     MIRROR,
-    CONVEXIFICATION,
+    PROJECT,
+    CONVEXIFY,
+    INVALID_REGULARIZE,
 } ocp_nlp_reg_t;
 
 
@@ -162,7 +166,7 @@ void ocp_nlp_opts_destroy(void *opts);
 void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
                       const char *field, const void* value);
 //
-int ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
                                          const char *field, void *value);
 //
 void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);

@@ -39,7 +39,7 @@ extern "C" {
 typedef struct
 {
     void *qp_solver_opts;
-    ocp_nlp_reg_opts *reg_opts;
+    void *regularize;
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
@@ -63,7 +63,7 @@ void ocp_nlp_sqp_opts_update(void *config, void *dims, void *opts);
 //
 void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, const void* value);
 //
-int ocp_nlp_sqp_dyanimcs_opts_set(void *config_, void *opts_, int stage,
+void ocp_nlp_sqp_dyanimcs_opts_set(void *config, void *opts, int stage,
                                      const char *field, void *value);
 
 /************************************************
@@ -75,7 +75,7 @@ typedef struct
     //    ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
-    void *reg_mem;
+    void *regularize_mem;
 
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory

@@ -67,6 +67,7 @@ EXAMPLES += nonlinear_chain_ocp_nlp
 # EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
 EXAMPLES += wind_turbine_nmpc
 #EXAMPLES += engine_example
+EXAMPLES += regularization
 
 examples: $(EXAMPLES)
 
@@ -91,10 +92,12 @@ RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 # RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
 RUN_EXAMPLES += run_wind_turbine_nmpc
 #RUN_EXAMPLES += run_engine_example
+RUN_EXAMPLES += run_regularization
 
 # overwrite to run just one
 #RUN_EXAMPLES = run_wind_turbine_nmpc
 #RUN_EXAMPLES = run_mass_spring_nmpc_example
+#RUN_EXAMPLES = run_regularization
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -493,6 +496,24 @@ engine_example: $(ENGINE_OBJS) engine_example.o
 
 run_engine_example:
 	./engine_example.out
+
+
+
+
+#################################################
+# regularization
+#################################################
+
+REGULARIZATION = 
+
+regularization: $(REGULARIZATION) regularization.o
+	$(CCC) -o regularization.out $(REGULARIZATION) regularization.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example regularization build complete."
+	@echo
+
+run_regularization:
+	./regularization.out
 
 
 

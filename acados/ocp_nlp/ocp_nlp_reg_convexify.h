@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_REG_MIRROR_H_
-#define ACADOS_OCP_NLP_OCP_NLP_REG_MIRROR_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_REG_CONVEXIFY_H_
+#define ACADOS_OCP_NLP_OCP_NLP_REG_CONVEXIFY_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,17 +46,19 @@ extern "C" {
 
 typedef struct
 {
+    double delta;
 	double epsilon;
-} ocp_nlp_reg_mirror_opts;
+//	double gamma; // 0.0
+} ocp_nlp_reg_convexify_opts;
 
 //
-int ocp_nlp_reg_mirror_opts_calculate_size(void);
+int ocp_nlp_reg_convexify_opts_calculate_size(void);
 //
-void *ocp_nlp_reg_mirror_opts_assign(void *raw_memory);
+void *ocp_nlp_reg_convexify_opts_assign(void *raw_memory);
 //
-void ocp_nlp_reg_mirror_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
+void ocp_nlp_reg_convexify_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
 //
-void ocp_nlp_reg_mirror_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value);
+void ocp_nlp_reg_convexify_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value);
 
 
 
@@ -64,21 +66,39 @@ void ocp_nlp_reg_mirror_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *op
  * memory
  ************************************************/
 
-typedef struct
-{
-    double *reg_hess; // TODO move to workspace
+typedef struct {
+    double *R;
     double *V; // TODO move to workspace
     double *d; // TODO move to workspace
     double *e; // TODO move to workspace
+    double *reg_hess; // TODO move to workspace
+
+    struct blasfeo_dmat Q_tilde;
+    struct blasfeo_dmat Q_bar;
+    struct blasfeo_dmat BAQ;
+    struct blasfeo_dmat L;
+    struct blasfeo_dmat delta_eye;
+    struct blasfeo_dmat St_copy;
+
+    struct blasfeo_dmat *original_RSQrq;
+
+//    struct blasfeo_dvec grad;
+//    struct blasfeo_dvec b2;
 
 	// giaf's
     struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in
-} ocp_nlp_reg_mirror_memory;
+    struct blasfeo_dvec **rq;  // pointer to rq in qp_in
+    struct blasfeo_dmat **BAbt;  // pointer to BAbt in qp_in
+    struct blasfeo_dvec **b;  // pointer to b in qp_in
+    struct blasfeo_dvec **ux;  // pointer to ux in qp_out
+    struct blasfeo_dvec **pi;  // pointer to pi in qp_out
+
+} ocp_nlp_reg_convexify_memory;
 
 //
-int ocp_nlp_reg_mirror_memory_calculate_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
+int ocp_nlp_reg_convexify_calculate_memory_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
 //
-void *ocp_nlp_reg_mirror_memory_assign(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
+void *ocp_nlp_reg_convexify_assign_memory(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
 
 /************************************************
  * workspace
@@ -91,12 +111,10 @@ void *ocp_nlp_reg_mirror_memory_assign(void *config, ocp_nlp_reg_dims *dims, voi
  ************************************************/
 
 //
-void ocp_nlp_reg_mirror_config_initialize_default(ocp_nlp_reg_config *config);
-
-
+void ocp_nlp_reg_convexify_config_initialize_default(ocp_nlp_reg_config *config);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_REG_MIRROR_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_REG_CONVEXIFY_H_

@@ -605,21 +605,19 @@ void ocp_nlp_constraints_bghp_opts_update(void *config_, void *dims_, void *opts
 
 
 
-void ocp_nlp_constraints_bghp_opts_set(void *config_, void *dims_, void *opts_,
-    enum acados_opts name, void *ptr_value)
+void ocp_nlp_constraints_bghp_opts_set(void *config_, void *opts_, char *field, void *value)
 {
 
     ocp_nlp_constraints_bghp_opts *opts = opts_;
 
-    if (name == COMPUTE_ADJ)
+    if(!strcmp(field, "compute_adj"))
     {
-        int *compute_adj = ptr_value;
+        int *compute_adj = value;
         opts->compute_adj = *compute_adj;
     }
     else
     {
-        // TODO(fuck_lint): something better tha this print-and-exit
-        printf("\nocp_nlp_constraints_bghp_opts_set: unknown opts name !\n");
+        printf("\nerror: field %s not available in ocp_nlp_constraints_bgh_opts_set\n", field);
         exit(1);
     }
 

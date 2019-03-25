@@ -805,10 +805,17 @@ void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hid
     }
 }
 
-static real_t hypot2(real_t x, real_t y) { return sqrt(x * x + y * y); }
-/* Symmetric Householder reduction to tridiagonal form. */
 
-static void tred2(int_t dim, real_t *V, real_t *d, real_t *e)
+
+static double hypot2(double x, double y)
+{
+	return sqrt(x*x + y*y);
+}
+
+
+
+/* Symmetric Householder reduction to tridiagonal form. */
+static void tred2(int dim, double *V, double *d, double *e)
 {
     /* This is derived from the Algol procedures tred2 by
     Bowdler, Martin, Reinsch, and Wilkinson, Handbook for
@@ -816,7 +823,7 @@ static void tred2(int_t dim, real_t *V, real_t *d, real_t *e)
     Fortran subroutine in EISPACK. */
 
     int i, j, k;
-    real_t f, g, h, hh;
+    double f, g, h, hh, scale;
     for (j = 0; j < dim; j++)
     {
         d[j] = V[(dim - 1) * dim + j];
@@ -828,8 +835,8 @@ static void tred2(int_t dim, real_t *V, real_t *d, real_t *e)
     {
         /* Scale to avoid under/overflow. */
 
-        real_t scale = 0.0;
-        real_t h = 0.0;
+        scale = 0.0;
+        h = 0.0;
         for (k = 0; k < i; k++)
         {
             scale = scale + fabs(d[k]);
@@ -947,9 +954,10 @@ static void tred2(int_t dim, real_t *V, real_t *d, real_t *e)
     e[0] = 0.0;
 }
 
-/* Symmetric tridiagonal QL algorithm. */
 
-static void tql2(int_t dim, real_t *V, real_t *d, real_t *e)
+
+/* Symmetric tridiagonal QL algorithm. */
+static void tql2(int dim, double *V, double *d, double *e)
 {
     /*  This is derived from the Algol procedures tql2, by
     Bowdler, Martin, Reinsch, and Wilkinson, Handbook for
@@ -957,8 +965,8 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e)
     Fortran subroutine in EISPACK. */
 
     int i, m, l, k;
-    real_t g, p, r, dl1, h, f, tst1, eps;
-    real_t c, c2, c3, el1, s, s2;
+    double g, p, r, dl1, h, f, tst1, eps;
+    double c, c2, c3, el1, s, s2;
 
     for (i = 1; i < dim; i++)
     {
@@ -1057,28 +1065,44 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e)
     }
 }
 
-void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d)
+
+
+void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double *e)
 {
-    real_t *e = (real_t *) calloc(dim, sizeof(real_t));
-    for (int_t i = 0; i < dim; i++)
-        for (int_t j = 0; j < dim; j++) V[i * dim + j] = A[i * dim + j];
+	int i, j;
+
+    for (i=0; i<dim; i++)
+        for (j=0; j<dim; j++)
+			V[i*dim+j] = A[i*dim+j];
+
     tred2(dim, V, d, e);
     tql2(dim, V, d, e);
+
+	return;
 }
 
-static void reconstruct_A(int_t dim, real_t *A, real_t *V, real_t *d)
+
+
+void eigen_decomposition(int dim, double *A, double *V, double *d)
 {
-    for (int_t i = 0; i < dim; i++)
-    {
-        for (int_t j = 0; j <= i; j++)
-        {
-            A[i * dim + j] = 0.0;
-            for (int_t k = 0; k < dim; k++)
-                A[i * dim + j] += V[i * dim + k] * d[k] * V[j * dim + k];
-            A[j * dim + i] = A[i * dim + j];
-        }
-    }
+	int i, j;
+
+    for (i=0; i<dim; i++)
+        for (j=0; j<dim; j++)
+			V[i*dim+j] = A[i*dim+j];
+
+    double *e = (double *) calloc(dim, sizeof(double));
+
+    tred2(dim, V, d, e);
+    tql2(dim, V, d, e);
+
+	free(e);
+
+	return;
 }
+
+
+
 
 /* cutting regularization */
 /*void regularize(real_t *A) {
@@ -1092,35 +1116,7 @@ for (i = 0; i < dim; i++) {
 reconstruct_A(A, V, d);
 }*/
 
-/* mirroring regularization */
-void mirror(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon)
-{
-    eigen_decomposition(dim, A, V, d);
 
-    for (int_t i = 0; i < dim; i++)
-    {
-        if (d[i] >= -epsilon && d[i] <= epsilon)
-            d[i] = epsilon;
-        else if (d[i] < 0)
-            d[i] = -d[i];
-    }
-
-    reconstruct_A(dim, A, V, d);
-}
-
-/* projecting regularization */
-void acados_project(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon)
-{
-    eigen_decomposition(dim, A, V, d);
-
-    for (int_t i = 0; i < dim; i++)
-    {
-        if (d[i] < epsilon)
-            d[i] = epsilon;
-    }
-
-    reconstruct_A(dim, A, V, d);
-}
 
 double minimum_of_doubles(double *x, int n)
 {

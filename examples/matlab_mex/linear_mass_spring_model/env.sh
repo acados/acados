@@ -23,6 +23,7 @@ echo
 echo "MATLABPATH=$MATLABPATH"
 # Octave case
 export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave-v3.4.0/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab/
+#export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave-v3.4.5/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab/
 echo
 echo "OCTAVE_PATH=$OCTAVE_PATH"
 
