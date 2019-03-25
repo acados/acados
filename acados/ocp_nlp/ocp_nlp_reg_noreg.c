@@ -116,6 +116,20 @@ void ocp_nlp_reg_noreg_memory_set_b_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_d
 
 
 
+void ocp_nlp_reg_noreg_memory_set_ux_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *ux, void *memory_)
+{
+    return;
+}
+
+
+
+void ocp_nlp_reg_noreg_memory_set_pi_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *pi, void *memory_)
+{
+    return;
+}
+
+
+
 void ocp_nlp_reg_noreg_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *memory_, char *field, void *value)
 {
 
@@ -163,6 +177,8 @@ void ocp_nlp_reg_noreg_config_initialize_default(ocp_nlp_reg_config *config)
     config->memory_set_rq_ptr = &ocp_nlp_reg_noreg_memory_set_rq_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_reg_noreg_memory_set_BAbt_ptr;
     config->memory_set_b_ptr = &ocp_nlp_reg_noreg_memory_set_b_ptr;
+    config->memory_set_ux_ptr = &ocp_nlp_reg_noreg_memory_set_ux_ptr;
+    config->memory_set_pi_ptr = &ocp_nlp_reg_noreg_memory_set_pi_ptr;
 	// functions
     config->regularize_hessian = &ocp_nlp_reg_noreg_regularize_hessian;
     config->correct_dual_sol = &ocp_nlp_reg_noreg_correct_dual_sol;

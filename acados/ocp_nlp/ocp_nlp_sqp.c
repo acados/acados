@@ -1077,6 +1077,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 	config->regularize->memory_set_rq_ptr(dims->regularize, work->qp_in->rqz, mem->regularize_mem);
 	config->regularize->memory_set_BAbt_ptr(dims->regularize, work->qp_in->BAbt, mem->regularize_mem);
 	config->regularize->memory_set_b_ptr(dims->regularize, work->qp_in->b, mem->regularize_mem);
+	config->regularize->memory_set_ux_ptr(dims->regularize, work->qp_out->ux, mem->regularize_mem);
+	config->regularize->memory_set_pi_ptr(dims->regularize, work->qp_out->pi, mem->regularize_mem);
 
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
@@ -1167,6 +1169,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         int qp_status =
             qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
                                 mem->qp_solver_mem, work->qp_work);
+
+        // compute correct dual solution in case of Hessian regularization
+		config->regularize->correct_dual_sol(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
 
         // stop timer
         mem->time_qp_sol += acados_toc(&timer1);

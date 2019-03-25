@@ -68,6 +68,8 @@ typedef struct
     void (*memory_set_rq_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *vec, void *memory);
     void (*memory_set_BAbt_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *mat, void *memory);
     void (*memory_set_b_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *vec, void *memory);
+    void (*memory_set_ux_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *vec, void *memory);
+    void (*memory_set_pi_ptr)(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *vec, void *memory);
     /* functions */
     void (*regularize_hessian)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *memory);
     void (*correct_dual_sol)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *memory);

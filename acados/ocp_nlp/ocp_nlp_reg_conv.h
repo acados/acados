@@ -90,6 +90,8 @@ typedef struct {
     struct blasfeo_dvec **rq;  // pointer to rq in qp_in
     struct blasfeo_dmat **BAbt;  // pointer to BAbt in qp_in
     struct blasfeo_dvec **b;  // pointer to b in qp_in
+    struct blasfeo_dvec **ux;  // pointer to ux in qp_out
+    struct blasfeo_dvec **pi;  // pointer to pi in qp_out
 
 } ocp_nlp_reg_conv_memory;
 

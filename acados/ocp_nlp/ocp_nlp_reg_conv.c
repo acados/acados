@@ -147,7 +147,7 @@ int ocp_nlp_reg_conv_calculate_memory_size(void *config_, ocp_nlp_reg_dims *dims
 
 	// giaf's
 	size += ((N+1)+N)*sizeof(struct blasfeo_dmat *); // RSQrq BAbt
-	size += ((N+1)+N)*sizeof(struct blasfeo_dvec *); // rq b
+	size += (2*(N+1)+2*N)*sizeof(struct blasfeo_dvec *); // rq b ux pi
 
     return size;
 }
@@ -215,6 +215,12 @@ void *ocp_nlp_reg_conv_assign_memory(void *config_, ocp_nlp_reg_dims *dims, void
 	c_ptr += (N+1)*sizeof(struct blasfeo_dvec *);
 
 	mem->b = (struct blasfeo_dvec **) c_ptr;
+	c_ptr += N*sizeof(struct blasfeo_dvec *);
+
+	mem->ux = (struct blasfeo_dvec **) c_ptr;
+	c_ptr += (N+1)*sizeof(struct blasfeo_dvec *);
+
+	mem->pi = (struct blasfeo_dvec **) c_ptr;
 	c_ptr += N*sizeof(struct blasfeo_dvec *);
 
     align_char_to(64, &c_ptr);
@@ -325,6 +331,48 @@ void ocp_nlp_reg_conv_memory_set_b_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dv
 
 
 
+void ocp_nlp_reg_conv_memory_set_ux_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *ux, void *memory_)
+{
+    ocp_nlp_reg_conv_memory *memory = memory_;
+
+	int ii;
+
+	int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+
+	for(ii=0; ii<=N; ii++)
+	{
+		memory->ux[ii] = ux+ii;
+//		blasfeo_print_dvec(nu[ii]+nx[ii], memory->ux[ii], 0);
+	}
+
+    return;
+}
+
+
+
+void ocp_nlp_reg_conv_memory_set_pi_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *pi, void *memory_)
+{
+    ocp_nlp_reg_conv_memory *memory = memory_;
+
+	int ii;
+
+	int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+
+	for(ii=0; ii<N; ii++)
+	{
+		memory->pi[ii] = pi+ii;
+//		blasfeo_print_dvec(nx[ii+1], memory->pi[ii], 0);
+	}
+
+    return;
+}
+
+
+
 void ocp_nlp_reg_conv_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *memory_, char *field, void *value)
 {
 
@@ -333,20 +381,30 @@ void ocp_nlp_reg_conv_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *me
 		struct blasfeo_dmat *RSQrq = value;
 		ocp_nlp_reg_conv_memory_set_RSQrq_ptr(dims, RSQrq, memory_);
 	}
-	if(!strcmp(field, "rq_ptr"))
+	else if(!strcmp(field, "rq_ptr"))
 	{
 		struct blasfeo_dvec *rq = value;
 		ocp_nlp_reg_conv_memory_set_rq_ptr(dims, rq, memory_);
 	}
-	if(!strcmp(field, "BAbt_ptr"))
+	else if(!strcmp(field, "BAbt_ptr"))
 	{
 		struct blasfeo_dmat *BAbt = value;
 		ocp_nlp_reg_conv_memory_set_BAbt_ptr(dims, BAbt, memory_);
 	}
-	if(!strcmp(field, "b_ptr"))
+	else if(!strcmp(field, "b_ptr"))
 	{
 		struct blasfeo_dvec *b = value;
 		ocp_nlp_reg_conv_memory_set_b_ptr(dims, b, memory_);
+	}
+	else if(!strcmp(field, "ux_ptr"))
+	{
+		struct blasfeo_dvec *ux = value;
+		ocp_nlp_reg_conv_memory_set_ux_ptr(dims, ux, memory_);
+	}
+	else if(!strcmp(field, "pi_ptr"))
+	{
+		struct blasfeo_dvec *pi = value;
+		ocp_nlp_reg_conv_memory_set_pi_ptr(dims, pi, memory_);
 	}
 	else
 	{
@@ -363,6 +421,8 @@ void ocp_nlp_reg_conv_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *me
  * functions
  ************************************************/
 
+// NOTE this only considers the case of (dynamcs) equality constraints (no inequality constraints)
+// TODO inequality constraints case
 void ocp_nlp_reg_conv_regularize_hessian(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
     ocp_nlp_reg_conv_memory *mem = mem_;
@@ -476,9 +536,27 @@ void ocp_nlp_reg_conv_regularize_hessian(void *config, ocp_nlp_reg_dims *dims, v
 
 
 
+// NOTE this only considers the case of (dynamcs) equality constraints (no inequality constraints)
+// TODO inequality constraints case
 void ocp_nlp_reg_conv_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
-	// TODO
+    ocp_nlp_reg_conv_memory *mem = mem_;
+    ocp_nlp_reg_conv_opts *opts = opts_;
+
+	int ii;
+
+    int *nx = dims->nx;
+	int *nu = dims->nu;
+    int N = dims->N;
+
+	blasfeo_dgemv_n(nx[N], nu[N]+nx[N], 1.0, mem->RSQrq[N], nu[N], 0, mem->ux[N], 0, 1.0, mem->rq[N], nu[N], mem->pi[N-1], 0);
+
+	for(ii=1; ii<N; ii++)
+	{
+		blasfeo_dgemv_n(nx[N-ii], nu[N-ii]+nx[N-ii], 1.0, mem->RSQrq[N-ii], nu[N-ii], 0, mem->ux[N-ii], 0, 1.0, mem->rq[N-ii], nu[N-ii], mem->pi[N-ii-1], 0);
+		blasfeo_dgemv_n(nx[N-ii], nx[N-ii+1], 1.0, mem->BAbt[N-ii], nu[N-ii], 0, mem->pi[N-ii], 0, 1.0, mem->pi[N-ii-1], 0, mem->pi[N-ii-1], 0);
+	}
+
 	return;
 }
 
@@ -500,7 +578,11 @@ void ocp_nlp_reg_conv_config_initialize_default(ocp_nlp_reg_config *config)
     config->memory_assign = &ocp_nlp_reg_conv_assign_memory;
     config->memory_set = &ocp_nlp_reg_conv_memory_set;
     config->memory_set_RSQrq_ptr = &ocp_nlp_reg_conv_memory_set_RSQrq_ptr;
+    config->memory_set_rq_ptr = &ocp_nlp_reg_conv_memory_set_rq_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_reg_conv_memory_set_BAbt_ptr;
+    config->memory_set_b_ptr = &ocp_nlp_reg_conv_memory_set_b_ptr;
+    config->memory_set_ux_ptr = &ocp_nlp_reg_conv_memory_set_ux_ptr;
+    config->memory_set_pi_ptr = &ocp_nlp_reg_conv_memory_set_pi_ptr;
 	// functions
     config->regularize_hessian = &ocp_nlp_reg_conv_regularize_hessian;
     config->correct_dual_sol = &ocp_nlp_reg_conv_correct_dual_sol;
