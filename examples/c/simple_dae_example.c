@@ -124,7 +124,7 @@ int main() {
     Vu[3+ny_*1] = 1.0;
 
     double *Vz = malloc((ny_*nz_)*sizeof(double));
-    for (int ii=0; ii < nz_*nz_; ii++)
+    for (int ii=0; ii < ny_*nz_; ii++)
         Vz[ii] = 0.0;
 
     if (FORMULATION == 0) {
@@ -152,6 +152,9 @@ int main() {
     W[3+ny_*3] = R[1];
 
     double *WN = malloc((ny[N]*ny[N])*sizeof(double));
+    for (int ii=0; ii<ny[N]*ny[N]; ii++)
+        WN[ii] = 0.0;
+
     WN[0+ny[N]*0] = QN[0];
     WN[1+ny[N]*1] = QN[1];
 
