@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_REG_MIRROR_H_
-#define ACADOS_OCP_NLP_OCP_NLP_REG_MIRROR_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_REG_NOREG_H_
+#define ACADOS_OCP_NLP_OCP_NLP_REG_NOREG_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,17 +46,17 @@ extern "C" {
 
 typedef struct
 {
-	double epsilon;
-} ocp_nlp_reg_mirror_opts;
+	int dummy;
+} ocp_nlp_reg_noreg_opts;
 
 //
-int ocp_nlp_reg_mirror_opts_calculate_size(void);
+int ocp_nlp_reg_noreg_opts_calculate_size(void);
 //
-void *ocp_nlp_reg_mirror_opts_assign(void *raw_memory);
+void *ocp_nlp_reg_noreg_opts_assign(void *raw_memory);
 //
-void ocp_nlp_reg_mirror_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
+void ocp_nlp_reg_noreg_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
 //
-void ocp_nlp_reg_mirror_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value);
+void ocp_nlp_reg_noreg_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value);
 
 
 
@@ -66,19 +66,13 @@ void ocp_nlp_reg_mirror_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *op
 
 typedef struct
 {
-    double *reg_hess; // TODO move to workspace
-    double *V; // TODO move to workspace
-    double *d; // TODO move to workspace
-    double *e; // TODO move to workspace
-
-	// giaf's
-    struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in
-} ocp_nlp_reg_mirror_memory;
+	int dummy;
+} ocp_nlp_reg_noreg_memory;
 
 //
-int ocp_nlp_reg_mirror_memory_calculate_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
+int ocp_nlp_reg_noreg_memory_calculate_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
 //
-void *ocp_nlp_reg_mirror_memory_assign(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
+void *ocp_nlp_reg_noreg_memory_assign(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
 
 /************************************************
  * workspace
@@ -91,7 +85,7 @@ void *ocp_nlp_reg_mirror_memory_assign(void *config, ocp_nlp_reg_dims *dims, voi
  ************************************************/
 
 //
-void ocp_nlp_reg_mirror_config_initialize_default(ocp_nlp_reg_config *config);
+void ocp_nlp_reg_noreg_config_initialize_default(ocp_nlp_reg_config *config);
 
 
 
@@ -99,4 +93,5 @@ void ocp_nlp_reg_mirror_config_initialize_default(ocp_nlp_reg_config *config);
 }
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_REG_MIRROR_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_REG_NOREG_H_
+

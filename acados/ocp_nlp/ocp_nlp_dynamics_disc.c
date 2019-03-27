@@ -188,13 +188,23 @@ void ocp_nlp_dynamics_disc_opts_update(void *config_, void *dims_, void *opts_)
 
 
 
-int ocp_nlp_dynamics_disc_opts_set(void *config_, void *opts_, const char *field, void* value)
+void ocp_nlp_dynamics_disc_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
-    // TODO(all): implement option setters, which?!
 
+    ocp_nlp_dynamics_disc_opts *opts = opts_;
 
-    printf("\nocp_nlp_dynamics_disc_opts_set: no options to be set !\n");
-    return ACADOS_FAILURE;
+	if(!strcmp(field, "compute_adj"))
+	{
+		int *int_ptr = value;
+		opts->compute_adj = *int_ptr;
+	}
+	else
+	{
+		printf("\nerror: field %s not available in ocp_nlp_dynamics_disc_opts_set\n", field);
+		exit(1);
+	}
+
+	return;
 
 }
 

@@ -82,7 +82,7 @@ void ocp_nlp_dynamics_cont_opts_initialize_default(void *config, void *dims, voi
 //
 void ocp_nlp_dynamics_cont_opts_update(void *config, void *dims, void *opts);
 //
-int ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *field, void* value);
+void ocp_nlp_dynamics_cont_opts_set(void *config, void *opts, const char *field, void* value);
 
 
 

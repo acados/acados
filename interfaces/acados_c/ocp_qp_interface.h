@@ -26,6 +26,8 @@ extern "C" {
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 
+
+
 typedef enum {
     PARTIAL_CONDENSING_HPIPM,
 #ifdef ACADOS_WITH_HPMPC
@@ -50,12 +52,17 @@ typedef enum {
 #ifdef ACADOS_WITH_OOQP
     FULL_CONDENSING_OOQP,
 #endif
+    INVALID_QP_SOLVER,
 } ocp_qp_solver_t;
+
+
 
 typedef struct
 {
     ocp_qp_solver_t qp_solver;
 } ocp_qp_solver_plan;
+
+
 
 typedef struct
 {
@@ -65,6 +72,8 @@ typedef struct
     void *mem;
     void *work;
 } ocp_qp_solver;
+
+
 
 /* config */
 void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,

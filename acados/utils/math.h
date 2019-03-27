@@ -80,11 +80,9 @@ void expm(int row, double *A);
 void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
                                      int *nvd, int *ned, int *nbd, int *ngd);
 
-void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d);
+void eigen_decomposition(int dim, double *A, double *V, double *d); // TODO remove !!!
 
-void acados_project(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon);
-
-void mirror(int_t dim, real_t *A, real_t *V, real_t *d, double epsilon);
+void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double *e);
 
 double minimum_of_doubles(double *x, int n);
 

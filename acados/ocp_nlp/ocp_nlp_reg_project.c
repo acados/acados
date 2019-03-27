@@ -17,7 +17,7 @@
  *
  */
 
-#include "acados/ocp_nlp/ocp_nlp_reg_mirror.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_project.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,23 +36,23 @@
  * opts
  ************************************************/
 
-int ocp_nlp_reg_mirror_opts_calculate_size(void)
+int ocp_nlp_reg_project_opts_calculate_size(void)
 {
-    return sizeof(ocp_nlp_reg_mirror_opts);
+    return sizeof(ocp_nlp_reg_project_opts);
 }
 
 
 
-void *ocp_nlp_reg_mirror_opts_assign(void *raw_memory)
+void *ocp_nlp_reg_project_opts_assign(void *raw_memory)
 {
     return raw_memory;
 }
 
 
 
-void ocp_nlp_reg_mirror_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
+void ocp_nlp_reg_project_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
 {
-	ocp_nlp_reg_mirror_opts *opts = opts_;
+	ocp_nlp_reg_project_opts *opts = opts_;
 
 	opts->epsilon = 1e-4;
 
@@ -61,10 +61,10 @@ void ocp_nlp_reg_mirror_opts_initialize_default(void *config_, ocp_nlp_reg_dims 
 
 
 
-void ocp_nlp_reg_mirror_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value)
+void ocp_nlp_reg_project_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value)
 {
 
-	ocp_nlp_reg_mirror_opts *opts = opts_;
+	ocp_nlp_reg_project_opts *opts = opts_;
 
     if (!strcmp(field, "epsilon"))
     {
@@ -73,7 +73,7 @@ void ocp_nlp_reg_mirror_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *op
     }
     else
     {
-        printf("\nerror: field %s not available in ocp_nlp_reg_mirror_opts_set\n", field);
+        printf("\nerror: field %s not available in ocp_nlp_reg_project_opts_set\n", field);
         exit(1);
     }
 
@@ -86,7 +86,7 @@ void ocp_nlp_reg_mirror_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *op
  * memory
  ************************************************/
 
-int ocp_nlp_reg_mirror_memory_calculate_size(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
+int ocp_nlp_reg_project_memory_calculate_size(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
 {
     int *nx = dims->nx;
 	int *nu = dims->nu;
@@ -102,7 +102,7 @@ int ocp_nlp_reg_mirror_memory_calculate_size(void *config_, ocp_nlp_reg_dims *di
 
     int size = 0;
 
-    size += sizeof(ocp_nlp_reg_mirror_memory);
+    size += sizeof(ocp_nlp_reg_project_memory);
 
     size += nuxM*nuxM*sizeof(double);  // reg_hess
     size += nuxM*nuxM*sizeof(double);  // V
@@ -114,7 +114,7 @@ int ocp_nlp_reg_mirror_memory_calculate_size(void *config_, ocp_nlp_reg_dims *di
 
 
 
-void *ocp_nlp_reg_mirror_memory_assign(void *config_, ocp_nlp_reg_dims *dims, void *opts_, void *raw_memory)
+void *ocp_nlp_reg_project_memory_assign(void *config_, ocp_nlp_reg_dims *dims, void *opts_, void *raw_memory)
 {
     int *nx = dims->nx;
 	int *nu = dims->nu;
@@ -130,8 +130,8 @@ void *ocp_nlp_reg_mirror_memory_assign(void *config_, ocp_nlp_reg_dims *dims, vo
 
     char *c_ptr = (char *) raw_memory;
 
-    ocp_nlp_reg_mirror_memory *mem = (ocp_nlp_reg_mirror_memory *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_reg_mirror_memory);
+    ocp_nlp_reg_project_memory *mem = (ocp_nlp_reg_project_memory *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_reg_project_memory);
 
     mem->reg_hess = (double *) c_ptr;
     c_ptr += nuxM*nuxM*sizeof(double);  // reg_hess
@@ -148,16 +148,16 @@ void *ocp_nlp_reg_mirror_memory_assign(void *config_, ocp_nlp_reg_dims *dims, vo
 	mem->RSQrq = (struct blasfeo_dmat **) c_ptr;
 	c_ptr += (N+1)*sizeof(struct blasfeo_dmat *); // RSQrq
 
-    assert((char *) mem + ocp_nlp_reg_mirror_memory_calculate_size(config_, dims, opts_) >= c_ptr);
+    assert((char *) mem + ocp_nlp_reg_project_memory_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return mem;
 }
 
 
 
-void ocp_nlp_reg_mirror_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *RSQrq, void *memory_)
+void ocp_nlp_reg_project_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *RSQrq, void *memory_)
 {
-    ocp_nlp_reg_mirror_memory *memory = memory_;
+    ocp_nlp_reg_project_memory *memory = memory_;
 
 	int ii;
 
@@ -176,52 +176,52 @@ void ocp_nlp_reg_mirror_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims, struct blas
 
 
 
-void ocp_nlp_reg_mirror_memory_set_rq_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *rq, void *memory_)
+void ocp_nlp_reg_project_memory_set_rq_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *rq, void *memory_)
 {
     return;
 }
 
 
 
-void ocp_nlp_reg_mirror_memory_set_BAbt_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *BAbt, void *memory_)
+void ocp_nlp_reg_project_memory_set_BAbt_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *BAbt, void *memory_)
 {
     return;
 }
 
 
 
-void ocp_nlp_reg_mirror_memory_set_b_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *b, void *memory_)
+void ocp_nlp_reg_project_memory_set_b_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *b, void *memory_)
 {
     return;
 }
 
 
 
-void ocp_nlp_reg_mirror_memory_set_ux_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *ux, void *memory_)
+void ocp_nlp_reg_project_memory_set_ux_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *ux, void *memory_)
 {
     return;
 }
 
 
 
-void ocp_nlp_reg_mirror_memory_set_pi_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *pi, void *memory_)
+void ocp_nlp_reg_project_memory_set_pi_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *pi, void *memory_)
 {
     return;
 }
 
 
 
-void ocp_nlp_reg_mirror_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *memory_, char *field, void *value)
+void ocp_nlp_reg_project_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *memory_, char *field, void *value)
 {
 
 	if(!strcmp(field, "RSQrq_ptr"))
 	{
 		struct blasfeo_dmat *RSQrq = value;
-		ocp_nlp_reg_mirror_memory_set_RSQrq_ptr(dims, RSQrq, memory_);
+		ocp_nlp_reg_project_memory_set_RSQrq_ptr(dims, RSQrq, memory_);
 	}
 	else
 	{
-		printf("\nerror: field %s not available in ocp_nlp_reg_mirror_set\n", field);
+		printf("\nerror: field %s not available in ocp_nlp_reg_project_set\n", field);
 		exit(1);
 	}
 
@@ -234,10 +234,10 @@ void ocp_nlp_reg_mirror_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *
  * functions
  ************************************************/
 
-void ocp_nlp_reg_mirror_regularize_hessian(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
+void ocp_nlp_reg_project_regularize_hessian(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
-    ocp_nlp_reg_mirror_memory *mem = (ocp_nlp_reg_mirror_memory *) mem_;
-    ocp_nlp_reg_mirror_opts *opts = opts_;
+    ocp_nlp_reg_project_memory *mem = (ocp_nlp_reg_project_memory *) mem_;
+    ocp_nlp_reg_project_opts *opts = opts_;
 
 	int ii;
 
@@ -252,42 +252,43 @@ void ocp_nlp_reg_mirror_regularize_hessian(void *config, ocp_nlp_reg_dims *dims,
 
         // regularize
         blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
-        acados_mirror(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, opts->epsilon);
+        acados_project(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, opts->epsilon);
         blasfeo_pack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->reg_hess, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
     }
 }
 
 
 
-void ocp_nlp_reg_mirror_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
+void ocp_nlp_reg_project_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
 	return;
 }
 
 
 
-void ocp_nlp_reg_mirror_config_initialize_default(ocp_nlp_reg_config *config)
+void ocp_nlp_reg_project_config_initialize_default(ocp_nlp_reg_config *config)
 {
 	// dims
     config->dims_calculate_size = &ocp_nlp_reg_dims_calculate_size;
     config->dims_assign = &ocp_nlp_reg_dims_assign;
     config->dims_set = &ocp_nlp_reg_dims_set;
 	// opts
-    config->opts_calculate_size = &ocp_nlp_reg_mirror_opts_calculate_size;
-    config->opts_assign = &ocp_nlp_reg_mirror_opts_assign;
-    config->opts_initialize_default = &ocp_nlp_reg_mirror_opts_initialize_default;
-    config->opts_set = &ocp_nlp_reg_mirror_opts_set;
+    config->opts_calculate_size = &ocp_nlp_reg_project_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_reg_project_opts_assign;
+    config->opts_initialize_default = &ocp_nlp_reg_project_opts_initialize_default;
+    config->opts_set = &ocp_nlp_reg_project_opts_set;
 	// memory
-    config->memory_calculate_size = &ocp_nlp_reg_mirror_memory_calculate_size;
-    config->memory_assign = &ocp_nlp_reg_mirror_memory_assign;
-    config->memory_set = &ocp_nlp_reg_mirror_memory_set;
-    config->memory_set_RSQrq_ptr = &ocp_nlp_reg_mirror_memory_set_RSQrq_ptr;
-    config->memory_set_rq_ptr = &ocp_nlp_reg_mirror_memory_set_rq_ptr;
-    config->memory_set_BAbt_ptr = &ocp_nlp_reg_mirror_memory_set_BAbt_ptr;
-    config->memory_set_b_ptr = &ocp_nlp_reg_mirror_memory_set_b_ptr;
-    config->memory_set_ux_ptr = &ocp_nlp_reg_mirror_memory_set_ux_ptr;
-    config->memory_set_pi_ptr = &ocp_nlp_reg_mirror_memory_set_pi_ptr;
+    config->memory_calculate_size = &ocp_nlp_reg_project_memory_calculate_size;
+    config->memory_assign = &ocp_nlp_reg_project_memory_assign;
+    config->memory_set = &ocp_nlp_reg_project_memory_set;
+    config->memory_set_RSQrq_ptr = &ocp_nlp_reg_project_memory_set_RSQrq_ptr;
+    config->memory_set_rq_ptr = &ocp_nlp_reg_project_memory_set_rq_ptr;
+    config->memory_set_BAbt_ptr = &ocp_nlp_reg_project_memory_set_BAbt_ptr;
+    config->memory_set_b_ptr = &ocp_nlp_reg_project_memory_set_b_ptr;
+    config->memory_set_ux_ptr = &ocp_nlp_reg_project_memory_set_ux_ptr;
+    config->memory_set_pi_ptr = &ocp_nlp_reg_project_memory_set_pi_ptr;
 	// functions
-    config->regularize_hessian = &ocp_nlp_reg_mirror_regularize_hessian;
-    config->correct_dual_sol = &ocp_nlp_reg_mirror_correct_dual_sol;
+    config->regularize_hessian = &ocp_nlp_reg_project_regularize_hessian;
+    config->correct_dual_sol = &ocp_nlp_reg_project_correct_dual_sol;
 }
+

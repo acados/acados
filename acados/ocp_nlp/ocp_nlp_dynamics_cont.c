@@ -241,13 +241,28 @@ void ocp_nlp_dynamics_cont_opts_update(void *config_, void *dims_, void *opts_)
 
 
 
-int ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *field, void* value)
+void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
     ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
     sim_config *sim_config_ = config->sim_solver;
 
-    return sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
+	if(!strcmp(field, "compute_adj"))
+	{
+		int *int_ptr = value;
+		opts->compute_adj = *int_ptr;
+	}
+	else
+	{
+		int return_value = sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
+		if(return_value!=ACADOS_SUCCESS)
+		{
+			printf("\nerror: field %s not available in ocp_nlp_dynamics_cont_opts_set\n", field);
+			exit(1);
+		}
+	}
+
+	return;
 
 }
 
@@ -402,6 +417,8 @@ void ocp_nlp_dynamics_cont_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *
     return;
 }
 
+
+
 void ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_)
 {
     ocp_nlp_dynamics_cont_memory *memory = memory_;
@@ -411,6 +428,8 @@ void ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void
     return;
 }
 
+
+
 void ocp_nlp_dynamics_cont_memory_set_z_ptr(struct blasfeo_dvec *z, void *memory_)
 {
     ocp_nlp_dynamics_cont_memory *memory = memory_;
@@ -419,6 +438,8 @@ void ocp_nlp_dynamics_cont_memory_set_z_ptr(struct blasfeo_dvec *z, void *memory
 
     return;
 }
+
+
 
 /************************************************
  * workspace

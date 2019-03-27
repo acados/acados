@@ -37,7 +37,6 @@
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
-#include "acados/ocp_nlp/ocp_nlp_reg_conv.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/math.h"
@@ -70,8 +69,7 @@ int ocp_nlp_sqp_opts_calculate_size(void *config_, void *dims_)
 
     size += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
 
-    if (config->regularization != NULL)
-        size += config->regularization->opts_calculate_size();
+    size += config->regularize->opts_calculate_size();
 
     // dynamics
     size += N * sizeof(void *);
@@ -119,11 +117,8 @@ void *ocp_nlp_sqp_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts->qp_solver_opts = qp_solver->opts_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
 
-    if (config->regularization != NULL)
-    {
-        opts->reg_opts = config->regularization->opts_assign(c_ptr);
-        c_ptr += config->regularization->opts_calculate_size();
-    }
+	opts->regularize = config->regularize->opts_assign(c_ptr);
+	c_ptr += config->regularize->opts_calculate_size();
 
     // dynamics
     opts->dynamics = (void **) c_ptr;
@@ -170,6 +165,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
+	ocp_nlp_reg_config *regularize = config->regularize;
 
     int ii;
 
@@ -190,13 +186,11 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     // submodules opts
 
+	// qp solver
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-    if (config->regularization != NULL)
-    {
-        opts->reg_opts->delta = 1e-4;
-        opts->reg_opts->gamma = 0.0;
-    }
+	// regularization
+	regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
 
     // dynamics
     for (ii = 0; ii < N; ii++)
@@ -308,14 +302,18 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, const v
     }
 }
 
-int ocp_nlp_sqp_dyanimcs_opts_set(void *config_, void *opts_, int stage,
+
+
+void ocp_nlp_sqp_dynamics_opts_set(void *config_, void *opts_, int stage,
                                      const char *field, void *value)
 {
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_opts *opts = opts_;
     ocp_nlp_dynamics_config *dyn_config = config->dynamics[stage];
 
-    return dyn_config->opts_set(dyn_config, opts->dynamics[stage], field, value);
+    dyn_config->opts_set(dyn_config, opts->dynamics[stage], field, value);
+
+	return;
 
 }
 
@@ -345,10 +343,11 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
 
     size += sizeof(ocp_nlp_sqp_memory);
 
+	// qp solver
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-    if (config->regularization != NULL)
-        size += config->regularization->memory_calculate_size(dims->qp_solver);
+	// regularization
+	size += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
 
     // dynamics
     size += N * sizeof(void *);
@@ -417,11 +416,9 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
         qp_solver->memory_assign(qp_solver, dims->qp_solver, opts->qp_solver_opts, c_ptr);
     c_ptr += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-    if (config->regularization != NULL)
-    {
-        mem->reg_mem = config->regularization->memory_assign(dims->qp_solver, c_ptr);
-        c_ptr += config->regularization->memory_calculate_size(dims->qp_solver);
-    }
+	// regularization
+	mem->regularize_mem = config->regularize->memory_assign(config->regularize, dims->regularize, opts->regularize, c_ptr);
+	c_ptr += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
 
     // nlp res
     mem->nlp_res = ocp_nlp_res_assign(dims, c_ptr);
@@ -905,21 +902,6 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 
 
 
-static void regularize_hessian(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
-                               ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts,
-                               ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
-{
-    ocp_nlp_config *config = (ocp_nlp_config *) config_;
-
-    if (config->regularization == NULL)
-        return;
-
-    config->regularization->evaluate(config->regularization, dims->qp_solver, work->qp_in,
-                                     work->qp_out, opts->reg_opts, mem->reg_mem);
-}
-
-
-
 // update QP rhs for SQP (step prim var, abs dual var)
 // TODO(all): move in dynamics, cost, constraints modules ???
 static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
@@ -1042,6 +1024,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // extract dims
     int N = dims->N;
 
+	int ii;
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -1055,21 +1039,21 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for
 #endif
-    for (int ii = 0; ii < N; ii++)
+    for (ii = 0; ii < N; ii++)
     {
-        config->dynamics[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_ux1_ptr(nlp_out->ux + ii + 1, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_pi_ptr(nlp_out->pi + ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_BAbt_ptr(work->qp_in->BAbt + ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_z_ptr(nlp_out->z, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_ux_ptr(nlp_out->ux+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_ux1_ptr(nlp_out->ux+ii+1, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_pi_ptr(nlp_out->pi+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_BAbt_ptr(work->qp_in->BAbt+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_z_ptr(nlp_out->z+ii, mem->dynamics[ii]);
     }
 
     // alias to cost_memory
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for
 #endif
-    for (int ii = 0; ii <= N; ii++)
+    for (ii = 0; ii <= N; ii++)
     {
         config->cost[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->cost[ii]);
         if (dims->nz[ii] > 0) {
@@ -1088,22 +1072,29 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for
 #endif
-    for (int ii = 0; ii <= N; ii++)
+    for (ii = 0; ii <= N; ii++)
     {
-        config->constraints[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->constraints[ii]);
-        config->constraints[ii]->memory_set_lam_ptr(nlp_out->lam + ii, mem->constraints[ii]);
-        config->constraints[ii]->memory_set_DCt_ptr(work->qp_in->DCt + ii, mem->constraints[ii]);
-        config->constraints[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii,
-                                                      mem->constraints[ii]);
+        config->constraints[ii]->memory_set_ux_ptr(nlp_out->ux+ii, mem->constraints[ii]);
+        config->constraints[ii]->memory_set_lam_ptr(nlp_out->lam+ii, mem->constraints[ii]);
+        config->constraints[ii]->memory_set_DCt_ptr(work->qp_in->DCt+ii, mem->constraints[ii]);
+        config->constraints[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq+ii, mem->constraints[ii]);
         config->constraints[ii]->memory_set_idxb_ptr(work->qp_in->idxb[ii], mem->constraints[ii]);
         config->constraints[ii]->memory_set_idxs_ptr(work->qp_in->idxs[ii], mem->constraints[ii]);
     }
+
+	// alias to regularize memory
+	config->regularize->memory_set_RSQrq_ptr(dims->regularize, work->qp_in->RSQrq, mem->regularize_mem);
+	config->regularize->memory_set_rq_ptr(dims->regularize, work->qp_in->rqz, mem->regularize_mem);
+	config->regularize->memory_set_BAbt_ptr(dims->regularize, work->qp_in->BAbt, mem->regularize_mem);
+	config->regularize->memory_set_b_ptr(dims->regularize, work->qp_in->b, mem->regularize_mem);
+	config->regularize->memory_set_ux_ptr(dims->regularize, work->qp_out->ux, mem->regularize_mem);
+	config->regularize->memory_set_pi_ptr(dims->regularize, work->qp_out->pi, mem->regularize_mem);
 
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp for
 #endif
-    for (int ii = 0; ii < N; ii++)
+    for (ii = 0; ii < N; ii++)
     {
         config->dynamics[ii]->model_set_T(nlp_in->Ts[ii], nlp_in->dynamics[ii]);
     }
@@ -1129,9 +1120,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // stop timer
         mem->time_lin += acados_toc(&timer1);
-
-        // regularize Hessian
-        regularize_hessian(config, dims, nlp_in, nlp_out, opts, mem, work);
 
         // update QP rhs for SQP (step prim var, abs dual var)
         sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
@@ -1178,6 +1166,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             return mem->status;
         }
 
+        // regularize Hessian
+		config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
+
 //        printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
 //       print_ocp_qp_in(work->qp_in);
 //		exit(1);
@@ -1188,6 +1179,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         int qp_status =
             qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
                                 mem->qp_solver_mem, work->qp_work);
+
+        // compute correct dual solution in case of Hessian regularization
+		config->regularize->correct_dual_sol(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
 
         // stop timer
         mem->time_qp_sol += acados_toc(&timer1);
@@ -1369,13 +1363,12 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_nlp_sqp_opts_initialize_default;
     config->opts_update = &ocp_nlp_sqp_opts_update;
     config->opts_set = &ocp_nlp_sqp_opts_set;
-    config->dynamics_opts_set = &ocp_nlp_sqp_dyanimcs_opts_set;
+    config->dynamics_opts_set = &ocp_nlp_sqp_dynamics_opts_set;
     config->memory_calculate_size = &ocp_nlp_sqp_memory_calculate_size;
     config->memory_assign = &ocp_nlp_sqp_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp;
     config->config_initialize_default = &ocp_nlp_sqp_config_initialize_default;
-    config->regularization = NULL; // XXX what is this ?????????????
     config->precompute = &ocp_nlp_sqp_precompute;
     config->get = &ocp_nlp_sqp_get;
 
