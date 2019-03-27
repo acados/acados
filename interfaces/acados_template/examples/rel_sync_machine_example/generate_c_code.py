@@ -5,12 +5,13 @@ from ctypes import *
 import matplotlib
 import matplotlib.pyplot as plt
 import scipy.linalg
+import json
 
 CODE_GEN = 1
 COMPILE = 1
 
 FORMULATION = 2 # 0 for hexagon 1 for sphere 2 SCQP sphere
-USE_JSON_DUMP = 0
+USE_JSON_DUMP = 1
 
 i_d_ref = 1.484
 i_q_ref = 1.429
@@ -394,13 +395,15 @@ if USE_JSON_DUMP == 1:
     ocp_nlp.solver_config = ra.solver_config.__dict__
     ocp_nlp.dims = ra.dims.__dict__
     ocp_nlp = ocp_nlp.__dict__
+    ocp_nlp = rename_keys(ocp_nlp)
     with open(name_file, 'w') as f:
         json.dump(ocp_nlp, f, default=np_array_to_list)
+
     ra = ocp_nlp_as_object(ocp_nlp)
-    # ra.cost = ocp_nlp_as_object(ra.cost)
-    # ra.constraints = ocp_nlp_as_object(ra.constraints)
-    # ra.solver_config = ocp_nlp_as_object(ra.solver_config)
-    # ra.dims = ocp_nlp_as_object(ra.dims)
+    ra.cost = ocp_nlp_as_object(ra.cost)
+    ra.constraints = ocp_nlp_as_object(ra.constraints)
+    ra.solver_config = ocp_nlp_as_object(ra.solver_config)
+    ra.dims = ocp_nlp_as_object(ra.dims)
 
 if CODE_GEN == 1:
     if FORMULATION == 0:
