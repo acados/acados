@@ -1,6 +1,7 @@
 clear all
 close all
 clc
+import acados_template.*
 
 % create ocp_nlp object
 acados_ocp_nlp = acados_ocp_nlp();
@@ -90,5 +91,12 @@ acados_ocp_nlp.solver_config.nlp_solver_type = "SQP";
 acados_ocp_nlp.acados_include_path = "/usr/local/include";
 acados_ocp_nlp.acados_lib_path = "/usr/local/lib";
 
-%generate_solver(model, acados_ocp_nlp)
+% dump JSON file
+json_string = jsonencode(acados_ocp_nlp);
+fid = fopen('acados_ocp_nlp.json', 'w');
+if fid == -1, error('Cannot create JSON file'); end
+fwrite(fid, json_string, 'char');
+fclose(fid);
+
+% generate_solver(model, acados_ocp_nlp)
 

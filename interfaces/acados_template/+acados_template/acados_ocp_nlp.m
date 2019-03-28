@@ -15,10 +15,10 @@ classdef acados_ocp_nlp < handle
     end
     methods 
         function obj = acados_ocp_nlp()
-            obj.dims = ocp_nlp_dims(); 
-            obj.cost = ocp_nlp_cost();
-            obj.constraints = ocp_nlp_constraints();
-            obj.solver_config = ocp_nlp_solver_config(); 
+            obj.dims = acados_template.ocp_nlp_dims(); 
+            obj.cost = acados_template.ocp_nlp_cost();
+            obj.constraints = acados_template.ocp_nlp_constraints();
+            obj.solver_config = acados_template.ocp_nlp_solver_config(); 
             obj.model_name = []; 
             obj.con_p_name = [];
             obj.con_pN_name = [];

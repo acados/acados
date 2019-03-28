@@ -167,6 +167,7 @@ if USE_JSON_DUMP == 1:
     ocp_nlp.dims = ra.dims.__dict__
     ocp_nlp = ocp_nlp.__dict__
     ocp_nlp = rename_keys(ocp_nlp)
+    print(ocp_nlp)
     # with open(name_file, 'w') as f:
     #     json.dump(ocp_nlp, f, default=np_array_to_list)
 
