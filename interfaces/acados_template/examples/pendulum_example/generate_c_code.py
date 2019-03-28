@@ -62,7 +62,7 @@ def export_ode_model():
     return model 
 
 # create render arguments
-ra = ocp_nlp_render_arguments()
+ra = acados_ocp_nlp()
 
 # export model 
 model = export_ode_model()

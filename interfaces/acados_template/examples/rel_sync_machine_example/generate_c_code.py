@@ -205,7 +205,7 @@ def get_general_constraints_DC(u_max):
     return res
 
 # create render arguments
-ra = ocp_nlp_render_arguments()
+ra = acados_ocp_nlp()
 
 
 # export model

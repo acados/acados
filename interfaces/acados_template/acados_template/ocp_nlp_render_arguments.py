@@ -301,27 +301,27 @@ class ocp_nlp_cost:
 
 class ocp_nlp_constraints:
     def __init__(self):
-        self.__lbx    = None  
-        self.__lbu    = None  
-        self.__idxbx  = None
-        self.__ubx    = None  
-        self.__ubu    = None  
-        self.__idxbu  = None
-        self.__lg     = None  
-        self.__ug     = None  
-        self.__lh     = None  
-        self.__uh     = None  
-        self.__D      = None  
-        self.__C      = None  
-        self.__lbxN   = None  
-        self.__ubxN   = None  
-        self.__idxbxN = None
-        self.__CN     = None  
-        self.__lgN    = None  
-        self.__ugN    = None  
-        self.__lhN    = None  
-        self.__uhN    = None  
-        self.__x0     = None  
+        self.__lbx    = None  # lower bounds on x
+        self.__lbu    = None  # lower bounds on u
+        self.__idxbx  = None  # indexes of bounds on x 
+        self.__ubx    = None  # upper bounds on x 
+        self.__ubu    = None  # upper bounds on u 
+        self.__idxbu  = None  # indexes of bounds on u
+        self.__lg     = None  # lower bound for general inequalities 
+        self.__ug     = None  # upper bound for general inequalities 
+        self.__lh     = None  # lower bound for nonlinear inequalities 
+        self.__uh     = None  # upper bound for nonlinear inequalities 
+        self.__D      = None  # D matrix in lg <= D * u + C * x <= ug
+        self.__C      = None  # C matrix in lg <= D * u + C * x <= ug
+        self.__lbxN   = None  # lower bounds on x at t=T 
+        self.__ubxN   = None  # upper bounds on x at t=T 
+        self.__idxbxN = None  # indexes for bounds on x at t=T 
+        self.__CN     = None  # C matrix at t=T 
+        self.__lgN    = None  # lower bound on general inequalities at t=T 
+        self.__ugN    = None  # upper bound on general inequalities at t=T 
+        self.__lhN    = None  # lower bound on nonlinear inequalities at t=T 
+        self.__uhN    = None  # upper bound on nonlinear inequalities at t=T 
+        self.__x0     = None  # initial state 
 
     @property
     def lbx(self):
@@ -539,11 +539,11 @@ class ocp_nlp_constraints:
 
 class ocp_nlp_solver_config:
     def __init__(self):
-        self.__qp_solver      = 'PARTIAL_CONDENSING_HPIPM'   # qp solver to be used in the NLP solver
-        self.__hessian_approx = 'GAUSS_NEWTON'               # hessian approximation
-        self.__integrator_type = 'ERK'                       # integrator type
-        self.__tf = None                                     # prediction horizon
-        self.__nlp_solver_tpye = 'SQP_RTI'                   # NLP solver 
+        self.__qp_solver        = 'PARTIAL_CONDENSING_HPIPM'  # qp solver to be used in the NLP solver
+        self.__hessian_approx   = 'GAUSS_NEWTON'              # hessian approximation
+        self.__integrator_type  = 'ERK'                       # integrator type
+        self.__tf               = None                        # prediction horizon
+        self.__nlp_solver_type  = 'SQP_RTI'                   # NLP solver 
 
     @property
     def qp_solver(self):
@@ -614,7 +614,7 @@ class ocp_nlp_constant:
         self.name  = None # constant name
         self.value = None # constant value
 
-class ocp_nlp_render_arguments:
+class acados_ocp_nlp:
     def __init__(self):
         self.dims = ocp_nlp_dims()
         self.cost = ocp_nlp_cost()
