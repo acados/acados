@@ -1,4 +1,4 @@
-classdef ocp_nlp_render_arguments < handle
+classdef acados_ocp_nlp < handle
     properties
         dims 
         cost 
@@ -14,7 +14,7 @@ classdef ocp_nlp_render_arguments < handle
         acados_lib_path 
     end
     methods 
-        function obj = ocp_nlp_render_arguments()
+        function obj = acados_ocp_nlp()
             obj.dims = ocp_nlp_dims(); 
             obj.cost = ocp_nlp_cost();
             obj.constraints = ocp_nlp_constraints();
