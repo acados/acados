@@ -640,6 +640,16 @@ class ocp_nlp_as_object:
         def __init__(self, d):
             self.__dict__ = d
 
+def print_dict(d):
+    new = {}
+    for k, v in d.iteritems():
+        if isinstance(v, dict):
+            v = print_dict(v)
+
+        new_key = k.split('__', 1)[-1]
+        new[k.replace(k, new_key)] = v
+    return new
+
 def rename_keys(iterable):
     new_iterable = {}
     return rename_keys_rec(iterable, new_iterable)
