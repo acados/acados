@@ -1,4 +1,4 @@
-sim interface
+sim_interface.c
 =======================
 .. doxygenfile:: sim_interface.c
 .. doxygenfile:: sim_interface.h
