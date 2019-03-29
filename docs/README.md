@@ -1,4 +1,4 @@
-# Acados documentation
+# acados documentation
 
 Based on `sphinx` and markdown
 
