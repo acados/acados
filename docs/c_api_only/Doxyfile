@@ -99,7 +99,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = ../../interfaces/acados_c ../../acados/ocp_qp/ocp_qp_common.h ../../acados/dense_qp/dense_qp_common.h ../../acados/sim/sim_common.h
+INPUT                  = ../../interfaces/acados_c ../../acados/ocp_qp/ocp_qp_common.h ../../acados/dense_qp/dense_qp_common.h ../../acados/sim/sim_common.h ../../acados/utils/external_function_generic.h
                          vhdlparser
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.h \
