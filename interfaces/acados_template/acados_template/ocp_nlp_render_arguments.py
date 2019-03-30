@@ -640,32 +640,21 @@ class ocp_nlp_as_object:
         def __init__(self, d):
             self.__dict__ = d
 
-def print_dict(d):
+def rename_keys(d):
     new = {}
-    for k, v in d.iteritems():
+    for k, v in d.items():
         if isinstance(v, dict):
-            v = print_dict(v)
+            v = rename_keys(v)
 
         new_key = k.split('__', 1)[-1]
         new[k.replace(k, new_key)] = v
     return new
 
-def rename_keys(iterable):
-    new_iterable = {}
-    return rename_keys_rec(iterable, new_iterable)
+def generate_value_types(d):
+    new = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            v = generate_value_types(v)
 
-def rename_keys_rec(iterable, new_iterable):
-    print('in new iteration \n\n')
-    print(iterable)
-    # import pdb; pdb.set_trace()
-    if type(iterable) is dict:
-        for key in list(iterable):
-            old_key = key
-            new_key = old_key.split('__', 1)[-1]
-            new_iterable[new_key] = iterable[old_key]
-            if type(iterable[old_key]) is dict or type(iterable[old_key]) is list:
-                new_iterable[new_key] = rename_keys_rec(iterable[old_key], new_iterable[new_key])
-    else:
-        return iterable
-    return new_iterable
-            
+        new[k] = str(type(v).__name__)
+    return new

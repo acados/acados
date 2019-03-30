@@ -2,6 +2,9 @@ clear all
 close all
 clc
 import acados_template.*
+addpath('jsonlab');
+
+NATIVE_MATLAB_JSON = 0;
 
 % create ocp_nlp object
 acados_ocp_nlp = acados_ocp_nlp();
@@ -92,11 +95,15 @@ acados_ocp_nlp.acados_include_path = "/usr/local/include";
 acados_ocp_nlp.acados_lib_path = "/usr/local/lib";
 
 % dump JSON file
-json_string = jsonencode(acados_ocp_nlp);
-fid = fopen('acados_ocp_nlp.json', 'w');
-if fid == -1, error('Cannot create JSON file'); end
-fwrite(fid, json_string, 'char');
+if NATIVE_MATLAB_JSON == 1
+    json_string = jsonencode(acados_ocp_nlp);
+    fid = fopen('acados_ocp_nlp.json', 'w');
+    if fid == -1, error('Cannot create JSON file'); end
+    fwrite(fid, json_string, 'char');
 fclose(fid);
+else
+    savejson('acados_ocp_nlp.json', acados_ocp_nlp)
+end
 
 % generate_solver(model, acados_ocp_nlp)
 

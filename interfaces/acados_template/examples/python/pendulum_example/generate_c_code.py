@@ -164,9 +164,15 @@ if USE_JSON_DUMP == 1:
     ocp_nlp.constraints = ra.constraints.__dict__
     ocp_nlp.solver_config = ra.solver_config.__dict__
     ocp_nlp.dims = ra.dims.__dict__
+    constants_list = []
+    for i in range(len(ocp_nlp.constants)):
+        constants_list.append(ocp_nlp.constants[i].__dict__)
     ocp_nlp = ocp_nlp.__dict__
-    # ocp_nlp = rename_keys(ocp_nlp)
-    ocp_nlp = print_dict(ocp_nlp)
+    ocp_nlp['constants'] = constants_list
+    print(ocp_nlp)
+    ocp_nlp = rename_keys(ocp_nlp)
+    ocp_nlp_type = generate_value_types(ocp_nlp)
+    print(ocp_nlp)
     import pdb; pdb.set_trace()
     with open(name_file, 'w') as f:
         json.dump(ocp_nlp, f, default=np_array_to_list)
