@@ -5,6 +5,7 @@ from ctypes import *
 import matplotlib
 import matplotlib.pyplot as plt
 import scipy.linalg
+import json
 
 USE_JSON_DUMP = 1
 
@@ -170,14 +171,18 @@ if USE_JSON_DUMP == 1:
     ocp_nlp = ocp_nlp.__dict__
     ocp_nlp['constants'] = constants_list
     print(ocp_nlp)
-    ocp_nlp = rename_keys(ocp_nlp)
-    ocp_nlp_type = generate_value_types(ocp_nlp)
+    ocp_nlp = dict2json(ocp_nlp)
     print(ocp_nlp)
-    import pdb; pdb.set_trace()
     with open(name_file, 'w') as f:
         json.dump(ocp_nlp, f, default=np_array_to_list)
 
-    ra = ocp_nlp_as_object(ocp_nlp)
+    with open(name_file, 'r') as f:
+        ocp_nlp_json = json.load(f)
+
+    import pdb; pdb.set_trace()
+    ocp_nlp_dict = json2dict(ocp_nlp_json)
+    import pdb; pdb.set_trace()
+    ra = ocp_nlp_as_object(ocp_nlp_dict)
     ra.cost = ocp_nlp_as_object(ra.cost)
     ra.constraints = ocp_nlp_as_object(ra.constraints)
     ra.solver_config = ocp_nlp_as_object(ra.solver_config)
