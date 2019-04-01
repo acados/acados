@@ -657,12 +657,17 @@ def json2dict(d):
         if isinstance(v, dict):
             v = json2dict(v)
 
-        v_type = str(type(v).__name__)
+        v_type__ = str(type(v).__name__)
         new_key = k.split('__', 1)[-1]
         v_type = new_key.split('__')[0]
         new_key = new_key.split('__', 1)[-1]
         # TODO: cast v to corresponding type
-        if v_type == 'ndarray':
-            v = np.array(v)
+        if v_type == 'ndarray' or v_type__ == 'list':
+            print(v_type__)
+            if v == []:
+                v = None
+            else:
+                v = np.array(v)
+
         new[k.replace(k, new_key)] = v
     return new
