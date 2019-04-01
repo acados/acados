@@ -27,6 +27,7 @@ Both a CMake and a Makefile based build system are supported at the moment.
     wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
     mkdir -p casadi-py35-v3.4.0-64bit
     tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-py35-v3.4.0-64bit
+    cd ..
     ```
 
     ```
@@ -40,6 +41,7 @@ Both a CMake and a Makefile based build system are supported at the moment.
     wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
     mkdir -p casadi-octave-v3.4.0
     tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave-v3.4.0
+    cd ..
     ```
 
 1. Build and install `acados`.
