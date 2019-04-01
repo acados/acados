@@ -4,5 +4,7 @@ syscop.bib
 objects.inv
 genindex.html
 _build
-_doxygen_c_api
+_build_doxygen_c_api
+_build_doxygen
+.tag
 old_*
