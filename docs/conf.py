@@ -26,8 +26,7 @@ source_suffix = {
 templates_path = ['_templates']
 master_doc = 'index'
 
-#  sys.path.append('/home/andrea/acados/docs/.acados_doc/lib/python3.5/site-packages/breathe/'))
-breathe_projects = { "acados": "_doxygen_c_api/xml/" }
+breathe_projects = { "acados": "_build_doxygen_c_api/xml/" }
 breathe_default_project = "acados"
 subprocess.call('doxygen c_api/Doxyfile', shell=True)
 subprocess.call('doxygen doxygen/Doxyfile', shell=True)
