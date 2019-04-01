@@ -30,6 +30,7 @@ master_doc = 'index'
 breathe_projects = { "acados": "_doxygen_c_api/xml/" }
 breathe_default_project = "acados"
 subprocess.call('doxygen c_api/Doxyfile', shell=True)
+subprocess.call('doxygen doxygen/Doxyfile', shell=True)
 
 # -- Project information -----------------------------------------------------
 

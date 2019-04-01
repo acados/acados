@@ -99,7 +99,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = ../../acados
+INPUT                  = ../acados/ ../interfaces/acados_c
                          vhdlparser
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.h \
