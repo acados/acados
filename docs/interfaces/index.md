@@ -2,9 +2,14 @@
 
 
 ## C API
-See WIP
+The C API of acados is an efficient interface to the core functionalities of acados. 
+It provides setters and getters that can be used to interact with the core of acados with 
+negligible computation overhead. In order to learn about the acados C API, you 
+can look at the examples in
+[`acados/examples/c/`](https://github.com/acados/acados/tree/master/examples/c). 
 
-## Acados Mex
+
+## acados MEX
 
 This interface makes a subset of `acados` functionalities available from Matlab or Octave.
 
@@ -22,7 +27,7 @@ export ACADOS_INSTALL_DIR="<your acados repo dir>"
 source env.sh # Which can be found in the folder of one of the examples
 ```
 
-If `ACADOS_INSTALL_DIR` is not speficied, it will be assumed that the examples are runned from the sub-folders of the current folder (i.e. acados main folder is 2 folders up from the current folder).
+If `ACADOS_INSTALL_DIR` is not specified, it will be assumed that the examples are run from the sub-folders of the current folder (i.e. acados main folder is 2 folders up from the current folder).
 
 Afterwards, launch Matlab or Octave from the same shell.
 
@@ -30,7 +35,7 @@ If you want to run the examples in a different folder, please close the current 
 
 
 
-## Acados Template
+## acados Python
 
 
 `acados_template` is an (experimental) Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them.
@@ -56,7 +61,4 @@ You should now be able to import it as a Python module and specify the problem f
 For more information contact `@zanellia`
 
 
-## Swig
-
-Broken
 
