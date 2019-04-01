@@ -3,3 +3,6 @@ syscop.bib
 .buildinfo
 objects.inv
 genindex.html
+_build
+_doxygen_c_api
+old_*
