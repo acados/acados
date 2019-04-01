@@ -4,11 +4,13 @@ clc
 import acados_template.*
 addpath('jsonlab');
 
-NATIVE_MATLAB_JSON = 0;
+NATIVE_MATLAB_JSON = 1;
 
 % create ocp_nlp object
 acados_ocp_nlp = acados_ocp_nlp();
 
+% set model_name 
+acados_ocp_nlp.model_name = "pendulum_ode";
 Tf = 1.0;
 nx = 4;
 nu = 1;
@@ -73,10 +75,7 @@ nlp_con.x0 = [0.0, 0.0, 3.14, 0.0];
 nlp_con.idxbu = [1];
 
 % set constants
-const1 = ocp_nlp_constant();
-const1.name  = "PI";
-const1.value = 3.1415926535897932;
-acados_ocp_nlp.constants = [const1];
+acados_ocp_nlp.constants.PI  =  3.1415926535897932;
 
 % set QP solver
 acados_ocp_nlp.solver_config.qp_solver = "PARTIAL_CONDENSING_HPIPM";

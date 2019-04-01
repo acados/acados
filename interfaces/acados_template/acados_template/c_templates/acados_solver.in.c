@@ -42,7 +42,7 @@
 #include "acados_solver_{{ra.model_name}}.h"
 
 {% for item in ra.constants %}
-#define {{ item.name }} {{ item.value }}
+#define {{ item }} {{ ra.constants[item] }}
 {% endfor %}
 #define NX_   {{ ra.dims.nx }}
 #define NZ_   {{ ra.dims.nz }}
@@ -336,7 +336,7 @@ int acados_create() {
     {%- endfor %}
 
     {% for j in range(ra.dims.ny): %}
-    yref[{{j}}] = {{ ra.cost.yref[j][0] }}; 
+    yref[{{j}}] = {{ ra.cost.yref[j] }}; 
     {%- endfor %}
 
     {% for j in range(ra.dims.nyN): %}
@@ -352,7 +352,7 @@ int acados_create() {
     {%- endfor %}
 
     {% for j in range(ra.dims.nyN): %}
-    yrefN[{{j}}] = {{ ra.cost.yrefN[j][0] }}; 
+    yrefN[{{j}}] = {{ ra.cost.yrefN[j] }}; 
     {%- endfor %}
 
     int max_num_sqp_iterations = 100;

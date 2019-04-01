@@ -125,8 +125,8 @@ VxN[3,3] = 1.0
 
 nlp_cost.VxN = VxN
 
-nlp_cost.yref  = np.zeros((ny, 1))
-nlp_cost.yrefN = np.zeros((nyN, 1))
+nlp_cost.yref  = np.zeros((ny, ))
+nlp_cost.yrefN = np.zeros((nyN, ))
 
 # setting bounds
 Fmax = 80.0
@@ -137,10 +137,7 @@ nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
 nlp_con.idxbu = np.array([1])
 
 # set constants
-const1 = ocp_nlp_constant()
-const1.name  = 'PI'
-const1.value = 3.1415926535897932
-ra.constants = [const1]
+ra.constants['PI'] = 3.1415926535897932
 
 # set QP solver
 ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -165,14 +162,15 @@ if USE_JSON_DUMP == 1:
     ocp_nlp.constraints = ra.constraints.__dict__
     ocp_nlp.solver_config = ra.solver_config.__dict__
     ocp_nlp.dims = ra.dims.__dict__
-    constants_list = []
-    for i in range(len(ocp_nlp.constants)):
-        constants_list.append(ocp_nlp.constants[i].__dict__)
     ocp_nlp = ocp_nlp.__dict__
-    ocp_nlp['constants'] = constants_list
-    print(ocp_nlp)
+    ocp_nlp_layout = dict2json_layout(ocp_nlp)
+
+    # save JSON reference layout
+    with open('acados_layout.json', 'w') as f:
+        json.dump(ocp_nlp_layout, f, default=np_array_to_list)
+
     ocp_nlp = dict2json(ocp_nlp)
-    print(ocp_nlp)
+
     with open(name_file, 'w') as f:
         json.dump(ocp_nlp, f, default=np_array_to_list)
 
@@ -180,20 +178,24 @@ if USE_JSON_DUMP == 1:
         ocp_nlp_json = json.load(f)
 
     # load MATLAB JSON file instead
-    with open('acados_ocp_nlp.json', 'r') as f:
+    with open('../../matlab/acados_ocp_nlp.json', 'r') as f:
         ocp_nlp_json = json.load(f)
 
     print(ocp_nlp_json)
-    import pdb; pdb.set_trace()
+    ocp_nlp_dict = cast_ocp_nlp(ocp_nlp_json, ocp_nlp_layout)
     ocp_nlp_dict = json2dict(ocp_nlp_json)
-    print(ocp_nlp_dict)
+    # load JSON layout
+    with open('acados_layout.json', 'r') as f:
+        ocp_nlp_layout = json.load(f)
     import pdb; pdb.set_trace()
+    print(ocp_nlp_dict)
     ra = ocp_nlp_as_object(ocp_nlp_dict)
     ra.cost = ocp_nlp_as_object(ra.cost)
     ra.constraints = ocp_nlp_as_object(ra.constraints)
     ra.solver_config = ocp_nlp_as_object(ra.solver_config)
     ra.dims = ocp_nlp_as_object(ra.dims)
 
+import pdb; pdb.set_trace()
 generate_solver(model, ra)
 
 # make 

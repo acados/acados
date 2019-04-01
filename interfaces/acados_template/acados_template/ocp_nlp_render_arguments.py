@@ -609,11 +609,6 @@ class ocp_nlp_solver_config:
             raise Exception('Invalid nlp_solver_type value. Possible values are:\n\n' \
                     + ',\n'.join(nlp_solver_types) + '.\n\nYou have: ' + nlp_solver_type + '.\n\nExiting.')
 
-class ocp_nlp_constant:
-    def __init__(self):
-        self.name  = None # constant name
-        self.value = None # constant value
-
 class acados_ocp_nlp:
     def __init__(self):
         self.dims = ocp_nlp_dims()
@@ -625,7 +620,7 @@ class acados_ocp_nlp:
         self.con_pN_name = None 
         self.con_h_name = None 
         self.con_hN_name = None 
-        self.constants = []
+        self.constants = {}
         self.acados_include_path = []
         self.acados_lib_path = []
 
@@ -651,6 +646,52 @@ def dict2json(d):
         new[k.replace(k, new_key)] = v
     return new
 
+def dict2json_layout(d):
+    new = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            v = dict2json_layout(v)
+
+        v_type = str(type(v).__name__)
+        if v_type == 'ndarray':
+            v_type = v_type + '_' + str(len(v.shape))
+        new_key = k.split('__', 1)[-1]
+
+        if isinstance(v, dict):
+            new[k.replace(k, new_key)] = v  
+        else:
+            new[k.replace(k, new_key)] = v_type 
+    
+    return new
+
+def cast_ocp_nlp(ocp_nlp, layout):
+
+    
+    return ocp_nlp
+
+def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
+    new = {}
+    for k, v in ocp_nlp.items():
+        if isinstance(v, dict):
+            v = cast_ocp_nlp(v, ocp_nlp_layout[k])
+
+        if 'ndarray' in ocp_nlp_layout[k]:
+            dim = int(ocp_nlp_layout[k].split('_',1)[1])
+            if isinstance(v, int) or isinstance(v, float):
+                import pdb; pdb.set_trace()
+                v = [v]
+            print(v)
+            while len(v.shape) < dim: 
+                v = [v]
+        new[k] = v
+    return new 
+
+    # load JSON layout
+    with open('acados_layout.json', 'r') as f:
+        ocp_nlp_layout = json.load(f)
+    
+    return ocp_nlp
+
 def json2dict(d):
     new = {}
     for k, v in d.items():
@@ -662,8 +703,10 @@ def json2dict(d):
         v_type = new_key.split('__')[0]
         new_key = new_key.split('__', 1)[-1]
         # TODO: cast v to corresponding type
+        print('key = ', k)
+        print('v type = ', v_type__)
+        print('v = ', v, '\n')
         if v_type == 'ndarray' or v_type__ == 'list':
-            print(v_type__)
             if v == []:
                 v = None
             else:
