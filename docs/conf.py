@@ -28,8 +28,6 @@ master_doc = 'index'
 
 breathe_projects = { "acados": "_build_doxygen_c_api/xml/" }
 breathe_default_project = "acados"
-subprocess.call('doxygen c_api/Doxyfile', shell=True)
-subprocess.call('doxygen doxygen/Doxyfile', shell=True)
 
 # -- Project information -----------------------------------------------------
 
@@ -43,7 +41,7 @@ author = 'syscop'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [ 'breathe', 'recommonmark' ]
+extensions = ['sphinx.ext.mathjax', 'breathe', 'recommonmark' ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -91,6 +89,7 @@ def setup(app):
             'enable_auto_toc_tree': True,
             'auto_toc_tree_section': 'Contents',
             'enable_eval_rst': True,
+            'enable_inline_math':True,
             'enable_math':True
             }, True)
     app.add_transform(AutoStructify)
