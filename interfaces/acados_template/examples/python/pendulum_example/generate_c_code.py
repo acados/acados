@@ -181,14 +181,14 @@ if USE_JSON_DUMP == 1:
     with open('../../matlab/acados_ocp_nlp.json', 'r') as f:
         ocp_nlp_json = json.load(f)
 
-    print(ocp_nlp_json)
-    ocp_nlp_dict = cast_ocp_nlp(ocp_nlp_json, ocp_nlp_layout)
-    ocp_nlp_dict = json2dict(ocp_nlp_json)
     # load JSON layout
     with open('acados_layout.json', 'r') as f:
         ocp_nlp_layout = json.load(f)
-    import pdb; pdb.set_trace()
+    print(ocp_nlp_json)
+    ocp_nlp_dict = json2dict(ocp_nlp_json)
+    ocp_nlp_dict = cast_ocp_nlp(ocp_nlp_dict, ocp_nlp_layout)
     print(ocp_nlp_dict)
+    import pdb; pdb.set_trace()
     ra = ocp_nlp_as_object(ocp_nlp_dict)
     ra.cost = ocp_nlp_as_object(ra.cost)
     ra.constraints = ocp_nlp_as_object(ra.constraints)

@@ -703,19 +703,23 @@ def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
             v = cast_ocp_nlp(v, ocp_nlp_layout[k])
 
         if 'ndarray' in ocp_nlp_layout[k]:
-            dim = int(ocp_nlp_layout[k].split('_',1)[1])
             if isinstance(v, int) or isinstance(v, float):
-                v = [v]
-            print(k)
-            print('\n', v, '\n')
-            while len(v.shape) < dim: 
-                v = [v]
+                v = np.array([v])
         out[k] = v
     return out 
 
 def json2dict(d):
     """ convert ocp_nlp loaded JSON to dictionary. Mainly convert
     lists to arrays for easier handling.
+    Parameters
+    ---------
+    d : dict 
+        dictionary loaded from JSON.
+    
+    Returns
+    -------
+    out : dict 
+        postprocessed dictionary.
     """
     out = {}
     for k, v in d.items():
@@ -726,10 +730,6 @@ def json2dict(d):
         out_key = k.split('__', 1)[-1]
         v_type = out_key.split('__')[0]
         out_key = out_key.split('__', 1)[-1]
-        # TODO: cast v to corresponding type
-        print('key = ', k)
-        print('v type = ', v_type__)
-        print('v = ', v, '\n')
         if v_type == 'ndarray' or v_type__ == 'list':
             if v == []:
                 v = None
