@@ -636,18 +636,33 @@ class ocp_nlp_as_object:
             self.__dict__ = d
 
 def dict2json(d):
-    new = {}
+    out = {}
     for k, v in d.items():
         if isinstance(v, dict):
             v = dict2json(v)
 
         v_type = str(type(v).__name__)
-        new_key = '__' + v_type + '__' + k.split('__', 1)[-1]
-        new[k.replace(k, new_key)] = v
-    return new
+        out_key = '__' + v_type + '__' + k.split('__', 1)[-1]
+        out[k.replace(k, out_key)] = v
+    return out
 
 def dict2json_layout(d):
-    new = {}
+    """ Convert dictionary containing the description of 
+    of the ocp_nlp to JSON format by stripping the 
+    property mangling and adding array dimension info.
+     
+    Parameters
+    ----------
+    d : dict
+        dictionary containing the description of 
+        the ocp_nlp.
+    
+    Returns
+    ------
+    out: dict 
+        postprocessed dictionary.
+    """
+    out = {}
     for k, v in d.items():
         if isinstance(v, dict):
             v = dict2json_layout(v)
@@ -655,22 +670,34 @@ def dict2json_layout(d):
         v_type = str(type(v).__name__)
         if v_type == 'ndarray':
             v_type = v_type + '_' + str(len(v.shape))
-        new_key = k.split('__', 1)[-1]
+        out_key = k.split('__', 1)[-1]
 
         if isinstance(v, dict):
-            new[k.replace(k, new_key)] = v  
+            out[k.replace(k, out_key)] = v  
         else:
-            new[k.replace(k, new_key)] = v_type 
+            out[k.replace(k, out_key)] = v_type 
     
-    return new
-
-def cast_ocp_nlp(ocp_nlp, layout):
-
-    
-    return ocp_nlp
+    return out
 
 def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
-    new = {}
+    """ MATLAB does not allow distinction between e.g a = [1,1,1] and b = [1,1,1].' 
+    or a = 1 and b = [1]. Hence, we need to do some postprocessing of the JSON 
+    file generated from MATLAB.
+     
+    Parameters
+    ----------
+    ocp_nlp : dict
+        ocp_nlp dictionary to be postprocessed.
+    
+    ocp_nlp_layout : dict
+        acados ocp_nlp target layout
+    Returns
+    ------
+    out : dict
+        postprocessed dictionary
+    """
+
+    out = {}
     for k, v in ocp_nlp.items():
         if isinstance(v, dict):
             v = cast_ocp_nlp(v, ocp_nlp_layout[k])
@@ -678,30 +705,27 @@ def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
         if 'ndarray' in ocp_nlp_layout[k]:
             dim = int(ocp_nlp_layout[k].split('_',1)[1])
             if isinstance(v, int) or isinstance(v, float):
-                import pdb; pdb.set_trace()
                 v = [v]
-            print(v)
+            print(k)
+            print('\n', v, '\n')
             while len(v.shape) < dim: 
                 v = [v]
-        new[k] = v
-    return new 
-
-    # load JSON layout
-    with open('acados_layout.json', 'r') as f:
-        ocp_nlp_layout = json.load(f)
-    
-    return ocp_nlp
+        out[k] = v
+    return out 
 
 def json2dict(d):
-    new = {}
+    """ convert ocp_nlp loaded JSON to dictionary. Mainly convert
+    lists to arrays for easier handling.
+    """
+    out = {}
     for k, v in d.items():
         if isinstance(v, dict):
             v = json2dict(v)
 
         v_type__ = str(type(v).__name__)
-        new_key = k.split('__', 1)[-1]
-        v_type = new_key.split('__')[0]
-        new_key = new_key.split('__', 1)[-1]
+        out_key = k.split('__', 1)[-1]
+        v_type = out_key.split('__')[0]
+        out_key = out_key.split('__', 1)[-1]
         # TODO: cast v to corresponding type
         print('key = ', k)
         print('v type = ', v_type__)
@@ -712,5 +736,5 @@ def json2dict(d):
             else:
                 v = np.array(v)
 
-        new[k.replace(k, new_key)] = v
-    return new
+        out[k.replace(k, out_key)] = v
+    return out
