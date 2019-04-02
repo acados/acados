@@ -55,7 +55,7 @@ nlp_cost.Vu = Vu;
 
 nlp_cost.WN = Q; 
 
-VxN = zeros(ny, nx);
+VxN = zeros(nyN, nx);
 VxN(1,1) = 1.0;
 VxN(2,2) = 1.0;
 VxN(3,3) = 1.0;

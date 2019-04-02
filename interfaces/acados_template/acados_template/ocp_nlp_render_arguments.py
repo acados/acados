@@ -668,14 +668,15 @@ def dict2json_layout(d):
             v = dict2json_layout(v)
 
         v_type = str(type(v).__name__)
-        if v_type == 'ndarray':
-            v_type = v_type + '_' + str(len(v.shape))
+        # add array number of dimensions?
+        # if v_type == 'ndarray':
+        #     v_type = v_type + '_' + str(len(v.shape))
         out_key = k.split('__', 1)[-1]
 
         if isinstance(v, dict):
             out[k.replace(k, out_key)] = v  
         else:
-            out[k.replace(k, out_key)] = v_type 
+            out[k.replace(k, out_key)] = [v_type] 
     
     return out
 
@@ -708,7 +709,7 @@ def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
         out[k] = v
     return out 
 
-def json2dict(d):
+def json2dict(d, ocp_nlp_dims, ocp_nlp_layout):
     """ convert ocp_nlp loaded JSON to dictionary. Mainly convert
     lists to arrays for easier handling.
     Parameters
@@ -724,7 +725,7 @@ def json2dict(d):
     out = {}
     for k, v in d.items():
         if isinstance(v, dict):
-            v = json2dict(v)
+            v = json2dict(v, ocp_nlp_dims, ocp_nlp_layout[k])
 
         v_type__ = str(type(v).__name__)
         out_key = k.split('__', 1)[-1]
@@ -735,6 +736,11 @@ def json2dict(d):
                 v = None
             else:
                 v = np.array(v)
-
+                dim_keys = ocp_nlp_layout[k][1]
+                dims_l = []
+                for item in dim_keys:
+                    dims_l.append(ocp_nlp_dims[item])
+                dims = tuple(dims_l)
+                v = np.reshape(v, dims)
         out[k.replace(k, out_key)] = v
     return out
