@@ -2,9 +2,6 @@ clear all
 close all
 clc
 import acados_template.*
-addpath('jsonlab');
-
-NATIVE_MATLAB_JSON = 1;
 
 % create ocp_nlp object
 acados_ocp_nlp = acados_ocp_nlp();
@@ -79,11 +76,8 @@ acados_ocp_nlp.constants.PI  =  3.1415926535897932;
 
 % set QP solver
 acados_ocp_nlp.solver_config.qp_solver = "PARTIAL_CONDENSING_HPIPM";
-% acados_ocp_nlp.solver_config.qp_solver = "FULL_CONDENSING_QPOASES";
 acados_ocp_nlp.solver_config.hessian_approx = "GAUSS_NEWTON";
-% acados_ocp_nlp.solver_config.hessian_approx = "EXACT";
 acados_ocp_nlp.solver_config.integrator_type = "ERK";
-% acados_ocp_nlp.solver_config.integrator_type = "IRK";
 
 % set prediction horizon
 acados_ocp_nlp.solver_config.tf = Tf;
@@ -94,15 +88,11 @@ acados_ocp_nlp.acados_include_path = "/usr/local/include";
 acados_ocp_nlp.acados_lib_path = "/usr/local/lib";
 
 % dump JSON file
-if NATIVE_MATLAB_JSON == 1
-    json_string = jsonencode(acados_ocp_nlp);
-    fid = fopen('acados_ocp_nlp.json', 'w');
-    if fid == -1, error('Cannot create JSON file'); end
-    fwrite(fid, json_string, 'char');
+json_string = jsonencode(acados_ocp_nlp);
+fid = fopen('acados_ocp_nlp.json', 'w');
+if fid == -1, error('Cannot create JSON file'); end
+fwrite(fid, json_string, 'char');
 fclose(fid);
-else
-    savejson('acados_ocp_nlp.json', acados_ocp_nlp)
-end
 
 % generate_solver(model, acados_ocp_nlp)
 

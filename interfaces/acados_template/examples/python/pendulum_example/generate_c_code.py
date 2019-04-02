@@ -163,6 +163,7 @@ if USE_JSON_DUMP == 1:
     ocp_nlp.solver_config = ra.solver_config.__dict__
     ocp_nlp.dims = ra.dims.__dict__
     ocp_nlp = ocp_nlp.__dict__
+
     # ocp_nlp_layout = dict2json_layout(ocp_nlp)
 
     # # save JSON reference layout
@@ -177,16 +178,15 @@ if USE_JSON_DUMP == 1:
     with open(name_file, 'r') as f:
         ocp_nlp_json = json.load(f)
 
-    # load MATLAB JSON file instead
-    with open('../../matlab/acados_ocp_nlp.json', 'r') as f:
-        ocp_nlp_json = json.load(f)
+    # # load MATLAB JSON file instead
+    # with open('../../matlab/acados_ocp_nlp.json', 'r') as f:
+    #     ocp_nlp_json = json.load(f)
 
     # load JSON layout
     with open('acados_layout.json', 'r') as f:
         ocp_nlp_layout = json.load(f)
 
     ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'], ocp_nlp_layout)
-    # ocp_nlp_dict = cast_ocp_nlp(ocp_nlp_dict, ocp_nlp_layout)
 
     ra = ocp_nlp_as_object(ocp_nlp_dict)
     ra.cost = ocp_nlp_as_object(ra.cost)
