@@ -184,18 +184,16 @@ if USE_JSON_DUMP == 1:
     # load JSON layout
     with open('acados_layout.json', 'r') as f:
         ocp_nlp_layout = json.load(f)
-    print(ocp_nlp_json)
+
     ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'], ocp_nlp_layout)
-    ocp_nlp_dict = cast_ocp_nlp(ocp_nlp_dict, ocp_nlp_layout)
-    print(ocp_nlp_dict)
-    import pdb; pdb.set_trace()
+    # ocp_nlp_dict = cast_ocp_nlp(ocp_nlp_dict, ocp_nlp_layout)
+
     ra = ocp_nlp_as_object(ocp_nlp_dict)
     ra.cost = ocp_nlp_as_object(ra.cost)
     ra.constraints = ocp_nlp_as_object(ra.constraints)
     ra.solver_config = ocp_nlp_as_object(ra.solver_config)
     ra.dims = ocp_nlp_as_object(ra.dims)
 
-import pdb; pdb.set_trace()
 generate_solver(model, ra)
 
 # make 
