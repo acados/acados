@@ -1,4 +1,7 @@
 import numpy as np
+import json
+import os
+import sys
 
 class ocp_nlp_dims:
     def __init__(self):
@@ -642,7 +645,8 @@ def dict2json(d):
             v = dict2json(v)
 
         v_type = str(type(v).__name__)
-        out_key = '__' + v_type + '__' + k.split('__', 1)[-1]
+        # out_key = '__' + v_type + '__' + k.split('__', 1)[-1]
+        out_key = k.split('__', 1)[-1]
         out[k.replace(k, out_key)] = v
     return out
 
@@ -709,7 +713,17 @@ def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
         out[k] = v
     return out 
 
-def json2dict(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
+def json2dict(ocp_nlp, ocp_nlp_dims):
+    # load JSON layout
+    current_module = sys.modules[__name__]
+    acados_path = os.path.dirname(current_module.__file__)
+    with open(acados_path + '/../acados_layout.json', 'r') as f:
+        ocp_nlp_layout = json.load(f)
+
+    out = json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout)
+    return out
+
+def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
     """ convert ocp_nlp loaded JSON to dictionary. Mainly convert
     lists to arrays for easier handling.
     Parameters
@@ -731,7 +745,7 @@ def json2dict(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
     out = {}
     for k, v in ocp_nlp.items():
         if isinstance(v, dict):
-            v = json2dict(v, ocp_nlp_dims, ocp_nlp_layout[k])
+            v = json2dict_rec(v, ocp_nlp_dims, ocp_nlp_layout[k])
 
         v_type__ = str(type(v).__name__)
         out_key = k.split('__', 1)[-1]

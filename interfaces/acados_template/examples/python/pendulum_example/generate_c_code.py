@@ -1,5 +1,6 @@
 from acados_template import *
 import acados_template as at
+from export_ode_model import *
 import numpy as np
 from ctypes import *
 import matplotlib
@@ -8,61 +9,6 @@ import scipy.linalg
 import json
 
 USE_JSON_DUMP = 1
-
-def export_ode_model():
-
-    model_name = 'pendulum_ode'
-
-    # constants
-    M = 1.
-    m = 0.1
-    g = 9.81
-    l = 0.8
-
-    # set up states & controls
-    x1      = SX.sym('x1')
-    theta   = SX.sym('theta')
-    v1      = SX.sym('v1')
-    dtheta  = SX.sym('dtheta')
-    
-    x = vertcat(x1, v1, theta, dtheta)
-
-    # controls
-    F = SX.sym('F')
-    u = vertcat(F)
-    
-    # xdot
-    x1_dot      = SX.sym('x1_dot')
-    theta_dot   = SX.sym('theta_dot')
-    v1_dot      = SX.sym('v1_dot')
-    dtheta_dot  = SX.sym('dtheta_dot')
-
-    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
-    
-    # algebraic variables
-    z = []
-
-    # parameters
-    p = []
-    
-    # dynamics     
-    denominator = M + m - m*cos(theta)*cos(theta)
-    f_expl = vertcat(v1, (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator, dtheta, (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator))
-    
-    f_impl = xdot - f_expl
-   
-    model = acados_dae()
-
-    model.f_impl_expr = f_impl
-    model.f_expl_expr = f_expl
-    model.x = x
-    model.xdot = xdot
-    model.u = u
-    model.z = z
-    model.p = p
-    model.name = model_name
-
-    return model 
 
 # create render arguments
 ra = acados_ocp_nlp()
@@ -117,7 +63,7 @@ nlp_cost.Vu = Vu
 
 nlp_cost.WN = Q 
 
-VxN = np.zeros((ny, nx))
+VxN = np.zeros((nyN, nx))
 VxN[0,0] = 1.0
 VxN[1,1] = 1.0
 VxN[2,2] = 1.0
@@ -178,15 +124,7 @@ if USE_JSON_DUMP == 1:
     with open(name_file, 'r') as f:
         ocp_nlp_json = json.load(f)
 
-   # load MATLAB JSON file instead
-    with open('../../matlab/acados_ocp_nlp.json', 'r') as f:
-        ocp_nlp_json = json.load(f)
-
-    # load JSON layout
-    with open('acados_layout.json', 'r') as f:
-        ocp_nlp_layout = json.load(f)
-
-    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'], ocp_nlp_layout)
+    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
 
     ra = ocp_nlp_as_object(ocp_nlp_dict)
     ra.cost = ocp_nlp_as_object(ra.cost)

@@ -1,6 +1,7 @@
 clear all
 close all
 clc
+
 import acados_template.*
 import casadi.*
 

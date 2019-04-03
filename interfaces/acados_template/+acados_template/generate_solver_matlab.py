@@ -99,7 +99,7 @@ def generate_solver_matlab(acados_ocp_nlp_json_file):
     out_file = open('./c_generated_code/make_sfun.m', 'w+')
     out_file.write(output)
     
-    print('Successfully generated acados solver!')
+    print('Successfully generated acados solver!\n')
 
     # build generated code
     os.chdir('c_generated_code')
