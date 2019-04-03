@@ -54,11 +54,9 @@ Where:
 * :math:`F: \mathbb{R}^{n_x}\times\mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_x+n_z}` is the (potentially) fully implicit dynamics.
 * :math:`F_T: \mathbb{R}^{n_x}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_x+n_z}` is the terminal algebraic constraint.
 
-* :math:`h: \mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_h}` is the constraints general nonlinear function.
-* :math:`h_T: \mathbb{R}^{n_x}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_{h_T}}` is the terminal constraints general nonlinear function.
+* :math:`h: \mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_h}` and :math:`h_T: \mathbb{R}^{n_x}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_{h_T}}` are general nonlinear functions.
 
-* :math:`g: \mathbb{R}^{n_h} \rightarrow \mathbb{R}^{n_g}` is the constraints convex function.
-* :math:`g_T: \mathbb{R}^{n_{h_T}} \rightarrow \mathbb{R}^{n_{g_T}}` is the terminal constraints convex function.
+* :math:`g: \mathbb{R}^{n_h} \rightarrow \mathbb{R}^{n_g}` and :math:`g_T: \mathbb{R}^{n_{h_T}} \rightarrow \mathbb{R}^{n_{g_T}}` are nonlinear convex functions.
 
 Currently not yet implemented features:
 

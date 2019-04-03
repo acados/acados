@@ -6,5 +6,5 @@ genindex.html
 _build
 _build_doxygen_c_api
 _build_doxygen
-.tag
+doxygen.tag
 old_*
