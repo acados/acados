@@ -86,38 +86,58 @@ HESS_multiplied = HESS_multiplied.simplify();
 % TODO(oj): fix namings such that jac_z is contained!
 if isfield(model, 'p')
     p = model.p;
-    impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z, p},...
+    impl_dae_fun = Function([model_name,'_impl_dae_fun'], {x, xdot, u, z, p},...
                              {f_impl});
-    impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'],...
+    impl_dae_fun_jac_x_xdot = Function([model_name,'_impl_dae_fun_jac_x_xdot'],...
          {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
-    impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'],...
+    impl_dae_jac_x_xdot_u = Function([model_name,'_impl_dae_jac_x_xdot_u'],...
          {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
-    impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'],...
+    impl_dae_fun_jac_x_xdot_u = Function([model_name,'_impl_dae_fun_jac_x_xdot_u'],...
          {x, xdot, u, z, p},...
          {f_impl, jac_x, jac_xdot, jac_u});
-    impl_ode_hess = Function([model.name,'_impl_ode_hess'], ...
+    impl_dae_hess = Function([model.name,'_impl_dae_hess'], ...
          {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
 else
-    impl_ode_fun = Function([model_name,'_impl_ode_fun'],...
+    impl_dae_fun = Function([model_name,'_impl_dae_fun'],...
                  {x, xdot, u, z}, {f_impl});
-    impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'],...
+    impl_dae_fun_jac_x_xdot = Function([model_name,'_impl_dae_fun_jac_x_xdot'],...
          {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_z});
-    impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z},...
+    impl_dae_jac_x_xdot_u = Function([model_name,'_impl_dae_jac_x_xdot_u'], {x, xdot, u, z},...
              {jac_x, jac_xdot, jac_u, jac_z});
-    impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'],...
+    impl_dae_fun_jac_x_xdot_u = Function([model_name,'_impl_dae_fun_jac_x_xdot_u'],...
          {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_u});
-    impl_ode_hess = Function([model.name,'_impl_ode_hess'], ...
+    impl_dae_hess = Function([model.name,'_impl_dae_hess'], ...
         {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
 end
 
 %% generate C code
-impl_ode_fun.generate([model_name,'_impl_ode_fun'], casadi_opts);
-impl_ode_fun_jac_x_xdot.generate([model_name,'_impl_ode_fun_jac_x_xdot'], casadi_opts);
-impl_ode_jac_x_xdot_u.generate([model_name,'_impl_ode_jac_x_xdot_u'], casadi_opts);
-impl_ode_fun_jac_x_xdot_u.generate([model_name,'_impl_ode_fun_jac_x_xdot_u'], casadi_opts);
-if generate_hess
-    impl_ode_hess.generate([model_name,'_impl_ode_hess'], casadi_opts);
-end
-% keyboard
+    if ~isfolder('c_generated_code')
+        mkdir('c_generated_code');
+    end
+    cd 'c_generated_code'
+    model_dir = [model_name, '_model'];
+    if ~isfolder(model_dir)
+        mkdir(model_dir);
+    end
+    model_dir_location = ['./', model_dir];
+    cd(model_dir_location);
 
+    fun_name = [model_name, '_impl_dae_fun'];
+    impl_dae_fun.generate(fun_name, casadi_opts);
+
+    fun_name = [model_name, '_impl_dae_fun_jac_x_xdot_z'];
+    impl_dae_fun_jac_x_xdot.generate(fun_name, casadi_opts);
+    
+    fun_name = [model_name, '_impl_dae_jac_x_xdot_u_z'];
+    impl_dae_jac_x_xdot_u.generate(fun_name, casadi_opts);
+
+    fun_name = [model_name, '_impl_dae_fun_jac_x_xdot_u_z'];
+    impl_dae_fun_jac_x_xdot_u.generate(fun_name, casadi_opts);
+
+    if generate_hess
+        fun_name = [model_name, '_impl_dae_hess'];
+        impl_dae_hess.generate(fun_name, casadi_opts);
+    end
+
+    cd '../..'
 end
