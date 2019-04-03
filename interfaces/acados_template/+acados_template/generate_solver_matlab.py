@@ -19,7 +19,7 @@ def generate_solver_matlab(acados_ocp_nlp_json_file):
     with open(acados_path + '/../acados_layout.json', 'r') as f:
         ocp_nlp_layout = json.load(f)
 
-    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'], ocp_nlp_layout)
+    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
 
     ra = ocp_nlp_as_object(ocp_nlp_dict)
     ra.cost = ocp_nlp_as_object(ra.cost)
