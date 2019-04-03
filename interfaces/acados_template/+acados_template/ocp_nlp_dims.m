@@ -22,7 +22,7 @@ classdef ocp_nlp_dims < handle
             obj.nx   = []; 
             obj.nz   = 0; 
             obj.nu   = []; 
-            obj.np   = 0
+            obj.np   = 0;
             obj.ny   = []; 
             obj.nyN  = []; 
             obj.npd  = 0;

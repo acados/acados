@@ -680,6 +680,35 @@ def dict2json_layout(d):
     
     return out
 
+def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
+    """ MATLAB does not allow distinction between e.g a = [1,1,1] and b = [1,1,1].' 
+    or a = 1 and b = [1]. Hence, we need to do some postprocessing of the JSON 
+    file generated from MATLAB.
+     
+    Parameters
+    ----------
+    ocp_nlp : dict
+        ocp_nlp dictionary to be postprocessed.
+    
+    ocp_nlp_layout : dict
+        acados ocp_nlp target layout
+    Returns
+    ------
+    out : dict
+        postprocessed dictionary
+    """
+
+    out = {}
+    for k, v in ocp_nlp.items():
+        if isinstance(v, dict):
+            v = cast_ocp_nlp(v, ocp_nlp_layout[k])
+
+        if 'ndarray' in ocp_nlp_layout[k]:
+            if isinstance(v, int) or isinstance(v, float):
+                v = np.array([v])
+        out[k] = v
+    return out 
+
 def json2dict(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
     """ convert ocp_nlp loaded JSON to dictionary. Mainly convert
     lists to arrays for easier handling.

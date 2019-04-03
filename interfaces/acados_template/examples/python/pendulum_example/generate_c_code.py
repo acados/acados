@@ -178,9 +178,9 @@ if USE_JSON_DUMP == 1:
     with open(name_file, 'r') as f:
         ocp_nlp_json = json.load(f)
 
-    # # load MATLAB JSON file instead
-    # with open('../../matlab/acados_ocp_nlp.json', 'r') as f:
-    #     ocp_nlp_json = json.load(f)
+   # load MATLAB JSON file instead
+    with open('../../matlab/acados_ocp_nlp.json', 'r') as f:
+        ocp_nlp_json = json.load(f)
 
     # load JSON layout
     with open('acados_layout.json', 'r') as f:
