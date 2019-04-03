@@ -32,10 +32,10 @@
 
 // example specific
 #include "{{ ra.model_name }}_model/{{ ra.model_name }}_model.h"
-{% if ra.dims.npd > 0: %}
+{% if ra.dims.npd > 0 %}
 #include "{{ ra.con_p_name }}_p_constraint/{{ ra.con_p_name }}_p_constraint.h"
 {% endif %}
-{% if ra.dims.nh > 0: %}
+{% if ra.dims.nh > 0 %}
 #include "{{ ra.con_h_name }}_h_constraint/{{ ra.con_h_name }}_h_constraint.h"
 {% endif %}
 
@@ -166,52 +166,59 @@ int acados_create() {
     // set up bounds for stage 0 
     // u
     int idxbu0[NBU];
-    {% for i in range(ra.dims.nbu): %}
-    idxbu0[{{i}}] = {{ra.constraints.idxbu[i]}};
+    {% for item in ra.constraints.idxbu %}
+    idxbu0[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     double lbu0[NBU]; 
+    {% for item in ra.constraints.lbu %}
+    lbu0[{{ loop.index0 }}] = {{ item }};
+    {%- endfor %}
     double ubu0[NBU];
-    {% for i in range(ra.dims.nbu): %}
-    lbu0[{{i}}] = {{ ra.constraints.lbu[i] }};
-    ubu0[{{i}}] = {{ ra.constraints.ubu[i] }};
+    {% for item in ra.constraints.ubu %}
+    ubu0[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
     // x
     int idxbx0[NX];
-    {% for i in range(ra.dims.nx): %}
-    idxbx0[{{i}}] = {{i}};
+    {% for i in range(ra.dims.nx) %}
+    idxbx0[{{ i }}] = {{ i }};
     {%- endfor %}
     double lbx0[NX]; 
-    double ubx0[NX];
-    {% for i in range(ra.dims.nx): %}
-    lbx0[{{i}}] = {{ ra.constraints.x0[i] }};
-    ubx0[{{i}}] = {{ ra.constraints.x0[i] }};
+    {% for item in ra.constraints.x0 %}
+    lbx0[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
-
+    double ubx0[NX];
+    {% for item in ra.constraints.x0 %}
+    ubx0[{{ loop.index0 }}] = {{ item }};
+    {%- endfor %}
 
     // set up bounds for intermediate stages
     // u
     int idxbu[NBU];
-    {% for i in range(ra.dims.nbu): %}
-    idxbu[{{i}}] = {{ra.constraints.idxbu[i]}};
+    {% for item in ra.constraints.idxbu %}
+    idxbu[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     double lbu[NBU]; 
+    {% for item in ra.constraints.lbu %}
+    lbu[{{ loop.index0 }}] = {{ item }};
+    {%- endfor %}
     double ubu[NBU];
-    {% for i in range(ra.dims.nbu): %}
-    lbu[{{i}}] = {{ ra.constraints.lbu[i] }};
-    ubu[{{i}}] = {{ ra.constraints.ubu[i] }};
+    {% for item in ra.constraints.ubu %}
+    ubu[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
     // x
     int idxbx[NBX];
-    {% for i in range(ra.dims.nbx): %}
-    idxbx[{{i}}] = {{ra.constraints.idxbx[i]}};
+    {% for item in ra.constraints.idxbx %}
+    idxbx[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     double lbx[NBX]; 
+    {% for item in ra.constraints.ubx %}
+    ubx[{{ loop.index0 }}] = {{ item }};
+    {%- endfor %}
     double ubx[NBX];
-    {% for i in range(ra.dims.nbx): %}
-    lbx[{{i}}] = {{ ra.constraints.lbx[i] }};
-    ubx[{{i}}] = {{ ra.constraints.ubx[i] }};
+    {% for item in ra.constraints.ubx %}
+    ubx[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
     // set up general constraints for stage 0 to N-1 
@@ -220,23 +227,24 @@ int acados_create() {
     double lg[NG];
     double ug[NG];
 
-    {% for j in range(ra.dims.ng): %}
-        {%- for k in range(ra.dims.nx): %}
-    D[{{j}}+NG * {{k}}] = {{ ra.constraints.D[j,k] }}; 
+    {% for item_j in ra.constraints.D %}
+        {% set outer_loop = loop %}
+        {%- for item_k in item_j %}
+    D[{{ outer_loop.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
         {%- endfor %}
     {%- endfor %}
 
-    {% for j in range(ra.dims.ng): %}
-        {%- for k in range(ra.dims.nu): %}
+    {% for j in range(ra.dims.ng) %}
+        {%- for k in range(ra.dims.nu) %}
     C[{{j}}+NG * {{k}}] = {{ ra.constraints.C[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
-    {% for i in range(ra.dims.ng): %}
+    {% for i in range(ra.dims.ng) %}
     lg[{{i}}] = {{ ra.constraints.lg[i] }};
     {%- endfor %}
 
-    {% for i in range(ra.dims.ng): %}
+    {% for i in range(ra.dims.ng) %}
     ug[{{i}}] = {{ ra.constraints.ug[i] }};
     {%- endfor %}
 
@@ -244,23 +252,23 @@ int acados_create() {
     double lh[NH];
     double uh[NH];
 
-    {% for i in range(ra.dims.nh): %}
+    {% for i in range(ra.dims.nh) %}
     lh[{{i}}] = {{ ra.constraints.lh[i] }};
     {%- endfor %}
 
-    {% for i in range(ra.dims.nh): %}
+    {% for i in range(ra.dims.nh) %}
     uh[{{i}}] = {{ ra.constraints.uh[i] }};
     {%- endfor %}
     
     // set up bounds for last stage
     // x
     int idxbxN[NBXN];
-    {% for i in range(ra.dims.nbxN): %}
+    {% for i in range(ra.dims.nbxN) %}
     idxbxN[{{i}}] = {{ra.constraints.idxbxN[i]}};
     {%- endfor %}
     double lbxN[NBXN]; 
     double ubxN[NBXN];
-    {% for i in range(ra.dims.nbxN): %}
+    {% for i in range(ra.dims.nbxN) %}
     lbxN[{{i}}] = {{ ra.constraints.lbxN[i] }};
     ubxN[{{i}}] = {{ ra.constraints.ubxN[i] }};
     {%- endfor %}
@@ -270,17 +278,17 @@ int acados_create() {
     double lgN[NGN];
     double ugN[NGN];
 
-    {% for j in range(ra.dims.ngN): %}
-        {%- for k in range(ra.dims.nu): %}
+    {% for j in range(ra.dims.ngN) %}
+        {%- for k in range(ra.dims.nu) %}
     CN[{{j}}+NG * {{k}}] = {{ ra.constraints.CN[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
-    {% for i in range(ra.dims.ngN): %}
+    {% for i in range(ra.dims.ngN) %}
     lgN[{{i}}] = {{ ra.constraints.lgN[i] }};
     {%- endfor %}
 
-    {% for i in range(ra.dims.ngN): %}
+    {% for i in range(ra.dims.ngN) %}
     ugN[{{i}}] = {{ ra.constraints.ugN[i] }};
     {%- endfor %}
 
@@ -288,11 +296,11 @@ int acados_create() {
     double lhN[NHN];
     double uhN[NHN];
 
-    {% for i in range(ra.dims.nhN): %}
+    {% for i in range(ra.dims.nhN) %}
     lhN[{{i}}] = {{ ra.constraints.lhN[i] }};
     {%- endfor %}
 
-    {% for i in range(ra.dims.nhN): %}
+    {% for i in range(ra.dims.nhN) %}
     uhN[{{i}}] = {{ ra.constraints.uhN[i] }};
     {%- endfor %}
 
@@ -311,47 +319,47 @@ int acados_create() {
     for (int ii = 0; ii < NU + NX; ii++)
         yref[ii] = 0.0;
 
-    {% for j in range(ra.dims.ny): %}
-        {%- for k in range(ra.dims.ny): %}
+    {% for j in range(ra.dims.ny) %}
+        {%- for k in range(ra.dims.ny) %}
     W[{{j}}+(NY) * {{k}}] = {{ ra.cost.W[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
-    {% for j in range(ra.dims.ny): %}
-        {%- for k in range(ra.dims.nx): %}
+    {% for j in range(ra.dims.ny) %}
+        {%- for k in range(ra.dims.nx) %}
     Vx[{{j}}+(NY) * {{k}}] = {{ ra.cost.Vx[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
-    {% for j in range(ra.dims.ny): %}
-        {%- for k in range(ra.dims.nu): %}
+    {% for j in range(ra.dims.ny) %}
+        {%- for k in range(ra.dims.nu) %}
     Vu[{{j}}+(NY) * {{k}}] = {{ ra.cost.Vu[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
-    {% for j in range(ra.dims.ny): %}
-        {%- for k in range(ra.dims.nz): %}
+    {% for j in range(ra.dims.ny) %}
+        {%- for k in range(ra.dims.nz) %}
     Vz[{{j}}+(NY) * {{k}}] = {{ ra.cost.Vz[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
-    {% for j in range(ra.dims.ny): %}
+    {% for j in range(ra.dims.ny) %}
     yref[{{j}}] = {{ ra.cost.yref[j] }}; 
     {%- endfor %}
 
-    {% for j in range(ra.dims.nyN): %}
-        {%- for k in range(ra.dims.nyN): %}
+    {% for j in range(ra.dims.nyN) %}
+        {%- for k in range(ra.dims.nyN) %}
     WN[{{j}}+(NYN) * {{k}}] = {{ ra.cost.WN[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
-    {% for j in range(ra.dims.nyN): %}
-        {%- for k in range(ra.dims.nx): %}
+    {% for j in range(ra.dims.nyN) %}
+        {%- for k in range(ra.dims.nx) %}
     VxN[{{j}}+(NYN) * {{k}}] = {{ ra.cost.VxN[j,k] }}; 
         {%- endfor %}
     {%- endfor %}
 
-    {% for j in range(ra.dims.nyN): %}
+    {% for j in range(ra.dims.nyN) %}
     yrefN[{{j}}] = {{ ra.cost.yrefN[j] }}; 
     {%- endfor %}
 
@@ -404,9 +412,9 @@ int acados_create() {
 
     // Make plan
     nlp_solver_plan = ocp_nlp_plan_create(N);
-    {% if ra.solver_config.nlp_solver_type == 'SQP': %}
+    {% if ra.solver_config.nlp_solver_type == "SQP" %}
     nlp_solver_plan->nlp_solver = SQP;
-    {% else: %}
+    {% else %}
     nlp_solver_plan->nlp_solver = SQP_RTI;
     {% endif %}
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ ra.solver_config.qp_solver }};
@@ -419,20 +427,20 @@ int acados_create() {
     }
 
     for (int i = 0; i < N; i++) {
-        {% if ra.dims.npd > 0: %}
+        {% if ra.dims.npd > 0 %}
         nlp_solver_plan->nlp_constraints[i] = BGHP;
-        {% else: %}
+        {% else %}
         nlp_solver_plan->nlp_constraints[i] = BGH;
         {% endif %}
     }
 
-    {% if ra.dims.npdN > 0: %}
+    {% if ra.dims.npdN > 0 %}
     nlp_solver_plan->nlp_constraints[N] = BGHP;
-    {% else: %}
+    {% else %}
     nlp_solver_plan->nlp_constraints[N] = BGH;
     {% endif %}
 
-    {% if ra.solver_config.hessian_approx == 'EXACT': %} 
+    {% if ra.solver_config.hessian_approx == "EXACT" %} 
     nlp_solver_plan->regularization = CONVEXIFICATION;
     {% endif %}
     nlp_config = ocp_nlp_config_create(*nlp_solver_plan);
@@ -453,15 +461,15 @@ int acados_create() {
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
     }
 
-    {% if ra.dims.npd > 0: %}
+    {% if ra.dims.npd > 0 %}
     for (int i = 0; i < N; i++) 
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "np", &npd[i]);
     {% endif %}
-    {% if ra.dims.npdN > 0: %}
+    {% if ra.dims.npdN > 0 %}
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "np", &npd[N]);
     {% endif %}
 
-    {% if ra.dims.npd > 0: %}
+    {% if ra.dims.npd > 0 %}
     p_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear part of convex-composite constraint
@@ -476,7 +484,7 @@ int acados_create() {
     }
     {% endif %}
 
-    {% if ra.dims.npdN > 0: %}
+    {% if ra.dims.npdN > 0 %}
 	// nonlinear part of convex-composite constraint
 	external_function_casadi p_constraint_N;
 	p_constraint_N.casadi_fun = &{{ ra.con_pN_name }}_p_constraint_N;
@@ -489,7 +497,7 @@ int acados_create() {
     external_function_casadi_create(p_constraint_N);
     {% endif %}
 
-    {% if ra.dims.nh > 0: %}
+    {% if ra.dims.nh > 0 %}
     h_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear constraint
@@ -504,7 +512,7 @@ int acados_create() {
     }
     {% endif %}
 
-    {% if ra.dims.nhN > 0: %}
+    {% if ra.dims.nhN > 0 %}
 	// nonlinear constraint
 	external_function_casadi h_constraint_N;
 	h_constraint_N.casadi_fun = &{{ ra.con_hN_name }}_h_constraint_N;
@@ -517,11 +525,11 @@ int acados_create() {
     external_function_casadi_create(h_constraint_N);
     {% endif %}
 
-    {% if ra.solver_config.integrator_type == 'ERK': %}
+    {% if ra.solver_config.integrator_type == "ERK" %}
     // explicit ode
-    {% if ra.dims.np < 1: %}
+    {% if ra.dims.np < 1 %}
     forw_vde_casadi = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else: %}
+    {% else %}
     forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     {% endif %}
 
@@ -535,11 +543,11 @@ int acados_create() {
         external_function_casadi_create(&forw_vde_casadi[i]);
     }
 
-    {% if ra.solver_config.hessian_approx == 'EXACT': %} 
+    {% if ra.solver_config.hessian_approx == "EXACT" %} 
     external_function_casadi * hess_vde_casadi;
-    {% if ra.dims.np < 1: %}
+    {% if ra.dims.np < 1 %}
     hess_vde_casadi = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else: %}
+    {% else %}
     hess_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     {% endif %}
     for (int i = 0; i < N; ++i) {
@@ -552,11 +560,11 @@ int acados_create() {
         external_function_casadi_create(&hess_vde_casadi[i]);
     }
     {% endif %}
-    {% elif ra.solver_config.integrator_type == 'IRK': %}
+    {% elif ra.solver_config.integrator_type == "IRK" %}
     // implicit dae
-    {% if ra.dims.np < 1: %}
+    {% if ra.dims.np < 1 %}
     impl_dae_fun = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else: %}
+    {% else %}
     impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     {% endif %}
     for (int i = 0; i < N; ++i) {
@@ -567,16 +575,16 @@ int acados_create() {
         impl_dae_fun[i].casadi_n_in = &{{ ra.model_name }}_impl_dae_fun_n_in;
         impl_dae_fun[i].casadi_n_out = &{{ ra.model_name }}_impl_dae_fun_n_out;
         // TODO(fix this!!)
-        {% if ra.dims.np < 1: %}
+        {% if ra.dims.np < 1 %}
         external_function_casadi_create(&impl_dae_fun[i]);
-        {% else: %}
+        {% else %}
         external_function_param_casadi_create(&impl_dae_fun[i], {{ra.dims.np}});
         {% endif %}
     }
 
-    {% if ra.dims.np < 1: %}
+    {% if ra.dims.np < 1 %}
     impl_dae_fun_jac_x_xdot_z = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else: %}
+    {% else %}
     impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     {% endif %}
     for (int i = 0; i < N; ++i) {
@@ -586,16 +594,16 @@ int acados_create() {
         impl_dae_fun_jac_x_xdot_z[i].casadi_sparsity_out = &{{ ra.model_name }}_impl_dae_fun_jac_x_xdot_z_sparsity_out;
         impl_dae_fun_jac_x_xdot_z[i].casadi_n_in = &{{ ra.model_name }}_impl_dae_fun_jac_x_xdot_z_n_in;
         impl_dae_fun_jac_x_xdot_z[i].casadi_n_out = &{{ ra.model_name }}_impl_dae_fun_jac_x_xdot_z_n_out;
-        {% if ra.dims.np < 1: %}
+        {% if ra.dims.np < 1 %}
         external_function_casadi_create(&impl_dae_fun_jac_x_xdot_z[i]);
-        {% else: %}
+        {% else %}
         external_function_param_casadi_create(&impl_dae_fun_jac_x_xdot_z[i], {{ra.dims.np}});
         {% endif %}
     }
 
-    {% if ra.dims.np < 1: %}
+    {% if ra.dims.np < 1 %}
     impl_dae_jac_x_xdot_u_z = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else: %}
+    {% else %}
     impl_dae_jac_x_xdot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     {% endif %}
     for (int i = 0; i < N; ++i) {
@@ -605,9 +613,9 @@ int acados_create() {
         impl_dae_jac_x_xdot_u_z[i].casadi_sparsity_out = &{{ ra.model_name }}_impl_dae_jac_x_xdot_u_z_sparsity_out;
         impl_dae_jac_x_xdot_u_z[i].casadi_n_in = &{{ ra.model_name }}_impl_dae_jac_x_xdot_u_z_n_in;
         impl_dae_jac_x_xdot_u_z[i].casadi_n_out = &{{ ra.model_name }}_impl_dae_jac_x_xdot_u_z_n_out;
-        {% if ra.dims.np < 1: %}
+        {% if ra.dims.np < 1 %}
         external_function_casadi_create(&impl_dae_jac_x_xdot_u_z[i]);
-        {% else: %}
+        {% else %}
         external_function_param_casadi_create(&impl_dae_jac_x_xdot_u_z[i], {{ra.dims.np}});
         {% endif %}
     }
@@ -618,8 +626,8 @@ int acados_create() {
     for (int i = 0; i < N; ++i)
         nlp_in->Ts[i] = Tf/N;
 
-    // NLP cost: linear least squares
-    // C  // TODO(oj): this can be done using
+    // NLP cost linear least squares
+    // C  // TODO(oj) this can be done using
     // // ocp_nlp_cost_set_model(nlp_config, nlp_dims, nlp_in, i, "Cyt", Cyt);
     // ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
     // for (int i = 0; i <= N; ++i) {
@@ -650,14 +658,14 @@ int acados_create() {
     // NLP dynamics
     int set_fun_status;
     for (int i = 0; i < N; ++i) {
-    {% if ra.solver_config.integrator_type == 'ERK': %} 
+    {% if ra.solver_config.integrator_type == "ERK" %} 
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
         if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
-        {% if ra.solver_config.hessian_approx == 'EXACT': %} 
+        {% if ra.solver_config.hessian_approx == "EXACT" %} 
             set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
             if (set_fun_status != 0) { printf("Error while setting expl_ode_hes[%i]\n", i);  exit(1); }
         {% endif %}
-    {% elif ra.solver_config.integrator_type == 'IRK': %} 
+    {% elif ra.solver_config.integrator_type == "IRK" %} 
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun[%i]\n", i);  exit(1); }
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z[i]);
@@ -668,7 +676,7 @@ int acados_create() {
     }
 
     // NLP constraints
-    // TODO(oj): remove this when idxb setter available
+    // TODO(oj) remove this when idxb setter available
 
     // bounds for stage 0
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
@@ -689,7 +697,7 @@ int acados_create() {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubu", ubu);
     }
    
-    {% if ra.dims.ng > 0: %} 
+    {% if ra.dims.ng > 0 %} 
     // general constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
     {
@@ -700,14 +708,14 @@ int acados_create() {
     }
     {% endif %}
     
-    {% if ra.dims.nbxN > 0: %} 
+    {% if ra.dims.nbxN > 0 %} 
     // bounds for last
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbxN);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbxN);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubxN);
     {% endif %}
     
-    {% if ra.dims.ngN > 0: %} 
+    {% if ra.dims.ngN > 0 %} 
     // general constraints for last stage
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "C", CN);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", lgN);
@@ -715,18 +723,18 @@ int acados_create() {
     {% endif %}
 
     
-    {% if ra.dims.npd > 0: %}
+    {% if ra.dims.npd > 0 %}
     // convex-composite constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "p", &p_constraint[i]);
     {% endif %}
 
-    {% if ra.dims.npdN > 0: %}
+    {% if ra.dims.npdN > 0 %}
     // convex-composite constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_constraint_N[i]);
     {% endif %}
 
-    {% if ra.dims.nh > 0: %}
+    {% if ra.dims.nh > 0 %}
     // nonlinear constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
     {
@@ -736,7 +744,7 @@ int acados_create() {
     }
     {% endif %}
 
-    {% if ra.dims.nhN > 0: %}
+    {% if ra.dims.nhN > 0 %}
     // nonlinear constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_constraint_N[i]);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lhN);
@@ -745,7 +753,7 @@ int acados_create() {
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);
     
-    {% if ra.dims.nz > 0: %}
+    {% if ra.dims.nz > 0 %}
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
     int num_steps_val = 1; 
@@ -758,7 +766,7 @@ int acados_create() {
     bool jac_reuse_val = true;
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "jac_reuse", &jac_reuse_val);
 
-    {% if ra.solver_config.nlp_solver_type == 'SQP': %}
+    {% if ra.solver_config.nlp_solver_type == "SQP" %}
 
     int maxIter = max_num_sqp_iterations;
     double min_res_g = 1e-6;
@@ -773,13 +781,13 @@ int acados_create() {
     ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_m", &min_res_m);
 
 
-    {% else: %}
+    {% else %}
     // ocp_nlp_sqp_rti_opts *sqp_opts = (ocp_nlp_sqp_rti_opts *) nlp_opts;
     {% endif %}
-    {% if ra.solver_config.hessian_approx == 'EXACT': %}
+    {% if ra.solver_config.hessian_approx == "EXACT" %}
     for (int i = 0; i < N; ++i)
     {
-        // TODO(oj): is the following needed, and what does it do? do we
+        // TODO(oj) is the following needed, and what does it do? do we
         // ((ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i])->compute_hess = true;
         int num_steps = 5;
         bool sens_hess = true;
@@ -799,18 +807,18 @@ int acados_create() {
     nlp_solver = ocp_nlp_solver_create(nlp_config, nlp_dims, nlp_opts);
 
     // initialize parameters to nominal value
-    {% if ra.dims.np > 0:%}
+    {% if ra.dims.np > 0%}
     double p[{{ra.dims.np}}];
-    {% for i in range(ra.dims.np): %}
+    {% for i in range(ra.dims.np) %}
     p[{{i}}] = {{ra.constraints.p[i]}};
     {%- endfor %}
-    {% if ra.solver_config.integrator_type == 'IRK': %}
+    {% if ra.solver_config.integrator_type == "IRK" %}
     for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
     impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
     }
-    {% else: %}
+    {% else %}
     for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
     expl_vde_for[ii].set_param(expl_vde_for+ii, p);
     }
@@ -840,29 +848,29 @@ int acados_free() {
     ocp_nlp_plan_destroy(nlp_solver_plan);
 
     // free external function 
-    {% if ra.solver_config.integrator_type == 'IRK': %}
+    {% if ra.solver_config.integrator_type == "IRK" %}
     for(int i = 0; i < {{ra.dims.N}}; i++) {
-        {% if ra.dims.np < 1: %}
+        {% if ra.dims.np < 1 %}
         external_function_casadi_free(&impl_dae_fun[i]);
         external_function_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
         external_function_casadi_free(&impl_dae_jac_x_xdot_u_z[i]);
-        {% else: %}
+        {% else %}
         external_function_param_casadi_free(&impl_dae_fun[i]);
         external_function_param_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
         external_function_param_casadi_free(&impl_dae_jac_x_xdot_u_z[i]);
         {% endif %}
     }
-    {% else: %}
+    {% else %}
     for(int i = 0; i < {{ra.dims.N}}; i++) {
-        {% if ra.dims.np < 1: %}
+        {% if ra.dims.np < 1 %}
         external_function_casadi_free(&forw_vde_casadi[i]);
-        {% else: %}
+        {% else %}
         external_function_param_casadi_free(&forw_vde_casadi[i]);
         {% endif %}
-    {% if ra.solver_config.hessian_approx == 'EXACT': %}
-        {% if ra.dims.np < 1: %}
+    {% if ra.solver_config.hessian_approx == "EXACT" %}
+        {% if ra.dims.np < 1 %}
         external_function_casadi_free(&hess_vde_casadi[i]);
-        {% else: %}
+        {% else %}
         external_function_param_casadi_free(&hess_vde_casadi[i]);
         {% endif %}
     {% endif %}

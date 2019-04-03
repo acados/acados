@@ -85,7 +85,7 @@ int main() {
     // set initial condition
     double x0[{{ra.dims.nx}}];
     {% for item in ra.constraints.x0 %}
-    x0[{{ loop.index }}] = {{ item }};
+    x0[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
     
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", x0);
@@ -94,7 +94,7 @@ int main() {
     {% if ra.dims.np > 0%}
     double p[{{ra.dims.np}}];
     {% for item in ra.constraints.p %}
-    p[{{ loop.index }}] = {{ item }};
+    p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
     {% endif %}
     

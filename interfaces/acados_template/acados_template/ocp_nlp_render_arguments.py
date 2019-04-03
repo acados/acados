@@ -202,15 +202,15 @@ class ocp_nlp_cost:
     # linear least-squares cost: || Vx*x + Vu*x + Vz*z ||^2_W
     def __init__(self):
         # Lagrange term
-        self.__W     = None  # weight matrix
-        self.__Vx    = None  # x matrix coefficient
-        self.__Vu    = None  # u matrix coefficient
-        self.__Vz    = None  # z matrix coefficient
-        self.__yref  = None  # reference
+        self.__W     = []  # weight matrix
+        self.__Vx    = []  # x matrix coefficient
+        self.__Vu    = []  # u matrix coefficient
+        self.__Vz    = []  # z matrix coefficient
+        self.__yref  = []  # reference
         # Mayer term
-        self.__WN    = None  # weight matrix
-        self.__VxN   = None  # x matrix coefficient
-        self.__yrefN = None  # reference
+        self.__WN    = []  # weight matrix
+        self.__VxN   = []  # x matrix coefficient
+        self.__yrefN = []  # reference
 
     # Lagrange term
     @property
@@ -304,27 +304,28 @@ class ocp_nlp_cost:
 
 class ocp_nlp_constraints:
     def __init__(self):
-        self.__lbx    = None  # lower bounds on x
-        self.__lbu    = None  # lower bounds on u
-        self.__idxbx  = None  # indexes of bounds on x 
-        self.__ubx    = None  # upper bounds on x 
-        self.__ubu    = None  # upper bounds on u 
-        self.__idxbu  = None  # indexes of bounds on u
-        self.__lg     = None  # lower bound for general inequalities 
-        self.__ug     = None  # upper bound for general inequalities 
-        self.__lh     = None  # lower bound for nonlinear inequalities 
-        self.__uh     = None  # upper bound for nonlinear inequalities 
-        self.__D      = None  # D matrix in lg <= D * u + C * x <= ug
-        self.__C      = None  # C matrix in lg <= D * u + C * x <= ug
-        self.__lbxN   = None  # lower bounds on x at t=T 
-        self.__ubxN   = None  # upper bounds on x at t=T 
-        self.__idxbxN = None  # indexes for bounds on x at t=T 
-        self.__CN     = None  # C matrix at t=T 
-        self.__lgN    = None  # lower bound on general inequalities at t=T 
-        self.__ugN    = None  # upper bound on general inequalities at t=T 
-        self.__lhN    = None  # lower bound on nonlinear inequalities at t=T 
-        self.__uhN    = None  # upper bound on nonlinear inequalities at t=T 
-        self.__x0     = None  # initial state 
+        self.__lbx    = []  # lower bounds on x
+        self.__lbu    = []  # lower bounds on u
+        self.__idxbx  = []  # indexes of bounds on x 
+        self.__ubx    = []  # upper bounds on x 
+        self.__ubu    = []  # upper bounds on u 
+        self.__idxbu  = []  # indexes of bounds on u
+        self.__lg     = []  # lower bound for general inequalities 
+        self.__ug     = []  # upper bound for general inequalities 
+        self.__lh     = []  # lower bound for nonlinear inequalities 
+        self.__uh     = []  # upper bound for nonlinear inequalities 
+        self.__D      = []  # D matrix in lg <= D * u + C * x <= ug
+        self.__C      = []  # C matrix in lg <= D * u + C * x <= ug
+        self.__lbxN   = []  # lower bounds on x at t=T 
+        self.__ubxN   = []  # upper bounds on x at t=T 
+        self.__idxbxN = []  # indexes for bounds on x at t=T 
+        self.__CN     = []  # C matrix at t=T 
+        self.__lgN    = []  # lower bound on general inequalities at t=T 
+        self.__ugN    = []  # upper bound on general inequalities at t=T 
+        self.__lhN    = []  # lower bound on nonlinear inequalities at t=T 
+        self.__uhN    = []  # upper bound on nonlinear inequalities at t=T 
+        self.__x0     = []  # initial state 
+        self.__p      = []  # parameters 
 
     @property
     def lbx(self):
@@ -756,7 +757,8 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
                 v = np.array([v])
         if v_type == 'ndarray' or v_type__ == 'list':
             if v == []:
-                v = None
+                # v = None
+                v = []
             else:
                 v = np.array(v)
                 dim_keys = ocp_nlp_layout[k][1]
@@ -764,6 +766,7 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
                 for item in dim_keys:
                     dims_l.append(ocp_nlp_dims[item])
                 dims = tuple(dims_l)
+                print(out_key)
                 v = np.reshape(v, dims)
         out[k.replace(k, out_key)] = v
     return out

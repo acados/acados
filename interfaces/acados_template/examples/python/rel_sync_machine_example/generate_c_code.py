@@ -248,7 +248,7 @@ nlp_dims.nz   = nz
 nlp_dims.ny   = ny
 nlp_dims.nyN  = nyN
 nlp_dims.nbx  = 0
-# nlp_dims.nbu  = 0
+nlp_dims.nbu  = 1
 
 if FORMULATION == 0:
     nlp_dims.nbu  = 1
@@ -259,7 +259,7 @@ if FORMULATION == 1:
     nlp_dims.nh  = 1
 
 if FORMULATION == 2:
-    nlp_dims.ng  = 0
+    nlp_dims.ng  = 2
     nlp_dims.npd  = 2
     nlp_dims.nh  = 1
     nlp_dims.nhN = 0
@@ -311,7 +311,7 @@ QN[0,0] = 1e-3
 QN[1,1] = 1e-3
 nlp_cost.WN = QN
 
-VxN = nmp.zeros((ny, nx))
+VxN = nmp.zeros((nyN, nx))
 VxN[0,0] = 1.0
 VxN[1,1] = 1.0
 
@@ -352,7 +352,7 @@ if FORMULATION > 0:
 
 nlp_con.x0 = nmp.array([0.0, -0.0])
 
-if FORMULATION == 0:
+if FORMULATION == 0 or FORMULATION == 2:
     # setting general constraints
     # lg <= D*u + C*u <= ug
     nlp_con.D   = D
@@ -388,18 +388,32 @@ ra.acados_include_path = '/usr/local/include'
 ra.acados_lib_path = '/usr/local/lib'
 
 if USE_JSON_DUMP == 1: 
-    name_file = 'acados_ocp'
+    name_file = 'acados_ocp.json'
     ocp_nlp = ra
     ocp_nlp.cost = ra.cost.__dict__
     ocp_nlp.constraints = ra.constraints.__dict__
     ocp_nlp.solver_config = ra.solver_config.__dict__
     ocp_nlp.dims = ra.dims.__dict__
     ocp_nlp = ocp_nlp.__dict__
-    ocp_nlp = rename_keys(ocp_nlp)
+
+    # ocp_nlp_layout = dict2json_layout(ocp_nlp)
+
+    # # save JSON reference layout
+    # with open('acados_layout.json', 'w') as f:
+    #     json.dump(ocp_nlp_layout, f, default=np_array_to_list)
+
+    ocp_nlp = dict2json(ocp_nlp)
+
     with open(name_file, 'w') as f:
         json.dump(ocp_nlp, f, default=np_array_to_list)
 
-    ra = ocp_nlp_as_object(ocp_nlp)
+    with open(name_file, 'r') as f:
+        ocp_nlp_json = json.load(f)
+
+    import pdb; pdb.set_trace()
+    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
+
+    ra = ocp_nlp_as_object(ocp_nlp_dict)
     ra.cost = ocp_nlp_as_object(ra.cost)
     ra.constraints = ocp_nlp_as_object(ra.constraints)
     ra.solver_config = ocp_nlp_as_object(ra.solver_config)
