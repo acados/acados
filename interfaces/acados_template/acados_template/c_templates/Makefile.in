@@ -1,68 +1,68 @@
 ACADOS_FLAGS = -fPIC
-{% if  'QPOASES' in ra.solver_config.qp_solver: %}
+{% if  'QPOASES' in ocp.solver_config.qp_solver: %}
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 {% endif %}
 OBJ =
-OBJ+= main_{{ ra.model_name }}.o
-{% if  ra.solver_config.integrator_type == 'ERK': %}
-OBJ+= {{ ra.model_name }}_model/{{ ra.model_name }}_expl_ode_fun.o
-OBJ+= {{ ra.model_name }}_model/{{ ra.model_name }}_expl_vde_forw.o
-{% if ra.solver_config.hessian_approx == 'EXACT': %}
-OBJ+= {{ ra.model_name }}_model/{{ ra.model_name }}_expl_ode_hess.o
+OBJ+= main_{{ ocp.model_name }}.o
+{% if  ocp.solver_config.integrator_type == 'ERK': %}
+OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_ode_fun.o
+OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_vde_forw.o
+{% if ocp.solver_config.hessian_approx == 'EXACT': %}
+OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_ode_hess.o
 {% endif %}
 {% else: %}
-OBJ+= {{ ra.model_name }}_model/{{ ra.model_name }}_impl_dae_fun.o
-OBJ+= {{ ra.model_name }}_model/{{ ra.model_name }}_impl_dae_fun_jac_x_xdot_z.o
-OBJ+= {{ ra.model_name }}_model/{{ ra.model_name }}_impl_dae_jac_x_xdot_u_z.o
+OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_fun.o
+OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z.o
+OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z.o
 {% endif %}
-{% if ra.dims.npd > 0: %}
-OBJ+= {{ ra.con_p_name }}_p_constraint/{{ ra.con_p_name }}_p_constraint.o
+{% if ocp.dims.npd > 0: %}
+OBJ+= {{ ocp.con_p_name }}_p_constraint/{{ ocp.con_p_name }}_p_constraint.o
 {% endif %}
-{% if ra.dims.nh > 0: %}
-OBJ+= {{ ra.con_h_name }}_h_constraint/{{ ra.con_h_name }}_h_constraint.o
+{% if ocp.dims.nh > 0: %}
+OBJ+= {{ ocp.con_h_name }}_h_constraint/{{ ocp.con_h_name }}_h_constraint.o
 {% endif %}
-OBJ+= acados_solver_{{ ra.model_name }}.o
+OBJ+= acados_solver_{{ ocp.model_name }}.o
 
-INCLUDE_PATH = {{ ra.acados_include_path }}
-LIB_PATH = {{ ra.acados_lib_path }}
+INCLUDE_PATH = {{ ocp.acados_include_path }}
+LIB_PATH = {{ ocp.acados_lib_path }}
 
 all: clean casadi_fun main solver example
 
 casadi_fun:
-	( cd {{ ra.model_name }}_model; \
-	{%- if  ra.solver_config.integrator_type == 'ERK': %}
-	gcc $(ACADOS_FLAGS) -c {{ ra.model_name }}_expl_ode_fun.c \
-	{{ ra.model_name }}_expl_vde_forw.c \
-	{% if ra.solver_config.hessian_approx == 'EXACT': -%}
-	{{ ra.model_name }}_expl_ode_hess.c \
+	( cd {{ ocp.model_name }}_model; \
+	{%- if  ocp.solver_config.integrator_type == 'ERK': %}
+	gcc $(ACADOS_FLAGS) -c {{ ocp.model_name }}_expl_ode_fun.c \
+	{{ ocp.model_name }}_expl_vde_forw.c \
+	{% if ocp.solver_config.hessian_approx == 'EXACT': -%}
+	{{ ocp.model_name }}_expl_ode_hess.c \
 	{% endif -%}
 	{% else: %}
-	gcc $(ACADOS_FLAGS) -c  {{ ra.model_name }}_impl_dae_fun.c \
-	{{ ra.model_name }}_impl_dae_fun_jac_x_xdot_z.c \
-	{{ ra.model_name }}_impl_dae_jac_x_xdot_u_z.c \
+	gcc $(ACADOS_FLAGS) -c  {{ ocp.model_name }}_impl_dae_fun.c \
+	{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z.c \
+	{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z.c \
 	{% endif -%}
 	)
-	{% if ra.dims.npd > 0: -%}
-	(cd {{ ra.con_p_name }}_p_constraint; \
-	gcc $(ACADOS_FLAGS) -c  {{ ra.con_p_name }}_p_constraint.c \
+	{% if ocp.dims.npd > 0: -%}
+	(cd {{ ocp.con_p_name }}_p_constraint; \
+	gcc $(ACADOS_FLAGS) -c  {{ ocp.con_p_name }}_p_constraint.c \
 	)
 	{% endif -%}
-	{% if ra.dims.nh > 0: -%}
-	(cd {{ ra.con_h_name }}_h_constraint; \
-	gcc $(ACADOS_FLAGS) -c  {{ ra.con_h_name }}_h_constraint.c \
+	{% if ocp.dims.nh > 0: -%}
+	(cd {{ ocp.con_h_name }}_h_constraint; \
+	gcc $(ACADOS_FLAGS) -c  {{ ocp.con_h_name }}_h_constraint.c \
 	)
 	{% endif %}
 
 main:
-	gcc $(ACADOS_FLAGS) -c main_{{ ra.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ \
+	gcc $(ACADOS_FLAGS) -c main_{{ ocp.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 solver:
-	gcc $(ACADOS_FLAGS) -c acados_solver_{{ ra.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ \
+	gcc $(ACADOS_FLAGS) -c acados_solver_{{ ocp.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 example:
-	gcc $(ACADOS_FLAGS) -o main_{{ ra.model_name}} $(OBJ) -L $(LIB_PATH) \
+	gcc $(ACADOS_FLAGS) -o main_{{ ocp.model_name}} $(OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH)/acados \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
@@ -74,7 +74,7 @@ example:
 	-I $(INCLUDE_PATH)/qpOASES_e/
 
 shared_lib: casadi_fun solver
-	gcc $(ACADOS_FLAGS) -shared -o acados_solver_{{ ra.model_name }}.so $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -shared -o acados_solver_{{ ocp.model_name }}.so $(OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
@@ -84,4 +84,4 @@ shared_lib: casadi_fun solver
 clean:
 	rm -f *.o
 	rm -f *.so
-	rm -f main_{{ ra.model_name}}
+	rm -f main_{{ ocp.model_name}}

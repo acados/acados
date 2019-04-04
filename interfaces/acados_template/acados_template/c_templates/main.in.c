@@ -24,7 +24,7 @@
 #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
-#include "acados_solver_{{ra.model_name}}.h"
+#include "acados_solver_{{ocp.model_name}}.h"
 
 // ** global data **
 ocp_nlp_in * nlp_in;
@@ -34,22 +34,22 @@ void * nlp_opts;
 ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
-{% if ra.solver_config.integrator_type == "ERK" %}
-{% if ra.dims.np < 1 %}
+{% if ocp.solver_config.integrator_type == "ERK" %}
+{% if ocp.dims.np < 1 %}
 external_function_casadi * forw_vde_casadi;
 {% else %}
 external_function_param_casadi * forw_vde_casadi;
 {% endif %}
-{% if ra.solver_config.hessian_approx == "EXACT" %} 
-{% if ra.dims.np < 1 %}
+{% if ocp.solver_config.hessian_approx == "EXACT" %} 
+{% if ocp.dims.np < 1 %}
 external_function_casadi * hess_vde_casadi;
 {% else %}
 external_function_param_casadi * hess_vde_casadi;
 {% endif %}
 {% endif %}
 {% else %}
-{% if ra.solver_config.integrator_type == "IRK" %}
-{% if ra.dims.np < 1 %}
+{% if ocp.solver_config.integrator_type == "IRK" %}
+{% if ocp.dims.np < 1 %}
 external_function_casadi * impl_dae_fun;
 external_function_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_casadi * impl_dae_jac_x_xdot_u_z;
@@ -59,16 +59,16 @@ external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
-{% if ra.dims.npd > 0 %}
+{% if ocp.dims.npd > 0 %}
 external_function_casadi * p_constraint;
 {% endif %}
-{% if ra.dims.npdN > 0 %}
+{% if ocp.dims.npdN > 0 %}
 external_function_casadi * p_constraint_N;
 {% endif %}
-{% if ra.dims.nh > 0 %}
+{% if ocp.dims.nh > 0 %}
 external_function_casadi * h_constraint;
 {% endif %}
-{% if ra.dims.nhN > 0 %}
+{% if ocp.dims.nhN > 0 %}
 external_function_casadi * h_constraint_N;
 {% endif %}
 {% endif %}
@@ -83,30 +83,30 @@ int main() {
         exit(1); }
 
     // set initial condition
-    double x0[{{ra.dims.nx}}];
-    {% for item in ra.constraints.x0 %}
+    double x0[{{ocp.dims.nx}}];
+    {% for item in ocp.constraints.x0 %}
     x0[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
     
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", x0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x0);
 
-    {% if ra.dims.np > 0%}
-    double p[{{ra.dims.np}}];
-    {% for item in ra.constraints.p %}
+    {% if ocp.dims.np > 0%}
+    double p[{{ocp.dims.np}}];
+    {% for item in ocp.constraints.p %}
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
     {% endif %}
     
-    {% if ra.dims.np > 0%}
-    {% if ra.solver_config.integrator_type == "IRK" %}
-    for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
+    {% if ocp.dims.np > 0%}
+    {% if ocp.solver_config.integrator_type == "IRK" %}
+    for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
     impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
     }
     {% else %}
-    for (int ii = 0; ii < {{ra.dims.N}}; ii++) {
+    for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
     expl_vde_for[ii].set_param(expl_vde_for+ii, p);
     }
     {% endif %}
