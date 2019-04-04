@@ -1,5 +1,5 @@
-#ifndef {{ ocp.con_p_name.upper() }}_P_CONSTRAINT
-#define {{ ocp.con_p_name.upper() }}_P_CONSTRAINT
+#ifndef {{ ocp.con_p_name }}_P_CONSTRAINT
+#define {{ ocp.con_p_name }}_P_CONSTRAINT
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,4 +19,4 @@ int {{ ocp.con_p_name }}_p_constraint_n_out();
 } /* extern "C" */
 #endif
 
-#endif  // {{ ocp.con_p_name.upper() }}_P_CONSTRAINT
+#endif  // {{ ocp.con_p_name }}_P_CONSTRAINT

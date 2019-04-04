@@ -1,5 +1,5 @@
-#ifndef ACADOS_SOLVER_{{ocp.model_name.upper()}}_H_
-#define ACADOS_SOLVER_{{ocp.model_name.upper()}}_H_
+#ifndef ACADOS_SOLVER_{{ocp.model_name}}_H_
+#define ACADOS_SOLVER_{{ocp.model_name}}_H_
 
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
@@ -23,42 +23,44 @@ extern void * nlp_opts;
 extern ocp_nlp_plan * nlp_solver_plan;
 extern ocp_nlp_config * nlp_config;
 extern ocp_nlp_dims * nlp_dims;
-{% if ocp.solver_config.integrator_type == 'ERK': %}
-{% if ocp.dims.np < 1: %}
+{% if ocp.solver_config.integrator_type == "ERK" %}
+{% if ocp.dims.np < 1 %}
 extern external_function_casadi * forw_vde_casadi;
-{% else: %}
+{% else %}
 extern external_function_param_casadi * forw_vde_casadi;
 {% endif %}
-{% if ocp.solver_config.hessian_approx == 'EXACT': %} 
-{% if ocp.dims.np < 1: %}
+{% if ocp.solver_config.hessian_approx == "EXACT" %} 
+{% if ocp.dims.np < 1 %}
 extern external_function_casadi * hess_vde_casadi;
-{% else: %}
+{% else %}
 extern external_function_param_casadi * hess_vde_casadi;
 {% endif %}
 {% endif %}
-{% elif ocp.solver_config.integrator_type == 'IRK': %}
-{% if ocp.dims.np < 1: %}
+{% else %}
+{% if ocp.solver_config.integrator_type == "IRK" %}
+{% if ocp.dims.np < 1 %}
 extern external_function_casadi * impl_dae_fun;
 extern external_function_casadi * impl_dae_fun_jac_x_xdot_z;
 extern external_function_casadi * impl_dae_jac_x_xdot_u_z;
-{% else: %}
+{% else %}
 extern external_function_param_casadi * impl_dae_fun;
 extern external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
-{% if ocp.dims.npd > 0: %}
+{% endif %}
+{% if ocp.dims.npd > 0 %}
 extern external_function_casadi * p_constraint;
 {% endif %}
-{% if ocp.dims.npdN > 0: %}
+{% if ocp.dims.npdN > 0 %}
 extern external_function_casadi * p_constraint_N;
 {% endif %}
-{% if ocp.dims.nh > 0: %}
+{% if ocp.dims.nh > 0 %}
 extern external_function_casadi * h_constraint;
 {% endif %}
-{% if ocp.dims.nhN > 0: %}
+{% if ocp.dims.nhN > 0 %}
 extern external_function_casadi * h_constraint_N;
 {% endif %}
 
 
-#endif  // ACADOS_SOLVER_{{ocp.model_name.upper()}}_H_
+#endif  // ACADOS_SOLVER_{{ocp.model_name}}_H_

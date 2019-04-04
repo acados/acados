@@ -228,16 +228,16 @@ int acados_create() {
     double ug[NG];
 
     {% for item_j in ocp.constraints.D %}
-    {% set outer_loop = loop %}
+    
     {% for item_k in item_j %}
-    D[{{ outer_loop.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
+    D[{{ loop.parent.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
     {% endfor %}
     {% endfor %}
 
     {% for item_j in ocp.constraints.C %}
-    {% set outer_loop = loop %}
+    
     {% for item_k in item_j %}
-    C[{{ outer_loop.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
+    C[{{ loop.parent.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
     {% endfor %}
     {% endfor %}
 
@@ -282,9 +282,9 @@ int acados_create() {
     double ugN[NGN];
 
     {% for item_j in ocp.constraints.CN %}
-    {% set outer_loop = loop %}
+    
     {% for item_k in item_j %}
-    CN[{{ outer_loop.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
+    CN[{{ loop.parent.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
     {% endfor %}
     {% endfor %}
 
@@ -324,30 +324,30 @@ int acados_create() {
         yref[ii] = 0.0;
 
     {% for item_j in ocp.cost.W %}
-    {% set outer_loop = loop %}
+    
     {% for item_k in item_j %}
-    W[{{ outer_loop.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
+    W[{{ loop.parent.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
     {% endfor %}
     {% endfor %}
 
     {% for item_j in ocp.cost.Vx %}
-    {% set outer_loop = loop %}
+    
     {% for item_k in item_j %}
-    Vx[{{ outer_loop.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
+    Vx[{{ loop.parent.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
     {% endfor %}
     {% endfor %}
 
     {% for item_j in ocp.cost.Vu %}
-    {% set outer_loop = loop %}
+    
     {% for item_k in item_j %}
-    Vu[{{ outer_loop.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
+    Vu[{{ loop.parent.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
     {% endfor %}
     {% endfor %}
 
     {% for item_j in ocp.cost.Vz %}
-    {% set outer_loop = loop %}
+    
     {% for item_k in item_j %}
-    Vz[{{ outer_loop.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
+    Vz[{{ loop.parent.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
     {% endfor %}
     {% endfor %}
 
@@ -356,16 +356,16 @@ int acados_create() {
     {% endfor %}
 
     {% for item_j in ocp.cost.WN %}
-    {% set outer_loop = loop %}
+    
     {% for item_k in item_j %}
-    WN[{{ outer_loop.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
+    WN[{{ loop.parent.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
     {% endfor %}
     {% endfor %}
 
     {% for item_j in ocp.cost.VxN %}
-    {% set outer_loop = loop %}
+    
     {% for item_k in item_j %}
-    VxN[{{ outer_loop.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
+    VxN[{{ loop.parent.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
     {% endfor %}
     {% endfor %}
 
@@ -570,7 +570,8 @@ int acados_create() {
         external_function_casadi_create(&hess_vde_casadi[i]);
     }
     {% endif %}
-    {% elif ocp.solver_config.integrator_type == "IRK" %}
+    {% else %}
+    {% if ocp.solver_config.integrator_type == "IRK" %}
     // implicit dae
     {% if ocp.dims.np < 1 %}
     impl_dae_fun = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
@@ -630,6 +631,7 @@ int acados_create() {
         {% endif %}
     }
     {% endif %}
+    {% endif %}
 
     nlp_in = ocp_nlp_in_create(nlp_config, nlp_dims);
 
@@ -675,13 +677,15 @@ int acados_create() {
             set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
             if (set_fun_status != 0) { printf("Error while setting expl_ode_hes[%i]\n", i);  exit(1); }
         {% endif %}
-    {% elif ocp.solver_config.integrator_type == "IRK" %} 
+    {% else %}
+    {% if ocp.solver_config.integrator_type == "IRK" %} 
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun[%i]\n", i);  exit(1); }
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun_jac_x_xdot_z[%i]\n", i);  exit(1); }
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_jac_x_xdot_u_z[%i]\n", i);  exit(1); }
+    {% endif %}
     {% endif %}
     }
 

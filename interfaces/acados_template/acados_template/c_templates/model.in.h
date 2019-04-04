@@ -1,11 +1,11 @@
-#ifndef {{ ocp.model_name.upper() }}_MODEL
-#define {{ ocp.model_name.upper() }}_MODEL
+#ifndef {{ ocp.model_name }}_MODEL
+#define {{ ocp.model_name }}_MODEL
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-{% if ocp.solver_config.integrator_type != 'ERK' %}
+{% if ocp.solver_config.integrator_type != "ERK" %}
 // implicit ODE
 int {{ ocp.model_name }}_impl_dae_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ ocp.model_name }}_impl_dae_fun_work(int *, int *, int *, int *);
@@ -128,4 +128,4 @@ int {{ ocp.model_name }}_expl_ode_hess_n_out();
 } /* extern "C" */
 #endif
 
-#endif  // {{ ocp.model_name.upper() }}_MODEL
+#endif  // {{ ocp.model_name }}_MODEL

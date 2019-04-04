@@ -570,7 +570,8 @@ int acados_create() {
         external_function_casadi_create(&hess_vde_casadi[i]);
     }
     {% endif %}
-    {% elif ocp.solver_config.integrator_type == "IRK" %}
+    {% else %}
+    {% if ocp.solver_config.integrator_type == "IRK" %}
     // implicit dae
     {% if ocp.dims.np < 1 %}
     impl_dae_fun = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
@@ -630,6 +631,7 @@ int acados_create() {
         {% endif %}
     }
     {% endif %}
+    {% endif %}
 
     nlp_in = ocp_nlp_in_create(nlp_config, nlp_dims);
 
@@ -675,13 +677,15 @@ int acados_create() {
             set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
             if (set_fun_status != 0) { printf("Error while setting expl_ode_hes[%i]\n", i);  exit(1); }
         {% endif %}
-    {% elif ocp.solver_config.integrator_type == "IRK" %} 
+    {% else %}
+    {% if ocp.solver_config.integrator_type == "IRK" %} 
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun[%i]\n", i);  exit(1); }
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun_jac_x_xdot_z[%i]\n", i);  exit(1); }
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_jac_x_xdot_u_z[%i]\n", i);  exit(1); }
+    {% endif %}
     {% endif %}
     }
 

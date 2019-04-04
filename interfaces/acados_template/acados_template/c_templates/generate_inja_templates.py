@@ -1,5 +1,5 @@
 import glob, os
-for template_name in glob.glob("*.in.*"):
+for template_name in glob.glob("*.in*"):
     with open(template_name, 'U') as f:
         newText=f.read()
     
