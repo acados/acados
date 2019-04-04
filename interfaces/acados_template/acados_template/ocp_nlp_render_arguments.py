@@ -766,7 +766,6 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
                 for item in dim_keys:
                     dims_l.append(ocp_nlp_dims[item])
                 dims = tuple(dims_l)
-                print(out_key)
                 v = np.reshape(v, dims)
         out[k.replace(k, out_key)] = v
     return out

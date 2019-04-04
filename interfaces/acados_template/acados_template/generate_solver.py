@@ -34,28 +34,28 @@ def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None)
 
     # render source template
     template = env.get_template('main.in.c')
-    output = template.render(ra=ra)
+    output = template.render(ocp=ra)
     # output file
     out_file = open('./c_generated_code/main_' + model.name + '.c', 'w+')
     out_file.write(output)
 
     # render source template
     template = env.get_template('acados_solver.in.c')
-    output = template.render(ra=ra)
+    output = template.render(ocp=ra)
     # output file
     out_file = open('./c_generated_code/acados_solver_' + model.name + '.c', 'w+')
     out_file.write(output)
 
     # render source template
     template = env.get_template('acados_solver.in.h')
-    output = template.render(ra=ra)
+    output = template.render(ocp=ra)
     # output file
     out_file = open('./c_generated_code/acados_solver_' + model.name + '.h', 'w+')
     out_file.write(output)
 
     # render header templates
     template = env.get_template('model.in.h')
-    output = template.render(ra=ra)
+    output = template.render(ocp=ra)
     # output file
     out_file = open('./c_generated_code/' + model.name + '_model/' + model.name + '_model.h', 'w+')
     out_file.write(output)
@@ -63,7 +63,7 @@ def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None)
     if ra.dims.npd > 0:
         # render header templates
         template = env.get_template('p_constraint.in.h')
-        output = template.render(ra=ra)
+        output = template.render(ocp=ra)
         # output file
         out_file = open('./c_generated_code/' + ra.con_p_name + '_p_constraint/' + ra.con_p_name + '_p_constraint.h', 'w+')
         out_file.write(output)
@@ -71,14 +71,14 @@ def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None)
     if ra.dims.nh > 0:
         # render header templates
         template = env.get_template('h_constraint.in.h')
-        output = template.render(ra=ra)
+        output = template.render(ocp=ra)
         # output file
         out_file = open('./c_generated_code/' + ra.con_h_name + '_h_constraint/' + ra.con_h_name + '_h_constraint.h', 'w+')
         out_file.write(output)
 
     # render Makefile template
     template = env.get_template('Makefile.in')
-    output = template.render(ra=ra)
+    output = template.render(ocp=ra)
 
     # output file
     out_file = open('./c_generated_code/Makefile', 'w+')
@@ -86,7 +86,7 @@ def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None)
 
     # render S-Function template
     template = env.get_template('acados_solver_sfun.in.c')
-    output = template.render(ra=ra)
+    output = template.render(ocp=ra)
 
     # output file
     out_file = open('./c_generated_code/acados_solver_sfunction_'  + model.name + '.c', 'w+')
@@ -94,7 +94,7 @@ def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None)
 
     # render MATLAB make script
     template = env.get_template('make_sfun.in.m')
-    output = template.render(ra=ra)
+    output = template.render(ocp=ra)
 
     # output file
     out_file = open('./c_generated_code/make_sfun.m', 'w+')

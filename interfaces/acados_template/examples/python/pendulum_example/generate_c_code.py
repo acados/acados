@@ -102,7 +102,7 @@ ra.acados_include_path = '/usr/local/include'
 ra.acados_lib_path = '/usr/local/lib'
 
 if USE_JSON_DUMP == 1: 
-    name_file = 'acados_ocp'
+    name_file = 'acados_ocp_nlp.json'
     ocp_nlp = ra
     ocp_nlp.cost = ra.cost.__dict__
     ocp_nlp.constraints = ra.constraints.__dict__

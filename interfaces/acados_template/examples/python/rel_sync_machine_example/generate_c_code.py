@@ -410,7 +410,6 @@ if USE_JSON_DUMP == 1:
     with open(name_file, 'r') as f:
         ocp_nlp_json = json.load(f)
 
-    import pdb; pdb.set_trace()
     ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
 
     ra = ocp_nlp_as_object(ocp_nlp_dict)
