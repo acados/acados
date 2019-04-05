@@ -10,7 +10,7 @@ def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None)
     file_loader = FileSystemLoader(acados_path + '/c_templates')
     env = Environment(loader = file_loader)
 
-    if ra.solver_config.integrator_type is 'ERK':
+    if ra.solver_config.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
     else:
