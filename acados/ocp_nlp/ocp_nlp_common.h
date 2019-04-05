@@ -22,10 +22,17 @@
 /// @{
 /// @}
 
+/// \defgroup ocp_nlp_solver ocp_nlp_solver
+/// @{
+/// @}
+
 /// \ingroup ocp_nlp
 /// @{
 
-/// \defgroup ocp_nlp_sqp ocp_nlp_sqp
+/// \ingroup ocp_nlp_solver
+/// @{
+
+/// \defgroup ocp_nlp_common ocp_nlp_common
 /// @{
 
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COMMON_H_

@@ -19,9 +19,9 @@
 
 /// \addtogroup ocp_nlp
 /// @{
-/// \addtogroup ocp_nlp_cost
+/// \addtogroup ocp_nlp_cost ocp_nlp_cost
 /// @{
-/// \addtogroup ocp_nlp_cost_nls
+/// \addtogroup ocp_nlp_cost_nls ocp_nlp_cost_nls
 /// \brief This module implements nonlinear-least squares costs of the form
 /// \f$\min_{x,u} \| r(x,u) - y_{\text{ref}} \|_W^2\f$.
 /// @{
