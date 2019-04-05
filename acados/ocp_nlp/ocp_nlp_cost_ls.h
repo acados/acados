@@ -55,16 +55,13 @@ typedef struct
 } ocp_nlp_cost_ls_dims;
 
 
-
 ///  Calculate the size of the ocp_nlp_cost_ls_dims struct
 ///
 ///  \param[in] config_ structure containing configuration of ocp_nlp_cost 
 ///  module
 ///  \param[out] []
 ///  \return \c size of ocp_nlp_dims struct 
-
 int ocp_nlp_cost_ls_dims_calculate_size(void *config);
-
 
 
 ///  Assign memory pointed to by raw_memory to ocp_nlp-cost_ls dims struct 
@@ -74,9 +71,7 @@ int ocp_nlp_cost_ls_dims_calculate_size(void *config);
 ///  \param[in] raw_memory pointer to memory location  
 ///  \param[out] []
 ///  \return dims
-
 void *ocp_nlp_cost_ls_dims_assign(void *config, void *raw_memory);
-
 
 
 ///  Initialize the dimensions struct of the 
@@ -89,17 +84,15 @@ void *ocp_nlp_cost_ls_dims_assign(void *config, void *raw_memory);
 ///  \param[in] ns number of slacks
 ///  \param[out] dims
 ///  \return size 
-
 void ocp_nlp_cost_ls_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns);
+
 //
 void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int* value);
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                     model                                  //
 ////////////////////////////////////////////////////////////////////////////////
-
 
 
 typedef struct
@@ -153,7 +146,6 @@ void ocp_nlp_cost_ls_opts_update(void *config, void *dims, void *opts);
 
 /// structure containing the memory associated with cost_ls component 
 /// of the ocp_nlp module
-
 typedef struct
 {
     struct blasfeo_dmat hess;    ///< hessian of cost function
