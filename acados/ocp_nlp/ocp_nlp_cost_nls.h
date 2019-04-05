@@ -17,6 +17,11 @@
  *
  */
 
+/// \addtogroup ocp_nlp
+/// @{
+/// \addtogroup ocp_nlp_cost
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
 
@@ -155,3 +160,5 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims, void *model_
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
+/// @}
+/// @}
