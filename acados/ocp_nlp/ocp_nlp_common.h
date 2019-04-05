@@ -17,6 +17,17 @@
  *
  */
 
+
+/// \defgroup ocp_nlp ocp_nlp
+/// @{
+/// @}
+
+/// \ingroup ocp_nlp
+/// @{
+
+/// \defgroup ocp_nlp_sqp ocp_nlp_sqp
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 
@@ -223,3 +234,5 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
+/// @}
+/// @}

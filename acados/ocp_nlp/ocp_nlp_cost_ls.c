@@ -32,12 +32,6 @@
 
 
 
-///  \file
-///  This module implements linear-least squares costs of the form
-///  \f$\min_{x,u,z} \| V_x x + V_u u + V_z z \|_W^2\f$.
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 //                                     dims                                   //
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,13 +40,8 @@
 
 int ocp_nlp_cost_ls_dims_calculate_size(void *config_)
 {
-    ///  Calculate the size of the ocp_nlp_cost_ls_dims struct
-    ///
-    ///  \param[in] config_ structure containing configuration of ocp_nlp_cost 
-    ///  module
-    ///  \param[out] []
-    ///  \return \c size of ocp_nlp_dims struct 
 
+    
     int size = sizeof(ocp_nlp_cost_ls_dims);
 
     return size;
@@ -62,14 +51,6 @@ int ocp_nlp_cost_ls_dims_calculate_size(void *config_)
 
 void *ocp_nlp_cost_ls_dims_assign(void *config_, void *raw_memory)
 {
-    
-    ///  Assign memory pointed to by raw_memory to ocp_nlp_cost_ls_dims struct 
-    ///
-    ///  \param[in] config_ structure containing configuration of ocp_nlp_cost 
-    ///  module
-    ///  \param[in] raw_memory pointer to memory location  
-    ///  \param[out] []
-    ///  \return []
     
     char *c_ptr = (char *) raw_memory;
 
@@ -85,6 +66,7 @@ void *ocp_nlp_cost_ls_dims_assign(void *config_, void *raw_memory)
 
 void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns)
 {
+
     ///  Initialize the dimensions struct of the 
     ///  ocp_nlp_cost_ls module    
     ///
@@ -95,7 +77,7 @@ void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx, int nu,
     ///  \param[in] ns number of slacks
     ///  \param[out] dims
     ///  \return [] 
-
+    
     ocp_nlp_cost_ls_dims *dims = dims_;
 
     dims->nx = nx;
@@ -570,9 +552,11 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_,
 
 
 
-/************************************************
- * functions
- ************************************************/
+////////////////////////////////////////////////////////////////////////////////
+//                                 functions                                  //
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 // TODO move computataion of hess into pre-compute???
 void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_, 

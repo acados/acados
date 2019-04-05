@@ -17,6 +17,10 @@
  *
  */
 
+///
+/// \defgroup ocp_nlp_cost ocp_nlp_cost 
+/// 
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COST_COMMON_H_
 

@@ -9,7 +9,6 @@ SPHINXPROJ    = acados
 SOURCEDIR     = .
 BUILDDIR      = _build
 GENERATED     = .doctrees _static _sources .buildinfo .nojekyll genindex.html objects.inv search.html searchindex.js
-DOXYSOURCEDIR = c_api/Doxyfile doxygen/Doxyfile
 DOXYBUILDDIR  = _build_doxygen_c_api _build_doxygen
 
 
@@ -22,7 +21,8 @@ html:
 	@$(SPHINXBUILD) -b $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 doxygen:
-	@$(DOXYBUILD) $(DOXYSOURCEDIR)
+	@$(DOXYBUILD) c_api/Doxyfile
+	@$(DOXYBUILD) doxygen/Doxyfile
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
