@@ -17,6 +17,15 @@
  *
  */
 
+/// \addtogroup ocp_nlp
+/// @{
+/// \addtogroup ocp_nlp_cost
+/// @{
+
+//  \file
+//  This module implements linear-least squares costs of the form
+//  \f$\min_{x,u,z} \| V_x x + V_u u + V_z z \|_W^2\f$.
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_LS_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COST_LS_H_
 
@@ -32,14 +41,6 @@ extern "C" {
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
 
-/// \addtogroup ocp_nlp
-/// @{
-/// \addtogroup ocp_nlp_cost
-/// @{
-
-//  \file
-//  This module implements linear-least squares costs of the form
-//  \f$\min_{x,u,z} \| V_x x + V_u u + V_z z \|_W^2\f$.
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                     dims                                   //

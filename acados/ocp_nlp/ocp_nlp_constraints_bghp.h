@@ -170,5 +170,3 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims, void
 #endif  // ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_BGHP_H_
 /// @}
 /// @}
-/// @}
-/// @}

@@ -17,6 +17,11 @@
  *
  */
 
+/// \addtogroup ocp_nlp
+/// @{
+/// \addtogroup ocp_nlp_dynamics
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_CONT_H_
 #define ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_CONT_H_
 
@@ -180,3 +185,5 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims, void *model_, vo
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_CONT_H_
+/// @}
+/// @}

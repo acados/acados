@@ -140,5 +140,3 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
 #endif  // ACADOS_OCP_NLP_OCP_NLP_SQP_RTI_H_
 /// @}
 /// @}
-/// @}
-/// @}
