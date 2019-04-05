@@ -21,6 +21,11 @@
 /// \defgroup ocp_nlp_cost ocp_nlp_cost 
 /// 
 
+/// \addtogroup ocp_nlp_cost
+/// @{
+/// \addtogroup ocp_nlp_cost_common
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COST_COMMON_H_
 
@@ -77,3 +82,5 @@ ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory);
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COST_COMMON_H_
+/// @} 
+/// @} 
