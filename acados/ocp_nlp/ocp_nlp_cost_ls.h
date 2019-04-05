@@ -22,7 +22,7 @@
 /// \addtogroup ocp_nlp_cost
 /// @{
 
-//  \file
+//  \brief
 //  This module implements linear-least squares costs of the form
 //  \f$\min_{x,u,z} \| V_x x + V_u u + V_z z \|_W^2\f$.
 
@@ -95,6 +95,7 @@ void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int
 ////////////////////////////////////////////////////////////////////////////////
 
 
+/// structure containing the data describing the linear least-square cost 
 typedef struct
 {
     // slack penalty has the form z^T * s + .5 * s^T * Z * s
