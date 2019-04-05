@@ -36,7 +36,7 @@ extern "C" {
 #include "acados_c/sim_interface.h"
 
 
-
+/// Solution methods for optimal control problems.
 typedef enum
 {
     SQP,
@@ -45,7 +45,7 @@ typedef enum
 } ocp_nlp_solver_t;
 
 
-
+/// Types of the cost function.
 typedef enum
 {
     LINEAR_LS,
@@ -55,7 +55,7 @@ typedef enum
 } ocp_nlp_cost_t;
 
 
-
+/// Types of the system dynamics, discrete or continuous time.
 typedef enum
 {
     CONTINUOUS_MODEL,
@@ -64,16 +64,19 @@ typedef enum
 } ocp_nlp_dynamics_t;
 
 
-
+/// Bound types
 typedef enum
 {
+    // simple bounds, polytopic constraints, general non-linear constraints
     BGH,
+    // simple bounds, polytopic constraints, general non-linear constraints,
+    // and positive definite
     BGHP,
     INVALID_CONSTRAINT,
 } ocp_nlp_constraints_t;
 
 
-
+/// Regularization types
 typedef enum
 {
     NO_REGULARIZE,
@@ -84,6 +87,7 @@ typedef enum
 } ocp_nlp_reg_t;
 
 
+/// Structure to store non-linear program
 typedef struct
 {
     ocp_qp_solver_plan ocp_qp_solver_plan;
@@ -97,7 +101,7 @@ typedef struct
 } ocp_nlp_plan;
 
 
-
+/// Structure to store state of the non-linear programming solver
 typedef struct
 {
     ocp_nlp_config *config;
