@@ -181,22 +181,53 @@ void ocp_nlp_in_destroy(void *in);
 ///
 /// \param config The configuration object.
 /// \param dims The dimensions object.
+/// \param in The inputs object.
 /// \param stage Stage number.
-/// \param field Has to be Ts
+/// \param field Has to be "Ts" (TBC other options).
 /// \param value The sampling times (floating point).
 void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
         const char *field, void *value);
-//
+
+
+/// Sets the function pointers to the dynamics functions for the given stage.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
+/// \param in The inputs object.
+/// \param stage Stage number.
+/// \param fun_type The name of the function type, either impl_ode_fun,
+///     impl_ode_fun_jac_x_xdot, impl_ode_jac_x_xdot_u (TBC)
+/// \param fun_ptr Function pointer to the dynamics function.
 int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                            int stage, const char *fun_type, void *fun_ptr);
-//
-// TODO remove and use ocp_nlp_dynamics_model_set instead !!!
+
+
+/// Deprecated
+/// TODO remove and use ocp_nlp_dynamics_model_set instead !!!
 int nlp_set_discrete_model_in_stage(ocp_nlp_config *config, ocp_nlp_in *in, int stage,
                                     void *fun_ptr);
-//
+
+/// Sets the function pointers to the cost functions for the given stage.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
+/// \param in The inputs object.
+/// \param stage Stage number.
+/// \param fun_type The name of the function type, either nls_res_jac,
+///     y_ref, W (TBC)
+/// \param fun_ptr Function pointer to the cost function.
 int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
                            int stage, const char *field, void *value);
-//
+
+
+/// Sets the function pointers to the constraints functions for the given stage.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
+/// \param in The inputs object.
+/// \param stage Stage number.
+/// \param fun_type The name of the function type, either lb, ub (TBC)
+/// \param fun_ptr Function pointer to the constraints function/values.
 int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                      ocp_nlp_in *in, int stage, const char *field, void *value);
 
