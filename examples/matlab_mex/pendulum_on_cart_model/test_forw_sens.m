@@ -11,10 +11,15 @@ sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
 
+Ts = 0.1;
+x0 = [1e-1; 1e0; 2e-1; 2e0];
+u = 0;
+epsilon = 1e-6;
+
 
 
 %% model
-model = linear_mass_spring_model;
+model = pendulum_on_cart_model;
 
 nx = model.nx;
 nu = model.nu;
@@ -23,7 +28,7 @@ nu = model.nu;
 
 %% acados sim model
 sim_model = acados_sim_model();
-sim_model.set('T', 0.5);
+%sim_model.set('T', Ts);
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
 	sim_model.set('dyn_expr_f', model.expr_f_expl);
@@ -49,8 +54,7 @@ else % irk
 %	sim_model.set('nz', model.nz);
 end
 
-sim_model.model_struct
-
+%sim_model.model_struct
 
 
 
@@ -63,7 +67,7 @@ sim_opts.set('num_steps', num_steps);
 sim_opts.set('method', method);
 sim_opts.set('sens_forw', sens_forw);
 
-sim_opts.opts_struct
+%sim_opts.opts_struct
 
 
 
@@ -71,41 +75,85 @@ sim_opts.opts_struct
 % create sim
 sim = acados_sim(sim_model, sim_opts);
 % (re)set numerical part of model
-%sim.set('T', 0.5);
-sim.C_sim
-sim.C_sim_ext_fun
+%sim.C_sim
+%sim.C_sim_ext_fun
 
 
+% set simulation time
+sim.set('T', Ts);
 
-x0 = ones(nx, 1); %x0(1) = 2.0;
-tic;
+% set initial state
 sim.set('x', x0);
-time_set_x = toc
-
-u = ones(nu, 1);
 sim.set('u', u);
 
 % solve
-tic;
 sim.solve();
-time_solve = toc
-
 
 % xn
 xn = sim.get('xn');
 xn
 % S_forw
-S_forw = sim.get('S_forw');
-S_forw
-% Sx
-Sx = sim.get('Sx');
-Sx
-% Su
-Su = sim.get('Su');
-Su
+S_forw_ind = sim.get('S_forw');
+S_forw_ind
+
+
+
+%% compute forward sensitivities using finite differences
+
+% TODO set sens_forw to 0
+
+S_forw_fd = zeros(nx, nx+nu);
+
+% asymmetric finite differences
+
+for ii=1:nx
+
+	dx = zeros(nx, 1);
+	dx(ii) = 1.0;
+
+	sim.set('x', x0+epsilon*dx);
+	sim.set('u', u);
+
+	% solve
+	sim.solve();
+
+	% xn
+	xn_tmp = sim.get('xn');
+
+	S_forw_fd(:,ii) = (xn_tmp - xn) / epsilon;
+
+end
+
+for ii=1:nu
+
+	du = zeros(nu, 1);
+	du(ii) = 1.0;
+
+	sim.set('x', x0);
+	sim.set('u', u+epsilon*du);
+
+	% solve
+	sim.solve();
+
+	% xn
+	xn_tmp = sim.get('xn');
+
+	S_forw_fd(:,nx+ii) = (xn_tmp - xn) / epsilon;
+
+end
+
+S_forw_fd
+
+
+%% compute error
+
+error_abs = S_forw_fd - S_forw_ind
+
 
 
 fprintf('\nsuccess!\n\n');
 
 
 return;
+
+

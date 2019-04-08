@@ -134,7 +134,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mexPrintf("\nsim_set_ext_fun_dyn_expl: method not supported %s\n", method);
 		return;
 		}
-mexPrintf("\nhere\n");
 	
 	return;
 

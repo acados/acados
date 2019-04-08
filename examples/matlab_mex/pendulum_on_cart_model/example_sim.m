@@ -4,8 +4,8 @@ clear all
 
 
 %% arguments
-compile_mex = 'false';
-codgen_model = 'false';
+compile_mex = 'true';
+codgen_model = 'true';
 method = 'erk';
 sens_forw = 'false';
 num_stages = 4;
@@ -102,7 +102,6 @@ end
 simulation_time = toc
 
 
-% get TODO with return value !!!!!
 % xn
 %xn = sim.get('xn');
 %xn
