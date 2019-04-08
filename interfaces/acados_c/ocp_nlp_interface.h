@@ -232,43 +232,102 @@ int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                      ocp_nlp_in *in, int stage, const char *field, void *value);
 
 /* out */
-//
+
+/// Constructs an outputs object for the non-linear program.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
-//
+
+/// Destructor of the outputs struct.
+///
+/// \param dims_ The outputs object.
 void ocp_nlp_out_destroy(void *out);
-//
+
+
+/// TBD
 void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
                      int stage, const char *field, void *value);
-//
+
+/// TBD
 void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
                      int stage, const char *field, void *value);
 
 /* opts */
-//
+
+/// Creates an options object for the non-linear program.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
 void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
-//
+
+/// Destructor of the options.
+///
+/// \param dims_ The options object.
 void ocp_nlp_opts_destroy(void *opts);
-//
+
+/// Sets an option.
+///
+/// \param config The configuration object.
+/// \param opt_ The options object.
+/// \param field Name of the option.
+/// \param value Value of the option.
 void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
                       const char *field, const void* value);
-//
+
+/// TBC
+/// Set the option for the dynamics in a given stage.
+///
+/// \param config The configuration object.
+/// \param opt_ The options object.
+/// \param stage Stage number.
+/// \param field Name of the option.
+/// \param value Value of the option.
 void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
                                          const char *field, void *value);
-//
+
+/// TBC
+/// Updates the options.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
+/// \param opt_ The options object.
 void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
 
 
 /* solver */
-//
+
+/// Creates an ocp solver.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
+/// \param opt_ The options object.
+/// \return The solver.
 ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
-//
+
+/// Destructor of the solver.
+///
+/// \param solver The solver object.
 void ocp_nlp_solver_destroy(void *solver);
-//
+
+/// Solves the optimal control problem. Call ocp_nlp_precompute before
+/// calling this functions (TBC).
+///
+/// \param solver The solver object.
+/// \param nlp_in The inputs object.
+/// \param nlp_out The outputs object.
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
-//
+
+/// Performs precomputations for the solver. Needs to be called before
+/// ocl_nlp_solve (TBC).
+///
+/// \param solver The solver object.
+/// \param nlp_in The inputs object.
+/// \param nlp_out The outputs object.
 int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
 /* get */
+/// TBD
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
                  const char *field, void *return_value_);
 
