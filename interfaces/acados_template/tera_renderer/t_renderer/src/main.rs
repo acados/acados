@@ -47,9 +47,7 @@ fn main() -> io::Result<()> {
 
     match tera.render(template_file, &v) {
         Ok(s) => {
-            let string_list = vec!["Foo".to_string(),"Bar".to_string()];
-            let joined = string_list.join("-");
-            let mut f_out = File::create("acados_solver.c").expect("Unable to create file");
+            let mut f_out = File::create(out_file).expect("Unable to create file");
             f_out.write_all(s.as_bytes())?;
         },
         Err(e) => {
