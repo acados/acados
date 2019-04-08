@@ -67,11 +67,14 @@ typedef enum
 /// Bound types
 typedef enum
 {
-    // simple bounds, polytopic constraints, general non-linear constraints
+    /// Comprises simple bounds, polytopic constraints,
+    /// general non-linear constraints.
     BGH,
-    // simple bounds, polytopic constraints, general non-linear constraints,
-    // and positive definite
+
+    /// Comprises simple bounds, polytopic constraints,
+    /// general non-linear constraints, and positive definite constraints.
     BGHP,
+
     INVALID_CONSTRAINT,
 } ocp_nlp_constraints_t;
 
@@ -87,17 +90,33 @@ typedef enum
 } ocp_nlp_reg_t;
 
 
-/// Structure to store non-linear program
+/// Structure to store the configuration of a non-linear program
 typedef struct
 {
+    /// Qp solver configuration.
     ocp_qp_solver_plan ocp_qp_solver_plan;
+
+    /// Simulation solver configuration for each stage.
     sim_solver_plan *sim_solver_plan;
+
+    /// Nlp solver type.
     ocp_nlp_solver_t nlp_solver;
+
+    /// Regularization type, defaults to no regularization.
     ocp_nlp_reg_t regularization;
+
+    /// Cost type for each stage.
     ocp_nlp_cost_t *nlp_cost;
+
+    /// Dynamics type for each stage.
     ocp_nlp_dynamics_t *nlp_dynamics;
+
+    /// Constraints type for each stage.
     ocp_nlp_constraints_t *nlp_constraints;
+
+    /// Horizon length.
     int N;
+
 } ocp_nlp_plan;
 
 
@@ -112,9 +131,11 @@ typedef struct
 } ocp_nlp_solver;
 
 
-/* plan */
+/// Construct an empty plan object (nlp configuration), all fields are set to a
+/// default/invalid state.
 ocp_nlp_plan *ocp_nlp_plan_create(int N);
-//
+
+/// Destroys a plan object, frees memory.
 void ocp_nlp_plan_destroy(void* plan_);
 
 /* config */
