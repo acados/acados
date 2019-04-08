@@ -171,16 +171,24 @@ void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage, const char
                                const void* value);
 
 /************************************************
- * in
+ * Inputs to the non-linear program
  ************************************************/
 
+/// Struct for storing the inputs of a non-linear program.
 typedef struct
 {
-    double *Ts;  // length of sampling intervals
+    /// Length of sampling intervals/timesteps.
+    double *Ts;
 
+    /// Pointers to cost functions (TBC).
     void **cost;
+
+    /// Pointers to dynamics functions (TBC).
     void **dynamics;
+
+    /// Pointers to constraints functions (TBC).
     void **constraints;
+
 } ocp_nlp_in;
 
 //

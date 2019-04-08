@@ -332,7 +332,7 @@ void ocp_nlp_dims_destroy(void *dims_)
 
 
 /************************************************
-* input
+* NLP inputs
 ************************************************/
 
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims)

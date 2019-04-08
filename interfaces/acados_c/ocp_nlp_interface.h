@@ -142,6 +142,7 @@ ocp_nlp_plan *ocp_nlp_plan_create(int N);
 /// \param plan_ The plan object to destroy.
 void ocp_nlp_plan_destroy(void* plan_);
 
+
 /// Constructs an nlp configuration object from a plan.
 ///
 /// \param plan The plan (user nlp configuration).
@@ -152,22 +153,37 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan);
 /// \param config_ The configuration object.
 void ocp_nlp_config_destroy(void *config_);
 
+
 /// Constructs an object that contains the dimensions of the variables.
 ///
 /// \param config_ The configuration object.
 ocp_nlp_dims *ocp_nlp_dims_create(void *config_);
 
-/// Destructor of the dimensions object.
+/// Destructor of the dimensions struct.
 ///
 /// \param dims_ The dimensions object.
 void ocp_nlp_dims_destroy(void *dims_);
 
 
-/* in */
+/// Constructs an input object for a non-linear programs.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
-//
+
+/// Destructor of the inputs struct.
+///
+/// \param dims_ The inputs object.
 void ocp_nlp_in_destroy(void *in);
-//
+
+
+/// Sets the sampling times for the given stage.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
+/// \param stage Stage number.
+/// \param field Has to be Ts
+/// \param value The sampling times (floating point).
 void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
         const char *field, void *value);
 //
