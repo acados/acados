@@ -127,26 +127,65 @@ ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dim
 /// \param dims_ The inputs object.
 void ocp_qp_in_free(void *in_);
 
-/* out */
+
+/// Constructs an outputs object for the qp.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
 ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
-//
+
+/// Destructor of the outputs struct.
+///
+/// \param dims_ The outputs object.
 void ocp_qp_out_free(void *out_);
 
-/* opts */
+
+/// Constructs an options object for the qp.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
 void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
-//
+
+/// Destructor of the options struct.
+///
+/// \param dims_ The options object to destroy.
 void ocp_qp_opts_free(void *opts_);
 
-/* solver */
+
+/// TBC Should be private/static?
 int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_);
-//
+
+
+/// TBC Reserves memory? TBC Should this be private?
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
+/// \param opts_ The options object.
+/// \param raw_memory The TBD.
 ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_,
                              void *raw_memory);
-//
+
+/// Creates a qp solver. Reserves memory.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
+/// \param opts_ The options object.
 ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_);
-//
+
+/// Solves the qp.
+///
+/// \param solver The solver.
+/// \param qp_in The inputs object.
+/// \param qp_out The outputs object.
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
-//
+
+
+/// Calculates the infinity norm of the residuals.
+///
+/// \param solver The solver.
+/// \param qp_in The inputs object.
+/// \param qp_out The outputs object.
+/// \param res Output array for the residuals.
 void ocp_qp_inf_norm_residuals(ocp_qp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
                                double *res);
 
