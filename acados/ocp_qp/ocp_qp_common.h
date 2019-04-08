@@ -72,6 +72,8 @@ typedef struct
     int (*workspace_calculate_size)(ocp_qp_dims *dims, void *opts);
 } ocp_qp_condensing_config;
 
+
+///
 typedef struct
 {
     void (*dims_set)(void *config_, void *dims_, int stage, const char *field, const int* value);
@@ -88,6 +90,7 @@ typedef struct
     qp_solver_config *qp_solver;  // either ocp_qp_solver or dense_solver
 } ocp_qp_xcond_solver_config;  // pcond - partial condensing or fcond - full condensing
 
+/// Struct containing metrics of the qp solver.
 typedef struct
 {
     double solve_QP_time;

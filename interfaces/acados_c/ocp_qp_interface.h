@@ -27,7 +27,22 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 
 
-
+/// Qp solver types (Enumeration).
+///
+/// Full list of fields:
+///   PARTIAL_CONDENSING_HPIPM
+///   PARTIAL_CONDENSING_HPMPC
+///   PARTIAL_CONDENSING_OOQP
+///   PARTIAL_CONDENSING_OSQP
+///   PARTIAL_CONDENSING_QPDUNES
+///   FULL_CONDENSING_HPIPM
+///   FULL_CONDENSING_QPOASES
+///   FULL_CONDENSING_QORE
+///   FULL_CONDENSING_OOQP
+///   INVALID_QP_SOLVER
+///
+/// Note: In this enumeration the partial condensing solvers have to be
+///       specified before the full condensing solvers.
 typedef enum {
     PARTIAL_CONDENSING_HPIPM,
 #ifdef ACADOS_WITH_HPMPC
@@ -56,14 +71,14 @@ typedef enum {
 } ocp_qp_solver_t;
 
 
-
+/// Struct containing qp solver
 typedef struct
 {
     ocp_qp_solver_t qp_solver;
 } ocp_qp_solver_plan;
 
 
-
+/// Linear ocp configuration.
 typedef struct
 {
     ocp_qp_xcond_solver_config *config;
@@ -74,23 +89,42 @@ typedef struct
 } ocp_qp_solver;
 
 
-
-/* config */
+/// Initializes the qp solver configuration.
+/// TBC should this be private/static?
 void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
                                                    ocp_qp_xcond_solver_config *solver_config);
-//
+
+/// Constructs a qp solver config and Initializes with default values.
+///
+/// \param plan The qp solver plan object.
 ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan);
-//
+
+/// Destructor for config object, frees memory.
+///
+/// \param config The config object to destroy.
 void ocp_qp_config_free(void *config_);
 
-/* dims */
+
+/// Constructs an object that contains the dimensions for the variables of the qp.
+///
+/// \param N The number of variables.
 ocp_qp_dims *ocp_qp_dims_create(int N);
-//
+
+/// Destructor of the dimensions struct.
+///
+/// \param dims_ The dimensions object.
 void ocp_qp_dims_free(void *dims_);
 
-/* in */
+
+/// Constructs an input object for the qp.
+///
+/// \param config The configuration object.
+/// \param dims The dimensions object.
 ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
-//
+
+/// Destructor of the inputs struct.
+///
+/// \param dims_ The inputs object.
 void ocp_qp_in_free(void *in_);
 
 /* out */
