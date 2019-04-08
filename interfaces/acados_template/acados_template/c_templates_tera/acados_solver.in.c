@@ -39,10 +39,10 @@
 #include "{{ ocp.con_h_name }}_h_constraint/{{ ocp.con_h_name }}_h_constraint.h"
 {% endif %}
 
-#include "acados_solver_{{ ocp.model_name }}.h"
+#include "acados_solver_{{ocp.model_name}}.h"
 
-{% for key, value in ocp.constants %}
-#define {{ key }} {{ value }}
+{% for value, key in ocp.constants %}
+#define {{ value }} {{ key }}
 {% endfor %}
 #define NX_   {{ ocp.dims.nx }}
 #define NZ_   {{ ocp.dims.nz }}
@@ -166,60 +166,53 @@ int acados_create() {
     // set up bounds for stage 0 
     // u
     int idxbu0[NBU];
-    {% for item in ocp.constraints.idxbu %}
-    idxbu0[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nbu) %}
+    idxbu0[{{i}}] = {{ocp.constraints.idxbu[i]}};
+    {%- endfor %}
     double lbu0[NBU]; 
-    {% for item in ocp.constraints.lbu %}
-    lbu0[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
     double ubu0[NBU];
-    {% for item in ocp.constraints.ubu %}
-    ubu0[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nbu) %}
+    lbu0[{{i}}] = {{ ocp.constraints.lbu[i] }};
+    ubu0[{{i}}] = {{ ocp.constraints.ubu[i] }};
+    {%- endfor %}
     
     // x
     int idxbx0[NX];
     {% for i in range(end=ocp.dims.nx) %}
-    idxbx0[{{ i }}] = {{ i }};
-    {% endfor %}
+    idxbx0[{{i}}] = {{i}};
+    {%- endfor %}
     double lbx0[NX]; 
-    {% for item in ocp.constraints.x0 %}
-    lbx0[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
     double ubx0[NX];
-    {% for item in ocp.constraints.x0 %}
-    ubx0[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nx) %}
+    lbx0[{{i}}] = {{ ocp.constraints.x0[i] }};
+    ubx0[{{i}}] = {{ ocp.constraints.x0[i] }};
+    {%- endfor %}
+
 
     // set up bounds for intermediate stages
     // u
     int idxbu[NBU];
-    {% for item in ocp.constraints.idxbu %}
-    idxbu[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nbu) %}
+    idxbu[{{i}}] = {{ocp.constraints.idxbu[i]}};
+    {%- endfor %}
     double lbu[NBU]; 
-    {% for item in ocp.constraints.lbu %}
-    lbu[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
     double ubu[NBU];
-    {% for item in ocp.constraints.ubu %}
-    ubu[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nbu) %}
+    lbu[{{i}}] = {{ ocp.constraints.lbu[i] }};
+    ubu[{{i}}] = {{ ocp.constraints.ubu[i] }};
+    {%- endfor %}
     
     // x
     int idxbx[NBX];
-    {% for item in ocp.constraints.idxbx %}
-    idxbx[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nbx) %}
+    idxbx[{{i}}] = {{ocp.constraints.idxbx[i]}};
+    {%- endfor %}
     double lbx[NBX]; 
-    {% for item in ocp.constraints.ubx %}
-    ubx[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
     double ubx[NBX];
-    {% for item in ocp.constraints.ubx %}
-    ubx[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nbx) %}
+    lbx[{{i}}] = {{ ocp.constraints.lbx[i] }};
+    ubx[{{i}}] = {{ ocp.constraints.ubx[i] }};
+    {%- endfor %}
 
     // set up general constraints for stage 0 to N-1 
     double D[NG*NU];
@@ -227,86 +220,81 @@ int acados_create() {
     double lg[NG];
     double ug[NG];
 
-    {% for item_j in ocp.constraints.D %}
-    {% set outer_loop = loop %}
-    {% for item_k in item_j %}
-    D[{{ outer_loop.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
-    {% endfor %}
-    {% endfor %}
+    {% for j in range(end=ocp.dims.ng) %}
+        {%- for k in range(end=ocp.dims.nx) %}
+    D[{{j}}+NG * {{k}}] = {{ ocp.constraints.D[j][k] }}; 
+        {%- endfor %}
+    {%- endfor %}
 
-    {% for item_j in ocp.constraints.C %}
-    {% set outer_loop = loop %}
-    {% for item_k in item_j %}
-    C[{{ outer_loop.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
-    {% endfor %}
-    {% endfor %}
+    {% for j in range(end=ocp.dims.ng) %}
+        {%- for k in range(end=ocp.dims.nu) %}
+    C[{{j}}+NG * {{k}}] = {{ ocp.constraints.C[j][k] }}; 
+        {%- endfor %}
+    {%- endfor %}
 
-    {% for item in ocp.constraints.lg %}
-    lg[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.ng) %}
+    lg[{{i}}] = {{ ocp.constraints.lg[i] }};
+    {%- endfor %}
 
-    {% for item in ocp.constraints.ug %}
-    ug[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.ng) %}
+    ug[{{i}}] = {{ ocp.constraints.ug[i] }};
+    {%- endfor %}
 
     // set up nonlinear constraints for stage 0 to N-1 
     double lh[NH];
     double uh[NH];
 
-    {% for item in ocp.constraints.lh %}
-    lh[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nh) %}
+    lh[{{i}}] = {{ ocp.constraints.lh[i] }};
+    {%- endfor %}
 
-    {% for item in ocp.constraints.uh %}
-    uh[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nh) %}
+    uh[{{i}}] = {{ ocp.constraints.uh[i] }};
+    {%- endfor %}
     
     // set up bounds for last stage
     // x
     int idxbxN[NBXN];
-    {% for item in ocp.constraints.idxbxN %}
-    idxbxN[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nbxN) %}
+    idxbxN[{{i}}] = {{ocp.constraints.idxbxN[i]}};
+    {%- endfor %}
     double lbxN[NBXN]; 
-    {% for item in ocp.constraints.lbxN %}
-    lbxN[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
     double ubxN[NBXN];
-    {% for item in ocp.constraints.ubxN %}
-    ubxN[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nbxN) %}
+    lbxN[{{i}}] = {{ ocp.constraints.lbxN[i] }};
+    ubxN[{{i}}] = {{ ocp.constraints.ubxN[i] }};
+    {%- endfor %}
     
     // set up general constraints for last stage 
     double CN[NGN*NX];
     double lgN[NGN];
     double ugN[NGN];
 
-    {% for item_j in ocp.constraints.CN %}
-    {% set outer_loop = loop %}
-    {% for item_k in item_j %}
-    CN[{{ outer_loop.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
-    {% endfor %}
-    {% endfor %}
+    {% for j in range(end=ocp.dims.ngN) %}
+        {%- for k in range(end=ocp.dims.nu) %}
+    CN[{{j}}+NG * {{k}}] = {{ ocp.constraints.CN[j][k] }}; 
+        {%- endfor %}
+    {%- endfor %}
 
-    {% for item in ocp.constraints.lgN %}
-    lgN[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.ngN) %}
+    lgN[{{i}}] = {{ ocp.constraints.lgN[i] }};
+    {%- endfor %}
 
-    {% for item in ocp.constraints.ugN %}
-    ugN[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.ngN) %}
+    ugN[{{i}}] = {{ ocp.constraints.ugN[i] }};
+    {%- endfor %}
 
     // set up nonlinear constraints for last stage 
     double lhN[NHN];
     double uhN[NHN];
 
-    {% for item in ocp.constraints.lhN %}
-    lhN[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nhN) %}
+    lhN[{{i}}] = {{ ocp.constraints.lhN[i] }};
+    {%- endfor %}
 
-    {% for item in ocp.constraints.uhN %}
-    uhN[{{ loop.index0}}] = {{ item }};
-    {% endfor %}
+    {% for i in range(end=ocp.dims.nhN) %}
+    uhN[{{i}}] = {{ ocp.constraints.uhN[i] }};
+    {%- endfor %}
 
     double yref[NY];
     double W[NY*NY];
@@ -323,55 +311,49 @@ int acados_create() {
     for (int ii = 0; ii < NU + NX; ii++)
         yref[ii] = 0.0;
 
-    {% for item_j in ocp.cost.W %}
-    {% set outer_loop = loop %}
-    {% for item_k in item_j %}
-    W[{{ outer_loop.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
-    {% endfor %}
-    {% endfor %}
+    {% for j in range(end=ocp.dims.ny) %}
+        {%- for k in range(end=ocp.dims.ny) %}
+    W[{{j}}+(NY) * {{k}}] = {{ ocp.cost.W[j][k] }}; 
+        {%- endfor %}
+    {%- endfor %}
 
-    {% for item_j in ocp.cost.Vx %}
-    {% set outer_loop = loop %}
-    {% for item_k in item_j %}
-    Vx[{{ outer_loop.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
-    {% endfor %}
-    {% endfor %}
+    {% for j in range(end=ocp.dims.ny) %}
+        {%- for k in range(end=ocp.dims.nx) %}
+    Vx[{{j}}+(NY) * {{k}}] = {{ ocp.cost.Vx[j][k] }}; 
+        {%- endfor %}
+    {%- endfor %}
 
-    {% for item_j in ocp.cost.Vu %}
-    {% set outer_loop = loop %}
-    {% for item_k in item_j %}
-    Vu[{{ outer_loop.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
-    {% endfor %}
-    {% endfor %}
+    {% for j in range(end=ocp.dims.ny) %}
+        {%- for k in range(end=ocp.dims.nu) %}
+    Vu[{{j}}+(NY) * {{k}}] = {{ ocp.cost.Vu[j][k] }}; 
+        {%- endfor %}
+    {%- endfor %}
 
-    {% for item_j in ocp.cost.Vz %}
-    {% set outer_loop = loop %}
-    {% for item_k in item_j %}
-    Vz[{{ outer_loop.index0 }} + (NY) * {{ loop.index0 }}] = {{ item_k }}; 
-    {% endfor %}
-    {% endfor %}
+    {% for j in range(end=ocp.dims.ny) %}
+        {%- for k in range(end=ocp.dims.nz) %}
+    Vz[{{j}}+(NY) * {{k}}] = {{ ocp.cost.Vz[j][k] }}; 
+        {%- endfor %}
+    {%- endfor %}
 
-    {% for item  in ocp.cost.yref %}
-    yref[{{ loop.index0 }}] = {{ item }}; 
-    {% endfor %}
+    {% for j in range(end=ocp.dims.ny) %}
+    yref[{{j}}] = {{ ocp.cost.yref[j] }}; 
+    {%- endfor %}
 
-    {% for item_j in ocp.cost.WN %}
-    {% set outer_loop = loop %}
-    {% for item_k in item_j %}
-    WN[{{ outer_loop.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
-    {% endfor %}
-    {% endfor %}
+    {% for j in range(end=ocp.dims.nyN) %}
+        {%- for k in range(end=ocp.dims.nyN) %}
+    WN[{{j}}+(NYN) * {{k}}] = {{ ocp.cost.WN[j][k] }}; 
+        {%- endfor %}
+    {%- endfor %}
 
-    {% for item_j in ocp.cost.VxN %}
-    {% set outer_loop = loop %}
-    {% for item_k in item_j %}
-    VxN[{{ outer_loop.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
-    {% endfor %}
-    {% endfor %}
+    {% for j in range(end=ocp.dims.nyN) %}
+        {%- for k in range(end=ocp.dims.nx) %}
+    VxN[{{j}}+(NYN) * {{k}}] = {{ ocp.cost.VxN[j][k] }}; 
+        {%- endfor %}
+    {%- endfor %}
 
-    {% for item in ocp.cost.yrefN %}
-    yrefN[{{ loop.index0 }}] = {{ item }}; 
-    {% endfor %}
+    {% for j in range(end=ocp.dims.nyN) %}
+    yrefN[{{j}}] = {{ ocp.cost.yrefN[j] }}; 
+    {%- endfor %}
 
     int max_num_sqp_iterations = 100;
 
@@ -570,8 +552,7 @@ int acados_create() {
         external_function_casadi_create(&hess_vde_casadi[i]);
     }
     {% endif %}
-    {% else %}
-    {% if ocp.solver_config.integrator_type == "IRK" %}
+    {% elif ocp.solver_config.integrator_type == "IRK" %}
     // implicit dae
     {% if ocp.dims.np < 1 %}
     impl_dae_fun = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
@@ -631,7 +612,6 @@ int acados_create() {
         {% endif %}
     }
     {% endif %}
-    {% endif %}
 
     nlp_in = ocp_nlp_in_create(nlp_config, nlp_dims);
 
@@ -677,15 +657,13 @@ int acados_create() {
             set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
             if (set_fun_status != 0) { printf("Error while setting expl_ode_hes[%i]\n", i);  exit(1); }
         {% endif %}
-    {% else %}
-    {% if ocp.solver_config.integrator_type == "IRK" %} 
+    {% elif ocp.solver_config.integrator_type == "IRK" %} 
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun[%i]\n", i);  exit(1); }
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun_jac_x_xdot_z[%i]\n", i);  exit(1); }
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_jac_x_xdot_u_z[%i]\n", i);  exit(1); }
-    {% endif %}
     {% endif %}
     }
 
@@ -822,18 +800,18 @@ int acados_create() {
 
     // initialize parameters to nominal value
     {% if ocp.dims.np > 0%}
-    double p[{{ ocp.dims.np }}];
-    {% for item in ocp.constraints.p %}
-    p[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
+    double p[{{ocp.dims.np}}];
+    {% for i in range(end=ocp.dims.np) %}
+    p[{{i}}] = {{ocp.constraints.p[i]}};
+    {%- endfor %}
     {% if ocp.solver_config.integrator_type == "IRK" %}
-    for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
+    for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
     impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
     }
     {% else %}
-    for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
+    for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
     expl_vde_for[ii].set_param(expl_vde_for+ii, p);
     }
     {% endif %}
