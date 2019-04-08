@@ -101,6 +101,7 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory);
  * dims
  ************************************************/
 
+/// Structure to store dimensions/number of variables.
 typedef struct
 {
     void **cost;

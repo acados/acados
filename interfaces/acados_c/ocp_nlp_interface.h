@@ -131,23 +131,37 @@ typedef struct
 } ocp_nlp_solver;
 
 
-/// Construct an empty plan object (nlp configuration), all fields are set to a
+/// Constructs an empty plan object (user nlp configuration), all fields are set to a
 /// default/invalid state.
+///
+/// \param N Horizon length
 ocp_nlp_plan *ocp_nlp_plan_create(int N);
 
-/// Destroys a plan object, frees memory.
+/// Destructor for plan object, frees memory.
+///
+/// \param plan_ The plan object to destroy.
 void ocp_nlp_plan_destroy(void* plan_);
 
-/* config */
+/// Constructs an nlp configuration object from a plan.
+///
+/// \param plan The plan (user nlp configuration).
 ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan);
-//
+
+/// Desctructor of the nlp configuration.
+///
+/// \param config_ The configuration object.
 void ocp_nlp_config_destroy(void *config_);
 
-/* dims */
+/// Constructs an object that contains the dimensions of the variables.
+///
+/// \param config_ The configuration object.
 ocp_nlp_dims *ocp_nlp_dims_create(void *config_);
-//
+
+/// Destructor of the dimensions object.
+///
+/// \param dims_ The dimensions object.
 void ocp_nlp_dims_destroy(void *dims_);
-//
+
 
 /* in */
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
