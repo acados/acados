@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-{% if ocp.dims.nh > 0: %}
+{% if ocp.dims.nh > 0 %}
 // implicit ODE
 int {{ ocp.con_h_name }}_h_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ ocp.con_h_name }}_h_constraint_work(int *, int *, int *, int *);

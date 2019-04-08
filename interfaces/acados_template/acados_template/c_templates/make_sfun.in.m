@@ -1,19 +1,19 @@
 SOURCES = [ 'acados_solver_sfunction_{{ ocp.model_name }}.c ', ...
             'acados_solver_{{ ocp.model_name }}.c ', ...
-            {%- if  ocp.solver_config.integrator_type == 'ERK': %}
+            {%- if  ocp.solver_config.integrator_type == 'ERK' %}
             '{{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_ode_fun.c ', ...
             '{{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_vde_forw.c ',...
-            {% if ocp.solver_config.hessian_approx == 'EXACT': -%} 
+            {% if ocp.solver_config.hessian_approx == 'EXACT' -%} 
             {% endif -%}
-            {% else: %}
+            {% else %}
             '{{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_fun.c ', ...
             '{{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z.c ', ...
             '{{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z.c ', ...
             {% endif -%}
-            {% if ocp.dims.npd > 0: -%}
+            {% if ocp.dims.npd > 0 -%}
             '{{ ocp.con_p_name }}_p_constraint/{{ ocp.con_p_name }}_p_constraint.c ', ...
             {% endif -%}
-            {% if ocp.dims.nh > 0: -%}
+            {% if ocp.dims.nh > 0 -%}
             '{{ ocp.con_h_name }}_h_constraint/{{ ocp.con_h_name }}_h_constraint.c ', ...
             {% endif -%}
           ];
@@ -26,7 +26,7 @@ INCS = [ ' -I', INC_PATH, '/blasfeo/include/ ', ...
 
 CFLAGS  = ' -O';
 
-{% if  'QPOASES' in ocp.solver_config.qp_solver: %}
+{% if  ocp.solver_config.qp_solver == "QPOASES" %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPOASES ' ];
 {% endif %}
 
