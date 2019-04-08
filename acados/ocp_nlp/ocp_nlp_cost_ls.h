@@ -19,12 +19,14 @@
 
 /// \addtogroup ocp_nlp
 /// @{
-/// \addtogroup ocp_nlp_cost
+/// \addtogroup ocp_nlp_cost ocp_nlp_cost
+/// @{
+/// \addtogroup ocp_nlp_cost_ls ocp_nlp_cost_ls
+/// \brief This module implements linear-least squares costs of the form
+/// \f$\min_{x,u,z} \| V_x x + V_u u + V_z z - y_{\text{ref}}\|_W^2\f$.
 /// @{
 
-//  \brief
-//  This module implements linear-least squares costs of the form
-//  \f$\min_{x,u,z} \| V_x x + V_u u + V_z z \|_W^2\f$.
+
 
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_LS_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COST_LS_H_
@@ -210,5 +212,6 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims, void *model_,
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COST_LS_H_
+/// @}
 /// @}
 /// @}

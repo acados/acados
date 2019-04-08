@@ -19,7 +19,9 @@
 
 /// \addtogroup ocp_nlp
 /// @{
-/// \addtogroup ocp_nlp_sqp
+/// \addtogroup ocp_nlp_solver
+/// @{
+/// \addtogroup ocp_nlp_sqp ocp_nlp_sqp
 /// @{
 
 #ifndef ACADOS_OCP_NLP_OCP_NLP_SQP_H_
@@ -144,5 +146,6 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_SQP_H_
+/// @}
 /// @}
 /// @}
