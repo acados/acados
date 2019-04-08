@@ -1,5 +1,5 @@
 [package]
-name = "hello_world"
+name = "t_renderer"
 version = "0.1.0"
 authors = ["andrea.zanelli <andrea.zanelli@imtek.uni-freiburg.de>"]
 edition = "2018"
