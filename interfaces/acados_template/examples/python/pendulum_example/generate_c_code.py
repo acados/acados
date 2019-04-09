@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import scipy.linalg
 import json
 
-USE_JSON_DUMP = 1
-
 # create render arguments
 ra = acados_ocp_nlp()
 
@@ -98,57 +96,10 @@ ra.solver_config.tf = Tf
 ra.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
-ra.acados_include_path = '/usr/local/include'
-ra.acados_lib_path = '/usr/local/lib'
+ra.acados_include_path  = '/usr/local/include'
+ra.acados_lib_path      = '/usr/local/lib'
 
-if USE_JSON_DUMP == 1: 
-    file_name = 'acados_ocp_nlp.json'
-    ocp_nlp = ra
-    ocp_nlp.cost = ra.cost.__dict__
-    ocp_nlp.constraints = ra.constraints.__dict__
-    ocp_nlp.solver_config = ra.solver_config.__dict__
-    ocp_nlp.dims = ra.dims.__dict__
-    ocp_nlp = ocp_nlp.__dict__
-
-    # ocp_nlp_layout = dict2json_layout(ocp_nlp)
-
-    # # save JSON reference layout
-    # with open('acados_layout.json', 'w') as f:
-    #     json.dump(ocp_nlp_layout, f, default=np_array_to_list)
-
-    ocp_nlp = dict2json(ocp_nlp)
-
-    with open(file_name, 'w') as f:
-        json.dump(ocp_nlp, f, default=np_array_to_list)
-
-    with open(file_name, 'r') as f:
-        ocp_nlp_json = json.load(f)
-
-    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
-
-    ra = ocp_nlp_as_object(ocp_nlp_dict)
-    ra.cost = ocp_nlp_as_object(ra.cost)
-    ra.constraints = ocp_nlp_as_object(ra.constraints)
-    ra.solver_config = ocp_nlp_as_object(ra.solver_config)
-    ra.dims = ocp_nlp_as_object(ra.dims)
-
-generate_solver(model, ra, json_file = file_name)
-
-# make 
-os.chdir('c_generated_code')
-os.system('make')
-os.system('make shared_lib')
-os.chdir('..')
-
-acados   = CDLL('c_generated_code/acados_solver_pendulum_ode.so')
-
-acados.acados_create()
-
-nlp_opts = acados.acados_get_nlp_opts()
-nlp_dims = acados.acados_get_nlp_dims()
-nlp_config = acados.acados_get_nlp_config()
-nlp_out = acados.acados_get_nlp_out()
-nlp_in = acados.acados_get_nlp_in()
+acados_solver = generate_solver(model, ra, json_file = 'acados_ocp.json')
 
 # closed loop simulation TODO(add proper simulation)
 Nsim = 100
@@ -167,9 +118,12 @@ simX = np.ndarray((Nsim, nx))
 simU = np.ndarray((Nsim, nu))
 
 for i in range(Nsim):
-    acados.acados_solve()
+    acados_solver.solve()
 
     # get solution
+    acados_solver.shared_lib.ocp_nlp_out_get(acados_solver.nlp_config, acados_solver.nlp_dims, acados_solver.nlp_out, 1, "x", x0);
+    import pdb; pdb.set_trace()
+    x0 = acados_solver.get(0, "x")
     acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "x", x0);
     acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", u0);
     

@@ -502,6 +502,23 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 
 
 
+int ocp_nlp_dims_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+                     int stage, const char *field)
+{
+    if (!strcmp(field, "x"))
+    {
+        return dims->nx[stage];
+    }
+    else if (!strcmp(field, "u"))
+    {
+        return dims->nx[stage];
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_out_set: field %s not available\n", field);
+        exit(1);
+    }
+}
 /************************************************
 * opts
 ************************************************/
