@@ -67,7 +67,7 @@ typedef struct
     double *z;     // z[NZ] - initialization for algebraic variables z
 
     double *S_forw;  // forward seed [Sx, Su]
-    double *S_adj;   // backward seed // TODO rename seed_adj ??? // TODO should be of size nx ???
+    double *S_adj;   // backward seed // TODO rename seed_adj ???
 
     void *model;
 

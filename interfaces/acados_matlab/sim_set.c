@@ -108,7 +108,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	else if(!strcmp(field, "seed_adj"))
 		{
 		double *seed_adj = mxGetPr( prhs[5] );
-		sim_in_set(config, dims, in, "S_adj", seed_adj); // TODO rename !!!!!
+		sim_in_set(config, dims, in, "seed_adj", seed_adj);
 		}
 	else
 		{
