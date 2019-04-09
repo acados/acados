@@ -87,7 +87,7 @@ end
 if isSX
     Sx = SX.sym('Sx', nx, nx);
     Su = SX.sym('Su', nx, nu);
-    lambdaX = SX.sym('lambdaX',nx,1);
+    lambdaX = SX.sym('lambdaX', nx, 1);
     vdeX = SX.zeros(nx, nx);
     vdeU = SX.zeros(nx, nu) + jacobian(f_expl, u);
 else
@@ -102,7 +102,6 @@ if (strcmp(param_f, 'true'))
 else
 	expl_ode_fun = Function([model_name,'_expl_ode_fun'], {x, u}, {f_expl});
 end
-% TODO: Polish: get rid of SX.zeros
 
 vdeX = vdeX + jtimes(f_expl, x, Sx);
 
@@ -114,7 +113,7 @@ else
 	expl_vde_for = Function([model_name,'_expl_vde_for'], {x, Sx, Su, u}, {f_expl, vdeX, vdeU});
 end
 
-adj = jtimes(f_expl, [x;u], lambdaX,true);
+adj = jtimes(f_expl, [x;u], lambdaX, true);
 
 if (strcmp(param_f, 'true'))
 	expl_vde_adj = Function([model_name,'_expl_vde_adj'], {x, lambdaX, u, p}, {adj});

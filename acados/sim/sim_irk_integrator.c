@@ -509,11 +509,15 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     return (void *) workspace;
 }
 
+
+
 int sim_irk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_,
                        void *work_)
 {
     return ACADOS_SUCCESS;
 }
+
+
 
 /************************************************
  * integrator
@@ -1226,6 +1230,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     return ACADOS_SUCCESS;
 }
+
+
 
 void sim_irk_config_initialize_default(void *config_)
 {

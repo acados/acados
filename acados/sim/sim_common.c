@@ -204,7 +204,7 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
     }
     else if (!strcmp(field, "S_forw"))
     {
-        // note: this assumes nf = nu+nx !!!
+        // NOTE: this assumes nf = nu+nx !!!
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
@@ -215,14 +215,16 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
     }
     else if (!strcmp(field, "S_adj"))
     {
-        // note: this assumes nf = nu+nx !!!
+        // NOTE: this assumes nf = nu+nx !!!
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
         int ii;
         double *S_adj = value;
-        for (ii=0; ii < nu+nx; ii++)
+        for (ii=0; ii < nx; ii++)
             in->S_adj[ii] = S_adj[ii];
+        for (ii=0; ii < nu; ii++)
+            in->S_adj[nx+ii] = 0;
     }
     else
     {
@@ -267,6 +269,8 @@ int sim_out_calculate_size(void *config_, void *dims)
 
     return size;
 }
+
+
 
 sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 {

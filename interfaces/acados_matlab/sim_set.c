@@ -105,6 +105,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			return;
 			}
 		}
+	else if(!strcmp(field, "seed_adj"))
+		{
+		double *seed_adj = mxGetPr( prhs[5] );
+		sim_in_set(config, dims, in, "S_adj", seed_adj); // TODO rename !!!!!
+		}
 	else
 		{
 		mexPrintf("\nsim_set: field not supported: %s\n", field);

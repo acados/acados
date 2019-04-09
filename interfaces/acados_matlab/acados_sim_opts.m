@@ -9,6 +9,7 @@ classdef acados_sim_opts < handle
 		num_steps
 		method
 		sens_forw
+		sens_adj
 		opts_struct
 	end % properties
 
@@ -22,11 +23,13 @@ classdef acados_sim_opts < handle
 			obj.codgen_model = 'true';
 			obj.method = 'irk';
 			obj.sens_forw = 'false';
+			obj.sens_adj = 'false';
 			obj.opts_struct = struct;
 			obj.opts_struct.compile_mex = obj.compile_mex;
 			obj.opts_struct.codgen_model = obj.codgen_model;
 			obj.opts_struct.method = obj.method;
 			obj.opts_struct.sens_forw = obj.sens_forw;
+			obj.opts_struct.sens_adj = obj.sens_adj;
 		end
 
 
@@ -49,6 +52,9 @@ classdef acados_sim_opts < handle
 			elseif (strcmp(field, 'sens_forw'))
 				obj.sens_forw = value;
 				obj.opts_struct.sens_forw = value;
+			elseif (strcmp(field, 'sens_adj'))
+				obj.sens_adj = value;
+				obj.opts_struct.sens_adj = value;
 			else
 				disp(['acados_sim_opts: set: wrong field: ', field]);
 			end
