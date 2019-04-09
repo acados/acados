@@ -126,9 +126,9 @@ void ocp_nlp_cost_ls_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memo
 void ocp_nlp_cost_ls_memory_set_Z_ptr(struct blasfeo_dvec *Z, void *memory);
 //
 void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
-
+//
 void ocp_nlp_cost_ls_memory_set_z_ptr(struct blasfeo_dvec *z, void *memory_);
-
+//
 void ocp_nlp_cost_ls_memory_set_dzdxu_tran_ptr(struct blasfeo_dvec *dzdxu_tran, void *memory_);
 /************************************************
  * workspace
@@ -136,12 +136,12 @@ void ocp_nlp_cost_ls_memory_set_dzdxu_tran_ptr(struct blasfeo_dvec *dzdxu_tran, 
 
 typedef struct
 {
-    struct blasfeo_dmat tmp_nv_ny;
-    struct blasfeo_dmat Cyt_tilde;
-    struct blasfeo_dmat dzdux_tran;
-    struct blasfeo_dvec tmp_ny;
-    struct blasfeo_dvec tmp_nz;
-    struct blasfeo_dvec y_ref_tilde;
+    struct blasfeo_dmat tmp_nv_ny;   // temporary matrix of dimensions nv, ny
+    struct blasfeo_dmat Cyt_tilde;   // updated Cyt (after z elimination)
+    struct blasfeo_dmat dzdux_tran;  // derivatives of z wrt u and x (tran)
+    struct blasfeo_dvec tmp_ny;      // temporary vector of dimension ny
+    struct blasfeo_dvec tmp_nz;      // temporary vector of dimension nz
+    struct blasfeo_dvec y_ref_tilde; // updated y_ref (after z elimination)
 } ocp_nlp_cost_ls_workspace;
 
 //
