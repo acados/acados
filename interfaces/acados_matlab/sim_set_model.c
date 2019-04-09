@@ -69,6 +69,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 		sim_in_set(config, dims, in, "expl_ode_fun", expl_ode_fun);
 		sim_in_set(config, dims, in, "expl_vde_for", expl_vde_for);
+		sim_in_set(config, dims, in, "expl_vde_adj", expl_vde_adj);
 		}
 	else if(!strcmp(method, "irk"))
 		{

@@ -6,7 +6,7 @@ clear all
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
-method = 'irk';
+method = 'erk';
 sens_forw = 'true';
 sens_adj = 'true';
 num_stages = 4;

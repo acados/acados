@@ -16,6 +16,14 @@ const int *sim_model_dyn_expl_vde_for_sparsity_out(int);
 int sim_model_dyn_expl_vde_for_n_in();
 int sim_model_dyn_expl_vde_for_n_out();
 
+// explicit vde adjoint
+int sim_model_dyn_expl_vde_adj(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int sim_model_dyn_expl_vde_adj_work(int *, int *, int *, int *);
+const int *sim_model_dyn_expl_vde_adj_sparsity_in(int);
+const int *sim_model_dyn_expl_vde_adj_sparsity_out(int);
+int sim_model_dyn_expl_vde_adj_n_in();
+int sim_model_dyn_expl_vde_adj_n_out();
+
 // implicit ode function
 int sim_model_dyn_impl_ode_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int sim_model_dyn_impl_ode_fun_work(int *, int *, int *, int *);
