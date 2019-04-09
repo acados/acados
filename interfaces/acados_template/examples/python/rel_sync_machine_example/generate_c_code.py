@@ -317,12 +317,12 @@ VxN[1,1] = 1.0
 
 nlp_cost.VxN = VxN
 
-nlp_cost.yref  = nmp.zeros((ny, 1))
+nlp_cost.yref  = nmp.zeros((ny, ))
 nlp_cost.yref[0]  = psi_d_ref
 nlp_cost.yref[1]  = psi_q_ref
 nlp_cost.yref[2]  = u_d_ref
 nlp_cost.yref[3]  = u_q_ref
-nlp_cost.yrefN = nmp.zeros((nyN, 1))
+nlp_cost.yrefN = nmp.zeros((nyN, ))
 nlp_cost.yrefN[0]  = psi_d_ref
 nlp_cost.yrefN[1]  = psi_q_ref
 
@@ -388,7 +388,7 @@ ra.acados_include_path = '/usr/local/include'
 ra.acados_lib_path = '/usr/local/lib'
 
 if USE_JSON_DUMP == 1: 
-    name_file = 'acados_ocp.json'
+    file_name = 'acados_ocp.json'
     ocp_nlp = ra
     ocp_nlp.cost = ra.cost.__dict__
     ocp_nlp.constraints = ra.constraints.__dict__
@@ -404,10 +404,10 @@ if USE_JSON_DUMP == 1:
 
     ocp_nlp = dict2json(ocp_nlp)
 
-    with open(name_file, 'w') as f:
+    with open(file_name, 'w') as f:
         json.dump(ocp_nlp, f, default=np_array_to_list)
 
-    with open(name_file, 'r') as f:
+    with open(file_name, 'r') as f:
         ocp_nlp_json = json.load(f)
 
     ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
@@ -420,11 +420,11 @@ if USE_JSON_DUMP == 1:
 
 if CODE_GEN == 1:
     if FORMULATION == 0:
-        generate_solver(model, ra)
+        generate_solver(model, ra, json_file = file_name)
     if FORMULATION == 1:
-        generate_solver(model, ra, con_h=constraint)
+        generate_solver(model, ra, con_h=constraint, json_file = file_name)
     if FORMULATION == 2:
-        generate_solver(model, ra, con_h=constraint, con_p=constraint_nl)
+        generate_solver(model, ra, con_h=constraint, con_p=constraint_nl, json_file = file_name)
 
 if COMPILE == 1:
     # make 

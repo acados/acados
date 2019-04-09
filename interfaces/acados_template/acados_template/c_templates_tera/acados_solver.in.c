@@ -41,9 +41,11 @@
 
 #include "acados_solver_{{model_name}}.h"
 
+{% if constants | length > 0 %}
 {% for value, key in constants %}
 #define {{ value }} {{ key }}
 {% endfor %}
+{% endif %}
 #define NX_   {{ dims.nx }}
 #define NZ_   {{ dims.nz }}
 #define NU_   {{ dims.nu }}
