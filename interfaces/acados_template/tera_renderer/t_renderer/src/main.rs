@@ -22,13 +22,15 @@ fn main() -> io::Result<()> {
     // read command line arguments
     let args: Vec<String> = env::args().collect();
 
-    let template_path = &args[1]; // relative path to template file
-    let template_file = &args[2]; // (absolute) template file path
+    let template_glob = &args[1]; // relative glob to template file
+    let template_file = &args[2]; // template file path relative 
+                                  // to 'template_glob'
+    
     let json_file     = &args[3]; // relative path json file
     let out_file      = &args[4]; // relative path to output file
 
     // print arguments
-    println!("template path: {}", template_path);
+    println!("template path: {}", template_glob);
     println!("template file: {}", template_file);
     println!("json file {}:"    , json_file);
     println!("out file {}:"     , out_file);
@@ -36,12 +38,12 @@ fn main() -> io::Result<()> {
     let mut file = File::open(json_file)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
-    println!("{}", contents);
+    // println!("{}", contents);
     
     // Parse the string of data into serde_json::Value.
     let v: Value = serde_json::from_str(&contents)?;
 
-    let mut tera = compile_templates!(template_path);
+    let mut tera = compile_templates!(template_glob);
     tera.autoescape_on(vec![".swp"]);
     tera.register_filter("do_nothing", do_nothing_filter);
 

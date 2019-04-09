@@ -4,11 +4,17 @@ from .generate_c_code_implicit_ode import *
 from .generate_c_code_constraint import *
 from .ocp_nlp_render_arguments import *
 
-def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None):
+def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None, json_file=None):
+    USE_TERA = 1 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
+
     # setting up loader and environment
     acados_path = os.path.dirname(os.path.abspath(__file__))
-    file_loader = FileSystemLoader(acados_path + '/c_templates')
-    env = Environment(loader = file_loader)
+    if USE_TERA == 0:
+        file_loader = FileSystemLoader(acados_path + '/c_templates')
+        env = Environment(loader = file_loader)
+    else:
+        template_glob = acados_path + '/c_templates_tera/*'
+        acados_template_path = acados_path + '/c_templates_tera'
 
     if ra.solver_config.integrator_type == 'ERK':
         # explicit model -- generate C code
@@ -32,13 +38,29 @@ def generate_solver(model, ra, con_h=None, con_hN=None, con_p=None, con_pN=None)
     # check render arguments
     check_ra(ra)
 
-    # render source template
-    template = env.get_template('main.in.c')
-    output = template.render(ocp=ra)
-    # output file
-    out_file = open('./c_generated_code/main_' + model.name + '.c', 'w+')
-    out_file.write(output)
+    # create c_generated_code folder
+    if not os.path.exists('c_generated_code'):
+        os.mkdir('c_generated_code')
 
+    if USE_TERA == 0:
+        # render source template
+        template = env.get_template('main.in.c')
+        output = template.render(ocp=ra)
+        # output file
+        out_file = open('./c_generated_code/main_' + model.name + '.c', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code')
+        # render source template
+        template_file = 'main.in.c'
+        out_file = 'main_' + model.name + '.c'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" + template_file + "\"" + ' ' + "\"" + '../' + json_file + "\"" + ' ' + "\"" + out_file + "\""
+        print(os_cmd)
+        import pdb; pdb.set_trace()
+        os.system(os_cmd)
+        
+    import pdb; pdb.set_trace()
     # render source template
     template = env.get_template('acados_solver.in.c')
     output = template.render(ocp=ra)

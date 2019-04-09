@@ -180,7 +180,7 @@ int acados_create() {
     
     // x
     int idxbx0[NX];
-    {% for i in range(end=ocp.dims.nx) %}
+    {% for i in range(ocp.dims.nx) %}
     idxbx0[{{ i }}] = {{ i }};
     {% endfor %}
     double lbx0[NX]; 
