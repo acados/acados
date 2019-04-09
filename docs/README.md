@@ -4,11 +4,9 @@ Based on `sphinx` and markdown
 
 ### Prerequisites
 
-Get and install doxygen:
+Get and install doxygen and graphviz:
 ```
-wget http://doxygen.nl/files/doxygen-1.8.15.linux.bin.tar.gz
-tar xf doxygen-1.8.15.linux.bin.tar.gz
-# add path to doxygen/bin to you bashrc
+sudo apt-get install doxygen graphviz
 ```
 
 This guide shows the *easy* way of using conda to manage virtual environments. You can of course use the environment of your choice to install pip packages.
@@ -43,11 +41,11 @@ in the folder with the following command:
 ```
 # For Linux, MacOS
 cd docs
-make html
+make
 ```
 
 ```
 # For Windows
 cd docs
-make.bat html
+make.bat
 ```
