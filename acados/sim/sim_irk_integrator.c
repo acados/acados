@@ -702,7 +702,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // pack
     blasfeo_pack_dvec(nx, in->x, xn, 0);
     blasfeo_pack_dmat(nx, nx + nu, in->S_forw, nx, S_forw, 0, 0);
-    blasfeo_pack_dvec(nx + nu, in->S_adj, lambda, 0);
+    blasfeo_pack_dvec(nx + nu, in->S_adj, lambda, 0); // TODO set to zero u-part ???
 
     // initialize integration variables
     for (int i = 0; i < ns; ++i){

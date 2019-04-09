@@ -461,7 +461,7 @@ int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 
     if (opts->sens_hess && opts->sens_adj)
     {
-        size += (nx + nX + nu) * sizeof(double);          // rhs_adj_in
+        size += (nX + nx + nu) * sizeof(double);          // rhs_adj_in
         size += (nx + nu + nhess) * sizeof(double);       // out_adj_tmp
         size += ns * (nx + nu + nhess) * sizeof(double);  // adj_traj
     }
@@ -477,6 +477,8 @@ int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 
     return size;
 }
+
+
 
 static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
@@ -540,6 +542,8 @@ int sim_erk_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 {
     return ACADOS_SUCCESS;
 }
+
+
 
 int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
@@ -643,19 +647,22 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         {
             K_traj = workspace->K_traj + istep * ns * nX;
             forw_traj = workspace->out_forw_traj + (istep + 1) * nX;
-            for (i = 0; i < nX; i++) forw_traj[i] = forw_traj[i - nX];
+            for (i = 0; i < nX; i++)
+				forw_traj[i] = forw_traj[i - nX];
         }
 
         for (s = 0; s < ns; s++)
         {
-            for (i = 0; i < nX; i++) rhs_forw_in[i] = forw_traj[i];
+            for (i = 0; i < nX; i++)
+				rhs_forw_in[i] = forw_traj[i];
             for (j = 0; j < s; j++)
             {
                 a = A_mat[j * ns + s];
                 if (a != 0)
                 {
                     a *= step;
-                    for (i = 0; i < nX; i++) rhs_forw_in[i] += a * K_traj[j * nX + i];
+                    for (i = 0; i < nX; i++)
+						rhs_forw_in[i] += a * K_traj[j * nX + i];
                 }
             }
 
@@ -718,8 +725,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     if (opts->sens_adj || opts->sens_hess)
     {
         // initialize integrator variables
-        for (i = 0; i < nx; i++) adj_tmp[i] = S_adj_in[i];
-        for (i = 0; i < nu; i++) adj_tmp[nx + i] = 0.0;
+        for (i = 0; i < nx; i++)
+			adj_tmp[i] = S_adj_in[i];
+		// TODO read from S_adj also u-part ???
+        for (i = 0; i < nu; i++)
+			adj_tmp[nx + i] = 0.0;
 
         int nForw = nx;
         int nAdj = nx + nu;
@@ -727,33 +737,38 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         {
             nForw = nX;
             nAdj = nx + nu + nhess;
-            for (i = 0; i < nhess; i++) adj_tmp[nx + nu + i] = 0.0;
+            for (i = 0; i < nhess; i++)
+				adj_tmp[nx + nu + i] = 0.0;
         }
 
         //        printf("\nnFOrw=%d nAdj=%d\n", nForw, nAdj);
 
-        for (i = 0; i < nu; i++) rhs_adj_in[nForw + nx + i] = u[i];
+        for (i = 0; i < nu; i++)
+			rhs_adj_in[nForw + nx + i] = u[i];
 
-        for (istep = num_steps - 1; istep > -1; istep--)
+        for (istep = num_steps - 1; istep >= 0; istep--)
         {
             K_traj = workspace->K_traj + istep * ns * nX;
             forw_traj = workspace->out_forw_traj + (istep + 1) * nX;
-            for (s = ns - 1; s > -1; s--)
+            for (s = ns - 1; s >= 0; s--)
             {
                 // forward variables:
-                for (i = 0; i < nForw; i++) rhs_adj_in[i] = forw_traj[i];  // extract x trajectory
+                for (i = 0; i < nForw; i++)
+					rhs_adj_in[i] = forw_traj[i];  // extract x trajectory
                 for (j = 0; j < s; j++)
                 {
                     a = A_mat[j * ns + s];
                     if (a != 0)
                     {
                         a *= step;
-                        for (i = 0; i < nForw; i++) rhs_adj_in[i] += a * K_traj[j * nX + i];
+                        for (i = 0; i < nForw; i++)
+							rhs_adj_in[i] += a * K_traj[j * nX + i];
                     }  // plus k traj
                 }
                 // adjoint variables:
                 b = step * b_vec[s];
-                for (i = 0; i < nx; i++) rhs_adj_in[nForw + i] = b * adj_tmp[i];
+                for (i = 0; i < nx; i++)
+					rhs_adj_in[nForw + i] = b * adj_tmp[i];
                 for (j = s + 1; j < ns; j++)
                 {
                     a = A_mat[s * ns + j];
@@ -770,23 +785,27 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 {
                     ext_fun_type_in[0] = COLMAJ;
                     ext_fun_in[0] = rhs_adj_in + 0;  // x: nx
+//                    ext_fun_type_in[1] = COLMAJ;
+//                    ext_fun_in[1] = rhs_adj_in + nx;  // Sx: nx*nx
+//                    ext_fun_type_in[2] = COLMAJ;
+//                    ext_fun_in[2] = rhs_adj_in + nx + nx * nx;  // Su: nx*nu
+//                    ext_fun_type_in[3] = COLMAJ;
+//                    ext_fun_in[3] = rhs_adj_in + nx + nx * nx + nx * nu;  // lam: nx
+//                    ext_fun_type_in[4] = COLMAJ;
+//                    ext_fun_in[4] = rhs_adj_in + nx + nx * nx + nx * nu + nx;  // u: nu
                     ext_fun_type_in[1] = COLMAJ;
-                    ext_fun_in[1] = rhs_adj_in + nx;  // Sx: nx*nx
+                    ext_fun_in[1] = rhs_adj_in + nx;  // lam: nx
                     ext_fun_type_in[2] = COLMAJ;
-                    ext_fun_in[2] = rhs_adj_in + nx + nx * nx;  // Su: nx*nu
-                    ext_fun_type_in[3] = COLMAJ;
-                    ext_fun_in[3] = rhs_adj_in + nx + nx * nx + nx * nu;  // lam: nx
-                    ext_fun_type_in[4] = COLMAJ;
-                    ext_fun_in[4] = rhs_adj_in + nx + nx * nx + nx * nu + nx;  // u: nu
+                    ext_fun_in[2] = rhs_adj_in + nx + nx;  // u: nu
 
                     ext_fun_type_out[0] = COLMAJ;
                     ext_fun_out[0] = adj_traj + s * nAdj + 0;  // adj: nx+nu
-                    ext_fun_type_out[1] = COLMAJ;
-                    ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
+//                    ext_fun_type_out[1] = COLMAJ;
+//                    ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
 
+					// adjoint VDE evaluation
                     model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in,
-                                                  ext_fun_type_out,
-                                                  ext_fun_out);  // adjoint VDE evaluation
+                                                  ext_fun_type_out, ext_fun_out);
                 }
                 else
                 {
@@ -812,11 +831,13 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 timing_ad += acados_toc(&timer_ad);
             }
             for (s = 0; s < ns; s++)
-                for (i = 0; i < nAdj; i++) adj_tmp[i] += adj_traj[s * nAdj + i];  // ERK step
+                for (i = 0; i < nAdj; i++)
+					adj_tmp[i] += adj_traj[s * nAdj + i];  // ERK step
         }
 
         // store adjoint sensitivities
-        for (i = 0; i < nx + nu; i++) S_adj_out[i] = adj_tmp[i];
+        for (i = 0; i < nx + nu; i++)
+			S_adj_out[i] = adj_tmp[i];
         // store hessian
         if (opts->sens_hess)
         {
