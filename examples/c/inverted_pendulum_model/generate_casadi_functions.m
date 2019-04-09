@@ -20,7 +20,6 @@ clc;
 clear all;
 close all;
 
-addpath('/home/andrea/casadi-linux-octave-v3.4.0') 
 addpath('~/casadi/swig/octave')
 
 % casadi opts for code generation
@@ -32,9 +31,9 @@ else
 	error('Please download and install Casadi 3.4.0')
 end
 
-NX = 6
-NU = 1
-NZ = 5
+NX = 6;
+NU = 1;
+NZ = 5;
 
 % define model 
 dae = export_inverted_pendulum_dae_model();
