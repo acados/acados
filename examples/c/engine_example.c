@@ -14,7 +14,7 @@
  *    You should have received a copy of the GNU Lesser General Public
  *    License along with acados; if not, write to the Free Software Foundation,
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *    
+ *
  *    Author: Jonathan Frey, Robin Verschueren
  */
 
@@ -249,7 +249,7 @@ int main()
 
     for (int i = 0; i < nb[0]; ++i)
         constraints[0]->idxb[i] = idxb[i];
-    
+
     for (int i = 1; i < N; ++i)
     {
         ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lb", lb);
@@ -295,7 +295,7 @@ int main()
             status = ocp_nlp_cost_model_set(config, dims, nlp_in, j, "y_ref", y_ref);
 
         status = ocp_nlp_solve(solver, nlp_in, nlp_out);
-        
+
         blasfeo_print_to_file_dvec(out_file, nu[0]+nx[0], nlp_out->ux, 0);
 
         blasfeo_unpack_dvec(nx[1], nlp_out->ux+1, nu[1], &lb_0[nu[1]]);
@@ -318,7 +318,7 @@ int main()
     ocp_nlp_dims_destroy(dims);
     ocp_nlp_config_destroy(config);
     ocp_nlp_plan_destroy(plan);
-    
+
     /* free external function */
     // implicit model
     external_function_casadi_free(&impl_dae_fun);

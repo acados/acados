@@ -27,6 +27,7 @@
 /// @{
 
 
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_LS_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COST_LS_H_
 

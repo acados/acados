@@ -61,4 +61,9 @@ Both a CMake and a Makefile based build system are supported at the moment.
     make run_examples_c
     ```
 
+  If the compilation/linking fails because `-lblas` or `-llapack` can not be found, you might want to do:
+  ```
+  sudo apt-get install libblas-dev liblapack-dev
+  ```
+
 * soon: binaries for all operating systems available for download (see Releases)
