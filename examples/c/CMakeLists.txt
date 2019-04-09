@@ -228,13 +228,13 @@ add_executable(simple_dae_example simple_dae_example.c
 target_link_libraries(simple_dae_example acados)
 add_test(simple_dae_example simple_dae_example)
 
-# add_executable(template_example template_example.c
-#     pendulum_model/pendulum_ode_expl_vde_forw.c
-#     pendulum_model/pendulum_ode_expl_ode_hess.c
-#     pendulum_model/constraint.c
-#     pendulum_model/position.c)
-# target_link_libraries(template_example acados)
-# add_test(template_example template_example)
+# -------------------- pendulum_scqp
+add_executable(pendulum_scqp pendulum_scqp.cpp
+    pendulum_model/pendulum_ode_expl_vde_forw.c
+    pendulum_model/constraint.c
+    pendulum_model/position.c)
+target_link_libraries(pendulum_scqp acados)
+add_test(pendulum_scqp pendulum_scqp)
 
 # -------------------- mass_spring
 add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)
