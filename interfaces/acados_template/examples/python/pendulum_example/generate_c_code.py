@@ -85,11 +85,8 @@ ra.constants['PI'] = 3.1415926535897932
 
 # set QP solver
 ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-# ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
-# ra.solver_config.hessian_approx = 'EXACT'
 ra.solver_config.integrator_type = 'ERK'
-# ra.solver_config.integrator_type = 'IRK'
 
 # set prediction horizon
 ra.solver_config.tf = Tf
@@ -99,33 +96,19 @@ ra.solver_config.nlp_solver_type = 'SQP'
 ra.acados_include_path  = '/usr/local/include'
 ra.acados_lib_path      = '/usr/local/lib'
 
-acados_solver = generate_solver(model, ra, json_file = 'acados_ocp.json')
+acados = generate_solver(model, ra, json_file = 'acados_ocp.json')
 
-# closed loop simulation TODO(add proper simulation)
 Nsim = 100
-
-lb0 = np.ascontiguousarray(np.zeros((5,1)), dtype=np.float64)
-ub0 = np.ascontiguousarray(np.zeros((5,1)), dtype=np.float64)
-lb0 = cast(lb0.ctypes.data, POINTER(c_double))
-ub0 = cast(ub0.ctypes.data, POINTER(c_double))
-
-x0 = np.ascontiguousarray(np.zeros((4,1)), dtype=np.float64)
-x0 = cast(x0.ctypes.data, POINTER(c_double))
-u0 = np.ascontiguousarray(np.zeros((1,1)), dtype=np.float64)
-u0 = cast(u0.ctypes.data, POINTER(c_double))
 
 simX = np.ndarray((Nsim, nx))
 simU = np.ndarray((Nsim, nu))
 
 for i in range(Nsim):
-    acados_solver.solve()
+    acados.solve()
 
     # get solution
-    acados_solver.shared_lib.ocp_nlp_out_get(acados_solver.nlp_config, acados_solver.nlp_dims, acados_solver.nlp_out, 1, "x", x0);
-    import pdb; pdb.set_trace()
-    x0 = acados_solver.get(0, "x")
-    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "x", x0);
-    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "u", u0);
+    x0 = acados.get(0, "x")
+    u0 = acados.get(0, "u")
     
     for j in range(nx):
         simX[i,j] = x0[j]
@@ -133,19 +116,10 @@ for i in range(Nsim):
         simU[i,j] = u0[j]
     
     # update initial condition
-    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, "x", x0);
+    x0 = acados.get(1, "x")
 
-    # ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lb", lb0);
-
-    acados.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_double)]
-    field_name = "lbx"
-    arg = field_name.encode('utf-8')
-    # acados.ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0);
-    acados.ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0);
-    field_name = "ubx"
-    arg = field_name.encode('utf-8')
-    # acados.ocp_nlp_constraints_bounds_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0);
-    acados.ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0);
+    acados.set(0, "lbx", x0)
+    acados.set(0, "ubx", x0)
 
 # plot results
 t = np.linspace(0.0, Tf/N, Nsim)
@@ -161,8 +135,4 @@ plt.ylabel('theta')
 plt.xlabel('t')
 plt.grid(True)
 plt.show()
-
-# free memory
-acados.acados_free()
-
 

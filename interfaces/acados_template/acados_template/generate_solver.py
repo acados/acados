@@ -258,12 +258,12 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
     os.chdir('..')
 
     solver = acados_solver(acados_ocp, 'c_generated_code/acados_solver_' + model.name + '.so')
-    solver.create()
     return solver
 
 class acados_solver:
-    def __init__(self, acados_ocp, shared_lib,):
+    def __init__(self, acados_ocp, shared_lib):
         self.shared_lib = CDLL(shared_lib)
+        self.shared_lib.acados_create()
         self.nlp_opts = self.shared_lib.acados_get_nlp_opts()
         self.nlp_dims = self.shared_lib.acados_get_nlp_dims()
         self.nlp_config = self.shared_lib.acados_get_nlp_config()
@@ -271,33 +271,42 @@ class acados_solver:
         self.nlp_in = self.shared_lib.acados_get_nlp_in()
         self.acados_ocp = acados_ocp
 
-    def create(self):
-        self.shared_lib.acados_create()
-
     def solve(self):
         self.shared_lib.acados_solve()
-
-    def free(self):
-        self.shared_lib.acados_free()
 
     def get(self, stage, field_):
 
         field = field_
         field = field.encode('utf-8')
-        import pdb; pdb.set_trace()
 
         self.shared_lib.ocp_nlp_dims_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.shared_lib.ocp_nlp_dims_get.restype = c_int
-        import pdb; pdb.set_trace()
-        x0 = np.ascontiguousarray(np.zeros((4,1)), dtype=np.float64)
-        x0 = cast(x0.ctypes.data, POINTER(c_double))
-        self.shared_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, self.nlp_out, 1, "x", x0);
-        import pdb; pdb.set_trace()
+
         dims = self.shared_lib.ocp_nlp_dims_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field)
-        out = np.ascontiguousarray(np.zeros((4,1)), dtype=np.float64)
+
+        out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
         out = cast(out.ctypes.data, POINTER(c_double))
+
         self.shared_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field, out);
+
+        out = cast((out), POINTER(c_double))
+
         return out
 
+    def set(self, stage_, field_, value_):
+
+        field = field_
+        field = field.encode('utf-8')
+
+        value = cast((value_), c_void_p)
+
+        stage = c_int(stage_)
+        self.shared_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value);
+
+        return 
+
+    def __del__(self):
+        self.shared_lib.acados_free()
 
 
