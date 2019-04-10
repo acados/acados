@@ -2,11 +2,8 @@ from acados_template import *
 import acados_template as at
 from export_ode_model import *
 import numpy as np
-from ctypes import *
-import matplotlib
-import matplotlib.pyplot as plt
 import scipy.linalg
-import json
+from ctypes import *
 
 # create render arguments
 ra = acados_ocp_nlp()
@@ -122,6 +119,8 @@ for i in range(Nsim):
     acados.set(0, "ubx", x0)
 
 # plot results
+import matplotlib
+import matplotlib.pyplot as plt
 t = np.linspace(0.0, Tf/N, Nsim)
 plt.subplot(2, 1, 1)
 plt.step(t, simU, 'r')

@@ -285,11 +285,11 @@ class acados_solver:
         dims = self.shared_lib.ocp_nlp_dims_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field)
 
         out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
-        out = cast(out.ctypes.data, POINTER(c_double))
+        out_data = cast(out.ctypes.data, POINTER(c_double))
 
-        self.shared_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field, out);
+        self.shared_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field, out_data);
 
-        out = cast((out), POINTER(c_double))
+        # out = cast((out), POINTER(c_double))
 
         return out
 
@@ -298,11 +298,12 @@ class acados_solver:
         field = field_
         field = field.encode('utf-8')
 
-        value = cast((value_), c_void_p)
+        value_data = cast(value_.ctypes.data, POINTER(c_double))
+        value_data_p = cast((value_data), c_void_p)
 
         stage = c_int(stage_)
         self.shared_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value);
+        self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
 
         return 
 
