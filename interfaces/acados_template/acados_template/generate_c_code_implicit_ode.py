@@ -93,7 +93,7 @@ def generate_c_code_implicit_ode( model, opts ):
         impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
 
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
+        impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
 
         # fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
         # impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
@@ -102,10 +102,13 @@ def generate_c_code_implicit_ode( model, opts ):
         # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
         
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
+        impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
+
+        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
         impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
 
         fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-        impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
+        impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
 
         
         fun_name = model_name + '_impl_dae_hess'
@@ -118,13 +121,13 @@ def generate_c_code_implicit_ode( model, opts ):
             impl_dae_fun = Function(fun_name, [x, xdot, u], [f_impl])
         
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_z])
+        impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_z])
         
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-        impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
+        impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
 
         fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-        impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
+        impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
         
         fun_name = model_name + '_impl_dae_hess'
         impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat], [HESS_multiplied])
@@ -141,13 +144,13 @@ def generate_c_code_implicit_ode( model, opts ):
     impl_dae_fun.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-    impl_dae_fun_jac_x_xdot.generate(fun_name, casadi_opts)
+    impl_dae_fun_jac_x_xdot_z.generate(fun_name, casadi_opts)
     
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-    impl_dae_jac_x_xdot_u.generate(fun_name, casadi_opts)
+    impl_dae_jac_x_xdot_u_z.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-    impl_dae_fun_jac_x_xdot_u.generate(fun_name, casadi_opts)
+    impl_dae_fun_jac_x_xdot_u_z.generate(fun_name, casadi_opts)
 
     if generate_hess:
         fun_name = model_name + '_impl_dae_hess'

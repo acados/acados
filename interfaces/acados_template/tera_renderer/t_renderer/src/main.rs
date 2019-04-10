@@ -1,5 +1,4 @@
 #[macro_use] extern crate tera;
-// #[macro_use] extern crate lazy_static;
 
 use std::collections::HashMap;
 
@@ -32,8 +31,8 @@ fn main() -> io::Result<()> {
     // print arguments
     println!("template path: {}", template_glob);
     println!("template file: {}", template_file);
-    println!("json file {}:"    , json_file);
-    println!("out file {}:"     , out_file);
+    println!("json file: {}"    , json_file);
+    println!("out file: {}"     , out_file);
 
     let mut file = File::open(json_file)?;
     let mut contents = String::new();
