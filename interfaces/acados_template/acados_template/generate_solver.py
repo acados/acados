@@ -272,7 +272,8 @@ class acados_solver:
         self.acados_ocp = acados_ocp
 
     def solve(self):
-        self.shared_lib.acados_solve()
+        status = self.shared_lib.acados_solve()
+        return status
 
     def get(self, stage, field_):
 

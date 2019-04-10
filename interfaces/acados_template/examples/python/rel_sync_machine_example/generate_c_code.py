@@ -11,7 +11,6 @@ CODE_GEN = 1
 COMPILE = 1
 
 FORMULATION = 2 # 0 for hexagon 1 for sphere 2 SCQP sphere
-USE_JSON_DUMP = 1
 
 i_d_ref = 1.484
 i_q_ref = 1.429
@@ -387,44 +386,15 @@ ra.solver_config.nlp_solver_type = 'SQP_RTI'
 ra.acados_include_path = '/usr/local/include'
 ra.acados_lib_path = '/usr/local/lib'
 
-if USE_JSON_DUMP == 1: 
-    file_name = 'acados_ocp.json'
-    ocp_nlp = ra
-    ocp_nlp.cost = ra.cost.__dict__
-    ocp_nlp.constraints = ra.constraints.__dict__
-    ocp_nlp.solver_config = ra.solver_config.__dict__
-    ocp_nlp.dims = ra.dims.__dict__
-    ocp_nlp = ocp_nlp.__dict__
-
-    # ocp_nlp_layout = dict2json_layout(ocp_nlp)
-
-    # # save JSON reference layout
-    # with open('acados_layout.json', 'w') as f:
-    #     json.dump(ocp_nlp_layout, f, default=np_array_to_list)
-
-    ocp_nlp = dict2json(ocp_nlp)
-
-    with open(file_name, 'w') as f:
-        json.dump(ocp_nlp, f, default=np_array_to_list)
-
-    with open(file_name, 'r') as f:
-        ocp_nlp_json = json.load(f)
-
-    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
-
-    ra = ocp_nlp_as_object(ocp_nlp_dict)
-    ra.cost = ocp_nlp_as_object(ra.cost)
-    ra.constraints = ocp_nlp_as_object(ra.constraints)
-    ra.solver_config = ocp_nlp_as_object(ra.solver_config)
-    ra.dims = ocp_nlp_as_object(ra.dims)
+file_name = 'acados_ocp.json'
 
 if CODE_GEN == 1:
     if FORMULATION == 0:
-        generate_solver(model, ra, json_file = file_name)
+        acados_solver = generate_solver(model, ra, json_file = file_name)
     if FORMULATION == 1:
-        generate_solver(model, ra, con_h=constraint, json_file = file_name)
+        acados_solver = generate_solver(model, ra, con_h=constraint, json_file = file_name)
     if FORMULATION == 2:
-        generate_solver(model, ra, con_h=constraint, con_p=constraint_nl, json_file = file_name)
+        acados_solver = generate_solver(model, ra, con_h=constraint, con_p=constraint_nl, json_file = file_name)
 
 if COMPILE == 1:
     # make 
@@ -433,56 +403,18 @@ if COMPILE == 1:
     os.system('make shared_lib')
     os.chdir('..')
 
-acados   = CDLL('c_generated_code/acados_solver_rsm.so')
-
-acados.acados_create()
-
-nlp_opts = acados.acados_get_nlp_opts()
-
-acados.acados_get_nlp_dims.restype = c_void_p
-nlp_dims = acados.acados_get_nlp_dims()
-
-acados.acados_get_nlp_config.restype = c_void_p
-nlp_config = acados.acados_get_nlp_config()
-
-acados.acados_get_nlp_out.restype = c_void_p
-nlp_out = acados.acados_get_nlp_out()
-
-acados.acados_get_nlp_in.restype = c_void_p
-nlp_in = acados.acados_get_nlp_in()
-
-
-nlp_dims
-
 # closed loop simulation TODO(add proper simulation)
 Nsim = 100
-
-x0 = cast(create_string_buffer(nx*sizeof(c_double)), c_void_p)
-u0 = cast(create_string_buffer(nu*sizeof(c_double)), c_void_p)
 
 simX = nmp.ndarray((Nsim, nx))
 simU = nmp.ndarray((Nsim, nu))
 
 for i in range(Nsim):
-    status = acados.acados_solve()
-
-    if status is not 0:
-        print('max number of iterations reached!')
+    status = acados_solver.solve()
 
     # get solution
-    field_name = "x"
-    arg = field_name.encode('utf-8')
-    x0 = cast((x0), c_void_p)
-
-    acados.ocp_nlp_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_wchar_p, c_void_p]
-    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, field_name, x0)
-    x0 = cast((x0), POINTER(c_double))
-
-    field_name = "u"
-    arg = field_name.encode('utf-8')
-    u0 = cast((u0), c_void_p)
-    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, field_name, u0)
-    u0 = cast((u0), POINTER(c_double))
+    x0 = acados_solver.get(0, "x")
+    u0 = acados_solver.get(0, "u")
 
     for j in range(nx):
         simX[i,j] = x0[j]
@@ -492,19 +424,16 @@ for i in range(Nsim):
 
     field_name = "u"
     # update initial condition
-    field_name = "x"
-    arg = field_name.encode('utf-8')
-    x0 = cast((x0), c_void_p)
-    acados.ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 1, field_name, x0)
+    x0 = acados_solver.get(1, "x")
 
-    acados.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_double)]
-    field_name = "lbx"
-    arg = field_name.encode('utf-8')
-    acados.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_void_p, c_void_p]
-    acados.ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0)
-    field_name = "ubx"
-    arg = field_name.encode('utf-8')
-    acados.ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, arg, x0)
+    acados_solver.set(0, "lbx", x0)
+    acados_solver.set(0, "ubx", x0)
+
+    # update initial condition
+    x0 = acados_solver.get(1, "x")
+
+    acados_solver.set(0, "lbx", x0)
+    acados_solver.set(0, "ubx", x0)
 
 # plot results
 t = nmp.linspace(0.0, Ts*Nsim, Nsim)
@@ -571,8 +500,3 @@ ax.set_ylim([-1.5*u_max, 1.5*u_max])
 circle = plt.Circle((0, 0), u_max, color='red', fill=False)
 ax.add_artist(circle)
 plt.show()
-
-# free memory
-acados.acados_free()
-
-

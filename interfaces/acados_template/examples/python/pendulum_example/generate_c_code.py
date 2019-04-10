@@ -101,7 +101,7 @@ simX = np.ndarray((Nsim, nx))
 simU = np.ndarray((Nsim, nu))
 
 for i in range(Nsim):
-    acados_solver.solve()
+    status = acados_solver.solve()
 
     # get solution
     x0 = acados_solver.get(0, "x")
