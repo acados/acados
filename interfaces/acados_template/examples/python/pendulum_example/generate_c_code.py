@@ -93,7 +93,7 @@ ra.solver_config.nlp_solver_type = 'SQP'
 ra.acados_include_path  = '/usr/local/include'
 ra.acados_lib_path      = '/usr/local/lib'
 
-acados = generate_solver(model, ra, json_file = 'acados_ocp.json')
+acados_solver = generate_solver(model, ra, json_file = 'acados_ocp.json')
 
 Nsim = 100
 
@@ -101,22 +101,23 @@ simX = np.ndarray((Nsim, nx))
 simU = np.ndarray((Nsim, nu))
 
 for i in range(Nsim):
-    acados.solve()
+    acados_solver.solve()
 
     # get solution
-    x0 = acados.get(0, "x")
-    u0 = acados.get(0, "u")
+    x0 = acados_solver.get(0, "x")
+    u0 = acados_solver.get(0, "u")
     
     for j in range(nx):
         simX[i,j] = x0[j]
+
     for j in range(nu):
         simU[i,j] = u0[j]
     
     # update initial condition
-    x0 = acados.get(1, "x")
+    x0 = acados_solver.get(1, "x")
 
-    acados.set(0, "lbx", x0)
-    acados.set(0, "ubx", x0)
+    acados_solver.set(0, "lbx", x0)
+    acados_solver.set(0, "ubx", x0)
 
 # plot results
 import matplotlib
