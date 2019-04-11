@@ -17,6 +17,24 @@
  *
  */
 
+
+/// \defgroup ocp_nlp ocp_nlp
+/// @{
+/// @}
+
+/// \defgroup ocp_nlp_solver ocp_nlp_solver
+/// @{
+/// @}
+
+/// \ingroup ocp_nlp
+/// @{
+
+/// \ingroup ocp_nlp_solver
+/// @{
+
+/// \defgroup ocp_nlp_common ocp_nlp_common
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 
@@ -83,6 +101,7 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory);
  * dims
  ************************************************/
 
+/// Structure to store dimensions/number of variables.
 typedef struct
 {
     void **cost;
@@ -108,30 +127,68 @@ int ocp_nlp_dims_calculate_size(void *config);
 ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
-//
+
+/// Sets the dimension of optimization variables
+/// (states, constrols, algebraic variables, slack variables).
+///
+/// \param config_ The configuration struct.
+/// \param dims_ The dimensions struct.
+/// \param field The type of optimization variables, either nx, nu, nz, or ns.
+/// \param value_array Number of variables for each stage.
 void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_,
                                const char *field, const void* value_array);
-//
+
+/// Sets the dimensions of constraints functions for a stage
+/// (bounds on states, bounds on controls, equality constraints,
+/// inequality constraints).
+///
+/// \param config_ The configuration struct.
+/// \param dims_ The dimensions struct.
+/// \param stage Stage number.
+/// \param field The type of constraint/bound, either nbx, nbu, ng, or nh.
+/// \param value_field Number of constraints/bounds for the given stage.
 void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage,
                                   const char *field, const void* value_field);
-//
+
+/// Sets the dimensions of the cost terms for a stage.
+///
+/// \param config_ The configuration struct.
+/// \param dims_ The dimensions struct.
+/// \param stage Stage number.
+/// \param field Type of cost term, can be eiter ny (or others TBC).
+/// \param value_field Number of cost terms/residuals for the given stage.
 void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage, const char *field,
                            const void* value_field);
-//
+
+/// Sets the dimensions of the dynamics for a stage.
+///
+/// \param config_ The configuration struct.
+/// \param dims_ The dimensions struct.
+/// \param stage Stage number.
+/// \param field TBD
+/// \param value TBD
 void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage, const char *field,
                                const void* value);
 
 /************************************************
- * in
+ * Inputs to the non-linear program
  ************************************************/
 
+/// Struct for storing the inputs of a non-linear program.
 typedef struct
 {
-    double *Ts;  // length of sampling intervals
+    /// Length of sampling intervals/timesteps.
+    double *Ts;
 
+    /// Pointers to cost functions (TBC).
     void **cost;
+
+    /// Pointers to dynamics functions (TBC).
     void **dynamics;
+
+    /// Pointers to constraints functions (TBC).
     void **constraints;
+
 } ocp_nlp_in;
 
 //
@@ -223,3 +280,5 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
+/// @}
+/// @}

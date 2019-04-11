@@ -17,6 +17,12 @@
  *
  */
 
+/// \ingroup ocp_nlp
+/// @{
+
+/// \defgroup ocp_nlp_constraints ocp_nlp_constraints
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_COMMON_H_
 
@@ -81,3 +87,5 @@ ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory);
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_COMMON_H_
+/// @}
+/// @}

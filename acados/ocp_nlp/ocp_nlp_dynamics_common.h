@@ -17,6 +17,12 @@
  *
  */
 
+/// \ingroup ocp_nlp
+/// @{
+
+/// \defgroup ocp_nlp_dynamics ocp_nlp_dynamics
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_
 
@@ -92,3 +98,5 @@ ocp_nlp_dynamics_config *ocp_nlp_dynamics_config_assign(void *raw_memory);
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_
+/// @}
+/// @}

@@ -17,6 +17,12 @@
  *
  */
 
+/// \ingroup ocp_nlp
+/// @{
+
+/// \defgroup ocp_nlp_reg ocp_nlp_reg
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_REG_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_REG_COMMON_H_
 
@@ -94,3 +100,5 @@ void acados_project(int dim, double *A, double *V, double *d, double *e, double 
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_REG_COMMON_H_
+/// @}
+/// @}
