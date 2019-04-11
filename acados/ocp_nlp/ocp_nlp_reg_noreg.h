@@ -17,6 +17,11 @@
  *
  */
 
+/// \addtogroup ocp_nlp
+/// @{
+/// \addtogroup ocp_nlp_reg
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_REG_NOREG_H_
 #define ACADOS_OCP_NLP_OCP_NLP_REG_NOREG_H_
 
@@ -95,3 +100,5 @@ void ocp_nlp_reg_noreg_config_initialize_default(ocp_nlp_reg_config *config);
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_REG_NOREG_H_
 
+/// @}
+/// @}

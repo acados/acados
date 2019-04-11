@@ -46,7 +46,6 @@
 /************************************************
 * plan
 ************************************************/
-
 static int ocp_nlp_plan_calculate_size(int N)
 {
     // N - number of shooting nodes
@@ -153,7 +152,6 @@ void ocp_nlp_plan_destroy(void* plan_)
 /************************************************
 * config
 ************************************************/
-
 ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 {
     int N = plan.N;
@@ -205,7 +203,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             break;
         default:
             printf("\nerror: ocp_nlp_config_create: unsupported plan->regularization\n");
-            exit(1); 
+            exit(1);
     }
 
     // cost
@@ -334,7 +332,7 @@ void ocp_nlp_dims_destroy(void *dims_)
 
 
 /************************************************
-* input
+* NLP inputs
 ************************************************/
 
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
