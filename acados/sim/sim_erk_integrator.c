@@ -741,44 +741,52 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 				adj_tmp[nx + nu + i] = 0.0;
         }
 
-        //        printf("\nnFOrw=%d nAdj=%d\n", nForw, nAdj);
+        //        printf("\nnForw=%d nAdj=%d\n", nForw, nAdj);
 
         for (i = 0; i < nu; i++)
 			rhs_adj_in[nForw + nx + i] = u[i];
 
         for (istep = num_steps - 1; istep >= 0; istep--)
         {
+
             K_traj = workspace->K_traj + istep * ns * nX;
-            forw_traj = workspace->out_forw_traj + (istep + 1) * nX;
+            forw_traj = workspace->out_forw_traj + istep*nX;
+
             for (s = ns - 1; s >= 0; s--)
             {
+
                 // forward variables:
                 for (i = 0; i < nForw; i++)
 					rhs_adj_in[i] = forw_traj[i];  // extract x trajectory
+
                 for (j = 0; j < s; j++)
                 {
-                    a = A_mat[j * ns + s];
+                    a = A_mat[j*ns + s];
                     if (a != 0)
                     {
                         a *= step;
                         for (i = 0; i < nForw; i++)
-							rhs_adj_in[i] += a * K_traj[j * nX + i];
+							rhs_adj_in[i] += a * K_traj[j*nX + i];
                     }  // plus k traj
                 }
+
                 // adjoint variables:
                 b = step * b_vec[s];
-                for (i = 0; i < nx; i++)
+
+                for (i = 0; i < nx; i++) // why nx ???
 					rhs_adj_in[nForw + i] = b * adj_tmp[i];
+
                 for (j = s + 1; j < ns; j++)
                 {
-                    a = A_mat[s * ns + j];
+                    a = A_mat[s*ns + j];
                     if (a != 0)
                     {
                         a *= step;
-                        for (i = 0; i < nx; i++)
-                            rhs_adj_in[nForw + i] += a * adj_traj[j * nAdj + i];
+                        for (i = 0; i < nx; i++) // why nx ???
+                            rhs_adj_in[nForw + i] += a * adj_traj[j*nAdj + i];
                     }
                 }
+
                 // TODO(oj): fix this whole file or write from scratch, not really readable :/
                 acados_tic(&timer_ad);
                 if (!opts->sens_hess)
@@ -830,9 +838,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 }
                 timing_ad += acados_toc(&timer_ad);
             }
+
             for (s = 0; s < ns; s++)
                 for (i = 0; i < nAdj; i++)
-					adj_tmp[i] += adj_traj[s * nAdj + i];  // ERK step
+					adj_tmp[i] += adj_traj[s*nAdj + i];  // ERK step
+
         }
 
         // store adjoint sensitivities

@@ -10,7 +10,7 @@ method = 'erk';
 sens_forw = 'true';
 sens_adj = 'true';
 num_stages = 4;
-num_steps = 4;
+num_steps = 3;
 
 Ts = 0.1;
 x0 = [1e-1; 1e0; 2e-1; 2e0];
