@@ -6,7 +6,7 @@ clear all
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
-method = 'erk';
+method = 'irk';
 sens_forw = 'true';
 sens_adj = 'true';
 sens_hess = 'true';
@@ -87,41 +87,86 @@ sim = acados_sim(sim_model, sim_opts);
 % set simulation time
 sim.set('T', Ts);
 
-% set initial state
-sim.set('x', x0);
-sim.set('u', u);
 
-
-
-%% compute hessian sensitivities using internal numerical differentiation
-
+% compute hessian sensitivities using internal numerical differentiation
 S_hess_ind = zeros(nx+nu, nx+nu, nx);
 
-% asymmetric finite differences
+% compute hessian sensitivities using finite differences
+S_hess_fd = zeros(nx+nu, nx+nu, nx);
 
-for ii=1:nx
 
-	dx = zeros(nx, 1);
-	dx(ii) = 1.0;
+for jj=1:nx
 
-	sim.set('seed_adj', dx);
+	% set initial state
+	sim.set('x', x0);
+	sim.set('u', u);
+
+	% internal numerical differentiation
+
+	lambda = zeros(nx, 1);
+	lambda(jj) = 1.0;
+
+	sim.set('seed_adj', lambda);
 
 	% solve
 	sim.solve();
 
-	% xn
+	% S_hess
 	S_hess = sim.get('S_hess');
 
-	S_hess_ind(:, :, ii) = S_hess;
+	S_hess_ind(:, :, jj) = S_hess;
+
+	% S_adj
+	S_adj = sim.get('S_adj');
+
+
+	% asymmetric finite differences
+
+	for ii=1:nx
+
+		dx = zeros(nx, 1);
+		dx(ii) = 1.0;
+
+		sim.set('x', x0+epsilon*dx);
+		sim.set('u', u);
+
+		% solve
+		sim.solve();
+
+		% S_adj
+		S_adj_tmp = sim.get('S_adj');
+
+		S_hess_fd(:, ii, jj) = (S_adj_tmp - S_adj) / epsilon;
+	
+	end
+
+	for ii=1:nu
+
+		du = zeros(nu, 1);
+		du(ii) = 1.0;
+
+		sim.set('x', x0);
+		sim.set('u', u+epsilon*du);
+
+		% solve
+		sim.solve();
+
+		% S_adj
+		S_adj_tmp = sim.get('S_adj');
+
+		S_hess_fd(:, nx+ii, jj) = (S_adj_tmp - S_adj) / epsilon;
+		end
 
 end
 
 S_hess_ind
 
+S_hess_fd
+
 
 %% compute error
 
-%error_abs = S_forw_adj - S_forw_ind
+error_abs = S_hess_fd - S_hess_ind
 
 
 
