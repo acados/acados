@@ -88,6 +88,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		sens_adj = true;
 		}
 //	mexPrintf("\n%d\n", sens_adj);
+	bool sens_hess = false;
+	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "sens_hess" ) );
+	if (!strcmp(c_ptr, "true"))
+		{
+		sens_hess = true;
+		}
+//	mexPrintf("\n%d\n", sens_hess);
 	//
 	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
 //	mexPrintf("\n%s\n", method);
@@ -160,11 +167,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	sim_opts_set(config, opts, "num_steps", &num_steps);
 	sim_opts_set(config, opts, "sens_forw", &sens_forw);
 	sim_opts_set(config, opts, "sens_adj", &sens_adj);
+	sim_opts_set(config, opts, "sens_hess", &sens_hess);
 
 
 	/* in */
 	sim_in *in = sim_in_create(config, dims);
-	if(sens_forw==true)
+	if(sens_forw==true) // | sens_hess==true ???
 		{
 //		mexPrintf("\nsens forw true!\n");
 		double *Sx = calloc(nx*nx, sizeof(double));

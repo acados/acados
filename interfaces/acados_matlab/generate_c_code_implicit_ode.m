@@ -29,8 +29,8 @@ else
 end
 
 if nargin > 1
-    if isfield(opts, 'generate_hess')
-        generate_hess = opts.generate_hess;
+    if isfield(opts, 'sens_hess')
+        generate_hess = opts.sens_hess;
     else
         generate_hess = 0;
 %        if opts.print_info
@@ -40,6 +40,8 @@ if nargin > 1
 else
     generate_hess = 0;
 end
+generate_hess = 1; % TODO remove when not needed any more !!!!!
+
 
 %% load model
 % x
@@ -146,13 +148,13 @@ if (strcmp(param_f, 'true'))
     impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
     impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
     impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_u});
-    impl_ode_hess = Function([model.name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
+    impl_ode_hess = Function([model_name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
 else
     impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z}, {f_impl});
     impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'], {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_z});
     impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z}, {jac_x, jac_xdot, jac_u, jac_z});
     impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_u});
-    impl_ode_hess = Function([model.name,'_impl_ode_hess'], {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
+    impl_ode_hess = Function([model_name,'_impl_ode_hess'], {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
 end
 
 %% generate C code

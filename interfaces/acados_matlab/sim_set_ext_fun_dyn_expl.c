@@ -63,6 +63,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	external_function_param_casadi *ext_fun_param_ptr;
 
 	// TODO templetize the casadi function names !!!
+
+	// TODO set checking opts !!!
+
 	if(!strcmp(method, "erk"))
 		{
 		if(!strcmp(param_f, "true")) // TODO bool
@@ -111,6 +114,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ptr = mxGetData(expl_vde_adj_mat);
 			ptr[0] = (long long) ext_fun_param_ptr;
 			mxSetField(plhs[0], 0, "dyn_expl_vde_adj", expl_vde_adj_mat);
+
+			// expl_ode_hes
+			ext_fun_param_ptr = (external_function_param_casadi *) malloc(1*sizeof(external_function_param_casadi));
+			external_function_param_casadi_set_fun(ext_fun_param_ptr, &sim_model_dyn_expl_ode_hes);
+			external_function_param_casadi_set_work(ext_fun_param_ptr, &sim_model_dyn_expl_ode_hes_work);
+			external_function_param_casadi_set_sparsity_in(ext_fun_param_ptr, &sim_model_dyn_expl_ode_hes_sparsity_in);
+			external_function_param_casadi_set_sparsity_out(ext_fun_param_ptr, &sim_model_dyn_expl_ode_hes_sparsity_out);
+			external_function_param_casadi_set_n_in(ext_fun_param_ptr, &sim_model_dyn_expl_ode_hes_n_in);
+			external_function_param_casadi_set_n_out(ext_fun_param_ptr, &sim_model_dyn_expl_ode_hes_n_out);
+			external_function_param_casadi_create(ext_fun_param_ptr, np);
+			// populate output struct
+			mxArray *expl_ode_hes_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+			ptr = mxGetData(expl_ode_hes_mat);
+			ptr[0] = (long long) ext_fun_param_ptr;
+			mxSetField(plhs[0], 0, "dyn_expl_ode_hes", expl_ode_hes_mat);
 			}
 		else
 			{
@@ -158,6 +176,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ptr = mxGetData(expl_vde_adj_mat);
 			ptr[0] = (long long) ext_fun_ptr;
 			mxSetField(plhs[0], 0, "dyn_expl_vde_adj", expl_vde_adj_mat);
+
+			// expl_ode_hes
+			ext_fun_ptr = (external_function_casadi *) malloc(1*sizeof(external_function_casadi));
+			external_function_casadi_set_fun(ext_fun_ptr, &sim_model_dyn_expl_ode_hes);
+			external_function_casadi_set_work(ext_fun_ptr, &sim_model_dyn_expl_ode_hes_work);
+			external_function_casadi_set_sparsity_in(ext_fun_ptr, &sim_model_dyn_expl_ode_hes_sparsity_in);
+			external_function_casadi_set_sparsity_out(ext_fun_ptr, &sim_model_dyn_expl_ode_hes_sparsity_out);
+			external_function_casadi_set_n_in(ext_fun_ptr, &sim_model_dyn_expl_ode_hes_n_in);
+			external_function_casadi_set_n_out(ext_fun_ptr, &sim_model_dyn_expl_ode_hes_n_out);
+			external_function_casadi_create(ext_fun_ptr);
+			// populate output struct
+			mxArray *expl_ode_hes_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+			ptr = mxGetData(expl_ode_hes_mat);
+			ptr[0] = (long long) ext_fun_ptr;
+			mxSetField(plhs[0], 0, "dyn_expl_ode_hes", expl_ode_hes_mat);
 			}
 		}
 	else

@@ -28,7 +28,20 @@ else
 	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
 end
 
-% TODO check for hessian
+if nargin > 1
+    if isfield(opts, 'sens_hess')
+        generate_hess = opts.sens_hess;
+    else
+        generate_hess = 0;
+%        if opts.print_info
+%        disp('generate_hess option was not set - default is false')
+%        end
+    end
+else
+    generate_hess = 0;
+end
+generate_hess = 1; % TODO remove when not needed any more !!!!!
+
 
 %% load model
 % x
@@ -140,6 +153,8 @@ end
 expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);
 expl_vde_for.generate([model_name,'_expl_vde_for'], casadi_opts);
 expl_vde_adj.generate([model_name,'_expl_vde_adj'], casadi_opts);
-expl_ode_hes.generate([model_name,'_expl_ode_hes'], casadi_opts);
+if generate_hess
+	expl_ode_hes.generate([model_name,'_expl_ode_hes'], casadi_opts);
+end
 
 end
