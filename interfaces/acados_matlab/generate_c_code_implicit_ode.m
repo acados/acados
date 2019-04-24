@@ -162,7 +162,7 @@ impl_ode_fun.generate([model_name,'_impl_ode_fun'], casadi_opts);
 impl_ode_fun_jac_x_xdot.generate([model_name,'_impl_ode_fun_jac_x_xdot'], casadi_opts);
 impl_ode_jac_x_xdot_u.generate([model_name,'_impl_ode_jac_x_xdot_u'], casadi_opts);
 impl_ode_fun_jac_x_xdot_u.generate([model_name,'_impl_ode_fun_jac_x_xdot_u'], casadi_opts);
-if generate_hess!='false'
+if strcmp(generate_hess, 'true')
     impl_ode_hess.generate([model_name,'_impl_ode_hess'], casadi_opts);
 end
 % keyboard

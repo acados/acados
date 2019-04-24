@@ -153,7 +153,7 @@ end
 expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);
 expl_vde_for.generate([model_name,'_expl_vde_for'], casadi_opts);
 expl_vde_adj.generate([model_name,'_expl_vde_adj'], casadi_opts);
-if generate_hess!='false'
+if strcmp(generate_hess, 'true')
 	expl_ode_hes.generate([model_name,'_expl_ode_hes'], casadi_opts);
 end
 
