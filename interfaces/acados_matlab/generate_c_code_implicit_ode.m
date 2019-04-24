@@ -32,15 +32,15 @@ if nargin > 1
     if isfield(opts, 'sens_hess')
         generate_hess = opts.sens_hess;
     else
-        generate_hess = 0;
+        generate_hess = 'false';
 %        if opts.print_info
 %        disp('generate_hess option was not set - default is false')
 %        end
     end
 else
-    generate_hess = 0;
+    generate_hess = 'false';
 end
-generate_hess = 1; % TODO remove when not needed any more !!!!!
+generate_hess = 'true'; % TODO remove when not needed any more !!!
 
 
 %% load model
@@ -162,7 +162,7 @@ impl_ode_fun.generate([model_name,'_impl_ode_fun'], casadi_opts);
 impl_ode_fun_jac_x_xdot.generate([model_name,'_impl_ode_fun_jac_x_xdot'], casadi_opts);
 impl_ode_jac_x_xdot_u.generate([model_name,'_impl_ode_jac_x_xdot_u'], casadi_opts);
 impl_ode_fun_jac_x_xdot_u.generate([model_name,'_impl_ode_fun_jac_x_xdot_u'], casadi_opts);
-if generate_hess
+if generate_hess!='false'
     impl_ode_hess.generate([model_name,'_impl_ode_hess'], casadi_opts);
 end
 % keyboard

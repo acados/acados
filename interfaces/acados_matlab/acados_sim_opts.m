@@ -23,6 +23,8 @@ classdef acados_sim_opts < handle
 			obj.compile_mex = 'true';
 			obj.codgen_model = 'true';
 			obj.method = 'irk';
+			obj.num_stages = 4;
+			obj.num_steps = 1;
 			obj.sens_forw = 'false';
 			obj.sens_adj = 'false';
 			obj.sens_hess = 'false';
@@ -30,6 +32,8 @@ classdef acados_sim_opts < handle
 			obj.opts_struct.compile_mex = obj.compile_mex;
 			obj.opts_struct.codgen_model = obj.codgen_model;
 			obj.opts_struct.method = obj.method;
+			obj.opts_struct.num_stages = obj.num_stages;
+			obj.opts_struct.num_steps = obj.num_steps;
 			obj.opts_struct.sens_forw = obj.sens_forw;
 			obj.opts_struct.sens_adj = obj.sens_adj;
 			obj.opts_struct.sens_hess = obj.sens_hess;
