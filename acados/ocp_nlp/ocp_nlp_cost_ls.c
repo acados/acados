@@ -521,14 +521,14 @@ void ocp_nlp_cost_ls_memory_set_z_alg_ptr(struct blasfeo_dvec *z, void *memory_)
     memory->z = z;
 }
 
-void ocp_nlp_cost_ls_memory_set_dzdxu_tran_ptr(struct blasfeo_dvec *dzdxu_tran, void *memory_)
+void ocp_nlp_cost_ls_memory_set_dzdxu_tran_ptr(struct blasfeo_dmat *dzdxu_tran, void *memory_)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
     memory->dzdxu_tran = dzdxu_tran;
 }
 
-void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dvec *dzdux_tran, void *memory_)
+void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, void *memory_)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
@@ -687,12 +687,12 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         // blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, &work->dzdux_tran, 0, 0,
         //         &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
 
-        blasfeo_print_dmat(nx + nu, nz, &memory->dzdux_tran, 0, 0);
-        // exit(1);
-        blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, &memory->dzdux_tran, 0, 0,
+        blasfeo_print_dmat(nx + nu, nz, memory->dzdux_tran, 0, 0);
+        exit(1);
+        blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
                 &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
         // update y_ref: y_ref_tilde = y_ref + Vz*x + Vz*u - Vz*z
-        blasfeo_dveccp(nz, &memory->z, 0, &work->tmp_nz, 0);
+        blasfeo_dveccp(nz, memory->z, 0, &work->tmp_nz, 0);
         blasfeo_dgemv_t(nz, nx + nu, 1.0, &work->dzdux_tran,
                 0, 0, memory->ux, 0, -1.0, &work->tmp_nz, 0, &work->tmp_nz, 0);
 
