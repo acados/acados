@@ -81,7 +81,6 @@ typedef struct
     //      used for algebraic sensitivity generation
     struct blasfeo_dmat df_dxdotz;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
     struct blasfeo_dmat dk0_dxu;    // intermediate result, (nx+nz, nx+nu)
-    struct blasfeo_dmat dk0_dux;    // intermediate result, (nx+nz, nx+nu) with u-x order
 
     // dK_dxu: if (!opts->sens_hess) - single blasfeo_dmat that is reused
     //         if ( opts->sens_hess) - array of (num_steps) blasfeo_dmat
