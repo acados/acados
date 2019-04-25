@@ -1046,7 +1046,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->dynamics[ii]->memory_set_pi_ptr(nlp_out->pi+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_BAbt_ptr(work->qp_in->BAbt+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq+ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_z_ptr(nlp_out->z+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_z_alg_ptr(nlp_out->z+ii, mem->dynamics[ii]);
     }
 
     // alias to cost_memory
@@ -1057,7 +1057,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
         config->cost[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->cost[ii]);
         if (dims->nz[ii] > 0) {
-            config->cost[ii]->memory_set_z_ptr(
+            config->cost[ii]->memory_set_z_alg_ptr(
                     &(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->z_out),
                     mem->cost[ii]);
             config->cost[ii]->memory_set_dzdxu_tran_ptr(

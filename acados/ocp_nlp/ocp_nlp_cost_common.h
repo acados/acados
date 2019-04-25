@@ -59,7 +59,7 @@ typedef struct
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     struct blasfeo_dvec *(*memory_get_grad_ptr)(void *memory);
     void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory);
-    void (*memory_set_z_ptr)(struct blasfeo_dvec *z, void *memory);
+    void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z_alg, void *memory);
     void (*memory_set_dzdxu_tran_ptr)(struct blasfeo_dmat *dzdxu, void *memory);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
     void (*memory_set_Z_ptr)(struct blasfeo_dvec *Z, void *memory);

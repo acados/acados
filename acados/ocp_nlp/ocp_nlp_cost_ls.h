@@ -178,7 +178,7 @@ void ocp_nlp_cost_ls_memory_set_Z_ptr(struct blasfeo_dvec *Z, void *memory);
 //
 void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
 //
-void ocp_nlp_cost_ls_memory_set_z_ptr(struct blasfeo_dvec *z, void *memory_);
+void ocp_nlp_cost_ls_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_);
 //
 void ocp_nlp_cost_ls_memory_set_dzdxu_tran_ptr(struct blasfeo_dvec *dzdxu_tran, void *memory_);
 
