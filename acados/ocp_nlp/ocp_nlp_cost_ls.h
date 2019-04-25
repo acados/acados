@@ -160,7 +160,8 @@ typedef struct
     struct blasfeo_dvec grad;           ///< gradient of cost function
     struct blasfeo_dvec *ux;            ///< pointer to ux in nlp_out
     struct blasfeo_dvec *z;             ///< pointer to z in sim_out
-    struct blasfeo_dmat *dzdxu_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
+    struct blasfeo_dmat *dzdxu_tran;    ///< pointer to sensitivity of a wrt xu in sim_out
+    struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat *RSQrq;         ///< pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;             ///< pointer to Z in qp_in
 } ocp_nlp_cost_ls_memory;
@@ -181,6 +182,8 @@ void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
 void ocp_nlp_cost_ls_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_);
 //
 void ocp_nlp_cost_ls_memory_set_dzdxu_tran_ptr(struct blasfeo_dvec *dzdxu_tran, void *memory_);
+//
+void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dvec *dzdux_tran, void *memory_);
 
 
 

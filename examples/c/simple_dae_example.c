@@ -35,7 +35,7 @@
 
 #include "simple_dae_model/simple_dae_model.h"
 
-#define FORMULATION 3 // 0 without Vz*z term 1 with Vz*z and without Vx*x
+#define FORMULATION 1 // 0 without Vz*z term 1 with Vz*z and without Vx*x
 
 int main() {
 

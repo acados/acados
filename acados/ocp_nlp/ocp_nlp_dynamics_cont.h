@@ -102,6 +102,7 @@ typedef struct
     struct blasfeo_dvec adj;
     struct blasfeo_dmat hes;
     struct blasfeo_dmat dzdxu_tran;     // dzdxu transposed
+    struct blasfeo_dmat dzdux_tran;     // dzdux transposed
     struct blasfeo_dvec *ux;            // pointer to ux in nlp_out at current stage
     struct blasfeo_dvec *ux1;           // pointer to ux in nlp_out at next stage
     struct blasfeo_dvec *pi;            // pointer to pi in nlp_out at current stage
