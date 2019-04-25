@@ -393,6 +393,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     if (opts->sens_algebraic){
         size += blasfeo_memsize_dmat(nx + nz, nx + nz);  // df_dxdotz
         size += blasfeo_memsize_dmat(nx + nz, nx + nu);  // dk0_dxu
+        size += blasfeo_memsize_dmat(nx + nz, nx + nu);  // dk0_dux
     }
 
     make_int_multiple_of(64, &size);
@@ -476,6 +477,7 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     if (opts->sens_algebraic){
         assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nz, &workspace->df_dxdotz, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nu, &workspace->dk0_dxu, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nu, &workspace->dk0_dux, &c_ptr);
     }
 
     assign_and_advance_blasfeo_dvec_mem(nK, workspace->rG, &c_ptr);
@@ -583,6 +585,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     struct blasfeo_dmat df_dxdotz = workspace->df_dxdotz;
     struct blasfeo_dmat dk0_dxu = workspace->dk0_dxu;
+    struct blasfeo_dmat dk0_dux = workspace->dk0_dux;
 
     // for adjoint
     struct blasfeo_dvec *lambda = workspace->lambda;
@@ -1015,8 +1018,25 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 blasfeo_dgesc(nx + nz, nx + nu, -1.0, &dk0_dxu, 0, 0);
 
                 // extract output
-                blasfeo_unpack_dmat(nz, nx + nu, &dk0_dxu, nx, 0, S_algebraic, nz);
-
+                blasfeo_dgecp(nx + nz, nu, &dk0_dxu, 0,  nx, &dk0_dux, 0, 0);
+                blasfeo_dgecp(nx + nz, nx, &dk0_dxu, 0,  0,  &dk0_dux, 0, nu);
+                printf("dk0_dxu: \n");
+                blasfeo_print_dmat(nx + nz, nx + nu, &dk0_dxu, 0, 0);
+                printf("dk0_dux: \n");
+                blasfeo_print_dmat(nx + nz, nx + nu, &dk0_dux, 0, 0);
+                // exit(1);
+                blasfeo_unpack_dmat(nz, nx + nu, &dk0_dux, nx, 0, S_algebraic, nz);
+                printf("S_algebraic: \n");
+                printf("nz = %i\n", nz);
+                for(int ii = 0; ii < nz; ii++) 
+                {
+                    for(int jj = 0; jj < nx + nu; jj++) 
+                    {
+                        printf("%f ", S_algebraic[jj*nz + ii]);
+                    }
+                    printf("\n");
+                }
+                printf("\n\n");
                 // Reset impl_ode inputs
                 impl_ode_type_in[0] = BLASFEO_DVEC;       // xt
                 impl_ode_type_in[1] = BLASFEO_DVEC_ARGS;  // k_i
