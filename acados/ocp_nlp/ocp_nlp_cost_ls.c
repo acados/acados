@@ -675,12 +675,12 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     // initialize hessian of lagrangian with hessian of cost
     blasfeo_dgecp(nu + nx, nu + nx, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
 
-    // copy Cyt into Cyt_tilde
-    blasfeo_dgecp(nu + nx, ny, &model->Cyt, 0, 0, &work->Cyt_tilde, 0, 0);
-    // copy y_ref into y_ref_tilde
-    blasfeo_dveccp(ny, &model->y_ref, 0, &work->y_ref_tilde, 0);
-
     if (nz > 0) { // eliminate algebraic variables and update Cyt and y_ref
+        // copy Cyt into Cyt_tilde
+        blasfeo_dgecp(nu + nx, ny, &model->Cyt, 0, 0, &work->Cyt_tilde, 0, 0);
+        // copy y_ref into y_ref_tilde
+        blasfeo_dveccp(ny, &model->y_ref, 0, &work->y_ref_tilde, 0);
+
         // update Cyt: Cyt_tilde = Cyt + dzdux_tran*Vz^T
         blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
                 &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
@@ -700,18 +700,29 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dsyrk_ln(nu + nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0,
                          memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 
+        // compute gradient
+        blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
+                0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
+
+        // TODO(all): use lower triangular chol of W to save n_y^2 flops
+        blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res,
+                0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+
+        blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
+                0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
+    } else {
+
+        // compute gradient
+        blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux,
+                0, -1.0, &model->y_ref, 0, &memory->res, 0);
+
+        // TODO(all): use lower triangular chol of W to save n_y^2 flops
+        blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res,
+                0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+
+        blasfeo_dgemv_n(nu + nx, ny, 1.0, &model->Cyt,
+                0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
     }
-
-    // compute gradient
-    blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
-            0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
-
-    // TODO(all): use lower triangular chol of W to save n_y^2 flops
-    blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res,
-            0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
-
-    blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
-            0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
     // slacks
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
