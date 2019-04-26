@@ -637,7 +637,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         // blasfeo_print_dmat(nu + nx, ny, &work->tmp_nv_ny, 0, 0);
 
         // RSQrq = tmp_nv_ny * tmp_nv_ny^T
-        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0,
+        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 1.0,
                          memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 
         // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
