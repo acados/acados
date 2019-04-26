@@ -679,36 +679,59 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     blasfeo_dgecp(nu + nx, ny, &model->Cyt, 0, 0, &work->Cyt_tilde, 0, 0);
     // copy y_ref into y_ref_tilde
     blasfeo_dveccp(ny, &model->y_ref, 0, &work->y_ref_tilde, 0);
+
+    printf("xu:\n");
+    blasfeo_print_dvec(nx + nu, memory->ux, 0);
+
     if (nz > 0) { // eliminate algebraic variables and update Cyt and y_ref
         // swap dzdu and dzdx
-        blasfeo_dgecp(nx, ny, memory->dzdxu_tran, 0, 0,  &work->dzdux_tran, nu, 0);
-        blasfeo_dgecp(nu, ny, memory->dzdxu_tran, nx, 0, &work->dzdux_tran, 0, 0);
+        blasfeo_dgecp(nx, ny, memory->dzdxu_tran, 0,  0,  &work->dzdux_tran, nu, 0);
+        blasfeo_dgecp(nu, ny, memory->dzdxu_tran, nx, 0,  &work->dzdux_tran, 0,  0);
+        
         // update Cyt: Cyt_tilde = Cyt + dzdux_tran*Vz^T
         blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, &work->dzdux_tran, 0, 0,
                 &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
 
         // blasfeo_print_dmat(nx + nu, nz, memory->dzdux_tran, 0, 0);
-        // blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
-                // &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
-        // update y_ref: y_ref_tilde = y_ref + Vz*x + Vz*u - Vz*z
+        // update y_ref: y_ref_tilde = y_ref + Vz*dzdx*x + Vz*dzdu*u - Vz*z
         blasfeo_dveccp(nz, memory->z, 0, &work->tmp_nz, 0);
-        blasfeo_dgemv_t(nz, nx + nu, 1.0, &work->dzdux_tran,
-                0, 0, memory->ux, 0, -1.0, &work->tmp_nz, 0, &work->tmp_nz, 0);
+        printf("z: \n");
+        blasfeo_print_dvec(nz, memory->z, 0);
+        printf("tmp_nz: \n");
+        blasfeo_print_dvec(nz, &work->tmp_nz, 0);
+        blasfeo_dgemv_t(nx + nu, nz, -1.0, &work->dzdux_tran,
+                0, 0, memory->ux, 0, 1.0, &work->tmp_nz, 0, &work->tmp_nz, 0);
 
-        blasfeo_dgemv_n(ny, nz, 1.0, &model->Vz,
+        printf("tmp_nz (post): \n");
+        blasfeo_print_dvec(nz, &work->tmp_nz, 0);
+
+        printf("dzdux_tran:\n");
+        blasfeo_print_dmat(nx + nu, nz, &work->dzdux_tran, 0, 0);
+
+        blasfeo_dgemv_n(ny, nz, -1.0, &model->Vz,
                 0, 0, &work->tmp_nz, 0, 1.0, &work->y_ref_tilde, 0, &work->y_ref_tilde, 0);
+
+        printf("z: \n");
+        blasfeo_print_dvec(nz, memory->z, 0);
 
         blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol,
                 0, 0, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny,
                            0, 0);
+
         blasfeo_dsyrk_ln(nu + nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0,
                          memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 
     }
 
+    printf("y_ref_tilde: \n");
+    blasfeo_print_dvec(ny, &work->y_ref_tilde, 0);
+    
     // compute gradient
     blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
             0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
+
+    printf("RSQrq: \n");
+    blasfeo_print_dmat(nx + nu, nx + nu, memory->RSQrq, 0, 0);
 
     // TODO(all): use lower triangular chol of W to save n_y^2 flops
     blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res,
@@ -716,6 +739,9 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
 
     blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
             0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
+
+    printf("grad: \n");
+    blasfeo_print_dvec(nx + nu, &memory->grad, 0);
 
     // slacks
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
