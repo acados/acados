@@ -747,7 +747,6 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
     config->memory_get_grad_ptr = &ocp_nlp_cost_ls_memory_get_grad_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_ls_memory_set_ux_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_cost_ls_memory_set_z_alg_ptr;
-    config->memory_set_dzdxu_tran_ptr = &ocp_nlp_cost_ls_memory_set_dzdxu_tran_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_ls_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_ls_memory_set_Z_ptr;

@@ -1060,9 +1060,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             config->cost[ii]->memory_set_z_alg_ptr(
                     &(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->z_out),
                     mem->cost[ii]);
-            config->cost[ii]->memory_set_dzdxu_tran_ptr(
-                    &(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->dzdxu_tran),
-                    mem->cost[ii]);
             config->cost[ii]->memory_set_dzdux_tran_ptr(
                     &(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->dzdux_tran),
                     mem->cost[ii]);
