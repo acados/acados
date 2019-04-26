@@ -680,9 +680,6 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     // copy y_ref into y_ref_tilde
     blasfeo_dveccp(ny, &model->y_ref, 0, &work->y_ref_tilde, 0);
 
-    printf("xu:\n");
-    blasfeo_print_dvec(nx + nu, memory->ux, 0);
-
     if (nz > 0) { // eliminate algebraic variables and update Cyt and y_ref
         // update Cyt: Cyt_tilde = Cyt + dzdux_tran*Vz^T
         blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
