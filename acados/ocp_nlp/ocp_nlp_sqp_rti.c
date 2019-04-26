@@ -771,12 +771,16 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 #endif
     for (i = 0; i <= N; i++)
     {
-        // cost
-        config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i],
-                                            opts->cost[i], mem->cost[i], work->cost[i]);
+        // init Hessian to 0 
+        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, work->qp_in->RSQrq+i, 0, 0);
+        
         // dynamics
         if (i < N)
             config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i],
+                    
+        // cost
+        config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i],
+                                            opts->cost[i], mem->cost[i], work->cost[i]);
                                                 nlp_in->dynamics[i], opts->dynamics[i],
                                                 mem->dynamics[i], work->dynamics[i]);
         // constraints
