@@ -399,7 +399,21 @@ void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
 
 int ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
-    return 0;
+    ocp_nlp_cost_external_dims *dims = dims_;
+
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+
+    int size = 0;
+
+    size += sizeof(ocp_nlp_cost_external_workspace);
+
+    size += 1 * blasfeo_memsize_dmat(nu + nx, nu + nx);  // tmp_nu_nx
+
+    size += 64;  // blasfeo_mem align
+    
+    return size;
 }
 
 
@@ -407,8 +421,24 @@ int ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, v
 static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, void *opts_,
                                                  void *work_)
 {
-    // assert((char *) work_ + ocp_nlp_cost_external_workspace_calculate_size(config_, dims_, opts_) >=
-        //    c_ptr);
+    ocp_nlp_cost_external_dims *dims = dims_;
+    ocp_nlp_cost_external_workspace *work = work_;
+    
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+    
+    char *c_ptr = (char *) work_;
+    c_ptr += sizeof(ocp_nlp_cost_external_workspace);
+
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
+    
+    // tmp_nu_nx
+    assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &work->tmp_nu_nx, &c_ptr);
+
+    assert((char *) work_ + ocp_nlp_cost_external_workspace_calculate_size(config_, dims_, opts_) >=
+           c_ptr);
 
     return;
 }

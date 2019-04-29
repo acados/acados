@@ -142,6 +142,7 @@ void ocp_nlp_cost_nls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
 typedef struct
 {
     struct blasfeo_dmat tmp_nv_ny;
+    struct blasfeo_dmat tmp_nu_nx;
     struct blasfeo_dvec tmp_ny;
 } ocp_nlp_cost_nls_workspace;
 
