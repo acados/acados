@@ -707,6 +707,24 @@ void print_ocp_qp_info(ocp_qp_info *info)
     printf("***************************************************************\n\n");
 }
 
+void acados_warning(char warning_string [])
+{
+    printf("%s", warning_string);
+}
+
+void acados_error(char error_string [])
+{
+    printf("%s\n", error_string);
+    printf("exiting.\n");
+    assert(0);
+}
+
+void acados_not_implemented(char feature_string [])
+{
+    printf("Feature %s not yet implemented. Exiting.\n", feature_string);
+    assert(0);
+}
+
 void print_blasfeo_target()
 {
     printf("\n");
