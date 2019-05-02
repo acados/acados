@@ -479,7 +479,7 @@ int ocp_nlp_cost_nls_workspace_calculate_size(void *config_, void *dims_, void *
     size += sizeof(ocp_nlp_cost_nls_workspace);
 
     size += 1 * blasfeo_memsize_dmat(nu + nx, ny);       // tmp_nv_ny
-    size += 1 * blasfeo_memsize_dmat(nu + nx, nu + nx);  // tmp_nu_nx
+    size += 1 * blasfeo_memsize_dmat(nu + nx, nu + nx);  // tmp_nv_nv
     size += 1 * blasfeo_memsize_dvec(ny);                // tmp_ny
 
     size += 64;  // blasfeo_mem align
@@ -510,8 +510,8 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
     // tmp_nv_ny
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &work->tmp_nv_ny, &c_ptr);
    
-    // tmp_nu_nx
-    assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &work->tmp_nu_nx, &c_ptr);
+    // tmp_nv_nv
+    assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &work->tmp_nv_nv, &c_ptr);
 
     // tmp_ny
     assign_and_advance_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);
@@ -657,7 +657,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
         ext_fun_type_out[0] = BLASFEO_DMAT;
         // ext_fun_out[0] = memory->RSQrq;     // hess: (nu+nx) * (nu+nx)
-        ext_fun_out[0] = &work->tmp_nu_nx;   // hess: (nu+nx) * (nu+nx)
+        ext_fun_out[0] = &work->tmp_nv_nv;   // hess: (nu+nx) * (nu+nx)
 
         // evaluate external function
         model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
@@ -669,7 +669,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
                            &work->tmp_nv_ny, 0, 0);
         // RSQrq = RSQrq + tmp_nv_ny * tmp_nv_ny^T
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 1.0,
-                         model->scaling, &work->tmp_nu_nx, 0, 0, memory->RSQrq, 0, 0);
+                         model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
     }
 
     // slacks
