@@ -29,6 +29,7 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/utils/mem.h"
+#include "acados/utils/print.h"
 
 
 
