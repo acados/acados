@@ -32,7 +32,7 @@
 
 // #define _USE_VALGRIND_  // uncomment to bypass assignment and do new memory allocation instead
 
-#define _USE_MALLOC_  // acados_malloc = malloc / acados_malloc = calloc
+// #define _USE_MALLOC_  // acados_malloc = malloc / acados_malloc = calloc
 
 void make_int_multiple_of(int num, int *size) { *size = (*size + num - 1) / num * num; }
 int align_char_to(int num, char **c_ptr)

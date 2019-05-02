@@ -399,7 +399,21 @@ void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
 
 int ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
-    return 0;
+    ocp_nlp_cost_external_dims *dims = dims_;
+
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+
+    int size = 0;
+
+    size += sizeof(ocp_nlp_cost_external_workspace);
+
+    size += 1 * blasfeo_memsize_dmat(nu + nx, nu + nx);  // tmp_nv_nv
+
+    size += 64;  // blasfeo_mem align
+    
+    return size;
 }
 
 
@@ -407,8 +421,24 @@ int ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, v
 static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, void *opts_,
                                                  void *work_)
 {
-    // assert((char *) work_ + ocp_nlp_cost_external_workspace_calculate_size(config_, dims_, opts_) >=
-        //    c_ptr);
+    ocp_nlp_cost_external_dims *dims = dims_;
+    ocp_nlp_cost_external_workspace *work = work_;
+    
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+    
+    char *c_ptr = (char *) work_;
+    c_ptr += sizeof(ocp_nlp_cost_external_workspace);
+
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
+    
+    // tmp_nv_nv
+    assign_and_advance_blasfeo_dmat_mem(nu + nx, nu + nx, &work->tmp_nv_nv, &c_ptr);
+
+    assert((char *) work_ + ocp_nlp_cost_external_workspace_calculate_size(config_, dims_, opts_) >=
+           c_ptr);
 
     return;
 }
@@ -445,7 +475,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     ocp_nlp_cost_external_model *model = model_;
     // ocp_nlp_cost_external_opts *opts = opts_;
     ocp_nlp_cost_external_memory *memory = memory_;
-    // ocp_nlp_cost_external_workspace *work = work_;
+    ocp_nlp_cost_external_workspace *work = work_;
 
     ocp_nlp_cost_external_cast_workspace(config_, dims, opts_, work_);
 
@@ -478,11 +508,20 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     ext_fun_type_out[0] = BLASFEO_DVEC;
     ext_fun_out[0] = &memory->grad;  // grad: nu+nx
     ext_fun_type_out[1] = BLASFEO_DMAT;
-    ext_fun_out[1] = memory->RSQrq;  // hess: (nu+nx) * (nu+nx)
+    ext_fun_out[1] = &work->tmp_nv_nv;   // hess: (nu+nx) * (nu+nx)
 
     // evaluate external function
     model->ext_cost->evaluate(model->ext_cost, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
                               ext_fun_out);
+
+	if(model->scaling!=1.0)
+	{
+        acados_warning("ocp_nlp_cost_external: scaling needs testing!\n");
+        // TODO(zanellia, giaf): check scaling
+        blasfeo_dgesc(nu+nx, nu+nx, model->scaling, &work->tmp_nv_nv, 0, 0);
+    }
+
+    blasfeo_dgead(nx + nu, nx + nu, 1.0, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
 
     // slacks
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
@@ -492,8 +531,9 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
 	// scale
 	if(model->scaling!=1.0)
 	{
-		blasfeo_dgesc(nu+nx, nu+nx, model->scaling, memory->RSQrq, 0, 0);
-		blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+        acados_warning("ocp_nlp_cost_external: scaling needs testing!\n");
+        // TODO(zanellia, giaf): check scaling
+        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
 	}
 
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);

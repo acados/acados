@@ -51,6 +51,7 @@ extern "C" {
 typedef struct
 {
     int nx;  // number of states
+    int nz;  // number of algebraic variables
     int nu;  // number of inputs
     int ny;  // number of outputs
     int ns;  // number of slacks
@@ -86,7 +87,8 @@ void *ocp_nlp_cost_ls_dims_assign(void *config, void *raw_memory);
 ///  \param[in] ns number of slacks
 ///  \param[out] dims
 ///  \return size 
-void ocp_nlp_cost_ls_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns);
+void ocp_nlp_cost_ls_dims_initialize(void *config, void *dims, int nx,
+        int nu, int ny, int ns, int nz);
 
 //
 void ocp_nlp_cost_ls_dims_set(void *config_, void *dims_, const char *field, int* value);
@@ -102,6 +104,7 @@ typedef struct
 {
     // slack penalty has the form z^T * s + .5 * s^T * Z * s
     struct blasfeo_dmat Cyt;            ///< output matrix: Cy * [x, u] = y; in transposed form
+    struct blasfeo_dmat Vz;             ///< Vz in ls cost Vx*x + Vu*u + Vz*z
     struct blasfeo_dmat W;              ///< ls norm corresponding to this matrix
     struct blasfeo_dvec y_ref;          ///< yref
     struct blasfeo_dvec Z;              ///< diagonal Hessian of slacks as vector (lower and upper)
@@ -151,13 +154,16 @@ void ocp_nlp_cost_ls_opts_update(void *config, void *dims, void *opts);
 /// of the ocp_nlp module
 typedef struct
 {
-    struct blasfeo_dmat hess;    ///< hessian of cost function
-    struct blasfeo_dmat W_chol;  ///< cholesky factor of weight matrix
-    struct blasfeo_dvec res;     ///< ls residual r(x)
-    struct blasfeo_dvec grad;    ///< gradient of cost function
-    struct blasfeo_dvec *ux;     ///< pointer to ux in nlp_out
-    struct blasfeo_dmat *RSQrq;  ///< pointer to RSQrq in qp_in
-    struct blasfeo_dvec *Z;      ///< pointer to Z in qp_in
+    struct blasfeo_dmat hess;           ///< hessian of cost function
+    struct blasfeo_dmat W_chol;         ///< cholesky factor of weight matrix
+    struct blasfeo_dvec res;            ///< ls residual r(x)
+    struct blasfeo_dvec grad;           ///< gradient of cost function
+    struct blasfeo_dvec *ux;            ///< pointer to ux in nlp_out
+    struct blasfeo_dvec *z;             ///< pointer to z in sim_out
+    struct blasfeo_dmat *dzdxu_tran;    ///< pointer to sensitivity of a wrt xu in sim_out
+    struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
+    struct blasfeo_dmat *RSQrq;         ///< pointer to RSQrq in qp_in
+    struct blasfeo_dvec *Z;             ///< pointer to Z in qp_in
 } ocp_nlp_cost_ls_memory;
 
 //
@@ -172,6 +178,12 @@ void ocp_nlp_cost_ls_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memo
 void ocp_nlp_cost_ls_memory_set_Z_ptr(struct blasfeo_dvec *Z, void *memory);
 //
 void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
+//
+void ocp_nlp_cost_ls_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_);
+//
+void ocp_nlp_cost_ls_memory_set_dzdxu_tran_ptr(struct blasfeo_dmat *dzdxu_tran, void *memory_);
+//
+void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, void *memory_);
 
 
 
@@ -183,8 +195,12 @@ void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
 
 typedef struct
 {
-    struct blasfeo_dmat tmp_nv_ny;
-    struct blasfeo_dvec tmp_ny;
+    struct blasfeo_dmat tmp_nv_ny;   // temporary matrix of dimensions nv, ny
+    struct blasfeo_dmat Cyt_tilde;   // updated Cyt (after z elimination)
+    struct blasfeo_dmat dzdux_tran;  // derivatives of z wrt u and x (tran)
+    struct blasfeo_dvec tmp_ny;      // temporary vector of dimension ny
+    struct blasfeo_dvec tmp_nz;      // temporary vector of dimension nz
+    struct blasfeo_dvec y_ref_tilde; // updated y_ref (after z elimination)
 } ocp_nlp_cost_ls_workspace;
 
 //

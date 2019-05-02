@@ -35,6 +35,7 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
@@ -770,14 +771,16 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 #endif
     for (i = 0; i <= N; i++)
     {
-        // cost
-        config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i],
-                                            opts->cost[i], mem->cost[i], work->cost[i]);
+        // init Hessian to 0 
+        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, work->qp_in->RSQrq+i, 0, 0);
         // dynamics
         if (i < N)
             config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i],
-                                                nlp_in->dynamics[i], opts->dynamics[i],
-                                                mem->dynamics[i], work->dynamics[i]);
+                    nlp_in->dynamics[i], opts->dynamics[i],
+                    mem->dynamics[i], work->dynamics[i]);
+        // cost
+        config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i],
+                                            opts->cost[i], mem->cost[i], work->cost[i]);
         // constraints
         config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i],
                                                    nlp_in->constraints[i], opts->constraints[i],
@@ -951,6 +954,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
+ 
 
     // acados timer
     acados_timer timer0, timer1;
@@ -1001,7 +1005,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->dynamics[ii]->memory_set_pi_ptr(nlp_out->pi+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_BAbt_ptr(work->qp_in->BAbt+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq+ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_z_ptr(nlp_out->z+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_z_alg_ptr(nlp_out->z+ii, mem->dynamics[ii]);
     }
 
     // alias to cost_memory
@@ -1010,9 +1014,18 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
     for (ii = 0; ii <= N; ii++)
     {
-        config->cost[ii]->memory_set_ux_ptr(nlp_out->ux+ii, mem->cost[ii]);
-        config->cost[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq+ii, mem->cost[ii]);
-        config->cost[ii]->memory_set_Z_ptr(work->qp_in->Z+ii, mem->cost[ii]);
+        config->cost[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->cost[ii]);
+        if (dims->nz[ii] > 0) {
+            config->cost[ii]->memory_set_z_alg_ptr(
+                    &(((ocp_nlp_dynamics_cont_memory *)
+                    mem->dynamics[ii])->z_out), mem->cost[ii]);
+
+            config->cost[ii]->memory_set_dzdux_tran_ptr(
+                    &(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->dzdux_tran),
+                    mem->cost[ii]);
+        }
+        config->cost[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii, mem->cost[ii]);
+        config->cost[ii]->memory_set_Z_ptr(work->qp_in->Z + ii, mem->cost[ii]);
     }
 
     // alias to constraints_memory
@@ -1053,6 +1066,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // initialize QP
     initialize_qp(config, dims, nlp_in, nlp_out, opts, mem, work);
 
+        
+
     // SQP body
 
     // start timer
@@ -1071,7 +1086,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 	config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
 
     // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
-    //  print_ocp_qp_in(work->qp_in);
+    // print_ocp_qp_in(work->qp_in);
+    // exit(1);
 
     // start timer
     acados_tic(&timer1);
@@ -1172,6 +1188,7 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
                                             mem->dynamics[ii], work->dynamics[ii]);
         if (status != ACADOS_SUCCESS) return status;
     }
+
     return status;
 }
 
