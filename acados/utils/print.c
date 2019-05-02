@@ -710,7 +710,6 @@ void print_ocp_qp_info(ocp_qp_info *info)
 void acados_warning(char warning_string [])
 {
     printf("acados warning: %s", warning_string);
-    assert(0);
 }
 
 void acados_error(char error_string [])
