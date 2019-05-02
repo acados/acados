@@ -516,25 +516,16 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     model->ext_cost->evaluate(model->ext_cost, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
                               ext_fun_out);
 
-	if(model->scaling!=1.0)
-	{
-        acados_warning("ocp_nlp_cost_external: scaling needs testing!\n");
-        // TODO(zanellia, giaf): check scaling
-        blasfeo_dgesc(nu+nx, nu+nx, model->scaling, &work->tmp_nv_nv, 0, 0);
-    }
-
-    blasfeo_dgead(nx + nu, nx + nu, 1.0, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+    // TODO(zanellia, giaf): check scaling
+    blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
 
     // slacks
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
-    // grad = grad + Z .* mem->ux
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
 	// scale
 	if(model->scaling!=1.0)
 	{
-        acados_warning("ocp_nlp_cost_external: scaling needs testing!\n");
-        // TODO(zanellia, giaf): check scaling
         blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
 	}
 

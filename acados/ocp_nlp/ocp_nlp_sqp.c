@@ -872,8 +872,8 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
         struct blasfeo_dvec *ineq_fun =
             config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
         blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
-        // nlp mem: ineq_adj
 
+        // nlp mem: ineq_adj
         struct blasfeo_dvec *ineq_adj =
             config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
         blasfeo_dveccp(nv[i], ineq_adj, 0, nlp_mem->ineq_adj + i, 0);
