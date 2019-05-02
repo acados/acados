@@ -526,8 +526,8 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
 	{
         acados_warning("ocp_nlp_cost_external: scaling needs testing!\n");
         // TODO(zanellia, giaf): check scaling
-		blasfeo_dgesc(nu+nx, nu+nx, model->scaling, memory->RSQrq, 0, 0);
-		blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+        blasfeo_dgesc(nu+nx, nu+nx, model->scaling, memory->RSQrq, 0, 0);
+        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
 	}
 
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);

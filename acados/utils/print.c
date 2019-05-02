@@ -709,12 +709,13 @@ void print_ocp_qp_info(ocp_qp_info *info)
 
 void acados_warning(char warning_string [])
 {
-    printf("%s", warning_string);
+    printf("acados warning: %s", warning_string);
+    assert(0);
 }
 
 void acados_error(char error_string [])
 {
-    printf("%s\n", error_string);
+    printf("acados error: %s\n", error_string);
     printf("exiting.\n");
     assert(0);
 }
