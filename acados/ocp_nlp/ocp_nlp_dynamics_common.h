@@ -17,6 +17,12 @@
  *
  */
 
+/// \ingroup ocp_nlp
+/// @{
+
+/// \defgroup ocp_nlp_dynamics ocp_nlp_dynamics
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_
 
@@ -69,7 +75,7 @@ typedef struct
     void (*memory_set_pi_ptr)(struct blasfeo_dvec *pi, void *memory_);
     void (*memory_set_BAbt_ptr)(struct blasfeo_dmat *BAbt, void *memory_);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory_);
-    void (*memory_set_z_ptr)(struct blasfeo_dvec *z, void *memory_);
+    void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z, void *memory_);
     /* workspace */
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
@@ -92,3 +98,5 @@ ocp_nlp_dynamics_config *ocp_nlp_dynamics_config_assign(void *raw_memory);
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_
+/// @}
+/// @}

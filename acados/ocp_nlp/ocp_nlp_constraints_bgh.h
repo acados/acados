@@ -17,6 +17,11 @@
  *
  */
 
+/// \addtogroup ocp_nlp
+/// @{
+/// \addtogroup ocp_nlp_constraints
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_BGH_H_
 #define ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_BGH_H_
 
@@ -179,3 +184,5 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims, void 
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_BGH_H_
+/// @}
+/// @}

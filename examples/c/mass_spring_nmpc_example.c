@@ -141,13 +141,10 @@ static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, 
 // hand-generated external function for externally provided hessian and gradient
 void ext_cost(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
-
     int ii;
 
     int nu = 3;
     int nx = 8;
-
-    int nv = nu+nx;
 
 	// extract inputs
 	// 0: [x], size: nx, type: BLASFEO_DVEC_ARGS
@@ -190,8 +187,6 @@ void ext_costN(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type
 
     int nu = 0;
     int nx = 8;
-
-    int nv = nu+nx;
 
 	// extract inputs
 	// 0: [x], size: nx, type: BLASFEO_DVEC_ARGS

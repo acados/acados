@@ -78,6 +78,12 @@ void print_dense_qp_in(dense_qp_in *qp_in);
 
 void print_ocp_qp_info(ocp_qp_info *info);
 
+void acados_warning(char warning_string[]);
+
+void acados_error(char error_string[]);
+
+void acados_not_implemented(char feature_string[]);
+
 // blasfeo
 void print_blasfeo_target();
 

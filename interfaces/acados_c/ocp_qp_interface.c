@@ -30,33 +30,39 @@
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
+
 #ifdef ACADOS_WITH_QORE
 #include "acados/dense_qp/dense_qp_qore.h"
 #endif
+
 #ifdef ACADOS_WITH_QPOASES
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #endif
+
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #ifdef ACADOS_WITH_HPMPC
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #endif
+
 #ifdef ACADOS_WITH_QPDUNES
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #endif
+
 #ifdef ACADOS_WITH_OOQP
 #include "acados/dense_qp/dense_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #endif
+
 #ifdef ACADOS_WITH_OSQP
 #include "acados/ocp_qp/ocp_qp_osqp.h"
 #endif
 
 
-
 void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
                                                    ocp_qp_xcond_solver_config *solver_config)
 {
-// NOTE: this only works if solvers are ordered in the enum !!!!!!!!!!!!!!!!
+// NOTE: this only works if solvers are ordered in the enum!!!
+// First the partial condensing solver then the full condensing solvers.
 if (solver_name < FULL_CONDENSING_HPIPM)
     {
         ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);

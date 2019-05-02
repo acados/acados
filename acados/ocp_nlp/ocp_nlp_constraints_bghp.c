@@ -481,7 +481,11 @@ int ocp_nlp_constraints_bghp_model_set(void *config_, void *dims_,
     {
         model->nl_constr_h_fun_jac = value;
     }
-    else if (!strcmp(field, "lh"))
+    else if (!strcmp(field, "p"))
+    {
+        model->p = value;
+    }
+    else if (!strcmp(field, "lh")) // TODO(fuck_lint) remove
     {
         blasfeo_pack_dvec(nh, value, &model->d, nb+ng);
     }
@@ -940,7 +944,7 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     {
         if (nh != 1)
         {
-            printf("Not implemented");
+            printf("BGHP-type constraint: nh!=1 not implemented. Exiting.");
             exit(1);
         }
         //

@@ -17,6 +17,11 @@
  *
  */
 
+/// \addtogroup ocp_nlp
+/// @{
+/// \addtogroup ocp_nlp_dynamics
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_DISC_H_
 #define ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_DISC_H_
 
@@ -165,3 +170,5 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *m
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_DISC_H_
+/// @}
+/// @}

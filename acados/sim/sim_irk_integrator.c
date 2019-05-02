@@ -267,8 +267,13 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_hess = false;
     opts->jac_reuse = true;
 
-    opts->output_z = false;
-    opts->sens_algebraic = false;
+    if (dims->nz > 0) {
+        opts->output_z = true;
+        opts->sens_algebraic = true;
+    } else {
+        opts->output_z = false;
+        opts->sens_algebraic = false;
+    }
 
     return;
 }
@@ -726,7 +731,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     acados_tic(&timer);
     for (int ss = 0; ss < num_steps; ss++)
     {
-        /* decide wheter results from forward sensitivity propagation are stored,
+        /* decide whether results from forward sensitivity propagation are stored,
             or if memory has to be reused --> set pointers accordingly */
         if (opts->sens_hess){
             dK_dxu_ss = &dK_dxu[ss];
@@ -782,7 +787,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                 impl_ode_z_in.xi    = ns * nx + ii * nz;
                                               // use z_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
-                impl_ode_res_out.xi = ii * (nx + nz);  // store output in this posistion of rG
+                impl_ode_res_out.xi = ii * (nx + nz);  // store output in this position of rG
 
                 // compute the residual of implicit ode at time t_ii
                 if ((opts->jac_reuse && (ss == 0) && (iter == 0)) || (!opts->jac_reuse))

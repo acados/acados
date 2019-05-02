@@ -16,7 +16,7 @@ function [ model ] = export_inverted_pendulum_dae_model()
     end
     model_name_prefix = 'inv_pendulum';
     
-    %% Parameters (taken from Rien Quirynens Master Thesis)
+    %% Parameters (taken from Rien Quirynen's Master Thesis)
     m = 2;
     g = 9.81;
     M = 3.5;

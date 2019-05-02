@@ -21,7 +21,7 @@ import os
 def generate_c_code_implicit_ode( model, opts ):
 
     casadi_version = CasadiMeta.version()
-    if  casadi_version != '3.4.0':
+    if  casadi_version not in ('3.4.5', '3.4.0'):
         # old casadi versions
         raise Exception('Please download and install Casadi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
 
@@ -93,13 +93,23 @@ def generate_c_code_implicit_ode( model, opts ):
         impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
 
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
+        impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
 
-        fun_name = model_name + '_impl_dae_jac_x_xdot_u'
-        impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
+        # fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
+        # impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
+
+        # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
+        # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
         
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
+        impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
+
+        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
         impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
+
+        fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
+        impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
+
         
         fun_name = model_name + '_impl_dae_hess'
         impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
@@ -111,13 +121,13 @@ def generate_c_code_implicit_ode( model, opts ):
             impl_dae_fun = Function(fun_name, [x, xdot, u], [f_impl])
         
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_z])
+        impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_z])
         
         fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-        impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
+        impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
 
         fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-        impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
+        impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
         
         fun_name = model_name + '_impl_dae_hess'
         impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat], [HESS_multiplied])
@@ -134,13 +144,13 @@ def generate_c_code_implicit_ode( model, opts ):
     impl_dae_fun.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-    impl_dae_fun_jac_x_xdot.generate(fun_name, casadi_opts)
+    impl_dae_fun_jac_x_xdot_z.generate(fun_name, casadi_opts)
     
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-    impl_dae_jac_x_xdot_u.generate(fun_name, casadi_opts)
+    impl_dae_jac_x_xdot_u_z.generate(fun_name, casadi_opts)
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-    impl_dae_fun_jac_x_xdot_u.generate(fun_name, casadi_opts)
+    impl_dae_fun_jac_x_xdot_u_z.generate(fun_name, casadi_opts)
 
     if generate_hess:
         fun_name = model_name + '_impl_dae_hess'

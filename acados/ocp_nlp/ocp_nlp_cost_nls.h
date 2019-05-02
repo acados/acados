@@ -17,6 +17,15 @@
  *
  */
 
+/// \addtogroup ocp_nlp
+/// @{
+/// \addtogroup ocp_nlp_cost ocp_nlp_cost
+/// @{
+/// \addtogroup ocp_nlp_cost_nls ocp_nlp_cost_nls
+/// \brief This module implements nonlinear-least squares costs of the form
+/// \f$\min_{x,u} \| r(x,u) - y_{\text{ref}} \|_W^2\f$.
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
 
@@ -133,6 +142,7 @@ void ocp_nlp_cost_nls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
 typedef struct
 {
     struct blasfeo_dmat tmp_nv_ny;
+    struct blasfeo_dmat tmp_nv_nv;
     struct blasfeo_dvec tmp_ny;
 } ocp_nlp_cost_nls_workspace;
 
@@ -155,3 +165,6 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims, void *model_
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COST_NLS_H_
+/// @}
+/// @}
+/// @}

@@ -17,6 +17,11 @@
  *
  */
 
+/// \addtogroup ocp_nlp
+/// @{
+/// \addtogroup ocp_nlp_reg
+/// @{
+
 #ifndef ACADOS_OCP_NLP_OCP_NLP_REG_CONVEXIFY_H_
 #define ACADOS_OCP_NLP_OCP_NLP_REG_CONVEXIFY_H_
 
@@ -118,3 +123,5 @@ void ocp_nlp_reg_convexify_config_initialize_default(ocp_nlp_reg_config *config)
 #endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_REG_CONVEXIFY_H_
+/// @}
+/// @}
