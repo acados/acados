@@ -172,6 +172,8 @@ void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *fiel
     }
 }
 
+
+
 /************************************************
  * options
  ************************************************/
@@ -596,6 +598,8 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_cont_model *model = model_;
 
+	int jj;
+
     int nx = dims->nx;
     int nu = dims->nu;
     int nz = dims->nz;
@@ -613,16 +617,20 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_unpack_dvec(nx, mem->ux, nu, work->sim_in->x);
 
     // initialize seeds
-    for (int jj = 0; jj < nx1 * (nx + nu); jj++) work->sim_in->S_forw[jj] = 0.0;
-    for (int jj = 0; jj < nx1; jj++) work->sim_in->S_forw[jj * (nx + 1)] = 1.0;
-    for (int jj = 0; jj < nx + nu; jj++) work->sim_in->S_adj[jj] = 0.0;
+	// TODO fix dims if nx!=nx1 !!!!!!!!!!!!!!!!!
+    for(jj = 0; jj < nx1 * (nx + nu); jj++)
+		work->sim_in->S_forw[jj] = 0.0;
+    for(jj = 0; jj < nx1; jj++)
+		work->sim_in->S_forw[jj * (nx + 1)] = 1.0;
+    for(jj = 0; jj < nx + nu; jj++)
+		work->sim_in->S_adj[jj] = 0.0;
     blasfeo_unpack_dvec(nx1, mem->pi, 0, work->sim_in->S_adj);
 
     // call integrator
     config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out, opts->sim_solver,
                                  mem->sim_solver, work->sim_solver);
 
-    // TODO(rien): transition functions for changing dimensions not yet implemented!
+    // TODO transition functions for changing dimensions not yet implemented!
 
     // B
     blasfeo_pack_tran_dmat(nx1, nu, work->sim_out->S_forw + nx1 * nx, nx1, mem->BAbt, 0, 0);
@@ -639,6 +647,7 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
 
     // adj TODO if not computed by the integrator
+	// TODO this is computed by the integrator if compute_hess!=0
     if (opts->compute_adj)
     {
         blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj,
@@ -659,8 +668,12 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
         // Add hessian contribution
         blasfeo_dgead(nx+nu, nx+nu, 1.0, &mem->hes, 0, 0, mem->RSQrq, 0, 0);
     }
+
     return;
+
 }
+
+
 
 int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, void *opts_,
                                         void *mem_, void *work_)
@@ -681,6 +694,8 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, v
                                    opts->sim_solver, mem->sim_solver, work->sim_solver);
     return status;
 }
+
+
 
 void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
 {
