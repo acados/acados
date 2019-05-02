@@ -520,11 +520,13 @@ void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 }
 
 
+
 void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
                       const char *field, const void *value)
 {
     config->opts_set(config, opts_, field, value);
 }
+
 
 
 void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
@@ -533,6 +535,8 @@ void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
     config->dynamics_opts_set(config, opts_, stage, field, value);
 	return;
 }
+
+
 
 void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
 {
@@ -545,6 +549,7 @@ void ocp_nlp_opts_destroy(void *opts)
 {
     free(opts);
 }
+
 
 
 /************************************************

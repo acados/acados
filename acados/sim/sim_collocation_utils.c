@@ -34,6 +34,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+
+
 // TODO(rien): replace these LU codes with blasfeo
 static double lu_system_solve(double *A, double *b, int *perm, int dim, int dim_rhs, void *work)
 {
@@ -135,6 +137,8 @@ static double lu_system_solve(double *A, double *b, int *perm, int dim, int dim_
     return det;
 }
 
+
+
 int gauss_nodes_work_calculate_size(int ns)
 {
     int N = ns - 1;
@@ -148,6 +152,8 @@ int gauss_nodes_work_calculate_size(int ns)
 
     return size;
 }
+
+
 
 void gauss_nodes(int ns, double *nodes, void *work)
 {
@@ -236,6 +242,8 @@ void gauss_nodes(int ns, double *nodes, void *work)
     return;
 }
 
+
+
 int gauss_simplified_work_calculate_size(int ns)
 {
     int size = 0;
@@ -247,6 +255,8 @@ int gauss_simplified_work_calculate_size(int ns)
 
     return size;
 }
+
+
 
 void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
 {
@@ -361,6 +371,8 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
     return;
 }
 
+
+
 int butcher_table_work_calculate_size(int ns)
 {
     int size = 0;
@@ -371,6 +383,8 @@ int butcher_table_work_calculate_size(int ns)
 
     return size;
 }
+
+
 
 void butcher_table(int ns, double *nodes, double *b, double *A, void *work)
 {

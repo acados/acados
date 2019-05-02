@@ -27,6 +27,8 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
+
+
 typedef struct
 {
     int nx;

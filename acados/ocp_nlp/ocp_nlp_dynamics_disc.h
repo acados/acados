@@ -63,6 +63,7 @@ void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim,
 typedef struct
 {
     int compute_adj;
+//    int compute_hess;
 } ocp_nlp_dynamics_disc_opts;
 
 //

@@ -218,9 +218,15 @@ void ocp_nlp_dynamics_cont_opts_initialize_default(void *config_, void *dims_, v
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
 
+	// own opts
     opts->compute_adj = 1;
+    opts->compute_hess = 0;
 
+	// sim opts
     config->sim_solver->opts_initialize_default(config->sim_solver, dims->sim, opts->sim_solver);
+
+	bool tmp_bool = false;
+	config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
 
     return;
 }
@@ -251,6 +257,17 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
 	{
 		int *int_ptr = value;
 		opts->compute_adj = *int_ptr;
+	}
+	else if(!strcmp(field, "compute_hess"))
+	{
+		int *int_ptr = value;
+		opts->compute_adj = *int_ptr;
+		bool tmp_bool = true;
+		if(*int_ptr==0)
+		{
+			tmp_bool = false;
+		}
+		config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
 	}
 	else
 	{

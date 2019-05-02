@@ -454,9 +454,9 @@ int sim_opts_set_(sim_opts *opts, const char *field, void *value)
     }
     else
     {
-        printf("\nerror: option type not available for RK integrator\n");
-        status = ACADOS_FAILURE;
+        printf("\nerror: field %s not available in sim_opts_set\n", field);
+        status = ACADOS_FAILURE; // TODO remove
         exit(1);
     }
-    return status;
+    return status; // TODO remove
 }
