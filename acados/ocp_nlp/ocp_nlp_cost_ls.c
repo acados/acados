@@ -69,6 +69,8 @@ void *ocp_nlp_cost_ls_dims_assign(void *config_, void *raw_memory)
     return dims;
 }
 
+
+
 void ocp_nlp_cost_ls_dims_initialize(void *config_, void *dims_, int nx,
         int nu, int ny, int ns, int nz)
 {

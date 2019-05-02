@@ -60,14 +60,15 @@ void *ocp_nlp_cost_external_dims_assign(void *config_, void *raw_memory)
 
 
 
-void ocp_nlp_cost_external_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny,
-                                           int ns)
+void ocp_nlp_cost_external_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns, int nz)
 {
     ocp_nlp_cost_external_dims *dims = dims_;
 
     dims->nx = nx;
     dims->nu = nu;
     dims->ns = ns;
+
+	// TODO nz
 
     return;
 }
