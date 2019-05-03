@@ -459,7 +459,7 @@ int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
         size += nX * sizeof(double);       // out_forw_traj
     }
 
-    if (opts->sens_hess && opts->sens_adj)
+    if (opts->sens_hess) // && opts->sens_adj)
     {
         size += (nX + nx + nu) * sizeof(double);          // rhs_adj_in
         size += (nx + nu + nhess) * sizeof(double);       // out_adj_tmp
@@ -515,7 +515,7 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
         assign_and_advance_double(nX, &workspace->out_forw_traj, &c_ptr);
     }
 
-    if (opts->sens_hess && opts->sens_adj)
+    if (opts->sens_hess) // && opts->sens_adj)
     {
         assign_and_advance_double(nx + nX + nu, &workspace->rhs_adj_in, &c_ptr);
         assign_and_advance_double(nx + nu + nhess, &workspace->out_adj_tmp, &c_ptr);
@@ -813,7 +813,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
 					// adjoint VDE evaluation
                     model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in,
-                                                  ext_fun_type_out, ext_fun_out);
+                    		ext_fun_type_out, ext_fun_out);
                 }
                 else
                 {
@@ -834,7 +834,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
 
                     model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in,
-                                                  ext_fun_type_out, ext_fun_out);
+                    		ext_fun_type_out, ext_fun_out);
                 }
                 timing_ad += acados_toc(&timer_ad);
             }

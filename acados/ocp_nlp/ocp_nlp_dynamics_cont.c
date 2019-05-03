@@ -628,7 +628,7 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 
     // call integrator
     config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out, opts->sim_solver,
-                                 mem->sim_solver, work->sim_solver);
+    		mem->sim_solver, work->sim_solver);
 
     // TODO transition functions for changing dimensions not yet implemented!
 

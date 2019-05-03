@@ -832,16 +832,15 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
         // dynamics
         if (i < N)
             config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i],
-                                                nlp_in->dynamics[i], opts->dynamics[i],
-                                                mem->dynamics[i], work->dynamics[i]);
+            		nlp_in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+
         // cost
         config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i],
                 opts->cost[i], mem->cost[i], work->cost[i]);
 
         // constraints
         config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i],
-                                                   nlp_in->constraints[i], opts->constraints[i],
-                                                   mem->constraints[i], work->constraints[i]);
+        		nlp_in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
     }
 
     /* collect stage-wise evaluations */
