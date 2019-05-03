@@ -263,7 +263,7 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
 	else if(!strcmp(field, "compute_hess"))
 	{
 		int *int_ptr = value;
-		opts->compute_adj = *int_ptr;
+		opts->compute_hess = *int_ptr;
 		bool tmp_bool = true;
 		if(*int_ptr==0)
 		{
@@ -657,6 +657,9 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 
     if (opts->compute_hess)
     {
+
+//		d_print_mat(nu+nx, nu+nx, work->sim_out->S_hess, nu+nx);
+
         // unpack d*_d2u
         blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx + nu,
                                      &mem->hes, 0, 0);
