@@ -19,6 +19,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int *i_ptr;
 	int *tmp_idx;
 	double *d_ptr;
+	char *c_ptr;
 
 	int ii, jj, idx;
 
@@ -615,8 +616,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// opts_struct
 
 	int N;							bool set_param_scheme_N = false;
-	char * nlp_solver;
-	char * qp_solver;
+	char *nlp_solver;
+	bool nlp_solver_exact_hessian;
+	char *qp_solver;
 	int qp_solver_N_pcond;			bool set_qp_solver_N_pcond = false;
 	char *sim_method;
 	int sim_method_num_stages;		bool set_sim_method_num_stages = false;
@@ -637,6 +639,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// nlp_solver
 	// TODO check
 	nlp_solver = mxArrayToString( mxGetField( prhs[1], 0, "nlp_solver" ) );
+	// nlp solver exact hessian
+	nlp_solver_exact_hessian = false;
+	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "nlp_solver_exact_hessian" ) );
+	if (!strcmp(c_ptr, "true"))
+		{
+		nlp_solver_exact_hessian = true;
+		}
 	// qp_solver
 	// TODO check
 	qp_solver = mxArrayToString( mxGetField( prhs[1], 0, "qp_solver" ) );
@@ -1012,6 +1021,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	void *opts = ocp_nlp_opts_create(config, dims);
 
+	// nlp solver exact hessian
+//	printf("\nexact hess %d\n", nlp_solver_exact_hessian);
+	if(nlp_solver_exact_hessian)
+		{
+		for(ii=0; ii<=N; ii++)
+			{
+			ocp_nlp_cost_opts_set(config, opts, ii, "exact_hess", &nlp_solver_exact_hessian);
+			}
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_dynamics_opts_set(config, opts, ii, "compute_hess", &nlp_solver_exact_hessian);
+			}
+		// TODO exact hessian of nonlinear constraints !!!!!!!!!!!!!!!!!!!!
+		}
 	// qp_solver_N_pcond
 	if(set_qp_solver_N_pcond)
 		{
