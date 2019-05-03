@@ -411,6 +411,27 @@ void ocp_nlp_cost_ls_opts_update(void *config_, void *dims_, void *opts_)
 
 
 
+void ocp_nlp_cost_ls_opts_set(void *config_, void *opts_, const char *field, void* value)
+{
+    ocp_nlp_cost_config *config = config_;
+    ocp_nlp_cost_ls_opts *opts = opts_;
+
+	if(!strcmp(field, "exact_hess"))
+	{
+		// do nothing: the exact hessian is always computed
+	}
+	else
+	{
+		printf("\nerror: field %s not available in ocp_nlp_cost_ls_opts_set\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                     memory                                 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -692,9 +713,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemv_n(ny, nz, -1.0, &model->Vz,
                 0, 0, &work->tmp_nz, 0, 1.0, &work->y_ref_tilde, 0, &work->y_ref_tilde, 0);
 
-        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol,
-                0, 0, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny,
-                           0, 0);
+        blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
 
         // add hessian of the cost contribution
         blasfeo_dsyrk_ln(nu + nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 1.0,
@@ -704,7 +723,6 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
                 0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
 
-        // TODO(all): use lower triangular chol of W to save n_y^2 flops
         blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res,
                 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
@@ -722,7 +740,6 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux,
                 0, -1.0, &model->y_ref, 0, &memory->res, 0);
 
-        // TODO(all): use lower triangular chol of W to save n_y^2 flops
         blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res,
                 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
 
@@ -761,6 +778,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
     config->opts_assign = &ocp_nlp_cost_ls_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_ls_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_ls_opts_update;
+    config->opts_set = &ocp_nlp_cost_ls_opts_set;
     config->memory_calculate_size = &ocp_nlp_cost_ls_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_ls_memory_assign;
     config->memory_get_grad_ptr = &ocp_nlp_cost_ls_memory_get_grad_ptr;

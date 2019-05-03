@@ -68,6 +68,8 @@ int ocp_nlp_cost_external_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_cost_external_model_assign(void *config, void *dims, void *raw_memory);
 
+
+
 /************************************************
  * options
  ************************************************/
@@ -85,6 +87,10 @@ void *ocp_nlp_cost_external_opts_assign(void *config, void *dims, void *raw_memo
 void ocp_nlp_cost_external_opts_initialize_default(void *config, void *dims, void *opts);
 //
 void ocp_nlp_cost_external_opts_update(void *config, void *dims, void *opts);
+//
+void ocp_nlp_cost_external_opts_set(void *config, void *opts, const char *field, void *value);
+
+
 
 /************************************************
  * memory

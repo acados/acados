@@ -356,7 +356,7 @@ void ocp_nlp_in_destroy(void *in)
 
 
 void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-        const char *field, void *value)
+		const char *field, void *value)
 {
     int ii;
 
@@ -379,7 +379,7 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
 
 
 int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-                           int stage, const char *fun_type, void *fun_ptr)
+		int stage, const char *fun_type, void *fun_ptr)
 {
     sim_config *sim_config = config->dynamics[stage]->sim_solver;
     ocp_nlp_dynamics_cont_model *dynamics = in->dynamics[stage];
@@ -392,8 +392,7 @@ int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
 
 
 int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                           ocp_nlp_in *in, int stage,
-                           const char *field, void *value)
+		ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     ocp_nlp_cost_config *cost_config = config->cost[stage];
     void *cost_model = in->cost[stage];
@@ -408,7 +407,7 @@ int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 // TODO remove and use ocp_nlp_dynamics_model_set instead !!!
 int nlp_set_discrete_model_in_stage(ocp_nlp_config *config, ocp_nlp_in *in, int stage,
-                                    void *fun_ptr)
+		void *fun_ptr)
 {
 
     ocp_nlp_dynamics_disc_model *dynamics = in->dynamics[stage];
@@ -419,7 +418,7 @@ int nlp_set_discrete_model_in_stage(ocp_nlp_config *config, ocp_nlp_in *in, int 
 
 
 int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
-             ocp_nlp_in *in, int stage, const char *field, void *value)
+		ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     ocp_nlp_constraints_config *constr_config = config->constraints[stage];
     void *constr_dims = dims->constraints[stage];
@@ -457,7 +456,7 @@ void ocp_nlp_out_destroy(void *out)
 
 
 void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-                     int stage, const char *field, void *value)
+		int stage, const char *field, void *value)
 {
     if (!strcmp(field, "x"))
     {
@@ -479,7 +478,7 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 
 
 void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-                     int stage, const char *field, void *value)
+		int stage, const char *field, void *value)
 {
     if (!strcmp(field, "x"))
     {
@@ -501,7 +500,7 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 
 
 int ocp_nlp_dims_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-                     int stage, const char *field)
+		int stage, const char *field)
 {
     if (!strcmp(field, "x"))
     {
@@ -537,7 +536,7 @@ void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
 
 void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
-                      const char *field, const void *value)
+		const char *field, const void *value)
 {
     config->opts_set(config, opts_, field, value);
 }
@@ -545,9 +544,18 @@ void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
 
 
 void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-                                         const char *field, void *value)
+		const char *field, void *value)
 {
     config->dynamics_opts_set(config, opts_, stage, field, value);
+	return;
+}
+
+
+
+void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+		const char *field, void *value)
+{
+    config->cost_opts_set(config, opts_, stage, field, value);
 	return;
 }
 

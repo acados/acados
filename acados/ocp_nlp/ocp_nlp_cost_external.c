@@ -293,6 +293,27 @@ void ocp_nlp_cost_external_opts_update(void *config_, void *dims_, void *opts_)
 
 
 
+void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *field, void* value)
+{
+    ocp_nlp_cost_config *config = config_;
+    ocp_nlp_cost_external_opts *opts = opts_;
+
+	if(!strcmp(field, "exact_hess"))
+	{
+		// do nothing: the exact hessian is always computed
+	}
+	else
+	{
+		printf("\nerror: field %s not available in ocp_nlp_cost_external_opts_set\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 /************************************************
  * memory
  ************************************************/
@@ -555,6 +576,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->opts_assign = &ocp_nlp_cost_external_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_external_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_external_opts_update;
+    config->opts_set = &ocp_nlp_cost_external_opts_set;
     config->memory_calculate_size = &ocp_nlp_cost_external_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_external_memory_assign;
     config->memory_get_grad_ptr = &ocp_nlp_cost_external_memory_get_grad_ptr;

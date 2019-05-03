@@ -141,6 +141,8 @@ void *ocp_nlp_cost_ls_opts_assign(void *config, void *dims, void *raw_memory);
 void ocp_nlp_cost_ls_opts_initialize_default(void *config, void *dims, void *opts);
 //
 void ocp_nlp_cost_ls_opts_update(void *config, void *dims, void *opts);
+//
+void ocp_nlp_cost_ls_opts_set(void *config, void *opts, const char *field, void *value);
 
 
 

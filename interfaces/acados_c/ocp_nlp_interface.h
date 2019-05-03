@@ -199,13 +199,13 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
 ///     impl_ode_fun_jac_x_xdot, impl_ode_jac_x_xdot_u (TBC)
 /// \param fun_ptr Function pointer to the dynamics function.
 int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-                           int stage, const char *fun_type, void *fun_ptr);
+		int stage, const char *fun_type, void *fun_ptr);
 
 
 /// Deprecated
 /// TODO remove and use ocp_nlp_dynamics_model_set instead !!!
 int nlp_set_discrete_model_in_stage(ocp_nlp_config *config, ocp_nlp_in *in, int stage,
-                                    void *fun_ptr);
+		void *fun_ptr);
 
 /// Sets the function pointers to the cost functions for the given stage.
 ///
@@ -217,7 +217,7 @@ int nlp_set_discrete_model_in_stage(ocp_nlp_config *config, ocp_nlp_in *in, int 
 ///     y_ref, W (others TBC)
 /// \param value Cost values.
 int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-                           int stage, const char *field, void *value);
+		int stage, const char *field, void *value);
 
 
 /// Sets the function pointers to the constraints functions for the given stage.
@@ -229,7 +229,7 @@ int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 /// \param field The name of the field, either lb, ub (others TBC)
 /// \param value Constraints function or values.
 int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                     ocp_nlp_in *in, int stage, const char *field, void *value);
+		ocp_nlp_in *in, int stage, const char *field, void *value);
 
 /* out */
 
@@ -247,14 +247,14 @@ void ocp_nlp_out_destroy(void *out);
 
 /// TBD
 void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-                     int stage, const char *field, void *value);
+		int stage, const char *field, void *value);
 
 /// TBD
 void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-                     int stage, const char *field, void *value);
+		int stage, const char *field, void *value);
 //
 int ocp_nlp_dims_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-                     int stage, const char *field);
+		int stage, const char *field);
 
 /* opts */
 
@@ -276,7 +276,7 @@ void ocp_nlp_opts_destroy(void *opts);
 /// \param field Name of the option.
 /// \param value Value of the option.
 void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
-                      const char *field, const void* value);
+		const char *field, const void* value);
 
 /// TBC
 /// Set the option for the dynamics in a given stage.
@@ -287,7 +287,18 @@ void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
 /// \param field Name of the option.
 /// \param value Value of the option.
 void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-                                         const char *field, void *value);
+		const char *field, void *value);
+
+/// TBC
+/// Set the option for the cost in a given stage.
+///
+/// \param config The configuration struct.
+/// \param opts_ The options struct.
+/// \param stage Stage number.
+/// \param field Name of the option.
+/// \param value Value of the option.
+void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+		const char *field, void *value);
 
 /// TBC
 /// Updates the options.
@@ -332,7 +343,7 @@ int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *
 /* get */
 /// TBD
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
-                 const char *field, void *return_value_);
+		const char *field, void *return_value_);
 
 #ifdef __cplusplus
 } /* extern "C" */
