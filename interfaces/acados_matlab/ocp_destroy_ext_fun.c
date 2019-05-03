@@ -114,6 +114,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			free(ext_fun_ptr);
 			}
 		}
+	if(mxGetField( prhs[2], 0, "dyn_expl_ode_hes" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_expl_ode_hes" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_param_casadi_free(ext_fun_param_ptr+ii);
+				}
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
+			free(ext_fun_ptr);
+			}
+		}
 	if(mxGetField( prhs[2], 0, "dyn_impl_ode_fun" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_impl_ode_fun" ) );
@@ -161,6 +183,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(mxGetField( prhs[2], 0, "dyn_impl_ode_jac_x_xdot_u" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_impl_ode_jac_x_xdot_u" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_param_casadi_free(ext_fun_param_ptr+ii);
+				}
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
+			free(ext_fun_ptr);
+			}
+		}
+	if(mxGetField( prhs[2], 0, "dyn_impl_ode_hess" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_impl_ode_hess" ) );
 		if(!strcmp(param_f, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];

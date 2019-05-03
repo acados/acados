@@ -43,6 +43,7 @@ classdef acados_ocp < handle
 					c_sources = [c_sources, 'ocp_model_dyn_impl_ode_fun_jac_x_xdot.c '];
 					c_sources = [c_sources, 'ocp_model_dyn_impl_ode_fun_jac_x_xdot_u.c '];
 					c_sources = [c_sources, 'ocp_model_dyn_impl_ode_jac_x_xdot_u.c '];
+					c_sources = [c_sources, 'ocp_model_dyn_impl_ode_hess.c '];
 				else
 					fprintf('\ncodegen_model: sim solver not supported: %s\n', obj.opts_struct.sim_method);
 					return;
