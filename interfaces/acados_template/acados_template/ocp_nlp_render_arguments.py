@@ -19,6 +19,7 @@ class ocp_nlp_dims:
         self.__nbu  = 0     # number of input bounds
         self.__nsbx = 0     # number of soft state bounds 
         self.__nsbu = 0     # number of soft input bounds
+        self.__ns   = 0     # total number of slacks
         self.__ng   = 0     # number of general constraints
         self.__nbxN = 0     # number of state bounds in last stage 
         self.__ngN  = 0     # number of general constraints in last stage
