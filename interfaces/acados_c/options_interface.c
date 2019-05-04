@@ -213,7 +213,7 @@ bool set_option_int(void *args_, const char *option, const int value)
             }
             else if (!strcmp(token, "max_iter"))
             {
-                args->options.max_iter = value;
+                args->options.maxIter = value;
             }
             else if (!strcmp(token, "N2"))
             {
