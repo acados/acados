@@ -7,6 +7,7 @@ clear all
 compile_mex = 'true';
 codgen_model = 'true';
 method = 'erk';
+%method = 'irk';
 sens_forw = 'false';
 num_stages = 4;
 num_steps = 4;

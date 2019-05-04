@@ -11,12 +11,15 @@ N = 100;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-exact_hessian = 'false';
+%exact_hessian = 'false'
+exact_hessian = 'true'
+%regularize_method = 'no_regularize';
+regularize_method = 'project';
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_N_pcond = 5;
-sim_method = 'erk';
-%sim_method = 'irk';
+%sim_method = 'erk';
+sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 cost_type = 'linear_ls';
@@ -152,6 +155,7 @@ ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', exact_hessian);
+ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
