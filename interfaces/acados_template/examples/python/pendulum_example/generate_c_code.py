@@ -93,6 +93,20 @@ ra.solver_config.nlp_solver_type = 'SQP'
 ra.acados_include_path  = '/usr/local/include'
 ra.acados_lib_path      = '/usr/local/lib'
 
+
+
+json_layout = acados_ocp2json_layout(ra)
+import pdb; pdb.set_trace()
+# ocp_nlp = ra
+# acados_ocp = ra
+# ocp_nlp.cost = acados_ocp.cost.__dict__
+# ocp_nlp.constraints = acados_ocp.constraints.__dict__
+# ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
+# ocp_nlp.dims = acados_ocp.dims.__dict__
+# ocp_nlp = ocp_nlp.__dict__
+# import pdb; pdb.set_trace()
+# json_layout = dict2json_layout(ocp_nlp)
+
 acados_solver = generate_solver(model, ra, json_file = 'acados_ocp.json')
 
 Nsim = 100

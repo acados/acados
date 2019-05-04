@@ -797,10 +797,37 @@ def dict2json(d):
         out[k.replace(k, out_key)] = v
     return out
 
+def acados_ocp2json_layout(acados_ocp):
+    """ Convert acados ocp nlp object JSON format by stripping the 
+    property mangling and adding array dimension info.
+    ALL items of type String will be converted 
+    to type ndarrray!
+     
+    Parameters
+    ----------
+    acados_ocp : class
+        object of type ocp_nlp_render_arguments.
+    
+    Returns
+    ------
+    out: dict 
+        acados_layout
+    """
+    ocp_nlp = acados_ocp
+    ocp_nlp.cost = acados_ocp.cost.__dict__
+    ocp_nlp.constraints = acados_ocp.constraints.__dict__
+    ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
+    ocp_nlp.dims = acados_ocp.dims.__dict__
+    ocp_nlp = ocp_nlp.__dict__
+    json_layout = dict2json_layout(ocp_nlp)
+    return json_layout
+
 def dict2json_layout(d):
     """ Convert dictionary containing the description of 
     of the ocp_nlp to JSON format by stripping the 
     property mangling and adding array dimension info.
+    ALL items of type String will be converted 
+    to type ndarrray!
      
     Parameters
     ----------
@@ -819,6 +846,9 @@ def dict2json_layout(d):
             v = dict2json_layout(v)
 
         v_type = str(type(v).__name__)
+        if v_type == 'list':
+            v_type = 'ndarray'
+
         # add array number of dimensions?
         # if v_type == 'ndarray':
         #     v_type = v_type + '_' + str(len(v.shape))
