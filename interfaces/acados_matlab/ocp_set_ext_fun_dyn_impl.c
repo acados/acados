@@ -186,7 +186,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mxArray *impl_ode_fun_jac_x_xdot_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 			ptr = mxGetData(impl_ode_fun_jac_x_xdot_mat);
 			ptr[0] = (long long) ext_fun_ptr;
-			mxSetField((mxArray*) prhs[1], 0, "dyn_impl_ode_fun_jac_x_xdot", impl_ode_fun_jac_x_xdot_mat);
+			mxSetField(plhs[0], 0, "dyn_impl_ode_fun_jac_x_xdot", impl_ode_fun_jac_x_xdot_mat);
 
 			// impl_ode_jac_x_xdot_u
 			ext_fun_ptr = (external_function_casadi *) malloc(N*sizeof(external_function_casadi));
