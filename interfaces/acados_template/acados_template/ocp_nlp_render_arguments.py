@@ -17,6 +17,8 @@ class ocp_nlp_dims:
         self.__nhN  = 0     # number of nonlinear constraints in last stage
         self.__nbx  = 0     # number of state bounds 
         self.__nbu  = 0     # number of input bounds
+        self.__nsbx = 0     # number of soft state bounds 
+        self.__nsbu = 0     # number of soft input bounds
         self.__ng   = 0     # number of general constraints
         self.__nbxN = 0     # number of state bounds in last stage 
         self.__ngN  = 0     # number of general constraints in last stage
@@ -69,6 +71,14 @@ class ocp_nlp_dims:
     @property
     def nbu(self):
         return self.__nbu
+
+    @property
+    def nsbx(self):
+        return self.__nsbx
+
+    @property
+    def nsbu(self):
+        return self.__nsbu
 
     @property
     def ng(self):
@@ -170,6 +180,20 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nbx value. Exiting.')
 
+    @nsbu.setter
+    def nsbu(self, nsbu):
+        if type(nsbu) == n int and nsbu > -1:
+            self.__nsbu = nsbu
+        else:
+            raise Exception('Invalid nsbu value. Exiting.')
+
+    @nsbx.setter
+    def nsbx(self, nbx):
+        if type(nsbx) === int and nsbx > -1:
+            self.__nsbx = nsbx
+        else:
+            raise Exception('Invalid nsbx value. Exiting.')
+
     @ng.setter
     def ng(self, ng):
         if type(ng) == int and ng > -1:
@@ -207,6 +231,10 @@ class ocp_nlp_cost:
         self.__Vu    = []  # u matrix coefficient
         self.__Vz    = []  # z matrix coefficient
         self.__yref  = []  # reference
+        self.__Zl    = []  # Hessian wrt lower slack 
+        self.__Zu    = []  # Hessian wrt upper slack 
+        self.__zl    = []  # gradient wrt lower slack 
+        self.__zu    = []  # gradient wrt upper slack 
         # Mayer term
         self.__WN    = []  # weight matrix
         self.__VxN   = []  # x matrix coefficient
@@ -232,6 +260,22 @@ class ocp_nlp_cost:
     @property
     def yref(self):
         return self.__yref
+
+    @property
+    def Zl(self):
+        return self.__Zl
+
+    @property
+    def Zu(self):
+        return self.__Zu
+
+    @property
+    def zl(self):
+        return self.__zl
+
+    @property
+    def zu(self):
+        return self.__zu
 
     @W.setter
     def W(self, W):
@@ -267,6 +311,34 @@ class ocp_nlp_cost:
             self.__yref = yref
         else:
             raise Exception('Invalid yref value. Exiting.')
+
+    @Zl.setter
+    def Zl(self, Zl):
+        if type(Zl) == np.ndarray:
+            self.__Zl = Zl
+        else:
+            raise Exception('Invalid Zl value. Exiting.')
+
+    @Zu.setter
+    def Zu(self, Zu):
+        if type(Zu) == np.ndarray:
+            self.__Zu = Zu
+        else:
+            raise Exception('Invalid Zu value. Exiting.')
+
+    @zl.setter
+    def zl(self, zl):
+        if type(zl) == np.ndarray:
+            self.__zl = zl
+        else:
+            raise Exception('Invalid zl value. Exiting.')
+
+    @zu.setter
+    def zu(self, zu):
+        if type(zu) == np.ndarray:
+            self.__zu = zu
+        else:
+            raise Exception('Invalid zu value. Exiting.')
 
     # Mayer term
     @property
@@ -310,6 +382,12 @@ class ocp_nlp_constraints:
         self.__ubx    = []  # upper bounds on x 
         self.__ubu    = []  # upper bounds on u 
         self.__idxbu  = []  # indexes of bounds on u
+        self.__lsbx   = []  # soft lower bounds on x
+        self.__lsbu   = []  # soft lower bounds on u
+        self.__idxsbx = []  # indexes of soft bounds on x 
+        self.__usbx   = []  # soft upper bounds on x 
+        self.__usbu   = []  # soft upper bounds on u 
+        self.__idxsbu = []  # indexes of soft bounds on u
         self.__lg     = []  # lower bound for general inequalities 
         self.__ug     = []  # upper bound for general inequalities 
         self.__lh     = []  # lower bound for nonlinear inequalities 
@@ -350,6 +428,30 @@ class ocp_nlp_constraints:
     @property
     def idxbu(self):
         return self.__idxbu
+
+    @property
+    def lsbx(self):
+        return self.__lsbx
+
+    @property
+    def lsbu(self):
+        return self.__lsbu
+    
+    @property
+    def usbx(self):
+        return self.__usbx
+
+    @property
+    def usbu(self):
+        return self.__usbu
+
+    @property
+    def idxsbx(self):
+        return self.__idxsbx
+
+    @property
+    def idxsbu(self):
+        return self.__idxsbu
 
     @property
     def lg(self):
@@ -456,6 +558,48 @@ class ocp_nlp_constraints:
             self.__idxbu = idxbu
         else:
             raise Exception('Invalid idxbu value. Exiting.')
+
+    @lsbx.setter
+    def lsbx(self, lsbx):
+        if type(lsbx) == np.ndarray:
+            self.__lsbx = lsbx
+        else:
+            raise Exception('Invalid lsbx value. Exiting.')
+
+    @usbx.setter
+    def usbx(self, usbx):
+        if type(usbx) == np.ndarray:
+            self.__usbx = usbx
+        else:
+            raise Exception('Invalid usbx value. Exiting.')
+
+    @idxsbx.setter
+    def idxsbx(self, idxsbx):
+        if type(idxsbx) == np.ndarray:
+            self.__idxsbx = idxsbx
+        else:
+            raise Exception('Invalid idxsbx value. Exiting.')
+
+    @lsbu.setter
+    def lsbu(self, lsbu):
+        if type(lsbu) == np.ndarray:
+            self.__lsbu = lsbu
+        else:
+            raise Exception('Invalid lsbu value. Exiting.')
+
+    @usbu.setter
+    def usbu(self, usbu):
+        if type(usbu) == np.ndarray:
+            self.__usbu = usbu
+        else:
+            raise Exception('Invalid usbu value. Exiting.')
+    
+    @idxsbu.setter
+    def idxsbu(self, idxsbu):
+        if type(idxsbu) == np.ndarray:
+            self.__idxsbu = idxsbu
+        else:
+            raise Exception('Invalid idxsbu value. Exiting.')
 
     @lg.setter
     def lg(self, lg):
