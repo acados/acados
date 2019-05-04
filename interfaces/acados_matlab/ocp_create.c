@@ -618,6 +618,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int N;							bool set_param_scheme_N = false;
 	char *nlp_solver;
 	bool nlp_solver_exact_hessian;
+	int nlp_solver_max_iter;		bool set_nlp_solver_max_iter = false;
 	char *qp_solver;
 	int qp_solver_N_pcond;			bool set_qp_solver_N_pcond = false;
 	char *sim_method;
@@ -645,6 +646,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if (!strcmp(c_ptr, "true"))
 		{
 		nlp_solver_exact_hessian = true;
+		}
+	// nlp solver max iter
+	if(mxGetField( prhs[1], 0, "nlp_solver_max_iter" )!=NULL)
+		{
+		set_nlp_solver_max_iter = true;
+		nlp_solver_max_iter = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_max_iter" ) );
 		}
 	// qp_solver
 	// TODO check
@@ -1034,6 +1041,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ocp_nlp_dynamics_opts_set(config, opts, ii, "compute_hess", &nlp_solver_exact_hessian);
 			}
 		// TODO exact hessian of nonlinear constraints !!!!!!!!!!!!!!!!!!!!
+		}
+	// nlp_solver_max_iter
+	if(set_nlp_solver_max_iter)
+		{
+		ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter); // TODO rename in max_iter
 		}
 	// qp_solver_N_pcond
 	if(set_qp_solver_N_pcond)

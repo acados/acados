@@ -173,7 +173,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     // SQP opts
 
-    opts->maxIter = 20;
+    opts->max_iter = 20;
     opts->min_res_g = 1e-8;
     opts->min_res_b = 1e-8;
     opts->min_res_d = 1e-8;
@@ -261,10 +261,10 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, const v
     ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
     ocp_nlp_config *config = config_;
 
-    if (!strcmp(field, "maxIter"))
+    if (!strcmp(field, "max_iter"))
     {
-        int* maxIter = (int *) value;
-        opts->maxIter = *maxIter;
+        int* max_iter = (int *) value;
+        opts->max_iter = *max_iter;
     }
     else if (!strcmp(field, "reuse_workspace"))
     {
@@ -1123,7 +1123,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     initialize_qp(config, dims, nlp_in, nlp_out, opts, mem, work);
 
     // main sqp loop
-    int max_sqp_iterations = opts->maxIter;
+    int max_sqp_iterations = opts->max_iter;
     int sqp_iter = 0;
     for (; sqp_iter < max_sqp_iterations; sqp_iter++)
     {

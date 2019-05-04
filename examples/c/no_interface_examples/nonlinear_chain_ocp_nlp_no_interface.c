@@ -1885,7 +1885,7 @@ int main() {
 
 
 
-    nlp_opts->maxIter = MAX_SQP_ITERS;
+    nlp_opts->max_iter = MAX_SQP_ITERS;
     nlp_opts->min_res_g = 1e-9;
     nlp_opts->min_res_b = 1e-9;
     nlp_opts->min_res_d = 1e-9;

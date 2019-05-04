@@ -11,10 +11,11 @@ N = 100;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-%exact_hessian = 'false'
-exact_hessian = 'true'
+%nlp_solver_exact_hessian = 'false'
+nlp_solver_exact_hessian = 'true'
 %regularize_method = 'no_regularize';
 regularize_method = 'project';
+nlp_solver_max_iter = 50;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_N_pcond = 5;
@@ -154,8 +155,9 @@ ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
-ocp_opts.set('nlp_solver_exact_hessian', exact_hessian);
+ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
+ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);

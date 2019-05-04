@@ -9,6 +9,7 @@ classdef acados_ocp_opts < handle
 		param_scheme_N
 		nlp_solver
 		nlp_solver_exact_hessian
+		nlp_solver_max_iter
 		qp_solver
 		qp_solver_N_pcond
 		sim_method
@@ -68,6 +69,9 @@ classdef acados_ocp_opts < handle
 			elseif (strcmp(field, 'nlp_solver_exact_hessian'))
 				obj.nlp_solver_exact_hessian = value;
 				obj.opts_struct.nlp_solver_exact_hessian = value;
+			elseif (strcmp(field, 'nlp_solver_max_iter'))
+				obj.nlp_solver_max_iter = value;
+				obj.opts_struct.nlp_solver_max_iter = value;
 			elseif (strcmp(field, 'qp_solver'))
 				obj.qp_solver = value;
 				obj.opts_struct.qp_solver = value;

@@ -293,7 +293,7 @@ static void mdlStart(SimStruct *S)
 
     // options
     ocp_nlp_sqp_opts *nlp_opts = ocp_nlp_opts_create(config, dims);
-    nlp_opts->maxIter = 1;
+    nlp_opts->max_iter = 1;
 
     // out
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
