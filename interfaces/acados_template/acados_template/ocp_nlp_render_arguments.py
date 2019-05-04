@@ -182,14 +182,14 @@ class ocp_nlp_dims:
 
     @nsbu.setter
     def nsbu(self, nsbu):
-        if type(nsbu) == n int and nsbu > -1:
+        if type(nsbu) == int and nsbu > -1:
             self.__nsbu = nsbu
         else:
             raise Exception('Invalid nsbu value. Exiting.')
 
     @nsbx.setter
     def nsbx(self, nbx):
-        if type(nsbx) === int and nsbx > -1:
+        if type(nsbx) == int and nsbx > -1:
             self.__nsbx = nsbx
         else:
             raise Exception('Invalid nsbx value. Exiting.')
@@ -725,7 +725,7 @@ class ocp_nlp_solver_config:
 
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
-        hessian_approxs = ('GAUSS_NEWTON', 'EXACT')
+        hessian_approxs = ('GAUSS_NEWTON')
 
         if type(hessian_approx) == str and hessian_approx in hessian_approxs:
             self.__hessian_approx = hessian_approx
@@ -763,18 +763,20 @@ class acados_ocp_nlp:
         self.cost = ocp_nlp_cost()
         self.constraints = ocp_nlp_constraints()
         self.solver_config = ocp_nlp_solver_config()
-        self.model_name = None 
-        self.con_p_name = None 
+        self.model_name  = None 
+        self.con_p_name  = None 
         self.con_pN_name = None 
-        self.con_h_name = None 
+        self.con_h_name  = None 
         self.con_hN_name = None 
         self.constants = {}
         self.acados_include_path = []
         self.acados_lib_path = []
 
 def check_ra(ra):
-    if ra.solver_config.hessian_approx == 'EXACT' and ra.solver_config.integrator_type == 'IRK':
-        raise Exception('Exact Hessians not yet supported with IRK integrators.')
+    # TODO(andrea): dimensions check are already performed 
+    # on the JSON data and type checks should be enforced by the 
+    # property setters. Add extra checks here?
+    return
 
 def np_array_to_list(np_array):
     return np_array.tolist()
