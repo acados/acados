@@ -23,6 +23,133 @@
         ]
     },
     "constraints": {
+        "lbx": [
+            "ndarray",
+                [
+                    "nbx"
+                ]
+        ],
+        "lbu": [
+            "ndarray",
+            [
+                "nbu"
+            ]
+        ],
+        "ubx": [
+            "ndarray",
+                [
+                    "nbx"
+                ]
+        ],
+        "ubu": [
+            "ndarray",
+            [
+                "nbu"
+            ]
+        ],
+        "idxbx": [
+            "ndarray",
+                [
+                    "nbx"
+                ]
+        ],
+        "idxbu": [
+            "ndarray",
+            [
+                "nbu"
+            ]
+        ],
+        "lbxN": [
+            "ndarray",
+            [
+                "nbxN"
+            ]
+        ],
+        "ubxN": [
+            "ndarray",
+            [
+                "nbxN"
+            ]
+        ],
+        "idxbxN": [
+            "ndarray",
+                    [
+                        "nbxN"
+                    ]
+        ],
+        "lsbx": [
+            "ndarray",
+                [
+                    "nsbx"
+                ]
+        ],
+        "lsbu": [
+            "ndarray",
+            [
+                "nsbu"
+            ]
+        ],
+        "usbx": [
+            "ndarray",
+                [
+                    "nsbx"
+                ]
+        ],
+        "usbu": [
+            "ndarray",
+            [
+                "nsbu"
+            ]
+        ],
+        "idxsbx": [
+            "ndarray",
+                [
+                    "nsbx"
+                ]
+        ],
+        "idxsbu": [
+            "ndarray",
+            [
+                "nsbu"
+            ]
+        ],
+        "lsbxN": [
+            "ndarray",
+                [
+                    "nsbxN"
+                ]
+        ],
+        "usbxN": [
+            "ndarray",
+                [
+                    "nsbxN"
+                ]
+        ],
+        "idxsbxN": [
+            "ndarray",
+                [
+                    "nsbxN"
+                ]
+        ],
+        "lg": [
+            "ndarray",
+            [
+                "ng"
+            ]
+        ],
+        "ug": [
+            "ndarray",
+            [
+                "ng"
+            ]
+        ],
+        "D": [
+            "ndarray",
+                [
+                    "ng",
+                    "nu"
+                ]
+        ],
         "C": [
             "ndarray",
             [
@@ -37,92 +164,13 @@
                 "nx"
             ]
         ],
-        "D": [
-            "ndarray",
-            [
-                "ng",
-                "nu"
-            ]
-        ],
-        "idxbu": [
-            "ndarray",
-            [
-                "nbu"
-            ]
-        ],
-        "idxbx": [
-            "ndarray",
-            [
-                "nbx"
-            ]
-        ],
-        "idxsbu": [
-            "ndarray",
-            [
-                "nsbu"
-            ]
-        ],
-        "idxsbx": [
-            "ndarray",
-            [
-                "nsbx"
-            ]
-        ],
-        "idxbxN": [
-            "ndarray",
-            [
-                "nbxN"
-            ]
-        ],
-        "lbu": [
-            "ndarray",
-            [
-                "nbu"
-            ]
-        ],
-        "lbx": [
-            "ndarray",
-            [
-                "nbx"
-            ]
-        ],
-        "lsbu": [
-            "ndarray",
-            [
-                "nsbu"
-            ]
-        ],
-        "lsbx": [
-            "ndarray",
-            [
-                "nsbx"
-            ]
-        ],
-        "usbu": [
-            "ndarray",
-            [
-                "nsbu"
-            ]
-        ],
-        "usbx": [
-            "ndarray",
-            [
-                "nsbx"
-            ]
-        ],
-        "lbxN": [
-            "ndarray",
-            [
-                "nbxN"
-            ]
-        ],
-        "lg": [
-            "ndarray",
-            [
-                "ng"
-            ]
-        ],
         "lgN": [
+            "ndarray",
+            [
+                "ngN"
+            ]
+        ],
+        "ugN": [
             "ndarray",
             [
                 "ngN"
@@ -134,7 +182,19 @@
                 "nh"
             ]
         ],
+        "uh": [
+            "ndarray",
+            [
+                "nh"
+            ]
+        ],
         "lhN": [
+            "ndarray",
+            [
+                "nhN"
+            ]
+        ],
+        "uhN": [
             "ndarray",
             [
                 "nhN"
@@ -144,48 +204,6 @@
             "ndarray",
             [
                 "np"
-            ]
-        ],
-        "ubu": [
-            "ndarray",
-            [
-                "nbu"
-            ]
-        ],
-        "ubx": [
-            "ndarray",
-            [
-                "nbx"
-            ]
-        ],
-        "ubxN": [
-            "ndarray",
-            [
-                "nbxN"
-            ]
-        ],
-        "ug": [
-            "ndarray",
-            [
-                "ng"
-            ]
-        ],
-        "ugN": [
-            "ndarray",
-            [
-                "ngN"
-            ]
-        ],
-        "uh": [
-            "ndarray",
-            [
-                "nh"
-            ]
-        ],
-        "uhN": [
-            "ndarray",
-            [
-                "nhN"
             ]
         ],
         "x0": [
@@ -275,7 +293,33 @@
             [
                 "nyN"
             ]
-        ]
+        ],
+        "ZlN": [
+            "ndarray",
+            [
+                "nsN",
+                "nsN"
+            ]
+        ],
+        "ZuN": [
+            "ndarray",
+            [
+                "nsN",
+                "nsN"
+            ]
+        ],
+        "zlN": [
+            "ndarray",
+            [
+                "nsN"
+            ]
+        ],
+        "zuN": [
+            "ndarray",
+            [
+                "nsN"
+            ]
+        ],
     },
     "dims": {
         "N": [
@@ -293,10 +337,16 @@
         "nsbx": [
             "int"
         ],
+        "nsbxN": [
+            "int"
+        ],
         "nbxN": [
             "int"
         ],
         "ns": [
+            "int"
+        ],
+        "nsN": [
             "int"
         ],
         "ng": [

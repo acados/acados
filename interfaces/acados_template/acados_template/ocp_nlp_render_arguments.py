@@ -449,35 +449,43 @@ class ocp_nlp_cost:
 
 class ocp_nlp_constraints:
     def __init__(self):
+        # bounds on x and u
         self.__lbx    = []  # lower bounds on x
         self.__lbu    = []  # lower bounds on u
         self.__ubx    = []  # upper bounds on x 
         self.__ubu    = []  # upper bounds on u 
         self.__idxbx  = []  # indexes of bounds on x 
         self.__idxbu  = []  # indexes of bounds on u
+        # bounds on x and u at t=T
+        self.__lbxN   = []  # lower bounds on x at t=T 
+        self.__ubxN   = []  # upper bounds on x at t=T 
+        self.__idxbxN = []  # indexes for bounds on x at t=T 
+        # soft bounds on x and u
         self.__lsbx   = []  # soft lower bounds on x
         self.__lsbu   = []  # soft lower bounds on u
         self.__usbx   = []  # soft upper bounds on x 
         self.__usbu   = []  # soft upper bounds on u 
         self.__idxsbx = []  # indexes of soft bounds on x 
         self.__idxsbu = []  # indexes of soft bounds on u
+        # soft bounds on x and u at t=T
         self.__lsbxN  = []  # soft lower bounds on x at t=T
         self.__usbxN  = []  # soft upper bounds on x at t=T
         self.__idxsbxN= []  # indexes of soft bounds on x at t=T 
+        # polytopic constraints 
         self.__lg     = []  # lower bound for general inequalities 
         self.__ug     = []  # upper bound for general inequalities 
-        self.__lh     = []  # lower bound for nonlinear inequalities 
-        self.__uh     = []  # upper bound for nonlinear inequalities 
         self.__D      = []  # D matrix in lg <= D * u + C * x <= ug
         self.__C      = []  # C matrix in lg <= D * u + C * x <= ug
-        self.__lbxN   = []  # lower bounds on x at t=T 
-        self.__ubxN   = []  # upper bounds on x at t=T 
-        self.__idxbxN = []  # indexes for bounds on x at t=T 
+        # polytopic constraints at t=T 
         self.__CN     = []  # C matrix at t=T 
         self.__lgN    = []  # lower bound on general inequalities at t=T 
         self.__ugN    = []  # upper bound on general inequalities at t=T 
-        self.__lhN    = []  # lower bound on nonlinear inequalities at t=T 
+        # nonlinear constraints
+        self.__lh     = []  # lower bound for nonlinear inequalities 
+        self.__uh     = []  # upper bound for nonlinear inequalities 
+        # nonlinear constraints at t=T
         self.__uhN    = []  # upper bound on nonlinear inequalities at t=T 
+        self.__lhN    = []  # lower bound on nonlinear inequalities at t=T 
         self.__x0     = []  # initial state 
         self.__p      = []  # parameters 
 
