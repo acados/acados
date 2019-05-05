@@ -44,22 +44,27 @@
 {% for key, value in ocp.constants %}
 #define {{ key }} {{ value }}
 {% endfor %}
-#define NX_   {{ ocp.dims.nx }}
-#define NZ_   {{ ocp.dims.nz }}
-#define NU_   {{ ocp.dims.nu }}
-#define NP_   {{ ocp.dims.np }}
-#define NBX_  {{ ocp.dims.nbx }}
-#define NBU_  {{ ocp.dims.nbu }}
-#define NG_   {{ ocp.dims.ng }}
-#define NBXN_ {{ ocp.dims.nbxN }}
-#define NGN_  {{ ocp.dims.ngN }}
-#define NY_   {{ ocp.dims.ny }}
-#define NYN_  {{ ocp.dims.nyN }}
-#define N_    {{ ocp.dims.N }}
-#define NPD_  {{ ocp.dims.npd }}
-#define NPDN_ {{ ocp.dims.npdN }}
-#define NH_   {{ ocp.dims.nh }}
-#define NHN_  {{ ocp.dims.nhN }}
+#define NX_    {{ ocp.dims.nx }}
+#define NZ_    {{ ocp.dims.nz }}
+#define NU_    {{ ocp.dims.nu }}
+#define NP_    {{ ocp.dims.np }}
+#define NBX_   {{ ocp.dims.nbx }}
+#define NBU_   {{ ocp.dims.nbu }}
+#define NSBX_  {{ ocp.dims.nsbx }}
+#define NSBU_  {{ ocp.dims.nsbu }}
+#define NSBXN_ {{ ocp.dims.nsbxN }}
+#define NS_    {{ ocp.dims.ns }}
+#define NSN_   {{ ocp.dims.nsN }}
+#define NG_    {{ ocp.dims.ng }}
+#define NBXN_  {{ ocp.dims.nbxN }}
+#define NGN_   {{ ocp.dims.ngN }}
+#define NY_    {{ ocp.dims.ny }}
+#define NYN_   {{ ocp.dims.nyN }}
+#define N_     {{ ocp.dims.N }}
+#define NPD_   {{ ocp.dims.npd }}
+#define NPDN_  {{ ocp.dims.npdN }}
+#define NH_    {{ ocp.dims.nh }}
+#define NHN_   {{ ocp.dims.nhN }}
 
 #if NX_ < 1
 #define NX   1
@@ -95,6 +100,36 @@
 #define NBU   1
 #else
 #define NBU   NBU_
+#endif
+
+#if NSBX_ < 1
+#define NSBX   1
+#else
+#define NSBX   NSBX_
+#endif
+
+#if NSBU_ < 1
+#define NSBU   1
+#else
+#define NSBU   NSBU_
+#endif
+
+#if NS_ < 1
+#define NS   1
+#else
+#define NS   NS_
+#endif
+
+#if NSBXN_ < 1
+#define NSBXN   1
+#else
+#define NSBXN   NSBXN_
+#endif
+
+#if NSN_ < 1
+#define NSN   1
+#else
+#define NSN   NSN_
 #endif
 
 #if NG_ < 1
@@ -163,22 +198,7 @@ int acados_create() {
 
     double Tf = {{ ocp.solver_config.tf }};
 
-    // set up bounds for stage 0 
-    // u
-    int idxbu0[NBU];
-    {% for item in ocp.constraints.idxbu %}
-    idxbu0[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
-    double lbu0[NBU]; 
-    {% for item in ocp.constraints.lbu %}
-    lbu0[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
-    double ubu0[NBU];
-    {% for item in ocp.constraints.ubu %}
-    ubu0[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
-    
-    // x
+    // initial state x0
     int idxbx0[NX];
     {% for i in range(ocp.dims.nx) %}
     idxbx0[{{ i }}] = {{ i }};
@@ -192,8 +212,7 @@ int acados_create() {
     ubx0[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
 
-    // set up bounds for intermediate stages
-    // u
+    // set up bounds for u
     int idxbu[NBU];
     {% for item in ocp.constraints.idxbu %}
     idxbu[{{ loop.index0 }}] = {{ item }};
@@ -207,7 +226,21 @@ int acados_create() {
     ubu[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
     
-    // x
+    // set up soft bounds for u
+    int idxsbu[NSBU];
+    {% for item in ocp.constraints.idxsbu %}
+    idxsbu[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+    double lsbu[NSBU]; 
+    {% for item in ocp.constraints.lsbu %}
+    lsbu[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+    double usbu[NSBU];
+    {% for item in ocp.constraints.usbu %}
+    ubu[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+    
+    // bounds on x
     int idxbx[NBX];
     {% for item in ocp.constraints.idxbx %}
     idxbx[{{ loop.index0 }}] = {{ item }};
@@ -219,6 +252,20 @@ int acados_create() {
     double ubx[NBX];
     {% for item in ocp.constraints.ubx %}
     ubx[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+    
+    // soft bounds on x
+    int idxsbx[NSBX];
+    {% for item in ocp.constraints.idxsbx %}
+    idxsbx[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+    double lsbx[NSBX]; 
+    {% for item in ocp.constraints.usbx %}
+    usbx[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+    double usbx[NSBX];
+    {% for item in ocp.constraints.usbx %}
+    usbx[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
 
     // set up general constraints for stage 0 to N-1 
@@ -276,6 +323,20 @@ int acados_create() {
     ubxN[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
     
+    // soft bounds on x
+    int idxsbxN[NSBXN];
+    {% for item in ocp.constraints.idxsbxN %}
+    idxsbxN[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+    double lsbxN[NSBXN]; 
+    {% for item in ocp.constraints.lsbxN %}
+    lsbxN[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+    double usbxN[NBXN];
+    {% for item in ocp.constraints.usbxN %}
+    usbxN[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+
     // set up general constraints for last stage 
     double CN[NGN*NX];
     double lgN[NGN];
@@ -314,9 +375,17 @@ int acados_create() {
     double Vx[NY*NX];
     double Vu[NY*NU];
     double Vz[NY*NZ];
+    double Zl[NS];
+    double Zu[NS];
+    double zl[NS];
+    double zu[NS];
 
     double yrefN[NYN];
     double WN[NYN*NYN];
+    double ZlN[NSN];
+    double ZuN[NSN];
+    double zlN[NSN];
+    double zuN[NSN];
 
     double VxN[NYN*NX];
     
@@ -351,6 +420,32 @@ int acados_create() {
     {% endfor %}
     {% endfor %}
 
+    {% for item_j in ocp.cost.Zl %}
+    {% set outer_loop = loop %}
+    {% for item_k in item_j %}
+    {% if outer_loop.index0 == loop.index0 %}
+    Zl[{{ outer_loop.index0 }}] = {{ item_k }}; 
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
+
+    {% for item_j in ocp.cost.Zu %}
+    {% set outer_loop = loop %}
+    {% for item_k in item_j %}
+    {% if outer_loop.index0 == loop.index0 %}
+    Zu[{{ outer_loop.index0 }}] = {{ item_k }}; 
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
+
+    {% for item  in ocp.cost.zl %}
+    zl[{{ loop.index0 }}] = {{ item }}; 
+    {% endfor %}
+
+    {% for item  in ocp.cost.zu %}
+    zu[{{ loop.index0 }}] = {{ item }}; 
+    {% endfor %}
+
     {% for item  in ocp.cost.yref %}
     yref[{{ loop.index0 }}] = {{ item }}; 
     {% endfor %}
@@ -367,6 +462,32 @@ int acados_create() {
     {% for item_k in item_j %}
     VxN[{{ outer_loop.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
     {% endfor %}
+    {% endfor %}
+
+    {% for item_j in ocp.cost.ZlN %}
+    {% set outer_loop = loop %}
+    {% for item_k in item_j %}
+    {% if outer_loop.index0 == loop.index0 %}
+    ZlN[{{ outer_loop.index0 }}] = {{ item_k }}; 
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
+
+    {% for item_j in ocp.cost.ZuN %}
+    {% set outer_loop = loop %}
+    {% for item_k in item_j %}
+    {% if outer_loop.index0 == loop.index0 %}
+    ZuN[{{ outer_loop.index0 }}] = {{ item_k }}; 
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
+
+    {% for item  in ocp.cost.zlN %}
+    zlN[{{ loop.index0 }}] = {{ item }}; 
+    {% endfor %}
+
+    {% for item  in ocp.cost.zuN %}
+    zuN[{{ loop.index0 }}] = {{ item }}; 
     {% endfor %}
 
     {% for item in ocp.cost.yrefN %}
@@ -696,9 +817,9 @@ int acados_create() {
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", ubx0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbu", idxbu0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbu", lbu0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubu", ubu0);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbu", idxbu);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbu", lbu);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubu", ubu);
 
     // bounds for intermediate stages
     for (int i = 1; i < N; ++i)
