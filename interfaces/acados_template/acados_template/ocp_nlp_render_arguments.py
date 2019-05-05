@@ -456,7 +456,7 @@ class ocp_nlp_constraints:
         self.__ubu    = []  # upper bounds on u 
         self.__idxbx  = []  # indexes of bounds on x 
         self.__idxbu  = []  # indexes of bounds on u
-        # bounds on x and u at t=T
+        # bounds on x at t=T
         self.__lbxN   = []  # lower bounds on x at t=T 
         self.__ubxN   = []  # upper bounds on x at t=T 
         self.__idxbxN = []  # indexes for bounds on x at t=T 
