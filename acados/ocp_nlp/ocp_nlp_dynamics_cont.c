@@ -641,20 +641,31 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_pack_tran_dmat(nz, nx, work->sim_out->S_algebraic + 0, nz, &mem->dzdux_tran, nu, 0);
     // blasfeo_print_dmat(nx + nu, nz, &mem->dzdux_tran, 0, 0);
 
-    // fun
+    // function
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
     blasfeo_pack_dvec(nz, work->sim_out->zn, &mem->z_out, 0);
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
 
-    // adj TODO if not computed by the integrator
-	// TODO this is computed by the integrator if compute_hess!=0
+    // adjoint
     if (opts->compute_adj)
     {
-        blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj,
-                        0);
-        blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
+		// this is computed by the integrator if compute_hess!=0
+		// TODO other cases when it is computed in the integrator ???
+		if (opts->compute_hess)
+		{
+			blasfeo_pack_dvec(nu, work->sim_out->S_adj+nx, &mem->adj, 0);
+			blasfeo_pack_dvec(nx, work->sim_out->S_adj+0, &mem->adj, nu);
+			blasfeo_dvecsc(nu+nx, -1.0, &mem->adj, 0);
+		}
+		// compute as forward * adj_seed
+		else
+		{
+			blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj, 0);
+		}
+		blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu+nx);
     }
 
+	// hessian
     if (opts->compute_hess)
     {
 
