@@ -22,6 +22,7 @@ class ocp_nlp_dims:
         self.__nsbxN = 0     # number of soft state bounds in last stage 
         self.__nsbu  = 0     # number of soft input bounds
         self.__ns    = 0     # total number of slacks
+        self.__nsN   = 0     # total number of slacks in last stage
         self.__ng    = 0     # number of general constraints
         self.__ngN   = 0     # number of general constraints in last stage
         self.__N     = None  # prediction horizon 
@@ -263,6 +264,10 @@ class ocp_nlp_cost:
         self.__WN    = []  # weight matrix
         self.__VxN   = []  # x matrix coefficient
         self.__yrefN = []  # reference
+        self.__ZlN   = []  # Hessian wrt lower slack 
+        self.__ZuN   = []  # Hessian wrt upper slack 
+        self.__zlN   = []  # gradient wrt lower slack 
+        self.__zuN   = []  # gradient wrt upper slack 
 
     # Lagrange term
     @property
@@ -377,6 +382,22 @@ class ocp_nlp_cost:
     def yrefN(self):
         return self.__yrefN
 
+    @property
+    def ZlN(self):
+        return self.__ZlN
+
+    @property
+    def ZuN(self):
+        return self.__ZuN
+
+    @property
+    def zlN(self):
+        return self.__zlN
+
+    @property
+    def zuN(self):
+        return self.__zuN
+
     @WN.setter
     def WN(self, WN):
         if type(WN) == np.ndarray:
@@ -398,20 +419,51 @@ class ocp_nlp_cost:
         else:
             raise Exception('Invalid yrefN value. Exiting.')
 
+    @ZlN.setter
+    def ZlN(self, ZlN):
+        if type(ZlN) == np.ndarray:
+            self.__ZlN = ZlN
+        else:
+            raise Exception('Invalid ZlN value. Exiting.')
+
+    @Zu.setter
+    def ZuN(self, ZuN):
+        if type(ZuN) == np.ndarray:
+            self.__ZuN = ZuN
+        else:
+            raise Exception('Invalid ZuN value. Exiting.')
+
+    @zlN.setter
+    def zlN(self, zlN):
+        if type(zlN) == np.ndarray:
+            self.__zlN = zlN
+        else:
+            raise Exception('Invalid zlN value. Exiting.')
+
+    @zuN.setter
+    def zuN(self, zuN):
+        if type(zuN) == np.ndarray:
+            self.__zuN = zuN
+        else:
+            raise Exception('Invalid zuN value. Exiting.')
+
 class ocp_nlp_constraints:
     def __init__(self):
         self.__lbx    = []  # lower bounds on x
         self.__lbu    = []  # lower bounds on u
-        self.__idxbx  = []  # indexes of bounds on x 
         self.__ubx    = []  # upper bounds on x 
         self.__ubu    = []  # upper bounds on u 
+        self.__idxbx  = []  # indexes of bounds on x 
         self.__idxbu  = []  # indexes of bounds on u
         self.__lsbx   = []  # soft lower bounds on x
         self.__lsbu   = []  # soft lower bounds on u
-        self.__idxsbx = []  # indexes of soft bounds on x 
         self.__usbx   = []  # soft upper bounds on x 
         self.__usbu   = []  # soft upper bounds on u 
+        self.__idxsbx = []  # indexes of soft bounds on x 
         self.__idxsbu = []  # indexes of soft bounds on u
+        self.__lsbxN  = []  # soft lower bounds on x at t=T
+        self.__usbxN  = []  # soft upper bounds on x at t=T
+        self.__idxsbxN= []  # indexes of soft bounds on x at t=T 
         self.__lg     = []  # lower bound for general inequalities 
         self.__ug     = []  # upper bound for general inequalities 
         self.__lh     = []  # lower bound for nonlinear inequalities 
@@ -476,6 +528,18 @@ class ocp_nlp_constraints:
     @property
     def idxsbu(self):
         return self.__idxsbu
+
+    @property
+    def lsbxN(self):
+        return self.__lsbxN
+
+    @property
+    def usbxN(self):
+        return self.__usbxN
+
+    @property
+    def idxsbxN(self):
+        return self.__idxsbxN
 
     @property
     def lg(self):
@@ -624,6 +688,27 @@ class ocp_nlp_constraints:
             self.__idxsbu = idxsbu
         else:
             raise Exception('Invalid idxsbu value. Exiting.')
+
+    @lsbxN.setter
+    def lsbxN(self, lsbxN):
+        if type(lsbxN) == np.ndarray:
+            self.__lsbxN = lsbxN
+        else:
+            raise Exception('Invalid lsbxN value. Exiting.')
+
+    @usbxN.setter
+    def usbxN(self, usbxN):
+        if type(usbxN) == np.ndarray:
+            self.__usbxN = usbxN
+        else:
+            raise Exception('Invalid usbxN value. Exiting.')
+
+    @idxsbxN.setter
+    def idxsbxN(self, idxsbxN):
+        if type(idxsbxN) == np.ndarray:
+            self.__idxsbxN = idxsbxN
+        else:
+            raise Exception('Invalid idxsbxN value. Exiting.')
 
     @lg.setter
     def lg(self, lg):
