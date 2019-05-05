@@ -5,25 +5,26 @@ import sys
 
 class ocp_nlp_dims:
     def __init__(self):
-        self.__nx   = None  # number of states
-        self.__nz   = 0     # number of algebraic variables
-        self.__nu   = None  # number of inputs
-        self.__np   = 0     # number of parameters
-        self.__ny   = None  # number of residuals in Lagrange term
-        self.__nyN  = None  # number of residuals in Mayer term
-        self.__npd  = 0     # number of positive definite constraints
-        self.__npdN = 0     # number of positive definite constraints in last stage
-        self.__nh   = 0     # number of nonlinear constraints
-        self.__nhN  = 0     # number of nonlinear constraints in last stage
-        self.__nbx  = 0     # number of state bounds 
-        self.__nbu  = 0     # number of input bounds
-        self.__nsbx = 0     # number of soft state bounds 
-        self.__nsbu = 0     # number of soft input bounds
-        self.__ns   = 0     # total number of slacks
-        self.__ng   = 0     # number of general constraints
-        self.__nbxN = 0     # number of state bounds in last stage 
-        self.__ngN  = 0     # number of general constraints in last stage
-        self.__N    = None  # prediction horizon 
+        self.__nx    = None  # number of states
+        self.__nz    = 0     # number of algebraic variables
+        self.__nu    = None  # number of inputs
+        self.__np    = 0     # number of parameters
+        self.__ny    = None  # number of residuals in Lagrange term
+        self.__nyN   = None  # number of residuals in Mayer term
+        self.__npd   = 0     # number of positive definite constraints
+        self.__npdN  = 0     # number of positive definite constraints in last stage
+        self.__nh    = 0     # number of nonlinear constraints
+        self.__nhN   = 0     # number of nonlinear constraints in last stage
+        self.__nbx   = 0     # number of state bounds 
+        self.__nbxN  = 0     # number of state bounds in last stage 
+        self.__nbu   = 0     # number of input bounds
+        self.__nsbx  = 0     # number of soft state bounds 
+        self.__nsbxN = 0     # number of soft state bounds in last stage 
+        self.__nsbu  = 0     # number of soft input bounds
+        self.__ns    = 0     # total number of slacks
+        self.__ng    = 0     # number of general constraints
+        self.__ngN   = 0     # number of general constraints in last stage
+        self.__N     = None  # prediction horizon 
 
     @property
     def nx(self):
@@ -46,6 +47,10 @@ class ocp_nlp_dims:
         return self.__ny
 
     @property
+    def nyN(self):
+        return self.__nyN
+
+    @property
     def npd(self):
         return self.__npd
 
@@ -62,12 +67,12 @@ class ocp_nlp_dims:
         return self.__nhN
 
     @property
-    def nyN(self):
-        return self.__nyN
-
-    @property
     def nbx(self):
         return self.__nbx
+
+    @property
+    def nbxN(self):
+        return self.__nbxN
 
     @property
     def nbu(self):
@@ -78,17 +83,21 @@ class ocp_nlp_dims:
         return self.__nsbx
 
     @property
+    def nsbxN(self):
+        return self.__nsbx
+
+    @property
     def nsbu(self):
         return self.__nsbu
+
+    @property
+    def ns(self):
+        return self.__ns
 
     @property
     def ng(self):
         return self.__ng
 
-    @property
-    def nbxN(self):
-        return self.__nbxN
-    
     @property
     def ngN(self):
         return self.__ngN
@@ -167,13 +176,6 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nhN value. Exiting.')
 
-    @nbu.setter
-    def nbu(self, nbu):
-        if type(nbu) == int and nbu > -1:
-            self.__nbu = nbu
-        else:
-            raise Exception('Invalid nbu value. Exiting.')
-
     @nbx.setter
     def nbx(self, nbx):
         if type(nbx) == int and nbx > -1:
@@ -181,12 +183,19 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nbx value. Exiting.')
 
-    @nsbu.setter
-    def nsbu(self, nsbu):
-        if type(nsbu) == int and nsbu > -1:
-            self.__nsbu = nsbu
+    @nbxN.setter
+    def nbxN(self, nbxN):
+        if type(nbxN) == int and nbxN > -1:
+            self.__nbxN = nbxN
         else:
-            raise Exception('Invalid nsbu value. Exiting.')
+            raise Exception('Invalid nbxN value. Exiting.')
+
+    @nbu.setter
+    def nbu(self, nbu):
+        if type(nbu) == int and nbu > -1:
+            self.__nbu = nbu
+        else:
+            raise Exception('Invalid nbu value. Exiting.')
 
     @nsbx.setter
     def nsbx(self, nbx):
@@ -195,19 +204,33 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nsbx value. Exiting.')
 
+    @nsbxN.setter
+    def nsbxN(self, nbxN):
+        if type(nsbxN) == int and nsbxN > -1:
+            self.__nsbxN = nsbxN
+        else:
+            raise Exception('Invalid nsbxN value. Exiting.')
+
+    @nsbu.setter
+    def nsbu(self, nsbu):
+        if type(nsbu) == int and nsbu > -1:
+            self.__nsbu = nsbu
+        else:
+            raise Exception('Invalid nsbu value. Exiting.')
+
+    @ns.setter
+    def ns(self, ns):
+        if type(ns) == int and ns > -1:
+            self.__ng = ns
+        else:
+            raise Exception('Invalid ns value. Exiting.')
+
     @ng.setter
     def ng(self, ng):
         if type(ng) == int and ng > -1:
             self.__ng = ng
         else:
             raise Exception('Invalid ng value. Exiting.')
-
-    @nbxN.setter
-    def nbxN(self, nbxN):
-        if type(nbxN) == int and nbxN > -1:
-            self.__nbxN = nbxN
-        else:
-            raise Exception('Invalid nbxN value. Exiting.')
 
     @ngN.setter
     def ngN(self, ngN):
