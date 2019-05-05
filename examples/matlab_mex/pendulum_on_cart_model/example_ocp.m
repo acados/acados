@@ -15,12 +15,14 @@ nlp_solver = 'sqp';
 nlp_solver_exact_hessian = 'true'
 %regularize_method = 'no_regularize';
 regularize_method = 'project';
-nlp_solver_max_iter = 50;
+%regularize_method = 'mirror';
+%regularize_method = 'convexify';
+nlp_solver_max_iter = 100;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
-qp_solver_N_pcond = 5;
-%sim_method = 'erk';
-sim_method = 'irk';
+qp_solver_N_pcond = N; %5;
+sim_method = 'erk';
+%sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 cost_type = 'linear_ls';
@@ -61,9 +63,9 @@ yr_e = zeros(ny_e, 1); % output reference in mayer term
 
 % constraints
 x0 = [0; pi; 0; 0];
-Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
-lbx = -4*ones(nbx, 1);
-ubx =  4*ones(nbx, 1);
+%Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
+%lbx = -4*ones(nbx, 1);
+%ubx =  4*ones(nbx, 1);
 Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
 lbu = -80*ones(nbu, 1);
 ubu =  80*ones(nbu, 1);
@@ -136,9 +138,9 @@ elseif (nh>0)
 	ocp_model.set('constr_lh_e', lh_e);
 	ocp_model.set('constr_uh_e', uh_e);
 else
-	ocp_model.set('constr_Jbx', Jbx);
-	ocp_model.set('constr_lbx', lbx);
-	ocp_model.set('constr_ubx', ubx);
+%	ocp_model.set('constr_Jbx', Jbx);
+%	ocp_model.set('constr_lbx', lbx);
+%	ocp_model.set('constr_ubx', ubx);
 	ocp_model.set('constr_Jbu', Jbu);
 	ocp_model.set('constr_lbu', lbu);
 	ocp_model.set('constr_ubu', ubu);

@@ -448,7 +448,7 @@ int sim_erk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 
     size += (nX + nu) * sizeof(double);  // rhs_forw_in
 
-    if (opts->sens_adj)
+    if (opts->sens_adj | opts->sens_hess)
     {
         size += num_steps * ns * nX * sizeof(double);   // K_traj
         size += (num_steps + 1) * nX * sizeof(double);  // out_forw_traj
@@ -504,7 +504,7 @@ static void *sim_erk_cast_workspace(void *config_, void *dims_, void *opts_, voi
 
     assign_and_advance_double(nX + nu, &workspace->rhs_forw_in, &c_ptr);
 
-    if (opts->sens_adj)
+    if (opts->sens_adj | opts->sens_hess)
     {
         assign_and_advance_double(ns * num_steps * nX, &workspace->K_traj, &c_ptr);
         assign_and_advance_double((num_steps + 1) * nX, &workspace->out_forw_traj, &c_ptr);
@@ -643,7 +643,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     for (istep = 0; istep < num_steps; istep++)
     {
-        if (opts->sens_adj)
+        if (opts->sens_adj | opts->sens_hess)
         {
             K_traj = workspace->K_traj + istep * ns * nX;
             forw_traj = workspace->out_forw_traj + (istep + 1) * nX;
@@ -722,7 +722,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     /************************************************
      * adjoint sweep
      ************************************************/
-    if (opts->sens_adj || opts->sens_hess)
+    if (opts->sens_adj | opts->sens_hess)
     {
         // initialize integrator variables
         for (i = 0; i < nx; i++)
@@ -833,8 +833,20 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     ext_fun_type_out[1] = COLMAJ;
                     ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
 
+//printf("\nin\n");
+//d_print_mat(1, nx, ext_fun_in[0], 1);
+//d_print_mat(nx, nx, ext_fun_in[1], nx);
+//d_print_mat(nx, nu, ext_fun_in[2], nx);
+//d_print_mat(1, nx, ext_fun_in[3], 1);
+//d_print_mat(1, nu, ext_fun_in[4], 1);
+
                     model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in,
                     		ext_fun_type_out, ext_fun_out);
+
+//printf("\nout\n");
+//d_print_mat(1, nx+nu, ext_fun_out[0], 1);
+//d_print_mat(1, (nx+nu)*(nu+nx+1)/2, ext_fun_out[1], nu+nx);
+
                 }
                 timing_ad += acados_toc(&timer_ad);
             }

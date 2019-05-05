@@ -1186,8 +1186,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 		config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
 
 //        printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
-//       print_ocp_qp_in(work->qp_in);
-//		exit(1);
+//        print_ocp_qp_in(work->qp_in);
+//        if(sqp_iter==1)
+//        exit(1);
 
         // start timer
         acados_tic(&timer1);
