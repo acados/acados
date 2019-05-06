@@ -1112,7 +1112,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
     for (ii = 0; ii < N; ii++)
     {
-        config->dynamics[ii]->model_set_T(nlp_in->Ts[ii], nlp_in->dynamics[ii]);
+        config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
     }
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -1313,7 +1313,7 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
     for (ii = 0; ii < N; ii++)
     {
         // set T
-        config->dynamics[ii]->model_set_T(nlp_in->Ts[ii], nlp_in->dynamics[ii]);
+        config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
         // dynamics precompute
         status = config->dynamics[ii]->precompute(config->dynamics[ii], dims->dynamics[ii],
                                             nlp_in->dynamics[ii], opts->dynamics[ii],

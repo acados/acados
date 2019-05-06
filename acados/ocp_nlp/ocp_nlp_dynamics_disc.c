@@ -486,8 +486,22 @@ void *ocp_nlp_dynamics_disc_model_assign(void *config_, void *dims_, void *raw_m
 
 
 
-void ocp_nlp_dynamics_disc_model_set_T(double T, void *model_)
+void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, const char *field, void *value_)
 {
+
+    ocp_nlp_dynamics_disc_model *model = model_;
+
+    if (!strcmp(field, "T"))
+    {
+		// do nothing
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_dynamics_disc_model_set\n", field);
+		
+        exit(1);
+    }
+
     return;
 }
 
@@ -626,7 +640,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->dims_set =  &ocp_nlp_dynamics_disc_dims_set;
     config->model_calculate_size = &ocp_nlp_dynamics_disc_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_disc_model_assign;
-    config->model_set_T = &ocp_nlp_dynamics_disc_model_set_T;
+    config->model_set = &ocp_nlp_dynamics_disc_model_set;
     config->opts_calculate_size = &ocp_nlp_dynamics_disc_opts_calculate_size;
     config->opts_assign = &ocp_nlp_dynamics_disc_opts_assign;
     config->opts_initialize_default = &ocp_nlp_dynamics_disc_opts_initialize_default;

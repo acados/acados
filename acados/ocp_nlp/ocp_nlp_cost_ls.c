@@ -350,8 +350,7 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     }
     else
     {
-        printf("\nerror: model entry: %s not available" 
-            "in module ocp_nlp_cost_ls\n", field);
+        printf("\nerror: field %s not available in ocp_nlp_cost_ls_model_set\n", field);
 		
         exit(1);
     }
