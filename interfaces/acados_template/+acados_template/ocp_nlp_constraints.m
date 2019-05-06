@@ -54,7 +54,6 @@ classdef ocp_nlp_constraints < handle
             obj.usbu    = [];
             obj.idxsbu  = [];
             obj.lsbxN   = [];  
-            obj.lsbuN   = [];
             obj.idxsbxN = [];
             obj.lg      = [];
             obj.ug      = [];
