@@ -96,6 +96,10 @@ class ocp_nlp_dims:
         return self.__ns
 
     @property
+    def nsN(self):
+        return self.__nsN
+
+    @property
     def ng(self):
         return self.__ng
 
@@ -222,9 +226,16 @@ class ocp_nlp_dims:
     @ns.setter
     def ns(self, ns):
         if type(ns) == int and ns > -1:
-            self.__ng = ns
+            self.__ns = ns
         else:
             raise Exception('Invalid ns value. Exiting.')
+
+    @nsN.setter
+    def nsN(self, nsN):
+        if type(nsN) == int and nsN > -1:
+            self.__nsN = nsN
+        else:
+            raise Exception('Invalid nsN value. Exiting.')
 
     @ng.setter
     def ng(self, ng):
@@ -1054,11 +1065,17 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
                 v = []
             else:
                 v = np.array(v)
+                v_dims = v.shape
                 dim_keys = ocp_nlp_layout[k][1]
                 dims_l = []
+                dims_names = []
                 for item in dim_keys:
                     dims_l.append(ocp_nlp_dims[item])
+                    dims_names.append(item)
                 dims = tuple(dims_l)
-                v = np.reshape(v, dims)
+                try: 
+                    v = np.reshape(v, dims)
+                except:  
+                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, v_dims, dims_names, dims))
         out[k.replace(k, out_key)] = v
     return out
