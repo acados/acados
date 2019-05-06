@@ -5,22 +5,27 @@ import sys
 
 class ocp_nlp_dims:
     def __init__(self):
-        self.__nx   = None  # number of states
-        self.__nz   = 0     # number of algebraic variables
-        self.__nu   = None  # number of inputs
-        self.__np   = 0     # number of parameters
-        self.__ny   = None  # number of residuals in Lagrange term
-        self.__nyN  = None  # number of residuals in Mayer term
-        self.__npd  = 0     # number of positive definite constraints
-        self.__npdN = 0     # number of positive definite constraints in last stage
-        self.__nh   = 0     # number of nonlinear constraints
-        self.__nhN  = 0     # number of nonlinear constraints in last stage
-        self.__nbx  = 0     # number of state bounds 
-        self.__nbu  = 0     # number of input bounds
-        self.__ng   = 0     # number of general constraints
-        self.__nbxN = 0     # number of state bounds in last stage 
-        self.__ngN  = 0     # number of general constraints in last stage
-        self.__N    = None  # prediction horizon 
+        self.__nx    = None  # number of states
+        self.__nz    = 0     # number of algebraic variables
+        self.__nu    = None  # number of inputs
+        self.__np    = 0     # number of parameters
+        self.__ny    = None  # number of residuals in Lagrange term
+        self.__nyN   = None  # number of residuals in Mayer term
+        self.__npd   = 0     # number of positive definite constraints
+        self.__npdN  = 0     # number of positive definite constraints at t=T
+        self.__nh    = 0     # number of nonlinear constraints
+        self.__nhN   = 0     # number of nonlinear constraints at t=T
+        self.__nbx   = 0     # number of state bounds 
+        self.__nbxN  = 0     # number of state bounds at t=T 
+        self.__nbu   = 0     # number of input bounds
+        self.__nsbx  = 0     # number of soft state bounds 
+        self.__nsbxN = 0     # number of soft state bounds at t=T 
+        self.__nsbu  = 0     # number of soft input bounds
+        self.__ns    = 0     # total number of slacks
+        self.__nsN   = 0     # total number of slacks at t=T
+        self.__ng    = 0     # number of general constraints
+        self.__ngN   = 0     # number of general constraints at t=T
+        self.__N     = None  # prediction horizon 
 
     @property
     def nx(self):
@@ -43,6 +48,10 @@ class ocp_nlp_dims:
         return self.__ny
 
     @property
+    def nyN(self):
+        return self.__nyN
+
+    @property
     def npd(self):
         return self.__npd
 
@@ -59,25 +68,41 @@ class ocp_nlp_dims:
         return self.__nhN
 
     @property
-    def nyN(self):
-        return self.__nyN
-
-    @property
     def nbx(self):
         return self.__nbx
+
+    @property
+    def nbxN(self):
+        return self.__nbxN
 
     @property
     def nbu(self):
         return self.__nbu
 
     @property
+    def nsbx(self):
+        return self.__nsbx
+
+    @property
+    def nsbxN(self):
+        return self.__nsbx
+
+    @property
+    def nsbu(self):
+        return self.__nsbu
+
+    @property
+    def ns(self):
+        return self.__ns
+
+    @property
+    def nsN(self):
+        return self.__nsN
+
+    @property
     def ng(self):
         return self.__ng
 
-    @property
-    def nbxN(self):
-        return self.__nbxN
-    
     @property
     def ngN(self):
         return self.__ngN
@@ -156,13 +181,6 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nhN value. Exiting.')
 
-    @nbu.setter
-    def nbu(self, nbu):
-        if type(nbu) == int and nbu > -1:
-            self.__nbu = nbu
-        else:
-            raise Exception('Invalid nbu value. Exiting.')
-
     @nbx.setter
     def nbx(self, nbx):
         if type(nbx) == int and nbx > -1:
@@ -170,19 +188,61 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nbx value. Exiting.')
 
-    @ng.setter
-    def ng(self, ng):
-        if type(ng) == int and ng > -1:
-            self.__ng = ng
-        else:
-            raise Exception('Invalid ng value. Exiting.')
-
     @nbxN.setter
     def nbxN(self, nbxN):
         if type(nbxN) == int and nbxN > -1:
             self.__nbxN = nbxN
         else:
             raise Exception('Invalid nbxN value. Exiting.')
+
+    @nbu.setter
+    def nbu(self, nbu):
+        if type(nbu) == int and nbu > -1:
+            self.__nbu = nbu
+        else:
+            raise Exception('Invalid nbu value. Exiting.')
+
+    @nsbx.setter
+    def nsbx(self, nbx):
+        if type(nsbx) == int and nsbx > -1:
+            self.__nsbx = nsbx
+        else:
+            raise Exception('Invalid nsbx value. Exiting.')
+
+    @nsbxN.setter
+    def nsbxN(self, nbxN):
+        if type(nsbxN) == int and nsbxN > -1:
+            self.__nsbxN = nsbxN
+        else:
+            raise Exception('Invalid nsbxN value. Exiting.')
+
+    @nsbu.setter
+    def nsbu(self, nsbu):
+        if type(nsbu) == int and nsbu > -1:
+            self.__nsbu = nsbu
+        else:
+            raise Exception('Invalid nsbu value. Exiting.')
+
+    @ns.setter
+    def ns(self, ns):
+        if type(ns) == int and ns > -1:
+            self.__ns = ns
+        else:
+            raise Exception('Invalid ns value. Exiting.')
+
+    @nsN.setter
+    def nsN(self, nsN):
+        if type(nsN) == int and nsN > -1:
+            self.__nsN = nsN
+        else:
+            raise Exception('Invalid nsN value. Exiting.')
+
+    @ng.setter
+    def ng(self, ng):
+        if type(ng) == int and ng > -1:
+            self.__ng = ng
+        else:
+            raise Exception('Invalid ng value. Exiting.')
 
     @ngN.setter
     def ngN(self, ngN):
@@ -207,10 +267,18 @@ class ocp_nlp_cost:
         self.__Vu    = []  # u matrix coefficient
         self.__Vz    = []  # z matrix coefficient
         self.__yref  = []  # reference
+        self.__Zl    = []  # Hessian wrt lower slack 
+        self.__Zu    = []  # Hessian wrt upper slack 
+        self.__zl    = []  # gradient wrt lower slack 
+        self.__zu    = []  # gradient wrt upper slack 
         # Mayer term
         self.__WN    = []  # weight matrix
         self.__VxN   = []  # x matrix coefficient
         self.__yrefN = []  # reference
+        self.__ZlN   = []  # Hessian wrt lower slack 
+        self.__ZuN   = []  # Hessian wrt upper slack 
+        self.__zlN   = []  # gradient wrt lower slack 
+        self.__zuN   = []  # gradient wrt upper slack 
 
     # Lagrange term
     @property
@@ -232,6 +300,22 @@ class ocp_nlp_cost:
     @property
     def yref(self):
         return self.__yref
+
+    @property
+    def Zl(self):
+        return self.__Zl
+
+    @property
+    def Zu(self):
+        return self.__Zu
+
+    @property
+    def zl(self):
+        return self.__zl
+
+    @property
+    def zu(self):
+        return self.__zu
 
     @W.setter
     def W(self, W):
@@ -268,6 +352,34 @@ class ocp_nlp_cost:
         else:
             raise Exception('Invalid yref value. Exiting.')
 
+    @Zl.setter
+    def Zl(self, Zl):
+        if type(Zl) == np.ndarray:
+            self.__Zl = Zl
+        else:
+            raise Exception('Invalid Zl value. Exiting.')
+
+    @Zu.setter
+    def Zu(self, Zu):
+        if type(Zu) == np.ndarray:
+            self.__Zu = Zu
+        else:
+            raise Exception('Invalid Zu value. Exiting.')
+
+    @zl.setter
+    def zl(self, zl):
+        if type(zl) == np.ndarray:
+            self.__zl = zl
+        else:
+            raise Exception('Invalid zl value. Exiting.')
+
+    @zu.setter
+    def zu(self, zu):
+        if type(zu) == np.ndarray:
+            self.__zu = zu
+        else:
+            raise Exception('Invalid zu value. Exiting.')
+
     # Mayer term
     @property
     def WN(self):
@@ -280,6 +392,22 @@ class ocp_nlp_cost:
     @property
     def yrefN(self):
         return self.__yrefN
+
+    @property
+    def ZlN(self):
+        return self.__ZlN
+
+    @property
+    def ZuN(self):
+        return self.__ZuN
+
+    @property
+    def zlN(self):
+        return self.__zlN
+
+    @property
+    def zuN(self):
+        return self.__zuN
 
     @WN.setter
     def WN(self, WN):
@@ -302,28 +430,73 @@ class ocp_nlp_cost:
         else:
             raise Exception('Invalid yrefN value. Exiting.')
 
+    @ZlN.setter
+    def ZlN(self, ZlN):
+        if type(ZlN) == np.ndarray:
+            self.__ZlN = ZlN
+        else:
+            raise Exception('Invalid ZlN value. Exiting.')
+
+    @Zu.setter
+    def ZuN(self, ZuN):
+        if type(ZuN) == np.ndarray:
+            self.__ZuN = ZuN
+        else:
+            raise Exception('Invalid ZuN value. Exiting.')
+
+    @zlN.setter
+    def zlN(self, zlN):
+        if type(zlN) == np.ndarray:
+            self.__zlN = zlN
+        else:
+            raise Exception('Invalid zlN value. Exiting.')
+
+    @zuN.setter
+    def zuN(self, zuN):
+        if type(zuN) == np.ndarray:
+            self.__zuN = zuN
+        else:
+            raise Exception('Invalid zuN value. Exiting.')
+
 class ocp_nlp_constraints:
     def __init__(self):
+        # bounds on x and u
         self.__lbx    = []  # lower bounds on x
         self.__lbu    = []  # lower bounds on u
-        self.__idxbx  = []  # indexes of bounds on x 
         self.__ubx    = []  # upper bounds on x 
         self.__ubu    = []  # upper bounds on u 
+        self.__idxbx  = []  # indexes of bounds on x 
         self.__idxbu  = []  # indexes of bounds on u
-        self.__lg     = []  # lower bound for general inequalities 
-        self.__ug     = []  # upper bound for general inequalities 
-        self.__lh     = []  # lower bound for nonlinear inequalities 
-        self.__uh     = []  # upper bound for nonlinear inequalities 
-        self.__D      = []  # D matrix in lg <= D * u + C * x <= ug
-        self.__C      = []  # C matrix in lg <= D * u + C * x <= ug
+        # bounds on x at t=T
         self.__lbxN   = []  # lower bounds on x at t=T 
         self.__ubxN   = []  # upper bounds on x at t=T 
         self.__idxbxN = []  # indexes for bounds on x at t=T 
+        # soft bounds on x and u
+        self.__lsbx   = []  # soft lower bounds on x
+        self.__lsbu   = []  # soft lower bounds on u
+        self.__usbx   = []  # soft upper bounds on x 
+        self.__usbu   = []  # soft upper bounds on u 
+        self.__idxsbx = []  # indexes of soft bounds on x 
+        self.__idxsbu = []  # indexes of soft bounds on u
+        # soft bounds on x and u at t=T
+        self.__lsbxN  = []  # soft lower bounds on x at t=T
+        self.__usbxN  = []  # soft upper bounds on x at t=T
+        self.__idxsbxN= []  # indexes of soft bounds on x at t=T 
+        # polytopic constraints 
+        self.__lg     = []  # lower bound for general inequalities 
+        self.__ug     = []  # upper bound for general inequalities 
+        self.__D      = []  # D matrix in lg <= D * u + C * x <= ug
+        self.__C      = []  # C matrix in lg <= D * u + C * x <= ug
+        # polytopic constraints at t=T 
         self.__CN     = []  # C matrix at t=T 
         self.__lgN    = []  # lower bound on general inequalities at t=T 
         self.__ugN    = []  # upper bound on general inequalities at t=T 
-        self.__lhN    = []  # lower bound on nonlinear inequalities at t=T 
+        # nonlinear constraints
+        self.__lh     = []  # lower bound for nonlinear inequalities 
+        self.__uh     = []  # upper bound for nonlinear inequalities 
+        # nonlinear constraints at t=T
         self.__uhN    = []  # upper bound on nonlinear inequalities at t=T 
+        self.__lhN    = []  # lower bound on nonlinear inequalities at t=T 
         self.__x0     = []  # initial state 
         self.__p      = []  # parameters 
 
@@ -350,6 +523,42 @@ class ocp_nlp_constraints:
     @property
     def idxbu(self):
         return self.__idxbu
+
+    @property
+    def lsbx(self):
+        return self.__lsbx
+
+    @property
+    def lsbu(self):
+        return self.__lsbu
+    
+    @property
+    def usbx(self):
+        return self.__usbx
+
+    @property
+    def usbu(self):
+        return self.__usbu
+
+    @property
+    def idxsbx(self):
+        return self.__idxsbx
+
+    @property
+    def idxsbu(self):
+        return self.__idxsbu
+
+    @property
+    def lsbxN(self):
+        return self.__lsbxN
+
+    @property
+    def usbxN(self):
+        return self.__usbxN
+
+    @property
+    def idxsbxN(self):
+        return self.__idxsbxN
 
     @property
     def lg(self):
@@ -456,6 +665,69 @@ class ocp_nlp_constraints:
             self.__idxbu = idxbu
         else:
             raise Exception('Invalid idxbu value. Exiting.')
+
+    @lsbx.setter
+    def lsbx(self, lsbx):
+        if type(lsbx) == np.ndarray:
+            self.__lsbx = lsbx
+        else:
+            raise Exception('Invalid lsbx value. Exiting.')
+
+    @usbx.setter
+    def usbx(self, usbx):
+        if type(usbx) == np.ndarray:
+            self.__usbx = usbx
+        else:
+            raise Exception('Invalid usbx value. Exiting.')
+
+    @idxsbx.setter
+    def idxsbx(self, idxsbx):
+        if type(idxsbx) == np.ndarray:
+            self.__idxsbx = idxsbx
+        else:
+            raise Exception('Invalid idxsbx value. Exiting.')
+
+    @lsbu.setter
+    def lsbu(self, lsbu):
+        if type(lsbu) == np.ndarray:
+            self.__lsbu = lsbu
+        else:
+            raise Exception('Invalid lsbu value. Exiting.')
+
+    @usbu.setter
+    def usbu(self, usbu):
+        if type(usbu) == np.ndarray:
+            self.__usbu = usbu
+        else:
+            raise Exception('Invalid usbu value. Exiting.')
+    
+    @idxsbu.setter
+    def idxsbu(self, idxsbu):
+        if type(idxsbu) == np.ndarray:
+            self.__idxsbu = idxsbu
+        else:
+            raise Exception('Invalid idxsbu value. Exiting.')
+
+    @lsbxN.setter
+    def lsbxN(self, lsbxN):
+        if type(lsbxN) == np.ndarray:
+            self.__lsbxN = lsbxN
+        else:
+            raise Exception('Invalid lsbxN value. Exiting.')
+
+    @usbxN.setter
+    def usbxN(self, usbxN):
+        if type(usbxN) == np.ndarray:
+            self.__usbxN = usbxN
+        else:
+            raise Exception('Invalid usbxN value. Exiting.')
+
+    @idxsbxN.setter
+    def idxsbxN(self, idxsbxN):
+        if type(idxsbxN) == np.ndarray:
+            self.__idxsbxN = idxsbxN
+        else:
+            raise Exception('Invalid idxsbxN value. Exiting.')
 
     @lg.setter
     def lg(self, lg):
@@ -581,7 +853,7 @@ class ocp_nlp_solver_config:
 
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
-        hessian_approxs = ('GAUSS_NEWTON', 'EXACT')
+        hessian_approxs = ('GAUSS_NEWTON')
 
         if type(hessian_approx) == str and hessian_approx in hessian_approxs:
             self.__hessian_approx = hessian_approx
@@ -619,18 +891,20 @@ class acados_ocp_nlp:
         self.cost = ocp_nlp_cost()
         self.constraints = ocp_nlp_constraints()
         self.solver_config = ocp_nlp_solver_config()
-        self.model_name = None 
-        self.con_p_name = None 
+        self.model_name  = None 
+        self.con_p_name  = None 
         self.con_pN_name = None 
-        self.con_h_name = None 
+        self.con_h_name  = None 
         self.con_hN_name = None 
         self.constants = {}
         self.acados_include_path = []
         self.acados_lib_path = []
 
 def check_ra(ra):
-    if ra.solver_config.hessian_approx == 'EXACT' and ra.solver_config.integrator_type == 'IRK':
-        raise Exception('Exact Hessians not yet supported with IRK integrators.')
+    # TODO(andrea): dimensions check are already performed 
+    # on the JSON data and type checks should be enforced by the 
+    # property setters. Add extra checks here?
+    return
 
 def np_array_to_list(np_array):
     return np_array.tolist()
@@ -651,10 +925,37 @@ def dict2json(d):
         out[k.replace(k, out_key)] = v
     return out
 
+def acados_ocp2json_layout(acados_ocp):
+    """ Convert acados ocp nlp object JSON format by stripping the 
+    property mangling and adding array dimension info.
+    ALL items of type String will be converted 
+    to type ndarrray!
+     
+    Parameters
+    ----------
+    acados_ocp : class
+        object of type ocp_nlp_render_arguments.
+    
+    Returns
+    ------
+    out: dict 
+        acados_layout
+    """
+    ocp_nlp = acados_ocp
+    ocp_nlp.cost = acados_ocp.cost.__dict__
+    ocp_nlp.constraints = acados_ocp.constraints.__dict__
+    ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
+    ocp_nlp.dims = acados_ocp.dims.__dict__
+    ocp_nlp = ocp_nlp.__dict__
+    json_layout = dict2json_layout(ocp_nlp)
+    return json_layout
+
 def dict2json_layout(d):
     """ Convert dictionary containing the description of 
     of the ocp_nlp to JSON format by stripping the 
     property mangling and adding array dimension info.
+    ALL items of type String will be converted 
+    to type ndarrray!
      
     Parameters
     ----------
@@ -673,6 +974,9 @@ def dict2json_layout(d):
             v = dict2json_layout(v)
 
         v_type = str(type(v).__name__)
+        if v_type == 'list':
+            v_type = 'ndarray'
+
         # add array number of dimensions?
         # if v_type == 'ndarray':
         #     v_type = v_type + '_' + str(len(v.shape))
@@ -761,11 +1065,17 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
                 v = []
             else:
                 v = np.array(v)
+                v_dims = v.shape
                 dim_keys = ocp_nlp_layout[k][1]
                 dims_l = []
+                dims_names = []
                 for item in dim_keys:
                     dims_l.append(ocp_nlp_dims[item])
+                    dims_names.append(item)
                 dims = tuple(dims_l)
-                v = np.reshape(v, dims)
+                try: 
+                    v = np.reshape(v, dims)
+                except:  
+                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, v_dims, dims_names, dims))
         out[k.replace(k, out_key)] = v
     return out
