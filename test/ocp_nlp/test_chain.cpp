@@ -1289,7 +1289,7 @@ void setup_and_solve_nlp(int NN,
                 if (NMF < 4)
                 {
                     dynamics = (ocp_nlp_dynamics_disc_model *)nlp_in->dynamics[i];
-                    dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
+                    dynamics->disc_dyn_fun_jac = (external_function_generic *) &erk4_casadi[i];
                 }
                 break;
 

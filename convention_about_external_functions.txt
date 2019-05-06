@@ -74,6 +74,40 @@ outputs:
 external function: p
 
 /************************************************
+* dynamics discrete
+************************************************/
+
+// function and jacobian of discrete dynamics
+
+external function: disc_dyn_fun_jac
+
+inputs:
+0) [x]    size: nx    type: COLMAJ
+1) [u]    size: nu    type: COLMAJ
+
+outputs:
+0) [fun]    size: nx1            type: COLMAJ
+1) [jac]    size: nx1*(nx+nu)    type: COLMAJ
+
+
+
+// function and jacobian and hessian of discrete dynamics
+
+external function: disc_dyn_fun_jac_hess
+
+inputs:
+0) [x]      size: nx     type: COLMAJ
+1) [u]      size: nu     type: COLMAJ
+2) [lam]    size: nx1    type: COLMAJ
+
+outputs:
+0) [fun]         size: nx1                type: COLMAJ
+1) [jac]         size: nx1*(nx+nu)        type: COLMAJ
+2) [hess*lam]    size: (nx+nu)*(nx+nu)    type: COLMAJ
+
+
+
+/************************************************
 * sim_erk_integrator
 ************************************************/
 

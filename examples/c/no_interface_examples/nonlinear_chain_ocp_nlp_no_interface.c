@@ -1702,7 +1702,7 @@ int main() {
 	for (int i=0; i<NN; i++)
 	{
 		ocp_nlp_dynamics_disc_model *dynamics = nlp_in->dynamics[i];
-		dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
+		dynamics->disc_dyn_fun_jac = (external_function_generic *) &erk4_casadi[i];
 	}
 #elif DYNAMICS==4
 	for (int i=0; i<NN; i++)

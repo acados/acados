@@ -653,7 +653,7 @@ int main() {
 
     for (int i=0; i<N; i++)
     {
-        dynamics[i]->discrete_model = &disc_model_generic;
+        dynamics[i]->disc_dyn_fun_jac = &disc_model_generic;
     }
 
 

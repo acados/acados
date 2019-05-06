@@ -310,13 +310,10 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
     size += 1 * blasfeo_memsize_dvec(nz);             // z at t = 0
-    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // hes
     size += 1 * blasfeo_memsize_dmat(nz, nu + nx);    // dzdux_tran
 
     size +=
         config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
-
-
 
     size += 1*64;  // blasfeo_mem align
 
@@ -361,9 +358,6 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
-
-    // hes
-    assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &memory->hes, &c_ptr);
 
     // dzdux_tran
     assign_and_advance_blasfeo_dmat_mem(nu + nx, nz, &memory->dzdux_tran, &c_ptr);
@@ -470,14 +464,21 @@ int ocp_nlp_dynamics_cont_workspace_calculate_size(void *config_, void *dims_, v
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
 
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+
     int size = 0;
 
     size += sizeof(ocp_nlp_dynamics_cont_workspace);
 
     size += sim_in_calculate_size(config->sim_solver, dims->sim);
     size += sim_out_calculate_size(config->sim_solver, dims->sim);
-    size += config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim,
-                                                         opts->sim_solver);
+    size += config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+
+    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // hess
+
+    size += 1*64;  // blasfeo_mem align
 
     return size;
 }
@@ -495,6 +496,10 @@ static void ocp_nlp_dynamics_cont_cast_workspace(void *config_, void *dims_, voi
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_dynamics_cont_workspace);
 
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+
     // sim in
     work->sim_in = sim_in_assign(config->sim_solver, dims->sim, c_ptr);
     c_ptr += sim_in_calculate_size(config->sim_solver, dims->sim);
@@ -503,11 +508,15 @@ static void ocp_nlp_dynamics_cont_cast_workspace(void *config_, void *dims_, voi
     c_ptr += sim_out_calculate_size(config->sim_solver, dims->sim);
     // workspace
     work->sim_solver = c_ptr;
-    c_ptr += config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim,
-                                                          opts->sim_solver);
+    c_ptr += config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
 
-    assert((char *) work + ocp_nlp_dynamics_cont_workspace_calculate_size(config, dims, opts) >=
-           c_ptr);
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
+
+    // hess
+    assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &work->hess, &c_ptr);
+
+    assert((char *) work + ocp_nlp_dynamics_cont_workspace_calculate_size(config, dims, opts) >= c_ptr);
 
     return;
 }
@@ -672,15 +681,14 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 //		d_print_mat(nu+nx, nu+nx, work->sim_out->S_hess, nu+nx);
 
         // unpack d*_d2u
-        blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx + nu,
-                                     &mem->hes, 0, 0);
+        blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx+nu, &work->hess, 0, 0);
         // unpack d*_dux: mem-hess: nx x nu
-        blasfeo_pack_dmat(nx, nu, &work->sim_out->S_hess[(nx + nu)*nx], nx + nu, &mem->hes, nu, 0);
+        blasfeo_pack_dmat(nx, nu, &work->sim_out->S_hess[(nx + nu)*nx], nx+nu, &work->hess, nu, 0);
         // unpack d*_d2x
-        blasfeo_pack_dmat(nx, nx, &work->sim_out->S_hess[0], nx + nu, &mem->hes, nu, nu);
+        blasfeo_pack_dmat(nx, nx, &work->sim_out->S_hess[0], nx+nu, &work->hess, nu, nu);
 
         // Add hessian contribution
-        blasfeo_dgead(nx+nu, nx+nu, 1.0, &mem->hes, 0, 0, mem->RSQrq, 0, 0);
+        blasfeo_dgead(nx+nu, nx+nu, 1.0, &work->hess, 0, 0, mem->RSQrq, 0, 0);
     }
 
     return;

@@ -131,6 +131,8 @@ void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim,
     }
 }
 
+
+
 /************************************************
  * options
  ************************************************/
@@ -172,6 +174,7 @@ void ocp_nlp_dynamics_disc_opts_initialize_default(void *config_, void *dims_, v
     ocp_nlp_dynamics_disc_opts *opts = opts_;
 
     opts->compute_adj = 1;
+    opts->compute_hess = 0;
 
     return;
 }
@@ -197,6 +200,11 @@ void ocp_nlp_dynamics_disc_opts_set(void *config_, void *opts_, const char *fiel
 	{
 		int *int_ptr = value;
 		opts->compute_adj = *int_ptr;
+	}
+	else if(!strcmp(field, "compute_hess"))
+	{
+		int *int_ptr = value;
+		opts->compute_hess = *int_ptr;
 	}
 	else
 	{
@@ -358,7 +366,7 @@ int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void *dims_, v
 {
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    // ocp_nlp_dynamics_disc_opts *opts = opts_;
+    ocp_nlp_dynamics_disc_opts *opts = opts_;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -368,8 +376,20 @@ int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void *dims_, v
 
     size += sizeof(ocp_nlp_dynamics_disc_workspace);
 
-    size += (nx + nu) * sizeof(double);                // discrete_model_in
-    size += (nx1 + nx1 * (nx + nu)) * sizeof(double);  // discrete_model_out
+	if (opts->compute_hess==0)
+	{
+		size += (nx + nu) * sizeof(double);                // disc_dyn_in
+		size += (nx1 + nx1 * (nx + nu)) * sizeof(double);  // disc_dyn_out
+	}
+	else
+	{
+		size += (nx + nu + nx1) * sizeof(double);                        // disc_dyn_in
+		size += (nx1 + nx1*(nx+nu) + (nx+nu)*(nx+nu)) * sizeof(double);  // disc_dyn_out
+	}
+
+    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // hess
+
+    size += 1*64;  // blasfeo_mem align
 
     size += 8;
 
@@ -383,7 +403,7 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, voi
 {
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    // ocp_nlp_dynamics_disc_opts *opts = opts_;
+    ocp_nlp_dynamics_disc_opts *opts = opts_;
     ocp_nlp_dynamics_disc_workspace *work = work_;
 
     int nx = dims->nx;
@@ -395,13 +415,28 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, voi
 
     align_char_to(8, &c_ptr);
 
-    // discrete_model_in
-    assign_and_advance_double(nx + nu, &work->discrete_model_in, &c_ptr);
-    // discrete_model_out
-    assign_and_advance_double(nx1 + nx1 * (nx + nu), &work->discrete_model_out, &c_ptr);
+	if (opts->compute_hess==0)
+	{
+		// disc_dyn_in
+		assign_and_advance_double(nx + nu, &work->disc_dyn_in, &c_ptr);
+		// disc_dyn_out
+		assign_and_advance_double(nx1 + nx1 * (nx + nu), &work->disc_dyn_out, &c_ptr);
+	}
+	else
+	{
+		// disc_dyn_in
+		assign_and_advance_double(nx + nu + nx1, &work->disc_dyn_in, &c_ptr);
+		// disc_dyn_out
+		assign_and_advance_double(nx1 + nx1*(nx+nu) + (nx+nu)*(nx+nu), &work->disc_dyn_out, &c_ptr);
+	}
 
-    assert((char *) work + ocp_nlp_dynamics_disc_workspace_calculate_size(config_, dims, opts_) >=
-           c_ptr);
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
+
+    // hess
+    assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &work->hess, &c_ptr);
+
+    assert((char *) work + ocp_nlp_dynamics_disc_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return;
 }
@@ -488,48 +523,90 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
     int nu1 = dims->nu1;
 
     ext_fun_arg_t ext_fun_type_in[2];
-    void *ext_fun_in[2];  // XXX large enough ?
+    void *ext_fun_in[3];  // XXX large enough ?
     ext_fun_arg_t ext_fun_type_out[2];
-    void *ext_fun_out[2];  // XXX large enough ?
+    void *ext_fun_out[3];  // XXX large enough ?
+
+	double *d_ptr;
 
     // pass state and control to integrator
-    blasfeo_unpack_dvec(nu, mem->ux, 0, work->discrete_model_in + nx);
-    blasfeo_unpack_dvec(nx, mem->ux, nu, work->discrete_model_in);
+    blasfeo_unpack_dvec(nu, mem->ux, 0, work->disc_dyn_in + nx);
+    blasfeo_unpack_dvec(nx, mem->ux, nu, work->disc_dyn_in);
 
-    ext_fun_type_in[0] = COLMAJ;
-    ext_fun_in[0] = work->discrete_model_in + 0;  // x: nx
-    ext_fun_type_in[1] = COLMAJ;
-    ext_fun_in[1] = work->discrete_model_in + nx;  // u: nu
+	if (opts->compute_hess)
+	{
 
-    ext_fun_type_out[0] = COLMAJ;
-    ext_fun_out[0] = work->discrete_model_out + 0;  // fun: nx1
-    ext_fun_type_out[1] = COLMAJ;
-    ext_fun_out[1] = work->discrete_model_out + nx1;  // jac: nx1*(nx+nu)
+		blasfeo_unpack_dvec(nx1, mem->pi, 0, work->disc_dyn_in + nx + nu);
 
-    // call external function
-    model->discrete_model->evaluate(model->discrete_model, ext_fun_type_in, ext_fun_in,
-                                    ext_fun_type_out, ext_fun_out);
+		ext_fun_type_in[0] = COLMAJ;
+		ext_fun_in[0] = work->disc_dyn_in + 0;  // x: nx
+		ext_fun_type_in[1] = COLMAJ;
+		ext_fun_in[1] = work->disc_dyn_in + nx;  // u: nu
+		ext_fun_type_in[2] = COLMAJ;
+		ext_fun_in[2] = work->disc_dyn_in + nx+nu;  // pi: nx1
+
+		ext_fun_type_out[0] = COLMAJ;
+		ext_fun_out[0] = work->disc_dyn_out + 0;  // fun: nx1
+		ext_fun_type_out[1] = COLMAJ;
+		ext_fun_out[1] = work->disc_dyn_out + nx1;  // jac: nx1*(nx+nu)
+		ext_fun_type_out[2] = COLMAJ;
+		ext_fun_out[2] = work->disc_dyn_out + nx1 + nx1*(nx+nu);  // hess*pi: (nx+nu)*(nx+nu)
+
+		// call external function
+		model->disc_dyn_fun_jac->evaluate(model->disc_dyn_fun_jac, ext_fun_type_in, ext_fun_in,
+				ext_fun_type_out, ext_fun_out);
+
+		d_ptr = work->disc_dyn_out + nx1 + nx1*(nx+nu);  // hess
+	
+        // unpack d*_d2u
+        blasfeo_pack_dmat(nu, nu, &d_ptr[(nx+nu)*nx + nx], nx+nu, &work->hess, 0, 0);
+        // unpack d*_dux: mem-hess: nx x nu
+        blasfeo_pack_dmat(nx, nu, &d_ptr[(nx + nu)*nx], nx+nu, &work->hess, nu, 0);
+        // unpack d*_d2x
+        blasfeo_pack_dmat(nx, nx, &d_ptr[0], nx+nu, &work->hess, nu, nu);
+
+        // Add hessian contribution
+        blasfeo_dgead(nx+nu, nx+nu, 1.0, &work->hess, 0, 0, mem->RSQrq, 0, 0);
+	}
+	else
+	{
+
+		ext_fun_type_in[0] = COLMAJ;
+		ext_fun_in[0] = work->disc_dyn_in + 0;  // x: nx
+		ext_fun_type_in[1] = COLMAJ;
+		ext_fun_in[1] = work->disc_dyn_in + nx;  // u: nu
+
+		ext_fun_type_out[0] = COLMAJ;
+		ext_fun_out[0] = work->disc_dyn_out + 0;  // fun: nx1
+		ext_fun_type_out[1] = COLMAJ;
+		ext_fun_out[1] = work->disc_dyn_out + nx1;  // jac: nx1*(nx+nu)
+
+		// call external function
+		model->disc_dyn_fun_jac->evaluate(model->disc_dyn_fun_jac, ext_fun_type_in, ext_fun_in,
+				ext_fun_type_out, ext_fun_out);
+
+	}
 
     // B
-    blasfeo_pack_tran_dmat(nx1, nu, work->discrete_model_out + nx1 + nx1 * nx, nx1, mem->BAbt, 0,
-                           0);
+    blasfeo_pack_tran_dmat(nx1, nu, work->disc_dyn_out+nx1+nx1*nx, nx1, mem->BAbt, 0, 0);
     // A
-    blasfeo_pack_tran_dmat(nx1, nx, work->discrete_model_out + nx1, nx1, mem->BAbt, nu, 0);
+    blasfeo_pack_tran_dmat(nx1, nx, work->disc_dyn_out+nx1, nx1, mem->BAbt, nu, 0);
 
     // fun
-    blasfeo_pack_dvec(nx1, work->discrete_model_out, &mem->fun, 0);
+    blasfeo_pack_dvec(nx1, work->disc_dyn_out, &mem->fun, 0);
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
 
     // adj TODO if not computed by the external function
     if (opts->compute_adj)
     {
-        blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj,
-                        0);
+        blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj, 0);
         blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
     }
 
     return;
 }
+
+
 
 int ocp_nlp_dynamics_disc_precompute(void *config_, void *dims, void *model_, void *opts_,
                                         void *mem_, void *work_)
