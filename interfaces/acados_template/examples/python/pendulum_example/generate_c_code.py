@@ -75,7 +75,7 @@ nlp_con = ra.constraints
 nlp_con.lbu = np.array([-Fmax])
 nlp_con.ubu = np.array([+Fmax])
 nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
-nlp_con.idxbu = np.array([1])
+nlp_con.idxbu = np.array([0])
 
 # set constants
 ra.constants['PI'] = 3.1415926535897932
@@ -96,8 +96,8 @@ ra.acados_lib_path      = '/usr/local/lib'
 # json_layout = acados_ocp2json_layout(ra)
 # with open('acados_layout.json', 'w') as f:
 #     json.dump(json_layout, f, default=np_array_to_list)
+# exit()
 
-# import pdb; pdb.set_trace()
 acados_solver = generate_solver(model, ra, json_file = 'acados_ocp.json')
 
 Nsim = 100
