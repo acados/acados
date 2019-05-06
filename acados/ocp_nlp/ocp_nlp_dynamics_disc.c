@@ -486,7 +486,7 @@ void *ocp_nlp_dynamics_disc_model_assign(void *config_, void *dims_, void *raw_m
 
 
 
-void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, const char *field, void *value_)
+void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, const char *field, void *value)
 {
 
     ocp_nlp_dynamics_disc_model *model = model_;
@@ -494,6 +494,14 @@ void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, c
     if (!strcmp(field, "T"))
     {
 		// do nothing
+    }
+    else if (!strcmp(field, "disc_dyn_fun_jac"))
+    {
+        model->disc_dyn_fun_jac = (external_function_generic *) value;
+    }
+    else if (!strcmp(field, "disc_dyn_fun_jac_hess"))
+    {
+        model->disc_dyn_fun_jac_hess = (external_function_generic *) value;
     }
     else
     {

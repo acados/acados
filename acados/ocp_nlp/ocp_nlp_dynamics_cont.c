@@ -572,20 +572,26 @@ void *ocp_nlp_dynamics_cont_model_assign(void *config_, void *dims_, void *raw_m
 
 
 
-void ocp_nlp_dynamics_cont_model_set(void *config_, void *dims_, void *model_, const char *field, void *value_)
+void ocp_nlp_dynamics_cont_model_set(void *config_, void *dims_, void *model_, const char *field, void *value)
 {
+    ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_cont_model *model = model_;
+
+	sim_config *sim_config = config->sim_solver;
 
     if (!strcmp(field, "T"))
     {
-        double *T = (double *) value_;
+        double *T = (double *) value;
 		model->T = *T;
     }
     else
     {
-        printf("\nerror: field %s not available in module ocp_nlp_dynamics_cont_model_set\n", field);
-		
-        exit(1);
+		int status = sim_config->model_set(model->sim_model, field, value);
+		if (status!=0)
+		{
+			printf("\nerror: field %s not available in module ocp_nlp_dynamics_cont_model_set\n", field);
+			exit(1);
+		}
     }
 
     return;

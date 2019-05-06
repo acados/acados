@@ -1227,7 +1227,8 @@ int main()
 				break;
 
 			case DISCRETE_MODEL:
-				nlp_set_discrete_model_in_stage(config, nlp_in, i, &erk4_casadi[i]);
+				set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "disc_dyn_fun_jac", &erk4_casadi[i]);
+				if (set_fun_status != 0) exit(1);
 				break;
 
 			default:

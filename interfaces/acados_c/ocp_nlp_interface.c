@@ -379,15 +379,13 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
 
 
 int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-		int stage, const char *fun_type, void *fun_ptr)
+		int stage, const char *field, void *value)
 {
-    sim_config *sim_config = config->dynamics[stage]->sim_solver;
-	// TODO make it work also for dynamics discrete !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ocp_nlp_dynamics_cont_model *dynamics = in->dynamics[stage];
+    ocp_nlp_dynamics_config *dynamics_config = config->dynamics[stage];
 
-    int status = sim_config->model_set(dynamics->sim_model, (char *) fun_type, fun_ptr);
+    dynamics_config->model_set(dynamics_config, dims->dynamics[stage], in->dynamics[stage], field, value);
 
-    return status;
+    return ACADOS_SUCCESS;
 }
 
 
@@ -396,25 +394,9 @@ int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
 		ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     ocp_nlp_cost_config *cost_config = config->cost[stage];
-    void *cost_model = in->cost[stage];
-    void *cost_dims = dims->cost[stage];
 
-    int status = cost_config->model_set(cost_config, cost_dims, cost_model, field, value);
+    return cost_config->model_set(cost_config, dims->cost[stage], in->cost[stage], field, value);
 
-    return status;
-}
-
-
-
-// TODO remove and use ocp_nlp_dynamics_model_set instead !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-int nlp_set_discrete_model_in_stage(ocp_nlp_config *config, ocp_nlp_in *in, int stage,
-		void *fun_ptr)
-{
-
-    ocp_nlp_dynamics_disc_model *dynamics = in->dynamics[stage];
-    dynamics->disc_dyn_fun_jac = (external_function_generic *) fun_ptr;
-
-    return ACADOS_SUCCESS;
 }
 
 

@@ -202,11 +202,6 @@ int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
 		int stage, const char *fun_type, void *fun_ptr);
 
 
-/// Deprecated
-/// TODO remove and use ocp_nlp_dynamics_model_set instead !!!
-int nlp_set_discrete_model_in_stage(ocp_nlp_config *config, ocp_nlp_in *in, int stage,
-		void *fun_ptr);
-
 /// Sets the function pointers to the cost functions for the given stage.
 ///
 /// \param config The configuration struct.

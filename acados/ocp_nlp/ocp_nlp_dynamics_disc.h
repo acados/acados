@@ -148,7 +148,7 @@ int ocp_nlp_dynamics_disc_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_dynamics_disc_model_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, const char *field, void *value_);
+void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, const char *field, void *value);
 
 
 
