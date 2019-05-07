@@ -126,6 +126,7 @@ else
 	expl_vde_for = Function([model_name,'_expl_vde_for'], {x, Sx, Su, u}, {f_expl, vdeX, vdeU});
 end
 
+% 'true' at the end tells to transpose the jacobian before multiplication => reverse mode
 adj = jtimes(f_expl, [x;u], lambdaX, true);
 
 if (strcmp(param_f, 'true'))
@@ -136,6 +137,7 @@ end
 
 S_forw = vertcat(horzcat(Sx, Su), horzcat(zeros(nu,nx), eye(nu)));
 hess = S_forw.'*jtimes(adj, [x;u], S_forw);
+% TODO uncompress it ?????
 hess2 = [];
 for j = 1:nx+nu
     for i = j:nx+nu

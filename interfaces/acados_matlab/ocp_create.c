@@ -1040,7 +1040,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			{
 			ocp_nlp_dynamics_opts_set(config, opts, ii, "compute_hess", &nlp_solver_exact_hessian);
 			}
-		// TODO exact hessian of nonlinear constraints !!!!!!!!!!!!!!!!!!!!
+		for(ii=0; ii<=N; ii++)
+			{
+			ocp_nlp_constraints_opts_set(config, opts, ii, "compute_hess", &nlp_solver_exact_hessian);
+			}
 		}
 	// nlp_solver_max_iter
 	if(set_nlp_solver_max_iter)

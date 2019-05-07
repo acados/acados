@@ -296,6 +296,17 @@ void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 		const char *field, void *value);
 
 /// TBC
+/// Set the option for the constraints in a given stage.
+///
+/// \param config The configuration struct.
+/// \param opts_ The options struct.
+/// \param stage Stage number.
+/// \param field Name of the option.
+/// \param value Value of the option.
+void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+		const char *field, void *value);
+
+/// TBC
 /// Updates the options.
 ///
 /// \param config The configuration struct.

@@ -129,6 +129,7 @@ else
     HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 end
 
+% TODO implement with jtimes instead !!!!!!!!!!!!!
 for ii = 1:length(f_impl)
     jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z_u);
     hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);

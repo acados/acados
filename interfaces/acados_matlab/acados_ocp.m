@@ -55,9 +55,11 @@ classdef acados_ocp < handle
 					% sources list
 					if isfield(obj.model_struct, 'constr_expr_h')
 						c_sources = [c_sources, 'ocp_model_constr_h_fun_jac_ut_xt.c '];
+						c_sources = [c_sources, 'ocp_model_constr_h_fun_jac_ut_xt_hess.c '];
 					end
 					if isfield(obj.model_struct, 'constr_expr_h_e')
 						c_sources = [c_sources, 'ocp_model_constr_h_e_fun_jac_ut_xt.c '];
+						c_sources = [c_sources, 'ocp_model_constr_h_e_fun_jac_ut_xt_hess.c '];
 					end
 				end
 				% nonlinear least squares

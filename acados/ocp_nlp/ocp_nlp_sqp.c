@@ -334,6 +334,21 @@ void ocp_nlp_sqp_cost_opts_set(void *config_, void *opts_, int stage,
 
 
 
+void ocp_nlp_sqp_constraints_opts_set(void *config_, void *opts_, int stage,
+		const char *field, void *value)
+{
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_opts *opts = opts_;
+    ocp_nlp_constraints_config *constraints_config = config->constraints[stage];
+
+    constraints_config->opts_set(constraints_config, opts->constraints[stage], (char *) field, value);
+
+	return;
+
+}
+
+
+
 /************************************************
  * memory
  ************************************************/
@@ -1381,6 +1396,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->opts_set = &ocp_nlp_sqp_opts_set;
     config->dynamics_opts_set = &ocp_nlp_sqp_dynamics_opts_set;
     config->cost_opts_set = &ocp_nlp_sqp_cost_opts_set;
+    config->constraints_opts_set = &ocp_nlp_sqp_constraints_opts_set;
     config->memory_calculate_size = &ocp_nlp_sqp_memory_calculate_size;
     config->memory_assign = &ocp_nlp_sqp_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;

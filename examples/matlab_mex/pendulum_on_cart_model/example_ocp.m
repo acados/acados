@@ -42,12 +42,21 @@ nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
-nbx = 0;
-nbu = nu;
-ng = 0;
-ng_e = 0;
-nh = 0;
-nh_e = 0;
+if 0
+	nbx = 0;
+	nbu = nu;
+	ng = 0;
+	ng_e = 0;
+	nh = 0;
+	nh_e = 0;
+else
+	nbx = 0;
+	nbu = 0;
+	ng = 0;
+	ng_e = 0;
+	nh = nu;
+	nh_e = 0;
+end
 
 % cost
 Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
@@ -67,8 +76,8 @@ x0 = [0; pi; 0; 0];
 %lbx = -4*ones(nbx, 1);
 %ubx =  4*ones(nbx, 1);
 Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
-lbu = -80*ones(nbu, 1);
-ubu =  80*ones(nbu, 1);
+lbu = -80*ones(nu, 1);
+ubu =  80*ones(nu, 1);
 
 
 
@@ -132,11 +141,11 @@ if (ng>0)
 	ocp_model.set('constr_ug_e', ug_e);
 elseif (nh>0)
 	ocp_model.set('constr_expr_h', model.expr_h);
-	ocp_model.set('constr_lh', lh);
-	ocp_model.set('constr_uh', uh);
-	ocp_model.set('constr_expr_h_e', model.expr_h_e);
-	ocp_model.set('constr_lh_e', lh_e);
-	ocp_model.set('constr_uh_e', uh_e);
+	ocp_model.set('constr_lh', lbu);
+	ocp_model.set('constr_uh', ubu);
+%	ocp_model.set('constr_expr_h_e', model.expr_h_e);
+%	ocp_model.set('constr_lh_e', lh_e);
+%	ocp_model.set('constr_uh_e', uh_e);
 else
 %	ocp_model.set('constr_Jbx', Jbx);
 %	ocp_model.set('constr_lbx', lbx);

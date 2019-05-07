@@ -244,6 +244,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				}
 			}
 		}
+	if (mxGetField( prhs[1], 0, "constr_h_fun_jac_ut_xt_hess" )!=NULL && mxGetM(mxGetField( prhs[1], 0, "constr_h_fun_jac_ut_xt_hess" ))>0)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "constr_h_fun_jac_ut_xt_hess" ) );
+		if(!strcmp(param_h, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_constraints_model_set(config, dims, in, ii, "nl_constr_h_fun_jac_hess", ext_fun_param_ptr+ii);
+				}
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_constraints_model_set(config, dims, in, ii, "nl_constr_h_fun_jac_hess", ext_fun_ptr+ii);
+				}
+			}
+		}
 	if (mxGetField( prhs[1], 0, "constr_h_e_fun_jac_ut_xt" )!=NULL && mxGetM(mxGetField( prhs[1], 0, "constr_h_e_fun_jac_ut_xt" ))>0)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "constr_h_e_fun_jac_ut_xt" ) );
@@ -256,6 +276,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			status = ocp_nlp_constraints_model_set(config, dims, in, N, "nl_constr_h_fun_jac", ext_fun_ptr);
+			}
+		}
+	if (mxGetField( prhs[1], 0, "constr_h_e_fun_jac_ut_xt_hess" )!=NULL && mxGetM(mxGetField( prhs[1], 0, "constr_h_e_fun_jac_ut_xt_hess" ))>0)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "constr_h_e_fun_jac_ut_xt_hess" ) );
+		if(!strcmp(param_h_e, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			status = ocp_nlp_constraints_model_set(config, dims, in, N, "nl_constr_h_fun_jac_hess", ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			status = ocp_nlp_constraints_model_set(config, dims, in, N, "nl_constr_h_fun_jac_hess", ext_fun_ptr);
 			}
 		}
 	if (mxGetField( prhs[1], 0, "cost_y_fun_jac_ut_xt" )!=NULL && mxGetM(mxGetField( prhs[1], 0, "cost_y_fun_jac_ut_xt" ))>0)

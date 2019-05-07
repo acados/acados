@@ -246,9 +246,47 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			free(ext_fun_ptr);
 			}
 		}
+	if(mxGetField( prhs[2], 0, "constr_h_fun_jac_ut_xt_hess" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "constr_h_fun_jac_ut_xt_hess" ) );
+		if(!strcmp(param_h, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_param_casadi_free(ext_fun_param_ptr+ii);
+				}
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
+			free(ext_fun_ptr);
+			}
+		}
 	if(mxGetField( prhs[2], 0, "constr_h_e_fun_jac_ut_xt" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "constr_h_e_fun_jac_ut_xt" ) );
+		if(!strcmp(param_h_e, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
+		}
+	if(mxGetField( prhs[2], 0, "constr_h_e_fun_jac_ut_xt_hess" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "constr_h_e_fun_jac_ut_xt_hess" ) );
 		if(!strcmp(param_h_e, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];

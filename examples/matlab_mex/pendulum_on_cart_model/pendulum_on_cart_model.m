@@ -31,6 +31,9 @@ expr_f_expl = vertcat(v, ...
                       (- l*m*cos(theta)*sin(theta)*omega.^2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta).^2)));
 expr_f_impl = expr_f_expl - sym_xdot;
 
+%% constraints
+expr_h = sym_u;
+
 %% populate structure
 model.nx = nx;
 model.nu = nu;
@@ -39,4 +42,5 @@ model.sym_xdot = sym_xdot;
 model.sym_u = sym_u;
 model.expr_f_expl = expr_f_expl;
 model.expr_f_impl = expr_f_impl;
+model.expr_h = expr_h;
 

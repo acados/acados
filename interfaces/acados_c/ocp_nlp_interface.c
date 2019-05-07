@@ -546,6 +546,15 @@ void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 
 
 
+void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+		const char *field, void *value)
+{
+    config->constraints_opts_set(config, opts_, stage, field, value);
+	return;
+}
+
+
+
 void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
 {
     config->opts_update(config, dims, opts_);
