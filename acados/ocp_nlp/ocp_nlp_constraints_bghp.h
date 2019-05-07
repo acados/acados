@@ -93,6 +93,7 @@ int ocp_nlp_constraints_bghp_model_set(void *config_, void *dims_,
 typedef struct
 {
     int compute_adj;
+    int compute_hess;
 } ocp_nlp_constraints_bghp_opts;
 
 //

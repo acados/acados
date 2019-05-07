@@ -594,6 +594,7 @@ void ocp_nlp_constraints_bghp_opts_initialize_default(void *config_, void *dims_
     ocp_nlp_constraints_bghp_opts *opts = opts_;
 
     opts->compute_adj = 1;
+    opts->compute_hess = 0;
 
     return;
 }
@@ -618,6 +619,11 @@ void ocp_nlp_constraints_bghp_opts_set(void *config_, void *opts_, char *field, 
     {
         int *compute_adj = value;
         opts->compute_adj = *compute_adj;
+    }
+    else if(!strcmp(field, "compute_hess"))
+    {
+        int *compute_hess = value;
+        opts->compute_hess = *compute_hess;
     }
     else
     {
@@ -996,6 +1002,12 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
         blasfeo_daxpy(2 * ns, 1.0, memory->lam, 2 * nb + 2 * ng + 2 * nh, &memory->adj, nu + nx,
                       &memory->adj, nu + nx);
     }
+
+    if (opts->compute_hess)
+    {
+		printf("\nerror: compute_hess!=0 not supported (yet) in ocp_nlp_constraints_bghp\n");
+		exit(1);
+	}
 
     return;
 }
