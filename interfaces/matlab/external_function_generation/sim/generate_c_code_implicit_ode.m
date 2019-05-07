@@ -87,13 +87,16 @@ else
     HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 end
 
-for ii = 1:length(f_impl)
-    jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z_u);
-    hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
-    HESS = HESS + multiplier(ii) * hess_x_xdot_z;
-end
+%for ii = 1:length(f_impl)
+%    jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z_u);
+%    hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
+%    HESS = HESS + multiplier(ii) * hess_x_xdot_z;
+%end
+%HESS = HESS.simplify();
+% hessian computed as forward over adjoint !!!
+ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, true);
+HESS = jacobian(ADJ, x_xdot_z_u);
 
-HESS = HESS.simplify();
 HESS_multiplied = multiply_mat' * HESS * multiply_mat;
 HESS_multiplied = HESS_multiplied.simplify();
 
