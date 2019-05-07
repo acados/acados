@@ -129,12 +129,13 @@ else
     HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 end
 
-% hessian as forward over adjoint
+% hessian computed as forward over adjoint !!!
 ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, true);
 HESS = jacobian(ADJ, x_xdot_z_u);
 
 HESS_multiplied = multiply_mat' * HESS * multiply_mat;
 HESS_multiplied = HESS_multiplied.simplify();
+%HESS_multiplied = HESS;
 
 
 

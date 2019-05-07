@@ -34,6 +34,12 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
 
+
+
+#define CASADI_HESS_MULT 1
+
+
+
 /************************************************
  * dims
  ************************************************/
@@ -376,8 +382,13 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
         size += (steps + 1) * blasfeo_memsize_dmat(nx, nx + nu);      // S_forw
         size += steps * nK * sizeof(int);  // ipiv
 
+#if CASADI_HESS_MULT
         size += 1 * blasfeo_memsize_dmat(nx + nu, nx + nu);  // f_hess
-        size += 1 * blasfeo_memsize_dmat(2 * nx + nu + nz, nx + nu);  // dxkzu_dw0
+        size += 1 * blasfeo_memsize_dmat(2*nx+nz+nu, nx+nu);  // dxkzu_dw0
+#else
+        size += 1 * blasfeo_memsize_dmat(2*nx+nz+nu, 2*nx+nz+nu);  // f_hess
+        size += 2 * blasfeo_memsize_dmat(2*nx+nz+nu, nx+nu);  // dxkzu_dw0, tmp_dxkzu_dw0
+#endif
         size += 1 * blasfeo_memsize_dmat(nx + nu, nx + nu);  // Hess
     }
 
@@ -463,8 +474,14 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
             assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, &workspace->S_forw[ii], &c_ptr);
         }
         assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, &workspace->S_forw[steps], &c_ptr);
+#if CASADI_HESS_MULT
         assign_and_advance_blasfeo_dmat_mem(nx + nu, nx + nu, &workspace->f_hess, &c_ptr);
         assign_and_advance_blasfeo_dmat_mem(2*nx + nu + nz, nx + nu, &workspace->dxkzu_dw0, &c_ptr);
+#else
+        assign_and_advance_blasfeo_dmat_mem(2*nx+nz+nu, 2*nx+nz+nu, &workspace->f_hess, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(2*nx+nz+nu, nx+nu, &workspace->dxkzu_dw0, &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(2*nx+nz+nu, nx+nu, &workspace->tmp_dxkzu_dw0, &c_ptr);
+#endif
         assign_and_advance_blasfeo_dmat_mem(nx + nu, nx + nu, &workspace->Hess, &c_ptr);
     }
 
@@ -578,12 +595,14 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dvec *xn = workspace->xn;
     struct blasfeo_dmat *S_forw = workspace->S_forw;
 
+	// TODO use pointers instead !!!!!!!!!
     struct blasfeo_dmat df_dx = workspace->df_dx;
     struct blasfeo_dmat df_dxdot = workspace->df_dxdot;
     struct blasfeo_dmat df_du = workspace->df_du;
     struct blasfeo_dmat df_dz = workspace->df_dz;
     struct blasfeo_dmat f_hess = workspace->f_hess;
     struct blasfeo_dmat dxkzu_dw0 = workspace->dxkzu_dw0;
+    struct blasfeo_dmat tmp_dxkzu_dw0 = workspace->tmp_dxkzu_dw0;
 
     struct blasfeo_dmat df_dxdotz = workspace->df_dxdotz;
     struct blasfeo_dmat dk0_dxu = workspace->dk0_dxu;
@@ -1176,12 +1195,12 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         }
                     }
                     // dk_dw0
-                    blasfeo_dgecpsc(nx, nx+nu, -1.0, dK_dxu_ss, ii * nx, 0, &dxkzu_dw0, nx, 0);
+                    blasfeo_dgecpsc(nx, nx+nu, -1.0, dK_dxu_ss, ii*nx, 0, &dxkzu_dw0, nx, 0);
                     // dz_dw0
-                    blasfeo_dgecpsc(nx, nx+nu, -1.0, dK_dxu_ss, ns * nx + ii * nz, 0,
-                                                                 &dxkzu_dw0, 2 * nx, 0);
+//                    blasfeo_dgecpsc(nx, nx+nu, -1.0, dK_dxu_ss, ns*nx+ii*nz, 0, &dxkzu_dw0, 2*nx, 0); // NOTE(giaf): I think the first argument is wrong, it should be nz !
+                    blasfeo_dgecpsc(nz, nx+nu, -1.0, dK_dxu_ss, ns*nx+ii*nz, 0, &dxkzu_dw0, 2*nx, 0);
                     // du_dw0
-                    blasfeo_dgese(nu, nx + nu, 0.0, &dxkzu_dw0, 2 * nx + nz, 0);
+                    blasfeo_dgese(nu, nx+nu, 0.0, &dxkzu_dw0, 2*nx+nz, 0);
                     blasfeo_ddiare(nu, 1.0, &dxkzu_dw0, 2*nx+nz, nx);
 
                     // printf("dxkzu_dw0 = (IRK, ss = %d) \n", ss);
@@ -1205,13 +1224,23 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         // blasfeo_print_exp_dmat(2 * nx + nu + nz, nx + nu, &dxkzu_dw0, 0, 0);
 
                     acados_tic(&timer_ad);
+
                     model->impl_ode_hess->evaluate(model->impl_ode_hess, impl_ode_hess_type_in,
                                     impl_ode_hess_in, impl_ode_hess_type_out, impl_ode_hess_out);
+
                     timing_ad += acados_toc(&timer_ad);
+
+#if CASADI_HESS_MULT
 
                         // printf("f_hess = (IRK, ss = %d) \n", ss);
                         // blasfeo_print_exp_dmat(nx + nu, nx + nu, &f_hess, 0 , 0);
                     blasfeo_dgead(nx + nu, nx + nu, 1.0, &f_hess, 0, 0, &Hess, 0, 0);
+#else
+					blasfeo_dgemm_nn(2*nx+nz+nu, nu+nx, 2*nx+nz+nu, 1.0, &f_hess, 0, 0, &dxkzu_dw0, 0, 0, 0.0, &tmp_dxkzu_dw0, 0, 0, &tmp_dxkzu_dw0, 0, 0); 
+//					blasfeo_dgemm_tn(nu+nx, nu+nx, 2*nx+nz+nu, 1.0, &dxkzu_dw0, 0, 0, &tmp_dxkzu_dw0, 0, 0, 1.0, &Hess, 0, 0, &Hess, 0, 0);
+					blasfeo_dsyrk_ut(nu+nx, 2*nx+nz+nu, 1.0, &dxkzu_dw0, 0, 0, &tmp_dxkzu_dw0, 0, 0, 1.0, &Hess, 0, 0, &Hess, 0, 0);
+					blasfeo_dtrtr_u(nu+nx, &Hess, 0, 0, &Hess, 0, 0);
+#endif
                 }  // end for ii
             }  // end if ( opts->sens_hess )
         }  // end for ss
