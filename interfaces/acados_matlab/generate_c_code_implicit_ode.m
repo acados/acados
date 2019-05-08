@@ -132,10 +132,11 @@ end
 % hessian computed as forward over adjoint !!!
 ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, true);
 HESS = jacobian(ADJ, x_xdot_z_u);
-
 HESS_multiplied = multiply_mat' * HESS * multiply_mat;
-HESS_multiplied = HESS_multiplied.simplify();
+%HESS = jtimes(ADJ, x_xdot_z_u, multiply_mat);
+%HESS_multiplied = multiply_mat' * HESS;
 %HESS_multiplied = HESS;
+HESS_multiplied = HESS_multiplied.simplify();
 
 
 

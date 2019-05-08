@@ -155,10 +155,11 @@ void ext_cost(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_
 	struct blasfeo_dvec_args *u_args = in[1];
 	struct blasfeo_dvec *u = u_args->x;
 	int ui = u_args->xi;
+
 	// extract outputs
 	// 0: [grad_u; grad_x], size: nu+nx, type: BLASFEO_DVEC
 	struct blasfeo_dvec *grad = out[0];
-	// 0: [hess_uu, hess_ux; hess_xu, hess_xx], size: (nu+nx)*(nu+nx), type: BLASFEO_DMAT
+	// 1: [hess_uu, hess_ux; hess_xu, hess_xx], size: (nu+nx)*(nu+nx), type: BLASFEO_DMAT
 	struct blasfeo_dmat *hess = out[1];
 
     // Hessian
@@ -244,31 +245,34 @@ void disc_model(void *fun0, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *ty
     for (ii=0; ii<nx; ii++)
         b[ii] = 0.0;
 
-    // extract input
-    double *x = in[0];
-    double *u = in[1];
+	// extract inputs
+	// 0: [x], size: nx, type: BLASFEO_DVEC_ARGS
+	struct blasfeo_dvec_args *x_args = in[0];
+	struct blasfeo_dvec *x = x_args->x;
+	int xi = x_args->xi;
+	// 1: [u], size: nu, type: BLASFEO_DVEC_ARGS
+	struct blasfeo_dvec_args *u_args = in[1];
+	struct blasfeo_dvec *u = u_args->x;
+	int ui = u_args->xi;
 
-    // extract output
-    double *fun = out[0];
-    double *jac = out[1];
-
-    // fun
-    for (ii=0; ii<nx; ii++)
-        fun[ii] = b[ii];
-    for (ii=0; ii<nx; ii++)
-        for (jj=0; jj<nx; jj++)
-            fun[ii] += A[ii+nx*jj] * x[jj];
-    for (ii=0; ii<nx; ii++)
-        for (jj=0; jj<nu; jj++)
-            fun[ii] += B[ii+nx*jj] * u[jj];
+	// extract outputs
+	// 0: [fun], size: nx1, type: BLASFEO_DVEC_ARGS
+	struct blasfeo_dvec_args *f_args = out[0];
+	struct blasfeo_dvec *fun = f_args->x;
+	int fun_i = x_args->xi;
+	// 1: [jac_u'; jac_x'], size: (nu+nx)*nx1, type: BLASFEO_DMAT_ARGS
+	struct blasfeo_dmat_args *j_args = out[1];
+	struct blasfeo_dmat *jac = j_args->A;
+	int jac_i = j_args->ai;
+	int jac_j = j_args->aj;
 
     // jac
-    for (jj=0; jj<nx; jj++)
-        for (ii=0; ii<nx; ii++)
-            jac[ii+nx*jj] = A[ii+nx*jj];
-    for (jj=0; jj<nu; jj++)
-        for (ii=0; ii<nx; ii++)
-            jac[nx*nx+ii+nx*jj] = B[ii+nx*jj];
+	blasfeo_pack_tran_dmat(nx, nu, B, nx, jac, 0, 0);
+	blasfeo_pack_tran_dmat(nx, nx, A, nx, jac, nu, 0);
+
+	// fun
+	blasfeo_dgemv_t(nu, nx, 1.0, jac, 0, 0, u, ui, 0.0, fun, 0, fun, 0);
+	blasfeo_dgemv_t(nx, nx, 1.0, jac, nu, 0, x, xi, 1.0, fun, 0, fun, 0);
 
     // free memory
     free(A);

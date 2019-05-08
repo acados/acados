@@ -1138,10 +1138,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     initialize_qp(config, dims, nlp_in, nlp_out, opts, mem, work);
 
     // main sqp loop
-    int max_sqp_iterations = opts->max_iter;
     int sqp_iter = 0;
-    for (; sqp_iter < max_sqp_iterations; sqp_iter++)
+    for (; sqp_iter < opts->max_iter; sqp_iter++)
     {
+//        printf("\n------- sqp iter %d (max_iter %d) --------\n", sqp_iter, opts->max_iter);
 
         // start timer
         acados_tic(&timer1);

@@ -66,8 +66,25 @@ inputs:
 1) [u]    size: nu    type: BLASFEO_DVEC_ARGS
 
 outputs:
-0) [fun]    size: nh    type: BLASFEO_DVEC_ARGS
+0) [fun]               size: nh            type: BLASFEO_DVEC_ARGS
 1) [jac_u'; jac_x']    size: (nu+nx)*nh    type: BLASFEO_DMAT_ARGS
+
+
+
+// function and jacobian_transposed and hessian*multipliers of nonlinear constraints
+
+external function: nl_constr_h_fun_jac
+
+inputs:
+0) [x]      size: nx    type: BLASFEO_DVEC_ARGS
+1) [u]      size: nu    type: BLASFEO_DVEC_ARGS
+2) [lam]    size: nh    type: BLASFEO_DVEC_ARGS
+
+outputs:
+0) [fun]               size: nh                 type: BLASFEO_DVEC_ARGS
+1) [jac_u'; jac_x']    size: (nu+nx)*nh         type: BLASFEO_DMAT_ARGS
+2) [hess*lam]          size: (nu+nx)*(nu+nx)    type: BLASFEO_DMAT_ARGS
+
 
 
 // TODO(whoever): add documentation; split input into x, u;

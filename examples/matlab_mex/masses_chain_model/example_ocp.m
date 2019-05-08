@@ -11,11 +11,18 @@ N = 40;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
+%nlp_solver_exact_hessian = 'false'
+nlp_solver_exact_hessian = 'true'
+%regularize_method = 'no_regularize';
+regularize_method = 'project';
+%regularize_method = 'mirror';
+%regularize_method = 'convexify';
+nlp_solver_max_iter = 100;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_N_pcond = 5;
-sim_method = 'erk';
-%sim_method = 'irk';
+%sim_method = 'erk';
+sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 2;
 cost_type = 'linear_ls';
@@ -144,6 +151,9 @@ ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
+ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
+ocp_opts.set('regularize_method', regularize_method);
+ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
@@ -178,12 +188,14 @@ tic;
 for rep=1:nrep
 	ocp.solve();
 end
-time_solve = toc/nrep
+time_ext = toc/nrep
 
 
 % get solution
 u = ocp.get('u');
 x = ocp.get('x');
+%u
+%x
 
 
 
@@ -208,6 +220,13 @@ end
 
 
 status = ocp.get('status');
+sqp_iter = ocp.get('sqp_iter');
+time_tot = ocp.get('time_tot');
+time_lin = ocp.get('time_lin');
+time_qp_sol = ocp.get('time_qp_sol');
+
+fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+
 
 if status==0
 	fprintf('\nsuccess!\n\n');

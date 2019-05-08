@@ -592,8 +592,7 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
 		ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nx1
 
 		// call external function
-		model->disc_dyn_fun_jac->evaluate(model->disc_dyn_fun_jac, ext_fun_type_in, ext_fun_in,
-				ext_fun_type_out, ext_fun_out);
+		model->disc_dyn_fun_jac->evaluate(model->disc_dyn_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
 	}
 
