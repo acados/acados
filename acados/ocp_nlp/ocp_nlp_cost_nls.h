@@ -80,7 +80,7 @@ typedef struct
     struct blasfeo_dvec y_ref;
     struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector
     struct blasfeo_dvec z;              // gradient of slacks as vector
-	double scaling;
+    double scaling;
 } ocp_nlp_cost_nls_model;
 
 //

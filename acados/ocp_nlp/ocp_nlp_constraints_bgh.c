@@ -920,52 +920,52 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         jac_out.ai = 0;
         jac_out.aj = ng;
 
-		if (opts->compute_hess)
-		{
-			struct blasfeo_dvec_args mult_in;  // multipliers of external fun;
-			mult_in.x = &work->tmp_nh;
-			mult_in.xi = 0;
-			// TODO check that it is (upper - lower) and  not the other way around
-			blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
+        if (opts->compute_hess)
+        {
+            struct blasfeo_dvec_args mult_in;  // multipliers of external fun;
+            mult_in.x = &work->tmp_nh;
+            mult_in.xi = 0;
+            // TODO check that it is (upper - lower) and  not the other way around
+            blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
 
-			struct blasfeo_dmat_args hess_out;
-			hess_out.A = &work->tmp_nv_nv;
-			hess_out.ai = 0;
-			hess_out.aj = 0;
+            struct blasfeo_dmat_args hess_out;
+            hess_out.A = &work->tmp_nv_nv;
+            hess_out.ai = 0;
+            hess_out.aj = 0;
 
-			ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
-			ext_fun_in[0] = &x_in;
-			ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-			ext_fun_in[1] = &u_in;
-			ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-			ext_fun_in[2] = &mult_in;
+            ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+            ext_fun_in[0] = &x_in;
+            ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+            ext_fun_in[1] = &u_in;
+            ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+            ext_fun_in[2] = &mult_in;
 
-			ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
-			ext_fun_out[0] = &fun_out;  // fun: nh
-			ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
-			ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nh
-			ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
-			ext_fun_out[2] = &hess_out;  // hess*mult: (nu+nx) * (nu+nx)
+            ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+            ext_fun_out[0] = &fun_out;  // fun: nh
+            ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
+            ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nh
+            ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
+            ext_fun_out[2] = &hess_out;  // hess*mult: (nu+nx) * (nu+nx)
 
-			model->nl_constr_h_fun_jac_hess->evaluate(model->nl_constr_h_fun_jac_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+            model->nl_constr_h_fun_jac_hess->evaluate(model->nl_constr_h_fun_jac_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
-			blasfeo_dgead(nu+nx, nu+nx, 1.0, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+            blasfeo_dgead(nu+nx, nu+nx, 1.0, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
 
-		}
-		else
-		{
-			ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
-			ext_fun_in[0] = &x_in;
-			ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
-			ext_fun_in[1] = &u_in;
+        }
+        else
+        {
+            ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+            ext_fun_in[0] = &x_in;
+            ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+            ext_fun_in[1] = &u_in;
 
-			ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
-			ext_fun_out[0] = &fun_out;  // fun: nh
-			ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
-			ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nh
+            ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+            ext_fun_out[0] = &fun_out;  // fun: nh
+            ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
+            ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nh
 
-			model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-		}
+            model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+        }
     }
 
     blasfeo_daxpy(nb+ng+nh, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);

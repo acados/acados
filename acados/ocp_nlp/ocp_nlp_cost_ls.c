@@ -249,8 +249,8 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     // z
     assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->z, &c_ptr);
 
-	// default initialization
-	model->scaling = 1.0;
+    // default initialization
+    model->scaling = 1.0;
 
     // assert
     assert((char *) raw_memory + 
@@ -351,7 +351,7 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_cost_ls_model_set\n", field);
-		
+        
         exit(1);
     }
     return status;
@@ -415,17 +415,17 @@ void ocp_nlp_cost_ls_opts_set(void *config_, void *opts_, const char *field, voi
     ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_ls_opts *opts = opts_;
 
-	if(!strcmp(field, "exact_hess"))
-	{
-		// do nothing: the exact hessian is always computed
-	}
-	else
-	{
-		printf("\nerror: field %s not available in ocp_nlp_cost_ls_opts_set\n", field);
-		exit(1);
-	}
+    if(!strcmp(field, "exact_hess"))
+    {
+        // do nothing: the exact hessian is always computed
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_ls_opts_set\n", field);
+        exit(1);
+    }
 
-	return;
+    return;
 
 }
 
@@ -670,7 +670,7 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_,
     blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0,
         &work->tmp_nv_ny, 0, 0, 0.0, &memory->hess, 0, 0, &memory->hess, 0, 0);
 
-	blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
+    blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
 }
@@ -695,7 +695,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     int ns = dims->ns;
 
     if (nz > 0)
-	{ // eliminate algebraic variables and update Cyt and y_ref
+    { // eliminate algebraic variables and update Cyt and y_ref
         // copy Cyt into Cyt_tilde
         blasfeo_dgecp(nu + nx, ny, &model->Cyt, 0, 0, &work->Cyt_tilde, 0, 0);
         // copy y_ref into y_ref_tilde
@@ -728,8 +728,8 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
                 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
     }
-	else
-	{
+    else
+    {
         // add hessian of the cost contribution
         blasfeo_dgead(nx + nu, nx + nu, 1.0, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
         // // initialize hessian of lagrangian with hessian of cost
@@ -751,11 +751,11 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux,
         nu+nx, &memory->grad, nu+nx);
 
-	// scale
-	if(model->scaling!=1.0)
-	{
-		blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
-	}
+    // scale
+    if(model->scaling!=1.0)
+    {
+        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+    }
 
     return;
 }

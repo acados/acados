@@ -51,7 +51,7 @@ extern "C" {
 
 typedef struct
 {
-	int dummy;
+    int dummy;
 } ocp_nlp_reg_noreg_opts;
 
 //
@@ -71,7 +71,7 @@ void ocp_nlp_reg_noreg_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opt
 
 typedef struct
 {
-	int dummy;
+    int dummy;
 } ocp_nlp_reg_noreg_memory;
 
 //

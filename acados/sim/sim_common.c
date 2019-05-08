@@ -227,7 +227,7 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
     else if (!strcmp(field, "seed_adj"))
     {
         // NOTE: this assumes nf = nu+nx !!!
-		// NOTE: this correctly initialized the u-part to 0, unless the above S_adj which copies it from outside
+        // NOTE: this correctly initialized the u-part to 0, unless the above S_adj which copies it from outside
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);

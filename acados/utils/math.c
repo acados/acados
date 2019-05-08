@@ -809,7 +809,7 @@ void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hid
 
 static double hypot2(double x, double y)
 {
-	return sqrt(x*x + y*y);
+    return sqrt(x*x + y*y);
 }
 
 
@@ -1069,36 +1069,36 @@ static void tql2(int dim, double *V, double *d, double *e)
 
 void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double *e)
 {
-	int i, j;
+    int i, j;
 
     for (i=0; i<dim; i++)
         for (j=0; j<dim; j++)
-			V[i*dim+j] = A[i*dim+j];
+            V[i*dim+j] = A[i*dim+j];
 
     tred2(dim, V, d, e);
     tql2(dim, V, d, e);
 
-	return;
+    return;
 }
 
 
 
 void eigen_decomposition(int dim, double *A, double *V, double *d)
 {
-	int i, j;
+    int i, j;
 
     for (i=0; i<dim; i++)
         for (j=0; j<dim; j++)
-			V[i*dim+j] = A[i*dim+j];
+            V[i*dim+j] = A[i*dim+j];
 
     double *e = (double *) calloc(dim, sizeof(double));
 
     tred2(dim, V, d, e);
     tql2(dim, V, d, e);
 
-	free(e);
+    free(e);
 
-	return;
+    return;
 }
 
 

@@ -117,8 +117,8 @@ void *ocp_nlp_sqp_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts->qp_solver_opts = qp_solver->opts_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
 
-	opts->regularize = config->regularize->opts_assign(c_ptr);
-	c_ptr += config->regularize->opts_calculate_size();
+    opts->regularize = config->regularize->opts_assign(c_ptr);
+    c_ptr += config->regularize->opts_calculate_size();
 
     // dynamics
     opts->dynamics = (void **) c_ptr;
@@ -165,7 +165,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     ocp_nlp_dynamics_config **dynamics = config->dynamics;
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
-	ocp_nlp_reg_config *regularize = config->regularize;
+    ocp_nlp_reg_config *regularize = config->regularize;
 
     int ii;
 
@@ -186,11 +186,11 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     // submodules opts
 
-	// qp solver
+    // qp solver
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-	// regularization
-	regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
+    // regularization
+    regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
 
     // dynamics
     for (ii = 0; ii < N; ii++)
@@ -305,7 +305,7 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, const v
 
 
 void ocp_nlp_sqp_dynamics_opts_set(void *config_, void *opts_, int stage,
-		const char *field, void *value)
+        const char *field, void *value)
 {
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_opts *opts = opts_;
@@ -313,14 +313,14 @@ void ocp_nlp_sqp_dynamics_opts_set(void *config_, void *opts_, int stage,
 
     dyn_config->opts_set(dyn_config, opts->dynamics[stage], field, value);
 
-	return;
+    return;
 
 }
 
 
 
 void ocp_nlp_sqp_cost_opts_set(void *config_, void *opts_, int stage,
-		const char *field, void *value)
+        const char *field, void *value)
 {
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_opts *opts = opts_;
@@ -328,14 +328,14 @@ void ocp_nlp_sqp_cost_opts_set(void *config_, void *opts_, int stage,
 
     cost_config->opts_set(cost_config, opts->cost[stage], field, value);
 
-	return;
+    return;
 
 }
 
 
 
 void ocp_nlp_sqp_constraints_opts_set(void *config_, void *opts_, int stage,
-		const char *field, void *value)
+        const char *field, void *value)
 {
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_opts *opts = opts_;
@@ -343,7 +343,7 @@ void ocp_nlp_sqp_constraints_opts_set(void *config_, void *opts_, int stage,
 
     constraints_config->opts_set(constraints_config, opts->constraints[stage], (char *) field, value);
 
-	return;
+    return;
 
 }
 
@@ -373,11 +373,11 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
 
     size += sizeof(ocp_nlp_sqp_memory);
 
-	// qp solver
+    // qp solver
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-	// regularization
-	size += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
+    // regularization
+    size += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
 
     // dynamics
     size += N * sizeof(void *);
@@ -446,9 +446,9 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
         qp_solver->memory_assign(qp_solver, dims->qp_solver, opts->qp_solver_opts, c_ptr);
     c_ptr += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
-	// regularization
-	mem->regularize_mem = config->regularize->memory_assign(config->regularize, dims->regularize, opts->regularize, c_ptr);
-	c_ptr += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
+    // regularization
+    mem->regularize_mem = config->regularize->memory_assign(config->regularize, dims->regularize, opts->regularize, c_ptr);
+    c_ptr += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
 
     // nlp res
     mem->nlp_res = ocp_nlp_res_assign(dims, c_ptr);
@@ -489,7 +489,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
                                                         opts->constraints[ii]);
     }
 
-	mem->status = ACADOS_READY;
+    mem->status = ACADOS_READY;
 
     assert((char *) raw_memory + ocp_nlp_sqp_memory_calculate_size(config, dims, opts) >= c_ptr);
 
@@ -847,7 +847,7 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
         // dynamics
         if (i < N)
             config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i],
-            		nlp_in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+                    nlp_in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
 
         // cost
         config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i],
@@ -855,7 +855,7 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 
         // constraints
         config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i],
-        		nlp_in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+                nlp_in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
     }
 
     /* collect stage-wise evaluations */
@@ -1056,7 +1056,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // extract dims
     int N = dims->N;
 
-	int ii;
+    int ii;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -1113,13 +1113,13 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->constraints[ii]->memory_set_idxs_ptr(work->qp_in->idxs[ii], mem->constraints[ii]);
     }
 
-	// alias to regularize memory
-	config->regularize->memory_set_RSQrq_ptr(dims->regularize, work->qp_in->RSQrq, mem->regularize_mem);
-	config->regularize->memory_set_rq_ptr(dims->regularize, work->qp_in->rqz, mem->regularize_mem);
-	config->regularize->memory_set_BAbt_ptr(dims->regularize, work->qp_in->BAbt, mem->regularize_mem);
-	config->regularize->memory_set_b_ptr(dims->regularize, work->qp_in->b, mem->regularize_mem);
-	config->regularize->memory_set_ux_ptr(dims->regularize, work->qp_out->ux, mem->regularize_mem);
-	config->regularize->memory_set_pi_ptr(dims->regularize, work->qp_out->pi, mem->regularize_mem);
+    // alias to regularize memory
+    config->regularize->memory_set_RSQrq_ptr(dims->regularize, work->qp_in->RSQrq, mem->regularize_mem);
+    config->regularize->memory_set_rq_ptr(dims->regularize, work->qp_in->rqz, mem->regularize_mem);
+    config->regularize->memory_set_BAbt_ptr(dims->regularize, work->qp_in->BAbt, mem->regularize_mem);
+    config->regularize->memory_set_b_ptr(dims->regularize, work->qp_in->b, mem->regularize_mem);
+    config->regularize->memory_set_ux_ptr(dims->regularize, work->qp_out->ux, mem->regularize_mem);
+    config->regularize->memory_set_pi_ptr(dims->regularize, work->qp_out->pi, mem->regularize_mem);
 
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
@@ -1185,20 +1185,20 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             // stop timer
             total_time += acados_toc(&timer0);
 
-			// save time
+            // save time
             nlp_out->total_time = total_time;
             mem->time_tot = total_time;
 
 #if defined(ACADOS_WITH_OPENMP)
-			// restore number of threads
-			omp_set_num_threads(num_threads_bkp);
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
 #endif
-			mem->status = ACADOS_SUCCESS;
+            mem->status = ACADOS_SUCCESS;
             return mem->status;
         }
 
         // regularize Hessian
-		config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
+        config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
 
 //        printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
 //        print_ocp_qp_in(work->qp_in);
@@ -1209,10 +1209,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         acados_tic(&timer1);
 
         int qp_status = qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out,
-				opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
+                opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
 
         // compute correct dual solution in case of Hessian regularization
-		config->regularize->correct_dual_sol(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
+        config->regularize->correct_dual_sol(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
 
         // stop timer
         mem->time_qp_sol += acados_toc(&timer1);
@@ -1228,23 +1228,23 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         {
             //   print_ocp_qp_in(work->qp_in);
 
-			// save sqp iterations number
-			mem->sqp_iter = sqp_iter;
-			nlp_out->sqp_iter = sqp_iter;
+            // save sqp iterations number
+            mem->sqp_iter = sqp_iter;
+            nlp_out->sqp_iter = sqp_iter;
 
             // stop timer
             total_time += acados_toc(&timer0);
 
-			// save time
+            // save time
             mem->time_tot = total_time;
             nlp_out->total_time = total_time;
 
             printf("QP solver returned error status %d in iteration %d\n", qp_status, sqp_iter);
 #if defined(ACADOS_WITH_OPENMP)
-			// restore number of threads
-			omp_set_num_threads(num_threads_bkp);
+            // restore number of threads
+            omp_set_num_threads(num_threads_bkp);
 #endif
-			mem->status = ACADOS_QP_FAILURE;
+            mem->status = ACADOS_QP_FAILURE;
             return mem->status;
         }
 
@@ -1278,7 +1278,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->sqp_iter = sqp_iter;
     nlp_out->sqp_iter = sqp_iter;
 
-	// save time
+    // save time
     mem->time_tot = total_time;
     nlp_out->total_time = total_time;
 
@@ -1290,7 +1290,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // restore number of threads
     omp_set_num_threads(num_threads_bkp);
 #endif
-	mem->status = ACADOS_MAXITER;
+    mem->status = ACADOS_MAXITER;
     return mem->status;
 }
 

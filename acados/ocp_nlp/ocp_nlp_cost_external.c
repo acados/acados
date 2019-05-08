@@ -68,7 +68,7 @@ void ocp_nlp_cost_external_dims_initialize(void *config_, void *dims_, int nx, i
     dims->nu = nu;
     dims->ns = ns;
 
-	// TODO nz
+    // TODO nz
 
     return;
 }
@@ -81,7 +81,7 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
 
     if (!strcmp(field, "nx"))
     {
-		dims->nx = *value;
+        dims->nx = *value;
     }
     else if (!strcmp(field, "nz"))
     {
@@ -90,11 +90,11 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
     }
     else if (!strcmp(field, "nu"))
     {
-		dims->nu = *value;
+        dims->nu = *value;
     }
     else if (!strcmp(field, "ns"))
     {
-		dims->ns = *value;
+        dims->ns = *value;
     }
     else
     {
@@ -102,7 +102,7 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
         exit(1);
     }
 
-	return;
+    return;
 }
 
 
@@ -158,8 +158,8 @@ void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_m
     // z
     assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->z, &c_ptr);
 
-	// default initialization
-	model->scaling = 1.0;
+    // default initialization
+    model->scaling = 1.0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_cost_external_model_calculate_size(config_, dims_) >=
@@ -227,7 +227,7 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     else
     {
         printf("\nerror: model entry: %s not available in module ocp_nlp_cost_external\n", field);
-		exit(1);
+        exit(1);
 //        status = ACADOS_FAILURE;
     }
     return status;
@@ -298,17 +298,17 @@ void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *fiel
     ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_external_opts *opts = opts_;
 
-	if(!strcmp(field, "exact_hess"))
-	{
-		// do nothing: the exact hessian is always computed
-	}
-	else
-	{
-		printf("\nerror: field %s not available in ocp_nlp_cost_external_opts_set\n", field);
-		exit(1);
-	}
+    if(!strcmp(field, "exact_hess"))
+    {
+        // do nothing: the exact hessian is always computed
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_external_opts_set\n", field);
+        exit(1);
+    }
 
-	return;
+    return;
 
 }
 
@@ -484,7 +484,7 @@ void ocp_nlp_cost_external_initialize(void *config_, void *dims_, void *model_, 
 
     int ns = dims->ns;
 
-	blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
+    blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
 }
@@ -543,11 +543,11 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
-	// scale
-	if(model->scaling!=1.0)
-	{
+    // scale
+    if(model->scaling!=1.0)
+    {
         blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
-	}
+    }
 
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
     // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);

@@ -1005,9 +1005,9 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
 
     if (opts->compute_hess)
     {
-		printf("\nerror: compute_hess!=0 not supported (yet) in ocp_nlp_constraints_bghp\n");
-		exit(1);
-	}
+        printf("\nerror: compute_hess!=0 not supported (yet) in ocp_nlp_constraints_bghp\n");
+        exit(1);
+    }
 
     return;
 }

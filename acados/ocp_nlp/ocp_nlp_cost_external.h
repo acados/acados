@@ -60,7 +60,7 @@ typedef struct
     external_function_generic *ext_cost;  // gradient and hessian
     struct blasfeo_dvec Z;
     struct blasfeo_dvec z;
-	double scaling;
+    double scaling;
 } ocp_nlp_cost_external_model;
 
 //

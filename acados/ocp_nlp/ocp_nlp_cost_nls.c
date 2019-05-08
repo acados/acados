@@ -68,7 +68,7 @@ void ocp_nlp_cost_nls_dims_initialize(void *config_, void *dims_, int nx, int nu
     dims->ny = ny;
     dims->ns = ns;
 
-	// TODO nz
+    // TODO nz
 
     return;
 }
@@ -201,8 +201,8 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
     // z
     assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->z, &c_ptr);
 
-	// default initialization
-	model->scaling = 1.0;
+    // default initialization
+    model->scaling = 1.0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_cost_nls_model_calculate_size(config_, dims) >= c_ptr);
@@ -286,7 +286,7 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_cost_nls_model_set\n", field);
-		exit(1);
+        exit(1);
 //        status = ACADOS_FAILURE;
     }
     return status;
@@ -354,30 +354,30 @@ void ocp_nlp_cost_nls_opts_set(void *config_, void *opts_, const char *field, vo
     ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_nls_opts *opts = opts_;
 
-	if(!strcmp(field, "gauss_newton_hess"))
-	{
-		int *int_ptr = value;
-		opts->gauss_newton_hess = *int_ptr;
-	}
-	else if(!strcmp(field, "exact_hess"))
-	{
-		int *int_ptr = value;
-		if(*int_ptr==0)
-		{
-			opts->gauss_newton_hess = 1;
-		}
-		else
-		{
-			opts->gauss_newton_hess = 0;
-		}
-	}
-	else
-	{
-		printf("\nerror: field %s not available in ocp_nlp_cost_nls_opts_set\n", field);
-		exit(1);
-	}
+    if(!strcmp(field, "gauss_newton_hess"))
+    {
+        int *int_ptr = value;
+        opts->gauss_newton_hess = *int_ptr;
+    }
+    else if(!strcmp(field, "exact_hess"))
+    {
+        int *int_ptr = value;
+        if(*int_ptr==0)
+        {
+            opts->gauss_newton_hess = 1;
+        }
+        else
+        {
+            opts->gauss_newton_hess = 0;
+        }
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_nls_opts_set\n", field);
+        exit(1);
+    }
 
-	return;
+    return;
 
 }
 
@@ -583,7 +583,7 @@ void ocp_nlp_cost_nls_initialize(void *config_, void *dims_, void *model_, void 
     // TODO(all): recompute factorization only if W are re-tuned ???
     blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
-	blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
+    blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
 }
@@ -651,7 +651,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
                     &work->tmp_ny, 0);
     // grad = Jt * tmp_ny
     blasfeo_dgemv_n(nu + nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0,
-    		&memory->grad, 0);
+            &memory->grad, 0);
 
     // printf("tmp_ny\n");
     // blasfeo_print_dvec(ny, &work->tmp_ny, 0);
@@ -670,13 +670,13 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         // gauss-newton approximation of hessian of ls cost
         // tmp_nv_ny = Jt * W_chol,     where W_chol is lower triangular
         blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
-        		&work->tmp_nv_ny, 0, 0);
+                &work->tmp_nv_ny, 0, 0);
 
         // blasfeo_print_dmat(nu + nx, ny, &work->tmp_nv_ny, 0, 0);
 
         // RSQrq = tmp_nv_ny * tmp_nv_ny^T
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 1.0,
-        		memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+                memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 
         // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
     }
@@ -697,26 +697,26 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
         // evaluate external function
         model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
-        		ext_fun_out);
+                ext_fun_out);
 
         // gauss-newton component update
         // tmp_nv_ny = Jt * W_chol, where W_chol is lower triangular
         blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
-        		&work->tmp_nv_ny, 0, 0);
+                &work->tmp_nv_ny, 0, 0);
         // RSQrq = RSQrq + tmp_nv_ny * tmp_nv_ny^T
         blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 1.0,
-        		model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+                model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
     }
 
     // slacks
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
-	// scale
-	if(model->scaling!=1.0)
-	{
-		blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
-	}
+    // scale
+    if(model->scaling!=1.0)
+    {
+        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+    }
 
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
     // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);

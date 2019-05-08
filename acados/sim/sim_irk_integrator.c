@@ -181,7 +181,7 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
     else
     {
         printf("\nerror: sim_irk_model_set: wrong field: %s\n", field);
-		exit(1);
+        exit(1);
 //        return ACADOS_FAILURE;
     }
 
@@ -595,7 +595,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dvec *xn = workspace->xn;
     struct blasfeo_dmat *S_forw = workspace->S_forw;
 
-	// TODO use pointers instead !!!!!!!!!
+    // TODO use pointers instead !!!!!!!!!
     struct blasfeo_dmat df_dx = workspace->df_dx;
     struct blasfeo_dmat df_dxdot = workspace->df_dxdot;
     struct blasfeo_dmat df_du = workspace->df_du;
@@ -1236,10 +1236,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         // blasfeo_print_exp_dmat(nx + nu, nx + nu, &f_hess, 0 , 0);
                     blasfeo_dgead(nx + nu, nx + nu, 1.0, &f_hess, 0, 0, &Hess, 0, 0);
 #else
-					blasfeo_dgemm_nn(2*nx+nz+nu, nu+nx, 2*nx+nz+nu, 1.0, &f_hess, 0, 0, &dxkzu_dw0, 0, 0, 0.0, &tmp_dxkzu_dw0, 0, 0, &tmp_dxkzu_dw0, 0, 0); 
-//					blasfeo_dgemm_tn(nu+nx, nu+nx, 2*nx+nz+nu, 1.0, &dxkzu_dw0, 0, 0, &tmp_dxkzu_dw0, 0, 0, 1.0, &Hess, 0, 0, &Hess, 0, 0);
-					blasfeo_dsyrk_ut(nu+nx, 2*nx+nz+nu, 1.0, &dxkzu_dw0, 0, 0, &tmp_dxkzu_dw0, 0, 0, 1.0, &Hess, 0, 0, &Hess, 0, 0);
-					blasfeo_dtrtr_u(nu+nx, &Hess, 0, 0, &Hess, 0, 0);
+                    blasfeo_dgemm_nn(2*nx+nz+nu, nu+nx, 2*nx+nz+nu, 1.0, &f_hess, 0, 0, &dxkzu_dw0, 0, 0, 0.0, &tmp_dxkzu_dw0, 0, 0, &tmp_dxkzu_dw0, 0, 0); 
+//                    blasfeo_dgemm_tn(nu+nx, nu+nx, 2*nx+nz+nu, 1.0, &dxkzu_dw0, 0, 0, &tmp_dxkzu_dw0, 0, 0, 1.0, &Hess, 0, 0, &Hess, 0, 0);
+                    blasfeo_dsyrk_ut(nu+nx, 2*nx+nz+nu, 1.0, &dxkzu_dw0, 0, 0, &tmp_dxkzu_dw0, 0, 0, 1.0, &Hess, 0, 0, &Hess, 0, 0);
+                    blasfeo_dtrtr_u(nu+nx, &Hess, 0, 0, &Hess, 0, 0);
 #endif
                 }  // end for ii
             }  // end if ( opts->sens_hess )

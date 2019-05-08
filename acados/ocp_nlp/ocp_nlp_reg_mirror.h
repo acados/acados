@@ -51,7 +51,7 @@ extern "C" {
 
 typedef struct
 {
-	double epsilon;
+    double epsilon;
 } ocp_nlp_reg_mirror_opts;
 
 //
@@ -76,7 +76,7 @@ typedef struct
     double *d; // TODO move to workspace
     double *e; // TODO move to workspace
 
-	// giaf's
+    // giaf's
     struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in
 } ocp_nlp_reg_mirror_memory;
 

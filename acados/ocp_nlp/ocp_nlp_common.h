@@ -108,7 +108,7 @@ typedef struct
     void **dynamics;
     void **constraints;
     ocp_qp_dims *qp_solver;  // xcond solver instead ??
-	ocp_nlp_reg_dims *regularize;
+    ocp_nlp_reg_dims *regularize;
 
     int *nv;  // number of primal variables (states+controls+slacks)
     int *nx;  // number of differential states

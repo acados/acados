@@ -65,15 +65,15 @@ ocp_nlp_reg_dims *ocp_nlp_reg_dims_assign(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
-	// dims
+    // dims
     ocp_nlp_reg_dims *dims = (ocp_nlp_reg_dims *) c_ptr;
     c_ptr += sizeof(ocp_nlp_reg_dims);
-	// nx
-	dims->nx = (int *) c_ptr;
-	c_ptr += (N+1)*sizeof(int);
-	// nu
-	dims->nu = (int *) c_ptr;
-	c_ptr += (N+1)*sizeof(int);
+    // nx
+    dims->nx = (int *) c_ptr;
+    c_ptr += (N+1)*sizeof(int);
+    // nu
+    dims->nu = (int *) c_ptr;
+    c_ptr += (N+1)*sizeof(int);
 
     dims->N = N;
 
@@ -89,11 +89,11 @@ void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char
 
     if (!strcmp(field, "nx"))
     {
-		dims->nx[stage] = *value;
+        dims->nx[stage] = *value;
     }
     else if (!strcmp(field, "nu"))
     {
-		dims->nu[stage] = *value;
+        dims->nu[stage] = *value;
     }
     else
     {
@@ -101,7 +101,7 @@ void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char
         exit(1);
     }
 
-	return;
+    return;
 }
 
 
@@ -113,7 +113,7 @@ void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char
 // reconstruct A = V * d * V'
 void acados_reconstruct_A(int dim, double *A, double *V, double *d)
 {
-	int i, j, k;
+    int i, j, k;
 
     for (i=0; i<dim; i++)
     {
@@ -132,16 +132,16 @@ void acados_reconstruct_A(int dim, double *A, double *V, double *d)
 // mirroring regularization
 void acados_mirror(int dim, double *A, double *V, double *d, double *e, double epsilon)
 {
-	int i;
+    int i;
 
     acados_eigen_decomposition(dim, A, V, d, e);
 
     for (i = 0; i < dim; i++)
     {
-		// project
+        // project
         if (d[i] >= -epsilon && d[i] <= epsilon)
             d[i] = epsilon;
-		// mirror
+        // mirror
         else if (d[i] < 0)
             d[i] = -d[i];
     }
@@ -154,11 +154,11 @@ void acados_mirror(int dim, double *A, double *V, double *d, double *e, double e
 // projecting regularization
 void acados_project(int dim, double *A, double *V, double *d, double *e, double epsilon)
 {
-	int i;
+    int i;
 
     acados_eigen_decomposition(dim, A, V, d, e);
 
-	// project
+    // project
     for (i = 0; i < dim; i++)
     {
         if (d[i] < epsilon)

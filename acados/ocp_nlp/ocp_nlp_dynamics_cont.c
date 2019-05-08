@@ -220,15 +220,15 @@ void ocp_nlp_dynamics_cont_opts_initialize_default(void *config_, void *dims_, v
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
 
-	// own opts
+    // own opts
     opts->compute_adj = 1;
     opts->compute_hess = 0;
 
-	// sim opts
+    // sim opts
     config->sim_solver->opts_initialize_default(config->sim_solver, dims->sim, opts->sim_solver);
 
-	bool tmp_bool = false;
-	config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
+    bool tmp_bool = false;
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
 
     return;
 }
@@ -255,33 +255,33 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     ocp_nlp_dynamics_cont_opts *opts = opts_;
     sim_config *sim_config_ = config->sim_solver;
 
-	if(!strcmp(field, "compute_adj"))
-	{
-		int *int_ptr = value;
-		opts->compute_adj = *int_ptr;
-	}
-	else if(!strcmp(field, "compute_hess"))
-	{
-		int *int_ptr = value;
-		opts->compute_hess = *int_ptr;
-		bool tmp_bool = true;
-		if(*int_ptr==0)
-		{
-			tmp_bool = false;
-		}
-		config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
-	}
-	else
-	{
-		int return_value = sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
-		if(return_value!=ACADOS_SUCCESS)
-		{
-			printf("\nerror: field %s not available in ocp_nlp_dynamics_cont_opts_set\n", field);
-			exit(1);
-		}
-	}
+    if(!strcmp(field, "compute_adj"))
+    {
+        int *int_ptr = value;
+        opts->compute_adj = *int_ptr;
+    }
+    else if(!strcmp(field, "compute_hess"))
+    {
+        int *int_ptr = value;
+        opts->compute_hess = *int_ptr;
+        bool tmp_bool = true;
+        if(*int_ptr==0)
+        {
+            tmp_bool = false;
+        }
+        config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
+    }
+    else
+    {
+        int return_value = sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
+        if(return_value!=ACADOS_SUCCESS)
+        {
+            printf("\nerror: field %s not available in ocp_nlp_dynamics_cont_opts_set\n", field);
+            exit(1);
+        }
+    }
 
-	return;
+    return;
 
 }
 
@@ -577,21 +577,21 @@ void ocp_nlp_dynamics_cont_model_set(void *config_, void *dims_, void *model_, c
     ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_cont_model *model = model_;
 
-	sim_config *sim_config = config->sim_solver;
+    sim_config *sim_config = config->sim_solver;
 
     if (!strcmp(field, "T"))
     {
         double *T = (double *) value;
-		model->T = *T;
+        model->T = *T;
     }
     else
     {
-		int status = sim_config->model_set(model->sim_model, field, value);
-		if (status!=0)
-		{
-			printf("\nerror: field %s not available in module ocp_nlp_dynamics_cont_model_set\n", field);
-			exit(1);
-		}
+        int status = sim_config->model_set(model->sim_model, field, value);
+        if (status!=0)
+        {
+            printf("\nerror: field %s not available in module ocp_nlp_dynamics_cont_model_set\n", field);
+            exit(1);
+        }
     }
 
     return;
@@ -623,7 +623,7 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_cont_model *model = model_;
 
-	int jj;
+    int jj;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -642,18 +642,18 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_unpack_dvec(nx, mem->ux, nu, work->sim_in->x);
 
     // initialize seeds
-	// TODO fix dims if nx!=nx1 !!!!!!!!!!!!!!!!!
+    // TODO fix dims if nx!=nx1 !!!!!!!!!!!!!!!!!
     for(jj = 0; jj < nx1 * (nx + nu); jj++)
-		work->sim_in->S_forw[jj] = 0.0;
+        work->sim_in->S_forw[jj] = 0.0;
     for(jj = 0; jj < nx1; jj++)
-		work->sim_in->S_forw[jj * (nx + 1)] = 1.0;
+        work->sim_in->S_forw[jj * (nx + 1)] = 1.0;
     for(jj = 0; jj < nx + nu; jj++)
-		work->sim_in->S_adj[jj] = 0.0;
+        work->sim_in->S_adj[jj] = 0.0;
     blasfeo_unpack_dvec(nx1, mem->pi, 0, work->sim_in->S_adj);
 
     // call integrator
     config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out, opts->sim_solver,
-    		mem->sim_solver, work->sim_solver);
+            mem->sim_solver, work->sim_solver);
 
     // TODO transition functions for changing dimensions not yet implemented!
 
@@ -674,27 +674,27 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     // adjoint
     if (opts->compute_adj)
     {
-		// this is computed by the integrator if compute_hess!=0
-		// TODO other cases when it is computed in the integrator ???
-		if (opts->compute_hess)
-		{
-			blasfeo_pack_dvec(nu, work->sim_out->S_adj+nx, &mem->adj, 0);
-			blasfeo_pack_dvec(nx, work->sim_out->S_adj+0, &mem->adj, nu);
-			blasfeo_dvecsc(nu+nx, -1.0, &mem->adj, 0);
-		}
-		// compute as forward * adj_seed
-		else
-		{
-			blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj, 0);
-		}
-		blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu+nx);
+        // this is computed by the integrator if compute_hess!=0
+        // TODO other cases when it is computed in the integrator ???
+        if (opts->compute_hess)
+        {
+            blasfeo_pack_dvec(nu, work->sim_out->S_adj+nx, &mem->adj, 0);
+            blasfeo_pack_dvec(nx, work->sim_out->S_adj+0, &mem->adj, nu);
+            blasfeo_dvecsc(nu+nx, -1.0, &mem->adj, 0);
+        }
+        // compute as forward * adj_seed
+        else
+        {
+            blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj, 0);
+        }
+        blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu+nx);
     }
 
-	// hessian
+    // hessian
     if (opts->compute_hess)
     {
 
-//		d_print_mat(nu+nx, nu+nx, work->sim_out->S_hess, nu+nx);
+//        d_print_mat(nu+nx, nu+nx, work->sim_out->S_hess, nu+nx);
 
         // unpack d*_d2u
         blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx+nu, &work->hess, 0, 0);

@@ -165,7 +165,7 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
     else
     {
         printf("\nerror: sim_erk_model_set: wrong field: %s\n", field);
-		exit(1);
+        exit(1);
 //        return ACADOS_FAILURE;
     }
 
@@ -648,13 +648,13 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             K_traj = workspace->K_traj + istep * ns * nX;
             forw_traj = workspace->out_forw_traj + (istep + 1) * nX;
             for (i = 0; i < nX; i++)
-				forw_traj[i] = forw_traj[i - nX];
+                forw_traj[i] = forw_traj[i - nX];
         }
 
         for (s = 0; s < ns; s++)
         {
             for (i = 0; i < nX; i++)
-				rhs_forw_in[i] = forw_traj[i];
+                rhs_forw_in[i] = forw_traj[i];
             for (j = 0; j < s; j++)
             {
                 a = A_mat[j * ns + s];
@@ -662,7 +662,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 {
                     a *= step;
                     for (i = 0; i < nX; i++)
-						rhs_forw_in[i] += a * K_traj[j * nX + i];
+                        rhs_forw_in[i] += a * K_traj[j * nX + i];
                 }
             }
 
@@ -726,10 +726,10 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     {
         // initialize integrator variables
         for (i = 0; i < nx; i++)
-			adj_tmp[i] = S_adj_in[i];
-		// TODO read from S_adj also u-part ???
+            adj_tmp[i] = S_adj_in[i];
+        // TODO read from S_adj also u-part ???
         for (i = 0; i < nu; i++)
-			adj_tmp[nx + i] = 0.0;
+            adj_tmp[nx + i] = 0.0;
 
         int nForw = nx;
         int nAdj = nx + nu;
@@ -738,13 +738,13 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             nForw = nX;
             nAdj = nx + nu + nhess;
             for (i = 0; i < nhess; i++)
-				adj_tmp[nx + nu + i] = 0.0;
+                adj_tmp[nx + nu + i] = 0.0;
         }
 
         //        printf("\nnForw=%d nAdj=%d\n", nForw, nAdj);
 
         for (i = 0; i < nu; i++)
-			rhs_adj_in[nForw + nx + i] = u[i];
+            rhs_adj_in[nForw + nx + i] = u[i];
 
         for (istep = num_steps - 1; istep >= 0; istep--)
         {
@@ -757,7 +757,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                 // forward variables:
                 for (i = 0; i < nForw; i++)
-					rhs_adj_in[i] = forw_traj[i];  // extract x trajectory
+                    rhs_adj_in[i] = forw_traj[i];  // extract x trajectory
 
                 for (j = 0; j < s; j++)
                 {
@@ -766,7 +766,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     {
                         a *= step;
                         for (i = 0; i < nForw; i++)
-							rhs_adj_in[i] += a * K_traj[j*nX + i];
+                            rhs_adj_in[i] += a * K_traj[j*nX + i];
                     }  // plus k traj
                 }
 
@@ -774,7 +774,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 b = step * b_vec[s];
 
                 for (i = 0; i < nx; i++) // why nx ???
-					rhs_adj_in[nForw + i] = b * adj_tmp[i];
+                    rhs_adj_in[nForw + i] = b * adj_tmp[i];
 
                 for (j = s + 1; j < ns; j++)
                 {
@@ -811,9 +811,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 //                    ext_fun_type_out[1] = COLMAJ;
 //                    ext_fun_out[1] = adj_traj + s * nAdj + nx + nu;  // hess: (nx+nu)*(nx+nu)
 
-					// adjoint VDE evaluation
+                    // adjoint VDE evaluation
                     model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in,
-                    		ext_fun_type_out, ext_fun_out);
+                            ext_fun_type_out, ext_fun_out);
                 }
                 else
                 {
@@ -841,7 +841,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 //d_print_mat(1, nu, ext_fun_in[4], 1);
 
                     model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in,
-                    		ext_fun_type_out, ext_fun_out);
+                            ext_fun_type_out, ext_fun_out);
 
 //printf("\nout\n");
 //d_print_mat(1, nx+nu, ext_fun_out[0], 1);
@@ -853,13 +853,13 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             for (s = 0; s < ns; s++)
                 for (i = 0; i < nAdj; i++)
-					adj_tmp[i] += adj_traj[s*nAdj + i];  // ERK step
+                    adj_tmp[i] += adj_traj[s*nAdj + i];  // ERK step
 
         }
 
         // store adjoint sensitivities
         for (i = 0; i < nx + nu; i++)
-			S_adj_out[i] = adj_tmp[i];
+            S_adj_out[i] = adj_tmp[i];
         // store hessian
         if (opts->sens_hess)
         {
