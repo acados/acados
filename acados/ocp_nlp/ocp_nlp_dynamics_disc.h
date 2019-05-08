@@ -124,9 +124,7 @@ void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *
 
 typedef struct
 {
-    struct blasfeo_dmat hess;
-    double *disc_dyn_in;
-    double *disc_dyn_out;
+    struct blasfeo_dmat tmp_nv_nv;
 } ocp_nlp_dynamics_disc_workspace;
 
 int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, void *dims, void *opts);

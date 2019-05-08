@@ -82,12 +82,12 @@ external function: p
 external function: disc_dyn_fun_jac
 
 inputs:
-0) [x]    size: nx    type: COLMAJ
-1) [u]    size: nu    type: COLMAJ
+0) [x]    size: nx    type: BLASFEO_DVEC_ARGS
+1) [u]    size: nu    type: BLASFEO_DVEC_ARGS
 
 outputs:
-0) [fun]    size: nx1            type: COLMAJ
-1) [jac]    size: nx1*(nx+nu)    type: COLMAJ
+0) [fun]               size: nx1            type: BLASFEO_DVEC_ARGS
+1) [jac_u'; jac_x']    size: (nu+nx)*nx1    type: BLASFEO_DMAT_ARGS
 
 
 
@@ -96,14 +96,14 @@ outputs:
 external function: disc_dyn_fun_jac_hess
 
 inputs:
-0) [x]      size: nx     type: COLMAJ
-1) [u]      size: nu     type: COLMAJ
-2) [lam]    size: nx1    type: COLMAJ
+0) [x]      size: nx     type: BLASFEO_DVEC_ARGS
+1) [u]      size: nu     type: BLASFEO_DVEC_ARGS
+2) [lam]    size: nx1    type: BLASFEO_DVEC_ARGS
 
 outputs:
-0) [fun]         size: nx1                type: COLMAJ
-1) [jac]         size: nx1*(nx+nu)        type: COLMAJ
-2) [hess*lam]    size: (nx+nu)*(nx+nu)    type: COLMAJ
+0) [fun]               size: nx1                type: BLASFEO_DVEC_ARGS
+1) [jac_u'; jac_x']    size: (nu+nx)*nx1        type: BLASFEO_DMAT_ARGS
+2) [hess*lam]          size: (nu+nx)*(nu+nx)    type: BLASFEO_DMAT_ARGS
 
 
 
