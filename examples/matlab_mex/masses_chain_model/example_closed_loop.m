@@ -13,13 +13,20 @@ sim_num_steps = 4;
 % ocp
 ocp_N = 40;
 ocp_param_scheme = 'multiple_shooting_unif_grid';
-%ocp_nlp_solver = 'sqp';
-ocp_nlp_solver = 'sqp_rti';
+ocp_nlp_solver = 'sqp';
+%ocp_nlp_solver = 'sqp_rti';
+%nlp_solver_exact_hessian = 'false'
+nlp_solver_exact_hessian = 'true'
+%regularize_method = 'no_regularize';
+regularize_method = 'project';
+%regularize_method = 'mirror';
+%regularize_method = 'convexify';
+nlp_solver_max_iter = 100;
 ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_hpipm';
 ocp_qp_solver_N_pcond = 5;
-ocp_sim_method = 'erk';
-%ocp_sim_method = 'irk';
+%ocp_sim_method = 'erk';
+ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
 ocp_sim_method_num_steps = 2;
 ocp_cost_type = 'linear_ls';
@@ -148,6 +155,9 @@ ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', ocp_param_scheme);
 ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', ocp_nlp_solver);
+ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
+ocp_opts.set('regularize_method', regularize_method);
+ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 ocp_opts.set('qp_solver', ocp_qp_solver);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_N_pcond', ocp_qp_solver_N_pcond);
@@ -155,7 +165,6 @@ end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
-ocp_opts.set('regularize_method', 'no_regularize');
 
 %ocp_opts.opts_struct
 
@@ -222,7 +231,7 @@ sim = acados_sim(sim_model, sim_opts);
 %% closed loop simulation
 n_sim = 50;
 x_sim = zeros(nx, n_sim+1);
-x_sim(:,1) = model.x0; % initial state
+x_sim(:,1) = x0; % initial state
 u_sim = zeros(nu, n_sim);
 
 x_traj_init = repmat(model.x_ref, 1, ocp_N+1);
@@ -243,6 +252,16 @@ for ii=1:n_sim
 
 	% solve OCP
 	ocp.solve();
+
+	if 1
+		status = ocp.get('status');
+		sqp_iter = ocp.get('sqp_iter');
+		time_tot = ocp.get('time_tot');
+		time_lin = ocp.get('time_lin');
+		time_qp_sol = ocp.get('time_qp_sol');
+
+		fprintf('\nstatus = %d, sqp_iter = %d, time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+	end
 
 	% get solution
 	%x_traj = ocp.get('x');

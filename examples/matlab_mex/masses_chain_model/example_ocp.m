@@ -186,6 +186,8 @@ ocp.set('init_u', u_traj_init);
 nrep = 10;
 tic;
 for rep=1:nrep
+	ocp.set('init_x', x_traj_init);
+	ocp.set('init_u', u_traj_init);
 	ocp.solve();
 end
 time_ext = toc/nrep
