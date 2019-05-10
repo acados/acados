@@ -4,6 +4,9 @@ import os
 import sys
 
 class ocp_nlp_dims:
+    """
+    class containing the dimensions of the optimal control problem
+    """
     def __init__(self):
         self.__nx    = None  # number of states
         self.__nz    = 0     # number of algebraic variables
@@ -259,6 +262,9 @@ class ocp_nlp_dims:
             raise Exception('Invalid N value. Exiting.')
 
 class ocp_nlp_cost:
+    """
+    class containing the description of the cost
+    """
     # linear least-squares cost: || Vx*x + Vu*x + Vz*z ||^2_W
     def __init__(self):
         # Lagrange term
@@ -459,6 +465,9 @@ class ocp_nlp_cost:
             raise Exception('Invalid zuN value. Exiting.')
 
 class ocp_nlp_constraints:
+    """
+    class containing the description of the constraints
+    """
     def __init__(self):
         # bounds on x and u
         self.__lbx    = []  # lower bounds on x
@@ -814,6 +823,9 @@ class ocp_nlp_constraints:
             raise Exception('Invalid p value. Exiting.')
 
 class ocp_nlp_solver_config:
+    """
+    class containing the description of the solver configuration
+    """
     def __init__(self):
         self.__qp_solver        = 'PARTIAL_CONDENSING_HPIPM'  # qp solver to be used in the NLP solver
         self.__hessian_approx   = 'GAUSS_NEWTON'              # hessian approximation
@@ -886,6 +898,9 @@ class ocp_nlp_solver_config:
                     + ',\n'.join(nlp_solver_types) + '.\n\nYou have: ' + nlp_solver_type + '.\n\nExiting.')
 
 class acados_ocp_nlp:
+    """
+    class containing the full description if the optimal control problem
+    """
     def __init__(self):
         self.dims = ocp_nlp_dims()
         self.cost = ocp_nlp_cost()
@@ -901,6 +916,9 @@ class acados_ocp_nlp:
         self.acados_lib_path = []
 
 def check_ra(ra):
+    """
+    (DEPRECATED) function that checks the consistency of the optimal control description
+    """
     # TODO(andrea): dimensions check are already performed 
     # on the JSON data and type checks should be enforced by the 
     # property setters. Add extra checks here?
