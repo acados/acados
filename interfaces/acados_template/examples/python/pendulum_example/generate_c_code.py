@@ -19,7 +19,7 @@ nx = model.x.size()[0]
 nu = model.u.size()[0]
 ny = nx + nu
 nyN = nx
-N = 10
+N = 100
 
 # set ocp_nlp_dimensions
 nlp_dims     = ra.dims
@@ -81,7 +81,8 @@ nlp_con.idxbu = np.array([0])
 ra.constants['PI'] = 3.1415926535897932
 
 # set QP solver
-ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+# ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
 ra.solver_config.integrator_type = 'ERK'
 
