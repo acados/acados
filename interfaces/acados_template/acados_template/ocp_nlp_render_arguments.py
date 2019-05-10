@@ -1022,7 +1022,7 @@ def json2dict(ocp_nlp, ocp_nlp_dims):
     # load JSON layout
     current_module = sys.modules[__name__]
     acados_path = os.path.dirname(current_module.__file__)
-    with open(acados_path + '/../acados_layout.json', 'r') as f:
+    with open(acados_path + '/acados_layout.json', 'r') as f:
         ocp_nlp_layout = json.load(f)
 
     out = json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout)
