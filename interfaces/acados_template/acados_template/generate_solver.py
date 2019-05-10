@@ -6,7 +6,7 @@ from .ocp_nlp_render_arguments import *
 from ctypes import *
 
 def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_pN=None, json_file='acados_ocp_nlp.json'):
-    USE_TERA = 1 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
+    USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
 
     ocp_nlp = acados_ocp
     ocp_nlp.cost = acados_ocp.cost.__dict__

@@ -1,1 +1,409 @@
-{"cost": {"Vz": ["ndarray", ["ny", "nz"]], "W": ["ndarray", ["ny", "ny"]], "yrefN": ["ndarray", ["nyN"]], "yref": ["ndarray", ["ny"]], "Vx": ["ndarray", ["ny", "nx"]], "VxN": ["ndarray", ["nyN", "nx"]], "Vu": ["ndarray", ["ny", "nu"]], "WN": ["ndarray", ["nyN", "nyN"]]}, "model_name": ["str"], "con_p_name": ["NoneType"], "solver_config": {"tf": ["float"], "integrator_type": ["str"], "qp_solver": ["str"], "nlp_solver_type": ["str"], "hessian_approx": ["str"]}, "acados_lib_path": ["str"], "constraints": {"D": ["ndarray", ["ng", "nu"]], "uhN": ["ndarray", ["nhN"]], "ug": ["ndarray", ["ng"]], "ubxN": ["ndarray", ["nbxN"]], "x0": ["ndarray", ["nx"]], "uh": ["ndarray", ["nh"]], "lg": ["ndarray", ["ng"]], "lbx": ["ndarray", ["nbx"]], "lhN": ["ndarray", ["nhN"]], "idxbxN": ["ndarray",["nbxN"]], "ubu": ["ndarray", ["nbu"]], "ugN": ["ndarray", ["ngN"]], "CN": ["ndarray", ["ngN", "nx"]], "lbxN": ["ndarray", ["nbxN"]], "idxbx": ["ndarray", ["nbx"]], "lh": ["ndarray", ["nh"]], "lgN": ["ndarray", ["ngN"]], "ubx": ["ndarray", ["nbx"]], "C": ["ndarray", ["ng", "nx"]], "lbu": ["ndarray", ["nbu"]], "idxbu": ["ndarray", ["nbu"]], "p": ["ndarray", ["np"]]}, "dims": {"ngN": ["int"], "nh": ["int"], "ny": ["int"], "nz": ["int"], "nu": ["int"], "N": ["int"], "nbu": ["int"], "npdN": ["int"], "np": ["int"], "ng": ["int"], "nhN": ["int"], "nbx": ["int"], "npd": ["int"], "nyN": ["int"], "nx": ["int"], "nbxN": ["int"]}, "con_pN_name": ["NoneType"], "con_h_name": ["NoneType"], "con_hN_name": ["NoneType"], "constants": {"PI": ["float"]}, "acados_include_path": ["str"]}
+{
+    "acados_include_path": [
+        "str"
+    ],
+    "acados_lib_path": [
+        "str"
+    ],
+    "con_hN_name": [
+        "NoneType"
+    ],
+    "con_h_name": [
+        "NoneType"
+    ],
+    "con_pN_name": [
+        "NoneType"
+    ],
+    "con_p_name": [
+        "NoneType"
+    ],
+    "constants": {
+        "PI": [
+            "float"
+        ]
+    },
+    "constraints": {
+        "lbx": [
+            "ndarray",
+                [
+                    "nbx"
+                ]
+        ],
+        "lbu": [
+            "ndarray",
+            [
+                "nbu"
+            ]
+        ],
+        "ubx": [
+            "ndarray",
+                [
+                    "nbx"
+                ]
+        ],
+        "ubu": [
+            "ndarray",
+            [
+                "nbu"
+            ]
+        ],
+        "idxbx": [
+            "ndarray",
+                [
+                    "nbx"
+                ]
+        ],
+        "idxbu": [
+            "ndarray",
+            [
+                "nbu"
+            ]
+        ],
+        "lbxN": [
+            "ndarray",
+            [
+                "nbxN"
+            ]
+        ],
+        "ubxN": [
+            "ndarray",
+            [
+                "nbxN"
+            ]
+        ],
+        "idxbxN": [
+            "ndarray",
+                    [
+                        "nbxN"
+                    ]
+        ],
+        "lsbx": [
+            "ndarray",
+                [
+                    "nsbx"
+                ]
+        ],
+        "lsbu": [
+            "ndarray",
+            [
+                "nsbu"
+            ]
+        ],
+        "usbx": [
+            "ndarray",
+                [
+                    "nsbx"
+                ]
+        ],
+        "usbu": [
+            "ndarray",
+            [
+                "nsbu"
+            ]
+        ],
+        "idxsbx": [
+            "ndarray",
+                [
+                    "nsbx"
+                ]
+        ],
+        "idxsbu": [
+            "ndarray",
+            [
+                "nsbu"
+            ]
+        ],
+        "lsbxN": [
+            "ndarray",
+                [
+                    "nsbxN"
+                ]
+        ],
+        "usbxN": [
+            "ndarray",
+                [
+                    "nsbxN"
+                ]
+        ],
+        "idxsbxN": [
+            "ndarray",
+                [
+                    "nsbxN"
+                ]
+        ],
+        "lg": [
+            "ndarray",
+            [
+                "ng"
+            ]
+        ],
+        "ug": [
+            "ndarray",
+            [
+                "ng"
+            ]
+        ],
+        "D": [
+            "ndarray",
+                [
+                    "ng",
+                    "nu"
+                ]
+        ],
+        "C": [
+            "ndarray",
+            [
+                "ng",
+                "nx"
+            ]
+        ],
+        "CN": [
+            "ndarray",
+            [
+                "ngN",
+                "nx"
+            ]
+        ],
+        "lgN": [
+            "ndarray",
+            [
+                "ngN"
+            ]
+        ],
+        "ugN": [
+            "ndarray",
+            [
+                "ngN"
+            ]
+        ],
+        "lh": [
+            "ndarray",
+            [
+                "nh"
+            ]
+        ],
+        "uh": [
+            "ndarray",
+            [
+                "nh"
+            ]
+        ],
+        "lhN": [
+            "ndarray",
+            [
+                "nhN"
+            ]
+        ],
+        "uhN": [
+            "ndarray",
+            [
+                "nhN"
+            ]
+        ],
+        "p": [
+            "ndarray",
+            [
+                "np"
+            ]
+        ],
+        "x0": [
+            "ndarray",
+            [
+                "nx"
+            ]
+        ]
+    },
+    "cost": {
+        "Vu": [
+            "ndarray",
+            [
+                "ny",
+                "nu"
+            ]
+        ],
+        "Vx": [
+            "ndarray",
+            [
+                "ny",
+                "nx"
+            ]
+        ],
+        "VxN": [
+            "ndarray",
+            [
+                "nyN",
+                "nx"
+            ]
+        ],
+        "Vz": [
+            "ndarray",
+            [
+                "ny",
+                "nz"
+            ]
+        ],
+        "W": [
+            "ndarray",
+            [
+                "ny",
+                "ny"
+            ]
+        ],
+        "Zl": [
+            "ndarray",
+            [
+                "ns",
+                "ns"
+            ]
+        ],
+        "Zu": [
+            "ndarray",
+            [
+                "ns",
+                "ns"
+            ]
+        ],
+        "zl": [
+            "ndarray",
+            [
+                "ns"
+            ]
+        ],
+        "zu": [
+            "ndarray",
+            [
+                "ns"
+            ]
+        ],
+        "WN": [
+            "ndarray",
+            [
+                "nyN",
+                "nyN"
+            ]
+        ],
+        "yref": [
+            "ndarray",
+            [
+                "ny"
+            ]
+        ],
+        "yrefN": [
+            "ndarray",
+            [
+                "nyN"
+            ]
+        ],
+        "ZlN": [
+            "ndarray",
+            [
+                "nsN",
+                "nsN"
+            ]
+        ],
+        "ZuN": [
+            "ndarray",
+            [
+                "nsN",
+                "nsN"
+            ]
+        ],
+        "zlN": [
+            "ndarray",
+            [
+                "nsN"
+            ]
+        ],
+        "zuN": [
+            "ndarray",
+            [
+                "nsN"
+            ]
+        ]
+    },
+    "dims": {
+        "N": [
+            "int"
+        ],
+        "nbu": [
+            "int"
+        ],
+        "nbx": [
+            "int"
+        ],
+        "nsbu": [
+            "int"
+        ],
+        "nsbx": [
+            "int"
+        ],
+        "nsbxN": [
+            "int"
+        ],
+        "nbxN": [
+            "int"
+        ],
+        "ns": [
+            "int"
+        ],
+        "nsN": [
+            "int"
+        ],
+        "ng": [
+            "int"
+        ],
+        "ngN": [
+            "int"
+        ],
+        "nh": [
+            "int"
+        ],
+        "nhN": [
+            "int"
+        ],
+        "np": [
+            "int"
+        ],
+        "npd": [
+            "int"
+        ],
+        "npdN": [
+            "int"
+        ],
+        "nu": [
+            "int"
+        ],
+        "nx": [
+            "int"
+        ],
+        "ny": [
+            "int"
+        ],
+        "nyN": [
+            "int"
+        ],
+        "nz": [
+            "int"
+        ]
+    },
+    "model_name": [
+        "str"
+    ],
+    "solver_config": {
+        "hessian_approx": [
+            "str"
+        ],
+        "integrator_type": [
+            "str"
+        ],
+        "nlp_solver_type": [
+            "str"
+        ],
+        "qp_solver": [
+            "str"
+        ],
+        "tf": [
+            "float"
+        ]
+    }
+}
