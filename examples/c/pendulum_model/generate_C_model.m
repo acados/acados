@@ -35,7 +35,7 @@ model = export_pendulum_ode_model();
 % generate_c_code_gnsf( gnsf );
 
 %% Implicit Model -- Generate C Code
-opts.generate_hess = 0;  % set to 1 if you want to use exact hessian propagation
+opts.generate_hess = 1;  % set to 1 if you want to use exact hessian propagation
 
 generate_c_code_implicit_ode( model, opts );
 

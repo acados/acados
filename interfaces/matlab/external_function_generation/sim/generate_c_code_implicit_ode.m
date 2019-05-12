@@ -97,8 +97,9 @@ end
 ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, true);
 HESS = jacobian(ADJ, x_xdot_z_u);
 
-HESS_multiplied = multiply_mat' * HESS * multiply_mat;
-HESS_multiplied = HESS_multiplied.simplify();
+%HESS_multiplied = multiply_mat' * HESS * multiply_mat;
+%HESS_multiplied = HESS_multiplied.simplify();
+HESS_multiplied = HESS; % do the multiplication in BLASFEO !!!
 
 
 

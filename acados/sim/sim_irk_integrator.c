@@ -36,7 +36,7 @@
 
 
 
-#define CASADI_HESS_MULT 1
+#define CASADI_HESS_MULT 0
 
 
 
