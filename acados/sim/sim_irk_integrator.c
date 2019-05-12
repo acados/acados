@@ -1199,6 +1199,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // dz_dw0
                     blasfeo_dgecpsc(nz, nx+nu, -1.0, dK_dxu_ss, ns*nx+ii*nz, 0, dxkzu_dw0, 2*nx, 0);
                     // du_dw0
+					// TODO exploit the fact that this is [0, I] !!!
                     blasfeo_dgese(nu, nx+nu, 0.0, dxkzu_dw0, 2*nx+nz, 0);
                     blasfeo_ddiare(nu, 1.0, dxkzu_dw0, 2*nx+nz, nx);
 
@@ -1235,8 +1236,16 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         // blasfeo_print_exp_dmat(nx + nu, nx + nu, f_hess, 0 , 0);
                     blasfeo_dgead(nx+nu, nx+nu, 1.0, f_hess, 0, 0, Hess, 0, 0);
 #else
-                    blasfeo_dgemm_nn(2*nx+nz+nu, nu+nx, 2*nx+nz+nu, 1.0, f_hess, 0, 0, dxkzu_dw0, 0, 0, 0.0, tmp_dxkzu_dw0, 0, 0, tmp_dxkzu_dw0, 0, 0); 
-                    blasfeo_dsyrk_ut(nu+nx, 2*nx+nz+nu, 1.0, dxkzu_dw0, 0, 0, tmp_dxkzu_dw0, 0, 0, 1.0, Hess, 0, 0, Hess, 0, 0);
+#if 1
+					// exploit that du_dw0 is [0, I]
+                    blasfeo_dgemm_nn(2*nx+nz+nu, nx+nu, 2*nx+nz, 1.0, f_hess, 0, 0, dxkzu_dw0, 0, 0, 0.0, tmp_dxkzu_dw0, 0, 0, tmp_dxkzu_dw0, 0, 0); 
+					blasfeo_dgead(2*nx+nz+nu, nu, 1.0, f_hess, 0, 2*nx+nz, tmp_dxkzu_dw0, 0, nx);
+                    blasfeo_dsyrk_ut(nx+nu, 2*nx+nz, 1.0, dxkzu_dw0, 0, 0, tmp_dxkzu_dw0, 0, 0, 1.0, Hess, 0, 0, Hess, 0, 0);
+					blasfeo_dgead(nu, nx+nu, 1.0, tmp_dxkzu_dw0, 2*nx+nz, 0, Hess, nx, 0);
+#else
+                    blasfeo_dgemm_nn(2*nx+nz+nu, nx+nu, 2*nx+nz+nu, 1.0, f_hess, 0, 0, dxkzu_dw0, 0, 0, 0.0, tmp_dxkzu_dw0, 0, 0, tmp_dxkzu_dw0, 0, 0); 
+                    blasfeo_dsyrk_ut(nx+nu, 2*nx+nz+nu, 1.0, dxkzu_dw0, 0, 0, tmp_dxkzu_dw0, 0, 0, 1.0, Hess, 0, 0, Hess, 0, 0);
+#endif
 #endif
                 }  // end for ii
             }  // end if ( opts->sens_hess )
