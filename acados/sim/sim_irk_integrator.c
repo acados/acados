@@ -703,8 +703,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     impl_ode_hess_in[3] = &impl_ode_z_in;          // 4th input is part of Z[ss]
     impl_ode_hess_type_in[4] = BLASFEO_DVEC_ARGS;  // lambdaK component, direction
     impl_ode_hess_in[4] = &impl_ode_hess_lambda_in;     // 5th input is part of lambdaK[ss]
+#if CASADI_HESS_MULT
     impl_ode_hess_type_in[5] = BLASFEO_DMAT;       // dxkzu_dw0
     impl_ode_hess_in[5] = dxkzu_dw0;              // 6th input is dxkzu_w0
+#endif
 
     // OUTPUT
     ext_fun_arg_t impl_ode_hess_type_out[1];
@@ -1226,7 +1228,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     acados_tic(&timer_ad);
 
                     model->impl_ode_hess->evaluate(model->impl_ode_hess, impl_ode_hess_type_in,
-                                    impl_ode_hess_in, impl_ode_hess_type_out, impl_ode_hess_out);
+                            impl_ode_hess_in, impl_ode_hess_type_out, impl_ode_hess_out);
 
                     timing_ad += acados_toc(&timer_ad);
 
