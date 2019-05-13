@@ -21,7 +21,8 @@ clc;
 clearvars;
 close all;
 
-addpath('../../../interfaces/matlab/sim/')
+addpath('../../../interfaces/matlab/external_function_generation/sim/')
+
 model = export_pendulum_ode_model();
 
 %% GNSF Model -- detect structure, reorder model, and generate C Code for
