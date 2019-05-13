@@ -27,6 +27,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// TODO bool instead !!!
 	char *param_f = mxArrayToString( mxGetField( prhs[0], 0, "dyn_param_f" ) );
+	char *param_phi = mxArrayToString( mxGetField( prhs[0], 0, "dyn_param_phi" ) );
 	char *param_h = mxArrayToString( mxGetField( prhs[0], 0, "constr_param_h" ) );
 	char *param_h_e = mxArrayToString( mxGetField( prhs[0], 0, "constr_param_h_e" ) );
 	char *param_y = mxArrayToString( mxGetField( prhs[0], 0, "cost_param_y" ) );
@@ -205,6 +206,50 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(mxGetField( prhs[2], 0, "dyn_impl_ode_hess" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_impl_ode_hess" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_param_casadi_free(ext_fun_param_ptr+ii);
+				}
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
+			free(ext_fun_ptr);
+			}
+		}
+	if(mxGetField( prhs[2], 0, "dyn_disc_phi_fun_jac" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_disc_phi_fun_jac" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_param_casadi_free(ext_fun_param_ptr+ii);
+				}
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
+			free(ext_fun_ptr);
+			}
+		}
+	if(mxGetField( prhs[2], 0, "dyn_disc_phi_fun_jac_hess" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_disc_phi_fun_jac_hess" ) );
 		if(!strcmp(param_f, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];

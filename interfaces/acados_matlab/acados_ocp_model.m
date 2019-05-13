@@ -67,6 +67,8 @@ classdef acados_ocp_model < handle
 		dyn_type
 		dyn_expr_f
 		dyn_param_f
+		dyn_expr_phi
+		dyn_param_phi
 		% constraints
 		constr_type
 		constr_x0
@@ -129,6 +131,7 @@ classdef acados_ocp_model < handle
 			obj.cost_param_ext_cost_e = 'false';
 			obj.dyn_type = 'implicit';
 			obj.dyn_param_f = 'false';
+			obj.dyn_param_phi = 'false';
 			obj.constr_type = 'bgh';
 			obj.constr_param_h = 'false';
 			obj.constr_param_h_e = 'false';
@@ -144,6 +147,7 @@ classdef acados_ocp_model < handle
 			obj.model_struct.cost_param_ext_cost_e = obj.cost_param_ext_cost_e;
 			obj.model_struct.dyn_type = obj.dyn_type;
 			obj.model_struct.dyn_param_f = obj.dyn_param_f;
+			obj.model_struct.dyn_param_phi = obj.dyn_param_phi;
 			obj.model_struct.constr_type = obj.constr_type;
 			obj.model_struct.constr_param_h = obj.constr_param_h;
 			obj.model_struct.constr_param_h_e = obj.constr_param_h_e;
@@ -284,6 +288,12 @@ classdef acados_ocp_model < handle
 				elseif (strcmp(field, 'dyn_param_f'))
 					obj.dyn_param_f = value;
 					obj.model_struct.dyn_param_f = value;
+				elseif (strcmp(field, 'dyn_expr_phi'))
+					obj.dyn_expr_phi = value;
+					obj.model_struct.dyn_expr_phi = value;
+				elseif (strcmp(field, 'dyn_param_phi'))
+					obj.dyn_param_phi = value;
+					obj.model_struct.dyn_param_phi = value;
 				else
 					disp(['acados_ocp_model: set: wrong field: ', field]);
 				end

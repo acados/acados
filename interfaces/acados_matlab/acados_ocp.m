@@ -27,7 +27,7 @@ classdef acados_ocp < handle
 				% select files to compile
 				c_sources = ' ';
 				% dynamics
-				if (strcmp(obj.opts_struct.sim_method, 'erk'))
+				if (strcmp(obj.model_struct.dyn_type, 'explicit'))
 					% generate c for function and derivatives using casadi
 					generate_c_code_explicit_ode(obj.model_struct, obj.opts_struct);
 					% sources list
@@ -35,7 +35,7 @@ classdef acados_ocp < handle
 					c_sources = [c_sources, 'ocp_model_dyn_expl_vde_for.c '];
 					c_sources = [c_sources, 'ocp_model_dyn_expl_vde_adj.c '];
 					c_sources = [c_sources, 'ocp_model_dyn_expl_ode_hes.c '];
-				elseif (strcmp(obj.opts_struct.sim_method, 'irk'))
+				elseif (strcmp(obj.model_struct.dyn_type, 'implicit'))
 					% generate c for function and derivatives using casadi
 					generate_c_code_implicit_ode(obj.model_struct, obj.opts_struct);
 					% sources list
@@ -44,8 +44,14 @@ classdef acados_ocp < handle
 					c_sources = [c_sources, 'ocp_model_dyn_impl_ode_fun_jac_x_xdot_u.c '];
 					c_sources = [c_sources, 'ocp_model_dyn_impl_ode_jac_x_xdot_u.c '];
 					c_sources = [c_sources, 'ocp_model_dyn_impl_ode_hess.c '];
+				elseif (strcmp(obj.model_struct.dyn_type, 'discrete'))
+					% generate c for function and derivatives using casadi
+					generate_c_code_disc_dyn(obj.model_struct, obj.opts_struct);
+					% sources list
+					c_sources = [c_sources, 'ocp_model_dyn_disc_phi_fun_jac.c '];
+					c_sources = [c_sources, 'ocp_model_dyn_disc_phi_fun_jac_hess.c '];
 				else
-					fprintf('\ncodegen_model: sim solver not supported: %s\n', obj.opts_struct.sim_method);
+					fprintf('\ncodegen_model: dyn_type not supported: %s\n', obj.model_struct.dyn_type);
 					return;
 				end
 				% nonlinear constraints
@@ -99,12 +105,14 @@ classdef acados_ocp < handle
 
 			% get pointers for external functions in model
 			% dynamics
-			if (strcmp(obj.opts_struct.sim_method, 'erk'))
+			if (strcmp(obj.model_struct.dyn_type, 'explicit'))
 				obj.C_ocp_ext_fun = ocp_set_ext_fun_dyn_expl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
-			elseif (strcmp(obj.opts_struct.sim_method, 'irk'))
+			elseif (strcmp(obj.model_struct.dyn_type, 'implicit'))
 				obj.C_ocp_ext_fun = ocp_set_ext_fun_dyn_impl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+			elseif (strcmp(obj.model_struct.dyn_type, 'discrete'))
+				obj.C_ocp_ext_fun = ocp_set_ext_fun_dyn_disc(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			else
-				fprintf('\ncodegen_model: sim_method not supported: %s\n', obj.opts_struct.sim_method);
+				fprintf('\ncodegen_model: dyn_type not supported: %s\n', obj.model_struct.dyn_type);
 				return;
 			end
 			% nonlinear constraints

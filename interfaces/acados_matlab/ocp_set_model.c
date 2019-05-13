@@ -29,6 +29,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// TODO bool instead !!!
 	char *param_f = mxArrayToString( mxGetField( prhs[0], 0, "dyn_param_f" ) );
+	char *param_phi = mxArrayToString( mxGetField( prhs[0], 0, "dyn_param_phi" ) );
 	char *param_h = mxArrayToString( mxGetField( prhs[0], 0, "constr_param_h" ) );
 	char *param_h_e = mxArrayToString( mxGetField( prhs[0], 0, "constr_param_h_e" ) );
 	char *param_y = mxArrayToString( mxGetField( prhs[0], 0, "cost_param_y" ) );
@@ -221,6 +222,46 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			for(ii=0; ii<N; ii++)
 				{
 				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "impl_ode_hess", ext_fun_ptr+ii);
+				}
+			}
+		}
+	if (mxGetField( prhs[1], 0, "dyn_disc_phi_fun_jac" )!=NULL && mxGetM(mxGetField( prhs[1], 0, "dyn_disc_phi_fun_jac" ))>0)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "dyn_disc_phi_fun_jac" ) );
+		if(!strcmp(param_phi, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "disc_dyn_fun_jac", ext_fun_param_ptr+ii);
+				}
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "disc_dyn_fun_jac", ext_fun_ptr+ii);
+				}
+			}
+		}
+	if (mxGetField( prhs[1], 0, "dyn_disc_phi_fun_jac_hess" )!=NULL && mxGetM(mxGetField( prhs[1], 0, "dyn_disc_phi_fun_jac_hess" ))>0)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "dyn_disc_phi_fun_jac_hess" ) );
+		if(!strcmp(param_phi, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "disc_dyn_fun_jac_hess", ext_fun_param_ptr+ii);
+				}
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "disc_dyn_fun_jac_hess", ext_fun_ptr+ii);
 				}
 			}
 		}

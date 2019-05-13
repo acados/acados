@@ -48,13 +48,29 @@ const int *ocp_model_dyn_impl_ode_jac_x_xdot_u_sparsity_out(int);
 int ocp_model_dyn_impl_ode_jac_x_xdot_u_n_in();
 int ocp_model_dyn_impl_ode_jac_x_xdot_u_n_out();
 
-// implicit ode function
+// implicit ode hessian
 int ocp_model_dyn_impl_ode_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int ocp_model_dyn_impl_ode_hess_work(int *, int *, int *, int *);
 const int *ocp_model_dyn_impl_ode_hess_sparsity_in(int);
 const int *ocp_model_dyn_impl_ode_hess_sparsity_out(int);
 int ocp_model_dyn_impl_ode_hess_n_in();
 int ocp_model_dyn_impl_ode_hess_n_out();
+
+// discrete model phi function jacobian
+int ocp_model_dyn_disc_phi_fun_jac(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ocp_model_dyn_disc_phi_fun_jac_work(int *, int *, int *, int *);
+const int *ocp_model_dyn_disc_phi_fun_jac_sparsity_in(int);
+const int *ocp_model_dyn_disc_phi_fun_jac_sparsity_out(int);
+int ocp_model_dyn_disc_phi_fun_jac_n_in();
+int ocp_model_dyn_disc_phi_fun_jac_n_out();
+
+// discrete model phi function jacobian hessian
+int ocp_model_dyn_disc_phi_fun_jac_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ocp_model_dyn_disc_phi_fun_jac_hess_work(int *, int *, int *, int *);
+const int *ocp_model_dyn_disc_phi_fun_jac_hess_sparsity_in(int);
+const int *ocp_model_dyn_disc_phi_fun_jac_hess_sparsity_out(int);
+int ocp_model_dyn_disc_phi_fun_jac_hess_n_in();
+int ocp_model_dyn_disc_phi_fun_jac_hess_n_out();
 
 // nonlinear constraints h
 int ocp_model_constr_h_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);

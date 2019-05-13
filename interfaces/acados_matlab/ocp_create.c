@@ -820,11 +820,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			}
 //		plan->sim_solver_plan[ii].sim_solver = LIFTED_IRK;
 		}
+	else if(!strcmp(dyn_type, "discrete"))
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			plan->nlp_dynamics[ii] = DISCRETE_MODEL;
+			}
+		}
 	else // TODO gnsf / discrete / linear
 		{
 //		plan->nlp_dynamics[ii] = DISCRETE_MODEL;
 //		plan->sim_solver_plan[ii].sim_solver = GNSF;
-		mexPrintf("\ndyn_type not supported %s\n", dyn_type);
+		mexPrintf("\ndyn_type not supported: %s\n", dyn_type);
 		return;
 		}
 	

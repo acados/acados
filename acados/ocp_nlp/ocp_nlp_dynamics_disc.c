@@ -572,7 +572,7 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
         ext_fun_out[2] = &hess_out;  // hess*pi: (nu+nx)*(nu+nx)
 
         // call external function
-        model->disc_dyn_fun_jac->evaluate(model->disc_dyn_fun_jac, ext_fun_type_in, ext_fun_in,
+        model->disc_dyn_fun_jac_hess->evaluate(model->disc_dyn_fun_jac, ext_fun_type_in, ext_fun_in,
                 ext_fun_type_out, ext_fun_out);
 
         // Add hessian contribution

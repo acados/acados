@@ -57,7 +57,7 @@ end
 model_name = model.name;
 
 if isfield(model, 'dyn_expr_phi')
-	phi = model.constr_expr_phi;
+	phi = model.dyn_expr_phi;
 	% assume nx1 = nx !!!
 	% multipliers for hessian
 	if isSX
@@ -72,14 +72,14 @@ if isfield(model, 'dyn_expr_phi')
 	% generate hessian
 	hess_ux = jacobian(adj_ux, [u; x]);
 	% Set up functions
-	if (strcmp(model.constr_param_h, 'true'))
-		phi_fun_jac_ut_xt = Function([model_name,'_dyn_phi_fun_jac_ut_xt'], {x, u, p}, {phi, jac_ux'});
-		phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_phi_fun_jac_ut_xt_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux});
+	if (strcmp(model.dyn_param_phi, 'true'))
+		phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'});
+		phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux});
 	else
-		phi_fun_jac_ut_xt = Function([model_name,'_dyn_phi_fun_jac_ut_xt'], {x, u}, {phi, jac_ux'});
-		phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_phi_fun_jac_ut_xt_hess'], {x, u, lam}, {phi, jac_ux', hess_ux});
+		phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u}, {phi, jac_ux'});
+		phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam}, {phi, jac_ux', hess_ux});
 	end
 	% generate C code
-	phi_fun_jac_ut_xt.generate([model_name,'_dyn_phi_fun_jac_ut_xt'], casadi_opts);
-	phi_fun_jac_ut_xt_hess.generate([model_name,'_dyn_phi_fun_jac_ut_xt_hess'], casadi_opts);
+	phi_fun_jac_ut_xt.generate([model_name,'_dyn_disc_phi_fun_jac'], casadi_opts);
+	phi_fun_jac_ut_xt_hess.generate([model_name,'_dyn_disc_phi_fun_jac_hess'], casadi_opts);
 end
