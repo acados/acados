@@ -247,20 +247,34 @@ outputs:
 3) [jac_z]      size: nx*nz    type: BLASFEO_DMAT
 
 
-// hessian function of implicit ode model
+// // hessian function of implicit ode model (multiplications with seeds done in CasADi)
+//         - only needed if opts->sens_hess
+// external function: impl_ode_hess
+// 
+// inputs:
+// 0) [x]          size: nx                    type: BLASFEO_DVEC
+// 1) [K]          size: nx                    type: BLASFEO_DVEC_ARGS
+// 2) [u]          size: nu                    type: COLMAJ
+// 3) [z]          size: nz                    type: BLASFEO_DVEC_ARGS
+// 4) [lam]        size: nx+nz                 type: BLASFEO_DVEC_ARGS
+// 5) [dxkzu_w0]   size: (2*nx+nz+nu, nx+nu)   type: BLASFEO_DMAT_ARGS
+// 
+// outputs:
+// 0) [f_hess]     size: (nx+nu, nx+nu)        type: BLASFEO_DMAT
+
+// hessian function of implicit ode model (multiplications with seeds done in BLASFEO)
         - only needed if opts->sens_hess
 external function: impl_ode_hess
 
 inputs:
-0) [x]          size: nx                    type: BLASFEO_DVEC
-1) [K]          size: nx                    type: BLASFEO_DVEC_ARGS
-2) [u]          size: nu                    type: COLMAJ
-3) [z]          size: nz                    type: BLASFEO_DVEC_ARGS
-4) [lam]        size: nx+nz                 type: BLASFEO_DVEC_ARGS
-5) [dxkzu_w0]   size: (2*nx+nz+nu, nx+nu)   type: BLASFEO_DMAT_ARGS
+0) [x]      size: nx       type: BLASFEO_DVEC
+1) [K]      size: nx       type: BLASFEO_DVEC_ARGS
+2) [u]      size: nu       type: COLMAJ
+3) [z]      size: nz       type: BLASFEO_DVEC_ARGS
+4) [lam]    size: nx+nz    type: BLASFEO_DVEC_ARGS
 
 outputs:
-0) [f_hess]     size: (nx+nu, nx+nu)        type: BLASFEO_DMAT
+0) [f_hess]     size: (2*nx+nz+nu, 2*nx+nz+nu)    type: BLASFEO_DMAT
 
 /************************************************
 * sim_lifted_irk_integrator
@@ -276,7 +290,7 @@ inputs:
 2) [u]    size: nu    type: COLMAJ
 
 outputs:
-0) [fun]    size: nx  type: BLASFEO_DVEC_ARGS
+0) [fun]    size: nx    type: BLASFEO_DVEC_ARGS
 
 
 
