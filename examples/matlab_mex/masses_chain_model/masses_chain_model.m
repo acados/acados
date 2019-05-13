@@ -98,25 +98,21 @@ end
 
 M   = 2; % RK4 steps per interval
 FUN = Function('f', {sym_x, sym_u}, {expr_f_expl});
-DT  = 8.0/40; %SX.sym('DT', 1);
+DT  = SX.sym('DT', 1);
+H   = DT/M;
 X0  = sym_x; %SX.sym('X0', nx);
 U   = sym_u; %SX.sym('U', nu);
 X   = X0;
 for j=1:M
    k1 = FUN(X, U);
-   k2 = FUN(X + DT/2 * k1, U);
-   k3 = FUN(X + DT/2 * k2, U);
-   k4 = FUN(X + DT * k3, U);
-   X  = X+DT/6*(k1 +2*k2 +2*k3 +k4);
+   k2 = FUN(X + H/2 * k1, U);
+   k3 = FUN(X + H/2 * k2, U);
+   k4 = FUN(X + H * k3, U);
+   X  = X+H/6*(k1 +2*k2 +2*k3 +k4);
 end
 
-if 0
-	np = 1;
-	sym_p = DT;
-else
-	np = 0;
-	sym_p = 0;
-end
+np = 1;
+sym_p = DT;
 expr_phi = X;
 
 

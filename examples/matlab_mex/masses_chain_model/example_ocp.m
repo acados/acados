@@ -12,10 +12,10 @@ N = 40;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-nlp_solver_exact_hessian = 'false';
-%nlp_solver_exact_hessian = 'true';
-regularize_method = 'no_regularize';
-%regularize_method = 'project';
+%nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
+%regularize_method = 'no_regularize';
+regularize_method = 'project';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
