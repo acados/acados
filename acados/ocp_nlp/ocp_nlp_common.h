@@ -69,7 +69,7 @@ typedef struct
     int (*memory_calculate_size)(void *config, void *dims, void *opts_);
     void *(*memory_assign)(void *config, void *dims, void *opts_, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts_);
-    void (*opts_set)(void *config_, void *opts_, const char *field, const void* value);
+    void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
     void (*dynamics_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
     void (*cost_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
     void (*constraints_opts_set)(void *config, void *opts, int stage, const char *field, void *value);

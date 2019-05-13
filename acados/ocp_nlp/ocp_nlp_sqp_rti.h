@@ -63,7 +63,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config, void *dims, void *opt
 //
 void ocp_nlp_sqp_rti_opts_update(void *config, void *dims, void *opts);
 //
-void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, const void* value);
+void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
 void ocp_nlp_sqp_rti_dyanimcs_opts_set(void *config, void *opts, int stage,
                                      const char *field, void *value);

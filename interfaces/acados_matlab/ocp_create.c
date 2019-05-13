@@ -1032,23 +1032,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //	printf("\nexact hess %d\n", nlp_solver_exact_hessian);
 	if(nlp_solver_exact_hessian)
 		{
-		for(ii=0; ii<=N; ii++)
-			{
-			ocp_nlp_cost_opts_set(config, opts, ii, "exact_hess", &nlp_solver_exact_hessian);
-			}
-		for(ii=0; ii<N; ii++)
-			{
-			ocp_nlp_dynamics_opts_set(config, opts, ii, "compute_hess", &nlp_solver_exact_hessian);
-			}
-		for(ii=0; ii<=N; ii++)
-			{
-			ocp_nlp_constraints_opts_set(config, opts, ii, "compute_hess", &nlp_solver_exact_hessian);
-			}
+		ocp_nlp_opts_set(config, opts, "exact_hess", &nlp_solver_exact_hessian);
 		}
 	// nlp_solver_max_iter
 	if(set_nlp_solver_max_iter)
 		{
-		ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter); // TODO rename in max_iter
+		ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
 		}
 	// qp_solver_N_pcond
 	if(set_qp_solver_N_pcond)
