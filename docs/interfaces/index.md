@@ -64,6 +64,5 @@ For more information contact `@zanellia`
 ``` eval_rst
 .. automodule:: acados_template.ocp_nlp_render_arguments
     :members:
-    :undoc-members:
     :private-members:
 ```
