@@ -11,6 +11,8 @@ setup(name='acados_template',
    include_package_data = True,
    install_requires=[
       'jinja2',
+      'numpy',
+      'scipy',
       'casadi==3.4.0'
    ],
    package_data={'': [

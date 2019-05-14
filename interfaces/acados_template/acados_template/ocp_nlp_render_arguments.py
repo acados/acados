@@ -8,27 +8,27 @@ class ocp_nlp_dims:
     class containing the dimensions of the optimal control problem
     """
     def __init__(self):
-        self.__nx    = None  # number of states
-        self.__nz    = 0     # number of algebraic variables
-        self.__nu    = None  # number of inputs
-        self.__np    = 0     # number of parameters
-        self.__ny    = None  # number of residuals in Lagrange term
-        self.__nyN   = None  # number of residuals in Mayer term
-        self.__npd   = 0     # number of positive definite constraints
-        self.__npdN  = 0     # number of positive definite constraints at t=T
-        self.__nh    = 0     # number of nonlinear constraints
-        self.__nhN   = 0     # number of nonlinear constraints at t=T
-        self.__nbx   = 0     # number of state bounds 
-        self.__nbxN  = 0     # number of state bounds at t=T 
-        self.__nbu   = 0     # number of input bounds
-        self.__nsbx  = 0     # number of soft state bounds 
-        self.__nsbxN = 0     # number of soft state bounds at t=T 
-        self.__nsbu  = 0     # number of soft input bounds
-        self.__ns    = 0     # total number of slacks
-        self.__nsN   = 0     # total number of slacks at t=T
-        self.__ng    = 0     # number of general constraints
-        self.__ngN   = 0     # number of general constraints at t=T
-        self.__N     = None  # prediction horizon 
+        self.__nx    = None  #: number of states
+        self.__nz    = 0     #: number of algebraic variables
+        self.__nu    = None  #: number of inputs
+        self.__np    = 0     #: number of parameters
+        self.__ny    = None  #: number of residuals in Lagrange term
+        self.__nyN   = None  #: number of residuals in Mayer term
+        self.__npd   = 0     #: number of positive definite constraints
+        self.__npdN  = 0     #: number of positive definite constraints at t=T
+        self.__nh    = 0     #: number of nonlinear constraints
+        self.__nhN   = 0     #: number of nonlinear constraints at t=T
+        self.__nbx   = 0     #: number of state bounds 
+        self.__nbxN  = 0     #: number of state bounds at t=T 
+        self.__nbu   = 0     #: number of input bounds
+        self.__nsbx  = 0     #: number of soft state bounds 
+        self.__nsbxN = 0     #: number of soft state bounds at t=T 
+        self.__nsbu  = 0     #: number of soft input bounds
+        self.__ns    = 0     #: total number of slacks
+        self.__nsN   = 0     #: total number of slacks at t=T
+        self.__ng    = 0     #: number of general constraints
+        self.__ngN   = 0     #: number of general constraints at t=T
+        self.__N     = None  #: prediction horizon 
 
     @property
     def nx(self):
