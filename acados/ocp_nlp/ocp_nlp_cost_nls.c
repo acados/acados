@@ -632,8 +632,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     ext_fun_out[1] = &memory->Jt;  // jac': (nu+nx) * ny
 
     // evaluate external function
-    model->nls_res_jac->evaluate(model->nls_res_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
-                             ext_fun_out);
+    model->nls_res_jac->evaluate(model->nls_res_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     /* gradient */
     // res = res - y_ref
@@ -647,11 +646,9 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
     // TODO(all): use lower triangular chol of W to save n_y^2 flops
     // tmp_ny = W * res
-    blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0,
-                    &work->tmp_ny, 0);
+    blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
     // grad = Jt * tmp_ny
-    blasfeo_dgemv_n(nu + nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0,
-            &memory->grad, 0);
+    blasfeo_dgemv_n(nu+nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
     // printf("tmp_ny\n");
     // blasfeo_print_dvec(ny, &work->tmp_ny, 0);
@@ -669,22 +666,14 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     {
         // gauss-newton approximation of hessian of ls cost
         // tmp_nv_ny = Jt * W_chol,     where W_chol is lower triangular
-        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
-                &work->tmp_nv_ny, 0, 0);
-
-        // blasfeo_print_dmat(nu + nx, ny, &work->tmp_nv_ny, 0, 0);
+        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0, &work->tmp_nv_ny, 0, 0);
 
         // RSQrq = tmp_nv_ny * tmp_nv_ny^T
-        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 1.0,
-                memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
-
-        // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
+        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
     }
     else
     {
-        // TODO(oj): test this
-        // NOTE(oj): this should add the non-Gauss-Newton term to RSQrq, the product < r, d2_d[x,u] r >,
-        //  where the cost is 0.5 * norm2(r(x,u))^2
+        // NOTE(oj): this should add the non-Gauss-Newton term to RSQrq, the product < r, d2_d[x,u] r >, where the cost is 0.5 * norm2(r(x,u))^2
         // exact hessian of ls cost
 
         // ext_fun_[type_]in 0,1 are the same as before.
@@ -692,20 +681,18 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         ext_fun_in[2] = &work->tmp_ny;  // fun: ny
 
         ext_fun_type_out[0] = BLASFEO_DMAT;
-        // ext_fun_out[0] = memory->RSQrq;     // hess: (nu+nx) * (nu+nx)
-        ext_fun_out[0] = &work->tmp_nv_nv;   // hess: (nu+nx) * (nu+nx)
+        // ext_fun_out[0] = memory->RSQrq;     // hess*fun: (nu+nx) * (nu+nx)
+        ext_fun_out[0] = &work->tmp_nv_nv;   // hess*fun: (nu+nx) * (nu+nx)
 
         // evaluate external function
-        model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
-                ext_fun_out);
+        model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
         // gauss-newton component update
         // tmp_nv_ny = Jt * W_chol, where W_chol is lower triangular
-        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
-                &work->tmp_nv_ny, 0, 0);
+        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0, &work->tmp_nv_ny, 0, 0);
+
         // RSQrq = RSQrq + tmp_nv_ny * tmp_nv_ny^T
-        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 1.0,
-                model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
     }
 
     // slacks
