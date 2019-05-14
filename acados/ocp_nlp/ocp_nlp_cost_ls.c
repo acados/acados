@@ -716,7 +716,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
 
         // add hessian of the cost contribution
         blasfeo_dsyrk_ln(nu + nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 1.0,
-                         memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+                memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 
         // compute gradient
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
@@ -727,6 +727,8 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
 
         blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
                 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
+
+		// TODO what about the exact hessian in the case of nz>0 ?????????????????????????????????????
     }
     else
     {
