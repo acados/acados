@@ -16,6 +16,14 @@ const int *ocp_model_dyn_expl_vde_for_sparsity_out(int);
 int ocp_model_dyn_expl_vde_for_n_in();
 int ocp_model_dyn_expl_vde_for_n_out();
 
+// explicit vde adjoint
+int ocp_model_dyn_expl_vde_adj(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ocp_model_dyn_expl_vde_adj_work(int *, int *, int *, int *);
+const int *ocp_model_dyn_expl_vde_adj_sparsity_in(int);
+const int *ocp_model_dyn_expl_vde_adj_sparsity_out(int);
+int ocp_model_dyn_expl_vde_adj_n_in();
+int ocp_model_dyn_expl_vde_adj_n_out();
+
 // explicit ode hessian
 int ocp_model_dyn_expl_ode_hes(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int ocp_model_dyn_expl_ode_hes_work(int *, int *, int *, int *);
@@ -110,6 +118,13 @@ const int *ocp_model_cost_y_fun_jac_ut_xt_sparsity_out(int);
 int ocp_model_cost_y_fun_jac_ut_xt_n_in();
 int ocp_model_cost_y_fun_jac_ut_xt_n_out();
 
+int ocp_model_cost_y_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ocp_model_cost_y_hess_work(int *, int *, int *, int *);
+const int *ocp_model_cost_y_hess_sparsity_in(int);
+const int *ocp_model_cost_y_hess_sparsity_out(int);
+int ocp_model_cost_y_hess_n_in();
+int ocp_model_cost_y_hess_n_out();
+
 // nonlinear least squares y_e
 int ocp_model_cost_y_e_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int ocp_model_cost_y_e_fun_jac_ut_xt_work(int *, int *, int *, int *);
@@ -117,6 +132,13 @@ const int *ocp_model_cost_y_e_fun_jac_ut_xt_sparsity_in(int);
 const int *ocp_model_cost_y_e_fun_jac_ut_xt_sparsity_out(int);
 int ocp_model_cost_y_e_fun_jac_ut_xt_n_in();
 int ocp_model_cost_y_e_fun_jac_ut_xt_n_out();
+
+int ocp_model_cost_y_e_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ocp_model_cost_y_e_hess_work(int *, int *, int *, int *);
+const int *ocp_model_cost_y_e_hess_sparsity_in(int);
+const int *ocp_model_cost_y_e_hess_sparsity_out(int);
+int ocp_model_cost_y_e_hess_n_in();
+int ocp_model_cost_y_e_hess_n_out();
 
 // external cost
 int ocp_model_cost_ext_cost_jac_hes(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);

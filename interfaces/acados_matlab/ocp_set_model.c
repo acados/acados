@@ -353,6 +353,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				}
 			}
 		}
+	if (mxGetField( prhs[1], 0, "cost_y_hess" )!=NULL && mxGetM(mxGetField( prhs[1], 0, "cost_y_hess" ))>0)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "cost_y_hess" ) );
+		if(!strcmp(param_y, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_cost_model_set(config, dims, in, ii, "nls_hess", ext_fun_param_ptr+ii);
+				}
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				status = ocp_nlp_cost_model_set(config, dims, in, ii, "nls_hess", ext_fun_ptr+ii);
+				}
+			}
+		}
 	if (mxGetField( prhs[1], 0, "cost_y_e_fun_jac_ut_xt" )!=NULL && mxGetM(mxGetField( prhs[1], 0, "cost_y_e_fun_jac_ut_xt" ))>0)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "cost_y_e_fun_jac_ut_xt" ) );
@@ -365,6 +385,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			{
 			ext_fun_ptr = (external_function_casadi *) ptr[0];
 			status = ocp_nlp_cost_model_set(config, dims, in, N, "nls_res_jac", ext_fun_ptr);
+			}
+		}
+	if (mxGetField( prhs[1], 0, "cost_y_e_hess" )!=NULL && mxGetM(mxGetField( prhs[1], 0, "cost_y_e_hess" ))>0)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "cost_y_e_hess" ) );
+		if(!strcmp(param_y_e, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			status = ocp_nlp_cost_model_set(config, dims, in, N, "nls_hess", ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			status = ocp_nlp_cost_model_set(config, dims, in, N, "nls_hess", ext_fun_ptr);
 			}
 		}
 	if (mxGetField( prhs[1], 0, "cost_ext_cost_jac_hes" )!=NULL && mxGetM(mxGetField( prhs[1], 0, "cost_ext_cost_jac_hes" ))>0)

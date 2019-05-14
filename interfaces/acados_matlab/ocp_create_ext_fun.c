@@ -27,7 +27,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* LHS */
 
 	// field names of output struct
-	char *fieldnames[18];
+	char *fieldnames[20];
 	fieldnames[0] = (char*)mxMalloc(50);
 	fieldnames[1] = (char*)mxMalloc(50);
 	fieldnames[2] = (char*)mxMalloc(50);
@@ -46,6 +46,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	fieldnames[15] = (char*)mxMalloc(50);
 	fieldnames[16] = (char*)mxMalloc(50);
 	fieldnames[17] = (char*)mxMalloc(50);
+	fieldnames[18] = (char*)mxMalloc(50);
+	fieldnames[19] = (char*)mxMalloc(50);
 
 	memcpy(fieldnames[0],"dyn_expl_ode_fun",sizeof("dyn_expl_ode_fun"));
 	memcpy(fieldnames[1],"dyn_expl_vde_for",sizeof("dyn_expl_vde_for"));
@@ -62,12 +64,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	memcpy(fieldnames[12],"constr_h_e_fun_jac_ut_xt",sizeof("constr_h_e_fun_jac_ut_xt"));
 	memcpy(fieldnames[13],"constr_h_e_fun_jac_ut_xt_hess",sizeof("constr_h_e_fun_jac_ut_xt_hess"));
 	memcpy(fieldnames[14],"cost_y_fun_jac_ut_xt",sizeof("cost_y_fun_jac_ut_xt"));
-	memcpy(fieldnames[15],"cost_y_e_fun_jac_ut_xt",sizeof("cost_y_e_fun_jac_ut_xt"));
-	memcpy(fieldnames[16],"cost_ext_cost_jac_hes",sizeof("cost_ext_cost_jac_hes"));
-	memcpy(fieldnames[17],"cost_ext_cost_e_jac_hes",sizeof("cost_ext_cost_e_jac_hes"));
+	memcpy(fieldnames[15],"cost_y_hess",sizeof("cost_y_hess"));
+	memcpy(fieldnames[16],"cost_y_e_fun_jac_ut_xt",sizeof("cost_y_e_fun_jac_ut_xt"));
+	memcpy(fieldnames[17],"cost_y_e_hess",sizeof("cost_y_e_hess"));
+	memcpy(fieldnames[18],"cost_ext_cost_jac_hes",sizeof("cost_ext_cost_jac_hes"));
+	memcpy(fieldnames[19],"cost_ext_cost_e_jac_hes",sizeof("cost_ext_cost_e_jac_hes"));
 
 	// create output struct
-	plhs[0] = mxCreateStructMatrix(1, 1, 18, (const char **) fieldnames);
+	plhs[0] = mxCreateStructMatrix(1, 1, 20, (const char **) fieldnames);
 
 	mxFree( fieldnames[0] );
 	mxFree( fieldnames[1] );
@@ -87,6 +91,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mxFree( fieldnames[15] );
 	mxFree( fieldnames[16] );
 	mxFree( fieldnames[17] );
+	mxFree( fieldnames[18] );
+	mxFree( fieldnames[19] );
 
 
 

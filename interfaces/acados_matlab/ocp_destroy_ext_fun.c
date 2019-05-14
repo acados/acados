@@ -49,6 +49,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	external_function_casadi *ext_fun_ptr;
 	external_function_param_casadi *ext_fun_param_ptr;
 
+	// TODO use a loop and mxGetFeildByNumber ?
+	// NO! it needs to know if a fun refers to middle or last stage !!!
+
+//	if (mxGetField( prhs[2], 0, "dyn_expl_ode_fun" )!=NULL && mxGetM(mxGetField( prhs[2], 0, "dyn_expl_ode_fun" ))>0)
 	if(mxGetField( prhs[2], 0, "dyn_expl_ode_fun" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_expl_ode_fun" ) );
@@ -367,9 +371,47 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			free(ext_fun_ptr);
 			}
 		}
+	if(mxGetField( prhs[2], 0, "cost_y_hess" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "cost_y_hess" ) );
+		if(!strcmp(param_y, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_param_casadi_free(ext_fun_param_ptr+ii);
+				}
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			for(ii=0; ii<N; ii++)
+				{
+				external_function_casadi_free(ext_fun_ptr+ii);
+				}
+			free(ext_fun_ptr);
+			}
+		}
 	if(mxGetField( prhs[2], 0, "cost_y_e_fun_jac_ut_xt" )!=NULL)
 		{
 		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "cost_y_e_fun_jac_ut_xt" ) );
+		if(!strcmp(param_y_e, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
+		}
+	if(mxGetField( prhs[2], 0, "cost_y_e_hess" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "cost_y_e_hess" ) );
 		if(!strcmp(param_y_e, "true")) // TODO bool
 			{
 			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];

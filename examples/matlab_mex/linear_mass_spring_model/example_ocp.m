@@ -11,6 +11,13 @@ N = 20;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
+%nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
+%regularize_method = 'no_regularize';
+regularize_method = 'project';
+%regularize_method = 'mirror';
+%regularize_method = 'convexify';
+nlp_solver_max_iter = 100;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_N_pcond = 5;
@@ -19,7 +26,8 @@ sim_method = 'erk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 %cost_type = 'linear_ls';
-cost_type = 'ext_cost';
+cost_type = 'nonlinear_ls';
+%cost_type = 'ext_cost';
 
 
 
@@ -93,7 +101,7 @@ ocp_model = acados_ocp_model();
 ocp_model.set('T', T);
 ocp_model.set('dim_nx', nx);
 ocp_model.set('dim_nu', nu);
-if (strcmp(cost_type, 'linear_ls'))
+if (strcmp(cost_type, 'linear_ls')) | (strcmp(cost_type, 'nonlinear_ls'))
 	ocp_model.set('dim_ny', ny);
 	ocp_model.set('dim_ny_e', ny_e);
 end
@@ -122,6 +130,13 @@ if (strcmp(cost_type, 'linear_ls'))
 	ocp_model.set('cost_Vu', Vu);
 	ocp_model.set('cost_Vx', Vx);
 	ocp_model.set('cost_Vx_e', Vx_e);
+	ocp_model.set('cost_W', W);
+	ocp_model.set('cost_W_e', W_e);
+	ocp_model.set('cost_yr', yr);
+	ocp_model.set('cost_yr_e', yr_e);
+elseif (strcmp(cost_type, 'nonlinear_ls'))
+	ocp_model.set('cost_expr_y', model.expr_y);
+	ocp_model.set('cost_expr_y_e', model.expr_y_e);
 	ocp_model.set('cost_W', W);
 	ocp_model.set('cost_W_e', W_e);
 	ocp_model.set('cost_yr', yr);
@@ -175,6 +190,9 @@ ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
+ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
+ocp_opts.set('regularize_method', regularize_method);
+ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
