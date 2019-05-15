@@ -5,8 +5,7 @@ clear all
 
 %% arguments
 compile_mex = 'true';
-%codgen_model = 'true';
-codgen_model = 'false';
+codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
 N = 40;
 
@@ -23,8 +22,8 @@ qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_N_pcond = 5;
 %dyn_type = 'explicit';
-%dyn_type = 'implicit';
-dyn_type = 'discrete';
+dyn_type = 'implicit';
+%dyn_type = 'discrete';
 %sim_method = 'erk';
 %sim_method = 'irk';
 sim_method_num_stages = 4;
