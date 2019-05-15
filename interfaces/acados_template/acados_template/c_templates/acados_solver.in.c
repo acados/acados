@@ -253,8 +253,8 @@ int acados_create() {
     {%- endfor %}
 
     double lbx[NBX]; 
-    {%- for item in ocp.constraints.ubx %}
-    ubx[{{ loop.index0 }}] = {{ item }};
+    {%- for item in ocp.constraints.lbx %}
+    lbx[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
     double ubx[NBX];
@@ -269,8 +269,8 @@ int acados_create() {
     {%- endfor %}
 
     double lsbx[NSBX]; 
-    {%- for item in ocp.constraints.usbx %}
-    usbx[{{ loop.index0 }}] = {{ item }};
+    {%- for item in ocp.constraints.lsbx %}
+    lsbx[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
     double usbx[NSBX];
