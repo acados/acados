@@ -22,7 +22,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //	mexPrintf("\nin ocp_expl_ext_fun_create\n");
 
 	// sizeof(long long) == sizeof(void *) = 64 !!!
-	int ii;
+	int ii, status;
 	long long *ptr;
 
 
@@ -31,9 +31,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// C_ocp
 
+	// config
+	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "config" ) );
+	ocp_nlp_config *config = (ocp_nlp_config *) ptr[0];
 	// dims
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "dims" ) );
 	ocp_nlp_dims *dims = (ocp_nlp_dims *) ptr[0];
+	// in
+	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "in" ) );
+	ocp_nlp_in *in = (ocp_nlp_in *) ptr[0];
 
 	// C_ocp_ext_fun
 
@@ -92,6 +98,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				external_function_param_casadi_set_n_in(ext_fun_param_ptr+ii, &ocp_model_dyn_expl_ode_fun_n_in);
 				external_function_param_casadi_set_n_out(ext_fun_param_ptr+ii, &ocp_model_dyn_expl_ode_fun_n_out);
 				external_function_param_casadi_create(ext_fun_param_ptr+ii, np);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_ode_fun", ext_fun_param_ptr+ii); // NOTE not needed as sens_forw=1
 				}
 			// populate output struct
 			tmp_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
@@ -110,6 +117,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				external_function_param_casadi_set_n_in(ext_fun_param_ptr+ii, &ocp_model_dyn_expl_vde_for_n_in);
 				external_function_param_casadi_set_n_out(ext_fun_param_ptr+ii, &ocp_model_dyn_expl_vde_for_n_out);
 				external_function_param_casadi_create(ext_fun_param_ptr+ii, np);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_vde_for", ext_fun_param_ptr+ii);
 				}
 			// populate output struct
 			tmp_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
@@ -128,6 +136,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				external_function_param_casadi_set_n_in(ext_fun_param_ptr+ii, &ocp_model_dyn_expl_vde_adj_n_in);
 				external_function_param_casadi_set_n_out(ext_fun_param_ptr+ii, &ocp_model_dyn_expl_vde_adj_n_out);
 				external_function_param_casadi_create(ext_fun_param_ptr+ii, np);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_vde_adj", ext_fun_param_ptr+ii);
 				}
 			// populate output struct
 			tmp_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
@@ -146,6 +155,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				external_function_param_casadi_set_n_in(ext_fun_param_ptr+ii, &ocp_model_dyn_expl_ode_hes_n_in);
 				external_function_param_casadi_set_n_out(ext_fun_param_ptr+ii, &ocp_model_dyn_expl_ode_hes_n_out);
 				external_function_param_casadi_create(ext_fun_param_ptr+ii, np);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_ode_hes", ext_fun_param_ptr+ii);
 				}
 			// populate output struct
 			tmp_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
@@ -166,6 +176,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				external_function_casadi_set_n_in(ext_fun_ptr+ii, &ocp_model_dyn_expl_ode_fun_n_in);
 				external_function_casadi_set_n_out(ext_fun_ptr+ii, &ocp_model_dyn_expl_ode_fun_n_out);
 				external_function_casadi_create(ext_fun_ptr+ii);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_ode_fun", ext_fun_ptr+ii); // NOTE not needed as sens_forw=1
 				}
 			// populate output struct
 			tmp_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
@@ -184,6 +195,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				external_function_casadi_set_n_in(ext_fun_ptr+ii, &ocp_model_dyn_expl_vde_for_n_in);
 				external_function_casadi_set_n_out(ext_fun_ptr+ii, &ocp_model_dyn_expl_vde_for_n_out);
 				external_function_casadi_create(ext_fun_ptr+ii);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_vde_for", ext_fun_ptr+ii);
 				}
 			// populate output struct
 			tmp_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
@@ -202,6 +214,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				external_function_casadi_set_n_in(ext_fun_ptr+ii, &ocp_model_dyn_expl_vde_adj_n_in);
 				external_function_casadi_set_n_out(ext_fun_ptr+ii, &ocp_model_dyn_expl_vde_adj_n_out);
 				external_function_casadi_create(ext_fun_ptr+ii);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_vde_adj", ext_fun_ptr+ii);
 				}
 			// populate output struct
 			tmp_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
@@ -220,6 +233,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				external_function_casadi_set_n_in(ext_fun_ptr+ii, &ocp_model_dyn_expl_ode_hes_n_in);
 				external_function_casadi_set_n_out(ext_fun_ptr+ii, &ocp_model_dyn_expl_ode_hes_n_out);
 				external_function_casadi_create(ext_fun_ptr+ii);
+				status = ocp_nlp_dynamics_model_set(config, dims, in, ii, "expl_ode_hes", ext_fun_ptr+ii); // NOTE not needed as sens_forw=1
 				}
 			// populate output struct
 			tmp_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);

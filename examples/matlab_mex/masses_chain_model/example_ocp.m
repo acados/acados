@@ -122,7 +122,7 @@ if (strcmp(dyn_type, 'explicit'))
 elseif (strcmp(dyn_type, 'implicit'))
 	ocp_model.set('dyn_type', 'implicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_impl);
-else % irk
+else
 	ocp_model.set('dyn_type', 'discrete');
 	ocp_model.set('dyn_expr_phi', model.expr_phi);
 	if (np>0)

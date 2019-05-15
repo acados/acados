@@ -68,9 +68,6 @@ classdef acados_ocp < handle
 			if (strcmp(obj.model_struct.cost_type_e, 'ext_cost'))
 				obj.C_ocp_ext_fun = ocp_set_ext_fun_cost_ext_cost_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 			end
-
-			% set in model
-			ocp_set_model(obj.model_struct, obj.C_ocp_ext_fun, obj.C_ocp);
 		end
 
 
