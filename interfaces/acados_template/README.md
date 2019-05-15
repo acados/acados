@@ -5,7 +5,11 @@ acados_template is an (experimental) Python package that can be used to specify 
 
 ## usage
 ### Linux/macOs 
-You can check out the examples folder to learn about  how to use acados_template. First of all, you need to compile and install acados without the qpDUNES, HPMPC and OSQP QP solvers running 'cmake -DACADOS_WITH_QPDUNES=OFF -DACADOS_WITH_HPMPC=OFF -DACADOS_WITH_OSQP=OFF .. & make install' Then, you will need to install acados_template Python package by running 'pip install .' from the root folder. You should now be able to import it as a Python module and specify the problem formulation as in examples/<example_name>/generate_c_code.py
+You can check out the examples folder to learn about  how to use acados_template. First of all, you need to compile and install acados without the qpDUNES, HPMPC and OSQP QP solvers running 
+~~~
+cmake -DACADOS_WITH_QPDUNES=OFF -DACADOS_WITH_HPMPC=OFF -DACADOS_WITH_OSQP=OFF .. & make install
+~~~
+Then, you will need to install acados_template Python package by running 'pip install .' from the root folder. You should now be able to import it as a Python module and specify the problem formulation as in examples/<example_name>/generate_c_code.py
 ### Windows
 You can in principle install the acados_template package within your native Python shell, but we highly recommend 
 using Windows Subsystems for Linux (https://docs.microsoft.com/en-us/windows/wsl/about) and to follow the 
