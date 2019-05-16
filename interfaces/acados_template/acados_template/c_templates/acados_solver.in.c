@@ -638,15 +638,15 @@ int acados_create() {
     }
     {%- endif %}
 
-    {%- if ocp.dims.npdN > 0 %}
+    {%- if ocp.dims.npd_e > 0 %}
 	// nonlinear part of convex-composite constraint
 	external_function_casadi p_constraint_e;
-	p_constraint_e.casadi_fun = &{{ ocp.con_pN_name }}_p_constraint_e;
-	p_constraint_e.casadi_n_in = &{{ ocp.con_pN_name }}_p_constraint_e_n_in;
-	p_constraint_e.casadi_n_out = &{{ ocp.con_pN_name }}_p_constraint_e_n_out;
-	p_constraint_e.casadi_sparsity_in = &{{ ocp.con_pN_name }}_p_constraint_e_sparsity_in;
-	p_constraint_e.casadi_sparsity_out = &{{ ocp.con_pN_name }}_p_constraint_e_sparsity_out;
-	p_constraint_e.casadi_work = &{{ ocp.con_pN_name }}_p_constraint_e_work;
+	p_constraint_e.casadi_fun = &{{ ocp.con_p_e_name }}_p_constraint_e;
+	p_constraint_e.casadi_n_in = &{{ ocp.con_p_e_name }}_p_constraint_e_n_in;
+	p_constraint_e.casadi_n_out = &{{ ocp.con_p_e_name }}_p_constraint_e_n_out;
+	p_constraint_e.casadi_sparsity_in = &{{ ocp.con_p_e_name }}_p_constraint_e_sparsity_in;
+	p_constraint_e.casadi_sparsity_out = &{{ ocp.con_p_e_name }}_p_constraint_e_sparsity_out;
+	p_constraint_e.casadi_work = &{{ ocp.con_p_e_name }}_p_constraint_e_work;
 
     external_function_casadi_create(p_constraint_e);
     {%- endif %}
@@ -666,15 +666,15 @@ int acados_create() {
     }
     {%- endif %}
 
-    {%- if ocp.dims.nhN > 0 %}
+    {%- if ocp.dims.nh_e > 0 %}
 	// nonlinear constraint
 	external_function_casadi h_constraint_e;
-	h_constraint_e.casadi_fun = &{{ ocp.con_hN_name }}_h_constraint_e;
-	h_constraint_e.casadi_n_in = &{{ ocp.con_hN_name }}_h_constraint_e_n_in;
-	h_constraint_e.casadi_n_out = &{{ ocp.con_hN_name }}_h_constraint_e_n_out;
-	h_constraint_e.casadi_sparsity_in = &{{ ocp.con_hN_name }}_h_constraint_e_sparsity_in;
-	h_constraint_e.casadi_sparsity_out = &{{ ocp.con_hN_name }}_h_constraint_e_sparsity_out;
-	p_constraint_e.casadi_work = &{{ ocp.con_hN_name }}_h_constraint_e_work;
+	h_constraint_e.casadi_fun = &{{ ocp.con_h_e_name }}_h_constraint_e;
+	h_constraint_e.casadi_n_in = &{{ ocp.con_h_e_name }}_h_constraint_e_n_in;
+	h_constraint_e.casadi_n_out = &{{ ocp.con_h_e_name }}_h_constraint_e_n_out;
+	h_constraint_e.casadi_sparsity_in = &{{ ocp.con_h_e_name }}_h_constraint_e_sparsity_in;
+	h_constraint_e.casadi_sparsity_out = &{{ ocp.con_h_e_name }}_h_constraint_e_sparsity_out;
+	p_constraint_e.casadi_work = &{{ ocp.con_h_e_name }}_h_constraint_e_work;
 
     external_function_casadi_create(h_constraint_e);
     {%- endif %}
@@ -797,8 +797,8 @@ int acados_create() {
     for (int i = 0; i < N; ++i) {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
     }
-    // WN
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", WN);
+    // W_e
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
 
 
 	for (int i = 0; i < N; ++i) {
@@ -812,12 +812,12 @@ int acados_create() {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zu", zu);
 	}
 
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", VxN);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yrefN);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zl", ZlN);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zu", ZuN);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zl", zlN);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zu", zuN);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zl", Zl_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zu", Zu_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zl", zl_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zu", zu_e);
 
     // NLP dynamics
     int set_fun_status;
@@ -899,24 +899,24 @@ int acados_create() {
     }
     {%- endif %}
     
-    {%- if ocp.dims.nbxN > 0 %} 
+    {%- if ocp.dims.nbx_e > 0 %} 
     // bounds for last
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbxN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbxN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubxN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbx_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbx_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubx_e);
     {%- endif %}
 
-    {%- if ocp.dims.nsbxN > 0 %} 
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsbxN", idxsbxN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsbxN", lsbxN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usbxN", usbxN);
+    {%- if ocp.dims.nsbx_e > 0 %} 
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsbx", idxsbx_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsbx", lsbx_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usbx", usbx_e);
     {%- endif %}
     
-    {%- if ocp.dims.ngN > 0 %} 
+    {%- if ocp.dims.ng_e > 0 %} 
     // general constraints for last stage
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "C", CN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", lgN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ugN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "C", C_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", lg_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ug_e);
     {%- endif %}
 
     
@@ -926,7 +926,7 @@ int acados_create() {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "p", &p_constraint[i]);
     {%- endif %}
 
-    {%- if ocp.dims.npdN > 0 %}
+    {%- if ocp.dims.npd_e > 0 %}
     // convex-composite constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_constraint_e[i]);
     {%- endif %}
@@ -941,11 +941,11 @@ int acados_create() {
     }
     {%- endif %}
 
-    {%- if ocp.dims.nhN > 0 %}
+    {%- if ocp.dims.nh_e > 0 %}
     // nonlinear constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_constraint_e[i]);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lhN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uhN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
     {%- endif %}
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);
