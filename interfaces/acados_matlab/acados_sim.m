@@ -37,15 +37,13 @@ classdef acados_sim < handle
 
 			% get pointers for external functions in model
 			if (strcmp(obj.opts_struct.method, 'erk'))
-				obj.C_sim_ext_fun = sim_set_ext_fun_dyn_expl(obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
+				obj.C_sim_ext_fun = sim_set_ext_fun_dyn_expl(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
 			elseif (strcmp(obj.opts_struct.method, 'irk'))
-				obj.C_sim_ext_fun = sim_set_ext_fun_dyn_impl(obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
+				obj.C_sim_ext_fun = sim_set_ext_fun_dyn_impl(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
 			else
 				fprintf('\ncodegen_model: method not supported: %s\n', obj.opts_struct.method);
 				return;
 			end
-			% set in model ( = casadi functions )
-			sim_set_model(obj.opts_struct, obj.C_sim, obj.C_sim_ext_fun);
 		end
 
 

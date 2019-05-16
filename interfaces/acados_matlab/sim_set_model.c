@@ -58,6 +58,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 //		mexPrintf("\n%s\n", method);
 
+#if 0
 		// expl_ode_fun
 		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_expl_ode_fun" ) );
 		external_function_casadi *expl_ode_fun = (external_function_casadi *) ptr[0];
@@ -75,11 +76,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		sim_in_set(config, dims, in, "expl_vde_for", expl_vde_for);
 		sim_in_set(config, dims, in, "expl_vde_adj", expl_vde_adj);
 		sim_in_set(config, dims, in, "expl_ode_hes", expl_ode_hes);
+#endif
 		}
 	else if(!strcmp(method, "irk"))
 		{
 //		mexPrintf("\n%s\n", method);
 
+#if 0
 		// impl_ode_fun
 		ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dyn_impl_ode_fun" ) );
 		external_function_casadi *impl_ode_fun = (external_function_casadi *) ptr[0];
@@ -97,6 +100,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot", impl_ode_fun_jac_x_xdot);
 		sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", impl_ode_jac_x_xdot_u);
 		sim_in_set(config, dims, in, "impl_ode_hess", impl_ode_hess);
+#endif
 		}
 	else
 		{

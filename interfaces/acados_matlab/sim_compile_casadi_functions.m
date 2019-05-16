@@ -1,4 +1,4 @@
-function compile_casadi_functions(model_struct, opts_struct)
+function sim_compile_casadi_functions(model_struct, opts_struct)
 
 c_sources = ' ';
 if (strcmp(opts_struct.method, 'erk'))
