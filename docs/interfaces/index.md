@@ -9,9 +9,13 @@ can look at the examples in
 [`acados/examples/c/`](https://github.com/acados/acados/tree/master/examples/c). 
 
 
-## acados MEX
+## acados MATLAB (rapid prototyping)
 
-This interface makes a subset of `acados` functionalities available from Matlab or Octave.
+This interface makes a broad set of `acados` functionalities available from Matlab or Octave 
+for prototyping purpose. As of now, this closely tracks the latest developments in the core of acados, e.g.
+exact Hessians, adjoint corrections, regularization, etc. However, for the time being, it will not be possible to 
+generate a self-contained C library that can be deployed on an embedded system. For this purpose 
+see the `acados emebedded` high-level interface below. 
 
 Some examples for the use of this interface can be found in `<acados_dir>/examples/matlab_mex`
 
@@ -35,12 +39,14 @@ If you want to run the examples in a different folder, please close the current 
 
 
 
-## acados Python
+### acados embedded - Python
 
 
-`acados_template` is an (experimental) Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them.
+`acados_template` is an Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them.
+In comparison with the MATLAB interface for rapid prototyping (see above), it supports less features, but it allows the user to generate a self-contained C library  
+that can be easily deployed on an embedded system.
 
-The framework is based on templated C files which are rendered from Python using the templating engine `Jinja2`. Notice that, at the moment, some of the features are not yet implemented.
+The framework is based on templated C files which are rendered from Python using the templating engine `Jinja2`.
 
 
 You can check out the examples folder to learn about  how to use acados_template.
@@ -66,3 +72,4 @@ For more information contact `@zanellia`
     :members:
     :private-members:
 ```
+### acados embedded - MATLAB
