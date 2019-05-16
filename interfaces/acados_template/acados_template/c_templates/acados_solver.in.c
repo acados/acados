@@ -321,33 +321,33 @@ int acados_create() {
     // set up bounds for last stage
     // x
     int idxbxN[NBXN];
-    {%- for item in ocp.constraints.idxbx_e %}}}
+    {%- for item in ocp.constraints.idxbx_e %}
     idxbxN[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
     double lbxN[NBXN]; 
-    {%- for item in ocp.constraints.lbx_e %}}}
+    {%- for item in ocp.constraints.lbx_e %}
     lbxN[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
     double ubxN[NBXN];
-    {%- for item in ocp.constraints.ubx_e %}}}
+    {%- for item in ocp.constraints.ubx_e %}
     ubxN[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
     // soft bounds on x
     int idxsbxN[NSBXN];
-    {%- for item in ocp.constraints.idxsbx_e %}}}
+    {%- for item in ocp.constraints.idxsbx_e %}
     idxsbxN[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
     double lsbxN[NSBXN]; 
-    {%- for item in ocp.constraints.lsbx_e %}}}
+    {%- for item in ocp.constraints.lsbx_e %}
     lsbxN[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
     double usbxN[NBXN];
-    {%- for item in ocp.constraints.usbx_e %}}}
+    {%- for item in ocp.constraints.usbx_e %}
     usbxN[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
@@ -356,18 +356,18 @@ int acados_create() {
     double lgN[NGN];
     double ugN[NGN];
 
-    {%- for item_j in ocp.constraints.C_e %}}}
+    {%- for item_j in ocp.constraints.C_e %}
     {% set outer_loop = loop %}
     {%- for item_k in item_j %}
     CN[{{ outer_loop.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
     {%- endfor %}
     {%- endfor %}
 
-    {%- for item in ocp.constraints.lg_e %}}}
+    {%- for item in ocp.constraints.lg_e %}
     lgN[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
-    {%- for item in ocp.constraints.ug_e %}}}
+    {%- for item in ocp.constraints.ug_e %}
     ugN[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
@@ -375,11 +375,11 @@ int acados_create() {
     double lhN[NHN];
     double uhN[NHN];
 
-    {%- for item in ocp.constraints.lh_e %}}}
+    {%- for item in ocp.constraints.lh_e %}
     lhN[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
-    {%- for item in ocp.constraints.uh_e %}}}
+    {%- for item in ocp.constraints.uh_e %}
     uhN[{{ loop.index0}}] = {{ item }};
     {%- endfor %}
 
@@ -464,21 +464,21 @@ int acados_create() {
     yref[{{ loop.index0 }}] = {{ item }}; 
     {%- endfor %}
 
-    {%- for item_j in ocp.cost.W_e %}}}
+    {%- for item_j in ocp.cost.W_e %}
     {% set outer_loop = loop %}
     {%- for item_k in item_j %}
     WN[{{ outer_loop.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
     {%- endfor %}
     {%- endfor %}
 
-    {%- for item_j in ocp.cost.Vx_e %}}}
+    {%- for item_j in ocp.cost.Vx_e %}
     {% set outer_loop = loop %}
     {%- for item_k in item_j %}
     VxN[{{ outer_loop.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
     {%- endfor %}
     {%- endfor %}
 
-    {%- for item_j in ocp.cost.Zl_e %}}}
+    {%- for item_j in ocp.cost.Zl_e %}
     {% set outer_loop = loop %}
     {%- for item_k in item_j %}
     {% if outer_loop.index0 == loop.index0 %}
@@ -487,7 +487,7 @@ int acados_create() {
     {%- endfor %}
     {%- endfor %}
 
-    {%- for item_j in ocp.cost.Zu_e %}}}
+    {%- for item_j in ocp.cost.Zu_e %}
     {% set outer_loop = loop %}
     {%- for item_k in item_j %}
     {% if outer_loop.index0 == loop.index0 %}
@@ -496,15 +496,15 @@ int acados_create() {
     {%- endfor %}
     {%- endfor %}
 
-    {%- for item  in ocp.cost.zl_e %}}}
+    {%- for item  in ocp.cost.zl_e %}
     zlN[{{ loop.index0 }}] = {{ item }}; 
     {%- endfor %}
 
-    {%- for item  in ocp.cost.zu_e %}}}
+    {%- for item  in ocp.cost.zu_e %}
     zuN[{{ loop.index0 }}] = {{ item }}; 
     {%- endfor %}
 
-    {%- for item in ocp.cost.yref_e %}}}
+    {%- for item in ocp.cost.yref_e %}
     yrefN[{{ loop.index0 }}] = {{ item }}; 
     {%- endfor %}
 
