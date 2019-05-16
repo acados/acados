@@ -11,10 +11,20 @@ N = 40;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
+%nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
+%regularize_method = 'no_regularize';
+regularize_method = 'project';
+%regularize_method = 'mirror';
+%regularize_method = 'convexify';
+nlp_solver_max_iter = 100;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_N_pcond = 5;
-sim_method = 'erk';
+%dyn_type = 'explicit';
+dyn_type = 'implicit';
+%dyn_type = 'discrete';
+%sim_method = 'erk';
 %sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 2;
@@ -42,6 +52,7 @@ ng = 0;
 ng_e = 0;
 nh = 0;
 nh_e = 0;
+np = model.np;
 
 % cost
 Vx = zeros(ny, nx); for ii=1:nx Vx(ii,ii)=1.0; end % state-to-output matrix in lagrange term
@@ -81,6 +92,7 @@ else
 	ocp_model.set('dim_nbx', nbx);
 	ocp_model.set('dim_nbu', nbu);
 end
+ocp_model.set('dim_np', np);
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
@@ -88,6 +100,9 @@ if isfield(model, 'sym_u')
 end
 if isfield(model, 'sym_xdot')
 	ocp_model.set('sym_xdot', model.sym_xdot);
+end
+if (np>0)
+	ocp_model.set('sym_p', model.sym_p);
 end
 % cost
 ocp_model.set('cost_type', cost_type);
@@ -100,12 +115,18 @@ ocp_model.set('cost_W_e', W_e);
 ocp_model.set('cost_yr', yr);
 ocp_model.set('cost_yr_e', yr_e);
 % dynamics
-if (strcmp(sim_method, 'erk'))
+if (strcmp(dyn_type, 'explicit'))
 	ocp_model.set('dyn_type', 'explicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_expl);
-else % irk
+elseif (strcmp(dyn_type, 'implicit'))
 	ocp_model.set('dyn_type', 'implicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_impl);
+else
+	ocp_model.set('dyn_type', 'discrete');
+	ocp_model.set('dyn_expr_phi', model.expr_phi);
+	if (np>0)
+		ocp_model.set('dyn_param_phi', 'true');
+	end
 end
 % constraints
 ocp_model.set('constr_x0', x0);
@@ -144,13 +165,22 @@ ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
+ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
+ocp_opts.set('regularize_method', regularize_method);
+ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
 end
-ocp_opts.set('sim_method', sim_method);
-ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
-ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+if (strcmp(dyn_type, 'explicit'))
+	ocp_opts.set('sim_method', 'erk');
+	ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
+	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+elseif (strcmp(dyn_type, 'implicit'))
+	ocp_opts.set('sim_method', 'irk');
+	ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
+	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+end
 
 %ocp_opts.opts_struct
 
@@ -171,19 +201,25 @@ u_traj_init = zeros(nu, N);
 ocp.set('init_x', x_traj_init);
 ocp.set('init_u', u_traj_init);
 
+% set parameter
+ocp.set('p', T/N);
 
 % solve
 nrep = 10;
 tic;
 for rep=1:nrep
+	ocp.set('init_x', x_traj_init);
+	ocp.set('init_u', u_traj_init);
 	ocp.solve();
 end
-time_solve = toc/nrep
+time_ext = toc/nrep
 
 
 % get solution
 u = ocp.get('u');
 x = ocp.get('x');
+%u
+%x
 
 
 
@@ -208,6 +244,13 @@ end
 
 
 status = ocp.get('status');
+sqp_iter = ocp.get('sqp_iter');
+time_tot = ocp.get('time_tot');
+time_lin = ocp.get('time_lin');
+time_qp_sol = ocp.get('time_qp_sol');
+
+fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+
 
 if status==0
 	fprintf('\nsuccess!\n\n');

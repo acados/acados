@@ -1,18 +1,23 @@
 from setuptools import setup, find_packages
 
-import acados_template
-
 setup(name='acados_template',
    version='0.1',
-   description='a templating framework for acados',
+   python_requires='>=3.5, <3.7',
+   description='A templating framework for acados',
    url='http://github.com/zanellia/acados',
    author='Andrea Zanelli',
    license='LGPL',
    packages = find_packages(),
    include_package_data = True,
-   package_data={'': ['c_templates/main.in.c',
+   install_requires=[
+      'jinja2',
+      'numpy',
+      'scipy',
+      'casadi==3.4.0'
+   ],
+   package_data={'': [
+       'c_templates/main.in.c',
        'c_templates/Makefile.in',
-       'acados_layout.json',
        'c_templates/model.in.h',
        'c_templates/main.in.h',
        'c_templates/acados_solver.in.c',
@@ -21,5 +26,7 @@ setup(name='acados_template',
        'c_templates/p_constraint.in.h',
        'c_templates/h_constraint.in.h',
        'c_templates/make_sfun.in.m',
+       'acados_layout.json'
        ]},
-   zip_safe=False)
+   zip_safe=False
+)

@@ -11,14 +11,25 @@ N = 20;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
+%nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
+%regularize_method = 'no_regularize';
+regularize_method = 'project';
+%regularize_method = 'mirror';
+%regularize_method = 'convexify';
+nlp_solver_max_iter = 100;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_N_pcond = 5;
-sim_method = 'erk';
+%dyn_type = 'explicit';
+%dyn_type = 'implicit';
+dyn_type = 'discrete';
+%sim_method = 'erk';
 %sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 %cost_type = 'linear_ls';
+%cost_type = 'nonlinear_ls';
 cost_type = 'ext_cost';
 
 
@@ -93,7 +104,7 @@ ocp_model = acados_ocp_model();
 ocp_model.set('T', T);
 ocp_model.set('dim_nx', nx);
 ocp_model.set('dim_nu', nu);
-if (strcmp(cost_type, 'linear_ls'))
+if (strcmp(cost_type, 'linear_ls')) | (strcmp(cost_type, 'nonlinear_ls'))
 	ocp_model.set('dim_ny', ny);
 	ocp_model.set('dim_ny_e', ny_e);
 end
@@ -126,17 +137,27 @@ if (strcmp(cost_type, 'linear_ls'))
 	ocp_model.set('cost_W_e', W_e);
 	ocp_model.set('cost_yr', yr);
 	ocp_model.set('cost_yr_e', yr_e);
+elseif (strcmp(cost_type, 'nonlinear_ls'))
+	ocp_model.set('cost_expr_y', model.expr_y);
+	ocp_model.set('cost_expr_y_e', model.expr_y_e);
+	ocp_model.set('cost_W', W);
+	ocp_model.set('cost_W_e', W_e);
+	ocp_model.set('cost_yr', yr);
+	ocp_model.set('cost_yr_e', yr_e);
 else % if (strcmp(cost_type, 'ext_cost'))
 	ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
 	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 end
 % dynamics
-if (strcmp(sim_method, 'erk'))
+if (strcmp(dyn_type, 'explicit'))
 	ocp_model.set('dyn_type', 'explicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_expl);
-else % irk
+elseif (strcmp(dyn_type, 'implicit'))
 	ocp_model.set('dyn_type', 'implicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_impl);
+else
+	ocp_model.set('dyn_type', 'discrete');
+	ocp_model.set('dyn_expr_phi', model.expr_phi);
 end
 % constraints
 ocp_model.set('constr_x0', x0);
@@ -175,13 +196,22 @@ ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
+ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
+ocp_opts.set('regularize_method', regularize_method);
+ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
 end
-ocp_opts.set('sim_method', sim_method);
-ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
-ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+if (strcmp(dyn_type, 'explicit'))
+	ocp_opts.set('sim_method', 'erk');
+	ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
+	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+elseif (strcmp(dyn_type, 'implicit'))
+	ocp_opts.set('sim_method', 'irk');
+	ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
+	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+end
 
 ocp_opts.opts_struct
 
@@ -234,7 +264,7 @@ x = ocp.get('x');
 figure()
 subplot(2, 1, 1)
 plot(0:N, x);
-title('closed loop simulation')
+title('trajectory')
 ylabel('x')
 subplot(2, 1, 2)
 plot(1:N, u);

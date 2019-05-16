@@ -69,14 +69,14 @@ typedef struct
     int (*memory_calculate_size)(void *config, void *dims, void *opts_);
     void *(*memory_assign)(void *config, void *dims, void *opts_, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts_);
-    void (*opts_set)(void *config_, void *opts_, const char *field, const void* value);
+    void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
     void (*dynamics_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
+    void (*cost_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
+    void (*constraints_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
     // evaluate solver
-    int (*evaluate)(void *config, void *dims, void *qp_in, void *qp_out,
-                    void *opts_, void *mem, void *work);
+    int (*evaluate)(void *config, void *dims, void *qp_in, void *qp_out, void *opts_, void *mem, void *work);
     // prepare memory
-    int (*precompute)(void *config, void *dims, void *qp_in, void *qp_out,
-                void *opts_, void *mem, void *work);
+    int (*precompute)(void *config, void *dims, void *qp_in, void *qp_out, void *opts_, void *mem, void *work);
     // initalize this struct with default values
     void (*config_initialize_default)(void *config);
     // general getter
@@ -108,7 +108,7 @@ typedef struct
     void **dynamics;
     void **constraints;
     ocp_qp_dims *qp_solver;  // xcond solver instead ??
-	ocp_nlp_reg_dims *regularize;
+    ocp_nlp_reg_dims *regularize;
 
     int *nv;  // number of primal variables (states+controls+slacks)
     int *nx;  // number of differential states

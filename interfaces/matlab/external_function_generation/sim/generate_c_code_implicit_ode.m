@@ -79,23 +79,27 @@ x_xdot_z_u = [x; xdot; z; u];
 
 if isSX
     multiplier  = SX.sym('multiplier', length(x) + length(z));
-    multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
-    HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
+%    multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
+%    HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 else
     multiplier  = MX.sym('multiplier', length(x) + length(z));
-    multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
-    HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
+%    multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
+%    HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 end
 
-for ii = 1:length(f_impl)
-    jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z_u);
-    hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
-    HESS = HESS + multiplier(ii) * hess_x_xdot_z;
-end
+%for ii = 1:length(f_impl)
+%    jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z_u);
+%    hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
+%    HESS = HESS + multiplier(ii) * hess_x_xdot_z;
+%end
+%HESS = HESS.simplify();
+% hessian computed as forward over adjoint !!!
+ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, true);
+HESS = jacobian(ADJ, x_xdot_z_u);
 
-HESS = HESS.simplify();
-HESS_multiplied = multiply_mat' * HESS * multiply_mat;
-HESS_multiplied = HESS_multiplied.simplify();
+%HESS_multiplied = multiply_mat' * HESS * multiply_mat;
+%HESS_multiplied = HESS_multiplied.simplify();
+%HESS_multiplied = HESS; % do the multiplication in BLASFEO !!!
 
 
 
@@ -113,7 +117,8 @@ if isfield(model, 'p')
          {x, xdot, u, z, p},...
          {f_impl, jac_x, jac_xdot, jac_u});
     impl_ode_hess = Function([model.name,'_impl_ode_hess'], ...
-         {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
+         {x, xdot, u, z, multiplier, p}, {HESS});
+%         {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
 else
     impl_ode_fun = Function([model_name,'_impl_ode_fun'],...
                  {x, xdot, u, z}, {f_impl});
@@ -124,7 +129,8 @@ else
     impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'],...
          {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_u});
     impl_ode_hess = Function([model.name,'_impl_ode_hess'], ...
-        {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
+        {x, xdot, u, z, multiplier}, {HESS});
+%        {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
 end
 
 %% generate C code

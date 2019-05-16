@@ -929,13 +929,13 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         }
     }
 
-    int maxIter = MAX_SQP_ITERS;
+    int max_iter = MAX_SQP_ITERS;
     double min_res_g = 1e-6;
     double min_res_b = 1e-8;
     double min_res_d = 1e-8;
     double min_res_m = 1e-8;
 
-    ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+    ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
     ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
     ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
     ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);

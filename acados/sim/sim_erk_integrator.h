@@ -27,6 +27,8 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
+
+
 typedef struct
 {
     int nx;
@@ -64,7 +66,7 @@ typedef struct
 {
     double *rhs_forw_in;  // x + S + p
 
-    double *K_traj;         // (stages *nX) or (steps*stages*nX) for adj
+    double *K_traj;         // (stages*nX) or (steps*stages*nX) for adj
     double *out_forw_traj;  // S or (steps+1)*nX for adj
 
     double *rhs_adj_in;

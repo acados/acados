@@ -4,28 +4,31 @@ import os
 import sys
 
 class ocp_nlp_dims:
+    """
+    class containing the dimensions of the optimal control problem
+    """
     def __init__(self):
-        self.__nx    = None  # number of states
-        self.__nz    = 0     # number of algebraic variables
-        self.__nu    = None  # number of inputs
-        self.__np    = 0     # number of parameters
-        self.__ny    = None  # number of residuals in Lagrange term
-        self.__nyN   = None  # number of residuals in Mayer term
-        self.__npd   = 0     # number of positive definite constraints
-        self.__npdN  = 0     # number of positive definite constraints at t=T
-        self.__nh    = 0     # number of nonlinear constraints
-        self.__nhN   = 0     # number of nonlinear constraints at t=T
-        self.__nbx   = 0     # number of state bounds 
-        self.__nbxN  = 0     # number of state bounds at t=T 
-        self.__nbu   = 0     # number of input bounds
-        self.__nsbx  = 0     # number of soft state bounds 
-        self.__nsbxN = 0     # number of soft state bounds at t=T 
-        self.__nsbu  = 0     # number of soft input bounds
-        self.__ns    = 0     # total number of slacks
-        self.__nsN   = 0     # total number of slacks at t=T
-        self.__ng    = 0     # number of general constraints
-        self.__ngN   = 0     # number of general constraints at t=T
-        self.__N     = None  # prediction horizon 
+        self.__nx    = None  #: number of states
+        self.__nz    = 0     #: number of algebraic variables
+        self.__nu    = None  #: number of inputs
+        self.__np    = 0     #: number of parameters
+        self.__ny    = None  #: number of residuals in Lagrange term
+        self.__nyN   = None  #: number of residuals in Mayer term
+        self.__npd   = 0     #: number of positive definite constraints
+        self.__npdN  = 0     #: number of positive definite constraints at t=T
+        self.__nh    = 0     #: number of nonlinear constraints
+        self.__nhN   = 0     #: number of nonlinear constraints at t=T
+        self.__nbx   = 0     #: number of state bounds 
+        self.__nbxN  = 0     #: number of state bounds at t=T 
+        self.__nbu   = 0     #: number of input bounds
+        self.__nsbx  = 0     #: number of soft state bounds 
+        self.__nsbxN = 0     #: number of soft state bounds at t=T 
+        self.__nsbu  = 0     #: number of soft input bounds
+        self.__ns    = 0     #: total number of slacks
+        self.__nsN   = 0     #: total number of slacks at t=T
+        self.__ng    = 0     #: number of general constraints
+        self.__ngN   = 0     #: number of general constraints at t=T
+        self.__N     = None  #: prediction horizon 
 
     @property
     def nx(self):
@@ -259,26 +262,29 @@ class ocp_nlp_dims:
             raise Exception('Invalid N value. Exiting.')
 
 class ocp_nlp_cost:
+    """
+    class containing the description of the cost
+    """
     # linear least-squares cost: || Vx*x + Vu*x + Vz*z ||^2_W
     def __init__(self):
         # Lagrange term
-        self.__W     = []  # weight matrix
-        self.__Vx    = []  # x matrix coefficient
-        self.__Vu    = []  # u matrix coefficient
-        self.__Vz    = []  # z matrix coefficient
-        self.__yref  = []  # reference
-        self.__Zl    = []  # Hessian wrt lower slack 
-        self.__Zu    = []  # Hessian wrt upper slack 
-        self.__zl    = []  # gradient wrt lower slack 
-        self.__zu    = []  # gradient wrt upper slack 
+        self.__W     = []  #: weight matrix
+        self.__Vx    = []  #: x matrix coefficient
+        self.__Vu    = []  #: u matrix coefficient
+        self.__Vz    = []  #: z matrix coefficient
+        self.__yref  = []  #: reference
+        self.__Zl    = []  #: Hessian wrt lower slack 
+        self.__Zu    = []  #: Hessian wrt upper slack 
+        self.__zl    = []  #: gradient wrt lower slack 
+        self.__zu    = []  #: gradient wrt upper slack 
         # Mayer term
-        self.__WN    = []  # weight matrix
-        self.__VxN   = []  # x matrix coefficient
-        self.__yrefN = []  # reference
-        self.__ZlN   = []  # Hessian wrt lower slack 
-        self.__ZuN   = []  # Hessian wrt upper slack 
-        self.__zlN   = []  # gradient wrt lower slack 
-        self.__zuN   = []  # gradient wrt upper slack 
+        self.__WN    = []  #: weight matrix
+        self.__VxN   = []  #: x matrix coefficient
+        self.__yrefN = []  #: reference
+        self.__ZlN   = []  #: Hessian wrt lower slack 
+        self.__ZuN   = []  #: Hessian wrt upper slack 
+        self.__zlN   = []  #: gradient wrt lower slack 
+        self.__zuN   = []  #: gradient wrt upper slack 
 
     # Lagrange term
     @property
@@ -459,46 +465,49 @@ class ocp_nlp_cost:
             raise Exception('Invalid zuN value. Exiting.')
 
 class ocp_nlp_constraints:
+    """
+    class containing the description of the constraints
+    """
     def __init__(self):
         # bounds on x and u
-        self.__lbx    = []  # lower bounds on x
-        self.__lbu    = []  # lower bounds on u
-        self.__ubx    = []  # upper bounds on x 
-        self.__ubu    = []  # upper bounds on u 
-        self.__idxbx  = []  # indexes of bounds on x 
-        self.__idxbu  = []  # indexes of bounds on u
+        self.__lbx    = []  #: lower bounds on x
+        self.__lbu    = []  #: lower bounds on u
+        self.__ubx    = []  #: upper bounds on x 
+        self.__ubu    = []  #: upper bounds on u 
+        self.__idxbx  = []  #: indexes of bounds on x 
+        self.__idxbu  = []  #: indexes of bounds on u
         # bounds on x at t=T
-        self.__lbxN   = []  # lower bounds on x at t=T 
-        self.__ubxN   = []  # upper bounds on x at t=T 
-        self.__idxbxN = []  # indexes for bounds on x at t=T 
+        self.__lbxN   = []  #: lower bounds on x at t=T 
+        self.__ubxN   = []  #: upper bounds on x at t=T 
+        self.__idxbxN = []  #: indexes for bounds on x at t=T 
         # soft bounds on x and u
-        self.__lsbx   = []  # soft lower bounds on x
-        self.__lsbu   = []  # soft lower bounds on u
-        self.__usbx   = []  # soft upper bounds on x 
-        self.__usbu   = []  # soft upper bounds on u 
-        self.__idxsbx = []  # indexes of soft bounds on x 
-        self.__idxsbu = []  # indexes of soft bounds on u
+        self.__lsbx   = []  #: soft lower bounds on x
+        self.__lsbu   = []  #: soft lower bounds on u
+        self.__usbx   = []  #: soft upper bounds on x 
+        self.__usbu   = []  #: soft upper bounds on u 
+        self.__idxsbx = []  #: indexes of soft bounds on x 
+        self.__idxsbu = []  #: indexes of soft bounds on u
         # soft bounds on x and u at t=T
-        self.__lsbxN  = []  # soft lower bounds on x at t=T
-        self.__usbxN  = []  # soft upper bounds on x at t=T
-        self.__idxsbxN= []  # indexes of soft bounds on x at t=T 
+        self.__lsbxN  = []  #: soft lower bounds on x at t=T
+        self.__usbxN  = []  #: soft upper bounds on x at t=T
+        self.__idxsbxN= []  #: indexes of soft bounds on x at t=T 
         # polytopic constraints 
-        self.__lg     = []  # lower bound for general inequalities 
-        self.__ug     = []  # upper bound for general inequalities 
-        self.__D      = []  # D matrix in lg <= D * u + C * x <= ug
-        self.__C      = []  # C matrix in lg <= D * u + C * x <= ug
+        self.__lg     = []  #: lower bound for general inequalities 
+        self.__ug     = []  #: upper bound for general inequalities 
+        self.__D      = []  #: D matrix in lg <= D * u + C * x <= ug
+        self.__C      = []  #: C matrix in lg <= D * u + C * x <= ug
         # polytopic constraints at t=T 
-        self.__CN     = []  # C matrix at t=T 
-        self.__lgN    = []  # lower bound on general inequalities at t=T 
-        self.__ugN    = []  # upper bound on general inequalities at t=T 
+        self.__CN     = []  #: C matrix at t=T 
+        self.__lgN    = []  #: lower bound on general inequalities at t=T 
+        self.__ugN    = []  #: upper bound on general inequalities at t=T 
         # nonlinear constraints
-        self.__lh     = []  # lower bound for nonlinear inequalities 
-        self.__uh     = []  # upper bound for nonlinear inequalities 
+        self.__lh     = []  #: lower bound for nonlinear inequalities 
+        self.__uh     = []  #: upper bound for nonlinear inequalities 
         # nonlinear constraints at t=T
-        self.__uhN    = []  # upper bound on nonlinear inequalities at t=T 
-        self.__lhN    = []  # lower bound on nonlinear inequalities at t=T 
-        self.__x0     = []  # initial state 
-        self.__p      = []  # parameters 
+        self.__uhN    = []  #: upper bound on nonlinear inequalities at t=T 
+        self.__lhN    = []  #: lower bound on nonlinear inequalities at t=T 
+        self.__x0     = []  #: initial state 
+        self.__p      = []  #: parameters 
 
     @property
     def lbx(self):
@@ -814,12 +823,15 @@ class ocp_nlp_constraints:
             raise Exception('Invalid p value. Exiting.')
 
 class ocp_nlp_solver_config:
+    """
+    class containing the description of the solver configuration
+    """
     def __init__(self):
-        self.__qp_solver        = 'PARTIAL_CONDENSING_HPIPM'  # qp solver to be used in the NLP solver
-        self.__hessian_approx   = 'GAUSS_NEWTON'              # hessian approximation
-        self.__integrator_type  = 'ERK'                       # integrator type
-        self.__tf               = None                        # prediction horizon
-        self.__nlp_solver_type  = 'SQP_RTI'                   # NLP solver 
+        self.__qp_solver        = 'PARTIAL_CONDENSING_HPIPM'  #: qp solver to be used in the NLP solver
+        self.__hessian_approx   = 'GAUSS_NEWTON'              #: hessian approximation
+        self.__integrator_type  = 'ERK'                       #: integrator type
+        self.__tf               = None                        #: prediction horizon
+        self.__nlp_solver_type  = 'SQP_RTI'                   #: NLP solver 
 
     @property
     def qp_solver(self):
@@ -886,6 +898,9 @@ class ocp_nlp_solver_config:
                     + ',\n'.join(nlp_solver_types) + '.\n\nYou have: ' + nlp_solver_type + '.\n\nExiting.')
 
 class acados_ocp_nlp:
+    """
+    class containing the full description if the optimal control problem
+    """
     def __init__(self):
         self.dims = ocp_nlp_dims()
         self.cost = ocp_nlp_cost()
@@ -901,6 +916,9 @@ class acados_ocp_nlp:
         self.acados_lib_path = []
 
 def check_ra(ra):
+    """
+    (DEPRECATED) function that checks the consistency of the optimal control description
+    """
     # TODO(andrea): dimensions check are already performed 
     # on the JSON data and type checks should be enforced by the 
     # property setters. Add extra checks here?

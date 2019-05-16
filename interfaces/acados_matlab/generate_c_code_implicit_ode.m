@@ -29,17 +29,19 @@ else
 end
 
 if nargin > 1
-    if isfield(opts, 'generate_hess')
-        generate_hess = opts.generate_hess;
+    if isfield(opts, 'sens_hess')
+        generate_hess = opts.sens_hess;
     else
-        generate_hess = 0;
+        generate_hess = 'false';
 %        if opts.print_info
 %        disp('generate_hess option was not set - default is false')
 %        end
     end
 else
-    generate_hess = 0;
+    generate_hess = 'false';
 end
+generate_hess = 'true'; % TODO remove when not needed any more !!!
+
 
 %% load model
 % x
@@ -119,23 +121,23 @@ x_xdot_z_u = [x; xdot; z; u];
 
 if isSX
     multiplier  = SX.sym('multiplier', length(x) + length(z));
-    multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
-    HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
+%    multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
+%    HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 else
     multiplier  = MX.sym('multiplier', length(x) + length(z));
-    multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
-    HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
+%    multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
+%    HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 end
 
-for ii = 1:length(f_impl)
-    jac_x_xdot_z = jacobian(f_impl(ii), x_xdot_z_u);
-    hess_x_xdot_z = jacobian( jac_x_xdot_z, x_xdot_z_u);
-    HESS = HESS + multiplier(ii) * hess_x_xdot_z;
-end
+% hessian computed as forward over adjoint !!!
+ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, true);
+HESS = jacobian(ADJ, x_xdot_z_u);
 
-HESS = HESS.simplify();
-HESS_multiplied = multiply_mat' * HESS * multiply_mat;
-HESS_multiplied = HESS_multiplied.simplify();
+%HESS_multiplied = multiply_mat' * HESS * multiply_mat;
+%HESS = jtimes(ADJ, x_xdot_z_u, multiply_mat);
+%HESS_multiplied = multiply_mat' * HESS;
+%HESS_multiplied = HESS_multiplied.simplify();
+%HESS_multiplied = HESS; % do the multiplication in BLASFEO !!!
 
 
 
@@ -146,13 +148,15 @@ if (strcmp(param_f, 'true'))
     impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
     impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
     impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_u});
-    impl_ode_hess = Function([model.name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
+%    impl_ode_hess = Function([model_name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
+    impl_ode_hess = Function([model_name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, p}, {HESS});
 else
     impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z}, {f_impl});
     impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'], {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_z});
     impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z}, {jac_x, jac_xdot, jac_u, jac_z});
     impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_u});
-    impl_ode_hess = Function([model.name,'_impl_ode_hess'], {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
+%    impl_ode_hess = Function([model_name,'_impl_ode_hess'], {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
+    impl_ode_hess = Function([model_name,'_impl_ode_hess'], {x, xdot, u, z, multiplier}, {HESS});
 end
 
 %% generate C code
@@ -160,7 +164,7 @@ impl_ode_fun.generate([model_name,'_impl_ode_fun'], casadi_opts);
 impl_ode_fun_jac_x_xdot.generate([model_name,'_impl_ode_fun_jac_x_xdot'], casadi_opts);
 impl_ode_jac_x_xdot_u.generate([model_name,'_impl_ode_jac_x_xdot_u'], casadi_opts);
 impl_ode_fun_jac_x_xdot_u.generate([model_name,'_impl_ode_fun_jac_x_xdot_u'], casadi_opts);
-if generate_hess
+if strcmp(generate_hess, 'true')
     impl_ode_hess.generate([model_name,'_impl_ode_hess'], casadi_opts);
 end
 % keyboard

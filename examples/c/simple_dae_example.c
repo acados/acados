@@ -314,7 +314,7 @@ int main() {
     for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps_val);
 
 	ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
-    sqp_opts->maxIter = max_num_sqp_iterations;
+    sqp_opts->max_iter = max_num_sqp_iterations;
     sqp_opts->min_res_g = 1e-6;
     sqp_opts->min_res_b = 1e-6;
     sqp_opts->min_res_d = 1e-6;

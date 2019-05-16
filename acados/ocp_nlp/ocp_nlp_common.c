@@ -153,8 +153,8 @@ int ocp_nlp_dims_calculate_size_self(int N)
     // qp solver
     size += ocp_qp_dims_calculate_size(N);
 
-	// regularization
-	size += ocp_nlp_reg_dims_calculate_size(N);
+    // regularization
+    size += ocp_nlp_reg_dims_calculate_size(N);
 
     size += sizeof(ocp_nlp_reg_dims);
 
@@ -314,7 +314,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_, const char *field,
     ocp_nlp_config *config = config_;
     ocp_nlp_dims *dims = dims_;
 
-	int ii;
+    int ii;
 
     int N = config->N;
     int *int_array = (int *) value_array;

@@ -141,23 +141,23 @@ TEST_CASE("pendulum_hessians", "[integrators]")
 
     // impl_ode_fun_jac_x_xdot
     external_function_casadi impl_ode_fun_jac_x_xdot;
-    impl_ode_fun_jac_x_xdot.casadi_fun = &pendulum_ode_impl_ode_fun_jac_x_xdot;
-    impl_ode_fun_jac_x_xdot.casadi_work = &pendulum_ode_impl_ode_fun_jac_x_xdot_work;
-    impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_sparsity_in;
+    impl_ode_fun_jac_x_xdot.casadi_fun = &pendulum_ode_impl_ode_fun_jac_x_xdot_z;
+    impl_ode_fun_jac_x_xdot.casadi_work = &pendulum_ode_impl_ode_fun_jac_x_xdot_z_work;
+    impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_z_sparsity_in;
     impl_ode_fun_jac_x_xdot.casadi_sparsity_out =
-                         &pendulum_ode_impl_ode_fun_jac_x_xdot_sparsity_out;
-    impl_ode_fun_jac_x_xdot.casadi_n_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_n_in;
-    impl_ode_fun_jac_x_xdot.casadi_n_out = &pendulum_ode_impl_ode_fun_jac_x_xdot_n_out;
+                         &pendulum_ode_impl_ode_fun_jac_x_xdot_z_sparsity_out;
+    impl_ode_fun_jac_x_xdot.casadi_n_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_z_n_in;
+    impl_ode_fun_jac_x_xdot.casadi_n_out = &pendulum_ode_impl_ode_fun_jac_x_xdot_z_n_out;
     external_function_casadi_create(&impl_ode_fun_jac_x_xdot);
 
     // impl_ode_jac_x_xdot_u
     external_function_casadi impl_ode_jac_x_xdot_u;
-    impl_ode_jac_x_xdot_u.casadi_fun = &pendulum_ode_impl_ode_jac_x_xdot_u;
-    impl_ode_jac_x_xdot_u.casadi_work = &pendulum_ode_impl_ode_jac_x_xdot_u_work;
-    impl_ode_jac_x_xdot_u.casadi_sparsity_in = &pendulum_ode_impl_ode_jac_x_xdot_u_sparsity_in;
-    impl_ode_jac_x_xdot_u.casadi_sparsity_out = &pendulum_ode_impl_ode_jac_x_xdot_u_sparsity_out;
-    impl_ode_jac_x_xdot_u.casadi_n_in = &pendulum_ode_impl_ode_jac_x_xdot_u_n_in;
-    impl_ode_jac_x_xdot_u.casadi_n_out = &pendulum_ode_impl_ode_jac_x_xdot_u_n_out;
+    impl_ode_jac_x_xdot_u.casadi_fun = &pendulum_ode_impl_ode_jac_x_xdot_u_z;
+    impl_ode_jac_x_xdot_u.casadi_work = &pendulum_ode_impl_ode_jac_x_xdot_u_z_work;
+    impl_ode_jac_x_xdot_u.casadi_sparsity_in = &pendulum_ode_impl_ode_jac_x_xdot_u_z_sparsity_in;
+    impl_ode_jac_x_xdot_u.casadi_sparsity_out = &pendulum_ode_impl_ode_jac_x_xdot_u_z_sparsity_out;
+    impl_ode_jac_x_xdot_u.casadi_n_in = &pendulum_ode_impl_ode_jac_x_xdot_u_z_n_in;
+    impl_ode_jac_x_xdot_u.casadi_n_out = &pendulum_ode_impl_ode_jac_x_xdot_u_z_n_out;
     external_function_casadi_create(&impl_ode_jac_x_xdot_u);
 
     // impl_ode_jac_x_xdot_u
@@ -659,23 +659,23 @@ TEST_CASE("pendulum model hessians - Finite Differences", "compare against finit
 
     // impl_ode_fun_jac_x_xdot
     external_function_casadi impl_ode_fun_jac_x_xdot;
-    impl_ode_fun_jac_x_xdot.casadi_fun = &pendulum_ode_impl_ode_fun_jac_x_xdot;
-    impl_ode_fun_jac_x_xdot.casadi_work = &pendulum_ode_impl_ode_fun_jac_x_xdot_work;
-    impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_sparsity_in;
+    impl_ode_fun_jac_x_xdot.casadi_fun = &pendulum_ode_impl_ode_fun_jac_x_xdot_z;
+    impl_ode_fun_jac_x_xdot.casadi_work = &pendulum_ode_impl_ode_fun_jac_x_xdot_z_work;
+    impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_z_sparsity_in;
     impl_ode_fun_jac_x_xdot.casadi_sparsity_out =
-                         &pendulum_ode_impl_ode_fun_jac_x_xdot_sparsity_out;
-    impl_ode_fun_jac_x_xdot.casadi_n_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_n_in;
-    impl_ode_fun_jac_x_xdot.casadi_n_out = &pendulum_ode_impl_ode_fun_jac_x_xdot_n_out;
+                         &pendulum_ode_impl_ode_fun_jac_x_xdot_z_sparsity_out;
+    impl_ode_fun_jac_x_xdot.casadi_n_in = &pendulum_ode_impl_ode_fun_jac_x_xdot_z_n_in;
+    impl_ode_fun_jac_x_xdot.casadi_n_out = &pendulum_ode_impl_ode_fun_jac_x_xdot_z_n_out;
     external_function_casadi_create(&impl_ode_fun_jac_x_xdot);
 
     // impl_ode_jac_x_xdot_u
     external_function_casadi impl_ode_jac_x_xdot_u;
-    impl_ode_jac_x_xdot_u.casadi_fun = &pendulum_ode_impl_ode_jac_x_xdot_u;
-    impl_ode_jac_x_xdot_u.casadi_work = &pendulum_ode_impl_ode_jac_x_xdot_u_work;
-    impl_ode_jac_x_xdot_u.casadi_sparsity_in = &pendulum_ode_impl_ode_jac_x_xdot_u_sparsity_in;
-    impl_ode_jac_x_xdot_u.casadi_sparsity_out = &pendulum_ode_impl_ode_jac_x_xdot_u_sparsity_out;
-    impl_ode_jac_x_xdot_u.casadi_n_in = &pendulum_ode_impl_ode_jac_x_xdot_u_n_in;
-    impl_ode_jac_x_xdot_u.casadi_n_out = &pendulum_ode_impl_ode_jac_x_xdot_u_n_out;
+    impl_ode_jac_x_xdot_u.casadi_fun = &pendulum_ode_impl_ode_jac_x_xdot_u_z;
+    impl_ode_jac_x_xdot_u.casadi_work = &pendulum_ode_impl_ode_jac_x_xdot_u_z_work;
+    impl_ode_jac_x_xdot_u.casadi_sparsity_in = &pendulum_ode_impl_ode_jac_x_xdot_u_z_sparsity_in;
+    impl_ode_jac_x_xdot_u.casadi_sparsity_out = &pendulum_ode_impl_ode_jac_x_xdot_u_z_sparsity_out;
+    impl_ode_jac_x_xdot_u.casadi_n_in = &pendulum_ode_impl_ode_jac_x_xdot_u_z_n_in;
+    impl_ode_jac_x_xdot_u.casadi_n_out = &pendulum_ode_impl_ode_jac_x_xdot_u_z_n_out;
     external_function_casadi_create(&impl_ode_jac_x_xdot_u);
 
     // impl_ode_jac_x_xdot_u

@@ -53,7 +53,7 @@ void *ocp_nlp_reg_noreg_opts_assign(void *raw_memory)
 void ocp_nlp_reg_noreg_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
 {
 
-	return;
+    return;
 }
 
 
@@ -61,8 +61,8 @@ void ocp_nlp_reg_noreg_opts_initialize_default(void *config_, ocp_nlp_reg_dims *
 void ocp_nlp_reg_noreg_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value)
 {
 
-	printf("\nerror: field %s not available in ocp_nlp_reg_noreg_opts_set\n", field);
-	exit(1);
+    printf("\nerror: field %s not available in ocp_nlp_reg_noreg_opts_set\n", field);
+    exit(1);
 
 }
 
@@ -74,7 +74,7 @@ void ocp_nlp_reg_noreg_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opt
 
 int ocp_nlp_reg_noreg_memory_calculate_size(void *config_, ocp_nlp_reg_dims *dims, void *opts_)
 {
-	int size = 0;
+    int size = 0;
 
     return size;
 }
@@ -133,8 +133,8 @@ void ocp_nlp_reg_noreg_memory_set_pi_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_
 void ocp_nlp_reg_noreg_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *memory_, char *field, void *value)
 {
 
-	printf("\nerror: field %s not available in ocp_nlp_reg_noreg_set\n", field);
-	exit(1);
+    printf("\nerror: field %s not available in ocp_nlp_reg_noreg_set\n", field);
+    exit(1);
 
     return;
 }
@@ -147,29 +147,29 @@ void ocp_nlp_reg_noreg_memory_set(void *config_, ocp_nlp_reg_dims *dims, void *m
 
 void ocp_nlp_reg_noreg_regularize_hessian(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
-	return;
+    return;
 }
 
 
 void ocp_nlp_reg_noreg_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
-	return;
+    return;
 }
 
 
 
 void ocp_nlp_reg_noreg_config_initialize_default(ocp_nlp_reg_config *config)
 {
-	// dims
+    // dims
     config->dims_calculate_size = &ocp_nlp_reg_dims_calculate_size;
     config->dims_assign = &ocp_nlp_reg_dims_assign;
     config->dims_set = &ocp_nlp_reg_dims_set;
-	// opts
+    // opts
     config->opts_calculate_size = &ocp_nlp_reg_noreg_opts_calculate_size;
     config->opts_assign = &ocp_nlp_reg_noreg_opts_assign;
     config->opts_initialize_default = &ocp_nlp_reg_noreg_opts_initialize_default;
     config->opts_set = &ocp_nlp_reg_noreg_opts_set;
-	// memory
+    // memory
     config->memory_calculate_size = &ocp_nlp_reg_noreg_memory_calculate_size;
     config->memory_assign = &ocp_nlp_reg_noreg_memory_assign;
     config->memory_set = &ocp_nlp_reg_noreg_memory_set;
@@ -179,7 +179,7 @@ void ocp_nlp_reg_noreg_config_initialize_default(ocp_nlp_reg_config *config)
     config->memory_set_b_ptr = &ocp_nlp_reg_noreg_memory_set_b_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_reg_noreg_memory_set_ux_ptr;
     config->memory_set_pi_ptr = &ocp_nlp_reg_noreg_memory_set_pi_ptr;
-	// functions
+    // functions
     config->regularize_hessian = &ocp_nlp_reg_noreg_regularize_hessian;
     config->correct_dual_sol = &ocp_nlp_reg_noreg_correct_dual_sol;
 }

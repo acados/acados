@@ -28,7 +28,20 @@ else
 	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
 end
 
-% TODO check for hessian
+if nargin > 1
+    if isfield(opts, 'sens_hess')
+        generate_hess = opts.sens_hess;
+    else
+        generate_hess = 'false';
+%        if opts.print_info
+%        disp('generate_hess option was not set - default is false')
+%        end
+    end
+else
+    generate_hess = 'false';
+end
+generate_hess = 'true'; % TODO remove when not needed any more !!!
+
 
 %% load model
 % x
@@ -87,7 +100,7 @@ end
 if isSX
     Sx = SX.sym('Sx', nx, nx);
     Su = SX.sym('Su', nx, nu);
-    lambdaX = SX.sym('lambdaX',nx,1);
+    lambdaX = SX.sym('lambdaX', nx, 1);
     vdeX = SX.zeros(nx, nx);
     vdeU = SX.zeros(nx, nu) + jacobian(f_expl, u);
 else
@@ -102,7 +115,6 @@ if (strcmp(param_f, 'true'))
 else
 	expl_ode_fun = Function([model_name,'_expl_ode_fun'], {x, u}, {f_expl});
 end
-% TODO: Polish: get rid of SX.zeros
 
 vdeX = vdeX + jtimes(f_expl, x, Sx);
 
@@ -114,7 +126,8 @@ else
 	expl_vde_for = Function([model_name,'_expl_vde_for'], {x, Sx, Su, u}, {f_expl, vdeX, vdeU});
 end
 
-adj = jtimes(f_expl, [x;u], lambdaX,true);
+% 'true' at the end tells to transpose the jacobian before multiplication => reverse mode
+adj = jtimes(f_expl, [x;u], lambdaX, true);
 
 if (strcmp(param_f, 'true'))
 	expl_vde_adj = Function([model_name,'_expl_vde_adj'], {x, lambdaX, u, p}, {adj});
@@ -124,6 +137,7 @@ end
 
 S_forw = vertcat(horzcat(Sx, Su), horzcat(zeros(nu,nx), eye(nu)));
 hess = S_forw.'*jtimes(adj, [x;u], S_forw);
+% TODO uncompress it ?????
 hess2 = [];
 for j = 1:nx+nu
     for i = j:nx+nu
@@ -141,6 +155,8 @@ end
 expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);
 expl_vde_for.generate([model_name,'_expl_vde_for'], casadi_opts);
 expl_vde_adj.generate([model_name,'_expl_vde_adj'], casadi_opts);
-expl_ode_hes.generate([model_name,'_expl_ode_hes'], casadi_opts);
+if strcmp(generate_hess, 'true')
+	expl_ode_hes.generate([model_name,'_expl_ode_hes'], casadi_opts);
+end
 
 end

@@ -68,6 +68,7 @@ void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim,
 typedef struct
 {
     int compute_adj;
+    int compute_hess;
 } ocp_nlp_dynamics_disc_opts;
 
 //
@@ -123,8 +124,7 @@ void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *
 
 typedef struct
 {
-    double *discrete_model_in;
-    double *discrete_model_out;
+    struct blasfeo_dmat tmp_nv_nv;
 } ocp_nlp_dynamics_disc_workspace;
 
 int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, void *dims, void *opts);
@@ -137,7 +137,8 @@ int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, void *dims, voi
 
 typedef struct
 {
-    external_function_generic *discrete_model;
+    external_function_generic *disc_dyn_fun_jac;
+    external_function_generic *disc_dyn_fun_jac_hess;
 } ocp_nlp_dynamics_disc_model;
 
 //
@@ -145,7 +146,7 @@ int ocp_nlp_dynamics_disc_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_dynamics_disc_model_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_dynamics_disc_model_set_T(double T, void *model);
+void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, const char *field, void *value);
 
 
 

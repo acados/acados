@@ -10,7 +10,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else
-  #define CASADI_PREFIX(ID) pendulum_ode_impl_ode_fun_jac_x_xdot_ ## ID
+  #define CASADI_PREFIX(ID) pendulum_ode_impl_ode_fun_jac_x_xdot_z_ ## ID
 #endif
 
 #include <math.h>
@@ -54,7 +54,7 @@ static const casadi_int casadi_s3[13] = {4, 4, 0, 0, 1, 3, 6, 0, 1, 3, 1, 2, 3};
 static const casadi_int casadi_s4[11] = {4, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3};
 static const casadi_int casadi_s5[3] = {4, 0, 0};
 
-/* pendulum_ode_impl_ode_fun_jac_x_xdot:(i0[4],i1[4],i2,i3[])->(o0[4],o1[4x4,6nz],o2[4x4,4nz],o3[4x0]) */
+/* pendulum_ode_impl_ode_fun_jac_x_xdot_z:(i0[4],i1[4],i2,i3[])->(o0[4],o1[4x4,6nz],o2[4x4,4nz],o3[4x0]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a2, a20, a21, a22, a23, a24, a3, a4, a5, a6, a7, a8, a9;
   a0=arg[1] ? arg[1][0] : 0;
@@ -174,21 +174,21 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT int pendulum_ode_impl_ode_fun_jac_x_xdot(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
+CASADI_SYMBOL_EXPORT int pendulum_ode_impl_ode_fun_jac_x_xdot_z(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
   return casadi_f0(arg, res, iw, w, mem);
 }
 
-CASADI_SYMBOL_EXPORT void pendulum_ode_impl_ode_fun_jac_x_xdot_incref(void) {
+CASADI_SYMBOL_EXPORT void pendulum_ode_impl_ode_fun_jac_x_xdot_z_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void pendulum_ode_impl_ode_fun_jac_x_xdot_decref(void) {
+CASADI_SYMBOL_EXPORT void pendulum_ode_impl_ode_fun_jac_x_xdot_z_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT casadi_int pendulum_ode_impl_ode_fun_jac_x_xdot_n_in(void) { return 4;}
+CASADI_SYMBOL_EXPORT casadi_int pendulum_ode_impl_ode_fun_jac_x_xdot_z_n_in(void) { return 4;}
 
-CASADI_SYMBOL_EXPORT casadi_int pendulum_ode_impl_ode_fun_jac_x_xdot_n_out(void) { return 4;}
+CASADI_SYMBOL_EXPORT casadi_int pendulum_ode_impl_ode_fun_jac_x_xdot_z_n_out(void) { return 4;}
 
-CASADI_SYMBOL_EXPORT const char* pendulum_ode_impl_ode_fun_jac_x_xdot_name_in(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* pendulum_ode_impl_ode_fun_jac_x_xdot_z_name_in(casadi_int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -198,7 +198,7 @@ CASADI_SYMBOL_EXPORT const char* pendulum_ode_impl_ode_fun_jac_x_xdot_name_in(ca
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* pendulum_ode_impl_ode_fun_jac_x_xdot_name_out(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* pendulum_ode_impl_ode_fun_jac_x_xdot_z_name_out(casadi_int i){
   switch (i) {
     case 0: return "o0";
     case 1: return "o1";
@@ -208,7 +208,7 @@ CASADI_SYMBOL_EXPORT const char* pendulum_ode_impl_ode_fun_jac_x_xdot_name_out(c
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* pendulum_ode_impl_ode_fun_jac_x_xdot_sparsity_in(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* pendulum_ode_impl_ode_fun_jac_x_xdot_z_sparsity_in(casadi_int i) {
   switch (i) {
     case 0: return casadi_s0;
     case 1: return casadi_s0;
@@ -218,7 +218,7 @@ CASADI_SYMBOL_EXPORT const casadi_int* pendulum_ode_impl_ode_fun_jac_x_xdot_spar
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* pendulum_ode_impl_ode_fun_jac_x_xdot_sparsity_out(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* pendulum_ode_impl_ode_fun_jac_x_xdot_z_sparsity_out(casadi_int i) {
   switch (i) {
     case 0: return casadi_s0;
     case 1: return casadi_s3;
@@ -228,7 +228,7 @@ CASADI_SYMBOL_EXPORT const casadi_int* pendulum_ode_impl_ode_fun_jac_x_xdot_spar
   }
 }
 
-CASADI_SYMBOL_EXPORT int pendulum_ode_impl_ode_fun_jac_x_xdot_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
+CASADI_SYMBOL_EXPORT int pendulum_ode_impl_ode_fun_jac_x_xdot_z_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 4;
   if (sz_res) *sz_res = 4;
   if (sz_iw) *sz_iw = 0;

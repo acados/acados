@@ -8,6 +8,8 @@ classdef acados_ocp_opts < handle
 		param_scheme
 		param_scheme_N
 		nlp_solver
+		nlp_solver_exact_hessian
+		nlp_solver_max_iter
 		qp_solver
 		qp_solver_N_pcond
 		sim_method
@@ -29,6 +31,7 @@ classdef acados_ocp_opts < handle
 			obj.param_scheme = 'multiple_shooting_unif_grid';
 			obj.param_scheme_N = 10;
 			obj.nlp_solver = 'sqp';
+			obj.nlp_solver_exact_hessian = 'false';
 			obj.qp_solver = 'qp_solver';
 			obj.sim_method = 'irk';
 			obj.regularize_method = 'no_regularize';
@@ -41,6 +44,7 @@ classdef acados_ocp_opts < handle
 			obj.opts_struct.param_scheme_N = obj.param_scheme_N;
 			obj.opts_struct.qp_solver = obj.qp_solver;
 			obj.opts_struct.nlp_solver = obj.nlp_solver;
+			obj.opts_struct.nlp_solver_exact_hessian = obj.nlp_solver;
 			obj.opts_struct.sim_method = obj.sim_method;
 			obj.opts_struct.regularize_method = obj.regularize_method;
 		end
@@ -62,6 +66,12 @@ classdef acados_ocp_opts < handle
 			elseif (strcmp(field, 'nlp_solver'))
 				obj.nlp_solver = value;
 				obj.opts_struct.nlp_solver = value;
+			elseif (strcmp(field, 'nlp_solver_exact_hessian'))
+				obj.nlp_solver_exact_hessian = value;
+				obj.opts_struct.nlp_solver_exact_hessian = value;
+			elseif (strcmp(field, 'nlp_solver_max_iter'))
+				obj.nlp_solver_max_iter = value;
+				obj.opts_struct.nlp_solver_max_iter = value;
 			elseif (strcmp(field, 'qp_solver'))
 				obj.qp_solver = value;
 				obj.opts_struct.qp_solver = value;

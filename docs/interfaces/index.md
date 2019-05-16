@@ -61,4 +61,8 @@ You should now be able to import it as a Python module and specify the problem f
 For more information contact `@zanellia`
 
 
-
+``` eval_rst
+.. automodule:: acados_template.ocp_nlp_render_arguments
+    :members:
+    :private-members:
+```
