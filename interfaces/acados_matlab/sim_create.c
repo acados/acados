@@ -16,8 +16,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //	mexPrintf("\nin sim_create\n");
 
 	// sizeof(long long) == sizeof(void *) = 64 !!!
-	long long *ptr;
 	int ii;
+
+	long long *l_ptr;
+	char *c_ptr;
 
 
 
@@ -25,16 +27,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// model
 
-	bool
-		set_nu = false,
-		set_nx = false,
-		set_T = false,
-		set_x = false,
-		set_u = false;
-
-	int nu, nx;
-	double T;
-	double *x, *u;
+	int nu;				bool set_nu = false;
+	int nx;				bool set_nx = false;
+	double T;			bool set_T = false;
+	double *x;			bool set_x = false;
+	double *u;			bool set_u = false;
+	double *seed_adj;	bool set_seed_adj = false;
 
 	if(mxGetField( prhs[0], 0, "dim_nx" )!=NULL)
 		{
@@ -61,6 +59,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		set_u = true;
 		u = mxGetPr( mxGetField( prhs[0], 0, "u" ) );
 		}
+	if(mxGetField( prhs[0], 0, "seed_adj" )!=NULL)
+		{
+		set_seed_adj = true;
+		seed_adj = mxGetPr( mxGetField( prhs[0], 0, "seed_adj" ) );
+		}
 
 
 	// opts_struct
@@ -70,13 +73,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	//
 	int num_steps = mxGetScalar( mxGetField( prhs[1], 0, "num_steps" ) );
 	//
-	bool sens_forw;
-	char *c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "sens_forw" ) );
+	bool sens_forw = false;
+	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "sens_forw" ) );
 	if (!strcmp(c_ptr, "true"))
+		{
 		sens_forw = true;
-	else
-		sens_forw = false;
+		}
 //	mexPrintf("\n%d\n", sens_forw);
+	//
+	bool sens_adj = false;
+	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "sens_adj" ) );
+	if (!strcmp(c_ptr, "true"))
+		{
+		sens_adj = true;
+		}
+//	mexPrintf("\n%d\n", sens_adj);
+	bool sens_hess = false;
+	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "sens_hess" ) );
+	if (!strcmp(c_ptr, "true"))
+		{
+		sens_hess = true;
+		}
+//	mexPrintf("\n%d\n", sens_hess);
 	//
 	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
 //	mexPrintf("\n%s\n", method);
@@ -148,10 +166,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	sim_opts_set(config, opts, "num_stages", &num_stages);
 	sim_opts_set(config, opts, "num_steps", &num_steps);
 	sim_opts_set(config, opts, "sens_forw", &sens_forw);
+	sim_opts_set(config, opts, "sens_adj", &sens_adj);
+	sim_opts_set(config, opts, "sens_hess", &sens_hess);
+
 
 	/* in */
 	sim_in *in = sim_in_create(config, dims);
-	if(sens_forw==true)
+	if(sens_forw==true) // | sens_hess==true ???
 		{
 //		mexPrintf("\nsens forw true!\n");
 		double *Sx = calloc(nx*nx, sizeof(double));
@@ -177,6 +198,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		sim_in_set(config, dims, in, "u", u);
 		}
+	if(set_seed_adj)
+		{
+		sim_in_set(config, dims, in, "S_adj", seed_adj);
+		}
 
 
 	/* out */
@@ -192,38 +217,38 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// config
 	mxArray *config_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-	ptr = mxGetData(config_mat);
-	ptr[0] = (long long) config;
+	l_ptr = mxGetData(config_mat);
+	l_ptr[0] = (long long) config;
 	mxSetField(plhs[0], 0, "config", config_mat);
 
 	// dims
 	mxArray *dims_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-	ptr = mxGetData(dims_mat);
-	ptr[0] = (long long) dims;
+	l_ptr = mxGetData(dims_mat);
+	l_ptr[0] = (long long) dims;
 	mxSetField(plhs[0], 0, "dims", dims_mat);
 
 	// opts
 	mxArray *opts_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-	ptr = mxGetData(opts_mat);
-	ptr[0] = (long long) opts;
+	l_ptr = mxGetData(opts_mat);
+	l_ptr[0] = (long long) opts;
 	mxSetField(plhs[0], 0, "opts", opts_mat);
 
 	// in
 	mxArray *in_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-	ptr = mxGetData(in_mat);
-	ptr[0] = (long long) in;
+	l_ptr = mxGetData(in_mat);
+	l_ptr[0] = (long long) in;
 	mxSetField(plhs[0], 0, "in", in_mat);
 
 	// out
 	mxArray *out_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-	ptr = mxGetData(out_mat);
-	ptr[0] = (long long) out;
+	l_ptr = mxGetData(out_mat);
+	l_ptr[0] = (long long) out;
 	mxSetField(plhs[0], 0, "out", out_mat);
 
 	// solver
 	mxArray *solver_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-	ptr = mxGetData(solver_mat);
-	ptr[0] = (long long) solver;
+	l_ptr = mxGetData(solver_mat);
+	l_ptr[0] = (long long) solver;
 	mxSetField(plhs[0], 0, "solver", solver_mat);
 
 

@@ -19,6 +19,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int *i_ptr;
 	int *tmp_idx;
 	double *d_ptr;
+	char *c_ptr;
 
 	int ii, jj, idx;
 
@@ -615,8 +616,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// opts_struct
 
 	int N;							bool set_param_scheme_N = false;
-	char * nlp_solver;
-	char * qp_solver;
+	char *nlp_solver;
+	bool nlp_solver_exact_hessian;
+	int nlp_solver_max_iter;		bool set_nlp_solver_max_iter = false;
+	char *qp_solver;
 	int qp_solver_N_pcond;			bool set_qp_solver_N_pcond = false;
 	char *sim_method;
 	int sim_method_num_stages;		bool set_sim_method_num_stages = false;
@@ -637,6 +640,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// nlp_solver
 	// TODO check
 	nlp_solver = mxArrayToString( mxGetField( prhs[1], 0, "nlp_solver" ) );
+	// nlp solver exact hessian
+	nlp_solver_exact_hessian = false;
+	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "nlp_solver_exact_hessian" ) );
+	if (!strcmp(c_ptr, "true"))
+		{
+		nlp_solver_exact_hessian = true;
+		}
+	// nlp solver max iter
+	if(mxGetField( prhs[1], 0, "nlp_solver_max_iter" )!=NULL)
+		{
+		set_nlp_solver_max_iter = true;
+		nlp_solver_max_iter = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_max_iter" ) );
+		}
 	// qp_solver
 	// TODO check
 	qp_solver = mxArrayToString( mxGetField( prhs[1], 0, "qp_solver" ) );
@@ -804,11 +820,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			}
 //		plan->sim_solver_plan[ii].sim_solver = LIFTED_IRK;
 		}
+	else if(!strcmp(dyn_type, "discrete"))
+		{
+		for(ii=0; ii<N; ii++)
+			{
+			plan->nlp_dynamics[ii] = DISCRETE_MODEL;
+			}
+		}
 	else // TODO gnsf / discrete / linear
 		{
 //		plan->nlp_dynamics[ii] = DISCRETE_MODEL;
 //		plan->sim_solver_plan[ii].sim_solver = GNSF;
-		mexPrintf("\ndyn_type not supported %s\n", dyn_type);
+		mexPrintf("\ndyn_type not supported: %s\n", dyn_type);
 		return;
 		}
 	
@@ -1012,6 +1035,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	void *opts = ocp_nlp_opts_create(config, dims);
 
+	// nlp solver exact hessian
+//	printf("\nexact hess %d\n", nlp_solver_exact_hessian);
+	if(nlp_solver_exact_hessian)
+		{
+		ocp_nlp_opts_set(config, opts, "exact_hess", &nlp_solver_exact_hessian);
+		}
+	// nlp_solver_max_iter
+	if(set_nlp_solver_max_iter)
+		{
+		ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
+		}
 	// qp_solver_N_pcond
 	if(set_qp_solver_N_pcond)
 		{

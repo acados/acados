@@ -370,7 +370,7 @@ void ocp_nlp::set_stage_cost(int stage, const casadi::Function& residual, vector
     dims_->cost[stage] = ocp_nlp_cost_nls_dims_assign(config_->cost[stage], raw_memory);
     ocp_nlp_cost_nls_dims_initialize(config_->cost[stage], dims_->cost[stage],
                                      d_["nx"][stage], d_["nu"][stage], d_["ny"][stage],
-                                     d_["ns"][stage]);
+                                     d_["ns"][stage], 0);
 
     int model_size = ocp_nlp_cost_nls_model_calculate_size(config_->cost[stage],
                                                            dims_->cost[stage]);

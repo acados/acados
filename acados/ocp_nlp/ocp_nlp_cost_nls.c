@@ -59,7 +59,7 @@ void *ocp_nlp_cost_nls_dims_assign(void *config_, void *raw_memory)
 
 
 
-void ocp_nlp_cost_nls_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns)
+void ocp_nlp_cost_nls_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns, int nz)
 {
     ocp_nlp_cost_nls_dims *dims = dims_;
 
@@ -67,6 +67,8 @@ void ocp_nlp_cost_nls_dims_initialize(void *config_, void *dims_, int nx, int nu
     dims->nu = nu;
     dims->ny = ny;
     dims->ns = ns;
+
+    // TODO nz
 
     return;
 }
@@ -199,8 +201,8 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
     // z
     assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->z, &c_ptr);
 
-	// default initialization
-	model->scaling = 1.0;
+    // default initialization
+    model->scaling = 1.0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_cost_nls_model_calculate_size(config_, dims) >= c_ptr);
@@ -283,8 +285,8 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
     }
     else
     {
-        printf("\nerror: model entry: %s not available in module ocp_nlp_cost_nls\n", field);
-		exit(1);
+        printf("\nerror: field %s not available in ocp_nlp_cost_nls_model_set\n", field);
+        exit(1);
 //        status = ACADOS_FAILURE;
     }
     return status;
@@ -343,6 +345,40 @@ void ocp_nlp_cost_nls_opts_update(void *config_, void *dims_, void *opts_)
     // ocp_nlp_cost_nls_opts *opts = opts_;
 
     return;
+}
+
+
+
+void ocp_nlp_cost_nls_opts_set(void *config_, void *opts_, const char *field, void* value)
+{
+    ocp_nlp_cost_config *config = config_;
+    ocp_nlp_cost_nls_opts *opts = opts_;
+
+    if(!strcmp(field, "gauss_newton_hess"))
+    {
+        int *int_ptr = value;
+        opts->gauss_newton_hess = *int_ptr;
+    }
+    else if(!strcmp(field, "exact_hess"))
+    {
+        int *int_ptr = value;
+        if(*int_ptr==0)
+        {
+            opts->gauss_newton_hess = 1;
+        }
+        else
+        {
+            opts->gauss_newton_hess = 0;
+        }
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_nls_opts_set\n", field);
+        exit(1);
+    }
+
+    return;
+
 }
 
 
@@ -547,7 +583,7 @@ void ocp_nlp_cost_nls_initialize(void *config_, void *dims_, void *model_, void 
     // TODO(all): recompute factorization only if W are re-tuned ???
     blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
-	blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
+    blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
 }
@@ -596,8 +632,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     ext_fun_out[1] = &memory->Jt;  // jac': (nu+nx) * ny
 
     // evaluate external function
-    model->nls_res_jac->evaluate(model->nls_res_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
-                             ext_fun_out);
+    model->nls_res_jac->evaluate(model->nls_res_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     /* gradient */
     // res = res - y_ref
@@ -611,11 +646,9 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
     // TODO(all): use lower triangular chol of W to save n_y^2 flops
     // tmp_ny = W * res
-    blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0,
-                    &work->tmp_ny, 0);
+    blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
     // grad = Jt * tmp_ny
-    blasfeo_dgemv_n(nu + nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0,
-                    &memory->grad, 0);
+    blasfeo_dgemv_n(nu+nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
     // printf("tmp_ny\n");
     // blasfeo_print_dvec(ny, &work->tmp_ny, 0);
@@ -633,22 +666,14 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
     {
         // gauss-newton approximation of hessian of ls cost
         // tmp_nv_ny = Jt * W_chol,     where W_chol is lower triangular
-        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
-                           &work->tmp_nv_ny, 0, 0);
-
-        // blasfeo_print_dmat(nu + nx, ny, &work->tmp_nv_ny, 0, 0);
+        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0, &work->tmp_nv_ny, 0, 0);
 
         // RSQrq = tmp_nv_ny * tmp_nv_ny^T
-        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 1.0,
-                         memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
-
-        // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
+        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
     }
     else
     {
-        // TODO(oj): test this
-        // NOTE(oj): this should add the non-Gauss-Newton term to RSQrq, the product < r, d2_d[x,u] r >,
-        //  where the cost is 0.5 * norm2(r(x,u))^2
+        // NOTE(oj): this should add the non-Gauss-Newton term to RSQrq, the product < r, d2_d[x,u] r >, where the cost is 0.5 * norm2(r(x,u))^2
         // exact hessian of ls cost
 
         // ext_fun_[type_]in 0,1 are the same as before.
@@ -656,31 +681,29 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         ext_fun_in[2] = &work->tmp_ny;  // fun: ny
 
         ext_fun_type_out[0] = BLASFEO_DMAT;
-        // ext_fun_out[0] = memory->RSQrq;     // hess: (nu+nx) * (nu+nx)
-        ext_fun_out[0] = &work->tmp_nv_nv;   // hess: (nu+nx) * (nu+nx)
+        // ext_fun_out[0] = memory->RSQrq;     // hess*fun: (nu+nx) * (nu+nx)
+        ext_fun_out[0] = &work->tmp_nv_nv;   // hess*fun: (nu+nx) * (nu+nx)
 
         // evaluate external function
-        model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
-                                  ext_fun_out);
+        model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
         // gauss-newton component update
         // tmp_nv_ny = Jt * W_chol, where W_chol is lower triangular
-        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0,
-                           &work->tmp_nv_ny, 0, 0);
+        blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0, &work->tmp_nv_ny, 0, 0);
+
         // RSQrq = RSQrq + tmp_nv_ny * tmp_nv_ny^T
-        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 1.0,
-                         model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+        blasfeo_dsyrk_ln(nu+nx, ny, model->scaling, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
     }
 
     // slacks
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
-	// scale
-	if(model->scaling!=1.0)
-	{
-		blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
-	}
+    // scale
+    if(model->scaling!=1.0)
+    {
+        blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
+    }
 
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
     // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
@@ -689,6 +712,8 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
     return;
 }
+
+
 
 void ocp_nlp_cost_nls_config_initialize_default(void *config_)
 {
@@ -705,6 +730,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->opts_assign = &ocp_nlp_cost_nls_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_nls_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_nls_opts_update;
+    config->opts_set = &ocp_nlp_cost_nls_opts_set;
     config->memory_calculate_size = &ocp_nlp_cost_nls_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_nls_memory_assign;
     config->memory_get_grad_ptr = &ocp_nlp_cost_nls_memory_get_grad_ptr;

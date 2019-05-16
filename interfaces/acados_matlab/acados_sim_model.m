@@ -20,6 +20,7 @@ classdef acados_sim_model < handle
 		dyn_expr_f
 		dyn_param_f
 		T
+		seed_adj
 		model_struct
 	end %properties
 
@@ -83,6 +84,9 @@ classdef acados_sim_model < handle
 			elseif (strcmp(field, 'T'))
 				obj.T = value;
 				obj.model_struct.T = value;
+			elseif (strcmp(field, 'seed_adj'))
+				obj.seed_adj = value;
+				obj.model_struct.seed_adj = value;
 			else
 				disp(['acados_sim_model: set: wrong field: ', field]);
 			end

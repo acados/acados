@@ -356,7 +356,7 @@ void ocp_nlp_in_destroy(void *in)
 
 
 void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, int stage,
-        const char *field, void *value)
+		const char *field, void *value)
 {
     int ii;
 
@@ -379,54 +379,38 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
 
 
 int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-                           int stage, const char *fun_type, void *fun_ptr)
+		int stage, const char *field, void *value)
 {
-    sim_config *sim_config = config->dynamics[stage]->sim_solver;
-    ocp_nlp_dynamics_cont_model *dynamics = in->dynamics[stage];
+    ocp_nlp_dynamics_config *dynamics_config = config->dynamics[stage];
 
-    int status = sim_config->model_set(dynamics->sim_model, (char *) fun_type, fun_ptr);
-
-    return status;
-}
-
-
-
-int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                           ocp_nlp_in *in, int stage,
-                           const char *field, void *value)
-{
-    ocp_nlp_cost_config *cost_config = config->cost[stage];
-    void *cost_model = in->cost[stage];
-    void *cost_dims = dims->cost[stage];
-
-    int status = cost_config->model_set(cost_config, cost_dims, cost_model, field, value);
-
-    return status;
-}
-
-
-
-// TODO remove and use ocp_nlp_dynamics_model_set instead !!!
-int nlp_set_discrete_model_in_stage(ocp_nlp_config *config, ocp_nlp_in *in, int stage,
-                                    void *fun_ptr)
-{
-
-    ocp_nlp_dynamics_disc_model *dynamics = in->dynamics[stage];
-    dynamics->discrete_model = (external_function_generic *) fun_ptr;
+    dynamics_config->model_set(dynamics_config, dims->dynamics[stage], in->dynamics[stage], field, value);
 
     return ACADOS_SUCCESS;
 }
 
 
+
+int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
+		ocp_nlp_in *in, int stage, const char *field, void *value)
+{
+    ocp_nlp_cost_config *cost_config = config->cost[stage];
+
+    return cost_config->model_set(cost_config, dims->cost[stage], in->cost[stage], field, value);
+
+}
+
+
+
 int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
-             ocp_nlp_in *in, int stage, const char *field, void *value)
+		ocp_nlp_in *in, int stage, const char *field, void *value)
 {
     ocp_nlp_constraints_config *constr_config = config->constraints[stage];
-    void *constr_dims = dims->constraints[stage];
 
-    return constr_config->model_set(constr_config, constr_dims,
-                                      in->constraints[stage], field, value);
+    return constr_config->model_set(constr_config, dims->constraints[stage],
+    		in->constraints[stage], field, value);
 }
+
+
 
 /************************************************
 * out
@@ -457,7 +441,7 @@ void ocp_nlp_out_destroy(void *out)
 
 
 void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-                     int stage, const char *field, void *value)
+		int stage, const char *field, void *value)
 {
     if (!strcmp(field, "x"))
     {
@@ -479,7 +463,7 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 
 
 void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-                     int stage, const char *field, void *value)
+		int stage, const char *field, void *value)
 {
     if (!strcmp(field, "x"))
     {
@@ -501,7 +485,7 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 
 
 int ocp_nlp_dims_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-                     int stage, const char *field)
+		int stage, const char *field)
 {
     if (!strcmp(field, "x"))
     {
@@ -535,19 +519,41 @@ void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 }
 
 
+
 void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
-                      const char *field, const void *value)
+		const char *field, void *value)
 {
     config->opts_set(config, opts_, field, value);
 }
 
 
+
 void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-                                         const char *field, void *value)
+		const char *field, void *value)
 {
     config->dynamics_opts_set(config, opts_, stage, field, value);
 	return;
 }
+
+
+
+void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+		const char *field, void *value)
+{
+    config->cost_opts_set(config, opts_, stage, field, value);
+	return;
+}
+
+
+
+void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+		const char *field, void *value)
+{
+    config->constraints_opts_set(config, opts_, stage, field, value);
+	return;
+}
+
+
 
 void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
 {
@@ -560,6 +566,7 @@ void ocp_nlp_opts_destroy(void *opts)
 {
     free(opts);
 }
+
 
 
 /************************************************

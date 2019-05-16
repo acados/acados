@@ -1289,7 +1289,7 @@ void setup_and_solve_nlp(int NN,
                 if (NMF < 4)
                 {
                     dynamics = (ocp_nlp_dynamics_disc_model *)nlp_in->dynamics[i];
-                    dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
+                    dynamics->disc_dyn_fun_jac = (external_function_generic *) &erk4_casadi[i];
                 }
                 break;
 
@@ -1380,13 +1380,13 @@ void setup_and_solve_nlp(int NN,
             }
         }
     }
-    int maxIter = MAX_SQP_ITERS;
+    int max_iter = MAX_SQP_ITERS;
     double min_res_g = 1e-6;
     double min_res_b = 1e-6;
     double min_res_d = 1e-6;
     double min_res_m = 1e-6;
 
-    ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+    ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
     ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
     ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
     ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);

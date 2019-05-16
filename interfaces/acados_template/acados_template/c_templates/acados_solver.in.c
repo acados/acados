@@ -52,19 +52,19 @@
 #define NBU_   {{ ocp.dims.nbu }}
 #define NSBX_  {{ ocp.dims.nsbx }}
 #define NSBU_  {{ ocp.dims.nsbu }}
-#define NSBXN_ {{ ocp.dims.nsbxN }}
+#define NSBXN_ {{ ocp.dims.nsbx_e }}
 #define NS_    {{ ocp.dims.ns }}
-#define NSN_   {{ ocp.dims.nsN }}
+#define NSN_   {{ ocp.dims.ns_e }}
 #define NG_    {{ ocp.dims.ng }}
-#define NBXN_  {{ ocp.dims.nbxN }}
-#define NGN_   {{ ocp.dims.ngN }}
+#define NBXN_  {{ ocp.dims.nbx_e }}
+#define NGN_   {{ ocp.dims.ng_e }}
 #define NY_    {{ ocp.dims.ny }}
-#define NYN_   {{ ocp.dims.nyN }}
+#define NYN_   {{ ocp.dims.ny_e }}
 #define N_     {{ ocp.dims.N }}
 #define NPD_   {{ ocp.dims.npd }}
-#define NPDN_  {{ ocp.dims.npdN }}
+#define NPDN_  {{ ocp.dims.npd_e }}
 #define NH_    {{ ocp.dims.nh }}
-#define NHN_   {{ ocp.dims.nhN }}
+#define NHN_   {{ ocp.dims.nh_e }}
 
 #if NX_ < 1
 #define NX   1
@@ -253,8 +253,8 @@ int acados_create() {
     {%- endfor %}
 
     double lbx[NBX]; 
-    {%- for item in ocp.constraints.ubx %}
-    ubx[{{ loop.index0 }}] = {{ item }};
+    {%- for item in ocp.constraints.lbx %}
+    lbx[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
     double ubx[NBX];
@@ -269,8 +269,8 @@ int acados_create() {
     {%- endfor %}
 
     double lsbx[NSBX]; 
-    {%- for item in ocp.constraints.usbx %}
-    usbx[{{ loop.index0 }}] = {{ item }};
+    {%- for item in ocp.constraints.lsbx %}
+    lsbx[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
     double usbx[NSBX];
@@ -320,67 +320,67 @@ int acados_create() {
     
     // set up bounds for last stage
     // x
-    int idxbxN[NBXN];
-    {%- for item in ocp.constraints.idxbxN %}
-    idxbxN[{{ loop.index0 }}] = {{ item }};
+    int idxbx_e[NBXN];
+    {%- for item in ocp.constraints.idxbx_e %}
+    idxbx_e[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
-    double lbxN[NBXN]; 
-    {%- for item in ocp.constraints.lbxN %}
-    lbxN[{{ loop.index0 }}] = {{ item }};
+    double lbx_e[NBXN]; 
+    {%- for item in ocp.constraints.lbx_e %}
+    lbx_e[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
-    double ubxN[NBXN];
-    {%- for item in ocp.constraints.ubxN %}
-    ubxN[{{ loop.index0 }}] = {{ item }};
+    double ubx_e[NBXN];
+    {%- for item in ocp.constraints.ubx_e %}
+    ubx_e[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
     // soft bounds on x
-    int idxsbxN[NSBXN];
-    {%- for item in ocp.constraints.idxsbxN %}
-    idxsbxN[{{ loop.index0 }}] = {{ item }};
+    int idxsbx_e[NSBXN];
+    {%- for item in ocp.constraints.idxsbx_e %}
+    idxsbx_e[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
-    double lsbxN[NSBXN]; 
-    {%- for item in ocp.constraints.lsbxN %}
-    lsbxN[{{ loop.index0 }}] = {{ item }};
+    double lsbx_e[NSBXN]; 
+    {%- for item in ocp.constraints.lsbx_e %}
+    lsbx_e[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
-    double usbxN[NBXN];
-    {%- for item in ocp.constraints.usbxN %}
-    usbxN[{{ loop.index0 }}] = {{ item }};
+    double usbx_e[NBXN];
+    {%- for item in ocp.constraints.usbx_e %}
+    usbx_e[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
     // set up general constraints for last stage 
-    double CN[NGN*NX];
-    double lgN[NGN];
-    double ugN[NGN];
+    double C_e[NGN*NX];
+    double lg_e[NGN];
+    double ug_e[NGN];
 
-    {%- for item_j in ocp.constraints.CN %}
+    {%- for item_j in ocp.constraints.C_e %}
     {% set outer_loop = loop %}
     {%- for item_k in item_j %}
-    CN[{{ outer_loop.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
+    C_e[{{ outer_loop.index0 }} + NG * {{ loop.index0 }}] = {{ item_k }}; 
     {%- endfor %}
     {%- endfor %}
 
-    {%- for item in ocp.constraints.lgN %}
-    lgN[{{ loop.index0 }}] = {{ item }};
+    {%- for item in ocp.constraints.lg_e %}
+    lg_e[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
-    {%- for item in ocp.constraints.ugN %}
-    ugN[{{ loop.index0 }}] = {{ item }};
+    {%- for item in ocp.constraints.ug_e %}
+    ug_e[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
     // set up nonlinear constraints for last stage 
-    double lhN[NHN];
-    double uhN[NHN];
+    double lh_e[NHN];
+    double uh_e[NHN];
 
-    {%- for item in ocp.constraints.lhN %}
-    lhN[{{ loop.index0 }}] = {{ item }};
+    {%- for item in ocp.constraints.lh_e %}
+    lh_e[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
-    {%- for item in ocp.constraints.uhN %}
-    uhN[{{ loop.index0}}] = {{ item }};
+    {%- for item in ocp.constraints.uh_e %}
+    uh_e[{{ loop.index0}}] = {{ item }};
     {%- endfor %}
 
     double yref[NY];
@@ -394,14 +394,14 @@ int acados_create() {
     double zl[NS];
     double zu[NS];
 
-    double yrefN[NYN];
-    double WN[NYN*NYN];
-    double ZlN[NSN];
-    double ZuN[NSN];
-    double zlN[NSN];
-    double zuN[NSN];
+    double yref_e[NYN];
+    double W_e[NYN*NYN];
+    double Zl_e[NSN];
+    double Zu_e[NSN];
+    double zl_e[NSN];
+    double zu_e[NSN];
 
-    double VxN[NYN*NX];
+    double Vx_e[NYN*NX];
     
     for (int ii = 0; ii < NU + NX; ii++)
         yref[ii] = 0.0;
@@ -464,48 +464,48 @@ int acados_create() {
     yref[{{ loop.index0 }}] = {{ item }}; 
     {%- endfor %}
 
-    {%- for item_j in ocp.cost.WN %}
+    {%- for item_j in ocp.cost.W_e %}
     {% set outer_loop = loop %}
     {%- for item_k in item_j %}
-    WN[{{ outer_loop.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
+    W_e[{{ outer_loop.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
     {%- endfor %}
     {%- endfor %}
 
-    {%- for item_j in ocp.cost.VxN %}
+    {%- for item_j in ocp.cost.Vx_e %}
     {% set outer_loop = loop %}
     {%- for item_k in item_j %}
-    VxN[{{ outer_loop.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
+    Vx_e[{{ outer_loop.index0 }} + (NYN) * {{ loop.index0 }}] = {{ item_k }}; 
     {%- endfor %}
     {%- endfor %}
 
-    {%- for item_j in ocp.cost.ZlN %}
+    {%- for item_j in ocp.cost.Zl_e %}
     {% set outer_loop = loop %}
     {%- for item_k in item_j %}
     {% if outer_loop.index0 == loop.index0 %}
-    ZlN[{{ outer_loop.index0 }}] = {{ item_k }}; 
+    Zl_e[{{ outer_loop.index0 }}] = {{ item_k }}; 
     {% endif %}
     {%- endfor %}
     {%- endfor %}
 
-    {%- for item_j in ocp.cost.ZuN %}
+    {%- for item_j in ocp.cost.Zu_e %}
     {% set outer_loop = loop %}
     {%- for item_k in item_j %}
     {% if outer_loop.index0 == loop.index0 %}
-    ZuN[{{ outer_loop.index0 }}] = {{ item_k }}; 
+    Zu_e[{{ outer_loop.index0 }}] = {{ item_k }}; 
     {% endif %}
     {%- endfor %}
     {%- endfor %}
 
-    {%- for item  in ocp.cost.zlN %}
-    zlN[{{ loop.index0 }}] = {{ item }}; 
+    {%- for item  in ocp.cost.zl_e %}
+    zl_e[{{ loop.index0 }}] = {{ item }}; 
     {%- endfor %}
 
-    {%- for item  in ocp.cost.zuN %}
-    zuN[{{ loop.index0 }}] = {{ item }}; 
+    {%- for item  in ocp.cost.zu_e %}
+    zu_e[{{ loop.index0 }}] = {{ item }}; 
     {%- endfor %}
 
-    {%- for item in ocp.cost.yrefN %}
-    yrefN[{{ loop.index0 }}] = {{ item }}; 
+    {%- for item in ocp.cost.yref_e %}
+    yref_e[{{ loop.index0 }}] = {{ item }}; 
     {%- endfor %}
 
     int max_num_sqp_iterations = 100;
@@ -524,7 +524,7 @@ int acados_create() {
     int nv[N+1];
     int ny[N+1];
     int npd[N+1];
-    int npdN[N+1];
+    int npd_e[N+1];
 
     for(int i = 0; i < N+1; i++) {
         nx[i]  = NX_;
@@ -586,7 +586,7 @@ int acados_create() {
         {%- endif %}
     }
 
-    {%- if ocp.dims.npdN > 0 %}
+    {%- if ocp.dims.npd_e > 0 %}
     nlp_solver_plan->nlp_constraints[N] = BGHP;
     {%- else %}
     nlp_solver_plan->nlp_constraints[N] = BGH;
@@ -619,7 +619,7 @@ int acados_create() {
     for (int i = 0; i < N; i++) 
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "np", &npd[i]);
     {%- endif %}
-    {%- if ocp.dims.npdN > 0 %}
+    {%- if ocp.dims.npd_e > 0 %}
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "np", &npd[N]);
     {%- endif %}
 
@@ -638,17 +638,17 @@ int acados_create() {
     }
     {%- endif %}
 
-    {%- if ocp.dims.npdN > 0 %}
+    {%- if ocp.dims.npd_e > 0 %}
 	// nonlinear part of convex-composite constraint
-	external_function_casadi p_constraint_N;
-	p_constraint_N.casadi_fun = &{{ ocp.con_pN_name }}_p_constraint_N;
-	p_constraint_N.casadi_n_in = &{{ ocp.con_pN_name }}_p_constraint_N_n_in;
-	p_constraint_N.casadi_n_out = &{{ ocp.con_pN_name }}_p_constraint_N_n_out;
-	p_constraint_N.casadi_sparsity_in = &{{ ocp.con_pN_name }}_p_constraint_N_sparsity_in;
-	p_constraint_N.casadi_sparsity_out = &{{ ocp.con_pN_name }}_p_constraint_N_sparsity_out;
-	p_constraint_N.casadi_work = &{{ ocp.con_pN_name }}_p_constraint_N_work;
+	external_function_casadi p_constraint_e;
+	p_constraint_e.casadi_fun = &{{ ocp.con_p_e_name }}_p_constraint_e;
+	p_constraint_e.casadi_n_in = &{{ ocp.con_p_e_name }}_p_constraint_e_n_in;
+	p_constraint_e.casadi_n_out = &{{ ocp.con_p_e_name }}_p_constraint_e_n_out;
+	p_constraint_e.casadi_sparsity_in = &{{ ocp.con_p_e_name }}_p_constraint_e_sparsity_in;
+	p_constraint_e.casadi_sparsity_out = &{{ ocp.con_p_e_name }}_p_constraint_e_sparsity_out;
+	p_constraint_e.casadi_work = &{{ ocp.con_p_e_name }}_p_constraint_e_work;
 
-    external_function_casadi_create(p_constraint_N);
+    external_function_casadi_create(p_constraint_e);
     {%- endif %}
 
     {%- if ocp.dims.nh > 0 %}
@@ -666,17 +666,17 @@ int acados_create() {
     }
     {%- endif %}
 
-    {%- if ocp.dims.nhN > 0 %}
+    {%- if ocp.dims.nh_e > 0 %}
 	// nonlinear constraint
-	external_function_casadi h_constraint_N;
-	h_constraint_N.casadi_fun = &{{ ocp.con_hN_name }}_h_constraint_N;
-	h_constraint_N.casadi_n_in = &{{ ocp.con_hN_name }}_h_constraint_N_n_in;
-	h_constraint_N.casadi_n_out = &{{ ocp.con_hN_name }}_h_constraint_N_n_out;
-	h_constraint_N.casadi_sparsity_in = &{{ ocp.con_hN_name }}_h_constraint_N_sparsity_in;
-	h_constraint_N.casadi_sparsity_out = &{{ ocp.con_hN_name }}_h_constraint_N_sparsity_out;
-	p_constraint_N.casadi_work = &{{ ocp.con_hN_name }}_h_constraint_N_work;
+	external_function_casadi h_constraint_e;
+	h_constraint_e.casadi_fun = &{{ ocp.con_h_e_name }}_h_constraint_e;
+	h_constraint_e.casadi_n_in = &{{ ocp.con_h_e_name }}_h_constraint_e_n_in;
+	h_constraint_e.casadi_n_out = &{{ ocp.con_h_e_name }}_h_constraint_e_n_out;
+	h_constraint_e.casadi_sparsity_in = &{{ ocp.con_h_e_name }}_h_constraint_e_sparsity_in;
+	h_constraint_e.casadi_sparsity_out = &{{ ocp.con_h_e_name }}_h_constraint_e_sparsity_out;
+	p_constraint_e.casadi_work = &{{ ocp.con_h_e_name }}_h_constraint_e_work;
 
-    external_function_casadi_create(h_constraint_N);
+    external_function_casadi_create(h_constraint_e);
     {%- endif %}
 
     {% if ocp.solver_config.integrator_type == "ERK" %}
@@ -797,8 +797,8 @@ int acados_create() {
     for (int i = 0; i < N; ++i) {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
     }
-    // WN
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", WN);
+    // W_e
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
 
 
 	for (int i = 0; i < N; ++i) {
@@ -812,12 +812,12 @@ int acados_create() {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zu", zu);
 	}
 
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", VxN);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yrefN);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zl", ZlN);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zu", ZuN);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zl", zlN);
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zu", zuN);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zl", Zl_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zu", Zu_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zl", zl_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zu", zu_e);
 
     // NLP dynamics
     int set_fun_status;
@@ -899,24 +899,24 @@ int acados_create() {
     }
     {%- endif %}
     
-    {%- if ocp.dims.nbxN > 0 %} 
+    {%- if ocp.dims.nbx_e > 0 %} 
     // bounds for last
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbxN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbxN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubxN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbx_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbx_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubx_e);
     {%- endif %}
 
-    {%- if ocp.dims.nsbxN > 0 %} 
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsbxN", idxsbxN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsbxN", lsbxN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usbxN", usbxN);
+    {%- if ocp.dims.nsbx_e > 0 %} 
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsbx", idxsbx_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsbx", lsbx_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usbx", usbx_e);
     {%- endif %}
     
-    {%- if ocp.dims.ngN > 0 %} 
+    {%- if ocp.dims.ng_e > 0 %} 
     // general constraints for last stage
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "C", CN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", lgN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ugN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "C", C_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", lg_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ug_e);
     {%- endif %}
 
     
@@ -926,9 +926,9 @@ int acados_create() {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "p", &p_constraint[i]);
     {%- endif %}
 
-    {%- if ocp.dims.npdN > 0 %}
+    {%- if ocp.dims.npd_e > 0 %}
     // convex-composite constraints for stage N
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_constraint_N[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_constraint_e[i]);
     {%- endif %}
 
     {%- if ocp.dims.nh > 0 %}
@@ -941,11 +941,11 @@ int acados_create() {
     }
     {%- endif %}
 
-    {%- if ocp.dims.nhN > 0 %}
+    {%- if ocp.dims.nh_e > 0 %}
     // nonlinear constraints for stage N
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_constraint_N[i]);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lhN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uhN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_constraint_e[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
     {%- endif %}
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);
@@ -965,13 +965,13 @@ int acados_create() {
 
     {% if ocp.solver_config.nlp_solver_type == "SQP" %}
 
-    int maxIter = max_num_sqp_iterations;
+    int max_iter = max_num_sqp_iterations;
     double min_res_g = 1e-6;
     double min_res_b = 1e-6;
     double min_res_d = 1e-6;
     double min_res_m = 1e-6;
 
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "maxIter", &maxIter);
+    ocp_nlp_opts_set(nlp_config, nlp_opts, "max_iter", &max_iter);
     ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_g", &min_res_g);
     ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_b", &min_res_b);
     ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_d", &min_res_d);

@@ -17,16 +17,20 @@ model_lib_path = ['-L', pwd];
 %% select files to compile
 mex_files = {};
 % dynamics
-if (strcmp(opts_struct.sim_method, 'erk'))
+if (strcmp(model_struct.dyn_type, 'explicit'))
 	mex_files = {mex_files{:}, ...
 		[acados_mex_folder, 'ocp_set_ext_fun_dyn_expl.c']
 		};
-elseif (strcmp(opts_struct.sim_method, 'irk'))
+elseif (strcmp(model_struct.dyn_type, 'implicit'))
 	mex_files = {mex_files{:}, ...
 		[acados_mex_folder, 'ocp_set_ext_fun_dyn_impl.c']
 		};
+elseif (strcmp(model_struct.dyn_type, 'discrete'))
+	mex_files = {mex_files{:}, ...
+		[acados_mex_folder, 'ocp_set_ext_fun_dyn_disc.c']
+		};
 else
-	fprintf('\nocp_compile_mex_mode_dep: sim_method not supported: %s\n', opts_struct.sim_method);
+	fprintf('\nocp_compile_mex_mode_dep: dyn_type not supported: %s\n', model_struct.dyn_type);
 end
 % nonlinear constraints
 if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'dim_nh') && model_struct.dim_nh>0))

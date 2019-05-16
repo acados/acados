@@ -54,7 +54,7 @@ typedef struct
     double min_res_b;
     double min_res_d;
     double min_res_m;
-    int maxIter;
+    int max_iter;
     int reuse_workspace;
     int num_threads;
 } ocp_nlp_sqp_opts;
@@ -68,7 +68,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config, void *dims, void *opts);
 //
 void ocp_nlp_sqp_opts_update(void *config, void *dims, void *opts);
 //
-void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, const void* value);
+void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
 void ocp_nlp_sqp_dyanimcs_opts_set(void *config, void *opts, int stage,
                                      const char *field, void *value);
@@ -94,7 +94,7 @@ typedef struct
     // nlp memory
     ocp_nlp_memory *nlp_mem;
 
-	int status;
+    int status;
 
     int sqp_iter;
 

@@ -58,7 +58,7 @@ typedef struct
     /* model */
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
-    void (*model_set_T)(double T, void *model);
+    void (*model_set)(void *config_, void *dims_, void *model_, const char *field, void *value_);
     /* opts */
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);

@@ -204,7 +204,7 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
     }
     else if (!strcmp(field, "S_forw"))
     {
-        // note: this assumes nf = nu+nx !!!
+        // NOTE: this assumes nf = nu+nx !!!
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
@@ -215,14 +215,28 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
     }
     else if (!strcmp(field, "S_adj"))
     {
-        // note: this assumes nf = nu+nx !!!
+        // NOTE: this assumes nf = nu+nx !!!
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
         int ii;
         double *S_adj = value;
-        for (ii=0; ii < nu+nx; ii++)
+        for (ii=0; ii < nx+nu; ii++)
             in->S_adj[ii] = S_adj[ii];
+    }
+    else if (!strcmp(field, "seed_adj"))
+    {
+        // NOTE: this assumes nf = nu+nx !!!
+        // NOTE: this correctly initialized the u-part to 0, unless the above S_adj which copies it from outside
+        int nx, nu;
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
+        int ii;
+        double *seed_adj = value;
+        for (ii=0; ii < nx; ii++)
+            in->S_adj[ii] = seed_adj[ii];
+        for (ii=0; ii < nu; ii++)
+            in->S_adj[nx+ii] = 0;
     }
     else
     {
@@ -267,6 +281,8 @@ int sim_out_calculate_size(void *config_, void *dims)
 
     return size;
 }
+
+
 
 sim_out *sim_out_assign(void *config_, void *dims, void *raw_memory)
 {
@@ -438,9 +454,9 @@ int sim_opts_set_(sim_opts *opts, const char *field, void *value)
     }
     else
     {
-        printf("\nerror: option type not available for RK integrator\n");
-        status = ACADOS_FAILURE;
+        printf("\nerror: field %s not available in sim_opts_set\n", field);
+        status = ACADOS_FAILURE; // TODO remove
         exit(1);
     }
-    return status;
+    return status; // TODO remove
 }
