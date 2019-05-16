@@ -100,7 +100,6 @@ typedef struct
     struct blasfeo_dvec fun;
     struct blasfeo_dvec z_out;          // output z at t = 0
     struct blasfeo_dvec adj;
-    struct blasfeo_dmat hes;
     struct blasfeo_dmat dzdux_tran;     // dzdux transposed
     struct blasfeo_dvec *ux;            // pointer to ux in nlp_out at current stage
     struct blasfeo_dvec *ux1;           // pointer to ux in nlp_out at next stage
@@ -136,6 +135,7 @@ void ocp_nlp_dynamics_cont_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *
 
 typedef struct
 {
+    struct blasfeo_dmat hess;
     sim_in *sim_in;
     sim_out *sim_out;
     void *sim_solver;  // sim solver workspace
@@ -161,7 +161,7 @@ int ocp_nlp_dynamics_cont_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_dynamics_cont_model_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_dynamics_cont_model_set_T(double T, void *model);
+void ocp_nlp_dynamics_cont_model_set(void *config_, void *dims_, void *model_, const char *field, void *value);
 
 
 

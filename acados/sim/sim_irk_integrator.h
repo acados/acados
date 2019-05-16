@@ -116,6 +116,7 @@ typedef struct
     // output of impl_ode_hess
     struct blasfeo_dmat f_hess;  // size: (nx + nu, nx + nu)
     struct blasfeo_dmat dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
+    struct blasfeo_dmat tmp_dxkzu_dw0;  // size (2*nx + nu + nz) x (nx + nu)
 
 } sim_irk_workspace;
 

@@ -92,6 +92,29 @@ while norm(full(fun_tmp)) > 1e-10
 end
 %x0
 
+% discrete dynamics: casadi RK integrator
+
+% Fixed step Runge-Kutta 4 integrator
+
+M   = 2; % RK4 steps per interval
+FUN = Function('f', {sym_x, sym_u}, {expr_f_expl});
+DT  = SX.sym('DT', 1);
+H   = DT/M;
+X0  = sym_x; %SX.sym('X0', nx);
+U   = sym_u; %SX.sym('U', nu);
+X   = X0;
+for j=1:M
+   k1 = FUN(X, U);
+   k2 = FUN(X + H/2 * k1, U);
+   k3 = FUN(X + H/2 * k2, U);
+   k4 = FUN(X + H * k3, U);
+   X  = X+H/6*(k1 +2*k2 +2*k3 +k4);
+end
+
+np = 1;
+sym_p = DT;
+expr_phi = X;
+
 
 
 %% cost
@@ -110,11 +133,14 @@ expr_h_e = SX.zeros(0);
 mode = struct;
 model.nx = nx;
 model.nu = nu;
+model.np = np;
 model.sym_x = sym_x;
 model.sym_xdot = sym_xdot;
 model.sym_u = sym_u;
+model.sym_p = sym_p;
 model.expr_f_expl = expr_f_expl;
 model.expr_f_impl = expr_f_impl;
+model.expr_phi = expr_phi;
 model.expr_h = expr_h;
 model.expr_h_e = expr_h_e;
 model.expr_y = expr_y;

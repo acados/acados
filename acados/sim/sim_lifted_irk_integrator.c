@@ -161,7 +161,7 @@ int sim_lifted_irk_model_set(void *model_, const char *field, void *value)
     else
     {
         printf("\nerror: sim_lifted_irk_model_set: wrong field: %s\n", field);
-		exit(1);
+        exit(1);
 //        return ACADOS_FAILURE;
     }
 

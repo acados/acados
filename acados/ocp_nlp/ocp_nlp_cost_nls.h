@@ -41,6 +41,8 @@ extern "C" {
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
 
+
+
 /************************************************
  * dims
  ************************************************/
@@ -58,9 +60,11 @@ int ocp_nlp_cost_nls_dims_calculate_size(void *config);
 //
 void *ocp_nlp_cost_nls_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_cost_nls_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns);
+void ocp_nlp_cost_nls_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns, int nz);
 //
 void ocp_nlp_cost_nls_dims_set(void *config_, void *dims_, const char *field, int* value);
+
+
 
 /************************************************
  * model
@@ -76,7 +80,7 @@ typedef struct
     struct blasfeo_dvec y_ref;
     struct blasfeo_dvec Z;              // diagonal Hessian of slacks as vector
     struct blasfeo_dvec z;              // gradient of slacks as vector
-	double scaling;
+    double scaling;
 } ocp_nlp_cost_nls_model;
 
 //
@@ -88,6 +92,8 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
                                const char *field, void *value_);
 //
 void ocp_nlp_cost_nls_config_initialize_default(void *config);
+
+
 
 /************************************************
  * options
@@ -106,6 +112,10 @@ void *ocp_nlp_cost_nls_opts_assign(void *config, void *dims, void *raw_memory);
 void ocp_nlp_cost_nls_opts_initialize_default(void *config, void *dims, void *opts);
 //
 void ocp_nlp_cost_nls_opts_update(void *config, void *dims, void *opts);
+//
+void ocp_nlp_cost_nls_opts_set(void *config, void *opts, const char *field, void *value);
+
+
 
 /************************************************
  * memory

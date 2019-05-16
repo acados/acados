@@ -246,8 +246,8 @@ run_sim_wt_model_nx3:
 
 INV_PENDULUM_OBJS =
 INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_z.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u_z.o
 INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_u.o
 INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_hess.o
 INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_fun.o

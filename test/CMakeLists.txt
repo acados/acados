@@ -170,8 +170,8 @@ set(TEST_SIM_HESS_SRC
     ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_vde_adj.c
     ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_expl_ode_hess.c
     ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_fun.c
-    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_fun_jac_x_xdot.c
-    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_jac_x_xdot_u.c
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_fun_jac_x_xdot_z.c
+    ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_jac_x_xdot_u_z.c
     ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_fun_jac_x_xdot_u.c
     ${PROJECT_SOURCE_DIR}/examples/c/pendulum_model/pendulum_ode_impl_ode_hess.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sim/sim_test_hessian.cpp

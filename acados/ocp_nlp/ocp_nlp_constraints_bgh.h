@@ -84,6 +84,7 @@ typedef struct
     struct blasfeo_dmat DCt;  // general linear constraint matrix
             // lg <= [D, C] * [u; x] <= ug
     external_function_generic *nl_constr_h_fun_jac;  // nonlinear: lh <= h(x,u) <= uh
+    external_function_generic *nl_constr_h_fun_jac_hess;  // nonlinear: lh <= h(x,u) <= uh
 } ocp_nlp_constraints_bgh_model;
 
 //
@@ -103,6 +104,7 @@ int ocp_nlp_constraints_bgh_model_set(void *config_, void *dims_,
 typedef struct
 {
     int compute_adj;
+    int compute_hess;
 } ocp_nlp_constraints_bgh_opts;
 
 //
@@ -160,7 +162,9 @@ void ocp_nlp_constraints_bgh_memory_set_idxs_ptr(int *idxs, void *memory_);
 
 typedef struct
 {
+    struct blasfeo_dmat tmp_nv_nv;
     struct blasfeo_dvec tmp_ni;
+    struct blasfeo_dvec tmp_nh;
 } ocp_nlp_constraints_bgh_workspace;
 
 //

@@ -172,6 +172,8 @@ void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *fiel
     }
 }
 
+
+
 /************************************************
  * options
  ************************************************/
@@ -218,9 +220,15 @@ void ocp_nlp_dynamics_cont_opts_initialize_default(void *config_, void *dims_, v
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
 
+    // own opts
     opts->compute_adj = 1;
+    opts->compute_hess = 0;
 
+    // sim opts
     config->sim_solver->opts_initialize_default(config->sim_solver, dims->sim, opts->sim_solver);
+
+    bool tmp_bool = false;
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
 
     return;
 }
@@ -247,22 +255,33 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     ocp_nlp_dynamics_cont_opts *opts = opts_;
     sim_config *sim_config_ = config->sim_solver;
 
-	if(!strcmp(field, "compute_adj"))
-	{
-		int *int_ptr = value;
-		opts->compute_adj = *int_ptr;
-	}
-	else
-	{
-		int return_value = sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
-		if(return_value!=ACADOS_SUCCESS)
-		{
-			printf("\nerror: field %s not available in ocp_nlp_dynamics_cont_opts_set\n", field);
-			exit(1);
-		}
-	}
+    if(!strcmp(field, "compute_adj"))
+    {
+        int *int_ptr = value;
+        opts->compute_adj = *int_ptr;
+    }
+    else if(!strcmp(field, "compute_hess"))
+    {
+        int *int_ptr = value;
+        opts->compute_hess = *int_ptr;
+        bool tmp_bool = true;
+        if(*int_ptr==0)
+        {
+            tmp_bool = false;
+        }
+        config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
+    }
+    else
+    {
+        int return_value = sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
+        if(return_value!=ACADOS_SUCCESS)
+        {
+            printf("\nerror: field %s not available in ocp_nlp_dynamics_cont_opts_set\n", field);
+            exit(1);
+        }
+    }
 
-	return;
+    return;
 
 }
 
@@ -291,13 +310,10 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
     size += 1 * blasfeo_memsize_dvec(nz);             // z at t = 0
-    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // hes
     size += 1 * blasfeo_memsize_dmat(nz, nu + nx);    // dzdux_tran
 
     size +=
         config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
-
-
 
     size += 1*64;  // blasfeo_mem align
 
@@ -342,9 +358,6 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
-
-    // hes
-    assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &memory->hes, &c_ptr);
 
     // dzdux_tran
     assign_and_advance_blasfeo_dmat_mem(nu + nx, nz, &memory->dzdux_tran, &c_ptr);
@@ -451,14 +464,21 @@ int ocp_nlp_dynamics_cont_workspace_calculate_size(void *config_, void *dims_, v
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
 
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+
     int size = 0;
 
     size += sizeof(ocp_nlp_dynamics_cont_workspace);
 
     size += sim_in_calculate_size(config->sim_solver, dims->sim);
     size += sim_out_calculate_size(config->sim_solver, dims->sim);
-    size += config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim,
-                                                         opts->sim_solver);
+    size += config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+
+    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);   // hess
+
+    size += 1*64;  // blasfeo_mem align
 
     return size;
 }
@@ -476,6 +496,10 @@ static void ocp_nlp_dynamics_cont_cast_workspace(void *config_, void *dims_, voi
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_dynamics_cont_workspace);
 
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+
     // sim in
     work->sim_in = sim_in_assign(config->sim_solver, dims->sim, c_ptr);
     c_ptr += sim_in_calculate_size(config->sim_solver, dims->sim);
@@ -484,11 +508,15 @@ static void ocp_nlp_dynamics_cont_cast_workspace(void *config_, void *dims_, voi
     c_ptr += sim_out_calculate_size(config->sim_solver, dims->sim);
     // workspace
     work->sim_solver = c_ptr;
-    c_ptr += config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim,
-                                                          opts->sim_solver);
+    c_ptr += config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
 
-    assert((char *) work + ocp_nlp_dynamics_cont_workspace_calculate_size(config, dims, opts) >=
-           c_ptr);
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
+
+    // hess
+    assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &work->hess, &c_ptr);
+
+    assert((char *) work + ocp_nlp_dynamics_cont_workspace_calculate_size(config, dims, opts) >= c_ptr);
 
     return;
 }
@@ -544,11 +572,27 @@ void *ocp_nlp_dynamics_cont_model_assign(void *config_, void *dims_, void *raw_m
 
 
 
-void ocp_nlp_dynamics_cont_model_set_T(double T, void *model_)
+void ocp_nlp_dynamics_cont_model_set(void *config_, void *dims_, void *model_, const char *field, void *value)
 {
+    ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_cont_model *model = model_;
 
-    model->T = T;
+    sim_config *sim_config = config->sim_solver;
+
+    if (!strcmp(field, "T"))
+    {
+        double *T = (double *) value;
+        model->T = *T;
+    }
+    else
+    {
+        int status = sim_config->model_set(model->sim_model, field, value);
+        if (status!=0)
+        {
+            printf("\nerror: field %s not available in module ocp_nlp_dynamics_cont_model_set\n", field);
+            exit(1);
+        }
+    }
 
     return;
 }
@@ -579,6 +623,8 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_cont_model *model = model_;
 
+    int jj;
+
     int nx = dims->nx;
     int nu = dims->nu;
     int nz = dims->nz;
@@ -596,16 +642,20 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_unpack_dvec(nx, mem->ux, nu, work->sim_in->x);
 
     // initialize seeds
-    for (int jj = 0; jj < nx1 * (nx + nu); jj++) work->sim_in->S_forw[jj] = 0.0;
-    for (int jj = 0; jj < nx1; jj++) work->sim_in->S_forw[jj * (nx + 1)] = 1.0;
-    for (int jj = 0; jj < nx + nu; jj++) work->sim_in->S_adj[jj] = 0.0;
+    // TODO fix dims if nx!=nx1 !!!!!!!!!!!!!!!!!
+    for(jj = 0; jj < nx1 * (nx + nu); jj++)
+        work->sim_in->S_forw[jj] = 0.0;
+    for(jj = 0; jj < nx1; jj++)
+        work->sim_in->S_forw[jj * (nx + 1)] = 1.0;
+    for(jj = 0; jj < nx + nu; jj++)
+        work->sim_in->S_adj[jj] = 0.0;
     blasfeo_unpack_dvec(nx1, mem->pi, 0, work->sim_in->S_adj);
 
     // call integrator
     config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out, opts->sim_solver,
-                                 mem->sim_solver, work->sim_solver);
+            mem->sim_solver, work->sim_solver);
 
-    // TODO(rien): transition functions for changing dimensions not yet implemented!
+    // TODO transition functions for changing dimensions not yet implemented!
 
     // B
     blasfeo_pack_tran_dmat(nx1, nu, work->sim_out->S_forw + nx1 * nx, nx1, mem->BAbt, 0, 0);
@@ -616,34 +666,52 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_pack_tran_dmat(nz, nx, work->sim_out->S_algebraic + 0, nz, &mem->dzdux_tran, nu, 0);
     // blasfeo_print_dmat(nx + nu, nz, &mem->dzdux_tran, 0, 0);
 
-    // fun
+    // function
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
     blasfeo_pack_dvec(nz, work->sim_out->zn, &mem->z_out, 0);
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
 
-    // adj TODO if not computed by the integrator
+    // adjoint
     if (opts->compute_adj)
     {
-        blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj,
-                        0);
-        blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu + nx);
+        // this is computed by the integrator if compute_hess!=0
+        // TODO other cases when it is computed in the integrator ???
+        if (opts->compute_hess)
+        {
+            blasfeo_pack_dvec(nu, work->sim_out->S_adj+nx, &mem->adj, 0);
+            blasfeo_pack_dvec(nx, work->sim_out->S_adj+0, &mem->adj, nu);
+            blasfeo_dvecsc(nu+nx, -1.0, &mem->adj, 0);
+        }
+        // compute as forward * adj_seed
+        else
+        {
+            blasfeo_dgemv_n(nu+nx, nx1, -1.0, mem->BAbt, 0, 0, mem->pi, 0, 0.0, &mem->adj, 0, &mem->adj, 0);
+        }
+        blasfeo_dveccp(nx1, mem->pi, 0, &mem->adj, nu+nx);
     }
 
+    // hessian
     if (opts->compute_hess)
     {
+
+//        d_print_mat(nu+nx, nu+nx, work->sim_out->S_hess, nu+nx);
+
         // unpack d*_d2u
-        blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx + nu,
-                                     &mem->hes, 0, 0);
+        blasfeo_pack_dmat(nu, nu, &work->sim_out->S_hess[(nx+nu)*nx + nx], nx+nu, &work->hess, 0, 0);
         // unpack d*_dux: mem-hess: nx x nu
-        blasfeo_pack_dmat(nx, nu, &work->sim_out->S_hess[(nx + nu)*nx], nx + nu, &mem->hes, nu, 0);
+        blasfeo_pack_dmat(nx, nu, &work->sim_out->S_hess[(nx + nu)*nx], nx+nu, &work->hess, nu, 0);
         // unpack d*_d2x
-        blasfeo_pack_dmat(nx, nx, &work->sim_out->S_hess[0], nx + nu, &mem->hes, nu, nu);
+        blasfeo_pack_dmat(nx, nx, &work->sim_out->S_hess[0], nx+nu, &work->hess, nu, nu);
 
         // Add hessian contribution
-        blasfeo_dgead(nx+nu, nx+nu, 1.0, &mem->hes, 0, 0, mem->RSQrq, 0, 0);
+        blasfeo_dgead(nx+nu, nx+nu, 1.0, &work->hess, 0, 0, mem->RSQrq, 0, 0);
     }
+
     return;
+
 }
+
+
 
 int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, void *opts_,
                                         void *mem_, void *work_)
@@ -665,6 +733,8 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, v
     return status;
 }
 
+
+
 void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
 {
     ocp_nlp_dynamics_config *config = config_;
@@ -675,7 +745,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->dims_initialize = &ocp_nlp_dynamics_cont_dims_initialize;
     config->model_calculate_size = &ocp_nlp_dynamics_cont_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_cont_model_assign;
-    config->model_set_T = &ocp_nlp_dynamics_cont_model_set_T;
+    config->model_set = &ocp_nlp_dynamics_cont_model_set;
     config->opts_calculate_size = &ocp_nlp_dynamics_cont_opts_calculate_size;
     config->opts_assign = &ocp_nlp_dynamics_cont_opts_assign;
     config->opts_initialize_default = &ocp_nlp_dynamics_cont_opts_initialize_default;

@@ -29,6 +29,7 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/utils/mem.h"
+#include "acados/utils/print.h"
 
 
 
@@ -59,14 +60,15 @@ void *ocp_nlp_cost_external_dims_assign(void *config_, void *raw_memory)
 
 
 
-void ocp_nlp_cost_external_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny,
-                                           int ns)
+void ocp_nlp_cost_external_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny, int ns, int nz)
 {
     ocp_nlp_cost_external_dims *dims = dims_;
 
     dims->nx = nx;
     dims->nu = nu;
     dims->ns = ns;
+
+    // TODO nz
 
     return;
 }
@@ -79,7 +81,7 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
 
     if (!strcmp(field, "nx"))
     {
-		dims->nx = *value;
+        dims->nx = *value;
     }
     else if (!strcmp(field, "nz"))
     {
@@ -88,11 +90,11 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
     }
     else if (!strcmp(field, "nu"))
     {
-		dims->nu = *value;
+        dims->nu = *value;
     }
     else if (!strcmp(field, "ns"))
     {
-		dims->ns = *value;
+        dims->ns = *value;
     }
     else
     {
@@ -100,7 +102,7 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
         exit(1);
     }
 
-	return;
+    return;
 }
 
 
@@ -156,8 +158,8 @@ void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_m
     // z
     assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->z, &c_ptr);
 
-	// default initialization
-	model->scaling = 1.0;
+    // default initialization
+    model->scaling = 1.0;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_cost_external_model_calculate_size(config_, dims_) >=
@@ -225,7 +227,7 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     else
     {
         printf("\nerror: model entry: %s not available in module ocp_nlp_cost_external\n", field);
-		exit(1);
+        exit(1);
 //        status = ACADOS_FAILURE;
     }
     return status;
@@ -287,6 +289,27 @@ void ocp_nlp_cost_external_opts_update(void *config_, void *dims_, void *opts_)
     // opts->gauss_newton_hess = 1;
 
     return;
+}
+
+
+
+void ocp_nlp_cost_external_opts_set(void *config_, void *opts_, const char *field, void* value)
+{
+    ocp_nlp_cost_config *config = config_;
+    ocp_nlp_cost_external_opts *opts = opts_;
+
+    if(!strcmp(field, "exact_hess"))
+    {
+        // do nothing: the exact hessian is always computed
+    }
+    else
+    {
+        printf("\nerror: field %s not available in ocp_nlp_cost_external_opts_set\n", field);
+        exit(1);
+    }
+
+    return;
+
 }
 
 
@@ -409,7 +432,7 @@ int ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, v
 
     size += sizeof(ocp_nlp_cost_external_workspace);
 
-    size += 1 * blasfeo_memsize_dmat(nu + nx, nu + nx);  // tmp_nv_nv
+    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);  // tmp_nv_nv
 
     size += 64;  // blasfeo_mem align
     
@@ -461,7 +484,7 @@ void ocp_nlp_cost_external_initialize(void *config_, void *dims_, void *model_, 
 
     int ns = dims->ns;
 
-	blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
+    blasfeo_dveccpsc(2*ns, model->scaling, &model->Z, 0, memory->Z, 0);
 
     return;
 }
@@ -500,8 +523,8 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     x_in.xi = nu;
 
     ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
-    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
     ext_fun_in[0] = &x_in;
+    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
     ext_fun_in[1] = &u_in;
 
     // OUTPUT
@@ -511,30 +534,20 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     ext_fun_out[1] = &work->tmp_nv_nv;   // hess: (nu+nx) * (nu+nx)
 
     // evaluate external function
-    model->ext_cost->evaluate(model->ext_cost, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
-                              ext_fun_out);
+    model->ext_cost->evaluate(model->ext_cost, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
-	if(model->scaling!=1.0)
-	{
-        acados_warning("ocp_nlp_cost_external: scaling needs testing!\n");
-        // TODO(zanellia, giaf): check scaling
-        blasfeo_dgesc(nu+nx, nu+nx, model->scaling, &work->tmp_nv_nv, 0, 0);
-    }
-
-    blasfeo_dgead(nx + nu, nx + nu, 1.0, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
+    // TODO(zanellia, giaf): check scaling
+    blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
 
     // slacks
     blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
-    // grad = grad + Z .* mem->ux
     blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
-	// scale
-	if(model->scaling!=1.0)
-	{
-        acados_warning("ocp_nlp_cost_external: scaling needs testing!\n");
-        // TODO(zanellia, giaf): check scaling
+    // scale
+    if(model->scaling!=1.0)
+    {
         blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
-	}
+    }
 
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
     // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
@@ -562,6 +575,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->opts_assign = &ocp_nlp_cost_external_opts_assign;
     config->opts_initialize_default = &ocp_nlp_cost_external_opts_initialize_default;
     config->opts_update = &ocp_nlp_cost_external_opts_update;
+    config->opts_set = &ocp_nlp_cost_external_opts_set;
     config->memory_calculate_size = &ocp_nlp_cost_external_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_external_memory_assign;
     config->memory_get_grad_ptr = &ocp_nlp_cost_external_memory_get_grad_ptr;
