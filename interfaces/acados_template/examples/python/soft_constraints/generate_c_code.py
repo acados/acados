@@ -19,7 +19,7 @@ nx = model.x.size()[0]
 nu = model.u.size()[0]
 ny = nx + nu
 nyN = nx
-N = 100
+N = 10
 
 # set ocp_nlp_dimensions
 nlp_dims     = ra.dims
@@ -28,6 +28,8 @@ nlp_dims.ny  = ny
 nlp_dims.nyN = nyN 
 nlp_dims.nbx = 0
 nlp_dims.nbu = nu 
+nlp_dims.nsbu = nu 
+nlp_dims.ns = nu 
 nlp_dims.nu  = model.u.size()[0]
 nlp_dims.N   = N
 
@@ -69,20 +71,25 @@ nlp_cost.VxN = VxN
 nlp_cost.yref  = np.zeros((ny, ))
 nlp_cost.yrefN = np.zeros((nyN, ))
 
+nlp_cost.zl = 50*np.ones((1, ))
+nlp_cost.zu = 50*np.ones((1, ))
+
 # setting bounds
 Fmax = 80.0
 nlp_con = ra.constraints
 nlp_con.lbu = np.array([-Fmax])
 nlp_con.ubu = np.array([+Fmax])
+nlp_con.lsbu = 0*np.array([-Fmax])
+nlp_con.usbu = 0*np.array([+Fmax])
 nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
 nlp_con.idxbu = np.array([0])
+nlp_con.idxsbu = np.array([0])
 
 # set constants
 ra.constants['PI'] = 3.1415926535897932
 
 # set QP solver
-# ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
+ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
 ra.solver_config.integrator_type = 'ERK'
 

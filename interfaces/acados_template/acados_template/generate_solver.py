@@ -6,7 +6,7 @@ from .ocp_nlp_render_arguments import *
 from ctypes import *
 
 def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_pN=None, json_file='acados_ocp_nlp.json'):
-    USE_TERA = 1 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
+    USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
 
     ocp_nlp = acados_ocp
     ocp_nlp.cost = acados_ocp.cost.__dict__
@@ -264,11 +264,22 @@ class acados_solver:
     def __init__(self, acados_ocp, shared_lib):
         self.shared_lib = CDLL(shared_lib)
         self.shared_lib.acados_create()
+
+        self.shared_lib.acados_get_nlp_opts.restype = c_void_p
         self.nlp_opts = self.shared_lib.acados_get_nlp_opts()
+
+        self.shared_lib.acados_get_nlp_dims.restype = c_void_p
         self.nlp_dims = self.shared_lib.acados_get_nlp_dims()
+
+        self.shared_lib.acados_get_nlp_config.restype = c_void_p
         self.nlp_config = self.shared_lib.acados_get_nlp_config()
+
+        self.shared_lib.acados_get_nlp_out.restype = c_void_p
         self.nlp_out = self.shared_lib.acados_get_nlp_out()
+
+        self.shared_lib.acados_get_nlp_in.restype = c_void_p
         self.nlp_in = self.shared_lib.acados_get_nlp_in()
+
         self.acados_ocp = acados_ocp
 
     def solve(self):
@@ -288,6 +299,7 @@ class acados_solver:
         out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
+        self.shared_lib.ocp_nlp_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
         self.shared_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field, out_data);
 
         # out = cast((out), POINTER(c_double))
@@ -306,7 +318,7 @@ class acados_solver:
         self.shared_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
         self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
 
-        return 
+        return
 
     def __del__(self):
         self.shared_lib.acados_free()

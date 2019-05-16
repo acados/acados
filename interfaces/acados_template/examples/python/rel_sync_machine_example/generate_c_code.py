@@ -373,7 +373,6 @@ ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 # ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
 # ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
-# ra.solver_config.hessian_approx = 'EXACT'
 # ra.solver_config.integrator_type = 'ERK'
 ra.solver_config.integrator_type = 'IRK'
 
