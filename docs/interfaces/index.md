@@ -39,7 +39,7 @@ If you want to run the examples in a different folder, please close the current 
 
 
 
-### acados embedded - Python
+## acados embedded - Python
 
 
 `acados_template` is an Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them.
@@ -66,10 +66,18 @@ You should now be able to import it as a Python module and specify the problem f
 
 For more information contact `@zanellia`
 
-
+### optimal control description
+``` eval_rst
+.. automodule:: acados_template.casadi_functions
+    :members:
+    :private-members:
+    :undoc-members:
+```
 ``` eval_rst
 .. automodule:: acados_template.ocp_nlp_render_arguments
     :members:
     :private-members:
+    :exclude-members: acados_ocp2json_layout, cast_ocp_nlp, dict2json_layout, dict2json_layout_rec, check_ra, json2dict_rec
+
 ```
-### acados embedded - MATLAB
+## acados embedded - MATLAB
