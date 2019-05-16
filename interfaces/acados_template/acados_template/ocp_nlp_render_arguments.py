@@ -13,21 +13,21 @@ class ocp_nlp_dims:
         self.__nu    = None  #: number of inputs
         self.__np    = 0     #: number of parameters
         self.__ny    = None  #: number of residuals in Lagrange term
-        self.__nyN   = None  #: number of residuals in Mayer term
+        self.__ny_e   = None  #: number of residuals in Mayer term
         self.__npd   = 0     #: number of positive definite constraints
-        self.__npdN  = 0     #: number of positive definite constraints at t=T
+        self.__npd_e  = 0     #: number of positive definite constraints at t=T
         self.__nh    = 0     #: number of nonlinear constraints
-        self.__nhN   = 0     #: number of nonlinear constraints at t=T
+        self.__nh_e   = 0     #: number of nonlinear constraints at t=T
         self.__nbx   = 0     #: number of state bounds 
-        self.__nbxN  = 0     #: number of state bounds at t=T 
+        self.__nbx_e  = 0     #: number of state bounds at t=T 
         self.__nbu   = 0     #: number of input bounds
         self.__nsbx  = 0     #: number of soft state bounds 
-        self.__nsbxN = 0     #: number of soft state bounds at t=T 
+        self.__nsbx_e = 0     #: number of soft state bounds at t=T 
         self.__nsbu  = 0     #: number of soft input bounds
         self.__ns    = 0     #: total number of slacks
-        self.__nsN   = 0     #: total number of slacks at t=T
+        self.__ns_e   = 0     #: total number of slacks at t=T
         self.__ng    = 0     #: number of general constraints
-        self.__ngN   = 0     #: number of general constraints at t=T
+        self.__ng_e   = 0     #: number of general constraints at t=T
         self.__N     = None  #: prediction horizon 
 
     @property
@@ -151,10 +151,10 @@ class ocp_nlp_dims:
 
     @nyN.setter
     def nyN(self, nyN):
-        if type(nyN) == int and nyN > -1:
-            self.__nyN = nyN
+        if type(nyN) == int and ny_e > -1:
+            self.__ny_e = nyN
         else:
-            raise Exception('Invalid nyN value. Exiting.')
+            raise Exception('Invalid ny_e value. Exiting.')
 
     @npd.setter
     def npd(self, npd):
@@ -165,10 +165,10 @@ class ocp_nlp_dims:
 
     @npdN.setter
     def npdN(self, npdN):
-        if type(npdN) == int and npdN > -1:
-            self.__npdN = npdN
+        if type(npdN) == int and npd_e > -1:
+            self.__npd_e = npdN
         else:
-            raise Exception('Invalid npdN value. Exiting.')
+            raise Exception('Invalid npd_e value. Exiting.')
 
     @nh.setter
     def nh(self, nh):
@@ -179,10 +179,10 @@ class ocp_nlp_dims:
 
     @nhN.setter
     def nhN(self, nhN):
-        if type(nhN) == int and nhN > -1:
-            self.__nhN = nhN
+        if type(nhN) == int and nh_e > -1:
+            self.__nh_e = nhN
         else:
-            raise Exception('Invalid nhN value. Exiting.')
+            raise Exception('Invalid nh_e value. Exiting.')
 
     @nbx.setter
     def nbx(self, nbx):
@@ -193,10 +193,10 @@ class ocp_nlp_dims:
 
     @nbxN.setter
     def nbxN(self, nbxN):
-        if type(nbxN) == int and nbxN > -1:
-            self.__nbxN = nbxN
+        if type(nbxN) == int and nbx_e > -1:
+            self.__nbx_e = nbxN
         else:
-            raise Exception('Invalid nbxN value. Exiting.')
+            raise Exception('Invalid nbx_e value. Exiting.')
 
     @nbu.setter
     def nbu(self, nbu):
@@ -214,10 +214,10 @@ class ocp_nlp_dims:
 
     @nsbxN.setter
     def nsbxN(self, nbxN):
-        if type(nsbxN) == int and nsbxN > -1:
-            self.__nsbxN = nsbxN
+        if type(nsbxN) == int and nsbx_e > -1:
+            self.__nsbx_e = nsbxN
         else:
-            raise Exception('Invalid nsbxN value. Exiting.')
+            raise Exception('Invalid nsbx_e value. Exiting.')
 
     @nsbu.setter
     def nsbu(self, nsbu):
@@ -235,10 +235,10 @@ class ocp_nlp_dims:
 
     @nsN.setter
     def nsN(self, nsN):
-        if type(nsN) == int and nsN > -1:
-            self.__nsN = nsN
+        if type(nsN) == int and ns_e > -1:
+            self.__ns_e = nsN
         else:
-            raise Exception('Invalid nsN value. Exiting.')
+            raise Exception('Invalid ns_e value. Exiting.')
 
     @ng.setter
     def ng(self, ng):
@@ -249,10 +249,10 @@ class ocp_nlp_dims:
 
     @ngN.setter
     def ngN(self, ngN):
-        if type(ngN) == int and ngN > -1:
-            self.__ngN = ngN
+        if type(ngN) == int and ng_e > -1:
+            self.__ng_e = ngN
         else:
-            raise Exception('Invalid ngN value. Exiting.')
+            raise Exception('Invalid ng_e value. Exiting.')
 
     @N.setter
     def N(self, N):
@@ -278,13 +278,13 @@ class ocp_nlp_cost:
         self.__zl    = []  #: gradient wrt lower slack 
         self.__zu    = []  #: gradient wrt upper slack 
         # Mayer term
-        self.__WN    = []  #: weight matrix
-        self.__VxN   = []  #: x matrix coefficient
-        self.__yrefN = []  #: reference
-        self.__ZlN   = []  #: Hessian wrt lower slack 
-        self.__ZuN   = []  #: Hessian wrt upper slack 
-        self.__zlN   = []  #: gradient wrt lower slack 
-        self.__zuN   = []  #: gradient wrt upper slack 
+        self.__W_e    = []  #: weight matrix
+        self.__Vx_e   = []  #: x matrix coefficient
+        self.__yref_e = []  #: reference
+        self.__Zl_e   = []  #: Hessian wrt lower slack 
+        self.__Zu_e   = []  #: Hessian wrt upper slack 
+        self.__zl_e   = []  #: gradient wrt lower slack 
+        self.__zu_e   = []  #: gradient wrt upper slack 
 
     # Lagrange term
     @property
@@ -415,54 +415,54 @@ class ocp_nlp_cost:
     def zuN(self):
         return self.__zuN
 
-    @WN.setter
-    def WN(self, WN):
-        if type(WN) == np.ndarray:
-            self.__WN = WN
+    @W_e.setter
+    def W_e(self, W_e):
+        if type(W_e) == np.ndarray:
+            self.__W_e = W_e
         else:
-            raise Exception('Invalid WN value. Exiting.')
+            raise Exception('Invalid W_e value. Exiting.')
     
-    @VxN.setter
-    def VxN(self, VxN):
-        if type(VxN) == np.ndarray:
-            self.__VxN = VxN
+    @Vx_e.setter
+    def Vx_e(self, Vx_e):
+        if type(Vx_e) == np.ndarray:
+            self.__Vx_e = Vx_e
         else:
-            raise Exception('Invalid VxN value. Exiting.')
+            raise Exception('Invalid Vx_e value. Exiting.')
 
-    @yrefN.setter
-    def yrefN(self, yrefN):
-        if type(yrefN) == np.ndarray:
-            self.__yrefN = yrefN
+    @yref_e.setter
+    def yref_e(self, yref_e):
+        if type(yref_e) == np.ndarray:
+            self.__yref_e = yref_e
         else:
-            raise Exception('Invalid yrefN value. Exiting.')
+            raise Exception('Invalid yref_e value. Exiting.')
 
-    @ZlN.setter
-    def ZlN(self, ZlN):
-        if type(ZlN) == np.ndarray:
-            self.__ZlN = ZlN
+    @Zl_e.setter
+    def Zl_e(self, Zl_e):
+        if type(Zl_e) == np.ndarray:
+            self.__Zl_e = Zl_e
         else:
-            raise Exception('Invalid ZlN value. Exiting.')
+            raise Exception('Invalid Zl_e value. Exiting.')
 
-    @Zu.setter
-    def ZuN(self, ZuN):
-        if type(ZuN) == np.ndarray:
-            self.__ZuN = ZuN
+    @Zu_e.setter
+    def Zu_e(self, Zu_e):
+        if type(Zu_e) == np.ndarray:
+            self.__Zu_e = Zu_e
         else:
-            raise Exception('Invalid ZuN value. Exiting.')
+            raise Exception('Invalid Zu_e value. Exiting.')
 
-    @zlN.setter
-    def zlN(self, zlN):
-        if type(zlN) == np.ndarray:
-            self.__zlN = zlN
+    @zl_e.setter
+    def zl_e(self, zl_e):
+        if type(zl_e) == np.ndarray:
+            self.__zl_e = zl_e
         else:
-            raise Exception('Invalid zlN value. Exiting.')
+            raise Exception('Invalid zl_e value. Exiting.')
 
-    @zuN.setter
-    def zuN(self, zuN):
-        if type(zuN) == np.ndarray:
-            self.__zuN = zuN
+    @zu_e.setter
+    def zu_e(self, zu_e):
+        if type(zu_e) == np.ndarray:
+            self.__zu_e = zu_e
         else:
-            raise Exception('Invalid zuN value. Exiting.')
+            raise Exception('Invalid zu_e value. Exiting.')
 
 class ocp_nlp_constraints:
     """
@@ -477,9 +477,9 @@ class ocp_nlp_constraints:
         self.__idxbx  = []  #: indexes of bounds on x 
         self.__idxbu  = []  #: indexes of bounds on u
         # bounds on x at t=T
-        self.__lbxN   = []  #: lower bounds on x at t=T 
-        self.__ubxN   = []  #: upper bounds on x at t=T 
-        self.__idxbxN = []  #: indexes for bounds on x at t=T 
+        self.__lbx_e   = []  #: lower bounds on x at t=T 
+        self.__ubx_e   = []  #: upper bounds on x at t=T 
+        self.__idxbx_e = []  #: indexes for bounds on x at t=T 
         # soft bounds on x and u
         self.__lsbx   = []  #: soft lower bounds on x
         self.__lsbu   = []  #: soft lower bounds on u
@@ -488,24 +488,24 @@ class ocp_nlp_constraints:
         self.__idxsbx = []  #: indexes of soft bounds on x 
         self.__idxsbu = []  #: indexes of soft bounds on u
         # soft bounds on x and u at t=T
-        self.__lsbxN  = []  #: soft lower bounds on x at t=T
-        self.__usbxN  = []  #: soft upper bounds on x at t=T
-        self.__idxsbxN= []  #: indexes of soft bounds on x at t=T 
+        self.__lsbx_e  = []  #: soft lower bounds on x at t=T
+        self.__usbx_e  = []  #: soft upper bounds on x at t=T
+        self.__idxsbx_e= []  #: indexes of soft bounds on x at t=T 
         # polytopic constraints 
         self.__lg     = []  #: lower bound for general inequalities 
         self.__ug     = []  #: upper bound for general inequalities 
         self.__D      = []  #: D matrix in lg <= D * u + C * x <= ug
         self.__C      = []  #: C matrix in lg <= D * u + C * x <= ug
         # polytopic constraints at t=T 
-        self.__CN     = []  #: C matrix at t=T 
-        self.__lgN    = []  #: lower bound on general inequalities at t=T 
-        self.__ugN    = []  #: upper bound on general inequalities at t=T 
+        self.__C_e     = []  #: C matrix at t=T 
+        self.__lg_e    = []  #: lower bound on general inequalities at t=T 
+        self.__ug_e    = []  #: upper bound on general inequalities at t=T 
         # nonlinear constraints
         self.__lh     = []  #: lower bound for nonlinear inequalities 
         self.__uh     = []  #: upper bound for nonlinear inequalities 
         # nonlinear constraints at t=T
-        self.__uhN    = []  #: upper bound on nonlinear inequalities at t=T 
-        self.__lhN    = []  #: lower bound on nonlinear inequalities at t=T 
+        self.__uh_e    = []  #: upper bound on nonlinear inequalities at t=T 
+        self.__lh_e    = []  #: lower bound on nonlinear inequalities at t=T 
         self.__x0     = []  #: initial state 
         self.__p      = []  #: parameters 
 
@@ -558,16 +558,16 @@ class ocp_nlp_constraints:
         return self.__idxsbu
 
     @property
-    def lsbxN(self):
-        return self.__lsbxN
+    def lsbx_e(self):
+        return self.__lsbx_e
 
     @property
-    def usbxN(self):
-        return self.__usbxN
+    def usbx_e(self):
+        return self.__usbx_e
 
     @property
-    def idxsbxN(self):
-        return self.__idxsbxN
+    def idxsbx_e(self):
+        return self.__idxsbx_e
 
     @property
     def lg(self):
@@ -594,36 +594,36 @@ class ocp_nlp_constraints:
         return self.__C
 
     @property
-    def lbxN(self):
-        return self.__lbxN
+    def lbx_e(self):
+        return self.__lbx_e
 
     @property
-    def ubxN(self):
-        return self.__ubxN
+    def ubx_e(self):
+        return self.__ubx_e
 
     @property
-    def idxbxN(self):
-        return self.__idxbxN
+    def idxbx_e(self):
+        return self.__idxbx_e
 
     @property
-    def CN(self):
-        return self.__CN
+    def C_e(self):
+        return self.__C_e
 
     @property
-    def lgN(self):
-        return self.__lgN
+    def lg_e(self):
+        return self.__lg_e
 
     @property
-    def ugN(self):
-        return self.__ugN
+    def ug_e(self):
+        return self.__ug_e
 
     @property
-    def lgN(self):
-        return self.__lgN
+    def lg_e(self):
+        return self.__lg_e
 
     @property
-    def ugN(self):
-        return self.__ugN
+    def ug_e(self):
+        return self.__ug_e
 
     @property
     def x0(self):
@@ -717,26 +717,26 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid idxsbu value. Exiting.')
 
-    @lsbxN.setter
-    def lsbxN(self, lsbxN):
-        if type(lsbxN) == np.ndarray:
-            self.__lsbxN = lsbxN
+    @lsbx_e.setter
+    def lsbx_e(self, lsbx_e):
+        if type(lsbx_e) == np.ndarray:
+            self.__lsbx_e = lsbx_e
         else:
-            raise Exception('Invalid lsbxN value. Exiting.')
+            raise Exception('Invalid lsbx_e value. Exiting.')
 
-    @usbxN.setter
-    def usbxN(self, usbxN):
-        if type(usbxN) == np.ndarray:
-            self.__usbxN = usbxN
+    @usbx_e.setter
+    def usbx_e(self, usbx_e):
+        if type(usbx_e) == np.ndarray:
+            self.__usbx_e = usbx_e
         else:
-            raise Exception('Invalid usbxN value. Exiting.')
+            raise Exception('Invalid usbx_e value. Exiting.')
 
-    @idxsbxN.setter
-    def idxsbxN(self, idxsbxN):
-        if type(idxsbxN) == np.ndarray:
-            self.__idxsbxN = idxsbxN
+    @idxsbx_e.setter
+    def idxsbx_e(self, idxsbx_e):
+        if type(idxsbx_e) == np.ndarray:
+            self.__idxsbx_e = idxsbx_e
         else:
-            raise Exception('Invalid idxsbxN value. Exiting.')
+            raise Exception('Invalid idxsbx_e value. Exiting.')
 
     @lg.setter
     def lg(self, lg):
@@ -780,33 +780,33 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid C value. Exiting.')
 
-    @CN.setter
-    def CN(self, CN):
-        if type(CN) == np.ndarray:
-            self.__CN = CN
+    @C_e.setter
+    def C_e(self, C_e):
+        if type(C_e) == np.ndarray:
+            self.__C_e = C_e
         else:
-            raise Exception('Invalid CN value. Exiting.')
+            raise Exception('Invalid C_e value. Exiting.')
 
-    @lbxN.setter
-    def lbxN(self, lbxN):
-        if type(lbxN) == np.ndarray:
-            self.__lbxN = lbxN
+    @lbx_e.setter
+    def lbx_e(self, lbx_e):
+        if type(lbx_e) == np.ndarray:
+            self.__lbx_e = lbx_e
         else:
-            raise Exception('Invalid lbxN value. Exiting.')
+            raise Exception('Invalid lbx_e value. Exiting.')
 
-    @ubxN.setter
-    def ubxN(self, ubxN):
-        if type(ubxN) == np.ndarray:
-            self.__ubxN = ubxN
+    @ubx_e.setter
+    def ubx_e(self, ubx_e):
+        if type(ubx_e) == np.ndarray:
+            self.__ubx_e = ubx_e
         else:
-            raise Exception('Invalid ubxN value. Exiting.')
+            raise Exception('Invalid ubx_e value. Exiting.')
 
-    @idxbxN.setter
-    def idxbxN(self, idxbxN):
-        if type(idxbxN) == np.ndarray:
-            self.__idxbxN = idxbxN
+    @idxbx_e.setter
+    def idxbx_e(self, idxbx_e):
+        if type(idxbx_e) == np.ndarray:
+            self.__idxbx_e = idxbx_e
         else:
-            raise Exception('Invalid idxbxN value. Exiting.')
+            raise Exception('Invalid idxbx_e value. Exiting.')
 
     @x0.setter
     def x0(self, x0):
@@ -908,9 +908,9 @@ class acados_ocp_nlp:
         self.solver_config = ocp_nlp_solver_config()
         self.model_name  = None 
         self.con_p_name  = None 
-        self.con_pN_name = None 
+        self.con_p_e_name = None 
         self.con_h_name  = None 
-        self.con_hN_name = None 
+        self.con_h_e_name = None 
         self.constants = {}
         self.acados_include_path = []
         self.acados_lib_path = []
