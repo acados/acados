@@ -586,7 +586,7 @@ int acados_create() {
         {%- endif %}
     }
 
-    {%- if ocp.dims.npdN > 0 %}
+    {%- if ocp.dims.npd_e > 0 %}
     nlp_solver_plan->nlp_constraints[N] = BGHP;
     {%- else %}
     nlp_solver_plan->nlp_constraints[N] = BGH;
@@ -619,7 +619,7 @@ int acados_create() {
     for (int i = 0; i < N; i++) 
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "np", &npd[i]);
     {%- endif %}
-    {%- if ocp.dims.npdN > 0 %}
+    {%- if ocp.dims.npd_e > 0 %}
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "np", &npd[N]);
     {%- endif %}
 
