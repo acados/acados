@@ -132,7 +132,7 @@ for j=1:M
    X  = X+DT/6*(k1 +2*k2 +2*k3 +k4);
 end
 
-RK_FUN = Function(['casadi_erk4_chain_nm' num2str(Nm)], {X0, U}, {X, jacobian(X, vertcat(X0, U))}, {'x0','p'}, {'xf', 'sensxu'});
+RK_FUN = Function(['casadi_erk4_chain_nm' num2str(Nm)], {X0, U}, {X, (jacobian(X, vertcat(U, X0)))'}, {'x0','p'}, {'xf', 'sensxu'});
 
 RK_FUN.generate(['casadi_erk4_chain_nm' num2str(Nm)], opts);
 

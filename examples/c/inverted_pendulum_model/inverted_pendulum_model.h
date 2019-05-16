@@ -18,20 +18,20 @@ int inv_pendulum_impl_ode_fun_n_in();
 int inv_pendulum_impl_ode_fun_n_out();
 
 // implicit ODE
-int inv_pendulum_impl_ode_fun_jac_x_xdot(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int inv_pendulum_impl_ode_fun_jac_x_xdot_work(int *, int *, int *, int *);
-const int *inv_pendulum_impl_ode_fun_jac_x_xdot_sparsity_in(int);
-const int *inv_pendulum_impl_ode_fun_jac_x_xdot_sparsity_out(int);
-int inv_pendulum_impl_ode_fun_jac_x_xdot_n_in();
-int inv_pendulum_impl_ode_fun_jac_x_xdot_n_out();
+int inv_pendulum_impl_ode_fun_jac_x_xdot_z(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int inv_pendulum_impl_ode_fun_jac_x_xdot_z_work(int *, int *, int *, int *);
+const int *inv_pendulum_impl_ode_fun_jac_x_xdot_z_sparsity_in(int);
+const int *inv_pendulum_impl_ode_fun_jac_x_xdot_z_sparsity_out(int);
+int inv_pendulum_impl_ode_fun_jac_x_xdot_z_n_in();
+int inv_pendulum_impl_ode_fun_jac_x_xdot_z_n_out();
 
 // implicit ODE
-int inv_pendulum_impl_ode_jac_x_xdot_u(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int inv_pendulum_impl_ode_jac_x_xdot_u_work(int *, int *, int *, int *);
-const int *inv_pendulum_impl_ode_jac_x_xdot_u_sparsity_in(int);
-const int *inv_pendulum_impl_ode_jac_x_xdot_u_sparsity_out(int);
-int inv_pendulum_impl_ode_jac_x_xdot_u_n_in();
-int inv_pendulum_impl_ode_jac_x_xdot_u_n_out();
+int inv_pendulum_impl_ode_jac_x_xdot_u_z(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int inv_pendulum_impl_ode_jac_x_xdot_u_z_work(int *, int *, int *, int *);
+const int *inv_pendulum_impl_ode_jac_x_xdot_u_z_sparsity_in(int);
+const int *inv_pendulum_impl_ode_jac_x_xdot_u_z_sparsity_out(int);
+int inv_pendulum_impl_ode_jac_x_xdot_u_z_n_in();
+int inv_pendulum_impl_ode_jac_x_xdot_u_z_n_out();
 
 // implicit ODE - for lifted_irk
 int inv_pendulum_impl_ode_fun_jac_x_xdot_u(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);

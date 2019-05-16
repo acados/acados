@@ -52,8 +52,8 @@ extern "C" {
 typedef struct
 {
     double delta;
-	double epsilon;
-//	double gamma; // 0.0
+    double epsilon;
+//    double gamma; // 0.0
 } ocp_nlp_reg_convexify_opts;
 
 //
@@ -90,7 +90,7 @@ typedef struct {
 //    struct blasfeo_dvec grad;
 //    struct blasfeo_dvec b2;
 
-	// giaf's
+    // giaf's
     struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dvec **rq;  // pointer to rq in qp_in
     struct blasfeo_dmat **BAbt;  // pointer to BAbt in qp_in

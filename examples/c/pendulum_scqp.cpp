@@ -201,13 +201,13 @@ int main() {
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
-    int maxIter = max_num_sqp_iterations;
+    int max_iter = max_num_sqp_iterations;
     double min_res_g = 1e-9;
     double min_res_b = 1e-9;
     double min_res_d = 1e-9;
     double min_res_m = 1e-9;
 
-	ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+	ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
 	ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
 	ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
 	ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);

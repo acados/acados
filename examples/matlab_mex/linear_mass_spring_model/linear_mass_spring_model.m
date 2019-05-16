@@ -14,6 +14,7 @@ sym_u = MX.sym('u', nu, 1); % controls
 sym_xdot = MX.sym('xdot',size(sym_x)); %state derivatives
 
 %% dynamics
+% continuous time
 Ac = zeros(nx, nx);
 for ii=1:num_mass
 	Ac(ii,num_mass+ii) = 1.0;
@@ -29,8 +30,15 @@ for ii=1:nu
 	Bc(num_mass+ii, ii) = 1.0;
 end
 
+% discrete time
+Ts = 0.5; % sampling time
+M = expm([Ts*Ac, Ts*Bc; zeros(nu, 2*nx/2+nu)]);
+A = M(1:nx,1:nx);
+B = M(1:nx,nx+1:end);
+
 expr_f_expl = Ac*sym_x + Bc*sym_u;
 expr_f_impl = expr_f_expl - sym_xdot;
+expr_phi = A*sym_x + B*sym_u;
 
 %% constraints
 expr_h = [sym_u; sym_x];
@@ -60,6 +68,7 @@ model.sym_xdot = sym_xdot;
 model.sym_u = sym_u;
 model.expr_f_expl = expr_f_expl;
 model.expr_f_impl = expr_f_impl;
+model.expr_phi = expr_phi;
 model.expr_h = expr_h;
 model.expr_h_e = expr_h_e;
 model.expr_y = expr_y;

@@ -20,38 +20,23 @@ clc;
 clear all;
 close all;
 
-addpath('~/casadi/swig/octave')
-
-% casadi opts for code generation
-if CasadiMeta.version()=='3.4.0'
-	% casadi 3.4
-	opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-else
-	% old casadi versions
-	error('Please download and install Casadi 3.4.0')
-end
-
-NX = 6;
-NU = 1;
-NZ = 5;
+addpath('../../../interfaces/matlab/external_function_generation/sim/')
 
 % define model 
-dae = export_inverted_pendulum_dae_model();
+model = export_inverted_pendulum_dae_model();
 
-% Set up DAE
-ode_impl    = dae.f_impl_expr; 
+%% GNSF Model -- detect structure, reorder model, and generate C Code for
+%% GNSF model. --> for more advanded users - uncomment this section
+% Reformulate model as GNSF & Reorder x, xdot, z, f_impl, f_expl
+% accordingly
+transcribe_opts.print_info = 1;
+[ gnsf, reordered_model] = detect_gnsf_structure(model, transcribe_opts);
+    % check output of this function to see if/how the states are reordered
+model = reordered_model;
+generate_c_code_gnsf( gnsf );
 
-jac_x = SX.zeros(NX+NZ, NX) + jacobian(ode_impl, dae.x);
-jac_xdot = SX.zeros(NX+NZ, NX) + jacobian(ode_impl, dae.xdot);
-jac_z = SX.zeros(NX+NZ, NZ) + jacobian(ode_impl, dae.z);
-jac_u = SX.zeros(NX+NZ, NU) + jacobian(ode_impl, dae.u);
+%% Implicit Model -- Generate C Code
+opts.generate_hess = 1;  % set to 1 if you want to use exact hessian propagation
 
-impl_ode_fun = Function('casadi_impl_ode_fun_pendulum_dae', {dae.x, dae.xdot, dae.u, dae.z}, {ode_impl});
-impl_ode_fun_jac_x_xdot_z = Function('casadi_impl_ode_fun_jac_x_xdot_z_pendulum_dae', {dae.x, dae.xdot, dae.u, dae.z}, {ode_impl, jac_x, jac_xdot, jac_z});
-impl_ode_fun_jac_x_xdot_u_z = Function('casadi_impl_ode_fun_jac_x_xdot_u_z_pendulum_dae', {dae.x, dae.xdot, dae.u, dae.z}, {ode_impl, jac_x, jac_xdot, jac_u, jac_z});
-impl_ode_jac_x_xdot_u_z = Function('casadi_impl_ode_jac_x_xdot_u_z_pendulum_dae', {dae.x, dae.xdot, dae.u, dae.z}, {jac_x, jac_xdot, jac_u, jac_z});
+generate_c_code_implicit_ode( model, opts );
 
-impl_ode_fun.generate('impl_ode_fun_pendulum_dae', opts);
-impl_ode_fun_jac_x_xdot_z.generate('impl_ode_fun_jac_x_xdot_z_pendulum_dae', opts);
-impl_ode_fun_jac_x_xdot_u_z.generate('impl_ode_fun_jac_x_xdot_u_z_pendulum_dae', opts);
-impl_ode_jac_x_xdot_u_z.generate('impl_ode_jac_x_xdot_u_z_pendulum_dae', opts);

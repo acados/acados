@@ -64,6 +64,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		double *Su = mxGetPr( plhs[0] );
 		sim_out_get(config, dims, out, "Su", Su);
 		}
+	else if(!strcmp(field, "S_adj"))
+		{
+		plhs[0] = mxCreateNumericMatrix(nx+nu, 1, mxDOUBLE_CLASS, mxREAL);
+		double *S_adj = mxGetPr( plhs[0] );
+		sim_out_get(config, dims, out, "S_adj", S_adj);
+		}
+	else if(!strcmp(field, "S_hess"))
+		{
+		plhs[0] = mxCreateNumericMatrix(nx+nu, nx+nu, mxDOUBLE_CLASS, mxREAL);
+		double *S_hess = mxGetPr( plhs[0] );
+		sim_out_get(config, dims, out, "S_hess", S_hess);
+		}
 	else
 		{
 		mexPrintf("\nsim_get: field not supported: %s\n", field);

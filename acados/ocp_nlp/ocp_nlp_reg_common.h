@@ -39,9 +39,9 @@ extern "C" {
 //typedef ocp_qp_dims ocp_nlp_reg_dims;
 typedef struct
 {
-	int *nx;
-	int *nu;
-	int N;
+    int *nx;
+    int *nu;
+    int N;
 } ocp_nlp_reg_dims;
 
 //
@@ -60,12 +60,12 @@ typedef struct
     /* dims */
     int (*dims_calculate_size)(int N);
     ocp_nlp_reg_dims *(*dims_assign)(int N, void *raw_memory);
-	void (*dims_set)(void *config, ocp_nlp_reg_dims *dims, int stage, char *field, int *value);
+    void (*dims_set)(void *config, ocp_nlp_reg_dims *dims, int stage, char *field, int *value);
     /* opts */
     int (*opts_calculate_size)(void);
     void *(*opts_assign)(void *raw_memory);
-	void (*opts_initialize_default)(void *config, ocp_nlp_reg_dims *dims, void *opts);
-	void (*opts_set)(void *config, ocp_nlp_reg_dims *dims, void *opts, char *field, void* value);
+    void (*opts_initialize_default)(void *config, ocp_nlp_reg_dims *dims, void *opts);
+    void (*opts_set)(void *config, ocp_nlp_reg_dims *dims, void *opts, char *field, void* value);
     /* memory */
     int (*memory_calculate_size)(void *config, ocp_nlp_reg_dims *dims, void *opts);
     void *(*memory_assign)(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);

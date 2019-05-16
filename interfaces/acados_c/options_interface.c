@@ -77,7 +77,7 @@ bool set_option_int(void *args_, const char *option, const int value)
             token = strsep_acados(&ptr_to_option_cpy, ".");
             ocp_nlp_sqp_opts *args = (ocp_nlp_sqp_opts *) args_;
             if (!strcmp(token, "max_iter")) {
-                args->maxIter = value;
+                args->max_iter = value;
             }
             else if (is_qp_solver(token))
             {

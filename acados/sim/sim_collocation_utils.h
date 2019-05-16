@@ -26,12 +26,16 @@ extern "C" {
 
 #include "acados/utils/types.h"
 
+
+
 enum Newton_type_collocation
 {
     exact = 0,
     simplified_in,
     simplified_inis
 };
+
+
 
 typedef struct
 {
@@ -48,6 +52,8 @@ typedef struct
     double *transf2_T;
 } Newton_scheme;
 
+
+
 //
 int gauss_nodes_work_calculate_size(int ns);
 //
@@ -60,6 +66,8 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work);
 int butcher_table_work_calculate_size(int ns);
 //
 void butcher_table(int ns, double *nodes, double *b, double *A, void *work);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

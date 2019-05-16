@@ -1227,7 +1227,8 @@ int main()
 				break;
 
 			case DISCRETE_MODEL:
-				nlp_set_discrete_model_in_stage(config, nlp_in, i, &erk4_casadi[i]);
+				set_fun_status = ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "disc_dyn_fun_jac", &erk4_casadi[i]);
+				if (set_fun_status != 0) exit(1);
 				break;
 
 			default:
@@ -1323,13 +1324,13 @@ int main()
 		}
     }
 
-	int maxIter = MAX_SQP_ITERS;
+	int max_iter = MAX_SQP_ITERS;
     double min_res_g = 1e-9;
     double min_res_b = 1e-9;
     double min_res_d = 1e-9;
     double min_res_m = 1e-9;
 
-	ocp_nlp_opts_set(config, nlp_opts, "maxIter", &maxIter);
+	ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
 	ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
 	ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
 	ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
