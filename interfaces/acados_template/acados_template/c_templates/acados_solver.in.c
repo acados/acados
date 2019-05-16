@@ -320,7 +320,7 @@ int acados_create() {
     
     // set up bounds for last stage
     // x
-    int idxbxN[NBXN];
+    int idxbx_e[NBXN];
     {%- for item in ocp.constraints.idxbx_e %}
     idxbx_e[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
