@@ -51,32 +51,32 @@ class ocp_nlp_dims:
         return self.__ny
 
     @property
-    def nyN(self):
-        return self.__nyN
+    def ny_e(self):
+        return self.__ny_e
 
     @property
     def npd(self):
         return self.__npd
 
     @property
-    def npdN(self):
-        return self.__npdN
+    def npd_e(self):
+        return self.__npd_e
 
     @property
     def nh(self):
         return self.__nh
 
     @property
-    def nhN(self):
-        return self.__nhN
+    def nh_e(self):
+        return self.__nh_e
 
     @property
     def nbx(self):
         return self.__nbx
 
     @property
-    def nbxN(self):
-        return self.__nbxN
+    def nbx_e(self):
+        return self.__nbx_e
 
     @property
     def nbu(self):
@@ -87,7 +87,7 @@ class ocp_nlp_dims:
         return self.__nsbx
 
     @property
-    def nsbxN(self):
+    def nsbx_e(self):
         return self.__nsbx
 
     @property
@@ -99,16 +99,16 @@ class ocp_nlp_dims:
         return self.__ns
 
     @property
-    def nsN(self):
-        return self.__nsN
+    def ns_e(self):
+        return self.__ns_e
 
     @property
     def ng(self):
         return self.__ng
 
     @property
-    def ngN(self):
-        return self.__ngN
+    def ng_e(self):
+        return self.__ng_e
 
     @property
     def N(self):
@@ -149,10 +149,10 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid ny value. Exiting.')
 
-    @nyN.setter
-    def nyN(self, nyN):
-        if type(nyN) == int and ny_e > -1:
-            self.__ny_e = nyN
+    @ny_e.setter
+    def ny_e(self, ny_e):
+        if type(ny_e) == int and ny_e > -1:
+            self.__ny_e = ny_e
         else:
             raise Exception('Invalid ny_e value. Exiting.')
 
@@ -163,10 +163,10 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid npd value. Exiting.')
 
-    @npdN.setter
-    def npdN(self, npdN):
-        if type(npdN) == int and npd_e > -1:
-            self.__npd_e = npdN
+    @npd_e.setter
+    def npd_e(self, npd_e):
+        if type(npd_e) == int and npd_e > -1:
+            self.__npd_e = npd_e
         else:
             raise Exception('Invalid npd_e value. Exiting.')
 
@@ -177,10 +177,10 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nh value. Exiting.')
 
-    @nhN.setter
-    def nhN(self, nhN):
-        if type(nhN) == int and nh_e > -1:
-            self.__nh_e = nhN
+    @nh_e.setter
+    def nh_e(self, nh_e):
+        if type(nh_e) == int and nh_e > -1:
+            self.__nh_e = nh_e
         else:
             raise Exception('Invalid nh_e value. Exiting.')
 
@@ -191,10 +191,10 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nbx value. Exiting.')
 
-    @nbxN.setter
-    def nbxN(self, nbxN):
-        if type(nbxN) == int and nbx_e > -1:
-            self.__nbx_e = nbxN
+    @nbx_e.setter
+    def nbx_e(self, nbx_e):
+        if type(nbx_e) == int and nbx_e > -1:
+            self.__nbx_e = nbx_e
         else:
             raise Exception('Invalid nbx_e value. Exiting.')
 
@@ -212,10 +212,10 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nsbx value. Exiting.')
 
-    @nsbxN.setter
-    def nsbxN(self, nbxN):
-        if type(nsbxN) == int and nsbx_e > -1:
-            self.__nsbx_e = nsbxN
+    @nsbx_e.setter
+    def nsbx_e(self, nbx_e):
+        if type(nsbx_e) == int and nsbx_e > -1:
+            self.__nsbx_e = nsbx_e
         else:
             raise Exception('Invalid nsbx_e value. Exiting.')
 
@@ -233,10 +233,10 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid ns value. Exiting.')
 
-    @nsN.setter
-    def nsN(self, nsN):
-        if type(nsN) == int and ns_e > -1:
-            self.__ns_e = nsN
+    @ns_e.setter
+    def ns_e(self, ns_e):
+        if type(ns_e) == int and ns_e > -1:
+            self.__ns_e = ns_e
         else:
             raise Exception('Invalid ns_e value. Exiting.')
 
@@ -247,10 +247,10 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid ng value. Exiting.')
 
-    @ngN.setter
-    def ngN(self, ngN):
-        if type(ngN) == int and ng_e > -1:
-            self.__ng_e = ngN
+    @ng_e.setter
+    def ng_e(self, ng_e):
+        if type(ng_e) == int and ng_e > -1:
+            self.__ng_e = ng_e
         else:
             raise Exception('Invalid ng_e value. Exiting.')
 
@@ -388,32 +388,32 @@ class ocp_nlp_cost:
 
     # Mayer term
     @property
-    def WN(self):
-        return self.__WN
+    def W_e(self):
+        return self.__W_e
 
     @property
-    def VxN(self):
-        return self.__VxN
+    def Vx_e(self):
+        return self.__Vx_e
 
     @property
-    def yrefN(self):
-        return self.__yrefN
+    def yref_e(self):
+        return self.__yref_e
 
     @property
-    def ZlN(self):
-        return self.__ZlN
+    def Zl_e(self):
+        return self.__Zl_e
 
     @property
-    def ZuN(self):
-        return self.__ZuN
+    def Zu_e(self):
+        return self.__Zu_e
 
     @property
-    def zlN(self):
-        return self.__zlN
+    def zl_e(self):
+        return self.__zl_e
 
     @property
-    def zuN(self):
-        return self.__zuN
+    def zu_e(self):
+        return self.__zu_e
 
     @W_e.setter
     def W_e(self, W_e):
