@@ -188,10 +188,10 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", in_x0);
 
     // update reference
-    for (int ii = 0; ii < {{ocp.dims._e}}; ii++)
+    for (int ii = 0; ii < {{ocp.dims.N}}; ii++)
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) in_y_ref);
 
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ocp.dims.N}}, "yref", (void *) in_y_ref_N);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ocp.dims.N}}, "yref", (void *) in_y_ref_e);
 
     // update value of parameters
     {% if ocp.dims.np > 0%}
