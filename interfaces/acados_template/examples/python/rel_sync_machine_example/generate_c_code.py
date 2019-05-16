@@ -236,7 +236,7 @@ nu  = model.u.size()[0]
 nz  = model.z.size()[0]
 np  = model.p.size()[0]
 ny  = nu + nx
-nyN = nx
+ny_e = nx
 N   = 2
 Tf  = N*Ts
 
@@ -245,7 +245,7 @@ nlp_dims      = ra.dims
 nlp_dims.nx   = nx
 nlp_dims.nz   = nz
 nlp_dims.ny   = ny
-nlp_dims.nyN  = nyN
+nlp_dims.ny_e  = ny_e
 nlp_dims.nbx  = 0
 nlp_dims.nbu  = 1
 
@@ -261,17 +261,17 @@ if FORMULATION == 2:
     nlp_dims.ng  = 2
     nlp_dims.npd  = 2
     nlp_dims.nh  = 1
-    nlp_dims.nhN = 0
+    nlp_dims.nh_e = 0
 
 # nlp_dims.nbu  = 2
 # nlp_dims.ng   = 2
 # nlp_dims.ng   = 0
-nlp_dims.ngN  = 0
-nlp_dims.nbxN = 0
+nlp_dims.ng_e  = 0
+nlp_dims.nbx_e = 0
 nlp_dims.nu   = nu
 nlp_dims.np   = np
 nlp_dims.N    = N
-# nlp_dims.npdN = 0
+# nlp_dims.npd_e = 0
 # nlp_dims.nh  = 1
 
 # set weighting matrices
@@ -305,25 +305,25 @@ Vz[1,1] = 0.0
 
 nlp_cost.Vz = Vz
 
-QN = nmp.eye(nx)
-QN[0,0] = 1e-3
-QN[1,1] = 1e-3
-nlp_cost.WN = QN
+Q_e = nmp.eye(nx)
+Q_e[0,0] = 1e-3
+Q_e[1,1] = 1e-3
+nlp_cost.W_e = Q_e
 
-VxN = nmp.zeros((nyN, nx))
-VxN[0,0] = 1.0
-VxN[1,1] = 1.0
+Vx_e = nmp.zeros((ny_e, nx))
+Vx_e[0,0] = 1.0
+Vx_e[1,1] = 1.0
 
-nlp_cost.VxN = VxN
+nlp_cost.Vx_e = Vx_e
 
 nlp_cost.yref  = nmp.zeros((ny, ))
 nlp_cost.yref[0]  = psi_d_ref
 nlp_cost.yref[1]  = psi_q_ref
 nlp_cost.yref[2]  = u_d_ref
 nlp_cost.yref[3]  = u_q_ref
-nlp_cost.yrefN = nmp.zeros((nyN, ))
-nlp_cost.yrefN[0]  = psi_d_ref
-nlp_cost.yrefN[1]  = psi_q_ref
+nlp_cost.yref_e = nmp.zeros((ny_e, ))
+nlp_cost.yref_e[0]  = psi_d_ref
+nlp_cost.yref_e[1]  = psi_q_ref
 
 # get D and C
 res = get_general_constraints_DC(u_max)
@@ -358,9 +358,9 @@ if FORMULATION == 0 or FORMULATION == 2:
     nlp_con.C   = C
     nlp_con.lg  = lg
     nlp_con.ug  = ug
-    # nlp_con.CN  = ...
-    # nlp_con.lgN = ...
-    # nlp_con.ugN = ...
+    # nlp_con.C_e  = ...
+    # nlp_con.lg_e = ...
+    # nlp_con.ug_e = ...
 
 # setting parameters
 nlp_con.p = nmp.array([w_val, 0.0, 0.0])

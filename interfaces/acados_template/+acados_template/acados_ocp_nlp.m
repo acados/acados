@@ -6,9 +6,9 @@ classdef acados_ocp_nlp < handle
         solver_config 
         model_name 
         con_p_name 
-        con_pN_name 
+        con_p_e_name 
         con_h_name 
-        con_hN_name 
+        con_h_e_name 
         constants 
         acados_include_path 
         acados_lib_path 
@@ -21,9 +21,9 @@ classdef acados_ocp_nlp < handle
             obj.solver_config = acados_template.ocp_nlp_solver_config(); 
             obj.model_name = []; 
             obj.con_p_name = [];
-            obj.con_pN_name = [];
+            obj.con_p_e_name = [];
             obj.con_h_name = [];
-            obj.con_hN_name = [];
+            obj.con_h_e_name = [];
             obj.constants = [];
             obj.acados_include_path = [];
             obj.acados_lib_path = [];

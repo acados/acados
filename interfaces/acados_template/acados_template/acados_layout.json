@@ -5,13 +5,13 @@
     "acados_lib_path": [
         "str"
     ],
-    "con_hN_name": [
+    "con_h_e_name": [
         "NoneType"
     ],
     "con_h_name": [
         "NoneType"
     ],
-    "con_pN_name": [
+    "con_p_e_name": [
         "NoneType"
     ],
     "con_p_name": [
@@ -59,22 +59,22 @@
                 "nbu"
             ]
         ],
-        "lbxN": [
+        "lbx_e": [
             "ndarray",
             [
-                "nbxN"
+                "nbx_e"
             ]
         ],
-        "ubxN": [
+        "ubx_e": [
             "ndarray",
             [
-                "nbxN"
+                "nbx_e"
             ]
         ],
-        "idxbxN": [
+        "idxbx_e": [
             "ndarray",
                     [
-                        "nbxN"
+                        "nbx_e"
                     ]
         ],
         "lsbx": [
@@ -113,22 +113,22 @@
                 "nsbu"
             ]
         ],
-        "lsbxN": [
+        "lsbx_e": [
             "ndarray",
                 [
-                    "nsbxN"
+                    "nsbx_e"
                 ]
         ],
-        "usbxN": [
+        "usbx_e": [
             "ndarray",
                 [
-                    "nsbxN"
+                    "nsbx_e"
                 ]
         ],
-        "idxsbxN": [
+        "idxsbx_e": [
             "ndarray",
                 [
-                    "nsbxN"
+                    "nsbx_e"
                 ]
         ],
         "lg": [
@@ -157,23 +157,23 @@
                 "nx"
             ]
         ],
-        "CN": [
+        "C_e": [
             "ndarray",
             [
-                "ngN",
+                "ng_e",
                 "nx"
             ]
         ],
-        "lgN": [
+        "lg_e": [
             "ndarray",
             [
-                "ngN"
+                "ng_e"
             ]
         ],
-        "ugN": [
+        "ug_e": [
             "ndarray",
             [
-                "ngN"
+                "ng_e"
             ]
         ],
         "lh": [
@@ -188,16 +188,16 @@
                 "nh"
             ]
         ],
-        "lhN": [
+        "lh_e": [
             "ndarray",
             [
-                "nhN"
+                "nh_e"
             ]
         ],
-        "uhN": [
+        "uh_e": [
             "ndarray",
             [
-                "nhN"
+                "nh_e"
             ]
         ],
         "p": [
@@ -228,10 +228,10 @@
                 "nx"
             ]
         ],
-        "VxN": [
+        "Vx_e": [
             "ndarray",
             [
-                "nyN",
+                "ny_e",
                 "nx"
             ]
         ],
@@ -275,11 +275,11 @@
                 "ns"
             ]
         ],
-        "WN": [
+        "W_e": [
             "ndarray",
             [
-                "nyN",
-                "nyN"
+                "ny_e",
+                "ny_e"
             ]
         ],
         "yref": [
@@ -288,36 +288,36 @@
                 "ny"
             ]
         ],
-        "yrefN": [
+        "yref_e": [
             "ndarray",
             [
-                "nyN"
+                "ny_e"
             ]
         ],
-        "ZlN": [
+        "Zl_e": [
             "ndarray",
             [
-                "nsN",
-                "nsN"
+                "ns_e",
+                "ns_e"
             ]
         ],
-        "ZuN": [
+        "Zu_e": [
             "ndarray",
             [
-                "nsN",
-                "nsN"
+                "ns_e",
+                "ns_e"
             ]
         ],
-        "zlN": [
+        "zl_e": [
             "ndarray",
             [
-                "nsN"
+                "ns_e"
             ]
         ],
-        "zuN": [
+        "zu_e": [
             "ndarray",
             [
-                "nsN"
+                "ns_e"
             ]
         ]
     },
@@ -337,28 +337,28 @@
         "nsbx": [
             "int"
         ],
-        "nsbxN": [
+        "nsbx_e": [
             "int"
         ],
-        "nbxN": [
+        "nbx_e": [
             "int"
         ],
         "ns": [
             "int"
         ],
-        "nsN": [
+        "ns_e": [
             "int"
         ],
         "ng": [
             "int"
         ],
-        "ngN": [
+        "ng_e": [
             "int"
         ],
         "nh": [
             "int"
         ],
-        "nhN": [
+        "nh_e": [
             "int"
         ],
         "np": [
@@ -367,7 +367,7 @@
         "npd": [
             "int"
         ],
-        "npdN": [
+        "npd_e": [
             "int"
         ],
         "nu": [
@@ -379,7 +379,7 @@
         "ny": [
             "int"
         ],
-        "nyN": [
+        "ny_e": [
             "int"
         ],
         "nz": [
