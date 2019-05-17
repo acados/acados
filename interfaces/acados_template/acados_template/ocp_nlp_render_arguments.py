@@ -22,7 +22,7 @@ class ocp_nlp_dims:
         self.__nbx_e  = 0     #: :math:`n_{b_x}` - number of state bounds at t=T 
         self.__nbu    = 0     #: :math:`n_{b_u}` - number of input bounds 
         self.__nsbx   = 0     #: :math:`n_{{sb}_x}` - number of soft state bounds 
-        self.__nsbx_e = 0     #: :math:`n_{{sb}_{x}^e}` - number of soft state bounds at t=T 
+        self.__nsbx_e = 0     #: :math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T 
         self.__nsbu   = 0     #: :math:`n_{{sb}_u}` - number of soft input bounds 
         self.__ns     = 0     #: :math:`n_{s}` - total number of slacks 
         self.__ns_e   = 0     #: :math:`n_{s}^e` - total number of slacks at t=T 

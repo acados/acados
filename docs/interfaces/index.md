@@ -48,6 +48,48 @@ that can be easily deployed on an embedded system.
 
 The framework is based on templated C files which are rendered from Python using the templating engine `Jinja2`.
 
+The currently supported formulations reads as
+
+```math
+\begin{equation}
+\begin{aligned}
+&\underset{\begin{subarray}{c}
+    x(\cdot),\,u(\cdot), \, z(\cdot)
+\end{subarray}}{\min}	    &&\int_0^T l(x(\tau), u(\tau), z(\tau), p)\mathrm{d}\tau + m(x(T), z(T), p)\\ 
+                            &\,\,\,\quad \text{s.t.}    &&x(0) - \bar{x}_0 = 0, &&\\
+                            & 						    &&\underline{h} \leq h(x(t), u(t), p) \leq \bar{h}, &&\quad t \in [0,\,T),\\
+                            & 						    &&\underline{u}_0 \leq \Pi_{u_0}u(0) \leq \bar{u}_0, && \\
+                            & 						    &&\underline{c}_0 \leq D_0u(0)\leq \bar{c}_0, && \\
+                            &                           &&                                                   && \\[-1em]
+                            & 						    &&F(x(t), \dot{x}(t), u(t), z(t), p) = 0, &&\quad t \in [0,\,T),\\
+                            & 						    &&\underline{h} \leq h(x(t), u(t), p) \leq \bar{h}, &&\quad t \in [0,\,T),\\
+                            & 						    &&\underline{x} \leq \Pi_{x}x(t) \leq \bar{x}, &&\quad t \in (0,\,T),\\
+                            & 						    &&\underline{u} \leq \Pi_{u}u(t) \leq \bar{u}, &&\quad t \in (0,\,T),\\
+                            & 						    &&\underline{c} \leq Cx(t) + Du(t)\leq \bar{c}, &&\quad t \in (0,\,T), \\
+                            &                           &&                                                   && \\[-1em]
+                            & 						    &&\underline{h}_e \leq h_e(x(T), p) \leq \bar{h}_e, &&\\
+                            & 						    &&\underline{x}_e \leq \Pi_{x_e}x(T) \leq \bar{x}_{e}, &&\\
+                            & 						    &&\underline{c}_e \leq C_ex(T)\leq \bar{c}_e, &&\\
+\end{aligned}
+\end{equation}
+```
+```eval_rst
+Where:
+
+* :math:`l: \mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z} \rightarrow \mathbb{R}` is the Lagrange objective term.
+* :math:`m: \mathbb{R}^{n_x}\times\mathbb{R}^{n_z} \rightarrow \mathbb{R}` is the Mayer objective term.
+
+* :math:`F: \mathbb{R}^{n_x}\times\mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_x+n_z}` describes the (potentially) fully implicit dynamics.
+
+* :math:`h: \mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_h}` and :math:`h_e: \mathbb{R}^{n_x}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_{h_e}}` are general nonlinear functions.
+
+
+Currently not yet implemented features:
+
+* :math:`l` must be in linear least-squares form :math:`l = \frac{1}{2}\| V_x x(t) + V_u u(t) + V_z z(t) - y_{\text{ref}}\|_W^2`
+* :math:`m` must be in linear least-squares form :math:`m = \frac{1}{2}\| V^e_x x(t) - y_{\text{ref}}^e\|_{W^e}^2`
+* Constraints cannot depend on algebraic variables (yet)
+```
 
 You can check out the examples folder to learn about  how to use acados_template.
 First of all, you need to compile and install acados without the qpDUNES, HPMPC and OSQP QP solvers running:
