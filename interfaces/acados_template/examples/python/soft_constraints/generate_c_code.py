@@ -18,14 +18,14 @@ Tf = 1.0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
 ny = nx + nu
-nyN = nx
+ny_e = nx
 N = 10
 
 # set ocp_nlp_dimensions
 nlp_dims     = ra.dims
 nlp_dims.nx  = nx 
 nlp_dims.ny  = ny 
-nlp_dims.nyN = nyN 
+nlp_dims.ny_e = ny_e 
 nlp_dims.nbx = 0
 nlp_dims.nbu = nu 
 nlp_dims.nsbu = nu 
@@ -58,18 +58,18 @@ Vu = np.zeros((ny, nu))
 Vu[4,0] = 1.0
 nlp_cost.Vu = Vu
 
-nlp_cost.WN = Q 
+nlp_cost.W_e = Q 
 
-VxN = np.zeros((nyN, nx))
-VxN[0,0] = 1.0
-VxN[1,1] = 1.0
-VxN[2,2] = 1.0
-VxN[3,3] = 1.0
+Vx_e = np.zeros((ny_e, nx))
+Vx_e[0,0] = 1.0
+Vx_e[1,1] = 1.0
+Vx_e[2,2] = 1.0
+Vx_e[3,3] = 1.0
 
-nlp_cost.VxN = VxN
+nlp_cost.Vx_e = Vx_e
 
 nlp_cost.yref  = np.zeros((ny, ))
-nlp_cost.yrefN = np.zeros((nyN, ))
+nlp_cost.yref_e = np.zeros((ny_e, ))
 
 nlp_cost.zl = 50*np.ones((1, ))
 nlp_cost.zu = 50*np.ones((1, ))
