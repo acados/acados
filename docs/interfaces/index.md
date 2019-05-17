@@ -67,9 +67,9 @@ The currently supported formulations reads as
                             & 						    &&\underline{u} \leq \Pi_{u}u(t) \leq \bar{u}, &&\quad t \in (0,\,T),\\
                             & 						    &&\underline{c} \leq Cx(t) + Du(t)\leq \bar{c}, &&\quad t \in (0,\,T), \\
                             &                           &&                                                   && \\[-1em]
-                            & 						    &&\underline{h}_e \leq h_e(x(T), p) \leq \bar{h}_e, &&\\
-                            & 						    &&\underline{x}_e \leq \Pi_{x_e}x(T) \leq \bar{x}_{e}, &&\\
-                            & 						    &&\underline{c}_e \leq C_ex(T)\leq \bar{c}_e, &&\\
+                            & 						    &&\underline{h}^e \leq h^e(x(T), p) \leq \bar{h}^e, &&\\
+                            & 						    &&\underline{x}^e \leq \Pi_{x}^e x(T) \leq \bar{x}^{e}, &&\\
+                            & 						    &&\underline{c}^e \leq C^e x(T)\leq \bar{c}^e, &&\\
 \end{aligned}
 \end{equation}
 ```
@@ -81,7 +81,7 @@ Where:
 
 * :math:`F: \mathbb{R}^{n_x}\times\mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_x+n_z}` describes the (potentially) fully implicit dynamics.
 
-* :math:`h: \mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_h}` and :math:`h_e: \mathbb{R}^{n_x}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_{h_e}}` are general nonlinear functions.
+* :math:`h: \mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_h}` and :math:`h^e: \mathbb{R}^{n_x}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_{h_e}}` are general nonlinear functions.
 
 
 Currently not yet implemented features:
