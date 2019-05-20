@@ -306,9 +306,9 @@ int acados_create() {
     double Vz[NY*NZ];
 
     double yref_e[NYN];
-    double WN[NYN*NYN];
+    double W_e[NYN*NYN];
 
-    double VxN[NYN*NX];
+    double Vx_e[NYN*NX];
     
     for (int ii = 0; ii < NU + NX; ii++)
         yref[ii] = 0.0;
@@ -741,8 +741,8 @@ int acados_create() {
     {% if dims.nh_e > 0 %}
     // nonlinear constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_constraint_e[i]);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lhN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uhN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
     {% endif %}
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);
