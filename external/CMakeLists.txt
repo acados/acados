@@ -23,8 +23,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # TODO: The following definition should go ASAP!
-set(TARGET "GENERIC" CACHE STRING "Target architecture")
-set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
 set(BLASFEO_HEADERS_INSTALLATION_DIRECTORY "include/blasfeo/include" CACHE STRING "")
 set(HPIPM_HEADERS_INSTALLATION_DIRECTORY "include/hpipm/include" CACHE STRING "")
 set(HPMPC_HEADERS_INSTALLATION_DIRECTORY "include/hpmpc/include" CACHE STRING "")
