@@ -954,7 +954,7 @@ def acados_ocp2json_layout(acados_ocp):
     Parameters
     ----------
     acados_ocp : class
-        object of type ocp_nlp_render_arguments.
+        object of type acados_ocp_nlp.
     
     Returns
     ------
