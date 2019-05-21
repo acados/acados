@@ -954,7 +954,7 @@ def acados_ocp2json_layout(acados_ocp):
     Parameters
     ----------
     acados_ocp : class
-        object of type ocp_nlp_render_arguments.
+        object of type acados_ocp_nlp.
     
     Returns
     ------
@@ -1080,19 +1080,23 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
             if isinstance(v, int) or isinstance(v, float):
                 v = np.array([v])
         if v_type == 'ndarray' or v_type__ == 'list':
+            dims_l = []
+            dims_names = []
+            dim_keys = ocp_nlp_layout[k][1]
+            for item in dim_keys:
+                dims_l.append(ocp_nlp_dims[item])
+                dims_names.append(item)
+            dims = tuple(dims_l)
             if v == []:
                 # v = None
-                v = []
+                try: 
+                    v = np.reshape(v, dims)
+                except:  
+                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, [], dims_names, dims))
+                # v = []
             else:
                 v = np.array(v)
                 v_dims = v.shape
-                dim_keys = ocp_nlp_layout[k][1]
-                dims_l = []
-                dims_names = []
-                for item in dim_keys:
-                    dims_l.append(ocp_nlp_dims[item])
-                    dims_names.append(item)
-                dims = tuple(dims_l)
                 try: 
                     v = np.reshape(v, dims)
                 except:  
