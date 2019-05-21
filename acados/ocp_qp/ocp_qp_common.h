@@ -50,7 +50,7 @@ typedef struct
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
     void (*opts_update)(void *config, void *dims, void *opts);
-    void (*opts_set)(void *config_, void *opts_, const char *field, const void* value);
+    void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
@@ -66,7 +66,7 @@ typedef struct
     void *(*opts_assign)(ocp_qp_dims *dims, void *raw_memory);
     void (*opts_initialize_default)(ocp_qp_dims *dims, void *opts);
     void (*opts_update)(ocp_qp_dims *dims, void *opts);
-    void (*opts_set)(void *config_, void *opts_, const char *field, const void* value);
+    void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
     int (*memory_calculate_size)(ocp_qp_dims *dims, void *opts);
     void *(*memory_assign)(ocp_qp_dims *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(ocp_qp_dims *dims, void *opts);
@@ -77,13 +77,12 @@ typedef struct
 typedef struct
 {
     void (*dims_set)(void *config_, void *dims_, int stage, const char *field, const int* value);
-    int (*evaluate)(void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem,
-                    void *work);
+    int (*evaluate)(void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem, void *work);
     int (*opts_calculate_size)(void *config, ocp_qp_dims *dims);
     void *(*opts_assign)(void *config, ocp_qp_dims *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, ocp_qp_dims *dims, void *opts);
     void (*opts_update)(void *config, ocp_qp_dims *dims, void *opts);
-    void (*opts_set)(void *config_, void *opts_, const char *field, const void* value);
+    void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
     int (*memory_calculate_size)(void *config, ocp_qp_dims *dims, void *opts);
     void *(*memory_assign)(void *config, ocp_qp_dims *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, ocp_qp_dims *dims, void *opts);
@@ -142,8 +141,7 @@ int ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory);
 //
-void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res,
-                        ocp_qp_res_ws *res_ws);
+void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws);
 //
 void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4]);
 //

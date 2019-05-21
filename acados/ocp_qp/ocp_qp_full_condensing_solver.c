@@ -112,8 +112,7 @@ void ocp_qp_full_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims,
     qp_solver->opts_update(qp_solver, NULL, opts->qp_solver_opts);  // TODO(all): pass dense_qp_dims
 }
 
-void ocp_qp_full_condensing_solver_opts_set(void *config_, void *opts_,
-                                            const char *field, const void* value)
+void ocp_qp_full_condensing_solver_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
     ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *) opts_;
     // ocp_qp_xcond_solver_config *config = config_;

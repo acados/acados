@@ -108,8 +108,7 @@ void ocp_qp_partial_condensing_solver_opts_update(void *config_, ocp_qp_dims *di
 }
 
 
-void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_,
-                                            const char *field, const void* value)
+void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
     ocp_qp_partial_condensing_solver_opts *opts = (ocp_qp_partial_condensing_solver_opts *) opts_;
     // ocp_qp_xcond_solver_config *config = config_;
@@ -126,8 +125,8 @@ void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_,
     }
     else
     {
-        printf("\nerror: option type %s not available in ocp_qp_partial_condense solver module\n",
-               field);
+		// TODO pass options to qp solver
+        printf("\nerror: option type %s not available in ocp_qp_partial_condense solver module\n", field);
         exit(1);
     }
 }
