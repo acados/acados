@@ -313,13 +313,28 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
     }
     else
     {
-		// TODO extract prefix 'qp_solver_' from filed ???
-        config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
+		printf("\nerror: ocp_nlp_sqp_opts_set: wrong field: %s\n", field);
+		exit(1);
     }
 }
 
 
 
+// TODO rename ... opts_set_qp !!!
+void ocp_nlp_sqp_qp_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_opts *opts = opts_;
+
+	config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
+
+    return;
+
+}
+
+
+
+// TODO rename ... opts_set_dynamics !!!
 void ocp_nlp_sqp_dynamics_opts_set(void *config_, void *opts_, int stage,
         const char *field, void *value)
 {
@@ -335,6 +350,7 @@ void ocp_nlp_sqp_dynamics_opts_set(void *config_, void *opts_, int stage,
 
 
 
+// TODO rename ... opts_set_cost !!!
 void ocp_nlp_sqp_cost_opts_set(void *config_, void *opts_, int stage,
         const char *field, void *value)
 {
@@ -350,6 +366,7 @@ void ocp_nlp_sqp_cost_opts_set(void *config_, void *opts_, int stage,
 
 
 
+// TODO rename ... opts_set_constraints !!!
 void ocp_nlp_sqp_constraints_opts_set(void *config_, void *opts_, int stage,
         const char *field, void *value)
 {
@@ -1412,6 +1429,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_nlp_sqp_opts_initialize_default;
     config->opts_update = &ocp_nlp_sqp_opts_update;
     config->opts_set = &ocp_nlp_sqp_opts_set;
+    config->qp_opts_set = &ocp_nlp_sqp_qp_opts_set;
     config->dynamics_opts_set = &ocp_nlp_sqp_dynamics_opts_set;
     config->cost_opts_set = &ocp_nlp_sqp_cost_opts_set;
     config->constraints_opts_set = &ocp_nlp_sqp_constraints_opts_set;

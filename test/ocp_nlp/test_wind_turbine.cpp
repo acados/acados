@@ -946,7 +946,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
     {
         int pcond_N2 = 10;
-        ocp_nlp_opts_set(config, nlp_opts, "pcond_N2", &pcond_N2);
+        ocp_nlp_qp_opts_set(config, nlp_opts, "pcond_N2", &pcond_N2);
     }
 
     config->opts_update(config, dims, nlp_opts);
