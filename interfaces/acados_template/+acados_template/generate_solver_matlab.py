@@ -6,6 +6,7 @@ import json
 import os 
 
 def generate_solver_matlab(acados_ocp_nlp_json_file):
+    USE_TERA = 1 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
 
     acados_path = os.path.dirname(acados_template.__file__)
     # load MATLAB JSON file instead
@@ -29,77 +30,204 @@ def generate_solver_matlab(acados_ocp_nlp_json_file):
     acados_ocp = ra
 
     # setting up loader and environment
-    file_loader = FileSystemLoader(acados_path + '/c_templates')
-    env = Environment(loader = file_loader)
+    if USE_TERA == 0:
+        file_loader = FileSystemLoader(acados_path + '/c_templates')
+        env = Environment(loader = file_loader)
+    else:
+        template_glob = acados_path + '/c_templates_tera/*'
+        acados_template_path = acados_path + '/c_templates_tera'
 
     # render source template
-    template = env.get_template('main.in.c')
-    output = template.render(ocp=acados_ocp)
+    if USE_TERA == 0:
+        # render source template
+        template = env.get_template('main.in.c')
+        output = template.render(ocp=acados_ocp)
+        # output file
+        out_file = open('./c_generated_code/main_' + model_name + '.c', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code')
+        # render source template
+        template_file = 'main.in.c'
+        out_file = 'main_' + model_name + '.c'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
 
-    # output file
-    out_file = open('./c_generated_code/main_' + model_name + '.c', 'w+')
-    out_file.write(output)
+        os.system(os_cmd)
+        os.chdir('..')
+
 
     # render source template
-    template = env.get_template('acados_solver.in.c')
-    output = template.render(ocp=acados_ocp)
-    # output file
-    out_file = open('./c_generated_code/acados_solver_' + model_name + '.c', 'w+')
-    out_file.write(output)
+    if USE_TERA == 0:
+        # render source template
+        template = env.get_template('acados_solver.in.c')
+        output = template.render(ocp=acados_ocp)
+        # output file
+        out_file = open('./c_generated_code/acados_solver_' + model_name + '.c', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code')
+        # render source template
+        template_file = 'acados_solver.in.c'
+        out_file = 'acados_solver_' + model_name + '.c'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
+
+        os.system(os_cmd)
+        os.chdir('..')
 
     # render source template
-    template = env.get_template('acados_solver.in.h')
-    output = template.render(ocp=acados_ocp)
-    # output file
-    out_file = open('./c_generated_code/acados_solver_' + model_name + '.h', 'w+')
-    out_file.write(output)
+    if USE_TERA == 0:
+        # render source template
+        template = env.get_template('acados_solver.in.h')
+        output = template.render(ocp=acados_ocp)
+        # output file
+        out_file = open('./c_generated_code/acados_solver_' + model_name + '.h', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code')
+        # render source template
+        template_file = 'acados_solver.in.h'
+        out_file = 'acados_solver_' + model_name + '.h'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
+
+        os.system(os_cmd)
+        os.chdir('..')
 
     # render header templates
-    template = env.get_template('model.in.h')
-    output = template.render(ocp=acados_ocp)
-    # output file
-    out_file = open('./c_generated_code/' + model_name + '_model/' + model_name + '_model.h', 'w+')
-    out_file.write(output)
+    if USE_TERA == 0:
+        # render header templates
+        template = env.get_template('model.in.h')
+        output = template.render(ocp=acados_ocp)
+        # output file
+        out_file = open('./c_generated_code/' + model.name + '_model/' + model_name + '_model.h', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code/' + model_name + '_model/')
+        # render source template
+        template_file = 'model.in.h'
+        out_file = model.name + '_model.h'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
+
+        os.system(os_cmd)
+        os.chdir('../..')
 
     if ra.dims.npd > 0:
         # render header templates
-        template = env.get_template('p_constraint.in.h')
-        output = template.render(ocp=acados_ocp)
-        # output file
-        out_file = open('./c_generated_code/' + ra.con_p_name + '_p_constraint/' + ra.con_p_name + '_p_constraint.h', 'w+')
-        out_file.write(output)
+        if USE_TERA == 0:
+            # render header templates
+            template = env.get_template('p_constraint.in.h')
+            output = template.render(ocp=acados_ocp)
+            # output file
+            out_file = open('./c_generated_code/' + acados_ocp.con_p_name + '_p_constraint/' + acados_ocp.con_p_name + '_p_constraint.h', 'w+')
+            out_file.write(output)
+        else:
+            os.chdir('c_generated_code/' + acados_ocp.con_p_name + '_p_constraint/')
+            # render source template
+            template_file = 'p_constraint.in.h'
+            out_file = acados_ocp.con_p_name + '_p_constraint.h'
+            # output file
+            os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                    + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
+                    "\"" + ' ' + "\"" + out_file + "\""
+
+            os.system(os_cmd)
+            os.chdir('../..')
 
     if ra.dims.nh > 0:
-        # render header templates
-        template = env.get_template('h_constraint.in.h')
-        output = template.render(ocp=acados_ocp)
-        # output file
-        out_file = open('./c_generated_code/' + ra.con_h_name + '_h_constraint/' + ra.con_h_name + '_h_constraint.h', 'w+')
-        out_file.write(output)
+        if USE_TERA == 0:
+            # render header templates
+            template = env.get_template('h_constraint.in.h')
+            output = template.render(ocp=acados_ocp)
+            # output file
+            out_file = open('./c_generated_code/' + acados_ocp.con_h_name + '_h_constraint/' + acados_ocp.con_h_name + '_h_constraint.h', 'w+')
+            out_file.write(output)
+        else:
+            os.chdir('c_generated_code/' + acados_ocp.con_h_name + '_h_constraint/')
+            # render source template
+            template_file = 'h_constraint.in.h'
+            out_file = acados_ocp.con_h_name + '_h_constraint.h'
+            # output file
+            os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                    + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
+                    "\"" + ' ' + "\"" + out_file + "\""
+
+            os.system(os_cmd)
+            os.chdir('../..')
 
     # render Makefile template
-    template = env.get_template('Makefile.in')
-    output = template.render(ocp=acados_ocp)
+    if USE_TERA == 0:
+        # render Makefile template
+        template = env.get_template('Makefile.in')
+        output = template.render(ocp=acados_ocp)
 
-    # output file
-    out_file = open('./c_generated_code/Makefile', 'w+')
-    out_file.write(output)
+        # output file
+        out_file = open('./c_generated_code/Makefile', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code/') 
+        # render source template
+        template_file = 'Makefile.in'
+        out_file = 'Makefile'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
 
-    # render S-Function template
-    template = env.get_template('acados_solver_sfun.in.c')
-    output = template.render(ocp=acados_ocp)
+        os.system(os_cmd)
+        os.chdir('..')
 
-    # output file
-    out_file = open('./c_generated_code/acados_solver_sfunction_'  + model_name + '.c', 'w+')
-    out_file.write(output)
+    if USE_TERA == 0:
+        # render S-Function template
+        template = env.get_template('acados_solver_sfun.in.c')
+        output = template.render(ocp=acados_ocp)
+
+        # output file
+        out_file = open('./c_generated_code/acados_solver_sfunction_'  + model_name + '.c', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code/') 
+        # render source template
+        template_file = 'acados_solver_sfun.in.c'
+        out_file = 'acados_solver_sfunction_'  + model_name + '.c'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
+
+        os.system(os_cmd)
 
     # render MATLAB make script
-    template = env.get_template('make_sfun.in.m')
-    output = template.render(ocp=acados_ocp)
+    if USE_TERA == 0:
+        # render MATLAB make script
+        template = env.get_template('make_sfun.in.m')
+        output = template.render(ocp=acados_ocp)
 
-    # output file
-    out_file = open('./c_generated_code/make_sfun.m', 'w+')
-    out_file.write(output)
+        # output file
+        out_file = open('./c_generated_code/make_sfun.m', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code/') 
+        # render source template
+        template_file = 'make_sfun.in.m'
+        out_file = 'acados_solver_sfun.in.c'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
+
+        os.system(os_cmd)
+        os.chdir('..')
     
     print('Successfully generated acados solver!\n')
 
