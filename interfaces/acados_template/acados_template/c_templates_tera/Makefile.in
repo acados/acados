@@ -51,7 +51,7 @@ CASADI_CON_H_SOURCE+= {{ con_h_name }}_h_constraint.c
 
 casadi_fun:
 	( cd {{ model_name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE))
-	{% if dims.np > 0 %}
+	{% if dims.npd > 0 %}
 	( cd {{ con_p_name }}_p_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_P_SOURCE))
 	{% endif %}
 	{% if dims.nh > 0 %}
