@@ -476,12 +476,12 @@ class ocp_nlp_constraints:
         self.__lbu     = []  #: :math:`\underline{u}` - lower bounds on u
         self.__ubx     = []  #: :math:`\bar{x}` - upper bounds on x 
         self.__ubu     = []  #: :math:`\bar{u}` - upper bounds on u 
-        self.__idxbx   = []  #: indexes of bounds on x (defines :math: `\Pi_x`) 
-        self.__idxbu   = []  #: indexes of bounds on u (defines :math: `\Pi_u`)
+        self.__idxbx   = []  #: indexes of bounds on x (defines :math:`\Pi_x`) 
+        self.__idxbu   = []  #: indexes of bounds on u (defines :math:`\Pi_u`)
         # bounds on x at t=T
         self.__lbx_e   = []  #: :math:`\underline{x}^e` - lower bounds on x at t=T 
         self.__ubx_e   = []  #: :math:`\bar{x}^e` - upper bounds on x at t=T 
-        self.__idxbx_e = []  #: indexes for bounds on x at t=T (defines :math: `\Pi_x^e`) 
+        self.__idxbx_e = []  #: indexes for bounds on x at t=T (defines :math:`\Pi_x^e`) 
         # soft bounds on x and u
         self.__lsbx   = []  #: soft lower bounds on x
         self.__lsbu   = []  #: soft lower bounds on u
