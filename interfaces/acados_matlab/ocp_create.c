@@ -1049,7 +1049,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// qp_solver_N_pcond
 	if(set_qp_solver_N_pcond)
 		{
-		ocp_nlp_qp_opts_set(config, opts, "pcond_N2", &qp_solver_N_pcond);
+		ocp_nlp_opts_set(config, opts, "qp_pcond_N2", &qp_solver_N_pcond);
 		}
 	// sim_method_num_stages
 	if(set_sim_method_num_stages)

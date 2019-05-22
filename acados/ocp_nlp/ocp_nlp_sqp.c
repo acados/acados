@@ -263,72 +263,84 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
 
 	int ii;
 
-    if (!strcmp(field, "max_iter"))
-    {
-        int* max_iter = (int *) value;
-        opts->max_iter = *max_iter;
-    }
-    else if (!strcmp(field, "reuse_workspace"))
-    {
-        int* reuse_workspace = (int *) value;
-        opts->reuse_workspace = *reuse_workspace;
-    }
-    else if (!strcmp(field, "num_threads"))
-    {
-        int* num_threads = (int *) value;
-        opts->num_threads = *num_threads;
-    }
-    else if (!strcmp(field, "min_res_g"))
-    {
-        double* min_res_g = (double *) value;
-        opts->min_res_g = *min_res_g;
-    }
-    else if (!strcmp(field, "min_res_b"))
-    {
-        double* min_res_b = (double *) value;
-        opts->min_res_b = *min_res_b;
-    }
-    else if (!strcmp(field, "min_res_d"))
-    {
-        double* min_res_d = (double *) value;
-        opts->min_res_d = *min_res_d;
-    }
-    else if (!strcmp(field, "min_res_m"))
-    {
-        double* min_res_m = (double *) value;
-        opts->min_res_m = *min_res_m;
-    }
-    else if (!strcmp(field, "exact_hess"))
-    {
-		int N = config->N;
-		// cost
-		for (ii=0; ii<=N; ii++)
-			config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "exact_hess", value);
-		// dynamics
-		for (ii=0; ii<N; ii++)
-			config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii], "compute_hess", value);
-		// constraints
-		for (ii=0; ii<=N; ii++)
-			config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
-    }
-    else
-    {
-		printf("\nerror: ocp_nlp_sqp_opts_set: wrong field: %s\n", field);
-		exit(1);
-    }
-}
+	char module[MAX_STR_LEN];
+	char *ptr_module = NULL;
+	int module_length = 0;
 
+	// extract module name
+	char *char_ = strchr(field, '_');
+	if(char_!=NULL)
+	{
+		module_length = char_-field;
+		for(ii=0; ii<module_length; ii++)
+			module[ii] = field[ii];
+		module[module_length] = '\0'; // add end of string
+		ptr_module = module;
+	}
 
+	// pass options to QP module
+	if(!strcmp(ptr_module, "qp"))
+	{
+		config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field+module_length+1, value);
+	}
+	else // nlp opts
+	{
+		if (!strcmp(field, "max_iter"))
+		{
+			int* max_iter = (int *) value;
+			opts->max_iter = *max_iter;
+		}
+		else if (!strcmp(field, "reuse_workspace"))
+		{
+			int* reuse_workspace = (int *) value;
+			opts->reuse_workspace = *reuse_workspace;
+		}
+		else if (!strcmp(field, "num_threads"))
+		{
+			int* num_threads = (int *) value;
+			opts->num_threads = *num_threads;
+		}
+		else if (!strcmp(field, "min_res_g"))
+		{
+			double* min_res_g = (double *) value;
+			opts->min_res_g = *min_res_g;
+		}
+		else if (!strcmp(field, "min_res_b"))
+		{
+			double* min_res_b = (double *) value;
+			opts->min_res_b = *min_res_b;
+		}
+		else if (!strcmp(field, "min_res_d"))
+		{
+			double* min_res_d = (double *) value;
+			opts->min_res_d = *min_res_d;
+		}
+		else if (!strcmp(field, "min_res_m"))
+		{
+			double* min_res_m = (double *) value;
+			opts->min_res_m = *min_res_m;
+		}
+		else if (!strcmp(field, "exact_hess"))
+		{
+			int N = config->N;
+			// cost
+			for (ii=0; ii<=N; ii++)
+				config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "exact_hess", value);
+			// dynamics
+			for (ii=0; ii<N; ii++)
+				config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii], "compute_hess", value);
+			// constraints
+			for (ii=0; ii<=N; ii++)
+				config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
+		}
+		else
+		{
+			printf("\nerror: ocp_nlp_sqp_opts_set: wrong field: %s\n", field);
+			exit(1);
+		}
+	}
 
-// TODO rename ... opts_set_qp !!!
-void ocp_nlp_sqp_qp_opts_set(void *config_, void *opts_, const char *field, void *value)
-{
-    ocp_nlp_config *config = config_;
-    ocp_nlp_sqp_opts *opts = opts_;
-
-	config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
-
-    return;
+	return;
 
 }
 
@@ -1429,7 +1441,6 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_nlp_sqp_opts_initialize_default;
     config->opts_update = &ocp_nlp_sqp_opts_update;
     config->opts_set = &ocp_nlp_sqp_opts_set;
-    config->qp_opts_set = &ocp_nlp_sqp_qp_opts_set;
     config->dynamics_opts_set = &ocp_nlp_sqp_dynamics_opts_set;
     config->cost_opts_set = &ocp_nlp_sqp_cost_opts_set;
     config->constraints_opts_set = &ocp_nlp_sqp_constraints_opts_set;

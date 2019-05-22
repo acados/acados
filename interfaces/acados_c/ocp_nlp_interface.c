@@ -528,15 +528,6 @@ void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, vo
 
 
 // TODO rename !!!
-void ocp_nlp_qp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void *value)
-{
-    config->qp_opts_set(config, opts_, field, value);
-	return;
-}
-
-
-
-// TODO rename !!!
 void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 		const char *field, void *value)
 {

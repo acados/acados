@@ -263,45 +263,54 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, voi
 
 	int ii;
 
-    if (!strcmp(field, "num_threads"))
-    {
-        int* num_threads = (int *) value;
-        opts->num_threads = *num_threads;
-    }
-    else if (!strcmp(field, "exact_hess"))
-    {
-		int N = config->N;
-		// cost
-		for (ii=0; ii<=N; ii++)
-			config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "exact_hess", value);
-		// dynamics
-		for (ii=0; ii<N; ii++)
-			config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii], "compute_hess", value);
-		// constraints
-		for (ii=0; ii<=N; ii++)
-			config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
-    }
-    else
-    {
-		printf("\nerror: ocp_nlp_sqp_rti_opts_set: wrong field: %s\n", field);
-		exit(1);
-    }
+	char module[MAX_STR_LEN];
+	char *ptr_module = NULL;
+	int module_length = 0;
+
+	// extract module name
+	char *char_ = strchr(field, '_');
+	if(char_!=NULL)
+	{
+		module_length = char_-field;
+		for(ii=0; ii<module_length; ii++)
+			module[ii] = field[ii];
+		module[module_length] = '\0'; // add end of string
+		ptr_module = module;
+	}
+
+	// pass options to QP module
+	if(!strcmp(ptr_module, "qp"))
+	{
+		config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field+module_length+1, value);
+	}
+	else // nlp opts
+	{
+		if (!strcmp(field, "num_threads"))
+		{
+			int* num_threads = (int *) value;
+			opts->num_threads = *num_threads;
+		}
+		else if (!strcmp(field, "exact_hess"))
+		{
+			int N = config->N;
+			// cost
+			for (ii=0; ii<=N; ii++)
+				config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "exact_hess", value);
+			// dynamics
+			for (ii=0; ii<N; ii++)
+				config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii], "compute_hess", value);
+			// constraints
+			for (ii=0; ii<=N; ii++)
+				config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
+		}
+		else
+		{
+			printf("\nerror: ocp_nlp_sqp_rti_opts_set: wrong field: %s\n", field);
+			exit(1);
+		}
+	}
 
 	return;
-
-}
-
-
-
-// TODO rename ... opts_set_qp !!!
-void ocp_nlp_sqp_rti_qp_opts_set(void *config_, void *opts_, const char *field, void *value)
-{
-    ocp_nlp_config *config = config_;
-    ocp_nlp_sqp_rti_opts *opts = opts_;
-
-	config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
-
-    return;
 
 }
 
@@ -1308,7 +1317,6 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_nlp_sqp_rti_opts_initialize_default;
     config->opts_update = &ocp_nlp_sqp_rti_opts_update;
     config->opts_set = &ocp_nlp_sqp_rti_opts_set;
-    config->qp_opts_set = &ocp_nlp_sqp_rti_qp_opts_set;
     config->dynamics_opts_set = &ocp_nlp_sqp_rti_dynamics_opts_set;
     config->cost_opts_set = &ocp_nlp_sqp_rti_cost_opts_set;
     config->constraints_opts_set = &ocp_nlp_sqp_rti_constraints_opts_set;
