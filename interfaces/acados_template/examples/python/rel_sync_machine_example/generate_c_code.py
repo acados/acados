@@ -347,7 +347,7 @@ nlp_con.ubu = ubu
 
 if FORMULATION > 0:
     nlp_con.lh = nmp.array([-1.0e8])
-    nlp_con.uh = nmp.array([u_max**2])
+    nlp_con.uh = nmp.array([(u_max*sqrt(3)/2)**2])
 
 nlp_con.x0 = nmp.array([0.0, -0.0])
 
@@ -366,7 +366,7 @@ if FORMULATION == 0 or FORMULATION == 2:
 nlp_con.p = nmp.array([w_val, 0.0, 0.0])
 
 # set constants
-ra.constants = []
+# ra.constants = []
 
 # set QP solver
 ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
@@ -496,6 +496,6 @@ plt.grid(True)
 ax = plt.gca()
 ax.set_xlim([-1.5*u_max, 1.5*u_max])
 ax.set_ylim([-1.5*u_max, 1.5*u_max])
-circle = plt.Circle((0, 0), u_max, color='red', fill=False)
+circle = plt.Circle((0, 0), u_max*nmp.sqrt(3)/2, color='red', fill=False)
 ax.add_artist(circle)
 plt.show()
