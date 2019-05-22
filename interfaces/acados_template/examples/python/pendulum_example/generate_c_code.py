@@ -78,7 +78,7 @@ nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
 nlp_con.idxbu = np.array([0])
 
 # set constants
-ra.constants['PI'] = 3.1415926535897932
+# ra.constants['PI'] = 3.1415926535897932
 
 # set QP solver
 # ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'

@@ -51,7 +51,7 @@ CASADI_CON_H_SOURCE+= {{ ocp.con_h_name }}_h_constraint.c
 
 casadi_fun:
 	( cd {{ ocp.model_name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE))
-	{% if ocp.dims.np > 0 %}
+	{% if ocp.dims.npd > 0 %}
 	( cd {{ ocp.con_p_name }}_p_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_P_SOURCE))
 	{% endif %}
 	{% if ocp.dims.nh > 0 %}

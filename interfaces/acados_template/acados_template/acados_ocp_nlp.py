@@ -8,27 +8,27 @@ class ocp_nlp_dims:
     class containing the dimensions of the optimal control problem
     """
     def __init__(self):
-        self.__nx    = None  #: number of states
-        self.__nz    = 0     #: number of algebraic variables
-        self.__nu    = None  #: number of inputs
-        self.__np    = 0     #: number of parameters
-        self.__ny    = None  #: number of residuals in Lagrange term
-        self.__ny_e   = None  #: number of residuals in Mayer term
-        self.__npd   = 0     #: number of positive definite constraints
-        self.__npd_e  = 0     #: number of positive definite constraints at t=T
-        self.__nh    = 0     #: number of nonlinear constraints
-        self.__nh_e   = 0     #: number of nonlinear constraints at t=T
-        self.__nbx   = 0     #: number of state bounds 
-        self.__nbx_e  = 0     #: number of state bounds at t=T 
-        self.__nbu   = 0     #: number of input bounds
-        self.__nsbx  = 0     #: number of soft state bounds 
-        self.__nsbx_e = 0     #: number of soft state bounds at t=T 
-        self.__nsbu  = 0     #: number of soft input bounds
-        self.__ns    = 0     #: total number of slacks
-        self.__ns_e   = 0     #: total number of slacks at t=T
-        self.__ng    = 0     #: number of general constraints
-        self.__ng_e   = 0     #: number of general constraints at t=T
-        self.__N     = None  #: prediction horizon 
+        self.__nx     = None  #: :math:`n_x` - number of states 
+        self.__nz     = 0     #: :math:`n_z` - number of algebraic variables 
+        self.__nu     = None  #: :math:`n_u` - number of inputs 
+        self.__np     = 0     #: :math:`n_p` - number of parameters 
+        self.__ny     = None  #: :math:`n_y` - number of residuals in Lagrange term 
+        self.__ny_e   = None  #: :math:`n_{y}^e` - number of residuals in Mayer term 
+        self.__npd    = 0     #: :math:`n_{\pi}` - number of positive definite constraints 
+        self.__npd_e  = 0     #: :math:`n_{\pi}^e` - number of positive definite constraints at t=T 
+        self.__nh     = 0     #: :math:`n_h` - number of nonlinear constraints 
+        self.__nh_e   = 0     #: :math:`n_{h}^e` - number of nonlinear constraints at t=T 
+        self.__nbx    = 0     #: :math:`n_{b_x}` - number of state bounds 
+        self.__nbx_e  = 0     #: :math:`n_{b_x}` - number of state bounds at t=T 
+        self.__nbu    = 0     #: :math:`n_{b_u}` - number of input bounds 
+        self.__nsbx   = 0     #: :math:`n_{{sb}_x}` - number of soft state bounds 
+        self.__nsbx_e = 0     #: :math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T 
+        self.__nsbu   = 0     #: :math:`n_{{sb}_u}` - number of soft input bounds 
+        self.__ns     = 0     #: :math:`n_{s}` - total number of slacks 
+        self.__ns_e   = 0     #: :math:`n_{s}^e` - total number of slacks at t=T 
+        self.__ng     = 0     #: :math:`n_{g}` - number of general constraints 
+        self.__ng_e   = 0     #: :math:`n_{g}^e` - number of general constraints at t=T 
+        self.__N      = None  #: :math:`N` - prediction horizon  
 
     @property
     def nx(self):
@@ -264,27 +264,29 @@ class ocp_nlp_dims:
 class ocp_nlp_cost:
     """
     class containing the description of the cost
+    (linear least-squares cost for the time being) 
+    :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`, 
+    :math:`m(x) = || V^e_x x - y_{\\text{ref}^e}||^2_{W^e}`
     """
-    # linear least-squares cost: || Vx*x + Vu*x + Vz*z ||^2_W
     def __init__(self):
         # Lagrange term
-        self.__W     = []  #: weight matrix
-        self.__Vx    = []  #: x matrix coefficient
-        self.__Vu    = []  #: u matrix coefficient
-        self.__Vz    = []  #: z matrix coefficient
-        self.__yref  = []  #: reference
-        self.__Zl    = []  #: Hessian wrt lower slack 
-        self.__Zu    = []  #: Hessian wrt upper slack 
-        self.__zl    = []  #: gradient wrt lower slack 
-        self.__zu    = []  #: gradient wrt upper slack 
+        self.__W     = []  #: :math:`W` - weight matrix
+        self.__Vx    = []  #: :math:`V_x` - x matrix coefficient
+        self.__Vu    = []  #: :math:`V_u` - u matrix coefficient
+        self.__Vz    = []  #: :math:`V_z` - z matrix coefficient
+        self.__yref  = []  #: :math:`y_{\text{ref}}` - reference
+        self.__Zl    = []  #: :math:`Z_l` - Hessian wrt lower slack 
+        self.__Zu    = []  #: :math:`Z_u` - Hessian wrt upper slack 
+        self.__zl    = []  #: :math:`z_l` - gradient wrt lower slack 
+        self.__zu    = []  #: :math:`z_u` - gradient wrt upper slack 
         # Mayer term
-        self.__W_e    = []  #: weight matrix
-        self.__Vx_e   = []  #: x matrix coefficient
-        self.__yref_e = []  #: reference
-        self.__Zl_e   = []  #: Hessian wrt lower slack 
-        self.__Zu_e   = []  #: Hessian wrt upper slack 
-        self.__zl_e   = []  #: gradient wrt lower slack 
-        self.__zu_e   = []  #: gradient wrt upper slack 
+        self.__W_e    = []  #: :math:`W^e` - weight matrix for Mayer term
+        self.__Vx_e   = []  #: :math:`V_x^e` - x matrix coefficient for Mayer term
+        self.__yref_e = []  #: :math:`y_{\text{ref}}^e` - reference for Mayer term
+        self.__Zl_e   = []  #: :math:`Z_l^e` - Hessian wrt lower slack for Mayer term
+        self.__Zu_e   = []  #: :math:`Z_u^e` - Hessian wrt upper slack for Mayer term
+        self.__zl_e   = []  #: :math:`z_l^e` - gradient wrt lower slack for Mayer term
+        self.__zu_e   = []  #: :math:`z_u^e` - gradient wrt upper slack for Mayer term
 
     # Lagrange term
     @property
@@ -911,7 +913,7 @@ class acados_ocp_nlp:
         self.con_p_e_name = None 
         self.con_h_name  = None 
         self.con_h_e_name = None 
-        self.constants = {}
+        # self.constants = {}
         self.acados_include_path = []
         self.acados_lib_path = []
 
@@ -952,7 +954,7 @@ def acados_ocp2json_layout(acados_ocp):
     Parameters
     ----------
     acados_ocp : class
-        object of type ocp_nlp_render_arguments.
+        object of type acados_ocp_nlp.
     
     Returns
     ------
@@ -1078,19 +1080,23 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
             if isinstance(v, int) or isinstance(v, float):
                 v = np.array([v])
         if v_type == 'ndarray' or v_type__ == 'list':
+            dims_l = []
+            dims_names = []
+            dim_keys = ocp_nlp_layout[k][1]
+            for item in dim_keys:
+                dims_l.append(ocp_nlp_dims[item])
+                dims_names.append(item)
+            dims = tuple(dims_l)
             if v == []:
                 # v = None
-                v = []
+                try: 
+                    v = np.reshape(v, dims)
+                except:  
+                    raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, [], dims_names, dims))
+                # v = []
             else:
                 v = np.array(v)
                 v_dims = v.shape
-                dim_keys = ocp_nlp_layout[k][1]
-                dims_l = []
-                dims_names = []
-                for item in dim_keys:
-                    dims_l.append(ocp_nlp_dims[item])
-                    dims_names.append(item)
-                dims = tuple(dims_l)
                 try: 
                     v = np.reshape(v, dims)
                 except:  

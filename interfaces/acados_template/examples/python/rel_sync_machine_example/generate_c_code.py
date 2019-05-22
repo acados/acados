@@ -366,7 +366,7 @@ if FORMULATION == 0 or FORMULATION == 2:
 nlp_con.p = nmp.array([w_val, 0.0, 0.0])
 
 # set constants
-ra.constants = []
+# ra.constants = []
 
 # set QP solver
 ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
