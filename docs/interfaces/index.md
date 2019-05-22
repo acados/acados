@@ -57,10 +57,6 @@ The currently supported formulations reads as
     x(\cdot),\,u(\cdot), \, z(\cdot)
 \end{subarray}}{\min}	    &&\int_0^T l(x(\tau), u(\tau), z(\tau), p)\mathrm{d}\tau + m(x(T), z(T), p)\\ 
                             &\,\,\,\quad \text{s.t.}    &&x(0) - \bar{x}_0 = 0, &&\\
-                            & 						    &&\underline{h} \leq h(x(t), u(t), p) \leq \bar{h}, &&\quad t \in [0,\,T),\\
-                            & 						    &&\underline{u}_0 \leq \Pi_{u_0}u(0) \leq \bar{u}_0, && \\
-                            & 						    &&\underline{c}_0 \leq D_0u(0)\leq \bar{c}_0, && \\
-                            &                           &&                                                   && \\[-1em]
                             & 						    &&F(x(t), \dot{x}(t), u(t), z(t), p) = 0, &&\quad t \in [0,\,T),\\
                             & 						    &&\underline{h} \leq h(x(t), u(t), p) \leq \bar{h}, &&\quad t \in [0,\,T),\\
                             & 						    &&\underline{x} \leq \Pi_{x}x(t) \leq \bar{x}, &&\quad t \in (0,\,T),\\
@@ -116,7 +112,7 @@ For more information contact `@zanellia`
     :undoc-members:
 ```
 ``` eval_rst
-.. automodule:: acados_template.ocp_nlp_render_arguments
+.. automodule:: acados_template.acados_ocp_nlp
     :members:
     :private-members:
     :exclude-members: acados_ocp2json_layout, cast_ocp_nlp, dict2json_layout, dict2json_layout_rec, check_ra, json2dict_rec

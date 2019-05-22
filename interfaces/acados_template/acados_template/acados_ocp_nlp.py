@@ -472,44 +472,44 @@ class ocp_nlp_constraints:
     """
     def __init__(self):
         # bounds on x and u
-        self.__lbx    = []  #: lower bounds on x
-        self.__lbu    = []  #: lower bounds on u
-        self.__ubx    = []  #: upper bounds on x 
-        self.__ubu    = []  #: upper bounds on u 
-        self.__idxbx  = []  #: indexes of bounds on x 
-        self.__idxbu  = []  #: indexes of bounds on u
+        self.__lbx     = []  #: :math:`\underline{x}` - lower bounds on x
+        self.__lbu     = []  #: :math:`\underline{u}` - lower bounds on u
+        self.__ubx     = []  #: :math:`\bar{x}` - upper bounds on x 
+        self.__ubu     = []  #: :math:`\bar{u}` - upper bounds on u 
+        self.__idxbx   = []  #: indexes of bounds on x (defines :math: `\Pi_x`) 
+        self.__idxbu   = []  #: indexes of bounds on u (defines :math: `\Pi_u`)
         # bounds on x at t=T
-        self.__lbx_e   = []  #: lower bounds on x at t=T 
-        self.__ubx_e   = []  #: upper bounds on x at t=T 
-        self.__idxbx_e = []  #: indexes for bounds on x at t=T 
+        self.__lbx_e   = []  #: :math:`\underline{x}^e` - lower bounds on x at t=T 
+        self.__ubx_e   = []  #: :math:`\bar{x}^e` - upper bounds on x at t=T 
+        self.__idxbx_e = []  #: indexes for bounds on x at t=T (defines :math: `\Pi_x^e`) 
         # soft bounds on x and u
-        self.__lsbx   = []  #: soft lower bounds on x
-        self.__lsbu   = []  #: soft lower bounds on u
-        self.__usbx   = []  #: soft upper bounds on x 
-        self.__usbu   = []  #: soft upper bounds on u 
-        self.__idxsbx = []  #: indexes of soft bounds on x 
-        self.__idxsbu = []  #: indexes of soft bounds on u
+        self.__lsbx   = []  #: :math:`` - soft lower bounds on x
+        self.__lsbu   = []  #: :math:`` - soft lower bounds on u
+        self.__usbx   = []  #: :math:`` - soft upper bounds on x 
+        self.__usbu   = []  #: :math:`` - soft upper bounds on u 
+        self.__idxsbx = []  #: :math:`` - indexes of soft bounds on x 
+        self.__idxsbu = []  #: :math:`` - indexes of soft bounds on u
         # soft bounds on x and u at t=T
-        self.__lsbx_e  = []  #: soft lower bounds on x at t=T
-        self.__usbx_e  = []  #: soft upper bounds on x at t=T
-        self.__idxsbx_e= []  #: indexes of soft bounds on x at t=T 
+        self.__lsbx_e  = []  #: :math:`` - soft lower bounds on x at t=T
+        self.__usbx_e  = []  #: :math:`` - soft upper bounds on x at t=T
+        self.__idxsbx_e= []  #: :math:`` - indexes of soft bounds on x at t=T 
         # polytopic constraints 
-        self.__lg     = []  #: lower bound for general inequalities 
-        self.__ug     = []  #: upper bound for general inequalities 
-        self.__D      = []  #: D matrix in lg <= D * u + C * x <= ug
-        self.__C      = []  #: C matrix in lg <= D * u + C * x <= ug
+        self.__lg      = []  #: :math:`\underline{c}` - lower bound for general inequalities 
+        self.__ug      = []  #: :math:`\bar{c}` - upper bound for general inequalities 
+        self.__D       = []  #: :math:`D` - D matrix in lg <= D * u + C * x <= ug
+        self.__C       = []  #: :math:`C` - C matrix in lg <= D * u + C * x <= ug
         # polytopic constraints at t=T 
-        self.__C_e     = []  #: C matrix at t=T 
-        self.__lg_e    = []  #: lower bound on general inequalities at t=T 
-        self.__ug_e    = []  #: upper bound on general inequalities at t=T 
+        self.__C_e     = []  #: :math:`C^e` - C matrix at t=T 
+        self.__lg_e    = []  #: :math:`\underline{c}^e` - lower bound on general inequalities at t=T 
+        self.__ug_e    = []  #: :math:`\bar{c}^e` - upper bound on general inequalities at t=T 
         # nonlinear constraints
-        self.__lh     = []  #: lower bound for nonlinear inequalities 
-        self.__uh     = []  #: upper bound for nonlinear inequalities 
+        self.__lh      = []  #: :math:`\underline{h}` - lower bound for nonlinear inequalities 
+        self.__uh      = []  #: :math:`\bar{h}` - upper bound for nonlinear inequalities 
         # nonlinear constraints at t=T
-        self.__uh_e    = []  #: upper bound on nonlinear inequalities at t=T 
-        self.__lh_e    = []  #: lower bound on nonlinear inequalities at t=T 
-        self.__x0     = []  #: initial state 
-        self.__p      = []  #: parameters 
+        self.__uh_e    = []  #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
+        self.__lh_e    = []  #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
+        self.__x0      = []  #: :math:`\bar{x}_0` - initial state 
+        self.__p       = []  #: :math:`p` - parameters 
 
     @property
     def lbx(self):
