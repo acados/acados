@@ -483,16 +483,16 @@ class ocp_nlp_constraints:
         self.__ubx_e   = []  #: :math:`\bar{x}^e` - upper bounds on x at t=T 
         self.__idxbx_e = []  #: indexes for bounds on x at t=T (defines :math: `\Pi_x^e`) 
         # soft bounds on x and u
-        self.__lsbx   = []  #: :math:`` - soft lower bounds on x
-        self.__lsbu   = []  #: :math:`` - soft lower bounds on u
-        self.__usbx   = []  #: :math:`` - soft upper bounds on x 
-        self.__usbu   = []  #: :math:`` - soft upper bounds on u 
-        self.__idxsbx = []  #: :math:`` - indexes of soft bounds on x 
-        self.__idxsbu = []  #: :math:`` - indexes of soft bounds on u
+        self.__lsbx   = []  #: soft lower bounds on x
+        self.__lsbu   = []  #: soft lower bounds on u
+        self.__usbx   = []  #: soft upper bounds on x 
+        self.__usbu   = []  #: soft upper bounds on u 
+        self.__idxsbx = []  #: indexes of soft bounds on x 
+        self.__idxsbu = []  #: indexes of soft bounds on u
         # soft bounds on x and u at t=T
-        self.__lsbx_e  = []  #: :math:`` - soft lower bounds on x at t=T
-        self.__usbx_e  = []  #: :math:`` - soft upper bounds on x at t=T
-        self.__idxsbx_e= []  #: :math:`` - indexes of soft bounds on x at t=T 
+        self.__lsbx_e  = []  #: soft lower bounds on x at t=T
+        self.__usbx_e  = []  #: soft upper bounds on x at t=T
+        self.__idxsbx_e= []  #: indexes of soft bounds on x at t=T 
         # polytopic constraints 
         self.__lg      = []  #: :math:`\underline{c}` - lower bound for general inequalities 
         self.__ug      = []  #: :math:`\bar{c}` - upper bound for general inequalities 
