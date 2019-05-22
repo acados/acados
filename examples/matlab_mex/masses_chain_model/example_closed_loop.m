@@ -24,7 +24,7 @@ regularize_method = 'project';
 nlp_solver_max_iter = 100;
 ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_hpipm';
-ocp_qp_solver_N_pcond = 5;
+ocp_qp_solver_pcond_N = 5;
 %ocp_sim_method = 'erk';
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
@@ -160,7 +160,7 @@ ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 ocp_opts.set('qp_solver', ocp_qp_solver);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_N_pcond', ocp_qp_solver_N_pcond);
+	ocp_opts.set('qp_solver_pcond_N', ocp_qp_solver_pcond_N);
 end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);

@@ -620,7 +620,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	bool nlp_solver_exact_hessian;
 	int nlp_solver_max_iter;		bool set_nlp_solver_max_iter = false;
 	char *qp_solver;
-	int qp_solver_N_pcond;			bool set_qp_solver_N_pcond = false;
+	int qp_solver_pcond_N;			bool set_qp_solver_pcond_N = false;
+	int qp_solver_ric_alg;			bool set_qp_solver_ric_alg = false;
 	char *sim_method;
 	int sim_method_num_stages;		bool set_sim_method_num_stages = false;
 	int sim_method_num_steps;		bool set_sim_method_num_steps = false;
@@ -657,10 +658,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// TODO check
 	qp_solver = mxArrayToString( mxGetField( prhs[1], 0, "qp_solver" ) );
 	// N_part_cond
-	if(mxGetField( prhs[1], 0, "qp_solver_N_pcond" )!=NULL)
+	if(mxGetField( prhs[1], 0, "qp_solver_pcond_N" )!=NULL)
 		{
-		set_qp_solver_N_pcond = true;
-		qp_solver_N_pcond = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_N_pcond" ) );
+		set_qp_solver_pcond_N = true;
+		qp_solver_pcond_N = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_pcond_N" ) );
+		}
+	// hpipm: riccati algorithm
+	if(mxGetField( prhs[1], 0, "qp_solver_ric_alg" )!=NULL)
+		{
+		set_qp_solver_ric_alg = true;
+		qp_solver_ric_alg = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_ric_alg" ) );
 		}
 	// sim_method
 	// TODO check
@@ -1046,10 +1053,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
 		}
-	// qp_solver_N_pcond
-	if(set_qp_solver_N_pcond)
+	// qp_solver_pcond_N
+	if(set_qp_solver_pcond_N)
 		{
-		ocp_nlp_opts_set(config, opts, "qp_pcond_N2", &qp_solver_N_pcond);
+		ocp_nlp_opts_set(config, opts, "qp_pcond_N2", &qp_solver_pcond_N);
+		}
+	// qp_solver_ric_alg
+	if(set_qp_solver_ric_alg)
+		{
+		ocp_nlp_opts_set(config, opts, "qp_ric_alg", &qp_solver_ric_alg);
 		}
 	// sim_method_num_stages
 	if(set_sim_method_num_stages)

@@ -58,6 +58,8 @@ int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims)
     return size;
 }
 
+
+
 void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     int N = dims->N;
@@ -92,6 +94,8 @@ void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
     return opts;
 }
 
+
+
 void ocp_qp_partial_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opts_)
 {
     ocp_qp_partial_condensing_opts *opts = opts_;
@@ -105,6 +109,8 @@ void ocp_qp_partial_condensing_opts_initialize_default(ocp_qp_dims *dims, void *
     // hpipm_opts
     d_set_default_cond_qp_ocp2ocp_arg(opts->N2, opts->hpipm_opts);
 }
+
+
 
 void ocp_qp_partial_condensing_opts_update(ocp_qp_dims *dims, void *opts_)
 {

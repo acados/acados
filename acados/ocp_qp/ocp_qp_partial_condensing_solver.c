@@ -30,6 +30,8 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+
+
 /************************************************
  * opts
  ************************************************/
@@ -47,6 +49,8 @@ int ocp_qp_partial_condensing_solver_opts_calculate_size(void *config_, ocp_qp_d
 
     return size;
 }
+
+
 
 void *ocp_qp_partial_condensing_solver_opts_assign(void *config_, ocp_qp_dims *dims,
                                                    void *raw_memory)
@@ -76,6 +80,8 @@ void *ocp_qp_partial_condensing_solver_opts_assign(void *config_, ocp_qp_dims *d
     return (void *) opts;
 }
 
+
+
 void ocp_qp_partial_condensing_solver_opts_initialize_default(void *config_, ocp_qp_dims *dims,
                                                               void *opts_)
 {
@@ -91,6 +97,8 @@ void ocp_qp_partial_condensing_solver_opts_initialize_default(void *config_, ocp
     // qp solver opts
     qp_solver->opts_initialize_default(qp_solver, dims, opts->qp_solver_opts);
 }
+
+
 
 void ocp_qp_partial_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
 {
@@ -108,10 +116,13 @@ void ocp_qp_partial_condensing_solver_opts_update(void *config_, ocp_qp_dims *di
 }
 
 
+
 void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
     ocp_qp_partial_condensing_solver_opts *opts = (ocp_qp_partial_condensing_solver_opts *) opts_;
-    // ocp_qp_xcond_solver_config *config = config_;
+    ocp_qp_xcond_solver_config *config = config_;
+
+	// TODO extract module name 'pcond' for partial condensing optsion
 
     if (!strcmp(field, "N2") || !strcmp(field, "pcond_N2"))
     {
@@ -123,13 +134,19 @@ void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_, const
         int* N2_bkp = (int *) value;
         opts->pcond_opts->N2_bkp = *N2_bkp;
     }
-    else
-    {
-		// TODO pass options to qp solver
-        printf("\nerror: option type %s not available in ocp_qp_partial_condense solver module\n", field);
-        exit(1);
-    }
+	else //if(!strcmp(field, "ric_alg"))
+	{
+		config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
+	}
+//    else
+//    {
+//		// TODO pass options to qp solver
+//        printf("\nerror: option type %s not available in ocp_qp_partial_condense solver module\n", field);
+//        exit(1);
+//    }
+	return;
 }
+
 
 
 /************************************************
