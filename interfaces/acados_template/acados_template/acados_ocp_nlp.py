@@ -26,8 +26,8 @@ class ocp_nlp_dims:
         self.__nsbu   = 0     #: :math:`n_{{sb}_u}` - number of soft input bounds 
         self.__ns     = 0     #: :math:`n_{s}` - total number of slacks 
         self.__ns_e   = 0     #: :math:`n_{s}^e` - total number of slacks at t=T 
-        self.__ng     = 0     #: :math:`n_{g}` - number of general constraints 
-        self.__ng_e   = 0     #: :math:`n_{g}^e` - number of general constraints at t=T 
+        self.__ng     = 0     #: :math:`n_{g}` - number of general polytopic constraints 
+        self.__ng_e   = 0     #: :math:`n_{g}^e` - number of general polytopic constraints at t=T 
         self.__N      = None  #: :math:`N` - prediction horizon  
 
     @property
@@ -494,14 +494,14 @@ class ocp_nlp_constraints:
         self.__usbx_e  = []  #: soft upper bounds on x at t=T
         self.__idxsbx_e= []  #: indexes of soft bounds on x at t=T 
         # polytopic constraints 
-        self.__lg      = []  #: :math:`\underline{c}` - lower bound for general inequalities 
-        self.__ug      = []  #: :math:`\bar{c}` - upper bound for general inequalities 
+        self.__lg      = []  #: :math:`\underline{c}` - lower bound for general polytopic inequalities 
+        self.__ug      = []  #: :math:`\bar{c}` - upper bound for general polytopic inequalities 
         self.__D       = []  #: :math:`D` - D matrix in lg <= D * u + C * x <= ug
         self.__C       = []  #: :math:`C` - C matrix in lg <= D * u + C * x <= ug
         # polytopic constraints at t=T 
         self.__C_e     = []  #: :math:`C^e` - C matrix at t=T 
-        self.__lg_e    = []  #: :math:`\underline{c}^e` - lower bound on general inequalities at t=T 
-        self.__ug_e    = []  #: :math:`\bar{c}^e` - upper bound on general inequalities at t=T 
+        self.__lg_e    = []  #: :math:`\underline{c}^e` - lower bound on general polytopic inequalities at t=T 
+        self.__ug_e    = []  #: :math:`\bar{c}^e` - upper bound on general polytopic inequalities at t=T 
         # nonlinear constraints
         self.__lh      = []  #: :math:`\underline{h}` - lower bound for nonlinear inequalities 
         self.__uh      = []  #: :math:`\bar{h}` - upper bound for nonlinear inequalities 
