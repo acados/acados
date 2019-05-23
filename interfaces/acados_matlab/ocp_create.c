@@ -621,6 +621,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int nlp_solver_max_iter;		bool set_nlp_solver_max_iter = false;
 	char *qp_solver;
 	int qp_solver_pcond_N;			bool set_qp_solver_pcond_N = false;
+	int qp_solver_pcond_ric_alg;	bool set_qp_solver_pcond_ric_alg = false;
 	int qp_solver_ric_alg;			bool set_qp_solver_ric_alg = false;
 	char *sim_method;
 	int sim_method_num_stages;		bool set_sim_method_num_stages = false;
@@ -662,6 +663,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_qp_solver_pcond_N = true;
 		qp_solver_pcond_N = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_pcond_N" ) );
+		}
+	// pcond riccati-like algorithm
+	if(mxGetField( prhs[1], 0, "qp_solver_pcond_ric_alg" )!=NULL)
+		{
+		set_qp_solver_pcond_ric_alg = true;
+		qp_solver_pcond_ric_alg = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_pcond_ric_alg" ) );
 		}
 	// hpipm: riccati algorithm
 	if(mxGetField( prhs[1], 0, "qp_solver_ric_alg" )!=NULL)
@@ -1057,6 +1064,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(set_qp_solver_pcond_N)
 		{
 		ocp_nlp_opts_set(config, opts, "qp_pcond_N2", &qp_solver_pcond_N);
+		}
+	// qp_solver_pcond_ric alg
+	if(set_qp_solver_pcond_N)
+		{
+		ocp_nlp_opts_set(config, opts, "qp_pcond_ric_alg", &qp_solver_pcond_ric_alg);
 		}
 	// qp_solver_ric_alg
 	if(set_qp_solver_ric_alg)

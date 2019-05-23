@@ -66,7 +66,7 @@ typedef struct
     void *(*opts_assign)(ocp_qp_dims *dims, void *raw_memory);
     void (*opts_initialize_default)(ocp_qp_dims *dims, void *opts);
     void (*opts_update)(ocp_qp_dims *dims, void *opts);
-    void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
+    void (*opts_set)(void *opts_, const char *field, void* value);
     int (*memory_calculate_size)(ocp_qp_dims *dims, void *opts);
     void *(*memory_assign)(ocp_qp_dims *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(ocp_qp_dims *dims, void *opts);
@@ -87,7 +87,9 @@ typedef struct
     void *(*memory_assign)(void *config, ocp_qp_dims *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, ocp_qp_dims *dims, void *opts);
     qp_solver_config *qp_solver;  // either ocp_qp_solver or dense_solver
+	// TODO condensing config
 } ocp_qp_xcond_solver_config;  // pcond - partial condensing or fcond - full condensing
+
 
 /// Struct containing metrics of the qp solver.
 typedef struct
@@ -99,6 +101,7 @@ typedef struct
     int num_iter;
     int t_computed;
 } ocp_qp_info;
+
 
 /* config */
 //

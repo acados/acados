@@ -107,7 +107,7 @@ bool set_option_int(void *args_, const char *option, const int value)
                 args->hpipm_opts->iter_max = value;
             else if (!strcmp(token, "max_stat"))
                 args->hpipm_opts->stat_max = value;
-            else if (!strcmp(token, "N2"))
+            else if (!strcmp(token, "pcond_N2"))
                 pcond_opts->N2 = value;
             else
                 return false;
@@ -140,7 +140,7 @@ bool set_option_int(void *args_, const char *option, const int value)
                 args->warm_start = value;
             // NOTE(dimitris): HPMPC partial condesing has a bug, using hpipm partial condensing
             // instead
-            else if (!strcmp(token, "N2"))
+            else if (!strcmp(token, "pcond_N2"))
                 pcond_opts->N2 = value;
             // partial tightening
             else if (!strcmp(token, "N"))
@@ -162,7 +162,7 @@ bool set_option_int(void *args_, const char *option, const int value)
                 (ocp_qp_partial_condensing_opts *) sparse_args->pcond_opts;
             if (!strcmp(token, "print_level"))
                 args->printLevel = value;
-            else if (!strcmp(token, "N2"))
+            else if (!strcmp(token, "pcond_N2"))
                 pcond_opts->N2 = value;
             else
                 return false;
@@ -188,7 +188,7 @@ bool set_option_int(void *args_, const char *option, const int value)
             ocp_qp_osqp_opts *args = (ocp_qp_osqp_opts *) sparse_args->qp_solver_opts;
             ocp_qp_partial_condensing_opts *pcond_opts =
                 (ocp_qp_partial_condensing_opts *) sparse_args->pcond_opts;
-            if (!strcmp(token, "N2"))
+            if (!strcmp(token, "pcond_N2"))
                 pcond_opts->N2 = value;
             else
                 return false;
@@ -215,7 +215,7 @@ bool set_option_int(void *args_, const char *option, const int value)
             {
                 args->options.maxIter = value;
             }
-            else if (!strcmp(token, "N2"))
+            else if (!strcmp(token, "pcond_N2"))
             {
                 pcond_opts->N2 = value;
             }

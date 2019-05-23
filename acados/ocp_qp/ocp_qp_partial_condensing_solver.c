@@ -124,27 +124,35 @@ void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_, const
 
 	// TODO extract module name 'pcond' for partial condensing optsion
 
-    if (!strcmp(field, "N2") || !strcmp(field, "pcond_N2"))
-    {
-        int* N2 = (int *) value;
-        opts->pcond_opts->N2 = *N2;
-    }
-    else if (!strcmp(field, "N2_bkp") || !strcmp(field, "pcond_N2_bkp"))
-    {
-        int* N2_bkp = (int *) value;
-        opts->pcond_opts->N2_bkp = *N2_bkp;
-    }
-	else //if(!strcmp(field, "ric_alg"))
+	int ii;
+
+	char module[MAX_STR_LEN];
+	char *ptr_module = NULL;
+	int module_length = 0;
+
+	// extract module name
+	char *char_ = strchr(field, '_');
+	if(char_!=NULL)
+	{
+		module_length = char_-field;
+		for(ii=0; ii<module_length; ii++)
+			module[ii] = field[ii];
+		module[module_length] = '\0'; // add end of string
+		ptr_module = module;
+	}
+
+	if(!strcmp(ptr_module, "pcond")) // pass options to pcond module
+	{
+		// TODO config !!!
+		ocp_qp_partial_condensing_opts_set(opts->pcond_opts, field+module_length+1, value);
+	}
+	else // pass options to QP module
 	{
 		config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
 	}
-//    else
-//    {
-//		// TODO pass options to qp solver
-//        printf("\nerror: option type %s not available in ocp_qp_partial_condense solver module\n", field);
-//        exit(1);
-//    }
+	
 	return;
+
 }
 
 
