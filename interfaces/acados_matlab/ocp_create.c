@@ -891,6 +891,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		plan->regularization = PROJECT;
 		}
+	else if(!strcmp(regularize_method, "project_reduc_hess"))
+		{
+		plan->regularization = PROJECT_REDUC_HESS;
+		}
 	else if(!strcmp(regularize_method, "convexify"))
 		{
 		plan->regularization = CONVEXIFY;

@@ -1216,6 +1216,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                     mem->nlp_res->inf_norm_res_m :
                                     nlp_out->inf_norm_res;
 
+printf("\niter = %d, res = %e %e %e %e\n", sqp_iter, mem->nlp_res->inf_norm_res_g, mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m);
+
         // exit conditions on residuals
         if ((mem->nlp_res->inf_norm_res_g < opts->min_res_g) &
             (mem->nlp_res->inf_norm_res_b < opts->min_res_b) &

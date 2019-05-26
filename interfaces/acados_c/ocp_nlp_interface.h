@@ -85,6 +85,7 @@ typedef enum
     NO_REGULARIZE,
     MIRROR,
     PROJECT,
+    PROJECT_REDUC_HESS,
     CONVEXIFY,
     INVALID_REGULARIZE,
 } ocp_nlp_reg_t;

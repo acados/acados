@@ -34,6 +34,7 @@ OBJS += acados/ocp_nlp/ocp_nlp_reg_common.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_convexify.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_mirror.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_project.o
+OBJS += acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.o
 OBJS += acados/ocp_nlp/ocp_nlp_reg_noreg.o
 
 # dense qp

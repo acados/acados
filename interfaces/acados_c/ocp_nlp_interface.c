@@ -37,6 +37,7 @@
 #include "acados/ocp_nlp/ocp_nlp_reg_convexify.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_mirror.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_project.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
@@ -197,6 +198,9 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             break;
         case PROJECT:
             ocp_nlp_reg_project_config_initialize_default(config->regularize);
+            break;
+        case PROJECT_REDUC_HESS:
+            ocp_nlp_reg_project_reduc_hess_config_initialize_default(config->regularize);
             break;
         case CONVEXIFY:
             ocp_nlp_reg_convexify_config_initialize_default(config->regularize);
