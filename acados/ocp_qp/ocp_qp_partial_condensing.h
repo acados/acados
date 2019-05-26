@@ -36,6 +36,7 @@ typedef struct ocp_qp_partial_condensing_opts_
     int *block_size;
     int N2;
     int N2_bkp;
+	int ric_alg;
 } ocp_qp_partial_condensing_opts;
 
 

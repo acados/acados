@@ -496,6 +496,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 			blasfeo_dgead(nx[ss], nx[ss], 1.0, L2, nu[ss], nu[ss], P, 0, 0);
 		}
 		blasfeo_dtrtr_l(nx[ss], P, 0, 0, P, 0, 0);
+//printf("\nP\n");
 //blasfeo_print_dmat(nx[ss], nx[ss], P, 0, 0);
 
 	}
@@ -528,6 +529,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 	// TODO till here
 //blasfeo_dgead(nu[ss]+nx[ss], nu[ss]+nx[ss], 1.0, L2, 0, 0, L, 0, 0);
 //blasfeo_dpotrf_l(nu[ss]+nx[ss], L, 0, 0, L, 0, 0);
+//printf("\nL0\n");
 //blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L, 0, 0);
 
 //	blasfeo_print_dmat(nx[ii], nx[ii], P, 0, 0);

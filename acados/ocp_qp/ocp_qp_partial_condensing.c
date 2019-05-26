@@ -124,6 +124,7 @@ void ocp_qp_partial_condensing_opts_update(ocp_qp_dims *dims, void *opts_)
     opts->N2_bkp = opts->N2;
     // hpipm_opts
     d_set_default_cond_qp_ocp2ocp_arg(opts->N2, opts->hpipm_opts);
+	d_set_cond_qp_ocp2ocp_arg_ric_alg(opts->ric_alg, opts->N2, opts->hpipm_opts);
 
 	return;
 }
@@ -148,7 +149,7 @@ void ocp_qp_partial_condensing_opts_set(void *opts_, const char *field, void* va
 	else if(!strcmp(field, "ric_alg"))
 	{
 		int *tmp_ptr = value;
-		d_set_cond_qp_ocp2ocp_arg_ric_alg(*tmp_ptr, opts->N2, opts->hpipm_opts);
+		opts->ric_alg = *tmp_ptr;
 	}
 	else
 	{
