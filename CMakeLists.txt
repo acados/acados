@@ -28,22 +28,35 @@ project(acados LANGUAGES C CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
-### Defaults
-
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
-set(ACADOS_INSTALL_DIR "$ENV{HOME}/.local/" CACHE STRING  "Installation path to ~/.local")
-set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
+### Defaults
 
+set(ACADOS_INSTALL_DIR "/usr/local" CACHE STRING  "Installation path to /usr/local")
 set(TARGET "GENERIC" CACHE STRING "Target architecture")
 set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
 
-set(ACADOS_WITH_HPMPC OFF CACHE BOOL "HPMPC solver")
-set(ACADOS_WITH_QORE OFF CACHE BOOL "QORE solver")
-set(ACADOS_WITH_OOQP OFF CACHE BOOL "OOQP solver")
-set(ACADOS_WITH_QPOASES OFF CACHE BOOL "qpOASES solver")
-set(ACADOS_WITH_QPDUNES OFF CACHE BOOL "qpDUNES solver")
-set(ACADOS_WITH_OSQP OFF CACHE BOOL "OSQP solver")
+# Additional targets
+option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
+option(ACADOS_EXAMPLES "Compile Examples" OFF)
+option(ACADOS_LINT "Compile Lint" OFF)
+# Extarnal libs
+option(ACADOS_WITH_QPOASES  "qpOASES solver" ON)
+option(ACADOS_WITH_HPMPC "HPMPC solver" OFF)
+option(ACADOS_WITH_QORE "QORE solver" OFF)
+option(ACADOS_WITH_OOQP "OOQP solver" OFF)
+option(ACADOS_WITH_QPDUNES "qpDUNES solver" OFF)
+option(ACADOS_WITH_OSQP "OSQP solver" OFF)
+# Interfaces
+option(SWIG_MATLAB "Swig Matlab Interface" OFF)
+option(SWIG_PYTHON "Swig Python Interface" OFF)
+option(TEMPLATE_MATLAB "Template Matlab Interface" OFF)
+option(TEMPLATE_PYTHON "Template Python Interface" OFF)
+option(DEV_MATLAB "Developer Matlab Interface" OFF)
+
+# Set custom path
+set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
+set(EXTERNAL_SRC_DIR ${PROJECT_SOURCE_DIR}/external)
 
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
@@ -121,46 +134,72 @@ if(ACADOS_WITH_QORE MATCHES ON)
 	endif()
 endif()
 
+if(SWIG_MATLAB OR SWIG_PYTHON)
+	if(CMAKE_SYSTEM_NAME MATCHES "dSpace")
+		set(SWIG_MATLAB OFF CACHE BOOL "Swig Matlab Interface" FORCE)
+		set(SWIG_PYTHON OFF CACHE BOOL "Swig Python Interface" FORCE)
+		message(WARNING "Swig has been disabled, not compatible with dSpace system")
+	endif()
+	if(CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
+		set(SWIG_MATLAB OFF CACHE BOOL "Swig Matlab Interface" FORCE)
+		set(SWIG_PYTHON OFF CACHE BOOL "Swig Python Interface" FORCE)
+		message(WARNING "Swig has been disabled, not compatible with NoExternalLibs target")
+	endif()
+endif()
 
+if(ACADOS_LINT)
+	if(CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "dSpace")
+		set(ACADOS_LINT OFF CACHE BOOL "Lint" FORCE)
+		message(WARNING "Lint has been disabled, not compatible with ${CMAKE_SYSTEM_NAME}")
+	endif()
+endif()
 
 ### ) External lib checks
 
-set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 # Configure acados
 add_subdirectory(acados)
+
+# Configure interfaces
+add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces/acados_c)
+
+if((SWIG_PYTHON OR SWIG_MATLAB))
+    add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces/acados_cpp)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/swig)
+endif()
 
 # Configure external libraries
 add_subdirectory(${EXTERNAL_SRC_DIR})
 
-message(STATUS "CPU TARGET is ${TARGET}")
-message(STATUS "Linear algebra is ${LA}")
-message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
-
-
-# Add examples
-if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+# Configure examples
+if(ACADOS_EXAMPLES)
 	add_subdirectory(examples)
 endif()
 
-# Configure SWIG interface
-if(NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-	if(SWIG_MATLAB OR SWIG_PYTHON)
-		add_subdirectory(swig)
-	endif()
-endif()
-
-# Generate test data and configure unit tests
-if(UNIT_TESTS)
+# Configure tests
+if(ACADOS_UNIT_TESTS)
 	add_subdirectory(test)
 endif()
 
-# Uninstallation
+# Configure lint
+if(ACADOS_LINT)
+	include(Lint)
+else()
+	add_custom_target(lint echo "Lint is disabled")
+endif()
+
+# Configure Uninstall
 configure_file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
 	"${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake"
 	IMMEDIATE @ONLY)
-add_custom_target(acados_uninstall # NOTE(dimitris): uninstall name clashes with submodules
+add_custom_target(uninstall
+	# NOTE(dimitris): uninstall name clashes with submodules
 	"${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
 
-# Cpplint
-include(Lint)
+# Status messages
+message(STATUS "CPU TARGET is ${TARGET}")
+message(STATUS "Linear algebra is ${LA}")
+message(STATUS "Swig: Python (${SWIG_PYTHON}) Matlab (${SWIG_MATLAB})")
+message(STATUS "System name:version ${CMAKE_SYSTEM_NAME}:${CMAKE_SYSTEM_VERSION}")
+message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
+message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
