@@ -17,12 +17,13 @@ function build_acados {
 	cmake -E make_directory build;
 	cmake -E chdir build cmake \
 			-D CMAKE_BUILD_TYPE="${BUILD_TYPE}" \
-			-D UNIT_TESTS="${UNIT_TESTS}" \
+			-D ACADOS_UNIT_TESTS="${UNIT_TESTS}" \
+			-D ACADOS_LINT="${LINT}" \
 			-D CMAKE_INSTALL_PREFIX="${ACADOS_INSTALL_DIR}" \
 			-D Matlab_ROOT_DIR="${MATLAB_ROOT}" \
 			-D SWIG_MATLAB="${SWIG_MATLAB}" \
 			-D COVERAGE="${COVERAGE}" \
-			-D SWIG_PYTHON=ON \
+			-D SWIG_PYTHON="${SWIG_PYTHON}" \
 			-D BUILD_SHARED_LIBS=ON \
 			..;
 	if [ "${LINT}" = 'ON' ]; then
