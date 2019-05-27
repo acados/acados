@@ -40,13 +40,15 @@ using Eigen::Map;
 ocp_qp_solver_t hashit(std::string const &inString)
 {
     if (inString == "SPARSE_HPIPM") return PARTIAL_CONDENSING_HPIPM;
-    if (inString == "SPARSE_HPMPC") return PARTIAL_CONDENSING_HPMPC;
-    if (inString == "SPARSE_QPDUNES") return PARTIAL_CONDENSING_QPDUNES;
-
     if (inString == "DENSE_HPIPM") return FULL_CONDENSING_HPIPM;
+#ifdef ACADOS_WITH_HPMPC
+    if (inString == "SPARSE_HPMPC") return PARTIAL_CONDENSING_HPMPC;
+#endif
+#ifdef ACADOS_WITH_QPOASES
     if (inString == "DENSE_QPOASES") return FULL_CONDENSING_QPOASES;
-#ifdef ACADOS_WITH_QORE
-    if (inString == "DENSE_QORE") return FULL_CONDENSING_QORE;
+#endif
+#ifdef ACADOS_WITH_QPDUNES
+    if (inString == "SPARSE_QPDUNES") return PARTIAL_CONDENSING_QPDUNES;
 #endif
 #ifdef ACADOS_WITH_OOQP
     if (inString == "DENSE_OOQP") return FULL_CONDENSING_OOQP;
@@ -55,7 +57,9 @@ ocp_qp_solver_t hashit(std::string const &inString)
 #ifdef ACADOS_WITH_OSQP
     if (inString == "SPARSE_OSQP") return PARTIAL_CONDENSING_OSQP;
 #endif
-
+#ifdef ACADOS_WITH_QORE
+    if (inString == "DENSE_QORE") return FULL_CONDENSING_QORE;
+#endif
     return (ocp_qp_solver_t) -1;
 }
 
@@ -122,26 +126,29 @@ void set_N2(std::string const &inString, void *opts, int N2, int N)
 
 TEST_CASE("mass spring example", "[QP solvers]")
 {
-    vector<std::string> solvers = {"SPARSE_HPIPM",
-                                   "SPARSE_HPMPC",
-                                   "SPARSE_QPDUNES",
-                                   "DENSE_HPIPM",
-                                   "DENSE_QPOASES"
+    vector<std::string> solvers = {
+                                    "DENSE_HPIPM"
+                                   ,"SPARSE_HPIPM"
+#ifdef ACADOS_WITH_HPMPC
+                                   ,"SPARSE_HPMPC"
+#endif
+#ifdef ACADOS_WITH_QPOASES
+                                   ,"DENSE_QPOASES"
+#endif
+#ifdef ACADOS_WITH_QPDUNES
+                                   ,"SPARSE_QPDUNES"
+#endif
 #ifdef ACADOS_WITH_OOQP
-                                   // ,
-                                   // "DENSE_OOQP",
-                                   // "SPARSE_OOQP"
+                                   ,"DENSE_OOQP"
+                                   ,"SPARSE_OOQP"
 #endif
 #ifdef ACADOS_WITH_OSQP
-                                    ,
-                                   "SPARSE_OSQP"
+                                   ,"SPARSE_OSQP"
 #endif
 #ifdef ACADOS_WITH_QORE
-                                   ,
-                                   "DENSE_QORE"};
-#else
-    };
+                                   ,"DENSE_QORE"
 #endif
+    };
 
     /************************************************
      * set up dimensions
@@ -204,8 +211,10 @@ TEST_CASE("mass spring example", "[QP solvers]")
             if (sparse_solver)
             {
                 N2_length = 3;
+                #ifdef ACADOS_WITH_HPMPC
                 if (plan.qp_solver == PARTIAL_CONDENSING_HPMPC)
                     N2_length = 1;  // TODO(dimitris): fix this
+                #endif
             }
             else
             {
@@ -222,6 +231,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
                     acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
 
+                    #ifdef ACADOS_WITH_QPDUNES
                     // TODO(dimitris): fix this hack for qpDUNES
                     // (it terminates one iteration before optimal solution,
                     // fixed with warm-start and calling solve twice)
@@ -229,6 +239,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
                     {
                         acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
                     }
+                    #endif
 
                     REQUIRE(acados_return == 0);
 

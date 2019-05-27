@@ -58,19 +58,26 @@
 ocp_qp_solver_t qp_solver_en(std::string const& inString)
 {
     if (inString == "SPARSE_HPIPM") return PARTIAL_CONDENSING_HPIPM;
-    if (inString == "SPARSE_HPMPC") return PARTIAL_CONDENSING_HPMPC;
-    if (inString == "SPARSE_QPDUNES") return PARTIAL_CONDENSING_QPDUNES;
-
     if (inString == "DENSE_HPIPM") return FULL_CONDENSING_HPIPM;
+#ifdef ACADOS_WITH_HPMPC
+    if (inString == "SPARSE_HPMPC") return PARTIAL_CONDENSING_HPMPC;
+#endif
+#ifdef ACADOS_WITH_QPOASES
     if (inString == "DENSE_QPOASES") return FULL_CONDENSING_QPOASES;
-#ifdef ACADOS_WITH_QORE
-    if (inString == "DENSE_QORE") return FULL_CONDENSING_QORE;
+#endif
+#ifdef ACADOS_WITH_QPDUNES
+    if (inString == "SPARSE_QPDUNES") return PARTIAL_CONDENSING_QPDUNES;
 #endif
 #ifdef ACADOS_WITH_OOQP
     if (inString == "DENSE_OOQP") return FULL_CONDENSING_OOQP;
-    if (inString == "SPARSE_QORE") return PARTIAL_CONDENSING_OOQP;
+    if (inString == "SPARSE_OOQP") return PARTIAL_CONDENSING_OOQP;
 #endif
-
+#ifdef ACADOS_WITH_OSQP
+    if (inString == "SPARSE_OSQP") return PARTIAL_CONDENSING_OSQP;
+#endif
+#ifdef ACADOS_WITH_QORE
+    if (inString == "DENSE_QORE") return FULL_CONDENSING_QORE;
+#endif
     return (ocp_qp_solver_t) -1;
 }
 
