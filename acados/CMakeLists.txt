@@ -75,7 +75,6 @@ target_include_directories(acados
 # HPMPC must come before BLASFEO!
 if(ACADOS_WITH_HPMPC)
     target_link_libraries(acados PUBLIC hpmpc)
-
     target_compile_definitions(acados PUBLIC ACADOS_WITH_HPMPC)
 endif()
 

@@ -33,7 +33,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 ### Defaults
 
 set(ACADOS_INSTALL_DIR "/usr/local" CACHE STRING  "Installation path to /usr/local")
-set(TARGET "GENERIC" CACHE STRING "Target architecture")
+set(BLASFEO_TARGET "GENERIC" CACHE STRING "BLASFEO Target architecture")
+set(HPIPM_TARGET "GENERIC" CACHE STRING "HPIPM Target architecture")
 set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
 
 # Additional targets
@@ -57,6 +58,7 @@ option(DEV_MATLAB "Developer Matlab Interface" OFF)
 # Set custom path
 set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
 set(EXTERNAL_SRC_DIR ${PROJECT_SOURCE_DIR}/external)
+set(BLASFEO_SRC_DIR ${PROJECT_SOURCE_DIR}/external/blasfeo)
 
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
@@ -196,9 +198,9 @@ add_custom_target(uninstall
 	# NOTE(dimitris): uninstall name clashes with submodules
 	"${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
 
-# Status messages
-message(STATUS "CPU TARGET is ${TARGET}")
-message(STATUS "Linear algebra is ${LA}")
+# Current config messages
+message(STATUS "Target: BLASFEO is ${BLASFEO_TARGET}, HPIPM is ${HPIPM_TARGET}")
+message(STATUS "Linear algebra: ${LA}")
 message(STATUS "Swig: Python (${SWIG_PYTHON}) Matlab (${SWIG_MATLAB})")
 message(STATUS "System name:version ${CMAKE_SYSTEM_NAME}:${CMAKE_SYSTEM_VERSION}")
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
