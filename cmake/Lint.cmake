@@ -7,7 +7,7 @@ if(NOT PYTHONINTERP_FOUND)
 endif()
 
 set(FIND_FILES_TO_LINT
-	find acados examples interfaces swig test \
+	find acados examples interfaces swig test
 	-type f -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.i")
 set(FIND_FILES_TO_LINT ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_FILES_TO_LINT})
 
