@@ -13,7 +13,7 @@ sim_num_stages = 4;
 sim_num_steps = 4;
 % ocp
 param_scheme = 'multiple_shooting_unif_grid';
-ocp_N = 50;
+ocp_N = 100;
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 %nlp_solver_exact_hessian = 'false'
@@ -275,8 +275,8 @@ for ii=1:n_sim
 	ocp.set('constr_x0', x_sim(:,ii));
 
 	% set trajectory initialization (if not, set internally using previous solution)
-%	ocp.set('init_x', x_traj_init);
-%	ocp.set('init_u', u_traj_init);
+	ocp.set('init_x', x_traj_init);
+	ocp.set('init_u', u_traj_init);
 
 	% solve OCP
 	ocp.solve();
@@ -291,9 +291,14 @@ for ii=1:n_sim
 		fprintf('\nstatus = %d, sqp_iter = %d, time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
 	end
 
-	% get solution
-	%x_traj = ocp.get('x');
-	%u_traj = ocp.get('u');
+	% get solution for initialization of next NLP
+	x_traj = ocp.get('x');
+	u_traj = ocp.get('u');
+
+	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
+	u_traj_init = [u_traj(:,2:end), u_traj(:,end)];
+
+	% get solution for sim
 	u_sim(:,ii) = ocp.get('u', 0);
 
 	% set initial state of sim
