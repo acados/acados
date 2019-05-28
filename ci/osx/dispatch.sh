@@ -2,6 +2,7 @@
 
 if [ "${SECTION}" = 'install' ]; then
 	source "${SCRIPT_DIR}/install_ccache.sh";
+	source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
 
 	if [ 0
 		 -o "${SWIG_MATLAB}" = 'ON'
@@ -27,7 +28,6 @@ if [ "${SECTION}" = 'install' ]; then
 		]; then
 		source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
 	fi
-
 
 	if [ 0
 		 -o "${SWIG_MATLAB}" = 'ON'
