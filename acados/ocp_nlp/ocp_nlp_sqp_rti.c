@@ -418,6 +418,9 @@ int ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts
     // nlp mem
     size += ocp_nlp_memory_calculate_size(config, dims);
 
+	// stat
+	size += 1*2*sizeof(double);
+
     size += 8;  // initial align
 
     //    make_int_multiple_of(64, &size);
@@ -494,6 +497,14 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, voi
         c_ptr += constraints[ii]->memory_calculate_size(constraints[ii], dims->constraints[ii],
                                                         opts->constraints[ii]);
     }
+
+	// stat
+	mem->stat = (double *) c_ptr;
+	mem->stat_m = 2;
+	mem->stat_n = 1;
+	c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
+
+    mem->status = ACADOS_READY;
 
     assert((char *) raw_memory+ocp_nlp_sqp_rti_memory_calculate_size(config, dims, opts) >= c_ptr);
 
@@ -1060,6 +1071,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     int ii;
 
+	int qp_iter = 0;
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -1157,6 +1170,9 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // update QP rhs for SQP (step prim var, abs dual var)
     sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
 
+	// save statistics
+	mem->stat[mem->stat_n*1+0] = qp_iter;
+
     // regularize Hessian
     config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
 
@@ -1177,10 +1193,17 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // compute correct dual solution in case of Hessian regularization
     config->regularize->correct_dual_sol(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
 
+	// TODO move into QP solver memory ???
+	nlp_out->qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
+	qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
+
     // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
     //  print_ocp_qp_out(work->qp_out);
     //  if(sqp_iter==1)
     //  exit(1);
+
+	// save statistics
+	mem->stat[mem->stat_n*1+0] = qp_iter;
 
     if (qp_status != 0)
     {
@@ -1299,6 +1322,21 @@ void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *ret
     {
         double *value = return_value_;
         *value = mem->time_lin;
+    }
+    else if (!strcmp("stat", field))
+    {
+        double **value = return_value_;
+        *value = mem->stat;
+    }
+    else if (!strcmp("stat_m", field))
+    {
+        int *value = return_value_;
+        *value = mem->stat_m;
+    }
+    else if (!strcmp("stat_n", field))
+    {
+        int *value = return_value_;
+        *value = mem->stat_n;
     }
     else
     {

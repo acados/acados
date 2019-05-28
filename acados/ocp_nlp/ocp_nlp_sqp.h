@@ -100,6 +100,10 @@ typedef struct
     double time_qp_sol;
     double time_lin;
     double time_tot;
+
+	double *stat;
+	int stat_m;
+	int stat_n;
 } ocp_nlp_sqp_memory;
 
 //

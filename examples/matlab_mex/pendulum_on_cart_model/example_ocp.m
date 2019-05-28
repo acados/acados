@@ -171,7 +171,9 @@ ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
-ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+if (strcmp(nlp_solver, 'sqp'))
+	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+end
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_pcond_N', qp_solver_pcond_N);
@@ -232,6 +234,21 @@ x = ocp.get('x');
 
 
 
+% statistics
+
+status = ocp.get('status');
+sqp_iter = ocp.get('sqp_iter');
+time_tot = ocp.get('time_tot');
+time_lin = ocp.get('time_lin');
+time_qp_sol = ocp.get('time_qp_sol');
+
+fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+
+stat = ocp.get('stat')
+
+
+% figures
+
 for ii=1:N+1
 	x_cur = x(:,ii);
 	visualize;
@@ -246,16 +263,6 @@ subplot(2,1,2);
 plot(0:N-1, u);
 xlim([0 N]);
 legend('F');
-
-
-
-status = ocp.get('status');
-sqp_iter = ocp.get('sqp_iter');
-time_tot = ocp.get('time_tot');
-time_lin = ocp.get('time_lin');
-time_qp_sol = ocp.get('time_qp_sol');
-
-fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
 
 
 

@@ -16,7 +16,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	long long *ptr;
 
-	int ii;
+	int ii, jj;
 
 	/* RHS */
 
@@ -128,6 +128,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
 		double *mat_ptr = mxGetPr( plhs[0] );
 		ocp_nlp_get(config, solver, "time_qp_sol", mat_ptr);
+		}
+	else if(!strcmp(field, "stat"))
+		{
+		int sqp_iter;
+		int stat_m, stat_n;
+		double *stat;
+		ocp_nlp_get(config, solver, "sqp_iter", &sqp_iter);
+		ocp_nlp_get(config, solver, "stat_m", &stat_m);
+		ocp_nlp_get(config, solver, "stat_n", &stat_n);
+		ocp_nlp_get(config, solver, "stat", &stat);
+		plhs[0] = mxCreateNumericMatrix(sqp_iter+1, stat_n+1, mxDOUBLE_CLASS, mxREAL);
+		double *mat_ptr = mxGetPr( plhs[0] );
+		if(sqp_iter+1>stat_m)
+			sqp_iter = stat_m-1;
+		for(ii=0; ii<sqp_iter+1; ii++)
+			{
+			mat_ptr[ii+0] = ii;
+			for(jj=0; jj<stat_n; jj++)
+				mat_ptr[ii+(jj+1)*(sqp_iter+1)] = stat[jj+ii*stat_n];
+			}
 		}
 	else
 		{

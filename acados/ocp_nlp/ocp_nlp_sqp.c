@@ -453,6 +453,9 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
     // nlp mem
     size += ocp_nlp_memory_calculate_size(config, dims);
 
+	// stat
+	size += 5*opts->max_iter*sizeof(double);
+
     size += 8;  // initial align
 
     //    make_int_multiple_of(64, &size);
@@ -533,6 +536,12 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
         c_ptr += constraints[ii]->memory_calculate_size(constraints[ii], dims->constraints[ii],
                                                         opts->constraints[ii]);
     }
+
+	// stat
+	mem->stat = (double *) c_ptr;
+	mem->stat_m = opts->max_iter;
+	mem->stat_n = 5;
+	c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
     mem->status = ACADOS_READY;
 
@@ -1103,6 +1112,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     int ii;
 
+	int qp_iter = 0;
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -1216,7 +1227,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                     mem->nlp_res->inf_norm_res_m :
                                     nlp_out->inf_norm_res;
 
-printf("\niter = %d, res = %e %e %e %e\n", sqp_iter, mem->nlp_res->inf_norm_res_g, mem->nlp_res->inf_norm_res_b, mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m);
+		// save statistics
+		if (sqp_iter < mem->stat_m)
+		{
+			mem->stat[mem->stat_n*sqp_iter+0] = mem->nlp_res->inf_norm_res_g;
+			mem->stat[mem->stat_n*sqp_iter+1] = mem->nlp_res->inf_norm_res_b;
+			mem->stat[mem->stat_n*sqp_iter+2] = mem->nlp_res->inf_norm_res_d;
+			mem->stat[mem->stat_n*sqp_iter+3] = mem->nlp_res->inf_norm_res_m;
+			mem->stat[mem->stat_n*sqp_iter+4] = qp_iter;
+		}
 
         // exit conditions on residuals
         if ((mem->nlp_res->inf_norm_res_g < opts->min_res_g) &
@@ -1266,7 +1285,9 @@ printf("\niter = %d, res = %e %e %e %e\n", sqp_iter, mem->nlp_res->inf_norm_res_
         // stop timer
         mem->time_qp_sol += acados_toc(&timer1);
 
+		// TODO move into QP solver memory ???
         nlp_out->qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
+        qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
 
 //        printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
 //        print_ocp_qp_out(work->qp_out);
@@ -1424,9 +1445,24 @@ void ocp_nlp_sqp_get(void *config_, void *mem_, const char *field, void *return_
         ocp_nlp_res **value = return_value_;
         *value = mem->nlp_res;
     }
+    else if (!strcmp("stat", field))
+    {
+        double **value = return_value_;
+        *value = mem->stat;
+    }
+    else if (!strcmp("stat_m", field))
+    {
+        int *value = return_value_;
+        *value = mem->stat_m;
+    }
+    else if (!strcmp("stat_n", field))
+    {
+        int *value = return_value_;
+        *value = mem->stat_n;
+    }
     else
     {
-        printf("\nerror: output type %s not available in ocp_nlp_sqp module\n", field);
+        printf("\nerror: field %s not available in ocp_nlp_sqp_get\n", field);
         exit(1);
     }
 
