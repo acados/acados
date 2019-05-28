@@ -2,7 +2,7 @@ from jinja2 import Environment, FileSystemLoader
 from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
 from .generate_c_code_constraint import *
-from .ocp_nlp_render_arguments import *
+from .acados_ocp_nlp import *
 from ctypes import *
 
 def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_pN=None, json_file='acados_ocp_nlp.json'):

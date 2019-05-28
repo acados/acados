@@ -17,11 +17,6 @@
     "con_p_name": [
         "NoneType"
     ],
-    "constants": {
-        "PI": [
-            "float"
-        ]
-    },
     "constraints": {
         "lbx": [
             "ndarray",
