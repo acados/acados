@@ -2,7 +2,7 @@
 find_package(PythonInterp 3)
 
 if(NOT PYTHONINTERP_FOUND)
-    message(STATUS "Disabling lint")
+    message(STATUS "Python Interpreter not found, disabling lint")
     return()
 endif()
 
