@@ -16,8 +16,8 @@ param_scheme = 'multiple_shooting_unif_grid';
 ocp_N = 100;
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-%nlp_solver_exact_hessian = 'false'
-nlp_solver_exact_hessian = 'true'
+%nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
 %regularize_method = 'no_regularize';
 %regularize_method = 'project';
 regularize_method = 'project_reduc_hess';
@@ -260,7 +260,7 @@ u_sim = zeros(nu, n_sim);
 % set trajectory initialization
 %x_traj_init = zeros(nx, ocp_N+1);
 %for ii=1:ocp_N x_traj_init(:,ii) = [0; pi; 0; 0]; end
-x_traj_init = linspace([0; pi; 0; 0], [0; 0; 0; 0], ocp_N+1);
+x_traj_init = [linspace(0, 0, ocp_N+1); linspace(pi, 0, ocp_N+1); linspace(0, 0, ocp_N+1); linspace(0, 0, ocp_N+1)];
 
 u_traj_init = zeros(nu, ocp_N);
 ocp.set('init_x', x_traj_init);
@@ -318,15 +318,14 @@ avg_time_solve = toc/n_sim
 
 
 
-% print solution
+% figures
+
 for ii=1:n_sim+1
 	x_cur = x_sim(:,ii);
 	visualize;
 end
 
 
-
-status = ocp.get('status');
 
 figure(2);
 subplot(2,1,1);
@@ -339,6 +338,8 @@ xlim([0 n_sim]);
 legend('F');
 
 
+
+status = ocp.get('status');
 
 if status==0
 	fprintf('\nsuccess!\n\n');

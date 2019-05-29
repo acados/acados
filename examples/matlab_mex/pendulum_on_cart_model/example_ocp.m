@@ -11,8 +11,8 @@ N = 100;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-%nlp_solver_exact_hessian = 'false'
-nlp_solver_exact_hessian = 'true'
+%nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
 %regularize_method = 'no_regularize';
 %regularize_method = 'project';
 regularize_method = 'project_reduc_hess';
@@ -200,7 +200,7 @@ ocp.C_ocp_ext_fun
 % set trajectory initialization
 %x_traj_init = zeros(nx, N+1);
 %for ii=1:N x_traj_init(:,ii) = [0; pi; 0; 0]; end
-x_traj_init = linspace([0; pi; 0; 0], [0; 0; 0; 0], N+1);
+x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
 
 u_traj_init = zeros(nu, N);
 ocp.set('init_x', x_traj_init);
@@ -244,7 +244,20 @@ time_qp_sol = ocp.get('time_qp_sol');
 
 fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
 
-stat = ocp.get('stat')
+stat = ocp.get('stat');
+if (strcmp(nlp_solver, 'sqp'))
+	fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_iter\n');
+	for ii=1:size(stat,1)
+		fprintf('%d\t%e\t%e\t%e\t%e\t%d\n', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6));
+	end
+	fprintf('\n');
+else % sqp_rti
+	fprintf('\niter\tqp_iter\n');
+	for ii=1:size(stat,1)
+		fprintf('%d\t%d\n', stat(ii,1), stat(ii,2));
+	end
+	fprintf('\n');
+end
 
 
 % figures
@@ -263,6 +276,18 @@ subplot(2,1,2);
 plot(0:N-1, u);
 xlim([0 N]);
 legend('F');
+
+if (strcmp(nlp_solver, 'sqp'))
+	figure(3);
+	plot([0: sqp_iter], log10(stat(:,2)), 'r-x');
+	hold on
+	plot([0: sqp_iter], log10(stat(:,3)), 'b-x');
+	plot([0: sqp_iter], log10(stat(:,4)), 'g-x');
+	plot([0: sqp_iter], log10(stat(:,5)), 'k-x');
+	hold off
+	xlabel('iter')
+	ylabel('res')
+end
 
 
 
