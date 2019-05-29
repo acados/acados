@@ -346,7 +346,6 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
 
 
 
-// TODO rename ... opts_set_dynamics !!!
 void ocp_nlp_sqp_dynamics_opts_set(void *config_, void *opts_, int stage,
         const char *field, void *value)
 {
@@ -362,7 +361,6 @@ void ocp_nlp_sqp_dynamics_opts_set(void *config_, void *opts_, int stage,
 
 
 
-// TODO rename ... opts_set_cost !!!
 void ocp_nlp_sqp_cost_opts_set(void *config_, void *opts_, int stage,
         const char *field, void *value)
 {
@@ -378,7 +376,6 @@ void ocp_nlp_sqp_cost_opts_set(void *config_, void *opts_, int stage,
 
 
 
-// TODO rename ... opts_set_constraints !!!
 void ocp_nlp_sqp_constraints_opts_set(void *config_, void *opts_, int stage,
         const char *field, void *value)
 {
