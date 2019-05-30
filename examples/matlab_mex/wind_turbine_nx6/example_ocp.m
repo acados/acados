@@ -10,10 +10,20 @@ param_scheme = 'multiple_shooting_unif_grid';
 N = 40;
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
+%nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
+%regularize_method = 'no_regularize';
+regularize_method = 'project';
+%regularize_method = 'project_reduc_hess';
+%regularize_method = 'mirror';
+%regularize_method = 'convexify';
+nlp_solver_max_iter = 100;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_pcond_N = 5;
-% sim_method = 'erk';
+qp_solver_pcond_ric_alg = 0;
+qp_solver_ric_alg = 0;
+%sim_method = 'erk';
 sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 1;
@@ -207,9 +217,16 @@ ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
+ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
+ocp_opts.set('regularize_method', regularize_method);
+if (strcmp(nlp_solver, 'sqp'))
+	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+end
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_pcond_N', qp_solver_pcond_N);
+	ocp_opts.set('qp_solver_pcond_ric_alg', qp_solver_pcond_ric_alg);
+	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
 end
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
@@ -266,6 +283,9 @@ u(:,1)'
 %electrical_power = 0.944*97/100*x(1,1)*x(6,1)
 electrical_power = 0.944*97/100*x(1,:).*x(6,:)
 
+
+% statistics
+
 status = ocp.get('status');
 sqp_iter = ocp.get('sqp_iter');
 time_tot = ocp.get('time_tot');
@@ -273,6 +293,57 @@ time_lin = ocp.get('time_lin');
 time_qp_sol = ocp.get('time_qp_sol');
 
 fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+
+stat = ocp.get('stat');
+if (strcmp(nlp_solver, 'sqp'))
+	fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_iter\n');
+	for ii=1:size(stat,1)
+		fprintf('%d\t%e\t%e\t%e\t%e\t%d\n', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6));
+	end
+	fprintf('\n');
+else % sqp_rti
+	fprintf('\niter\tqp_iter\n');
+	for ii=1:size(stat,1)
+		fprintf('%d\t%d\n', stat(ii,1), stat(ii,2));
+	end
+	fprintf('\n');
+end
+
+
+% figures
+
+figure(1);
+subplot(3,1,1);
+plot(0:N, x);
+xlim([0 N]);
+ylabel('states');
+%legend('p', 'theta', 'v', 'omega');
+subplot(3,1,2);
+plot(0:N-1, u);
+xlim([0 N]);
+ylabel('inputs');
+%legend('F');
+subplot(3,1,3);
+plot(0:N, electrical_power);
+hold on
+plot([0 N], [Pel_max Pel_max]);
+hold off
+xlim([0 N]);
+ylim([4.5 6.0]);
+ylabel('electrical power');
+%legend('F');
+
+if (strcmp(nlp_solver, 'sqp'))
+	figure(2);
+	plot([0: sqp_iter], log10(stat(:,2)), 'r-x');
+	hold on
+	plot([0: sqp_iter], log10(stat(:,3)), 'b-x');
+	plot([0: sqp_iter], log10(stat(:,4)), 'g-x');
+	plot([0: sqp_iter], log10(stat(:,5)), 'k-x');
+	hold off
+	xlabel('iter')
+	ylabel('res')
+end
 
 
 
@@ -282,6 +353,8 @@ else
 	fprintf('\nsolution failed!\n\n');
 end
 
+
+waitforbuttonpress;
 
 
 return;

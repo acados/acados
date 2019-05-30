@@ -14,11 +14,21 @@ sim_num_steps = 1;
 % ocp
 ocp_param_scheme = 'multiple_shooting_unif_grid';
 ocp_N = 40;
-%ocp_nlp_solver = 'sqp';
-ocp_nlp_solver = 'sqp_rti';
+ocp_nlp_solver = 'sqp';
+%ocp_nlp_solver = 'sqp_rti';
+%ocp_nlp_solver_exact_hessian = 'false';
+ocp_nlp_solver_exact_hessian = 'true';
+%regularize_method = 'no_regularize';
+%regularize_method = 'project';
+regularize_method = 'project_reduc_hess';
+%regularize_method = 'mirror';
+%regularize_method = 'convexify';
+ocp_nlp_solver_max_iter = 50;
 ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_hpipm';
 ocp_qp_solver_pcond_N = 5;
+ocp_qp_solver_pcond_ric_alg = 0;
+ocp_qp_solver_ric_alg = 0;
 %ocp_sim_method = 'erk';
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
@@ -213,9 +223,16 @@ ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', ocp_param_scheme);
 ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', ocp_nlp_solver);
+ocp_opts.set('nlp_solver_exact_hessian', ocp_nlp_solver_exact_hessian);
+ocp_opts.set('regularize_method', regularize_method);
+if (strcmp(ocp_nlp_solver, 'sqp'))
+	ocp_opts.set('nlp_solver_max_iter', ocp_nlp_solver_max_iter);
+end
 ocp_opts.set('qp_solver', ocp_qp_solver);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_pcond_N', ocp_qp_solver_pcond_N);
+	ocp_opts.set('qp_solver_pcond_ric_alg', ocp_qp_solver_pcond_ric_alg);
+	ocp_opts.set('qp_solver_ric_alg', ocp_qp_solver_ric_alg);
 end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
@@ -293,7 +310,7 @@ sim = acados_sim(sim_model, sim_opts);
 % get references
 compute_setup;
 
-n_sim = 40;
+n_sim = 100;
 n_sim_max = length(wind0_ref) - ocp_N;
 if n_sim>n_sim_max
 	n_sim = s_sim_max;
@@ -301,6 +318,8 @@ end
 x_sim = zeros(nx, n_sim+1);
 x_sim(:,1) = x0_ref; % initial state
 u_sim = zeros(nu, n_sim);
+
+sqp_iter_sim = zeros(n_sim,1);
 
 % set trajectory initialization
 x_traj_init = repmat(x0_ref, 1, ocp_N+1);
@@ -315,7 +334,6 @@ for ii=1:n_sim
 	% set x0
 	ocp.set('constr_x0', x_sim(:,ii));
 	% set parameter
-	% TODO different parameter at each stage !!!!!
 %	ocp.set('p', wind0_ref(:,ii));
 	for jj=0:ocp_N-1
 		ocp.set('p', jj, wind0_ref(:,ii+jj));
@@ -396,12 +414,47 @@ for ii=1:n_sim
 	time_lin = ocp.get('time_lin');
 	time_qp_sol = ocp.get('time_qp_sol');
 
+	sqp_iter_sim(ii) = sqp_iter;
+
 	fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
 
 end
 
 %u_sim
 %x_sim
+electrical_power = 0.944*97/100*x_sim(1,:).*x_sim(6,:);
+
+
+% figures
+
+figure(1);
+subplot(3,1,1);
+plot(0:n_sim, x_sim);
+xlim([0 n_sim]);
+ylabel('states');
+%legend('p', 'theta', 'v', 'omega');
+subplot(3,1,2);
+plot(0:n_sim-1, u_sim);
+xlim([0 n_sim]);
+ylabel('inputs');
+%legend('F');
+subplot(3,1,3);
+plot(0:n_sim, electrical_power);
+hold on
+plot([0 n_sim], [Pel_max Pel_max]);
+hold off
+xlim([0 n_sim]);
+ylim([4.0 6.0]);
+ylabel('electrical power');
+%legend('F');
+
+figure(2);
+plot(1:n_sim, sqp_iter_sim, 'rx');
+hold on
+plot([1 n_sim], [ocp_nlp_solver_max_iter ocp_nlp_solver_max_iter]);
+hold off
+ylim([0 ocp_nlp_solver_max_iter+1])
+
 
 if status==0
 	fprintf('\nsuccess!\n\n');
@@ -409,6 +462,8 @@ else
 	fprintf('\nsolution failed!\n\n');
 end
 
+
+waitforbuttonpress;
 
 
 return;
