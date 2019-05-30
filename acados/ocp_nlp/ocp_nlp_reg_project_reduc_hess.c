@@ -56,6 +56,7 @@ void ocp_nlp_reg_project_reduc_hess_opts_initialize_default(void *config_, ocp_n
     ocp_nlp_reg_project_reduc_hess_opts *opts = opts_;
 
     opts->epsilon = 1e-4;
+	opts->pivoting = 1;
 
     return;
 }
@@ -71,6 +72,11 @@ void ocp_nlp_reg_project_reduc_hess_opts_set(void *config_, ocp_nlp_reg_dims *di
     {
         double *d_ptr = value;
         opts->epsilon = *d_ptr;
+    }
+    else if (!strcmp(field, "pivoting"))
+    {
+        int *i_ptr = value;
+        opts->pivoting = *i_ptr;
     }
     else
     {
@@ -373,7 +379,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
     ocp_nlp_reg_project_reduc_hess_memory *mem = (ocp_nlp_reg_project_reduc_hess_memory *) mem_;
     ocp_nlp_reg_project_reduc_hess_opts *opts = opts_;
 
-    int ii, jj, kk, ll, ss;
+    int ii, jj, kk, ll, ss, idx;
 
 //printf("\nhola\n");
     int *nx = dims->nx;
@@ -398,7 +404,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 	// last stage
 	ss = N;
 	blasfeo_dtrtr_l(nu[ss]+nx[ss], mem->RSQrq[ss], 0, 0, mem->RSQrq[ss], 0, 0); // necessary ???
-	// TODO !!!!!!!!!!!!!!!!!!
+	// TODO copy middle stage for nu[N}>0 !!!!!!!!!!!!!!!!!!
 //	blasfeo_unpack_dmat(nu[ss], nu[ss], mem->RSQrq[ss], 0, 0, mem->reg_hess, nu[ss]);
 //	acados_project(nu[ss], mem->reg_hess, mem->V, mem->d, mem->e, opts->epsilon);
 //	blasfeo_pack_dmat(nu[ss], nu[ss], mem->reg_hess, nu[ss], mem->RSQrq[ss], 0, 0);
@@ -458,27 +464,91 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 //printf("\nL2\n");
 //blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L2, 0, 0);
 
+//printf("\nL3\n");
+//blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L3, 0, 0);
 		// compute true_schur
+//		if(1)
 		if(do_reg)
 		{
-			for(jj=0; jj<nu[ss]; jj++)
+			if(opts->pivoting)
 			{
-				// TODO check for singularity of pivot !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-				pivot = BLASFEO_DMATEL(L3, jj, jj);
-//				printf("\n%f\n", pivot);
-				pivot = 1.0/pivot;
-				for(kk=jj+1; kk<nu[ss]+nx[ss]; kk++)
+				for(jj=0; jj<nu[ss]; jj++)
 				{
-					tmp_el = pivot * BLASFEO_DMATEL(L3, kk, jj);
-					for(ll=kk; ll<nu[ss]+nx[ss]; ll++)
+					// find pivot element
+					pivot = BLASFEO_DMATEL(L3, jj, jj);
+					idx = jj;
+					for(kk=jj+1; kk<nu[ss]; kk++)
 					{
-						BLASFEO_DMATEL(L3, ll, kk) -= BLASFEO_DMATEL(L3, ll, jj) * tmp_el;
+						tmp_el = BLASFEO_DMATEL(L3, kk, kk);
+						if(tmp_el<pivot & tmp_el>-pivot)
+						{
+							pivot = BLASFEO_DMATEL(L3, kk, kk);
+							idx = kk;
+						}
+					}
+					// symmetric permute
+					if(idx!=jj)
+					{
+						// top triangle
+						for(kk=jj; kk<idx; kk++)
+						{
+							tmp_el = BLASFEO_DMATEL(L3, kk, jj);
+							BLASFEO_DMATEL(L3, kk, jj) = BLASFEO_DMATEL(L3, idx-jj, idx-kk);
+							BLASFEO_DMATEL(L3, idx-jj, idx-kk) = tmp_el;
+						}
+						// bottom rectangle
+						for(kk=idx+1; kk<nu[ss]+nx[ss]; kk++)
+						{
+							tmp_el = BLASFEO_DMATEL(L3, kk, jj);
+							BLASFEO_DMATEL(L3, kk, jj) = BLASFEO_DMATEL(L3, kk, idx);
+							BLASFEO_DMATEL(L3, kk, idx) = tmp_el;
+						}
+					}
+						
+					pivot = BLASFEO_DMATEL(L3, jj, jj);
+					// TODO check for singularity of pivot !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+					if(pivot==0.0)
+					{
+						printf("\nocp_nlp_project_reduc_hess: zero pivot element!\n");
+						exit(1);
+					}
+					pivot = 1.0/pivot;
+					for(kk=jj+1; kk<nu[ss]+nx[ss]; kk++)
+					{
+						tmp_el = pivot * BLASFEO_DMATEL(L3, kk, jj);
+						for(ll=kk; ll<nu[ss]+nx[ss]; ll++)
+						{
+							BLASFEO_DMATEL(L3, ll, kk) -= BLASFEO_DMATEL(L3, ll, jj) * tmp_el;
+						}
+					}
+				}
+			}
+			else
+			{
+				for(jj=0; jj<nu[ss]; jj++)
+				{
+					pivot = BLASFEO_DMATEL(L3, jj, jj);
+					// TODO check for singularity of pivot !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+					if(pivot==0.0)
+					{
+						printf("\nocp_nlp_project_reduc_hess: zero pivot element!\n");
+						exit(1);
+					}
+					pivot = 1.0/pivot;
+					for(kk=jj+1; kk<nu[ss]+nx[ss]; kk++)
+					{
+						tmp_el = pivot * BLASFEO_DMATEL(L3, kk, jj);
+						for(ll=kk; ll<nu[ss]+nx[ss]; ll++)
+						{
+							BLASFEO_DMATEL(L3, ll, kk) -= BLASFEO_DMATEL(L3, ll, jj) * tmp_el;
+						}
 					}
 				}
 			}
 //printf("\nL3\n");
 //blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L3, 0, 0);
 		}
+//blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L3, 0, 0);
 
 		// apply shur to P
 		blasfeo_dgecp(nx[ss], nx[ss], L, nu[ss], nu[ss], P, 0, 0);

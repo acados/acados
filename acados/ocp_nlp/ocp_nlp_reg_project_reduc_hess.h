@@ -52,6 +52,7 @@ extern "C" {
 typedef struct
 {
     double epsilon;
+	int pivoting;
 } ocp_nlp_reg_project_reduc_hess_opts;
 
 //
