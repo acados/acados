@@ -329,9 +329,9 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
 			// dynamics
 			for (ii=0; ii<N; ii++)
 				config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii], "compute_hess", value);
-			// constraints
-			for (ii=0; ii<=N; ii++)
-				config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
+			// constraints TODO disabled for now as prevents convergence !!!
+//			for (ii=0; ii<=N; ii++)
+//				config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
 		}
 		else
 		{
@@ -451,7 +451,7 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
     size += ocp_nlp_memory_calculate_size(config, dims);
 
 	// stat
-	size += 5*opts->max_iter*sizeof(double);
+	size += 5*(opts->max_iter+1)*sizeof(double);
 
     size += 8;  // initial align
 
@@ -536,7 +536,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 
 	// stat
 	mem->stat = (double *) c_ptr;
-	mem->stat_m = opts->max_iter;
+	mem->stat_m = opts->max_iter+1;
 	mem->stat_n = 5;
 	c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
