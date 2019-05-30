@@ -324,6 +324,7 @@ sqp_iter_sim = zeros(n_sim,1);
 % set trajectory initialization
 x_traj_init = repmat(x0_ref, 1, ocp_N+1);
 u_traj_init = repmat(u0_ref, 1, ocp_N);
+pi_traj_init = zeros(nx, ocp_N);
 
 for ii=1:n_sim
 
@@ -346,9 +347,10 @@ for ii=1:n_sim
 	end
 	ocp.set('cost_yr_e', y_ref(:,ii+ocp_N));
 
-	% initialize trajectory
+	% set trajectory initialization (if not, set internally using previous solution)
 	ocp.set('init_x', x_traj_init);
 	ocp.set('init_u', u_traj_init);
+	ocp.set('init_pi', pi_traj_init);
 
 %	x_traj_init
 %	u_traj_init
@@ -359,6 +361,7 @@ for ii=1:n_sim
 	% get solution
 	x = ocp.get('x');
 	u = ocp.get('u');
+	pi = ocp.get('pi');
 
 %	x
 %	u
@@ -394,12 +397,13 @@ for ii=1:n_sim
 	% simulate state
 %	sim.solve();
 
-	% shift initialization
+	% shift trajectory for initialization
 %	x_traj_init = [x(:,2:ocp_N+1), zeros(nx, 1)];
 	x_traj_init = [x(:,2:ocp_N+1), x(:,ocp_N+1)];
 %	x_traj_init = [x(:,2:ocp_N+1), sim.get('xn')];
 %	u_traj_init = [u(:,2:ocp_N), zeros(nu, 1)];
 	u_traj_init = [u(:,2:ocp_N), u(:,ocp_N)];
+	pi_traj_init = [pi(:,2:ocp_N), pi(:,ocp_N)];
 
 	time_ext = toc;
 

@@ -298,6 +298,8 @@ else
 end
 
 
+waitforbuttonpress;
+
 
 return;
 

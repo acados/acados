@@ -263,8 +263,8 @@ u_sim = zeros(nu, n_sim);
 x_traj_init = [linspace(0, 0, ocp_N+1); linspace(pi, 0, ocp_N+1); linspace(0, 0, ocp_N+1); linspace(0, 0, ocp_N+1)];
 
 u_traj_init = zeros(nu, ocp_N);
-ocp.set('init_x', x_traj_init);
-ocp.set('init_u', u_traj_init);
+pi_traj_init = zeros(nx, ocp_N);
+
 
 
 tic;
@@ -277,6 +277,7 @@ for ii=1:n_sim
 	% set trajectory initialization (if not, set internally using previous solution)
 	ocp.set('init_x', x_traj_init);
 	ocp.set('init_u', u_traj_init);
+	ocp.set('init_pi', pi_traj_init);
 
 	% solve OCP
 	ocp.solve();
@@ -294,9 +295,12 @@ for ii=1:n_sim
 	% get solution for initialization of next NLP
 	x_traj = ocp.get('x');
 	u_traj = ocp.get('u');
+	pi_traj = ocp.get('pi');
 
+	% shift trajectory for initialization
 	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
 	u_traj_init = [u_traj(:,2:end), u_traj(:,end)];
+	pi_traj_init = [pi_traj(:,2:end), pi_traj(:,end)];
 
 	% get solution for sim
 	u_sim(:,ii) = ocp.get('u', 0);
@@ -347,6 +351,8 @@ else
 	fprintf('\nsolution failed!\n\n');
 end
 
+
+waitforbuttonpress;
 
 
 return;

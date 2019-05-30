@@ -457,6 +457,11 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_pack_dvec(dims->nu[stage], double_values, &out->ux[stage], 0);
     }
+    else if (!strcmp(field, "pi"))
+    {
+        double *double_values = value;
+        blasfeo_pack_dvec(dims->nx[stage+1], double_values, &out->pi[stage], 0);
+    }
     else
     {
         printf("\nerror: ocp_nlp_out_set: field %s not available\n", field);
@@ -478,6 +483,11 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     {
         double *double_values = value;
         blasfeo_unpack_dvec(dims->nu[stage], &out->ux[stage], 0, double_values);
+    }
+    else if (!strcmp(field, "pi"))
+    {
+        double *double_values = value;
+        blasfeo_unpack_dvec(dims->nx[stage+1], &out->pi[stage], 0, double_values);
     }
     else
     {

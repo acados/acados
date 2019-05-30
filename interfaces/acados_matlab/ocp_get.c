@@ -95,6 +95,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			return;
 			}
 		}
+	else if(!strcmp(field, "pi"))
+		{
+		if(nrhs==2)
+			{
+			plhs[0] = mxCreateNumericMatrix(nx, N, mxDOUBLE_CLASS, mxREAL);
+			double *pi = mxGetPr( plhs[0] );
+			for(ii=0; ii<N; ii++)
+				{
+				ocp_nlp_out_get(config, dims, out, ii, "pi", pi+ii*nx);
+				}
+			}
+		else if(nrhs==3)
+			{
+			plhs[0] = mxCreateNumericMatrix(nx, 1, mxDOUBLE_CLASS, mxREAL);
+			double *pi = mxGetPr( plhs[0] );
+			int stage = mxGetScalar( prhs[2] );
+			ocp_nlp_out_get(config, dims, out, stage, "pi", pi);
+			}
+		else
+			{
+			mexPrintf("\nocp_get: wrong nrhs: %d\n", nrhs);
+			return;
+			}
+		}
 	else if(!strcmp(field, "status"))
 		{
 		plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
