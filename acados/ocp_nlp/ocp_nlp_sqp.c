@@ -190,6 +190,11 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
     // qp solver
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+	// overwrite default
+	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_stat", &opts->min_res_g);
+	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_eq", &opts->min_res_b);
+	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_ineq", &opts->min_res_d);
+	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_comp", &opts->min_res_m);
 
     // regularization
     regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
@@ -308,25 +313,33 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
 			int* num_threads = (int *) value;
 			opts->num_threads = *num_threads;
 		}
-		else if (!strcmp(field, "min_res_g"))
+		else if (!strcmp(field, "min_res_g")) // TODO rename !!!
 		{
 			double* min_res_g = (double *) value;
 			opts->min_res_g = *min_res_g;
+			// pass to QP too
+			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_stat", value);
 		}
-		else if (!strcmp(field, "min_res_b"))
+		else if (!strcmp(field, "min_res_b")) // TODO rename !!!
 		{
 			double* min_res_b = (double *) value;
 			opts->min_res_b = *min_res_b;
+			// pass to QP too
+			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_eq", value);
 		}
-		else if (!strcmp(field, "min_res_d"))
+		else if (!strcmp(field, "min_res_d")) // TODO rename !!!
 		{
 			double* min_res_d = (double *) value;
 			opts->min_res_d = *min_res_d;
+			// pass to QP too
+			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_ineq", value);
 		}
-		else if (!strcmp(field, "min_res_m"))
+		else if (!strcmp(field, "min_res_m")) // TODO rename !!!
 		{
 			double* min_res_m = (double *) value;
 			opts->min_res_m = *min_res_m;
+			// pass to QP too
+			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_comp", value);
 		}
 		else if (!strcmp(field, "exact_hess"))
 		{
