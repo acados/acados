@@ -623,6 +623,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int qp_solver_pcond_N;			bool set_qp_solver_pcond_N = false;
 	int qp_solver_pcond_ric_alg;	bool set_qp_solver_pcond_ric_alg = false;
 	int qp_solver_ric_alg;			bool set_qp_solver_ric_alg = false;
+	int qp_solver_warm_start;		bool set_qp_solver_warm_start = false;
 	char *sim_method;
 	int sim_method_num_stages;		bool set_sim_method_num_stages = false;
 	int sim_method_num_steps;		bool set_sim_method_num_steps = false;
@@ -675,6 +676,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_qp_solver_ric_alg = true;
 		qp_solver_ric_alg = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_ric_alg" ) );
+		}
+	// qp solver: warm start
+	if(mxGetField( prhs[1], 0, "qp_solver_warm_start" )!=NULL)
+		{
+		set_qp_solver_warm_start = true;
+		qp_solver_warm_start = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_warm_start" ) );
 		}
 	// sim_method
 	// TODO check
@@ -1074,10 +1081,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		ocp_nlp_opts_set(config, opts, "qp_pcond_ric_alg", &qp_solver_pcond_ric_alg);
 		}
-	// qp_solver_ric_alg
+	// qp_solver_ric_alg TODO only for hpipm !!!
 	if(set_qp_solver_ric_alg)
 		{
 		ocp_nlp_opts_set(config, opts, "qp_ric_alg", &qp_solver_ric_alg);
+		}
+	// qp_solver_warm_start
+	if(set_qp_solver_warm_start)
+		{
+		ocp_nlp_opts_set(config, opts, "qp_warm_start", &qp_solver_warm_start);
 		}
 	// sim_method_num_stages
 	if(set_sim_method_num_stages)

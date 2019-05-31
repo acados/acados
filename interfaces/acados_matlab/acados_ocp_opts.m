@@ -50,6 +50,8 @@ classdef acados_ocp_opts < handle
 				obj.opts_struct.qp_solver_pcond_ric_alg = value;
 			elseif (strcmp(field, 'qp_solver_ric_alg'))
 				obj.opts_struct.qp_solver_ric_alg = value;
+			elseif (strcmp(field, 'qp_solver_warm_start'))
+				obj.opts_struct.qp_solver_warm_start = value;
 			elseif (strcmp(field, 'sim_method'))
 				obj.opts_struct.sim_method = value;
 			elseif (strcmp(field, 'sim_method_num_stages'))

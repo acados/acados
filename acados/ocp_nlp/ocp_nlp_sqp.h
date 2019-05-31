@@ -57,6 +57,7 @@ typedef struct
     int max_iter;
     int reuse_workspace;
     int num_threads;
+	int qp_warm_start;
 } ocp_nlp_sqp_opts;
 
 //
