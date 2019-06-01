@@ -139,7 +139,15 @@ void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void
     return mem;
 }
 
-int dense_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_) { return 0; }
+
+
+int dense_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+{
+	return 0;
+}
+
+
+
 int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
 {
     dense_qp_in *qp_in = qp_in_;
@@ -153,6 +161,13 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     // cast structures
     dense_qp_hpipm_opts *opts = opts_;
     dense_qp_hpipm_memory *memory = mem_;
+
+	// zero primal solution
+	// TODO add a check if warm start of first SQP iteration is implemented !!!!!!
+	int ii;
+	int nv = qp_in->dim->nv;
+	int ns = qp_in->dim->ns;
+	blasfeo_dvecse(nv+2*ns, 0.0, qp_out->v, 0);
 
     // solve ipm
     acados_tic(&qp_timer);
@@ -172,6 +187,8 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     if (hpipm_status == 2) acados_status = ACADOS_MINSTEP;
     return acados_status;
 }
+
+
 
 void dense_qp_hpipm_config_initialize_default(void *config_)
 {

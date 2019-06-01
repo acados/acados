@@ -238,13 +238,25 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     ocp_qp_in *qp_in = qp_in_;
     ocp_qp_out *qp_out = qp_out_;
 
-    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    ocp_qp_info *info = qp_out->misc;
     acados_timer tot_timer, qp_timer;
 
     acados_tic(&tot_timer);
     // cast data structures
-    ocp_qp_hpipm_opts *opts = (ocp_qp_hpipm_opts *) opts_;
-    ocp_qp_hpipm_memory *memory = (ocp_qp_hpipm_memory *) mem_;
+    ocp_qp_hpipm_opts *opts = opts_;
+    ocp_qp_hpipm_memory *memory = mem_;
+
+	// zero primal solution
+	// TODO add a check if warm start of first SQP iteration is implemented !!!!!!
+	int ii;
+	int N = qp_in->dim->N;
+	int *nx = qp_in->dim->nx;
+	int *nu = qp_in->dim->nu;
+	int *ns = qp_in->dim->ns;
+	for(ii=0; ii<=N; ii++)
+	{
+		blasfeo_dvecse(nu[ii]+nx[ii]+2*ns[ii], 0.0, qp_out->ux+ii, 0);
+	}
 
     // solve ipm
     acados_tic(&qp_timer);
@@ -262,6 +274,7 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     if (hpipm_status == 0) acados_status = ACADOS_SUCCESS;
     if (hpipm_status == 1) acados_status = ACADOS_MAXITER;
     if (hpipm_status == 2) acados_status = ACADOS_MINSTEP;
+
     return acados_status;
 }
 
