@@ -30,6 +30,8 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
 
+
+
 /************************************************
  * opts
  ************************************************/
@@ -41,6 +43,8 @@ int dense_qp_qore_opts_calculate_size(void *config_, dense_qp_dims *dims)
 
     return size;
 }
+
+
 
 void *dense_qp_qore_opts_assign(void *config_, dense_qp_dims *dims, void *raw_memory)
 {
@@ -55,6 +59,8 @@ void *dense_qp_qore_opts_assign(void *config_, dense_qp_dims *dims, void *raw_me
 
     return (void *) opts;
 }
+
+
 
 void dense_qp_qore_opts_initialize_default(void *config_, dense_qp_dims *dims, void *opts_)
 {
@@ -71,12 +77,51 @@ void dense_qp_qore_opts_initialize_default(void *config_, dense_qp_dims *dims, v
     return;
 }
 
+
+
 void dense_qp_qore_opts_update(void *config_, dense_qp_dims *dims, void *opts_)
 {
     //    dense_qp_qore_opts *opts = (dense_qp_qore_opts *)opts_;
 
     return;
 }
+
+
+
+void dense_qp_qore_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    dense_qp_qore_opts *opts = opts_;
+
+    if (!strcmp(field, "tol_stat"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_eq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_ineq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_comp"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "warm_start"))
+    {
+		// TODO set solver warm start
+    }
+	else
+	{
+		printf("\nerror: dense_qp_qore_opts_set: wrong field: %s\n", field);
+		exit(1);
+	}
+
+	return;
+}
+
+
 
 /************************************************
  * memory
@@ -132,6 +177,8 @@ int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void
 
     return size;
 }
+
+
 
 void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts_, void *raw_memory)
 {
@@ -217,6 +264,8 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     return mem;
 }
 
+
+
 /************************************************
  * workspace
  ************************************************/
@@ -225,6 +274,8 @@ int dense_qp_qore_workspace_calculate_size(void *config_, dense_qp_dims *dims, v
 {
     return 0;
 }
+
+
 
 /************************************************
  * functions
@@ -455,6 +506,8 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     return acados_status;
 }
 
+
+
 void dense_qp_qore_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -464,6 +517,7 @@ void dense_qp_qore_config_initialize_default(void *config_)
     config->opts_initialize_default =
         (void (*)(void *, void *, void *)) & dense_qp_qore_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & dense_qp_qore_opts_update;
+    config->opts_set = &dense_qp_qore_opts_set;
     config->memory_calculate_size =
         (int (*)(void *, void *, void *)) & dense_qp_qore_memory_calculate_size;
     config->memory_assign =
