@@ -29,12 +29,17 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
+
+
 typedef struct ocp_qp_full_condensing_opts_
 {
     struct d_cond_qp_ocp2dense_arg *hpipm_opts;
-    int condense_rhs_only;
-    int expand_primal_sol_only;
+    int cond_hess; // 0 cond only rhs, 1 cond hess + rhs
+    int expand_dual_sol; // 0 primal sol only, 1 primal + dual sol
+	int ric_alg;
 } ocp_qp_full_condensing_opts;
+
+
 
 typedef struct ocp_qp_full_condensing_memory_
 {
@@ -42,6 +47,8 @@ typedef struct ocp_qp_full_condensing_memory_
     // NOTE(dimitris): points to qp_in, does NOT copy to memory (needed for expansion)
     ocp_qp_in *qp_in;
 } ocp_qp_full_condensing_memory;
+
+
 
 //
 void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims);
@@ -53,6 +60,8 @@ void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory);
 void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opts_);
 //
 void ocp_qp_full_condensing_opts_update(ocp_qp_dims *dims, void *opts_);
+//
+void ocp_qp_full_condensing_opts_set(void *opts_, const char *field, void* value);
 //
 int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_);
 //

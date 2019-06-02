@@ -32,6 +32,8 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+
+
 /************************************************
  * opts
  ************************************************/
@@ -54,6 +56,8 @@ int ocp_qp_full_condensing_solver_opts_calculate_size(void *config_, ocp_qp_dims
 
     return size;
 }
+
+
 
 void *ocp_qp_full_condensing_solver_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
 {
@@ -84,6 +88,8 @@ void *ocp_qp_full_condensing_solver_opts_assign(void *config_, ocp_qp_dims *dims
     return (void *) opts;
 }
 
+
+
 void ocp_qp_full_condensing_solver_opts_initialize_default(void *config_, ocp_qp_dims *dims,
                                                            void *opts_)
 {
@@ -99,6 +105,8 @@ void ocp_qp_full_condensing_solver_opts_initialize_default(void *config_, ocp_qp
                                        opts->qp_solver_opts);  // TODO(all): pass dense_qp_dims ???
 }
 
+
+
 void ocp_qp_full_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     ocp_qp_xcond_solver_config *config = config_;
@@ -112,27 +120,44 @@ void ocp_qp_full_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims,
     qp_solver->opts_update(qp_solver, NULL, opts->qp_solver_opts);  // TODO(all): pass dense_qp_dims
 }
 
+
+
 void ocp_qp_full_condensing_solver_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
     ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *) opts_;
-    // ocp_qp_xcond_solver_config *config = config_;
+    ocp_qp_xcond_solver_config *config = config_;
 
-    if (!strcmp(field, "condense_rhs_only"))
-    {
-        int* condense_rhs_only = (int *) value;
-        opts->cond_opts->condense_rhs_only = *condense_rhs_only;
-    }
-    else if (!strcmp(field, "expand_primal_sol_only"))
-    {
-        int* expand_primal_sol_only = (int *) value;
-        opts->cond_opts->expand_primal_sol_only = *expand_primal_sol_only;
-    }
-    else
-    {
-        printf("\nerror: option type %s not available in ocp_qp_full_condensing_solver module\n",
-               field);
-        exit(1);
-    }
+	int ii;
+
+	char module[MAX_STR_LEN];
+	char *ptr_module = NULL;
+	int module_length = 0;
+
+	// extract module name
+	char *char_ = strchr(field, '_');
+	if(char_!=NULL)
+	{
+		module_length = char_-field;
+		for(ii=0; ii<module_length; ii++)
+			module[ii] = field[ii];
+		module[module_length] = '\0'; // add end of string
+		ptr_module = module;
+	}
+//printf("\nin cond solver opts set: %s\n", field);
+
+	if((!strcmp(ptr_module, "cond")) | (!strcmp(ptr_module, "expand"))) // pass options to (partial) condensing module
+	{
+		// TODO config !!!
+		ocp_qp_full_condensing_opts_set(opts->cond_opts, field+module_length+1, value);
+	}
+	else // pass options to QP module
+	{
+//printf("\ncalling qp solver opts set: %s\n", field);
+		config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
+	}
+
+	return;
+
 }
 
 
@@ -163,6 +188,8 @@ int ocp_qp_full_condensing_solver_memory_calculate_size(void *config_, ocp_qp_di
 
     return size;
 }
+
+
 
 void *ocp_qp_full_condensing_solver_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_,
                                                   void *raw_memory)
@@ -208,6 +235,8 @@ void *ocp_qp_full_condensing_solver_memory_assign(void *config_, ocp_qp_dims *di
     return mem;
 }
 
+
+
 /************************************************
  * workspace
  ************************************************/
@@ -229,6 +258,8 @@ int ocp_qp_full_condensing_solver_workspace_calculate_size(void *config_, ocp_qp
 
     return size;
 }
+
+
 
 static void cast_workspace(void *config_, ocp_qp_dims *dims,
                            ocp_qp_full_condensing_solver_opts *opts,
@@ -254,6 +285,8 @@ static void cast_workspace(void *config_, ocp_qp_dims *dims,
                ocp_qp_full_condensing_solver_workspace_calculate_size(config_, dims, opts) >=
            c_ptr);
 }
+
+
 
 /************************************************
  * functions
@@ -303,6 +336,8 @@ int ocp_qp_full_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out *q
 
     return solver_status;
 }
+
+
 
 void ocp_qp_full_condensing_solver_config_initialize_default(void *config_)
 {

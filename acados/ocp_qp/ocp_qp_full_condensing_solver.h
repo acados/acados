@@ -30,11 +30,15 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_full_condensing.h"
 #include "acados/utils/types.h"
 
+
+
 typedef struct ocp_qp_full_condensing_solver_opts_
 {
     ocp_qp_full_condensing_opts *cond_opts;
     void *qp_solver_opts;
 } ocp_qp_full_condensing_solver_opts;
+
+
 
 typedef struct ocp_qp_full_condensing_solver_memory_
 {
@@ -44,6 +48,8 @@ typedef struct ocp_qp_full_condensing_solver_memory_
     dense_qp_out *qpd_out;
 } ocp_qp_full_condensing_solver_memory;
 
+
+
 typedef struct ocp_qp_full_condensing_solver_workspace_
 {
     void *cond_work;
@@ -52,6 +58,8 @@ typedef struct ocp_qp_full_condensing_solver_workspace_
     // dense_qp_in *qpd_in;
     // dense_qp_out *qpd_out;
 } ocp_qp_full_condensing_solver_workspace;
+
+
 
 //
 int ocp_qp_full_condensing_solver_opts_calculate_size(void *config, ocp_qp_dims *dims);

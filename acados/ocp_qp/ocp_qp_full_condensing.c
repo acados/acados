@@ -18,7 +18,9 @@
  */
 
 // external
+#include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 // hpipm
 #include "hpipm/include/hpipm_d_cond.h"
 #include "hpipm/include/hpipm_d_dense_qp.h"
@@ -33,6 +35,8 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/types.h"
 
+
+
 /************************************************
  * dims
  ************************************************/
@@ -41,6 +45,8 @@ void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims)
 {
     d_compute_qp_dim_ocp2dense(dims, ddims);
 }
+
+
 
 /************************************************
  * opts
@@ -59,6 +65,8 @@ int ocp_qp_full_condensing_opts_calculate_size(ocp_qp_dims *dims)
 
     return size;
 }
+
+
 
 void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
 {
@@ -83,19 +91,66 @@ void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
     return opts;
 }
 
+
+
 void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opts_)
 {
     ocp_qp_full_condensing_opts *opts = opts_;
 
     // condense both Hessian and gradient by default
-    opts->condense_rhs_only = 0;
+    opts->cond_hess = 1;
     // expand only primal solution (linear MPC, Gauss-Newton)
-    opts->expand_primal_sol_only = 0;
+    opts->expand_dual_sol = 1;
     // hpipm_opts
     d_set_default_cond_qp_ocp2dense_arg(opts->hpipm_opts);
 }
 
-void ocp_qp_full_condensing_opts_update(ocp_qp_dims *dims, void *opts_) { return; }
+
+
+void ocp_qp_full_condensing_opts_update(ocp_qp_dims *dims, void *opts_)
+{
+    ocp_qp_full_condensing_opts *opts = opts_;
+
+    // hpipm_opts
+	d_set_cond_qp_ocp2dense_arg_ric_alg(opts->ric_alg, opts->hpipm_opts);
+
+	return;
+}
+
+
+
+void ocp_qp_full_condensing_opts_set(void *opts_, const char *field, void* value)
+{
+
+    ocp_qp_full_condensing_opts *opts = opts_;
+
+	if(!strcmp(field, "ric_alg"))
+	{
+		int *tmp_ptr = value;
+		opts->ric_alg = *tmp_ptr;
+	}
+	else if(!strcmp(field, "hess"))
+	{
+		int *tmp_ptr = value;
+		opts->cond_hess = *tmp_ptr;
+	}
+	else if(!strcmp(field, "dual_sol"))
+	{
+		int *tmp_ptr = value;
+		opts->expand_dual_sol = *tmp_ptr;
+	}
+	else
+	{
+		printf("\nerror: field %s not available in ocp_qp_full_condensing_opts_set\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 /************************************************
  * memory
  ************************************************/
@@ -111,6 +166,8 @@ int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_)
 
     return size;
 }
+
+
 
 void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void *raw_memory)
 {
@@ -135,7 +192,15 @@ void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void 
     return mem;
 }
 
-int ocp_qp_full_condensing_workspace_calculate_size(ocp_qp_dims *dims, void *opts_) { return 0; }
+
+
+int ocp_qp_full_condensing_workspace_calculate_size(ocp_qp_dims *dims, void *opts_)
+{
+return 0;
+}
+
+
+
 void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condensing_opts *opts,
                             ocp_qp_full_condensing_memory *mem, void *work)
 {
@@ -143,7 +208,7 @@ void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condens
     mem->qp_in = in;
 
     // convert to dense qp structure
-    if (opts->condense_rhs_only == 1)
+    if (opts->cond_hess == 0)
     {
         // condense gradient only
         d_cond_rhs_qp_ocp2dense(in, out, opts->hpipm_opts, mem->hpipm_workspace);
@@ -165,10 +230,12 @@ void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condens
     }
 }
 
+
+
 void ocp_qp_full_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_condensing_opts *opts,
                            ocp_qp_full_condensing_memory *mem, void *work)
 {
-    if (opts->expand_primal_sol_only == 1)
+    if (opts->expand_dual_sol == 0)
     {
         d_expand_primal_sol_dense2ocp(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
     }
@@ -178,6 +245,8 @@ void ocp_qp_full_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_conden
     }
 }
 
+
+
 void ocp_qp_full_condensing_config_initialize_default(void *config_)
 {
     ocp_qp_condensing_config *config = config_;
@@ -186,6 +255,7 @@ void ocp_qp_full_condensing_config_initialize_default(void *config_)
     config->opts_assign = &ocp_qp_full_condensing_opts_assign;
     config->opts_initialize_default = &ocp_qp_full_condensing_opts_initialize_default;
     config->opts_update = &ocp_qp_full_condensing_opts_update;
+    config->opts_set = &ocp_qp_full_condensing_opts_set;
     config->memory_calculate_size = &ocp_qp_full_condensing_memory_calculate_size;
     config->memory_assign = &ocp_qp_full_condensing_memory_assign;
     config->workspace_calculate_size = &ocp_qp_full_condensing_workspace_calculate_size;

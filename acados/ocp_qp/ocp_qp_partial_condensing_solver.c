@@ -122,8 +122,6 @@ void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_, const
     ocp_qp_partial_condensing_solver_opts *opts = (ocp_qp_partial_condensing_solver_opts *) opts_;
     ocp_qp_xcond_solver_config *config = config_;
 
-	// TODO extract module name 'pcond' for partial condensing optsion
-
 	int ii;
 
 	char module[MAX_STR_LEN];
@@ -150,7 +148,7 @@ void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_, const
 	{
 		config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
 	}
-	
+
 	return;
 
 }
