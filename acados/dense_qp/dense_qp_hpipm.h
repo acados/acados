@@ -32,15 +32,21 @@ extern "C" {
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
 
+
+
 typedef struct dense_qp_hpipm_opts_
 {
     struct d_dense_qp_ipm_arg *hpipm_opts;
 } dense_qp_hpipm_opts;
 
+
+
 typedef struct dense_qp_hpipm_memory_
 {
     struct d_dense_qp_ipm_workspace *hpipm_workspace;
 } dense_qp_hpipm_memory;
+
+
 
 //
 int dense_qp_hpipm_opts_calculate_size(void *config, void *dims);
