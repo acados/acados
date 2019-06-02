@@ -141,7 +141,7 @@ void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_, const
 		ptr_module = module;
 	}
 
-	if(!strcmp(ptr_module, "pcond")) // pass options to pcond module
+	if(!strcmp(ptr_module, "cond")) // pass options to (partial) condensing module
 	{
 		// TODO config !!!
 		ocp_qp_partial_condensing_opts_set(opts->pcond_opts, field+module_length+1, value);

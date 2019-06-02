@@ -136,12 +136,12 @@ void ocp_qp_partial_condensing_opts_set(void *opts_, const char *field, void* va
 
     ocp_qp_partial_condensing_opts *opts = opts_;
 
-	if(!strcmp(field, "N2"))
+	if(!strcmp(field, "N"))
 	{
 		int *tmp_ptr = value;
 		opts->N2 = *tmp_ptr;
 	}
-	else if(!strcmp(field, "N2_bkp"))
+	else if(!strcmp(field, "N_bkp"))
 	{
 		int *tmp_ptr = value;
 		opts->N2_bkp = *tmp_ptr;

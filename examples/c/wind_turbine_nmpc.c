@@ -873,8 +873,8 @@ int main()
     // partial condensing opts
     if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
     {
-        int pcond_N2 = 5;
-        ocp_nlp_opts_set(config, nlp_opts, "qp_pcond_N2", &pcond_N2);
+        int cond_N = 5;
+        ocp_nlp_opts_set(config, nlp_opts, "qp_cond_N", &cond_N);
     }
 
     // update opts after manual changes

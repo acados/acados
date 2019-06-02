@@ -36,8 +36,8 @@ regularize_method = 'project_reduc_hess';
 ocp_nlp_solver_max_iter = 50;
 ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_hpipm';
-ocp_qp_solver_pcond_N = 5;
-ocp_qp_solver_pcond_ric_alg = 0;
+ocp_qp_solver_cond_N = 5;
+ocp_qp_solver_cond_ric_alg = 0;
 ocp_qp_solver_ric_alg = 0;
 %ocp_sim_method = 'erk';
 ocp_sim_method = 'irk';
@@ -240,8 +240,8 @@ if (strcmp(ocp_nlp_solver, 'sqp'))
 end
 ocp_opts.set('qp_solver', ocp_qp_solver);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_pcond_N', ocp_qp_solver_pcond_N);
-	ocp_opts.set('qp_solver_pcond_ric_alg', ocp_qp_solver_pcond_ric_alg);
+	ocp_opts.set('qp_solver_cond_N', ocp_qp_solver_cond_N);
+	ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
 	ocp_opts.set('qp_solver_ric_alg', ocp_qp_solver_ric_alg);
 end
 ocp_opts.set('sim_method', ocp_sim_method);

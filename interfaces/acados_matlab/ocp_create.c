@@ -620,8 +620,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	bool nlp_solver_exact_hessian;
 	int nlp_solver_max_iter;		bool set_nlp_solver_max_iter = false;
 	char *qp_solver;
-	int qp_solver_pcond_N;			bool set_qp_solver_pcond_N = false;
-	int qp_solver_pcond_ric_alg;	bool set_qp_solver_pcond_ric_alg = false;
+	int qp_solver_cond_N;			bool set_qp_solver_cond_N = false;
+	int qp_solver_cond_ric_alg;		bool set_qp_solver_cond_ric_alg = false;
 	int qp_solver_ric_alg;			bool set_qp_solver_ric_alg = false;
 	int qp_solver_warm_start;		bool set_qp_solver_warm_start = false;
 	char *sim_method;
@@ -660,16 +660,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// TODO check
 	qp_solver = mxArrayToString( mxGetField( prhs[1], 0, "qp_solver" ) );
 	// N_part_cond
-	if(mxGetField( prhs[1], 0, "qp_solver_pcond_N" )!=NULL)
+	if(mxGetField( prhs[1], 0, "qp_solver_cond_N" )!=NULL)
 		{
-		set_qp_solver_pcond_N = true;
-		qp_solver_pcond_N = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_pcond_N" ) );
+		set_qp_solver_cond_N = true;
+		qp_solver_cond_N = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_cond_N" ) );
 		}
-	// pcond riccati-like algorithm
-	if(mxGetField( prhs[1], 0, "qp_solver_pcond_ric_alg" )!=NULL)
+	// cond riccati-like algorithm
+	if(mxGetField( prhs[1], 0, "qp_solver_cond_ric_alg" )!=NULL)
 		{
-		set_qp_solver_pcond_ric_alg = true;
-		qp_solver_pcond_ric_alg = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_pcond_ric_alg" ) );
+		set_qp_solver_cond_ric_alg = true;
+		qp_solver_cond_ric_alg = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_cond_ric_alg" ) );
 		}
 	// hpipm: riccati algorithm
 	if(mxGetField( prhs[1], 0, "qp_solver_ric_alg" )!=NULL)
@@ -1071,15 +1071,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
 		}
-	// qp_solver_pcond_N
-	if(set_qp_solver_pcond_N)
+	// qp_solver_cond_N
+	if(set_qp_solver_cond_N)
 		{
-		ocp_nlp_opts_set(config, opts, "qp_pcond_N2", &qp_solver_pcond_N);
+		ocp_nlp_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
 		}
-	// qp_solver_pcond_ric alg
-	if(set_qp_solver_pcond_N)
+	// qp_solver_cond_ric alg
+	if(set_qp_solver_cond_N)
 		{
-		ocp_nlp_opts_set(config, opts, "qp_pcond_ric_alg", &qp_solver_pcond_ric_alg);
+		ocp_nlp_opts_set(config, opts, "qp_cond_ric_alg", &qp_solver_cond_ric_alg);
 		}
 	// qp_solver_ric_alg TODO only for hpipm !!!
 	if(set_qp_solver_ric_alg)
