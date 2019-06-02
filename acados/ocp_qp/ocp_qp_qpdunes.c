@@ -25,6 +25,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
@@ -34,6 +35,8 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
+
+
 
 static int get_maximum_number_of_inequality_constraints(ocp_qp_dims *dims)
 {
@@ -45,6 +48,8 @@ static int get_maximum_number_of_inequality_constraints(ocp_qp_dims *dims)
     }
     return nDmax;
 }
+
+
 
 static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_opts *opts, ocp_qp_in *qp_in)
 {
@@ -108,6 +113,8 @@ static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_opts *opts
     return stageQpSolver;
 }
 
+
+
 /************************************************
  * opts
  ************************************************/
@@ -118,6 +125,8 @@ int ocp_qp_qpdunes_opts_calculate_size(void *config_, ocp_qp_dims *dims)
     size += sizeof(ocp_qp_qpdunes_opts);
     return size;
 }
+
+
 
 void *ocp_qp_qpdunes_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
 {
@@ -132,6 +141,8 @@ void *ocp_qp_qpdunes_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_mem
 
     return (void *) opts;
 }
+
+
 
 void ocp_qp_qpdunes_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_)
 {
@@ -185,12 +196,51 @@ void ocp_qp_qpdunes_opts_initialize_default(void *config_, ocp_qp_dims *dims, vo
     return;
 }
 
+
+
 void ocp_qp_qpdunes_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     //    ocp_qp_qpdunes_opts *opts = (ocp_qp_qpdunes_opts *)opts_;
 
     return;
 }
+
+
+
+void ocp_qp_qpdunes_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    ocp_qp_qpdunes_opts *opts = opts_;
+
+    if (!strcmp(field, "tol_stat"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_eq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_ineq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_comp"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "warm_start"))
+    {
+		// TODO set solver warm start
+    }
+	else
+	{
+		printf("\nerror: ocp_qp_qpdunes_opts_set: wrong field: %s\n", field);
+		exit(1);
+	}
+
+	return;
+}
+
+
 
 /************************************************
  * memory
@@ -203,6 +253,8 @@ int ocp_qp_qpdunes_memory_calculate_size(void *config_, ocp_qp_dims *dims, void 
     size += sizeof(ocp_qp_qpdunes_memory);
     return size;
 }
+
+
 
 void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory)
 {
@@ -262,6 +314,8 @@ void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_
     return mem;
 }
 
+
+
 static void form_H(double *H, int nx, int nu, struct blasfeo_dmat *sRSQrq)
 {
     // make Q full
@@ -284,6 +338,8 @@ static void form_H(double *H, int nx, int nu, struct blasfeo_dmat *sRSQrq)
     // d_print_mat(nx+nu, nx+nu, H, nx+nu);
     // printf("********************************************\n\n");
 }
+
+
 
 static void form_RSQ(double *R, double *S, double *Q, int nx, int nu, struct blasfeo_dmat *sRSQrq)
 {
@@ -312,6 +368,8 @@ static void form_RSQ(double *R, double *S, double *Q, int nx, int nu, struct bla
     // printf("********************************************\n\n");
 }
 
+
+
 static void form_g(double *g, int nx, int nu, struct blasfeo_dvec *srq)
 {
     blasfeo_unpack_dvec(nx, srq, nu, &g[0]);
@@ -323,6 +381,8 @@ static void form_g(double *g, int nx, int nu, struct blasfeo_dvec *srq)
     // d_print_mat(1, nx+nu, g, 1);
     // printf("********************************************\n\n");
 }
+
+
 
 static void form_dynamics(double *ABt, double *b, int nx, int nu, struct blasfeo_dmat *sBAbt,
                           struct blasfeo_dvec *sb)
@@ -342,6 +402,8 @@ static void form_dynamics(double *ABt, double *b, int nx, int nu, struct blasfeo
     // d_print_mat(nu, nx, &ABt[nx], nx+nu);
     // printf("********************************************\n\n");
 }
+
+
 
 static void form_bounds(double *zLow, double *zUpp, int nx, int nu, int nb, int ng, int *idxb,
                         struct blasfeo_dvec *sd, double infty)
@@ -366,6 +428,8 @@ static void form_bounds(double *zLow, double *zUpp, int nx, int nu, int nb, int 
     }
 }
 
+
+
 static void form_inequalities(double *Ct, double *lc, double *uc, int nx, int nu, int nb, int ng,
                               struct blasfeo_dmat *sDCt, struct blasfeo_dvec *sd)
 {
@@ -382,6 +446,8 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx, int nu
 
     for (ii = 0; ii < ng; ii++) uc[ii] = -uc[ii];
 }
+
+
 
 /************************************************
  * workspcae
@@ -410,6 +476,8 @@ int ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, vo
     return size;
 }
 
+
+
 static void cast_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory *mem)
 {
     char *c_ptr = (char *) work;
@@ -433,6 +501,8 @@ static void cast_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory
     assign_and_advance_double(nz, &work->zLow, &c_ptr);
     assign_and_advance_double(nz, &work->zUpp, &c_ptr);
 }
+
+
 
 static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdunes_memory *mem,
                          ocp_qp_qpdunes_workspace *work)
@@ -620,6 +690,8 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
     return (int) value;
 }
 
+
+
 static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem)
 {
     int N = in->dim->N;
@@ -671,12 +743,16 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory
     }
 }
 
+
+
 // TODO(dimitris): free also qp_in, qp_out, etc and write for all solvers?
 void ocp_qp_qpdunes_free_memory(void *mem_)
 {
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
     qpDUNES_cleanup(&(mem->qpData));
 }
+
+
 
 /************************************************
  * functions
@@ -731,6 +807,8 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     return acados_status;
 }
 
+
+
 void ocp_qp_qpdunes_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -741,6 +819,7 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
     config->opts_initialize_default =
         (void (*)(void *, void *, void *)) & ocp_qp_qpdunes_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & ocp_qp_qpdunes_opts_update;
+    config->opts_set = &ocp_qp_qpdunes_opts_set;
     config->memory_calculate_size =
         (int (*)(void *, void *, void *)) & ocp_qp_qpdunes_memory_calculate_size;
     config->memory_assign =
