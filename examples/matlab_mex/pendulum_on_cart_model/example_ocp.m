@@ -3,6 +3,16 @@ clear all
 
 
 
+% check that env.sh has been run
+env_run = getenv('ENV_RUN');
+if (~strcmp(env_run, 'true'))
+	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
+	disp('source env.sh');
+	return;
+end
+
+
+
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
@@ -24,7 +34,7 @@ qp_solver = 'partial_condensing_hpipm';
 qp_solver_pcond_N = 5;
 qp_solver_pcond_ric_alg = 0;
 qp_solver_ric_alg = 0;
-qp_solver_warm_start = 0;
+qp_solver_warm_start = 2;
 %sim_method = 'erk';
 sim_method = 'irk';
 sim_method_num_stages = 4;

@@ -3,6 +3,16 @@ clear all
 
 
 
+% check that env.sh has been run
+env_run = getenv('ENV_RUN');
+if (~strcmp(env_run, 'true'))
+	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
+	disp('source env.sh');
+	return;
+end
+
+
+
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
