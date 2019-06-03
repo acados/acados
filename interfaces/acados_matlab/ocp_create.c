@@ -619,6 +619,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	char *nlp_solver;
 	bool nlp_solver_exact_hessian;
 	int nlp_solver_max_iter;		bool set_nlp_solver_max_iter = false;
+	double nlp_solver_tol_stat;		bool set_nlp_solver_tol_stat = false;
+	double nlp_solver_tol_eq;		bool set_nlp_solver_tol_eq = false;
+	double nlp_solver_tol_ineq;		bool set_nlp_solver_tol_ineq = false;
+	double nlp_solver_tol_comp;		bool set_nlp_solver_tol_comp = false;
 	char *qp_solver;
 	int qp_solver_cond_N;			bool set_qp_solver_cond_N = false;
 	int qp_solver_cond_ric_alg;		bool set_qp_solver_cond_ric_alg = false;
@@ -655,6 +659,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_nlp_solver_max_iter = true;
 		nlp_solver_max_iter = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_max_iter" ) );
+		}
+	// nlp solver exit tolerances
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_stat" )!=NULL)
+		{
+		set_nlp_solver_tol_stat = true;
+		nlp_solver_tol_stat = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_stat" ) );
+		}
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_eq" )!=NULL)
+		{
+		set_nlp_solver_tol_eq = true;
+		nlp_solver_tol_eq = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_eq" ) );
+		}
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_ineq" )!=NULL)
+		{
+		set_nlp_solver_tol_ineq = true;
+		nlp_solver_tol_ineq = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_ineq" ) );
+		}
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_comp" )!=NULL)
+		{
+		set_nlp_solver_tol_comp = true;
+		nlp_solver_tol_comp = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_comp" ) );
 		}
 	// qp_solver
 	// TODO check
@@ -1070,6 +1095,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(set_nlp_solver_max_iter)
 		{
 		ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
+		}
+	// nlp_solver_tol_stat
+	if(set_nlp_solver_tol_stat)
+		{
+		ocp_nlp_opts_set(config, opts, "tol_stat", &nlp_solver_tol_stat);
+		}
+	// nlp_solver_tol_eq
+	if(set_nlp_solver_tol_eq)
+		{
+		ocp_nlp_opts_set(config, opts, "tol_eq", &nlp_solver_tol_eq);
+		}
+	// nlp_solver_tol_ineq
+	if(set_nlp_solver_tol_ineq)
+		{
+		ocp_nlp_opts_set(config, opts, "tol_ineq", &nlp_solver_tol_ineq);
+		}
+	// nlp_solver_tol_comp
+	if(set_nlp_solver_tol_comp)
+		{
+		ocp_nlp_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
 		}
 	// qp_solver_cond_N
 	if(set_qp_solver_cond_N)

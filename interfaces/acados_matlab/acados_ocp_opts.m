@@ -42,6 +42,14 @@ classdef acados_ocp_opts < handle
 				obj.opts_struct.nlp_solver_exact_hessian = value;
 			elseif (strcmp(field, 'nlp_solver_max_iter'))
 				obj.opts_struct.nlp_solver_max_iter = value;
+			elseif (strcmp(field, 'nlp_solver_tol_stat'))
+				obj.opts_struct.nlp_solver_tol_stat = value;
+			elseif (strcmp(field, 'nlp_solver_tol_eq'))
+				obj.opts_struct.nlp_solver_tol_eq = value;
+			elseif (strcmp(field, 'nlp_solver_tol_ineq'))
+				obj.opts_struct.nlp_solver_tol_ineq = value;
+			elseif (strcmp(field, 'nlp_solver_tol_comp'))
+				obj.opts_struct.nlp_solver_tol_comp = value;
 			elseif (strcmp(field, 'qp_solver'))
 				obj.opts_struct.qp_solver = value;
 			elseif (strcmp(field, 'qp_solver_cond_N'))

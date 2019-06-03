@@ -29,6 +29,10 @@ regularize_method = 'project_reduc_hess';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
+nlp_solver_tol_stat = 1e-8;
+nlp_solver_tol_eq   = 1e-8;
+nlp_solver_tol_ineq = 1e-8;
+nlp_solver_tol_comp = 1e-8;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_cond_N = 5;
@@ -184,6 +188,10 @@ ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
 if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+	ocp_opts.set('nlp_solver_tol_stat', nlp_solver_tol_stat);
+	ocp_opts.set('nlp_solver_tol_eq', nlp_solver_tol_eq);
+	ocp_opts.set('nlp_solver_tol_ineq', nlp_solver_tol_ineq);
+	ocp_opts.set('nlp_solver_tol_comp', nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
