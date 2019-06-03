@@ -387,7 +387,6 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 
     int ii, jj, kk, ll, ss, idx;
 
-//printf("\nhola\n");
     int *nx = dims->nx;
     int *nu = dims->nu;
     int N = dims->N;
@@ -402,32 +401,23 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 	int do_reg = 0;
 	double pivot, tmp_el;
 
-//	for(ii=0; ii<=N; ii++)
-//		blasfeo_print_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
-//	exit(1);
 
-//printf("\nin project\n");
-	// last stage
-	ss = N;
-	blasfeo_dtrtr_l(nu[ss]+nx[ss], mem->RSQrq[ss], 0, 0, mem->RSQrq[ss], 0, 0); // necessary ???
-	// TODO copy middle stage for nu[N}>0 !!!!!!!!!!!!!!!!!!
-//	blasfeo_unpack_dmat(nu[ss], nu[ss], mem->RSQrq[ss], 0, 0, mem->reg_hess, nu[ss]);
-//	acados_project(nu[ss], mem->reg_hess, mem->V, mem->d, mem->e, opts->min_eig);
-//	blasfeo_pack_dmat(nu[ss], nu[ss], mem->reg_hess, nu[ss], mem->RSQrq[ss], 0, 0);
-	blasfeo_dpotrf_l_mn(nu[ss]+nx[ss], nu[ss], mem->RSQrq[ss], 0, 0, L, 0, 0);
-//printf("\nii = %d\n", ss);
-//blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L, 0, 0);
-	blasfeo_dgecp(nx[ss], nu[ss], L, nu[ss], 0, Ls, 0, 0);
-	blasfeo_dsyrk_ln_mn(nx[ss], nx[ss], nu[ss], -1.0, Ls, 0, 0, Ls, 0, 0, 1.0, mem->RSQrq[ss], nu[ss], nu[ss], P, 0, 0);
-	blasfeo_dtrtr_l(nx[ss], P, 0, 0, P, 0, 0);
-
-	// middle stages
-	for(ii=0; ii<N-1; ii++)
+	// last + middle stages
+	for(ii=-1; ii<N-1; ii++)
 	{
+
 		ss = N-ii-1;
-//printf("\nss = %d\n", ss);
-		blasfeo_dgemm_nt(nu[ss]+nx[ss], nx[ss+1], nx[ss+1], 1.0, mem->BAbt[ss], 0, 0, P, 0, 0, 0.0, AL, 0, 0, AL, 0, 0); // TODO symm
-		blasfeo_dsyrk_ln(nu[ss]+nx[ss], nx[ss+1], 1.0, AL, 0, 0, mem->BAbt[ss], 0, 0, 1.0, mem->RSQrq[ss], 0, 0, L, 0, 0);
+		// last stage
+		if(ss==N)
+		{
+			blasfeo_dtrcp_l(nu[ss]+nx[ss], mem->RSQrq[ss], 0, 0, L, 0, 0);
+		}
+		// middle stages
+		else
+		{
+			blasfeo_dgemm_nt(nu[ss]+nx[ss], nx[ss+1], nx[ss+1], 1.0, mem->BAbt[ss], 0, 0, P, 0, 0, 0.0, AL, 0, 0, AL, 0, 0); // TODO symm
+			blasfeo_dsyrk_ln(nu[ss]+nx[ss], nx[ss+1], 1.0, AL, 0, 0, mem->BAbt[ss], 0, 0, 1.0, mem->RSQrq[ss], 0, 0, L, 0, 0);
+		}
 		blasfeo_dtrtr_l(nu[ss]+nx[ss], L, 0, 0, L, 0, 0); // necessary ???
 
 		// backup L in L3
@@ -467,13 +457,8 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 		blasfeo_dpotrf_l_mn(nu[ss]+nx[ss], nu[ss], L2, 0, 0, L2, 0, 0);
 		blasfeo_dgecp(nx[ss], nu[ss], L2, nu[ss], 0, Ls, 0, 0);
 		blasfeo_dsyrk_ln_mn(nx[ss], nx[ss], nu[ss], -1.0, Ls, 0, 0, Ls, 0, 0, 0.0, L2, nu[ss], nu[ss], L2, nu[ss], nu[ss]);
-//printf("\nL2\n");
-//blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L2, 0, 0);
 
-//printf("\nL3\n");
-//blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L3, 0, 0);
 		// compute true_schur
-//		if(1)
 		if(do_reg)
 		{
 			for(jj=0; jj<nu[ss]; jj++)
@@ -513,11 +498,6 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 				}
 					
 				pivot = BLASFEO_DMATEL(L3, jj, jj);
-//				if(pivot==0.0)
-//				{
-//					printf("\nocp_nlp_project_reduc_hess: zero pivot element!\n");
-//					exit(1);
-//				}
 				if(pivot<opts->min_pivot & pivot>-opts->min_pivot)
 				{
 					if(pivot<0.0)
@@ -535,10 +515,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 					}
 				}
 			}
-//printf("\nL3\n");
-//blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L3, 0, 0);
 		}
-//blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L3, 0, 0);
 
 		// apply shur to P
 		blasfeo_dgecp(nx[ss], nx[ss], L, nu[ss], nu[ss], P, 0, 0);
@@ -556,19 +533,15 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 			blasfeo_dgead(nx[ss], nx[ss], 1.0, L2, nu[ss], nu[ss], P, 0, 0);
 		}
 		blasfeo_dtrtr_l(nx[ss], P, 0, 0, P, 0, 0);
-//printf("\nP\n");
-//blasfeo_print_dmat(nx[ss], nx[ss], P, 0, 0);
 
 	}
 
+
 	// first stage: factorize P in L too
 	ss = 0;
-//printf("\nss %d\n", ss);
 	blasfeo_dgemm_nt(nu[ss]+nx[ss], nx[ss+1], nx[ss+1], 1.0, mem->BAbt[ss], 0, 0, P, 0, 0, 0.0, AL, 0, 0, AL, 0, 0); // TODO symm
 	blasfeo_dsyrk_ln(nu[ss]+nx[ss], nx[ss+1], 1.0, AL, 0, 0, mem->BAbt[ss], 0, 0, 1.0, mem->RSQrq[ss], 0, 0, L, 0, 0);
 	blasfeo_dtrtr_l(nu[ss]+nx[ss], L, 0, 0, L, 0, 0); // necessary ???
-	// TODO regularize RSQ (also SQ !!!)
-//blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L, 0, 0);
 	blasfeo_unpack_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L, 0, 0, mem->reg_hess, nu[ss]+nx[ss]);
 	acados_eigen_decomposition(nu[ss]+nx[ss], mem->reg_hess, mem->V, mem->d, mem->e);
 	for(jj=0; jj<nu[ss]+nx[ss]; jj++)
@@ -578,23 +551,10 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 		else
 			mem->e[jj] = 0.0;
 	}
-//d_print_mat(nu[ss]+nx[ss], nu[ss]+nx[ss], mem->V, nu[ss]+nx[ss]);
-//d_print_mat(1, nu[ss]+nx[ss], mem->d, 1);
-//d_print_mat(1, nu[ss]+nx[ss], mem->e, 1);
 	acados_reconstruct_A(nu[ss]+nx[ss], mem->reg_hess, mem->V, mem->e);
-//d_print_mat(nu[ss]+nx[ss], nu[ss]+nx[ss], mem->reg_hess, nu[ss]+nx[ss]);
 	blasfeo_pack_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], mem->reg_hess, nu[ss]+nx[ss], L2, 0, 0);
 	blasfeo_dgead(nu[ss]+nx[ss], nu[ss]+nx[ss], 1.0, L2, 0, 0, mem->RSQrq[ss], 0, 0);
-//blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], mem->RSQrq[ss], 0, 0);
-	// TODO till here
-//blasfeo_dgead(nu[ss]+nx[ss], nu[ss]+nx[ss], 1.0, L2, 0, 0, L, 0, 0);
-//blasfeo_dpotrf_l(nu[ss]+nx[ss], L, 0, 0, L, 0, 0);
-//printf("\nL0\n");
-//blasfeo_print_dmat(nu[ss]+nx[ss], nu[ss]+nx[ss], L, 0, 0);
 
-//	blasfeo_print_dmat(nx[ii], nx[ii], P, 0, 0);
-
-//	exit(1);
 
 //	printf("\nhessian after\n");
 //	for(ii=0; ii<=N; ii++)
