@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
@@ -37,6 +38,8 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+
+
 /************************************************
  * opts
  ************************************************/
@@ -48,6 +51,8 @@ int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims)
     size += 1 * 64;                // align once to typical cache line size
     return size;
 }
+
+
 
 void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
 {
@@ -69,6 +74,8 @@ void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memor
     return (void *) args;
 }
 
+
+
 void ocp_qp_hpmpc_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *) opts_;
@@ -81,12 +88,51 @@ void ocp_qp_hpmpc_opts_initialize_default(void *config_, ocp_qp_dims *dims, void
     return;
 }
 
+
+
 void ocp_qp_hpmpc_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     //    ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *)opts_;
 
     return;
 }
+
+
+
+void ocp_qp_hpmpc_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    ocp_qp_hpmpc_opts *opts = opts_;
+
+    if (!strcmp(field, "tol_stat"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_eq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_ineq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_comp"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "warm_start"))
+    {
+		// TODO set solver warm start
+    }
+	else
+	{
+		printf("\nerror: ocp_qp_hpmpc_opts_set: wrong field: %s\n", field);
+		exit(1);
+	}
+
+	return;
+}
+
+
 
 /************************************************
  * memory
@@ -461,6 +507,7 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
     config->opts_initialize_default =
         (void (*)(void *, void *, void *)) & ocp_qp_hpmpc_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & ocp_qp_hpmpc_opts_update;
+    config->opts_set = &ocp_qp_hpmpc_opts_set;
     config->memory_calculate_size =
         (int (*)(void *, void *, void *)) & ocp_qp_hpmpc_memory_calculate_size;
     config->memory_assign =

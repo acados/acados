@@ -18,7 +18,9 @@
  */
 
 // external
+#include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 // hpipm
 #include "hpipm/include/hpipm_d_dense_qp.h"
 #include "hpipm/include/hpipm_d_dense_qp_ipm.h"
@@ -28,6 +30,8 @@
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
+
+
 
 /************************************************
  * opts
@@ -44,6 +48,8 @@ int dense_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
 
     return size;
 }
+
+
 
 void *dense_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
@@ -68,6 +74,8 @@ void *dense_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
     return (void *) opts;
 }
 
+
+
 void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     dense_qp_hpipm_opts *opts = opts_;
@@ -86,12 +94,66 @@ void dense_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *op
     return;
 }
 
+
+
 void dense_qp_hpipm_opts_update(void *config_, void *dims_, void *opts_)
 {
     //    dense_qp_hpipm_opts *opts = (dense_qp_hpipm_opts *)opts_;
 
     return;
 }
+
+
+
+void dense_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    dense_qp_hpipm_opts *opts = opts_;
+
+    if (!strcmp(field, "iter_max"))
+    {
+        int* tmp_ptr = (int *) value;
+		d_set_dense_qp_ipm_arg_iter_max(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "mu0"))
+    {
+        double* tmp_ptr = (double *) value;
+		d_set_dense_qp_ipm_arg_mu0(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "tol_stat"))
+    {
+        double* tmp_ptr = (double *) value;
+		d_set_dense_qp_ipm_arg_tol_stat(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "tol_eq"))
+    {
+        double* tmp_ptr = (double *) value;
+		d_set_dense_qp_ipm_arg_tol_eq(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "tol_ineq"))
+    {
+        double* tmp_ptr = (double *) value;
+		d_set_dense_qp_ipm_arg_tol_ineq(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "tol_comp"))
+    {
+        double* tmp_ptr = (double *) value;
+		d_set_dense_qp_ipm_arg_tol_comp(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "warm_start"))
+    {
+        int* tmp_ptr = (int *) value;
+		d_set_dense_qp_ipm_arg_warm_start(*tmp_ptr, opts->hpipm_opts);
+    }
+	else
+	{
+		printf("\nerror: dense_qp_hpipm_opts_set: wrong field: %s\n", field);
+		exit(1);
+	}
+
+	return;
+}
+
+
 
 /************************************************
  * memory
@@ -110,6 +172,8 @@ int dense_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_
 
     return size;
 }
+
+
 
 void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
@@ -139,7 +203,15 @@ void *dense_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void
     return mem;
 }
 
-int dense_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_) { return 0; }
+
+
+int dense_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+{
+	return 0;
+}
+
+
+
 int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
 {
     dense_qp_in *qp_in = qp_in_;
@@ -153,6 +225,13 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     // cast structures
     dense_qp_hpipm_opts *opts = opts_;
     dense_qp_hpipm_memory *memory = mem_;
+
+	// zero primal solution
+	// TODO add a check if warm start of first SQP iteration is implemented !!!!!!
+	int ii;
+	int nv = qp_in->dim->nv;
+	int ns = qp_in->dim->ns;
+	blasfeo_dvecse(nv+2*ns, 0.0, qp_out->v, 0);
 
     // solve ipm
     acados_tic(&qp_timer);
@@ -173,6 +252,8 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     return acados_status;
 }
 
+
+
 void dense_qp_hpipm_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -182,6 +263,7 @@ void dense_qp_hpipm_config_initialize_default(void *config_)
     config->opts_assign = &dense_qp_hpipm_opts_assign;
     config->opts_initialize_default = &dense_qp_hpipm_opts_initialize_default;
     config->opts_update = &dense_qp_hpipm_opts_update;
+    config->opts_set = &dense_qp_hpipm_opts_set;
     config->memory_calculate_size = &dense_qp_hpipm_memory_calculate_size;
     config->memory_assign = &dense_qp_hpipm_memory_assign;
     config->workspace_calculate_size = &dense_qp_hpipm_workspace_calculate_size;

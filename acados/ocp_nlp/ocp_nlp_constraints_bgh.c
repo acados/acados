@@ -920,6 +920,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         jac_out.ai = 0;
         jac_out.aj = ng;
 
+		// TODO check that it is correct, as it prevents convergence !!!!!
         if (opts->compute_hess)
         {
             struct blasfeo_dvec_args mult_in;  // multipliers of external fun;
@@ -927,6 +928,8 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             mult_in.xi = 0;
             // TODO check that it is (upper - lower) and  not the other way around
             blasfeo_daxpy(nh, -1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
+//            blasfeo_daxpy(nh, -1.0, memory->lam, 2*nb+2*ng+nh, memory->lam, nb+ng, &work->tmp_nh, 0);
+//            blasfeo_daxpy(nh, 1.0, memory->lam, nb+ng, memory->lam, 2*nb+2*ng+nh, &work->tmp_nh, 0);
 
             struct blasfeo_dmat_args hess_out;
             hess_out.A = &work->tmp_nv_nv;

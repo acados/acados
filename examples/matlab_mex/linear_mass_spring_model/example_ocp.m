@@ -3,6 +3,16 @@ clear all
 
 
 
+% check that env.sh has been run
+env_run = getenv('ENV_RUN');
+if (~strcmp(env_run, 'true'))
+	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
+	disp('source env.sh');
+	return;
+end
+
+
+
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
@@ -20,7 +30,7 @@ regularize_method = 'project';
 nlp_solver_max_iter = 100;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
-qp_solver_N_pcond = 5;
+qp_solver_cond_N = 5;
 %dyn_type = 'explicit';
 %dyn_type = 'implicit';
 dyn_type = 'discrete';
@@ -201,7 +211,7 @@ ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
+	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 end
 if (strcmp(dyn_type, 'explicit'))
 	ocp_opts.set('sim_method', 'erk');

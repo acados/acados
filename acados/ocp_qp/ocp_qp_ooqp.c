@@ -35,9 +35,13 @@
 
 #define FLIP_BOUNDS
 
+
+
 int *rows;
 int *cols;
 int lda;
+
+
 
 static int max_of_three(int a, int b, int c)
 {
@@ -48,6 +52,8 @@ static int max_of_three(int a, int b, int c)
 
     return ans;
 }
+
+
 
 // comparator for qsort
 static int comparator(const void *p1, const void *p2)
@@ -61,6 +67,8 @@ static int comparator(const void *p1, const void *p2)
 
     return ans1 - ans2;
 }
+
+
 
 static void sort_matrix_structure_row_major(int *order, int *irow, int nnz, int *jcol,
                                             int *tmp)
@@ -88,6 +96,8 @@ static void sort_matrix_structure_row_major(int *order, int *irow, int nnz, int 
     }
 }
 
+
+
 static void sort_matrix_data_row_major(int *order, int nnz, real_t *d, real_t *tmp)
 {
     int ii;
@@ -103,6 +113,8 @@ static void sort_matrix_data_row_major(int *order, int nnz, real_t *d, real_t *t
     }
 }
 
+
+
 static int get_number_of_primal_vars(const ocp_qp_dims *dims)
 {
     int nx = 0;
@@ -115,6 +127,8 @@ static int get_number_of_primal_vars(const ocp_qp_dims *dims)
 
     return nx;
 }
+
+
 
 static int get_number_of_equalities(const ocp_qp_dims *dims)
 {
@@ -129,6 +143,8 @@ static int get_number_of_equalities(const ocp_qp_dims *dims)
     return my;
 }
 
+
+
 static int get_number_of_inequalities(const ocp_qp_dims *dims)
 {
     int mz = 0;
@@ -141,6 +157,8 @@ static int get_number_of_inequalities(const ocp_qp_dims *dims)
 
     return mz;
 }
+
+
 
 static int get_nnzQ(const ocp_qp_dims *dims)
 {
@@ -157,6 +175,8 @@ static int get_nnzQ(const ocp_qp_dims *dims)
     return nnzQ;
 }
 
+
+
 static int get_nnzA(const ocp_qp_dims *dims)
 {
     int kk;
@@ -170,6 +190,8 @@ static int get_nnzA(const ocp_qp_dims *dims)
     return nnzA;
 }
 
+
+
 static int get_nnzC(const ocp_qp_dims *dims)
 {
     int kk;
@@ -182,6 +204,8 @@ static int get_nnzC(const ocp_qp_dims *dims)
 
     return nnzC;
 }
+
+
 
 static void update_gradient(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem)
 {
@@ -197,6 +221,8 @@ static void update_gradient(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem)
         nn += dims->nu[kk];
     }
 }
+
+
 
 static void update_hessian_structure(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
                                      ocp_qp_ooqp_workspace *work)
@@ -253,6 +279,8 @@ static void update_hessian_structure(const ocp_qp_in *in, ocp_qp_ooqp_memory *me
     sort_matrix_structure_row_major(mem->orderQ, mem->irowQ, mem->nnzQ, mem->jcolQ, work->tmpInt);
 }
 
+
+
 static void update_hessian_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
                                 ocp_qp_ooqp_workspace *work)
 {
@@ -290,6 +318,8 @@ static void update_hessian_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
     sort_matrix_data_row_major(mem->orderQ, mem->nnzQ, mem->dQ, work->tmpReal);
 }
 
+
+
 static void update_b_vector(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem)
 {
     int ii, kk;
@@ -304,6 +334,8 @@ static void update_b_vector(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem)
         }
     }
 }
+
+
 
 static void update_dynamics_structure(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
                                       ocp_qp_ooqp_workspace *work)
@@ -354,6 +386,8 @@ static void update_dynamics_structure(const ocp_qp_in *in, ocp_qp_ooqp_memory *m
     sort_matrix_structure_row_major(mem->orderA, mem->irowA, mem->nnzA, mem->jcolA, work->tmpInt);
 }
 
+
+
 static void update_dynamics_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
                                  ocp_qp_ooqp_workspace *work)
 {
@@ -390,6 +424,8 @@ static void update_dynamics_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
     }
     sort_matrix_data_row_major(mem->orderA, mem->nnzA, mem->dA, work->tmpReal);
 }
+
+
 
 static void update_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem)
 {
@@ -441,6 +477,8 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem)
     }
 }
 
+
+
 static void update_ineq_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem)
 {
     int ii, kk;
@@ -459,6 +497,8 @@ static void update_ineq_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem)
         }
     }
 }
+
+
 
 static void update_inequalities_structure(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
                                           ocp_qp_ooqp_workspace *work)
@@ -502,6 +542,8 @@ static void update_inequalities_structure(const ocp_qp_in *in, ocp_qp_ooqp_memor
     sort_matrix_structure_row_major(mem->orderC, mem->irowC, mem->nnzC, mem->jcolC, work->tmpInt);
 }
 
+
+
 static void update_inequalities_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
                                      ocp_qp_ooqp_workspace *work)
 {
@@ -532,6 +574,8 @@ static void update_inequalities_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *me
     }
     sort_matrix_data_row_major(mem->orderC, mem->nnzC, mem->dC, work->tmpReal);
 }
+
+
 
 static void ocp_qp_ooqp_update_memory(const ocp_qp_in *in, const ocp_qp_ooqp_opts *opts,
                                       ocp_qp_ooqp_memory *mem, ocp_qp_ooqp_workspace *work)
@@ -587,6 +631,8 @@ static void ocp_qp_ooqp_update_memory(const ocp_qp_in *in, const ocp_qp_ooqp_opt
     mem->firstRun = 0;
 }
 
+
+
 static void print_inputs(ocp_qp_ooqp_memory *mem)
 {
     printf("\n----------> OOQP INPUTS <----------\n\n");
@@ -637,6 +683,8 @@ static void print_inputs(ocp_qp_ooqp_memory *mem)
     }
 }
 
+
+
 static void print_outputs(ocp_qp_ooqp_memory *mem, ocp_qp_ooqp_workspace *work, int return_value)
 {
     int ii;
@@ -679,6 +727,8 @@ static void print_outputs(ocp_qp_ooqp_memory *mem, ocp_qp_ooqp_workspace *work, 
         printf("=====> pi[%d] = %f\n", ii + 1, work->pi[ii]);
     }
 }
+
+
 
 static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace *work)
 {
@@ -748,12 +798,16 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_wor
     }
 }
 
+
+
 int ocp_qp_ooqp_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
     int size = 0;
     size += sizeof(ocp_qp_ooqp_opts);
     return size;
 }
+
+
 
 void *ocp_qp_ooqp_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
 {
@@ -768,6 +822,8 @@ void *ocp_qp_ooqp_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory
 
     return (void *) opts;
 }
+
+
 
 void ocp_qp_ooqp_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_)
 {
@@ -784,10 +840,49 @@ void ocp_qp_ooqp_opts_initialize_default(void *config_, ocp_qp_dims *dims, void 
     return;
 }
 
+
+
 void ocp_qp_ooqp_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     return;
 }
+
+
+
+void ocp_qp_ooqp_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    ocp_qp_ooqp_opts *opts = opts_;
+
+    if (!strcmp(field, "tol_stat"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_eq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_ineq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_comp"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "warm_start"))
+    {
+		// TODO set solver warm start
+    }
+	else
+	{
+		printf("\nerror: ocp_qp_ooqp_opts_set: wrong field: %s\n", field);
+		exit(1);
+	}
+
+	return;
+}
+
+
 
 int ocp_qp_ooqp_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
@@ -819,6 +914,8 @@ int ocp_qp_ooqp_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *op
 
     return size;
 }
+
+
 
 void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory)
 {
@@ -888,6 +985,8 @@ void *ocp_qp_ooqp_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, v
     return mem;
 }
 
+
+
 int ocp_qp_ooqp_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     UNUSED(opts_);
@@ -910,6 +1009,8 @@ int ocp_qp_ooqp_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void 
 
     return size;
 }
+
+
 
 static void ocp_qp_ooqp_cast_workspace(ocp_qp_ooqp_workspace *work, ocp_qp_ooqp_memory *mem)
 {
@@ -935,6 +1036,8 @@ static void ocp_qp_ooqp_cast_workspace(ocp_qp_ooqp_workspace *work, ocp_qp_ooqp_
     work->tmpReal = (double *)ptr;
     // ptr += (mem->nnz)*sizeof(double);
 }
+
+
 
 int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *memory_,
                   void *work_)
@@ -994,11 +1097,15 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
     return acados_status;
 }
 
+
+
 void ocp_qp_ooqp_destroy(void *mem_, void *work)
 {
     free(work);
     free(mem_);
 }
+
+
 
 void ocp_qp_ooqp_config_initialize_default(void *config_)
 {
@@ -1010,6 +1117,7 @@ void ocp_qp_ooqp_config_initialize_default(void *config_)
     config->opts_initialize_default =
         (void (*)(void *, void *, void *)) & ocp_qp_ooqp_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & ocp_qp_ooqp_opts_update;
+    config->opts_set = &ocp_qp_ooqp_opts_set;
     config->memory_calculate_size =
         (int (*)(void *, void *, void *)) & ocp_qp_ooqp_memory_calculate_size;
     config->memory_assign =

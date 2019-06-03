@@ -263,29 +263,61 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, voi
 
 	int ii;
 
-    if (!strcmp(field, "num_threads"))
-    {
-        int* num_threads = (int *) value;
-        opts->num_threads = *num_threads;
-    }
-    else if (!strcmp(field, "exact_hess"))
-    {
-		int N = config->N;
-		// cost
-		for (ii=0; ii<=N; ii++)
-			config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "exact_hess", value);
-		// dynamics
-		for (ii=0; ii<N; ii++)
-			config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii], "compute_hess", value);
-		// constraints
-		for (ii=0; ii<=N; ii++)
-			config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
-    }
-    else
-    {
-		// TODO extract prefix 'qp_solver_' from filed ???
-        config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
-    }
+	char module[MAX_STR_LEN];
+	char *ptr_module = NULL;
+	int module_length = 0;
+
+	// extract module name
+	char *char_ = strchr(field, '_');
+	if(char_!=NULL)
+	{
+		module_length = char_-field;
+		for(ii=0; ii<module_length; ii++)
+			module[ii] = field[ii];
+		module[module_length] = '\0'; // add end of string
+		ptr_module = module;
+	}
+
+	// pass options to QP module
+	if(!strcmp(ptr_module, "qp"))
+	{
+		config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field+module_length+1, value);
+
+		if(!strcmp(field, "qp_warm_start"))
+		{
+			int* i_ptr = (int *) value;
+			opts->qp_warm_start = *i_ptr;
+		}
+	}
+	else // nlp opts
+	{
+		if (!strcmp(field, "num_threads"))
+		{
+			int* num_threads = (int *) value;
+			opts->num_threads = *num_threads;
+		}
+		else if (!strcmp(field, "exact_hess"))
+		{
+			int N = config->N;
+			// cost
+			for (ii=0; ii<=N; ii++)
+				config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "exact_hess", value);
+			// dynamics
+			for (ii=0; ii<N; ii++)
+				config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii], "compute_hess", value);
+//			// constraints TODO disabled for now as prevents convergence !!!
+//			for (ii=0; ii<=N; ii++)
+//				config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
+		}
+		else
+		{
+			printf("\nerror: ocp_nlp_sqp_rti_opts_set: wrong field: %s\n", field);
+			exit(1);
+		}
+	}
+
+	return;
+
 }
 
 
@@ -389,6 +421,9 @@ int ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts
     // nlp mem
     size += ocp_nlp_memory_calculate_size(config, dims);
 
+	// stat
+	size += 1*2*sizeof(double);
+
     size += 8;  // initial align
 
     //    make_int_multiple_of(64, &size);
@@ -465,6 +500,14 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, voi
         c_ptr += constraints[ii]->memory_calculate_size(constraints[ii], dims->constraints[ii],
                                                         opts->constraints[ii]);
     }
+
+	// stat
+	mem->stat = (double *) c_ptr;
+	mem->stat_m = 2;
+	mem->stat_n = 1;
+	c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
+
+    mem->status = ACADOS_READY;
 
     assert((char *) raw_memory+ocp_nlp_sqp_rti_memory_calculate_size(config, dims, opts) >= c_ptr);
 
@@ -1031,6 +1074,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     int ii;
 
+	int qp_iter = 0;
+
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
     int num_threads_bkp = omp_get_num_threads();
@@ -1128,6 +1173,9 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // update QP rhs for SQP (step prim var, abs dual var)
     sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
 
+	// save statistics
+	mem->stat[mem->stat_n*1+0] = qp_iter;
+
     // regularize Hessian
     config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
 
@@ -1135,12 +1183,16 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // print_ocp_qp_in(work->qp_in);
     // exit(1);
 
+	// TODO no warm start across NLP solutions (yet)
+	int tmp_int = 0;
+	config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "warm_start", &tmp_int);
+
     // start timer
     acados_tic(&timer1);
 
-    int qp_status =
-        qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
-                            mem->qp_solver_mem, work->qp_work);
+	// TODO move qp_out in memory !!!!! (it has to be preserved to do warm start)
+    int qp_status = qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
+    		mem->qp_solver_mem, work->qp_work);
 
     // stop timer
     mem->time_qp_sol += acados_toc(&timer1);
@@ -1148,10 +1200,17 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // compute correct dual solution in case of Hessian regularization
     config->regularize->correct_dual_sol(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
 
+	// TODO move into QP solver memory ???
+	nlp_out->qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
+	qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
+
     // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
     //  print_ocp_qp_out(work->qp_out);
     //  if(sqp_iter==1)
     //  exit(1);
+
+	// save statistics
+	mem->stat[mem->stat_n*1+0] = qp_iter;
 
     if (qp_status != 0)
     {
@@ -1270,6 +1329,21 @@ void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *ret
     {
         double *value = return_value_;
         *value = mem->time_lin;
+    }
+    else if (!strcmp("stat", field))
+    {
+        double **value = return_value_;
+        *value = mem->stat;
+    }
+    else if (!strcmp("stat_m", field))
+    {
+        int *value = return_value_;
+        *value = mem->stat_m;
+    }
+    else if (!strcmp("stat_n", field))
+    {
+        int *value = return_value_;
+        *value = mem->stat_n;
     }
     else
     {

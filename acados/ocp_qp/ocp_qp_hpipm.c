@@ -18,7 +18,9 @@
  */
 
 // external
+#include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_ipm.h"
@@ -30,6 +32,8 @@
 // #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+
+
 
 /************************************************
  * opts
@@ -47,6 +51,8 @@ int ocp_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
     size += 1 * 8;
     return size;
 }
+
+
 
 void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
@@ -72,6 +78,8 @@ void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
     return (void *) opts;
 }
 
+
+
 void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
     // ocp_qp_dims *dims = dims_;
@@ -91,12 +99,71 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts
     return;
 }
 
+
+
 void ocp_qp_hpipm_opts_update(void *config_, void *dims_, void *opts_)
 {
     //    ocp_qp_hpipm_opts *opts = (ocp_qp_hpipm_opts *)opts_;
 
     return;
 }
+
+
+
+void ocp_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    ocp_qp_hpipm_opts *opts = opts_;
+
+    if (!strcmp(field, "iter_max"))
+    {
+        int* tmp_ptr = (int *) value;
+		d_set_ocp_qp_ipm_arg_iter_max(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "mu0"))
+    {
+        double* tmp_ptr = (double *) value;
+		d_set_ocp_qp_ipm_arg_mu0(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "tol_stat"))
+    {
+        double* tmp_ptr = (double *) value;
+		d_set_ocp_qp_ipm_arg_tol_stat(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "tol_eq"))
+    {
+        double* tmp_ptr = (double *) value;
+		d_set_ocp_qp_ipm_arg_tol_eq(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "tol_ineq"))
+    {
+        double* tmp_ptr = (double *) value;
+		d_set_ocp_qp_ipm_arg_tol_ineq(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "tol_comp"))
+    {
+        double* tmp_ptr = (double *) value;
+		d_set_ocp_qp_ipm_arg_tol_comp(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "warm_start"))
+    {
+        int* tmp_ptr = (int *) value;
+		d_set_ocp_qp_ipm_arg_warm_start(*tmp_ptr, opts->hpipm_opts);
+    }
+    else if (!strcmp(field, "ric_alg"))
+    {
+        int* tmp_ptr = (int *) value;
+		d_set_ocp_qp_ipm_arg_ric_alg(*tmp_ptr, opts->hpipm_opts);
+    }
+	else
+	{
+		printf("\nerror: ocp_qp_hpipm_opts_set: wrong field: %s\n", field);
+		exit(1);
+	}
+
+	return;
+}
+
+
 
 /************************************************
  * memory
@@ -117,6 +184,8 @@ int ocp_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_)
     size += 1 * 8;
     return size;
 }
+
+
 
 void *ocp_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
@@ -147,11 +216,18 @@ void *ocp_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *
     return mem;
 }
 
+
+
 /************************************************
  * workspace
  ************************************************/
 
-int ocp_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_) { return 0; }
+int ocp_qp_hpipm_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+{
+	return 0;
+}
+
+
 
 /************************************************
  * functions
@@ -162,13 +238,25 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     ocp_qp_in *qp_in = qp_in_;
     ocp_qp_out *qp_out = qp_out_;
 
-    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    ocp_qp_info *info = qp_out->misc;
     acados_timer tot_timer, qp_timer;
 
     acados_tic(&tot_timer);
     // cast data structures
-    ocp_qp_hpipm_opts *opts = (ocp_qp_hpipm_opts *) opts_;
-    ocp_qp_hpipm_memory *memory = (ocp_qp_hpipm_memory *) mem_;
+    ocp_qp_hpipm_opts *opts = opts_;
+    ocp_qp_hpipm_memory *memory = mem_;
+
+	// zero primal solution
+	// TODO add a check if warm start of first SQP iteration is implemented !!!!!!
+	int ii;
+	int N = qp_in->dim->N;
+	int *nx = qp_in->dim->nx;
+	int *nu = qp_in->dim->nu;
+	int *ns = qp_in->dim->ns;
+	for(ii=0; ii<=N; ii++)
+	{
+		blasfeo_dvecse(nu[ii]+nx[ii]+2*ns[ii], 0.0, qp_out->ux+ii, 0);
+	}
 
     // solve ipm
     acados_tic(&qp_timer);
@@ -186,8 +274,11 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     if (hpipm_status == 0) acados_status = ACADOS_SUCCESS;
     if (hpipm_status == 1) acados_status = ACADOS_MAXITER;
     if (hpipm_status == 2) acados_status = ACADOS_MINSTEP;
+
     return acados_status;
 }
+
+
 
 void ocp_qp_hpipm_config_initialize_default(void *config_)
 {
@@ -198,6 +289,7 @@ void ocp_qp_hpipm_config_initialize_default(void *config_)
     config->opts_assign = &ocp_qp_hpipm_opts_assign;
     config->opts_initialize_default = &ocp_qp_hpipm_opts_initialize_default;
     config->opts_update = &ocp_qp_hpipm_opts_update;
+    config->opts_set = &ocp_qp_hpipm_opts_set;
     config->memory_calculate_size = &ocp_qp_hpipm_memory_calculate_size;
     config->memory_assign = &ocp_qp_hpipm_memory_assign;
     config->workspace_calculate_size = &ocp_qp_hpipm_workspace_calculate_size;

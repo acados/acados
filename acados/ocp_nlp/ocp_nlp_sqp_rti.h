@@ -52,6 +52,7 @@ typedef struct
     int compute_dual_sol;
     int reuse_workspace;
     int num_threads;
+	int qp_warm_start;
 } ocp_nlp_sqp_rti_opts;
 
 //
@@ -90,6 +91,10 @@ typedef struct
     double time_qp_sol;
     double time_lin;
     double time_tot;
+
+	double *stat;
+	int stat_m;
+	int stat_n;
 } ocp_nlp_sqp_rti_memory;
 
 //
