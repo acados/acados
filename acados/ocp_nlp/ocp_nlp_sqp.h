@@ -50,10 +50,10 @@ typedef struct
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
-    double min_res_g;
-    double min_res_b;
-    double min_res_d;
-    double min_res_m;
+    double tol_stat;     // exit tolerance on stationarity condition
+    double tol_eq;       // exit tolerance on equality constraints
+    double tol_ineq;     // exit tolerance on inequality constraints
+    double tol_comp;     // exit tolerance on complemetarity condition
     int max_iter;
     int reuse_workspace;
     int num_threads;

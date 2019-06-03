@@ -174,10 +174,10 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     // SQP opts
 
     opts->max_iter = 20;
-    opts->min_res_g = 1e-8;
-    opts->min_res_b = 1e-8;
-    opts->min_res_d = 1e-8;
-    opts->min_res_m = 1e-8;
+    opts->tol_stat = 1e-8;
+    opts->tol_eq   = 1e-8;
+    opts->tol_ineq = 1e-8;
+    opts->tol_comp = 1e-8;
 
     opts->reuse_workspace = 1;
 #if defined(ACADOS_WITH_OPENMP)
@@ -191,10 +191,10 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     // qp solver
     qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 	// overwrite default
-	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_stat", &opts->min_res_g);
-	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_eq", &opts->min_res_b);
-	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_ineq", &opts->min_res_d);
-	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_comp", &opts->min_res_m);
+	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_stat", &opts->tol_stat);
+	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_eq", &opts->tol_eq);
+	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_ineq", &opts->tol_ineq);
+	qp_solver->opts_set(qp_solver, opts->qp_solver_opts, "tol_comp", &opts->tol_comp);
 
     // regularization
     regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
@@ -313,31 +313,31 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
 			int* num_threads = (int *) value;
 			opts->num_threads = *num_threads;
 		}
-		else if (!strcmp(field, "min_res_g")) // TODO rename !!!
+		else if (!strcmp(field, "tol_stat")) // TODO rename !!!
 		{
-			double* min_res_g = (double *) value;
-			opts->min_res_g = *min_res_g;
+			double* tol_stat = (double *) value;
+			opts->tol_stat = *tol_stat;
 			// pass to QP too
 			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_stat", value);
 		}
-		else if (!strcmp(field, "min_res_b")) // TODO rename !!!
+		else if (!strcmp(field, "tol_eq")) // TODO rename !!!
 		{
-			double* min_res_b = (double *) value;
-			opts->min_res_b = *min_res_b;
+			double* tol_eq = (double *) value;
+			opts->tol_eq = *tol_eq;
 			// pass to QP too
 			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_eq", value);
 		}
-		else if (!strcmp(field, "min_res_d")) // TODO rename !!!
+		else if (!strcmp(field, "tol_ineq")) // TODO rename !!!
 		{
-			double* min_res_d = (double *) value;
-			opts->min_res_d = *min_res_d;
+			double* tol_ineq = (double *) value;
+			opts->tol_ineq = *tol_ineq;
 			// pass to QP too
 			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_ineq", value);
 		}
-		else if (!strcmp(field, "min_res_m")) // TODO rename !!!
+		else if (!strcmp(field, "tol_comp")) // TODO rename !!!
 		{
-			double* min_res_m = (double *) value;
-			opts->min_res_m = *min_res_m;
+			double* tol_comp = (double *) value;
+			opts->tol_comp = *tol_comp;
 			// pass to QP too
 			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_comp", value);
 		}
@@ -1256,10 +1256,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 		}
 
         // exit conditions on residuals
-        if ((mem->nlp_res->inf_norm_res_g < opts->min_res_g) &
-            (mem->nlp_res->inf_norm_res_b < opts->min_res_b) &
-            (mem->nlp_res->inf_norm_res_d < opts->min_res_d) &
-            (mem->nlp_res->inf_norm_res_m < opts->min_res_m))
+        if ((mem->nlp_res->inf_norm_res_g < opts->tol_stat) &
+            (mem->nlp_res->inf_norm_res_b < opts->tol_eq) &
+            (mem->nlp_res->inf_norm_res_d < opts->tol_ineq) &
+            (mem->nlp_res->inf_norm_res_m < opts->tol_comp))
         {
             // printf("%d sqp iterations\n", sqp_iter);
             // print_ocp_qp_in(work->qp_in);
