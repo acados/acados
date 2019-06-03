@@ -55,7 +55,8 @@ void ocp_nlp_reg_project_reduc_hess_opts_initialize_default(void *config_, ocp_n
 {
     ocp_nlp_reg_project_reduc_hess_opts *opts = opts_;
 
-    opts->epsilon = 1e-4;
+    opts->min_eig = 1e-4;
+    opts->min_pivot = 1e-12;
 	opts->pivoting = 1;
 
     return;
@@ -68,10 +69,15 @@ void ocp_nlp_reg_project_reduc_hess_opts_set(void *config_, ocp_nlp_reg_dims *di
 
     ocp_nlp_reg_project_reduc_hess_opts *opts = opts_;
 
-    if (!strcmp(field, "epsilon"))
+    if (!strcmp(field, "min_eig"))
     {
         double *d_ptr = value;
-        opts->epsilon = *d_ptr;
+        opts->min_eig = *d_ptr;
+    }
+    else if (!strcmp(field, "min_pivot"))
+    {
+        double *d_ptr = value;
+        opts->min_pivot = *d_ptr;
     }
     else if (!strcmp(field, "pivoting"))
     {
@@ -406,7 +412,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 	blasfeo_dtrtr_l(nu[ss]+nx[ss], mem->RSQrq[ss], 0, 0, mem->RSQrq[ss], 0, 0); // necessary ???
 	// TODO copy middle stage for nu[N}>0 !!!!!!!!!!!!!!!!!!
 //	blasfeo_unpack_dmat(nu[ss], nu[ss], mem->RSQrq[ss], 0, 0, mem->reg_hess, nu[ss]);
-//	acados_project(nu[ss], mem->reg_hess, mem->V, mem->d, mem->e, opts->epsilon);
+//	acados_project(nu[ss], mem->reg_hess, mem->V, mem->d, mem->e, opts->min_eig);
 //	blasfeo_pack_dmat(nu[ss], nu[ss], mem->reg_hess, nu[ss], mem->RSQrq[ss], 0, 0);
 	blasfeo_dpotrf_l_mn(nu[ss]+nx[ss], nu[ss], mem->RSQrq[ss], 0, 0, L, 0, 0);
 //printf("\nii = %d\n", ss);
@@ -434,9 +440,9 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 		do_reg = 0;
 		for(jj=0; jj<nu[ss]; jj++)
 		{
-			if(mem->d[jj]<opts->epsilon)
+			if(mem->d[jj]<opts->min_eig)
 			{
-				mem->e[jj] = opts->epsilon - mem->d[jj];
+				mem->e[jj] = opts->min_eig - mem->d[jj];
 				do_reg = 1;
 			}
 			else
@@ -470,9 +476,9 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 //		if(1)
 		if(do_reg)
 		{
-			if(opts->pivoting)
+			for(jj=0; jj<nu[ss]; jj++)
 			{
-				for(jj=0; jj<nu[ss]; jj++)
+				if(opts->pivoting)
 				{
 					// find pivot element
 					pivot = BLASFEO_DMATEL(L3, jj, jj);
@@ -504,44 +510,28 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 							BLASFEO_DMATEL(L3, kk, idx) = tmp_el;
 						}
 					}
-						
-					pivot = BLASFEO_DMATEL(L3, jj, jj);
-					// TODO check for singularity of pivot !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-					if(pivot==0.0)
-					{
-						printf("\nocp_nlp_project_reduc_hess: zero pivot element!\n");
-						exit(1);
-					}
-					pivot = 1.0/pivot;
-					for(kk=jj+1; kk<nu[ss]+nx[ss]; kk++)
-					{
-						tmp_el = pivot * BLASFEO_DMATEL(L3, kk, jj);
-						for(ll=kk; ll<nu[ss]+nx[ss]; ll++)
-						{
-							BLASFEO_DMATEL(L3, ll, kk) -= BLASFEO_DMATEL(L3, ll, jj) * tmp_el;
-						}
-					}
 				}
-			}
-			else
-			{
-				for(jj=0; jj<nu[ss]; jj++)
+					
+				pivot = BLASFEO_DMATEL(L3, jj, jj);
+//				if(pivot==0.0)
+//				{
+//					printf("\nocp_nlp_project_reduc_hess: zero pivot element!\n");
+//					exit(1);
+//				}
+				if(pivot<opts->min_pivot & pivot>-opts->min_pivot)
 				{
-					pivot = BLASFEO_DMATEL(L3, jj, jj);
-					// TODO check for singularity of pivot !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-					if(pivot==0.0)
+					if(pivot<0.0)
+						pivot = opts->min_pivot;
+					else
+						pivot = - opts->min_pivot;
+				}
+				pivot = 1.0/pivot;
+				for(kk=jj+1; kk<nu[ss]+nx[ss]; kk++)
+				{
+					tmp_el = pivot * BLASFEO_DMATEL(L3, kk, jj);
+					for(ll=kk; ll<nu[ss]+nx[ss]; ll++)
 					{
-						printf("\nocp_nlp_project_reduc_hess: zero pivot element!\n");
-						exit(1);
-					}
-					pivot = 1.0/pivot;
-					for(kk=jj+1; kk<nu[ss]+nx[ss]; kk++)
-					{
-						tmp_el = pivot * BLASFEO_DMATEL(L3, kk, jj);
-						for(ll=kk; ll<nu[ss]+nx[ss]; ll++)
-						{
-							BLASFEO_DMATEL(L3, ll, kk) -= BLASFEO_DMATEL(L3, ll, jj) * tmp_el;
-						}
+						BLASFEO_DMATEL(L3, ll, kk) -= BLASFEO_DMATEL(L3, ll, jj) * tmp_el;
 					}
 				}
 			}
@@ -583,8 +573,8 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 	acados_eigen_decomposition(nu[ss]+nx[ss], mem->reg_hess, mem->V, mem->d, mem->e);
 	for(jj=0; jj<nu[ss]+nx[ss]; jj++)
 	{
-		if(mem->d[jj]<opts->epsilon)
-			mem->e[jj] = opts->epsilon - mem->d[jj];
+		if(mem->d[jj]<opts->min_eig)
+			mem->e[jj] = opts->min_eig - mem->d[jj];
 		else
 			mem->e[jj] = 0.0;
 	}
