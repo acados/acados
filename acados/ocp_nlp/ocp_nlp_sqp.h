@@ -112,6 +112,8 @@ int ocp_nlp_sqp_memory_calculate_size(void *config, void *dims, void *opts_);
 //
 void *ocp_nlp_sqp_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 
+
+
 /************************************************
  * workspace
  ************************************************/
@@ -122,6 +124,8 @@ typedef struct
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
     void *qp_work;
+	ocp_qp_res *qp_res;
+	ocp_qp_res_ws *qp_res_ws;
 
     void **dynamics;     // dynamics_workspace
     void **cost;         // cost_workspace
@@ -131,6 +135,8 @@ typedef struct
 
 //
 int ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
+
+
 
 /************************************************
  * functions

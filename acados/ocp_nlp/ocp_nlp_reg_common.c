@@ -54,7 +54,7 @@ int ocp_nlp_reg_dims_calculate_size(int N)
 {
     int size = sizeof(ocp_nlp_reg_dims);
 
-    size += 2*(N+1)*sizeof(int); // nx nu
+    size += 5*(N+1)*sizeof(int); // nx nu nbu nbx ng
 
     return size;
 }
@@ -73,6 +73,14 @@ ocp_nlp_reg_dims *ocp_nlp_reg_dims_assign(int N, void *raw_memory)
     c_ptr += (N+1)*sizeof(int);
     // nu
     dims->nu = (int *) c_ptr;
+    c_ptr += (N+1)*sizeof(int);
+    // nbu
+    dims->nbu = (int *) c_ptr;
+    // nbx
+    dims->nbx = (int *) c_ptr;
+    c_ptr += (N+1)*sizeof(int);
+    // ng
+    dims->ng = (int *) c_ptr;
     c_ptr += (N+1)*sizeof(int);
 
     dims->N = N;
@@ -94,6 +102,18 @@ void ocp_nlp_reg_dims_set(void *config_, ocp_nlp_reg_dims *dims, int stage, char
     else if (!strcmp(field, "nu"))
     {
         dims->nu[stage] = *value;
+    }
+    else if (!strcmp(field, "nbu"))
+    {
+        dims->nbu[stage] = *value;
+    }
+    else if (!strcmp(field, "nbx"))
+    {
+        dims->nbx[stage] = *value;
+    }
+    else if (!strcmp(field, "ng"))
+    {
+        dims->ng[stage] = *value;
     }
     else
     {

@@ -1138,8 +1138,11 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     config->regularize->memory_set_rq_ptr(dims->regularize, work->qp_in->rqz, mem->regularize_mem);
     config->regularize->memory_set_BAbt_ptr(dims->regularize, work->qp_in->BAbt, mem->regularize_mem);
     config->regularize->memory_set_b_ptr(dims->regularize, work->qp_in->b, mem->regularize_mem);
+	config->regularize->memory_set_idxb_ptr(dims->regularize, work->qp_in->idxb, mem->regularize_mem);
+    config->regularize->memory_set_DCt_ptr(dims->regularize, work->qp_in->DCt, mem->regularize_mem);
     config->regularize->memory_set_ux_ptr(dims->regularize, work->qp_out->ux, mem->regularize_mem);
     config->regularize->memory_set_pi_ptr(dims->regularize, work->qp_out->pi, mem->regularize_mem);
+    config->regularize->memory_set_lam_ptr(dims->regularize, work->qp_out->lam, mem->regularize_mem);
 
     // copy sampling times into dynamics model
 #if defined(ACADOS_WITH_OPENMP)
