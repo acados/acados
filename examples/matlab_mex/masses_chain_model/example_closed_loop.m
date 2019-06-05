@@ -2,6 +2,17 @@
 clear all
 
 
+
+% check that env.sh has been run
+env_run = getenv('ENV_RUN');
+if (~strcmp(env_run, 'true'))
+	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
+	disp('source env.sh');
+	return;
+end
+
+
+
 %% handy arguments
 compile_mex = 'true';
 codgen_model = 'true';
@@ -15,16 +26,19 @@ ocp_N = 40;
 ocp_param_scheme = 'multiple_shooting_unif_grid';
 ocp_nlp_solver = 'sqp';
 %ocp_nlp_solver = 'sqp_rti';
-%nlp_solver_exact_hessian = 'false'
-nlp_solver_exact_hessian = 'true'
+%ocp_nlp_solver_exact_hessian = 'false';
+ocp_nlp_solver_exact_hessian = 'true';
 %regularize_method = 'no_regularize';
-regularize_method = 'project';
+%regularize_method = 'project';
+regularize_method = 'project_reduc_hess';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
 ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_hpipm';
-ocp_qp_solver_N_pcond = 5;
+ocp_qp_solver_cond_N = 5;
+ocp_qp_solver_cond_ric_alg = 0;
+ocp_qp_solver_ric_alg = 0;
 %ocp_sim_method = 'erk';
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
@@ -155,12 +169,16 @@ ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', ocp_param_scheme);
 ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', ocp_nlp_solver);
-ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
+ocp_opts.set('nlp_solver_exact_hessian', ocp_nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
-ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+if (strcmp(ocp_nlp_solver, 'sqp'))
+	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+end
 ocp_opts.set('qp_solver', ocp_qp_solver);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_N_pcond', ocp_qp_solver_N_pcond);
+	ocp_opts.set('qp_solver_cond_N', ocp_qp_solver_cond_N);
+	ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
+	ocp_opts.set('qp_solver_ric_alg', ocp_qp_solver_ric_alg);
 end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
@@ -236,8 +254,11 @@ u_sim = zeros(nu, n_sim);
 
 x_traj_init = repmat(model.x_ref, 1, ocp_N+1);
 u_traj_init = zeros(nu, ocp_N);
-ocp.set('init_x', x_traj_init);
-ocp.set('init_u', u_traj_init);
+pi_traj_init = zeros(nx, ocp_N);
+
+%ocp.set('init_x', x_traj_init);
+%ocp.set('init_u', u_traj_init);
+%ocp.set('init_pi', pi_traj_init);
 
 tic;
 
@@ -247,8 +268,9 @@ for ii=1:n_sim
 	ocp.set('constr_x0', x_sim(:,ii));
 
 	% set trajectory initialization (if not, set internally using previous solution)
-%	ocp.set('init_x', x_traj_init);
-%	ocp.set('init_u', u_traj_init);
+	ocp.set('init_x', x_traj_init);
+	ocp.set('init_u', u_traj_init);
+	ocp.set('init_pi', pi_traj_init);
 
 	% solve OCP
 	ocp.solve();
@@ -264,8 +286,16 @@ for ii=1:n_sim
 	end
 
 	% get solution
-	%x_traj = ocp.get('x');
-	%u_traj = ocp.get('u');
+	x_traj = ocp.get('x');
+	u_traj = ocp.get('u');
+	pi_traj = ocp.get('pi');
+
+	% shift trajectory for initialization
+	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
+	u_traj_init = [u_traj(:,2:end), u_traj(:,end)];
+	pi_traj_init = [pi_traj(:,2:end), pi_traj(:,end)];
+
+	% get solution for sim
 	u_sim(:,ii) = ocp.get('u', 0);
 
 	% set initial state of sim
@@ -301,6 +331,8 @@ else
 	fprintf('\nsolution failed!\n\n');
 end
 
+
+waitforbuttonpress;
 
 
 return;

@@ -35,12 +35,16 @@
 #include "acados/utils/print.h"
 #include "acados/utils/mem.h"
 
+
+
 static void update_gradient(const dense_qp_in *in, dense_qp_ooqp_memory *mem)
 {
     dense_qp_dims *dims = in->dim;
 
     blasfeo_unpack_dvec(dims->nv, in->gz, 0, &mem->c[0]);
 }
+
+
 
 static void update_hessian_data(const dense_qp_in *in, dense_qp_ooqp_memory *mem)
 {
@@ -53,12 +57,16 @@ static void update_hessian_data(const dense_qp_in *in, dense_qp_ooqp_memory *mem
     blasfeo_unpack_tran_dmat(dims->nv, dims->nv, in->Hv, 0, 0, mem->dQ, dims->nv);
 }
 
+
+
 static void update_b_vector(const dense_qp_in *in, dense_qp_ooqp_memory *mem)
 {
     dense_qp_dims *dims = in->dim;
 
     blasfeo_unpack_dvec(dims->ne, in->b, 0, mem->bA);
 }
+
+
 
 static void update_bounds(const dense_qp_in *in, dense_qp_ooqp_memory *mem)
 {
@@ -90,6 +98,8 @@ static void update_bounds(const dense_qp_in *in, dense_qp_ooqp_memory *mem)
     }
 }
 
+
+
 static void update_ineq_bounds(const dense_qp_in *in, dense_qp_ooqp_memory *mem)
 {
     dense_qp_dims *dims = in->dim;
@@ -103,12 +113,16 @@ static void update_ineq_bounds(const dense_qp_in *in, dense_qp_ooqp_memory *mem)
     }
 }
 
+
+
 static void update_inequalities_data(const dense_qp_in *in, dense_qp_ooqp_memory *mem)
 {
     dense_qp_dims *dims = in->dim;
 
     blasfeo_unpack_dmat(dims->nv, dims->ng, in->Ct, 0, 0, mem->dC, dims->nv);
 }
+
+
 
 static void dense_qp_ooqp_update_memory(const dense_qp_in *in, const dense_qp_ooqp_opts *opts,
                                         dense_qp_ooqp_memory *mem)
@@ -137,6 +151,8 @@ static void dense_qp_ooqp_update_memory(const dense_qp_in *in, const dense_qp_oo
 
     mem->firstRun = 0;
 }
+
+
 
 static void print_inputs(dense_qp_ooqp_memory *mem)
 {
@@ -188,6 +204,8 @@ static void print_inputs(dense_qp_ooqp_memory *mem)
     }
 }
 
+
+
 static void print_outputs(dense_qp_ooqp_memory *mem, dense_qp_ooqp_workspace *work,
                           int return_value)
 {
@@ -232,6 +250,8 @@ static void print_outputs(dense_qp_ooqp_memory *mem, dense_qp_ooqp_workspace *wo
     }
 }
 
+
+
 static void fill_in_qp_out(const dense_qp_in *in, dense_qp_out *out, dense_qp_ooqp_workspace *work)
 {
     int nb = in->dim->nb;
@@ -267,12 +287,16 @@ static void fill_in_qp_out(const dense_qp_in *in, dense_qp_out *out, dense_qp_oo
 
 }
 
+
+
 int dense_qp_ooqp_opts_calculate_size(void *config_, dense_qp_dims *dims)
 {
     int size = 0;
     size += sizeof(dense_qp_ooqp_opts);
     return size;
 }
+
+
 
 void *dense_qp_ooqp_opts_assign(void *config_, dense_qp_dims *dims, void *raw_memory)
 {
@@ -288,6 +312,8 @@ void *dense_qp_ooqp_opts_assign(void *config_, dense_qp_dims *dims, void *raw_me
     return (void *) opts;
 }
 
+
+
 void dense_qp_ooqp_opts_initialize_default(void *config_, dense_qp_dims *dims, void *opts_)
 {
     dense_qp_ooqp_opts *opts = (dense_qp_ooqp_opts *) opts_;
@@ -300,10 +326,49 @@ void dense_qp_ooqp_opts_initialize_default(void *config_, dense_qp_dims *dims, v
     return;
 }
 
+
+
 void dense_qp_ooqp_opts_update(void *config_, dense_qp_dims *dims, void *opts_)
 {
     return;
 }
+
+
+
+void dense_qp_ooqp_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    dense_qp_ooqp_opts *opts = opts_;
+
+    if (!strcmp(field, "tol_stat"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_eq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_ineq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_comp"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "warm_start"))
+    {
+		// TODO set solver warm start
+    }
+	else
+	{
+		printf("\nerror: dense_qp_ooqp_opts_set: wrong field: %s\n", field);
+		exit(1);
+	}
+
+	return;
+}
+
+
 
 int dense_qp_ooqp_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
@@ -332,6 +397,8 @@ int dense_qp_ooqp_memory_calculate_size(void *config_, dense_qp_dims *dims, void
 
     return size;
 }
+
+
 
 void *dense_qp_ooqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts_, void *raw_memory)
 {
@@ -383,6 +450,8 @@ void *dense_qp_ooqp_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     return mem;
 }
 
+
+
 int dense_qp_ooqp_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
     // dense_qp_ooqp_opts *opts = (dense_qp_ooqp_opts *)opts_;
@@ -399,6 +468,8 @@ int dense_qp_ooqp_workspace_calculate_size(void *config_, dense_qp_dims *dims, v
 
     return size;
 }
+
+
 
 static void dense_qp_ooqp_cast_workspace(dense_qp_ooqp_workspace *work, dense_qp_ooqp_memory *mem)
 {
@@ -420,6 +491,8 @@ static void dense_qp_ooqp_cast_workspace(dense_qp_ooqp_workspace *work, dense_qp
     work->pi = (double *)ptr;
     ptr += (mem->mz) * sizeof(double);
 }
+
+
 
 int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
                     void *memory_, void *work_)
@@ -486,11 +559,15 @@ int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, voi
     return acados_status;
 }
 
+
+
 void dense_qp_ooqp_destroy(void *mem_, void *work)
 {
     free(work);
     free(mem_);
 }
+
+
 
 void dense_qp_ooqp_config_initialize_default(void *config_)
 {
@@ -501,6 +578,7 @@ void dense_qp_ooqp_config_initialize_default(void *config_)
     config->opts_initialize_default =
         (void (*)(void *, void *, void *)) & dense_qp_ooqp_opts_initialize_default;
     config->opts_update = (void (*)(void *, void *, void *)) & dense_qp_ooqp_opts_update;
+    config->opts_set = &dense_qp_ooqp_opts_set;
     config->memory_calculate_size =
         (int (*)(void *, void *, void *)) & dense_qp_ooqp_memory_calculate_size;
     config->memory_assign =

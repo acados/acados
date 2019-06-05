@@ -105,7 +105,7 @@ if isfield(model, 'constr_expr_h_e')
 		h_e_fun_jac_ut_xt_hess = Function([model_name,'_constr_h_e_fun_jac_ut_xt_hess'], {x, lam_h_e, p}, {h_e, jac_x_e', hess_ux_e});
 	else
 		h_e_fun_jac_ut_xt = Function([model_name,'_constr_h_e_fun_jac_ut_xt'], {x}, {h_e, jac_x_e'});
-		h_e_fun_jac_ut_xt_hess = Function([model_name,'_constr_h_e_fun_jac_ut_xt_hess'], {x, lam_h}, {h_e, jac_x_e', hess_ux_e});
+		h_e_fun_jac_ut_xt_hess = Function([model_name,'_constr_h_e_fun_jac_ut_xt_hess'], {x, lam_h_e}, {h_e, jac_x_e', hess_ux_e});
 	end
 	% generate C code
 	h_e_fun_jac_ut_xt.generate([model_name,'_constr_h_e_fun_jac_ut_xt'], casadi_opts);

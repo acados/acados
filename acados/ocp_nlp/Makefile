@@ -21,6 +21,7 @@ OBJS += ocp_nlp_reg_common.o
 OBJS += ocp_nlp_reg_convexify.o
 OBJS += ocp_nlp_reg_mirror.o
 OBJS += ocp_nlp_reg_project.o
+OBJS += ocp_nlp_reg_project_reduc_hess.o
 OBJS += ocp_nlp_reg_noreg.o
 
 obj: $(OBJS)

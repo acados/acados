@@ -139,6 +139,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ocp_nlp_out_set(config, dims, out, ii, "u", init_u+ii*nu);
 			}
 		}
+	else if (!strcmp(field, "init_pi"))
+		{
+		double *init_pi = mxGetPr( prhs[5] );
+		for (ii=0; ii<N; ii++)
+			{
+			ocp_nlp_out_set(config, dims, out, ii, "pi", init_pi+ii*nx);
+			}
+		}
 	// TODO make setters for ALL numerical data
 	else if(!strcmp(field, "p"))
 		{

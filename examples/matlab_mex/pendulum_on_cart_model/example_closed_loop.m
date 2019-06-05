@@ -16,9 +16,14 @@ end
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
+% simulation
+sim_method = 'irk';
+sim_sens_forw = 'false';
+sim_num_stages = 4;
+sim_num_steps = 4;
+% ocp
 param_scheme = 'multiple_shooting_unif_grid';
-N = 100;
-
+ocp_N = 100;
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 %nlp_solver_exact_hessian = 'false';
@@ -29,20 +34,16 @@ regularize_method = 'project_reduc_hess';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
-nlp_solver_tol_stat = 1e-8;
-nlp_solver_tol_eq   = 1e-8;
-nlp_solver_tol_ineq = 1e-8;
-nlp_solver_tol_comp = 1e-8;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
-qp_solver_warm_start = 2;
-%sim_method = 'erk';
-sim_method = 'irk';
-sim_method_num_stages = 4;
-sim_method_num_steps = 3;
+qp_solver_warm_start = 0;
+ocp_sim_method = 'erk';
+%ocp_sim_method = 'irk';
+ocp_sim_method_num_stages = 4;
+ocp_sim_method_num_steps = 1;
 cost_type = 'linear_ls';
 %cost_type = 'ext_cost';
 
@@ -55,7 +56,7 @@ model = pendulum_on_cart_model;
 
 
 % dims
-T = N*h; % horizon length time
+T = ocp_N*h; % horizon length time
 nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
@@ -140,7 +141,7 @@ ocp_model.set('cost_type_e', cost_type);
 %	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 %end
 % dynamics
-if (strcmp(sim_method, 'erk'))
+if (strcmp(ocp_sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_expl);
 else % irk
@@ -182,27 +183,23 @@ ocp_opts = acados_ocp_opts();
 ocp_opts.set('compile_mex', compile_mex);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
-ocp_opts.set('param_scheme_N', N);
+ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
 if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
-	ocp_opts.set('nlp_solver_tol_stat', nlp_solver_tol_stat);
-	ocp_opts.set('nlp_solver_tol_eq', nlp_solver_tol_eq);
-	ocp_opts.set('nlp_solver_tol_ineq', nlp_solver_tol_ineq);
-	ocp_opts.set('nlp_solver_tol_comp', nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+	ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
 	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
+	ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 end
-ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
-ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
-ocp_opts.set('sim_method', sim_method);
-ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
-ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+ocp_opts.set('sim_method', ocp_sim_method);
+ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
+ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 
 ocp_opts.opts_struct
 
@@ -217,99 +214,148 @@ ocp.C_ocp_ext_fun
 
 
 
-% set trajectory initialization
-%x_traj_init = zeros(nx, N+1);
-%for ii=1:N x_traj_init(:,ii) = [0; pi; 0; 0]; end
-x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
-
-u_traj_init = zeros(nu, N);
-ocp.set('init_x', x_traj_init);
-ocp.set('init_u', u_traj_init);
-
-
-% solve
-tic;
-ocp.solve();
-time_ext = toc
-
-
-%x0(1) = 1.5;
-%ocp.set('constr_x0', x0);
-
-
-%ocp.set('cost_yr', 1);
-
-% if not set, the trajectory is initialized with the previous solution
-
-
-%tic;
-%ocp.solve();
-%time_ext = toc
-
-
-
-% get solution
-u = ocp.get('u');
-x = ocp.get('x');
-
-
-
-% statistics
-
-status = ocp.get('status');
-sqp_iter = ocp.get('sqp_iter');
-time_tot = ocp.get('time_tot');
-time_lin = ocp.get('time_lin');
-time_qp_sol = ocp.get('time_qp_sol');
-
-fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
-
-stat = ocp.get('stat');
-if (strcmp(nlp_solver, 'sqp'))
-	fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_iter\n');
-	for ii=1:size(stat,1)
-		fprintf('%d\t%e\t%e\t%e\t%e\t%d\n', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6));
-	end
-	fprintf('\n');
-else % sqp_rti
-	fprintf('\niter\tqp_iter\n');
-	for ii=1:size(stat,1)
-		fprintf('%d\t%d\n', stat(ii,1), stat(ii,2));
-	end
-	fprintf('\n');
+%% acados sim model
+sim_model = acados_sim_model();
+% dims
+sim_model.set('dim_nx', nx);
+sim_model.set('dim_nu', nu);
+% symbolics
+sim_model.set('sym_x', model.sym_x);
+if isfield(model, 'sym_u')
+	sim_model.set('sym_u', model.sym_u);
 end
+if isfield(model, 'sym_xdot')
+	sim_model.set('sym_xdot', model.sym_xdot);
+end
+% model
+sim_model.set('T', T/ocp_N);
+if (strcmp(sim_method, 'erk'))
+	sim_model.set('dyn_type', 'explicit');
+	sim_model.set('dyn_expr_f', model.expr_f_expl);
+else % irk
+	sim_model.set('dyn_type', 'implicit');
+	sim_model.set('dyn_expr_f', model.expr_f_impl);
+end
+
+%sim_model.model_struct
+
+
+
+%% acados sim opts
+sim_opts = acados_sim_opts();
+sim_opts.set('compile_mex', compile_mex);
+sim_opts.set('codgen_model', codgen_model);
+sim_opts.set('num_stages', sim_num_stages);
+sim_opts.set('num_steps', sim_num_steps);
+sim_opts.set('method', sim_method);
+sim_opts.set('sens_forw', sim_sens_forw);
+
+%sim_opts.opts_struct
+
+
+
+%% acados sim
+% create sim
+sim = acados_sim(sim_model, sim_opts);
+%sim
+%sim.C_sim
+%sim.C_sim_ext_fun
+
+
+
+%% closed loop simulation
+n_sim = 200;
+x_sim = zeros(nx, n_sim+1);
+x_sim(:,1) = x0; % initial state
+u_sim = zeros(nu, n_sim);
+
+% set trajectory initialization
+%x_traj_init = zeros(nx, ocp_N+1);
+%for ii=1:ocp_N x_traj_init(:,ii) = [0; pi; 0; 0]; end
+x_traj_init = [linspace(0, 0, ocp_N+1); linspace(pi, 0, ocp_N+1); linspace(0, 0, ocp_N+1); linspace(0, 0, ocp_N+1)];
+
+u_traj_init = zeros(nu, ocp_N);
+pi_traj_init = zeros(nx, ocp_N);
+
+
+
+tic;
+
+for ii=1:n_sim
+
+	% set x0
+	ocp.set('constr_x0', x_sim(:,ii));
+
+	% set trajectory initialization (if not, set internally using previous solution)
+	ocp.set('init_x', x_traj_init);
+	ocp.set('init_u', u_traj_init);
+	ocp.set('init_pi', pi_traj_init);
+
+	% solve OCP
+	ocp.solve();
+
+	if 1
+		status = ocp.get('status');
+		sqp_iter = ocp.get('sqp_iter');
+		time_tot = ocp.get('time_tot');
+		time_lin = ocp.get('time_lin');
+		time_qp_sol = ocp.get('time_qp_sol');
+
+		fprintf('\nstatus = %d, sqp_iter = %d, time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+	end
+
+	% get solution for initialization of next NLP
+	x_traj = ocp.get('x');
+	u_traj = ocp.get('u');
+	pi_traj = ocp.get('pi');
+
+	% shift trajectory for initialization
+	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
+	u_traj_init = [u_traj(:,2:end), u_traj(:,end)];
+	pi_traj_init = [pi_traj(:,2:end), pi_traj(:,end)];
+
+	% get solution for sim
+	u_sim(:,ii) = ocp.get('u', 0);
+
+	% set initial state of sim
+	sim.set('x', x_sim(:,ii));
+	% set input in sim
+	sim.set('u', u_sim(:,ii));
+
+	% simulate state
+	sim.solve();
+
+	% get new state
+	x_sim(:,ii+1) = sim.get('xn');
+
+end
+
+avg_time_solve = toc/n_sim
+
 
 
 % figures
 
-for ii=1:N+1
-	x_cur = x(:,ii);
+for ii=1:n_sim+1
+	x_cur = x_sim(:,ii);
 	visualize;
 end
 
+
+
 figure(2);
 subplot(2,1,1);
-plot(0:N, x);
-xlim([0 N]);
+plot(0:n_sim, x_sim);
+xlim([0 n_sim]);
 legend('p', 'theta', 'v', 'omega');
 subplot(2,1,2);
-plot(0:N-1, u);
-xlim([0 N]);
+plot(0:n_sim-1, u_sim);
+xlim([0 n_sim]);
 legend('F');
 
-if (strcmp(nlp_solver, 'sqp'))
-	figure(3);
-	plot([0: sqp_iter], log10(stat(:,2)), 'r-x');
-	hold on
-	plot([0: sqp_iter], log10(stat(:,3)), 'b-x');
-	plot([0: sqp_iter], log10(stat(:,4)), 'g-x');
-	plot([0: sqp_iter], log10(stat(:,5)), 'k-x');
-	hold off
-	xlabel('iter')
-	ylabel('res')
-end
 
 
+status = ocp.get('status');
 
 if status==0
 	fprintf('\nsuccess!\n\n');
@@ -322,4 +368,5 @@ waitforbuttonpress;
 
 
 return;
+
 

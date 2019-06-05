@@ -37,6 +37,7 @@
 #include "acados/ocp_nlp/ocp_nlp_reg_convexify.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_mirror.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_project.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
@@ -197,6 +198,9 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             break;
         case PROJECT:
             ocp_nlp_reg_project_config_initialize_default(config->regularize);
+            break;
+        case PROJECT_REDUC_HESS:
+            ocp_nlp_reg_project_reduc_hess_config_initialize_default(config->regularize);
             break;
         case CONVEXIFY:
             ocp_nlp_reg_convexify_config_initialize_default(config->regularize);
@@ -453,6 +457,11 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_pack_dvec(dims->nu[stage], double_values, &out->ux[stage], 0);
     }
+    else if (!strcmp(field, "pi"))
+    {
+        double *double_values = value;
+        blasfeo_pack_dvec(dims->nx[stage+1], double_values, &out->pi[stage], 0);
+    }
     else
     {
         printf("\nerror: ocp_nlp_out_set: field %s not available\n", field);
@@ -474,6 +483,11 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     {
         double *double_values = value;
         blasfeo_unpack_dvec(dims->nu[stage], &out->ux[stage], 0, double_values);
+    }
+    else if (!strcmp(field, "pi"))
+    {
+        double *double_values = value;
+        blasfeo_unpack_dvec(dims->nx[stage+1], &out->pi[stage], 0, double_values);
     }
     else
     {
@@ -520,8 +534,7 @@ void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
 
 
-void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
-		const char *field, void *value)
+void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void *value)
 {
     config->opts_set(config, opts_, field, value);
 }

@@ -1886,10 +1886,10 @@ int main() {
 
 
     nlp_opts->max_iter = MAX_SQP_ITERS;
-    nlp_opts->min_res_g = 1e-9;
-    nlp_opts->min_res_b = 1e-9;
-    nlp_opts->min_res_d = 1e-9;
-    nlp_opts->min_res_m = 1e-9;
+    nlp_opts->tol_stat = 1e-9;
+    nlp_opts->tol_eq = 1e-9;
+    nlp_opts->tol_ineq = 1e-9;
+    nlp_opts->tol_comp = 1e-9;
 
 	// update after user-defined options
 	ocp_nlp_sqp_opts_update(config, dims, nlp_opts);
