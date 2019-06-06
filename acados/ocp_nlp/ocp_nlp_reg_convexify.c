@@ -138,7 +138,7 @@ int ocp_nlp_reg_convexify_calculate_memory_size(void *config_, ocp_nlp_reg_dims 
     size += 2*nuxM*sizeof(double);      // d e
     size += nuxM*nuxM*sizeof(double);   // reg_hess
 
-    size += (N+1)*sizeof(struct blasfeo_dmat); // original_RSQrq
+    size += 2*(N+1)*sizeof(struct blasfeo_dmat); // original_RSQrq tmp_RSQrq
 
     size += 1 * 64;
 
@@ -152,7 +152,7 @@ int ocp_nlp_reg_convexify_calculate_memory_size(void *config_, ocp_nlp_reg_dims 
 
     for (ii=0; ii<=N; ii++)
     {
-        size += blasfeo_memsize_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]); // original_RSQrq
+        size += 2*blasfeo_memsize_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]); // original_RSQrq tmp_RSQrq
     }
 
 //    size += 2*blasfeo_memsize_dvec(nxM); // grad b2
@@ -227,6 +227,9 @@ void *ocp_nlp_reg_convexify_assign_memory(void *config_, ocp_nlp_reg_dims *dims,
     mem->original_RSQrq = (struct blasfeo_dmat *) c_ptr;
     c_ptr += (N+1)*sizeof(struct blasfeo_dmat);
 
+    mem->tmp_RSQrq = (struct blasfeo_dmat *) c_ptr;
+    c_ptr += (N+1)*sizeof(struct blasfeo_dmat);
+
     mem->RSQrq = (struct blasfeo_dmat **) c_ptr;
     c_ptr += (N+1)*sizeof(struct blasfeo_dmat *);
 
@@ -264,9 +267,10 @@ void *ocp_nlp_reg_convexify_assign_memory(void *config_, ocp_nlp_reg_dims *dims,
     assign_and_advance_blasfeo_dmat_mem(nxM, nuM, &mem->St_copy, &c_ptr);
 
     for (ii=0; ii<=N; ii++)
-    {
         assign_and_advance_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &mem->original_RSQrq[ii], &c_ptr);
-    }
+
+    for (ii=0; ii<=N; ii++)
+        assign_and_advance_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &mem->tmp_RSQrq[ii], &c_ptr);
 
     assign_and_advance_blasfeo_dvec_mem(nuxM, &mem->tmp_nuxM, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nbgM, &mem->tmp_nbgM, &c_ptr);
@@ -557,6 +561,7 @@ void ocp_nlp_reg_convexify_regularize_hessian(void *config, ocp_nlp_reg_dims *di
     double delta = opts->delta;
 
     // Algorithm 6 from Verschueren2017
+
 	blasfeo_drowin(nu[N]+nx[N], 1.0, mem->rq[N], 0, mem->RSQrq[N], nu[N]+nx[N], 0);
 
     blasfeo_dgecp(nu[N]+nx[N]+1, nu[N]+nx[N], mem->RSQrq[N], 0, 0, &mem->original_RSQrq[N], 0, 0);
@@ -610,10 +615,19 @@ void ocp_nlp_reg_convexify_regularize_hessian(void *config, ocp_nlp_reg_dims *di
 
         if (needs_regularization)
         {
+			blasfeo_dgecp(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, &mem->tmp_RSQrq[ii], 0, 0);
 			// TODO project only nu instead ???????????
+			// TODO compute correction as a separate matrix, and apply to original_RSQrq too (TODO change this name then)
             blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]+nx[ii]);
-            acados_mirror(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
+//            acados_mirror(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
+            acados_project(nu[ii]+nx[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
             blasfeo_pack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], mem->reg_hess, nu[ii]+nx[ii], mem->RSQrq[ii], 0, 0);
+//            blasfeo_unpack_dmat(nu[ii], nu[ii], mem->RSQrq[ii], 0, 0, mem->reg_hess, nu[ii]);
+//            acados_mirror(nu[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
+//            acados_project(nu[ii], mem->reg_hess, mem->V, mem->d, mem->e, 1e-4);
+//            blasfeo_pack_dmat(nu[ii], nu[ii], mem->reg_hess, nu[ii], mem->RSQrq[ii], 0, 0);
+			blasfeo_dgead(nu[ii]+nx[ii], nu[ii]+nx[ii], -1.0, mem->RSQrq[ii], 0, 0, &mem->tmp_RSQrq[ii], 0, 0);
+			blasfeo_dgead(nu[ii]+nx[ii], nu[ii]+nx[ii], -1.0, &mem->tmp_RSQrq[ii], 0, 0, &mem->original_RSQrq[ii], 0, 0);
         }
 
         // printf("QSR_hat\n");
