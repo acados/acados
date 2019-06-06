@@ -55,6 +55,7 @@ void ocp_nlp_reg_project_reduc_hess_opts_initialize_default(void *config_, ocp_n
 {
     ocp_nlp_reg_project_reduc_hess_opts *opts = opts_;
 
+    opts->thr_eig = 1e-12;
     opts->min_eig = 1e-4;
     opts->min_pivot = 1e-12;
 	opts->pivoting = 1;
@@ -69,7 +70,12 @@ void ocp_nlp_reg_project_reduc_hess_opts_set(void *config_, ocp_nlp_reg_dims *di
 
     ocp_nlp_reg_project_reduc_hess_opts *opts = opts_;
 
-    if (!strcmp(field, "min_eig"))
+    if (!strcmp(field, "thr_eig"))
+    {
+        double *d_ptr = value;
+        opts->thr_eig = *d_ptr;
+    }
+    else if (!strcmp(field, "min_eig"))
     {
         double *d_ptr = value;
         opts->min_eig = *d_ptr;
@@ -361,7 +367,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 		do_reg = 0;
 		for(jj=0; jj<nu[ss]; jj++)
 		{
-			if(mem->d[jj]<opts->min_eig)
+			if(mem->d[jj]<opts->thr_eig)
 			{
 				mem->e[jj] = opts->min_eig - mem->d[jj];
 				do_reg = 1;
@@ -477,7 +483,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 	acados_eigen_decomposition(nu[ss]+nx[ss], mem->reg_hess, mem->V, mem->d, mem->e);
 	for(jj=0; jj<nu[ss]+nx[ss]; jj++)
 	{
-		if(mem->d[jj]<opts->min_eig)
+		if(mem->d[jj]<opts->thr_eig)
 			mem->e[jj] = opts->min_eig - mem->d[jj];
 		else
 			mem->e[jj] = 0.0;

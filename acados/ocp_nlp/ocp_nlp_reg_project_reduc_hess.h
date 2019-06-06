@@ -51,6 +51,7 @@ extern "C" {
 
 typedef struct
 {
+    double thr_eig;
     double min_eig;
     double min_pivot;
 	int pivoting;
