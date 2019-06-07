@@ -89,7 +89,7 @@ static void mdlInitializeSizes (SimStruct *S)
 
     // specify dimension information for the input ports 
     ssSetInputPortVectorDimension(S, 0, {{ ocp.dims.nx }});
-    ssSetInputPortVectorDimension(S, 1, {{ ocp.dims.ny }});
+    ssSetInputPortVectorDimension(S, 1, {{ ocp.dims.ny * ocp.dims.N }});
     ssSetInputPortVectorDimension(S, 2, {{ ocp.dims.ny_e }});
     {% if ocp.dims.np > 0 %}
     ssSetInputPortVectorDimension(S, 3, {{ ocp.dims.np }});
@@ -97,10 +97,10 @@ static void mdlInitializeSizes (SimStruct *S)
 
     // specify dimension information for the output ports 
     ssSetOutputPortVectorDimension(S, 0, {{ ocp.dims.nu }} ); // optimal input
-    ssSetOutputPortVectorDimension(S, 1, 1 );                // solver status
-    ssSetOutputPortVectorDimension(S, 2, 1 );                // KKT residuals
+    ssSetOutputPortVectorDimension(S, 1, 1 );                 // solver status
+    ssSetOutputPortVectorDimension(S, 2, 1 );                 // KKT residuals
     ssSetOutputPortVectorDimension(S, 3, {{ ocp.dims.nx }} ); // first state
-    ssSetOutputPortVectorDimension(S, 4, 1); // computation times
+    ssSetOutputPortVectorDimension(S, 4, 1);                  // computation times
 
     // specify the direct feedthrough status 
     ssSetInputPortDirectFeedThrough(S, 0, 1); // current state x0
@@ -159,7 +159,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     
     // local buffers
     real_t in_x0[{{ ocp.dims.nx }}];
-    real_t in_y_ref[{{ ocp.dims.ny }}];
+    real_t in_y_ref[{{ ocp.dims.ny * ocp.dims.N}}];
     real_t in_y_ref_e[{{ ocp.dims.ny_e }}];
     {% if ocp.dims.np > 0 %}
     real_t in_p[{{ ocp.dims.np }}];
@@ -174,7 +174,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     // copy signals into local buffers
     for (int i = 0; i < {{ ocp.dims.nx }}; i++) in_x0[i] = (double)(*in_x0_sign[i]);
-    for (int i = 0; i < {{ ocp.dims.ny }}; i++) in_y_ref[i] = (double)(*in_y_ref_sign[i]);
+    for (int i = 0; i < {{ ocp.dims.ny * ocp.dims.N }}; i++) in_y_ref[i] = (double)(*in_y_ref_sign[i]);
     for (int i = 0; i < {{ ocp.dims.ny_e }}; i++) in_y_ref_e[i] = (double)(*in_y_ref_e_sign[i]);
     {% if ocp.dims.np > 0 %}
     for (int i = 0; i < {{ ocp.dims.np }}; i++) in_p[i] = (double)(*in_p_sign[i]);
@@ -188,10 +188,12 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", in_x0);
 
     // update reference
-    for (int ii = 0; ii < {{ocp.dims.N}}; ii++)
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) in_y_ref);
+    for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, 
+                nlp_in, ii, "yref", (void *) (in_y_ref + ii*{{ ocp.dims.ny }});
 
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ocp.dims.N}}, "yref", (void *) in_y_ref_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 
+        {{ ocp.dims.N }}, "yref", (void *) in_y_ref_e);
 
     // update value of parameters
     {% if ocp.dims.np > 0%}
