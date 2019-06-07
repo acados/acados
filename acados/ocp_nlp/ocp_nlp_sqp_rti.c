@@ -1100,6 +1100,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     double total_time = 0.0;
     mem->time_qp_sol = 0.0;
     mem->time_lin = 0.0;
+    mem->time_reg = 0.0;
     mem->time_tot = 0.0;
 
     // extract dims
@@ -1108,6 +1109,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     int ii;
 
 	int qp_iter = 0;
+	int qp_status = 0;
 
 #if defined(ACADOS_WITH_OPENMP)
     // backup number of threads
@@ -1212,8 +1214,12 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 	// save statistics
 	mem->stat[mem->stat_n*1+0] = qp_iter;
 
+	// start timer
+	acados_tic(&timer1);
     // regularize Hessian
     config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
+	// stop timer
+	mem->time_reg += acados_toc(&timer1);
 
     // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
     // print_ocp_qp_in(work->qp_in);
@@ -1225,16 +1231,17 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // start timer
     acados_tic(&timer1);
-
 	// TODO move qp_out in memory !!!!! (it has to be preserved to do warm start)
-    int qp_status = qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts,
-    		mem->qp_solver_mem, work->qp_work);
-
+    qp_status = qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
     // stop timer
     mem->time_qp_sol += acados_toc(&timer1);
 
+	// start timer
+	acados_tic(&timer1);
     // compute correct dual solution in case of Hessian regularization
     config->regularize->correct_dual_sol(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
+	// stop timer
+	mem->time_reg += acados_toc(&timer1);
 
 	// TODO move into QP solver memory ???
 	nlp_out->qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
@@ -1375,6 +1382,11 @@ void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *ret
     {
         double *value = return_value_;
         *value = mem->time_lin;
+    }
+    else if (!strcmp("time_reg", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_reg;
     }
     else if (!strcmp("stat", field))
     {

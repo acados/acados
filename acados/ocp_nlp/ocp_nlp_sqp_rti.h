@@ -91,6 +91,7 @@ typedef struct
 
     double time_qp_sol;
     double time_lin;
+    double time_reg;
     double time_tot;
 
 	double *stat;
