@@ -33,8 +33,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 ### Defaults
 
 set(ACADOS_INSTALL_DIR "/usr/local" CACHE STRING  "Installation path to /usr/local")
-set(BLASFEO_TARGET "GENERIC" CACHE STRING "BLASFEO Target architecture")
-set(HPIPM_TARGET "GENERIC" CACHE STRING "HPIPM Target architecture")
+set(BLASFEO_TARGET "X64_INTEL_HASWELL" CACHE STRING "BLASFEO Target architecture")
+set(HPIPM_TARGET "AVX" CACHE STRING "HPIPM Target architecture")
 set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
 
 # Additional targets
@@ -42,7 +42,7 @@ option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
 option(ACADOS_EXAMPLES "Compile Examples" OFF)
 option(ACADOS_LINT "Compile Lint" OFF)
 # Extarnal libs
-option(ACADOS_WITH_QPOASES  "qpOASES solver" ON)
+option(ACADOS_WITH_QPOASES  "qpOASES solver" OFF)
 option(ACADOS_WITH_HPMPC "HPMPC solver" OFF)
 option(ACADOS_WITH_QORE "QORE solver" OFF)
 option(ACADOS_WITH_OOQP "OOQP solver" OFF)
@@ -107,7 +107,7 @@ endif()
 
 if(ACADOS_WITH_HPMPC MATCHES ON AND CMAKE_C_COMPILER_ID MATCHES "MSVC")
 	set(ACADOS_WITH_HPMPC OFF CACHE BOOL "HPMPC solver" FORCE)
-	message(WARNING "HPMPC is not compatible with MSVC")
+	message(WARNING "HPMPC has been disabled, not compatible with ${CMAKE_C_COMPILER_ID}")
 endif()
 
 if(ACADOS_WITH_OOQP MATCHES ON)

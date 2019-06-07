@@ -12,11 +12,16 @@ function build_acados {
 		ACADOS_LINT='OFF';
 	fi
 
+	if [ "${ACADOS_UNIT_TESTS}" = 'ON' ]; then
+		ACADOS_WITH_QPOASES='ON';
+	fi
+
 	[ -d ./build ] && rm -r build;
 	cmake -E make_directory build;
 	cmake -E chdir build cmake \
 			-D CMAKE_BUILD_TYPE="${BUILD_TYPE}" \
 			-D ACADOS_UNIT_TESTS="${ACADOS_UNIT_TESTS}" \
+			-D ACADOS_WITH_QPOASES="${ACADOS_WITH_QPOASES}" \
 			-D ACADOS_LINT="${ACADOS_LINT}" \
 			-D ACADOS_INSTALL_DIR="${ACADOS_INSTALL_DIR}" \
 			-D Matlab_ROOT_DIR="${MATLAB_ROOT}" \
