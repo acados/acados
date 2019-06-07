@@ -156,7 +156,7 @@ void ocp_nlp_cost_nls_dims_get(void *config_, void *dims_, const char *field, in
     }
     else
     {
-        printf("error: attempt to get dimension from constraint model, that is not there");
+        printf("error: ocp_nlp_cost_nls_dims_get: attempt to get dimensions of non-existing field %s\n", field);
         exit(1);
     }
 }
