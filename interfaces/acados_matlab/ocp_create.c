@@ -911,6 +911,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
 		}
+	else if(!strcmp(qp_solver, "full_condensing_qpoases"))
+		{
+		plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+		}
 	else
 		{
 		mexPrintf("\nqp_solver not supported: %s\n", qp_solver);
