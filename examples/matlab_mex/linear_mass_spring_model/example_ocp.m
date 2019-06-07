@@ -291,6 +291,37 @@ time_qp_sol = ocp.get('time_qp_sol');
 
 fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
 
+stat = ocp.get('stat');
+if (strcmp(nlp_solver, 'sqp'))
+	fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_iter');
+	if size(stat,2)>6
+		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
+	end
+	fprintf('\n');
+	for ii=1:size(stat,1)
+		fprintf('%d\t%e\t%e\t%e\t%e\t%d', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6));
+		if size(stat,2)>6
+			fprintf('\t%e\t%e\t%e\t%e', stat(ii,7), stat(ii,8), stat(ii,9), stat(ii,10));
+		end
+		fprintf('\n');
+	end
+	fprintf('\n');
+else % sqp_rti
+	fprintf('\niter\tqp_iter');
+	if size(stat,2)>2
+		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
+	end
+	fprintf('\n');
+	for ii=1:size(stat,1)
+		fprintf('%d\t%d', stat(ii,1), stat(ii,2));
+		if size(stat,2)>2
+			fprintf('\t%e\t%e\t%e\t%e', stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6));
+		end
+		fprintf('\n');
+	end
+	fprintf('\n');
+end
+
 
 
 if status==0

@@ -179,6 +179,8 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
     opts->num_threads = ACADOS_NUM_THREADS;
 #endif
 
+	opts->ext_qp_res = 0;
+
     // submodules opts
 
     // do not compute adjoint in dynamics and constraints
@@ -309,6 +311,11 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, voi
 //			for (ii=0; ii<=N; ii++)
 //				config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
 		}
+		else if (!strcmp(field, "ext_qp_res"))
+		{
+			int* ext_qp_res = (int *) value;
+			opts->ext_qp_res = *ext_qp_res;
+		}
 		else
 		{
 			printf("\nerror: ocp_nlp_sqp_rti_opts_set: wrong field: %s\n", field);
@@ -422,7 +429,11 @@ int ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts
     size += ocp_nlp_memory_calculate_size(config, dims);
 
 	// stat
-	size += 1*2*sizeof(double);
+	int stat_m = 1+1;
+	int stat_n = 1;
+	if(opts->ext_qp_res)
+		stat_n += 4;
+	size += stat_n*stat_m*sizeof(double);
 
     size += 8;  // initial align
 
@@ -503,8 +514,10 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, voi
 
 	// stat
 	mem->stat = (double *) c_ptr;
-	mem->stat_m = 2;
+	mem->stat_m = 1+1;
 	mem->stat_n = 1;
+	if(opts->ext_qp_res)
+		mem->stat_n += 4;
 	c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
     mem->status = ACADOS_READY;
@@ -557,6 +570,15 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
 
     // qp out
     size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
+
+	if(opts->ext_qp_res)
+	{
+		// qp res
+		size += ocp_qp_res_calculate_size(dims->qp_solver);
+
+		// qp res ws
+		size += ocp_qp_res_workspace_calculate_size(dims->qp_solver);
+	}
 
     if (opts->reuse_workspace)
     {
@@ -694,6 +716,17 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
     // qp out
     work->qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
+
+	if(opts->ext_qp_res)
+	{
+		// qp res
+		work->qp_res = ocp_qp_res_assign(dims->qp_solver, c_ptr);
+		c_ptr += ocp_qp_res_calculate_size(dims->qp_solver);
+
+		// qp res ws
+		work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver, c_ptr);
+		c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver);
+	}
 
     if (opts->reuse_workspace)
     {
@@ -1207,6 +1240,14 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 	nlp_out->qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
 	qp_iter = ((ocp_qp_info *) work->qp_out->misc)->num_iter;
 
+	// compute external QP residuals (for debugging)
+	if(opts->ext_qp_res)
+	{
+		ocp_qp_res_compute(work->qp_in, work->qp_out, work->qp_res, work->qp_res_ws);
+		ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*1+1));
+//		printf("\nsqp_iter %d, res %e %e %e %e\n", sqp_iter, inf_norm_qp_res[0], inf_norm_qp_res[1], inf_norm_qp_res[2], inf_norm_qp_res[3]);
+	}
+
     // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
     //  print_ocp_qp_out(work->qp_out);
     //  if(sqp_iter==1)
@@ -1259,6 +1300,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 }
 
 
+
 int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
@@ -1301,6 +1343,7 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
 
     return status;
 }
+
 
 
 void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *return_value_)

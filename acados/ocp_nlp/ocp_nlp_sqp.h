@@ -57,6 +57,7 @@ typedef struct
     int max_iter;
     int reuse_workspace;
     int num_threads;
+	int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
 	int qp_warm_start;
 } ocp_nlp_sqp_opts;
 
@@ -72,6 +73,8 @@ void ocp_nlp_sqp_opts_update(void *config, void *dims, void *opts);
 void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
 void ocp_nlp_sqp_dyanimcs_opts_set(void *config, void *opts, int stage, const char *field, void *value);
+
+
 
 /************************************************
  * memory
