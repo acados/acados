@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ "${SECTION}" = 'before_install' ]; then
+	# export GENERIC target for osx
+	export BLASFEO_TARGET=GENERIC
+	export HPIPM_TARGET=GENERIC
+fi
+
 if [ "${SECTION}" = 'install' ]; then
 	source "${SCRIPT_DIR}/install_ccache.sh";
 	source "${SHARED_SCRIPT_DIR}/install_eigen.sh";

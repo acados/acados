@@ -1,6 +1,8 @@
 language: c
 env:
   global:
+    - BLASFEO_TARGET=X64_INTEL_HASWELL
+    - HPIPM_TARGET=AVX
     - CASADIPATH="${HOME}/casadi"
     - ACADOS_INSTALL_DIR="${HOME}/acados"
     - DEPLOY_FOLDER="${HOME}/deploy"

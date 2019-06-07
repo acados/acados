@@ -9,7 +9,7 @@ install:
 build_script:
   - git submodule update --init --recursive
   - cmake -E make_directory build
-  - cmake -E chdir build cmake ..
+  - cmake -E chdir build cmake -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC ..
   - cmake --build build --config Debug
   - cmake -E chdir build ctest --output-on-failure
   - cmake --build build --config Release
@@ -17,5 +17,5 @@ build_script:
   - rm -fr build
   - cmake -E make_directory build
   - cmake -E make_directory appveyor-artifacts
-  - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\appveyor-artifacts ..
+  - cmake -E chdir build cmake -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\appveyor-artifacts ..
   - cmake --build build --target install
