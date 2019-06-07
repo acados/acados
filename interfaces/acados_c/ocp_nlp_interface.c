@@ -510,7 +510,7 @@ int ocp_nlp_dims_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     }
     else if (!strcmp(field, "u"))
     {
-        return dims->nx[stage];
+        return dims->nu[stage];
     }
     // ocp_nlp_constraints_dims
     else if (!strcmp(field, "lbx") || !strcmp(field, "ubx"))
