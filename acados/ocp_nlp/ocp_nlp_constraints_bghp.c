@@ -266,6 +266,22 @@ static void ocp_nlp_constraints_bghp_get_nb(void *config_, void *dims_, int* val
 
 
 
+static void ocp_nlp_constraints_bgh_get_nbx(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nbx;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_get_nbu(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nbu;
+}
+
+
+
 static void ocp_nlp_constraints_bghp_get_ng(void *config_, void *dims_, int* value)
 {
     ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
