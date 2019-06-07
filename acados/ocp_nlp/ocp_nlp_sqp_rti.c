@@ -430,7 +430,7 @@ int ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts
 
 	// stat
 	int stat_m = 1+1;
-	int stat_n = 1;
+	int stat_n = 2;
 	if(opts->ext_qp_res)
 		stat_n += 4;
 	size += stat_n*stat_m*sizeof(double);
@@ -515,7 +515,7 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, voi
 	// stat
 	mem->stat = (double *) c_ptr;
 	mem->stat_m = 1+1;
-	mem->stat_n = 1;
+	mem->stat_n = 2;
 	if(opts->ext_qp_res)
 		mem->stat_n += 4;
 	c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
@@ -1212,7 +1212,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
 
 	// save statistics
-	mem->stat[mem->stat_n*1+0] = qp_iter;
+//	mem->stat[mem->stat_n*1+0] = qp_status;
+//	mem->stat[mem->stat_n*1+1] = qp_iter;
 
 	// start timer
 	acados_tic(&timer1);
@@ -1251,7 +1252,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 	if(opts->ext_qp_res)
 	{
 		ocp_qp_res_compute(work->qp_in, work->qp_out, work->qp_res, work->qp_res_ws);
-		ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*1+1));
+		ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*1+2));
 //		printf("\nsqp_iter %d, res %e %e %e %e\n", sqp_iter, inf_norm_qp_res[0], inf_norm_qp_res[1], inf_norm_qp_res[2], inf_norm_qp_res[3]);
 	}
 
@@ -1261,9 +1262,10 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     //  exit(1);
 
 	// save statistics
-	mem->stat[mem->stat_n*1+0] = qp_iter;
+	mem->stat[mem->stat_n*1+0] = qp_status;
+	mem->stat[mem->stat_n*1+1] = qp_iter;
 
-    if (qp_status != 0)
+	if (qp_status!=ACADOS_SUCCESS & qp_status!=ACADOS_MAXITER)
     {
         //   print_ocp_qp_in(work->qp_in);
 

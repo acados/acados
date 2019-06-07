@@ -480,7 +480,7 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
 
 	// stat
 	int stat_m = opts->max_iter+1;
-	int stat_n = 5;
+	int stat_n = 6;
 	if(opts->ext_qp_res)
 		stat_n += 4;
 	size += stat_n*stat_m*sizeof(double);
@@ -569,7 +569,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 	// stat
 	mem->stat = (double *) c_ptr;
 	mem->stat_m = opts->max_iter+1;
-	mem->stat_n = 5;
+	mem->stat_n = 6;
 	if(opts->ext_qp_res)
 		mem->stat_n += 4;
 	c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
@@ -1290,7 +1290,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 			mem->stat[mem->stat_n*sqp_iter+1] = mem->nlp_res->inf_norm_res_b;
 			mem->stat[mem->stat_n*sqp_iter+2] = mem->nlp_res->inf_norm_res_d;
 			mem->stat[mem->stat_n*sqp_iter+3] = mem->nlp_res->inf_norm_res_m;
-			mem->stat[mem->stat_n*sqp_iter+4] = qp_iter;
+			mem->stat[mem->stat_n*sqp_iter+4] = qp_status;
+			mem->stat[mem->stat_n*sqp_iter+5] = qp_iter;
 		}
 
         // exit conditions on residuals
@@ -1369,7 +1370,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 		if(opts->ext_qp_res)
 		{
 			ocp_qp_res_compute(work->qp_in, work->qp_out, work->qp_res, work->qp_res_ws);
-			ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+5));
+			ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+6));
 //			printf("\nsqp_iter %d, res %e %e %e %e\n", sqp_iter, inf_norm_qp_res[0], inf_norm_qp_res[1], inf_norm_qp_res[2], inf_norm_qp_res[3]);
 		}
 
@@ -1379,7 +1380,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 //        exit(1);
 
 
-        if (qp_status != 0)
+        if (qp_status!=ACADOS_SUCCESS & qp_status!=ACADOS_MAXITER)
         {
             //   print_ocp_qp_in(work->qp_in);
 
