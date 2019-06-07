@@ -503,6 +503,7 @@ int ocp_nlp_dims_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 {
     int dims_value = -1;
 
+    // ocp_nlp_dims
     if (!strcmp(field, "x"))
     {
         return dims->nx[stage];
@@ -511,6 +512,7 @@ int ocp_nlp_dims_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     {
         return dims->nx[stage];
     }
+    // ocp_nlp_constraints_dims
     else if (!strcmp(field, "lbx") || !strcmp(field, "ubx"))
     {
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
@@ -521,6 +523,13 @@ int ocp_nlp_dims_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     {
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
                                             "nbu", &dims_value);
+        return dims_value;
+    }
+    // ocp_nlp_cost_dims
+    else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
+    {
+        config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
+                                            "ny", &dims_value);
         return dims_value;
     }
     else

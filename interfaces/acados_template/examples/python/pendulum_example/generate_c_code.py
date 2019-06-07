@@ -94,11 +94,6 @@ ra.solver_config.nlp_solver_type = 'SQP'
 ra.acados_include_path  = '/usr/local/include'
 ra.acados_lib_path      = '/usr/local/lib'
 
-# json_layout = acados_ocp2json_layout(ra)
-# with open('acados_layout.json', 'w') as f:
-#     json.dump(json_layout, f, default=np_array_to_list)
-# exit()
-
 acados_solver = generate_solver(model, ra, json_file = 'acados_ocp.json')
 
 Nsim = 100
@@ -124,6 +119,10 @@ for i in range(Nsim):
 
     acados_solver.set(0, "lbx", x0)
     acados_solver.set(0, "ubx", x0)
+
+    # update reference
+    for j in range(N):
+        acados_solver.set(j, "yref", np.array([0, 0, 0, 0, 0]))
 
 # plot results
 import matplotlib

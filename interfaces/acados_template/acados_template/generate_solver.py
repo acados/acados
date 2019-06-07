@@ -307,6 +307,12 @@ class acados_solver:
         return out
 
     def set(self, stage_, field_, value_):
+        
+        cost = ['y_ref', 'yref']
+        constraints = ['lbx', 'ubx', 'lbu', 'ubu']
+
+        # cast value_ to avoid conversion issues
+        value_ = value_.astype(float)
 
         field = field_
         field = field.encode('utf-8')
@@ -323,8 +329,12 @@ class acados_solver:
         value_data_p = cast((value_data), c_void_p)
 
         stage = c_int(stage_)
-        self.shared_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
+        if field_ in constraints:
+            self.shared_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+            self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
+        if field_ in cost:
+            self.shared_lib.ocp_nlp_cost_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+            self.shared_lib.ocp_nlp_cost_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
 
         return
 
