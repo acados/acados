@@ -86,7 +86,7 @@ typedef struct {
     struct blasfeo_dmat St_copy;
 
     struct blasfeo_dmat *original_RSQrq;
-    struct blasfeo_dmat *tmp_RSQrq;
+    struct blasfeo_dmat tmp_RSQ;
 
 	struct blasfeo_dvec tmp_nuxM;
 	struct blasfeo_dvec tmp_nbgM;
