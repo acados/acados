@@ -286,7 +286,7 @@ class acados_solver:
         status = self.shared_lib.acados_solve()
         return status
 
-    def get(self, stage, field_):
+    def get(self, stage_, field_):
 
         field = field_
         field = field.encode('utf-8')
@@ -294,13 +294,13 @@ class acados_solver:
         self.shared_lib.ocp_nlp_dims_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.shared_lib.ocp_nlp_dims_get.restype = c_int
 
-        dims = self.shared_lib.ocp_nlp_dims_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field)
+        dims = self.shared_lib.ocp_nlp_dims_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field)
 
         out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
         out_data = cast(out.ctypes.data, POINTER(c_double))
 
         self.shared_lib.ocp_nlp_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field, out_data);
+        self.shared_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field, out_data);
 
         # out = cast((out), POINTER(c_double))
 
@@ -310,6 +310,14 @@ class acados_solver:
 
         field = field_
         field = field.encode('utf-8')
+
+        self.shared_lib.ocp_nlp_dims_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
+        self.shared_lib.ocp_nlp_dims_get.restype = c_int
+
+        dims = self.shared_lib.ocp_nlp_dims_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field)
+         
+        if value_.shape[0] != dims: 
+            raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_,dims, value_.shape[0]))
 
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
