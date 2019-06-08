@@ -18,7 +18,7 @@ classdef acados_ocp < handle
 
 			% compile mex without model dependency
 			if (strcmp(obj.opts_struct.compile_mex, 'true'))
-				ocp_compile_mex();
+				ocp_compile_mex(obj.opts_struct);
 			end
 
 			obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);

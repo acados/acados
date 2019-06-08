@@ -197,6 +197,20 @@ void ocp_nlp_reg_project_memory_set_b_ptr(ocp_nlp_reg_dims *dims, struct blasfeo
 
 
 
+void ocp_nlp_reg_project_memory_set_idxb_ptr(ocp_nlp_reg_dims *dims, int **idxb, void *memory_)
+{
+    return;
+}
+
+
+
+void ocp_nlp_reg_project_memory_set_DCt_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dmat *DCt, void *memory_)
+{
+    return;
+}
+
+
+
 void ocp_nlp_reg_project_memory_set_ux_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *ux, void *memory_)
 {
     return;
@@ -205,6 +219,13 @@ void ocp_nlp_reg_project_memory_set_ux_ptr(ocp_nlp_reg_dims *dims, struct blasfe
 
 
 void ocp_nlp_reg_project_memory_set_pi_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *pi, void *memory_)
+{
+    return;
+}
+
+
+
+void ocp_nlp_reg_project_memory_set_lam_ptr(ocp_nlp_reg_dims *dims, struct blasfeo_dvec *lam, void *memory_)
 {
     return;
 }
@@ -285,8 +306,11 @@ void ocp_nlp_reg_project_config_initialize_default(ocp_nlp_reg_config *config)
     config->memory_set_rq_ptr = &ocp_nlp_reg_project_memory_set_rq_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_reg_project_memory_set_BAbt_ptr;
     config->memory_set_b_ptr = &ocp_nlp_reg_project_memory_set_b_ptr;
+    config->memory_set_idxb_ptr = &ocp_nlp_reg_project_memory_set_idxb_ptr;
+    config->memory_set_DCt_ptr = &ocp_nlp_reg_project_memory_set_DCt_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_reg_project_memory_set_ux_ptr;
     config->memory_set_pi_ptr = &ocp_nlp_reg_project_memory_set_pi_ptr;
+    config->memory_set_lam_ptr = &ocp_nlp_reg_project_memory_set_lam_ptr;
     // functions
     config->regularize_hessian = &ocp_nlp_reg_project_regularize_hessian;
     config->correct_dual_sol = &ocp_nlp_reg_project_correct_dual_sol;

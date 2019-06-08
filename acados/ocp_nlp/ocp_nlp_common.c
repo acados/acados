@@ -541,8 +541,12 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     // update qp_solver dims
     if ( (!strcmp(field, "nbx")) || (!strcmp(field, "nbu")) )
     {
-        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i,
-                                    field, int_value);
+		// qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+
+		// regularization
+        config->regularize->dims_set(config->regularize, dims->regularize, i, (char *) field, int_value);
+
         // Note(oj): how to decide if ocp_qp or dense? plan not available here..
         // Note(giaf): the NLP solver always calls a xcond_solver,
         //             so only its dimensions should be set now
@@ -565,16 +569,19 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     {
         // update ng_qp_solver in qp_solver
         int ng, nh, ng_qp_solver;
-        config->constraints[i]->get_dims(config->constraints[i],
-                                            dims->constraints[i], "ng", &ng);
-        config->constraints[i]->get_dims(config->constraints[i],
-                                            dims->constraints[i], "nh", &nh);
+        config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i], "ng", &ng);
+        config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i], "nh", &nh);
 
         ng_qp_solver = ng + nh;
 
+		// qp solver
         config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
+
+		// regularization
+        config->regularize->dims_set(config->regularize, dims->regularize, i, "ng", &ng_qp_solver);
     }
 }
+
 
 
 void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage,
@@ -589,6 +596,8 @@ void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage,
     config->cost[stage]->dims_set(config->cost[stage], dims->cost[stage], field, int_value);
 }
 
+
+
 void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage,
                                const char *field, const void* value)
 {
@@ -598,8 +607,7 @@ void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage,
 
     int *int_value = (int *) value;
 
-    config->dynamics[stage]->dims_set(config->dynamics[stage],
-                                  dims->dynamics[stage], field, int_value);
+    config->dynamics[stage]->dims_set(config->dynamics[stage], dims->dynamics[stage], field, int_value);
 }
 
 
