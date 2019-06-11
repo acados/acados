@@ -86,6 +86,7 @@ SHARED_DEPS = blasfeo_shared hpipm_shared
 CLEAN_DEPS = blasfeo_clean hpipm_clean
 ifeq ($(ACADOS_WITH_QPOASES), 1)
 STATIC_DEPS += qpoases_static
+SHARED_DEPS += qpoases_shared
 CLEAN_DEPS += qpoases_clean
 endif
 ifeq ($(ACADOS_WITH_HPMPC), 1)
@@ -163,6 +164,13 @@ hpmpc_static: blasfeo_static
 
 qpoases_static:
 	( cd $(QPOASES_PATH); $(MAKE) CC=$(CC) )
+	mkdir -p include/qpoases/include
+	mkdir -p lib
+	cp -r $(QPOASES_PATH)/include/* include/qpoases/include
+	cp $(QPOASES_PATH)/bin/libqpOASES_e.a lib
+
+qpoases_shared:
+	( cd $(QPOASES_PATH); $(MAKE) CC=$(CC) MAKE_STATIC_LIB=0 DLLEXT=so )
 	mkdir -p include/qpoases/include
 	mkdir -p lib
 	cp -r $(QPOASES_PATH)/include/* include/qpoases/include
