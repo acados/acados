@@ -107,6 +107,14 @@ void ocp_nlp_cost_external_dims_set(void *config_, void *dims_, const char *fiel
 
 
 
+void ocp_nlp_cost_external_dims_get(void *config_, void *dims_, const char *field, int* value)
+{
+        printf("error: ocp_nlp_cost_external_dims_get: attempt to get dimensions of non-existing field %s\n", field);
+        exit(1);
+}
+
+
+
 /************************************************
  * model
  ************************************************/
@@ -568,6 +576,7 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->dims_assign = &ocp_nlp_cost_external_dims_assign;
     config->dims_initialize = &ocp_nlp_cost_external_dims_initialize;
     config->dims_set = &ocp_nlp_cost_external_dims_set;
+    config->dims_get = &ocp_nlp_cost_external_dims_get;
     config->model_calculate_size = &ocp_nlp_cost_external_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_external_model_assign;
     config->model_set = &ocp_nlp_cost_external_model_set;

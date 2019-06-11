@@ -271,7 +271,7 @@ nlp_dims.nbx_e = 0
 nlp_dims.nu   = nu
 nlp_dims.np   = np
 nlp_dims.N    = N
-# nlp_dims.npd_e = 0
+# nlp_dims.npd_e = -1
 # nlp_dims.nh  = 1
 
 # set weighting matrices

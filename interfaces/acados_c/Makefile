@@ -9,6 +9,8 @@ OBJS += condensing_interface.o
 OBJS += options_interface.o
 OBJS += sim_interface.o
 
+obj: $(OBJS)
+
 static_library: $(OBJS)
 	ar rcs libacados_c.a $(OBJS)
 	@echo

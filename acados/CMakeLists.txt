@@ -75,49 +75,32 @@ target_include_directories(acados
 # HPMPC must come before BLASFEO!
 if(ACADOS_WITH_HPMPC)
     target_link_libraries(acados PUBLIC hpmpc)
-endif()
-
-if(ACADOS_WITH_QORE)
-    target_link_libraries(acados PUBLIC qore)
-endif()
-
-if(ACADOS_WITH_QPOASES)
-    target_link_libraries(acados PUBLIC qpOASES_e)
-endif()
-
-if(ACADOS_WITH_QPDUNES)
-    target_link_libraries(acados PUBLIC qpdunes)
-endif()
-
-if(ACADOS_WITH_OSQP)
-    target_link_libraries(acados PUBLIC osqp)
-endif()
-
-target_link_libraries(acados PUBLIC hpipm blasfeo)
-
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    target_compile_definitions(acados PRIVATE DEBUG)
-endif()
-
-if(ACADOS_WITH_HPMPC)
     target_compile_definitions(acados PUBLIC ACADOS_WITH_HPMPC)
 endif()
 
 if(ACADOS_WITH_QORE)
+    target_link_libraries(acados PUBLIC qore)
+
     target_compile_definitions(acados PUBLIC ACADOS_WITH_QORE)
 endif()
 
 if(ACADOS_WITH_QPOASES)
+    target_link_libraries(acados PUBLIC qpOASES_e)
+
     target_compile_definitions(acados PUBLIC ACADOS_WITH_QPOASES)
     target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES)
 endif()
 
 if(ACADOS_WITH_QPDUNES)
+    target_link_libraries(acados PUBLIC qpdunes)
+
     target_compile_definitions(acados PUBLIC ACADOS_WITH_QPDUNES)
     target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES)
 endif()
 
 if(ACADOS_WITH_OSQP)
+    target_link_libraries(acados PUBLIC osqp)
+
     target_compile_definitions(acados PUBLIC ACADOS_WITH_OSQP)
     # TODO(dimitris): needed or not?
     # target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES)
@@ -128,15 +111,19 @@ if(ACADOS_WITH_OOQP)
     target_link_libraries(acados PUBLIC ooqp)
 endif()
 
+target_link_libraries(acados PUBLIC hpipm blasfeo m)
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    target_compile_definitions(acados PRIVATE DEBUG)
+endif()
+
 # Enable or disable timings
 if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 
-add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
-if((SWIG_PYTHON OR SWIG_MATLAB) AND NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+if(SWIG_PYTHON OR SWIG_MATLAB)
     find_package(Casadi REQUIRED)
-    add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
     target_link_libraries(acados PUBLIC casadi)
 endif()
 

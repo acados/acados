@@ -51,15 +51,15 @@ for ii=1:length(mex_files)
 	if is_octave()
 %		mkoctfile -p CFLAGS
 		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
-			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
+			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
 		else
-			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
+			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
 		end
 	else
 		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
-			mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp -DACADOS_WITH_QPOASES', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
+			mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp -DACADOS_WITH_QPOASES', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
 		else
-			mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
+			mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
 		end
 	end
 end
