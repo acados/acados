@@ -853,9 +853,9 @@ int acados_create() {
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbu", lbu);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubu", ubu);
 
-    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsbx", idxsbx);
-    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsbx", lsbx);
-    // ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbx", usbx);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsbx", idxsbx);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsbx", lsbx);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbx", usbx);
     
     {%- if ocp.dims.nsbu > 0 %} 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsbu", idxsbu);
@@ -966,16 +966,16 @@ int acados_create() {
     {% if ocp.solver_config.nlp_solver_type == "SQP" %}
 
     int max_iter = max_num_sqp_iterations;
-    double min_res_g = 1e-6;
-    double min_res_b = 1e-6;
-    double min_res_d = 1e-6;
-    double min_res_m = 1e-6;
+    double tol_stat = 1e-6;
+    double tol_eq   = 1e-6;
+    double tol_ineq = 1e-6;
+    double tol_comp = 1e-6;
 
     ocp_nlp_opts_set(nlp_config, nlp_opts, "max_iter", &max_iter);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_g", &min_res_g);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_b", &min_res_b);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_d", &min_res_d);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_m", &min_res_m);
+    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_stat", &tol_stat);
+    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_eq", &tol_eq);
+    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_ineq", &tol_ineq);
+    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_comp", &tol_comp);
 
 
     {% else %}

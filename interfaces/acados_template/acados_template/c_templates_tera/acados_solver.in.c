@@ -306,9 +306,9 @@ int acados_create() {
     double Vz[NY*NZ];
 
     double yref_e[NYN];
-    double WN[NYN*NYN];
+    double W_e[NYN*NYN];
 
-    double VxN[NYN*NX];
+    double Vx_e[NYN*NX];
     
     for (int ii = 0; ii < NU + NX; ii++)
         yref[ii] = 0.0;
@@ -741,8 +741,8 @@ int acados_create() {
     {% if dims.nh_e > 0 %}
     // nonlinear constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_constraint_e[i]);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lhN);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uhN);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
     {% endif %}
 
     nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);
@@ -763,16 +763,16 @@ int acados_create() {
     {% if solver_config.nlp_solver_type == "SQP" %}
 
     int max_iter = max_num_sqp_iterations;
-    double min_res_g = 1e-6;
-    double min_res_b = 1e-6;
-    double min_res_d = 1e-6;
-    double min_res_m = 1e-6;
+    double tol_stat = 1e-6;
+    double tol_eq   = 1e-6;
+    double tol_ineq = 1e-6;
+    double tol_comp = 1e-6;
 
     ocp_nlp_opts_set(nlp_config, nlp_opts, "max_iter", &max_iter);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_g", &min_res_g);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_b", &min_res_b);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_d", &min_res_d);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "min_res_m", &min_res_m);
+    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_stat", &tol_stat);
+    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_eq", &tol_eq);
+    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_ineq", &tol_ineq);
+    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_comp", &tol_comp);
 
 
     {% else %}

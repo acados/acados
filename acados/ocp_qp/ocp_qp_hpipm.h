@@ -30,6 +30,8 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
+
+
 // struct of arguments to the solver
 // TODO(roversch): why not make this a typedef of the underlying struct?
 typedef struct ocp_qp_hpipm_opts_
@@ -37,12 +39,16 @@ typedef struct ocp_qp_hpipm_opts_
     struct d_ocp_qp_ipm_arg *hpipm_opts;
 } ocp_qp_hpipm_opts;
 
+
+
 // TODO(roversch): why not make this a typedef of the underlying struct?
 // struct of the solver memory
 typedef struct ocp_qp_hpipm_memory_
 {
     struct d_ocp_qp_ipm_workspace *hpipm_workspace;
 } ocp_qp_hpipm_memory;
+
+
 
 //
 int ocp_qp_hpipm_opts_calculate_size(void *config, void *dims);
@@ -53,15 +59,22 @@ void ocp_qp_hpipm_opts_initialize_default(void *config, void *dims, void *opts_)
 //
 void ocp_qp_hpipm_opts_update(void *config, void *dims, void *opts_);
 //
+void ocp_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *value);
+
+//
 int ocp_qp_hpipm_memory_calculate_size(void *config, void *dims, void *opts_);
 //
 void *ocp_qp_hpipm_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+
 //
 int ocp_qp_hpipm_workspace_calculate_size(void *config, void *dims, void *opts_);
 //
 int ocp_qp_hpipm(void *config, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
+
 //
 void ocp_qp_hpipm_config_initialize_default(void *config);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

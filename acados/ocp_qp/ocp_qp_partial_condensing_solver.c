@@ -30,6 +30,8 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+
+
 /************************************************
  * opts
  ************************************************/
@@ -47,6 +49,8 @@ int ocp_qp_partial_condensing_solver_opts_calculate_size(void *config_, ocp_qp_d
 
     return size;
 }
+
+
 
 void *ocp_qp_partial_condensing_solver_opts_assign(void *config_, ocp_qp_dims *dims,
                                                    void *raw_memory)
@@ -76,6 +80,8 @@ void *ocp_qp_partial_condensing_solver_opts_assign(void *config_, ocp_qp_dims *d
     return (void *) opts;
 }
 
+
+
 void ocp_qp_partial_condensing_solver_opts_initialize_default(void *config_, ocp_qp_dims *dims,
                                                               void *opts_)
 {
@@ -91,6 +97,8 @@ void ocp_qp_partial_condensing_solver_opts_initialize_default(void *config_, ocp
     // qp solver opts
     qp_solver->opts_initialize_default(qp_solver, dims, opts->qp_solver_opts);
 }
+
+
 
 void ocp_qp_partial_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
 {
@@ -108,29 +116,43 @@ void ocp_qp_partial_condensing_solver_opts_update(void *config_, ocp_qp_dims *di
 }
 
 
-void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_,
-                                            const char *field, const void* value)
+
+void ocp_qp_partial_condensing_solver_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
     ocp_qp_partial_condensing_solver_opts *opts = (ocp_qp_partial_condensing_solver_opts *) opts_;
-    // ocp_qp_xcond_solver_config *config = config_;
+    ocp_qp_xcond_solver_config *config = config_;
 
-    if (!strcmp(field, "N2") || !strcmp(field, "pcond_N2"))
-    {
-        int* N2 = (int *) value;
-        opts->pcond_opts->N2 = *N2;
-    }
-    else if (!strcmp(field, "N2_bkp") || !strcmp(field, "pcond_N2_bkp"))
-    {
-        int* N2_bkp = (int *) value;
-        opts->pcond_opts->N2_bkp = *N2_bkp;
-    }
-    else
-    {
-        printf("\nerror: option type %s not available in ocp_qp_partial_condense solver module\n",
-               field);
-        exit(1);
-    }
+	int ii;
+
+	char module[MAX_STR_LEN];
+	char *ptr_module = NULL;
+	int module_length = 0;
+
+	// extract module name
+	char *char_ = strchr(field, '_');
+	if(char_!=NULL)
+	{
+		module_length = char_-field;
+		for(ii=0; ii<module_length; ii++)
+			module[ii] = field[ii];
+		module[module_length] = '\0'; // add end of string
+		ptr_module = module;
+	}
+
+	if(!strcmp(ptr_module, "cond")) // pass options to (partial) condensing module
+	{
+		// TODO config !!!
+		ocp_qp_partial_condensing_opts_set(opts->pcond_opts, field+module_length+1, value);
+	}
+	else // pass options to QP module
+	{
+		config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field, value);
+	}
+
+	return;
+
 }
+
 
 
 /************************************************
@@ -174,6 +196,8 @@ int ocp_qp_partial_condensing_solver_memory_calculate_size(void *config_, ocp_qp
 
     return size;
 }
+
+
 
 void *ocp_qp_partial_condensing_solver_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_,
                                                      void *raw_memory)
@@ -250,6 +274,8 @@ void *ocp_qp_partial_condensing_solver_memory_assign(void *config_, ocp_qp_dims 
     return mem;
 }
 
+
+
 /************************************************
  * workspace
  ************************************************/
@@ -281,6 +307,8 @@ int ocp_qp_partial_condensing_solver_workspace_calculate_size(void *config_, ocp
     return size;
 }
 
+
+
 static void cast_workspace(void *config_, ocp_qp_dims *dims,
                            ocp_qp_partial_condensing_solver_opts *opts,
                            ocp_qp_partial_condensing_solver_memory *mem,
@@ -311,6 +339,8 @@ static void cast_workspace(void *config_, ocp_qp_dims *dims,
     c_ptr += qp_solver->workspace_calculate_size(qp_solver, pcond_dims, opts->qp_solver_opts);
 }
 
+
+
 /************************************************
  * functions
  ************************************************/
@@ -326,11 +356,9 @@ int ocp_qp_partial_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out
     acados_tic(&tot_timer);
 
     // cast data structures
-    ocp_qp_partial_condensing_solver_opts *opts = (ocp_qp_partial_condensing_solver_opts *) opts_;
-    ocp_qp_partial_condensing_solver_memory *memory =
-        (ocp_qp_partial_condensing_solver_memory *) mem_;
-    ocp_qp_partial_condensing_solver_workspace *work =
-        (ocp_qp_partial_condensing_solver_workspace *) work_;
+    ocp_qp_partial_condensing_solver_opts *opts = opts_;
+    ocp_qp_partial_condensing_solver_memory *memory = mem_;
+    ocp_qp_partial_condensing_solver_workspace *work = work_;
 
     // cast workspace
     cast_workspace(config_, qp_in->dim, opts, memory, work);
@@ -353,9 +381,8 @@ int ocp_qp_partial_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out
     int solver_status;
     if (memory->solver_memory != NULL)
     {
-        solver_status =
-            qp_solver->evaluate(qp_solver, memory->pcond_qp_in, memory->pcond_qp_out,
-                                opts->qp_solver_opts, memory->solver_memory, work->solver_work);
+        solver_status = qp_solver->evaluate(qp_solver, memory->pcond_qp_in, memory->pcond_qp_out,
+        		opts->qp_solver_opts, memory->solver_memory, work->solver_work);
     }
     else
     {
@@ -366,8 +393,10 @@ int ocp_qp_partial_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out
     if (opts->pcond_opts->N2 < qp_in->dim->N)
     {
         acados_tic(&cond_timer);
+
         ocp_qp_partial_expansion(memory->pcond_qp_out, qp_out, opts->pcond_opts,
-                                 memory->pcond_memory, work->pcond_work);
+				memory->pcond_memory, work->pcond_work);
+
         info->condensing_time += acados_toc(&cond_timer);
     }
 
@@ -379,6 +408,8 @@ int ocp_qp_partial_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out
 
     return solver_status;
 }
+
+
 
 void ocp_qp_partial_condensing_solver_config_initialize_default(void *config_)
 {

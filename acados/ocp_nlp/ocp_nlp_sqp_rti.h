@@ -52,6 +52,8 @@ typedef struct
     int compute_dual_sol;
     int reuse_workspace;
     int num_threads;
+	int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
+	int qp_warm_start;
 } ocp_nlp_sqp_rti_opts;
 
 //
@@ -89,7 +91,12 @@ typedef struct
 
     double time_qp_sol;
     double time_lin;
+    double time_reg;
     double time_tot;
+
+	double *stat;
+	int stat_m;
+	int stat_n;
 } ocp_nlp_sqp_rti_memory;
 
 //
@@ -109,6 +116,8 @@ typedef struct
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
     void *qp_work;
+	ocp_qp_res *qp_res;
+	ocp_qp_res_ws *qp_res_ws;
 
     void **dynamics;     // dynamics_workspace
     void **cost;         // cost_workspace

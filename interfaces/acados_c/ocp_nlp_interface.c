@@ -37,6 +37,7 @@
 #include "acados/ocp_nlp/ocp_nlp_reg_convexify.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_mirror.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_project.h"
+#include "acados/ocp_nlp/ocp_nlp_reg_project_reduc_hess.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_noreg.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
@@ -197,6 +198,9 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             break;
         case PROJECT:
             ocp_nlp_reg_project_config_initialize_default(config->regularize);
+            break;
+        case PROJECT_REDUC_HESS:
+            ocp_nlp_reg_project_reduc_hess_config_initialize_default(config->regularize);
             break;
         case CONVEXIFY:
             ocp_nlp_reg_convexify_config_initialize_default(config->regularize);
@@ -453,6 +457,11 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_pack_dvec(dims->nu[stage], double_values, &out->ux[stage], 0);
     }
+    else if (!strcmp(field, "pi"))
+    {
+        double *double_values = value;
+        blasfeo_pack_dvec(dims->nx[stage+1], double_values, &out->pi[stage], 0);
+    }
     else
     {
         printf("\nerror: ocp_nlp_out_set: field %s not available\n", field);
@@ -475,6 +484,11 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_unpack_dvec(dims->nu[stage], &out->ux[stage], 0, double_values);
     }
+    else if (!strcmp(field, "pi"))
+    {
+        double *double_values = value;
+        blasfeo_unpack_dvec(dims->nx[stage+1], &out->pi[stage], 0, double_values);
+    }
     else
     {
         printf("\nerror: ocp_nlp_out_get: field %s not available\n", field);
@@ -484,20 +498,43 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 
 
 
-int ocp_nlp_dims_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
 		int stage, const char *field)
 {
+    int dims_value = -1;
+
+    // ocp_nlp_dims
     if (!strcmp(field, "x"))
     {
         return dims->nx[stage];
     }
     else if (!strcmp(field, "u"))
     {
-        return dims->nx[stage];
+        return dims->nu[stage];
+    }
+    // ocp_nlp_constraints_dims
+    else if (!strcmp(field, "lbx") || !strcmp(field, "ubx"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                                            "nbx", &dims_value);
+        return dims_value;
+    }
+    else if (!strcmp(field, "lbu") || !strcmp(field, "ubu"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                                            "nbu", &dims_value);
+        return dims_value;
+    }
+    // ocp_nlp_cost_dims
+    else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
+    {
+        config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
+                                            "ny", &dims_value);
+        return dims_value;
     }
     else
     {
-        printf("\nerror: ocp_nlp_out_set: field %s not available\n", field);
+        printf("\nerror: ocp_nlp_dims_get: field %s not available\n", field);
         exit(1);
     }
 }
@@ -520,8 +557,7 @@ void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
 
 
-void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
-		const char *field, void *value)
+void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void *value)
 {
     config->opts_set(config, opts_, field, value);
 }

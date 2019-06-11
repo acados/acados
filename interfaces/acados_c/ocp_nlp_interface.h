@@ -85,6 +85,7 @@ typedef enum
     NO_REGULARIZE,
     MIRROR,
     PROJECT,
+    PROJECT_REDUC_HESS,
     CONVEXIFY,
     INVALID_REGULARIZE,
 } ocp_nlp_reg_t;
@@ -248,7 +249,7 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
 		int stage, const char *field, void *value);
 //
-int ocp_nlp_dims_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
 		int stage, const char *field);
 
 /* opts */
@@ -270,8 +271,7 @@ void ocp_nlp_opts_destroy(void *opts);
 /// \param opts_ The options struct.
 /// \param field Name of the option.
 /// \param value Value of the option.
-void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_,
-		const char *field, void* value);
+void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void* value);
 
 /// TBC
 /// Set the option for the dynamics in a given stage.

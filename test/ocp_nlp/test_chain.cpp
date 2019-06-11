@@ -1385,16 +1385,16 @@ void setup_and_solve_nlp(int NN,
         }
     }
     int max_iter = MAX_SQP_ITERS;
-    double min_res_g = 1e-6;
-    double min_res_b = 1e-6;
-    double min_res_d = 1e-6;
-    double min_res_m = 1e-6;
+    double tol_stat = 1e-6;
+    double tol_eq   = 1e-6;
+    double tol_ineq = 1e-6;
+    double tol_comp = 1e-6;
 
     ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
-    ocp_nlp_opts_set(config, nlp_opts, "min_res_g", &min_res_g);
-    ocp_nlp_opts_set(config, nlp_opts, "min_res_b", &min_res_b);
-    ocp_nlp_opts_set(config, nlp_opts, "min_res_d", &min_res_d);
-    ocp_nlp_opts_set(config, nlp_opts, "min_res_m", &min_res_m);
+    ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+    ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+    ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+    ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
     /************************************************
     * ocp_nlp out

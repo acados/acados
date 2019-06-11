@@ -3,6 +3,16 @@ clear all
 
 
 
+% check that env.sh has been run
+env_run = getenv('ENV_RUN');
+if (~strcmp(env_run, 'true'))
+	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
+	disp('source env.sh');
+	return;
+end
+
+
+
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
@@ -11,16 +21,26 @@ N = 100;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-%nlp_solver_exact_hessian = 'false'
-nlp_solver_exact_hessian = 'true'
+%nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
 %regularize_method = 'no_regularize';
-regularize_method = 'project';
+%regularize_method = 'project';
+regularize_method = 'project_reduc_hess';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
+nlp_solver_tol_stat = 1e-8;
+nlp_solver_tol_eq   = 1e-8;
+nlp_solver_tol_ineq = 1e-8;
+nlp_solver_tol_comp = 1e-8;
+nlp_solver_ext_qp_res = 1;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
-qp_solver_N_pcond = N; %5;
+%qp_solver = 'full_condensing_qpoases';
+qp_solver_cond_N = 5;
+qp_solver_cond_ric_alg = 0;
+qp_solver_ric_alg = 0;
+qp_solver_warm_start = 2;
 %sim_method = 'erk';
 sim_method = 'irk';
 sim_method_num_stages = 4;
@@ -168,11 +188,21 @@ ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
-ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
+if (strcmp(nlp_solver, 'sqp'))
+	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+	ocp_opts.set('nlp_solver_tol_stat', nlp_solver_tol_stat);
+	ocp_opts.set('nlp_solver_tol_eq', nlp_solver_tol_eq);
+	ocp_opts.set('nlp_solver_tol_ineq', nlp_solver_tol_ineq);
+	ocp_opts.set('nlp_solver_tol_comp', nlp_solver_tol_comp);
+end
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_N_pcond', qp_solver_N_pcond);
+	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
 end
+ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
+ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
@@ -193,7 +223,7 @@ ocp.C_ocp_ext_fun
 % set trajectory initialization
 %x_traj_init = zeros(nx, N+1);
 %for ii=1:N x_traj_init(:,ii) = [0; pi; 0; 0]; end
-x_traj_init = linspace([0; pi; 0; 0], [0; 0; 0; 0], N+1);
+x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
 
 u_traj_init = zeros(nu, N);
 ocp.set('init_x', x_traj_init);
@@ -227,6 +257,51 @@ x = ocp.get('x');
 
 
 
+% statistics
+
+status = ocp.get('status');
+sqp_iter = ocp.get('sqp_iter');
+time_tot = ocp.get('time_tot');
+time_lin = ocp.get('time_lin');
+time_reg = ocp.get('time_reg');
+time_qp_sol = ocp.get('time_qp_sol');
+
+fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
+
+stat = ocp.get('stat');
+if (strcmp(nlp_solver, 'sqp'))
+	fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter');
+	if size(stat,2)>7
+		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
+	end
+	fprintf('\n');
+	for ii=1:size(stat,1)
+		fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
+		if size(stat,2)>7
+			fprintf('\t%e\t%e\t%e\t%e', stat(ii,8), stat(ii,9), stat(ii,10), stat(ii,11));
+		end
+		fprintf('\n');
+	end
+	fprintf('\n');
+else % sqp_rti
+	fprintf('\niter\tqp_stat\tqp_iter');
+	if size(stat,2)>3
+		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
+	end
+	fprintf('\n');
+	for ii=1:size(stat,1)
+		fprintf('%d\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3));
+		if size(stat,2)>3
+			fprintf('\t%e\t%e\t%e\t%e', stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
+		end
+		fprintf('\n');
+	end
+	fprintf('\n');
+end
+
+
+% figures
+
 for ii=1:N+1
 	x_cur = x(:,ii);
 	visualize;
@@ -242,15 +317,17 @@ plot(0:N-1, u);
 xlim([0 N]);
 legend('F');
 
-
-
-status = ocp.get('status');
-sqp_iter = ocp.get('sqp_iter');
-time_tot = ocp.get('time_tot');
-time_lin = ocp.get('time_lin');
-time_qp_sol = ocp.get('time_qp_sol');
-
-fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+if (strcmp(nlp_solver, 'sqp'))
+	figure(3);
+	plot([0: sqp_iter], log10(stat(:,2)), 'r-x');
+	hold on
+	plot([0: sqp_iter], log10(stat(:,3)), 'b-x');
+	plot([0: sqp_iter], log10(stat(:,4)), 'g-x');
+	plot([0: sqp_iter], log10(stat(:,5)), 'k-x');
+	hold off
+	xlabel('iter')
+	ylabel('res')
+end
 
 
 
@@ -260,6 +337,8 @@ else
 	fprintf('\nsolution failed!\n\n');
 end
 
+
+waitforbuttonpress;
 
 
 return;

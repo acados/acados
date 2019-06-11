@@ -535,14 +535,18 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
                                         field, int_value);
     // update ni in ocp_nlp dimensions
-    config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i],
+    config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
                                         "ni", &dims->ni[i]);
 
     // update qp_solver dims
     if ( (!strcmp(field, "nbx")) || (!strcmp(field, "nbu")) )
     {
-        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i,
-                                    field, int_value);
+		// qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+
+		// regularization
+        config->regularize->dims_set(config->regularize, dims->regularize, i, (char *) field, int_value);
+
         // Note(oj): how to decide if ocp_qp or dense? plan not available here..
         // Note(giaf): the NLP solver always calls a xcond_solver,
         //             so only its dimensions should be set now
@@ -556,7 +560,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
         // {
         //     // update nb in qp_solver
         //     int nb;
-        //     config->constraints[i]->get_dims(config->constraints[i],
+        //     config->constraints[i]->dims_get(config->constraints[i],
         //                            dims->constraints[i], "nb", &nb);
         //     config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nb", &nb);
         // }
@@ -565,16 +569,19 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     {
         // update ng_qp_solver in qp_solver
         int ng, nh, ng_qp_solver;
-        config->constraints[i]->get_dims(config->constraints[i],
-                                            dims->constraints[i], "ng", &ng);
-        config->constraints[i]->get_dims(config->constraints[i],
-                                            dims->constraints[i], "nh", &nh);
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ng", &ng);
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nh", &nh);
 
         ng_qp_solver = ng + nh;
 
+		// qp solver
         config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
+
+		// regularization
+        config->regularize->dims_set(config->regularize, dims->regularize, i, "ng", &ng_qp_solver);
     }
 }
+
 
 
 void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage,
@@ -589,6 +596,8 @@ void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage,
     config->cost[stage]->dims_set(config->cost[stage], dims->cost[stage], field, int_value);
 }
 
+
+
 void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage,
                                const char *field, const void* value)
 {
@@ -598,8 +607,7 @@ void ocp_nlp_dims_set_dynamics(void *config_, void *dims_, int stage,
 
     int *int_value = (int *) value;
 
-    config->dynamics[stage]->dims_set(config->dynamics[stage],
-                                  dims->dynamics[stage], field, int_value);
+    config->dynamics[stage]->dims_set(config->dynamics[stage], dims->dynamics[stage], field, int_value);
 }
 
 
@@ -623,6 +631,8 @@ int ocp_nlp_in_calculate_size_self(int N)
 
     return size;
 }
+
+
 
 int ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 {
@@ -659,6 +669,8 @@ int ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
     return size;
 }
 
+
+
 ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
@@ -688,6 +700,8 @@ ocp_nlp_in *ocp_nlp_in_assign_self(int N, void *raw_memory)
 
     return in;
 }
+
+
 
 ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory)
 {
@@ -731,6 +745,8 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
     return in;
 }
 
+
+
 /************************************************
  * out
  ************************************************/
@@ -769,6 +785,8 @@ int ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
     return size;
 }
+
+
 
 ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory)
 {
@@ -838,6 +856,8 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
     return out;
 }
 
+
+
 /************************************************
  * memory
  ************************************************/
@@ -875,6 +895,8 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
     return size;
 }
+
+
 
 ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
                                       void *raw_memory)
@@ -940,6 +962,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     return mem;
 }
+
+
 
 /************************************************
  * residuals
@@ -1035,6 +1059,8 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 
     return res;
 }
+
+
 
 void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res,
                          ocp_nlp_memory *mem)

@@ -49,6 +49,7 @@ typedef struct
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *args);
     void (*opts_update)(void *config, void *dims, void *args);
+    void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
     int (*memory_calculate_size)(void *config, void *dims, void *args);
     void *(*memory_assign)(void *config, void *dims, void *args, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *args);
@@ -100,8 +101,7 @@ dense_qp_res_ws *dense_qp_res_workspace_assign(dense_qp_dims *dims, void *raw_me
 //
 void dense_qp_compute_t(dense_qp_in *qp_in, dense_qp_out *qp_out);
 //
-void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res,
-                          dense_qp_res_ws *res_ws);
+void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws);
 //
 void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4]);
 //

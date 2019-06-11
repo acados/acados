@@ -619,8 +619,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	char *nlp_solver;
 	bool nlp_solver_exact_hessian;
 	int nlp_solver_max_iter;		bool set_nlp_solver_max_iter = false;
+	double nlp_solver_tol_stat;		bool set_nlp_solver_tol_stat = false;
+	double nlp_solver_tol_eq;		bool set_nlp_solver_tol_eq = false;
+	double nlp_solver_tol_ineq;		bool set_nlp_solver_tol_ineq = false;
+	double nlp_solver_tol_comp;		bool set_nlp_solver_tol_comp = false;
+	int nlp_solver_ext_qp_res;		bool set_nlp_solver_ext_qp_res = false;
 	char *qp_solver;
-	int qp_solver_N_pcond;			bool set_qp_solver_N_pcond = false;
+	int qp_solver_cond_N;			bool set_qp_solver_cond_N = false;
+	int qp_solver_cond_ric_alg;		bool set_qp_solver_cond_ric_alg = false;
+	int qp_solver_ric_alg;			bool set_qp_solver_ric_alg = false;
+	int qp_solver_warm_start;		bool set_qp_solver_warm_start = false;
 	char *sim_method;
 	int sim_method_num_stages;		bool set_sim_method_num_stages = false;
 	int sim_method_num_steps;		bool set_sim_method_num_steps = false;
@@ -653,14 +661,59 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		set_nlp_solver_max_iter = true;
 		nlp_solver_max_iter = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_max_iter" ) );
 		}
+	// nlp solver exit tolerances
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_stat" )!=NULL)
+		{
+		set_nlp_solver_tol_stat = true;
+		nlp_solver_tol_stat = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_stat" ) );
+		}
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_eq" )!=NULL)
+		{
+		set_nlp_solver_tol_eq = true;
+		nlp_solver_tol_eq = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_eq" ) );
+		}
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_ineq" )!=NULL)
+		{
+		set_nlp_solver_tol_ineq = true;
+		nlp_solver_tol_ineq = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_ineq" ) );
+		}
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_comp" )!=NULL)
+		{
+		set_nlp_solver_tol_comp = true;
+		nlp_solver_tol_comp = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_comp" ) );
+		}
+	// nlp solver ext qp res
+	if(mxGetField( prhs[1], 0, "nlp_solver_ext_qp_res" )!=NULL)
+		{
+		set_nlp_solver_ext_qp_res = true;
+		nlp_solver_ext_qp_res = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_ext_qp_res" ) );
+		}
 	// qp_solver
 	// TODO check
 	qp_solver = mxArrayToString( mxGetField( prhs[1], 0, "qp_solver" ) );
 	// N_part_cond
-	if(mxGetField( prhs[1], 0, "qp_solver_N_pcond" )!=NULL)
+	if(mxGetField( prhs[1], 0, "qp_solver_cond_N" )!=NULL)
 		{
-		set_qp_solver_N_pcond = true;
-		qp_solver_N_pcond = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_N_pcond" ) );
+		set_qp_solver_cond_N = true;
+		qp_solver_cond_N = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_cond_N" ) );
+		}
+	// cond riccati-like algorithm
+	if(mxGetField( prhs[1], 0, "qp_solver_cond_ric_alg" )!=NULL)
+		{
+		set_qp_solver_cond_ric_alg = true;
+		qp_solver_cond_ric_alg = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_cond_ric_alg" ) );
+		}
+	// hpipm: riccati algorithm
+	if(mxGetField( prhs[1], 0, "qp_solver_ric_alg" )!=NULL)
+		{
+		set_qp_solver_ric_alg = true;
+		qp_solver_ric_alg = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_ric_alg" ) );
+		}
+	// qp solver: warm start
+	if(mxGetField( prhs[1], 0, "qp_solver_warm_start" )!=NULL)
+		{
+		set_qp_solver_warm_start = true;
+		qp_solver_warm_start = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_warm_start" ) );
 		}
 	// sim_method
 	// TODO check
@@ -858,6 +911,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
 		}
+	else if(!strcmp(qp_solver, "full_condensing_qpoases"))
+		{
+		plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+		}
 	else
 		{
 		mexPrintf("\nqp_solver not supported: %s\n", qp_solver);
@@ -876,6 +933,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	else if(!strcmp(regularize_method, "project"))
 		{
 		plan->regularization = PROJECT;
+		}
+	else if(!strcmp(regularize_method, "project_reduc_hess"))
+		{
+		plan->regularization = PROJECT_REDUC_HESS;
 		}
 	else if(!strcmp(regularize_method, "convexify"))
 		{
@@ -1046,10 +1107,50 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
 		}
-	// qp_solver_N_pcond
-	if(set_qp_solver_N_pcond)
+	// nlp_solver_tol_stat
+	if(set_nlp_solver_tol_stat)
 		{
-		ocp_nlp_opts_set(config, opts, "pcond_N2", &qp_solver_N_pcond);
+		ocp_nlp_opts_set(config, opts, "tol_stat", &nlp_solver_tol_stat);
+		}
+	// nlp_solver_tol_eq
+	if(set_nlp_solver_tol_eq)
+		{
+		ocp_nlp_opts_set(config, opts, "tol_eq", &nlp_solver_tol_eq);
+		}
+	// nlp_solver_tol_ineq
+	if(set_nlp_solver_tol_ineq)
+		{
+		ocp_nlp_opts_set(config, opts, "tol_ineq", &nlp_solver_tol_ineq);
+		}
+	// nlp_solver_tol_comp
+	if(set_nlp_solver_tol_comp)
+		{
+		ocp_nlp_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
+		}
+	// nlp_solver_max_iter
+	if(set_nlp_solver_ext_qp_res)
+		{
+		ocp_nlp_opts_set(config, opts, "ext_qp_res", &nlp_solver_ext_qp_res);
+		}
+	// qp_solver_cond_N
+	if(set_qp_solver_cond_N)
+		{
+		ocp_nlp_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
+		}
+	// qp_solver_cond_ric alg
+	if(set_qp_solver_cond_N)
+		{
+		ocp_nlp_opts_set(config, opts, "qp_cond_ric_alg", &qp_solver_cond_ric_alg);
+		}
+	// qp_solver_ric_alg TODO only for hpipm !!!
+	if(set_qp_solver_ric_alg)
+		{
+		ocp_nlp_opts_set(config, opts, "qp_ric_alg", &qp_solver_ric_alg);
+		}
+	// qp_solver_warm_start
+	if(set_qp_solver_warm_start)
+		{
+		ocp_nlp_opts_set(config, opts, "qp_warm_start", &qp_solver_warm_start);
 		}
 	// sim_method_num_stages
 	if(set_sim_method_num_stages)

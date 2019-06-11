@@ -85,19 +85,19 @@ void set_N2(std::string const &inString, void *opts, int N2, int N)
 
     if (inString == "SPARSE_HPIPM")
     {
-        option_found = set_option_int(opts, "sparse_hpipm.N2", N2);
+        option_found = set_option_int(opts, "sparse_hpipm.cond_N", N2);
         REQUIRE(option_found == true);
     }
 
     if (inString == "SPARSE_HPMPC")
     {
-        option_found = set_option_int(opts, "hpmpc.N2", N2);
+        option_found = set_option_int(opts, "hpmpc.cond_N", N2);
         REQUIRE(option_found == true);
     }
 
     if (inString == "SPARSE_QPDUNES")
     {
-        option_found = set_option_int(opts, "qpdunes.N2", N2);
+        option_found = set_option_int(opts, "qpdunes.cond_N", N2);
         REQUIRE(option_found == true);
         if (N2 == N)
         {
@@ -113,13 +113,13 @@ void set_N2(std::string const &inString, void *opts, int N2, int N)
 
     if (inString == "SPARSE_OOQP")
     {
-        option_found = set_option_int(opts, "sparse_ooqp.N2", N2);
+        option_found = set_option_int(opts, "sparse_ooqp.cond_N", N2);
         REQUIRE(option_found == true);
     }
 
     if (inString == "SPARSE_OSQP")
     {
-        option_found = set_option_int(opts, "sparse_osqp.N2", N2);
+        option_found = set_option_int(opts, "sparse_osqp.cond_N", N2);
         REQUIRE(option_found == true);
     }
 }

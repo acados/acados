@@ -7,6 +7,11 @@ To install CasADi, you can follow the installation instructions [here](https://g
 ## Installation
 Both a CMake and a Makefile based build system are supported at the moment.
 
+1. Clone acados
+    ```
+    git clone https://github.com/acados/acados.git
+    ```
+
 1. Initialize all submodules
     ```
     git submodule update --recursive --init
@@ -63,3 +68,5 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_acados_folder>/lib
 make examples_c
 make run_examples_c
 ```
+### Interfaces installation
+For the installation of Python/MATLAB interfaces, please refer to the [Interfaces](../interfaces/index.md) page.

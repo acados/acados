@@ -38,6 +38,7 @@
 #include "acados/utils/types.h"
 
 
+
 /************************************************
  * helper functions
  ************************************************/
@@ -639,6 +640,41 @@ void ocp_qp_osqp_opts_update(void *config_, void *dims_, void *opts_)
 
     return;
 }
+
+void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *value)
+{
+    ocp_qp_osqp_opts *opts = opts_;
+
+    if (!strcmp(field, "tol_stat"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_eq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_ineq"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "tol_comp"))
+    {
+		// TODO set solver exit tolerance
+    }
+    else if (!strcmp(field, "warm_start"))
+    {
+		// TODO set solver warm start
+    }
+	else
+	{
+		printf("\nerror: ocp_qp_osqp_opts_set: wrong field: %s\n", field);
+		exit(1);
+	}
+
+	return;
+}
+
+
 
 /************************************************
  * memory
@@ -1260,6 +1296,7 @@ void ocp_qp_osqp_config_initialize_default(void *config_)
     config->opts_assign = &ocp_qp_osqp_opts_assign;
     config->opts_initialize_default = &ocp_qp_osqp_opts_initialize_default;
     config->opts_update = &ocp_qp_osqp_opts_update;
+    config->opts_set = &ocp_qp_osqp_opts_set;
     config->memory_calculate_size = &ocp_qp_osqp_memory_calculate_size;
     config->memory_assign = &ocp_qp_osqp_memory_assign;
     config->workspace_calculate_size = &ocp_qp_osqp_workspace_calculate_size;

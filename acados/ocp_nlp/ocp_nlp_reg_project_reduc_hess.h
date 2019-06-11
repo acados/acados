@@ -22,8 +22,8 @@
 /// \addtogroup ocp_nlp_reg
 /// @{
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_REG_CONVEXIFY_H_
-#define ACADOS_OCP_NLP_OCP_NLP_REG_CONVEXIFY_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_REG_PROJECT_REDUC_HESS_H_
+#define ACADOS_OCP_NLP_OCP_NLP_REG_PROJECT_REDUC_HESS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,19 +51,20 @@ extern "C" {
 
 typedef struct
 {
-    double delta;
-    double epsilon;
-//    double gamma; // 0.0
-} ocp_nlp_reg_convexify_opts;
+    double thr_eig;
+    double min_eig;
+    double min_pivot;
+	int pivoting;
+} ocp_nlp_reg_project_reduc_hess_opts;
 
 //
-int ocp_nlp_reg_convexify_opts_calculate_size(void);
+int ocp_nlp_reg_project_reduc_hess_opts_calculate_size(void);
 //
-void *ocp_nlp_reg_convexify_opts_assign(void *raw_memory);
+void *ocp_nlp_reg_project_reduc_hess_opts_assign(void *raw_memory);
 //
-void ocp_nlp_reg_convexify_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
+void ocp_nlp_reg_project_reduc_hess_opts_initialize_default(void *config_, ocp_nlp_reg_dims *dims, void *opts_);
 //
-void ocp_nlp_reg_convexify_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value);
+void ocp_nlp_reg_project_reduc_hess_opts_set(void *config_, ocp_nlp_reg_dims *dims, void *opts_, char *field, void* value);
 
 
 
@@ -71,46 +72,29 @@ void ocp_nlp_reg_convexify_opts_set(void *config_, ocp_nlp_reg_dims *dims, void 
  * memory
  ************************************************/
 
-typedef struct {
-    double *R;
+typedef struct
+{
+    double *reg_hess; // TODO move to workspace
     double *V; // TODO move to workspace
     double *d; // TODO move to workspace
     double *e; // TODO move to workspace
-    double *reg_hess; // TODO move to workspace
-
-    struct blasfeo_dmat Q_tilde;
-    struct blasfeo_dmat Q_bar;
-    struct blasfeo_dmat BAQ;
-    struct blasfeo_dmat L;
-    struct blasfeo_dmat delta_eye;
-    struct blasfeo_dmat St_copy;
-
-    struct blasfeo_dmat *original_RSQrq;
-    struct blasfeo_dmat tmp_RSQ;
-
-	struct blasfeo_dvec tmp_nuxM;
-	struct blasfeo_dvec tmp_nbgM;
-
-//    struct blasfeo_dvec grad;
-//    struct blasfeo_dvec b2;
 
     // giaf's
+    struct blasfeo_dmat L; // TODO move to workspace
+    struct blasfeo_dmat L2; // TODO move to workspace
+    struct blasfeo_dmat L3; // TODO move to workspace
+    struct blasfeo_dmat Ls; // TODO move to workspace
+    struct blasfeo_dmat P; // TODO move to workspace
+    struct blasfeo_dmat AL; // TODO move to workspace
+
     struct blasfeo_dmat **RSQrq;  // pointer to RSQrq in qp_in
-    struct blasfeo_dvec **rq;  // pointer to rq in qp_in
-    struct blasfeo_dmat **BAbt;  // pointer to BAbt in qp_in
-    struct blasfeo_dvec **b;  // pointer to b in qp_in
-    struct blasfeo_dmat **DCt;  // pointer to DCt in qp_in
-    struct blasfeo_dvec **ux;  // pointer to ux in qp_out
-    struct blasfeo_dvec **pi;  // pointer to pi in qp_out
-    struct blasfeo_dvec **lam;  // pointer to lam in qp_out
-	int **idxb; // pointer to idxb in qp_in
-
-} ocp_nlp_reg_convexify_memory;
+    struct blasfeo_dmat **BAbt;  // pointer to RSQrq in qp_in
+} ocp_nlp_reg_project_reduc_hess_memory;
 
 //
-int ocp_nlp_reg_convexify_calculate_memory_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
+int ocp_nlp_reg_project_reduc_hess_memory_calculate_size(void *config, ocp_nlp_reg_dims *dims, void *opts);
 //
-void *ocp_nlp_reg_convexify_assign_memory(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
+void *ocp_nlp_reg_project_reduc_hess_memory_assign(void *config, ocp_nlp_reg_dims *dims, void *opts, void *raw_memory);
 
 /************************************************
  * workspace
@@ -123,12 +107,14 @@ void *ocp_nlp_reg_convexify_assign_memory(void *config, ocp_nlp_reg_dims *dims, 
  ************************************************/
 
 //
-void ocp_nlp_reg_convexify_config_initialize_default(ocp_nlp_reg_config *config);
+void ocp_nlp_reg_project_reduc_hess_config_initialize_default(ocp_nlp_reg_config *config);
+
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // ACADOS_OCP_NLP_OCP_NLP_REG_CONVEXIFY_H_
+#endif  // ACADOS_OCP_NLP_OCP_NLP_REG_PROJECT_REDUC_HESS_H_
 /// @}
 /// @}
