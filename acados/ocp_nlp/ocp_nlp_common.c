@@ -569,8 +569,8 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     {
         // update ng_qp_solver in qp_solver
         int ng, nh, ng_qp_solver;
-        config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i], "ng", &ng);
-        config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i], "nh", &nh);
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ng", &ng);
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nh", &nh);
 
         ng_qp_solver = ng + nh;
 
