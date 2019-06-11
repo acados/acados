@@ -252,6 +252,22 @@ static void ocp_nlp_constraints_bgh_get_nb(void *config_, void *dims_, int* valu
 
 
 
+static void ocp_nlp_constraints_bgh_get_nbx(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nbx;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_get_nbu(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nbu;
+}
+
+
+
 static void ocp_nlp_constraints_bgh_get_ng(void *config_, void *dims_, int* value)
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
@@ -285,6 +301,14 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
     else if (!strcmp(field, "nb"))
     {
         ocp_nlp_constraints_bgh_get_nb(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nbx"))
+    {
+        ocp_nlp_constraints_bgh_get_nbx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nbu"))
+    {
+        ocp_nlp_constraints_bgh_get_nbu(config_, dims_, value);
     }
     else if (!strcmp(field, "ng"))
     {
@@ -1006,7 +1030,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_)
     config->dims_assign = &ocp_nlp_constraints_bgh_dims_assign;
     config->dims_initialize = &ocp_nlp_constraints_bgh_dims_initialize;
     config->dims_set = &ocp_nlp_constraints_bgh_dims_set;
-    config->get_dims = &ocp_nlp_constraints_bgh_dims_get;
+    config->dims_get = &ocp_nlp_constraints_bgh_dims_get;
     config->model_calculate_size = &ocp_nlp_constraints_bgh_model_calculate_size;
     config->model_assign = &ocp_nlp_constraints_bgh_model_assign;
     config->model_set = &ocp_nlp_constraints_bgh_model_set;

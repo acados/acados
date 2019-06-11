@@ -498,20 +498,43 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
 
 
 
-int ocp_nlp_dims_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
+int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
 		int stage, const char *field)
 {
+    int dims_value = -1;
+
+    // ocp_nlp_dims
     if (!strcmp(field, "x"))
     {
         return dims->nx[stage];
     }
     else if (!strcmp(field, "u"))
     {
-        return dims->nx[stage];
+        return dims->nu[stage];
+    }
+    // ocp_nlp_constraints_dims
+    else if (!strcmp(field, "lbx") || !strcmp(field, "ubx"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                                            "nbx", &dims_value);
+        return dims_value;
+    }
+    else if (!strcmp(field, "lbu") || !strcmp(field, "ubu"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                                            "nbu", &dims_value);
+        return dims_value;
+    }
+    // ocp_nlp_cost_dims
+    else if (!strcmp(field, "y_ref") || !strcmp(field, "yref"))
+    {
+        config->cost[stage]->dims_get(config->cost[stage], dims->cost[stage],
+                                            "ny", &dims_value);
+        return dims_value;
     }
     else
     {
-        printf("\nerror: ocp_nlp_out_set: field %s not available\n", field);
+        printf("\nerror: ocp_nlp_dims_get: field %s not available\n", field);
         exit(1);
     }
 }

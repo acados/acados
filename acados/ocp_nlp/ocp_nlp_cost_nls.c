@@ -139,6 +139,30 @@ void ocp_nlp_cost_nls_dims_set(void *config_, void *dims_, const char *field, in
 
 
 
+/* dimension getters */
+static void ocp_nlp_cost_nls_get_ny(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_cost_nls_dims *dims = (ocp_nlp_cost_nls_dims *) dims_;
+    *value = dims->ny;
+}
+
+
+
+void ocp_nlp_cost_nls_dims_get(void *config_, void *dims_, const char *field, int* value)
+{
+    if (!strcmp(field, "ny"))
+    {
+        ocp_nlp_cost_nls_get_ny(config_, dims_, value);
+    }
+    else
+    {
+        printf("error: ocp_nlp_cost_nls_dims_get: attempt to get dimensions of non-existing field %s\n", field);
+        exit(1);
+    }
+}
+
+
+
 /************************************************
  * model
  ************************************************/
@@ -723,6 +747,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->dims_assign = &ocp_nlp_cost_nls_dims_assign;
     config->dims_initialize = &ocp_nlp_cost_nls_dims_initialize;
     config->dims_set = &ocp_nlp_cost_nls_dims_set;
+    config->dims_get = &ocp_nlp_cost_nls_dims_get;
     config->model_calculate_size = &ocp_nlp_cost_nls_model_calculate_size;
     config->model_assign = &ocp_nlp_cost_nls_model_assign;
     config->model_set = &ocp_nlp_cost_nls_model_set;

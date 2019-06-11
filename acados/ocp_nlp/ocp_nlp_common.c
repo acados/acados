@@ -535,7 +535,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     config->constraints[i]->dims_set(config->constraints[i], dims->constraints[i],
                                         field, int_value);
     // update ni in ocp_nlp dimensions
-    config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i],
+    config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i],
                                         "ni", &dims->ni[i]);
 
     // update qp_solver dims
@@ -560,7 +560,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
         // {
         //     // update nb in qp_solver
         //     int nb;
-        //     config->constraints[i]->get_dims(config->constraints[i],
+        //     config->constraints[i]->dims_get(config->constraints[i],
         //                            dims->constraints[i], "nb", &nb);
         //     config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nb", &nb);
         // }
@@ -569,8 +569,8 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
     {
         // update ng_qp_solver in qp_solver
         int ng, nh, ng_qp_solver;
-        config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i], "ng", &ng);
-        config->constraints[i]->get_dims(config->constraints[i], dims->constraints[i], "nh", &nh);
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ng", &ng);
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nh", &nh);
 
         ng_qp_solver = ng + nh;
 
