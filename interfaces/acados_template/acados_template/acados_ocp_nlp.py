@@ -261,6 +261,9 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid N value. Exiting.')
 
+    def set(self, attr, value):
+        setattr(self, attr, value)
+
 class ocp_nlp_cost:
     """
     class containing the description of the cost
@@ -465,6 +468,9 @@ class ocp_nlp_cost:
             self.__zu_e = zu_e
         else:
             raise Exception('Invalid zu_e value. Exiting.')
+
+    def set(self, attr, value):
+        setattr(self, attr, value)
 
 class ocp_nlp_constraints:
     """
@@ -824,6 +830,9 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid p value. Exiting.')
 
+    def set(self, attr, value):
+        setattr(self, attr, value)
+
 class ocp_nlp_solver_config:
     """
     class containing the description of the solver configuration
@@ -899,6 +908,9 @@ class ocp_nlp_solver_config:
             raise Exception('Invalid nlp_solver_type value. Possible values are:\n\n' \
                     + ',\n'.join(nlp_solver_types) + '.\n\nYou have: ' + nlp_solver_type + '.\n\nExiting.')
 
+    def set(self, attr, value):
+        setattr(self, attr, value)
+
 class acados_ocp_nlp:
     """
     class containing the full description if the optimal control problem
@@ -916,6 +928,17 @@ class acados_ocp_nlp:
         # self.constants = {}
         self.acados_include_path = []
         self.acados_lib_path = []
+
+    def set(self, attr, value):
+        # tokenize string 
+        tokens = attr.split('_', 1)
+        if len(tokens) > 1:
+            setter_to_call = getattr(getattr(self, tokens[0]), 'set')
+        else:
+            setter_to_call = getattr(self, 'set')
+
+        setter_to_call(tokens[1], value)
+        return 
 
 def check_ra(ra):
     """
