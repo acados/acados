@@ -3,15 +3,13 @@
 
 
 # default make target
-all: acados_static acados_c_static
+all: acados_static
 
 
 
 # include config & tailored rules
 include ./Makefile.rule
 include ./Makefile.osqp
-
-
 
 # acados sources
 OBJS =
@@ -78,7 +76,14 @@ OBJS += acados/utils/timing.o
 OBJS += acados/utils/mem.o
 OBJS += acados/utils/external_function_generic.o
 
-
+CAPI_OBJS = $(OBJS)
+CAPI_OBJS += interfaces/acados_c/external_function_interface.o
+CAPI_OBJS += interfaces/acados_c/dense_qp_interface.o
+CAPI_OBJS += interfaces/acados_c/ocp_nlp_interface.o
+CAPI_OBJS += interfaces/acados_c/ocp_qp_interface.o
+CAPI_OBJS += interfaces/acados_c/condensing_interface.o
+CAPI_OBJS += interfaces/acados_c/options_interface.o
+CAPI_OBJS += interfaces/acados_c/sim_interface.o
 
 # acados dependencies
 STATIC_DEPS = blasfeo_static hpipm_static
@@ -86,6 +91,7 @@ SHARED_DEPS = blasfeo_shared hpipm_shared
 CLEAN_DEPS = blasfeo_clean hpipm_clean
 ifeq ($(ACADOS_WITH_QPOASES), 1)
 STATIC_DEPS += qpoases_static
+SHARED_DEPS += qpoases_shared
 CLEAN_DEPS += qpoases_clean
 endif
 ifeq ($(ACADOS_WITH_HPMPC), 1)
@@ -106,7 +112,6 @@ CLEAN_DEPS += osqp_clean
 endif
 
 
-
 acados_static: $(STATIC_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
@@ -116,15 +121,49 @@ acados_static: $(STATIC_DEPS)
 	@echo " libacore.a static library build complete."
 	@echo
 
+ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
+	( cd interfaces/acados_c; $(MAKE) obj CC=$(CC) TOP=$(TOP) )
+	mkdir -p include/acados_c
+	cp -r interfaces/acados_c/*.h include/acados_c
+
+	ar rcs libacados.a $(CAPI_OBJS)
+	mkdir -p lib
+	mv libacados.a lib
+
+	@echo
+	@echo " libacados.a static library build complete."
+	@echo
+endif
+
+
 acados_shared: $(SHARED_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
-	ar rcs libacore.a $(OBJS)
 	$(CC) -L./lib -shared -o libacore.so $(OBJS) -lblasfeo -lhpipm -lm -fopenmp
 	mkdir -p lib
 	mv libacore.so lib
+
+	mkdir -p include/acados
+	cp --parents acados/*/*.h include/
+
 	@echo
 	@echo " libacore.so shared library build complete."
 	@echo
+
+ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
+	( cd interfaces/acados_c; $(MAKE) obj  CC=$(CC) TOP=$(TOP) )
+
+	mkdir -p include/acados_c
+	cp -r interfaces/acados_c/*.h include/acados_c
+
+	$(CC) -L./lib -shared -o libacados.so $(CAPI_OBJS) -lblasfeo -lhpipm -lm -fopenmp
+	mkdir -p lib
+	mv libacados.so lib
+
+	@echo
+	@echo " libacados.so shared library build complete."
+	@echo
+endif
+
 
 blasfeo_static:
 	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) BLAS_API=0 )
@@ -168,6 +207,13 @@ qpoases_static:
 	cp -r $(QPOASES_PATH)/include/* include/qpoases/include
 	cp $(QPOASES_PATH)/bin/libqpOASES_e.a lib
 
+qpoases_shared:
+	( cd $(QPOASES_PATH); $(MAKE) CC=$(CC) MAKE_STATIC_LIB=0 DLLEXT=so )
+	mkdir -p include/qpoases/include
+	mkdir -p lib
+	cp -r $(QPOASES_PATH)/include/* include/qpoases/include
+	cp $(QPOASES_PATH)/bin/libqpOASES_e.a lib
+
 # TODO how is BLASFEO path set for QORE ?????
 qore_static: blasfeo_static
 	( cd $(QORE_PATH); $(MAKE) static_dense; )
@@ -192,32 +238,14 @@ qpdunes_static:
 	cp -r $(QPDUNES_PATH)/include/* include/qpdunes/include
 	cp $(QPDUNES_PATH)/src/libqpdunes.a lib
 	cp $(QPDUNES_PATH)/externals/qpOASES-3.0beta/bin/libqpOASES.a lib
-	
+
 osqp_static: $(OSQP_LIB_STATIC)
 	mkdir -p include/osqp/include
 	mkdir -p lib
 	cp -r $(OSQP_PATH)/include/* include/osqp/include
 	mv libosqp.a lib
 
-acados_c_static: acados_static
-ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
-	( cd interfaces/acados_c; $(MAKE) static_library CC=$(CC) TOP=$(TOP) )
-	mkdir -p include/acados_c
-	mkdir -p lib
-	cp -r interfaces/acados_c/*.h include/acados_c
-	mv interfaces/acados_c/libacados_c.a lib
-endif
-
-acados_c_shared: acados_shared
-ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
-	( cd interfaces/acados_c; $(MAKE) shared_library CC=$(CC) TOP=$(TOP) )
-	mkdir -p include/acados_c
-	mkdir -p lib
-	cp -r interfaces/acados_c/*.h include/acados_c
-	mv interfaces/acados_c/libacados_c.so lib
-endif
-
-examples_c: acados_c_static
+examples_c: acados_static
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )
 
 run_examples_c: examples_c
@@ -245,7 +273,7 @@ qore_clean:
 
 qpdunes_clean:
 	( cd $(QPDUNES_PATH); $(MAKE) clean )
-	
+
 osqp_clean:
 	@$(RM) $(OSQP_ALL_OBJ)
 	@$(RM) $(OSQP_QDLDL_INC_DIR)qdldl_types.h

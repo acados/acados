@@ -91,6 +91,7 @@ build/
 include/
 lib/
 local/
+*.local
 *.dat
 octave-workspace
 .vscode
