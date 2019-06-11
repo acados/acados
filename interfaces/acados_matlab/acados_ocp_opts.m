@@ -50,6 +50,8 @@ classdef acados_ocp_opts < handle
 				obj.opts_struct.nlp_solver_tol_ineq = value;
 			elseif (strcmp(field, 'nlp_solver_tol_comp'))
 				obj.opts_struct.nlp_solver_tol_comp = value;
+			elseif (strcmp(field, 'nlp_solver_ext_qp_res'))
+				obj.opts_struct.nlp_solver_ext_qp_res = value;
 			elseif (strcmp(field, 'qp_solver'))
 				obj.opts_struct.qp_solver = value;
 			elseif (strcmp(field, 'qp_solver_cond_N'))

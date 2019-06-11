@@ -86,6 +86,10 @@ typedef struct {
     struct blasfeo_dmat St_copy;
 
     struct blasfeo_dmat *original_RSQrq;
+    struct blasfeo_dmat tmp_RSQ;
+
+	struct blasfeo_dvec tmp_nuxM;
+	struct blasfeo_dvec tmp_nbgM;
 
 //    struct blasfeo_dvec grad;
 //    struct blasfeo_dvec b2;
@@ -95,8 +99,11 @@ typedef struct {
     struct blasfeo_dvec **rq;  // pointer to rq in qp_in
     struct blasfeo_dmat **BAbt;  // pointer to BAbt in qp_in
     struct blasfeo_dvec **b;  // pointer to b in qp_in
+    struct blasfeo_dmat **DCt;  // pointer to DCt in qp_in
     struct blasfeo_dvec **ux;  // pointer to ux in qp_out
     struct blasfeo_dvec **pi;  // pointer to pi in qp_out
+    struct blasfeo_dvec **lam;  // pointer to lam in qp_out
+	int **idxb; // pointer to idxb in qp_in
 
 } ocp_nlp_reg_convexify_memory;
 

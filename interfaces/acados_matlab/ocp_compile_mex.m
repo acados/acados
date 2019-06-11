@@ -1,4 +1,4 @@
-function ocp_compile_mex()
+function ocp_compile_mex(opts)
 
 % get acados folder
 acados_folder = getenv('ACADOS_INSTALL_DIR');
@@ -33,6 +33,9 @@ if is_octave()
 		cflags_tmp = fscanf(input_file, '%[^\n]s');
 		fclose(input_file);
 		cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
+		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+			cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
+		end
 		input_file = fopen('cflags_octave.txt', 'w');
 		fprintf(input_file, '%s', cflags_tmp);
 		fclose(input_file);
@@ -47,8 +50,16 @@ for ii=1:length(mex_files)
 	disp(['compiling ', mex_files{ii}])
 	if is_octave()
 %		mkoctfile -p CFLAGS
-		mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
+		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
+		else
+			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
+		end
 	else
-		mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
+		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+			mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp -DACADOS_WITH_QPOASES', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
+		else
+			mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados_c', '-lacore', '-lhpipm', '-lblasfeo', mex_files{ii})
+		end
 	end
 end
