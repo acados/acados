@@ -22,22 +22,28 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error -w")
 endif()
 
-# TODO: The following definition should go ASAP!
-set(TARGET "GENERIC" CACHE STRING "Target architecture")
-set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
-set(BLASFEO_HEADERS_INSTALLATION_DIRECTORY "include/blasfeo/include" CACHE STRING "")
-set(HPIPM_HEADERS_INSTALLATION_DIRECTORY "include/hpipm/include" CACHE STRING "")
-set(HPMPC_HEADERS_INSTALLATION_DIRECTORY "include/hpmpc/include" CACHE STRING "")
-
-
 if(CMAKE_SYSTEM_NAME MATCHES "dSpace")
     set(USE_C99_MATH OFF CACHE BOOL "fmax is not implemented for dSpace.")
 endif()
 
+# When BLASFEO is used as part of acados
+set(BLASFEO_HEADERS_INSTALLATION_DIRECTORY "include/blasfeo/include" CACHE STRING "")
+
+set(TARGET ${BLASFEO_TARGET} CACHE STRING "Set CPU architecture target" FORCE)
 add_subdirectory(blasfeo)
+
+# When HPIPM is used as part of acados
+set(HPIPM_BLASFEO_PATH ${BLASFEO_SRC_DIR} CACHE STRING "Set CPU architecture target" FORCE)
+
+set(HPIPM_BLASFEO_LIB OFF CACHE STRING "Turn off BLASFEO from HPIPM" FORCE)
+set(HPIPM_HEADERS_INSTALLATION_DIRECTORY "include/hpipm/include" CACHE STRING "")
+set(TARGET ${HPIPM_TARGET} CACHE STRING "Set CPU architecture target" FORCE)
 add_subdirectory(hpipm)
 
 if(ACADOS_WITH_HPMPC)
+	# TODO: The following definition should go ASAP!
+	# When hpmpc is used as part of acados
+	set(HPMPC_HEADERS_INSTALLATION_DIRECTORY "include/hpmpc/include" CACHE STRING "")
 	add_subdirectory(hpmpc)
 endif()
 

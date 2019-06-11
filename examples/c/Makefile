@@ -8,11 +8,7 @@ include ../../Makefile.rule
 
 LIBS =
 
-ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
-LIBS += -lacados_c
-endif
-
-LIBS += -lacore -lhpipm
+LIBS += -lacados -lhpipm
 
 ifeq ($(ACADOS_WITH_QPOASES), 1)
 LIBS += -lqpOASES_e
@@ -100,8 +96,6 @@ RUN_EXAMPLES += run_regularization
 #RUN_EXAMPLES = run_regularization
 
 run_examples: $(RUN_EXAMPLES)
-
-
 
 #################################################
 # crane model
