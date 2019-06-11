@@ -57,6 +57,7 @@ typedef struct
     int max_iter;
     int reuse_workspace;
     int num_threads;
+	int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
 	int qp_warm_start;
 } ocp_nlp_sqp_opts;
 
@@ -72,6 +73,8 @@ void ocp_nlp_sqp_opts_update(void *config, void *dims, void *opts);
 void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
 void ocp_nlp_sqp_dyanimcs_opts_set(void *config, void *opts, int stage, const char *field, void *value);
+
+
 
 /************************************************
  * memory
@@ -100,6 +103,7 @@ typedef struct
 
     double time_qp_sol;
     double time_lin;
+    double time_reg;
     double time_tot;
 
 	double *stat;
@@ -112,6 +116,8 @@ int ocp_nlp_sqp_memory_calculate_size(void *config, void *dims, void *opts_);
 //
 void *ocp_nlp_sqp_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 
+
+
 /************************************************
  * workspace
  ************************************************/
@@ -122,6 +128,8 @@ typedef struct
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
     void *qp_work;
+	ocp_qp_res *qp_res;
+	ocp_qp_res_ws *qp_res_ws;
 
     void **dynamics;     // dynamics_workspace
     void **cost;         // cost_workspace
@@ -131,6 +139,8 @@ typedef struct
 
 //
 int ocp_nlp_sqp_workspace_calculate_size(void *config, void *dims, void *opts_);
+
+
 
 /************************************************
  * functions

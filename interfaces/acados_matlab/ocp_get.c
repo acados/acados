@@ -147,6 +147,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		double *mat_ptr = mxGetPr( plhs[0] );
 		ocp_nlp_get(config, solver, "time_lin", mat_ptr);
 		}
+	else if(!strcmp(field, "time_reg"))
+		{
+		plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+		double *mat_ptr = mxGetPr( plhs[0] );
+		ocp_nlp_get(config, solver, "time_reg", mat_ptr);
+		}
 	else if(!strcmp(field, "time_qp_sol"))
 		{
 		plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);

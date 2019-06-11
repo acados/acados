@@ -33,8 +33,10 @@ nlp_solver_tol_stat = 1e-8;
 nlp_solver_tol_eq   = 1e-8;
 nlp_solver_tol_ineq = 1e-8;
 nlp_solver_tol_comp = 1e-8;
+nlp_solver_ext_qp_res = 1;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
+%qp_solver = 'full_condensing_qpoases';
 qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
@@ -186,6 +188,7 @@ ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
+ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
 if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 	ocp_opts.set('nlp_solver_tol_stat', nlp_solver_tol_stat);
@@ -260,21 +263,38 @@ status = ocp.get('status');
 sqp_iter = ocp.get('sqp_iter');
 time_tot = ocp.get('time_tot');
 time_lin = ocp.get('time_lin');
+time_reg = ocp.get('time_reg');
 time_qp_sol = ocp.get('time_qp_sol');
 
-fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 
 stat = ocp.get('stat');
 if (strcmp(nlp_solver, 'sqp'))
-	fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_iter\n');
+	fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter');
+	if size(stat,2)>7
+		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
+	end
+	fprintf('\n');
 	for ii=1:size(stat,1)
-		fprintf('%d\t%e\t%e\t%e\t%e\t%d\n', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6));
+		fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
+		if size(stat,2)>7
+			fprintf('\t%e\t%e\t%e\t%e', stat(ii,8), stat(ii,9), stat(ii,10), stat(ii,11));
+		end
+		fprintf('\n');
 	end
 	fprintf('\n');
 else % sqp_rti
-	fprintf('\niter\tqp_iter\n');
+	fprintf('\niter\tqp_stat\tqp_iter');
+	if size(stat,2)>3
+		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
+	end
+	fprintf('\n');
 	for ii=1:size(stat,1)
-		fprintf('%d\t%d\n', stat(ii,1), stat(ii,2));
+		fprintf('%d\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3));
+		if size(stat,2)>3
+			fprintf('\t%e\t%e\t%e\t%e', stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
+		end
+		fprintf('\n');
 	end
 	fprintf('\n');
 end
