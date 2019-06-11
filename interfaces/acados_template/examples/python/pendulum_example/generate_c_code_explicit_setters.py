@@ -6,13 +6,13 @@ import scipy.linalg
 from ctypes import *
 
 # create render arguments
-ra = acados_ocp_nlp()
+ocp = acados_ocp_nlp()
 
 # export model 
 model = export_ode_model()
 
 # set model_name 
-ra.model_name = model.name
+ocp.model_name = model.name
 
 Tf = 1.0
 nx = model.x.size()[0]
@@ -22,17 +22,16 @@ ny_e = nx
 N = 100
 
 # set ocp_nlp_dimensions
-nlp_dims     = ra.dims
-nlp_dims.nx  = nx 
-nlp_dims.ny  = ny 
-nlp_dims.ny_e = ny_e 
-nlp_dims.nbx = 0
-nlp_dims.nbu = nu 
-nlp_dims.nu  = model.u.size()[0]
-nlp_dims.N   = N
+
+ocp.set('dims_nx', nx) 
+ocp.set('dims_ny', ny) 
+ocp.set('dims_ny_e', ny_e) 
+ocp.set('dims_nbx', 0) 
+ocp.set('dims_nbu', nu) 
+ocp.set('dims_nu', model.u.size()[0]) 
+ocp.set('dims_N', N) 
 
 # set weighting matrices
-nlp_cost = ra.cost
 Q = np.eye(4)
 Q[0,0] = 1e3
 Q[1,1] = 1e-2
@@ -42,7 +41,7 @@ Q[3,3] = 1e-2
 R = np.eye(1)
 R[0,0] = 1e-2
 
-nlp_cost.W = scipy.linalg.block_diag(Q, R) 
+ocp.set('cost_W', scipy.linalg.block_diag(Q, R)) 
 
 Vx = np.zeros((ny, nx))
 Vx[0,0] = 1.0
@@ -50,13 +49,13 @@ Vx[1,1] = 1.0
 Vx[2,2] = 1.0
 Vx[3,3] = 1.0
 
-nlp_cost.Vx = Vx
+ocp.set('cost_Vx', Vx)
 
 Vu = np.zeros((ny, nu))
 Vu[4,0] = 1.0
-nlp_cost.Vu = Vu
+ocp.set('cost_Vu', Vu)
 
-nlp_cost.W_e = Q 
+ocp.set('cost_W_e', Q) 
 
 Vx_e = np.zeros((ny_e, nx))
 Vx_e[0,0] = 1.0
@@ -64,37 +63,41 @@ Vx_e[1,1] = 1.0
 Vx_e[2,2] = 1.0
 Vx_e[3,3] = 1.0
 
-nlp_cost.Vx_e = Vx_e
+ocp.set('cost_Vx_e', Vx_e)
 
-nlp_cost.yref  = np.zeros((ny, ))
-nlp_cost.yref_e = np.zeros((ny_e, ))
+ocp.set('cost_yref', np.zeros((ny, )))
+ocp.set('cost_yref_e', np.zeros((ny_e, )))
 
 # setting bounds
 Fmax = 80.0
-nlp_con = ra.constraints
-nlp_con.lbu = np.array([-Fmax])
-nlp_con.ubu = np.array([+Fmax])
-nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
-nlp_con.idxbu = np.array([0])
+ocp.set('constraints_lbu', np.array([-Fmax]))
+ocp.set('constraints_ubu', np.array([-Fmax]))
+ocp.set('constraints_x0', np.array([0.0, 0.0, 3.14, 0.0])
+ocp.set('constraints_idxbu', np.array([0])
 
 # set constants
-# ra.constants['PI'] = 3.1415926535897932
+# ocp.constants['PI'] = 3.1415926535897932
 
 # set QP solver
-# ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
-ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
-ra.solver_config.integrator_type = 'ERK'
+# ocp.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+ocp.set('solver_config_qp_solver', 'FULL_CONDENSING_QPOASES')
+ocp.set('solver_config_hessian_approx', 'GAUSS_NEWTON')
+ocp.set('solver_config_integrator_type', 'ERK')
 
 # set prediction horizon
-ra.solver_config.tf = Tf
-ra.solver_config.nlp_solver_type = 'SQP'
+ocp.set('solver_config_tf', Tf)
+ocp.set('solver_config_nlp_solver_type', 'SQP')
 
 # set header path
-ra.acados_include_path  = '/usr/local/include'
-ra.acados_lib_path      = '/usr/local/lib'
+ocp.set('acados_include_path', '/usr/local/include')
+ocp.set('acados_lib_path', '/usr/local/lib')
 
-acados_solver = generate_solver(model, ra, json_file = 'acados_ocp.json')
+# json_layout = acados_ocp2json_layout(ocp)
+# with open('acados_layout.json', 'w') as f:
+#     json.dump(json_layout, f, default=np_array_to_list)
+# exit()
+
+acados_solver = generate_solver(model, ocp, json_file = 'acados_ocp.json')
 
 Nsim = 100
 
@@ -119,10 +122,6 @@ for i in range(Nsim):
 
     acados_solver.set(0, "lbx", x0)
     acados_solver.set(0, "ubx", x0)
-
-    # update reference
-    for j in range(N):
-        acados_solver.set(j, "yref", np.array([0, 0, 0, 0, 0]))
 
 # plot results
 import matplotlib

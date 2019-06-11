@@ -30,15 +30,27 @@ BLASFEO_PATH = $(EXT_PATH)/blasfeo
 BLASFEO_VERSION = HIGH_PERFORMANCE
 # BLASFEO_VERSION = REFERENCE
 # BLASFEO_VERSION = BLAS_WRAPPER
+
 ## BLASFEO target
 BLASFEO_TARGET = X64_INTEL_HASWELL
 # BLASFEO_TARGET = X64_INTEL_SANDY_BRIDGE
 # BLASFEO_TARGET = X64_INTEL_CORE
+#
+# TARGET = X64_AMD_BULLDOZER
+# TARGET = X86_AMD_JAGUAR
+# TARGET = X86_AMD_BARCELONA
+#
+# TARGET = ARMV8A_ARM_CORTEX_A57
+# TARGET = ARMV8A_ARM_CORTEX_A53
+# TARGET = ARMV7A_ARM_CORTEX_A15
+# TARGET = ARMV7A_ARM_CORTEX_A7
+#
 # BLASFEO_TARGET = GENERIC
 
 ## HPIPM path
 HPIPM_PATH = $(EXT_PATH)/hpipm
 #HPIPM_PATH = /home/gianluca/hpipm
+
 ## HPIPM target
 HPIPM_TARGET = AVX
 # HPIPM_TARGET = GENERIC
@@ -85,9 +97,14 @@ ACADOS_WITH_C_INTERFACE = 1
 # measure timings
 MEASURE_TIMINGS = 1
 
-
 # compiler flags
 CFLAGS =
+
+# Possible overide with local options
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))
+# Do not complain if Makefile.local does not exisist
+-include $(current_dir)/Makefile.local
 
 # optimization flags
 CFLAGS += -O2 -fPIC
