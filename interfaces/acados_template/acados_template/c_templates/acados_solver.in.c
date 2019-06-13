@@ -257,7 +257,7 @@ int acados_create() {
 
     double usbu[NSBU];
     {%- for item in ocp.constraints.usbu %}
-    ubu[{{ loop.index0 }}] = {{ item }};
+    usbu[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
     // set up soft bounds for nonlinear constraints
@@ -562,6 +562,7 @@ int acados_create() {
     int nbu[N+1];
     int nsbx[N+1];
     int nsbu[N+1];
+    int nsh[N+1];
     int ns[N+1];
     int nb[N+1];
     int ng[N+1];
@@ -580,6 +581,7 @@ int acados_create() {
         nb[i]  = NBU_ + NBX_;
         nsbx[i]  = NSBX_;
         nsbu[i]  = NSBU_;
+        nsh[i]  = NSH_;
         ns[i]  = NS_;
         ng[i]  = NG_;
         nh[i]  = NH_;
@@ -594,6 +596,7 @@ int acados_create() {
     nb[0]  = NX_ + NBU_;
     nsbx[N]  = NSBXN_;
     nsbu[N]  = 0;
+    nsh[N]  = NSHN_;
     ns[N]  = NSN_;
 
     nu[N]  = 0;
@@ -659,6 +662,7 @@ int acados_create() {
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbu", &nsbu[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsh", &nsh[i]);
     }
 
     {%- if ocp.dims.npd > 0 %}

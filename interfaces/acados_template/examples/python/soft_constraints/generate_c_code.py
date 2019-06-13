@@ -5,6 +5,9 @@ import numpy as np
 import scipy.linalg
 from ctypes import *
 
+FORMULATION = 1 # 0 for linear soft bounds, 
+            # 1 for equivalent nonlinear soft constraint
+
 def export_nonlinear_constraint():
 
     con_name = 'nl_con'
@@ -32,9 +35,6 @@ def export_nonlinear_constraint():
 
     return constraint
 
-FORMULATION = 1 # 0 for linear soft bounds, 
-                # 1 for equivalent nonlinear soft constraint
-
 # create render arguments
 ocp = acados_ocp_nlp()
 
@@ -49,7 +49,7 @@ nx = model.x.size()[0]
 nu = model.u.size()[0]
 ny = nx + nu
 ny_e = nx
-N = 10
+N = 100
 
 # set ocp_nlp_dimensions
 nlp_dims     = ocp.dims
@@ -62,12 +62,14 @@ nlp_dims.nu  = model.u.size()[0]
 nlp_dims.N   = N
 
 if FORMULATION == 1:
-    nlp_dims.nh  = model.u.size()[0]
-    nlp_dims.nbu = 0 
+    nlp_dims.nh   = model.u.size()[0]
+    nlp_dims.nsh  = model.u.size()[0] 
+    nlp_dims.nbu  = 0 
     nlp_dims.nsbu = 0 
 else:
-    nlp_dims.nh  = 0
-    nlp_dims.nbu = model.u.size()[0]
+    nlp_dims.nh   = 0
+    nlp_dims.nsh  = 0
+    nlp_dims.nbu  = model.u.size()[0]
     nlp_dims.nsbu = model.u.size()[0]
 
 # set weighting matrices
@@ -121,12 +123,10 @@ nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
 
 constraint = export_nonlinear_constraint()
 if FORMULATION == 1:
-    nlp_dims.nsh = 1
     nlp_con.lh = np.array([-Fmax])
     nlp_con.uh = np.array([+Fmax])
     nlp_con.lsh = 0*np.array([-Fmax])
     nlp_con.ush = 0*np.array([+Fmax])
-    nlp_con.idxsh = np.array([0])
     nlp_con.idxsh = np.array([0])
 else:
     nlp_con.lbu = np.array([-Fmax])
