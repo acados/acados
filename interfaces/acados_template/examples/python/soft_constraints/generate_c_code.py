@@ -72,7 +72,9 @@ nlp_cost.yref  = np.zeros((ny, ))
 nlp_cost.yref_e = np.zeros((ny_e, ))
 
 nlp_cost.zl = 50*np.ones((1, ))
+nlp_cost.Zl = 0*np.ones((1, 1))
 nlp_cost.zu = 50*np.ones((1, ))
+nlp_cost.Zu = 0*np.ones((1, 1))
 
 # setting bounds
 Fmax = 80.0
@@ -84,9 +86,6 @@ nlp_con.usbu = 0*np.array([+Fmax])
 nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
 nlp_con.idxbu = np.array([0])
 nlp_con.idxsbu = np.array([0])
-
-# set constants
-ra.constants['PI'] = 3.1415926535897932
 
 # set QP solver
 ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
