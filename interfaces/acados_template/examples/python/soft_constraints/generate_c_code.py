@@ -121,7 +121,6 @@ nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
 
 constraint = export_nonlinear_constraint()
 if FORMULATION == 1:
-    nlp_dims.nh = 1
     nlp_dims.nsh = 1
     nlp_con.lh = np.array([-Fmax])
     nlp_con.uh = np.array([+Fmax])
