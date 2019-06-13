@@ -24,6 +24,8 @@ class ocp_nlp_dims:
         self.__nsbx   = 0     #: :math:`n_{{sb}_x}` - number of soft state bounds 
         self.__nsbx_e = 0     #: :math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T 
         self.__nsbu   = 0     #: :math:`n_{{sb}_u}` - number of soft input bounds 
+        self.__nsh    = 0     #: :math:`n_{{sb}_u}` - number of soft nonlinear constraints 
+        self.__nsh_e  = 0     #: :math:`n_{{sb}_u}` - number of soft nonlinear constraints 
         self.__ns     = 0     #: :math:`n_{s}` - total number of slacks 
         self.__ns_e   = 0     #: :math:`n_{s}^e` - total number of slacks at t=T 
         self.__ng     = 0     #: :math:`n_{g}` - number of general polytopic constraints 
@@ -93,6 +95,14 @@ class ocp_nlp_dims:
     @property
     def nsbu(self):
         return self.__nsbu
+
+    @property
+    def nsh(self):
+        return self.__nsh
+
+    @property
+    def nsh_e(self):
+        return self.__nsh_e
 
     @property
     def ns(self):
@@ -493,12 +503,16 @@ class ocp_nlp_constraints:
         self.__lsbu   = []  #: soft lower bounds on u
         self.__usbx   = []  #: soft upper bounds on x 
         self.__usbu   = []  #: soft upper bounds on u 
+        self.__lsbh   = []  #: soft lower bounds for nonlinear constraints 
+        self.__usbh   = []  #: soft upper bounds for nonlinear constraints 
         self.__idxsbx = []  #: indexes of soft bounds on x 
         self.__idxsbu = []  #: indexes of soft bounds on u
+        self.__idxsh  = []  #: indexes of soft nonlinear constraints 
         # soft bounds on x and u at t=T
         self.__lsbx_e  = []  #: soft lower bounds on x at t=T
         self.__usbx_e  = []  #: soft upper bounds on x at t=T
         self.__idxsbx_e= []  #: indexes of soft bounds on x at t=T 
+        self.__idxsh_e = []  #: indexes of soft nonlinear constraints at t=T 
         # polytopic constraints 
         self.__lg      = []  #: :math:`\underline{c}` - lower bound for general polytopic inequalities 
         self.__ug      = []  #: :math:`\bar{c}` - upper bound for general polytopic inequalities 
