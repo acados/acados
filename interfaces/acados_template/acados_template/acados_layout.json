@@ -96,6 +96,18 @@
                 "nsbu"
             ]
         ],
+        "lsbh": [
+            "ndarray",
+            [
+                "nbh"
+            ]
+        ],
+        "usbh": [
+            "ndarray",
+            [
+                "nsh"
+            ]
+        ],
         "idxsbx": [
             "ndarray",
                 [
@@ -106,6 +118,12 @@
             "ndarray",
             [
                 "nsbu"
+            ]
+        ],
+        "idxsbh": [
+            "ndarray",
+            [
+                "nsh"
             ]
         ],
         "lsbx_e": [
@@ -125,6 +143,12 @@
                 [
                     "nsbx_e"
                 ]
+        ],
+        "idxsbh_e": [
+            "ndarray",
+            [
+                "nsh_e"
+            ]
         ],
         "lg": [
             "ndarray",
@@ -336,6 +360,12 @@
             "int"
         ],
         "nbx_e": [
+            "int"
+        ],
+        "nsh": [
+            "int"
+        ],
+        "nsh_e": [
             "int"
         ],
         "ns": [
