@@ -96,13 +96,13 @@
                 "nsbu"
             ]
         ],
-        "lsbh": [
+        "lsh": [
             "ndarray",
             [
-                "nbh"
+                "nsh"
             ]
         ],
-        "usbh": [
+        "ush": [
             "ndarray",
             [
                 "nsh"
@@ -120,7 +120,7 @@
                 "nsbu"
             ]
         ],
-        "idxsbh": [
+        "idxsh": [
             "ndarray",
             [
                 "nsh"
@@ -144,7 +144,19 @@
                     "nsbx_e"
                 ]
         ],
-        "idxsbh_e": [
+        "lsh_e": [
+            "ndarray",
+            [
+                "nsh_e"
+            ]
+        ],
+        "ush_e": [
+            "ndarray",
+            [
+                "nsh_e"
+            ]
+        ],
+        "idxsh_e": [
             "ndarray",
             [
                 "nsh_e"

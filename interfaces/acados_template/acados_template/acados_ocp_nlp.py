@@ -236,6 +236,20 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nsbu value. Exiting.')
 
+    @nsh.setter
+    def nsh(self, nsh):
+        if type(nsh) == int and nsh > -1:
+            self.__nsh = nsh
+        else:
+            raise Exception('Invalid nsh value. Exiting.')
+
+    @nsh_e.setter
+    def nsh_e(self, nsh_e):
+        if type(nsh_e) == int and nsh_e > -1:
+            self.__nsh_e = nsh_e
+        else:
+            raise Exception('Invalid nsh_e value. Exiting.')
+
     @ns.setter
     def ns(self, ns):
         if type(ns) == int and ns > -1:
@@ -503,16 +517,20 @@ class ocp_nlp_constraints:
         self.__lsbu   = []  #: soft lower bounds on u
         self.__usbx   = []  #: soft upper bounds on x 
         self.__usbu   = []  #: soft upper bounds on u 
-        self.__lsbh   = []  #: soft lower bounds for nonlinear constraints 
-        self.__usbh   = []  #: soft upper bounds for nonlinear constraints 
         self.__idxsbx = []  #: indexes of soft bounds on x 
         self.__idxsbu = []  #: indexes of soft bounds on u
+        # soft bounds on nonlinear constraints
+        self.__lsh    = []  #: soft lower bounds for nonlinear constraints 
+        self.__ush    = []  #: soft upper bounds for nonlinear constraints 
         self.__idxsh  = []  #: indexes of soft nonlinear constraints 
         # soft bounds on x and u at t=T
         self.__lsbx_e  = []  #: soft lower bounds on x at t=T
         self.__usbx_e  = []  #: soft upper bounds on x at t=T
         self.__idxsbx_e= []  #: indexes of soft bounds on x at t=T 
-        self.__idxsh_e = []  #: indexes of soft nonlinear constraints at t=T 
+        # soft bounds on nonlinear constraints
+        self.__lsh_e    = []  #: soft lower bounds for nonlinear constraints 
+        self.__ush_e    = []  #: soft upper bounds for nonlinear constraints 
+        self.__idxsh_e  = []  #: indexes of soft nonlinear constraints at t=T 
         # polytopic constraints 
         self.__lg      = []  #: :math:`\underline{c}` - lower bound for general polytopic inequalities 
         self.__ug      = []  #: :math:`\bar{c}` - upper bound for general polytopic inequalities 
@@ -580,6 +598,19 @@ class ocp_nlp_constraints:
         return self.__idxsbu
 
     @property
+    def lsh(self):
+        return self.__lsh
+
+    @property
+    def ush(self):
+        return self.__ush
+
+    @property
+    def idxsh(self):
+        return self.__idxsh
+
+
+    @property
     def lsbx_e(self):
         return self.__lsbx_e
 
@@ -590,6 +621,18 @@ class ocp_nlp_constraints:
     @property
     def idxsbx_e(self):
         return self.__idxsbx_e
+
+    @property
+    def lsh_e(self):
+        return self.__lsh_e
+
+    @property
+    def ush_e(self):
+        return self.__ush_e
+
+    @property
+    def idxsh_e(self):
+        return self.__idxsh_e
 
     @property
     def lg(self):
@@ -739,6 +782,27 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid idxsbu value. Exiting.')
 
+    @lsh.setter
+    def lsh(self, lsh):
+        if type(lsh) == np.ndarray:
+            self.__lsh = lsh
+        else:
+            raise Exception('Invalid lsh value. Exiting.')
+
+    @ush.setter
+    def ush(self, ush):
+        if type(ush) == np.ndarray:
+            self.__ush = ush
+        else:
+            raise Exception('Invalid ush value. Exiting.')
+
+    @idxsh.setter
+    def idxsh(self, idxsh):
+        if type(idxsh) == np.ndarray:
+            self.__idxsh = idxsh
+        else:
+            raise Exception('Invalid idxsh value. Exiting.')
+
     @lsbx_e.setter
     def lsbx_e(self, lsbx_e):
         if type(lsbx_e) == np.ndarray:
@@ -759,6 +823,27 @@ class ocp_nlp_constraints:
             self.__idxsbx_e = idxsbx_e
         else:
             raise Exception('Invalid idxsbx_e value. Exiting.')
+
+    @lsh_e.setter
+    def lsh_e(self, lsh_e):
+        if type(lsh_e) == np.ndarray:
+            self.__lsh_e = lsh_e
+        else:
+            raise Exception('Invalid lsh_e value. Exiting.')
+
+    @ush_e.setter
+    def ush_e(self, ush_e):
+        if type(ush_e) == np.ndarray:
+            self.__ush_e = ush_e
+        else:
+            raise Exception('Invalid ush_e value. Exiting.')
+
+    @idxsh_e.setter
+    def idxsh_e(self, idxsh_e):
+        if type(idxsh_e) == np.ndarray:
+            self.__idxsh_e = idxsh_e
+        else:
+            raise Exception('Invalid idxsh_e value. Exiting.')
 
     @lg.setter
     def lg(self, lg):
