@@ -141,5 +141,8 @@ legend('p', 'theta', 'v', 'omega');
 fprintf('\nsuccess!\n\n');
 
 
+waitforbuttonpress;
+
+
 return;
 

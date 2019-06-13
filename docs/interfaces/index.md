@@ -89,10 +89,10 @@ Currently not yet implemented features:
 ```
 
 You can check out the examples folder to learn about  how to use acados_template.
-First of all, you need to compile and install acados without the qpDUNES, HPMPC and OSQP QP solvers running:
+First of all, you need to compile and install acados with the qpOASES solver running:
 ```bash
 cd <cmake_build_dir>
-cmake -DACADOS_WITH_QPDUNES=OFF -DACADOS_WITH_HPMPC=OFF -DACADOS_WITH_OSQP=OFF ..
+cmake -DACADOS_WITH_QPOASES=ON ..
 make install
 ```
 

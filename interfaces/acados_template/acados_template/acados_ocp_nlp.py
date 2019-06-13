@@ -14,8 +14,8 @@ class ocp_nlp_dims:
         self.__np     = 0     #: :math:`n_p` - number of parameters 
         self.__ny     = None  #: :math:`n_y` - number of residuals in Lagrange term 
         self.__ny_e   = None  #: :math:`n_{y}^e` - number of residuals in Mayer term 
-        self.__npd    = 0     #: :math:`n_{\pi}` - number of positive definite constraints 
-        self.__npd_e  = 0     #: :math:`n_{\pi}^e` - number of positive definite constraints at t=T 
+        self.__npd    = 0     #: :math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints 
+        self.__npd_e  = 0     #: :math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints
         self.__nh     = 0     #: :math:`n_h` - number of nonlinear constraints 
         self.__nh_e   = 0     #: :math:`n_{h}^e` - number of nonlinear constraints at t=T 
         self.__nbx    = 0     #: :math:`n_{b_x}` - number of state bounds 
