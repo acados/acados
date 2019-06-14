@@ -253,7 +253,6 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
 
     # make 
     os.chdir('c_generated_code')
-    import pdb; pdb.set_trace()
     os.system('make')
     os.system('make shared_lib')
     os.chdir('..')
