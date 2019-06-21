@@ -20,7 +20,7 @@ clc;
 clear all;
 close all;
 
-addpath('../../../interfaces/matlab/external_function_generation/sim/')
+addpath('../../../experimental/interfaces/matlab/external_function_generation/sim/')
 
 % define model 
 model = export_inverted_pendulum_dae_model();

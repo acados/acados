@@ -37,7 +37,7 @@ clc;
 clearvars;
 close all;
 
-addpath('../../../interfaces/matlab/sim/')
+addpath('../../../experimental/interfaces/matlab/sim/')
 
 %% Set options
 % default is 1 for all options
