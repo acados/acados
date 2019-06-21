@@ -9,6 +9,9 @@ Fast and embedded solvers for nonlinear optimal control.
 Some functionalities in acados require CasADi (version 3.4.0) to be installed on your system.
 To install CasADi, you can follow the installation instructions [here](https://github.com/casadi/casadi/wiki/InstallationInstructions)
 
+### acados forum 
+If you have any acados-related question, feel free to post on our [forum](https://discourse.acados.org/).  
+
 ### Installation
 Both a CMake and a Makefile based build system are supported at the moment.
 
