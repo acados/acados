@@ -196,7 +196,6 @@ typedef struct
     struct blasfeo_dmat J_G2_K1;
 
     struct blasfeo_dmat dK2_dx1;
-    struct blasfeo_dmat dK2_du;
     struct blasfeo_dmat dK2_dvv;
     struct blasfeo_dmat dxf_dwn;
     struct blasfeo_dmat S_forw_new;
@@ -252,6 +251,7 @@ typedef struct
     int *ipivM2;
 
     struct blasfeo_dmat dK2_dx2;
+    struct blasfeo_dmat dK2_du;
 
     struct blasfeo_dmat Lu;
 
