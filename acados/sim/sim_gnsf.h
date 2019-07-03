@@ -94,7 +94,9 @@ typedef struct
     double *L_u;
 
     double *A_LO;
+    double *B_LO;
     double *E_LO;
+    bool nontrivial_f_LO; // indicates if f_LO is constant zero function
 
 //    double *B_LO; idea, maybe detect linear dependency on controlls to treat
 // fully linear systems more efficiently
@@ -180,6 +182,7 @@ typedef struct
     struct blasfeo_dvec K1u;
     struct blasfeo_dvec Zu;
     struct blasfeo_dvec ALOtimesx02;
+    struct blasfeo_dvec BLOtimesu0;
 
     struct blasfeo_dvec uhat;
 
@@ -244,6 +247,7 @@ typedef struct
     struct blasfeo_dmat ZZu;
 
     struct blasfeo_dmat ALO;
+    struct blasfeo_dmat BLO;
     struct blasfeo_dmat M2_LU;
     int *ipivM2;
 

@@ -53,6 +53,7 @@ L_u    = gnsf.L_u;
 
 A_LO = gnsf.A_LO;
 E_LO = gnsf.E_LO;
+B_LO = gnsf.B_LO;
 
 I_x1 = 1:nx1;
 I_x2 = nx1+1:nx;
@@ -129,7 +130,7 @@ for i_check = 1:num_eval
 
     
     if nx2 > 0 % eval LOS
-        gnsf_val2 =  A_LO * x0(I_x2) + ...
+        gnsf_val2 =  A_LO * x0(I_x2) + B_LO * u0 + ...
             f_lo_val - E_LO * [x0dot(I_x2); z0(I_z2)];
         gnsf_val = full([gnsf_val1; gnsf_val2 ]);
     else

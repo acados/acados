@@ -33,6 +33,7 @@ extern "C" {
 #define casadi_s5 CASADI_PREFIX(s5)
 #define casadi_s6 CASADI_PREFIX(s6)
 #define casadi_s7 CASADI_PREFIX(s7)
+#define casadi_s8 CASADI_PREFIX(s8)
 
 /* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
@@ -57,8 +58,9 @@ static const casadi_int casadi_s4[28] = {4, 5, 0, 4, 8, 12, 16, 20, 0, 1, 2, 3, 
 static const casadi_int casadi_s5[3] = {4, 0, 0};
 static const casadi_int casadi_s6[7] = {1, 2, 0, 1, 2, 0, 0};
 static const casadi_int casadi_s7[23] = {4, 4, 0, 4, 8, 12, 16, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
+static const casadi_int casadi_s8[13] = {4, 2, 0, 4, 8, 0, 1, 2, 3, 0, 1, 2, 3};
 
-/* crane_nx9_get_matrices_fun:(i0)->(o0[5x5],o1[5x2],o2[5],o3[5x5],o4[4x5],o5[4x5],o6[4x0],o7[1x2],o8[4x4],o9[5],o10[4x4]) */
+/* crane_nx9_get_matrices_fun:(i0)->(o0[5x5],o1[5x2],o2[5],o3[5x5],o4[4x5],o5[4x5],o6[4x0],o7[1x2],o8[4x4],o9[5],o10[4x4],o11[4x2],o12) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2;
   a0=0.;
@@ -211,6 +213,15 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[10]!=0) res[10][13]=a0;
   if (res[10]!=0) res[10][14]=a0;
   if (res[10]!=0) res[10][15]=a1;
+  if (res[11]!=0) res[11][0]=a0;
+  if (res[11]!=0) res[11][1]=a0;
+  if (res[11]!=0) res[11][2]=a1;
+  if (res[11]!=0) res[11][3]=a0;
+  if (res[11]!=0) res[11][4]=a0;
+  if (res[11]!=0) res[11][5]=a0;
+  if (res[11]!=0) res[11][6]=a0;
+  if (res[11]!=0) res[11][7]=a0;
+  if (res[12]!=0) res[12][0]=a1;
   return 0;
 }
 
@@ -226,7 +237,7 @@ CASADI_SYMBOL_EXPORT void crane_nx9_get_matrices_fun_decref(void) {
 
 CASADI_SYMBOL_EXPORT casadi_int crane_nx9_get_matrices_fun_n_in(void) { return 1;}
 
-CASADI_SYMBOL_EXPORT casadi_int crane_nx9_get_matrices_fun_n_out(void) { return 11;}
+CASADI_SYMBOL_EXPORT casadi_int crane_nx9_get_matrices_fun_n_out(void) { return 13;}
 
 CASADI_SYMBOL_EXPORT const char* crane_nx9_get_matrices_fun_name_in(casadi_int i){
   switch (i) {
@@ -248,6 +259,8 @@ CASADI_SYMBOL_EXPORT const char* crane_nx9_get_matrices_fun_name_out(casadi_int 
     case 8: return "o8";
     case 9: return "o9";
     case 10: return "o10";
+    case 11: return "o11";
+    case 12: return "o12";
     default: return 0;
   }
 }
@@ -272,13 +285,15 @@ CASADI_SYMBOL_EXPORT const casadi_int* crane_nx9_get_matrices_fun_sparsity_out(c
     case 8: return casadi_s7;
     case 9: return casadi_s3;
     case 10: return casadi_s7;
+    case 11: return casadi_s8;
+    case 12: return casadi_s0;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT int crane_nx9_get_matrices_fun_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 1;
-  if (sz_res) *sz_res = 11;
+  if (sz_res) *sz_res = 13;
   if (sz_iw) *sz_iw = 0;
   if (sz_w) *sz_w = 0;
   return 0;

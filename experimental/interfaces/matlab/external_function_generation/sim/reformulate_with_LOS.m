@@ -325,11 +325,52 @@ end
 
 gnsf.C = gnsf.C(:,I_nonzero);
 gnsf.phi_expr = gnsf.phi_expr(I_nonzero);
+gnsf.B_LO = zeros(length(gnsf.f_lo_expr), gnsf.nu);
 
 gnsf = determine_input_nonlinearity_function( gnsf );
-
 check_reformulation(reordered_model, gnsf, print_info);
 
+%% Reformulate with B_LO
+for ii = 1:length(gnsf.f_lo_expr)
+    fii = gnsf.f_lo_expr(ii);
+    for iu = 1:gnsf.nu
+        var = u(iu);
+        varname = var.name;
+        % symbolic jacobian of fii w.r.t. ui;
+        jac_fii_ui = jacobian(fii, var);
+        if jac_fii_ui.is_constant % i.e. hessian is structural zero
+            % jacobian value
+            jac_fii_ui_fun = Function(['jac_fii_ui_fun'],...
+                            {x(1)}, {jac_fii_ui});
+            gnsf.B_LO(ii, iu) = full(jac_fii_ui_fun(0));
+        else
+            gnsf.B_LO(ii, iu) = 0;
+            if print_info
+                disp(['f_LO(' num2str(ii) ') is nonlinear in u(', num2str(iu), ') = ' varname]);
+                disp(fii)
+                disp('-----------------------------------------------------');
+            end
+        end
+    end
+end
+f_next = gnsf.f_lo_expr - gnsf.B_LO * u;
+f_next = f_next.simplify();
+gnsf.f_lo_expr = f_next;
+
+gnsf.nontrivial_f_LO = 0;
+for ii = 1:length(gnsf.f_lo_expr)
+    fii = gnsf.f_lo_expr(ii);
+    if ~fii.is_zero
+        gnsf.nontrivial_f_LO = 1;
+    end
+end
+if ~gnsf.nontrivial_f_LO && print_info
+    disp('f_LO is fully trivial (== 0)');
+    disp('B_LO =');
+    disp(gnsf.B_LO);
+end
+
+check_reformulation(reordered_model, gnsf, print_info);
 
 if print_info
     disp('');
