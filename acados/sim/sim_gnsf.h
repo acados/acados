@@ -252,6 +252,7 @@ typedef struct
 
     struct blasfeo_dmat dK2_dx2;
     struct blasfeo_dmat dK2_du;
+    struct blasfeo_dmat dx2f_dx2u;
 
     struct blasfeo_dmat Lu;
 

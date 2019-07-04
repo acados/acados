@@ -663,6 +663,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     struct blasfeo_dmat M2_LU = mem->M2_LU;
     struct blasfeo_dmat dK2_dx2 = mem->dK2_dx2;
     struct blasfeo_dmat dK2_du = mem->dK2_du;
+    struct blasfeo_dmat dx2f_dx2u = mem->dx2f_dx2u;
 
     struct blasfeo_dmat Lu = mem->Lu;
 
@@ -936,6 +937,16 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
         blasfeo_drowpe(nK2, ipivM2, &dK2_du);  // permute also rhs
         blasfeo_dtrsm_llnu(nK2, nu, 1.0, &M2_LU, 0, 0, &dK2_du, 0, 0, &dK2_du, 0, 0);
         blasfeo_dtrsm_lunn(nK2, nu, 1.0, &M2_LU, 0, 0, &dK2_du, 0, 0, &dK2_du, 0, 0);
+
+        // precompute dx2f_dx2u
+        for (int ii = 0; ii < nx2; ii++)
+            blasfeo_dgein1(1.0, &dx2f_dx2u, ii, ii);
+
+        for (int ii = 0; ii < num_stages; ii++)
+        {
+            blasfeo_dgead(nx2, nx2, b_dt[ii], &dK2_dx2, ii * nxz2, 0, &dx2f_dx2u, 0, 0);
+            blasfeo_dgead(nx2, nu,  b_dt[ii], &dK2_du,  ii * nxz2, 0, &dx2f_dx2u, 0, nx2);
+        }
     }
 
     if (opts->sens_algebraic){
@@ -1137,6 +1148,7 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
     size += blasfeo_memsize_dmat(nK2, nK2);  // M2_LU
     size += blasfeo_memsize_dmat(nK2, nx2);  // dK2_dx2
     size += blasfeo_memsize_dmat(nK2, nu);          // dK2_du
+    size += blasfeo_memsize_dmat(nx2, nx2 + nu); // dx2f_dx2u
 
     size += blasfeo_memsize_dmat(nuhat, nu);  // Lu
 
@@ -1266,6 +1278,7 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     assign_and_advance_blasfeo_dmat_mem(nK2, nK2, &mem->M2_LU, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nK2, nx2, &mem->dK2_dx2, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nK2, nu, &mem->dK2_du, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx2, nx2 + nu, &mem->dx2f_dx2u, &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nuhat, nu, &mem->Lu, &c_ptr);
 
@@ -1720,6 +1733,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     struct blasfeo_dmat M2_LU = mem->M2_LU;
     struct blasfeo_dmat dK2_dx2 = mem->dK2_dx2;
     struct blasfeo_dmat dK2_du = mem->dK2_du;
+    struct blasfeo_dmat dx2f_dx2u = mem->dx2f_dx2u;
 
     struct blasfeo_dmat Lu = mem->Lu;
 
@@ -1978,7 +1992,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                                 nx1 * ii, &x1_stage_val, nx1 * ii);
                 }
             }
-        }
+        } // if (nx1 > 0 || nz1 > 0)
 
         if (nxz2)
         {
@@ -2167,10 +2181,21 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 // dK1_dw
                 blasfeo_dgead(nx1, nx1, b_dt[ii], &dK1_dx1, ii * nx1, 0, &dxf_dwn, 0, 0);
                 blasfeo_dgead(nx1, nu , b_dt[ii], &dK1_du , ii * nx1, 0, &dxf_dwn, 0, nx);
-                // dK2_dw
-                blasfeo_dgead(nx2, nx1, b_dt[ii], &dK2_dx1, ii * nxz2, 0, &dxf_dwn, nx1, 0);
-                blasfeo_dgead(nx2, nx2, b_dt[ii], &dK2_dx2, ii * nxz2, 0, &dxf_dwn, nx1, nx1);
-                blasfeo_dgead(nx2, nu,  b_dt[ii], &dK2_du,  ii * nxz2, 0, &dxf_dwn, nx1, nx);
+            }
+            // dK2_dw
+            if (model->nontrivial_f_LO)
+            {
+                for (int ii = 0; ii < num_stages; ii++)
+                {
+                    blasfeo_dgead(nx2, nx1, b_dt[ii], &dK2_dx1, ii * nxz2, 0, &dxf_dwn, nx1, 0);
+                    blasfeo_dgead(nx2, nx2, b_dt[ii], &dK2_dx2, ii * nxz2, 0, &dxf_dwn, nx1, nx1);
+                    blasfeo_dgead(nx2, nu,  b_dt[ii], &dK2_du,  ii * nxz2, 0, &dxf_dwn, nx1, nx);
+                }
+            }
+            else
+            {
+                // copy from precomputed dx2f_dx2u
+                blasfeo_dgecp(nx2, nx2 + nu, &dx2f_dx2u, 0, 0, &dxf_dwn, nx1, nx1);
             }
             blasfeo_dgemm_nn(nx, nx, nx, 1.0, &dxf_dwn, 0, 0, &S_forw, 0, 0, 0.0, &S_forw_new, 0, 0,
                              &S_forw_new, 0, 0);
