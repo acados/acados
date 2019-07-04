@@ -150,13 +150,22 @@ void sim_gnsf_dims_get(void *config_, void *dims_, const char *field, int *value
 
 
 /************************************************
- * import functions
+ * import function
  ************************************************/
 
 static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
 {
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
     external_function_generic *get_matrices_fun = model->get_gnsf_matrices;
-    double tmp;
+
+    int nu = dims->nu;
+    int nx2 = dims->nx - dims->nx1;
+    int nz2 = dims->nz - dims->nz1;
+
+    // ensure compatibility with earlier version without B_LO
+    double tmp = 0.0;
+    for (int ii = 0; ii < (nx2+nz2)*nu; ii++)
+        model->B_LO[ii] = 0.0;
 
     // calling the external function
     ext_fun_arg_t ext_fun_type_in[1];
@@ -167,9 +176,8 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
     ext_fun_type_in[0] = COLMAJ;
     ext_fun_in[0] = model->A;  // just to have some input;
 
-    for (int ii = 0; ii < 13; ii++) {
+    for (int ii = 0; ii < 13; ii++)
         ext_fun_type_out[ii] = COLMAJ;
-    }
 
     ext_fun_out[0] = model->A;
     ext_fun_out[1] = model->B;

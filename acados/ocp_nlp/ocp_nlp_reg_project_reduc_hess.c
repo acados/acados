@@ -426,7 +426,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 						}
 						// bottom rectangle
 						for(kk=idx+1; kk<nu[ss]+nx[ss]; kk++)
-						{
+                            {
 							tmp_el = BLASFEO_DMATEL(L3, kk, jj);
 							BLASFEO_DMATEL(L3, kk, jj) = BLASFEO_DMATEL(L3, kk, idx);
 							BLASFEO_DMATEL(L3, kk, idx) = tmp_el;

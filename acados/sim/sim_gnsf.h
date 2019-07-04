@@ -29,7 +29,6 @@ extern "C" {
 
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-
 #include "acados/sim/sim_common.h"
 
 #include "blasfeo/include/blasfeo_common.h"
@@ -43,9 +42,13 @@ extern "C" {
 /* 
 GNSF - Generalized Nonlinear Static Feedback Model
 has the following form
+https://github.com/acados/acados/files/3359595/gnsf_structure_blo.pdf
 
+Details on the algorithm can be found in master thesis of Jonathan Frey,
+which presents a slightly different format without the B_LO matrix.
 https://github.com/acados/acados/files/2318322/gnsf_structure.pdf
-More details can be found in Master thesis of Jonathan Frey
+https://cdn.syscop.de/publications/Frey2018.pdf
+https://cdn.syscop.de/publications/Frey2019.pdf
 */
 
 typedef struct
@@ -97,10 +100,6 @@ typedef struct
     double *B_LO;
     double *E_LO;
     bool nontrivial_f_LO; // indicates if f_LO is constant zero function
-
-//    double *B_LO; idea, maybe detect linear dependency on controlls to treat
-// fully linear systems more efficiently
-
 
     /* constant vector */
     double *c;
