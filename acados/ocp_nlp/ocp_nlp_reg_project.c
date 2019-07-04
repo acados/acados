@@ -162,8 +162,8 @@ void ocp_nlp_reg_project_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims, struct bla
     int ii;
 
     int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
+    // int *nx = dims->nx;
+    // int *nu = dims->nu;
 
     for(ii=0; ii<=N; ii++)
     {
@@ -264,7 +264,6 @@ void ocp_nlp_reg_project_regularize_hessian(void *config, ocp_nlp_reg_dims *dims
 
     int *nx = dims->nx;
     int *nu = dims->nu;
-    int N = dims->N;
 
     for(ii=0; ii<=dims->N; ii++)
     {

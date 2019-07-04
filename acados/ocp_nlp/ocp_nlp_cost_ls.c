@@ -433,8 +433,8 @@ void ocp_nlp_cost_ls_opts_update(void *config_, void *dims_, void *opts_)
 
 void ocp_nlp_cost_ls_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
-    ocp_nlp_cost_config *config = config_;
-    ocp_nlp_cost_ls_opts *opts = opts_;
+    // ocp_nlp_cost_config *config = config_;
+    // ocp_nlp_cost_ls_opts *opts = opts_;
 
     if(!strcmp(field, "exact_hess"))
     {

@@ -1380,7 +1380,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 //        exit(1);
 
 
-        if (qp_status!=ACADOS_SUCCESS & qp_status!=ACADOS_MAXITER)
+        if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
         {
             //   print_ocp_qp_in(work->qp_in);
 

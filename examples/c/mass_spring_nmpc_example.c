@@ -226,7 +226,7 @@ void ext_costN(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type
 void disc_model(void *fun0, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
-    int ii, jj;
+    int ii;
 
     int nu = 3;
     int nx = 8;
@@ -247,7 +247,7 @@ void disc_model(void *fun0, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *ty
 
 	// extract inputs
 	// 0: [x], size: nx, type: BLASFEO_DVEC_ARGS
-	struct blasfeo_dvec_args *x_args = in[0];
+    struct blasfeo_dvec_args *x_args = in[0];
 	struct blasfeo_dvec *x = x_args->x;
 	int xi = x_args->xi;
 	// 1: [u], size: nu, type: BLASFEO_DVEC_ARGS
@@ -259,12 +259,9 @@ void disc_model(void *fun0, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *ty
 	// 0: [fun], size: nx1, type: BLASFEO_DVEC_ARGS
 	struct blasfeo_dvec_args *f_args = out[0];
 	struct blasfeo_dvec *fun = f_args->x;
-	int fun_i = x_args->xi;
 	// 1: [jac_u'; jac_x'], size: (nu+nx)*nx1, type: BLASFEO_DMAT_ARGS
 	struct blasfeo_dmat_args *j_args = out[1];
 	struct blasfeo_dmat *jac = j_args->A;
-	int jac_i = j_args->ai;
-	int jac_j = j_args->aj;
 
     // jac
 	blasfeo_pack_tran_dmat(nx, nu, B, nx, jac, 0, 0);

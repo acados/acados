@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "acados/utils/print.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
@@ -69,10 +70,8 @@ int main() {
 	int	nb[N+1];
     int ng[N+1];
     int nh[N+1];
-    int np[N+1];
 	int	ns[N+1];
     int nz[N+1];
-    int nv[N+1];
     int ny[N+1];
 
     for(int i = 0; i < N+1; i++) {
@@ -83,10 +82,8 @@ int main() {
         nb[i] = 0;
         ng[i] = 0;
         nh[i] = 0;
-        np[i] = 0;
         ns[i] = 0;
         nz[i] = nz_;
-        nv[i] = nx_ + nu_;
         ny[i] = ny_;
     }
 
@@ -94,8 +91,6 @@ int main() {
     nb[0] = nx_;
     nu[N] = 0;
     nh[N] = 0;
-    np[N] = 0;
-    nv[N] = nx_; 
     ny[N] = nx_;
     nz[N] = 0;
 

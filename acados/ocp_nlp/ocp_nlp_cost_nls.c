@@ -247,8 +247,8 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
     ocp_nlp_cost_nls_dims *dims = dims_;
     ocp_nlp_cost_nls_model *model = model_;
 
-    int nx = dims->nx;
-    int nu = dims->nu;
+    // int nx = dims->nx;
+    // int nu = dims->nu;
     int ny = dims->ny;
     int ns = dims->ns;
 
@@ -375,7 +375,7 @@ void ocp_nlp_cost_nls_opts_update(void *config_, void *dims_, void *opts_)
 
 void ocp_nlp_cost_nls_opts_set(void *config_, void *opts_, const char *field, void* value)
 {
-    ocp_nlp_cost_config *config = config_;
+    // ocp_nlp_cost_config *config = config_;
     ocp_nlp_cost_nls_opts *opts = opts_;
 
     if(!strcmp(field, "gauss_newton_hess"))

@@ -62,8 +62,6 @@ static int ocp_nlp_plan_calculate_size(int N)
 
 static ocp_nlp_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
 {
-    int ii;
-
     char *c_ptr = (char *) raw_memory;
 
     ocp_nlp_plan *plan = (ocp_nlp_plan *) c_ptr;

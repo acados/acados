@@ -270,6 +270,9 @@ int main() {
                     break;
 
 #endif
+                case INVALID_QP_SOLVER:
+                    printf("\nInvalid QP solver\n\n");
+
             }
 
             ocp_qp_solver *qp_solver = ocp_qp_create(config, qp_dims, opts);

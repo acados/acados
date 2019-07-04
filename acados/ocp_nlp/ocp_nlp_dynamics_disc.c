@@ -370,7 +370,7 @@ int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void *dims_, v
 
     int nx = dims->nx;
     int nu = dims->nu;
-    int nx1 = dims->nx1;
+    // int nx1 = dims->nx1;
 
     int size = 0;
 
@@ -399,7 +399,7 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, voi
 
     int nx = dims->nx;
     int nu = dims->nu;
-    int nx1 = dims->nx1;
+    // int nx1 = dims->nx1;
 
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_workspace);

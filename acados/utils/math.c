@@ -391,7 +391,8 @@ void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B, int ldb
 /* one norm of a matrix */
 double onenorm(int row, int col, double *ptrA)
 {
-    double max, temp;
+    double max = 0.0;
+    double temp;
     int i, j;
     temp = 0;
     for (j = 0; j < col; j++)
