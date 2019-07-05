@@ -428,10 +428,10 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                         std::cout << "\n --->> NOT SUPPORTED -- corresponding test skipped \n";
                         break;
                     }
-                    if ( sens_forw + sens_adj < 2 )
+                    if ( !sens_forw )
                     {
-                        std::cout << "\n ERK hessians only tested with ";
-                        std::cout << "sens_forw and sens_adj == true \n other settings are buggy";
+                        std::cout << "\n ERK hessians only work with   ";
+                        std::cout << "sens_forw = true; [known issue]";
                         std::cout << "\n --->> corresponding test skipped \n";
                         break;
                     }
