@@ -90,8 +90,8 @@ sim_solver_t hashitsim_hess(std::string const& inString)
 
 double sim_solver_tolerance_sim(std::string const& inString)
 {
-    if (inString == "IRK")  return 1e-4;
-    if (inString == "ERK") return 1e-3;
+    if (inString == "IRK")  return 1e-9;
+    if (inString == "ERK") return 1e-5;
 
     return -1;
 }
@@ -99,7 +99,7 @@ double sim_solver_tolerance_sim(std::string const& inString)
 double sim_solver_tolerance_hess(std::string const& inString)
 {
     if (inString == "IRK")  return 1e-8;
-    if (inString == "ERK") return 3e-1;
+    if (inString == "ERK") return 1e-5;
     // TODO(OJ): this should obivously be smaller. ERK adjoints and Hessians should be checked!
 
     return -1;
