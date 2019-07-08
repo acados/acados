@@ -37,7 +37,7 @@ clc;
 clearvars;
 close all;
 
-addpath('../../../interfaces/matlab/external_function_generation/sim/')
+addpath('../../../experimental/interfaces/matlab/external_function_generation/sim/')
 
 %% Set options
 print_info = 1;
