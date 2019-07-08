@@ -615,26 +615,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// opts_struct
 
-	int N;							bool set_param_scheme_N = false;
+	char *param_scheme;
+	int N;									bool set_param_scheme_N = false;
+	double *param_scheme_shooting_nodes;	bool set_param_scheme_shooting_nodes = false;
 	char *nlp_solver;
 	bool nlp_solver_exact_hessian;
-	int nlp_solver_max_iter;		bool set_nlp_solver_max_iter = false;
-	double nlp_solver_tol_stat;		bool set_nlp_solver_tol_stat = false;
-	double nlp_solver_tol_eq;		bool set_nlp_solver_tol_eq = false;
-	double nlp_solver_tol_ineq;		bool set_nlp_solver_tol_ineq = false;
-	double nlp_solver_tol_comp;		bool set_nlp_solver_tol_comp = false;
-	int nlp_solver_ext_qp_res;		bool set_nlp_solver_ext_qp_res = false;
+	int nlp_solver_max_iter;				bool set_nlp_solver_max_iter = false;
+	double nlp_solver_tol_stat;				bool set_nlp_solver_tol_stat = false;
+	double nlp_solver_tol_eq;				bool set_nlp_solver_tol_eq = false;
+	double nlp_solver_tol_ineq;				bool set_nlp_solver_tol_ineq = false;
+	double nlp_solver_tol_comp;				bool set_nlp_solver_tol_comp = false;
+	int nlp_solver_ext_qp_res;				bool set_nlp_solver_ext_qp_res = false;
 	char *qp_solver;
-	int qp_solver_cond_N;			bool set_qp_solver_cond_N = false;
-	int qp_solver_cond_ric_alg;		bool set_qp_solver_cond_ric_alg = false;
-	int qp_solver_ric_alg;			bool set_qp_solver_ric_alg = false;
-	int qp_solver_warm_start;		bool set_qp_solver_warm_start = false;
+	int qp_solver_cond_N;					bool set_qp_solver_cond_N = false;
+	int qp_solver_cond_ric_alg;				bool set_qp_solver_cond_ric_alg = false;
+	int qp_solver_ric_alg;					bool set_qp_solver_ric_alg = false;
+	int qp_solver_warm_start;				bool set_qp_solver_warm_start = false;
 	char *sim_method;
-	int sim_method_num_stages;		bool set_sim_method_num_stages = false;
-	int sim_method_num_steps;		bool set_sim_method_num_steps = false;
-	char *regularize_method;		bool set_regularize_method = false;
+	int sim_method_num_stages;				bool set_sim_method_num_stages = false;
+	int sim_method_num_steps;				bool set_sim_method_num_steps = false;
+	char *regularize_method;				bool set_regularize_method = false;
 
-	// param_scheme_NN
+	// parametrization scheme
+	// TODO check
+	param_scheme = mxArrayToString( mxGetField( prhs[1], 0, "param_scheme" ) );
+	// param_scheme_N
 	if(mxGetField( prhs[1], 0, "param_scheme_N" )!=NULL)
 		{
 		set_param_scheme_N = true;
@@ -644,6 +649,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		mexPrintf("\nerror: ocp_create: param_scheme_N not set!\n");
 		return;
+		}
+	// param_scheme_shooting_nodes
+	if(mxGetField( prhs[1], 0, "param_scheme_shooting_nodes" )!=NULL)
+		{
+		set_param_scheme_shooting_nodes = true;
+		param_scheme_shooting_nodes = mxGetPr( mxGetField( prhs[1], 0, "param_scheme_shooting_nodes" ) );
 		}
 	// nlp_solver
 	// TODO check
@@ -784,7 +795,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nnlp_solver not supported: %s\n", nlp_solver);
+		mexPrintf("\nerror: ocp_create: nlp_solver not supported: %s\n", nlp_solver);
 		return;
 		}
 	
@@ -812,7 +823,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\ncost_type not supported: %s\n", cost_type);
+		mexPrintf("\nerror: ocp_create: cost_type not supported: %s\n", cost_type);
 		return;
 		}
 	if(!strcmp(cost_e_type, "linear_ls"))
@@ -829,7 +840,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\ncost_e_type not supported: %s\n", cost_e_type);
+		mexPrintf("\nerror: ocp_create: cost_e_type not supported: %s\n", cost_e_type);
 		return;
 		}
 
@@ -849,7 +860,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			}
 		else
 			{
-			mexPrintf("\nsim_method not supported for explicit dynamics: %s\n", sim_method);
+			mexPrintf("\nerror: ocp_create: sim_method not supported for explicit dynamics: %s\n", sim_method);
 			return;
 			}
 		}
@@ -868,7 +879,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			}
 		else
 			{
-			mexPrintf("\nsim_method not supported for implicit dynamics: %s\n", sim_method);
+			mexPrintf("\nerror: ocp_create: sim_method not supported for implicit dynamics: %s\n", sim_method);
 			return;
 			}
 //		plan->sim_solver_plan[ii].sim_solver = LIFTED_IRK;
@@ -884,7 +895,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 //		plan->nlp_dynamics[ii] = DISCRETE_MODEL;
 //		plan->sim_solver_plan[ii].sim_solver = GNSF;
-		mexPrintf("\ndyn_type not supported: %s\n", dyn_type);
+		mexPrintf("\nerror: ocp_create: dyn_type not supported: %s\n", dyn_type);
 		return;
 		}
 	
@@ -898,7 +909,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nconstr_type not supported: %s\n", constr_type);
+		mexPrintf("\nerror: ocp_create: constr_type not supported: %s\n", constr_type);
 		return;
 		}
 
@@ -919,7 +930,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 #endif
 	else
 		{
-		mexPrintf("\nqp_solver not supported: %s\n", qp_solver);
+		mexPrintf("\nerror: ocp_create: qp_solver not supported: %s\n", qp_solver);
 		return;
 		}
 	
@@ -946,7 +957,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 	else
 		{
-		mexPrintf("\nregularize_method not supported: %s\n", regularize_method);
+		mexPrintf("\nerror: ocp_create: regularize_method not supported: %s\n", regularize_method);
 		return;
 		}
 
@@ -976,12 +987,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// ns
 	if(ns!=nsbu+nsbx+nsg+nsh)
 		{
-		mexPrintf("\nerror: ns!=nsbu+nsbx+nsg+nsh\n");
+		mexPrintf("\nerror: ocp_create: ns!=nsbu+nsbx+nsg+nsh\n");
 		return;
 		}
 	if(ns_e!=nsbx+nsg_e+nsh_e)
 		{
-		mexPrintf("\nerror: ns_e!=nsbx+nsg_e+nsh_e\n");
+		mexPrintf("\nerror: ocp_create: ns_e!=nsbx+nsg_e+nsh_e\n");
 		return;
 		}
 	// TODO fix stage 0 !!!!!!!!
@@ -1179,11 +1190,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	ocp_nlp_in *in = ocp_nlp_in_create(config, dims);
 
 	// shooting nodes
-	double Ts = T/N;
-	for(ii=0; ii<N; ii++)
+	if(!strcmp(param_scheme, "multiple_shooting_unif_grid"))
 		{
-		ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
-		ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
+		double Ts = T/N;
+		for(ii=0; ii<N; ii++)
+			{
+			ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
+			ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
+			}
+		}
+	else if(!strcmp(param_scheme, "multiple_shooting"))
+		{
+		if(!set_param_scheme_shooting_nodes)
+			{
+			mexPrintf("\nerror: ocp_create: param_scheme_shooting_nodes not set for param_scheme multiple_shooting!\n");
+			return;
+			}
+		double scale = T/(param_scheme_shooting_nodes[N]-param_scheme_shooting_nodes[0]);
+		for(ii=0; ii<N; ii++)
+			{
+			double Ts = scale*(param_scheme_shooting_nodes[ii+1]-param_scheme_shooting_nodes[ii]);
+			ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
+			ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
+			}
+		}
+	else
+		{
+		mexPrintf("\nerror: ocp_create: param_scheme not supported: %s\n");
+		return;
 		}
 
 	// cost: ls

@@ -17,7 +17,9 @@ end
 compile_mex = 'true';
 codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
-N = 20;
+%param_scheme = 'multiple_shooting';
+%shooting_nodes = [0 0.1 0.2 0.3 0.5 1];;
+N = 5;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
@@ -206,6 +208,9 @@ ocp_opts.set('compile_mex', compile_mex);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
+if (strcmp(param_scheme, 'multiple_shooting'))
+	ocp_opts.set('param_scheme_shooting_nodes', shooting_nodes);
+end
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
@@ -267,8 +272,8 @@ time_ext = toc
 
 
 % get solution
-u = ocp.get('u');
-x = ocp.get('x');
+u = ocp.get('u')
+x = ocp.get('x')
 
 
 

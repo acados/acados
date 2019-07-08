@@ -4,6 +4,8 @@ classdef acados_ocp_model < handle
 
 	properties
 		model_struct
+		andreas
+		dae
 	end %properties
 
 
