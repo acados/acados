@@ -46,6 +46,13 @@ function [ gnsf, reordered_model] = detect_gnsf_structure(model, transcribe_opts
 
 
 %% load transcribe_opts
+if ~exist('transcribe_opts', 'var')
+    disp('WARNING: GNSF structure detection called without transcribe_opts');
+    disp(' using default settings');
+    disp('');
+    transcribe_opts = struct;
+end
+
 if isfield(transcribe_opts, 'print_info')
     print_info = transcribe_opts.print_info;
 else
