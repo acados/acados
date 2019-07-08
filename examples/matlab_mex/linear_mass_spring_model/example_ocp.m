@@ -272,8 +272,8 @@ time_ext = toc
 
 
 % get solution
-u = ocp.get('u')
-x = ocp.get('x')
+u = ocp.get('u');
+x = ocp.get('x');
 
 
 
