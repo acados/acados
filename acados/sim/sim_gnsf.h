@@ -84,6 +84,10 @@ typedef struct
     //    [default]: true -> auto;
     bool auto_import_gnsf;
 
+    // booleans from structure detection
+    bool nontrivial_f_LO; // indicates if f_LO is constant zero function
+    bool tmp_fully_linear; // indicates if model is fully linear LOS
+
     /* model defining matrices */
     // TODO: add setters to set manually
     double *A;
@@ -99,7 +103,6 @@ typedef struct
     double *A_LO;
     double *B_LO;
     double *E_LO;
-    bool nontrivial_f_LO; // indicates if f_LO is constant zero function
 
     /* constant vector */
     double *c;
@@ -280,6 +283,8 @@ typedef struct
     struct blasfeo_dmat *Lx;
     struct blasfeo_dmat *Lxdot;
     struct blasfeo_dmat *Lz;
+
+    bool first_call;
 
 } sim_gnsf_memory;
 
