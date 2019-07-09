@@ -82,7 +82,7 @@ typedef struct
 
     // booleans from structure detection
     bool nontrivial_f_LO; // indicates if f_LO is constant zero function
-    bool tmp_fully_linear; // indicates if model is fully linear LOS
+    bool fully_linear; // indicates if model is fully linear LOS
 
     /* model defining matrices */
     // TODO: add setters to set manually

@@ -195,7 +195,7 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
                                ext_fun_out);
 
     model->nontrivial_f_LO = (tmp_nontriv_f_LO > 0);
-    model->tmp_fully_linear = (tmp_fully_linear > 0);
+    model->fully_linear = (tmp_fully_linear > 0);
 }
 
 
@@ -1085,7 +1085,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
 
     // generate sensitivities
     mem->first_call = true;
-    if (model->tmp_fully_linear)
+    if (model->fully_linear)
     {
         // set identity seed
         for (int jj = 0; jj < nx * (nx + nu); jj++)
@@ -1794,7 +1794,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     blasfeo_pack_dvec(nx + nu, &in->S_adj[0], lambda_old, 0);
 
 
-    if (model->tmp_fully_linear && !mem->first_call)
+    if (model->fully_linear && !mem->first_call)
     {
         // xf = x_0 + S_forw_x * x0 + S_forw_u * u0; 
         blasfeo_dgemv_n(nx, nx, 1.0, S_forw, 0, 0, x0_traj, 0, 0.0,
@@ -1817,6 +1817,12 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
         // adjoint
         blasfeo_dgemv_t(nx, nx+nu, 1.0, S_forw, 0, 0, lambda_old, 0, 0.0, lambda_old, 0, lambda, 0);
+
+        if (opts->output_z || opts->sens_algebraic)
+        {
+            printf("ERROR sim_gnsf: output_z and sens_algebraic not supported with fully linear structure exploitation\n");
+            return ACADOS_FAILURE;
+        }
     }
     else
     {
