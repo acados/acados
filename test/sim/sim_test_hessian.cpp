@@ -292,6 +292,8 @@ TEST_CASE("pendulum_hessians", "[integrators]")
         in->S_forw[ii] = 0.0;
     for (int ii = 0; ii < nx; ii++)
         in->S_forw[ii * (nx + 1)] = 1.0;
+    in->identity_seed = true;
+
 
     // seeds adj
     for (int ii = 0; ii < nx; ii++)

@@ -640,10 +640,14 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 
     // initialize seeds
     // TODO fix dims if nx!=nx1 !!!!!!!!!!!!!!!!!
+    // set S_forw = [eye(nx), zeros(nx x nu)]
     for(jj = 0; jj < nx1 * (nx + nu); jj++)
         work->sim_in->S_forw[jj] = 0.0;
     for(jj = 0; jj < nx1; jj++)
         work->sim_in->S_forw[jj * (nx + 1)] = 1.0;
+    work->sim_in->identity_seed = true;
+
+    // adjoint seed
     for(jj = 0; jj < nx + nu; jj++)
         work->sim_in->S_adj[jj] = 0.0;
     blasfeo_unpack_dvec(nx1, mem->pi, 0, work->sim_in->S_adj);

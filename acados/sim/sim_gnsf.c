@@ -1083,10 +1083,18 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
                                 0, 0, ELO_inv_ALO, 0, 0);
     }
 
-    // generate all sensitivities
+    // generate sensitivities
     mem->first_call = true;
     if (model->tmp_fully_linear)
+    {
+        // set identity seed
+        for (int jj = 0; jj < nx * (nx + nu); jj++)
+            in->S_forw[jj] = 0.0;
+        for (int jj = 0; jj < nx; jj++)
+            in->S_forw[jj * (nx + 1)] = 1.0;
+        in->identity_seed = true;
         sim_gnsf(config_, in, out, opts_, mem_, work_);
+    }
     mem->first_call = false;
 
     return status;
@@ -1795,14 +1803,17 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                         x0_traj, nx * num_steps, x0_traj, nx * num_steps);
 
         // sensitivities are constant and already computed - only multiply with seed
-        // pack seed into S_forw_new
-        blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, S_forw_new, 0, 0);
-        // S_forw_new_x = S_forw_x * S_forw_new_x
-        blasfeo_dgemm_nn(nx, nx, nx, 1.0, S_forw, 0, 0, S_forw_new, 0, 0, 0.0, S_forw_new, 0, 0,
-                                S_forw_new, 0, 0);
-        // S_forw_new_u = S_forw_x * S_forw_new_u + S_forw_new_u
-        blasfeo_dgemm_nn(nx, nu, nx, 1.0, S_forw, 0, 0, S_forw_new, 0, nx, 1.0, S_forw_new, 0, nx,
-                            S_forw_new, 0, nx);
+        if (!in->identity_seed)
+        {
+            // pack seed into S_forw_new
+            blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, S_forw_new, 0, 0);
+            // S_forw_new_x = S_forw_x * S_forw_new_x
+            blasfeo_dgemm_nn(nx, nx, nx, 1.0, S_forw, 0, 0, S_forw_new, 0, 0, 0.0, S_forw_new, 0, 0,
+                                    S_forw_new, 0, 0);
+            // S_forw_new_u = S_forw_x * S_forw_new_u + S_forw_new_u
+            blasfeo_dgemm_nn(nx, nu, nx, 1.0, S_forw, 0, 0, S_forw_new, 0, nx, 1.0, S_forw_new, 0, nx,
+                                S_forw_new, 0, nx);
+        }
 
         // adjoint
         blasfeo_dgemv_t(nx, nx+nu, 1.0, S_forw, 0, 0, lambda_old, 0, 0.0, lambda_old, 0, lambda, 0);
@@ -2231,11 +2242,17 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                     // copy from precomputed dx2f_dx2u
                     blasfeo_dgecp(nx2, nx2 + nu, dx2f_dx2u, 0, 0, dxf_dwn, nx1, nx1);
                 }
-                blasfeo_dgemm_nn(nx, nx, nx, 1.0, dxf_dwn, 0, 0, S_forw, 0, 0, 0.0, S_forw_new, 0, 0,
-                                S_forw_new, 0, 0);
-                blasfeo_dgemm_nn(nx, nu, nx, 1.0, dxf_dwn, 0, 0, S_forw, 0, nx, 1.0, dxf_dwn, 0, nx,
-                                S_forw_new, 0, nx);
-                blasfeo_dgecp(nx, nx + nu, S_forw_new, 0, 0, S_forw, 0, 0);
+                // omit matrix multiplication for identity seed
+                if (in->identity_seed && ss == 0)
+                    blasfeo_dgecp(nx, nx + nu, dxf_dwn, 0, 0, S_forw, 0, 0);
+                else
+                {
+                    blasfeo_dgemm_nn(nx, nx, nx, 1.0, dxf_dwn, 0, 0, S_forw, 0, 0, 0.0, S_forw_new, 0, 0,
+                                    S_forw_new, 0, 0);
+                    blasfeo_dgemm_nn(nx, nu, nx, 1.0, dxf_dwn, 0, 0, S_forw, 0, nx, 1.0, dxf_dwn, 0, nx,
+                                    S_forw_new, 0, nx);
+                    blasfeo_dgecp(nx, nx + nu, S_forw_new, 0, 0, S_forw, 0, 0);
+                }
             }
 
     /* output z and propagate corresponding sensitivities */

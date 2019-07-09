@@ -935,15 +935,21 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             acados_tic(&timer_la);
             blasfeo_dgetrf_rp(nK, nK, dG_dK_ss, 0, 0, dG_dK_ss, 0, 0, ipiv_ss);
             timing_la += acados_toc(&timer_la);
+
             /* obtain dK_dxu */
             // set up right hand side
-            // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw_old
-            blasfeo_dgemm_nn(nK, nx + nu, nx, 1.0, dG_dxu_ss, 0, 0, S_forw_ss, 0,
-                                 0, 0.0, dK_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
-            // printf("dG_dxu = \n");
-            // blasfeo_print_exp_dmat(nx + nz, nx+nu, dG_dxu_ss, 0, 0);
-            // dK_du = dK_du + 1 * dG_du
-            blasfeo_dgead(nK, nu, 1.0, dG_dxu_ss, 0, nx, dK_dxu_ss, 0, nx);
+            if (in->identity_seed && ss == 0) // omit matrix multiplication for identity seed
+                blasfeo_dgecp(nK, nx + nu, dG_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
+            else
+            {
+                // dK_dw = 0 * dK_dw + 1 * dG_dx * S_forw_old
+                blasfeo_dgemm_nn(nK, nx + nu, nx, 1.0, dG_dxu_ss, 0, 0, S_forw_ss, 0,
+                                    0, 0.0, dK_dxu_ss, 0, 0, dK_dxu_ss, 0, 0);
+                // printf("dG_dxu = \n");
+                // blasfeo_print_exp_dmat(nx + nz, nx+nu, dG_dxu_ss, 0, 0);
+                // dK_du = dK_du + 1 * dG_du
+                blasfeo_dgead(nK, nu, 1.0, dG_dxu_ss, 0, nx, dK_dxu_ss, 0, nx);
+            }
             // solve linear system
             acados_tic(&timer_la);
             blasfeo_drowpe(nK, ipiv_ss, dK_dxu_ss);
