@@ -1786,6 +1786,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     // transform inputs to blasfeo
     blasfeo_pack_dvec(nu, in->u, u0, 0);
     blasfeo_pack_dvec(nx, &in->x[0], x0_traj, 0);
+    blasfeo_pack_dvec(nx + nu, &in->S_adj[0], lambda, 0);
+    blasfeo_pack_dvec(nx + nu, &in->S_adj[0], lambda_old, 0);
 
 
     if (model->tmp_fully_linear && !mem->first_call)
@@ -1795,12 +1797,22 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                         x0_traj, 0, x0_traj, nx * num_steps);
         blasfeo_dgemv_n(nx, nu, 1.0, S_forw, 0, nx, u0, 0, 1.0,
                         x0_traj, nx * num_steps, x0_traj, nx * num_steps);
-        // forward and adjoint sensitivities are constant and already computed
+
+        // sensitivities are constant and already computed - only multiply with seed
+        // pack seed into S_forw_new
+        blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, S_forw_new, 0, 0);
+        // S_forw_new_x = S_forw_x * S_forw_new_x
+        blasfeo_dgemm_nn(nx, nx, nx, 1.0, S_forw, 0, 0, S_forw_new, 0, 0, 0.0, S_forw_new, 0, 0,
+                                S_forw_new, 0, 0);
+        // S_forw_new_u = S_forw_x * S_forw_new_u + S_forw_new_u
+        blasfeo_dgemm_nn(nx, nu, nx, 1.0, S_forw, 0, 0, S_forw_new, 0, nx, 1.0, S_forw_new, 0, nx,
+                            S_forw_new, 0, nx);
+
+        // adjoint
+        blasfeo_dgemv_t(nx, nx+nu, 1.0, S_forw, 0, 0, lambda_old, 0, 0.0, lambda_old, 0, lambda, 0);
     }
     else
     {
-        blasfeo_pack_dvec(nx + nu, &in->S_adj[0], lambda, 0);
-        blasfeo_pack_dvec(nx + nu, &in->S_adj[0], lambda_old, 0);
         blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, S_forw, 0, 0);
         // initialize vv for first step, for further steps initialize with last vv value in step loop
         for (int i = 0; i < num_stages; i++)
