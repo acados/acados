@@ -36,6 +36,8 @@ classdef acados_ocp_opts < handle
 				obj.opts_struct.param_scheme = value;
 			elseif (strcmp(field, 'param_scheme_N'))
 				obj.opts_struct.param_scheme_N = value;
+			elseif (strcmp(field, 'param_scheme_shooting_nodes'))
+				obj.opts_struct.param_scheme_shooting_nodes = value;
 			elseif (strcmp(field, 'nlp_solver'))
 				obj.opts_struct.nlp_solver = value;
 			elseif (strcmp(field, 'nlp_solver_exact_hessian'))
