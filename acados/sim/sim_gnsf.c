@@ -1803,17 +1803,22 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                         x0_traj, nx * num_steps, x0_traj, nx * num_steps);
 
         // sensitivities are constant and already computed - only multiply with seed
+        // dont change S_forw!
         if (!in->identity_seed)
         {
-            // pack seed into S_forw_new
-            blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, S_forw_new, 0, 0);
-            // S_forw_new_x = S_forw_x * S_forw_new_x
-            blasfeo_dgemm_nn(nx, nx, nx, 1.0, S_forw, 0, 0, S_forw_new, 0, 0, 0.0, S_forw_new, 0, 0,
+            // pack seed into dxf_dwn
+            blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, dxf_dwn, 0, 0);
+            // S_forw_new_x = S_forw_x * dxf_dx
+            blasfeo_dgemm_nn(nx, nx, nx, 1.0, S_forw, 0, 0, dxf_dwn, 0, 0, 0.0, S_forw_new, 0, 0,
                                     S_forw_new, 0, 0);
-            // S_forw_new_u = S_forw_x * S_forw_new_u + S_forw_new_u
-            blasfeo_dgemm_nn(nx, nu, nx, 1.0, S_forw, 0, 0, S_forw_new, 0, nx, 1.0, S_forw_new, 0, nx,
+            // S_forw_new_u = S_forw_x * S_forw_new_u + dxf_du
+            blasfeo_dgemm_nn(nx, nu, nx, 1.0, S_forw, 0, 0, dxf_dwn, 0, nx, 1.0, S_forw_new, 0, nx,
                                 S_forw_new, 0, nx);
         }
+        else // copy into S_forw_new and unpack from there later
+            blasfeo_dgecp(nx, nx + nu, S_forw, 0, 0, S_forw_new, 0, 0);
+
+        
 
         // adjoint
         blasfeo_dgemv_t(nx, nx+nu, 1.0, S_forw, 0, 0, lambda_old, 0, 0.0, lambda_old, 0, lambda, 0);
@@ -2250,7 +2255,10 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                 }
                 // omit matrix multiplication for identity seed
                 if (in->identity_seed && ss == 0)
+                {
                     blasfeo_dgecp(nx, nx + nu, dxf_dwn, 0, 0, S_forw, 0, 0);
+                    blasfeo_dgecp(nx, nx + nu, dxf_dwn, 0, 0, S_forw_new, 0, 0);
+                }
                 else
                 {
                     blasfeo_dgemm_nn(nx, nx, nx, 1.0, dxf_dwn, 0, 0, S_forw, 0, 0, 0.0, S_forw_new, 0, 0,
@@ -2606,7 +2614,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     }
 /* unpack */
     blasfeo_unpack_dvec(nx, x0_traj, nx * num_steps, out->xn);
-    blasfeo_unpack_dmat(nx, nx + nu, S_forw, 0, 0, out->S_forw, nx);
+    blasfeo_unpack_dmat(nx, nx + nu, S_forw_new, 0, 0, out->S_forw, nx);
     blasfeo_unpack_dvec(nx + nu, lambda, 0, out->S_adj);
 
     out->info->CPUtime = acados_toc(&tot_timer);
