@@ -75,4 +75,4 @@ BLD3_frTanAero = p_2*BLD3_velEff^p_1*splineCMBL([BLD3_agPtch,BLD3_velTipRat]) ;
 
 
 %% Implicit Nonlinear State-Space Model
-fi = dx - fe;
+f_impl = dx - fe;
