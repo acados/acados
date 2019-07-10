@@ -4,6 +4,10 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int acados_create();
 int acados_solve();
 int acados_free();
@@ -14,6 +18,11 @@ ocp_nlp_solver * acados_get_nlp_solver();
 ocp_nlp_config * acados_get_nlp_config();
 void * acados_get_nlp_opts();
 ocp_nlp_dims * acados_get_nlp_dims();
+
+#ifdef __cplusplus
+}
+#endif
+
 
 // ** global data **
 extern ocp_nlp_in * nlp_in;
@@ -29,7 +38,7 @@ extern external_function_casadi * forw_vde_casadi;
 {% else %}
 extern external_function_param_casadi * forw_vde_casadi;
 {% endif %}
-{% if ocp.solver_config.hessian_approx == "EXACT" %} 
+{% if ocp.solver_config.hessian_approx == "EXACT" %}
 {% if ocp.dims.np < 1 %}
 extern external_function_casadi * hess_vde_casadi;
 {% else %}
@@ -61,6 +70,5 @@ extern external_function_casadi * h_constraint;
 {% if ocp.dims.nh_e > 0 %}
 extern external_function_casadi * h_constraint_e;
 {% endif %}
-
 
 #endif  // ACADOS_SOLVER_{{ocp.model_name}}_H_
