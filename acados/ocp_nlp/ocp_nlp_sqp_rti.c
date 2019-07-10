@@ -1262,7 +1262,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 	mem->stat[mem->stat_n*1+0] = qp_status;
 	mem->stat[mem->stat_n*1+1] = qp_iter;
 
-	if (qp_status!=ACADOS_SUCCESS & qp_status!=ACADOS_MAXITER)
+	if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
     {
         //   print_ocp_qp_in(work->qp_in);
 

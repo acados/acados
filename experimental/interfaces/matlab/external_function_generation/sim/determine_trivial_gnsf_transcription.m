@@ -105,6 +105,7 @@ gnsf = determine_input_nonlinearity_function( gnsf );
     
 gnsf.A_LO = [];
 gnsf.E_LO = [];
+gnsf.B_LO = [];
 gnsf.f_lo_expr = [];
 
 check_reformulation(model, gnsf, print_info);

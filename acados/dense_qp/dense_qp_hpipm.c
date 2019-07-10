@@ -225,7 +225,6 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
 
 	// zero primal solution
 	// TODO add a check if warm start of first SQP iteration is implemented !!!!!!
-	int ii;
 	int nv = qp_in->dim->nv;
 	int ns = qp_in->dim->ns;
 	blasfeo_dvecse(nv+2*ns, 0.0, qp_out->v, 0);

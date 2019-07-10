@@ -114,6 +114,11 @@ int main() {
     gnsf_dim->ny = 4;
     gnsf_dim->nuhat = 1;
 
+    // fully linear test model
+    // gnsf_dim->nx1 = 0;
+    // gnsf_dim->n_out = 0;
+    // gnsf_dim->ny = 0;
+    // gnsf_dim->nuhat = 0;
 
     // set up sim_dims
     // sim_dims *dims = (sim_dims *) gnsf_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
@@ -184,7 +189,7 @@ int main() {
     // precompute
     sim_precompute(sim_solver, in, out);
 
-    int NREP = 100;
+    int NREP = 5000;
     double casadi_times[NREP];
     double gnsf_times[NREP];
     for (int i = 0; i < NREP; i++) {
@@ -210,7 +215,7 @@ int main() {
     printf("adj Sensitivities =\n");
     d_print_exp_mat(1, nx + nu, out->S_adj, 1);
 
-    printf("gnsf_time  =  %f [ms]\n", gnsf_time*1000);
+    printf("gnsf_time   =  %f [ms]\n", gnsf_time*1000);
     printf("casadi_time =  %f [ms]\t minimum of %d executions \n", casadi_time*1000, NREP);
 
     free(config);

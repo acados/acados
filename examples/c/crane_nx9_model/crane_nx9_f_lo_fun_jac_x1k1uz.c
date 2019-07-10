@@ -51,18 +51,18 @@ static const casadi_int casadi_s0[9] = {5, 1, 0, 5, 0, 1, 2, 3, 4};
 static const casadi_int casadi_s1[3] = {1, 0, 0};
 static const casadi_int casadi_s2[6] = {2, 1, 0, 2, 0, 1};
 static const casadi_int casadi_s3[8] = {4, 1, 0, 4, 0, 1, 2, 3};
-static const casadi_int casadi_s4[18] = {4, 12, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 2, 3};
+static const casadi_int casadi_s4[17] = {4, 12, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 3};
 
 casadi_real casadi_sq(casadi_real x) { return x*x;}
 
-/* crane_nx9_f_lo_fun_jac_x1k1uz:(i0[5],i1[5],i2[1x0],i3[2])->(o0[4],o1[4x12,3nz]) */
+/* crane_nx9_f_lo_fun_jac_x1k1uz:(i0[5],i1[5],i2[1x0],i3[2])->(o0[4],o1[4x12,2nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2, a3;
   a0=0.;
   if (res[0]!=0) res[0][0]=a0;
   if (res[0]!=0) res[0][1]=a0;
-  a0=arg[3] ? arg[3][0] : 0;
   if (res[0]!=0) res[0][2]=a0;
+  a0=arg[3] ? arg[3][0] : 0;
   a1=casadi_sq(a0);
   a2=arg[0] ? arg[0][0] : 0;
   a3=casadi_sq(a2);
@@ -70,10 +70,8 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[0]!=0) res[0][3]=a1;
   a2=(a2+a2);
   if (res[1]!=0) res[1][0]=a2;
-  a2=1.;
-  if (res[1]!=0) res[1][1]=a2;
   a0=(a0+a0);
-  if (res[1]!=0) res[1][2]=a0;
+  if (res[1]!=0) res[1][1]=a0;
   return 0;
 }
 

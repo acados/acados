@@ -43,6 +43,7 @@ L_u    = gnsf.L_u;
 
 A_LO = gnsf.A_LO;
 E_LO = gnsf.E_LO;
+B_LO = gnsf.B_LO;
 
 % CasADi variables and expressions
 x1 = gnsf.x(1:gnsf.nx1);
@@ -54,6 +55,18 @@ uhat = gnsf.uhat;
 
 phi = gnsf.phi_expr;
 f_lo = gnsf.f_lo_expr;
+
+if isfield(gnsf, 'nontrivial_f_LO')
+    nontrivial_f_LO = gnsf.nontrivial_f_LO;
+else
+    nontrivial_f_LO = 1;
+end
+
+if gnsf.nx1 == 0 && gnsf.nz1 == 0 && nontrivial_f_LO == 0
+    purely_linear = 1;
+else
+    purely_linear = 0;
+end
 
 % name
 model_name = gnsf.name;
@@ -83,7 +96,7 @@ end
 dummy = gnsf.x(1);
 
 get_matrices_fun = Function([model_name,'_get_matrices_fun'], {dummy},...
-     {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO});
+     {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO, nontrivial_f_LO, purely_linear});
 
 
 %% generate functions

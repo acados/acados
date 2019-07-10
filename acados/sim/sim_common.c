@@ -121,6 +121,8 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
     assign_and_advance_double(nx * NF, &in->S_forw, &c_ptr);
     assign_and_advance_double(NF, &in->S_adj, &c_ptr);
 
+    in->identity_seed = false;
+
     in->model = config->model_assign(config, dims, c_ptr);
     c_ptr += config->model_calculate_size(config, dims);
 

@@ -90,8 +90,8 @@ sim_solver_t hashitsim_hess(std::string const& inString)
 
 double sim_solver_tolerance_sim(std::string const& inString)
 {
-    if (inString == "IRK")  return 1e-4;
-    if (inString == "ERK") return 1e-3;
+    if (inString == "IRK")  return 1e-9;
+    if (inString == "ERK") return 1e-5;
 
     return -1;
 }
@@ -99,7 +99,7 @@ double sim_solver_tolerance_sim(std::string const& inString)
 double sim_solver_tolerance_hess(std::string const& inString)
 {
     if (inString == "IRK")  return 1e-8;
-    if (inString == "ERK") return 3e-1;
+    if (inString == "ERK") return 1e-5;
     // TODO(OJ): this should obivously be smaller. ERK adjoints and Hessians should be checked!
 
     return -1;
@@ -292,6 +292,8 @@ TEST_CASE("pendulum_hessians", "[integrators]")
         in->S_forw[ii] = 0.0;
     for (int ii = 0; ii < nx; ii++)
         in->S_forw[ii * (nx + 1)] = 1.0;
+    in->identity_seed = true;
+
 
     // seeds adj
     for (int ii = 0; ii < nx; ii++)
@@ -428,10 +430,10 @@ TEST_CASE("pendulum_hessians", "[integrators]")
                         std::cout << "\n --->> NOT SUPPORTED -- corresponding test skipped \n";
                         break;
                     }
-                    if ( sens_forw + sens_adj < 2 )
+                    if ( !sens_forw )
                     {
-                        std::cout << "\n ERK hessians only tested with ";
-                        std::cout << "sens_forw and sens_adj == true \n other settings are buggy";
+                        std::cout << "\n ERK hessians only work with   ";
+                        std::cout << "sens_forw = true; [known issue]";
                         std::cout << "\n --->> corresponding test skipped \n";
                         break;
                     }

@@ -41,8 +41,12 @@ function [ model ] = export_pure_linear_test_model()
     nx = length(x);
     nu = length(u);
 
-    A = rand(nx, nx);
-    B = rand(nx, nu);
+    if 0
+        A = rand(nx, nx);
+        B = rand(nx, nu);
+    else
+        load('AB_test.mat')
+    end
     f_expl = A*x + B*u;
 
     f_impl = (f_expl - xdot);

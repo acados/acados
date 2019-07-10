@@ -607,8 +607,9 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
     lifted_irk_model *model = in->model;
 
-    acados_timer timer, timer_ad;
+    acados_timer timer, timer_ad, timer_la;
     double timing_ad = 0.0;
+    out->info->LAtime = 0.0;
 
     if (opts->sens_adj)
     {
@@ -782,14 +783,22 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
             blasfeo_daxpy(nx, -step * b_vec[ii], rG, ii * nx, dxn, 0, dxn, 0);
 
         // update JKf
-        blasfeo_dgemm_nn(nx * ns, nx + nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, &JKf[ss], 0, 0,
-                         &JKf[ss], 0, 0);
+        // JKf[ss] = JGf * S_forw;
+        if (in->identity_seed && ss == 0) // omit matrix multiplication for identity seed
+            blasfeo_dgecp(nx * ns, nx + nu, JGf, 0, 0, &JKf[ss], 0, 0);
+        else
+        {
+            blasfeo_dgemm_nn(nx * ns, nx + nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, &JKf[ss], 0, 0,
+                            &JKf[ss], 0, 0);
+            blasfeo_dgead(nx * ns, nu, 1.0, JGf, 0, nx, &JKf[ss], 0, nx);
+        }
 
-        blasfeo_dgead(nx * ns, nu, 1.0, JGf, 0, nx, &JKf[ss], 0, nx);
-
+        // solve linear system
+        acados_tic(&timer_la);
         blasfeo_drowpe(nx * ns, ipiv, &JKf[ss]);
         blasfeo_dtrsm_llnu(nx * ns, nx + nu, 1.0, JGK, 0, 0, &JKf[ss], 0, 0, &JKf[ss], 0, 0);
         blasfeo_dtrsm_lunn(nx * ns, nx + nu, 1.0, JGK, 0, 0, &JKf[ss], 0, 0, &JKf[ss], 0, 0);
+        out->info->LAtime += acados_toc(&timer_la);
 
         // update forward sensitivity
         for (jj = 0; jj < ns; jj++)
@@ -808,7 +817,6 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     blasfeo_unpack_dmat(nx, nx + nu, S_forw, 0, 0, S_forw_out, nx);
 
     out->info->CPUtime = acados_toc(&timer);
-    out->info->LAtime = 0.0;
     out->info->ADtime = timing_ad;
 
     return 0;

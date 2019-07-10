@@ -405,7 +405,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 					for(kk=jj+1; kk<nu[ss]; kk++)
 					{
 						tmp_el = BLASFEO_DMATEL(L3, kk, kk);
-						if(tmp_el<pivot & tmp_el>-pivot)
+						if((tmp_el<pivot) & (tmp_el>-pivot))
 						{
 							pivot = BLASFEO_DMATEL(L3, kk, kk);
 							idx = kk;
@@ -423,7 +423,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 						}
 						// bottom rectangle
 						for(kk=idx+1; kk<nu[ss]+nx[ss]; kk++)
-						{
+                            {
 							tmp_el = BLASFEO_DMATEL(L3, kk, jj);
 							BLASFEO_DMATEL(L3, kk, jj) = BLASFEO_DMATEL(L3, kk, idx);
 							BLASFEO_DMATEL(L3, kk, idx) = tmp_el;
@@ -432,7 +432,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 				}
 					
 				pivot = BLASFEO_DMATEL(L3, jj, jj);
-				if(pivot<opts->min_pivot & pivot>-opts->min_pivot)
+				if ((pivot<opts->min_pivot) & (pivot>-opts->min_pivot))
 				{
 					if(pivot<0.0)
 						pivot = opts->min_pivot;

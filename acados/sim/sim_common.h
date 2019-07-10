@@ -66,6 +66,8 @@ typedef struct
     double *S_forw;  // forward seed [Sx, Su]
     double *S_adj;   // backward seed // TODO rename seed_adj ???
 
+    bool identity_seed; // indicating if S_forw = [eye(nx), zeros(nx x nu)]
+
     void *model;
 
     double T;  // simulation time

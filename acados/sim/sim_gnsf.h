@@ -25,7 +25,6 @@ extern "C" {
 
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-
 #include "acados/sim/sim_common.h"
 
 #include "blasfeo/include/blasfeo_common.h"
@@ -39,9 +38,13 @@ extern "C" {
 /* 
 GNSF - Generalized Nonlinear Static Feedback Model
 has the following form
+https://github.com/acados/acados/files/3359595/gnsf_structure_blo.pdf
 
+Details on the algorithm can be found in master thesis of Jonathan Frey,
+which presents a slightly different format without the B_LO matrix.
 https://github.com/acados/acados/files/2318322/gnsf_structure.pdf
-More details can be found in Master thesis of Jonathan Frey
+https://cdn.syscop.de/publications/Frey2018.pdf
+https://cdn.syscop.de/publications/Frey2019.pdf
 */
 
 typedef struct
@@ -77,6 +80,10 @@ typedef struct
     //    [default]: true -> auto;
     bool auto_import_gnsf;
 
+    // booleans from structure detection
+    bool nontrivial_f_LO; // indicates if f_LO is constant zero function
+    bool fully_linear; // indicates if model is fully linear LOS
+
     /* model defining matrices */
     // TODO: add setters to set manually
     double *A;
@@ -90,11 +97,8 @@ typedef struct
     double *L_u;
 
     double *A_LO;
+    double *B_LO;
     double *E_LO;
-
-//    double *B_LO; idea, maybe detect linear dependency on controlls to treat
-// fully linear systems more efficiently
-
 
     /* constant vector */
     double *c;
@@ -176,6 +180,7 @@ typedef struct
     struct blasfeo_dvec K1u;
     struct blasfeo_dvec Zu;
     struct blasfeo_dvec ALOtimesx02;
+    struct blasfeo_dvec BLOtimesu0;
 
     struct blasfeo_dvec uhat;
 
@@ -189,7 +194,6 @@ typedef struct
     struct blasfeo_dmat J_G2_K1;
 
     struct blasfeo_dmat dK2_dx1;
-    struct blasfeo_dmat dK2_du;
     struct blasfeo_dmat dK2_dvv;
     struct blasfeo_dmat dxf_dwn;
     struct blasfeo_dmat S_forw_new;
@@ -240,10 +244,13 @@ typedef struct
     struct blasfeo_dmat ZZu;
 
     struct blasfeo_dmat ALO;
+    struct blasfeo_dmat BLO;
     struct blasfeo_dmat M2_LU;
     int *ipivM2;
 
     struct blasfeo_dmat dK2_dx2;
+    struct blasfeo_dmat dK2_du;
+    struct blasfeo_dmat dx2f_dx2u;
 
     struct blasfeo_dmat Lu;
 
@@ -272,6 +279,8 @@ typedef struct
     struct blasfeo_dmat *Lx;
     struct blasfeo_dmat *Lxdot;
     struct blasfeo_dmat *Lz;
+
+    bool first_call;
 
 } sim_gnsf_memory;
 

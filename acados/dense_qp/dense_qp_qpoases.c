@@ -120,7 +120,7 @@ void dense_qp_qpoases_opts_update(void *config_, dense_qp_dims *dims, void *opts
 
 void dense_qp_qpoases_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
-    dense_qp_qpoases_opts *opts = opts_;
+    // dense_qp_qpoases_opts *opts = opts_;
 
     if (!strcmp(field, "tol_stat"))
     {

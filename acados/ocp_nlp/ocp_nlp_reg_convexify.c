@@ -264,7 +264,8 @@ void *ocp_nlp_reg_convexify_assign_memory(void *config_, ocp_nlp_reg_dims *dims,
     for (ii=0; ii<=N; ii++)
         assign_and_advance_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &mem->original_RSQrq[ii], &c_ptr);
 
-	assign_and_advance_blasfeo_dmat_mem(nuxM, nuxM, &mem->tmp_RSQ, &c_ptr);
+
+    assign_and_advance_blasfeo_dmat_mem(nuxM, nuxM, &mem->tmp_RSQ, &c_ptr);
 
     assign_and_advance_blasfeo_dvec_mem(nuxM, &mem->tmp_nuxM, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nbgM, &mem->tmp_nbgM, &c_ptr);
@@ -286,8 +287,6 @@ void ocp_nlp_reg_convexify_memory_set_RSQrq_ptr(ocp_nlp_reg_dims *dims, struct b
     int ii;
 
     int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
 
     for(ii=0; ii<=N; ii++)
     {
@@ -307,8 +306,8 @@ void ocp_nlp_reg_convexify_memory_set_rq_ptr(ocp_nlp_reg_dims *dims, struct blas
     int ii;
 
     int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
+    // int *nx = dims->nx;
+    // int *nu = dims->nu;
 
     for(ii=0; ii<=N; ii++)
     {
@@ -328,8 +327,8 @@ void ocp_nlp_reg_convexify_memory_set_BAbt_ptr(ocp_nlp_reg_dims *dims, struct bl
     int ii;
 
     int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
+    // int *nx = dims->nx;
+    // int *nu = dims->nu;
 
     for(ii=0; ii<N; ii++)
     {
@@ -349,8 +348,8 @@ void ocp_nlp_reg_convexify_memory_set_b_ptr(ocp_nlp_reg_dims *dims, struct blasf
     int ii;
 
     int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
+    // int *nx = dims->nx;
+    // int *nu = dims->nu;
 
     for(ii=0; ii<N; ii++)
     {
@@ -388,9 +387,6 @@ void ocp_nlp_reg_convexify_memory_set_DCt_ptr(ocp_nlp_reg_dims *dims, struct bla
     int ii;
 
     int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ng = dims->ng;
 
     for(ii=0; ii<=N; ii++)
     {
@@ -410,8 +406,8 @@ void ocp_nlp_reg_convexify_memory_set_ux_ptr(ocp_nlp_reg_dims *dims, struct blas
     int ii;
 
     int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
+    // int *nx = dims->nx;
+    // int *nu = dims->nu;
 
     for(ii=0; ii<=N; ii++)
     {
@@ -431,8 +427,8 @@ void ocp_nlp_reg_convexify_memory_set_pi_ptr(ocp_nlp_reg_dims *dims, struct blas
     int ii;
 
     int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
+    // int *nx = dims->nx;
+    // int *nu = dims->nu;
 
     for(ii=0; ii<N; ii++)
     {
@@ -452,9 +448,9 @@ void ocp_nlp_reg_convexify_memory_set_lam_ptr(ocp_nlp_reg_dims *dims, struct bla
     int ii;
 
     int N = dims->N;
-    int *nbu = dims->nbu;
-    int *nbx = dims->nbx;
-    int *ng = dims->ng;
+    // int *nbu = dims->nbu;
+    // int *nbx = dims->nbx;
+    // int *ng = dims->ng;
 
     for(ii=0; ii<=N; ii++)
     {
@@ -679,9 +675,9 @@ void ocp_nlp_reg_convexify_regularize_hessian(void *config, ocp_nlp_reg_dims *di
 void ocp_nlp_reg_convexify_correct_dual_sol(void *config, ocp_nlp_reg_dims *dims, void *opts_, void *mem_)
 {
     ocp_nlp_reg_convexify_memory *mem = mem_;
-    ocp_nlp_reg_convexify_opts *opts = opts_;
+    // ocp_nlp_reg_convexify_opts *opts = opts_;
 
-    int ii, ss;
+    int ii;
 
     int N = dims->N;
     int *nx = dims->nx;
