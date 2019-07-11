@@ -135,8 +135,8 @@ gnsf.B_LO = [];
 gnsf.f_lo_expr = [];
 
 % permutation
-gnsf.idx_perm = 1:nx; % matlab-style
-gnsf.ipiv = 0:nx-1; % blasfeo-style
+gnsf.idx_perm_f = 1:nx; % matlab-style
+gnsf.ipiv_f = 0:nx-1; % blasfeo-style
 
 check_reformulation(model, gnsf, print_info);
 if print_info

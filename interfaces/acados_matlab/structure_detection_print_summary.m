@@ -122,12 +122,29 @@ end
 %print_casadi_expression(f_impl_expr);
 %disp(' ');
 %end
-if ~isequal(gnsf.idx_perm, [1:nx])
-disp(' ');
-disp('--------------------------------------------------------------------------------------------------');
-disp('NOTE: permuted state vector x, such that x_gnsf = x(idx_perm) with idx_perm =');
-gnsf.idx_perm
-disp(' ');
+if ~isequal(gnsf.idx_perm_x, [1:nx])
+	disp(' ');
+	disp('--------------------------------------------------------------------------------------------------');
+	disp('NOTE: permuted differential state vector x, such that x_gnsf = x(idx_perm_x) with idx_perm_x =');
+	gnsf.idx_perm_x
+	disp(' ');
+end
+
+if ~isequal(gnsf.idx_perm_z, [1:nz])
+	disp(' ');
+	disp('--------------------------------------------------------------------------------------------------');
+	disp('NOTE: permuted algebraic state vector z, such that z_gnsf = z(idx_perm_z) with idx_perm_z =');
+	gnsf.idx_perm_z
+	disp(' ');
+end
+
+if ~isequal(gnsf.idx_perm_f, [1:nx+nz])
+	disp(' ');
+	disp('--------------------------------------------------------------------------------------------------');
+	disp('NOTE: permuted rhs expression vector f, such that f_gnsf = f(idx_perm_f) with idx_perm_f =');
+	gnsf.idx_perm_f
+	disp(' ');
+end
 
 %% print GNSF dimenstions
 format short

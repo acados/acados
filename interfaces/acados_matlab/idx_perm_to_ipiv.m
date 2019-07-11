@@ -3,6 +3,7 @@ function ipiv = idx_perm_to_ipiv(idx_perm)
 n = length(idx_perm);
 
 vec = 1:n;
+ipiv = zeros(1,n);
 
 for ii=1:n
 	idx0 = idx_perm(ii);
