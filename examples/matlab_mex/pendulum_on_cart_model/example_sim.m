@@ -16,8 +16,10 @@ end
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
-method = 'erk';
+%method = 'erk';
 %method = 'irk';
+method = 'irk_gnsf';
+gnsf_detect_struct = 'true'
 sens_forw = 'false';
 num_stages = 4;
 num_steps = 4;
@@ -48,7 +50,7 @@ if (strcmp(method, 'erk'))
 	end
 	sim_model.set('dim_nx', model.nx);
 	sim_model.set('dim_nu', model.nu);
-else % irk
+else % irk irk_gnsf
 	sim_model.set('dyn_type', 'implicit');
 	sim_model.set('dyn_expr_f', model.expr_f_impl);
 	sim_model.set('sym_x', model.sym_x);
@@ -76,6 +78,9 @@ sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
 sim_opts.set('method', method);
 sim_opts.set('sens_forw', sens_forw);
+if (strcmp(method, 'irk_gnsf'))
+	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
+end
 
 %sim_opts.opts_struct
 
