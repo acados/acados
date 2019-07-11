@@ -61,7 +61,7 @@ I_x2 = nx1+1:nx;
 I_z1 = 1:nz1;
 I_z2 = nz1+1:nz;
 
-idx_perm = gnsf.idx_perm;
+idx_perm_f = gnsf.idx_perm_f;
 
 
 % get casadi variables
@@ -118,7 +118,7 @@ for i_check = 1:num_eval
         phi_val = phi_fun( y0, uhat0);
         f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0(I_z1), u0);
     end
-	f_impl_val = f_impl_val(idx_perm);
+	f_impl_val = f_impl_val(idx_perm_f);
     
 
     

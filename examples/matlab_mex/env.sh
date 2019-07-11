@@ -30,7 +30,7 @@ fi
 # check that this file is run
 export ENV_RUN=true
 
-# if acados folder not specified assume parent of this folder
+# if acados folder not specified assume parent of the folder of the single examples
 ACADOS_INSTALL_DIR=${ACADOS_INSTALL_DIR:-"$(pwd)/../.."}
 export ACADOS_INSTALL_DIR
 echo

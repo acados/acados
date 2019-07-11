@@ -18,7 +18,9 @@ classdef acados_sim < handle
 
 			% detect GNSF structure
 			if (strcmp(obj.opts_struct.method, 'irk_gnsf'))
-				gnsf = detect_gnsf_structure(obj.model_struct);
+				obj.model_struct = detect_gnsf_structure(obj.model_struct);
+				obj.model_struct
+				% TODO code-generate a file with e.g. dims, ..., to avoid to detect the gnsf structure all the time
 			end
 
 			% compile mex without model dependency

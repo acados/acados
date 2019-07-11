@@ -219,7 +219,6 @@ I_x2 = intersect(I_LOS_components, 1:nx);
 I_z2 = intersect(I_LOS_components, nx+1:nx+nz);
 I_z2 = I_z2 - nx;
 
-
 %% permute x, xdot
 
 if isempty(I_x1)
@@ -258,8 +257,13 @@ gnsf.nx2 = size(x2,1);
 gnsf.nz1 = size(z1,1);
 gnsf.nz2 = size(z2,1);
 
-gnsf.idx_perm = [I_nsf_eq, I_LOS_eq];
-gnsf.ipiv = idx_perm_to_ipiv(gnsf.idx_perm);
+% store permutations
+gnsf.idx_perm_x = [I_x1, I_x2];
+gnsf.ipiv_x = idx_perm_to_ipiv(gnsf.idx_perm_x);
+gnsf.idx_perm_z = [I_z1, I_z2];
+gnsf.ipiv_z = idx_perm_to_ipiv(gnsf.idx_perm_z);
+gnsf.idx_perm_f = [I_nsf_eq, I_LOS_eq];
+gnsf.ipiv_f = idx_perm_to_ipiv(gnsf.idx_perm_f);
 
 f_LO = SX.sym('f_LO',0,0);
 E_LO = [];

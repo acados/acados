@@ -46,7 +46,9 @@ E_LO = gnsf.E_LO;
 B_LO = gnsf.B_LO;
 
 % state permutation vector: x_gnsf = dvecpe(x, ipiv)
-ipiv = gnsf.ipiv;
+ipiv_x = gnsf.ipiv_x;
+ipiv_z = gnsf.ipiv_z;
+ipiv_f = gnsf.ipiv_f;
 
 % CasADi variables and expressions
 x1 = gnsf.x(1:gnsf.nx1);
@@ -100,7 +102,8 @@ dummy = gnsf.x(1);
 
 get_matrices_fun = Function([model_name,'_get_matrices_fun'], {dummy},...
 %     {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO, nontrivial_f_LO, purely_linear});
-     {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO, ipiv, nontrivial_f_LO, purely_linear});
+     {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO, nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z});
+% TODO ipiv_x ipiv_z
 % TODO add ipiv to gnsf.c !!!!!!!!!!!!!!!!!!
 
 

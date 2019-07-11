@@ -1,4 +1,4 @@
-function gnsf = detect_gnsf_structure(model, transcribe_opts)
+function model = detect_gnsf_structure(model, transcribe_opts)
 %
 %   This file is part of acados.
 %
@@ -128,6 +128,54 @@ end
 %    generate_c_code_implicit_ode( model, transcribe_opts );
 %    disp('Successfully generated C Code to simulate model with acados integrator IRK');
 %end
+
+
+
+% detect purely linear model
+if gnsf.nx1 == 0 && gnsf.nz1 == 0 && gnsf.nontrivial_f_LO == 0
+    gnsf.purely_linear = 1;
+else
+    gnsf.purely_linear = 0;
+end
+
+
+
+% copy relevant fields from gnsf to model
+gnsf
+
+% dim
+model.dim_gnsf_nx1 = gnsf.nx1;
+model.dim_gnsf_nx2 = gnsf.nx2;
+model.dim_gnsf_nz1 = gnsf.nz1;
+model.dim_gnsf_nz2 = gnsf.nz2;
+model.dim_gnsf_nuhat = gnsf.nuhat;
+model.dim_gnsf_ny = gnsf.ny;
+model.dim_gnsf_nout = gnsf.n_out;
+
+% data
+model.dyn_gnsf_A = gnsf.A;
+model.dyn_gnsf_A_LO = gnsf.A_LO;
+model.dyn_gnsf_B = gnsf.B;
+model.dyn_gnsf_B_LO = gnsf.B_LO;
+model.dyn_gnsf_E = gnsf.E;
+model.dyn_gnsf_E_LO = gnsf.E_LO;
+model.dyn_gnsf_C = gnsf.C;
+model.dyn_gnsf_c = gnsf.c;
+%model.dyn_gnsf_c_LO = gnsf.c_LO; TODO
+model.dyn_gnsf_L_x = gnsf.L_x;
+model.dyn_gnsf_L_xdot = gnsf.L_xdot;
+model.dyn_gnsf_L_z = gnsf.L_z;
+model.dyn_gnsf_L_u = gnsf.L_u;
+model.dyn_gnsf_idx_perm_x = gnsf.idx_perm_x;
+model.dyn_gnsf_ipiv_x = gnsf.ipiv_x;
+model.dyn_gnsf_idx_perm_z = gnsf.idx_perm_z;
+model.dyn_gnsf_ipiv_z = gnsf.ipiv_z;
+model.dyn_gnsf_idx_perm_f = gnsf.idx_perm_f;
+model.dyn_gnsf_ipiv_f = gnsf.ipiv_f;
+
+% flags
+model.dyn_gnsf_nontrivial_f_LO = gnsf.nontrivial_f_LO;
+model.dyn_gnsf_purely_linear = gnsf.purely_linear;
 
 
 end
