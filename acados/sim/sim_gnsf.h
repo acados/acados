@@ -103,6 +103,10 @@ typedef struct
     /* constant vector */
     double *c;
 
+    // permutation vector - to have GNSF order of x, z within sim_gnsf only
+    int *ipiv_x;
+    int *ipiv_z;
+
 } gnsf_model;
 
 // pre_workspace - workspace used in the precomputation phase
@@ -198,6 +202,7 @@ typedef struct
     struct blasfeo_dmat dxf_dwn;
     struct blasfeo_dmat S_forw_new;
     struct blasfeo_dmat S_forw;
+    struct blasfeo_dmat S_algebraic;
 
     struct blasfeo_dmat dPsi_dvv;
     struct blasfeo_dmat dPsi_dx;
@@ -207,7 +212,7 @@ typedef struct
 
     // memory only available if (opts->sens_algebraic)
     struct blasfeo_dvec x0dot_1;
-    struct blasfeo_dvec z0_1;
+    struct blasfeo_dvec z0;
     struct blasfeo_dmat dz10_dx1u;  // (nz1) * (nx1+nu);
     struct blasfeo_dmat dr0_dvv0;  // (n_out * n_out)
     struct blasfeo_dmat f_LO_jac0; // (nx2+nz2) * (2*nx1 + nz1 + nu)
