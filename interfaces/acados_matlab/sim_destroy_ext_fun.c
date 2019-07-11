@@ -159,6 +159,86 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			free(ext_fun_ptr);
 			}
 		}
+	if(mxGetField( prhs[1], 0, "dyn_gnsf_f_lo_fun_jac_x1k1uz" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "dyn_gnsf_f_lo_fun_jac_x1k1uz" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
+		}
+	if(mxGetField( prhs[1], 0, "dyn_gnsf_get_matrices_fun" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "dyn_gnsf_get_matrices_fun" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
+		}
+	if(mxGetField( prhs[1], 0, "dyn_gnsf_phi_fun" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "dyn_gnsf_phi_fun" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
+		}
+	if(mxGetField( prhs[1], 0, "dyn_gnsf_phi_fun_jac_y" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "dyn_gnsf_phi_fun_jac_y" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
+		}
+	if(mxGetField( prhs[1], 0, "dyn_gnsf_phi_jac_y_uhat" )!=NULL)
+		{
+		ptr = (long long *) mxGetData( mxGetField( prhs[1], 0, "dyn_gnsf_phi_jac_y_uhat" ) );
+		if(!strcmp(param_f, "true")) // TODO bool
+			{
+			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+			external_function_param_casadi_free(ext_fun_param_ptr);
+			free(ext_fun_param_ptr);
+			}
+		else
+			{
+			ext_fun_ptr = (external_function_casadi *) ptr[0];
+			external_function_casadi_free(ext_fun_ptr);
+			free(ext_fun_ptr);
+			}
+		}
 
 
 

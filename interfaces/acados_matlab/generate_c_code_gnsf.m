@@ -16,7 +16,7 @@
 %
 %   Author: Jonathan Frey: jonathanpaulfrey(at)gmail.com
 
-function generate_c_code_gnsf(gnsf)
+function generate_c_code_gnsf(model)
 
 %% import casadi
 import casadi.*
@@ -30,88 +30,123 @@ end
 
 %% import models
 % model matrices
-A  = gnsf.A;
-B  = gnsf.B;
-C  = gnsf.C;
-E  = gnsf.E;
-c  = gnsf.c;
+A  = model.dyn_gnsf_A;
+B  = model.dyn_gnsf_B;
+C  = model.dyn_gnsf_C;
+E  = model.dyn_gnsf_E;
+c  = model.dyn_gnsf_c;
 
-L_x    = gnsf.L_x;
-L_z    = gnsf.L_z;
-L_xdot = gnsf.L_xdot;
-L_u    = gnsf.L_u;
+L_x    = model.dyn_gnsf_L_x;
+L_z    = model.dyn_gnsf_L_z;
+L_xdot = model.dyn_gnsf_L_xdot;
+L_u    = model.dyn_gnsf_L_u;
 
-A_LO = gnsf.A_LO;
-E_LO = gnsf.E_LO;
-B_LO = gnsf.B_LO;
+A_LO = model.dyn_gnsf_A_LO;
+E_LO = model.dyn_gnsf_E_LO;
+B_LO = model.dyn_gnsf_B_LO;
 
 % state permutation vector: x_gnsf = dvecpe(x, ipiv)
-ipiv_x = gnsf.ipiv_x;
-ipiv_z = gnsf.ipiv_z;
-ipiv_f = gnsf.ipiv_f;
+ipiv_x = model.dyn_gnsf_ipiv_x;
+idx_perm_x = model.dyn_gnsf_idx_perm_x;
+ipiv_z = model.dyn_gnsf_ipiv_z;
+idx_perm_z = model.dyn_gnsf_idx_perm_z;
+ipiv_f = model.dyn_gnsf_ipiv_f;
+idx_perm_f = model.dyn_gnsf_idx_perm_f;
 
 % CasADi variables and expressions
-x1 = gnsf.x(1:gnsf.nx1);
-x1dot = gnsf.xdot(1:gnsf.nx1);
-u = gnsf.u;
-z1 = gnsf.z(1:gnsf.nz1);
-y = gnsf.y;
-uhat = gnsf.uhat;
-
-phi = gnsf.phi_expr;
-f_lo = gnsf.f_lo_expr;
-
-if isfield(gnsf, 'nontrivial_f_LO')
-    nontrivial_f_LO = gnsf.nontrivial_f_LO;
+% x
+x = model.sym_x;
+x1 = x(model.dyn_gnsf_idx_perm_x(1:model.dim_gnsf_nx1));
+% check type
+if class(x(1)) == 'casadi.SX'
+    isSX = true;
 else
-    nontrivial_f_LO = 1;
+    isSX = false;
 end
-
-if gnsf.nx1 == 0 && gnsf.nz1 == 0 && nontrivial_f_LO == 0
-    purely_linear = 1;
+% xdot
+xdot = model.sym_xdot;
+x1dot = xdot(model.dyn_gnsf_idx_perm_x(1:model.dim_gnsf_nx1));
+% u
+if isfield(model, 'sym_u')
+    u = model.sym_u;
 else
-    purely_linear = 0;
+    if isSX
+        u = SX.sym('u',0, 0);
+    else
+        u = MX.sym('u',0, 0);
+    end
 end
+% z
+if isfield(model, 'sym_z')
+    z = model.sym_z;
+	z1 = model.sym_z(model.dyn_gnsf_idx_perm_z(1:model.dim_gnsf_nz1));
+else
+    if isSX
+        z = SX.sym('z',0, 0);
+        z1 = SX.sym('z1',0, 0);
+    else
+        z = MX.sym('z',0, 0);
+        z1 = MX.sym('z1',0, 0);
+    end
+end
+% p
+if isfield(model, 'sym_p')
+    p = model.sym_p;
+else
+    if isSX
+        p = SX.sym('p',0, 0);
+    else
+        p = MX.sym('p',0, 0);
+    end
+end
+% y
+y = model.sym_gnsf_y;
+% uhat
+uhat = model.sym_gnsf_uhat;
+
+% expressions
+phi = model.dyn_gnsf_expr_phi;
+f_lo = model.dyn_gnsf_expr_f_lo;
+
+nontrivial_f_LO = model.dyn_gnsf_nontrivial_f_LO;
+purely_linear = model.dyn_gnsf_purely_linear;
 
 % name
-model_name = gnsf.name;
+model_name = model.name;
+model_name = [model_name, '_dyn'];
 
 % generate functions
 jac_phi_y = jacobian(phi,y);
 jac_phi_uhat = jacobian(phi,uhat);
 
-if isfield(gnsf, 'p')
-    p = gnsf.p;
-    phi_fun = Function([model_name,'_phi_fun'], {y, uhat, p}, {phi});
-    phi_fun_jac_y = Function([model_name,'_phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y});
-    phi_jac_y_uhat = Function([model_name,'_phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat});
+if (strcmp(model.dyn_param_f, 'true'))
+    phi_fun = Function([model_name,'_gnsf_phi_fun'], {y, uhat, p}, {phi});
+    phi_fun_jac_y = Function([model_name,'_gnsf_phi_fun_jac_y'], {y, uhat, p}, {phi, jac_phi_y});
+    phi_jac_y_uhat = Function([model_name,'_gnsf_phi_jac_y_uhat'], {y, uhat, p}, {jac_phi_y, jac_phi_uhat});
 
-    f_lo_fun_jac_x1k1uz = Function([model_name,'_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u, p}, ...
+    f_lo_fun_jac_x1k1uz = Function([model_name,'_gnsf_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u, p}, ...
         {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z1)]});
 else
-    phi_fun = Function([model_name,'_phi_fun'], {y, uhat}, {phi});
-    phi_fun_jac_y = Function([model_name,'_phi_fun_jac_y'], {y, uhat}, {phi, jac_phi_y});
-    phi_jac_y_uhat = Function([model_name,'_phi_jac_y_uhat'], {y, uhat}, {jac_phi_y, jac_phi_uhat});
+    phi_fun = Function([model_name,'_gnsf_phi_fun'], {y, uhat}, {phi});
+    phi_fun_jac_y = Function([model_name,'_gnsf_phi_fun_jac_y'], {y, uhat}, {phi, jac_phi_y});
+    phi_jac_y_uhat = Function([model_name,'_gnsf_phi_jac_y_uhat'], {y, uhat}, {jac_phi_y, jac_phi_uhat});
 
-    f_lo_fun_jac_x1k1uz = Function([model_name,'_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u}, ...
+    f_lo_fun_jac_x1k1uz = Function([model_name,'_gnsf_f_lo_fun_jac_x1k1uz'], {x1, x1dot, z1, u}, ...
         {f_lo, [jacobian(f_lo,x1), jacobian(f_lo,x1dot), jacobian(f_lo,u), jacobian(f_lo,z1)]});
 end
 
 % get_matrices function
-dummy = gnsf.x(1);
+dummy = x(1);
 
-get_matrices_fun = Function([model_name,'_get_matrices_fun'], {dummy},...
-%     {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO, nontrivial_f_LO, purely_linear});
+get_matrices_fun = Function([model_name,'_gnsf_get_matrices_fun'], {dummy},...
      {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO, nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z});
-% TODO ipiv_x ipiv_z
-% TODO add ipiv to gnsf.c !!!!!!!!!!!!!!!!!!
 
 
 %% generate functions
-f_lo_fun_jac_x1k1uz.generate([model_name,'_f_lo_fun_jac_x1k1uz'], casadi_opts);
-phi_fun.generate([model_name,'_phi_fun'], casadi_opts);
-phi_fun_jac_y.generate([model_name,'_phi_fun_jac_y'], casadi_opts);
-phi_jac_y_uhat.generate([model_name,'_phi_jac_y_uhat'], casadi_opts);
-get_matrices_fun.generate([model_name,'_get_matrices_fun'], casadi_opts);
+f_lo_fun_jac_x1k1uz.generate([model_name,'_gnsf_f_lo_fun_jac_x1k1uz'], casadi_opts);
+phi_fun.generate([model_name,'_gnsf_phi_fun'], casadi_opts);
+phi_fun_jac_y.generate([model_name,'_gnsf_phi_fun_jac_y'], casadi_opts);
+phi_jac_y_uhat.generate([model_name,'_gnsf_phi_jac_y_uhat'], casadi_opts);
+get_matrices_fun.generate([model_name,'_gnsf_get_matrices_fun'], casadi_opts);
 
 end

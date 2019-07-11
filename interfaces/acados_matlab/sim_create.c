@@ -25,47 +25,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* RHS */
 
-	// model
-
-	int nu;				bool set_nu = false;
-	int nx;				bool set_nx = false;
-	double T;			bool set_T = false;
-	double *x;			bool set_x = false;
-	double *u;			bool set_u = false;
-	double *seed_adj;	bool set_seed_adj = false;
-
-	if(mxGetField( prhs[0], 0, "dim_nx" )!=NULL)
-		{
-		set_nx = true;
-		nx = mxGetScalar( mxGetField( prhs[0], 0, "dim_nx" ) );
-		}
-	if(mxGetField( prhs[0], 0, "dim_nu" )!=NULL)
-		{
-		set_nu = true;
-		nu = mxGetScalar( mxGetField( prhs[0], 0, "dim_nu" ) );
-		}
-	if(mxGetField( prhs[0], 0, "T" )!=NULL)
-		{
-		set_T = true;
-		T = mxGetScalar( mxGetField( prhs[0], 0, "T" ) );
-		}
-	if(mxGetField( prhs[0], 0, "x" )!=NULL)
-		{
-		set_x = true;
-		x = mxGetPr( mxGetField( prhs[0], 0, "x" ) );
-		}
-	if(mxGetField( prhs[0], 0, "u" )!=NULL)
-		{
-		set_u = true;
-		u = mxGetPr( mxGetField( prhs[0], 0, "u" ) );
-		}
-	if(mxGetField( prhs[0], 0, "seed_adj" )!=NULL)
-		{
-		set_seed_adj = true;
-		seed_adj = mxGetPr( mxGetField( prhs[0], 0, "seed_adj" ) );
-		}
-
-
 	// opts_struct
 
 	//
@@ -99,6 +58,82 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
 //	mexPrintf("\n%s\n", method);
 
+
+
+	// model
+
+	int nu;				bool set_nu = false;
+	int nx;				bool set_nx = false;
+	double T;			bool set_T = false;
+	double *x;			bool set_x = false;
+	double *u;			bool set_u = false;
+	double *seed_adj;	bool set_seed_adj = false;
+	// gnsf stuff
+	int gnsf_nx1;		bool set_gnsf_nx1 = false;
+	int gnsf_nz1;		bool set_gnsf_nz1 = false;
+	int gnsf_nuhat;		bool set_gnsf_nuhat = false;
+	int gnsf_ny;		bool set_gnsf_ny = false;
+	int gnsf_nout;		bool set_gnsf_nout = false;
+
+	if(mxGetField( prhs[0], 0, "dim_nx" )!=NULL)
+		{
+		set_nx = true;
+		nx = mxGetScalar( mxGetField( prhs[0], 0, "dim_nx" ) );
+		}
+	if(mxGetField( prhs[0], 0, "dim_nu" )!=NULL)
+		{
+		set_nu = true;
+		nu = mxGetScalar( mxGetField( prhs[0], 0, "dim_nu" ) );
+		}
+	if(mxGetField( prhs[0], 0, "T" )!=NULL)
+		{
+		set_T = true;
+		T = mxGetScalar( mxGetField( prhs[0], 0, "T" ) );
+		}
+	if(mxGetField( prhs[0], 0, "x" )!=NULL)
+		{
+		set_x = true;
+		x = mxGetPr( mxGetField( prhs[0], 0, "x" ) );
+		}
+	if(mxGetField( prhs[0], 0, "u" )!=NULL)
+		{
+		set_u = true;
+		u = mxGetPr( mxGetField( prhs[0], 0, "u" ) );
+		}
+	if(mxGetField( prhs[0], 0, "seed_adj" )!=NULL)
+		{
+		set_seed_adj = true;
+		seed_adj = mxGetPr( mxGetField( prhs[0], 0, "seed_adj" ) );
+		}
+	// gnsf stuff
+	if(!strcmp(method, "irk_gnsf"))
+		{
+		if(mxGetField( prhs[0], 0, "dim_gnsf_nx1" )!=NULL)
+			{
+			set_gnsf_nx1 = true;
+			gnsf_nx1 = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nx1" ) );
+			}
+		if(mxGetField( prhs[0], 0, "dim_gnsf_nz1" )!=NULL)
+			{
+			set_gnsf_nz1 = true;
+			gnsf_nz1 = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nz1" ) );
+			}
+		if(mxGetField( prhs[0], 0, "dim_gnsf_nuhat" )!=NULL)
+			{
+			set_gnsf_nuhat = true;
+			gnsf_nuhat = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nuhat" ) );
+			}
+		if(mxGetField( prhs[0], 0, "dim_gnsf_ny" )!=NULL)
+			{
+			set_gnsf_ny = true;
+			gnsf_ny = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_ny" ) );
+			}
+		if(mxGetField( prhs[0], 0, "dim_gnsf_nout" )!=NULL)
+			{
+			set_gnsf_nout = true;
+			gnsf_nout = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nout" ) );
+			}
+		}
 
 
 	/* LHS */
@@ -136,17 +171,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	if(!strcmp(method, "erk"))
 		{
-//		mexPrintf("\n%s\n", method);
 		plan.sim_solver = ERK;
 		}
 	else if(!strcmp(method, "irk"))
 		{
-//		mexPrintf("\n%s\n", method);
 		plan.sim_solver = IRK;
+		}
+	else if(!strcmp(method, "irk_gnsf"))
+		{
+		plan.sim_solver = GNSF;
 		}
 	else
 		{
-		mexPrintf("\nmethod not supported %s\n", method);
+		mexPrintf("\nsim_create: method not supported %s\n", method);
 		return;
 		}
 
@@ -159,6 +196,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		sim_dims_set(config, dims, "nx", &nx);
 	if(set_nu)
 		sim_dims_set(config, dims, "nu", &nu);
+	if(!strcmp(method, "irk_gnsf"))
+		{
+		if(set_gnsf_nx1)
+			sim_dims_set(config, dims, "gnsf_nx1", &gnsf_nx1);
+		if(set_gnsf_nz1)
+			sim_dims_set(config, dims, "gnsf_nz1", &gnsf_nz1);
+		if(set_gnsf_nuhat)
+			sim_dims_set(config, dims, "gnsf_nuhat", &gnsf_nuhat);
+		if(set_gnsf_ny)
+			sim_dims_set(config, dims, "gnsf_ny", &gnsf_ny);
+		if(set_gnsf_nout)
+			sim_dims_set(config, dims, "gnsf_nout", &gnsf_nout);
+		}
 
 
 	/* opts */

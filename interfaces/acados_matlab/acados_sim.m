@@ -18,9 +18,12 @@ classdef acados_sim < handle
 
 			% detect GNSF structure
 			if (strcmp(obj.opts_struct.method, 'irk_gnsf'))
-				obj.model_struct = detect_gnsf_structure(obj.model_struct);
-				obj.model_struct
-				% TODO code-generate a file with e.g. dims, ..., to avoid to detect the gnsf structure all the time
+				if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))
+					obj.model_struct = detect_gnsf_structure(obj.model_struct);
+					generate_get_gnsf_structure(obj.model_struct);
+				else
+					obj.model_struct = get_gnsf_structure(obj.model_struct);
+				end
 			end
 
 			% compile mex without model dependency
@@ -47,10 +50,16 @@ classdef acados_sim < handle
 				obj.C_sim_ext_fun = sim_set_ext_fun_dyn_expl(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
 			elseif (strcmp(obj.opts_struct.method, 'irk'))
 				obj.C_sim_ext_fun = sim_set_ext_fun_dyn_impl(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
+			elseif (strcmp(obj.opts_struct.method, 'irk_gnsf'))
+				obj.C_sim_ext_fun = sim_set_ext_fun_dyn_gnsf(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
 			else
 				fprintf('\ncodegen_model: method not supported: %s\n', obj.opts_struct.method);
 				return;
 			end
+
+			% precompute
+			sim_precompute(obj.C_sim);
+
 		end
 
 
