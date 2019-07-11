@@ -100,7 +100,6 @@ double sim_solver_tolerance_hess(std::string const& inString)
 {
     if (inString == "IRK")  return 1e-8;
     if (inString == "ERK") return 1e-5;
-    // TODO(OJ): this should obivously be smaller. ERK adjoints and Hessians should be checked!
 
     return -1;
 }

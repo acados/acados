@@ -20,3 +20,5 @@ for ii=1:n
 end
 		
 ipiv = ipiv-1; % C 0-based indexing
+
+end

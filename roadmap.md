@@ -2,7 +2,7 @@
 
 #### `ocp_nlp`
 - [x] Gauss-Newton SQP
-- [ ] exact Hessian SQP
+- [x] exact Hessian SQP
 - [ ] partial tightening
 - [ ] HPNMPC
 - [ ] blockSQP
@@ -36,4 +36,4 @@
 - [ ] HPMPC and HPIPM for MSVC / dSpace
 - [ ] Proper installation instructions/Troubleshooting on the Wiki/Readme
 - [ ] Installation instructions for MacOS
-- [ ] Provide separate documentation page
+- [x] Provide separate documentation page
