@@ -9,9 +9,15 @@ nx = 2*num_mass;
 nu = num_mass-1;
 
 %% symbolic variables
-sym_x = MX.sym('x', nx, 1); % states
-sym_u = MX.sym('u', nu, 1); % controls
-sym_xdot = MX.sym('xdot',size(sym_x)); %state derivatives
+if 1
+	sym_x = SX.sym('x', nx, 1); % states
+	sym_u = SX.sym('u', nu, 1); % controls
+	sym_xdot = SX.sym('xdot',size(sym_x)); %state derivatives
+else
+	sym_x = MX.sym('x', nx, 1); % states
+	sym_u = MX.sym('u', nu, 1); % controls
+	sym_xdot = MX.sym('xdot',size(sym_x)); %state derivatives
+end
 
 %% dynamics
 % continuous time
