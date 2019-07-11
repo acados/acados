@@ -2203,26 +2203,25 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                                         2 * nx1 + nu, dZ_du, ii * nz1, 0, 1.0, BLO,
                                         0, 0, dK2_du, ii * nxz2,  0);
                                     // set ith block of dK2_du to df_dz(k1_i, x1_i, z_i, u) * dzi_du +  BLO
-                            // dK2_dx1
-                            blasfeo_dgemm_nn(nK2, nx1, nK1, -1.0, J_G2_K1, 0, 0, dK1_dx1, 0, 0, 1.0,
-                                            dK2_dx1, 0, 0, dK2_dx1, 0, 0);
-                                // dK2_dx1 = dK2_dx1 - JG2_K1 * dK1_dx1
-                            
-                            blasfeo_dgead(nK2, nx1, 1.0, &f_LO_jac_traj[ss], 0, 0, dK2_dx1, 0, 0);
-                                // add df_dx1 (at stages concatenated) to dK2_dx1
-
-                            // solve for dK2_dx1
-                            acados_tic(&la_timer);
-                            blasfeo_drowpe(nK2, ipivM2, dK2_dx1);  // permute also rhs
-                            blasfeo_dtrsm_llnu(nK2, nx1, 1.0, M2_LU, 0, 0,
-                                            dK2_dx1, 0, 0, dK2_dx1, 0, 0);
-                            blasfeo_dtrsm_lunn(nK2, nx1, 1.0, M2_LU, 0, 0, dK2_dx1, 0, 0, dK2_dx1, 0, 0);
-                            out->info->LAtime += acados_toc(&la_timer);
-
-                            // dK2_du
-                            blasfeo_dgemm_nn(nK2, nu, nK1, -1.0, J_G2_K1, 0, 0, dK1_du, 0, 0, 1.0, dK2_du,
-                                            0, 0, dK2_du, 0, 0);  // dK2_du += J_G2_K1 * dK1_du;
                         }
+                        // dK2_dx1
+                        blasfeo_dgemm_nn(nK2, nx1, nK1, -1.0, J_G2_K1, 0, 0, dK1_dx1, 0, 0, 1.0,
+                                        dK2_dx1, 0, 0, dK2_dx1, 0, 0);
+                            // dK2_dx1 = dK2_dx1 - JG2_K1 * dK1_dx1
+                        blasfeo_dgead(nK2, nx1, 1.0, &f_LO_jac_traj[ss], 0, 0, dK2_dx1, 0, 0);
+                            // add df_dx1 (at stages concatenated) to dK2_dx1
+
+                        // solve for dK2_dx1
+                        acados_tic(&la_timer);
+                        blasfeo_drowpe(nK2, ipivM2, dK2_dx1);  // permute also rhs
+                        blasfeo_dtrsm_llnu(nK2, nx1, 1.0, M2_LU, 0, 0,
+                                        dK2_dx1, 0, 0, dK2_dx1, 0, 0);
+                        blasfeo_dtrsm_lunn(nK2, nx1, 1.0, M2_LU, 0, 0, dK2_dx1, 0, 0, dK2_dx1, 0, 0);
+                        out->info->LAtime += acados_toc(&la_timer);
+
+                        // dK2_du
+                        blasfeo_dgemm_nn(nK2, nu, nK1, -1.0, J_G2_K1, 0, 0, dK1_du, 0, 0, 1.0, dK2_du,
+                                        0, 0, dK2_du, 0, 0);  // dK2_du += J_G2_K1 * dK1_du;
 
                         // BUILD dK2_du
                         blasfeo_dgead(nK2, nu, 1.0, &f_LO_jac_traj[ss], 0, 2 * nx1, dK2_du, 0, 0);
