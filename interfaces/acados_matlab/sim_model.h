@@ -63,3 +63,44 @@ const int *sim_model_dyn_impl_ode_hess_sparsity_in(int);
 const int *sim_model_dyn_impl_ode_hess_sparsity_out(int);
 int sim_model_dyn_impl_ode_hess_n_in();
 int sim_model_dyn_impl_ode_hess_n_out();
+
+// gnsf
+int sim_model_dyn_gnsf_f_lo_fun_jac_x1k1uz(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int sim_model_dyn_gnsf_f_lo_fun_jac_x1k1uz_work(int *, int *, int *, int *);
+const int *sim_model_dyn_gnsf_f_lo_fun_jac_x1k1uz_sparsity_in(int);
+const int *sim_model_dyn_gnsf_f_lo_fun_jac_x1k1uz_sparsity_out(int);
+int sim_model_dyn_gnsf_f_lo_fun_jac_x1k1uz_n_in();
+int sim_model_dyn_gnsf_f_lo_fun_jac_x1k1uz_n_out();
+
+// gnsf
+int sim_model_dyn_gnsf_get_matrices_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int sim_model_dyn_gnsf_get_matrices_fun_work(int *, int *, int *, int *);
+const int *sim_model_dyn_gnsf_get_matrices_fun_sparsity_in(int);
+const int *sim_model_dyn_gnsf_get_matrices_fun_sparsity_out(int);
+int sim_model_dyn_gnsf_get_matrices_fun_n_in();
+int sim_model_dyn_gnsf_get_matrices_fun_n_out();
+
+// gnsf
+int sim_model_dyn_gnsf_phi_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int sim_model_dyn_gnsf_phi_fun_work(int *, int *, int *, int *);
+const int *sim_model_dyn_gnsf_phi_fun_sparsity_in(int);
+const int *sim_model_dyn_gnsf_phi_fun_sparsity_out(int);
+int sim_model_dyn_gnsf_phi_fun_n_in();
+int sim_model_dyn_gnsf_phi_fun_n_out();
+
+// gnsf
+int sim_model_dyn_gnsf_phi_fun_jac_y(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int sim_model_dyn_gnsf_phi_fun_jac_y_work(int *, int *, int *, int *);
+const int *sim_model_dyn_gnsf_phi_fun_jac_y_sparsity_in(int);
+const int *sim_model_dyn_gnsf_phi_fun_jac_y_sparsity_out(int);
+int sim_model_dyn_gnsf_phi_fun_jac_y_n_in();
+int sim_model_dyn_gnsf_phi_fun_jac_y_n_out();
+
+// gnsf
+int sim_model_dyn_gnsf_phi_jac_y_uhat(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int sim_model_dyn_gnsf_phi_jac_y_uhat_work(int *, int *, int *, int *);
+const int *sim_model_dyn_gnsf_phi_jac_y_uhat_sparsity_in(int);
+const int *sim_model_dyn_gnsf_phi_jac_y_uhat_sparsity_out(int);
+int sim_model_dyn_gnsf_phi_jac_y_uhat_n_in();
+int sim_model_dyn_gnsf_phi_jac_y_uhat_n_out();
+

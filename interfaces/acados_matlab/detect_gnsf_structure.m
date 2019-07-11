@@ -116,11 +116,11 @@ structure_detection_print_summary(gnsf, model);
 check_reformulation( model, gnsf, print_info );
 
 %% EXPORT C Code
-if generate_gnsf_model
-    % generate gnsf model
-    generate_c_code_gnsf( gnsf );
-    disp('Successfully generated C Code to simulate model with acados integrator GNSF');
-end
+%if generate_gnsf_model
+%    % generate gnsf model
+%    generate_c_code_gnsf( gnsf );
+%    disp('Successfully generated C Code to simulate model with acados integrator GNSF');
+%end
 
 %if generate_reordered_model
 %    % generate implicit model
@@ -140,8 +140,7 @@ end
 
 
 
-% copy relevant fields from gnsf to model
-gnsf
+%% copy relevant fields from gnsf to model
 
 % dim
 model.dim_gnsf_nx1 = gnsf.nx1;
@@ -151,6 +150,10 @@ model.dim_gnsf_nz2 = gnsf.nz2;
 model.dim_gnsf_nuhat = gnsf.nuhat;
 model.dim_gnsf_ny = gnsf.ny;
 model.dim_gnsf_nout = gnsf.n_out;
+
+% sym
+model.sym_gnsf_y = gnsf.y;
+model.sym_gnsf_uhat = gnsf.uhat;
 
 % data
 model.dyn_gnsf_A = gnsf.A;
@@ -176,6 +179,10 @@ model.dyn_gnsf_ipiv_f = gnsf.ipiv_f;
 % flags
 model.dyn_gnsf_nontrivial_f_LO = gnsf.nontrivial_f_LO;
 model.dyn_gnsf_purely_linear = gnsf.purely_linear;
+
+% casadi expr
+model.dyn_gnsf_expr_phi = gnsf.phi_expr;
+model.dyn_gnsf_expr_f_lo = gnsf.f_lo_expr;
 
 
 end

@@ -202,8 +202,7 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
     ext_fun_out[14] = ipiv_x;
     ext_fun_out[15] = ipiv_z;
 
-    get_matrices_fun->evaluate(get_matrices_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out,
-                               ext_fun_out);
+    get_matrices_fun->evaluate(get_matrices_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     model->nontrivial_f_LO = (tmp_nontriv_f_LO > 0);
     model->fully_linear = (tmp_fully_linear > 0);
@@ -444,23 +443,23 @@ int sim_gnsf_model_set(void *model_, const char *field, void *value)
 {
     gnsf_model *model = model_;
 
-    if (!strcmp(field, "phi_fun"))
+    if (!strcmp(field, "phi_fun") || !strcmp(field, "gnsf_phi_fun"))
     {
         model->phi_fun = value;
     }
-    else if (!strcmp(field, "phi_fun_jac_y"))
+    else if (!strcmp(field, "phi_fun_jac_y") || !strcmp(field, "gnsf_phi_fun_jac_y"))
     {
         model->phi_fun_jac_y = value;
     }
-    else if (!strcmp(field, "phi_jac_y_uhat"))
+    else if (!strcmp(field, "phi_jac_y_uhat") || !strcmp(field, "gnsf_phi_jac_y_uhat"))
     {
         model->phi_jac_y_uhat = value;
     }
-    else if (!strcmp(field, "f_lo_jac_x1_x1dot_u_z"))
+    else if (!strcmp(field, "f_lo_jac_x1_x1dot_u_z") || !strcmp(field, "gnsf_f_lo_fun_jac_x1k1uz"))
     {
         model->f_lo_fun_jac_x1_x1dot_u_z = value;
     }
-    else if (!strcmp(field, "get_gnsf_matrices"))
+    else if (!strcmp(field, "get_gnsf_matrices") || !strcmp(field, "gnsf_get_matrices_fun"))
     {
         model->get_gnsf_matrices = value;
     }
