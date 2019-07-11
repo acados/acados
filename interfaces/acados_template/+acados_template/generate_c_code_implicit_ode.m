@@ -82,7 +82,6 @@ HESS_multiplied = HESS_multiplied.simplify();
 
 
 %% Set up functions
-% TODO(oj): fix namings such that jac_z is contained!
 if isfield(model, 'p')
     p = model.p;
     impl_dae_fun = Function([model_name,'_impl_dae_fun'], {x, xdot, u, z, p},...
