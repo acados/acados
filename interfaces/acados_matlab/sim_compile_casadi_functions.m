@@ -28,7 +28,7 @@ elseif (strcmp(opts_struct.method, 'irk_gnsf'))
 	c_sources = [c_sources, 'sim_model_dyn_gnsf_phi_fun_jac_y.c '];
 	c_sources = [c_sources, 'sim_model_dyn_gnsf_phi_jac_y_uhat.c '];
 else
-	fprintf('\ncodegen_model: method not supported: %s\n', opts_struct.method);
+	fprintf('\nsim_compile_casadi_functions: method not supported: %s\n', opts_struct.method);
 	return;
 end
 lib_name = ['libsim_model.so'];

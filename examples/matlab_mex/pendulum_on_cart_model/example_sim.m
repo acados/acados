@@ -17,10 +17,10 @@ end
 compile_mex = 'true';
 codgen_model = 'true';
 %method = 'erk';
-method = 'irk';
-%method = 'irk_gnsf';
+%method = 'irk';
+method = 'irk_gnsf';
 gnsf_detect_struct = 'true';
-sens_forw = 'false';
+sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
 
@@ -119,17 +119,17 @@ simulation_time = toc
 
 
 % xn
-%xn = sim.get('xn');
-%xn
+xn = sim.get('xn');
+xn
 % S_forw
-%S_forw = sim.get('S_forw');
-%S_forw
+S_forw = sim.get('S_forw');
+S_forw
 % Sx
-%Sx = sim.get('Sx');
-%Sx
+Sx = sim.get('Sx');
+Sx
 % Su
-%Su = sim.get('Su');
-%Su
+Su = sim.get('Su');
+Su
 
 %x_sim
 
