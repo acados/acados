@@ -10,7 +10,7 @@ acados_include = ['-I' acados_folder];
 acados_interfaces_include = ['-I' acados_folder, '/interfaces'];
 acados_lib_path = ['-L' acados_folder, '/lib'];
 acados_matlab_lib_path = ['-L' acados_folder, '/interfaces/acados_matlab/'];
-model_lib_path = ['-L', pwd];
+model_lib_path = ['-L', pwd, '/build'];
 
 %% select files to compile
 mex_files = {};
@@ -32,20 +32,20 @@ else
 end
 
 if is_octave()
-	if exist('cflags_octave.txt')==0
-		diary 'cflags_octave.txt'
+	if exist('build/cflags_octave.txt')==0
+		diary 'build/cflags_octave.txt'
 		diary on
 		mkoctfile -p CFLAGS
 		diary off
-		input_file = fopen('cflags_octave.txt', 'r');
+		input_file = fopen('build/cflags_octave.txt', 'r');
 		cflags_tmp = fscanf(input_file, '%[^\n]s');
 		fclose(input_file);
 		cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
-		input_file = fopen('cflags_octave.txt', 'w');
+		input_file = fopen('build/cflags_octave.txt', 'w');
 		fprintf(input_file, '%s', cflags_tmp);
 		fclose(input_file);
 	end
-	input_file = fopen('cflags_octave.txt', 'r');
+	input_file = fopen('build/cflags_octave.txt', 'r');
 	cflags_tmp = fscanf(input_file, '%[^\n]s');
 	fclose(input_file);
 	setenv('CFLAGS', cflags_tmp);
@@ -60,4 +60,11 @@ for ii=1:length(mex_files)
 	else
 		mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lsim_model', mex_files{ii});
 	end
+end
+
+if is_octave()
+	system(['mv -f *.o build/']);
+	system(['mv -f *.mex build/']);
+else
+	system(['mv -f *.mexa64 build/']);
 end

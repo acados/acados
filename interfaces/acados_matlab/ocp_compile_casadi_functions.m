@@ -73,3 +73,5 @@ end
 lib_name = ['libocp_model.so'];
 system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 
+system(['mv *.c build/']);
+system(['mv *.so build/']);
