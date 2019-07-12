@@ -16,6 +16,12 @@ classdef acados_ocp < handle
 			obj.model_struct = model.model_struct;
 			obj.opts_struct = opts.opts_struct;
 
+			% create build folder
+			system('mkdir -p build');
+
+			% add path
+			addpath('build/');
+
 			% compile mex without model dependency
 			if (strcmp(obj.opts_struct.compile_mex, 'true'))
 				ocp_compile_mex(obj.opts_struct);

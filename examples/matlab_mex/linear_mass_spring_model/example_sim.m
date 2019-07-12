@@ -16,8 +16,9 @@ end
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
-%method = 'irk';
-method = 'irk_gnsf';
+%method = 'erk';
+method = 'irk';
+%method = 'irk_gnsf';
 gnsf_detect_struct = 'true'
 sens_forw = 'true';
 num_stages = 4;

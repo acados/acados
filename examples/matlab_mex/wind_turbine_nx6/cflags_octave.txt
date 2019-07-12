@@ -1,0 +1,1 @@
+-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -std=c99 -fopenmp

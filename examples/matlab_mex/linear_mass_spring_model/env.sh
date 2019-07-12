@@ -31,7 +31,7 @@ fi
 export ENV_RUN=true
 
 # if acados folder not specified assume parent of the folder of the single examples
-ACADOS_INSTALL_DIR=${ACADOS_INSTALL_DIR:-"$(pwd)/../.."}
+ACADOS_INSTALL_DIR=${ACADOS_INSTALL_DIR:-"$(pwd)/../../.."}
 export ACADOS_INSTALL_DIR
 echo
 echo "ACADOS_INSTALL_DIR=$ACADOS_INSTALL_DIR"
@@ -50,7 +50,7 @@ echo "OCTAVE_PATH=$OCTAVE_PATH"
 #export ACADOS_MEX_FLAGS="GCC=/usr/bin/gcc-4.9"
 
 # if model folder not specified assume this folder
-MODEL_FOLDER=${MODEL_FOLDER:-"."}
+MODEL_FOLDER=${MODEL_FOLDER:-"./build"}
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
 echo
 echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
