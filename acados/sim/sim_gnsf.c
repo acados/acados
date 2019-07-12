@@ -169,12 +169,10 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
         model->c_LO[ii] = 0.0;
 
     // ipiv_x, z
-    double ipiv_x[nx];
-    double ipiv_z[nz];
     for (int ii = 0; ii < nx; ii++)
-        ipiv_x[ii] = (double) ii;
+        model->ipiv_x_double[ii] = (double) ii;
     for (int ii = 0; ii < nz; ii++)
-        ipiv_z[ii] = (double) ii;
+        model->ipiv_z_double[ii] = (double) ii;
 
     // calling the external function
     ext_fun_arg_t ext_fun_type_in[1];
@@ -202,8 +200,8 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
     ext_fun_out[11] = model->B_LO;
     ext_fun_out[12] = &tmp_nontriv_f_LO;
     ext_fun_out[13] = &tmp_fully_linear;
-    ext_fun_out[14] = ipiv_x;
-    ext_fun_out[15] = ipiv_z;
+    ext_fun_out[14] = model->ipiv_x_double;
+    ext_fun_out[15] = model->ipiv_z_double;
     ext_fun_out[16] = model->c_LO;
 
     get_matrices_fun->evaluate(get_matrices_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
@@ -211,9 +209,9 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
     model->nontrivial_f_LO = (tmp_nontriv_f_LO > 0);
     model->fully_linear = (tmp_fully_linear > 0);
     for (int ii = 0; ii < nx; ii++)
-        model->ipiv_x[ii] = (int) ipiv_x[ii];
+        model->ipiv_x[ii] = (int) model->ipiv_x_double[ii];
     for (int ii = 0; ii < nz; ii++)
-        model->ipiv_z[ii] = (int) ipiv_z[ii];
+        model->ipiv_z[ii] = (int) model->ipiv_z_double[ii];
 
     // printf("\nimported model matrices\n");
     // printf("\nc_LO =\n");
@@ -380,7 +378,7 @@ int sim_gnsf_model_calculate_size(void *config, void *dims_)
 
     // ipiv
     size += (nx + nz) * sizeof(int); // ipiv_x, ipiv_z
-
+    size += (nx + nz) * sizeof(double); // ipiv_x_double, ipiv_z_double
     make_int_multiple_of(64, &size);
     size += 1 * 64;
 
@@ -407,7 +405,6 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
     int nuhat   = dims->nuhat;
     int nx2     = nx - nx1;
     int nz2     = nz - nz1;
-
 
     // initial align
     align_char_to(8, &c_ptr);
@@ -437,8 +434,12 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
     assign_and_advance_double((nx2 + nz2) * nu, &model->B_LO, &c_ptr);
     assign_and_advance_double((nx2 + nz2) * (nx2 + nz2), &model->E_LO, &c_ptr);
 
+    assign_and_advance_double(nx, &model->ipiv_x_double, &c_ptr);
+    assign_and_advance_double(nz, &model->ipiv_z_double, &c_ptr);
+
     assign_and_advance_int(nx, &model->ipiv_x, &c_ptr);
     assign_and_advance_int(nz, &model->ipiv_z, &c_ptr);
+
     // initialize with identity permutation
     for (int ii = 0; ii < nx; ii++)
         model->ipiv_x[ii] = ii;

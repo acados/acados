@@ -108,6 +108,9 @@ typedef struct
     int *ipiv_x;
     int *ipiv_z;
 
+    double *ipiv_x_double;
+    double *ipiv_z_double;
+
 } gnsf_model;
 
 // pre_workspace - workspace used in the precomputation phase
