@@ -41,7 +41,7 @@ has the following form
 https://github.com/acados/acados/files/3359595/gnsf_structure_blo.pdf
 
 Details on the algorithm can be found in master thesis of Jonathan Frey,
-which presents a slightly different format without the B_LO matrix.
+which presents a slightly different format without the terms B_LO, c_LO.
 https://github.com/acados/acados/files/2318322/gnsf_structure.pdf
 https://cdn.syscop.de/publications/Frey2018.pdf
 https://cdn.syscop.de/publications/Frey2019.pdf
@@ -102,6 +102,7 @@ typedef struct
 
     /* constant vector */
     double *c;
+    double *c_LO;
 
     // permutation vector - to have GNSF order of x, z within sim_gnsf only
     int *ipiv_x;

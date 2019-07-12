@@ -287,13 +287,19 @@ else
     lhs_nsf = E(:,I_nsf_components) * [x1; z1];
 end
 
+n_LO = length(I_LOS_eq);
+B_LO = zeros(n_LO, gnsf.nu);
+E_LO = zeros(n_LO);
+c_LO = zeros(n_LO, 1);
 for eq = I_LOS_eq
     i_LO = find( I_LOS_eq == eq );
     f_LO = vertcat(f_LO, ...
-            Ax1(eq) + B(eq, :) * u + c(eq) + C_phi(eq)...
+            Ax1(eq) + C_phi(eq)...
             - lhs_nsf(eq)) ;
     E_LO(i_LO, :) = E(eq, I_LOS_components);
     A_LO(i_LO, :) = A(eq, I_x2);
+    c_LO(i_LO, :) = c(eq);
+    B_LO(i_LO, :) = B(eq, :);
 end
 % keyboard
 if any(size(f_LO) == 0)
@@ -303,6 +309,8 @@ end
 f_LO = f_LO.simplify();
 gnsf.A_LO = A_LO;
 gnsf.E_LO = E_LO;
+gnsf.B_LO = B_LO;
+gnsf.c_LO = c_LO;
 gnsf.f_lo_expr = f_LO;
 
 %% remove I_LOS_eq from NSF type system
@@ -323,37 +331,10 @@ end
 
 gnsf.C = gnsf.C(:,I_nonzero);
 gnsf.phi_expr = gnsf.phi_expr(I_nonzero);
-gnsf.B_LO = zeros(length(gnsf.f_lo_expr), gnsf.nu);
 
 gnsf = determine_input_nonlinearity_function( gnsf );
 check_reformulation(model, gnsf, print_info);
 
-%% Reformulate with B_LO
-for ii = 1:length(gnsf.f_lo_expr)
-    fii = gnsf.f_lo_expr(ii);
-    for iu = 1:gnsf.nu
-        var = u(iu);
-        varname = var.name;
-        % symbolic jacobian of fii w.r.t. ui;
-        jac_fii_ui = jacobian(fii, var);
-        if jac_fii_ui.is_constant % i.e. hessian is structural zero
-            % jacobian value
-            jac_fii_ui_fun = Function(['jac_fii_ui_fun'],...
-                            {x(1)}, {jac_fii_ui});
-            gnsf.B_LO(ii, iu) = full(jac_fii_ui_fun(0));
-        else
-            gnsf.B_LO(ii, iu) = 0;
-            if print_info
-                disp(['f_LO(' num2str(ii) ') is nonlinear in u(', num2str(iu), ') = ' varname]);
-                disp(fii)
-                disp('-----------------------------------------------------');
-            end
-        end
-    end
-end
-f_next = gnsf.f_lo_expr - gnsf.B_LO * u;
-f_next = f_next.simplify();
-gnsf.f_lo_expr = f_next;
 
 gnsf.nontrivial_f_LO = 0;
 for ii = 1:length(gnsf.f_lo_expr)
@@ -364,8 +345,6 @@ for ii = 1:length(gnsf.f_lo_expr)
 end
 if ~gnsf.nontrivial_f_LO && print_info
     disp('f_LO is fully trivial (== 0)');
-    disp('B_LO =');
-    disp(gnsf.B_LO);
 end
 
 check_reformulation(model, gnsf, print_info);
@@ -373,13 +352,24 @@ check_reformulation(model, gnsf, print_info);
 if print_info
     disp('');
     disp('---------------------------------------------------------------------------------');
-    disp('------------- Success: Linear Output System detected ----------------------------');
+    disp('------------- Success: Linear Output System (LOS) detected ----------------------');
     disp('---------------------------------------------------------------------------------');
     disp('');
     disp(['==>>  moved  ', num2str(gnsf.nx2), ' differential states and ',...
         num2str(gnsf.nz2),' algebraic variables to the Linear Output System']);
     disp(['==>>  recuced output dimension of phi from  ',...
         num2str(length(phi_old)), ' to ', num2str(length(gnsf.phi_expr))]);
+    disp(' ');
+    disp('Matrices defining the LOS read as');
+    disp(' ');
+    disp('E_LO =');
+    disp(gnsf.E_LO);
+    disp('A_LO =');
+    disp(gnsf.A_LO);
+    disp('B_LO =');
+    disp(gnsf.B_LO);
+    disp('c_LO =');
+    disp(gnsf.c_LO);
 end
 
 end

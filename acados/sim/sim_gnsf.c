@@ -160,11 +160,14 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
     int nx2 = nx - dims->nx1;
     int nz2 = nz - dims->nz1;
 
-    // ensure compatibility with earlier version without B_LO, ipiv_x, ipiv_z
+    // ensure compatibility with earlier version without B_LO, ipiv_x, ipiv_z, c_LO
     double tmp_nontriv_f_LO = 0.0;
     double tmp_fully_linear = 0.0;
     for (int ii = 0; ii < (nx2+nz2)*nu; ii++)
         model->B_LO[ii] = 0.0;
+    for (int ii = 0; ii < nx2+nz2; ii++)
+        model->c_LO[ii] = 0.0;
+
     // ipiv_x, z
     double ipiv_x[nx];
     double ipiv_z[nz];
@@ -176,13 +179,13 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
     // calling the external function
     ext_fun_arg_t ext_fun_type_in[1];
     void *ext_fun_in[1];
-    ext_fun_arg_t ext_fun_type_out[16];
-    void *ext_fun_out[16];
+    ext_fun_arg_t ext_fun_type_out[17];
+    void *ext_fun_out[17];
 
     ext_fun_type_in[0] = COLMAJ;
     ext_fun_in[0] = model->A;  // just to have some input;
 
-    for (int ii = 0; ii < 16; ii++)
+    for (int ii = 0; ii < 17; ii++)
         ext_fun_type_out[ii] = COLMAJ;
 
     ext_fun_out[0] = model->A;
@@ -201,6 +204,7 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
     ext_fun_out[13] = &tmp_fully_linear;
     ext_fun_out[14] = ipiv_x;
     ext_fun_out[15] = ipiv_z;
+    ext_fun_out[16] = model->c_LO;
 
     get_matrices_fun->evaluate(get_matrices_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
@@ -210,6 +214,12 @@ static void sim_gnsf_import_matrices(void *dims_, gnsf_model *model)
         model->ipiv_x[ii] = (int) ipiv_x[ii];
     for (int ii = 0; ii < nz; ii++)
         model->ipiv_z[ii] = (int) ipiv_z[ii];
+
+    // printf("\nimported model matrices\n");
+    // printf("\nc_LO =\n");
+    // for (int ii = 0; ii < nx2 + nz2; ii++) {
+    //     printf("%e \t", model->c_LO[ii]);
+    // }
 
 }
 
@@ -364,6 +374,7 @@ int sim_gnsf_model_calculate_size(void *config, void *dims_)
     size += nuhat * nu * sizeof(double);           // L_u
     size += (nx2 + nz2) * nx2 * sizeof(double);            // A_LO
     size += (nx1 + nz1) * sizeof(double);           // c
+    size += (nx2 + nz2) * sizeof(double);           // c_LO
     size += (nx2 + nz2) * (nx2 + nz2) * sizeof(double);  // E_LO
     size += (nx2 + nz2) * nu * sizeof(double); // B_LO
 
@@ -414,6 +425,7 @@ void *sim_gnsf_model_assign(void *config, void *dims_, void *raw_memory)
     assign_and_advance_double((nx1 + nz1) * n_out, &model->C, &c_ptr);
     assign_and_advance_double((nx1 + nz1) * (nx1 + nz1), &model->E, &c_ptr);
     assign_and_advance_double(nx1 + nz1 , &model->c, &c_ptr);
+    assign_and_advance_double(nx2 + nz2 , &model->c_LO, &c_ptr);
 
     assign_and_advance_double(ny * nx1, &model->L_x, &c_ptr);
     assign_and_advance_double(ny * nx1, &model->L_xdot, &c_ptr);
@@ -1986,9 +1998,11 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             blasfeo_dgemv_n(nZ1, nu, 1.0, ZZu, 0, 0, u0, 0, 1.0, ZZ0, 0, Zu , 0);
         }
 
-        // compute uhat, BLOtimesu0
+        // uhat = Lu * u0;
         blasfeo_dgemv_n(nuhat, nu, 1.0, Lu, 0, 0, u0, 0, 0.0, uhat, 0, uhat, 0);
-        blasfeo_dgemv_n(nxz2, nu, 1.0, BLO, 0, 0, u0, 0, 0.0, f_LO_val, 0, BLOtimesu0, 0);
+        // BLOtimesu0 = BLO * u0 + c_LO
+        blasfeo_pack_dvec(nxz2, model->c_LO, BLOtimesu0, 0);
+        blasfeo_dgemv_n(nxz2, nu, 1.0, BLO, 0, 0, u0, 0, 1.0, BLOtimesu0, 0, BLOtimesu0, 0);
 
         /************************************************
          * FORWARD LOOP
@@ -2101,18 +2115,20 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
             if (nxz2)
             {
-                f_lo_in_x1.x = x1_stage_val;
-                f_lo_in_k1.x = K1_val;
-                f_lo_in_z1.x = Z1_val;
 
-                f_lo_val_out.x = f_LO_val;
-                f_lo_jac_out.A = &f_LO_jac_traj[ss];
                 /* SIMULATE LINEAR OUTPUT SYSTEM */
                 blasfeo_dgemv_n(nxz2, nx2, 1.0, ALO, 0, 0, x0_traj, ss * nx + nx1, 1.0, BLOtimesu0,
                                 0, ALOtimesx02, 0);
-                        // ALOtimesx02 = ALO * x2part(x0_traj(step));
+                        // ALOtimesx02 = ALO * x2part(x0_traj(step)) + BLO * u0 + c_LO;
 
                 if (model->nontrivial_f_LO) // Evaluate f_LO + jacobians
+                {
+                    f_lo_in_x1.x = x1_stage_val;
+                    f_lo_in_k1.x = K1_val;
+                    f_lo_in_z1.x = Z1_val;
+
+                    f_lo_val_out.x = f_LO_val;
+                    f_lo_jac_out.A = &f_LO_jac_traj[ss];
                     for (int ii = 0; ii < num_stages; ii++)
                     {
                         f_lo_in_x1.xi = ii * nx1;
@@ -2129,12 +2145,13 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                         out->info->ADtime += acados_toc(&casadi_timer);
                         blasfeo_dvecsc(nxz2, -1.0, f_LO_val, nxz2 * ii);  // f_LO_val = - f_LO_val
                         blasfeo_dvecad(nxz2, -1.0, ALOtimesx02, 0, f_LO_val, nxz2 * ii);
-                                // f_LO_val = f_LO_val - ALOtimesx02 (actual right hand side)
+                        // f_LO_val = - ALOtimesx02 (includes BLO * u + c_LO) (actual rhs)
                     }
+                }
                 else
                     for (int ii = 0; ii < num_stages; ii++)
                     {
-                        // f_LO_val = - ALOtimesx02 (actual rhs)
+                        // f_LO_val = - ALOtimesx02 (includes BLO * u + c_LO) (actual rhs)
                         blasfeo_dveccpsc(nxz2, -1.0, ALOtimesx02, 0, f_LO_val, nxz2 * ii);
                     }
 
@@ -2360,9 +2377,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                     }
 
                     // pack x0dot_1
-                    blasfeo_pack_dvec(nx1, out->xn, x0dot_1, 0); // giaf: permute - FreyJo: no, should be already in gnsf order
+                    blasfeo_pack_dvec(nx1, out->xn, x0dot_1, 0);
                     // pack z0
-                    blasfeo_pack_dvec(nz, out->zn, z0, 0); // giaf: permute - FreyJo: no, should be already in gnsf order
+                    blasfeo_pack_dvec(nz, out->zn, z0, 0);
 
                     // evaluate phi at x0_1, x0_1dot, u, z0;
                     // build y_0; // use y_one_stage

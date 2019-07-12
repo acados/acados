@@ -36,13 +36,19 @@ for ii=1:nu
 	Bc(num_mass+ii, ii) = 1.0;
 end
 
+c_const = zeros(nx, 1);
+% just to test gnsf with nontrivial c_LO
+% for ii=1:nx
+%     c_const(ii) = (-1)^ii * 1e-8;
+% end
+
 % discrete time
 Ts = 0.5; % sampling time
 M = expm([Ts*Ac, Ts*Bc; zeros(nu, 2*nx/2+nu)]);
 A = M(1:nx,1:nx);
 B = M(1:nx,nx+1:end);
 
-expr_f_expl = Ac*sym_x + Bc*sym_u;
+expr_f_expl = Ac*sym_x + Bc*sym_u + c_const;
 expr_f_impl = expr_f_expl - sym_xdot;
 expr_phi = A*sym_x + B*sym_u;
 

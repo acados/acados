@@ -130,24 +130,24 @@ if ~isequal(gnsf.idx_perm_x, [1:nx])
 	disp(' ');
 	disp('--------------------------------------------------------------------------------------------------');
 	disp('NOTE: permuted differential state vector x, such that x_gnsf = x(idx_perm_x) with idx_perm_x =');
-	gnsf.idx_perm_x
 	disp(' ');
+	disp(gnsf.idx_perm_x)
 end
 
 if nz~= 0 && ~isequal(gnsf.idx_perm_z, [1:nz])
 	disp(' ');
 	disp('--------------------------------------------------------------------------------------------------');
 	disp('NOTE: permuted algebraic state vector z, such that z_gnsf = z(idx_perm_z) with idx_perm_z =');
-	gnsf.idx_perm_z
 	disp(' ');
+	disp(gnsf.idx_perm_z)
 end
 
 if ~isequal(gnsf.idx_perm_f, [1:nx+nz])
 	disp(' ');
 	disp('--------------------------------------------------------------------------------------------------');
 	disp('NOTE: permuted rhs expression vector f, such that f_gnsf = f(idx_perm_f) with idx_perm_f =');
-	gnsf.idx_perm_f
 	disp(' ');
+	disp(gnsf.idx_perm_f)
 end
 
 %% print GNSF dimensions
@@ -158,15 +158,16 @@ disp('The dimensions of the GNSF reformulated model read as:');
 disp(' ');
 %T_dim = table(nx, nu, nz, np, nx1, nz1, n_out, ny, nuhat);
 %disp( T_dim )
-nx
-nu
-nz
-np
-nz1
-nz1
-n_out
-ny
-nuhat
+disp(['nx    ' num2str(nx)]);
+disp(['nu    ' num2str(nu)]);
+disp(['nz    ' num2str(nz)]);
+disp(['np    ' num2str(np)]);
+disp(['nx1   ' num2str(nx1)]);
+disp(['nz1   ' num2str(nz1)]);
+disp(['n_out ' num2str(n_out)]);
+disp(['ny    ' num2str(ny)]);
+disp(['nuhat ' num2str(nuhat)]);
+
 format short e
 
 end
