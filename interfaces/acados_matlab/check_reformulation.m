@@ -54,6 +54,7 @@ L_u    = gnsf.L_u;
 A_LO = gnsf.A_LO;
 E_LO = gnsf.E_LO;
 B_LO = gnsf.B_LO;
+c_LO = gnsf.c_LO;
 
 I_x1 = 1:nx1;
 I_x2 = nx1+1:nx;
@@ -131,9 +132,9 @@ for i_check = 1:num_eval
     gnsf_val1 = A * x0(I_x1) + B * u0 + ...
         C_phi + c - E * [x0dot(I_x1); z0(I_z1)];
 
-    
+
     if nx2 > 0 % eval LOS
-        gnsf_val2 =  A_LO * x0(I_x2) + B_LO * u0 + ...
+        gnsf_val2 =  A_LO * x0(I_x2) + B_LO * u0 + c_LO + ...
             f_lo_val - E_LO * [x0dot(I_x2); z0(I_z2)];
         gnsf_val = full([gnsf_val1; gnsf_val2 ]);
     else
@@ -144,17 +145,17 @@ for i_check = 1:num_eval
     rel_error = norm(f_impl_val - gnsf_val) / norm(f_impl_val);
 
     if rel_error > TOL
+        disp('transcription failed; rel_error > TOL');
+        disp('you are in debug mode now: keyboard');
+        keyboard
         abs_error = gnsf_val - f_impl_val;
         T = table(f_impl_val, gnsf_val, abs_error);
         disp(T)
 %         error('transcription failed; rel_error > TOL');
 %         check = 0;
-        disp('transcription failed; rel_error > TOL');
-        disp('you are in debug mode now: keyboard');
 
 
-        keyboard
-        lo_expr =  A_LO * x(I_x2) + ...
+        lo_expr =  A_LO * x(I_x2) + B_LO * u + c_LO + ...
             gnsf.f_lo_expr - E_LO * [xdot(I_x2)];
         nsf_expr = (A * x(I_x1) + B * u + ...
             C * gnsf.phi_expr + c) - E * [xdot(I_x1); z(I_z1)];

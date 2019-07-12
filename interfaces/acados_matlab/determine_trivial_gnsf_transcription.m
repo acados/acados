@@ -132,6 +132,7 @@ gnsf = determine_input_nonlinearity_function( gnsf );
 gnsf.A_LO = [];
 gnsf.E_LO = [];
 gnsf.B_LO = [];
+gnsf.c_LO = [];
 gnsf.f_lo_expr = [];
 
 % permutation

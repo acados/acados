@@ -44,6 +44,7 @@ L_u    = model.dyn_gnsf_L_u;
 A_LO = model.dyn_gnsf_A_LO;
 E_LO = model.dyn_gnsf_E_LO;
 B_LO = model.dyn_gnsf_B_LO;
+c_LO = model.dyn_gnsf_c_LO;
 
 % state permutation vector: x_gnsf = dvecpe(x, ipiv)
 ipiv_x = model.dyn_gnsf_ipiv_x;
@@ -139,7 +140,8 @@ end
 dummy = x(1);
 
 get_matrices_fun = Function([model_name,'_gnsf_get_matrices_fun'], {dummy},...
-     {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO, nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z});
+     {A, B, C, E, L_x, L_xdot, L_z, L_u, A_LO, c, E_LO, B_LO,...
+      nontrivial_f_LO, purely_linear, ipiv_x, ipiv_z, c_LO});
 
 
 %% generate functions
