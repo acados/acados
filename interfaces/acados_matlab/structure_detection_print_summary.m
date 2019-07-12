@@ -55,7 +55,7 @@ phi_current = gnsf.phi_expr;
 disp(' ');
 disp('*********************************************************************************************');
 disp(' ');
-disp('******************        SUCCESS: GNSF STRUCTURE DETECTION COMPLETE !!!      **************');
+disp('******************        SUCCESS: GNSF STRUCTURE DETECTION COMPLETE !!!      ***************');
 disp(' ');
 disp('*********************************************************************************************');
 disp(' ');
@@ -91,7 +91,11 @@ if gnsf.nz2 >0
     disp(z(gnsf.nz1+1:gnsf.nz));
     disp(' ');
 end
-
+if gnsf.purely_linear == 1
+    disp(' ');
+    disp('Model is fully linear!');
+	disp(' ');
+end
 
 %compare_x = (x_old == x);
 %if ~compare_x.is_constant()
@@ -130,7 +134,7 @@ if ~isequal(gnsf.idx_perm_x, [1:nx])
 	disp(' ');
 end
 
-if ~isequal(gnsf.idx_perm_z, [1:nz])
+if nz~= 0 && ~isequal(gnsf.idx_perm_z, [1:nz])
 	disp(' ');
 	disp('--------------------------------------------------------------------------------------------------');
 	disp('NOTE: permuted algebraic state vector z, such that z_gnsf = z(idx_perm_z) with idx_perm_z =');
@@ -146,7 +150,7 @@ if ~isequal(gnsf.idx_perm_f, [1:nx+nz])
 	disp(' ');
 end
 
-%% print GNSF dimenstions
+%% print GNSF dimensions
 format short
 disp('--------------------------------------------------------------------------------------------------------');
 disp(' ');

@@ -112,25 +112,6 @@ if check_E_invertibility
     gnsf = reformulate_with_invertible_E_mat( gnsf, model, print_info);
 end
 
-structure_detection_print_summary(gnsf, model);
-check_reformulation( model, gnsf, print_info );
-
-%% EXPORT C Code
-%if generate_gnsf_model
-%    % generate gnsf model
-%    generate_c_code_gnsf( gnsf );
-%    disp('Successfully generated C Code to simulate model with acados integrator GNSF');
-%end
-
-%if generate_reordered_model
-%    % generate implicit model
-%	% TODO opts instead of transcribe_opts
-%    generate_c_code_implicit_ode( model, transcribe_opts );
-%    disp('Successfully generated C Code to simulate model with acados integrator IRK');
-%end
-
-
-
 % detect purely linear model
 if gnsf.nx1 == 0 && gnsf.nz1 == 0 && gnsf.nontrivial_f_LO == 0
     gnsf.purely_linear = 1;
@@ -138,6 +119,8 @@ else
     gnsf.purely_linear = 0;
 end
 
+structure_detection_print_summary(gnsf, model);
+check_reformulation( model, gnsf, print_info );
 
 
 %% copy relevant fields from gnsf to model
