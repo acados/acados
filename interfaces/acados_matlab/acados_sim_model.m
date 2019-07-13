@@ -19,8 +19,11 @@ classdef acados_sim_model < handle
 
 
 		function obj = set(obj, field, value)
+			% misc
+			if (strcmp(field, 'name'))
+				obj.model_struct.name = value;
 			% dims
-			if (strcmp(field, 'dim_nx'))
+			elseif (strcmp(field, 'dim_nx'))
 				obj.model_struct.dim_nx = value;
 			elseif (strcmp(field, 'dim_nu'))
 				obj.model_struct.dim_nu = value;

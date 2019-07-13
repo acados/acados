@@ -23,6 +23,7 @@ gnsf_detect_struct = 'true';
 sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
+model_name = 'sim_pendulum';
 
 h = 0.1;
 x0 = [0; 1e-1; 0; 0e0];
@@ -40,6 +41,7 @@ nu = model.nu;
 
 %% acados sim model
 sim_model = acados_sim_model();
+sim_model.set('name', model_name);
 sim_model.set('T', h);
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');

@@ -46,7 +46,7 @@ classdef acados_sim < handle
 
 			obj.C_sim_ext_fun = sim_create_ext_fun();
 
-			% compile mex with model dependency & get pointers for external functions in model
+			% compile mex with model dependency & set pointers for external functions in model
 			obj.C_sim_ext_fun = sim_compile_mex_model_dep(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
 
 			% precompute
