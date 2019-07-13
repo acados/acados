@@ -1,4 +1,4 @@
-function sim_compile_casadi_functions(model_struct, opts_struct)
+function sim_generate_casadi_ext_fun(model_struct, opts_struct)
 
 model_name = model_struct.name;
 

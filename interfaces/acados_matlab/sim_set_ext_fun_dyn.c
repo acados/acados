@@ -12,8 +12,8 @@
 
 
 // macro to string
-#define XSTR(x) STR(x)
-#define STR(x) #x
+#define STR(x) STR_AGAIN(x)
+#define STR_AGAIN(x) #x
 
 // glue macros
 #define GLUE2(x,y) GLUE2_AGAIN(x,y)
@@ -99,12 +99,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		external_function_param_casadi_set_n_in(ext_fun_param_ptr, &GLUE2(FUN_NAME,N_IN));
 		external_function_param_casadi_set_n_out(ext_fun_param_ptr, &GLUE2(FUN_NAME,N_OUT));
 		external_function_param_casadi_create(ext_fun_param_ptr, np);
-		sim_in_set(config, dims, in, XSTR(SET_FIELD), ext_fun_param_ptr);
+		sim_in_set(config, dims, in, STR(SET_FIELD), ext_fun_param_ptr);
 		// populate output struct
 		tmp_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 		ptr = mxGetData(tmp_mat);
 		ptr[0] = (long long) ext_fun_param_ptr;
-		mxSetField(plhs[0], 0, XSTR(MEX_FIELD), tmp_mat);
+		mxSetField(plhs[0], 0, STR(MEX_FIELD), tmp_mat);
 		}
 	else
 		{
@@ -116,12 +116,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		external_function_casadi_set_n_in(ext_fun_ptr, &GLUE2(FUN_NAME,N_IN));
 		external_function_casadi_set_n_out(ext_fun_ptr, &GLUE2(FUN_NAME,N_OUT));
 		external_function_casadi_create(ext_fun_ptr);
-		sim_in_set(config, dims, in, XSTR(SET_FIELD), ext_fun_ptr);
+		sim_in_set(config, dims, in, STR(SET_FIELD), ext_fun_ptr);
 		// populate output struct
 		tmp_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
 		ptr = mxGetData(tmp_mat);
 		ptr[0] = (long long) ext_fun_ptr;
-		mxSetField(plhs[0], 0, XSTR(MEX_FIELD), tmp_mat);
+		mxSetField(plhs[0], 0, STR(MEX_FIELD), tmp_mat);
 		}
 	
 	return;

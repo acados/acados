@@ -41,13 +41,13 @@ classdef acados_sim < handle
 
 			% generate and compile casadi functions
 			if (strcmp(obj.opts_struct.codgen_model, 'true'))
-				sim_compile_casadi_functions(obj.model_struct, obj.opts_struct)
+				sim_generate_casadi_ext_fun(obj.model_struct, obj.opts_struct)
 			end
 
 			obj.C_sim_ext_fun = sim_create_ext_fun();
 
 			% compile mex with model dependency & set pointers for external functions in model
-			obj.C_sim_ext_fun = sim_compile_mex_model_dep(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
+			obj.C_sim_ext_fun = sim_set_ext_fun(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
 
 			% precompute
 			sim_precompute(obj.C_sim);

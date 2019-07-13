@@ -1,4 +1,4 @@
-function C_sim_ext_fun = sim_compile_mex_model_dep(C_sim, C_sim_ext_fun, model_struct, opts_struct)
+function C_sim_ext_fun = sim_set_ext_fun(C_sim, C_sim_ext_fun, model_struct, opts_struct)
 
 model_name = model_struct.name;
 
