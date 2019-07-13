@@ -19,14 +19,14 @@ codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
 %param_scheme = 'multiple_shooting';
 %shooting_nodes = [0 0.1 0.2 0.3 0.5 1];;
-N = 5;
+N = 20;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-%nlp_solver_exact_hessian = 'false';
-nlp_solver_exact_hessian = 'true';
-%regularize_method = 'no_regularize';
-regularize_method = 'project';
+nlp_solver_exact_hessian = 'false';
+%nlp_solver_exact_hessian = 'true';
+regularize_method = 'no_regularize';
+%regularize_method = 'project';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
@@ -34,10 +34,10 @@ nlp_solver_ext_qp_res = 1;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_cond_N = 5;
-%dyn_type = 'explicit';
+dyn_type = 'explicit';
 %dyn_type = 'implicit';
-dyn_type = 'discrete';
-%sim_method = 'erk';
+%dyn_type = 'discrete';
+sim_method = 'erk';
 %sim_method = 'irk';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
@@ -58,12 +58,12 @@ nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
-if 1
+if 0
 	nbx = nx/2;
 	nbu = nu;
 	ng = 0;
 	nh = 0;
-elseif 1
+elseif 0
 	nbx = 0;
 	nbu = 0;
 	ng = nu+nx/2;
@@ -338,6 +338,8 @@ else
 	fprintf('\nsolution failed!\n\n');
 end
 
+
+waitforbuttonpress;
 
 
 return;

@@ -32,8 +32,8 @@ ocp_qp_solver_cond_N = 5;
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 2;
 ocp_sim_method_num_steps = 2;
-%ocp_cost_type = 'linear_ls';
-ocp_cost_type = 'nonlinear_ls';
+ocp_cost_type = 'linear_ls';
+%ocp_cost_type = 'nonlinear_ls';
 %ocp_cost_type = 'ext_cost';
 
 
@@ -274,6 +274,7 @@ else
 end
 
 
+waitforbuttonpress;
 
 
 return;

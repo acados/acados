@@ -1,4 +1,4 @@
-function ocp_compile_casadi_functions(model_struct, opts_struct)
+function ocp_generate_casadi_ext_fun(model_struct, opts_struct)
 
 % select files to compile
 c_sources = ' ';
