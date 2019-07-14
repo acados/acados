@@ -15,26 +15,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //	mexPrintf("\nin ocp_get\n");
 
 	long long *ptr;
-
-	int ii;
+	int ii, jj, kk;
+	int Nf;
+	mxArray *mex_field;
 
 	/* RHS */
 
 	// model
-	// TODO bool instead !!!
-	char *param_y_e = mxArrayToString( mxGetField( prhs[0], 0, "cost_param_y_e" ) );
-	char *param_ext_cost = mxArrayToString( mxGetField( prhs[0], 0, "cost_param_ext_cost" ) );
-	char *param_ext_cost_e = mxArrayToString( mxGetField( prhs[0], 0, "cost_param_ext_cost_e" ) );
-	char *dyn_type = mxArrayToString( mxGetField( prhs[0], 0, "dyn_type" ) );
-	char *param_f = mxArrayToString( mxGetField( prhs[0], 0, "dyn_param_f" ) );
-	char *param_phi = mxArrayToString( mxGetField( prhs[0], 0, "dyn_param_phi" ) );
-	char *param_y = mxArrayToString( mxGetField( prhs[0], 0, "cost_param_y" ) );
-	char *param_h = mxArrayToString( mxGetField( prhs[0], 0, "constr_param_h" ) );
-	char *param_h_e = mxArrayToString( mxGetField( prhs[0], 0, "constr_param_h_e" ) );
 
 	// opts
-	// TODO
-//	char *sim_method = mxArrayToString( mxGetField( prhs[1], 0, "sim_method" ) );
 
 	// C_ocp
 
@@ -86,6 +75,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int nu = dims->nu[0];
 	int nx = dims->nx[0];
 
+	// XXX hard-code number and size of phases for now !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	int NN[] = {N, 1};
 
 
 	// TODO implement with LHS ?????
@@ -152,296 +143,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		double *p = mxGetPr( prhs[5] );
 		external_function_param_casadi *ext_fun_param_ptr;
-		if(!strcmp(param_f, "true")) // TODO bool
+		int struct_size = mxGetNumberOfFields( prhs[3] );
+		for(ii=0; ii<struct_size; ii++)
 			{
-			if(!strcmp(dyn_type, "explicit"))
+//			printf("\n%s\n", mxGetFieldNameByNumber( prhs[3], ii) );
+			mex_field = mxGetFieldByNumber( prhs[3], 0, ii );
+			ptr = (long long *) mxGetData( mex_field );
+			Nf = mxGetN( mex_field );
+			for(jj=0; jj<Nf; jj++)
 				{
-				if(nrhs==6)
+				ext_fun_param_ptr = (external_function_param_casadi *) ptr[jj];
+				if(ext_fun_param_ptr!=0)
 					{
-					// expl_ode_fun
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_expl_ode_fun" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					for(ii=0; ii<N; ii++)
+					for(kk=0; kk<NN[jj]; kk++)
 						{
-						(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-						}
-					// expl_vde_for
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_expl_vde_for" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					for(ii=0; ii<N; ii++)
-						{
-						(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-						}
-					// expl_vde_adj
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_expl_vde_adj" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					for(ii=0; ii<N; ii++)
-						{
-						(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-						}
-					// expl_ode_hes
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_expl_ode_hes" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					for(ii=0; ii<N; ii++)
-						{
-						(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
+						(ext_fun_param_ptr+kk)->set_param(ext_fun_param_ptr+kk, p);
 						}
 					}
-				else if(nrhs==7)
-					{
-					int stage = mxGetScalar( prhs[6] );
-					// expl_ode_fun
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_expl_ode_fun" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-					// expl_vde_for
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_expl_vde_for" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-					// expl_vde_adj
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_expl_vde_adj" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-					// expl_ode_hes
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_expl_ode_hes" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-					}
-				else
-					{
-					mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
-					goto end;
-					}
-				}
-			else if(!strcmp(dyn_type, "implicit"))
-				{
-				if(nrhs==6)
-					{
-					// impl_ode_fun
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_impl_ode_fun" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					for(ii=0; ii<N; ii++)
-						{
-						(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-						}
-					// impl_ode_fun_jac_x_xdot
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_impl_ode_fun_jac_x_xdot" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					for(ii=0; ii<N; ii++)
-						{
-						(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-						}
-					// impl_ode_jac_x_xdot_u
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_impl_ode_jac_x_xdot_u" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					for(ii=0; ii<N; ii++)
-						{
-						(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-						}
-					// impl_ode_hess
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_impl_ode_hess" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					for(ii=0; ii<N; ii++)
-						{
-						(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-						}
-					}
-				else if(nrhs==7)
-					{
-					int stage = mxGetScalar( prhs[6] );
-					// impl_ode_fun
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_impl_ode_fun" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-					// impl_ode_fun_jac_x_xdot
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_impl_ode_fun_jac_x_xdot" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-					// impl_ode_jac_x_xdot_u
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_impl_ode_jac_x_xdot_u" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-					// impl_ode_hess
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_impl_ode_hess" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-					}
-				else
-					{
-					mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
-					goto end;
-					}
-				}
-			else
-				{
-				mexPrintf("\nocp_set: dyn_type not supported %s\n", dyn_type);
-				goto end;
 				}
 			}
-		if(!strcmp(param_phi, "true")) // TODO bool
-			{
-			if(!strcmp(dyn_type, "discrete"))
-				{
-				if(nrhs==6)
-					{
-					// disc_phi_fun_jac
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_disc_phi_fun_jac" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					for(ii=0; ii<N; ii++)
-						{
-						(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-						}
-					// disc_phi_fun_jac_hess
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_disc_phi_fun_jac_hess" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					for(ii=0; ii<N; ii++)
-						{
-						(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-						}
-					}
-				else if(nrhs==7)
-					{
-					int stage = mxGetScalar( prhs[6] );
-					// disc_phi_fun_jac
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_disc_phi_fun_jac" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-					// disc_phi_fun_jac_hess
-					ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_disc_phi_fun_jac_hess" ) );
-					ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-					(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-					}
-				else
-					{
-					mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
-					goto end;
-					}
-				}
-			else
-				{
-				mexPrintf("\nocp_set: dyn_type not supported %s\n", dyn_type);
-				goto end;
-				}
-			}
-		if(!strcmp(param_h, "true")) // TODO bool
-			{
-			if(nrhs==6)
-				{
-				// h_fun_jac_ut_xt
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "constr_h_fun_jac_ut_xt" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				for(ii=0; ii<N; ii++)
-					{
-					(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-					}
-				// h_fun_jac_ut_xt_hess
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "constr_h_fun_jac_ut_xt_hess" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				for(ii=0; ii<N; ii++)
-					{
-					(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-					}
-				}
-			else if(nrhs==7)
-				{
-				int stage = mxGetScalar( prhs[6] );
-				// h_fun_jac_ut_xt
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "constr_h_fun_jac_ut_xt" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-				// h_fun_jac_ut_xt_hess
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "constr_h_fun_jac_ut_xt_hess" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-				}
-			else
-				{
-				mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
-				goto end;
-				}
-			}
-		if(!strcmp(param_h_e, "true")) // TODO bool
-			{
-			// h_e_fun_jac_ut_xt
-			ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "constr_h_e_fun_jac_ut_xt" ) );
-			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-			ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
-			// h_e_fun_jac_ut_xt_hess
-			ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "constr_h_e_fun_jac_ut_xt_hess" ) );
-			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-			ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
-			}
-		if(!strcmp(param_y, "true")) // TODO bool
-			{
-			if(nrhs==6)
-				{
-				// y_fun_jac_ut_xt
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "cost_y_fun_jac_ut_xt" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				for(ii=0; ii<N; ii++)
-					{
-					(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-					}
-				}
-			else if(nrhs==7)
-				{
-				int stage = mxGetScalar( prhs[6] );
-				// y_fun_jac_ut_xt
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "cost_y_fun_jac_ut_xt" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-				}
-			else
-				{
-				mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
-				goto end;
-				}
-			}
-		if(!strcmp(param_y_e, "true")) // TODO bool
-			{
-			// y_e_fun_jac_ut_xt
-			ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "cost_y_e_fun_jac_ut_xt" ) );
-			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-			ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
-			}
-		if(!strcmp(param_ext_cost, "true")) // TODO bool
-			{
-			if(nrhs==6)
-				{
-				// y_fun_jac_ut_xt
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "cost_ext_cost_jac_hes" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				for(ii=0; ii<N; ii++)
-					{
-					(ext_fun_param_ptr+ii)->set_param(ext_fun_param_ptr+ii, p);
-					}
-				}
-			else if(nrhs==7)
-				{
-				int stage = mxGetScalar( prhs[6] );
-				// y_fun_jac_ut_xt
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "cost_ext_cost_jac_hes" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
-				}
-			else
-				{
-				mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
-				goto end;
-				}
-			}
-		if(!strcmp(param_ext_cost_e, "true")) // TODO bool
-			{
-			// y_e_fun_jac_ut_xt
-			ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "cost_ext_cost_e_jac_hes" ) );
-			ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-			ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
-			}
-//		else
-//			{
-//			mexPrintf("\nocp_set: can not set p for non-param f, y, y_e, h or h_e\n");
-//			goto end;
-//			}
 		}
 	else
 		{

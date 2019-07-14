@@ -18,16 +18,8 @@ classdef acados_ocp_model < handle
 			obj.model_struct.name = 'ocp_model';
 			obj.model_struct.cost_type = 'linear_ls';
 			obj.model_struct.cost_type_e = 'linear_ls';
-			obj.model_struct.cost_param_y = 'false';
-			obj.model_struct.cost_param_y_e = 'false';
-			obj.model_struct.cost_param_ext_cost = 'false';
-			obj.model_struct.cost_param_ext_cost_e = 'false';
 			obj.model_struct.dyn_type = 'implicit';
-			obj.model_struct.dyn_param_f = 'false';
-			obj.model_struct.dyn_param_phi = 'false';
 			obj.model_struct.constr_type = 'bgh';
-			obj.model_struct.constr_param_h = 'false';
-			obj.model_struct.constr_param_h_e = 'false';
 		end
 
 
@@ -64,20 +56,12 @@ classdef acados_ocp_model < handle
 					obj.model_struct.cost_type_e = value;
 				elseif (strcmp(field, 'cost_expr_y'))
 					obj.model_struct.cost_expr_y = value;
-				elseif (strcmp(field, 'cost_param_y'))
-					obj.model_struct.cost_param_y = value;
 				elseif (strcmp(field, 'cost_expr_y_e'))
 					obj.model_struct.cost_expr_y_e = value;
-				elseif (strcmp(field, 'cost_param_y_e'))
-					obj.model_struct.cost_param_y_e = value;
 				elseif (strcmp(field, 'cost_expr_ext_cost'))
 					obj.model_struct.cost_expr_ext_cost = value;
-				elseif (strcmp(field, 'cost_param_ext_cost'))
-					obj.model_struct.cost_param_ext_cost = value;
 				elseif (strcmp(field, 'cost_expr_ext_cost_e'))
 					obj.model_struct.cost_expr_ext_cost_e = value;
-				elseif (strcmp(field, 'cost_param_ext_cost_e'))
-					obj.model_struct.cost_param_ext_cost_e = value;
 				elseif (strcmp(field, 'cost_Vu'))
 					obj.model_struct.cost_Vu = value;
 				elseif (strcmp(field, 'cost_Vx'))
@@ -128,12 +112,8 @@ classdef acados_ocp_model < handle
 					obj.model_struct.dyn_type = value;
 				elseif (strcmp(field, 'dyn_expr_f'))
 					obj.model_struct.dyn_expr_f = value;
-				elseif (strcmp(field, 'dyn_param_f'))
-					obj.model_struct.dyn_param_f = value;
 				elseif (strcmp(field, 'dyn_expr_phi'))
 					obj.model_struct.dyn_expr_phi = value;
-				elseif (strcmp(field, 'dyn_param_phi'))
-					obj.model_struct.dyn_param_phi = value;
 				else
 					disp(['acados_ocp_model: set: wrong field: ', field]);
 					keyboard;
@@ -174,16 +154,12 @@ classdef acados_ocp_model < handle
 					obj.model_struct.constr_ug_e = value;
 				elseif (strcmp(field, 'constr_expr_h'))
 					obj.model_struct.constr_expr_h = value;
-				elseif (strcmp(field, 'constr_param_h'))
-					obj.model_struct.constr_param_h = value;
 				elseif (strcmp(field, 'constr_lh'))
 					obj.model_struct.constr_lh = value;
 				elseif (strcmp(field, 'constr_uh'))
 					obj.model_struct.constr_uh = value;
 				elseif (strcmp(field, 'constr_expr_h_e'))
 					obj.model_struct.constr_expr_h_e = value;
-				elseif (strcmp(field, 'constr_param_h_e'))
-					obj.model_struct.constr_param_h_e = value;
 				elseif (strcmp(field, 'constr_lh_e'))
 					obj.model_struct.constr_lh_e = value;
 				elseif (strcmp(field, 'constr_uh_e'))

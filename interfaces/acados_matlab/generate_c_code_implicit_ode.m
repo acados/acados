@@ -101,11 +101,6 @@ else
 	f_impl = model.expr_f;
 end
 
-if isfield(model, 'dyn_param_f')
-	param_f = model.dyn_param_f;
-else
-	param_f = model.param_f;
-end
 
 
 %% generate jacobians
@@ -142,21 +137,12 @@ HESS = jacobian(ADJ, x_xdot_z_u);
 
 %% Set up functions
 % TODO(oj): fix namings such that jac_z is contained!
-if (strcmp(param_f, 'true'))
-    impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z, p}, {f_impl});
-    impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
-    impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
-    impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_u});
+impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z, p}, {f_impl});
+impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
+impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
+impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_u});
 %    impl_ode_hess = Function([model_name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
-    impl_ode_hess = Function([model_name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, p}, {HESS});
-else
-    impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z}, {f_impl});
-    impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'], {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_z});
-    impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z}, {jac_x, jac_xdot, jac_u, jac_z});
-    impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z}, {f_impl, jac_x, jac_xdot, jac_u});
-%    impl_ode_hess = Function([model_name,'_impl_ode_hess'], {x, xdot, u, z, multiplier, multiply_mat}, {HESS_multiplied});
-    impl_ode_hess = Function([model_name,'_impl_ode_hess'], {x, xdot, u, z, multiplier}, {HESS});
-end
+impl_ode_hess = Function([model_name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, p}, {HESS});
 
 %% generate C code
 impl_ode_fun.generate([model_name,'_impl_ode_fun'], casadi_opts);

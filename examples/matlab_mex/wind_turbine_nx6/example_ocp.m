@@ -35,12 +35,16 @@ qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 0;
-%sim_method = 'erk';
-sim_method = 'irk';
+sim_method = 'erk';
+%sim_method = 'irk';
 sim_method_num_stages = 4;
-sim_method_num_steps = 1;
-%cost_type = 'linear_ls';
-cost_type = 'nonlinear_ls';
+if (strcmp(sim_method, 'erk'))
+	sim_method_num_steps = 4;
+else
+	sim_method_num_steps = 1;
+end
+cost_type = 'linear_ls';
+%cost_type = 'nonlinear_ls';
 
 
 
@@ -197,8 +201,6 @@ else % irk
 	ocp_model.set('dyn_type', 'implicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_impl);
 end
-ocp_model.set('dyn_param_f', 'true');
-%% constraints
 % state bounds
 ocp_model.set('constr_Jbx', Jbx);
 ocp_model.set('constr_lbx', lbx);
@@ -255,7 +257,7 @@ ocp_opts.opts_struct
 ocp = acados_ocp(ocp_model, ocp_opts);
 %ocp
 %ocp.C_ocp
-%ocp.C_ocp_ext_fun
+ocp.C_ocp_ext_fun
 
 
 
@@ -284,7 +286,9 @@ ocp.set('cost_yr', y_ref(:,nn));
 ocp.set('cost_yr_e', y_ref(:,nn));
 
 % solve
+disp('before solve')
 ocp.solve();
+disp('after solve')
 
 % get solution
 u = ocp.get('u');

@@ -21,7 +21,8 @@ load testSim.mat
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
-method = 'irk';
+%method = 'irk';
+method = 'erk';
 sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
@@ -45,7 +46,6 @@ sim_model = acados_sim_model();
 sim_model.set('T', Ts);
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('dyn_param_f', 'true');
 	sim_model.set('dyn_expr_f', model.expr_f_expl);
 	sim_model.set('sym_x', model.sym_x);
 	if isfield(model, 'sym_u')
@@ -59,7 +59,6 @@ if (strcmp(method, 'erk'))
 	sim_model.set('dim_np', model.np);
 else % irk
 	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('dyn_param_f', 'true');
 	sim_model.set('dyn_expr_f', model.expr_f_impl);
 	sim_model.set('sym_x', model.sym_x);
 	sim_model.set('sym_xdot', model.sym_xdot);
@@ -97,6 +96,7 @@ sim_opts.opts_struct
 %% acados sim
 % create sim
 sim = acados_sim(sim_model, sim_opts);
+sim.C_sim_ext_fun
 
 % to avoid unstable behavior introduce a small pi-contorller for rotor speed tracking
 uctrl = 0.0;

@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 // acados
-#include "acados_c/ocp_nlp_interface.h"
+#include "acados/sim/sim_common.h"
+#include "acados_c/sim_interface.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados_c/external_function_interface.h"
 // mex
@@ -39,30 +40,26 @@ int GLUE2(FUN_NAME,N_OUT)();
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	{
 
-//	mexPrintf("\nin ocp_expl_ext_fun_create\n");
+//	mexPrintf("\nin sim_expl_ext_fun_create\n");
 
 	// sizeof(long long) == sizeof(void *) = 64 !!!
-	int ii, status;
 	long long *ptr;
-//	mxInt64 *ptr;
 
 
 
 	/* RHS */
 
-	// C_ocp
+	// C_sim
 
 	// config
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "config" ) );
-	ocp_nlp_config *config = (ocp_nlp_config *) ptr[0];
+	sim_config *config = (sim_config *) ptr[0];
 	// dims
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "dims" ) );
-	ocp_nlp_dims *dims = (ocp_nlp_dims *) ptr[0];
+	void *dims = (void *) ptr[0];
 	// in
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "in" ) );
-	ocp_nlp_in *in = (ocp_nlp_in *) ptr[0];
-
-	// C_ocp_ext_fun
+	sim_in *in = (sim_in *) ptr[0];
 
 	// model
 
@@ -73,7 +70,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 
 
-	
+
 	/* LHS */
 
 	/* copy existing fields */
@@ -89,27 +86,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	mxArray *tmp_mat;
 
-	// expl_ode_fun
-	ext_fun_param_ptr = (external_function_param_casadi *) malloc((N1-N0+1)*sizeof(external_function_param_casadi));
-	for(ii=0; ii<N1-N0+1; ii++)
-		{
-		external_function_param_casadi_set_fun(ext_fun_param_ptr+ii, &FUN_NAME);
-		external_function_param_casadi_set_work(ext_fun_param_ptr+ii, &GLUE2(FUN_NAME,WORK));
-		external_function_param_casadi_set_sparsity_in(ext_fun_param_ptr+ii, &GLUE2(FUN_NAME,SP_IN));
-		external_function_param_casadi_set_sparsity_out(ext_fun_param_ptr+ii, &GLUE2(FUN_NAME,SP_OUT));
-		external_function_param_casadi_set_n_in(ext_fun_param_ptr+ii, &GLUE2(FUN_NAME,N_IN));
-		external_function_param_casadi_set_n_out(ext_fun_param_ptr+ii, &GLUE2(FUN_NAME,N_OUT));
-		external_function_param_casadi_create(ext_fun_param_ptr+ii, np);
-		status = SETTER(config, dims, in, N0+ii, STR(SET_FIELD), ext_fun_param_ptr+ii);
-		}
+	ext_fun_param_ptr = (external_function_param_casadi *) malloc(1*sizeof(external_function_param_casadi));
+	external_function_param_casadi_set_fun(ext_fun_param_ptr, &FUN_NAME);
+	external_function_param_casadi_set_work(ext_fun_param_ptr, &GLUE2(FUN_NAME,WORK));
+	external_function_param_casadi_set_sparsity_in(ext_fun_param_ptr, &GLUE2(FUN_NAME,SP_IN));
+	external_function_param_casadi_set_sparsity_out(ext_fun_param_ptr, &GLUE2(FUN_NAME,SP_OUT));
+	external_function_param_casadi_set_n_in(ext_fun_param_ptr, &GLUE2(FUN_NAME,N_IN));
+	external_function_param_casadi_set_n_out(ext_fun_param_ptr, &GLUE2(FUN_NAME,N_OUT));
+	external_function_param_casadi_create(ext_fun_param_ptr, np);
+	sim_in_set(config, dims, in, STR(SET_FIELD), ext_fun_param_ptr);
 	// populate output struct
 	ptr = mxGetData(mxGetField(plhs[0], 0, STR(MEX_FIELD)));
-	ptr[PHASE] = (long long) ext_fun_param_ptr;
+	ptr[0] = (long long) ext_fun_param_ptr;
 	
 	return;
 
 	}
-
 
 
 

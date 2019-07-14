@@ -15,7 +15,6 @@ acados_matlab_lib_path = ['-L' acados_folder, '/interfaces/acados_matlab/'];
 model_lib_path = ['-L', pwd, '/build'];
 
 %% select files to compile
-mex_files = {[acados_mex_folder, 'sim_set_ext_fun_dyn.c']};
 set_fields = {};
 mex_fields = {};
 fun_names = {};
@@ -146,11 +145,11 @@ if (strcmp(opts_struct.compile_mex, 'true'))
 			cflags_tmp = [cflags_tmp, ' -DMEX_FIELD=', mex_fields{ii}];
 			cflags_tmp = [cflags_tmp, ' -DFUN_NAME=', fun_names{ii}];
 			setenv('CFLAGS', cflags_tmp);
-			mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1});
-			system(['mv sim_set_ext_fun_dyn.mex ', mex_names{ii}, '.mex']);
+			mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], [acados_mex_folder, 'sim_set_ext_fun_gen.c']);
+			system(['mv sim_set_ext_fun_gen.mex ', mex_names{ii}, '.mex']);
 		else
-			mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1});
-			system(['mv sim_set_ext_fun_dyn.mexa64 ', mex_names{ii}, '.mexa64']);
+			mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], [acados_mex_folder, 'sim_set_ext_fun_gen.c']);
+			system(['mv sim_set_ext_fun_gen.mexa64 ', mex_names{ii}, '.mexa64']);
 		end
 
 	end
