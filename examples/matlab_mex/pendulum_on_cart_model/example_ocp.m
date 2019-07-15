@@ -17,9 +17,9 @@ end
 compile_mex = 'true';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
+
 param_scheme = 'multiple_shooting_unif_grid';
 N = 100;
-
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 nlp_solver_exact_hessian = 'false';
