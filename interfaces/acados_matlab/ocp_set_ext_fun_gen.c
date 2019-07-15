@@ -103,6 +103,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		status = SETTER(config, dims, in, N0+ii, STR(SET_FIELD), ext_fun_param_ptr+ii);
 		}
 	// populate output struct
+//	printf("\n%s\n", STR(MEX_FIELD));
 	ptr = mxGetData(mxGetField(plhs[0], 0, STR(MEX_FIELD)));
 	ptr[PHASE] = (long long) ext_fun_param_ptr;
 	

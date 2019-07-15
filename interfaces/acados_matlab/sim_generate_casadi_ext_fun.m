@@ -30,7 +30,7 @@ elseif (strcmp(opts_struct.method, 'irk_gnsf'))
 	c_sources = [c_sources, model_name, '_dyn_gnsf_phi_fun_jac_y.c '];
 	c_sources = [c_sources, model_name, '_dyn_gnsf_phi_jac_y_uhat.c '];
 else
-	fprintf('\nsim_compile_casadi_functions: method not supported: %s\n', opts_struct.method);
+	fprintf('\nsim_generate_casadi_ext_fun: method not supported: %s\n', opts_struct.method);
 	return;
 end
 lib_name = ['lib', model_name, '.so'];

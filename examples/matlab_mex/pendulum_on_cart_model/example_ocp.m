@@ -21,11 +21,11 @@ N = 100;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-%nlp_solver_exact_hessian = 'false';
-nlp_solver_exact_hessian = 'true';
-%regularize_method = 'no_regularize';
+nlp_solver_exact_hessian = 'false';
+%nlp_solver_exact_hessian = 'true';
+regularize_method = 'no_regularize';
 %regularize_method = 'project';
-regularize_method = 'project_reduc_hess';
+%regularize_method = 'project_reduc_hess';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
@@ -42,7 +42,8 @@ qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 2;
 %sim_method = 'erk';
-sim_method = 'irk';
+%sim_method = 'irk';
+sim_method = 'irk_gnsf';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 cost_type = 'linear_ls';
@@ -145,7 +146,7 @@ ocp_model.set('cost_type_e', cost_type);
 if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_expl);
-else % irk
+else % irk irk_gnsf
 	ocp_model.set('dyn_type', 'implicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_impl);
 end
@@ -217,6 +218,7 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 ocp
 ocp.C_ocp
 ocp.C_ocp_ext_fun
+%ocp.model_struct
 
 
 

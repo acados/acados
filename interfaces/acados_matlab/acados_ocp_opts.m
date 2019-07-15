@@ -24,6 +24,7 @@ classdef acados_ocp_opts < handle
 			obj.opts_struct.qp_solver = 'partial_condensing_hpipm';
 			obj.opts_struct.sim_method = 'irk';
 			obj.opts_struct.regularize_method = 'no_regularize';
+			obj.opts_struct.gnsf_detect_struct = 'true';
 		end
 
 
@@ -70,6 +71,8 @@ classdef acados_ocp_opts < handle
 				obj.opts_struct.sim_method_num_stages = value;
 			elseif (strcmp(field, 'sim_method_num_steps'))
 				obj.opts_struct.sim_method_num_steps = value;
+			elseif (strcmp(field, 'gnsf_detect_struct'))
+				obj.opts_struct.gnsf_detect_struct = value;
 			elseif (strcmp(field, 'regularize_method'))
 				obj.opts_struct.regularize_method = value;
 			else

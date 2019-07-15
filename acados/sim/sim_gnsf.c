@@ -993,7 +993,8 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
         }
     }
 
-    if (opts->sens_algebraic){
+    if (opts->sens_algebraic)
+    {
 
         /* ONLY FOR ALGEBRAIC SENSITIVITIES */
         /* Compute K0*, Z0*, Y0*, * \in {f,x,u} */
@@ -1114,10 +1115,8 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
         // blasfeo_print_dmat(nxz2, nxz2, ELO_LU, )
         blasfeo_pack_dmat(nxz2, nx2, model->A_LO, nxz2, ELO_inv_ALO, 0, 0);
         blasfeo_drowpe(nxz2, ipiv_ELO, ELO_inv_ALO);  // permute also rhs
-        blasfeo_dtrsm_llnu(nxz2, nx2, 1.0, ELO_LU, 0, 0, ELO_inv_ALO,
-                                0, 0, ELO_inv_ALO, 0, 0);
-        blasfeo_dtrsm_lunn(nxz2, nx2, 1.0, ELO_LU, 0, 0, ELO_inv_ALO,
-                                0, 0, ELO_inv_ALO, 0, 0);
+        blasfeo_dtrsm_llnu(nxz2, nx2, 1.0, ELO_LU, 0, 0, ELO_inv_ALO, 0, 0, ELO_inv_ALO, 0, 0);
+        blasfeo_dtrsm_lunn(nxz2, nx2, 1.0, ELO_LU, 0, 0, ELO_inv_ALO, 0, 0, ELO_inv_ALO, 0, 0);
     }
 
     // generate sensitivities
@@ -2018,8 +2017,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
             if (nx1 > 0 || nz1 > 0)
             {
-                blasfeo_dgemv_n(nyy, nx1, 1.0, YYx, 0, 0, x0_traj, ss * nx, 1.0, yyu, 0, yyss,
-                                nyy * ss);  // yyss = YY0 + YYu * u + YYx * x0(at_stage)
+                // yyss = YY0 + YYu * u + YYx * x0(at_stage)
+                blasfeo_dgemv_n(nyy, nx1, 1.0, YYx, 0, 0, x0_traj, ss*nx, 1.0, yyu, 0, yyss, nyy*ss);
 
                 y_in.x = &yy_traj[ss];
                 for (int iter = 0; iter < newton_iter; iter++)
@@ -2055,8 +2054,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
                             // build jacobian J_r_vv
                             blasfeo_dgemm_nn(n_out, nvv, ny, -1.0, dPHI_dyuhat, ii * n_out, 0, YYv,
-                                            ii * ny, 0, 1.0, J_r_vv, ii * n_out, 0, J_r_vv, ii * n_out,
-                                            0);
+                                            ii*ny, 0, 1.0, J_r_vv, ii*n_out, 0, J_r_vv, ii*n_out, 0);
                         }
                         else
                         {

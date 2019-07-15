@@ -27,6 +27,143 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* RHS */
 
+	// opts_struct
+
+	char *param_scheme;
+	int N;									bool set_param_scheme_N = false;
+	double *param_scheme_shooting_nodes;	bool set_param_scheme_shooting_nodes = false;
+	char *nlp_solver;
+	bool nlp_solver_exact_hessian;
+	int nlp_solver_max_iter;				bool set_nlp_solver_max_iter = false;
+	double nlp_solver_tol_stat;				bool set_nlp_solver_tol_stat = false;
+	double nlp_solver_tol_eq;				bool set_nlp_solver_tol_eq = false;
+	double nlp_solver_tol_ineq;				bool set_nlp_solver_tol_ineq = false;
+	double nlp_solver_tol_comp;				bool set_nlp_solver_tol_comp = false;
+	int nlp_solver_ext_qp_res;				bool set_nlp_solver_ext_qp_res = false;
+	char *qp_solver;
+	int qp_solver_cond_N;					bool set_qp_solver_cond_N = false;
+	int qp_solver_cond_ric_alg;				bool set_qp_solver_cond_ric_alg = false;
+	int qp_solver_ric_alg;					bool set_qp_solver_ric_alg = false;
+	int qp_solver_warm_start;				bool set_qp_solver_warm_start = false;
+	char *sim_method;
+	int sim_method_num_stages;				bool set_sim_method_num_stages = false;
+	int sim_method_num_steps;				bool set_sim_method_num_steps = false;
+	char *regularize_method;				bool set_regularize_method = false;
+
+	// parametrization scheme
+	// TODO check
+	param_scheme = mxArrayToString( mxGetField( prhs[1], 0, "param_scheme" ) );
+	// param_scheme_N
+	if(mxGetField( prhs[1], 0, "param_scheme_N" )!=NULL)
+		{
+		set_param_scheme_N = true;
+		N = mxGetScalar( mxGetField( prhs[1], 0, "param_scheme_N" ) );
+		}
+	else
+		{
+		mexPrintf("\nerror: ocp_create: param_scheme_N not set!\n");
+		return;
+		}
+	// param_scheme_shooting_nodes
+	if(mxGetField( prhs[1], 0, "param_scheme_shooting_nodes" )!=NULL)
+		{
+		set_param_scheme_shooting_nodes = true;
+		param_scheme_shooting_nodes = mxGetPr( mxGetField( prhs[1], 0, "param_scheme_shooting_nodes" ) );
+		}
+	// nlp_solver
+	// TODO check
+	nlp_solver = mxArrayToString( mxGetField( prhs[1], 0, "nlp_solver" ) );
+	// nlp solver exact hessian
+	nlp_solver_exact_hessian = false;
+	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "nlp_solver_exact_hessian" ) );
+	if (!strcmp(c_ptr, "true"))
+		{
+		nlp_solver_exact_hessian = true;
+		}
+	// nlp solver max iter
+	if(mxGetField( prhs[1], 0, "nlp_solver_max_iter" )!=NULL)
+		{
+		set_nlp_solver_max_iter = true;
+		nlp_solver_max_iter = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_max_iter" ) );
+		}
+	// nlp solver exit tolerances
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_stat" )!=NULL)
+		{
+		set_nlp_solver_tol_stat = true;
+		nlp_solver_tol_stat = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_stat" ) );
+		}
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_eq" )!=NULL)
+		{
+		set_nlp_solver_tol_eq = true;
+		nlp_solver_tol_eq = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_eq" ) );
+		}
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_ineq" )!=NULL)
+		{
+		set_nlp_solver_tol_ineq = true;
+		nlp_solver_tol_ineq = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_ineq" ) );
+		}
+	if(mxGetField( prhs[1], 0, "nlp_solver_tol_comp" )!=NULL)
+		{
+		set_nlp_solver_tol_comp = true;
+		nlp_solver_tol_comp = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_comp" ) );
+		}
+	// nlp solver ext qp res
+	if(mxGetField( prhs[1], 0, "nlp_solver_ext_qp_res" )!=NULL)
+		{
+		set_nlp_solver_ext_qp_res = true;
+		nlp_solver_ext_qp_res = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_ext_qp_res" ) );
+		}
+	// qp_solver
+	// TODO check
+	qp_solver = mxArrayToString( mxGetField( prhs[1], 0, "qp_solver" ) );
+	// N_part_cond
+	if(mxGetField( prhs[1], 0, "qp_solver_cond_N" )!=NULL)
+		{
+		set_qp_solver_cond_N = true;
+		qp_solver_cond_N = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_cond_N" ) );
+		}
+	// cond riccati-like algorithm
+	if(mxGetField( prhs[1], 0, "qp_solver_cond_ric_alg" )!=NULL)
+		{
+		set_qp_solver_cond_ric_alg = true;
+		qp_solver_cond_ric_alg = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_cond_ric_alg" ) );
+		}
+	// hpipm: riccati algorithm
+	if(mxGetField( prhs[1], 0, "qp_solver_ric_alg" )!=NULL)
+		{
+		set_qp_solver_ric_alg = true;
+		qp_solver_ric_alg = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_ric_alg" ) );
+		}
+	// qp solver: warm start
+	if(mxGetField( prhs[1], 0, "qp_solver_warm_start" )!=NULL)
+		{
+		set_qp_solver_warm_start = true;
+		qp_solver_warm_start = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_warm_start" ) );
+		}
+	// sim_method
+	// TODO check
+	sim_method = mxArrayToString( mxGetField( prhs[1], 0, "sim_method" ) );
+	// sim_method_num_stages
+	if(mxGetField( prhs[1], 0, "sim_method_num_stages" )!=NULL)
+		{
+		set_sim_method_num_stages = true;
+		sim_method_num_stages = mxGetScalar( mxGetField( prhs[1], 0, "sim_method_num_stages" ) );
+		}
+	// sim_method_num_steps
+	if(mxGetField( prhs[1], 0, "sim_method_num_steps" )!=NULL)
+		{
+		set_sim_method_num_steps = true;
+		sim_method_num_steps = mxGetScalar( mxGetField( prhs[1], 0, "sim_method_num_steps" ) );
+		}
+	// regularize_method
+	if(mxGetField( prhs[1], 0, "regularize_method" )!=NULL)
+		{
+		set_regularize_method = true;
+		regularize_method = mxArrayToString( mxGetField( prhs[1], 0, "regularize_method" ) );
+		}
+
+
+
 	// model
 
 	// dims
@@ -49,6 +186,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int nsg_e = 0;	bool set_nsg_e = false;
 	int nsh = 0;	bool set_nsh = false;
 	int nsh_e = 0;	bool set_nsh_e = false;
+	// gnsf stuff
+	int gnsf_nx1;	bool set_gnsf_nx1 = false;
+	int gnsf_nz1;	bool set_gnsf_nz1 = false;
+	int gnsf_nuhat;	bool set_gnsf_nuhat = false;
+	int gnsf_ny;	bool set_gnsf_ny = false;
+	int gnsf_nout;	bool set_gnsf_nout = false;
 	// cost
 	char *cost_type;
 	char *cost_e_type;
@@ -244,6 +387,35 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_nsh_e = true;
 		nsh_e = mxGetScalar( mxGetField( prhs[0], 0, "dim_nsh_e" ) );
+		}
+	// gnsf stuff
+	if(!strcmp(sim_method, "irk_gnsf"))
+		{
+		if(mxGetField( prhs[0], 0, "dim_gnsf_nx1" )!=NULL)
+			{
+			set_gnsf_nx1 = true;
+			gnsf_nx1 = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nx1" ) );
+			}
+		if(mxGetField( prhs[0], 0, "dim_gnsf_nz1" )!=NULL)
+			{
+			set_gnsf_nz1 = true;
+			gnsf_nz1 = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nz1" ) );
+			}
+		if(mxGetField( prhs[0], 0, "dim_gnsf_nuhat" )!=NULL)
+			{
+			set_gnsf_nuhat = true;
+			gnsf_nuhat = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nuhat" ) );
+			}
+		if(mxGetField( prhs[0], 0, "dim_gnsf_ny" )!=NULL)
+			{
+			set_gnsf_ny = true;
+			gnsf_ny = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_ny" ) );
+			}
+		if(mxGetField( prhs[0], 0, "dim_gnsf_nout" )!=NULL)
+			{
+			set_gnsf_nout = true;
+			gnsf_nout = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nout" ) );
+			}
 		}
 	// cost
 	// cost type
@@ -613,143 +785,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 
 
-	// opts_struct
-
-	char *param_scheme;
-	int N;									bool set_param_scheme_N = false;
-	double *param_scheme_shooting_nodes;	bool set_param_scheme_shooting_nodes = false;
-	char *nlp_solver;
-	bool nlp_solver_exact_hessian;
-	int nlp_solver_max_iter;				bool set_nlp_solver_max_iter = false;
-	double nlp_solver_tol_stat;				bool set_nlp_solver_tol_stat = false;
-	double nlp_solver_tol_eq;				bool set_nlp_solver_tol_eq = false;
-	double nlp_solver_tol_ineq;				bool set_nlp_solver_tol_ineq = false;
-	double nlp_solver_tol_comp;				bool set_nlp_solver_tol_comp = false;
-	int nlp_solver_ext_qp_res;				bool set_nlp_solver_ext_qp_res = false;
-	char *qp_solver;
-	int qp_solver_cond_N;					bool set_qp_solver_cond_N = false;
-	int qp_solver_cond_ric_alg;				bool set_qp_solver_cond_ric_alg = false;
-	int qp_solver_ric_alg;					bool set_qp_solver_ric_alg = false;
-	int qp_solver_warm_start;				bool set_qp_solver_warm_start = false;
-	char *sim_method;
-	int sim_method_num_stages;				bool set_sim_method_num_stages = false;
-	int sim_method_num_steps;				bool set_sim_method_num_steps = false;
-	char *regularize_method;				bool set_regularize_method = false;
-
-	// parametrization scheme
-	// TODO check
-	param_scheme = mxArrayToString( mxGetField( prhs[1], 0, "param_scheme" ) );
-	// param_scheme_N
-	if(mxGetField( prhs[1], 0, "param_scheme_N" )!=NULL)
-		{
-		set_param_scheme_N = true;
-		N = mxGetScalar( mxGetField( prhs[1], 0, "param_scheme_N" ) );
-		}
-	else
-		{
-		mexPrintf("\nerror: ocp_create: param_scheme_N not set!\n");
-		return;
-		}
-	// param_scheme_shooting_nodes
-	if(mxGetField( prhs[1], 0, "param_scheme_shooting_nodes" )!=NULL)
-		{
-		set_param_scheme_shooting_nodes = true;
-		param_scheme_shooting_nodes = mxGetPr( mxGetField( prhs[1], 0, "param_scheme_shooting_nodes" ) );
-		}
-	// nlp_solver
-	// TODO check
-	nlp_solver = mxArrayToString( mxGetField( prhs[1], 0, "nlp_solver" ) );
-	// nlp solver exact hessian
-	nlp_solver_exact_hessian = false;
-	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "nlp_solver_exact_hessian" ) );
-	if (!strcmp(c_ptr, "true"))
-		{
-		nlp_solver_exact_hessian = true;
-		}
-	// nlp solver max iter
-	if(mxGetField( prhs[1], 0, "nlp_solver_max_iter" )!=NULL)
-		{
-		set_nlp_solver_max_iter = true;
-		nlp_solver_max_iter = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_max_iter" ) );
-		}
-	// nlp solver exit tolerances
-	if(mxGetField( prhs[1], 0, "nlp_solver_tol_stat" )!=NULL)
-		{
-		set_nlp_solver_tol_stat = true;
-		nlp_solver_tol_stat = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_stat" ) );
-		}
-	if(mxGetField( prhs[1], 0, "nlp_solver_tol_eq" )!=NULL)
-		{
-		set_nlp_solver_tol_eq = true;
-		nlp_solver_tol_eq = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_eq" ) );
-		}
-	if(mxGetField( prhs[1], 0, "nlp_solver_tol_ineq" )!=NULL)
-		{
-		set_nlp_solver_tol_ineq = true;
-		nlp_solver_tol_ineq = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_ineq" ) );
-		}
-	if(mxGetField( prhs[1], 0, "nlp_solver_tol_comp" )!=NULL)
-		{
-		set_nlp_solver_tol_comp = true;
-		nlp_solver_tol_comp = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_tol_comp" ) );
-		}
-	// nlp solver ext qp res
-	if(mxGetField( prhs[1], 0, "nlp_solver_ext_qp_res" )!=NULL)
-		{
-		set_nlp_solver_ext_qp_res = true;
-		nlp_solver_ext_qp_res = mxGetScalar( mxGetField( prhs[1], 0, "nlp_solver_ext_qp_res" ) );
-		}
-	// qp_solver
-	// TODO check
-	qp_solver = mxArrayToString( mxGetField( prhs[1], 0, "qp_solver" ) );
-	// N_part_cond
-	if(mxGetField( prhs[1], 0, "qp_solver_cond_N" )!=NULL)
-		{
-		set_qp_solver_cond_N = true;
-		qp_solver_cond_N = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_cond_N" ) );
-		}
-	// cond riccati-like algorithm
-	if(mxGetField( prhs[1], 0, "qp_solver_cond_ric_alg" )!=NULL)
-		{
-		set_qp_solver_cond_ric_alg = true;
-		qp_solver_cond_ric_alg = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_cond_ric_alg" ) );
-		}
-	// hpipm: riccati algorithm
-	if(mxGetField( prhs[1], 0, "qp_solver_ric_alg" )!=NULL)
-		{
-		set_qp_solver_ric_alg = true;
-		qp_solver_ric_alg = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_ric_alg" ) );
-		}
-	// qp solver: warm start
-	if(mxGetField( prhs[1], 0, "qp_solver_warm_start" )!=NULL)
-		{
-		set_qp_solver_warm_start = true;
-		qp_solver_warm_start = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_warm_start" ) );
-		}
-	// sim_method
-	// TODO check
-	sim_method = mxArrayToString( mxGetField( prhs[1], 0, "sim_method" ) );
-	// sim_method_num_stages
-	if(mxGetField( prhs[1], 0, "sim_method_num_stages" )!=NULL)
-		{
-		set_sim_method_num_stages = true;
-		sim_method_num_stages = mxGetScalar( mxGetField( prhs[1], 0, "sim_method_num_stages" ) );
-		}
-	// sim_method_num_steps
-	if(mxGetField( prhs[1], 0, "sim_method_num_steps" )!=NULL)
-		{
-		set_sim_method_num_steps = true;
-		sim_method_num_steps = mxGetScalar( mxGetField( prhs[1], 0, "sim_method_num_steps" ) );
-		}
-	// regularize_method
-	if(mxGetField( prhs[1], 0, "regularize_method" )!=NULL)
-		{
-		set_regularize_method = true;
-		regularize_method = mxArrayToString( mxGetField( prhs[1], 0, "regularize_method" ) );
-		}
-
-
-
 	/* LHS */
 
 	// field names of output struct
@@ -875,6 +910,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			for(ii=0; ii<N; ii++)
 				{
 				plan->sim_solver_plan[ii].sim_solver = IRK;
+				}
+			}
+		else if(!strcmp(sim_method, "irk_gnsf"))
+			{
+			for(ii=0; ii<N; ii++)
+				{
+				plan->sim_solver_plan[ii].sim_solver = GNSF;
 				}
 			}
 		else
@@ -1101,6 +1143,44 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(set_nsh_e)
 		{
 		ocp_nlp_dims_set_constraints(config, dims, N, "nsh", &nsh_e);
+		}
+	if(!strcmp(sim_method, "irk_gnsf"))
+		{
+		if(set_gnsf_nx1)
+			{
+			for(ii=0; ii<N; ii++)
+				{
+				ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nx1", &gnsf_nx1);
+				}
+			}
+		if(set_gnsf_nz1)
+			{
+			for(ii=0; ii<N; ii++)
+				{
+				ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nz1", &gnsf_nz1);
+				}
+			}
+		if(set_gnsf_nuhat)
+			{
+			for(ii=0; ii<N; ii++)
+				{
+				ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nuhat", &gnsf_nuhat);
+				}
+			}
+		if(set_gnsf_ny)
+			{
+			for(ii=0; ii<N; ii++)
+				{
+				ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_ny", &gnsf_ny);
+				}
+			}
+		if(set_gnsf_nout)
+			{
+			for(ii=0; ii<N; ii++)
+				{
+				ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nout", &gnsf_nout);
+				}
+			}
 		}
 			
 

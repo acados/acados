@@ -22,6 +22,16 @@ classdef acados_ocp < handle
 			% add path
 			addpath('build/');
 
+			% detect GNSF structure
+			if (strcmp(obj.opts_struct.sim_method, 'irk_gnsf'))
+				if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))
+					obj.model_struct = detect_gnsf_structure(obj.model_struct);
+					generate_get_gnsf_structure(obj.model_struct);
+				else
+					obj.model_struct = get_gnsf_structure(obj.model_struct);
+				end
+			end
+
 			% compile mex without model dependency
 			if (strcmp(obj.opts_struct.compile_mex, 'true'))
 				ocp_compile_mex(obj.opts_struct);
@@ -39,7 +49,8 @@ classdef acados_ocp < handle
 			% compile mex with model dependency & set pointers for external functions in model
 			obj.C_ocp_ext_fun = ocp_set_ext_fun(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 
-			% TODO precompute
+			% precompute
+			ocp_precompute(obj.C_ocp);
 
 		end
 

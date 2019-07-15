@@ -39,6 +39,7 @@ dyn_type = 'explicit';
 %dyn_type = 'discrete';
 sim_method = 'erk';
 %sim_method = 'irk';
+%sim_method = 'irk_gnsf';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 %cost_type = 'linear_ls';
@@ -220,12 +221,8 @@ ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 end
-if (strcmp(dyn_type, 'explicit'))
-	ocp_opts.set('sim_method', 'erk');
-	ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
-	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
-elseif (strcmp(dyn_type, 'implicit'))
-	ocp_opts.set('sim_method', 'irk');
+if (strcmp(dyn_type, 'explicit') || strcmp(dyn_type, 'implicit'))
+	ocp_opts.set('sim_method', sim_method);
 	ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 end
