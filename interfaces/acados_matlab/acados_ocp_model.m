@@ -256,7 +256,9 @@ classdef acados_ocp_model < handle
 			% others
 			else
 
-				if (strcmp(field, 'T'))
+				if (strcmp(field, 'name'))
+					obj.model_struct.name = value;
+				elseif (strcmp(field, 'T'))
 					obj.model_struct.T = value;
 
 				else

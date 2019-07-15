@@ -405,7 +405,7 @@ end
 
 % call mex files
 for ii=1:length(mex_names)
-	disp(['calling ', mex_names{ii}])
+%	disp(['calling ', mex_names{ii}])
 	C_ocp_ext_fun = eval([mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)']);
 end
 
@@ -413,38 +413,4 @@ end
 %keyboard
 
 return;
-
-
-% dynamics
-if (strcmp(model_struct.dyn_type, 'explicit'))
-	C_ocp_ext_fun = ocp_set_ext_fun_dyn_expl(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
-elseif (strcmp(model_struct.dyn_type, 'implicit'))
-	C_ocp_ext_fun = ocp_set_ext_fun_dyn_impl(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
-elseif (strcmp(model_struct.dyn_type, 'discrete'))
-	C_ocp_ext_fun = ocp_set_ext_fun_dyn_disc(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
-else
-	fprintf('\ncodegen_model: dyn_type not supported: %s\n', model_struct.dyn_type);
-	return;
-end
-% nonlinear constraints
-if (strcmp(model_struct.constr_type, 'bgh') && isfield(model_struct, 'constr_expr_h'))
-	C_ocp_ext_fun = ocp_set_ext_fun_constr_h(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
-end
-if (strcmp(model_struct.constr_type, 'bgh') && isfield(model_struct, 'constr_expr_h_e'))
-	C_ocp_ext_fun = ocp_set_ext_fun_constr_h_e(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
-end
-% nonlinear least squares
-if (strcmp(model_struct.cost_type, 'nonlinear_ls'))
-	C_ocp_ext_fun = ocp_set_ext_fun_cost_y(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
-end
-if (strcmp(model_struct.cost_type_e, 'nonlinear_ls'))
-	C_ocp_ext_fun = ocp_set_ext_fun_cost_y_e(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
-end
-% external cost
-if (strcmp(model_struct.cost_type, 'ext_cost'))
-	C_ocp_ext_fun = ocp_set_ext_fun_cost_ext_cost(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
-end
-if (strcmp(model_struct.cost_type_e, 'ext_cost'))
-	C_ocp_ext_fun = ocp_set_ext_fun_cost_ext_cost_e(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
-end
 

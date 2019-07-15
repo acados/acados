@@ -16,6 +16,7 @@ end
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
+gnsf_detect_struct = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
 N = 100;
 
@@ -48,6 +49,7 @@ sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 cost_type = 'linear_ls';
 %cost_type = 'ext_cost';
+model_name = 'ocp_pendulum';
 
 h = 0.01;
 
@@ -105,6 +107,7 @@ ubu =  80*ones(nu, 1);
 
 %% acados ocp model
 ocp_model = acados_ocp_model();
+ocp_model.set('name', model_name);
 % dims
 ocp_model.set('T', T);
 ocp_model.set('dim_nx', nx);
@@ -207,6 +210,9 @@ ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+if (strcmp(sim_method, 'irk_gnsf'))
+	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
+end
 
 ocp_opts.opts_struct
 

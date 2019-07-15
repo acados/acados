@@ -106,7 +106,7 @@ elseif (strcmp(opts_struct.method, 'irk_gnsf'))
 		};
 
 else
-	fprintf('\ncodegen_model: method not supported: %s\n', opts_struct.method);
+	fprintf('\nsim_set_ext_fun: method not supported: %s\n', opts_struct.method);
 end
 
 % compile mex files
