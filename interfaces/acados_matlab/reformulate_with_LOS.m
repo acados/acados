@@ -337,16 +337,17 @@ check_reformulation(model, gnsf, print_info);
 
 
 gnsf.nontrivial_f_LO = 0;
-for ii = 1:length(gnsf.f_lo_expr)
-    fii = gnsf.f_lo_expr(ii);
-    if ~fii.is_zero
-        gnsf.nontrivial_f_LO = 1;
+if ~gnsf.f_lo_expr.is_empty()
+    for ii = 1:length(gnsf.f_lo_expr)
+        fii = gnsf.f_lo_expr(ii);
+        if ~fii.is_zero
+            gnsf.nontrivial_f_LO = 1;
+        end
+    end
+    if ~gnsf.nontrivial_f_LO && print_info
+        disp('f_LO is fully trivial (== 0)');
     end
 end
-if ~gnsf.nontrivial_f_LO && print_info
-    disp('f_LO is fully trivial (== 0)');
-end
-
 check_reformulation(model, gnsf, print_info);
 
 if print_info
