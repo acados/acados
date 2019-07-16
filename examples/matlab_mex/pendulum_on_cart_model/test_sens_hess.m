@@ -1,12 +1,12 @@
 %% test of native matlab interface
 clear VARIABLES
 
-
-for integrator = {'erk', 'irk', 'irk_gnsf'}
+% TODO: include irk_gnsf, as soon as hessians are implemented
+for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
 	%% arguments
 	compile_mex = 'true';
 	codgen_model = 'true';
-	method = integrator{1}; %'irk';
+	method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
 	sens_forw = 'true';
 	sens_adj = 'true';
 	sens_hess = 'true';
@@ -17,7 +17,6 @@ for integrator = {'erk', 'irk', 'irk_gnsf'}
 	x0 = [1e-1; 1e0; 2e-1; 2e0];
 	u = 0;
 	epsilon = 1e-6;
-
 
 	%% model
 	model = pendulum_on_cart_model;
@@ -54,8 +53,6 @@ for integrator = {'erk', 'irk', 'irk_gnsf'}
 		sim_model.set('dim_nu', model.nu);
 	%	sim_model.set('nz', model.nz);
 	end
-
-	%sim_model.model_struct
 
 
 	%% acados sim opts
@@ -127,12 +124,11 @@ for integrator = {'erk', 'irk', 'irk_gnsf'}
         end
 	end
 
-
 	%% compute & check error
 	error_abs = max(max(max(abs(S_hess_fd - S_hess_ind))));
 	disp(' ')
 	disp(['integrator:  ' method]);
-	disp(['error hessian (wrt finite differences:   ' num2str(error_abs)])
+	disp(['error hessian (wrt finite differences):   ' num2str(error_abs)])
 	disp(' ')
     if error_abs > 1e-6
         disp(['hessian error too large -> debug mode'])
@@ -140,11 +136,6 @@ for integrator = {'erk', 'irk', 'irk_gnsf'}
     end
 end
 
-fprintf('\nsuccess!\n\n');
-
+fprintf('\nTEST_HESSIANS: success!\n\n');
 
 return;
-
-
-
-

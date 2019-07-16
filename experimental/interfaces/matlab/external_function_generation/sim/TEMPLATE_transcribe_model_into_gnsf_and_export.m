@@ -23,7 +23,7 @@
 % functions called within this script.
 
 clc;
-clearvars;
+clear VARIABLES;
 close all;
 
 % TODO adjust path
