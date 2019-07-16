@@ -165,15 +165,15 @@ end
 
 
 % codegen the file to call mex files
-fileID = fopen('build/sim_set_ext_fun_tmp.m', 'w');
-fprintf(fileID, 'function C_sim_ext_fun = sim_set_ext_fun_tmp(C_sim, C_sim_ext_fun, model_struct, opts_struct)\n');
+%fileID = fopen('build/sim_set_ext_fun_tmp.m', 'w');
+%fprintf(fileID, 'function C_sim_ext_fun = sim_set_ext_fun_tmp(C_sim, C_sim_ext_fun, model_struct, opts_struct)\n');
 for ii=1:length(mex_names)
-%	C_sim_ext_fun = eval([mex_names{ii}, '(C_sim, C_sim_ext_fun, model_struct, opts_struct)']);
-	fprintf(fileID, [mex_names{ii}, '(C_sim, C_sim_ext_fun, model_struct, opts_struct);\n']);
+	C_sim_ext_fun = eval([mex_names{ii}, '(C_sim, C_sim_ext_fun, model_struct, opts_struct)']);
+%	fprintf(fileID, [mex_names{ii}, '(C_sim, C_sim_ext_fun, model_struct, opts_struct);\n']);
 end
-fclose(fileID);
+%fclose(fileID);
 
 % call mex files
-sim_set_ext_fun_tmp(C_sim, C_sim_ext_fun, model_struct, opts_struct);
+%sim_set_ext_fun_tmp(C_sim, C_sim_ext_fun, model_struct, opts_struct);
 
 return;
