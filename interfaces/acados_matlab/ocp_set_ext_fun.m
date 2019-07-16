@@ -403,11 +403,17 @@ end
 
 %C_ocp_ext_fun
 
-% call mex files
+% codegen the file to call mex files
+fileID = fopen('build/ocp_set_ext_fun_tmp.m', 'w');
+fprintf(fileID, 'function C_ocp_ext_fun = ocp_set_ext_fun_tmp(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)\n');
 for ii=1:length(mex_names)
-%	disp(['calling ', mex_names{ii}])
-	C_ocp_ext_fun = eval([mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)']);
+%	C_ocp_ext_fun = eval([mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)']);
+	fprintf(fileID, [mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);\n']);
 end
+fclose(fileID);
+
+% call mex files
+ocp_set_ext_fun_tmp(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
 
 %C_ocp_ext_fun
 %keyboard
