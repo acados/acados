@@ -41,11 +41,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	//
 	external_function_param_casadi *ext_fun_param_ptr;
-	int struct_size = mxGetNumberOfFields( prhs[3] );
+	int struct_size = mxGetNumberOfFields( prhs[2] );
 	for(ii=0; ii<struct_size; ii++)
 		{
-//		printf("\n%s\n", mxGetFieldNameByNumber( prhs[3], ii) );
-		mex_field = mxGetFieldByNumber( prhs[3], 0, ii );
+//		printf("\n%s\n", mxGetFieldNameByNumber( prhs[2], ii) );
+		mex_field = mxGetFieldByNumber( prhs[2], 0, ii );
 		ptr = (long long *) mxGetData( mex_field );
 		Nf = mxGetN( mex_field );
 		for(jj=0; jj<Nf; jj++)
