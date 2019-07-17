@@ -34,7 +34,7 @@
 % generated
 
 clc;
-clearvars;
+clear VARIABLES;
 close all;
 
 addpath('../../../experimental/interfaces/matlab/external_function_generation/sim/')

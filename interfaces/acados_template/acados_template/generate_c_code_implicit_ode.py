@@ -86,7 +86,6 @@ def generate_c_code_implicit_ode( model, opts ):
     # HESS_multiplied = HESS_multiplied.simplify()
 
     ## Set up functions
-    # TODO(oj): fix namings such that jac_z is contained!
     if np != 0:
         p = model.p
         fun_name = model_name + '_impl_dae_fun'

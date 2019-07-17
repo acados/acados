@@ -25,7 +25,6 @@
 #include "catch/include/catch.hpp"
 
 // std
-#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -976,7 +975,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     * sqp solve
     ************************************************/
 
-    int nmpc_problems = 40;
+    int nmpc_problems = 10;
 
     acados_timer timer;
     acados_tic(&timer);
@@ -992,6 +991,9 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     // set x0 as box constraint
     ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0_ref);
     ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0_ref);
+
+    double total_power = 0.0; // sum up to get total objective
+    double electrical_power = 0.0;
 
     for (int idx = 0; idx < nmpc_problems; idx++)
     {
@@ -1063,11 +1065,14 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         printf("\nproblem #%d, status %d, iters %d, time (total %f, lin %f, qp_sol %f) ms\n",
             idx, status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
 
+        // TODO(oj): rather simulate then take x from SQP solution
         printf("xsim = \n");
         ocp_nlp_out_get(config, dims, nlp_out, 0, "x", x_end);
         d_print_mat(1, nx[0], x_end, 1);
-        printf("electrical power = %f\n", 0.944*97/100* x_end[0] * x_end[5]);
 
+        electrical_power = 0.944*97/100* x_end[0] * x_end[5];
+        total_power += electrical_power;
+        printf("electrical power = %f\n", electrical_power);
         printf("Max residuals = %e\n", max_res);
 
         REQUIRE((status == 0 || status == 1 && MAX_SQP_ITERS == 1));
@@ -1085,6 +1090,9 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
     printf("\n\ntotal time (including printing) = %f ms (time per SQP = %f)\n\n",
         time*1e3, time*1e3/nmpc_problems);
+    printf("total electrical power %e\n\n", total_power);
+    REQUIRE(total_power - 5.161e1 > 0); // ensure MPC has a performance close to the known optimum
+
 
 
     /************************************************

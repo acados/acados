@@ -1,5 +1,5 @@
 %% EXAMPLE - GENERATE C CODE for ocp_nlp acados
-clearvars;
+clear VARIABLES;
 
 path_sim_codegen = strcat(pwd,'/sim');
 path_cost_codegen = strcat(pwd,'/cost');

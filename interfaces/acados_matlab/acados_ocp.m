@@ -16,6 +16,22 @@ classdef acados_ocp < handle
 			obj.model_struct = model.model_struct;
 			obj.opts_struct = opts.opts_struct;
 
+			% create build folder
+			system('mkdir -p build');
+
+			% add path
+			addpath('build/');
+
+			% detect GNSF structure
+			if (strcmp(obj.opts_struct.sim_method, 'irk_gnsf'))
+				if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))
+					obj.model_struct = detect_gnsf_structure(obj.model_struct);
+					generate_get_gnsf_structure(obj.model_struct);
+				else
+					obj.model_struct = get_gnsf_structure(obj.model_struct);
+				end
+			end
+
 			% compile mex without model dependency
 			if (strcmp(obj.opts_struct.compile_mex, 'true'))
 				ocp_compile_mex(obj.opts_struct);
@@ -25,49 +41,17 @@ classdef acados_ocp < handle
 
 			% generate and compile casadi functions
 			if (strcmp(obj.opts_struct.codgen_model, 'true'))
-				ocp_compile_casadi_functions(obj.model_struct, obj.opts_struct);
+				ocp_generate_casadi_ext_fun(obj.model_struct, obj.opts_struct);
 			end
 
 			obj.C_ocp_ext_fun = ocp_create_ext_fun();
 
-			% compile mex with model dependency
-			if (strcmp(obj.opts_struct.compile_mex, 'true'))
-				ocp_compile_mex_model_dep(obj.model_struct, obj.opts_struct);
-			end
+			% compile mex with model dependency & set pointers for external functions in model
+			obj.C_ocp_ext_fun = ocp_set_ext_fun(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 
-			% get pointers for external functions in model
-			% dynamics
-			if (strcmp(obj.model_struct.dyn_type, 'explicit'))
-				obj.C_ocp_ext_fun = ocp_set_ext_fun_dyn_expl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
-			elseif (strcmp(obj.model_struct.dyn_type, 'implicit'))
-				obj.C_ocp_ext_fun = ocp_set_ext_fun_dyn_impl(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
-			elseif (strcmp(obj.model_struct.dyn_type, 'discrete'))
-				obj.C_ocp_ext_fun = ocp_set_ext_fun_dyn_disc(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
-			else
-				fprintf('\ncodegen_model: dyn_type not supported: %s\n', obj.model_struct.dyn_type);
-				return;
-			end
-			% nonlinear constraints
-			if (strcmp(obj.model_struct.constr_type, 'bgh') && isfield(obj.model_struct, 'constr_expr_h'))
-				obj.C_ocp_ext_fun = ocp_set_ext_fun_constr_h(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
-			end
-			if (strcmp(obj.model_struct.constr_type, 'bgh') && isfield(obj.model_struct, 'constr_expr_h_e'))
-				obj.C_ocp_ext_fun = ocp_set_ext_fun_constr_h_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
-			end
-			% nonlinear least squares
-			if (strcmp(obj.model_struct.cost_type, 'nonlinear_ls'))
-				obj.C_ocp_ext_fun = ocp_set_ext_fun_cost_y(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
-			end
-			if (strcmp(obj.model_struct.cost_type_e, 'nonlinear_ls'))
-				obj.C_ocp_ext_fun = ocp_set_ext_fun_cost_y_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
-			end
-			% external cost
-			if (strcmp(obj.model_struct.cost_type, 'ext_cost'))
-				obj.C_ocp_ext_fun = ocp_set_ext_fun_cost_ext_cost(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
-			end
-			if (strcmp(obj.model_struct.cost_type_e, 'ext_cost'))
-				obj.C_ocp_ext_fun = ocp_set_ext_fun_cost_ext_cost_e(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
-			end
+			% precompute
+			ocp_precompute(obj.C_ocp);
+
 		end
 
 

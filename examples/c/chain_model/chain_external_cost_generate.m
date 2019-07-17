@@ -2,7 +2,7 @@
 % import casadi
 % this script was written to replace hand written external functions that
 % looked as pasted in the end of the script
-clearvars
+clear VARIABLES
 
 import casadi.*
 addpath('../../../experimental/interfaces/matlab/external_function_generation');

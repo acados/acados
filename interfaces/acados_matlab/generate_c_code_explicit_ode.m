@@ -20,12 +20,11 @@ function generate_c_code_explicit_ode( model, opts )
 %% import casadi
 import casadi.*
 
-if CasadiMeta.version()=='3.4.0'
-	% casadi 3.4
+casadi_version = CasadiMeta.version();
+if strcmp(casadi_version(1:3),'3.4') % require casadi 3.4.x
 	casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-else
-	% old casadi versions
-	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
+else % old casadi versions
+	error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
 end
 
 if nargin > 1
@@ -88,12 +87,6 @@ else
 	f_expl = model.expr_f;
 end
 
-if isfield(model, 'dyn_param_f')
-	param_f = model.dyn_param_f;
-else
-	param_f = model.param_f;
-end
-
 
 
 %% set up functions to be exported
@@ -110,30 +103,18 @@ else
     vdeX = MX.zeros(nx, nx);
     vdeU = MX.zeros(nx, nu) + jacobian(f_expl, u);
 end
-if (strcmp(param_f, 'true'))
-	expl_ode_fun = Function([model_name,'_expl_ode_fun'], {x, u, p}, {f_expl});
-else
-	expl_ode_fun = Function([model_name,'_expl_ode_fun'], {x, u}, {f_expl});
-end
+expl_ode_fun = Function([model_name,'_expl_ode_fun'], {x, u, p}, {f_expl});
 
 vdeX = vdeX + jtimes(f_expl, x, Sx);
 
 vdeU = vdeU + jtimes(f_expl, x, Su);
 
-if (strcmp(param_f, 'true'))
-	expl_vde_for = Function([model_name,'_expl_vde_for'], {x, Sx, Su, u, p}, {f_expl, vdeX, vdeU});
-else
-	expl_vde_for = Function([model_name,'_expl_vde_for'], {x, Sx, Su, u}, {f_expl, vdeX, vdeU});
-end
+expl_vde_for = Function([model_name,'_expl_vde_for'], {x, Sx, Su, u, p}, {f_expl, vdeX, vdeU});
 
 % 'true' at the end tells to transpose the jacobian before multiplication => reverse mode
 adj = jtimes(f_expl, [x;u], lambdaX, true);
 
-if (strcmp(param_f, 'true'))
-	expl_vde_adj = Function([model_name,'_expl_vde_adj'], {x, lambdaX, u, p}, {adj});
-else
-	expl_vde_adj = Function([model_name,'_expl_vde_adj'], {x, lambdaX, u}, {adj});
-end
+expl_vde_adj = Function([model_name,'_expl_vde_adj'], {x, lambdaX, u, p}, {adj});
 
 S_forw = vertcat(horzcat(Sx, Su), horzcat(zeros(nu,nx), eye(nu)));
 hess = S_forw.'*jtimes(adj, [x;u], S_forw);
@@ -145,11 +126,7 @@ for j = 1:nx+nu
     end
 end
 
-if (strcmp(param_f, 'true'))
-	expl_ode_hes = Function([model_name,'_expl_ode_hes'], {x, Sx, Su, lambdaX, u, p}, {adj, hess2});
-else
-	expl_ode_hes = Function([model_name,'_expl_ode_hes'], {x, Sx, Su, lambdaX, u}, {adj, hess2});
-end
+expl_ode_hes = Function([model_name,'_expl_ode_hes'], {x, Sx, Su, lambdaX, u, p}, {adj, hess2});
 
 %% generate C code
 expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);

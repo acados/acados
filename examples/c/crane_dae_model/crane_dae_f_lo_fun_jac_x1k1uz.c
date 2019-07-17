@@ -29,6 +29,7 @@ extern "C" {
 #define casadi_s1 CASADI_PREFIX(s1)
 #define casadi_s2 CASADI_PREFIX(s2)
 #define casadi_s3 CASADI_PREFIX(s3)
+#define casadi_s4 CASADI_PREFIX(s4)
 #define casadi_sq CASADI_PREFIX(sq)
 
 /* Symbol visibility in DLLs */
@@ -47,20 +48,21 @@ extern "C" {
 #endif
 
 static const casadi_int casadi_s0[9] = {5, 1, 0, 5, 0, 1, 2, 3, 4};
-static const casadi_int casadi_s1[6] = {2, 1, 0, 2, 0, 1};
-static const casadi_int casadi_s2[10] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
-static const casadi_int casadi_s3[27] = {6, 14, 0, 2, 3, 3, 4, 5, 6, 6, 6, 6, 6, 9, 10, 10, 10, 3, 4, 5, 4, 5, 5, 2, 3, 5, 4};
+static const casadi_int casadi_s1[4] = {0, 1, 0, 0};
+static const casadi_int casadi_s2[6] = {2, 1, 0, 2, 0, 1};
+static const casadi_int casadi_s3[10] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
+static const casadi_int casadi_s4[24] = {6, 12, 0, 2, 3, 3, 4, 5, 6, 6, 6, 6, 6, 8, 9, 3, 4, 5, 4, 5, 5, 3, 5, 4};
 
 casadi_real casadi_sq(casadi_real x) { return x*x;}
 
-/* crane_dae_f_lo_fun_jac_x1k1uz:(i0[5],i1[5],i2[2],i3[2])->(o0[6],o1[6x14,10nz]) */
+/* crane_dae_f_lo_fun_jac_x1k1uz:(i0[5],i1[5],i2[0],i3[2])->(o0[6],o1[6x12,9nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2, a3, a4, a5, a6, a7, a8;
   a0=0.;
   if (res[0]!=0) res[0][0]=a0;
   if (res[0]!=0) res[0][1]=a0;
-  a0=arg[3] ? arg[3][0] : 0;
   if (res[0]!=0) res[0][2]=a0;
+  a0=arg[3] ? arg[3][0] : 0;
   a1=casadi_sq(a0);
   a2=arg[0] ? arg[0][0] : 0;
   a3=casadi_sq(a2);
@@ -109,16 +111,14 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a3=(a6+a6);
   a3=(-a3);
   if (res[1]!=0) res[1][5]=a3;
-  a3=1.;
-  if (res[1]!=0) res[1][6]=a3;
   a0=(a0+a0);
-  if (res[1]!=0) res[1][7]=a0;
+  if (res[1]!=0) res[1][6]=a0;
   a6=(a6+a6);
   a6=(a6*a7);
-  if (res[1]!=0) res[1][8]=a6;
+  if (res[1]!=0) res[1][7]=a6;
   a4=cos(a4);
   a4=(-a4);
-  if (res[1]!=0) res[1][9]=a4;
+  if (res[1]!=0) res[1][8]=a4;
   return 0;
 }
 
@@ -159,15 +159,15 @@ CASADI_SYMBOL_EXPORT const casadi_int* crane_dae_f_lo_fun_jac_x1k1uz_sparsity_in
     case 0: return casadi_s0;
     case 1: return casadi_s0;
     case 2: return casadi_s1;
-    case 3: return casadi_s1;
+    case 3: return casadi_s2;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT const casadi_int* crane_dae_f_lo_fun_jac_x1k1uz_sparsity_out(casadi_int i) {
   switch (i) {
-    case 0: return casadi_s2;
-    case 1: return casadi_s3;
+    case 0: return casadi_s3;
+    case 1: return casadi_s4;
     default: return 0;
   }
 }

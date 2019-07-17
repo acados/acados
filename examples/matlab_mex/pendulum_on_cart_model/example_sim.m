@@ -16,11 +16,14 @@ end
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
-method = 'erk';
+gnsf_detect_struct = 'true';
+%method = 'erk';
 %method = 'irk';
-sens_forw = 'false';
+method = 'irk_gnsf';
+sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
+model_name = 'sim_pendulum';
 
 h = 0.1;
 x0 = [0; 1e-1; 0; 0e0];
@@ -38,6 +41,7 @@ nu = model.nu;
 
 %% acados sim model
 sim_model = acados_sim_model();
+sim_model.set('name', model_name);
 sim_model.set('T', h);
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
@@ -48,7 +52,7 @@ if (strcmp(method, 'erk'))
 	end
 	sim_model.set('dim_nx', model.nx);
 	sim_model.set('dim_nu', model.nu);
-else % irk
+else % irk irk_gnsf
 	sim_model.set('dyn_type', 'implicit');
 	sim_model.set('dyn_expr_f', model.expr_f_impl);
 	sim_model.set('sym_x', model.sym_x);
@@ -76,6 +80,9 @@ sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
 sim_opts.set('method', method);
 sim_opts.set('sens_forw', sens_forw);
+if (strcmp(method, 'irk_gnsf'))
+	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
+end
 
 %sim_opts.opts_struct
 
@@ -114,17 +121,17 @@ simulation_time = toc
 
 
 % xn
-%xn = sim.get('xn');
-%xn
+xn = sim.get('xn');
+xn
 % S_forw
-%S_forw = sim.get('S_forw');
-%S_forw
+S_forw = sim.get('S_forw');
+S_forw
 % Sx
-%Sx = sim.get('Sx');
-%Sx
+Sx = sim.get('Sx');
+Sx
 % Su
-%Su = sim.get('Su');
-%Su
+Su = sim.get('Su');
+Su
 
 %x_sim
 

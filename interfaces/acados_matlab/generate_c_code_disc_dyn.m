@@ -20,12 +20,11 @@ function generate_c_code_disc_dyn( model, opts )
 %% import casadi
 import casadi.*
 
-if CasadiMeta.version()=='3.4.0'
-	% casadi 3.4
+casadi_version = CasadiMeta.version();
+if strcmp(casadi_version(1:3),'3.4') % require casadi 3.4.x
 	casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-else
-	% old casadi versions
-	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
+else % old casadi versions
+	error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
 end
 
 %% load model
@@ -72,13 +71,8 @@ if isfield(model, 'dyn_expr_phi')
 	% generate hessian
 	hess_ux = jacobian(adj_ux, [u; x]);
 	% Set up functions
-	if (strcmp(model.dyn_param_phi, 'true'))
-		phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'});
-		phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux});
-	else
-		phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u}, {phi, jac_ux'});
-		phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam}, {phi, jac_ux', hess_ux});
-	end
+	phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'});
+	phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux});
 	% generate C code
 	phi_fun_jac_ut_xt.generate([model_name,'_dyn_disc_phi_fun_jac'], casadi_opts);
 	phi_fun_jac_ut_xt_hess.generate([model_name,'_dyn_disc_phi_fun_jac_hess'], casadi_opts);

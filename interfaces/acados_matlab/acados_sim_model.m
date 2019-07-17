@@ -14,13 +14,15 @@ classdef acados_sim_model < handle
 		function obj = acados_sim_model()
 			obj.model_struct = struct;
 			obj.model_struct.name = 'sim_model';
-			obj.model_struct.dyn_param_f = 'false';
 		end
 
 
 		function obj = set(obj, field, value)
+			% misc
+			if (strcmp(field, 'name'))
+				obj.model_struct.name = value;
 			% dims
-			if (strcmp(field, 'dim_nx'))
+			elseif (strcmp(field, 'dim_nx'))
 				obj.model_struct.dim_nx = value;
 			elseif (strcmp(field, 'dim_nu'))
 				obj.model_struct.dim_nu = value;
@@ -42,8 +44,6 @@ classdef acados_sim_model < handle
 			% dynamics
 			elseif (strcmp(field, 'dyn_type'))
 				obj.model_struct.dyn_type = value;
-			elseif (strcmp(field, 'dyn_param_f'))
-				obj.model_struct.dyn_param_f = value;
 			elseif (strcmp(field, 'dyn_expr_f'))
 				obj.model_struct.dyn_expr_f = value;
 			elseif (strcmp(field, 'T'))

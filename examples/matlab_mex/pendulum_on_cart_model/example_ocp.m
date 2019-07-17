@@ -16,16 +16,17 @@ end
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
+gnsf_detect_struct = 'true';
+
 param_scheme = 'multiple_shooting_unif_grid';
 N = 100;
-
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-%nlp_solver_exact_hessian = 'false';
-nlp_solver_exact_hessian = 'true';
-%regularize_method = 'no_regularize';
+nlp_solver_exact_hessian = 'false';
+%nlp_solver_exact_hessian = 'true';
+regularize_method = 'no_regularize';
 %regularize_method = 'project';
-regularize_method = 'project_reduc_hess';
+%regularize_method = 'project_reduc_hess';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
@@ -42,11 +43,13 @@ qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 2;
 %sim_method = 'erk';
-sim_method = 'irk';
+%sim_method = 'irk';
+sim_method = 'irk_gnsf';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 cost_type = 'linear_ls';
 %cost_type = 'ext_cost';
+model_name = 'ocp_pendulum';
 
 h = 0.01;
 
@@ -104,6 +107,7 @@ ubu =  80*ones(nu, 1);
 
 %% acados ocp model
 ocp_model = acados_ocp_model();
+ocp_model.set('name', model_name);
 % dims
 ocp_model.set('T', T);
 ocp_model.set('dim_nx', nx);
@@ -145,7 +149,7 @@ ocp_model.set('cost_type_e', cost_type);
 if (strcmp(sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_expl);
-else % irk
+else % irk irk_gnsf
 	ocp_model.set('dyn_type', 'implicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_impl);
 end
@@ -206,6 +210,9 @@ ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+if (strcmp(sim_method, 'irk_gnsf'))
+	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
+end
 
 ocp_opts.opts_struct
 
@@ -217,6 +224,7 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 ocp
 ocp.C_ocp
 ocp.C_ocp_ext_fun
+%ocp.model_struct
 
 
 

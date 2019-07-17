@@ -19,28 +19,29 @@ mex_files = { ...
 	[acados_mex_folder, 'ocp_create_ext_fun.c'], ...
 	[acados_mex_folder, 'ocp_destroy_ext_fun.c'], ...
 	[acados_mex_folder, 'ocp_solve.c'], ...
+	[acados_mex_folder, 'ocp_precompute.c'], ...
 	[acados_mex_folder, 'ocp_set.c'], ...
 	[acados_mex_folder, 'ocp_get.c'], ...
 	} ;
 
 if is_octave()
-	if exist('cflags_octave.txt')==0
-		diary 'cflags_octave.txt'
+	if exist('build/cflags_octave.txt')==0
+		diary 'build/cflags_octave.txt'
 		diary on
 		mkoctfile -p CFLAGS
 		diary off
-		input_file = fopen('cflags_octave.txt', 'r');
+		input_file = fopen('build/cflags_octave.txt', 'r');
 		cflags_tmp = fscanf(input_file, '%[^\n]s');
 		fclose(input_file);
 		cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
 		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
 			cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
 		end
-		input_file = fopen('cflags_octave.txt', 'w');
+		input_file = fopen('build/cflags_octave.txt', 'w');
 		fprintf(input_file, '%s', cflags_tmp);
 		fclose(input_file);
 	end
-	input_file = fopen('cflags_octave.txt', 'r');
+	input_file = fopen('build/cflags_octave.txt', 'r');
 	cflags_tmp = fscanf(input_file, '%[^\n]s');
 	fclose(input_file);
 	setenv('CFLAGS', cflags_tmp);
@@ -62,4 +63,11 @@ for ii=1:length(mex_files)
 			mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
 		end
 	end
+end
+
+if is_octave()
+	system(['mv -f *.o build/']);
+	system(['mv -f *.mex build/']);
+else
+	system(['mv -f *.mexa64 build/']);
 end

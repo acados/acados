@@ -20,12 +20,11 @@ function generate_c_code_nonlinear_least_squares( model, opts )
 %% import casadi
 import casadi.*
 
-if CasadiMeta.version()=='3.4.0'
-	% casadi 3.4
+casadi_version = CasadiMeta.version();
+if strcmp(casadi_version(1:3),'3.4') % require casadi 3.4.x
 	casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
-else
-	% old casadi versions
-	error('Please download and install Casadi 3.4.0 to ensure compatibility with acados')
+else % old casadi versions
+	error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
 end
 
 %% load model
@@ -72,13 +71,8 @@ if isfield(model, 'cost_expr_y')
 	y_adj = jtimes(fun, [u; x], y, true);
 	y_hess = jacobian(y_adj, [u; x]);
 	% Set up functions
-	if (strcmp(model.cost_param_y, 'true'))
-		y_fun_jac_ut_xt = Function([model_name,'_cost_y_fun_jac_ut_xt'], {x, u, p}, {fun, [jac_u'; jac_x']});
-		y_hess = Function([model_name,'_cost_y_hess'], {x, u, y, p}, {y_hess});
-	else
-		y_fun_jac_ut_xt = Function([model_name,'_cost_y_fun_jac_ut_xt'], {x, u}, {fun, [jac_u'; jac_x']});
-		y_hess = Function([model_name,'_cost_y_hess'], {x, u, y}, {y_hess});
-	end
+	y_fun_jac_ut_xt = Function([model_name,'_cost_y_fun_jac_ut_xt'], {x, u, p}, {fun, [jac_u'; jac_x']});
+	y_hess = Function([model_name,'_cost_y_hess'], {x, u, y, p}, {y_hess});
 	% generate C code
 	y_fun_jac_ut_xt.generate([model_name,'_cost_y_fun_jac_ut_xt'], casadi_opts);
 	y_hess.generate([model_name,'_cost_y_hess'], casadi_opts);
@@ -99,13 +93,8 @@ if isfield(model, 'cost_expr_y_e')
 	y_e_adj = jtimes(fun, x, y_e, true);
 	y_e_hess = jacobian(y_e_adj, x);
 	% Set up functions
-	if (strcmp(model.cost_param_y_e, 'true'))
-		y_e_fun_jac_ut_xt = Function([model_name,'_cost_y_e_fun_jac_ut_xt'], {x, p}, {fun_e, jac_x_e'});
-		y_e_hess = Function([model_name,'_cost_y_e_hess'], {x, y_e, p}, {y_e_hess});
-	else
-		y_e_fun_jac_ut_xt = Function([model_name,'_cost_y_e_fun_jac_ut_xt'], {x}, {fun_e, jac_x_e'});
-		y_e_hess = Function([model_name,'_cost_y_e_hess'], {x, y_e}, {y_e_hess});
-	end
+	y_e_fun_jac_ut_xt = Function([model_name,'_cost_y_e_fun_jac_ut_xt'], {x, p}, {fun_e, jac_x_e'});
+	y_e_hess = Function([model_name,'_cost_y_e_hess'], {x, y_e, p}, {y_e_hess});
 	% generate C code
 	y_e_fun_jac_ut_xt.generate([model_name,'_cost_y_e_fun_jac_ut_xt'], casadi_opts);
 	y_e_hess.generate([model_name,'_cost_y_e_hess'], casadi_opts);

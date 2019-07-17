@@ -41,7 +41,7 @@ has the following form
 https://github.com/acados/acados/files/3359595/gnsf_structure_blo.pdf
 
 Details on the algorithm can be found in master thesis of Jonathan Frey,
-which presents a slightly different format without the B_LO matrix.
+which presents a slightly different format without the terms B_LO, c_LO.
 https://github.com/acados/acados/files/2318322/gnsf_structure.pdf
 https://cdn.syscop.de/publications/Frey2018.pdf
 https://cdn.syscop.de/publications/Frey2019.pdf
@@ -102,6 +102,14 @@ typedef struct
 
     /* constant vector */
     double *c;
+    double *c_LO;
+
+    // permutation vector - to have GNSF order of x, z within sim_gnsf only
+    int *ipiv_x;
+    int *ipiv_z;
+
+    double *ipiv_x_double;
+    double *ipiv_z_double;
 
 } gnsf_model;
 
@@ -198,16 +206,17 @@ typedef struct
     struct blasfeo_dmat dxf_dwn;
     struct blasfeo_dmat S_forw_new;
     struct blasfeo_dmat S_forw;
+    struct blasfeo_dmat S_algebraic;
 
     struct blasfeo_dmat dPsi_dvv;
     struct blasfeo_dmat dPsi_dx;
     struct blasfeo_dmat dPsi_du;
 
     struct blasfeo_dmat dPHI_dyuhat;
+    struct blasfeo_dvec z0;
 
     // memory only available if (opts->sens_algebraic)
     struct blasfeo_dvec x0dot_1;
-    struct blasfeo_dvec z0_1;
     struct blasfeo_dmat dz10_dx1u;  // (nz1) * (nx1+nu);
     struct blasfeo_dmat dr0_dvv0;  // (n_out * n_out)
     struct blasfeo_dmat f_LO_jac0; // (nx2+nz2) * (2*nx1 + nz1 + nu)

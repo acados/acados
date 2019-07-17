@@ -16,6 +16,22 @@ classdef acados_sim < handle
 			obj.model_struct = model.model_struct;
 			obj.opts_struct = opts.opts_struct;
 
+			% create build folder
+			system('mkdir -p build');
+
+			% add path
+			addpath('build/');
+
+			% detect GNSF structure
+			if (strcmp(obj.opts_struct.method, 'irk_gnsf'))
+				if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))
+					obj.model_struct = detect_gnsf_structure(obj.model_struct);
+					generate_get_gnsf_structure(obj.model_struct);
+				else
+					obj.model_struct = get_gnsf_structure(obj.model_struct);
+				end
+			end
+
 			% compile mex without model dependency
 			if (strcmp(obj.opts_struct.compile_mex, 'true'))
 				sim_compile_mex();
@@ -25,25 +41,17 @@ classdef acados_sim < handle
 
 			% generate and compile casadi functions
 			if (strcmp(obj.opts_struct.codgen_model, 'true'))
-				sim_compile_casadi_functions(obj.model_struct, obj.opts_struct)
+				sim_generate_casadi_ext_fun(obj.model_struct, obj.opts_struct)
 			end
 
 			obj.C_sim_ext_fun = sim_create_ext_fun();
 
-			% compile mex with model dependency
-			if (strcmp(obj.opts_struct.compile_mex, 'true'))
-				sim_compile_mex_model_dep(obj.model_struct, obj.opts_struct);
-			end
+			% compile mex with model dependency & set pointers for external functions in model
+			obj.C_sim_ext_fun = sim_set_ext_fun(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
 
-			% get pointers for external functions in model
-			if (strcmp(obj.opts_struct.method, 'erk'))
-				obj.C_sim_ext_fun = sim_set_ext_fun_dyn_expl(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
-			elseif (strcmp(obj.opts_struct.method, 'irk'))
-				obj.C_sim_ext_fun = sim_set_ext_fun_dyn_impl(obj.C_sim, obj.C_sim_ext_fun, obj.model_struct, obj.opts_struct);
-			else
-				fprintf('\ncodegen_model: method not supported: %s\n', obj.opts_struct.method);
-				return;
-			end
+			% precompute
+			sim_precompute(obj.C_sim);
+
 		end
 
 

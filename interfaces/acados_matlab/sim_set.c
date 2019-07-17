@@ -17,13 +17,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 //	mexPrintf("\nin sim_set\n");
 
+	int ii;
 	long long *ptr;
 
 	/* RHS */
 
 	// model
-	// TODO bool instead !!!
-	char *param_f = mxArrayToString( mxGetField( prhs[0], 0, "dyn_param_f" ) );
 
 	// opts
 	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
@@ -65,44 +64,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		double *p = mxGetPr( prhs[5] );
 		external_function_param_casadi *ext_fun_param_ptr;
-		if(!strcmp(param_f, "true")) // TODO bool
+		int struct_size = mxGetNumberOfFields( prhs[3] );
+		for(ii=0; ii<struct_size; ii++)
 			{
-			if(!strcmp(method, "erk"))
+//			printf("\n%s\n", mxGetFieldNameByNumber( prhs[3], ii) );
+			ptr = (long long *) mxGetData( mxGetFieldByNumber( prhs[3], 0, ii ) );
+			if(ptr[0]!=0)
 				{
-				// expl_ode_fun
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_expl_ode_fun" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
-				// expl_vde_for
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_expl_vde_for" ) );
 				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
 				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
 				}
-			else if(!strcmp(method, "irk"))
-				{
-				// impl_ode_fun
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_impl_ode_fun" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
-				// impl_ode_fun_jac_x_xdot
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_impl_ode_fun_jac_x_xdot" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
-				// impl_ode_jac_x_xdot_u
-				ptr = (long long *) mxGetData( mxGetField( prhs[3], 0, "dyn_impl_ode_jac_x_xdot_u" ) );
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
-				}
-			else
-				{
-				mexPrintf("\nsim_set: method not supported %s\n", method);
-				return;
-				}
-			}
-		else
-			{
-			mexPrintf("\nsim_set: can not set p for non-param f\n");
-			return;
 			}
 		}
 	else if(!strcmp(field, "seed_adj"))
