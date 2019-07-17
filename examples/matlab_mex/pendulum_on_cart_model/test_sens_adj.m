@@ -1,6 +1,18 @@
 %% test of native matlab interface
 clear VARIABLES
 
+
+
+% check that env.sh has been run
+env_run = getenv('ENV_RUN');
+if (~strcmp(env_run, 'true'))
+	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
+	disp('source env.sh');
+	return;
+end
+
+
+
 for integrator = {'irk_gnsf', 'irk', 'erk'}
 	%% arguments
 	compile_mex = 'true';
