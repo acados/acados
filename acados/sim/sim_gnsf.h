@@ -213,10 +213,10 @@ typedef struct
     struct blasfeo_dmat dPsi_du;
 
     struct blasfeo_dmat dPHI_dyuhat;
+    struct blasfeo_dvec z0;
 
     // memory only available if (opts->sens_algebraic)
     struct blasfeo_dvec x0dot_1;
-    struct blasfeo_dvec z0;
     struct blasfeo_dmat dz10_dx1u;  // (nz1) * (nx1+nu);
     struct blasfeo_dmat dr0_dvv0;  // (n_out * n_out)
     struct blasfeo_dmat f_LO_jac0; // (nx2+nz2) * (2*nx1 + nz1 + nu)

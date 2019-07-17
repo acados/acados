@@ -181,7 +181,7 @@ add_executable(unit_tests
     # $<TARGET_OBJECTS:ocp_nlp_gen>
     # $<TARGET_OBJECTS:ocp_qp_gen>
     ${TEST_SIM_HESS_SRC}
-    # ${TEST_SIM_DAE_SRC}
+    ${TEST_SIM_DAE_SRC}
     ${TEST_SIM_ODE_SRC}
     ${TEST_OCP_QP_SRC}
     ${TEST_OCP_NLP_SRC}
