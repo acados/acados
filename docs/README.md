@@ -2,35 +2,49 @@
 
 Based on `sphinx` and markdown
 
+## Linux
+
 ### Prerequisites
 
-Get and install doxygen and graphviz:
+* Get and install doxygen and graphviz:
 ```
 sudo apt-get install doxygen graphviz
 ```
+### Python virtual environment
 
-This guide shows the *easy* way of using conda to manage virtual environments. You can of course use the environment of your choice to install pip packages.
+* Get python3.5 or later if not already present.
 
-Get and install miniconda (follow the installation instructions, best to keep default path ~/miniconda3, and say yes to initialize miniconda in your bashrc):
+<!-- ####  -->
+<!-- Get and install miniconda (follow the installation instructions, best to keep default path ~/miniconda3, and say yes to initialize miniconda in your bashrc): -->
+<!-- ``` -->
+<!-- wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -->
+<!-- sh Miniconda3-latest-Linux-x86_64.sh -->
+<!-- source ~/.bashrc # or restart your terminal -->
+<!-- ``` -->
+
+<!-- Create an environment for python and activate the environment -->
+<!-- ``` -->
+<!-- conda create -n acados_doc python=3.7 -->
+<!-- conda activate acados_doc -->
+<!-- ``` -->
+<!-- conda install sphinx=1.8 # or pip install sphinx -->
+
+<!-- Create a python virtualenv and install `sphinx` and `recommonmark` -->
+
+<!-- ``` -->
+<!-- pip install -r requirements.txt -->
+<!-- ``` -->
+
+* Optionally create and activate a python virtual environment
+
 ```
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-sh Miniconda3-latest-Linux-x86_64.sh
-source ~/.bashrc # or restart your terminal
+python3 -m venv /path/to/new/virtual/environment
+source /path/to/new/virtual/environment/bin/activate
 ```
 
-Create an environment for python and activate the environment
+* Install requirements:
 ```
-conda create -n acados_doc python=3.7
-conda activate acados_doc
-```
-
-Create a python virtualenv and install `sphinx` and `recommonmark`
-
-```
-conda install sphinx=1.8 # or pip install sphinx
-pip install recommonmark
-pip install breathe
-pip install sphinx_rtd_theme
+pip3 install -r requirements.txt
 ```
 
 ### Building the webpage
