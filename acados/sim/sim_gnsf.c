@@ -1493,10 +1493,10 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
     size += 2 * blasfeo_memsize_dvec(nxz2);  // ALOtimesx02, BLOtimesu0
 
     size += blasfeo_memsize_dvec(nuhat);  // uhat
+    size += blasfeo_memsize_dvec(nz);  // z0;
 
     if (opts->sens_algebraic){
         size += blasfeo_memsize_dvec(nx1);  // x0dot_1;
-        size += blasfeo_memsize_dvec(nz);  // z0;
         size += n_out * sizeof(int);  // ipiv_vv0
     }
 
@@ -1615,10 +1615,10 @@ static void *sim_gnsf_cast_workspace(void *config, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dvec_mem(nxz2, &workspace->ALOtimesx02, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nxz2, &workspace->BLOtimesu0, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nuhat, &workspace->uhat, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nz, &workspace->z0, &c_ptr);
 
     if (opts->sens_algebraic){
         assign_and_advance_blasfeo_dvec_mem(nx1, &workspace->x0dot_1, &c_ptr);
-        assign_and_advance_blasfeo_dvec_mem(nz, &workspace->z0, &c_ptr);
 
         assign_and_advance_int(n_out, &workspace->ipiv_vv0, &c_ptr);
 
@@ -2360,6 +2360,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                                     // eval polynomial through (c_i, Z_i) at 0.
                     }
                 }
+                // pack z0
+                blasfeo_pack_dvec(nz, out->zn, z0, 0);
 
             /* propagate sensitivities of z1 */
                 if (opts->sens_algebraic)
@@ -2377,8 +2379,6 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
                     // pack x0dot_1
                     blasfeo_pack_dvec(nx1, out->xn, x0dot_1, 0);
-                    // pack z0
-                    blasfeo_pack_dvec(nz, out->zn, z0, 0);
 
                     // evaluate phi at x0_1, x0_1dot, u, z0;
                     // build y_0; // use y_one_stage

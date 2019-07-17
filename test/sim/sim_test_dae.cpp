@@ -278,27 +278,27 @@ TEST_CASE("crane_dae_example", "[integrators]")
     sim_in *in = sim_in_create(config, dims);
     sim_out *out = sim_out_create(config, dims);
 
-    in->T = T;
+    sim_in_set(config, dims, in, "T", &T);
 
     // set model
     switch (plan.sim_solver)
     {
         case IRK:  // IRK
         {
-            sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-            sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
+            sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+            sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot",
                     &impl_ode_fun_jac_x_xdot);
-            sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+            sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
             break;
         }
         case GNSF:  // GNSF
         {
             // set model funtions
-            sim_model_set(config, in, "phi_fun", &phi_fun);
-            sim_model_set(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
-            sim_model_set(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
-            sim_model_set(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
-            sim_model_set(config, in, "get_gnsf_matrices", &get_matrices_fun);
+            sim_in_set(config, dims, in, "phi_fun", &phi_fun);
+            sim_in_set(config, dims, in, "phi_fun_jac_y", &phi_fun_jac_y);
+            sim_in_set(config, dims, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
+            sim_in_set(config, dims, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+            sim_in_set(config, dims, in, "get_gnsf_matrices", &get_matrices_fun);
             break;
         }
         default :
@@ -326,6 +326,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
     ************************************************/
 
     sim_solver *sim_solver = sim_solver_create(config, dims, opts);
+    sim_precompute(sim_solver, in, out);
 
     int acados_return;
 
@@ -396,11 +397,9 @@ TEST_CASE("crane_dae_example", "[integrators]")
 * test solver loop
 ************************************************/
 
-
-
-    for (int sens_forw = 0; sens_forw < 2; sens_forw++)
+    for (std::string solver : solvers)
     {
-    SECTION("sens_forw = " + std::to_string((bool)sens_forw))
+    SECTION(solver)
     {
         for (int sens_adj = 0; sens_adj < 2; sens_adj++)
         {
@@ -422,11 +421,11 @@ TEST_CASE("crane_dae_example", "[integrators]")
             {
             SECTION("num_steps = " + std::to_string(num_steps))
             {
+            for (int sens_forw = 0; sens_forw < 2; sens_forw++)
+            {
+            SECTION("sens_forw = " + std::to_string((bool)sens_forw))
+            {
 
-            for (std::string solver : solvers)
-            {
-            SECTION(solver)
-            {
 
 
                 double tol = sim_solver_tolerance_dae(solver);
@@ -436,6 +435,7 @@ TEST_CASE("crane_dae_example", "[integrators]")
 
                 // create correct config based on plan
                 sim_config *config = sim_config_create(plan);
+                void *dims = sim_dims_create(config);
 
             /* sim dims */
                 sim_dims_set(config, dims, "nx", &nx);
@@ -482,21 +482,19 @@ TEST_CASE("crane_dae_example", "[integrators]")
                 {
                     case IRK:  // IRK
                     {
-                        sim_model_set(config, in, "impl_ode_fun", &impl_ode_fun);
-                        sim_model_set(config, in, "impl_ode_fun_jac_x_xdot",
-                                &impl_ode_fun_jac_x_xdot);
-                        sim_model_set(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+                        sim_in_set(config, dims, in, "impl_ode_fun", &impl_ode_fun);
+                        sim_in_set(config, dims, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
+                        sim_in_set(config, dims, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
                         break;
                     }
                     case GNSF:  // GNSF
                     {
                         // set model funtions
-                        sim_model_set(config, in, "phi_fun", &phi_fun);
-                        sim_model_set(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
-                        sim_model_set(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
-                        sim_model_set(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
-                        sim_model_set(config, in, "get_gnsf_matrices", &get_matrices_fun);
-
+                        sim_in_set(config, dims, in, "phi_fun", &phi_fun);
+                        sim_in_set(config, dims, in, "phi_fun_jac_y", &phi_fun_jac_y);
+                        sim_in_set(config, dims, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
+                        sim_in_set(config, dims, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_fun_jac_x1k1uz);
+                        sim_in_set(config, dims, in, "get_gnsf_matrices", &get_matrices_fun);
                         break;
                     }
                     default :

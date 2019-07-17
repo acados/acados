@@ -27,11 +27,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// C_sim_ext_fun
 
 	external_function_param_casadi *ext_fun_param_ptr;
-	int struct_size = mxGetNumberOfFields( prhs[3] );
+	int struct_size = mxGetNumberOfFields( prhs[1] );
 	for(ii=0; ii<struct_size; ii++)
 		{
-//		printf("\n%s\n", mxGetFieldNameByNumber( prhs[3], ii) );
-		ptr = (long long *) mxGetData( mxGetFieldByNumber( prhs[3], 0, ii ) );
+//		printf("\n%s\n", mxGetFieldNameByNumber( prhs[1], ii) );
+		ptr = (long long *) mxGetData( mxGetFieldByNumber( prhs[1], 0, ii ) );
 		ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
 		if(ext_fun_param_ptr!=0)
 			{
