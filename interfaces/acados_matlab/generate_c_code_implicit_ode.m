@@ -69,7 +69,11 @@ end
 % z
 if isfield(model, 'sym_z')
     z = model.sym_z;
-	nz = length(z);
+    if ~z.isempty()
+    	nz = length(z);
+    else
+        nz = 0;
+    end
 else
     if isSX
         z = SX.sym('z',0, 0);
@@ -81,7 +85,11 @@ end
 % p
 if isfield(model, 'sym_p')
     p = model.sym_p;
-	np = length(p);
+    if ~p.isempty()
+    	np = length(p);
+    else
+        np = 0;
+    end
 else
     if isSX
         p = SX.sym('p',0, 0);
@@ -114,11 +122,11 @@ jac_z       = jacobian(f_impl, z);
 x_xdot_z_u = [x; xdot; z; u];
 
 if isSX
-    multiplier  = SX.sym('multiplier', length(x) + length(z));
+    multiplier  = SX.sym('multiplier', nx + nz);
 %    multiply_mat  = SX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
 %    HESS = SX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 else
-    multiplier  = MX.sym('multiplier', length(x) + length(z));
+    multiplier  = MX.sym('multiplier', nx + nz);
 %    multiply_mat  = MX.sym('multiply_mat', 2*nx+nz+nu, nx + nu);
 %    HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 end
