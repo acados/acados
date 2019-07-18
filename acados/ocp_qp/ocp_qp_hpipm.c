@@ -61,11 +61,11 @@ void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts = (ocp_qp_hpipm_opts *) c_ptr;
     c_ptr += sizeof(ocp_qp_hpipm_opts);
 
-    opts->hpipm_opts = (struct d_ocp_qp_ipm_arg *) c_ptr;
-    c_ptr += sizeof(struct d_ocp_qp_ipm_arg);
-
     align_char_to(8, &c_ptr);
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
+    opts->hpipm_opts = (struct d_ocp_qp_ipm_arg *) c_ptr;
+    c_ptr += sizeof(struct d_ocp_qp_ipm_arg);
 
     d_create_ocp_qp_ipm_arg(dims, opts->hpipm_opts, c_ptr);
     c_ptr += d_memsize_ocp_qp_ipm_arg(dims);
@@ -178,7 +178,7 @@ int ocp_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_)
 
     size += d_memsize_ocp_qp_ipm(dims, opts->hpipm_opts);
 
-    size += 1 * 8;
+    size += 2 * 8;
     return size;
 }
 
@@ -195,6 +195,8 @@ void *ocp_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *
 
     mem = (ocp_qp_hpipm_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_hpipm_memory);
+
+    align_char_to(8, &c_ptr);
 
     mem->hpipm_workspace = (struct d_ocp_qp_ipm_workspace *) c_ptr;
     c_ptr += sizeof(struct d_ocp_qp_ipm_workspace);

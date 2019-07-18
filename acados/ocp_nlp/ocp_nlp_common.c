@@ -644,6 +644,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
     {
         size +=
             config->dynamics[ii]->model_calculate_size(config->dynamics[ii], dims->dynamics[ii]);
+        size += 8;
     }
 
     // cost
@@ -719,6 +720,7 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *
             config->dynamics[ii]->model_assign(config->dynamics[ii], dims->dynamics[ii], c_ptr);
         c_ptr +=
             config->dynamics[ii]->model_calculate_size(config->dynamics[ii], dims->dynamics[ii]);
+        align_char_to(8, &c_ptr);
     }
 
     // cost

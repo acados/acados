@@ -168,6 +168,7 @@ int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims)
     int size = sizeof(ocp_qp_in);
     size += d_memsize_ocp_qp(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
+    size += 8;
     return size;
 }
 
@@ -182,6 +183,8 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 
     d_create_ocp_qp(dims, qp_in, c_ptr);
     c_ptr += d_memsize_ocp_qp(dims);
+
+    align_char_to(8, &c_ptr);
 
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
