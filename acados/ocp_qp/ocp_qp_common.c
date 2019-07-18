@@ -32,6 +32,7 @@
 
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/utils/mem.h"
 #include "acados/utils/types.h"
 
 
