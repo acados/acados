@@ -24,22 +24,24 @@ Both a CMake and a Makefile based build system are supported at the moment.
     and, depending on your preferred CasADi interface (Python, MATLAB, Octave):
 
     ```
-    wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
+    wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
     mkdir -p casadi-py35-v3.4.0-64bit
     tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-py35-v3.4.0-64bit
+    cd ..   
     ```
 
     ```
-    wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
+    wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
     mkdir -p casadi-matlabR2014b-v3.4.0
     tar -xf casadi-linux-matlabR2014b-v3.4.0.tar.gz -C casadi-matlabR2014b-v3.4.0
-    cd ..
+    cd ..    wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
     ```
 
     ```
-    wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
+    wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
     mkdir -p casadi-octave-v3.4.0
     tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave-v3.4.0
+    cd ..
     ```
 
 1. To build and install `acados` library you can either use `Makefile`

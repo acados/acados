@@ -14,8 +14,8 @@ class ocp_nlp_dims:
         self.__np     = 0     #: :math:`n_p` - number of parameters 
         self.__ny     = None  #: :math:`n_y` - number of residuals in Lagrange term 
         self.__ny_e   = None  #: :math:`n_{y}^e` - number of residuals in Mayer term 
-        self.__npd    = 0     #: :math:`n_{\pi}` - number of positive definite constraints 
-        self.__npd_e  = 0     #: :math:`n_{\pi}^e` - number of positive definite constraints at t=T 
+        self.__npd    = 0     #: :math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints 
+        self.__npd_e  = 0     #: :math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints
         self.__nh     = 0     #: :math:`n_h` - number of nonlinear constraints 
         self.__nh_e   = 0     #: :math:`n_{h}^e` - number of nonlinear constraints at t=T 
         self.__nbx    = 0     #: :math:`n_{b_x}` - number of state bounds 
@@ -24,6 +24,8 @@ class ocp_nlp_dims:
         self.__nsbx   = 0     #: :math:`n_{{sb}_x}` - number of soft state bounds 
         self.__nsbx_e = 0     #: :math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T 
         self.__nsbu   = 0     #: :math:`n_{{sb}_u}` - number of soft input bounds 
+        self.__nsh    = 0     #: :math:`n_{{sb}_u}` - number of soft nonlinear constraints 
+        self.__nsh_e  = 0     #: :math:`n_{{sb}_u}` - number of soft nonlinear constraints 
         self.__ns     = 0     #: :math:`n_{s}` - total number of slacks 
         self.__ns_e   = 0     #: :math:`n_{s}^e` - total number of slacks at t=T 
         self.__ng     = 0     #: :math:`n_{g}` - number of general polytopic constraints 
@@ -93,6 +95,14 @@ class ocp_nlp_dims:
     @property
     def nsbu(self):
         return self.__nsbu
+
+    @property
+    def nsh(self):
+        return self.__nsh
+
+    @property
+    def nsh_e(self):
+        return self.__nsh_e
 
     @property
     def ns(self):
@@ -225,6 +235,20 @@ class ocp_nlp_dims:
             self.__nsbu = nsbu
         else:
             raise Exception('Invalid nsbu value. Exiting.')
+
+    @nsh.setter
+    def nsh(self, nsh):
+        if type(nsh) == int and nsh > -1:
+            self.__nsh = nsh
+        else:
+            raise Exception('Invalid nsh value. Exiting.')
+
+    @nsh_e.setter
+    def nsh_e(self, nsh_e):
+        if type(nsh_e) == int and nsh_e > -1:
+            self.__nsh_e = nsh_e
+        else:
+            raise Exception('Invalid nsh_e value. Exiting.')
 
     @ns.setter
     def ns(self, ns):
@@ -495,10 +519,18 @@ class ocp_nlp_constraints:
         self.__usbu   = []  #: soft upper bounds on u 
         self.__idxsbx = []  #: indexes of soft bounds on x 
         self.__idxsbu = []  #: indexes of soft bounds on u
+        # soft bounds on nonlinear constraints
+        self.__lsh    = []  #: soft lower bounds for nonlinear constraints 
+        self.__ush    = []  #: soft upper bounds for nonlinear constraints 
+        self.__idxsh  = []  #: indexes of soft nonlinear constraints 
         # soft bounds on x and u at t=T
         self.__lsbx_e  = []  #: soft lower bounds on x at t=T
         self.__usbx_e  = []  #: soft upper bounds on x at t=T
         self.__idxsbx_e= []  #: indexes of soft bounds on x at t=T 
+        # soft bounds on nonlinear constraints
+        self.__lsh_e    = []  #: soft lower bounds for nonlinear constraints 
+        self.__ush_e    = []  #: soft upper bounds for nonlinear constraints 
+        self.__idxsh_e  = []  #: indexes of soft nonlinear constraints at t=T 
         # polytopic constraints 
         self.__lg      = []  #: :math:`\underline{c}` - lower bound for general polytopic inequalities 
         self.__ug      = []  #: :math:`\bar{c}` - upper bound for general polytopic inequalities 
@@ -566,6 +598,19 @@ class ocp_nlp_constraints:
         return self.__idxsbu
 
     @property
+    def lsh(self):
+        return self.__lsh
+
+    @property
+    def ush(self):
+        return self.__ush
+
+    @property
+    def idxsh(self):
+        return self.__idxsh
+
+
+    @property
     def lsbx_e(self):
         return self.__lsbx_e
 
@@ -576,6 +621,18 @@ class ocp_nlp_constraints:
     @property
     def idxsbx_e(self):
         return self.__idxsbx_e
+
+    @property
+    def lsh_e(self):
+        return self.__lsh_e
+
+    @property
+    def ush_e(self):
+        return self.__ush_e
+
+    @property
+    def idxsh_e(self):
+        return self.__idxsh_e
 
     @property
     def lg(self):
@@ -725,6 +782,27 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid idxsbu value. Exiting.')
 
+    @lsh.setter
+    def lsh(self, lsh):
+        if type(lsh) == np.ndarray:
+            self.__lsh = lsh
+        else:
+            raise Exception('Invalid lsh value. Exiting.')
+
+    @ush.setter
+    def ush(self, ush):
+        if type(ush) == np.ndarray:
+            self.__ush = ush
+        else:
+            raise Exception('Invalid ush value. Exiting.')
+
+    @idxsh.setter
+    def idxsh(self, idxsh):
+        if type(idxsh) == np.ndarray:
+            self.__idxsh = idxsh
+        else:
+            raise Exception('Invalid idxsh value. Exiting.')
+
     @lsbx_e.setter
     def lsbx_e(self, lsbx_e):
         if type(lsbx_e) == np.ndarray:
@@ -745,6 +823,27 @@ class ocp_nlp_constraints:
             self.__idxsbx_e = idxsbx_e
         else:
             raise Exception('Invalid idxsbx_e value. Exiting.')
+
+    @lsh_e.setter
+    def lsh_e(self, lsh_e):
+        if type(lsh_e) == np.ndarray:
+            self.__lsh_e = lsh_e
+        else:
+            raise Exception('Invalid lsh_e value. Exiting.')
+
+    @ush_e.setter
+    def ush_e(self, ush_e):
+        if type(ush_e) == np.ndarray:
+            self.__ush_e = ush_e
+        else:
+            raise Exception('Invalid ush_e value. Exiting.')
+
+    @idxsh_e.setter
+    def idxsh_e(self, idxsh_e):
+        if type(idxsh_e) == np.ndarray:
+            self.__idxsh_e = idxsh_e
+        else:
+            raise Exception('Invalid idxsh_e value. Exiting.')
 
     @lg.setter
     def lg(self, lg):
