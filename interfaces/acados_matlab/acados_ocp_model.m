@@ -226,30 +226,43 @@ classdef acados_ocp_model < handle
 
 				if (strcmp(field, 'dim_nx'))
 					obj.model_struct.dim_nx = value;
+					obj.acados_ocp_nlp_json.dims.nx = value;
 				elseif (strcmp(field, 'dim_nu'))
 					obj.model_struct.dim_nu = value;
+					obj.acados_ocp_nlp_json.dims.nu = value;
 				elseif (strcmp(field, 'dim_nz'))
 					obj.model_struct.dim_nz = value;
+					obj.acados_ocp_nlp_json.dims.nz = value;
 				elseif (strcmp(field, 'dim_ny'))
 					obj.model_struct.dim_ny = value;
+					obj.acados_ocp_nlp_json.dims.ny = value;
 				elseif (strcmp(field, 'dim_ny_e'))
 					obj.model_struct.dim_ny_e = value;
+					obj.acados_ocp_nlp_json.dims.ny_e = value;
 				elseif (strcmp(field, 'dim_nbx'))
 					obj.model_struct.dim_nbx = value;
+					obj.acados_ocp_nlp_json.dims.nbx = value;
 				elseif (strcmp(field, 'dim_nbu'))
 					obj.model_struct.dim_nbu = value;
+					obj.acados_ocp_nlp_json.dims.nbu = value;
 				elseif (strcmp(field, 'dim_ng'))
 					obj.model_struct.dim_ng = value;
+					obj.acados_ocp_nlp_json.dims.ng = value;
 				elseif (strcmp(field, 'dim_ng_e'))
 					obj.model_struct.dim_ng_e = value;
+					obj.acados_ocp_nlp_json.dims.ng_e = value;
 				elseif (strcmp(field, 'dim_nh'))
 					obj.model_struct.dim_nh = value;
+					obj.acados_ocp_nlp_json.dims.nh = value;
 				elseif (strcmp(field, 'dim_nh_e'))
 					obj.model_struct.dim_nh_e = value;
+					obj.acados_ocp_nlp_json.dims.nh_e = value;
 				elseif (strcmp(field, 'dim_ns'))
 					obj.model_struct.dim_ns = value;
+					obj.acados_ocp_nlp_json.dims.ns = value;
 				elseif (strcmp(field, 'dim_ns_e'))
 					obj.model_struct.dim_ns_e = value;
+					obj.acados_ocp_nlp_json.dims.ns_e = value;
 				elseif (strcmp(field, 'dim_nsbu'))
 					obj.model_struct.dim_nsbu = value;
 				elseif (strcmp(field, 'dim_nsbx'))
