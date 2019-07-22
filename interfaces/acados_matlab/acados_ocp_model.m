@@ -142,44 +142,60 @@ classdef acados_ocp_model < handle
 					obj.model_struct.constr_type = value;
 				elseif (strcmp(field, 'constr_x0'))
 					obj.model_struct.constr_x0 = value;
+                    obj.acados_ocp_nlp_json.constraints.x0 = value;
 				elseif (strcmp(field, 'constr_Jbx'))
 					obj.model_struct.constr_Jbx = value;
 				elseif (strcmp(field, 'constr_lbx'))
 					obj.model_struct.constr_lbx = value;
+                    obj.acados_ocp_nlp_json.constraints.lbx = value;
 				elseif (strcmp(field, 'constr_ubx'))
 					obj.model_struct.constr_ubx = value;
+                    obj.acados_ocp_nlp_json.constraints.ubx = value;
 				elseif (strcmp(field, 'constr_Jbu'))
 					obj.model_struct.constr_Jbu = value;
 				elseif (strcmp(field, 'constr_lbu'))
 					obj.model_struct.constr_lbu = value;
+                    obj.acados_ocp_nlp_json.constraints.lbu = value;
 				elseif (strcmp(field, 'constr_ubu'))
 					obj.model_struct.constr_ubu = value;
+                    obj.acados_ocp_nlp_json.constraints.ubu = value;
 				elseif (strcmp(field, 'constr_C'))
 					obj.model_struct.constr_C = value;
+                    obj.acados_ocp_nlp_json.constraints.C = value;
 				elseif (strcmp(field, 'constr_D'))
 					obj.model_struct.constr_D = value;
+                    obj.acados_ocp_nlp_json.constraints.D = value;
 				elseif (strcmp(field, 'constr_lg'))
 					obj.model_struct.constr_lg = value;
+                    obj.acados_ocp_nlp_json.constraints.lg = value;
 				elseif (strcmp(field, 'constr_ug'))
 					obj.model_struct.constr_ug = value;
+                    obj.acados_ocp_nlp_json.constraints.ug = value;
 				elseif (strcmp(field, 'constr_C_e'))
 					obj.model_struct.constr_C_e = value;
+                    obj.acados_ocp_nlp_json.constraints.C_e = value;
 				elseif (strcmp(field, 'constr_lg_e'))
 					obj.model_struct.constr_lg_e = value;
+                    obj.acados_ocp_nlp_json.constraints.lg_e = value;
 				elseif (strcmp(field, 'constr_ug_e'))
 					obj.model_struct.constr_ug_e = value;
+                    obj.acados_ocp_nlp_json.constraints.ug_e = value;
 				elseif (strcmp(field, 'constr_expr_h'))
 					obj.model_struct.constr_expr_h = value;
 				elseif (strcmp(field, 'constr_lh'))
 					obj.model_struct.constr_lh = value;
+                    obj.acados_ocp_nlp_json.constraints.lh = value;
 				elseif (strcmp(field, 'constr_uh'))
 					obj.model_struct.constr_uh = value;
+                    obj.acados_ocp_nlp_json.constraints.uh = value;
 				elseif (strcmp(field, 'constr_expr_h_e'))
 					obj.model_struct.constr_expr_h_e = value;
 				elseif (strcmp(field, 'constr_lh_e'))
 					obj.model_struct.constr_lh_e = value;
+                    obj.acados_ocp_nlp_json.constraints.lh_e = value;
 				elseif (strcmp(field, 'constr_uh_e'))
 					obj.model_struct.constr_uh_e = value;
+                    obj.acados_ocp_nlp_json.constraints.uh_e = value;
 				elseif (strcmp(field, 'constr_Jsbu'))
 					obj.model_struct.constr_Jsbu = value;
 	%			elseif (strcmp(field, 'constr_lsbu'))
