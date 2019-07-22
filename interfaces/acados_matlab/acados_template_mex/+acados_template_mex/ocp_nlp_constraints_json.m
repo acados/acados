@@ -1,4 +1,4 @@
-classdef ocp_nlp_constraints < handle
+classdef ocp_nlp_constraints_json < handle
     properties
         % bounds on x and u
         lbx     % lower bounds on x

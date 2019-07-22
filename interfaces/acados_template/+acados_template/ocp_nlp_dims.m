@@ -1,26 +1,26 @@
 classdef ocp_nlp_dims < handle
     properties
-        nx    % number of states
-        nz    % number of algebraic variables
-        nu    % number of inputs
-        np    % number of parameters
-        ny    % number of residuals in Lagrange term
+        nx     % number of states
+        nz     % number of algebraic variables
+        nu     % number of inputs
+        np     % number of parameters
+        ny     % number of residuals in Lagrange term
         ny_e   % number of residuals in Mayer term
-        npd   % number of positive definite constraints
+        npd    % number of positive definite constraints
         npd_e  % number of positive definite constraints at t=T
-        nh    % number of nonlinear constraints
+        nh     % number of nonlinear constraints
         nh_e   % number of nonlinear constraints at t=T
-        nbx   % number of state bounds 
+        nbx    % number of state bounds 
         nbx_e  % number of state bounds at t=T 
-        nbu   % number of input bounds
-        nsbx  % number of soft state bounds 
-        nsbu  % number of soft state bounds 
+        nbu    % number of input bounds
+        nsbx   % number of soft state bounds 
+        nsbu   % number of soft state bounds 
         nsbx_e % number of state bounds at t=T 
-        ns    % total number of soft bounds 
+        ns     % total number of soft bounds 
         ns_e   % total number of soft bounds at t=T 
-        ng    % number of general constraints
+        ng     % number of general constraints
         ng_e   % number of general constraints at t=T
-        N     % prediction horizon 
+        N      % prediction horizon 
     end
     methods 
         function obj = ocp_nlp_dims()

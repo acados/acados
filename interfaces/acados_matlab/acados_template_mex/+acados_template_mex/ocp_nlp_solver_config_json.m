@@ -1,4 +1,4 @@
-classdef ocp_nlp_solver_config < handle
+classdef ocp_nlp_solver_config_json < handle
     properties
         qp_solver        %  qp solver to be used in the NLP solver
         hessian_approx   %  hessian approximation

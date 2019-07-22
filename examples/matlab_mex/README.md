@@ -1,7 +1,7 @@
 This folder contains some examples to use the mex-based acados_matlab interface from Matlab or Octave.
 This interface uses the shared libraries created using the make command from the main acados folder
 ```
-make acados_c_shared
+make acados_shared
 ```
 
 To run the examples, navigate into the selected folder, and there run the command

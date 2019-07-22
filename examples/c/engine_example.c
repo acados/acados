@@ -178,7 +178,8 @@ int main()
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = NONLINEAR_LS;
 
-	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
 
 	for (int i = 0; i < N; i++)
     {

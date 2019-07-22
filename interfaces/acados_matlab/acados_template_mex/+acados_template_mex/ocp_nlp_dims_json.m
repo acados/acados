@@ -1,4 +1,4 @@
-classdef ocp_nlp_dims < handle
+classdef ocp_nlp_dims_json < handle
     properties
         nx     % number of states
         nz     % number of algebraic variables

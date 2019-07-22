@@ -1,4 +1,4 @@
-classdef ocp_nlp_cost < handle
+classdef ocp_nlp_cost_json < handle
     % linear least-squares cost: || Vx*x + Vu*x + Vz*z ||^2_W
     properties
         % Lagrange term
