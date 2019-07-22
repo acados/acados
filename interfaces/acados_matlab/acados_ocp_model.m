@@ -1,9 +1,8 @@
 classdef acados_ocp_model < handle
-	
-
 
 	properties
 		model_struct
+        acados_ocp_nlp_json
 	end %properties
 
 
@@ -20,6 +19,8 @@ classdef acados_ocp_model < handle
 			obj.model_struct.cost_type_e = 'linear_ls';
 			obj.model_struct.dyn_type = 'implicit';
 			obj.model_struct.constr_type = 'bgh';
+            % JSON data
+            obj.acados_ocp_nlp_json = acados_template_mex.acados_ocp_nlp_json()
 		end
 
 
@@ -64,42 +65,57 @@ classdef acados_ocp_model < handle
 					obj.model_struct.cost_expr_ext_cost_e = value;
 				elseif (strcmp(field, 'cost_Vu'))
 					obj.model_struct.cost_Vu = value;
+                    obj.acados_ocp_nlp_json.cost.Vu = value;
 				elseif (strcmp(field, 'cost_Vx'))
 					obj.model_struct.cost_Vx = value;
+                    obj.acados_ocp_nlp_json.cost.Vx = value;
 				elseif (strcmp(field, 'cost_Vx_e'))
 					obj.model_struct.cost_Vx_e = value;
+                    obj.acados_ocp_nlp_json.cost.Vx_e = value;
 				elseif (strcmp(field, 'cost_W'))
 					obj.model_struct.cost_W = value;
+                    obj.acados_ocp_nlp_json.cost.W = value;
 				elseif (strcmp(field, 'cost_W_e'))
 					obj.model_struct.cost_W_e = value;
+                    obj.acados_ocp_nlp_json.cost.W_e = value;
 				elseif (strcmp(field, 'cost_yr'))
 					obj.model_struct.cost_yr = value;
+                    obj.acados_ocp_nlp_json.cost.yref = value;
 				elseif (strcmp(field, 'cost_yr_e'))
 					obj.model_struct.cost_yr_e = value;
+                    obj.acados_ocp_nlp_json.cost.yref_e = value;
 				elseif (strcmp(field, 'cost_Z'))
 					obj.model_struct.cost_Z = value;
 				elseif (strcmp(field, 'cost_Z_e'))
 					obj.model_struct.cost_Z_e = value;
 				elseif (strcmp(field, 'cost_Zl'))
 					obj.model_struct.cost_Zl = value;
+                    obj.acados_ocp_nlp_json.cost.Zl = value;
 				elseif (strcmp(field, 'cost_Zl_e'))
 					obj.model_struct.cost_Zl_e = value;
+                    obj.acados_ocp_nlp_json.cost.Zl_e = value;
 				elseif (strcmp(field, 'cost_Zu'))
 					obj.model_struct.cost_Zu = value;
+                    obj.acados_ocp_nlp_json.cost.Zu = value;
 				elseif (strcmp(field, 'cost_Zu_e'))
 					obj.model_struct.cost_Zu_e = value;
+                    obj.acados_ocp_nlp_json.cost.Zu_e = value;
 				elseif (strcmp(field, 'cost_zl'))
 					obj.model_struct.cost_zl = value;
+                    obj.acados_ocp_nlp_json.cost.zl = value;
 				elseif (strcmp(field, 'cost_zl_e'))
 					obj.model_struct.cost_zl_e = value;
+                    obj.acados_ocp_nlp_json.cost.zl_e = value;
 				elseif (strcmp(field, 'cost_z'))
 					obj.model_struct.cost_z = value;
 				elseif (strcmp(field, 'cost_z_e'))
 					obj.model_struct.cost_z_e = value;
 				elseif (strcmp(field, 'cost_zu'))
 					obj.model_struct.cost_zu = value;
+                    obj.acados_ocp_nlp_json.cost.zu = value;
 				elseif (strcmp(field, 'cost_zu_e'))
 					obj.model_struct.cost_zu_e = value;
+                    obj.acados_ocp_nlp_json.cost.zu_e = value;
 				else
 					disp(['acados_ocp_model: set: wrong field: ', field]);
 					keyboard;
