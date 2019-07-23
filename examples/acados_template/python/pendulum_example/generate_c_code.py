@@ -123,6 +123,7 @@ for i in range(Nsim):
     # update reference
     for j in range(N):
         acados_solver.set(j, "yref", np.array([0, 0, 0, 0, 0]))
+    acados_solver.set(N, "yref", np.array([0, 0, 0, 0]))
 
 # plot results
 import matplotlib

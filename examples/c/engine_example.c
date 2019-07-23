@@ -174,12 +174,13 @@ int main()
 	ocp_nlp_plan *plan = ocp_nlp_plan_create(N);
 
 	plan->nlp_solver = SQP;
+//	plan->nlp_solver = SQP_RTI;
 
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = NONLINEAR_LS;
 
-	// plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
-	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
+	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+//	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
 
 	for (int i = 0; i < N; i++)
     {
@@ -263,7 +264,7 @@ int main()
 
     // options
     void *nlp_opts = ocp_nlp_opts_create(config, dims);
-    int max_iter = 1;
+    int max_iter = 5;
     ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
 
     // out

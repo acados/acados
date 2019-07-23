@@ -17,7 +17,7 @@ exact Hessians, adjoint corrections, regularization, etc. However, for the time 
 generate a self-contained C library that can be deployed on an embedded system. For this purpose 
 see the `acados emebedded` high-level interface below. 
 
-Some examples for the use of this interface can be found in `<acados_dir>/examples/matlab_mex`
+Some examples for the use of this interface can be found in `<acados_root>/examples/matlab_mex`
 
 This interface uses the shared libraries created using the make command from the main acados folder
 
@@ -27,7 +27,7 @@ make acados_c_shared
 
 To run the examples, navigate into the selected folder, and there run the command
 ```
-export ACADOS_INSTALL_DIR="<your acados repo dir>"
+export ACADOS_INSTALL_DIR="<acados_root>"
 source env.sh # Which can be found in the folder of one of the examples
 ```
 
@@ -42,7 +42,7 @@ If you want to run the examples in a different folder, please close the current 
 ## acados embedded - Python
 
 
-`acados_template` is an Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them.
+`acados_template` is a Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them.
 In comparison with the MATLAB interface for rapid prototyping (see above), it supports less features, but it allows the user to generate a self-contained C library  
 that can be easily deployed on an embedded system.
 
@@ -56,16 +56,16 @@ The currently supported formulations reads as
 &\underset{\begin{subarray}{c}
     x(\cdot),\,u(\cdot), \, z(\cdot)
 \end{subarray}}{\min}	    &&\int_0^T l(x(\tau), u(\tau), z(\tau), p)\mathrm{d}\tau + m(x(T), z(T), p)\\ 
-                            &\,\,\,\quad \text{s.t.}    &&x(0) - \bar{x}_0 = 0, &&\\
-                            & 						    &&F(x(t), \dot{x}(t), u(t), z(t), p) = 0, &&\quad t \in [0,\,T),\\
-                            & 						    &&\underline{h} \leq h(x(t), u(t), p) \leq \bar{h}, &&\quad t \in [0,\,T),\\
-                            & 						    &&\underline{x} \leq \Pi_{x}x(t) \leq \bar{x}, &&\quad t \in [0,\,T),\\
-                            & 						    &&\underline{u} \leq \Pi_{u}u(t) \leq \bar{u}, &&\quad t \in [0,\,T),\\
-                            & 						    &&\underline{c} \leq Cx(t) + Du(t)\leq \bar{c}, &&\quad t \in [0,\,T), \\
-                            &                           &&                                                   && \\[-1em]
-                            & 						    &&\underline{h}^e \leq h^e(x(T), p) \leq \bar{h}^e, &&\\
-                            & 						    &&\underline{x}^e \leq \Pi_{x}^e x(T) \leq \bar{x}^{e}, &&\\
-                            & 						    &&\underline{c}^e \leq C^e x(T)\leq \bar{c}^e, &&\\
+&\,\,\,\quad \text{s.t.}    &&x(0) - \bar{x}_0 = 0, &&\\
+&&&F(x(t), \dot{x}(t), u(t), z(t), p) = 0, &&\quad t \in [0,\,T),\\
+&&&\underline{h} \leq h(x(t), u(t), p) \leq \bar{h}, &&\quad t \in [0,\,T),\\
+&&&\underline{x} \leq \Pi_{x}x(t) \leq \bar{x}, &&\quad t \in [0,\,T),\\
+&&&\underline{u} \leq \Pi_{u}u(t) \leq \bar{u}, &&\quad t \in [0,\,T),\\
+&&&\underline{c} \leq Cx(t) + Du(t)\leq \bar{c}, &&\quad t \in [0,\,T), \\
+&&& && \\[-1em]
+&&&\underline{h}^e \leq h^e(x(T), p) \leq \bar{h}^e, &&\\
+&&&\underline{x}^e \leq \Pi_{x}^e x(T) \leq \bar{x}^{e}, &&\\
+&&&\underline{c}^e \leq C^e x(T)\leq \bar{c}^e, &&\\
 \end{aligned}
 \end{equation}
 ```
@@ -88,20 +88,21 @@ Currently not yet implemented features:
 * Constraints cannot depend on algebraic variables (yet)
 ```
 
-You can check out the examples folder to learn about  how to use acados_template.
-First of all, you need to compile and install acados without the qpDUNES, HPMPC and OSQP QP solvers running:
+
+### Installation
+1. Compile and install acados by running:
 ```bash
-cd <cmake_build_dir>
+cd <acados_root>/build
 cmake -DACADOS_WITH_QPDUNES=OFF -DACADOS_WITH_HPMPC=OFF -DACADOS_WITH_OSQP=OFF ..
-make install
+make install -j4
 ```
 
-Then, you will need to install acados_template Python package by running
+2. Install acados_template Python package by running
 ```
-pip install <acados_repo_root>/interfaces/acados_template
+pip install <acados_root>/interfaces/acados_template
 ```
 
-You should now be able to import it as a Python module and specify the problem formulation as in `examples/<example_name>/generate_c_code.py`
+You should now be able to import it as a Python module and use it as shown in the examples in `<acados_root>/examples/acados_template/python/<example_name>/generate_c_code.py`
 
 For more information contact `@zanellia`
 
@@ -120,3 +121,4 @@ For more information contact `@zanellia`
 
 ```
 ## acados embedded - MATLAB
+TODO!

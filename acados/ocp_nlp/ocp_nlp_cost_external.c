@@ -421,6 +421,24 @@ void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
 
 
 
+void ocp_nlp_cost_external_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_)
+{
+    ocp_nlp_cost_external_memory *memory = memory_;
+
+    memory->z_alg = z_alg;
+}
+
+
+
+void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, void *memory_)
+{
+    ocp_nlp_cost_external_memory *memory = memory_;
+
+    memory->dzdux_tran = dzdux_tran;
+}
+
+
+
 /************************************************
  * workspace
  ************************************************/
@@ -586,6 +604,8 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_cost_external_memory_assign;
     config->memory_get_grad_ptr = &ocp_nlp_cost_external_memory_get_grad_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_external_memory_set_ux_ptr;
+    config->memory_set_z_alg_ptr = &ocp_nlp_cost_external_memory_set_z_alg_ptr;
+    config->memory_set_dzdux_tran_ptr = &ocp_nlp_cost_external_memory_set_dzdux_tran_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_cost_external_memory_set_RSQrq_ptr;
     config->memory_set_Z_ptr = &ocp_nlp_cost_external_memory_set_Z_ptr;
     config->workspace_calculate_size = &ocp_nlp_cost_external_workspace_calculate_size;
