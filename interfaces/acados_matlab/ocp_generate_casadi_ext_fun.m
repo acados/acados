@@ -86,8 +86,13 @@ if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_
 		c_sources = [c_sources, model_name, '_cost_ext_cost_e_jac_hes.c '];
 	end
 end
-lib_name = ['libocp_model.so'];
+
+if ispc
+  lib_name = ['libocp_model.lib'];
+else
+  lib_name = ['libocp_model.so'];
+end
 system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 
-system(['mv *.c build/']);
-system(['mv *.so build/']);
+movefile('*.c', 'build')
+movefile(lib_name, 'build')
