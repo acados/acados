@@ -65,12 +65,12 @@ external_function_casadi * p_constraint;
 {% if dims.npdN > 0 %}
 external_function_casadi * p_constraint_N;
 {% endif %}
+{% endif %}
 {% if dims.nh > 0 %}
 external_function_casadi * h_constraint;
 {% endif %}
 {% if dims.nhN > 0 %}
 external_function_casadi * h_constraint_N;
-{% endif %}
 {% endif %}
 
 int main() {

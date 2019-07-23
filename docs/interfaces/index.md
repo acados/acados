@@ -17,7 +17,7 @@ exact Hessians, adjoint corrections, regularization, etc. However, for the time 
 generate a self-contained C library that can be deployed on an embedded system. For this purpose 
 see the `acados emebedded` high-level interface below. 
 
-Some examples for the use of this interface can be found in `<acados_dir>/examples/matlab_mex`
+Some examples for the use of this interface can be found in `<acados_root>/examples/matlab_mex`
 
 This interface uses the shared libraries created using the make command from the main acados folder
 
@@ -27,7 +27,7 @@ make acados_c_shared
 
 To run the examples, navigate into the selected folder, and there run the command
 ```
-export ACADOS_INSTALL_DIR="<your acados repo dir>"
+export ACADOS_INSTALL_DIR="<acados_root>"
 source env.sh # Which can be found in the folder of one of the examples
 ```
 
@@ -88,20 +88,21 @@ Currently not yet implemented features:
 * Constraints cannot depend on algebraic variables (yet)
 ```
 
-You can check out the examples folder to learn about how to use acados_template.
-First of all, you need to compile and install acados without the qpDUNES, HPMPC and OSQP QP solvers running:
+
+### Installation
+1. Compile and install acados by running:
 ```bash
-cd <cmake_build_dir>
+cd <acados_root>/build
 cmake -DACADOS_WITH_QPDUNES=OFF -DACADOS_WITH_HPMPC=OFF -DACADOS_WITH_OSQP=OFF ..
-make install
+make install -j4
 ```
 
-Then, you will need to install acados_template Python package by running
+2. Install acados_template Python package by running
 ```
-pip install <acados_repo_root>/interfaces/acados_template
+pip install <acados_root>/interfaces/acados_template
 ```
 
-You should now be able to import it as a Python module and specify the problem formulation as in `examples/<example_name>/generate_c_code.py`
+You should now be able to import it as a Python module and use it as shown in the examples in `<acados_root>/examples/acados_template/python/<example_name>/generate_c_code.py`
 
 For more information contact `@zanellia`
 

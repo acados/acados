@@ -65,12 +65,12 @@ external_function_casadi * p_constraint;
 {% if ocp.dims.npd_e > 0 %}
 external_function_casadi * p_constraint_e;
 {% endif %}
+{% endif %}
 {% if ocp.dims.nh > 0 %}
 external_function_casadi * h_constraint;
 {% endif %}
 {% if ocp.dims.nh_e > 0 %}
 external_function_casadi * h_constraint_e;
-{% endif %}
 {% endif %}
 
 int main() {
