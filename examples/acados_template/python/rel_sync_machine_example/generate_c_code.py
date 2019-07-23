@@ -219,12 +219,12 @@ ra.model_name = model.name
 
 if FORMULATION == 1:
     # constraints name
-    ra.con_h_name = constraint.name
+    ra.con_h = constraint
 
 if FORMULATION == 2:
     # constraints name
-    ra.con_h_name = constraint.name
-    ra.con_p_name = constraint_nl.name
+    ra.con_h = constraint
+    ra.con_p = constraint_nl
 
 # Ts  = 0.0016
 # Ts  = 0.0012
@@ -391,9 +391,9 @@ if CODE_GEN == 1:
     if FORMULATION == 0:
         acados_solver = generate_solver(model, ra, json_file = file_name)
     if FORMULATION == 1:
-        acados_solver = generate_solver(model, ra, con_h=constraint, json_file = file_name)
+        acados_solver = generate_solver(model, ra, json_file = file_name)
     if FORMULATION == 2:
-        acados_solver = generate_solver(model, ra, con_h=constraint, con_p=constraint_nl, json_file = file_name)
+        acados_solver = generate_solver(model, ra, json_file = file_name)
 
 if COMPILE == 1:
     # make 

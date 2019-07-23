@@ -15,5 +15,14 @@ class acados_constraint():
         self.x = None    #: CasADi variable describing the state of the system
         self.u = None    #: CasADi variable describing the input of the system
         self.z = None    #: CasADi variable describing the algebraic variables of the DAE
+        self.nc = None   #: number of constraints
         self.name = None #: name associated with the function
 
+def acados_constraint_strip_non_num(acados_constraint):
+    out = acados_constraint
+    del out['x']
+    del out['u']
+    del out['z']
+    del out['expr']
+    del out['nc']
+    return out

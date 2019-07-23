@@ -5,45 +5,8 @@ from .generate_c_code_constraint import *
 from .acados_ocp_nlp import *
 from ctypes import *
 
-def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_pN=None, json_file='acados_ocp_nlp.json'):
+def generate_solver(model, acados_ocp, json_file='acados_ocp_nlp.json'):
     USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
-
-    ocp_nlp = acados_ocp
-    ocp_nlp.cost = acados_ocp.cost.__dict__
-    ocp_nlp.constraints = acados_ocp.constraints.__dict__
-    ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
-    ocp_nlp.dims = acados_ocp.dims.__dict__
-    ocp_nlp.con_h = acados_ocp.con_h.__dict__
-    ocp_nlp.con_h_e = acados_ocp.con_h_e.__dict__
-    ocp_nlp.con_p = acados_ocp.con_p.__dict__
-    ocp_nlp.con_p_e = acados_ocp.con_p_e.__dict__
-    ocp_nlp = ocp_nlp.__dict__
-
-    ocp_nlp = dict2json(ocp_nlp)
-
-    with open(json_file, 'w') as f:
-        json.dump(ocp_nlp, f, default=np_array_to_list)
-
-    with open(json_file, 'r') as f:
-        ocp_nlp_json = json.load(f)
-
-    import pdb; pdb.set_trace()
-    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
-
-    acados_ocp = ocp_nlp_as_object(ocp_nlp_dict)
-    acados_ocp.cost = ocp_nlp_as_object(acados_ocp.cost)
-    acados_ocp.constraints = ocp_nlp_as_object(acados_ocp.constraints)
-    acados_ocp.solver_config = ocp_nlp_as_object(acados_ocp.solver_config)
-    acados_ocp.dims = ocp_nlp_as_object(acados_ocp.dims)
-
-    # setting up loader and environment
-    acados_path = os.path.dirname(os.path.abspath(__file__))
-    if USE_TERA == 0:
-        file_loader = FileSystemLoader(acados_path + '/c_templates')
-        env = Environment(loader = file_loader)
-    else:
-        template_glob = acados_path + '/c_templates_tera/*'
-        acados_template_path = acados_path + '/c_templates_tera'
 
     if acados_ocp.solver_config.integrator_type == 'ERK':
         # explicit model -- generate C code
@@ -62,7 +25,55 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
 
     if acados_ocp.con_p.name is not None:
         # convex part of nonlinear constraints 
+        import pdb; pdb.set_trace()
         generate_c_code_constraint(acados_ocp.con_p, '_p_constraint')
+
+    ocp_nlp = acados_ocp
+    ocp_nlp.cost = acados_ocp.cost.__dict__
+    ocp_nlp.constraints = acados_ocp.constraints.__dict__
+    ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
+    ocp_nlp.dims = acados_ocp.dims.__dict__
+    ocp_nlp.con_h = acados_ocp.con_h.__dict__
+    ocp_nlp.con_h_e = acados_ocp.con_h_e.__dict__
+    ocp_nlp.con_p = acados_ocp.con_p.__dict__
+    ocp_nlp.con_p_e = acados_ocp.con_p_e.__dict__
+    ocp_nlp = ocp_nlp.__dict__
+
+    # need to strip non-numerical stuff from expressions for now
+    ocp_nlp['con_h'] = acados_constraint_strip_non_num(ocp_nlp['con_h'])
+    ocp_nlp['con_p'] = acados_constraint_strip_non_num(ocp_nlp['con_p'])
+    ocp_nlp['con_h_e'] = acados_constraint_strip_non_num(ocp_nlp['con_h_e'])
+    ocp_nlp['con_p_e'] = acados_constraint_strip_non_num(ocp_nlp['con_p_e'])
+
+    ocp_nlp = dict2json(ocp_nlp)
+
+    with open(json_file, 'w') as f:
+        json.dump(ocp_nlp, f, default=np_array_to_list)
+
+    with open(json_file, 'r') as f:
+        ocp_nlp_json = json.load(f)
+
+    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
+    acados_ocp = ocp_nlp_as_object(ocp_nlp_dict)
+    acados_ocp.cost = ocp_nlp_as_object(acados_ocp.cost)
+    acados_ocp.constraints = ocp_nlp_as_object(acados_ocp.constraints)
+    acados_ocp.solver_config = ocp_nlp_as_object(acados_ocp.solver_config)
+    acados_ocp.dims = ocp_nlp_as_object(acados_ocp.dims)
+
+    acados_ocp.con_h = ocp_nlp_as_object(acados_ocp.con_h)
+    acados_ocp.con_h_e = ocp_nlp_as_object(acados_ocp.con_h_e)
+    acados_ocp.con_p = ocp_nlp_as_object(acados_ocp.con_p)
+    acados_ocp.con_p_e = ocp_nlp_as_object(acados_ocp.con_p_e)
+
+    # setting up loader and environment
+    acados_path = os.path.dirname(os.path.abspath(__file__))
+    if USE_TERA == 0:
+        file_loader = FileSystemLoader(acados_path + '/c_templates')
+        env = Environment(loader = file_loader)
+    else:
+        template_glob = acados_path + '/c_templates_tera/*'
+        acados_template_path = acados_path + '/c_templates_tera'
+
 
     # check render arguments
     check_ra(acados_ocp)

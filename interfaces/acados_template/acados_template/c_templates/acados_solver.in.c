@@ -33,10 +33,10 @@
 // example specific
 #include "{{ ocp.model_name }}_model/{{ ocp.model_name }}_model.h"
 {% if ocp.dims.npd > 0 %}
-#include "{{ ocp.con_p_name }}_p_constraint/{{ ocp.con_p_name }}_p_constraint.h"
+#include "{{ ocp.con_p.name }}_p_constraint/{{ ocp.con_p.name }}_p_constraint.h"
 {% endif %}
 {% if ocp.dims.nh > 0 %}
-#include "{{ ocp.con_h_name }}_h_constraint/{{ ocp.con_h_name }}_h_constraint.h"
+#include "{{ ocp.con_h.name }}_h_constraint/{{ ocp.con_h.name }}_h_constraint.h"
 {% endif %}
 
 #include "acados_solver_{{ ocp.model_name }}.h"
@@ -677,12 +677,12 @@ int acados_create() {
     p_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear part of convex-composite constraint
-        p_constraint[i].casadi_fun = &{{ ocp.con_p_name }}_p_constraint;
-        p_constraint[i].casadi_n_in = &{{ ocp.con_p_name }}_p_constraint_n_in;
-        p_constraint[i].casadi_n_out = &{{ ocp.con_p_name }}_p_constraint_n_out;
-        p_constraint[i].casadi_sparsity_in = &{{ ocp.con_p_name }}_p_constraint_sparsity_in;
-        p_constraint[i].casadi_sparsity_out = &{{ ocp.con_p_name }}_p_constraint_sparsity_out;
-        p_constraint[i].casadi_work = &{{ ocp.con_p_name }}_p_constraint_work;
+        p_constraint[i].casadi_fun = &{{ ocp.con_p.name }}_p_constraint;
+        p_constraint[i].casadi_n_in = &{{ ocp.con_p.name }}_p_constraint_n_in;
+        p_constraint[i].casadi_n_out = &{{ ocp.con_p.name }}_p_constraint_n_out;
+        p_constraint[i].casadi_sparsity_in = &{{ ocp.con_p.name }}_p_constraint_sparsity_in;
+        p_constraint[i].casadi_sparsity_out = &{{ ocp.con_p.name }}_p_constraint_sparsity_out;
+        p_constraint[i].casadi_work = &{{ ocp.con_p.name }}_p_constraint_work;
 
         external_function_casadi_create(&p_constraint[i]);
     }
@@ -691,12 +691,12 @@ int acados_create() {
     {%- if ocp.dims.npd_e > 0 %}
 	// nonlinear part of convex-composite constraint
 	external_function_casadi p_constraint_e;
-	p_constraint_e.casadi_fun = &{{ ocp.con_p_e_name }}_p_constraint_e;
-	p_constraint_e.casadi_n_in = &{{ ocp.con_p_e_name }}_p_constraint_e_n_in;
-	p_constraint_e.casadi_n_out = &{{ ocp.con_p_e_name }}_p_constraint_e_n_out;
-	p_constraint_e.casadi_sparsity_in = &{{ ocp.con_p_e_name }}_p_constraint_e_sparsity_in;
-	p_constraint_e.casadi_sparsity_out = &{{ ocp.con_p_e_name }}_p_constraint_e_sparsity_out;
-	p_constraint_e.casadi_work = &{{ ocp.con_p_e_name }}_p_constraint_e_work;
+	p_constraint_e.casadi_fun = &{{ ocp.con_p_e.name }}_p_constraint_e;
+	p_constraint_e.casadi_n_in = &{{ ocp.con_p_e.name }}_p_constraint_e_n_in;
+	p_constraint_e.casadi_n_out = &{{ ocp.con_p_e.name }}_p_constraint_e_n_out;
+	p_constraint_e.casadi_sparsity_in = &{{ ocp.con_p_e.name }}_p_constraint_e_sparsity_in;
+	p_constraint_e.casadi_sparsity_out = &{{ ocp.con_p_e.name }}_p_constraint_e_sparsity_out;
+	p_constraint_e.casadi_work = &{{ ocp.con_p_e.name }}_p_constraint_e_work;
 
     external_function_casadi_create(p_constraint_e);
     {%- endif %}
@@ -705,12 +705,12 @@ int acados_create() {
     h_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear constraint
-        h_constraint[i].casadi_fun = &{{ ocp.con_h_name }}_h_constraint;
-        h_constraint[i].casadi_n_in = &{{ ocp.con_h_name }}_h_constraint_n_in;
-        h_constraint[i].casadi_n_out = &{{ ocp.con_h_name }}_h_constraint_n_out;
-        h_constraint[i].casadi_sparsity_in = &{{ ocp.con_h_name }}_h_constraint_sparsity_in;
-        h_constraint[i].casadi_sparsity_out = &{{ ocp.con_h_name }}_h_constraint_sparsity_out;
-        h_constraint[i].casadi_work = &{{ ocp.con_h_name }}_h_constraint_work;
+        h_constraint[i].casadi_fun = &{{ ocp.con_h.name }}_h_constraint;
+        h_constraint[i].casadi_n_in = &{{ ocp.con_h.name }}_h_constraint_n_in;
+        h_constraint[i].casadi_n_out = &{{ ocp.con_h.name }}_h_constraint_n_out;
+        h_constraint[i].casadi_sparsity_in = &{{ ocp.con_h.name }}_h_constraint_sparsity_in;
+        h_constraint[i].casadi_sparsity_out = &{{ ocp.con_h.name }}_h_constraint_sparsity_out;
+        h_constraint[i].casadi_work = &{{ ocp.con_h.name }}_h_constraint_work;
 
         external_function_casadi_create(&h_constraint[i]);
     }
@@ -719,12 +719,12 @@ int acados_create() {
     {%- if ocp.dims.nh_e > 0 %}
 	// nonlinear constraint
 	external_function_casadi h_constraint_e;
-	h_constraint_e.casadi_fun = &{{ ocp.con_h_e_name }}_h_constraint_e;
-	h_constraint_e.casadi_n_in = &{{ ocp.con_h_e_name }}_h_constraint_e_n_in;
-	h_constraint_e.casadi_n_out = &{{ ocp.con_h_e_name }}_h_constraint_e_n_out;
-	h_constraint_e.casadi_sparsity_in = &{{ ocp.con_h_e_name }}_h_constraint_e_sparsity_in;
-	h_constraint_e.casadi_sparsity_out = &{{ ocp.con_h_e_name }}_h_constraint_e_sparsity_out;
-	p_constraint_e.casadi_work = &{{ ocp.con_h_e_name }}_h_constraint_e_work;
+	h_constraint_e.casadi_fun = &{{ ocp.con_h_e.name }}_h_constraint_e;
+	h_constraint_e.casadi_n_in = &{{ ocp.con_h_e.name }}_h_constraint_e_n_in;
+	h_constraint_e.casadi_n_out = &{{ ocp.con_h_e.name }}_h_constraint_e_n_out;
+	h_constraint_e.casadi_sparsity_in = &{{ ocp.con_h_e.name }}_h_constraint_e_sparsity_in;
+	h_constraint_e.casadi_sparsity_out = &{{ ocp.con_h_e.name }}_h_constraint_e_sparsity_out;
+	p_constraint_e.casadi_work = &{{ ocp.con_h_e.name }}_h_constraint_e_work;
 
     external_function_casadi_create(h_constraint_e);
     {%- endif %}
