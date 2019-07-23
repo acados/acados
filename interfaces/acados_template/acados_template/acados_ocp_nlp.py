@@ -1042,7 +1042,7 @@ class ocp_nlp_solver_config:
 
 class acados_ocp_nlp:
     """
-    class containing the full description if the optimal control problem
+    class containing the full description of the optimal control problem
     """
     def __init__(self):
         self.dims = ocp_nlp_dims()
@@ -1050,10 +1050,14 @@ class acados_ocp_nlp:
         self.constraints = ocp_nlp_constraints()
         self.solver_config = ocp_nlp_solver_config()
         self.model_name  = None 
-        self.con_p_name  = None 
-        self.con_p_e_name = None 
-        self.con_h_name  = None 
-        self.con_h_e_name = None 
+        # self.con_p_name  = None 
+        # self.con_p_e_name = None 
+        # self.con_h_name  = None 
+        # self.con_h_e_name = None 
+        self.con_p   = ocp_nlp_constraint() 
+        self.con_p_e = ocp_nlp_constraint() 
+        self.con_h   = ocp_nlp_constraint() 
+        self.con_h_e = ocp_nlp_constraint() 
         # self.constants = {}
         self.acados_include_path = []
         self.acados_lib_path = []
@@ -1098,7 +1102,7 @@ def dict2json(d):
     return out
 
 def acados_ocp2json_layout(acados_ocp):
-    """ Convert acados ocp nlp object JSON format by stripping the 
+    """ Convert acados ocp nlp object to JSON format by stripping the 
     property mangling and adding array dimension info.
     ALL items of type String will be converted 
     to type ndarrray!

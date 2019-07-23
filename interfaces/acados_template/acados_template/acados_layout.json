@@ -5,12 +5,16 @@
     "acados_lib_path": [
         "str"
     ],
-    "con_h_e_name": [
-        "NoneType"
-    ],
-    "con_h_name": [
-        "NoneType"
-    ],
+    "con_h": [
+        "name": [
+            "NoneType"
+            ],   
+        ],
+    "con_h_e": [
+        "name": [
+            "NoneType"
+            ],   
+        ],
     "con_p_e_name": [
         "NoneType"
     ],
