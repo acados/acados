@@ -13,6 +13,10 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
     ocp_nlp.constraints = acados_ocp.constraints.__dict__
     ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
     ocp_nlp.dims = acados_ocp.dims.__dict__
+    ocp_nlp.con_h = acados_ocp.con_h.__dict__
+    ocp_nlp.con_h_e = acados_ocp.con_h_e.__dict__
+    ocp_nlp.con_p = acados_ocp.con_p.__dict__
+    ocp_nlp.con_p_e = acados_ocp.con_p_e.__dict__
     ocp_nlp = ocp_nlp.__dict__
 
     ocp_nlp = dict2json(ocp_nlp)
@@ -23,6 +27,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
     with open(json_file, 'r') as f:
         ocp_nlp_json = json.load(f)
 
+    import pdb; pdb.set_trace()
     ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
 
     acados_ocp = ocp_nlp_as_object(ocp_nlp_dict)

@@ -2,6 +2,7 @@ import numpy as np
 import json
 import os
 import sys
+from .casadi_functions import *
 
 class ocp_nlp_dims:
     """
@@ -1054,10 +1055,10 @@ class acados_ocp_nlp:
         # self.con_p_e_name = None 
         # self.con_h_name  = None 
         # self.con_h_e_name = None 
-        self.con_p   = ocp_nlp_constraint() 
-        self.con_p_e = ocp_nlp_constraint() 
-        self.con_h   = ocp_nlp_constraint() 
-        self.con_h_e = ocp_nlp_constraint() 
+        self.con_p   = acados_constraint() 
+        self.con_p_e = acados_constraint() 
+        self.con_h   = acados_constraint() 
+        self.con_h_e = acados_constraint() 
         # self.constants = {}
         self.acados_include_path = []
         self.acados_lib_path = []

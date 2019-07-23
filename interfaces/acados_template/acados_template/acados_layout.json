@@ -2,31 +2,35 @@
     "acados_include_path": [
         "str"
     ],
+    "con_h": {
+        "name"   : [
+            "NoneType"
+            ]   
+    },
+    "con_h_e": {
+        "name": [
+            "NoneType"
+            ]   
+    },
+    "con_p_e": {
+        "name" : [
+            "NoneType"
+        ]
+     },
+     "con_p": {
+         "name" : [
+            "NoneType"
+        ]
+    },
     "acados_lib_path": [
         "str"
     ],
-    "con_h": [
-        "name": [
-            "NoneType"
-            ],   
-        ],
-    "con_h_e": [
-        "name": [
-            "NoneType"
-            ],   
-        ],
-    "con_p_e_name": [
-        "NoneType"
-    ],
-    "con_p_name": [
-        "NoneType"
-    ],
     "constraints": {
         "constr_type": [
-            "str",
+            "str"
         ],
         "constr_type_e": [
-            "str",
+            "str"
         ],
         "lbx": [
             "ndarray",
@@ -256,10 +260,10 @@
     },
     "cost": {
         "cost_type": [
-            "str",
+            "str"
         ],
         "cost_type_e": [
-            "str",
+            "str"
         ],
         "Vu": [
             "ndarray",
