@@ -18,6 +18,12 @@
         "NoneType"
     ],
     "constraints": {
+        "constr_type": [
+            "str",
+        ],
+        "constr_type_e": [
+            "str",
+        ],
         "lbx": [
             "ndarray",
                 [
@@ -245,6 +251,12 @@
         ]
     },
     "cost": {
+        "cost_type": [
+            "str",
+        ],
+        "cost_type_e": [
+            "str",
+        ],
         "Vu": [
             "ndarray",
             [

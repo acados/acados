@@ -1,5 +1,7 @@
 classdef ocp_nlp_constraints_json < handle
     properties
+        constr_type
+        constr_type_e
         % bounds on x and u
         lbx     % lower bounds on x
         lbu     % lower bounds on u
@@ -49,35 +51,37 @@ classdef ocp_nlp_constraints_json < handle
     end
     methods
         function obj = ocp_nlp_constraints()
-            obj.lbx     = [];  
-            obj.lbu     = [];
-            obj.idxbx   = [];
-            obj.ubx     = [];
-            obj.ubu     = [];
-            obj.idxbu   = [];
-            obj.lsbx    = [];  
-            obj.lsbu    = [];
-            obj.idxsbx  = [];
-            obj.usbx    = [];
-            obj.usbu    = [];
-            obj.idxsbu  = [];
-            obj.lsbx_e   = [];  
-            obj.idxsbx_e = [];
-            obj.lg      = [];
-            obj.ug      = [];
-            obj.lh      = [];
-            obj.uh      = [];
-            obj.D       = [];
-            obj.C       = [];
-            obj.lbx_e    = [];
-            obj.ubx_e    = [];
-            obj.idxbx_e  = [];
-            obj.C_e      = [];
-            obj.lg_e     = [];
-            obj.ug_e     = [];
-            obj.lh_e     = [];
-            obj.uh_e     = [];
-            obj.x0      = [];
+            obj.constr_type     = 'BGH';  
+            obj.constr_type_e   = 'BGH';  
+            obj.lbx             = [];  
+            obj.lbu             = [];
+            obj.idxbx           = [];
+            obj.ubx             = [];
+            obj.ubu             = [];
+            obj.idxbu           = [];
+            obj.lsbx            = [];  
+            obj.lsbu            = [];
+            obj.idxsbx          = [];
+            obj.usbx            = [];
+            obj.usbu            = [];
+            obj.idxsbu          = [];
+            obj.lsbx_e          = [];  
+            obj.idxsbx_e        = [];
+            obj.lg              = [];
+            obj.ug              = [];
+            obj.lh              = [];
+            obj.uh              = [];
+            obj.D               = [];
+            obj.C               = [];
+            obj.lbx_e           = [];
+            obj.ubx_e           = [];
+            obj.idxbx_e         = [];
+            obj.C_e             = [];
+            obj.lg_e            = [];
+            obj.ug_e            = [];
+            obj.lh_e            = [];
+            obj.uh_e            = [];
+            obj.x0              = [];
         end
     end
 end
