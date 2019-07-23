@@ -350,7 +350,7 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     // fun
     assign_and_advance_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
 
-    // z
+    // z_out
     assign_and_advance_blasfeo_dvec_mem(nz, &memory->z_out, &c_ptr);
 
     // blasfeo_mem align
@@ -632,11 +632,12 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     work->sim_in->model = model->sim_model;
     work->sim_in->T = model->T;
 
-    blasfeo_unpack_dvec(nz, mem->z, 0, work->sim_in->z);
-
     // pass state and control to integrator
     blasfeo_unpack_dvec(nu, mem->ux, 0, work->sim_in->u);
     blasfeo_unpack_dvec(nx, mem->ux, nu, work->sim_in->x);
+
+	// pass guess on z to integrator
+    blasfeo_unpack_dvec(nz, mem->z, 0, work->sim_in->z); // TODO rename {mem,sim_in}->z => z_guess
 
     // initialize seeds
     // TODO fix dims if nx!=nx1 !!!!!!!!!!!!!!!!!
@@ -669,8 +670,8 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 
     // function
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
-    blasfeo_pack_dvec(nz, work->sim_out->zn, &mem->z_out, 0);
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
+    blasfeo_pack_dvec(nz, work->sim_out->zn, &mem->z_out, 0); // TODO rename sim_out->zn into z0n ???
 
     // adjoint
     if (opts->compute_adj)

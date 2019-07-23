@@ -1139,13 +1139,9 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
         config->cost[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->cost[ii]);
         if (dims->nz[ii] > 0) {
-            config->cost[ii]->memory_set_z_alg_ptr(
-                    &(((ocp_nlp_dynamics_cont_memory *)
-                    mem->dynamics[ii])->z_out), mem->cost[ii]);
-
-            config->cost[ii]->memory_set_dzdux_tran_ptr(
-                    &(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->dzdux_tran),
-                    mem->cost[ii]);
+			// TODO fix creating dynamics->memory_get !!!!!!!!!!!! or add these terms in nlp work alongside qp_in ???
+            config->cost[ii]->memory_set_z_alg_ptr(&(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->z_out), mem->cost[ii]);
+            config->cost[ii]->memory_set_dzdux_tran_ptr(&(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->dzdux_tran), mem->cost[ii]);
         }
         config->cost[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii, mem->cost[ii]);
         config->cost[ii]->memory_set_Z_ptr(work->qp_in->Z + ii, mem->cost[ii]);
