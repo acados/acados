@@ -3,7 +3,7 @@ classdef acados_ocp_model < handle
 	properties
 		model_struct
         acados_ocp_nlp_json
-	end %properties
+	end % properties
 
 
 
@@ -20,7 +20,7 @@ classdef acados_ocp_model < handle
 			obj.model_struct.dyn_type = 'implicit';
 			obj.model_struct.constr_type = 'bgh';
             % JSON data
-            obj.acados_ocp_nlp_json = acados_template_mex.acados_ocp_nlp_json()
+            obj.acados_ocp_nlp_json = acados_template_mex.acados_ocp_nlp_json();
 		end
 
 
@@ -53,8 +53,10 @@ classdef acados_ocp_model < handle
 
 				if (strcmp(field, 'cost_type'))
 					obj.model_struct.cost_type = value;
+					obj.acados_ocp_nlp_json.cost.cost_type = upper(value);
 				elseif (strcmp(field, 'cost_type_e'))
 					obj.model_struct.cost_type_e = value;
+					obj.acados_ocp_nlp_json.cost.cost_type_e = upper(value);
 				elseif (strcmp(field, 'cost_expr_y'))
 					obj.model_struct.cost_expr_y = value;
 				elseif (strcmp(field, 'cost_expr_y_e'))
@@ -140,6 +142,7 @@ classdef acados_ocp_model < handle
 
 				if (strcmp(field, 'constr_type'))
 					obj.model_struct.constr_type = value;
+					obj.acados_ocp_nlp_json.constraints.constr_type = upper(value);
 				elseif (strcmp(field, 'constr_x0'))
 					obj.model_struct.constr_x0 = value;
                     obj.acados_ocp_nlp_json.constraints.x0 = value;
@@ -307,7 +310,7 @@ classdef acados_ocp_model < handle
 					obj.model_struct.name = value;
 				elseif (strcmp(field, 'T'))
 					obj.model_struct.T = value;
-
+  					obj.acados_ocp_nlp_json.solver_config.tf = value;
 				else
 					disp(['acados_ocp_model: set: wrong field: ', field]);
 					keyboard;

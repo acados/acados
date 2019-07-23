@@ -297,7 +297,7 @@ class ocp_nlp_cost:
     """
     def __init__(self):
         # Lagrange term
-        self.__cost_type   = 'linear_ls'  #: cost type
+        self.__cost_type   = 'LINEAR_LS'  #: cost type
         self.__W           = []           #: :math:`W` - weight matrix
         self.__Vx          = []           #: :math:`V_x` - x matrix coefficient
         self.__Vu          = []           #: :math:`V_u` - u matrix coefficient
@@ -308,7 +308,7 @@ class ocp_nlp_cost:
         self.__zl          = []           #: :math:`z_l` - gradient wrt lower slack 
         self.__zu          = []           #: :math:`z_u` - gradient wrt upper slack 
         # Mayer term
-        self.__cost_type_e = 'linear_ls'  #: cost type for Mayer term
+        self.__cost_type_e = 'LINEAR_LS'  #: cost type for Mayer term
         self.__W_e         = []           #: :math:`W^e` - weight matrix for Mayer term
         self.__Vx_e        = []           #: :math:`V_x^e` - x matrix coefficient for Mayer term
         self.__yref_e      = []           #: :math:`y_{\text{ref}}^e` - reference for Mayer term
