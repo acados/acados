@@ -297,25 +297,31 @@ class ocp_nlp_cost:
     """
     def __init__(self):
         # Lagrange term
-        self.__W     = []  #: :math:`W` - weight matrix
-        self.__Vx    = []  #: :math:`V_x` - x matrix coefficient
-        self.__Vu    = []  #: :math:`V_u` - u matrix coefficient
-        self.__Vz    = []  #: :math:`V_z` - z matrix coefficient
-        self.__yref  = []  #: :math:`y_{\text{ref}}` - reference
-        self.__Zl    = []  #: :math:`Z_l` - Hessian wrt lower slack 
-        self.__Zu    = []  #: :math:`Z_u` - Hessian wrt upper slack 
-        self.__zl    = []  #: :math:`z_l` - gradient wrt lower slack 
-        self.__zu    = []  #: :math:`z_u` - gradient wrt upper slack 
+        self.__cost_type   = 'linear_ls'  #: cost type
+        self.__W           = []           #: :math:`W` - weight matrix
+        self.__Vx          = []           #: :math:`V_x` - x matrix coefficient
+        self.__Vu          = []           #: :math:`V_u` - u matrix coefficient
+        self.__Vz          = []           #: :math:`V_z` - z matrix coefficient
+        self.__yref        = []           #: :math:`y_{\text{ref}}` - reference
+        self.__Zl          = []           #: :math:`Z_l` - Hessian wrt lower slack 
+        self.__Zu          = []           #: :math:`Z_u` - Hessian wrt upper slack 
+        self.__zl          = []           #: :math:`z_l` - gradient wrt lower slack 
+        self.__zu          = []           #: :math:`z_u` - gradient wrt upper slack 
         # Mayer term
-        self.__W_e    = []  #: :math:`W^e` - weight matrix for Mayer term
-        self.__Vx_e   = []  #: :math:`V_x^e` - x matrix coefficient for Mayer term
-        self.__yref_e = []  #: :math:`y_{\text{ref}}^e` - reference for Mayer term
-        self.__Zl_e   = []  #: :math:`Z_l^e` - Hessian wrt lower slack for Mayer term
-        self.__Zu_e   = []  #: :math:`Z_u^e` - Hessian wrt upper slack for Mayer term
-        self.__zl_e   = []  #: :math:`z_l^e` - gradient wrt lower slack for Mayer term
-        self.__zu_e   = []  #: :math:`z_u^e` - gradient wrt upper slack for Mayer term
+        self.__cost_type_e = 'linear_ls'  #: cost type for Mayer term
+        self.__W_e         = []           #: :math:`W^e` - weight matrix for Mayer term
+        self.__Vx_e        = []           #: :math:`V_x^e` - x matrix coefficient for Mayer term
+        self.__yref_e      = []           #: :math:`y_{\text{ref}}^e` - reference for Mayer term
+        self.__Zl_e        = []           #: :math:`Z_l^e` - Hessian wrt lower slack for Mayer term
+        self.__Zu_e        = []           #: :math:`Z_u^e` - Hessian wrt upper slack for Mayer term
+        self.__zl_e        = []           #: :math:`z_l^e` - gradient wrt lower slack for Mayer term
+        self.__zu_e        = []           #: :math:`z_u^e` - gradient wrt upper slack for Mayer term
 
     # Lagrange term
+    @property
+    def cost_type(self):
+        return self.__cost_type
+
     @property
     def W(self):
         return self.__W
@@ -351,6 +357,15 @@ class ocp_nlp_cost:
     @property
     def zu(self):
         return self.__zu
+
+    @cost_type.setter
+    def cost_type(self, cost_type):
+        cost_types = ('LINEAR_LS')
+
+        if type(cost_type) == str and cost_type in cost_types:
+            self.__cost_type = cost_type
+        else:
+            raise Exception('Invalid cost_type value. Exiting.')
 
     @W.setter
     def W(self, W):
@@ -417,6 +432,10 @@ class ocp_nlp_cost:
 
     # Mayer term
     @property
+    def cost_type_e(self):
+        return self.__cost_type_e
+
+    @property
     def W_e(self):
         return self.__W_e
 
@@ -443,6 +462,15 @@ class ocp_nlp_cost:
     @property
     def zu_e(self):
         return self.__zu_e
+
+    @cost_type_e.setter
+    def cost_type_e(self, cost_type_e):
+        cost_types = ('LINEAR_LS')
+
+        if type(cost_type_e) == str and cost_type_e in cost_types:
+            self.__cost_type_e = cost_type_e
+        else:
+            raise Exception('Invalid cost_type_e value. Exiting.')
 
     @W_e.setter
     def W_e(self, W_e):
@@ -501,53 +529,55 @@ class ocp_nlp_constraints:
     class containing the description of the constraints
     """
     def __init__(self):
+        self.__constr_type   = 'BGH' #: constraint type
+        self.__constr_type_e = 'BGH' #: constraint type
         # bounds on x and u
-        self.__lbx     = []  #: :math:`\underline{x}` - lower bounds on x
-        self.__lbu     = []  #: :math:`\underline{u}` - lower bounds on u
-        self.__ubx     = []  #: :math:`\bar{x}` - upper bounds on x 
-        self.__ubu     = []  #: :math:`\bar{u}` - upper bounds on u 
-        self.__idxbx   = []  #: indexes of bounds on x (defines :math:`\Pi_x`) 
-        self.__idxbu   = []  #: indexes of bounds on u (defines :math:`\Pi_u`)
+        self.__lbx     = []        #: :math:`\underline{x}` - lower bounds on x
+        self.__lbu     = []        #: :math:`\underline{u}` - lower bounds on u
+        self.__ubx     = []        #: :math:`\bar{x}` - upper bounds on x 
+        self.__ubu     = []        #: :math:`\bar{u}` - upper bounds on u 
+        self.__idxbx   = []        #: indexes of bounds on x (defines :math:`\Pi_x`) 
+        self.__idxbu   = []        #: indexes of bounds on u (defines :math:`\Pi_u`)
         # bounds on x at t=T
-        self.__lbx_e   = []  #: :math:`\underline{x}^e` - lower bounds on x at t=T 
-        self.__ubx_e   = []  #: :math:`\bar{x}^e` - upper bounds on x at t=T 
-        self.__idxbx_e = []  #: indexes for bounds on x at t=T (defines :math:`\Pi_x^e`) 
+        self.__lbx_e   = []        #: :math:`\underline{x}^e` - lower bounds on x at t=T 
+        self.__ubx_e   = []        #: :math:`\bar{x}^e` - upper bounds on x at t=T 
+        self.__idxbx_e = []        #: indexes for bounds on x at t=T (defines :math:`\Pi_x^e`) 
         # soft bounds on x and u
-        self.__lsbx   = []  #: soft lower bounds on x
-        self.__lsbu   = []  #: soft lower bounds on u
-        self.__usbx   = []  #: soft upper bounds on x 
-        self.__usbu   = []  #: soft upper bounds on u 
-        self.__idxsbx = []  #: indexes of soft bounds on x 
-        self.__idxsbu = []  #: indexes of soft bounds on u
+        self.__lsbx   = []         #: soft lower bounds on x
+        self.__lsbu   = []         #: soft lower bounds on u
+        self.__usbx   = []         #: soft upper bounds on x 
+        self.__usbu   = []         #: soft upper bounds on u 
+        self.__idxsbx = []         #: indexes of soft bounds on x 
+        self.__idxsbu = []         #: indexes of soft bounds on u
         # soft bounds on nonlinear constraints
-        self.__lsh    = []  #: soft lower bounds for nonlinear constraints 
-        self.__ush    = []  #: soft upper bounds for nonlinear constraints 
-        self.__idxsh  = []  #: indexes of soft nonlinear constraints 
+        self.__lsh    = []         #: soft lower bounds for nonlinear constraints 
+        self.__ush    = []         #: soft upper bounds for nonlinear constraints 
+        self.__idxsh  = []         #: indexes of soft nonlinear constraints 
         # soft bounds on x and u at t=T
-        self.__lsbx_e  = []  #: soft lower bounds on x at t=T
-        self.__usbx_e  = []  #: soft upper bounds on x at t=T
-        self.__idxsbx_e= []  #: indexes of soft bounds on x at t=T 
+        self.__lsbx_e  = []        #: soft lower bounds on x at t=T
+        self.__usbx_e  = []        #: soft upper bounds on x at t=T
+        self.__idxsbx_e= []        #: indexes of soft bounds on x at t=T 
         # soft bounds on nonlinear constraints
-        self.__lsh_e    = []  #: soft lower bounds for nonlinear constraints 
-        self.__ush_e    = []  #: soft upper bounds for nonlinear constraints 
-        self.__idxsh_e  = []  #: indexes of soft nonlinear constraints at t=T 
+        self.__lsh_e    = []       #: soft lower bounds for nonlinear constraints 
+        self.__ush_e    = []       #: soft upper bounds for nonlinear constraints 
+        self.__idxsh_e  = []       #: indexes of soft nonlinear constraints at t=T 
         # polytopic constraints 
-        self.__lg      = []  #: :math:`\underline{c}` - lower bound for general polytopic inequalities 
-        self.__ug      = []  #: :math:`\bar{c}` - upper bound for general polytopic inequalities 
-        self.__D       = []  #: :math:`D` - D matrix in lg <= D * u + C * x <= ug
-        self.__C       = []  #: :math:`C` - C matrix in lg <= D * u + C * x <= ug
+        self.__lg      = []        #: :math:`\underline{c}` - lower bound for general polytopic inequalities 
+        self.__ug      = []        #: :math:`\bar{c}` - upper bound for general polytopic inequalities 
+        self.__D       = []        #: :math:`D` - D matrix in lg <= D * u + C * x <= ug
+        self.__C       = []        #: :math:`C` - C matrix in lg <= D * u + C * x <= ug
         # polytopic constraints at t=T 
-        self.__C_e     = []  #: :math:`C^e` - C matrix at t=T 
-        self.__lg_e    = []  #: :math:`\underline{c}^e` - lower bound on general polytopic inequalities at t=T 
-        self.__ug_e    = []  #: :math:`\bar{c}^e` - upper bound on general polytopic inequalities at t=T 
+        self.__C_e     = []        #: :math:`C^e` - C matrix at t=T 
+        self.__lg_e    = []        #: :math:`\underline{c}^e` - lower bound on general polytopic inequalities at t=T 
+        self.__ug_e    = []        #: :math:`\bar{c}^e` - upper bound on general polytopic inequalities at t=T 
         # nonlinear constraints
-        self.__lh      = []  #: :math:`\underline{h}` - lower bound for nonlinear inequalities 
-        self.__uh      = []  #: :math:`\bar{h}` - upper bound for nonlinear inequalities 
+        self.__lh      = []        #: :math:`\underline{h}` - lower bound for nonlinear inequalities 
+        self.__uh      = []        #: :math:`\bar{h}` - upper bound for nonlinear inequalities 
         # nonlinear constraints at t=T
-        self.__uh_e    = []  #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
-        self.__lh_e    = []  #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
-        self.__x0      = []  #: :math:`\bar{x}_0` - initial state 
-        self.__p       = []  #: :math:`p` - parameters 
+        self.__uh_e    = []        #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
+        self.__lh_e    = []        #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
+        self.__x0      = []        #: :math:`\bar{x}_0` - initial state 
+        self.__p       = []        #: :math:`p` - parameters 
 
     @property
     def lbx(self):

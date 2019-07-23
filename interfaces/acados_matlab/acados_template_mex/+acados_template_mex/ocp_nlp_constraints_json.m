@@ -22,6 +22,14 @@ classdef ocp_nlp_constraints_json < handle
         lsbx_e   % soft lower bounds on x at t=T
         usbx_e   % soft upper bounds on x at t=T
         idxsbx_e % indexes of soft bounds on x at t=T 
+        % soft bounds on nonlinear constraints 
+        lsh     % soft lower bounds for nonlinear constraints 
+        ush     % soft upper bounds for nonlinear constraints 
+        idxsh   % indexes of soft nonlinear constraints at t=T 
+        % soft bounds on nonlinear constraints at t=T
+        lsh_e    % soft lower bounds for nonlinear constraints 
+        ush_e    % soft upper bounds for nonlinear constraints 
+        idxsh_e  % indexes of soft nonlinear constraints at t=T 
         % polytopic constraints 
         D       % D matrix in lg <= D * u + C * x <= ug
         C       % C matrix in lg <= D * u + C * x <= ug

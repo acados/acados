@@ -289,8 +289,10 @@ classdef acados_ocp_model < handle
 					obj.model_struct.dim_nsg_e = value;
 				elseif (strcmp(field, 'dim_nsh'))
 					obj.model_struct.dim_nsh = value;
+					obj.acados_ocp_nlp_json.dims.nsh = value;
 				elseif (strcmp(field, 'dim_nsh_e'))
 					obj.model_struct.dim_nsh_e = value;
+					obj.acados_ocp_nlp_json.dims.nsh_e = value;
 				elseif (strcmp(field, 'dim_np'))
 					obj.model_struct.dim_np = value;
 				else
