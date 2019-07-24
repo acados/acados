@@ -1,6 +1,6 @@
-function generate_get_gnsf_structure(model)
+function generate_get_gnsf_structure(model, build_dir)
 
-fileID = fopen('build/get_gnsf_structure.m', 'w');
+fileID = fopen(fullfile(build_dir, 'get_gnsf_structure.m'), 'w');
 
 fprintf(fileID, 'function model = get_gnsf_structure(model)\n');
 fprintf(fileID, 'model.dim_gnsf_nx1 = %d;\n', model.dim_gnsf_nx1);

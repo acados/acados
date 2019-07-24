@@ -26,7 +26,7 @@ classdef acados_ocp < handle
 			if (strcmp(obj.opts_struct.sim_method, 'irk_gnsf'))
 				if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))
 					obj.model_struct = detect_gnsf_structure(obj.model_struct);
-					generate_get_gnsf_structure(obj.model_struct);
+					generate_get_gnsf_structure(obj.model_struct, build_dir);
 				else
 					obj.model_struct = get_gnsf_structure(obj.model_struct);
 				end
