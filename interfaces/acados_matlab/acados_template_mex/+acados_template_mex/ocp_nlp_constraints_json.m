@@ -47,6 +47,7 @@ classdef ocp_nlp_constraints_json < handle
         % nonlinear constraints at t=T
         lh_e     % lower bound on nonlinear inequalities at t=T 
         uh_e     % upper bound on nonlinear inequalities at t=T 
+        p       % nominal value of the parameter 
         x0      % initial state 
     end
     methods
@@ -82,6 +83,7 @@ classdef ocp_nlp_constraints_json < handle
             obj.lh_e            = [];
             obj.uh_e            = [];
             obj.x0              = [];
+            obj.p              = [];
         end
     end
 end

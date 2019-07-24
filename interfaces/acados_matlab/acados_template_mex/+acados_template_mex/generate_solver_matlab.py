@@ -9,7 +9,6 @@ def generate_solver_matlab(acados_ocp_nlp_json_file):
     USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
 
     acados_path = os.path.dirname(acados_template.__file__)
-    import pdb; pdb.set_trace()
     # load MATLAB JSON file instead
     acados_ocp_nlp_json_file = acados_ocp_nlp_json_file[0]
     with open(acados_ocp_nlp_json_file, 'r') as f:

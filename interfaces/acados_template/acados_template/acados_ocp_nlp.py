@@ -1225,8 +1225,6 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
     """
     out = {}
     for k, v in ocp_nlp.items():
-        print("k= ", k)
-        print("v =", v)
         if isinstance(v, dict):
             v = json2dict_rec(v, ocp_nlp_dims, ocp_nlp_layout[k])
 
@@ -1234,8 +1232,6 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
         out_key = k.split('__', 1)[-1]
         v_type = out_key.split('__')[0]
         out_key = out_key.split('__', 1)[-1]
-        if k == 'lh':
-            import pdb; pdb.set_trace()
         if 'ndarray' in ocp_nlp_layout[k]:
             if isinstance(v, int) or isinstance(v, float):
                 v = np.array([v])
@@ -1247,7 +1243,6 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
                 dims_l.append(ocp_nlp_dims[item])
                 dims_names.append(item)
             dims = tuple(dims_l)
-            print(v)
             if v == []:
                 # v = None
                 try: 

@@ -117,31 +117,76 @@ classdef acados_ocp < handle
             obj.acados_ocp_nlp_json.con_p_e = con_p_e;
             
             % post process numerical data (mostly cast scalars to 1-dimensional cells)
-            temp = obj.acados_ocp_nlp_json.constraints;
-            props = properties(temp);
+            constr = obj.acados_ocp_nlp_json.constraints;
+            props = properties(constr);
             for iprop = 1:length(props)
                 thisprop = props{iprop};
                 %%%Add logic here if you want to work with select properties
-                thisprop_value = temp.(thisprop);
+                thisprop_value = constr.(thisprop);
                 %%%Add logic here if you want to do something based on the property's value
                 if size(thisprop_value) == [1 1]
-                    temp.(thisprop) = num2cell(temp.(thisprop));
+                    constr.(thisprop) = num2cell(constr.(thisprop));
                 end
             end
-            obj.acados_ocp_nlp_json.constraints = temp;
+            obj.acados_ocp_nlp_json.constraints = constr;
             
-            temp = obj.acados_ocp_nlp_json.cost;
-            props = properties(temp);
+            cost = obj.acados_ocp_nlp_json.cost;
+            props = properties(cost);
             for iprop = 1:length(props)
                 thisprop = props{iprop};
                 %%%Add logic here if you want to work with select properties
-                thisprop_value = temp.(thisprop);
+                thisprop_value = cost.(thisprop);
                 %%%Add logic here if you want to do something based on the property's value
-                if size(thisprop_value) == [1 1]
-                    temp.(thisprop) = num2cell(temp.(thisprop));
+                if norm(size(thisprop_value) - [1, 1]) == 0
+                    cost.(thisprop) = num2cell(cost.(thisprop));
                 end
             end
-            obj.acados_ocp_nlp_json.cost = temp;
+            obj.acados_ocp_nlp_json.cost = cost;
+            
+            % load JSON layout
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            acados_layout = jsondecode(fileread([acados_folder, '/interfaces/acados_template/acados_template/acados_layout.json']));
+            
+            dims = obj.acados_ocp_nlp_json.dims;
+            % reshape constraints
+            constr = obj.acados_ocp_nlp_json.constraints;
+            constr_l = acados_layout.constraints;
+            fields = fieldnames(constr_l);
+            for i = 1:numel(fields)
+                if strcmp(constr_l.(fields{i}){1}, 'ndarray')
+                    if length(constr_l.(fields{i}){2}) == 1
+                        this_dims = [dims.(constr_l.(fields{i}){2}{1}), 1];
+                    else
+                        this_dims = [dims.(constr_l.(fields{i}){2}{1}), dims.(constr_l.(fields{i}){2}{1})];
+                    end
+                    constr.(fields{i}) = reshape(constr.(fields{i}), this_dims);
+                end
+            end
+            obj.acados_ocp_nlp_json.constraints = constr;
+            
+            % reshape cost
+            cost = obj.acados_ocp_nlp_json.cost;
+            cost_l = acados_layout.cost;
+            fields = fieldnames(cost_l);
+            for i = 1:numel(fields)
+                if strcmp(cost_l.(fields{i}){1}, 'ndarray')
+                    if length(cost_l.(fields{i}){2}) == 1
+                        this_dims = [dims.(cost_l.(fields{i}){2}{1}), 1];
+                    else
+                        this_dims = [dims.(cost_l.(fields{i}){2}{1}), dims.(cost_l.(fields{i}){2}{2})];
+                    end
+                    cost.(fields{i}) = reshape(cost.(fields{i}), this_dims);
+                    % convert 1-dimensional arrays to cells
+                    if length(cost_l.(fields{i}){2}) == 2 && (this_dims(1) == 1 || this_dims(2) == 1)
+                        field_as_cell = {};
+                        for j = 1:max(this_dims(1), this_dims(2))
+                            field_as_cell{end+1} = num2cell(cost.(fields{i})(j));
+                        end
+                        cost.(fields{i}) = field_as_cell;
+                    end
+                end
+            end
+            obj.acados_ocp_nlp_json.cost = cost;
             
             % dump JSON file
             json_string = jsonencode(obj.acados_ocp_nlp_json);
