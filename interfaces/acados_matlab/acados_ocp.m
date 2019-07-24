@@ -16,28 +16,7 @@ classdef acados_ocp < handle
 			obj.model_struct = model.model_struct;
 			obj.opts_struct = opts.opts_struct;
 
-			% clear mex functions (if loaded from previous build)
-      clear ocp_create
-      clear ocp_create_ext_fun
-      clear ocp_destroy
-      clear ocp_destroy_ext_fun
-      clear ocp_get
-      clear ocp_model_ocp_set_ext_fun_cost_0_ext_cost_jac_hes
-      clear ocp_model_ocp_set_ext_fun_cost_1_ext_cost_jac_hes
-      clear ocp_model_ocp_set_ext_fun_dyn_0_expl_ode_fun
-      clear ocp_model_ocp_set_ext_fun_dyn_0_expl_ode_hes
-      clear ocp_model_ocp_set_ext_fun_dyn_0_expl_vde_adj
-      clear ocp_model_ocp_set_ext_fun_dyn_0_expl_vde_for
-      clear ocp_precompute
-      clear ocp_set
-      clear ocp_solve
-
-      % create build folder and add to path
-      addpath('build');
-      rmpath('build')
-			[~] = rmdir('build', 's');
-      [~,~] = mkdir('build');
-			addpath('build');
+			acados_create_build_dir();
 
 			% detect GNSF structure
 			if (strcmp(obj.opts_struct.sim_method, 'irk_gnsf'))

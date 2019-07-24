@@ -33,8 +33,20 @@ else
 	fprintf('\nsim_generate_casadi_ext_fun: method not supported: %s\n', opts_struct.method);
 	return;
 end
-lib_name = ['lib', model_name, '.so'];
+
+if ispc
+  lib_name = ['lib', model_name, '.lib'];
+else
+  lib_name = ['lib', model_name, '.so'];
+end
+
 system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 
-system(['mv *.c build/']);
-system(['mv *.so build/']);
+c_files = split(c_sources);
+for k=1:length(c_files)
+  if ~isempty(c_files{k})
+    movefile(c_files{k}, 'build')
+  end
+end
+
+movefile(lib_name, 'build')

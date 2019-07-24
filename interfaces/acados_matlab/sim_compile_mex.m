@@ -5,23 +5,27 @@ acados_folder = getenv('ACADOS_INSTALL_DIR');
 mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
-acados_mex_folder = [acados_folder, '/interfaces/acados_matlab/'];
+acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab');
 acados_include = ['-I' acados_folder];
-acados_interfaces_include = ['-I' acados_folder, '/interfaces'];
-acados_lib_path = ['-L' acados_folder, '/lib'];
+acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
+acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
+
+mex_names = { ...
+  'sim_create', ...
+  'sim_create_ext_fun', ...
+  'sim_destroy_ext_fun', ...
+  'sim_solve', ...
+  'sim_set', ...
+  'sim_get', ...
+  'sim_precompute' ...
+};
+
+mex_files = cell(length(mex_names), 1);
+for k=1:length(mex_names)
+  mex_files{k} = fullfile(acados_mex_folder, [mex_names{k}, '.c']);
+end
 
 % compile mex
-mex_files ={ ...
-	[acados_mex_folder, 'sim_create.c'], ...
-	[acados_mex_folder, 'sim_create_ext_fun.c'], ...
-	[acados_mex_folder, 'sim_destroy.c'], ...
-	[acados_mex_folder, 'sim_destroy_ext_fun.c'], ...
-	[acados_mex_folder, 'sim_solve.c'], ...
-	[acados_mex_folder, 'sim_set.c'], ...
-	[acados_mex_folder, 'sim_get.c'], ...
-	[acados_mex_folder, 'sim_precompute.c'], ...
-	} ;
-
 if is_octave()
 	if exist('build/cflags_octave.txt')==0
 		diary 'build/cflags_octave.txt'
@@ -48,13 +52,15 @@ for ii=1:length(mex_files)
 %		mkoctfile -p CFLAGS
 		mex(acados_include, acados_interfaces_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
 	else
-		mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+		mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
 	end
 end
 
+
 if is_octave()
-	system(['mv -f *.o build/']);
-	system(['mv -f *.mex build/']);
-else
-	system(['mv -f *.mexa64 build/']);
+  movefile('*.o', 'build')
+end
+
+for k=1:length(mex_names)
+  movefile([mex_names{k}, '.', mexext], 'build');
 end

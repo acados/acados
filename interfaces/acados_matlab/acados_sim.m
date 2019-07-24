@@ -16,11 +16,7 @@ classdef acados_sim < handle
 			obj.model_struct = model.model_struct;
 			obj.opts_struct = opts.opts_struct;
 
-			% create build folder
-			system('mkdir -p build');
-
-			% add path
-			addpath('build/');
+      acados_create_build_dir();
 
 			% detect GNSF structure
 			if (strcmp(obj.opts_struct.method, 'irk_gnsf'))
