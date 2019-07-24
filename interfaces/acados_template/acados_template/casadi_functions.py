@@ -38,3 +38,4 @@ def acados_constraint_strip_non_num(acados_constraint):
     del out['expr']
     del out['nc']
     return out
+

@@ -18,12 +18,14 @@ classdef ocp_nlp_dims_json < handle
         nsbx_e % number of state bounds at t=T 
         ns     % total number of soft bounds 
         ns_e   % total number of soft bounds at t=T 
+        nsh    % number of soft bounds on nonlinear constraints 
+        nsh_e  % number of soft bounds on nonlinear constraints at t=T 
         ng     % number of general constraints
         ng_e   % number of general constraints at t=T
         N      % prediction horizon 
     end
     methods 
-        function obj = ocp_nlp_dims()
+        function obj = ocp_nlp_dims_json()
             obj.nx    = []; 
             obj.nz    = 0; 
             obj.nu    = []; 
@@ -42,6 +44,8 @@ classdef ocp_nlp_dims_json < handle
             obj.nsbx_e = 0;
             obj.ns    = 0;
             obj.ns_e   = 0;
+            obj.nsh   = 0;
+            obj.nsh_e  = 0;
             obj.ng    = 0;
             obj.ng_e   = 0;
             obj.N     = [];

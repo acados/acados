@@ -4,27 +4,27 @@
     ],
     "con_h": {
         "name"   : [
-            "NoneType"
+            "str"
             ]   
     },
     "con_h_e": {
         "name": [
-            "NoneType"
+            "str"
             ]   
     },
     "con_p_e": {
         "name" : [
-            "NoneType"
+            "str"
         ]
      },
      "con_p": {
          "name" : [
-            "NoneType"
+            "str"
         ]
     },
      "model": {
          "name" : [
-            "NoneType"
+            "str"
         ]
     },
     "acados_lib_path": [
@@ -448,9 +448,6 @@
             "int"
         ]
     },
-    "model_name": [
-        "str"
-    ],
     "solver_config": {
         "hessian_approx": [
             "str"

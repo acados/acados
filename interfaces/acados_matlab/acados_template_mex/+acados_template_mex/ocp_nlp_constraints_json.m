@@ -50,7 +50,7 @@ classdef ocp_nlp_constraints_json < handle
         x0      % initial state 
     end
     methods
-        function obj = ocp_nlp_constraints()
+        function obj = ocp_nlp_constraints_json()
             obj.constr_type     = 'BGH';  
             obj.constr_type_e   = 'BGH';  
             obj.lbx             = [];  

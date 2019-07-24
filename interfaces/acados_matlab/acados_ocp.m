@@ -23,6 +23,7 @@ classdef acados_ocp < handle
             model.acados_ocp_nlp_json.solver_config.qp_solver = obj.opts_struct.qp_solver;
             model.acados_ocp_nlp_json.solver_config.integrator_type = upper(obj.opts_struct.sim_method);
             model.acados_ocp_nlp_json.solver_config.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
+            model.acados_ocp_nlp_json.dims.N = upper(obj.opts_struct.param_scheme_N);
             obj.acados_ocp_nlp_json = model.acados_ocp_nlp_json;
             
 			% create build folder
@@ -85,8 +86,36 @@ classdef acados_ocp < handle
             
             % set include and lib path
             acados_folder = getenv('ACADOS_INSTALL_DIR');
-            obj.acados_ocp_nlp_json.acados_include_path = [acados_folder "/include"];
-            obj.acados_ocp_nlp_json.acados_lib_path = [acados_folder "/lib"];
+            obj.acados_ocp_nlp_json.acados_include_path = [acados_folder, '/include'];
+            obj.acados_ocp_nlp_json.acados_lib_path = [acados_folder, '/lib'];
+            % strip non-numerical data
+            
+            % model
+            model.name = obj.acados_ocp_nlp_json.model.name;
+            
+            obj.acados_ocp_nlp_json.model = [];
+            obj.acados_ocp_nlp_json.model = model;
+            
+            con_h.name = obj.acados_ocp_nlp_json.con_h.name;
+            
+            obj.acados_ocp_nlp_json.con_h = [];
+            obj.acados_ocp_nlp_json.con_h = con_h;
+            
+            con_h_e.name = obj.acados_ocp_nlp_json.con_h_e.name;
+            
+            obj.acados_ocp_nlp_json.con_h_e = [];
+            obj.acados_ocp_nlp_json.con_h_e = con_h_e;
+            
+            con_p.name = obj.acados_ocp_nlp_json.con_p.name;
+            
+            obj.acados_ocp_nlp_json.con_p = [];
+            obj.acados_ocp_nlp_json.con_p = con_p;
+            
+            con_p_e.name = obj.acados_ocp_nlp_json.con_p_e.name;
+            
+            obj.acados_ocp_nlp_json.con_p_e = [];
+            obj.acados_ocp_nlp_json.con_p_e = con_p_e;
+            
             % dump JSON file
             json_string = jsonencode(obj.acados_ocp_nlp_json);
             fid = fopen('acados_ocp_nlp.json', 'w');
@@ -94,7 +123,7 @@ classdef acados_ocp < handle
             fwrite(fid, json_string, 'char');
             fclose(fid);
             % render templated C code
-            generate_solver('acados_ocp_nlp.json', '/home/andrea/.acados_t/bin/python3')
+            acados_template_mex.generate_solver('acados_ocp_nlp.json', '/home/andrea/.acados_t/bin/python3')
 		end
 
 

@@ -7,7 +7,7 @@ classdef ocp_nlp_solver_config_json < handle
         nlp_solver_type  %  NLP solver 
     end
     methods
-        function obj = ocp_nlp_solver_config()
+        function obj = ocp_nlp_solver_config_json()
             obj.qp_solver       = "PARTIAL_CONDENSING_HPIPM"; 
             obj.hessian_approx  = "GAUSS_NEWTON"; 
             obj.integrator_type = "ERK"; 

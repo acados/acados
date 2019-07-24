@@ -1050,7 +1050,6 @@ class acados_ocp_nlp:
         self.cost = ocp_nlp_cost()
         self.constraints = ocp_nlp_constraints()
         self.solver_config = ocp_nlp_solver_config()
-        self.model_name  = None 
         # self.con_p_name  = None 
         # self.con_p_e_name = None 
         # self.con_h_name  = None 
@@ -1226,6 +1225,8 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
     """
     out = {}
     for k, v in ocp_nlp.items():
+        print("k= ", k)
+        print("v =", v)
         if isinstance(v, dict):
             v = json2dict_rec(v, ocp_nlp_dims, ocp_nlp_layout[k])
 
@@ -1233,17 +1234,21 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
         out_key = k.split('__', 1)[-1]
         v_type = out_key.split('__')[0]
         out_key = out_key.split('__', 1)[-1]
+        type_from_layout = [0]
         if 'ndarray' in ocp_nlp_layout[k]:
             if isinstance(v, int) or isinstance(v, float):
                 v = np.array([v])
-        if v_type == 'ndarray' or v_type__ == 'list':
+        if (v_type == 'ndarray' or v_type__ == 'list') and (ocp_nlp_layout[k][0] != 'str'):
             dims_l = []
             dims_names = []
+            if k == 'name':
+                import pdb; pdb.set_trace()
             dim_keys = ocp_nlp_layout[k][1]
             for item in dim_keys:
                 dims_l.append(ocp_nlp_dims[item])
                 dims_names.append(item)
             dims = tuple(dims_l)
+            print(v)
             if v == []:
                 # v = None
                 try: 

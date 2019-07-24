@@ -38,7 +38,6 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp.con_p = acados_ocp.con_p.__dict__
     ocp_nlp.con_p_e = acados_ocp.con_p_e.__dict__
     ocp_nlp.model = acados_ocp.model.__dict__
-    import pdb; pdb.set_trace()
     ocp_nlp = ocp_nlp.__dict__
 
     # need to strip non-numerical stuff from expressions for now
