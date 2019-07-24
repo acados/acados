@@ -1,4 +1,4 @@
-function acados_create_build_dir
+function acados_create_build_dir(build_dir)
 
 % clear mex functions (if loaded from previous build)
 clear ocp_create
@@ -25,8 +25,8 @@ clear sim_get
 clear sim_precompute
 
 % create build folder and add to path
-addpath('build');
-rmpath('build')
-[~] = rmdir('build', 's');
-[~,~] = mkdir('build');
-addpath('build');
+addpath(build_dir);
+rmpath(build_dir)
+[~] = rmdir(build_dir, 's');
+[~,~] = mkdir(build_dir);
+addpath(build_dir);

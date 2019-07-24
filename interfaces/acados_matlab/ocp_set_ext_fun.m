@@ -1,4 +1,4 @@
-function C_ocp_ext_fun = ocp_set_ext_fun(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)
+function C_ocp_ext_fun = ocp_set_ext_fun(C_ocp, C_ocp_ext_fun, model_struct, opts_struct, build_dir)
 
 model_name = model_struct.name;
 N = opts_struct.param_scheme_N;
@@ -15,7 +15,7 @@ external_include = ['-I' fullfile(acados_folder, 'external')];
 blasfeo_include = ['-I' fullfile(acados_folder, 'external' , 'blasfeo', 'include')];
 acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
 acados_matlab_lib_path = ['-L' fullfile(acados_folder, 'interfaces', 'acados_matlab')];
-model_lib_path = ['-L', fullfile(pwd, 'build')];
+model_lib_path = ['-L', build_dir];
 
 %% select files to compile
 %mex_files = {};
@@ -348,16 +348,16 @@ end
 if (strcmp(opts_struct.compile_mex, 'true'))
 
 	if is_octave()
-		if exist('build/cflags_octave.txt')==0
-			diary 'build/cflags_octave.txt'
+		if exist(fullfile(build_dir, 'cflags_octave.txt'), 'file')==0
+		diary(fullfile(build_dir, 'cflags_octave.txt'))
 			diary on
 			mkoctfile -p CFLAGS
 			diary off
-			input_file = fopen('build/cflags_octave.txt', 'r');
+			input_file = fopen(fullfile(build_dir, 'cflags_octave.txt'), 'r');
 			cflags_tmp = fscanf(input_file, '%[^\n]s');
 			fclose(input_file);
 			cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
-			input_file = fopen('build/cflags_octave.txt', 'w');
+			input_file = fopen(fullfile(build_dir, 'cflags_octave.txt'), 'w');
 			fprintf(input_file, '%s', cflags_tmp);
 			fclose(input_file);
 		end
@@ -373,7 +373,7 @@ if (strcmp(opts_struct.compile_mex, 'true'))
 		disp(['compiling ', mex_names{ii}])
 		if is_octave()
 	%		mkoctfile -p CFLAGS
-			input_file = fopen('build/cflags_octave.txt', 'r');
+			input_file = fopen(fullfile(build_dir, 'cflags_octave.txt'), 'r');
 			cflags_tmp = fscanf(input_file, '%[^\n]s');
 			fclose(input_file);
 			cflags_tmp = [cflags_tmp, ' -DSETTER=', setter{ii}];
@@ -402,7 +402,7 @@ if (strcmp(opts_struct.compile_mex, 'true'))
   
   if is_octave()
     mex_ending = '.mex';
-    movefile('*.o', 'build')
+    movefile('*.o', build_dir)
   elseif ispc
     mex_ending = '.mexw64';
   else
@@ -410,7 +410,7 @@ if (strcmp(opts_struct.compile_mex, 'true'))
   end
   
   for k=1:length(mex_names)
-    movefile([mex_names{k}, mex_ending], 'build');
+    movefile([mex_names{k}, mex_ending], build_dir);
   end
   
 end

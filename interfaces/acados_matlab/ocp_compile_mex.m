@@ -1,4 +1,4 @@
-function ocp_compile_mex(opts)
+function ocp_compile_mex(opts, build_dir)
 
 % get acados folder
 acados_folder = getenv('ACADOS_INSTALL_DIR');
@@ -29,23 +29,23 @@ end
 
 % compile mex
 if is_octave()
-	if exist('build/cflags_octave.txt')==0
-		diary 'build/cflags_octave.txt'
+	if exist(fullfile(build_dir, 'cflags_octave.txt'), 'file')==0
+		diary(fullfile(build_dir, 'cflags_octave.txt'))
 		diary on
 		mkoctfile -p CFLAGS
 		diary off
-		input_file = fopen('build/cflags_octave.txt', 'r');
+		input_file = fopen(fullfile(build_dir, 'cflags_octave.txt'), 'r');
 		cflags_tmp = fscanf(input_file, '%[^\n]s');
 		fclose(input_file);
 		cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
 		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
 			cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
 		end
-		input_file = fopen('build/cflags_octave.txt', 'w');
+		input_file = fopen(fullfile(build_dir, 'cflags_octave.txt'), 'w');
 		fprintf(input_file, '%s', cflags_tmp);
 		fclose(input_file);
 	end
-	input_file = fopen('build/cflags_octave.txt', 'r');
+	input_file = fopen(fullfile(build_dir, 'cflags_octave.txt'), 'r');
 	cflags_tmp = fscanf(input_file, '%[^\n]s');
 	fclose(input_file);
 	setenv('CFLAGS', cflags_tmp);
@@ -70,11 +70,11 @@ for ii=1:length(mex_files)
 end
 
 if is_octave()
-  movefile('*.o', 'build')
+  movefile('*.o', build_dir)
 end
 
 for k=1:length(mex_names)
-  movefile([mex_names{k}, '.', mexext], 'build');
+  movefile([mex_names{k}, '.', mexext], build_dir);
 end
 
 
