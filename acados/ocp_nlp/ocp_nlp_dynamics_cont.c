@@ -307,7 +307,7 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
     size += 1 * blasfeo_memsize_dvec(nz);             // z at t = 0
-    size += 1 * blasfeo_memsize_dmat(nz, nu + nx);    // dzdux_tran
+    size += 1 * blasfeo_memsize_dmat(nu + nx, nz);    // dzdux_tran
 
     size +=
         config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);

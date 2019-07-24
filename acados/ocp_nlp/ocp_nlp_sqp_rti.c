@@ -546,6 +546,9 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
 
     // extract dims
     int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *nz = dims->nz;
 
     int size = 0;
     int size_tmp = 0;
@@ -670,6 +673,18 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
 
     }
 
+	// dzdux
+	size += (N+1)*sizeof(struct blasfeo_dmat);
+	for(ii=0; ii<=N; ii++)
+		size += blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]);
+	// z_alg
+	size += (N+1)*sizeof(struct blasfeo_dvec);
+	for(ii=0; ii<=N; ii++)
+		size += blasfeo_memsize_dvec(nz[ii]);
+
+    size += 1*8;  // blasfeo_str align
+    size += 1*64;  // blasfeo_mem align
+
     return size;
 }
 
@@ -688,8 +703,14 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
 
+    // loop index
+	int ii;
+
     // extract dims
     int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *nz = dims->nz;
 
     // sqp
     char *c_ptr = (char *) work;
@@ -816,6 +837,32 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
         }
 
     }
+
+    // blasfeo_str align
+    align_char_to(8, &c_ptr);
+
+	// dzduz_tran
+	work->dzdux_tran = (struct blasfeo_dmat *) c_ptr;
+	c_ptr += (N+1)*sizeof(struct blasfeo_dmat);
+	// z_alg
+	work->z_alg = (struct blasfeo_dvec *) c_ptr;
+	c_ptr += (N+1)*sizeof(struct blasfeo_dvec);
+
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
+
+	// dzduz_tran
+	for(ii=0; ii<=N; ii++)
+		{
+		blasfeo_create_dmat(nu[ii]+nx[ii], nz[ii], work->dzdux_tran+ii, c_ptr);
+		c_ptr += blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]);
+		}
+	// z_alg
+	for(ii=0; ii<=N; ii++)
+		{
+		blasfeo_create_dvec(nz[ii], work->z_alg+ii, c_ptr);
+		c_ptr += blasfeo_memsize_dvec(nz[ii]);
+		}
 
     // assert & return
     assert((char *) work + ocp_nlp_sqp_rti_workspace_calculate_size(config, dims, opts) >= c_ptr);
