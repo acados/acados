@@ -74,6 +74,7 @@ if is_octave()
 end
 
 for k=1:length(mex_names)
+  clear(mex_names{k})
   movefile([mex_names{k}, '.', mexext], build_dir);
 end
 

@@ -389,28 +389,17 @@ if (strcmp(opts_struct.compile_mex, 'true'))
 			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', ['-DSETTER=', setter{ii}], ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], ['-DPHASE=', num2str(phase{ii})], ['-DN0=', num2str(phase_start{ii})], ['-DN1=', num2str(phase_end{ii})], acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{1}); % TODO
     end
     
-    if is_octave()
-      movefile('ocp_set_ext_fun_gen.mex', [mex_names{ii}, '.mex'])
-    elseif ispc
-      movefile('ocp_set_ext_fun_gen.mexw64', [mex_names{ii}, '.mexw64'])
-    else
-      movefile('ocp_set_ext_fun_gen.mexa64', [mex_names{ii}, '.mexa64'])
-    end
-    
+    movefile(['ocp_set_ext_fun_gen.', mexext], [mex_names{ii}, '.', mexext])
   end
   
   
   if is_octave()
-    mex_ending = '.mex';
     movefile('*.o', build_dir)
-  elseif ispc
-    mex_ending = '.mexw64';
-  else
-    mex_ending = '.mexa64';
   end
   
   for k=1:length(mex_names)
-    movefile([mex_names{k}, mex_ending], build_dir);
+%     clear(mex_names{k})
+    movefile([mex_names{k}, '.', mexext], build_dir);
   end
   
 end
