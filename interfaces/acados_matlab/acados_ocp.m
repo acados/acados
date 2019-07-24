@@ -93,6 +93,8 @@ classdef acados_ocp < handle
             if fid == -1, error('Cannot create JSON file'); end
             fwrite(fid, json_string, 'char');
             fclose(fid);
+            % render templated C code
+            generate_solver('acados_ocp_nlp.json', '/home/andrea/.acados_t/bin/python3')
 		end
 
 
