@@ -130,8 +130,30 @@ classdef acados_ocp_model < handle
 					obj.model_struct.dyn_type = value;
 				elseif (strcmp(field, 'dyn_expr_f'))
 					obj.model_struct.dyn_expr_f = value;
+                    if isfield(obj.model_struct, 'sym_x')
+                        obj.acados_ocp_nlp_json.model.x = obj.model_struct.sym_x;
+                    end
+                    if isfield(obj.model_struct, 'sym_u')
+                        obj.acados_ocp_nlp_json.model.u = obj.model_struct.sym_u;
+                    end
+                    if isfield(obj.model_struct, 'sym_z')
+                        obj.acados_ocp_nlp_json.model.z = obj.model_struct.sym_z;
+                    end
+                    obj.acados_ocp_nlp_json.model.name = 'dyn_expl_expr';
+                    obj.acados_ocp_nlp_json.model.f_expl_expr = value;
 				elseif (strcmp(field, 'dyn_expr_phi'))
 					obj.model_struct.dyn_expr_phi = value;
+                    if isfield(obj.model_struct, 'sym_x')
+                        obj.acados_ocp_nlp_json.model.x = obj.model_struct.sym_x;
+                    end
+                    if isfield(obj.model_struct, 'sym_u')
+                        obj.acados_ocp_nlp_json.model.u = obj.model_struct.sym_u;
+                    end
+                    if isfield(obj.model_struct, 'sym_z')
+                        obj.acados_ocp_nlp_json.model.z = obj.model_struct.sym_z;
+                    end
+                    obj.acados_ocp_nlp_json.model.name = 'dyn_impl_expr';
+                    obj.acados_ocp_nlp_json.model.f_impl_expr = value;
 				else
 					disp(['acados_ocp_model: set: wrong field: ', field]);
 					keyboard;
@@ -204,10 +226,15 @@ classdef acados_ocp_model < handle
                     obj.acados_ocp_nlp_json.constraints.uh = value;
 				elseif (strcmp(field, 'constr_expr_h_e'))
 					obj.model_struct.constr_expr_h_e = value;
-                    obj.model_struct.constr_expr_h = value;
-                    obj.acados_ocp_nlp_json.con_h_e.x = obj.model_struct.sym_x;
-                    obj.acados_ocp_nlp_json.con_h_e.u = obj.model_struct.sym_u;
-                    obj.acados_ocp_nlp_json.con_h_e.z = obj.model_struct.sym_z;
+                    if isfield(obj.model_struct, 'sym_x')
+                        obj.acados_ocp_nlp_json.con_h_e.x = obj.model_struct.sym_x;
+                    end
+                    if isfield(obj.model_struct, 'sym_u')
+                        obj.acados_ocp_nlp_json.con_h_e.u = obj.model_struct.sym_u;
+                    end
+                    if isfield(obj.model_struct, 'sym_z')
+                        obj.acados_ocp_nlp_json.con_h_e.z = obj.model_struct.sym_z;
+                    end
                     obj.acados_ocp_nlp_json.con_h_e.name = 'expr_h_e';
                     obj.acados_ocp_nlp_json.con_h_e.expr = value;
 				elseif (strcmp(field, 'constr_lh_e'))
