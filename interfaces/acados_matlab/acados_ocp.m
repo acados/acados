@@ -16,7 +16,13 @@ classdef acados_ocp < handle
 			obj.model_struct = model.model_struct;
 			obj.opts_struct = opts.opts_struct;
 
-			% create build folder and add to path
+			% clear mex functions (if loaded from previous build)
+      clear ocp_create
+      clear ocp_create_ext_fun
+      clear ocp_destroy
+      clear ocp_destroy_ext_fun
+      
+      % create build folder and add to path
       addpath('build');
       rmpath('build')
 			[~] = rmdir('build', 's');

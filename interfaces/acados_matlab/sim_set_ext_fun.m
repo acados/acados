@@ -7,12 +7,12 @@ acados_folder = getenv('ACADOS_INSTALL_DIR');
 mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
-acados_mex_folder = [acados_folder, '/interfaces/acados_matlab/'];
+acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab');
 acados_include = ['-I' acados_folder];
-acados_interfaces_include = ['-I' acados_folder, '/interfaces'];
-acados_lib_path = ['-L' acados_folder, '/lib'];
-acados_matlab_lib_path = ['-L' acados_folder, '/interfaces/acados_matlab/'];
-model_lib_path = ['-L', pwd, '/build'];
+acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
+acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
+acados_matlab_lib_path = ['-L' fullfile(acados_folder, 'interfaces', 'acados_matlab')];
+model_lib_path = ['-L', fullfile(pwd, 'build')];
 
 %% select files to compile
 set_fields = {};
@@ -145,22 +145,30 @@ if (strcmp(opts_struct.compile_mex, 'true'))
 			cflags_tmp = [cflags_tmp, ' -DMEX_FIELD=', mex_fields{ii}];
 			cflags_tmp = [cflags_tmp, ' -DFUN_NAME=', fun_names{ii}];
 			setenv('CFLAGS', cflags_tmp);
-			mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], [acados_mex_folder, 'sim_set_ext_fun_gen.c']);
-			system(['mv sim_set_ext_fun_gen.mex ', mex_names{ii}, '.mex']);
+			mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], fullfile(acados_mex_folder, 'sim_set_ext_fun_gen.c'));
 		else
-			mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], [acados_mex_folder, 'sim_set_ext_fun_gen.c']);
-			system(['mv sim_set_ext_fun_gen.mexa64 ', mex_names{ii}, '.mexa64']);
-		end
+			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], fullfile(acados_mex_folder, 'sim_set_ext_fun_gen.c'));
+    end
+    
+    if is_octave()
+      movefile('sim_set_ext_fun_gen.mex', [mex_names{ii}, '.mex'])
+    elseif ispc
+      movefile('sim_set_ext_fun_gen.mexw64', [mex_names{ii}, '.mexw64'])
+    else
+      movefile('sim_set_ext_fun_gen.mexa64', [mex_names{ii}, '.mexa64'])
+    end
 
-	end
+  end
 
-	if is_octave()
-		system(['mv -f *.o build/']);
-		system(['mv -f *.mex build/']);
-	else
-		system(['mv -f *.mexa64 build/']);
-	end
-
+  if is_octave()
+    movefile('*.o', 'build')
+    movefile('*.mex', 'build')
+  elseif ispc
+    movefile('*.mexw64', 'build')
+  else
+    movefile('*.mexa64', 'build')
+  end
+  
 end
 
 
