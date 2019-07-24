@@ -157,7 +157,10 @@ def generate_solver_matlab(acados_ocp_nlp_json_file):
             out_file = open('./c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/' + acados_ocp.con_h.name + '_h_constraint.h', 'w+')
             out_file.write(output)
         else:
-            os.chdir('c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/')
+            dir_name = 'c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/'
+            if not os.path.exists(dir_name):
+                os.mkdir(dir_name)
+            os.chdir(dir_name)
             # render source template
             template_file = 'h_constraint.in.h'
             out_file = acados_ocp.con_h.name + '_h_constraint.h'
@@ -210,6 +213,7 @@ def generate_solver_matlab(acados_ocp_nlp_json_file):
                 "\"" + ' ' + "\"" + out_file + "\""
 
         os.system(os_cmd)
+        os.chdir('..')
 
     # render MATLAB make script
     if USE_TERA == 0:

@@ -1234,15 +1234,14 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
         out_key = k.split('__', 1)[-1]
         v_type = out_key.split('__')[0]
         out_key = out_key.split('__', 1)[-1]
-        type_from_layout = [0]
+        if k == 'lh':
+            import pdb; pdb.set_trace()
         if 'ndarray' in ocp_nlp_layout[k]:
             if isinstance(v, int) or isinstance(v, float):
                 v = np.array([v])
         if (v_type == 'ndarray' or v_type__ == 'list') and (ocp_nlp_layout[k][0] != 'str'):
             dims_l = []
             dims_names = []
-            if k == 'name':
-                import pdb; pdb.set_trace()
             dim_keys = ocp_nlp_layout[k][1]
             for item in dim_keys:
                 dims_l.append(ocp_nlp_dims[item])

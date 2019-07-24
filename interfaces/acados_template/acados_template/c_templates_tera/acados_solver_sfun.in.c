@@ -58,13 +58,13 @@ external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% if dims.npd > 0 %}
 external_function_casadi * p_constraint;
 {% endif %}
-{% if dims.npdN > 0 %}
+{% if dims.npd_e > 0 %}
 external_function_casadi * p_constraint_N;
 {% endif %}
 {% if dims.nh > 0 %}
 external_function_casadi * h_constraint;
 {% endif %}
-{% if dims.nhN > 0 %}
+{% if dims.nh_e > 0 %}
 external_function_casadi * h_constraint_N;
 {% endif %}
 
@@ -90,7 +90,7 @@ static void mdlInitializeSizes (SimStruct *S)
     // specify dimension information for the input ports 
     ssSetInputPortVectorDimension(S, 0, {{ dims.nx }});
     ssSetInputPortVectorDimension(S, 1, {{ dims.ny }});
-    ssSetInputPortVectorDimension(S, 2, {{ dims.nyN }});
+    ssSetInputPortVectorDimension(S, 2, {{ dims.ny_e }});
     {% if dims.np > 0 %}
     ssSetInputPortVectorDimension(S, 3, {{ dims.np }});
     {% endif %}
@@ -160,7 +160,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // local buffers
     real_t in_x0[{{ dims.nx }}];
     real_t in_y_ref[{{ dims.ny }}];
-    real_t in_y_ref_N[{{ dims.nyN }}];
+    real_t in_y_ref_N[{{ dims.ny_e }}];
     {% if dims.np > 0 %}
     real_t in_p[{{ dims.np }}];
     {% endif %}
@@ -175,7 +175,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // copy signals into local buffers
     for (int i = 0; i < {{ dims.nx }}; i++) in_x0[i] = (double)(*in_x0_sign[i]);
     for (int i = 0; i < {{ dims.ny }}; i++) in_y_ref[i] = (double)(*in_y_ref_sign[i]);
-    for (int i = 0; i < {{ dims.nyN }}; i++) in_y_ref_N[i] = (double)(*in_y_ref_N_sign[i]);
+    for (int i = 0; i < {{ dims.ny_e }}; i++) in_y_ref_N[i] = (double)(*in_y_ref_N_sign[i]);
     {% if dims.np > 0 %}
     for (int i = 0; i < {{ dims.np }}; i++) in_p[i] = (double)(*in_p_sign[i]);
     {% endif %}
