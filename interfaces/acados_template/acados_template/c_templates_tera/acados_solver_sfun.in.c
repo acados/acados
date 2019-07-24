@@ -1,4 +1,4 @@
-#define S_FUNCTION_NAME   acados_solver_sfunction_{{model_name}}
+#define S_FUNCTION_NAME   acados_solver_sfunction_{{model.name}}
 #define S_FUNCTION_LEVEL  2
 
 #define MDL_START
@@ -17,8 +17,8 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 // example specific
-#include "{{ model_name }}_model/{{ model_name }}_model.h"
-#include "acados_solver_{{ model_name }}.h"
+#include "{{ model.name }}_model/{{ model.name }}_model.h"
+#include "acados_solver_{{ model.name }}.h"
 
 #include "simstruc.h"
 
