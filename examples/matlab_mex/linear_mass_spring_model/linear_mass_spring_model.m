@@ -1,7 +1,5 @@
 function model = linear_mass_spring_model()
 
-import casadi.*
-
 %% dims
 num_mass = 4;
 
@@ -10,13 +8,13 @@ nu = num_mass-1;
 
 %% symbolic variables
 if 1
-	sym_x = SX.sym('x', nx, 1); % states
-	sym_u = SX.sym('u', nu, 1); % controls
-	sym_xdot = SX.sym('xdot',size(sym_x)); %state derivatives
+	sym_x = casadi.SX.sym('x', nx, 1); % states
+	sym_u = casadi.SX.sym('u', nu, 1); % controls
+	sym_xdot = casadi.SX.sym('xdot',size(sym_x)); %state derivatives
 else
-	sym_x = MX.sym('x', nx, 1); % states
-	sym_u = MX.sym('u', nu, 1); % controls
-	sym_xdot = MX.sym('xdot',size(sym_x)); %state derivatives
+	sym_x = casadi.MX.sym('x', nx, 1); % states
+	sym_u = casadi.MX.sym('u', nu, 1); % controls
+	sym_xdot = casadi.MX.sym('xdot',size(sym_x)); %state derivatives
 end
 
 %% dynamics
