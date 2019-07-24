@@ -5,6 +5,7 @@ classdef acados_ocp < handle
 		C_ocp_ext_fun
 		model_struct
 		opts_struct
+        acados_ocp_nlp_json
 	end % properties
 
 
@@ -22,7 +23,8 @@ classdef acados_ocp < handle
             model.acados_ocp_nlp_json.solver_config.qp_solver = obj.opts_struct.qp_solver;
             model.acados_ocp_nlp_json.solver_config.integrator_type = upper(obj.opts_struct.sim_method);
             model.acados_ocp_nlp_json.solver_config.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
-
+            obj.acados_ocp_nlp_json = model.acados_ocp_nlp_json;
+            
 			% create build folder
 			system('mkdir -p build');
 
@@ -65,6 +67,32 @@ classdef acados_ocp < handle
 
 		function solve(obj)
 			ocp_solve(obj.C_ocp);
+        end
+        
+        
+        
+        function generate_c_code(obj)
+            % generate C code for CasADi functions
+            if (strcmp(obj.model_struct.dyn_type, 'explicit'))
+                acados_template_mex.generate_c_code_explicit_ode(obj.acados_ocp_nlp_json.model);
+            elseif (strcmp(obj.model_struct.dyn_type, 'implicit'))
+                if (strcmp(obj.opts_struct.sim_method, 'irk'))
+                    opts.generate_hess = 1;
+                    acados_template_mex.generate_c_code_implicit_ode(obj.acados_ocp_nlp_json.model, opts);
+                end
+            end
+
+            
+            % set include and lib path
+            acados_folder = getenv('ACADOS_INSTALL_DIR');
+            obj.acados_ocp_nlp_json.acados_include_path = [acados_folder "/include"];
+            obj.acados_ocp_nlp_json.acados_lib_path = [acados_folder "/lib"];
+            % dump JSON file
+            json_string = jsonencode(obj.acados_ocp_nlp_json);
+            fid = fopen('acados_ocp_nlp.json', 'w');
+            if fid == -1, error('Cannot create JSON file'); end
+            fwrite(fid, json_string, 'char');
+            fclose(fid);
 		end
 
 
