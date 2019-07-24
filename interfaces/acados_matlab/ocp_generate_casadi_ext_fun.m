@@ -99,8 +99,8 @@ system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 c_files = strsplit(c_sources);
 for k=1:length(c_files)
   if ~isempty(c_files{k})
-    movefile(c_files{k}, opts_struct.compile_output_dir)
+    movefile(c_files{k}, opts_struct.output_dir)
   end
 end
 
-movefile(lib_name, opts_struct.compile_output_dir)
+movefile(lib_name, opts_struct.output_dir)

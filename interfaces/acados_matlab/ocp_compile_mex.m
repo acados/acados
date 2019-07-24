@@ -29,23 +29,23 @@ end
 
 % compile mex
 if is_octave()
-	if exist(fullfile(opts.compile_output_dir, 'cflags_octave.txt'), 'file')==0
-		diary(fullfile(opts.compile_output_dir, 'cflags_octave.txt'))
+	if exist(fullfile(opts.output_dir, 'cflags_octave.txt'), 'file')==0
+		diary(fullfile(opts.output_dir, 'cflags_octave.txt'))
 		diary on
 		mkoctfile -p CFLAGS
 		diary off
-		input_file = fopen(fullfile(opts.compile_output_dir, 'cflags_octave.txt'), 'r');
+		input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
 		cflags_tmp = fscanf(input_file, '%[^\n]s');
 		fclose(input_file);
 		cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
 		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
 			cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
 		end
-		input_file = fopen(fullfile(opts.compile_output_dir, 'cflags_octave.txt'), 'w');
+		input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');
 		fprintf(input_file, '%s', cflags_tmp);
 		fclose(input_file);
 	end
-	input_file = fopen(fullfile(opts.compile_output_dir, 'cflags_octave.txt'), 'r');
+	input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
 	cflags_tmp = fscanf(input_file, '%[^\n]s');
 	fclose(input_file);
 	setenv('CFLAGS', cflags_tmp);
@@ -70,12 +70,12 @@ for ii=1:length(mex_files)
 end
 
 if is_octave()
-  movefile('*.o', opts.compile_output_dir)
+  movefile('*.o', opts.output_dir)
 end
 
 for k=1:length(mex_names)
   clear(mex_names{k})
-  movefile([mex_names{k}, '.', mexext], opts.compile_output_dir);
+  movefile([mex_names{k}, '.', mexext], opts.output_dir);
 end
 
 

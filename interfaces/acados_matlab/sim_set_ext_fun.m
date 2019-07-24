@@ -150,24 +150,15 @@ if (strcmp(opts_struct.compile_mex, 'true'))
 			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], fullfile(acados_mex_folder, 'sim_set_ext_fun_gen.c'));
     end
     
-    if is_octave()
-      movefile('sim_set_ext_fun_gen.mex', [mex_names{ii}, '.mex'])
-    elseif ispc
-      movefile('sim_set_ext_fun_gen.mexw64', [mex_names{ii}, '.mexw64'])
-    else
-      movefile('sim_set_ext_fun_gen.mexa64', [mex_names{ii}, '.mexa64'])
-    end
-
+    movefile(['sim_set_ext_fun_gen.', mexext], [mex_names{ii}, '.', mexext])
   end
 
   if is_octave()
     movefile('*.o', opts_struct.output_dir)
-    movefile('*.mex', opts_struct.output_dir)
-  elseif ispc
-    movefile('*.mexw64', opts_struct.output_dir)
-  else
-    movefile('*.mexa64', opts_struct.output_dir)
   end
+  
+  movefile(['*.', mexext], opts_struct.output_dir)
+  
   
 end
 
