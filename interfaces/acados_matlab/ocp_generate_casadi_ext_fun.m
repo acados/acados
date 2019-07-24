@@ -88,9 +88,9 @@ if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_
 end
 
 if ispc
-  lib_name = ['libocp_model.lib'];
+  lib_name = 'libocp_model.lib';
 else
-  lib_name = ['libocp_model.so'];
+  lib_name = 'libocp_model.so';
 end
 
 % works also on windows if mingw64 is setup properly

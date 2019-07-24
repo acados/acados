@@ -397,15 +397,20 @@ if (strcmp(opts_struct.compile_mex, 'true'))
       movefile('ocp_set_ext_fun_gen.mexa64', [mex_names{ii}, '.mexa64'])
     end
     
-	end
-
+  end
+  
+  
   if is_octave()
+    mex_ending = '.mex';
     movefile('*.o', 'build')
-    movefile('*.mex', 'build')
   elseif ispc
-    movefile('*.mexw64', 'build')
+    mex_ending = '.mexw64';
   else
-    movefile('*.mexa64', 'build')
+    mex_ending = '.mexa64';
+  end
+  
+  for k=1:length(mex_names)
+    movefile([mex_names{k}, mex_ending], 'build');
   end
   
 end
