@@ -66,12 +66,16 @@ for ii=1:length(mex_files)
 end
 
 if is_octave()
+  mex_ending = '.mex';
   movefile('*.o', 'build')
-  movefile('*.mex', 'build')
 elseif ispc
-	movefile('*.mexw64', 'build')
+  mex_ending = '.mexw64';
 else
-  movefile('*.mexa64', 'build')
+  mex_ending = '.mexa64';
+end
+
+for k=1:length(mex_files)
+  movefile([mex_files{k}, mex_ending], 'build');
 end
 
 
