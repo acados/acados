@@ -1,4 +1,4 @@
-function sim_generate_casadi_ext_fun(model_struct, opts_struct, build_dir)
+function sim_generate_casadi_ext_fun(model_struct, opts_struct)
 
 model_name = model_struct.name;
 
@@ -45,8 +45,8 @@ system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 c_files = strsplit(c_sources);
 for k=1:length(c_files)
   if ~isempty(c_files{k})
-    movefile(c_files{k}, build_dir)
+    movefile(c_files{k}, opts_struct.output_dir)
   end
 end
 
-movefile(lib_name, build_dir)
+movefile(lib_name, opts_struct.output_dir)

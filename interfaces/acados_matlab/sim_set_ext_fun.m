@@ -1,4 +1,4 @@
-function C_sim_ext_fun = sim_set_ext_fun(C_sim, C_sim_ext_fun, model_struct, opts_struct, build_dir)
+function C_sim_ext_fun = sim_set_ext_fun(C_sim, C_sim_ext_fun, model_struct, opts_struct)
 
 model_name = model_struct.name;
 
@@ -12,7 +12,7 @@ acados_include = ['-I' acados_folder];
 acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
 acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
 acados_matlab_lib_path = ['-L' fullfile(acados_folder, 'interfaces', 'acados_matlab')];
-model_lib_path = ['-L', build_dir];
+model_lib_path = ['-L', opts_struct.output_dir];
 
 %% select files to compile
 set_fields = {};
@@ -113,16 +113,16 @@ end
 if (strcmp(opts_struct.compile_mex, 'true'))
 
 	if is_octave()
-		if exist(fullfile(build_dir, 'cflags_octave.txt'), 'file')==0
-			diary(fullfile(build_dir, 'cflags_octave.txt'))
+		if exist(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'file')==0
+			diary(fullfile(opts_struct.output_dir, 'cflags_octave.txt'))
 			diary on
 			mkoctfile -p CFLAGS
 			diary off
-			input_file = fopen(fullfile(build_dir, 'cflags_octave.txt'), 'r');
+			input_file = fopen(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'r');
 			cflags_tmp = fscanf(input_file, '%[^\n]s');
 			fclose(input_file);
 			cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
-			input_file = fopen(fullfile(build_dir, 'cflags_octave.txt'), 'w');
+			input_file = fopen(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'w');
 			fprintf(input_file, '%s', cflags_tmp);
 			fclose(input_file);
 		end
@@ -138,7 +138,7 @@ if (strcmp(opts_struct.compile_mex, 'true'))
 		disp(['compiling ', mex_names{ii}])
 		if is_octave()
 	%		mkoctfile -p CFLAGS
-			input_file = fopen(fullfile(build_dir, 'cflags_octave.txt'), 'r');
+			input_file = fopen(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'r');
 			cflags_tmp = fscanf(input_file, '%[^\n]s');
 			fclose(input_file);
 			cflags_tmp = [cflags_tmp, ' -DSET_FIELD=', set_fields{ii}];
@@ -161,12 +161,12 @@ if (strcmp(opts_struct.compile_mex, 'true'))
   end
 
   if is_octave()
-    movefile('*.o', build_dir)
-    movefile('*.mex', build_dir)
+    movefile('*.o', opts_struct.output_dir)
+    movefile('*.mex', opts_struct.output_dir)
   elseif ispc
-    movefile('*.mexw64', build_dir)
+    movefile('*.mexw64', opts_struct.output_dir)
   else
-    movefile('*.mexa64', build_dir)
+    movefile('*.mexa64', opts_struct.output_dir)
   end
   
 end

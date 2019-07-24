@@ -12,21 +12,18 @@ classdef acados_ocp < handle
 	methods
 
 
-		function obj = acados_ocp(model, opts, build_dir)
+		function obj = acados_ocp(model, opts)
 			obj.model_struct = model.model_struct;
 			obj.opts_struct = opts.opts_struct;
-      
-      if nargin <= 2
-        build_dir = fullfile(pwd, 'build');
-      end
 
-			acados_create_build_dir(build_dir);
+      [~,~] = mkdir(obj.opts_struct.output_dir);
+      addpath(obj.opts_struct.output_dir);
 
 			% detect GNSF structure
 			if (strcmp(obj.opts_struct.sim_method, 'irk_gnsf'))
 				if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))
 					obj.model_struct = detect_gnsf_structure(obj.model_struct);
-					generate_get_gnsf_structure(obj.model_struct, build_dir);
+					generate_get_gnsf_structure(obj.model_struct, obj.opts_struct.compile_output_dir);
 				else
 					obj.model_struct = get_gnsf_structure(obj.model_struct);
 				end
@@ -34,20 +31,20 @@ classdef acados_ocp < handle
 
 			% compile mex without model dependency
 			if (strcmp(obj.opts_struct.compile_mex, 'true'))
-				ocp_compile_mex(obj.opts_struct, build_dir);
+				ocp_compile_mex(obj.opts_struct);
 			end
 
 			obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
 
 			% generate and compile casadi functions
 			if (strcmp(obj.opts_struct.codgen_model, 'true'))
-				ocp_generate_casadi_ext_fun(obj.model_struct, obj.opts_struct, build_dir);
+				ocp_generate_casadi_ext_fun(obj.model_struct, obj.opts_struct);
 			end
 
 			obj.C_ocp_ext_fun = ocp_create_ext_fun();
 
 			% compile mex with model dependency & set pointers for external functions in model
-			obj.C_ocp_ext_fun = ocp_set_ext_fun(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct, build_dir);
+			obj.C_ocp_ext_fun = ocp_set_ext_fun(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
 
 			% precompute
 			ocp_precompute(obj.C_ocp);
