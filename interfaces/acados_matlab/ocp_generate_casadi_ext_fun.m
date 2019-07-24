@@ -96,7 +96,7 @@ end
 % works also on windows if mingw64 is setup properly
 system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 
-c_files = split(c_sources);
+c_files = strsplit(c_sources);
 for k=1:length(c_files)
   if ~isempty(c_files{k})
     movefile(c_files{k}, build_dir)
