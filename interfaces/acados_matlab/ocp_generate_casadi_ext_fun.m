@@ -92,7 +92,15 @@ if ispc
 else
   lib_name = ['libocp_model.so'];
 end
+
+% works also on windows if mingw64 is setup properly
 system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 
-movefile('*.c', 'build')
+c_files = split(c_sources);
+for k=1:length(c_files)
+  if ~isempty(c_files{k})
+    movefile(c_files{k}, 'build')
+  end
+end
+
 movefile(lib_name, 'build')
