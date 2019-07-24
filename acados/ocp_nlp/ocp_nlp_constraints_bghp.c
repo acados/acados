@@ -281,19 +281,19 @@ static void ocp_nlp_constraints_bghp_get_nb(void *config_, void *dims_, int* val
 
 
 
-// static void ocp_nlp_constraints_bghp_get_nbx(void *config_, void *dims_, int* value)
-// {
-//     ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
-//     *value = dims->nbx;
-// }
+static void ocp_nlp_constraints_bghp_get_nbx(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    *value = dims->nbx;
+}
 
 
 
-// static void ocp_nlp_constraints_bghp_get_nbu(void *config_, void *dims_, int* value)
-// {
-//     ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
-//     *value = dims->nbu;
-// }
+static void ocp_nlp_constraints_bghp_get_nbu(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    *value = dims->nbu;
+}
 
 
 
@@ -323,6 +323,7 @@ static void ocp_nlp_constraints_bghp_get_ns(void *config_, void *dims_, int* val
 
 void ocp_nlp_constraints_bghp_dims_get(void *config_, void *dims_, const char *field, int* value)
 {
+
     if (!strcmp(field, "ni"))
     {
         ocp_nlp_constraints_bghp_get_ni(config_, dims_, value);
@@ -330,6 +331,14 @@ void ocp_nlp_constraints_bghp_dims_get(void *config_, void *dims_, const char *f
     else if (!strcmp(field, "nb"))
     {
         ocp_nlp_constraints_bghp_get_nb(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nbx"))
+    {
+        ocp_nlp_constraints_bghp_get_nbx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nbu"))
+    {
+        ocp_nlp_constraints_bghp_get_nbu(config_, dims_, value);
     }
     else if (!strcmp(field, "ng"))
     {
