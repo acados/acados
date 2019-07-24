@@ -24,7 +24,7 @@
 #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
-#include "acados_solver_{{ocp.model_name}}.h"
+#include "acados_solver_{{ocp.model.name}}.h"
 
 // ** global data **
 ocp_nlp_in * nlp_in;

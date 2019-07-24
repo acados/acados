@@ -22,6 +22,11 @@
             "NoneType"
         ]
     },
+     "model": {
+         "name" : [
+            "NoneType"
+        ]
+    },
     "acados_lib_path": [
         "str"
     ],

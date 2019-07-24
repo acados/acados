@@ -1,4 +1,4 @@
-#define S_FUNCTION_NAME   acados_solver_sfunction_{{ocp.model_name}}
+#define S_FUNCTION_NAME   acados_solver_sfunction_{{ocp.model.name}}
 #define S_FUNCTION_LEVEL  2
 
 #define MDL_START
@@ -17,8 +17,8 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 // example specific
-#include "{{ ocp.model_name }}_model/{{ ocp.model_name }}_model.h"
-#include "acados_solver_{{ ocp.model_name }}.h"
+#include "{{ ocp.model.name }}_model/{{ ocp.model.name }}_model.h"
+#include "acados_solver_{{ ocp.model.name }}.h"
 
 #include "simstruc.h"
 

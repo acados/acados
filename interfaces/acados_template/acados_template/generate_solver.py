@@ -5,9 +5,10 @@ from .generate_c_code_constraint import *
 from .acados_ocp_nlp import *
 from ctypes import *
 
-def generate_solver(model, acados_ocp, json_file='acados_ocp_nlp.json'):
+def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
-
+    
+    model = acados_ocp.model
     if acados_ocp.solver_config.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
@@ -25,7 +26,6 @@ def generate_solver(model, acados_ocp, json_file='acados_ocp_nlp.json'):
 
     if acados_ocp.con_p.name is not None:
         # convex part of nonlinear constraints 
-        import pdb; pdb.set_trace()
         generate_c_code_constraint(acados_ocp.con_p, '_p_constraint')
 
     ocp_nlp = acados_ocp
@@ -37,6 +37,8 @@ def generate_solver(model, acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp.con_h_e = acados_ocp.con_h_e.__dict__
     ocp_nlp.con_p = acados_ocp.con_p.__dict__
     ocp_nlp.con_p_e = acados_ocp.con_p_e.__dict__
+    ocp_nlp.model = acados_ocp.model.__dict__
+    import pdb; pdb.set_trace()
     ocp_nlp = ocp_nlp.__dict__
 
     # need to strip non-numerical stuff from expressions for now
@@ -44,6 +46,8 @@ def generate_solver(model, acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp['con_p'] = acados_constraint_strip_non_num(ocp_nlp['con_p'])
     ocp_nlp['con_h_e'] = acados_constraint_strip_non_num(ocp_nlp['con_h_e'])
     ocp_nlp['con_p_e'] = acados_constraint_strip_non_num(ocp_nlp['con_p_e'])
+
+    ocp_nlp['model'] = acados_dae_strip_non_num(ocp_nlp['model'])
 
     ocp_nlp = dict2json(ocp_nlp)
 

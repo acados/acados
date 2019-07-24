@@ -12,7 +12,7 @@ ra = acados_ocp_nlp()
 model = export_ode_model()
 
 # set model_name 
-ra.model_name = model.name
+ra.model = model
 
 Tf = 1.0
 nx = model.x.size()[0]
@@ -94,7 +94,7 @@ ra.solver_config.nlp_solver_type = 'SQP'
 ra.acados_include_path  = '/usr/local/include'
 ra.acados_lib_path      = '/usr/local/lib'
 
-acados_solver = generate_solver(model, ra, json_file = 'acados_ocp.json')
+acados_solver = generate_solver(ra, json_file = 'acados_ocp.json')
 
 Nsim = 100
 

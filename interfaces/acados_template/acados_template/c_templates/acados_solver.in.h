@@ -1,5 +1,5 @@
-#ifndef ACADOS_SOLVER_{{ocp.model_name}}_H_
-#define ACADOS_SOLVER_{{ocp.model_name}}_H_
+#ifndef ACADOS_SOLVER_{{ocp.model.name}}_H_
+#define ACADOS_SOLVER_{{ocp.model.name}}_H_
 
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
@@ -71,4 +71,4 @@ extern external_function_casadi * h_constraint;
 extern external_function_casadi * h_constraint_e;
 {% endif %}
 
-#endif  // ACADOS_SOLVER_{{ocp.model_name}}_H_
+#endif  // ACADOS_SOLVER_{{ocp.model.name}}_H_
