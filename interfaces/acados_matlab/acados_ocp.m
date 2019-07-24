@@ -116,6 +116,33 @@ classdef acados_ocp < handle
             obj.acados_ocp_nlp_json.con_p_e = [];
             obj.acados_ocp_nlp_json.con_p_e = con_p_e;
             
+            % post process numerical data (mostly cast scalars to 1-dimensional cells)
+            temp = obj.acados_ocp_nlp_json.constraints;
+            props = properties(temp);
+            for iprop = 1:length(props)
+                thisprop = props{iprop};
+                %%%Add logic here if you want to work with select properties
+                thisprop_value = temp.(thisprop);
+                %%%Add logic here if you want to do something based on the property's value
+                if size(thisprop_value) == [1 1]
+                    temp.(thisprop) = num2cell(temp.(thisprop));
+                end
+            end
+            obj.acados_ocp_nlp_json.constraints = temp;
+            
+            temp = obj.acados_ocp_nlp_json.cost;
+            props = properties(temp);
+            for iprop = 1:length(props)
+                thisprop = props{iprop};
+                %%%Add logic here if you want to work with select properties
+                thisprop_value = temp.(thisprop);
+                %%%Add logic here if you want to do something based on the property's value
+                if size(thisprop_value) == [1 1]
+                    temp.(thisprop) = num2cell(temp.(thisprop));
+                end
+            end
+            obj.acados_ocp_nlp_json.cost = temp;
+            
             % dump JSON file
             json_string = jsonencode(obj.acados_ocp_nlp_json);
             fid = fopen('acados_ocp_nlp.json', 'w');
