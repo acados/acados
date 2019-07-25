@@ -249,6 +249,13 @@
                     "nsbx_e"
                 ]
         ],
+        "Jsbx_e": [
+            "ndarray",
+                [
+                    "nsbx_e",
+                    "nx"
+                ]
+        ],
         "lsh": [
             "ndarray",
             [

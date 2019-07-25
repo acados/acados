@@ -574,7 +574,7 @@ class ocp_nlp_constraints:
         self.__lsbx_e  = []        #: soft lower bounds on x at t=T
         self.__usbx_e  = []        #: soft upper bounds on x at t=T
         self.__idxsbx_e= []        #: indexes of soft bounds on x at t=T 
-        self.__Jsx_e    = []       #: :math`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T 
+        self.__Jsbx_e    = []      #: :math`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T 
         # soft bounds on nonlinear constraints
         self.__lsh    = []         #: soft lower bounds for nonlinear constraints 
         self.__ush    = []         #: soft upper bounds for nonlinear constraints 
