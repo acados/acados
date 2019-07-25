@@ -844,7 +844,7 @@ class ocp_nlp_constraints:
     @Jbu.setter
     def Jbu(self, Jbu):
         if type(Jbu) == np.ndarray:
-            self.__Jbu = Jbu
+            self.__idxbu = self.J_to_idx(Jbu)
         else:
             raise Exception('Invalid Jbu value. Exiting.')
 
@@ -873,7 +873,7 @@ class ocp_nlp_constraints:
     @Jbx_e.setter
     def Jbx_e(self, Jbx_e):
         if type(Jbx_e) == np.ndarray:
-            self.__Jbx_e = Jbx_e
+            self.__idxbx_e = self.J_to_idx(Jbx_e)
         else:
             raise Exception('Invalid Jbx_e value. Exiting.')
 
@@ -983,7 +983,7 @@ class ocp_nlp_constraints:
     @Jsbx.setter
     def Jsbx(self, Jsbx):
         if type(Jsbx) == np.ndarray:
-            self.__Jsbx = Jsbx
+            self.__idxsbx = self.J_to_idx(Jbsx)
         else:
             raise Exception('Invalid Jsbx value. Exiting.')
 
@@ -1012,7 +1012,7 @@ class ocp_nlp_constraints:
     @Jsbu.setter
     def Jsbu(self, Jsbu):
         if type(Jsbu) == np.ndarray:
-            self.__Jsbu = Jsbu
+            self.__idxsbu = self.J_to_idx(Jbsu)
         else:
             raise Exception('Invalid Jsbu value. Exiting.')
 
@@ -1042,6 +1042,7 @@ class ocp_nlp_constraints:
     def Jsbx_e(self, Jsbx_e):
         if type(Jsbx_e) == np.ndarray:
             self.__Jsbx_e = Jsbx_e
+            self.__idxsbx_e = self.J_to_idx(Jbsx_e)
         else:
             raise Exception('Invalid Jsbx_e value. Exiting.')
 
