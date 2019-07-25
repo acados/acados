@@ -20,7 +20,7 @@ classdef acados_ocp < handle
             % TODO(andrea): this is temporary. later on the solver_config
             % object will separate from the OCP object
             
-            model.acados_ocp_nlp_json.solver_config.qp_solver = obj.opts_struct.qp_solver;
+            model.acados_ocp_nlp_json.solver_config.qp_solver = upper(obj.opts_struct.qp_solver);
             model.acados_ocp_nlp_json.solver_config.integrator_type = upper(obj.opts_struct.sim_method);
             model.acados_ocp_nlp_json.solver_config.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
             model.acados_ocp_nlp_json.dims.N = upper(obj.opts_struct.param_scheme_N);

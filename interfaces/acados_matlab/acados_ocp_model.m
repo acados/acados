@@ -6,7 +6,24 @@ classdef acados_ocp_model < handle
 	end % properties
 
 
-
+    methods(Static)
+        function idx = J_to_idx(J)
+            size_J = size(J);
+            nrows = size_J(1);
+            idx = zeros(nrows);
+            for i = 1:nrows
+                this_idx = nonzeros(J(i,:));
+                if length(this_idx) ~= 1
+                    error('Invalid J matrix. Exiting.');
+                end
+                if J(i,this_idx) ~= 1
+                    error('J matrices can only contain 1s. Exiting.')
+                end
+                idx(i) = this_idx - 1; % strore 0-based index
+            end
+        end
+    end % methods(static)
+    
 	methods
 		
 
@@ -178,6 +195,7 @@ classdef acados_ocp_model < handle
                     obj.acados_ocp_nlp_json.constraints.ubx = value;
 				elseif (strcmp(field, 'constr_Jbu'))
 					obj.model_struct.constr_Jbu = value;
+  					obj.acados_ocp_nlp_json.constraints.idxbu = obj.J_to_idx(value);
 				elseif (strcmp(field, 'constr_lbu'))
 					obj.model_struct.constr_lbu = value;
                     obj.acados_ocp_nlp_json.constraints.lbu = value;
@@ -359,10 +377,12 @@ classdef acados_ocp_model < handle
 					disp(['acados_ocp_model: set: wrong field: ', field]);
 					keyboard;
 				end
-			end
-		end
+            end    
+        end
 
 	end % methods
+    
+
 
 
 
