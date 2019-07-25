@@ -779,6 +779,18 @@ class ocp_nlp_constraints:
     def p(self):
         return self.__p
 
+    def J_to_idx(self, J):
+        nrows = J.shape[0]
+        idx = np.zeros((nrows, ))
+        for i in range(nrows):
+            this_idx = np.nonzero(J[i,:])[0]
+            if len(this_idx) != 1: 
+                raise Exception('Invalid J matrix structure detected. Exiting.')
+            if J[i,this_idx[0]] != 1:
+                raise Exception('J matrices can only contain 1s. Exiting.')
+            idx[i] = this_idx[0]
+        return idx
+
     # bounds on x and u
     @lbx.setter
     def lbx(self, lbx):
@@ -804,7 +816,7 @@ class ocp_nlp_constraints:
     @Jbx.setter
     def Jbx(self, Jbx):
         if type(Jbx) == np.ndarray:
-            self.__Jbx = Jbx
+            self.__idxbx = self.J_to_idx(Jbx)
         else:
             raise Exception('Invalid Jbx value. Exiting.')
 
