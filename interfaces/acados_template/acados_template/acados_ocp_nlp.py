@@ -538,14 +538,14 @@ class ocp_nlp_constraints:
         self.__ubx     = []        #: :math:`\bar{x}` - upper bounds on x 
         self.__ubu     = []        #: :math:`\bar{u}` - upper bounds on u 
         self.__idxbx   = []        #: indexes of bounds on x (defines :math:`\Pi_x`) 
-        self.__Jbx     = []        #: :math`J_x` - matrix coefficient for bounds on x 
+        # self.__Jbx     = []        #: :math`J_x` - matrix coefficient for bounds on x 
         self.__idxbu   = []        #: indexes of bounds on u (defines :math:`\Pi_u`)
-        self.__Jbu     = []        #: :math`J_u` - matrix coefficient for bounds on u 
+        # self.__Jbu     = []        #: :math`J_u` - matrix coefficient for bounds on u 
         # bounds on x at t=T
         self.__lbx_e   = []        #: :math:`\underline{x}^e` - lower bounds on x at t=T 
         self.__ubx_e   = []        #: :math:`\bar{x}^e` - upper bounds on x at t=T 
         self.__idxbx_e = []        #: indexes for bounds on x at t=T (defines :math:`\Pi_x^e`) 
-        self.__Jbx_e   = []         #: :math`J_{x}^e`indexes of bounds on x (defines :math:`\Pi_x`) 
+        # self.__Jbx_e   = []         #: :math`J_{x}^e`indexes of bounds on x (defines :math:`\Pi_x`) 
         # polytopic constraints 
         self.__lg      = []        #: :math:`\underline{c}` - lower bound for general polytopic inequalities 
         self.__ug      = []        #: :math:`\bar{c}` - upper bound for general polytopic inequalities 
@@ -567,24 +567,24 @@ class ocp_nlp_constraints:
         self.__usbx   = []         #: soft upper bounds on x 
         self.__usbu   = []         #: soft upper bounds on u 
         self.__idxsbx = []         #: indexes of soft bounds on x 
-        self.__Jsbx   = []         #: :math`J_{s,x}` - matrix coefficient for soft bounds on x 
+        # self.__Jsbx   = []         #: :math`J_{s,x}` - matrix coefficient for soft bounds on x 
         self.__idxsbu = []         #: indexes of soft bounds on u
-        self.__Jsbu   = []         #: :math`J_{s,u}` - matrix coefficient for soft bounds on u 
+        # self.__Jsbu   = []         #: :math`J_{s,u}` - matrix coefficient for soft bounds on u 
         # soft bounds on x at t=T
         self.__lsbx_e  = []        #: soft lower bounds on x at t=T
         self.__usbx_e  = []        #: soft upper bounds on x at t=T
         self.__idxsbx_e= []        #: indexes of soft bounds on x at t=T 
-        self.__Jsbx_e    = []      #: :math`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T 
+        # self.__Jsbx_e    = []      #: :math`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T 
         # soft bounds on nonlinear constraints
         self.__lsh    = []         #: soft lower bounds for nonlinear constraints 
         self.__ush    = []         #: soft upper bounds for nonlinear constraints 
         self.__idxsh  = []         #: indexes of soft nonlinear constraints 
-        self.__Jsh    = []         #: :math`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints 
+        # self.__Jsh    = []         #: :math`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints 
         # soft bounds on nonlinear constraints at t=T
         self.__lsh_e    = []       #: soft lower bounds for nonlinear constraints at t=T
         self.__ush_e    = []       #: soft upper bounds for nonlinear constraints at t=T
         self.__idxsh_e  = []       #: indexes of soft nonlinear constraints at t=T 
-        self.__Jsh_e    = []       #: :math`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T 
+        # self.__Jsh_e    = []       #: :math`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T 
         self.__x0      = []        #: :math:`\bar{x}_0` - initial state 
         self.__p       = []        #: :math:`p` - parameters 
 

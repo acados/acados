@@ -67,25 +67,11 @@
                     "nbx"
                 ]
         ],
-        "Jbx": [
-            "ndarray",
-                [
-                    "nbx",
-                    "nx"
-                ]
-        ],
         "idxbu": [
             "ndarray",
             [
                 "nbu"
             ]
-        ],
-        "Jbu": [
-            "ndarray",
-                [
-                    "nbu",
-                    "nu"
-                ]
         ],
         "lbx_e": [
             "ndarray",
@@ -104,13 +90,6 @@
                     [
                         "nbx_e"
                     ]
-        ],
-        "Jbx_e": [
-            "ndarray",
-                [
-                    "nbx_e",
-                    "nx"
-                ]
         ],
         "lg": [
             "ndarray",
@@ -211,25 +190,11 @@
                     "nsbx"
                 ]
         ],
-        "Jsbx": [
-            "ndarray",
-                [
-                    "nsbx",
-                    "nx"
-                ]
-        ],
         "idxsbu": [
             "ndarray",
             [
                 "nsbu"
             ]
-        ],
-        "Jsbu": [
-            "ndarray",
-                [
-                    "nsbu",
-                    "nu"
-                ]
         ],
         "lsbx_e": [
             "ndarray",
@@ -247,13 +212,6 @@
             "ndarray",
                 [
                     "nsbx_e"
-                ]
-        ],
-        "Jsbx_e": [
-            "ndarray",
-                [
-                    "nsbx_e",
-                    "nx"
                 ]
         ],
         "lsh": [
@@ -274,13 +232,6 @@
                 "nsh"
             ]
         ],
-        "Jsh": [
-            "ndarray",
-                [
-                    "nsh",
-                    "nh"
-                ]
-        ],
         "lsh_e": [
             "ndarray",
             [
@@ -298,13 +249,6 @@
             [
                 "nsh_e"
             ]
-        ],
-        "Jsh_e": [
-            "ndarray",
-                [
-                    "nsh_e",
-                    "nh_e"
-                ]
         ],
         "p": [
             "ndarray",
