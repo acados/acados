@@ -67,11 +67,25 @@
                     "nbx"
                 ]
         ],
+        "Jbx": [
+            "ndarray",
+                [
+                    "nbx",
+                    "nx"
+                ]
+        ],
         "idxbu": [
             "ndarray",
             [
                 "nbu"
             ]
+        ],
+        "Jbu": [
+            "ndarray",
+                [
+                    "nbu",
+                    "nu"
+                ]
         ],
         "lbx_e": [
             "ndarray",
@@ -91,95 +105,12 @@
                         "nbx_e"
                     ]
         ],
-        "lsbx": [
+        "Jbx_e": [
             "ndarray",
                 [
-                    "nsbx"
+                    "nbx_e",
+                    "nx"
                 ]
-        ],
-        "lsbu": [
-            "ndarray",
-            [
-                "nsbu"
-            ]
-        ],
-        "usbx": [
-            "ndarray",
-                [
-                    "nsbx"
-                ]
-        ],
-        "usbu": [
-            "ndarray",
-            [
-                "nsbu"
-            ]
-        ],
-        "lsh": [
-            "ndarray",
-            [
-                "nsh"
-            ]
-        ],
-        "ush": [
-            "ndarray",
-            [
-                "nsh"
-            ]
-        ],
-        "idxsbx": [
-            "ndarray",
-                [
-                    "nsbx"
-                ]
-        ],
-        "idxsbu": [
-            "ndarray",
-            [
-                "nsbu"
-            ]
-        ],
-        "idxsh": [
-            "ndarray",
-            [
-                "nsh"
-            ]
-        ],
-        "lsbx_e": [
-            "ndarray",
-                [
-                    "nsbx_e"
-                ]
-        ],
-        "usbx_e": [
-            "ndarray",
-                [
-                    "nsbx_e"
-                ]
-        ],
-        "idxsbx_e": [
-            "ndarray",
-                [
-                    "nsbx_e"
-                ]
-        ],
-        "lsh_e": [
-            "ndarray",
-            [
-                "nsh_e"
-            ]
-        ],
-        "ush_e": [
-            "ndarray",
-            [
-                "nsh_e"
-            ]
-        ],
-        "idxsh_e": [
-            "ndarray",
-            [
-                "nsh_e"
-            ]
         ],
         "lg": [
             "ndarray",
@@ -249,6 +180,124 @@
             [
                 "nh_e"
             ]
+        ],
+        "lsbx": [
+            "ndarray",
+                [
+                    "nsbx"
+                ]
+        ],
+        "usbx": [
+            "ndarray",
+                [
+                    "nsbx"
+                ]
+        ],
+        "lsbu": [
+            "ndarray",
+            [
+                "nsbu"
+            ]
+        ],
+        "usbu": [
+            "ndarray",
+            [
+                "nsbu"
+            ]
+        ],
+        "idxsbx": [
+            "ndarray",
+                [
+                    "nsbx"
+                ]
+        ],
+        "Jsbx": [
+            "ndarray",
+                [
+                    "nsbx",
+                    "nx"
+                ]
+        ],
+        "idxsbu": [
+            "ndarray",
+            [
+                "nsbu"
+            ]
+        ],
+        "Jsbu": [
+            "ndarray",
+                [
+                    "nsbu",
+                    "nu"
+                ]
+        ],
+        "lsbx_e": [
+            "ndarray",
+                [
+                    "nsbx_e"
+                ]
+        ],
+        "usbx_e": [
+            "ndarray",
+                [
+                    "nsbx_e"
+                ]
+        ],
+        "idxsbx_e": [
+            "ndarray",
+                [
+                    "nsbx_e"
+                ]
+        ],
+        "lsh": [
+            "ndarray",
+            [
+                "nsh"
+            ]
+        ],
+        "ush": [
+            "ndarray",
+            [
+                "nsh"
+            ]
+        ],
+        "idxsh": [
+            "ndarray",
+            [
+                "nsh"
+            ]
+        ],
+        "Jsh": [
+            "ndarray",
+                [
+                    "nsh",
+                    "nh"
+                ]
+        ],
+        "lsh_e": [
+            "ndarray",
+            [
+                "nsh_e"
+            ]
+        ],
+        "ush_e": [
+            "ndarray",
+            [
+                "nsh_e"
+            ]
+        ],
+        "idxsh_e": [
+            "ndarray",
+            [
+                "nsh_e"
+            ]
+        ],
+        "Jsh_e": [
+            "ndarray",
+                [
+                    "nsh_e",
+                    "nh_e"
+                ]
         ],
         "p": [
             "ndarray",
