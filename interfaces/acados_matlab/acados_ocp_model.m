@@ -187,6 +187,7 @@ classdef acados_ocp_model < handle
                     obj.acados_ocp_nlp_json.constraints.x0 = value;
 				elseif (strcmp(field, 'constr_Jbx'))
 					obj.model_struct.constr_Jbx = value;
+   					obj.acados_ocp_nlp_json.constraints.idxbx = obj.J_to_idx(value);
 				elseif (strcmp(field, 'constr_lbx'))
 					obj.model_struct.constr_lbx = value;
                     obj.acados_ocp_nlp_json.constraints.lbx = value;
@@ -263,36 +264,42 @@ classdef acados_ocp_model < handle
                     obj.acados_ocp_nlp_json.constraints.uh_e = value;
 				elseif (strcmp(field, 'constr_Jsbu'))
 					obj.model_struct.constr_Jsbu = value;
+   					obj.acados_ocp_nlp_json.constraints.idxsbu = obj.J_to_idx(value);
 	%			elseif (strcmp(field, 'constr_lsbu'))
 	%				obj.model_struct.constr_lsbu = value;
 	%			elseif (strcmp(field, 'constr_usbu'))
 	%				obj.model_struct.constr_usbu = value;
 				elseif (strcmp(field, 'constr_Jsbx'))
 					obj.model_struct.constr_Jsbx = value;
+                    obj.acados_ocp_nlp_json.constraints.idxsbx = obj.J_to_idx(value);
 	%			elseif (strcmp(field, 'constr_lsbx'))
 	%				obj.model_struct.constr_lsbx = value;
 	%			elseif (strcmp(field, 'constr_usbx'))
 	%				obj.model_struct.constr_usbx = value;
 				elseif (strcmp(field, 'constr_Jsg'))
 					obj.model_struct.constr_Jsg = value;
+                    warning('Jsg not implmented in code-gen backend')
 	%			elseif (strcmp(field, 'constr_lsg'))
 	%				obj.model_struct.constr_lsg = value;
 	%			elseif (strcmp(field, 'constr_usg'))
 	%				obj.model_struct.constr_usg = value;
 				elseif (strcmp(field, 'constr_Jsg_e'))
 					obj.model_struct.constr_Jsg_e = value;
+                    warning('Jsg not implmented in code-gen backend')
 	%			elseif (strcmp(field, 'constr_lsg_e'))
 	%				obj.model_struct.constr_lsg_e = value;
 	%			elseif (strcmp(field, 'constr_usg_e'))
 	%				obj.model_struct.constr_usg_e = value;
 				elseif (strcmp(field, 'constr_Jsh'))
 					obj.model_struct.constr_Jsh = value;
+                    obj.acados_ocp_nlp_json.constraints.idxsh = obj.J_to_idx(value);
 	%			elseif (strcmp(field, 'constr_lsh'))
 	%				obj.model_struct.constr_lsh = value;
 	%			elseif (strcmp(field, 'constr_ush'))
 	%				obj.model_struct.constr_ush = value;
 				elseif (strcmp(field, 'constr_Jsh_e'))
 					obj.model_struct.constr_Jsh_e = value;
+                    obj.acados_ocp_nlp_json.constraints.idxsh_e = obj.J_to_idx(value);
 	%			elseif (strcmp(field, 'constr_lsh_e'))
 	%				obj.model_struct.constr_lsh_e = value;
 	%			elseif (strcmp(field, 'constr_ush_e'))
