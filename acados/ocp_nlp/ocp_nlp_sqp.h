@@ -129,7 +129,7 @@ typedef struct
 	ocp_qp_res_ws *qp_res_ws;
 
 	// QP stuff not entering the qp_in struct
-    struct blasfeo_dmat *dzdux_tran; // dzdux transposed
+    struct blasfeo_dmat *dzduxt; // dzdux transposed
     struct blasfeo_dvec *z_alg; // z_alg
 
     void **dynamics;     // dynamics_workspace

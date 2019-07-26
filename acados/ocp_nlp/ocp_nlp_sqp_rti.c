@@ -673,7 +673,7 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
 
     }
 
-	// dzdux
+	// dzduxt
 	size += (N+1)*sizeof(struct blasfeo_dmat);
 	for(ii=0; ii<=N; ii++)
 		size += blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]);
@@ -781,26 +781,39 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
 
 #else
 
+		int size_tmp = 0;
+		int tmp;
+
         // qp solver
         work->qp_work = (void *) c_ptr;
+        tmp = qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+        size_tmp = tmp > size_tmp ? tmp : size_tmp;
 
         // dynamics
         for (int ii = 0; ii < N; ii++)
         {
             work->dynamics[ii] = c_ptr;
+            tmp = dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+            size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
 
         // cost
         for (int ii = 0; ii <= N; ii++)
         {
             work->cost[ii] = c_ptr;
+            tmp = cost[ii]->workspace_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+            size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
 
         // constraints
         for (int ii = 0; ii <= N; ii++)
         {
             work->constraints[ii] = c_ptr;
+            tmp = constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+            size_tmp = tmp > size_tmp ? tmp : size_tmp;
         }
+
+        c_ptr += size_tmp;
 
 #endif
 
@@ -841,8 +854,8 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
     // blasfeo_str align
     align_char_to(8, &c_ptr);
 
-	// dzduz_tran
-	work->dzdux_tran = (struct blasfeo_dmat *) c_ptr;
+	// dzduxt
+	work->dzduxt = (struct blasfeo_dmat *) c_ptr;
 	c_ptr += (N+1)*sizeof(struct blasfeo_dmat);
 	// z_alg
 	work->z_alg = (struct blasfeo_dvec *) c_ptr;
@@ -851,10 +864,10 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
 
-	// dzduz_tran
+	// dzduxt
 	for(ii=0; ii<=N; ii++)
 		{
-		blasfeo_create_dmat(nu[ii]+nx[ii], nz[ii], work->dzdux_tran+ii, c_ptr);
+		blasfeo_create_dmat(nu[ii]+nx[ii], nz[ii], work->dzduxt+ii, c_ptr);
 		c_ptr += blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]);
 		}
 	// z_alg
@@ -1080,6 +1093,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
     int *nx = dims->nx;
     // int *nu = dims->nu;
     int *ni = dims->ni;
+    int *nz = dims->nz;
 
     // TODO(all): fix and move where appropriate
     //    for (i = 0; i < N; i++)
@@ -1108,6 +1122,9 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
         blasfeo_dveccp(2 * ni[i], work->qp_out->lam + i, 0, nlp_out->lam + i, 0);
 
         blasfeo_dveccp(2 * ni[i], work->qp_out->t + i, 0, nlp_out->t + i, 0);
+
+        if (i < N)
+			blasfeo_dveccp(nz[i], work->z_alg+i, 0, nlp_out->z+i, 0);
 
     }
 
@@ -1175,7 +1192,10 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->dynamics[ii]->memory_set_pi_ptr(nlp_out->pi+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_BAbt_ptr(work->qp_in->BAbt+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq+ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_z_alg_ptr(nlp_out->z+ii, mem->dynamics[ii]);
+//        config->dynamics[ii]->memory_set_z_alg_ptr(nlp_out->z+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_dzduxt_ptr(work->dzduxt+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_z_guess_ptr(nlp_out->z+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_z_alg_ptr(work->z_alg+ii, mem->dynamics[ii]);
     }
 
     // alias to cost_memory
@@ -1185,11 +1205,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     for (ii = 0; ii <= N; ii++)
     {
         config->cost[ii]->memory_set_ux_ptr(nlp_out->ux + ii, mem->cost[ii]);
-        if (dims->nz[ii] > 0) {
-			// TODO fix creating dynamics->memory_get !!!!!!!!!!!! or add these terms in nlp work alongside qp_in ???
-            config->cost[ii]->memory_set_z_alg_ptr(&(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->z_out), mem->cost[ii]);
-            config->cost[ii]->memory_set_dzdux_tran_ptr(&(((ocp_nlp_dynamics_cont_memory *) mem->dynamics[ii])->dzdux_tran), mem->cost[ii]);
-        }
+		config->cost[ii]->memory_set_z_alg_ptr(work->z_alg+ii, mem->cost[ii]);
+		config->cost[ii]->memory_set_dzdux_tran_ptr(work->dzduxt+ii, mem->cost[ii]);
         config->cost[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq + ii, mem->cost[ii]);
         config->cost[ii]->memory_set_Z_ptr(work->qp_in->Z + ii, mem->cost[ii]);
     }
