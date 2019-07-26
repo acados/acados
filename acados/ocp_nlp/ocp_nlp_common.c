@@ -252,6 +252,27 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     // N
     dims->N = N;
 
+	// initialize dimensions to zero by default
+	// nv
+	for(ii=0; ii<=N; ii++)
+		dims->nv[ii] = 0;
+	// nx
+	for(ii=0; ii<=N; ii++)
+		dims->nx[ii] = 0;
+	// nu
+	for(ii=0; ii<=N; ii++)
+		dims->nu[ii] = 0;
+	// ni
+	for(ii=0; ii<=N; ii++)
+		dims->ni[ii] = 0;
+	// nz
+	for(ii=0; ii<=N; ii++)
+		dims->nz[ii] = 0;
+	// ns
+	for(ii=0; ii<=N; ii++)
+		dims->ns[ii] = 0;
+	// TODO initialize dims to zero by default also in modules !!!!!!!
+
     // assert
     assert((char *) raw_memory + ocp_nlp_dims_calculate_size_self(N) >= c_ptr);
 
