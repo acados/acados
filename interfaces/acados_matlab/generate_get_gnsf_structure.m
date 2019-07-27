@@ -1,4 +1,6 @@
-function generate_get_gnsf_structure(model, output_dir)
+function generate_get_gnsf_structure(model, opts)
+
+output_dir = opts.output_dir;
 
 fileID = fopen(fullfile(output_dir, 'get_gnsf_structure.m'), 'w');
 

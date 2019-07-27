@@ -387,16 +387,16 @@ if (strcmp(opts_struct.compile_mex, 'true'))
 			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{1});
 		else
 			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', ['-DSETTER=', setter{ii}], ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], ['-DPHASE=', num2str(phase{ii})], ['-DN0=', num2str(phase_start{ii})], ['-DN1=', num2str(phase_end{ii})], acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{1}); % TODO
-    end
-    
-    clear(mex_names{ii})
-    movefile(['ocp_set_ext_fun_gen.', mexext], fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
-  end
-  
-end
+		end
+		
+%		clear(mex_names{ii})
+		movefile(['ocp_set_ext_fun_gen.', mexext], fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
+	end
+	
+	if is_octave()
+		movefile('*.o', opts_struct.output_dir);
+	end
 
-if is_octave()
-  movefile('*.o', opts_struct.output_dir)
 end
 
 %C_ocp_ext_fun

@@ -35,18 +35,19 @@ else
 end
 
 if ispc
-  lib_name = ['lib', model_name, '.lib'];
+	lib_name = ['lib', model_name, '.lib'];
 else
-  lib_name = ['lib', model_name, '.so'];
+	lib_name = ['lib', model_name, '.so'];
 end
 
+% works also on windows if mingw64 is setup properly
 system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 
 c_files = strsplit(c_sources);
 for k=1:length(c_files)
-  if ~isempty(c_files{k})
-    movefile(c_files{k}, opts_struct.output_dir)
-  end
+	if ~isempty(c_files{k})
+		movefile(c_files{k}, opts_struct.output_dir);
+	end
 end
 
-movefile(lib_name, opts_struct.output_dir)
+movefile(lib_name, opts_struct.output_dir);

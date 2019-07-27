@@ -88,9 +88,9 @@ if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_
 end
 
 if ispc
-  lib_name = 'libocp_model.lib';
+	lib_name = 'libocp_model.lib';
 else
-  lib_name = 'libocp_model.so';
+	lib_name = 'libocp_model.so';
 end
 
 % works also on windows if mingw64 is setup properly
@@ -98,9 +98,9 @@ system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 
 c_files = strsplit(c_sources);
 for k=1:length(c_files)
-  if ~isempty(c_files{k})
-    movefile(c_files{k}, opts_struct.output_dir)
-  end
+	if ~isempty(c_files{k})
+		movefile(c_files{k}, opts_struct.output_dir);
+	end
 end
 
-movefile(lib_name, opts_struct.output_dir)
+movefile(lib_name, opts_struct.output_dir);
