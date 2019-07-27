@@ -25,6 +25,7 @@ classdef acados_ocp_opts < handle
 			obj.opts_struct.sim_method = 'irk';
 			obj.opts_struct.regularize_method = 'no_regularize';
 			obj.opts_struct.gnsf_detect_struct = 'true';
+      obj.opts_struct.output_dir = fullfile(pwd, 'build');
 		end
 
 
@@ -75,6 +76,8 @@ classdef acados_ocp_opts < handle
 				obj.opts_struct.gnsf_detect_struct = value;
 			elseif (strcmp(field, 'regularize_method'))
 				obj.opts_struct.regularize_method = value;
+      elseif (strcmp(field, 'output_dir'))
+        obj.opts_struct.output_dir = value;
 			else
 				disp(['acados_ocp_opts: set: wrong field: ', field]);
 				keyboard;
