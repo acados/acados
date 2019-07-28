@@ -61,7 +61,7 @@ nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
-if 0
+if 1
 	nbx = 0;
 	nbu = nu;
 	ng = 0;
