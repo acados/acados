@@ -86,8 +86,8 @@ nlp_dims.nx  = nx
 nlp_dims.ny  = ny 
 nlp_dims.ny_e = ny_e 
 nlp_dims.nbx = 0
-nlp_dims.ns = nu 
 nlp_dims.nu  = model.u.size()[0]
+nlp_dims.ns = nu 
 nlp_dims.N   = N
 
 if FORMULATION == 1:
@@ -101,6 +101,7 @@ elif FORMULATION == 0:
     nlp_dims.nbu  = model.u.size()[0]
     nlp_dims.nsbu = model.u.size()[0]
 elif FORMULATION == 2:
+    nlp_dims.ns_e = 1
     nlp_dims.nh    = model.u.size()[0]
     nlp_dims.nsh   = model.u.size()[0] 
     nlp_dims.nh_e  = 1
@@ -151,9 +152,14 @@ nlp_cost.Zl = 0*np.ones((1, 1))
 nlp_cost.zu = 50*np.ones((1, ))
 nlp_cost.Zu = 0*np.ones((1, 1))
 
+nlp_cost.zl_e = 5000*np.ones((1, ))
+nlp_cost.Zl_e = 0*np.ones((1, 1))
+nlp_cost.zu_e = 5000*np.ones((1, ))
+nlp_cost.Zu_e = 0*np.ones((1, 1))
+
 # setting bounds
 Fmax = 80.0
-xmax = 10.0
+xmax = 1.0
 nlp_con = ocp.constraints
 nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
 
