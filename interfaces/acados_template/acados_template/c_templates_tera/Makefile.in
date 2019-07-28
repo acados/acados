@@ -21,6 +21,9 @@ OBJ+= {{ con_p.name }}_p_constraint/{{ con_p.name }}_p_constraint.o
 {% if dims.nh > 0 %}
 OBJ+= {{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.o
 {% endif %}
+{% if dims.nh_e > 0 %}
+OBJ+= {{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.o
+{% endif %}
 OBJ+= acados_solver_{{ model.name }}.o
 
 INCLUDE_PATH = {{ acados_include_path }}
@@ -48,6 +51,9 @@ CASADI_CON_H_SOURCE=
 {% if dims.nh > 0 %}
 CASADI_CON_H_SOURCE+= {{ con_h.name }}_h_constraint.c 
 {% endif %}
+{% if dims.nh_e > 0 %}
+CASADI_CON_H_E_SOURCE+= {{ con_h_e.name }}_h_e_constraint.c 
+{% endif %}
 
 casadi_fun:
 	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE))
@@ -56,6 +62,9 @@ casadi_fun:
 	{% endif %}
 	{% if dims.nh > 0 %}
 	( cd {{ con_h.name }}_h_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))
+	{% endif %}
+	{% if dims.nh_e > 0 %}
+	( cd {{ con_h_e.name }}_h_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_E_SOURCE))
 	{% endif %}
 
 main:
