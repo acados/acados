@@ -70,7 +70,7 @@ external_function_casadi * p_constraint_e;
 external_function_casadi * h_constraint;
 {% endif %}
 {% if ocp.dims.nh_e > 0 %}
-external_function_casadi * h_constraint_e;
+external_function_casadi h_e_constraint;
 {% endif %}
 
 int main() {

@@ -59,7 +59,7 @@ extern external_function_casadi * p_constraint_e;
 extern external_function_casadi * h_constraint;
 {% endif %}
 {% if dims.nh_e > 0 %}
-extern external_function_casadi * h_constraint_e;
+extern external_function_casadi h_e_constraint;
 {% endif %}
 
 

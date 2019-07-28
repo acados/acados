@@ -68,7 +68,7 @@ extern external_function_casadi * p_constraint_e;
 extern external_function_casadi * h_constraint;
 {% endif %}
 {% if ocp.dims.nh_e > 0 %}
-extern external_function_casadi * h_constraint_e;
+extern external_function_casadi h_e_constraint;
 {% endif %}
 
 #endif  // ACADOS_SOLVER_{{ocp.model.name}}_H_

@@ -63,14 +63,14 @@ external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 external_function_casadi * p_constraint;
 {% endif %}
 {% if dims.npd_e > 0 %}
-external_function_casadi * p_constraint_N;
+external_function_casadi * p_e_constraint;
 {% endif %}
 {% endif %}
 {% if dims.nh > 0 %}
 external_function_casadi * h_constraint;
 {% endif %}
 {% if dims.nh_e > 0 %}
-external_function_casadi * h_constraint_N;
+external_function_casadi h_e_constraint;
 {% endif %}
 
 int main() {

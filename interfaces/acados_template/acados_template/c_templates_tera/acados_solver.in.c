@@ -506,7 +506,6 @@ int acados_create() {
 
     {% if dims.nh_e > 0 %}
 	// nonlinear constraint
-	external_function_casadi h_e_constraint;
 	h_e_constraint.casadi_fun = &{{ con_h_e.name }}_h_e_constraint;
 	h_e_constraint.casadi_n_in = &{{ con_h_e.name }}_h_e_constraint_n_in;
 	h_e_constraint.casadi_n_out = &{{ con_h_e.name }}_h_e_constraint_n_out;

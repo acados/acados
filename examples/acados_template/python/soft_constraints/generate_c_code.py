@@ -179,7 +179,7 @@ elif FORMULATION == 0:
     nlp_con.usbu = 0*np.array([+Fmax])
     nlp_con.idxbu = np.array([0])
     nlp_con.idxsbu = np.array([0])
-if FORMULATION == 2:
+elif FORMULATION == 2:
     nlp_con.lh = np.array([-Fmax])
     nlp_con.uh = np.array([+Fmax])
     nlp_con.lsh = 0*np.array([-Fmax])
@@ -247,15 +247,20 @@ for i in range(Nsim):
 import matplotlib
 import matplotlib.pyplot as plt
 t = np.linspace(0.0, Tf/N, Nsim)
-plt.subplot(2, 1, 1)
+plt.subplot(3, 1, 1)
 plt.step(t, simU, 'r')
 plt.title('closed-loop simulation')
 plt.ylabel('u')
 plt.xlabel('t')
 plt.grid(True)
-plt.subplot(2, 1, 2)
+plt.subplot(3, 1, 2)
 plt.plot(t, simX[:,2])
 plt.ylabel('theta')
+plt.xlabel('t')
+plt.grid(True)
+plt.subplot(3, 1, 3)
+plt.plot(t, simX[:,1])
+plt.ylabel('x')
 plt.xlabel('t')
 plt.grid(True)
 plt.show()
