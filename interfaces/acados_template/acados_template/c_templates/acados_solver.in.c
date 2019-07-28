@@ -35,6 +35,9 @@
 {% if ocp.dims.nh > 0 %}
 #include "{{ ocp.con_h.name }}_h_constraint/{{ ocp.con_h.name }}_h_constraint.h"
 {% endif %}
+{% if ocp.dims.nh_e > 0 %}
+#include "{{ ocp.con_h_e.name }}_h_e_constraint/{{ ocp.con_h_e.name }}_h_e_constraint.h"
+{% endif %}
 
 #include "acados_solver_{{ ocp.model.name }}.h"
 
@@ -715,15 +718,15 @@ int acados_create() {
 
     {%- if ocp.dims.nh_e > 0 %}
 	// nonlinear constraint
-	external_function_casadi h_constraint_e;
-	h_constraint_e.casadi_fun = &{{ ocp.con_h_e.name }}_h_constraint_e;
-	h_constraint_e.casadi_n_in = &{{ ocp.con_h_e.name }}_h_constraint_e_n_in;
-	h_constraint_e.casadi_n_out = &{{ ocp.con_h_e.name }}_h_constraint_e_n_out;
-	h_constraint_e.casadi_sparsity_in = &{{ ocp.con_h_e.name }}_h_constraint_e_sparsity_in;
-	h_constraint_e.casadi_sparsity_out = &{{ ocp.con_h_e.name }}_h_constraint_e_sparsity_out;
-	p_constraint_e.casadi_work = &{{ ocp.con_h_e.name }}_h_constraint_e_work;
+	external_function_casadi h_e_constraint;
+	h_e_constraint.casadi_fun = &{{ ocp.con_h_e.name }}_h_e_constraint;
+	h_e_constraint.casadi_n_in = &{{ ocp.con_h_e.name }}_h_e_constraint_n_in;
+	h_e_constraint.casadi_n_out = &{{ ocp.con_h_e.name }}_h_e_constraint_n_out;
+	h_e_constraint.casadi_sparsity_in = &{{ ocp.con_h_e.name }}_h_e_constraint_sparsity_in;
+	h_e_constraint.casadi_sparsity_out = &{{ ocp.con_h_e.name }}_h_e_constraint_sparsity_out;
+	h_e_constraint.casadi_work = &{{ ocp.con_h_e.name }}_h_e_constraint_work;
 
-    external_function_casadi_create(h_constraint_e);
+    external_function_casadi_create(&h_e_constraint);
     {%- endif %}
 
     {% if ocp.solver_config.integrator_type == "ERK" %}
@@ -998,7 +1001,7 @@ int acados_create() {
 
     {%- if ocp.dims.nh_e > 0 %}
     // nonlinear constraints for stage N
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_constraint_e[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_e_constraint);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
     {%- endif %}
