@@ -12,6 +12,7 @@ acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
 
 mex_names = { ...
 	'sim_create', ...
+	'sim_destroy', ...
 	'sim_create_ext_fun', ...
 	'sim_destroy_ext_fun', ...
 	'sim_solve', ...
@@ -61,7 +62,10 @@ if is_octave()
 	movefile('*.o', opts.output_dir);
 end
 
+%system(['mv -f *.mexa64 ', opts.output_dir])
 for k=1:length(mex_names)
 %	clear(mex_names{k})
-	movefile([mex_names{k}, '.', mexext], opts.output_dir);
+%	[status, message] = movefile([mex_names{k}, '.', mexext], opts.output_dir)
+	[status, message] = copyfile([mex_names{k}, '.', mexext], opts.output_dir);
+	delete([mex_names{k}, '.', mexext]);
 end
