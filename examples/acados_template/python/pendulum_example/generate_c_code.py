@@ -6,13 +6,13 @@ import scipy.linalg
 from ctypes import *
 
 # create render arguments
-ra = acados_ocp_nlp()
+ocp = acados_ocp_nlp()
 
 # export model 
 model = export_ode_model()
 
 # set model_name 
-ra.model = model
+ocp.model = model
 
 Tf = 1.0
 nx = model.x.size()[0]
@@ -22,7 +22,7 @@ ny_e = nx
 N = 100
 
 # set ocp_nlp_dimensions
-nlp_dims     = ra.dims
+nlp_dims     = ocp.dims
 nlp_dims.nx  = nx 
 nlp_dims.ny  = ny 
 nlp_dims.ny_e = ny_e 
@@ -32,7 +32,7 @@ nlp_dims.nu  = model.u.size()[0]
 nlp_dims.N   = N
 
 # set weighting matrices
-nlp_cost = ra.cost
+nlp_cost = ocp.cost
 Q = np.eye(4)
 Q[0,0] = 1e3
 Q[1,1] = 1e-2
@@ -71,30 +71,27 @@ nlp_cost.yref_e = np.zeros((ny_e, ))
 
 # setting bounds
 Fmax = 80.0
-nlp_con = ra.constraints
+nlp_con = ocp.constraints
 nlp_con.lbu = np.array([-Fmax])
 nlp_con.ubu = np.array([+Fmax])
 nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
 nlp_con.idxbu = np.array([0])
 
-# set constants
-# ra.constants['PI'] = 3.1415926535897932
-
 # set QP solver
-# ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
-ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
-ra.solver_config.integrator_type = 'ERK'
+# ocp.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+ocp.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
+ocp.solver_config.hessian_approx = 'GAUSS_NEWTON'
+ocp.solver_config.integrator_type = 'ERK'
 
 # set prediction horizon
-ra.solver_config.tf = Tf
-ra.solver_config.nlp_solver_type = 'SQP'
+ocp.solver_config.tf = Tf
+ocp.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
-ra.acados_include_path  = '/usr/local/include'
-ra.acados_lib_path      = '/usr/local/lib'
+ocp.acados_include_path  = '/usr/local/include'
+ocp.acados_lib_path      = '/usr/local/lib'
 
-acados_solver = generate_solver(ra, json_file = 'acados_ocp.json')
+acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
 
 Nsim = 100
 
