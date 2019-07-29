@@ -8,18 +8,18 @@ acados_folder = getenv('ACADOS_INSTALL_DIR');
 mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
-acados_mex_folder = [acados_folder, '/interfaces/acados_matlab/'];
+acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab');
 acados_include = ['-I' acados_folder];
-acados_interfaces_include = ['-I' acados_folder, '/interfaces'];
-external_include = ['-I' acados_folder, '/external'];
-blasfeo_include = ['-I' acados_folder, '/external/blasfeo/include'];
-acados_lib_path = ['-L' acados_folder, '/lib'];
-acados_matlab_lib_path = ['-L' acados_folder, '/interfaces/acados_matlab/'];
-model_lib_path = ['-L', pwd, '/build'];
+acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
+external_include = ['-I' fullfile(acados_folder, 'external')];
+blasfeo_include = ['-I' fullfile(acados_folder, 'external' , 'blasfeo', 'include')];
+acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
+acados_matlab_lib_path = ['-L' fullfile(acados_folder, 'interfaces', 'acados_matlab')];
+model_lib_path = ['-L', opts_struct.output_dir];
 
 %% select files to compile
 %mex_files = {};
-mex_files = {[acados_mex_folder, 'ocp_set_ext_fun_gen.c']};
+mex_files = {fullfile(acados_mex_folder, 'ocp_set_ext_fun_gen.c')};
 setter = {};
 set_fields = {};
 mex_fields = {};
@@ -348,16 +348,16 @@ end
 if (strcmp(opts_struct.compile_mex, 'true'))
 
 	if is_octave()
-		if exist('build/cflags_octave.txt')==0
-			diary 'build/cflags_octave.txt'
+		if exist(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'file')==0
+		diary(fullfile(opts_struct.output_dir, 'cflags_octave.txt'))
 			diary on
 			mkoctfile -p CFLAGS
 			diary off
-			input_file = fopen('build/cflags_octave.txt', 'r');
+			input_file = fopen(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'r');
 			cflags_tmp = fscanf(input_file, '%[^\n]s');
 			fclose(input_file);
 			cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
-			input_file = fopen('build/cflags_octave.txt', 'w');
+			input_file = fopen(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'w');
 			fprintf(input_file, '%s', cflags_tmp);
 			fclose(input_file);
 		end
@@ -373,7 +373,7 @@ if (strcmp(opts_struct.compile_mex, 'true'))
 		disp(['compiling ', mex_names{ii}])
 		if is_octave()
 	%		mkoctfile -p CFLAGS
-			input_file = fopen('build/cflags_octave.txt', 'r');
+			input_file = fopen(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'r');
 			cflags_tmp = fscanf(input_file, '%[^\n]s');
 			fclose(input_file);
 			cflags_tmp = [cflags_tmp, ' -DSETTER=', setter{ii}];
@@ -385,18 +385,16 @@ if (strcmp(opts_struct.compile_mex, 'true'))
 			cflags_tmp = [cflags_tmp, ' -DN1=', num2str(phase_end{ii})];
 			setenv('CFLAGS', cflags_tmp);
 			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{1});
-			system(['mv ocp_set_ext_fun_gen.mex ', mex_names{ii}, '.mex']);
 		else
-			mex(mex_flags, 'CFLAGS=\$CFLAGS -std=c99 -fopenmp', ['-DSETTER=', setter{ii}], ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], ['-DPHASE=', num2str(phase{ii})], ['-DN0=', num2str(phase_start{ii})], ['-DN1=', num2str(phase_end{ii})], acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{1}); % TODO
-			system(['mv ocp_set_ext_fun_gen.mexa64 ', mex_names{ii}, '.mexa64']);
+			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', ['-DSETTER=', setter{ii}], ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], ['-DPHASE=', num2str(phase{ii})], ['-DN0=', num2str(phase_start{ii})], ['-DN1=', num2str(phase_end{ii})], acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{1}); % TODO
 		end
+		
+%		clear(mex_names{ii})
+		movefile(['ocp_set_ext_fun_gen.', mexext], fullfile(opts_struct.output_dir, [mex_names{ii}, '.', mexext]));
 	end
-
+	
 	if is_octave()
-		system(['mv -f *.o build/']);
-		system(['mv -f *.mex build/']);
-	else
-		system(['mv -f *.mexa64 build/']);
+		movefile('*.o', opts_struct.output_dir);
 	end
 
 end

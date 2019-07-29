@@ -22,6 +22,7 @@ classdef acados_sim_opts < handle
 			obj.opts_struct.sens_adj = 'false';
 			obj.opts_struct.sens_hess = 'false';
 			obj.opts_struct.gnsf_detect_struct = 'true';
+			obj.opts_struct.output_dir = fullfile(pwd, 'build');
 		end
 
 
@@ -44,6 +45,8 @@ classdef acados_sim_opts < handle
 				obj.opts_struct.sens_hess = value;
 			elseif (strcmp(field, 'gnsf_detect_struct'))
 				obj.opts_struct.gnsf_detect_struct = value;
+			elseif (strcmp(field, 'output_dir'))
+				obj.opts_struct.output_dir = value;
 			else
 				disp(['acados_sim_opts: set: wrong field: ', field]);
 			end

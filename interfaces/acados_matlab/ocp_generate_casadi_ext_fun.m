@@ -86,8 +86,21 @@ if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_
 		c_sources = [c_sources, model_name, '_cost_ext_cost_e_jac_hes.c '];
 	end
 end
-lib_name = ['libocp_model.so'];
+
+if ispc
+	lib_name = 'libocp_model.lib';
+else
+	lib_name = 'libocp_model.so';
+end
+
+% works also on windows if mingw64 is setup properly
 system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
 
-system(['mv *.c build/']);
-system(['mv *.so build/']);
+c_files = strsplit(c_sources);
+for k=1:length(c_files)
+	if ~isempty(c_files{k})
+		movefile(c_files{k}, opts_struct.output_dir);
+	end
+end
+
+movefile(lib_name, opts_struct.output_dir);

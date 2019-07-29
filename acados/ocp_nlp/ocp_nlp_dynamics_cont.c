@@ -306,8 +306,6 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
 
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
-    size += 1 * blasfeo_memsize_dvec(nz);             // z at t = 0
-    size += 1 * blasfeo_memsize_dmat(nz, nu + nx);    // dzdux_tran
 
     size +=
         config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
@@ -343,6 +341,8 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     c_ptr +=
         config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
 
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
 
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
@@ -350,14 +350,6 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     // fun
     assign_and_advance_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
 
-    // z_out
-    assign_and_advance_blasfeo_dvec_mem(nz, &memory->z_out, &c_ptr);
-
-    // blasfeo_mem align
-    align_char_to(64, &c_ptr);
-
-    // dzdux_tran
-    assign_and_advance_blasfeo_dmat_mem(nu + nx, nz, &memory->dzdux_tran, &c_ptr);
     assert((char *) raw_memory +
                ocp_nlp_dynamics_cont_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
@@ -440,11 +432,33 @@ void ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void
 
 
 
-void ocp_nlp_dynamics_cont_memory_set_z_alg_ptr(struct blasfeo_dvec *z, void *memory_)
+void ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr(struct blasfeo_dmat *mat, void *memory_)
 {
     ocp_nlp_dynamics_cont_memory *memory = memory_;
 
-    memory->z = z;
+    memory->dzduxt = mat;
+
+    return;
+}
+
+
+
+void ocp_nlp_dynamics_cont_memory_set_z_guess_ptr(struct blasfeo_dvec *vec, void *memory_)
+{
+    ocp_nlp_dynamics_cont_memory *memory = memory_;
+
+    memory->z = vec;
+
+    return;
+}
+
+
+
+void ocp_nlp_dynamics_cont_memory_set_z_alg_ptr(struct blasfeo_dvec *vec, void *memory_)
+{
+    ocp_nlp_dynamics_cont_memory *memory = memory_;
+
+    memory->z_alg = vec;
 
     return;
 }
@@ -663,15 +677,15 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_pack_tran_dmat(nx1, nu, work->sim_out->S_forw + nx1 * nx, nx1, mem->BAbt, 0, 0);
     // A
     blasfeo_pack_tran_dmat(nx1, nx, work->sim_out->S_forw + 0, nx1, mem->BAbt, nu, 0);
-    // dzdux_tran
-    blasfeo_pack_tran_dmat(nz, nu, work->sim_out->S_algebraic + nx*nz, nz, &mem->dzdux_tran, 0, 0);
-    blasfeo_pack_tran_dmat(nz, nx, work->sim_out->S_algebraic + 0, nz, &mem->dzdux_tran, nu, 0);
-    // blasfeo_print_dmat(nx + nu, nz, &mem->dzdux_tran, 0, 0);
+    // dzduxt
+    blasfeo_pack_tran_dmat(nz, nu, work->sim_out->S_algebraic + nx*nz, nz, mem->dzduxt, 0, 0);
+    blasfeo_pack_tran_dmat(nz, nx, work->sim_out->S_algebraic + 0, nz, mem->dzduxt, nu, 0);
+    // blasfeo_print_dmat(nx + nu, nz, mem->dzduxt, 0, 0);
 
     // function
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
-    blasfeo_pack_dvec(nz, work->sim_out->zn, &mem->z_out, 0); // TODO rename sim_out->zn into z0n ???
+    blasfeo_pack_dvec(nz, work->sim_out->zn, mem->z_alg, 0); // TODO rename sim_out->zn into z0n ???
 
     // adjoint
     if (opts->compute_adj)
@@ -762,6 +776,8 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->memory_set_pi_ptr = &ocp_nlp_dynamics_cont_memory_set_pi_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_cont_memory_set_BAbt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr;
+    config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr;
+    config->memory_set_z_guess_ptr = &ocp_nlp_dynamics_cont_memory_set_z_guess_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_cont_memory_set_z_alg_ptr;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;

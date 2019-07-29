@@ -26,17 +26,14 @@ classdef acados_ocp < handle
             model.acados_ocp_nlp_json.dims.N = upper(obj.opts_struct.param_scheme_N);
             obj.acados_ocp_nlp_json = model.acados_ocp_nlp_json;
             
-			% create build folder
-			system('mkdir -p build');
-
-			% add path
-			addpath('build/');
+            [~,~] = mkdir(obj.opts_struct.output_dir);
+            addpath(obj.opts_struct.output_dir);
 
 			% detect GNSF structure
 			if (strcmp(obj.opts_struct.sim_method, 'irk_gnsf'))
 				if (strcmp(obj.opts_struct.gnsf_detect_struct, 'true'))
 					obj.model_struct = detect_gnsf_structure(obj.model_struct);
-					generate_get_gnsf_structure(obj.model_struct);
+					generate_get_gnsf_structure(obj.model_struct, obj.opts_struct);
 				else
 					obj.model_struct = get_gnsf_structure(obj.model_struct);
 				end
@@ -240,8 +237,12 @@ classdef acados_ocp < handle
 
 
 		function delete(obj)
-			ocp_destroy_ext_fun(obj.model_struct, obj.C_ocp, obj.C_ocp_ext_fun);
-			ocp_destroy(obj.C_ocp);
+			if ~isempty(obj.C_ocp_ext_fun)
+				ocp_destroy_ext_fun(obj.model_struct, obj.C_ocp, obj.C_ocp_ext_fun);
+			end
+			if ~isempty(obj.C_ocp) 
+				ocp_destroy(obj.C_ocp);
+			end
 		end
 
 
