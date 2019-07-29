@@ -201,7 +201,6 @@ else % irk
 	ocp_model.set('dyn_type', 'implicit');
 	ocp_model.set('dyn_expr_f', model.expr_f_impl);
 end
-ocp_model.set('dyn_param_f', 'true');
 %% constraints
 % state bounds
 ocp_model.set('constr_Jbx', Jbx);
@@ -280,7 +279,6 @@ if isfield(model, 'sym_p')
 end
 % model
 sim_model.set('T', T/ocp_N);
-sim_model.set('dyn_param_f', 'true');
 if (strcmp(sim_method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
 	sim_model.set('dyn_expr_f', model.expr_f_expl);
