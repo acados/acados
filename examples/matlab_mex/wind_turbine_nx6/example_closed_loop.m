@@ -26,19 +26,25 @@ ocp_param_scheme = 'multiple_shooting_unif_grid';
 ocp_N = 40;
 ocp_nlp_solver = 'sqp';
 %ocp_nlp_solver = 'sqp_rti';
-%ocp_nlp_solver_exact_hessian = 'false';
-ocp_nlp_solver_exact_hessian = 'true';
-%regularize_method = 'no_regularize';
+ocp_nlp_solver_exact_hessian = 'false';
+%ocp_nlp_solver_exact_hessian = 'true';
+regularize_method = 'no_regularize';
 %regularize_method = 'project';
-regularize_method = 'project_reduc_hess';
+%regularize_method = 'project_reduc_hess';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
 ocp_nlp_solver_max_iter = 50;
+ocp_nlp_solver_tol_stat = 1e-8;
+ocp_nlp_solver_tol_eq   = 1e-8;
+ocp_nlp_solver_tol_ineq = 1e-8;
+ocp_nlp_solver_tol_comp = 1e-8;
+ocp_nlp_solver_ext_qp_res = 1;
 ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_hpipm';
 ocp_qp_solver_cond_N = 5;
 ocp_qp_solver_cond_ric_alg = 0;
 ocp_qp_solver_ric_alg = 0;
+%ocp_qp_solver_warm_start = 2;
 %ocp_sim_method = 'erk';
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
@@ -234,14 +240,20 @@ ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', ocp_nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', ocp_nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
+ocp_opts.set('nlp_solver_ext_qp_res', ocp_nlp_solver_ext_qp_res);
 if (strcmp(ocp_nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', ocp_nlp_solver_max_iter);
+	ocp_opts.set('nlp_solver_tol_stat', ocp_nlp_solver_tol_stat);
+	ocp_opts.set('nlp_solver_tol_eq', ocp_nlp_solver_tol_eq);
+	ocp_opts.set('nlp_solver_tol_ineq', ocp_nlp_solver_tol_ineq);
+	ocp_opts.set('nlp_solver_tol_comp', ocp_nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', ocp_qp_solver);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_cond_N', ocp_qp_solver_cond_N);
 	ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
 	ocp_opts.set('qp_solver_ric_alg', ocp_qp_solver_ric_alg);
+%	ocp_opts.set('qp_solver_warm_start', ocp_qp_solver_warm_start);
 end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
@@ -429,6 +441,39 @@ for ii=1:n_sim
 	sqp_iter_sim(ii) = sqp_iter;
 
 	fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
+
+	if 0
+		stat = ocp.get('stat');
+		if (strcmp(ocp_nlp_solver, 'sqp'))
+			fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter');
+			if size(stat,2)>7
+				fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
+			end
+			fprintf('\n');
+			for ii=1:size(stat,1)
+				fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
+				if size(stat,2)>7
+					fprintf('\t%e\t%e\t%e\t%e', stat(ii,8), stat(ii,9), stat(ii,10), stat(ii,11));
+				end
+				fprintf('\n');
+			end
+			fprintf('\n');
+		else % sqp_rti
+			fprintf('\niter\tqp_stat\tqp_iter');
+			if size(stat,2)>3
+				fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
+			end
+			fprintf('\n');
+			for ii=1:size(stat,1)
+				fprintf('%d\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3));
+				if size(stat,2)>3
+					fprintf('\t%e\t%e\t%e\t%e', stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
+				end
+				fprintf('\n');
+			end
+			fprintf('\n');
+		end
+	end
 
 end
 
