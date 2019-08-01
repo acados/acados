@@ -130,7 +130,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 t = np.linspace(0.0, Tf/N, Nsim)
 plt.subplot(2, 1, 1)
-plt.step(t, simU, 'r')
+plt.step(t, simU, color='r')
 plt.title('closed-loop simulation')
 plt.ylabel('u')
 plt.xlabel('t')
