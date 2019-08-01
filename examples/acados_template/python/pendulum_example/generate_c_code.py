@@ -74,7 +74,7 @@ Fmax = 80.0
 nlp_con = ra.constraints
 nlp_con.lbu = np.array([-Fmax])
 nlp_con.ubu = np.array([+Fmax])
-nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
+nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
 nlp_con.idxbu = np.array([0])
 
 # set constants
@@ -136,7 +136,7 @@ plt.ylabel('u')
 plt.xlabel('t')
 plt.grid(True)
 plt.subplot(2, 1, 2)
-plt.plot(t, simX[:,2])
+plt.plot(t, simX[:,1])
 plt.ylabel('theta')
 plt.xlabel('t')
 plt.grid(True)
