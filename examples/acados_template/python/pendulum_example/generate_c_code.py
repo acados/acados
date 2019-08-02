@@ -14,12 +14,12 @@ model = export_ode_model()
 # set model_name 
 ocp.model = model
 
-Tf = 1.0
+Tf = 2.0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
 ny = nx + nu
 ny_e = nx
-N = 100
+N = 50
 
 # set ocp_nlp_dimensions
 nlp_dims     = ocp.dims
@@ -34,13 +34,13 @@ nlp_dims.N   = N
 # set weighting matrices
 nlp_cost = ocp.cost
 Q = np.eye(4)
-Q[0,0] = 1e3
-Q[1,1] = 1e-2
-Q[2,2] = 1e3
+Q[0,0] = 1e0
+Q[1,1] = 1e2
+Q[2,2] = 1e-3
 Q[3,3] = 1e-2
 
 R = np.eye(1)
-R[0,0] = 1e-2
+R[0,0] = 1e0
 
 nlp_cost.W = scipy.linalg.block_diag(Q, R) 
 
@@ -70,11 +70,12 @@ nlp_cost.yref  = np.zeros((ny, ))
 nlp_cost.yref_e = np.zeros((ny_e, ))
 
 # setting bounds
-Fmax = 80.0
+Fmax = 2.0
 nlp_con = ocp.constraints
 nlp_con.lbu = np.array([-Fmax])
 nlp_con.ubu = np.array([+Fmax])
-nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
+nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
+# nlp_con.x0 = np.array([0.0, 0.5, 0.0, 0.0])
 nlp_con.idxbu = np.array([0])
 
 # set QP solver
@@ -86,6 +87,7 @@ ocp.solver_config.integrator_type = 'ERK'
 # set prediction horizon
 ocp.solver_config.tf = Tf
 ocp.solver_config.nlp_solver_type = 'SQP'
+# ocp.solver_config.nlp_solver_type = 'SQP_RTI'
 
 # set header path
 ocp.acados_include_path  = '/usr/local/include'
@@ -127,13 +129,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 t = np.linspace(0.0, Tf/N, Nsim)
 plt.subplot(2, 1, 1)
-plt.step(t, simU, 'r')
+plt.step(t, simU, color='r')
 plt.title('closed-loop simulation')
 plt.ylabel('u')
 plt.xlabel('t')
 plt.grid(True)
 plt.subplot(2, 1, 2)
-plt.plot(t, simX[:,2])
+plt.plot(t, simX[:,1])
 plt.ylabel('theta')
 plt.xlabel('t')
 plt.grid(True)

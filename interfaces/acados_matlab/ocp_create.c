@@ -41,6 +41,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double nlp_solver_tol_comp;				bool set_nlp_solver_tol_comp = false;
 	int nlp_solver_ext_qp_res;				bool set_nlp_solver_ext_qp_res = false;
 	char *qp_solver;
+	int qp_solver_iter_max;					bool set_qp_solver_iter_max = false;
 	int qp_solver_cond_N;					bool set_qp_solver_cond_N = false;
 	int qp_solver_cond_ric_alg;				bool set_qp_solver_cond_ric_alg = false;
 	int qp_solver_ric_alg;					bool set_qp_solver_ric_alg = false;
@@ -116,6 +117,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// qp_solver
 	// TODO check
 	qp_solver = mxArrayToString( mxGetField( prhs[1], 0, "qp_solver" ) );
+	// iter_max
+	if(mxGetField( prhs[1], 0, "qp_solver_iter_max" )!=NULL)
+		{
+		set_qp_solver_iter_max = true;
+		qp_solver_iter_max = mxGetScalar( mxGetField( prhs[1], 0, "qp_solver_iter_max" ) );
+		}
 	// N_part_cond
 	if(mxGetField( prhs[1], 0, "qp_solver_cond_N" )!=NULL)
 		{
@@ -1224,6 +1231,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(set_nlp_solver_ext_qp_res)
 		{
 		ocp_nlp_opts_set(config, opts, "ext_qp_res", &nlp_solver_ext_qp_res);
+		}
+	// qp_solver_iter_max TODO only for hpipm !!!
+	if(set_qp_solver_iter_max)
+		{
+		ocp_nlp_opts_set(config, opts, "qp_iter_max", &qp_solver_iter_max);
 		}
 	// qp_solver_cond_N
 	if(set_qp_solver_cond_N)

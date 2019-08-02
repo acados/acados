@@ -22,7 +22,7 @@ Some examples for the use of this interface can be found in `<acados_root>/examp
 This interface uses the shared libraries created using the make command from the main acados folder
 
 ```bash
-make acados_c_shared
+make acados_shared
 ```
 
 To run the examples, navigate into the selected folder, and there run the command
@@ -93,7 +93,7 @@ Currently not yet implemented features:
 1. Compile and install acados by running:
 ```bash
 cd <acados_root>/build
-cmake -DACADOS_WITH_QPDUNES=OFF -DACADOS_WITH_HPMPC=OFF -DACADOS_WITH_OSQP=OFF ..
+cmake -DACADOS_WITH_QPOASES=ON ..
 make install -j4
 ```
 

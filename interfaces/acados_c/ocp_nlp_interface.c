@@ -455,6 +455,11 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_pack_dvec(dims->nu[stage], double_values, &out->ux[stage], 0);
     }
+    else if (!strcmp(field, "z"))
+    {
+        double *double_values = value;
+        blasfeo_pack_dvec(dims->nz[stage], double_values, &out->z[stage], 0);
+    }
     else if (!strcmp(field, "pi"))
     {
         double *double_values = value;
@@ -481,6 +486,11 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
     {
         double *double_values = value;
         blasfeo_unpack_dvec(dims->nu[stage], &out->ux[stage], 0, double_values);
+    }
+    else if (!strcmp(field, "z"))
+    {
+        double *double_values = value;
+        blasfeo_unpack_dvec(dims->nz[stage], &out->z[stage], 0, double_values);
     }
     else if (!strcmp(field, "pi"))
     {
