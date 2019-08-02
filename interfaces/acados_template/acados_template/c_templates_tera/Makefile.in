@@ -1,5 +1,5 @@
 ACADOS_FLAGS = -fPIC
-{% if solver_config.qp_solver == "QPOASES" %}
+{% if solver_config.qp_solver == "FULL_CONDENSING_QPOASES" %}
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 {% endif %}
 OBJ =
