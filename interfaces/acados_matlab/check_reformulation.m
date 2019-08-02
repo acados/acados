@@ -73,8 +73,9 @@ u = gnsf.u;
 y = gnsf.y;
 uhat = gnsf.uhat;
 
-if (strcmp(gnsf.param_f, 'true'))
-    p = model.p;
+isparametric = isfield(model, 'sym_p');
+if isparametric
+    p = model.sym_p;
     np = length(p);
     % create functions
     impl_ode_fun = Function('impl_ode_fun', {x, xdot, u, z, p}, {model.dyn_expr_f});
@@ -82,7 +83,7 @@ if (strcmp(gnsf.param_f, 'true'))
     f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z, u, p}, {gnsf.f_lo_expr});
 else
     % create functions
-    impl_ode_fun = Function(['impl_ode_fun'], {x, xdot, u, z}, {model.dyn_expr_f});
+    impl_ode_fun = Function('impl_ode_fun', {x, xdot, u, z}, {model.dyn_expr_f});
     phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
     f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z(1:nz1), u}, {gnsf.f_lo_expr});
 end
@@ -109,7 +110,7 @@ for i_check = 1:num_eval
 
 
     % eval functions
-	if (strcmp(gnsf.param_f, 'true'))
+    if isparametric
         p0 = rand(np, 1);
         f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0, p0));
         phi_val = phi_fun( y0, uhat0, p0);
