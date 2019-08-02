@@ -87,20 +87,30 @@ if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_
 	end
 end
 
-if ispc
-	lib_name = 'libocp_model.lib';
-else
-	lib_name = 'libocp_model.so';
-end
-
-% works also on windows if mingw64 is setup properly
-system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', lib_name]);
-
 c_files = strsplit(c_sources);
-for k=1:length(c_files)
-	if ~isempty(c_files{k})
-		movefile(c_files{k}, opts_struct.output_dir);
-	end
+c_files = c_files(~cellfun(@isempty, c_files)); % remove empty cells
+
+if ispc
+  ldext = '.lib';
+else
+  ldext = '.so';
 end
 
-movefile(lib_name, opts_struct.output_dir);
+FID = fopen('ocp_model.c', 'w');
+fclose(FID);
+
+mbuild('ocp_model.c', c_files{:}, 'CFLAGS="-fPIC $CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
+% mex('ocp_model.c', c_files{:}, 'LINKEXPORT=', 'LINKEXPORTVER=','LINKLIBS=','CFLAGS=-fPIC $CFLAGS','LDTYPE=-shared', ['LDEXT=', ldext])
+
+% the first of c_files determines the name of the output .so file
+% [~,lib_name,~] = fileparts(c_files{1});
+
+% lib_name_out = [lib_name, ldext];
+movefile(['ocp_model', ldext], fullfile(opts_struct.output_dir, ['ocp_model', ldext]));
+
+for k=1:length(c_files)
+  movefile(c_files{k}, opts_struct.output_dir);
+end
+
+delete ocp_model.c
+
