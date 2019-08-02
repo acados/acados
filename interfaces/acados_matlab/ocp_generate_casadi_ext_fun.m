@@ -96,19 +96,18 @@ else
   ldext = '.so';
 end
 
-lib_name_out = ['ocp_model', ldext];
+lib_name = 'ocp_model';
 
-FID = fopen('ocp_model.c', 'w');
-fclose(FID);
+if ispc
+  mbuild(c_files{:}, '-output', lib_name, 'CFLAGS="-fPIC $CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
+else
+  system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', [lib_name, ldext]]);
+end
 
-mbuild('ocp_model.c', c_files{:}, 'CFLAGS="-fPIC $CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
-% mex('ocp_model.c', c_files{:}, 'LINKEXPORT=', 'LINKEXPORTVER=','LINKLIBS=','CFLAGS=-fPIC $CFLAGS','LDTYPE=-shared', ['LDEXT=', ldext])
-
-movefile(lib_name_out, fullfile(opts_struct.output_dir, lib_name_out));
+movefile([lib_name, ldext], fullfile(opts_struct.output_dir, [lib_name, ldext]));
 
 for k=1:length(c_files)
   movefile(c_files{k}, opts_struct.output_dir);
 end
 
-delete ocp_model.c
 
