@@ -99,15 +99,15 @@ end
 lib_name = 'ocp_model';
 
 if ispc
-  mbuild(c_files{:}, '-output', lib_name, 'CFLAGS="-fPIC $CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
+  mbuild(c_files{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
 else
   system(['gcc -O2 -fPIC -shared ', c_sources, ' -o ', [lib_name, ldext]]);
 end
 
-movefile([lib_name, ldext], fullfile(opts_struct.output_dir, [lib_name, ldext]));
-
 for k=1:length(c_files)
   movefile(c_files{k}, opts_struct.output_dir);
 end
+
+movefile([lib_name, ldext], fullfile(opts_struct.output_dir, [lib_name, ldext]));
 
 
