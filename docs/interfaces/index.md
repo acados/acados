@@ -93,7 +93,7 @@ Currently not yet implemented features:
 1. Compile and install acados by running:
 ```bash
 cd <acados_root>/build
-cmake -DACADOS_WITH_QPDUNES=OFF -DACADOS_WITH_HPMPC=OFF -DACADOS_WITH_OSQP=OFF ..
+cmake -DACADOS_WITH_QPOASES=ON ..
 make install -j4
 ```
 

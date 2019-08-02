@@ -150,16 +150,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			mex_field = mxGetFieldByNumber( prhs[3], 0, ii );
 			ptr = (long long *) mxGetData( mex_field );
 			Nf = mxGetN( mex_field );
+			int Nf_sum = 0;
 			for(jj=0; jj<Nf; jj++)
 				{
 				ext_fun_param_ptr = (external_function_param_casadi *) ptr[jj];
 				if(ext_fun_param_ptr!=0)
 					{
-					for(kk=0; kk<NN[jj]; kk++)
+					if(nrhs==6)
 						{
-						(ext_fun_param_ptr+kk)->set_param(ext_fun_param_ptr+kk, p);
+						for(kk=0; kk<NN[jj]; kk++)
+							{
+							(ext_fun_param_ptr+kk)->set_param(ext_fun_param_ptr+kk, p);
+							}
+						}
+					else if(nrhs==7)
+						{
+						int stage = mxGetScalar( prhs[6] );
+						if(stage>=Nf_sum & stage<Nf_sum+NN[jj])
+							{
+							(ext_fun_param_ptr+stage)->set_param(ext_fun_param_ptr+stage, p);
+							}
+						}
+					else
+						{
+						mexPrintf("\nocp_set: wrong nrhs: %d\n", nrhs);
+						goto end;
 						}
 					}
+				Nf_sum += NN[jj];
 				}
 			}
 		}
