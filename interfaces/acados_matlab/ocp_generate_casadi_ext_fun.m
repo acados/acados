@@ -96,17 +96,15 @@ else
   ldext = '.so';
 end
 
+lib_name_out = ['ocp_model', ldext];
+
 FID = fopen('ocp_model.c', 'w');
 fclose(FID);
 
 mbuild('ocp_model.c', c_files{:}, 'CFLAGS="-fPIC $CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
 % mex('ocp_model.c', c_files{:}, 'LINKEXPORT=', 'LINKEXPORTVER=','LINKLIBS=','CFLAGS=-fPIC $CFLAGS','LDTYPE=-shared', ['LDEXT=', ldext])
 
-% the first of c_files determines the name of the output .so file
-% [~,lib_name,~] = fileparts(c_files{1});
-
-% lib_name_out = [lib_name, ldext];
-movefile(['ocp_model', ldext], fullfile(opts_struct.output_dir, ['ocp_model', ldext]));
+movefile(lib_name_out, fullfile(opts_struct.output_dir, lib_name_out));
 
 for k=1:length(c_files)
   movefile(c_files{k}, opts_struct.output_dir);
