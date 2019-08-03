@@ -33,7 +33,7 @@ typedef struct d_ocp_qp_dim ocp_qp_dims;
 typedef struct d_ocp_qp ocp_qp_in;
 typedef struct d_ocp_qp_sol ocp_qp_out;
 typedef struct d_ocp_qp_res ocp_qp_res;
-typedef struct d_ocp_qp_res_workspace ocp_qp_res_ws;
+typedef struct d_ocp_qp_res_ws ocp_qp_res_ws;
 
 #ifndef QP_SOLVER_CONFIG_
 #define QP_SOLVER_CONFIG_

@@ -43,7 +43,7 @@ int ocp_qp_hpipm_opts_calculate_size(void *config_, void *dims_)
     int size = 0;
     size += sizeof(ocp_qp_hpipm_opts);
     size += sizeof(struct d_ocp_qp_ipm_arg);
-    size += d_memsize_ocp_qp_ipm_arg(dims);
+    size += d_ocp_qp_ipm_arg_memsize(dims);
 
     size += 1 * 8;
     return size;
@@ -67,8 +67,8 @@ void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
     align_char_to(8, &c_ptr);
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    d_create_ocp_qp_ipm_arg(dims, opts->hpipm_opts, c_ptr);
-    c_ptr += d_memsize_ocp_qp_ipm_arg(dims);
+    d_ocp_qp_ipm_arg_create(dims, opts->hpipm_opts, c_ptr);
+    c_ptr += d_ocp_qp_ipm_arg_memsize(dims);
 
     assert((char *) raw_memory + ocp_qp_hpipm_opts_calculate_size(config_, dims) >= c_ptr);
 
@@ -82,7 +82,7 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts
     // ocp_qp_dims *dims = dims_;
     ocp_qp_hpipm_opts *opts = opts_;
 
-    d_set_default_ocp_qp_ipm_arg(BALANCE, opts->hpipm_opts);
+    d_ocp_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
     // overwrite some default options
     opts->hpipm_opts->res_g_max = 1e-6;
     opts->hpipm_opts->res_b_max = 1e-8;
@@ -111,51 +111,7 @@ void ocp_qp_hpipm_opts_set(void *config_, void *opts_, const char *field, void *
 {
     ocp_qp_hpipm_opts *opts = opts_;
 
-    if (!strcmp(field, "iter_max"))
-    {
-        int* tmp_ptr = (int *) value;
-		d_set_ocp_qp_ipm_arg_iter_max(*tmp_ptr, opts->hpipm_opts);
-    }
-    else if (!strcmp(field, "mu0"))
-    {
-        double* tmp_ptr = (double *) value;
-		d_set_ocp_qp_ipm_arg_mu0(*tmp_ptr, opts->hpipm_opts);
-    }
-    else if (!strcmp(field, "tol_stat"))
-    {
-        double* tmp_ptr = (double *) value;
-		d_set_ocp_qp_ipm_arg_tol_stat(*tmp_ptr, opts->hpipm_opts);
-    }
-    else if (!strcmp(field, "tol_eq"))
-    {
-        double* tmp_ptr = (double *) value;
-		d_set_ocp_qp_ipm_arg_tol_eq(*tmp_ptr, opts->hpipm_opts);
-    }
-    else if (!strcmp(field, "tol_ineq"))
-    {
-        double* tmp_ptr = (double *) value;
-		d_set_ocp_qp_ipm_arg_tol_ineq(*tmp_ptr, opts->hpipm_opts);
-    }
-    else if (!strcmp(field, "tol_comp"))
-    {
-        double* tmp_ptr = (double *) value;
-		d_set_ocp_qp_ipm_arg_tol_comp(*tmp_ptr, opts->hpipm_opts);
-    }
-    else if (!strcmp(field, "warm_start"))
-    {
-        int* tmp_ptr = (int *) value;
-		d_set_ocp_qp_ipm_arg_warm_start(*tmp_ptr, opts->hpipm_opts);
-    }
-    else if (!strcmp(field, "ric_alg"))
-    {
-        int* tmp_ptr = (int *) value;
-		d_set_ocp_qp_ipm_arg_ric_alg(*tmp_ptr, opts->hpipm_opts);
-    }
-	else
-	{
-		printf("\nerror: ocp_qp_hpipm_opts_set: wrong field: %s\n", field);
-		exit(1);
-	}
+	d_ocp_qp_ipm_arg_set((char *) field, value, opts->hpipm_opts);
 
 	return;
 }
@@ -174,9 +130,9 @@ int ocp_qp_hpipm_memory_calculate_size(void *config_, void *dims_, void *opts_)
     int size = 0;
     size += sizeof(ocp_qp_hpipm_memory);
 
-    size += sizeof(struct d_ocp_qp_ipm_workspace);
+    size += sizeof(struct d_ocp_qp_ipm_ws);
 
-    size += d_memsize_ocp_qp_ipm(dims, opts->hpipm_opts);
+    size += d_ocp_qp_ipm_ws_memsize(dims, opts->hpipm_opts);
 
     size += 1 * 8;
     return size;
@@ -196,16 +152,16 @@ void *ocp_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *
     mem = (ocp_qp_hpipm_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_hpipm_memory);
 
-    mem->hpipm_workspace = (struct d_ocp_qp_ipm_workspace *) c_ptr;
-    c_ptr += sizeof(struct d_ocp_qp_ipm_workspace);
+    mem->hpipm_workspace = (struct d_ocp_qp_ipm_ws *) c_ptr;
+    c_ptr += sizeof(struct d_ocp_qp_ipm_ws);
 
-    struct d_ocp_qp_ipm_workspace *ipm_workspace = mem->hpipm_workspace;
+    struct d_ocp_qp_ipm_ws *ipm_workspace = mem->hpipm_workspace;
 
     align_char_to(8, &c_ptr);
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     // ipm workspace structure
-    d_create_ocp_qp_ipm(dims, opts->hpipm_opts, ipm_workspace, c_ptr);
+    d_ocp_qp_ipm_ws_create(dims, opts->hpipm_opts, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;
 
     assert((char *) raw_memory + ocp_qp_hpipm_memory_calculate_size(config_, dims, opts_) >= c_ptr);
@@ -258,7 +214,9 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     // solve ipm
     acados_tic(&qp_timer);
     // print_ocp_qp_in(qp_in);
-    int hpipm_status = d_solve_ocp_qp_ipm(qp_in, qp_out, opts->hpipm_opts, memory->hpipm_workspace);
+    int hpipm_status;
+	d_ocp_qp_ipm_solve(qp_in, qp_out, opts->hpipm_opts, memory->hpipm_workspace);
+	d_ocp_qp_ipm_get_status(memory->hpipm_workspace, &hpipm_status);
 
     info->solve_QP_time = acados_toc(&qp_timer);
     info->interface_time = 0;  // there are no conversions for hpipm
