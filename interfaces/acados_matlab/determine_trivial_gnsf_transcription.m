@@ -95,11 +95,6 @@ else
 	np = 0;
 end
 
-if isfield(model, 'dyn_param_f')
-	param_f = model.dyn_param_f;
-else
-	param_f = 'false';
-end
 
 %% initialize gnsf struct
 % dimensions
@@ -123,9 +118,7 @@ gnsf.x = x;
 gnsf.xdot = xdot;
 gnsf.z = z;
 gnsf.u = u;
-gnsf.p = p; % TODO check later for param_f
-
-gnsf.param_f = param_f;
+gnsf.p = p;
 
 gnsf = determine_input_nonlinearity_function( gnsf );
     
