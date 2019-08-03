@@ -72,17 +72,21 @@ z = gnsf.z;
 u = gnsf.u;
 y = gnsf.y;
 uhat = gnsf.uhat;
-p = model.sym_p;
-
-if ~isempty(p)
+if isfield(model, 'sym_p')
+	p = model.sym_p;
     np = length(p);
 else
+	if class(x(1)) == 'casadi.SX'
+		p = SX.sym('p',0, 0);
+	else
+		p = MX.sym('p',0, 0);
+	end
     np = 0;
 end
 
 % create functions
 impl_ode_fun = Function('impl_ode_fun', {x, xdot, u, z, p}, {model.dyn_expr_f});
-phi_fun = Function('phi_fun',{y,uhat, p}, {gnsf.phi_expr});
+phi_fun = Function('phi_fun',{y, uhat, p}, {gnsf.phi_expr});
 f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z, u, p}, {gnsf.f_lo_expr});
 
 for i_check = 1:num_eval
