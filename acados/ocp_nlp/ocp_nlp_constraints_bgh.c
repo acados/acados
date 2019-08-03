@@ -225,7 +225,7 @@ void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *fi
     }
     else
     {
-        printf("\nerror: dims type not available in module ocp_nlp_constraints_bgh: %s\n", field);
+        printf("\nerror: ocp_nlp_constraints_bgh_dims_get: field %s not available in module\n", field);
         exit(1);
     }
 }
@@ -289,6 +289,38 @@ static void ocp_nlp_constraints_bgh_get_ns(void *config_, void *dims_, int* valu
 
 
 
+static void ocp_nlp_constraints_bgh_get_nsbx(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nsbx;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_get_nsbu(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nsbu;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_get_nsg(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nsg;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_get_nsh(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nsh;
+}
+
+
+
 void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *field, int* value)
 {
     if (!strcmp(field, "ni"))
@@ -319,9 +351,25 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
     {
         ocp_nlp_constraints_bgh_get_ns(config_, dims_, value);
     }
+    else if (!strcmp(field, "nsbu"))
+    {
+        ocp_nlp_constraints_bgh_get_nsbu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nsbx"))
+    {
+        ocp_nlp_constraints_bgh_get_nsbx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nsg"))
+    {
+        ocp_nlp_constraints_bgh_get_nsg(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nsh"))
+    {
+        ocp_nlp_constraints_bgh_get_nsh(config_, dims_, value);
+    }
     else
     {
-        printf("error: attempt to get dimension from constraint model, that is not there");
+        printf("\nerror: ocp_nlp_constraints_bgh_dims_get: field %s not available in module\n", field);
         exit(1);
     }
 }

@@ -564,26 +564,13 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 
 		// regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, (char *) field, int_value);
-
-        // Note(oj): how to decide if ocp_qp or dense? plan not available here..
-        // Note(giaf): the NLP solver always calls a xcond_solver,
-        //             so only its dimensions should be set now
-        // if( is_ocp_qp_solver )
-        // {
-            // set nbx, respectively nbu in qp_solver
-            // nb in qp_solver gets updated in the setter
-        // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i,field, &value[i]);
-        // }
-        // else  // dense_qp
-        // {
-        //     // update nb in qp_solver
-        //     int nb;
-        //     config->constraints[i]->dims_get(config->constraints[i],
-        //                            dims->constraints[i], "nb", &nb);
-        //     config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nb", &nb);
-        // }
     }
-    if ( (!strcmp(field, "ng")) || (!strcmp(field, "nh")) )
+    else if ( (!strcmp(field, "nsbx")) || (!strcmp(field, "nsbu")) )
+    {
+		// qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+    }
+    else if ( (!strcmp(field, "ng")) || (!strcmp(field, "nh")) )
     {
         // update ng_qp_solver in qp_solver
         int ng, nh, ng_qp_solver;
@@ -598,6 +585,20 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 		// regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, "ng", &ng_qp_solver);
     }
+    else if ( (!strcmp(field, "nsg")) || (!strcmp(field, "nsh")) )
+    {
+        // update ng_qp_solver in qp_solver
+        int nsg, nsh, nsg_qp_solver;
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg", &nsg);
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsh", &nsh);
+
+        nsg_qp_solver = nsg + nsh;
+
+		// qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &nsg_qp_solver);
+    }
+
+	return;
 }
 
 

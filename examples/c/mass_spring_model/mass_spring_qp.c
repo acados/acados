@@ -480,7 +480,38 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims)
 
     ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);
 
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
+//    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
+	int ii;
+	for(ii=0; ii<N; ii++)
+	{
+		d_ocp_qp_set_A(ii, hA[ii], qp_in);
+		d_ocp_qp_set_B(ii, hB[ii], qp_in);
+		d_ocp_qp_set_b(ii, hb[ii], qp_in);
+		d_ocp_qp_set_R(ii, hR[ii], qp_in);
+		d_ocp_qp_set_S(ii, hS[ii], qp_in);
+		d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+		d_ocp_qp_set_r(ii, hr[ii], qp_in);
+		d_ocp_qp_set_q(ii, hq[ii], qp_in);
+		d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+		d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+		d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+		d_ocp_qp_set_C(ii, hC[ii], qp_in);
+		d_ocp_qp_set_D(ii, hD[ii], qp_in);
+		d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+		d_ocp_qp_set_ug(ii, hug[ii], qp_in);
+	}
+	d_ocp_qp_set_R(ii, hR[ii], qp_in);
+	d_ocp_qp_set_S(ii, hS[ii], qp_in);
+	d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+	d_ocp_qp_set_r(ii, hr[ii], qp_in);
+	d_ocp_qp_set_q(ii, hq[ii], qp_in);
+	d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+	d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+	d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+	d_ocp_qp_set_C(ii, hC[ii], qp_in);
+	d_ocp_qp_set_D(ii, hD[ii], qp_in);
+	d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+	d_ocp_qp_set_ug(ii, hug[ii], qp_in);
 
     // free objective
     free(Q);
@@ -528,6 +559,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims)
 
     return qp_in;
 }
+
 
 
 ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_, int nb_, int ng_, int ngN)
@@ -997,7 +1029,47 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *d
 
     ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);
 
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hZl, hZu, hzl, hzu, hidxs, hd_ls, hd_us, qp_in);
+//    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hZl, hZu, hzl, hzu, hidxs, hd_ls, hd_us, qp_in);
+	for(ii=0; ii<N; ii++)
+	{
+		d_ocp_qp_set_A(ii, hA[ii], qp_in);
+		d_ocp_qp_set_B(ii, hB[ii], qp_in);
+		d_ocp_qp_set_b(ii, hb[ii], qp_in);
+		d_ocp_qp_set_R(ii, hR[ii], qp_in);
+		d_ocp_qp_set_S(ii, hS[ii], qp_in);
+		d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+		d_ocp_qp_set_r(ii, hr[ii], qp_in);
+		d_ocp_qp_set_q(ii, hq[ii], qp_in);
+		d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+		d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+		d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+		d_ocp_qp_set_C(ii, hC[ii], qp_in);
+		d_ocp_qp_set_D(ii, hD[ii], qp_in);
+		d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+		d_ocp_qp_set_ug(ii, hug[ii], qp_in);
+		d_ocp_qp_set_Zl(ii, hZl[ii], qp_in);
+		d_ocp_qp_set_Zu(ii, hZu[ii], qp_in);
+		d_ocp_qp_set_zl(ii, hzl[ii], qp_in);
+		d_ocp_qp_set_zu(ii, hzu[ii], qp_in);
+		d_ocp_qp_set_idxb(ii, hidxs[ii], qp_in);
+	}
+	d_ocp_qp_set_R(ii, hR[ii], qp_in);
+	d_ocp_qp_set_S(ii, hS[ii], qp_in);
+	d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+	d_ocp_qp_set_r(ii, hr[ii], qp_in);
+	d_ocp_qp_set_q(ii, hq[ii], qp_in);
+	d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+	d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+	d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+	d_ocp_qp_set_C(ii, hC[ii], qp_in);
+	d_ocp_qp_set_D(ii, hD[ii], qp_in);
+	d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+	d_ocp_qp_set_ug(ii, hug[ii], qp_in);
+	d_ocp_qp_set_Zl(ii, hZl[ii], qp_in);
+	d_ocp_qp_set_Zu(ii, hZu[ii], qp_in);
+	d_ocp_qp_set_zl(ii, hzl[ii], qp_in);
+	d_ocp_qp_set_zu(ii, hzu[ii], qp_in);
+	d_ocp_qp_set_idxb(ii, hidxs[ii], qp_in);
 
     // free objective
     free(Q);
