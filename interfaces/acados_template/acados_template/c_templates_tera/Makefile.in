@@ -63,7 +63,7 @@ main:
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 solver:
-	gcc $(ACADOS_FLAGS) -c acados_solver_{{ model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ \
+	gcc $(ACADOS_FLAGS) -c libacados_solver_{{ model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 example:
