@@ -48,7 +48,7 @@ int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims)
     size += d_memsize_cond_qp_ocp2ocp_arg(N);  // worst case size of new QP
                                                //
     size += sizeof(ocp_qp_dims);
-    size += d_memsize_ocp_qp_dim(N);  // worst-case size of new QP
+    size += d_ocp_qp_dim_memsize(N);  // worst-case size of new QP
     size += (N + 1) * sizeof(int);    // block size
 
     size += 1 * 8;
@@ -82,8 +82,8 @@ void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
     align_char_to(8, &c_ptr);
 
     // pcond_dims
-    d_create_ocp_qp_dim(N, opts->pcond_dims, c_ptr);
-    c_ptr += d_memsize_ocp_qp_dim(dims->N);
+    d_ocp_qp_dim_create(N, opts->pcond_dims, c_ptr);
+    c_ptr += d_ocp_qp_dim_memsize(dims->N);
     // hpipm_opts
     d_create_cond_qp_ocp2ocp_arg(N, opts->hpipm_opts, c_ptr);
     c_ptr += opts->hpipm_opts->memsize;

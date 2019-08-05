@@ -79,7 +79,7 @@ example:
 	-I $(INCLUDE_PATH)/qpOASES_e/
 
 shared_lib: casadi_fun solver
-	gcc $(ACADOS_FLAGS) -shared -o acados_solver_{{ ocp.model_name }}.so $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ ocp.model_name }}.so $(OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \

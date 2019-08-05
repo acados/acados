@@ -257,7 +257,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
     os.system('make shared_lib')
     os.chdir('..')
 
-    solver = acados_solver(acados_ocp, 'c_generated_code/acados_solver_' + model.name + '.so')
+    solver = acados_solver(acados_ocp, 'c_generated_code/libacados_solver_' + model.name + '.so')
     return solver
 
 class acados_solver:
