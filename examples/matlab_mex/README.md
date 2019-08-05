@@ -36,3 +36,4 @@ Run the script `acados_examples_env.m` in this folder to setup environment
 variables and the path for acados mex interface.
 
 Navigate to one of the examples and run the example script.
+
