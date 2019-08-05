@@ -93,7 +93,7 @@ else
   ldext = '.so';
 end
 
-lib_name = 'ocp_model';
+lib_name = ['lib', model_name];
 
 if ispc
   mbuild(c_files{:}, '-output', lib_name, 'CFLAGS="$CFLAGS"', 'LDTYPE="-shared"', ['LDEXT=', ldext]);
