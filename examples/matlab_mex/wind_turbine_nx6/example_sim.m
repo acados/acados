@@ -2,7 +2,6 @@
 clear all
 
 
-
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
@@ -17,12 +16,11 @@ end
 load testSim.mat
 
 
-
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
-%method = 'irk';
-method = 'erk';
+method = 'irk'; % irk, erk, irk_gnsf
+% method = 'irk_gnsf';
 sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
@@ -44,37 +42,31 @@ np = model.np;
 Ts = 0.2;
 sim_model = acados_sim_model();
 sim_model.set('T', Ts);
+
+sim_model.set('sym_x', model.sym_x);
+if isfield(model, 'sym_u')
+    sim_model.set('sym_u', model.sym_u);
+end
+if isfield(model, 'sym_p')
+    sim_model.set('sym_p', model.sym_p);
+end
+
+sim_model.set('dim_nx', model.nx);
+sim_model.set('dim_nu', model.nu);
+sim_model.set('dim_np', model.np);
+
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
 	sim_model.set('dyn_expr_f', model.expr_f_expl);
-	sim_model.set('sym_x', model.sym_x);
-	if isfield(model, 'sym_u')
-		sim_model.set('sym_u', model.sym_u);
-	end
-	if isfield(model, 'sym_p')
-		sim_model.set('sym_p', model.sym_p);
-	end
-	sim_model.set('dim_nx', model.nx);
-	sim_model.set('dim_nu', model.nu);
-	sim_model.set('dim_np', model.np);
-else % irk
+else % irk irk_gnsf
 	sim_model.set('dyn_type', 'implicit');
 	sim_model.set('dyn_expr_f', model.expr_f_impl);
-	sim_model.set('sym_x', model.sym_x);
 	sim_model.set('sym_xdot', model.sym_xdot);
-	if isfield(model, 'sym_u')
-		sim_model.set('sym_u', model.sym_u);
-	end
+
 %	if isfield(model, 'sym_z')
 %		sim_model.set('sym_z', model.sym_z);
 %	end
-	if isfield(model, 'sym_p')
-		sim_model.set('sym_p', model.sym_p);
-	end
-	sim_model.set('dim_nx', model.nx);
-	sim_model.set('dim_nu', model.nu);
 %	sim_model.set('dim_nz', model.nz);
-	sim_model.set('dim_np', model.np);
 end
 
 sim_model.model_struct
@@ -139,19 +131,9 @@ time_solve = toc/nsim
 %statesFAST(1:nsim+1,:)'
 x_sim(:,1:nsim+1)
 
-% get TODO with return value !!!!!
-% xn
-%xn = sim.get('xn');
-%xn
-% S_forw
 %S_forw = sim.get('S_forw');
-%S_forw
-% Sx
 %Sx = sim.get('Sx');
-%Sx
-% Su
 %Su = sim.get('Su');
-%Su
 
 
 fprintf('\nsuccess!\n\n');
