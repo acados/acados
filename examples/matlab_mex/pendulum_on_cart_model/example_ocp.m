@@ -221,7 +221,7 @@ ocp_opts.opts_struct
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-ocp.set('nlp_solver_max_iter', 1)
+ocp.set('nlp_solver_max_iter', 8);
 ocp
 
 ocp.C_ocp
