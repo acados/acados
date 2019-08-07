@@ -27,17 +27,10 @@ extern "C" {
 #include "acados/utils/types.h"
 
 //
-int get_option_int(const void *args_, const char *option);
 bool set_option_int(void *args_, const char *option, const int value);
 //
-const int *get_option_int_array(const void *args_, const char *option);
-bool set_option_int_array(void *args_, const char *option, const int *value);
-//
-double get_option_double(const void *args_, const char *option);
 bool set_option_double(void *args_, const char *option, const double value);
 //
-const double *get_option_double_array(const void *args_, const char *option);
-bool set_option_double_array(void *args_, const char *option, const double *value);
 
 #ifdef __cplusplus
 } /* extern "C" */

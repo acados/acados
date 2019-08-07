@@ -60,8 +60,6 @@ static bool is_qp_solver(const char *qp_solver_name)
         || !strcmp(qp_solver_name, "qore");
 }
 
-int get_option_int(const void *args_, const char *option) { return 0; }
-
 bool set_option_int(void *args_, const char *option, const int value)
 {
     char *token;
@@ -285,16 +283,6 @@ bool set_option_int(void *args_, const char *option, const int value)
     return true;
 }
 
-const int *get_option_int_array(const void *args_, const char *option) { return NULL; }
-
-bool set_option_int_array(void *args_, const char *option, const int *value)
-{
-    bool return_value = true;
-
-    return return_value;
-}
-
-double get_option_double(const void *args_, const char *option) { return 0; }
 
 bool set_option_double(void *args_, const char *option, const double value)
 {
@@ -398,13 +386,4 @@ bool set_option_double(void *args_, const char *option, const double value)
         token = strsep_acados(&ptr_to_option_cpy, ".");
     }
     return true;
-}
-
-const double *get_option_double_array(const void *args_, const char *option) { return NULL; }
-
-bool set_option_double_array(void *args_, const char *option, const double *value)
-{
-    bool return_value = true;
-
-    return return_value;
 }
