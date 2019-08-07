@@ -62,6 +62,7 @@ endif
 
 EXAMPLES =
 EXAMPLES += dense_qp
+EXAMPLES += ocp_qp
 EXAMPLES += pendulum_scqp
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
@@ -75,8 +76,8 @@ EXAMPLES += mass_spring_fcond_split
 EXAMPLES += mass_spring_offline_fcond_qpoases_split
 EXAMPLES += nonlinear_chain_ocp_nlp
 # EXAMPLES += sim_crane_no_interface
-# EXAMPLES += mass_spring_example_no_interface
-# EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
+EXAMPLES += mass_spring_example_no_interface
+#EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
 EXAMPLES += wind_turbine_nmpc
 #EXAMPLES += engine_example
 EXAMPLES += regularization
@@ -87,6 +88,7 @@ examples: $(EXAMPLES)
 # run all
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_dense_qp
+RUN_EXAMPLES += run_ocp_qp
 RUN_EXAMPLES += run_pendulum_scqp
 RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
@@ -100,8 +102,8 @@ RUN_EXAMPLES += run_mass_spring_fcond_split
 #RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
 RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 # RUN_EXAMPLES += run_sim_crane_no_interface
-# RUN_EXAMPLES += run_mass_spring_example_no_interface
-# RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
+RUN_EXAMPLES += run_mass_spring_example_no_interface
+#RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
 RUN_EXAMPLES += run_wind_turbine_nmpc
 #RUN_EXAMPLES += run_engine_example
 RUN_EXAMPLES += run_regularization
@@ -282,10 +284,10 @@ run_sim_inverted_pendulum:
 #################################################
 
 MASS_SPRING_OBJS =
-MASS_SPRING_OBJS += mass_spring_model/mass_spring_qp.o
+MASS_SPRING_OBJS += no_interface_examples/mass_spring_model/mass_spring_qp.o
 
-mass_spring_example_no_interface: $(MASS_SPRING_OBJS) mass_spring_example_no_interface.o
-	$(CCC) -o mass_spring_example_no_interface.out $(MASS_SPRING_OBJS) mass_spring_example_no_interface.o $(LDFLAGS) $(LIBS)
+mass_spring_example_no_interface: $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_example_no_interface.o
+	$(CCC) -o mass_spring_example_no_interface.out $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_example_no_interface.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_example_no_interface build complete."
 	@echo
@@ -295,8 +297,8 @@ run_mass_spring_example_no_interface:
 
 
 
-mass_spring_example: $(MASS_SPRING_OBJS) mass_spring_example.o
-	$(CCC) -o mass_spring_example.out $(MASS_SPRING_OBJS) mass_spring_example.o $(LDFLAGS) $(LIBS)
+mass_spring_example: $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_example.o
+	$(CCC) -o mass_spring_example.out $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_example.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_example build complete."
 	@echo
@@ -306,8 +308,8 @@ run_mass_spring_example:
 
 
 
-mass_spring_nmpc_example: $(MASS_SPRING_OBJS) mass_spring_nmpc_example.o
-	$(CCC) -o mass_spring_nmpc_example.out $(MASS_SPRING_OBJS) mass_spring_nmpc_example.o $(LDFLAGS) $(LIBS)
+mass_spring_nmpc_example: $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_nmpc_example.o
+	$(CCC) -o mass_spring_nmpc_example.out $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_nmpc_example.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_nmpc_example build complete."
 	@echo
@@ -317,8 +319,8 @@ run_mass_spring_nmpc_example:
 
 
 
-mass_spring_pcond_split: $(MASS_SPRING_OBJS) mass_spring_pcond_split.o
-	$(CCC) -o mass_spring_pcond_split.out $(MASS_SPRING_OBJS) mass_spring_pcond_split.o $(LDFLAGS) $(LIBS)
+mass_spring_pcond_split: $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_pcond_split.o
+	$(CCC) -o mass_spring_pcond_split.out $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_pcond_split.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_pcond_split build complete."
 	@echo
@@ -328,8 +330,8 @@ run_mass_spring_pcond_split:
 
 
 
-mass_spring_fcond_split: $(MASS_SPRING_OBJS) mass_spring_fcond_split.o
-	$(CCC) -o mass_spring_fcond_split.out $(MASS_SPRING_OBJS) mass_spring_fcond_split.o $(LDFLAGS) $(LIBS)
+mass_spring_fcond_split: $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_fcond_split.o
+	$(CCC) -o mass_spring_fcond_split.out $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_fcond_split.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_fcond_split build complete."
 	@echo
@@ -339,8 +341,8 @@ run_mass_spring_fcond_split:
 
 
 
-mass_spring_offline_fcond_qpoases_split: $(MASS_SPRING_OBJS) mass_spring_offline_fcond_qpoases_split.o
-	$(CCC) -o mass_spring_offline_fcond_qpoases_split.out $(MASS_SPRING_OBJS) mass_spring_offline_fcond_qpoases_split.o $(LDFLAGS) $(LIBS)
+mass_spring_offline_fcond_qpoases_split: $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_offline_fcond_qpoases_split.o
+	$(CCC) -o mass_spring_offline_fcond_qpoases_split.out $(MASS_SPRING_OBJS) no_interface_examples/mass_spring_offline_fcond_qpoases_split.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_offline_fcond_qpoases_split build complete."
 	@echo
@@ -425,8 +427,8 @@ CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_u_chain_nm6.o
 CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.o
 
 
-nonlinear_chain_ocp_nlp_no_interface: $(CHAIN_OBJS) nonlinear_chain_ocp_nlp_no_interface.o
-	$(CCC) -o nonlinear_chain_ocp_nlp_no_interface.out $(CHAIN_OBJS) nonlinear_chain_ocp_nlp_no_interface.o $(LDFLAGS) $(LIBS)
+nonlinear_chain_ocp_nlp_no_interface: $(CHAIN_OBJS) no_interface_examples/nonlinear_chain_ocp_nlp_no_interface.o
+	$(CCC) -o nonlinear_chain_ocp_nlp_no_interface.out $(CHAIN_OBJS) no_interface_examples/nonlinear_chain_ocp_nlp_no_interface.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example nonlinear_chain_ocp_nlp_no_interface build complete."
 	@echo
@@ -483,6 +485,24 @@ dense_qp: $(DENSE_QP) dense_qp.o
 
 run_dense_qp:
 	./dense_qp.out
+
+
+
+
+#################################################
+# ocp qp
+#################################################
+
+OCP_QP = 
+
+ocp_qp: $(OCP_QP) no_interface_examples/ocp_qp.o
+	$(CCC) -o ocp_qp.out $(OCP_QP) no_interface_examples/ocp_qp.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example ocp_qp build complete."
+	@echo
+
+run_ocp_qp:
+	./ocp_qp.out
 
 
 
