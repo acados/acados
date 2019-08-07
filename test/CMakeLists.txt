@@ -126,7 +126,7 @@ set(TEST_OCP_NLP_SRC
 )
 
 set(TEST_OCP_QP_SRC
-    ${PROJECT_SOURCE_DIR}/examples/c/mass_spring_model/mass_spring_qp.c
+    ${PROJECT_SOURCE_DIR}/examples/c/no_interface_examples/mass_spring_model/mass_spring_qp.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/test_qpsolvers.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/../test_utils/read_ocp_qp_in.c
 )
