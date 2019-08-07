@@ -168,15 +168,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		ocp_nlp_get(config, solver, "stat_m", &stat_m);
 		ocp_nlp_get(config, solver, "stat_n", &stat_n);
 		ocp_nlp_get(config, solver, "stat", &stat);
-		plhs[0] = mxCreateNumericMatrix(sqp_iter+1, stat_n+1, mxDOUBLE_CLASS, mxREAL);
+		int min_size = stat_m<sqp_iter+1 ? stat_m : sqp_iter+1;
+		plhs[0] = mxCreateNumericMatrix(min_size, stat_n+1, mxDOUBLE_CLASS, mxREAL);
 		double *mat_ptr = mxGetPr( plhs[0] );
-		if(sqp_iter+1>stat_m)
-			sqp_iter = stat_m-1;
-		for(ii=0; ii<sqp_iter+1; ii++)
+		for(ii=0; ii<min_size; ii++)
 			{
 			mat_ptr[ii+0] = ii;
 			for(jj=0; jj<stat_n; jj++)
-				mat_ptr[ii+(jj+1)*(sqp_iter+1)] = stat[jj+ii*stat_n];
+				mat_ptr[ii+(jj+1)*min_size] = stat[jj+ii*stat_n];
 			}
 		}
 	else

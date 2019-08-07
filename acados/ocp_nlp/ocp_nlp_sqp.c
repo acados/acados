@@ -1424,7 +1424,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 		if(opts->ext_qp_res)
 		{
 			ocp_qp_res_compute(work->qp_in, work->qp_out, work->qp_res, work->qp_res_ws);
-			ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+6));
+			if (sqp_iter+1 < mem->stat_m)
+				ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*(sqp_iter+1)+6));
 //			printf("\nsqp_iter %d, res %e %e %e %e\n", sqp_iter, inf_norm_qp_res[0], inf_norm_qp_res[1], inf_norm_qp_res[2], inf_norm_qp_res[3]);
 		}
 
