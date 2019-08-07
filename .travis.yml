@@ -6,7 +6,7 @@ env:
     - CASADIPATH="${HOME}/casadi"
     - ACADOS_INSTALL_DIR="${HOME}/acados"
     - DEPLOY_FOLDER="${HOME}/deploy"
-    - ACADOS_UNIT_TESTS='ON'
+    - ACADOS_UNIT_TESTS='ON';
     - ACADOS_WITH_QPOASES='ON';
     - ACADOS_LINT="OFF"
     - SWIG_MATLAB="OFF"
