@@ -110,7 +110,7 @@ else
 end
 
 % compile mex files
-if (strcmp(opts_struct.compile_mex, 'true'))
+if (strcmp(opts_struct.compile_mex, 'true') || strcmp(opts_struct.codgen_model, 'true'))
 
 	if is_octave()
 		if exist(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'file')==0
