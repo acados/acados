@@ -23,8 +23,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// model
 
-	// opts
-
 	// C_ocp
 
 	// config
@@ -39,6 +37,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// out
 	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "out" ) );
 	ocp_nlp_out *out = (ocp_nlp_out *) ptr[0];
+
+	// opts
+	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "opts" ) );
+	void *opts = (void *) ptr[0];
 
 	// field
 	char *field = mxArrayToString( prhs[4] );
@@ -181,6 +183,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				}
 			}
 		}
+	else if (!strcmp(field, "nlp_solver_max_iter"))
+	{
+		double *max_it_double = mxGetPr( prhs[5] );
+		int nlp_solver_max_iter = max_it_double[0];
+		ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
+	}
 	else
 		{
 		mexPrintf("\nocp_set: field not supported: %s\n", field);

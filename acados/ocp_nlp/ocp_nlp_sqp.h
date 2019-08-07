@@ -55,7 +55,7 @@ typedef struct
     int reuse_workspace;
     int num_threads;
 	int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
-	int qp_warm_start;
+	int qp_warm_start;   // TODO(FreyJo): why not bool?!
 } ocp_nlp_sqp_opts;
 
 //

@@ -221,11 +221,12 @@ ocp_opts.opts_struct
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
+ocp.set('nlp_solver_max_iter', 1)
 ocp
+
 ocp.C_ocp
 ocp.C_ocp_ext_fun
 %ocp.model_struct
-
 
 
 % set trajectory initialization

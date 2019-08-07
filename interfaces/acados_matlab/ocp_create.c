@@ -1227,7 +1227,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		ocp_nlp_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
 		}
-	// nlp_solver_max_iter
+	// nlp_solver_ext_qp_res
 	if(set_nlp_solver_ext_qp_res)
 		{
 		ocp_nlp_opts_set(config, opts, "ext_qp_res", &nlp_solver_ext_qp_res);
