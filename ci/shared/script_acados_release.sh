@@ -48,6 +48,7 @@ function build_acados {
 		-D COVERAGE="${COVERAGE}" \
 		-D SWIG_PYTHON="${SWIG_PYTHON}" \
 		-D BUILD_SHARED_LIBS=ON \
+		-D ACADOS_EXAMPLES="${ACADOS_EXAMPLES}"\
 		..;
 	if [ "${ACADOS_LINT}" = 'ON' ]; then
 		cmake --build build --target lint;
@@ -55,7 +56,11 @@ function build_acados {
 	fi
 
 	cmake --build build;
+	# Run ctest
 	cmake -E chdir build ctest --output-on-failure;
+	# TODO: test matlab/octave/python
+	# cmake -E chdir build matlabtest --output-on-failure;
+
 	[ $? -ne 0 ] && exit 100;
 	if [ -n "${COVERAGE}" ]; then
 		cmake --build build --target acados_coverage || \

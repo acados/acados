@@ -7,6 +7,7 @@ env:
     - ACADOS_INSTALL_DIR="${HOME}/acados"
     - DEPLOY_FOLDER="${HOME}/deploy"
     - ACADOS_UNIT_TESTS='ON';
+    - ACADOS_EXAMPLES='ON'
     - ACADOS_WITH_QPOASES='ON';
     - ACADOS_LINT="OFF"
     - SWIG_MATLAB="OFF"
@@ -53,6 +54,11 @@ matrix:
       env:
         - DEPLOY_NAME="linux-python-clang37"
         - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
+    # - name: Linux Matlab interface
+    #   env:
+    #     - DEPLOY_NAME="linux-python-matlab-gcc49"
+    #     - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+    #     # - MATLAB_MEX='ON'
 
 cache:
   ccache: true

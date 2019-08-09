@@ -43,6 +43,7 @@ if [ "${SECTION}" = 'install' ]; then
 		 -o "${SWIG_MATLAB}" = 'ON'
 		 -o "${TEMPLATE_MATLAB}" = 'ON'
 		 -o "${DEV_MATLAB}" = 'ON'
+		 -o "${MATLAB_MEX}" = 'ON'
 		]; then
 		source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
 	fi
