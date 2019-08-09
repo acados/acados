@@ -296,7 +296,7 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
 
     // extract dims
     int nx = dims->nx;
-    int nz = dims->nz;
+    // int nz = dims->nz;
     int nu = dims->nu;
     int nx1 = dims->nx1;
 
@@ -327,7 +327,7 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
 
     // extract dims
     int nx = dims->nx;
-    int nz = dims->nz;
+    // int nz = dims->nz;
     int nu = dims->nu;
     int nx1 = dims->nx1;
 

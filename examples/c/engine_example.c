@@ -41,12 +41,10 @@ int main()
     FILE *out_file = fopen("engine_ux.txt", "w");
     if(ferror(out_file))
         exit(1);
-	
-	int ii, jj;
 
-	int stat_m, stat_n, sqp_iter;
-	double time_tot;
-	double *stat;
+    int jj, sqp_iter;
+    double time_tot;
+    // double *stat;
 
     const int n_sim = 601;
     const int N = 20;
@@ -55,7 +53,7 @@ int main()
 	int nu_ = 2;
 	int nz_ = 2;
 
-    int nx[N+1], nu[N+1], nz[N+1], ny[N+1], nb[N+1], nbx[N+1], nbu[N+1];
+    int nx[N+1], nu[N+1], nz[N+1], ny[N+1], nbx[N+1], nbu[N+1];
     for (int i = 0; i < N; i++)
     {
         nx[i] = nx_;
@@ -64,7 +62,6 @@ int main()
         ny[i] = 1 + nx_ + nu_;
         nbx[i] = nx_;
         nbu[i] = nu_;
-        nb[i] = nbx[i] + nbu[i];
     }
 	nx[N] = nx_;
 	nu[N] = 0;
@@ -72,7 +69,6 @@ int main()
 	ny[N] = 1 + nx_;
 	nbx[N] = nx_;
 	nbu[N] = 0;
-	nb[N] = nbx[N];
 
     // sampling time (s)
     double T = 0.05;
@@ -241,9 +237,7 @@ int main()
         if(ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
     }
 
-    // bounds
-	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
-
+    // constraints
     ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0);
     ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0);
 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "idxbx", idxbx);
