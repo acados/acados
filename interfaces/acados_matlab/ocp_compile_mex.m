@@ -75,7 +75,7 @@ end
 
 %system(['mv -f *.mexa64 ', opts.output_dir])
 for k=1:length(mex_names)
-%	clear(mex_names{k})
+	clear(mex_names{k})
 %	movefile([mex_names{k}, '.', mexext], opts.output_dir);
 	[status, message] = copyfile([mex_names{k}, '.', mexext], opts.output_dir);
 	delete([mex_names{k}, '.', mexext]);
