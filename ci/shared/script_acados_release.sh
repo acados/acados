@@ -48,7 +48,9 @@ function build_acados {
 		-D COVERAGE="${COVERAGE}" \
 		-D SWIG_PYTHON="${SWIG_PYTHON}" \
 		-D BUILD_SHARED_LIBS=ON \
-		-D ACADOS_EXAMPLES="${ACADOS_EXAMPLES}"\
+		-D ACADOS_EXAMPLES="${ACADOS_EXAMPLES}" \
+		-D MATLAB_EXECUTABLE="${MATLAB_EXECUTABLE}" \
+		-D ACADOS_MATLAB="${ACADOS_MATLAB}" \
 		..;
 	if [ "${ACADOS_LINT}" = 'ON' ]; then
 		cmake --build build --target lint;
