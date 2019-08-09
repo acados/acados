@@ -32,9 +32,9 @@ classdef acados_sim < handle
 			% compile mex without model dependency
 			if (strcmp(obj.opts_struct.compile_mex, 'true'))
 				sim_compile_mex(obj.opts_struct);
-			end
-
-			obj.C_sim = sim_create(obj.model_struct, obj.opts_struct);
+            end
+            sim_check_dims(obj.model_struct);
+            obj.C_sim = sim_create(obj.model_struct, obj.opts_struct);
 
 			% generate and compile casadi functions
 			if (strcmp(obj.opts_struct.codgen_model, 'true'))
