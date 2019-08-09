@@ -51,6 +51,7 @@ option(SWIG_PYTHON "Swig Python Interface" OFF)
 option(TEMPLATE_MATLAB "Template Matlab Interface" OFF)
 option(TEMPLATE_PYTHON "Template Python Interface" OFF)
 option(DEV_MATLAB "Developer Matlab Interface" OFF)
+option(ACADOS_MATLAB "The Matlab Interface" OFF)
 
 # Set custom path
 set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
@@ -153,6 +154,10 @@ if(ACADOS_LINT)
 	endif()
 endif()
 
+if(ACADOS_MATLAB) #TODO: OR ACADOS_PYTHON
+	add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces)
+endif()
+
 ### ) External lib checks
 
 # Configure acados
@@ -199,6 +204,7 @@ add_custom_target(uninstall
 message(STATUS "Target: BLASFEO is ${BLASFEO_TARGET}, HPIPM is ${HPIPM_TARGET}")
 message(STATUS "Linear algebra: ${LA}")
 message(STATUS "Swig: Python (${SWIG_PYTHON}) Matlab (${SWIG_MATLAB})")
+message(STATUS "Matlab MEX (${ACADOS_MATLAB})")
 message(STATUS "System name:version ${CMAKE_SYSTEM_NAME}:${CMAKE_SYSTEM_VERSION}")
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
