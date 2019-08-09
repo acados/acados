@@ -16,7 +16,7 @@
 
 /*  This example shows how acados can be used to simulate index-1 DAEs
         using IRK integrators, either the standard sim_irk_integrator or
-        the GNSF (generalized nonlinear static feedback) exploitingintegrator.
+        the GNSF (generalized nonlinear static feedback) exploiting integrator.
     Author: Jonathan Frey                                                   */
 
 // external
@@ -30,6 +30,7 @@
 #include "acados/utils/math.h"
 
 #include "acados_c/external_function_interface.h"
+// TODO(oj): use only sim_interface!
 #include "interfaces/acados_c/sim_interface.h"
 
 // crane dae model
@@ -60,7 +61,7 @@ int main()
     int ny    = 8;
     int nuhat = 1;
 
-	int nsim = 1;
+	int nsim = 1000;
 
     // generate x0, u_sim
     double x0[nx];
@@ -78,7 +79,7 @@ int main()
 
     int NF = nx + nu;  // columns of forward seed
 
-    int nsim0 = 1;  // nsim;
+    int nsim0 = nsim;
 
     double T = 0.01;
 
@@ -250,7 +251,7 @@ int main()
         sim_opts *opts = (sim_opts *) opts_;
         config->opts_initialize_default(config, dims, opts);
 
-        opts->jac_reuse = true;        // jacobian reuse
+        opts->jac_reuse = false;        // jacobian reuse
         opts->newton_iter = 3;          // number of newton iterations per integration step
 
         opts->ns                = 3;    // number of stages in rk integrator
@@ -259,14 +260,14 @@ int main()
         opts->sens_adj          = true;
         opts->output_z          = true;
         opts->sens_algebraic    = true;
-        opts->sens_hess         = true;
+        opts->sens_hess         = false;
 
     /* sim in / out */
 
 		sim_in *in   = sim_in_create(config, dims);
 		sim_out *out = sim_out_create(config, dims);
 
-		in->T = T;
+        sim_in_set(config, dims, in, "T", &T);
 
     /* set model */
         switch (plan.sim_solver)
@@ -343,8 +344,6 @@ int main()
 
     /* simulate */
 
-		// int nsim0 = nsim;
-
 		double cpu_time = 0.0;
 		double la_time = 0.0;
 		double ad_time = 0.0;
@@ -357,7 +356,7 @@ int main()
 
             // u
             for (int jj = 0; jj < nu; jj++)
-                in->u[jj] = u_sim[ii*nu+jj];
+                in->u[jj] = u_sim[0]; //u_sim[ii*nu+jj];
 
 			// execute simulation step with current input and state
 			acados_return = sim_solve(sim_solver, in, out);
@@ -431,7 +430,7 @@ int main()
             d_print_exp_mat(nz, NF, &out->S_algebraic[0], nz);
         }
 
-		if(opts->sens_hess){
+		if (opts->sens_hess){
 			double *S_hess = out->S_hess;
 			printf("S_hess: \n");
 			d_print_exp_mat(nx+nu, nx+nu, S_hess, nx+nu);
@@ -449,12 +448,12 @@ int main()
 		printf("time spent in integrator outside of casADi %f \n", 1e3*(total_cpu_time-ad_time));
 
     /* free memory */
-		free(dims);
-		free(sim_solver);
-		free(in);
-		free(out);
-		free(opts);
-		free(config);
+		sim_dims_destroy(dims);
+		sim_solver_destroy(sim_solver);
+		sim_in_destroy(in);
+		sim_out_destroy(out);
+		sim_opts_destroy(opts);
+		sim_config_destroy(config);
 	}
 /* free external function */
     // implicit model
