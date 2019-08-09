@@ -33,6 +33,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// dims
 	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dims" ) );
 	ocp_nlp_dims *dims = (ocp_nlp_dims *) ptr[0];
+	// opts
+	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "opts" ) );
+	void *opts = (void *) ptr[0];
 	// in
 	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "in" ) );
 	ocp_nlp_in *in = (ocp_nlp_in *) ptr[0];
@@ -180,6 +183,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				Nf_sum += NN[jj];
 				}
 			}
+		}
+	else if (!strcmp(field, "nlp_solver_max_iter"))
+		{
+		int nlp_solver_max_iter = mxGetScalar( prhs[5] );
+		ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
 		}
 	else
 		{

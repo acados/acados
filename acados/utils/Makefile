@@ -22,7 +22,6 @@ include ../../Makefile.rule
 OBJS =
 
 OBJS += math.o
-OBJS += copy.o
 OBJS += print.o
 OBJS += timing.o
 OBJS += mem.o

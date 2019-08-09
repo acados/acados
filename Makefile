@@ -86,7 +86,6 @@ OBJS += acados/sim/sim_common.o
 OBJS += acados/sim/sim_gnsf.o
 # utils
 OBJS += acados/utils/math.o
-OBJS += acados/utils/copy.o
 OBJS += acados/utils/print.o
 OBJS += acados/utils/timing.o
 OBJS += acados/utils/mem.o

@@ -110,7 +110,7 @@ int main()
     ************************************************/
 
     ocp_qp_solver_plan qp_plan;
-    qp_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;  // TODO(dimitris): UPS! Name is weird in this context!
+    qp_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
     ocp_qp_xcond_solver_config *config = ocp_qp_config_create(qp_plan);
 
@@ -196,13 +196,13 @@ int main()
     * free memory
     ************************************************/
 
-    free(qp_dims);
-    free(qp_in);
+    ocp_qp_dims_free(qp_dims);
+    ocp_qp_in_free(qp_in);
     free(qpp_in);
     free(qpp_out);
     free(sol);
     free(popts);
-    free(config);
+    ocp_qp_config_free(config);
     free(qp_solver);
 
     free(cond_opts);

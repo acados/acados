@@ -36,7 +36,7 @@ int main() {
     double r[] = {0};
 
     double x0[] = {1, 1};
-    int idxb0[] = {1, 2};
+    int idxb0[] = {0, 1};
 
     ocp_qp_solver_plan plan;
     plan.qp_solver = FULL_CONDENSING_HPIPM;
@@ -78,11 +78,13 @@ int main() {
     double *hR[] = {R, R, R, R, R};
     double *hq[] = {q, q, q, q, q, q};
     double *hr[] = {r, r, r, r, r, r};
-    int *hidxb[] = {idxb0};
-    double *hlb[] = {x0};
-    double *hub[] = {x0};
+    int *hidxbx[] = {idxb0};
+    double *hlbx[] = {x0};
+    double *hubx[] = {x0};
 
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
+    d_ocp_qp_set_all(hA, hB, hb, hQ, hS, hR, hq, hr, hidxbx, hlbx, hubx,
+                     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                     NULL, NULL, NULL, NULL, NULL, qp_in);
 
     print_ocp_qp_in(qp_in);
 
@@ -114,9 +116,10 @@ int main() {
     // ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
     // print_ocp_qp_info(info);
 
-    free(config);
-    free(opts);
-    free(qp_in);
-    free(qp_out);
+    ocp_qp_config_free(config);
+    ocp_qp_opts_free(opts);
+    ocp_qp_in_free(qp_in);
+    ocp_qp_out_free(qp_out);
+    // TODO(oj): use free from C interface
     free(qp_solver);
 }

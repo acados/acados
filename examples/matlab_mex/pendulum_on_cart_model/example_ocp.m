@@ -238,6 +238,10 @@ ocp.set('init_x', x_traj_init);
 ocp.set('init_u', u_traj_init);
 
 
+% change number of sqp iterations
+ocp.set('nlp_solver_max_iter', 20);
+
+
 % solve
 tic;
 ocp.solve();
@@ -327,11 +331,11 @@ legend('F');
 
 if (strcmp(nlp_solver, 'sqp'))
 	figure(3);
-	plot([0: sqp_iter], log10(stat(:,2)), 'r-x');
+	plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
 	hold on
-	plot([0: sqp_iter], log10(stat(:,3)), 'b-x');
-	plot([0: sqp_iter], log10(stat(:,4)), 'g-x');
-	plot([0: sqp_iter], log10(stat(:,5)), 'k-x');
+	plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');
+	plot([0: size(stat,1)-1], log10(stat(:,4)), 'g-x');
+	plot([0: size(stat,1)-1], log10(stat(:,5)), 'k-x');
 	hold off
 	xlabel('iter')
 	ylabel('res')
