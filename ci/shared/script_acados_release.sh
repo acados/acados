@@ -59,9 +59,16 @@ function build_acados {
 
 	cmake --build build;
 	# Run ctest
+	if [ "${ACADOS_MATLAB}" = 'ON' ]; then
+		chdir examples/matlab_mex/pendulum_on_cart_model;
+		source env.sh;
+		chdir ../../..;
+	fi
+
+
 	cmake -E chdir build ctest --output-on-failure;
+	# cmake -E chdir examples/matlab_mex/pendulum_on_cart_model -E source env.sh -E chdir ../../../build ctest --output-on-failure;
 	# TODO: test matlab/octave/python
-	# cmake -E chdir build matlabtest --output-on-failure;
 
 	[ $? -ne 0 ] && exit 100;
 	if [ -n "${COVERAGE}" ]; then
