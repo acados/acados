@@ -60,12 +60,18 @@ function build_acados {
 
 	cmake --build build;
 	# Run ctest
-	if [ "${ACADOS_MATLAB}" = 'ON' ]; then
-		chdir examples/matlab_mex/pendulum_on_cart_model;
-		source env.sh;
-		chdir ../../..;
-	fi
 
+	# if [ 0 -o "${ACADOS_MATLAB}" = 'ON' -o "${ACADOS_OCTAVE}" = 'ON']; then
+	# 	pushd examples/matlab_mex/pendulum_on_cart_model;
+	# 		source env.sh;
+	# 	popd;
+	# fi
+
+	if [ "${ACADOS_OCTAVE}" = 'ON' ]; then # TODO: add OR (ACADOS_MATLAB)
+		pushd examples/matlab_mex/pendulum_on_cart_model;
+			source env.sh;
+		popd;
+	fi
 
 	cmake -E chdir build ctest --output-on-failure;
 	# cmake -E chdir examples/matlab_mex/pendulum_on_cart_model -E source env.sh -E chdir ../../../build ctest --output-on-failure;

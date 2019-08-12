@@ -34,8 +34,8 @@ pushd external;
 	tar -xf casadi-linux-matlabR2014b.tar.gz -C casadi-linux-matlabR2014b;
 	export MATLABPATH=$(pwd)/casadi-linux-matlabR2014b:$MATLABPATH;
 
-	wget -O casadi-linux-matlabR2014b.tar.gz "${CASADI_OCTAVE_URL}";
+	wget -O casadi-linux-octave.tar.gz "${CASADI_OCTAVE_URL}";
 	mkdir -p casadi-octave;
-	tar -xf casadi-linux-octave-4.4.1-v3.4.5.tar.gz -C casadi-octave;
-	export OCTAVEPATH=$(pwd)/casadi-octave:$OCTAVEPATH;
+	tar -xf casadi-linux-octave.tar.gz -C casadi-octave;
+	# export OCTAVE_PATH=$(pwd)/casadi-octave:$OCTAVE_PATH;
 popd;
