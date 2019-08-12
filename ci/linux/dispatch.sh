@@ -22,37 +22,27 @@ if [ "${SECTION}" = 'install' ]; then
 	source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
 	source "${SCRIPT_DIR}/install_python.sh";
 
-	if [ 0
-		 -o "${SWIG_MATLAB}" = 'ON'
-		 -o "${SWIG_PYTHON}" = 'ON'
-		 -o "${TEMPLATE_PYTHON}" = 'ON'
-		 -o "${TEMPLATE_MATLAB}" = 'ON'
-		 -o "${DEV_MATLAB}" = 'ON'
-		]; then
+	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]] ||
+	   [[ "${TEMPLATE_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+		"${DEV_MATLAB}" = 'ON';
+		then
 		source "${SCRIPT_DIR}/install_casadi.sh";
 	fi
 
-	if [ 0
-		 -o "${SWIG_PYTHON}" = 'ON'
-		 -o "${TEMPLATE_PYTHON}" = 'ON'
-		]; then
+	if [["${SWIG_PYTHON}" = 'ON' || "${TEMPLATE_PYTHON}" = 'ON']] ;
+	then
 		source "${SCRIPT_DIR}/install_python_dependencies.sh";
 	fi
 
-	if [ 0
-		 -o "${SWIG_MATLAB}" = 'ON'
-		 -o "${TEMPLATE_MATLAB}" = 'ON'
-		 -o "${DEV_MATLAB}" = 'ON'
-		 -o "${MATLAB_MEX}" = 'ON'
-		]; then
+	if [[ "${SWIG_MATLAB}" = 'ON' ||  "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+	   [["${DEV_MATLAB}" = 'ON' || "${MATLAB_MEX}" = 'ON' ]];
+	then
 		source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
 	fi
 
 
-	if [ 0
-		 -o "${SWIG_MATLAB}" = 'ON'
-		 -o "${SWIG_PYTHON}" = 'ON'
-		]; then
+	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]];
+		then
 		source "${SHARED_SCRIPT_DIR}/install_swig.sh";
 	fi
 
