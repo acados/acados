@@ -51,6 +51,7 @@ function build_acados {
 		-D ACADOS_EXAMPLES="${ACADOS_EXAMPLES}" \
 		-D MATLAB_EXECUTABLE="${MATLAB_EXECUTABLE}" \
 		-D ACADOS_MATLAB="${ACADOS_MATLAB}" \
+		-D ACADOS_OCTAVE="${ACADOS_OCTAVE}" \
 		..;
 	if [ "${ACADOS_LINT}" = 'ON' ]; then
 		cmake --build build --target lint;
