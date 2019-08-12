@@ -1,4 +1,3 @@
-#!/bin/bash
 #
 #
 # Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
@@ -16,46 +15,15 @@
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
+#/bin/bash
 
-if [ "${SECTION}" = 'install' ]; then
-	source "${SCRIPT_DIR}/install_apt_dependencies.sh";
-	source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
-	source "${SCRIPT_DIR}/install_python.sh";
+# sudo add-apt-repository ppa:octave/stable -y;
+# sudo apt-get update -yqq;
+# sudo apt-get install octave -yqq;
 
-	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]] ||
-	   [[ "${TEMPLATE_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
-	   [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
-		"${DEV_MATLAB}" = 'ON';
-		then
-		source "${SCRIPT_DIR}/install_casadi.sh";
-	fi
+# wget -O octave_4.4_installer http://de.archive.ubuntu.com/ubuntu/pool/universe/o/octave/octave_4.4.1-1_amd64.deb;
+# sudo dpkg -i ./octave_4.4_installer;
 
-	if [ "${ACADOS_OCTAVE}" = 'ON' ] ;
-	then
-		source "${SCRIPT_DIR}/install_octave.sh";
-	fi
-
-	if [[ "${SWIG_PYTHON}" = 'ON' || "${TEMPLATE_PYTHON}" = 'ON' ]] ;
-	then
-		source "${SCRIPT_DIR}/install_python_dependencies.sh";
-	fi
-
-	if [[ "${SWIG_MATLAB}" = 'ON' ||  "${TEMPLATE_MATLAB}" = 'ON' ]] ||
-	   [[ "${DEV_MATLAB}" = 'ON' || "${MATLAB_MEX}" = 'ON' ]];
-	then
-		source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
-	fi
-
-
-	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]];
-		then
-		source "${SHARED_SCRIPT_DIR}/install_swig.sh";
-	fi
-
-elif [ "${SECTION}" = 'script' ]; then
-	source "${SHARED_SCRIPT_DIR}/script_acados_release.sh";
-
-elif [ "${SECTION}" = 'after_success' ]; then
-	source "${SHARED_SCRIPT_DIR}/after_success_package_release.sh";
-	source "${SHARED_SCRIPT_DIR}/upload_coverage.sh";
-fi
+sudo apt-add-repository ppa:octave/stable -y;
+sudo apt-get update -qq;
+sudo apt-get install octave liboctave-dev -y;

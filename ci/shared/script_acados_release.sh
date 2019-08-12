@@ -59,21 +59,31 @@ function build_acados {
 	fi
 
 	cmake --build build;
-	# Run ctest
 
-	# if [ 0 -o "${ACADOS_MATLAB}" = 'ON' -o "${ACADOS_OCTAVE}" = 'ON']; then
-	# 	pushd examples/matlab_mex/pendulum_on_cart_model;
-	# 		source env.sh;
-	# 	popd;
-	# fi
+	# echo "searching the libs"
+	# find $(pwd) -name 'libhpipm.*';
 
-	if [ "${ACADOS_OCTAVE}" = 'ON' ]; then # TODO: add OR (ACADOS_MATLAB)
+	# Prepare ctest with Matlab/Octave interface
+	if [[ "${ACADOS_OCTAVE}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]]; then
+		echo "creating symboic links to libaries"
+		echo
+		mkdir -p /home/travis/build/acados/acados/lib;
+		ln -s /home/travis/build/acados/acados/build/external/hpipm/libhpipm.so /home/travis/build/acados/acados/lib/libhpipm.so;
+		ln -s /home/travis/build/acados/acados/build/external/blasfeo/libblasfeo.so /home/travis/build/acados/acados/lib/libblasfeo.so;
+		ln -s /home/travis/build/acados/acados/build/acados/libacados.so /home/travis/build/acados/acados/lib/libacados.so;
+
+		# Setting paths
+		export OCTAVE_PATH=/home/travis/build/acados/acados/interfaces/acados_matlab:$OCTAVE_PATH;
+
 		pushd examples/matlab_mex/pendulum_on_cart_model;
-			source env.sh;
+			source env_ci.sh;
 		popd;
+
+		echo "OCTAVE_PATH=$OCTAVE_PATH";
 	fi
 
-	cmake -E chdir build ctest --output-on-failure;
+	# Run ctest
+	cmake -E chdir build ctest -V;#--output-on-failure;
 	# cmake -E chdir examples/matlab_mex/pendulum_on_cart_model -E source env.sh -E chdir ../../../build ctest --output-on-failure;
 	# TODO: test matlab/octave/python
 

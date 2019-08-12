@@ -23,6 +23,4 @@ end
 
 fprintf('\nRUN_TESTS: success!\n\n');
 
-exit()
-
-
+% exit(0);
