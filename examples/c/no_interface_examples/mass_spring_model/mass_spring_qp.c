@@ -951,9 +951,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *d
     double *hZu[N+1];
     double *hzl[N+1];
     double *hzu[N+1];
-    int *hidxs[N+1]; // XXX
-    double *hd_ls[N+1];
-    double *hd_us[N+1];
+    int *hidxs[N+1];
 
 #if defined(ELIMINATE_X0)
     hA[0] = A0;
@@ -984,8 +982,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *d
     hzl[0] = zl0;
     hzu[0] = zu0;
     hidxs[0] = idxs0;
-    hd_ls[0] = d_ls0;
-    hd_us[0] = d_us0;
     for (int ii = 1; ii < N; ii++) {
         hA[ii] = A;
         hB[ii] = B;
@@ -1007,8 +1003,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *d
         hzl[ii] = zl1;
         hzu[ii] = zu1;
         hidxs[ii] = idxs1;
-        hd_ls[ii] = d_ls1;
-        hd_us[ii] = d_us1;
     }
     hQ[N] = Q;  // or maybe initialize to the solution of the DARE???
     hq[N] = q;  // or maybe initialize to the solution of the DARE???
@@ -1023,8 +1017,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *d
     hzl[N] = zlN;
     hzu[N] = zuN;
     hidxs[N] = idxsN;
-    hd_ls[N] = d_lsN;
-    hd_us[N] = d_usN;
 
 
     ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);

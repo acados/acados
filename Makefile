@@ -19,7 +19,7 @@
 
 
 # default make target
-all: acados_static
+all: static_library
 
 
 
@@ -127,7 +127,7 @@ CLEAN_DEPS += osqp_clean
 endif
 
 
-acados_static: $(STATIC_DEPS)
+static_library: $(STATIC_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
 	mkdir -p lib
@@ -151,7 +151,7 @@ ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
 endif
 
 
-acados_shared: $(SHARED_DEPS)
+shared_library: $(SHARED_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	$(CC) -L./lib -shared -o libacore.so $(OBJS) -lblasfeo -lhpipm -lm -fopenmp
 	mkdir -p lib
@@ -260,7 +260,7 @@ osqp_static: $(OSQP_LIB_STATIC)
 	cp -r $(OSQP_PATH)/include/* include/osqp/include
 	mv libosqp.a lib
 
-examples_c: acados_static
+examples_c: static_library
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )
 
 run_examples_c: examples_c

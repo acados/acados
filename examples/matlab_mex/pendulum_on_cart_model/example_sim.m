@@ -135,10 +135,10 @@ Su
 
 %x_sim
 
-for ii=1:N_sim+1
-	x_cur = x_sim(:,ii);
-	visualize;
-end
+% for ii=1:N_sim+1
+% 	x_cur = x_sim(:,ii);
+% 	visualize;
+% end
 
 figure(2);
 plot(1:N_sim+1, x_sim);

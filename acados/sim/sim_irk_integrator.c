@@ -795,12 +795,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                 for (int jj = 0; jj < ns; jj++)
                 {  // jj-th col of tableau
-                    a = A_mat[ii + ns * jj];
-                    if (a != 0)
-                    {  // xt = xt + T_int * a[i,j]*K_j
-                        a *= step;
-                        blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
-                    }
+                    // TODO(oj): precompute A_mat * step;
+                    a = A_mat[ii + ns * jj] * step;
+                    // xt = xt + T_int * a[i,j]*K_j
+                    blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                 }
                 impl_ode_xdot_in.xi = ii * nx;  // use k_i of K = (k_1,..., k_{ns},z_1,..., z_{ns})
                 impl_ode_z_in.xi    = ns * nx + ii * nz;
@@ -820,13 +818,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // compute the blocks of dG_dK_ss
                     for (int jj = 0; jj < ns; jj++)
                     {  // compute the block (ii,jj)th block of dG_dK_ss
-                        a = A_mat[ii + ns * jj];
-                        if (a != 0)
-                        {
-                            a *= step;
-                            blasfeo_dgead(nx + nz, nx, a, df_dx, 0, 0,
-                                              dG_dK_ss, ii * (nx + nz), jj * nx);
-                        }
+                        a = A_mat[ii + ns * jj] * step;
+                        blasfeo_dgead(nx + nz, nx, a, df_dx, 0, 0,
+                                            dG_dK_ss, ii * (nx + nz), jj * nx);
                         if (jj == ii)
                         {
                             blasfeo_dgead(nx + nz, nx, 1, df_dxdot, 0, 0,
@@ -894,12 +888,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                 for (int jj = 0; jj < ns; jj++)
                 {
-                    a = A_mat[ii + ns * jj];
-                    if (a != 0)
-                    {  // xt = xt + T_int * a[i,j]*K_j
-                        a *= step;
-                        blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
-                    }
+                    a = A_mat[ii + ns * jj] * step;
+                    // xt = xt + T_int * a[i,j]*K_j
+                    blasfeo_daxpy(nx, a, K, jj * nx, xt, 0, xt, 0);
                 }
 
                 acados_tic(&timer_ad);
@@ -914,13 +905,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 // compute the blocks of dG_dK_ss
                 for (int jj = 0; jj < ns; jj++)
                 {  // compute the block (ii,jj)th block of dG_dK_ss
-                    a = A_mat[ii + ns * jj];
-                    if (a != 0)
-                    {
-                        a *= step;
-                        blasfeo_dgead(nx + nz, nx, a, df_dx, 0, 0,
-                                            dG_dK_ss, ii * (nx + nz), jj * nx);
-                    }
+                    a = A_mat[ii + ns * jj] * step;
+                    blasfeo_dgead(nx + nz, nx, a, df_dx, 0, 0,
+                                        dG_dK_ss, ii * (nx + nz), jj * nx);
                     if (jj == ii)
                     {
                         blasfeo_dgead(nx + nz, nx, 1, df_dxdot, 0, 0,
@@ -961,6 +948,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // blasfeo_print_exp_dmat(nK, nx + nu, dK_dxu_ss, 0, 0);
 
             // update forward sensitivity
+            // NOTE(oj): dK_dxu_ss is actually -dK_dxu_ss, because alpha = -1.0
+            //   was not supported by blasfeos backsolve initially.
             for (int jj = 0; jj < ns; jj++)
                 blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], dK_dxu_ss, jj * nx, 0,
                                                      S_forw_ss, 0, 0);
@@ -1109,12 +1098,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);
                     for (int jj = 0; jj < ns; jj++)
                     {
-                        a = A_mat[ii + ns * jj];
-                        if (a != 0)
-                        {
-                            a *= step;
-                            blasfeo_daxpy(nx, a, &K_traj[ss], jj * nx, xt, 0, xt, 0);
-                        }
+                        a = A_mat[ii + ns * jj] * step;
+                        blasfeo_daxpy(nx, a, &K_traj[ss], jj * nx, xt, 0, xt, 0);
                     }
                     /* set up input for impl_ode jacobians */
                     acados_tic(&timer_ad);
@@ -1130,13 +1115,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     /* build dG_dK_ss */
                     for (int jj = 0; jj < ns; jj++)
                     {  // compute the block (ii,jj)th block of dG_dK_ss
-                        a = A_mat[ii + ns * jj];
-                        if (a != 0)
-                        {
-                            a *= step;
-                            blasfeo_dgead(nx + nz, nx, a, df_dx, 0, 0,
-                                                dG_dK_ss, ii * (nx + nz), jj * nx);
-                        }
+                        a = A_mat[ii + ns * jj] * step;
+                        blasfeo_dgead(nx + nz, nx, a, df_dx, 0, 0,
+                                      dG_dK_ss, ii * (nx + nz), jj * nx);
                         if (jj == ii)
                         {
                             blasfeo_dgead(nx + nz, nx, 1.0, df_dxdot, 0, 0,
@@ -1190,14 +1171,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);
                     for (int jj = 0; jj < ns; jj++)
                     {
-                        a = A_mat[ii + ns * jj];
-                        if (a != 0)
-                        {
-                            a *= step;
-                            blasfeo_daxpy(nx, a, &K_traj[ss], jj * nx, xt, 0, xt, 0);
-                            // dxii_dw0 += a * dkjj_dxu
-                            blasfeo_dgead(nx, nx + nu, -a, dK_dxu_ss, jj * nx, 0, dxkzu_dw0, 0, 0);
-                        }
+                        a = A_mat[ii + ns * jj] * step;
+                        blasfeo_daxpy(nx, a, &K_traj[ss], jj * nx, xt, 0, xt, 0);
+                        // dxii_dw0 += a * dkjj_dxu
+                        blasfeo_dgead(nx, nx + nu, -a, dK_dxu_ss, jj * nx, 0, dxkzu_dw0, 0, 0);
                     }
                     // dk_dw0
                     blasfeo_dgecpsc(nx, nx+nu, -1.0, dK_dxu_ss, ii*nx, 0, dxkzu_dw0, nx, 0);
