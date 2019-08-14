@@ -8,24 +8,11 @@ else
     require_env_variable('MATLABPATH');
 end
 
-
-% sim tests
+%% ocp tests
 try
-    test_sens_forw;
+    test_ocp;
 catch error
     exit_with_error(error);
 end
 
-try
-    test_sens_adj;
-catch error
-    exit_with_error(error);
-end
-
-try
-    test_sens_hess;
-catch error
-    exit_with_error(error);
-end
-
-fprintf('\nrun_tests_sim: success!\n\n');
+fprintf('\nrun_tests_ocp: success!\n\n');

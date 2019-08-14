@@ -4,3 +4,4 @@
 
 # add_test(NAME octave_test_sim_pendulum COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/matlab_mex/pendulum_on_cart_model octave-cli ./run_tests.m)
 add_test(NAME octave_test_sim COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/matlab_mex/test octave --no-gui --no-window-system ./run_tests_sim.m)
+add_test(NAME octave_test_ocp COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/matlab_mex/test octave --no-gui --no-window-system ./run_tests_ocp.m)

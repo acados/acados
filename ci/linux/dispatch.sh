@@ -36,6 +36,9 @@ elif [ "${SECTION}" = 'install' ]; then
 
 	if [ "${ACADOS_OCTAVE}" = 'ON' ] ;
 	then
+		echo "find hpipm_common.h"
+		find $(pwd) -name 'hpipm_common.h';
+
 		source "${SCRIPT_DIR}/install_octave.sh";
 		export OCTAVE_PATH="${ACADOS_SOURCE_DIR}/interfaces/acados_matlab":$OCTAVE_PATH;
 		echo "OCTAVE_PATH=$OCTAVE_PATH";
