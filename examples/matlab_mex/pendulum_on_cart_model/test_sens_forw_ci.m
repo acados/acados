@@ -3,7 +3,7 @@ clear VARIABLES
 
 status = 0;
 
-for integrator = {'irk', 'irk_gnsf', 'erk'}
+for integrator = {'irk_gnsf', 'irk', 'erk'}
     %% arguments
     compile_mex = 'true';
     codgen_model = 'true';
@@ -92,19 +92,16 @@ for integrator = {'irk', 'irk_gnsf', 'erk'}
     sim_opts.set('sens_adj', 'false');
     S_forw_fd = zeros(nx, nx+nu);
 
-    % asymmetric finite differences
-
+    %% asymmetric finite differences
     for ii=1:nx
         dx = zeros(nx, 1);
         dx(ii) = 1.0;
 
         sim.set('x', x0+FD_epsilon*dx);
         sim.set('u', u);
-
         sim.solve();
 
         xn_tmp = sim.get('xn');
-
         S_forw_fd(:,ii) = (xn_tmp - xn) / FD_epsilon;
     end
 
@@ -114,11 +111,9 @@ for integrator = {'irk', 'irk_gnsf', 'erk'}
 
         sim.set('x', x0);
         sim.set('u', u+FD_epsilon*du);
-
         sim.solve();
 
         xn_tmp = sim.get('xn');
-
         S_forw_fd(:,nx+ii) = (xn_tmp - xn) / FD_epsilon;
     end
 

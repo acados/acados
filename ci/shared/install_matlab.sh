@@ -23,7 +23,6 @@ MATLAB_DOWNLOAD_LINK="${MATLAB_DOWNLOAD_LINK_LINUX}";
 # initialize
 export MATLAB_EXECUTABLE='testing'
 
-
 if [ -n "${MATLAB_DOWNLOAD_LINK}" -a "${ACADOS_MATLAB}" = 'ON' ]; then
     pushd "${EXTERNAL_SOFTWARE_DOWNLOAD_DIR}";
         wget -q -O matlab.tar.gz "${MATLAB_DOWNLOAD_LINK}";

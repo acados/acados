@@ -41,7 +41,7 @@ if [ "${SECTION}" = 'install' ]; then
 	fi
 
 	if [[ "${SWIG_MATLAB}" = 'ON' ||  "${TEMPLATE_MATLAB}" = 'ON' ]] ||
-	   [[ "${DEV_MATLAB}" = 'ON' || "${MATLAB_MEX}" = 'ON' ]];
+	   [[ "${DEV_MATLAB}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
 	then
 		source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
 	fi

@@ -55,15 +55,13 @@ matrix:
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
         - COVERAGE="lcov"
         - ACADOS_OCTAVE="ON"
-        - ACADOS_UNIT_TESTS="OFF"
-        - ACADOS_EXAMPLES="OFF"
     - name: Linux Clang
       env:
         - DEPLOY_NAME="linux-python-clang37"
         - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
         - ACADOS_OCTAVE="ON"
-        - ACADOS_UNIT_TESTS="OFF"
-        - ACADOS_EXAMPLES="OFF"
+        # - ACADOS_UNIT_TESTS="OFF"
+        # - ACADOS_EXAMPLES="OFF"
 
 cache:
   ccache: true

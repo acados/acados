@@ -17,13 +17,6 @@
 #
 #/bin/bash
 
-# sudo add-apt-repository ppa:octave/stable -y;
-# sudo apt-get update -yqq;
-# sudo apt-get install octave -yqq;
-
-# wget -O octave_4.4_installer http://de.archive.ubuntu.com/ubuntu/pool/universe/o/octave/octave_4.4.1-1_amd64.deb;
-# sudo dpkg -i ./octave_4.4_installer;
-
 sudo apt-add-repository ppa:octave/stable -y;
 sudo apt-get update -qq;
 sudo apt-get install octave liboctave-dev -y;
