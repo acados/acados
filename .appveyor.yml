@@ -3,19 +3,20 @@ branches:
     - master
 
 install:
-  - call C:\Miniconda36-x64\Scripts\activate.bat
-  - conda install --yes -c msys2 m2w64-gcc-libgfortran m2w64-openblas
+  # - call C:\Miniconda36-x64\Scripts\activate.bat
+  # - conda install --yes -c msys2 m2w64-gcc-libgfortran m2w64-openblas
 
 build_script:
   - git submodule update --init --recursive
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC ..
-  - cmake --build build --config Debug
-  - cmake -E chdir build ctest --output-on-failure
+  - cmake -E chdir build cmake -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D ACADOS_INSTALL_DIR=c:\projects\%APPVEYOR_PROJECT_SLUG ..
+  # - cmake --build build --config Debug
+  # - cmake -E chdir build ctest --output-on-failure
   - cmake --build build --config Release
   - cmake -E chdir build ctest --output-on-failure
   - rm -fr build
   - cmake -E make_directory build
   - cmake -E make_directory appveyor-artifacts
-  - cmake -E chdir build cmake -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\appveyor-artifacts ..
+  # - cmake -E chdir build cmake -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER%\appveyor-artifacts ..
+  # - cmake -E chdir build cmake -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D CMAKE_BUILD_TYPE=Release -D ACADOS_INSTALL_DIR=%APPVEYOR_BUILD_FOLDER%\appveyor-artifacts ..
   - cmake --build build --target install
