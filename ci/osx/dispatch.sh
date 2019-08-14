@@ -19,43 +19,37 @@
 
 if [ "${SECTION}" = 'before_install' ]; then
 	# export GENERIC target for osx
-	export BLASFEO_TARGET=GENERIC
-	export HPIPM_TARGET=GENERIC
-fi
+	export BLASFEO_TARGET=GENERIC;
+	export HPIPM_TARGET=GENERIC;
 
-if [ "${SECTION}" = 'install' ]; then
+    export ACADOS_INSTALL_DIR="$(pwd)";
+	export ACADOS_SOURCE_DIR="$(pwd)";
+
+elif [ "${SECTION}" = 'install' ]; then
 	source "${SCRIPT_DIR}/install_ccache.sh";
 	source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
 
-	if [ 0
-		 -o "${SWIG_MATLAB}" = 'ON'
-		 -o "${SWIG_PYTHON}" = 'ON'
-		 -o "${TEMPLATE_PYTHON}" = 'ON'
-		 -o "${TEMPLATE_MATLAB}" = 'ON'
-		 -o "${DEV_MATLAB}" = 'ON'
-		]; then
+	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]] ||
+	   [[ "${TEMPLATE_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+	   [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
+		"${DEV_MATLAB}" = 'ON';
+		then
 		source "${SCRIPT_DIR}/install_casadi.sh";
 	fi
 
-	if [ 0
-		 -o "${SWIG_PYTHON}" = 'ON'
-		 -o "${TEMPLATE_PYTHON}" = 'ON'
-		]; then
+	if [[ "${SWIG_PYTHON}" = 'ON' || "${TEMPLATE_PYTHON}" = 'ON' ]] ;
+	then
 		source "${SCRIPT_DIR}/install_python_dependencies.sh";
 	fi
 
-	if [ 0
-		 -o "${SWIG_MATLAB}" = 'ON'
-		 -o "${TEMPLATE_MATLAB}" = 'ON'
-		 -o "${DEV_MATLAB}" = 'ON'
-		]; then
+	if [[ "${SWIG_MATLAB}" = 'ON' ||  "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+	   [[ "${DEV_MATLAB}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
+	then
 		source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
 	fi
 
-	if [ 0
-		 -o "${SWIG_MATLAB}" = 'ON'
-		 -o "${SWIG_PYTHON}" = 'ON'
-		]; then
+	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]];
+		then
 		source "${SHARED_SCRIPT_DIR}/install_swig.sh";
 	fi
 
