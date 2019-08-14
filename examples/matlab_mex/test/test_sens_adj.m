@@ -1,42 +1,34 @@
 %% test of native matlab interface
 clear VARIABLES
 
-
-% check that env.sh has been run
-env_run = getenv('ENV_RUN');
-if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
-end
-
+addpath('../pendulum_on_cart_model/');
 
 for integrator = {'irk_gnsf', 'irk', 'erk'}
-	%% arguments
-	compile_mex = 'true';
-	codgen_model = 'true';
-	method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
-	sens_forw = 'true';
-	sens_adj = 'true';
-	num_stages = 4;
-	num_steps = 3;
+    %% arguments
+    compile_mex = 'true';
+    codgen_model = 'true';
+    method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
+    sens_forw = 'false';
+    num_stages = 4;
+    num_steps = 4;
+    gnsf_detect_struct = 'true';
 
-	Ts = 0.1;
-	x0 = [1e-1; 1e0; 2e-1; 2e0];
-	u = 0;
+    Ts = 0.1;
+    x0 = [1e-1; 1e0; 2e-1; 2e0];
+    u = 0;
+    FD_epsilon = 1e-6;
 
-    disp(['testing integrator  ' method])
-	%% model
-	model = pendulum_on_cart_model;
+    %% model
+    model = pendulum_on_cart_model;
 
-	model_name = ['pendulum_' method];
-	nx = model.nx;
-	nu = model.nu;
+    model_name = ['pendulum_' method];
+    nx = model.nx;
+    nu = model.nu;
 
-	%% acados sim model
-	sim_model = acados_sim_model();
-	sim_model.set('T', Ts);
-	sim_model.set('name', model_name);
+    %% acados sim model
+    sim_model = acados_sim_model();
+    sim_model.set('T', Ts);
+    sim_model.set('name', model_name);
 
     sim_model.set('sym_x', model.sym_x);
     if isfield(model, 'sym_u')
@@ -69,9 +61,8 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
 	sim_opts.set('num_stages', num_stages);
 	sim_opts.set('num_steps', num_steps);
 	sim_opts.set('method', method);
-	sim_opts.set('sens_forw', sens_forw);
-	sim_opts.set('sens_adj', sens_adj);
-
+	sim_opts.set('sens_forw', 'true');
+	sim_opts.set('sens_adj', 'true');
 
 	%% acados sim
 	% create sim
@@ -115,11 +106,10 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
 	disp(['error adjoint sensitivities (wrt forward sens):   ' num2str(error_abs)])
 	disp(' ')
 	if error_abs > 1e-14
-		disp(['adjoint sensitivities error too large -> debug mode'])
-		keyboard
+        disp(['adjoint sensitivities error too large'])
+        error(strcat('test_sens_adj FAIL: adjoint sensitivities error too large: \n',...
+            'for integrator:\t', method));
 	end
 end
 
 fprintf('\nTEST_ADJOINT_SENSITIVITIES: success!\n\n');
-
-return;

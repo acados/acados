@@ -9,14 +9,21 @@ else
 end
 
 
-%% sim tests
+% sim tests
 try
-    test_sens_forw_ci;
-%     test_sens_adj;
-%     test_sens_hess;
+    test_sens_forw;
+catch error
+    exit_with_error(error);
+end
 
-%     c = 1;
-%     b = [c zeros(2)];
+try
+    test_sens_adj;
+catch error
+    exit_with_error(error);
+end
+
+try
+    test_sens_hess;
 catch error
     exit_with_error(error);
 end
