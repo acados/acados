@@ -7,4 +7,5 @@ function require_env_variable(var_name)
     catch error
         exit_with_error(error);
     end
+    disp(strcat(var_name,'=',tmp));
 end

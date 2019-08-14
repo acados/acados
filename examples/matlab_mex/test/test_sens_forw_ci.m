@@ -1,6 +1,7 @@
 %% test of native matlab interface
 clear VARIABLES
 
+addpath('../pendulum_on_cart_model/');
 status = 0;
 
 for integrator = {'irk_gnsf', 'irk', 'erk'}
