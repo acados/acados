@@ -17,7 +17,6 @@
 #
 #
 COVERAGE="${COVERAGE:-}";
-ACADOS_ROOT_FOLDER="init";
 
 export MATLABPATH="${ACADOS_INSTALL_DIR}/lib:${MATLABPATH}";
 
@@ -32,10 +31,6 @@ function build_acados {
 	if [ "${ACADOS_UNIT_TESTS}" = 'ON' ]; then
 		ACADOS_WITH_QPOASES='ON';
 	fi
-
-	ACADOS_ROOT_FOLDER="$(pwd)";
-	echo
-	echo "ACADOS_ROOT_FOLDER=$ACADOS_ROOT_FOLDER" #/home/travis/build/acados/acados
 
 	[ -d ./build ] && rm -r build;
 	cmake -E make_directory build;
@@ -62,40 +57,8 @@ function build_acados {
 		[ $? -ne 0 ] && exit 110;
 	fi
 
-
 	cmake --build build;
 	cmake --build build --target install;
-
-	# echo "searching the libs"
-	# find $(pwd) -name 'libhpipm.*';
-
-	# Prepare ctest with Matlab/Octave interface
-	if [[ "${ACADOS_OCTAVE}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]]; then
-
-		# mkdir -p /home/travis/build/acados/acados/lib;
-		# echo "creating directory ${ACADOS_ROOT_FOLDER}/lib";
-		# mkdir -p "${ACADOS_ROOT_FOLDER}/lib";
-
-		# echo "creating symboic links to libaries"
-		# echo
-		# ln -s "${ACADOS_ROOT_FOLDER}/build/external/hpipm/libhpipm.so" "${ACADOS_ROOT_FOLDER}/lib";
-		# ln -s "${ACADOS_ROOT_FOLDER}/build/external/blasfeo/libblasfeo.so" "${ACADOS_ROOT_FOLDER}/lib";
-		# ln -s "${ACADOS_ROOT_FOLDER}/build/acados/libacados.so" "${ACADOS_ROOT_FOLDER}/lib";
-
-		# Export paths
-		export OCTAVE_PATH="${ACADOS_ROOT_FOLDER}/interfaces/acados_matlab":$OCTAVE_PATH;
-		export ACADOS_INSTALL_DIR="${ACADOS_ROOT_FOLDER}";
-
-		pushd examples/matlab_mex/pendulum_on_cart_model;
-			# source env_ci.sh;
-			MODEL_FOLDER=${MODEL_FOLDER:-"./build"}
-			export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_ROOT_FOLDER/lib:$MODEL_FOLDER
-			echo
-			echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-		popd;
-
-		echo "OCTAVE_PATH=$OCTAVE_PATH";
-	fi
 
 	# Run ctest
 	# TODO: test matlab/python
