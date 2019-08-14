@@ -91,14 +91,16 @@ OBJS += acados/utils/timing.o
 OBJS += acados/utils/mem.o
 OBJS += acados/utils/external_function_generic.o
 
-CAPI_OBJS = $(OBJS)
-CAPI_OBJS += interfaces/acados_c/external_function_interface.o
-CAPI_OBJS += interfaces/acados_c/dense_qp_interface.o
-CAPI_OBJS += interfaces/acados_c/ocp_nlp_interface.o
-CAPI_OBJS += interfaces/acados_c/ocp_qp_interface.o
-CAPI_OBJS += interfaces/acados_c/condensing_interface.o
-CAPI_OBJS += interfaces/acados_c/options_interface.o
-CAPI_OBJS += interfaces/acados_c/sim_interface.o
+# C interface
+ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
+OBJS += interfaces/acados_c/external_function_interface.o
+OBJS += interfaces/acados_c/dense_qp_interface.o
+OBJS += interfaces/acados_c/ocp_nlp_interface.o
+OBJS += interfaces/acados_c/ocp_qp_interface.o
+OBJS += interfaces/acados_c/condensing_interface.o
+OBJS += interfaces/acados_c/options_interface.o
+OBJS += interfaces/acados_c/sim_interface.o
+endif
 
 # acados dependencies
 STATIC_DEPS = blasfeo_static hpipm_static
@@ -129,56 +131,31 @@ endif
 
 static_library: $(STATIC_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
-	ar rcs libacore.a $(OBJS)
-	mkdir -p lib
-	mv libacore.a lib
-	@echo
-	@echo " libacore.a static library build complete."
-	@echo
-
-ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
 	( cd interfaces/acados_c; $(MAKE) obj CC=$(CC) TOP=$(TOP) )
-	mkdir -p include/acados_c
-	cp -r interfaces/acados_c/*.h include/acados_c
-
-	ar rcs libacados.a $(CAPI_OBJS)
+	ar rcs libacados.a $(OBJS)
 	mkdir -p lib
 	mv libacados.a lib
-
+	mkdir -p include/acados
+	cp --parents acados/*/*.h include/
+	mkdir -p include/acados_c
+	cp -r interfaces/acados_c/*.h include/acados_c
 	@echo
 	@echo " libacados.a static library build complete."
 	@echo
-endif
-
 
 shared_library: $(SHARED_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
-	$(CC) -L./lib -shared -o libacore.so $(OBJS) -lblasfeo -lhpipm -lm -fopenmp
-	mkdir -p lib
-	mv libacore.so lib
-
-	mkdir -p include/acados
-	cp --parents acados/*/*.h include/
-
-	@echo
-	@echo " libacore.so shared library build complete."
-	@echo
-
-ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
 	( cd interfaces/acados_c; $(MAKE) obj  CC=$(CC) TOP=$(TOP) )
-
-	mkdir -p include/acados_c
-	cp -r interfaces/acados_c/*.h include/acados_c
-
-	$(CC) -L./lib -shared -o libacados.so $(CAPI_OBJS) -lblasfeo -lhpipm -lm -fopenmp
+	$(CC) -L./lib -shared -o libacados.so $(OBJS) -lblasfeo -lhpipm -lm -fopenmp
 	mkdir -p lib
 	mv libacados.so lib
-
+	mkdir -p include/acados
+	cp --parents acados/*/*.h include/
+	mkdir -p include/acados_c
+	cp -r interfaces/acados_c/*.h include/acados_c
 	@echo
 	@echo " libacados.so shared library build complete."
 	@echo
-endif
-
 
 blasfeo_static:
 	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) BLAS_API=0 )

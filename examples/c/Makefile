@@ -555,6 +555,8 @@ run_regularization:
 clean:
 	rm -f *.o
 	rm -f *.out
+	rm -f no_interface_examples/*.o
+	rm -f no_interface_examples/*.out
 
 clean_models:
 	rm -f chain_model/*.o
