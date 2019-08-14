@@ -128,6 +128,10 @@ void *ocp_nlp_sqp_memory_assign(void *config, void *dims, void *opts_, void *raw
 
 typedef struct
 {
+	// temp QP in & out (to be used as workspace)
+    ocp_qp_in *tmp_qp_in;
+    ocp_qp_out *tmp_qp_out;
+
     // QP solver
     void *qp_work;
 	ocp_qp_res *qp_res;

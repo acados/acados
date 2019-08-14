@@ -622,6 +622,12 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
     // sqp
     size += sizeof(ocp_nlp_sqp_rti_work);
 
+    // qp in
+    size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+
+    // qp out
+    size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
+
     // array of pointers
     // cost
     size += (N + 1) * sizeof(void *);
@@ -761,6 +767,14 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
     // sqp
     char *c_ptr = (char *) work;
     c_ptr += sizeof(ocp_nlp_sqp_rti_work);
+
+    // qp in
+    work->tmp_qp_in = ocp_qp_in_assign(qp_solver, dims->qp_solver, c_ptr);
+    c_ptr += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+
+    // qp out
+    work->tmp_qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver, c_ptr);
+    c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
 
     // array of pointers
     //
@@ -1424,6 +1438,7 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
 
 
 
+// TODO remane mmeory_get ???
 void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *return_value_)
 {
     // ocp_nlp_config *config = config_;

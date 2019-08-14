@@ -675,6 +675,12 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
     // sqp
     size += sizeof(ocp_nlp_sqp_work);
 
+    // tmp qp in
+    size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+
+    // tmp qp out
+    size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
+
     // array of pointers
     // cost
     size += (N + 1) * sizeof(void *);
@@ -811,6 +817,14 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
     // sqp
     char *c_ptr = (char *) work;
     c_ptr += sizeof(ocp_nlp_sqp_work);
+
+    // tmp qp in
+    work->tmp_qp_in = ocp_qp_in_assign(qp_solver, dims->qp_solver, c_ptr);
+    c_ptr += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+
+    // tmp qp out
+    work->tmp_qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver, c_ptr);
+    c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
 
     // array of pointers
     //
@@ -1563,6 +1577,7 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
 
 
 
+// TODO rename memory_get ???
 void ocp_nlp_sqp_get(void *config_, void *mem_, const char *field, void *return_value_)
 {
     // ocp_nlp_config *config = config_;
