@@ -46,7 +46,6 @@ if [ "${SECTION}" = 'install' ]; then
 		source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
 	fi
 
-
 	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]];
 		then
 		source "${SHARED_SCRIPT_DIR}/install_swig.sh";
@@ -58,4 +57,9 @@ elif [ "${SECTION}" = 'script' ]; then
 elif [ "${SECTION}" = 'after_success' ]; then
 	source "${SHARED_SCRIPT_DIR}/after_success_package_release.sh";
 	source "${SHARED_SCRIPT_DIR}/upload_coverage.sh";
+
+elif [ "${SECTION}" = 'before_install' ]; then
+    export ACADOS_INSTALL_DIR="$(pwd)";
+
 fi
+

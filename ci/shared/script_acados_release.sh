@@ -16,7 +16,6 @@
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-ACADOS_INSTALL_DIR="${ACADOS_INSTALL_DIR:-${HOME}/acados}";
 COVERAGE="${COVERAGE:-}";
 ACADOS_ROOT_FOLDER="init";
 
@@ -36,7 +35,7 @@ function build_acados {
 
 	ACADOS_ROOT_FOLDER="$(pwd)";
 	echo
-	echo "ACADOS_ROOT_FOLDER=$ACADOS_ROOT_FOLDER"
+	echo "ACADOS_ROOT_FOLDER=$ACADOS_ROOT_FOLDER" #/home/travis/build/acados/acados
 
 	[ -d ./build ] && rm -r build;
 	cmake -E make_directory build;
@@ -63,7 +62,9 @@ function build_acados {
 		[ $? -ne 0 ] && exit 110;
 	fi
 
+
 	cmake --build build;
+	cmake --build build --target install;
 
 	# echo "searching the libs"
 	# find $(pwd) -name 'libhpipm.*';
@@ -72,14 +73,14 @@ function build_acados {
 	if [[ "${ACADOS_OCTAVE}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]]; then
 
 		# mkdir -p /home/travis/build/acados/acados/lib;
-		echo "creating directory ${ACADOS_ROOT_FOLDER}/lib";
-		mkdir -p "${ACADOS_ROOT_FOLDER}/lib";
+		# echo "creating directory ${ACADOS_ROOT_FOLDER}/lib";
+		# mkdir -p "${ACADOS_ROOT_FOLDER}/lib";
 
-		echo "creating symboic links to libaries"
-		echo
-		ln -s "${ACADOS_ROOT_FOLDER}/build/external/hpipm/libhpipm.so" "${ACADOS_ROOT_FOLDER}/lib";
-		ln -s "${ACADOS_ROOT_FOLDER}/build/external/blasfeo/libblasfeo.so" "${ACADOS_ROOT_FOLDER}/lib";
-		ln -s "${ACADOS_ROOT_FOLDER}/build/acados/libacados.so" "${ACADOS_ROOT_FOLDER}/lib";
+		# echo "creating symboic links to libaries"
+		# echo
+		# ln -s "${ACADOS_ROOT_FOLDER}/build/external/hpipm/libhpipm.so" "${ACADOS_ROOT_FOLDER}/lib";
+		# ln -s "${ACADOS_ROOT_FOLDER}/build/external/blasfeo/libblasfeo.so" "${ACADOS_ROOT_FOLDER}/lib";
+		# ln -s "${ACADOS_ROOT_FOLDER}/build/acados/libacados.so" "${ACADOS_ROOT_FOLDER}/lib";
 
 		# Export paths
 		export OCTAVE_PATH="${ACADOS_ROOT_FOLDER}/interfaces/acados_matlab":$OCTAVE_PATH;
@@ -105,8 +106,6 @@ function build_acados {
 		cmake --build build --target acados_coverage || \
 		  echo "Coverage report not generated";
 	fi
-	# only install release version
-	[ "${BUILD_TYPE}" = 'Release' ] && cmake --build build --target install;
 }
 
 # build_acados Debug;

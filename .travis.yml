@@ -3,9 +3,6 @@ env:
   global:
     - BLASFEO_TARGET=X64_INTEL_HASWELL
     - HPIPM_TARGET=AVX
-    - CASADIPATH="${HOME}/casadi"
-    - ACADOS_INSTALL_DIR="${HOME}/acados"
-    - DEPLOY_FOLDER="${HOME}/deploy"
     - ACADOS_UNIT_TESTS="ON"
     - ACADOS_EXAMPLES="ON"
     - ACADOS_WITH_QPOASES="ON"
@@ -35,20 +32,20 @@ addons:
 
 matrix:
   include:
-    # - name: MacOS Build
-    #   os: osx
-    #   osx_image: xcode9.4
-    #   # osx_image: xcode10.1
-    #   env:
-    #     - DEPLOY_NAME="osx-python"
-    # - name: Linux Gcc6
-    #   env:
-    #     - DEPLOY_NAME="linux-python-gcc6"
-    #     - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-    # - name: Linux Gcc5
-    #   env:
-    #     - DEPLOY_NAME="linux-python-gcc5"
-    #     - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+    - name: MacOS Build
+      os: osx
+      osx_image: xcode9.4
+      # osx_image: xcode10.1
+      env:
+        - DEPLOY_NAME="osx-python"
+    - name: Linux Gcc6
+      env:
+        - DEPLOY_NAME="linux-python-gcc6"
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+    - name: Linux Gcc5
+      env:
+        - DEPLOY_NAME="linux-python-gcc5"
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
     - name: Linux Gcc4.9
       env:
         - DEPLOY_NAME="linux-python-matlab-gcc49"

@@ -29,10 +29,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 ### Defaults
 
-set(ACADOS_INSTALL_DIR "/usr/local" CACHE STRING  "Installation path to /usr/local")
+set(ACADOS_INSTALL_DIR "${PROJECT_SOURCE_DIR}" CACHE STRING  "Installation path to PROJECT_SOURCE_DIR")
 set(BLASFEO_TARGET "X64_INTEL_HASWELL" CACHE STRING "BLASFEO Target architecture")
 set(HPIPM_TARGET "AVX" CACHE STRING "HPIPM Target architecture")
 set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
+
+option(BUILD_SHARED_LIBS "Build shared libs" ON)
 
 # Additional targets
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
