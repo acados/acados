@@ -66,6 +66,7 @@ function build_acados {
 
 	[ $? -ne 0 ] && exit 100;
 	if [ -n "${COVERAGE}" ]; then
+		echo "analyzing test coverage";
 		cmake --build build --target acados_coverage || \
 		  echo "Coverage report not generated";
 	fi
