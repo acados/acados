@@ -81,6 +81,7 @@ EXAMPLES += mass_spring_example_no_interface
 EXAMPLES += wind_turbine_nmpc
 #EXAMPLES += engine_example
 EXAMPLES += regularization
+EXAMPLES += simple_dae_example
 
 examples: $(EXAMPLES)
 
@@ -107,6 +108,7 @@ RUN_EXAMPLES += run_mass_spring_example_no_interface
 RUN_EXAMPLES += run_wind_turbine_nmpc
 #RUN_EXAMPLES += run_engine_example
 RUN_EXAMPLES += run_regularization
+RUN_EXAMPLES += run_simple_dae_example
 
 # overwrite to run just one
 #RUN_EXAMPLES = run_wind_turbine_nmpc
@@ -544,6 +546,27 @@ regularization: $(REGULARIZATION) regularization.o
 
 run_regularization:
 	./regularization.out
+
+
+
+
+#################################################
+# simple dae example
+#################################################
+
+SIMPLE_DAE_OBJS =
+SIMPLE_DAE_OBJS += simple_dae_model/simple_dae_impl_ode_fun.o
+SIMPLE_DAE_OBJS += simple_dae_model/simple_dae_impl_ode_jac_x_xdot_u_z.o
+SIMPLE_DAE_OBJS += simple_dae_model/simple_dae_impl_ode_fun_jac_x_xdot_z.o
+
+simple_dae_example: $(SIMPLE_DAE_OBJS) simple_dae_example.o
+	$(CCC) -o simple_dae_example.out $(SIMPLE_DAE_OBJS) simple_dae_example.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example simple_dae_example build complete."
+	@echo
+
+run_simple_dae_example:
+	./simple_dae_example.out
 
 
 
