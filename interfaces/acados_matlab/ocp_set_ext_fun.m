@@ -13,6 +13,7 @@ acados_include = ['-I' acados_folder];
 acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
 external_include = ['-I' fullfile(acados_folder, 'external')];
 blasfeo_include = ['-I' fullfile(acados_folder, 'external' , 'blasfeo', 'include')];
+hpipm_include = ['-I' fullfile(acados_folder, 'external' , 'hpipm', 'include')];
 acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
 acados_matlab_lib_path = ['-L' fullfile(acados_folder, 'interfaces', 'acados_matlab')];
 model_lib_path = ['-L', opts_struct.output_dir];
@@ -384,7 +385,9 @@ if (strcmp(opts_struct.compile_mex, 'true') || strcmp(opts_struct.codgen_model, 
 			cflags_tmp = [cflags_tmp, ' -DN0=', num2str(phase_start{ii})];
 			cflags_tmp = [cflags_tmp, ' -DN1=', num2str(phase_end{ii})];
 			setenv('CFLAGS', cflags_tmp);
-			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1});
+			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include,...
+				hpipm_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados',...
+				 '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1});
 		else
 			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', ['-DSETTER=', setter{ii}], ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], ['-DPHASE=', num2str(phase{ii})], ['-DN0=', num2str(phase_start{ii})], ['-DN1=', num2str(phase_end{ii})], acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1}); % TODO
 		end
@@ -414,7 +417,6 @@ end
 %ocp_set_ext_fun_tmp(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
 
 %C_ocp_ext_fun
-%keyboard
 
 return;
 
