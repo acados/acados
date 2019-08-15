@@ -1,13 +1,7 @@
 %% test of native matlab interface
 clear VARIABLES
 
-% check that env.sh has been run
-env_run = getenv('ENV_RUN');
-if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
-end
+addpath('../pendulum_on_cart_model/');
 
 %% arguments
 compile_mex = 'true';
@@ -29,10 +23,11 @@ regularize_method = 'no_regularize';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
-nlp_solver_tol_stat = 1e-8;
-nlp_solver_tol_eq   = 1e-8;
-nlp_solver_tol_ineq = 1e-8;
-nlp_solver_tol_comp = 1e-8;
+tol = 1e-8;
+nlp_solver_tol_stat = tol;
+nlp_solver_tol_eq   = tol;
+nlp_solver_tol_ineq = tol;
+nlp_solver_tol_comp = tol;
 nlp_solver_ext_qp_res = 1;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
@@ -50,7 +45,6 @@ cost_type = 'linear_ls';
 %cost_type = 'ext_cost';
 model_name = 'ocp_pendulum';
 
-
 %% create model entries
 model = pendulum_on_cart_model;
 
@@ -60,21 +54,13 @@ nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
-if 0
-	nbx = 0;
-	nbu = nu;
-	ng = 0;
-	ng_e = 0;
-	nh = 0;
-	nh_e = 0;
-else
-	nbx = 0;
-	nbu = 0;
-	ng = 0;
-	ng_e = 0;
-	nh = nu;
-	nh_e = 0;
-end
+
+nbx = 0;
+nbu = 0;
+ng = 0;
+ng_e = 0;
+nh = nu;
+nh_e = 0;
 
 % cost
 Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
@@ -227,8 +213,6 @@ disp(ocp.C_ocp_ext_fun);
 x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
 
 u_traj_init = zeros(nu, N);
-
-% if not set, the trajectory is initialized with the previous solution
 ocp.set('init_x', x_traj_init);
 ocp.set('init_u', u_traj_init);
 
@@ -238,10 +222,7 @@ ocp.set('nlp_solver_max_iter', 20);
 % solve
 tic;
 ocp.solve();
-time_ext = toc;
-% TODO: add getter for internal timing
-fprintf(['time for ocp.solve (matlab tic-toc): ', num2str(time_ext), ' s\n'])
-
+time_ext=toc;
 % get solution
 u = ocp.get('u');
 x = ocp.get('x');
@@ -288,51 +269,13 @@ else % sqp_rti
 end
 
 
-%% figures
-
-% for ii=1:N+1
-% 	x_cur = x(:,ii);
-% 	visualize;
-% end
-
-figure(2);
-subplot(2,1,1);
-plot(0:N, x);
-xlim([0 N]);
-legend('p', 'theta', 'v', 'omega');
-subplot(2,1,2);
-plot(0:N-1, u);
-xlim([0 N]);
-legend('F');
-
-if (strcmp(nlp_solver, 'sqp'))
-	figure(3);
-% 	plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
-% 	hold on
-% 	plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');
-% 	plot([0: size(stat,1)-1], log10(stat(:,4)), 'g-x');
-% 	plot([0: size(stat,1)-1], log10(stat(:,5)), 'k-x');
-	semilogy(0: size(stat,1)-1, stat(:,2), 'r-x');
-	hold on
-	semilogy(0: size(stat,1)-1, stat(:,3), 'b-x');
-	semilogy(0: size(stat,1)-1, stat(:,4), 'g-x');
-	semilogy(0: size(stat,1)-1, stat(:,5), 'k-x');
-    hold off
-	xlabel('iter')
-	ylabel('res')
-    legend('res g', 'res b', 'res d', 'res m');
+if status~=0
+    error('\nnTEST_OCP: solution failed!\n\n');
+elseif tol < max(stat(end,2:5))
+    error('\nnTEST_OCP: residuals bigger than tol!\n\n');
+elseif sqp_iter > 9
+    error('\nnTEST_OCP: sqp_iter > 9, this problem is typically solved within less iterations!\n\n');
 end
 
-
-if status==0
-	fprintf('\nsuccess!\n\n');
-else
-	fprintf('\nsolution failed!\n\n');
-end
-
-
-waitforbuttonpress;
-
-
-return;
+fprintf('\nTEST_OCP: success!\n\n');
 

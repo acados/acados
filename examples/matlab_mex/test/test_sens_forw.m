@@ -1,13 +1,7 @@
 %% test of native matlab interface
 clear VARIABLES
 
-% check that env.sh has been run
-env_run = getenv('ENV_RUN');
-if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
-end
+addpath('../linear_mass_spring_model/');
 
 for integrator = {'irk_gnsf', 'irk', 'erk'}
     %% arguments
@@ -20,20 +14,21 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     gnsf_detect_struct = 'true';
 
     Ts = 0.1;
-    x0 = [1e-1; 1e0; 2e-1; 2e0];
-    u = 0;
-    epsilon = 1e-6;
-
-    disp(['testing integrator  ' method])
-
-
+    FD_epsilon = 1e-6;
+    
     %% model
-    model = pendulum_on_cart_model;
-
-    model_name = ['pendulum_' method];
+    model = linear_mass_spring_model;
+    
+    model_name = ['linear_mass_spring_' method];
     nx = model.nx;
     nu = model.nu;
+    
+    % x0 = [1e-1; 1e0; 2e-1; 2e0]; % pendulum
+    % u = 0;
 
+    % linear_mass_spring_
+    x0 = ones(nx,1);
+    u = ones(nu,1);
 
     %% acados sim model
     sim_model = acados_sim_model();
@@ -100,35 +95,29 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     sim_opts.set('sens_adj', 'false');
     S_forw_fd = zeros(nx, nx+nu);
 
-    % asymmetric finite differences
-
+    %% asymmetric finite differences
     for ii=1:nx
         dx = zeros(nx, 1);
         dx(ii) = 1.0;
 
-        sim.set('x', x0+epsilon*dx);
+        sim.set('x', x0+FD_epsilon*dx);
         sim.set('u', u);
-
         sim.solve();
 
         xn_tmp = sim.get('xn');
-
-        S_forw_fd(:,ii) = (xn_tmp - xn) / epsilon;
+        S_forw_fd(:,ii) = (xn_tmp - xn) / FD_epsilon;
     end
 
     for ii=1:nu
-
         du = zeros(nu, 1);
         du(ii) = 1.0;
 
         sim.set('x', x0);
-        sim.set('u', u+epsilon*du);
-
+        sim.set('u', u+FD_epsilon*du);
         sim.solve();
 
         xn_tmp = sim.get('xn');
-
-        S_forw_fd(:,nx+ii) = (xn_tmp - xn) / epsilon;
+        S_forw_fd(:,nx+ii) = (xn_tmp - xn) / FD_epsilon;
     end
 
     %% compute & check error
@@ -138,11 +127,10 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     disp(['error forward sensitivities (wrt forward sens):   ' num2str(error_abs)])
     disp(' ')
     if error_abs > 1e-6
-        disp(['forward sensitivities error too large -> debug mode'])
-        keyboard
+        disp(['forward sensitivities error too large'])
+        error(strcat('test_sens_adj FAIL: forward sensitivities error too large: \n',...
+            'for integrator:\t', method));
     end
 end
 
 fprintf('\nTEST_FORWARD_SENSITIVITIES: success!\n\n');
-
-return;

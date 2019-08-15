@@ -1,7 +1,5 @@
 %% test of native matlab interface
-clear all
-
-
+clear VARIABLES
 
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
@@ -10,8 +8,6 @@ if (~strcmp(env_run, 'true'))
 	disp('source env.sh');
 	return;
 end
-
-
 
 %% arguments
 compile_mex = 'true';
@@ -29,15 +25,11 @@ h = 0.1;
 x0 = [0; 1e-1; 0; 0e0];
 u = 0;
 
-
-
 %% model
 model = pendulum_on_cart_model;
 
 nx = model.nx;
 nu = model.nu;
-
-
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -68,9 +60,6 @@ else % irk irk_gnsf
 %	sim_model.set('nz', model.nz);
 end
 
-%sim_model.model_struct
-
-
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
@@ -83,9 +72,6 @@ sim_opts.set('sens_forw', sens_forw);
 if (strcmp(method, 'irk_gnsf'))
 	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
-
-%sim_opts.opts_struct
-
 
 
 %% acados sim

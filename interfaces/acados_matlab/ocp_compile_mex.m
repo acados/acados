@@ -10,6 +10,7 @@ acados_include = ['-I', acados_folder];
 acados_interfaces_include = ['-I', fullfile(acados_folder, 'interfaces')];
 external_include = ['-I', fullfile(acados_folder, 'external')];
 blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
+hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];
 acados_lib_path = ['-L', fullfile(acados_folder, 'lib')];
 
 mex_names = { ...
@@ -51,20 +52,25 @@ if is_octave()
 	setenv('CFLAGS', cflags_tmp);
 end
 
+
 for ii=1:length(mex_files)
 	disp(['compiling ', mex_files{ii}])
 	if is_octave()
 %		mkoctfile -p CFLAGS
 		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
-			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
+			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+			    acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
 		else
-			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+			    acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
 		end
 	else
 		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
-			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp -DACADOS_WITH_QPOASES', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
+			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp -DACADOS_WITH_QPOASES', acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+			    acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
 		else
-			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+			    acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
 		end
 	end
 end
@@ -80,7 +86,5 @@ for k=1:length(mex_names)
 	[status, message] = copyfile([mex_names{k}, '.', mexext], opts.output_dir);
 	delete([mex_names{k}, '.', mexext]);
 end
-
-
 
 

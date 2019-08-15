@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /usr/bin/bash
 #
 #
 # Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
@@ -17,46 +17,40 @@
 #
 #
 
-if [ "${SECTION}" = 'before_install' ]; then
-	# export GENERIC target for osx
-	export BLASFEO_TARGET=GENERIC;
-	export HPIPM_TARGET=GENERIC;
+# use this file to run the tests on the local machine
 
-    export ACADOS_INSTALL_DIR="$(pwd)";
-	export ACADOS_SOURCE_DIR="$(pwd)";
-
-elif [ "${SECTION}" = 'install' ]; then
-	source "${SCRIPT_DIR}/install_ccache.sh";
-	source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
-
-	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]] ||
-	   [[ "${TEMPLATE_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
-	   [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
-		"${DEV_MATLAB}" = 'ON';
-		then
-		source "${SCRIPT_DIR}/install_casadi.sh";
-	fi
-
-	if [[ "${SWIG_PYTHON}" = 'ON' || "${TEMPLATE_PYTHON}" = 'ON' ]] ;
-	then
-		source "${SCRIPT_DIR}/install_python_dependencies.sh";
-	fi
-
-	if [[ "${SWIG_MATLAB}" = 'ON' ||  "${TEMPLATE_MATLAB}" = 'ON' ]] ||
-	   [[ "${DEV_MATLAB}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
-	then
-		source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
-	fi
-
-	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]];
-		then
-		source "${SHARED_SCRIPT_DIR}/install_swig.sh";
-	fi
-
-elif [ "${SECTION}" = 'script' ]; then
-	source "${SHARED_SCRIPT_DIR}/script_acados_release.sh";
-
-elif [ "${SECTION}" = 'after_success' ]; then
-	source "${SHARED_SCRIPT_DIR}/after_success_package_release.sh";
-
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
+then
+	echo "Script is being sourced"
+else
+	echo "ERROR: Script is a subshell"
+	echo "To affect your current shell enviroment source this script with:"
+	echo "source env.sh"
+	exit
 fi
+
+
+# if acados folder not specified assume parent of the folder of the single examples
+ACADOS_INSTALL_DIR=${ACADOS_INSTALL_DIR:-"$(pwd)/../../.."}
+export ACADOS_INSTALL_DIR
+echo
+echo "ACADOS_INSTALL_DIR=$ACADOS_INSTALL_DIR"
+
+# export casadi folder and matlab/octave mex folder
+# MATLAB case
+export MATLABPATH=$MATLABPATH:$ACADOS_INSTALL_DIR/external/casadi-matlab/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab/
+echo
+echo "MATLABPATH=$MATLABPATH"
+# Octave case
+export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab/
+echo
+echo "OCTAVE_PATH=$OCTAVE_PATH"
+
+# export acados mex flags
+#export ACADOS_MEX_FLAGS="GCC=/usr/bin/gcc-4.9"
+
+# if model folder not specified assume this folder
+MODEL_FOLDER=${MODEL_FOLDER:-"./build"}
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
+echo
+echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"

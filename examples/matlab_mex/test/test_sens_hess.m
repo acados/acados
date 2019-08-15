@@ -1,15 +1,7 @@
 %% test of native matlab interface
 clear VARIABLES
 
-
-% check that env.sh has been run
-env_run = getenv('ENV_RUN');
-if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
-end
-
+addpath('../pendulum_on_cart_model/');
 
 % TODO: include irk_gnsf, as soon as hessians are implemented
 for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
@@ -26,7 +18,7 @@ for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
 	Ts = 0.1;
 	x0 = [1e-1; 1e0; 2e-1; 2e0];
 	u = 0;
-	epsilon = 1e-6;
+	FD_epsilon = 1e-6;
 
 	%% model
 	model = pendulum_on_cart_model;
@@ -112,12 +104,12 @@ for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
 			dx = zeros(nx, 1);
 			dx(ii) = 1.0;
 
-			sim.set('x', x0+epsilon*dx);
+			sim.set('x', x0+FD_epsilon*dx);
 			sim.set('u', u);
 
 			sim.solve();
 			S_adj_tmp = sim.get('S_adj');
-			S_hess_fd(:, ii, jj) = (S_adj_tmp - S_adj) / epsilon;
+			S_hess_fd(:, ii, jj) = (S_adj_tmp - S_adj) / FD_epsilon;
 		
 		end
 
@@ -126,11 +118,11 @@ for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
 			du(ii) = 1.0;
 
 			sim.set('x', x0);
-			sim.set('u', u+epsilon*du);
+			sim.set('u', u+FD_epsilon*du);
 
 			sim.solve();
 			S_adj_tmp = sim.get('S_adj');
-			S_hess_fd(:, nx+ii, jj) = (S_adj_tmp - S_adj) / epsilon;
+			S_hess_fd(:, nx+ii, jj) = (S_adj_tmp - S_adj) / FD_epsilon;
         end
 	end
 
@@ -141,9 +133,10 @@ for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
 	disp(['error hessian (wrt finite differences):   ' num2str(error_abs)])
 	disp(' ')
     if error_abs > 1e-6
-        disp(['hessian error too large -> debug mode'])
-        keyboard
-    end
+        disp(['hessian error too large'])
+        error(strcat('test_sens_hess FAIL: second order sensitivity error too large: \n',...
+			'for integrator:\t', method));
+	end
 end
 
 fprintf('\nTEST_HESSIANS: success!\n\n');
