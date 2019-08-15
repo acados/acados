@@ -31,9 +31,11 @@ extern "C" {
 typedef struct ocp_qp_full_condensing_opts_
 {
     struct d_cond_qp_arg *hpipm_opts;
+    dense_qp_dims *fcond_dims;  // TODO(all): move to dims
     int cond_hess; // 0 cond only rhs, 1 cond hess + rhs
     int expand_dual_sol; // 0 primal sol only, 1 primal + dual sol
 	int ric_alg;
+	int mem_qp_in; // allocate qp_in in memory
 } ocp_qp_full_condensing_opts;
 
 

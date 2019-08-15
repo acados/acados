@@ -52,10 +52,16 @@ void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims)
 int ocp_qp_full_condensing_opts_calculate_size(ocp_qp_dims *dims)
 {
     int size = 0;
+
     size += sizeof(ocp_qp_full_condensing_opts);
+
     // hpipm opts
     size += sizeof(struct d_cond_qp_arg);
     size += d_cond_qp_arg_memsize();
+
+	// fcond_dims
+    size += sizeof(dense_qp_dims);
+
     //
     size += 1 * 8;
     make_int_multiple_of(8, &size);
@@ -72,6 +78,10 @@ void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
     // opts
     ocp_qp_full_condensing_opts *opts = (ocp_qp_full_condensing_opts *) c_ptr;
     c_ptr += sizeof(ocp_qp_full_condensing_opts);
+
+    // fcond_dims
+    opts->fcond_dims = (dense_qp_dims *) c_ptr;
+    c_ptr += sizeof(dense_qp_dims);
 
     // hpipm_opts
     opts->hpipm_opts = (struct d_cond_qp_arg *) c_ptr;
@@ -100,6 +110,10 @@ void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opt
     opts->expand_dual_sol = 1;
     // hpipm_opts
     d_cond_qp_arg_set_default(opts->hpipm_opts);
+
+	opts->mem_qp_in = 1;
+
+	return;
 }
 
 
@@ -148,6 +162,28 @@ void ocp_qp_full_condensing_opts_set(void *opts_, const char *field, void* value
 
 
 
+void ocp_qp_full_condensing_opts_get(void *opts_, const char *field, void* value)
+{
+
+    ocp_qp_full_condensing_opts *opts = opts_;
+
+	if(!strcmp(field, "xcond_dims"))
+	{
+		dense_qp_dims **ptr = value;
+		*ptr = opts->fcond_dims;
+	}
+	else
+	{
+		printf("\nerror: ocp_qp_full_condensing_opts_set: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 /************************************************
  * memory
  ************************************************/
@@ -155,7 +191,11 @@ void ocp_qp_full_condensing_opts_set(void *opts_, const char *field, void* value
 int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_)
 {
     ocp_qp_full_condensing_opts *opts = opts_;
+
     int size = 0;
+
+    // populate dimensions of new ocp_qp based on N2
+	compute_dense_qp_dims(dims, opts->fcond_dims);
 
     size += sizeof(ocp_qp_full_condensing_memory);
     size += sizeof(struct d_cond_qp_ws);
@@ -265,6 +305,7 @@ void ocp_qp_full_condensing_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_qp_full_condensing_opts_initialize_default;
     config->opts_update = &ocp_qp_full_condensing_opts_update;
     config->opts_set = &ocp_qp_full_condensing_opts_set;
+    config->opts_get = &ocp_qp_full_condensing_opts_get;
     config->memory_calculate_size = &ocp_qp_full_condensing_memory_calculate_size;
     config->memory_assign = &ocp_qp_full_condensing_memory_assign;
     config->workspace_calculate_size = &ocp_qp_full_condensing_workspace_calculate_size;

@@ -281,7 +281,7 @@ void *ocp_qp_partial_condensing_solver_memory_assign(void *config_, ocp_qp_dims 
  * workspace
  ************************************************/
 
-int ocp_qp_partial_condensing_solver_workspace_calculate_size(void *config_, ocp_qp_dims *dims,
+int ocp_qp_xcond_solver_workspace_calculate_size(void *config_, ocp_qp_dims *dims,
                                                               void *opts_)
 {
     ocp_qp_xcond_solver_config *config = config_;
@@ -290,10 +290,11 @@ int ocp_qp_partial_condensing_solver_workspace_calculate_size(void *config_, ocp
 
     ocp_qp_xcond_solver_opts *opts = (ocp_qp_xcond_solver_opts *) opts_;
 
-    int size = sizeof(ocp_qp_partial_condensing_solver_workspace);
-    size += ocp_qp_partial_condensing_workspace_calculate_size(dims, opts->xcond_opts);
+    int size = sizeof(ocp_qp_xcond_solver_workspace);
 
-    // set up dimesions of partially condensed qp
+    size += xcond->workspace_calculate_size(dims, opts->xcond_opts);
+
+    // set up dimesions of condensed qp
     void *xcond_dims;
 	xcond->opts_get(opts->xcond_opts, "xcond_dims", &xcond_dims);
 //    if (opts->xcond_opts->N2 < dims->N)
@@ -315,13 +316,13 @@ int ocp_qp_partial_condensing_solver_workspace_calculate_size(void *config_, ocp
 static void cast_workspace(void *config_, ocp_qp_dims *dims,
                            ocp_qp_xcond_solver_opts *opts,
                            ocp_qp_partial_condensing_solver_memory *mem,
-                           ocp_qp_partial_condensing_solver_workspace *work)
+                           ocp_qp_xcond_solver_workspace *work)
 {
     ocp_qp_xcond_solver_config *config = config_;
     qp_solver_config *qp_solver = config->qp_solver;
 	ocp_qp_xcond_config *xcond = config->xcond;
 
-    // set up dimesions of partially condensed qp
+    // set up dimesions of  condensed qp
     void *xcond_dims;
 	xcond->opts_get(opts->xcond_opts, "xcond_dims", &xcond_dims);
 //    if (opts->xcond_opts->N2 < dims->N)
@@ -335,12 +336,12 @@ static void cast_workspace(void *config_, ocp_qp_dims *dims,
 
     char *c_ptr = (char *) work;
 
-    c_ptr += sizeof(ocp_qp_partial_condensing_solver_workspace);
+    c_ptr += sizeof(ocp_qp_xcond_solver_workspace);
 
-    work->pcond_work = c_ptr;
-    c_ptr += ocp_qp_partial_condensing_workspace_calculate_size(dims, opts->xcond_opts);
+    work->xcond_work = c_ptr;
+    c_ptr += xcond->workspace_calculate_size(dims, opts->xcond_opts);
 
-    work->solver_work = c_ptr;
+    work->qp_solver_work = c_ptr;
     c_ptr += qp_solver->workspace_calculate_size(qp_solver, xcond_dims, opts->qp_solver_opts);
 }
 
@@ -364,7 +365,7 @@ int ocp_qp_partial_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out
     // cast data structures
     ocp_qp_xcond_solver_opts *opts = opts_;
     ocp_qp_partial_condensing_solver_memory *memory = mem_;
-    ocp_qp_partial_condensing_solver_workspace *work = work_;
+    ocp_qp_xcond_solver_workspace *work = work_;
 
     // cast workspace
     cast_workspace(config_, qp_in->dim, opts, memory, work);
@@ -375,7 +376,7 @@ int ocp_qp_partial_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out
 //    if (opts->xcond_opts->N2 < qp_in->dim->N)
 //    {  // condensing
         acados_tic(&cond_timer);
-        tmp_status = xcond->condensing(qp_in, memory->pcond_qp_in, opts->xcond_opts, memory->pcond_memory, work->pcond_work);
+        tmp_status = xcond->condensing(qp_in, memory->pcond_qp_in, opts->xcond_opts, memory->pcond_memory, work->xcond_work);
         info->condensing_time = acados_toc(&cond_timer);
 //    }
 //    else
@@ -387,7 +388,7 @@ int ocp_qp_partial_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out
 
     // solve qp
 	solver_status = qp_solver->evaluate(qp_solver, memory->pcond_qp_in, memory->pcond_qp_out,
-        		opts->qp_solver_opts, memory->solver_memory, work->solver_work);
+        		opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
 
     // expand
 //    if (opts->xcond_opts->N2 < qp_in->dim->N)
@@ -395,7 +396,7 @@ int ocp_qp_partial_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out
         acados_tic(&cond_timer);
 
         tmp_status = xcond->expansion(memory->pcond_qp_out, qp_out, opts->xcond_opts,
-				memory->pcond_memory, work->pcond_work);
+				memory->pcond_memory, work->xcond_work);
 
         info->condensing_time += acados_toc(&cond_timer);
 //    }
@@ -420,7 +421,7 @@ void ocp_qp_partial_condensing_solver_eval_sens(void *config_, ocp_qp_in *param_
     // cast data structures
     ocp_qp_xcond_solver_opts *opts = opts_;
     ocp_qp_partial_condensing_solver_memory *memory = mem_;
-    ocp_qp_partial_condensing_solver_workspace *work = work_;
+    ocp_qp_xcond_solver_workspace *work = work_;
 
     // cast workspace
     cast_workspace(config_, param_qp_in->dim, opts, memory, work);
@@ -431,7 +432,7 @@ void ocp_qp_partial_condensing_solver_eval_sens(void *config_, ocp_qp_in *param_
 //    if (opts->xcond_opts->N2 < param_qp_in->dim->N)
 //    {
         tmp_status = ocp_qp_partial_condensing(param_qp_in, memory->pcond_qp_in, opts->xcond_opts,
-        		memory->pcond_memory, work->pcond_work);
+        		memory->pcond_memory, work->xcond_work);
 //    }
 //    else
 //    {
@@ -441,7 +442,7 @@ void ocp_qp_partial_condensing_solver_eval_sens(void *config_, ocp_qp_in *param_
 
 	// eval sensitivity
 //	solver_status = qp_solver->evaluate(qp_solver, memory->pcond_qp_in, memory->pcond_qp_out,
-//			opts->qp_solver_opts, memory->solver_memory, work->solver_work);
+//			opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
 
 	printf("\nocp_qp_partial_condensing_solver_eval_sens: not implemented yet\n");
 	exit(1);
@@ -464,7 +465,7 @@ void ocp_qp_partial_condensing_solver_config_initialize_default(void *config_)
     config->opts_set = &ocp_qp_xcond_solver_opts_set;
     config->memory_calculate_size = &ocp_qp_partial_condensing_solver_memory_calculate_size;
     config->memory_assign = &ocp_qp_partial_condensing_solver_memory_assign;
-    config->workspace_calculate_size = &ocp_qp_partial_condensing_solver_workspace_calculate_size;
+    config->workspace_calculate_size = &ocp_qp_xcond_solver_workspace_calculate_size;
     config->evaluate = &ocp_qp_partial_condensing_solver;
     config->eval_sens = &ocp_qp_partial_condensing_solver_eval_sens;
 

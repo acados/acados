@@ -47,9 +47,12 @@ int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims)
     size += sizeof(struct d_part_cond_qp_arg);
     size += d_part_cond_qp_arg_memsize(N);  // worst case size of new QP
                                                //
+	// pcond_dims
     size += sizeof(ocp_qp_dims);
     size += d_ocp_qp_dim_memsize(N);  // worst-case size of new QP
-    size += (N + 1) * sizeof(int);    // block size
+
+	// block size
+    size += (N + 1) * sizeof(int);
 
     size += 1 * 8;
     make_int_multiple_of(8, &size);
@@ -72,6 +75,7 @@ void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
     // pcond_dims
     opts->pcond_dims = (ocp_qp_dims *) c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
+
     // hpipm_opts
     opts->hpipm_opts = (struct d_part_cond_qp_arg *) c_ptr;
     c_ptr += sizeof(struct d_part_cond_qp_arg);
@@ -107,6 +111,8 @@ void ocp_qp_partial_condensing_opts_initialize_default(ocp_qp_dims *dims, void *
     opts->pcond_dims->N = opts->N2;
     // hpipm_opts
     d_part_cond_qp_arg_set_default(opts->N2, opts->hpipm_opts);
+
+	opts->mem_qp_in = 1;
 
 	return;
 }
@@ -172,7 +178,7 @@ void ocp_qp_partial_condensing_opts_get(void *opts_, const char *field, void* va
 	}
 	else
 	{
-		printf("\nerror: field %s not available in ocp_qp_partial_condensing_opts_set\n", field);
+		printf("\nerror: ocp_qp_partial_condensing_opts_set: field %s not available\n", field);
 		exit(1);
 	}
 
@@ -196,15 +202,16 @@ int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opt
     opts->pcond_dims->N = opts->N2;
     // TODO(all): user-defined block size
     d_part_cond_qp_compute_block_size(dims->N, opts->N2, opts->block_size);
-
     d_part_cond_qp_compute_dim(dims, opts->block_size, opts->pcond_dims);
 
     size += sizeof(ocp_qp_partial_condensing_memory);
+
     // hpipm workspace
     size += sizeof(struct d_part_cond_qp_ws);
     size += d_part_cond_qp_ws_memsize(dims, opts->block_size, opts->pcond_dims, opts->hpipm_opts);
 
     size += 1 * 8;
+
     return size;
 }
 
@@ -231,8 +238,6 @@ void *ocp_qp_partial_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, vo
                              mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
 
-    mem->qp_in = NULL;  // initialized when partial condensing routine is called
-
     assert((char *) raw_memory + ocp_qp_partial_condensing_memory_calculate_size(dims, opts) >=
            c_ptr);
 
@@ -256,37 +261,39 @@ int ocp_qp_partial_condensing_workspace_calculate_size(ocp_qp_dims *dims, void *
  * functions
  ************************************************/
 
-int ocp_qp_partial_condensing(void *in_, void *out_, void *opts_, void *mem_, void *work)
+int ocp_qp_partial_condensing(void *qp_in_, void *pcond_qp_in_, void *opts_, void *mem_, void *work)
 {
-	ocp_qp_in *in = in_;
-	ocp_qp_in *out = out_;
+	ocp_qp_in *qp_in = qp_in_;
+	ocp_qp_in *pcond_qp_in = pcond_qp_in_;
 	ocp_qp_partial_condensing_opts *opts = opts_;
 	ocp_qp_partial_condensing_memory *mem = mem_;
 
     assert(opts->N2 == opts->N2_bkp);
 
     // save pointers to ocp_qp_in in memory (needed for expansion)
-    mem->qp_in = in;
-    mem->pcond_qp_in = out;
+    mem->ptr_qp_in = qp_in;
+    mem->ptr_pcond_qp_in = pcond_qp_in;
 
     // convert to partially condensed qp structure
-    d_part_cond_qp_cond(in, out, opts->hpipm_opts, mem->hpipm_workspace);
+	// TODO only if N2<N
+    d_part_cond_qp_cond(qp_in, pcond_qp_in, opts->hpipm_opts, mem->hpipm_workspace);
 
 	return ACADOS_SUCCESS;
 }
 
 
 
-int ocp_qp_partial_expansion(void *in_, void *out_, void *opts_, void *mem_, void *work)
+int ocp_qp_partial_expansion(void *pcond_qp_out_, void *qp_out_, void *opts_, void *mem_, void *work)
 {
-	ocp_qp_out *in = in_;
-	ocp_qp_out *out = out_;
+	ocp_qp_out *pcond_qp_out = pcond_qp_out_;
+	ocp_qp_out *qp_out = qp_out_;
 	ocp_qp_partial_condensing_opts *opts = opts_;
 	ocp_qp_partial_condensing_memory *mem = mem_;
 
     assert(opts->N2 == opts->N2_bkp);
 
-    d_part_cond_qp_expand_sol(mem->qp_in, mem->pcond_qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
+	// TODO only if N2<N
+    d_part_cond_qp_expand_sol(mem->ptr_qp_in, mem->ptr_pcond_qp_in, pcond_qp_out, qp_out, opts->hpipm_opts, mem->hpipm_workspace);
 
 	return ACADOS_SUCCESS;
 }

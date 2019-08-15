@@ -34,6 +34,7 @@ typedef struct ocp_qp_partial_condensing_opts_
     int N2;
     int N2_bkp;
 	int ric_alg;
+	int mem_qp_in; // allocate qp_in in memory
 } ocp_qp_partial_condensing_opts;
 
 
@@ -41,8 +42,9 @@ typedef struct ocp_qp_partial_condensing_opts_
 typedef struct ocp_qp_partial_condensing_memory_
 {
     struct d_part_cond_qp_ws *hpipm_workspace;
-    ocp_qp_in *qp_in;
-    ocp_qp_in *pcond_qp_in;
+    ocp_qp_in *ptr_qp_in;
+    ocp_qp_in *ptr_pcond_qp_in;
+    ocp_qp_out *ptr_pcond_qp_out; // TODO !!!
 } ocp_qp_partial_condensing_memory;
 
 
