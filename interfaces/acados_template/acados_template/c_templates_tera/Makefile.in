@@ -59,7 +59,7 @@ casadi_fun:
 	{% endif %}
 
 main:
-	gcc $(ACADOS_FLAGS) -c main_{{ model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ \
+	gcc $(ACADOS_FLAGS) -c main_{{ model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 solver:
@@ -74,6 +74,7 @@ example:
 	-L $(LIB_PATH)/external/qpoases/lib \
 	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
+	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
 	-I $(INCLUDE_PATH)/acados/ \
 	-I $(INCLUDE_PATH)/qpOASES_e/

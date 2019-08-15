@@ -31,7 +31,13 @@
 
 // #define _USE_MALLOC_  // acados_malloc = malloc / acados_malloc = calloc
 
-void make_int_multiple_of(int num, int *size) { *size = (*size + num - 1) / num * num; }
+void make_int_multiple_of(int num, int *size)
+{
+	*size = (*size + num - 1) / num * num;
+}
+
+
+
 int align_char_to(int num, char **c_ptr)
 {
     size_t s_ptr = (size_t) *c_ptr;
