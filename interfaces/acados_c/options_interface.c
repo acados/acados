@@ -240,8 +240,8 @@ bool set_option_int(void *args_, const char *option, const int value)
         else if (!strcmp(token, "qore"))
         {
             token = strsep_acados(&ptr_to_option_cpy, ".");
-            ocp_qp_full_condensing_solver_opts *cond_opts =
-                (ocp_qp_full_condensing_solver_opts *) args_;
+            ocp_qp_xcond_solver_opts *cond_opts =
+                (ocp_qp_xcond_solver_opts *) args_;
             dense_qp_qore_opts *args = (dense_qp_qore_opts *) cond_opts->qp_solver_opts;
             if (!strcmp(token, "print_freq"))
                 args->print_freq = value;
@@ -263,8 +263,8 @@ bool set_option_int(void *args_, const char *option, const int value)
         else if (!strcmp(token, "qpoases"))
         {
             token = strsep_acados(&ptr_to_option_cpy, ".");
-            ocp_qp_full_condensing_solver_opts *cond_opts =
-                (ocp_qp_full_condensing_solver_opts *) args_;
+            ocp_qp_xcond_solver_opts *cond_opts =
+                (ocp_qp_xcond_solver_opts *) args_;
             dense_qp_qpoases_opts *args = (dense_qp_qpoases_opts *) cond_opts->qp_solver_opts;
             if (!strcmp(token, "max_iter"))
                 args->max_nwsr = value;
@@ -370,8 +370,8 @@ bool set_option_double(void *args_, const char *option, const double value)
         else if (!strcmp(token, "qpoases"))
         {
             token = strsep_acados(&ptr_to_option_cpy, ".");
-            ocp_qp_full_condensing_solver_opts *cond_opts =
-                (ocp_qp_full_condensing_solver_opts *) args_;
+            ocp_qp_xcond_solver_opts *cond_opts =
+                (ocp_qp_xcond_solver_opts *) args_;
             dense_qp_qpoases_opts *args = (dense_qp_qpoases_opts *) cond_opts->qp_solver_opts;
             if (!strcmp(option, "max_cputime"))
                 args->max_cputime = value;

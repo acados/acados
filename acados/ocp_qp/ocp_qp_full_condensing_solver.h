@@ -29,16 +29,6 @@ extern "C" {
 
 
 
-#if 0
-typedef struct ocp_qp_full_condensing_solver_opts_
-{
-    ocp_qp_full_condensing_opts *cond_opts;
-    void *qp_solver_opts;
-} ocp_qp_full_condensing_solver_opts;
-#endif
-
-
-
 typedef struct ocp_qp_full_condensing_solver_memory_
 {
     ocp_qp_full_condensing_memory *cond_memory;
