@@ -39,23 +39,23 @@ typedef struct
 
 typedef struct
 {
-    ocp_qp_condensing_config *config;
+    ocp_qp_xcond_config *config;
     void *dims;
     void *opts;
     void *mem;
     void *work;
 } condensing_module;
 
-ocp_qp_condensing_config *ocp_qp_condensing_config_create(condensing_plan *plan);
+ocp_qp_xcond_config *ocp_qp_condensing_config_create(condensing_plan *plan);
 //
-void *ocp_qp_condensing_opts_create(ocp_qp_condensing_config *config, void *dims_);
+void *ocp_qp_condensing_opts_create(ocp_qp_xcond_config *config, void *dims_);
 //
-int ocp_qp_condensing_calculate_size(ocp_qp_condensing_config *config, void *dims_, void *opts_);
+int ocp_qp_condensing_calculate_size(ocp_qp_xcond_config *config, void *dims_, void *opts_);
 //
-condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, void *dims_,
+condensing_module *ocp_qp_condensing_assign(ocp_qp_xcond_config *config, void *dims_,
                                             void *opts_, void *raw_memory);
 //
-condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, void *dims_,
+condensing_module *ocp_qp_condensing_create(ocp_qp_xcond_config *config, void *dims_,
                                             void *opts_);
 //
 int ocp_qp_condense(condensing_module *module, void *qp_in, void *qp_out);

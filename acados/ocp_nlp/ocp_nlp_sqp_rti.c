@@ -1513,6 +1513,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_sqp_rti_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_rti_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp_rti;
+	config->eval_param_sens = NULL;
     config->config_initialize_default = &ocp_nlp_sqp_rti_config_initialize_default;
     config->precompute = &ocp_nlp_sqp_rti_precompute;
     config->get = &ocp_nlp_sqp_rti_get;

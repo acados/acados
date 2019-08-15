@@ -397,6 +397,7 @@ int main() {
     // no condensing or partial condensing HPIPM
     ocp_qp_partial_condensing_solver_config_initialize_default(config->qp_solver);
     ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
+    ocp_qp_partial_condensing_config_initialize_default(config->qp_solver->xcond);
 #endif
 
 
@@ -712,8 +713,9 @@ int main() {
 
 #if XCOND==1
     // partial condensing
-    ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = nlp_opts->qp_solver_opts;
-    pcond_solver_opts->pcond_opts->N2 = 5; // set partial condensing horizon
+    ocp_qp_xcond_solver_opts *xcond_solver_opts = nlp_opts->qp_solver_opts;
+	ocp_qp_partial_condensing_opts *pcond_opts = xcond_solver_opts->xcond_opts;
+    pcond_opts->N2 = 5; // set partial condensing horizon
 #endif
 
     for (int i = 0; i < N; ++i)

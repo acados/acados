@@ -198,9 +198,13 @@ return 0;
 
 
 
-void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condensing_opts *opts,
-                            ocp_qp_full_condensing_memory *mem, void *work)
+int ocp_qp_full_condensing(void *in_, void *out_, void *opts_, void *mem_, void *work_)
 {
+	ocp_qp_in *in = in_;
+	dense_qp_in *out = out_;
+	ocp_qp_full_condensing_opts *opts = opts_;
+	ocp_qp_full_condensing_memory *mem = mem_;
+
     // save pointer to ocp_qp_in in memory (needed for expansion)
     mem->qp_in = in;
 
@@ -225,13 +229,19 @@ void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condens
         // printf("gradient with gradient-only condensing:\n\n");
         // blasfeo_print_dvec(out->g->m, out->g, 0);
     }
+
+	return ACADOS_SUCCESS;
 }
 
 
 
-void ocp_qp_full_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_condensing_opts *opts,
-                           ocp_qp_full_condensing_memory *mem, void *work)
+int ocp_qp_full_expansion(void *in_, void *out_, void *opts_, void *mem_, void *work)
 {
+	dense_qp_out *in = in_;
+	ocp_qp_out *out = out_;
+	ocp_qp_full_condensing_opts *opts = opts_;
+	ocp_qp_full_condensing_memory *mem = mem_;
+
     if (opts->expand_dual_sol == 0)
     {
         d_cond_qp_expand_primal_sol(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
@@ -240,13 +250,15 @@ void ocp_qp_full_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_conden
     {
         d_cond_qp_expand_sol(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
     }
+
+	return ACADOS_SUCCESS;
 }
 
 
 
 void ocp_qp_full_condensing_config_initialize_default(void *config_)
 {
-    ocp_qp_condensing_config *config = config_;
+    ocp_qp_xcond_config *config = config_;
 
     config->opts_calculate_size = &ocp_qp_full_condensing_opts_calculate_size;
     config->opts_assign = &ocp_qp_full_condensing_opts_assign;
@@ -256,10 +268,8 @@ void ocp_qp_full_condensing_config_initialize_default(void *config_)
     config->memory_calculate_size = &ocp_qp_full_condensing_memory_calculate_size;
     config->memory_assign = &ocp_qp_full_condensing_memory_assign;
     config->workspace_calculate_size = &ocp_qp_full_condensing_workspace_calculate_size;
-    // TODO(dimitris): either do casting as below or void in defs, as above (also pass config or
-    // not?)
-    config->condensing = (int (*)(void *, void *, void *, void *, void *)) & ocp_qp_full_condensing;
-    config->expansion = (int (*)(void *, void *, void *, void *, void *)) & ocp_qp_full_expansion;
+    config->condensing = &ocp_qp_full_condensing;
+    config->expansion = &ocp_qp_full_expansion;
 
     return;
 }

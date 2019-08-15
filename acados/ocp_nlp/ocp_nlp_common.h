@@ -70,10 +70,11 @@ typedef struct
     void (*dynamics_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
     void (*cost_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
     void (*constraints_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
-    // evaluate solver
-    int (*evaluate)(void *config, void *dims, void *qp_in, void *qp_out, void *opts_, void *mem, void *work);
+    // evaluate solver // TODO rename into solve
+    int (*evaluate)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
+    void (*eval_param_sens)(void *config, void *dims, void *opts_, void *mem, void *work, char *field, int stage, int index, void *sens_nlp_out);
     // prepare memory
-    int (*precompute)(void *config, void *dims, void *qp_in, void *qp_out, void *opts_, void *mem, void *work);
+    int (*precompute)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     // initalize this struct with default values
     void (*config_initialize_default)(void *config);
     // general getter

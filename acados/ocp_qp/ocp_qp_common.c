@@ -69,7 +69,8 @@ int ocp_qp_xcond_solver_config_calculate_size()
 
     size += sizeof(ocp_qp_xcond_solver_config);
 
-    size += ocp_qp_solver_config_calculate_size();  // qp solver
+    size += ocp_qp_solver_config_calculate_size();  // qp_solver
+    size += ocp_qp_condensing_config_calculate_size();  // xcond
 
     return size;
 }
@@ -86,6 +87,9 @@ ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory)
     config->qp_solver = ocp_qp_solver_config_assign(c_ptr);
     c_ptr += ocp_qp_solver_config_calculate_size();
 
+    config->xcond = ocp_qp_condensing_config_assign(c_ptr);
+    c_ptr += ocp_qp_condensing_config_calculate_size();
+
     return config;
 }
 
@@ -95,19 +99,19 @@ int ocp_qp_condensing_config_calculate_size()
 {
     int size = 0;
 
-    size += sizeof(ocp_qp_condensing_config);
+    size += sizeof(ocp_qp_xcond_config);
 
     return size;
 }
 
 
 
-ocp_qp_condensing_config *ocp_qp_condensing_config_assign(void *raw_memory)
+ocp_qp_xcond_config *ocp_qp_condensing_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    ocp_qp_condensing_config *config = (ocp_qp_condensing_config *) c_ptr;
-    c_ptr += sizeof(ocp_qp_condensing_config);
+    ocp_qp_xcond_config *config = (ocp_qp_xcond_config *) c_ptr;
+    c_ptr += sizeof(ocp_qp_xcond_config);
 
     return config;
 }

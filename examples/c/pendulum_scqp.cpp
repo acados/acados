@@ -210,8 +210,8 @@ int main() {
     ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
     ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
-	ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
-	((ocp_qp_partial_condensing_solver_opts *) sqp_opts->qp_solver_opts)->pcond_opts->N2 = N;
+	int N2 = N;
+    ocp_nlp_opts_set(config, nlp_opts, "qp_cond_N", &N2);
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 	for (int i = 0; i <= N; ++i)

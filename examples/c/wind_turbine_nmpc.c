@@ -960,6 +960,8 @@ int main()
             // solve NLP
             status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
+//	config->eval_param_sens(config, dims, solver->opts, solver->mem, solver->work, "ex", 0, 0, nlp_out);
+
             // update initial condition
             // TODO(dimitris): maybe simulate system instead of passing x[1] as next state
             ocp_nlp_out_get(config, dims, nlp_out, 1, "x", specific_x);

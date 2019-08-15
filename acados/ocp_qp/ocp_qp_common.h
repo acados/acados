@@ -64,10 +64,11 @@ typedef struct
     void (*opts_initialize_default)(ocp_qp_dims *dims, void *opts);
     void (*opts_update)(ocp_qp_dims *dims, void *opts);
     void (*opts_set)(void *opts_, const char *field, void* value);
+    void (*opts_get)(void *opts_, const char *field, void* value);
     int (*memory_calculate_size)(ocp_qp_dims *dims, void *opts);
     void *(*memory_assign)(ocp_qp_dims *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(ocp_qp_dims *dims, void *opts);
-} ocp_qp_condensing_config;
+} ocp_qp_xcond_config;
 
 
 ///
@@ -75,6 +76,7 @@ typedef struct
 {
     void (*dims_set)(void *config_, void *dims_, int stage, const char *field, const int* value);
     int (*evaluate)(void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem, void *work);
+    void (*eval_sens)(void *config, ocp_qp_in *param_qp_in, ocp_qp_out *sens_qp_out, void *opts, void *mem, void *work);
     int (*opts_calculate_size)(void *config, ocp_qp_dims *dims);
     void *(*opts_assign)(void *config, ocp_qp_dims *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, ocp_qp_dims *dims, void *opts);
@@ -85,6 +87,7 @@ typedef struct
     int (*workspace_calculate_size)(void *config, ocp_qp_dims *dims, void *opts);
     qp_solver_config *qp_solver;  // either ocp_qp_solver or dense_solver
 	// TODO condensing config
+	ocp_qp_xcond_config *xcond;
 } ocp_qp_xcond_solver_config;  // pcond - partial condensing or fcond - full condensing
 
 
@@ -112,7 +115,7 @@ ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory);
 //
 int ocp_qp_condensing_config_calculate_size();
 //
-ocp_qp_condensing_config *ocp_qp_condensing_config_assign(void *raw_memory);
+ocp_qp_xcond_config *ocp_qp_condensing_config_assign(void *raw_memory);
 
 /* dims */
 //
