@@ -161,7 +161,7 @@ if(ACADOS_MATLAB OR ACADOS_OCTAVE) #TODO: OR ACADOS_PYTHON
 	add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces)
 endif()
 
-### ) External lib checks
+## ) External lib checks
 
 # Configure acados
 add_subdirectory(acados)
