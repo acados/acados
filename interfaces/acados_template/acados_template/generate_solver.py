@@ -36,6 +36,7 @@ from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
 from .generate_c_code_constraint import *
 from .acados_ocp_nlp import *
+from .acados_solver import acados_solver
 from ctypes import *
 
 def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_pN=None, json_file='acados_ocp_nlp.json'):
@@ -80,16 +81,16 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         # implicit model -- generate C code
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
-    
+
     if con_p is not None and con_h is None:
         raise Exception('h constraint is missing!')
 
     if con_h is not None:
-        # nonlinear part of nonlinear constraints 
+        # nonlinear part of nonlinear constraints
         generate_c_code_constraint(con_h, '_h_constraint')
 
     if con_p is not None:
-        # convex part of nonlinear constraints 
+        # convex part of nonlinear constraints
         generate_c_code_constraint(con_p, '_p_constraint')
 
     # check render arguments
@@ -118,7 +119,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
 
         os.system(os_cmd)
         os.chdir('..')
-        
+
     if USE_TERA == 0:
         # render source template
         template = env.get_template('acados_solver.in.c')
@@ -270,7 +271,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         out_file = open('./c_generated_code/Makefile', 'w+')
         out_file.write(output)
     else:
-        os.chdir('c_generated_code/') 
+        os.chdir('c_generated_code/')
         # render source template
         template_file = 'Makefile.in'
         out_file = 'Makefile'
@@ -291,7 +292,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         out_file = open('./c_generated_code/acados_solver_sfunction_'  + model.name + '.c', 'w+')
         out_file.write(output)
     else:
-        os.chdir('c_generated_code/') 
+        os.chdir('c_generated_code/')
         # render source template
         template_file = 'acados_solver_sfun.in.c'
         out_file = 'acados_solver_sfunction_'  + model.name + '.c'
@@ -312,7 +313,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         out_file = open('./c_generated_code/make_sfun.m', 'w+')
         out_file.write(output)
     else:
-        os.chdir('c_generated_code/') 
+        os.chdir('c_generated_code/')
         # render source template
         template_file = 'make_sfun.in.m'
         out_file = 'acados_solver_sfun.in.c'
@@ -324,7 +325,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         os.system(os_cmd)
         os.chdir('..')
 
-    # make 
+    # make
     os.chdir('c_generated_code')
     os.system('make')
     os.system('make shared_lib')
@@ -332,86 +333,3 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
 
     solver = acados_solver(acados_ocp, 'c_generated_code/libacados_solver_' + model.name + '.so')
     return solver
-
-class acados_solver:
-    def __init__(self, acados_ocp, shared_lib):
-        self.shared_lib = CDLL(shared_lib)
-        self.shared_lib.acados_create()
-
-        self.shared_lib.acados_get_nlp_opts.restype = c_void_p
-        self.nlp_opts = self.shared_lib.acados_get_nlp_opts()
-
-        self.shared_lib.acados_get_nlp_dims.restype = c_void_p
-        self.nlp_dims = self.shared_lib.acados_get_nlp_dims()
-
-        self.shared_lib.acados_get_nlp_config.restype = c_void_p
-        self.nlp_config = self.shared_lib.acados_get_nlp_config()
-
-        self.shared_lib.acados_get_nlp_out.restype = c_void_p
-        self.nlp_out = self.shared_lib.acados_get_nlp_out()
-
-        self.shared_lib.acados_get_nlp_in.restype = c_void_p
-        self.nlp_in = self.shared_lib.acados_get_nlp_in()
-
-        self.acados_ocp = acados_ocp
-
-    def solve(self):
-        status = self.shared_lib.acados_solve()
-        return status
-
-    def get(self, stage_, field_):
-
-        field = field_
-        field = field.encode('utf-8')
-
-        self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-        self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
-
-        dims = self.shared_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field)
-
-        out = np.ascontiguousarray(np.zeros((dims,)), dtype=np.float64)
-        out_data = cast(out.ctypes.data, POINTER(c_double))
-
-        self.shared_lib.ocp_nlp_out_get.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-        self.shared_lib.ocp_nlp_out_get(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field, out_data);
-
-        # out = cast((out), POINTER(c_double))
-
-        return out
-
-    def set(self, stage_, field_, value_):
-        
-        cost = ['y_ref', 'yref']
-        constraints = ['lbx', 'ubx', 'lbu', 'ubu']
-
-        # cast value_ to avoid conversion issues
-        value_ = value_.astype(float)
-
-        field = field_
-        field = field.encode('utf-8')
-
-        self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
-        self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
-
-        dims = self.shared_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field)
-         
-        if value_.shape[0] != dims: 
-            raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_,dims, value_.shape[0]))
-
-        value_data = cast(value_.ctypes.data, POINTER(c_double))
-        value_data_p = cast((value_data), c_void_p)
-
-        stage = c_int(stage_)
-        if field_ in constraints:
-            self.shared_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-            self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
-        if field_ in cost:
-            self.shared_lib.ocp_nlp_cost_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
-            self.shared_lib.ocp_nlp_cost_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
-
-        return
-
-    def __del__(self):
-        self.shared_lib.acados_free()
-
-

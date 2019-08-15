@@ -35,13 +35,13 @@ from setuptools import setup, find_packages
 
 import sys
 print(sys.version_info)
-if sys.version_info < (3,5) or sys.version_info > (3,7):
+if sys.version_info < (3,5) or sys.version_info > (3,8):
     sys.exit('3.5 <= Python version < 3.7 required. Exiting.')
 
 
 setup(name='acados_template',
    version='0.1',
-   python_requires='>=3.5, <3.7',
+   python_requires='>=3.5, <3.8',
    description='A templating framework for acados',
    url='http://github.com/zanellia/acados',
    author='Andrea Zanelli',
@@ -52,7 +52,7 @@ setup(name='acados_template',
       'jinja2',
       'numpy',
       'scipy',
-      'casadi==3.4.0'
+      'casadi==3.4.5'
    ],
    package_data={'': [
        'c_templates/main.in.c',
