@@ -69,7 +69,7 @@ EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_inverted_pendulum
 EXAMPLES += sim_crane_example
 EXAMPLES += sim_gnsf_crane
-##EXAMPLES += mass_spring_example
+EXAMPLES += mass_spring_example
 EXAMPLES += mass_spring_nmpc_example
 ##EXAMPLES += mass_spring_pcond_split
 ##EXAMPLES += mass_spring_fcond_split
@@ -96,7 +96,7 @@ RUN_EXAMPLES += run_sim_wt_model_nx6
 RUN_EXAMPLES += run_sim_inverted_pendulum
 RUN_EXAMPLES += run_sim_crane_example
 RUN_EXAMPLES += run_sim_gnsf_crane
-##RUN_EXAMPLES += run_mass_spring_example
+RUN_EXAMPLES += run_mass_spring_example
 RUN_EXAMPLES += run_mass_spring_nmpc_example
 ##RUN_EXAMPLES += run_mass_spring_pcond_split
 ##RUN_EXAMPLES += run_mass_spring_fcond_split
@@ -114,6 +114,7 @@ RUN_EXAMPLES += run_simple_dae_example
 #RUN_EXAMPLES = run_wind_turbine_nmpc
 #RUN_EXAMPLES = run_mass_spring_nmpc_example
 #RUN_EXAMPLES = run_regularization
+#RUN_EXAMPLES = run_mass_spring_example
 
 run_examples: $(RUN_EXAMPLES)
 

@@ -89,7 +89,7 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15,10,5};
 
-    int ii_max = 2;
+    int ii_max = 9;
 
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
@@ -105,6 +105,7 @@ int main() {
     #endif
     #ifndef ACADOS_WITH_OOQP
     ii_max--;
+    ii_max--;
     #endif
     #ifndef ACADOS_WITH_OSQP
     ii_max--;
@@ -114,23 +115,30 @@ int main() {
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
 		PARTIAL_CONDENSING_HPIPM,
+
         #ifdef ACADOS_WITH_HPMPC
-        // PARTIAL_CONDENSING_HPMPC,
+        PARTIAL_CONDENSING_HPMPC,
         #endif
+
         #ifdef ACADOS_WITH_QPDUNES
-        // PARTIAL_CONDENSING_QPDUNES,
+        PARTIAL_CONDENSING_QPDUNES,
         #endif
-        // FULL_CONDENSING_HPIPM,
+
+        FULL_CONDENSING_HPIPM,
+
         #ifdef ACADOS_WITH_QORE
-        // FULL_CONDENSING_QORE,
+        FULL_CONDENSING_QORE,
         #endif
+
         #ifdef ACADOS_WITH_QPOASES
-        // FULL_CONDENSING_QPOASES,
+        FULL_CONDENSING_QPOASES,
         #endif
+
         #ifdef ACADOS_WITH_OOQP
-        // PARTIAL_CONDENSING_OOQP,
-        // FULL_CONDENSING_OOQP,
+        PARTIAL_CONDENSING_OOQP,
+        FULL_CONDENSING_OOQP,
         #endif
+
         #ifdef ACADOS_WITH_OSQP
         PARTIAL_CONDENSING_OSQP,
         #endif
