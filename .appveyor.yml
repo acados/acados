@@ -3,8 +3,7 @@ branches:
     - master
 
 environment:
-  EIGEN3_ROOT:       C:\dev\Eigen3\include\eigen3
-  EIGEN3_INCLUDE_DIR: C:\dev\Eigen3\include
+  EIGEN3_INCLUDE_DIR: C:\dev\Eigen3\include\eigen3
 
 install:
   - cmd: if not exist c:\dev\Eigen3\include\eigen3\Eigen\Core (
