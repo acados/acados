@@ -2,6 +2,9 @@ branches:
   only:
     - master
 
+cache:
+  - c:\dev\Eigen3\
+
 environment:
   matrix:
     - BUILD_TYPE: Release

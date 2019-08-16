@@ -16,9 +16,6 @@
 
 # Check if external libraries are present; these are needed for the unit tests
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 find_package(Eigen3)
 
 include_directories(${EIGEN3_INCLUDE_DIR})
