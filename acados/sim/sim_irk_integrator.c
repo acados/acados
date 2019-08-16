@@ -624,7 +624,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dmat *dG_dK_ss;
     struct blasfeo_dmat *dG_dxu_ss;
     struct blasfeo_dmat *dK_dxu_ss;
-    struct blasfeo_dmat *S_forw_ss;
+    struct blasfeo_dmat *S_forw_ss = S_forw;
     int *ipiv_ss;
 
 
@@ -953,7 +953,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             for (int jj = 0; jj < ns; jj++)
                 blasfeo_dgead(nx, nx + nu, -step * b_vec[jj], dK_dxu_ss, jj * nx, 0,
                                                      S_forw_ss, 0, 0);
-        }  // end if sens_forw
+        }  // end if sens_forw || sens_hess 
 
 
         // obtain x(n+1)

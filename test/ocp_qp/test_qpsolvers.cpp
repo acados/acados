@@ -33,9 +33,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims);
 }
 
 using std::vector;
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
-using Eigen::Map;
 
 ocp_qp_solver_t hashit(std::string const &inString)
 {
