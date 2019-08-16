@@ -2,6 +2,21 @@ branches:
   only:
     - master
 
+environment:
+  EIGEN3_ROOT:       C:\dev\Eigen3\include\eigen3
+
+install:
+  - cmd: if not exist c:\dev\Eigen3\include\eigen3\Eigen\Core (
+            curl -L -o eigen-eigen-dc6cfdf9bcec.tar.gz https://bitbucket.org/eigen/eigen/get/3.2.9.tar.gz &&
+            cmake -E tar zxf eigen-eigen-dc6cfdf9bcec.tar.gz &&
+            cd eigen-eigen-dc6cfdf9bcec &&
+            mkdir build &&
+            cd build &&
+            cmake -G "Visual Studio 12" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="c:\dev\Eigen3" .. &&
+            cmake --build . --target install --config Release &&
+            cd ..\..
+         ) else (echo Using cached Eigen3)
+
 # NOTE: only static linking, i.e. via .lib file supported
 #  -D BUILD_SHARED_LIBS=OFF;
 # extern "C" {  would have to be added to subprojects
