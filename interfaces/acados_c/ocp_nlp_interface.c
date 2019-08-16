@@ -427,8 +427,8 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
     ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, ptr);
 
     // initialize to zeros
-    for (int ii = 0; ii <= dims->N; ++ii)
-        blasfeo_dvecse(dims->qp_solver->nu[ii] + dims->qp_solver->nx[ii], 0.0, nlp_out->ux + ii, 0);
+//    for (int ii = 0; ii <= dims->N; ++ii)
+//        blasfeo_dvecse(dims->qp_solver->nu[ii] + dims->qp_solver->nx[ii], 0.0, nlp_out->ux + ii, 0);
 
     return nlp_out;
 }

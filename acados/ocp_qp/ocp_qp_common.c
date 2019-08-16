@@ -63,38 +63,6 @@ qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory)
 
 
 
-int ocp_qp_xcond_solver_config_calculate_size()
-{
-    int size = 0;
-
-    size += sizeof(ocp_qp_xcond_solver_config);
-
-    size += ocp_qp_solver_config_calculate_size();  // qp_solver
-    size += ocp_qp_condensing_config_calculate_size();  // xcond
-
-    return size;
-}
-
-
-
-ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory)
-{
-    char *c_ptr = raw_memory;
-
-    ocp_qp_xcond_solver_config *config = (ocp_qp_xcond_solver_config *) c_ptr;
-    c_ptr += sizeof(ocp_qp_xcond_solver_config);
-
-    config->qp_solver = ocp_qp_solver_config_assign(c_ptr);
-    c_ptr += ocp_qp_solver_config_calculate_size();
-
-    config->xcond = ocp_qp_condensing_config_assign(c_ptr);
-    c_ptr += ocp_qp_condensing_config_calculate_size();
-
-    return config;
-}
-
-
-
 int ocp_qp_condensing_config_calculate_size()
 {
     int size = 0;
@@ -152,13 +120,13 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 
 
 
-void ocp_qp_dims_set(void *config_, void *dims_, int stage, const char *field, const int* value)
+void ocp_qp_dims_set(void *config_, void *dims, int stage, const char *field, int* value)
 {
-    ocp_qp_dims *dims = (ocp_qp_dims *) dims_;
-    // char field_copy[MAX_STR_LEN];
     char *field_copy = (char *) field;
 
     d_ocp_qp_dim_set(field_copy, stage, *value, dims);
+
+	return;
 }
 
 

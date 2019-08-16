@@ -26,11 +26,22 @@ extern "C" {
 
 
 
+typedef struct
+{
+	ocp_qp_dims *orig_dims;
+	ocp_qp_dims *pcond_dims;
+    int *block_size;
+    int N2;
+    int N2_bkp;
+} ocp_qp_partial_condensing_dims;
+
+
+
 typedef struct ocp_qp_partial_condensing_opts_
 {
     struct d_part_cond_qp_arg *hpipm_opts;
-    ocp_qp_dims *pcond_dims;  // TODO(all): move to dims
-    int *block_size;
+//    ocp_qp_dims *pcond_dims;  // TODO(all): move to dims
+//    int *block_size;
     int N2;
     int N2_bkp;
 	int ric_alg;
@@ -50,21 +61,21 @@ typedef struct ocp_qp_partial_condensing_memory_
 
 
 //
-int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims);
+int ocp_qp_partial_condensing_opts_calculate_size(void *dims);
 //
-void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory);
+void *ocp_qp_partial_condensing_opts_assign(void *dims, void *raw_memory);
 //
-void ocp_qp_partial_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opts_);
+void ocp_qp_partial_condensing_opts_initialize_default(void *dims, void *opts_);
 //
-void ocp_qp_partial_condensing_opts_update(ocp_qp_dims *dims, void *opts_);
+void ocp_qp_partial_condensing_opts_update(void *dims, void *opts_);
 //
 void ocp_qp_partial_condensing_opts_set(void *opts_, const char *field, void* value);
 //
-int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_);
+int ocp_qp_partial_condensing_memory_calculate_size(void *dims, void *opts_);
 //
-void *ocp_qp_partial_condensing_memory_assign(ocp_qp_dims *dims, void *opts, void *raw_memory);
+void *ocp_qp_partial_condensing_memory_assign(void *dims, void *opts, void *raw_memory);
 //
-int ocp_qp_partial_condensing_workspace_calculate_size(ocp_qp_dims *dims, void *opts_);
+int ocp_qp_partial_condensing_workspace_calculate_size(void *dims, void *opts_);
 //
 int ocp_qp_partial_condensing(void *in, void *out, void *opts, void *mem, void *work);
 //

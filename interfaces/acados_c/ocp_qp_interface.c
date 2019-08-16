@@ -64,65 +64,74 @@ void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
 // NOTE: this only works if solvers are ordered in the enum!!!
 // First the partial condensing solver then the full condensing solvers.
 // TODO remove !!!!!!!!!!!!
-if (solver_name < FULL_CONDENSING_HPIPM)
-    {
-        ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
-    }
-    else
-    {
-        ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
-    }
+//if (solver_name < FULL_CONDENSING_HPIPM)
+//    {
+//        ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
+//    }
+//    else
+//    {
+//        ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
+//    }
 
     switch (solver_name)
     {
         case PARTIAL_CONDENSING_HPIPM:
             ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
-			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+//			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+			ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
             break;
 #ifdef ACADOS_WITH_HPMPC
         case PARTIAL_CONDENSING_HPMPC:
             ocp_qp_hpmpc_config_initialize_default(solver_config->qp_solver);
-			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+//			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+			ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
             break;
 #endif
 #ifdef ACADOS_WITH_OOQP
         case PARTIAL_CONDENSING_OOQP:
             ocp_qp_ooqp_config_initialize_default(solver_config->qp_solver);
-			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+//			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+			ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
             break;
 #endif
 #ifdef ACADOS_WITH_OSQP
         case PARTIAL_CONDENSING_OSQP:
             ocp_qp_osqp_config_initialize_default(solver_config->qp_solver);
-			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+//			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+			ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
             break;
 #endif
 #ifdef ACADOS_WITH_QPDUNES
         case PARTIAL_CONDENSING_QPDUNES:
             ocp_qp_qpdunes_config_initialize_default(solver_config->qp_solver);
-			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+//			ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
+			ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
             break;
 #endif
         case FULL_CONDENSING_HPIPM:
             dense_qp_hpipm_config_initialize_default(solver_config->qp_solver);
-			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
+//			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
+			ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
             break;
 #ifdef ACADOS_WITH_QPOASES
         case FULL_CONDENSING_QPOASES:
             dense_qp_qpoases_config_initialize_default(solver_config->qp_solver);
-			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
+//			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
+			ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
             break;
 #endif
 #ifdef ACADOS_WITH_QORE
         case FULL_CONDENSING_QORE:
             dense_qp_qore_config_initialize_default(solver_config->qp_solver);
-			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
+//			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
+			ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
             break;
 #endif
 #ifdef ACADOS_WITH_OOQP
         case FULL_CONDENSING_OOQP:
             dense_qp_ooqp_config_initialize_default(solver_config->qp_solver);
-			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
+//			ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
+			ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
             break;
 #endif
         case INVALID_QP_SOLVER:
@@ -225,7 +234,7 @@ void ocp_qp_out_free(void *out_)
 
 
 /* opts */
-void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
+void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims)
 {
     int bytes = config->opts_calculate_size(config, dims);
 
@@ -249,7 +258,7 @@ void ocp_qp_opts_free(void *opts_)
 
 /* solver */
 
-int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_)
+int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_)
 {
     int bytes = sizeof(ocp_qp_solver);
 
@@ -261,7 +270,7 @@ int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims,
 
 
 
-ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_,
+ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_,
                              void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
@@ -288,7 +297,7 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
 
 
 
-ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_)
+ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_)
 {
     config->opts_update(config, dims, opts_);
 
@@ -305,7 +314,7 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
 
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
-    return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem,
+    return solver->config->evaluate(solver->config, solver->dims, qp_in, qp_out, solver->opts, solver->mem,
                                     solver->work);
 }
 

@@ -447,10 +447,10 @@ int ocp_nlp_sqp_memory_calculate_size(void *config_, void *dims_, void *opts_)
     size += sizeof(ocp_nlp_sqp_memory);
 
     // qp in
-    size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+    size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver->orig_dims);
 
     // qp out
-    size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
+    size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver->orig_dims);
 
     // qp solver
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
@@ -546,16 +546,15 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     c_ptr += sizeof(ocp_nlp_sqp_memory);
 
     // qp in
-    mem->qp_in = ocp_qp_in_assign(qp_solver, dims->qp_solver, c_ptr);
-    c_ptr += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+    mem->qp_in = ocp_qp_in_assign(qp_solver, dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver->orig_dims);
 
     // qp out
-    mem->qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver, c_ptr);
-    c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
+    mem->qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver->orig_dims);
 
     // QP solver
-    mem->qp_solver_mem =
-        qp_solver->memory_assign(qp_solver, dims->qp_solver, opts->qp_solver_opts, c_ptr);
+    mem->qp_solver_mem = qp_solver->memory_assign(qp_solver, dims->qp_solver, opts->qp_solver_opts, c_ptr);
     c_ptr += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
     // regularization
@@ -676,10 +675,10 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
     size += sizeof(ocp_nlp_sqp_work);
 
     // tmp qp in
-    size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+    size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver->orig_dims);
 
     // tmp qp out
-    size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
+    size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver->orig_dims);
 
     // array of pointers
     // cost
@@ -692,10 +691,10 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, void *dims_, void *opts_
 	if(opts->ext_qp_res)
 	{
 		// qp res
-		size += ocp_qp_res_calculate_size(dims->qp_solver);
+		size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
 
 		// qp res ws
-		size += ocp_qp_res_workspace_calculate_size(dims->qp_solver);
+		size += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
 	}
 
     if (opts->reuse_workspace)
@@ -819,12 +818,12 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
     c_ptr += sizeof(ocp_nlp_sqp_work);
 
     // tmp qp in
-    work->tmp_qp_in = ocp_qp_in_assign(qp_solver, dims->qp_solver, c_ptr);
-    c_ptr += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+    work->tmp_qp_in = ocp_qp_in_assign(qp_solver, dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver->orig_dims);
 
     // tmp qp out
-    work->tmp_qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver, c_ptr);
-    c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
+    work->tmp_qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver->orig_dims);
 
     // array of pointers
     //
@@ -840,12 +839,12 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
 	if(opts->ext_qp_res)
 	{
 		// qp res
-		work->qp_res = ocp_qp_res_assign(dims->qp_solver, c_ptr);
-		c_ptr += ocp_qp_res_calculate_size(dims->qp_solver);
+		work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
+		c_ptr += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
 
 		// qp res ws
-		work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver, c_ptr);
-		c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver);
+		work->qp_res_ws = ocp_qp_res_workspace_assign(dims->qp_solver->orig_dims, c_ptr);
+		c_ptr += ocp_qp_res_workspace_calculate_size(dims->qp_solver->orig_dims);
 	}
 
     if (opts->reuse_workspace)
@@ -1425,7 +1424,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // start timer
         acados_tic(&timer1);
 		// TODO move qp_out in memory !!!!! (it has to be preserved to do warm start)
-        qp_status = qp_solver->evaluate(qp_solver, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
+        qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
         // stop timer
         mem->time_qp_sol += acados_toc(&timer1);
 
@@ -1609,7 +1608,7 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 
 		d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
 
-		config->qp_solver->eval_sens(config->qp_solver, work->tmp_qp_in, work->tmp_qp_out, opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
+		config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out, opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
 
 		exit(1);
 

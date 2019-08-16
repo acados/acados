@@ -25,6 +25,7 @@ extern "C" {
 #endif
 
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_xcond_solver.h"
 
 
 /// QP solver types (Enumeration).
@@ -144,7 +145,7 @@ void ocp_qp_out_free(void *out_);
 ///
 /// \param config The configuration struct.
 /// \param dims The dimensions struct.
-void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
+void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims);
 
 /// Destructor of the options struct.
 ///
@@ -153,7 +154,7 @@ void ocp_qp_opts_free(void *opts_);
 
 
 /// TBC Should be private/static?
-int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_);
+int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 
 
 /// TBC Reserves memory? TBC Should this be private?
@@ -162,7 +163,7 @@ int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims,
 /// \param dims The dimensions struct.
 /// \param opts_ The options struct.
 /// \param raw_memory The TBD.
-ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_,
+ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_,
                              void *raw_memory);
 
 /// Creates a qp solver. Reserves memory.
@@ -170,7 +171,7 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
 /// \param config The configuration struct.
 /// \param dims The dimensions struct.
 /// \param opts_ The options struct.
-ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_);
+ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 
 /// Solves the qp.
 ///
