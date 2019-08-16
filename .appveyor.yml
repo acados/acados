@@ -15,7 +15,7 @@ build_script:
   - rm "C:/Program Files/Git/usr/bin/sh.exe"
   - cmake -E make_directory build
   # TODO: make this work
-  # - cmake -E chdir build cmake -D ACADOS_WITH_QPOASES=ON -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D BUILD_SHARED_LIBS=OFF  -D ACADOS_EXAMPLES=ON ..
-  - cmake -E chdir build cmake -D ACADOS_WITH_QPOASES=ON -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D BUILD_SHARED_LIBS=OFF -G "MinGW Makefiles" ..
+  # - cmake -E chdir build cmake -D ACADOS_WITH_QPOASES=ON -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D BUILD_SHARED_LIBS=OFF   ..
+  - cmake -E chdir build cmake -D ACADOS_WITH_QPOASES=ON -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D BUILD_SHARED_LIBS=OFF -D ACADOS_EXAMPLES=ON -G "MinGW Makefiles" ..
   - cmake --build build --config Release
   - cmake -E chdir build ctest -V
