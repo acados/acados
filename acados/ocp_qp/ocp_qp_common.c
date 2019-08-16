@@ -336,7 +336,7 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
         info->t_computed = 1;
     }
 
-    d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);
+    d_ocp_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
 
     return;
 }

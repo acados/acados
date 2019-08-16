@@ -16,7 +16,6 @@
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-ACADOS_INSTALL_DIR="${ACADOS_INSTALL_DIR:-${HOME}/acados}";
 COVERAGE="${COVERAGE:-}";
 
 export MATLABPATH="${ACADOS_INSTALL_DIR}/lib:${MATLABPATH}";
@@ -48,6 +47,10 @@ function build_acados {
 		-D COVERAGE="${COVERAGE}" \
 		-D SWIG_PYTHON="${SWIG_PYTHON}" \
 		-D BUILD_SHARED_LIBS=ON \
+		-D ACADOS_EXAMPLES="${ACADOS_EXAMPLES}" \
+		-D MATLAB_EXECUTABLE="${MATLAB_EXECUTABLE}" \
+		-D ACADOS_MATLAB="${ACADOS_MATLAB}" \
+		-D ACADOS_OCTAVE="${ACADOS_OCTAVE}" \
 		..;
 	if [ "${ACADOS_LINT}" = 'ON' ]; then
 		cmake --build build --target lint;
@@ -55,15 +58,19 @@ function build_acados {
 	fi
 
 	cmake --build build;
-	cmake -E chdir build ctest --output-on-failure;
+	cmake --build build --target install;
+
+	# Run ctest
+	# TODO: test matlab/python
+	cmake -E chdir build ctest --output-on-failure; # use -V for full output
+
 	[ $? -ne 0 ] && exit 100;
 	if [ -n "${COVERAGE}" ]; then
+		echo "analyzing test coverage";
 		cmake --build build --target acados_coverage || \
 		  echo "Coverage report not generated";
 	fi
-	# only install release version
-	[ "${BUILD_TYPE}" = 'Release' ] && cmake --build build --target install;
 }
 
-build_acados Debug;
+# build_acados Debug;
 build_acados Release;

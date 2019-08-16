@@ -190,7 +190,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // update reference
     for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, 
-                nlp_in, ii, "yref", (void *) (in_y_ref + ii*{{ ocp.dims.ny }});
+                nlp_in, ii, "yref", (void *) (in_y_ref + ii*{{ ocp.dims.ny }}));
+    }
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 
         {{ ocp.dims.N }}, "yref", (void *) in_y_ref_e);

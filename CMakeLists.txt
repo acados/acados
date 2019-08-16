@@ -29,10 +29,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 ### Defaults
 
-set(ACADOS_INSTALL_DIR "/usr/local" CACHE STRING  "Installation path to /usr/local")
+set(ACADOS_INSTALL_DIR "${PROJECT_SOURCE_DIR}" CACHE STRING  "Installation path to PROJECT_SOURCE_DIR")
 set(BLASFEO_TARGET "X64_INTEL_HASWELL" CACHE STRING "BLASFEO Target architecture")
 set(HPIPM_TARGET "AVX" CACHE STRING "HPIPM Target architecture")
 set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
+
+set(BUILD_SHARED_LIBS ON CACHE STRING "Build shared libraries")
 
 # Additional targets
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
@@ -51,6 +53,8 @@ option(SWIG_PYTHON "Swig Python Interface" OFF)
 option(TEMPLATE_MATLAB "Template Matlab Interface" OFF)
 option(TEMPLATE_PYTHON "Template Python Interface" OFF)
 option(DEV_MATLAB "Developer Matlab Interface" OFF)
+option(ACADOS_MATLAB "The Matlab Interface" OFF)
+option(ACADOS_OCTAVE "The Octave Interface" OFF)
 
 # Set custom path
 set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
@@ -153,7 +157,11 @@ if(ACADOS_LINT)
 	endif()
 endif()
 
-### ) External lib checks
+if(ACADOS_MATLAB OR ACADOS_OCTAVE) #TODO: OR ACADOS_PYTHON
+	add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces)
+endif()
+
+## ) External lib checks
 
 # Configure acados
 add_subdirectory(acados)
@@ -202,6 +210,8 @@ add_custom_target(uninstall
 message(STATUS "Target: BLASFEO is ${BLASFEO_TARGET}, HPIPM is ${HPIPM_TARGET}")
 message(STATUS "Linear algebra: ${LA}")
 message(STATUS "Swig: Python (${SWIG_PYTHON}) Matlab (${SWIG_MATLAB})")
+message(STATUS "Matlab MEX (${ACADOS_MATLAB})")
+message(STATUS "Octave MEX (${ACADOS_OCTAVE})")
 message(STATUS "System name:version ${CMAKE_SYSTEM_NAME}:${CMAKE_SYSTEM_VERSION}")
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")

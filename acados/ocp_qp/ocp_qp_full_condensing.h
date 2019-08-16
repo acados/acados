@@ -30,7 +30,7 @@ extern "C" {
 
 typedef struct ocp_qp_full_condensing_opts_
 {
-    struct d_cond_qp_ocp2dense_arg *hpipm_opts;
+    struct d_cond_qp_arg *hpipm_opts;
     int cond_hess; // 0 cond only rhs, 1 cond hess + rhs
     int expand_dual_sol; // 0 primal sol only, 1 primal + dual sol
 	int ric_alg;
@@ -40,7 +40,7 @@ typedef struct ocp_qp_full_condensing_opts_
 
 typedef struct ocp_qp_full_condensing_memory_
 {
-    struct d_cond_qp_ocp2dense_workspace *hpipm_workspace;
+    struct d_cond_qp_ws *hpipm_workspace;
     // NOTE(dimitris): points to qp_in, does NOT copy to memory (needed for expansion)
     ocp_qp_in *qp_in;
 } ocp_qp_full_condensing_memory;

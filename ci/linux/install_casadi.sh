@@ -16,20 +16,38 @@
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-CASADI_VERSION='3.4.0';
+CASADI_VERSION='3.4.5';
 _CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
 CASADI_PYTHON_URL="${_CASADI_GITHUB_RELEASES}/casadi-linux-py35-v${CASADI_VERSION}-64bit.tar.gz";
 CASADI_MATLAB_URL="${_CASADI_GITHUB_RELEASES}/casadi-linux-matlabR2014b-v${CASADI_VERSION}.tar.gz";
+CASADI_OCTAVE_URL="${_CASADI_GITHUB_RELEASES}/casadi-linux-octave-v${CASADI_VERSION}.tar.gz";
+
+echo "installing CasADi"
 
 pushd external;
-	wget -O casadi-linux-py35.tar.gz "${CASADI_PYTHON_URL}";
-	mkdir -p casadi-linux-py35;
-	tar -xf casadi-linux-py35.tar.gz -C casadi-linux-py35;
-	export PYTHONPATH=$(pwd)/casadi-linux-py35:$PYTHONPATH;
-	export CASADIPATH=$(pwd)/casadi-linux-py35;
+	if [[ "${SWIG_PYTHON}" = 'ON' || "${TEMPLATE_PYTHON}" = 'ON' ]] ;
+	then
+		wget -O casadi-linux-py35.tar.gz "${CASADI_PYTHON_URL}";
+		mkdir -p casadi-linux-py35;
+		tar -xf casadi-linux-py35.tar.gz -C casadi-linux-py35;
+		export PYTHONPATH=$(pwd)/casadi-linux-py35:$PYTHONPATH;
+		export CASADIPATH=$(pwd)/casadi-linux-py35;
+	fi
 
-	wget -O casadi-linux-matlabR2014b.tar.gz "${CASADI_MATLAB_URL}";
-	mkdir -p casadi-linux-matlabR2014b;
-	tar -xf casadi-linux-matlabR2014b.tar.gz -C casadi-linux-matlabR2014b;
-	export MATLABPATH=$(pwd)/casadi-linux-matlabR2014b:$MATLABPATH;
+	if [[ "${SWIG_MATLAB}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+ 	   [[ "${DEV_MATLAB}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
+	then
+		wget -O casadi-linux-matlabR2014b.tar.gz "${CASADI_MATLAB_URL}";
+		mkdir -p casadi-linux-matlabR2014b;
+		tar -xf casadi-linux-matlabR2014b.tar.gz -C casadi-linux-matlabR2014b;
+		export MATLABPATH=$(pwd)/casadi-linux-matlabR2014b:$MATLABPATH;
+	fi
+
+	if [ "${ACADOS_OCTAVE}" = 'ON' ];
+	then
+		wget -O casadi-linux-octave.tar.gz "${CASADI_OCTAVE_URL}";
+		mkdir -p casadi-octave;
+		tar -xf casadi-linux-octave.tar.gz -C casadi-octave;
+		export OCTAVE_PATH=$(pwd)/casadi-octave:$OCTAVE_PATH;
+	fi
 popd;

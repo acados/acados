@@ -57,4 +57,5 @@ if check == 0
     message = strcat('\nSIM_DIM_CHECK FAIL: check consistency of dim_',...
         fail, ' with CasADi symbolic sym_', fail, '!\n\n');
     fprintf(message);
+    error(message);
 end

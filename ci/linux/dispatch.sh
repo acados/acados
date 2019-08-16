@@ -17,41 +17,63 @@
 #
 #
 
-if [ "${SECTION}" = 'install' ]; then
+if [ "${SECTION}" = 'before_install' ]; then
+    export ACADOS_INSTALL_DIR="$(pwd)";
+	export ACADOS_SOURCE_DIR="$(pwd)";
+
+elif [ "${SECTION}" = 'install' ]; then
 	source "${SCRIPT_DIR}/install_apt_dependencies.sh";
 	source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
 	source "${SCRIPT_DIR}/install_python.sh";
 
-	if [ 0
-		 -o "${SWIG_MATLAB}" = 'ON'
-		 -o "${SWIG_PYTHON}" = 'ON'
-		 -o "${TEMPLATE_PYTHON}" = 'ON'
-		 -o "${TEMPLATE_MATLAB}" = 'ON'
-		 -o "${DEV_MATLAB}" = 'ON'
-		]; then
+	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]] ||
+	   [[ "${TEMPLATE_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+	   [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
+		"${DEV_MATLAB}" = 'ON';
+		then
 		source "${SCRIPT_DIR}/install_casadi.sh";
 	fi
 
-	if [ 0
-		 -o "${SWIG_PYTHON}" = 'ON'
-		 -o "${TEMPLATE_PYTHON}" = 'ON'
-		]; then
+	if [ "${ACADOS_OCTAVE}" = 'ON' ] ;
+	then
+		echo "find hpipm_common.h"
+		find $(pwd) -name 'hpipm_common.h';
+
+		source "${SCRIPT_DIR}/install_octave.sh";
+		export OCTAVE_PATH="${ACADOS_SOURCE_DIR}/interfaces/acados_matlab":$OCTAVE_PATH;
+		echo "OCTAVE_PATH=$OCTAVE_PATH";
+	fi
+
+	# Prepare ctest with Matlab/Octave interface
+	if [[ "${ACADOS_OCTAVE}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]]; then
+		# Export paths
+		# MATLAB_TEST_FOLDER=${ACADOS_SOURCE_DIR}/examples/matlab_mex/test/build;
+		# PENDULUM_FOLDER=${ACADOS_SOURCE_DIR}/examples/matlab_mex/pendulum_on_cart_model/build;
+		# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MATLAB_TEST_FOLDER:$PENDULUM_FOLDER;
+
+		# TODO: do this more clean, sth like the above
+		pushd examples/matlab_mex/pendulum_on_cart_model;
+			MODEL_FOLDER=${MODEL_FOLDER:-"./build"}
+			export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
+		popd;
+
+		echo
+		echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+	fi
+
+	if [[ "${SWIG_PYTHON}" = 'ON' || "${TEMPLATE_PYTHON}" = 'ON' ]] ;
+	then
 		source "${SCRIPT_DIR}/install_python_dependencies.sh";
 	fi
 
-	if [ 0
-		 -o "${SWIG_MATLAB}" = 'ON'
-		 -o "${TEMPLATE_MATLAB}" = 'ON'
-		 -o "${DEV_MATLAB}" = 'ON'
-		]; then
+	if [[ "${SWIG_MATLAB}" = 'ON' ||  "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+	   [[ "${DEV_MATLAB}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
+	then
 		source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
 	fi
 
-
-	if [ 0
-		 -o "${SWIG_MATLAB}" = 'ON'
-		 -o "${SWIG_PYTHON}" = 'ON'
-		]; then
+	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]];
+		then
 		source "${SHARED_SCRIPT_DIR}/install_swig.sh";
 	fi
 
@@ -61,4 +83,6 @@ elif [ "${SECTION}" = 'script' ]; then
 elif [ "${SECTION}" = 'after_success' ]; then
 	source "${SHARED_SCRIPT_DIR}/after_success_package_release.sh";
 	source "${SHARED_SCRIPT_DIR}/upload_coverage.sh";
+
 fi
+
