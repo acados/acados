@@ -36,4 +36,4 @@ build_script:
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_PREFIX_PATH=C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0 -D ACADOS_WITH_QPOASES=ON -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D BUILD_SHARED_LIBS=OFF -D ACADOS_EXAMPLES=ON -D ACADOS_UNIT_TESTS=ON -DEIGEN3_INCLUDE_DIR="C:\dev\Eigen3\include\eigen3" -G "MinGW Makefiles" ..
   - cmake --build build --config Release
-  - cmake -E chdir build ctest -V
+  - cmake -E chdir build ctest --output-on-failure
