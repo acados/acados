@@ -36,7 +36,7 @@ set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
 
 # Additional targets
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
-option(ACADOS_EXAMPLES "Compile Examples" OFF)
+option(ACADOS_EXAMPLES "Compile Examples" ON)
 option(ACADOS_LINT "Compile Lint" OFF)
 # Extarnal libs
 option(ACADOS_WITH_QPOASES  "qpOASES solver" OFF)
@@ -172,6 +172,9 @@ add_subdirectory(${EXTERNAL_SRC_DIR})
 # Configure examples
 if(ACADOS_EXAMPLES)
 	add_subdirectory(examples)
+	if(EMBEDDED_TARGET)
+		message(STATUS "Examples: compile embedded examples for ${EMBEDDED_TARGET}")
+	endif()
 endif()
 
 # Configure tests

@@ -110,6 +110,10 @@ endif()
 
 target_link_libraries(acados PUBLIC hpipm blasfeo m)
 
+if(EMBEDDED_TARGET MATCHES XILINX_NONE_ELF )
+	target_link_libraries(acados PUBLIC -Wl,--start-group xil c gcc -Wl,--end-group)
+endif()
+
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
 endif()

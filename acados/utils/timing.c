@@ -64,6 +64,21 @@ void acados_tic(acados_timer* t)
 
 real_t acados_toc(acados_timer* t) { return ds1401_tic_read() - t->time; }
 
+#elif defined(__XILINX_NONE_ELF__)
+
+inline void acados_tic(acados_timer* t)
+{
+	XTime_GetTime(&(t->tic));
+}
+
+inline real_t acados_toc(acados_timer* t) { 
+	uint64_t toc;
+	XTime_GetTime(&toc);
+	t->toc = toc;
+
+	/* time in s */
+	return (double)(toc - t->tic) / (COUNTS_PER_SECOND);  
+}
 #else
 
 #if __STDC_VERSION__ >= 199901L  // C99 Mode

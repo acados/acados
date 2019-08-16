@@ -22,23 +22,23 @@
 extern "C" {
 #endif
 
-#define X0_NM2_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm2.txt"
-#define X0_NM3_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm3.txt"
-#define X0_NM4_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm4.txt"
-#define X0_NM5_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm5.txt"
-#define X0_NM6_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm6.txt"
-#define X0_NM7_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm7.txt"
-#define X0_NM8_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm8.txt"
-#define X0_NM9_FILE "/home/gianluca/acados/examples/c/chain_model/x0_nm9.txt"
+#define X0_NM2_FILE "/home/bstickan/temp/acados/examples/c/chain_model/x0_nm2.txt"
+#define X0_NM3_FILE "/home/bstickan/temp/acados/examples/c/chain_model/x0_nm3.txt"
+#define X0_NM4_FILE "/home/bstickan/temp/acados/examples/c/chain_model/x0_nm4.txt"
+#define X0_NM5_FILE "/home/bstickan/temp/acados/examples/c/chain_model/x0_nm5.txt"
+#define X0_NM6_FILE "/home/bstickan/temp/acados/examples/c/chain_model/x0_nm6.txt"
+#define X0_NM7_FILE "/home/bstickan/temp/acados/examples/c/chain_model/x0_nm7.txt"
+#define X0_NM8_FILE "/home/bstickan/temp/acados/examples/c/chain_model/x0_nm8.txt"
+#define X0_NM9_FILE "/home/bstickan/temp/acados/examples/c/chain_model/x0_nm9.txt"
 
-#define XN_NM2_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm2.txt"
-#define XN_NM3_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm3.txt"
-#define XN_NM4_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm4.txt"
-#define XN_NM5_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm5.txt"
-#define XN_NM6_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm6.txt"
-#define XN_NM7_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm7.txt"
-#define XN_NM8_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm8.txt"
-#define XN_NM9_FILE "/home/gianluca/acados/examples/c/chain_model/xN_nm9.txt"
+#define XN_NM2_FILE "/home/bstickan/temp/acados/examples/c/chain_model/xN_nm2.txt"
+#define XN_NM3_FILE "/home/bstickan/temp/acados/examples/c/chain_model/xN_nm3.txt"
+#define XN_NM4_FILE "/home/bstickan/temp/acados/examples/c/chain_model/xN_nm4.txt"
+#define XN_NM5_FILE "/home/bstickan/temp/acados/examples/c/chain_model/xN_nm5.txt"
+#define XN_NM6_FILE "/home/bstickan/temp/acados/examples/c/chain_model/xN_nm6.txt"
+#define XN_NM7_FILE "/home/bstickan/temp/acados/examples/c/chain_model/xN_nm7.txt"
+#define XN_NM8_FILE "/home/bstickan/temp/acados/examples/c/chain_model/xN_nm8.txt"
+#define XN_NM9_FILE "/home/bstickan/temp/acados/examples/c/chain_model/xN_nm9.txt"
 
 /* forward vde */
 int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);

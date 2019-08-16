@@ -58,6 +58,15 @@ typedef struct acados_timer_
     double time;
 } acados_timer;
 
+#elif defined (__XILINX_NONE_ELF__)
+
+#include "xtime_l.h"
+
+typedef struct acados_timer_ {
+	uint64_t tic;
+	uint64_t toc;
+} acados_timer;
+
 #else
 
 /* Use POSIX clock_gettime() for timing on non-Windows machines. */

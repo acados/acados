@@ -226,12 +226,14 @@ target_link_libraries(simple_dae_example acados)
 add_test(simple_dae_example simple_dae_example)
 
 # -------------------- pendulum_scqp
-add_executable(pendulum_scqp pendulum_scqp.cpp
-    pendulum_model/pendulum_ode_expl_vde_forw.c
-    pendulum_model/constraint.c
-    pendulum_model/position.c)
-target_link_libraries(pendulum_scqp acados)
-add_test(pendulum_scqp pendulum_scqp)
+if(NOT EMBEDDED_TARGET MATCHES XILINX_NONE_ELF ) #Xilinx bare-metal
+	add_executable(pendulum_scqp pendulum_scqp.cpp
+		pendulum_model/pendulum_ode_expl_vde_forw.c
+		pendulum_model/constraint.c
+		pendulum_model/position.c)
+	target_link_libraries(pendulum_scqp acados)
+	add_test(pendulum_scqp pendulum_scqp)
+endif()
 
 # -------------------- mass_spring
 add_executable(mass_spring_example no_interface_examples/mass_spring_example.c no_interface_examples/mass_spring_model/mass_spring_qp.c)
@@ -271,5 +273,9 @@ add_test(sim_wt_model_nx3 sim_wt_model_nx3)
 add_executable(dense_qp dense_qp.c)
 target_link_libraries(dense_qp acados)
 add_test(dense_qp dense_qp)
+
+if(EMBEDDED_TARGET MATCHES XILINX_NONE_ELF ) #Xilinx bare-metal
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T ${LINKER_SCRIPT_PATH}")
+endif()
 
 endif()
