@@ -1,0 +1,4 @@
+## auto generated files when using cmake to install
+# cmake --build build --target install
+*Config*.cmake
+*Targets*.cmake
