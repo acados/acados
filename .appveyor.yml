@@ -29,7 +29,8 @@ build_script:
   # MinGW files need to be at the beginning of the PATH
   - set PATH=C:\msys64\usr\bin;%PATH%
   # Workaround for CMake not wanting sh.exe on PATH for MinGW
-  - rm "C:/Program Files/Git/usr/bin/sh.exe"
+  - rm "C:\msys64\usr\bin\sh.exe"
+  - rm "C:\Program Files\Git\usr\bin\sh.exe"
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_PREFIX_PATH=C:\mingw64 -D ACADOS_WITH_QPOASES=ON -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D BUILD_SHARED_LIBS=OFF -D ACADOS_EXAMPLES=ON -D ACADOS_UNIT_TESTS=ON -DEIGEN3_INCLUDE_DIR="C:\dev\Eigen3\include\eigen3" -G "MinGW Makefiles" ..
   - cmake --build build --config Release
