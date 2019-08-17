@@ -36,7 +36,6 @@
 #include <stdlib.h>
 
 #include "acados/utils/print.h"
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"

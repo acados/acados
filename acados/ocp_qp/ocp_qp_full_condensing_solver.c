@@ -43,7 +43,7 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_full_condensing.h" // TODO remove !!!
 #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h" // TODO remove !!!
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h" // TODO rename !!!
+#include "acados/ocp_qp/ocp_qp_xcond_solver.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"

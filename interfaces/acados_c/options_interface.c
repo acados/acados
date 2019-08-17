@@ -43,7 +43,7 @@
 #ifdef ACADOS_WITH_QPOASES
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #endif
-#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h" // TODO remove !!!
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #ifdef ACADOS_WITH_HPMPC
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
@@ -58,7 +58,7 @@
 #ifdef ACADOS_WITH_QPDUNES
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #endif
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
+#include "acados/ocp_qp/ocp_qp_xcond_solver.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp_rti.h"
 #include "acados/utils/strsep.h"
