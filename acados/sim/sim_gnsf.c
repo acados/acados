@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 // acados
 #include "acados/utils/mem.h"
@@ -1716,10 +1715,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     int nxz2 = nx2 + nz2;
 
     // assert - only use supported features
-    double epsilon = 1e-10 * fmax( fabs(mem->dt), fabs(in->T) );
-    if ( fabs(mem->dt - in->T / opts->num_steps) > epsilon )
+    if (mem->dt != in->T / opts->num_steps)
     {
-        printf("ERROR sim_gnsf: mem->dt - in->T/opts->num_steps > epsilon, check initialization\n");
+        printf("ERROR sim_gnsf: mem->dt n!= in->T/opts->num_steps, check initialization\n");
         return ACADOS_FAILURE;
     }
 
