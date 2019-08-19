@@ -52,9 +52,10 @@ typedef struct d_dense_qp_sol dense_qp_out;
 typedef struct d_dense_qp_res dense_qp_res;
 typedef struct d_dense_qp_res_workspace dense_qp_res_ws;
 
+
+
 #ifndef QP_SOLVER_CONFIG_
 #define QP_SOLVER_CONFIG_
-
 typedef struct
 {
     // TODO(dimitris): pass dims to evaluate?
@@ -69,17 +70,24 @@ typedef struct
     void *(*memory_assign)(void *config, void *dims, void *args, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *args);
 } qp_solver_config;
-
 #endif
 
+
+
+#ifndef QP_INFO_
+#define QP_INFO_
 typedef struct
 {
     double solve_QP_time;
+    double condensing_time;
     double interface_time;
     double total_time;
     int num_iter;
     int t_computed;
-} dense_qp_info;
+} qp_info;
+#endif
+
+
 
 /* config */
 //
@@ -107,6 +115,8 @@ dense_qp_in *dense_qp_in_assign(dense_qp_dims *dims, void *raw_memory);
 int dense_qp_out_calculate_size(dense_qp_dims *dims);
 //
 dense_qp_out *dense_qp_out_assign(dense_qp_dims *dims, void *raw_memory);
+//
+void dense_qp_out_get(dense_qp_out *out, const char *field, void *value);
 
 /* res */
 //

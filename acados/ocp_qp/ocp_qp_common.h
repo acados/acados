@@ -59,7 +59,6 @@ typedef struct d_ocp_qp_res_ws ocp_qp_res_ws;
 
 #ifndef QP_SOLVER_CONFIG_
 #define QP_SOLVER_CONFIG_
-
 typedef struct
 {
     // TODO(dimitris): pass dims to evaluate?
@@ -74,7 +73,6 @@ typedef struct
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
 } qp_solver_config;
-
 #endif
 
 
@@ -85,6 +83,7 @@ typedef struct
     void *(*dims_assign)(void *config, int N, void *raw_memory);
     void (*dims_set)(void *config, void *dims_, int stage, const char *field, int* value);
     void (*dims_get)(void *config, void *dims, const char *field, void* value);
+	// TODO add config everywhere !!!!!
     int (*opts_calculate_size)(void *dims);
     void *(*opts_assign)(void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *dims, void *opts);
@@ -92,6 +91,7 @@ typedef struct
     void (*opts_set)(void *opts_, const char *field, void* value);
     int (*memory_calculate_size)(void *dims, void *opts);
     void *(*memory_assign)(void *dims, void *opts, void *raw_memory);
+    void (*memory_get)(void *config, void *mem, const char *field, void* value);
     int (*workspace_calculate_size)(void *dims, void *opts);
     int (*condensing)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     int (*expansion)(void *qp_in, void *qp_out, void *opts, void *mem, void *work);
@@ -100,6 +100,8 @@ typedef struct
 
 
 /// Struct containing metrics of the qp solver.
+#ifndef QP_INFO_
+#define QP_INFO_
 typedef struct
 {
     double solve_QP_time;
@@ -108,7 +110,8 @@ typedef struct
     double total_time;
     int num_iter;
     int t_computed;
-} ocp_qp_info;
+} qp_info;
+#endif
 
 
 
@@ -144,6 +147,8 @@ ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory);
 int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory);
+//
+void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value);
 
 
 /* res */

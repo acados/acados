@@ -1070,7 +1070,7 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
     }
 
     acados_timer tot_timer, qp_timer, interface_timer;
-    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    qp_info *info = (qp_info *) qp_out->misc;
     acados_tic(&tot_timer);
 
     ocp_qp_ooqp_opts *opts = (ocp_qp_ooqp_opts *)opts_;

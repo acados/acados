@@ -139,7 +139,7 @@ void ocp_qp_partial_condensing_dims_get(void *config_, void *dims_, const char *
 	}
 	else
 	{
-		printf("\nerror: ocp_qp_partial_condensing_dims_set: field %s not available\n", field);
+		printf("\nerror: ocp_qp_partial_condensing_dims_get: field %s not available\n", field);
 		exit(1);
 	}
 
@@ -316,11 +316,15 @@ int ocp_qp_partial_condensing_memory_calculate_size(void *dims_, void *opts_)
 
     size += sizeof(ocp_qp_partial_condensing_memory);
 
+	size += ocp_qp_in_calculate_size(dims->pcond_dims);
+
+	size += ocp_qp_out_calculate_size(dims->pcond_dims);
+
     // hpipm workspace
     size += sizeof(struct d_part_cond_qp_ws);
     size += d_part_cond_qp_ws_memsize(dims->orig_dims, dims->block_size, dims->pcond_dims, opts->hpipm_opts);
 
-    size += 1 * 8;
+    size += 2 * 8;
 
     return size;
 }
@@ -334,24 +338,58 @@ void *ocp_qp_partial_condensing_memory_assign(void *dims_, void *opts_, void *ra
 
     char *c_ptr = (char *) raw_memory;
 
+	// initial alignment
+    align_char_to(8, &c_ptr);
+
     ocp_qp_partial_condensing_memory *mem = (ocp_qp_partial_condensing_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_partial_condensing_memory);
-    // hpipm_workspace
+
+    align_char_to(8, &c_ptr);
+
+    // hpipm_workspace struct
     mem->hpipm_workspace = (struct d_part_cond_qp_ws *) c_ptr;
     c_ptr += sizeof(struct d_part_cond_qp_ws);
-
-    // hpipm workspace structure
-    align_char_to(8, &c_ptr);
-    assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     // hpipm_workspace
     d_part_cond_qp_ws_create(dims->orig_dims, dims->block_size, dims->pcond_dims, opts->hpipm_opts, mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
 
+	mem->pcond_qp_in = ocp_qp_in_assign(dims->pcond_dims, c_ptr);
+	c_ptr += ocp_qp_in_calculate_size(dims->pcond_dims);
+
+	mem->pcond_qp_out = ocp_qp_out_assign(dims->pcond_dims, c_ptr);
+	c_ptr += ocp_qp_out_calculate_size(dims->pcond_dims);
+
     assert((char *) raw_memory + ocp_qp_partial_condensing_memory_calculate_size(dims, opts) >=
            c_ptr);
 
     return mem;
+}
+
+
+
+void ocp_qp_partial_condensing_memory_get(void *config_, void *mem_, const char *field, void* value)
+{
+	ocp_qp_partial_condensing_memory *mem = mem_;
+
+	if(!strcmp(field, "xcond_qp_in"))
+	{
+		ocp_qp_in **ptr = value;
+		*ptr = mem->pcond_qp_in;
+	}
+	else if(!strcmp(field, "xcond_qp_out"))
+	{
+		ocp_qp_out **ptr = value;
+		*ptr = mem->pcond_qp_out;
+	}
+	else
+	{
+		printf("\nerror: ocp_qp_partial_condensing_memory_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
+
 }
 
 
@@ -425,6 +463,7 @@ void ocp_qp_partial_condensing_config_initialize_default(void *config_)
 	config->opts_set = &ocp_qp_partial_condensing_opts_set;
     config->memory_calculate_size = &ocp_qp_partial_condensing_memory_calculate_size;
     config->memory_assign = &ocp_qp_partial_condensing_memory_assign;
+    config->memory_get = &ocp_qp_partial_condensing_memory_get;
     config->workspace_calculate_size = &ocp_qp_partial_condensing_workspace_calculate_size;
     config->condensing = &ocp_qp_partial_condensing;
     config->expansion = &ocp_qp_partial_expansion;

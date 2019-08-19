@@ -521,7 +521,7 @@ int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, voi
     }
 
     acados_timer tot_timer, qp_timer, interface_timer;
-    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
+    qp_info *info = (qp_info *) qp_out->misc;
     acados_tic(&tot_timer);
 
     dense_qp_ooqp_opts *opts = (dense_qp_ooqp_opts *)opts_;

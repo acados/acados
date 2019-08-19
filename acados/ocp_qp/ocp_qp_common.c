@@ -33,6 +33,8 @@
 
 
 // external
+#include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 #include <string.h>
 
@@ -194,7 +196,7 @@ int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
     int size = sizeof(ocp_qp_out);
     size += d_ocp_qp_sol_memsize(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
-    size += sizeof(ocp_qp_info);
+    size += sizeof(qp_info); // TODO move to memory !!!
     return size;
 }
 
@@ -210,8 +212,8 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
     d_ocp_qp_sol_create(dims, qp_out, c_ptr);
     c_ptr += d_ocp_qp_sol_memsize(dims);
 
-    qp_out->misc = (void *) c_ptr;
-    c_ptr += sizeof(ocp_qp_info);
+    qp_out->misc = (void *) c_ptr; // TODO move to memory !!!
+    c_ptr += sizeof(qp_info); // TODO move to memory !!!
 
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
@@ -223,6 +225,24 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
     assert((char *) raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
 
     return qp_out;
+}
+
+
+
+void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value)
+{
+	if(!strcmp(field, "qp_info"))
+	{
+		qp_info **ptr = value;
+		*ptr = out->misc;
+	}
+	else
+	{
+		printf("\nerror: ocp_qp_out_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
 }
 
 
@@ -286,7 +306,7 @@ ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory)
 void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res,
                         ocp_qp_res_ws *res_ws)
 {
-    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    qp_info *info = (qp_info *) qp_out->misc;
 
     if (info->t_computed == 0)
     {

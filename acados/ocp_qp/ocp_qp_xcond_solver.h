@@ -62,13 +62,13 @@ typedef struct ocp_qp_xcond_solver_opts_
 
 
 
-typedef struct ocp_qp_partial_condensing_solver_memory_
+typedef struct ocp_qp_xcond_solver_memory_
 {
-    ocp_qp_partial_condensing_memory *pcond_memory;
+    void *xcond_memory;
     void *solver_memory;
-    ocp_qp_in *pcond_qp_in;
-    ocp_qp_out *pcond_qp_out;
-} ocp_qp_partial_condensing_solver_memory;
+    void *xcond_qp_in;
+    void *xcond_qp_out;
+} ocp_qp_xcond_solver_memory;
 
 
 
@@ -127,9 +127,9 @@ void ocp_qp_xcond_solver_opts_update(void *config, ocp_qp_xcond_solver_dims *dim
 //
 void ocp_qp_xcond_solver_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
-int ocp_qp_partial_condensing_solver_calculate_memory_size(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
+int ocp_qp_xcond_solver_memory_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 //
-void *ocp_qp_partial_condensing_solver_memory_assign(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_, void *raw_memory);
+void *ocp_qp_xcond_solver_memory_assign(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_, void *raw_memory);
 //
 int ocp_qp_xcond_solver_workspace_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 //

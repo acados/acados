@@ -70,22 +70,22 @@ typedef struct ocp_qp_full_condensing_solver_workspace_
 
 
 //
-int ocp_qp_full_condensing_solver_opts_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims);
+//int ocp_qp_full_condensing_solver_opts_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims);
 //
-void *ocp_qp_full_condensing_solver_opts_assign(void *config, ocp_qp_xcond_solver_dims *dims, void *raw_memory);
+//void *ocp_qp_full_condensing_solver_opts_assign(void *config, ocp_qp_xcond_solver_dims *dims, void *raw_memory);
 //
-void ocp_qp_full_condensing_solver_opts_initialize_default(void *config, ocp_qp_xcond_solver_dims *dims,
-                                                           void *opts_);
+//void ocp_qp_full_condensing_solver_opts_initialize_default(void *config, ocp_qp_xcond_solver_dims *dims,
+//                                                           void *opts_);
 //
-void ocp_qp_full_condensing_solver_opts_update(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
+//void ocp_qp_full_condensing_solver_opts_update(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 //
-void ocp_qp_full_condensing_solver_opts_set(void *config_, void *opts_, const char *field, void* value);
+//void ocp_qp_full_condensing_solver_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
-int ocp_qp_full_condensing_solver_memory_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims,
-                                                        void *opts_);
+//int ocp_qp_full_condensing_solver_memory_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims,
+//                                                        void *opts_);
 //
-void *ocp_qp_full_condensing_solver_memory_assign(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_,
-                                                  void *raw_memory);
+//void *ocp_qp_full_condensing_solver_memory_assign(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_,
+//                                                  void *raw_memory);
 //
 int ocp_qp_full_condensing_solver_workspace_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims,
                                                            void *opts_);

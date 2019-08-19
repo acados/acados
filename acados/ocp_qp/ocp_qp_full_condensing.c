@@ -131,7 +131,7 @@ void ocp_qp_full_condensing_dims_get(void *config_, void *dims_, const char *fie
 	}
 	else
 	{
-		printf("\nerror: ocp_qp_full_condensing_dims_set: field %s not available\n", field);
+		printf("\nerror: ocp_qp_full_condensing_dims_get: field %s not available\n", field);
 		exit(1);
 	}
 
@@ -149,7 +149,7 @@ int ocp_qp_full_condensing_opts_calculate_size(void *dims_)
 {
     ocp_qp_full_condensing_dims *dims = dims_;
 
-    // populate dimensions of new ocp_qp based on N2
+    // populate dimensions of new dense_qp
     d_cond_qp_compute_dim(dims->orig_dims, dims->fcond_dims);
 
     int size = 0;
@@ -276,11 +276,22 @@ int ocp_qp_full_condensing_memory_calculate_size(void *dims_, void *opts_)
     ocp_qp_full_condensing_dims *dims = dims_;
     ocp_qp_full_condensing_opts *opts = opts_;
 
+    // populate dimensions of new dense_qp
+	// TODO needed ???
+//    d_cond_qp_compute_dim(dims->orig_dims, dims->fcond_dims);
+
     int size = 0;
 
     size += sizeof(ocp_qp_full_condensing_memory);
+
+	size += dense_qp_in_calculate_size(dims->fcond_dims);
+
+	size += dense_qp_out_calculate_size(dims->fcond_dims);
+
     size += sizeof(struct d_cond_qp_ws);
     size += d_cond_qp_ws_memsize(dims->orig_dims, opts->hpipm_opts);
+
+    size += 2 * 8;
 
     return size;
 }
@@ -294,17 +305,30 @@ void *ocp_qp_full_condensing_memory_assign(void *dims_, void *opts_, void *raw_m
 
     char *c_ptr = (char *) raw_memory;
 
+	// initial alignment
+    align_char_to(8, &c_ptr);
+
     ocp_qp_full_condensing_memory *mem = (ocp_qp_full_condensing_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_full_condensing_memory);
 
+    align_char_to(8, &c_ptr);
+
+    // hpipm_workspace struct
     mem->hpipm_workspace = (struct d_cond_qp_ws *) c_ptr;
     c_ptr += sizeof(struct d_cond_qp_ws);
 
-    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+//    align_char_to(8, &c_ptr);
+//    assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     // hpipm workspace
     d_cond_qp_ws_create(dims->orig_dims, opts->hpipm_opts, mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
+
+	mem->fcond_qp_in = dense_qp_in_assign(dims->fcond_dims, c_ptr);
+	c_ptr += dense_qp_in_calculate_size(dims->fcond_dims);
+
+	mem->fcond_qp_out = dense_qp_out_assign(dims->fcond_dims, c_ptr);
+	c_ptr += dense_qp_out_calculate_size(dims->fcond_dims);
 
     assert((char *) raw_memory + ocp_qp_full_condensing_memory_calculate_size(dims, opts) >= c_ptr);
 
@@ -312,6 +336,36 @@ void *ocp_qp_full_condensing_memory_assign(void *dims_, void *opts_, void *raw_m
 }
 
 
+
+void ocp_qp_full_condensing_memory_get(void *config_, void *mem_, const char *field, void* value)
+{
+	ocp_qp_full_condensing_memory *mem = mem_;
+
+	if(!strcmp(field, "xcond_qp_in"))
+	{
+		dense_qp_in **ptr = value;
+		*ptr = mem->fcond_qp_in;
+	}
+	else if(!strcmp(field, "xcond_qp_out"))
+	{
+		dense_qp_out **ptr = value;
+		*ptr = mem->fcond_qp_out;
+	}
+	else
+	{
+		printf("\nerror: ocp_qp_full_condensing_memory_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
+/************************************************
+ * workspace
+ ************************************************/
 
 int ocp_qp_full_condensing_workspace_calculate_size(void *dims_, void *opts_)
 {
@@ -321,6 +375,10 @@ int ocp_qp_full_condensing_workspace_calculate_size(void *dims_, void *opts_)
 }
 
 
+
+/************************************************
+ * functions
+ ************************************************/
 
 int ocp_qp_full_condensing(void *in_, void *out_, void *opts_, void *mem_, void *work_)
 {
@@ -395,6 +453,7 @@ void ocp_qp_full_condensing_config_initialize_default(void *config_)
     config->opts_set = &ocp_qp_full_condensing_opts_set;
     config->memory_calculate_size = &ocp_qp_full_condensing_memory_calculate_size;
     config->memory_assign = &ocp_qp_full_condensing_memory_assign;
+    config->memory_get = &ocp_qp_full_condensing_memory_get;
     config->workspace_calculate_size = &ocp_qp_full_condensing_workspace_calculate_size;
     config->condensing = &ocp_qp_full_condensing;
     config->expansion = &ocp_qp_full_expansion;

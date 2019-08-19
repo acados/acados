@@ -316,6 +316,7 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_so
 
 ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_)
 {
+
     config->opts_update(config, dims, opts_);
 
     int bytes = ocp_qp_calculate_size(config, dims, opts_);

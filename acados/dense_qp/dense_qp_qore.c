@@ -299,7 +299,7 @@ int dense_qp_qore_workspace_calculate_size(void *config_, dense_qp_dims *dims, v
 int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
                   void *memory_, void *work_)
 {
-    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
+    qp_info *info = (qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
 
     acados_tic(&tot_timer);

@@ -42,6 +42,8 @@
 // acados
 #include <acados/utils/print.h>
 
+#include <acados/ocp_qp/ocp_qp_full_condensing.h>
+
 // c interface
 #include <acados_c/ocp_qp_interface.h>
 #include <acados_c/options_interface.h>
@@ -129,6 +131,8 @@ int main() {
     {
 		PARTIAL_CONDENSING_HPIPM,
 
+        FULL_CONDENSING_HPIPM,
+
         #ifdef ACADOS_WITH_HPMPC
         PARTIAL_CONDENSING_HPMPC,
         #endif
@@ -136,8 +140,6 @@ int main() {
         #ifdef ACADOS_WITH_QPDUNES
         PARTIAL_CONDENSING_QPDUNES,
         #endif
-
-        FULL_CONDENSING_HPIPM,
 
         #ifdef ACADOS_WITH_QORE
         FULL_CONDENSING_QORE,
@@ -310,12 +312,17 @@ int main() {
 
             }
 
+//			ocp_qp_full_condensing_dims *xcond_dims = qp_dims->xcond_dims;
+//			printf("%d %d\n", xcond_dims->fcond_dims->nv, xcond_dims->fcond_dims->ne);
+//			printf("\nbefore solver create\n");
             ocp_qp_solver *qp_solver = ocp_qp_create(config, qp_dims, opts);
+//			printf("\nafter solver create\n");
+//			exit(1);
 
             int acados_return = 0;
 
-            ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
-            ocp_qp_info min_info;
+            qp_info *info = (qp_info *) qp_out->misc;
+            qp_info min_info;
 
             // print_ocp_qp_in(qp_in);
 
@@ -366,7 +373,7 @@ int main() {
 
             printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
 
-            print_ocp_qp_info(&min_info);
+            print_qp_info(&min_info);
 
             free(qp_solver);
 

@@ -1346,8 +1346,10 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 	mem->time_reg += acados_toc(&timer1);
 
 	// TODO move into QP solver memory ???
-	nlp_out->qp_iter = ((ocp_qp_info *) mem->qp_out->misc)->num_iter;
-	qp_iter = ((ocp_qp_info *) mem->qp_out->misc)->num_iter;
+	qp_info *qp_info_;
+	ocp_qp_out_get(mem->qp_out, "qp_info", &qp_info_);
+	nlp_out->qp_iter = qp_info_->num_iter;
+	qp_iter = qp_info_->num_iter;
 
 	// compute external QP residuals (for debugging)
 	if(opts->ext_qp_res)

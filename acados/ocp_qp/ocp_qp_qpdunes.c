@@ -789,7 +789,7 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     }
 
     acados_timer tot_timer, qp_timer, interface_timer;
-    ocp_qp_info *info = (ocp_qp_info *) out->misc;
+    qp_info *info = (qp_info *) out->misc;
     acados_tic(&tot_timer);
 
     // cast data structures
