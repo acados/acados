@@ -2599,6 +2599,11 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                     blasfeo_unpack_dvec(nz, z0, 0, out->zn);
                 }
             } // if ss == 0;
+            if (ss == num_steps-1)
+            {
+                // store last vv values for next initialization
+                blasfeo_unpack_dvec(n_out, &vv_traj[ss], (num_stages-1) * n_out, mem->phi_guess);
+            }
         }  // end step loop: ss
 
 

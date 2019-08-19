@@ -1167,6 +1167,12 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 impl_ode_in[3] = &impl_ode_z_in;     // 4th input is part of Z[ss]
             }  // end if sens_algebraic
         }  //  end if (ss == 0)
+        if (ss == num_steps-1)
+        {
+            // store last xdot, z values for next initialization
+            blasfeo_unpack_dvec(nx, K, (ns-1) * nx, mem->xdot);
+            blasfeo_unpack_dvec(nz, K, (ns-1) * nz + ns*nx, mem->z);
+        }
     }  // end step loop (ss)
 
     // extract results from forward sweep to output
