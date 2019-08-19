@@ -374,9 +374,9 @@ void *sim_irk_memory_assign(void *config, void *dims_, void *opts_, void *raw_me
 
     // initialization of xdot, z is 0 if not changed
     for (int ii = 0; ii < nx; ii++)
-        mem->xdot[ii] = 0;
+        mem->xdot[ii] = 0.0;
     for (int ii = 0; ii < nz; ii++)
-        mem->z[ii] = 0;
+        mem->z[ii] = 0.0;
 
     return mem;
 }
@@ -412,6 +412,33 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
 
     return status;
 }
+
+
+int sim_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
+{
+    sim_config *config = config_;
+    sim_irk_memory *mem = (sim_irk_memory *) mem_;
+
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "guesses"))
+    {
+        int nx, nz;
+        config->dims_get(config_, dims_, "nz", &nz);
+        config->dims_get(config_, dims_, "nx", &nx);
+        for (int ii=0; ii < nz; ii++)
+            mem->z[ii] = 0.0;
+        for (int ii=0; ii < nx; ii++)
+            mem->xdot[ii] = 0.0;
+    }
+    else
+    {
+        status = ACADOS_FAILURE;
+    }
+
+    return status;
+}
+
 
 /************************************************
  * workspace
@@ -1370,6 +1397,7 @@ void sim_irk_config_initialize_default(void *config_)
     config->memory_calculate_size = &sim_irk_memory_calculate_size;
     config->memory_assign = &sim_irk_memory_assign;
     config->memory_set = &sim_irk_memory_set;
+    config->memory_set_to_zero = &sim_irk_memory_set_to_zero;
     config->workspace_calculate_size = &sim_irk_workspace_calculate_size;
     config->model_calculate_size = &sim_irk_model_calculate_size;
     config->model_assign = &sim_irk_model_assign;

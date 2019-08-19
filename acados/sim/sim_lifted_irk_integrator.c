@@ -428,6 +428,31 @@ int sim_lifted_irk_memory_set(void *config_, void *dims_, void *mem_, const char
 }
 
 
+int sim_lifted_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
+{
+    sim_config *config = config_;
+    sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *) mem_;
+    sim_opts *opts = (sim_opts *) opts_;
+
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "guesses"))
+    {
+        int nx;
+        config->dims_get(config_, dims_, "nx", &nx);
+        for (int i = 0; i < opts->num_steps; i++)
+        {
+            blasfeo_dvecse(nx * opts->ns, 0.0, &mem->K[i], 0);
+        }
+    }
+    else
+    {
+        status = ACADOS_FAILURE;
+    }
+
+    return status;
+}
+
 /************************************************
 * workspace
 ************************************************/
@@ -866,6 +891,7 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     config->memory_calculate_size = &sim_lifted_irk_memory_calculate_size;
     config->memory_assign = &sim_lifted_irk_memory_assign;
     config->memory_set = &sim_lifted_irk_memory_set;
+    config->memory_set_to_zero = &sim_lifted_irk_memory_set_to_zero;
     config->workspace_calculate_size = &sim_lifted_irk_workspace_calculate_size;
     config->model_calculate_size = &sim_lifted_irk_model_calculate_size;
     config->model_assign = &sim_lifted_irk_model_assign;

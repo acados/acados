@@ -453,6 +453,23 @@ int sim_erk_memory_set(void *config_, void *dims_, void *mem_, const char *field
     return status;
 }
 
+int sim_erk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
+{
+    sim_config *config = config_;
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "guesses"))
+    {
+        // no guesses/initialization in ERK
+    }
+    else
+    {
+        status = ACADOS_FAILURE;
+    }
+
+    return status;
+}
+
 
 /************************************************
  * workspace
@@ -917,6 +934,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     return 0;  // success
 }
 
+
 void sim_erk_config_initialize_default(void *config_)
 {
     sim_config *config = config_;
@@ -929,6 +947,7 @@ void sim_erk_config_initialize_default(void *config_)
     config->memory_calculate_size = &sim_erk_memory_calculate_size;
     config->memory_assign = &sim_erk_memory_assign;
     config->memory_set = &sim_erk_memory_set;
+    config->memory_set_to_zero = &sim_erk_memory_set_to_zero;
     config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
     config->model_calculate_size = &sim_erk_model_calculate_size;
     config->model_assign = &sim_erk_model_assign;

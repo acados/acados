@@ -668,12 +668,6 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_unpack_dvec(nu, mem->ux, 0, work->sim_in->u);
     blasfeo_unpack_dvec(nx, mem->ux, nu, work->sim_in->x);
 
-	// pass guess on z to integrator
-    // NOTE(oj): the following line only works properly for IRK;
-    //      in my opinion, the initialization of z, xdot (IRK), phi (GNSF-IRK) should happen within the integrator.
-    // TODO rename {mem,sim_in}->z => z_guess
-    int status = config->sim_solver->memory_set(config->sim_solver, work->sim_in->dims, mem->sim_solver, "z", mem->z);
-
     // initialize seeds
     // TODO fix dims if nx!=nx1 !!!!!!!!!!!!!!!!!
     // set S_forw = [eye(nx), zeros(nx x nu)]
@@ -767,6 +761,10 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, v
     // call integrator
     int status = config->sim_solver->precompute(config->sim_solver, work->sim_in, work->sim_out,
                                    opts->sim_solver, mem->sim_solver, work->sim_solver);
+    
+    config->sim_solver->memory_set_to_zero(config->sim_solver, work->sim_in->dims,
+                                    opts->sim_solver, mem->sim_solver, "guesses");
+
     return status;
 }
 
