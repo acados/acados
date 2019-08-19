@@ -65,9 +65,6 @@ extern "C"
 }
 
 using std::vector;
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
-using Eigen::Map;
 
 sim_solver_t hashitsim(std::string const& inString)
 {

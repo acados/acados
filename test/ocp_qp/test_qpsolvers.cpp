@@ -48,9 +48,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims);
 }
 
 using std::vector;
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
-using Eigen::Map;
 
 
 

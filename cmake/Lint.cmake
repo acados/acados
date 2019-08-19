@@ -50,7 +50,7 @@ string(REPLACE "\n" " " FILES_TO_LINT ${FILES_TO_LINT})
 separate_arguments(FILES_TO_LINT)
 
 set(LINT_COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}
-	${PYTHON_EXECUTABLE} ./cpplint.py --quiet --counting=detailed
+	${PYTHON_EXECUTABLE} ./utils/cpplint.py --quiet --counting=detailed
 	--extensions=c,cpp,h,hpp,i ${FILES_TO_LINT})
 
 add_custom_target(lint ${LINT_COMMAND})
