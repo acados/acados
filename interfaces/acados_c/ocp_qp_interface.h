@@ -98,7 +98,7 @@ typedef struct
 typedef struct
 {
     ocp_qp_xcond_solver_config *config;
-    void *dims;
+    ocp_qp_xcond_solver_dims *dims;
     void *opts;
     void *mem;
     void *work;
@@ -113,12 +113,12 @@ void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
 /// Constructs a qp solver config and Initializes with default values.
 ///
 /// \param plan The qp solver plan struct.
-ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan);
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create(ocp_qp_solver_plan plan);
 
 /// Destructor for config struct, frees memory.
 ///
 /// \param config_ The config object to destroy.
-void ocp_qp_config_free(void *config_);
+void ocp_qp_xcond_solver_config_free(ocp_qp_xcond_solver_config *config);
 
 
 /// Constructs a struct that contains the dimensions for the variables of the qp.
@@ -129,8 +129,13 @@ ocp_qp_dims *ocp_qp_dims_create(int N);
 /// Destructor of the dimensions struct.
 ///
 /// \param dims_ The dimensions struct.
-void ocp_qp_dims_free(void *dims_);
+void ocp_qp_dims_free(void *dims);
 
+
+//
+ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create(ocp_qp_xcond_solver_config *config, int N);
+//
+void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims_);
 
 /// Constructs an input object for the qp.
 ///
@@ -160,12 +165,12 @@ void ocp_qp_out_free(void *out_);
 ///
 /// \param config The configuration struct.
 /// \param dims The dimensions struct.
-void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims);
+void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims);
 
 /// Destructor of the options struct.
 ///
 /// \param opts_ The options struct to destroy.
-void ocp_qp_opts_free(void *opts_);
+void ocp_qp_xcond_solver_opts_free(ocp_qp_xcond_solver_opts *opts);
 
 
 /// TBC Should be private/static?
