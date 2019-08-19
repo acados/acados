@@ -20,12 +20,12 @@ sim_opts    * {{ocp.model_name}}_acados_get_sim_opts();
 sim_solver  * {{ocp.model_name}}_acados_get_sim_solver();
 
 // ** global data **
-sim_config  * {{ocp.model_name}}_sim_config;
-sim_in      * {{ocp.model_name}}_sim_in;
-sim_out     * {{ocp.model_name}}_sim_out; 
-void        * {{ocp.model_name}}_sim_dims;
-sim_opts    * {{ocp.model_name}}_sim_opts;
-sim_solver  * {{ocp.model_name}}_sim_solver; 
+extern sim_config  * {{ocp.model_name}}_sim_config;
+extern sim_in      * {{ocp.model_name}}_sim_in;
+extern sim_out     * {{ocp.model_name}}_sim_out; 
+extern void        * {{ocp.model_name}}_sim_dims;
+extern sim_opts    * {{ocp.model_name}}_sim_opts;
+extern sim_solver  * {{ocp.model_name}}_sim_solver; 
 
 #ifdef __cplusplus
 }
@@ -34,8 +34,10 @@ sim_solver  * {{ocp.model_name}}_sim_solver;
 {% if ocp.solver_config.integrator_type == "ERK" %}
 {% if ocp.dims.np < 1 %}
 extern external_function_casadi * sim_forw_vde_casadi;
+extern external_function_casadi * sim_expl_ode_fun_casadi;
 {% else %}
 extern external_function_param_casadi * sim_forw_vde_casadi;
+extern external_function_param_casadi * sim_expl_ode_fun_casadi;
 {% endif %}
 {% if ocp.solver_config.hessian_approx == "EXACT" %}
 {% if ocp.dims.np < 1 %}
