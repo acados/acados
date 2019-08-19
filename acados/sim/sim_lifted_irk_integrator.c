@@ -417,6 +417,16 @@ void *sim_lifted_irk_memory_assign(void *config, void *dims_, void *opts_, void 
 }
 
 
+int sim_lifted_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
+{
+    sim_config *config = config_;
+    sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *) mem_;
+
+    int status = ACADOS_FAILURE;
+
+    return status;
+}
+
 
 /************************************************
 * workspace
@@ -855,6 +865,7 @@ void sim_lifted_irk_config_initialize_default(void *config_)
     config->opts_set = &sim_lifted_irk_opts_set;
     config->memory_calculate_size = &sim_lifted_irk_memory_calculate_size;
     config->memory_assign = &sim_lifted_irk_memory_assign;
+    config->memory_set = &sim_lifted_irk_memory_set;
     config->workspace_calculate_size = &sim_lifted_irk_workspace_calculate_size;
     config->model_calculate_size = &sim_lifted_irk_model_calculate_size;
     config->model_assign = &sim_lifted_irk_model_assign;

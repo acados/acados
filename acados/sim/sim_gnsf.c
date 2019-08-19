@@ -1159,7 +1159,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
 
 
 /************************************************
- * memory & workspace
+ * memory
  ************************************************/
 
 int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
@@ -1393,6 +1393,33 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
 }
 
 
+int sim_gnsf_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
+{
+    sim_config *config = config_;
+    sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "phi_guess"))
+    {
+        double *phi_guess = value;
+        for (int ii=0; ii < dims->n_out; ii++)
+            mem->phi_guess[ii] = phi_guess[ii];
+    }
+    else
+    {
+        status = ACADOS_FAILURE;
+    }
+
+    return status;
+}
+
+
+
+/************************************************
+ * workspace
+ ************************************************/
 
 int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
 {
@@ -2749,6 +2776,7 @@ void sim_gnsf_config_initialize_default(void *config_)
     // memory & workspace
     config->memory_calculate_size = &sim_gnsf_memory_calculate_size;
     config->memory_assign = &sim_gnsf_memory_assign;
+    config->memory_set = &sim_gnsf_memory_set;
     config->workspace_calculate_size = &sim_gnsf_workspace_calculate_size;
     // model
     config->model_calculate_size = &sim_gnsf_model_calculate_size;

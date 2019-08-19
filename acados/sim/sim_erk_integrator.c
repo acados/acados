@@ -434,11 +434,25 @@ void sim_erk_opts_update(void *config_, void *dims, void *opts_)
  * memory
  ************************************************/
 
-int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_) { return 0; }
+int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_)
+{
+    return 0;
+}
+
+
 void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory)
 {
     return NULL;
 }
+
+int sim_erk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
+{
+    // sim_config *config = config_;
+    int status = ACADOS_FAILURE;
+
+    return status;
+}
+
 
 /************************************************
  * workspace
@@ -914,6 +928,7 @@ void sim_erk_config_initialize_default(void *config_)
     config->opts_set = &sim_erk_opts_set;
     config->memory_calculate_size = &sim_erk_memory_calculate_size;
     config->memory_assign = &sim_erk_memory_assign;
+    config->memory_set = &sim_erk_memory_set;
     config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
     config->model_calculate_size = &sim_erk_model_calculate_size;
     config->model_assign = &sim_erk_model_assign;
