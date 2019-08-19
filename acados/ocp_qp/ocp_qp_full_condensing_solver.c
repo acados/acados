@@ -73,8 +73,8 @@ int ocp_qp_full_condensing_solver_memory_calculate_size(void *config_, ocp_qp_xc
     size += ocp_qp_full_condensing_memory_calculate_size(dims, opts->xcond_opts);
     size += qp_solver->memory_calculate_size(qp_solver, xcond_dims, opts->qp_solver_opts);
 
-    size += dense_qp_in_calculate_size(qp_solver, xcond_dims);
-    size += dense_qp_out_calculate_size(qp_solver, xcond_dims);
+    size += dense_qp_in_calculate_size(xcond_dims);
+    size += dense_qp_out_calculate_size(xcond_dims);
 
     return size;
 }
@@ -111,13 +111,13 @@ void *ocp_qp_full_condensing_solver_memory_assign(void *config_, ocp_qp_xcond_so
 
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    mem->qpd_in = dense_qp_in_assign(qp_solver, xcond_dims, c_ptr);
-    c_ptr += dense_qp_in_calculate_size(qp_solver, xcond_dims);
+    mem->qpd_in = dense_qp_in_assign(xcond_dims, c_ptr);
+    c_ptr += dense_qp_in_calculate_size(xcond_dims);
 
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    mem->qpd_out = dense_qp_out_assign(qp_solver, xcond_dims, c_ptr);
-    c_ptr += dense_qp_out_calculate_size(qp_solver, xcond_dims);
+    mem->qpd_out = dense_qp_out_assign(xcond_dims, c_ptr);
+    c_ptr += dense_qp_out_calculate_size(xcond_dims);
 
     assert((char *) raw_memory + ocp_qp_full_condensing_solver_memory_calculate_size(config_, dims, opts_) == c_ptr);
 

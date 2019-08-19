@@ -98,13 +98,17 @@ void dense_qp_dims_set(void *config_, void *dims_, const char *field, const int*
 
 /* in */
 //
-int dense_qp_in_calculate_size(void *config, dense_qp_dims *dims);
+int dense_qp_in_calculate_size(dense_qp_dims *dims);
 //
-dense_qp_in *dense_qp_in_assign(void *config, dense_qp_dims *dims, void *raw_memory);
+dense_qp_in *dense_qp_in_assign(dense_qp_dims *dims, void *raw_memory);
+
+/* out */
 //
-int dense_qp_out_calculate_size(void *config, dense_qp_dims *dims);
+int dense_qp_out_calculate_size(dense_qp_dims *dims);
 //
-dense_qp_out *dense_qp_out_assign(void *config, dense_qp_dims *dims, void *raw_memory);
+dense_qp_out *dense_qp_out_assign(dense_qp_dims *dims, void *raw_memory);
+
+/* res */
 //
 int dense_qp_res_calculate_size(dense_qp_dims *dims);
 //
@@ -119,6 +123,8 @@ void dense_qp_compute_t(dense_qp_in *qp_in, dense_qp_out *qp_out);
 void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws);
 //
 void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4]);
+
+/* misc */
 //
 void dense_qp_stack_slacks_dims(dense_qp_dims *in, dense_qp_dims *out);
 //

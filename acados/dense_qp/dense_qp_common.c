@@ -121,7 +121,7 @@ void dense_qp_dims_set(void *config_, void *dims_, const char *field, const int*
  * in
  ************************************************/
 
-int dense_qp_in_calculate_size(void *config, dense_qp_dims *dims)
+int dense_qp_in_calculate_size(dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_in);
     size += sizeof(dense_qp_dims);
@@ -129,7 +129,7 @@ int dense_qp_in_calculate_size(void *config, dense_qp_dims *dims)
     return size;
 }
 
-dense_qp_in *dense_qp_in_assign(void *config, dense_qp_dims *dims, void *raw_memory)
+dense_qp_in *dense_qp_in_assign(dense_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -152,7 +152,7 @@ dense_qp_in *dense_qp_in_assign(void *config, dense_qp_dims *dims, void *raw_mem
     qp_in->dim->nsb = dims->nsb;
     qp_in->dim->nsg = dims->nsg;
 
-    assert((char *) raw_memory + dense_qp_in_calculate_size(config, dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_in_calculate_size(dims) == c_ptr);
 
     return qp_in;
 }
@@ -161,7 +161,7 @@ dense_qp_in *dense_qp_in_assign(void *config, dense_qp_dims *dims, void *raw_mem
  * out
  ************************************************/
 
-int dense_qp_out_calculate_size(void *config, dense_qp_dims *dims)
+int dense_qp_out_calculate_size(dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_out);
     size += d_memsize_dense_qp_sol(dims);
@@ -169,7 +169,7 @@ int dense_qp_out_calculate_size(void *config, dense_qp_dims *dims)
     return size;
 }
 
-dense_qp_out *dense_qp_out_assign(void *config, dense_qp_dims *dims, void *raw_memory)
+dense_qp_out *dense_qp_out_assign(dense_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -184,7 +184,7 @@ dense_qp_out *dense_qp_out_assign(void *config, dense_qp_dims *dims, void *raw_m
     qp_out->misc = (void *) c_ptr;
     c_ptr += sizeof(dense_qp_info);
 
-    assert((char *) raw_memory + dense_qp_out_calculate_size(config, dims) == c_ptr);
+    assert((char *) raw_memory + dense_qp_out_calculate_size(dims) == c_ptr);
 
     return qp_out;
 }

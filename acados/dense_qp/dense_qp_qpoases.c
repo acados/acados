@@ -217,7 +217,7 @@ int dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dims *dims, v
     if (ns > 0)
     {
         dense_qp_stack_slacks_dims(dims, &dims_stacked);
-        size += dense_qp_in_calculate_size(config_, &dims_stacked);
+        size += dense_qp_in_calculate_size(&dims_stacked);
     }
 
     if (ng > 0 || ns > 0)  // QProblem
@@ -261,8 +261,8 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     if (ns > 0)
     {
         dense_qp_stack_slacks_dims(dims, &dims_stacked);
-        mem->qp_stacked = dense_qp_in_assign(config_, &dims_stacked, c_ptr);
-        c_ptr += dense_qp_in_calculate_size(config_, &dims_stacked);
+        mem->qp_stacked = dense_qp_in_assign(&dims_stacked, c_ptr);
+        c_ptr += dense_qp_in_calculate_size(&dims_stacked);
     }
     else
     {

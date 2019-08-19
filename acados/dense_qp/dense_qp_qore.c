@@ -185,7 +185,7 @@ int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void
     if (ns > 0)
     {
         dense_qp_stack_slacks_dims(dims, &dims_stacked);
-        size += dense_qp_in_calculate_size(config_, &dims_stacked);
+        size += dense_qp_in_calculate_size(&dims_stacked);
     }
 
     make_int_multiple_of(8, &size);
@@ -225,8 +225,8 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     if (ns > 0)
     {
         dense_qp_stack_slacks_dims(dims, &dims_stacked);
-        mem->qp_stacked = dense_qp_in_assign(config_, &dims_stacked, c_ptr);
-        c_ptr += dense_qp_in_calculate_size(config_, &dims_stacked);
+        mem->qp_stacked = dense_qp_in_assign(&dims_stacked, c_ptr);
+        c_ptr += dense_qp_in_calculate_size(&dims_stacked);
     }
     else
     {
