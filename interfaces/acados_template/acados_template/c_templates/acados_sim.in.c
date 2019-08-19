@@ -63,7 +63,7 @@
 #define NP   NP_
 #endif
 
-int {{ ocp.model_name}}_sim_create() {
+int {{ ocp.model_name}}_acados_sim_create() {
 
 	// initialize
 
@@ -150,67 +150,70 @@ int {{ ocp.model_name}}_sim_create() {
     // sim solver
 
     {{ ocp.model_name }}_sim_solver = sim_create({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_opts);
-
+    
+    // initialize state and input to zero
+    // x
+    for (ii = 0; ii < NX; ii++)
+        {{ ocp.model_name }}_sim_in->x[ii] = 0.0;
+    
+    // u
+    for (ii = 0; ii < NU; ii++)
+        {{ ocp.model_name }}_sim_in->u[ii] = 0.0;
     int status = 0;
 
     return status;
 }
 
-int acados_solve() {
+int {{ ocp.model_name }}_acados_sim_solve() {
 
-    // solve NLP 
-    int solver_status = ocp_nlp_solve(nlp_solver, nlp_in, nlp_out);
+    // integrate dynamics using acados sim_solver 
+    int status = sim_solve({{ ocp.model_name }}_sim_solver, {{ ocp.model_name }}_sim_in, {{ ocp.model_name }}_sim_out);
+    if (status != 0)
+        printf("error in {{ ocp.model_name }}_acados_sim_solve()! Exiting.\n");
 
-    return solver_status;
+    return status;
 }
 
-int acados_free() {
+int {{ ocp.model_name }}_acados_sim_free() {
 
     // free memory
-    ocp_nlp_opts_destroy(nlp_opts);
-    ocp_nlp_in_destroy(nlp_in);
-    ocp_nlp_out_destroy(nlp_out);
-    ocp_nlp_solver_destroy(nlp_solver);
-    ocp_nlp_dims_destroy(nlp_dims);
-    ocp_nlp_config_destroy(nlp_config);
-    ocp_nlp_plan_destroy(nlp_solver_plan);
+    sim_solver_destroy({{ ocp.model_name }}_sim_solver);
+    sim_in_destroy({{ ocp.model_name }}_sim_in);
+    sim_out_destroy({{ ocp.model_name }}_sim_out);
+    sim_opts_destroy({{ ocp.model_name }}_sim_opts);
+    sim_dims_destroy({{ ocp.model_name }}_sim_dims);
+    sim_config_destroy({{ ocp.model_name }}_sim_config);
 
     // free external function 
     {% if ocp.solver_config.integrator_type == "IRK" %}
     for(int i = 0; i < {{ocp.dims.N}}; i++) {
         {% if ocp.dims.np < 1 %}
-        external_function_casadi_free(&impl_dae_fun[i]);
-        external_function_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
-        external_function_casadi_free(&impl_dae_jac_x_xdot_u_z[i]);
+        external_function_casadi_free(&sim_impl_dae_fun[i]);
+        external_function_casadi_free(&sim_impl_dae_fun_jac_x_xdot_z[i]);
+        external_function_casadi_free(&sim_impl_dae_jac_x_xdot_u_z[i]);
         {% else %}
-        external_function_param_casadi_free(&impl_dae_fun[i]);
-        external_function_param_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
-        external_function_param_casadi_free(&impl_dae_jac_x_xdot_u_z[i]);
+        external_function_param_casadi_free(&sim_impl_dae_fun[i]);
+        external_function_param_casadi_free(&sim_impl_dae_fun_jac_x_xdot_z[i]);
+        external_function_param_casadi_free(&sim_impl_dae_jac_x_xdot_u_z[i]);
         {% endif %}
     }
     {% else %}
     for(int i = 0; i < {{ocp.dims.N}}; i++) {
         {% if ocp.dims.np < 1 %}
-        external_function_casadi_free(&forw_vde_casadi[i]);
+        external_function_casadi_free(&sim_forw_vde_casadi[i]);
         {% else %}
-        external_function_param_casadi_free(&forw_vde_casadi[i]);
+        external_function_param_casadi_free(&sim_forw_vde_casadi[i]);
         {% endif %}
-    {% if ocp.solver_config.hessian_approx == "EXACT" %}
-        {% if ocp.dims.np < 1 %}
-        external_function_casadi_free(&hess_vde_casadi[i]);
-        {% else %}
-        external_function_param_casadi_free(&hess_vde_casadi[i]);
-        {% endif %}
-    {% endif %}
     }
     {% endif %}
     
     return 0;
 }
 
-ocp_nlp_in * acados_get_nlp_in() { return  nlp_in; }
-ocp_nlp_out * acados_get_nlp_out() { return  nlp_out; }
-ocp_nlp_solver * acados_get_nlp_solver() { return  nlp_solver; }
-ocp_nlp_config * acados_get_nlp_config() { return  nlp_config; }
-void * acados_get_nlp_opts() { return  nlp_opts; }
-ocp_nlp_dims * acados_get_nlp_dims() { return  nlp_dims; }
+sim_config  * {{ocp.model_name}}_acados_get_sim_config() {  return {{ocp.model_name}}_sim__config()};
+sim_in      * {{ocp.model_name}}_acados_get_sim_in(){       return {{ocp.model_name}}_sim__in()};
+sim_out     * {{ocp.model_name}}_acados_get_sim_out(){      return {{ocp.model_name}}_sim__out()};
+void        * {{ocp.model_name}}_acados_get_sim_dims(){     return {{ocp.model_name}}_sim__dims()};
+sim_opts    * {{ocp.model_name}}_acados_get_sim_opts{       return {{ocp.model_name}}_sim__opts};
+sim_solver  * {{ocp.model_name}}_acados_get_sim_solver(){   return {{ocp.model_name}}_sim__solver()};
+
