@@ -415,7 +415,6 @@ int main() {
     // no condensing or partial condensing HPIPM
     ocp_qp_partial_condensing_solver_config_initialize_default(config->qp_solver);
     ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
-    ocp_qp_partial_condensing_config_initialize_default(config->qp_solver->xcond);
 #endif
 
 
@@ -729,13 +728,6 @@ int main() {
 
     ocp_nlp_sqp_opts_initialize_default(config, dims, nlp_opts);
 
-#if XCOND==1
-    // partial condensing
-    ocp_qp_xcond_solver_opts *xcond_solver_opts = nlp_opts->qp_solver_opts;
-	ocp_qp_partial_condensing_opts *pcond_opts = xcond_solver_opts->xcond_opts;
-    pcond_opts->N2 = 5; // set partial condensing horizon
-#endif
-
     for (int i = 0; i < N; ++i)
     {
         // dynamics: discrete model
@@ -748,12 +740,17 @@ int main() {
     double tol_eq   = 1e-9;
     double tol_ineq = 1e-9;
     double tol_comp = 1e-9;
+	int N2 = 5;
 
     ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
     ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
     ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
     ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
     ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+#if XCOND==1
+    // partial condensing
+    ocp_nlp_opts_set(config, nlp_opts, "qp_cond_N", &N2);
+#endif
 
     // update after user-defined options
     ocp_nlp_sqp_opts_update(config, dims, nlp_opts);
