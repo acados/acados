@@ -99,6 +99,10 @@ solver:
 	gcc $(ACADOS_FLAGS) -c acados_solver_{{ ocp.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
+sim_solver:
+	gcc $(ACADOS_FLAGS) -c acados_sim_solver_{{ ocp.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
+	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
+
 example:
 	gcc $(ACADOS_FLAGS) -o main_{{ ocp.model_name}} $(OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH)/acados \
@@ -112,7 +116,7 @@ example:
 	-I $(INCLUDE_PATH)/acados/ \
 	-I $(INCLUDE_PATH)/qpOASES_e/
 
-shared_lib: casadi_fun solver
+shared_lib: casadi_fun solver sim_solver
 	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ ocp.model_name }}.so $(OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-L $(LIB_PATH)/external/blasfeo \

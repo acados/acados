@@ -16,7 +16,7 @@ sim_config  * {{ocp.model_name}}_acados_get_sim_config();
 sim_in      * {{ocp.model_name}}_acados_get_sim_in();
 sim_out     * {{ocp.model_name}}_acados_get_sim_out();
 void        * {{ocp.model_name}}_acados_get_sim_dims();
-sim_opts    * {{ocp.model_name}}_acados_get_sim_opts;
+sim_opts    * {{ocp.model_name}}_acados_get_sim_opts();
 sim_solver  * {{ocp.model_name}}_acados_get_sim_solver();
 
 // ** global data **
