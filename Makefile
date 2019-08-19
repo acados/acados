@@ -259,9 +259,16 @@ examples_c: static_library
 run_examples_c: examples_c
 	( cd examples/c; $(MAKE) run_examples )
 
+unit_tests: static_library
+	( cd test; $(MAKE) unit_tests TOP=$(TOP) )
+
+run_unit_tests: unit_tests
+	( cd test; $(MAKE) run_unit_tests )
+
 clean:
 	( cd acados; $(MAKE) clean )
 	( cd examples/c; $(MAKE) clean )
+	( cd test; $(MAKE) clean )
 	( cd interfaces/acados_c; $(MAKE) clean )
 
 blasfeo_clean:

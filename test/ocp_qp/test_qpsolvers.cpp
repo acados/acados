@@ -37,13 +37,13 @@
 #include <vector>
 
 #include "catch/include/catch.hpp"
-#include "test/test_utils/eigen.h"
+//#include "test/test_utils/eigen.h"
 
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/options_interface.h"
 
 extern "C" {
-ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_config config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
+ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_config *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
 ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims);
 }
 
@@ -200,15 +200,15 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
             tol = solver_tolerance(solver);
 
-            config = ocp_qp_config_create(plan);
+            config = ocp_qp_xcond_solver_config_create(plan);
 
 			qp_dims = create_ocp_qp_dims_mass_spring(config, N, nx_, nu_, nb_, ng_, ngN);
 
-			qp_in = create_ocp_qp_in_mass_spring(qp_dims);
+			qp_in = create_ocp_qp_in_mass_spring(qp_dims->orig_dims);
 
-			qp_out = ocp_qp_out_create(qp_dims);
+			qp_out = ocp_qp_out_create(qp_dims->orig_dims);
 
-            opts = ocp_qp_opts_create(config, qp_dims);
+            opts = ocp_qp_xcond_solver_opts_create(config, qp_dims);
 
             if (sparse_solver)
             {
@@ -245,7 +245,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
                     REQUIRE(acados_return == 0);
 
-                    ocp_qp_inf_norm_residuals(qp_dims, qp_in, qp_out, res);
+                    ocp_qp_inf_norm_residuals(qp_dims->orig_dims, qp_in, qp_out, res);
 
                     max_res = 0.0;
                     for (int ii = 0; ii < 4; ii++)
