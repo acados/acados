@@ -160,6 +160,46 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         os.chdir('..')
 
     if USE_TERA == 0:
+        # render source template
+        template = env.get_template('acados_sim_solver.in.c')
+        output = template.render(ocp=acados_ocp)
+        # output file
+        out_file = open('./c_generated_code/acados_sim_solver_' + model.name + '.c', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code')
+        # render source template
+        template_file = 'acados_sim_solver.in.c'
+        out_file = 'acados_sim_solver_' + model.name + '.c'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
+
+        os.system(os_cmd)
+        os.chdir('..')
+
+    if USE_TERA == 0:
+        # render source template
+        template = env.get_template('acados_sim_solver.in.h')
+        output = template.render(ocp=acados_ocp)
+        # output file
+        out_file = open('./c_generated_code/acados_sim_solver_' + model.name + '.h', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code')
+        # render source template
+        template_file = 'acados_solver.in.h'
+        out_file = 'acados_solver_' + model.name + '.h'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
+
+        os.system(os_cmd)
+        os.chdir('..')
+
+    if USE_TERA == 0:
         # render header templates
         template = env.get_template('model.in.h')
         output = template.render(ocp=acados_ocp)
