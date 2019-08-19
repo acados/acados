@@ -126,7 +126,7 @@ int main() {
     {% endfor %}
     
     // seeds forw
-    for (int ii = 0; ii < {{ocp.dims.nx}} * {{ocp.dims.nx}} + {{ocp.dims.nu}}; ii++)
+    for (int ii = 0; ii < {{ocp.dims.nx}} * ({{ocp.dims.nx}} + {{ocp.dims.nu}}); ii++)
         {{ ocp.model_name }}_sim_in->S_forw[ii] = 0.0;
     for (int ii = 0; ii < {{ocp.dims.nx}}; ii++)
         {{ ocp.model_name }}_sim_in->S_forw[ii * ({{ocp.dims.nx}} + 1)] = 1.0;
