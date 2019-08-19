@@ -314,8 +314,8 @@ int ocp_qp_partial_condensing_solver_memory_calculate_size(void *config_, ocp_qp
 
 //    if (opts->xcond_opts->N2 < dims->N)
 //    {
-        size += ocp_qp_in_calculate_size(qp_solver, xcond_qp_dims);
-        size += ocp_qp_out_calculate_size(qp_solver, xcond_qp_dims);
+        size += ocp_qp_in_calculate_size(xcond_qp_dims);
+        size += ocp_qp_out_calculate_size(xcond_qp_dims);
 //    }
 
     return size;
@@ -374,8 +374,8 @@ void *ocp_qp_partial_condensing_solver_memory_assign(void *config_, ocp_qp_xcond
 
 //    if (opts->xcond_opts->N2 < dims->N)
 //    {
-        mem->pcond_qp_in = ocp_qp_in_assign(qp_solver, xcond_qp_dims, c_ptr);
-        c_ptr += ocp_qp_in_calculate_size(qp_solver, xcond_qp_dims);
+        mem->pcond_qp_in = ocp_qp_in_assign(xcond_qp_dims, c_ptr);
+        c_ptr += ocp_qp_in_calculate_size(xcond_qp_dims);
 //    }
 //    else
 //    {
@@ -384,8 +384,8 @@ void *ocp_qp_partial_condensing_solver_memory_assign(void *config_, ocp_qp_xcond
 
 //    if (opts->xcond_opts->N2 < dims->N)
 //    {
-        mem->pcond_qp_out = ocp_qp_out_assign(qp_solver, xcond_qp_dims, c_ptr);
-        c_ptr += ocp_qp_out_calculate_size(qp_solver, xcond_qp_dims);
+        mem->pcond_qp_out = ocp_qp_out_assign(xcond_qp_dims, c_ptr);
+        c_ptr += ocp_qp_out_calculate_size(xcond_qp_dims);
 //    }
 //    else
 //    {

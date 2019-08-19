@@ -49,11 +49,11 @@
 // mass spring helper functions
 // hard constraints
 ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_config *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
-ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims);
+ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims);
 // soft constraints
 // TODO
 ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
-ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *dims);
+ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims);
 
 #ifndef ACADOS_WITH_QPDUNES
 #define ELIMINATE_X0
@@ -181,13 +181,14 @@ int main() {
 
 		// qp in
 #ifdef SOFT_CONSTRAINTS
-		ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring_soft_constr(NULL, qp_dims->orig_dims);
+		// TODO
+		ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring_soft_constr(qp_dims->orig_dims);
 #else
-		ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(NULL, qp_dims->orig_dims);
+		ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(qp_dims->orig_dims);
 #endif
 
 		// qp out
-		ocp_qp_out *qp_out = ocp_qp_out_create(NULL, qp_dims->orig_dims);
+		ocp_qp_out *qp_out = ocp_qp_out_create(qp_dims->orig_dims);
 
 
         ocp_qp_xcond_solver_opts *opts = ocp_qp_xcond_solver_opts_create(config, qp_dims);

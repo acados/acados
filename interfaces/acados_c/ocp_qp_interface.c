@@ -208,13 +208,13 @@ void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims)
 
 /* in */
 
-ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
+ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims)
 {
-    int bytes = ocp_qp_in_calculate_size(config, dims);
+    int bytes = ocp_qp_in_calculate_size(dims);
 
     void *ptr = calloc(1, bytes);
 
-    ocp_qp_in *in = ocp_qp_in_assign(config, dims, ptr);
+    ocp_qp_in *in = ocp_qp_in_assign(dims, ptr);
 
     return in;
 }
@@ -230,13 +230,13 @@ void ocp_qp_in_free(void *in_)
 
 /* out */
 
-ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
+ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims)
 {
-    int bytes = ocp_qp_out_calculate_size(config, dims);
+    int bytes = ocp_qp_out_calculate_size(dims);
 
     void *ptr = calloc(1, bytes);
 
-    ocp_qp_out *out = ocp_qp_out_assign(config, dims, ptr);
+    ocp_qp_out *out = ocp_qp_out_assign(dims, ptr);
 
     return out;
 }

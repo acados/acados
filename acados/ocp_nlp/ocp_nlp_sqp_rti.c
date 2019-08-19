@@ -420,10 +420,10 @@ int ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts
     size += sizeof(ocp_nlp_sqp_rti_memory);
 
     // qp in
-    size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver->orig_dims);
+    size += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
 
     // qp out
-    size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver->orig_dims);
+    size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
 
 	// qp solver
     size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
@@ -515,12 +515,12 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, voi
     c_ptr += sizeof(ocp_nlp_sqp_rti_memory);
 
     // qp in
-    mem->qp_in = ocp_qp_in_assign(qp_solver, dims->qp_solver->orig_dims, c_ptr);
-    c_ptr += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver->orig_dims);
+    mem->qp_in = ocp_qp_in_assign(dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
 
     // qp out
-    mem->qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver->orig_dims, c_ptr);
-    c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver->orig_dims);
+    mem->qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
 
     // QP solver
     mem->qp_solver_mem =
@@ -641,10 +641,10 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
     size += sizeof(ocp_nlp_sqp_rti_work);
 
     // qp in
-    size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver->orig_dims);
+    size += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
 
     // qp out
-    size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver->orig_dims);
+    size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
 
     // array of pointers
     // cost
@@ -787,12 +787,12 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
     c_ptr += sizeof(ocp_nlp_sqp_rti_work);
 
     // qp in
-    work->tmp_qp_in = ocp_qp_in_assign(qp_solver, dims->qp_solver->orig_dims, c_ptr);
-    c_ptr += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver->orig_dims);
+    work->tmp_qp_in = ocp_qp_in_assign(dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
 
     // qp out
-    work->tmp_qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver->orig_dims, c_ptr);
-    c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver->orig_dims);
+    work->tmp_qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
 
     // array of pointers
     //

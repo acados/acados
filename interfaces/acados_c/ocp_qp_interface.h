@@ -141,7 +141,7 @@ void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims_);
 ///
 /// \param config The configuration struct.
 /// \param dims The dimensions struct.
-ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
+ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims);
 
 /// Destructor of the inputs struct.
 ///
@@ -153,7 +153,7 @@ void ocp_qp_in_free(void *in_);
 ///
 /// \param config The configuration struct.
 /// \param dims The dimensions struct.
-ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
+ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims);
 
 /// Destructor of the outputs struct.
 ///

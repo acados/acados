@@ -43,14 +43,16 @@
 #include "acados_c/options_interface.h"
 
 extern "C" {
-ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
-ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims);
+ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_config config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
+ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims);
 }
 
 using std::vector;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Map;
+
+
 
 ocp_qp_solver_t hashit(std::string const &inString)
 {
@@ -78,12 +80,13 @@ ocp_qp_solver_t hashit(std::string const &inString)
     return (ocp_qp_solver_t) -1;
 }
 
+
+
 double solver_tolerance(std::string const &inString)
 {
     if (inString == "SPARSE_HPIPM") return 1e-8;
     if (inString == "SPARSE_HPMPC") return 1e-5;
     if (inString == "SPARSE_QPDUNES") return 1e-8;
-
     if (inString == "DENSE_HPIPM") return 1e-8;
     if (inString == "DENSE_QPOASES") return 1e-10;
     if (inString == "DENSE_QORE") return 1e-10;
@@ -94,50 +97,31 @@ double solver_tolerance(std::string const &inString)
     return -1;
 }
 
-void set_N2(std::string const &inString, void *opts, int N2, int N)
+
+
+void set_N2(std::string const &inString, ocp_qp_xcond_solver_config *config, void *opts, int N2, int N)
 {
     bool option_found = false;
 
-    if (inString == "SPARSE_HPIPM")
+    if ( inString=="SPARSE_HPIPM" | inString=="SPARSE_HPMPC" | inString == "SPARSE_OOQP" | inString == "SPARSE_OSQP" )
     {
-        option_found = set_option_int(opts, "sparse_hpipm.cond_N", N2);
-        REQUIRE(option_found == true);
-    }
-
-    if (inString == "SPARSE_HPMPC")
-    {
-        option_found = set_option_int(opts, "hpmpc.cond_N", N2);
-        REQUIRE(option_found == true);
+		config->opts_set(config, opts, "cond_N", &N2);
     }
 
     if (inString == "SPARSE_QPDUNES")
     {
-        option_found = set_option_int(opts, "qpdunes.cond_N", N2);
-        REQUIRE(option_found == true);
+		config->opts_set(config, opts, "cond_N", &N2);
+		int clipping = 0;
         if (N2 == N)
         {
-            option_found = set_option_int(opts, "qpdunes.clipping", 1);
-            REQUIRE(option_found == true);
+			clipping = 1;
         }
-        else
-        {
-            option_found = set_option_int(opts, "qpdunes.clipping", 0);
-            REQUIRE(option_found == true);
-        }
+		config->opts_set(config, opts, "clipping", &clipping);
     }
 
-    if (inString == "SPARSE_OOQP")
-    {
-        option_found = set_option_int(opts, "sparse_ooqp.cond_N", N2);
-        REQUIRE(option_found == true);
-    }
-
-    if (inString == "SPARSE_OSQP")
-    {
-        option_found = set_option_int(opts, "sparse_osqp.cond_N", N2);
-        REQUIRE(option_found == true);
-    }
 }
+
+
 
 TEST_CASE("mass spring example", "[QP solvers]")
 {
@@ -183,11 +167,11 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
     double N2_values[] = {15, 5, 3};  // horizon of partially condensed QP for sparse solvers
 
-    ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring(N, nx_, nu_, nb_, ng_, ngN);
+    ocp_qp_xcond_solver_dims *qp_dims;
 
-    ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(NULL, qp_dims);
+    ocp_qp_in *qp_in;
 
-    ocp_qp_out *qp_out = ocp_qp_out_create(NULL, qp_dims);
+    ocp_qp_out *qp_out;
 
     ocp_qp_solver_plan plan;
 
@@ -221,6 +205,12 @@ TEST_CASE("mass spring example", "[QP solvers]")
 
             config = ocp_qp_config_create(plan);
 
+			qp_dims = create_ocp_qp_dims_mass_spring(config, N, nx_, nu_, nb_, ng_, ngN);
+
+			qp_in = create_ocp_qp_in_mass_spring(qp_dims);
+
+			qp_out = ocp_qp_out_create(qp_dims);
+
             opts = ocp_qp_opts_create(config, qp_dims);
 
             if (sparse_solver)
@@ -240,7 +230,7 @@ TEST_CASE("mass spring example", "[QP solvers]")
             {
                 SECTION("N2 = " + std::to_string((int)N2_values[ii]))
                 {
-                    set_N2(solver, opts, N2_values[ii], N);
+                    set_N2(solver, config, opts, N2_values[ii], N);
 
                     qp_solver = ocp_qp_create(config, qp_dims, opts);
 
@@ -275,15 +265,15 @@ TEST_CASE("mass spring example", "[QP solvers]")
                 }
             }
 
+			free(qp_out);
+			free(qp_in);
+			free(qp_dims);
+
             free(opts);
             free(config);
 
         }  // END_FOR_N2
 
     }  // END_FOR_SOLVERS
-
-    free(qp_out);
-    free(qp_in);
-    free(qp_dims);
 
 }  // END_TEST_CASE

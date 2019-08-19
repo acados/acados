@@ -134,13 +134,19 @@ void ocp_qp_dims_set(void *config_, void *dims, int stage, const char *field, in
 
 /* in */
 //
-int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims);
+int ocp_qp_in_calculate_size(ocp_qp_dims *dims);
 //
-ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
+ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory);
+
+
+/* out */
 //
-int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims);
+int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
-ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
+ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory);
+
+
+/* res */
 //
 int ocp_qp_res_calculate_size(ocp_qp_dims *dims);
 //
@@ -153,6 +159,9 @@ ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory);
 void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws);
 //
 void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4]);
+
+
+/* misc */
 //
 void ocp_qp_stack_slacks_dims(ocp_qp_dims *in, ocp_qp_dims *out);
 //

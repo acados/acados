@@ -129,8 +129,6 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
     d_ocp_qp_dim_create(N, dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
 
-    dims->N = N;
-
     assert((char *) raw_memory + ocp_qp_dims_calculate_size(N) == c_ptr);
 
     return dims;
@@ -153,7 +151,7 @@ void ocp_qp_dims_set(void *config_, void *dims, int stage, const char *field, in
  * in
  ************************************************/
 
-int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims)
+int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_in);
     size += d_ocp_qp_memsize(dims);
@@ -163,7 +161,7 @@ int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims)
 
 
 
-ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
+ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -176,25 +174,11 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
 
-    dims_copy->N = dims->N;
-
-    for (int ii = 0; ii < dims->N + 1; ii++)
-    {
-        dims_copy->nx[ii] = dims->nx[ii];
-        dims_copy->nu[ii] = dims->nu[ii];
-        dims_copy->nb[ii] = dims->nb[ii];
-        dims_copy->ng[ii] = dims->ng[ii];
-        dims_copy->ns[ii] = dims->ns[ii];
-        dims_copy->nbu[ii] = dims->nbu[ii];
-        dims_copy->nbx[ii] = dims->nbx[ii];
-        dims_copy->nsbu[ii] = dims->nsbu[ii];
-        dims_copy->nsbx[ii] = dims->nsbx[ii];
-        dims_copy->nsg[ii] = dims->nsg[ii];
-    }
+	d_ocp_qp_dim_copy_all(dims, dims_copy);
 
     qp_in->dim = dims_copy;
 
-    assert((char *) raw_memory + ocp_qp_in_calculate_size(config, dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);
 
     return qp_in;
 }
@@ -205,7 +189,7 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
  * out
  ************************************************/
 
-int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims)
+int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_out);
     size += d_ocp_qp_sol_memsize(dims);
@@ -216,7 +200,7 @@ int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims)
 
 
 
-ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
+ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -232,25 +216,11 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
 
-    dims_copy->N = dims->N;
-
-    for (int ii = 0; ii < dims->N + 1; ii++)
-    {
-        dims_copy->nx[ii] = dims->nx[ii];
-        dims_copy->nu[ii] = dims->nu[ii];
-        dims_copy->nb[ii] = dims->nb[ii];
-        dims_copy->ng[ii] = dims->ng[ii];
-        dims_copy->ns[ii] = dims->ns[ii];
-        dims_copy->nsbx[ii] = dims->nsbx[ii];
-        dims_copy->nsbu[ii] = dims->nsbu[ii];
-        dims_copy->nsg[ii] = dims->nsg[ii];
-        dims_copy->nbu[ii] = dims->nbu[ii];
-        dims_copy->nbx[ii] = dims->nbx[ii];
-    }
+	d_ocp_qp_dim_copy_all(dims, dims_copy);
 
     qp_out->dim = dims_copy;
 
-    assert((char *) raw_memory + ocp_qp_out_calculate_size(config, dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
 
     return qp_out;
 }
@@ -260,8 +230,6 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 /************************************************
  * res
  ************************************************/
-
-// TODO(all): add config !!!
 
 int ocp_qp_res_calculate_size(ocp_qp_dims *dims)
 {
