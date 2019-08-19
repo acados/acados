@@ -303,7 +303,7 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
 	}
 
 	// pass options to QP module
-	if(!strcmp(ptr_module, "qp"))
+	if( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
 	{
 		config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field+module_length+1, value);
 

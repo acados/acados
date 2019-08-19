@@ -262,7 +262,7 @@ void ocp_qp_xcond_solver_opts_set(void *config_, void *opts_, const char *field,
 		ptr_module = module;
 	}
 
-	if(!strcmp(ptr_module, "cond")) // pass options to condensing module
+	if( ptr_module!=NULL && (!strcmp(ptr_module, "cond")) ) // pass options to condensing module // TODO rename xcond ???
 	{
 		xcond->opts_set(opts->xcond_opts, field+module_length+1, value);
 	}
