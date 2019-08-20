@@ -46,9 +46,9 @@ end
 compile_mex = 'true';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
-%method = 'erk';
-%method = 'irk';
-method = 'irk_gnsf';
+method = 'erk';
+% method = 'irk';
+% method = 'irk_gnsf';
 sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
@@ -76,9 +76,6 @@ end
 if isfield(model, 'sym_p')
     sim_model.set('sym_p', model.sym_p);
 end
-sim_model.set('dim_nx', model.nx);
-sim_model.set('dim_nu', model.nu);
-
 
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
@@ -90,7 +87,6 @@ else % irk irk_gnsf
 %	if isfield(model, 'sym_z')
 %		sim_model.set('sym_z', model.sym_z);
 %	end
-%	sim_model.set('nz', model.nz);
 end
 
 

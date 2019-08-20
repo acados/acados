@@ -75,9 +75,6 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     if isfield(model, 'sym_p')
         sim_model.set('sym_p', model.sym_p);
     end
-    sim_model.set('dim_nx', model.nx);
-    sim_model.set('dim_nu', model.nu);
-
 
     if (strcmp(method, 'erk'))
         sim_model.set('dyn_type', 'explicit');

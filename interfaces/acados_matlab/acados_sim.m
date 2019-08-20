@@ -46,6 +46,7 @@ classdef acados_sim < handle
 
 
 		function obj = acados_sim(model, opts)
+			model.model_struct = acados_sim_detect_dims( model.model_struct );
 			obj.model_struct = model.model_struct;
 			obj.opts_struct = opts.opts_struct;
 
