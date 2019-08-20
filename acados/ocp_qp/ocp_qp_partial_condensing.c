@@ -438,6 +438,28 @@ int ocp_qp_partial_condensing(void *qp_in_, void *pcond_qp_in_, void *opts_, voi
 
 
 
+int ocp_qp_partial_condensing_rhs(void *qp_in_, void *pcond_qp_in_, void *opts_, void *mem_, void *work)
+{
+	ocp_qp_in *qp_in = qp_in_;
+	ocp_qp_in *pcond_qp_in = pcond_qp_in_;
+	ocp_qp_partial_condensing_opts *opts = opts_;
+	ocp_qp_partial_condensing_memory *mem = mem_;
+
+    assert(opts->N2 == opts->N2_bkp);
+
+    // save pointers to ocp_qp_in in memory (needed for expansion)
+    mem->ptr_qp_in = qp_in;
+    mem->ptr_pcond_qp_in = pcond_qp_in;
+
+    // convert to partially condensed qp structure
+	// TODO only if N2<N
+    d_part_cond_qp_cond_rhs(qp_in, pcond_qp_in, opts->hpipm_opts, mem->hpipm_workspace);
+
+	return ACADOS_SUCCESS;
+}
+
+
+
 int ocp_qp_partial_expansion(void *pcond_qp_out_, void *qp_out_, void *opts_, void *mem_, void *work)
 {
 	ocp_qp_out *pcond_qp_out = pcond_qp_out_;
@@ -473,6 +495,7 @@ void ocp_qp_partial_condensing_config_initialize_default(void *config_)
     config->memory_get = &ocp_qp_partial_condensing_memory_get;
     config->workspace_calculate_size = &ocp_qp_partial_condensing_workspace_calculate_size;
     config->condensing = &ocp_qp_partial_condensing;
+    config->condensing_rhs = &ocp_qp_partial_condensing_rhs;
     config->expansion = &ocp_qp_partial_expansion;
 
     return;

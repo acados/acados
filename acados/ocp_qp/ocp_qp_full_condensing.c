@@ -387,36 +387,26 @@ int ocp_qp_full_condensing_workspace_calculate_size(void *dims_, void *opts_)
  * functions
  ************************************************/
 
-int ocp_qp_full_condensing(void *in_, void *out_, void *opts_, void *mem_, void *work_)
+int ocp_qp_full_condensing(void *qp_in_, void *fcond_qp_in_, void *opts_, void *mem_, void *work_)
 {
-	ocp_qp_in *in = in_;
-	dense_qp_in *out = out_;
+	ocp_qp_in *qp_in = qp_in_;
+	dense_qp_in *fcond_qp_in = fcond_qp_in_;
 	ocp_qp_full_condensing_opts *opts = opts_;
 	ocp_qp_full_condensing_memory *mem = mem_;
 
     // save pointer to ocp_qp_in in memory (needed for expansion)
-    mem->qp_in = in;
+    mem->ptr_qp_in = qp_in;
 
     // convert to dense qp structure
     if (opts->cond_hess == 0)
     {
         // condense gradient only
-        d_cond_qp_cond_rhs(in, out, opts->hpipm_opts, mem->hpipm_workspace);
+        d_cond_qp_cond_rhs(qp_in, fcond_qp_in, opts->hpipm_opts, mem->hpipm_workspace);
     }
     else
     {
         // condense gradient and Hessian
-        d_cond_qp_cond(in, out, opts->hpipm_opts, mem->hpipm_workspace);
-
-        // ++ for debugging ++
-        //
-        // printf("gradient with full condensing:\n\n");
-        // blasfeo_print_dvec(out->g->m, out->g, 0);
-
-        // d_cond_rhs_qp_ocp2dense(in, out, mem->hpipm_workspace);
-
-        // printf("gradient with gradient-only condensing:\n\n");
-        // blasfeo_print_dvec(out->g->m, out->g, 0);
+        d_cond_qp_cond(qp_in, fcond_qp_in, opts->hpipm_opts, mem->hpipm_workspace);
     }
 
 	return ACADOS_SUCCESS;
@@ -424,20 +414,38 @@ int ocp_qp_full_condensing(void *in_, void *out_, void *opts_, void *mem_, void 
 
 
 
-int ocp_qp_full_expansion(void *in_, void *out_, void *opts_, void *mem_, void *work)
+int ocp_qp_full_condensing_rhs(void *qp_in_, void *fcond_qp_in_, void *opts_, void *mem_, void *work_)
 {
-	dense_qp_out *in = in_;
-	ocp_qp_out *out = out_;
+	ocp_qp_in *qp_in = qp_in_;
+	dense_qp_in *fcond_qp_in = fcond_qp_in_;
+	ocp_qp_full_condensing_opts *opts = opts_;
+	ocp_qp_full_condensing_memory *mem = mem_;
+
+    // save pointer to ocp_qp_in in memory (needed for expansion)
+    mem->ptr_qp_in = qp_in;
+
+	// condense gradient only
+	d_cond_qp_cond_rhs(qp_in, fcond_qp_in, opts->hpipm_opts, mem->hpipm_workspace);
+
+	return ACADOS_SUCCESS;
+}
+
+
+
+int ocp_qp_full_expansion(void *fcond_qp_out_, void *qp_out_, void *opts_, void *mem_, void *work)
+{
+	dense_qp_out *fcond_qp_out = fcond_qp_out_;
+	ocp_qp_out *qp_out = qp_out_;
 	ocp_qp_full_condensing_opts *opts = opts_;
 	ocp_qp_full_condensing_memory *mem = mem_;
 
     if (opts->expand_dual_sol == 0)
     {
-        d_cond_qp_expand_primal_sol(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
+        d_cond_qp_expand_primal_sol(mem->ptr_qp_in, fcond_qp_out, qp_out, opts->hpipm_opts, mem->hpipm_workspace);
     }
     else
     {
-        d_cond_qp_expand_sol(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
+        d_cond_qp_expand_sol(mem->ptr_qp_in, fcond_qp_out, qp_out, opts->hpipm_opts, mem->hpipm_workspace);
     }
 
 	return ACADOS_SUCCESS;
@@ -463,6 +471,7 @@ void ocp_qp_full_condensing_config_initialize_default(void *config_)
     config->memory_get = &ocp_qp_full_condensing_memory_get;
     config->workspace_calculate_size = &ocp_qp_full_condensing_workspace_calculate_size;
     config->condensing = &ocp_qp_full_condensing;
+    config->condensing_rhs = &ocp_qp_full_condensing_rhs;
     config->expansion = &ocp_qp_full_expansion;
 
     return;
