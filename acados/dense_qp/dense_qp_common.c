@@ -218,7 +218,7 @@ void dense_qp_out_get(dense_qp_out *out, const char *field, void *value)
 	}
 	else
 	{
-		printf("\nerror: ocp_qp_out_get: field %s not available\n", field);
+		printf("\nerror: dense_qp_out_get: field %s not available\n", field);
 		exit(1);
 	}
 

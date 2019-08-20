@@ -92,7 +92,6 @@ endif
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_xcond_solver.o
-OBJS += acados/ocp_qp/ocp_qp_full_condensing_solver.o
 # sim
 OBJS += acados/sim/sim_collocation_utils.o
 OBJS += acados/sim/sim_erk_integrator.o

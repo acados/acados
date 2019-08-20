@@ -133,10 +133,12 @@ void *ocp_qp_xcond_solver_memory_assign(void *config, ocp_qp_xcond_solver_dims *
 //
 int ocp_qp_xcond_solver_workspace_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 //
-int ocp_qp_partial_condensing_solver(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                                     void *opts_, void *mem_, void *work_);
+int ocp_qp_xcond_solver(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_);
+
 //
 void ocp_qp_partial_condensing_solver_config_initialize_default(void *config_);
+//
+void ocp_qp_full_condensing_solver_config_initialize_default(void *config);
 
 #ifdef __cplusplus
 } /* extern "C" */

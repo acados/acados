@@ -75,6 +75,7 @@ typedef struct ocp_qp_full_condensing_memory_
 	dense_qp_out *fcond_qp_out;
 	// only pointer
     ocp_qp_in *qp_in;
+	qp_info *qp_out_info; // info in fcond_qp_in
 } ocp_qp_full_condensing_memory;
 
 
