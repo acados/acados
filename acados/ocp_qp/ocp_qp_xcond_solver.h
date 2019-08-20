@@ -41,7 +41,6 @@ extern "C" {
 
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_partial_condensing.h" // TODO remove !!!!!!
 #include "acados/utils/types.h"
 
 

@@ -44,7 +44,8 @@
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
-#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h" // TODO remove
+#include "acados/ocp_qp/ocp_qp_full_condensing.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 
 #include "acados/dense_qp/dense_qp_hpipm.h"
 

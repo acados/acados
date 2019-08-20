@@ -113,7 +113,6 @@ OBJS += interfaces/acados_c/dense_qp_interface.o
 OBJS += interfaces/acados_c/ocp_nlp_interface.o
 OBJS += interfaces/acados_c/ocp_qp_interface.o
 OBJS += interfaces/acados_c/condensing_interface.o
-OBJS += interfaces/acados_c/options_interface.o
 OBJS += interfaces/acados_c/sim_interface.o
 endif
 

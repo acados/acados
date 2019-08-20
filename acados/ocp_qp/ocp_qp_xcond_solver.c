@@ -39,8 +39,6 @@
 
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_partial_condensing.h" // TODO remove !!!
-#include "acados/ocp_qp/ocp_qp_full_condensing.h" // TODO remove !!!
 #include "acados/ocp_qp/ocp_qp_xcond_solver.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
@@ -472,8 +470,8 @@ void ocp_qp_xcond_solver_eval_sens(void *config_, ocp_qp_xcond_solver_dims *dims
 	// condensing
 //    if (opts->xcond_opts->N2 < param_qp_in->dim->N)
 //    {
-        tmp_status = ocp_qp_partial_condensing(param_qp_in, memory->xcond_qp_in, opts->xcond_opts,
-        		memory->xcond_memory, work->xcond_work);
+        //tmp_status = ocp_qp_partial_condensing(param_qp_in, memory->xcond_qp_in, opts->xcond_opts,
+        //		memory->xcond_memory, work->xcond_work);
 //    }
 //    else
 //    {

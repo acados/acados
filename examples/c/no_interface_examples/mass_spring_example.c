@@ -244,29 +244,21 @@ int main() {
                 #endif
 
                 #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-//                    ok = set_option_int(opts, "qpdunes.clipping", 0);
-//                    assert(ok = true && "specified option not found!");
 					clipping = 0;
 					config->opts_set(config, opts, "clipping", &clipping);
                 #else
                     if (N2 == N)
                     {
-//                        ok = set_option_int(opts, "qpdunes.clipping", 1);
-//                        assert(ok = true && "specified option not found!");
 						clipping = 1;
 						config->opts_set(config, opts, "clipping", &clipping);
                     } else
                     {
-//                        ok = set_option_int(opts, "qpdunes.clipping", 0);
-//                        assert(ok = true && "specified option not found!");
 						clipping = 0;
 						config->opts_set(config, opts, "clipping", &clipping);
                     }
                 #endif
-//                    ok = set_option_int(opts, "qpdunes.warm_start", 0);
-//                    assert(ok = true && "specified option not found!");
 					warm_start = 0;
-					config->opts_set(config, opts, "warm_start", &clipping);
+					config->opts_set(config, opts, "warm_start", &warm_start);
 
 					N2 = N2_values[jj];
 					config->opts_set(config, opts, "cond_N", &N2);
@@ -285,7 +277,8 @@ int main() {
 #ifdef ACADOS_WITH_QPOASES
                 case FULL_CONDENSING_QPOASES:
                     printf("\nFull condensing + QPOASES:\n\n");
-                    set_option_int(opts, "qpoases.warm_start", 0);
+					warm_start = 0;
+					config->opts_set(config, opts, "warm_start", &warm_start);
                     break;
 #endif
 #ifdef ACADOS_WITH_OOQP
