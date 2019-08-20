@@ -40,7 +40,6 @@
 //#include "test/test_utils/eigen.h"
 
 #include "acados_c/ocp_qp_interface.h"
-#include "acados_c/options_interface.h"
 
 extern "C" {
 ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_config *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
