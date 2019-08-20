@@ -33,7 +33,7 @@
 
 %% test of native matlab interface
 clear all
-
+GENERATE_C_CODE = 1;
 
 
 % check that env.sh has been run
@@ -94,7 +94,7 @@ nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
-if 0
+if 1
 	nbx = 0;
 	nbu = nu;
 	ng = 0;
@@ -245,6 +245,9 @@ ocp
 ocp.C_ocp
 ocp.C_ocp_ext_fun
 
+if GENERATE_C_CODE == 1
+    ocp.generate_c_code()
+end
 
 
 %% acados sim model

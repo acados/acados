@@ -904,7 +904,7 @@ int main()
     ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
 
     /************************************************
-    *     precomputation (after all options are set)
+    * precomputation (after all options are set)
     ************************************************/
 
     status = ocp_nlp_precompute(solver, nlp_in, nlp_out);

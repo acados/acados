@@ -248,16 +248,16 @@ constraint = export_voltage_sphere_con()
 constraint_nl = export_nonlinear_part_voltage_constraint()
 
 # set model_name
-ra.model_name = model.name
+ra.model = model
 
 if FORMULATION == 1:
     # constraints name
-    ra.con_h_name = constraint.name
+    ra.con_h = constraint
 
 if FORMULATION == 2:
     # constraints name
-    ra.con_h_name = constraint.name
-    ra.con_p_name = constraint_nl.name
+    ra.con_h = constraint
+    ra.con_p = constraint_nl
 
 # Ts  = 0.0016
 # Ts  = 0.0012
@@ -422,11 +422,11 @@ file_name = 'acados_ocp.json'
 
 if CODE_GEN == 1:
     if FORMULATION == 0:
-        acados_solver = generate_solver(model, ra, json_file = file_name)
+        acados_solver = generate_solver(ra, json_file = file_name)
     if FORMULATION == 1:
-        acados_solver = generate_solver(model, ra, con_h=constraint, json_file = file_name)
+        acados_solver = generate_solver(ra, json_file = file_name)
     if FORMULATION == 2:
-        acados_solver = generate_solver(model, ra, con_h=constraint, con_p=constraint_nl, json_file = file_name)
+        acados_solver = generate_solver(ra, json_file = file_name)
 
 if COMPILE == 1:
     # make 
