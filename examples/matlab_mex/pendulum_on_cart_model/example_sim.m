@@ -50,8 +50,10 @@ gnsf_detect_struct = 'true';
 %method = 'irk';
 method = 'irk_gnsf';
 sens_forw = 'true';
+jac_reuse = 'true';
 num_stages = 4;
 num_steps = 4;
+newton_iter = 5;
 model_name = 'sim_pendulum';
 
 h = 0.1;
@@ -100,8 +102,10 @@ sim_opts.set('compile_mex', compile_mex);
 sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
+sim_opts.set('newton_iter', newton_iter);
 sim_opts.set('method', method);
 sim_opts.set('sens_forw', sens_forw);
+sim_opts.set('jac_reuse', jac_reuse);
 if (strcmp(method, 'irk_gnsf'))
 	sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
