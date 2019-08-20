@@ -419,8 +419,8 @@ void *sim_lifted_irk_memory_assign(void *config, void *dims_, void *opts_, void 
 
 int sim_lifted_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
 {
-    sim_config *config = config_;
-    sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *) mem_;
+    // sim_config *config = config_;
+    // sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *) mem_;
 
     int status = ACADOS_FAILURE;
 

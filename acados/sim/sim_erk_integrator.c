@@ -455,7 +455,6 @@ int sim_erk_memory_set(void *config_, void *dims_, void *mem_, const char *field
 
 int sim_erk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
 {
-    sim_config *config = config_;
     int status = ACADOS_SUCCESS;
 
     if (!strcmp(field, "guesses"))

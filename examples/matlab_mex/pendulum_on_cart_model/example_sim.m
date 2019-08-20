@@ -47,7 +47,7 @@ compile_mex = 'true';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
 %method = 'erk';
-%method = 'irk';
+% method = 'irk';
 method = 'irk_gnsf';
 sens_forw = 'true';
 jac_reuse = 'true';
@@ -131,6 +131,14 @@ for ii=1:N_sim
 	% set initial state
 	sim.set('x', x_sim(:,ii));
 	sim.set('u', u);
+
+    % initialize implicit integrator
+    if (strcmp(method, 'irk'))
+        sim.set('xdot', zeros(nx,1));
+    elseif (strcmp(method, 'irk_gnsf'))
+        n_out = sim.model_struct.dim_gnsf_nout;
+        sim.set('phi_guess', zeros(n_out,1));
+    end
 
 	% solve
 	sim.solve();

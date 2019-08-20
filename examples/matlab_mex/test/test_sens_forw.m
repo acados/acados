@@ -36,7 +36,7 @@ clear VARIABLES
 
 addpath('../linear_mass_spring_model/');
 
-for integrator = {'irk', 'irk', 'erk'}
+for integrator = {'irk_gnsf', 'irk', 'erk'}
     %% arguments
     compile_mex = 'true';
     codgen_model = 'true';
@@ -121,6 +121,14 @@ for integrator = {'irk', 'irk', 'erk'}
     % set initial state
     sim.set('x', x0);
     sim.set('u', u);
+
+    % initialize implicit integrator
+    if (strcmp(method, 'irk'))
+        sim.set('xdot', zeros(nx,1));
+    elseif (strcmp(method, 'irk_gnsf'))
+        n_out = sim.model_struct.dim_gnsf_nout;
+        sim.set('phi_guess', zeros(n_out,1));
+    end
 
     % solve
     sim.solve();
