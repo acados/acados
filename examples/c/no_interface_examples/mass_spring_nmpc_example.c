@@ -409,11 +409,13 @@ int main() {
 
 #if XCOND==2
     // full condensing HPIPM
-    ocp_qp_full_condensing_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_xcond_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_full_condensing_config_initialize_default(config->qp_solver->xcond);
     dense_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
 #else
     // no condensing or partial condensing HPIPM
-    ocp_qp_partial_condensing_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_xcond_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_partial_condensing_config_initialize_default(config->qp_solver->xcond);
     ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
 #endif
 

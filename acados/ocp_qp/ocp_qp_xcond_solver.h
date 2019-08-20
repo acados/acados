@@ -126,19 +126,23 @@ void ocp_qp_xcond_solver_opts_initialize_default(void *config, ocp_qp_xcond_solv
 void ocp_qp_xcond_solver_opts_update(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 //
 void ocp_qp_xcond_solver_opts_set(void *config_, void *opts_, const char *field, void* value);
+
+/* memory */
 //
 int ocp_qp_xcond_solver_memory_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 //
 void *ocp_qp_xcond_solver_memory_assign(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_, void *raw_memory);
+
+/* workspace */
 //
 int ocp_qp_xcond_solver_workspace_calculate_size(void *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
+
+/* config */
 //
 int ocp_qp_xcond_solver(void *config, ocp_qp_xcond_solver_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_);
 
 //
-void ocp_qp_partial_condensing_solver_config_initialize_default(void *config_);
-//
-void ocp_qp_full_condensing_solver_config_initialize_default(void *config);
+void ocp_qp_xcond_solver_config_initialize_default(void *config_);
 
 #ifdef __cplusplus
 } /* extern "C" */

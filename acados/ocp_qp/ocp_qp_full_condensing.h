@@ -69,7 +69,6 @@ typedef struct ocp_qp_full_condensing_opts_
 typedef struct ocp_qp_full_condensing_memory_
 {
     struct d_cond_qp_ws *hpipm_workspace;
-    // NOTE(dimitris): points to qp_in, does NOT copy to memory (needed for expansion)
 	// in memory
 	dense_qp_in *fcond_qp_in;
 	dense_qp_out *fcond_qp_out;

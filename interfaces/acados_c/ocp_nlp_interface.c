@@ -62,6 +62,7 @@
 /************************************************
 * plan
 ************************************************/
+
 static int ocp_nlp_plan_calculate_size(int N)
 {
     // N - number of shooting nodes
@@ -166,6 +167,7 @@ void ocp_nlp_plan_destroy(void* plan_)
 /************************************************
 * config
 ************************************************/
+
 ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 {
     int N = plan.N;
@@ -198,7 +200,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 	}
 
     // QP solver
-    ocp_qp_xcond_solver_config_initialize_default(plan.ocp_qp_solver_plan.qp_solver, config->qp_solver);
+    ocp_qp_xcond_solver_config_initialize_from_plan(plan.ocp_qp_solver_plan.qp_solver, config->qp_solver);
 
     // regularization
     switch (plan.regularization)

@@ -107,8 +107,7 @@ typedef struct
 
 /// Initializes the qp solver configuration.
 /// TBC should this be private/static?
-void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
-                                                   ocp_qp_xcond_solver_config *solver_config);
+void ocp_qp_xcond_solver_config_initialize_from_plan(ocp_qp_solver_t solver_name, ocp_qp_xcond_solver_config *solver_config);
 
 /// Constructs a qp solver config and Initializes with default values.
 ///

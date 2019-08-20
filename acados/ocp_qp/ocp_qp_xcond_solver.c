@@ -494,7 +494,7 @@ void ocp_qp_xcond_solver_eval_sens(void *config_, ocp_qp_xcond_solver_dims *dims
 
 
 
-void ocp_qp_partial_condensing_solver_config_initialize_default(void *config_)
+void ocp_qp_xcond_solver_config_initialize_default(void *config_)
 {
     ocp_qp_xcond_solver_config *config = config_;
 
@@ -512,34 +512,6 @@ void ocp_qp_partial_condensing_solver_config_initialize_default(void *config_)
     config->evaluate = &ocp_qp_xcond_solver;
     config->eval_sens = &ocp_qp_xcond_solver_eval_sens;
 
-	// initialize xcond
-	ocp_qp_partial_condensing_config_initialize_default(config->xcond);
-
     return;
 }
 
-
-
-void ocp_qp_full_condensing_solver_config_initialize_default(void *config_)
-{
-    ocp_qp_xcond_solver_config *config = config_;
-
-    config->dims_calculate_size = &ocp_qp_xcond_solver_dims_calculate_size;
-    config->dims_assign = &ocp_qp_xcond_solver_dims_assign;
-    config->dims_set = &ocp_qp_xcond_solver_dims_set;
-    config->opts_calculate_size = &ocp_qp_xcond_solver_opts_calculate_size;
-    config->opts_assign = &ocp_qp_xcond_solver_opts_assign;
-    config->opts_initialize_default = &ocp_qp_xcond_solver_opts_initialize_default;
-    config->opts_update = &ocp_qp_xcond_solver_opts_update;
-    config->opts_set = &ocp_qp_xcond_solver_opts_set;
-    config->memory_calculate_size = &ocp_qp_xcond_solver_memory_calculate_size;
-    config->memory_assign = &ocp_qp_xcond_solver_memory_assign;
-    config->workspace_calculate_size = &ocp_qp_xcond_solver_workspace_calculate_size;
-    config->evaluate = &ocp_qp_xcond_solver;
-    config->eval_sens = &ocp_qp_xcond_solver_eval_sens;
-
-	// initialize xcond
-	ocp_qp_full_condensing_config_initialize_default(config->xcond);
-
-    return;
-}
