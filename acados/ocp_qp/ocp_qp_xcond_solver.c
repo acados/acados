@@ -457,6 +457,11 @@ void ocp_qp_xcond_solver_eval_sens(void *config_, ocp_qp_xcond_solver_dims *dims
 {
     ocp_qp_xcond_solver_config *config = config_;
     qp_solver_config *qp_solver = config->qp_solver;
+	ocp_qp_xcond_config *xcond = config->xcond;
+
+//    qp_info *info = (qp_info *) qp_out->misc;
+//    acados_timer tot_timer, cond_timer;
+//    acados_tic(&tot_timer);
 
     // cast data structures
     ocp_qp_xcond_solver_opts *opts = opts_;
@@ -469,23 +474,27 @@ void ocp_qp_xcond_solver_eval_sens(void *config_, ocp_qp_xcond_solver_dims *dims
 	int tmp_status;
 
 	// condensing
-//    if (opts->xcond_opts->N2 < param_qp_in->dim->N)
-//    {
-        //tmp_status = ocp_qp_partial_condensing(param_qp_in, memory->xcond_qp_in, opts->xcond_opts,
-        //		memory->xcond_memory, work->xcond_work);
-//    }
-//    else
-//    {
-//        memory->xcond_qp_in = param_qp_in;
-//        memory->xcond_qp_out = sens_qp_out;
-//    }
+//	acados_tic(&cond_timer);
+	tmp_status = xcond->condensing_rhs(param_qp_in, memory->xcond_qp_in, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
+//	info->condensing_time = acados_toc(&cond_timer);
 
-	// eval sensitivity
-//	solver_status = qp_solver->evaluate(qp_solver, memory->xcond_qp_in, memory->xcond_qp_out,
-//			opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
+    // qp evaluate sensitivity
+	qp_solver->eval_sens(qp_solver, memory->xcond_qp_in, memory->xcond_qp_out, opts->qp_solver_opts, memory->solver_memory, work->qp_solver_work);
 
-	printf("\nocp_qp_xcond_solver_eval_sens: not implemented yet\n");
-	exit(1);
+	// expansion
+//	acados_tic(&cond_timer);
+	tmp_status = xcond->expansion(memory->xcond_qp_out, sens_qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
+//	info->condensing_time += acados_toc(&cond_timer);
+
+	// output qp info
+//	qp_info *info_mem;
+//	xcond->memory_get(xcond, memory->xcond_memory, "qp_out_info", &info_mem);
+
+//    info->total_time = acados_toc(&tot_timer);
+//    info->solve_QP_time = info_mem->solve_QP_time;
+//    info->interface_time = info_mem->interface_time;
+//    info->num_iter = info_mem->num_iter;
+//    info->t_computed = info_mem->t_computed;
 
 	return;
 

@@ -683,6 +683,16 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     return acados_status;
 }
 
+
+
+void dense_qp_qpoases_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+	printf("\nerror: dense_qp_qpoases_eval_sens: not implemented yet\n");
+	exit(1);
+}
+
+
+
 void dense_qp_qpoases_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -699,6 +709,7 @@ void dense_qp_qpoases_config_initialize_default(void *config_)
         (void *(*) (void *, void *, void *, void *) ) & dense_qp_qpoases_memory_assign;
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & dense_qp_qpoases_workspace_calculate_size;
+    config->eval_sens = &dense_qp_qpoases_eval_sens;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_qpoases;
 
     return;

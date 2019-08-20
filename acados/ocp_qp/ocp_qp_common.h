@@ -63,7 +63,6 @@ typedef struct
 {
     // TODO(dimitris): pass dims to evaluate?
     void (*dims_set)(void *config_, void *dims_, int stage, const char *field, int* value);
-    int (*evaluate)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, void *dims, void *opts);
@@ -72,6 +71,8 @@ typedef struct
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    int (*evaluate)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    void (*eval_sens)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
 } qp_solver_config;
 #endif
 

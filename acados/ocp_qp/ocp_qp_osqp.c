@@ -1303,6 +1303,14 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
 
 
 
+void ocp_qp_osqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+	printf("\nerror: ocp_qp_osqp_eval_sens: not implemented yet\n");
+	exit(1);
+}
+
+
+
 void ocp_qp_osqp_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -1316,6 +1324,7 @@ void ocp_qp_osqp_config_initialize_default(void *config_)
     config->memory_assign = &ocp_qp_osqp_memory_assign;
     config->workspace_calculate_size = &ocp_qp_osqp_workspace_calculate_size;
     config->evaluate = &ocp_qp_osqp;
+    config->eval_sens = &ocp_qp_osqp_eval_sens;
 
     return;
 }

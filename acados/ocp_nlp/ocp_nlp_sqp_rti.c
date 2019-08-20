@@ -1458,6 +1458,56 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
 
 
 
+void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_, void *mem_, void *work_, char *field, int stage, int index, void *sens_nlp_out_)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_sqp_rti_opts *opts = opts_;
+    ocp_nlp_sqp_rti_memory *mem = mem_;
+
+    ocp_nlp_out *sens_nlp_out = sens_nlp_out_;
+
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_nlp_sqp_rti_work *work = work_;
+
+    ocp_nlp_sqp_rti_cast_workspace(config, dims, work, mem, opts);
+
+    // extract dims
+//    int N = dims->N;
+//    int status = ACADOS_SUCCESS;
+
+//    int ii;
+
+	d_ocp_qp_copy_all(mem->qp_in, work->tmp_qp_in);
+	d_ocp_qp_set_rhs_zero(work->tmp_qp_in);
+
+	double one = 1.0;
+
+    if ((!strcmp("ex", field)) & stage==0)
+    {
+		d_ocp_qp_set_el("lbx", stage, index, &one, work->tmp_qp_in);
+		d_ocp_qp_set_el("ubx", stage, index, &one, work->tmp_qp_in);
+
+//		d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
+
+		config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out, opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
+
+//		d_ocp_qp_sol_print(work->tmp_qp_out->dim, work->tmp_qp_out);
+//		exit(1);
+
+		// TODO config->qp->sens ...
+	}
+    else
+    {
+        printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_rti_eval_param_sens\n", field, stage);
+        exit(1);
+    }
+
+    return;
+}
+
+
+
 // TODO remane mmeory_get ???
 void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *return_value_)
 {
@@ -1533,7 +1583,7 @@ void ocp_nlp_sqp_rti_config_initialize_default(void *config_)
     config->memory_assign = &ocp_nlp_sqp_rti_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_rti_workspace_calculate_size;
     config->evaluate = &ocp_nlp_sqp_rti;
-	config->eval_param_sens = NULL;
+    config->eval_param_sens = &ocp_nlp_sqp_rti_eval_param_sens;
     config->config_initialize_default = &ocp_nlp_sqp_rti_config_initialize_default;
     config->precompute = &ocp_nlp_sqp_rti_precompute;
     config->get = &ocp_nlp_sqp_rti_get;

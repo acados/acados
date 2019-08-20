@@ -268,6 +268,14 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
 
 
 
+void dense_qp_hpipm_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+	printf("\nerror: dense_qp_hpipm_eval_sens: not implemented yet\n");
+	exit(1);
+}
+
+
+
 void dense_qp_hpipm_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -282,6 +290,7 @@ void dense_qp_hpipm_config_initialize_default(void *config_)
     config->memory_assign = &dense_qp_hpipm_memory_assign;
     config->workspace_calculate_size = &dense_qp_hpipm_workspace_calculate_size;
     config->evaluate = &dense_qp_hpipm;
+    config->eval_sens = &dense_qp_hpipm_eval_sens;
 
     return;
 }

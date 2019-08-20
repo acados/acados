@@ -80,6 +80,8 @@ int dense_qp_hpipm_calculate_workspace_size(void *dims, void *opts_);
 //
 int dense_qp_hpipm(void *config, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
+void dense_qp_hpipm_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
+//
 void dense_qp_hpipm_config_initialize_default(void *config_);
 
 #ifdef __cplusplus

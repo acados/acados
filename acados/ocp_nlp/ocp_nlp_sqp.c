@@ -1626,17 +1626,18 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 		d_ocp_qp_set_el("lbx", stage, index, &one, work->tmp_qp_in);
 		d_ocp_qp_set_el("ubx", stage, index, &one, work->tmp_qp_in);
 
-		d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
+//		d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
 
 		config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out, opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
 
-		exit(1);
+//		d_ocp_qp_sol_print(work->tmp_qp_out->dim, work->tmp_qp_out);
+//		exit(1);
 
 		// TODO config->qp->sens ...
 	}
     else
     {
-        printf("\nerror: field %s at stage %d not available in ocp_nlp_eval_param_sens\n", field, stage);
+        printf("\nerror: field %s at stage %d not available in ocp_nlp_sqp_eval_param_sens\n", field, stage);
         exit(1);
     }
 
