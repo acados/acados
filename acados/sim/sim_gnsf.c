@@ -608,8 +608,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     if (model->get_gnsf_matrices == NULL && model->auto_import_gnsf)
     {
         printf("sim_gnsf error: get_gnsf_matrices function seems to be unset!\n");
-        status = ACADOS_FAILURE;
-        return status;
+        exit(1);
     }
 
     if (model->auto_import_gnsf)
@@ -651,8 +650,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     if (dt == 0.0)
     {
         printf("sim_gnsf error: simulation time = 0; seems to be unset!\n");
-        status = ACADOS_FAILURE;
-        return status;
+        exit(1);
     }
     mem->dt = dt;
 
@@ -1408,7 +1406,8 @@ int sim_gnsf_memory_set(void *config_, void *dims_, void *mem_, const char *fiel
     }
     else
     {
-        status = ACADOS_FAILURE;
+        printf("sim_gnsf_memory_set field %s is not supported! \n", field);
+        exit(1);
     }
 
     return status;
@@ -1429,7 +1428,8 @@ int sim_gnsf_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *
     }
     else
     {
-        status = ACADOS_FAILURE;
+        printf("sim_gnsf_memory_set_to_zero field %s is not supported! \n", field);
+        exit(1);
     }
 
     return status;
@@ -1750,7 +1750,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     if ( opts->ns != opts->tableau_size )
     {
         printf("Error in sim_gnsf: the Butcher tableau size does not match ns");
-        return ACADOS_FAILURE;
+        exit(1);
     }
 
     // necessary integers
@@ -1781,7 +1781,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     if (mem->dt != in->T / opts->num_steps)
     {
         printf("ERROR sim_gnsf: mem->dt n!= in->T/opts->num_steps, check initialization\n");
-        return ACADOS_FAILURE;
+        exit(1);
     }
 
     // assign variables from workspace
@@ -1946,7 +1946,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         if (opts->output_z || opts->sens_algebraic)
         {
             printf("ERROR sim_gnsf: output_z and sens_algebraic not supported with fully linear structure exploitation\n");
-            return ACADOS_FAILURE;
+            exit(1);
         }
     }
     else

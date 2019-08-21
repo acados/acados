@@ -351,7 +351,7 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
         if (ns[ii] > 0)
         {
             printf("\nHPMPC interface can not handle ns>0 yet: what about implementing it? :)\n");
-            return ACADOS_FAILURE;
+            exit(1);
         }
     }
 

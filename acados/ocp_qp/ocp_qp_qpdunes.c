@@ -784,7 +784,7 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
         if (ns[ii] > 0)
         {
             printf("\nqpDUNES interface can not handle ns>0 yet: what about implementing it? :)\n");
-            return ACADOS_FAILURE;
+            exit(1);
         }
     }
 

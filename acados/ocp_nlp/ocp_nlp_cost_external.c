@@ -199,7 +199,10 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     int status = ACADOS_SUCCESS;
 
     if ( !config_ || !dims_ || !model_ || !value_ )
-        status = ACADOS_FAILURE;
+    {
+        printf("ocp_nlp_cost_external_model_set: got Null pointer \n");
+        exit(1);
+    }
 
     ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_model *model = model_;
@@ -251,7 +254,6 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
     {
         printf("\nerror: model entry: %s not available in module ocp_nlp_cost_external\n", field);
         exit(1);
-//        status = ACADOS_FAILURE;
     }
     return status;
 }

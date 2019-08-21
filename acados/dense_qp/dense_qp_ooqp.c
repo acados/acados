@@ -517,7 +517,7 @@ int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, voi
     if (ns > 0)
     {
         printf("\nOOQP interface can not handle ns>0 yet: what about implementing it? :)\n");
-        return ACADOS_FAILURE;
+        exit(1);
     }
 
     acados_timer tot_timer, qp_timer, interface_timer;

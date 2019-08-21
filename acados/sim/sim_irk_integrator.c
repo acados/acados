@@ -197,7 +197,6 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
     {
         printf("\nerror: sim_irk_model_set: wrong field: %s\n", field);
         exit(1);
-//        return ACADOS_FAILURE;
     }
 
     return ACADOS_SUCCESS;
@@ -407,7 +406,8 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
     }
     else
     {
-        status = ACADOS_FAILURE;
+        printf("sim_irk_memory_set: field %s is not supported! \n", field);
+        exit(1);
     }
 
     return status;
@@ -433,7 +433,8 @@ int sim_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *m
     }
     else
     {
-        status = ACADOS_FAILURE;
+        printf("sim_irk_memory_set: field %s is not supported! \n", field);
+        exit(1);
     }
 
     return status;
@@ -674,7 +675,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     if ( opts->ns != opts->tableau_size )
     {
         printf("Error in sim_irk: the Butcher tableau size does not match ns");
-        return ACADOS_FAILURE;
+        exit(1);
     }
     int ns = opts->ns;
 

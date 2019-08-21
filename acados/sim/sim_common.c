@@ -375,7 +375,8 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
     }
     else
     {
-        status = ACADOS_FAILURE;
+        printf("sim_out_get_: field %s not supported \n", field);
+        exit(1);
     }
 
     return status;
@@ -438,7 +439,6 @@ int sim_opts_set_(sim_opts *opts, const char *field, void *value)
     else
     {
         printf("\nerror: field %s not available in sim_opts_set\n", field);
-        status = ACADOS_FAILURE; // TODO remove
         exit(1);
     }
     return status; // TODO remove

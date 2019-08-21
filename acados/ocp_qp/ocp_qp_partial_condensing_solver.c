@@ -401,7 +401,8 @@ int ocp_qp_partial_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out
     }
     else
     {
-        solver_status = ACADOS_FAILURE;
+        printf("\nocp_qp_partial_condensing_solver: memory is NULL\n");
+        exit(1);
     }
 
     // expand

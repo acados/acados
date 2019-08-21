@@ -177,7 +177,6 @@ int sim_lifted_irk_model_set(void *model_, const char *field, void *value)
     {
         printf("\nerror: sim_lifted_irk_model_set: wrong field: %s\n", field);
         exit(1);
-//        return ACADOS_FAILURE;
     }
 
     return ACADOS_SUCCESS;
@@ -422,9 +421,8 @@ int sim_lifted_irk_memory_set(void *config_, void *dims_, void *mem_, const char
     // sim_config *config = config_;
     // sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *) mem_;
 
-    int status = ACADOS_FAILURE;
-
-    return status;
+    printf("sim_lifted_irk_memory_set field %s is not supported! \n", field);
+    exit(1);
 }
 
 
@@ -447,7 +445,8 @@ int sim_lifted_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, 
     }
     else
     {
-        status = ACADOS_FAILURE;
+        printf("sim_lifted_irk_memory_set_to_zero field %s is not supported! \n", field);
+        exit(1);
     }
 
     return status;
@@ -590,23 +589,23 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     if ( opts->ns != opts->tableau_size )
     {
         printf("Error in sim_lifted_irk: the Butcher tableau size does not match ns");
-        return ACADOS_FAILURE;
+        exit(1);
     }
     // assert - only use supported features
     if (nz != 0)
     {
         printf("nz should be zero - DAEs are not supported by the lifted IRK integrator");
-        return ACADOS_FAILURE;
+        exit(1);
     }
     if (opts->output_z)
     {
         printf("opts->output_z should be false - DAEs are not supported for the lifted IRK integrator");
-        return ACADOS_FAILURE;
+        exit(1);
     }
     if (opts->sens_algebraic)
     {
         printf("opts->sens_algebraic should be false - DAEs are not supported for the lifted IRK integrator");
-        return ACADOS_FAILURE;
+        exit(1);
     }
 
     int ii, jj, ss;

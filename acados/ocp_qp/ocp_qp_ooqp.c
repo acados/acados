@@ -1065,7 +1065,7 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
         if (ns[ii] > 0)
         {
             printf("\nOOQP interface can not handle ns>0 yet: what about implementing it? :)\n");
-            return ACADOS_FAILURE;
+            exit(1);
         }
     }
 
