@@ -360,10 +360,9 @@ void *ocp_qp_partial_condensing_memory_assign(void *dims_, void *opts_, void *ra
 	mem->pcond_qp_out = ocp_qp_out_assign(dims->pcond_dims, c_ptr);
 	c_ptr += ocp_qp_out_calculate_size(dims->pcond_dims);
 
-	mem->qp_out_info = (qp_info *) mem->pcond_qp_out;
+	mem->qp_out_info = (qp_info *) mem->pcond_qp_out->misc;
 
-    assert((char *) raw_memory + ocp_qp_partial_condensing_memory_calculate_size(dims, opts) >=
-           c_ptr);
+    assert((char *) raw_memory + ocp_qp_partial_condensing_memory_calculate_size(dims, opts) >= c_ptr);
 
     return mem;
 }

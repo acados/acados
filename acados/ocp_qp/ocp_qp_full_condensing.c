@@ -330,7 +330,7 @@ void *ocp_qp_full_condensing_memory_assign(void *dims_, void *opts_, void *raw_m
 	mem->fcond_qp_out = dense_qp_out_assign(dims->fcond_dims, c_ptr);
 	c_ptr += dense_qp_out_calculate_size(dims->fcond_dims);
 
-	mem->qp_out_info = (qp_info *) mem->fcond_qp_out;
+	mem->qp_out_info = (qp_info *) mem->fcond_qp_out->misc;
 
     assert((char *) raw_memory + ocp_qp_full_condensing_memory_calculate_size(dims, opts) >= c_ptr);
 
