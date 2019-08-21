@@ -896,10 +896,12 @@ int main()
     ocp_nlp_opts_update(config, dims, nlp_opts);
 
     /************************************************
-    * ocp_nlp out
+    * ocp_nlp_out & solver
     ************************************************/
 
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
+
+    ocp_nlp_out *sens_nlp_out = ocp_nlp_out_create(config, dims);
 
     ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, nlp_opts);
 
@@ -977,6 +979,11 @@ int main()
 
             // solve NLP
             status = ocp_nlp_solve(solver, nlp_in, nlp_out);
+
+			// evaluate parametric sensitivity of solution
+//			ocp_nlp_out_print(dims, nlp_out);
+			ocp_nlp_eval_param_sens(solver, "ex", 0, 0, sens_nlp_out);
+//			ocp_nlp_out_print(dims, nlp_out);
 
             // update initial condition
             // TODO(dimitris): maybe simulate system instead of passing x[1] as next state
@@ -1070,6 +1077,7 @@ int main()
     ocp_nlp_opts_destroy(nlp_opts);
     ocp_nlp_in_destroy(nlp_in);
     ocp_nlp_out_destroy(nlp_out);
+    ocp_nlp_out_destroy(sens_nlp_out);
     ocp_nlp_solver_destroy(solver);
     ocp_nlp_dims_destroy(dims);
     ocp_nlp_config_destroy(config);

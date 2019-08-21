@@ -75,6 +75,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// solver
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "solver" ) );
 	ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
+	// sens_out
+	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "sens_out" ) );
+	ocp_nlp_out *sens_out = (ocp_nlp_out *) ptr[0];
 
 
 
@@ -86,6 +89,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	ocp_nlp_in_destroy(in);
 	ocp_nlp_out_destroy(out);
 	ocp_nlp_solver_destroy(solver);
+	ocp_nlp_out_destroy(sens_out);
 
 
 

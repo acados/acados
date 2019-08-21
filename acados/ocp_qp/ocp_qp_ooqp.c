@@ -1070,7 +1070,7 @@ int ocp_qp_ooqp(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_
     }
 
     acados_timer tot_timer, qp_timer, interface_timer;
-    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    qp_info *info = (qp_info *) qp_out->misc;
     acados_tic(&tot_timer);
 
     ocp_qp_ooqp_opts *opts = (ocp_qp_ooqp_opts *)opts_;
@@ -1122,6 +1122,14 @@ void ocp_qp_ooqp_destroy(void *mem_, void *work)
 
 
 
+void ocp_qp_ooqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+	printf("\nerror: ocp_qp_ooqp_eval_sens: not implemented yet\n");
+	exit(1);
+}
+
+
+
 void ocp_qp_ooqp_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -1140,4 +1148,5 @@ void ocp_qp_ooqp_config_initialize_default(void *config_)
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & ocp_qp_ooqp_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_ooqp;
+    config->eval_sens = &ocp_qp_ooqp_eval_sens;
 }
