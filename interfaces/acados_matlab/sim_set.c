@@ -35,11 +35,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
 // acados
 #include "acados/sim/sim_common.h"
 #include "acados_c/sim_interface.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados_c/external_function_interface.h"
+
 // mex
 #include "mex.h"
 
@@ -74,58 +76,102 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// field
 	char *field = mxArrayToString( prhs[4] );
+	char buffer [100];
 //	mexPrintf("\n%s\n", field);
 
+	int matlab_size = (int) mxGetNumberOfElements( prhs[5] );
+	int acados_size, tmp;
+	char fun_name[50] = "sim_set";
 
-	// value
-	if(!strcmp(field, "T"))
-		{
+	// check dimension, set value
+	if (!strcmp(field, "T"))
+	{
 		double *T = mxGetPr( prhs[5] );
+		
+		acados_size = 1;
+		if (acados_size != matlab_size)
+		{
+			sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d", fun_name, field, matlab_size, acados_size);
+			mexErrMsgTxt(buffer);
+		}
 		sim_in_set(config, dims, in, "T", T);
-		}
-	else if(!strcmp(field, "x"))
-		{
-		double *x = mxGetPr( prhs[5] );
-		sim_in_set(config, dims, in, "x", x);
-		}
-	else if(!strcmp(field, "u"))
-		{
-		double *u = mxGetPr( prhs[5] );
-		sim_in_set(config, dims, in, "u", u);
-		}
-	else if(!strcmp(field, "p"))
-		{
-		double *p = mxGetPr( prhs[5] );
-		external_function_param_casadi *ext_fun_param_ptr;
-		int struct_size = mxGetNumberOfFields( prhs[3] );
-		for(ii=0; ii<struct_size; ii++)
-			{
-//			printf("\n%s\n", mxGetFieldNameByNumber( prhs[3], ii) );
-			ptr = (long long *) mxGetData( mxGetFieldByNumber( prhs[3], 0, ii ) );
-			if(ptr[0]!=0)
-				{
-				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
-				}
-			}
-		}
-	else if(!strcmp(field, "seed_adj"))
-		{
-		double *seed_adj = mxGetPr( prhs[5] );
-		sim_in_set(config, dims, in, "seed_adj", seed_adj);
-		}
-	else
-		{
-		mexPrintf("\nsim_set: field not supported: %s\n", field);
-		return;
-		}
-
-
-
-	/* return */
-
-	return;
 
 	}
+	else if (!strcmp(field, "x"))
+	{
+		double *x = mxGetPr( prhs[5] );
+
+		sim_dims_get(config, dims, "nx", &acados_size);
+		if (acados_size != matlab_size)
+		{
+			sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d", fun_name, field, matlab_size, acados_size);
+			mexErrMsgTxt(buffer);
+		}
+		sim_in_set(config, dims, in, "x", x);
+	}
+	else if (!strcmp(field, "u"))
+	{
+		double *u = mxGetPr( prhs[5] );
+		
+		sim_dims_get(config, dims, "nu", &acados_size);
+		if (acados_size != matlab_size)
+		{
+			sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d", fun_name, field, matlab_size, acados_size);
+			mexErrMsgTxt(buffer);
+		}
+		sim_in_set(config, dims, in, "u", u);
+	}
+	else if (!strcmp(field, "p"))
+	{
+		double *p = mxGetPr( prhs[5] );
+		external_function_param_casadi *ext_fun_param_ptr;
+
+		// check
+		acados_size = ext_fun_param_ptr->np;
+		if (acados_size != matlab_size)
+		{
+			sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d", fun_name, field, matlab_size, acados_size);
+			mexErrMsgTxt(buffer);
+		}
+
+
+		int struct_size = mxGetNumberOfFields( prhs[3] );
+		for(ii=0; ii<struct_size; ii++)
+		{
+//			printf("\n%s\n", mxGetFieldNameByNumber( prhs[3], ii) );
+			ptr = (long long *) mxGetData( mxGetFieldByNumber( prhs[3], 0, ii ) );
+			if (ptr[0]!=0)
+			{
+				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
+				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
+			}
+		}
+	}
+	else if (!strcmp(field, "seed_adj"))
+	{
+		double *seed_adj = mxGetPr( prhs[5] );
+		sim_dims_get(config, dims, "nx", &acados_size);
+		// TODO(oj): in C, the backward seed is of dimension nx+nu, I think it should only be nx.
+		// sim_dims_get(config, dims, "nu", &tmp);
+		// acados_size += tmp;
+
+		if (acados_size != matlab_size)
+		{
+			sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d", fun_name, field, matlab_size, acados_size);
+			mexErrMsgTxt(buffer);
+		}
+
+		sim_in_set(config, dims, in, "seed_adj", seed_adj);
+	}
+	else
+	{
+		sprintf(buffer, "sim_set: field not supported: %s\n", field);
+		mexErrMsgTxt(buffer);
+	}
+
+	/* return */
+	return;
+
+}
 
 

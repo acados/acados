@@ -52,7 +52,7 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     %% model
     model = linear_mass_spring_model;
     
-    model_name = ['linear_mass_spring_' method];
+    model_name = ['lin_mass_' method];
     nx = model.nx;
     nu = model.nu;
     

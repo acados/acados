@@ -41,6 +41,16 @@ else
     require_env_variable('MATLABPATH');
 end
 
+try
+    test_checks;
+catch error
+    if ~isempty(strfind(error.message, 'sim_set: error setting x, wrong dimension'))
+        disp('Success: setter checks work in general')
+    else
+        exit_with_error(error);
+    end
+end
+
 
 % sim tests
 try
