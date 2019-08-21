@@ -44,25 +44,23 @@
 
 // mex
 #include "mex.h"
-
+#include "mex_macros.h"
 
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	{
 
-//	mexPrintf("\nin sim_set\n");
-
 	int ii;
+	int acados_size, tmp;
 	long long *ptr;
+	char fun_name[50] = "sim_set";
+	char buffer [100];
 
 	/* RHS */
-
-	// model
-
-	// opts
-	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
+	// char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
 
 	// C_sim
+	const mxArray *C_ext_fun_pointers = prhs[3];
 
 	// config
 	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "config" ) );
@@ -76,70 +74,43 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	// field
 	char *field = mxArrayToString( prhs[4] );
-	char buffer [100];
-//	mexPrintf("\n%s\n", field);
+	double *value = mxGetPr( prhs[5] );
 
 	int matlab_size = (int) mxGetNumberOfElements( prhs[5] );
-	int acados_size, tmp;
-	char fun_name[50] = "sim_set";
 
 	// check dimension, set value
 	if (!strcmp(field, "T"))
 	{
-		double *T = mxGetPr( prhs[5] );
-		
 		acados_size = 1;
-		if (acados_size != matlab_size)
-		{
-			sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d", fun_name, field, matlab_size, acados_size);
-			mexErrMsgTxt(buffer);
-		}
-		sim_in_set(config, dims, in, "T", T);
-
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+		sim_in_set(config, dims, in, field, value);
 	}
 	else if (!strcmp(field, "x"))
 	{
-		double *x = mxGetPr( prhs[5] );
-
 		sim_dims_get(config, dims, "nx", &acados_size);
-		if (acados_size != matlab_size)
-		{
-			sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d", fun_name, field, matlab_size, acados_size);
-			mexErrMsgTxt(buffer);
-		}
-		sim_in_set(config, dims, in, "x", x);
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+		sim_in_set(config, dims, in, field, value);
 	}
 	else if (!strcmp(field, "u"))
 	{
-		double *u = mxGetPr( prhs[5] );
-		
 		sim_dims_get(config, dims, "nu", &acados_size);
-		if (acados_size != matlab_size)
-		{
-			sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d", fun_name, field, matlab_size, acados_size);
-			mexErrMsgTxt(buffer);
-		}
-		sim_in_set(config, dims, in, "u", u);
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+		sim_in_set(config, dims, in, field, value);
 	}
 	else if (!strcmp(field, "p"))
 	{
 		double *p = mxGetPr( prhs[5] );
 		external_function_param_casadi *ext_fun_param_ptr;
 
-		// check
 		acados_size = ext_fun_param_ptr->np;
-		if (acados_size != matlab_size)
-		{
-			sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d", fun_name, field, matlab_size, acados_size);
-			mexErrMsgTxt(buffer);
-		}
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
 
-
-		int struct_size = mxGetNumberOfFields( prhs[3] );
+		// loop over number of external functions;
+		int struct_size = mxGetNumberOfFields( C_ext_fun_pointers );
 		for(ii=0; ii<struct_size; ii++)
 		{
-//			printf("\n%s\n", mxGetFieldNameByNumber( prhs[3], ii) );
-			ptr = (long long *) mxGetData( mxGetFieldByNumber( prhs[3], 0, ii ) );
+//			printf("\n%s\n", mxGetFieldNameByNumber( C_ext_fun_pointers, ii) );
+			ptr = (long long *) mxGetData( mxGetFieldByNumber( C_ext_fun_pointers, 0, ii ) );
 			if (ptr[0]!=0)
 			{
 				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
@@ -149,18 +120,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 	else if (!strcmp(field, "seed_adj"))
 	{
-		double *seed_adj = mxGetPr( prhs[5] );
+		double *seed_adj = value;
 		sim_dims_get(config, dims, "nx", &acados_size);
 		// TODO(oj): in C, the backward seed is of dimension nx+nu, I think it should only be nx.
 		// sim_dims_get(config, dims, "nu", &tmp);
 		// acados_size += tmp;
-
-		if (acados_size != matlab_size)
-		{
-			sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d", fun_name, field, matlab_size, acados_size);
-			mexErrMsgTxt(buffer);
-		}
-
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
 		sim_in_set(config, dims, in, "seed_adj", seed_adj);
 	}
 	else
@@ -169,9 +134,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		mexErrMsgTxt(buffer);
 	}
 
-	/* return */
 	return;
-
 }
-
 
