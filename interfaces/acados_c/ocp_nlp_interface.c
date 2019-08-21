@@ -694,16 +694,25 @@ void ocp_nlp_solver_destroy(void *solver)
 
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
-    return solver->config->evaluate(solver->config, solver->dims, nlp_in, nlp_out, solver->opts,
-                                    solver->mem, solver->work);
+    return solver->config->evaluate(solver->config, solver->dims, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
 }
+
 
 
 int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
-    return solver->config->precompute(solver->config, solver->dims, nlp_in, nlp_out, solver->opts,
-                                    solver->mem, solver->work);
+    return solver->config->precompute(solver->config, solver->dims, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
 }
+
+
+
+void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *field, int stage, int index, ocp_nlp_out *sens_nlp_out)
+{
+    solver->config->eval_param_sens(solver->config, solver->dims, solver->opts, solver->mem, solver->work, field, stage, index, sens_nlp_out);
+	return;
+}
+
+
 
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
                  const char *field, void *return_value_)
