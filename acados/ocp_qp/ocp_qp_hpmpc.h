@@ -113,8 +113,9 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
 //
 int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_,
-                 void *work_);
+int ocp_qp_hpmpc(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
+//
+void ocp_qp_hpmpc_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
 void ocp_qp_hpmpc_config_initialize_default(void *config_);
 

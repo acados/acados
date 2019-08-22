@@ -2,18 +2,38 @@ branches:
   only:
     - master
 
+cache:
+  - c:\dev\Eigen3\
+
+environment:
+  matrix:
+    - BUILD_TYPE: Release
+      COMPILER: MinGW-w64
+      PLATFORM: x64
+
+install:
+  - cmd: if not exist c:\dev\Eigen3\include\eigen3\Eigen\Core (
+            curl -L -o eigen-eigen-dc6cfdf9bcec.tar.gz https://bitbucket.org/eigen/eigen/get/3.2.9.tar.gz &&
+            cmake -E tar zxf eigen-eigen-dc6cfdf9bcec.tar.gz &&
+            cd eigen-eigen-dc6cfdf9bcec &&
+            mkdir build &&
+            cd build &&
+            cmake -G "Visual Studio 12" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="c:\dev\Eigen3" .. &&
+            cmake --build . --target install --config Release &&
+            cd ..\..
+         ) else (echo Using cached Eigen3)
+
 # NOTE: only static linking, i.e. via .lib file supported
 #  -D BUILD_SHARED_LIBS=OFF;
 # extern "C" {  would have to be added to subprojects
 
 build_script:
   - git submodule update --init --recursive
+  # MinGW files need to be at the beginning of the PATH
+  - set PATH=C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;%PATH%
   # Workaround for CMake not wanting sh.exe on PATH for MinGW
-  # - set PATH=%PATH:C:/Program_Files/Git/usr/bin/;=%
-  # - rm "C:/Program Files/Git/usr/bin/sh.exe"
+  - rm "C:\Program Files\Git\usr\bin\sh.exe"
   - cmake -E make_directory build
-  # TODO: make this work
-  # - cmake -E chdir build cmake -D ACADOS_WITH_QPOASES=ON -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D BUILD_SHARED_LIBS=OFF -D ACADOS_EXAMPLES=ON -G "MinGW Makefiles" ..
-  - cmake -E chdir build cmake -D ACADOS_WITH_QPOASES=ON -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D BUILD_SHARED_LIBS=OFF ..
+  - cmake -E chdir build cmake -DCMAKE_PREFIX_PATH=C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0 -D ACADOS_WITH_QPOASES=ON -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D BUILD_SHARED_LIBS=OFF -D ACADOS_EXAMPLES=ON -D ACADOS_UNIT_TESTS=ON -DEIGEN3_INCLUDE_DIR="C:\dev\Eigen3\include\eigen3" -G "MinGW Makefiles" ..
   - cmake --build build --config Release
-  - cmake -E chdir build ctest -V
+  - cmake -E chdir build ctest --output-on-failure

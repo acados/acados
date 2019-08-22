@@ -47,6 +47,7 @@
 // acados
 #include "acados/utils/math.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_xcond_solver.h"
 
 // acados_c
 #include <acados_c/ocp_qp_interface.h>
@@ -132,7 +133,7 @@ static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, 
 
 
 
-ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, int ng_, int ngN)
+ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_config *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN)
 {
 
     int nbu_ = nu_<nb_ ? nu_ : nb_;
@@ -190,24 +191,21 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, in
 
 
     // dims
-    int dims_size = ocp_qp_dims_calculate_size(N);
+    int dims_size = ocp_qp_xcond_solver_dims_calculate_size(config, N);
     void *dims_mem = malloc(dims_size);
-    ocp_qp_dims *dims = ocp_qp_dims_assign(N, dims_mem);
+    ocp_qp_xcond_solver_dims *dims = ocp_qp_xcond_solver_dims_assign(config, N, dims_mem);
 
-    dims->N = N;
     for (int ii=0; ii<=N; ii++)
     {
-        dims->nx[ii] = nx[ii];
-        dims->nu[ii] = nu[ii];
-        dims->nb[ii] = nb[ii];
-        dims->ng[ii] = ng[ii];
-        dims->ns[ii] = ns[ii];
-        dims->nsbx[ii] = ns[ii];
-        dims->nsbu[ii] = ns[ii];
-        dims->nsg[ii] = ns[ii];
-        dims->nbu[ii] = nbu[ii];
-        dims->nbx[ii] = nbx[ii];
+		config->dims_set(config, dims, ii, "nx", &nx[ii]);
+		config->dims_set(config, dims, ii, "nu", &nu[ii]);
+		config->dims_set(config, dims, ii, "nbx", &nbx[ii]);
+		config->dims_set(config, dims, ii, "nbu", &nbu[ii]);
+		config->dims_set(config, dims, ii, "ng", &ng[ii]);
+		config->dims_set(config, dims, ii, "ns", &ns[ii]);
     }
+
+//d_ocp_qp_dim_print(dims->orig_dims);
 
     return dims;
 
@@ -215,7 +213,7 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, in
 
 
 
-ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims)
+ocp_qp_in *create_ocp_qp_in_mass_spring(ocp_qp_dims *dims)
 {
 
     /************************************************
@@ -496,7 +494,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims)
     hug[N] = ugN;
 
 
-    ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);
+    ocp_qp_in *qp_in = ocp_qp_in_create(dims);
 
 //    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
 	int ii;
@@ -664,7 +662,7 @@ ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_,
 
 
 
-ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *dims)
+ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(ocp_qp_dims *dims)
 {
 
     int ii;
@@ -1037,7 +1035,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *d
     hidxs[N] = idxsN;
 
 
-    ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);
+    ocp_qp_in *qp_in = ocp_qp_in_create(dims);
 
 //    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hZl, hZu, hzl, hzu, hidxs, hd_ls, hd_us, qp_in);
 	for(ii=0; ii<N; ii++)
