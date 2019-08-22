@@ -64,6 +64,7 @@ for i in range(Nsim):
     u0 = acados_ocp_solver.get(0, "u")
 
     acados_sim_solver.set("u", u0)
+    acados_sim_solver.set("T", Tf/N)
     status = acados_sim_solver.solve()
     x0 = acados_sim_solver.get("x")
 
@@ -100,4 +101,3 @@ plt.ylabel('theta')
 plt.xlabel('t')
 plt.grid(True)
 plt.show()
-

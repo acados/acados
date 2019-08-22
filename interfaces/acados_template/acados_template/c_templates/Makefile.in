@@ -35,33 +35,46 @@ ACADOS_FLAGS = -fPIC
 {% if ocp.solver_config.qp_solver == "FULL_CONDENSING_QPOASES" %}
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 {% endif %}
-OBJ =
-# OBJ+= main_{{ ocp.model_name }}.o
+MODEL_OBJ=
 {% if  ocp.solver_config.integrator_type == "ERK" %}
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_ode_fun.o
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_vde_forw.o
+MODEL_OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_ode_fun.o
+MODEL_OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_vde_forw.o
 {% if ocp.solver_config.hessian_approx == "EXACT" %}
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_ode_hess.o
+MODEL_OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_ode_hess.o
 {% endif %}
 {% else %}
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_fun.o
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z.o
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z.o
+MODEL_OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_fun.o
+MODEL_OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z.o
+MODEL_OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z.o
 {% endif %}
+
+OCP_OBJ=
 {% if ocp.dims.npd > 0 %}
-OBJ+= {{ ocp.con_p_name }}_p_constraint/{{ ocp.con_p_name }}_p_constraint.o
+OCP_OBJ+= {{ ocp.con_p_name }}_p_constraint/{{ ocp.con_p_name }}_p_constraint.o
 {% endif %}
 {% if ocp.dims.nh > 0 %}
-OBJ+= {{ ocp.con_h_name }}_h_constraint/{{ ocp.con_h_name }}_h_constraint.o
+OCP_OBJ+= {{ ocp.con_h_name }}_h_constraint/{{ ocp.con_h_name }}_h_constraint.o
 {% endif %}
-OBJ+= acados_solver_{{ ocp.model_name }}.o
-OBJ+= acados_sim_solver_{{ ocp.model_name }}.o
+OCP_OBJ+= acados_solver_{{ ocp.model_name }}.o
+
+SIM_OBJ=
+SIM_OBJ+= acados_sim_solver_{{ ocp.model_name }}.o
+
+EX_OBJ=
+EX_OBJ+= main_{{ ocp.model_name}}.o
+
+OBJ=
+OBJ+= $(MODEL_OBJ)
+OBJ+= $(SIM_OBJ)
+OBJ+= $(OCP_OBJ)
+
+
 
 INCLUDE_PATH = {{ ocp.acados_include_path }}
 LIB_PATH = {{ ocp.acados_lib_path }}
 
 all: clean casadi_fun main ocp_solver sim_solver example
-shared_lib: ocp_shared_lib sim_shared_lib
+shared_lib: bundled_shared_lib ocp_shared_lib sim_shared_lib
 
 CASADI_MODEL_SOURCE=
 {% if  ocp.solver_config.integrator_type == "ERK" %}
@@ -106,7 +119,7 @@ sim_solver:
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 example:
-	gcc $(ACADOS_FLAGS) -o main_{{ ocp.model_name}} main_{{ ocp.model_name}}.o $(OBJ) -L $(LIB_PATH) \
+	gcc $(ACADOS_FLAGS) -o main_{{ ocp.model_name}} $(EX_OBJ) $(OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH)/acados \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
@@ -118,8 +131,16 @@ example:
 	-I $(INCLUDE_PATH)/acados/ \
 	-I $(INCLUDE_PATH)/qpOASES_e/
 
+bundled_shared_lib: casadi_fun ocp_solver sim_solver
+	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ ocp.model_name }}.so $(OBJ) -L $(LIB_PATH)/acados \
+	-L $(LIB_PATH) \
+	-L $(LIB_PATH)/external/blasfeo \
+	-L $(LIB_PATH)/external/hpipm  \
+	-L $(LIB_PATH)/external/qpoases/lib \
+	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
+
 ocp_shared_lib: casadi_fun ocp_solver
-	gcc $(ACADOS_FLAGS) -shared -o libacados_ocp_solver_{{ ocp.model_name }}.so $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -shared -o libacados_ocp_solver_{{ ocp.model_name }}.so $(OCP_OBJ) $(MODEL_OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
@@ -127,7 +148,7 @@ ocp_shared_lib: casadi_fun ocp_solver
 	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
 
 sim_shared_lib: casadi_fun sim_solver
-	gcc $(ACADOS_FLAGS) -shared -o libacados_sim_solver_{{ ocp.model_name }}.so $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -shared -o libacados_sim_solver_{{ ocp.model_name }}.so $(SIM_OBJ) $(MODEL_OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \

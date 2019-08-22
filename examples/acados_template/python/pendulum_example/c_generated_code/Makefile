@@ -35,23 +35,36 @@ ACADOS_FLAGS = -fPIC
 
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 
-OBJ =
-# OBJ+= main_pendulum_ode.o
+MODEL_OBJ=
 
-OBJ+= pendulum_ode_model/pendulum_ode_expl_ode_fun.o
-OBJ+= pendulum_ode_model/pendulum_ode_expl_vde_forw.o
-
+MODEL_OBJ+= pendulum_ode_model/pendulum_ode_expl_ode_fun.o
+MODEL_OBJ+= pendulum_ode_model/pendulum_ode_expl_vde_forw.o
 
 
 
-OBJ+= acados_solver_pendulum_ode.o
-OBJ+= acados_sim_solver_pendulum_ode.o
+OCP_OBJ=
+
+
+OCP_OBJ+= acados_solver_pendulum_ode.o
+
+SIM_OBJ=
+SIM_OBJ+= acados_sim_solver_pendulum_ode.o
+
+EX_OBJ=
+EX_OBJ+= main_pendulum_ode.o
+
+OBJ=
+OBJ+= $(MODEL_OBJ)
+OBJ+= $(SIM_OBJ)
+OBJ+= $(OCP_OBJ)
+
+
 
 INCLUDE_PATH = /usr/lib/include
 LIB_PATH = /usr/lib/lib
 
 all: clean casadi_fun main ocp_solver sim_solver example
-shared_lib: ocp_shared_lib sim_shared_lib
+shared_lib: bundled_shared_lib ocp_shared_lib sim_shared_lib
 
 CASADI_MODEL_SOURCE=
 
@@ -82,7 +95,7 @@ sim_solver:
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 example:
-	gcc $(ACADOS_FLAGS) -o main_pendulum_ode main_pendulum_ode.o $(OBJ) -L $(LIB_PATH) \
+	gcc $(ACADOS_FLAGS) -o main_pendulum_ode $(EX_OBJ) $(OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH)/acados \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
@@ -94,8 +107,16 @@ example:
 	-I $(INCLUDE_PATH)/acados/ \
 	-I $(INCLUDE_PATH)/qpOASES_e/
 
+bundled_shared_lib: casadi_fun ocp_solver sim_solver
+	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_pendulum_ode.so $(OBJ) -L $(LIB_PATH)/acados \
+	-L $(LIB_PATH) \
+	-L $(LIB_PATH)/external/blasfeo \
+	-L $(LIB_PATH)/external/hpipm  \
+	-L $(LIB_PATH)/external/qpoases/lib \
+	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
+
 ocp_shared_lib: casadi_fun ocp_solver
-	gcc $(ACADOS_FLAGS) -shared -o libacados_ocp_solver_pendulum_ode.so $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -shared -o libacados_ocp_solver_pendulum_ode.so $(OCP_OBJ) $(MODEL_OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
@@ -103,7 +124,7 @@ ocp_shared_lib: casadi_fun ocp_solver
 	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
 
 sim_shared_lib: casadi_fun sim_solver
-	gcc $(ACADOS_FLAGS) -shared -o libacados_sim_solver_pendulum_ode.so $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -shared -o libacados_sim_solver_pendulum_ode.so $(SIM_OBJ) $(MODEL_OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \

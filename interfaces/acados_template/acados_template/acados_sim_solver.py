@@ -70,7 +70,13 @@ class acados_sim_solver:
     def set(self, field_, value_):
 
         # cast value_ to avoid conversion issues
+        if type(value_) == float:
+            value_ = np.array([value_])
+
         value_ = value_.astype(float)
+        value_data = cast(value_.ctypes.data, POINTER(c_double))
+        value_data_p = cast((value_data), c_void_p)
+
 
         field = field_
         field = field.encode('utf-8')
@@ -83,9 +89,6 @@ class acados_sim_solver:
         #  if value_.shape[0] != dims:
             #  raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_,dims, value_.shape[0]))
 
-        value_data = cast(value_.ctypes.data, POINTER(c_double))
-        value_data_p = cast((value_data), c_void_p)
-
         if field_ in self.settable:
             self.shared_lib.sim_in_set.argtypes = [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p]
             self.shared_lib.sim_in_set(self.sim_config, self.sim_dims, self.sim_in, field, value_data_p);
@@ -95,4 +98,4 @@ class acados_sim_solver:
         return
 
     def __del__(self):
-        getattr(self.shared_lib, f"{self.model_name}_acados_free")()
+        getattr(self.shared_lib, f"{self.model_name}_acados_sim_free")()
