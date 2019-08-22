@@ -359,7 +359,7 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
     // extract data from qp_in in col-major
-    d_cvt_dense_qp_to_colmaj(qp_in, H, gg, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug,
+    d_dense_qp_get_all(qp_in, H, gg, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug,
                              Zl, Zu, zl, zu, idxs, d_ls, d_us);
 
     // reorder bounds
@@ -372,7 +372,7 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     if (ns > 0)
     {
         dense_qp_stack_slacks(qp_in, qp_stacked);
-        d_cvt_dense_qp_to_colmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg,
+        d_dense_qp_get_all(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg,
             d_ug, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
         for (int ii = 0; ii < nb2; ii++)

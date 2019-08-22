@@ -400,7 +400,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
     // extract data from qp_in in row-major
-    d_cvt_dense_qp_to_rowmaj(qp_in, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg0, d_ug0,
+    d_dense_qp_get_all_rowmaj(qp_in, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg0, d_ug0,
                                  Zl, Zu, zl, zu, idxs, d_ls, d_us);
 
     // reorder box constraints bounds
@@ -413,7 +413,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     if (ns > 0)
     {
         dense_qp_stack_slacks(qp_in, qp_stacked);
-        d_cvt_dense_qp_to_rowmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg,
+        d_dense_qp_get_all_rowmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg,
             d_ug, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
         for (int ii = 0; ii < nb2; ii++)
