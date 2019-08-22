@@ -173,10 +173,10 @@ ocp_qp_xcond_solver_dims *create_ocp_qp_dims_mass_spring(ocp_qp_xcond_solver_con
         nbx[ii] = nbx_;
     }
 
-    int nb[N+1];
-    for (int ii = 0; ii <= N; ii++) {
-        nb[ii] = nbu[ii]+nbx[ii];
-    }
+    // int nb[N+1];
+    // for (int ii = 0; ii <= N; ii++) {
+    //     nb[ii] = nbu[ii]+nbx[ii];
+    // }
 
     int ng[N+1];
     for (int ii = 0; ii < N; ii++) {

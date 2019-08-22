@@ -629,9 +629,9 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
 
     // extract dims
     int N = dims->N;
-	int *nx = dims->nx;
-	int *nu = dims->nu;
-	int *nz = dims->nz;
+	// int *nx = dims->nx;
+	// int *nu = dims->nu;
+	// int *nz = dims->nz;
 
     int size = 0;
     int size_tmp = 0;
@@ -773,14 +773,11 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
 
-    // loop index
-	int ii;
-
     // extract dims
     int N = dims->N;
-	int *nx = dims->nx;
-	int *nu = dims->nu;
-	int *nz = dims->nz;
+	// int *nx = dims->nx;
+	// int *nu = dims->nu;
+	// int *nz = dims->nz;
 
     // sqp
     char *c_ptr = (char *) work;
@@ -1467,7 +1464,7 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_, vo
 
     ocp_nlp_out *sens_nlp_out = sens_nlp_out_;
 
-    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    // ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
     ocp_nlp_sqp_rti_work *work = work_;
 
     ocp_nlp_sqp_rti_cast_workspace(config, dims, work, mem, opts);
@@ -1483,7 +1480,7 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_, vo
 
 	double one = 1.0;
 
-    if ((!strcmp("ex", field)) & stage==0)
+    if ((!strcmp("ex", field)) & (stage==0))
     {
 		d_ocp_qp_set_el("lbx", stage, index, &one, work->tmp_qp_in);
 		d_ocp_qp_set_el("ubx", stage, index, &one, work->tmp_qp_in);
@@ -1506,7 +1503,7 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_, vo
 		int *nx = dims->nx;
 		// int *nu = dims->nu;
 		int *ni = dims->ni;
-		int *nz = dims->nz;
+		// int *nz = dims->nz;
 
 		for (i = 0; i <= N; i++)
 		{
