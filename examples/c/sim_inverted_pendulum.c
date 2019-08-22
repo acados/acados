@@ -381,7 +381,7 @@ int main()
 			if (acados_return != 0)
 			{
 				printf("error in sim solver\n");
-				return ACADOS_FAILURE;
+				exit(1);
 			}
 
 			cpu_time += out->info->CPUtime;

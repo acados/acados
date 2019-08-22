@@ -111,8 +111,9 @@ void *dense_qp_qore_memory_assign(void *config, dense_qp_dims *dims, void *opts_
 //
 int dense_qp_qore_workspace_calculate_size(void *config, dense_qp_dims *dims, void *opts_);
 //
-int dense_qp_qore(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
-                  void *memory_, void *work_);
+int dense_qp_qore(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_);
+//
+void dense_qp_qore_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
 void dense_qp_qore_config_initialize_default(void *config);
 

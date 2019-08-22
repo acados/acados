@@ -39,7 +39,6 @@ OBJS += dense_qp_interface.o
 OBJS += ocp_nlp_interface.o
 OBJS += ocp_qp_interface.o
 OBJS += condensing_interface.o
-OBJS += options_interface.o
 OBJS += sim_interface.o
 
 obj: $(OBJS)

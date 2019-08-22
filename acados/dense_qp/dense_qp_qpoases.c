@@ -217,7 +217,7 @@ int dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dims *dims, v
     if (ns > 0)
     {
         dense_qp_stack_slacks_dims(dims, &dims_stacked);
-        size += dense_qp_in_calculate_size(config_, &dims_stacked);
+        size += dense_qp_in_calculate_size(&dims_stacked);
     }
 
     if (ng > 0 || ns > 0)  // QProblem
@@ -261,8 +261,8 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     if (ns > 0)
     {
         dense_qp_stack_slacks_dims(dims, &dims_stacked);
-        mem->qp_stacked = dense_qp_in_assign(config_, &dims_stacked, c_ptr);
-        c_ptr += dense_qp_in_calculate_size(config_, &dims_stacked);
+        mem->qp_stacked = dense_qp_in_assign(&dims_stacked, c_ptr);
+        c_ptr += dense_qp_in_calculate_size(&dims_stacked);
     }
     else
     {
@@ -340,7 +340,7 @@ int dense_qp_qpoases_workspace_calculate_size(void *config_, dense_qp_dims *dims
 int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
                      void *memory_, void *work_)
 {
-    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
+    qp_info *info = (qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
 
     acados_tic(&tot_timer);
@@ -683,6 +683,16 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     return acados_status;
 }
 
+
+
+void dense_qp_qpoases_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+	printf("\nerror: dense_qp_qpoases_eval_sens: not implemented yet\n");
+	exit(1);
+}
+
+
+
 void dense_qp_qpoases_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -699,6 +709,7 @@ void dense_qp_qpoases_config_initialize_default(void *config_)
         (void *(*) (void *, void *, void *, void *) ) & dense_qp_qpoases_memory_assign;
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & dense_qp_qpoases_workspace_calculate_size;
+    config->eval_sens = &dense_qp_qpoases_eval_sens;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_qpoases;
 
     return;

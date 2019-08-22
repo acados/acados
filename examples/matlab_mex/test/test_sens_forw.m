@@ -42,8 +42,10 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     codgen_model = 'true';
     method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
     sens_forw = 'true';
+    jac_reuse = 'true';
     num_stages = 4;
     num_steps = 4;
+    newton_iter = 3;
     gnsf_detect_struct = 'true';
 
     Ts = 0.1;
@@ -99,8 +101,10 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     sim_opts.set('codgen_model', codgen_model);
     sim_opts.set('num_stages', num_stages);
     sim_opts.set('num_steps', num_steps);
+    sim_opts.set('newton_iter', newton_iter);
     sim_opts.set('method', method);
     sim_opts.set('sens_forw', sens_forw);
+    sim_opts.set('jac_reuse', jac_reuse);
     if (strcmp(method, 'irk_gnsf'))
         sim_opts.set('gnsf_detect_struct', gnsf_detect_struct);
     end
@@ -116,6 +120,14 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     % set initial state
     sim.set('x', x0);
     sim.set('u', u);
+
+    % initialize implicit integrator
+    if (strcmp(method, 'irk'))
+        sim.set('xdot', zeros(nx,1));
+    elseif (strcmp(method, 'irk_gnsf'))
+        n_out = sim.model_struct.dim_gnsf_nout;
+        sim.set('phi_guess', zeros(n_out,1));
+    end
 
     % solve
     sim.solve();

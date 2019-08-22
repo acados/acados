@@ -44,11 +44,11 @@
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/utils/mem.h"
 
-ocp_qp_condensing_config *ocp_qp_condensing_config_create(condensing_plan *plan)
+ocp_qp_xcond_config *ocp_qp_condensing_config_create(condensing_plan *plan)
 {
     int bytes = ocp_qp_condensing_config_calculate_size();
     void *ptr = calloc(1, bytes);
-    ocp_qp_condensing_config *config = ocp_qp_condensing_config_assign(ptr);
+    ocp_qp_xcond_config *config = ocp_qp_condensing_config_assign(ptr);
 
     switch (plan->condensing_type)
     {
@@ -62,7 +62,7 @@ ocp_qp_condensing_config *ocp_qp_condensing_config_create(condensing_plan *plan)
     return config;
 }
 
-void *ocp_qp_condensing_opts_create(ocp_qp_condensing_config *config, void *dims_)
+void *ocp_qp_condensing_opts_create(ocp_qp_xcond_config *config, void *dims_)
 {
     int bytes = config->opts_calculate_size(dims_);
 
@@ -75,7 +75,7 @@ void *ocp_qp_condensing_opts_create(ocp_qp_condensing_config *config, void *dims
     return opts;
 }
 
-int ocp_qp_condensing_calculate_size(ocp_qp_condensing_config *config, void *dims_, void *opts_)
+int ocp_qp_condensing_calculate_size(ocp_qp_xcond_config *config, void *dims_, void *opts_)
 {
     int bytes = sizeof(condensing_module);
 
@@ -85,7 +85,7 @@ int ocp_qp_condensing_calculate_size(ocp_qp_condensing_config *config, void *dim
     return bytes;
 }
 
-condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, void *dims_,
+condensing_module *ocp_qp_condensing_assign(ocp_qp_xcond_config *config, void *dims_,
                                             void *opts_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
@@ -108,7 +108,7 @@ condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, vo
     return module;
 }
 
-condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, void *dims_,
+condensing_module *ocp_qp_condensing_create(ocp_qp_xcond_config *config, void *dims_,
                                             void *opts_)
 {
     config->opts_update(dims_, opts_);

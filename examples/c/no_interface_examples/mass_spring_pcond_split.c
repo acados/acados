@@ -104,7 +104,7 @@ int main()
     condensing_plan cond_plan;
     cond_plan.condensing_type = PARTIAL_CONDENSING;
 
-    ocp_qp_condensing_config *cond_config = ocp_qp_condensing_config_create(&cond_plan);
+    ocp_qp_xcond_config *cond_config = ocp_qp_condensing_config_create(&cond_plan);
 
     ocp_qp_partial_condensing_opts *cond_opts = ocp_qp_condensing_opts_create(cond_config, qp_in->dim);
 

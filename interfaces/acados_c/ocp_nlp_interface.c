@@ -62,6 +62,7 @@
 /************************************************
 * plan
 ************************************************/
+
 static int ocp_nlp_plan_calculate_size(int N)
 {
     // N - number of shooting nodes
@@ -166,6 +167,7 @@ void ocp_nlp_plan_destroy(void* plan_)
 /************************************************
 * config
 ************************************************/
+
 ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 {
     int N = plan.N;
@@ -198,7 +200,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 	}
 
     // QP solver
-    ocp_qp_xcond_solver_config_initialize_default(plan.ocp_qp_solver_plan.qp_solver, config->qp_solver);
+    ocp_qp_xcond_solver_config_initialize_from_plan(plan.ocp_qp_solver_plan.qp_solver, config->qp_solver);
 
     // regularization
     switch (plan.regularization)
@@ -442,8 +444,8 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
     ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, ptr);
 
     // initialize to zeros
-    for (int ii = 0; ii <= dims->N; ++ii)
-        blasfeo_dvecse(dims->qp_solver->nu[ii] + dims->qp_solver->nx[ii], 0.0, nlp_out->ux + ii, 0);
+//    for (int ii = 0; ii <= dims->N; ++ii)
+//        blasfeo_dvecse(dims->qp_solver->nu[ii] + dims->qp_solver->nx[ii], 0.0, nlp_out->ux + ii, 0);
 
     return nlp_out;
 }
@@ -692,16 +694,25 @@ void ocp_nlp_solver_destroy(void *solver)
 
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
-    return solver->config->evaluate(solver->config, solver->dims, nlp_in, nlp_out, solver->opts,
-                                    solver->mem, solver->work);
+    return solver->config->evaluate(solver->config, solver->dims, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
 }
+
 
 
 int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
-    return solver->config->precompute(solver->config, solver->dims, nlp_in, nlp_out, solver->opts,
-                                    solver->mem, solver->work);
+    return solver->config->precompute(solver->config, solver->dims, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
 }
+
+
+
+void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *field, int stage, int index, ocp_nlp_out *sens_nlp_out)
+{
+    solver->config->eval_param_sens(solver->config, solver->dims, solver->opts, solver->mem, solver->work, field, stage, index, sens_nlp_out);
+	return;
+}
+
+
 
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
                  const char *field, void *return_value_)

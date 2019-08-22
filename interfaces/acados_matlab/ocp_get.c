@@ -67,6 +67,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// solver
 	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "solver" ) );
 	ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
+	// sens_out
+	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "sens_out" ) );
+	ocp_nlp_out *sens_out = (ocp_nlp_out *) ptr[0];
 
 	// field
 	char *field = mxArrayToString( prhs[1] );
@@ -145,6 +148,78 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			double *pi = mxGetPr( plhs[0] );
 			int stage = mxGetScalar( prhs[2] );
 			ocp_nlp_out_get(config, dims, out, stage, "pi", pi);
+			}
+		else
+			{
+			mexPrintf("\nocp_get: wrong nrhs: %d\n", nrhs);
+			return;
+			}
+		}
+	else if(!strcmp(field, "sens_x"))
+		{
+		if(nrhs==2)
+			{
+			plhs[0] = mxCreateNumericMatrix(nx, N+1, mxDOUBLE_CLASS, mxREAL);
+			double *x = mxGetPr( plhs[0] );
+			for(ii=0; ii<=N; ii++)
+				{
+				ocp_nlp_out_get(config, dims, sens_out, ii, "x", x+ii*nx);
+				}
+			}
+		else if(nrhs==3)
+			{
+			plhs[0] = mxCreateNumericMatrix(nx, 1, mxDOUBLE_CLASS, mxREAL);
+			double *x = mxGetPr( plhs[0] );
+			int stage = mxGetScalar( prhs[2] );
+			ocp_nlp_out_get(config, dims, sens_out, stage, "x", x);
+			}
+		else
+			{
+			mexPrintf("\nocp_get: wrong nrhs: %d\n", nrhs);
+			return;
+			}
+		}
+	else if(!strcmp(field, "sens_u"))
+		{
+		if(nrhs==2)
+			{
+			plhs[0] = mxCreateNumericMatrix(nu, N, mxDOUBLE_CLASS, mxREAL);
+			double *u = mxGetPr( plhs[0] );
+			for(ii=0; ii<N; ii++)
+				{
+				ocp_nlp_out_get(config, dims, sens_out, ii, "u", u+ii*nu);
+				}
+			}
+		else if(nrhs==3)
+			{
+			plhs[0] = mxCreateNumericMatrix(nu, 1, mxDOUBLE_CLASS, mxREAL);
+			double *u = mxGetPr( plhs[0] );
+			int stage = mxGetScalar( prhs[2] );
+			ocp_nlp_out_get(config, dims, sens_out, stage, "u", u);
+			}
+		else
+			{
+			mexPrintf("\nocp_get: wrong nrhs: %d\n", nrhs);
+			return;
+			}
+		}
+	else if(!strcmp(field, "sens_pi"))
+		{
+		if(nrhs==2)
+			{
+			plhs[0] = mxCreateNumericMatrix(nx, N, mxDOUBLE_CLASS, mxREAL);
+			double *pi = mxGetPr( plhs[0] );
+			for(ii=0; ii<N; ii++)
+				{
+				ocp_nlp_out_get(config, dims, sens_out, ii, "pi", pi+ii*nx);
+				}
+			}
+		else if(nrhs==3)
+			{
+			plhs[0] = mxCreateNumericMatrix(nx, 1, mxDOUBLE_CLASS, mxREAL);
+			double *pi = mxGetPr( plhs[0] );
+			int stage = mxGetScalar( prhs[2] );
+			ocp_nlp_out_get(config, dims, sens_out, stage, "pi", pi);
 			}
 		else
 			{

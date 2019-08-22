@@ -56,6 +56,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	char buffer [100]; // for error messages
 
 	/* RHS */
+	// solver
+	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "solver" ) );
+	sim_solver *solver = (sim_solver *) ptr[0];
 	// config
 	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "config" ) );
 	sim_config *config = (sim_config *) ptr[0];
@@ -122,6 +125,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		// acados_size += tmp;
 		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
 		sim_in_set(config, dims, in, "seed_adj", seed_adj);
+	}
+	else if(!strcmp(field, "xdot"))
+	{
+		double *xdot = mxGetPr( prhs[5] );
+		sim_solver_set(solver, "xdot", xdot);
+	}
+	else if(!strcmp(field, "phi_guess"))
+	{
+		double *phi_guess = mxGetPr( prhs[5] );
+		sim_solver_set(solver, "phi_guess", phi_guess);
 	}
 	else
 	{
