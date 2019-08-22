@@ -41,22 +41,7 @@
 #include "acados_c/external_function_interface.h"
 // mex
 #include "mex.h"
-
-
-// macro to string
-#define STR(x) STR_AGAIN(x)
-#define STR_AGAIN(x) #x
-
-// glue macros
-#define GLUE2(x,y) GLUE2_AGAIN(x,y)
-#define GLUE2_AGAIN(x,y) x##y
-
-// macro bricks
-#define WORK _work
-#define SP_IN _sparsity_in
-#define SP_OUT _sparsity_out
-#define N_IN _n_in
-#define N_OUT _n_out
+#include "mex_macros.h"
 
 
 // casadi functions for the model
