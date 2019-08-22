@@ -245,6 +245,12 @@ hessFun.generate(['vde_hess_chain_nm' num2str(Nm)], opts);
 %% x0_init
 %err_rest = norm(full(out))
 %
+
+% NOTE: the values of the x0_nm* and xN_nm* files have been transfered to a
+% .c file with the same name to make them conveniently useable with the
+% make build system.
+
+
 %fid = fopen(['x0_nm' num2str(Nm) '.txt'],'wt');
 %fprintf(fid,'%e\n',x0_init);
 %fclose(fid);
