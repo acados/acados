@@ -48,20 +48,14 @@
 
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-	{
+{
 
-	int ii;
 	int acados_size, tmp;
 	long long *ptr;
 	char fun_name[50] = "sim_set";
-	char buffer [100];
+	char buffer [100]; // for error messages
 
 	/* RHS */
-	// char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
-
-	// C_sim
-	const mxArray *C_ext_fun_pointers = prhs[3];
-
 	// config
 	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "config" ) );
 	sim_config *config = (sim_config *) ptr[0];
@@ -71,6 +65,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// in
 	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "in" ) );
 	sim_in *in = (sim_in *) ptr[0];
+
+	const mxArray *C_ext_fun_pointers = prhs[3];
 
 	// field
 	char *field = mxArrayToString( prhs[4] );
@@ -99,22 +95,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 	else if (!strcmp(field, "p"))
 	{
-		double *p = mxGetPr( prhs[5] );
 		external_function_param_casadi *ext_fun_param_ptr;
-
-		acados_size = ext_fun_param_ptr->np;
-		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
 
 		// loop over number of external functions;
 		int struct_size = mxGetNumberOfFields( C_ext_fun_pointers );
-		for(ii=0; ii<struct_size; ii++)
+		for (int ii=0; ii<struct_size; ii++)
 		{
 //			printf("\n%s\n", mxGetFieldNameByNumber( C_ext_fun_pointers, ii) );
 			ptr = (long long *) mxGetData( mxGetFieldByNumber( C_ext_fun_pointers, 0, ii ) );
 			if (ptr[0]!=0)
 			{
 				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
+				acados_size = ext_fun_param_ptr->np;
+				MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+
+				ext_fun_param_ptr->set_param(ext_fun_param_ptr, value);
 			}
 		}
 	}
@@ -130,8 +125,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 	else
 	{
-		sprintf(buffer, "sim_set: field not supported: %s\n", field);
-		mexErrMsgTxt(buffer);
+		MEX_FIELD_NOT_SUPPORTED(fun_name, field);
 	}
 
 	return;

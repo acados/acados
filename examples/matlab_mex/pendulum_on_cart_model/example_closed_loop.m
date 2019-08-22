@@ -285,10 +285,6 @@ sim_opts.set('sens_forw', sim_sens_forw);
 %% acados sim
 % create sim
 sim = acados_sim(sim_model, sim_opts);
-%sim
-%sim.C_sim
-%sim.C_sim_ext_fun
-
 
 
 %% closed loop simulation
@@ -376,7 +372,7 @@ end
 
 
 
-figure;q
+figure;
 subplot(2,1,1);
 plot(0:n_sim, x_sim);
 xlim([0 n_sim]);
