@@ -32,81 +32,57 @@
 #
 
 ACADOS_FLAGS = -fPIC
-{% if ocp.solver_config.qp_solver == "FULL_CONDENSING_QPOASES" %}
-ACADOS_FLAGS += -DACADOS_WITH_QPOASES
-{% endif %}
-OBJ =
-# OBJ+= main_{{ ocp.model_name }}.o
-{% if  ocp.solver_config.integrator_type == "ERK" %}
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_ode_fun.o
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_vde_forw.o
-{% if ocp.solver_config.hessian_approx == "EXACT" %}
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_expl_ode_hess.o
-{% endif %}
-{% else %}
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_fun.o
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z.o
-OBJ+= {{ ocp.model_name }}_model/{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z.o
-{% endif %}
-{% if ocp.dims.npd > 0 %}
-OBJ+= {{ ocp.con_p_name }}_p_constraint/{{ ocp.con_p_name }}_p_constraint.o
-{% endif %}
-{% if ocp.dims.nh > 0 %}
-OBJ+= {{ ocp.con_h_name }}_h_constraint/{{ ocp.con_h_name }}_h_constraint.o
-{% endif %}
-OBJ+= acados_solver_{{ ocp.model_name }}.o
-OBJ+= acados_sim_solver_{{ ocp.model_name }}.o
 
-INCLUDE_PATH = {{ ocp.acados_include_path }}
-LIB_PATH = {{ ocp.acados_lib_path }}
+ACADOS_FLAGS += -DACADOS_WITH_QPOASES
+
+OBJ =
+# OBJ+= main_pendulum_ode.o
+
+OBJ+= pendulum_ode_model/pendulum_ode_expl_ode_fun.o
+OBJ+= pendulum_ode_model/pendulum_ode_expl_vde_forw.o
+
+
+
+
+OBJ+= acados_solver_pendulum_ode.o
+OBJ+= acados_sim_solver_pendulum_ode.o
+
+INCLUDE_PATH = /usr/lib/include
+LIB_PATH = /usr/lib/lib
 
 all: clean casadi_fun main ocp_solver sim_solver example
 shared_lib: ocp_shared_lib sim_shared_lib
 
 CASADI_MODEL_SOURCE=
-{% if  ocp.solver_config.integrator_type == "ERK" %}
-CASADI_MODEL_SOURCE+= {{ ocp.model_name }}_expl_ode_fun.c
-CASADI_MODEL_SOURCE+= {{ ocp.model_name }}_expl_vde_forw.c
-{% if ocp.solver_config.hessian_approx == "EXACT" %}
-CASADI_MODEL_SOURCE+= {{ ocp.model_name }}_expl_ode_hess.c
-{% endif %}
-{% else %}
-CASADI_MODEL_SOURCE+=	{{ ocp.model_name }}_impl_dae_fun.c
-CASADI_MODEL_SOURCE+=	{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z.c
-CASADI_MODEL_SOURCE+=	{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z.c
-{% endif %}
+
+CASADI_MODEL_SOURCE+= pendulum_ode_expl_ode_fun.c
+CASADI_MODEL_SOURCE+= pendulum_ode_expl_vde_forw.c
+
+
 CASADI_CON_P_SOURCE=
-{% if ocp.dims.npd > 0 %}
-CASADI_CON_P_SOURCE+=  {{ ocp.con_p_name }}_p_constraint.c
-{% endif %}
+
 CASADI_CON_H_SOURCE=
-{% if ocp.dims.nh > 0 %}
-CASADI_CON_H_SOURCE+= {{ ocp.con_h_name }}_h_constraint.c
-{% endif %}
+
 
 casadi_fun:
-	( cd {{ ocp.model_name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE))
-	{% if ocp.dims.npd > 0 %}
-	( cd {{ ocp.con_p_name }}_p_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_P_SOURCE))
-	{% endif %}
-	{% if ocp.dims.nh > 0 %}
-	( cd {{ ocp.con_h_name }}_h_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))
-	{% endif %}
+	( cd pendulum_ode_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE))
+	
+	
 
 main:
-	gcc $(ACADOS_FLAGS) -c main_{{ ocp.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
+	gcc $(ACADOS_FLAGS) -c main_pendulum_ode.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 ocp_solver:
-	gcc $(ACADOS_FLAGS) -c acados_solver_{{ ocp.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
+	gcc $(ACADOS_FLAGS) -c acados_solver_pendulum_ode.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 sim_solver:
-	gcc $(ACADOS_FLAGS) -c acados_sim_solver_{{ ocp.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
+	gcc $(ACADOS_FLAGS) -c acados_sim_solver_pendulum_ode.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 example:
-	gcc $(ACADOS_FLAGS) -o main_{{ ocp.model_name}} main_{{ ocp.model_name}}.o $(OBJ) -L $(LIB_PATH) \
+	gcc $(ACADOS_FLAGS) -o main_pendulum_ode main_pendulum_ode.o $(OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH)/acados \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
@@ -119,7 +95,7 @@ example:
 	-I $(INCLUDE_PATH)/qpOASES_e/
 
 ocp_shared_lib: casadi_fun ocp_solver
-	gcc $(ACADOS_FLAGS) -shared -o libacados_ocp_solver_{{ ocp.model_name }}.so $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -shared -o libacados_ocp_solver_pendulum_ode.so $(OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
@@ -127,7 +103,7 @@ ocp_shared_lib: casadi_fun ocp_solver
 	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
 
 sim_shared_lib: casadi_fun sim_solver
-	gcc $(ACADOS_FLAGS) -shared -o libacados_sim_solver_{{ ocp.model_name }}.so $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -shared -o libacados_sim_solver_pendulum_ode.so $(OBJ) -L $(LIB_PATH)/acados \
 	-L $(LIB_PATH) \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
@@ -137,4 +113,4 @@ sim_shared_lib: casadi_fun sim_solver
 clean:
 	rm -f *.o
 	rm -f *.so
-	rm -f main_{{ ocp.model_name}}
+	rm -f main_pendulum_ode

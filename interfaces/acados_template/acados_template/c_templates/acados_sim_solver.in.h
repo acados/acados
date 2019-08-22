@@ -20,6 +20,7 @@ sim_opts    * {{ocp.model_name}}_acados_get_sim_opts();
 sim_solver  * {{ocp.model_name}}_acados_get_sim_solver();
 
 // ** global data **
+//
 extern sim_config  * {{ocp.model_name}}_sim_config;
 extern sim_in      * {{ocp.model_name}}_sim_in;
 extern sim_out     * {{ocp.model_name}}_sim_out; 

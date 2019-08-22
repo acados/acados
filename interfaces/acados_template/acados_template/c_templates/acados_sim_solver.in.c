@@ -50,7 +50,50 @@
 #define NU   NU_
 #define NP   NP_
 
-int {{ ocp.model_name}}_acados_sim_create() {
+sim_config  * {{ocp.model_name}}_sim_config;
+sim_in      * {{ocp.model_name}}_sim_in;
+sim_out     * {{ocp.model_name}}_sim_out;
+void        * {{ocp.model_name}}_sim_dims;
+sim_opts    * {{ocp.model_name}}_sim_opts;
+sim_solver  * {{ocp.model_name}}_sim_solver;
+
+// ** global data **
+
+{% if ocp.solver_config.integrator_type == "ERK" %}
+{% if ocp.dims.np < 1 %}
+external_function_casadi * sim_forw_vde_casadi;
+external_function_casadi * sim_expl_ode_fun_casadi;
+{% else %}
+external_function_param_casadi * sim_forw_vde_casadi;
+external_function_param_casadi * sim_expl_ode_fun_casadi;
+{% endif %}
+{% else %}
+{% if ocp.solver_config.integrator_type == "IRK" %}
+{% if ocp.dims.np < 1 %}
+external_function_casadi * sim_impl_dae_fun;
+external_function_casadi * sim_impl_dae_fun_jac_x_xdot_z;
+external_function_casadi * sim_impl_dae_jac_x_xdot_u_z;
+{% else %}
+external_function_param_casadi * sim_impl_dae_fun;
+external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
+external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
+{% endif %}
+{% endif %}
+{% if ocp.dims.npd > 0 %}
+external_function_casadi * p_constraint;
+{% endif %}
+{% if ocp.dims.npd_e > 0 %}
+external_function_casadi * p_constraint_e;
+{% endif %}
+{% endif %}
+{% if ocp.dims.nh > 0 %}
+external_function_casadi * h_constraint;
+{% endif %}
+{% if ocp.dims.nh_e > 0 %}
+external_function_casadi * h_constraint_e;
+{% endif %}
+
+int {{ocp.model_name}}_acados_sim_create() {
 
 	// initialize
 

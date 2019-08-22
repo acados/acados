@@ -31,7 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-
 // standard
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,6 +54,56 @@
 {% endif %}
 
 #include "acados_solver_{{ ocp.model_name }}.h"
+
+ocp_nlp_in * nlp_in;
+ocp_nlp_out * nlp_out;
+ocp_nlp_solver * nlp_solver;
+void * nlp_opts;
+ocp_nlp_plan * nlp_solver_plan;
+ocp_nlp_config * nlp_config;
+ocp_nlp_dims * nlp_dims;
+
+// ** global data **
+
+{% if ocp.solver_config.integrator_type == "ERK" %}
+{% if ocp.dims.np < 1 %}
+external_function_casadi * forw_vde_casadi;
+{% else %}
+external_function_param_casadi * forw_vde_casadi;
+{% endif %}
+{% if ocp.solver_config.hessian_approx == "EXACT" %}
+{% if ocp.dims.np < 1 %}
+external_function_casadi * hess_vde_casadi;
+{% else %}
+external_function_param_casadi * hess_vde_casadi;
+{% endif %}
+{% endif %}
+{% else %}
+{% if ocp.solver_config.integrator_type == "IRK" %}
+{% if ocp.dims.np < 1 %}
+external_function_casadi * impl_dae_fun;
+external_function_casadi * impl_dae_fun_jac_x_xdot_z;
+external_function_casadi * impl_dae_jac_x_xdot_u_z;
+{% else %}
+external_function_param_casadi * impl_dae_fun;
+external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
+external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
+{% endif %}
+{% endif %}
+{% if ocp.dims.npd > 0 %}
+external_function_casadi * p_constraint;
+{% endif %}
+{% if ocp.dims.npd_e > 0 %}
+external_function_casadi * p_constraint_e;
+{% endif %}
+{% endif %}
+{% if ocp.dims.nh > 0 %}
+external_function_casadi * h_constraint;
+{% endif %}
+{% if ocp.dims.nh_e > 0 %}
+external_function_casadi * h_constraint_e;
+{% endif %}
+
 
 {%- for key, value in ocp.constants %}
 #define {{ key }} {{ value }}

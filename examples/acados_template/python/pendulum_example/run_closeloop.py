@@ -31,48 +31,73 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from setuptools import setup, find_packages
+from define_ocp import *
+from define_model import *
+from acados_template.generate_solver import generate_solver
 
-import sys
-print(sys.version_info)
+# import the model
+model = export_ode_model()
 
-if sys.version_info < (3,5) or sys.version_info > (3,8):
-    sys.exit('3.5 <= Python version < 3.8 required. Exiting.')
+# Define the ocp problem
+ocp = define_ocp(model)
 
-# support f-strings
-python35_requires = []
-if sys.version_info < (3,6):
-    python35_requires = ['future-fstrings']
+# generate c code
+# compile the src
+# wrap the solver with ctypes interface
+acados_ocp_solver, acados_sim_solver = generate_solver(ocp, model)
 
-setup(name='acados_template',
-   version='0.1',
-   python_requires='>=3.5, <3.8',
-   description='A templating framework for acados',
-   url='http://github.com/zanellia/acados',
-   author='Andrea Zanelli',
-   license='LGPL',
-   packages = find_packages(),
-   include_package_data = True,
-   install_requires=[
-      'jinja2',
-      'numpy',
-      'scipy',
-      'casadi==3.4.5'
-   ]+python35_requires,
-   package_data={'': [
-       'c_templates/main.in.c',
-       'c_templates/Makefile.in',
-       'c_templates/model.in.h',
-       'c_templates/main.in.h',
-       'c_templates/acados_solver.in.c',
-       'c_templates/acados_solver.in.h',
-       'c_templates/acados_sim_solver.in.c',
-       'c_templates/acados_sim_solver.in.h',
-       'c_templates/acados_solver_sfun.in.c',
-       'c_templates/p_constraint.in.h',
-       'c_templates/h_constraint.in.h',
-       'c_templates/make_sfun.in.m',
-       'acados_layout.json'
-       ]},
-   zip_safe=False
-)
+
+# Close loop simulation
+Nsim = 100
+nx = ocp.dims.nx
+nu = ocp.dims.nu
+N = ocp.dims.N
+Tf = ocp.solver_config.tf
+
+simX = np.ndarray((Nsim, nx))
+simU = np.ndarray((Nsim, nu))
+
+for i in range(Nsim):
+    status = acados_ocp_solver.solve()
+
+    # get solution
+    u0 = acados_ocp_solver.get(0, "u")
+
+    acados_sim_solver.set("u", u0)
+    status = acados_sim_solver.solve()
+    x0 = acados_sim_solver.get("x")
+
+    for j in range(nx):
+        simX[i,j] = x0[j]
+
+    for j in range(nu):
+        simU[i,j] = u0[j]
+
+    # update initial condition
+    #  x0 = acados_solver.get(1, "x")
+
+    acados_ocp_solver.set(0, "lbx", x0)
+    acados_ocp_solver.set(0, "ubx", x0)
+
+    # update reference
+    for j in range(N):
+        acados_ocp_solver.set(j, "yref", np.array([0, 0, 0, 0, 0]))
+    acados_ocp_solver.set(N, "yref", np.array([0, 0, 0, 0]))
+
+# plot results
+import matplotlib
+import matplotlib.pyplot as plt
+t = np.linspace(0.0, Tf/N, Nsim)
+plt.subplot(2, 1, 1)
+plt.step(t, simU, color='r')
+plt.title('closed-loop simulation')
+plt.ylabel('u')
+plt.xlabel('t')
+plt.grid(True)
+plt.subplot(2, 1, 2)
+plt.plot(t, simX[:,1])
+plt.ylabel('theta')
+plt.xlabel('t')
+plt.grid(True)
+plt.show()
+

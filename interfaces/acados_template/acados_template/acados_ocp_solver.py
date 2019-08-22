@@ -1,7 +1,7 @@
 from ctypes import *
 import numpy as np
 
-class acados_solver:
+class acados_ocp_solver:
     def __init__(self, acados_ocp, shared_lib):
         self.shared_lib = CDLL(shared_lib)
         self.shared_lib.acados_create()
@@ -48,7 +48,7 @@ class acados_solver:
         return out
 
     def set(self, stage_, field_, value_):
-        
+
         cost = ['y_ref', 'yref']
         constraints = ['lbx', 'ubx', 'lbu', 'ubu']
 
@@ -62,8 +62,8 @@ class acados_solver:
         self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
 
         dims = self.shared_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field)
-         
-        if value_.shape[0] != dims: 
+
+        if value_.shape[0] != dims:
             raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_,dims, value_.shape[0]))
 
         value_data = cast(value_.ctypes.data, POINTER(c_double))
@@ -81,5 +81,3 @@ class acados_solver:
 
     def __del__(self):
         self.shared_lib.acados_free()
-
-

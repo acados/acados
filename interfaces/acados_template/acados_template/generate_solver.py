@@ -36,12 +36,12 @@ from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
 from .generate_c_code_constraint import *
 from .acados_ocp_nlp import *
-from .acados_solver import acados_solver
+from .acados_ocp_solver import acados_ocp_solver
+from .acados_sim_solver import acados_sim_solver
 from ctypes import *
 
-def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_pN=None, json_file='acados_ocp_nlp.json'):
-    USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
 
+def store_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp = acados_ocp
     ocp_nlp.cost = acados_ocp.cost.__dict__
     ocp_nlp.constraints = acados_ocp.constraints.__dict__
@@ -54,6 +54,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
     with open(json_file, 'w') as f:
         json.dump(ocp_nlp, f, default=np_array_to_list)
 
+def load_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     with open(json_file, 'r') as f:
         ocp_nlp_json = json.load(f)
 
@@ -64,6 +65,11 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
     acados_ocp.constraints = ocp_nlp_as_object(acados_ocp.constraints)
     acados_ocp.solver_config = ocp_nlp_as_object(acados_ocp.solver_config)
     acados_ocp.dims = ocp_nlp_as_object(acados_ocp.dims)
+
+    return acados_ocp
+
+def generate_solver(acados_ocp, model, con_h=None, con_hN=None, con_p=None, con_pN=None):
+    USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
 
     # setting up loader and environment
     acados_path = os.path.dirname(os.path.abspath(__file__))
@@ -331,5 +337,6 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
     os.system('make shared_lib')
     os.chdir('..')
 
-    solver = acados_solver(acados_ocp, 'c_generated_code/libacados_solver_' + model.name + '.so')
-    return solver
+    ocp_solver = acados_ocp_solver(acados_ocp, 'c_generated_code/libacados_ocp_solver_' + model.name + '.so')
+    sim_solver = acados_sim_solver(acados_ocp, 'c_generated_code/libacados_sim_solver_' + model.name + '.so')
+    return ocp_solver, sim_solver
