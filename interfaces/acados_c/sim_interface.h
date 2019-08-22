@@ -126,6 +126,8 @@ void sim_solver_destroy(void *solver);
 int sim_solve(sim_solver *solver, sim_in *in, sim_out *out);
 //
 int sim_precompute(sim_solver *solver, sim_in *in, sim_out *out);
+//
+int sim_solver_set(sim_solver *solver, const char *field, void *value);
 
 #ifdef __cplusplus
 } /* extern "C" */
