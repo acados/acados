@@ -92,7 +92,7 @@ int dense_qp_dims_calculate_size()
 {
     int size = sizeof(dense_qp_dims);
 
-    size += d_memsize_dense_qp_dim();
+    size += d_dense_qp_dim_memsize();
 
     return size;
 }
@@ -106,8 +106,8 @@ dense_qp_dims *dense_qp_dims_assign(void *raw_memory)
     dense_qp_dims *dims = (dense_qp_dims *) c_ptr;
     c_ptr += sizeof(dense_qp_dims);
 
-    d_create_dense_qp_dim(dims, c_ptr);
-    c_ptr += d_memsize_dense_qp_dim();
+    d_dense_qp_dim_create(dims, c_ptr);
+    c_ptr += d_dense_qp_dim_memsize();
 
     assert((char *) raw_memory + dense_qp_dims_calculate_size() == c_ptr);
 
@@ -124,7 +124,7 @@ void dense_qp_dims_set(void *config_, void *dims_, const char *field, const int*
 
     dense_qp_dims *dims = (dense_qp_dims *) dims_;
 
-    d_set_dense_qp_dim(field_copy, *value, dims);
+    d_dense_qp_dim_set(field_copy, *value, dims);
 }
 
 
@@ -137,7 +137,7 @@ int dense_qp_in_calculate_size(dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_in);
     size += sizeof(dense_qp_dims);
-    size += d_memsize_dense_qp(dims);
+    size += d_dense_qp_memsize(dims);
     return size;
 }
 
@@ -152,8 +152,8 @@ dense_qp_in *dense_qp_in_assign(dense_qp_dims *dims, void *raw_memory)
 
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    d_create_dense_qp(dims, qp_in, c_ptr);
-    c_ptr += d_memsize_dense_qp(dims);
+    d_dense_qp_create(dims, qp_in, c_ptr);
+    c_ptr += d_dense_qp_memsize(dims);
 
     qp_in->dim = (dense_qp_dims *) c_ptr;
     c_ptr += sizeof(dense_qp_dims);
@@ -180,7 +180,7 @@ dense_qp_in *dense_qp_in_assign(dense_qp_dims *dims, void *raw_memory)
 int dense_qp_out_calculate_size(dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_out);
-    size += d_memsize_dense_qp_sol(dims);
+    size += d_dense_qp_sol_memsize(dims);
     size += sizeof(qp_info);
     return size;
 }
@@ -196,8 +196,8 @@ dense_qp_out *dense_qp_out_assign(dense_qp_dims *dims, void *raw_memory)
 
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    d_create_dense_qp_sol(dims, qp_out, c_ptr);
-    c_ptr += d_memsize_dense_qp_sol(dims);
+    d_dense_qp_sol_create(dims, qp_out, c_ptr);
+    c_ptr += d_dense_qp_sol_memsize(dims);
 
     qp_out->misc = (void *) c_ptr;
     c_ptr += sizeof(qp_info);
@@ -234,7 +234,7 @@ void dense_qp_out_get(dense_qp_out *out, const char *field, void *value)
 int dense_qp_res_calculate_size(dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_res);
-    size += d_memsize_dense_qp_res(dims);
+    size += d_dense_qp_res_memsize(dims);
     return size;
 }
 
@@ -247,8 +247,8 @@ dense_qp_res *dense_qp_res_assign(dense_qp_dims *dims, void *raw_memory)
     dense_qp_res *qp_res = (dense_qp_res *) c_ptr;
     c_ptr += sizeof(dense_qp_res);
 
-    d_create_dense_qp_res(dims, qp_res, c_ptr);
-    c_ptr += d_memsize_dense_qp_res(dims);
+    d_dense_qp_res_create(dims, qp_res, c_ptr);
+    c_ptr += d_dense_qp_res_memsize(dims);
 
     assert((char *) raw_memory + dense_qp_res_calculate_size(dims) == c_ptr);
 
@@ -260,7 +260,7 @@ dense_qp_res *dense_qp_res_assign(dense_qp_dims *dims, void *raw_memory)
 int dense_qp_res_workspace_calculate_size(dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_res_ws);
-    size += d_memsize_dense_qp_res_workspace(dims);
+    size += d_dense_qp_res_ws_memsize(dims);
     return size;
 }
 
@@ -273,8 +273,8 @@ dense_qp_res_ws *dense_qp_res_workspace_assign(dense_qp_dims *dims, void *raw_me
     dense_qp_res_ws *res_ws = (dense_qp_res_ws *) c_ptr;
     c_ptr += sizeof(dense_qp_res_ws);
 
-    d_create_dense_qp_res_workspace(dims, res_ws, c_ptr);
-    c_ptr += d_memsize_dense_qp_res_workspace(dims);
+    d_dense_qp_res_ws_create(dims, res_ws, c_ptr);
+    c_ptr += d_dense_qp_res_ws_memsize(dims);
 
     assert((char *) raw_memory + dense_qp_res_workspace_calculate_size(dims) == c_ptr);
 
@@ -328,7 +328,7 @@ void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res
     }
 
     // compute residuals
-    d_compute_res_dense_qp(qp_in, qp_out, qp_res, res_ws);
+    d_dense_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
 }
 
 

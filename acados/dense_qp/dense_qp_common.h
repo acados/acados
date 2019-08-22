@@ -50,7 +50,7 @@ typedef struct d_dense_qp_dim dense_qp_dims;
 typedef struct d_dense_qp dense_qp_in;
 typedef struct d_dense_qp_sol dense_qp_out;
 typedef struct d_dense_qp_res dense_qp_res;
-typedef struct d_dense_qp_res_workspace dense_qp_res_ws;
+typedef struct d_dense_qp_res_ws dense_qp_res_ws;
 
 
 
