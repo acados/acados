@@ -743,7 +743,6 @@ int main() {
     double tol_eq   = 1e-9;
     double tol_ineq = 1e-9;
     double tol_comp = 1e-9;
-	int N2 = 5;
 
     ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
     ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
@@ -752,6 +751,7 @@ int main() {
     ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 #if XCOND==1
     // partial condensing
+	int N2 = 5;
     ocp_nlp_opts_set(config, nlp_opts, "qp_cond_N", &N2);
 #endif
 
