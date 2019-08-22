@@ -205,7 +205,6 @@ void *ocp_qp_full_condensing_opts_assign(void *dims_, void *raw_memory)
 
 void ocp_qp_full_condensing_opts_initialize_default(void *dims_, void *opts_)
 {
-    ocp_qp_full_condensing_dims *dims = dims_;
     ocp_qp_full_condensing_opts *opts = opts_;
 
     // condense both Hessian and gradient by default
@@ -224,7 +223,6 @@ void ocp_qp_full_condensing_opts_initialize_default(void *dims_, void *opts_)
 
 void ocp_qp_full_condensing_opts_update(void *dims_, void *opts_)
 {
-    ocp_qp_full_condensing_dims *dims = dims_;
     ocp_qp_full_condensing_opts *opts = opts_;
 
     // hpipm_opts

@@ -421,12 +421,11 @@ int ocp_qp_xcond_solver(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in
     // cast workspace
     cast_workspace(config_, dims, opts, memory, work);
 
-    int solver_status;
-	int tmp_status;
+    int solver_status = ACADOS_SUCCESS;
 
 	// condensing
 	acados_tic(&cond_timer);
-	tmp_status = xcond->condensing(qp_in, memory->xcond_qp_in, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
+	xcond->condensing(qp_in, memory->xcond_qp_in, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
 	info->condensing_time = acados_toc(&cond_timer);
 
     // solve qp
@@ -434,7 +433,7 @@ int ocp_qp_xcond_solver(void *config_, ocp_qp_xcond_solver_dims *dims, ocp_qp_in
 
 	// expansion
 	acados_tic(&cond_timer);
-	tmp_status = xcond->expansion(memory->xcond_qp_out, qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
+	xcond->expansion(memory->xcond_qp_out, qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
 	info->condensing_time += acados_toc(&cond_timer);
 
 	// output qp info
@@ -471,11 +470,10 @@ void ocp_qp_xcond_solver_eval_sens(void *config_, ocp_qp_xcond_solver_dims *dims
     // cast workspace
     cast_workspace(config_, dims, opts, memory, work);
 
-	int tmp_status;
 
 	// condensing
 //	acados_tic(&cond_timer);
-	tmp_status = xcond->condensing_rhs(param_qp_in, memory->xcond_qp_in, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
+	xcond->condensing_rhs(param_qp_in, memory->xcond_qp_in, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
 //	info->condensing_time = acados_toc(&cond_timer);
 
     // qp evaluate sensitivity
@@ -483,7 +481,7 @@ void ocp_qp_xcond_solver_eval_sens(void *config_, ocp_qp_xcond_solver_dims *dims
 
 	// expansion
 //	acados_tic(&cond_timer);
-	tmp_status = xcond->expansion(memory->xcond_qp_out, sens_qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
+	xcond->expansion(memory->xcond_qp_out, sens_qp_out, opts->xcond_opts, memory->xcond_memory, work->xcond_work);
 //	info->condensing_time += acados_toc(&cond_timer);
 
 	// output qp info
