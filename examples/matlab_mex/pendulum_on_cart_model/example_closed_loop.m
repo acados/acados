@@ -316,7 +316,6 @@ for ii=1:n_sim
 	% modify numerical data
 	stages = 1:10:ocp_N;
 	for i = stages
-		% TODO(oj): change the order!!!
 		ocp.set('cost_Vx', i, Vx);
 	end
 
