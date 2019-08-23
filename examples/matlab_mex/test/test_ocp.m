@@ -252,6 +252,15 @@ ocp.set('init_u', u_traj_init);
 % change number of sqp iterations
 ocp.set('nlp_solver_max_iter', 20);
 
+% modify numerical data for a certain stage
+some_stages = 1:10:N-1;
+for i = some_stages
+	ocp.set('cost_Vx', Vx, i); % cost_yr, cost_Vu, cost_Vx, cost_W, cost_Z, cost_Zl,...
+	 % cost_Zu, cost_z, cost_zl, cost_zu;
+	ocp.set('cost_Vu', Vu, i);
+	ocp.set('cost_yr', yr, i);
+end
+
 % solve
 tic;
 ocp.solve();

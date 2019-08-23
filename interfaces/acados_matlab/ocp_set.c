@@ -115,6 +115,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	else if (nrhs==7)
 	{
 		s0 = mxGetScalar( prhs[6] );
+		if (s0 > N)
+		{
+			sprintf(buffer, "ocp_set: N < specified stage = %d\n", s0);
+			mexErrMsgTxt(buffer);			
+		}
 		se = s0 + 1;
 	}
 	else

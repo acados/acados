@@ -313,10 +313,11 @@ for ii=1:n_sim
 	ocp.set('init_u', u_traj_init);
 	ocp.set('init_pi', pi_traj_init);
 
-	% modify numerical data
-	stages = 1:10:ocp_N;
-	for i = stages
-		ocp.set('cost_Vx', i, Vx);
+	% modify numerical data for a certain stage
+	some_stages = 1:10:ocp_N-1;
+	for i = some_stages
+		ocp.set('cost_Vx', Vx, i); % cost_yr, cost_Vu, cost_Vx, cost_W, cost_Z, cost_Zl,...
+		 % cost_Zu, cost_z, cost_zl, cost_zu;
 	end
 
 	% solve OCP
