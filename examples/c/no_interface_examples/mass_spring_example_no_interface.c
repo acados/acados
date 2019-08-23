@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // external
 #include <stdio.h>
@@ -107,8 +125,9 @@ int main() {
 			int solver_opts_size;
 			void *solver_opts_mem;
 			void *solver_opts = NULL;
-			ocp_qp_partial_condensing_solver_opts *partial_condensing_solver_opts;
+			ocp_qp_xcond_solver_opts *xcond_solver_opts;
 			ocp_qp_hpipm_opts *hpipm_opts;
+			ocp_qp_partial_condensing_opts *part_cond_opts;
 			int solver_mem_size;
 			void *solver_mem_mem;
 			void *solver_mem;
@@ -123,6 +142,7 @@ int main() {
 
 					// config
 					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
+					ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
 					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
 
 					// opts
@@ -131,10 +151,11 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
-					partial_condensing_solver_opts = solver_opts;
-					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
+					xcond_solver_opts = solver_opts;
+					hpipm_opts = xcond_solver_opts->qp_solver_opts;
 					hpipm_opts->hpipm_opts->iter_max = 30;
-					partial_condensing_solver_opts->pcond_opts->N2 = N;
+					part_cond_opts = xcond_solver_opts->xcond_opts;
+					part_cond_opts->N2 = N;
 					break;
 
 				case 1: // PARTIAL_CONDENSING_HPIPM
@@ -142,6 +163,7 @@ int main() {
 
 					// config
 					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
+					ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
 					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
 					// solver_config->N2 = N2;
 
@@ -151,10 +173,11 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
-					partial_condensing_solver_opts = solver_opts;
-					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
+					xcond_solver_opts = solver_opts;
+					hpipm_opts = xcond_solver_opts->qp_solver_opts;
 					hpipm_opts->hpipm_opts->iter_max = 30;
-					partial_condensing_solver_opts->pcond_opts->N2 = N2;
+					part_cond_opts = xcond_solver_opts->xcond_opts;
+					part_cond_opts->N2 = N;
 
 					break;
 
@@ -163,6 +186,7 @@ int main() {
 
 					// config
 					ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
+					ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
 					dense_qp_hpipm_config_initialize_default(solver_config->qp_solver);
 
 					// opts
@@ -171,8 +195,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
-					partial_condensing_solver_opts = solver_opts;
-					dense_hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
+					xcond_solver_opts = solver_opts;
+					dense_hpipm_opts = xcond_solver_opts->qp_solver_opts;
 					dense_hpipm_opts->hpipm_opts->iter_max = 30;
 
 					break;
@@ -183,6 +207,7 @@ int main() {
 
 					// config
 					ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
+					ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
 					dense_qp_qpoases_config_initialize_default(solver_config->qp_solver);
 
 					// opts
@@ -191,8 +216,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
-// 				partial_condensing_solver_opts = solver_opts;
-// 				dense_hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
+// 				xcond_solver_opts = solver_opts;
+// 				dense_hpipm_opts = xcond_solver_opts->qp_solver_opts;
 // 				dense_hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 
@@ -204,6 +229,7 @@ int main() {
 
 					// config
 					ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
+					ocp_qp_full_condensing_config_initialize_default(solver_config->xcond);
 					dense_qp_qore_config_initialize_default(solver_config->qp_solver);
 
 					// opts
@@ -212,8 +238,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
-// 				partial_condensing_solver_opts = solver_opts;
-// 				dense_hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
+// 				xcond_solver_opts = solver_opts;
+// 				dense_hpipm_opts = xcond_solver_opts->qp_solver_opts;
 // 				dense_hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 
@@ -225,6 +251,7 @@ int main() {
 
 					// config
 					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
+					ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
 					ocp_qp_hpmpc_config_initialize_default(solver_config->qp_solver);
 
 					// opts
@@ -233,9 +260,10 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
-					partial_condensing_solver_opts = solver_opts;
-					partial_condensing_solver_opts->pcond_opts->N2 = N2;
-// 				hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
+					xcond_solver_opts = solver_opts;
+					part_cond_opts = xcond_solver_opts->xcond_opts;
+					part_cond_opts->N2 = N;
+// 				hpipm_opts = xcond_solver_opts->qp_solver_opts;
 // 				hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 
@@ -247,6 +275,7 @@ int main() {
 
 					// config
 					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
+					ocp_qp_partial_condensing_config_initialize_default(solver_config->xcond);
 					ocp_qp_qpdunes_config_initialize_default(solver_config->qp_solver);
 
 					// opts
@@ -255,9 +284,10 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, qp_dims, solver_opts);
-					partial_condensing_solver_opts = solver_opts;
-					partial_condensing_solver_opts->pcond_opts->N2 = N2;
-// 				hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
+					xcond_solver_opts = solver_opts;
+					part_cond_opts = xcond_solver_opts->xcond_opts;
+					part_cond_opts->N2 = N;
+// 				hpipm_opts = xcond_solver_opts->qp_solver_opts;
 // 				hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 

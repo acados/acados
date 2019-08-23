@@ -1,19 +1,36 @@
-#   This file is part of acados.
 #
-#   acados is free software; you can redistribute it and/or
-#   modify it under the terms of the GNU Lesser General Public
-#   License as published by the Free Software Foundation; either
-#   version 3 of the License, or (at your option) any later version.
+# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+# Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+# Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+# Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
 #
-#   acados is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#   Lesser General Public License for more details.
+# This file is part of acados.
 #
-#   You should have received a copy of the GNU Lesser General Public
-#   License along with acados; if not, write to the Free Software Foundation,
-#   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# The 2-Clause BSD License
 #
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
+#
+
 
 from casadi import *
 import os
@@ -38,23 +55,41 @@ def generate_c_code_explicit_ode( model ):
     nu = u.size()[0]
 
     ## set up functions to be exported
-    Sx = SX.sym('Sx', nx, nx)
-    Sp = SX.sym('Sp', nx, nu)
-    lambdaX = SX.sym('lambdaX', nx, 1)
+    if str(type(f_expl)) == "<class 'casadi.casadi.SX'>":
+        Sx = SX.sym('Sx', nx, nx)
+        Sp = SX.sym('Sp', nx, nu)
+        lambdaX = SX.sym('lambdaX', nx, 1)
+    elif str(type(f_expl)) == "<class 'casadi.casadi.MX'>":
+        Sx = MX.sym('Sx', nx, nx)
+        Sp = MX.sym('Sp', nx, nu)
+        lambdaX = MX.sym('lambdaX', nx, 1)
+    else:
+        raise Exception("Invalid type for f_expl! Possible types are 'SX' and 'MX'. Exiting.")
 
     fun_name = model_name + '_expl_ode_fun'
     expl_ode_fun = Function(fun_name, [x,u], [f_expl])
     # TODO: Polish: get rid of SX.zeros
-    vdeX = SX.zeros(nx,nx)
+    if str(type(f_expl)) == "<class 'casadi.casadi.SX'>":
+        vdeX = SX.zeros(nx,nx)
+    else: 
+        vdeX = MX.zeros(nx,nx)
+
     vdeX = vdeX + jtimes(f_expl,x,Sx)
 
-    vdeP = SX.zeros(nx,nu) + jacobian(f_expl,u)
+    if str(type(f_expl)) == "<class 'casadi.casadi.SX'>":
+        vdeP = SX.zeros(nx,nu) + jacobian(f_expl,u)
+    else: 
+        vdeP = MX.zeros(nx,nu) + jacobian(f_expl,u)
+
     vdeP = vdeP + jtimes(f_expl,x,Sp)
 
     fun_name = model_name + '_expl_vde_forw'
     expl_vde_forw = Function(fun_name, [x,Sx,Sp,u], [f_expl,vdeX,vdeP])
 
-    jacX = SX.zeros(nx,nx) + jacobian(f_expl,x)
+    if str(type(f_expl)) == "<class 'casadi.casadi.SX'>":
+        jacX = SX.zeros(nx,nx) + jacobian(f_expl,x)
+    else: 
+        jacX = MX.zeros(nx,nx) + jacobian(f_expl,x)
 
     adj = jtimes(f_expl, vertcat(x, u), lambdaX, True)
 

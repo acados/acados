@@ -1,21 +1,36 @@
 /*
- *    This file is part of acados.
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
- *    acados is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation; either
- *    version 3 of the License, or (at your option) any later version.
+ * This file is part of acados.
  *
- *    acados is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
+ * The 2-Clause BSD License
  *
- *    You should have received a copy of the GNU Lesser General Public
- *    License along with acados; if not, write to the Free Software Foundation,
- *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // standard
 #include <stdio.h>
@@ -25,6 +40,7 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 #include "acados_solver_{{ocp.model_name}}.h"
+#include "acados_sim_solver_{{ocp.model_name}}.h"
 
 // ** global data **
 ocp_nlp_in * nlp_in;
@@ -34,11 +50,23 @@ void * nlp_opts;
 ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
+
+sim_config  * {{ocp.model_name}}_sim_config;
+sim_in      * {{ocp.model_name}}_sim_in;
+sim_out     * {{ocp.model_name}}_sim_out; 
+void        * {{ocp.model_name}}_sim_dims;
+sim_opts    * {{ocp.model_name}}_sim_opts;
+sim_solver  * {{ocp.model_name}}_sim_solver; 
+
 {% if ocp.solver_config.integrator_type == "ERK" %}
 {% if ocp.dims.np < 1 %}
 external_function_casadi * forw_vde_casadi;
+external_function_casadi * sim_forw_vde_casadi;
+external_function_casadi * sim_expl_ode_fun_casadi;
 {% else %}
 external_function_param_casadi * forw_vde_casadi;
+external_function_param_casadi * sim_forw_vde_casadi;
+external_function_param_casadi * sim_expl_ode_fun_casadi;
 {% endif %}
 {% if ocp.solver_config.hessian_approx == "EXACT" %} 
 {% if ocp.dims.np < 1 %}
@@ -53,10 +81,16 @@ external_function_param_casadi * hess_vde_casadi;
 external_function_casadi * impl_dae_fun;
 external_function_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_casadi * impl_dae_jac_x_xdot_u_z;
+external_function_casadi * sim_impl_dae_fun;
+external_function_casadi * sim_impl_dae_fun_jac_x_xdot_z;
+external_function_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% else %}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
+external_function_param_casadi * sim_impl_dae_fun;
+external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
+external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
 {% if ocp.dims.npd > 0 %}
@@ -74,6 +108,48 @@ external_function_casadi * h_constraint_e;
 {% endif %}
 
 int main() {
+
+    // test integrator first
+    int sim_status = 0;
+    sim_status = {{ ocp.model_name }}_acados_sim_create();
+
+    // set sim input
+    double x_sim[{{ocp.dims.nx}}];
+    {% for item in ocp.constraints.x0 %}
+    x_sim[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+
+    // set initial condition
+    double u_sim[{{ocp.dims.nu}}];
+    {% for item in range(ocp.dims.nu) %}
+    u_sim[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+    
+    // seeds forw
+    for (int ii = 0; ii < {{ocp.dims.nx}} * ({{ocp.dims.nx}} + {{ocp.dims.nu}}); ii++)
+        {{ ocp.model_name }}_sim_in->S_forw[ii] = 0.0;
+    for (int ii = 0; ii < {{ocp.dims.nx}}; ii++)
+        {{ ocp.model_name }}_sim_in->S_forw[ii * ({{ocp.dims.nx}} + 1)] = 1.0;
+
+    double Td = {{ ocp.solver_config.tf }}/ {{ ocp.dims.N }};
+    sim_in_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_in, "T", &Td);
+    sim_in_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_in, "x", x_sim);
+    sim_in_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_in, "u", u_sim);
+
+
+    sim_status = {{ ocp.model_name }}_acados_sim_solve();
+    // get and print output
+    double *xn_out = calloc( {{ ocp.dims.nx }}, sizeof(double));
+    sim_out_get({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_out, "xn", xn_out);
+    printf("\nxn: \n");
+    d_print_exp_mat(1, {{ ocp.dims.nx }}, xn_out, 1);
+
+    double *S_forw_out = calloc({{ ocp.dims.nx }}*({{ ocp.dims.nx }}+{{ ocp.dims.nu }}), sizeof(double));
+    if ({{ ocp.model_name }}_sim_opts->sens_forw){
+        sim_out_get({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_out, "S_forw", S_forw_out);
+        printf("\nS_forw_out: \n");
+        d_print_exp_mat({{ ocp.dims.nx }}, {{ ocp.dims.nx }} + {{ ocp.dims.nx }} + {{ ocp.dims.nu }}, S_forw_out, {{ ocp.dims.nx }});
+    }
 
     int status = 0;
     status = acados_create();

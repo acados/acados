@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #include <math.h>
 #include <stdio.h>
@@ -25,8 +43,9 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
+#include "acados/ocp_qp/ocp_qp_xcond_solver.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 
 #include "acados/dense_qp/dense_qp_hpipm.h"
 
@@ -391,11 +410,13 @@ int main() {
 
 #if XCOND==2
     // full condensing HPIPM
-    ocp_qp_full_condensing_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_xcond_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_full_condensing_config_initialize_default(config->qp_solver->xcond);
     dense_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
 #else
     // no condensing or partial condensing HPIPM
-    ocp_qp_partial_condensing_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_xcond_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_partial_condensing_config_initialize_default(config->qp_solver->xcond);
     ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
 #endif
 
@@ -710,12 +731,6 @@ int main() {
 
     ocp_nlp_sqp_opts_initialize_default(config, dims, nlp_opts);
 
-#if XCOND==1
-    // partial condensing
-    ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = nlp_opts->qp_solver_opts;
-    pcond_solver_opts->pcond_opts->N2 = 5; // set partial condensing horizon
-#endif
-
     for (int i = 0; i < N; ++i)
     {
         // dynamics: discrete model
@@ -734,6 +749,11 @@ int main() {
     ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
     ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
     ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+#if XCOND==1
+    // partial condensing
+	int N2 = 5;
+    ocp_nlp_opts_set(config, nlp_opts, "qp_cond_N", &N2);
+#endif
 
     // update after user-defined options
     ocp_nlp_sqp_opts_update(config, dims, nlp_opts);

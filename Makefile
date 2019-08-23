@@ -1,20 +1,36 @@
 #
-#
-# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+# Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+# Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+# Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
 #
 # This file is part of acados.
 #
 # The 2-Clause BSD License
 #
-# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 #
-# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
 #
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
 #
-#
+
 
 
 
@@ -75,8 +91,7 @@ OBJS += acados/ocp_qp/ocp_qp_osqp.o
 endif
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing.o
-OBJS += acados/ocp_qp/ocp_qp_partial_condensing_solver.o
-OBJS += acados/ocp_qp/ocp_qp_full_condensing_solver.o
+OBJS += acados/ocp_qp/ocp_qp_xcond_solver.o
 # sim
 OBJS += acados/sim/sim_collocation_utils.o
 OBJS += acados/sim/sim_erk_integrator.o
@@ -91,14 +106,15 @@ OBJS += acados/utils/timing.o
 OBJS += acados/utils/mem.o
 OBJS += acados/utils/external_function_generic.o
 
-CAPI_OBJS = $(OBJS)
-CAPI_OBJS += interfaces/acados_c/external_function_interface.o
-CAPI_OBJS += interfaces/acados_c/dense_qp_interface.o
-CAPI_OBJS += interfaces/acados_c/ocp_nlp_interface.o
-CAPI_OBJS += interfaces/acados_c/ocp_qp_interface.o
-CAPI_OBJS += interfaces/acados_c/condensing_interface.o
-CAPI_OBJS += interfaces/acados_c/options_interface.o
-CAPI_OBJS += interfaces/acados_c/sim_interface.o
+# C interface
+ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
+OBJS += interfaces/acados_c/external_function_interface.o
+OBJS += interfaces/acados_c/dense_qp_interface.o
+OBJS += interfaces/acados_c/ocp_nlp_interface.o
+OBJS += interfaces/acados_c/ocp_qp_interface.o
+OBJS += interfaces/acados_c/condensing_interface.o
+OBJS += interfaces/acados_c/sim_interface.o
+endif
 
 # acados dependencies
 STATIC_DEPS = blasfeo_static hpipm_static
@@ -129,56 +145,31 @@ endif
 
 static_library: $(STATIC_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
-	ar rcs libacore.a $(OBJS)
-	mkdir -p lib
-	mv libacore.a lib
-	@echo
-	@echo " libacore.a static library build complete."
-	@echo
-
-ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
 	( cd interfaces/acados_c; $(MAKE) obj CC=$(CC) TOP=$(TOP) )
-	mkdir -p include/acados_c
-	cp -r interfaces/acados_c/*.h include/acados_c
-
-	ar rcs libacados.a $(CAPI_OBJS)
+	ar rcs libacados.a $(OBJS)
 	mkdir -p lib
 	mv libacados.a lib
-
+	mkdir -p include/acados
+	cp --parents acados/*/*.h include/
+	mkdir -p include/acados_c
+	cp -r interfaces/acados_c/*.h include/acados_c
 	@echo
 	@echo " libacados.a static library build complete."
 	@echo
-endif
-
 
 shared_library: $(SHARED_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
-	$(CC) -L./lib -shared -o libacore.so $(OBJS) -lblasfeo -lhpipm -lm -fopenmp
-	mkdir -p lib
-	mv libacore.so lib
-
-	mkdir -p include/acados
-	cp --parents acados/*/*.h include/
-
-	@echo
-	@echo " libacore.so shared library build complete."
-	@echo
-
-ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
 	( cd interfaces/acados_c; $(MAKE) obj  CC=$(CC) TOP=$(TOP) )
-
-	mkdir -p include/acados_c
-	cp -r interfaces/acados_c/*.h include/acados_c
-
-	$(CC) -L./lib -shared -o libacados.so $(CAPI_OBJS) -lblasfeo -lhpipm -lm -fopenmp
+	$(CC) -L./lib -shared -o libacados.so $(OBJS) -lblasfeo -lhpipm -lm -fopenmp
 	mkdir -p lib
 	mv libacados.so lib
-
+	mkdir -p include/acados
+	cp --parents acados/*/*.h include/
+	mkdir -p include/acados_c
+	cp -r interfaces/acados_c/*.h include/acados_c
 	@echo
 	@echo " libacados.so shared library build complete."
 	@echo
-endif
-
 
 blasfeo_static:
 	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) BLAS_API=0 )
@@ -266,9 +257,16 @@ examples_c: static_library
 run_examples_c: examples_c
 	( cd examples/c; $(MAKE) run_examples )
 
+unit_tests: static_library
+	( cd test; $(MAKE) unit_tests TOP=$(TOP) )
+
+run_unit_tests: unit_tests
+	( cd test; $(MAKE) run_unit_tests )
+
 clean:
 	( cd acados; $(MAKE) clean )
 	( cd examples/c; $(MAKE) clean )
+	( cd test; $(MAKE) clean )
 	( cd interfaces/acados_c; $(MAKE) clean )
 
 blasfeo_clean:

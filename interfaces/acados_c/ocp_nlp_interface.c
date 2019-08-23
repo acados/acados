@@ -1,21 +1,36 @@
 /*
- *    This file is part of acados.
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
- *    acados is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation; either
- *    version 3 of the License, or (at your option) any later version.
+ * This file is part of acados.
  *
- *    acados is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
+ * The 2-Clause BSD License
  *
- *    You should have received a copy of the GNU Lesser General Public
- *    License along with acados; if not, write to the Free Software Foundation,
- *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #include "acados_c/ocp_nlp_interface.h"
 
@@ -47,6 +62,7 @@
 /************************************************
 * plan
 ************************************************/
+
 static int ocp_nlp_plan_calculate_size(int N)
 {
     // N - number of shooting nodes
@@ -151,6 +167,7 @@ void ocp_nlp_plan_destroy(void* plan_)
 /************************************************
 * config
 ************************************************/
+
 ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 {
     int N = plan.N;
@@ -183,7 +200,7 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
 	}
 
     // QP solver
-    ocp_qp_xcond_solver_config_initialize_default(plan.ocp_qp_solver_plan.qp_solver, config->qp_solver);
+    ocp_qp_xcond_solver_config_initialize_from_plan(plan.ocp_qp_solver_plan.qp_solver, config->qp_solver);
 
     // regularization
     switch (plan.regularization)
@@ -427,8 +444,8 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
     ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, ptr);
 
     // initialize to zeros
-    for (int ii = 0; ii <= dims->N; ++ii)
-        blasfeo_dvecse(dims->qp_solver->nu[ii] + dims->qp_solver->nx[ii], 0.0, nlp_out->ux + ii, 0);
+//    for (int ii = 0; ii <= dims->N; ++ii)
+//        blasfeo_dvecse(dims->qp_solver->nu[ii] + dims->qp_solver->nx[ii], 0.0, nlp_out->ux + ii, 0);
 
     return nlp_out;
 }
@@ -677,16 +694,25 @@ void ocp_nlp_solver_destroy(void *solver)
 
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
-    return solver->config->evaluate(solver->config, solver->dims, nlp_in, nlp_out, solver->opts,
-                                    solver->mem, solver->work);
+    return solver->config->evaluate(solver->config, solver->dims, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
 }
+
 
 
 int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
-    return solver->config->precompute(solver->config, solver->dims, nlp_in, nlp_out, solver->opts,
-                                    solver->mem, solver->work);
+    return solver->config->precompute(solver->config, solver->dims, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
 }
+
+
+
+void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *field, int stage, int index, ocp_nlp_out *sens_nlp_out)
+{
+    solver->config->eval_param_sens(solver->config, solver->dims, solver->opts, solver->mem, solver->work, field, stage, index, sens_nlp_out);
+	return;
+}
+
+
 
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
                  const char *field, void *return_value_)

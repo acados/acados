@@ -1,21 +1,36 @@
 /*
- *    This file is part of acados.
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
- *    acados is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation; either
- *    version 3 of the License, or (at your option) any later version.
+ * This file is part of acados.
  *
- *    acados is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
+ * The 2-Clause BSD License
  *
- *    You should have received a copy of the GNU Lesser General Public
- *    License along with acados; if not, write to the Free Software Foundation,
- *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #ifndef INTERFACES_ACADOS_C_OCP_QP_INTERFACE_H_
 #define INTERFACES_ACADOS_C_OCP_QP_INTERFACE_H_
@@ -25,6 +40,7 @@ extern "C" {
 #endif
 
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_xcond_solver.h"
 
 
 /// QP solver types (Enumeration).
@@ -82,7 +98,7 @@ typedef struct
 typedef struct
 {
     ocp_qp_xcond_solver_config *config;
-    void *dims;
+    ocp_qp_xcond_solver_dims *dims;
     void *opts;
     void *mem;
     void *work;
@@ -91,18 +107,17 @@ typedef struct
 
 /// Initializes the qp solver configuration.
 /// TBC should this be private/static?
-void ocp_qp_xcond_solver_config_initialize_default(ocp_qp_solver_t solver_name,
-                                                   ocp_qp_xcond_solver_config *solver_config);
+void ocp_qp_xcond_solver_config_initialize_from_plan(ocp_qp_solver_t solver_name, ocp_qp_xcond_solver_config *solver_config);
 
 /// Constructs a qp solver config and Initializes with default values.
 ///
 /// \param plan The qp solver plan struct.
-ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan);
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_create(ocp_qp_solver_plan plan);
 
 /// Destructor for config struct, frees memory.
 ///
 /// \param config_ The config object to destroy.
-void ocp_qp_config_free(void *config_);
+void ocp_qp_xcond_solver_config_free(ocp_qp_xcond_solver_config *config);
 
 
 /// Constructs a struct that contains the dimensions for the variables of the qp.
@@ -113,14 +128,19 @@ ocp_qp_dims *ocp_qp_dims_create(int N);
 /// Destructor of the dimensions struct.
 ///
 /// \param dims_ The dimensions struct.
-void ocp_qp_dims_free(void *dims_);
+void ocp_qp_dims_free(void *dims);
 
+
+//
+ocp_qp_xcond_solver_dims *ocp_qp_xcond_solver_dims_create(ocp_qp_xcond_solver_config *config, int N);
+//
+void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims_);
 
 /// Constructs an input object for the qp.
 ///
 /// \param config The configuration struct.
 /// \param dims The dimensions struct.
-ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
+ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims);
 
 /// Destructor of the inputs struct.
 ///
@@ -132,7 +152,7 @@ void ocp_qp_in_free(void *in_);
 ///
 /// \param config The configuration struct.
 /// \param dims The dimensions struct.
-ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
+ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims);
 
 /// Destructor of the outputs struct.
 ///
@@ -144,16 +164,16 @@ void ocp_qp_out_free(void *out_);
 ///
 /// \param config The configuration struct.
 /// \param dims The dimensions struct.
-void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
+void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims);
 
 /// Destructor of the options struct.
 ///
 /// \param opts_ The options struct to destroy.
-void ocp_qp_opts_free(void *opts_);
+void ocp_qp_xcond_solver_opts_free(ocp_qp_xcond_solver_opts *opts);
 
 
 /// TBC Should be private/static?
-int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_);
+int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 
 
 /// TBC Reserves memory? TBC Should this be private?
@@ -162,7 +182,7 @@ int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims,
 /// \param dims The dimensions struct.
 /// \param opts_ The options struct.
 /// \param raw_memory The TBD.
-ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_,
+ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_,
                              void *raw_memory);
 
 /// Creates a qp solver. Reserves memory.
@@ -170,7 +190,7 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
 /// \param config The configuration struct.
 /// \param dims The dimensions struct.
 /// \param opts_ The options struct.
-ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_);
+ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 
 /// Solves the qp.
 ///

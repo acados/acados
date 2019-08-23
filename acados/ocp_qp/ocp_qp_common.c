@@ -1,20 +1,40 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
 
+
 // external
+#include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 #include <string.h>
 
@@ -63,51 +83,23 @@ qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory)
 
 
 
-int ocp_qp_xcond_solver_config_calculate_size()
-{
-    int size = 0;
-
-    size += sizeof(ocp_qp_xcond_solver_config);
-
-    size += ocp_qp_solver_config_calculate_size();  // qp solver
-
-    return size;
-}
-
-
-
-ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory)
-{
-    char *c_ptr = raw_memory;
-
-    ocp_qp_xcond_solver_config *config = (ocp_qp_xcond_solver_config *) c_ptr;
-    c_ptr += sizeof(ocp_qp_xcond_solver_config);
-
-    config->qp_solver = ocp_qp_solver_config_assign(c_ptr);
-    c_ptr += ocp_qp_solver_config_calculate_size();
-
-    return config;
-}
-
-
-
 int ocp_qp_condensing_config_calculate_size()
 {
     int size = 0;
 
-    size += sizeof(ocp_qp_condensing_config);
+    size += sizeof(ocp_qp_xcond_config);
 
     return size;
 }
 
 
 
-ocp_qp_condensing_config *ocp_qp_condensing_config_assign(void *raw_memory)
+ocp_qp_xcond_config *ocp_qp_condensing_config_assign(void *raw_memory)
 {
     char *c_ptr = raw_memory;
 
-    ocp_qp_condensing_config *config = (ocp_qp_condensing_config *) c_ptr;
-    c_ptr += sizeof(ocp_qp_condensing_config);
+    ocp_qp_xcond_config *config = (ocp_qp_xcond_config *) c_ptr;
+    c_ptr += sizeof(ocp_qp_xcond_config);
 
     return config;
 }
@@ -139,8 +131,6 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
     d_ocp_qp_dim_create(N, dims, c_ptr);
     c_ptr += d_ocp_qp_dim_memsize(N);
 
-    dims->N = N;
-
     assert((char *) raw_memory + ocp_qp_dims_calculate_size(N) == c_ptr);
 
     return dims;
@@ -148,13 +138,13 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 
 
 
-void ocp_qp_dims_set(void *config_, void *dims_, int stage, const char *field, const int* value)
+void ocp_qp_dims_set(void *config_, void *dims, int stage, const char *field, int* value)
 {
-    ocp_qp_dims *dims = (ocp_qp_dims *) dims_;
-    // char field_copy[MAX_STR_LEN];
     char *field_copy = (char *) field;
 
     d_ocp_qp_dim_set(field_copy, stage, *value, dims);
+
+	return;
 }
 
 
@@ -163,7 +153,7 @@ void ocp_qp_dims_set(void *config_, void *dims_, int stage, const char *field, c
  * in
  ************************************************/
 
-int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims)
+int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_in);
     size += d_ocp_qp_memsize(dims);
@@ -173,7 +163,7 @@ int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims)
 
 
 
-ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
+ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -186,25 +176,11 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
 
-    dims_copy->N = dims->N;
-
-    for (int ii = 0; ii < dims->N + 1; ii++)
-    {
-        dims_copy->nx[ii] = dims->nx[ii];
-        dims_copy->nu[ii] = dims->nu[ii];
-        dims_copy->nb[ii] = dims->nb[ii];
-        dims_copy->ng[ii] = dims->ng[ii];
-        dims_copy->ns[ii] = dims->ns[ii];
-        dims_copy->nbu[ii] = dims->nbu[ii];
-        dims_copy->nbx[ii] = dims->nbx[ii];
-        dims_copy->nsbu[ii] = dims->nsbu[ii];
-        dims_copy->nsbx[ii] = dims->nsbx[ii];
-        dims_copy->nsg[ii] = dims->nsg[ii];
-    }
+	d_ocp_qp_dim_copy_all(dims, dims_copy);
 
     qp_in->dim = dims_copy;
 
-    assert((char *) raw_memory + ocp_qp_in_calculate_size(config, dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);
 
     return qp_in;
 }
@@ -215,18 +191,18 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
  * out
  ************************************************/
 
-int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims)
+int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_out);
     size += d_ocp_qp_sol_memsize(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
-    size += sizeof(ocp_qp_info);
+    size += sizeof(qp_info); // TODO move to memory !!!
     return size;
 }
 
 
 
-ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
+ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -236,33 +212,37 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
     d_ocp_qp_sol_create(dims, qp_out, c_ptr);
     c_ptr += d_ocp_qp_sol_memsize(dims);
 
-    qp_out->misc = (void *) c_ptr;
-    c_ptr += sizeof(ocp_qp_info);
+    qp_out->misc = (void *) c_ptr; // TODO move to memory !!!
+    c_ptr += sizeof(qp_info); // TODO move to memory !!!
 
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
 
-    dims_copy->N = dims->N;
-
-    for (int ii = 0; ii < dims->N + 1; ii++)
-    {
-        dims_copy->nx[ii] = dims->nx[ii];
-        dims_copy->nu[ii] = dims->nu[ii];
-        dims_copy->nb[ii] = dims->nb[ii];
-        dims_copy->ng[ii] = dims->ng[ii];
-        dims_copy->ns[ii] = dims->ns[ii];
-        dims_copy->nsbx[ii] = dims->nsbx[ii];
-        dims_copy->nsbu[ii] = dims->nsbu[ii];
-        dims_copy->nsg[ii] = dims->nsg[ii];
-        dims_copy->nbu[ii] = dims->nbu[ii];
-        dims_copy->nbx[ii] = dims->nbx[ii];
-    }
+	d_ocp_qp_dim_copy_all(dims, dims_copy);
 
     qp_out->dim = dims_copy;
 
-    assert((char *) raw_memory + ocp_qp_out_calculate_size(config, dims) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
 
     return qp_out;
+}
+
+
+
+void ocp_qp_out_get(ocp_qp_out *out, const char *field, void *value)
+{
+	if(!strcmp(field, "qp_info"))
+	{
+		qp_info **ptr = value;
+		*ptr = out->misc;
+	}
+	else
+	{
+		printf("\nerror: ocp_qp_out_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
 }
 
 
@@ -270,8 +250,6 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 /************************************************
  * res
  ************************************************/
-
-// TODO(all): add config !!!
 
 int ocp_qp_res_calculate_size(ocp_qp_dims *dims)
 {
@@ -328,7 +306,7 @@ ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory)
 void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res,
                         ocp_qp_res_ws *res_ws)
 {
-    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    qp_info *info = (qp_info *) qp_out->misc;
 
     if (info->t_computed == 0)
     {
