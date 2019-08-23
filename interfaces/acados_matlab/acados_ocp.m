@@ -110,6 +110,8 @@ classdef acados_ocp < handle
 			elseif nargin==4
 				obj = varargin{1};
 				field = varargin{2};
+				% NOTE(oj): why different order then above?
+				% TODO: just take stage as optional last argument!
 				stage = varargin{3};
 				value = varargin{4};
 				ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);

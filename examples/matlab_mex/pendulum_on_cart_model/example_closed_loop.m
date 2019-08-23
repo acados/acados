@@ -43,7 +43,6 @@ if (~strcmp(env_run, 'true'))
 end
 
 
-
 %% options
 compile_mex = 'true'; % true, false
 codgen_model = 'true'; % true, false
@@ -64,8 +63,7 @@ qp_solver = 'partial_condensing_hpipm';
         % full_condensing_hpipm, partial_condensing_hpipm
 qp_solver_cond_N = 5;
 qp_solver_warm_start = 0;
-qp_solver_cond_ric_alg = 0; % HPIPM specific
- % TODO(oj): this is not propagated!!
+qp_solver_cond_ric_alg = 0; % HPIPM specific? what does it stand for?
 qp_solver_ric_alg = 0; % HPIPM specific? what does it stand for?
 ocp_sim_method = 'erk'; % erk, irk, irk_gnsf
 ocp_sim_method_num_stages = 4;
@@ -314,6 +312,13 @@ for ii=1:n_sim
 	ocp.set('init_x', x_traj_init);
 	ocp.set('init_u', u_traj_init);
 	ocp.set('init_pi', pi_traj_init);
+
+	% modify numerical data
+	stages = 1:10:ocp_N;
+	for i = stages
+		% TODO(oj): change the order!!!
+		ocp.set('cost_Vx', i, Vx);
+	end
 
 	% solve OCP
 	ocp.solve();
