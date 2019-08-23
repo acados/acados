@@ -81,8 +81,7 @@ Where:
 
 * :math:`C,\,D,\,C^e,\,\Pi_x,\,\Pi_u,\,\Pi_x^e` are matrices of appropriate dimensions defining the polytopic and box constraints.
 
-Currently not yet implemented features:
-
+The `acados_template` interface makes some limiting assumptions on the problem formulation above, namely:
 * :math:`l` must be in linear least-squares form :math:`l = \frac{1}{2}\| V_x x(t) + V_u u(t) + V_z z(t) - y_{\text{ref}}\|_W^2`
 * :math:`m` must be in linear least-squares form :math:`m = \frac{1}{2}\| V^e_x x(t) - y_{\text{ref}}^e\|_{W^e}^2`
 * Constraints cannot depend on algebraic variables (yet)
