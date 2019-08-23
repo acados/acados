@@ -274,8 +274,4 @@ add_executable(dense_qp dense_qp.c)
 target_link_libraries(dense_qp acados)
 add_test(dense_qp dense_qp)
 
-if(EMBEDDED_TARGET MATCHES XILINX_NONE_ELF ) #Xilinx bare-metal
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T ${LINKER_SCRIPT_PATH}")
-endif()
-
 endif()
