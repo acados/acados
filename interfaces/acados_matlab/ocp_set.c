@@ -53,11 +53,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 	/* RHS */
-	// TODO(oj): better get these fields from plan, because that is what is actually in C.
-	char *cost_type = mxArrayToString( mxGetField( prhs[0], 0, "cost_type" ) );
-	char *cost_type_e = mxArrayToString( mxGetField( prhs[0], 0, "cost_type_e" ) );
-
-
+	// plan
+	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "plan" ) );
+	ocp_nlp_plan *plan = (ocp_nlp_plan *) ptr[0];
 	// config
 	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "config" ) );
 	ocp_nlp_config *config = (ocp_nlp_config *) ptr[0];
@@ -149,18 +147,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// cost:
 	else if (!strcmp(field, "cost_yr"))
 	{
-		if (!strcmp(cost_type, "linear_ls") || !strcmp(cost_type, "nonlinear_ls"))
+		for (int ii=s0; ii<se; ii++)
 		{
-			acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "y_ref");
-			MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
-			for (int ii=s0; ii<se; ii++)
+			if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS))
 			{
+				acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
+				MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
 				ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", value);
 			}
-		}
-		else
-		{
-			MEX_FIELD_NOT_SUPPORTED_FOR_MODULE(fun_name, field, cost_type);
+			else
+			{
+				MEX_FIELD_NOT_SUPPORTED_FOR_COST_STAGE(fun_name, field, plan->nlp_cost[ii], ii);
+			}
 		}
 	}
 	else if (!strcmp(field, "cost_yr_e"))
@@ -171,41 +169,55 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 	else if (!strcmp(field, "cost_Vu"))
 	{
-		int ny = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "y_ref");
-		int nu = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "u");
-		acados_size = ny * nu;
-		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
 		for (int ii=s0; ii<se; ii++)
 		{
-			ocp_nlp_cost_model_set(config, dims, in, ii, "Vu", value);
+			if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS))
+			{
+				int ny = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
+				int nu = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "u");
+				acados_size = ny * nu;
+				MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+				ocp_nlp_cost_model_set(config, dims, in, ii, "Vu", value);
+			}
+			else
+			{
+				MEX_FIELD_NOT_SUPPORTED_FOR_COST_STAGE(fun_name, field, plan->nlp_cost[ii], ii);
+			}
 		}
 	}
 	else if (!strcmp(field, "cost_Vx"))
 	{
-		if (!strcmp(cost_type, "linear_ls") || !strcmp(cost_type, "nonlinear_ls"))
+		for (int ii=s0; ii<se; ii++)
 		{
-			int ny = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "y_ref");
-			int nx = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "x");
-			acados_size = ny * nx;
-			MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
-			for (int ii=s0; ii<se; ii++)
+			if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS))
 			{
+				int ny = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "y_ref");
+				int nx = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "x");
+				acados_size = ny * nx;
+				MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
 				ocp_nlp_cost_model_set(config, dims, in, ii, "Vx", value);
 			}
-		}
-		else
-		{
-			MEX_FIELD_NOT_SUPPORTED_FOR_MODULE(fun_name, field, cost_type);
+			else
+			{
+				MEX_FIELD_NOT_SUPPORTED_FOR_COST_STAGE(fun_name, field, plan->nlp_cost[ii], ii);
+			}
 		}
 	}
 	else if (!strcmp(field, "cost_W"))
 	{
-		int ny = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "y_ref");
-		acados_size = ny * ny;
-		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
 		for (int ii=s0; ii<se; ii++)
 		{
-			ocp_nlp_cost_model_set(config, dims, in, ii, "W", value);
+			if ((plan->nlp_cost[ii] == LINEAR_LS) || (plan->nlp_cost[ii] == NONLINEAR_LS))
+			{
+				int ny = ocp_nlp_dims_get_from_attr(config, dims, out, s0, "y_ref");
+				acados_size = ny * ny;
+				MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+				ocp_nlp_cost_model_set(config, dims, in, ii, "W", value);
+			}
+			else
+			{
+				MEX_FIELD_NOT_SUPPORTED_FOR_COST_STAGE(fun_name, field, plan->nlp_cost[ii], ii);
+			}
 		}
 	}
 	// slacks, TODO(oj): _e stuff, but maybe this can be avoided!!

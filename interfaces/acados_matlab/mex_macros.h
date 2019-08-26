@@ -52,10 +52,12 @@
 	mexErrMsgTxt(buffer);\
 }
 
-#define MEX_FIELD_NOT_SUPPORTED_FOR_MODULE(fun_name, field, module) {\
-	sprintf(buffer, "%s field %s not supported for module %s", fun_name, field, module);\
+#define MEX_FIELD_NOT_SUPPORTED_FOR_COST_STAGE(fun_name, field, cost, ii) {\
+	sprintf(buffer, "%s field %s not supported for cost type %d at stage %d", fun_name, field, cost, ii);\
 	mexErrMsgTxt(buffer);\
 }
+
+
 
 // macro to string
 #define STR(x) STR_AGAIN(x)
