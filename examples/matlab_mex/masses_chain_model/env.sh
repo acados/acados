@@ -55,10 +55,12 @@ echo "ACADOS_INSTALL_DIR=$ACADOS_INSTALL_DIR"
 # export casadi folder and matlab/octave mex folder
 # MATLAB case
 export MATLABPATH=$MATLABPATH:$ACADOS_INSTALL_DIR/external/casadi-matlab/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab/
+export MATLABPATH=$MATLABPATH:$ACADOS_INSTALL_DIR/external/casadi-matlab/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab/acados_template_mex/
 echo
 echo "MATLABPATH=$MATLABPATH"
 # Octave case
 export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab/
+export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-matlab/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab/acados_template_mex/
 echo
 echo "OCTAVE_PATH=$OCTAVE_PATH"
 
