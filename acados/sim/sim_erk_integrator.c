@@ -181,7 +181,6 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
     {
         printf("\nerror: sim_erk_model_set: wrong field: %s\n", field);
         exit(1);
-//        return ACADOS_FAILURE;
     }
 
     return ACADOS_SUCCESS;
@@ -434,11 +433,40 @@ void sim_erk_opts_update(void *config_, void *dims, void *opts_)
  * memory
  ************************************************/
 
-int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_) { return 0; }
+int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_)
+{
+    return 0;
+}
+
+
 void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory)
 {
     return NULL;
 }
+
+int sim_erk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
+{
+    printf("sim_erk_memory_set field %s is not supported! \n", field);
+    exit(1);
+}
+
+int sim_erk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
+{
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "guesses"))
+    {
+        // no guesses/initialization in ERK
+    }
+    else
+    {
+        printf("sim_erk_memory_set_to_zero field %s is not supported! \n", field);
+        exit(1);
+    }
+
+    return status;
+}
+
 
 /************************************************
  * workspace
@@ -567,8 +595,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     if ( opts->ns != opts->tableau_size )
     {
-        printf("Error in sim_erk: the Butcher tableau size does not match ns");
-        return ACADOS_FAILURE;
+        printf("Error in sim_erk: the Butcher tableau size does not match ns\n");
+        exit(1);
     }
     int ns = opts->ns;
 
@@ -587,18 +615,18 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // assert - only use supported features
     if (nz != 0)
     {
-        printf("nz should be zero - DAEs are not supported by the ERK integrator");
-        return ACADOS_FAILURE;
+        printf("sim_erk: nz should be zero - DAEs are not supported by the ERK integrator\n");
+        exit(1);
     }
     if (opts->output_z)
     {
-        printf("opts->output_z should be false - DAEs are not supported for the ERK integrator");
-        return ACADOS_FAILURE;
+        printf("sim_erk: opts->output_z should be false - DAEs are not supported for the ERK integrator\n");
+        exit(1);
     }
     if (opts->sens_algebraic)
     {
-        printf("opts->sens_algebraic should be false - DAEs are not supported for the ERK integrator");
-        return ACADOS_FAILURE;
+        printf("sim_erk: opts->sens_algebraic should be false - DAEs are not supported for the ERK integrator\n");
+        exit(1);
     }
 
     int nf = opts->num_forw_sens;
@@ -903,6 +931,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     return 0;  // success
 }
 
+
 void sim_erk_config_initialize_default(void *config_)
 {
     sim_config *config = config_;
@@ -914,6 +943,8 @@ void sim_erk_config_initialize_default(void *config_)
     config->opts_set = &sim_erk_opts_set;
     config->memory_calculate_size = &sim_erk_memory_calculate_size;
     config->memory_assign = &sim_erk_memory_assign;
+    config->memory_set = &sim_erk_memory_set;
+    config->memory_set_to_zero = &sim_erk_memory_set_to_zero;
     config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
     config->model_calculate_size = &sim_erk_model_calculate_size;
     config->model_assign = &sim_erk_model_assign;

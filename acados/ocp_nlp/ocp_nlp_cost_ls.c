@@ -304,7 +304,10 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     int status = ACADOS_SUCCESS;
 
     if ( !config_ || !dims_ || !model_ || !value_ )
-        status = ACADOS_FAILURE;
+    {
+        printf("ocp_nlp_cost_ls_model_set: got NULL pointer \n");
+        exit(1);
+    }
 
     ocp_nlp_cost_ls_dims *dims = dims_;
     ocp_nlp_cost_ls_model *model = model_;

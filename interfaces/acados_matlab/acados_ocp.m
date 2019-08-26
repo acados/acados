@@ -230,6 +230,12 @@ classdef acados_ocp < handle
 
 
 
+		function eval_param_sens(obj, field, stage, index)
+			ocp_eval_param_sens(obj.C_ocp, field, stage, index);
+		end
+
+
+
 %		function set(obj, field, value)
 %			ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
 %		end

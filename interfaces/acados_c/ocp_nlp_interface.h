@@ -361,6 +361,9 @@ int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_o
 /// \param nlp_out The outputs struct.
 int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
+//
+void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *field, int stage, int index, ocp_nlp_out *sens_nlp_out);
+
 /* get */
 /// TBD
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,

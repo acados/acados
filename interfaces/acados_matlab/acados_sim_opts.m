@@ -51,9 +51,11 @@ classdef acados_sim_opts < handle
 			obj.opts_struct.method = 'irk';
 			obj.opts_struct.num_stages = 4;
 			obj.opts_struct.num_steps = 1;
+			obj.opts_struct.newton_iter = 3;
 			obj.opts_struct.sens_forw = 'false';
 			obj.opts_struct.sens_adj = 'false';
 			obj.opts_struct.sens_hess = 'false';
+			obj.opts_struct.jac_reuse = 'false';
 			obj.opts_struct.gnsf_detect_struct = 'true';
 			obj.opts_struct.output_dir = fullfile(pwd, 'build');
 		end
@@ -68,6 +70,8 @@ classdef acados_sim_opts < handle
 				obj.opts_struct.num_stages = value;
 			elseif (strcmp(field, 'num_steps'))
 				obj.opts_struct.num_steps = value;
+			elseif (strcmp(field, 'newton_iter'))
+				obj.opts_struct.newton_iter = value;
 			elseif (strcmp(field, 'method'))
 				obj.opts_struct.method = value;
 			elseif (strcmp(field, 'sens_forw'))
@@ -76,6 +80,8 @@ classdef acados_sim_opts < handle
 				obj.opts_struct.sens_adj = value;
 			elseif (strcmp(field, 'sens_hess'))
 				obj.opts_struct.sens_hess = value;
+			elseif (strcmp(field, 'jac_reuse'))
+				obj.opts_struct.jac_reuse = value;
 			elseif (strcmp(field, 'gnsf_detect_struct'))
 				obj.opts_struct.gnsf_detect_struct = value;
 			elseif (strcmp(field, 'output_dir'))

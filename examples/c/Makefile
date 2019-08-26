@@ -78,7 +78,7 @@ endif
 
 EXAMPLES =
 EXAMPLES += dense_qp
-EXAMPLES += ocp_qp
+##EXAMPLES += ocp_qp
 EXAMPLES += pendulum_scqp
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
@@ -87,16 +87,17 @@ EXAMPLES += sim_crane_example
 EXAMPLES += sim_gnsf_crane
 EXAMPLES += mass_spring_example
 EXAMPLES += mass_spring_nmpc_example
-EXAMPLES += mass_spring_pcond_split
-EXAMPLES += mass_spring_fcond_split
-EXAMPLES += mass_spring_offline_fcond_qpoases_split
+##EXAMPLES += mass_spring_pcond_split
+##EXAMPLES += mass_spring_fcond_split
+##EXAMPLES += mass_spring_offline_fcond_qpoases_split
 EXAMPLES += nonlinear_chain_ocp_nlp
 # EXAMPLES += sim_crane_no_interface
-EXAMPLES += mass_spring_example_no_interface
+##EXAMPLES += mass_spring_example_no_interface
 #EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
 EXAMPLES += wind_turbine_nmpc
 #EXAMPLES += engine_example
 EXAMPLES += regularization
+EXAMPLES += simple_dae_example
 
 examples: $(EXAMPLES)
 
@@ -104,7 +105,7 @@ examples: $(EXAMPLES)
 # run all
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_dense_qp
-RUN_EXAMPLES += run_ocp_qp
+##RUN_EXAMPLES += run_ocp_qp
 RUN_EXAMPLES += run_pendulum_scqp
 RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
@@ -113,21 +114,23 @@ RUN_EXAMPLES += run_sim_crane_example
 RUN_EXAMPLES += run_sim_gnsf_crane
 RUN_EXAMPLES += run_mass_spring_example
 RUN_EXAMPLES += run_mass_spring_nmpc_example
-RUN_EXAMPLES += run_mass_spring_pcond_split
-RUN_EXAMPLES += run_mass_spring_fcond_split
+##RUN_EXAMPLES += run_mass_spring_pcond_split
+##RUN_EXAMPLES += run_mass_spring_fcond_split
 #RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
 RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 # RUN_EXAMPLES += run_sim_crane_no_interface
-RUN_EXAMPLES += run_mass_spring_example_no_interface
+##RUN_EXAMPLES += run_mass_spring_example_no_interface
 #RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
 RUN_EXAMPLES += run_wind_turbine_nmpc
 #RUN_EXAMPLES += run_engine_example
 RUN_EXAMPLES += run_regularization
+RUN_EXAMPLES += run_simple_dae_example
 
 # overwrite to run just one
 #RUN_EXAMPLES = run_wind_turbine_nmpc
 #RUN_EXAMPLES = run_mass_spring_nmpc_example
 #RUN_EXAMPLES = run_regularization
+#RUN_EXAMPLES = run_mass_spring_example
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -565,12 +568,35 @@ run_regularization:
 
 
 #################################################
+# simple dae example
+#################################################
+
+SIMPLE_DAE_OBJS =
+SIMPLE_DAE_OBJS += simple_dae_model/simple_dae_impl_ode_fun.o
+SIMPLE_DAE_OBJS += simple_dae_model/simple_dae_impl_ode_jac_x_xdot_u_z.o
+SIMPLE_DAE_OBJS += simple_dae_model/simple_dae_impl_ode_fun_jac_x_xdot_z.o
+
+simple_dae_example: $(SIMPLE_DAE_OBJS) simple_dae_example.o
+	$(CCC) -o simple_dae_example.out $(SIMPLE_DAE_OBJS) simple_dae_example.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example simple_dae_example build complete."
+	@echo
+
+run_simple_dae_example:
+	./simple_dae_example.out
+
+
+
+
+#################################################
 # clean
 #################################################
 
 clean:
 	rm -f *.o
 	rm -f *.out
+	rm -f no_interface_examples/*.o
+	rm -f no_interface_examples/*.out
 
 clean_models:
 	rm -f chain_model/*.o

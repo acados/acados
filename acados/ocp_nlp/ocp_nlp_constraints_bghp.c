@@ -451,7 +451,11 @@ int ocp_nlp_constraints_bghp_model_set(void *config_, void *dims_,
     int ii;
     int *ptr_i;
 
-    if (!dims || !model || !field || !value) return ACADOS_FAILURE;
+    if (!dims || !model || !field || !value)
+    {
+        printf("ocp_nlp_constraints_bghp_model_set: got Null pointer \n");
+        exit(1);
+    }
 
     int nu = dims->nu;
     int nx = dims->nx;

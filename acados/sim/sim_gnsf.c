@@ -608,8 +608,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     if (model->get_gnsf_matrices == NULL && model->auto_import_gnsf)
     {
         printf("sim_gnsf error: get_gnsf_matrices function seems to be unset!\n");
-        status = ACADOS_FAILURE;
-        return status;
+        exit(1);
     }
 
     if (model->auto_import_gnsf)
@@ -651,8 +650,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
     if (dt == 0.0)
     {
         printf("sim_gnsf error: simulation time = 0; seems to be unset!\n");
-        status = ACADOS_FAILURE;
-        return status;
+        exit(1);
     }
     mem->dt = dt;
 
@@ -1159,7 +1157,7 @@ int sim_gnsf_precompute(void *config_, sim_in *in, sim_out *out, void *opts_, vo
 
 
 /************************************************
- * memory & workspace
+ * memory
  ************************************************/
 
 int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
@@ -1393,6 +1391,53 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
 }
 
 
+int sim_gnsf_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
+{
+    sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "phi_guess"))
+    {
+        double *phi_guess = value;
+        for (int ii=0; ii < dims->n_out; ii++)
+            mem->phi_guess[ii] = phi_guess[ii];
+    }
+    else
+    {
+        printf("sim_gnsf_memory_set field %s is not supported! \n", field);
+        exit(1);
+    }
+
+    return status;
+}
+
+
+int sim_gnsf_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
+{
+    sim_gnsf_memory *mem = (sim_gnsf_memory *) mem_;
+    sim_gnsf_dims *dims = (sim_gnsf_dims *) dims_;
+
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "guesses"))
+    {
+        for (int ii=0; ii < dims->n_out; ii++)
+            mem->phi_guess[ii] = 0.0;
+    }
+    else
+    {
+        printf("sim_gnsf_memory_set_to_zero field %s is not supported! \n", field);
+        exit(1);
+    }
+
+    return status;
+}
+
+/************************************************
+ * workspace
+ ************************************************/
 
 int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
 {
@@ -1705,7 +1750,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     if ( opts->ns != opts->tableau_size )
     {
         printf("Error in sim_gnsf: the Butcher tableau size does not match ns");
-        return ACADOS_FAILURE;
+        exit(1);
     }
 
     // necessary integers
@@ -1736,7 +1781,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     if (mem->dt != in->T / opts->num_steps)
     {
         printf("ERROR sim_gnsf: mem->dt n!= in->T/opts->num_steps, check initialization\n");
-        return ACADOS_FAILURE;
+        exit(1);
     }
 
     // assign variables from workspace
@@ -1901,7 +1946,7 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         if (opts->output_z || opts->sens_algebraic)
         {
             printf("ERROR sim_gnsf: output_z and sens_algebraic not supported with fully linear structure exploitation\n");
-            return ACADOS_FAILURE;
+            exit(1);
         }
     }
     else
@@ -2554,6 +2599,11 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                     blasfeo_unpack_dvec(nz, z0, 0, out->zn);
                 }
             } // if ss == 0;
+            if (ss == num_steps-1)
+            {
+                // store last vv values for next initialization
+                blasfeo_unpack_dvec(n_out, &vv_traj[ss], (num_stages-1) * n_out, mem->phi_guess);
+            }
         }  // end step loop: ss
 
 
@@ -2749,6 +2799,8 @@ void sim_gnsf_config_initialize_default(void *config_)
     // memory & workspace
     config->memory_calculate_size = &sim_gnsf_memory_calculate_size;
     config->memory_assign = &sim_gnsf_memory_assign;
+    config->memory_set = &sim_gnsf_memory_set;
+    config->memory_set_to_zero = &sim_gnsf_memory_set_to_zero;
     config->workspace_calculate_size = &sim_gnsf_workspace_calculate_size;
     // model
     config->model_calculate_size = &sim_gnsf_model_calculate_size;

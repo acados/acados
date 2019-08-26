@@ -215,7 +215,7 @@ int main() {
         if (acados_return != 0)
         {
             printf("error in sim solver\n");
-            return ACADOS_FAILURE;
+            exit(1);
         }
         casadi_times[i] = out->info->ADtime;
         gnsf_times[i] = out->info->CPUtime;

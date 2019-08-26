@@ -54,15 +54,18 @@ OBJ+= {{ ocp.con_p.name }}_p_constraint/{{ ocp.con_p.name }}_p_constraint.o
 {% if ocp.dims.nh > 0 %}
 OBJ+= {{ ocp.con_h.name }}_h_constraint/{{ ocp.con_h.name }}_h_constraint.o
 {% endif %}
+
 {% if ocp.dims.nh_e > 0 %}
 OBJ+= {{ ocp.con_h_e.name }}_h_e_constraint/{{ ocp.con_h_e.name }}_h_e_constraint.o
 {% endif %}
 OBJ+= acados_solver_{{ ocp.model.name }}.o
+OBJ+= acados_sim_solver_{{ ocp.model.name }}.o
+
 
 INCLUDE_PATH = {{ ocp.acados_include_path }}
 LIB_PATH = {{ ocp.acados_lib_path }}
 
-all: clean casadi_fun main solver example
+all: clean casadi_fun main solver sim_solver example
 
 CASADI_MODEL_SOURCE= 
 {% if  ocp.solver_config.integrator_type == "ERK" %}
@@ -108,6 +111,10 @@ solver:
 	gcc $(ACADOS_FLAGS) -c acados_solver_{{ ocp.model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/  \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
+sim_solver:
+	gcc $(ACADOS_FLAGS) -c acados_sim_solver_{{ ocp.model_name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
+	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
+
 example:
 	gcc $(ACADOS_FLAGS) -o main_{{ ocp.model.name}} $(OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH)/acados \
@@ -121,8 +128,9 @@ example:
 	-I $(INCLUDE_PATH)/acados/ \
 	-I $(INCLUDE_PATH)/qpOASES_e/
 
-shared_lib: casadi_fun solver
+shared_lib: casadi_fun solver sim_solver
 	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ ocp.model.name }}.so $(OBJ) -L $(LIB_PATH)/acados \
+
 	-L $(LIB_PATH) \
 	-L $(LIB_PATH)/external/blasfeo \
 	-L $(LIB_PATH)/external/hpipm  \
