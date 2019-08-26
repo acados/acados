@@ -33,7 +33,8 @@
 
 from define_ocp import *
 from define_model import *
-from acados_template.generate_solver import generate_solver
+from acados_template import generate_ocp_solver, load_solver, store_solver
+
 
 # import the model
 model = export_ode_model()
@@ -41,32 +42,41 @@ model = export_ode_model()
 # Define the ocp problem
 ocp = define_ocp(model)
 
+#  store_solver(ocp, "test.json")
+#  load_solver(ocp, "test.json")
+
 # generate c code
 # compile the src
 # wrap the solver with ctypes interface
-acados_ocp_solver, acados_sim_solver = generate_solver(ocp, model)
+acados_ocp_solver, acados_sim_solver = generate_ocp_solver(ocp, model)
 
-
-# Close loop simulation
-Nsim = 100
 nx = ocp.dims.nx
 nu = ocp.dims.nu
 N = ocp.dims.N
 Tf = ocp.solver_config.tf
+x0 = np.array([0.0, 3.14, 0.0, 0.0])
 
+# Close loop simulation
+Nsim = 100
 simX = np.ndarray((Nsim, nx))
 simU = np.ndarray((Nsim, nu))
 
+#  forward_seed = np.zeros((nx*(nx+nu)))
+#  for ii in range(nx):
+    #  forward_seed[ii * (nx + nu)] = 1.0;
+
+#  acados_sim_solver.set("S_forw", forward_seed)
+acados_sim_solver.set("x", x0)
+#  acados_sim_solver.set("T", Tf/N)
+
 for i in range(Nsim):
+    acados_ocp_solver.set(0, "lbx", x0)
+    acados_ocp_solver.set(0, "ubx", x0)
+
     status = acados_ocp_solver.solve()
 
     # get solution
     u0 = acados_ocp_solver.get(0, "u")
-
-    acados_sim_solver.set("u", u0)
-    acados_sim_solver.set("T", Tf/N)
-    status = acados_sim_solver.solve()
-    x0 = acados_sim_solver.get("x")
 
     for j in range(nx):
         simX[i,j] = x0[j]
@@ -74,11 +84,15 @@ for i in range(Nsim):
     for j in range(nu):
         simU[i,j] = u0[j]
 
-    # update initial condition
-    #  x0 = acados_solver.get(1, "x")
+    # simulate the systemd
+    acados_sim_solver.set("u", u0)
+    acados_sim_solver.set("x", x0)
+    status = acados_sim_solver.solve()
+    x0 = acados_sim_solver.get("xn")
 
-    acados_ocp_solver.set(0, "lbx", x0)
-    acados_ocp_solver.set(0, "ubx", x0)
+    #  #  update initial condition
+    #  x0 = acados_ocp_solver.get(1, "x")
+
 
     # update reference
     for j in range(N):

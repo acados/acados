@@ -94,4 +94,3 @@ def define_ocp(model, acados_path='/usr/lib'):
     ocp.acados_include_path  = f'{acados_path}/include'
     ocp.acados_lib_path      = f'{acados_path}/lib'
     return ocp
-
