@@ -52,6 +52,10 @@
 	mexErrMsgTxt(buffer);\
 }
 
+#define MEX_FIELD_NOT_SUPPORTED_FOR_MODULE(fun_name, field, module) {\
+	sprintf(buffer, "%s field %s not supported for module %s", fun_name, field, module);\
+	mexErrMsgTxt(buffer);\
+}
 
 // macro to string
 #define STR(x) STR_AGAIN(x)
