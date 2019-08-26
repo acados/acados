@@ -119,6 +119,9 @@ int sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value)
 int sim_erk_memory_calculate_size(void *config, void *dims, void *opts_);
 //
 void *sim_erk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+//
+int sim_erk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value);
+
 
 // workspace
 int sim_erk_workspace_calculate_size(void *config, void *dims, void *opts_);

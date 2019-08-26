@@ -43,8 +43,9 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
+#include "acados/ocp_qp/ocp_qp_xcond_solver.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 
 #include "acados/dense_qp/dense_qp_hpipm.h"
 
@@ -409,11 +410,13 @@ int main() {
 
 #if XCOND==2
     // full condensing HPIPM
-    ocp_qp_full_condensing_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_xcond_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_full_condensing_config_initialize_default(config->qp_solver->xcond);
     dense_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
 #else
     // no condensing or partial condensing HPIPM
-    ocp_qp_partial_condensing_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_xcond_solver_config_initialize_default(config->qp_solver);
+    ocp_qp_partial_condensing_config_initialize_default(config->qp_solver->xcond);
     ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
 #endif
 
@@ -728,12 +731,6 @@ int main() {
 
     ocp_nlp_sqp_opts_initialize_default(config, dims, nlp_opts);
 
-#if XCOND==1
-    // partial condensing
-    ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = nlp_opts->qp_solver_opts;
-    pcond_solver_opts->pcond_opts->N2 = 5; // set partial condensing horizon
-#endif
-
     for (int i = 0; i < N; ++i)
     {
         // dynamics: discrete model
@@ -752,6 +749,11 @@ int main() {
     ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
     ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
     ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+#if XCOND==1
+    // partial condensing
+	int N2 = 5;
+    ocp_nlp_opts_set(config, nlp_opts, "qp_cond_N", &N2);
+#endif
 
     // update after user-defined options
     ocp_nlp_sqp_opts_update(config, dims, nlp_opts);

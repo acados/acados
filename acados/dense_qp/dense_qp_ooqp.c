@@ -517,11 +517,11 @@ int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, voi
     if (ns > 0)
     {
         printf("\nOOQP interface can not handle ns>0 yet: what about implementing it? :)\n");
-        return ACADOS_FAILURE;
+        exit(1);
     }
 
     acados_timer tot_timer, qp_timer, interface_timer;
-    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
+    qp_info *info = (qp_info *) qp_out->misc;
     acados_tic(&tot_timer);
 
     dense_qp_ooqp_opts *opts = (dense_qp_ooqp_opts *)opts_;
@@ -584,6 +584,14 @@ void dense_qp_ooqp_destroy(void *mem_, void *work)
 
 
 
+void dense_qp_ooqp_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+	printf("\nerror: dense_qp_ooqp_eval_sens: not implemented yet\n");
+	exit(1);
+}
+
+
+
 void dense_qp_ooqp_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -601,4 +609,5 @@ void dense_qp_ooqp_config_initialize_default(void *config_)
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & dense_qp_ooqp_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_ooqp;
+    config->eval_sens = &dense_qp_ooqp_eval_sens;
 }

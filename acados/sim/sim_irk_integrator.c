@@ -197,7 +197,6 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
     {
         printf("\nerror: sim_irk_model_set: wrong field: %s\n", field);
         exit(1);
-//        return ACADOS_FAILURE;
     }
 
     return ACADOS_SUCCESS;
@@ -330,11 +329,117 @@ int sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value)
  * memory
  ************************************************/
 
-int sim_irk_memory_calculate_size(void *config, void *dims, void *opts_) { return 0; }
-void *sim_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory)
+int sim_irk_memory_calculate_size(void *config, void *dims_, void *opts_)
 {
-    return NULL;
+    // typecast
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
+    // sim_opts *opts = opts_;
+
+    // necessary integers
+    int nx = dims->nx;
+    int nz = dims->nz;
+
+    int size = sizeof(sim_irk_memory);
+
+    size += nx * sizeof(double); // xdot
+    size += nz * sizeof(double); // z
+    size += 8;  // corresponds to memory alignment
+
+    return size;
 }
+
+
+void *sim_irk_memory_assign(void *config, void *dims_, void *opts_, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    // typecast
+    sim_irk_dims *dims = (sim_irk_dims *) dims_;
+    // sim_opts *opts = opts_;
+
+    // necessary integers
+    int nx = dims->nx;
+    int nz = dims->nz;
+
+    // struct
+    sim_irk_memory *mem = (sim_irk_memory *) c_ptr;
+    c_ptr += sizeof(sim_irk_memory);
+
+    align_char_to(8, &c_ptr);
+
+    // assign doubles
+    assign_and_advance_double(nz, &mem->z, &c_ptr);
+    assign_and_advance_double(nx, &mem->xdot, &c_ptr);
+
+    // initialization of xdot, z is 0 if not changed
+    for (int ii = 0; ii < nx; ii++)
+        mem->xdot[ii] = 0.0;
+    for (int ii = 0; ii < nz; ii++)
+        mem->z[ii] = 0.0;
+
+    return mem;
+}
+
+
+int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value)
+{
+    sim_config *config = config_;
+    sim_irk_memory *mem = (sim_irk_memory *) mem_;
+
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "xdot"))
+    {
+        int nx;
+        config->dims_get(config_, dims_, "nx", &nx);
+        double *xdot = value;
+        for (int ii=0; ii < nx; ii++)
+            mem->xdot[ii] = xdot[ii];
+    }
+    else if (!strcmp(field, "z"))
+    {
+        int nz;
+        config->dims_get(config_, dims_, "nz", &nz);
+        double *z = value;
+        for (int ii=0; ii < nz; ii++)
+            mem->z[ii] = z[ii];
+    }
+    else
+    {
+        printf("sim_irk_memory_set: field %s is not supported! \n", field);
+        exit(1);
+    }
+
+    return status;
+}
+
+
+int sim_irk_memory_set_to_zero(void *config_, void * dims_, void *opts_, void *mem_, const char *field)
+{
+    sim_config *config = config_;
+    sim_irk_memory *mem = (sim_irk_memory *) mem_;
+
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(field, "guesses"))
+    {
+        int nx, nz;
+        config->dims_get(config_, dims_, "nz", &nz);
+        config->dims_get(config_, dims_, "nx", &nx);
+        for (int ii=0; ii < nz; ii++)
+            mem->z[ii] = 0.0;
+        for (int ii=0; ii < nx; ii++)
+            mem->xdot[ii] = 0.0;
+    }
+    else
+    {
+        printf("sim_irk_memory_set: field %s is not supported! \n", field);
+        exit(1);
+    }
+
+    return status;
+}
+
 
 /************************************************
  * workspace
@@ -570,7 +675,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     if ( opts->ns != opts->tableau_size )
     {
         printf("Error in sim_irk: the Butcher tableau size does not match ns");
-        return ACADOS_FAILURE;
+        exit(1);
     }
     int ns = opts->ns;
 
@@ -578,6 +683,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     sim_irk_dims *dims = (sim_irk_dims *) dims_;
     sim_irk_workspace *workspace =
         (sim_irk_workspace *) sim_irk_workspace_cast(config, dims, opts, work_);
+
+    sim_irk_memory *mem = (sim_irk_memory *) mem_;
 
     irk_model *model = in->model;
 
@@ -748,9 +855,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // initialize integration variables
     for (int i = 0; i < ns; ++i){
         //  state derivatives
-        blasfeo_pack_dvec(nx, in->xdot, K, nx*i);
+        blasfeo_pack_dvec(nx, mem->xdot, K, nx*i);
         //  algebraic variables
-        blasfeo_pack_dvec(nz, in->z, K, nx*ns + i*nz);
+        blasfeo_pack_dvec(nz, mem->z, K, nx*ns + i*nz);
     }
 
     // TODO(dimitris, FreyJo): implement NF (number of forward sensis) properly, instead of nx+nu?
@@ -1061,6 +1168,12 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 impl_ode_in[3] = &impl_ode_z_in;     // 4th input is part of Z[ss]
             }  // end if sens_algebraic
         }  //  end if (ss == 0)
+        if (ss == num_steps-1)
+        {
+            // store last xdot, z values for next initialization
+            blasfeo_unpack_dvec(nx, K, (ns-1) * nx, mem->xdot);
+            blasfeo_unpack_dvec(nz, K, (ns-1) * nz + ns*nx, mem->z);
+        }
     }  // end step loop (ss)
 
     // extract results from forward sweep to output
@@ -1290,6 +1403,8 @@ void sim_irk_config_initialize_default(void *config_)
     config->opts_set = &sim_irk_opts_set;
     config->memory_calculate_size = &sim_irk_memory_calculate_size;
     config->memory_assign = &sim_irk_memory_assign;
+    config->memory_set = &sim_irk_memory_set;
+    config->memory_set_to_zero = &sim_irk_memory_set_to_zero;
     config->workspace_calculate_size = &sim_irk_workspace_calculate_size;
     config->model_calculate_size = &sim_irk_model_calculate_size;
     config->model_assign = &sim_irk_model_assign;

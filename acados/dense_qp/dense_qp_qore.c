@@ -185,7 +185,7 @@ int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void
     if (ns > 0)
     {
         dense_qp_stack_slacks_dims(dims, &dims_stacked);
-        size += dense_qp_in_calculate_size(config_, &dims_stacked);
+        size += dense_qp_in_calculate_size(&dims_stacked);
     }
 
     make_int_multiple_of(8, &size);
@@ -225,8 +225,8 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     if (ns > 0)
     {
         dense_qp_stack_slacks_dims(dims, &dims_stacked);
-        mem->qp_stacked = dense_qp_in_assign(config_, &dims_stacked, c_ptr);
-        c_ptr += dense_qp_in_calculate_size(config_, &dims_stacked);
+        mem->qp_stacked = dense_qp_in_assign(&dims_stacked, c_ptr);
+        c_ptr += dense_qp_in_calculate_size(&dims_stacked);
     }
     else
     {
@@ -299,7 +299,7 @@ int dense_qp_qore_workspace_calculate_size(void *config_, dense_qp_dims *dims, v
 int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
                   void *memory_, void *work_)
 {
-    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
+    qp_info *info = (qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
 
     acados_tic(&tot_timer);
@@ -359,7 +359,7 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     blasfeo_dtrtr_l(nv, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
     // extract data from qp_in in col-major
-    d_cvt_dense_qp_to_colmaj(qp_in, H, gg, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug,
+    d_dense_qp_get_all(qp_in, H, gg, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug,
                              Zl, Zu, zl, zu, idxs, d_ls, d_us);
 
     // reorder bounds
@@ -372,7 +372,7 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     if (ns > 0)
     {
         dense_qp_stack_slacks(qp_in, qp_stacked);
-        d_cvt_dense_qp_to_colmaj(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg,
+        d_dense_qp_get_all(qp_stacked, HH, gg, A, b, idxb_stacked, d_lb0, d_ub0, CC, d_lg,
             d_ug, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
         for (int ii = 0; ii < nb2; ii++)
@@ -523,6 +523,14 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
 
 
 
+void dense_qp_qore_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+	printf("\nerror: dense_qp_qore_eval_sens: not implemented yet\n");
+	exit(1);
+}
+
+
+
 void dense_qp_qore_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -540,6 +548,7 @@ void dense_qp_qore_config_initialize_default(void *config_)
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & dense_qp_qore_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & dense_qp_qore;
+    config->eval_sens = &dense_qp_qore_eval_sens;
 
     return;
 }

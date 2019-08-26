@@ -50,8 +50,7 @@ OBJS += ocp_qp_osqp.o
 endif
 OBJS += ocp_qp_partial_condensing.o
 OBJS += ocp_qp_full_condensing.o
-OBJS += ocp_qp_partial_condensing_solver.o
-OBJS += ocp_qp_full_condensing_solver.o
+OBJS += ocp_qp_xcond_solver.o
 
 obj: $(OBJS)
 

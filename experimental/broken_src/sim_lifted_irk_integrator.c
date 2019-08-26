@@ -132,7 +132,8 @@ int sim_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, voi
             model->expl_vde_for = (external_function_generic *) fun;
             break;
         default:
-            return ACADOS_FAILURE;
+            printf("\nsim_lifted_irk_model_set_function: unsupported fun_type \n");
+            exit(1);
     }
     return ACADOS_SUCCESS;
 }
@@ -1147,7 +1148,7 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     if ( opts->ns != opts->tableau_size )
     {
         printf("Error in sim_lifted_irk: the Butcher tableau size does not match ns");
-        return ACADOS_FAILURE;
+        error(1);
     }
 
     int ns = opts->ns;

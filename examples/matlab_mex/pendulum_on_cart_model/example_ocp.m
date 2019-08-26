@@ -75,8 +75,8 @@ qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 2;
 %sim_method = 'erk';
-%sim_method = 'irk';
-sim_method = 'irk_gnsf';
+sim_method = 'irk';
+%sim_method = 'irk_gnsf';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
 cost_type = 'linear_ls';
@@ -323,10 +323,10 @@ end
 
 %% figures
 
-% for ii=1:N+1
-% 	x_cur = x(:,ii);
-% 	visualize;
-% end
+for ii=1:N+1
+	x_cur = x(:,ii);
+%	visualize;
+end
 
 figure(2);
 subplot(2,1,1);
@@ -362,6 +362,45 @@ if status==0
 else
 	fprintf('\nsolution failed!\n\n');
 end
+
+
+% paramteric sensitivity of solution
+
+field = 'ex'; % equality constraint on states
+stage = 0;
+index = 0;
+ocp.eval_param_sens(field, stage, index);
+
+sens_u = ocp.get('sens_u');
+sens_x = ocp.get('sens_x');
+
+% plot sensitivity
+figure(4);
+subplot(2,1,1);
+plot(0:N, sens_x);
+xlim([0 N]);
+legend('p', 'theta', 'v', 'omega');
+subplot(2,1,2);
+plot(0:N-1, sens_u);
+xlim([0 N]);
+legend('F');
+
+% plot predicted solution
+figure(5);
+subplot(2,1,1);
+plot(0:N, x+sens_x);
+xlim([0 N]);
+legend('p', 'theta', 'v', 'omega');
+subplot(2,1,2);
+plot(0:N-1, u+sens_u);
+xlim([0 N]);
+legend('F');
+
+for ii=1:N+1
+	x_cur = x(:,ii)+sens_x(:,ii);
+%	visualize;
+end
+
 
 
 waitforbuttonpress;

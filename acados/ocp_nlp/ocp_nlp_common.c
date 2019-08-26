@@ -165,9 +165,6 @@ int ocp_nlp_dims_calculate_size_self(int N)
     // constraints
     size += (N + 1) * sizeof(void *);
 
-    // qp solver
-    size += ocp_qp_dims_calculate_size(N);
-
     // regularization
     size += ocp_nlp_reg_dims_calculate_size(N);
 
@@ -203,6 +200,9 @@ int ocp_nlp_dims_calculate_size(void *config_)
     // constraints
     for (ii = 0; ii <= N; ii++)
         size += config->constraints[ii]->dims_calculate_size(config->constraints[ii]);
+
+    // qp solver
+    size += config->qp_solver->dims_calculate_size(config->qp_solver, N);
 
     return size;
 }
@@ -248,24 +248,20 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     dims->constraints = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
 
-    // qp solver
-    dims->qp_solver = ocp_qp_dims_assign(N, c_ptr);
-    c_ptr += ocp_qp_dims_calculate_size(N);
-
     // regularization
     dims->regularize = ocp_nlp_reg_dims_assign(N, c_ptr);
     c_ptr += ocp_nlp_reg_dims_calculate_size(N);
 
     /* initialize qp_solver dimensions */
-    dims->qp_solver->N = N;
-    for (ii = 0; ii <= N; ii++)
-    {
+//    dims->qp_solver->N = N;
+//    for (ii = 0; ii <= N; ii++)
+//    {
         // TODO(dimitris): values below are needed for reformulation of QP when soft constraints
         //   are not supported. Make this a bit more transparent as it clushes with nbx/nbu above.
-        dims->qp_solver->nsbx[ii] = 0;
-        dims->qp_solver->nsbu[ii] = 0;
-        dims->qp_solver->nsg[ii] = 0;
-    }
+//        dims->qp_solver->nsbx[ii] = 0;
+//        dims->qp_solver->nsbu[ii] = 0;
+//        dims->qp_solver->nsg[ii] = 0;
+//    }
 
     // N
     dims->N = N;
@@ -334,6 +330,10 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
             config->constraints[ii]->dims_assign(config->constraints[ii], c_ptr);
         c_ptr += config->constraints[ii]->dims_calculate_size(config->constraints[ii]);
     }
+
+    // qp solver
+    dims->qp_solver = config->qp_solver->dims_assign(config->qp_solver, N, c_ptr);
+    c_ptr += config->qp_solver->dims_calculate_size(config->qp_solver, N);
 
     // assert
     assert((char *) raw_memory + ocp_nlp_dims_calculate_size(config_) >= c_ptr);
@@ -827,6 +827,9 @@ int ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
 ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory)
 {
+	// loop index
+	int ii;
+
     // extract sizes
     int N = dims->N;
     int *nv = dims->nv;
@@ -887,6 +890,21 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
     {
         assign_and_advance_blasfeo_dvec_mem(2 * ni[ii], out->t + ii, &c_ptr);
     }
+
+	// zero solution
+	for(ii=0; ii<N; ii++)
+	{
+		blasfeo_dvecse(nv[ii], 0.0, out->ux+ii, 0);
+		blasfeo_dvecse(nz[ii], 0.0, out->z+ii, 0);
+		blasfeo_dvecse(nx[ii+1], 0.0, out->pi+ii, 0);
+		blasfeo_dvecse(2*ni[ii], 0.0, out->lam+ii, 0);
+		blasfeo_dvecse(2*ni[ii], 0.0, out->t+ii, 0);
+	}
+	ii = N;
+	blasfeo_dvecse(nv[ii], 0.0, out->ux+ii, 0);
+	blasfeo_dvecse(nz[ii], 0.0, out->z+ii, 0);
+	blasfeo_dvecse(2*ni[ii], 0.0, out->lam+ii, 0);
+	blasfeo_dvecse(2*ni[ii], 0.0, out->t+ii, 0);
 
     assert((char *) raw_memory + ocp_nlp_out_calculate_size(config, dims) >= c_ptr);
 

@@ -40,6 +40,8 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 #include "acados_solver_{{ocp.model.name}}.h"
+#include "acados_sim_solver_{{ocp.model.name}}.h"
+
 
 // ** global data **
 ocp_nlp_in * nlp_in;
@@ -49,11 +51,23 @@ void * nlp_opts;
 ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
+
+sim_config  * {{ocp.model_name}}_sim_config;
+sim_in      * {{ocp.model_name}}_sim_in;
+sim_out     * {{ocp.model_name}}_sim_out; 
+void        * {{ocp.model_name}}_sim_dims;
+sim_opts    * {{ocp.model_name}}_sim_opts;
+sim_solver  * {{ocp.model_name}}_sim_solver; 
+
 {% if ocp.solver_config.integrator_type == "ERK" %}
 {% if ocp.dims.np < 1 %}
 external_function_casadi * forw_vde_casadi;
+external_function_casadi * sim_forw_vde_casadi;
+external_function_casadi * sim_expl_ode_fun_casadi;
 {% else %}
 external_function_param_casadi * forw_vde_casadi;
+external_function_param_casadi * sim_forw_vde_casadi;
+external_function_param_casadi * sim_expl_ode_fun_casadi;
 {% endif %}
 {% if ocp.solver_config.hessian_approx == "EXACT" %} 
 {% if ocp.dims.np < 1 %}
@@ -68,10 +82,16 @@ external_function_param_casadi * hess_vde_casadi;
 external_function_casadi * impl_dae_fun;
 external_function_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_casadi * impl_dae_jac_x_xdot_u_z;
+external_function_casadi * sim_impl_dae_fun;
+external_function_casadi * sim_impl_dae_fun_jac_x_xdot_z;
+external_function_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% else %}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
+external_function_param_casadi * sim_impl_dae_fun;
+external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
+external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
 {% if ocp.dims.npd > 0 %}
@@ -89,6 +109,48 @@ external_function_casadi h_e_constraint;
 {% endif %}
 
 int main() {
+
+    // test integrator first
+    int sim_status = 0;
+    sim_status = {{ ocp.model_name }}_acados_sim_create();
+
+    // set sim input
+    double x_sim[{{ocp.dims.nx}}];
+    {% for item in ocp.constraints.x0 %}
+    x_sim[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+
+    // set initial condition
+    double u_sim[{{ocp.dims.nu}}];
+    {% for item in range(ocp.dims.nu) %}
+    u_sim[{{ loop.index0 }}] = {{ item }};
+    {% endfor %}
+    
+    // seeds forw
+    for (int ii = 0; ii < {{ocp.dims.nx}} * ({{ocp.dims.nx}} + {{ocp.dims.nu}}); ii++)
+        {{ ocp.model_name }}_sim_in->S_forw[ii] = 0.0;
+    for (int ii = 0; ii < {{ocp.dims.nx}}; ii++)
+        {{ ocp.model_name }}_sim_in->S_forw[ii * ({{ocp.dims.nx}} + 1)] = 1.0;
+
+    double Td = {{ ocp.solver_config.tf }}/ {{ ocp.dims.N }};
+    sim_in_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_in, "T", &Td);
+    sim_in_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_in, "x", x_sim);
+    sim_in_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_in, "u", u_sim);
+
+
+    sim_status = {{ ocp.model_name }}_acados_sim_solve();
+    // get and print output
+    double *xn_out = calloc( {{ ocp.dims.nx }}, sizeof(double));
+    sim_out_get({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_out, "xn", xn_out);
+    printf("\nxn: \n");
+    d_print_exp_mat(1, {{ ocp.dims.nx }}, xn_out, 1);
+
+    double *S_forw_out = calloc({{ ocp.dims.nx }}*({{ ocp.dims.nx }}+{{ ocp.dims.nu }}), sizeof(double));
+    if ({{ ocp.model_name }}_sim_opts->sens_forw){
+        sim_out_get({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_out, "S_forw", S_forw_out);
+        printf("\nS_forw_out: \n");
+        d_print_exp_mat({{ ocp.dims.nx }}, {{ ocp.dims.nx }} + {{ ocp.dims.nx }} + {{ ocp.dims.nu }}, S_forw_out, {{ ocp.dims.nx }});
+    }
 
     int status = 0;
     status = acados_create();

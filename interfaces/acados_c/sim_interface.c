@@ -309,3 +309,9 @@ int sim_precompute(sim_solver *solver, sim_in *in, sim_out *out)
     return solver->config->precompute(solver->config, in, out, solver->opts, solver->mem,
                                     solver->work);
 }
+
+
+int sim_solver_set(sim_solver *solver, const char *field, void *value)
+{
+    return solver->config->memory_set(solver->config, solver->dims, solver->mem, field, value);
+}

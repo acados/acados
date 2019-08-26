@@ -136,6 +136,13 @@ typedef struct
 } sim_irk_workspace;
 
 
+typedef struct
+{
+    double *xdot;  // xdot[NX] - initialization for state derivatives k within the integrator
+    double *z;     // z[NZ] - initialization for algebraic variables z
+
+} sim_irk_memory;
+
 
 // get & set functions
 void sim_irk_dims_set(void *config_, void *dims_, const char *field, const int *value);
@@ -160,6 +167,7 @@ int sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value)
 // memory
 int sim_irk_memory_calculate_size(void *config, void *dims, void *opts_);
 void *sim_irk_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
+int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field, void *value);
 
 // workspace
 int sim_irk_workspace_calculate_size(void *config, void *dims, void *opts_);

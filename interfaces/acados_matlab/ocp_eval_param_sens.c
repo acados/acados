@@ -31,24 +31,58 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
+// system
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+// acados
+//#include "acados/sim/sim_common.h"
+#include "acados_c/ocp_nlp_interface.h"
+// mex
+#include "mex.h"
 
-#ifndef INTERFACES_ACADOS_C_OPTIONS_INTERFACE_H_
-#define INTERFACES_ACADOS_C_OPTIONS_INTERFACE_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-#include "acados/utils/types.h"
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+	{
 
-//
-bool set_option_int(void *args_, const char *option, const int value);
-//
-bool set_option_double(void *args_, const char *option, const double value);
-//
+//	mexPrintf("\nin ocp_solve\n");
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+	long long *ptr;
 
-#endif  // INTERFACES_ACADOS_C_OPTIONS_INTERFACE_H_
+	/* RHS */
+
+	// C_ocp
+
+	// solver
+	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "solver" ) );
+	ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
+	// sens_out
+	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "sens_out" ) );
+	ocp_nlp_out *sens_out = (ocp_nlp_out *) ptr[0];
+
+	// field
+	char *field = mxArrayToString( prhs[1] );
+
+	// stage
+	int stage = mxGetScalar( prhs[2] );
+
+	// index
+	int index = mxGetScalar( prhs[3] );
+
+
+
+	/* solver */
+	ocp_nlp_eval_param_sens(solver, field, stage, index, sens_out);
+
+
+
+	/* return */
+
+	return;
+
+	}
+
+
+
+

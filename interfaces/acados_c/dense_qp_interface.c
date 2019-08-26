@@ -108,22 +108,22 @@ dense_qp_dims *dense_qp_dims_create()
 
 dense_qp_in *dense_qp_in_create(qp_solver_config *config, dense_qp_dims *dims)
 {
-    int bytes = dense_qp_in_calculate_size(config, dims);
+    int bytes = dense_qp_in_calculate_size(dims);
 
     void *ptr = calloc(1, bytes);
 
-    dense_qp_in *in = dense_qp_in_assign(config, dims, ptr);
+    dense_qp_in *in = dense_qp_in_assign(dims, ptr);
 
     return in;
 }
 
 dense_qp_out *dense_qp_out_create(qp_solver_config *config, dense_qp_dims *dims)
 {
-    int bytes = dense_qp_out_calculate_size(config, dims);
+    int bytes = dense_qp_out_calculate_size(dims);
 
     void *ptr = calloc(1, bytes);
 
-    dense_qp_out *out = dense_qp_out_assign(config, dims, ptr);
+    dense_qp_out *out = dense_qp_out_assign(dims, ptr);
 
     return out;
 }

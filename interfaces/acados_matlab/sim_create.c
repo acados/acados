@@ -47,7 +47,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	{
 
 //	mexPrintf("\nin sim_create\n");
-
 	// sizeof(long long) == sizeof(void *) = 64 !!!
 	int ii;
 
@@ -62,8 +61,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	//
 	int num_stages = mxGetScalar( mxGetField( prhs[1], 0, "num_stages" ) );
-	//
 	int num_steps = mxGetScalar( mxGetField( prhs[1], 0, "num_steps" ) );
+	int newton_iter = mxGetScalar( mxGetField( prhs[1], 0, "newton_iter" ) );
 	//
 	bool sens_forw = false;
 	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "sens_forw" ) );
@@ -87,6 +86,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		sens_hess = true;
 		}
 //	mexPrintf("\n%d\n", sens_hess);
+	bool jac_reuse = false;
+	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "jac_reuse" ) );
+	if (!strcmp(c_ptr, "true"))
+		{
+		jac_reuse = true;
+		}
+//	mexPrintf("\n%d\n", jac_reuse);
+
 	//
 	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
 //	mexPrintf("\n%s\n", method);
@@ -108,65 +115,65 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int gnsf_ny;		bool set_gnsf_ny = false;
 	int gnsf_nout;		bool set_gnsf_nout = false;
 
-	if(mxGetField( prhs[0], 0, "dim_nx" )!=NULL)
+	if (mxGetField( prhs[0], 0, "dim_nx" )!=NULL)
 		{
 		set_nx = true;
 		nx = mxGetScalar( mxGetField( prhs[0], 0, "dim_nx" ) );
 		}
-	if(mxGetField( prhs[0], 0, "dim_nu" )!=NULL)
+	if (mxGetField( prhs[0], 0, "dim_nu" )!=NULL)
 		{
 		set_nu = true;
 		nu = mxGetScalar( mxGetField( prhs[0], 0, "dim_nu" ) );
 		}
-	if(mxGetField( prhs[0], 0, "T" )!=NULL)
+	if (mxGetField( prhs[0], 0, "T" )!=NULL)
 		{
 		set_T = true;
 		T = mxGetScalar( mxGetField( prhs[0], 0, "T" ) );
 		}
-	if(mxGetField( prhs[0], 0, "x" )!=NULL)
+	if (mxGetField( prhs[0], 0, "x" )!=NULL)
 		{
 		set_x = true;
 		x = mxGetPr( mxGetField( prhs[0], 0, "x" ) );
 		}
-	if(mxGetField( prhs[0], 0, "u" )!=NULL)
+	if (mxGetField( prhs[0], 0, "u" )!=NULL)
 		{
 		set_u = true;
 		u = mxGetPr( mxGetField( prhs[0], 0, "u" ) );
 		}
-	if(mxGetField( prhs[0], 0, "seed_adj" )!=NULL)
+	if (mxGetField( prhs[0], 0, "seed_adj" )!=NULL)
 		{
 		set_seed_adj = true;
 		seed_adj = mxGetPr( mxGetField( prhs[0], 0, "seed_adj" ) );
 		}
 	// gnsf stuff
-	if(!strcmp(method, "irk_gnsf"))
-		{
-		if(mxGetField( prhs[0], 0, "dim_gnsf_nx1" )!=NULL)
+	if (!strcmp(method, "irk_gnsf"))
+	{
+		if (mxGetField( prhs[0], 0, "dim_gnsf_nx1" )!=NULL)
 			{
 			set_gnsf_nx1 = true;
 			gnsf_nx1 = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nx1" ) );
 			}
-		if(mxGetField( prhs[0], 0, "dim_gnsf_nz1" )!=NULL)
+		if (mxGetField( prhs[0], 0, "dim_gnsf_nz1" )!=NULL)
 			{
 			set_gnsf_nz1 = true;
 			gnsf_nz1 = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nz1" ) );
 			}
-		if(mxGetField( prhs[0], 0, "dim_gnsf_nuhat" )!=NULL)
+		if (mxGetField( prhs[0], 0, "dim_gnsf_nuhat" )!=NULL)
 			{
 			set_gnsf_nuhat = true;
 			gnsf_nuhat = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nuhat" ) );
 			}
-		if(mxGetField( prhs[0], 0, "dim_gnsf_ny" )!=NULL)
+		if (mxGetField( prhs[0], 0, "dim_gnsf_ny" )!=NULL)
 			{
 			set_gnsf_ny = true;
 			gnsf_ny = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_ny" ) );
 			}
-		if(mxGetField( prhs[0], 0, "dim_gnsf_nout" )!=NULL)
+		if (mxGetField( prhs[0], 0, "dim_gnsf_nout" )!=NULL)
 			{
 			set_gnsf_nout = true;
 			gnsf_nout = mxGetScalar( mxGetField( prhs[0], 0, "dim_gnsf_nout" ) );
 			}
-		}
+	}
 
 
 	/* LHS */
@@ -202,15 +209,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* plan & config */
 	sim_solver_plan plan;
 
-	if(!strcmp(method, "erk"))
+	if (!strcmp(method, "erk"))
 		{
 		plan.sim_solver = ERK;
 		}
-	else if(!strcmp(method, "irk"))
+	else if (!strcmp(method, "irk"))
 		{
 		plan.sim_solver = IRK;
 		}
-	else if(!strcmp(method, "irk_gnsf"))
+	else if (!strcmp(method, "irk_gnsf"))
 		{
 		plan.sim_solver = GNSF;
 		}
@@ -225,21 +232,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	/* dims */
 	void *dims = sim_dims_create(config);
-	if(set_nx)
+	if (set_nx)
 		sim_dims_set(config, dims, "nx", &nx);
-	if(set_nu)
+	if (set_nu)
 		sim_dims_set(config, dims, "nu", &nu);
-	if(!strcmp(method, "irk_gnsf"))
+	if (!strcmp(method, "irk_gnsf"))
 		{
-		if(set_gnsf_nx1)
+		if (set_gnsf_nx1)
 			sim_dims_set(config, dims, "gnsf_nx1", &gnsf_nx1);
-		if(set_gnsf_nz1)
+		if (set_gnsf_nz1)
 			sim_dims_set(config, dims, "gnsf_nz1", &gnsf_nz1);
-		if(set_gnsf_nuhat)
+		if (set_gnsf_nuhat)
 			sim_dims_set(config, dims, "gnsf_nuhat", &gnsf_nuhat);
-		if(set_gnsf_ny)
+		if (set_gnsf_ny)
 			sim_dims_set(config, dims, "gnsf_ny", &gnsf_ny);
-		if(set_gnsf_nout)
+		if (set_gnsf_nout)
 			sim_dims_set(config, dims, "gnsf_nout", &gnsf_nout);
 		}
 
@@ -248,14 +255,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	sim_opts *opts = sim_opts_create(config, dims);
 	sim_opts_set(config, opts, "num_stages", &num_stages);
 	sim_opts_set(config, opts, "num_steps", &num_steps);
+	sim_opts_set(config, opts, "newton_iter", &newton_iter);
 	sim_opts_set(config, opts, "sens_forw", &sens_forw);
 	sim_opts_set(config, opts, "sens_adj", &sens_adj);
 	sim_opts_set(config, opts, "sens_hess", &sens_hess);
+	sim_opts_set(config, opts, "jac_reuse", &jac_reuse);
 
 
 	/* in */
 	sim_in *in = sim_in_create(config, dims);
-	if(sens_forw==true) // | sens_hess==true ???
+	if (sens_forw==true) // | sens_hess==true ???
 		{
 //		mexPrintf("\nsens forw true!\n");
 		double *Sx = calloc(nx*nx, sizeof(double));
@@ -269,19 +278,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		free(Sx);
 		free(Su);
 		}
-	if(set_T)
+	if (set_T)
 		{
 		sim_in_set(config, dims, in, "T", &T);
 		}
-	if(set_x)
+	if (set_x)
 		{
 		sim_in_set(config, dims, in, "x", x);
 		}
-	if(set_u)
+	if (set_u)
 		{
 		sim_in_set(config, dims, in, "u", u);
 		}
-	if(set_seed_adj)
+	if (set_seed_adj)
 		{
 		sim_in_set(config, dims, in, "S_adj", seed_adj);
 		}
@@ -290,10 +299,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* out */
 	sim_out *out = sim_out_create(config, dims);
 
-
 	/* solver */
 	sim_solver *solver = sim_solver_create(config, dims, opts);
-
 
 
 	/* populate output struct */
@@ -333,7 +340,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	l_ptr = mxGetData(solver_mat);
 	l_ptr[0] = (long long) solver;
 	mxSetField(plhs[0], 0, "solver", solver_mat);
-
 
 
 	/* return */

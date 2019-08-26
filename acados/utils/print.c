@@ -702,7 +702,7 @@ void print_dense_qp_in(dense_qp_in *qp_in)
     blasfeo_print_dvec(2*nb+2*ng+2*ns, qp_in->d, 0);
 }
 
-void print_ocp_qp_info(ocp_qp_info *info)
+void print_qp_info(qp_info *info)
 {
     double misc =
         info->total_time - info->condensing_time - info->solve_QP_time - info->interface_time;
