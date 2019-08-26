@@ -1,3 +1,36 @@
+%
+% Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+% Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+% Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+% Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+%
+% This file is part of acados.
+%
+% The 2-Clause BSD License
+%
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions are met:
+%
+% 1. Redistributions of source code must retain the above copyright notice,
+% this list of conditions and the following disclaimer.
+%
+% 2. Redistributions in binary form must reproduce the above copyright notice,
+% this list of conditions and the following disclaimer in the documentation
+% and/or other materials provided with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+% POSSIBILITY OF SUCH DAMAGE.;
+%
+
 function C_ocp_ext_fun = ocp_set_ext_fun(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)
 
 model_name = model_struct.name;
@@ -13,6 +46,7 @@ acados_include = ['-I' acados_folder];
 acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
 external_include = ['-I' fullfile(acados_folder, 'external')];
 blasfeo_include = ['-I' fullfile(acados_folder, 'external' , 'blasfeo', 'include')];
+hpipm_include = ['-I' fullfile(acados_folder, 'external' , 'hpipm', 'include')];
 acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
 acados_matlab_lib_path = ['-L' fullfile(acados_folder, 'interfaces', 'acados_matlab')];
 model_lib_path = ['-L', opts_struct.output_dir];
@@ -345,7 +379,7 @@ end
 %phase
 %phase_start
 %phase_end
-if (strcmp(opts_struct.compile_mex, 'true'))
+if (strcmp(opts_struct.compile_mex, 'true') || strcmp(opts_struct.codgen_model, 'true'))
 
 	if is_octave()
 		if exist(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'file')==0
@@ -384,9 +418,17 @@ if (strcmp(opts_struct.compile_mex, 'true'))
 			cflags_tmp = [cflags_tmp, ' -DN0=', num2str(phase_start{ii})];
 			cflags_tmp = [cflags_tmp, ' -DN1=', num2str(phase_end{ii})];
 			setenv('CFLAGS', cflags_tmp);
-			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{1});
+			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include,...
+				hpipm_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados',...
+				 '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1});
 		else
-			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', ['-DSETTER=', setter{ii}], ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], ['-DPHASE=', num2str(phase{ii})], ['-DN0=', num2str(phase_start{ii})], ['-DN1=', num2str(phase_end{ii})], acados_include, acados_interfaces_include, external_include, blasfeo_include, acados_lib_path, acados_matlab_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-locp_model', mex_files{1}); % TODO
+			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', ['-DSETTER=', setter{ii}],...
+				['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}],...
+				['-DFUN_NAME=', fun_names{ii}], ['-DPHASE=', num2str(phase{ii})],...
+				['-DN0=', num2str(phase_start{ii})], ['-DN1=', num2str(phase_end{ii})],...
+				acados_include, acados_interfaces_include, external_include, blasfeo_include,...
+				hpipm_include, acados_lib_path, acados_matlab_lib_path, model_lib_path,...
+				'-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1});
 		end
 		
 %		clear(mex_names{ii})
@@ -414,7 +456,6 @@ end
 %ocp_set_ext_fun_tmp(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
 
 %C_ocp_ext_fun
-%keyboard
 
 return;
 

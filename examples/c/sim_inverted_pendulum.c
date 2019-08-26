@@ -1,22 +1,40 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 /*  This example shows how acados can be used to simulate index-1 DAEs
         using IRK integrators, either the standard sim_irk_integrator or
-        the GNSF (generalized nonlinear static feedback) exploitingintegrator.
+        the GNSF (generalized nonlinear static feedback) exploiting integrator.
     Author: Jonathan Frey                                                   */
 
 // external
@@ -30,6 +48,7 @@
 #include "acados/utils/math.h"
 
 #include "acados_c/external_function_interface.h"
+// TODO(oj): use only sim_interface!
 #include "interfaces/acados_c/sim_interface.h"
 
 // crane dae model
@@ -60,7 +79,7 @@ int main()
     int ny    = 8;
     int nuhat = 1;
 
-	int nsim = 1;
+	int nsim = 1000;
 
     // generate x0, u_sim
     double x0[nx];
@@ -78,7 +97,7 @@ int main()
 
     int NF = nx + nu;  // columns of forward seed
 
-    int nsim0 = 1;  // nsim;
+    int nsim0 = nsim;
 
     double T = 0.01;
 
@@ -250,7 +269,7 @@ int main()
         sim_opts *opts = (sim_opts *) opts_;
         config->opts_initialize_default(config, dims, opts);
 
-        opts->jac_reuse = true;        // jacobian reuse
+        opts->jac_reuse = false;        // jacobian reuse
         opts->newton_iter = 3;          // number of newton iterations per integration step
 
         opts->ns                = 3;    // number of stages in rk integrator
@@ -259,14 +278,14 @@ int main()
         opts->sens_adj          = true;
         opts->output_z          = true;
         opts->sens_algebraic    = true;
-        opts->sens_hess         = true;
+        opts->sens_hess         = false;
 
     /* sim in / out */
 
 		sim_in *in   = sim_in_create(config, dims);
 		sim_out *out = sim_out_create(config, dims);
 
-		in->T = T;
+        sim_in_set(config, dims, in, "T", &T);
 
     /* set model */
         switch (plan.sim_solver)
@@ -343,8 +362,6 @@ int main()
 
     /* simulate */
 
-		// int nsim0 = nsim;
-
 		double cpu_time = 0.0;
 		double la_time = 0.0;
 		double ad_time = 0.0;
@@ -357,7 +374,7 @@ int main()
 
             // u
             for (int jj = 0; jj < nu; jj++)
-                in->u[jj] = u_sim[ii*nu+jj];
+                in->u[jj] = u_sim[0]; //u_sim[ii*nu+jj];
 
 			// execute simulation step with current input and state
 			acados_return = sim_solve(sim_solver, in, out);
@@ -431,7 +448,7 @@ int main()
             d_print_exp_mat(nz, NF, &out->S_algebraic[0], nz);
         }
 
-		if(opts->sens_hess){
+		if (opts->sens_hess){
 			double *S_hess = out->S_hess;
 			printf("S_hess: \n");
 			d_print_exp_mat(nx+nu, nx+nu, S_hess, nx+nu);
@@ -449,12 +466,12 @@ int main()
 		printf("time spent in integrator outside of casADi %f \n", 1e3*(total_cpu_time-ad_time));
 
     /* free memory */
-		free(dims);
-		free(sim_solver);
-		free(in);
-		free(out);
-		free(opts);
-		free(config);
+		sim_dims_destroy(dims);
+		sim_solver_destroy(sim_solver);
+		sim_in_destroy(in);
+		sim_out_destroy(out);
+		sim_opts_destroy(opts);
+		sim_config_destroy(config);
 	}
 /* free external function */
     // implicit model

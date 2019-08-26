@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
 
@@ -225,7 +243,7 @@ void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *fi
     }
     else
     {
-        printf("\nerror: dims type not available in module ocp_nlp_constraints_bgh: %s\n", field);
+        printf("\nerror: ocp_nlp_constraints_bgh_dims_get: field %s not available in module\n", field);
         exit(1);
     }
 }
@@ -289,6 +307,38 @@ static void ocp_nlp_constraints_bgh_get_ns(void *config_, void *dims_, int* valu
 
 
 
+static void ocp_nlp_constraints_bgh_get_nsbx(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nsbx;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_get_nsbu(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nsbu;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_get_nsg(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nsg;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_get_nsh(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    *value = dims->nsh;
+}
+
+
+
 void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *field, int* value)
 {
     if (!strcmp(field, "ni"))
@@ -319,9 +369,25 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
     {
         ocp_nlp_constraints_bgh_get_ns(config_, dims_, value);
     }
+    else if (!strcmp(field, "nsbu"))
+    {
+        ocp_nlp_constraints_bgh_get_nsbu(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nsbx"))
+    {
+        ocp_nlp_constraints_bgh_get_nsbx(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nsg"))
+    {
+        ocp_nlp_constraints_bgh_get_nsg(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nsh"))
+    {
+        ocp_nlp_constraints_bgh_get_nsh(config_, dims_, value);
+    }
     else
     {
-        printf("error: attempt to get dimension from constraint model, that is not there");
+        printf("\nerror: ocp_nlp_constraints_bgh_dims_get: field %s not available in module\n", field);
         exit(1);
     }
 }

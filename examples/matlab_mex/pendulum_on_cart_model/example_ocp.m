@@ -1,7 +1,38 @@
+%
+% Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+% Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+% Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+% Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+%
+% This file is part of acados.
+%
+% The 2-Clause BSD License
+%
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions are met:
+%
+% 1. Redistributions of source code must retain the above copyright notice,
+% this list of conditions and the following disclaimer.
+%
+% 2. Redistributions in binary form must reproduce the above copyright notice,
+% this list of conditions and the following disclaimer in the documentation
+% and/or other materials provided with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+% POSSIBILITY OF SUCH DAMAGE.;
+%
+
 %% test of native matlab interface
-clear all
-
-
+clear VARIABLES
 
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
@@ -11,15 +42,16 @@ if (~strcmp(env_run, 'true'))
 	return;
 end
 
-
-
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
 
+% discretization
 param_scheme = 'multiple_shooting_unif_grid';
 N = 100;
+h = 0.01;
+
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 nlp_solver_exact_hessian = 'false';
@@ -51,13 +83,9 @@ cost_type = 'linear_ls';
 %cost_type = 'ext_cost';
 model_name = 'ocp_pendulum';
 
-h = 0.01;
-
 
 %% create model entries
 model = pendulum_on_cart_model;
-
-
 
 % dims
 T = N*h; % horizon length time
@@ -101,8 +129,6 @@ x0 = [0; pi; 0; 0];
 Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
 lbu = -80*ones(nu, 1);
 ubu =  80*ones(nu, 1);
-
-
 
 
 %% acados ocp model
@@ -178,9 +204,8 @@ else
 	ocp_model.set('constr_lbu', lbu);
 	ocp_model.set('constr_ubu', ubu);
 end
-
-ocp_model.model_struct
-
+disp('ocp_model.model_struct')
+disp(ocp_model.model_struct)
 
 
 %% acados ocp opts
@@ -214,18 +239,19 @@ if (strcmp(sim_method, 'irk_gnsf'))
 	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-ocp_opts.opts_struct
-
+disp('ocp_opts');
+disp(ocp_opts.opts_struct);
 
 
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
 ocp
-ocp.C_ocp
-ocp.C_ocp_ext_fun
+disp('ocp.C_ocp');
+disp(ocp.C_ocp);
+disp('ocp.C_ocp_ext_fun');
+disp(ocp.C_ocp_ext_fun);
 %ocp.model_struct
-
 
 
 % set trajectory initialization
@@ -234,39 +260,26 @@ ocp.C_ocp_ext_fun
 x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
 
 u_traj_init = zeros(nu, N);
+
+% if not set, the trajectory is initialized with the previous solution
 ocp.set('init_x', x_traj_init);
 ocp.set('init_u', u_traj_init);
 
+% change number of sqp iterations
+ocp.set('nlp_solver_max_iter', 20);
 
 % solve
 tic;
 ocp.solve();
-time_ext = toc
-
-
-%x0(1) = 1.5;
-%ocp.set('constr_x0', x0);
-
-
-%ocp.set('cost_yr', 1);
-
-% if not set, the trajectory is initialized with the previous solution
-
-
-%tic;
-%ocp.solve();
-%time_ext = toc
-
-
+time_ext = toc;
+% TODO: add getter for internal timing
+fprintf(['time for ocp.solve (matlab tic-toc): ', num2str(time_ext), ' s\n'])
 
 % get solution
 u = ocp.get('u');
 x = ocp.get('x');
 
-
-
-% statistics
-
+%% evaluation
 status = ocp.get('status');
 sqp_iter = ocp.get('sqp_iter');
 time_tot = ocp.get('time_tot');
@@ -308,12 +321,12 @@ else % sqp_rti
 end
 
 
-% figures
+%% figures
 
-for ii=1:N+1
-	x_cur = x(:,ii);
-	visualize;
-end
+% for ii=1:N+1
+% 	x_cur = x(:,ii);
+% 	visualize;
+% end
 
 figure(2);
 subplot(2,1,1);
@@ -327,16 +340,21 @@ legend('F');
 
 if (strcmp(nlp_solver, 'sqp'))
 	figure(3);
-	plot([0: sqp_iter], log10(stat(:,2)), 'r-x');
+% 	plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
+% 	hold on
+% 	plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');
+% 	plot([0: size(stat,1)-1], log10(stat(:,4)), 'g-x');
+% 	plot([0: size(stat,1)-1], log10(stat(:,5)), 'k-x');
+	semilogy(0: size(stat,1)-1, stat(:,2), 'r-x');
 	hold on
-	plot([0: sqp_iter], log10(stat(:,3)), 'b-x');
-	plot([0: sqp_iter], log10(stat(:,4)), 'g-x');
-	plot([0: sqp_iter], log10(stat(:,5)), 'k-x');
-	hold off
+	semilogy(0: size(stat,1)-1, stat(:,3), 'b-x');
+	semilogy(0: size(stat,1)-1, stat(:,4), 'g-x');
+	semilogy(0: size(stat,1)-1, stat(:,5), 'k-x');
+    hold off
 	xlabel('iter')
 	ylabel('res')
+    legend('res g', 'res b', 'res d', 'res m');
 end
-
 
 
 if status==0

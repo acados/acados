@@ -1,18 +1,36 @@
 #
-# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+# Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+# Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+# Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
 #
 # This file is part of acados.
 #
 # The 2-Clause BSD License
 #
-# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 #
-# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
 #
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
 #
+
 
 cmake_minimum_required(VERSION 3.1)
 
@@ -29,10 +47,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 ### Defaults
 
-set(ACADOS_INSTALL_DIR "/usr/local" CACHE STRING  "Installation path to /usr/local")
+set(ACADOS_INSTALL_DIR "${PROJECT_SOURCE_DIR}" CACHE STRING  "Installation path to PROJECT_SOURCE_DIR")
 set(BLASFEO_TARGET "X64_INTEL_HASWELL" CACHE STRING "BLASFEO Target architecture")
 set(HPIPM_TARGET "AVX" CACHE STRING "HPIPM Target architecture")
 set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
+
+set(BUILD_SHARED_LIBS ON CACHE STRING "Build shared libraries")
 
 # Additional targets
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
@@ -51,6 +71,8 @@ option(SWIG_PYTHON "Swig Python Interface" OFF)
 option(TEMPLATE_MATLAB "Template Matlab Interface" OFF)
 option(TEMPLATE_PYTHON "Template Python Interface" OFF)
 option(DEV_MATLAB "Developer Matlab Interface" OFF)
+option(ACADOS_MATLAB "The Matlab Interface" OFF)
+option(ACADOS_OCTAVE "The Octave Interface" OFF)
 
 # Set custom path
 set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
@@ -153,7 +175,11 @@ if(ACADOS_LINT)
 	endif()
 endif()
 
-### ) External lib checks
+if(ACADOS_MATLAB OR ACADOS_OCTAVE) #TODO: OR ACADOS_PYTHON
+	add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces)
+endif()
+
+## ) External lib checks
 
 # Configure acados
 add_subdirectory(acados)
@@ -199,6 +225,8 @@ add_custom_target(uninstall
 message(STATUS "Target: BLASFEO is ${BLASFEO_TARGET}, HPIPM is ${HPIPM_TARGET}")
 message(STATUS "Linear algebra: ${LA}")
 message(STATUS "Swig: Python (${SWIG_PYTHON}) Matlab (${SWIG_MATLAB})")
+message(STATUS "Matlab MEX (${ACADOS_MATLAB})")
+message(STATUS "Octave MEX (${ACADOS_OCTAVE})")
 message(STATUS "System name:version ${CMAKE_SYSTEM_NAME}:${CMAKE_SYSTEM_VERSION}")
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")

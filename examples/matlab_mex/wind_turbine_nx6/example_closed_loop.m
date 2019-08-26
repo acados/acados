@@ -1,3 +1,36 @@
+%
+% Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+% Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+% Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+% Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+%
+% This file is part of acados.
+%
+% The 2-Clause BSD License
+%
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions are met:
+%
+% 1. Redistributions of source code must retain the above copyright notice,
+% this list of conditions and the following disclaimer.
+%
+% 2. Redistributions in binary form must reproduce the above copyright notice,
+% this list of conditions and the following disclaimer in the documentation
+% and/or other materials provided with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+% POSSIBILITY OF SUCH DAMAGE.;
+%
+
 %% test of native matlab interface
 clear all
 
@@ -44,7 +77,7 @@ ocp_qp_solver = 'partial_condensing_hpipm';
 ocp_qp_solver_cond_N = 5;
 ocp_qp_solver_cond_ric_alg = 0;
 ocp_qp_solver_ric_alg = 0;
-%ocp_qp_solver_warm_start = 2;
+ocp_qp_solver_warm_start = 2;
 %ocp_sim_method = 'erk';
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
@@ -72,8 +105,12 @@ ng = 0;
 ng_e = 0;
 nh = 1;
 nh_e = 1;
-ns = 1;
-ns_e = 1;
+ns = 2;
+%ns = 1;
+ns_e = 2;
+%ns_e = 1;
+nsbx = 1;
+%nsbx = 0;
 nsh = 1;
 nsh_e = 1;
 np = model.np; % 1
@@ -110,10 +147,10 @@ W_e(2, 2) =  0.0180;
 % output reference in mayer term
 %yr_e = ... ;
 % slacks
-Z = 1e2;
-Z_e = 1e2;
-z = 0e2;
-z_e = 0e2;
+Z = 1e2*eye(ns);
+Z_e = 1e2*eye(ns_e);
+z = 0e2*eye(ns);
+z_e = 0e2*eye(ns_e);
 
 %% constraints
 % constants
@@ -148,6 +185,9 @@ lh = Pel_min;
 uh = Pel_max;
 lh_e = Pel_min;
 uh_e = Pel_max;
+% soft box state constraints
+Jsbx = zeros(nbx, nsbx);
+Jsbx(1, 1) = 1.0;
 % soft nonlinear constraints
 Jsh = zeros(nh, nsh);
 Jsh(1, 1) = 1.0;
@@ -174,6 +214,7 @@ ocp_model.set('dim_nh', nh);
 ocp_model.set('dim_nh_e', nh_e);
 ocp_model.set('dim_ns', ns);
 ocp_model.set('dim_ns_e', ns_e);
+ocp_model.set('dim_nsbx', nsbx);
 ocp_model.set('dim_nsh', nsh);
 ocp_model.set('dim_nsh_e', nsh_e);
 ocp_model.set('dim_np', np);
@@ -224,6 +265,7 @@ ocp_model.set('constr_expr_h_e', model.expr_h_e);
 ocp_model.set('constr_lh_e', lh_e);
 ocp_model.set('constr_uh_e', uh_e);
 % soft nonlinear constraints
+ocp_model.set('constr_Jsbx', Jsbx);
 ocp_model.set('constr_Jsh', Jsh);
 ocp_model.set('constr_Jsh_e', Jsh_e);
 
@@ -253,7 +295,7 @@ if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_cond_N', ocp_qp_solver_cond_N);
 	ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
 	ocp_opts.set('qp_solver_ric_alg', ocp_qp_solver_ric_alg);
-%	ocp_opts.set('qp_solver_warm_start', ocp_qp_solver_warm_start);
+	ocp_opts.set('qp_solver_warm_start', ocp_qp_solver_warm_start);
 end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);

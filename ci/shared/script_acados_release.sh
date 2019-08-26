@@ -1,22 +1,37 @@
 #!/bin/bash
 #
-#
-# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+# Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+# Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+# Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
 #
 # This file is part of acados.
 #
 # The 2-Clause BSD License
 #
-# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 #
-# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
 #
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
 #
-#
-ACADOS_INSTALL_DIR="${ACADOS_INSTALL_DIR:-${HOME}/acados}";
+
 COVERAGE="${COVERAGE:-}";
 
 export MATLABPATH="${ACADOS_INSTALL_DIR}/lib:${MATLABPATH}";
@@ -48,6 +63,10 @@ function build_acados {
 		-D COVERAGE="${COVERAGE}" \
 		-D SWIG_PYTHON="${SWIG_PYTHON}" \
 		-D BUILD_SHARED_LIBS=ON \
+		-D ACADOS_EXAMPLES="${ACADOS_EXAMPLES}" \
+		-D MATLAB_EXECUTABLE="${MATLAB_EXECUTABLE}" \
+		-D ACADOS_MATLAB="${ACADOS_MATLAB}" \
+		-D ACADOS_OCTAVE="${ACADOS_OCTAVE}" \
 		..;
 	if [ "${ACADOS_LINT}" = 'ON' ]; then
 		cmake --build build --target lint;
@@ -55,15 +74,19 @@ function build_acados {
 	fi
 
 	cmake --build build;
-	cmake -E chdir build ctest --output-on-failure;
+	cmake --build build --target install;
+
+	# Run ctest
+	# TODO: test matlab/python
+	cmake -E chdir build ctest --output-on-failure; # use -V for full output
+
 	[ $? -ne 0 ] && exit 100;
 	if [ -n "${COVERAGE}" ]; then
+		echo "analyzing test coverage";
 		cmake --build build --target acados_coverage || \
 		  echo "Coverage report not generated";
 	fi
-	# only install release version
-	[ "${BUILD_TYPE}" = 'Release' ] && cmake --build build --target install;
 }
 
-build_acados Debug;
+# build_acados Debug;
 build_acados Release;

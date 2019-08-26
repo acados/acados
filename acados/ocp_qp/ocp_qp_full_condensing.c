@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // external
 #include <stdlib.h>
@@ -40,7 +58,7 @@
 
 void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims)
 {
-    d_compute_qp_dim_ocp2dense(dims, ddims);
+    d_cond_qp_compute_dim(dims, ddims);
 }
 
 
@@ -54,8 +72,8 @@ int ocp_qp_full_condensing_opts_calculate_size(ocp_qp_dims *dims)
     int size = 0;
     size += sizeof(ocp_qp_full_condensing_opts);
     // hpipm opts
-    size += sizeof(struct d_cond_qp_ocp2dense_arg);
-    size += d_memsize_cond_qp_ocp2dense_arg();
+    size += sizeof(struct d_cond_qp_arg);
+    size += d_cond_qp_arg_memsize();
     //
     size += 1 * 8;
     make_int_multiple_of(8, &size);
@@ -74,13 +92,13 @@ void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
     c_ptr += sizeof(ocp_qp_full_condensing_opts);
 
     // hpipm_opts
-    opts->hpipm_opts = (struct d_cond_qp_ocp2dense_arg *) c_ptr;
-    c_ptr += sizeof(struct d_cond_qp_ocp2dense_arg);
+    opts->hpipm_opts = (struct d_cond_qp_arg *) c_ptr;
+    c_ptr += sizeof(struct d_cond_qp_arg);
 
     align_char_to(8, &c_ptr);
 
     // hpipm_opts
-    d_create_cond_qp_ocp2dense_arg(opts->hpipm_opts, c_ptr);
+    d_cond_qp_arg_create(opts->hpipm_opts, c_ptr);
     c_ptr += opts->hpipm_opts->memsize;
 
     assert((char *) raw_memory + ocp_qp_full_condensing_opts_calculate_size(dims) >= c_ptr);
@@ -99,7 +117,7 @@ void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opt
     // expand only primal solution (linear MPC, Gauss-Newton)
     opts->expand_dual_sol = 1;
     // hpipm_opts
-    d_set_default_cond_qp_ocp2dense_arg(opts->hpipm_opts);
+    d_cond_qp_arg_set_default(opts->hpipm_opts);
 }
 
 
@@ -109,7 +127,7 @@ void ocp_qp_full_condensing_opts_update(ocp_qp_dims *dims, void *opts_)
     ocp_qp_full_condensing_opts *opts = opts_;
 
     // hpipm_opts
-	d_set_cond_qp_ocp2dense_arg_ric_alg(opts->ric_alg, opts->hpipm_opts);
+	d_cond_qp_arg_set_ric_alg(opts->ric_alg, opts->hpipm_opts);
 
 	return;
 }
@@ -158,8 +176,8 @@ int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_)
     int size = 0;
 
     size += sizeof(ocp_qp_full_condensing_memory);
-    size += sizeof(struct d_cond_qp_ocp2dense_workspace);
-    size += d_memsize_cond_qp_ocp2dense(dims, opts->hpipm_opts);
+    size += sizeof(struct d_cond_qp_ws);
+    size += d_cond_qp_ws_memsize(dims, opts->hpipm_opts);
 
     return size;
 }
@@ -175,13 +193,13 @@ void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void 
     ocp_qp_full_condensing_memory *mem = (ocp_qp_full_condensing_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_full_condensing_memory);
 
-    mem->hpipm_workspace = (struct d_cond_qp_ocp2dense_workspace *) c_ptr;
-    c_ptr += sizeof(struct d_cond_qp_ocp2dense_workspace);
+    mem->hpipm_workspace = (struct d_cond_qp_ws *) c_ptr;
+    c_ptr += sizeof(struct d_cond_qp_ws);
 
     assert((size_t) c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     // hpipm workspace
-    d_create_cond_qp_ocp2dense(dims, opts->hpipm_opts, mem->hpipm_workspace, c_ptr);
+    d_cond_qp_ws_create(dims, opts->hpipm_opts, mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
 
     assert((char *) raw_memory + ocp_qp_full_condensing_memory_calculate_size(dims, opts) >= c_ptr);
@@ -208,12 +226,12 @@ void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condens
     if (opts->cond_hess == 0)
     {
         // condense gradient only
-        d_cond_rhs_qp_ocp2dense(in, out, opts->hpipm_opts, mem->hpipm_workspace);
+        d_cond_qp_cond_rhs(in, out, opts->hpipm_opts, mem->hpipm_workspace);
     }
     else
     {
         // condense gradient and Hessian
-        d_cond_qp_ocp2dense(in, out, opts->hpipm_opts, mem->hpipm_workspace);
+        d_cond_qp_cond(in, out, opts->hpipm_opts, mem->hpipm_workspace);
 
         // ++ for debugging ++
         //
@@ -234,11 +252,11 @@ void ocp_qp_full_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_conden
 {
     if (opts->expand_dual_sol == 0)
     {
-        d_expand_primal_sol_dense2ocp(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
+        d_cond_qp_expand_primal_sol(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
     }
     else
     {
-        d_expand_sol_dense2ocp(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
+        d_cond_qp_expand_sol(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
     }
 }
 

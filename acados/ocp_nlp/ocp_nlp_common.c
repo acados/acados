@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 
@@ -564,26 +582,13 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 
 		// regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, (char *) field, int_value);
-
-        // Note(oj): how to decide if ocp_qp or dense? plan not available here..
-        // Note(giaf): the NLP solver always calls a xcond_solver,
-        //             so only its dimensions should be set now
-        // if( is_ocp_qp_solver )
-        // {
-            // set nbx, respectively nbu in qp_solver
-            // nb in qp_solver gets updated in the setter
-        // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i,field, &value[i]);
-        // }
-        // else  // dense_qp
-        // {
-        //     // update nb in qp_solver
-        //     int nb;
-        //     config->constraints[i]->dims_get(config->constraints[i],
-        //                            dims->constraints[i], "nb", &nb);
-        //     config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nb", &nb);
-        // }
     }
-    if ( (!strcmp(field, "ng")) || (!strcmp(field, "nh")) )
+    else if ( (!strcmp(field, "nsbx")) || (!strcmp(field, "nsbu")) )
+    {
+		// qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+    }
+    else if ( (!strcmp(field, "ng")) || (!strcmp(field, "nh")) )
     {
         // update ng_qp_solver in qp_solver
         int ng, nh, ng_qp_solver;
@@ -598,6 +603,20 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 		// regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, "ng", &ng_qp_solver);
     }
+    else if ( (!strcmp(field, "nsg")) || (!strcmp(field, "nsh")) )
+    {
+        // update ng_qp_solver in qp_solver
+        int nsg, nsh, nsg_qp_solver;
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg", &nsg);
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsh", &nsh);
+
+        nsg_qp_solver = nsg + nsh;
+
+		// qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &nsg_qp_solver);
+    }
+
+	return;
 }
 
 
