@@ -211,7 +211,7 @@ int {{ocp.model_name}}_acados_sim_create() {
     {{ ocp.model_name }}_sim_config->model_set(in->model, "impl_ode_jac_x_xdot_u", sim_impl_dae_jac_x_xdot_u_z);
 
     {% else %}
-    {% if ocp.solver_config.integrator_type == "ERK" %} 
+    {% if ocp.solver_config.integrator_type == "ERK" %}
     {{ ocp.model_name }}_sim_config->model_set({{ ocp.model_name }}_sim_in->model, "expl_vde_for", sim_forw_vde_casadi);
     {{ ocp.model_name }}_sim_config->model_set({{ ocp.model_name }}_sim_in->model, "expl_ode_fun", sim_expl_ode_fun_casadi);
     {% endif %}
@@ -220,12 +220,12 @@ int {{ocp.model_name}}_acados_sim_create() {
     // sim solver
 
     {{ ocp.model_name }}_sim_solver = sim_solver_create({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_opts);
-    
+
     // initialize state and input to zero
     // x
     for (ii = 0; ii < NX; ii++)
         {{ ocp.model_name }}_sim_in->x[ii] = 0.0;
-    
+
     // u
     for (ii = 0; ii < NU; ii++)
         {{ ocp.model_name }}_sim_in->u[ii] = 0.0;
@@ -236,7 +236,7 @@ int {{ocp.model_name}}_acados_sim_create() {
 
 int {{ ocp.model_name }}_acados_sim_solve() {
 
-    // integrate dynamics using acados sim_solver 
+    // integrate dynamics using acados sim_solver
     int status = sim_solve({{ ocp.model_name }}_sim_solver, {{ ocp.model_name }}_sim_in, {{ ocp.model_name }}_sim_out);
     if (status != 0)
         printf("error in {{ ocp.model_name }}_acados_sim_solve()! Exiting.\n");
@@ -254,7 +254,7 @@ int {{ ocp.model_name }}_acados_sim_free() {
     sim_dims_destroy({{ ocp.model_name }}_sim_dims);
     sim_config_destroy({{ ocp.model_name }}_sim_config);
 
-    // free external function 
+    // free external function
     {% if ocp.solver_config.integrator_type == "IRK" %}
         {% if ocp.dims.np < 1 %}
         external_function_casadi_free(sim_impl_dae_fun);
@@ -274,25 +274,25 @@ int {{ ocp.model_name }}_acados_sim_free() {
         external_function_param_casadi_free(sim_expl_ode_fun_casadi_casadi);
         {% endif %}
     {% endif %}
-    
+
     return 0;
 }
 
-sim_config  * {{ocp.model_name}}_acados_get_sim_config() {  
+sim_config  * {{ocp.model_name}}_acados_get_sim_config() {
     return {{ocp.model_name}}_sim_config; };
 
-sim_in      * {{ocp.model_name}}_acados_get_sim_in(){       
+sim_in      * {{ocp.model_name}}_acados_get_sim_in(){
     return {{ocp.model_name}}_sim_in; };
 
-sim_out     * {{ocp.model_name}}_acados_get_sim_out(){      
+sim_out     * {{ocp.model_name}}_acados_get_sim_out(){
     return {{ocp.model_name}}_sim_out; };
 
-void        * {{ocp.model_name}}_acados_get_sim_dims(){     
+void        * {{ocp.model_name}}_acados_get_sim_dims(){
     return {{ocp.model_name}}_sim_dims; };
 
-sim_opts    * {{ocp.model_name}}_acados_get_sim_opts(){     
+sim_opts    * {{ocp.model_name}}_acados_get_sim_opts(){
     return {{ocp.model_name}}_sim_opts; };
 
-sim_solver  * {{ocp.model_name}}_acados_get_sim_solver(){   
+sim_solver  * {{ocp.model_name}}_acados_get_sim_solver(){
     return {{ocp.model_name}}_sim_solver; };
 

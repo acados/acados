@@ -42,7 +42,7 @@ from ctypes import *
 
 
 def store_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
-    ocp_nlp = acados_ocp
+    ocp_nlp = acados_ocp_nlp()
     ocp_nlp.cost = acados_ocp.cost.__dict__
     ocp_nlp.constraints = acados_ocp.constraints.__dict__
     ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
@@ -54,21 +54,28 @@ def store_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     with open(json_file, 'w') as f:
         json.dump(ocp_nlp, f, default=np_array_to_list)
 
-def load_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
+def load_solver(json_file='acados_ocp_nlp.json'):
+
     with open(json_file, 'r') as f:
         ocp_nlp_json = json.load(f)
 
     ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
 
-    acados_ocp = ocp_nlp_as_object(ocp_nlp_dict)
-    acados_ocp.cost = ocp_nlp_as_object(acados_ocp.cost)
-    acados_ocp.constraints = ocp_nlp_as_object(acados_ocp.constraints)
-    acados_ocp.solver_config = ocp_nlp_as_object(acados_ocp.solver_config)
-    acados_ocp.dims = ocp_nlp_as_object(acados_ocp.dims)
+    acados_ocp = acados_ocp()
+    acados_ocp.__dict__ = ocp_nlp_dict
+
+    for acados_struct in acados_ocp.acados_structs:
+        getattr(acados_ocp, acados_struct).__dict__ = ocp_nlp_dict[acados_struct]
+
+    #  acados_ocp = ocp_nlp_as_object(ocp_nlp_dict)
+    #  acados_ocp.cost = ocp_nlp_as_object(acados_ocp.cost)
+    #  acados_ocp.constraints = ocp_nlp_as_object(acados_ocp.constraints)
+    #  acados_ocp.solver_config = ocp_nlp_as_object(acados_ocp.solver_config)
+    #  acados_ocp.dims = ocp_nlp_as_object(acados_ocp.dims)
 
     return acados_ocp
 
-def generate_solver(acados_ocp, model, con_h=None, con_hN=None, con_p=None, con_pN=None):
+def generate_ocp_solver(acados_ocp, model, con_h=None, con_hN=None, con_p=None, con_pN=None):
     USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
 
     # setting up loader and environment

@@ -30,6 +30,7 @@ class acados_sim_solver:
         nx = self.sim_struct.dims.nx
         self.gettable = {
             'x': nx,
+            'xn': nx,
             'u': nu,
             'S_forw': nx*(nx+nu)
         }
