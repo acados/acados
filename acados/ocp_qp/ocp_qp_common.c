@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // external
 #include <assert.h>
@@ -122,7 +140,7 @@ int ocp_qp_dims_calculate_size(int N)
 {
     int size = sizeof(ocp_qp_dims);
 
-    size += d_memsize_ocp_qp_dim(N);
+    size += d_ocp_qp_dim_memsize(N);
 
     return size;
 }
@@ -136,8 +154,8 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
     ocp_qp_dims *dims = (ocp_qp_dims *) c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
 
-    d_create_ocp_qp_dim(N, dims, c_ptr);
-    c_ptr += d_memsize_ocp_qp_dim(N);
+    d_ocp_qp_dim_create(N, dims, c_ptr);
+    c_ptr += d_ocp_qp_dim_memsize(N);
 
     dims->N = N;
 
@@ -154,7 +172,7 @@ void ocp_qp_dims_set(void *config_, void *dims_, int stage, const char *field, c
     // char field_copy[MAX_STR_LEN];
     char *field_copy = (char *) field;
 
-    d_set_ocp_qp_dim(field_copy, stage, *value, dims);
+    d_ocp_qp_dim_set(field_copy, stage, *value, dims);
 }
 
 
@@ -166,7 +184,7 @@ void ocp_qp_dims_set(void *config_, void *dims_, int stage, const char *field, c
 int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_in);
-    size += d_memsize_ocp_qp(dims);
+    size += d_ocp_qp_memsize(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
     return size;
 }
@@ -180,8 +198,8 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
     ocp_qp_in *qp_in = (ocp_qp_in *) c_ptr;
     c_ptr += sizeof(ocp_qp_in);
 
-    d_create_ocp_qp(dims, qp_in, c_ptr);
-    c_ptr += d_memsize_ocp_qp(dims);
+    d_ocp_qp_create(dims, qp_in, c_ptr);
+    c_ptr += d_ocp_qp_memsize(dims);
 
     ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
     c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
@@ -218,7 +236,7 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_out);
-    size += d_memsize_ocp_qp_sol(dims);
+    size += d_ocp_qp_sol_memsize(dims);
     size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
     size += sizeof(ocp_qp_info);
     return size;
@@ -233,8 +251,8 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
     ocp_qp_out *qp_out = (ocp_qp_out *) c_ptr;
     c_ptr += sizeof(ocp_qp_out);
 
-    d_create_ocp_qp_sol(dims, qp_out, c_ptr);
-    c_ptr += d_memsize_ocp_qp_sol(dims);
+    d_ocp_qp_sol_create(dims, qp_out, c_ptr);
+    c_ptr += d_ocp_qp_sol_memsize(dims);
 
     qp_out->misc = (void *) c_ptr;
     c_ptr += sizeof(ocp_qp_info);
@@ -276,7 +294,7 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 int ocp_qp_res_calculate_size(ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_res);
-    size += d_memsize_ocp_qp_res(dims);
+    size += d_ocp_qp_res_memsize(dims);
     return size;
 }
 
@@ -289,8 +307,8 @@ ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory)
     ocp_qp_res *qp_res = (ocp_qp_res *) c_ptr;
     c_ptr += sizeof(ocp_qp_res);
 
-    d_create_ocp_qp_res(dims, qp_res, c_ptr);
-    c_ptr += d_memsize_ocp_qp_res(dims);
+    d_ocp_qp_res_create(dims, qp_res, c_ptr);
+    c_ptr += d_ocp_qp_res_memsize(dims);
 
     assert((char *) raw_memory + ocp_qp_res_calculate_size(dims) == c_ptr);
 
@@ -302,7 +320,7 @@ ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory)
 int ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_res_ws);
-    size += d_memsize_ocp_qp_res_workspace(dims);
+    size += d_ocp_qp_res_ws_memsize(dims);
     return size;
 }
 
@@ -315,8 +333,8 @@ ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory)
     ocp_qp_res_ws *qp_res_ws = (ocp_qp_res_ws *) c_ptr;
     c_ptr += sizeof(ocp_qp_res_ws);
 
-    d_create_ocp_qp_res_workspace(dims, qp_res_ws, c_ptr);
-    c_ptr += d_memsize_ocp_qp_res_workspace(dims);
+    d_ocp_qp_res_ws_create(dims, qp_res_ws, c_ptr);
+    c_ptr += d_ocp_qp_res_ws_memsize(dims);
 
     assert((char *) raw_memory + ocp_qp_res_workspace_calculate_size(dims) == c_ptr);
 
@@ -336,7 +354,7 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
         info->t_computed = 1;
     }
 
-    d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);
+    d_ocp_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
 
     return;
 }

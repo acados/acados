@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // external
 #include <stdlib.h>
@@ -44,11 +62,11 @@ int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims)
     size += sizeof(ocp_qp_partial_condensing_opts);
 
     // hpipm opts
-    size += sizeof(struct d_cond_qp_ocp2ocp_arg);
-    size += d_memsize_cond_qp_ocp2ocp_arg(N);  // worst case size of new QP
+    size += sizeof(struct d_part_cond_qp_arg);
+    size += d_part_cond_qp_arg_memsize(N);  // worst case size of new QP
                                                //
     size += sizeof(ocp_qp_dims);
-    size += d_memsize_ocp_qp_dim(N);  // worst-case size of new QP
+    size += d_ocp_qp_dim_memsize(N);  // worst-case size of new QP
     size += (N + 1) * sizeof(int);    // block size
 
     size += 1 * 8;
@@ -73,8 +91,8 @@ void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
     opts->pcond_dims = (ocp_qp_dims *) c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
     // hpipm_opts
-    opts->hpipm_opts = (struct d_cond_qp_ocp2ocp_arg *) c_ptr;
-    c_ptr += sizeof(struct d_cond_qp_ocp2ocp_arg);
+    opts->hpipm_opts = (struct d_part_cond_qp_arg *) c_ptr;
+    c_ptr += sizeof(struct d_part_cond_qp_arg);
 
     // block size
     assign_and_advance_int(N + 1, &opts->block_size, &c_ptr);
@@ -82,10 +100,10 @@ void *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
     align_char_to(8, &c_ptr);
 
     // pcond_dims
-    d_create_ocp_qp_dim(N, opts->pcond_dims, c_ptr);
-    c_ptr += d_memsize_ocp_qp_dim(dims->N);
+    d_ocp_qp_dim_create(N, opts->pcond_dims, c_ptr);
+    c_ptr += d_ocp_qp_dim_memsize(dims->N);
     // hpipm_opts
-    d_create_cond_qp_ocp2ocp_arg(N, opts->hpipm_opts, c_ptr);
+    d_part_cond_qp_arg_create(N, opts->hpipm_opts, c_ptr);
     c_ptr += opts->hpipm_opts->memsize;
 
     assert((char *) raw_memory + ocp_qp_partial_condensing_opts_calculate_size(dims) >= c_ptr);
@@ -106,7 +124,7 @@ void ocp_qp_partial_condensing_opts_initialize_default(ocp_qp_dims *dims, void *
 
     opts->pcond_dims->N = opts->N2;
     // hpipm_opts
-    d_set_default_cond_qp_ocp2ocp_arg(opts->N2, opts->hpipm_opts);
+    d_part_cond_qp_arg_set_default(opts->N2, opts->hpipm_opts);
 
 	return;
 }
@@ -120,8 +138,8 @@ void ocp_qp_partial_condensing_opts_update(ocp_qp_dims *dims, void *opts_)
     opts->pcond_dims->N = opts->N2;
     opts->N2_bkp = opts->N2;
     // hpipm_opts
-    d_set_default_cond_qp_ocp2ocp_arg(opts->N2, opts->hpipm_opts);
-	d_set_cond_qp_ocp2ocp_arg_ric_alg(opts->ric_alg, opts->N2, opts->hpipm_opts);
+    d_part_cond_qp_arg_set_default(opts->N2, opts->hpipm_opts);
+	d_part_cond_qp_arg_set_ric_alg(opts->ric_alg, opts->N2, opts->hpipm_opts);
 
 	return;
 }
@@ -173,14 +191,14 @@ int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opt
     // populate dimensions of new ocp_qp based on N2
     opts->pcond_dims->N = opts->N2;
     // TODO(all): user-defined block size
-    d_compute_block_size_cond_qp_ocp2ocp(dims->N, opts->N2, opts->block_size);
+    d_part_cond_qp_compute_block_size(dims->N, opts->N2, opts->block_size);
 
-    d_compute_qp_dim_ocp2ocp(dims, opts->block_size, opts->pcond_dims);
+    d_part_cond_qp_compute_dim(dims, opts->block_size, opts->pcond_dims);
 
     size += sizeof(ocp_qp_partial_condensing_memory);
     // hpipm workspace
-    size += sizeof(struct d_cond_qp_ocp2ocp_workspace);
-    size += d_memsize_cond_qp_ocp2ocp(dims, opts->block_size, opts->pcond_dims, opts->hpipm_opts);
+    size += sizeof(struct d_part_cond_qp_ws);
+    size += d_part_cond_qp_ws_memsize(dims, opts->block_size, opts->pcond_dims, opts->hpipm_opts);
 
     size += 1 * 8;
     return size;
@@ -197,15 +215,15 @@ void *ocp_qp_partial_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, vo
     ocp_qp_partial_condensing_memory *mem = (ocp_qp_partial_condensing_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_partial_condensing_memory);
     // hpipm_workspace
-    mem->hpipm_workspace = (struct d_cond_qp_ocp2ocp_workspace *) c_ptr;
-    c_ptr += sizeof(struct d_cond_qp_ocp2ocp_workspace);
+    mem->hpipm_workspace = (struct d_part_cond_qp_ws *) c_ptr;
+    c_ptr += sizeof(struct d_part_cond_qp_ws);
 
     // hpipm workspace structure
     align_char_to(8, &c_ptr);
     assert((size_t) c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     // hpipm_workspace
-    d_create_cond_qp_ocp2ocp(dims, opts->block_size, opts->pcond_dims, opts->hpipm_opts,
+    d_part_cond_qp_ws_create(dims, opts->block_size, opts->pcond_dims, opts->hpipm_opts,
                              mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
 
@@ -244,7 +262,7 @@ void ocp_qp_partial_condensing(ocp_qp_in *in, ocp_qp_in *out, ocp_qp_partial_con
     mem->pcond_qp_in = out;
 
     // convert to partially condensed qp structure
-    d_cond_qp_ocp2ocp(in, out, opts->hpipm_opts, mem->hpipm_workspace);
+    d_part_cond_qp_cond(in, out, opts->hpipm_opts, mem->hpipm_workspace);
 }
 
 
@@ -254,7 +272,7 @@ void ocp_qp_partial_expansion(ocp_qp_out *in, ocp_qp_out *out, ocp_qp_partial_co
 {
     assert(opts->N2 == opts->N2_bkp);
 
-    d_expand_sol_ocp2ocp(mem->qp_in, mem->pcond_qp_in, in, out, opts->hpipm_opts,
+    d_part_cond_qp_expand_sol(mem->qp_in, mem->pcond_qp_in, in, out, opts->hpipm_opts,
                          mem->hpipm_workspace);
 }
 

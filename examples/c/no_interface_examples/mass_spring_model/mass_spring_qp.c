@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 
 // external
@@ -480,7 +498,38 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims)
 
     ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);
 
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
+//    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
+	int ii;
+	for(ii=0; ii<N; ii++)
+	{
+		d_ocp_qp_set_A(ii, hA[ii], qp_in);
+		d_ocp_qp_set_B(ii, hB[ii], qp_in);
+		d_ocp_qp_set_b(ii, hb[ii], qp_in);
+		d_ocp_qp_set_R(ii, hR[ii], qp_in);
+		d_ocp_qp_set_S(ii, hS[ii], qp_in);
+		d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+		d_ocp_qp_set_r(ii, hr[ii], qp_in);
+		d_ocp_qp_set_q(ii, hq[ii], qp_in);
+		d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+		d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+		d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+		d_ocp_qp_set_C(ii, hC[ii], qp_in);
+		d_ocp_qp_set_D(ii, hD[ii], qp_in);
+		d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+		d_ocp_qp_set_ug(ii, hug[ii], qp_in);
+	}
+	d_ocp_qp_set_R(ii, hR[ii], qp_in);
+	d_ocp_qp_set_S(ii, hS[ii], qp_in);
+	d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+	d_ocp_qp_set_r(ii, hr[ii], qp_in);
+	d_ocp_qp_set_q(ii, hq[ii], qp_in);
+	d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+	d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+	d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+	d_ocp_qp_set_C(ii, hC[ii], qp_in);
+	d_ocp_qp_set_D(ii, hD[ii], qp_in);
+	d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+	d_ocp_qp_set_ug(ii, hug[ii], qp_in);
 
     // free objective
     free(Q);
@@ -528,6 +577,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, ocp_qp_dims *dims)
 
     return qp_in;
 }
+
 
 
 ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_, int nb_, int ng_, int ngN)
@@ -919,9 +969,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *d
     double *hZu[N+1];
     double *hzl[N+1];
     double *hzu[N+1];
-    int *hidxs[N+1]; // XXX
-    double *hd_ls[N+1];
-    double *hd_us[N+1];
+    int *hidxs[N+1];
 
 #if defined(ELIMINATE_X0)
     hA[0] = A0;
@@ -952,8 +1000,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *d
     hzl[0] = zl0;
     hzu[0] = zu0;
     hidxs[0] = idxs0;
-    hd_ls[0] = d_ls0;
-    hd_us[0] = d_us0;
     for (int ii = 1; ii < N; ii++) {
         hA[ii] = A;
         hB[ii] = B;
@@ -975,8 +1021,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *d
         hzl[ii] = zl1;
         hzu[ii] = zu1;
         hidxs[ii] = idxs1;
-        hd_ls[ii] = d_ls1;
-        hd_us[ii] = d_us1;
     }
     hQ[N] = Q;  // or maybe initialize to the solution of the DARE???
     hq[N] = q;  // or maybe initialize to the solution of the DARE???
@@ -991,13 +1035,51 @@ ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, ocp_qp_dims *d
     hzl[N] = zlN;
     hzu[N] = zuN;
     hidxs[N] = idxsN;
-    hd_ls[N] = d_lsN;
-    hd_us[N] = d_usN;
 
 
     ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);
 
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hZl, hZu, hzl, hzu, hidxs, hd_ls, hd_us, qp_in);
+//    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hZl, hZu, hzl, hzu, hidxs, hd_ls, hd_us, qp_in);
+	for(ii=0; ii<N; ii++)
+	{
+		d_ocp_qp_set_A(ii, hA[ii], qp_in);
+		d_ocp_qp_set_B(ii, hB[ii], qp_in);
+		d_ocp_qp_set_b(ii, hb[ii], qp_in);
+		d_ocp_qp_set_R(ii, hR[ii], qp_in);
+		d_ocp_qp_set_S(ii, hS[ii], qp_in);
+		d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+		d_ocp_qp_set_r(ii, hr[ii], qp_in);
+		d_ocp_qp_set_q(ii, hq[ii], qp_in);
+		d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+		d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+		d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+		d_ocp_qp_set_C(ii, hC[ii], qp_in);
+		d_ocp_qp_set_D(ii, hD[ii], qp_in);
+		d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+		d_ocp_qp_set_ug(ii, hug[ii], qp_in);
+		d_ocp_qp_set_Zl(ii, hZl[ii], qp_in);
+		d_ocp_qp_set_Zu(ii, hZu[ii], qp_in);
+		d_ocp_qp_set_zl(ii, hzl[ii], qp_in);
+		d_ocp_qp_set_zu(ii, hzu[ii], qp_in);
+		d_ocp_qp_set_idxb(ii, hidxs[ii], qp_in);
+	}
+	d_ocp_qp_set_R(ii, hR[ii], qp_in);
+	d_ocp_qp_set_S(ii, hS[ii], qp_in);
+	d_ocp_qp_set_Q(ii, hQ[ii], qp_in);
+	d_ocp_qp_set_r(ii, hr[ii], qp_in);
+	d_ocp_qp_set_q(ii, hq[ii], qp_in);
+	d_ocp_qp_set_idxb(ii, hidxb[ii], qp_in);
+	d_ocp_qp_set_lb(ii, hlb[ii], qp_in);
+	d_ocp_qp_set_ub(ii, hub[ii], qp_in);
+	d_ocp_qp_set_C(ii, hC[ii], qp_in);
+	d_ocp_qp_set_D(ii, hD[ii], qp_in);
+	d_ocp_qp_set_lg(ii, hlg[ii], qp_in);
+	d_ocp_qp_set_ug(ii, hug[ii], qp_in);
+	d_ocp_qp_set_Zl(ii, hZl[ii], qp_in);
+	d_ocp_qp_set_Zu(ii, hZu[ii], qp_in);
+	d_ocp_qp_set_zl(ii, hzl[ii], qp_in);
+	d_ocp_qp_set_zu(ii, hzu[ii], qp_in);
+	d_ocp_qp_set_idxb(ii, hidxs[ii], qp_in);
 
     // free objective
     free(Q);

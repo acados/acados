@@ -1,3 +1,36 @@
+%
+% Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+% Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+% Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+% Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+%
+% This file is part of acados.
+%
+% The 2-Clause BSD License
+%
+% Redistribution and use in source and binary forms, with or without
+% modification, are permitted provided that the following conditions are met:
+%
+% 1. Redistributions of source code must retain the above copyright notice,
+% this list of conditions and the following disclaimer.
+%
+% 2. Redistributions in binary form must reproduce the above copyright notice,
+% this list of conditions and the following disclaimer in the documentation
+% and/or other materials provided with the distribution.
+%
+% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+% POSSIBILITY OF SUCH DAMAGE.;
+%
+
 function check = check_reformulation(model, gnsf, print_info)
 %
 %   This file is part of acados.
@@ -72,21 +105,22 @@ z = gnsf.z;
 u = gnsf.u;
 y = gnsf.y;
 uhat = gnsf.uhat;
-
-if (strcmp(gnsf.param_f, 'true'))
-    p = model.p;
+if isfield(model, 'sym_p')
+	p = model.sym_p;
     np = length(p);
-    % create functions
-    impl_ode_fun = Function('impl_ode_fun', {x, xdot, u, z, p}, {model.dyn_expr_f});
-    phi_fun = Function('phi_fun',{y,uhat, p}, {gnsf.phi_expr});
-    f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z, u, p}, {gnsf.f_lo_expr});
 else
-    % create functions
-    impl_ode_fun = Function(['impl_ode_fun'], {x, xdot, u, z}, {model.dyn_expr_f});
-    phi_fun = Function('phi_fun',{y,uhat}, {gnsf.phi_expr});
-    f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z(1:nz1), u}, {gnsf.f_lo_expr});
+	if class(x(1)) == 'casadi.SX'
+		p = SX.sym('p',0, 0);
+	else
+		p = MX.sym('p',0, 0);
+	end
+    np = 0;
 end
 
+% create functions
+impl_ode_fun = Function('impl_ode_fun', {x, xdot, u, z, p}, {model.dyn_expr_f});
+phi_fun = Function('phi_fun',{y, uhat, p}, {gnsf.phi_expr});
+f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z, u, p}, {gnsf.f_lo_expr});
 
 for i_check = 1:num_eval
     
@@ -109,16 +143,16 @@ for i_check = 1:num_eval
 
 
     % eval functions
-	if (strcmp(gnsf.param_f, 'true'))
+    % if isparametric
         p0 = rand(np, 1);
         f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0, p0));
         phi_val = phi_fun( y0, uhat0, p0);
         f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0(I_z1), u0, p0);
-    else
-        f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0));
-        phi_val = phi_fun( y0, uhat0);
-        f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0(I_z1), u0);
-    end
+    % else
+    %     f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0));
+    %     phi_val = phi_fun( y0, uhat0);
+    %     f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0(I_z1), u0);
+    % end
 	f_impl_val = f_impl_val(idx_perm_f);
     
 

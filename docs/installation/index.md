@@ -81,7 +81,7 @@ Please choose one and proceed with the corresponding paragraph.
     For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
     Install acados as follows
     ```
-    make acados_shared
+    make shared_library
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_acados_folder>/lib
     make examples_c
     make run_examples_c

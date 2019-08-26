@@ -48,7 +48,7 @@ Depending on the environment you want to use to generate CasADi functions from, 
     tar -xf casadi-linux-octave-4.4.1-v3.4.5.tar.gz -C casadi-octave
     ```
 
-    ### **Octave version 4.2 or earliear**
+    ### **Octave version 4.2 or earlier**
     Put CasADi binaries into `<acados_root_folder>/external/casadi-octave` :
 
     ```
@@ -79,15 +79,10 @@ Please choose one and proceed with the corresponding paragraph.
     For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
     Install acados as follows
     ```
-    make acados_shared
+    make shared_library
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_acados_folder>/lib
     make examples_c
     make run_examples_c
     ```
-
-  If the compilation/linking fails because `-lblas` or `-llapack` can not be found, you might want to do:
-  ```
-  sudo apt-get install libblas-dev liblapack-dev
-  ```
 
 * soon: binaries for all operating systems available for download (see Releases)

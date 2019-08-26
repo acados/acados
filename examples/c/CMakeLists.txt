@@ -1,20 +1,38 @@
 #
-# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+# Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+# Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+# Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
 #
 # This file is part of acados.
 #
 # The 2-Clause BSD License
 #
-# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 #
-# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
 #
-# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
 #
 
-if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC") # TODO: make this work on windodws?!
 
 configure_file(chain_model/chain_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/chain_model/chain_model.h @ONLY)
 
@@ -234,23 +252,23 @@ target_link_libraries(pendulum_scqp acados)
 add_test(pendulum_scqp pendulum_scqp)
 
 # -------------------- mass_spring
-add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)
+add_executable(mass_spring_example no_interface_examples/mass_spring_example.c no_interface_examples/mass_spring_model/mass_spring_qp.c)
 target_link_libraries(mass_spring_example acados)
 add_test(mass_spring_example mass_spring_example)
 
-add_executable(mass_spring_fcond_split mass_spring_fcond_split.c mass_spring_model/mass_spring_qp.c)
+add_executable(mass_spring_fcond_split no_interface_examples/mass_spring_fcond_split.c no_interface_examples/mass_spring_model/mass_spring_qp.c)
 target_link_libraries(mass_spring_fcond_split acados)
 add_test(mass_spring_fcond_split mass_spring_example)
 
-add_executable(mass_spring_pcond_split mass_spring_pcond_split.c mass_spring_model/mass_spring_qp.c)
+add_executable(mass_spring_pcond_split no_interface_examples/mass_spring_pcond_split.c no_interface_examples/mass_spring_model/mass_spring_qp.c)
 target_link_libraries(mass_spring_pcond_split acados)
 add_test(mass_spring_pcond_split mass_spring_example)
 
-add_executable(mass_spring_offline_fcond_qpoases_split mass_spring_offline_fcond_qpoases_split.c mass_spring_model/mass_spring_qp.c)
+add_executable(mass_spring_offline_fcond_qpoases_split no_interface_examples/mass_spring_offline_fcond_qpoases_split.c no_interface_examples/mass_spring_model/mass_spring_qp.c)
 target_link_libraries(mass_spring_offline_fcond_qpoases_split acados)
 add_test(mass_spring_offline_fcond_qpoases_split mass_spring_example)
 
-add_executable(mass_spring_nmpc_example mass_spring_nmpc_example.c mass_spring_model/mass_spring_qp.c)
+add_executable(mass_spring_nmpc_example no_interface_examples/mass_spring_nmpc_example.c no_interface_examples/mass_spring_model/mass_spring_qp.c)
 target_link_libraries(mass_spring_nmpc_example acados)
 add_test(mass_spring_nmpc_example mass_spring_example)
 
@@ -263,9 +281,9 @@ add_executable(sim_wt_model_nx3 sim_wt_model_nx3.c ${WT_MODEL_NX3_SRC})
 target_link_libraries(sim_wt_model_nx3 acados)
 add_test(sim_wt_model_nx3 sim_wt_model_nx3)
 
-add_executable(ocp_qp ocp_qp.c)
-target_link_libraries(ocp_qp acados)
-add_test(ocp_qp ocp_qp)
+#add_executable(ocp_qp ocp_qp.c)
+#target_link_libraries(ocp_qp acados)
+#add_test(ocp_qp ocp_qp)
 
 # -------------------- dense_qp
 add_executable(dense_qp dense_qp.c)
