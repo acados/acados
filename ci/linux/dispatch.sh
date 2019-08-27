@@ -32,6 +32,8 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+echo "SECTION ="
+echo ${SECTION}
 
 if [ "${SECTION}" = 'before_install' ]; then
     export ACADOS_INSTALL_DIR="$(pwd)";

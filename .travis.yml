@@ -82,6 +82,7 @@ script:
 
 after_success:
   - SECTION='after_success'
+  - export DEPLOY_FOLDER="${DEPLOY_FOLDER:-${HOME}/deploy}"
   - mkdir -p "${DEPLOY_FOLDER}"
   - source "${SCRIPT_DIR}/dispatch.sh"
 
