@@ -99,7 +99,7 @@ elif [ "${SECTION}" = 'script' ]; then
 	source "${SHARED_SCRIPT_DIR}/script_acados_release.sh";
 
 elif [ "${SECTION}" = 'after_success' ]; then
-	source "${SHARED_SCRIPT_DIR}/after_success_package_release.sh";
+	# source "${SHARED_SCRIPT_DIR}/after_success_package_release.sh";
 	source "${SHARED_SCRIPT_DIR}/upload_coverage.sh";
 
 fi
