@@ -80,6 +80,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		double *xn = mxGetPr( plhs[0] );
 		sim_out_get(config, dims, out, "xn", xn);
 		}
+	else if(!strcmp(field, "zn"))
+		{
+		plhs[0] = mxCreateNumericMatrix(nz, 1, mxDOUBLE_CLASS, mxREAL);
+		double *zn = mxGetPr( plhs[0] );
+		sim_out_get(config, dims, out, "zn", zn);
+		}
 	else if(!strcmp(field, "S_forw"))
 		{
 		plhs[0] = mxCreateNumericMatrix(nx, nu+nx, mxDOUBLE_CLASS, mxREAL);

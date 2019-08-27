@@ -46,7 +46,6 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	{
 
-//	mexPrintf("\nin sim_create\n");
 	// sizeof(long long) == sizeof(void *) = 64 !!!
 	int ii;
 
@@ -86,6 +85,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		sens_hess = true;
 		}
 //	mexPrintf("\n%d\n", sens_hess);
+	bool sens_algebraic = false;
+	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "sens_algebraic" ) );
+	if (!strcmp(c_ptr, "true"))
+		{
+		sens_algebraic = true;
+		}
+
 	bool jac_reuse = false;
 	c_ptr = mxArrayToString( mxGetField( prhs[1], 0, "jac_reuse" ) );
 	if (!strcmp(c_ptr, "true"))
@@ -96,7 +102,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	//
 	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
-//	mexPrintf("\n%s\n", method);
+	// mexPrintf("\n%s\n", method);
 
 
 
@@ -267,6 +273,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	sim_opts_set(config, opts, "sens_forw", &sens_forw);
 	sim_opts_set(config, opts, "sens_adj", &sens_adj);
 	sim_opts_set(config, opts, "sens_hess", &sens_hess);
+	sim_opts_set(config, opts, "sens_algebraic", &sens_algebraic);
 	sim_opts_set(config, opts, "jac_reuse", &jac_reuse);
 
 

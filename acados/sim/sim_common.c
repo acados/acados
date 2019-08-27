@@ -314,10 +314,17 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
     {
         int nx;
         config->dims_get(config_, dims_, "nx", &nx);
-        int ii;
         double *xn = value;
-        for (ii=0; ii < nx; ii++)
+        for (int ii=0; ii < nx; ii++)
             xn[ii] = out->xn[ii];
+    }
+    else if (!strcmp(field, "zn"))
+    {
+        int nz;
+        config->dims_get(config_, dims_, "nz", &nz);
+        double *zn = value;
+        for (int ii=0; ii < nz; ii++)
+            zn[ii] = out->zn[ii];
     }
     else if (!strcmp(field, "S_forw"))
     {
