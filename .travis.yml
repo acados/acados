@@ -85,11 +85,16 @@ after_success:
   # - mkdir -p "${DEPLOY_FOLDER}"
   - source "${SCRIPT_DIR}/dispatch.sh"
 
+before_deploy:
+  - cd "${ACADOS_INSTALL_DIR}/lib/"
+  - tar -zcf * acados-$TRAVIS_TAG-$TRAVIS_OS_NAME.tar.gz
+  - cd ../..
+   
 deploy:
   provider: releases
   api_key: "${GITHUB_OAUTH_TOKEN}"
   file_glob: true
-  file: "${ACADOS_INSTALL_DIR}/lib/*"
+  file: "${ACADOS_INSTALL_DIR}/lib/acados-*"
   skip_cleanup: true
   on:
     tags: true
