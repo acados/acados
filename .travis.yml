@@ -87,7 +87,7 @@ after_success:
 
 before_deploy:
   - cd "${ACADOS_INSTALL_DIR}/lib/"
-  - tar -zcf * acados-$TRAVIS_TAG-$TRAVIS_OS_NAME.tar.gz
+  - tar -zcf acados-$TRAVIS_TAG-$TRAVIS_OS_NAME.tar.gz *
   - cd ../..
    
 deploy:
