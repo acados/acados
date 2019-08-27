@@ -89,7 +89,7 @@ deploy:
   provider: releases
   api_key: "${GITHUB_OAUTH_TOKEN}"
   file_glob: true
-  file: "${ACADOS_INSTALL_DIR}/*"
+  file: "${ACADOS_INSTALL_DIR}/lib/*"
   skip_cleanup: true
   on:
     tags: true
