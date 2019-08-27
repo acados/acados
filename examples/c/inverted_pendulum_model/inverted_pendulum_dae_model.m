@@ -31,7 +31,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function [ model ] = export_inverted_pendulum_dae_model()
+function [ model ] = inverted_pendulum_dae_model()
     %% this function generates an implicit ODE / index-1 DAE model,
     % which consists of a CasADi expression f_impl_expr
     % that depends on the symbolic CasADi variables x, xdot, u, z,
@@ -97,18 +97,16 @@ function [ model ] = export_inverted_pendulum_dae_model()
                      ax + vy * valpha + ypos * aalpha, ...
                      ay - vx * valpha - xpos * aalpha);
     
-    %                  ay - vx * vx - xpos * aalpha);
-    
     %% initial value
 %     x0 = [1; -5; 1; 0.1; -0.5; 0.1];
 %     z0 = [-1.5; -0.3; -0.3; -3; 19];
 %     u0 = 1;
 
-    model.f_impl_expr = f_impl;
-    model.x = x;
-    model.xdot = xdot;
-    model.u = u;
-    model.z = z;
+    model.expr_f_impl = f_impl;
+    model.sym_x = x;
+    model.sym_xdot = xdot;
+    model.sym_u = u;
+    model.sym_z = z;
     model.name = model_name_prefix;
     
 end

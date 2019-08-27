@@ -148,7 +148,7 @@ gnsf.idx_perm_x = 1:nx; % matlab-style
 gnsf.ipiv_x = idx_perm_to_ipiv(gnsf.idx_perm_x); % blasfeo-style
 gnsf.idx_perm_z = 1:nz;
 gnsf.ipiv_z = idx_perm_to_ipiv(gnsf.idx_perm_z);
-gnsf.idx_perm_f = 1:nx;
+gnsf.idx_perm_f = 1:(nx+nz);
 gnsf.ipiv_f = idx_perm_to_ipiv(gnsf.idx_perm_f);
 
 gnsf.nontrivial_f_LO = 0;

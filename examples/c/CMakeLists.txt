@@ -175,16 +175,16 @@ file(GLOB WT_MODEL_NX6P2_SRC
 )
 
 file(GLOB INV_PENDULUM_SRC
-    inverted_pendulum_model/inv_pendulum_impl_ode_fun.c
-    inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_z.c
-    inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u_z.c
-    inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_u.c
-    inverted_pendulum_model/inv_pendulum_impl_ode_hess.c
-    inverted_pendulum_model/inv_pendulum_phi_fun.c
-    inverted_pendulum_model/inv_pendulum_phi_fun_jac_y.c
-    inverted_pendulum_model/inv_pendulum_phi_jac_y_uhat.c
-    inverted_pendulum_model/inv_pendulum_f_lo_fun_jac_x1k1uz.c
-    inverted_pendulum_model/inv_pendulum_get_matrices_fun.c
+    inverted_pendulum_model/inv_pendulum_dyn_impl_ode_fun.c
+    inverted_pendulum_model/inv_pendulum_dyn_impl_ode_fun_jac_x_xdot.c
+    inverted_pendulum_model/inv_pendulum_dyn_impl_ode_jac_x_xdot_u.c
+    inverted_pendulum_model/inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_u.c
+    inverted_pendulum_model/inv_pendulum_dyn_impl_ode_hess.c
+    inverted_pendulum_model/inv_pendulum_dyn_gnsf_phi_fun.c
+    inverted_pendulum_model/inv_pendulum_dyn_gnsf_phi_fun_jac_y.c
+    inverted_pendulum_model/inv_pendulum_dyn_gnsf_phi_jac_y_uhat.c
+    inverted_pendulum_model/inv_pendulum_dyn_gnsf_f_lo_fun_jac_x1k1uz.c
+    inverted_pendulum_model/inv_pendulum_dyn_gnsf_get_matrices_fun.c
 )
 
 file(GLOB GNSF_CRANE_SRC

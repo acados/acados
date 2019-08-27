@@ -33,22 +33,22 @@
 
 
 clc;
-clear all;
+clear VARIABLES;
 close all;
 
-addpath('../../../experimental/interfaces/matlab/external_function_generation/sim/')
+addpath('../../../interfaces/acados_matlab/')
 
 % define model 
-model = export_inverted_pendulum_dae_model();
+model = inverted_pendulum_dae_model();
+model.dyn_expr_f = model.expr_f_impl;
 
 %% GNSF Model -- detect structure, reorder model, and generate C Code for
 %% GNSF model. --> for more advanded users - uncomment this section
 % Reformulate model as GNSF & Reorder x, xdot, z, f_impl, f_expl
 % accordingly
 transcribe_opts.print_info = 1;
-[ gnsf, reordered_model] = detect_gnsf_structure(model, transcribe_opts);
+[ gnsf ] = detect_gnsf_structure(model, transcribe_opts);
     % check output of this function to see if/how the states are reordered
-model = reordered_model;
 generate_c_code_gnsf( gnsf );
 
 %% Implicit Model -- Generate C Code
