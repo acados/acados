@@ -79,7 +79,7 @@ int main()
     int ny    = 8;
     int nuhat = 1;
 
-	int nsim = 1; // 1000
+	int nsim = 1000;
 
     // generate x0, u_sim
     double x0[nx];
@@ -87,10 +87,10 @@ int main()
 
     x0[0] =  1.0000;  // xpos
     x0[1] = -5.0000;  // ypos
-    x0[2] =  0.1000;  // vx
-    x0[3] = -0.5000;  // vy
-    x0[4] =  0.1000;  // valpha
-    x0[5] =  1.0000;  // alpha
+    x0[2] =  1.0000;  // alpha
+    x0[3] =  0.1000;  // vx
+    x0[4] = -0.5000;  // vy
+    x0[5] =  0.1000;  // valpha
 
 
     u_sim[0] = 1;
