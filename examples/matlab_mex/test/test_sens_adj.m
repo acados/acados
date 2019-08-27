@@ -84,7 +84,7 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     %	if isfield(model, 'sym_z')
     %		sim_model.set('sym_z', model.sym_z);
     %	end
-    %	sim_model.set('nz', model.nz);
+    %	sim_model.set('dim_nz', model.nz);
     end
 
 	%% acados sim opts

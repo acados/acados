@@ -78,8 +78,8 @@ end
 if isfield(model, 'sym_p')
     sim_model.set('sym_p', model.sym_p);
 end
-sim_model.set('dim_nx', model.nx);
-sim_model.set('dim_nu', model.nu);
+sim_model.set('dim_nx', nx);
+sim_model.set('dim_nu', nu);
 
 
 if (strcmp(method, 'erk'))
@@ -92,7 +92,7 @@ else % irk irk_gnsf
 %	if isfield(model, 'sym_z')
 %		sim_model.set('sym_z', model.sym_z);
 %	end
-%	sim_model.set('nz', model.nz);
+%	sim_model.set('dim_nz', model.nz);
 end
 
 
@@ -155,14 +155,9 @@ simulation_time = toc
 xn = sim.get('xn');
 xn
 % S_forw
-S_forw = sim.get('S_forw');
-S_forw
-% Sx
+S_forw = sim.get('S_forw')
 Sx = sim.get('Sx');
-Sx
-% Su
 Su = sim.get('Su');
-Su
 
 %x_sim
 

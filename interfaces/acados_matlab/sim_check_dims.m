@@ -74,7 +74,7 @@ end
 
 
 if isfield(model, 'sym_z')
-    if ~isemzty(model.sym_z)
+    if ~isempty(model.sym_z)
         nz = length(model.sym_z);
     else
         nz = 0;
