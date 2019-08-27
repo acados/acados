@@ -104,6 +104,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	int nu;				bool set_nu = false;
 	int nx;				bool set_nx = false;
+	int nz;				bool set_nz = false;
 	double T;			bool set_T = false;
 	double *x;			bool set_x = false;
 	double *u;			bool set_u = false;
@@ -124,6 +125,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 		set_nu = true;
 		nu = mxGetScalar( mxGetField( prhs[0], 0, "dim_nu" ) );
+		}
+	if (mxGetField( prhs[0], 0, "dim_nz" )!=NULL)
+		{
+		set_nz = true;
+		nz = mxGetScalar( mxGetField( prhs[0], 0, "dim_nz" ) );
 		}
 	if (mxGetField( prhs[0], 0, "T" )!=NULL)
 		{
@@ -236,6 +242,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		sim_dims_set(config, dims, "nx", &nx);
 	if (set_nu)
 		sim_dims_set(config, dims, "nu", &nu);
+	if (set_nz)
+		sim_dims_set(config, dims, "nz", &nz);
 	if (!strcmp(method, "irk_gnsf"))
 		{
 		if (set_gnsf_nx1)

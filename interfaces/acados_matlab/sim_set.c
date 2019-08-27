@@ -118,23 +118,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 	else if (!strcmp(field, "seed_adj"))
 	{
-		double *seed_adj = value;
 		sim_dims_get(config, dims, "nx", &acados_size);
 		// TODO(oj): in C, the backward seed is of dimension nx+nu, I think it should only be nx.
 		// sim_dims_get(config, dims, "nu", &tmp);
 		// acados_size += tmp;
 		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
-		sim_in_set(config, dims, in, "seed_adj", seed_adj);
+		sim_in_set(config, dims, in, field, value);
 	}
 	else if(!strcmp(field, "xdot"))
 	{
-		double *xdot = mxGetPr( prhs[5] );
-		sim_solver_set(solver, "xdot", xdot);
+		sim_dims_get(config, dims, "nx", &acados_size);
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+		sim_solver_set(solver, field, value);
+	}
+	else if(!strcmp(field, "z"))
+	{
+		sim_dims_get(config, dims, "nz", &acados_size);
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+		sim_solver_set(solver, field, value);
 	}
 	else if(!strcmp(field, "phi_guess"))
 	{
-		double *phi_guess = mxGetPr( prhs[5] );
-		sim_solver_set(solver, "phi_guess", phi_guess);
+		// TODO(oj): check if irk_gnsf
+		sim_dims_get(config, dims, "nout", &acados_size);
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+		sim_solver_set(solver, field, value);
 	}
 	else
 	{
