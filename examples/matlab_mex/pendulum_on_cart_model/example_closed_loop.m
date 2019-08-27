@@ -34,8 +34,6 @@
 %% test of native matlab interface
 clear all
 
-
-
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
@@ -45,40 +43,32 @@ if (~strcmp(env_run, 'true'))
 end
 
 
-
-%% arguments
-compile_mex = 'true';
-codgen_model = 'true';
+%% options
+compile_mex = 'true'; % true, false
+codgen_model = 'true'; % true, false
 % simulation
-sim_method = 'irk';
-sim_sens_forw = 'false';
+sim_method = 'irk'; % erk, irk, irk_gnsf
+sim_sens_forw = 'false'; % true, false
 sim_num_stages = 4;
 sim_num_steps = 4;
 % ocp
 param_scheme = 'multiple_shooting_unif_grid';
 ocp_N = 100;
-nlp_solver = 'sqp';
-%nlp_solver = 'sqp_rti';
-%nlp_solver_exact_hessian = 'false';
+nlp_solver = 'sqp'; % sqp, sqp_rti
 nlp_solver_exact_hessian = 'true';
-%regularize_method = 'no_regularize';
-%regularize_method = 'project';
-regularize_method = 'project_reduc_hess';
-%regularize_method = 'mirror';
-%regularize_method = 'convexify';
+regularize_method = 'project_reduc_hess'; % no_regularize, project,...
+    % project_reduc_hess, mirror, convexify
 nlp_solver_max_iter = 100;
 qp_solver = 'partial_condensing_hpipm';
-%qp_solver = 'full_condensing_hpipm';
+        % full_condensing_hpipm, partial_condensing_hpipm
 qp_solver_cond_N = 5;
-qp_solver_cond_ric_alg = 0;
-qp_solver_ric_alg = 0;
 qp_solver_warm_start = 0;
-ocp_sim_method = 'erk';
-%ocp_sim_method = 'irk';
+qp_solver_cond_ric_alg = 0; % HPIPM specific? what does it stand for?
+qp_solver_ric_alg = 0; % HPIPM specific? what does it stand for?
+ocp_sim_method = 'erk'; % erk, irk, irk_gnsf
 ocp_sim_method_num_stages = 4;
 ocp_sim_method_num_steps = 1;
-cost_type = 'linear_ls';
-%cost_type = 'ext_cost';
+cost_type = 'linear_ls'; % linear_ls, ext_cost
 
 h = 0.01;
 
@@ -86,15 +76,15 @@ h = 0.01;
 %% create model entries
 model = pendulum_on_cart_model;
 
-
-
 % dims
 T = ocp_N*h; % horizon length time
 nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
-if 0
+
+linear_constraints = 1; % 1, 0
+if linear_constraints
 	nbx = 0;
 	nbu = nu;
 	ng = 0;
@@ -133,11 +123,11 @@ ubu =  80*ones(nu, 1);
 
 
 
-
 %% acados ocp model
 ocp_model = acados_ocp_model();
-% dims
 ocp_model.set('T', T);
+
+% dims
 ocp_model.set('dim_nx', nx);
 ocp_model.set('dim_nu', nu);
 if (strcmp(cost_type, 'linear_ls'))
@@ -150,6 +140,7 @@ ocp_model.set('dim_ng', ng);
 ocp_model.set('dim_ng_e', ng_e);
 ocp_model.set('dim_nh', nh);
 ocp_model.set('dim_nh_e', nh_e);
+
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
@@ -158,10 +149,11 @@ end
 if isfield(model, 'sym_xdot')
 	ocp_model.set('sym_xdot', model.sym_xdot);
 end
+
 % cost
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_type_e', cost_type);
-%if (strcmp(cost_type, 'linear_ls'))
+if (strcmp(cost_type, 'linear_ls'))
 	ocp_model.set('cost_Vu', Vu);
 	ocp_model.set('cost_Vx', Vx);
 	ocp_model.set('cost_Vx_e', Vx_e);
@@ -169,10 +161,11 @@ ocp_model.set('cost_type_e', cost_type);
 	ocp_model.set('cost_W_e', W_e);
 	ocp_model.set('cost_yr', yr);
 	ocp_model.set('cost_yr_e', yr_e);
-%else % if (strcmp(cost_type, 'ext_cost'))
-%	ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-%	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
-%end
+elseif (strcmp(cost_type, 'ext_cost'))
+	ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+end
+
 % dynamics
 if (strcmp(ocp_sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');
@@ -290,10 +283,6 @@ sim_opts.set('sens_forw', sim_sens_forw);
 %% acados sim
 % create sim
 sim = acados_sim(sim_model, sim_opts);
-%sim
-%sim.C_sim
-%sim.C_sim_ext_fun
-
 
 
 %% closed loop simulation
@@ -324,6 +313,13 @@ for ii=1:n_sim
 	ocp.set('init_u', u_traj_init);
 	ocp.set('init_pi', pi_traj_init);
 
+	% modify numerical data for a certain stage
+	some_stages = 1:10:ocp_N-1;
+	for i = some_stages
+		ocp.set('cost_Vx', Vx, i); % cost_yr, cost_Vu, cost_Vx, cost_W, cost_Z, cost_Zl,...
+		 % cost_Zu, cost_z, cost_zl, cost_zu;
+	end
+
 	% solve OCP
 	ocp.solve();
 
@@ -334,7 +330,12 @@ for ii=1:n_sim
 		time_lin = ocp.get('time_lin');
 		time_qp_sol = ocp.get('time_qp_sol');
 
-		fprintf('\nstatus = %d, sqp_iter = %d, time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+		fprintf('\nstatus = %d, sqp_iter = %d, time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n',...
+            status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+        if status~=0
+            disp('acados ocp solver failed');
+            keyboard
+        end
 	end
 
 	% get solution for initialization of next NLP
@@ -371,12 +372,12 @@ avg_time_solve = toc/n_sim
 
 for ii=1:n_sim+1
 	x_cur = x_sim(:,ii);
-	visualize;
+% 	visualize;
 end
 
 
 
-figure(2);
+figure;
 subplot(2,1,1);
 plot(0:n_sim, x_sim);
 xlim([0 n_sim]);
@@ -387,19 +388,5 @@ xlim([0 n_sim]);
 legend('F');
 
 
-
-status = ocp.get('status');
-
-if status==0
-	fprintf('\nsuccess!\n\n');
-else
-	fprintf('\nsolution failed!\n\n');
-end
-
-
 waitforbuttonpress;
-
-
-return;
-
 

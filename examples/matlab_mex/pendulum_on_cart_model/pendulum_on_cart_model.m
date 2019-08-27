@@ -67,6 +67,12 @@ expr_f_impl = expr_f_expl - sym_xdot;
 %% constraints
 expr_h = sym_u;
 
+%% cost
+W_x = diag([1e3, 1e3, 1e-2, 1e-2]);
+W_u = 1e-2;
+expr_ext_cost_e = sym_x'* W_x * sym_x;
+expr_ext_cost = expr_ext_cost_e + sym_u' * W_u * sym_u;
+
 %% populate structure
 model.nx = nx;
 model.nu = nu;
@@ -76,4 +82,6 @@ model.sym_u = sym_u;
 model.expr_f_expl = expr_f_expl;
 model.expr_f_impl = expr_f_impl;
 model.expr_h = expr_h;
+model.expr_ext_cost = expr_ext_cost;
+model.expr_ext_cost_e = expr_ext_cost_e;
 

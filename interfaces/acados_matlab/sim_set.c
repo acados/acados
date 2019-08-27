@@ -35,33 +35,27 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
 // acados
 #include "acados/sim/sim_common.h"
 #include "acados_c/sim_interface.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados_c/external_function_interface.h"
+
 // mex
 #include "mex.h"
-
+#include "mex_macros.h"
 
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-	{
+{
 
-//	mexPrintf("\nin sim_set\n");
-
-	int ii;
+	int acados_size, tmp;
 	long long *ptr;
+	char fun_name[50] = "sim_set";
+	char buffer [100]; // for error messages
 
 	/* RHS */
-
-	// model
-
-	// opts
-	char *method = mxArrayToString( mxGetField( prhs[1], 0, "method" ) );
-
-	// C_sim
-
 	// solver
 	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "solver" ) );
 	sim_solver *solver = (sim_solver *) ptr[0];
@@ -75,70 +69,78 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "in" ) );
 	sim_in *in = (sim_in *) ptr[0];
 
+	const mxArray *C_ext_fun_pointers = prhs[3];
+
 	// field
 	char *field = mxArrayToString( prhs[4] );
-//	mexPrintf("\n%s\n", field);
+	double *value = mxGetPr( prhs[5] );
 
+	int matlab_size = (int) mxGetNumberOfElements( prhs[5] );
 
-	// value
-	if(!strcmp(field, "T"))
-		{
-		double *T = mxGetPr( prhs[5] );
-		sim_in_set(config, dims, in, "T", T);
-		}
-	else if(!strcmp(field, "x"))
-		{
-		double *x = mxGetPr( prhs[5] );
-		sim_in_set(config, dims, in, "x", x);
-		}
-	else if(!strcmp(field, "u"))
-		{
-		double *u = mxGetPr( prhs[5] );
-		sim_in_set(config, dims, in, "u", u);
-		}
-	else if(!strcmp(field, "p"))
-		{
-		double *p = mxGetPr( prhs[5] );
+	// check dimension, set value
+	if (!strcmp(field, "T"))
+	{
+		acados_size = 1;
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+		sim_in_set(config, dims, in, field, value);
+	}
+	else if (!strcmp(field, "x"))
+	{
+		sim_dims_get(config, dims, "nx", &acados_size);
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+		sim_in_set(config, dims, in, field, value);
+	}
+	else if (!strcmp(field, "u"))
+	{
+		sim_dims_get(config, dims, "nu", &acados_size);
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+		sim_in_set(config, dims, in, field, value);
+	}
+	else if (!strcmp(field, "p"))
+	{
 		external_function_param_casadi *ext_fun_param_ptr;
-		int struct_size = mxGetNumberOfFields( prhs[3] );
-		for(ii=0; ii<struct_size; ii++)
+
+		// loop over number of external functions;
+		int struct_size = mxGetNumberOfFields( C_ext_fun_pointers );
+		for (int ii=0; ii<struct_size; ii++)
+		{
+//			printf("\n%s\n", mxGetFieldNameByNumber( C_ext_fun_pointers, ii) );
+			ptr = (long long *) mxGetData( mxGetFieldByNumber( C_ext_fun_pointers, 0, ii ) );
+			if (ptr[0]!=0)
 			{
-//			printf("\n%s\n", mxGetFieldNameByNumber( prhs[3], ii) );
-			ptr = (long long *) mxGetData( mxGetFieldByNumber( prhs[3], 0, ii ) );
-			if(ptr[0]!=0)
-				{
 				ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
-				ext_fun_param_ptr->set_param(ext_fun_param_ptr, p);
-				}
+				acados_size = ext_fun_param_ptr->np;
+				MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+
+				ext_fun_param_ptr->set_param(ext_fun_param_ptr, value);
 			}
 		}
-	else if(!strcmp(field, "seed_adj"))
-		{
-		double *seed_adj = mxGetPr( prhs[5] );
+	}
+	else if (!strcmp(field, "seed_adj"))
+	{
+		double *seed_adj = value;
+		sim_dims_get(config, dims, "nx", &acados_size);
+		// TODO(oj): in C, the backward seed is of dimension nx+nu, I think it should only be nx.
+		// sim_dims_get(config, dims, "nu", &tmp);
+		// acados_size += tmp;
+		MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
 		sim_in_set(config, dims, in, "seed_adj", seed_adj);
-		}
+	}
 	else if(!strcmp(field, "xdot"))
-		{
+	{
 		double *xdot = mxGetPr( prhs[5] );
 		sim_solver_set(solver, "xdot", xdot);
-		}
+	}
 	else if(!strcmp(field, "phi_guess"))
-		{
+	{
 		double *phi_guess = mxGetPr( prhs[5] );
 		sim_solver_set(solver, "phi_guess", phi_guess);
-		}
+	}
 	else
-		{
-		mexPrintf("\nsim_set: field not supported: %s\n", field);
-		return;
-		}
-
-
-
-	/* return */
-
-	return;
-
+	{
+		MEX_FIELD_NOT_SUPPORTED(fun_name, field);
 	}
 
+	return;
+}
 
