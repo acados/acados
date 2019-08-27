@@ -71,6 +71,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 	int nx; sim_dims_get(config, dims, "nx", &nx);
 	int nu; sim_dims_get(config, dims, "nu", &nu);
+	int nz; sim_dims_get(config, dims, "nz", &nz);
 
 
 	if(!strcmp(field, "xn"))
@@ -108,6 +109,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		plhs[0] = mxCreateNumericMatrix(nx+nu, nx+nu, mxDOUBLE_CLASS, mxREAL);
 		double *S_hess = mxGetPr( plhs[0] );
 		sim_out_get(config, dims, out, "S_hess", S_hess);
+		}
+	else if(!strcmp(field, "S_algebraic"))
+		{
+		plhs[0] = mxCreateNumericMatrix(nz, nx+nu, mxDOUBLE_CLASS, mxREAL);
+		double *S_algebraic = mxGetPr( plhs[0] );
+		sim_out_get(config, dims, out, "S_algebraic", S_algebraic);
 		}
 	else
 		{
