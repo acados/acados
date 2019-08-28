@@ -97,6 +97,13 @@ void ocp_nlp_sqp_dyanimcs_opts_set(void *config, void *opts, int stage, const ch
 
 typedef struct
 {
+	// qp in & out
+    ocp_qp_in *qp_in;
+    ocp_qp_out *qp_out;
+	// QP stuff not entering the qp_in struct
+    struct blasfeo_dmat *dzduxt; // dzdux transposed
+    struct blasfeo_dvec *z_alg; // z_alg
+
     //    ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
@@ -139,16 +146,14 @@ void *ocp_nlp_sqp_memory_assign(void *config, void *dims, void *opts_, void *raw
 
 typedef struct
 {
+	// temp QP in & out (to be used as workspace)
+    ocp_qp_in *tmp_qp_in;
+    ocp_qp_out *tmp_qp_out;
+
     // QP solver
-    ocp_qp_in *qp_in;
-    ocp_qp_out *qp_out;
     void *qp_work;
 	ocp_qp_res *qp_res;
 	ocp_qp_res_ws *qp_res_ws;
-
-	// QP stuff not entering the qp_in struct
-    struct blasfeo_dmat *dzduxt; // dzdux transposed
-    struct blasfeo_dvec *z_alg; // z_alg
 
     void **dynamics;     // dynamics_workspace
     void **cost;         // cost_workspace

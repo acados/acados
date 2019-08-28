@@ -58,7 +58,7 @@ typedef struct dense_qp_hpipm_opts_
 
 typedef struct dense_qp_hpipm_memory_
 {
-    struct d_dense_qp_ipm_workspace *hpipm_workspace;
+    struct d_dense_qp_ipm_ws *hpipm_workspace;
 } dense_qp_hpipm_memory;
 
 
@@ -79,6 +79,8 @@ void *dense_qp_hpipm_assign_memory(void *dims, void *opts_, void *raw_memory);
 int dense_qp_hpipm_calculate_workspace_size(void *dims, void *opts_);
 //
 int dense_qp_hpipm(void *config, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
+//
+void dense_qp_hpipm_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
 void dense_qp_hpipm_config_initialize_default(void *config_);
 

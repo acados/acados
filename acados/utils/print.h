@@ -91,7 +91,7 @@ void print_colmaj_ocp_qp_out(char *filename, colmaj_ocp_qp_in *qp, colmaj_ocp_qp
 
 void print_dense_qp_in(dense_qp_in *qp_in);
 
-void print_ocp_qp_info(ocp_qp_info *info);
+void print_qp_info(qp_info *info);
 
 void acados_warning(char warning_string[]);
 

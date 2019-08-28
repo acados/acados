@@ -32,6 +32,8 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+echo "SECTION ="
+echo ${SECTION}
 
 if [ "${SECTION}" = 'before_install' ]; then
     export ACADOS_INSTALL_DIR="$(pwd)";
@@ -67,7 +69,6 @@ elif [ "${SECTION}" = 'install' ]; then
 		# PENDULUM_FOLDER=${ACADOS_SOURCE_DIR}/examples/matlab_mex/pendulum_on_cart_model/build;
 		# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MATLAB_TEST_FOLDER:$PENDULUM_FOLDER;
 
-		# TODO: do this more clean, sth like the above
 		pushd examples/matlab_mex/pendulum_on_cart_model;
 			MODEL_FOLDER=${MODEL_FOLDER:-"./build"}
 			export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
@@ -97,7 +98,7 @@ elif [ "${SECTION}" = 'script' ]; then
 	source "${SHARED_SCRIPT_DIR}/script_acados_release.sh";
 
 elif [ "${SECTION}" = 'after_success' ]; then
-	source "${SHARED_SCRIPT_DIR}/after_success_package_release.sh";
+	# source "${SHARED_SCRIPT_DIR}/after_success_package_release.sh";
 	source "${SHARED_SCRIPT_DIR}/upload_coverage.sh";
 
 fi

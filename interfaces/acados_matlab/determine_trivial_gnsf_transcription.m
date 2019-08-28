@@ -33,24 +33,6 @@
 
 function [ gnsf ] = determine_trivial_gnsf_transcription(model, print_info)
 
-%   This file is part of acados.
-%
-%   acados is free software; you can redistribute it and/or
-%   modify it under the terms of the GNU Lesser General Public
-%   License as published by the Free Software Foundation; either
-%   version 3 of the License, or (at your option) any later version.
-%
-%   acados is distributed in the hope that it will be useful,
-%   but WITHOUT ANY WARRANTY; without even the implied warranty of
-%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-%   Lesser General Public License for more details.
-%
-%   You should have received a copy of the GNU Lesser General Public
-%   License along with acados; if not, write to the Free Software Foundation,
-%   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-%
-%   Author: Jonathan Frey: jonathanpaulfrey(at)gmail.com
-
 %% Description
 % this function takes a model of an implicit ODE/ index-1 DAE and sets up
 % an equivalent model in the GNSF structure, with empty linear output
@@ -162,8 +144,14 @@ gnsf.c_LO = [];
 gnsf.f_lo_expr = [];
 
 % permutation
-gnsf.idx_perm_f = 1:nx; % matlab-style
-gnsf.ipiv_f = 0:nx-1; % blasfeo-style
+gnsf.idx_perm_x = 1:nx; % matlab-style
+gnsf.ipiv_x = idx_perm_to_ipiv(gnsf.idx_perm_x); % blasfeo-style
+gnsf.idx_perm_z = 1:nz;
+gnsf.ipiv_z = idx_perm_to_ipiv(gnsf.idx_perm_z);
+gnsf.idx_perm_f = 1:nx;
+gnsf.ipiv_f = idx_perm_to_ipiv(gnsf.idx_perm_f);
+
+gnsf.nontrivial_f_LO = 0;
 
 check_reformulation(model, gnsf, print_info);
 if print_info

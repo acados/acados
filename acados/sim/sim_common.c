@@ -89,9 +89,8 @@ int sim_in_calculate_size(void *config_, void *dims)
     config->dims_get(config_, dims, "nu", &nu);
     config->dims_get(config_, dims, "nz", &nz);
 
-    size += 2 * nx * sizeof(double);          // x, xdot
+    size += nx * sizeof(double);              // x
     size += nu * sizeof(double);              // u
-    size += nz * sizeof(double);              // z
     size += nx * (nx + nu) * sizeof(double);  // S_forw (max dimension)
     size += (nx + nu) * sizeof(double);       // S_adj
 
@@ -127,14 +126,6 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 
     assign_and_advance_double(nx, &in->x, &c_ptr);
     assign_and_advance_double(nu, &in->u, &c_ptr);
-    assign_and_advance_double(nz, &in->z, &c_ptr);
-    assign_and_advance_double(nx, &in->xdot, &c_ptr);
-
-    // initialization of xdot, z is 0 if not changed
-    for (int ii = 0; ii < nx; ii++)
-        in->xdot[ii] = 0;
-    for (int ii = 0; ii < nz; ii++)
-        in->z[ii] = 0;
 
     assign_and_advance_double(nx * NF, &in->S_forw, &c_ptr);
     assign_and_advance_double(NF, &in->S_adj, &c_ptr);
@@ -166,46 +157,25 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
     {
         int nx;
         config->dims_get(config_, dims_, "nx", &nx);
-        int ii;
         double *x = value;
-        for (ii=0; ii < nx; ii++)
+        for (int ii=0; ii < nx; ii++)
             in->x[ii] = x[ii];
-    }
-    else if (!strcmp(field, "xdot"))
-    {
-        int nx;
-        config->dims_get(config_, dims_, "nx", &nx);
-        int ii;
-        double *xdot = value;
-        for (ii=0; ii < nx; ii++)
-            in->xdot[ii] = xdot[ii];
     }
     else if (!strcmp(field, "u"))
     {
         int nu;
         config->dims_get(config_, dims_, "nu", &nu);
-        int ii;
         double *u = value;
-        for (ii=0; ii < nu; ii++)
+        for (int ii=0; ii < nu; ii++)
             in->u[ii] = u[ii];
-    }
-    else if (!strcmp(field, "z"))
-    {
-        int nz;
-        config->dims_get(config_, dims_, "nz", &nz);
-        int ii;
-        double *z = value;
-        for (ii=0; ii < nz; ii++)
-            in->z[ii] = z[ii];
     }
     else if (!strcmp(field, "Sx"))
     {
         // note: this assumes nf = nu+nx !!!
         int nx;
         config->dims_get(config_, dims_, "nx", &nx);
-        int ii;
         double *Sx = value;
-        for (ii=0; ii < nx*nx; ii++)
+        for (int ii=0; ii < nx*nx; ii++)
             in->S_forw[ii] = Sx[ii];
     }
     else if (!strcmp(field, "Su"))
@@ -214,9 +184,8 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
-        int ii;
         double *Su = value;
-        for (ii=0; ii < nx*nu; ii++)
+        for (int ii=0; ii < nx*nu; ii++)
             in->S_forw[nx*nx+ii] = Su[ii];
     }
     else if (!strcmp(field, "S_forw"))
@@ -225,9 +194,8 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
-        int ii;
         double *S_forw = value;
-        for (ii=0; ii < nx*(nu+nx); ii++)
+        for (int ii=0; ii < nx*(nu+nx); ii++)
             in->S_forw[ii] = S_forw[ii];
     }
     else if (!strcmp(field, "S_adj"))
@@ -236,9 +204,8 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
-        int ii;
         double *S_adj = value;
-        for (ii=0; ii < nx+nu; ii++)
+        for (int ii=0; ii < nx+nu; ii++)
             in->S_adj[ii] = S_adj[ii];
     }
     else if (!strcmp(field, "seed_adj"))
@@ -248,11 +215,10 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
-        int ii;
         double *seed_adj = value;
-        for (ii=0; ii < nx; ii++)
+        for (int ii=0; ii < nx; ii++)
             in->S_adj[ii] = seed_adj[ii];
-        for (ii=0; ii < nu; ii++)
+        for (int ii=0; ii < nu; ii++)
             in->S_adj[nx+ii] = 0;
     }
     else
@@ -409,7 +375,8 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
     }
     else
     {
-        status = ACADOS_FAILURE;
+        printf("sim_out_get_: field %s not supported \n", field);
+        exit(1);
     }
 
     return status;
@@ -472,7 +439,6 @@ int sim_opts_set_(sim_opts *opts, const char *field, void *value)
     else
     {
         printf("\nerror: field %s not available in sim_opts_set\n", field);
-        status = ACADOS_FAILURE; // TODO remove
         exit(1);
     }
     return status; // TODO remove

@@ -828,13 +828,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* LHS */
 
 	// field names of output struct
-	char *fieldnames[6];
+	char *fieldnames[7];
 	fieldnames[0] = (char*) mxMalloc(50);
 	fieldnames[1] = (char*) mxMalloc(50);
 	fieldnames[2] = (char*) mxMalloc(50);
 	fieldnames[3] = (char*) mxMalloc(50);
 	fieldnames[4] = (char*) mxMalloc(50);
 	fieldnames[5] = (char*) mxMalloc(50);
+	fieldnames[6] = (char*) mxMalloc(50);
 
 	memcpy(fieldnames[0],"config",sizeof("config"));
 	memcpy(fieldnames[1],"dims",sizeof("dims"));
@@ -842,9 +843,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	memcpy(fieldnames[3],"in",sizeof("in"));
 	memcpy(fieldnames[4],"out",sizeof("out"));
 	memcpy(fieldnames[5],"solver",sizeof("solver"));
+	memcpy(fieldnames[6],"sens_out",sizeof("sens_out"));
 
 	// create output struct
-	plhs[0] = mxCreateStructMatrix(1, 1, 6, (const char **) fieldnames);
+	plhs[0] = mxCreateStructMatrix(1, 1, 7, (const char **) fieldnames);
 
 	mxFree( fieldnames[0] );
 	mxFree( fieldnames[1] );
@@ -852,6 +854,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mxFree( fieldnames[3] );
 	mxFree( fieldnames[4] );
 	mxFree( fieldnames[5] );
+	mxFree( fieldnames[6] );
 
 
 
@@ -1967,6 +1970,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 
+	/* sens_out */
+
+	ocp_nlp_out *sens_out = ocp_nlp_out_create(config, dims);
+
+
+
 	/* populate output struct */
 
 	// config
@@ -2004,6 +2013,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	l_ptr = mxGetData(solver_mat);
 	l_ptr[0] = (long long) solver;
 	mxSetField(plhs[0], 0, "solver", solver_mat);
+
+	// sens_out
+	mxArray *sens_out_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+	l_ptr = mxGetData(sens_out_mat);
+	l_ptr[0] = (long long) sens_out;
+	mxSetField(plhs[0], 0, "sens_out", sens_out_mat);
 
 
 

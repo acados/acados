@@ -333,9 +333,11 @@ int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void
  * functions
  ************************************************/
 
-int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_,
-                 void *work_)
+int ocp_qp_hpmpc(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *mem_, void *work_)
 {
+    ocp_qp_in *qp_in = qp_in_;
+    ocp_qp_out *qp_out = qp_out_;
+
     ocp_qp_hpmpc_opts *hpmpc_args = (ocp_qp_hpmpc_opts *) opts_;
     ocp_qp_hpmpc_memory *mem = (ocp_qp_hpmpc_memory *) mem_;
 
@@ -351,11 +353,11 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
         if (ns[ii] > 0)
         {
             printf("\nHPMPC interface can not handle ns>0 yet: what about implementing it? :)\n");
-            return ACADOS_FAILURE;
+            exit(1);
         }
     }
 
-    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    qp_info *info = (qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
     acados_tic(&tot_timer);
 
@@ -512,6 +514,16 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
     return acados_status;
 }
 
+
+
+void ocp_qp_hpmpc_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
+{
+	printf("\nerror: ocp_qp_hpmpc_eval_sens: not implemented yet\n");
+	exit(1);
+}
+
+
+
 void ocp_qp_hpmpc_config_initialize_default(void *config_)
 {
     qp_solver_config *config = config_;
@@ -529,7 +541,8 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
         (void *(*) (void *, void *, void *, void *) ) & ocp_qp_hpmpc_memory_assign;
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & ocp_qp_hpmpc_workspace_calculate_size;
-    config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_hpmpc;
+    config->evaluate = &ocp_qp_hpmpc;
+    config->eval_sens = &ocp_qp_hpmpc_eval_sens;
 
     return;
 }

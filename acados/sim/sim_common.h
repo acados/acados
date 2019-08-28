@@ -78,9 +78,6 @@ typedef struct
     double *x;  // x[NX] - initial state value for simulation
     double *u;  // u[NU] - control - constant over simulation time
 
-    double *xdot;  // xdot[NX] - initialization for state derivatives k within the integrator
-    double *z;     // z[NZ] - initialization for algebraic variables z
-
     double *S_forw;  // forward seed [Sx, Su]
     double *S_adj;   // backward seed
 
@@ -99,6 +96,7 @@ typedef struct
     double CPUtime;  // in seconds
     double LAtime;   // in seconds
     double ADtime;   // in seconds
+
 } sim_info;
 
 
@@ -117,6 +115,7 @@ typedef struct
     double *grad;  // gradient correction
 
     sim_info *info;
+
 } sim_out;
 
 
@@ -159,19 +158,26 @@ typedef struct
 {
     int (*evaluate)(void *config_, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
     int (*precompute)(void *config_, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
+    // opts
     int (*opts_calculate_size)(void *config_, void *dims);
     void *(*opts_assign)(void *config_, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config_, void *dims, void *opts);
     void (*opts_update)(void *config_, void *dims, void *opts);
     int (*opts_set)(void *config_, void *opts_, const char *field, void *value);
+    // mem
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
+    int (*memory_set)(void *config, void *dims, void *mem, const char *field, void *value);
+    int (*memory_set_to_zero)(void *config, void *dims, void *opts, void *mem, const char *field);
+    // work
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
+    // model
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
     int (*model_set)(void *model, const char *field, void *value);
+    // config
     void (*config_initialize_default)(void *config);
-//    int (*dims_calculate_size)(void *config);
+    // dims
     int (*dims_calculate_size)();
     void *(*dims_assign)(void *config, void *raw_memory);
     void (*dims_set)(void *config, void *dims, const char *field, const int *value);

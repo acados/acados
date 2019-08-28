@@ -81,7 +81,7 @@ else % irk
 %	end
 	sim_model.set('nx', model.nx);
 	sim_model.set('nu', model.nu);
-%	sim_model.set('nz', model.nz);
+%	sim_model.set('dim_nz', model.nz);
 end
 
 sim_model.model_struct
