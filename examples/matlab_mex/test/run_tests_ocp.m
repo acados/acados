@@ -44,8 +44,8 @@ end
 %% ocp tests
 try
     test_ocp;
-catch error
-    exit_with_error(error);
+catch exception
+    exit_with_error(exception);
 end
 
 fprintf('\nrun_tests_ocp: success!\n\n');

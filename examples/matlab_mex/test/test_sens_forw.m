@@ -37,10 +37,11 @@ clear VARIABLES
 addpath('../linear_mass_spring_model/');
 
 for integrator = {'irk_gnsf', 'irk', 'erk'}
+    method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
+
     %% arguments
     compile_mex = 'true';
     codgen_model = 'true';
-    method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
     sens_forw = 'true';
     jac_reuse = 'true';
     num_stages = 4;
@@ -57,7 +58,6 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     model_name = ['lin_mass_' method];
     nx = model.nx;
     nu = model.nu;
-    
     % x0 = [1e-1; 1e0; 2e-1; 2e0]; % pendulum
     % u = 0;
 

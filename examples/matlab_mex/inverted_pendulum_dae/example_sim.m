@@ -46,7 +46,7 @@ end
 compile_mex = 'true'; % true, false
 codgen_model = 'true'; % true, false
 gnsf_detect_struct = 'true'; % true, false
-method = 'irk_gnsf'; % irk, irk_gnsf, [erk]
+method = 'irk'; % irk, irk_gnsf, [erk]
 sens_forw = 'true'; % true, false
 jac_reuse = 'false'; % true, false
 num_stages = 3;
@@ -153,10 +153,9 @@ end
 format short e
 xfinal = sim.get('xn')'
 S_forw
-Sadj = sim.get('S_adj')'
-% sensitivities of algebraic variables z
-Salg = sim.get('S_algebraic')
-z = sim.get('zn')'
+S_adj = sim.get('S_adj')'
+z = sim.get('zn')' % approximate value of algebraic variables at start of simulation
+S_alg = sim.get('S_algebraic') % sensitivities of algebraic variables z
 
 simulation_time = toc
 
