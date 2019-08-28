@@ -41,31 +41,55 @@ from .acados_sim_solver import acados_sim_solver
 from ctypes import *
 
 
-def store_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
-    ocp_nlp = acados_ocp_nlp()
-    ocp_nlp.cost = acados_ocp.cost.__dict__
-    ocp_nlp.constraints = acados_ocp.constraints.__dict__
-    ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
-    ocp_nlp.dims = acados_ocp.dims.__dict__
-    ocp_nlp = ocp_nlp.__dict__
+def store_ocp_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
+    # Load acados_ocp_nlp structure description
+    ocp_layout = get_ocp_nlp_layout()
 
-    ocp_nlp = dict2json(ocp_nlp)
+    # Instatiate acados_ocp_nlp object
+    ocp_nlp = acados_ocp_nlp()
+
+    # Copy input ocp object dictionary
+    ocp_nlp_dict = dict(acados_ocp.__dict__)
+
+    for acados_struct, v  in ocp_layout.items():
+        # skip non dict attributes
+        if not isinstance(v, dict): continue
+        #  setattr(ocp_nlp, acados_struct, dict(getattr(acados_ocp, acados_struct).__dict__))
+        # Copy ocp object attributes dictionaries
+        ocp_nlp_dict[acados_struct]=dict(getattr(acados_ocp, acados_struct).__dict__)
+
+    #  ocp_nlp = acados_ocp
+    #  ocp_nlp.cost = acados_ocp.cost.__dict__
+    #  ocp_nlp.constraints = acados_ocp.constraints.__dict__
+    #  ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
+    #  ocp_nlp.dims = acados_ocp.dims.__dict__
+    #  ocp_nlp = ocp_nlp.__dict__
+
+    ocp_nlp_json = dict2json(ocp_nlp_dict)
 
     with open(json_file, 'w') as f:
-        json.dump(ocp_nlp, f, default=np_array_to_list)
+        json.dump(ocp_nlp_json, f, default=np_array_to_list)
 
-def load_solver(json_file='acados_ocp_nlp.json'):
+def load_ocp_solver(json_file='acados_ocp_nlp.json'):
+    # Load acados_ocp_nlp structure description
+    ocp_layout = get_ocp_nlp_layout()
 
     with open(json_file, 'r') as f:
         ocp_nlp_json = json.load(f)
 
     ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
 
-    acados_ocp = acados_ocp()
+    # Instantiate acados_ocp_nlp object
+    acados_ocp = acados_ocp_nlp()
+
+    # load class dict
     acados_ocp.__dict__ = ocp_nlp_dict
 
-    for acados_struct in acados_ocp.acados_structs:
-        getattr(acados_ocp, acados_struct).__dict__ = ocp_nlp_dict[acados_struct]
+    # laod class attributes dict, dims, constraints, ecc
+    for acados_struct, v  in ocp_layout.items():
+        # skip non dict attributes
+        if not isinstance(v, dict): continue
+        setattr(acados_ocp, acados_struct, ocp_nlp_as_object(ocp_nlp_dict[acados_struct]))
 
     #  acados_ocp = ocp_nlp_as_object(ocp_nlp_dict)
     #  acados_ocp.cost = ocp_nlp_as_object(acados_ocp.cost)
@@ -75,7 +99,7 @@ def load_solver(json_file='acados_ocp_nlp.json'):
 
     return acados_ocp
 
-def generate_ocp_solver(acados_ocp, model, con_h=None, con_hN=None, con_p=None, con_pN=None):
+def generate_solvers(acados_ocp, model, con_h=None, con_hN=None, con_p=None, con_pN=None):
     USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
 
     # setting up loader and environment
