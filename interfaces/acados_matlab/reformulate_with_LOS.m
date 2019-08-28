@@ -189,6 +189,7 @@ while true
             if isempty(i_phi)
                 i_phi = length(gnsf.phi_expr) + 1;
                 gnsf.C( i_eq, i_phi) = 1; % add column to C with 1 entry
+                gnsf.phi_expr = [ gnsf.phi_expr; 0];
             end
             gnsf.phi_expr(i_phi) = gnsf.phi_expr(i_phi) + ...
                 gnsf.E(i_eq, ii) / gnsf.C(i_eq, i_phi) * xdot_z(ii);
