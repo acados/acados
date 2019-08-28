@@ -3,16 +3,21 @@
 #### documentation
 - [ ] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula in docs
     - [ ] closely stick to setter names!
+- [ ] Set up and document binary workflow
+    - [ ] Windows Matlab
+    - [ ] MacOS Matlab
 
-## matlab interface
-- [ ] separate acados_ocp() into generating the C object and setting the numerical data
+#### `matlab interface`
+- [ ] separate `acados_ocp()` into generating the C object and setting the numerical data
 - [ ] code generation workflow!
 - [ ] support nonuniform grids?
+- [ ] OCP with DAEs
+
+#### `templating`
+- [ ] add GNSF
 
 #### `general`
 - [ ] RTI implementation similar to ACADO
-- [ ] Installation instructions for MacOS
-
 
 #### `ocp_nlp`
 - [x] Gauss-Newton SQP
@@ -32,4 +37,4 @@
 - [x] lifted IRK
 - [x] collocation integrators GL
 - [ ] collocation integrators Radau
-
+- [ ] GNSF Hessians

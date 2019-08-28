@@ -330,32 +330,32 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
 			int* num_threads = (int *) value;
 			opts->num_threads = *num_threads;
 		}
-		else if (!strcmp(field, "tol_stat")) // TODO rename !!!
+		else if (!strcmp(field, "tol_stat")) // TODO rename !!! to be what?!
 		{
 			double* tol_stat = (double *) value;
 			opts->tol_stat = *tol_stat;
-			// pass to QP too
+			// TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
 			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_stat", value);
 		}
 		else if (!strcmp(field, "tol_eq")) // TODO rename !!!
 		{
 			double* tol_eq = (double *) value;
 			opts->tol_eq = *tol_eq;
-			// pass to QP too
+			// TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
 			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_eq", value);
 		}
 		else if (!strcmp(field, "tol_ineq")) // TODO rename !!!
 		{
 			double* tol_ineq = (double *) value;
 			opts->tol_ineq = *tol_ineq;
-			// pass to QP too
+			// TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
 			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_ineq", value);
 		}
 		else if (!strcmp(field, "tol_comp")) // TODO rename !!!
 		{
 			double* tol_comp = (double *) value;
 			opts->tol_comp = *tol_comp;
-			// pass to QP too
+			// TODO: set accuracy of the qp_solver to the minimum of current QP accuracy and the one specified.
 			config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "tol_comp", value);
 		}
 		else if (!strcmp(field, "exact_hess"))

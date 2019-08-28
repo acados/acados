@@ -30,26 +30,9 @@
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 % POSSIBILITY OF SUCH DAMAGE.;
 %
+%   Author: Jonathan Frey: jonathanpaulfrey(at)gmail.com
 
 function structure_detection_print_summary(gnsf, model)
-%
-%   This file is part of acados.
-%
-%   acados is free software; you can redistribute it and/or
-%   modify it under the terms of the GNU Lesser General Public
-%   License as published by the Free Software Foundation; either
-%   version 3 of the License, or (at your option) any later version.
-%
-%   acados is distributed in the hope that it will be useful,
-%   but WITHOUT ANY WARRANTY; without even the implied warranty of
-%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-%   Lesser General Public License for more details.
-%
-%   You should have received a copy of the GNU Lesser General Public
-%   License along with acados; if not, write to the Free Software Foundation,
-%   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-%
-%   Author: Jonathan Frey: jonathanpaulfrey(at)gmail.com
 
 %% Description
 % this function prints the most important info after determining a GNSF
@@ -130,35 +113,6 @@ if gnsf.purely_linear == 1
 	disp(' ');
 end
 
-%compare_x = (x_old == x);
-%if ~compare_x.is_constant()
-%disp(' ');
-%disp('--------------------------------------------------------------------------------------------------');
-%disp('NOTE: permuted state vector x, such that the implicit model, can take it in the same order as GNSF');
-%disp(' ');
-%disp(' OLD / initial state vector read as: ');
-%disp(x_old);
-%disp(' ');
-%disp(' whereas NEW / permuted state vector reads as: ');
-%disp(x);
-%end
-% TODO permutation information
-
-%compare_f = (f_impl_old == f_impl_expr);
-%if ~compare_f.is_constant()
-%disp(' ');
-%disp('--------------------------------------------------------------------------------------------------');
-%disp('NOTE: permuted implicit function, such that the implicit & GNSF model, have the same order');
-%disp(' ');
-%disp(' OLD / initial state f_impl read as: ');
-%disp(' ');
-%print_casadi_expression(f_impl_old);
-%disp(' ');
-%disp(' whereas NEW / permuted f_impl reads as: ');
-%disp(' ');
-%print_casadi_expression(f_impl_expr);
-%disp(' ');
-%end
 if ~isequal(gnsf.idx_perm_x, [1:nx])
 	disp(' ');
 	disp('--------------------------------------------------------------------------------------------------');

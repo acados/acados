@@ -32,8 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-
-# use this file to run the tests on the local machine
+## use this file to run the tests on the local machine
 
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
 then
@@ -45,6 +44,8 @@ else
 	exit
 fi
 
+# to be able to also run the other examples
+export ENV_RUN=true
 
 # if acados folder not specified assume parent of the folder of the single examples
 ACADOS_INSTALL_DIR=${ACADOS_INSTALL_DIR:-"$(pwd)/../../.."}

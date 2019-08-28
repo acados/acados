@@ -92,7 +92,7 @@ else % irk irk_gnsf
 %	end
 	sim_model.set('dim_nx', model.nx);
 	sim_model.set('dim_nu', model.nu);
-%	sim_model.set('nz', model.nz);
+%	sim_model.set('dim_nz', model.nz);
 end
 
 sim_model.model_struct
