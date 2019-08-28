@@ -57,6 +57,10 @@
 	mexErrMsgTxt(buffer);\
 }
 
+#define MEX_MISSING_ARGUMENT(fun_name, field) {\
+	sprintf(buffer, "%s field %s not provided, is mandatory!", fun_name, field);\
+	mexErrMsgTxt(buffer);\
+}
 
 
 // macro to string
