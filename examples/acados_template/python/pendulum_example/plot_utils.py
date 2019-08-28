@@ -31,58 +31,24 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from acados_template import *
-def define_model():
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 
-    model_name = 'pendulum_ode'
+def plot_ocp(dt=1, Nsim=10):
+    simX = np.load("simX.npy")
+    simU = np.load("simU.npy")
 
-    # constants
-    M = 1.
-    m = 0.1
-    g = 9.81
-    l = 0.8
-
-    # set up states & controls
-    x1      = SX.sym('x1')
-    theta   = SX.sym('theta')
-    v1      = SX.sym('v1')
-    dtheta  = SX.sym('dtheta')
-
-    x = vertcat(x1, v1, theta, dtheta)
-
-    # controls
-    F = SX.sym('F')
-    u = vertcat(F)
-
-    # xdot
-    x1_dot      = SX.sym('x1_dot')
-    theta_dot   = SX.sym('theta_dot')
-    v1_dot      = SX.sym('v1_dot')
-    dtheta_dot  = SX.sym('dtheta_dot')
-
-    xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
-
-    # algebraic variables
-    z = []
-
-    # parameters
-    p = []
-
-    # dynamics
-    denominator = M + m - m*cos(theta)*cos(theta)
-    f_expl = vertcat(v1, dtheta, (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator, (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator))
-
-    f_impl = xdot - f_expl
-
-    model = acados_dae()
-
-    model.f_impl_expr = f_impl
-    model.f_expl_expr = f_expl
-    model.x = x
-    model.xdot = xdot
-    model.u = u
-    model.z = z
-    model.p = p
-    model.name = model_name
-
-    return model
+    t = np.linspace(0.0, dt, Nsim)
+    plt.subplot(2, 1, 1)
+    plt.step(t, simU, color='r')
+    plt.title('closed-loop simulation')
+    plt.ylabel('u')
+    plt.xlabel('t')
+    plt.grid(True)
+    plt.subplot(2, 1, 2)
+    plt.plot(t, simX[:,1])
+    plt.ylabel('theta')
+    plt.xlabel('t')
+    plt.grid(True)
+    plt.show()

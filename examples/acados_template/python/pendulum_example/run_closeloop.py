@@ -31,24 +31,26 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from define_ocp import *
-from define_model import *
-from acados_template import generate_ocp_solver, load_solver, store_solver
-
+from define_ocp import define_ocp
+from define_model import define_model
+from plot_utils import plot_ocp
+from acados_template import *
 
 # import the model
-model = export_ode_model()
+model = define_model()
 
 # Define the ocp problem
 ocp = define_ocp(model)
+#  sim = define_sim(model)
 
-#  store_solver(ocp, "test.json")
-#  load_solver(ocp, "test.json")
+#  store_ocp_solver(ocp, "test.json")
+ocp = load_ocp_solver("test.json")
 
 # generate c code
 # compile the src
 # wrap the solver with ctypes interface
-acados_ocp_solver, acados_sim_solver = generate_ocp_solver(ocp, model)
+acados_ocp_solver, acados_sim_solver = generate_solvers(ocp, model)
+# generate_sim_solver(sim, model)
 
 nx = ocp.dims.nx
 nu = ocp.dims.nu
@@ -61,13 +63,8 @@ Nsim = 100
 simX = np.ndarray((Nsim, nx))
 simU = np.ndarray((Nsim, nu))
 
-#  forward_seed = np.zeros((nx*(nx+nu)))
-#  for ii in range(nx):
-    #  forward_seed[ii * (nx + nu)] = 1.0;
-
 #  acados_sim_solver.set("S_forw", forward_seed)
 acados_sim_solver.set("x", x0)
-#  acados_sim_solver.set("T", Tf/N)
 
 for i in range(Nsim):
     acados_ocp_solver.set(0, "lbx", x0)
@@ -99,19 +96,10 @@ for i in range(Nsim):
         acados_ocp_solver.set(j, "yref", np.array([0, 0, 0, 0, 0]))
     acados_ocp_solver.set(N, "yref", np.array([0, 0, 0, 0]))
 
-# plot results
-import matplotlib
-import matplotlib.pyplot as plt
-t = np.linspace(0.0, Tf/N, Nsim)
-plt.subplot(2, 1, 1)
-plt.step(t, simU, color='r')
-plt.title('closed-loop simulation')
-plt.ylabel('u')
-plt.xlabel('t')
-plt.grid(True)
-plt.subplot(2, 1, 2)
-plt.plot(t, simX[:,1])
-plt.ylabel('theta')
-plt.xlabel('t')
-plt.grid(True)
-plt.show()
+
+# save solution
+np.save("simX.npy", simX)
+np.save("simU.npy", simU)
+
+# plot solution
+plot_ocp(dt=Tf/N, Nsim=Nsim)
