@@ -5,6 +5,7 @@ class acados_sim_solver:
     def __init__(self, acados_sim, shared_lib):
 
         self.sim_struct = acados_sim
+
         model_name = self.sim_struct.model_name
 
 
