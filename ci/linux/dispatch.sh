@@ -32,6 +32,8 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+echo "SECTION ="
+echo ${SECTION}
 
 if [ "${SECTION}" = 'before_install' ]; then
     export ACADOS_INSTALL_DIR="$(pwd)";
@@ -96,7 +98,7 @@ elif [ "${SECTION}" = 'script' ]; then
 	source "${SHARED_SCRIPT_DIR}/script_acados_release.sh";
 
 elif [ "${SECTION}" = 'after_success' ]; then
-	source "${SHARED_SCRIPT_DIR}/after_success_package_release.sh";
+	# source "${SHARED_SCRIPT_DIR}/after_success_package_release.sh";
 	source "${SHARED_SCRIPT_DIR}/upload_coverage.sh";
 
 fi
