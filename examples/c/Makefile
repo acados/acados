@@ -276,16 +276,16 @@ run_sim_wt_model_nx3:
 #################################################
 
 INV_PENDULUM_OBJS =
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_z.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u_z.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_u.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_hess.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_fun.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_fun_jac_y.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_jac_y_uhat.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_f_lo_fun_jac_x1k1uz.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_get_matrices_fun.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_dyn_impl_ode_fun.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_dyn_impl_ode_fun_jac_x_xdot.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_dyn_impl_ode_jac_x_xdot_u.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_u.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_dyn_impl_ode_hess.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_dyn_gnsf_phi_fun.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_dyn_gnsf_phi_fun_jac_y.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_dyn_gnsf_phi_jac_y_uhat.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_dyn_gnsf_f_lo_fun_jac_x1k1uz.o
+INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_dyn_gnsf_get_matrices_fun.o
 
 sim_inverted_pendulum: $(INV_PENDULUM_OBJS) sim_inverted_pendulum.o
 	$(CCC) -o sim_inverted_pendulum.out sim_inverted_pendulum.o  $(INV_PENDULUM_OBJS) $(LDFLAGS) $(LIBS)
