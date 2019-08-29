@@ -848,6 +848,16 @@ void ocp_nlp_constraints_bgh_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, vo
 
 
 
+
+void ocp_nlp_constraints_bgh_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_)
+{
+    ocp_nlp_constraints_bgh_memory *memory = memory_;
+
+    memory->z_alg = z_alg;
+}
+
+
+
 void ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr(struct blasfeo_dmat *dzduxt, void *memory_)
 {
     ocp_nlp_constraints_bgh_memory *memory = memory_;
@@ -897,7 +907,7 @@ int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_,
     size += sizeof(ocp_nlp_constraints_bgh_workspace);
 
     size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx); // tmp_nv_nv
-    size += 1 * blasfeo_memsize_dmat(nh, nz);       // tmp_nh_nz
+    size += 1 * blasfeo_memsize_dmat(nz, nh);       // tmp_nz_nh
     size += 1 * blasfeo_memsize_dvec(nb+ng+nh+ns);  // tmp_ni
     size += 1 * blasfeo_memsize_dvec(nh);           // tmp_nh
 
@@ -916,6 +926,7 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -929,6 +940,9 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
 
     // tmp_nv_nv
     assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &work->tmp_nv_nv, &c_ptr);
+    
+    // tmp_nz_nh
+    assign_and_advance_blasfeo_dmat_mem(nz, nh, &work->tmp_nz_nh, &c_ptr);
 
     // tmp_ni
     assign_and_advance_blasfeo_dvec_mem(nb+ng+nh+ns, &work->tmp_ni, &c_ptr);
@@ -1004,10 +1018,10 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
     int nh = dims->nh;
     int ns = dims->ns;
 
-    ext_fun_arg_t ext_fun_type_in[3];
-    void *ext_fun_in[3];
-    ext_fun_arg_t ext_fun_type_out[3];
-    void *ext_fun_out[3];
+    ext_fun_arg_t ext_fun_type_in[4];
+    void *ext_fun_in[4];
+    ext_fun_arg_t ext_fun_type_out[4];
+    void *ext_fun_out[4];
 
     // box
     blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_ni, 0);
@@ -1038,7 +1052,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         struct blasfeo_dmat_args jac_z_out; // Jacobian dhdz treated separately
         if (nz > 0)
         { 
-            jac_z_out.A = &work->tmp_nh_nz;
+            jac_z_out.A = &work->tmp_nz_nh;
             jac_z_out.ai = 0;
             jac_z_out.aj = 0;
         }
@@ -1089,11 +1103,21 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             ext_fun_in[0] = &x_in;
             ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
             ext_fun_in[1] = &u_in;
+            if (nz > 0) 
+            {
+                ext_fun_type_in[3] = BLASFEO_DVEC_ARGS;
+                ext_fun_in[3] = memory->z_alg;
+            }
 
             ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
             ext_fun_out[0] = &fun_out;  // fun: nh
             ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
             ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nh
+            if (nz > 0) 
+            {
+                ext_fun_type_out[3] = BLASFEO_DMAT_ARGS;
+                ext_fun_out[3] = &jac_z_out;  // jac': nz * nh
+            }
 
             model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
         }

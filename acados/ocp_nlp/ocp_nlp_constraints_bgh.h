@@ -146,6 +146,7 @@ typedef struct
     struct blasfeo_dvec adj;
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out
     struct blasfeo_dvec *lam;    // pointer to lam in nlp_out
+    struct blasfeo_dvec *z_alg;  // pointer to z_alg in ocp_nlp memory
     struct blasfeo_dmat *DCt;    // pointer to DCt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dmat *dzduxt; // pointer to dzduxt in ocp_nlp memory
@@ -187,7 +188,7 @@ void ocp_nlp_constraints_bgh_memory_set_idxs_ptr(int *idxs, void *memory_);
 typedef struct
 {
     struct blasfeo_dmat tmp_nv_nv;
-    struct blasfeo_dmat tmp_nh_nz;
+    struct blasfeo_dmat tmp_nz_nh;
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dvec tmp_nh;
 } ocp_nlp_constraints_bgh_workspace;
