@@ -60,6 +60,7 @@ typedef struct
 {
     int nx;
     int nu;
+    int nz;
     int nb;  // nbx + nbu
     int nbu;
     int nbx;
@@ -77,7 +78,7 @@ int ocp_nlp_constraints_bgh_dims_calculate_size(void *config);
 //
 void *ocp_nlp_constraints_bgh_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_constraints_bgh_dims_initialize(void *config, void *dims, int nx, int nu, int nbx,
+void ocp_nlp_constraints_bgh_dims_initialize(void *config, void *dims, int nx, int nu, int nz, int nbx,
                                          int nbu, int ng, int nh, int dummy0, int ns);
 //
 void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *field, int* value);
@@ -147,6 +148,7 @@ typedef struct
     struct blasfeo_dvec *lam;    // pointer to lam in nlp_out
     struct blasfeo_dmat *DCt;    // pointer to DCt in qp_in
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
+    struct blasfeo_dmat *dzduxt; // pointer to dzduxt in ocp_nlp memory
     int *idxb;                   // pointer to idxb[ii] in qp_in
     int *idxs;                   // pointer to idxs[ii] in qp_in
 } ocp_nlp_constraints_bgh_memory;
@@ -161,9 +163,14 @@ struct blasfeo_dvec *ocp_nlp_constraints_bgh_memory_get_fun_ptr(void *memory_);
 struct blasfeo_dvec *ocp_nlp_constraints_bgh_memory_get_adj_ptr(void *memory_);
 //
 void ocp_nlp_constraints_bgh_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
+//
 void ocp_nlp_constraints_bgh_memory_set_lam_ptr(struct blasfeo_dvec *lam, void *memory_);
 //
 void ocp_nlp_constraints_bgh_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *memory);
+//
+void ocp_nlp_constraints_bgh_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_);
+//
+void ocp_nlp_constraints_bgh_memory_set_dzduxt(struct blasfeo_dmat *dzduxt, void *memory_);
 //
 void ocp_nlp_constraints_bgh_memory_set_idxb_ptr(int *idxb, void *memory_);
 //

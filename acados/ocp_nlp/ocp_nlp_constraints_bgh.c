@@ -72,6 +72,7 @@ void *ocp_nlp_constraints_bgh_dims_assign(void *config_, void *raw_memory)
     // initialize to zero
     dims->nx = 0;
     dims->nu = 0;
+    dims->nz = 0;
     dims->nb = 0;
     dims->nbx = 0;
     dims->nbu = 0;
@@ -88,13 +89,14 @@ void *ocp_nlp_constraints_bgh_dims_assign(void *config_, void *raw_memory)
 
 
 
-void ocp_nlp_constraints_bgh_dims_initialize(void *config_, void *dims_, int nx, int nu, int nbx,
+void ocp_nlp_constraints_bgh_dims_initialize(void *config_, void *dims_, int nx, int nu, int nz, int nbx,
                                              int nbu, int ng, int nh, int dummy0, int ns)
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
 
     dims->nx = nx;
     dims->nu = nu;
+    dims->nz = nz;
     dims->nbx = nbx;
     dims->nbu = nbu;
     dims->nb = nbx + nbu;
@@ -119,6 +121,14 @@ static void ocp_nlp_constraints_bgh_set_nu(void *config_, void *dims_, const int
 {
     ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
     dims->nu = *nu;
+}
+
+
+
+static void ocp_nlp_constraints_bgh_set_nz(void *config_, void *dims_, const int *nz)
+{
+    ocp_nlp_constraints_bgh_dims *dims = (ocp_nlp_constraints_bgh_dims *) dims_;
+    dims->nz = *nz;
 }
 
 
@@ -206,8 +216,7 @@ void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *fi
     }
     else if (!strcmp(field, "nz"))
     {
-        // do nothing
-        // TODO(all): implement constraints with daes
+        ocp_nlp_constraints_bgh_set_nz(config_, dims, value);
     }
     else if (!strcmp(field, "nbx"))
     {
@@ -405,6 +414,7 @@ int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -435,6 +445,7 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     // extract sizes
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -832,6 +843,15 @@ void ocp_nlp_constraints_bgh_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, vo
     ocp_nlp_constraints_bgh_memory *memory = memory_;
 
     memory->RSQrq = RSQrq;
+}
+
+
+
+void ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr(struct blasfeo_dmat *dzduxt, void *memory_)
+{
+    ocp_nlp_constraints_bgh_memory *memory = memory_;
+
+    memory->dzduxt = dzduxt;
 }
 
 
