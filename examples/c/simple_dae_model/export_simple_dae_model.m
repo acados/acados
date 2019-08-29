@@ -83,11 +83,11 @@ function [ model ] = export_simple_dae_model()
     %     z0 = [0.0, 0.0];
     %     u0 = 0;
 
-    model.f_impl_expr = f_impl;
-    model.x = x;
-    model.xdot = xdot;
-    model.u = u;
-    model.z = z;
+    model.expr_f = f_impl;
+    model.sym_x = x;
+    model.sym_xdot = xdot;
+    model.sym_u = u;
+    model.sym_z = z;
     model.name = model_name_prefix;
     
 end

@@ -50,7 +50,10 @@
 
 #include "simple_dae_model/simple_dae_model.h"
 
-#define FORMULATION 1 // 0 without Vz*z term 1 with Vz*z and without Vx*x
+#define FORMULATION 1 
+// 0: without Vz*z term 
+// 1: with Vz*z and without Vx*x 
+// 2: same as (1) + nonlinear constraint on z: h(x,u,z(x,u)) = z_1^2 + z_2^2 \leq 1
 
 int main() {
 
@@ -198,6 +201,7 @@ int main() {
         ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
+        ocp_nlp_dims_set_constraints(config, dims, i, "nz", &nz[i]);
     }
 
 	external_function_casadi impl_ode_fun[N];
