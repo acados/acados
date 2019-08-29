@@ -209,6 +209,7 @@ while true
         I_linear_dependence = find(E(eq,:));
         I_linear_dependence = union( find(A(eq,:)), I_linear_dependence);
         I_nsf_components = union(I_linear_dependence, I_nsf_components);
+        I_nsf_components = I_nsf_components(:)'; % ensure row vector for octave
     end
     %
     new_nsf_components = intersect(I_LOS_candidates, I_nsf_components);

@@ -119,6 +119,10 @@ N_sim = 1000;
 x_sim = zeros(nx, N_sim+1);
 x_sim(:,1) = x0;
 
+% initialization
+xdot0 = zeros(nx, 1);
+z0 = zeros(nz, 1);
+
 tic
 for ii=1:N_sim
 	
@@ -131,9 +135,18 @@ for ii=1:N_sim
 
     % initialize implicit integrator
     if (strcmp(method, 'irk'))
-        sim.set('xdot', zeros(nx,1));
-        sim.set('z', zeros(nz,1));
+        sim.set('xdot', xdot0);
+        sim.set('z', z0);
     elseif (strcmp(method, 'irk_gnsf'))
+        y_in = sim.model_struct.dyn_gnsf_L_x * x0 ...
+                + sim.model_struct.dyn_gnsf_L_xdot * xdot0 ...
+                + sim.model_struct.dyn_gnsf_L_z * z0;
+        u_hat = sim.model_struct.dyn_gnsf_L_u * u;
+        phi_fun = Function([model_name,'_gnsf_phi_fun'],...
+                        {sim.model_struct.sym_gnsf_y, sim.model_struct.sym_gnsf_uhat},...
+                            {sim.model_struct.dyn_gnsf_expr_phi(:)}); % sim.model_struct.sym_p
+
+        phi_guess = full( phi_fun( y_in, u_hat ) );
         n_out = sim.model_struct.dim_gnsf_nout;
         sim.set('phi_guess', zeros(n_out,1));
     end

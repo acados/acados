@@ -2130,6 +2130,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                                                     phi_fun_out);
                             out->info->ADtime += acados_toc(&casadi_timer);
                         }
+                        // printf("\ngnsf: phi residual for newton %d, stage %d\n", iter, ii);
+                        // blasfeo_print_dvec(n_out, res_val, ii*n_out);
                     }
 
                     // set up res_val
