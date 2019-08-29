@@ -360,9 +360,8 @@ int main() {
 
     free(Vx);
     free(Vu);
-    // free(Vz);
+    free(Vz);
     free(VxN);
-    // free(VzN);
     free(W);
     free(WN);
 

@@ -124,6 +124,14 @@ static void ocp_nlp_constraints_bghp_set_nu(void *config_, void *dims_, const in
 
 
 
+static void ocp_nlp_constraints_bghp_set_nz(void *config_, void *dims_, const int *nz)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    dims->nz = *nz;
+}
+
+
+
 static void ocp_nlp_constraints_bghp_set_nbx(void *config_, void *dims_, const int *nbx)
 {
     ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
@@ -211,8 +219,7 @@ void ocp_nlp_constraints_bghp_dims_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "nz"))
     {
-        // do nothing
-        // TODO(oj): implement constraints with daes
+        ocp_nlp_constraints_bghp_set_nz(config_, dims_, value);
     }
     else if (!strcmp(field, "nu"))
     {
@@ -1074,6 +1081,8 @@ void ocp_nlp_constraints_bghp_config_initialize_default(void *config_)
     config->memory_set_lam_ptr = &ocp_nlp_constraints_bghp_memory_set_lam_ptr;
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bghp_memory_set_DCt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_bghp_memory_set_RSQrq_ptr;
+    config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bgh_memory_set_z_alg_ptr;
+    config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr;
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bghp_memory_set_idxb_ptr;
     config->memory_set_idxs_ptr = &ocp_nlp_constraints_bghp_memory_set_idxs_ptr;
     config->workspace_calculate_size = &ocp_nlp_constraints_bghp_workspace_calculate_size;
