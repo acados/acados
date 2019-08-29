@@ -170,6 +170,8 @@ void ocp_nlp_constraints_bgh_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *
 //
 void ocp_nlp_constraints_bgh_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_);
 //
+void ocp_nlp_constraints_bgh_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_);
+//
 void ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr(struct blasfeo_dmat *dzduxt, void *memory_);
 //
 void ocp_nlp_constraints_bgh_memory_set_idxb_ptr(int *idxb, void *memory_);
@@ -185,6 +187,7 @@ void ocp_nlp_constraints_bgh_memory_set_idxs_ptr(int *idxs, void *memory_);
 typedef struct
 {
     struct blasfeo_dmat tmp_nv_nv;
+    struct blasfeo_dmat tmp_nh_nz;
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dvec tmp_nh;
 } ocp_nlp_constraints_bgh_workspace;

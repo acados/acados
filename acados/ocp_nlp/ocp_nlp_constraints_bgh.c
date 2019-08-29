@@ -738,6 +738,7 @@ int ocp_nlp_constraints_bgh_memory_calculate_size(void *config_, void *dims_, vo
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -885,6 +886,7 @@ int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_,
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -894,11 +896,12 @@ int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_,
 
     size += sizeof(ocp_nlp_constraints_bgh_workspace);
 
-    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx);  // tmp_nv_nv
+    size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx); // tmp_nv_nv
+    size += 1 * blasfeo_memsize_dmat(nh, nz);       // tmp_nh_nz
     size += 1 * blasfeo_memsize_dvec(nb+ng+nh+ns);  // tmp_ni
-    size += 1 * blasfeo_memsize_dvec(nh);  // tmp_nh
+    size += 1 * blasfeo_memsize_dvec(nh);           // tmp_nh
 
-    size += 1 * 64;  // blasfeo_mem align
+    size += 1 * 64;                                 // blasfeo_mem align
 
     return size;
 }
@@ -995,6 +998,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -1031,9 +1035,22 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         jac_out.ai = 0;
         jac_out.aj = ng;
 
+        struct blasfeo_dmat_args jac_z_out; // Jacobian dhdz treated separately
+        if (nz > 0)
+        { 
+            jac_z_out.A = &work->tmp_nh_nz;
+            jac_z_out.ai = 0;
+            jac_z_out.aj = 0;
+        }
+
 		// TODO check that it is correct, as it prevents convergence !!!!!
         if (opts->compute_hess)
         {
+            if (nz > 0) {
+                printf("ocp_nlp_constraints_bgh: opts->compute_hess is set to 1, but exact Hessians are not available (yet) when nz > 0. Exiting.\n");
+                exit(1);
+            }
+
             struct blasfeo_dvec_args mult_in;  // multipliers of external fun;
             mult_in.x = &work->tmp_nh;
             mult_in.xi = 0;
@@ -1134,6 +1151,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_)
     config->memory_set_lam_ptr = &ocp_nlp_constraints_bgh_memory_set_lam_ptr;
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bgh_memory_set_DCt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_bgh_memory_set_RSQrq_ptr;
+    config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bgh_memory_set_z_alg_ptr;
     config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr;
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgh_memory_set_idxb_ptr;
     config->memory_set_idxs_ptr = &ocp_nlp_constraints_bgh_memory_set_idxs_ptr;
