@@ -1309,7 +1309,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     for (ii = 0; ii <= N; ii++)
     {
         config->constraints[ii]->memory_set_ux_ptr(nlp_out->ux+ii, mem->constraints[ii]);
-		config->constraints[ii]->memory_set_z_alg_ptr(mem->z_alg+ii, mem->constrints[ii]);
 		config->constraints[ii]->memory_set_dzdux_tran_ptr(mem->dzduxt+ii, mem->constraints[ii]);
         config->constraints[ii]->memory_set_lam_ptr(nlp_out->lam+ii, mem->constraints[ii]);
         config->constraints[ii]->memory_set_DCt_ptr(mem->qp_in->DCt+ii, mem->constraints[ii]);

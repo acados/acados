@@ -216,7 +216,7 @@ void ocp_nlp_constraints_bgh_dims_set(void *config_, void *dims_, const char *fi
     }
     else if (!strcmp(field, "nz"))
     {
-        ocp_nlp_constraints_bgh_set_nz(config_, dims, value);
+        ocp_nlp_constraints_bgh_set_nz(config_, dims_, value);
     }
     else if (!strcmp(field, "nbx"))
     {
@@ -1134,6 +1134,7 @@ void ocp_nlp_constraints_bgh_config_initialize_default(void *config_)
     config->memory_set_lam_ptr = &ocp_nlp_constraints_bgh_memory_set_lam_ptr;
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bgh_memory_set_DCt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_bgh_memory_set_RSQrq_ptr;
+    config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bgh_memory_set_dzduxt_ptr;
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bgh_memory_set_idxb_ptr;
     config->memory_set_idxs_ptr = &ocp_nlp_constraints_bgh_memory_set_idxs_ptr;
     config->workspace_calculate_size = &ocp_nlp_constraints_bgh_workspace_calculate_size;
