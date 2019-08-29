@@ -157,7 +157,7 @@ HESS = jacobian(ADJ, x_xdot_z_u);
 %% Set up functions
 % TODO(oj): fix namings such that jac_z is contained!
 impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z, p}, {f_impl});
-impl_ode_fun_jac_x_xdot = Function([model_name,'_impl_ode_fun_jac_x_xdot'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
+impl_ode_fun_jac_x_xdot_z = Function([model_name,'_impl_ode_fun_jac_x_xdot_z'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
 impl_ode_jac_x_xdot_u = Function([model_name,'_impl_ode_jac_x_xdot_u'], {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
 impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_u});
 %    impl_ode_hess = Function([model_name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
@@ -165,7 +165,7 @@ impl_ode_hess = Function([model_name,'_impl_ode_hess'],  {x, xdot, u, z, multipl
 
 %% generate C code
 impl_ode_fun.generate([model_name,'_impl_ode_fun'], casadi_opts);
-impl_ode_fun_jac_x_xdot.generate([model_name,'_impl_ode_fun_jac_x_xdot'], casadi_opts);
+impl_ode_fun_jac_x_xdot_z.generate([model_name,'_impl_ode_fun_jac_x_xdot_z'], casadi_opts);
 impl_ode_jac_x_xdot_u.generate([model_name,'_impl_ode_jac_x_xdot_u'], casadi_opts);
 impl_ode_fun_jac_x_xdot_u.generate([model_name,'_impl_ode_fun_jac_x_xdot_u'], casadi_opts);
 if strcmp(generate_hess, 'true')

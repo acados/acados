@@ -80,7 +80,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	memcpy(fieldnames[2],"dyn_expl_vde_adj",sizeof("dyn_expl_vde_adj"));
 	memcpy(fieldnames[3],"dyn_expl_ode_hes",sizeof("dyn_expl_ode_hes"));
 	memcpy(fieldnames[4],"dyn_impl_ode_fun",sizeof("dyn_impl_ode_fun"));
-	memcpy(fieldnames[5],"dyn_impl_ode_fun_jac_x_xdot",sizeof("dyn_impl_ode_fun_jac_x_xdot"));
+	memcpy(fieldnames[5],"dyn_impl_ode_fun_jac_x_xdot_z",sizeof("dyn_impl_ode_fun_jac_x_xdot_z"));
 	memcpy(fieldnames[6],"dyn_impl_ode_jac_x_xdot_u",sizeof("dyn_impl_ode_jac_x_xdot_u"));
 	memcpy(fieldnames[7],"dyn_impl_ode_hess",sizeof("dyn_impl_ode_hess"));
 	memcpy(fieldnames[8],"dyn_gnsf_f_lo_fun_jac_x1k1uz",sizeof("dyn_gnsf_f_lo_fun_jac_x1k1uz"));
@@ -115,7 +115,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mxSetField(plhs[0], 0, "dyn_expl_vde_adj", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
 	mxSetField(plhs[0], 0, "dyn_expl_ode_hes", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
 	mxSetField(plhs[0], 0, "dyn_impl_ode_fun", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
-	mxSetField(plhs[0], 0, "dyn_impl_ode_fun_jac_x_xdot", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
+	mxSetField(plhs[0], 0, "dyn_impl_ode_fun_jac_x_xdot_z", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
 	mxSetField(plhs[0], 0, "dyn_impl_ode_jac_x_xdot_u", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
 	mxSetField(plhs[0], 0, "dyn_impl_ode_hess", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
 	mxSetField(plhs[0], 0, "dyn_gnsf_f_lo_fun_jac_x1k1uz", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
