@@ -148,7 +148,8 @@ classdef acados_ocp < handle
             
             % post process numerical data (mostly cast scalars to 1-dimensional cells)
             constr = obj.acados_ocp_nlp_json.constraints;
-            props = properties(constr);
+            %props = properties(constr);
+            props = fieldnames(constr);
             for iprop = 1:length(props)
                 thisprop = props{iprop};
                 %%%Add logic here if you want to work with select properties
@@ -161,7 +162,8 @@ classdef acados_ocp < handle
             obj.acados_ocp_nlp_json.constraints = constr;
             
             cost = obj.acados_ocp_nlp_json.cost;
-            props = properties(cost);
+            %props = properties(cost);
+            props = fieldnames(cost);
             for iprop = 1:length(props)
                 thisprop = props{iprop};
                 %%%Add logic here if you want to work with select properties

@@ -33,7 +33,7 @@
 
 %% test of native matlab interface
 clear all
-GENERATE_C_CODE = 1;
+GENERATE_C_CODE = 0;
 
 
 % check that env.sh has been run
