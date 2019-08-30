@@ -41,7 +41,7 @@ function [ model ] = export_simple_dae_constr()
     else % old casadi versions
         error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
     end
-    model_name_prefix = 'simple_dae_constr';
+    model_name_prefix = 'simple_dae';
        
     %% Set up States & Controls
     x1    = SX.sym('x1');     % Differential States
