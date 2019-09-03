@@ -111,7 +111,6 @@ endif()
 # Rpath handling, see https://cmake.org/Wiki/CMake_RPATH_handling#What_is_RPATH_.3F
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-set(CMAKE_INSTALL_RPATH "$ENV{CASADIPATH}/casadi")
 
 if(CMAKE_BUILD_TYPE MATCHES WithExternalLibs)
 	set(ACADOS_WITH_HPMPC ON CACHE BOOL "Add HPMPC solver")
