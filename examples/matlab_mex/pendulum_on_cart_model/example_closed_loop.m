@@ -70,37 +70,39 @@ ocp_sim_method_num_stages = 4;
 ocp_sim_method_num_steps = 1;
 cost_type = 'linear_ls'; % linear_ls, ext_cost
 
-h = 0.01;
-
 
 %% create model entries
 model = pendulum_on_cart_model;
 
-% dims
+h = 0.01;
 T = ocp_N*h; % horizon length time
+
+% dims
 nx = model.nx;
 nu = model.nu;
+
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
 
-linear_constraints = 1; % 1, 0
+ng = 0; % number of general linear constraints intermediate stages
+ng_e = 0; % number of general linear constraints final stage
+nbx = 0; % number of bounds on state x
+
+
+linear_constraints = 1; % 1: encode control bounds as bounds (efficient)
+    % 0: encode control bounds as external CasADi functions
 if linear_constraints
-	nbx = 0;
 	nbu = nu;
-	ng = 0;
-	ng_e = 0;
 	nh = 0;
 	nh_e = 0;
 else
-	nbx = 0;
 	nbu = 0;
-	ng = 0;
-	ng_e = 0;
 	nh = nu;
 	nh_e = 0;
 end
 
 % cost
+% linear least square cost: y^T * W * y, where y = Vx * x + Vu * u - y_ref
 Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
 Vx = zeros(ny, nx); for ii=1:nx Vx(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
 Vx_e = zeros(ny_e, nx); for ii=1:nx Vx_e(ii,ii)=1.0; end % state-to-output matrix in mayer term
@@ -266,7 +268,6 @@ end
 %sim_model.model_struct
 
 
-
 %% acados sim opts
 sim_opts = acados_sim_opts();
 sim_opts.set('compile_mex', compile_mex);
@@ -286,15 +287,16 @@ sim = acados_sim(sim_model, sim_opts);
 
 
 %% closed loop simulation
-n_sim = 200;
-x_sim = zeros(nx, n_sim+1);
+N_sim = 200;
+x_sim = zeros(nx, N_sim+1);
 x_sim(:,1) = x0; % initial state
-u_sim = zeros(nu, n_sim);
+u_sim = zeros(nu, N_sim);
 
 % set trajectory initialization
 %x_traj_init = zeros(nx, ocp_N+1);
 %for ii=1:ocp_N x_traj_init(:,ii) = [0; pi; 0; 0]; end
-x_traj_init = [linspace(0, 0, ocp_N+1); linspace(pi, 0, ocp_N+1); linspace(0, 0, ocp_N+1); linspace(0, 0, ocp_N+1)];
+x_traj_init = [linspace(0, 0, ocp_N+1); linspace(pi, 0, ocp_N+1); ...
+    linspace(0, 0, ocp_N+1); linspace(0, 0, ocp_N+1)];
 
 u_traj_init = zeros(nu, ocp_N);
 pi_traj_init = zeros(nx, ocp_N);
@@ -303,7 +305,7 @@ pi_traj_init = zeros(nx, ocp_N);
 
 tic;
 
-for ii=1:n_sim
+for ii=1:N_sim
 
 	% set x0
 	ocp.set('constr_x0', x_sim(:,ii));
@@ -364,13 +366,13 @@ for ii=1:n_sim
 
 end
 
-avg_time_solve = toc/n_sim
+avg_time_solve = toc/N_sim
 
 
 
 % figures
 
-for ii=1:n_sim+1
+for ii=1:N_sim+1
 	x_cur = x_sim(:,ii);
 % 	visualize;
 end
@@ -379,12 +381,12 @@ end
 
 figure;
 subplot(2,1,1);
-plot(0:n_sim, x_sim);
-xlim([0 n_sim]);
+plot(0:N_sim, x_sim);
+xlim([0 N_sim]);
 legend('p', 'theta', 'v', 'omega');
 subplot(2,1,2);
-plot(0:n_sim-1, u_sim);
-xlim([0 n_sim]);
+plot(0:N_sim-1, u_sim);
+xlim([0 N_sim]);
 legend('F');
 
 
