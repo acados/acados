@@ -207,9 +207,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// model
 
 	// dims
+	// TODO(oj): remove set_* and make 1 if per field!
 	double T;		bool set_T = false;
-	int nx;			bool set_nx = false;
-	int nu;			bool set_nu = false;
+	int nx;
+	int nu;
+	int nz;			bool set_nz = false;
 	int ny;			bool set_ny = false;
 	int ny_e;		bool set_ny_e = false;
 	int nbx = 0;	bool set_nbx = false;
@@ -313,7 +315,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// nx
 	if(mxGetField( prhs[0], 0, "dim_nx" )!=NULL)
 		{
-		set_nx = true;
 		nx = mxGetScalar( mxGetField( prhs[0], 0, "dim_nx" ) );
 		}
 	else
@@ -324,13 +325,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// nu
 	if(mxGetField( prhs[0], 0, "dim_nu" )!=NULL)
 		{
-		set_nu = true;
 		nu = mxGetScalar( mxGetField( prhs[0], 0, "dim_nu" ) );
 		}
 	else
 		{
 		mexPrintf("\nerror: ocp_create: dim_nu not set!\n");
 		return;
+		}
+	// nz
+	if(mxGetField( prhs[0], 0, "dim_nz" )!=NULL)
+		{
+		set_nz = true;
+		nz = mxGetScalar( mxGetField( prhs[0], 0, "dim_nz" ) );
 		}
 	// ny
 	if(mxGetField( prhs[0], 0, "dim_ny" )!=NULL)
@@ -1068,6 +1074,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		i_ptr[ii] = nu;
 	i_ptr[N] = 0;
 	ocp_nlp_dims_set_opt_vars(config, dims, "nu", i_ptr);
+	// nz
+	if (set_nz)
+	{
+		for(ii=0; ii<=N; ii++)
+			i_ptr[ii] = nz;
+		ocp_nlp_dims_set_opt_vars(config, dims, "nz", i_ptr);
+	}
 	// ns
 	if(ns!=nsbu+nsbx+nsg+nsh)
 		{
