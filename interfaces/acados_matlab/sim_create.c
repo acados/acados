@@ -52,7 +52,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     long long *l_ptr;
     char *c_ptr;
     char fun_name[50] = "sim_create";
-    char buffer [100]; // for error messages
+    char buffer [300]; // for error messages
 
     /* RHS */
     const mxArray *matlab_model = prhs[0];
@@ -109,8 +109,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else
     {
-        mexPrintf("\nsim_create: method not supported %s\n", method);
-        return;
+        MEX_SOLVER_NOT_SUPPORTED(fun_name, "method", method, "erk, irk, irk_gnsf");
     }
 
     sim_config *config = sim_config_create(plan);

@@ -62,6 +62,37 @@
 	mexErrMsgTxt(buffer);\
 }
 
+#define MEX_SOLVER_NOT_SUPPORTED(fun_name, field, value, suggestions) {\
+	sprintf(buffer, "%s field %s does not support %s, supported values are:\n %s",\
+	        fun_name, field, value, suggestions);\
+	mexErrMsgTxt(buffer);\
+}
+
+#define MEX_SOLVER_NOT_SUPPORTED_GIVEN(fun_name, field, value, given, suggestions) {\
+	sprintf(buffer, "%s field %s does not support %s given %s, supported values are:\n %s",\
+	        fun_name, field, value, given, suggestions);\
+	mexErrMsgTxt(buffer);\
+}
+
+#define MEX_MISSING_ARGUMENT_MODULE(fun_name, field, module) {\
+	sprintf(buffer, "%s field %s not provided, is mandatory for module %s!", fun_name, field, module);\
+	mexErrMsgTxt(buffer);\
+}
+
+
+#define MEX_STR_TO_BOOL(fun_name, str, bool_ptr, name) {\
+	if (!strcmp(str, "true"))\
+        *bool_ptr = true;\
+    else if (!strcmp(str, "false"))\
+        *bool_ptr = false;\
+	else \
+	{\
+		sprintf(buffer, "%s error casting field %s to bool, contains %s!", fun_name, name);\
+		mexErrMsgTxt(buffer);\
+	}\
+}
+
+
 
 // macro to string
 #define STR(x) STR_AGAIN(x)

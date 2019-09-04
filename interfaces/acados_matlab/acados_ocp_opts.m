@@ -58,6 +58,7 @@ classdef acados_ocp_opts < handle
 			obj.opts_struct.sim_method = 'irk';
 			obj.opts_struct.regularize_method = 'no_regularize';
 			obj.opts_struct.gnsf_detect_struct = 'true';
+			% TODO(oj): add nlp_solver_ext_qp_res, nlp_solver_tol_*, ...?!
 			obj.opts_struct.output_dir = fullfile(pwd, 'build');
 		end
 

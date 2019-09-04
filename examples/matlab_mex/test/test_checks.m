@@ -40,6 +40,7 @@ addpath('../linear_mass_spring_model/');
 compile_mex = 'true';
 codgen_model = 'true';
 method = 'irk';
+% method = 'IRK';
 sens_forw = 'true';
 num_stages = 4;
 num_steps = 4;
