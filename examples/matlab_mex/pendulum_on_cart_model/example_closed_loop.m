@@ -54,21 +54,27 @@ sim_num_steps = 4;
 % ocp
 param_scheme = 'multiple_shooting_unif_grid';
 ocp_N = 100;
+%nlp_solver = 'sqp_rti';
+%nlp_solver_exact_hessian = 'false';
 nlp_solver = 'sqp'; % sqp, sqp_rti
 nlp_solver_exact_hessian = 'true';
 regularize_method = 'project_reduc_hess'; % no_regularize, project,...
-    % project_reduc_hess, mirror, convexify
+	% project_reduc_hess, mirror, convexify
+%regularize_method = 'mirror';
+%regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
 qp_solver = 'partial_condensing_hpipm';
         % full_condensing_hpipm, partial_condensing_hpipm
 qp_solver_cond_N = 5;
 qp_solver_warm_start = 0;
-qp_solver_cond_ric_alg = 0; % HPIPM specific? what does it stand for?
-qp_solver_ric_alg = 0; % HPIPM specific? what does it stand for?
+qp_solver_cond_ric_alg = 0; % 0: dont factorize hessian in the condensing; 1: factorize
+qp_solver_ric_alg = 0; % HPIPM specific
 ocp_sim_method = 'erk'; % erk, irk, irk_gnsf
+% ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
 ocp_sim_method_num_steps = 1;
 cost_type = 'linear_ls'; % linear_ls, ext_cost
+% cost_type = 'ext_cost'; % linear_ls, ext_cost
 
 h = 0.01;
 
