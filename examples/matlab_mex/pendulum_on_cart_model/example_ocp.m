@@ -403,8 +403,9 @@ end
 
 
 
-waitforbuttonpress;
-
+if is_octave()
+    waitforbuttonpress;
+end
 
 return;
 

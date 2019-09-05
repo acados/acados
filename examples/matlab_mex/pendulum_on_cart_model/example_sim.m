@@ -174,8 +174,9 @@ legend('p', 'theta', 'v', 'omega');
 fprintf('\nsuccess!\n\n');
 
 
-waitforbuttonpress;
-
+if is_octave()
+    waitforbuttonpress;
+end
 
 return;
 

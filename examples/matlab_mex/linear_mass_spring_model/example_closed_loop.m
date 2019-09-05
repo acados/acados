@@ -297,7 +297,6 @@ ylabel('u')
 xlabel('sample')
 
 
-
 status = ocp.get('status');
 
 if status==0
@@ -307,7 +306,8 @@ else
 end
 
 
-waitforbuttonpress;
-
+if is_octave()
+    waitforbuttonpress;
+end
 
 return;

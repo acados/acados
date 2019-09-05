@@ -396,5 +396,6 @@ xlim([0 N_sim]);
 legend('F');
 
 
-waitforbuttonpress;
-
+if is_octave()
+    waitforbuttonpress;
+end
