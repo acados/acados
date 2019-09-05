@@ -365,31 +365,279 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
     /* dims */
-    int nx;
-    int nu;
-    int nz;            bool set_nz = false;
-    int ny;            bool set_ny = false;
-    int ny_e;        bool set_ny_e = false;
-    int nbx = 0;    bool set_nbx = false;
-    int nbu;        bool set_nbu = false;
-    int ng;            bool set_ng = false;
-    int ng_e;        bool set_ng_e = false;
-    int nh;            bool set_nh = false;
-    int nh_e;        bool set_nh_e = false;
-    int ns = 0;        bool set_ns = false;
-    int ns_e = 0;    bool set_ns_e = false;
-    int nsbu = 0;    bool set_nsbu = false;
-    int nsbx = 0;    bool set_nsbx = false;
-    int nsg = 0;    bool set_nsg = false;
-    int nsg_e = 0;    bool set_nsg_e = false;
-    int nsh = 0;    bool set_nsh = false;
-    int nsh_e = 0;    bool set_nsh_e = false;
+    int nx, nu;
+    int nz = 0;
+    int ny, ny_e;
+    int nbx;
+    int nbu;
+    int ng;
+    int ng_e;
+    int nh;
+    int nh_e;
+    int ns = 0;
+    int ns_e = 0;
+    int nsbu = 0;
+    int nsbx = 0;
+    int nsg = 0;
+    int nsg_e = 0;
+    int nsh = 0;
+    int nsh_e = 0;
+
+
+    ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
+
+    // nx
+    if (mxGetField( matlab_model, 0, "dim_nx" )!=NULL)
+	{
+        nx = mxGetScalar( mxGetField( prhs[0], 0, "dim_nx" ) );
+	}
+    else
+	{
+        MEX_MISSING_ARGUMENT(fun_name, "dim_nx");
+	}
+
+    i_ptr = (int *) malloc((N+1)*sizeof(int));
+    for (ii=0; ii<=N; ii++)
+        i_ptr[ii] = nx;
+    ocp_nlp_dims_set_opt_vars(config, dims, "nx", i_ptr);
+
+    // nu
+    if (mxGetField( matlab_model, 0, "dim_nu" )!=NULL)
+	{
+        nu = mxGetScalar( mxGetField( prhs[0], 0, "dim_nu" ) );
+	}
+    else
+	{
+        MEX_MISSING_ARGUMENT(fun_name, "dim_nu");
+	}
+    for (ii=0; ii<N; ii++)
+        i_ptr[ii] = nu;
+    i_ptr[N] = 0;
+    ocp_nlp_dims_set_opt_vars(config, dims, "nu", i_ptr);
+	
+	// nz
+    if (mxGetField( prhs[0], 0, "dim_nz" )!=NULL)
+	{
+        nz = mxGetScalar( mxGetField( prhs[0], 0, "dim_nz" ) );
+        for (ii=0; ii<=N; ii++)
+            i_ptr[ii] = nz;
+        ocp_nlp_dims_set_opt_vars(config, dims, "nz", i_ptr);
+	}
+    free(i_ptr);
+
     // gnsf stuff
-    int gnsf_nx1;    bool set_gnsf_nx1 = false;
-    int gnsf_nz1;    bool set_gnsf_nz1 = false;
-    int gnsf_nuhat;    bool set_gnsf_nuhat = false;
-    int gnsf_ny;    bool set_gnsf_ny = false;
-    int gnsf_nout;    bool set_gnsf_nout = false;
+    int gnsf_nx1, gnsf_nz1, gnsf_nuhat, gnsf_ny, gnsf_nout;
+    if (!strcmp(sim_method, "irk_gnsf"))
+	{
+		// nx1
+        if (mxGetField( matlab_model, 0, "dim_gnsf_nx1" )!=NULL)
+		{
+            gnsf_nx1 = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_nx1" ) );
+		}
+		else
+		{
+			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nx1", "irk_gnsf")
+		}
+		// nz1
+        if (mxGetField( matlab_model, 0, "dim_gnsf_nz1" )!=NULL)
+		{
+            gnsf_nz1 = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_nz1" ) );
+		}
+		else
+		{
+			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nz1", "irk_gnsf")
+		}
+		// nuhat
+		if (mxGetField( matlab_model, 0, "dim_gnsf_nuhat" )!=NULL)
+		{
+            gnsf_nuhat = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_nuhat" ) );
+		}
+		else
+		{
+			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nuhat", "irk_gnsf")
+		}
+		// ny
+        if (mxGetField( matlab_model, 0, "dim_gnsf_ny" )!=NULL)
+		{
+            gnsf_ny = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_ny" ) );
+		}
+		else
+		{
+			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_ny", "irk_gnsf")
+		}
+		// nout
+        if (mxGetField( matlab_model, 0, "dim_gnsf_nout" )!=NULL)
+		{
+            gnsf_nout = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_nout" ) );
+		}
+		else
+		{
+			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nout", "irk_gnsf")
+		}
+		// assign
+		for (ii=0; ii<N; ii++)
+		{
+			ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nx1", &gnsf_nx1);
+			ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nz1", &gnsf_nz1);
+			ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nuhat", &gnsf_nuhat);
+			ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_ny", &gnsf_ny);
+			ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nout", &gnsf_nout);
+		}
+	}
+
+
+    // ny
+    if (mxGetField( matlab_model, 0, "dim_ny" )!=NULL)
+	{
+        ny = mxGetScalar( mxGetField( matlab_model, 0, "dim_ny" ) );
+		for (ii=0; ii<N; ii++)
+		{
+            ocp_nlp_dims_set_cost(config, dims, ii, "ny", &ny);
+		}
+	}
+    // ny_e
+    if (mxGetField( matlab_model, 0, "dim_ny_e" )!=NULL)
+	{
+        ny_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_ny_e" ) );
+        ocp_nlp_dims_set_cost(config, dims, N, "ny", &ny_e);
+	}
+
+	// constraint dims
+	// nbx
+    ocp_nlp_dims_set_constraints(config, dims, 0, "nbx", &nx);
+    if (mxGetField( matlab_model, 0, "dim_nbx" )!=NULL)
+	{
+        nbx = mxGetScalar( mxGetField( matlab_model, 0, "dim_nbx" ) );
+        for (ii=1; ii<=N; ii++)
+		{
+            ocp_nlp_dims_set_constraints(config, dims, ii, "nbx", &nbx);
+		}
+	}
+    // nbu
+    if (mxGetField( matlab_model, 0, "dim_nbu" )!=NULL)
+	{
+        nbu = mxGetScalar( mxGetField( matlab_model, 0, "dim_nbu" ) );
+        for (ii=0; ii<N; ii++)
+		{
+            ocp_nlp_dims_set_constraints(config, dims, ii, "nbu", &nbu);
+		}
+	}
+    // ng
+    if (mxGetField( matlab_model, 0, "dim_ng" )!=NULL)
+	{
+        ng = mxGetScalar( mxGetField( matlab_model, 0, "dim_ng" ) );
+        for (ii=0; ii<N; ii++)
+		{
+            ocp_nlp_dims_set_constraints(config, dims, ii, "ng", &ng);
+        }
+	}
+    // ng_e
+    if (mxGetField( matlab_model, 0, "dim_ng_e" )!=NULL)
+	{
+        ng_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_ng_e" ) );
+        ocp_nlp_dims_set_constraints(config, dims, N, "ng", &ng_e);
+	}
+
+    // nh
+    if (mxGetField( matlab_model, 0, "dim_nh" )!=NULL)
+	{
+        nh = mxGetScalar( mxGetField( matlab_model, 0, "dim_nh" ) );
+        for (ii=0; ii<N; ii++)
+		{
+            ocp_nlp_dims_set_constraints(config, dims, ii, "nh", &nh);
+        }
+	}
+    // nh_e
+    if (mxGetField( matlab_model, 0, "dim_nh_e" )!=NULL)
+	{
+        nh_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_nh_e" ) );
+        ocp_nlp_dims_set_constraints(config, dims, N, "nh", &nh_e);
+	}
+
+	// slack dims
+    // ns
+    if (mxGetField( matlab_model, 0, "dim_ns" )!=NULL)
+	{
+        ns = mxGetScalar( mxGetField( matlab_model, 0, "dim_ns" ) );
+	}
+
+    // ns_e
+    if (mxGetField( matlab_model, 0, "dim_ns_e" )!=NULL)
+	{
+        ns_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_ns_e" ) );
+	}
+    // nsbu
+    if (mxGetField( matlab_model, 0, "dim_nsbu" )!=NULL)
+	{
+        nsbu = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsbu" ) );
+		for (ii=0; ii<N; ii++)
+		{
+            ocp_nlp_dims_set_constraints(config, dims, ii, "nsbu", &nsbu);
+		}
+	}
+    // nsbx
+    if (mxGetField( matlab_model, 0, "dim_nsbx" )!=NULL)
+	{
+        nsbx = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsbx" ) );
+        for (ii=1; ii<=N; ii++) // TODO fix stage 0 !!!!!
+		{
+            ocp_nlp_dims_set_constraints(config, dims, ii, "nsbx", &nsbx);
+		}
+	}
+    // nsg
+    if (mxGetField( matlab_model, 0, "dim_nsg" )!=NULL)
+	{
+        nsg = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsg" ) );
+        for (ii=0; ii<N; ii++)
+		{
+            ocp_nlp_dims_set_constraints(config, dims, ii, "nsg", &nsg);
+		}
+	}
+    // nsg_e
+    if (mxGetField( matlab_model, 0, "dim_nsg_e" )!=NULL)
+	{
+        nsg_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsg_e" ) );
+        ocp_nlp_dims_set_constraints(config, dims, N, "nsg", &nsg_e);
+	}
+    // nsh
+    if (mxGetField( matlab_model, 0, "dim_nsh" )!=NULL)
+	{
+        nsh = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsh" ) );
+        for (ii=0; ii<N; ii++)
+        {
+            ocp_nlp_dims_set_constraints(config, dims, ii, "nsh", &nsh);
+        }
+	}
+    // nsh_e
+    if (mxGetField( matlab_model, 0, "dim_nsh_e" )!=NULL)
+	{
+        nsh_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsh_e" ) );
+        ocp_nlp_dims_set_constraints(config, dims, N, "nsh", &nsh_e);
+	}
+    // ns
+    if (ns!=nsbu+nsbx+nsg+nsh)
+	{
+		sprintf(buffer,"ocp_create: ns!=nsbu+nsbx+nsg+nsh, got ns=%d, nsbu=%d, nsbx=%d nsg=%d nsh=%d\n",
+			ns, nsbu, nsbx, nsg, nsh);
+        mexErrMsgTxt(buffer);
+	}
+    if (ns_e!=nsbx+nsg_e+nsh_e)
+	{
+		sprintf(buffer,"ocp_create: ns_e!=nsbx+nsg_e+nsh_e, got ns_e=%d, nsbx=%d nsg_e=%d nsh_e=%d\n",
+			ns, nsbx, nsg_e, nsh_e);
+        mexErrMsgTxt(buffer);
+	}
+    // TODO fix stage 0 !!!!!!!!
+    i_ptr[0] = nsbu+nsg+nsh; // XXX not nsbx !!!!!!!!!!
+    for (ii=1; ii<N; ii++)
+        i_ptr[ii] = ns;
+    i_ptr[N] = ns_e;
+    ocp_nlp_dims_set_opt_vars(config, dims, "ns", i_ptr);
+
+
+    /* opts */
+
+    void *opts = ocp_nlp_opts_create(config, dims);
 
     double *param_scheme_shooting_nodes;    bool set_param_scheme_shooting_nodes = false;
     bool nlp_solver_exact_hessian;
@@ -454,7 +702,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         nlp_solver_ext_qp_res = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_ext_qp_res" ) );
         }
     // qp_solver
-    // TODO check
     qp_solver = mxArrayToString( mxGetField( matlab_opts, 0, "qp_solver" ) );
     // iter_max
     if (mxGetField( matlab_opts, 0, "qp_solver_iter_max" )!=NULL)
@@ -578,157 +825,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexPrintf("\nerror: ocp_create: T not set!\n");
         return;
         }
-    // nx
-    if (mxGetField( matlab_model, 0, "dim_nx" )!=NULL)
-        {
-        nx = mxGetScalar( mxGetField( prhs[0], 0, "dim_nx" ) );
-        }
-    else
-        {
-        mexPrintf("\nerror: ocp_create: dim_nx not set!\n");
-        return;
-        }
-    // nu
-    if (mxGetField( matlab_model, 0, "dim_nu" )!=NULL)
-        {
-        nu = mxGetScalar( mxGetField( prhs[0], 0, "dim_nu" ) );
-        }
-    else
-        {
-        mexPrintf("\nerror: ocp_create: dim_nu not set!\n");
-        return;
-        }
-    // nz
-    if (mxGetField( prhs[0], 0, "dim_nz" )!=NULL)
-        {
-        set_nz = true;
-        nz = mxGetScalar( mxGetField( prhs[0], 0, "dim_nz" ) );
-        }
-    // ny
-    if (mxGetField( matlab_model, 0, "dim_ny" )!=NULL)
-        {
-        set_ny = true;
-        ny = mxGetScalar( mxGetField( matlab_model, 0, "dim_ny" ) );
-        }
-    // ny_e
-    if (mxGetField( matlab_model, 0, "dim_ny_e" )!=NULL)
-        {
-        set_ny_e = true;
-        ny_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_ny_e" ) );
-        }
-    // nbx
-    if (mxGetField( matlab_model, 0, "dim_nbx" )!=NULL)
-        {
-        set_nbx = true;
-        nbx = mxGetScalar( mxGetField( matlab_model, 0, "dim_nbx" ) );
-        }
-    // nbu
-    if (mxGetField( matlab_model, 0, "dim_nbu" )!=NULL)
-        {
-        set_nbu = true;
-        nbu = mxGetScalar( mxGetField( matlab_model, 0, "dim_nbu" ) );
-        }
-    // ng
-    if (mxGetField( matlab_model, 0, "dim_ng" )!=NULL)
-        {
-        set_ng = true;
-        ng = mxGetScalar( mxGetField( matlab_model, 0, "dim_ng" ) );
-        }
-    // ng_e
-    if (mxGetField( matlab_model, 0, "dim_ng_e" )!=NULL)
-        {
-        set_ng_e = true;
-        ng_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_ng_e" ) );
-        }
-    // nh
-    if (mxGetField( matlab_model, 0, "dim_nh" )!=NULL)
-        {
-        set_nh = true;
-        nh = mxGetScalar( mxGetField( matlab_model, 0, "dim_nh" ) );
-        }
-    // nh_e
-    if (mxGetField( matlab_model, 0, "dim_nh_e" )!=NULL)
-        {
-        set_nh_e = true;
-        nh_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_nh_e" ) );
-        }
-    // ns
-    if (mxGetField( matlab_model, 0, "dim_ns" )!=NULL)
-        {
-        set_ns = true;
-        ns = mxGetScalar( mxGetField( matlab_model, 0, "dim_ns" ) );
-        }
-    // ns_e
-    if (mxGetField( matlab_model, 0, "dim_ns_e" )!=NULL)
-        {
-        set_ns_e = true;
-        ns_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_ns_e" ) );
-        }
-    // nsbu
-    if (mxGetField( matlab_model, 0, "dim_nsbu" )!=NULL)
-        {
-        set_nsbu = true;
-        nsbu = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsbu" ) );
-        }
-    // nsbx
-    if (mxGetField( matlab_model, 0, "dim_nsbx" )!=NULL)
-        {
-        set_nsbx = true;
-        nsbx = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsbx" ) );
-        }
-    // nsg
-    if (mxGetField( matlab_model, 0, "dim_nsg" )!=NULL)
-        {
-        set_nsg = true;
-        nsg = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsg" ) );
-        }
-    // nsg_e
-    if (mxGetField( matlab_model, 0, "dim_nsg_e" )!=NULL)
-        {
-        set_nsg_e = true;
-        nsg_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsg_e" ) );
-        }
-    // nsh
-    if (mxGetField( matlab_model, 0, "dim_nsh" )!=NULL)
-        {
-        set_nsh = true;
-        nsh = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsh" ) );
-        }
-    // nsh_e
-    if (mxGetField( matlab_model, 0, "dim_nsh_e" )!=NULL)
-        {
-        set_nsh_e = true;
-        nsh_e = mxGetScalar( mxGetField( matlab_model, 0, "dim_nsh_e" ) );
-        }
-    // gnsf stuff
-    if (!strcmp(sim_method, "irk_gnsf"))
-        {
-        if (mxGetField( matlab_model, 0, "dim_gnsf_nx1" )!=NULL)
-            {
-            set_gnsf_nx1 = true;
-            gnsf_nx1 = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_nx1" ) );
-            }
-        if (mxGetField( matlab_model, 0, "dim_gnsf_nz1" )!=NULL)
-            {
-            set_gnsf_nz1 = true;
-            gnsf_nz1 = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_nz1" ) );
-            }
-        if (mxGetField( matlab_model, 0, "dim_gnsf_nuhat" )!=NULL)
-            {
-            set_gnsf_nuhat = true;
-            gnsf_nuhat = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_nuhat" ) );
-            }
-        if (mxGetField( matlab_model, 0, "dim_gnsf_ny" )!=NULL)
-            {
-            set_gnsf_ny = true;
-            gnsf_ny = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_ny" ) );
-            }
-        if (mxGetField( matlab_model, 0, "dim_gnsf_nout" )!=NULL)
-            {
-            set_gnsf_nout = true;
-            gnsf_nout = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_nout" ) );
-            }
-        }
+
+
+
+
+
+
+
+
 
 
     // Vu
@@ -1078,194 +1182,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 
-
-
-
-
-
-    /* dims */
-
-    ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-    // allocate tmp
-    i_ptr = (int *) malloc((N+1)*sizeof(int));
-    // nx
-    for (ii=0; ii<=N; ii++)
-        i_ptr[ii] = nx;
-    ocp_nlp_dims_set_opt_vars(config, dims, "nx", i_ptr);
-    // nu
-    for (ii=0; ii<N; ii++)
-        i_ptr[ii] = nu;
-    i_ptr[N] = 0;
-    ocp_nlp_dims_set_opt_vars(config, dims, "nu", i_ptr);
-    // nz
-    if (set_nz)
-    {
-        for (ii=0; ii<=N; ii++)
-            i_ptr[ii] = nz;
-        ocp_nlp_dims_set_opt_vars(config, dims, "nz", i_ptr);
-    }
-    // ns
-    if (ns!=nsbu+nsbx+nsg+nsh)
-        {
-        mexPrintf("\nerror: ocp_create: ns!=nsbu+nsbx+nsg+nsh\n");
-        return;
-        }
-    if (ns_e!=nsbx+nsg_e+nsh_e)
-        {
-        mexPrintf("\nerror: ocp_create: ns_e!=nsbx+nsg_e+nsh_e\n");
-        return;
-        }
-    // TODO fix stage 0 !!!!!!!!
-    i_ptr[0] = nsbu+nsg+nsh; // XXX not nsbx !!!!!!!!!!
-    for (ii=1; ii<N; ii++)
-        i_ptr[ii] = ns;
-    i_ptr[N] = ns_e;
-    ocp_nlp_dims_set_opt_vars(config, dims, "ns", i_ptr);
-    // free tmp
-    free(i_ptr);
-    // ny
-    if (set_ny)
-        {
-        for (ii=0; ii<N; ii++)
-            {
-            ocp_nlp_dims_set_cost(config, dims, ii, "ny", &ny);
-            }
-        }
-    // ny_e
-    if (set_ny_e)
-        {
-        ocp_nlp_dims_set_cost(config, dims, N, "ny", &ny_e);
-        }
-    // nbx
-    ocp_nlp_dims_set_constraints(config, dims, 0, "nbx", &nx);
-    if (set_nbx)
-        {
-        for (ii=1; ii<=N; ii++)
-            {
-            ocp_nlp_dims_set_constraints(config, dims, ii, "nbx", &nbx);
-            }
-        }
-    // nbu
-    if (set_nbu)
-        {
-        for (ii=0; ii<N; ii++)
-            {
-            ocp_nlp_dims_set_constraints(config, dims, ii, "nbu", &nbu);
-            }
-        }
-    // ng
-    if (set_ng)
-        {
-        for (ii=0; ii<N; ii++)
-            {
-            ocp_nlp_dims_set_constraints(config, dims, ii, "ng", &ng);
-            }
-        }
-    // ng_e
-    if (set_ng_e)
-        {
-        ocp_nlp_dims_set_constraints(config, dims, N, "ng", &ng_e);
-        }
-    // nh
-    if (set_nh)
-        {
-        for (ii=0; ii<N; ii++)
-            {
-            ocp_nlp_dims_set_constraints(config, dims, ii, "nh", &nh);
-            }
-        }
-    // nh_e
-    if (set_nh_e)
-        {
-        ocp_nlp_dims_set_constraints(config, dims, N, "nh", &nh_e);
-        }
-    // nsbx
-    if (set_nsbx)
-        {
-//        for (ii=0; ii<=N; ii++)
-        for (ii=1; ii<=N; ii++) // TODO fix stage 0 !!!!!
-            {
-            ocp_nlp_dims_set_constraints(config, dims, ii, "nsbx", &nsbx);
-            }
-        }
-    // nsbu
-    if (set_nsbu)
-        {
-        for (ii=0; ii<N; ii++)
-            {
-            ocp_nlp_dims_set_constraints(config, dims, ii, "nsbu", &nsbu);
-            }
-        }
-    // nsg
-    if (set_nsg)
-        {
-        for (ii=0; ii<N; ii++)
-            {
-            ocp_nlp_dims_set_constraints(config, dims, ii, "nsg", &nsg);
-            }
-        }
-    // nsg_e
-    if (set_nsg_e)
-        {
-        ocp_nlp_dims_set_constraints(config, dims, N, "nsg", &nsg_e);
-        }
-    // nsh
-    if (set_nsh)
-        {
-        for (ii=0; ii<N; ii++)
-            {
-            ocp_nlp_dims_set_constraints(config, dims, ii, "nsh", &nsh);
-            }
-        }
-    // nsh_e
-    if (set_nsh_e)
-        {
-        ocp_nlp_dims_set_constraints(config, dims, N, "nsh", &nsh_e);
-        }
-    if (!strcmp(sim_method, "irk_gnsf"))
-        {
-        if (set_gnsf_nx1)
-            {
-            for (ii=0; ii<N; ii++)
-                {
-                ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nx1", &gnsf_nx1);
-                }
-            }
-        if (set_gnsf_nz1)
-            {
-            for (ii=0; ii<N; ii++)
-                {
-                ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nz1", &gnsf_nz1);
-                }
-            }
-        if (set_gnsf_nuhat)
-            {
-            for (ii=0; ii<N; ii++)
-                {
-                ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nuhat", &gnsf_nuhat);
-                }
-            }
-        if (set_gnsf_ny)
-            {
-            for (ii=0; ii<N; ii++)
-                {
-                ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_ny", &gnsf_ny);
-                }
-            }
-        if (set_gnsf_nout)
-            {
-            for (ii=0; ii<N; ii++)
-                {
-                ocp_nlp_dims_set_dynamics(config, dims, ii, "gnsf_nout", &gnsf_nout);
-                }
-            }
-        }
-            
-
-
-    /* opts */
-
-    void *opts = ocp_nlp_opts_create(config, dims);
 
     // nlp solver exact hessian
 //    printf("\nexact hess %d\n", nlp_solver_exact_hessian);
