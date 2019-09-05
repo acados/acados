@@ -426,9 +426,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     free(i_ptr);
 
     // gnsf stuff
-    int gnsf_nx1, gnsf_nz1, gnsf_nuhat, gnsf_ny, gnsf_nout;
     if (!strcmp(sim_method, "irk_gnsf"))
 	{
+		int gnsf_nx1, gnsf_nz1, gnsf_nuhat, gnsf_ny, gnsf_nout;
 		// nx1
         if (mxGetField( matlab_model, 0, "dim_gnsf_nx1" )!=NULL)
 		{
@@ -436,7 +436,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 		else
 		{
-			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nx1", "irk_gnsf")
+			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nx1", "irk_gnsf");
 		}
 		// nz1
         if (mxGetField( matlab_model, 0, "dim_gnsf_nz1" )!=NULL)
@@ -445,7 +445,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 		else
 		{
-			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nz1", "irk_gnsf")
+			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nz1", "irk_gnsf");
 		}
 		// nuhat
 		if (mxGetField( matlab_model, 0, "dim_gnsf_nuhat" )!=NULL)
@@ -454,7 +454,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 		else
 		{
-			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nuhat", "irk_gnsf")
+			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nuhat", "irk_gnsf");
 		}
 		// ny
         if (mxGetField( matlab_model, 0, "dim_gnsf_ny" )!=NULL)
@@ -463,7 +463,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 		else
 		{
-			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_ny", "irk_gnsf")
+			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_ny", "irk_gnsf");
 		}
 		// nout
         if (mxGetField( matlab_model, 0, "dim_gnsf_nout" )!=NULL)
@@ -472,7 +472,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 		else
 		{
-			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nout", "irk_gnsf")
+			MEX_MISSING_ARGUMENT_MODULE(fun_name, "dim_gnsf_nout", "irk_gnsf");
 		}
 		// assign
 		for (ii=0; ii<N; ii++)
@@ -641,17 +641,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     void *opts = ocp_nlp_opts_create(config, dims);
 
-    int nlp_solver_max_iter;
-    int nlp_solver_ext_qp_res;                bool set_nlp_solver_ext_qp_res = false;
-    int qp_solver_iter_max;                    bool set_qp_solver_iter_max = false;
-    int qp_solver_cond_N;                    bool set_qp_solver_cond_N = false;
-    int qp_solver_cond_ric_alg;                bool set_qp_solver_cond_ric_alg = false;
-    int qp_solver_ric_alg;                    bool set_qp_solver_ric_alg = false;
-    int qp_solver_warm_start;                bool set_qp_solver_warm_start = false;
-    int sim_method_num_stages;                bool set_sim_method_num_stages = false;
-    int sim_method_num_steps;                bool set_sim_method_num_steps = false;
-
-
     // nlp solver exact hessian
     bool nlp_solver_exact_hessian = false;
     c_ptr = mxArrayToString( mxGetField( matlab_opts, 0, "nlp_solver_exact_hessian" ) );
@@ -667,83 +656,88 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // nlp solver max iter
     if (mxGetField( matlab_opts, 0, "nlp_solver_max_iter" )!=NULL)
 	{
-        nlp_solver_max_iter = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_max_iter" ) );
+        int nlp_solver_max_iter = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_max_iter" ) );
         ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
 	}
+
     // nlp solver exit tolerances
-    double nlp_solver_tol_stat, nlp_solver_tol_eq, nlp_solver_tol_ineq, nlp_solver_tol_comp;
     if (mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" )!=NULL)
 	{
-        nlp_solver_tol_stat = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" ) );
+        double nlp_solver_tol_stat = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" ) );
         ocp_nlp_opts_set(config, opts, "tol_stat", &nlp_solver_tol_stat);
 	}
     if (mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" )!=NULL)
 	{
-        nlp_solver_tol_eq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" ) );
+        double nlp_solver_tol_eq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" ) );
         ocp_nlp_opts_set(config, opts, "tol_eq", &nlp_solver_tol_eq);
 	}
     if (mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" )!=NULL)
 	{
-        nlp_solver_tol_ineq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" ) );
+        double nlp_solver_tol_ineq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" ) );
         ocp_nlp_opts_set(config, opts, "tol_ineq", &nlp_solver_tol_ineq);
 	}
     if (mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" )!=NULL)
 	{
-        nlp_solver_tol_comp = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" ) );
+        double nlp_solver_tol_comp = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" ) );
         ocp_nlp_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
 	}
 
-
     // nlp solver ext qp res
     if (mxGetField( matlab_opts, 0, "nlp_solver_ext_qp_res" )!=NULL)
-        {
-        set_nlp_solver_ext_qp_res = true;
-        nlp_solver_ext_qp_res = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_ext_qp_res" ) );
-        }
-    // qp_solver
-    qp_solver = mxArrayToString( mxGetField( matlab_opts, 0, "qp_solver" ) );
+	{
+        int nlp_solver_ext_qp_res = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_ext_qp_res" ) );
+        ocp_nlp_opts_set(config, opts, "ext_qp_res", &nlp_solver_ext_qp_res);
+	}
+    // qp_solver_iter_max TODO only for hpipm !!!
     // iter_max
     if (mxGetField( matlab_opts, 0, "qp_solver_iter_max" )!=NULL)
-        {
-        set_qp_solver_iter_max = true;
-        qp_solver_iter_max = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_iter_max" ) );
-        }
+	{
+        int qp_solver_iter_max = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_iter_max" ) );
+        ocp_nlp_opts_set(config, opts, "qp_iter_max", &qp_solver_iter_max);
+	}
     // N_part_cond
     if (mxGetField( matlab_opts, 0, "qp_solver_cond_N" )!=NULL)
-        {
-        set_qp_solver_cond_N = true;
-        qp_solver_cond_N = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_cond_N" ) );
-        }
+	{
+        int qp_solver_cond_N = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_cond_N" ) );
+        ocp_nlp_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
+	}
     // cond riccati-like algorithm
     if (mxGetField( matlab_opts, 0, "qp_solver_cond_ric_alg" )!=NULL)
-        {
-        set_qp_solver_cond_ric_alg = true;
-        qp_solver_cond_ric_alg = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_cond_ric_alg" ) );
-        }
+	{
+        int qp_solver_cond_ric_alg = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_cond_ric_alg" ) );
+        ocp_nlp_opts_set(config, opts, "qp_cond_ric_alg", &qp_solver_cond_ric_alg);
+	}
     // hpipm: riccati algorithm
     if (mxGetField( matlab_opts, 0, "qp_solver_ric_alg" )!=NULL)
-        {
-        set_qp_solver_ric_alg = true;
-        qp_solver_ric_alg = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_ric_alg" ) );
-        }
+	{
+        int qp_solver_ric_alg = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_ric_alg" ) );
+        ocp_nlp_opts_set(config, opts, "qp_ric_alg", &qp_solver_ric_alg);
+	}
     // qp solver: warm start
     if (mxGetField( matlab_opts, 0, "qp_solver_warm_start" )!=NULL)
-        {
-        set_qp_solver_warm_start = true;
-        qp_solver_warm_start = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_warm_start" ) );
-        }
+	{
+        int qp_solver_warm_start = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_warm_start" ) );
+        ocp_nlp_opts_set(config, opts, "qp_warm_start", &qp_solver_warm_start);
+	}
+
     // sim_method_num_stages
     if (mxGetField( matlab_opts, 0, "sim_method_num_stages" )!=NULL)
-        {
-        set_sim_method_num_stages = true;
-        sim_method_num_stages = mxGetScalar( mxGetField( matlab_opts, 0, "sim_method_num_stages" ) );
+	{
+        int sim_method_num_stages = mxGetScalar( mxGetField( matlab_opts, 0, "sim_method_num_stages" ) );
+        for (ii=0; ii<N; ii++)
+		{
+            ocp_nlp_dynamics_opts_set(config, opts, ii, "num_stages", &sim_method_num_stages);
         }
+	}
     // sim_method_num_steps
     if (mxGetField( matlab_opts, 0, "sim_method_num_steps" )!=NULL)
+	{
+        int sim_method_num_steps = mxGetScalar( mxGetField( matlab_opts, 0, "sim_method_num_steps" ) );
+        for (ii=0; ii<N; ii++)
         {
-        set_sim_method_num_steps = true;
-        sim_method_num_steps = mxGetScalar( mxGetField( matlab_opts, 0, "sim_method_num_steps" ) );
+            ocp_nlp_dynamics_opts_set(config, opts, ii, "num_steps", &sim_method_num_steps);
         }
+	}
 
 
 
@@ -1180,54 +1174,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
 
 
-
-
-    // ext_qp_res
-    if (set_nlp_solver_ext_qp_res)
-        {
-        ocp_nlp_opts_set(config, opts, "ext_qp_res", &nlp_solver_ext_qp_res);
-        }
-    // qp_solver_iter_max TODO only for hpipm !!!
-    if (set_qp_solver_iter_max)
-        {
-        ocp_nlp_opts_set(config, opts, "qp_iter_max", &qp_solver_iter_max);
-        }
-    // qp_solver_cond_N
-    if (set_qp_solver_cond_N)
-        {
-        ocp_nlp_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
-        }
-    // qp_solver_cond_ric alg
-    if (set_qp_solver_cond_N)
-        {
-        ocp_nlp_opts_set(config, opts, "qp_cond_ric_alg", &qp_solver_cond_ric_alg);
-        }
-    // qp_solver_ric_alg TODO only for hpipm !!!
-    if (set_qp_solver_ric_alg)
-        {
-        ocp_nlp_opts_set(config, opts, "qp_ric_alg", &qp_solver_ric_alg);
-        }
-    // qp_solver_warm_start
-    if (set_qp_solver_warm_start)
-        {
-        ocp_nlp_opts_set(config, opts, "qp_warm_start", &qp_solver_warm_start);
-        }
-    // sim_method_num_stages
-    if (set_sim_method_num_stages)
-        {
-        for (ii=0; ii<N; ii++)
-            {
-            ocp_nlp_dynamics_opts_set(config, opts, ii, "num_stages", &sim_method_num_stages);
-            }
-        }
-    // sim_method_num_steps
-    if (set_sim_method_num_steps)
-        {
-        for (ii=0; ii<N; ii++)
-            {
-            ocp_nlp_dynamics_opts_set(config, opts, ii, "num_steps", &sim_method_num_steps);
-            }
-        }
 
 
 
