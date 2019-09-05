@@ -31,7 +31,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function [ model ] = inverted_pendulum_dae_model()
+function [ model ] = pendulum_dae_model()
     %% this function generates an implicit ODE / index-1 DAE model,
     % which consists of a CasADi expression f_impl_expr
     % that depends on the symbolic CasADi variables x, xdot, u, z,
@@ -46,7 +46,7 @@ function [ model ] = inverted_pendulum_dae_model()
     else % old casadi versions
         error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
     end
-    model_name_prefix = 'inv_pendulum';
+    model_name_prefix = 'pendulum_dae';
     
     %% Parameters (taken from Rien Quirynen's Master Thesis)
     % NOTE: removed torque from parameters and made it the control.

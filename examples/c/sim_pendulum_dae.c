@@ -52,7 +52,7 @@
 #include "interfaces/acados_c/sim_interface.h"
 
 // crane dae model
-#include "examples/c/inverted_pendulum_model/inverted_pendulum_model.h"
+#include "examples/c/pendulum_dae_model/pendulum_dae_model.h"
 
 // blasfeo
 #include "blasfeo/include/blasfeo_common.h"
@@ -109,54 +109,54 @@ int main()
 
     // impl_ode_fun
     external_function_param_casadi impl_ode_fun;
-    impl_ode_fun.casadi_fun = &inv_pendulum_dyn_impl_ode_fun;
-    impl_ode_fun.casadi_work = &inv_pendulum_dyn_impl_ode_fun_work;
-    impl_ode_fun.casadi_sparsity_in = &inv_pendulum_dyn_impl_ode_fun_sparsity_in;
-    impl_ode_fun.casadi_sparsity_out = &inv_pendulum_dyn_impl_ode_fun_sparsity_out;
-    impl_ode_fun.casadi_n_in = &inv_pendulum_dyn_impl_ode_fun_n_in;
-    impl_ode_fun.casadi_n_out = &inv_pendulum_dyn_impl_ode_fun_n_out;
+    impl_ode_fun.casadi_fun = &pendulum_dae_dyn_impl_ode_fun;
+    impl_ode_fun.casadi_work = &pendulum_dae_dyn_impl_ode_fun_work;
+    impl_ode_fun.casadi_sparsity_in = &pendulum_dae_dyn_impl_ode_fun_sparsity_in;
+    impl_ode_fun.casadi_sparsity_out = &pendulum_dae_dyn_impl_ode_fun_sparsity_out;
+    impl_ode_fun.casadi_n_in = &pendulum_dae_dyn_impl_ode_fun_n_in;
+    impl_ode_fun.casadi_n_out = &pendulum_dae_dyn_impl_ode_fun_n_out;
     external_function_param_casadi_create(&impl_ode_fun, 0);
 
     // impl_ode_fun_jac_x_xdot
     external_function_param_casadi impl_ode_fun_jac_x_xdot;
-    impl_ode_fun_jac_x_xdot.casadi_fun = &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot;
-    impl_ode_fun_jac_x_xdot.casadi_work = &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_work;
-    impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_sparsity_in;
-    impl_ode_fun_jac_x_xdot.casadi_sparsity_out = &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_sparsity_out;
-    impl_ode_fun_jac_x_xdot.casadi_n_in = &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_n_in;
-    impl_ode_fun_jac_x_xdot.casadi_n_out = &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_n_out;
+    impl_ode_fun_jac_x_xdot.casadi_fun = &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot;
+    impl_ode_fun_jac_x_xdot.casadi_work = &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_work;
+    impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_sparsity_in;
+    impl_ode_fun_jac_x_xdot.casadi_sparsity_out = &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_sparsity_out;
+    impl_ode_fun_jac_x_xdot.casadi_n_in = &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_n_in;
+    impl_ode_fun_jac_x_xdot.casadi_n_out = &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_n_out;
     external_function_param_casadi_create(&impl_ode_fun_jac_x_xdot, 0);
 
     // impl_ode_jac_x_xdot_u
     external_function_param_casadi impl_ode_jac_x_xdot_u;
-    impl_ode_jac_x_xdot_u.casadi_fun = &inv_pendulum_dyn_impl_ode_jac_x_xdot_u;
-    impl_ode_jac_x_xdot_u.casadi_work = &inv_pendulum_dyn_impl_ode_jac_x_xdot_u_work;
-    impl_ode_jac_x_xdot_u.casadi_sparsity_in = &inv_pendulum_dyn_impl_ode_jac_x_xdot_u_sparsity_in;
-    impl_ode_jac_x_xdot_u.casadi_sparsity_out = &inv_pendulum_dyn_impl_ode_jac_x_xdot_u_sparsity_out;
-    impl_ode_jac_x_xdot_u.casadi_n_in = &inv_pendulum_dyn_impl_ode_jac_x_xdot_u_n_in;
-    impl_ode_jac_x_xdot_u.casadi_n_out = &inv_pendulum_dyn_impl_ode_jac_x_xdot_u_n_out;
+    impl_ode_jac_x_xdot_u.casadi_fun = &pendulum_dae_dyn_impl_ode_jac_x_xdot_u;
+    impl_ode_jac_x_xdot_u.casadi_work = &pendulum_dae_dyn_impl_ode_jac_x_xdot_u_work;
+    impl_ode_jac_x_xdot_u.casadi_sparsity_in = &pendulum_dae_dyn_impl_ode_jac_x_xdot_u_sparsity_in;
+    impl_ode_jac_x_xdot_u.casadi_sparsity_out = &pendulum_dae_dyn_impl_ode_jac_x_xdot_u_sparsity_out;
+    impl_ode_jac_x_xdot_u.casadi_n_in = &pendulum_dae_dyn_impl_ode_jac_x_xdot_u_n_in;
+    impl_ode_jac_x_xdot_u.casadi_n_out = &pendulum_dae_dyn_impl_ode_jac_x_xdot_u_n_out;
     external_function_param_casadi_create(&impl_ode_jac_x_xdot_u, 0);
 
     // impl_ode_jac_x_xdot_u
     external_function_param_casadi impl_ode_fun_jac_x_xdot_u;
-    impl_ode_fun_jac_x_xdot_u.casadi_fun = &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_u;
-    impl_ode_fun_jac_x_xdot_u.casadi_work = &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_u_work;
+    impl_ode_fun_jac_x_xdot_u.casadi_fun = &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_u;
+    impl_ode_fun_jac_x_xdot_u.casadi_work = &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_u_work;
     impl_ode_fun_jac_x_xdot_u.casadi_sparsity_in =
-                            &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_u_sparsity_in;
+                            &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_u_sparsity_in;
     impl_ode_fun_jac_x_xdot_u.casadi_sparsity_out =
-                            &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_u_sparsity_out;
-    impl_ode_fun_jac_x_xdot_u.casadi_n_in = &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_u_n_in;
-    impl_ode_fun_jac_x_xdot_u.casadi_n_out = &inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_u_n_out;
+                            &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_u_sparsity_out;
+    impl_ode_fun_jac_x_xdot_u.casadi_n_in = &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_u_n_in;
+    impl_ode_fun_jac_x_xdot_u.casadi_n_out = &pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_u_n_out;
     external_function_param_casadi_create(&impl_ode_fun_jac_x_xdot_u, 0);
 
     // impl_ode_hess
     external_function_param_casadi impl_ode_hess;
-    impl_ode_hess.casadi_fun = &inv_pendulum_dyn_impl_ode_hess;
-    impl_ode_hess.casadi_work = &inv_pendulum_dyn_impl_ode_hess_work;
-    impl_ode_hess.casadi_sparsity_in = &inv_pendulum_dyn_impl_ode_hess_sparsity_in;
-    impl_ode_hess.casadi_sparsity_out = &inv_pendulum_dyn_impl_ode_hess_sparsity_out;
-    impl_ode_hess.casadi_n_in = &inv_pendulum_dyn_impl_ode_hess_n_in;
-    impl_ode_hess.casadi_n_out = &inv_pendulum_dyn_impl_ode_hess_n_out;
+    impl_ode_hess.casadi_fun = &pendulum_dae_dyn_impl_ode_hess;
+    impl_ode_hess.casadi_work = &pendulum_dae_dyn_impl_ode_hess_work;
+    impl_ode_hess.casadi_sparsity_in = &pendulum_dae_dyn_impl_ode_hess_sparsity_in;
+    impl_ode_hess.casadi_sparsity_out = &pendulum_dae_dyn_impl_ode_hess_sparsity_out;
+    impl_ode_hess.casadi_n_in = &pendulum_dae_dyn_impl_ode_hess_n_in;
+    impl_ode_hess.casadi_n_out = &pendulum_dae_dyn_impl_ode_hess_n_out;
     external_function_param_casadi_create(&impl_ode_hess, 0);
 
     /************************************************
@@ -164,52 +164,52 @@ int main()
     ************************************************/
     // phi_fun
     external_function_param_casadi phi_fun;
-    phi_fun.casadi_fun            = &inv_pendulum_dyn_gnsf_phi_fun;
-    phi_fun.casadi_work           = &inv_pendulum_dyn_gnsf_phi_fun_work;
-    phi_fun.casadi_sparsity_in    = &inv_pendulum_dyn_gnsf_phi_fun_sparsity_in;
-    phi_fun.casadi_sparsity_out   = &inv_pendulum_dyn_gnsf_phi_fun_sparsity_out;
-    phi_fun.casadi_n_in           = &inv_pendulum_dyn_gnsf_phi_fun_n_in;
-    phi_fun.casadi_n_out          = &inv_pendulum_dyn_gnsf_phi_fun_n_out;
+    phi_fun.casadi_fun            = &pendulum_dae_dyn_gnsf_phi_fun;
+    phi_fun.casadi_work           = &pendulum_dae_dyn_gnsf_phi_fun_work;
+    phi_fun.casadi_sparsity_in    = &pendulum_dae_dyn_gnsf_phi_fun_sparsity_in;
+    phi_fun.casadi_sparsity_out   = &pendulum_dae_dyn_gnsf_phi_fun_sparsity_out;
+    phi_fun.casadi_n_in           = &pendulum_dae_dyn_gnsf_phi_fun_n_in;
+    phi_fun.casadi_n_out          = &pendulum_dae_dyn_gnsf_phi_fun_n_out;
     external_function_param_casadi_create(&phi_fun, 0);
 
     // phi_fun_jac_y
     external_function_param_casadi phi_fun_jac_y;
-    phi_fun_jac_y.casadi_fun            = &inv_pendulum_dyn_gnsf_phi_fun_jac_y;
-    phi_fun_jac_y.casadi_work           = &inv_pendulum_dyn_gnsf_phi_fun_jac_y_work;
-    phi_fun_jac_y.casadi_sparsity_in    = &inv_pendulum_dyn_gnsf_phi_fun_jac_y_sparsity_in;
-    phi_fun_jac_y.casadi_sparsity_out   = &inv_pendulum_dyn_gnsf_phi_fun_jac_y_sparsity_out;
-    phi_fun_jac_y.casadi_n_in           = &inv_pendulum_dyn_gnsf_phi_fun_jac_y_n_in;
-    phi_fun_jac_y.casadi_n_out          = &inv_pendulum_dyn_gnsf_phi_fun_jac_y_n_out;
+    phi_fun_jac_y.casadi_fun            = &pendulum_dae_dyn_gnsf_phi_fun_jac_y;
+    phi_fun_jac_y.casadi_work           = &pendulum_dae_dyn_gnsf_phi_fun_jac_y_work;
+    phi_fun_jac_y.casadi_sparsity_in    = &pendulum_dae_dyn_gnsf_phi_fun_jac_y_sparsity_in;
+    phi_fun_jac_y.casadi_sparsity_out   = &pendulum_dae_dyn_gnsf_phi_fun_jac_y_sparsity_out;
+    phi_fun_jac_y.casadi_n_in           = &pendulum_dae_dyn_gnsf_phi_fun_jac_y_n_in;
+    phi_fun_jac_y.casadi_n_out          = &pendulum_dae_dyn_gnsf_phi_fun_jac_y_n_out;
     external_function_param_casadi_create(&phi_fun_jac_y, 0);
 
     // phi_jac_y_uhat
     external_function_param_casadi phi_jac_y_uhat;
-    phi_jac_y_uhat.casadi_fun                = &inv_pendulum_dyn_gnsf_phi_jac_y_uhat;
-    phi_jac_y_uhat.casadi_work               = &inv_pendulum_dyn_gnsf_phi_jac_y_uhat_work;
-    phi_jac_y_uhat.casadi_sparsity_in        = &inv_pendulum_dyn_gnsf_phi_jac_y_uhat_sparsity_in;
-    phi_jac_y_uhat.casadi_sparsity_out       = &inv_pendulum_dyn_gnsf_phi_jac_y_uhat_sparsity_out;
-    phi_jac_y_uhat.casadi_n_in               = &inv_pendulum_dyn_gnsf_phi_jac_y_uhat_n_in;
-    phi_jac_y_uhat.casadi_n_out              = &inv_pendulum_dyn_gnsf_phi_jac_y_uhat_n_out;
+    phi_jac_y_uhat.casadi_fun                = &pendulum_dae_dyn_gnsf_phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_work               = &pendulum_dae_dyn_gnsf_phi_jac_y_uhat_work;
+    phi_jac_y_uhat.casadi_sparsity_in        = &pendulum_dae_dyn_gnsf_phi_jac_y_uhat_sparsity_in;
+    phi_jac_y_uhat.casadi_sparsity_out       = &pendulum_dae_dyn_gnsf_phi_jac_y_uhat_sparsity_out;
+    phi_jac_y_uhat.casadi_n_in               = &pendulum_dae_dyn_gnsf_phi_jac_y_uhat_n_in;
+    phi_jac_y_uhat.casadi_n_out              = &pendulum_dae_dyn_gnsf_phi_jac_y_uhat_n_out;
     external_function_param_casadi_create(&phi_jac_y_uhat, 0);
 
     // f_lo_fun_jac_x1k1uz
     external_function_param_casadi f_lo_fun_jac_x1k1uz;
-    f_lo_fun_jac_x1k1uz.casadi_fun            = &inv_pendulum_dyn_gnsf_f_lo_fun_jac_x1k1uz;
-    f_lo_fun_jac_x1k1uz.casadi_work           = &inv_pendulum_dyn_gnsf_f_lo_fun_jac_x1k1uz_work;
-    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &inv_pendulum_dyn_gnsf_f_lo_fun_jac_x1k1uz_sparsity_in;
-    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &inv_pendulum_dyn_gnsf_f_lo_fun_jac_x1k1uz_sparsity_out;
-    f_lo_fun_jac_x1k1uz.casadi_n_in           = &inv_pendulum_dyn_gnsf_f_lo_fun_jac_x1k1uz_n_in;
-    f_lo_fun_jac_x1k1uz.casadi_n_out          = &inv_pendulum_dyn_gnsf_f_lo_fun_jac_x1k1uz_n_out;
+    f_lo_fun_jac_x1k1uz.casadi_fun            = &pendulum_dae_dyn_gnsf_f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_work           = &pendulum_dae_dyn_gnsf_f_lo_fun_jac_x1k1uz_work;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &pendulum_dae_dyn_gnsf_f_lo_fun_jac_x1k1uz_sparsity_in;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &pendulum_dae_dyn_gnsf_f_lo_fun_jac_x1k1uz_sparsity_out;
+    f_lo_fun_jac_x1k1uz.casadi_n_in           = &pendulum_dae_dyn_gnsf_f_lo_fun_jac_x1k1uz_n_in;
+    f_lo_fun_jac_x1k1uz.casadi_n_out          = &pendulum_dae_dyn_gnsf_f_lo_fun_jac_x1k1uz_n_out;
     external_function_param_casadi_create(&f_lo_fun_jac_x1k1uz, 0);
 
     // get_matrices_fun
     external_function_param_casadi get_matrices_fun;
-    get_matrices_fun.casadi_fun            = &inv_pendulum_dyn_gnsf_get_matrices_fun;
-    get_matrices_fun.casadi_work           = &inv_pendulum_dyn_gnsf_get_matrices_fun_work;
-    get_matrices_fun.casadi_sparsity_in    = &inv_pendulum_dyn_gnsf_get_matrices_fun_sparsity_in;
-    get_matrices_fun.casadi_sparsity_out   = &inv_pendulum_dyn_gnsf_get_matrices_fun_sparsity_out;
-    get_matrices_fun.casadi_n_in           = &inv_pendulum_dyn_gnsf_get_matrices_fun_n_in;
-    get_matrices_fun.casadi_n_out          = &inv_pendulum_dyn_gnsf_get_matrices_fun_n_out;
+    get_matrices_fun.casadi_fun            = &pendulum_dae_dyn_gnsf_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &pendulum_dae_dyn_gnsf_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &pendulum_dae_dyn_gnsf_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &pendulum_dae_dyn_gnsf_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &pendulum_dae_dyn_gnsf_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &pendulum_dae_dyn_gnsf_get_matrices_fun_n_out;
     external_function_param_casadi_create(&get_matrices_fun, 0);
 
 

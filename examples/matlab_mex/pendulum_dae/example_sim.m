@@ -70,7 +70,7 @@ u = 3.5;
 % x0 = [ 0; -length_pendulum; 0; 0; 0; 0];
 
 %% model
-model = inverted_pendulum_dae_model;
+model = pendulum_dae_model;
 disp('state')
 disp(model.sym_x)
 

@@ -10,7 +10,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else
-  #define CASADI_PREFIX(ID) inv_pendulum_dyn_impl_ode_hess_ ## ID
+  #define CASADI_PREFIX(ID) pendulum_dae_dyn_impl_ode_hess_ ## ID
 #endif
 
 #include <math.h>
@@ -54,7 +54,7 @@ static const casadi_int casadi_s3[15] = {11, 1, 0, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8
 static const casadi_int casadi_s4[3] = {0, 0, 0};
 static const casadi_int casadi_s5[33] = {18, 18, 0, 2, 4, 4, 5, 6, 8, 8, 8, 8, 8, 8, 8, 8, 8, 10, 11, 12, 12, 14, 16, 14, 15, 5, 5, 3, 4, 0, 1, 1, 0};
 
-/* inv_pendulum_dyn_impl_ode_hess:(i0[6],i1[6],i2,i3[5],i4[11],i5[])->(o0[18x18,12nz]) */
+/* pendulum_dae_dyn_impl_ode_hess:(i0[6],i1[6],i2,i3[5],i4[11],i5[])->(o0[18x18,12nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2, a3;
   a0=arg[4] ? arg[4][10] : 0;
@@ -81,21 +81,21 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT int inv_pendulum_dyn_impl_ode_hess(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
+CASADI_SYMBOL_EXPORT int pendulum_dae_dyn_impl_ode_hess(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
   return casadi_f0(arg, res, iw, w, mem);
 }
 
-CASADI_SYMBOL_EXPORT void inv_pendulum_dyn_impl_ode_hess_incref(void) {
+CASADI_SYMBOL_EXPORT void pendulum_dae_dyn_impl_ode_hess_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void inv_pendulum_dyn_impl_ode_hess_decref(void) {
+CASADI_SYMBOL_EXPORT void pendulum_dae_dyn_impl_ode_hess_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT casadi_int inv_pendulum_dyn_impl_ode_hess_n_in(void) { return 6;}
+CASADI_SYMBOL_EXPORT casadi_int pendulum_dae_dyn_impl_ode_hess_n_in(void) { return 6;}
 
-CASADI_SYMBOL_EXPORT casadi_int inv_pendulum_dyn_impl_ode_hess_n_out(void) { return 1;}
+CASADI_SYMBOL_EXPORT casadi_int pendulum_dae_dyn_impl_ode_hess_n_out(void) { return 1;}
 
-CASADI_SYMBOL_EXPORT const char* inv_pendulum_dyn_impl_ode_hess_name_in(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* pendulum_dae_dyn_impl_ode_hess_name_in(casadi_int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -107,14 +107,14 @@ CASADI_SYMBOL_EXPORT const char* inv_pendulum_dyn_impl_ode_hess_name_in(casadi_i
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* inv_pendulum_dyn_impl_ode_hess_name_out(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* pendulum_dae_dyn_impl_ode_hess_name_out(casadi_int i){
   switch (i) {
     case 0: return "o0";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_dyn_impl_ode_hess_sparsity_in(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* pendulum_dae_dyn_impl_ode_hess_sparsity_in(casadi_int i) {
   switch (i) {
     case 0: return casadi_s0;
     case 1: return casadi_s0;
@@ -126,14 +126,14 @@ CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_dyn_impl_ode_hess_sparsity_i
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_dyn_impl_ode_hess_sparsity_out(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* pendulum_dae_dyn_impl_ode_hess_sparsity_out(casadi_int i) {
   switch (i) {
     case 0: return casadi_s5;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT int inv_pendulum_dyn_impl_ode_hess_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
+CASADI_SYMBOL_EXPORT int pendulum_dae_dyn_impl_ode_hess_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 6;
   if (sz_res) *sz_res = 1;
   if (sz_iw) *sz_iw = 0;

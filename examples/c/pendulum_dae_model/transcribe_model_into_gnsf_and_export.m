@@ -37,7 +37,7 @@
 % variables x, xdot, u, z, which all togehther represent an implicit ODE/
 % index-1 DAE.
 % The expression and the variables should be provided as in the example
-% file, export_inverted_pendulum_dae_model;
+% file, export_pendulum_dae_model;
 % It will create a struct "gnsf" containing all information needed to use
 % it with the gnsf integrator in acados and can generate the neccessary C
 % functions.
@@ -68,7 +68,7 @@ transcribe_opts.generate_hess = 0;
 transcribe_opts.detect_LOS = 1;
 
 %% define f_impl
-model = export_inverted_pendulum_dae_model();
+model = export_pendulum_dae_model();
 
 %% transcribe model into gnsf & export
 [ gnsf, reordered_model] = detect_gnsf_structure(model, transcribe_opts);

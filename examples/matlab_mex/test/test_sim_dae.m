@@ -34,7 +34,7 @@
 %% test of native matlab interface
 clear VARIABLES
 
-addpath('../inverted_pendulum_dae/');
+addpath('../pendulum_dae/');
 
 i_method = 0;
 for integrator = {'irk', 'irk_gnsf'}
@@ -62,7 +62,7 @@ for integrator = {'irk', 'irk_gnsf'}
     u = 3.5;
     
     %% model
-    model = inverted_pendulum_dae_model;
+    model = pendulum_dae_model;
     % disp('state')
     % disp(model.sym_x)
     

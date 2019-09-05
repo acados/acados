@@ -37,10 +37,10 @@ clear VARIABLES;
 close all;
 
 addpath('../../../interfaces/acados_matlab/')
-addpath('../../matlab_mex/inverted_pendulum_dae/')
+addpath('../../matlab_mex/pendulum_dae/')
 
 % define model 
-model = inverted_pendulum_dae_model();
+model = pendulum_dae_model();
 model.dyn_expr_f = model.expr_f_impl;
 
 %% GNSF Model -- detect structure, reorder model, and generate C Code for

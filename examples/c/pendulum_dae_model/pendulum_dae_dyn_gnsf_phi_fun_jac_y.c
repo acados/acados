@@ -10,7 +10,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else
-  #define CASADI_PREFIX(ID) inv_pendulum_dyn_gnsf_phi_fun_jac_y_ ## ID
+  #define CASADI_PREFIX(ID) pendulum_dae_dyn_gnsf_phi_fun_jac_y_ ## ID
 #endif
 
 #include <math.h>
@@ -50,7 +50,7 @@ static const casadi_int casadi_s1[3] = {0, 0, 0};
 static const casadi_int casadi_s2[7] = {3, 1, 0, 3, 0, 1, 2};
 static const casadi_int casadi_s3[23] = {3, 8, 0, 2, 4, 5, 6, 8, 10, 11, 12, 0, 2, 0, 1, 2, 1, 1, 2, 1, 2, 0, 0};
 
-/* inv_pendulum_dyn_gnsf_phi_fun_jac_y:(i0[8],i1[],i2[])->(o0[3],o1[3x8,12nz]) */
+/* pendulum_dae_dyn_gnsf_phi_fun_jac_y:(i0[8],i1[],i2[])->(o0[3],o1[3x8,12nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2, a3, a4, a5, a6, a7, a8, a9;
   a0=arg[0] ? arg[0][7] : 0;
@@ -95,21 +95,21 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT int inv_pendulum_dyn_gnsf_phi_fun_jac_y(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
+CASADI_SYMBOL_EXPORT int pendulum_dae_dyn_gnsf_phi_fun_jac_y(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
   return casadi_f0(arg, res, iw, w, mem);
 }
 
-CASADI_SYMBOL_EXPORT void inv_pendulum_dyn_gnsf_phi_fun_jac_y_incref(void) {
+CASADI_SYMBOL_EXPORT void pendulum_dae_dyn_gnsf_phi_fun_jac_y_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void inv_pendulum_dyn_gnsf_phi_fun_jac_y_decref(void) {
+CASADI_SYMBOL_EXPORT void pendulum_dae_dyn_gnsf_phi_fun_jac_y_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT casadi_int inv_pendulum_dyn_gnsf_phi_fun_jac_y_n_in(void) { return 3;}
+CASADI_SYMBOL_EXPORT casadi_int pendulum_dae_dyn_gnsf_phi_fun_jac_y_n_in(void) { return 3;}
 
-CASADI_SYMBOL_EXPORT casadi_int inv_pendulum_dyn_gnsf_phi_fun_jac_y_n_out(void) { return 2;}
+CASADI_SYMBOL_EXPORT casadi_int pendulum_dae_dyn_gnsf_phi_fun_jac_y_n_out(void) { return 2;}
 
-CASADI_SYMBOL_EXPORT const char* inv_pendulum_dyn_gnsf_phi_fun_jac_y_name_in(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* pendulum_dae_dyn_gnsf_phi_fun_jac_y_name_in(casadi_int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -118,7 +118,7 @@ CASADI_SYMBOL_EXPORT const char* inv_pendulum_dyn_gnsf_phi_fun_jac_y_name_in(cas
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* inv_pendulum_dyn_gnsf_phi_fun_jac_y_name_out(casadi_int i){
+CASADI_SYMBOL_EXPORT const char* pendulum_dae_dyn_gnsf_phi_fun_jac_y_name_out(casadi_int i){
   switch (i) {
     case 0: return "o0";
     case 1: return "o1";
@@ -126,7 +126,7 @@ CASADI_SYMBOL_EXPORT const char* inv_pendulum_dyn_gnsf_phi_fun_jac_y_name_out(ca
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_dyn_gnsf_phi_fun_jac_y_sparsity_in(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* pendulum_dae_dyn_gnsf_phi_fun_jac_y_sparsity_in(casadi_int i) {
   switch (i) {
     case 0: return casadi_s0;
     case 1: return casadi_s1;
@@ -135,7 +135,7 @@ CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_dyn_gnsf_phi_fun_jac_y_spars
   }
 }
 
-CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_dyn_gnsf_phi_fun_jac_y_sparsity_out(casadi_int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* pendulum_dae_dyn_gnsf_phi_fun_jac_y_sparsity_out(casadi_int i) {
   switch (i) {
     case 0: return casadi_s2;
     case 1: return casadi_s3;
@@ -143,7 +143,7 @@ CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_dyn_gnsf_phi_fun_jac_y_spars
   }
 }
 
-CASADI_SYMBOL_EXPORT int inv_pendulum_dyn_gnsf_phi_fun_jac_y_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
+CASADI_SYMBOL_EXPORT int pendulum_dae_dyn_gnsf_phi_fun_jac_y_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 3;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;

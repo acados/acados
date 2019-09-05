@@ -77,7 +77,7 @@ ocp_sim_method_num_steps = 1;
 cost_type = 'linear_ls'; % linear_ls, ext_cost
 
 %% model
-model = inverted_pendulum_dae_model;
+model = pendulum_dae_model;
 
 % x0 = [1; -5; 1; 0.1; -0.5; 0.1];
 length_pendulum = 5;
