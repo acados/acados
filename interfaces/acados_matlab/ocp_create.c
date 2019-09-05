@@ -741,9 +741,126 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 
+    /* in */
+    ocp_nlp_in *in = ocp_nlp_in_create(config, dims);
 
-    // model
-    double T;        bool set_T = false;
+	// time T
+    double T;
+    if (mxGetField( matlab_model, 0, "T" )!=NULL)
+	{
+        T = mxGetScalar( mxGetField( matlab_model, 0, "T" ) );
+	}
+    else
+	{
+        MEX_MISSING_ARGUMENT(fun_name, "T");
+	}
+
+	/* discretization grid */
+    // param_scheme_shooting_nodes
+    double *param_scheme_shooting_nodes;    bool set_param_scheme_shooting_nodes = false;
+
+    // parametrization scheme
+    char *param_scheme = mxArrayToString( mxGetField( matlab_opts, 0, "param_scheme" ) );
+    if (!strcmp(param_scheme, "multiple_shooting_unif_grid"))
+    {
+        double Ts = T/N;
+        for (ii=0; ii<N; ii++)
+		{
+            ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
+            ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
+		}
+    }
+    else if (!strcmp(param_scheme, "multiple_shooting"))
+    {
+		if (mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" )!=NULL)
+		{
+			int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" ) );
+			int acados_size = N+1;
+			MEX_DIM_CHECK(fun_name, "param_scheme_shooting_nodes", matlab_size, acados_size);
+
+			param_scheme_shooting_nodes = mxGetPr( mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" ) );
+			double scale = T/(param_scheme_shooting_nodes[N]-param_scheme_shooting_nodes[0]);
+			for (ii=0; ii<N; ii++)
+			{
+				double Ts = scale*(param_scheme_shooting_nodes[ii+1]-param_scheme_shooting_nodes[ii]);
+				ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
+				ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
+			}
+        }
+		else
+		{
+			MEX_MISSING_ARGUMENT_MODULE(fun_name, "param_scheme_shooting_nodes", "multiple_shooting")
+		}
+    }
+    else
+    {
+		MEX_SOLVER_NOT_SUPPORTED(fun_name, "param_scheme", param_scheme,
+							 "multiple_shooting, multiple_shooting_unif_grid");
+    }
+
+    /* out */
+    ocp_nlp_out *out = ocp_nlp_out_create(config, dims);
+	
+    /* solver */
+    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, opts);
+
+
+    /* sens_out */
+    ocp_nlp_out *sens_out = ocp_nlp_out_create(config, dims);
+
+
+    /* populate output struct */
+    // plan
+    mxArray *plan_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(plan_mat);
+    l_ptr[0] = (long long) plan;
+    mxSetField(plhs[0], 0, "plan", plan_mat);
+
+    // config
+    mxArray *config_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(config_mat);
+    l_ptr[0] = (long long) config;
+    mxSetField(plhs[0], 0, "config", config_mat);
+
+    // dims
+    mxArray *dims_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(dims_mat);
+    l_ptr[0] = (long long) dims;
+    mxSetField(plhs[0], 0, "dims", dims_mat);
+
+    // opts
+    mxArray *opts_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(opts_mat);
+    l_ptr[0] = (long long) opts;
+    mxSetField(plhs[0], 0, "opts", opts_mat);
+
+    // in
+    mxArray *in_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(in_mat);
+    l_ptr[0] = (long long) in;
+    mxSetField(plhs[0], 0, "in", in_mat);
+
+    // out
+    mxArray *out_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(out_mat);
+    l_ptr[0] = (long long) out;
+    mxSetField(plhs[0], 0, "out", out_mat);
+
+    // solver
+    mxArray *solver_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(solver_mat);
+    l_ptr[0] = (long long) solver;
+    mxSetField(plhs[0], 0, "solver", solver_mat);
+
+    // sens_out
+    mxArray *sens_out_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(sens_out_mat);
+    l_ptr[0] = (long long) sens_out;
+    mxSetField(plhs[0], 0, "sens_out", sens_out_mat);
+
+	/* NUMERICAL DATA */
+	// TODO: use ocp_set for these guys
+
     // cost
     double *Vu;        bool set_Vu = false;
     double *Vx;        bool set_Vx = false;
@@ -805,27 +922,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // trajectory initialization
     double *x_init; bool set_x_init = false;
     double *u_init; bool set_u_init = false;
-
-    // dims
-    // T
-    if (mxGetField( matlab_model, 0, "T" )!=NULL)
-        {
-        set_T = true;
-        T = mxGetScalar( mxGetField( matlab_model, 0, "T" ) );
-        }
-    else
-        {
-        mexPrintf("\nerror: ocp_create: T not set!\n");
-        return;
-        }
-
-
-
-
-
-
-
-
 
 
     // Vu
@@ -1178,50 +1274,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 
-    /* in */
 
-    ocp_nlp_in *in = ocp_nlp_in_create(config, dims);
-
-    // param_scheme_shooting_nodes
-    double *param_scheme_shooting_nodes;    bool set_param_scheme_shooting_nodes = false;
-    if (mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" )!=NULL)
-	{
-        set_param_scheme_shooting_nodes = true;
-        param_scheme_shooting_nodes = mxGetPr( mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" ) );
-	}
-
-    // shooting nodes
-    // parametrization scheme
-    char *param_scheme = mxArrayToString( mxGetField( matlab_opts, 0, "param_scheme" ) );
-    if (!strcmp(param_scheme, "multiple_shooting_unif_grid"))
-    {
-        double Ts = T/N;
-        for (ii=0; ii<N; ii++)
-       {
-            ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
-            ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
-       }
-    }
-    else if (!strcmp(param_scheme, "multiple_shooting"))
-    {
-        if (!set_param_scheme_shooting_nodes)
-        {
-            mexPrintf("\nerror: ocp_create: param_scheme_shooting_nodes not set for param_scheme multiple_shooting!\n");
-            return;
-        }
-        double scale = T/(param_scheme_shooting_nodes[N]-param_scheme_shooting_nodes[0]);
-        for (ii=0; ii<N; ii++)
-       {
-            double Ts = scale*(param_scheme_shooting_nodes[ii+1]-param_scheme_shooting_nodes[ii]);
-            ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
-            ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
-       }
-    }
-    else
-    {
-        mexPrintf("\nerror: ocp_create: param_scheme not supported: %s\n");
-        return;
-    }
 
     // cost: ls
     if (!strcmp(cost_type, "linear_ls"))
@@ -1800,9 +1853,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 
-    /* out */
 
-    ocp_nlp_out *out = ocp_nlp_out_create(config, dims);
 
     if (set_x_init)
         {
@@ -1838,65 +1889,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
 
 
-    /* solver */
-    ocp_nlp_solver *solver = ocp_nlp_solver_create(config, dims, opts);
-
-
-    /* sens_out */
-    ocp_nlp_out *sens_out = ocp_nlp_out_create(config, dims);
-
-
-    /* populate output struct */
-    // plan
-    mxArray *plan_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(plan_mat);
-    l_ptr[0] = (long long) plan;
-    mxSetField(plhs[0], 0, "plan", plan_mat);
-
-    // config
-    mxArray *config_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(config_mat);
-    l_ptr[0] = (long long) config;
-    mxSetField(plhs[0], 0, "config", config_mat);
-
-    // dims
-    mxArray *dims_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(dims_mat);
-    l_ptr[0] = (long long) dims;
-    mxSetField(plhs[0], 0, "dims", dims_mat);
-
-    // opts
-    mxArray *opts_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(opts_mat);
-    l_ptr[0] = (long long) opts;
-    mxSetField(plhs[0], 0, "opts", opts_mat);
-
-    // in
-    mxArray *in_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(in_mat);
-    l_ptr[0] = (long long) in;
-    mxSetField(plhs[0], 0, "in", in_mat);
-
-    // out
-    mxArray *out_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(out_mat);
-    l_ptr[0] = (long long) out;
-    mxSetField(plhs[0], 0, "out", out_mat);
-
-    // solver
-    mxArray *solver_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(solver_mat);
-    l_ptr[0] = (long long) solver;
-    mxSetField(plhs[0], 0, "solver", solver_mat);
-
-    // sens_out
-    mxArray *sens_out_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(sens_out_mat);
-    l_ptr[0] = (long long) sens_out;
-    mxSetField(plhs[0], 0, "sens_out", sens_out_mat);
-
-
     return;
 
 }
-
