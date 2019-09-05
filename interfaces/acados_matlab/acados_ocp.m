@@ -85,7 +85,6 @@ classdef acados_ocp < handle
 		end
 
 
-
 		function solve(obj)
 			ocp_solve(obj.C_ocp);
 		end
@@ -97,10 +96,6 @@ classdef acados_ocp < handle
 		end
 
 
-
-%		function set(obj, field, value)
-%			ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
-%		end
 		function set(varargin)
 			if nargin==3
 				obj = varargin{1};
