@@ -657,7 +657,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     c_ptr = mxArrayToString( mxGetField( matlab_opts, 0, "nlp_solver_exact_hessian" ) );
 	MEX_STR_TO_BOOL(fun_name, c_ptr, &nlp_solver_exact_hessian, "nlp_solver_exact_hessian");
 	// TODO: check if possible: e.g. not with irk_gnsf
-	ocp_nlp_opts_set(config, opts, "exact_hess", &nlp_solver_exact_hessian);
+	// TODO: this if should not be needed! however, calling the setter with false leads to weird behavior. Investigate!
+    if (nlp_solver_exact_hessian)
+	{
+        ocp_nlp_opts_set(config, opts, "exact_hess", &nlp_solver_exact_hessian);
+	}
 
 
     // nlp solver max iter
