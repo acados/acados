@@ -58,8 +58,6 @@ model_name = 'inv_pend_dae';
 % x0 = [1; -5; 1; 0.1; -0.5; 0.1];
 % x0 = zeros(nx, 1); %
 length_pendulum = 5;
-% steady state
-% x0 = [ 0; -length_pendulum; 0; 0; 0; 0];
 
 alpha0 = .01;
 xp0 = length_pendulum * sin(alpha0);
@@ -67,6 +65,9 @@ yp0 = - length_pendulum * cos(alpha0);
 x0 = [ xp0; yp0; alpha0; 0; 0; 0];
 
 u = 3.5;
+
+% steady state
+% x0 = [ 0; -length_pendulum; 0; 0; 0; 0];
 
 %% model
 model = inverted_pendulum_dae_model;

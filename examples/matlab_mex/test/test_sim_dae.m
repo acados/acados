@@ -51,10 +51,15 @@ for integrator = {'irk', 'irk_gnsf'}
     num_stages = 3;
     num_steps = 3;
     newton_iter = 3;
-    model_name = ['inv_pend_dae' method];
+    model_name = ['inv_pend_dae_' method];
 
-    x0 = [1; -5; 1; 0.1; -0.5; 0.1];
-    u = 1;
+    length_pendulum = 5;
+    alpha0 = .01;
+    xp0 = length_pendulum * sin(alpha0);
+    yp0 = - length_pendulum * cos(alpha0);
+    x0 = [ xp0; yp0; alpha0; 0; 0; 0];
+
+    u = 3.5;
     
     %% model
     model = inverted_pendulum_dae_model;
@@ -152,7 +157,7 @@ for integrator = {'irk', 'irk_gnsf'}
     z = sim.get('zn')'; % approximate value of algebraic variables at start of simulation
     S_alg = sim.get('S_algebraic'); % sensitivities of algebraic variables z
 
-
+    required_accuracy = 1e-13;
     if i_method == 1
         % store solution as reference
         x_sim_ref = x_sim;
@@ -167,9 +172,9 @@ for integrator = {'irk', 'irk_gnsf'}
         err_z = norm(z - z_ref)
         err_S_alg = norm(S_alg - S_alg_ref)
         err = max([err_x, err_S_forw, err_S_adj, err_z, err_S_alg]);
-        if max(err > 1e-14 )
-            error(strcat('test_sim_dae FAIL: error too large: \n',...
-                'for integrator:\t', method));
+        if max(err > required_accuracy )
+            error(strcat('test_sim_dae FAIL: error larger than required accuracy:',...
+                num2str(required_accuracy), ' for integrator: ', method));
         end
     end
 
