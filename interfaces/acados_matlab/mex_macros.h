@@ -87,7 +87,9 @@
         *bool_ptr = false;\
 	else \
 	{\
-		sprintf(buffer, "%s error casting field %s to bool, contains %s!", fun_name, name);\
+		sprintf(buffer,\
+		   "%s error casting field %s to bool, contains %s! possible values \'true\', \'false\'",\
+		    fun_name, name, str);\
 		mexErrMsgTxt(buffer);\
 	}\
 }

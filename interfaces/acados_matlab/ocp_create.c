@@ -627,25 +627,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			ns, nsbx, nsg_e, nsh_e);
         mexErrMsgTxt(buffer);
 	}
+
+	i_ptr = (int *) malloc((N+1)*sizeof(int));
     // TODO fix stage 0 !!!!!!!!
     i_ptr[0] = nsbu+nsg+nsh; // XXX not nsbx !!!!!!!!!!
     for (ii=1; ii<N; ii++)
         i_ptr[ii] = ns;
     i_ptr[N] = ns_e;
     ocp_nlp_dims_set_opt_vars(config, dims, "ns", i_ptr);
-
+	free(i_ptr);
 
     /* opts */
 
     void *opts = ocp_nlp_opts_create(config, dims);
 
-    double *param_scheme_shooting_nodes;    bool set_param_scheme_shooting_nodes = false;
-    bool nlp_solver_exact_hessian;
-    int nlp_solver_max_iter;                bool set_nlp_solver_max_iter = false;
-    double nlp_solver_tol_stat;                bool set_nlp_solver_tol_stat = false;
-    double nlp_solver_tol_eq;                bool set_nlp_solver_tol_eq = false;
-    double nlp_solver_tol_ineq;                bool set_nlp_solver_tol_ineq = false;
-    double nlp_solver_tol_comp;                bool set_nlp_solver_tol_comp = false;
+    int nlp_solver_max_iter;
     int nlp_solver_ext_qp_res;                bool set_nlp_solver_ext_qp_res = false;
     int qp_solver_iter_max;                    bool set_qp_solver_iter_max = false;
     int qp_solver_cond_N;                    bool set_qp_solver_cond_N = false;
@@ -655,46 +651,45 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int sim_method_num_stages;                bool set_sim_method_num_stages = false;
     int sim_method_num_steps;                bool set_sim_method_num_steps = false;
 
-    // param_scheme_shooting_nodes
-    if (mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" )!=NULL)
-        {
-        set_param_scheme_shooting_nodes = true;
-        param_scheme_shooting_nodes = mxGetPr( mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" ) );
-        }
+
     // nlp solver exact hessian
-    nlp_solver_exact_hessian = false;
+    bool nlp_solver_exact_hessian = false;
     c_ptr = mxArrayToString( mxGetField( matlab_opts, 0, "nlp_solver_exact_hessian" ) );
-    if (!strcmp(c_ptr, "true"))
-        {
-        nlp_solver_exact_hessian = true;
-        }
+	MEX_STR_TO_BOOL(fun_name, c_ptr, &nlp_solver_exact_hessian, "nlp_solver_exact_hessian");
+	// TODO: check if possible: e.g. not with irk_gnsf
+	ocp_nlp_opts_set(config, opts, "exact_hess", &nlp_solver_exact_hessian);
+
+
     // nlp solver max iter
     if (mxGetField( matlab_opts, 0, "nlp_solver_max_iter" )!=NULL)
-        {
-        set_nlp_solver_max_iter = true;
+	{
         nlp_solver_max_iter = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_max_iter" ) );
-        }
+        ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
+	}
     // nlp solver exit tolerances
+    double nlp_solver_tol_stat, nlp_solver_tol_eq, nlp_solver_tol_ineq, nlp_solver_tol_comp;
     if (mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" )!=NULL)
-        {
-        set_nlp_solver_tol_stat = true;
+	{
         nlp_solver_tol_stat = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" ) );
-        }
+        ocp_nlp_opts_set(config, opts, "tol_stat", &nlp_solver_tol_stat);
+	}
     if (mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" )!=NULL)
-        {
-        set_nlp_solver_tol_eq = true;
+	{
         nlp_solver_tol_eq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" ) );
-        }
+        ocp_nlp_opts_set(config, opts, "tol_eq", &nlp_solver_tol_eq);
+	}
     if (mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" )!=NULL)
-        {
-        set_nlp_solver_tol_ineq = true;
+	{
         nlp_solver_tol_ineq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" ) );
-        }
+        ocp_nlp_opts_set(config, opts, "tol_ineq", &nlp_solver_tol_ineq);
+	}
     if (mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" )!=NULL)
-        {
-        set_nlp_solver_tol_comp = true;
+	{
         nlp_solver_tol_comp = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" ) );
-        }
+        ocp_nlp_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
+	}
+
+
     // nlp solver ext qp res
     if (mxGetField( matlab_opts, 0, "nlp_solver_ext_qp_res" )!=NULL)
         {
@@ -1183,37 +1178,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 
-    // nlp solver exact hessian
-//    printf("\nexact hess %d\n", nlp_solver_exact_hessian);
-    if (nlp_solver_exact_hessian)
-        {
-        ocp_nlp_opts_set(config, opts, "exact_hess", &nlp_solver_exact_hessian);
-        }
-    // nlp_solver_max_iter
-    if (set_nlp_solver_max_iter)
-        {
-        ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
-        }
-    // nlp_solver_tol_stat
-    if (set_nlp_solver_tol_stat)
-        {
-        ocp_nlp_opts_set(config, opts, "tol_stat", &nlp_solver_tol_stat);
-        }
-    // nlp_solver_tol_eq
-    if (set_nlp_solver_tol_eq)
-        {
-        ocp_nlp_opts_set(config, opts, "tol_eq", &nlp_solver_tol_eq);
-        }
-    // nlp_solver_tol_ineq
-    if (set_nlp_solver_tol_ineq)
-        {
-        ocp_nlp_opts_set(config, opts, "tol_ineq", &nlp_solver_tol_ineq);
-        }
-    // nlp_solver_tol_comp
-    if (set_nlp_solver_tol_comp)
-        {
-        ocp_nlp_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
-        }
     // ext_qp_res
     if (set_nlp_solver_ext_qp_res)
         {
@@ -1268,6 +1232,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     ocp_nlp_in *in = ocp_nlp_in_create(config, dims);
 
+    // param_scheme_shooting_nodes
+    double *param_scheme_shooting_nodes;    bool set_param_scheme_shooting_nodes = false;
+    if (mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" )!=NULL)
+	{
+        set_param_scheme_shooting_nodes = true;
+        param_scheme_shooting_nodes = mxGetPr( mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" ) );
+	}
+
     // shooting nodes
     // parametrization scheme
     char *param_scheme = mxArrayToString( mxGetField( matlab_opts, 0, "param_scheme" ) );
@@ -1283,10 +1255,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (!strcmp(param_scheme, "multiple_shooting"))
     {
         if (!set_param_scheme_shooting_nodes)
-       {
+        {
             mexPrintf("\nerror: ocp_create: param_scheme_shooting_nodes not set for param_scheme multiple_shooting!\n");
             return;
-       }
+        }
         double scale = T/(param_scheme_shooting_nodes[N]-param_scheme_shooting_nodes[0]);
         for (ii=0; ii<N; ii++)
        {
