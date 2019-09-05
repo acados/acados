@@ -101,7 +101,7 @@ make install -j4
 pip3 install <acados_root>/interfaces/acados_template
 ```
 
-(Notice that, of course, you'll have to use `pip` instead, if you run from within a Python virtual 
+(Notice that, of course, you might need to use `pip` instead, if you run, for example, from within a Python virtual 
 environment) You should now be able to import it as a Python module and use it as shown in the examples in `<acados_root>/examples/acados_template/python/<example_name>/generate_c_code.py`
 
 For more information contact `@zanellia`
