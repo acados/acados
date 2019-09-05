@@ -33,6 +33,7 @@ extern "C" {
 #define casadi_s5 CASADI_PREFIX(s5)
 #define casadi_s6 CASADI_PREFIX(s6)
 #define casadi_s7 CASADI_PREFIX(s7)
+#define casadi_s8 CASADI_PREFIX(s8)
 
 /* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
@@ -55,10 +56,11 @@ static const casadi_int casadi_s2[14] = {10, 1, 0, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8
 static const casadi_int casadi_s3[36] = {10, 3, 0, 10, 20, 30, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 static const casadi_int casadi_s4[113] = {10, 10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 static const casadi_int casadi_s5[48] = {8, 5, 0, 8, 16, 24, 32, 40, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7};
-static const casadi_int casadi_s6[15] = {1, 6, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0};
-static const casadi_int casadi_s7[13] = {1, 5, 0, 1, 2, 3, 4, 5, 0, 0, 0, 0, 0};
+static const casadi_int casadi_s6[4] = {0, 1, 0, 0};
+static const casadi_int casadi_s7[15] = {1, 6, 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0};
+static const casadi_int casadi_s8[13] = {1, 5, 0, 1, 2, 3, 4, 5, 0, 0, 0, 0, 0};
 
-/* inv_pendulum_dyn_gnsf_get_matrices_fun:(i0)->(o0[10x5],o1[10],o2[10x3],o3[10x10],o4[8x5],o5[8x5],o6[8x5],o7,o8,o9[10],o10,o11,o12,o13,o14[1x6],o15[1x5],o16) */
+/* inv_pendulum_dyn_gnsf_get_matrices_fun:(i0)->(o0[10x5],o1[10],o2[10x3],o3[10x10],o4[8x5],o5[8x5],o6[8x5],o7[0],o8,o9[10],o10,o11,o12,o13,o14[1x6],o15[1x5],o16) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2, a3, a4;
   a0=0.;
@@ -120,8 +122,8 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[1]!=0) res[1][4]=a0;
   if (res[1]!=0) res[1][5]=a0;
   if (res[1]!=0) res[1][6]=a0;
-  if (res[1]!=0) res[1][7]=a0;
-  if (res[1]!=0) res[1][8]=a1;
+  if (res[1]!=0) res[1][7]=a1;
+  if (res[1]!=0) res[1][8]=a0;
   if (res[1]!=0) res[1][9]=a0;
   if (res[2]!=0) res[2][0]=a0;
   if (res[2]!=0) res[2][1]=a0;
@@ -376,7 +378,6 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[6]!=0) res[6][37]=a0;
   if (res[6]!=0) res[6][38]=a0;
   if (res[6]!=0) res[6][39]=a2;
-  if (res[7]!=0) res[7][0]=a2;
   if (res[8]!=0) res[8][0]=a0;
   if (res[9]!=0) res[9][0]=a0;
   if (res[9]!=0) res[9][1]=a0;
@@ -472,15 +473,15 @@ CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_dyn_gnsf_get_matrices_fun_sp
     case 4: return casadi_s5;
     case 5: return casadi_s5;
     case 6: return casadi_s5;
-    case 7: return casadi_s0;
+    case 7: return casadi_s6;
     case 8: return casadi_s0;
     case 9: return casadi_s2;
     case 10: return casadi_s0;
     case 11: return casadi_s0;
     case 12: return casadi_s0;
     case 13: return casadi_s0;
-    case 14: return casadi_s6;
-    case 15: return casadi_s7;
+    case 14: return casadi_s7;
+    case 15: return casadi_s8;
     case 16: return casadi_s0;
     default: return 0;
   }

@@ -49,11 +49,11 @@ function [ model ] = inverted_pendulum_dae_model()
     model_name_prefix = 'inv_pendulum';
     
     %% Parameters (taken from Rien Quirynen's Master Thesis)
-    m = 2;
-    g = 9.81;
-    M = 3.5;
-    I = 0.1;
-    
+    % NOTE: removed torque from parameters and made it the control.
+    m = 2;  % mass
+    g = 9.81; % grav const
+    I = 0.1; % moment of inertia
+
     %% Set up States & Controls
     xpos    = SX.sym('xpos');     % Differential States
     ypos    = SX.sym('ypos');
@@ -70,7 +70,7 @@ function [ model ] = inverted_pendulum_dae_model()
     Fy      = SX.sym('Fy');
     z = vertcat(ax, ay, aalpha, Fx, Fy);
     
-    u       = SX.sym('u');  % Controls
+    u       = SX.sym('u');  % Controls % applied torque
     
     %% xdot
     xpos_dot    = SX.sym('xpos_dot');     % Differential States
@@ -91,9 +91,9 @@ function [ model ] = inverted_pendulum_dae_model()
                      vx_dot - ax, ...
                      vy_dot - ay, ...
                      valpha_dot - aalpha, ...
-                     m * ax - (Fx + u), ...
+                     m * ax - Fx, ...
                      m * ay + m * g - Fy, ...
-                     I * aalpha - M - (Fx + u) * ypos + Fy * xpos, ...
+                     I * aalpha - u - Fx * ypos + Fy * xpos, ...
                      ax + vy * valpha + ypos * aalpha, ...
                      ay - vx * valpha - xpos * aalpha);
     

@@ -37,6 +37,7 @@ clear VARIABLES;
 close all;
 
 addpath('../../../interfaces/acados_matlab/')
+addpath('../../matlab_mex/inverted_pendulum_dae/')
 
 % define model 
 model = inverted_pendulum_dae_model();

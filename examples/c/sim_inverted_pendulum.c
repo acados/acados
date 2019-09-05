@@ -79,25 +79,24 @@ int main()
     int ny    = 8;
     int nuhat = 1;
 
-	int nsim = 1000;
+	int nsim = 100;
 
     // generate x0, u_sim
     double x0[nx];
     double u_sim[nu];
 
-    x0[0] =  1.0000;  // xpos
-    x0[1] = -5.0000;  // ypos
-    x0[2] =  1.0000;  // alpha
-    x0[3] =  0.1000;  // vx
-    x0[4] = -0.5000;  // vy
-    x0[5] =  0.1000;  // valpha
+    x0[0] =  0.049999166670833;  // xpos
+    x0[1] = -4.999750002083326;  // ypos
+    x0[2] = 0.010000000000000;  // alpha
+    x0[3] =  0.0;  // vx
+    x0[4] =  0.0;  // vy
+    x0[5] =  0.0;  // valpha
 
-
-    u_sim[0] = 1;
+    u_sim[0] = 3.5;
 
     int NF = nx + nu;  // columns of forward seed
 
-    double T = 0.01;
+    double T = 0.1;
 
 	double *x_sim = malloc(sizeof(double)*nx*(nsim+1));
 

@@ -29,7 +29,6 @@ extern "C" {
 #define casadi_s1 CASADI_PREFIX(s1)
 #define casadi_s2 CASADI_PREFIX(s2)
 #define casadi_s3 CASADI_PREFIX(s3)
-#define casadi_s4 CASADI_PREFIX(s4)
 
 /* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
@@ -47,12 +46,11 @@ extern "C" {
 #endif
 
 static const casadi_int casadi_s0[12] = {8, 1, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7};
-static const casadi_int casadi_s1[5] = {1, 1, 0, 1, 0};
-static const casadi_int casadi_s2[3] = {0, 0, 0};
-static const casadi_int casadi_s3[23] = {3, 8, 0, 2, 4, 5, 6, 8, 10, 11, 12, 0, 2, 0, 1, 2, 1, 1, 2, 1, 2, 0, 0};
-static const casadi_int casadi_s4[5] = {3, 1, 0, 1, 0};
+static const casadi_int casadi_s1[3] = {0, 0, 0};
+static const casadi_int casadi_s2[23] = {3, 8, 0, 2, 4, 5, 6, 8, 10, 11, 12, 0, 2, 0, 1, 2, 1, 1, 2, 1, 2, 0, 0};
+static const casadi_int casadi_s3[3] = {3, 0, 0};
 
-/* inv_pendulum_dyn_gnsf_phi_jac_y_uhat:(i0[8],i1,i2[])->(o0[3x8,12nz],o1[3x1,1nz]) */
+/* inv_pendulum_dyn_gnsf_phi_jac_y_uhat:(i0[8],i1[],i2[])->(o0[3x8,12nz],o1[3x0]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2;
   a0=arg[0] ? arg[0][7] : 0;
@@ -61,8 +59,6 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a1=(-a0);
   if (res[0]!=0) res[0][1]=a1;
   a1=arg[0] ? arg[0][6] : 0;
-  a2=arg[1] ? arg[1][0] : 0;
-  a1=(a1+a2);
   a1=(-a1);
   if (res[0]!=0) res[0][2]=a1;
   if (res[0]!=0) res[0][3]=a0;
@@ -80,11 +76,9 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a1=arg[0] ? arg[0][0] : 0;
   a2=(-a1);
   if (res[0]!=0) res[0][9]=a2;
-  a2=(-a0);
-  if (res[0]!=0) res[0][10]=a2;
-  if (res[0]!=0) res[0][11]=a1;
   a0=(-a0);
-  if (res[1]!=0) res[1][0]=a0;
+  if (res[0]!=0) res[0][10]=a0;
+  if (res[0]!=0) res[0][11]=a1;
   return 0;
 }
 
@@ -123,15 +117,15 @@ CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_dyn_gnsf_phi_jac_y_uhat_spar
   switch (i) {
     case 0: return casadi_s0;
     case 1: return casadi_s1;
-    case 2: return casadi_s2;
+    case 2: return casadi_s1;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT const casadi_int* inv_pendulum_dyn_gnsf_phi_jac_y_uhat_sparsity_out(casadi_int i) {
   switch (i) {
-    case 0: return casadi_s3;
-    case 1: return casadi_s4;
+    case 0: return casadi_s2;
+    case 1: return casadi_s3;
     default: return 0;
   }
 }

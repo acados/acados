@@ -56,9 +56,9 @@ static const casadi_int casadi_s3[3] = {0, 0, 0};
 static const casadi_int casadi_s4[15] = {11, 1, 0, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 static const casadi_int casadi_s5[20] = {11, 6, 0, 2, 4, 4, 6, 8, 11, 8, 10, 8, 9, 0, 10, 1, 9, 2, 9, 10};
 static const casadi_int casadi_s6[15] = {11, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5};
-static const casadi_int casadi_s7[6] = {11, 1, 0, 2, 6, 8};
+static const casadi_int casadi_s7[5] = {11, 1, 0, 1, 8};
 
-/* inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_u:(i0[6],i1[6],i2,i3[5],i4[])->(o0[11],o1[11x6,11nz],o2[11x6,6nz],o3[11x1,2nz]) */
+/* inv_pendulum_dyn_impl_ode_fun_jac_x_xdot_u:(i0[6],i1[6],i2,i3[5],i4[])->(o0[11],o1[11x6,11nz],o2[11x6,6nz],o3[11x1,1nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a10, a11, a2, a3, a4, a5, a6, a7, a8, a9;
   a0=arg[1] ? arg[1][0] : 0;
@@ -88,9 +88,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a0=2.;
   a7=(a0*a4);
   a8=arg[3] ? arg[3][3] : 0;
-  a9=arg[2] ? arg[2][0] : 0;
-  a10=(a8+a9);
-  a7=(a7-a10);
+  a7=(a7-a8);
   if (res[0]!=0) res[0][6]=a7;
   a0=(a0*a5);
   a7=1.9620000000000001e+01;
@@ -100,9 +98,8 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[0]!=0) res[0][7]=a0;
   a0=1.0000000000000001e-01;
   a0=(a0*a6);
-  a10=3.5000000000000000e+00;
-  a0=(a0-a10);
-  a8=(a8+a9);
+  a9=arg[2] ? arg[2][0] : 0;
+  a0=(a0-a9);
   a9=arg[0] ? arg[0][1] : 0;
   a10=(a8*a9);
   a0=(a0-a10);
@@ -112,8 +109,8 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[0]!=0) res[0][8]=a0;
   a0=(a2*a3);
   a4=(a4+a0);
-  a0=(a9*a6);
-  a4=(a4+a0);
+  a9=(a9*a6);
+  a4=(a4+a9);
   if (res[0]!=0) res[0][9]=a4;
   a4=(a1*a3);
   a5=(a5-a4);
@@ -144,8 +141,6 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   if (res[2]!=0) res[2][4]=a1;
   if (res[2]!=0) res[2][5]=a1;
   if (res[3]!=0) res[3][0]=a6;
-  a9=(-a9);
-  if (res[3]!=0) res[3][1]=a9;
   return 0;
 }
 

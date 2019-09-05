@@ -31,8 +31,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-%% test of native matlab interface
-clear VARIABLES
+clear all
 
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
@@ -42,9 +41,10 @@ if (~strcmp(env_run, 'true'))
 	return;
 end
 
-%% arguments
+%% options
 compile_mex = 'true'; % true, false
-codgen_model = 'true'; % true, false
+% codgen_model = 'true'; % true, false
+codgen_model = 'true';
 gnsf_detect_struct = 'true'; % true, false
 method = 'irk'; % irk, irk_gnsf, [erk]
 sens_forw = 'true'; % true, false
@@ -54,8 +54,19 @@ num_steps = 3;
 newton_iter = 3;
 model_name = 'inv_pend_dae';
 
-x0 = [1; -5; 1; 0.1; -0.5; 0.1];
-u = 1;
+% x = [xpos, ypos, alpha, vx, vy, valpha]
+% x0 = [1; -5; 1; 0.1; -0.5; 0.1];
+% x0 = zeros(nx, 1); %
+length_pendulum = 5;
+% steady state
+% x0 = [ 0; -length_pendulum; 0; 0; 0; 0];
+
+alpha0 = .01;
+xp0 = length_pendulum * sin(alpha0);
+yp0 = - length_pendulum * cos(alpha0);
+x0 = [ xp0; yp0; alpha0; 0; 0; 0];
+
+u = 3.5;
 
 %% model
 model = inverted_pendulum_dae_model;
@@ -69,7 +80,7 @@ nz = length(model.sym_z);
 %% acados sim model
 sim_model = acados_sim_model();
 sim_model.set('name', model_name);
-sim_model.set('T', 0.01); % simulation time
+sim_model.set('T', 0.1); % simulation time
 
 sim_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
@@ -114,7 +125,7 @@ end
 % create integrator
 sim = acados_sim(sim_model, sim_opts);
 
-N_sim = 1000;
+N_sim = 100;
 
 x_sim = zeros(nx, N_sim+1);
 x_sim(:,1) = x0;
@@ -161,21 +172,44 @@ for ii=1:N_sim
 	S_forw = sim.get('S_forw');
 	Sx = sim.get('Sx');
 	Su = sim.get('Su');
-	
+
 end
 format short e
-xfinal = sim.get('xn')'
-S_forw
-S_adj = sim.get('S_adj')'
-z = sim.get('zn')' % approximate value of algebraic variables at start of simulation
-S_alg = sim.get('S_algebraic') % sensitivities of algebraic variables z
+xfinal = sim.get('xn')';
+S_adj = sim.get('S_adj')';
+z = sim.get('zn')'; % approximate value of algebraic variables at start of simulation
+S_alg = sim.get('S_algebraic'); % sensitivities of algebraic variables z
 
 simulation_time = toc
 
 
-figure(2);
-plot(1:N_sim+1, x_sim);
-legend('xpos', 'ypos', 'alpha', 'vx', 'vy', 'valpha');
+figure;
+Nsub = 4;
+subplot(Nsub, 1, 1);
+plot(1:N_sim+1, x_sim(1,:));
+legend('xpos');
 
-waitforbuttonpress;
+subplot(Nsub, 1, 2);
+plot(1:N_sim+1, x_sim(2,:));
+legend('ypos');
+
+subplot(Nsub, 1, 3);
+plot(1:N_sim+1, x_sim(3,:));
+legend('alpha')
+
+subplot(Nsub, 1, 4);
+plot(1:N_sim+1, x_sim(4:6,:));
+legend('vx', 'vy', 'valpha');
+
+if is_octave()
+    waitforbuttonpress;
+end
+
+% check consistency
+xp = x_sim(1,:);
+yp = x_sim(2,:);
+check = xp.^2 + yp.^2 - length_pendulum^2;
+if any( max(abs(check)) > 1e-10 )
+    disp('note: check for constant pendulum length failed');
+end
 
