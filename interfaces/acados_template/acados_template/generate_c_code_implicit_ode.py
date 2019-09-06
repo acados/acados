@@ -149,6 +149,9 @@ def generate_c_code_implicit_ode( model, opts ):
         impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat], [HESS_multiplied])
 
     # generate C code
+    if not os.path.exists('c_generated_code'):
+        os.mkdir('c_generated_code')
+
     os.chdir('c_generated_code')
     model_dir = model_name + '_model'
     if not os.path.exists(model_dir):
