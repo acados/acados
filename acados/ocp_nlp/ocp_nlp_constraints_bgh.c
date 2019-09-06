@@ -1022,8 +1022,8 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
     int nh = dims->nh;
     int ns = dims->ns;
 
-    ext_fun_arg_t ext_fun_type_in[4];
-    void *ext_fun_in[4];
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
     ext_fun_arg_t ext_fun_type_out[3];
     void *ext_fun_out[3];
 

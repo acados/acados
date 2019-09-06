@@ -52,7 +52,7 @@
 #include "simple_dae_model/simple_dae_model.h"
 #include "simple_dae_model/simple_dae_constr.h"
 
-#define FORMULATION 1 
+#define FORMULATION 2
 // 0: without Vz*z term 
 // 1: with Vz*z and without Vx*x 
 // 2: same as (1) + nonlinear constraint on z: h(x,u,z(x,u)) = z_1^2 + z_2^2 \leq 1
