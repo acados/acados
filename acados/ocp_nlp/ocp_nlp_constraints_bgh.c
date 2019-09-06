@@ -1136,10 +1136,14 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
 			
 			// TODO(andrea): check residual computation
 			// update DCt
+			// printf("memory->dzduxt=n");
+			// blasfeo_print_dmat(nu+nx, nh, memory->dzduxt, 0, 0);
 			blasfeo_dgemm_nn(nu+nx, nh, nz, 1.0, memory->dzduxt, 0, 0, &work->tmp_nz_nh, 0, 0, 0.0, &work->tmp_nv_nh, 0, 0, &work->tmp_nv_nh, 0, 0);
-		    blasfeo_dgead(nu+nx, nh, 1.0, &work->tmp_nz_nh, 0, 0, memory->DCt, ng, 0);	
+		    blasfeo_dgead(nu+nx, nh, 1.0, &work->tmp_nv_nh, 0, 0, memory->DCt, ng, 0);	
+			// printf("tmp_nv_nh=\n");
+			// blasfeo_print_dmat(nu+nx, nh, &work->tmp_nv_nh, 0, 0);
 			// update memory->fun	
-			blasfeo_dgemv_t(nu+nx, nh, 1.0, &work->tmp_nz_nh, 0, 0, &memory->ux, 0, 1.0, &memory->fun, 0, &memory->fun, 0);
+			blasfeo_dgemv_t(nu+nx, nh, -1.0, &work->tmp_nz_nh, 0, 0, memory->ux, 0, 1.0, &memory->fun, 0, &memory->fun, 0);
         }
     }
 

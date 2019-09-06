@@ -29,7 +29,6 @@ extern "C" {
 #define casadi_s1 CASADI_PREFIX(s1)
 #define casadi_s2 CASADI_PREFIX(s2)
 #define casadi_s3 CASADI_PREFIX(s3)
-#define casadi_sq CASADI_PREFIX(sq)
 
 /* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
@@ -48,26 +47,19 @@ extern "C" {
 
 static const casadi_int casadi_s0[6] = {2, 1, 0, 2, 0, 1};
 static const casadi_int casadi_s1[3] = {0, 0, 0};
-static const casadi_int casadi_s2[5] = {1, 1, 0, 1, 0};
-static const casadi_int casadi_s3[4] = {4, 1, 0, 0};
+static const casadi_int casadi_s2[5] = {4, 2, 0, 0, 0};
+static const casadi_int casadi_s3[7] = {2, 2, 0, 1, 2, 0, 1};
 
-casadi_real casadi_sq(casadi_real x) { return x*x;}
-
-/* simple_dae_constr_h_fun_jac_ut_xt:(i0[2],i1[2],i2[2],i3[])->(o0,o1[4x1,0nz],o2[2]) */
+/* simple_dae_constr_h_fun_jac_ut_xt:(i0[2],i1[2],i2[2],i3[])->(o0[2],o1[4x2,0nz],o2[2x2,2nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
-  casadi_real a0, a1, a2, a3;
+  casadi_real a0;
   a0=arg[2] ? arg[2][0] : 0;
-  a1=casadi_sq(a0);
-  a2=arg[2] ? arg[2][1] : 0;
-  a3=casadi_sq(a2);
-  a1=(a1+a3);
-  a3=10.;
-  a1=(a1-a3);
-  if (res[0]!=0) res[0][0]=a1;
-  a0=(a0+a0);
+  if (res[0]!=0) res[0][0]=a0;
+  a0=arg[2] ? arg[2][1] : 0;
+  if (res[0]!=0) res[0][1]=a0;
+  a0=1.;
   if (res[2]!=0) res[2][0]=a0;
-  a2=(a2+a2);
-  if (res[2]!=0) res[2][1]=a2;
+  if (res[2]!=0) res[2][1]=a0;
   return 0;
 }
 
@@ -116,9 +108,9 @@ CASADI_SYMBOL_EXPORT const casadi_int* simple_dae_constr_h_fun_jac_ut_xt_sparsit
 
 CASADI_SYMBOL_EXPORT const casadi_int* simple_dae_constr_h_fun_jac_ut_xt_sparsity_out(casadi_int i) {
   switch (i) {
-    case 0: return casadi_s2;
-    case 1: return casadi_s3;
-    case 2: return casadi_s0;
+    case 0: return casadi_s0;
+    case 1: return casadi_s2;
+    case 2: return casadi_s3;
     default: return 0;
   }
 }

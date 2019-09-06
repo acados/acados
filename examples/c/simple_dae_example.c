@@ -52,7 +52,7 @@
 #include "simple_dae_model/simple_dae_model.h"
 #include "simple_dae_model/simple_dae_constr.h"
 
-#define FORMULATION 2 
+#define FORMULATION 1 
 // 0: without Vz*z term 
 // 1: with Vz*z and without Vx*x 
 // 2: same as (1) + nonlinear constraint on z: h(x,u,z(x,u)) = z_1^2 + z_2^2 \leq 1
@@ -62,25 +62,40 @@ int main() {
 	double lh[2];
 	double uh[2];
 
-	lh[0] = -100;
-	lh[1] = -100;
+	lh[0] = -2;
+	lh[1] = -2;
 
-	uh[0] = 100;
-	uh[1] = 100;
+	uh[0] = 2;
+	uh[1] = 2;
 
-    int NH = 0;
-    if (FORMULATION == 2) NH = 2;
+    int NH, NBX;
+    if (FORMULATION == 2) {
+		NH  = 2;
+		NBX = 0;
+	} else {
+		NH  = 0;
+		NBX = 2;
+	}
 
 	int num_states = 2, num_controls = 2, N = 20;
 	int num_alg_states = 2;
-	double Tf = 1.0, R[2] = {1e-1, 1e-1}, QN[2] = {1e1, 1e1};
+	double Tf = 1.0, R[2] = {1e3, 1e3}, QN[2] = {1e1, 1e1};
     double Q[2] = {1e1, 1e1};
 	int idxb_0[2] = {2, 3};
+	int idxb[2] = {2, 3};
 	double x0[num_states];
+	double x0_l[num_states];
+	double x0_u[num_states];
+	double EPS = 1e-6;
 
     x0[0] =  1.0;  
     x0[1] =  -1.0;  
 
+    x0_l[0] =  x0[0] - EPS;  
+    x0_l[1] =  x0[1] - EPS;  
+
+    x0_u[0] =  x0[0] + EPS;  
+    x0_u[1] =  x0[1] + EPS;  
 	int max_num_sqp_iterations = 10;
 
     int nx_ = num_states;
@@ -108,9 +123,9 @@ int main() {
     for(int i = 0; i < N+1; i++) {
         nx[i] = nx_;
         nu[i] = nu_;
-        nbx[i] = 0;
+        nbx[i] = NBX;
         nbu[i] = 0;
-        nb[i] = 0;
+        nb[i] = NBX;
         ng[i] = 0;
         nh[i] = NH;
         ns[i] = 0;
@@ -119,11 +134,13 @@ int main() {
     }
 
     nbx[0] = nx_;
-    nb[0] = nx_;
-    nu[N] = 0;
-    nh[N] = 0;
-    ny[N] = nx_;
-    nz[N] = 0;
+    nb[0]  = nx_;
+    nb[N]  = 0;
+    nbx[N] = 0;
+    nu[N]  = 0;
+    nh[N]  = 0;
+    ny[N]  = nx_;
+    nz[N]  = 0;
 
     /* linear least squares */
 
@@ -345,7 +362,14 @@ int main() {
             ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "lh", lh);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "uh", uh);
         }
-    }
+    } else { 
+		for (int ii = 1; ii < N; ++ii) {
+			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "ubx", uh);
+			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "lbx", lh);
+			constraints[ii]->idxb = idxb;
+		}
+	}
+
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
    

@@ -56,7 +56,7 @@ function [ model ] = export_simple_dae_constr()
     u2      = SX.sym('u2');
     u       = vertcat(u1, u2);
     
-    h_expr = vertcat(u1, u2);
+    h_expr = vertcat(z1, z2);
     
     model.constr_expr_h = h_expr;
     model.sym_x = x;
