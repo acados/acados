@@ -59,8 +59,17 @@
 
 int main() {
 
+	double lh[2];
+	double uh[2];
+
+	lh[0] = -100;
+	lh[1] = -100;
+
+	uh[0] = 100;
+	uh[1] = 100;
+
     int NH = 0;
-    if (FORMULATION == 2) NH = 1;
+    if (FORMULATION == 2) NH = 2;
 
 	int num_states = 2, num_controls = 2, N = 20;
 	int num_alg_states = 2;
@@ -316,9 +325,11 @@ int main() {
 	// bounds
 	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
-    constraints[0]->idxb = idxb_0;
-	blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, 0);
-	blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, nb[0]+ng[0]);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0_u);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0_l);
+    // constraints[0]->idxb = idxb_0;
+	// blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, 0);
+	// blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, nb[0]+ng[0]);
 
     if (FORMULATION == 2) {
         external_function_param_casadi * nl_constr_h_fun_jac;
@@ -333,6 +344,8 @@ int main() {
             nl_constr_h_fun_jac[ii].casadi_n_out        = &simple_dae_constr_h_fun_jac_ut_xt_n_out;
             external_function_param_casadi_create(&nl_constr_h_fun_jac[ii], 0);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "nl_constr_h_fun_jac", &nl_constr_h_fun_jac[ii]);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "lh", lh);
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "uh", uh);
         }
     }
 
