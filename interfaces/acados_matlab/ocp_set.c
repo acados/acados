@@ -78,6 +78,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // value
     double *value = mxGetPr( prhs[5] );
     int matlab_size = (int) mxGetNumberOfElements( prhs[5] );
+    // mexPrintf("\nocp_set: %s, matlab_size %d\n", field, matlab_size);
 
     int N = dims->N;
     int nu = dims->nu[0];

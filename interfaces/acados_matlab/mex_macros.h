@@ -94,6 +94,21 @@
 	}\
 }
 
+#define MEX_CHECK_DIAGONALITY(fun_name, dim, mat, name){\
+	for (int ii=0; ii<dim; ii++)\
+	{\
+		for (int jj=0; jj<dim; jj++)\
+		{\
+			if ((jj!=ii) && mat[ii*dim+jj]!= 0.0)\
+			{\
+				sprintf(buffer,"%s: setting %s, only diagonal matrices supported,\
+							got nonzero offdiagonal elements", fun_name, name);\
+				mexErrMsgTxt(buffer);\
+			}\
+		}\
+	}\
+}
+
 
 
 // macro to string

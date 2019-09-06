@@ -874,8 +874,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         // TODO: else complain?
         if (mxGetField( matlab_model, 0, "cost_yr" )!=NULL)
         {
-            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_W" ) );
-            int acados_size = ny*ny;
+            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_yr" ) );
+            int acados_size = ny;
             double *yr = mxGetPr( mxGetField( matlab_model, 0, "cost_yr" ) );
             for (ii=0; ii<N; ii++)
             {
@@ -927,7 +927,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (mxGetField( matlab_model, 0, "cost_yr_e" )!=NULL)
         {
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_yr_e" ) );
-            int acados_size = ny_e ;
+            int acados_size = ny_e;
             MEX_DIM_CHECK(fun_name, "cost_yr_e", matlab_size, acados_size);
             double *yr_e = mxGetPr( mxGetField( matlab_model, 0, "cost_yr_e" ) );
             ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
@@ -951,9 +951,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "cost_Z" )!=NULL)
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Z" ) );
-        int acados_size = ns;
+        int acados_size = ns*ns;
         MEX_DIM_CHECK(fun_name, "cost_Z", matlab_size, acados_size);
         double *Z = mxGetPr( mxGetField( matlab_model, 0, "cost_Z" ) );
+        MEX_CHECK_DIAGONALITY(fun_name, ns, Z, "cost_Z");
+
         d_ptr = malloc(ns*sizeof(double));
         for (ii=0; ii<ns; ii++)
         {
@@ -969,9 +971,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "cost_Z_e" )!=NULL)
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Z_e" ) );
-        int acados_size = ns_e;
+        int acados_size = ns_e*ns_e;
         MEX_DIM_CHECK(fun_name, "cost_Z_e", matlab_size, acados_size);
         double *Z_e = mxGetPr( mxGetField( matlab_model, 0, "cost_Z_e" ) );
+        MEX_CHECK_DIAGONALITY(fun_name, ns_e, Z_e, "cost_Z_e");
         d_ptr = malloc(ns_e*sizeof(double));
         for (ii=0; ii<ns_e; ii++)
         {
