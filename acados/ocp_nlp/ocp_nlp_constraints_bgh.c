@@ -1020,8 +1020,8 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
 
     ext_fun_arg_t ext_fun_type_in[4];
     void *ext_fun_in[4];
-    ext_fun_arg_t ext_fun_type_out[4];
-    void *ext_fun_out[4];
+    ext_fun_arg_t ext_fun_type_out[3];
+    void *ext_fun_out[3];
 
     // box
     blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_ni, 0);
@@ -1107,22 +1107,16 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             ext_fun_in[0] = &x_in;
             ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
             ext_fun_in[1] = &u_in;
-            // if (nz > 0) 
-            // {
 			ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
 			ext_fun_in[2] = &z_in;
-            // }
 
             ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
             ext_fun_out[0] = &fun_out;  // fun: nh
             ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
             ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nh
-            // if (nz > 0) 
-            // {
 			ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
 			ext_fun_out[2] = &jac_z_out;  // jac': nz * nh
-             // }
-
+			
             model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
         }
     }
