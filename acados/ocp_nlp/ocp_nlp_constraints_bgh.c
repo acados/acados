@@ -1040,6 +1040,10 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         u_in.x = memory->ux;
         u_in.xi = 0;
 
+        struct blasfeo_dvec_args z_in;  // input u of external fun;
+        z_in.x = memory->z_alg;
+        z_in.xi = 0;
+
         struct blasfeo_dvec_args fun_out;
         fun_out.x = &work->tmp_ni;
         fun_out.xi = nb + ng;
@@ -1103,21 +1107,21 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             ext_fun_in[0] = &x_in;
             ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
             ext_fun_in[1] = &u_in;
-            if (nz > 0) 
-            {
-                ext_fun_type_in[3] = BLASFEO_DVEC_ARGS;
-                ext_fun_in[3] = memory->z_alg;
-            }
+            // if (nz > 0) 
+            // {
+			ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+			ext_fun_in[2] = &z_in;
+            // }
 
             ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
             ext_fun_out[0] = &fun_out;  // fun: nh
             ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
             ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nh
-            if (nz > 0) 
-            {
-                ext_fun_type_out[3] = BLASFEO_DMAT_ARGS;
-                ext_fun_out[3] = &jac_z_out;  // jac': nz * nh
-            }
+            // if (nz > 0) 
+            // {
+			ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
+			ext_fun_out[2] = &jac_z_out;  // jac': nz * nh
+             // }
 
             model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
         }
