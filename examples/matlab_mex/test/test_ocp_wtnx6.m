@@ -34,6 +34,7 @@
 %% test of native matlab interface
 clear all
 
+addpath('../wind_turbine_nx6/');
 
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
@@ -505,14 +506,29 @@ end
 
 electrical_power = 0.944*97/100*x_sim(1,:).*x_sim(6,:);
 
-if status==0
-    fprintf('\nsuccess!\n\n');
+x_sim_ref = [   1.263425730522397
+   0.007562725557589
+  76.028289356099236
+   0.007188510774546
+   6.949049234224142
+   3.892712459979240
+   6.302629591941585
+   3.882220255648666];
+
+err_vs_ref = x_sim_ref - x_sim(:,end);
+
+if status~=0
+    error('\nnTEST_OCP: solution failed!\n\n');
+elseif err_vs_ref > 1e-14
+    error('\nnTEST_OCP: to high deviation from known result!\n\n');
+elseif sqp_iter > 2
+    error('\nnTEST_OCP: sqp_iter > 2, this problem is typically solved within less iterations!\n\n');
 else
-    fprintf('\nsolution failed!\n\n');
+    fprintf('\nsuccess!\n');
 end
 
 % figures
-if 1
+if 0
     figure;
     subplot(3,1,1);
     plot(0:n_sim, x_sim);
@@ -546,6 +562,9 @@ if 1
         waitforbuttonpress;
     end
 end
+
+
+
 
 
 

@@ -43,7 +43,8 @@ end
 
 %% ocp tests
 try
-    test_ocp;
+    test_ocp_pendulum_on_cart;
+    test_ocp_wtnx6;
 catch exception
     exit_with_error(exception);
 end
