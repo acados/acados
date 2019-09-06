@@ -52,7 +52,7 @@
 #include "simple_dae_model/simple_dae_model.h"
 #include "simple_dae_model/simple_dae_constr.h"
 
-#define FORMULATION 2
+#define FORMULATION 2 
 // 0: without Vz*z term 
 // 1: with Vz*z and without Vx*x 
 // 2: same as (1) + nonlinear constraint on z: h(x,u,z(x,u)) = z_1^2 + z_2^2 \leq 1
@@ -62,10 +62,10 @@ int main() {
 	double lh[2];
 	double uh[2];
 
-	lh[0] = -2;
+	lh[0] = 2;
 	lh[1] = -2;
 
-	uh[0] = 2;
+	uh[0] = 4;
 	uh[1] = 2;
 
     int NH, NBX;
@@ -79,16 +79,17 @@ int main() {
 
 	int num_states = 2, num_controls = 2, N = 20;
 	int num_alg_states = 2;
-	double Tf = 1.0, R[2] = {1e3, 1e3}, QN[2] = {1e1, 1e1};
+	double Tf = 1.0, R[2] = {1e-3, 1e-3}, QN[2] = {1e1, 1e1};
+	// double Tf = 1.0, R[2] = {1e-3, 1e-3}, QN[2] = {1e1, 1e1};
     double Q[2] = {1e1, 1e1};
 	int idxb_0[2] = {2, 3};
 	int idxb[2] = {2, 3};
 	double x0[num_states];
 
-    x0[0] =  1.0;  
-    x0[1] =  -1.0;  
+    x0[0] =  3;  
+    x0[1] =  -1.8;  
 
-	int max_num_sqp_iterations = 10;
+	int max_num_sqp_iterations = 100;
 
     int nx_ = num_states;
     int nz_ = num_alg_states;
