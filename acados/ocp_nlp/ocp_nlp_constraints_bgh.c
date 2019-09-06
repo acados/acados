@@ -908,6 +908,7 @@ int ocp_nlp_constraints_bgh_workspace_calculate_size(void *config_, void *dims_,
 
     size += 1 * blasfeo_memsize_dmat(nu+nx, nu+nx); // tmp_nv_nv
     size += 1 * blasfeo_memsize_dmat(nz, nh);       // tmp_nz_nh
+    size += 1 * blasfeo_memsize_dmat(nx+nu, nh);    // tmp_nv_nh
     size += 1 * blasfeo_memsize_dvec(nb+ng+nh+ns);  // tmp_ni
     size += 1 * blasfeo_memsize_dvec(nh);           // tmp_nh
 
@@ -943,6 +944,9 @@ static void ocp_nlp_constraints_bgh_cast_workspace(void *config_, void *dims_, v
     
     // tmp_nz_nh
     assign_and_advance_blasfeo_dmat_mem(nz, nh, &work->tmp_nz_nh, &c_ptr);
+
+    // tmp_nv_nh
+    assign_and_advance_blasfeo_dmat_mem(nx + nu, nh, &work->tmp_nv_nh, &c_ptr);
 
     // tmp_ni
     assign_and_advance_blasfeo_dvec_mem(nb+ng+nh+ns, &work->tmp_ni, &c_ptr);
@@ -1126,14 +1130,16 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
 			// dhdu*(u - \bar{u}) + 
 			// dhdz*(z - \bar{z}) =
 			//
-			//  h(\bar{x}, \bar{u}, \bar{z}) - dhdz*dzdx*\bar{x} - dhdz*dzdu*\bar{u} + 
-			//  (dhdx + dhdz*dzdx)*(x - \bar{x}) +  
-			//  (dhdu + dhdz*dzdu)*(u - \bar{u})  
+			// h(\bar{x}, \bar{u}, \bar{z}) - dhdz*dzdx*\bar{x} - dhdz*dzdu*\bar{u} + 
+			// (dhdx + dhdz*dzdx)*(x - \bar{x}) +  
+			// (dhdu + dhdz*dzdu)*(u - \bar{u})  
 			
 			// TODO(andrea): check residual computation
 			// update DCt
-		    	
-			// update d	
+			blasfeo_dgemm_nn(nu+nx, nh, nz, 1.0, memory->dzduxt, 0, 0, &work->tmp_nz_nh, 0, 0, 0.0, &work->tmp_nv_nh, 0, 0, &work->tmp_nv_nh, 0, 0);
+		    blasfeo_dgead(nu+nx, nh, 1.0, &work->tmp_nz_nh, 0, 0, memory->DCt, ng, 0);	
+			// update memory->fun	
+			blasfeo_dgemv_t(nu+nx, nh, 1.0, &work->tmp_nz_nh, 0, 0, &memory->ux, 0, 1.0, &memory->fun, 0, &memory->fun, 0);
         }
     }
 
