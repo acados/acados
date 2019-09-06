@@ -72,7 +72,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "in" ) );
     sim_in *in = (sim_in *) ptr[0];
 
-
     // field
     char *field = mxArrayToString( prhs[4] );
     double *value = mxGetPr( prhs[5] );

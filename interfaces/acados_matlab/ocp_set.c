@@ -48,28 +48,30 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     long long *ptr;
     int acados_size;
     mxArray *mex_field;
-    char fun_name[50] = "ocp_set";
-    char buffer [100]; // for error messages
+    char fun_name[20] = "ocp_set";
+    char buffer [200]; // for error messages
 
 
     /* RHS */
+    // C_ocp
+	const mxArray *C_ocp = prhs[2];
     // plan
-    ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "plan" ) );
+    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
     ocp_nlp_plan *plan = (ocp_nlp_plan *) ptr[0];
     // config
-    ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "config" ) );
+    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "config" ) );
     ocp_nlp_config *config = (ocp_nlp_config *) ptr[0];
     // dims
-    ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "dims" ) );
+    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "dims" ) );
     ocp_nlp_dims *dims = (ocp_nlp_dims *) ptr[0];
     // opts
-    ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "opts" ) );
+    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "opts" ) );
     void *opts = (void *) ptr[0];
     // in
-    ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "in" ) );
+    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "in" ) );
     ocp_nlp_in *in = (ocp_nlp_in *) ptr[0];
     // out
-    ptr = (long long *) mxGetData( mxGetField( prhs[2], 0, "out" ) );
+    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "out" ) );
     ocp_nlp_out *out = (ocp_nlp_out *) ptr[0];
 
     const mxArray *C_ext_fun_pointers = prhs[3];
@@ -83,7 +85,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int N = dims->N;
     int nu = dims->nu[0];
     int nx = dims->nx[0];
-    // tmp_idx = malloc((nx+nu)*sizeof(int));
 
     // stage
     int s0, se;
@@ -355,7 +356,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         MEX_FIELD_NOT_SUPPORTED(fun_name, field);
     }
-    // free(tmp_idx);
 
     return;
 }
