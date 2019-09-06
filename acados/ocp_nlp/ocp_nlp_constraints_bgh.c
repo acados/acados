@@ -1118,6 +1118,22 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
 			ext_fun_out[2] = &jac_z_out;  // jac': nz * nh
 			
             model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+			// expand h:
+			// h(x, u, z) ~
+			// h(\bar{x}, \bar{u}, \bar{z}) + 
+			// dhdx*(x - \bar{x}) + 
+			// dhdu*(u - \bar{u}) + 
+			// dhdz*(z - \bar{z}) =
+			//
+			//  h(\bar{x}, \bar{u}, \bar{z}) - dhdz*dzdx*\bar{x} - dhdz*dzdu*\bar{u} + 
+			//  (dhdx + dhdz*dzdx)*(x - \bar{x}) +  
+			//  (dhdu + dhdz*dzdu)*(u - \bar{u})  
+			
+			// TODO(andrea): check residual computation
+			// update DCt
+		    	
+			// update d	
         }
     }
 
