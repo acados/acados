@@ -84,18 +84,10 @@ int main() {
 	int idxb_0[2] = {2, 3};
 	int idxb[2] = {2, 3};
 	double x0[num_states];
-	double x0_l[num_states];
-	double x0_u[num_states];
-	double EPS = 1e-6;
 
     x0[0] =  1.0;  
     x0[1] =  -1.0;  
 
-    x0_l[0] =  x0[0] - EPS;  
-    x0_l[1] =  x0[1] - EPS;  
-
-    x0_u[0] =  x0[0] + EPS;  
-    x0_u[1] =  x0[1] + EPS;  
 	int max_num_sqp_iterations = 10;
 
     int nx_ = num_states;
@@ -113,7 +105,6 @@ int main() {
     int nu[N+1];
     int nbx[N+1];
     int nbu[N+1];
-	int	nb[N+1];
     int ng[N+1];
     int nh[N+1];
 	int	ns[N+1];
@@ -125,7 +116,6 @@ int main() {
         nu[i] = nu_;
         nbx[i] = NBX;
         nbu[i] = 0;
-        nb[i] = NBX;
         ng[i] = 0;
         nh[i] = NH;
         ns[i] = 0;
@@ -134,8 +124,6 @@ int main() {
     }
 
     nbx[0] = nx_;
-    nb[0]  = nx_;
-    nb[N]  = 0;
     nbx[N] = 0;
     nu[N]  = 0;
     nh[N]  = 0;
@@ -342,8 +330,8 @@ int main() {
 	// bounds
 	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
 
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0_u);
-	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0_l);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0);
     constraints[0]->idxb = idxb_0;
 
     if (FORMULATION == 2) {
