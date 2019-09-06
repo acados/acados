@@ -58,6 +58,9 @@
 
 int main() {
 
+    int NH = 0;
+    if (FORMULATION == 2) NH = 1;
+
 	int num_states = 2, num_controls = 2, N = 20;
 	int num_alg_states = 2;
 	double Tf = 1.0, R[2] = {1e-1, 1e-1}, QN[2] = {1e1, 1e1};
@@ -99,7 +102,7 @@ int main() {
         nbu[i] = 0;
         nb[i] = 0;
         ng[i] = 0;
-        nh[i] = 0;
+        nh[i] = NH;
         ns[i] = 0;
         nz[i] = nz_;
         ny[i] = ny_;
@@ -315,6 +318,20 @@ int main() {
     constraints[0]->idxb = idxb_0;
 	blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, 0);
 	blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, nb[0]+ng[0]);
+
+    if (FORMULATION == 2) {
+        external_function_casadi nl_constr_h_fun_jac[N];
+
+        for (int ii = 0; ii < N; ++ii) {
+            nl_constr_h_fun_jac[ii].casadi_fun          = &simple_dae_constr_h_fun_jac_ut_xt;
+            nl_constr_h_fun_jac[ii].casadi_work         = &simple_dae_constr_h_fun_jac_ut_xt_work;
+            nl_constr_h_fun_jac[ii].casadi_sparsity_in  = &simple_dae_constr_h_fun_jac_ut_xt_sparsity_in;
+            nl_constr_h_fun_jac[ii].casadi_sparsity_out = &simple_dae_constr_h_fun_jac_ut_xt_sparsity_out;
+            nl_constr_h_fun_jac[ii].casadi_n_in         = &simple_dae_constr_h_fun_jac_ut_xt_n_in;
+            nl_constr_h_fun_jac[ii].casadi_n_out        = &simple_dae_constr_h_fun_jac_ut_xt_n_out;
+            ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "nl_constr_h_fun_jac", &nl_constr_h_fun_jac);
+        }
+    }
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
    
