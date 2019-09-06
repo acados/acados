@@ -55,7 +55,7 @@
 #define FORMULATION 2 
 // 0: without Vz*z term 
 // 1: with Vz*z and without Vx*x 
-// 2: same as (1) + nonlinear constraint on z: h(x,u,z(x,u)) = z_1^2 + z_2^2 \leq 1
+// 2: same as (1) + nonlinear constraint on z: h(x,u,z(x,u)) = [2, -2] \leq [z_1, z_2] \leq [4, 2]
 
 int main() {
 
@@ -80,7 +80,6 @@ int main() {
 	int num_states = 2, num_controls = 2, N = 20;
 	int num_alg_states = 2;
 	double Tf = 1.0, R[2] = {1e-3, 1e-3}, QN[2] = {1e1, 1e1};
-	// double Tf = 1.0, R[2] = {1e-3, 1e-3}, QN[2] = {1e1, 1e1};
     double Q[2] = {1e1, 1e1};
 	int idxb_0[2] = {2, 3};
 	int idxb[2] = {2, 3};
