@@ -93,8 +93,8 @@ yr_e = zeros(ny_e, 1); % output reference in mayer term
 % constraints
 x0 = zeros(nx, 1); x0(1)=2.5; x0(2)=2.5;
 Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
-lbx = -4*ones(nx, 1);
-ubx =  4*ones(nx, 1);
+lbx = -4*ones(nbx, 1);
+ubx =  4*ones(nbx, 1);
 Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
 lbu = -0.5*ones(nu, 1);
 ubu =  0.5*ones(nu, 1);
