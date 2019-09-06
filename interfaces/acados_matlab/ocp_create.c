@@ -53,7 +53,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     int N, ii, jj, idx;
     char fun_name[50] = "ocp_create";
-    char buffer[300]; // for error messages
+    char buffer[500]; // for error messages
     double acados_inf = 1e8;
 
     /* RHS */
@@ -1155,7 +1155,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "constr_lbx" )!=NULL)
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_lbx" ) );
-        int acados_size = nx;
+        int acados_size = nbx;
         MEX_DIM_CHECK(fun_name, "constr_lbx", matlab_size, acados_size);
         set_lbx = true;
         lbx = mxGetPr( mxGetField( matlab_model, 0, "constr_lbx" ) );
@@ -1169,7 +1169,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_model, 0, "constr_ubx" )!=NULL)
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_ubx" ) );
-        int acados_size = nx;
+        int acados_size = nbx;
         MEX_DIM_CHECK(fun_name, "constr_ubx", matlab_size, acados_size);
         set_ubx = true;
         ubx = mxGetPr( mxGetField( matlab_model, 0, "constr_ubx" ) );
@@ -1313,9 +1313,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // lbu
     if (mxGetField( matlab_model, 0, "constr_lbu" )!=NULL)
     {
-        int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_Jbu" ) );
+        int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_lbu" ) );
         int acados_size = nbu;
-        MEX_DIM_CHECK(fun_name, "constr_Jbu", matlab_size, acados_size);
+        MEX_DIM_CHECK(fun_name, "constr_lbu", matlab_size, acados_size);
 
         double *lbu = mxGetPr( mxGetField( matlab_model, 0, "constr_lbu" ) );
         for (ii=0; ii<N; ii++)
@@ -1326,9 +1326,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // ubu
     if (mxGetField( matlab_model, 0, "constr_ubu" )!=NULL)
     {
-        int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_Jbu" ) );
+        int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_ubu" ) );
         int acados_size = nbu;
-        MEX_DIM_CHECK(fun_name, "constr_Jbu", matlab_size, acados_size);
+        MEX_DIM_CHECK(fun_name, "constr_ubu", matlab_size, acados_size);
 
         double *ubu = mxGetPr( mxGetField( matlab_model, 0, "constr_ubu" ) );
         for (ii=0; ii<N; ii++)
@@ -1449,7 +1449,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *uh_e = mxGetPr( mxGetField( matlab_model, 0, "constr_uh_e" ) );
         ocp_nlp_constraints_model_set(config, dims, in, N, "uh", uh_e);
     }
-
     // Jsbu
     if (mxGetField( matlab_model, 0, "constr_Jsbu" )!=NULL)
     {
@@ -1503,6 +1502,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         free(i_ptr);
     }
+
     // Jsg
     if (mxGetField( matlab_model, 0, "constr_Jsg" )!=NULL)
     {
@@ -1566,21 +1566,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *Jsh = mxGetPr( mxGetField( matlab_model, 0, "constr_Jsh" ) );
         i_ptr = malloc(nsh*sizeof(int));
         for (ii=0; ii<nsh; ii++)
-            {
+        {
             idx = -1;
             for (jj=0; jj<nh; jj++)
-                {
+            {
                 if (Jsh[jj+nh*ii]!=0.0)
-                    {
+                {
                     i_ptr[ii] = jj;
                     idx = jj;
-                    }
                 }
             }
+        }
         for (ii=0; ii<N; ii++)
-            {
+        {
             ocp_nlp_constraints_model_set(config, dims, in, ii, "idxsh", i_ptr);
-            }
+        }
         free(i_ptr);
     }
 
@@ -1608,8 +1608,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_constraints_model_set(config, dims, in, N, "idxsh", i_ptr);
         free(i_ptr);
     }
+    // mexPrintf("\nocp_create end\n");
 
-// TODO: maybe add the following..
+    return;
+
+}
+// TODO: maybe add the following: lower bounds for slack variables
 //    double *lsbu;    bool set_lsbu = false;
 //    double *usbu;    bool set_usbu = false;
 //    double *lsbx;    bool set_lsbx = false;
@@ -1623,9 +1627,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //    double *lsh_e;    bool set_lsh_e = false;
 //    double *ush_e;    bool set_ush_e = false;
 
-    return;
-
-}
     // lsbu
 //    if (mxGetField( matlab_model, 0, "constr_lsbu" )!=NULL)
 //        {
