@@ -223,9 +223,9 @@ int main() {
         ocp_nlp_dims_set_constraints(config, dims, i, "nz", &nz[i]);
     }
 
-	external_function_casadi impl_ode_fun[N];
-	external_function_casadi impl_ode_fun_jac_x_xdot_z[N];
-	external_function_casadi impl_ode_jac_x_xdot_u_z[N];
+	external_function_param_casadi impl_ode_fun[N];
+	external_function_param_casadi impl_ode_fun_jac_x_xdot_z[N];
+	external_function_param_casadi impl_ode_jac_x_xdot_u_z[N];
 
 	for (int ii = 0; ii < N; ++ii) {
         impl_ode_fun[ii].casadi_fun = &simple_dae_impl_ode_fun;
@@ -254,40 +254,40 @@ int main() {
     int	tmp_size = 0;
 	for (int ii=0; ii<N; ii++)
 	{
-		tmp_size += external_function_casadi_calculate_size(impl_ode_fun+ii);
+		tmp_size += external_function_param_casadi_calculate_size(impl_ode_fun+ii, 0);
 	}
 	void *impl_ode_casadi_mem = malloc(tmp_size);
 	void *c_ptr = impl_ode_casadi_mem;
 	for (int ii=0; ii<N; ii++)
 	{
-		external_function_casadi_assign(impl_ode_fun+ii, c_ptr);
-		c_ptr += external_function_casadi_calculate_size(impl_ode_fun+ii);
+		external_function_param_casadi_assign(impl_ode_fun+ii, c_ptr);
+		c_ptr += external_function_param_casadi_calculate_size(impl_ode_fun+ii, 0);
 	}
 	//
 	tmp_size = 0;
 	for (int ii=0; ii<N; ii++)
 	{
-		tmp_size += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z+ii);
+		tmp_size += external_function_param_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z+ii, 0);
 	}
 	void *impl_ode_fun_jac_x_xdot_z_mem = malloc(tmp_size);
 	c_ptr = impl_ode_fun_jac_x_xdot_z_mem;
 	for (int ii=0; ii<N; ii++)
 	{
-		external_function_casadi_assign(impl_ode_fun_jac_x_xdot_z+ii, c_ptr);
-		c_ptr += external_function_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z+ii);
+		external_function_param_casadi_assign(impl_ode_fun_jac_x_xdot_z+ii, c_ptr);
+		c_ptr += external_function_param_casadi_calculate_size(impl_ode_fun_jac_x_xdot_z+ii, 0);
 	}
 
 	tmp_size = 0;
 	for (int ii=0; ii<N; ii++)
 	{
-		tmp_size += external_function_casadi_calculate_size(impl_ode_jac_x_xdot_u_z+ii);
+		tmp_size += external_function_param_casadi_calculate_size(impl_ode_jac_x_xdot_u_z+ii, 0);
 	}
 	void *impl_ode_jac_x_xdot_u_z_mem = malloc(tmp_size);
 	c_ptr = impl_ode_jac_x_xdot_u_z_mem;
 	for (int ii=0; ii<N; ii++)
 	{
-		external_function_casadi_assign(impl_ode_jac_x_xdot_u_z+ii, c_ptr);
-		c_ptr += external_function_casadi_calculate_size(impl_ode_jac_x_xdot_u_z+ii);
+		external_function_param_casadi_assign(impl_ode_jac_x_xdot_u_z+ii, c_ptr);
+		c_ptr += external_function_param_casadi_calculate_size(impl_ode_jac_x_xdot_u_z+ii, 0);
 	}
 
 	ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
@@ -346,9 +346,9 @@ int main() {
             nl_constr_h_fun_jac[ii].casadi_n_in         = &simple_dae_constr_h_fun_jac_ut_xt_n_in;
             nl_constr_h_fun_jac[ii].casadi_n_out        = &simple_dae_constr_h_fun_jac_ut_xt_n_out;
             external_function_param_casadi_create(&nl_constr_h_fun_jac[ii], 0);
-            ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "nl_constr_h_fun_jac", &nl_constr_h_fun_jac[ii]);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "lh", lh);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "uh", uh);
+			ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "nl_constr_h_fun_jac", &nl_constr_h_fun_jac[ii]);
         }
     } else { 
 		for (int ii = 1; ii < N; ++ii) {
