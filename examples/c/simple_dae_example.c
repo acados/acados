@@ -321,8 +321,8 @@ int main() {
 	blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, nb[0]+ng[0]);
 
     if (FORMULATION == 2) {
-        external_function_casadi * nl_constr_h_fun_jac;
-		nl_constr_h_fun_jac = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
+        external_function_param_casadi * nl_constr_h_fun_jac;
+		nl_constr_h_fun_jac = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
 
         for (int ii = 0; ii < N; ++ii) {
             nl_constr_h_fun_jac[ii].casadi_fun          = &simple_dae_constr_h_fun_jac_ut_xt;
@@ -331,7 +331,7 @@ int main() {
             nl_constr_h_fun_jac[ii].casadi_sparsity_out = &simple_dae_constr_h_fun_jac_ut_xt_sparsity_out;
             nl_constr_h_fun_jac[ii].casadi_n_in         = &simple_dae_constr_h_fun_jac_ut_xt_n_in;
             nl_constr_h_fun_jac[ii].casadi_n_out        = &simple_dae_constr_h_fun_jac_ut_xt_n_out;
-            external_function_casadi_create(&nl_constr_h_fun_jac[ii]);
+            external_function_param_casadi_create(&nl_constr_h_fun_jac[ii], 0);
             ocp_nlp_constraints_model_set(config, dims, nlp_in, ii, "nl_constr_h_fun_jac", &nl_constr_h_fun_jac[ii]);
         }
     }
