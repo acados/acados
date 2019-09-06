@@ -107,10 +107,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgTxt(buffer);
     }
 
-    // XXX hard-code number and size of phases for now !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    int NN[] = {N, 1}; // number of phases, i.e. shooting nodes with same dimensions
-    int Nf = 2; // number of phases
-    // Nf = mxGetN( mex_field );
+    // XXX hard-code size of phases for now !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    int NN[] = {N, 1}; // size of phases, i.e. shooting nodes with same dimensions
 
     /* Set value */
     if (!strcmp(field, "constr_x0"))
@@ -303,19 +301,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else if (!strcmp(field, "p"))
     {
         external_function_param_casadi *ext_fun_param_ptr;
+        // mexPrintf("ocp_set p: nrhs %d \n", nrhs);
 
         // loop over number of external functions;
         int struct_size = mxGetNumberOfFields( C_ext_fun_pointers );
         for (int ii=0; ii<struct_size; ii++)
         {
-//            printf("\n%s\n", mxGetFieldNameByNumber( C_ext_fun_pointers, ii) );
             mex_field = mxGetFieldByNumber( C_ext_fun_pointers, 0, ii );
             ptr = (long long *) mxGetData( mex_field );
+            int Nf = (int) mxGetNumberOfElements(mex_field);
+            // mexPrintf("\n%s, Nf = %d\n", mxGetFieldNameByNumber( C_ext_fun_pointers, ii), Nf );
             int Nf_sum = 0;
             // loop over number of phases
             for (int jj=0; jj<Nf; jj++)
             {
                 ext_fun_param_ptr = (external_function_param_casadi *) ptr[jj];
+                // mexPrintf("ocp_set p: jj %d ext_fun_param_ptr %p \n", jj, ext_fun_param_ptr);
                 if (ext_fun_param_ptr!=0)
                 {
                     if (nrhs==6)
