@@ -35,15 +35,13 @@
 clear all
 
 
-
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
+    disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
+    disp('source env.sh');
+    return;
 end
-
 
 
 %% arguments
@@ -149,8 +147,8 @@ W_e(2, 2) =  0.0180;
 % slacks
 Z = 1e2*eye(ns);
 Z_e = 1e2*eye(ns_e);
-z = 0e2*eye(ns);
-z_e = 0e2*eye(ns_e);
+z = 0e2*ones(ns,1);
+z_e = 0e2*ones(ns_e,1);
 
 %% constraints
 % constants
@@ -227,12 +225,12 @@ ocp_model.set('sym_p', model.sym_p);
 ocp_model.set('cost_type', cost_type);
 ocp_model.set('cost_type_e', cost_type);
 if (strcmp(cost_type, 'linear_ls'))
-	ocp_model.set('cost_Vu', Vu);
-	ocp_model.set('cost_Vx', Vx);
-	ocp_model.set('cost_Vx_e', Vx_e);
+    ocp_model.set('cost_Vu', Vu);
+    ocp_model.set('cost_Vx', Vx);
+    ocp_model.set('cost_Vx_e', Vx_e);
 else % nonlinear_ls
-	ocp_model.set('cost_expr_y', model.expr_y);
-	ocp_model.set('cost_expr_y_e', model.expr_y_e);
+    ocp_model.set('cost_expr_y', model.expr_y);
+    ocp_model.set('cost_expr_y_e', model.expr_y_e);
 end
 ocp_model.set('cost_W', W);
 ocp_model.set('cost_W_e', W_e);
@@ -242,11 +240,11 @@ ocp_model.set('cost_z', z);
 ocp_model.set('cost_z_e', z_e);
 %% dynamics
 if (strcmp(ocp_sim_method, 'erk'))
-	ocp_model.set('dyn_type', 'explicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_expl);
+    ocp_model.set('dyn_type', 'explicit');
+    ocp_model.set('dyn_expr_f', model.expr_f_expl);
 else % irk
-	ocp_model.set('dyn_type', 'implicit');
-	ocp_model.set('dyn_expr_f', model.expr_f_impl);
+    ocp_model.set('dyn_type', 'implicit');
+    ocp_model.set('dyn_expr_f', model.expr_f_impl);
 end
 %% constraints
 % state bounds
@@ -284,18 +282,18 @@ ocp_opts.set('nlp_solver_exact_hessian', ocp_nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_ext_qp_res', ocp_nlp_solver_ext_qp_res);
 if (strcmp(ocp_nlp_solver, 'sqp'))
-	ocp_opts.set('nlp_solver_max_iter', ocp_nlp_solver_max_iter);
-	ocp_opts.set('nlp_solver_tol_stat', ocp_nlp_solver_tol_stat);
-	ocp_opts.set('nlp_solver_tol_eq', ocp_nlp_solver_tol_eq);
-	ocp_opts.set('nlp_solver_tol_ineq', ocp_nlp_solver_tol_ineq);
-	ocp_opts.set('nlp_solver_tol_comp', ocp_nlp_solver_tol_comp);
+    ocp_opts.set('nlp_solver_max_iter', ocp_nlp_solver_max_iter);
+    ocp_opts.set('nlp_solver_tol_stat', ocp_nlp_solver_tol_stat);
+    ocp_opts.set('nlp_solver_tol_eq', ocp_nlp_solver_tol_eq);
+    ocp_opts.set('nlp_solver_tol_ineq', ocp_nlp_solver_tol_ineq);
+    ocp_opts.set('nlp_solver_tol_comp', ocp_nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', ocp_qp_solver);
 if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_cond_N', ocp_qp_solver_cond_N);
-	ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
-	ocp_opts.set('qp_solver_ric_alg', ocp_qp_solver_ric_alg);
-	ocp_opts.set('qp_solver_warm_start', ocp_qp_solver_warm_start);
+    ocp_opts.set('qp_solver_cond_N', ocp_qp_solver_cond_N);
+    ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
+    ocp_opts.set('qp_solver_ric_alg', ocp_qp_solver_ric_alg);
+    ocp_opts.set('qp_solver_warm_start', ocp_qp_solver_warm_start);
 end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
@@ -323,22 +321,22 @@ sim_model.set('dim_np', np);
 % symbolics
 sim_model.set('sym_x', model.sym_x);
 if isfield(model, 'sym_u')
-	sim_model.set('sym_u', model.sym_u);
+    sim_model.set('sym_u', model.sym_u);
 end
 if isfield(model, 'sym_xdot')
-	sim_model.set('sym_xdot', model.sym_xdot);
+    sim_model.set('sym_xdot', model.sym_xdot);
 end
 if isfield(model, 'sym_p')
-	sim_model.set('sym_p', model.sym_p);
+    sim_model.set('sym_p', model.sym_p);
 end
 % model
 sim_model.set('T', T/ocp_N);
 if (strcmp(sim_method, 'erk'))
-	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('dyn_expr_f', model.expr_f_expl);
+    sim_model.set('dyn_type', 'explicit');
+    sim_model.set('dyn_expr_f', model.expr_f_expl);
 else % irk
-	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('dyn_expr_f', model.expr_f_impl);
+    sim_model.set('dyn_type', 'implicit');
+    sim_model.set('dyn_expr_f', model.expr_f_impl);
 end
 
 %sim_model.model_struct
@@ -362,10 +360,6 @@ ocp_opts.set('regularize_method', 'no_regularize');
 %% acados sim
 % create sim
 sim = acados_sim(sim_model, sim_opts);
-%sim
-%sim.C_sim
-%sim.C_sim_ext_fun
-
 
 
 %% closed loop simulation
@@ -375,7 +369,7 @@ compute_setup;
 n_sim = 100;
 n_sim_max = length(wind0_ref) - ocp_N;
 if n_sim>n_sim_max
-	n_sim = s_sim_max;
+    n_sim = s_sim_max;
 end
 x_sim = zeros(nx, n_sim+1);
 x_sim(:,1) = x0_ref; % initial state
@@ -390,137 +384,132 @@ pi_traj_init = zeros(nx, ocp_N);
 
 for ii=1:n_sim
 
-%	fprintf('\nsimulation step %d\n', ii);
+%    fprintf('\nsimulation step %d\n', ii);
 
-	tic
+    tic
 
-	% set x0
-	ocp.set('constr_x0', x_sim(:,ii));
-	% set parameter
-%	ocp.set('p', wind0_ref(:,ii));
-	for jj=0:ocp_N-1
-		ocp.set('p', jj, wind0_ref(:,ii+jj));
-	end
-	% set reference (different at each stage)
-%	ocp.set('yr', y_ref(:,ii));
-%	ocp.set('yr_e', y_ref(:,ii));
-	for jj=0:ocp_N-1
-		ocp.set('cost_yr', jj, y_ref(:,ii+jj));
-	end
-	ocp.set('cost_yr_e', y_ref(:,ii+ocp_N));
+    % set x0
+    ocp.set('constr_x0', x_sim(:,ii));
+    % set parameter
+%    ocp.set('p', wind0_ref(:,ii));
+    for jj=0:ocp_N-1
+        ocp.set('p', wind0_ref(:,ii+jj), jj);
+    end
+    % set reference (different at each stage)
+%    ocp.set('yr', y_ref(:,ii));
+%    ocp.set('yr_e', y_ref(:,ii));
+    for jj=0:ocp_N-1
+        ocp.set('cost_yr', y_ref(:,ii+jj), jj);
+    end
+    ocp.set('cost_yr_e', y_ref(1:ny_e,ii+ocp_N));
 
-	% set trajectory initialization (if not, set internally using previous solution)
-	ocp.set('init_x', x_traj_init);
-	ocp.set('init_u', u_traj_init);
-	ocp.set('init_pi', pi_traj_init);
+    % set trajectory initialization (if not, set internally using previous solution)
+    ocp.set('init_x', x_traj_init);
+    ocp.set('init_u', u_traj_init);
+    ocp.set('init_pi', pi_traj_init);
 
-%	x_traj_init
-%	u_traj_init
+%    x_traj_init
+%    u_traj_init
 
-	% solve
-	ocp.solve();
+    % solve
+    ocp.solve();
 
-	% get solution
-	x = ocp.get('x');
-	u = ocp.get('u');
-	pi = ocp.get('pi');
+    % get solution
+    x = ocp.get('x');
+    u = ocp.get('u');
+    pi = ocp.get('pi');
 
-%	x
-%	u
+    % store first input
+    u_sim(:,ii) = ocp.get('u', 0);
 
-	% store first input
-	u_sim(:,ii) = ocp.get('u', 0);
+    % set initial state of sim
+    sim.set('x', x_sim(:,ii));
+    % set input in sim
+    sim.set('u', u_sim(:,ii));
+    % set parameter
+    sim.set('p', wind0_ref(:,ii));
 
-	% set initial state of sim
-	sim.set('x', x_sim(:,ii));
-	% set input in sim
-	sim.set('u', u_sim(:,ii));
-	% set parameter
-	sim.set('p', wind0_ref(:,ii));
+    % simulate state
+    sim.solve();
 
-	% simulate state
-	sim.solve();
+    % get new state
+    x_sim(:,ii+1) = sim.get('xn');
+%    x_sim(:,ii+1) = x(:,2);
 
-	% get new state
-	x_sim(:,ii+1) = sim.get('xn');
-%	x_sim(:,ii+1) = x(:,2);
+%    (x(:,2) - sim.get('xn'))'
 
-%	(x(:,2) - sim.get('xn'))'
+    % simulate to initialize last stage
+    % set initial state of sim
+%    sim.set('x', x(:,ocp_N+1));
+    % set input in sim
+%    sim.set('u', zeros(nu, 1));
+%    sim.set('u', u(:,ocp_N));
+    % set parameter
+%    sim.set('p', wind0_ref(:,ii+ocp_N));
 
-	% simulate to initialize last stage
-	% set initial state of sim
-%	sim.set('x', x(:,ocp_N+1));
-	% set input in sim
-%	sim.set('u', zeros(nu, 1));
-%	sim.set('u', u(:,ocp_N));
-	% set parameter
-%	sim.set('p', wind0_ref(:,ii+ocp_N));
+    % simulate state
+%    sim.solve();
 
-	% simulate state
-%	sim.solve();
+    % shift trajectory for initialization
+%    x_traj_init = [x(:,2:ocp_N+1), zeros(nx, 1)];
+    x_traj_init = [x(:,2:ocp_N+1), x(:,ocp_N+1)];
+%    x_traj_init = [x(:,2:ocp_N+1), sim.get('xn')];
+%    u_traj_init = [u(:,2:ocp_N), zeros(nu, 1)];
+    u_traj_init = [u(:,2:ocp_N), u(:,ocp_N)];
+    pi_traj_init = [pi(:,2:ocp_N), pi(:,ocp_N)];
 
-	% shift trajectory for initialization
-%	x_traj_init = [x(:,2:ocp_N+1), zeros(nx, 1)];
-	x_traj_init = [x(:,2:ocp_N+1), x(:,ocp_N+1)];
-%	x_traj_init = [x(:,2:ocp_N+1), sim.get('xn')];
-%	u_traj_init = [u(:,2:ocp_N), zeros(nu, 1)];
-	u_traj_init = [u(:,2:ocp_N), u(:,ocp_N)];
-	pi_traj_init = [pi(:,2:ocp_N), pi(:,ocp_N)];
+    time_ext = toc;
 
-	time_ext = toc;
+%    x(:,1)'
+%    u(:,1)'
 
-%	x(:,1)'
-%	u(:,1)'
+    electrical_power = 0.944*97/100*x(1,1)*x(6,1);
 
-	electrical_power = 0.944*97/100*x(1,1)*x(6,1);
+    status = ocp.get('status');
+    sqp_iter = ocp.get('sqp_iter');
+    time_tot = ocp.get('time_tot');
+    time_lin = ocp.get('time_lin');
+    time_qp_sol = ocp.get('time_qp_sol');
 
-	status = ocp.get('status');
-	sqp_iter = ocp.get('sqp_iter');
-	time_tot = ocp.get('time_tot');
-	time_lin = ocp.get('time_lin');
-	time_qp_sol = ocp.get('time_qp_sol');
+    sqp_iter_sim(ii) = sqp_iter;
 
-	sqp_iter_sim(ii) = sqp_iter;
+    fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
 
-	fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
-
-	if 0
-		stat = ocp.get('stat');
-		if (strcmp(ocp_nlp_solver, 'sqp'))
-			fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter');
-			if size(stat,2)>7
-				fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
-			end
-			fprintf('\n');
-			for ii=1:size(stat,1)
-				fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
-				if size(stat,2)>7
-					fprintf('\t%e\t%e\t%e\t%e', stat(ii,8), stat(ii,9), stat(ii,10), stat(ii,11));
-				end
-				fprintf('\n');
-			end
-			fprintf('\n');
-		else % sqp_rti
-			fprintf('\niter\tqp_stat\tqp_iter');
-			if size(stat,2)>3
-				fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
-			end
-			fprintf('\n');
-			for ii=1:size(stat,1)
-				fprintf('%d\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3));
-				if size(stat,2)>3
-					fprintf('\t%e\t%e\t%e\t%e', stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
-				end
-				fprintf('\n');
-			end
-			fprintf('\n');
-		end
-	end
+    if 0
+        stat = ocp.get('stat');
+        if (strcmp(ocp_nlp_solver, 'sqp'))
+            fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter');
+            if size(stat,2)>7
+                fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
+            end
+            fprintf('\n');
+            for ii=1:size(stat,1)
+                fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
+                if size(stat,2)>7
+                    fprintf('\t%e\t%e\t%e\t%e', stat(ii,8), stat(ii,9), stat(ii,10), stat(ii,11));
+                end
+                fprintf('\n');
+            end
+            fprintf('\n');
+        else % sqp_rti
+            fprintf('\niter\tqp_stat\tqp_iter');
+            if size(stat,2)>3
+                fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
+            end
+            fprintf('\n');
+            for ii=1:size(stat,1)
+                fprintf('%d\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3));
+                if size(stat,2)>3
+                    fprintf('\t%e\t%e\t%e\t%e', stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
+                end
+                fprintf('\n');
+            end
+            fprintf('\n');
+        end
+    end
 
 end
 
-%u_sim
-%x_sim
 electrical_power = 0.944*97/100*x_sim(1,:).*x_sim(6,:);
 
 
@@ -553,12 +542,13 @@ hold on
 plot([1 n_sim], [ocp_nlp_solver_max_iter ocp_nlp_solver_max_iter]);
 hold off
 ylim([0 ocp_nlp_solver_max_iter+1])
-
+ylabel('sqp iterations')
+xlabel('sqp calls')
 
 if status==0
-	fprintf('\nsuccess!\n\n');
+    fprintf('\nsuccess!\n\n');
 else
-	fprintf('\nsolution failed!\n\n');
+    fprintf('\nsolution failed!\n\n');
 end
 
 
