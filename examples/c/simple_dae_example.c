@@ -327,9 +327,7 @@ int main() {
 
 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0_u);
 	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0_l);
-    // constraints[0]->idxb = idxb_0;
-	// blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, 0);
-	// blasfeo_pack_dvec(nb[0], x0, &constraints[0]->d, nb[0]+ng[0]);
+    constraints[0]->idxb = idxb_0;
 
     if (FORMULATION == 2) {
         external_function_param_casadi * nl_constr_h_fun_jac;
