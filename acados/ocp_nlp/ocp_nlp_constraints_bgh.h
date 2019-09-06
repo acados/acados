@@ -67,10 +67,10 @@ typedef struct
     int ng;  // number of general linear constraints
     int nh;  // number of nonlinear path constraints
     int ns;  // nsbu + nsbx + nsg + nsh
-    int nsbu;  // number of softed input bounds
-    int nsbx;  // number of softed state bounds
-    int nsg;  // number of softed general linear constraints
-    int nsh;  // number of softed nonlinear constraints
+    int nsbu;  // number of softened input bounds
+    int nsbx;  // number of softened state bounds
+    int nsg;  // number of softened general linear constraints
+    int nsh;  // number of softened nonlinear constraints
 } ocp_nlp_constraints_bgh_dims;
 
 //
