@@ -1178,11 +1178,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     // extract results from forward sweep to output
     blasfeo_unpack_dvec(nx, xn, 0, x_out);
-	printf("(in irk) x_out = \n");
-	blasfeo_print_dvec(nx, xn, 0);
-	printf("(in irk) x->in = \n");
-	for(int j = 0; j < nx; j++)
-		printf("%f\n", in->x[j]);
 
     if  ( opts->sens_forw || opts->sens_hess )
         blasfeo_unpack_dmat(nx, nx + nu, S_forw_ss, 0, 0, S_forw_out, nx);
