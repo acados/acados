@@ -513,7 +513,6 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     }
 
     if ( opts->sens_adj || opts->sens_hess ){
-		exit(1);
         size += steps * blasfeo_memsize_dvec(nx);       // for xn_traj
         size += steps * blasfeo_memsize_dvec(nK);       // for K_traj
     }
