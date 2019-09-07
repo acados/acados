@@ -51,7 +51,7 @@ elseif (strcmp(opts_struct.method, 'irk'))
 	c_files{end+1} = [model_name, '_dyn_impl_ode_fun.c'];
 	c_files{end+1} = [model_name, '_dyn_impl_ode_fun_jac_x_xdot_z.c'];
 	c_files{end+1} = [model_name, '_dyn_impl_ode_fun_jac_x_xdot_u.c'];
-	c_files{end+1} = [model_name, '_dyn_impl_ode_jac_x_xdot_u.c'];
+	c_files{end+1} = [model_name, '_dyn_impl_ode_jac_x_xdot_u_z.c'];
 	c_files{end+1} = [model_name, '_dyn_impl_ode_hess.c'];
 elseif (strcmp(opts_struct.method, 'irk_gnsf'))
 	% generate c for function and derivatives using casadi
