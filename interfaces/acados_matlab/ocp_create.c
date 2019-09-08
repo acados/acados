@@ -774,7 +774,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" ) );
             int acados_size = N+1;
-            MEX_DIM_CHECK(fun_name, "param_scheme_shooting_nodes", matlab_size, acados_size);
+            MEX_DIM_CHECK_VEC(fun_name, "param_scheme_shooting_nodes", matlab_size, acados_size);
 
             param_scheme_shooting_nodes = mxGetPr( mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" ) );
             double scale = T/(param_scheme_shooting_nodes[N]-param_scheme_shooting_nodes[0]);
@@ -864,7 +864,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_W" ) );
             int acados_size = ny*ny;
-            MEX_DIM_CHECK(fun_name, "cost_W", matlab_size, acados_size);
+            MEX_DIM_CHECK_VEC(fun_name, "cost_W", matlab_size, acados_size);
             double *W = mxGetPr( mxGetField( matlab_model, 0, "cost_W" ) );
             for (ii=0; ii<N; ii++)
             {
@@ -890,7 +890,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Vu" ) );
             int acados_size = ny*nu;
-            MEX_DIM_CHECK(fun_name, "cost_Vu", matlab_size, acados_size);
+            MEX_DIM_CHECK_VEC(fun_name, "cost_Vu", matlab_size, acados_size);
             double *Vu = mxGetPr( mxGetField( matlab_model, 0, "cost_Vu" ) );
             for (ii=0; ii<N; ii++)
             {
@@ -902,7 +902,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Vx" ) );
             int acados_size = ny*nx;
-            MEX_DIM_CHECK(fun_name, "cost_Vx", matlab_size, acados_size);
+            MEX_DIM_CHECK_VEC(fun_name, "cost_Vx", matlab_size, acados_size);
             double *Vx = mxGetPr( mxGetField( matlab_model, 0, "cost_Vx" ) );
             for (ii=0; ii<N; ii++)
             {
@@ -919,7 +919,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_W_e" ) );
             int acados_size = ny_e * ny_e;
-            MEX_DIM_CHECK(fun_name, "cost_W_e", matlab_size, acados_size);
+            MEX_DIM_CHECK_VEC(fun_name, "cost_W_e", matlab_size, acados_size);
             double *W_e = mxGetPr( mxGetField( matlab_model, 0, "cost_W_e" ) );
             ocp_nlp_cost_model_set(config, dims, in, N, "W", W_e);
         }
@@ -928,7 +928,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_yr_e" ) );
             int acados_size = ny_e;
-            MEX_DIM_CHECK(fun_name, "cost_yr_e", matlab_size, acados_size);
+            MEX_DIM_CHECK_VEC(fun_name, "cost_yr_e", matlab_size, acados_size);
             double *yr_e = mxGetPr( mxGetField( matlab_model, 0, "cost_yr_e" ) );
             ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
         }
@@ -940,7 +940,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Vx_e" ) );
             int acados_size = nx * ny_e;
-            MEX_DIM_CHECK(fun_name, "cost_Vx_e", matlab_size, acados_size);
+            MEX_DIM_CHECK_VEC(fun_name, "cost_Vx_e", matlab_size, acados_size);
             double *Vx_e = mxGetPr( mxGetField( matlab_model, 0, "cost_Vx_e" ) );
             ocp_nlp_cost_model_set(config, dims, in, N, "Vx", Vx_e);
         }
@@ -952,7 +952,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Z" ) );
         int acados_size = ns*ns;
-        MEX_DIM_CHECK(fun_name, "cost_Z", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_Z", matlab_size, acados_size);
         double *Z = mxGetPr( mxGetField( matlab_model, 0, "cost_Z" ) );
         MEX_CHECK_DIAGONALITY(fun_name, ns, Z, "cost_Z");
 
@@ -972,7 +972,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Z_e" ) );
         int acados_size = ns_e*ns_e;
-        MEX_DIM_CHECK(fun_name, "cost_Z_e", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_Z_e", matlab_size, acados_size);
         double *Z_e = mxGetPr( mxGetField( matlab_model, 0, "cost_Z_e" ) );
         MEX_CHECK_DIAGONALITY(fun_name, ns_e, Z_e, "cost_Z_e");
         d_ptr = malloc(ns_e*sizeof(double));
@@ -988,7 +988,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Zl" ) );
         int acados_size = ns;
-        MEX_DIM_CHECK(fun_name, "cost_Zl", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_Zl", matlab_size, acados_size);
         double *Zl = mxGetPr( mxGetField( matlab_model, 0, "cost_Zl" ) );
         d_ptr = malloc(ns*sizeof(double));
         for (ii=0; ii<ns; ii++)
@@ -1005,7 +1005,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Zl_e" ) );
         int acados_size = ns;
-        MEX_DIM_CHECK(fun_name, "cost_Zl_e", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_Zl_e", matlab_size, acados_size);
         double *Zl_e = mxGetPr( mxGetField( matlab_model, 0, "cost_Zl_e" ) );
         d_ptr = malloc(ns*sizeof(double));
         for (ii=0; ii<ns; ii++)
@@ -1020,7 +1020,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Zu" ) );
         int acados_size = ns;
-        MEX_DIM_CHECK(fun_name, "cost_Zu", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_Zu", matlab_size, acados_size);
         double *Zu = mxGetPr( mxGetField( matlab_model, 0, "cost_Zu" ) );
         d_ptr = malloc(ns*sizeof(double));
         for (ii=0; ii<ns; ii++)
@@ -1037,7 +1037,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Zu_e" ) );
         int acados_size = ns;
-        MEX_DIM_CHECK(fun_name, "cost_Zu_e", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_Zu_e", matlab_size, acados_size);
         double *Zu_e = mxGetPr( mxGetField( matlab_model, 0, "cost_Zu_e" ) );
         d_ptr = malloc(ns*sizeof(double));
         for (ii=0; ii<ns; ii++)
@@ -1052,7 +1052,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_z" ) );
         int acados_size = ns;
-        MEX_DIM_CHECK(fun_name, "cost_z", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_z", matlab_size, acados_size);
         double *z = mxGetPr( mxGetField( matlab_model, 0, "cost_z" ) );
         for (ii=0; ii<N; ii++)
         {
@@ -1064,7 +1064,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_z_e" ) );
         int acados_size = ns;
-        MEX_DIM_CHECK(fun_name, "cost_z_e", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_z_e", matlab_size, acados_size);
         double *z_e = mxGetPr( mxGetField( matlab_model, 0, "cost_z_e" ) );
         ocp_nlp_cost_model_set(config, dims, in, N, "z", z_e);
     }
@@ -1073,7 +1073,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_zl" ) );
         int acados_size = ns;
-        MEX_DIM_CHECK(fun_name, "cost_zl", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_zl", matlab_size, acados_size);
         double *zl = mxGetPr( mxGetField( matlab_model, 0, "cost_zl" ) );
         for (ii=0; ii<N; ii++)
         {
@@ -1085,7 +1085,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_zl_e" ) );
         int acados_size = ns;
-        MEX_DIM_CHECK(fun_name, "cost_zl_e", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_zl_e", matlab_size, acados_size);
         double *zl_e = mxGetPr( mxGetField( matlab_model, 0, "cost_zl_e" ) );
         ocp_nlp_cost_model_set(config, dims, in, N, "zl", zl_e);
     }
@@ -1094,7 +1094,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_zu" ) );
         int acados_size = ns;
-        MEX_DIM_CHECK(fun_name, "cost_zu", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_zu", matlab_size, acados_size);
         double *zu = mxGetPr( mxGetField( matlab_model, 0, "cost_zu" ) );
         for (ii=0; ii<N; ii++)
         {
@@ -1106,7 +1106,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_zu_e" ) );
         int acados_size = ns;
-        MEX_DIM_CHECK(fun_name, "cost_zu_e", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "cost_zu_e", matlab_size, acados_size);
         double *zu_e = mxGetPr( mxGetField( matlab_model, 0, "cost_zu_e" ) );
         ocp_nlp_cost_model_set(config, dims, in, N, "zu", zu_e);
     }
@@ -1159,7 +1159,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_lbx" ) );
         int acados_size = nbx;
-        MEX_DIM_CHECK(fun_name, "constr_lbx", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_lbx", matlab_size, acados_size);
         set_lbx = true;
         lbx = mxGetPr( mxGetField( matlab_model, 0, "constr_lbx" ) );
         for (ii=1; ii<=N; ii++)
@@ -1173,7 +1173,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_ubx" ) );
         int acados_size = nbx;
-        MEX_DIM_CHECK(fun_name, "constr_ubx", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_ubx", matlab_size, acados_size);
         set_ubx = true;
         ubx = mxGetPr( mxGetField( matlab_model, 0, "constr_ubx" ) );
         for (ii=1; ii<=N; ii++)
@@ -1191,24 +1191,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ocp_nlp_constraints_model_set(config, dims, in, 0, "idxbx", i_ptr);
     free(i_ptr);
 
+
     tmp_idx = malloc(nbx*sizeof(int));
+
     // Jbx
-    if (mxGetField( matlab_model, 0, "constr_Jbx" )!=NULL)
+    const mxArray *Jbx_matlab = mxGetField( matlab_model, 0, "constr_Jbx" );
+    if (Jbx_matlab!=NULL)
     {
-        int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_Jbx" ) );
-        int acados_size = nx*nbx;
-        MEX_DIM_CHECK(fun_name, "constr_Jbx", matlab_size, acados_size);
-        double *Jbx = mxGetPr( mxGetField( matlab_model, 0, "constr_Jbx" ) );
-        for (ii=0; ii<nbx; ii++)
+        int nrow = (int) mxGetM( Jbx_matlab );
+        int ncol = (int) mxGetN( Jbx_matlab );
+        MEX_DIM_CHECK_MAT(fun_name, "constr_Jbx", nrow, ncol, nbx, nx);
+
+        double *Jbx = mxGetPr( Jbx_matlab );
+        for (ii=0; ii<nrow; ii++)
         {
-            idx = -1;
-            for (jj=0; jj<nx; jj++)
+            int nnz_row = 0;
+            for (jj=0; jj<ncol; jj++)
             {
-                if (Jbx[ii+nbx*jj]!=0.0)
+                if (Jbx[ii+nrow*jj]==1.0)
                 {
                     tmp_idx[ii] = jj;
-                    idx = jj;
+                    nnz_row++;
                 }
+                else if (Jbx[ii+nrow*jj]!=0.0)
+                {
+                    MEX_NONBINARY_MAT(fun_name, "constr_Jbx");
+                }
+            }
+            if (nnz_row > 1)
+            {
+                MEX_MULTIPLE_ONES_IN_ROW(fun_name, "constr_Jbx");
             }
         }
         for (ii=1; ii<=N; ii++)
@@ -1230,7 +1242,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_x0" ) );
         int acados_size = nx;
-        MEX_DIM_CHECK(fun_name, "constr_x0", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_x0", matlab_size, acados_size);
         double *x0 = mxGetPr( mxGetField( matlab_model, 0, "constr_x0" ) );
 
         ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", x0);
@@ -1285,24 +1297,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
     // Jbu
-    if (mxGetField( matlab_model, 0, "constr_Jbu" )!=NULL)
+    const mxArray *Jbu_matlab = mxGetField( matlab_model, 0, "constr_Jbu" );
+    if (Jbu_matlab != NULL)
     {
-        int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_Jbu" ) );
-        int acados_size = nu*nbu;
-        MEX_DIM_CHECK(fun_name, "constr_Jbu", matlab_size, acados_size);
+        int nrow = (int) mxGetM( Jbu_matlab );
+        int ncol = (int) mxGetN( Jbu_matlab );
+        MEX_DIM_CHECK_MAT(fun_name, "constr_Jbu", nrow, ncol, nbu, nu);
 
         double *Jbu = mxGetPr( mxGetField( matlab_model, 0, "constr_Jbu" ) );
-        i_ptr = malloc(nbu*sizeof(int));
-        for (ii=0; ii<nbu; ii++)
+        i_ptr = malloc(nrow*sizeof(int));
+        for (ii=0; ii<nrow; ii++)
         {
-            idx = -1;
-            for (jj=0; jj<nu; jj++)
+            int nnz_row = 0;
+            for (jj=0; jj<ncol; jj++)
             {
-                if (Jbu[ii+nbu*jj]!=0.0)
+                if (Jbu[ii+nrow*jj]!=0.0)
                 {
                     i_ptr[ii] = jj;
-                    idx = jj;
+                    nnz_row++;
                 }
+                else if (Jbu[ii+nrow*jj]!=0.0)
+                {
+                    MEX_NONBINARY_MAT(fun_name, "constr_Jbu");
+                }
+            }
+            if (nnz_row > 1)
+            {
+                MEX_MULTIPLE_ONES_IN_ROW(fun_name, "constr_Jbu");
             }
         }
         for (ii=0; ii<N; ii++)
@@ -1318,7 +1339,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_lbu" ) );
         int acados_size = nbu;
-        MEX_DIM_CHECK(fun_name, "constr_lbu", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_lbu", matlab_size, acados_size);
 
         double *lbu = mxGetPr( mxGetField( matlab_model, 0, "constr_lbu" ) );
         for (ii=0; ii<N; ii++)
@@ -1331,7 +1352,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_ubu" ) );
         int acados_size = nbu;
-        MEX_DIM_CHECK(fun_name, "constr_ubu", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_ubu", matlab_size, acados_size);
 
         double *ubu = mxGetPr( mxGetField( matlab_model, 0, "constr_ubu" ) );
         for (ii=0; ii<N; ii++)
@@ -1346,7 +1367,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_C" ) );
         int acados_size = ng*nx;
-        MEX_DIM_CHECK(fun_name, "constr_C", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_C", matlab_size, acados_size);
 
         double *C = mxGetPr( mxGetField( matlab_model, 0, "constr_C" ) );
         for (ii=0; ii<N; ii++)
@@ -1359,7 +1380,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_D" ) );
         int acados_size = ng*nu;
-        MEX_DIM_CHECK(fun_name, "constr_D", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_D", matlab_size, acados_size);
 
         double *D = mxGetPr( mxGetField( matlab_model, 0, "constr_D" ) );
         for (ii=0; ii<N; ii++)
@@ -1372,7 +1393,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_lg" ) );
         int acados_size = ng;
-        MEX_DIM_CHECK(fun_name, "constr_lg", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_lg", matlab_size, acados_size);
         double *lg = mxGetPr( mxGetField( matlab_model, 0, "constr_lg" ) );
         for (ii=0; ii<N; ii++)
         {
@@ -1384,7 +1405,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_ug" ) );
         int acados_size = ng;
-        MEX_DIM_CHECK(fun_name, "constr_ug", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_ug", matlab_size, acados_size);
         double *ug = mxGetPr( mxGetField( matlab_model, 0, "constr_ug" ) );
         for (ii=0; ii<N; ii++)
         {
@@ -1415,7 +1436,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_lh" ) );
         int acados_size = nh;
-        MEX_DIM_CHECK(fun_name, "constr_lh", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_lh", matlab_size, acados_size);
         double *lh = mxGetPr( mxGetField( matlab_model, 0, "constr_lh" ) );
         for (ii=0; ii<N; ii++)
         {
@@ -1427,7 +1448,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_uh" ) );
         int acados_size = nh;
-        MEX_DIM_CHECK(fun_name, "constr_uh", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_uh", matlab_size, acados_size);
         double *uh = mxGetPr( mxGetField( matlab_model, 0, "constr_uh" ) );
         for (ii=0; ii<N; ii++)
         {
@@ -1439,7 +1460,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_lh_e" ) );
         int acados_size = nh_e;
-        MEX_DIM_CHECK(fun_name, "constr_lh_e", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_lh_e", matlab_size, acados_size);
         double *lh_e = mxGetPr( mxGetField( matlab_model, 0, "constr_lh_e" ) );
         ocp_nlp_constraints_model_set(config, dims, in, N, "lh", lh_e);
     }
@@ -1448,7 +1469,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_uh_e" ) );
         int acados_size = nh_e;
-        MEX_DIM_CHECK(fun_name, "constr_uh_e", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_uh_e", matlab_size, acados_size);
         double *uh_e = mxGetPr( mxGetField( matlab_model, 0, "constr_uh_e" ) );
         ocp_nlp_constraints_model_set(config, dims, in, N, "uh", uh_e);
     }
@@ -1457,7 +1478,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_Jsbu" ) );
         int acados_size = nbu * nsbu;
-        MEX_DIM_CHECK(fun_name, "constr_Jsbu", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_Jsbu", matlab_size, acados_size);
         double *Jsbu = mxGetPr( mxGetField( matlab_model, 0, "constr_Jsbu" ) );
 
         i_ptr = malloc(nsbu*sizeof(int));
@@ -1484,7 +1505,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_Jsbx" ) );
         int acados_size = nbx * nsbx;
-        MEX_DIM_CHECK(fun_name, "constr_Jsbx", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_Jsbx", matlab_size, acados_size);
         double *Jsbx = mxGetPr( mxGetField( matlab_model, 0, "constr_Jsbx" ) );
         i_ptr = malloc(nsbx*sizeof(int));
         for (ii=0; ii<nsbx; ii++)
@@ -1511,7 +1532,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_Jsbx" ) );
         int acados_size = nsg * ng;
-        MEX_DIM_CHECK(fun_name, "constr_Jsbx", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_Jsbx", matlab_size, acados_size);
 
         double *Jsg = mxGetPr( mxGetField( matlab_model, 0, "constr_Jsg" ) );
         i_ptr = malloc(nsg*sizeof(int));
@@ -1538,7 +1559,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_Jsg_e" ) );
         int acados_size = nsg_e * ng_e;
-        MEX_DIM_CHECK(fun_name, "constr_Jsg_e", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_Jsg_e", matlab_size, acados_size);
         
         double *Jsg_e = mxGetPr( mxGetField( matlab_model, 0, "constr_Jsg_e" ) );
 
@@ -1564,7 +1585,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_Jsh" ) );
         int acados_size = nsh * nh;
-        MEX_DIM_CHECK(fun_name, "constr_Jsh", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_Jsh", matlab_size, acados_size);
 
         double *Jsh = mxGetPr( mxGetField( matlab_model, 0, "constr_Jsh" ) );
         i_ptr = malloc(nsh*sizeof(int));
@@ -1592,7 +1613,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_Jsh_e" ) );
         int acados_size = nsh_e * nh_e;
-        MEX_DIM_CHECK(fun_name, "constr_Jsh_e", matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, "constr_Jsh_e", matlab_size, acados_size);
 
         double *Jsh_e = mxGetPr( mxGetField( matlab_model, 0, "constr_Jsh_e" ) );
         i_ptr = malloc(nsh_e*sizeof(int));

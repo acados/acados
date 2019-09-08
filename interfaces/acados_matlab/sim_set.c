@@ -82,19 +82,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (!strcmp(field, "T"))
     {
         acados_size = 1;
-        MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         sim_in_set(config, dims, in, field, value);
     }
     else if (!strcmp(field, "x"))
     {
         sim_dims_get(config, dims, "nx", &acados_size);
-        MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         sim_in_set(config, dims, in, field, value);
     }
     else if (!strcmp(field, "u"))
     {
         sim_dims_get(config, dims, "nu", &acados_size);
-        MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         sim_in_set(config, dims, in, field, value);
     }
     else if (!strcmp(field, "p"))
@@ -111,7 +111,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 ext_fun_param_ptr = (external_function_param_casadi *) ptr[0];
                 acados_size = ext_fun_param_ptr->np;
-                MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+                MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
 
                 ext_fun_param_ptr->set_param(ext_fun_param_ptr, value);
             }
@@ -123,26 +123,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         // TODO(oj): in C, the backward seed is of dimension nx+nu, I think it should only be nx.
         // sim_dims_get(config, dims, "nu", &tmp);
         // acados_size += tmp;
-        MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         sim_in_set(config, dims, in, field, value);
     }
     else if(!strcmp(field, "xdot"))
     {
         sim_dims_get(config, dims, "nx", &acados_size);
-        MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         sim_solver_set(solver, field, value);
     }
     else if(!strcmp(field, "z"))
     {
         sim_dims_get(config, dims, "nz", &acados_size);
-        MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         sim_solver_set(solver, field, value);
     }
     else if(!strcmp(field, "phi_guess"))
     {
         // TODO(oj): check if irk_gnsf
         sim_dims_get(config, dims, "nout", &acados_size);
-        MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         sim_solver_set(solver, field, value);
     }
     else

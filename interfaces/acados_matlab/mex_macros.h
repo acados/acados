@@ -34,12 +34,32 @@
 #include "mex.h"
 
 
-#define MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size) {\
+#define MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size) {\
 	if (acados_size != matlab_size)\
 	{\
 		sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d", fun_name, field, matlab_size, acados_size);\
 		mexErrMsgTxt(buffer);\
 	}\
+}
+
+#define MEX_DIM_CHECK_MAT(fun_name, field, matlab_nrow, matlab_ncol, acados_nrow, acados_ncol) {\
+	if ((acados_nrow != matlab_nrow) || (acados_ncol != matlab_ncol)  )\
+	{\
+		sprintf(buffer, "%s: error setting %s, wrong dimension, got %d x %d, need %d x %d",\
+		       fun_name, field, matlab_nrow, matlab_ncol, acados_nrow, acados_ncol);\
+		mexErrMsgTxt(buffer);\
+	}\
+}
+
+#define MEX_NONBINARY_MAT(fun_name, field) {\
+	sprintf(buffer, "%s: error setting %s, matrix should be binary!", fun_name, field);\
+	mexErrMsgTxt(buffer);\
+}
+
+#define MEX_MULTIPLE_ONES_IN_ROW(fun_name, field) {\
+	sprintf(buffer, "%s: error setting %s, matrix cannot contain multiple ones in row!",\
+	        fun_name, field);\
+	mexErrMsgTxt(buffer);\
 }
 
 #define MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field) {\
