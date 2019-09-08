@@ -287,6 +287,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_out_set(config, dims, out, ii, "u", value+ii*nu);
         }
     }
+    else if (!strcmp(field, "init_z"))
+    {
+        int nz = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "z");
+        if (nrhs!=6)
+            MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
+
+        acados_size = N*nz;
+        MEX_DIM_CHECK(fun_name, field, matlab_size, acados_size);
+        for (int ii=0; ii<N; ii++)
+        {
+            ocp_nlp_out_set(config, dims, out, ii, "z", value+ii*nz);
+        }
+    }
     else if (!strcmp(field, "init_pi"))
     {
         if (nrhs!=6)

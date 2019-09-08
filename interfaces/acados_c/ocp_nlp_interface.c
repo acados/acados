@@ -537,6 +537,10 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         return dims->nu[stage];
     }
+    else if (!strcmp(field, "z"))
+    {
+        return dims->nz[stage];
+    }
     // ocp_nlp_constraints_dims
     else if (!strcmp(field, "lbx") || !strcmp(field, "ubx"))
     {

@@ -79,7 +79,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int N = dims->N;
 	int nu = dims->nu[0];
 	int nx = dims->nx[0];
-
+	int nz = dims->nz[0];
 
 	if (!strcmp(field, "x"))
 	{
@@ -122,7 +122,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			double *u = mxGetPr( plhs[0] );
 			int stage = mxGetScalar( prhs[2] );
 			ocp_nlp_out_get(config, dims, out, stage, "u", u);
+		}
+		else
+		{
+			sprintf(buffer, "\nocp_get: wrong nrhs: %d\n", nrhs);
+			mexErrMsgTxt(buffer);
+		}
+	}
+	else if (!strcmp(field, "z"))
+	{
+		if (nrhs==2)
+		{
+			plhs[0] = mxCreateNumericMatrix(nz, N, mxDOUBLE_CLASS, mxREAL);
+			double *z = mxGetPr( plhs[0] );
+			for (ii=0; ii<N; ii++)
+			{
+				ocp_nlp_out_get(config, dims, out, ii, "z", z+ii*nz);
 			}
+		}
+		else if (nrhs==3)
+		{
+			plhs[0] = mxCreateNumericMatrix(nz, 1, mxDOUBLE_CLASS, mxREAL);
+			double *z = mxGetPr( plhs[0] );
+			int stage = mxGetScalar( prhs[2] );
+			ocp_nlp_out_get(config, dims, out, stage, "z", z);
+		}
 		else
 		{
 			sprintf(buffer, "\nocp_get: wrong nrhs: %d\n", nrhs);
