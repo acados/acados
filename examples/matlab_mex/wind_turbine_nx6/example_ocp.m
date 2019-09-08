@@ -316,7 +316,7 @@ ocp.set('p', wind0_ref(:,nn));
 
 % set reference
 ocp.set('cost_yr', y_ref(:,nn));
-ocp.set('cost_yr_e', y_ref(:,nn));
+ocp.set('cost_yr_e', y_ref(1:ny_e,nn));
 
 % solve
 disp('before solve')
@@ -380,7 +380,7 @@ end
 
 % figures
 
-figure(1);
+figure;
 subplot(3,1,1);
 plot(0:N, x);
 xlim([0 N]);
@@ -402,7 +402,7 @@ ylabel('electrical power');
 %legend('F');
 
 if (strcmp(nlp_solver, 'sqp'))
-	figure(2);
+	figure;
 	plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
 	hold on
 	plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');

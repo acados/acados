@@ -32,7 +32,7 @@
 %
 
 %% test of native matlab interface
-clear VARIABLES
+clear all
 
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
@@ -43,19 +43,19 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% options
-% compile_mex = 'true'; % true, false
-% codgen_model = 'true'; % true, false
-compile_mex = 'false'; % true, false
-codgen_model = 'false'; % true, false
+compile_mex = 'true'; % true, false
+codgen_model = 'true'; % true, false
+% compile_mex = 'false'; % true, false
+% codgen_model = 'false'; % true, false
 % simulation
 gnsf_detect_struct = 'true'; % true, false
-sim_method = 'irk'; % irk, irk_gnsf, [erk]
+sim_method = 'irk_gnsf'; % irk, irk_gnsf, [erk]
 sim_sens_forw = 'false'; % true, false
 sim_jac_reuse = 'false'; % true, false
 sim_num_stages = 3;
 sim_num_steps = 3;
 sim_newton_iter = 3;
-model_name = 'inv_pend_dae';
+model_name = 'pend_dae';
 
 % ocp
 param_scheme = 'multiple_shooting_unif_grid';
@@ -78,18 +78,21 @@ cost_type = 'linear_ls'; % linear_ls, ext_cost
 
 %% model
 model = pendulum_dae_model;
-
+%  sym_x = [xpos, ypos, alpha, vx, vy, valpha]
 % x0 = [1; -5; 1; 0.1; -0.5; 0.1];
 length_pendulum = 5;
 xsteady = [ 0; -length_pendulum; 0; 0; 0; 0];
+xtarget = [ 0; +length_pendulum; pi; 0; 0; 0];
+% xtarget = xsteady;
+uref = 0;
 
-alpha0 = .01;
+alpha0 = 0;%.01;
 xp0 = length_pendulum * sin(alpha0);
 yp0 = - length_pendulum * cos(alpha0);
 x0 = [ xp0; yp0; alpha0; 0; 0; 0];
 % x0 = xsteady + 1e-4 * ones(nx,1);
 
-h = 0.01;
+h = 0.05;
 T = ocp_N*h;
 
 disp('state')
@@ -112,21 +115,20 @@ nh_e = 0;
 
 % cost
 % linear least square cost: y^T * W * y, where y = Vx * x + Vu * u - y_ref
-Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
-Vx = zeros(ny, nx); for ii=1:nx Vx(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
-Vx_e = zeros(ny_e, nx); for ii=1:nx Vx_e(ii,ii)=1.0; end % state-to-output matrix in mayer term
-W = eye(ny); % weight matrix in lagrange term
-for ii=1:nu W(ii,ii)=1e-2; end
-for ii=nu+1:nu+nx W(ii,ii)=1e3; end
+Vx = eye(ny, nx); % state-to-output matrix in lagrange term
+Vu = zeros(ny, nu);
+Vu(nx:end, nx:end) = eye(nu); % input-to-output matrix in lagrange term
+Vx_e = Vx(1:ny_e,:); % state-to-output matrix in mayer term
+% weight matrix in lagrange term
+W = diag([1e3 * ones(3,1);... % xpos, ypos, alpha
+            ones(3,1); ... %speeds
+            1e2 ]); % control
 W_e = W(nu+1:nu+nx, nu+1:nu+nx); % weight matrix in mayer term
-yr = xsteady; % output reference in lagrange term
-yr_e = xsteady(1:ny_e); % output reference in mayer term
+yr = [xtarget; uref]; % output reference in lagrange term
+yr_e = xtarget; % output reference in mayer term
 
 % constraints
-%Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
-%lbx = -4*ones(nbx, 1);
-%ubx =  4*ones(nbx, 1);
-Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
+Jbu = eye(nbu, nu);
 lbu = -80*ones(nu, 1);
 ubu =  80*ones(nu, 1);
 
@@ -247,13 +249,6 @@ ocp_opts.opts_struct
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-ocp
-ocp.C_ocp
-ocp.C_ocp_ext_fun
-
-
-
-
 
 
 %% acados sim model
@@ -305,7 +300,7 @@ end
 sim = acados_sim(sim_model, sim_opts);
 
 %% closed loop simulation
-N_sim = 1000;
+N_sim = 99;
 
 x_sim = zeros(nx, N_sim+1);
 x_sim(:,1) = x0; % initial state
@@ -315,65 +310,69 @@ u_sim = zeros(nu, N_sim);
 xdot0 = zeros(nx, 1);
 z0 = zeros(nz, 1);
 
-% % set trajectory initialization
-%x_traj_init = zeros(nx, ocp_N+1);
-%for ii=1:ocp_N x_traj_init(:,ii) = [0; pi; 0; 0]; end
+% set trajectory initialization
 x_traj_init = repmat(x0, 1, ocp_N + 1);
-
 u_traj_init = zeros(nu, ocp_N);
 pi_traj_init = zeros(nx, ocp_N);
+z_traj_init = zeros(nz, ocp_N);
 
+sqp_iter = zeros(N_sim,1);
+sqp_time = zeros(N_sim,1);
 
 tic
 for ii=1:N_sim
-	
+
 	% set initial state
     ocp.set('constr_x0', x_sim(:,ii));
 	% set trajectory initialization (if not, set internally using previous solution)
 	ocp.set('init_x', x_traj_init);
 	ocp.set('init_u', u_traj_init);
 	ocp.set('init_pi', pi_traj_init);
+	ocp.set('init_z', z_traj_init);
 
 	ocp.solve();
 
-    % get solution for initialization of next NLP
-	x_traj = ocp.get('x');
-	u_traj = ocp.get('u');
-	pi_traj = ocp.get('pi');
-    
     status = ocp.get('status');
     if status ~= 0
         keyboard
     end
+    sqp_iter(ii) = ocp.get('sqp_iter');
+    sqp_time(ii) = ocp.get('time_tot');
 
 	% get solution for initialization of next NLP
 	x_traj = ocp.get('x');
 	u_traj = ocp.get('u');
 	pi_traj = ocp.get('pi');
+	z_traj = ocp.get('z');
 
 	% shift trajectory for initialization
 	x_traj_init = [x_traj(:,2:end), x_traj(:,end)];
 	u_traj_init = [u_traj(:,2:end), u_traj(:,end)];
 	pi_traj_init = [pi_traj(:,2:end), pi_traj(:,end)];
+	z_traj_init = [z_traj(:,2:end), z_traj(:,end)];
 
     u_sim(:,ii) = ocp.get('u', 0); % get control input
     % initialize implicit integrator
-%     if (strcmp(sim_method, 'irk'))
-%         sim.set('xdot', xdot0);
-%         sim.set('z', z0);
-%     elseif (strcmp(sim_method, 'irk_gnsf'))
-%         y_in = sim.model_struct.dyn_gnsf_L_x * x0 ...
-%                 + sim.model_struct.dyn_gnsf_L_xdot * xdot0 ...
-%                 + sim.model_struct.dyn_gnsf_L_z * z0;
-%         u_hat = sim.model_struct.dyn_gnsf_L_u * u;
-%         phi_fun = Function([model_name,'_gnsf_phi_fun'],...
-%                         {sim.model_struct.sym_gnsf_y, sim.model_struct.sym_gnsf_uhat},...
-%                             {sim.model_struct.dyn_gnsf_expr_phi(:)}); % sim.model_struct.sym_p
-% 
-%         phi_guess = full( phi_fun( y_in, u_hat ) );
-%         n_out = sim.model_struct.dim_gnsf_nout;
-%         sim.set('phi_guess', zeros(n_out,1));
-%     end
+    if (strcmp(sim_method, 'irk'))
+        sim.set('xdot', xdot0);
+        sim.set('z', z0);
+    elseif (strcmp(sim_method, 'irk_gnsf'))
+        import casadi.*
+        x01_gnsf = x0(sim.model_struct.dyn_gnsf_idx_perm_x(1:sim.model_struct.dim_gnsf_nx1));
+        x01_dot_gnsf = xdot0(sim.model_struct.dyn_gnsf_idx_perm_x(1:sim.model_struct.dim_gnsf_nx1));
+        z0_gnsf = z0(sim.model_struct.dyn_gnsf_idx_perm_z( 1:sim.model_struct.dim_gnsf_nz1 ));
+        y_in = sim.model_struct.dyn_gnsf_L_x * x01_gnsf ...
+                + sim.model_struct.dyn_gnsf_L_xdot * x01_dot_gnsf ...
+                + sim.model_struct.dyn_gnsf_L_z * z0_gnsf;
+        u_hat = sim.model_struct.dyn_gnsf_L_u * u_sim(:,ii);
+        phi_fun = Function([model_name,'_gnsf_phi_fun'],...
+                        {sim.model_struct.sym_gnsf_y, sim.model_struct.sym_gnsf_uhat},...
+                            {sim.model_struct.dyn_gnsf_expr_phi(:)}); % sim.model_struct.sym_p
+
+        phi_guess = full( phi_fun( y_in, u_hat ) );
+        n_out = sim.model_struct.dim_gnsf_nout;
+        sim.set('phi_guess', zeros(n_out,1));
+    end
 
 	sim.set('x', x_sim(:,ii)); 	% set initial state
 	sim.set('u', u_sim(:,ii)); 	% set input
@@ -385,13 +384,11 @@ for ii=1:N_sim
 
 end
 format short e
-% xfinal = sim.get('xn')'
-% z = sim.get('zn')' % approximate value of algebraic variables at start of simulation
-% S_alg = sim.get('S_algebraic') % sensitivities of algebraic variables z
 
 toc
 
 
+% trajectory plot
 figure;
 subplot(4, 1, 1);
 plot(1:N_sim+1, x_sim(1:2,:));
@@ -407,8 +404,32 @@ legend('vx', 'vy', 'valpha');
 
 subplot(4,1,4);
 plot(1:N_sim+1, [0 u_sim]);
+legend('u')
 
 if is_octave()
     waitforbuttonpress;
 end
 
+
+% iterations, CPU time
+figure();
+subplot(2, 1, 1);
+plot(1:N_sim, sqp_iter)
+ylabel('# iterations')
+xlabel('ocp instance')
+subplot(2, 1, 2);
+plot(1:N_sim, sqp_time)
+ylabel('CPU time')
+xlabel('ocp instance')
+if is_octave()
+    waitforbuttonpress;
+end
+
+% check consistency
+xp = x_sim(1,:);
+yp = x_sim(2,:);
+check = abs(xp.^2 + yp.^2 - length_pendulum^2);
+
+if any( max(abs(check)) > 1e-13 )
+    disp('note: check for constant pendulum length failed');
+end
