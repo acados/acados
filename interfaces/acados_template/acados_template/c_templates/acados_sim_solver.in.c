@@ -66,8 +66,12 @@ int {{ ocp.model_name}}_acados_sim_create() {
     {% if ocp.solver_config.integrator_type == "IRK" %}
     {% if ocp.dims.np < 1 %}
     sim_impl_dae_fun = (external_function_casadi *) malloc(sizeof(external_function_casadi));
+    sim_impl_dae_fun_jac_x_xdot_z = (external_function_casadi *) malloc(sizeof(external_function_casadi));
+    sim_impl_dae_jac_x_xdot_u_z = (external_function_casadi *) malloc(sizeof(external_function_casadi));
     {% else %}
     sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
+    sim_impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
+    sim_impl_dae_jac_x_xdot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     {% endif %}
 	// external functions (implicit model)
 	sim_impl_dae_fun->casadi_fun  = &{{ ocp.model_name }}_impl_dae_fun;
@@ -164,8 +168,8 @@ int {{ ocp.model_name}}_acados_sim_create() {
     // external functions
     {% if ocp.solver_config.integrator_type == "IRK" %}
     {{ ocp.model_name }}_sim_config->model_set({{ ocp.model_name }}_sim_in->model, "impl_ode_fun", sim_impl_dae_fun);
-    {{ ocp.model_name }}_config->model_set({{ ocp.model_name }}_sim_in->model, "impl_ode_fun_jac_x_xdot", sim_impl_dae_fun_jac_x_xdot_z);
-    {{ ocp.model_name }}_sim_config->model_set(in->model, "impl_ode_jac_x_xdot_u", sim_impl_dae_jac_x_xdot_u_z);
+    {{ ocp.model_name }}_sim_config->model_set({{ ocp.model_name }}_sim_in->model, "impl_ode_fun_jac_x_xdot", sim_impl_dae_fun_jac_x_xdot_z);
+    {{ ocp.model_name }}_sim_config->model_set({{ ocp.model_name }}_sim_in->model, "impl_ode_jac_x_xdot_u", sim_impl_dae_jac_x_xdot_u_z);
 
     {% else %}
     {% if ocp.solver_config.integrator_type == "ERK" %} 

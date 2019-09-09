@@ -828,7 +828,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* LHS */
 
 	// field names of output struct
-	char *fieldnames[7];
+	char *fieldnames[8];
 	fieldnames[0] = (char*) mxMalloc(50);
 	fieldnames[1] = (char*) mxMalloc(50);
 	fieldnames[2] = (char*) mxMalloc(50);
@@ -836,6 +836,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	fieldnames[4] = (char*) mxMalloc(50);
 	fieldnames[5] = (char*) mxMalloc(50);
 	fieldnames[6] = (char*) mxMalloc(50);
+	fieldnames[7] = (char*) mxMalloc(50);
 
 	memcpy(fieldnames[0],"config",sizeof("config"));
 	memcpy(fieldnames[1],"dims",sizeof("dims"));
@@ -844,9 +845,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	memcpy(fieldnames[4],"out",sizeof("out"));
 	memcpy(fieldnames[5],"solver",sizeof("solver"));
 	memcpy(fieldnames[6],"sens_out",sizeof("sens_out"));
+	memcpy(fieldnames[7],"plan",sizeof("plan"));
 
 	// create output struct
-	plhs[0] = mxCreateStructMatrix(1, 1, 7, (const char **) fieldnames);
+	plhs[0] = mxCreateStructMatrix(1, 1, 8, (const char **) fieldnames);
 
 	mxFree( fieldnames[0] );
 	mxFree( fieldnames[1] );
@@ -855,7 +857,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mxFree( fieldnames[4] );
 	mxFree( fieldnames[5] );
 	mxFree( fieldnames[6] );
-
+	mxFree( fieldnames[7] );
 
 
 	/* plan & config */
@@ -1049,9 +1051,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	// TODO checks on initialization of plan !!!!!!!!
 
     ocp_nlp_config *config = ocp_nlp_config_create(*plan);
-
-
-	ocp_nlp_plan_destroy(plan);
 	
 
 
@@ -1977,6 +1976,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 	/* populate output struct */
+
+	// plan
+	mxArray *plan_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+	l_ptr = mxGetData(plan_mat);
+	l_ptr[0] = (long long) plan;
+	mxSetField(plhs[0], 0, "plan", plan_mat);
 
 	// config
 	mxArray *config_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
