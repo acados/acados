@@ -1411,6 +1411,10 @@ int sim_gnsf_memory_set(void *config_, void *dims_, void *mem_, const char *fiel
         for (int ii=0; ii < dims->n_out; ii++)
             mem->phi_guess[ii] = phi_guess[ii];
     }
+    else if (!strcmp(field, "guesses_blasfeo"))
+    {
+        blasfeo_unpack_dvec(dims->n_out, value, 0, mem->phi_guess);
+    }
     else
     {
         printf("sim_gnsf_memory_set field %s is not supported! \n", field);
@@ -1967,7 +1971,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         for (int i = 0; i < num_stages; i++)
             blasfeo_pack_dvec(n_out, mem->phi_guess, &vv_traj[0], i * n_out);
 
-        // blasfeo_dvecse(nvv, 0.0, &vv_traj[0], 0);
+        // printf("GNSF_IRK initial guess:\n");
+        // blasfeo_print_dvec(num_stages * n_out, &vv_traj[0], 0);
+        // exit(1);
 
         /************************************************
          * Set up function input & outputs

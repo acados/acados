@@ -88,9 +88,15 @@
 	mexErrMsgTxt(buffer);\
 }
 
-#define MEX_SOLVER_NOT_SUPPORTED_GIVEN(fun_name, field, value, given, suggestions) {\
+#define MEX_FIELD_NOT_SUPPORTED_GIVEN(fun_name, field, value, given, suggestions) {\
 	sprintf(buffer, "%s field %s does not support %s given %s, supported values are:\n %s",\
 	        fun_name, field, value, given, suggestions);\
+	mexErrMsgTxt(buffer);\
+}
+
+#define MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, solver) {\
+	sprintf(buffer, "%s field %s only supported for %s\n",\
+	        fun_name, field, solver);\
 	mexErrMsgTxt(buffer);\
 }
 

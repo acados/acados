@@ -244,7 +244,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else
         {
-            MEX_SOLVER_NOT_SUPPORTED_GIVEN(fun_name, "sim_method", sim_method, "explicit dynamics", "erk");
+            MEX_FIELD_NOT_SUPPORTED_GIVEN(fun_name, "sim_method", sim_method, "explicit dynamics", "erk");
         }
     }
     else if (!strcmp(dyn_type, "implicit"))
@@ -259,7 +259,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else
         {
-            MEX_SOLVER_NOT_SUPPORTED_GIVEN(fun_name, "sim_method", sim_method, "implicit dynamics", "irk, irk_gnsf");
+            MEX_FIELD_NOT_SUPPORTED_GIVEN(fun_name, "sim_method", sim_method, "implicit dynamics", "irk, irk_gnsf");
         }
     }
     for (int ii=0; ii<N; ii++)

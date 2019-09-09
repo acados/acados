@@ -755,6 +755,15 @@ void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
         blasfeo_pack_dvec(nx, double_values, &mem->sim_guess[stage], 0);
         mem->set_sim_guess[stage] = true;
     }
+    else if (!strcmp(field, "gnsf_phi_guess"))
+    {
+        int nout;
+        config->dynamics[stage]->dims_get(config->dynamics[stage], dims->dynamics[stage],
+                                            "gnsf_nout", &nout);
+        double *double_values = value;
+        blasfeo_pack_dvec(nout, double_values, &mem->sim_guess[stage], 0);
+        mem->set_sim_guess[stage] = true;
+    }
     else
     {
         printf("\nerror: ocp_nlp_mem_set: field %s not available\n", field);

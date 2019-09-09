@@ -37,6 +37,7 @@
 #include <string.h>
 // acados
 #include "acados_c/ocp_nlp_interface.h"
+#include "acados_c/sim_interface.h"
 // mex
 #include "mex.h"
 #include "mex_macros.h"
@@ -53,7 +54,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
     /* RHS */
-    // C_ocp
+    const mxArray *matlab_model = prhs[0];
 	const mxArray *C_ocp = prhs[2];
     // plan
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
@@ -292,28 +293,69 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "init_z"))
     {
-        int nz = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "z");
-        if (nrhs!=6)
-            MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
-
-        acados_size = N*nz;
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        for (int ii=0; ii<N; ii++)
+        sim_solver_plan sim_plan = plan->sim_solver_plan[0];
+        sim_solver_t type = sim_plan.sim_solver;
+        if (type == IRK)
         {
-            ocp_nlp_set(config, solver, ii, "z_guess", value+ii*nz);
+            int nz = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "z");
+            if (nrhs!=6)
+                MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
+
+            acados_size = N*nz;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_set(config, solver, ii, "z_guess", value+ii*nz);
+            }
+        }
+        else
+        {
+            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_z", "irk")
         }
     }
     else if (!strcmp(field, "init_xdot"))
     {
-        int nx = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "x");
-        if (nrhs!=6)
-            MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
-
-        acados_size = N*nx;
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        for (int ii=0; ii<N; ii++)
+        sim_solver_plan sim_plan = plan->sim_solver_plan[0];
+        sim_solver_t type = sim_plan.sim_solver;
+        if (type == IRK)
         {
-            ocp_nlp_set(config, solver, ii, "xdot_guess", value+ii*nx);
+            int nx = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "x");
+            if (nrhs!=6)
+                MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
+
+            acados_size = N*nx;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_set(config, solver, ii, "xdot_guess", value+ii*nx);
+            }
+        }
+        else
+        {
+            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_z", "irk")
+        }
+    }
+    else if (!strcmp(field, "init_gnsf_phi"))
+    {
+        sim_solver_plan sim_plan = plan->sim_solver_plan[0];
+        sim_solver_t type = sim_plan.sim_solver;
+        if (type == GNSF)
+        {
+            // int nx = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "x");
+            int nout = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_nout" ) );
+            if (nrhs!=6)
+                MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
+
+            acados_size = N*nout;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_set(config, solver, ii, "gnsf_phi_guess", value+ii*nx);
+            }
+        }
+        else
+        {
+            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, "init_gnsf_phi", "irk_gnsf")
         }
     }
     else if (!strcmp(field, "init_pi"))
