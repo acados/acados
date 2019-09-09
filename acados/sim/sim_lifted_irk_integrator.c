@@ -362,6 +362,9 @@ void *sim_lifted_irk_memory_assign(void *config, void *dims_, void *opts_, void 
 
     int num_steps = opts->num_steps;
 
+    // initial align
+    align_char_to(8, &c_ptr);
+
     sim_lifted_irk_memory *memory = (sim_lifted_irk_memory *) c_ptr;
     c_ptr += sizeof(sim_lifted_irk_memory);
 

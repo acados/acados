@@ -1294,6 +1294,9 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     int nK2 = num_stages * nxz2;
     int nZ1 = num_stages * nz1;
 
+    // initial align
+    align_char_to(8, &c_ptr);
+
     // struct
     sim_gnsf_memory *mem = (sim_gnsf_memory *) c_ptr;
     c_ptr += sizeof(sim_gnsf_memory);
