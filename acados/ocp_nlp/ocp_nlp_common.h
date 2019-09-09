@@ -226,6 +226,7 @@ typedef struct
 {
     struct blasfeo_dvec *ux;
     struct blasfeo_dvec *z;
+    struct blasfeo_dvec *sim_guess;
     struct blasfeo_dvec *pi;
     struct blasfeo_dvec *lam;
     struct blasfeo_dvec *t;

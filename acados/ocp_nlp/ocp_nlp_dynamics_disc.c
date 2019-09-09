@@ -376,7 +376,7 @@ void ocp_nlp_dynamics_disc_memory_set_dzduxt_ptr(struct blasfeo_dmat *mat, void 
 
 
 
-void ocp_nlp_dynamics_disc_memory_set_z_guess_ptr(struct blasfeo_dvec *z, void *memory_)
+void ocp_nlp_dynamics_disc_memory_set_sim_guess_ptr(struct blasfeo_dvec *z, void *memory_)
 {
     return;  // we don't allow algebraic variables for discrete models for now
 }
@@ -677,7 +677,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_disc_memory_set_BAbt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_disc_memory_set_RSQrq_ptr;
     config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_disc_memory_set_dzduxt_ptr;
-    config->memory_set_z_guess_ptr = &ocp_nlp_dynamics_disc_memory_set_z_guess_ptr;
+    config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_disc_memory_set_sim_guess_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_disc_memory_set_z_alg_ptr;
     config->workspace_calculate_size = &ocp_nlp_dynamics_disc_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_disc_initialize;
