@@ -472,11 +472,6 @@ void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_pack_dvec(dims->nu[stage], double_values, &out->ux[stage], 0);
     }
-    else if (!strcmp(field, "z"))
-    {
-        double *double_values = value;
-        blasfeo_pack_dvec(dims->nz[stage], double_values, &out->z[stage], 0);
-    }
     else if (!strcmp(field, "pi"))
     {
         double *double_values = value;
@@ -573,6 +568,8 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
         exit(1);
     }
 }
+
+
 /************************************************
 * opts
 ************************************************/
@@ -669,6 +666,7 @@ static ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     solver->opts = opts_;
 
     solver->mem = config->memory_assign(config, dims, opts_, c_ptr);
+    // printf("\nsolver->mem %p", solver->mem);
     c_ptr += config->memory_calculate_size(config, dims, opts_);
 
     solver->work = (void *) c_ptr;
@@ -728,4 +726,39 @@ void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
                  const char *field, void *return_value_)
 {
     solver->config->get(solver->config, solver->mem, field, return_value_);
+}
+
+
+void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
+		int stage, const char *field, void *value)
+{
+    ocp_nlp_memory *mem;
+    config->get(config, solver->mem, "mem_nlp", &mem);
+    // printf("called getter: mem_nlp %p\n", mem);
+
+    ocp_nlp_dims *dims = solver->dims;
+
+    if (!strcmp(field, "z_guess"))
+    {
+        int nz = dims->nz[stage];
+        int nx = dims->nx[stage];
+        double *double_values = value;
+        blasfeo_pack_dvec(nz, double_values, mem->sim_guess + stage, nx);
+        mem->set_sim_guess[stage] = true;
+        // printf("set z_guess\n");
+        // blasfeo_print_exp_dvec(nz, mem->sim_guess+stage, nx);
+    }
+    else if (!strcmp(field, "xdot_guess"))
+    {
+        int nx = dims->nx[stage];
+        double *double_values = value;
+        blasfeo_pack_dvec(nx, double_values, &mem->sim_guess[stage], 0);
+        mem->set_sim_guess[stage] = true;
+    }
+    else
+    {
+        printf("\nerror: ocp_nlp_mem_set: field %s not available\n", field);
+        exit(1);
+    }
+    // printf("exit ocp_nlp_set\n");
 }

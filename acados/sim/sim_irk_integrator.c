@@ -872,9 +872,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         blasfeo_pack_dvec(nx, mem->xdot, K, nx*i);
         // algebraic variables
         blasfeo_pack_dvec(nz, mem->z, K, nx*ns + i*nz);
-        // printf("sim_irk: K initialization\n");
-        // blasfeo_print_exp_dvec(nK, K, 0);
     }
+    // printf("sim_irk: K initialization\n");
+    // blasfeo_print_exp_dvec(nK, K, 0);
     // exit(1);
 
     // TODO(dimitris, FreyJo): implement NF (number of forward sensis) properly, instead of nx+nu?

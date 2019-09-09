@@ -73,6 +73,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // out
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "out" ) );
     ocp_nlp_out *out = (ocp_nlp_out *) ptr[0];
+    // solver
+    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "solver" ) );
+    ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
 
     const mxArray *C_ext_fun_pointers = prhs[3];
     // field
@@ -297,7 +300,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         for (int ii=0; ii<N; ii++)
         {
-            ocp_nlp_out_set(config, dims, out, ii, "z", value+ii*nz);
+            ocp_nlp_set(config, solver, ii, "z_guess", value+ii*nz);
+        }
+    }
+    else if (!strcmp(field, "init_xdot"))
+    {
+        int nx = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "x");
+        if (nrhs!=6)
+            MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
+
+        acados_size = N*nx;
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+        for (int ii=0; ii<N; ii++)
+        {
+            ocp_nlp_set(config, solver, ii, "xdot_guess", value+ii*nx);
         }
     }
     else if (!strcmp(field, "init_pi"))

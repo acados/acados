@@ -369,6 +369,20 @@ void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *field, int stage, int
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
 		const char *field, void *return_value_);
 
+/* set */
+/// Sets the initial guesses for the integrator for the given stage.
+///
+/// \param config The configuration struct.
+/// \param dims The dimensions struct.
+/// \param mem The memory struct.
+/// \param stage Stage number.
+/// \param field Supports "z_guess", "xdot_guess" (IRK), "phi_guess" (GNSF-IRK)
+/// \param value The initial guess for the algebraic variables in the integrator (if continuous model is used).
+void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
+		int stage, const char *field, void *value);
+
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

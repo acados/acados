@@ -669,12 +669,14 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_unpack_dvec(nu, mem->ux, 0, work->sim_in->u);
     blasfeo_unpack_dvec(nx, mem->ux, nu, work->sim_in->x);
 
-    // printf("sim_guess\n");
+    // printf("sim_guess, bool %d\n", mem->set_sim_guess[0]);
     // blasfeo_print_exp_dvec(nx + nz, mem->sim_guess, 0);
-    if (mem->set_sim_guess==NULL && mem->set_sim_guess[0])
+
+    if (mem->set_sim_guess!=NULL && mem->set_sim_guess[0])
     {
         config->sim_solver->memory_set(config->sim_solver, work->sim_in->dims, mem->sim_solver,
                                         "guesses_blasfeo", mem->sim_guess);
+        mem->set_sim_guess[0] = false;
     }
 
     // initialize seeds

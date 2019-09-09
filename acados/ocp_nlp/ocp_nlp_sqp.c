@@ -622,7 +622,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 	mem->stat = (double *) c_ptr;
 	mem->stat_m = opts->max_iter+1;
 	mem->stat_n = 6;
-	if(opts->ext_qp_res)
+	if (opts->ext_qp_res)
 		mem->stat_n += 4;
 	c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
@@ -640,17 +640,17 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     align_char_to(64, &c_ptr);
 
 	// dzduxt
-	for(ii=0; ii<=N; ii++)
-		{
+	for (int ii=0; ii<=N; ii++)
+    {
 		blasfeo_create_dmat(nu[ii]+nx[ii], nz[ii], mem->dzduxt+ii, c_ptr);
 		c_ptr += blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]);
-		}
+    }
 	// z_alg
-	for(ii=0; ii<=N; ii++)
-		{
+	for (int ii=0; ii<=N; ii++)
+    {
 		blasfeo_create_dvec(nz[ii], mem->z_alg+ii, c_ptr);
 		c_ptr += blasfeo_memsize_dvec(nz[ii]);
-		}
+    }
 
     mem->status = ACADOS_READY;
 
