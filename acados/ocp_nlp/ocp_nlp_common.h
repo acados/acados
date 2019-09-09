@@ -226,10 +226,9 @@ typedef struct
 {
     struct blasfeo_dvec *ux;
     struct blasfeo_dvec *z;
-    struct blasfeo_dvec *sim_guess;
     struct blasfeo_dvec *pi;
     struct blasfeo_dvec *lam;
-    struct blasfeo_dvec *t;
+    struct blasfeo_dvec *t;  // slacks of inequalities
 
     int sqp_iter;
     int qp_iter;
@@ -256,6 +255,10 @@ typedef struct
     struct blasfeo_dvec *ineq_adj;
     struct blasfeo_dvec *dyn_fun;
     struct blasfeo_dvec *dyn_adj;
+
+    bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
+    struct blasfeo_dvec *sim_guess;
+
 } ocp_nlp_memory;
 
 //

@@ -800,21 +800,19 @@ int ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
     int size = sizeof(ocp_nlp_out);
 
-    size += 5 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux lam t z sim_guess
+    size += 4 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux, lam, t, z
     size += 1 * N * sizeof(struct blasfeo_dvec);        // pi
 
     for (int ii = 0; ii < N; ii++)
     {
         size += 1 * blasfeo_memsize_dvec(nv[ii]);      // ux
         size += 1 * blasfeo_memsize_dvec(nz[ii]);      // z
-        size += 2 * blasfeo_memsize_dvec(2 * ni[ii]);  // lam t
-        size += 1 * blasfeo_memsize_dvec(nx[ii] + nz[ii]); // sim_guess
+        size += 2 * blasfeo_memsize_dvec(2 * ni[ii]);  // lam, t
         size += 1 * blasfeo_memsize_dvec(nx[ii + 1]);  // pi
     }
     size += 1 * blasfeo_memsize_dvec(nv[N]);      // ux
     size += 1 * blasfeo_memsize_dvec(nz[N]);     // z
-    size += 1 * blasfeo_memsize_dvec(nx[N] + nz[N]);  // sim_guess
-    size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // lam t
+    size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // lam, t
 
     size += 8;   // initial align
     size += 8;   // blasfeo_struct align
@@ -856,8 +854,6 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
     assign_and_advance_blasfeo_dvec_structs(N + 1, &out->ux, &c_ptr);
     // z
     assign_and_advance_blasfeo_dvec_structs(N + 1, &out->z, &c_ptr);
-    // sim_guess
-    assign_and_advance_blasfeo_dvec_structs(N + 1, &out->sim_guess, &c_ptr);
     // pi
     assign_and_advance_blasfeo_dvec_structs(N, &out->pi, &c_ptr);
     // lam
@@ -878,11 +874,6 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
     for (int ii = 0; ii <= N; ++ii)
     {
         assign_and_advance_blasfeo_dvec_mem(nz[ii], out->z + ii, &c_ptr);
-    }
-    // sim_guess
-    for (int ii = 0; ii <= N; ++ii)
-    {
-        assign_and_advance_blasfeo_dvec_mem(nx[ii] + nz[ii], out->sim_guess + ii, &c_ptr);
     }
     // pi
     for (int ii = 0; ii < N; ++ii)
@@ -905,7 +896,6 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
 	{
 		blasfeo_dvecse(nv[ii], 0.0, out->ux+ii, 0);
 		blasfeo_dvecse(nz[ii], 0.0, out->z+ii, 0);
-		blasfeo_dvecse(nx[ii] + nz[ii], 0.0, out->sim_guess+ii, 0);
 		blasfeo_dvecse(nx[ii+1], 0.0, out->pi+ii, 0);
 		blasfeo_dvecse(2*ni[ii], 0.0, out->lam+ii, 0);
 		blasfeo_dvecse(2*ni[ii], 0.0, out->t+ii, 0);
@@ -913,7 +903,6 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
 	ii = N;
 	blasfeo_dvecse(nv[ii], 0.0, out->ux+ii, 0);
 	blasfeo_dvecse(nz[ii], 0.0, out->z+ii, 0);
-    blasfeo_dvecse(nx[ii] + nz[ii], 0.0, out->sim_guess+ii, 0);
 	blasfeo_dvecse(2*ni[ii], 0.0, out->lam+ii, 0);
 	blasfeo_dvecse(2*ni[ii], 0.0, out->t+ii, 0);
 
@@ -934,12 +923,15 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
+    int *nz = dims->nz;
     int *nu = dims->nu;
     int *ni = dims->ni;
 
     int size = sizeof(ocp_nlp_memory);
 
-    size += 4 * (N + 1) * sizeof(struct blasfeo_dvec);  // cost_grad ineq_fun ineq_adj dyn_adj
+    size += (N + 1) * sizeof(bool); // set_sim_guess
+
+    size += 5 * (N + 1) * sizeof(struct blasfeo_dvec);  // cost_grad, ineq_fun, ineq_adj, dyn_adj, sim_guess
     size += 1 * N * sizeof(struct blasfeo_dvec);        // dyn_fun
 
     for (int ii = 0; ii < N; ii++)
@@ -948,10 +940,12 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
         size += 1 * blasfeo_memsize_dvec(nu[ii] + nx[ii]);  // dyn_adj
         size += 1 * blasfeo_memsize_dvec(nx[ii + 1]);       // dyn_fun
         size += 1 * blasfeo_memsize_dvec(2 * ni[ii]);       // ineq_fun
+        size += 1 * blasfeo_memsize_dvec(nx[ii] + nz[ii]); // sim_guess
     }
     size += 2 * blasfeo_memsize_dvec(nv[N]);          // cost_grad ineq_adj
     size += 1 * blasfeo_memsize_dvec(nu[N] + nx[N]);  // dyn_adj
     size += 1 * blasfeo_memsize_dvec(2 * ni[N]);      // ineq_fun
+    size += 1 * blasfeo_memsize_dvec(nx[N] + nz[N]);  // sim_guess
 
     size += 8;   // initial align
     size += 8;   // blasfeo_struct align
@@ -973,6 +967,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
+    int *nz = dims->nz;
     int *nu = dims->nu;
     int *ni = dims->ni;
 
@@ -982,6 +977,13 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // struct
     ocp_nlp_memory *mem = (ocp_nlp_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_memory);
+
+    // set_sim_guess
+    assign_and_advance_bool(N+1, &mem->set_sim_guess, &c_ptr);
+    for (int ii = 0; ii <= N; ++ii)
+    {
+        mem->set_sim_guess[ii] = false;
+    }
 
     // blasfeo_struct align
     align_char_to(8, &c_ptr);
@@ -996,6 +998,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     assign_and_advance_blasfeo_dvec_structs(N, &mem->dyn_fun, &c_ptr);
     // dyn_adj
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->dyn_adj, &c_ptr);
+    // sim_guess
+    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->sim_guess, &c_ptr);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -1025,6 +1029,15 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     {
         assign_and_advance_blasfeo_dvec_mem(nu[ii] + nx[ii], mem->dyn_adj + ii, &c_ptr);
     }
+    // sim_guess
+    for (int ii = 0; ii <= N; ++ii)
+    {
+        assign_and_advance_blasfeo_dvec_mem(nx[ii] + nz[ii], mem->sim_guess + ii, &c_ptr);
+        // set to 0;
+		blasfeo_dvecse(nx[ii] + nz[ii], 0.0, mem->sim_guess+ii, 0);
+        // printf("sim_guess ii %d: %p\n", ii, mem->sim_guess+ii);
+    }
+    // printf("created memory %p\n", mem);
 
     return mem;
 }

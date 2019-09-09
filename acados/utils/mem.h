@@ -40,6 +40,7 @@ extern "C" {
 #endif
 
 #include <stdio.h>
+#include <stdbool.h>
 
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
@@ -90,6 +91,9 @@ void assign_and_advance_char(int n, char **v, char **ptr);
 
 // allocate vector of ints and advance pointer
 void assign_and_advance_int(int n, int **v, char **ptr);
+
+// allocate vector of bools and advance pointer
+void assign_and_advance_bool(int n, bool **v, char **ptr);
 
 // allocate vector of doubles and advance pointer
 void assign_and_advance_double(int n, double **v, char **ptr);

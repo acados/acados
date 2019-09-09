@@ -352,8 +352,6 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     // struct
     ocp_nlp_dynamics_cont_memory *memory = (ocp_nlp_dynamics_cont_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_cont_memory);
-    memory->set_sim_guess = false;
-
 
     // sim_solver
     memory->sim_solver =
@@ -463,11 +461,12 @@ void ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr(struct blasfeo_dmat *mat, void 
 
 
 
-void ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr(struct blasfeo_dvec *vec, void *memory_)
+void ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr(struct blasfeo_dvec *vec, bool *bool_ptr, void *memory_)
 {
     ocp_nlp_dynamics_cont_memory *memory = memory_;
 
     memory->sim_guess = vec;
+    memory->set_sim_guess = bool_ptr;
 
     return;
 }
@@ -672,13 +671,11 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 
     // printf("sim_guess\n");
     // blasfeo_print_exp_dvec(nx + nz, mem->sim_guess, 0);
-
-    if (mem->set_sim_guess)
+    if (mem->set_sim_guess==NULL && mem->set_sim_guess[0])
     {
         config->sim_solver->memory_set(config->sim_solver, work->sim_in->dims, mem->sim_solver,
                                         "guesses_blasfeo", mem->sim_guess);
     }
-
 
     // initialize seeds
     // TODO fix dims if nx!=nx1 !!!!!!!!!!!!!!!!!

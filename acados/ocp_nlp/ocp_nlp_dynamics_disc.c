@@ -376,7 +376,7 @@ void ocp_nlp_dynamics_disc_memory_set_dzduxt_ptr(struct blasfeo_dmat *mat, void 
 
 
 
-void ocp_nlp_dynamics_disc_memory_set_sim_guess_ptr(struct blasfeo_dvec *z, void *memory_)
+void ocp_nlp_dynamics_disc_memory_set_sim_guess_ptr(struct blasfeo_dvec *z, bool *bool_ptr, void *memory_)
 {
     return;  // we don't allow algebraic variables for discrete models for now
 }
