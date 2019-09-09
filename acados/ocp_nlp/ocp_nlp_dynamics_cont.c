@@ -188,6 +188,30 @@ void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *fiel
 }
 
 
+void ocp_nlp_dynamics_cont_dims_get(void *config_, void *dims_, const char *field, int* value)
+{
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+    if (!strcmp(field, "nx"))
+    {
+        *value = dims->nx;
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        *value = dims->nu;
+    }
+    else
+    {
+        // get GNSF dims from integrator module
+        ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+        ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
+        sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
+
+        sim_config_->dims_get(sim_config_, dims->sim, field, value);
+    }
+// printf("\nexiting: ocp_nlp_dynamics_cont_dims_get, %d\n", *value);
+
+}
+
 
 /************************************************
  * options
@@ -788,6 +812,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_dynamics_cont_dims_calculate_size;
     config->dims_assign = &ocp_nlp_dynamics_cont_dims_assign;
     config->dims_set = &ocp_nlp_dynamics_cont_dims_set;
+    config->dims_get = &ocp_nlp_dynamics_cont_dims_get;
     config->dims_initialize = &ocp_nlp_dynamics_cont_dims_initialize;
     config->model_calculate_size = &ocp_nlp_dynamics_cont_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_cont_model_assign;
