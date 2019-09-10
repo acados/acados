@@ -390,9 +390,9 @@ for ii=1:n_sim
 
     % set reference (different at each stage)
     for jj=0:ocp_N-1
-        ocp.set('cost_yr', y_ref(:,ii+jj), jj);
+        ocp.set('cost_y_ref', y_ref(:,ii+jj), jj);
     end
-    ocp.set('cost_yr_e', y_ref(1:ny_e,ii+ocp_N));
+    ocp.set('cost_y_ref_e', y_ref(1:ny_e,ii+ocp_N));
 
     % set trajectory initialization (if not, set internally using previous solution)
     ocp.set('init_x', x_traj_init);

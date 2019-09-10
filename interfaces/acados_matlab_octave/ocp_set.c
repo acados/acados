@@ -125,7 +125,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", value);
     }
     // cost:
-    else if (!strcmp(field, "cost_yr"))
+    else if (!strcmp(field, "cost_y_ref"))
     {
         for (int ii=s0; ii<se; ii++)
         {
@@ -141,7 +141,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
         }
     }
-    else if (!strcmp(field, "cost_yr_e"))
+    else if (!strcmp(field, "cost_y_ref_e"))
     {
         acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, N, "y_ref");
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);

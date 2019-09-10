@@ -105,10 +105,10 @@ classdef acados_ocp_model < handle
 					obj.model_struct.cost_W = value;
 				elseif (strcmp(field, 'cost_W_e'))
 					obj.model_struct.cost_W_e = value;
-				elseif (strcmp(field, 'cost_yr'))
-					obj.model_struct.cost_yr = value;
-				elseif (strcmp(field, 'cost_yr_e'))
-					obj.model_struct.cost_yr_e = value;
+				elseif (strcmp(field, 'cost_y_ref'))
+					obj.model_struct.cost_y_ref = value;
+				elseif (strcmp(field, 'cost_y_ref_e'))
+					obj.model_struct.cost_y_ref_e = value;
 				elseif (strcmp(field, 'cost_Z'))
 					obj.model_struct.cost_Z = value;
 				elseif (strcmp(field, 'cost_Z_e'))

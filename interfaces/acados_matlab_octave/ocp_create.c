@@ -939,11 +939,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
         }
         // TODO: else complain?
-        if (mxGetField( matlab_model, 0, "cost_yr" )!=NULL)
+        if (mxGetField( matlab_model, 0, "cost_y_ref" )!=NULL)
         {
-            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_yr" ) );
+            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_y_ref" ) );
             int acados_size = ny;
-            double *yr = mxGetPr( mxGetField( matlab_model, 0, "cost_yr" ) );
+            double *yr = mxGetPr( mxGetField( matlab_model, 0, "cost_y_ref" ) );
             for (int ii=0; ii<N; ii++)
             {
                 ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
@@ -991,12 +991,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_cost_model_set(config, dims, in, N, "W", W_e);
         }
         // TODO: else complain?
-        if (mxGetField( matlab_model, 0, "cost_yr_e" )!=NULL)
+        if (mxGetField( matlab_model, 0, "cost_y_ref_e" )!=NULL)
         {
-            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_yr_e" ) );
+            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_y_ref_e" ) );
             int acados_size = ny_e;
-            MEX_DIM_CHECK_VEC(fun_name, "cost_yr_e", matlab_size, acados_size);
-            double *yr_e = mxGetPr( mxGetField( matlab_model, 0, "cost_yr_e" ) );
+            MEX_DIM_CHECK_VEC(fun_name, "cost_y_ref_e", matlab_size, acados_size);
+            double *yr_e = mxGetPr( mxGetField( matlab_model, 0, "cost_y_ref_e" ) );
             ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
         }
         // TODO: else complain?

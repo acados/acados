@@ -155,8 +155,8 @@ ocp_model.set('cost_Vx', Vx);
 ocp_model.set('cost_Vx_e', Vx_e);
 ocp_model.set('cost_W', W);
 ocp_model.set('cost_W_e', W_e);
-ocp_model.set('cost_yr', yr);
-ocp_model.set('cost_yr_e', yr_e);
+ocp_model.set('cost_y_ref', yr);
+ocp_model.set('cost_y_ref_e', yr_e);
 % dynamics
 if (strcmp(ocp_sim_method, 'erk'))
 	ocp_model.set('dyn_type', 'explicit');

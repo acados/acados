@@ -315,8 +315,8 @@ nn = 1;
 ocp.set('p', wind0_ref(:,nn));
 
 % set reference
-ocp.set('cost_yr', y_ref(:,nn));
-ocp.set('cost_yr_e', y_ref(1:ny_e,nn));
+ocp.set('cost_y_ref', y_ref(:,nn));
+ocp.set('cost_y_ref_e', y_ref(1:ny_e,nn));
 
 % solve
 disp('before solve')

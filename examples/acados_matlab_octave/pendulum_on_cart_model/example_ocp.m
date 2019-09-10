@@ -165,8 +165,8 @@ ocp_model.set('cost_type_e', cost_type);
 	ocp_model.set('cost_Vx_e', Vx_e);
 	ocp_model.set('cost_W', W);
 	ocp_model.set('cost_W_e', W_e);
-	ocp_model.set('cost_yr', yr);
-	ocp_model.set('cost_yr_e', yr_e);
+	ocp_model.set('cost_y_ref', yr);
+	ocp_model.set('cost_y_ref_e', yr_e);
 %else % if (strcmp(cost_type, 'ext_cost'))
 %	ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
 %	ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
