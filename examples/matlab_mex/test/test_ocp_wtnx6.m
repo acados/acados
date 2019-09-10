@@ -36,14 +36,6 @@ clear all
 
 addpath('../wind_turbine_nx6/');
 
-% check that env.sh has been run
-env_run = getenv('ENV_RUN');
-if (~strcmp(env_run, 'true'))
-    disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-    disp('source env.sh');
-    return;
-end
-
 
 %% arguments
 compile_mex = 'true';
@@ -269,7 +261,7 @@ ocp_model.set('constr_Jsbx', Jsbx);
 ocp_model.set('constr_Jsh', Jsh);
 ocp_model.set('constr_Jsh_e', Jsh_e);
 
-ocp_model.model_struct
+ocp_model.model_struct;
 
 
 
@@ -302,7 +294,7 @@ ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
 
-ocp_opts.opts_struct
+ocp_opts.opts_struct;
 
 
 
@@ -456,9 +448,6 @@ for ii=1:n_sim
 
     time_ext = toc;
 
-%    x(:,1)'
-%    u(:,1)'
-
     electrical_power = 0.944*97/100*x(1,1)*x(6,1);
 
     status = ocp.get('status');
@@ -468,6 +457,9 @@ for ii=1:n_sim
     time_qp_sol = ocp.get('time_qp_sol');
 
     sqp_iter_sim(ii) = sqp_iter;
+    if status ~= 0
+        error('ocp_nlp solver returned nonzero status!');
+    end
 
     fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms]), Pel = %f\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, electrical_power);
 

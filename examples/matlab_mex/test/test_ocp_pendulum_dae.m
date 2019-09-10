@@ -34,14 +34,6 @@
 %% test of native matlab interface
 clear all
 
-% check that env.sh has been run
-env_run = getenv('ENV_RUN');
-if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
-end
-
 addpath('../pendulum_dae/');
 
 %% options
@@ -135,7 +127,6 @@ yr_e = xtarget; % output reference in mayer term
 Jbu = eye(nbu, nu);
 lbu = -80*ones(nu, 1);
 ubu =  80*ones(nu, 1);
-
 
 
 %% acados ocp model
@@ -234,6 +225,10 @@ ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
 if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+    ocp_opts.set('nlp_solver_tol_stat', 1e-8);
+    ocp_opts.set('nlp_solver_tol_eq', 1e-8);
+    ocp_opts.set('nlp_solver_tol_ineq', 1e-8);
+    ocp_opts.set('nlp_solver_tol_comp', 1e-8);
 end
 ocp_opts.set('qp_solver', qp_solver);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
@@ -364,7 +359,7 @@ for ii=1:N_sim
             fprintf('\n');
         end
     end
-        
+
     status = ocp.get('status');
     sqp_iter(ii) = ocp.get('sqp_iter');
     sqp_time(ii) = ocp.get('time_tot');

@@ -730,7 +730,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( matlab_array );
         MEX_DIM_CHECK_VEC_TWO(fun_name, matlab_field_name, matlab_size, 1, N);
-        mexPrintf("\ncheck successful");
 
         if (matlab_size == 1)
         {
@@ -758,7 +757,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( matlab_array );
         MEX_DIM_CHECK_VEC_TWO(fun_name, matlab_field_name, matlab_size, 1, N);
-        mexPrintf("\ncheck successful");
 
         if (matlab_size == 1)
         {
@@ -786,7 +784,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int matlab_size = (int) mxGetNumberOfElements( matlab_array );
         MEX_DIM_CHECK_VEC_TWO(fun_name, matlab_field_name, matlab_size, 1, N);
-        mexPrintf("\ncheck successful");
 
         if (matlab_size == 1)
         {
