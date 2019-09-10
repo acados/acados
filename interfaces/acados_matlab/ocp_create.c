@@ -54,6 +54,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int N;
     char fun_name[50] = "ocp_create";
     char buffer[500]; // for error messages
+    char matlab_field_name[100];
     double acados_inf = 1e8;
 
     /* RHS */
@@ -720,30 +721,88 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 
     // sim_method_num_stages
-    if (mxGetField( matlab_opts, 0, "sim_method_num_stages" )!=NULL)
+    sprintf(matlab_field_name, "sim_method_num_stages");
+    const mxArray *matlab_array;
+    matlab_array = mxGetField( matlab_opts, 0, matlab_field_name );
+    if (matlab_array!=NULL)
     {
-        int sim_method_num_stages = mxGetScalar( mxGetField( matlab_opts, 0, "sim_method_num_stages" ) );
-        for (int ii=0; ii<N; ii++)
+        int matlab_size = (int) mxGetNumberOfElements( matlab_array );
+        MEX_DIM_CHECK_VEC_TWO(fun_name, matlab_field_name, matlab_size, 1, N);
+        mexPrintf("\ncheck successful");
+
+        if (matlab_size == 1)
         {
-            ocp_nlp_dynamics_opts_set(config, opts, ii, "num_stages", &sim_method_num_stages);
+            int sim_method_num_stages = mxGetScalar( matlab_array );
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_dynamics_opts_set(config, opts, ii, "num_stages", &sim_method_num_stages);
+            }
+        }
+        else
+        {
+            double *values = mxGetPr(matlab_array);
+            for (int ii=0; ii<N; ii++)
+            {
+                int sim_method_num_stages = (int) values[ii];
+                // mexPrintf("\nsim_method_num_stages[%d] = %d", ii, sim_method_num_stages);
+                ocp_nlp_dynamics_opts_set(config, opts, ii, "num_stages", &sim_method_num_stages);
+            }
         }
     }
     // sim_method_num_steps
-    if (mxGetField( matlab_opts, 0, "sim_method_num_steps" )!=NULL)
+    sprintf(matlab_field_name, "sim_method_num_steps");
+    matlab_array = mxGetField( matlab_opts, 0, matlab_field_name );
+    if (matlab_array!=NULL)
     {
-        int sim_method_num_steps = mxGetScalar( mxGetField( matlab_opts, 0, "sim_method_num_steps" ) );
-        for (int ii=0; ii<N; ii++)
+        int matlab_size = (int) mxGetNumberOfElements( matlab_array );
+        MEX_DIM_CHECK_VEC_TWO(fun_name, matlab_field_name, matlab_size, 1, N);
+        mexPrintf("\ncheck successful");
+
+        if (matlab_size == 1)
         {
-            ocp_nlp_dynamics_opts_set(config, opts, ii, "num_steps", &sim_method_num_steps);
+            int sim_method_num_steps = mxGetScalar( matlab_array );
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_dynamics_opts_set(config, opts, ii, "num_steps", &sim_method_num_steps);
+            }
+        }
+        else
+        {
+            double *values = mxGetPr(matlab_array);
+            for (int ii=0; ii<N; ii++)
+            {
+                int sim_method_num_steps = (int) values[ii];
+                // mexPrintf("\nsim_method_num_steps[%d] = %d", ii, sim_method_num_steps);
+                ocp_nlp_dynamics_opts_set(config, opts, ii, "num_steps", &sim_method_num_steps);
+            }
         }
     }
     // sim_method_newton_iter
-    if (mxGetField( matlab_opts, 0, "sim_method_newton_iter" )!=NULL)
+    sprintf(matlab_field_name, "sim_method_newton_iter");
+    matlab_array = mxGetField( matlab_opts, 0, matlab_field_name );
+    if (matlab_array!=NULL)
     {
-        int sim_method_newton_iter = mxGetScalar( mxGetField( matlab_opts, 0, "sim_method_newton_iter" ) );
-        for (int ii=0; ii<N; ii++)
+        int matlab_size = (int) mxGetNumberOfElements( matlab_array );
+        MEX_DIM_CHECK_VEC_TWO(fun_name, matlab_field_name, matlab_size, 1, N);
+        mexPrintf("\ncheck successful");
+
+        if (matlab_size == 1)
         {
-            ocp_nlp_dynamics_opts_set(config, opts, ii, "newton_iter", &sim_method_newton_iter);
+            int sim_method_newton_iter = mxGetScalar( matlab_array );
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_dynamics_opts_set(config, opts, ii, "newton_iter", &sim_method_newton_iter);
+            }
+        }
+        else
+        {
+            double *values = mxGetPr(matlab_array);
+            for (int ii=0; ii<N; ii++)
+            {
+                int sim_method_newton_iter = (int) values[ii];
+                // mexPrintf("\nsim_method_newton_iter[%d] = %d", ii, sim_method_newton_iter);
+                ocp_nlp_dynamics_opts_set(config, opts, ii, "newton_iter", &sim_method_newton_iter);
+            }
         }
     }
 

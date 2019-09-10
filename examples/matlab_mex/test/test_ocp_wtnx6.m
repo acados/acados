@@ -79,8 +79,9 @@ ocp_qp_solver_ric_alg = 0;
 ocp_qp_solver_warm_start = 2;
 %ocp_sim_method = 'erk';
 ocp_sim_method = 'irk';
-ocp_sim_method_num_stages = 4;
-ocp_sim_method_num_steps = 1;
+ocp_sim_method_num_stages = 4 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
+ocp_sim_method_num_steps = 1 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
+ocp_sim_method_newton_iter = 3 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
 %cost_type = 'linear_ls';
 cost_type = 'nonlinear_ls';
 
@@ -299,6 +300,7 @@ end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
+ocp_opts.set('sim_method_newton_iter', ocp_sim_method_num_steps);
 
 ocp_opts.opts_struct
 

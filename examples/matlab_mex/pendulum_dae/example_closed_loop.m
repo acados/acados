@@ -72,8 +72,9 @@ qp_solver_warm_start = 0;
 qp_solver_cond_ric_alg = 0; % 0: dont factorize hessian in the condensing; 1: factorize
 qp_solver_ric_alg = 0; % HPIPM specific
 ocp_sim_method = 'irk'; % irk, irk_gnsf
-ocp_sim_method_num_stages = 4;
-ocp_sim_method_num_steps = 1;
+ocp_sim_method_num_stages = 4 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
+ocp_sim_method_num_steps = 1; % scalar or vector of size ocp_N;
+ocp_sim_method_newton_iter = 3 * ones(ocp_N, 1); % scalar or vector of size ocp_N;
 cost_type = 'linear_ls'; % linear_ls, ext_cost
 
 %% model
@@ -241,6 +242,7 @@ end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
+ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
 
 ocp_opts.opts_struct
 

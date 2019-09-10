@@ -42,6 +42,15 @@
 	}\
 }
 
+#define MEX_DIM_CHECK_VEC_TWO(fun_name, field, matlab_size, acados_size1, acados_size2) {\
+	if ((acados_size1 != matlab_size) && (acados_size2 != matlab_size) )\
+	{\
+		sprintf(buffer, "%s: error setting %s, wrong dimension, got %d, need %d or %d",\
+				fun_name, field, matlab_size, acados_size1, acados_size2);\
+		mexErrMsgTxt(buffer);\
+	}\
+}
+
 #define MEX_DIM_CHECK_MAT(fun_name, field, matlab_nrow, matlab_ncol, acados_nrow, acados_ncol) {\
 	if ((acados_nrow != matlab_nrow) || (acados_ncol != matlab_ncol)  )\
 	{\
