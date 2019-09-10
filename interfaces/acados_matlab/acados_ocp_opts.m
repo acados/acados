@@ -52,13 +52,27 @@ classdef acados_ocp_opts < handle
 			obj.opts_struct.codgen_model = 'true';
 			obj.opts_struct.param_scheme = 'multiple_shooting_unif_grid';
 			obj.opts_struct.param_scheme_N = 10;
+			% obj.opts_struct.param_scheme_shooting_nodes % only needed for nonuniform grid
 			obj.opts_struct.nlp_solver = 'sqp';
 			obj.opts_struct.nlp_solver_exact_hessian = 'false';
+			obj.opts_struct.nlp_solver_max_iter = 100;
+			obj.opts_struct.nlp_solver_tol_stat = 1e-6;
+			obj.opts_struct.nlp_solver_tol_eq = 1e-6;
+			obj.opts_struct.nlp_solver_tol_ineq = 1e-6;
+			obj.opts_struct.nlp_solver_tol_comp = 1e-6;
+			obj.opts_struct.nlp_solver_ext_qp_res = 0;
 			obj.opts_struct.qp_solver = 'partial_condensing_hpipm';
+			obj.opts_struct.qp_solver_iter_max = 50;
+			obj.opts_struct.qp_solver_cond_N = 5; % for partial condensing_hpipm
+			obj.opts_struct.qp_solver_cond_ric_alg = 0; % 0: dont factorize hessian in the condensing; 1: factorize
+			obj.opts_struct.qp_solver_ric_alg = 0; % HPIPM specific
+			obj.opts_struct.qp_solver_warm_start = 0;
 			obj.opts_struct.sim_method = 'irk';
-			obj.opts_struct.regularize_method = 'no_regularize';
+			obj.opts_struct.sim_method_num_stages = 4;
+			obj.opts_struct.sim_method_num_steps = 1;
+			obj.opts_struct.sim_method_newton_iter = 3;
 			obj.opts_struct.gnsf_detect_struct = 'true';
-			% TODO(oj): add nlp_solver_ext_qp_res, nlp_solver_tol_*, ...?!
+			obj.opts_struct.regularize_method = 'no_regularize';
 			obj.opts_struct.output_dir = fullfile(pwd, 'build');
 		end
 
