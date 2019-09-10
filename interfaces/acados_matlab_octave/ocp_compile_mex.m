@@ -31,29 +31,32 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function sim_compile_mex(opts)
+function ocp_compile_mex(opts)
 
 % get acados folder
 acados_folder = getenv('ACADOS_INSTALL_DIR');
 mex_flags = getenv('ACADOS_MEX_FLAGS');
 
 % set paths
-acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab');
-acados_include = ['-I' acados_folder];
-acados_interfaces_include = ['-I' fullfile(acados_folder, 'interfaces')];
-acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
+acados_mex_folder = fullfile(acados_folder, 'interfaces', 'acados_matlab_octave');
+acados_include = ['-I', acados_folder];
+acados_interfaces_include = ['-I', fullfile(acados_folder, 'interfaces')];
+external_include = ['-I', fullfile(acados_folder, 'external')];
+blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
+hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];
+acados_lib_path = ['-L', fullfile(acados_folder, 'lib')];
 
 mex_names = { ...
-	'sim_create', ...
-	'sim_destroy', ...
-	'sim_create_ext_fun', ...
-	'sim_destroy_ext_fun', ...
-	'sim_solve', ...
-	'sim_set', ...
-	'sim_get', ...
-	'sim_precompute' ...
+	'ocp_create', ...
+	'ocp_destroy', ...
+	'ocp_create_ext_fun', ...
+	'ocp_destroy_ext_fun', ...
+	'ocp_solve', ...
+	'ocp_precompute', ...
+	'ocp_set', ...
+	'ocp_get' ...
+	'ocp_eval_param_sens', ...
 };
-
 mex_files = cell(length(mex_names), 1);
 for k=1:length(mex_names)
 	mex_files{k} = fullfile(acados_mex_folder, [mex_names{k}, '.c']);
@@ -70,6 +73,9 @@ if is_octave()
 		cflags_tmp = fscanf(input_file, '%[^\n]s');
 		fclose(input_file);
 		cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
+		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+			cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
+		end
 		input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');
 		fprintf(input_file, '%s', cflags_tmp);
 		fclose(input_file);
@@ -80,18 +86,28 @@ if is_octave()
 	setenv('CFLAGS', cflags_tmp);
 end
 
+
 for ii=1:length(mex_files)
 	disp(['compiling ', mex_files{ii}])
 	if is_octave()
 %		mkoctfile -p CFLAGS
-		mex(acados_include, acados_interfaces_include, acados_lib_path,...
-            '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+			    acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
+		else
+			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+			    acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+		end
 	else
-		mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', acados_include,...
-            acados_interfaces_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp -DACADOS_WITH_QPOASES', acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+			    acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
+		else
+			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+			    acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+		end
 	end
 end
-
 
 if is_octave()
 	movefile('*.o', opts.output_dir);
@@ -100,7 +116,9 @@ end
 %system(['mv -f *.mexa64 ', opts.output_dir])
 for k=1:length(mex_names)
 	clear(mex_names{k})
-%	[status, message] = movefile([mex_names{k}, '.', mexext], opts.output_dir)
+%	movefile([mex_names{k}, '.', mexext], opts.output_dir);
 	[status, message] = copyfile([mex_names{k}, '.', mexext], opts.output_dir);
 	delete([mex_names{k}, '.', mexext]);
 end
+
+

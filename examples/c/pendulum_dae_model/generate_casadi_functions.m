@@ -36,7 +36,7 @@ clc;
 clear VARIABLES;
 close all;
 
-addpath('../../../interfaces/acados_matlab/')
+addpath('../../../interfaces/acados_matlab_octave/')
 addpath('../../matlab_mex/pendulum_dae/')
 
 % define model 

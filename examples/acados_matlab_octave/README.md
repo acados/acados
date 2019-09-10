@@ -2,7 +2,7 @@
 
 ## Linux
 
-This folder contains some examples to use the mex-based acados_matlab interface from Matlab or Octave.
+This folder contains some examples to use the mex-based acados_matlab_octave interface from Matlab or Octave.
 This interface uses the shared libraries created using the make command from the main acados folder
 ```
 make shared_library

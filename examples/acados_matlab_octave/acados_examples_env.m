@@ -36,7 +36,7 @@ example_dir = fileparts(which('acados_examples_env'));
 
 acados_dir = fullfile(example_dir, '..', '..');
 
-matlab_interface_dir = fullfile(acados_dir, 'interfaces', 'acados_matlab');
+matlab_interface_dir = fullfile(acados_dir, 'interfaces', 'acados_matlab_octave');
 addpath(matlab_interface_dir);
 
 casadi_dir = fullfile(acados_dir, 'external', 'casadi-matlab');
