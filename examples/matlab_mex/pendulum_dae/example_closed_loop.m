@@ -49,7 +49,7 @@ codgen_model = 'true'; % true, false
 % codgen_model = 'false'; % true, false
 % simulation
 gnsf_detect_struct = 'true'; % true, false
-sim_method = 'irk_gnsf'; % irk, irk_gnsf, [erk]
+sim_method = 'irk'; % irk, irk_gnsf, [erk]
 sim_sens_forw = 'false'; % true, false
 sim_jac_reuse = 'false'; % true, false
 sim_num_stages = 3;
@@ -314,7 +314,8 @@ z0 = zeros(nz, 1);
 x_traj_init = repmat(x0, 1, ocp_N + 1);
 u_traj_init = zeros(nu, ocp_N);
 pi_traj_init = zeros(nx, ocp_N);
-z_traj_init = zeros(nz, ocp_N);
+z_traj_init = 0*ones(nz, ocp_N);
+xdot_traj_init = 0*ones(nx, ocp_N);
 
 sqp_iter = zeros(N_sim,1);
 sqp_time = zeros(N_sim,1);
@@ -328,16 +329,34 @@ for ii=1:N_sim
 	ocp.set('init_x', x_traj_init);
 	ocp.set('init_u', u_traj_init);
 	ocp.set('init_pi', pi_traj_init);
-	ocp.set('init_z', z_traj_init);
+    if ii == 1
+    	ocp.set('init_z', z_traj_init);
+    	ocp.set('init_xdot', xdot_traj_init);
+    end
 
 	ocp.solve();
 
+%     stat = ocp.get('stat');
+%     fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter');
+%     if size(stat,2)>7
+%         fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
+%     end
+%     fprintf('\n');
+%     for ii=1:size(stat,1)
+%         fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
+%         if size(stat,2)>7
+%             fprintf('\t%e\t%e\t%e\t%e', stat(ii,8), stat(ii,9), stat(ii,10), stat(ii,11));
+%         end
+%         fprintf('\n');
+%     end
+%     fprintf('\n');
+    
     status = ocp.get('status');
+    sqp_iter(ii) = ocp.get('sqp_iter');
+    sqp_time(ii) = ocp.get('time_tot');
     if status ~= 0
         keyboard
     end
-    sqp_iter(ii) = ocp.get('sqp_iter');
-    sqp_time(ii) = ocp.get('time_tot');
 
 	% get solution for initialization of next NLP
 	x_traj = ocp.get('x');
@@ -430,6 +449,6 @@ xp = x_sim(1,:);
 yp = x_sim(2,:);
 check = abs(xp.^2 + yp.^2 - length_pendulum^2);
 
-if any( max(abs(check)) > 1e-13 )
+if any( max(abs(check)) > 1e-11 )
     disp('note: check for constant pendulum length failed');
 end
