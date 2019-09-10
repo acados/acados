@@ -108,6 +108,8 @@ classdef acados_ocp_opts < handle
 				obj.opts_struct.sim_method_num_stages = value;
 			elseif (strcmp(field, 'sim_method_num_steps'))
 				obj.opts_struct.sim_method_num_steps = value;
+			elseif (strcmp(field, 'sim_method_newton_iter'))
+				obj.opts_struct.sim_method_newton_iter = value;
 			elseif (strcmp(field, 'gnsf_detect_struct'))
 				obj.opts_struct.gnsf_detect_struct = value;
 			elseif (strcmp(field, 'regularize_method'))

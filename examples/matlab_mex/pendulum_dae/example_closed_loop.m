@@ -69,8 +69,8 @@ qp_solver = 'partial_condensing_hpipm';
         % full_condensing_hpipm, partial_condensing_hpipm
 qp_solver_cond_N = 5;
 qp_solver_warm_start = 0;
-qp_solver_cond_ric_alg = 0; % HPIPM specific? what does it stand for?
-qp_solver_ric_alg = 0; % HPIPM specific? what does it stand for?
+qp_solver_cond_ric_alg = 0; % 0: dont factorize hessian in the condensing; 1: factorize
+qp_solver_ric_alg = 0; % HPIPM specific
 ocp_sim_method = 'irk'; % irk, irk_gnsf
 ocp_sim_method_num_stages = 4;
 ocp_sim_method_num_steps = 1;

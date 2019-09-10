@@ -294,17 +294,17 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     ocp_nlp_dynamics_cont_opts *opts = opts_;
     sim_config *sim_config_ = config->sim_solver;
 
-    if(!strcmp(field, "compute_adj"))
+    if (!strcmp(field, "compute_adj"))
     {
         int *int_ptr = value;
         opts->compute_adj = *int_ptr;
     }
-    else if(!strcmp(field, "compute_hess"))
+    else if (!strcmp(field, "compute_hess"))
     {
         int *int_ptr = value;
         opts->compute_hess = *int_ptr;
         bool tmp_bool = true;
-        if(*int_ptr==0)
+        if (*int_ptr==0)
         {
             tmp_bool = false;
         }
@@ -313,7 +313,7 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     else
     {
         int return_value = sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
-        if(return_value!=ACADOS_SUCCESS)
+        if (return_value!=ACADOS_SUCCESS)
         {
             printf("\nerror: field %s not available in ocp_nlp_dynamics_cont_opts_set\n", field);
             exit(1);

@@ -370,7 +370,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_out_set(config, dims, out, ii, "pi", value+ii*nx);
         }
     }
-    // TODO make setters for ALL numerical data
     else if (!strcmp(field, "p"))
     {
         external_function_param_casadi *ext_fun_param_ptr;

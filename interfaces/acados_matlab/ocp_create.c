@@ -737,6 +737,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_dynamics_opts_set(config, opts, ii, "num_steps", &sim_method_num_steps);
         }
     }
+    // sim_method_newton_iter
+    if (mxGetField( matlab_opts, 0, "sim_method_newton_iter" )!=NULL)
+    {
+        int sim_method_newton_iter = mxGetScalar( mxGetField( matlab_opts, 0, "sim_method_newton_iter" ) );
+        for (int ii=0; ii<N; ii++)
+        {
+            ocp_nlp_dynamics_opts_set(config, opts, ii, "newton_iter", &sim_method_newton_iter);
+        }
+    }
 
 
     /* in */
