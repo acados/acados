@@ -142,7 +142,7 @@ void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim,
     }
     else
     {
-        printf("\ndimension type not available in module\n");
+        printf("\ndimension type %s not available in module ocp_nlp_dynamics_disc\n", dim);
         exit(1);
     }
 }
@@ -163,7 +163,7 @@ void ocp_nlp_dynamics_disc_dims_get(void *config_, void *dims_, const char *dim,
     {
         if ( *value > 0)
         {
-            printf("\nerror: discrete dynamics with nz>0\n");
+            printf("\nerror: ocp_nlp_dynamics_disc does not support nz > 0\n");
             exit(1);
         }
     }
@@ -177,7 +177,7 @@ void ocp_nlp_dynamics_disc_dims_get(void *config_, void *dims_, const char *dim,
     }
     else
     {
-        printf("\ndimension type not available in module\n");
+        printf("\ndimension type %s not available in module ocp_nlp_dynamics_disc\n", dim);
         exit(1);
     }
 }

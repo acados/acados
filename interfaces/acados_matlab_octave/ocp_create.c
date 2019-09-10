@@ -368,7 +368,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* dims */
     int nx, nu;
     int nz = 0;
-    int ny = 0, ny_e = 0;
+    int ny = 0;
+    int ny_e = 0;
     int nbx;
     int nbu;
     int ng;
@@ -383,7 +384,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int nsg_e = 0;
     int nsh = 0;
     int nsh_e = 0;
-
 
     ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 
@@ -701,7 +701,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_opts, 0, "qp_solver_cond_N" )!=NULL)
     {
         int qp_solver_cond_N = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_cond_N" ) );
+        if (qp_solver_cond_N > N)
+        {
+            sprintf(buffer, "%s setting qp_solver_cond_N = %d not possible, since N = %d. Require qp_solver_cond_N <= N",
+                    fun_name, qp_solver_cond_N, N);
+            mexErrMsgTxt(buffer);
+        }
         ocp_nlp_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
+    }
+    else if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
+    {
+        MEX_MISSING_ARGUMENT_MODULE(fun_name, "qp_solver_cond_N", "partial_condensing_hpipm");
     }
     // cond riccati-like algorithm
     if (mxGetField( matlab_opts, 0, "qp_solver_cond_ric_alg" )!=NULL)
@@ -938,7 +948,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ocp_nlp_cost_model_set(config, dims, in, ii, "W", W);
             }
         }
-        // TODO: else complain?
+        else
+        {
+            MEX_MISSING_ARGUMENT_MODULE(fun_name, "cost_W", "linear_ls or nonlinear_ls");
+        }
+
         if (mxGetField( matlab_model, 0, "cost_y_ref" )!=NULL)
         {
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_y_ref" ) );
@@ -990,7 +1004,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             double *W_e = mxGetPr( mxGetField( matlab_model, 0, "cost_W_e" ) );
             ocp_nlp_cost_model_set(config, dims, in, N, "W", W_e);
         }
-        // TODO: else complain?
+        else
+        {
+            MEX_MISSING_ARGUMENT_MODULE(fun_name, "cost_W_e", "linear_ls or nonlinear_ls");
+        }
         if (mxGetField( matlab_model, 0, "cost_y_ref_e" )!=NULL)
         {
             int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_y_ref_e" ) );

@@ -1719,7 +1719,7 @@ void ocp_nlp_sqp_get(void *config_, void *mem_, const char *field, void *return_
         int *value = return_value_;
         *value = mem->stat_n;
     }
-    else if (!strcmp("mem_nlp", field))
+    else if (!strcmp("nlp_mem", field))
     {
         void **value = return_value_;
         *value = mem->nlp_mem;
