@@ -629,7 +629,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 	mem->stat = (double *) c_ptr;
 	mem->stat_m = opts->max_iter+1;
 	mem->stat_n = 6;
-	if(opts->ext_qp_res)
+	if (opts->ext_qp_res)
 		mem->stat_n += 4;
 	c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
@@ -647,17 +647,17 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     align_char_to(64, &c_ptr);
 
 	// dzduxt
-	for(ii=0; ii<=N; ii++)
-		{
+	for (int ii=0; ii<=N; ii++)
+    {
 		blasfeo_create_dmat(nu[ii]+nx[ii], nz[ii], mem->dzduxt+ii, c_ptr);
 		c_ptr += blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]);
-		}
+    }
 	// z_alg
-	for(ii=0; ii<=N; ii++)
-		{
+	for (int ii=0; ii<=N; ii++)
+    {
 		blasfeo_create_dvec(nz[ii], mem->z_alg+ii, c_ptr);
 		c_ptr += blasfeo_memsize_dvec(nz[ii]);
-		}
+    }
 
     mem->status = ACADOS_READY;
 
@@ -1307,7 +1307,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->dynamics[ii]->memory_set_BAbt_ptr(mem->qp_in->BAbt+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_RSQrq_ptr(mem->qp_in->RSQrq+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_dzduxt_ptr(mem->dzduxt+ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_z_guess_ptr(nlp_out->z+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_sim_guess_ptr(mem->nlp_mem->sim_guess+ii,
+                                      mem->nlp_mem->set_sim_guess+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_z_alg_ptr(mem->z_alg+ii, mem->dynamics[ii]);
     }
 
@@ -1738,6 +1739,11 @@ void ocp_nlp_sqp_get(void *config_, void *mem_, const char *field, void *return_
     {
         int *value = return_value_;
         *value = mem->stat_n;
+    }
+    else if (!strcmp("nlp_mem", field))
+    {
+        void **value = return_value_;
+        *value = mem->nlp_mem;
     }
     else
     {

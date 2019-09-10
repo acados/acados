@@ -82,7 +82,7 @@ EXAMPLES += dense_qp
 EXAMPLES += pendulum_scqp
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
-EXAMPLES += sim_inverted_pendulum
+EXAMPLES += sim_pendulum_dae
 EXAMPLES += sim_crane_example
 EXAMPLES += sim_gnsf_crane
 EXAMPLES += mass_spring_example
@@ -109,7 +109,7 @@ RUN_EXAMPLES += run_dense_qp
 RUN_EXAMPLES += run_pendulum_scqp
 RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
-RUN_EXAMPLES += run_sim_inverted_pendulum
+RUN_EXAMPLES += run_sim_pendulum_dae
 RUN_EXAMPLES += run_sim_crane_example
 RUN_EXAMPLES += run_sim_gnsf_crane
 RUN_EXAMPLES += run_mass_spring_example
@@ -276,25 +276,25 @@ run_sim_wt_model_nx3:
 #################################################
 
 INV_PENDULUM_OBJS =
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_z.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u_z.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_u.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_impl_ode_hess.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_fun.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_fun_jac_y.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_phi_jac_y_uhat.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_f_lo_fun_jac_x1k1uz.o
-INV_PENDULUM_OBJS += inverted_pendulum_model/inv_pendulum_get_matrices_fun.o
+INV_PENDULUM_OBJS += pendulum_dae_model/pendulum_dae_dyn_impl_ode_fun.o
+INV_PENDULUM_OBJS += pendulum_dae_model/pendulum_dae_dyn_impl_ode_fun_jac_x_xdot.o
+INV_PENDULUM_OBJS += pendulum_dae_model/pendulum_dae_dyn_impl_ode_jac_x_xdot_u.o
+INV_PENDULUM_OBJS += pendulum_dae_model/pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_u.o
+INV_PENDULUM_OBJS += pendulum_dae_model/pendulum_dae_dyn_impl_ode_hess.o
+INV_PENDULUM_OBJS += pendulum_dae_model/pendulum_dae_dyn_gnsf_phi_fun.o
+INV_PENDULUM_OBJS += pendulum_dae_model/pendulum_dae_dyn_gnsf_phi_fun_jac_y.o
+INV_PENDULUM_OBJS += pendulum_dae_model/pendulum_dae_dyn_gnsf_phi_jac_y_uhat.o
+INV_PENDULUM_OBJS += pendulum_dae_model/pendulum_dae_dyn_gnsf_f_lo_fun_jac_x1k1uz.o
+INV_PENDULUM_OBJS += pendulum_dae_model/pendulum_dae_dyn_gnsf_get_matrices_fun.o
 
-sim_inverted_pendulum: $(INV_PENDULUM_OBJS) sim_inverted_pendulum.o
-	$(CCC) -o sim_inverted_pendulum.out sim_inverted_pendulum.o  $(INV_PENDULUM_OBJS) $(LDFLAGS) $(LIBS)
+sim_pendulum_dae: $(INV_PENDULUM_OBJS) sim_pendulum_dae.o
+	$(CCC) -o sim_pendulum_dae.out sim_pendulum_dae.o  $(INV_PENDULUM_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
-	@echo " Example sim_inverted_pendulum build complete."
+	@echo " Example sim_pendulum_dae build complete."
 	@echo
 
-run_sim_inverted_pendulum:
-	./sim_inverted_pendulum.out
+run_sim_pendulum_dae:
+	./sim_pendulum_dae.out
 
 
 
@@ -606,5 +606,5 @@ clean_models:
 	rm -f wt_model_nx3/*.o
 	rm -f wt_model_nx6/*.o
 	rm -f wt_model_nx6/nx6p2/*.o
-	rm -f inverted_pendulum_model/*.o
+	rm -f pendulum_dae_model/*.o
 

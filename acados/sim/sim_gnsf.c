@@ -154,6 +154,10 @@ void sim_gnsf_dims_get(void *config_, void *dims_, const char *field, int *value
     {
         *value = dims->nz;
     }
+    else if (!strcmp(field, "nout") || !strcmp(field, "gnsf_nout"))
+    {
+        *value = dims->n_out;
+    }
     else
     {
         printf("\nerror: sim_gnsf_dims_get: field not available: %s\n", field);
@@ -1253,7 +1257,7 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
     size += blasfeo_memsize_dvec(nyy);  // YY0
 
     size += 1 * 64;  // corresponds to memory alignment
-    size += 8;  // corresponds to memory alignment
+    size += 2 * 8;  // initial memory alignment, alignment for doubles
     make_int_multiple_of(64, &size);
 
     return size;
@@ -1289,6 +1293,9 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     int nK1 = num_stages * nx1;
     int nK2 = num_stages * nxz2;
     int nZ1 = num_stages * nz1;
+
+    // initial align
+    align_char_to(8, &c_ptr);
 
     // struct
     sim_gnsf_memory *mem = (sim_gnsf_memory *) c_ptr;
@@ -1403,6 +1410,10 @@ int sim_gnsf_memory_set(void *config_, void *dims_, void *mem_, const char *fiel
         double *phi_guess = value;
         for (int ii=0; ii < dims->n_out; ii++)
             mem->phi_guess[ii] = phi_guess[ii];
+    }
+    else if (!strcmp(field, "guesses_blasfeo"))
+    {
+        blasfeo_unpack_dvec(dims->n_out, value, 0, mem->phi_guess);
     }
     else
     {
@@ -1960,7 +1971,9 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         for (int i = 0; i < num_stages; i++)
             blasfeo_pack_dvec(n_out, mem->phi_guess, &vv_traj[0], i * n_out);
 
-        // blasfeo_dvecse(nvv, 0.0, &vv_traj[0], 0);
+        // printf("GNSF_IRK initial guess:\n");
+        // blasfeo_print_dvec(num_stages * n_out, &vv_traj[0], 0);
+        // exit(1);
 
         /************************************************
          * Set up function input & outputs
@@ -2126,6 +2139,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                                                     phi_fun_out);
                             out->info->ADtime += acados_toc(&casadi_timer);
                         }
+                        // printf("\ngnsf: phi residual for newton %d, stage %d\n", iter, ii);
+                        // blasfeo_print_dvec(n_out, res_val, ii*n_out);
                     }
 
                     // set up res_val

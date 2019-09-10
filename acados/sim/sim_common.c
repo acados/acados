@@ -314,10 +314,17 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
     {
         int nx;
         config->dims_get(config_, dims_, "nx", &nx);
-        int ii;
         double *xn = value;
-        for (ii=0; ii < nx; ii++)
+        for (int ii=0; ii < nx; ii++)
             xn[ii] = out->xn[ii];
+    }
+    else if (!strcmp(field, "zn"))
+    {
+        int nz;
+        config->dims_get(config_, dims_, "nz", &nz);
+        double *zn = value;
+        for (int ii=0; ii < nz; ii++)
+            zn[ii] = out->zn[ii];
     }
     else if (!strcmp(field, "S_forw"))
     {
@@ -372,6 +379,17 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
         double *S_hess = value;
         for (ii=0; ii < (nu+nx)*(nu+nx); ii++)
             S_hess[ii] = out->S_hess[ii];
+    }
+    else if (!strcmp(field, "S_algebraic"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu, nz;
+        config->dims_get(config_, dims_, "nz", &nz);
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
+        double *S_algebraic = value;
+        for (int ii=0; ii < nz*(nu+nx); ii++)
+            S_algebraic[ii] = out->S_algebraic[ii];
     }
     else
     {
