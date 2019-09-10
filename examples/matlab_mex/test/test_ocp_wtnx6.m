@@ -300,7 +300,7 @@ end
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
-ocp_opts.set('sim_method_newton_iter', ocp_sim_method_num_steps);
+ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
 
 ocp_opts.opts_struct
 
