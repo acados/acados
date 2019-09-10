@@ -41,14 +41,14 @@ matrix:
 
     - name: Linux Gcc6 - Octave interface
       env:
-        - DEPLOY_NAME="linux-python-gcc6"
+        - DEPLOY_NAME="linux octave gcc6"
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
         - ACADOS_OCTAVE="ON"
         - ACADOS_EXAMPLES="OFF"
 
     - name: Linux Gcc4.9 - Octave interface + coverage
       env:
-        - DEPLOY_NAME="linux-python-matlab-gcc49"
+        - DEPLOY_NAME="linux-octave-coverage-gcc49"
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
         - COVERAGE="lcov"
         - ACADOS_OCTAVE="ON"
@@ -68,7 +68,6 @@ matrix:
 cache:
   ccache: true
   directories:
-      - "${CASADIPATH}"
 
 before_install:
   - eval "${MATRIX_EVAL}"

@@ -47,7 +47,6 @@ pushd external;
 		mkdir -p casadi-linux-py35;
 		tar -xf casadi-linux-py35.tar.gz -C casadi-linux-py35;
 		export PYTHONPATH=$(pwd)/casadi-linux-py35:$PYTHONPATH;
-		export CASADIPATH=$(pwd)/casadi-linux-py35;
 	fi
 
 	if [[ "${SWIG_MATLAB}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
