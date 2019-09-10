@@ -33,7 +33,8 @@ class acados_sim_solver:
             'x': nx,
             'xn': nx,
             'u': nu,
-            'S_forw': nx*(nx+nu)
+            'S_forw': nx*(nx+nu),
+            'Sx': nx*nx
         }
 
         self.settable = ['S_adj', 'S_forw', 'T', 'x', 'u', 'xdot', 'z', 'Su', 'Sx']
