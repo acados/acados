@@ -66,8 +66,6 @@ option(ACADOS_WITH_OOQP "OOQP solver" OFF)
 option(ACADOS_WITH_QPDUNES "qpDUNES solver" OFF)
 option(ACADOS_WITH_OSQP "OSQP solver" OFF)
 # Interfaces
-option(SWIG_MATLAB "Swig Matlab Interface" OFF)
-option(SWIG_PYTHON "Swig Python Interface" OFF)
 option(TEMPLATE_MATLAB "Template Matlab Interface" OFF)
 option(TEMPLATE_PYTHON "Template Python Interface" OFF)
 option(DEV_MATLAB "Developer Matlab Interface" OFF)
@@ -154,19 +152,6 @@ if(ACADOS_WITH_QORE MATCHES ON)
 	endif()
 endif()
 
-if(SWIG_MATLAB OR SWIG_PYTHON)
-	if(CMAKE_SYSTEM_NAME MATCHES "dSpace")
-		set(SWIG_MATLAB OFF CACHE BOOL "Swig Matlab Interface" FORCE)
-		set(SWIG_PYTHON OFF CACHE BOOL "Swig Python Interface" FORCE)
-		message(WARNING "Swig has been disabled, not compatible with dSpace system")
-	endif()
-	if(CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-		set(SWIG_MATLAB OFF CACHE BOOL "Swig Matlab Interface" FORCE)
-		set(SWIG_PYTHON OFF CACHE BOOL "Swig Python Interface" FORCE)
-		message(WARNING "Swig has been disabled, not compatible with NoExternalLibs target")
-	endif()
-endif()
-
 if(ACADOS_LINT)
 	if(CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "dSpace")
 		set(ACADOS_LINT OFF CACHE BOOL "Lint" FORCE)
@@ -185,11 +170,6 @@ add_subdirectory(acados)
 
 # Configure interfaces
 add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces/acados_c)
-
-if((SWIG_PYTHON OR SWIG_MATLAB))
-    add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces/acados_cpp)
-    add_subdirectory(${PROJECT_SOURCE_DIR}/swig)
-endif()
 
 # Configure external libraries
 add_subdirectory(${EXTERNAL_SRC_DIR})
@@ -223,7 +203,6 @@ add_custom_target(uninstall
 # Current config messages
 message(STATUS "Target: BLASFEO is ${BLASFEO_TARGET}, HPIPM is ${HPIPM_TARGET}")
 message(STATUS "Linear algebra: ${LA}")
-message(STATUS "Swig: Python (${SWIG_PYTHON}) Matlab (${SWIG_MATLAB})")
 message(STATUS "Matlab MEX (${ACADOS_MATLAB})")
 message(STATUS "Octave MEX (${ACADOS_OCTAVE})")
 message(STATUS "System name:version ${CMAKE_SYSTEM_NAME}:${CMAKE_SYSTEM_VERSION}")

@@ -137,11 +137,6 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 
-if(SWIG_PYTHON OR SWIG_MATLAB)
-    find_package(Casadi REQUIRED)
-    target_link_libraries(acados PUBLIC casadi)
-endif()
-
 # Only test acados library for coverage
 if(COVERAGE MATCHES "lcov")
     include(CodeCoverage)

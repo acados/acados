@@ -45,28 +45,22 @@ elif [ "${SECTION}" = 'install' ]; then
 	source "${SCRIPT_DIR}/install_ccache.sh";
 	source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
 
-	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]] ||
-	   [[ "${TEMPLATE_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+	if [[ "${TEMPLATE_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
 	   [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
 		"${DEV_MATLAB}" = 'ON';
 		then
 		source "${SCRIPT_DIR}/install_casadi.sh";
 	fi
 
-	if [[ "${SWIG_PYTHON}" = 'ON' || "${TEMPLATE_PYTHON}" = 'ON' ]] ;
+	if [[ "${TEMPLATE_PYTHON}" = 'ON' ]] ;
 	then
 		source "${SCRIPT_DIR}/install_python_dependencies.sh";
 	fi
 
-	if [[ "${SWIG_MATLAB}" = 'ON' ||  "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+	if [[ "${TEMPLATE_MATLAB}" = 'ON' ]] ||
 	   [[ "${DEV_MATLAB}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
 	then
 		source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
-	fi
-
-	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]];
-		then
-		source "${SHARED_SCRIPT_DIR}/install_swig.sh";
 	fi
 
 elif [ "${SECTION}" = 'script' ]; then
