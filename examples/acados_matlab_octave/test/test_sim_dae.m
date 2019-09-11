@@ -37,7 +37,7 @@ clear VARIABLES
 addpath('../pendulum_dae/');
 
 i_method = 0;
-for integrator = {'irk', 'irk_gnsf'}
+for integrator = {'irk_gnsf', 'irk'}
     i_method = i_method + 1;
     method = integrator{1};
 
@@ -166,6 +166,9 @@ for integrator = {'irk', 'irk_gnsf'}
         z_ref = z;
         S_alg_ref = S_alg;
     else
+        S_alg
+        S_alg_ref
+
         err_x = norm(x_sim - x_sim_ref)
         err_S_forw = norm(S_forw - S_forw_ref)
         err_S_adj = norm(S_adj - S_adj_ref)
