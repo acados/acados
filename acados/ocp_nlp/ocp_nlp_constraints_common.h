@@ -60,7 +60,7 @@ typedef struct
 {
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
-    void (*dims_initialize)(void *config, void *dims, int nx, int nu, int nbx, int nbu, int ng,
+    void (*dims_initialize)(void *config, void *dims, int nx, int nu, int nz, int nbx, int nbu, int ng,
                             int nh, int nq, int ns);
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
@@ -77,6 +77,8 @@ typedef struct
     void (*memory_set_lam_ptr)(struct blasfeo_dvec *lam, void *memory);
     void (*memory_set_DCt_ptr)(struct blasfeo_dmat *DCt, void *memory);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
+    void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z_alg, void *memory);
+    void (*memory_set_dzdux_tran_ptr)(struct blasfeo_dmat *dzduxt, void *memory);
     void (*memory_set_idxb_ptr)(int *idxb, void *memory);
     void (*memory_set_idxs_ptr)(int *idxs, void *memory);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
