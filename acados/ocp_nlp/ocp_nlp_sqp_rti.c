@@ -1600,6 +1600,11 @@ void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *ret
         int *value = return_value_;
         *value = mem->stat_n;
     }
+    else if (!strcmp("nlp_mem", field))
+    {
+        void **value = return_value_;
+        *value = mem->nlp_mem;
+    }
     else
     {
         printf("\nerror: output type %s not available in ocp_nlp_sqp_rti module\n", field);

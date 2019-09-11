@@ -655,33 +655,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                  "true", "irk_gnsf", "false")
     }
 
-    // nlp solver max iter
-    if (mxGetField( matlab_opts, 0, "nlp_solver_max_iter" )!=NULL)
+    if ( plan->nlp_solver != SQP_RTI )
     {
-        int nlp_solver_max_iter = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_max_iter" ) );
-        ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
-    }
+        // nlp solver max iter
+        if (mxGetField( matlab_opts, 0, "nlp_solver_max_iter" )!=NULL)
+        {
+            int nlp_solver_max_iter = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_max_iter" ) );
+            ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
+        }
 
-    // nlp solver exit tolerances
-    if (mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" )!=NULL)
-    {
-        double nlp_solver_tol_stat = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" ) );
-        ocp_nlp_opts_set(config, opts, "tol_stat", &nlp_solver_tol_stat);
-    }
-    if (mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" )!=NULL)
-    {
-        double nlp_solver_tol_eq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" ) );
-        ocp_nlp_opts_set(config, opts, "tol_eq", &nlp_solver_tol_eq);
-    }
-    if (mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" )!=NULL)
-    {
-        double nlp_solver_tol_ineq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" ) );
-        ocp_nlp_opts_set(config, opts, "tol_ineq", &nlp_solver_tol_ineq);
-    }
-    if (mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" )!=NULL)
-    {
-        double nlp_solver_tol_comp = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" ) );
-        ocp_nlp_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
+        // nlp solver exit tolerances
+        if (mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" )!=NULL)
+        {
+            double nlp_solver_tol_stat = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" ) );
+            ocp_nlp_opts_set(config, opts, "tol_stat", &nlp_solver_tol_stat);
+        }
+        if (mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" )!=NULL)
+        {
+            double nlp_solver_tol_eq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" ) );
+            ocp_nlp_opts_set(config, opts, "tol_eq", &nlp_solver_tol_eq);
+        }
+        if (mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" )!=NULL)
+        {
+            double nlp_solver_tol_ineq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" ) );
+            ocp_nlp_opts_set(config, opts, "tol_ineq", &nlp_solver_tol_ineq);
+        }
+        if (mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" )!=NULL)
+        {
+            double nlp_solver_tol_comp = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" ) );
+            ocp_nlp_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
+        }
     }
 
     // nlp solver ext qp res
