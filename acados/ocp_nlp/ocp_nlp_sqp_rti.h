@@ -64,6 +64,7 @@ typedef struct
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
+	double step_length;  // (fixed) step length in SQP loop
     int compute_dual_sol;
     int reuse_workspace;
     int num_threads;

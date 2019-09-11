@@ -266,7 +266,7 @@ ocp.set('init_x', x_traj_init);
 ocp.set('init_u', u_traj_init);
 
 % change number of sqp iterations
-ocp.set('nlp_solver_max_iter', 20);
+%ocp.set('nlp_solver_max_iter', 20);
 
 % solve
 tic;

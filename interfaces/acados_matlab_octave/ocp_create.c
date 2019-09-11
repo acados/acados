@@ -690,6 +690,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int nlp_solver_ext_qp_res = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_ext_qp_res" ) );
         ocp_nlp_opts_set(config, opts, "ext_qp_res", &nlp_solver_ext_qp_res);
     }
+    // nlp solver step length
+    if (mxGetField( matlab_opts, 0, "nlp_solver_step_length" )!=NULL)
+    {
+        double nlp_solver_step_length = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_step_length" ) );
+        ocp_nlp_opts_set(config, opts, "step_length", &nlp_solver_step_length);
+    }
     // qp_solver_iter_max TODO only for hpipm !!!
     // iter_max
     if (mxGetField( matlab_opts, 0, "qp_solver_iter_max" )!=NULL)
