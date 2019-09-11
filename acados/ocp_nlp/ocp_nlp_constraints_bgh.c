@@ -414,7 +414,6 @@ int ocp_nlp_constraints_bgh_model_calculate_size(void *config, void *dims_)
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
-    int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -445,7 +444,6 @@ void *ocp_nlp_constraints_bgh_model_assign(void *config, void *dims_, void *raw_
     // extract sizes
     int nx = dims->nx;
     int nu = dims->nu;
-    int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -738,7 +736,6 @@ int ocp_nlp_constraints_bgh_memory_calculate_size(void *config_, void *dims_, vo
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
-    int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -1044,7 +1041,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         u_in.x = memory->ux;
         u_in.xi = 0;
 
-        struct blasfeo_dvec_args z_in;  // input u of external fun;
+        struct blasfeo_dvec_args z_in;  // input z of external fun;
         z_in.x = memory->z_alg;
         z_in.xi = 0;
 
