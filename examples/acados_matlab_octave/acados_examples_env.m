@@ -32,28 +32,16 @@
 %
 
 
-clc;
-clear VARIABLES;
-close all;
+example_dir = fileparts(which('acados_examples_env'));
 
-addpath('../../../interfaces/acados_matlab_octave/')
-addpath('../../matlab_mex/pendulum_dae/')
+acados_dir = fullfile(example_dir, '..', '..');
 
-% define model 
-model = pendulum_dae_model();
-model.dyn_expr_f = model.expr_f_impl;
+matlab_interface_dir = fullfile(acados_dir, 'interfaces', 'acados_matlab_octave');
+addpath(matlab_interface_dir);
 
-%% GNSF Model -- detect structure, reorder model, and generate C Code for
-%% GNSF model. --> for more advanded users - uncomment this section
-% Reformulate model as GNSF & Reorder x, xdot, z, f_impl, f_expl
-% accordingly
-transcribe_opts.print_info = 1;
-[ gnsf ] = detect_gnsf_structure(model, transcribe_opts);
-    % check output of this function to see if/how the states are reordered
-generate_c_code_gnsf( gnsf );
+casadi_dir = fullfile(acados_dir, 'external', 'casadi-matlab');
+addpath(casadi_dir);
 
-%% Implicit Model -- Generate C Code
-opts.generate_hess = 1;  % set to 1 if you want to use exact hessian propagation
-
-generate_c_code_implicit_ode( model, opts );
+setenv('ACADOS_INSTALL_DIR', acados_dir);
+setenv('ENV_RUN', 'true');
 

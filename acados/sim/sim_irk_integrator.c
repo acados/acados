@@ -536,6 +536,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
         size += blasfeo_memsize_dmat(nx + nz, nx + nu);  // dk0_dxu
     }
 
+    size += 1 * 8; // initial alignment
     make_int_multiple_of(64, &size);
     size += 1 * 64;
 

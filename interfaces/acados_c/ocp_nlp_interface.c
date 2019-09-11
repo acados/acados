@@ -733,8 +733,8 @@ void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
 		int stage, const char *field, void *value)
 {
     ocp_nlp_memory *mem;
-    config->get(config, solver->mem, "mem_nlp", &mem);
-    // printf("called getter: mem_nlp %p\n", mem);
+    config->get(config, solver->mem, "nlp_mem", &mem);
+    // printf("called getter: nlp_mem %p\n", mem);
 
     ocp_nlp_dims *dims = solver->dims;
 

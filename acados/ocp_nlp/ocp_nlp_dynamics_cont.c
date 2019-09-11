@@ -700,6 +700,7 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     {
         config->sim_solver->memory_set(config->sim_solver, work->sim_in->dims, mem->sim_solver,
                                         "guesses_blasfeo", mem->sim_guess);
+        // only use/pass the initial guess once
         mem->set_sim_guess[0] = false;
     }
 

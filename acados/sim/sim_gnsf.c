@@ -1257,7 +1257,7 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
     size += blasfeo_memsize_dvec(nyy);  // YY0
 
     size += 1 * 64;  // corresponds to memory alignment
-    size += 8;  // corresponds to memory alignment
+    size += 2 * 8;  // initial memory alignment, alignment for doubles
     make_int_multiple_of(64, &size);
 
     return size;

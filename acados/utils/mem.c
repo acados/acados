@@ -51,6 +51,7 @@
 
 void make_int_multiple_of(int num, int *size)
 {
+    // round integer size up to next multiple of num;
 	*size = (*size + num - 1) / num * num;
 }
 
