@@ -984,6 +984,7 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -1002,6 +1003,11 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     // general linear
     blasfeo_dgemv_t(nu + nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_ni, nb,
                     &work->tmp_ni, nb);
+	
+	if (nz > 0) {
+		printf("ocp_nlp_constraints_bghp_update_qp_matrices: constraints with nz > 0 not yet implmented. Exiting.\n");
+		exit(1);
+	}
 
     // nonlinear
     if (nh > 0)
