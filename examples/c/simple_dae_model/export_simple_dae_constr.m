@@ -31,12 +31,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function [ model ] = export_simple_dae_model()
-    %% this function generates an implicit ODE / index-1 DAE model,
-    % which consists of a CasADi expression f_impl_expr
-    % that depends on the symbolic CasADi variables x, xdot, u, z,
-    % and a model name, which will be used as a prefix for generated C
-    % functions later on;
+function [ model ] = export_simple_dae_constr()
     
     %% CasADi
     import casadi.*
@@ -48,9 +43,6 @@ function [ model ] = export_simple_dae_model()
     end
     model_name_prefix = 'simple_dae';
        
-    %% parameters
-    alpha = 1.0;
-    
     %% Set up States & Controls
     x1    = SX.sym('x1');     % Differential States
     x2    = SX.sym('x2');
@@ -64,31 +56,13 @@ function [ model ] = export_simple_dae_model()
     u2      = SX.sym('u2');
     u       = vertcat(u1, u2);
     
-    %% xdot
-    x1_dot    = SX.sym('x1_dot');     % Differential States
-    x2_dot    = SX.sym('x2_dot');
+    h_expr = vertcat(z1, z2);
     
-    xdot = [x1_dot; x2_dot];
-    
-    %% Dynamics: implicit DAE formulation (index-1)
-    % x = vertcat(xpos, ypos, alpha, vx, vy, valpha);
-    % z = vertcat(ax, ay, aalpha, Fx, Fy);
-    f_impl = vertcat(x1_dot-0.1*x1+0.1*z2-u1, ...
-                     x2_dot+x2+0.01*z1-u2,  ...
-                     z1-x1, ...
-                     z2-x2);
- 
-    
-    %% initial value
-    %     x0 = [0.1; -0.1];
-    %     z0 = [0.0, 0.0];
-    %     u0 = 0;
-
-    model.expr_f = f_impl;
+    model.constr_expr_h = h_expr;
     model.sym_x = x;
-    model.sym_xdot = xdot;
     model.sym_u = u;
     model.sym_z = z;
     model.name = model_name_prefix;
     
 end
+
