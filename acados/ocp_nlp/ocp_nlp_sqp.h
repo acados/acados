@@ -69,7 +69,7 @@ typedef struct
     double tol_eq;       // exit tolerance on equality constraints
     double tol_ineq;     // exit tolerance on inequality constraints
     double tol_comp;     // exit tolerance on complemetarity condition
-	double alpha;        // (fixed) step length in SQP loop
+	double step_length;  // (fixed) step length in SQP loop
     int max_iter;
     int reuse_workspace;
     int num_threads;

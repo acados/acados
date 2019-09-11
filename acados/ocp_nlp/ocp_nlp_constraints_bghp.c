@@ -70,6 +70,7 @@ void *ocp_nlp_constraints_bghp_dims_assign(void *config_, void *raw_memory)
     // initialize to zero
     dims->nx = 0;
     dims->nu = 0;
+    dims->nz = 0;
     dims->nb = 0;
     dims->nbx = 0;
     dims->nbu = 0;
@@ -87,13 +88,14 @@ void *ocp_nlp_constraints_bghp_dims_assign(void *config_, void *raw_memory)
 
 
 
-void ocp_nlp_constraints_bghp_dims_initialize(void *config_, void *dims_, int nx, int nu, int nbx,
-                                             int nbu, int ng, int nh, int np, int ns)
+void ocp_nlp_constraints_bghp_dims_initialize(void *config_, void *dims_, int nx, int nu, int nz,
+		int nbx, int nbu, int ng, int nh, int np, int ns)
 {
     ocp_nlp_constraints_bghp_dims *dims = dims_;
 
     dims->nx = nx;
     dims->nu = nu;
+    dims->nz = nz;
     dims->nbx = nbx;
     dims->nbu = nbu;
     dims->nb = nbx + nbu;
@@ -120,6 +122,14 @@ static void ocp_nlp_constraints_bghp_set_nu(void *config_, void *dims_, const in
 {
     ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
     dims->nu = *nu;
+}
+
+
+
+static void ocp_nlp_constraints_bghp_set_nz(void *config_, void *dims_, const int *nz)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    dims->nz = *nz;
 }
 
 
@@ -211,8 +221,7 @@ void ocp_nlp_constraints_bghp_dims_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "nz"))
     {
-        // do nothing
-        // TODO(oj): implement constraints with daes
+        ocp_nlp_constraints_bghp_set_nz(config_, dims_, value);
     }
     else if (!strcmp(field, "nu"))
     {
@@ -820,6 +829,25 @@ void ocp_nlp_constraints_bghp_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, v
 
 
 
+void ocp_nlp_constraints_bghp_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_)
+{
+    ocp_nlp_constraints_bghp_memory *memory = memory_;
+
+    memory->z_alg = z_alg;
+}
+
+
+
+void ocp_nlp_constraints_bghp_memory_set_dzduxt_ptr(struct blasfeo_dmat *dzduxt, void *memory_)
+{
+    ocp_nlp_constraints_bghp_memory *memory = memory_;
+
+    memory->dzduxt = dzduxt;
+}
+
+
+
+
 void ocp_nlp_constraints_bghp_memory_set_idxb_ptr(int *idxb, void *memory_)
 {
     ocp_nlp_constraints_bghp_memory *memory = memory_;
@@ -956,6 +984,7 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     // extract dims
     int nx = dims->nx;
     int nu = dims->nu;
+    int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
     int nh = dims->nh;
@@ -963,10 +992,10 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     int np = dims->np;
 
     // XXX large enough ?
-    ext_fun_arg_t ext_fun_type_in[2];
-    void *ext_fun_in[2];
-    ext_fun_arg_t ext_fun_type_out[2];
-    void *ext_fun_out[2];
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_out[3];
+    void *ext_fun_out[3];
 
     // box
     blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_ni, 0);
@@ -974,6 +1003,11 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     // general linear
     blasfeo_dgemv_t(nu + nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_ni, nb,
                     &work->tmp_ni, nb);
+	
+	if (nz > 0) {
+		printf("ocp_nlp_constraints_bghp_update_qp_matrices: constraints with nz > 0 not yet implmented. Exiting.\n");
+		exit(1);
+	}
 
     // nonlinear
     if (nh > 0)
@@ -981,12 +1015,15 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
         //
         struct blasfeo_dvec_args x_in;  // input x of external fun;
         struct blasfeo_dvec_args u_in;  // input u of external fun;
+        struct blasfeo_dvec_args z_in;  // input z of external fun;
 
         x_in.x = memory->ux;
         u_in.x = memory->ux;
+        z_in.x = memory->z_alg;
 
         x_in.xi = nu;
         u_in.xi = 0;
+		z_in.xi = 0;
 
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
         ext_fun_in[0] = &x_in;
@@ -994,6 +1031,8 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
         ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
         ext_fun_in[1] = &u_in;
 
+		ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+		ext_fun_in[2] = &z_in;
         //
         ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
         struct blasfeo_dvec_args h_args;
@@ -1104,6 +1143,8 @@ void ocp_nlp_constraints_bghp_config_initialize_default(void *config_)
     config->memory_set_lam_ptr = &ocp_nlp_constraints_bghp_memory_set_lam_ptr;
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bghp_memory_set_DCt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_bghp_memory_set_RSQrq_ptr;
+    config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bghp_memory_set_z_alg_ptr;
+    config->memory_set_dzdux_tran_ptr = &ocp_nlp_constraints_bghp_memory_set_dzduxt_ptr;
     config->memory_set_idxb_ptr = &ocp_nlp_constraints_bghp_memory_set_idxb_ptr;
     config->memory_set_idxs_ptr = &ocp_nlp_constraints_bghp_memory_set_idxs_ptr;
     config->workspace_calculate_size = &ocp_nlp_constraints_bghp_workspace_calculate_size;

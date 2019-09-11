@@ -238,7 +238,9 @@ add_test(sim_gnsf_crane sim_gnsf_crane)
 add_executable(simple_dae_example simple_dae_example.c
     simple_dae_model/simple_dae_impl_ode_fun.c
     simple_dae_model/simple_dae_impl_ode_jac_x_xdot_u_z.c
-    simple_dae_model/simple_dae_impl_ode_fun_jac_x_xdot_z.c)
+    simple_dae_model/simple_dae_impl_ode_fun_jac_x_xdot_z.c
+    simple_dae_model/simple_dae_constr_h_fun_jac_ut_xt.c
+    simple_dae_model/simple_dae_constr_h_fun_jac_ut_xt_hess.c)
     
 target_link_libraries(simple_dae_example acados)
 add_test(simple_dae_example simple_dae_example)
