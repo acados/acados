@@ -340,6 +340,7 @@ int sim_lifted_irk_memory_calculate_size(void *config, void *dims_, void *opts_)
     size += 1 * blasfeo_memsize_dvec(nx);                         // x
     size += 1 * blasfeo_memsize_dvec(nu);                         // u
 
+    size += 1 * 8; // initial align
     make_int_multiple_of(64, &size);
     size += 1 * 64;
 
@@ -361,6 +362,9 @@ void *sim_lifted_irk_memory_assign(void *config, void *dims_, void *opts_, void 
     int nu = dims->nu;
 
     int num_steps = opts->num_steps;
+
+    // initial align
+    align_char_to(8, &c_ptr);
 
     sim_lifted_irk_memory *memory = (sim_lifted_irk_memory *) c_ptr;
     c_ptr += sizeof(sim_lifted_irk_memory);

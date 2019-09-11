@@ -142,10 +142,45 @@ void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim,
     }
     else
     {
-        assert(0 == 1);  // dimension type not available in module
+        printf("\ndimension type %s not available in module ocp_nlp_dynamics_disc\n", dim);
+        exit(1);
     }
 }
 
+void ocp_nlp_dynamics_disc_dims_get(void *config_, void *dims_, const char *dim, int* value)
+{
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) dims_;
+
+    if (!strcmp(dim, "nx"))
+    {
+        *value = dims->nx;
+    }
+    else if (!strcmp(dim, "nx1"))
+    {
+        *value = dims->nx1;
+    }
+    else if (!strcmp(dim, "nz"))
+    {
+        if ( *value > 0)
+        {
+            printf("\nerror: ocp_nlp_dynamics_disc does not support nz > 0\n");
+            exit(1);
+        }
+    }
+    else if (!strcmp(dim, "nu"))
+    {
+        *value = dims->nu;
+    }
+    else if (!strcmp(dim, "nu1"))
+    {
+        *value = dims->nu1;
+    }
+    else
+    {
+        printf("\ndimension type %s not available in module ocp_nlp_dynamics_disc\n", dim);
+        exit(1);
+    }
+}
 
 
 /************************************************
@@ -155,7 +190,6 @@ void ocp_nlp_dynamics_disc_dims_set(void *config_, void *dims_, const char *dim,
 int ocp_nlp_dynamics_disc_opts_calculate_size(void *config_, void *dims_)
 {
     // ocp_nlp_dynamics_config *config = config_;
-    // ocp_nlp_dynamics_disc_dims *config = dims_;
 
     int size = 0;
 
@@ -376,7 +410,7 @@ void ocp_nlp_dynamics_disc_memory_set_dzduxt_ptr(struct blasfeo_dmat *mat, void 
 
 
 
-void ocp_nlp_dynamics_disc_memory_set_z_guess_ptr(struct blasfeo_dvec *z, void *memory_)
+void ocp_nlp_dynamics_disc_memory_set_sim_guess_ptr(struct blasfeo_dvec *z, bool *bool_ptr, void *memory_)
 {
     return;  // we don't allow algebraic variables for discrete models for now
 }
@@ -659,6 +693,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->dims_assign = &ocp_nlp_dynamics_disc_dims_assign;
     config->dims_initialize = &ocp_nlp_dynamics_disc_dims_initialize;
     config->dims_set =  &ocp_nlp_dynamics_disc_dims_set;
+    config->dims_get = &ocp_nlp_dynamics_disc_dims_get;
     config->model_calculate_size = &ocp_nlp_dynamics_disc_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_disc_model_assign;
     config->model_set = &ocp_nlp_dynamics_disc_model_set;
@@ -677,7 +712,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
     config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_disc_memory_set_BAbt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_disc_memory_set_RSQrq_ptr;
     config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_disc_memory_set_dzduxt_ptr;
-    config->memory_set_z_guess_ptr = &ocp_nlp_dynamics_disc_memory_set_z_guess_ptr;
+    config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_disc_memory_set_sim_guess_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_disc_memory_set_z_alg_ptr;
     config->workspace_calculate_size = &ocp_nlp_dynamics_disc_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_disc_initialize;

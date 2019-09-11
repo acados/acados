@@ -78,7 +78,7 @@ function build_acados {
 
 	# Run ctest
 	# TODO: test matlab/python
-	cmake -E chdir build ctest --output-on-failure; # use -V for full output
+	cmake -E chdir build ctest -V; # use -V for full output # --output-on-failure for less
 
 	[ $? -ne 0 ] && exit 100;
 	if [ -n "${COVERAGE}" ]; then

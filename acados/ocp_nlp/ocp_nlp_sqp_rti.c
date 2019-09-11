@@ -1234,7 +1234,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->dynamics[ii]->memory_set_BAbt_ptr(mem->qp_in->BAbt+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_RSQrq_ptr(mem->qp_in->RSQrq+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_dzduxt_ptr(mem->dzduxt+ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_z_guess_ptr(nlp_out->z+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_sim_guess_ptr(mem->nlp_mem->sim_guess+ii,
+                                      mem->nlp_mem->set_sim_guess+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_z_alg_ptr(mem->z_alg+ii, mem->dynamics[ii]);
     }
 

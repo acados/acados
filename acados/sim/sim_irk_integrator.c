@@ -404,6 +404,16 @@ int sim_irk_memory_set(void *config_, void *dims_, void *mem_, const char *field
         for (int ii=0; ii < nz; ii++)
             mem->z[ii] = z[ii];
     }
+    else if (!strcmp(field, "guesses_blasfeo"))
+    {
+        int nx, nz;
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nz", &nz);
+
+        struct blasfeo_dvec *sim_guess = (struct blasfeo_dvec *) value;
+        blasfeo_unpack_dvec(nx, sim_guess, 0, mem->xdot);
+        blasfeo_unpack_dvec(nz, sim_guess, nx, mem->z);
+    }
     else
     {
         printf("sim_irk_memory_set: field %s is not supported! \n", field);
@@ -526,6 +536,7 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
         size += blasfeo_memsize_dmat(nx + nz, nx + nu);  // dk0_dxu
     }
 
+    size += 1 * 8; // initial alignment
     make_int_multiple_of(64, &size);
     size += 1 * 64;
 
@@ -547,6 +558,9 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     int steps = opts->num_steps;
 
     char *c_ptr = (char *) raw_memory;
+
+    // initial align
+    align_char_to(8, &c_ptr);
 
     sim_irk_workspace *workspace = (sim_irk_workspace *) c_ptr;
     c_ptr += sizeof(sim_irk_workspace);
@@ -852,12 +866,16 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     blasfeo_pack_dvec(nx + nu, in->S_adj, lambda, 0); // TODO set to zero u-part ???
 
     // initialize integration variables
-    for (int i = 0; i < ns; ++i){
+    for (int i = 0; i < ns; ++i)
+    {
         // state derivatives
         blasfeo_pack_dvec(nx, mem->xdot, K, nx*i);
         // algebraic variables
         blasfeo_pack_dvec(nz, mem->z, K, nx*ns + i*nz);
     }
+    // printf("sim_irk: K initialization\n");
+    // blasfeo_print_exp_dvec(nK, K, 0);
+    // exit(1);
 
     // TODO(dimitris, FreyJo): implement NF (number of forward sensis) properly, instead of nx+nu?
 

@@ -51,6 +51,7 @@
 
 void make_int_multiple_of(int num, int *size)
 {
+    // round integer size up to next multiple of num;
 	*size = (*size + num - 1) / num * num;
 }
 
@@ -170,6 +171,17 @@ void assign_and_advance_int(int n, int **v, char **ptr)
 #else
     *v = (int *) *ptr;
     *ptr += sizeof(int) * n;
+#endif
+}
+
+void assign_and_advance_bool(int n, bool **v, char **ptr)
+{
+#ifdef _USE_VALGRIND_
+    *v = (bool *) acados_malloc(n, sizeof(bool));
+    print_warning();
+#else
+    *v = (bool *) *ptr;
+    *ptr += sizeof(bool) * n;
 #endif
 }
 
