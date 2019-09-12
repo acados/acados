@@ -342,22 +342,7 @@ for ii=1:N_sim
     end
 
 	ocp.solve();
-
-    stat = ocp.get('stat');
-    if strcmp(nlp_solver, 'sqp')
-        fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter');
-        if size(stat,2)>7
-            fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
-        end
-        fprintf('\n');
-        for jj=1:size(stat,1)
-            fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(jj,1), stat(jj,2), stat(jj,3), stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7));
-            if size(stat,2)>7
-                fprintf('\t%e\t%e\t%e\t%e', stat(jj,8), stat(jj,9), stat(jj,10), stat(jj,11));
-            end
-            fprintf('\n');
-        end
-    end
+    ocp.print('stat')
 
     status = ocp.get('status');
     sqp_iter(ii) = ocp.get('sqp_iter');
@@ -415,7 +400,7 @@ format short e
 
 toc
 
-if 1
+if 0
     % trajectory plot
     figure;
     subplot(4, 1, 1);
@@ -437,7 +422,6 @@ if 1
     if is_octave()
         waitforbuttonpress;
     end
-
 
     % iterations, CPU time
     figure();
