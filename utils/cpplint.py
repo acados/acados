@@ -2634,7 +2634,7 @@ class NestingState(object):
     """Update preprocessor stack.
 
     We need to handle preprocessors due to classes like this:
-      #ifdef SWIG
+      #ifdef YOLO
       struct ResultDetailsPageElementExtensionPoint {
       #else
       struct ResultDetailsPageElementExtensionPoint : public Extension {
