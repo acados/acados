@@ -35,22 +35,18 @@
 clear all
 
 
-
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
+	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
-
 
 
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
-model_name = 'masses_chain'
+model_name = 'masses_chain';
 
 param_scheme = 'multiple_shooting_unif_grid';
 N = 40;
@@ -307,8 +303,8 @@ if (strcmp(nlp_solver, 'sqp'))
 	semilogy(0: size(stat,1)-1, stat(:,5), 'k-x');
 	hold off
 	xlabel('iter')
-	ylabel('res')
-    legend('res g', 'res b', 'res d', 'res m');
+	ylabel('residuals')
+    legend('res stat', 'res eq', 'res ineq', 'res compl');
 end
 
 

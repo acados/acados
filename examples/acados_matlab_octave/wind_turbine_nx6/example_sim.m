@@ -38,9 +38,7 @@ clear all
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
+	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
 
 
@@ -171,5 +169,3 @@ x_sim(:,1:nsim+1)
 
 fprintf('\nsuccess!\n\n');
 
-
-return;
