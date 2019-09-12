@@ -729,7 +729,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_opts_set(config, opts, "qp_cond_ric_alg", &qp_solver_cond_ric_alg);
     }
     // hpipm: riccati algorithm
-    if (mxGetField( matlab_opts, 0, "qp_solver_ric_alg" )!=NULL)
+    if (mxGetField( matlab_opts, 0, "qp_solver_ric_alg" )!=NULL
+        && plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
     {
         int qp_solver_ric_alg = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_ric_alg" ) );
         ocp_nlp_opts_set(config, opts, "qp_ric_alg", &qp_solver_ric_alg);
