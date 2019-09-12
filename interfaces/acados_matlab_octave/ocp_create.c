@@ -44,6 +44,7 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
+//mexPrintf("\nstart ocp create\n");
 
     long long *l_ptr;
     int *i_ptr;
@@ -1276,6 +1277,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     }
 
+    // Jbx
+
     // x0 is always bounded on all components !!!
     i_ptr = malloc(nx*sizeof(int));
     for (int ii=0; ii<nx; ii++)
@@ -1285,18 +1288,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ocp_nlp_constraints_model_set(config, dims, in, 0, "idxbx", i_ptr);
     free(i_ptr);
 
-
     tmp_idx = malloc(nbx*sizeof(int));
 
-    // Jbx
+    double *Jbx;    bool set_Jbx = false;
     const mxArray *Jbx_matlab = mxGetField( matlab_model, 0, "constr_Jbx" );
     if (Jbx_matlab!=NULL)
     {
         int nrow = (int) mxGetM( Jbx_matlab );
         int ncol = (int) mxGetN( Jbx_matlab );
         MEX_DIM_CHECK_MAT(fun_name, "constr_Jbx", nrow, ncol, nbx, nx);
-
-        double *Jbx = mxGetPr( Jbx_matlab );
+        set_Jbx = true;
+        Jbx = mxGetPr( Jbx_matlab );
         for (int ii=0; ii<nrow; ii++)
         {
             int nnz_row = 0;
@@ -1322,16 +1324,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_constraints_model_set(config, dims, in, ii, "idxbx", tmp_idx);
         }
     }
-    else
-    {
-        // TODO(oj): not sure about that, but otherwise tmp_idx is not initialized!
-        for (int jj=0; jj<nx; jj++)
-        {
-            tmp_idx[jj] = jj;
-        }
-    }
+//    else
+//    {
+//        // TODO(oj): not sure about that, but otherwise tmp_idx is not initialized!
+//        for (int jj=0; jj<nx; jj++)
+//        {
+//            tmp_idx[jj] = jj;
+//        }
+//    }
     
 
+	// x0
     if (mxGetField( matlab_model, 0, "constr_x0" )!=NULL)
     {
         int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_x0" ) );
@@ -1345,48 +1348,55 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         // initialize initial state bounds with +- infinity
-        d_ptr = malloc(nx*sizeof(double));
-        for (int ii=0; ii<nx; ii++)
-        {
-            d_ptr[ii] = - acados_inf;
-        }
-        ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", d_ptr);
-        for (int ii=0; ii<nx; ii++)
-        {
-            d_ptr[ii] = acados_inf;
-        }
-        ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", d_ptr);
-        free(d_ptr);
+//        d_ptr = malloc(nx*sizeof(double));
+//        for (int ii=0; ii<nx; ii++)
+//        {
+//            d_ptr[ii] = - acados_inf;
+//        }
+//        ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", d_ptr);
+//        for (int ii=0; ii<nx; ii++)
+//        {
+//            d_ptr[ii] = acados_inf;
+//        }
+//        ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", d_ptr);
+//        free(d_ptr);
 
-        if (set_lbx)  // use lbx for initial stage
-        {
+//        if (set_lbx)  // use lbx for initial stage
+//        {
             d_ptr = malloc(nx*sizeof(double));
             for (int ii=0; ii<nx; ii++)
             {
                 d_ptr[ii] = - acados_inf;
             }
-            for (int ii=0; ii<nbx; ii++)
-            {
-                d_ptr[tmp_idx[ii]] = lbx[ii];
-            }
+			if (set_Jbx & set_lbx)
+			{
+				for (int ii=0; ii<nbx; ii++)
+				{
+					d_ptr[tmp_idx[ii]] = lbx[ii];
+				}
+			}
             ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", d_ptr);
-            free(d_ptr);
-        }
-        if (set_ubx) // use ubx for initial stage
-        {
-            d_ptr = malloc(nx*sizeof(double));
+//            free(d_ptr);
+//        }
+//        if (set_ubx) // use ubx for initial stage
+//        {
+//            d_ptr = malloc(nx*sizeof(double));
             for (int ii=0; ii<nx; ii++)
             {
                 d_ptr[ii] = acados_inf;
             }
-            for (int ii=0; ii<nbx; ii++)
-            {
-                d_ptr[tmp_idx[ii]] = ubx[ii];
-            }
+			if (set_Jbx & set_ubx)
+			{
+				for (int ii=0; ii<nbx; ii++)
+				{
+					d_ptr[tmp_idx[ii]] = ubx[ii];
+				}
+			}
             ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", d_ptr);
             free(d_ptr);
-        }
+//        }
     }
+
     free(tmp_idx);
 
 

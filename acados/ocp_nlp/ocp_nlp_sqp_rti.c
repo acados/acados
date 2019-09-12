@@ -1139,7 +1139,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
-    // int *nu = dims->nu;
+    int *nu = dims->nu;
     int *ni = dims->ni;
     int *nz = dims->nz;
 
@@ -1178,10 +1178,11 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
 		blasfeo_dvecsc(2*ni[i], 1.0-alpha, nlp_out->t+i, 0);
         blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->t+i, 0, nlp_out->t+i, 0, nlp_out->t+i, 0);
 
+		// linear update of algebraic variables using state and input sensitivity
+
         if (i < N)
 		{
-			blasfeo_dvecsc(nz[i], 1.0-alpha, nlp_out->z+i, 0);
-			blasfeo_daxpy(nz[i], alpha, mem->z_alg+i, 0, nlp_out->z+i, 0, nlp_out->z+i, 0);
+			blasfeo_dgemv_t(nu[i]+nx[i], nz[i], 1.0, mem->dzduxt+i, 0, 0, nlp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, nlp_out->z+i, 0); 
 		}
 
     }
