@@ -97,6 +97,9 @@ function [ model ] = pendulum_dae_model()
                      ax + vy * valpha + ypos * aalpha, ...
                      ay - vx * valpha - xpos * aalpha);
     
+    %% constraint
+    expr_h = ax^2 + ay^2;
+
     %% initial value
 %     x0 = [1; -5; 1; 0.1; -0.5; 0.1];
 %     z0 = [-1.5; -0.3; -0.3; -3; 19];
@@ -108,5 +111,6 @@ function [ model ] = pendulum_dae_model()
     model.sym_u = u;
     model.sym_z = z;
     model.name = model_name_prefix;
+    model.expr_h = expr_h;
     
 end
