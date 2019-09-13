@@ -32,14 +32,19 @@
 %
 
 %% check that environment variables are provided
-require_env_variable('LD_LIBRARY_PATH');
-require_env_variable('ACADOS_INSTALL_DIR');
-
-if is_octave()
-    require_env_variable('OCTAVE_PATH');
-else
-    require_env_variable('MATLABPATH');
+try
+    require_env_variable('LD_LIBRARY_PATH');
+    require_env_variable('ACADOS_INSTALL_DIR');
+    if is_octave()
+        require_env_variable('OCTAVE_PATH');
+    else
+        require_env_variable('MATLABPATH');
+    end
+catch exception
+    exit_with_error(exception);
 end
+
+
 
 %% ocp tests
 try

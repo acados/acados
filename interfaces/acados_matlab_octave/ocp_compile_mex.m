@@ -74,6 +74,8 @@ if is_octave()
 		fclose(input_file);
 		cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
 		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+			disp('compiling mex with qpOASES')
+			disp('compiling mex with qpOASES')
 			cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
 		end
 		input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');

@@ -43,6 +43,7 @@ matrix:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
         - ACADOS_OCTAVE="ON"
         - ACADOS_EXAMPLES="OFF"
+        - ACADOS_UNIT_TESTS="OFF"
 
     - name: Linux Gcc4.9 - Octave interface + coverage
       env:
