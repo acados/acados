@@ -75,6 +75,7 @@ function model = simple_dae_model()
  
 	%% constraints
     expr_h = vertcat(z1, z2);
+    expr_h_e = vertcat(x1, x2);
     
     %% initial value
     %     x0 = [0.1; -0.1];
@@ -86,7 +87,8 @@ function model = simple_dae_model()
     model.sym_u = u;
     model.sym_z = z;
     model.expr_f_impl = expr_f_impl;
-    model.constr_expr_h = expr_h;
+    model.expr_h = expr_h;
+    model.expr_h_e = expr_h_e;
     model.name = model_name_prefix;
     
 end

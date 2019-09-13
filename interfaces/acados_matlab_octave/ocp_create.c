@@ -56,6 +56,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     char fun_name[50] = "ocp_create";
     char buffer[500]; // for error messages
     char matlab_field_name[100];
+
     double acados_inf = 1e8;
 
     /* RHS */
@@ -995,6 +996,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             for (int ii=0; ii<N; ii++)
             {
                 ocp_nlp_cost_model_set(config, dims, in, ii, "Vx", Vx);
+            }
+        }
+        // TODO: else complain?
+        if (mxGetField( matlab_model, 0, "cost_Vz" )!=NULL)
+        {
+            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Vz" ) );
+            int acados_size = ny*nz;
+            MEX_DIM_CHECK_VEC(fun_name, "cost_Vz", matlab_size, acados_size);
+            double *Vz = mxGetPr( mxGetField( matlab_model, 0, "cost_Vz" ) );
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_cost_model_set(config, dims, in, ii, "Vz", Vz);
             }
         }
         // TODO: else complain?
