@@ -211,10 +211,7 @@ else
 	ocp_model.set('constr_lbu', lbu);
 	ocp_model.set('constr_ubu', ubu);
 end
-
-ocp_model.model_struct
-
-
+% ocp_model.model_struct
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
@@ -243,8 +240,7 @@ ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);
 ocp_opts.set('sim_method_newton_iter', ocp_sim_method_newton_iter);
-
-ocp_opts.opts_struct
+% ocp_opts.opts_struct
 
 
 %% acados ocp
@@ -342,7 +338,7 @@ for ii=1:N_sim
     end
 
 	ocp.solve();
-    ocp.print('stat')
+%     ocp.print('stat')
 
     status = ocp.get('status');
     sqp_iter(ii) = ocp.get('sqp_iter');

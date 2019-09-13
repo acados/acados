@@ -168,31 +168,11 @@ else % irk irk_gnsf
 end
 % constraints
 ocp_model.set('constr_x0', x0);
-if (ng>0)
-	ocp_model.set('constr_C', C);
-	ocp_model.set('constr_D', D);
-	ocp_model.set('constr_lg', lg);
-	ocp_model.set('constr_ug', ug);
-	ocp_model.set('constr_C_e', C_e);
-	ocp_model.set('constr_lg_e', lg_e);
-	ocp_model.set('constr_ug_e', ug_e);
-elseif (nh>0)
-	ocp_model.set('constr_expr_h', model.expr_h);
-	ocp_model.set('constr_lh', lbu);
-	ocp_model.set('constr_uh', ubu);
-%	ocp_model.set('constr_expr_h_e', model.expr_h_e);
-%	ocp_model.set('constr_lh_e', lh_e);
-%	ocp_model.set('constr_uh_e', uh_e);
-else
-%	ocp_model.set('constr_Jbx', Jbx);
-%	ocp_model.set('constr_lbx', lbx);
-%	ocp_model.set('constr_ubx', ubx);
-	ocp_model.set('constr_Jbu', Jbu);
-	ocp_model.set('constr_lbu', lbu);
-	ocp_model.set('constr_ubu', ubu);
-end
-disp('ocp_model.model_struct')
-disp(ocp_model.model_struct)
+ocp_model.set('constr_expr_h', model.expr_h);
+ocp_model.set('constr_lh', lbu);
+ocp_model.set('constr_uh', ubu);
+% disp('ocp_model.model_struct')
+% disp(ocp_model.model_struct)
 
 
 %% acados ocp opts
@@ -228,18 +208,17 @@ if (strcmp(sim_method, 'irk_gnsf'))
 	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-disp('ocp_opts');
-disp(ocp_opts.opts_struct);
+% disp('ocp_opts');
+% disp(ocp_opts.opts_struct);
 
 
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-disp('ocp.C_ocp');
-disp(ocp.C_ocp);
-disp('ocp.C_ocp_ext_fun');
-disp(ocp.C_ocp_ext_fun);
-%ocp.model_struct
+% disp('ocp.C_ocp');
+% disp(ocp.C_ocp);
+% disp('ocp.C_ocp_ext_fun');
+% disp(ocp.C_ocp_ext_fun);
 
 
 % set trajectory initialization

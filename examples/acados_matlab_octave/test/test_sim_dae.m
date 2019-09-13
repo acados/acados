@@ -51,7 +51,7 @@ for integrator = {'irk_gnsf', 'irk'}
     num_stages = 3;
     num_steps = 3;
     newton_iter = 3;
-    model_name = ['inv_pend_dae_' method];
+    model_name = ['pend_dae_' method];
 
     length_pendulum = 5;
     alpha0 = .01;
@@ -166,15 +166,21 @@ for integrator = {'irk_gnsf', 'irk'}
         z_ref = z;
         S_alg_ref = S_alg;
     else
-        S_alg
-        S_alg_ref
+%         S_alg
+%         S_alg_ref
 
-        err_x = norm(x_sim - x_sim_ref)
-        err_S_forw = norm(S_forw - S_forw_ref)
-        err_S_adj = norm(S_adj - S_adj_ref)
-        err_z = norm(z - z_ref)
-        err_S_alg = norm(S_alg - S_alg_ref)
+        err_x = norm(x_sim - x_sim_ref);
+        err_S_forw = norm(S_forw - S_forw_ref);
+        err_S_adj = norm(S_adj - S_adj_ref);
+        err_z = norm(z - z_ref);
+        err_S_alg = norm(S_alg - S_alg_ref);
         err = max([err_x, err_S_forw, err_S_adj, err_z, err_S_alg]);
+        fprintf(['\nerr_x\t\t' num2str(err_x, '%e')]);
+        fprintf(['\nerr_S_forw\t' num2str(err_S_forw, '%e')]);
+        fprintf(['\nerr_S_adj\t' num2str(err_S_adj, '%e')]);
+        fprintf(['\nerr_z\t\t' num2str(err_z, '%e')]);
+        fprintf(['\nerr_S_alg\t' num2str(err_S_alg, '%e')]);
+
         if max(err > required_accuracy )
             error(strcat('test_sim_dae FAIL: error larger than required accuracy:',...
                 num2str(required_accuracy), ' for integrator: ', method));
@@ -184,4 +190,4 @@ for integrator = {'irk_gnsf', 'irk'}
 
 end
 
-fprintf('\nTEST_SIM_DAE: success!\n\n');
+fprintf('\n\nTEST_SIM_DAE: success!\n\n');
