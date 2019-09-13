@@ -72,11 +72,10 @@ ocp_sim_method = 'irk'; % irk, irk_gnsf
 ocp_sim_method_num_stages = 6; % scalar or vector of size ocp_N;
 ocp_sim_method_num_steps = 4; % scalar or vector of size ocp_N;
 ocp_sim_method_newton_iter = 3; % scalar or vector of size ocp_N;
-cost_type = 'linear_ls'; % linear_ls, ext_cost
 
 % selectors for example variants
 constr_variant = 1; % 0: x bounds; 1: z bounds
-cost_variant = 1; % 0: ls on x; 1: ls on z
+cost_variant = 1; % 0: ls on u,x; 1: ls on u,z; (not implemented yet: 2: nls on u,z)
 
 
 
@@ -131,14 +130,19 @@ ocp_model.set('sym_xdot', model.sym_xdot);
 ocp_model.set('sym_z', model.sym_z);
 
 % cost
-ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_type_e', cost_type);
-ocp_model.set('cost_Vu', Vu);
 if cost_variant==0
+	ocp_model.set('cost_type', 'linear_ls');
+	ocp_model.set('cost_Vu', Vu);
 	ocp_model.set('cost_Vx', Vx);
-else
+elseif cost_variant==1
+	ocp_model.set('cost_type', 'linear_ls');
+	ocp_model.set('cost_Vu', Vu);
 	ocp_model.set('cost_Vz', Vx);
-endif
+else
+	ocp_model.set('cost_type', 'nonlinear_ls');
+	ocp_model.set('cost_expr_y', model.expr_y);
+end
+ocp_model.set('cost_type_e', 'linear_ls');
 ocp_model.set('cost_Vx_e', Vx_e);
 ocp_model.set('cost_W', W);
 ocp_model.set('cost_W_e', Wx);

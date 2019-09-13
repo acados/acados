@@ -67,6 +67,9 @@ function model = simple_dae_model()
     x2_dot    = SX.sym('x2_dot');
     xdot = [x1_dot; x2_dot];
     
+	%% cost
+	expr_y = vertcat(u1, u2, z1, z2);
+
     %% Dynamics: implicit DAE formulation (index-1)
     expr_f_impl = vertcat(x1_dot-0.1*x1+0.1*z2-u1, ...
                      x2_dot+x2+0.01*z1-u2,  ...
@@ -86,6 +89,7 @@ function model = simple_dae_model()
     model.sym_xdot = xdot;
     model.sym_u = u;
     model.sym_z = z;
+    model.expr_y = expr_y;
     model.expr_f_impl = expr_f_impl;
     model.expr_h = expr_h;
     model.expr_h_e = expr_h_e;
