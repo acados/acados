@@ -62,13 +62,14 @@ nlp_solver_tol_eq   = tol;
 nlp_solver_tol_ineq = tol;
 nlp_solver_tol_comp = tol;
 nlp_solver_ext_qp_res = 1;
-qp_solver = 'partial_condensing_hpipm';
+% qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
-%qp_solver = 'full_condensing_qpoases';
+qp_solver = 'full_condensing_qpoases';
 qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 2;
+qp_solver_iter_max = 100;
 %sim_method = 'erk';
 % sim_method = 'irk';
 sim_method = 'irk_gnsf';
@@ -219,6 +220,7 @@ if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 end
 ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
 ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
+ocp_opts.set('qp_solver_iter_max', qp_solver_iter_max);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
