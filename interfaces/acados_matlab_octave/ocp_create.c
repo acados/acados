@@ -56,6 +56,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     char fun_name[50] = "ocp_create";
     char buffer[500]; // for error messages
     char matlab_field_name[100];
+
     double acados_inf = 1e8;
 
     /* RHS */
@@ -948,12 +949,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if ((cost_type_enum == LINEAR_LS) || (cost_type_enum == NONLINEAR_LS))
     {
 
-        if (mxGetField( matlab_model, 0, "cost_W" )!=NULL)
+		const mxArray *W_matlab = mxGetField( matlab_model, 0, "cost_W" );
+        if (W_matlab!=NULL)
         {
-            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_W" ) );
-            int acados_size = ny*ny;
-            MEX_DIM_CHECK_VEC(fun_name, "cost_W", matlab_size, acados_size);
-            double *W = mxGetPr( mxGetField( matlab_model, 0, "cost_W" ) );
+            int nrow = (int) mxGetM( W_matlab );
+            int ncol = (int) mxGetN( W_matlab );
+            MEX_DIM_CHECK_MAT(fun_name, "cost_W", nrow, ncol, ny, ny);
+            double *W = mxGetPr( W_matlab );
             for (int ii=0; ii<N; ii++)
             {
                 ocp_nlp_cost_model_set(config, dims, in, ii, "W", W);
@@ -974,45 +976,62 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
             }
         }
-        // TODO: else complain?
+        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
     }
     if (cost_type_enum == LINEAR_LS)
     {
-        if (mxGetField( matlab_model, 0, "cost_Vu" )!=NULL)
+        const mxArray *Vu_matlab = mxGetField( matlab_model, 0, "cost_Vu" );
+        if (Vu_matlab!=NULL)
         {
-            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Vu" ) );
-            int acados_size = ny*nu;
-            MEX_DIM_CHECK_VEC(fun_name, "cost_Vu", matlab_size, acados_size);
-            double *Vu = mxGetPr( mxGetField( matlab_model, 0, "cost_Vu" ) );
+            int nrow = (int) mxGetM( Vu_matlab );
+            int ncol = (int) mxGetN( Vu_matlab );
+            MEX_DIM_CHECK_MAT(fun_name, "cost_Vu", nrow, ncol, ny, nu);
+            double *Vu = mxGetPr( Vu_matlab );
             for (int ii=0; ii<N; ii++)
             {
                 ocp_nlp_cost_model_set(config, dims, in, ii, "Vu", Vu);
             }
         }
-        // TODO: else complain?
-        if (mxGetField( matlab_model, 0, "cost_Vx" )!=NULL)
+        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
+        const mxArray *Vx_matlab = mxGetField( matlab_model, 0, "cost_Vx" );
+        if (Vx_matlab!=NULL)
         {
-            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Vx" ) );
-            int acados_size = ny*nx;
-            MEX_DIM_CHECK_VEC(fun_name, "cost_Vx", matlab_size, acados_size);
-            double *Vx = mxGetPr( mxGetField( matlab_model, 0, "cost_Vx" ) );
+            int nrow = (int) mxGetM( Vx_matlab );
+            int ncol = (int) mxGetN( Vx_matlab );
+            MEX_DIM_CHECK_MAT(fun_name, "cost_Vx", nrow, ncol, ny, nx);
+            double *Vx = mxGetPr( Vx_matlab );
             for (int ii=0; ii<N; ii++)
             {
                 ocp_nlp_cost_model_set(config, dims, in, ii, "Vx", Vx);
             }
         }
-        // TODO: else complain?
+        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
+        const mxArray *Vz_matlab = mxGetField( matlab_model, 0, "cost_Vz" );
+        if (Vz_matlab!=NULL)
+        {
+            int nrow = (int) mxGetM( Vz_matlab );
+            int ncol = (int) mxGetN( Vz_matlab );
+            MEX_DIM_CHECK_MAT(fun_name, "cost_Vz", nrow, ncol, ny, nz);
+            double *Vz = mxGetPr( Vz_matlab );
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_cost_model_set(config, dims, in, ii, "Vz", Vz);
+            }
+        }
+        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
+		// XXX should complain only if none of the is there
     }
 
     // mayer term
     if ((cost_type_e_enum == LINEAR_LS) || (cost_type_e_enum == NONLINEAR_LS))
     {
-        if (mxGetField( matlab_model, 0, "cost_W_e" )!=NULL)
+		const mxArray *W_e_matlab = mxGetField( matlab_model, 0, "cost_W_e" );
+        if (W_e_matlab!=NULL)
         {
-            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_W_e" ) );
-            int acados_size = ny_e * ny_e;
-            MEX_DIM_CHECK_VEC(fun_name, "cost_W_e", matlab_size, acados_size);
-            double *W_e = mxGetPr( mxGetField( matlab_model, 0, "cost_W_e" ) );
+            int nrow = (int) mxGetM( W_e_matlab );
+            int ncol = (int) mxGetN( W_e_matlab );
+            MEX_DIM_CHECK_MAT(fun_name, "cost_W_e", nrow, ncol, ny_e, ny_e);
+            double *W_e = mxGetPr( W_e_matlab );
             ocp_nlp_cost_model_set(config, dims, in, N, "W", W_e);
         }
         else
@@ -1027,19 +1046,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             double *yr_e = mxGetPr( mxGetField( matlab_model, 0, "cost_y_ref_e" ) );
             ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
         }
-        // TODO: else complain?
+        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
     }
     if (cost_type_e_enum == LINEAR_LS)
     {
-        if (mxGetField( matlab_model, 0, "cost_Vx_e" )!=NULL)
+        const mxArray *Vx_e_matlab = mxGetField( matlab_model, 0, "cost_Vx_e" );
+        if (Vx_e_matlab!=NULL)
         {
-            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "cost_Vx_e" ) );
-            int acados_size = nx * ny_e;
-            MEX_DIM_CHECK_VEC(fun_name, "cost_Vx_e", matlab_size, acados_size);
-            double *Vx_e = mxGetPr( mxGetField( matlab_model, 0, "cost_Vx_e" ) );
+            int nrow = (int) mxGetM( Vx_e_matlab );
+            int ncol = (int) mxGetN( Vx_e_matlab );
+            MEX_DIM_CHECK_MAT(fun_name, "cost_Vx_e", nrow, ncol, ny_e, nx);
+            double *Vx_e = mxGetPr( Vx_e_matlab );
             ocp_nlp_cost_model_set(config, dims, in, N, "Vx", Vx_e);
         }
-        // TODO: else complain?
+        // TODO: else complain? giaf: yes
     }
 
     // slacks

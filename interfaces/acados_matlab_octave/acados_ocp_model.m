@@ -101,6 +101,8 @@ classdef acados_ocp_model < handle
 					obj.model_struct.cost_Vx = value;
 				elseif (strcmp(field, 'cost_Vx_e'))
 					obj.model_struct.cost_Vx_e = value;
+				elseif (strcmp(field, 'cost_Vz'))
+					obj.model_struct.cost_Vz = value;
 				elseif (strcmp(field, 'cost_W'))
 					obj.model_struct.cost_W = value;
 				elseif (strcmp(field, 'cost_W_e'))
