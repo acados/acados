@@ -51,6 +51,7 @@ try
     test_ocp_pendulum_on_cart;
     test_ocp_wtnx6;
     test_ocp_pendulum_dae;
+    test_ocp_linear_mass_spring;
 catch exception
     exit_with_error(exception);
 end
