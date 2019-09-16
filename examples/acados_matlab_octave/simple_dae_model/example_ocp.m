@@ -37,9 +37,7 @@ clear all
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
+	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
 
 %% options
@@ -221,10 +219,10 @@ end
 
 format short e
 % get solution for initialization of next NLP
-x_traj = ocp.get('x')
-u_traj = ocp.get('u')
-pi_traj = ocp.get('pi')
-z_traj = ocp.get('z')
+x_traj = ocp.get('x');
+u_traj = ocp.get('u');
+pi_traj = ocp.get('pi');
+z_traj = ocp.get('z');
 
 diff_x_z = x_traj(:,1:N) - z_traj
 
