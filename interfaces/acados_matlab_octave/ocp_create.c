@@ -869,6 +869,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             double scale = T/(param_scheme_shooting_nodes[N]-param_scheme_shooting_nodes[0]);
             for (int ii=0; ii<N; ii++)
             {
+                if (param_scheme_shooting_nodes[ii+1]-param_scheme_shooting_nodes[ii] <= 0)
+                {
+                    sprintf(buffer, "%s: param_scheme_shooting_nodes must be in ascending order!", fun_name);
+                    mexErrMsgTxt(buffer);
+                }
                 double Ts = scale*(param_scheme_shooting_nodes[ii+1]-param_scheme_shooting_nodes[ii]);
                 ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
                 ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
@@ -976,7 +981,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
             }
         }
-        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
+        // else: is set to zero by default in C
     }
     if (cost_type_enum == LINEAR_LS)
     {

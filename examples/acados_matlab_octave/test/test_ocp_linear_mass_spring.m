@@ -1,3 +1,4 @@
+
 %
 % Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
 % Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
@@ -43,7 +44,7 @@ codgen_model = 'true';
 % param_scheme = 'multiple_shooting_unif_grid';
 param_scheme = 'multiple_shooting';
 N = 20;
-shooting_nodes = [ linspace(0,1,N/2) linspace(1,5,N/2+1) ];
+shooting_nodes = [ linspace(0,1,N/2) linspace(1.1,5,N/2+1) ];
 
 model_name = 'lin_mass';
 
