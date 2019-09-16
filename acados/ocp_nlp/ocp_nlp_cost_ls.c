@@ -275,7 +275,7 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &model->Cyt, &c_ptr);
 
     // Vz
-    assign_and_advance_blasfeo_dmat_mem(nz, ny, &model->Vz, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(ny, nz, &model->Vz, &c_ptr);
 
     // blasfeo_dvec
     // y_ref
