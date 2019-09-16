@@ -180,7 +180,6 @@ if (strcmp(opts_struct.compile_mex, 'true') || strcmp(opts_struct.codgen_model, 
 			cflags_tmp = [cflags_tmp, ' -DFUN_NAME=', fun_names{ii}];
 			setenv('CFLAGS', cflags_tmp);
 			mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], fullfile(acados_mex_folder, 'sim_set_ext_fun_gen.c'));
-			setenv('CFLAGS', '');
 		else
 			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], fullfile(acados_mex_folder, 'sim_set_ext_fun_gen.c'));
 		end

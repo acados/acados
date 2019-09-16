@@ -395,10 +395,6 @@ if (strcmp(opts_struct.compile_mex, 'true') || strcmp(opts_struct.codgen_model, 
 			fprintf(input_file, '%s', cflags_tmp);
 			fclose(input_file);
 		end
-%		input_file = fopen('build/cflags_octave.txt', 'r');
-%		cflags_tmp = fscanf(input_file, '%[^\n]s');
-%		fclose(input_file);
-%		setenv('CFLAGS', cflags_tmp);
 	end
 
 	%% get pointers for external functions in model
@@ -421,7 +417,6 @@ if (strcmp(opts_struct.compile_mex, 'true') || strcmp(opts_struct.codgen_model, 
 			mex(acados_include, acados_interfaces_include, external_include, blasfeo_include,...
 				hpipm_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path, '-lacados',...
 				 '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1});
-			setenv('CFLAGS', '');
 		else
 			mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', ['-DSETTER=', setter{ii}],...
 				['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}],...
