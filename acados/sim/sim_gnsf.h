@@ -222,8 +222,6 @@ typedef struct
     struct blasfeo_dmat dK2_dvv;
     struct blasfeo_dmat dxf_dwn;
     struct blasfeo_dmat S_forw_new;
-    struct blasfeo_dmat S_forw;
-    struct blasfeo_dmat S_algebraic;
 
     struct blasfeo_dmat dPsi_dvv;
     struct blasfeo_dmat dPsi_dx;
@@ -258,6 +256,9 @@ typedef struct
 
     // value used to initialize integration variables - corresponding to value of phi
     double *phi_guess;  //  n_out
+
+    struct blasfeo_dmat S_forw;
+    struct blasfeo_dmat S_algebraic;
 
     // precomputed matrices
     struct blasfeo_dmat KKv;

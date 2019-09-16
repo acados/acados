@@ -1210,7 +1210,8 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
 
     size += nK2 * sizeof(int);      // ipivM2
 
-    if (opts->sens_algebraic){
+    if (opts->sens_algebraic)
+    {
         size += nxz2 * sizeof(int); // ipiv_ELO
 
         size += 9 * sizeof(struct blasfeo_dmat);  // Z0*, K0*, Y0*, *in {x,u,v}
@@ -1240,7 +1241,11 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
 
     size += blasfeo_memsize_dmat(nuhat, nu);  // Lu
 
-    if (opts->sens_algebraic){
+    size += blasfeo_memsize_dmat(nx, nx + nu);  // S_forw
+    size += blasfeo_memsize_dmat(nz, nx + nu);  // S_algebraic
+
+    if (opts->sens_algebraic)
+    {
         // matrices only needed for algebraic sensitivities
         size += blasfeo_memsize_dmat(nz1, nx1);     // Z0x
         size += blasfeo_memsize_dmat(nz1, nu);      // Z0u
@@ -1374,6 +1379,9 @@ void *sim_gnsf_memory_assign(void *config, void *dims_, void *opts_, void *raw_m
     assign_and_advance_blasfeo_dmat_mem(nx2, nx2 + nu, &mem->dx2f_dx2u, &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nuhat, nu, &mem->Lu, &c_ptr);
+
+    assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, &mem->S_forw, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz, nx + nu, &mem->S_algebraic, &c_ptr);
 
     // if (opts->sens_algebraic){
     //     // for algebraic sensitivity propagation
@@ -1605,11 +1613,10 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
     size += blasfeo_memsize_dmat(nZ1, nu);   // dZ_du
     size += blasfeo_memsize_dmat(nK2, nK1);  // J_G2_K1
 
-    size += blasfeo_memsize_dmat(nK2, nx1);         // dK2_dx1
-    size += blasfeo_memsize_dmat(nK2, nvv);         // dK2_dvv
-    size += blasfeo_memsize_dmat(nx, nx + nu);      // dxf_dwn
-    size += 2 * blasfeo_memsize_dmat(nx, nx + nu);  // S_forw_new, S_forw
-    size += blasfeo_memsize_dmat(nz, nx + nu);  // S_algebraic
+    size += blasfeo_memsize_dmat(nK2, nx1);     // dK2_dx1
+    size += blasfeo_memsize_dmat(nK2, nvv);     // dK2_dvv
+    size += blasfeo_memsize_dmat(nx, nx + nu);  // dxf_dwn
+    size += blasfeo_memsize_dmat(nx, nx + nu);  // S_forw_new
 
     size += blasfeo_memsize_dmat(nx, nvv);   // dPsi_dvv
     size += blasfeo_memsize_dmat(nx, nx);    // dPsi_dx
@@ -1741,8 +1748,6 @@ static void *sim_gnsf_cast_workspace(void *config, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dmat_mem(nK2, nvv, &workspace->dK2_dvv, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, &workspace->dxf_dwn, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, &workspace->S_forw_new, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx, nx + nu, &workspace->S_forw, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nz, nx + nu, &workspace->S_algebraic, &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nx, nvv, &workspace->dPsi_dvv, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->dPsi_dx, &c_ptr);
@@ -1822,8 +1827,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     struct blasfeo_dmat *dK2_dvv = &workspace->dK2_dvv;
     struct blasfeo_dmat *dxf_dwn = &workspace->dxf_dwn;
     struct blasfeo_dmat *S_forw_new = &workspace->S_forw_new;  // used to avoid side effects
-    struct blasfeo_dmat *S_forw = &workspace->S_forw;
-    struct blasfeo_dmat *S_algebraic = &workspace->S_algebraic; // to perform permutation
+    struct blasfeo_dmat *S_forw = &mem->S_forw;
+    struct blasfeo_dmat *S_algebraic = &mem->S_algebraic; // to perform permutation
 
     struct blasfeo_dmat *f_LO_jac_traj = workspace->f_LO_jac_traj;
 
