@@ -35,7 +35,7 @@
 /* 
  * Description: linear least-squares (LLS) cost module (ocp_nlp)
  *
- * min_w (Vx*x + Vu*u + Vz*z - yref)^T*W*(Vx*x + Vu*u + Vz*z - yref),
+ * min_w (Vx*x + Vu*u + Vz*z - yref)^T * W * (Vx*x + Vu*u + Vz*z - yref),
  *
  */
 
@@ -271,15 +271,20 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     // blasfeo_dmat
     // W
     assign_and_advance_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
+
     // Cyt
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &model->Cyt, &c_ptr);
+    blasfeo_dgese(nu+nx, ny, 0.0, &model->Cyt, 0, 0);
 
     // Vz
-    assign_and_advance_blasfeo_dmat_mem(nz, ny, &model->Vz, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(ny, nz, &model->Vz, &c_ptr);
+    blasfeo_dgese(ny, nz, 0.0, &model->Vz, 0, 0);
 
     // blasfeo_dvec
     // y_ref
     assign_and_advance_blasfeo_dvec_mem(ny, &model->y_ref, &c_ptr);
+    blasfeo_dvecse(ny, 0.0, &model->y_ref, 0);
+
     // Z
     assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->Z, &c_ptr);
     // z

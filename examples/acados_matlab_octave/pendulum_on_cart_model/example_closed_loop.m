@@ -37,9 +37,7 @@ clear all
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
+	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
 
 
@@ -64,7 +62,8 @@ regularize_method = 'project_reduc_hess'; % no_regularize, project,...
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
 qp_solver = 'partial_condensing_hpipm';
-        % full_condensing_hpipm, partial_condensing_hpipm
+        % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
+qp_solver_iter_max = 100;
 qp_solver_cond_N = 5;
 qp_solver_warm_start = 0;
 qp_solver_cond_ric_alg = 0; % 0: dont factorize hessian in the condensing; 1: factorize
@@ -231,6 +230,7 @@ if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
 	ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 end
+ocp_opts.set('qp_solver_iter_max', qp_solver_iter_max);
 ocp_opts.set('sim_method', ocp_sim_method);
 ocp_opts.set('sim_method_num_stages', ocp_sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', ocp_sim_method_num_steps);

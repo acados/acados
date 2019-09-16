@@ -62,9 +62,10 @@ for k=1:length(mex_names)
 	mex_files{k} = fullfile(acados_mex_folder, [mex_names{k}, '.c']);
 end
 
-% compile mex
+
+%% compile mex
 if is_octave()
-	if exist(fullfile(opts.output_dir, 'cflags_octave.txt'), 'file')==0
+	if ~exist(fullfile(opts.output_dir, 'cflags_octave.txt'), 'file')
 		diary(fullfile(opts.output_dir, 'cflags_octave.txt'));
 		diary on
 		mkoctfile -p CFLAGS
@@ -73,17 +74,22 @@ if is_octave()
 		cflags_tmp = fscanf(input_file, '%[^\n]s');
 		fclose(input_file);
 		cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
-		if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
-			cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
-		end
 		input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');
 		fprintf(input_file, '%s', cflags_tmp);
 		fclose(input_file);
 	end
+	% read cflags from file
 	input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
 	cflags_tmp = fscanf(input_file, '%[^\n]s');
 	fclose(input_file);
+
+	% add temporary additional flag
+	if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+		cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_QPOASES'];
+	end
+
 	setenv('CFLAGS', cflags_tmp);
+
 end
 
 

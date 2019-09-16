@@ -13,6 +13,9 @@
 - [ ] support nonuniform grids?
 - [ ] OCP with DAEs
 
+#### build
+- [ ] cmake: add openmp parallelization
+
 #### `templating`
 - [ ] add GNSF
 

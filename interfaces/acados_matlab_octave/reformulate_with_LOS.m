@@ -115,7 +115,7 @@ if gnsf.ny > 0
         end
     end
 else
-    I_LOS_candidates = 1:nx;
+    I_LOS_candidates = 1:(nx+nz);
 end
 
 if print_info
@@ -285,8 +285,7 @@ gnsf.idx_perm_f = [I_nsf_eq, I_LOS_eq];
 gnsf.ipiv_f = idx_perm_to_ipiv(gnsf.idx_perm_f);
 
 f_LO = SX.sym('f_LO',0,0);
-E_LO = [];
-% keyboard
+
 %% rewrite I_LOS_eq as LOS
 if gnsf.n_out == 0
     C_phi = zeros(gnsf.nx+gnsf.nz,1);
@@ -310,6 +309,7 @@ n_LO = length(I_LOS_eq);
 B_LO = zeros(n_LO, gnsf.nu);
 E_LO = zeros(n_LO);
 c_LO = zeros(n_LO, 1);
+
 for eq = I_LOS_eq
     i_LO = find( I_LOS_eq == eq );
     f_LO = vertcat(f_LO, ...
@@ -320,7 +320,7 @@ for eq = I_LOS_eq
     c_LO(i_LO, :) = c(eq);
     B_LO(i_LO, :) = B(eq, :);
 end
-% keyboard
+
 if any(size(f_LO) == 0)
     f_LO = SX.zeros(gnsf.nx2 + gnsf.nz2,1);
 end

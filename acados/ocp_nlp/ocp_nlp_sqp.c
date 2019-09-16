@@ -553,9 +553,6 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 
     char *c_ptr = (char *) raw_memory;
 
-    // loop index
-	int ii;
-
     // extract dims
     int N = dims->N;
     // ocp_nlp_cost_dims **cost_dims = dims->cost;

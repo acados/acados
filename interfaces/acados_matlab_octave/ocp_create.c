@@ -657,33 +657,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                  "true", "irk_gnsf", "false")
     }
 
-    // nlp solver max iter
-    if (mxGetField( matlab_opts, 0, "nlp_solver_max_iter" )!=NULL)
+    if ( plan->nlp_solver != SQP_RTI )
     {
-        int nlp_solver_max_iter = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_max_iter" ) );
-        ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
-    }
+        // nlp solver max iter
+        if (mxGetField( matlab_opts, 0, "nlp_solver_max_iter" )!=NULL)
+        {
+            int nlp_solver_max_iter = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_max_iter" ) );
+            ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
+        }
 
-    // nlp solver exit tolerances
-    if (mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" )!=NULL)
-    {
-        double nlp_solver_tol_stat = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" ) );
-        ocp_nlp_opts_set(config, opts, "tol_stat", &nlp_solver_tol_stat);
-    }
-    if (mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" )!=NULL)
-    {
-        double nlp_solver_tol_eq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" ) );
-        ocp_nlp_opts_set(config, opts, "tol_eq", &nlp_solver_tol_eq);
-    }
-    if (mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" )!=NULL)
-    {
-        double nlp_solver_tol_ineq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" ) );
-        ocp_nlp_opts_set(config, opts, "tol_ineq", &nlp_solver_tol_ineq);
-    }
-    if (mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" )!=NULL)
-    {
-        double nlp_solver_tol_comp = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" ) );
-        ocp_nlp_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
+        // nlp solver exit tolerances
+        if (mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" )!=NULL)
+        {
+            double nlp_solver_tol_stat = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" ) );
+            ocp_nlp_opts_set(config, opts, "tol_stat", &nlp_solver_tol_stat);
+        }
+        if (mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" )!=NULL)
+        {
+            double nlp_solver_tol_eq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" ) );
+            ocp_nlp_opts_set(config, opts, "tol_eq", &nlp_solver_tol_eq);
+        }
+        if (mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" )!=NULL)
+        {
+            double nlp_solver_tol_ineq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" ) );
+            ocp_nlp_opts_set(config, opts, "tol_ineq", &nlp_solver_tol_ineq);
+        }
+        if (mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" )!=NULL)
+        {
+            double nlp_solver_tol_comp = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" ) );
+            ocp_nlp_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
+        }
     }
 
     // nlp solver ext qp res
@@ -698,7 +701,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double nlp_solver_step_length = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_step_length" ) );
         ocp_nlp_opts_set(config, opts, "step_length", &nlp_solver_step_length);
     }
-    // qp_solver_iter_max TODO only for hpipm !!!
     // iter_max
     if (mxGetField( matlab_opts, 0, "qp_solver_iter_max" )!=NULL)
     {
@@ -728,7 +730,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_opts_set(config, opts, "qp_cond_ric_alg", &qp_solver_cond_ric_alg);
     }
     // hpipm: riccati algorithm
-    if (mxGetField( matlab_opts, 0, "qp_solver_ric_alg" )!=NULL)
+    if (mxGetField( matlab_opts, 0, "qp_solver_ric_alg" )!=NULL
+        && plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
     {
         int qp_solver_ric_alg = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_ric_alg" ) );
         ocp_nlp_opts_set(config, opts, "qp_ric_alg", &qp_solver_ric_alg);
@@ -865,6 +868,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             double scale = T/(param_scheme_shooting_nodes[N]-param_scheme_shooting_nodes[0]);
             for (int ii=0; ii<N; ii++)
             {
+                if (param_scheme_shooting_nodes[ii+1]-param_scheme_shooting_nodes[ii] <= 0)
+                {
+                    sprintf(buffer, "%s: param_scheme_shooting_nodes must be in ascending order!", fun_name);
+                    mexErrMsgTxt(buffer);
+                }
                 double Ts = scale*(param_scheme_shooting_nodes[ii+1]-param_scheme_shooting_nodes[ii]);
                 ocp_nlp_in_set(config, dims, in, ii, "Ts", &Ts);
                 ocp_nlp_cost_model_set(config, dims, in, ii, "scaling", &Ts);
@@ -972,7 +980,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ocp_nlp_cost_model_set(config, dims, in, ii, "y_ref", yr);
             }
         }
-        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
+        // else: is set to zero by default in C
     }
     if (cost_type_enum == LINEAR_LS)
     {
@@ -988,7 +996,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ocp_nlp_cost_model_set(config, dims, in, ii, "Vu", Vu);
             }
         }
-        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
+        // else: set to zero by default in C
         const mxArray *Vx_matlab = mxGetField( matlab_model, 0, "cost_Vx" );
         if (Vx_matlab!=NULL)
         {
@@ -1001,7 +1009,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ocp_nlp_cost_model_set(config, dims, in, ii, "Vx", Vx);
             }
         }
-        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
+        // else: set to zero by default in C
         const mxArray *Vz_matlab = mxGetField( matlab_model, 0, "cost_Vz" );
         if (Vz_matlab!=NULL)
         {
@@ -1014,8 +1022,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ocp_nlp_cost_model_set(config, dims, in, ii, "Vz", Vz);
             }
         }
-        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
-		// XXX should complain only if none of the is there
+        // else: set to zero by default in C
+        if ((Vz_matlab==NULL) && (Vx_matlab==NULL) && (Vu_matlab==NULL))
+        {
+            sprintf(buffer, "%s: setting linear_ls cost: one of the following must be provided:\
+                             cost_Vx, cost_Vu, cost_Vz", fun_name);
+            mexErrMsgTxt(buffer);
+        }
     }
 
     // mayer term
@@ -1042,7 +1055,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             double *yr_e = mxGetPr( mxGetField( matlab_model, 0, "cost_y_ref_e" ) );
             ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
         }
-        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
+        // else set to zero by default in C
     }
     if (cost_type_e_enum == LINEAR_LS)
     {
@@ -1055,7 +1068,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             double *Vx_e = mxGetPr( Vx_e_matlab );
             ocp_nlp_cost_model_set(config, dims, in, N, "Vx", Vx_e);
         }
-        // TODO: else complain? giaf: yes
+        else
+        {
+            MEX_MISSING_ARGUMENT_MODULE(fun_name, "cost_Vx_e", "cost_type_e: linear_ls");
+        }
+        
     }
 
     // slacks
@@ -1340,15 +1357,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_constraints_model_set(config, dims, in, ii, "idxbx", tmp_idx);
         }
     }
-//    else
-//    {
-//        // TODO(oj): not sure about that, but otherwise tmp_idx is not initialized!
-//        for (int jj=0; jj<nx; jj++)
-//        {
-//            tmp_idx[jj] = jj;
-//        }
-//    }
-    
 
 	// x0
     if (mxGetField( matlab_model, 0, "constr_x0" )!=NULL)

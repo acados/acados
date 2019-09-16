@@ -382,8 +382,8 @@ end
 if (strcmp(opts_struct.compile_mex, 'true') || strcmp(opts_struct.codgen_model, 'true'))
 
 	if is_octave()
-		if exist(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'file')==0
-		diary(fullfile(opts_struct.output_dir, 'cflags_octave.txt'))
+		if ~exist(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'file')
+			diary(fullfile(opts_struct.output_dir, 'cflags_octave.txt'))
 			diary on
 			mkoctfile -p CFLAGS
 			diary off
@@ -395,10 +395,6 @@ if (strcmp(opts_struct.compile_mex, 'true') || strcmp(opts_struct.codgen_model, 
 			fprintf(input_file, '%s', cflags_tmp);
 			fclose(input_file);
 		end
-%		input_file = fopen('build/cflags_octave.txt', 'r');
-%		cflags_tmp = fscanf(input_file, '%[^\n]s');
-%		fclose(input_file);
-%		setenv('CFLAGS', cflags_tmp);
 	end
 
 	%% get pointers for external functions in model

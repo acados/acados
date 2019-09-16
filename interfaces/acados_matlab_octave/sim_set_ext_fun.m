@@ -142,11 +142,12 @@ else
 	fprintf('\nsim_set_ext_fun: method not supported: %s\n', opts_struct.method);
 end
 
-% compile mex files
+
+%% compile mex files
 if (strcmp(opts_struct.compile_mex, 'true') || strcmp(opts_struct.codgen_model, 'true'))
 
 	if is_octave()
-		if exist(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'file')==0
+		if ~exist(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'file')
 			diary(fullfile(opts_struct.output_dir, 'cflags_octave.txt'))
 			diary on
 			mkoctfile -p CFLAGS

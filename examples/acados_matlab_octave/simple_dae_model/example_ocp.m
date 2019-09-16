@@ -37,9 +37,7 @@ clear all
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
+	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
 
 %% options
@@ -62,13 +60,14 @@ nlp_solver_tol_eq   = 1e-12;
 nlp_solver_tol_ineq = 1e-12;
 nlp_solver_tol_comp = 1e-12;
 nlp_solver_ext_qp_res = 1;
-qp_solver = 'partial_condensing_hpipm';
+% qp_solver = 'full_condensing_qpoases'; % partial_condensing_hpipm
+qp_solver = 'partial_condensing_hpipm'; % partial_condensing_hpipm
 qp_solver_cond_N = 5;
 qp_solver_warm_start = 0;
 qp_solver_cond_ric_alg = 1; % 0: dont factorize hessian in the condensing; 1: factorize
 qp_solver_ric_alg = 1; % HPIPM specific
-ocp_sim_method = 'irk'; % irk, irk_gnsf
-%ocp_sim_method = 'irk_gnsf'; % irk, irk_gnsf
+% ocp_sim_method = 'irk'; % irk, irk_gnsf
+ocp_sim_method = 'irk_gnsf'; % irk, irk_gnsf
 ocp_sim_method_num_stages = 6; % scalar or vector of size ocp_N;
 ocp_sim_method_num_steps = 4; % scalar or vector of size ocp_N;
 ocp_sim_method_newton_iter = 3; % scalar or vector of size ocp_N;
@@ -208,19 +207,8 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 ocp.solve();
 
 stat = ocp.get('stat');
-fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter');
-if size(stat,2)>7
-	fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
-end
-fprintf('\n');
-for jj=1:size(stat,1)
-	fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(jj,1), stat(jj,2), stat(jj,3), stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7));
-	if size(stat,2)>7
-		fprintf('\t%e\t%e\t%e\t%e', stat(jj,8), stat(jj,9), stat(jj,10), stat(jj,11));
-	end
-	fprintf('\n');
-end
-fprintf('\n');
+
+ocp.print('stat')
 
 status = ocp.get('status');
 sqp_iter = ocp.get('sqp_iter');
@@ -229,20 +217,18 @@ if status ~= 0
 	keyboard
 end
 
+format short e
 % get solution for initialization of next NLP
-x_traj = ocp.get('x')
-u_traj = ocp.get('u')
-pi_traj = ocp.get('pi')
-z_traj = ocp.get('z')
+x_traj = ocp.get('x');
+u_traj = ocp.get('u');
+pi_traj = ocp.get('pi');
+z_traj = ocp.get('z');
 
-x_traj(:,1:N) - z_traj
+diff_x_z = x_traj(:,1:N) - z_traj
 
 
 
-if is_octave()
-    waitforbuttonpress;
-end
-
-return
-
+% if is_octave()
+%     waitforbuttonpress;
+% end
 
