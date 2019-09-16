@@ -1243,7 +1243,6 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
 
     size += blasfeo_memsize_dmat(nx, nx + nu);  // S_forw
     size += blasfeo_memsize_dmat(nz, nx + nu);  // S_algebraic
-
     // if (opts->sens_algebraic)
     // {
     //     // matrices only needed for algebraic sensitivities
@@ -1623,6 +1622,7 @@ int sim_gnsf_workspace_calculate_size(void *config, void *dims_, void *opts_)
     size += blasfeo_memsize_dmat(nx, nu);    // dPsi_du
 
     size += blasfeo_memsize_dmat(nvv, ny + nuhat);  // dPHI_dyuhat
+    size += blasfeo_memsize_dmat(nz, nx + nu);  // S_algebraic_aux
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -1752,6 +1752,7 @@ static void *sim_gnsf_cast_workspace(void *config, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dmat_mem(nx, nvv, &workspace->dPsi_dvv, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->dPsi_dx, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nu, &workspace->dPsi_du, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz, nx + nu, &workspace->S_algebraic_aux, &c_ptr);
 
     assert((char *) raw_memory + sim_gnsf_workspace_calculate_size(config, dims_, opts) >= c_ptr);
 
@@ -1828,7 +1829,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
     struct blasfeo_dmat *dxf_dwn = &workspace->dxf_dwn;
     struct blasfeo_dmat *S_forw_new = &workspace->S_forw_new;  // used to avoid side effects
     struct blasfeo_dmat *S_forw = &mem->S_forw;
-    struct blasfeo_dmat *S_algebraic = &mem->S_algebraic; // to perform permutation
+    struct blasfeo_dmat *S_algebraic = &mem->S_algebraic; // to store
+    struct blasfeo_dmat *S_algebraic_aux = &workspace->S_algebraic_aux; // to perform permutation
 
     struct blasfeo_dmat *f_LO_jac_traj = workspace->f_LO_jac_traj;
 
@@ -1962,19 +1964,22 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             blasfeo_dgemm_nn(nx, nu, nx, 1.0, S_forw, 0, 0, dxf_dwn, 0, nx, 1.0, S_forw_new, 0, nx,
                                 S_forw_new, 0, nx);
         }
-        else // copy into S_forw_new and unpack from there later
+        else
+        {
+            // copy into S_forw_new and unpack from there later
             blasfeo_dgecp(nx, nx + nu, S_forw, 0, 0, S_forw_new, 0, 0);
-
+        }
         
 
         // adjoint
         blasfeo_dgemv_t(nx, nx+nu, 1.0, S_forw, 0, 0, lambda_old, 0, 0.0, lambda_old, 0, lambda, 0);
 
-        if (opts->output_z || opts->sens_algebraic)
-        {
-            printf("ERROR sim_gnsf: output_z and sens_algebraic not supported with fully linear structure exploitation\n");
-            exit(1);
-        }
+        // z0 = S_algebraic_x * x0
+        blasfeo_dgemv_n(nz, nx, 1.0, S_algebraic, 0, 0, x0_traj, 0, 0.0, z0, 0, z0, 0);
+        // z0 += S_algebraic_u * u;
+        blasfeo_dgemv_n(nz, nu, 1.0, S_algebraic, 0, nx, u0, 0, 1.0, z0, 0 , z0, 0);
+
+        // S_algebraic available already..
     }
     else
     {
@@ -2548,6 +2553,8 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
                         }
                     }
                 }
+                blasfeo_pack_dmat(nz, nx + nu, out->S_algebraic, nz, S_algebraic, 0, 0);
+                blasfeo_dgecp(nz, nx+nu, S_algebraic, 0, 0, S_algebraic_aux, 0, 0);
 
             // /* propagate sensitivities of z1 */
             //     if (opts->sens_algebraic)
@@ -2708,19 +2715,6 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
             //                             &out->S_algebraic[nx1*nz + nz1], nz);
             //        }
 
-                if (opts->sens_algebraic)
-                {
-                    // permute rows and cols
-                    blasfeo_pack_dmat(nz, nx + nu, out->S_algebraic, nz, S_algebraic, 0, 0);
-                    blasfeo_drowpei(nz, ipiv_z, S_algebraic);
-                    blasfeo_dcolpei(nx, ipiv_x, S_algebraic);
-                    blasfeo_unpack_dmat(nz, nx+nu, S_algebraic, 0, 0, out->S_algebraic, nz);
-                }
-                if (opts->output_z)
-                {
-                    blasfeo_dvecpei(nz, ipiv_z, z0, 0);
-                    blasfeo_unpack_dvec(nz, z0, 0, out->zn);
-                }
             } // if ss == 0;
             if (ss == num_steps-1)
             {
@@ -2890,8 +2884,6 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
 
     if (opts->sens_forw)
     {
-// printf("Sforw before permutation\n");
-// blasfeo_print_exp_dmat(nx, nx+nu, S_forw_new, 0, 0);
         blasfeo_drowpei(nx, ipiv_x, S_forw_new);
         blasfeo_dcolpei(nx, ipiv_x, S_forw_new);
         blasfeo_unpack_dmat(nx, nx + nu, S_forw_new, 0, 0, out->S_forw, nx);
@@ -2901,9 +2893,22 @@ int sim_gnsf(void *config, sim_in *in, sim_out *out, void *args, void *mem_, voi
         blasfeo_dvecpei(nx, ipiv_x, lambda, 0);
         blasfeo_unpack_dvec(nx + nu, lambda, 0, out->S_adj);
     }
+    if (opts->sens_algebraic)
+    {
+        // permute rows and cols
+        blasfeo_dgecp(nz, nx+nu, S_algebraic, 0, 0, S_algebraic_aux, 0, 0);
+        blasfeo_drowpei(nz, ipiv_z, S_algebraic_aux);
+        blasfeo_dcolpei(nx, ipiv_x, S_algebraic_aux);
+        blasfeo_unpack_dmat(nz, nx+nu, S_algebraic_aux, 0, 0, out->S_algebraic, nz);
+    }
+    if (opts->output_z)
+    {
+        blasfeo_dvecpei(nz, ipiv_z, z0, 0);
+        blasfeo_unpack_dvec(nz, z0, 0, out->zn);
+    }
 
     out->info->CPUtime = acados_toc(&tot_timer);
-    return 0;
+    return ACADOS_SUCCESS;
 }
 
 

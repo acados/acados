@@ -69,7 +69,7 @@ qp_solver_warm_start = 0;
 qp_solver_cond_ric_alg = 1; % 0: dont factorize hessian in the condensing; 1: factorize
 qp_solver_ric_alg = 1; % HPIPM specific
 % ocp_sim_method = 'irk'; % irk, irk_gnsf
-ocp_sim_method = 'irk'; % irk, irk_gnsf
+ocp_sim_method = 'irk_gnsf'; % irk, irk_gnsf
 ocp_sim_method_num_stages = 6; % scalar or vector of size ocp_N;
 ocp_sim_method_num_steps = 4; % scalar or vector of size ocp_N;
 ocp_sim_method_newton_iter = 3; % scalar or vector of size ocp_N;
@@ -219,20 +219,18 @@ if status ~= 0
 	keyboard
 end
 
+format short e
 % get solution for initialization of next NLP
 x_traj = ocp.get('x')
 u_traj = ocp.get('u')
 pi_traj = ocp.get('pi')
 z_traj = ocp.get('z')
 
-x_traj(:,1:N) - z_traj
+diff_x_z = x_traj(:,1:N) - z_traj
 
 
 
-if is_octave()
-    waitforbuttonpress;
-end
-
-return
-
+% if is_octave()
+%     waitforbuttonpress;
+% end
 
