@@ -701,7 +701,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double nlp_solver_step_length = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_step_length" ) );
         ocp_nlp_opts_set(config, opts, "step_length", &nlp_solver_step_length);
     }
-    // qp_solver_iter_max TODO only for hpipm !!!
     // iter_max
     if (mxGetField( matlab_opts, 0, "qp_solver_iter_max" )!=NULL)
     {
@@ -997,7 +996,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ocp_nlp_cost_model_set(config, dims, in, ii, "Vu", Vu);
             }
         }
-        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
+        // else: set to zero by default in C
         const mxArray *Vx_matlab = mxGetField( matlab_model, 0, "cost_Vx" );
         if (Vx_matlab!=NULL)
         {
@@ -1010,7 +1009,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ocp_nlp_cost_model_set(config, dims, in, ii, "Vx", Vx);
             }
         }
-        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
+        // else: set to zero by default in C
         const mxArray *Vz_matlab = mxGetField( matlab_model, 0, "cost_Vz" );
         if (Vz_matlab!=NULL)
         {
@@ -1023,8 +1022,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ocp_nlp_cost_model_set(config, dims, in, ii, "Vz", Vz);
             }
         }
-        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
-		// XXX should complain only if none of the is there
+        // else: set to zero by default in C
+        if ((Vz_matlab==NULL) && (Vx_matlab==NULL) && (Vu_matlab==NULL))
+        {
+            sprintf(buffer, "%s: setting linear_ls cost: one of the following must be provided:\
+                             cost_Vx, cost_Vu, cost_Vz", fun_name);
+            mexErrMsgTxt(buffer);
+        }
     }
 
     // mayer term
@@ -1051,7 +1055,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             double *yr_e = mxGetPr( mxGetField( matlab_model, 0, "cost_y_ref_e" ) );
             ocp_nlp_cost_model_set(config, dims, in, N, "y_ref", yr_e);
         }
-        // TODO: else complain? giaf: no, if set to zero by default in C (to be checked)
+        // else set to zero by default in C
     }
     if (cost_type_e_enum == LINEAR_LS)
     {
@@ -1064,7 +1068,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             double *Vx_e = mxGetPr( Vx_e_matlab );
             ocp_nlp_cost_model_set(config, dims, in, N, "Vx", Vx_e);
         }
-        // TODO: else complain? giaf: yes
+        else
+        {
+            MEX_MISSING_ARGUMENT_MODULE(fun_name, "cost_Vx_e", "cost_type_e: linear_ls");
+        }
+        
     }
 
     // slacks
@@ -1349,15 +1357,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             ocp_nlp_constraints_model_set(config, dims, in, ii, "idxbx", tmp_idx);
         }
     }
-//    else
-//    {
-//        // TODO(oj): not sure about that, but otherwise tmp_idx is not initialized!
-//        for (int jj=0; jj<nx; jj++)
-//        {
-//            tmp_idx[jj] = jj;
-//        }
-//    }
-    
 
 	// x0
     if (mxGetField( matlab_model, 0, "constr_x0" )!=NULL)
