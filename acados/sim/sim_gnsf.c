@@ -1244,27 +1244,27 @@ int sim_gnsf_memory_calculate_size(void *config, void *dims_, void *opts_)
     size += blasfeo_memsize_dmat(nx, nx + nu);  // S_forw
     size += blasfeo_memsize_dmat(nz, nx + nu);  // S_algebraic
 
-    if (opts->sens_algebraic)
-    {
-        // matrices only needed for algebraic sensitivities
-        size += blasfeo_memsize_dmat(nz1, nx1);     // Z0x
-        size += blasfeo_memsize_dmat(nz1, nu);      // Z0u
-        size += blasfeo_memsize_dmat(nz1, n_out);   // Z0v
+    // if (opts->sens_algebraic)
+    // {
+    //     // matrices only needed for algebraic sensitivities
+    //     size += blasfeo_memsize_dmat(nz1, nx1);     // Z0x
+    //     size += blasfeo_memsize_dmat(nz1, nu);      // Z0u
+    //     size += blasfeo_memsize_dmat(nz1, n_out);   // Z0v
 
-        size += blasfeo_memsize_dmat(ny, nx1);      // Y0x
-        size += blasfeo_memsize_dmat(ny, nu);       // Y0u
-        size += blasfeo_memsize_dmat(ny, n_out);    // Y0v
+    //     size += blasfeo_memsize_dmat(ny, nx1);      // Y0x
+    //     size += blasfeo_memsize_dmat(ny, nu);       // Y0u
+    //     size += blasfeo_memsize_dmat(ny, n_out);    // Y0v
 
-        size += blasfeo_memsize_dmat(nx1, nx1);     // K0x
-        size += blasfeo_memsize_dmat(nx1, nu);      // K0u
-        size += blasfeo_memsize_dmat(nx1, n_out);   // K0v
+    //     size += blasfeo_memsize_dmat(nx1, nx1);     // K0x
+    //     size += blasfeo_memsize_dmat(nx1, nu);      // K0u
+    //     size += blasfeo_memsize_dmat(nx1, n_out);   // K0v
 
-        size += blasfeo_memsize_dmat(nxz2, nxz2);   // ELO_LU
-        size += blasfeo_memsize_dmat(nxz2, nx2);    // ELO_inv_ALO
+    //     size += blasfeo_memsize_dmat(nxz2, nxz2);   // ELO_LU
+    //     size += blasfeo_memsize_dmat(nxz2, nx2);    // ELO_inv_ALO
 
-        size += 2 * blasfeo_memsize_dmat(ny, nx1);   // Lx, Lxdot
-        size += blasfeo_memsize_dmat(ny, nz1);        // Lz
-    }
+    //     size += 2 * blasfeo_memsize_dmat(ny, nx1);   // Lx, Lxdot
+    //     size += blasfeo_memsize_dmat(ny, nz1);        // Lz
+    // }
 
     size += blasfeo_memsize_dvec(nZ1);  // ZZ0
     size += blasfeo_memsize_dvec(nK1);  // KK0
