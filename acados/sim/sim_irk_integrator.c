@@ -287,10 +287,14 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_hess = false;
     opts->jac_reuse = true;
 
-    if (dims->nz > 0) {
+    // TODO(oj): check if constr h or cost depend on z, turn on in this case only.
+    if (dims->nz > 0)
+    {
         opts->output_z = true;
         opts->sens_algebraic = true;
-    } else {
+    }
+    else
+    {
         opts->output_z = false;
         opts->sens_algebraic = false;
     }

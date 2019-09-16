@@ -35,7 +35,7 @@
 /* 
  * Description: linear least-squares (LLS) cost module (ocp_nlp)
  *
- * min_w (Vx*x + Vu*u + Vz*z - yref)^T*W*(Vx*x + Vu*u + Vz*z - yref),
+ * min_w (Vx*x + Vu*u + Vz*z - yref)^T * W * (Vx*x + Vu*u + Vz*z - yref),
  *
  */
 
