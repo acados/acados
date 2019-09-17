@@ -36,7 +36,7 @@ clc;
 clear all;
 close all;
 
-addpath('../../../experimental/interfaces/matlab/external_function_generation/sim/') 
+addpath('../../../experimental/interfaces/acados_matlab/') 
 
 import casadi.*
 
@@ -54,7 +54,9 @@ NU = 2;
 NZ = 2;
 
 % define model 
-dae = export_simple_dae_model();
+dae     = export_simple_dae_model();
+constr  = export_simple_dae_constr();
 
 generate_c_code_implicit_ode( dae )
+generate_c_code_nonlinear_constr( constr )
 

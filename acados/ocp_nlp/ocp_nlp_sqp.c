@@ -203,6 +203,8 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
 
 	opts->qp_warm_start = 0;
 
+	opts->step_length = 1.0;
+
     // submodules opts
 
     // qp solver
@@ -375,6 +377,11 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
 		{
 			int* ext_qp_res = (int *) value;
 			opts->ext_qp_res = *ext_qp_res;
+		}
+		else if (!strcmp(field, "step_length"))
+		{
+			double* step_length = (double *) value;
+			opts->step_length = *step_length;
 		}
 		else
 		{
@@ -622,7 +629,7 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 	mem->stat = (double *) c_ptr;
 	mem->stat_m = opts->max_iter+1;
 	mem->stat_n = 6;
-	if(opts->ext_qp_res)
+	if (opts->ext_qp_res)
 		mem->stat_n += 4;
 	c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
@@ -640,17 +647,17 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     align_char_to(64, &c_ptr);
 
 	// dzduxt
-	for(ii=0; ii<=N; ii++)
-		{
+	for (int ii=0; ii<=N; ii++)
+    {
 		blasfeo_create_dmat(nu[ii]+nx[ii], nz[ii], mem->dzduxt+ii, c_ptr);
 		c_ptr += blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]);
-		}
+    }
 	// z_alg
-	for(ii=0; ii<=N; ii++)
-		{
+	for (int ii=0; ii<=N; ii++)
+    {
 		blasfeo_create_dvec(nz[ii], mem->z_alg+ii, c_ptr);
 		c_ptr += blasfeo_memsize_dvec(nz[ii]);
-		}
+    }
 
     mem->status = ACADOS_READY;
 
@@ -1199,6 +1206,8 @@ static void sqp_update_variables(void *config_, ocp_nlp_dims *dims, ocp_nlp_out 
     //        }
     //    }
 
+	double alpha = opts->step_length;
+
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
 #endif
@@ -1206,19 +1215,27 @@ static void sqp_update_variables(void *config_, ocp_nlp_dims *dims, ocp_nlp_out 
     {
         // (full) step in primal variables
 
-        blasfeo_daxpy(nv[i], 1.0, mem->qp_out->ux + i, 0, nlp_out->ux + i, 0, nlp_out->ux + i, 0);
+        blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux + i, 0, nlp_out->ux + i, 0, nlp_out->ux + i, 0);
 
         // absolute in dual variables
 
         if (i < N)
-            blasfeo_dveccp(nx[i + 1], mem->qp_out->pi + i, 0, nlp_out->pi + i, 0);
+		{
+			blasfeo_dvecsc(nx[i+1], 1.0-alpha, nlp_out->pi+i, 0);
+            blasfeo_daxpy(nx[i+1], alpha, mem->qp_out->pi+i, 0, nlp_out->pi+i, 0, nlp_out->pi+i, 0);
+		}
 
-        blasfeo_dveccp(2 * ni[i], mem->qp_out->lam + i, 0, nlp_out->lam + i, 0);
+		blasfeo_dvecsc(2*ni[i], 1.0-alpha, nlp_out->lam+i, 0);
+        blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->lam+i, 0, nlp_out->lam+i, 0, nlp_out->lam+i, 0);
 
-        blasfeo_dveccp(2 * ni[i], mem->qp_out->t + i, 0, nlp_out->t + i, 0);
+		blasfeo_dvecsc(2*ni[i], 1.0-alpha, nlp_out->t+i, 0);
+        blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->t+i, 0, nlp_out->t+i, 0, nlp_out->t+i, 0);
 
         if (i < N)
-			blasfeo_dveccp(nz[i], mem->z_alg+i, 0, nlp_out->z+i, 0);
+		{
+			blasfeo_dvecsc(nz[i], 1.0-alpha, nlp_out->z+i, 0);
+			blasfeo_daxpy(nz[i], alpha, mem->z_alg+i, 0, nlp_out->z+i, 0, nlp_out->z+i, 0);
+		}
 
     }
 
@@ -1286,7 +1303,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->dynamics[ii]->memory_set_BAbt_ptr(mem->qp_in->BAbt+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_RSQrq_ptr(mem->qp_in->RSQrq+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_dzduxt_ptr(mem->dzduxt+ii, mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_z_guess_ptr(nlp_out->z+ii, mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_sim_guess_ptr(mem->nlp_mem->sim_guess+ii,
+                                      mem->nlp_mem->set_sim_guess+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_z_alg_ptr(mem->z_alg+ii, mem->dynamics[ii]);
     }
 
@@ -1309,6 +1327,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     for (ii = 0; ii <= N; ii++)
     {
         config->constraints[ii]->memory_set_ux_ptr(nlp_out->ux+ii, mem->constraints[ii]);
+		config->constraints[ii]->memory_set_z_alg_ptr(mem->z_alg+ii, mem->constraints[ii]);
+		config->constraints[ii]->memory_set_dzdux_tran_ptr(mem->dzduxt+ii, mem->constraints[ii]);
         config->constraints[ii]->memory_set_lam_ptr(nlp_out->lam+ii, mem->constraints[ii]);
         config->constraints[ii]->memory_set_DCt_ptr(mem->qp_in->DCt+ii, mem->constraints[ii]);
         config->constraints[ii]->memory_set_RSQrq_ptr(mem->qp_in->RSQrq+ii, mem->constraints[ii]);
@@ -1717,6 +1737,11 @@ void ocp_nlp_sqp_get(void *config_, void *mem_, const char *field, void *return_
     {
         int *value = return_value_;
         *value = mem->stat_n;
+    }
+    else if (!strcmp("nlp_mem", field))
+    {
+        void **value = return_value_;
+        *value = mem->nlp_mem;
     }
     else
     {

@@ -44,8 +44,7 @@ elif [ "${SECTION}" = 'install' ]; then
 	source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
 	source "${SCRIPT_DIR}/install_python.sh";
 
-	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]] ||
-	   [[ "${TEMPLATE_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+	if [[ "${TEMPLATE_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
 	   [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
 		"${DEV_MATLAB}" = 'ON';
 		then
@@ -65,11 +64,11 @@ elif [ "${SECTION}" = 'install' ]; then
 	# Prepare ctest with Matlab/Octave interface
 	if [[ "${ACADOS_OCTAVE}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]]; then
 		# Export paths
-		# MATLAB_TEST_FOLDER=${ACADOS_SOURCE_DIR}/examples/matlab_mex/test/build;
-		# PENDULUM_FOLDER=${ACADOS_SOURCE_DIR}/examples/matlab_mex/pendulum_on_cart_model/build;
+		# MATLAB_TEST_FOLDER=${ACADOS_SOURCE_DIR}/examples/acados_matlab_octave/test/build;
+		# PENDULUM_FOLDER=${ACADOS_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model/build;
 		# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MATLAB_TEST_FOLDER:$PENDULUM_FOLDER;
 
-		pushd examples/matlab_mex/pendulum_on_cart_model;
+		pushd examples/acados_matlab_octave/pendulum_on_cart_model;
 			MODEL_FOLDER=${MODEL_FOLDER:-"./build"}
 			export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
 		popd;
@@ -78,20 +77,15 @@ elif [ "${SECTION}" = 'install' ]; then
 		echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 	fi
 
-	if [[ "${SWIG_PYTHON}" = 'ON' || "${TEMPLATE_PYTHON}" = 'ON' ]] ;
+	if [[ "${TEMPLATE_PYTHON}" = 'ON' ]] ;
 	then
 		source "${SCRIPT_DIR}/install_python_dependencies.sh";
 	fi
 
-	if [[ "${SWIG_MATLAB}" = 'ON' ||  "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+	if [[ "${TEMPLATE_MATLAB}" = 'ON' ]] ||
 	   [[ "${DEV_MATLAB}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
 	then
 		source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
-	fi
-
-	if [[ "${SWIG_MATLAB}" = 'ON' || "${SWIG_PYTHON}" = 'ON' ]];
-		then
-		source "${SHARED_SCRIPT_DIR}/install_swig.sh";
 	fi
 
 elif [ "${SECTION}" = 'script' ]; then

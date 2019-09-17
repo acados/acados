@@ -69,11 +69,13 @@ typedef struct
     double tol_eq;       // exit tolerance on equality constraints
     double tol_ineq;     // exit tolerance on inequality constraints
     double tol_comp;     // exit tolerance on complemetarity condition
+	double step_length;  // (fixed) step length in SQP loop
     int max_iter;
     int reuse_workspace;
     int num_threads;
 	int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
 	int qp_warm_start;
+
 } ocp_nlp_sqp_opts;
 
 //
@@ -102,7 +104,7 @@ typedef struct
     ocp_qp_out *qp_out;
 	// QP stuff not entering the qp_in struct
     struct blasfeo_dmat *dzduxt; // dzdux transposed
-    struct blasfeo_dvec *z_alg; // z_alg
+    struct blasfeo_dvec *z_alg; // z_alg, output algebraic variables
 
     //    ocp_nlp_dims *dims;
     void *qp_solver_mem;
@@ -131,6 +133,7 @@ typedef struct
 	double *stat;
 	int stat_m;
 	int stat_n;
+
 } ocp_nlp_sqp_memory;
 
 //

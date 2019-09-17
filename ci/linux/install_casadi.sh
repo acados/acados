@@ -41,16 +41,15 @@ CASADI_OCTAVE_URL="${_CASADI_GITHUB_RELEASES}/casadi-linux-octave-v${CASADI_VERS
 echo "installing CasADi"
 
 pushd external;
-	if [[ "${SWIG_PYTHON}" = 'ON' || "${TEMPLATE_PYTHON}" = 'ON' ]] ;
+	if [[ "${TEMPLATE_PYTHON}" = 'ON' ]] ;
 	then
 		wget -O casadi-linux-py35.tar.gz "${CASADI_PYTHON_URL}";
 		mkdir -p casadi-linux-py35;
 		tar -xf casadi-linux-py35.tar.gz -C casadi-linux-py35;
 		export PYTHONPATH=$(pwd)/casadi-linux-py35:$PYTHONPATH;
-		export CASADIPATH=$(pwd)/casadi-linux-py35;
 	fi
 
-	if [[ "${SWIG_MATLAB}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+	if [[ "${TEMPLATE_MATLAB}" = 'ON' ]] ||
  	   [[ "${DEV_MATLAB}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
 	then
 		wget -O casadi-linux-matlabR2014b.tar.gz "${CASADI_MATLAB_URL}";
