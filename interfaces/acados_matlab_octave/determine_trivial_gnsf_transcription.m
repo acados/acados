@@ -68,7 +68,7 @@ nx = length(x);
 if class(x(1)) == 'casadi.SX'
     isSX = true;
 else
-    disp('GNSF detection only works for SX CasADi type!!!!!!!!');
+    disp('GNSF detection only works for SX CasADi type!!!');
 	keyboard;
 end
 % xdot
@@ -79,9 +79,9 @@ if isfield(model, 'sym_u')
 	nu = length(u);
 else
     if isSX
-        u = SX.sym('u',0, 0);
+        u = SX.sym('u', 0, 0);
     else
-        u = MX.sym('u',0, 0);
+        u = MX.sym('u', 0, 0);
     end
 	nu = 0;
 end
@@ -91,9 +91,9 @@ if isfield(model, 'sym_z')
 	nz = length(z);
 else
     if isSX
-        z = SX.sym('z',0, 0);
+        z = SX.sym('z', 0, 0);
     else
-        z = MX.sym('z',0, 0);
+        z = MX.sym('z', 0, 0);
     end
 	nz = 0;
 end
@@ -103,9 +103,9 @@ if isfield(model, 'sym_p')
 	np = length(p);
 else
     if isSX
-        p = SX.sym('p',0, 0);
+        p = SX.sym('p', 0, 0);
     else
-        p = MX.sym('p',0, 0);
+        p = MX.sym('p', 0, 0);
     end
 	np = 0;
 end
