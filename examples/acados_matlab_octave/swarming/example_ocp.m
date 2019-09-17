@@ -266,37 +266,7 @@ time_qp_sol = ocp.get('time_qp_sol');
 fprintf('\nstatus = %d, sqp_iter = %d,  time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 % time_ext = %f [ms], time_ext*1e3,
 
-stat = ocp.get('stat');
-if (strcmp(nlp_solver, 'sqp'))
-	fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter');
-	if size(stat,2)>7
-		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
-	end
-	fprintf('\n');
-	for k=1:size(stat,1)
-		fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(k,1), stat(k,2), stat(k,3), stat(k,4), stat(k,5), stat(k,6), stat(k,7));
-		if size(stat,2)>7
-			fprintf('\t%e\t%e\t%e\t%e', stat(k,8), stat(k,9), stat(k,10), stat(k,11));
-		end
-		fprintf('\n');
-	end
-	fprintf('\n');
-else % sqp_rti
-	fprintf('\niter\tqp_stat\tqp_iter');
-	if size(stat,2)>3
-		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
-	end
-	fprintf('\n');
-	for k=1:size(stat,1)
-		fprintf('%d\t%d\t%d', stat(k,1), stat(k,2), stat(k,3));
-		if size(stat,2)>3
-			fprintf('\t%e\t%e\t%e\t%e', stat(k,4), stat(k,5), stat(k,6), stat(k,7));
-		end
-		fprintf('\n');
-	end
-	fprintf('\n');
-end
-
+ocp.print('stat');
 
 %% Extract trajectories
 
