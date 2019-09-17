@@ -1,3 +1,4 @@
+
 %
 % Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
 % Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
@@ -34,31 +35,27 @@
 %% test of native matlab interface
 clear all
 
-
-% check that env.sh has been run
-env_run = getenv('ENV_RUN');
-if (~strcmp(env_run, 'true'))
-	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
-end
+addpath('../linear_mass_spring_model/');
 
 
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
-param_scheme = 'multiple_shooting_unif_grid';
-%param_scheme = 'multiple_shooting';
-%shooting_nodes = [0 0.1 0.2 0.3 0.5 1];;
+% param_scheme = 'multiple_shooting_unif_grid';
+param_scheme = 'multiple_shooting';
 N = 20;
+shooting_nodes = [ linspace(0,1,N/2) linspace(1.1,5,N/2+1) ];
+
 model_name = 'lin_mass';
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
 nlp_solver_exact_hessian = 'false';
 %nlp_solver_exact_hessian = 'true';
-regularize_method = 'no_regularize';
+% regularize_method = 'no_regularize';
 %regularize_method = 'project';
 %regularize_method = 'mirror';
-%regularize_method = 'convexify';
+regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
 nlp_solver_ext_qp_res = 1;
 qp_solver = 'partial_condensing_hpipm';
@@ -82,31 +79,18 @@ cost_type = 'ext_cost';
 model = linear_mass_spring_model;
 
 
-
 % dims
 T = 10.0; % horizon length time
 nx = model.nx;
 nu = model.nu;
 ny = nu+nx; % number of outputs in lagrange term
 ny_e = nx; % number of outputs in mayer term
-if 0
-	nbx = nx/2;
-	nbu = nu;
-	ng = 0;
-	nh = 0;
-elseif 0
-	nbx = 0;
-	nbu = 0;
-	ng = nu+nx/2;
-	ng_e = nx;
-	nh = 0;
-else
-	nbx = 0;
-	nbu = 0;
-	ng = 0;
-	nh = nu+nx;
-	nh_e = nx;
-end
+nbx = 0;
+nbu = 0;
+ng = 0;
+nh = nu+nx;
+nh_e = nx;
+
 % cost
 Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
 Vx = zeros(ny, nx); for ii=1:nx Vx(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
@@ -138,8 +122,6 @@ else
 	lbu = -0.5*ones(nbu, 1);
 	ubu =  0.5*ones(nbu, 1);
 end
-
-
 
 
 %% acados ocp model
@@ -233,9 +215,6 @@ else
 	ocp_model.set('constr_ubu', ubu);
 end
 
-ocp_model.model_struct
-
-
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
@@ -261,17 +240,10 @@ if (strcmp(dyn_type, 'explicit') || strcmp(dyn_type, 'implicit'))
 	ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
 end
 
-ocp_opts.opts_struct
-
-
 
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-ocp
-ocp.C_ocp
-ocp.C_ocp_ext_fun
-
 
 
 % set trajectory initialization
@@ -284,22 +256,11 @@ ocp.set('init_u', u_traj_init);
 % solve
 tic;
 ocp.solve();
-time_ext = toc
-
-
-%x0(1) = 1.5;
-%ocp.set('constr_x0', x0);
-
-
-%ocp.set('cost_y_ref', 1);
-
-% if not set, the trajectory is initialized with the previous solution
-
+time_ext = toc;
 
 % get solution
 u = ocp.get('u');
 x = ocp.get('x');
-
 
 % get info
 status = ocp.get('status');
@@ -314,23 +275,25 @@ fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (t
 % print statistics
 ocp.print('stat')
 
-if status==0
-	fprintf('\nsuccess!\n\n');
+if status~=0
+    error('ocp_nlp solver returned status nonzero');
+elseif sqp_iter > 2
+    error('ocp can be solved in 2 iterations!');
 else
-	fprintf('\nsolution failed!\n\n');
+	fprintf('\nsuccess!\n');
 end
 
 % plot result
-figure()
-subplot(2, 1, 1)
-plot(0:N, x);
-title('trajectory')
-ylabel('x')
-subplot(2, 1, 2)
-plot(1:N, u);
-ylabel('u')
-xlabel('sample')
-
-if is_octave()
-    waitforbuttonpress;
-end
+% figure()
+% subplot(2, 1, 1)
+% plot(0:N, x);
+% title('trajectory')
+% ylabel('x')
+% subplot(2, 1, 2)
+% plot(1:N, u);
+% ylabel('u')
+% xlabel('sample')
+% 
+% if is_octave()
+%     waitforbuttonpress;
+% end

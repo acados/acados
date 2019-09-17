@@ -32,20 +32,27 @@
 %
 
 %% check that environment variables are provided
-require_env_variable('LD_LIBRARY_PATH');
-require_env_variable('ACADOS_INSTALL_DIR');
-
-if is_octave()
-    require_env_variable('OCTAVE_PATH');
-else
-    require_env_variable('MATLABPATH');
+try
+    require_env_variable('LD_LIBRARY_PATH');
+    require_env_variable('ACADOS_INSTALL_DIR');
+    if is_octave()
+        require_env_variable('OCTAVE_PATH');
+    else
+        require_env_variable('MATLABPATH');
+    end
+catch exception
+    exit_with_error(exception);
 end
+
+
 
 %% ocp tests
 try
     test_ocp_pendulum_on_cart;
     test_ocp_wtnx6;
     test_ocp_pendulum_dae;
+    test_ocp_linear_mass_spring;
+    test_ocp_linear_dae;
 catch exception
     exit_with_error(exception);
 end

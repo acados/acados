@@ -35,21 +35,18 @@
 clear all
 
 
-
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
+	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
-
 
 
 %% arguments
 compile_mex = 'true';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
+model_name = 'masses_chain';
 
 param_scheme = 'multiple_shooting_unif_grid';
 N = 40;
@@ -89,7 +86,6 @@ model = masses_chain_model(nfm);
 wall = -0.01;
 
 
-
 % dims
 T = 8.0; % horizon length time
 nx = model.nx; % 6*nfm
@@ -123,9 +119,9 @@ lbu = -10.0*ones(nbu, 1);
 ubu =  10.0*ones(nbu, 1);
 
 
-
 %% acados ocp model
 ocp_model = acados_ocp_model();
+ocp_model.set('name', model_name);
 % dims
 ocp_model.set('T', T);
 ocp_model.set('dim_nx', nx);
@@ -237,18 +233,10 @@ if (strcmp(sim_method, 'irk_gnsf'))
 	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-%ocp_opts.opts_struct
-
-
 
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-%ocp
-%ocp.C_ocp
-%ocp.C_ocp_ext_fun
-
-
 
 % set trajectory initialization
 x_traj_init = repmat(model.x_ref, 1, N+1);
@@ -273,13 +261,9 @@ time_ext = toc/nrep
 % get solution
 u = ocp.get('u');
 x = ocp.get('x');
-%u
-%x
-
 
 
 % statistics
-
 status = ocp.get('status');
 sqp_iter = ocp.get('sqp_iter');
 time_tot = ocp.get('time_tot');
@@ -289,38 +273,10 @@ time_qp_sol = ocp.get('time_qp_sol');
 
 fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 
-stat = ocp.get('stat');
-if (strcmp(nlp_solver, 'sqp'))
-	fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter');
-	if size(stat,2)>7
-		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
-	end
-	fprintf('\n');
-	for ii=1:size(stat,1)
-		fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
-		if size(stat,2)>7
-			fprintf('\t%e\t%e\t%e\t%e', stat(ii,8), stat(ii,9), stat(ii,10), stat(ii,11));
-		end
-		fprintf('\n');
-	end
-	fprintf('\n');
-else % sqp_rti
-	fprintf('\niter\tqp_stat\tqp_iter');
-	if size(stat,2)>3
-		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
-	end
-	fprintf('\n');
-	for ii=1:size(stat,1)
-		fprintf('%d\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3));
-		if size(stat,2)>3
-			fprintf('\t%e\t%e\t%e\t%e', stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
-		end
-		fprintf('\n');
-	end
-	fprintf('\n');
-end
+ocp.print('stat');
 
 
+%% figures
 % plot result
 %figure()
 %subplot(2, 1, 1)
@@ -332,26 +288,24 @@ end
 %ylabel('u')
 %xlabel('sample')
 
-
-% figures
-
 for ii=1:N
 	cur_pos = x(:,ii);
 	visualize;
 end
 
+stat = ocp.get('stat');
 if (strcmp(nlp_solver, 'sqp'))
-	figure(2);
-	plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
+	figure();
+	semilogy(0: size(stat,1)-1, stat(:,2), 'r-x');
 	hold on
-	plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');
-	plot([0: size(stat,1)-1], log10(stat(:,4)), 'g-x');
-	plot([0: size(stat,1)-1], log10(stat(:,5)), 'k-x');
+	semilogy(0: size(stat,1)-1, stat(:,3), 'b-x');
+	semilogy(0: size(stat,1)-1, stat(:,4), 'g-x');
+	semilogy(0: size(stat,1)-1, stat(:,5), 'k-x');
 	hold off
 	xlabel('iter')
-	ylabel('res')
+	ylabel('residuals')
+    legend('res stat', 'res eq', 'res ineq', 'res compl');
 end
-
 
 
 if status==0
@@ -364,5 +318,3 @@ end
 if is_octave()
     waitforbuttonpress;
 end
-
-return;

@@ -287,10 +287,14 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_hess = false;
     opts->jac_reuse = true;
 
-    if (dims->nz > 0) {
+    // TODO(oj): check if constr h or cost depend on z, turn on in this case only.
+    if (dims->nz > 0)
+    {
         opts->output_z = true;
         opts->sens_algebraic = true;
-    } else {
+    }
+    else
+    {
         opts->output_z = false;
         opts->sens_algebraic = false;
     }
@@ -535,10 +539,10 @@ int sim_irk_workspace_calculate_size(void *config_, void *dims_, void *opts_)
     size += blasfeo_memsize_dmat(nx + nz, nu);      // df_du
     size += blasfeo_memsize_dmat(nx + nz, nz);      // df_dz
 
-    if (opts->sens_algebraic){
-        size += blasfeo_memsize_dmat(nx + nz, nx + nz);  // df_dxdotz
-        size += blasfeo_memsize_dmat(nx + nz, nx + nu);  // dk0_dxu
-    }
+    // if (opts->sens_algebraic){
+    //     size += blasfeo_memsize_dmat(nx + nz, nx + nz);  // df_dxdotz
+    //     size += blasfeo_memsize_dmat(nx + nz, nx + nu);  // dk0_dxu
+    // }
 
     size += 1 * 8; // initial alignment
     make_int_multiple_of(64, &size);
@@ -628,10 +632,10 @@ static void *sim_irk_workspace_cast(void *config_, void *dims_, void *opts_, voi
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nu, &workspace->df_du, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx + nz, nz, &workspace->df_dz, &c_ptr);
 
-    if (opts->sens_algebraic){
-        assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nz, &workspace->df_dxdotz, &c_ptr);
-        assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nu, &workspace->dk0_dxu, &c_ptr);
-    }
+    // if (opts->sens_algebraic){
+    //     assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nz, &workspace->df_dxdotz, &c_ptr);
+    //     assign_and_advance_blasfeo_dmat_mem(nx + nz, nx + nu, &workspace->dk0_dxu, &c_ptr);
+    // }
 
     assign_and_advance_blasfeo_dvec_mem(nK, workspace->rG, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nK, workspace->K, &c_ptr);
@@ -721,7 +725,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double step = in->T / num_steps;
 
     int *ipiv = workspace->ipiv;
-    int *ipiv_one_stage = workspace->ipiv_one_stage;
     double *Z_work = workspace->Z_work;
 
     struct blasfeo_dmat *dG_dK = workspace->dG_dK;
@@ -730,7 +733,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dmat *dG_dxu = workspace->dG_dxu;
     struct blasfeo_dmat *dK_dxu = workspace->dK_dxu;
     struct blasfeo_dvec *xt = workspace->xt;
-    struct blasfeo_dvec *xtdot = &workspace->xtdot;
 
     struct blasfeo_dvec *xn = workspace->xn;
     struct blasfeo_dmat *S_forw = workspace->S_forw;
@@ -743,8 +745,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dmat *dxkzu_dw0 = &workspace->dxkzu_dw0;
     struct blasfeo_dmat *tmp_dxkzu_dw0 = &workspace->tmp_dxkzu_dw0;
 
-    struct blasfeo_dmat *df_dxdotz = &workspace->df_dxdotz;
-    struct blasfeo_dmat *dk0_dxu = &workspace->dk0_dxu;
+    // struct blasfeo_dmat *df_dxdotz = &workspace->df_dxdotz;
+    // struct blasfeo_dmat *dk0_dxu = &workspace->dk0_dxu;
+    // struct blasfeo_dvec *xtdot = &workspace->xtdot;
+    // int *ipiv_one_stage = workspace->ipiv_one_stage;
 
     // for adjoint
     struct blasfeo_dvec *lambda = workspace->lambda;

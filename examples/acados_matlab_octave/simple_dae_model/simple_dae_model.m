@@ -31,7 +31,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function [ model ] = pendulum_dae_model()
+function model = simple_dae_model()
     %% this function generates an implicit ODE / index-1 DAE model,
     % which consists of a CasADi expression f_impl_expr
     % that depends on the symbolic CasADi variables x, xdot, u, z,
@@ -46,71 +46,54 @@ function [ model ] = pendulum_dae_model()
     else % old casadi versions
         error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
     end
-    model_name_prefix = 'pendulum_dae';
-    
-    %% Parameters (taken from Rien Quirynen's Master Thesis)
-    % NOTE: removed torque from parameters and made it the control.
-    m = 2;  % mass
-    g = 9.81; % grav const
-    I = 0.1; % moment of inertia
 
+    model_name_prefix = 'simple_dae';
+       
     %% Set up States & Controls
-    xpos    = SX.sym('xpos');     % Differential States
-    ypos    = SX.sym('ypos');
-    alpha   = SX.sym('alpha');     
-    vx      = SX.sym('vx');
-    vy      = SX.sym('vy');
-    valpha  = SX.sym('valpha');
-    x = vertcat(xpos, ypos, alpha, vx, vy, valpha);
+    x1    = SX.sym('x1');     % Differential States
+    x2    = SX.sym('x2');
+    x = vertcat(x1, x2);
     
-    ax      = SX.sym('ax');     % Algebraic states
-    ay      = SX.sym('ay');
-    aalpha  = SX.sym('aalpha');
-    Fx      = SX.sym('Fx');
-    Fy      = SX.sym('Fy');
-    z = vertcat(ax, ay, aalpha, Fx, Fy);
+    z1      = SX.sym('z1');     % Algebraic states
+    z2      = SX.sym('z2');
+    z = vertcat(z1, z2);
     
-    u       = SX.sym('u');  % Controls % applied torque
+    u1      = SX.sym('u1');     % Controls
+    u2      = SX.sym('u2');
+    u       = vertcat(u1, u2);
     
     %% xdot
-    xpos_dot    = SX.sym('xpos_dot');     % Differential States
-    ypos_dot    = SX.sym('ypos_dot');
-    alpha_dot   = SX.sym('alpha_dot');     
-    vx_dot      = SX.sym('vx_dot');
-    vy_dot      = SX.sym('vy_dot');
-    valpha_dot  = SX.sym('valpha_dot');
+    x1_dot    = SX.sym('x1_dot');     % Differential States
+    x2_dot    = SX.sym('x2_dot');
+    xdot = [x1_dot; x2_dot];
     
-    xdot = [xpos_dot; ypos_dot; alpha_dot; vx_dot; vy_dot; valpha_dot];
-    
+	%% cost
+	expr_y = vertcat(u1, u2, z1, z2);
+
     %% Dynamics: implicit DAE formulation (index-1)
-    % x = vertcat(xpos, ypos, alpha, vx, vy, valpha);
-    % z = vertcat(ax, ay, aalpha, Fx, Fy);
-    f_impl = vertcat(xpos_dot - vx, ...
-                     ypos_dot - vy, ...
-                     alpha_dot - valpha, ...
-                     vx_dot - ax, ...
-                     vy_dot - ay, ...
-                     valpha_dot - aalpha, ...
-                     m * ax - Fx, ...
-                     m * ay + m * g - Fy, ...
-                     I * aalpha - u - Fx * ypos + Fy * xpos, ...
-                     ax + vy * valpha + ypos * aalpha, ...
-                     ay - vx * valpha - xpos * aalpha);
+    expr_f_impl = vertcat(x1_dot-0.1*x1+0.1*z2-u1, ...
+                     x2_dot+x2+0.01*z1-u2,  ...
+                     z1-x1, ...
+                     z2-x2);
+ 
+	%% constraints
+    expr_h = vertcat(z1, z2);
+    expr_h_e = vertcat(x1, x2);
     
-    %% constraint
-    expr_h = ax^2 + ay^2;
-
     %% initial value
-%     x0 = [1; -5; 1; 0.1; -0.5; 0.1];
-%     z0 = [-1.5; -0.3; -0.3; -3; 19];
-%     u0 = 1;
+    %     x0 = [0.1; -0.1];
+    %     z0 = [0.0, 0.0];
+    %     u0 = 0;
 
-    model.expr_f_impl = f_impl;
     model.sym_x = x;
     model.sym_xdot = xdot;
     model.sym_u = u;
     model.sym_z = z;
-    model.name = model_name_prefix;
+    model.expr_y = expr_y;
+    model.expr_f_impl = expr_f_impl;
     model.expr_h = expr_h;
+    model.expr_h_e = expr_h_e;
+    model.name = model_name_prefix;
     
 end
+

@@ -106,9 +106,9 @@ void dense_qp_qpoases_opts_update(void *config, dense_qp_dims *dims, void *opts_
 //
 int dense_qp_qpoases__memorycalculate_size(void *config, dense_qp_dims *dims, void *opts_);
 //
-void *dense_qp_qpoases__memoryassign(void *config, dense_qp_dims *dims, void *opts_, void *raw_memory);
+void *dense_qp_qpoases_memory_assign(void *config, dense_qp_dims *dims, void *opts_, void *raw_memory);
 //
-int dense_qp_qpoases__workspacecalculate_size(void *config, dense_qp_dims *dims, void *opts_);
+int dense_qp_qpoases_workspace_calculate_size(void *config, dense_qp_dims *dims, void *opts_);
 //
 int dense_qp_qpoases(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_);
 //

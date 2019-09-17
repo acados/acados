@@ -62,13 +62,14 @@ nlp_solver_tol_eq   = tol;
 nlp_solver_tol_ineq = tol;
 nlp_solver_tol_comp = tol;
 nlp_solver_ext_qp_res = 1;
-qp_solver = 'partial_condensing_hpipm';
+% qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
-%qp_solver = 'full_condensing_qpoases';
+qp_solver = 'full_condensing_qpoases';
 qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 2;
+qp_solver_iter_max = 100;
 %sim_method = 'erk';
 % sim_method = 'irk';
 sim_method = 'irk_gnsf';
@@ -167,31 +168,11 @@ else % irk irk_gnsf
 end
 % constraints
 ocp_model.set('constr_x0', x0);
-if (ng>0)
-	ocp_model.set('constr_C', C);
-	ocp_model.set('constr_D', D);
-	ocp_model.set('constr_lg', lg);
-	ocp_model.set('constr_ug', ug);
-	ocp_model.set('constr_C_e', C_e);
-	ocp_model.set('constr_lg_e', lg_e);
-	ocp_model.set('constr_ug_e', ug_e);
-elseif (nh>0)
-	ocp_model.set('constr_expr_h', model.expr_h);
-	ocp_model.set('constr_lh', lbu);
-	ocp_model.set('constr_uh', ubu);
-%	ocp_model.set('constr_expr_h_e', model.expr_h_e);
-%	ocp_model.set('constr_lh_e', lh_e);
-%	ocp_model.set('constr_uh_e', uh_e);
-else
-%	ocp_model.set('constr_Jbx', Jbx);
-%	ocp_model.set('constr_lbx', lbx);
-%	ocp_model.set('constr_ubx', ubx);
-	ocp_model.set('constr_Jbu', Jbu);
-	ocp_model.set('constr_lbu', lbu);
-	ocp_model.set('constr_ubu', ubu);
-end
-disp('ocp_model.model_struct')
-disp(ocp_model.model_struct)
+ocp_model.set('constr_expr_h', model.expr_h);
+ocp_model.set('constr_lh', lbu);
+ocp_model.set('constr_uh', ubu);
+% disp('ocp_model.model_struct')
+% disp(ocp_model.model_struct)
 
 
 %% acados ocp opts
@@ -219,6 +200,7 @@ if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 end
 ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
 ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
+ocp_opts.set('qp_solver_iter_max', qp_solver_iter_max);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
@@ -226,18 +208,17 @@ if (strcmp(sim_method, 'irk_gnsf'))
 	ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
 end
 
-disp('ocp_opts');
-disp(ocp_opts.opts_struct);
+% disp('ocp_opts');
+% disp(ocp_opts.opts_struct);
 
 
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-disp('ocp.C_ocp');
-disp(ocp.C_ocp);
-disp('ocp.C_ocp_ext_fun');
-disp(ocp.C_ocp_ext_fun);
-%ocp.model_struct
+% disp('ocp.C_ocp');
+% disp(ocp.C_ocp);
+% disp('ocp.C_ocp_ext_fun');
+% disp(ocp.C_ocp_ext_fun);
 
 
 % set trajectory initialization
@@ -280,35 +261,7 @@ time_qp_sol = ocp.get('time_qp_sol');
 fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
 
 stat = ocp.get('stat');
-if (strcmp(nlp_solver, 'sqp'))
-	fprintf('\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter');
-	if size(stat,2)>7
-		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
-	end
-	fprintf('\n');
-	for ii=1:size(stat,1)
-		fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3), stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
-		if size(stat,2)>7
-			fprintf('\t%e\t%e\t%e\t%e', stat(ii,8), stat(ii,9), stat(ii,10), stat(ii,11));
-		end
-		fprintf('\n');
-	end
-	fprintf('\n');
-else % sqp_rti
-	fprintf('\niter\tqp_stat\tqp_iter');
-	if size(stat,2)>3
-		fprintf('\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m');
-	end
-	fprintf('\n');
-	for ii=1:size(stat,1)
-		fprintf('%d\t%d\t%d', stat(ii,1), stat(ii,2), stat(ii,3));
-		if size(stat,2)>3
-			fprintf('\t%e\t%e\t%e\t%e', stat(ii,4), stat(ii,5), stat(ii,6), stat(ii,7));
-		end
-		fprintf('\n');
-	end
-	fprintf('\n');
-end
+ocp.print('stat')
 
 
 if status~=0

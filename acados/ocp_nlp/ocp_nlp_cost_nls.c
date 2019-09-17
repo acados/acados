@@ -235,6 +235,8 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
     // blasfeo_dvec
     // y_ref
     assign_and_advance_blasfeo_dvec_mem(ny, &model->y_ref, &c_ptr);
+    blasfeo_dvecse(ny, 0.0, &model->y_ref, 0);
+
     // Z
     assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->Z, &c_ptr);
     // z

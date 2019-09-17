@@ -553,9 +553,6 @@ void *ocp_nlp_sqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
 
     char *c_ptr = (char *) raw_memory;
 
-    // loop index
-	int ii;
-
     // extract dims
     int N = dims->N;
     // ocp_nlp_cost_dims **cost_dims = dims->cost;
@@ -1190,7 +1187,7 @@ static void sqp_update_variables(void *config_, ocp_nlp_dims *dims, ocp_nlp_out 
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
-    // int *nu = dims->nu;
+    int *nu = dims->nu;
     int *ni = dims->ni;
     int *nz = dims->nz;
 
@@ -1231,10 +1228,11 @@ static void sqp_update_variables(void *config_, ocp_nlp_dims *dims, ocp_nlp_out 
 		blasfeo_dvecsc(2*ni[i], 1.0-alpha, nlp_out->t+i, 0);
         blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->t+i, 0, nlp_out->t+i, 0, nlp_out->t+i, 0);
 
+		// linear update of algebraic variables using state and input sensitivity
+
         if (i < N)
 		{
-			blasfeo_dvecsc(nz[i], 1.0-alpha, nlp_out->z+i, 0);
-			blasfeo_daxpy(nz[i], alpha, mem->z_alg+i, 0, nlp_out->z+i, 0, nlp_out->z+i, 0);
+			blasfeo_dgemv_t(nu[i]+nx[i], nz[i], 1.0, mem->dzduxt+i, 0, 0, nlp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, nlp_out->z+i, 0); 
 		}
 
     }
@@ -1304,7 +1302,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         config->dynamics[ii]->memory_set_RSQrq_ptr(mem->qp_in->RSQrq+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_dzduxt_ptr(mem->dzduxt+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_sim_guess_ptr(mem->nlp_mem->sim_guess+ii,
-                                      mem->nlp_mem->set_sim_guess+ii, mem->dynamics[ii]);
+                mem->nlp_mem->set_sim_guess+ii, mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_z_alg_ptr(mem->z_alg+ii, mem->dynamics[ii]);
     }
 

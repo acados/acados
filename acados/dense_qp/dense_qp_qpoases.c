@@ -138,35 +138,41 @@ void dense_qp_qpoases_opts_update(void *config_, dense_qp_dims *dims, void *opts
 
 void dense_qp_qpoases_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
-    // dense_qp_qpoases_opts *opts = opts_;
+    dense_qp_qpoases_opts *opts = opts_;
 
     if (!strcmp(field, "tol_stat"))
     {
-		// TODO set solver exit tolerance
+        // TODO set solver exit tolerance
     }
     else if (!strcmp(field, "tol_eq"))
     {
-		// TODO set solver exit tolerance
+        // TODO set solver exit tolerance
     }
     else if (!strcmp(field, "tol_ineq"))
     {
-		// TODO set solver exit tolerance
+        // TODO set solver exit tolerance
     }
     else if (!strcmp(field, "tol_comp"))
     {
-		// TODO set solver exit tolerance
+        // TODO set solver exit tolerance
     }
     else if (!strcmp(field, "warm_start"))
     {
-		// TODO set solver warm start
+        // TODO set solver warm start
+        // opts->
     }
-	else
-	{
-		printf("\nerror: dense_qp_qpoases_opts_set: wrong field: %s\n", field);
-		exit(1);
-	}
+    else if (!strcmp(field, "iter_max"))
+    {
+        int *max_iter = value;
+        opts->max_nwsr = *max_iter;
+    }
+    else
+    {
+        printf("\nerror: dense_qp_qpoases_opts_set: wrong field: %s\n", field);
+        exit(1);
+    }
 
-	return;
+    return;
 }
 
 
@@ -687,8 +693,8 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
 void dense_qp_qpoases_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
 {
-	printf("\nerror: dense_qp_qpoases_eval_sens: not implemented yet\n");
-	exit(1);
+    printf("\nerror: dense_qp_qpoases_eval_sens: not implemented yet\n");
+    exit(1);
 }
 
 
