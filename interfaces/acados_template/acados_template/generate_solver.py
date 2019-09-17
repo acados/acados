@@ -1,3 +1,36 @@
+#
+# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+# Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+# Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+# Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+#
+# This file is part of acados.
+#
+# The 2-Clause BSD License
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
+#
+
 from jinja2 import Environment, FileSystemLoader
 from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
@@ -112,6 +145,46 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         output = template.render(ocp=acados_ocp)
         # output file
         out_file = open('./c_generated_code/acados_solver_' + model.name + '.h', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code')
+        # render source template
+        template_file = 'acados_solver.in.h'
+        out_file = 'acados_solver_' + model.name + '.h'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
+
+        os.system(os_cmd)
+        os.chdir('..')
+
+    if USE_TERA == 0:
+        # render source template
+        template = env.get_template('acados_sim_solver.in.c')
+        output = template.render(ocp=acados_ocp)
+        # output file
+        out_file = open('./c_generated_code/acados_sim_solver_' + model.name + '.c', 'w+')
+        out_file.write(output)
+    else:
+        os.chdir('c_generated_code')
+        # render source template
+        template_file = 'acados_sim_solver.in.c'
+        out_file = 'acados_sim_solver_' + model.name + '.c'
+        # output file
+        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
+
+        os.system(os_cmd)
+        os.chdir('..')
+
+    if USE_TERA == 0:
+        # render source template
+        template = env.get_template('acados_sim_solver.in.h')
+        output = template.render(ocp=acados_ocp)
+        # output file
+        out_file = open('./c_generated_code/acados_sim_solver_' + model.name + '.h', 'w+')
         out_file.write(output)
     else:
         os.chdir('c_generated_code')
@@ -257,7 +330,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
     os.system('make shared_lib')
     os.chdir('..')
 
-    solver = acados_solver(acados_ocp, 'c_generated_code/acados_solver_' + model.name + '.so')
+    solver = acados_solver(acados_ocp, 'c_generated_code/libacados_solver_' + model.name + '.so')
     return solver
 
 class acados_solver:

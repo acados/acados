@@ -1,23 +1,41 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 /* 
  * Description: linear least-squares (LLS) cost module (ocp_nlp)
  *
- * min_w (Vx*x + Vu*u + Vz*z - yref)^T*W*(Vx*x + Vu*u + Vz*z - yref),
+ * min_w (Vx*x + Vu*u + Vz*z - yref)^T * W * (Vx*x + Vu*u + Vz*z - yref),
  *
  */
 
@@ -253,15 +271,20 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     // blasfeo_dmat
     // W
     assign_and_advance_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
+
     // Cyt
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &model->Cyt, &c_ptr);
+    blasfeo_dgese(nu+nx, ny, 0.0, &model->Cyt, 0, 0);
 
     // Vz
-    assign_and_advance_blasfeo_dmat_mem(nz, ny, &model->Vz, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(ny, nz, &model->Vz, &c_ptr);
+    blasfeo_dgese(ny, nz, 0.0, &model->Vz, 0, 0);
 
     // blasfeo_dvec
     // y_ref
     assign_and_advance_blasfeo_dvec_mem(ny, &model->y_ref, &c_ptr);
+    blasfeo_dvecse(ny, 0.0, &model->y_ref, 0);
+
     // Z
     assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->Z, &c_ptr);
     // z
@@ -286,7 +309,10 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     int status = ACADOS_SUCCESS;
 
     if ( !config_ || !dims_ || !model_ || !value_ )
-        status = ACADOS_FAILURE;
+    {
+        printf("ocp_nlp_cost_ls_model_set: got NULL pointer \n");
+        exit(1);
+    }
 
     ocp_nlp_cost_ls_dims *dims = dims_;
     ocp_nlp_cost_ls_model *model = model_;
@@ -554,19 +580,16 @@ void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
     memory->ux = ux;
 }
 
-void ocp_nlp_cost_ls_memory_set_z_alg_ptr(struct blasfeo_dvec *z, void *memory_)
+
+
+void ocp_nlp_cost_ls_memory_set_z_alg_ptr(struct blasfeo_dvec *z_alg, void *memory_)
 {
     ocp_nlp_cost_ls_memory *memory = memory_;
 
-    memory->z = z;
+    memory->z_alg = z_alg;
 }
 
-void ocp_nlp_cost_ls_memory_set_dzdxu_tran_ptr(struct blasfeo_dmat *dzdxu_tran, void *memory_)
-{
-    ocp_nlp_cost_ls_memory *memory = memory_;
 
-    memory->dzdxu_tran = dzdxu_tran;
-}
 
 void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, void *memory_)
 {
@@ -574,6 +597,8 @@ void ocp_nlp_cost_ls_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_tran, 
 
     memory->dzdux_tran = dzdux_tran;
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                 workspace                                  //
@@ -723,11 +748,11 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
                 &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
 
-        // update y_ref: y_ref_tilde = y_ref + Vz*dzdx*x + Vz*dzdu*u - Vz*z
-        blasfeo_dgemv_t(nx + nu, nz, -1.0, memory->dzdux_tran,
-                0, 0, memory->ux, 0, 1.0, memory->z, 0, &work->tmp_nz, 0);
+        // update y_ref: y_ref_tilde = y_ref + Vz*(dzdx*x + dzdu*u - z)
+        blasfeo_dgemv_t(nx + nu, nz, 1.0, memory->dzdux_tran,
+                0, 0, memory->ux, 0, -1.0, memory->z_alg, 0, &work->tmp_nz, 0);
 
-        blasfeo_dgemv_n(ny, nz, -1.0, &model->Vz,
+        blasfeo_dgemv_n(ny, nz, +1.0, &model->Vz,
                 0, 0, &work->tmp_nz, 0, 1.0, &work->y_ref_tilde, 0, &work->y_ref_tilde, 0);
 
         blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
@@ -737,6 +762,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
                 memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 
         // compute gradient
+		// res = \tilde{V}_x * x + \tilde{V}_u * u - \tilde{y}_ref
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
                 0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
 

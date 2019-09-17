@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 
 /// \defgroup ocp_nlp ocp_nlp
@@ -44,6 +62,7 @@ extern "C" {
 #include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_xcond_solver.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/external_function_generic.h"
 #include "acados/utils/types.h"
@@ -70,16 +89,17 @@ typedef struct
     void (*dynamics_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
     void (*cost_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
     void (*constraints_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
-    // evaluate solver
-    int (*evaluate)(void *config, void *dims, void *qp_in, void *qp_out, void *opts_, void *mem, void *work);
+    // evaluate solver // TODO rename into solve
+    int (*evaluate)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
+    void (*eval_param_sens)(void *config, void *dims, void *opts_, void *mem, void *work, char *field, int stage, int index, void *sens_nlp_out);
     // prepare memory
-    int (*precompute)(void *config, void *dims, void *qp_in, void *qp_out, void *opts_, void *mem, void *work);
+    int (*precompute)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     // initalize this struct with default values
     void (*config_initialize_default)(void *config);
     // general getter
     void (*get)(void *config_, void *mem_, const char *field, void *return_value_);
     // config structs of submodules
-    ocp_qp_xcond_solver_config *qp_solver;
+    ocp_qp_xcond_solver_config *qp_solver; // TODO rename xcond_solver
     ocp_nlp_dynamics_config **dynamics;
     ocp_nlp_cost_config **cost;
     ocp_nlp_constraints_config **constraints;
@@ -104,7 +124,7 @@ typedef struct
     void **cost;
     void **dynamics;
     void **constraints;
-    ocp_qp_dims *qp_solver;  // xcond solver instead ??
+    ocp_qp_xcond_solver_dims *qp_solver;  // xcond solver instead ??
     ocp_nlp_reg_dims *regularize;
 
     int *nv;  // number of primal variables (states+controls+slacks)
@@ -208,7 +228,7 @@ typedef struct
     struct blasfeo_dvec *z;
     struct blasfeo_dvec *pi;
     struct blasfeo_dvec *lam;
-    struct blasfeo_dvec *t;
+    struct blasfeo_dvec *t;  // slacks of inequalities
 
     int sqp_iter;
     int qp_iter;
@@ -235,6 +255,10 @@ typedef struct
     struct blasfeo_dvec *ineq_adj;
     struct blasfeo_dvec *dyn_fun;
     struct blasfeo_dvec *dyn_adj;
+
+    bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
+    struct blasfeo_dvec *sim_guess;
+
 } ocp_nlp_memory;
 
 //

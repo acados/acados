@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #include <stdlib.h>
 // #include <xmmintrin.h>
@@ -42,33 +60,33 @@ int main()
     if(ferror(out_file))
         exit(1);
 
+    int jj, sqp_iter;
+    double time_tot;
+    // double *stat;
+
     const int n_sim = 601;
     const int N = 20;
 
-    int nx[N+1], nu[N+1], nz[N+1], ny[N+1], nb[N+1], nbx[N+1], nbu[N+1], ng[N+1], nh[N+1], ns[N+1];
-    for (int i = 0; i <= N; ++i)
+	int nx_ = 4;
+	int nu_ = 2;
+	int nz_ = 2;
+
+    int nx[N+1], nu[N+1], nz[N+1], ny[N+1], nbx[N+1], nbu[N+1];
+    for (int i = 0; i < N; i++)
     {
-        nx[i] = 4;
-        nu[i] = 2;
-        nz[i] = 2;
-        ny[i] = 1 + nx[i] + nu[i];
-        nbx[i] = nx[i];
-        nbu[i] = nu[i];
-        nb[i] = nbx[i] + nbu[i];
-        ng[i] = 0;
-        nh[i] = 0;
-        ns[i] = 0;
+        nx[i] = nx_;
+        nu[i] = nu_;
+        nz[i] = nz_;
+        ny[i] = 1 + nx_ + nu_;
+        nbx[i] = nx_;
+        nbu[i] = nu_;
     }
-
-    nu[N] = 0;
-    nz[N] = 0;
-    ny[N] = 1 + nx[N];
-    nbu[N] = 0;
-    nb[N] = nbx[N] + nbu[N];
-
-    int idxb[nbu[0]+nbx[0]];
-    for (int i = 0; i < nbu[0]+nbx[0]; ++i)
-        idxb[i] = i;
+	nx[N] = nx_;
+	nu[N] = 0;
+	nz[N] = 0;
+	ny[N] = 1 + nx_;
+	nbx[N] = nx_;
+	nbu[N] = 0;
 
     // sampling time (s)
     double T = 0.05;
@@ -105,14 +123,13 @@ int main()
     W_N[4*(ny[N]+1)] = 1;
 
     // bounds
-    double lb_0[] = {-10000, -10000, 50, 50, 1.14275, 1.53787};
-    double ub_0[] = {+10000, +10000, 50, 50, 1.14275, 1.53787};
+    double lbu[] = {-10000, -10000};
+    double ubu[] = {10000, 10000};
+	int idxbu[] = {0, 1};
 
-    double lb[] = {-10000, -10000, 0, 0, 0.5, 0.5};
-    double ub[] = {+10000, +10000, 100, 100, 1.757, 2.125};
-
-    double lb_N[] = {0, 0, 0.5, 0.5};
-    double ub_N[] = {100, 100, 1.757, 2.125};
+    double lbx[] = {0, 0, 0.5, 0.5};
+    double ubx[] = {100, 100, 1.757, 2.125};
+	int idxbx[] = {0, 1, 2, 3};
 
     // implicit dae
     external_function_casadi impl_dae_fun;
@@ -174,11 +191,14 @@ int main()
 	ocp_nlp_plan *plan = ocp_nlp_plan_create(N);
 
 	plan->nlp_solver = SQP;
+//	plan->nlp_solver = SQP_RTI;
 
 	for (int i = 0; i <= N; i++)
 		plan->nlp_cost[i] = NONLINEAR_LS;
 
-	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
+	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+//	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
+//	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
 
 	for (int i = 0; i < N; i++)
     {
@@ -197,7 +217,6 @@ int main()
     ocp_nlp_dims_set_opt_vars(config, dims, "nx", nx);
     ocp_nlp_dims_set_opt_vars(config, dims, "nu", nu);
     ocp_nlp_dims_set_opt_vars(config, dims, "nz", nz);
-    ocp_nlp_dims_set_opt_vars(config, dims, "ns", ns);
 
 	for (int i = 0; i <= N; i++)
     {
@@ -205,15 +224,14 @@ int main()
 
         ocp_nlp_dims_set_constraints(config, dims, i, "nbx", &nbx[i]);
         ocp_nlp_dims_set_constraints(config, dims, i, "nbu", &nbu[i]);
-        ocp_nlp_dims_set_constraints(config, dims, i, "ng", &ng[i]);
-        ocp_nlp_dims_set_constraints(config, dims, i, "nh", &nh[i]);
     }
 
 
     // in
 	ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
+
 	for (int i = 0; i < N; ++i)
-    	nlp_in->Ts[i] = T;
+		ocp_nlp_in_set(config, dims, nlp_in, i, "Ts", &T);
 
     // cost
     // ocp_nlp_cost_nls_model **cost = (ocp_nlp_cost_nls_model **) nlp_in->cost;
@@ -237,33 +255,38 @@ int main()
         if(ocp_nlp_dynamics_model_set(config, dims, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z)) exit(1);
     }
 
-    // bounds
-	ocp_nlp_constraints_bgh_model **constraints = (ocp_nlp_constraints_bgh_model **) nlp_in->constraints;
+    // constraints
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x0);
+    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x0);
+	ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "idxbx", idxbx);
 
-    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lb", lb_0);
-    ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ub", ub_0);
-
-    for (int i = 0; i < nb[0]; ++i)
-        constraints[0]->idxb[i] = idxb[i];
-
-    for (int i = 1; i < N; ++i)
+    for (int i = 1; i <= N; i++)
     {
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lb", lb);
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ub", ub);
-
-        for (int j = 0; j < nb[i]; ++j)
-            constraints[i]->idxb[j] = idxb[j];
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbx", lbx);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubx", ubx);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "idxbx", idxbx);
     }
 
-    ocp_nlp_constraints_model_set(config, dims, nlp_in, N, "lb", lb_N);
-    ocp_nlp_constraints_model_set(config, dims, nlp_in, N, "ub", ub_N);
-    for (int i = 0; i < nb[N]; ++i)
-        constraints[N]->idxb[i] = idxb[i];
+    for (int i = 0; i < N; i++)
+    {
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "lbu", lbu);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "ubu", ubu);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, i, "idxbu", idxbu);
+    }
 
     // options
     void *nlp_opts = ocp_nlp_opts_create(config, dims);
-    int max_iter = 1;
+    int max_iter = 20;
     ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
+	int ext_qp_res = 1;
+    ocp_nlp_opts_set(config, nlp_opts, "ext_qp_res", &ext_qp_res);
+	int qp_warm_start = 2;
+    ocp_nlp_opts_set(config, nlp_opts, "qp_warm_start", &qp_warm_start);
+	double tol = 1e-6;
+    ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol);
+    ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol);
+    ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol);
+    ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol);
 
     // out
     ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
@@ -274,13 +297,17 @@ int main()
     // initialize
     for (int i = 0; i < N; ++i)
     {
-        blasfeo_pack_dvec(nu[i], u, nlp_out->ux+i, 0);
-        blasfeo_pack_dvec(nx[i], x0, nlp_out->ux+i, nu[i]);
-        blasfeo_pack_dvec(nz[i], z0, nlp_out->z+i, 0);
+		ocp_nlp_out_set(config, dims, nlp_out, i, "u", u);
+		ocp_nlp_out_set(config, dims, nlp_out, i, "x", x0);
+		ocp_nlp_out_set(config, dims, nlp_out, i, "z", z0);
     }
-    blasfeo_pack_dvec(nx[N], x0, nlp_out->ux+N, nu[N]);
+	ocp_nlp_out_set(config, dims, nlp_out, N, "x", x0);
 
     status = ocp_nlp_precompute(solver, nlp_in, nlp_out);
+
+	double *x_sol = malloc(nx_*(N+1)*sizeof(double));
+	double *u_sol = malloc(nu_*(N+1)*sizeof(double));
+	double *z_sol = malloc(nz_*(N+1)*sizeof(double));
 
     for (int i = 0; i < n_sim; ++i)
     {
@@ -294,19 +321,57 @@ int main()
 
         blasfeo_print_to_file_dvec(out_file, nu[0]+nx[0], nlp_out->ux, 0);
 
-        blasfeo_unpack_dvec(nx[1], nlp_out->ux+1, nu[1], &lb_0[nu[1]]);
-        blasfeo_unpack_dvec(nx[1], nlp_out->ux+1, nu[1], &ub_0[nu[1]]);
+		// get solution
+		for(jj=0; jj<=N; jj++)
+			ocp_nlp_out_get(config, dims, nlp_out, jj, "x", x_sol+jj*nx_);
+		for(jj=0; jj<N; jj++)
+			ocp_nlp_out_get(config, dims, nlp_out, jj, "u", u_sol+jj*nu_);
+		for(jj=0; jj<N; jj++)
+			ocp_nlp_out_get(config, dims, nlp_out, jj, "z", z_sol+jj*nz_);
 
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lb", lb_0);
-        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ub", ub_0);
+		// set x0
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "lbx", x_sol+1*nx_);
+        ocp_nlp_constraints_model_set(config, dims, nlp_in, 0, "ubx", x_sol+1*nx_);
 
+		// shift guess
+		for(jj=0; jj<N; jj++)
+			ocp_nlp_out_set(config, dims, nlp_out, jj, "x", x_sol+(jj+1)*nx_);
+		for(jj=0; jj<N-1; jj++)
+			ocp_nlp_out_set(config, dims, nlp_out, jj, "u", u_sol+(jj+1)*nu_);
+		for(jj=0; jj<N-1; jj++)
+			ocp_nlp_out_set(config, dims, nlp_out, jj, "z", z_sol+(jj+1)*nz_);
 
-        printf("iter %d, status: %d, res = %g\n", i, status, nlp_out->inf_norm_res);
+		config->get(config, solver->mem, "sqp_iter", &sqp_iter);
+		config->get(config, solver->mem, "time_tot", &time_tot);
+#if 0
+		config->get(config, solver->mem, "stat_m", &stat_m);
+		config->get(config, solver->mem, "stat_n", &stat_n);
+		config->get(config, solver->mem, "stat", &stat);
+		printf("\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m\t");
+		for(jj=0; jj<sqp_iter+1; jj++)
+		{
+			if(stat_n==10)
+			{
+				printf("\n%d\t%e\t%e\t%e\t%e\t%d\t%d\t%e\t%e\t%e\t%e\n", jj, stat[jj*stat_n+0], stat[jj*stat_n+1], stat[jj*stat_n+2], stat[jj*stat_n+3], (int) stat[jj*stat_n+4], (int) stat[jj*stat_n+5], stat[jj*stat_n+6], stat[jj*stat_n+7], stat[jj*stat_n+8], stat[jj*stat_n+9]);
+			}
+		}
+#endif
+
+        printf("n_sim %d, time: %e [s], status: %d, iter: %d, res = %g\n", i, time_tot, status, sqp_iter, nlp_out->inf_norm_res);
+
+#if 0
+	if(i==5)
+		exit(1);
+#endif
     }
 
     fclose(out_file);
 
     // free memory
+	free(x_sol);
+	free(u_sol);
+	free(z_sol);
+
     ocp_nlp_solver_destroy(solver);
     ocp_nlp_out_destroy(nlp_out);
     ocp_nlp_opts_destroy(nlp_opts);

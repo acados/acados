@@ -17,56 +17,75 @@ Both a CMake and a Makefile based build system are supported at the moment.
     git submodule update --recursive --init
     ```
 
-1. Download CasADi into the `<acados_root_folder>/external` folder:
+1. Download CasADi:
+To create external function for your problem, we suggest to use CasADi and use it from `<acados_root_folder>/external`.
+Depending on the environment you want to use to generate CasADi functions from, proceed with the corresponding paragraph (Python, MATLAB, Octave):
+
+    ### **Python**
+
     ```
     cd external
-    ```
-    and, depending on your preferred CasADi interface (Python, MATLAB, Octave):
-
-    ```
-    wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
+    wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
     mkdir -p casadi-py35-v3.4.0-64bit
     tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-py35-v3.4.0-64bit
-    ```
-
-    ```
-    wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
-    mkdir -p casadi-matlabR2014b-v3.4.0
-    tar -xf casadi-linux-matlabR2014b-v3.4.0.tar.gz -C casadi-matlabR2014b-v3.4.0
     cd ..
     ```
 
+    ### **Matlab**
+    Put CasADi binaries into `<acados_root_folder>/external/casadi-matlab` :
     ```
-    wget -q -nc http://files.casadi.org/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
-    mkdir -p casadi-octave-v3.4.0
-    tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave-v3.4.0
+    cd external
+    wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-matlabR2014b-v3.4.0.tar.gz
+    mkdir -p casadi-matlab
+    tar -xf casadi-linux-matlabR2014b-v3.4.0.tar.gz -C casadi-matlab
+    cd ..
     ```
 
-1. To build and install `acados` library you can either use `Makefile`
-   or `CMake`
+    ### **Octave version 4.4 or later**
+    Put CasADi binaries into `<acados_root_folder>/external/casadi-octave` :
+    ```
+    cd external
+    wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.5/casadi-linux-octave-4.4.1-v3.4.5.tar.gz
+    mkdir -p casadi-octave
+    tar -xf casadi-linux-octave-4.4.1-v3.4.5.tar.gz -C casadi-octave
+    ```
 
+    ### **Octave version 4.2 or earliear**
+    Put CasADi binaries into `<acados_root_folder>/external/casadi-octave` :
 
-### CMake
+    ```
+    cd external
+    wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
+    mkdir -p casadi-octave
+    tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave
+    cd ..
+    ```
 
-```bash
-mkdir -p build
-cd build
-cmake ..
-make install
-```
+1. Build and install `acados`.
+Both a CMake and a Makefile based build system is supported at the moment.
+Please choose one and proceed with the corresponding paragraph.
 
-Optional CMake arguments:
-* `-DACADOS_WITH_OSQP=OFF/ON`
-* `-DACADOS_INSTALL_DIR=<path_to_acados_installation_folder>`
+    ### **CMake**
+    Set the `BLASFEO_TARGET` in `<acados_root_folder>/CMakeLists.txt`.
+    For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
+    Install acados as follows
+    ```
+    mkdir -p build
+    cd build
+    cmake .. (with optional arguments e.g. -DACADOS_WITH_OSQP=OFF/ON -DACADOS_INSTALL_DIR=<path_to_acados_installation_folder>)
+    make install
+    ```
 
+    ### **Make**
+    Set the `BLASFEO_TARGET` in `<acados_root_folder>/Makefile.rule`.
+    For a list of supported targets, we refer to https://github.com/giaf/blasfeo/blob/master/README.md .
+    Install acados as follows
+    ```
+    make shared_library
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_acados_folder>/lib
+    make examples_c
+    make run_examples_c
+    ```
 
-### Makefile
-
-```bash
-make acados_shared
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_acados_folder>/lib
-make examples_c
-make run_examples_c
-```
 ### Interfaces installation
 For the installation of Python/MATLAB interfaces, please refer to the [Interfaces](../interfaces/index.md) page.

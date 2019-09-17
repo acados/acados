@@ -1,22 +1,41 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #include "acados/sim/sim_collocation_utils.h"
 
 #include <math.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -151,22 +170,9 @@ int gauss_nodes_work_calculate_size(int ns)
 }
 
 
-
+// TODO(all): understand how this works and leave a comment!
 void gauss_nodes(int ns, double *nodes, void *work)
 {
-    //    if ( ns == 1 ) {         // GL2
-    //        nodes[0] = 1.0/2.0;
-    //    } else if ( ns == 2 ) {  // GL4
-    //        memcpy(nodes,
-    //                ((double[]) {1.0/2.0+sqrt(3.0)/6.0,
-    //                1.0/2.0-sqrt(3.0)/6.0}), sizeof(*nodes) * (ns));
-    //    } else if ( ns == 3 ) {  // GL6
-    //        memcpy(nodes,
-    //                ((double[]) {1.0/2.0-sqrt(15.0)/10.0, 1.0/2.0,
-    //                1.0/2.0+sqrt(15.0)/10.0}), sizeof(*nodes) * (ns));
-    //    } else {
-    //        // throw error somehow?
-    //    }
     int N = ns - 1;
     int N1 = N + 1;
     int N2 = N + 2;
@@ -191,7 +197,7 @@ void gauss_nodes(int ns, double *nodes, void *work)
     double *der_lgvm = (double *) c_ptr;
     c_ptr += N1 * sizeof(double);
 
-    // TODO(all): assert !!!
+    assert((char *) work + gauss_nodes_work_calculate_size(ns) >= c_ptr);
 
     double a = 0.0;
     double b = 1.0;  // code for collocation interval [a,b]
@@ -234,7 +240,8 @@ void gauss_nodes(int ns, double *nodes, void *work)
             if (err < fabs(y[i] - y_prev[i])) err = fabs(y[i] - y_prev[i]);
         }
     }
-    for (int i = 0; i < N1; i++) nodes[i] = (a * (1 - y[i]) + 0.5 * b * (1 + y[i]));
+    for (int i = 0; i < N1; i++)
+        nodes[i] = (a * (1 - y[i]) + 0.5 * b * (1 + y[i]));
 
     return;
 }
@@ -254,7 +261,7 @@ int gauss_simplified_work_calculate_size(int ns)
 }
 
 
-
+// TODO(all): understand how this works and leave a comment!
 void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
 {
     char *c_ptr = work;
@@ -275,7 +282,7 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
     int *perm = (int *) c_ptr;
     c_ptr += ns * sizeof(int);
 
-    // TODO(all): assert !!!
+    assert((char *) work + gauss_simplified_work_calculate_size(ns) >= c_ptr);
 
     char simplified[MAX_STR_LEN];
 
@@ -402,7 +409,7 @@ void butcher_table(int ns, double *nodes, double *b, double *A, void *work)
     int *perm = (int *) c_ptr;
     c_ptr += ns * sizeof(int);
 
-    // TODO(all): assert !!!
+    assert((char *) work + butcher_table_work_calculate_size(ns) >= c_ptr);
 
     for (j = 0; j < ns; j++)
     {

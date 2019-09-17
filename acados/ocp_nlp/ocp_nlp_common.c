@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 
@@ -147,9 +165,6 @@ int ocp_nlp_dims_calculate_size_self(int N)
     // constraints
     size += (N + 1) * sizeof(void *);
 
-    // qp solver
-    size += ocp_qp_dims_calculate_size(N);
-
     // regularization
     size += ocp_nlp_reg_dims_calculate_size(N);
 
@@ -185,6 +200,9 @@ int ocp_nlp_dims_calculate_size(void *config_)
     // constraints
     for (ii = 0; ii <= N; ii++)
         size += config->constraints[ii]->dims_calculate_size(config->constraints[ii]);
+
+    // qp solver
+    size += config->qp_solver->dims_calculate_size(config->qp_solver, N);
 
     return size;
 }
@@ -230,27 +248,44 @@ ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
     dims->constraints = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
 
-    // qp solver
-    dims->qp_solver = ocp_qp_dims_assign(N, c_ptr);
-    c_ptr += ocp_qp_dims_calculate_size(N);
-
     // regularization
     dims->regularize = ocp_nlp_reg_dims_assign(N, c_ptr);
     c_ptr += ocp_nlp_reg_dims_calculate_size(N);
 
     /* initialize qp_solver dimensions */
-    dims->qp_solver->N = N;
-    for (ii = 0; ii <= N; ii++)
-    {
+//    dims->qp_solver->N = N;
+//    for (ii = 0; ii <= N; ii++)
+//    {
         // TODO(dimitris): values below are needed for reformulation of QP when soft constraints
         //   are not supported. Make this a bit more transparent as it clushes with nbx/nbu above.
-        dims->qp_solver->nsbx[ii] = 0;
-        dims->qp_solver->nsbu[ii] = 0;
-        dims->qp_solver->nsg[ii] = 0;
-    }
+//        dims->qp_solver->nsbx[ii] = 0;
+//        dims->qp_solver->nsbu[ii] = 0;
+//        dims->qp_solver->nsg[ii] = 0;
+//    }
 
     // N
     dims->N = N;
+
+	// initialize dimensions to zero by default
+	// nv
+	for(ii=0; ii<=N; ii++)
+		dims->nv[ii] = 0;
+	// nx
+	for(ii=0; ii<=N; ii++)
+		dims->nx[ii] = 0;
+	// nu
+	for(ii=0; ii<=N; ii++)
+		dims->nu[ii] = 0;
+	// ni
+	for(ii=0; ii<=N; ii++)
+		dims->ni[ii] = 0;
+	// nz
+	for(ii=0; ii<=N; ii++)
+		dims->nz[ii] = 0;
+	// ns
+	for(ii=0; ii<=N; ii++)
+		dims->ns[ii] = 0;
+	// TODO initialize dims to zero by default also in modules !!!!!!!
 
     // assert
     assert((char *) raw_memory + ocp_nlp_dims_calculate_size_self(N) >= c_ptr);
@@ -295,6 +330,10 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
             config->constraints[ii]->dims_assign(config->constraints[ii], c_ptr);
         c_ptr += config->constraints[ii]->dims_calculate_size(config->constraints[ii]);
     }
+
+    // qp solver
+    dims->qp_solver = config->qp_solver->dims_assign(config->qp_solver, N, c_ptr);
+    c_ptr += config->qp_solver->dims_calculate_size(config->qp_solver, N);
 
     // assert
     assert((char *) raw_memory + ocp_nlp_dims_calculate_size(config_) >= c_ptr);
@@ -543,26 +582,13 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 
 		// regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, (char *) field, int_value);
-
-        // Note(oj): how to decide if ocp_qp or dense? plan not available here..
-        // Note(giaf): the NLP solver always calls a xcond_solver,
-        //             so only its dimensions should be set now
-        // if( is_ocp_qp_solver )
-        // {
-            // set nbx, respectively nbu in qp_solver
-            // nb in qp_solver gets updated in the setter
-        // config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i,field, &value[i]);
-        // }
-        // else  // dense_qp
-        // {
-        //     // update nb in qp_solver
-        //     int nb;
-        //     config->constraints[i]->dims_get(config->constraints[i],
-        //                            dims->constraints[i], "nb", &nb);
-        //     config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nb", &nb);
-        // }
     }
-    if ( (!strcmp(field, "ng")) || (!strcmp(field, "nh")) )
+    else if ( (!strcmp(field, "nsbx")) || (!strcmp(field, "nsbu")) )
+    {
+		// qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
+    }
+    else if ( (!strcmp(field, "ng")) || (!strcmp(field, "nh")) )
     {
         // update ng_qp_solver in qp_solver
         int ng, nh, ng_qp_solver;
@@ -577,6 +603,20 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 		// regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, "ng", &ng_qp_solver);
     }
+    else if ( (!strcmp(field, "nsg")) || (!strcmp(field, "nsh")) )
+    {
+        // update ng_qp_solver in qp_solver
+        int nsg, nsh, nsg_qp_solver;
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg", &nsg);
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsh", &nsh);
+
+        nsg_qp_solver = nsg + nsh;
+
+		// qp solver
+        config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &nsg_qp_solver);
+    }
+
+	return;
 }
 
 
@@ -760,19 +800,19 @@ int ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
     int size = sizeof(ocp_nlp_out);
 
-    size += 4 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux lam z
+    size += 4 * (N + 1) * sizeof(struct blasfeo_dvec);  // ux, lam, t, z
     size += 1 * N * sizeof(struct blasfeo_dvec);        // pi
 
     for (int ii = 0; ii < N; ii++)
     {
         size += 1 * blasfeo_memsize_dvec(nv[ii]);      // ux
         size += 1 * blasfeo_memsize_dvec(nz[ii]);      // z
+        size += 2 * blasfeo_memsize_dvec(2 * ni[ii]);  // lam, t
         size += 1 * blasfeo_memsize_dvec(nx[ii + 1]);  // pi
-        size += 2 * blasfeo_memsize_dvec(2 * ni[ii]);  // lam t
     }
     size += 1 * blasfeo_memsize_dvec(nv[N]);      // ux
     size += 1 * blasfeo_memsize_dvec(nz[N]);     // z
-    size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // lam t
+    size += 2 * blasfeo_memsize_dvec(2 * ni[N]);  // lam, t
 
     size += 8;   // initial align
     size += 8;   // blasfeo_struct align
@@ -787,6 +827,9 @@ int ocp_nlp_out_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
 ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory)
 {
+	// loop index
+	int ii;
+
     // extract sizes
     int N = dims->N;
     int *nv = dims->nv;
@@ -848,6 +891,21 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
         assign_and_advance_blasfeo_dvec_mem(2 * ni[ii], out->t + ii, &c_ptr);
     }
 
+	// zero solution
+	for(ii=0; ii<N; ii++)
+	{
+		blasfeo_dvecse(nv[ii], 0.0, out->ux+ii, 0);
+		blasfeo_dvecse(nz[ii], 0.0, out->z+ii, 0);
+		blasfeo_dvecse(nx[ii+1], 0.0, out->pi+ii, 0);
+		blasfeo_dvecse(2*ni[ii], 0.0, out->lam+ii, 0);
+		blasfeo_dvecse(2*ni[ii], 0.0, out->t+ii, 0);
+	}
+	ii = N;
+	blasfeo_dvecse(nv[ii], 0.0, out->ux+ii, 0);
+	blasfeo_dvecse(nz[ii], 0.0, out->z+ii, 0);
+	blasfeo_dvecse(2*ni[ii], 0.0, out->lam+ii, 0);
+	blasfeo_dvecse(2*ni[ii], 0.0, out->t+ii, 0);
+
     assert((char *) raw_memory + ocp_nlp_out_calculate_size(config, dims) >= c_ptr);
 
     return out;
@@ -865,12 +923,15 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
+    int *nz = dims->nz;
     int *nu = dims->nu;
     int *ni = dims->ni;
 
     int size = sizeof(ocp_nlp_memory);
 
-    size += 4 * (N + 1) * sizeof(struct blasfeo_dvec);  // cost_grad ineq_fun ineq_adj dyn_adj
+    size += (N + 1) * sizeof(bool); // set_sim_guess
+
+    size += 5 * (N + 1) * sizeof(struct blasfeo_dvec);  // cost_grad, ineq_fun, ineq_adj, dyn_adj, sim_guess
     size += 1 * N * sizeof(struct blasfeo_dvec);        // dyn_fun
 
     for (int ii = 0; ii < N; ii++)
@@ -879,10 +940,12 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
         size += 1 * blasfeo_memsize_dvec(nu[ii] + nx[ii]);  // dyn_adj
         size += 1 * blasfeo_memsize_dvec(nx[ii + 1]);       // dyn_fun
         size += 1 * blasfeo_memsize_dvec(2 * ni[ii]);       // ineq_fun
+        size += 1 * blasfeo_memsize_dvec(nx[ii] + nz[ii]); // sim_guess
     }
     size += 2 * blasfeo_memsize_dvec(nv[N]);          // cost_grad ineq_adj
     size += 1 * blasfeo_memsize_dvec(nu[N] + nx[N]);  // dyn_adj
     size += 1 * blasfeo_memsize_dvec(2 * ni[N]);      // ineq_fun
+    size += 1 * blasfeo_memsize_dvec(nx[N] + nz[N]);  // sim_guess
 
     size += 8;   // initial align
     size += 8;   // blasfeo_struct align
@@ -904,6 +967,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
+    int *nz = dims->nz;
     int *nu = dims->nu;
     int *ni = dims->ni;
 
@@ -913,6 +977,13 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // struct
     ocp_nlp_memory *mem = (ocp_nlp_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_memory);
+
+    // set_sim_guess
+    assign_and_advance_bool(N+1, &mem->set_sim_guess, &c_ptr);
+    for (int ii = 0; ii <= N; ++ii)
+    {
+        mem->set_sim_guess[ii] = false;
+    }
 
     // blasfeo_struct align
     align_char_to(8, &c_ptr);
@@ -927,6 +998,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     assign_and_advance_blasfeo_dvec_structs(N, &mem->dyn_fun, &c_ptr);
     // dyn_adj
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->dyn_adj, &c_ptr);
+    // sim_guess
+    assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->sim_guess, &c_ptr);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -956,6 +1029,15 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     {
         assign_and_advance_blasfeo_dvec_mem(nu[ii] + nx[ii], mem->dyn_adj + ii, &c_ptr);
     }
+    // sim_guess
+    for (int ii = 0; ii <= N; ++ii)
+    {
+        assign_and_advance_blasfeo_dvec_mem(nx[ii] + nz[ii], mem->sim_guess + ii, &c_ptr);
+        // set to 0;
+		blasfeo_dvecse(nx[ii] + nz[ii], 0.0, mem->sim_guess+ii, 0);
+        // printf("sim_guess ii %d: %p\n", ii, mem->sim_guess+ii);
+    }
+    // printf("created memory %p\n", mem);
 
     return mem;
 }

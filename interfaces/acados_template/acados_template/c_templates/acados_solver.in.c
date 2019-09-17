@@ -1,21 +1,36 @@
 /*
- *    This file is part of acados.
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
- *    acados is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation; either
- *    version 3 of the License, or (at your option) any later version.
+ * This file is part of acados.
  *
- *    acados is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
+ * The 2-Clause BSD License
  *
- *    You should have received a copy of the GNU Lesser General Public
- *    License along with acados; if not, write to the Free Software Foundation,
- *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // standard
 #include <stdio.h>
@@ -52,6 +67,8 @@
 #define NBU_   {{ ocp.dims.nbu }}
 #define NSBX_  {{ ocp.dims.nsbx }}
 #define NSBU_  {{ ocp.dims.nsbu }}
+#define NSH_  {{ ocp.dims.nsh }}
+#define NSHN_  {{ ocp.dims.nsh_e }}
 #define NSBXN_ {{ ocp.dims.nsbx_e }}
 #define NS_    {{ ocp.dims.ns }}
 #define NSN_   {{ ocp.dims.ns_e }}
@@ -112,6 +129,18 @@
 #define NSBU   1
 #else
 #define NSBU   NSBU_
+#endif
+
+#if NSH_ < 1
+#define NSH   1
+#else
+#define NSH   NSH_
+#endif
+
+#if NSHN_ < 1
+#define NSHN   1
+#else
+#define NSHN   NSHN_
 #endif
 
 #if NS_ < 1
@@ -243,7 +272,23 @@ int acados_create() {
 
     double usbu[NSBU];
     {%- for item in ocp.constraints.usbu %}
-    ubu[{{ loop.index0 }}] = {{ item }};
+    usbu[{{ loop.index0 }}] = {{ item }};
+    {%- endfor %}
+    
+    // set up soft bounds for nonlinear constraints
+    int idxsh[NSH];
+    {%- for item in ocp.constraints.idxsh %}
+    idxsh[{{ loop.index0 }}] = {{ item }};
+    {%- endfor %}
+
+    double lsh[NSH]; 
+    {%- for item in ocp.constraints.lsh %}
+    lsh[{{ loop.index0 }}] = {{ item }};
+    {%- endfor %}
+
+    double ush[NSH];
+    {%- for item in ocp.constraints.ush %}
+    ush[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     
     // bounds on x
@@ -351,6 +396,22 @@ int acados_create() {
     usbx_e[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
 
+    // set up soft bounds for nonlinear constraints
+    int idxsh_e[NSHN];
+    {%- for item in ocp.constraints.idxsh_e %}
+    idxsh_e[{{ loop.index0 }}] = {{ item }};
+    {%- endfor %}
+
+    double lsh_e[NSHN]; 
+    {%- for item in ocp.constraints.lsh_e %}
+    lsh[{{ loop.index0 }}] = {{ item }};
+    {%- endfor %}
+
+    double ush_e[NSHN];
+    {%- for item in ocp.constraints.ush_e %}
+    ush_e[{{ loop.index0 }}] = {{ item }};
+    {%- endfor %}
+    
     // set up general constraints for last stage 
     double C_e[NGN*NX];
     double lg_e[NGN];
@@ -516,6 +577,7 @@ int acados_create() {
     int nbu[N+1];
     int nsbx[N+1];
     int nsbu[N+1];
+    int nsh[N+1];
     int ns[N+1];
     int nb[N+1];
     int ng[N+1];
@@ -534,6 +596,7 @@ int acados_create() {
         nb[i]  = NBU_ + NBX_;
         nsbx[i]  = NSBX_;
         nsbu[i]  = NSBU_;
+        nsh[i]  = NSH_;
         ns[i]  = NS_;
         ng[i]  = NG_;
         nh[i]  = NH_;
@@ -548,6 +611,7 @@ int acados_create() {
     nb[0]  = NX_ + NBU_;
     nsbx[N]  = NSBXN_;
     nsbu[N]  = 0;
+    nsh[N]  = NSHN_;
     ns[N]  = NSN_;
 
     nu[N]  = 0;
@@ -613,6 +677,7 @@ int acados_create() {
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbu", &nsbu[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "ng", &ng[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsh", &nsh[i]);
     }
 
     {%- if ocp.dims.npd > 0 %}
@@ -853,9 +918,11 @@ int acados_create() {
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbu", lbu);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubu", ubu);
 
+    {%- if ocp.dims.nsbx > 0 %} 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsbx", idxsbx);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsbx", lsbx);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbx", usbx);
+    {%- endif %}
     
     {%- if ocp.dims.nsbu > 0 %} 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsbu", idxsbu);
@@ -863,6 +930,12 @@ int acados_create() {
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbu", usbu);
     {%- endif %}
     
+    {%- if ocp.dims.nsh > 0 %} 
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsh", idxsh);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsh", lsh);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ush", ush);
+    {%- endif %}
+
     // bounds for intermediate stages
     for (int i = 1; i < N; ++i)
     {
@@ -884,6 +957,12 @@ int acados_create() {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsbu", idxsbu);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsbu", lsbu);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "usbu", usbu);
+        {%- endif %}
+
+        {%- if ocp.dims.nsh > 0 %} 
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsh", idxsh);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsh", lsh);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ush", ush);
         {%- endif %}
 
     }
@@ -912,6 +991,12 @@ int acados_create() {
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usbx", usbx_e);
     {%- endif %}
     
+    {%- if ocp.dims.nsh_e > 0 %} 
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsh", idxsh_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsh", lsh_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ush", ush_e);
+    {%- endif %}
+
     {%- if ocp.dims.ng_e > 0 %} 
     // general constraints for last stage
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "C", C_e);

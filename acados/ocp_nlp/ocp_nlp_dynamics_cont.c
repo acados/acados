@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
@@ -170,6 +188,30 @@ void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *fiel
 }
 
 
+void ocp_nlp_dynamics_cont_dims_get(void *config_, void *dims_, const char *field, int* value)
+{
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+    if (!strcmp(field, "nx"))
+    {
+        *value = dims->nx;
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        *value = dims->nu;
+    }
+    else
+    {
+        // get GNSF dims from integrator module
+        ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+        ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
+        sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
+
+        sim_config_->dims_get(sim_config_, dims->sim, field, value);
+    }
+// printf("\nexiting: ocp_nlp_dynamics_cont_dims_get, %d\n", *value);
+
+}
+
 
 /************************************************
  * options
@@ -252,17 +294,17 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     ocp_nlp_dynamics_cont_opts *opts = opts_;
     sim_config *sim_config_ = config->sim_solver;
 
-    if(!strcmp(field, "compute_adj"))
+    if (!strcmp(field, "compute_adj"))
     {
         int *int_ptr = value;
         opts->compute_adj = *int_ptr;
     }
-    else if(!strcmp(field, "compute_hess"))
+    else if (!strcmp(field, "compute_hess"))
     {
         int *int_ptr = value;
         opts->compute_hess = *int_ptr;
         bool tmp_bool = true;
-        if(*int_ptr==0)
+        if (*int_ptr==0)
         {
             tmp_bool = false;
         }
@@ -271,7 +313,7 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     else
     {
         int return_value = sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
-        if(return_value!=ACADOS_SUCCESS)
+        if (return_value!=ACADOS_SUCCESS)
         {
             printf("\nerror: field %s not available in ocp_nlp_dynamics_cont_opts_set\n", field);
             exit(1);
@@ -296,7 +338,7 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
 
     // extract dims
     int nx = dims->nx;
-    int nz = dims->nz;
+    // int nz = dims->nz;
     int nu = dims->nu;
     int nx1 = dims->nx1;
 
@@ -306,8 +348,6 @@ int ocp_nlp_dynamics_cont_memory_calculate_size(void *config_, void *dims_, void
 
     size += 1 * blasfeo_memsize_dvec(nu + nx + nx1);  // adj
     size += 1 * blasfeo_memsize_dvec(nx1);            // fun
-    size += 1 * blasfeo_memsize_dvec(nz);             // z at t = 0
-    size += 1 * blasfeo_memsize_dmat(nz, nu + nx);    // dzdux_tran
 
     size +=
         config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
@@ -329,7 +369,7 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
 
     // extract dims
     int nx = dims->nx;
-    int nz = dims->nz;
+    // int nz = dims->nz;
     int nu = dims->nu;
     int nx1 = dims->nx1;
 
@@ -343,6 +383,8 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     c_ptr +=
         config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
 
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
 
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + nx1, &memory->adj, &c_ptr);
@@ -350,14 +392,6 @@ void *ocp_nlp_dynamics_cont_memory_assign(void *config_, void *dims_, void *opts
     // fun
     assign_and_advance_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
 
-    // z
-    assign_and_advance_blasfeo_dvec_mem(nz, &memory->z_out, &c_ptr);
-
-    // blasfeo_mem align
-    align_char_to(64, &c_ptr);
-
-    // dzdux_tran
-    assign_and_advance_blasfeo_dmat_mem(nu + nx, nz, &memory->dzdux_tran, &c_ptr);
     assert((char *) raw_memory +
                ocp_nlp_dynamics_cont_memory_calculate_size(config_, dims, opts_) >=
            c_ptr);
@@ -440,11 +474,34 @@ void ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void
 
 
 
-void ocp_nlp_dynamics_cont_memory_set_z_alg_ptr(struct blasfeo_dvec *z, void *memory_)
+void ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr(struct blasfeo_dmat *mat, void *memory_)
 {
     ocp_nlp_dynamics_cont_memory *memory = memory_;
 
-    memory->z = z;
+    memory->dzduxt = mat;
+
+    return;
+}
+
+
+
+void ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr(struct blasfeo_dvec *vec, bool *bool_ptr, void *memory_)
+{
+    ocp_nlp_dynamics_cont_memory *memory = memory_;
+
+    memory->sim_guess = vec;
+    memory->set_sim_guess = bool_ptr;
+
+    return;
+}
+
+
+
+void ocp_nlp_dynamics_cont_memory_set_z_alg_ptr(struct blasfeo_dvec *vec, void *memory_)
+{
+    ocp_nlp_dynamics_cont_memory *memory = memory_;
+
+    memory->z_alg = vec;
 
     return;
 }
@@ -632,11 +689,20 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     work->sim_in->model = model->sim_model;
     work->sim_in->T = model->T;
 
-    blasfeo_unpack_dvec(nz, mem->z, 0, work->sim_in->z);
-
     // pass state and control to integrator
     blasfeo_unpack_dvec(nu, mem->ux, 0, work->sim_in->u);
     blasfeo_unpack_dvec(nx, mem->ux, nu, work->sim_in->x);
+
+    // printf("sim_guess, bool %d\n", mem->set_sim_guess[0]);
+    // blasfeo_print_exp_dvec(nx + nz, mem->sim_guess, 0);
+
+    if (mem->set_sim_guess!=NULL && mem->set_sim_guess[0])
+    {
+        config->sim_solver->memory_set(config->sim_solver, work->sim_in->dims, mem->sim_solver,
+                                        "guesses_blasfeo", mem->sim_guess);
+        // only use/pass the initial guess once
+        mem->set_sim_guess[0] = false;
+    }
 
     // initialize seeds
     // TODO fix dims if nx!=nx1 !!!!!!!!!!!!!!!!!
@@ -662,15 +728,15 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_pack_tran_dmat(nx1, nu, work->sim_out->S_forw + nx1 * nx, nx1, mem->BAbt, 0, 0);
     // A
     blasfeo_pack_tran_dmat(nx1, nx, work->sim_out->S_forw + 0, nx1, mem->BAbt, nu, 0);
-    // dzdux_tran
-    blasfeo_pack_tran_dmat(nz, nu, work->sim_out->S_algebraic + nx*nz, nz, &mem->dzdux_tran, 0, 0);
-    blasfeo_pack_tran_dmat(nz, nx, work->sim_out->S_algebraic + 0, nz, &mem->dzdux_tran, nu, 0);
-    // blasfeo_print_dmat(nx + nu, nz, &mem->dzdux_tran, 0, 0);
+    // dzduxt
+    blasfeo_pack_tran_dmat(nz, nu, work->sim_out->S_algebraic + nx*nz, nz, mem->dzduxt, 0, 0);
+    blasfeo_pack_tran_dmat(nz, nx, work->sim_out->S_algebraic + 0, nz, mem->dzduxt, nu, 0);
+    // blasfeo_print_dmat(nx + nu, nz, mem->dzduxt, 0, 0);
 
     // function
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
-    blasfeo_pack_dvec(nz, work->sim_out->zn, &mem->z_out, 0);
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
+    blasfeo_pack_dvec(nz, work->sim_out->zn, mem->z_alg, 0); // TODO rename sim_out->zn into z0n ???
 
     // adjoint
     if (opts->compute_adj)
@@ -731,6 +797,10 @@ int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, v
     // call integrator
     int status = config->sim_solver->precompute(config->sim_solver, work->sim_in, work->sim_out,
                                    opts->sim_solver, mem->sim_solver, work->sim_solver);
+    
+    config->sim_solver->memory_set_to_zero(config->sim_solver, work->sim_in->dims,
+                                    opts->sim_solver, mem->sim_solver, "guesses");
+
     return status;
 }
 
@@ -743,6 +813,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_dynamics_cont_dims_calculate_size;
     config->dims_assign = &ocp_nlp_dynamics_cont_dims_assign;
     config->dims_set = &ocp_nlp_dynamics_cont_dims_set;
+    config->dims_get = &ocp_nlp_dynamics_cont_dims_get;
     config->dims_initialize = &ocp_nlp_dynamics_cont_dims_initialize;
     config->model_calculate_size = &ocp_nlp_dynamics_cont_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_cont_model_assign;
@@ -761,6 +832,8 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->memory_set_pi_ptr = &ocp_nlp_dynamics_cont_memory_set_pi_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_cont_memory_set_BAbt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr;
+    config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr;
+    config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_cont_memory_set_z_alg_ptr;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;

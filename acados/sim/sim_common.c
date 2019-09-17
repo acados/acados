@@ -1,18 +1,36 @@
 /*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren, Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor, Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan, Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
  * This file is part of acados.
  *
  * The 2-Clause BSD License
  *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
+
 
 // standard
 #include <assert.h>
@@ -71,9 +89,8 @@ int sim_in_calculate_size(void *config_, void *dims)
     config->dims_get(config_, dims, "nu", &nu);
     config->dims_get(config_, dims, "nz", &nz);
 
-    size += 2 * nx * sizeof(double);          // x, xdot
+    size += nx * sizeof(double);              // x
     size += nu * sizeof(double);              // u
-    size += nz * sizeof(double);              // z
     size += nx * (nx + nu) * sizeof(double);  // S_forw (max dimension)
     size += (nx + nu) * sizeof(double);       // S_adj
 
@@ -109,14 +126,6 @@ sim_in *sim_in_assign(void *config_, void *dims, void *raw_memory)
 
     assign_and_advance_double(nx, &in->x, &c_ptr);
     assign_and_advance_double(nu, &in->u, &c_ptr);
-    assign_and_advance_double(nz, &in->z, &c_ptr);
-    assign_and_advance_double(nx, &in->xdot, &c_ptr);
-
-    // initialization of xdot, z is 0 if not changed
-    for (int ii = 0; ii < nx; ii++)
-        in->xdot[ii] = 0;
-    for (int ii = 0; ii < nz; ii++)
-        in->z[ii] = 0;
 
     assign_and_advance_double(nx * NF, &in->S_forw, &c_ptr);
     assign_and_advance_double(NF, &in->S_adj, &c_ptr);
@@ -148,46 +157,25 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
     {
         int nx;
         config->dims_get(config_, dims_, "nx", &nx);
-        int ii;
         double *x = value;
-        for (ii=0; ii < nx; ii++)
+        for (int ii=0; ii < nx; ii++)
             in->x[ii] = x[ii];
-    }
-    else if (!strcmp(field, "xdot"))
-    {
-        int nx;
-        config->dims_get(config_, dims_, "nx", &nx);
-        int ii;
-        double *xdot = value;
-        for (ii=0; ii < nx; ii++)
-            in->xdot[ii] = xdot[ii];
     }
     else if (!strcmp(field, "u"))
     {
         int nu;
         config->dims_get(config_, dims_, "nu", &nu);
-        int ii;
         double *u = value;
-        for (ii=0; ii < nu; ii++)
+        for (int ii=0; ii < nu; ii++)
             in->u[ii] = u[ii];
-    }
-    else if (!strcmp(field, "z"))
-    {
-        int nz;
-        config->dims_get(config_, dims_, "nz", &nz);
-        int ii;
-        double *z = value;
-        for (ii=0; ii < nz; ii++)
-            in->z[ii] = z[ii];
     }
     else if (!strcmp(field, "Sx"))
     {
         // note: this assumes nf = nu+nx !!!
         int nx;
         config->dims_get(config_, dims_, "nx", &nx);
-        int ii;
         double *Sx = value;
-        for (ii=0; ii < nx*nx; ii++)
+        for (int ii=0; ii < nx*nx; ii++)
             in->S_forw[ii] = Sx[ii];
     }
     else if (!strcmp(field, "Su"))
@@ -196,9 +184,8 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
-        int ii;
         double *Su = value;
-        for (ii=0; ii < nx*nu; ii++)
+        for (int ii=0; ii < nx*nu; ii++)
             in->S_forw[nx*nx+ii] = Su[ii];
     }
     else if (!strcmp(field, "S_forw"))
@@ -207,9 +194,8 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
-        int ii;
         double *S_forw = value;
-        for (ii=0; ii < nx*(nu+nx); ii++)
+        for (int ii=0; ii < nx*(nu+nx); ii++)
             in->S_forw[ii] = S_forw[ii];
     }
     else if (!strcmp(field, "S_adj"))
@@ -218,9 +204,8 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
-        int ii;
         double *S_adj = value;
-        for (ii=0; ii < nx+nu; ii++)
+        for (int ii=0; ii < nx+nu; ii++)
             in->S_adj[ii] = S_adj[ii];
     }
     else if (!strcmp(field, "seed_adj"))
@@ -230,11 +215,10 @@ int sim_in_set_(void *config_, void *dims_, sim_in *in, const char *field, void 
         int nx, nu;
         config->dims_get(config_, dims_, "nx", &nx);
         config->dims_get(config_, dims_, "nu", &nu);
-        int ii;
         double *seed_adj = value;
-        for (ii=0; ii < nx; ii++)
+        for (int ii=0; ii < nx; ii++)
             in->S_adj[ii] = seed_adj[ii];
-        for (ii=0; ii < nu; ii++)
+        for (int ii=0; ii < nu; ii++)
             in->S_adj[nx+ii] = 0;
     }
     else
@@ -330,10 +314,17 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
     {
         int nx;
         config->dims_get(config_, dims_, "nx", &nx);
-        int ii;
         double *xn = value;
-        for (ii=0; ii < nx; ii++)
+        for (int ii=0; ii < nx; ii++)
             xn[ii] = out->xn[ii];
+    }
+    else if (!strcmp(field, "zn"))
+    {
+        int nz;
+        config->dims_get(config_, dims_, "nz", &nz);
+        double *zn = value;
+        for (int ii=0; ii < nz; ii++)
+            zn[ii] = out->zn[ii];
     }
     else if (!strcmp(field, "S_forw"))
     {
@@ -389,9 +380,21 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
         for (ii=0; ii < (nu+nx)*(nu+nx); ii++)
             S_hess[ii] = out->S_hess[ii];
     }
+    else if (!strcmp(field, "S_algebraic"))
+    {
+        // note: this assumes nf = nu+nx !!!
+        int nx, nu, nz;
+        config->dims_get(config_, dims_, "nz", &nz);
+        config->dims_get(config_, dims_, "nx", &nx);
+        config->dims_get(config_, dims_, "nu", &nu);
+        double *S_algebraic = value;
+        for (int ii=0; ii < nz*(nu+nx); ii++)
+            S_algebraic[ii] = out->S_algebraic[ii];
+    }
     else
     {
-        status = ACADOS_FAILURE;
+        printf("sim_out_get_: field %s not supported \n", field);
+        exit(1);
     }
 
     return status;
@@ -454,7 +457,6 @@ int sim_opts_set_(sim_opts *opts, const char *field, void *value)
     else
     {
         printf("\nerror: field %s not available in sim_opts_set\n", field);
-        status = ACADOS_FAILURE; // TODO remove
         exit(1);
     }
     return status; // TODO remove

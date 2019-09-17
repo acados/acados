@@ -1,3 +1,36 @@
+#
+# Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+# Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+# Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+# Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
+#
+# This file is part of acados.
+#
+# The 2-Clause BSD License
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.;
+#
+
 from acados_template import *
 import acados_template as at
 from export_ode_model import *
@@ -6,23 +39,23 @@ import scipy.linalg
 from ctypes import *
 
 # create render arguments
-ra = acados_ocp_nlp()
+ocp = acados_ocp_nlp()
 
 # export model 
 model = export_ode_model()
 
 # set model_name 
-ra.model_name = model.name
+ocp.model_name = model.name
 
-Tf = 1.0
+Tf = 2.0
 nx = model.x.size()[0]
 nu = model.u.size()[0]
 ny = nx + nu
 ny_e = nx
-N = 100
+N = 50
 
 # set ocp_nlp_dimensions
-nlp_dims     = ra.dims
+nlp_dims     = ocp.dims
 nlp_dims.nx  = nx 
 nlp_dims.ny  = ny 
 nlp_dims.ny_e = ny_e 
@@ -32,15 +65,15 @@ nlp_dims.nu  = model.u.size()[0]
 nlp_dims.N   = N
 
 # set weighting matrices
-nlp_cost = ra.cost
+nlp_cost = ocp.cost
 Q = np.eye(4)
-Q[0,0] = 1e3
-Q[1,1] = 1e-2
-Q[2,2] = 1e3
+Q[0,0] = 1e0
+Q[1,1] = 1e2
+Q[2,2] = 1e-3
 Q[3,3] = 1e-2
 
 R = np.eye(1)
-R[0,0] = 1e-2
+R[0,0] = 1e0
 
 nlp_cost.W = scipy.linalg.block_diag(Q, R) 
 
@@ -70,31 +103,33 @@ nlp_cost.yref  = np.zeros((ny, ))
 nlp_cost.yref_e = np.zeros((ny_e, ))
 
 # setting bounds
-Fmax = 80.0
-nlp_con = ra.constraints
+Fmax = 2.0
+nlp_con = ocp.constraints
 nlp_con.lbu = np.array([-Fmax])
 nlp_con.ubu = np.array([+Fmax])
-nlp_con.x0 = np.array([0.0, 0.0, 3.14, 0.0])
+nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
+# nlp_con.x0 = np.array([0.0, 0.5, 0.0, 0.0])
 nlp_con.idxbu = np.array([0])
 
 # set constants
-# ra.constants['PI'] = 3.1415926535897932
+# ocp.constants['PI'] = 3.1415926535897932
 
 # set QP solver
-# ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
-ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
-ra.solver_config.integrator_type = 'ERK'
+# ocp.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+ocp.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
+ocp.solver_config.hessian_approx = 'GAUSS_NEWTON'
+ocp.solver_config.integrator_type = 'ERK'
 
 # set prediction horizon
-ra.solver_config.tf = Tf
-ra.solver_config.nlp_solver_type = 'SQP'
+ocp.solver_config.tf = Tf
+ocp.solver_config.nlp_solver_type = 'SQP'
+# ocp.solver_config.nlp_solver_type = 'SQP_RTI'
 
 # set header path
-ra.acados_include_path  = '/usr/local/include'
-ra.acados_lib_path      = '/usr/local/lib'
+ocp.acados_include_path  = '/usr/local/include'
+ocp.acados_lib_path      = '/usr/local/lib'
 
-acados_solver = generate_solver(model, ra, json_file = 'acados_ocp.json')
+acados_solver = generate_solver(model, ocp, json_file = 'acados_ocp.json')
 
 Nsim = 100
 
@@ -123,19 +158,20 @@ for i in range(Nsim):
     # update reference
     for j in range(N):
         acados_solver.set(j, "yref", np.array([0, 0, 0, 0, 0]))
+    acados_solver.set(N, "yref", np.array([0, 0, 0, 0]))
 
 # plot results
 import matplotlib
 import matplotlib.pyplot as plt
 t = np.linspace(0.0, Tf/N, Nsim)
 plt.subplot(2, 1, 1)
-plt.step(t, simU, 'r')
+plt.step(t, simU, color='r')
 plt.title('closed-loop simulation')
 plt.ylabel('u')
 plt.xlabel('t')
 plt.grid(True)
 plt.subplot(2, 1, 2)
-plt.plot(t, simX[:,2])
+plt.plot(t, simX[:,1])
 plt.ylabel('theta')
 plt.xlabel('t')
 plt.grid(True)
