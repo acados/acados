@@ -826,6 +826,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     }
 
+    // sim_method_jac_reuse
+    sprintf(matlab_field_name, "sim_method_jac_reuse");
+    matlab_array = mxGetField( matlab_opts, 0, matlab_field_name );
+    if (matlab_array!=NULL)
+    {
+        int matlab_size = (int) mxGetNumberOfElements( matlab_array );
+        MEX_DIM_CHECK_VEC_TWO(fun_name, matlab_field_name, matlab_size, 1, N);
+
+        if (matlab_size == 1)
+        {
+            bool sim_method_jac_reuse = mxGetScalar( matlab_array );
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_dynamics_opts_set(config, opts, ii, "jac_reuse", &sim_method_jac_reuse);
+            }
+        }
+        else
+        {
+            double *values = mxGetPr(matlab_array);
+            for (int ii=0; ii<N; ii++)
+            {
+                bool sim_method_jac_reuse = (int) values[ii];
+                // mexPrintf("\nsim_method_jac_reuse[%d] = %d", ii, sim_method_jac_reuse);
+                ocp_nlp_dynamics_opts_set(config, opts, ii, "jac_reuse", &sim_method_jac_reuse);
+            }
+        }
+    }
 
     /* in */
     ocp_nlp_in *in = ocp_nlp_in_create(config, dims);
