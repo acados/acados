@@ -39,8 +39,9 @@
 #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
-#include "acados_solver_{{ocp.model_name}}.h"
-#include "acados_sim_solver_{{ocp.model_name}}.h"
+#include "acados_solver_{{ocp.model.name}}.h"
+#include "acados_sim_solver_{{ocp.model.name}}.h"
+
 
 // ** global data **
 ocp_nlp_in * nlp_in;
@@ -104,7 +105,7 @@ external_function_casadi * p_constraint_e;
 external_function_casadi * h_constraint;
 {% endif %}
 {% if ocp.dims.nh_e > 0 %}
-external_function_casadi * h_constraint_e;
+external_function_casadi h_e_constraint;
 {% endif %}
 
 int main() {

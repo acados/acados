@@ -31,8 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef ACADOS_SOLVER_{{ocp.model_name}}_H_
-#define ACADOS_SOLVER_{{ocp.model_name}}_H_
+
+#ifndef ACADOS_SOLVER_{{ocp.model.name}}_H_
+#define ACADOS_SOLVER_{{ocp.model.name}}_H_
 
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
@@ -101,7 +102,7 @@ extern external_function_casadi * p_constraint_e;
 extern external_function_casadi * h_constraint;
 {% endif %}
 {% if ocp.dims.nh_e > 0 %}
-extern external_function_casadi * h_constraint_e;
+extern external_function_casadi h_e_constraint;
 {% endif %}
 
-#endif  // ACADOS_SOLVER_{{ocp.model_name}}_H_
+#endif  // ACADOS_SOLVER_{{ocp.model.name}}_H_

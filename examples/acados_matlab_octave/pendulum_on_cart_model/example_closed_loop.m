@@ -34,6 +34,8 @@
 %% test of native matlab interface
 clear all
 
+GENERATE_C_CODE = 0;
+
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
@@ -246,6 +248,9 @@ ocp
 ocp.C_ocp
 ocp.C_ocp_ext_fun
 
+if GENERATE_C_CODE == 1
+    ocp.generate_c_code()
+end
 
 
 %% acados sim model

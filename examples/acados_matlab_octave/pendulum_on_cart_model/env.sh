@@ -55,10 +55,12 @@ echo "ACADOS_INSTALL_DIR=$ACADOS_INSTALL_DIR"
 # export casadi folder and matlab/octave mex folder
 # MATLAB case
 export MATLABPATH=$MATLABPATH:$ACADOS_INSTALL_DIR/external/casadi-matlab/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/
+export MATLABPATH=$MATLABPATH:$ACADOS_INSTALL_DIR/external/casadi-matlab/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab/acados_template_mex/
 echo
 echo "MATLABPATH=$MATLABPATH"
 # Octave case
 export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/
+export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-matlab/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/acados_template_mex/
 echo
 echo "OCTAVE_PATH=$OCTAVE_PATH"
 
@@ -68,5 +70,6 @@ echo "OCTAVE_PATH=$OCTAVE_PATH"
 # if model folder not specified assume this folder
 MODEL_FOLDER=${MODEL_FOLDER:-"./build"}
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/interfaces/acados_template/tera_renderer/t_renderer/target/release
 echo
 echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
