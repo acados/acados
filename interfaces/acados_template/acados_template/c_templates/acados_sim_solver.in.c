@@ -64,6 +64,7 @@ int {{ ocp.model_name}}_acados_sim_create() {
     double Td = {{ ocp.solver_config.tf }}/ {{ ocp.dims.N }};
 
     {% if ocp.solver_config.integrator_type == "IRK" %}
+
     {% if ocp.dims.np < 1 %}
     sim_impl_dae_fun = (external_function_casadi *) malloc(sizeof(external_function_casadi));
     sim_impl_dae_fun_jac_x_xdot_z = (external_function_casadi *) malloc(sizeof(external_function_casadi));
@@ -73,6 +74,7 @@ int {{ ocp.model_name}}_acados_sim_create() {
     sim_impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     sim_impl_dae_jac_x_xdot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     {% endif %}
+
 	// external functions (implicit model)
 	sim_impl_dae_fun->casadi_fun  = &{{ ocp.model_name }}_impl_dae_fun;
 	sim_impl_dae_fun->casadi_work = &{{ ocp.model_name }}_impl_dae_fun_work;
@@ -80,7 +82,12 @@ int {{ ocp.model_name}}_acados_sim_create() {
 	sim_impl_dae_fun->casadi_sparsity_out = &{{ ocp.model_name }}_impl_dae_fun_sparsity_out;
 	sim_impl_dae_fun->casadi_n_in = &{{ ocp.model_name }}_impl_dae_fun_n_in;
 	sim_impl_dae_fun->casadi_n_out = &{{ ocp.model_name }}_impl_dae_fun_n_out;
-	external_function_param_casadi_create(sim_impl_dae_fun, {{ ocp.dims.np }});
+
+    {% if ocp.dims.np < 1 %}
+    external_function_casadi_create(sim_impl_dae_fun);
+    {% else %}
+    external_function_param_casadi_create(sim_impl_dae_fun, {{ ocp.dims.np }});
+    {% endif %}
 
 	// external_function_casadi impl_dae_fun_jac_x_xdot_z;
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_fun = &{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z;
@@ -89,7 +96,12 @@ int {{ ocp.model_name}}_acados_sim_create() {
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_out = &{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z_sparsity_out;
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_n_in = &{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z_n_in;
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_n_out = &{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z_n_out;
-	external_function_param_casadi_create(sim_impl_dae_fun_jac_x_xdot_z, {{ ocp.dims.np }});
+
+    {% if ocp.dims.np < 1 %}
+    external_function_casadi_create(sim_impl_dae_fun_jac_x_xdot_z);
+    {% else %}
+    external_function_param_casadi_create(sim_impl_dae_fun_jac_x_xdot_z, {{ ocp.dims.np }});
+    {% endif %}
 
 	// external_function_casadi impl_dae_jac_x_xdot_u_z;
 	sim_impl_dae_jac_x_xdot_u_z->casadi_fun = &{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z;
@@ -98,7 +110,13 @@ int {{ ocp.model_name}}_acados_sim_create() {
 	sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_out = &{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z_sparsity_out;
 	sim_impl_dae_jac_x_xdot_u_z->casadi_n_in = &{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z_n_in;
 	sim_impl_dae_jac_x_xdot_u_z->casadi_n_out = &{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z_n_out;
-	external_function_param_casadi_create(sim_impl_dae_jac_x_xdot_u_z, {{ ocp.dims.np }});
+
+    {% if ocp.dims.np < 1 %}
+    external_function_casadi_create(sim_impl_dae_jac_x_xdot_u_z);
+    {% else %}
+    external_function_param_casadi_create(sim_impl_dae_jac_x_xdot_u_z, {{ ocp.dims.np }});
+    {% endif %}
+
     {% else %}
     // explicit ode
     {% if ocp.dims.np < 1 %}
@@ -115,7 +133,12 @@ int {{ ocp.model_name}}_acados_sim_create() {
     sim_forw_vde_casadi->casadi_sparsity_in = &{{ ocp.model_name }}_expl_vde_forw_sparsity_in;
     sim_forw_vde_casadi->casadi_sparsity_out = &{{ ocp.model_name }}_expl_vde_forw_sparsity_out;
     sim_forw_vde_casadi->casadi_work = &{{ ocp.model_name }}_expl_vde_forw_work;
+
+    {% if ocp.dims.np < 1 %}
     external_function_casadi_create(sim_forw_vde_casadi);
+    {% else %}
+    external_function_param_casadi_create(sim_forw_vde_casadi, {{ ocp.dims.np }});
+    {% endif %}
 
     sim_expl_ode_fun_casadi->casadi_fun = &{{ ocp.model_name }}_expl_ode_fun;
     sim_expl_ode_fun_casadi->casadi_n_in = &{{ ocp.model_name }}_expl_ode_fun_n_in;
@@ -123,7 +146,13 @@ int {{ ocp.model_name}}_acados_sim_create() {
     sim_expl_ode_fun_casadi->casadi_sparsity_in = &{{ ocp.model_name }}_expl_ode_fun_sparsity_in;
     sim_expl_ode_fun_casadi->casadi_sparsity_out = &{{ ocp.model_name }}_expl_ode_fun_sparsity_out;
     sim_expl_ode_fun_casadi->casadi_work = &{{ ocp.model_name }}_expl_ode_fun_work;
+
+    {% if ocp.dims.np < 1 %}
     external_function_casadi_create(sim_expl_ode_fun_casadi);
+    {% else %}
+    external_function_param_casadi_create(sim_expl_ode_fun_casadi, {{ ocp.dims.np }});
+    {% endif %}
+
     {% endif %}
 
     // sim plan & config
