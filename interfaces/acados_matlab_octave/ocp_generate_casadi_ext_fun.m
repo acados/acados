@@ -58,13 +58,17 @@ elseif (strcmp(model_struct.dyn_type, 'implicit'))
 		c_files{end+1} = [model_name, '_dyn_impl_ode_hess.c'];
 	elseif (strcmp(opts_struct.sim_method, 'irk_gnsf'))
 		% generate c for function and derivatives using casadi
-		generate_c_code_gnsf(model_struct); %, opts_struct);
-		% compile the code in a shared library
-		c_files{end+1} = [model_name, '_dyn_gnsf_f_lo_fun_jac_x1k1uz.c'];
+		generate_c_code_gnsf(model_struct, opts_struct);
+		% sources list
 		c_files{end+1} = [model_name, '_dyn_gnsf_get_matrices_fun.c'];
-		c_files{end+1} = [model_name, '_dyn_gnsf_phi_fun.c'];
-		c_files{end+1} = [model_name, '_dyn_gnsf_phi_fun_jac_y.c'];
-		c_files{end+1} = [model_name, '_dyn_gnsf_phi_jac_y_uhat.c'];
+        if ~model_struct.dyn_gnsf_purely_linear
+            if model_struct.dyn_gnsf_nontrivial_f_LO
+                c_files{end+1} = [model_name, '_dyn_gnsf_f_lo_fun_jac_x1k1uz.c'];
+            end
+            c_files{end+1} = [model_name, '_dyn_gnsf_phi_fun.c'];
+            c_files{end+1} = [model_name, '_dyn_gnsf_phi_fun_jac_y.c'];
+            c_files{end+1} = [model_name, '_dyn_gnsf_phi_jac_y_uhat.c'];
+        end
 	else
 		fprintf('\nocp_generate_casadi_ext_fun: sim_method not supported: %s\n', opts_struct.sim_method);
 		return;
