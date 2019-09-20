@@ -70,15 +70,15 @@ qp_solver_ric_alg = 1; % HPIPM specific
 %qp_solver_tol_eq   = 1e-4;
 %qp_solver_tol_ineq = 1e-4;
 %qp_solver_tol_comp = 1e-4;
-ocp_sim_method = 'irk'; % irk, irk_gnsf
-%ocp_sim_method = 'irk_gnsf'; % irk, irk_gnsf
+%ocp_sim_method = 'irk'; % irk, irk_gnsf
+ocp_sim_method = 'irk_gnsf'; % irk, irk_gnsf
 ocp_sim_method_num_stages = 6; % scalar or vector of size ocp_N;
 ocp_sim_method_num_steps = 4; % scalar or vector of size ocp_N;
 ocp_sim_method_newton_iter = 3; % scalar or vector of size ocp_N;
 
 % selectors for example variants
-constr_variant = 0; % 0: x bounds; 1: z bounds
-cost_variant = 0; % 0: ls on u,x; 1: ls on u,z; (not implemented yet: 2: nls on u,z)
+constr_variant = 1; % 0: x bounds; 1: z bounds
+cost_variant = 1; % 0: ls on u,x; 1: ls on u,z; (not implemented yet: 2: nls on u,z)
 
 
 
