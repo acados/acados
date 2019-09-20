@@ -54,12 +54,13 @@ nlp_solver_exact_hessian = 'false';
 %nlp_solver_exact_hessian = 'true';
 regularize_method = 'no_regularize';
 %regularize_method = 'project_reduc_hess';
-nlp_solver_max_iter = 50;
+nlp_solver_max_iter = 10;
 nlp_solver_tol_stat = 1e-12;
 nlp_solver_tol_eq   = 1e-12;
 nlp_solver_tol_ineq = 1e-12;
 nlp_solver_tol_comp = 1e-12;
 nlp_solver_ext_qp_res = 1;
+nlp_solver_step_length = 0.7;
 %qp_solver = 'full_condensing_qpoases'; % partial_condensing_hpipm
 qp_solver = 'partial_condensing_hpipm'; % partial_condensing_hpipm
 qp_solver_cond_N = 5;
@@ -184,6 +185,7 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
+ocp_opts.set('nlp_solver_step_length', nlp_solver_step_length);
 if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 	ocp_opts.set('nlp_solver_tol_stat', nlp_solver_tol_stat);
