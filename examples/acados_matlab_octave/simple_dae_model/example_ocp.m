@@ -54,19 +54,24 @@ nlp_solver_exact_hessian = 'false';
 %nlp_solver_exact_hessian = 'true';
 regularize_method = 'no_regularize';
 %regularize_method = 'project_reduc_hess';
-nlp_solver_max_iter = 100;
+nlp_solver_max_iter = 10;
 nlp_solver_tol_stat = 1e-12;
 nlp_solver_tol_eq   = 1e-12;
 nlp_solver_tol_ineq = 1e-12;
 nlp_solver_tol_comp = 1e-12;
 nlp_solver_ext_qp_res = 1;
-% qp_solver = 'full_condensing_qpoases'; % partial_condensing_hpipm
+nlp_solver_step_length = 0.7;
+%qp_solver = 'full_condensing_qpoases'; % partial_condensing_hpipm
 qp_solver = 'partial_condensing_hpipm'; % partial_condensing_hpipm
 qp_solver_cond_N = 5;
 qp_solver_warm_start = 0;
 qp_solver_cond_ric_alg = 1; % 0: dont factorize hessian in the condensing; 1: factorize
 qp_solver_ric_alg = 1; % HPIPM specific
-% ocp_sim_method = 'irk'; % irk, irk_gnsf
+%qp_solver_tol_stat = 1e-4;
+%qp_solver_tol_eq   = 1e-4;
+%qp_solver_tol_ineq = 1e-4;
+%qp_solver_tol_comp = 1e-4;
+%ocp_sim_method = 'irk'; % irk, irk_gnsf
 ocp_sim_method = 'irk_gnsf'; % irk, irk_gnsf
 ocp_sim_method_num_stages = 6; % scalar or vector of size ocp_N;
 ocp_sim_method_num_steps = 4; % scalar or vector of size ocp_N;
@@ -180,6 +185,7 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
+ocp_opts.set('nlp_solver_step_length', nlp_solver_step_length);
 if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 	ocp_opts.set('nlp_solver_tol_stat', nlp_solver_tol_stat);
@@ -188,6 +194,11 @@ if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_tol_comp', nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', qp_solver);
+% overwrite default qp solver tol which is same as nlp tol
+%ocp_opts.set('qp_solver_tol_stat', qp_solver_tol_stat);
+%ocp_opts.set('qp_solver_tol_eq', qp_solver_tol_eq);
+%ocp_opts.set('qp_solver_tol_ineq', qp_solver_tol_ineq);
+%ocp_opts.set('qp_solver_tol_comp', qp_solver_tol_comp);
 if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 	ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
@@ -213,9 +224,9 @@ ocp.print('stat')
 status = ocp.get('status');
 sqp_iter = ocp.get('sqp_iter');
 sqp_time = ocp.get('time_tot');
-if status ~= 0
-	keyboard
-end
+%if status ~= 0
+%	keyboard
+%end
 
 format short e
 % get solution for initialization of next NLP
