@@ -449,6 +449,11 @@ int sim_opts_set_(sim_opts *opts, const char *field, void *value)
         bool *output_z = (bool *) value;
         opts->output_z = *output_z;
     }
+    else if (!strcmp(field, "exact_z_output"))
+    {
+        bool *exact_z_output = (bool *) value;
+        opts->exact_z_output = *exact_z_output;
+    }
     else if (!strcmp(field, "sens_algebraic"))
     {
         bool *sens_algebraic = (bool *) value;

@@ -44,6 +44,9 @@ extern "C" {
 double fmax(double a, double b);
 #endif
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb, double *C, int ldc);
 void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y);
 void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y);

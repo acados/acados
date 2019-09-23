@@ -72,6 +72,7 @@ classdef acados_ocp_opts < handle
 			obj.opts_struct.sim_method_num_stages = 4;
 			obj.opts_struct.sim_method_num_steps = 1;
 			obj.opts_struct.sim_method_newton_iter = 3;
+			obj.opts_struct.sim_method_jac_reuse = 1;
 			obj.opts_struct.gnsf_detect_struct = 'true';
 			obj.opts_struct.regularize_method = 'no_regularize';
 			obj.opts_struct.output_dir = fullfile(pwd, 'build');
@@ -111,6 +112,14 @@ classdef acados_ocp_opts < handle
 				obj.opts_struct.qp_solver = value;
 			elseif (strcmp(field, 'qp_solver_iter_max'))
 				obj.opts_struct.qp_solver_iter_max = value;
+			elseif (strcmp(field, 'qp_solver_tol_stat'))
+				obj.opts_struct.qp_solver_tol_stat = value;
+			elseif (strcmp(field, 'qp_solver_tol_eq'))
+				obj.opts_struct.qp_solver_tol_eq = value;
+			elseif (strcmp(field, 'qp_solver_tol_ineq'))
+				obj.opts_struct.qp_solver_tol_ineq = value;
+			elseif (strcmp(field, 'qp_solver_tol_comp'))
+				obj.opts_struct.qp_solver_tol_comp = value;
 			elseif (strcmp(field, 'qp_solver_cond_N'))
 				obj.opts_struct.qp_solver_cond_N = value;
 			elseif (strcmp(field, 'qp_solver_cond_ric_alg'))
@@ -127,7 +136,9 @@ classdef acados_ocp_opts < handle
 				obj.opts_struct.sim_method_num_steps = value;
 			elseif (strcmp(field, 'sim_method_newton_iter'))
 				obj.opts_struct.sim_method_newton_iter = value;
-			elseif (strcmp(field, 'gnsf_detect_struct'))
+			elseif (strcmp(field, 'sim_method_jac_reuse'))
+				obj.opts_struct.sim_method_jac_reuse = value;
+            elseif (strcmp(field, 'gnsf_detect_struct'))
 				obj.opts_struct.gnsf_detect_struct = value;
 			elseif (strcmp(field, 'regularize_method'))
 				obj.opts_struct.regularize_method = value;

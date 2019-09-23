@@ -627,7 +627,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (ns_e!=nsbx+nsg_e+nsh_e)
     {
         sprintf(buffer,"ocp_create: ns_e!=nsbx+nsg_e+nsh_e, got ns_e=%d, nsbx=%d nsg_e=%d nsh_e=%d\n",
-            ns, nsbx, nsg_e, nsh_e);
+            ns_e, nsbx, nsg_e, nsh_e);
         mexErrMsgTxt(buffer);
     }
 
@@ -707,6 +707,29 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int qp_solver_iter_max = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_iter_max" ) );
         ocp_nlp_opts_set(config, opts, "qp_iter_max", &qp_solver_iter_max);
     }
+
+	// qp solver exit tolerances
+	if (mxGetField( matlab_opts, 0, "qp_solver_tol_stat" )!=NULL)
+	{
+		double qp_solver_tol_stat = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_stat" ) );
+		ocp_nlp_opts_set(config, opts, "qp_tol_stat", &qp_solver_tol_stat);
+	}
+	if (mxGetField( matlab_opts, 0, "qp_solver_tol_eq" )!=NULL)
+	{
+		double qp_solver_tol_eq = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_eq" ) );
+		ocp_nlp_opts_set(config, opts, "qp_tol_eq", &qp_solver_tol_eq);
+	}
+	if (mxGetField( matlab_opts, 0, "qp_solver_tol_ineq" )!=NULL)
+	{
+		double qp_solver_tol_ineq = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_ineq" ) );
+		ocp_nlp_opts_set(config, opts, "qp_tol_ineq", &qp_solver_tol_ineq);
+	}
+	if (mxGetField( matlab_opts, 0, "qp_solver_tol_comp" )!=NULL)
+	{
+		double qp_solver_tol_comp = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_comp" ) );
+		ocp_nlp_opts_set(config, opts, "qp_tol_comp", &qp_solver_tol_comp);
+	}
+
     // N_part_cond
     if (mxGetField( matlab_opts, 0, "qp_solver_cond_N" )!=NULL)
     {
@@ -826,6 +849,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     }
 
+    // sim_method_jac_reuse
+    sprintf(matlab_field_name, "sim_method_jac_reuse");
+    matlab_array = mxGetField( matlab_opts, 0, matlab_field_name );
+    if (matlab_array!=NULL)
+    {
+        int matlab_size = (int) mxGetNumberOfElements( matlab_array );
+        MEX_DIM_CHECK_VEC_TWO(fun_name, matlab_field_name, matlab_size, 1, N);
+
+        if (matlab_size == 1)
+        {
+            bool sim_method_jac_reuse = mxGetScalar( matlab_array );
+            for (int ii=0; ii<N; ii++)
+            {
+                ocp_nlp_dynamics_opts_set(config, opts, ii, "jac_reuse", &sim_method_jac_reuse);
+            }
+        }
+        else
+        {
+            double *values = mxGetPr(matlab_array);
+            for (int ii=0; ii<N; ii++)
+            {
+                bool sim_method_jac_reuse = (int) values[ii];
+                // mexPrintf("\nsim_method_jac_reuse[%d] = %d", ii, sim_method_jac_reuse);
+                ocp_nlp_dynamics_opts_set(config, opts, ii, "jac_reuse", &sim_method_jac_reuse);
+            }
+        }
+    }
 
     /* in */
     ocp_nlp_in *in = ocp_nlp_in_create(config, dims);
