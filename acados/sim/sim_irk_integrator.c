@@ -286,7 +286,7 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->sens_adj = false;
     opts->sens_hess = false;
     opts->jac_reuse = true;
-    opts->exact_z_output = true;
+    opts->exact_z_output = false;
 
     // TODO(oj): check if constr h or cost depend on z, turn on in this case only.
     if (dims->nz > 0)
