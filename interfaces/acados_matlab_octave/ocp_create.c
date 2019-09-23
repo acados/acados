@@ -627,7 +627,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (ns_e!=nsbx+nsg_e+nsh_e)
     {
         sprintf(buffer,"ocp_create: ns_e!=nsbx+nsg_e+nsh_e, got ns_e=%d, nsbx=%d nsg_e=%d nsh_e=%d\n",
-            ns, nsbx, nsg_e, nsh_e);
+            ns_e, nsbx, nsg_e, nsh_e);
         mexErrMsgTxt(buffer);
     }
 
