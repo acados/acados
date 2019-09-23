@@ -56,6 +56,7 @@ typedef struct dense_qp_qpoases_opts_
                    // with frozen sensitivities)
     int set_acado_opts;  // use same options as in acado code generation
     int compute_t;       // compute t in qp_out (to have correct residuals in NLP)
+    double tolerance;  // terminationTolerance
 } dense_qp_qpoases_opts;
 
 typedef struct dense_qp_qpoases_memory_
