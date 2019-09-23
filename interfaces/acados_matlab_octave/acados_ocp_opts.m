@@ -112,6 +112,14 @@ classdef acados_ocp_opts < handle
 				obj.opts_struct.qp_solver = value;
 			elseif (strcmp(field, 'qp_solver_iter_max'))
 				obj.opts_struct.qp_solver_iter_max = value;
+			elseif (strcmp(field, 'qp_solver_tol_stat'))
+				obj.opts_struct.qp_solver_tol_stat = value;
+			elseif (strcmp(field, 'qp_solver_tol_eq'))
+				obj.opts_struct.qp_solver_tol_eq = value;
+			elseif (strcmp(field, 'qp_solver_tol_ineq'))
+				obj.opts_struct.qp_solver_tol_ineq = value;
+			elseif (strcmp(field, 'qp_solver_tol_comp'))
+				obj.opts_struct.qp_solver_tol_comp = value;
 			elseif (strcmp(field, 'qp_solver_cond_N'))
 				obj.opts_struct.qp_solver_cond_N = value;
 			elseif (strcmp(field, 'qp_solver_cond_ric_alg'))

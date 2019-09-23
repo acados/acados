@@ -707,6 +707,29 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int qp_solver_iter_max = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_iter_max" ) );
         ocp_nlp_opts_set(config, opts, "qp_iter_max", &qp_solver_iter_max);
     }
+
+	// qp solver exit tolerances
+	if (mxGetField( matlab_opts, 0, "qp_solver_tol_stat" )!=NULL)
+	{
+		double qp_solver_tol_stat = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_stat" ) );
+		ocp_nlp_opts_set(config, opts, "qp_tol_stat", &qp_solver_tol_stat);
+	}
+	if (mxGetField( matlab_opts, 0, "qp_solver_tol_eq" )!=NULL)
+	{
+		double qp_solver_tol_eq = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_eq" ) );
+		ocp_nlp_opts_set(config, opts, "qp_tol_eq", &qp_solver_tol_eq);
+	}
+	if (mxGetField( matlab_opts, 0, "qp_solver_tol_ineq" )!=NULL)
+	{
+		double qp_solver_tol_ineq = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_ineq" ) );
+		ocp_nlp_opts_set(config, opts, "qp_tol_ineq", &qp_solver_tol_ineq);
+	}
+	if (mxGetField( matlab_opts, 0, "qp_solver_tol_comp" )!=NULL)
+	{
+		double qp_solver_tol_comp = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_comp" ) );
+		ocp_nlp_opts_set(config, opts, "qp_tol_comp", &qp_solver_tol_comp);
+	}
+
     // N_part_cond
     if (mxGetField( matlab_opts, 0, "qp_solver_cond_N" )!=NULL)
     {
