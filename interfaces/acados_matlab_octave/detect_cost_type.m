@@ -32,40 +32,124 @@
 %
 %   Author: Jonathan Frey: jonathanpaulfrey(at)gmail.com
 
-function model = detect_cost_type(model)
+function model = detect_cost_type(model, is_e)
 
-import casadi.*
+    import casadi.*
 
-x = model.sym_x;
-u = model.sym_u;
+    x = model.sym_x;
+    u = model.sym_u;
 
-% check type
-if class(x(1)) == 'casadi.SX'
-    isSX = true;
-else
-    disp('cost type detection only works for SX CasADi type!!!');
-	keyboard;
+    % check type
+    if strcmp(class(x(1)), 'casadi.SX')
+        isSX = true;
+    else
+        disp('cost type detection only works for SX CasADi type!!!');
+        keyboard;
+    end
+
+    if isfield(model, 'sym_z')
+        z = model.sym_z;
+    else
+        z = SX.sym('z', 0, 0);
+    end
+
+    nx = length(x);
+    nu = length(u);
+    nz = length(z);
+
+    % z = model.sym_z;
+    expr_cost = model.cost_expr_ext_cost;
+    cost_fun = Function('cost_fun', {x, u, z}, {expr_cost});
+
+
+    if expr_cost.is_quadratic(x) && expr_cost.is_quadratic(u) && expr_cost.is_quadratic(z)
+        dummy = SX.sym('dummy', 1, 1);
+        
+        fprintf('\n\nCost function is quadratic -> Reformulating as linear_ls cost.\n\n');
+
+        Hxuz_fun = Function('Hxuz_fun', {dummy}, {hessian(expr_cost, [x; u; z])});
+        H_xuz = full(Hxuz_fun(0));
+
+        xuz_idx = [];
+        for i = 1:(nx+nu+nz)
+            if ~isempty(find(H_xuz(i,:), 1) )
+                xuz_idx = union(xuz_idx, i);
+            end
+        end
+        x_idx = intersect(1:nx, xuz_idx);
+        u_idx = intersect(1+nx:nx+nu, xuz_idx);
+        z_idx = intersect(1+nx+nu : nx+nu+nz, xuz_idx);
+
+        ny = length(xuz_idx);
+
+        Vx = zeros(ny, nx);
+        Vu = zeros(ny, nu);
+        Vz = zeros(ny, nz);
+        W = zeros(ny);
+
+        i = 1;
+        for id = x_idx
+            Vx(i, id) = 1;
+            W(i, :) = H_xuz(id, xuz_idx)/2;
+            i = i+1;
+        end
+
+        for id = u_idx
+            iu = id - nx;
+            Vu(i, iu) = 1;
+            W(i, :) = H_xuz(id, xuz_idx)/2;
+            i = i+1;
+        end
+
+        for id = z_idx
+            Vz(i, id) = 1;
+            W(i, :) = H_xuz(id, xuz_idx)/2;
+            i = i+1;
+        end
+
+
+        y = Vx * x + Vu * u;
+        if nz>0
+            y = y + Vz * z;
+        end
+        lls_cost_fun = Function('lls_cost_fun', {x, u, z}, {y' * W * y});
+
+        for jj = 1:5
+            x0 = rand(nx,1);
+            u0 = rand(nu,1);
+            z0 = rand(nz,1);
+            val1 = lls_cost_fun(x0, z0, u0);
+            val2 = cost_fun(x0, z0, u0);
+            if norm(full(val1 - val2))> 1e-13
+                disp('something went wrong when reformulating with linear least square cost');
+                keyboard
+            end
+        end
+
+        if is_e
+            model.cost_type_e = 'linear_ls';
+            model.dim_ny_e = ny;
+            model.cost_Vx_e = Vx;
+            model.cost_Vz_e = Vz;
+            % TODO: add check that Vu is zeros?
+            model.cost_W_e = W;
+        else
+            model.cost_type = 'linear_ls';
+            model.dim_ny = ny;
+            model.cost_Vx = Vx;
+            model.cost_Vu = Vu;
+            model.cost_Vz = Vz;
+            model.cost_W = W;
+        end
+    % elseif 
+    %  TODO: can nonlinear_ls be detected?!
+    else
+        fprintf('\n\nCost function is not quadratic -> Using external cost\n\n');
+        if is_e
+            model.cost_type_e = 'ext_cost';
+        else
+            model.cost_type = 'ext_cost';
+        end
+    end
+
 end
-
-if isfield(model, 'sym_z')
-    z = model.sym_z;
-else
-    z = SX.sym('z', 0, 0);
-end
-
-% z = model.sym_z;
-expr_cost = model.cost_expr_ext_cost;
-
-
-if expr_cost.is_quadratic(x) && expr_cost.is_quadratic(u) && expr_cost.is_quadratic(z)
-    keyboard
-    
-
-end
-keyboard
-
-
-
-
-end
-

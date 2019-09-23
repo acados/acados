@@ -64,9 +64,11 @@ classdef acados_ocp < handle
 
             % detect cost type
             if (strcmp(obj.model_struct.cost_type, 'auto'))
-                obj.model_struct = detect_cost_type(obj.model_struct);
+                obj.model_struct = detect_cost_type(obj.model_struct, 0);
             end
-
+            if (strcmp(obj.model_struct.cost_type_e, 'auto'))
+                obj.model_struct = detect_cost_type(obj.model_struct, 1);
+            end
 
             % compile mex without model dependency
             if (strcmp(obj.opts_struct.compile_mex, 'true'))

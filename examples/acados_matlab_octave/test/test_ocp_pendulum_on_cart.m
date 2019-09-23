@@ -36,7 +36,7 @@ clear VARIABLES
 
 addpath('../pendulum_on_cart_model/');
 
-for itest = 3%1:2
+for itest = 1:3
     %% arguments
     compile_mex = 'true';
     codgen_model = 'true';
@@ -153,6 +153,13 @@ for itest = 3%1:2
     % cost
     ocp_model.set('cost_type', cost_type);
     ocp_model.set('cost_type_e', cost_type);
+
+    % model.expr_ext_cost = [model.sym_x; model.sym_u]' * rand(nx+nu) * [model.sym_x; model.sym_u];
+
+    % x= model.sym_x;
+    % cost = cos(x(1)) * cos(x(1));
+    % keyboard
+
     if (strcmp(cost_type, 'linear_ls'))
         ocp_model.set('cost_Vu', Vu);
         ocp_model.set('cost_Vx', Vx);
