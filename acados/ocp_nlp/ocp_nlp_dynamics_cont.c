@@ -59,7 +59,7 @@ int ocp_nlp_dynamics_cont_dims_calculate_size(void *config_)
 
     size += sizeof(ocp_nlp_dynamics_cont_dims);
 
-    size += sim_sol_config->dims_calculate_size(sim_sol_config);
+    size += sim_sol_config->dims_calculate_size();
 
     return size;
 }
