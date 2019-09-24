@@ -13,9 +13,7 @@ close all;
 % Check that env.sh has been runz2
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
+	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
 
 %% Arguments
@@ -305,6 +303,7 @@ ylabel('Control inputs [m/s^2]','fontsize',fontsize);
 
 if (strcmp(nlp_solver, 'sqp'))
 	figure;
+    stat = ocp.get('stat');
 	plot([0: sqp_iter], log10(stat(:,2)), 'r-x');
 	hold on
 	plot([0: sqp_iter], log10(stat(:,3)), 'b-x');
@@ -322,5 +321,6 @@ else
 	fprintf('\nsolution failed!\n\n');
 end
 
-waitforbuttonpress;
-return;
+if is_octave
+    waitforbuttonpress;
+end
