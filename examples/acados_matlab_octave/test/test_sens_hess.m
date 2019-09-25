@@ -39,7 +39,7 @@ addpath('../pendulum_on_cart_model/');
 % TODO: include irk_gnsf, as soon as hessians are implemented
 for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
 	%% arguments
-	compile_mex = 'true';
+	compile_mex = 'false';
 	codgen_model = 'true';
 	method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
 	sens_forw = 'true';

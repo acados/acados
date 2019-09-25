@@ -32,7 +32,7 @@ max_a = S.max_a;
 
 
 if 1
-	compile_mex = 'true';
+	compile_mex = 'false';
 	codgen_model = 'true';
 	gnsf_detect_struct = 'true';
 else

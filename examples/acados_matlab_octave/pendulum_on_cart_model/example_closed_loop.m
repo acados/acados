@@ -42,7 +42,7 @@ end
 
 
 %% options
-compile_mex = 'true'; % true, false
+compile_mex = 'false'; % true, false
 codgen_model = 'true'; % true, false
 % simulation
 sim_method = 'irk'; % erk, irk, irk_gnsf

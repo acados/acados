@@ -38,7 +38,7 @@ addpath('../simple_dae_model/');
 
 for itest = 1:2;
     %% options
-    compile_mex = 'true'; % true, false
+    compile_mex = 'false'; % true, false
     codgen_model = 'true'; % true, false
 
     % ocp

@@ -37,7 +37,7 @@ clear all
 addpath('../pendulum_dae/');
 
 %% options
-compile_mex = 'true'; % true, false
+compile_mex = 'false'; % true, false
 codgen_model = 'true'; % true, false
 % compile_mex = 'false'; % true, false
 % codgen_model = 'false'; % true, false

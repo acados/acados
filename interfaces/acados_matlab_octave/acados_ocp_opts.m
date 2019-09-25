@@ -48,7 +48,7 @@ classdef acados_ocp_opts < handle
             % model stuct
             obj.opts_struct = struct;
             % default values
-            obj.opts_struct.compile_mex = 'true';
+            obj.opts_struct.compile_mex = 'false';
             obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.param_scheme = 'multiple_shooting_unif_grid';
             obj.opts_struct.param_scheme_N = 10;
@@ -135,6 +135,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.sim_method_num_steps = value;
             elseif (strcmp(field, 'sim_method_newton_iter'))
                 obj.opts_struct.sim_method_newton_iter = value;
+            elseif (strcmp(field, 'sim_method_exact_z_output'))
+                obj.opts_struct.sim_method_exact_z_output = value;
             elseif (strcmp(field, 'gnsf_detect_struct'))
                 obj.opts_struct.gnsf_detect_struct = value;
             elseif (strcmp(field, 'regularize_method'))

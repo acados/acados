@@ -62,8 +62,17 @@ classdef acados_sim < handle
                 end
             end
 
+            % check if mex interface exists already
+            if is_octave()
+                mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
+                    '/sim_create.mex'), 'file');
+            else
+                mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
+                    '/sim_create.mexa64'), 'file');
+            end
+
             % compile mex without model dependency
-            if (strcmp(obj.opts_struct.compile_mex, 'true'))
+            if (strcmp(obj.opts_struct.compile_mex, 'true') || ~mex_exists)
                 sim_compile_mex(obj.opts_struct);
             end
             sim_check_dims(obj.model_struct);

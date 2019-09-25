@@ -43,7 +43,7 @@ end
 
 
 %% arguments
-compile_mex = 'true';
+compile_mex = 'false';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
 model_name = 'masses_chain';

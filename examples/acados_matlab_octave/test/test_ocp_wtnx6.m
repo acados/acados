@@ -38,7 +38,7 @@ addpath('../wind_turbine_nx6/');
 
 
 %% arguments
-compile_mex = 'true';
+compile_mex = 'false';
 codgen_model = 'true';
 % simulation
 sim_method = 'irk';
