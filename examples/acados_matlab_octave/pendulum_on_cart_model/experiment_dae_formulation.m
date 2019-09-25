@@ -51,9 +51,12 @@ constr_vals = zeros(N, ncases);
 for i = 1:3
     %% arguments
     compile_mex = 'true';
-    if exist('build/ocp_create.mexa64', 'file')
+    if ~is_octave && exist('build/ocp_create.mexa64', 'file')
+        compile_mex = 'false';
+    elseif is_octave && exist('build/ocp_create.mex', 'file')
         compile_mex = 'false';
     end
+
     codgen_model = 'true';
     gnsf_detect_struct = 'true';
 
