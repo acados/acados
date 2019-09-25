@@ -32,29 +32,38 @@
 %
 
 %% test of native matlab interface
-clear VARIABLES
+clear all
 
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
 	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
+import casadi.*
+
 tic
+
+N = 40;
+
+ncases = 3;
+constr_violation = zeros(1, ncases);
+constr_vals = zeros(N, ncases);
 for i = 1:3
     %% arguments
     compile_mex = 'true';
+    if exist('build/ocp_create.mexa64', 'file')
+        compile_mex = 'false';
+    end
     codgen_model = 'true';
     gnsf_detect_struct = 'true';
 
     % discretization
     param_scheme = 'multiple_shooting_unif_grid';
-    N = 100;
-    h = 0.01;
+    h = 0.02;
 
     nlp_solver = 'sqp';
     %nlp_solver = 'sqp_rti';
     nlp_solver_exact_hessian = 'false';
-    %nlp_solver_exact_hessian = 'true';
     regularize_method = 'no_regularize';
     nlp_solver_max_iter = 100;
     tol = 1e-12;
@@ -64,33 +73,40 @@ for i = 1:3
     nlp_solver_tol_comp = tol;
     nlp_solver_ext_qp_res = 1;
     qp_solver = 'partial_condensing_hpipm';
-    %qp_solver = 'full_condensing_hpipm';
-    %qp_solver = 'full_condensing_qpoases';
+%     qp_solver = 'full_condensing_hpipm';
+%     qp_solver = 'full_condensing_qpoases';
     qp_solver_cond_N = 5;
     qp_solver_cond_ric_alg = 0;
     qp_solver_ric_alg = 0;
-    qp_solver_warm_start = 2;
+    qp_solver_warm_start = 1;
     sim_method = 'irk';
-    sim_method_num_stages = 2;
+    sim_method_num_stages = 1;
     sim_method_num_steps = 1;
+    sim_method_exact_z_output = 0;
 
-    if i == 3
-        sim_method_exact_z_output = 1;
-    else
-        sim_method_exact_z_output = 0;
-    end
     % cost_type = 'linear_ls';
     cost_type = 'ext_cost';
     model_name = ['ocp_pendulum_' num2str(i)];
 
 
     %% create model entries
-    if i==1
-        model = pendulum_on_cart_model;
-    elseif i==2
-        model = pendulum_on_cart_model_dae;
-%     else
-%         model = pendulum_on_cart_model_algebraic_constraints;
+    switch i
+        case 1
+            model = pendulum_on_cart_model;
+            theta = model.sym_x(2);
+            omega = model.sym_x(4);
+            model.sym_z = [];
+            model.expr_h = cos(theta)*sin(theta)*omega.^2;
+            lh = -40;
+            uh = 40;
+        case {2,3}
+            model = pendulum_on_cart_model_dae;
+            model.expr_h = model.sym_z;
+            lh = -40;
+            uh = 40;
+            if i == 2
+                sim_method_exact_z_output = 1;
+            end
     end
 
     % dims
@@ -103,28 +119,10 @@ for i = 1:3
         nz = 0;
     end
 
-    if 0
-        nbx = 0;
-        nbu = nu;
-        ng = 0;
-        ng_e = 0;
-        nh = 0;
-        nh_e = 0;
-    else
-        nbx = 0;
-        nbu = 0;
-        ng = 0;
-        ng_e = 0;
-        nh = nu;
-        nh_e = 0;
-    end
-
     % constraints
     x0 = [0; pi; 0; 0];
-    %Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
-    %lbx = -4*ones(nbx, 1);
-    %ubx =  4*ones(nbx, 1);
-    Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
+    nbu = nu;
+    Jbu = zeros(nbu, nu); for ii=1:nbu; Jbu(ii,ii)=1.0; end
     lbu = -80*ones(nu, 1);
     ubu =  80*ones(nu, 1);
 
@@ -137,14 +135,9 @@ for i = 1:3
     ocp_model.set('dim_nx', nx);
     ocp_model.set('dim_nu', nu);
     ocp_model.set('dim_nz', nz);
-
     %constr
-    ocp_model.set('dim_nbx', nbx);
     ocp_model.set('dim_nbu', nbu);
-    ocp_model.set('dim_ng', ng);
-    ocp_model.set('dim_ng_e', ng_e);
-    ocp_model.set('dim_nh', nh);
-    ocp_model.set('dim_nh_e', nh_e);
+    
     % symbolics
     ocp_model.set('sym_x', model.sym_x);
     if isfield(model, 'sym_u')
@@ -171,33 +164,21 @@ for i = 1:3
         ocp_model.set('dyn_type', 'implicit');
         ocp_model.set('dyn_expr_f', model.expr_f_impl);
     end
+  
     % constraints
     ocp_model.set('constr_x0', x0);
-    if (ng>0)
-        ocp_model.set('constr_C', C);
-        ocp_model.set('constr_D', D);
-        ocp_model.set('constr_lg', lg);
-        ocp_model.set('constr_ug', ug);
-        ocp_model.set('constr_C_e', C_e);
-        ocp_model.set('constr_lg_e', lg_e);
-        ocp_model.set('constr_ug_e', ug_e);
-    elseif (nh>0)
-        ocp_model.set('constr_expr_h', model.expr_h);
-        ocp_model.set('constr_lh', lbu);
-        ocp_model.set('constr_uh', ubu);
-    %	ocp_model.set('constr_expr_h_e', model.expr_h_e);
-    %	ocp_model.set('constr_lh_e', lh_e);
-    %	ocp_model.set('constr_uh_e', uh_e);
-    else
-    %	ocp_model.set('constr_Jbx', Jbx);
-    %	ocp_model.set('constr_lbx', lbx);
-    %	ocp_model.set('constr_ubx', ubx);
-        ocp_model.set('constr_Jbu', Jbu);
-        ocp_model.set('constr_lbu', lbu);
-        ocp_model.set('constr_ubu', ubu);
-    end
-    disp('ocp_model.model_struct')
-    disp(ocp_model.model_struct)
+    
+    nh = length(model.expr_h);
+    ocp_model.set('dim_nh', nh);
+    ocp_model.set('constr_expr_h', model.expr_h);
+    ocp_model.set('constr_lh', lh);
+    ocp_model.set('constr_uh', uh);
+
+    ocp_model.set('constr_Jbu', Jbu);
+    ocp_model.set('constr_lbu', lbu);
+    ocp_model.set('constr_ubu', ubu);
+%     disp('ocp_model.model_struct')
+%     disp(ocp_model.model_struct)
 
 
     %% acados ocp opts
@@ -239,23 +220,12 @@ for i = 1:3
 
 
     %% acados ocp
-    % create ocp
     ocp = acados_ocp(ocp_model, ocp_opts);
-    ocp
-    disp('ocp.C_ocp');
-    disp(ocp.C_ocp);
-    disp('ocp.C_ocp_ext_fun');
-    disp(ocp.C_ocp_ext_fun);
-    %ocp.model_struct
-
 
     % set trajectory initialization
-    %x_traj_init = zeros(nx, N+1);
-    %for ii=1:N x_traj_init(:,ii) = [0; pi; 0; 0]; end
     x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
     u_traj_init = zeros(nu, N);
 
-    % if not set, the trajectory is initialized with the previous solution
     ocp.set('init_x', x_traj_init);
     ocp.set('init_u', u_traj_init);
 
@@ -273,25 +243,56 @@ for i = 1:3
     time_reg = ocp.get('time_reg');
     time_qp_sol = ocp.get('time_qp_sol');
 
-    fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
+    fprintf(['\nstatus = %d, sqp_iter = %d, time_int = %f [ms]'...
+        ' (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n'],...
+        status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3 );
 
     ocp.print('stat');
     
     if i == 1
+        % save reference
         xref = x;
         uref = u;
     else
-        err_x = norm(x - xref)
-        err_u = norm(u - uref)
+        % compare error w.r.t reference
+        err_x(i) = norm(x - xref)
+        err_u(i) = norm(u - uref)
     end
     
     % compare z accuracy to respective value obtained from x
+    thetas = xref(2,:);
+    omegas = xref(4,:);
+    z_fromx = cos(thetas).*sin(thetas).*omegas.^2;
     if i > 1
         z = ocp.get('z');
-        thetas = xref(2,:);
-        omegas = xref(4,:);
-        z_fromx = cos(thetas).*sin(thetas).*omegas.^2;
-        err_z_zfromx(i) = norm( z - z_fromx(1:end-1) )
+        err_z_zfromx(i) = norm( z - z_fromx(1:end-1) );
+    end
+    
+    % check constraint violation
+    theta = model.sym_x(2);
+    omega = model.sym_x(4);
+    constr_expr = cos(theta)*sin(theta)*omega.^2;
+    constr_fun = Function('constr_fun', {model.sym_x, model.sym_u, model.sym_z}, ...
+        {constr_expr});
+
+    constr_violation(i) = 0;
+    for j=1:N
+        valh = full( constr_fun(x(:,j), u(:,j), z_fromx(:,j) ) );
+        constr_vals(j,i) = valh;
+        violation = max([0, -(valh-lh), valh - uh]);
+        constr_violation(i) = max(norm(violation), constr_violation(i));
     end
 end
+
 toc
+
+fprintf('\nConstraint values\n');
+fprintf('\nODE \t\tDAE-exact_z\tDAE-extrapolation\n');
+for i = 1:N
+    fprintf('%.4e\t%.4e\t%.4e\n', constr_vals(i,1), constr_vals(i,2),...
+        constr_vals(i,3))
+end
+fprintf('\n\nConstraint violations');
+fprintf('\nODE \t\tDAE-exact_z\tDAE-extrapolation\n');
+fprintf('%.4e\t%.4e\t%.4e\n', constr_violation(1), constr_violation(2),...
+    constr_violation(3))
