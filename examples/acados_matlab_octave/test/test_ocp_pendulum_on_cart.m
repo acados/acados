@@ -37,7 +37,7 @@ clear VARIABLES
 addpath('../pendulum_on_cart_model/');
 
 %% arguments
-compile_mex = 'false';
+compile_mex = 'true';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
 

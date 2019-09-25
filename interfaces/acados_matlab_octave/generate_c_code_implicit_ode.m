@@ -47,16 +47,17 @@ end
 if nargin > 1
     if isfield(opts, 'sens_hess')
         generate_hess = opts.sens_hess;
-    else
-        generate_hess = 'false';
+    elseif isfield(opts, 'nlp_solver_exact_hessian')
+        generate_hess = opts.nlp_solver_exact_hessian;
 %        if opts.print_info
 %        disp('generate_hess option was not set - default is false')
 %        end
+    else
+        generate_hess = 'false';
     end
 else
     generate_hess = 'false';
 end
-generate_hess = 'true'; % TODO remove when not needed any more !!!
 
 
 %% load model
@@ -140,28 +141,13 @@ else
 %    HESS = MX.zeros( length(x_xdot_z_u), length(x_xdot_z_u));
 end
 
-% hessian computed as forward over adjoint !!!
-ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, true);
-HESS = jacobian(ADJ, x_xdot_z_u);
-
-%HESS_multiplied = multiply_mat' * HESS * multiply_mat;
-
-%HESS = jtimes(ADJ, x_xdot_z_u, multiply_mat);
-%HESS_multiplied = multiply_mat' * HESS;
-
-%HESS_multiplied = HESS_multiplied.simplify();
-%HESS_multiplied = HESS; % do the multiplication in BLASFEO !!!
-
 
 
 %% Set up functions
-% TODO(oj): fix namings such that jac_z is contained!
 impl_ode_fun = Function([model_name,'_impl_ode_fun'], {x, xdot, u, z, p}, {f_impl});
 impl_ode_fun_jac_x_xdot_z = Function([model_name,'_impl_ode_fun_jac_x_xdot_z'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_z});
 impl_ode_jac_x_xdot_u_z = Function([model_name,'_impl_ode_jac_x_xdot_u_z'], {x, xdot, u, z, p}, {jac_x, jac_xdot, jac_u, jac_z});
 impl_ode_fun_jac_x_xdot_u = Function([model_name,'_impl_ode_fun_jac_x_xdot_u'], {x, xdot, u, z, p}, {f_impl, jac_x, jac_xdot, jac_u});
-%    impl_ode_hess = Function([model_name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
-impl_ode_hess = Function([model_name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, p}, {HESS});
 
 %% generate C code
 impl_ode_fun.generate([model_name,'_impl_ode_fun'], casadi_opts);
@@ -169,6 +155,21 @@ impl_ode_fun_jac_x_xdot_z.generate([model_name,'_impl_ode_fun_jac_x_xdot_z'], ca
 impl_ode_jac_x_xdot_u_z.generate([model_name,'_impl_ode_jac_x_xdot_u_z'], casadi_opts);
 impl_ode_fun_jac_x_xdot_u.generate([model_name,'_impl_ode_fun_jac_x_xdot_u'], casadi_opts);
 if strcmp(generate_hess, 'true')
+    % hessian computed as forward over adjoint !!!
+    ADJ = jtimes(f_impl, x_xdot_z_u, multiplier, true);
+    HESS = jacobian(ADJ, x_xdot_z_u);
+
+    %HESS_multiplied = multiply_mat' * HESS * multiply_mat;
+
+    %HESS = jtimes(ADJ, x_xdot_z_u, multiply_mat);
+    %HESS_multiplied = multiply_mat' * HESS;
+
+    %HESS_multiplied = HESS_multiplied.simplify();
+    %HESS_multiplied = HESS; % do the multiplication in BLASFEO !!!
+    %    impl_ode_hess = Function([model_name,'_impl_ode_hess'],  {x, xdot, u, z, multiplier, multiply_mat, p}, {HESS_multiplied});
+
+    impl_ode_hess = Function([model_name,'_impl_ode_hess'],...
+                             {x, xdot, u, z, multiplier, p}, {HESS});
     impl_ode_hess.generate([model_name,'_impl_ode_hess'], casadi_opts);
 end
 % keyboard

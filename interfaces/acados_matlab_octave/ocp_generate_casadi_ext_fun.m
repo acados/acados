@@ -55,7 +55,9 @@ elseif (strcmp(model_struct.dyn_type, 'implicit'))
         c_files{end+1} = [model_name, '_dyn_impl_ode_fun_jac_x_xdot_z.c'];
         c_files{end+1} = [model_name, '_dyn_impl_ode_fun_jac_x_xdot_u.c'];
         c_files{end+1} = [model_name, '_dyn_impl_ode_jac_x_xdot_u_z.c'];
-        c_files{end+1} = [model_name, '_dyn_impl_ode_hess.c'];
+        if strcmp(opts_struct.nlp_solver_exact_hessian, 'true')
+            c_files{end+1} = [model_name, '_dyn_impl_ode_hess.c'];
+        end
     elseif (strcmp(opts_struct.sim_method, 'irk_gnsf'))
         % generate c for function and derivatives using casadi
         generate_c_code_gnsf(model_struct, opts_struct);
@@ -144,3 +146,4 @@ end
 
 movefile([lib_name, ldext], fullfile(opts_struct.output_dir, [lib_name, ldext]));
 
+end
