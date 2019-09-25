@@ -39,9 +39,9 @@ import casadi.*
 
 casadi_version = CasadiMeta.version();
 if strcmp(casadi_version(1:3),'3.4') % require casadi 3.4.x
-	casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
+    casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 else % old casadi versions
-	error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
+    error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
 end
 
 
@@ -97,7 +97,7 @@ end
 % z
 if isfield(model, 'sym_z')
     z = model.sym_z;
-	z1 = model.sym_z(model.dyn_gnsf_idx_perm_z(1:model.dim_gnsf_nz1));
+    z1 = model.sym_z(model.dyn_gnsf_idx_perm_z(1:model.dim_gnsf_nz1));
 else
     if isSX
         z = SX.sym('z',0, 0);

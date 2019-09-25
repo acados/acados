@@ -88,14 +88,14 @@ u = gnsf.u;
 y = gnsf.y;
 uhat = gnsf.uhat;
 if isfield(model, 'sym_p')
-	p = model.sym_p;
+    p = model.sym_p;
     np = length(p);
 else
-	if class(x(1)) == 'casadi.SX'
-		p = SX.sym('p',0, 0);
-	else
-		p = MX.sym('p',0, 0);
-	end
+    if class(x(1)) == 'casadi.SX'
+        p = SX.sym('p',0, 0);
+    else
+        p = MX.sym('p',0, 0);
+    end
     np = 0;
 end
 
@@ -135,7 +135,7 @@ for i_check = 1:num_eval
     %     phi_val = phi_fun( y0, uhat0);
     %     f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0(I_z1), u0);
     % end
-	f_impl_val = f_impl_val(idx_perm_f);
+    f_impl_val = f_impl_val(idx_perm_f);
     
 
     

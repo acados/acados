@@ -55,7 +55,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* RHS */
     const mxArray *matlab_model = prhs[0];
-	const mxArray *C_ocp = prhs[2];
+    const mxArray *C_ocp = prhs[2];
     // plan
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
     ocp_nlp_plan *plan = (ocp_nlp_plan *) ptr[0];
