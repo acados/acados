@@ -92,23 +92,23 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
 
     % render Makefile template
 	template_file = 'Makefile.in';
-	out_file = 'Makefile';
+    out_file = 'Makefile';
 	% output file
-	os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
+    os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
 			template_file, '"', ' ', '"', '../', acados_ocp_nlp_json_file, ...
 			'"', ' ', '"', out_file, '"'];
 
-	system(os_cmd);
+    system(os_cmd);
 
-	% render source template
-	template_file = 'acados_solver_sfun.in.c';
-	out_file = ['acados_solver_sfunction_' , model_name, '.c'];
-	% output file
-	os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
+    % render source template
+    template_file = 'acados_solver_sfun.in.c';
+    out_file = ['acados_solver_sfunction_' , model_name, '.c'];
+    % output file
+    os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
 			template_file, '"', ' ', '"', '../', acados_ocp_nlp_json_file, ...
 			'"', ' ', '"', out_file, '"'];
 
-	system(os_cmd);
+    system(os_cmd);
 
     % render MATLAB make script
 	% render source template
@@ -118,16 +118,15 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
 	os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
 			template_file, '"', ' ', '"', '../', acados_ocp_nlp_json_file, ...
 			'"', ' ', '"', out_file, '"'];
-
-	system(os_cmd);
+    system(os_cmd);
    
-   fprintf('Successfully generated acados solver!\n')
+    fprintf('Successfully generated acados solver!\n')
 
-   % build generated code
-   system('make')
-   system('make shared_lib')
-   chdir('..')
+    % build generated code
+    system('make')
+    system('make shared_lib')
+    chdir('..')
 
-   fprintf('Successfully built generated code!\n')
+    fprintf('Successfully built generated code!\n')
 
 end
