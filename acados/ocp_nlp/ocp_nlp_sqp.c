@@ -1454,6 +1454,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // no warm start at first iteration
         if (sqp_iter == 0 && !opts->warm_start_first_qp)
         {
+            // printf("sqp: dont warm start first qp\n");
             int tmp_int = 0;
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "warm_start", &tmp_int);
         }
@@ -1464,11 +1465,10 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                         opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
         mem->time_qp_sol += acados_toc(&timer1);
 
-        // start timer
-        acados_tic(&timer1);
         // compute correct dual solution in case of Hessian regularization
-        config->regularize->correct_dual_sol(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
-        // stop timer
+        acados_tic(&timer1);
+        config->regularize->correct_dual_sol(config->regularize, dims->regularize,
+                                             opts->regularize, mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
 
         // restore default warm start
@@ -1481,8 +1481,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         qp_info *qp_info_;
         ocp_qp_out_get(mem->qp_out, "qp_info", &qp_info_);
         nlp_out->qp_iter = qp_info_->num_iter;
-        // printf("\nqp_iter = %d\n", nlp_out->qp_iter);
+        // printf("\nqp_iter = %d, sqp_iter = %d, max_sqp_iter = %d\n", nlp_out->qp_iter, sqp_iter, opts->max_iter);
         qp_iter = qp_info_->num_iter;
+
+        // save statistics of last qp solver call
+        if (sqp_iter == opts->max_iter-1)
+        {
+            mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
+            mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
+        }
 
         // compute external QP residuals (for debugging)
         if (opts->ext_qp_res)
