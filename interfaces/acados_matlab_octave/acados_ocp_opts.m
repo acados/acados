@@ -67,7 +67,10 @@ classdef acados_ocp_opts < handle
             % obj.opts_struct.qp_solver_cond_N = 5; % for partial condensing_hpipm
             obj.opts_struct.qp_solver_cond_ric_alg = 0; % 0: dont factorize hessian in the condensing; 1: factorize
             obj.opts_struct.qp_solver_ric_alg = 0; % HPIPM specific
-            obj.opts_struct.qp_solver_warm_start = 0; % 0 no warm start; 1 warm start primal variables; 2 warm start primal and dual variables
+            obj.opts_struct.qp_solver_warm_start = 0;
+                    % 0 no warm start; 1 warm start primal variables; 2 warm start primal and dual variables
+            obj.opts_struct.warm_start_first_qp = 0;
+                    % 0 no warm start in first sqp iter - 1 warm start even in first sqp iter
             obj.opts_struct.sim_method = 'irk'; % erk; irk; irk_gnsf
             obj.opts_struct.sim_method_num_stages = 4;
             obj.opts_struct.sim_method_num_steps = 1;
@@ -127,6 +130,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.qp_solver_ric_alg = value;
             elseif (strcmp(field, 'qp_solver_warm_start'))
                 obj.opts_struct.qp_solver_warm_start = value;
+            elseif (strcmp(field, 'warm_start_first_qp'))
+                obj.opts_struct.warm_start_first_qp = value;
             elseif (strcmp(field, 'sim_method'))
                 obj.opts_struct.sim_method = value;
             elseif (strcmp(field, 'sim_method_num_stages'))
