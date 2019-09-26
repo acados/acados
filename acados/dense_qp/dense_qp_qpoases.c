@@ -75,9 +75,9 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/print.h"
+#include "acados/utils/math.h"
 
 #include "acados_c/dense_qp_interface.h"
-
 
 
 /************************************************
@@ -121,6 +121,7 @@ void dense_qp_qpoases_opts_initialize_default(void *config_, dense_qp_dims *dims
     opts->hotstart = 0;
     opts->set_acado_opts = 1;
     opts->compute_t = 1;
+    opts->tolerance = 1e-4;
 
     return;
 }
@@ -142,19 +143,23 @@ void dense_qp_qpoases_opts_set(void *config_, void *opts_, const char *field, vo
 
     if (!strcmp(field, "tol_stat"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        opts->tolerance = MIN(opts->tolerance, *tol);
     }
     else if (!strcmp(field, "tol_eq"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        opts->tolerance = MIN(opts->tolerance, *tol);
     }
     else if (!strcmp(field, "tol_ineq"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        opts->tolerance = MIN(opts->tolerance, *tol);
     }
     else if (!strcmp(field, "tol_comp"))
     {
-        // TODO set solver exit tolerance
+        double *tol = value;
+        opts->tolerance = MIN(opts->tolerance, *tol);
     }
     else if (!strcmp(field, "warm_start"))
     {
@@ -467,6 +472,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
                 {
                     static Options options;
                     Options_setToMPC(&options);
+                    options.terminationTolerance = opts->tolerance;
                     QProblem_setOptions(QP, options);
                 }
 
@@ -499,6 +505,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
                 {
                     static Options options;
                     Options_setToMPC(&options);
+                    options.terminationTolerance = opts->tolerance;
                     QProblem_setOptions(QP, options);
                 }
                 QProblemB_init(QPB, H, g, d_lb, d_ub, &nwsr, &cputime);
@@ -526,10 +533,13 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             QProblem_printProperties(QP);
             if (opts->use_precomputed_cholesky == 1)
             {
+                // NOTE(oj): why are there no options set in this case?
                 // static Options options;
                 // Options_setToDefault( &options );
                 // options.initialStatusBounds = ST_INACTIVE;
+                // options.terminationTolerance = opts->tolerance;
                 // QProblem_setOptions( QP, options );
+
 
                 qpoases_status = (ns > 0) ?
                     QProblem_initW(QP, HH, gg, CC, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
@@ -547,6 +557,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
                 {
                     static Options options;
                     Options_setToMPC(&options);
+                    options.terminationTolerance = opts->tolerance;
                     QProblem_setOptions(QP, options);
                 }
                 if (opts->warm_start)
@@ -575,6 +586,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             QProblemB_printProperties(QPB);
             if (opts->use_precomputed_cholesky == 1)
             {
+                // NOTE(oj): why are there no options set in this case?
                 // static Options options;
                 // Options_setToDefault( &options );
                 // options.initialStatusBounds = ST_INACTIVE;
@@ -590,6 +602,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
                 {
                     static Options options;
                     Options_setToMPC(&options);
+                    options.terminationTolerance = opts->tolerance;
                     QProblemB_setOptions(QPB, options);
                 }
                 if (opts->warm_start)

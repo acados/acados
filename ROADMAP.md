@@ -1,5 +1,8 @@
 ## Roadmap
 
+#### core
+- [ ] propagate cost in integrator
+
 #### documentation
 - [ ] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula in docs
     - [ ] closely stick to setter names!
@@ -8,10 +11,10 @@
     - [ ] MacOS Matlab
 
 #### `matlab interface`
-- [ ] separate `acados_ocp()` into generating the C object and setting the numerical data
 - [ ] code generation workflow!
-- [ ] support nonuniform grids?
-- [ ] OCP with DAEs
+- [x] separate `acados_ocp()` into generating the C object and setting the numerical data
+- [x] support nonuniform grids
+- [x] OCP with DAEs
 
 #### build
 - [ ] cmake: add openmp parallelization

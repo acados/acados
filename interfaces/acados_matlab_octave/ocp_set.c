@@ -422,6 +422,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int nlp_solver_max_iter = (int) value[0];
         ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
     }
+    else if (!strcmp(field, "qp_warm_start"))
+    {
+        acados_size = 1;
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+        int qp_warm_start = (int) value[0];
+        ocp_nlp_opts_set(config, opts, "qp_warm_start", &qp_warm_start);
+    }
     else
     {
         MEX_FIELD_NOT_SUPPORTED(fun_name, field);
