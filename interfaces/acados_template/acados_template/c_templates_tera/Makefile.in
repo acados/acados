@@ -101,19 +101,11 @@ casadi_fun:
 	{% endif %}
 
 main:
-<<<<<<< HEAD
-	gcc $(ACADOS_FLAGS) -c main_{{ model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ \
-	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
-
-solver:
-	gcc $(ACADOS_FLAGS) -c acados_solver_{{ model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ \
-=======
 	gcc $(ACADOS_FLAGS) -c main_{{ model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 solver:
-	gcc $(ACADOS_FLAGS) -c libacados_solver_{{ model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
->>>>>>> 74cd154c805e926ec66fe3dfd69bb542f3771c87
+	gcc $(ACADOS_FLAGS) -c acados_solver_{{ model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 example:
