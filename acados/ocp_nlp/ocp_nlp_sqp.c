@@ -187,7 +187,6 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     int N = dims->N;
 
     // SQP opts
-
     opts->max_iter = 20;
     opts->tol_stat = 1e-8;
     opts->tol_eq   = 1e-8;
@@ -202,6 +201,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     opts->ext_qp_res = 0;
 
     opts->qp_warm_start = 0;
+    opts->warm_start_first_qp = false;
 
     opts->step_length = 1.0;
 
@@ -382,6 +382,11 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
         {
             double* step_length = (double *) value;
             opts->step_length = *step_length;
+        }
+        else if (!strcmp(field, "warm_start_first_qp"))
+        {
+            bool* warm_start_first_qp = (bool *) value;
+            opts->warm_start_first_qp = *warm_start_first_qp;
         }
         else
         {
@@ -1447,17 +1452,15 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 //        exit(1);
 
         // no warm start at first iteration
-        if(sqp_iter==0)
+        if (sqp_iter == 0 && !opts->warm_start_first_qp)
         {
             int tmp_int = 0;
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "warm_start", &tmp_int);
         }
 
-        // start timer
+        // solve qp
         acados_tic(&timer1);
-        // TODO move qp_out in memory !!!!! (it has to be preserved to do warm start)
         qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
-        // stop timer
         mem->time_qp_sol += acados_toc(&timer1);
 
         // start timer
@@ -1468,7 +1471,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         mem->time_reg += acados_toc(&timer1);
 
         // restore default warm start
-        if(sqp_iter==0)
+        if (sqp_iter==0)
         {
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
         }
@@ -1477,10 +1480,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         qp_info *qp_info_;
         ocp_qp_out_get(mem->qp_out, "qp_info", &qp_info_);
         nlp_out->qp_iter = qp_info_->num_iter;
+        // printf("\nqp_iter = %d\n", nlp_out->qp_iter);
         qp_iter = qp_info_->num_iter;
 
         // compute external QP residuals (for debugging)
-        if(opts->ext_qp_res)
+        if (opts->ext_qp_res)
         {
             ocp_qp_res_compute(mem->qp_in, mem->qp_out, work->qp_res, work->qp_res_ws);
             if (sqp_iter+1 < mem->stat_m)

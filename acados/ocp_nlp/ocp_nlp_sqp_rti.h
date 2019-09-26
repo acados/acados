@@ -68,8 +68,10 @@ typedef struct
     int compute_dual_sol;
     int reuse_workspace;
     int num_threads;
-	int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
-	int qp_warm_start;
+    int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
+    int qp_warm_start;   // NOTE: this is not actually setting the warm_start! Just for compatibility with sqp.
+    bool warm_start_first_qp; // to set qp_warm_start in first iteration
+
 } ocp_nlp_sqp_rti_opts;
 
 //
@@ -117,9 +119,11 @@ typedef struct
     double time_reg;
     double time_tot;
 
+    // statistics
 	double *stat;
 	int stat_m;
 	int stat_n;
+
 } ocp_nlp_sqp_rti_memory;
 
 //

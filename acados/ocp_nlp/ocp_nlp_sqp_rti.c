@@ -186,7 +186,7 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
     int N = dims->N;
 
     // SQP RTI opts
-
+    opts->warm_start_first_qp = false;
 //    opts->compute_dual_sol = 1;
 
     opts->reuse_workspace = 1;
@@ -298,7 +298,7 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, voi
     }
 
     // pass options to QP module
-    if( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
+    if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
     {
         config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field+module_length+1, value);
 
@@ -337,6 +337,11 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, voi
         {
             double* step_length = (double *) value;
             opts->step_length = *step_length;
+        }
+        else if (!strcmp(field, "warm_start_first_qp"))
+        {
+            bool* warm_start_first_qp = (bool *) value;
+            opts->warm_start_first_qp = *warm_start_first_qp;
         }
         else
         {
@@ -1196,7 +1201,6 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
- 
 
     // acados timer
     acados_timer timer0, timer1;
@@ -1329,10 +1333,6 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // update QP rhs for SQP (step prim var, abs dual var)
     sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
 
-    // save statistics
-//    mem->stat[mem->stat_n*1+0] = qp_status;
-//    mem->stat[mem->stat_n*1+1] = qp_iter;
-
     // start timer
     acados_tic(&timer1);
     // regularize Hessian
@@ -1344,15 +1344,15 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // print_ocp_qp_in(mem->qp_in);
     // exit(1);
 
-    // TODO no warm start across NLP solutions (yet)
-    int tmp_int = 0;
-    config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "warm_start", &tmp_int);
+    if (!opts->warm_start_first_qp)
+    {
+        int tmp_int = 0;
+        config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "warm_start", &tmp_int);
+    }
 
-    // start timer
+    // solve qp
     acados_tic(&timer1);
-    // TODO move qp_out in memory !!!!! (it has to be preserved to do warm start)
     qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
-    // stop timer
     mem->time_qp_sol += acados_toc(&timer1);
 
     // start timer
@@ -1415,8 +1415,6 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     mem->time_tot = total_time;
     nlp_out->total_time = total_time;
-
-    // ocp_nlp_out_print(nlp_out);
 
     // print_ocp_qp_in(mem->qp_in);
 
