@@ -53,7 +53,6 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/sim/sim_common.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -291,7 +290,7 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, voi
     if (char_!=NULL)
     {
         module_length = char_-field;
-        for(ii=0; ii<module_length; ii++)
+        for (ii=0; ii<module_length; ii++)
             module[ii] = field[ii];
         module[module_length] = '\0'; // add end of string
         ptr_module = module;
@@ -416,13 +415,9 @@ int ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
 
-    // loop index
     int ii;
 
-    // extract dims
     int N = dims->N;
-    // ocp_nlp_cost_dims **cost_dims = dims->cost;
-    // int ny;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *nz = dims->nz;
@@ -477,11 +472,11 @@ int ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts
 
     // dzduxt
     size += (N+1)*sizeof(struct blasfeo_dmat);
-    for(ii=0; ii<=N; ii++)
+    for (ii=0; ii<=N; ii++)
         size += blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]);
     // z_alg
     size += (N+1)*sizeof(struct blasfeo_dvec);
-    for(ii=0; ii<=N; ii++)
+    for (ii=0; ii<=N; ii++)
         size += blasfeo_memsize_dvec(nz[ii]);
 
     size += 1*8;  // blasfeo_str align
@@ -509,13 +504,9 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, voi
 
     char *c_ptr = (char *) raw_memory;
 
-    // loop index
     int ii;
 
-    // extract dims
     int N = dims->N;
-    // ocp_nlp_cost_dims **cost_dims = dims->cost;
-    // int ny;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *nz = dims->nz;
@@ -600,17 +591,17 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, voi
     align_char_to(64, &c_ptr);
 
     // dzduxt
-    for(ii=0; ii<=N; ii++)
-        {
+    for (ii=0; ii<=N; ii++)
+    {
         blasfeo_create_dmat(nu[ii]+nx[ii], nz[ii], mem->dzduxt+ii, c_ptr);
         c_ptr += blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]);
-        }
+    }
     // z_alg
-    for(ii=0; ii<=N; ii++)
-        {
+    for (ii=0; ii<=N; ii++)
+    {
         blasfeo_create_dvec(nz[ii], mem->z_alg+ii, c_ptr);
         c_ptr += blasfeo_memsize_dvec(nz[ii]);
-        }
+    }
 
     mem->status = ACADOS_READY;
 
@@ -636,10 +627,8 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
 
-    // loop index
     int ii;
 
-    // extract dims
     int N = dims->N;
     // int *nx = dims->nx;
     // int *nu = dims->nu;
@@ -773,7 +762,6 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
 
 
 
-// TODO(all): introduce member "memsize" in all structures to make on-line cast cheaper (i.e. avoid to calculate size on-line)
 static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
                                            ocp_nlp_sqp_rti_work *work,
                                            ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_opts *opts)
@@ -785,7 +773,6 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
     ocp_nlp_cost_config **cost = config->cost;
     ocp_nlp_constraints_config **constraints = config->constraints;
 
-    // extract dims
     int N = dims->N;
     // int *nx = dims->nx;
     // int *nu = dims->nu;
@@ -930,7 +917,6 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
 
     }
 
-    // assert & return
     assert((char *) work + ocp_nlp_sqp_rti_workspace_calculate_size(config, dims, opts) >= c_ptr);
 
     return;
@@ -948,10 +934,8 @@ static void initialize_qp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
 {
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
 
-    // loop index
     int ii;
 
-    // extract dims
     int N = dims->N;
 
 #if defined(ACADOS_WITH_OPENMP)
@@ -984,10 +968,8 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 {
     ocp_nlp_config *config = (ocp_nlp_config *) config_;
 
-    // loop index
     int i;
 
-    // extract dims
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
@@ -1100,10 +1082,8 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
                                   ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts,
                                   ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_work *work)
 {
-    // loop index
     int i;
 
-    // extract dims
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
@@ -1137,26 +1117,14 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
                                  ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp_rti_memory *mem,
                                  ocp_nlp_sqp_rti_work *work)
 {
-    // loop index
     int i;
 
-    // extract dims
     int N = dims->N;
     int *nv = dims->nv;
     int *nx = dims->nx;
     int *nu = dims->nu;
     int *ni = dims->ni;
     int *nz = dims->nz;
-
-    // TODO(all): fix and move where appropriate
-    //    for (i = 0; i < N; i++)
-    //    {
-    //  nx1 = dims->constraints[i+1]->nx;
-    //        for (j = 0; j < nx1; j++)
-    //        {
-    //            work->sim_in[i]->S_adj[j] = -BLASFEO_DVECEL(&mem->qp_out->pi[i], j);
-    //        }
-    //    }
 
     double alpha = opts->step_length;
 
@@ -1166,11 +1134,9 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
     for (i = 0; i <= N; i++)
     {
         // (full) step in primal variables
-
         blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux + i, 0, nlp_out->ux + i, 0, nlp_out->ux + i, 0);
 
-        // absolute in dual variables
-
+        // update dual variables
         if (i < N)
         {
             blasfeo_dvecsc(nx[i+1], 1.0-alpha, nlp_out->pi+i, 0);
@@ -1180,6 +1146,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
         blasfeo_dvecsc(2*ni[i], 1.0-alpha, nlp_out->lam+i, 0);
         blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->lam+i, 0, nlp_out->lam+i, 0, nlp_out->lam+i, 0);
 
+        // update slack values
         blasfeo_dvecsc(2*ni[i], 1.0-alpha, nlp_out->t+i, 0);
         blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->t+i, 0, nlp_out->t+i, 0, nlp_out->t+i, 0);
 
@@ -1202,10 +1169,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
 
-    // acados timer
     acados_timer timer0, timer1;
 
-    // start timer
     acados_tic(&timer0);
 
     ocp_nlp_dims *dims = dims_;
@@ -1227,7 +1192,6 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->time_reg = 0.0;
     mem->time_tot = 0.0;
 
-    // extract dims
     int N = dims->N;
 
     int ii;
@@ -1315,25 +1279,19 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         
 
-    // SQP body
-
-    // start timer
-    acados_tic(&timer1);
+    /* SQP body */
 
     // linearizate NLP and update QP matrices
+    acados_tic(&timer1);
     linearize_update_qp_matrices(config, dims, nlp_in, nlp_out, opts, mem, work);
-
-    // stop timer
     mem->time_lin += acados_toc(&timer1);
 
     // update QP rhs for SQP (step prim var, abs dual var)
     sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
 
-    // start timer
-    acados_tic(&timer1);
     // regularize Hessian
+    acados_tic(&timer1);
     config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
-    // stop timer
     mem->time_reg += acados_toc(&timer1);
 
     // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
@@ -1352,11 +1310,9 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                     opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
     mem->time_qp_sol += acados_toc(&timer1);
 
-    // start timer
-    acados_tic(&timer1);
     // compute correct dual solution in case of Hessian regularization
+    acados_tic(&timer1);
     config->regularize->correct_dual_sol(config->regularize, dims->regularize, opts->regularize, mem->regularize_mem);
-    // stop timer
     mem->time_reg += acados_toc(&timer1);
 
     // TODO move into QP solver memory ???
@@ -1386,7 +1342,6 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     {
         //   print_ocp_qp_in(mem->qp_in);
 
-        // stop timer
         total_time += acados_toc(&timer0);
 
         mem->time_tot = total_time;
@@ -1407,7 +1362,6 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     // ocp_nlp_out_print(nlp_out);
     // exit(1);
 
-    // stop timer
     total_time += acados_toc(&timer0);
 
     mem->time_tot = total_time;
@@ -1440,7 +1394,6 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
 
     ocp_nlp_sqp_rti_cast_workspace(config, dims, work, mem, opts);
 
-    // extract dims
     int N = dims->N;
     int status = ACADOS_SUCCESS;
 
@@ -1490,11 +1443,6 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_, vo
 
     ocp_nlp_sqp_rti_cast_workspace(config, dims, work, mem, opts);
 
-    // extract dims
-//    int N = dims->N;
-//    int status = ACADOS_SUCCESS;
-
-//    int ii;
 
     d_ocp_qp_copy_all(mem->qp_in, work->tmp_qp_in);
     d_ocp_qp_set_rhs_zero(work->tmp_qp_in);
@@ -1513,12 +1461,9 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_, vo
 //        d_ocp_qp_sol_print(work->tmp_qp_out->dim, work->tmp_qp_out);
 //        exit(1);
 
-        // copy tmp_qp_out into sens_nlp_out
-
-        // loop index
+        /* copy tmp_qp_out into sens_nlp_out */
         int i;
 
-        // extract dims
         int N = dims->N;
         int *nv = dims->nv;
         int *nx = dims->nx;
@@ -1551,7 +1496,6 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_, vo
 
 
 
-// TODO remane mmeory_get ???
 void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *return_value_)
 {
     // ocp_nlp_config *config = config_;
