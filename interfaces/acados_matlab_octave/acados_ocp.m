@@ -226,7 +226,9 @@ classdef acados_ocp < handle
 			fwrite(fid, json_string, 'char');
 			fclose(fid);
 			% render templated C code
-			acados_template_mex.generate_solver('acados_ocp_nlp.json', '/home/andrea/.acados_t/bin/python3')
+			% old call (Python + Jinja)
+            % acados_template_mex.generate_solver('acados_ocp_nlp.json', '/home/andrea/.acados_t/bin/python3')
+            acados_template_mex.generate_solver_matlab('acados_ocp_nlp.json')
 		end
 
 
