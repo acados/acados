@@ -36,6 +36,8 @@ clear all
 
 GENERATE_C_CODE = 1;
 
+model_name = 'ocp_pendulum';
+
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
@@ -134,6 +136,7 @@ ubu =  80*ones(nu, 1);
 
 %% acados ocp model
 ocp_model = acados_ocp_model();
+ocp_model.set('name', model_name);
 ocp_model.set('T', T);
 
 % dims

@@ -210,7 +210,7 @@ classdef acados_ocp_model < handle
                     if isfield(obj.model_struct, 'sym_z')
                         obj.acados_ocp_nlp_json.model.z = obj.model_struct.sym_z;
                     end
-                    obj.acados_ocp_nlp_json.model.name = 'dyn';
+                    % obj.acados_ocp_nlp_json.model.name = 'dyn';
                     obj.acados_ocp_nlp_json.model.f_expl_expr = value;
 				elseif (strcmp(field, 'dyn_expr_phi'))
 					obj.model_struct.dyn_expr_phi = value;
@@ -223,7 +223,7 @@ classdef acados_ocp_model < handle
                     if isfield(obj.model_struct, 'sym_z')
                         obj.acados_ocp_nlp_json.model.z = obj.model_struct.sym_z;
                     end
-                    obj.acados_ocp_nlp_json.model.name = 'dyn';
+                    % obj.acados_ocp_nlp_json.model.name = 'dyn';
                     obj.acados_ocp_nlp_json.model.f_impl_expr = value;
 				else
 					disp(['acados_ocp_model: set: wrong field: ', field]);
@@ -431,6 +431,7 @@ classdef acados_ocp_model < handle
 
 				if (strcmp(field, 'name'))
 					obj.model_struct.name = value;
+  					obj.acados_ocp_nlp_json.model.name = value;
 				elseif (strcmp(field, 'T'))
 					obj.model_struct.T = value;
   					obj.acados_ocp_nlp_json.solver_config.tf = value;
