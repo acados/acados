@@ -54,21 +54,33 @@ class acados_constraint():
 
 def acados_dae_strip_non_num(acados_constraint):
     out = acados_constraint
-    del out['f_impl_expr']
-    del out['f_expl_expr']
-    del out['x']
-    del out['xdot']
-    del out['u']
-    del out['z']
-    del out['p']
+    if 'f_impl_expr' in out.keys(): 
+        del out['f_impl_expr']
+    if 'f_expl_expr' in out.keys(): 
+        del out['f_expl_expr']
+    if 'x' in out.keys(): 
+        del out['x']
+    if 'xdot' in out.keys(): 
+        del out['xdot']
+    if 'u' in out.keys(): 
+        del out['u']
+    if 'z' in out.keys(): 
+        del out['z']
+    if 'p' in out.keys(): 
+        del out['p']
     return out
 
 def acados_constraint_strip_non_num(acados_constraint):
     out = acados_constraint
-    del out['x']
-    del out['u']
-    del out['z']
-    del out['expr']
-    del out['nc']
+    if 'x' in out.keys(): 
+        del out['x']
+    if 'u' in out.keys(): 
+        del out['u']
+    if 'z' in out.keys(): 
+        del out['z']
+    if 'expr' in out.keys(): 
+        del out['expr']
+    if 'nc' in out.keys(): 
+        del out['nc']
     return out
 
