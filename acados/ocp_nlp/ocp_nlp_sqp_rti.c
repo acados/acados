@@ -288,7 +288,7 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, voi
 
     // extract module name
     char *char_ = strchr(field, '_');
-    if(char_!=NULL)
+    if (char_!=NULL)
     {
         module_length = char_-field;
         for(ii=0; ii<module_length; ii++)
@@ -302,7 +302,7 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, voi
     {
         config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field+module_length+1, value);
 
-        if(!strcmp(field, "qp_warm_start"))
+        if (!strcmp(field, "qp_warm_start"))
         {
             int* i_ptr = (int *) value;
             opts->qp_warm_start = *i_ptr;
@@ -471,7 +471,7 @@ int ocp_nlp_sqp_rti_memory_calculate_size(void *config_, void *dims_, void *opts
     // stat
     int stat_m = 1+1;
     int stat_n = 2;
-    if(opts->ext_qp_res)
+    if (opts->ext_qp_res)
         stat_n += 4;
     size += stat_n*stat_m*sizeof(double);
 
@@ -582,7 +582,7 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config_, void *dims_, void *opts_, voi
     mem->stat = (double *) c_ptr;
     mem->stat_m = 1+1;
     mem->stat_n = 2;
-    if(opts->ext_qp_res)
+    if (opts->ext_qp_res)
         mem->stat_n += 4;
     c_ptr += mem->stat_m*mem->stat_n*sizeof(double);
 
@@ -666,7 +666,7 @@ int ocp_nlp_sqp_rti_workspace_calculate_size(void *config_, void *dims_, void *o
     // constraints
     size += (N + 1) * sizeof(void *);
 
-    if(opts->ext_qp_res)
+    if (opts->ext_qp_res)
     {
         // qp res
         size += ocp_qp_res_calculate_size(dims->qp_solver->orig_dims);
@@ -814,7 +814,7 @@ static void ocp_nlp_sqp_rti_cast_workspace(void *config_, ocp_nlp_dims *dims,
     work->constraints = (void **) c_ptr;
     c_ptr += (N + 1) * sizeof(void *);
 
-    if(opts->ext_qp_res)
+    if (opts->ext_qp_res)
     {
         // qp res
         work->qp_res = ocp_qp_res_assign(dims->qp_solver->orig_dims, c_ptr);
@@ -1076,7 +1076,7 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
     {
         // TODO(rien) where should the update happen??? move to qp update ???
         // TODO(all): fix and move where appropriate
-        //  if(i<N)
+        //  if (i<N)
         //  {
         //   ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
         //   sim_opts *opts = dynamics_opts->sim_solver;
@@ -1185,10 +1185,10 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
 
         // linear update of algebraic variables using state and input sensitivity
         if (i < N)
-		{
-			blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0,
+        {
+            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0,
                             1.0, mem->z_alg+i, 0, nlp_out->z+i, 0); 
-		}
+        }
 
     }
 
@@ -1352,7 +1352,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // solve qp
     acados_tic(&timer1);
-    qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, mem->qp_in, mem->qp_out, opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
+    qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, mem->qp_in, mem->qp_out,
+                                    opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
     mem->time_qp_sol += acados_toc(&timer1);
 
     // start timer
@@ -1369,7 +1370,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     qp_iter = qp_info_->num_iter;
 
     // compute external QP residuals (for debugging)
-    if(opts->ext_qp_res)
+    if (opts->ext_qp_res)
     {
         ocp_qp_res_compute(mem->qp_in, mem->qp_out, work->qp_res, work->qp_res_ws);
         ocp_qp_res_compute_nrm_inf(work->qp_res, mem->stat+(mem->stat_n*1+2));
@@ -1378,7 +1379,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
     //  print_ocp_qp_out(mem->qp_out);
-    //  if(sqp_iter==1)
+    //  if (sqp_iter==1)
     //  exit(1);
 
     // save statistics
@@ -1449,11 +1450,17 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
 
     int ii;
 
-    // TODO(fuck_lint) checks
-    // TODO(fuck_lint) flag to enable/disable checks
+    // TODO(giaf) flag to enable/disable checks
     for (ii = 0; ii <= N; ii++)
     {
-        // TODO(fuck_lint) check that ns in opt_var == ns in constraints
+        int module_val;
+        config->constraints[ii]->dims_get(config->constraints[ii], dims->constraints[ii],
+                                        "ns", &module_val);
+        if (dims->ns[ii] != module_val)
+        {
+            printf("ocp_nlp_sqp_precompute: inconsistent dimension ns with constraint module.");
+            exit(1);
+        }
     }
 
     // precompute

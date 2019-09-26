@@ -64,7 +64,7 @@ typedef struct
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
     void **constraints;  // constraints_opts
-	double step_length;  // (fixed) step length in SQP loop
+    double step_length;  // (fixed) step length in SQP loop
     int compute_dual_sol;
     int reuse_workspace;
     int num_threads;
@@ -94,10 +94,10 @@ void ocp_nlp_sqp_rti_dyanimcs_opts_set(void *config, void *opts, int stage,
 
 typedef struct
 {
-	// QP in & out
+    // QP in & out
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
-	// QP stuff not entering the qp_in struct
+    // QP stuff not entering the qp_in struct
     struct blasfeo_dmat *dzduxt; // dzdux transposed
     struct blasfeo_dvec *z_alg; // z_alg
 
@@ -120,9 +120,9 @@ typedef struct
     double time_tot;
 
     // statistics
-	double *stat;
-	int stat_m;
-	int stat_n;
+    double *stat;
+    int stat_m;
+    int stat_n;
 
 } ocp_nlp_sqp_rti_memory;
 
@@ -139,14 +139,14 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config, void *dims, void *opts_, void 
 
 typedef struct
 {
-	// temp QP in & out (to be used as workspace)
+    // temp QP in & out (to be used as workspace)
     ocp_qp_in *tmp_qp_in;
     ocp_qp_out *tmp_qp_out;
 
     // QP solver
     void *qp_work;
-	ocp_qp_res *qp_res;
-	ocp_qp_res_ws *qp_res_ws;
+    ocp_qp_res *qp_res;
+    ocp_qp_res_ws *qp_res_ws;
 
     void **dynamics;     // dynamics_workspace
     void **cost;         // cost_workspace
