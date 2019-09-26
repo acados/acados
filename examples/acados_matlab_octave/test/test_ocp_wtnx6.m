@@ -484,13 +484,13 @@ x_sim_ref = [   1.263425730522397
 err_vs_ref = x_sim_ref - x_sim(:,end);
 
 if status~=0
-    error('\nnTEST_OCP: solution failed!\n\n');
+    error('test_ocp_wtnx6: solution failed!');
 elseif err_vs_ref > 1e-14
-    error('\nnTEST_OCP: to high deviation from known result!\n\n');
+    error('test_ocp_wtnx6: to high deviation from known result!');
 elseif sqp_iter > 2
-    error('\nnTEST_OCP: sqp_iter > 2, this problem is typically solved within less iterations!\n\n');
+    error('test_ocp_wtnx6: sqp_iter > 2, this problem is typically solved within less iterations!');
 else
-    fprintf('\nsuccess!\n');
+    fprintf('\ntest_ocp_wtnx6: success!\n');
 end
 
 % figures

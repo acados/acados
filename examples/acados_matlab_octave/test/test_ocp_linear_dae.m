@@ -221,10 +221,10 @@ for itest = 1:2;
     tol_diff_xz = 1e-15;
 
     if status ~= 0
-        error('ocp_nlp solver exit with nonzero status');
+        error('test_ocp_linear_dae: ocp_nlp solver exit with nonzero status');
     elseif max(abs(diff_x_z)) > tol_diff_xz
-        error(['difference between x and z bigger than', num2str(tol_diff_xz, '%e'),...
-        ' should be equal'])
+        error(['test_ocp_wtnx6: difference between x and z bigger than',
+            num2str(tol_diff_xz, '%e'), ' should be equal'])
     end
 end % itest
 
