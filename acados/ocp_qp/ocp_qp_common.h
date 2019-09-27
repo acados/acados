@@ -61,7 +61,6 @@ typedef struct d_ocp_qp_res_ws ocp_qp_res_ws;
 #define QP_SOLVER_CONFIG_
 typedef struct
 {
-    // TODO(dimitris): pass dims to evaluate?
     void (*dims_set)(void *config_, void *dims_, int stage, const char *field, int* value);
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);

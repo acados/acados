@@ -698,9 +698,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     sim_config *config = config_;
     sim_opts *opts = opts_;
 
-    printf("\nSIM_IRK: opts - sens_forw %d, sens_adj %d, sens_hess %d\n", opts->sens_forw,
-             opts->sens_adj, opts->sens_hess);
-
     if ( opts->ns != opts->tableau_size )
     {
         printf("Error in sim_irk: the Butcher tableau size does not match ns");
