@@ -232,6 +232,11 @@ void sim_opts_set(sim_config *config, void *opts, const char *field,
     config->opts_set(config, opts, field, value);
 }
 
+void sim_opts_get(sim_config *config, void *opts, const char *field, void *value)
+{
+    sim_opts *opts_ = (sim_opts *) opts;
+    sim_opts_get_(config, opts_, field, value);
+}
 
 /************************************************
 * solver

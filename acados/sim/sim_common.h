@@ -213,6 +213,7 @@ int sim_out_get_(void *config, void *dims, sim_out *out, const char *field, void
 /* opts */
 //
 void sim_opts_set_(sim_opts *opts, const char *field, void *value);
-
+//
+void sim_opts_get_(sim_config *config, sim_opts *opts, const char *field, void *value);
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

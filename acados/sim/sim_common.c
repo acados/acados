@@ -467,3 +467,21 @@ void sim_opts_set_(sim_opts *opts, const char *field, void *value)
 
     return;
 }
+
+
+void sim_opts_get_(sim_config *config, sim_opts *opts, const char *field, void *value)
+{
+
+    if (!strcmp(field, "sens_adj"))
+    {
+        bool *sens_adj = value;
+        *sens_adj = opts->sens_adj;
+    }
+    else
+    {
+        printf("sim_opts_get: field %s not supported \n", field);
+        exit(1);
+    }
+
+    return;
+}
