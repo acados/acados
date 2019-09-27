@@ -226,10 +226,10 @@ void sim_opts_destroy(void *opts)
 }
 
 
-int sim_opts_set(sim_config *config, void *opts, const char *field,
+void sim_opts_set(sim_config *config, void *opts, const char *field,
                            void *value)
 {
-    return config->opts_set(config, opts, field, value);
+    config->opts_set(config, opts, field, value);
 }
 
 

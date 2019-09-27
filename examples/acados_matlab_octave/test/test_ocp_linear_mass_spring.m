@@ -61,11 +61,9 @@ nlp_solver_ext_qp_res = 1;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
 qp_solver_cond_N = 5;
-dyn_type = 'explicit';
-%dyn_type = 'implicit';
 %dyn_type = 'discrete';
 sim_method = 'erk';
-%sim_method = 'irk';
+% sim_method = 'irk';
 %sim_method = 'irk_gnsf';
 sim_method_num_stages = 4;
 sim_method_num_steps = 3;
@@ -73,7 +71,11 @@ sim_method_num_steps = 3;
 %cost_type = 'nonlinear_ls';
 cost_type = 'ext_cost';
 
-
+if strcmp(sim_method, 'erk')
+    dyn_type = 'explicit';
+else % irk, irk_gnsf
+    dyn_type = 'implicit';
+end
 
 %% create model entries
 model = linear_mass_spring_model;

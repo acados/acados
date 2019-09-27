@@ -406,9 +406,9 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
 * sim_opts
 ************************************************/
 
-int sim_opts_set_(sim_opts *opts, const char *field, void *value)
+void sim_opts_set_(sim_opts *opts, const char *field, void *value)
 {
-    int status = ACADOS_SUCCESS;
+
     if (!strcmp(field, "ns") ||!strcmp(field, "num_stages"))
     {
         int *ns = (int *) value;
@@ -464,5 +464,6 @@ int sim_opts_set_(sim_opts *opts, const char *field, void *value)
         printf("\nerror: field %s not available in sim_opts_set\n", field);
         exit(1);
     }
-    return status; // TODO remove
+
+    return;
 }

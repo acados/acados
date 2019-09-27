@@ -111,7 +111,7 @@ void *sim_opts_create(sim_config *config, void *dims);
 //
 void sim_opts_destroy(void *opts);
 //
-int sim_opts_set(sim_config *config, void *opts, const char *field,
+void sim_opts_set(sim_config *config, void *opts, const char *field,
                            void *value);
 /* solver */
 //

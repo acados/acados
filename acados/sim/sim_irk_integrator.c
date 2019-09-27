@@ -324,10 +324,10 @@ void sim_irk_opts_update(void *config_, void *dims, void *opts_)
 }
 
 
-int sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value)
+void sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
     sim_opts *opts = (sim_opts *) opts_;
-    return sim_opts_set_(opts, field, value);
+    sim_opts_set_(opts, field, value);
 }
 
 /************************************************
@@ -697,6 +697,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // cast pointers
     sim_config *config = config_;
     sim_opts *opts = opts_;
+
+    printf("\nSIM_IRK: opts - sens_forw %d, sens_adj %d, sens_hess %d\n", opts->sens_forw,
+             opts->sens_adj, opts->sens_hess);
 
     if ( opts->ns != opts->tableau_size )
     {
