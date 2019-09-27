@@ -604,22 +604,21 @@ void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 }
 
 
+// TODO(oj): do we need these?
+// void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+//         const char *field, void *value)
+// {
+//     config->cost_opts_set(config, opts_, stage, field, value);
+//     return;
+// }
 
-void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-        const char *field, void *value)
-{
-    config->cost_opts_set(config, opts_, stage, field, value);
-    return;
-}
 
-
-
-void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-        const char *field, void *value)
-{
-    config->constraints_opts_set(config, opts_, stage, field, value);
-    return;
-}
+// void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+//         const char *field, void *value)
+// {
+//     config->constraints_opts_set(config, opts_, stage, field, value);
+//     return;
+// }
 
 
 

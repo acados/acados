@@ -303,8 +303,9 @@ void ocp_nlp_opts_destroy(void *opts);
 /// \param value Value of the option.
 void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void* value);
 
-/// TBC
+
 /// Set the option for the dynamics in a given stage.
+/// More specifically options of the integrator in case of continuous dynamics
 ///
 /// \param config The configuration struct.
 /// \param opts_ The options struct.
@@ -314,27 +315,12 @@ void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, vo
 void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
         const char *field, void *value);
 
-/// TBC
-/// Set the option for the cost in a given stage.
-///
-/// \param config The configuration struct.
-/// \param opts_ The options struct.
-/// \param stage Stage number.
-/// \param field Name of the option.
-/// \param value Value of the option.
-void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-        const char *field, void *value);
 
-/// TBC
-/// Set the option for the constraints in a given stage.
-///
-/// \param config The configuration struct.
-/// \param opts_ The options struct.
-/// \param stage Stage number.
-/// \param field Name of the option.
-/// \param value Value of the option.
-void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-        const char *field, void *value);
+// TODO(oj): do we need these?
+// void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+//         const char *field, void *value);
+// void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+//         const char *field, void *value);
 
 /// TBC
 /// Updates the options.
