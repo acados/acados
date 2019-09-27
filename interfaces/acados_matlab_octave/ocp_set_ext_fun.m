@@ -251,7 +251,7 @@ elseif (strcmp(model_struct.dyn_type, 'discrete'))
     phase_end = {phase_end{:}, N-1, N-1};
 
 else
-    fprintf('\nocp_compile_mex_mode_dep: dyn_type not supported: %s\n', model_struct.dyn_type);
+    fprintf('\nocp_compile_interface_mode_dep: dyn_type not supported: %s\n', model_struct.dyn_type);
 end
 
 % nonlinear constraints
@@ -420,7 +420,7 @@ end
 %phase
 %phase_start
 %phase_end
-if (strcmp(opts_struct.compile_mex, 'true') || strcmp(opts_struct.codgen_model, 'true'))
+if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_model, 'true'))
 
     if is_octave()
         if ~exist(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'file')

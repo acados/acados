@@ -37,7 +37,7 @@ clear VARIABLES
 addpath('../pendulum_on_cart_model/');
 
 %% arguments
-compile_mex = 'true';
+compile_interface = 'true';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
 
@@ -177,7 +177,7 @@ ocp_model.set('constr_uh', ubu);
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);

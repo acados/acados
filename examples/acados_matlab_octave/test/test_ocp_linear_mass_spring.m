@@ -39,7 +39,7 @@ addpath('../linear_mass_spring_model/');
 
 
 %% arguments
-compile_mex = 'false';
+compile_interface = 'false';
 codgen_model = 'true';
 % param_scheme = 'multiple_shooting_unif_grid';
 param_scheme = 'multiple_shooting';
@@ -220,7 +220,7 @@ end
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);

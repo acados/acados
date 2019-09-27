@@ -37,7 +37,7 @@ clear all
 
 
 %% arguments
-compile_mex = 'true';
+compile_interface = 'true';
 codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
 N = 20;
@@ -194,7 +194,7 @@ ocp_model.model_struct
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);

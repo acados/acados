@@ -37,7 +37,7 @@ clear all
 
 
 %% arguments
-compile_mex = 'true';
+compile_interface = 'true';
 codgen_model = 'true';
 method = 'irk';
 sens_forw = 'true';
@@ -91,7 +91,7 @@ sim_model.model_struct
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
-sim_opts.set('compile_mex', compile_mex);
+sim_opts.set('compile_interface', compile_interface);
 sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);

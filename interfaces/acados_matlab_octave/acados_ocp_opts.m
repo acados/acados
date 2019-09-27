@@ -48,7 +48,7 @@ classdef acados_ocp_opts < handle
             % model stuct
             obj.opts_struct = struct;
             % default values
-            obj.opts_struct.compile_mex = 'false';
+            obj.opts_struct.compile_interface = 'false';
             obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.param_scheme = 'multiple_shooting_unif_grid';
             obj.opts_struct.param_scheme_N = 10;
@@ -82,8 +82,8 @@ classdef acados_ocp_opts < handle
 
 
         function obj = set(obj, field, value)
-            if (strcmp(field, 'compile_mex'))
-                obj.opts_struct.compile_mex = value;
+            if (strcmp(field, 'compile_interface'))
+                obj.opts_struct.compile_interface = value;
             elseif (strcmp(field, 'codgen_model'))
                 obj.opts_struct.codgen_model = value;
             elseif (strcmp(field, 'param_scheme'))
