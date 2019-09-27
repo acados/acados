@@ -62,8 +62,17 @@ classdef acados_ocp < handle
                 end
             end
 
-            % compile mex without model dependency
-            if (strcmp(obj.opts_struct.compile_mex, 'true'))
+            % check if mex interface exists already
+            if is_octave()
+                mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
+                    '/ocp_create.mex'), 'file');
+            else
+                mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
+                    '/ocp_create.mexa64'), 'file');
+            end
+
+            % compile mex interface (without model dependency)
+            if (strcmp(obj.opts_struct.compile_mex, 'true') || ~mex_exists)
                 ocp_compile_mex(obj.opts_struct);
             end
 

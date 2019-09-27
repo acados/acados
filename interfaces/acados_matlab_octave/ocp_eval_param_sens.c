@@ -44,44 +44,44 @@
 
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-	{
+    {
 
-//	mexPrintf("\nin ocp_solve\n");
+//    mexPrintf("\nin ocp_solve\n");
 
-	long long *ptr;
+    long long *ptr;
 
-	/* RHS */
+    /* RHS */
 
-	// C_ocp
+    // C_ocp
 
-	// solver
-	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "solver" ) );
-	ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
-	// sens_out
-	ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "sens_out" ) );
-	ocp_nlp_out *sens_out = (ocp_nlp_out *) ptr[0];
+    // solver
+    ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "solver" ) );
+    ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
+    // sens_out
+    ptr = (long long *) mxGetData( mxGetField( prhs[0], 0, "sens_out" ) );
+    ocp_nlp_out *sens_out = (ocp_nlp_out *) ptr[0];
 
-	// field
-	char *field = mxArrayToString( prhs[1] );
+    // field
+    char *field = mxArrayToString( prhs[1] );
 
-	// stage
-	int stage = mxGetScalar( prhs[2] );
+    // stage
+    int stage = mxGetScalar( prhs[2] );
 
-	// index
-	int index = mxGetScalar( prhs[3] );
-
-
-
-	/* solver */
-	ocp_nlp_eval_param_sens(solver, field, stage, index, sens_out);
+    // index
+    int index = mxGetScalar( prhs[3] );
 
 
 
-	/* return */
+    /* solver */
+    ocp_nlp_eval_param_sens(solver, field, stage, index, sens_out);
 
-	return;
 
-	}
+
+    /* return */
+
+    return;
+
+    }
 
 
 

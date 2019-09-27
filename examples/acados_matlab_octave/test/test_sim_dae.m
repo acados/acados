@@ -42,7 +42,7 @@ for integrator = {'irk_gnsf', 'irk'}
     method = integrator{1};
 
     %% arguments
-    compile_mex = 'true'; % true, false
+    compile_mex = 'false'; % true, false
     codgen_model = 'true'; % true, false
     gnsf_detect_struct = 'true'; % true, false
     % method = 'irk'; % irk, irk_gnsf, [erk]

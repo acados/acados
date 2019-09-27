@@ -46,7 +46,7 @@ classdef acados_sim_opts < handle
 
         function obj = acados_sim_opts()
             obj.opts_struct = struct;
-            obj.opts_struct.compile_mex = 'true';
+            obj.opts_struct.compile_mex = 'false';
             obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.method = 'irk';
             obj.opts_struct.num_stages = 4;

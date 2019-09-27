@@ -43,7 +43,7 @@ end
 
 
 %% arguments
-compile_mex = 'true';
+compile_mex = 'false';
 codgen_model = 'true';
 param_scheme = 'multiple_shooting_unif_grid';
 %param_scheme = 'multiple_shooting';

@@ -48,7 +48,7 @@ load testSim.mat
 
 
 %% arguments
-compile_mex = 'true';
+compile_mex = 'false';
 codgen_model = 'true';
 method = 'irk'; % irk, erk, irk_gnsf
 % method = 'irk_gnsf';

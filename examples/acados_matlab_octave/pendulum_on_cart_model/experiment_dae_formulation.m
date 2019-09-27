@@ -50,7 +50,7 @@ constr_violation = zeros(1, ncases);
 constr_vals = zeros(N, ncases);
 for i = 1:3
     %% arguments
-    compile_mex = 'true';
+    compile_mex = 'false';
     if ~is_octave && exist('build/ocp_create.mexa64', 'file')
         compile_mex = 'false';
     elseif is_octave && exist('build/ocp_create.mex', 'file')

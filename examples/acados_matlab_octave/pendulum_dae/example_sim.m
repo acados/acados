@@ -40,7 +40,7 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% options
-compile_mex = 'true'; % true, false
+compile_mex = 'false'; % true, false
 % codgen_model = 'true'; % true, false
 codgen_model = 'true';
 gnsf_detect_struct = 'true'; % true, false

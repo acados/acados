@@ -110,31 +110,31 @@ end
 if gnsf.purely_linear == 1
     disp(' ');
     disp('Model is fully linear!');
-	disp(' ');
+    disp(' ');
 end
 
 if ~isequal(gnsf.idx_perm_x, [1:nx])
-	disp(' ');
-	disp('--------------------------------------------------------------------------------------------------');
-	disp('NOTE: permuted differential state vector x, such that x_gnsf = x(idx_perm_x) with idx_perm_x =');
-	disp(' ');
-	disp(gnsf.idx_perm_x)
+    disp(' ');
+    disp('--------------------------------------------------------------------------------------------------');
+    disp('NOTE: permuted differential state vector x, such that x_gnsf = x(idx_perm_x) with idx_perm_x =');
+    disp(' ');
+    disp(gnsf.idx_perm_x)
 end
 
 if nz~= 0 && ~isequal(gnsf.idx_perm_z, [1:nz])
-	disp(' ');
-	disp('--------------------------------------------------------------------------------------------------');
-	disp('NOTE: permuted algebraic state vector z, such that z_gnsf = z(idx_perm_z) with idx_perm_z =');
-	disp(' ');
-	disp(gnsf.idx_perm_z)
+    disp(' ');
+    disp('--------------------------------------------------------------------------------------------------');
+    disp('NOTE: permuted algebraic state vector z, such that z_gnsf = z(idx_perm_z) with idx_perm_z =');
+    disp(' ');
+    disp(gnsf.idx_perm_z)
 end
 
 if ~isequal(gnsf.idx_perm_f, [1:nx+nz])
-	disp(' ');
-	disp('--------------------------------------------------------------------------------------------------');
-	disp('NOTE: permuted rhs expression vector f, such that f_gnsf = f(idx_perm_f) with idx_perm_f =');
-	disp(' ');
-	disp(gnsf.idx_perm_f)
+    disp(' ');
+    disp('--------------------------------------------------------------------------------------------------');
+    disp('NOTE: permuted rhs expression vector f, such that f_gnsf = f(idx_perm_f) with idx_perm_f =');
+    disp(' ');
+    disp(gnsf.idx_perm_f)
 end
 
 %% print GNSF dimensions

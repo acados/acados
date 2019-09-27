@@ -41,7 +41,7 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% arguments
-compile_mex = 'true';
+compile_mex = 'false';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
 %method = 'erk';
