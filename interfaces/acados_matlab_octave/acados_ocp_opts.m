@@ -148,6 +148,11 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.regularize_method = value;
             elseif (strcmp(field, 'output_dir'))
                 obj.opts_struct.output_dir = value;
+            elseif (strcmp(field, 'compile_mex'))
+                disp(['Option compile_mex is not supported anymore,'...
+                    'please use compile_interface instead or dont set the option.', ...
+                    'note: false will compile the interface, if not compiled already.']);
+                keyboard
             else
                 disp(['acados_ocp_opts: set: wrong field: ', field]);
                 keyboard;

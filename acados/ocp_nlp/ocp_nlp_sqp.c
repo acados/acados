@@ -1402,10 +1402,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 //        if (sqp_iter==1)
 //        exit(1);
 
-        // no warm start at first iteration
+        // (typically) no warm start at first iteration
         if (sqp_iter == 0 && !opts->warm_start_first_qp)
         {
-            // printf("sqp: dont warm start first qp\n");
             int tmp_int = 0;
             config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, "warm_start", &tmp_int);
         }

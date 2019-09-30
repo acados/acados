@@ -582,8 +582,9 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
                 if (opts->warm_start)
                 {
                     qpoases_status = (ns > 0) ?
-                        QProblem_initW(QP, HH, gg, CC, d_lb, d_ub, d_lg, d_ug, &nwsr,
-                                       &cputime, NULL, dual_sol, NULL, NULL, NULL) :
+                        QProblem_initW(QP, HH, gg, CC, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
+                                      /* primal_sol */ NULL, dual_sol, /* guessed bounds */ NULL,
+                                      /* guessed constraints */ NULL, /* R */ NULL) :
                         QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg0, d_ug0, &nwsr,
                                        &cputime, NULL, dual_sol, NULL, NULL, NULL);
                 }
