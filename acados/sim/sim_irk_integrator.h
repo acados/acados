@@ -162,7 +162,7 @@ int sim_irk_opts_calculate_size(void *config, void *dims);
 void *sim_irk_opts_assign(void *config, void *dims, void *raw_memory);
 void sim_irk_opts_initialize_default(void *config, void *dims, void *opts_);
 void sim_irk_opts_update(void *config_, void *dims, void *opts_);
-int sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value);
+void sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value);
 
 // memory
 int sim_irk_memory_calculate_size(void *config, void *dims, void *opts_);

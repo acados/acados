@@ -41,7 +41,7 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% arguments
-compile_mex = 'true';
+compile_interface = 'false';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
 
@@ -208,7 +208,7 @@ disp(ocp_model.model_struct)
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
@@ -297,7 +297,7 @@ for ii=1:N+1
 %	visualize;
 end
 
-figure(2);
+figure;
 subplot(2,1,1);
 plot(0:N, x);
 xlim([0 N]);
@@ -309,7 +309,7 @@ legend('F');
 
 stat = ocp.get('stat');
 if (strcmp(nlp_solver, 'sqp'))
-	figure(3);
+	figure;
 % 	plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
 % 	hold on
 % 	plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');
@@ -345,7 +345,7 @@ sens_u = ocp.get('sens_u');
 sens_x = ocp.get('sens_x');
 
 % plot sensitivity
-figure(4);
+figure
 subplot(2,1,1);
 plot(0:N, sens_x);
 xlim([0 N]);
@@ -356,7 +356,7 @@ xlim([0 N]);
 legend('F');
 
 % plot predicted solution
-figure(5);
+figure
 subplot(2,1,1);
 plot(0:N, x+sens_x);
 xlim([0 N]);

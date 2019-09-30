@@ -34,93 +34,98 @@
 %% test of native matlab interface
 clear all
 
-addpath('../pendulum_on_cart_model/');
+% check that env.sh has been run
+env_run = getenv('ENV_RUN');
+if (~strcmp(env_run, 'true'))
+	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
+end
+import casadi.*
 
-for itest = 1:3
+tic
+
+N = 40;
+
+ncases = 3;
+constr_violation = zeros(1, ncases);
+constr_vals = zeros(N, ncases);
+for i = 1:3
     %% arguments
     compile_interface = 'false';
+    if ~is_octave && exist('build/ocp_create.mexa64', 'file')
+        compile_interface = 'false';
+    elseif is_octave && exist('build/ocp_create.mex', 'file')
+        compile_interface = 'false';
+    end
+
     codgen_model = 'true';
     gnsf_detect_struct = 'true';
 
     % discretization
     param_scheme = 'multiple_shooting_unif_grid';
-    N = 100;
-    h = 0.01;
+    h = 0.02;
 
     nlp_solver = 'sqp';
     %nlp_solver = 'sqp_rti';
     nlp_solver_exact_hessian = 'false';
-    %nlp_solver_exact_hessian = 'true';
     regularize_method = 'no_regularize';
-    %regularize_method = 'project';
-    %regularize_method = 'project_reduc_hess';
-    %regularize_method = 'mirror';
-    %regularize_method = 'convexify';
     nlp_solver_max_iter = 100;
-    tol = 1e-8;
+    tol = 1e-12;
     nlp_solver_tol_stat = tol;
     nlp_solver_tol_eq   = tol;
     nlp_solver_tol_ineq = tol;
     nlp_solver_tol_comp = tol;
     nlp_solver_ext_qp_res = 1;
-    % qp_solver = 'partial_condensing_hpipm';
-    %qp_solver = 'full_condensing_hpipm';
-    qp_solver = 'full_condensing_qpoases';
+    qp_solver = 'partial_condensing_hpipm';
+%     qp_solver = 'full_condensing_hpipm';
+%     qp_solver = 'full_condensing_qpoases';
     qp_solver_cond_N = 5;
     qp_solver_cond_ric_alg = 0;
     qp_solver_ric_alg = 0;
     qp_solver_warm_start = 1;
-    qp_solver_iter_max = 100;
-    %sim_method = 'erk';
     sim_method = 'irk';
-%     sim_method = 'irk_gnsf';
-    sim_method_num_stages = 4;
-    sim_method_num_steps = 3;
+    sim_method_num_stages = 1;
+    sim_method_num_steps = 1;
+    sim_method_exact_z_output = 0;
 
-    if itest == 1
-        cost_type = 'linear_ls';
-    elseif itest == 2
-        cost_type = 'ext_cost';
-    else
-        cost_type = 'auto';
-    end
-    model_name = ['pendulum_' num2str(itest)];
+    % cost_type = 'linear_ls';
+    cost_type = 'ext_cost';
+    model_name = ['ocp_pendulum_' num2str(i)];
+
 
     %% create model entries
-    model = pendulum_on_cart_model;
+    switch i
+        case 1
+            model = pendulum_on_cart_model;
+            theta = model.sym_x(2);
+            omega = model.sym_x(4);
+            model.sym_z = [];
+            model.expr_h = cos(theta)*sin(theta)*omega.^2;
+            lh = -40;
+            uh = 40;
+        case {2,3}
+            model = pendulum_on_cart_model_dae;
+            model.expr_h = model.sym_z;
+            lh = -40;
+            uh = 40;
+            if i == 2
+                sim_method_exact_z_output = 1;
+            end
+    end
 
     % dims
     T = N*h; % horizon length time
-    nx = model.nx;
-    nu = model.nu;
-    ny = nu+nx; % number of outputs in lagrange term
-    ny_e = nx; % number of outputs in mayer term
-
-    nbx = 0;
-    nbu = 0;
-    ng = 0;
-    ng_e = 0;
-    nh = nu;
-    nh_e = 0;
-
-    % cost
-    Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
-    Vx = zeros(ny, nx); for ii=1:nx Vx(nu+ii,ii)=1.0; end % state-to-output matrix in lagrange term
-    Vx_e = zeros(ny_e, nx); for ii=1:nx Vx_e(ii,ii)=1.0; end % state-to-output matrix in mayer term
-    W = eye(ny); % weight matrix in lagrange term
-    for ii=1:nu W(ii,ii)=1e-2; end
-    for ii=nu+1:nu+nx/2 W(ii,ii)=1e3; end
-    for ii=nu+nx/2+1:nu+nx W(ii,ii)=1e-2; end
-    W_e = W(nu+1:nu+nx, nu+1:nu+nx); % weight matrix in mayer term
-    yr = zeros(ny, 1); % output reference in lagrange term
-    yr_e = zeros(ny_e, 1); % output reference in mayer term
+    nx = length(model.sym_x);
+    nu = length(model.sym_u);
+    if isfield(model, 'sym_z')
+        nz = length(model.sym_z);
+    else
+        nz = 0;
+    end
 
     % constraints
     x0 = [0; pi; 0; 0];
-    %Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
-    %lbx = -4*ones(nbx, 1);
-    %ubx =  4*ones(nbx, 1);
-    Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
+    nbu = nu;
+    Jbu = zeros(nbu, nu); for ii=1:nbu; Jbu(ii,ii)=1.0; end
     lbu = -80*ones(nu, 1);
     ubu =  80*ones(nu, 1);
 
@@ -132,16 +137,10 @@ for itest = 1:3
     ocp_model.set('T', T);
     ocp_model.set('dim_nx', nx);
     ocp_model.set('dim_nu', nu);
-    if (strcmp(cost_type, 'linear_ls'))
-        ocp_model.set('dim_ny', ny);
-        ocp_model.set('dim_ny_e', ny_e);
-    end
-    ocp_model.set('dim_nbx', nbx);
+    ocp_model.set('dim_nz', nz);
+    %constr
     ocp_model.set('dim_nbu', nbu);
-    ocp_model.set('dim_ng', ng);
-    ocp_model.set('dim_ng_e', ng_e);
-    ocp_model.set('dim_nh', nh);
-    ocp_model.set('dim_nh_e', nh_e);
+    
     % symbolics
     ocp_model.set('sym_x', model.sym_x);
     if isfield(model, 'sym_u')
@@ -150,21 +149,16 @@ for itest = 1:3
     if isfield(model, 'sym_xdot')
         ocp_model.set('sym_xdot', model.sym_xdot);
     end
+    if isfield(model, 'sym_z')
+        ocp_model.set('sym_z', model.sym_z);
+    end
     % cost
     ocp_model.set('cost_type', cost_type);
     ocp_model.set('cost_type_e', cost_type);
-    if (strcmp(cost_type, 'linear_ls'))
-        ocp_model.set('cost_Vu', Vu);
-        ocp_model.set('cost_Vx', Vx);
-        ocp_model.set('cost_Vx_e', Vx_e);
-        ocp_model.set('cost_W', W);
-        ocp_model.set('cost_W_e', W_e);
-        ocp_model.set('cost_y_ref', yr);
-        ocp_model.set('cost_y_ref_e', yr_e);
-    else % if (strcmp(cost_type, 'ext_cost'))
-        ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-        ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
-    end
+
+    ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+    ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
+
     % dynamics
     if (strcmp(sim_method, 'erk'))
         ocp_model.set('dyn_type', 'explicit');
@@ -173,13 +167,21 @@ for itest = 1:3
         ocp_model.set('dyn_type', 'implicit');
         ocp_model.set('dyn_expr_f', model.expr_f_impl);
     end
+  
     % constraints
     ocp_model.set('constr_x0', x0);
+    
+    nh = length(model.expr_h);
+    ocp_model.set('dim_nh', nh);
     ocp_model.set('constr_expr_h', model.expr_h);
-    ocp_model.set('constr_lh', lbu);
-    ocp_model.set('constr_uh', ubu);
-    % disp('ocp_model.model_struct')
-    % disp(ocp_model.model_struct)
+    ocp_model.set('constr_lh', lh);
+    ocp_model.set('constr_uh', uh);
+
+    ocp_model.set('constr_Jbu', Jbu);
+    ocp_model.set('constr_lbu', lbu);
+    ocp_model.set('constr_ubu', ubu);
+%     disp('ocp_model.model_struct')
+%     disp(ocp_model.model_struct)
 
 
     %% acados ocp opts
@@ -190,7 +192,6 @@ for itest = 1:3
     ocp_opts.set('param_scheme_N', N);
     ocp_opts.set('nlp_solver', nlp_solver);
     ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
-    % ocp_opts.set('nlp_solver_exact_hessian', 'TEST');
     ocp_opts.set('regularize_method', regularize_method);
     ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
     if (strcmp(nlp_solver, 'sqp'))
@@ -207,57 +208,35 @@ for itest = 1:3
     end
     ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
     ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
-    ocp_opts.set('qp_solver_iter_max', qp_solver_iter_max);
     ocp_opts.set('sim_method', sim_method);
     ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
     ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
+    ocp_opts.set('sim_method_exact_z_output', sim_method_exact_z_output);
+    
+    
     if (strcmp(sim_method, 'irk_gnsf'))
         ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
     end
 
-    % disp('ocp_opts');
-    % disp(ocp_opts.opts_struct);
+    disp('ocp_opts');
+    disp(ocp_opts.opts_struct);
 
 
     %% acados ocp
-    % create ocp
     ocp = acados_ocp(ocp_model, ocp_opts);
-    % disp('ocp.C_ocp');
-    % disp(ocp.C_ocp);
-    % disp('ocp.C_ocp_ext_fun');
-    % disp(ocp.C_ocp_ext_fun);
-
 
     % set trajectory initialization
-    %x_traj_init = zeros(nx, N+1);
-    %for ii=1:N x_traj_init(:,ii) = [0; pi; 0; 0]; end
     x_traj_init = [linspace(0, 0, N+1); linspace(pi, 0, N+1); linspace(0, 0, N+1); linspace(0, 0, N+1)];
-
     u_traj_init = zeros(nu, N);
+
     ocp.set('init_x', x_traj_init);
     ocp.set('init_u', u_traj_init);
 
-    % change number of sqp iterations
-    ocp.set('nlp_solver_max_iter', 20);
-
-    % modify numerical data for a certain stage
-    some_stages = 1:10:N-1;
-    for i = some_stages
-        if          (strcmp(cost_type, 'linear_ls'))
-            ocp.set('cost_Vx', Vx, i); % cost_y_ref, cost_Vu, cost_Vx, cost_W, cost_Z, cost_Zl,...
-             % cost_Zu, cost_z, cost_zl, cost_zu;
-            ocp.set('cost_Vu', Vu, i);
-            ocp.set('cost_y_ref', yr, i);
-        end
-    end
-
-    % solve
-    tic;
     ocp.solve();
-    time_ext=toc;
+
     % get solution
-    utraj = ocp.get('u');
-    xtraj = ocp.get('x');
+    u = ocp.get('u');
+    x = ocp.get('x');
 
     %% evaluation
     status = ocp.get('status');
@@ -267,30 +246,56 @@ for itest = 1:3
     time_reg = ocp.get('time_reg');
     time_qp_sol = ocp.get('time_qp_sol');
 
-    fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
+    fprintf(['\nstatus = %d, sqp_iter = %d, time_int = %f [ms]'...
+        ' (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n'],...
+        status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3 );
 
-    stat = ocp.get('stat');
-    ocp.print('stat')
-
-    if itest == 1
-        utraj_ref = utraj;
-        xtraj_ref = xtraj;
+    ocp.print('stat');
+    
+    if i == 1
+        % save reference
+        xref = x;
+        uref = u;
     else
-        err_x = max(max(abs(xtraj - xtraj_ref)));
-        err_u = max(max(abs(utraj - utraj_ref)));
-        if max(err_x, err_u) > tol
-            error(['\nSolutions differ by more than tol = ' num2str(tol)]);
-        end
+        % compare error w.r.t reference
+        err_x(i) = norm(x - xref)
+        err_u(i) = norm(u - uref)
     end
-
-
-    if status~=0
-        error('test_ocp_pendulum_on_cart: solution failed!');
-    elseif tol < max(stat(end,2:5))
-        error('test_ocp_pendulum_on_cart: residuals bigger than tol!');
-    elseif sqp_iter > 9
-        error('test_ocp_pendulum_on_cart: sqp_iter > 9, this problem is typically solved within less iterations!');
+    
+    % compare z accuracy to respective value obtained from x
+    thetas = xref(2,:);
+    omegas = xref(4,:);
+    z_fromx = cos(thetas).*sin(thetas).*omegas.^2;
+    if i > 1
+        z = ocp.get('z');
+        err_z_zfromx(i) = norm( z - z_fromx(1:end-1) );
     end
+    
+    % check constraint violation
+    theta = model.sym_x(2);
+    omega = model.sym_x(4);
+    constr_expr = cos(theta)*sin(theta)*omega.^2;
+    constr_fun = Function('constr_fun', {model.sym_x, model.sym_u, model.sym_z}, ...
+        {constr_expr});
 
+    constr_violation(i) = 0;
+    for j=1:N
+        valh = full( constr_fun(x(:,j), u(:,j), z_fromx(:,j) ) );
+        constr_vals(j,i) = valh;
+        violation = max([0, -(valh-lh), valh - uh]);
+        constr_violation(i) = max(norm(violation), constr_violation(i));
+    end
 end
-fprintf('\ntest_ocp_pendulum_on_cart: success!\n');
+
+toc
+
+fprintf('\nConstraint values\n');
+fprintf('\nODE \t\tDAE-exact_z\tDAE-extrapolation\n');
+for i = 1:N
+    fprintf('%.4e\t%.4e\t%.4e\n', constr_vals(i,1), constr_vals(i,2),...
+        constr_vals(i,3))
+end
+fprintf('\n\nConstraint violations');
+fprintf('\nODE \t\tDAE-exact_z\tDAE-extrapolation\n');
+fprintf('%.4e\t%.4e\t%.4e\n', constr_violation(1), constr_violation(2),...
+    constr_violation(3))

@@ -41,9 +41,9 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% options
-compile_mex = 'true'; % true, false
+compile_interface = 'false'; % true, false
 codgen_model = 'true'; % true, false
-% compile_mex = 'false'; % true, false
+% compile_interface = 'false'; % true, false
 % codgen_model = 'false'; % true, false
 
 % ocp
@@ -177,7 +177,7 @@ end
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
 
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);

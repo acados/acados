@@ -163,8 +163,27 @@ void dense_qp_qpoases_opts_set(void *config_, void *opts_, const char *field, vo
     }
     else if (!strcmp(field, "warm_start"))
     {
-        // TODO set solver warm start
-        // opts->
+        int *warm_start = value;
+        if (*warm_start == 0)
+        {
+            opts->warm_start = 0;
+            opts->hotstart = 0;
+        }
+        else if (*warm_start == 1)
+        {
+            opts->warm_start = 1;
+            opts->hotstart = 0;
+        }
+        else if (*warm_start == 2)
+        {
+            opts->warm_start = 1;
+            opts->hotstart = 1;
+        }
+        else
+        {
+            printf("\ndense_qp_qpoases: setting warm_start: supported values are: 0 - cold, 1 - warm, 2 - hot\n");
+            exit(1);
+        }
     }
     else if (!strcmp(field, "iter_max"))
     {
@@ -563,8 +582,9 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
                 if (opts->warm_start)
                 {
                     qpoases_status = (ns > 0) ?
-                        QProblem_initW(QP, HH, gg, CC, d_lb, d_ub, d_lg, d_ug, &nwsr,
-                                       &cputime, NULL, dual_sol, NULL, NULL, NULL) :
+                        QProblem_initW(QP, HH, gg, CC, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
+                                      /* primal_sol */ NULL, dual_sol, /* guessed bounds */ NULL,
+                                      /* guessed constraints */ NULL, /* R */ NULL) :
                         QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg0, d_ug0, &nwsr,
                                        &cputime, NULL, dual_sol, NULL, NULL, NULL);
                 }

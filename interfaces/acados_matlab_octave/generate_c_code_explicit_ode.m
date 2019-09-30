@@ -39,9 +39,9 @@ import casadi.*
 
 casadi_version = CasadiMeta.version();
 if strcmp(casadi_version(1:3),'3.4') % require casadi 3.4.x
-	casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
+    casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 else % old casadi versions
-	error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
+    error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
 end
 
 if nargin > 1
@@ -72,36 +72,36 @@ end
 % u
 if isfield(model, 'sym_u')
     u = model.sym_u;
-	nu = length(u);
+    nu = length(u);
 else
     if isSX
         u = SX.sym('u',0, 0);
     else
         u = MX.sym('u',0, 0);
     end
-	nu = 0;
+    nu = 0;
 end
 % p
 if isfield(model, 'sym_p')
     p = model.sym_p;
-	np = length(p);
+    np = length(p);
 else
     if isSX
         p = SX.sym('p',0, 0);
     else
         p = MX.sym('p',0, 0);
     end
-	np = 0;
+    np = 0;
 end
 
 
 model_name = model.name;
 
 if isfield(model, 'dyn_expr_f')
-	f_expl = model.dyn_expr_f;
-	model_name = [model_name, '_dyn'];
+    f_expl = model.dyn_expr_f;
+    model_name = [model_name, '_dyn'];
 else
-	f_expl = model.expr_f;
+    f_expl = model.expr_f;
 end
 
 
@@ -150,7 +150,7 @@ expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);
 expl_vde_for.generate([model_name,'_expl_vde_for'], casadi_opts);
 expl_vde_adj.generate([model_name,'_expl_vde_adj'], casadi_opts);
 if strcmp(generate_hess, 'true')
-	expl_ode_hes.generate([model_name,'_expl_ode_hes'], casadi_opts);
+    expl_ode_hes.generate([model_name,'_expl_ode_hes'], casadi_opts);
 end
 
 end

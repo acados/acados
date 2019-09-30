@@ -32,14 +32,14 @@
 %
 
 %% test of native matlab interface
-clear VARIABLES
+clear all
 
 addpath('../pendulum_on_cart_model/');
 
 % TODO: include irk_gnsf, as soon as hessians are implemented
 for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
 	%% arguments
-	compile_mex = 'true';
+	compile_interface = 'false';
 	codgen_model = 'true';
 	method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
 	sens_forw = 'true';
@@ -92,7 +92,7 @@ for integrator = {'erk', 'irk'} %, 'irk_gnsf'}
 
 	%% acados sim opts
 	sim_opts = acados_sim_opts();
-	sim_opts.set('compile_mex', compile_mex);
+	sim_opts.set('compile_interface', compile_interface);
 	sim_opts.set('codgen_model', codgen_model);
 	sim_opts.set('num_stages', num_stages);
 	sim_opts.set('num_steps', num_steps);

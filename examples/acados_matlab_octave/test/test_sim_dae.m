@@ -42,7 +42,7 @@ for integrator = {'irk_gnsf', 'irk'}
     method = integrator{1};
 
     %% arguments
-    compile_mex = 'true'; % true, false
+    compile_interface = 'false'; % true, false
     codgen_model = 'true'; % true, false
     gnsf_detect_struct = 'true'; % true, false
     % method = 'irk'; % irk, irk_gnsf, [erk]
@@ -97,7 +97,7 @@ for integrator = {'irk_gnsf', 'irk'}
     
     %% acados sim opts
     sim_opts = acados_sim_opts();
-    sim_opts.set('compile_mex', compile_mex);
+    sim_opts.set('compile_interface', compile_interface);
     sim_opts.set('codgen_model', codgen_model);
     sim_opts.set('num_stages', num_stages);
     sim_opts.set('num_steps', num_steps);

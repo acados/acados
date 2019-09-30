@@ -112,7 +112,7 @@ void *sim_erk_opts_assign(void *config, void *dims, void *raw_memory);
 //
 void sim_erk_opts_initialize_default(void *config, void *dims, void *opts_);
 //
-int sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value);
+void sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value);
 
 
 // memory
