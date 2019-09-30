@@ -58,7 +58,11 @@ function model = detect_cost_type(model, is_e)
     nz = length(z);
 
     % z = model.sym_z;
-    expr_cost = model.cost_expr_ext_cost;
+    if is_e
+        expr_cost = model.cost_expr_ext_cost_e;
+    else
+        expr_cost = model.cost_expr_ext_cost;
+    end
     cost_fun = Function('cost_fun', {x, u, z}, {expr_cost});
 
 
@@ -131,7 +135,9 @@ function model = detect_cost_type(model, is_e)
             model.dim_ny_e = ny;
             model.cost_Vx_e = Vx;
             model.cost_Vz_e = Vz;
-            % TODO: add check that Vu is zeros?
+            if ~isempty(find(Vu,1))
+                error('Cost mayer term cannot depend on control input u!');
+            end
             model.cost_W_e = W;
         else
             model.cost_type = 'linear_ls';
