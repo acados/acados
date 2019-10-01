@@ -81,6 +81,7 @@ classdef acados_ocp < handle
 
             % compile mex interface (without model dependency)
             if (strcmp(obj.opts_struct.compile_interface, 'true') || ~mex_exists)
+                % TODO(oj): add something like: || ~isempty(strfind(obj.opts_struct.qp_solver,'qpoases')) )
                 ocp_compile_interface(obj.opts_struct);
             end
 

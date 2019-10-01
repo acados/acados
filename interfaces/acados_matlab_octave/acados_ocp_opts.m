@@ -77,7 +77,11 @@ classdef acados_ocp_opts < handle
             obj.opts_struct.sim_method_newton_iter = 3;
             obj.opts_struct.gnsf_detect_struct = 'true';
             obj.opts_struct.regularize_method = 'no_regularize';
+
             obj.opts_struct.output_dir = fullfile(pwd, 'build');
+            if ismac()
+                obj.opts_struct.output_dir = '/usr/local/lib';
+            end
         end
 
 
