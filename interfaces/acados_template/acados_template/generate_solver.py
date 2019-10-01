@@ -361,8 +361,13 @@ class acados_solver:
 
     def get(self, stage_, field_):
 
+        out_fields = ['x', 'u', 'z']
         field = field_
         field = field.encode('utf-8')
+
+        if (field_ not in out_fields):
+            raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
+                    \nPossible values are {} and {}. Exiting.".format(field, cost, constraints))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
@@ -381,8 +386,9 @@ class acados_solver:
 
     def set(self, stage_, field_, value_):
         
-        cost = ['y_ref', 'yref']
-        constraints = ['lbx', 'ubx', 'lbu', 'ubu']
+        cost_fields = ['y_ref', 'yref']
+        constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
+        out_fields = ['x', 'u']
 
         # cast value_ to avoid conversion issues
         value_ = value_.astype(float)
@@ -390,9 +396,9 @@ class acados_solver:
         field = field_
         field = field.encode('utf-8')
 
-        if (field_ not in constraints) and (field_ not in cost):
+        if (field_ not in constraints_fields) and (field_ not in cost_fields) and (field_ not in out_fields):
             raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
-                    \nPossible values are {} and {}. Exiting.".format(field, cost, constraints))
+                    \nPossible values are {} and {}. Exiting.".format(field, cost_fields, constraints_fields, out_fields))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
@@ -406,12 +412,15 @@ class acados_solver:
         value_data_p = cast((value_data), c_void_p)
 
         stage = c_int(stage_)
-        if field_ in constraints:
+        if field_ in constraints_fields:
             self.shared_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
-        elif field_ in cost:
+        elif field_ in cost_fields:
             self.shared_lib.ocp_nlp_cost_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_cost_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
+        elif field_ in out_fields:
+            self.shared_lib.ocp_nlp_out_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+            self.shared_lib.ocp_nlp_out_set(self.nlp_config, self.nlp_dims, self.nlp_out, stage, field, value_data_p);
 
         return
 
