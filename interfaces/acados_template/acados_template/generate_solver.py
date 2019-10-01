@@ -390,6 +390,10 @@ class acados_solver:
         field = field_
         field = field.encode('utf-8')
 
+        if (field_ not in constraints) and (field_ not in cost):
+            raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
+                    \nPossible values are {} and {}. Exiting.".format(field, cost, constraints))
+
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
 
@@ -405,7 +409,7 @@ class acados_solver:
         if field_ in constraints:
             self.shared_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
-        if field_ in cost:
+        elif field_ in cost:
             self.shared_lib.ocp_nlp_cost_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
             self.shared_lib.ocp_nlp_cost_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
 
