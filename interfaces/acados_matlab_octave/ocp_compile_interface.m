@@ -97,11 +97,27 @@ if is_octave()
 end
 
 
+if ismac()
+    FLAGS = 'CFLAGS=$CFLAGS -std=c99';
+else
+    FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
+end
+
+% is qpOASES?
+with_qp_oases = ~isempty(strfind(opts.qp_solver,'qpoases'));
+if with_qp_oases
+    % flag file to remember if compiled with qpOASES
+    flag_file = fullfile(opts.output_dir, '_compiled_with_qpoases.txt');
+    flagID = fopen(flag_file, 'w');
+    fclose(flagID);
+end
+
+
 for ii=1:length(mex_files)
     disp(['compiling ', mex_files{ii}])
     if is_octave()
 %        mkoctfile -p CFLAGS
-        if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+        if with_qp_oases
             mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
         else
@@ -109,12 +125,7 @@ for ii=1:length(mex_files)
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
         end
     else
-        if ismac()
-            FLAGS = 'CFLAGS=$CFLAGS -std=c99';
-        else
-            FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
-        end
-        if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+        if with_qp_oases
             FLAGS = [FLAGS, ' -DACADOS_WITH_QPOASES'];
             mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})

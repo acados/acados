@@ -79,9 +79,18 @@ classdef acados_ocp < handle
                     '/ocp_create.mexa64'), 'file');
             end
 
+            if mex_exists
+                % recompile if qpOAES is needed and not linked against in existing interface
+                recompile_with_qpOASES = false;
+                if ~isempty(strfind(obj.opts_struct.qp_solver,'qpoases'))
+                    flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_qpoases.txt');
+                    recompile_with_qpOASES = ~exist(flag_file, 'file');
+                end
+            end
+
             % compile mex interface (without model dependency)
-            if (strcmp(obj.opts_struct.compile_interface, 'true') || ~mex_exists)
-                % TODO(oj): add something like: || ~isempty(strfind(obj.opts_struct.qp_solver,'qpoases')) )
+            if ( strcmp(obj.opts_struct.compile_interface, 'true') || ~mex_exists  ...
+                  || recompile_with_qpOASES  )
                 ocp_compile_interface(obj.opts_struct);
             end
 
