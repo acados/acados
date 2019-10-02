@@ -31,113 +31,104 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-%% test of native matlab interface
-clear all
+%% minimal example of acados integrator matlab interface
+clear VARIABLES
 
-
+env_run = getenv('ENV_RUN');
+if (~strcmp(env_run, 'true'))
+	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
+end
 
 %% arguments
-compile_interface = 'true';
-codgen_model = 'true';
-method = 'irk';
-sens_forw = 'true';
-num_stages = 4;
-num_steps = 4;
+compile_interface = 'false';
+method = 'erk'; % irk, irk_gnsf
+model_name = 'sim_pendulum';
 
+h = 0.1;
+x0 = [0; 1e-1; 0; 0];
+u = 0;
 
-
-%% model
-%model = linear_model;
-model = linear_mass_spring_model;
-%model = crane_model;
+%% define model dynamics
+model = pendulum_on_cart_model;
 
 nx = model.nx;
 nu = model.nu;
 
-
-
 %% acados sim model
 sim_model = acados_sim_model();
-sim_model.set('T', 0.5);
+sim_model.set('name', model_name);
+sim_model.set('T', h);
+
+sim_model.set('sym_x', model.sym_x);
+if isfield(model, 'sym_u')
+    sim_model.set('sym_u', model.sym_u);
+end
+sim_model.set('dim_nx', nx);
+sim_model.set('dim_nu', nu);
+
+% explit integrator (erk) take explicit ODE expression
 if (strcmp(method, 'erk'))
 	sim_model.set('dyn_type', 'explicit');
-	sim_model.set('expr_f', model.expr_f_expl);
-	sim_model.set('sym_x', model.sym_x);
-	if isfield(model, 'sym_u')
-		sim_model.set('sym_u', model.sym_u);
-	end
-	sim_model.set('nx', model.nx);
-	sim_model.set('nu', model.nu);
-else % irk
+	sim_model.set('dyn_expr_f', model.expr_f_expl);
+else % implicit integrators (irk irk_gnsf) take implicit ODE expression
 	sim_model.set('dyn_type', 'implicit');
-	sim_model.set('expr_f', model.expr_f_impl);
-	sim_model.set('sym_x', model.sym_x);
+	sim_model.set('dyn_expr_f', model.expr_f_impl);
 	sim_model.set('sym_xdot', model.sym_xdot);
-	if isfield(model, 'sym_u')
-		sim_model.set('sym_u', model.sym_u);
-	end
-%	if isfield(model, 'sym_z')
-%		sim_model.set('sym_z', model.sym_z);
-%	end
-	sim_model.set('nx', model.nx);
-	sim_model.set('nu', model.nu);
-%	sim_model.set('dim_nz', model.nz);
 end
-
-sim_model.model_struct
-
-
-
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
-sim_opts.set('compile_interface', compile_interface);
-sim_opts.set('codgen_model', codgen_model);
-sim_opts.set('num_stages', num_stages);
-sim_opts.set('num_steps', num_steps);
+
+sim_opts.set('num_stages', 2);
+sim_opts.set('num_steps', 3);
+sim_opts.set('newton_iter', 2); % for implicit intgrators
 sim_opts.set('method', method);
-sim_opts.set('sens_forw', sens_forw);
-
-sim_opts.opts_struct
-
+sim_opts.set('sens_forw', 'true'); % generate forward sensitivities
+sim_opts.set('jac_reuse', jac_reuse); % for implicit intgrators
+if (strcmp(method, 'irk_gnsf'))
+	sim_opts.set('gnsf_detect_struct', 'true');
+end
 
 
 %% acados sim
 % create sim
 sim = acados_sim(sim_model, sim_opts);
-% (re)set numerical part of model
-%sim.set('T', 0.5);
 
-x0 = ones(sim_model.nx, 1); %x0(1) = 2.0;
-tic;
-sim.set('x', x0);
-time_set_x = toc
+N_sim = 100;
 
-u = ones(nu, 1);
-sim.set('u', u);
+x_sim = zeros(nx, N_sim+1);
+x_sim(:,1) = x0;
 
-% solve
-tic;
-sim.solve();
-time_solve = toc
+% simulate system in loop
+for ii=1:N_sim
+	
+	% set initial state
+	sim.set('x', x_sim(:,ii));
+	sim.set('u', u);
 
+    % initialize implicit integrator
+    if (strcmp(method, 'irk'))
+        sim.set('xdot', zeros(nx,1));
+    elseif (strcmp(method, 'irk_gnsf'))
+        n_out = sim.model_struct.dim_gnsf_nout;
+        sim.set('phi_guess', zeros(n_out,1));
+    end
 
-% get TODO with return value !!!!!
-% xn
-xn = sim.get('xn');
-xn
-% S_forw
+	% solve
+	sim.solve();
+
+	% get simulated state
+	x_sim(:,ii+1) = sim.get('xn');
+end
+
+for ii=1:N_sim+1
+	x_cur = x_sim(:,ii);
+	visualize;
+end
+
+% forward sensitivities ( dxn_d[x0,u] )
 S_forw = sim.get('S_forw');
-S_forw
-% Sx
-Sx = sim.get('Sx');
-Sx
-% Su
-Su = sim.get('Su');
-Su
 
-
-fprintf('\nsuccess!\n\n');
-
-
-return;
+figure;
+plot(1:N_sim+1, x_sim);
+legend('p', 'theta', 'v', 'omega');

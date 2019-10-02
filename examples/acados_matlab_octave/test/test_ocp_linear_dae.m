@@ -38,7 +38,7 @@ addpath('../simple_dae_model/');
 
 for itest = 1:2;
     %% options
-    compile_mex = 'false'; % true, false
+    compile_interface = 'false'; % true, false
     codgen_model = 'true'; % true, false
 
     % ocp
@@ -171,7 +171,7 @@ for itest = 1:2;
     %% acados ocp opts
     ocp_opts = acados_ocp_opts();
 
-    ocp_opts.set('compile_mex', compile_mex);
+    ocp_opts.set('compile_interface', compile_interface);
     ocp_opts.set('codgen_model', codgen_model);
     ocp_opts.set('param_scheme', param_scheme);
     ocp_opts.set('param_scheme_N', N);
@@ -221,10 +221,10 @@ for itest = 1:2;
     tol_diff_xz = 1e-15;
 
     if status ~= 0
-        error('ocp_nlp solver exit with nonzero status');
+        error('test_ocp_linear_dae: ocp_nlp solver exit with nonzero status');
     elseif max(abs(diff_x_z)) > tol_diff_xz
-        error(['difference between x and z bigger than', num2str(tol_diff_xz, '%e'),...
-        ' should be equal'])
+        error(['test_ocp_wtnx6: difference between x and z bigger than',
+            num2str(tol_diff_xz, '%e'), ' should be equal'])
     end
 end % itest
 

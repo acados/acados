@@ -280,6 +280,11 @@ void ocp_nlp_dynamics_cont_opts_update(void *config_, void *dims_, void *opts_)
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
 
+    if (!opts->compute_hess)
+    {
+        bool tmp_bool = false;
+        config->sim_solver->opts_set( config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool );
+    }
     config->sim_solver->opts_update(config->sim_solver, dims->sim, opts->sim_solver);
 
     return;
@@ -312,12 +317,7 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     }
     else
     {
-        int return_value = sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
-        if (return_value!=ACADOS_SUCCESS)
-        {
-            printf("\nerror: field %s not available in ocp_nlp_dynamics_cont_opts_set\n", field);
-            exit(1);
-        }
+        sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
     }
 
     return;
@@ -736,14 +736,16 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     // function
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
-    blasfeo_pack_dvec(nz, work->sim_out->zn, mem->z_alg, 0); // TODO rename sim_out->zn into z0n ???
+    blasfeo_pack_dvec(nz, work->sim_out->zn, mem->z_alg, 0);
 
     // adjoint
     if (opts->compute_adj)
     {
-        // this is computed by the integrator if compute_hess!=0
-        // TODO other cases when it is computed in the integrator ???
-        if (opts->compute_hess)
+        // check if adjoints computed in integrator
+        bool adjoint_integrator;
+        sim_opts_get(config->sim_solver, opts->sim_solver, "sens_adj", &adjoint_integrator);
+
+        if (adjoint_integrator)
         {
             blasfeo_pack_dvec(nu, work->sim_out->S_adj+nx, &mem->adj, 0);
             blasfeo_pack_dvec(nx, work->sim_out->S_adj+0, &mem->adj, nu);

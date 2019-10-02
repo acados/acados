@@ -72,8 +72,8 @@ classdef acados_ocp < handle
             end
 
             % compile mex interface (without model dependency)
-            if (strcmp(obj.opts_struct.compile_mex, 'true') || ~mex_exists)
-                ocp_compile_mex(obj.opts_struct);
+            if (strcmp(obj.opts_struct.compile_interface, 'true') || ~mex_exists)
+                ocp_compile_interface(obj.opts_struct);
             end
 
             obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);

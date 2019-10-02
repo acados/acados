@@ -765,6 +765,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int qp_solver_warm_start = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_warm_start" ) );
         ocp_nlp_opts_set(config, opts, "qp_warm_start", &qp_solver_warm_start);
     }
+    // qp solver: warm start first
+    if (mxGetField( matlab_opts, 0, "warm_start_first_qp" )!=NULL)
+    {
+        int warm_start_first_qp = mxGetScalar( mxGetField( matlab_opts, 0, "warm_start_first_qp" ) );
+        ocp_nlp_opts_set(config, opts, "warm_start_first_qp", &warm_start_first_qp);
+    }
 
     // sim_method_num_stages
     sprintf(matlab_field_name, "sim_method_num_stages");

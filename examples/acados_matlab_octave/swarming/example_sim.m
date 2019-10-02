@@ -36,7 +36,7 @@ x0 = [10*rand(3*N,1); 2*rand(3*N,1)]; % initial condition (3D positions ...
 u = zeros(N*3,1); % control input is null (acceleration)
 
 % Simulation parameters
-compile_mex = 'false';
+compile_interface = 'false';
 codgen_model = 'true';
 %gnsf_detect_struct = 'true';
 method = 'erk';
@@ -90,7 +90,7 @@ end
 
 %% Acados simutation options
 sim_opts = acados_sim_opts();
-sim_opts.set('compile_mex', compile_mex);
+sim_opts.set('compile_interface', compile_interface);
 sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);

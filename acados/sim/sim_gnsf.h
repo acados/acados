@@ -326,7 +326,7 @@ int sim_gnsf_opts_calculate_size(void *config, void *dims);
 void *sim_gnsf_opts_assign(void *config, void *dims, void *raw_memory);
 void sim_gnsf_opts_initialize_default(void *config, void *dims, void *opts_);
 void sim_gnsf_opts_update(void *config_, void *dims, void *opts_);
-int sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value);
+void sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value);
 
 // model
 int sim_gnsf_model_calculate_size(void *config, void *dims_);

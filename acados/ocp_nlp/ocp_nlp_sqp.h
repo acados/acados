@@ -69,12 +69,13 @@ typedef struct
     double tol_eq;       // exit tolerance on equality constraints
     double tol_ineq;     // exit tolerance on inequality constraints
     double tol_comp;     // exit tolerance on complemetarity condition
-	double step_length;  // (fixed) step length in SQP loop
+    double step_length;  // (fixed) step length in SQP loop
     int max_iter;
     int reuse_workspace;
     int num_threads;
-	int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
-	int qp_warm_start;
+    int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
+    int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
+    bool warm_start_first_qp; // to set qp_warm_start in first iteration
 
 } ocp_nlp_sqp_opts;
 
@@ -99,10 +100,10 @@ void ocp_nlp_sqp_dyanimcs_opts_set(void *config, void *opts, int stage, const ch
 
 typedef struct
 {
-	// qp in & out
+    // qp in & out
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
-	// QP stuff not entering the qp_in struct
+    // QP stuff not entering the qp_in struct
     struct blasfeo_dmat *dzduxt; // dzdux transposed
     struct blasfeo_dvec *z_alg; // z_alg, output algebraic variables
 
@@ -130,9 +131,9 @@ typedef struct
     double time_reg;
     double time_tot;
 
-	double *stat;
-	int stat_m;
-	int stat_n;
+    double *stat;
+    int stat_m;
+    int stat_n;
 
 } ocp_nlp_sqp_memory;
 
@@ -149,14 +150,14 @@ void *ocp_nlp_sqp_memory_assign(void *config, void *dims, void *opts_, void *raw
 
 typedef struct
 {
-	// temp QP in & out (to be used as workspace)
+    // temp QP in & out (to be used as workspace)
     ocp_qp_in *tmp_qp_in;
     ocp_qp_out *tmp_qp_out;
 
     // QP solver
     void *qp_work;
-	ocp_qp_res *qp_res;
-	ocp_qp_res_ws *qp_res_ws;
+    ocp_qp_res *qp_res;
+    ocp_qp_res_ws *qp_res_ws;
 
     void **dynamics;     // dynamics_workspace
     void **cost;         // cost_workspace

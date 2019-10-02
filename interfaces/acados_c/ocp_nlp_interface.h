@@ -175,16 +175,16 @@ void ocp_nlp_config_destroy(void *config_);
 /// \param config_ The configuration struct.
 ocp_nlp_dims *ocp_nlp_dims_create(void *config_);
 
-/// Destructor of the dimensions struct.
+/// Destructor of The dimension struct.
 ///
-/// \param dims_ The dimensions struct.
+/// \param dims_ The dimension struct.
 void ocp_nlp_dims_destroy(void *dims_);
 
 
 /// Constructs an input struct for a non-linear programs.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
 
 /// Destructor of the inputs struct.
@@ -196,7 +196,7 @@ void ocp_nlp_in_destroy(void *in);
 /// Sets the sampling times for the given stage.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 /// \param in The inputs struct.
 /// \param stage Stage number.
 /// \param field Has to be "Ts" (TBC other options).
@@ -208,71 +208,86 @@ void ocp_nlp_in_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, 
 /// Sets the function pointers to the dynamics functions for the given stage.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 /// \param in The inputs struct.
 /// \param stage Stage number.
 /// \param fun_type The name of the function type, either impl_ode_fun,
 ///     impl_ode_fun_jac_x_xdot, impl_ode_jac_x_xdot_u (TBC)
 /// \param fun_ptr Function pointer to the dynamics function.
 int ocp_nlp_dynamics_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-		int stage, const char *fun_type, void *fun_ptr);
+        int stage, const char *fun_type, void *fun_ptr);
 
 
 /// Sets the function pointers to the cost functions for the given stage.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 /// \param in The inputs struct.
 /// \param stage Stage number.
 /// \param field The name of the field, either nls_res_jac,
 ///     y_ref, W (others TBC)
 /// \param value Cost values.
 int ocp_nlp_cost_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in,
-		int stage, const char *field, void *value);
+        int stage, const char *field, void *value);
 
 
 /// Sets the function pointers to the constraints functions for the given stage.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 /// \param in The inputs struct.
 /// \param stage Stage number.
 /// \param field The name of the field, either lb, ub (others TBC)
 /// \param value Constraints function or values.
 int ocp_nlp_constraints_model_set(ocp_nlp_config *config, ocp_nlp_dims *dims,
-		ocp_nlp_in *in, int stage, const char *field, void *value);
+        ocp_nlp_in *in, int stage, const char *field, void *value);
 
 /* out */
 
-/// Constructs an outputs struct for the non-linear program.
+/// Constructs an output struct for the non-linear program.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
 
-/// Destructor of the outputs struct.
+/// Destructor of the output struct.
 ///
-/// \param out The outputs struct.
+/// \param out The output struct.
 void ocp_nlp_out_destroy(void *out);
 
 
-/// TBD
+/// Sets fields in the output struct of an nlp solver, used to initialize the solver.
+///
+/// \param config The configuration struct.
+/// \param dims The dimension struct.
+/// \param out The output struct.
+/// \param stage Stage number.
+/// \param field The name of the field, either x, u, pi.
+/// \param value Initialization values.
 void ocp_nlp_out_set(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-		int stage, const char *field, void *value);
+        int stage, const char *field, void *value);
 
-/// TBD
+
+/// Gets values of fields in the output struct of an nlp solver.
+///
+/// \param config The configuration struct.
+/// \param dims The dimension struct.
+/// \param out The output struct.
+/// \param stage Stage number.
+/// \param field The name of the field, either x, u, z, pi.
+/// \param value Pointer to the output memory.
 void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-		int stage, const char *field, void *value);
+        int stage, const char *field, void *value);
 //
 int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *out,
-		int stage, const char *field);
+        int stage, const char *field);
 
 /* opts */
 
 /// Creates an options struct for the non-linear program.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
 
 /// Destructor of the options.
@@ -288,8 +303,9 @@ void ocp_nlp_opts_destroy(void *opts);
 /// \param value Value of the option.
 void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void* value);
 
-/// TBC
+
 /// Set the option for the dynamics in a given stage.
+/// More specifically options of the integrator in case of continuous dynamics
 ///
 /// \param config The configuration struct.
 /// \param opts_ The options struct.
@@ -297,35 +313,20 @@ void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, vo
 /// \param field Name of the option.
 /// \param value Value of the option.
 void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-		const char *field, void *value);
+        const char *field, void *value);
 
-/// TBC
-/// Set the option for the cost in a given stage.
-///
-/// \param config The configuration struct.
-/// \param opts_ The options struct.
-/// \param stage Stage number.
-/// \param field Name of the option.
-/// \param value Value of the option.
-void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-		const char *field, void *value);
 
-/// TBC
-/// Set the option for the constraints in a given stage.
-///
-/// \param config The configuration struct.
-/// \param opts_ The options struct.
-/// \param stage Stage number.
-/// \param field Name of the option.
-/// \param value Value of the option.
-void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-		const char *field, void *value);
+// TODO(oj): do we need these?
+// void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+//         const char *field, void *value);
+// void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+//         const char *field, void *value);
 
 /// TBC
 /// Updates the options.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 /// \param opts_ The options struct.
 void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
 
@@ -335,7 +336,7 @@ void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_
 /// Creates an ocp solver.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 /// \param opts_ The options struct.
 /// \return The solver.
 ocp_nlp_solver *ocp_nlp_solver_create(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
@@ -350,7 +351,7 @@ void ocp_nlp_solver_destroy(void *solver);
 ///
 /// \param solver The solver struct.
 /// \param nlp_in The inputs struct.
-/// \param nlp_out The outputs struct.
+/// \param nlp_out The output struct.
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
 /// Performs precomputations for the solver. Needs to be called before
@@ -358,28 +359,31 @@ int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_o
 ///
 /// \param solver The solver struct.
 /// \param nlp_in The inputs struct.
-/// \param nlp_out The outputs struct.
+/// \param nlp_out The output struct.
 int ocp_nlp_precompute(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out);
 
 //
 void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *field, int stage, int index, ocp_nlp_out *sens_nlp_out);
 
 /* get */
-/// TBD
+/// \param config The configuration struct.
+/// \param solver The solver struct.
+/// \param field Supports "sqp_iter", "status", "nlp_res", "time_tot", ...
+/// \param return_value_ Pointer to the output memory.
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
-		const char *field, void *return_value_);
+        const char *field, void *return_value_);
 
 /* set */
 /// Sets the initial guesses for the integrator for the given stage.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 /// \param mem The memory struct.
 /// \param stage Stage number.
 /// \param field Supports "z_guess", "xdot_guess" (IRK), "phi_guess" (GNSF-IRK)
 /// \param value The initial guess for the algebraic variables in the integrator (if continuous model is used).
 void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
-		int stage, const char *field, void *value);
+        int stage, const char *field, void *value);
 
 
 

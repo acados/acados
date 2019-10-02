@@ -668,25 +668,25 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
     // explicit model
     external_function_param_casadi *expl_vde_for =
-    (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+    (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     // implicit model
     external_function_param_casadi *impl_ode_fun =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *impl_ode_fun_jac_x_xdot =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *impl_ode_jac_x_xdot_u =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *impl_ode_fun_jac_x_xdot_u =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     // gnsf model
     external_function_param_casadi *phi_fun =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *phi_fun_jac_y =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *phi_jac_y_uhat =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *f_lo_jac_x1_x1dot_u_z =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
 
     select_dynamics_wt_casadi(NN, expl_vde_for, impl_ode_fun, impl_ode_fun_jac_x_xdot,
         impl_ode_jac_x_xdot_u, impl_ode_fun_jac_x_xdot_u, phi_fun, phi_fun_jac_y, phi_jac_y_uhat,

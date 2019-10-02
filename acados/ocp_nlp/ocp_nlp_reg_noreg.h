@@ -58,7 +58,8 @@ extern "C" {
  * dims
  ************************************************/
 
- // TODO ???
+// use the functions in ocp_nlp_reg_common
+
 
 /************************************************
  * options
@@ -98,7 +99,7 @@ void *ocp_nlp_reg_noreg_memory_assign(void *config, ocp_nlp_reg_dims *dims, void
  * workspace
  ************************************************/
 
- // TODO
+// not needed
 
 /************************************************
  * functions

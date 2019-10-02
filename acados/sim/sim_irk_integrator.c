@@ -324,10 +324,10 @@ void sim_irk_opts_update(void *config_, void *dims, void *opts_)
 }
 
 
-int sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value)
+void sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
     sim_opts *opts = (sim_opts *) opts_;
-    return sim_opts_set_(opts, field, value);
+    sim_opts_set_(opts, field, value);
 }
 
 /************************************************

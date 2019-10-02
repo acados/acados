@@ -459,7 +459,7 @@ void ocp_nlp_cost_ls_opts_set(void *config_, void *opts_, const char *field, voi
     // ocp_nlp_cost_config *config = config_;
     // ocp_nlp_cost_ls_opts *opts = opts_;
 
-    if(!strcmp(field, "exact_hess"))
+    if (!strcmp(field, "exact_hess"))
     {
         // do nothing: the exact hessian is always computed
     }
@@ -772,7 +772,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
                 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
-		// TODO what about the exact hessian in the case of nz>0 ?????????????????????????????????????
+		// TODO what about the exact hessian in the case of nz>0 ???
     }
     else
     {

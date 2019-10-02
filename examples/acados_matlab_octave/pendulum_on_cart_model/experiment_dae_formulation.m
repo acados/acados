@@ -50,11 +50,11 @@ constr_violation = zeros(1, ncases);
 constr_vals = zeros(N, ncases);
 for i = 1:3
     %% arguments
-    compile_mex = 'false';
+    compile_interface = 'false';
     if ~is_octave && exist('build/ocp_create.mexa64', 'file')
-        compile_mex = 'false';
+        compile_interface = 'false';
     elseif is_octave && exist('build/ocp_create.mex', 'file')
-        compile_mex = 'false';
+        compile_interface = 'false';
     end
 
     codgen_model = 'true';
@@ -186,7 +186,7 @@ for i = 1:3
 
     %% acados ocp opts
     ocp_opts = acados_ocp_opts();
-    ocp_opts.set('compile_mex', compile_mex);
+    ocp_opts.set('compile_interface', compile_interface);
     ocp_opts.set('codgen_model', codgen_model);
     ocp_opts.set('param_scheme', param_scheme);
     ocp_opts.set('param_scheme_N', N);

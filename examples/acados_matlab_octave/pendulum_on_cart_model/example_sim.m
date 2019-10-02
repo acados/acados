@@ -41,7 +41,7 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% arguments
-compile_mex = 'false';
+compile_interface = 'false';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
 %method = 'erk';
@@ -96,7 +96,7 @@ end
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
-sim_opts.set('compile_mex', compile_mex);
+sim_opts.set('compile_interface', compile_interface);
 sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', num_stages);
 sim_opts.set('num_steps', num_steps);
@@ -164,7 +164,7 @@ Su = sim.get('Su');
 % 	visualize;
 % end
 
-figure(2);
+figure;
 plot(1:N_sim+1, x_sim);
 legend('p', 'theta', 'v', 'omega');
 
