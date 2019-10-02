@@ -1270,6 +1270,14 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     #pragma omp for nowait
 #endif
 
+    // NOTE(oj): this will lead in an error for irk_gnsf, T must be set in precompute;
+    //    -> remove here and make sure precompute is called everywhere (e.g. Python interface).
+    for (ii = 0; ii < N; ii++)
+    {
+        config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii],
+                                         nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
+    }
+
 #if defined(ACADOS_WITH_OPENMP)
     } // end of parallel region
 #endif

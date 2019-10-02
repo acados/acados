@@ -1315,6 +1315,14 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     #pragma omp for
 #endif
 
+    // NOTE(oj): this will lead in an error for irk_gnsf, T must be set in precompute;
+    //    -> remove here and make sure precompute is called everywhere (e.g. Python interface).
+    for (ii = 0; ii < N; ii++)
+    {
+        config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii],
+                                         nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
+    }
+
 #if defined(ACADOS_WITH_OPENMP)
     } // end of parallel region
 #endif
@@ -1359,8 +1367,6 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
             mem->stat[mem->stat_n*sqp_iter+1] = mem->nlp_res->inf_norm_res_b;
             mem->stat[mem->stat_n*sqp_iter+2] = mem->nlp_res->inf_norm_res_d;
             mem->stat[mem->stat_n*sqp_iter+3] = mem->nlp_res->inf_norm_res_m;
-            mem->stat[mem->stat_n*sqp_iter+4] = qp_status;
-            mem->stat[mem->stat_n*sqp_iter+5] = qp_iter;
         }
 
         // exit conditions on residuals
@@ -1435,7 +1441,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         qp_iter = qp_info_->num_iter;
 
         // save statistics of last qp solver call
-        if (sqp_iter == opts->max_iter-1)
+        if (sqp_iter+1 < mem->stat_m)
         {
             mem->stat[mem->stat_n*(sqp_iter+1)+4] = qp_status;
             mem->stat[mem->stat_n*(sqp_iter+1)+5] = qp_iter;
@@ -1548,7 +1554,7 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
 
     int ii;
 
-    // TODO(giaf) flag to enable/disable checks
+    // TODO(all) add flag to enable/disable checks
     for (ii = 0; ii <= N; ii++)
     {
         int module_val;
@@ -1565,7 +1571,8 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
     for (ii = 0; ii < N; ii++)
     {
         // set T
-        config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
+        config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii],
+                                        nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
         // dynamics precompute
         status = config->dynamics[ii]->precompute(config->dynamics[ii], dims->dynamics[ii],
                                             nlp_in->dynamics[ii], opts->dynamics[ii],
