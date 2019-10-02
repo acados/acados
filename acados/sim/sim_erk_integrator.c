@@ -236,10 +236,10 @@ void *sim_erk_opts_assign(void *config_, void *dims, void *raw_memory)
 
 
 
-int sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value)
+void sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
     sim_opts *opts = (sim_opts *) opts_;
-    return sim_opts_set_(opts, field, value);
+    sim_opts_set_(opts, field, value);
 }
 
 

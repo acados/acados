@@ -37,9 +37,9 @@ clear all
 addpath('../pendulum_dae/');
 
 %% options
-compile_mex = 'true'; % true, false
+compile_interface = 'false'; % true, false
 codgen_model = 'true'; % true, false
-% compile_mex = 'false'; % true, false
+% compile_interface = 'false'; % true, false
 % codgen_model = 'false'; % true, false
 % simulation
 gnsf_detect_struct = 'true'; % true, false
@@ -215,7 +215,7 @@ end
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', ocp_N);
@@ -273,7 +273,7 @@ sim_model.set('dim_nz', nz);
 
 %% acados sim opts
 sim_opts = acados_sim_opts();
-sim_opts.set('compile_mex', compile_mex);
+sim_opts.set('compile_interface', compile_interface);
 sim_opts.set('codgen_model', codgen_model);
 sim_opts.set('num_stages', sim_num_stages);
 sim_opts.set('num_steps', sim_num_steps);
@@ -444,10 +444,10 @@ dist2target = norm( sim.get('xn') - xtarget );
 requ_dist2target = 1e-4;
 
 if any( max(abs(check)) > tol_pendulum )
-    error(['note: check for constant pendulum length failed, violation >' ...
+    error(['test_ocp_pendulum_dae: check for constant pendulum length failed, violation >' ...
         num2str(tol_pendulum)]);
 elseif dist2target > requ_dist2target
-    error(['system should have reached desired state up to accuracy ' ...
+    error(['test_ocp_pendulum_dae: system should have reached desired state up to accuracy ' ...
            num2str(requ_dist2target,'%e')]);
 else
     disp('test_ocp_pendulum_dae: SUCCESS');
