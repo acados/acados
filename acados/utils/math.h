@@ -44,10 +44,13 @@ extern "C" {
 double fmax(double a, double b);
 #endif
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb, double *C, int ldc);
-void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y);
-void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y);
-void dcopy_3l(int n, double *x, int incx, double *y, int incy);
+// void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y);
+// void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y);
+// void dcopy_3l(int n, double *x, int incx, double *y, int incy);
 void daxpy_3l(int n, double da, double *dx, double *dy);
 void dscal_3l(int n, double da, double *dx);
 double twonormv(int n, double *ptrv);
@@ -80,16 +83,14 @@ void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B, int ldb
 
 double onenorm(int row, int col, double *ptrA);
 
-double twonormv(int n, double *ptrv);
+// double twonormv(int n, double *ptrv);
 
 void padeapprox(int m, int row, double *A);
 
 void expm(int row, double *A);
 
-void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
-                                     int *nvd, int *ned, int *nbd, int *ngd);
-
-void eigen_decomposition(int dim, double *A, double *V, double *d); // TODO remove !!!
+// void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
+//                                      int *nvd, int *ned, int *nbd, int *ngd);
 
 void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double *e);
 

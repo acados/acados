@@ -13,9 +13,7 @@ close all;
 % Check that env.sh has been runz2
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
-	disp('ERROR: env.sh has not been sourced! Before executing this example, run:');
-	disp('source env.sh');
-	return;
+	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
 end
 
 %% Arguments
@@ -39,11 +37,11 @@ v_ref = S.v_ref;
 max_a = S.max_a;
 
 if 1
-	compile_mex = 'true';
+	compile_interface = 'false';
 	codgen_model = 'true';
 	gnsf_detect_struct = 'true';
 else
-	compile_mex = 'false';
+	compile_interface = 'false';
 	codgen_model = 'false';
 	gnsf_detect_struct = 'false';
 end
@@ -186,7 +184,7 @@ ocp_model.model_struct
 %% Acados ocp options
 
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', nb_steps);
@@ -305,6 +303,7 @@ ylabel('Control inputs [m/s^2]','fontsize',fontsize);
 
 if (strcmp(nlp_solver, 'sqp'))
 	figure;
+    stat = ocp.get('stat');
 	plot([0: sqp_iter], log10(stat(:,2)), 'r-x');
 	hold on
 	plot([0: sqp_iter], log10(stat(:,3)), 'b-x');
@@ -322,5 +321,6 @@ else
 	fprintf('\nsolution failed!\n\n');
 end
 
-waitforbuttonpress;
-return;
+if is_octave
+    waitforbuttonpress;
+end

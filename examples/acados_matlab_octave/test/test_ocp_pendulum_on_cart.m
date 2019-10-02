@@ -37,7 +37,7 @@ clear VARIABLES
 addpath('../pendulum_on_cart_model/');
 
 %% arguments
-compile_mex = 'true';
+compile_interface = 'true';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
 
@@ -68,7 +68,7 @@ qp_solver = 'full_condensing_qpoases';
 qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
-qp_solver_warm_start = 2;
+qp_solver_warm_start = 1;
 qp_solver_iter_max = 100;
 %sim_method = 'erk';
 % sim_method = 'irk';
@@ -177,7 +177,7 @@ ocp_model.set('constr_uh', ubu);
 
 %% acados ocp opts
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('compile_mex', compile_mex);
+ocp_opts.set('compile_interface', compile_interface);
 ocp_opts.set('codgen_model', codgen_model);
 ocp_opts.set('param_scheme', param_scheme);
 ocp_opts.set('param_scheme_N', N);
@@ -265,12 +265,12 @@ ocp.print('stat')
 
 
 if status~=0
-    error('\nnTEST_OCP: solution failed!\n\n');
+    error('test_ocp_pendulum_on_cart: solution failed!');
 elseif tol < max(stat(end,2:5))
-    error('\nnTEST_OCP: residuals bigger than tol!\n\n');
+    error('test_ocp_pendulum_on_cart: residuals bigger than tol!');
 elseif sqp_iter > 9
-    error('\nnTEST_OCP: sqp_iter > 9, this problem is typically solved within less iterations!\n\n');
+    error('test_ocp_pendulum_on_cart: sqp_iter > 9, this problem is typically solved within less iterations!');
 end
 
-fprintf('\nTEST_OCP: success!\n\n');
+fprintf('\ntest_ocp_pendulum_on_cart: success!\n');
 

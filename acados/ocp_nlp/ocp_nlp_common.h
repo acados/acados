@@ -137,11 +137,7 @@ typedef struct
 } ocp_nlp_dims;
 
 //
-int ocp_nlp_dims_calculate_size_self(int N);
-//
 int ocp_nlp_dims_calculate_size(void *config);
-//
-ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
 
@@ -149,7 +145,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
 /// (states, constrols, algebraic variables, slack variables).
 ///
 /// \param config_ The configuration struct.
-/// \param dims_ The dimensions struct.
+/// \param dims_ The dimension struct.
 /// \param field The type of optimization variables, either nx, nu, nz, or ns.
 /// \param value_array Number of variables for each stage.
 void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_,
@@ -160,7 +156,7 @@ void ocp_nlp_dims_set_opt_vars(void *config_, void *dims_,
 /// inequality constraints).
 ///
 /// \param config_ The configuration struct.
-/// \param dims_ The dimensions struct.
+/// \param dims_ The dimension struct.
 /// \param stage Stage number.
 /// \param field The type of constraint/bound, either nbx, nbu, ng, or nh.
 /// \param value_field Number of constraints/bounds for the given stage.
@@ -170,7 +166,7 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage,
 /// Sets the dimensions of the cost terms for a stage.
 ///
 /// \param config_ The configuration struct.
-/// \param dims_ The dimensions struct.
+/// \param dims_ The dimension struct.
 /// \param stage Stage number.
 /// \param field Type of cost term, can be eiter ny (or others TBC).
 /// \param value_field Number of cost terms/residuals for the given stage.
@@ -180,7 +176,7 @@ void ocp_nlp_dims_set_cost(void *config_, void *dims_, int stage, const char *fi
 /// Sets the dimensions of the dynamics for a stage.
 ///
 /// \param config_ The configuration struct.
-/// \param dims_ The dimensions struct.
+/// \param dims_ The dimension struct.
 /// \param stage Stage number.
 /// \param field TBD
 /// \param value TBD

@@ -39,9 +39,9 @@ import casadi.*
 
 casadi_version = CasadiMeta.version();
 if strcmp(casadi_version(1:3),'3.4') % require casadi 3.4.x
-	casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
+    casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
 else % old casadi versions
-	error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
+    error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
 end
 
 %% load model
@@ -60,44 +60,44 @@ nu = length(u);
 % p
 if isfield(model, 'sym_p')
     p = model.sym_p;
-	np = length(p);
+    np = length(p);
 else
     if isSX
         p = SX.sym('p',0, 0);
     else
         p = MX.sym('p',0, 0);
     end
-	np = 0;
+    np = 0;
 end
 
 model_name = model.name;
 
 if isfield(model, 'cost_expr_ext_cost')
-	ext_cost = model.cost_expr_ext_cost;
-	% generate jacobians
-	jac_x = jacobian(ext_cost, x);
-	jac_u = jacobian(ext_cost, u);
-	% generate hessians
-	hes_uu = jacobian(jac_u', u);
-	hes_xu = jacobian(jac_u', x);
-	hes_ux = jacobian(jac_x', u);
-	hes_xx = jacobian(jac_x', x);
-	% Set up functions
-	ext_cost_jac_hes = Function([model_name,'_cost_ext_cost_jac_hes'], {x, u, p}, {[jac_u'; jac_x'], [hes_uu, hes_xu; hes_ux, hes_xx]});
-	% generate C code
-	ext_cost_jac_hes.generate([model_name,'_cost_ext_cost_jac_hes'], casadi_opts);
+    ext_cost = model.cost_expr_ext_cost;
+    % generate jacobians
+    jac_x = jacobian(ext_cost, x);
+    jac_u = jacobian(ext_cost, u);
+    % generate hessians
+    hes_uu = jacobian(jac_u', u);
+    hes_xu = jacobian(jac_u', x);
+    hes_ux = jacobian(jac_x', u);
+    hes_xx = jacobian(jac_x', x);
+    % Set up functions
+    ext_cost_jac_hes = Function([model_name,'_cost_ext_cost_jac_hes'], {x, u, p}, {[jac_u'; jac_x'], [hes_uu, hes_xu; hes_ux, hes_xx]});
+    % generate C code
+    ext_cost_jac_hes.generate([model_name,'_cost_ext_cost_jac_hes'], casadi_opts);
 end
 
 if isfield(model, 'cost_expr_ext_cost_e')
-	ext_cost_e = model.cost_expr_ext_cost_e;
-	% generate jacobians
-	jac_x_e = jacobian(ext_cost_e, x);
-	% generate hessians
-	hes_xx_e = jacobian(jac_x', x);
-	% Set up functions
-	ext_cost_e_jac_hes = Function([model_name,'_cost_ext_cost_e_jac_hes'], {x, p}, {jac_x_e', hes_xx_e});
-	% generate C code
-	ext_cost_e_jac_hes.generate([model_name,'_cost_ext_cost_e_jac_hes'], casadi_opts);
+    ext_cost_e = model.cost_expr_ext_cost_e;
+    % generate jacobians
+    jac_x_e = jacobian(ext_cost_e, x);
+    % generate hessians
+    hes_xx_e = jacobian(jac_x', x);
+    % Set up functions
+    ext_cost_e_jac_hes = Function([model_name,'_cost_ext_cost_e_jac_hes'], {x, p}, {jac_x_e', hes_xx_e});
+    % generate C code
+    ext_cost_e_jac_hes.generate([model_name,'_cost_ext_cost_e_jac_hes'], casadi_opts);
 end
 
 

@@ -146,8 +146,7 @@ ocp_nlp_config *ocp_nlp_config_assign(int N, void *raw_memory)
  * dims
  ************************************************/
 
-// TODO(oj): should be static, but used by current ocp_nlp c++ interface
-int ocp_nlp_dims_calculate_size_self(int N)
+static int ocp_nlp_dims_calculate_size_self(int N)
 {
     int size = 0;
 
@@ -209,8 +208,7 @@ int ocp_nlp_dims_calculate_size(void *config_)
 
 
 
-// TODO(oj): should be static, but used by current ocp_nlp c++ interface
-ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
+static ocp_nlp_dims *ocp_nlp_dims_assign_self(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 

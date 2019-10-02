@@ -66,7 +66,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     long long *ptr;
 
     /* RHS */
-	const mxArray *C_sim = prhs[0];
+    const mxArray *C_sim = prhs[0];
     const mxArray *matlab_model = prhs[2];
 
     // config
@@ -82,9 +82,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // model
     int np = 0;
     if (mxGetField( matlab_model, 0, "dim_np" )!=NULL)
-	{
+    {
         np = mxGetScalar( mxGetField( matlab_model, 0, "dim_np" ) );
-	}
+    }
 
     /* LHS */
     /* copy existing fields */
@@ -109,7 +109,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     return;
 
 }
-
-
 
 
