@@ -59,16 +59,9 @@ extern "C" {
 
 typedef struct
 {
-//    void *qp_solver_opts;
-//    void *regularize;
-//    void **dynamics;     // dynamics_opts
-//    void **cost;         // cost_opts
-//    void **constraints;  // constraints_opts
 	ocp_nlp_opts *nlp_opts;
     double step_length;  // (fixed) step length in SQP loop
     int compute_dual_sol;
-//    int reuse_workspace;
-//    int num_threads;
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int qp_warm_start;   // NOTE: this is not actually setting the warm_start! Just for compatibility with sqp.
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
@@ -94,25 +87,8 @@ void ocp_nlp_sqp_rti_opts_set_at_stage(void *config_, void *opts_, int stage, co
 
 typedef struct
 {
-    // QP in & out
-    ocp_qp_in *qp_in;
-    ocp_qp_out *qp_out;
-    // QP stuff not entering the qp_in struct
-    struct blasfeo_dmat *dzduxt; // dzdux transposed
-    struct blasfeo_dvec *z_alg; // z_alg
-
-    //    ocp_nlp_dims *dims;
-    void *qp_solver_mem;
-    void *regularize_mem;
-
-    void **dynamics;     // dynamics memory
-    void **cost;         // cost memory
-    void **constraints;  // constraints memory
-
     // nlp memory
     ocp_nlp_memory *nlp_mem;
-
-    int status;
 
     double time_qp_sol;
     double time_lin;
@@ -123,6 +99,8 @@ typedef struct
     double *stat;
     int stat_m;
     int stat_n;
+
+    int status;
 
 } ocp_nlp_sqp_rti_memory;
 

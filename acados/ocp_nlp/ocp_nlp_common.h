@@ -275,6 +275,19 @@ void ocp_nlp_opts_set_at_stage(void *config, void *opts, int stage, const char *
 
 typedef struct
 {
+    void *qp_solver_mem;
+    void *regularize_mem;
+    void **dynamics;     // dynamics memory
+    void **cost;         // cost memory
+    void **constraints;  // constraints memory
+
+    // qp in & out
+    ocp_qp_in *qp_in;
+    ocp_qp_out *qp_out;
+    // QP stuff not entering the qp_in struct
+    struct blasfeo_dmat *dzduxt; // dzdux transposed
+    struct blasfeo_dvec *z_alg; // z_alg, output algebraic variables
+
     struct blasfeo_dvec *cost_grad;
     struct blasfeo_dvec *ineq_fun;
     struct blasfeo_dvec *ineq_adj;
@@ -288,10 +301,9 @@ typedef struct
 } ocp_nlp_memory;
 
 //
-int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
+int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts);
 //
-ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                      void *raw_memory);
+ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts, void *raw_memory);
 
 
 

@@ -60,11 +60,6 @@ extern "C" {
 
 typedef struct
 {
-//    void *qp_solver_opts;
-//    void *regularize;
-//    void **dynamics;     // dynamics_opts
-//    void **cost;         // cost_opts
-//    void **constraints;  // constraints_opts
 	ocp_nlp_opts *nlp_opts;
     double tol_stat;     // exit tolerance on stationarity condition
     double tol_eq;       // exit tolerance on equality constraints
@@ -72,8 +67,6 @@ typedef struct
     double tol_comp;     // exit tolerance on complemetarity condition
     double step_length;  // (fixed) step length in SQP loop
     int max_iter;
-//    int reuse_workspace;
-//    int num_threads;
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
@@ -123,10 +116,6 @@ typedef struct
     // nlp memory
     ocp_nlp_memory *nlp_mem;
 
-    int status;
-
-    int sqp_iter;
-
     double time_qp_sol;
     double time_lin;
     double time_reg;
@@ -135,6 +124,9 @@ typedef struct
     double *stat;
     int stat_m;
     int stat_n;
+
+    int status;
+    int sqp_iter;
 
 } ocp_nlp_sqp_memory;
 

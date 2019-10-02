@@ -1236,8 +1236,13 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
  * memory
  ************************************************/
 
-int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
+int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts)
 {
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_nlp_dynamics_config **dynamics = config->dynamics;
+    ocp_nlp_cost_config **cost = config->cost;
+    ocp_nlp_constraints_config **constraints = config->constraints;
+
     // extract dims
     int N = dims->N;
     int *nv = dims->nv;
@@ -1248,39 +1253,80 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
     int size = sizeof(ocp_nlp_memory);
 
-    size += (N + 1) * sizeof(bool); // set_sim_guess
+    // qp in
+    size += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
 
-    size += 5 * (N + 1) * sizeof(struct blasfeo_dvec);  // cost_grad, ineq_fun, ineq_adj, dyn_adj, sim_guess
-    size += 1 * N * sizeof(struct blasfeo_dvec);        // dyn_fun
+    // qp out
+    size += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+
+    // qp solver
+    size += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+
+    // regularization
+    size += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
+
+    // dynamics
+    size += N * sizeof(void *);
+    for (int ii = 0; ii < N; ii++)
+    {
+        size += dynamics[ii]->memory_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+    }
+
+    // cost
+    size += (N + 1) * sizeof(void *);
+    for (int ii = 0; ii <= N; ii++)
+    {
+        size += cost[ii]->memory_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+    }
+
+    // constraints
+    size += (N + 1) * sizeof(void *);
+    for (int ii = 0; ii <= N; ii++)
+    {
+        size += constraints[ii]->memory_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+    }
+
+    size += (N+1)*sizeof(bool); // set_sim_guess
+
+    size += (N+1)*sizeof(struct blasfeo_dmat); // dzduxt
+    size += 6*(N+1)*sizeof(struct blasfeo_dvec);  // cost_grad ineq_fun ineq_adj dyn_adj sim_guess z_alg
+    size += 1*N*sizeof(struct blasfeo_dvec);        // dyn_fun
 
     for (int ii = 0; ii < N; ii++)
     {
-        size += 2 * blasfeo_memsize_dvec(nv[ii]);           // cost_grad ineq_adj
-        size += 1 * blasfeo_memsize_dvec(nu[ii] + nx[ii]);  // dyn_adj
-        size += 1 * blasfeo_memsize_dvec(nx[ii + 1]);       // dyn_fun
-        size += 1 * blasfeo_memsize_dvec(2 * ni[ii]);       // ineq_fun
-        size += 1 * blasfeo_memsize_dvec(nx[ii] + nz[ii]); // sim_guess
+		size += 1*blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]); // dzduxt
+		size += 1*blasfeo_memsize_dvec(nz[ii]); // z_alg
+        size += 2*blasfeo_memsize_dvec(nv[ii]);           // cost_grad ineq_adj
+        size += 1*blasfeo_memsize_dvec(nu[ii] + nx[ii]);  // dyn_adj
+        size += 1*blasfeo_memsize_dvec(nx[ii + 1]);       // dyn_fun
+        size += 1*blasfeo_memsize_dvec(2 * ni[ii]);       // ineq_fun
+        size += 1*blasfeo_memsize_dvec(nx[ii] + nz[ii]); // sim_guess
     }
-    size += 2 * blasfeo_memsize_dvec(nv[N]);          // cost_grad ineq_adj
-    size += 1 * blasfeo_memsize_dvec(nu[N] + nx[N]);  // dyn_adj
-    size += 1 * blasfeo_memsize_dvec(2 * ni[N]);      // ineq_fun
-    size += 1 * blasfeo_memsize_dvec(nx[N] + nz[N]);  // sim_guess
+	size += 1*blasfeo_memsize_dmat(nu[N]+nx[N], nz[N]); // dzduxt
+	size += 1*blasfeo_memsize_dvec(nz[N]); // z_alg
+    size += 2*blasfeo_memsize_dvec(nv[N]);          // cost_grad ineq_adj
+    size += 1*blasfeo_memsize_dvec(nu[N] + nx[N]);  // dyn_adj
+    size += 1*blasfeo_memsize_dvec(2 * ni[N]);      // ineq_fun
+    size += 1*blasfeo_memsize_dvec(nx[N] + nz[N]);  // sim_guess
 
     size += 8;   // initial align
+    size += 8;   // middle align
     size += 8;   // blasfeo_struct align
     size += 64;  // blasfeo_mem align
 
-    //  make_int_multiple_of(64, &size);
+    make_int_multiple_of(8, &size);
 
     return size;
 }
 
 
 
-ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                      void *raw_memory)
+ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts, void *raw_memory)
 {
-    char *c_ptr = (char *) raw_memory;
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_nlp_dynamics_config **dynamics = config->dynamics;
+    ocp_nlp_cost_config **cost = config->cost;
+    ocp_nlp_constraints_config **constraints = config->constraints;
 
     // extract sizes
     int N = dims->N;
@@ -1290,12 +1336,66 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     int *nu = dims->nu;
     int *ni = dims->ni;
 
+    char *c_ptr = (char *) raw_memory;
+
     // initial align
     align_char_to(8, &c_ptr);
 
     // struct
     ocp_nlp_memory *mem = (ocp_nlp_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_memory);
+
+    // dynamics
+    mem->dynamics = (void **) c_ptr;
+    c_ptr += N*sizeof(void *);
+
+    // cost
+    mem->cost = (void **) c_ptr;
+    c_ptr += (N+1)*sizeof(void *);
+
+    // constraints
+    mem->constraints = (void **) c_ptr;
+    c_ptr += (N+1)*sizeof(void *);
+
+    // middle align
+    align_char_to(8, &c_ptr);
+
+    // qp in
+    mem->qp_in = ocp_qp_in_assign(dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_in_calculate_size(dims->qp_solver->orig_dims);
+
+    // qp out
+    mem->qp_out = ocp_qp_out_assign(dims->qp_solver->orig_dims, c_ptr);
+    c_ptr += ocp_qp_out_calculate_size(dims->qp_solver->orig_dims);
+
+    // QP solver
+    mem->qp_solver_mem = qp_solver->memory_assign(qp_solver, dims->qp_solver, opts->qp_solver_opts, c_ptr);
+    c_ptr += qp_solver->memory_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+
+    // regularization
+    mem->regularize_mem = config->regularize->memory_assign(config->regularize, dims->regularize, opts->regularize, c_ptr);
+    c_ptr += config->regularize->memory_calculate_size(config->regularize, dims->regularize, opts->regularize);
+
+    // dynamics
+    for (int ii = 0; ii < N; ii++)
+    {
+        mem->dynamics[ii] = dynamics[ii]->memory_assign(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii], c_ptr);
+        c_ptr += dynamics[ii]->memory_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+    }
+
+    // cost
+    for (int ii = 0; ii <= N; ii++)
+    {
+        mem->cost[ii] = cost[ii]->memory_assign(cost[ii], dims->cost[ii], opts->cost[ii], c_ptr);
+        c_ptr += cost[ii]->memory_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
+    }
+
+    // constraints
+    for (int ii = 0; ii <= N; ii++)
+    {
+        mem->constraints[ii] = constraints[ii]->memory_assign(constraints[ii], dims->constraints[ii], opts->constraints[ii], c_ptr);
+        c_ptr += constraints[ii]->memory_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+    }
 
     // set_sim_guess
     assign_and_advance_bool(N+1, &mem->set_sim_guess, &c_ptr);
@@ -1306,6 +1406,13 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     // blasfeo_struct align
     align_char_to(8, &c_ptr);
+
+    // dzduxt
+    mem->dzduxt = (struct blasfeo_dmat *) c_ptr;
+    c_ptr += (N+1)*sizeof(struct blasfeo_dmat);
+    // z_alg
+    mem->z_alg = (struct blasfeo_dvec *) c_ptr;
+    c_ptr += (N+1)*sizeof(struct blasfeo_dvec);
 
     // cost_grad
     assign_and_advance_blasfeo_dvec_structs(N + 1, &mem->cost_grad, &c_ptr);
@@ -1322,6 +1429,19 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
+
+    // dzduxt
+    for (int ii=0; ii<=N; ii++)
+    {
+        blasfeo_create_dmat(nu[ii]+nx[ii], nz[ii], mem->dzduxt+ii, c_ptr);
+        c_ptr += blasfeo_memsize_dmat(nu[ii]+nx[ii], nz[ii]);
+    }
+    // z_alg
+    for (int ii=0; ii<=N; ii++)
+    {
+        blasfeo_create_dvec(nz[ii], mem->z_alg+ii, c_ptr);
+        c_ptr += blasfeo_memsize_dvec(nz[ii]);
+    }
 
     // cost_grad
     for (int ii = 0; ii <= N; ii++)
