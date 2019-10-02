@@ -185,7 +185,8 @@ classdef acados_ocp < handle
 			
 			% load JSON layout
 			acados_folder = getenv('ACADOS_INSTALL_DIR');
-			acados_layout = jsondecode(fileread([acados_folder, '/interfaces/acados_template/acados_template/acados_layout.json']));
+			acados_layout = jsondecode(fileread([acados_folder,...
+                '/interfaces/acados_template/acados_template/acados_layout.json']));
 			
 			dims = obj.acados_ocp_nlp_json.dims;
 			% reshape constraints
