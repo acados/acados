@@ -1385,7 +1385,7 @@ void setup_and_solve_nlp(int NN,
         if (plan->nlp_dynamics[i] == CONTINUOUS_MODEL)
         {
             ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = (ocp_nlp_dynamics_cont_opts *)
-                                                              sqp_opts->dynamics[i];
+                                                              sqp_opts->nlp_opts->dynamics[i];
             sim_opts *sim_opts_ = (sim_opts *) dynamics_stage_opts->sim_solver;
 
             if (plan->sim_solver_plan[i].sim_solver == ERK)
