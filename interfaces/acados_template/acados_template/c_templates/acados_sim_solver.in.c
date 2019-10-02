@@ -261,7 +261,7 @@ int {{ ocp.model.name }}_acados_sim_free() {
         external_function_casadi_free(sim_expl_ode_fun_casadi);
         {% else %}
         external_function_param_casadi_free(sim_forw_vde_casadi);
-        external_function_param_casadi_free(sim_expl_ode_fun_casadi_casadi);
+        external_function_param_casadi_free(sim_expl_ode_fun_casadi);
         {% endif %}
     {% endif %}
     
