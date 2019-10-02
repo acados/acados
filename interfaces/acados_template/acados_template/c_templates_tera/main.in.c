@@ -74,12 +74,12 @@ external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
+{% endif %}
 {% if dims.npd > 0 %}
 external_function_casadi * p_constraint;
 {% endif %}
 {% if dims.npd_e > 0 %}
 external_function_casadi * p_e_constraint;
-{% endif %}
 {% endif %}
 {% if dims.nh > 0 %}
 external_function_casadi * h_constraint;
@@ -122,7 +122,7 @@ int main() {
     }
     {% else %}
     for (int ii = 0; ii < {{dims.N}}; ii++) {
-    expl_vde_for[ii].set_param(expl_vde_for+ii, p);
+    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {% endif %}
     {% endif %}

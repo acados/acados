@@ -236,7 +236,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     }
     {% else %}
     for (int ii = 0; ii < {{dims.N}}; ii++) {
-    expl_vde_for[ii].set_param(expl_vde_for+ii, in_p);
+    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {% endif %}
     {% endif %}
