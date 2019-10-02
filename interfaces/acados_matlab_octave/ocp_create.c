@@ -786,7 +786,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             int sim_method_num_stages = mxGetScalar( matlab_array );
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_solver_dynamics_opts_set(config, opts, ii, "num_stages", &sim_method_num_stages);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_num_stages", &sim_method_num_stages);
             }
         }
         else
@@ -796,7 +796,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 int sim_method_num_stages = (int) values[ii];
                 // mexPrintf("\nsim_method_num_stages[%d] = %d", ii, sim_method_num_stages);
-                ocp_nlp_solver_dynamics_opts_set(config, opts, ii, "num_stages", &sim_method_num_stages);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_num_stages", &sim_method_num_stages);
             }
         }
     }
@@ -813,7 +813,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             int sim_method_num_steps = mxGetScalar( matlab_array );
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_solver_dynamics_opts_set(config, opts, ii, "num_steps", &sim_method_num_steps);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_num_steps", &sim_method_num_steps);
             }
         }
         else
@@ -823,7 +823,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 int sim_method_num_steps = (int) values[ii];
                 // mexPrintf("\nsim_method_num_steps[%d] = %d", ii, sim_method_num_steps);
-                ocp_nlp_solver_dynamics_opts_set(config, opts, ii, "num_steps", &sim_method_num_steps);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_num_steps", &sim_method_num_steps);
             }
         }
     }
@@ -840,7 +840,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             int sim_method_newton_iter = mxGetScalar( matlab_array );
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_solver_dynamics_opts_set(config, opts, ii, "newton_iter", &sim_method_newton_iter);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_newton_iter", &sim_method_newton_iter);
             }
         }
         else
@@ -850,7 +850,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 int sim_method_newton_iter = (int) values[ii];
                 // mexPrintf("\nsim_method_newton_iter[%d] = %d", ii, sim_method_newton_iter);
-                ocp_nlp_solver_dynamics_opts_set(config, opts, ii, "newton_iter", &sim_method_newton_iter);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_newton_iter", &sim_method_newton_iter);
             }
         }
     }
@@ -868,7 +868,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             bool sim_method_jac_reuse = mxGetScalar( matlab_array );
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_solver_dynamics_opts_set(config, opts, ii, "jac_reuse", &sim_method_jac_reuse);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_jac_reuse", &sim_method_jac_reuse);
             }
         }
         else
@@ -878,7 +878,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 bool sim_method_jac_reuse = (int) values[ii];
                 // mexPrintf("\nsim_method_jac_reuse[%d] = %d", ii, sim_method_jac_reuse);
-                ocp_nlp_solver_dynamics_opts_set(config, opts, ii, "jac_reuse", &sim_method_jac_reuse);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_jac_reuse", &sim_method_jac_reuse);
             }
         }
     }
@@ -896,7 +896,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             bool sim_method_exact_z_output = mxGetScalar( matlab_array );
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_solver_dynamics_opts_set(config, opts, ii, "exact_z_output", &sim_method_exact_z_output);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_exact_z_output", &sim_method_exact_z_output);
             }
         }
         else
@@ -906,7 +906,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 bool sim_method_exact_z_output = (int) values[ii];
                 // mexPrintf("\nsim_method_exact_z_output[%d] = %d", ii, sim_method_exact_z_output);
-                ocp_nlp_solver_dynamics_opts_set(config, opts, ii, "exact_z_output", &sim_method_exact_z_output);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_exact_z_output", &sim_method_exact_z_output);
             }
         }
     }

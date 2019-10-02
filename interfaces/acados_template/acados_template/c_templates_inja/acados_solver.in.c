@@ -786,14 +786,14 @@ int acados_create() {
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
     int num_steps_val = 1; 
-    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "output_z", &output_z_val);
-    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_algebraic", &sens_algebraic_val);
-    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_output_z", &output_z_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
     {% endif %}
     int ns_val = 1; 
-    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "ns", &ns_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_ns", &ns_val);
     bool jac_reuse_val = true;
-    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "jac_reuse", &jac_reuse_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse_val);
 
     {% if ocp.solver_config.nlp_solver_type == "SQP" %}
 
@@ -822,9 +822,9 @@ int acados_create() {
         bool sens_hess = true;
         bool sens_adj = true;
 
-        ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps);
-        ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_hess", &sens_hess);
-        ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_adj", &sens_adj);
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_hess", &sens_hess);
+        ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_adj", &sens_adj);
     }
     {% endif %}
 

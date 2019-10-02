@@ -365,10 +365,10 @@ int main() {
     bool sens_algebraic_val = true; 
     bool reuse_val = true; 
     int num_steps_val = 5; 
-    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(config, nlp_opts, i, "output_z", &output_z_val);
-    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(config, nlp_opts, i, "sens_algebraic", &sens_algebraic_val);
-    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &reuse_val);
-    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_output_z", &output_z_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_jac_reuse", &reuse_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
 
 	double tol_stat = 1e-6;
 	double tol_eq   = 1e-6;

@@ -254,44 +254,13 @@ void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* v
 
 
 
-void ocp_nlp_sqp_dynamics_opts_set(void *config_, void *opts_, int stage,
-        const char *field, void *value)
+void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, int stage, const char *field, void* value)
 {
     ocp_nlp_config *config = config_;
-    ocp_nlp_sqp_opts *opts = opts_;
+    ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
     ocp_nlp_opts *nlp_opts = opts->nlp_opts;
 
-	ocp_nlp_dynamics_opts_set(config, nlp_opts, stage, field, value);
-
-    return;
-
-}
-
-
-
-void ocp_nlp_sqp_cost_opts_set(void *config_, void *opts_, int stage,
-        const char *field, void *value)
-{
-    ocp_nlp_config *config = config_;
-    ocp_nlp_sqp_opts *opts = opts_;
-    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-
-	ocp_nlp_cost_opts_set(config, nlp_opts, stage, field, value);
-
-    return;
-
-}
-
-
-
-void ocp_nlp_sqp_constraints_opts_set(void *config_, void *opts_, int stage,
-        const char *field, void *value)
-{
-    ocp_nlp_config *config = config_;
-    ocp_nlp_sqp_opts *opts = opts_;
-    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
-
-	ocp_nlp_constraints_opts_set(config, nlp_opts, stage, field, value);
+	ocp_nlp_opts_set_at_stage(config, nlp_opts, stage, field, value);
 
     return;
 
@@ -1585,9 +1554,7 @@ void ocp_nlp_sqp_config_initialize_default(void *config_)
     config->opts_initialize_default = &ocp_nlp_sqp_opts_initialize_default;
     config->opts_update = &ocp_nlp_sqp_opts_update;
     config->opts_set = &ocp_nlp_sqp_opts_set;
-    config->dynamics_opts_set = &ocp_nlp_sqp_dynamics_opts_set;
-    config->cost_opts_set = &ocp_nlp_sqp_cost_opts_set;
-    config->constraints_opts_set = &ocp_nlp_sqp_constraints_opts_set;
+    config->opts_set_at_stage = &ocp_nlp_sqp_opts_set_at_stage;
     config->memory_calculate_size = &ocp_nlp_sqp_memory_calculate_size;
     config->memory_assign = &ocp_nlp_sqp_memory_assign;
     config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;

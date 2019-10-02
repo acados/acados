@@ -304,24 +304,8 @@ void ocp_nlp_solver_opts_destroy(void *opts);
 void ocp_nlp_solver_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void* value);
 
 
-/// Set the option for the dynamics in a given stage.
-/// More specifically options of the integrator in case of continuous dynamics
-///
-/// \param config The configuration struct.
-/// \param opts_ The options struct.
-/// \param stage Stage number.
-/// \param field Name of the option.
-/// \param value Value of the option.
-// TODO remove and include module name in field instead ???
-void ocp_nlp_solver_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-        const char *field, void *value);
+void ocp_nlp_solver_opts_set_at_stage(ocp_nlp_config *config, void *opts_, int stage, const char *field, void* value);
 
-
-// TODO(oj): do we need these?
-// void ocp_nlp_solver_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-//         const char *field, void *value);
-// void ocp_nlp_solver_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-//         const char *field, void *value);
 
 /// TBC
 /// Updates the options.

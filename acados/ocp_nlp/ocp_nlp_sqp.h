@@ -91,7 +91,7 @@ void ocp_nlp_sqp_opts_update(void *config, void *dims, void *opts);
 //
 void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
-void ocp_nlp_sqp_dynamics_opts_set(void *config, void *opts, int stage, const char *field, void *value);
+void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, int stage, const char *field, void* value);
 
 
 

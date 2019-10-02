@@ -1326,15 +1326,15 @@ int main()
 			{
 				int ns = 4;
 
-				ocp_nlp_solver_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+				ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
 			}
 			else if (plan->sim_solver_plan[i].sim_solver == IRK)
 			{
 				int ns = 2;
 				bool jac_reuse = true;
 
-				ocp_nlp_solver_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
-				ocp_nlp_solver_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
+				ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
+				ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse);
 			}
 		}
     }

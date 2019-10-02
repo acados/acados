@@ -86,9 +86,7 @@ typedef struct
     void *(*memory_assign)(void *config, void *dims, void *opts_, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts_);
     void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
-    void (*dynamics_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
-    void (*cost_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
-    void (*constraints_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
+    void (*opts_set_at_stage)(void *config_, void *opts_, int stage, const char *field, void* value);
     // evaluate solver // TODO rename into solve
     int (*evaluate)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     void (*eval_param_sens)(void *config, void *dims, void *opts_, void *mem, void *work, char *field, int stage, int index, void *sens_nlp_out);
@@ -267,11 +265,7 @@ void ocp_nlp_opts_update(void *config, void *dims, void *opts);
 //
 void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
-void ocp_nlp_cost_opts_set(void *config, void *opts, int stage, const char *field, void *value);
-//
-void ocp_nlp_dynamics_opts_set(void *config, void *opts, int stage, const char *field, void *value);
-//
-void ocp_nlp_constraints_opts_set(void *config, void *opts, int stage, const char *field, void *value);
+void ocp_nlp_opts_set_at_stage(void *config, void *opts, int stage, const char *field, void *value);
 
 
 

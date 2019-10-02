@@ -596,30 +596,10 @@ void ocp_nlp_solver_opts_set(ocp_nlp_config *config, void *opts_, const char *fi
 
 
 
-// TODO remove and include module name in field instead ???
-void ocp_nlp_solver_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-        const char *field, void *value)
+void ocp_nlp_solver_opts_set_at_stage(ocp_nlp_config *config, void *opts_, int stage, const char *field, void *value)
 {
-    config->dynamics_opts_set(config, opts_, stage, field, value);
-    return;
+    config->opts_set_at_stage(config, opts_, stage, field, value);
 }
-
-
-// TODO(oj): do we need these?
-// void ocp_nlp_solver_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-//         const char *field, void *value)
-// {
-//     config->cost_opts_set(config, opts_, stage, field, value);
-//     return;
-// }
-
-
-// void ocp_nlp_solver_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-//         const char *field, void *value)
-// {
-//     config->constraints_opts_set(config, opts_, stage, field, value);
-//     return;
-// }
 
 
 

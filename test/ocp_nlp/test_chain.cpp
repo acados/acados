@@ -1377,7 +1377,7 @@ void setup_and_solve_nlp(int NN,
     * sqp opts
     ************************************************/
 
-    void *nlp_opts = ocp_nlp_opts_create(config, dims);
+    void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
     ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
 
     for (int i = 0; i < NN; ++i)
@@ -1405,11 +1405,11 @@ void setup_and_solve_nlp(int NN,
     double tol_ineq = 1e-6;
     double tol_comp = 1e-6;
 
-    ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
     /************************************************
     * ocp_nlp out
@@ -1474,7 +1474,7 @@ void setup_and_solve_nlp(int NN,
         free(erk4_casadi);
     }
 
-    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_solver_opts_destroy(nlp_opts);
     ocp_nlp_in_destroy(nlp_in);
     ocp_nlp_out_destroy(nlp_out);
     ocp_nlp_solver_destroy(solver);
