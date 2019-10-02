@@ -1316,7 +1316,7 @@ int main()
     * sqp opts
     ************************************************/
 
-	void *nlp_opts = ocp_nlp_opts_create(config, dims);
+	void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
 
     for (int i = 0; i < NN; ++i)
 	{
@@ -1326,15 +1326,15 @@ int main()
 			{
 				int ns = 4;
 
-				ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+				ocp_nlp_solver_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
 			}
 			else if (plan->sim_solver_plan[i].sim_solver == IRK)
 			{
 				int ns = 2;
 				bool jac_reuse = true;
 
-				ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
-				ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
+				ocp_nlp_solver_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+				ocp_nlp_solver_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
 			}
 		}
     }
@@ -1345,11 +1345,11 @@ int main()
     double tol_ineq = 1e-9;
     double tol_comp = 1e-9;
 
-    ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
     /************************************************
     * ocp_nlp out
@@ -1442,7 +1442,7 @@ int main()
 	free(erk4_casadi);
 
 	// free ocp_nlp module
-	ocp_nlp_opts_destroy(nlp_opts);
+	ocp_nlp_solver_opts_destroy(nlp_opts);
 	ocp_nlp_in_destroy(nlp_in);
 	ocp_nlp_out_destroy(nlp_out);
 	ocp_nlp_solver_destroy(solver);

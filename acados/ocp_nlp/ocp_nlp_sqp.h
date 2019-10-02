@@ -60,19 +60,20 @@ extern "C" {
 
 typedef struct
 {
-    void *qp_solver_opts;
-    void *regularize;
-    void **dynamics;     // dynamics_opts
-    void **cost;         // cost_opts
-    void **constraints;  // constraints_opts
+//    void *qp_solver_opts;
+//    void *regularize;
+//    void **dynamics;     // dynamics_opts
+//    void **cost;         // cost_opts
+//    void **constraints;  // constraints_opts
+	ocp_nlp_opts *nlp_opts;
     double tol_stat;     // exit tolerance on stationarity condition
     double tol_eq;       // exit tolerance on equality constraints
     double tol_ineq;     // exit tolerance on inequality constraints
     double tol_comp;     // exit tolerance on complemetarity condition
     double step_length;  // (fixed) step length in SQP loop
     int max_iter;
-    int reuse_workspace;
-    int num_threads;
+//    int reuse_workspace;
+//    int num_threads;
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int qp_warm_start;   // qp_warm_start in all but the first sqp iterations
     bool warm_start_first_qp; // to set qp_warm_start in first iteration
@@ -90,7 +91,7 @@ void ocp_nlp_sqp_opts_update(void *config, void *dims, void *opts);
 //
 void ocp_nlp_sqp_opts_set(void *config_, void *opts_, const char *field, void* value);
 //
-void ocp_nlp_sqp_dyanimcs_opts_set(void *config, void *opts, int stage, const char *field, void *value);
+void ocp_nlp_sqp_dynamics_opts_set(void *config, void *opts, int stage, const char *field, void *value);
 
 
 

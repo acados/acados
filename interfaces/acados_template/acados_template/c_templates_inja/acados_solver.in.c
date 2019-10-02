@@ -780,20 +780,20 @@ int acados_create() {
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uhN);
     {% endif %}
 
-    nlp_opts = ocp_nlp_opts_create(nlp_config, nlp_dims);
+    nlp_opts = ocp_nlp_solver_opts_create(nlp_config, nlp_dims);
     
     {% if ocp.dims.nz > 0 %}
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
     int num_steps_val = 1; 
-    for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "output_z", &output_z_val);
-    for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_algebraic", &sens_algebraic_val);
-    for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "output_z", &output_z_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_algebraic", &sens_algebraic_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps_val);
     {% endif %}
     int ns_val = 1; 
-    for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "ns", &ns_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "ns", &ns_val);
     bool jac_reuse_val = true;
-    for (int i = 0; i < N; i++) ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "jac_reuse", &jac_reuse_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "jac_reuse", &jac_reuse_val);
 
     {% if ocp.solver_config.nlp_solver_type == "SQP" %}
 
@@ -803,11 +803,11 @@ int acados_create() {
     double tol_ineq = 1e-6;
     double tol_comp = 1e-6;
 
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "max_iter", &max_iter);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_stat", &tol_stat);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_eq", &tol_eq);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_ineq", &tol_ineq);
-    ocp_nlp_opts_set(nlp_config, nlp_opts, "tol_comp", &tol_comp);
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "max_iter", &max_iter);
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_stat", &tol_stat);
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_eq", &tol_eq);
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_ineq", &tol_ineq);
+    ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_comp", &tol_comp);
 
 
     {% else %}
@@ -822,9 +822,9 @@ int acados_create() {
         bool sens_hess = true;
         bool sens_adj = true;
 
-        ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps);
-        ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_hess", &sens_hess);
-        ocp_nlp_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_adj", &sens_adj);
+        ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "num_steps", &num_steps);
+        ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_hess", &sens_hess);
+        ocp_nlp_solver_dynamics_opts_set(nlp_config, nlp_opts, i, "sens_adj", &sens_adj);
     }
     {% endif %}
 
@@ -868,7 +868,7 @@ int acados_solve() {
 int acados_free() {
 
     // free memory
-    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_solver_opts_destroy(nlp_opts);
     ocp_nlp_in_destroy(nlp_in);
     ocp_nlp_out_destroy(nlp_out);
     ocp_nlp_solver_destroy(nlp_solver);

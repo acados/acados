@@ -912,6 +912,323 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void
 
 
 /************************************************
+ * options
+ ************************************************/
+
+int ocp_nlp_opts_calculate_size(void *config_, void *dims_)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_nlp_dynamics_config **dynamics = config->dynamics;
+    ocp_nlp_cost_config **cost = config->cost;
+    ocp_nlp_constraints_config **constraints = config->constraints;
+
+    int N = dims->N;
+
+    int size = 0;
+
+    size += sizeof(ocp_nlp_opts);
+
+    size += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
+
+    size += config->regularize->opts_calculate_size();
+
+    // dynamics
+    size += N * sizeof(void *);
+    for (int ii = 0; ii < N; ii++)
+    {
+        size += dynamics[ii]->opts_calculate_size(dynamics[ii], dims->dynamics[ii]);
+    }
+
+    // cost
+    size += (N + 1) * sizeof(void *);
+    for (int ii = 0; ii <= N; ii++)
+    {
+        size += cost[ii]->opts_calculate_size(cost[ii], dims->cost[ii]);
+    }
+
+    // constraints
+    size += (N + 1) * sizeof(void *);
+    for (int ii = 0; ii <= N; ii++)
+    {
+        size += constraints[ii]->opts_calculate_size(constraints[ii], dims->constraints[ii]);
+    }
+
+    return size;
+}
+
+
+
+void *ocp_nlp_opts_assign(void *config_, void *dims_, void *raw_memory)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_nlp_dynamics_config **dynamics = config->dynamics;
+    ocp_nlp_cost_config **cost = config->cost;
+    ocp_nlp_constraints_config **constraints = config->constraints;
+
+    int N = dims->N;
+
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_nlp_opts *opts = (ocp_nlp_opts *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_opts);
+
+    opts->qp_solver_opts = qp_solver->opts_assign(qp_solver, dims->qp_solver, c_ptr);
+    c_ptr += qp_solver->opts_calculate_size(qp_solver, dims->qp_solver);
+
+    opts->regularize = config->regularize->opts_assign(c_ptr);
+    c_ptr += config->regularize->opts_calculate_size();
+
+    // dynamics
+    opts->dynamics = (void **) c_ptr;
+    c_ptr += N * sizeof(void *);
+    for (int ii = 0; ii < N; ii++)
+    {
+        opts->dynamics[ii] = dynamics[ii]->opts_assign(dynamics[ii], dims->dynamics[ii], c_ptr);
+        c_ptr += dynamics[ii]->opts_calculate_size(dynamics[ii], dims->dynamics[ii]);
+    }
+
+    // cost
+    opts->cost = (void **) c_ptr;
+    c_ptr += (N + 1) * sizeof(void *);
+    for (int ii = 0; ii <= N; ii++)
+    {
+        opts->cost[ii] = cost[ii]->opts_assign(cost[ii], dims->cost[ii], c_ptr);
+        c_ptr += cost[ii]->opts_calculate_size(cost[ii], dims->cost[ii]);
+    }
+
+    // constraints
+    opts->constraints = (void **) c_ptr;
+    c_ptr += (N + 1) * sizeof(void *);
+    for (int ii = 0; ii <= N; ii++)
+    {
+        opts->constraints[ii] =
+            constraints[ii]->opts_assign(constraints[ii], dims->constraints[ii], c_ptr);
+        c_ptr += constraints[ii]->opts_calculate_size(constraints[ii], dims->constraints[ii]);
+    }
+
+    assert((char *) raw_memory + ocp_nlp_opts_calculate_size(config, dims) >= c_ptr);
+
+    return opts;
+}
+
+
+
+void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_opts *opts = opts_;
+
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_nlp_dynamics_config **dynamics = config->dynamics;
+    ocp_nlp_cost_config **cost = config->cost;
+    ocp_nlp_constraints_config **constraints = config->constraints;
+    ocp_nlp_reg_config *regularize = config->regularize;
+
+    int ii;
+
+    int N = dims->N;
+
+    opts->reuse_workspace = 1;
+#if defined(ACADOS_WITH_OPENMP)
+    opts->num_threads = ACADOS_NUM_THREADS;
+#endif
+
+    // submodules opts
+
+    // qp solver
+    qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+
+    // regularization
+    regularize->opts_initialize_default(regularize, dims->regularize, opts->regularize);
+
+    // dynamics
+    for (ii = 0; ii < N; ii++)
+    {
+        dynamics[ii]->opts_initialize_default(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+    }
+
+    // cost
+    for (ii = 0; ii <= N; ii++)
+    {
+        cost[ii]->opts_initialize_default(cost[ii], dims->cost[ii], opts->cost[ii]);
+    }
+
+    // constraints
+    for (ii = 0; ii <= N; ii++)
+    {
+        constraints[ii]->opts_initialize_default(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+    }
+
+    return;
+}
+
+
+
+void ocp_nlp_opts_update(void *config_, void *dims_, void *opts_)
+{
+    ocp_nlp_dims *dims = dims_;
+    ocp_nlp_config *config = config_;
+    ocp_nlp_opts *opts = opts_;
+
+    ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+    ocp_nlp_dynamics_config **dynamics = config->dynamics;
+    ocp_nlp_cost_config **cost = config->cost;
+    ocp_nlp_constraints_config **constraints = config->constraints;
+
+    int ii;
+
+    int N = dims->N;
+
+    qp_solver->opts_update(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+
+    // dynamics
+    for (ii = 0; ii < N; ii++)
+    {
+        dynamics[ii]->opts_update(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+    }
+
+    // cost
+    for (ii = 0; ii <= N; ii++)
+    {
+        cost[ii]->opts_update(cost[ii], dims->cost[ii], opts->cost[ii]);
+    }
+
+    // constraints
+    for (ii = 0; ii <= N; ii++)
+    {
+        constraints[ii]->opts_update(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+    }
+
+    return;
+}
+
+
+
+void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value)
+{
+    ocp_nlp_opts *opts = (ocp_nlp_opts *) opts_;
+    ocp_nlp_config *config = config_;
+
+    int ii;
+
+    char module[MAX_STR_LEN];
+    char *ptr_module = NULL;
+    int module_length = 0;
+
+    // extract module name
+    char *char_ = strchr(field, '_');
+    if (char_!=NULL)
+    {
+        module_length = char_-field;
+        for (ii=0; ii<module_length; ii++)
+            module[ii] = field[ii];
+        module[module_length] = '\0'; // add end of string
+        ptr_module = module;
+    }
+
+    // pass options to QP module
+    if ( ptr_module!=NULL && (!strcmp(ptr_module, "qp")) )
+    {
+        config->qp_solver->opts_set(config->qp_solver, opts->qp_solver_opts, field+module_length+1, value);
+
+//        if (!strcmp(field, "qp_warm_start"))
+//        {
+//            int* i_ptr = (int *) value;
+//            opts->qp_warm_start = *i_ptr;
+//        }
+    }
+    // pass options to dynamics module
+    else // nlp opts
+    {
+        if (!strcmp(field, "reuse_workspace"))
+        {
+            int* reuse_workspace = (int *) value;
+            opts->reuse_workspace = *reuse_workspace;
+        }
+        else if (!strcmp(field, "num_threads"))
+        {
+            int* num_threads = (int *) value;
+            opts->num_threads = *num_threads;
+        }
+        else if (!strcmp(field, "exact_hess"))
+        {
+            int N = config->N;
+            // cost
+            for (ii=0; ii<=N; ii++)
+                config->cost[ii]->opts_set(config->cost[ii], opts->cost[ii], "exact_hess", value);
+            // dynamics
+            for (ii=0; ii<N; ii++)
+                config->dynamics[ii]->opts_set(config->dynamics[ii], opts->dynamics[ii], "compute_hess", value);
+            // constraints TODO disabled for now as prevents convergence !!!
+//            for (ii=0; ii<=N; ii++)
+//                config->constraints[ii]->opts_set(config->constraints[ii], opts->constraints[ii], "compute_hess", value);
+        }
+        else
+        {
+            printf("\nerror: ocp_nlp_opts_set: wrong field: %s\n", field);
+            exit(1);
+        }
+    }
+
+    return;
+
+}
+
+
+
+void ocp_nlp_dynamics_opts_set(void *config_, void *opts_, int stage,
+        const char *field, void *value)
+{
+    ocp_nlp_config *config = config_;
+    ocp_nlp_opts *opts = opts_;
+    ocp_nlp_dynamics_config *dyn_config = config->dynamics[stage];
+
+    dyn_config->opts_set(dyn_config, opts->dynamics[stage], field, value);
+
+    return;
+
+}
+
+
+
+void ocp_nlp_cost_opts_set(void *config_, void *opts_, int stage,
+        const char *field, void *value)
+{
+    ocp_nlp_config *config = config_;
+    ocp_nlp_opts *opts = opts_;
+    ocp_nlp_cost_config *cost_config = config->cost[stage];
+
+    cost_config->opts_set(cost_config, opts->cost[stage], field, value);
+
+    return;
+
+}
+
+
+
+void ocp_nlp_constraints_opts_set(void *config_, void *opts_, int stage,
+        const char *field, void *value)
+{
+    ocp_nlp_config *config = config_;
+    ocp_nlp_opts *opts = opts_;
+    ocp_nlp_constraints_config *constraints_config = config->constraints[stage];
+
+    constraints_config->opts_set(constraints_config, opts->constraints[stage], (char *) field, value);
+
+    return;
+
+}
+
+
+
+/************************************************
  * memory
  ************************************************/
 

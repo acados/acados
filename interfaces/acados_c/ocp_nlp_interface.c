@@ -574,7 +574,7 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
 * opts
 ************************************************/
 
-void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
+void *ocp_nlp_solver_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 {
     int bytes = config->opts_calculate_size(config, dims);
 
@@ -589,14 +589,15 @@ void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims)
 
 
 
-void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void *value)
+void ocp_nlp_solver_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void *value)
 {
     config->opts_set(config, opts_, field, value);
 }
 
 
 
-void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+// TODO remove and include module name in field instead ???
+void ocp_nlp_solver_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
         const char *field, void *value)
 {
     config->dynamics_opts_set(config, opts_, stage, field, value);
@@ -605,7 +606,7 @@ void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 
 
 // TODO(oj): do we need these?
-// void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+// void ocp_nlp_solver_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 //         const char *field, void *value)
 // {
 //     config->cost_opts_set(config, opts_, stage, field, value);
@@ -613,7 +614,7 @@ void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 // }
 
 
-// void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+// void ocp_nlp_solver_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 //         const char *field, void *value)
 // {
 //     config->constraints_opts_set(config, opts_, stage, field, value);
@@ -622,14 +623,14 @@ void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 
 
 
-void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
+void ocp_nlp_solver_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_)
 {
     config->opts_update(config, dims, opts_);
 }
 
 
 
-void ocp_nlp_opts_destroy(void *opts)
+void ocp_nlp_solver_opts_destroy(void *opts)
 {
     free(opts);
 }

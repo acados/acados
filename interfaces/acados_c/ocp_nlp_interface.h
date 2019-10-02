@@ -288,12 +288,12 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
 ///
 /// \param config The configuration struct.
 /// \param dims The dimension struct.
-void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
+void *ocp_nlp_solver_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
 
 /// Destructor of the options.
 ///
 /// \param opts The options struct.
-void ocp_nlp_opts_destroy(void *opts);
+void ocp_nlp_solver_opts_destroy(void *opts);
 
 /// Sets an option.
 ///
@@ -301,7 +301,7 @@ void ocp_nlp_opts_destroy(void *opts);
 /// \param opts_ The options struct.
 /// \param field Name of the option.
 /// \param value Value of the option.
-void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void* value);
+void ocp_nlp_solver_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void* value);
 
 
 /// Set the option for the dynamics in a given stage.
@@ -312,14 +312,15 @@ void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, vo
 /// \param stage Stage number.
 /// \param field Name of the option.
 /// \param value Value of the option.
-void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+// TODO remove and include module name in field instead ???
+void ocp_nlp_solver_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
         const char *field, void *value);
 
 
 // TODO(oj): do we need these?
-// void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+// void ocp_nlp_solver_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 //         const char *field, void *value);
-// void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
+// void ocp_nlp_solver_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 //         const char *field, void *value);
 
 /// TBC
@@ -328,7 +329,7 @@ void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 /// \param config The configuration struct.
 /// \param dims The dimension struct.
 /// \param opts_ The options struct.
-void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
+void ocp_nlp_solver_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
 
 
 /* solver */

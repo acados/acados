@@ -241,6 +241,41 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 /************************************************
+ * options
+ ************************************************/
+
+typedef struct
+{
+    void *qp_solver_opts;
+    void *regularize;
+    void **dynamics;     // dynamics_opts
+    void **cost;         // cost_opts
+    void **constraints;  // constraints_opts
+    int reuse_workspace;
+    int num_threads;
+
+} ocp_nlp_opts;
+
+//
+int ocp_nlp_opts_calculate_size(void *config, void *dims);
+//
+void *ocp_nlp_opts_assign(void *config, void *dims, void *raw_memory);
+//
+void ocp_nlp_opts_initialize_default(void *config, void *dims, void *opts);
+//
+void ocp_nlp_opts_update(void *config, void *dims, void *opts);
+//
+void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value);
+//
+void ocp_nlp_cost_opts_set(void *config, void *opts, int stage, const char *field, void *value);
+//
+void ocp_nlp_dynamics_opts_set(void *config, void *opts, int stage, const char *field, void *value);
+//
+void ocp_nlp_constraints_opts_set(void *config, void *opts, int stage, const char *field, void *value);
+
+
+
+/************************************************
  * memory TODO move to sqp ???
  ************************************************/
 
@@ -251,6 +286,7 @@ typedef struct
     struct blasfeo_dvec *ineq_adj;
     struct blasfeo_dvec *dyn_fun;
     struct blasfeo_dvec *dyn_adj;
+//	int cost_fun; TODO
 
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
     struct blasfeo_dvec *sim_guess;
