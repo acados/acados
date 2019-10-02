@@ -60,7 +60,7 @@ INCS = [ ' -I', INC_PATH, '/blasfeo/include/ ', ...
 
 CFLAGS  = ' -O';
 
-{% if  ocp.solver_config.qp_solver == "QPOASES" %}
+{% if  ocp.solver_config.qp_solver == 'FULL_CONDENSING_QPOASES' %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPOASES ' ];
 {% endif %}
 
