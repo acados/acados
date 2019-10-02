@@ -190,8 +190,8 @@ int {{ ocp.model.name}}_acados_sim_create() {
 
     {{ ocp.model.name }}_sim_opts = sim_opts_create({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims);
 
-    {{ ocp.model.name }}_sim_opts->ns = 1; // number of stages in rk integrator
-    {{ ocp.model.name }}_sim_opts->num_steps = 1; // number of integration steps
+    {{ ocp.model.name }}_sim_opts->ns = {{ ocp.solver_config.sim_method_num_stages }}; // number of stages in rk integrator
+    {{ ocp.model.name }}_sim_opts->num_steps = {{ ocp.solver_config.sim_method_num_steps }}; // number of integration steps
     {{ ocp.model.name }}_sim_opts->sens_adj = false;
     {{ ocp.model.name }}_sim_opts->sens_forw = true;
     {% if ocp.solver_config.integrator_type == "IRK" %}
