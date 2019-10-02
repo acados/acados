@@ -10,6 +10,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     % setting up loader and environment
     template_glob = [acados_template_folder, '/c_templates_tera/*'];
     chdir('c_generated_code');
+
     % render source template
     template_file = 'main.in.c';
     out_file = ['main_', model_name, '.c'];
@@ -17,7 +18,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
     template_file, '"', ' ', '"', '../', acados_ocp_nlp_json_file, ...
     '"', ' ', '"', out_file, '"'];
-
+    
     system(os_cmd);
 
     template_file = 'acados_solver.in.c';
@@ -117,6 +118,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
             template_file, '"', ' ', '"', '../', acados_ocp_nlp_json_file, ...
             '"', ' ', '"', out_file, '"'];
+
     system(os_cmd);
    
     fprintf('Successfully generated acados solver!\n');
