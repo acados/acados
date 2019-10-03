@@ -26,9 +26,9 @@
   - [ ] how to set up trenderer
   - [ ] ...
 - [ ] explore possibility to interact with generated C code
-- [ ] make compatible with octave (if possible)
-- [ ] set up CI tests
+- [ ] set up CI tests - matlab needed..
 - [ ] add GNSF
+- [ ] make compatible with octave (if possible) - jsonencode alternative?!
 
 #### `general`
 - [ ] RTI implementation similar to ACADO

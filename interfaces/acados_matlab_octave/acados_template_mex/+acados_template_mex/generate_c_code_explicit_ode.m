@@ -97,14 +97,14 @@ end
 
 expl_ode_hess = Function([model_name,'_expl_ode_hess'],{x,Sx,Sp,lambdaX,u},{adj,hess2});
 %% generate C code
-    if ~isfolder('c_generated_code')
+    if ~exist('c_generated_code', 'dir')
         mkdir('c_generated_code');
     end
 
     cd('c_generated_code');
     model_dir = [model_name, '_model'];
     
-    if ~isfolder(model_dir)
+    if ~exist(model_dir, 'dir')
         mkdir(model_dir);
     end
     
