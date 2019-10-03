@@ -40,7 +40,7 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% options
-compile_interface = 'false'; % true, false
+compile_interface = 'auto'; % true, false
 % codgen_model = 'true'; % true, false
 codgen_model = 'true';
 gnsf_detect_struct = 'true'; % true, false

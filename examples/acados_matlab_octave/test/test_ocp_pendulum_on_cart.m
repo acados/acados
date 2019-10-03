@@ -38,7 +38,7 @@ addpath('../pendulum_on_cart_model/');
 
 for itest = 1:3
     %% arguments
-    compile_interface = 'false';
+    compile_interface = 'auto';
     codgen_model = 'true';
     gnsf_detect_struct = 'true';
 

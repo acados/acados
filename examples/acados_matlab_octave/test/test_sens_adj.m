@@ -38,7 +38,7 @@ addpath('../pendulum_on_cart_model/');
 
 for integrator = {'irk_gnsf', 'irk', 'erk'}
     %% arguments
-    compile_interface = 'false';
+    compile_interface = 'auto';
     codgen_model = 'true';
     method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
     sens_forw = 'false';
