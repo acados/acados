@@ -444,154 +444,6 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims *dim
  * functions
  ************************************************/
 
-static void initialize_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
-                          ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem,
-                          ocp_nlp_sqp_workspace *work)
-{
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_nlp_workspace *nlp_work = work->nlp_work;
-
-    int ii;
-
-    int N = dims->N;
-
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (ii = 0; ii <= N; ii++)
-    {
-        // cost
-        config->cost[ii]->initialize(config->cost[ii], dims->cost[ii], nlp_in->cost[ii],
-                                     opts->nlp_opts->cost[ii], nlp_mem->cost[ii], nlp_work->cost[ii]);
-        // dynamics
-        if (ii < N)
-            config->dynamics[ii]->initialize(config->dynamics[ii], dims->dynamics[ii],
-                                         nlp_in->dynamics[ii], opts->nlp_opts->dynamics[ii],
-                                         nlp_mem->dynamics[ii], nlp_work->dynamics[ii]);
-        // constraints
-        config->constraints[ii]->initialize(config->constraints[ii], dims->constraints[ii],
-                                            nlp_in->constraints[ii], opts->nlp_opts->constraints[ii],
-                                            nlp_mem->constraints[ii], nlp_work->constraints[ii]);
-    }
-
-    return;
-}
-
-
-
-static void linearize_update_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
-                                         ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts,
-                                         ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_workspace *work)
-{
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-    ocp_nlp_workspace *nlp_work = work->nlp_work;
-
-    int i;
-
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ni = dims->ni;
-
-    /* stage-wise multiple shooting lagrangian evaluation */
-
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (i = 0; i <= N; i++)
-    {
-        // init Hessian to 0 
-        blasfeo_dgese(nu[i] + nx[i], nu[i] + nx[i], 0.0, nlp_mem->qp_in->RSQrq+i, 0, 0);
-
-        // dynamics
-        if (i < N)
-            config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i],
-                    nlp_in->dynamics[i], opts->nlp_opts->dynamics[i], nlp_mem->dynamics[i], nlp_work->dynamics[i]);
-
-        // cost
-        config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i],
-                opts->nlp_opts->cost[i], nlp_mem->cost[i], nlp_work->cost[i]);
-
-        // constraints
-        config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i],
-                nlp_in->constraints[i], opts->nlp_opts->constraints[i], nlp_mem->constraints[i], nlp_work->constraints[i]);
-    }
-
-    /* collect stage-wise evaluations */
-
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (i=0; i <= N; i++)
-    {
-
-        // nlp mem: cost_grad
-        struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(nlp_mem->cost[i]);
-        blasfeo_dveccp(nv[i], cost_grad, 0, nlp_mem->cost_grad + i, 0);
-
-        // nlp mem: dyn_fun
-        if (i < N)
-        {
-            struct blasfeo_dvec *dyn_fun
-                = config->dynamics[i]->memory_get_fun_ptr(nlp_mem->dynamics[i]);
-            blasfeo_dveccp(nx[i + 1], dyn_fun, 0, nlp_mem->dyn_fun + i, 0);
-        }
-
-        // nlp mem: dyn_adj
-        if (i < N)
-        {
-            struct blasfeo_dvec *dyn_adj
-                = config->dynamics[i]->memory_get_adj_ptr(nlp_mem->dynamics[i]);
-            blasfeo_dveccp(nu[i] + nx[i], dyn_adj, 0, nlp_mem->dyn_adj + i, 0);
-        }
-        else
-        {
-            blasfeo_dvecse(nu[N] + nx[N], 0.0, nlp_mem->dyn_adj + N, 0);
-        }
-        if (i > 0)
-        {
-            struct blasfeo_dvec *dyn_adj
-                = config->dynamics[i-1]->memory_get_adj_ptr(nlp_mem->dynamics[i-1]);
-            blasfeo_daxpy(nx[i], 1.0, dyn_adj, nu[i-1]+nx[i-1], nlp_mem->dyn_adj+i, nu[i],
-                nlp_mem->dyn_adj+i, nu[i]);
-        }
-
-        // nlp mem: ineq_fun
-        struct blasfeo_dvec *ineq_fun =
-            config->constraints[i]->memory_get_fun_ptr(nlp_mem->constraints[i]);
-        blasfeo_dveccp(2 * ni[i], ineq_fun, 0, nlp_mem->ineq_fun + i, 0);
-
-        // nlp mem: ineq_adj
-        struct blasfeo_dvec *ineq_adj =
-            config->constraints[i]->memory_get_adj_ptr(nlp_mem->constraints[i]);
-        blasfeo_dveccp(nv[i], ineq_adj, 0, nlp_mem->ineq_adj + i, 0);
-
-    }
-
-    for (i = 0; i <= N; i++)
-    {
-        // TODO(rien) where should the update happen??? move to qp update ???
-        // TODO(all): fix and move where appropriate
-        //  if (i<N)
-        //  {
-        //   ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
-        //   sim_opts *opts = dynamics_opts->sim_solver;
-        //   if (opts->scheme != NULL && opts->scheme->type != exact)
-        //   {
-        //    for (int_t j = 0; j < nx; j++)
-        //     BLASFEO_DVECEL(nlp_mem->cost_grad+i, nu+j) += work->sim_out[i]->grad[j];
-        //    for (int_t j = 0; j < nu; j++)
-        //     BLASFEO_DVECEL(nlp_mem->cost_grad+i, j) += work->sim_out[i]->grad[nx+j];
-        //   }
-        //  }
-    }
-
-    return;
-}
-
-
-
 // update QP rhs for SQP (step prim var, abs dual var)
 // TODO(all): move in dynamics, cost, constraints modules ???
 static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
@@ -683,7 +535,6 @@ static void sqp_update_variables(void *config_, ocp_nlp_dims *dims, ocp_nlp_out 
 
 
 
-// Simple fixed-step Gauss-Newton based SQP routine
 int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
@@ -695,6 +546,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
     ocp_nlp_sqp_opts *opts = opts_;
+    ocp_nlp_opts *nlp_opts = opts->nlp_opts;
     ocp_nlp_sqp_memory *mem = mem_;
     ocp_nlp_in *nlp_in = nlp_in_;
     ocp_nlp_out *nlp_out = nlp_out_;
@@ -802,7 +654,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 #endif
 
     // initialize QP
-    initialize_qp(config, dims, nlp_in, nlp_out, opts, mem, work);
+    ocp_nlp_initialize_qp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     // main sqp loop
     int sqp_iter = 0;
@@ -814,7 +666,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // linearizate NLP and update QP matrices
         acados_tic(&timer1);
-        linearize_update_qp_matrices(config, dims, nlp_in, nlp_out, opts, mem, work);
+        ocp_nlp_approximate_qp_matrices(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
         mem->time_lin += acados_toc(&timer1);
 
         // update QP rhs for SQP (step prim var, abs dual var)
