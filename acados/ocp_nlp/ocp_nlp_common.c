@@ -1040,6 +1040,8 @@ void ocp_nlp_opts_initialize_default(void *config_, void *dims_, void *opts_)
     opts->num_threads = ACADOS_NUM_THREADS;
 #endif
 
+    opts->step_length = 1.0;
+
     // submodules opts
 
     // qp solver
@@ -1156,6 +1158,11 @@ void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value
         {
             int* num_threads = (int *) value;
             opts->num_threads = *num_threads;
+        }
+        else if (!strcmp(field, "step_length"))
+        {
+            double* step_length = (double *) value;
+            opts->step_length = *step_length;
         }
         else if (!strcmp(field, "exact_hess"))
         {
@@ -1776,7 +1783,7 @@ void ocp_nlp_initialize_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_i
 
 
 
-void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *nlp_out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
 
     int i;
@@ -1878,6 +1885,88 @@ void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims,
         //     BLASFEO_DVECEL(nlp_mem->cost_grad+i, j) += work->sim_out[i]->grad[nx+j];
         //   }
         //  }
+    }
+
+    return;
+}
+
+
+
+// update QP rhs for SQP (step prim var, abs dual var)
+// TODO(all): move in dynamics, cost, constraints modules ???
+void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int i;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    // int *nu = dims->nu;
+    int *ni = dims->ni;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (i = 0; i <= N; i++)
+    {
+        // g
+        blasfeo_dveccp(nv[i], mem->cost_grad + i, 0, mem->qp_in->rqz + i, 0);
+
+        // b
+        if (i < N)
+            blasfeo_dveccp(nx[i + 1], mem->dyn_fun + i, 0, mem->qp_in->b + i, 0);
+
+        // d
+        blasfeo_dveccp(2 * ni[i], mem->ineq_fun + i, 0, mem->qp_in->d + i, 0);
+    }
+
+    return;
+}
+
+
+
+void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int i;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+    int *nz = dims->nz;
+
+    // ocp_nlp_config *config = (ocp_nlp_config *) config_;
+
+    double alpha = opts->step_length;
+
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (i = 0; i <= N; i++)
+    {
+        // (full) step in primal variables
+        blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux + i, 0, out->ux + i, 0, out->ux + i, 0);
+    
+        // update dual variables
+        if (i < N)
+        {
+            blasfeo_dvecsc(nx[i+1], 1.0-alpha, out->pi+i, 0);
+            blasfeo_daxpy(nx[i+1], alpha, mem->qp_out->pi+i, 0, out->pi+i, 0, out->pi+i, 0);
+        }
+
+        blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->lam+i, 0);
+        blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->lam+i, 0, out->lam+i, 0, out->lam+i, 0);
+
+        // update slack values
+        blasfeo_dvecsc(2*ni[i], 1.0-alpha, out->t+i, 0);
+        blasfeo_daxpy(2*ni[i], alpha, mem->qp_out->t+i, 0, out->t+i, 0, out->t+i, 0);
+
+        // linear update of algebraic variables using state and input sensitivity
+        if (i < N)
+        {
+            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0); 
+        }
     }
 
     return;

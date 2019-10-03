@@ -124,8 +124,6 @@ void ocp_nlp_sqp_rti_opts_initialize_default(void *config_, void *dims_, void *o
 
     opts->ext_qp_res = 0;
 
-    opts->step_length = 1.0;
-
     // overwrite default submodules opts
 
     // do not compute adjoint in dynamics and constraints
@@ -203,11 +201,6 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, voi
         {
             int* ext_qp_res = (int *) value;
             opts->ext_qp_res = *ext_qp_res;
-        }
-        else if (!strcmp(field, "step_length"))
-        {
-            double* step_length = (double *) value;
-            opts->step_length = *step_length;
         }
         else if (!strcmp(field, "warm_start_first_qp"))
         {
@@ -418,96 +411,6 @@ static void ocp_nlp_sqp_rti_cast_workspace(ocp_nlp_config *config, ocp_nlp_dims 
  * functions
  ************************************************/
 
-// update QP rhs for SQP (step prim var, abs dual var)
-// TODO(all): move in dynamics, cost, constraints modules ???
-static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
-                                  ocp_nlp_out *nlp_out, ocp_nlp_sqp_rti_opts *opts,
-                                  ocp_nlp_sqp_rti_memory *mem, ocp_nlp_sqp_rti_workspace *work)
-{
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
-    int i;
-
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    // int *nu = dims->nu;
-    int *ni = dims->ni;
-
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (i = 0; i <= N; i++)
-    {
-        // g
-        blasfeo_dveccp(nv[i], nlp_mem->cost_grad + i, 0, nlp_mem->qp_in->rqz + i, 0);
-
-        // b
-        if (i < N)
-            blasfeo_dveccp(nx[i + 1], nlp_mem->dyn_fun + i, 0, nlp_mem->qp_in->b + i, 0);
-
-        // d
-        blasfeo_dveccp(2 * ni[i], nlp_mem->ineq_fun + i, 0, nlp_mem->qp_in->d + i, 0);
-    }
-
-    return;
-}
-
-
-
-static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out,
-                                 ocp_nlp_sqp_rti_opts *opts, ocp_nlp_sqp_rti_memory *mem,
-                                 ocp_nlp_sqp_rti_workspace *work)
-{
-    ocp_nlp_memory *nlp_mem = mem->nlp_mem;
-
-    int i;
-
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ni = dims->ni;
-    int *nz = dims->nz;
-
-    double alpha = opts->step_length;
-
-#if defined(ACADOS_WITH_OPENMP)
-    #pragma omp parallel for
-#endif
-    for (i = 0; i <= N; i++)
-    {
-        // (full) step in primal variables
-        blasfeo_daxpy(nv[i], alpha, nlp_mem->qp_out->ux + i, 0, nlp_out->ux + i, 0, nlp_out->ux + i, 0);
-
-        // update dual variables
-        if (i < N)
-        {
-            blasfeo_dvecsc(nx[i+1], 1.0-alpha, nlp_out->pi+i, 0);
-            blasfeo_daxpy(nx[i+1], alpha, nlp_mem->qp_out->pi+i, 0, nlp_out->pi+i, 0, nlp_out->pi+i, 0);
-        }
-
-        blasfeo_dvecsc(2*ni[i], 1.0-alpha, nlp_out->lam+i, 0);
-        blasfeo_daxpy(2*ni[i], alpha, nlp_mem->qp_out->lam+i, 0, nlp_out->lam+i, 0, nlp_out->lam+i, 0);
-
-        // update slack values
-        blasfeo_dvecsc(2*ni[i], 1.0-alpha, nlp_out->t+i, 0);
-        blasfeo_daxpy(2*ni[i], alpha, nlp_mem->qp_out->t+i, 0, nlp_out->t+i, 0, nlp_out->t+i, 0);
-
-        // linear update of algebraic variables using state and input sensitivity
-        if (i < N)
-        {
-            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, nlp_mem->dzduxt+i, 0, 0, nlp_mem->qp_out->ux+i, 0,
-                            1.0, nlp_mem->z_alg+i, 0, nlp_out->z+i, 0); 
-        }
-
-    }
-
-    return;
-}
-
-
-
 int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                 void *opts_, void *mem_, void *work_)
 {
@@ -640,7 +543,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->time_lin += acados_toc(&timer1);
 
     // update QP rhs for SQP (step prim var, abs dual var)
-    sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
+    ocp_nlp_approximate_qp_vectors_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     // regularize Hessian
     acados_tic(&timer1);
@@ -709,7 +612,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         return mem->status;
     }
 
-    sqp_update_variables(dims, nlp_out, opts, mem, work);
+    ocp_nlp_update_variables_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
 
     // ocp_nlp_dims_print(nlp_out->dims);
     // ocp_nlp_out_print(nlp_out);
@@ -756,8 +659,7 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
     for (ii = 0; ii <= N; ii++)
     {
         int module_val;
-        config->constraints[ii]->dims_get(config->constraints[ii], dims->constraints[ii],
-                                        "ns", &module_val);
+        config->constraints[ii]->dims_get(config->constraints[ii], dims->constraints[ii], "ns", &module_val);
         if (dims->ns[ii] != module_val)
         {
             printf("ocp_nlp_sqp_precompute: inconsistent dimension ns with constraint module.");
@@ -771,10 +673,9 @@ int ocp_nlp_sqp_rti_precompute(void *config_, void *dims_, void *nlp_in_, void *
         // set T
         config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
         // dynamics precompute
-        status = config->dynamics[ii]->precompute(config->dynamics[ii], dims->dynamics[ii],
-                                            nlp_in->dynamics[ii], opts->nlp_opts->dynamics[ii],
-                                            nlp_mem->dynamics[ii], nlp_work->dynamics[ii]);
-        if (status != ACADOS_SUCCESS) return status;
+        status = config->dynamics[ii]->precompute(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii], opts->nlp_opts->dynamics[ii], nlp_mem->dynamics[ii], nlp_work->dynamics[ii]);
+        if (status != ACADOS_SUCCESS)
+			return status;
     }
 
     return status;

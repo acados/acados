@@ -60,7 +60,6 @@ extern "C" {
 typedef struct
 {
 	ocp_nlp_opts *nlp_opts;
-    double step_length;  // (fixed) step length in SQP loop
     int compute_dual_sol;
     int ext_qp_res;      // compute external QP residuals (i.e. at SQP level) at each SQP iteration (for debugging)
     int qp_warm_start;   // NOTE: this is not actually setting the warm_start! Just for compatibility with sqp.
