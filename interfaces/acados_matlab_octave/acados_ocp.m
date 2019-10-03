@@ -70,30 +70,42 @@ classdef acados_ocp < handle
                 obj.model_struct = detect_cost_type(obj.model_struct, 1);
             end
 
-            % check if mex interface exists already
-            if is_octave()
-                mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
-                    '/ocp_create.mex'), 'file');
-            else
-                mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
-                    '/ocp_create.mexa64'), 'file');
-            end
-
-            if mex_exists
-                % recompile if qpOAES is needed and not linked against in existing interface
-                recompile_with_qpOASES = false;
-                if ~isempty(strfind(obj.opts_struct.qp_solver,'qpoases'))
-                    flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_qpoases.txt');
-                    recompile_with_qpOASES = ~exist(flag_file, 'file');
-                end
-            end
 
             % compile mex interface (without model dependency)
-            if ( strcmp(obj.opts_struct.compile_interface, 'true') || ~mex_exists  ...
-                  || recompile_with_qpOASES  )
+            if ( strcmp(obj.opts_struct.compile_interface, 'true') )
+                compile_interface = true;
+            elseif ( strcmp(obj.opts_struct.compile_interface, 'false') )
+                compile_interface = false;
+            elseif ( strcmp(obj.opts_struct.compile_interface, 'auto') )
+                % check if mex interface exists already
+                if is_octave()
+                    mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
+                        '/ocp_create.mex'), 'file');
+                else
+                    mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
+                        '/ocp_create.mexa64'), 'file');
+                end
+                % check if mex interface is linked against external libs, like qpOASES,...
+                if mex_exists
+                    if ~isempty(strfind(obj.opts_struct.qp_solver,'qpoases'))
+                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_qpoases.txt');
+                        compile_interface = ~exist(flag_file, 'file');
+                    else
+                        compile_interface = false;
+                    end
+                else
+                    compile_interface = true;
+                end
+            else
+                obj.model_struct.cost_type
+                error('acados_ocp: field compile_interface is , supported values are: true, false, auto');
+            end
+
+            if ( compile_interface )
                 ocp_compile_interface(obj.opts_struct);
             end
 
+            % create C object
             obj.C_ocp = ocp_create(obj.model_struct, obj.opts_struct);
 
             % generate and compile casadi functions

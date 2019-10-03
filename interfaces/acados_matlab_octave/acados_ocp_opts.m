@@ -48,7 +48,7 @@ classdef acados_ocp_opts < handle
             % model stuct
             obj.opts_struct = struct;
             % default values
-            obj.opts_struct.compile_interface = 'false';
+            obj.opts_struct.compile_interface = 'auto'; % auto, true, false
             obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.param_scheme = 'multiple_shooting_unif_grid';
             obj.opts_struct.param_scheme_N = 10;
@@ -155,7 +155,7 @@ classdef acados_ocp_opts < handle
             elseif (strcmp(field, 'compile_mex'))
                 disp(['Option compile_mex is not supported anymore,'...
                     'please use compile_interface instead or dont set the option.', ...
-                    'note: false will compile the interface, if not compiled already.']);
+                    'options are: true, false, auto.']);
                 keyboard
             else
                 disp(['acados_ocp_opts: set: wrong field: ', field]);

@@ -46,7 +46,7 @@ classdef acados_sim_opts < handle
 
         function obj = acados_sim_opts()
             obj.opts_struct = struct;
-            obj.opts_struct.compile_interface = 'false';
+            obj.opts_struct.compile_interface = 'auto'; % auto, true, false
             obj.opts_struct.codgen_model = 'true';
             obj.opts_struct.method = 'irk';
             obj.opts_struct.num_stages = 4;
@@ -95,7 +95,7 @@ classdef acados_sim_opts < handle
             elseif (strcmp(field, 'compile_mex'))
                 disp(['Option compile_mex is not supported anymore,'...
                     'please use compile_interface instead or dont set the option.', ...
-                    'note: false will compile the interface, if not compiled already.']);
+                    'options are: true, false, auto.']);
                 keyboard
             else
                 disp(['acados_sim_opts: set: wrong field: ', field]);
