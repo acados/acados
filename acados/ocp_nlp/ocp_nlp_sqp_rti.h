@@ -119,20 +119,18 @@ void *ocp_nlp_sqp_rti_memory_assign(void *config, void *dims, void *opts_, void 
 
 typedef struct
 {
-    // temp QP in & out (to be used as workspace)
+	ocp_nlp_workspace *nlp_work;
+
+    // temp QP in & out (to be used as workspace in param sens)
     ocp_qp_in *tmp_qp_in;
     ocp_qp_out *tmp_qp_out;
 
-    // QP solver
-    void *qp_work;
+    // qp residuals
     ocp_qp_res *qp_res;
     ocp_qp_res_ws *qp_res_ws;
 
-    void **dynamics;     // dynamics_workspace
-    void **cost;         // cost_workspace
-    void **constraints;  // constraints_workspace
 
-} ocp_nlp_sqp_rti_work;
+} ocp_nlp_sqp_rti_workspace;
 
 //
 int ocp_nlp_sqp_rti_workspace_calculate_size(void *config, void *dims, void *opts_);
