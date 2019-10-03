@@ -81,6 +81,8 @@ void ocp_nlp_sqp_rti_opts_set(void *config_, void *opts_, const char *field, voi
 //
 void ocp_nlp_sqp_rti_opts_set_at_stage(void *config_, void *opts_, int stage, const char *field, void* value);
 
+
+
 /************************************************
  * memory
  ************************************************/

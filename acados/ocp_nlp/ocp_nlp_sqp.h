@@ -94,33 +94,18 @@ void ocp_nlp_sqp_opts_set_at_stage(void *config_, void *opts_, int stage, const 
 
 typedef struct
 {
-    // qp in & out
-    ocp_qp_in *qp_in;
-    ocp_qp_out *qp_out;
-    // QP stuff not entering the qp_in struct
-    struct blasfeo_dmat *dzduxt; // dzdux transposed
-    struct blasfeo_dvec *z_alg; // z_alg, output algebraic variables
-
-    //    ocp_nlp_dims *dims;
-    void *qp_solver_mem;
-
-    void *regularize_mem;
-
-    void **dynamics;     // dynamics memory
-    void **cost;         // cost memory
-    void **constraints;  // constraints memory
+    // nlp memory
+    ocp_nlp_memory *nlp_mem;
 
     // residuals
     ocp_nlp_res *nlp_res;
-
-    // nlp memory
-    ocp_nlp_memory *nlp_mem;
 
     double time_qp_sol;
     double time_lin;
     double time_reg;
     double time_tot;
 
+    // statistics
     double *stat;
     int stat_m;
     int stat_n;
