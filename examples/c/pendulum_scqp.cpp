@@ -213,7 +213,7 @@ int main() {
 	constraints[N]->nl_constr_h_fun_jac = (external_function_generic *) &nonlinear_constraint;
 	constraints[N]->p = (external_function_generic *) &position_constraint;
 
-	void *nlp_opts = ocp_nlp_opts_create(config, dims);
+	void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
 
     int max_iter = max_num_sqp_iterations;
     double tol_stat = 1e-9;
@@ -221,15 +221,15 @@ int main() {
     double tol_ineq = 1e-9;
     double tol_comp = 1e-9;
 
-    ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
 	int N2 = N;
-    ocp_nlp_opts_set(config, nlp_opts, "qp_cond_N", &N2);
-    ocp_nlp_opts_update(config, dims, nlp_opts);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "qp_cond_N", &N2);
+    ocp_nlp_solver_opts_update(config, dims, nlp_opts);
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 	for (int i = 0; i <= N; ++i)

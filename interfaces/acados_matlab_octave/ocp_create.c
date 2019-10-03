@@ -642,7 +642,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
     /* opts */
-    void *opts = ocp_nlp_opts_create(config, dims);
+    void *opts = ocp_nlp_solver_opts_create(config, dims);
 
     // nlp solver exact hessian
     bool nlp_solver_exact_hessian = false;
@@ -651,7 +651,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // TODO: this if should not be needed! however, calling the setter with false leads to weird behavior. Investigate!
     if (nlp_solver_exact_hessian)
     {
-        ocp_nlp_opts_set(config, opts, "exact_hess", &nlp_solver_exact_hessian);
+        ocp_nlp_solver_opts_set(config, opts, "exact_hess", &nlp_solver_exact_hessian);
         if (sim_method_enum == GNSF)
             MEX_FIELD_NOT_SUPPORTED_GIVEN(fun_name, "nlp_solver_exact_hessian",
                  "true", "irk_gnsf", "false")
@@ -663,29 +663,29 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (mxGetField( matlab_opts, 0, "nlp_solver_max_iter" )!=NULL)
         {
             int nlp_solver_max_iter = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_max_iter" ) );
-            ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
+            ocp_nlp_solver_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
         }
 
         // nlp solver exit tolerances
         if (mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" )!=NULL)
         {
             double nlp_solver_tol_stat = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_stat" ) );
-            ocp_nlp_opts_set(config, opts, "tol_stat", &nlp_solver_tol_stat);
+            ocp_nlp_solver_opts_set(config, opts, "tol_stat", &nlp_solver_tol_stat);
         }
         if (mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" )!=NULL)
         {
             double nlp_solver_tol_eq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_eq" ) );
-            ocp_nlp_opts_set(config, opts, "tol_eq", &nlp_solver_tol_eq);
+            ocp_nlp_solver_opts_set(config, opts, "tol_eq", &nlp_solver_tol_eq);
         }
         if (mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" )!=NULL)
         {
             double nlp_solver_tol_ineq = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_ineq" ) );
-            ocp_nlp_opts_set(config, opts, "tol_ineq", &nlp_solver_tol_ineq);
+            ocp_nlp_solver_opts_set(config, opts, "tol_ineq", &nlp_solver_tol_ineq);
         }
         if (mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" )!=NULL)
         {
             double nlp_solver_tol_comp = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_tol_comp" ) );
-            ocp_nlp_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
+            ocp_nlp_solver_opts_set(config, opts, "tol_comp", &nlp_solver_tol_comp);
         }
     }
 
@@ -693,41 +693,41 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_opts, 0, "nlp_solver_ext_qp_res" )!=NULL)
     {
         int nlp_solver_ext_qp_res = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_ext_qp_res" ) );
-        ocp_nlp_opts_set(config, opts, "ext_qp_res", &nlp_solver_ext_qp_res);
+        ocp_nlp_solver_opts_set(config, opts, "ext_qp_res", &nlp_solver_ext_qp_res);
     }
     // nlp solver step length
     if (mxGetField( matlab_opts, 0, "nlp_solver_step_length" )!=NULL)
     {
         double nlp_solver_step_length = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_step_length" ) );
-        ocp_nlp_opts_set(config, opts, "step_length", &nlp_solver_step_length);
+        ocp_nlp_solver_opts_set(config, opts, "step_length", &nlp_solver_step_length);
     }
     // iter_max
     if (mxGetField( matlab_opts, 0, "qp_solver_iter_max" )!=NULL)
     {
         int qp_solver_iter_max = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_iter_max" ) );
-        ocp_nlp_opts_set(config, opts, "qp_iter_max", &qp_solver_iter_max);
+        ocp_nlp_solver_opts_set(config, opts, "qp_iter_max", &qp_solver_iter_max);
     }
 
 	// qp solver exit tolerances
 	if (mxGetField( matlab_opts, 0, "qp_solver_tol_stat" )!=NULL)
 	{
 		double qp_solver_tol_stat = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_stat" ) );
-		ocp_nlp_opts_set(config, opts, "qp_tol_stat", &qp_solver_tol_stat);
+		ocp_nlp_solver_opts_set(config, opts, "qp_tol_stat", &qp_solver_tol_stat);
 	}
 	if (mxGetField( matlab_opts, 0, "qp_solver_tol_eq" )!=NULL)
 	{
 		double qp_solver_tol_eq = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_eq" ) );
-		ocp_nlp_opts_set(config, opts, "qp_tol_eq", &qp_solver_tol_eq);
+		ocp_nlp_solver_opts_set(config, opts, "qp_tol_eq", &qp_solver_tol_eq);
 	}
 	if (mxGetField( matlab_opts, 0, "qp_solver_tol_ineq" )!=NULL)
 	{
 		double qp_solver_tol_ineq = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_ineq" ) );
-		ocp_nlp_opts_set(config, opts, "qp_tol_ineq", &qp_solver_tol_ineq);
+		ocp_nlp_solver_opts_set(config, opts, "qp_tol_ineq", &qp_solver_tol_ineq);
 	}
 	if (mxGetField( matlab_opts, 0, "qp_solver_tol_comp" )!=NULL)
 	{
 		double qp_solver_tol_comp = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_tol_comp" ) );
-		ocp_nlp_opts_set(config, opts, "qp_tol_comp", &qp_solver_tol_comp);
+		ocp_nlp_solver_opts_set(config, opts, "qp_tol_comp", &qp_solver_tol_comp);
 	}
 
     // N_part_cond
@@ -740,7 +740,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     fun_name, qp_solver_cond_N, N);
             mexErrMsgTxt(buffer);
         }
-        ocp_nlp_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
+        ocp_nlp_solver_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
     }
     else if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
     {
@@ -750,26 +750,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (mxGetField( matlab_opts, 0, "qp_solver_cond_ric_alg" )!=NULL)
     {
         int qp_solver_cond_ric_alg = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_cond_ric_alg" ) );
-        ocp_nlp_opts_set(config, opts, "qp_cond_ric_alg", &qp_solver_cond_ric_alg);
+        ocp_nlp_solver_opts_set(config, opts, "qp_cond_ric_alg", &qp_solver_cond_ric_alg);
     }
     // hpipm: riccati algorithm
     if (mxGetField( matlab_opts, 0, "qp_solver_ric_alg" )!=NULL
         && plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
     {
         int qp_solver_ric_alg = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_ric_alg" ) );
-        ocp_nlp_opts_set(config, opts, "qp_ric_alg", &qp_solver_ric_alg);
+        ocp_nlp_solver_opts_set(config, opts, "qp_ric_alg", &qp_solver_ric_alg);
     }
     // qp solver: warm start
     if (mxGetField( matlab_opts, 0, "qp_solver_warm_start" )!=NULL)
     {
         int qp_solver_warm_start = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_warm_start" ) );
-        ocp_nlp_opts_set(config, opts, "qp_warm_start", &qp_solver_warm_start);
+        ocp_nlp_solver_opts_set(config, opts, "qp_warm_start", &qp_solver_warm_start);
     }
     // qp solver: warm start first
     if (mxGetField( matlab_opts, 0, "warm_start_first_qp" )!=NULL)
     {
         int warm_start_first_qp = mxGetScalar( mxGetField( matlab_opts, 0, "warm_start_first_qp" ) );
-        ocp_nlp_opts_set(config, opts, "warm_start_first_qp", &warm_start_first_qp);
+        ocp_nlp_solver_opts_set(config, opts, "warm_start_first_qp", &warm_start_first_qp);
     }
 
     // sim_method_num_stages
@@ -786,7 +786,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             int sim_method_num_stages = mxGetScalar( matlab_array );
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_dynamics_opts_set(config, opts, ii, "num_stages", &sim_method_num_stages);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_num_stages", &sim_method_num_stages);
             }
         }
         else
@@ -796,7 +796,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 int sim_method_num_stages = (int) values[ii];
                 // mexPrintf("\nsim_method_num_stages[%d] = %d", ii, sim_method_num_stages);
-                ocp_nlp_dynamics_opts_set(config, opts, ii, "num_stages", &sim_method_num_stages);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_num_stages", &sim_method_num_stages);
             }
         }
     }
@@ -813,7 +813,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             int sim_method_num_steps = mxGetScalar( matlab_array );
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_dynamics_opts_set(config, opts, ii, "num_steps", &sim_method_num_steps);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_num_steps", &sim_method_num_steps);
             }
         }
         else
@@ -823,7 +823,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 int sim_method_num_steps = (int) values[ii];
                 // mexPrintf("\nsim_method_num_steps[%d] = %d", ii, sim_method_num_steps);
-                ocp_nlp_dynamics_opts_set(config, opts, ii, "num_steps", &sim_method_num_steps);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_num_steps", &sim_method_num_steps);
             }
         }
     }
@@ -840,7 +840,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             int sim_method_newton_iter = mxGetScalar( matlab_array );
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_dynamics_opts_set(config, opts, ii, "newton_iter", &sim_method_newton_iter);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_newton_iter", &sim_method_newton_iter);
             }
         }
         else
@@ -850,7 +850,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 int sim_method_newton_iter = (int) values[ii];
                 // mexPrintf("\nsim_method_newton_iter[%d] = %d", ii, sim_method_newton_iter);
-                ocp_nlp_dynamics_opts_set(config, opts, ii, "newton_iter", &sim_method_newton_iter);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_newton_iter", &sim_method_newton_iter);
             }
         }
     }
@@ -868,7 +868,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             bool sim_method_jac_reuse = mxGetScalar( matlab_array );
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_dynamics_opts_set(config, opts, ii, "jac_reuse", &sim_method_jac_reuse);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_jac_reuse", &sim_method_jac_reuse);
             }
         }
         else
@@ -878,7 +878,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 bool sim_method_jac_reuse = (int) values[ii];
                 // mexPrintf("\nsim_method_jac_reuse[%d] = %d", ii, sim_method_jac_reuse);
-                ocp_nlp_dynamics_opts_set(config, opts, ii, "jac_reuse", &sim_method_jac_reuse);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_jac_reuse", &sim_method_jac_reuse);
             }
         }
     }
@@ -896,7 +896,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             bool sim_method_exact_z_output = mxGetScalar( matlab_array );
             for (int ii=0; ii<N; ii++)
             {
-                ocp_nlp_dynamics_opts_set(config, opts, ii, "exact_z_output", &sim_method_exact_z_output);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_exact_z_output", &sim_method_exact_z_output);
             }
         }
         else
@@ -906,7 +906,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             {
                 bool sim_method_exact_z_output = (int) values[ii];
                 // mexPrintf("\nsim_method_exact_z_output[%d] = %d", ii, sim_method_exact_z_output);
-                ocp_nlp_dynamics_opts_set(config, opts, ii, "exact_z_output", &sim_method_exact_z_output);
+                ocp_nlp_solver_opts_set_at_stage(config, opts, ii, "dynamics_exact_z_output", &sim_method_exact_z_output);
             }
         }
     }
