@@ -21,6 +21,13 @@
 - [ ] cmake: add openmp parallelization
 
 #### `templating`
+- [ ] remove duplicated code to generate external functions
+- [ ] add documentation
+  - [ ] how to set up trenderer
+  - [ ] ...
+- [ ] explore possibility to interact with generated C code
+- [ ] make compatible with octave (if possible)
+- [ ] set up CI tests
 - [ ] add GNSF
 
 #### `general`
