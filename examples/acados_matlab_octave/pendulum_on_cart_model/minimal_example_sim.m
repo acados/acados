@@ -44,9 +44,11 @@ compile_interface = 'auto';
 method = 'erk'; % irk, irk_gnsf
 model_name = 'sim_pendulum';
 
-h = 0.1;
-x0 = [0; 1e-1; 0; 0];
-u = 0;
+% simulation parameters
+N_sim = 100;
+h = 0.1; % simulation time
+x0 = [0; 1e-1; 0; 0]; % initial state
+u0 = 0; % control input
 
 %% define model dynamics
 model = pendulum_on_cart_model;
@@ -79,32 +81,30 @@ end
 %% acados sim opts
 sim_opts = acados_sim_opts();
 
+sim_opts.set('compile_interface', compile_interface);
 sim_opts.set('num_stages', 2);
 sim_opts.set('num_steps', 3);
 sim_opts.set('newton_iter', 2); % for implicit intgrators
 sim_opts.set('method', method);
 sim_opts.set('sens_forw', 'true'); % generate forward sensitivities
-sim_opts.set('jac_reuse', jac_reuse); % for implicit intgrators
 if (strcmp(method, 'irk_gnsf'))
 	sim_opts.set('gnsf_detect_struct', 'true');
 end
 
 
-%% acados sim
-% create sim
+%% create integrator
 sim = acados_sim(sim_model, sim_opts);
 
-N_sim = 100;
 
+%% simulate system in loop
 x_sim = zeros(nx, N_sim+1);
 x_sim(:,1) = x0;
 
-% simulate system in loop
 for ii=1:N_sim
 	
 	% set initial state
 	sim.set('x', x_sim(:,ii));
-	sim.set('u', u);
+	sim.set('u', u0);
 
     % initialize implicit integrator
     if (strcmp(method, 'irk'))
@@ -121,14 +121,16 @@ for ii=1:N_sim
 	x_sim(:,ii+1) = sim.get('xn');
 end
 
-for ii=1:N_sim+1
-	x_cur = x_sim(:,ii);
-	visualize;
-end
-
 % forward sensitivities ( dxn_d[x0,u] )
 S_forw = sim.get('S_forw');
+
+%% plots
+% for ii=1:N_sim+1
+% 	x_cur = x_sim(:,ii);
+% 	visualize;
+% end
 
 figure;
 plot(1:N_sim+1, x_sim);
 legend('p', 'theta', 'v', 'omega');
+
