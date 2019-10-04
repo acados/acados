@@ -37,11 +37,11 @@ v_ref = S.v_ref;
 max_a = S.max_a;
 
 if 1
-	compile_interface = 'false';
+	compile_interface = 'auto';
 	codgen_model = 'true';
 	gnsf_detect_struct = 'true';
 else
-	compile_interface = 'false';
+	compile_interface = 'auto';
 	codgen_model = 'false';
 	gnsf_detect_struct = 'false';
 end

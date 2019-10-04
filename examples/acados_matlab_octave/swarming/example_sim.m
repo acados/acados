@@ -36,7 +36,7 @@ x0 = [10*rand(3*N,1); 2*rand(3*N,1)]; % initial condition (3D positions ...
 u = zeros(N*3,1); % control input is null (acceleration)
 
 % Simulation parameters
-compile_interface = 'false';
+compile_interface = 'auto';
 codgen_model = 'true';
 %gnsf_detect_struct = 'true';
 method = 'erk';

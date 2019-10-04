@@ -70,7 +70,11 @@ if is_octave()
         input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
         cflags_tmp = fscanf(input_file, '%[^\n]s');
         fclose(input_file);
-        cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
+        if ~ismac()
+            cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
+        else
+            cflags_tmp = [cflags_tmp, ' -std=c99'];
+        end
         input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');
         fprintf(input_file, '%s', cflags_tmp);
         fclose(input_file);
@@ -89,8 +93,13 @@ for ii=1:length(mex_files)
         mex(acados_include, acados_interfaces_include, acados_lib_path,...
             '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
     else
-        mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', acados_include,...
-            acados_interfaces_include, acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
+        if ismac()
+            FLAGS = 'CFLAGS=$CFLAGS -std=c99';
+        else
+            FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
+        end
+        mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, acados_lib_path, ...
+             '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
     end
 end
 

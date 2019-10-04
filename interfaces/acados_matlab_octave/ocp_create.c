@@ -1075,9 +1075,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             int ncol = (int) mxGetN( Vu_matlab );
             MEX_DIM_CHECK_MAT(fun_name, "cost_Vu", nrow, ncol, ny, nu);
             double *Vu = mxGetPr( Vu_matlab );
-            for (int ii=0; ii<N; ii++)
+            if (nrow > 0 && ncol > 0)
             {
-                ocp_nlp_cost_model_set(config, dims, in, ii, "Vu", Vu);
+                for (int ii=0; ii<N; ii++)
+                {
+                    ocp_nlp_cost_model_set(config, dims, in, ii, "Vu", Vu);
+                }
             }
         }
         // else: set to zero by default in C
@@ -1101,9 +1104,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             int ncol = (int) mxGetN( Vz_matlab );
             MEX_DIM_CHECK_MAT(fun_name, "cost_Vz", nrow, ncol, ny, nz);
             double *Vz = mxGetPr( Vz_matlab );
-            for (int ii=0; ii<N; ii++)
+            if (nrow > 0 && ncol > 0)
             {
-                ocp_nlp_cost_model_set(config, dims, in, ii, "Vz", Vz);
+                for (int ii=0; ii<N; ii++)
+                {
+                    ocp_nlp_cost_model_set(config, dims, in, ii, "Vz", Vz);
+                }
             }
         }
         // else: set to zero by default in C
