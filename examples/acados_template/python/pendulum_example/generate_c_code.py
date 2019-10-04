@@ -123,8 +123,10 @@ ocp.solver_config.nlp_solver_type = 'SQP'
 # ocp.solver_config.nlp_solver_type = 'SQP_RTI'
 
 # set header path
-ocp.acados_include_path  = '/usr/local/include'
-ocp.acados_lib_path      = '/usr/local/lib'
+# ocp.acados_include_path  = '/usr/local/include'
+# ocp.acados_lib_path      = '/usr/local/lib'
+ocp.acados_include_path  = '~/acados/include'
+ocp.acados_lib_path      = '~/acados/lib'
 
 acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
 
