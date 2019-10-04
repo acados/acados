@@ -420,21 +420,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         acados_size = 1;
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         int nlp_solver_max_iter = (int) value[0];
-        ocp_nlp_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
+        ocp_nlp_solver_opts_set(config, opts, "max_iter", &nlp_solver_max_iter);
     }
     else if (!strcmp(field, "qp_warm_start"))
     {
         acados_size = 1;
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         int qp_warm_start = (int) value[0];
-        ocp_nlp_opts_set(config, opts, "qp_warm_start", &qp_warm_start);
+        ocp_nlp_solver_opts_set(config, opts, "qp_warm_start", &qp_warm_start);
     }
     else if (!strcmp(field, "warm_start_first_qp"))
     {
         acados_size = 1;
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         int warm_start_first_qp = (int) value[0];
-        ocp_nlp_opts_set(config, opts, "warm_start_first_qp", &warm_start_first_qp);
+        ocp_nlp_solver_opts_set(config, opts, "warm_start_first_qp", &warm_start_first_qp);
     }
     else
     {

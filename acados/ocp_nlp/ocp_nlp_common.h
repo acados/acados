@@ -86,9 +86,7 @@ typedef struct
     void *(*memory_assign)(void *config, void *dims, void *opts_, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts_);
     void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
-    void (*dynamics_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
-    void (*cost_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
-    void (*constraints_opts_set)(void *config, void *opts, int stage, const char *field, void *value);
+    void (*opts_set_at_stage)(void *config_, void *opts_, int stage, const char *field, void* value);
     // evaluate solver // TODO rename into solve
     int (*evaluate)(void *config, void *dims, void *nlp_in, void *nlp_out, void *opts_, void *mem, void *work);
     void (*eval_param_sens)(void *config, void *dims, void *opts_, void *mem, void *work, char *field, int stage, int index, void *sens_nlp_out);
@@ -230,6 +228,7 @@ typedef struct
     int qp_iter;
     double inf_norm_res;
     double total_time;
+
 } ocp_nlp_out;
 
 //
@@ -241,16 +240,62 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 
 /************************************************
- * memory TODO move to sqp ???
+ * options
  ************************************************/
 
 typedef struct
 {
+    void *qp_solver_opts;
+    void *regularize;
+    void **dynamics;     // dynamics_opts
+    void **cost;         // cost_opts
+    void **constraints;  // constraints_opts
+    double step_length;  // (fixed) step length in SQP loop
+    int reuse_workspace;
+    int num_threads;
+
+} ocp_nlp_opts;
+
+//
+int ocp_nlp_opts_calculate_size(void *config, void *dims);
+//
+void *ocp_nlp_opts_assign(void *config, void *dims, void *raw_memory);
+//
+void ocp_nlp_opts_initialize_default(void *config, void *dims, void *opts);
+//
+void ocp_nlp_opts_update(void *config, void *dims, void *opts);
+//
+void ocp_nlp_opts_set(void *config_, void *opts_, const char *field, void* value);
+//
+void ocp_nlp_opts_set_at_stage(void *config, void *opts, int stage, const char *field, void *value);
+
+
+
+/************************************************
+ * memory
+ ************************************************/
+
+typedef struct
+{
+    void *qp_solver_mem;
+    void *regularize_mem;
+    void **dynamics;     // dynamics memory
+    void **cost;         // cost memory
+    void **constraints;  // constraints memory
+
+    // qp in & out
+    ocp_qp_in *qp_in;
+    ocp_qp_out *qp_out;
+    // QP stuff not entering the qp_in struct
+    struct blasfeo_dmat *dzduxt; // dzdux transposed
+    struct blasfeo_dvec *z_alg; // z_alg, output algebraic variables
+
     struct blasfeo_dvec *cost_grad;
     struct blasfeo_dvec *ineq_fun;
     struct blasfeo_dvec *ineq_adj;
     struct blasfeo_dvec *dyn_fun;
     struct blasfeo_dvec *dyn_adj;
+//	int cost_fun; TODO
 
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
     struct blasfeo_dvec *sim_guess;
@@ -258,10 +303,45 @@ typedef struct
 } ocp_nlp_memory;
 
 //
-int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
+int ocp_nlp_memory_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts);
 //
-ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
-                                      void *raw_memory);
+ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts, void *raw_memory);
+
+
+
+/************************************************
+ * workspace
+ ************************************************/
+
+typedef struct
+{
+
+    void *qp_work;
+    void **dynamics;     // dynamics_workspace
+    void **cost;         // cost_workspace
+    void **constraints;  // constraints_workspace
+
+} ocp_nlp_workspace;
+
+//
+int ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts);
+//
+ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_opts *opts, ocp_nlp_memory *mem, void *raw_memory);
+
+
+
+/************************************************
+ * function
+ ************************************************/
+
+//
+void ocp_nlp_initialize_qp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
+//
+void ocp_nlp_approximate_qp_matrices(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
+//
+void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
+//
+void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work);
 
 
 
@@ -287,8 +367,7 @@ int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
 //
 ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
 //
-void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res,
-                         ocp_nlp_memory *mem);
+void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp_nlp_memory *mem);
 
 
 

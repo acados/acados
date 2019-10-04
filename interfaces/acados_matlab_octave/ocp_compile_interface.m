@@ -73,7 +73,11 @@ if is_octave()
         input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
         cflags_tmp = fscanf(input_file, '%[^\n]s');
         fclose(input_file);
-        cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
+        if ~ismac()
+            cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
+        else
+            cflags_tmp = [cflags_tmp, ' -std=c99'];
+        end
         input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');
         fprintf(input_file, '%s', cflags_tmp);
         fclose(input_file);
@@ -93,11 +97,27 @@ if is_octave()
 end
 
 
+if ismac()
+    FLAGS = 'CFLAGS=$CFLAGS -std=c99';
+else
+    FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
+end
+
+% is qpOASES?
+with_qp_oases = ~isempty(strfind(opts.qp_solver,'qpoases'));
+if with_qp_oases
+    % flag file to remember if compiled with qpOASES
+    flag_file = fullfile(opts.output_dir, '_compiled_with_qpoases.txt');
+    flagID = fopen(flag_file, 'w');
+    fclose(flagID);
+end
+
+
 for ii=1:length(mex_files)
     disp(['compiling ', mex_files{ii}])
     if is_octave()
 %        mkoctfile -p CFLAGS
-        if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
+        if with_qp_oases
             mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
         else
@@ -105,11 +125,12 @@ for ii=1:length(mex_files)
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
         end
     else
-        if (strcmp(opts.qp_solver, 'full_condensing_qpoases'))
-            mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp -DACADOS_WITH_QPOASES', acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+        if with_qp_oases
+            FLAGS = [FLAGS, ' -DACADOS_WITH_QPOASES'];
+            mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
         else
-            mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+            mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
         end
     end
