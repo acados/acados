@@ -91,7 +91,7 @@
     mexErrMsgTxt(buffer);\
 }
 
-#define MEX_SOLVER_NOT_SUPPORTED(fun_name, field, value, suggestions) {\
+#define MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, field, value, suggestions) {\
     sprintf(buffer, "%s: field %s does not support %s, supported values are:\n %s",\
             fun_name, field, value, suggestions);\
     mexErrMsgTxt(buffer);\

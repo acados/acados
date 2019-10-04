@@ -122,7 +122,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else
     {
-        MEX_SOLVER_NOT_SUPPORTED(fun_name, "nlp_solver", nlp_solver, "sqp, sqp_rti");
+        MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "nlp_solver", nlp_solver, "sqp, sqp_rti");
     }
 
     // cost type
@@ -145,7 +145,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else
         {
-            MEX_SOLVER_NOT_SUPPORTED(fun_name, "cost_type", cost_type, "linear_ls, nonlinear_ls, ext_cost");
+            MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "cost_type", cost_type, "linear_ls, nonlinear_ls, ext_cost");
         }
     }
     else
@@ -178,7 +178,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else
         {
-            MEX_SOLVER_NOT_SUPPORTED(fun_name, "cost_type_e", cost_type_e, "linear_ls, nonlinear_ls, ext_cost");
+            MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "cost_type_e", cost_type_e, "linear_ls, nonlinear_ls, ext_cost");
         }
     }
     else
@@ -208,7 +208,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         else
         {
-            MEX_SOLVER_NOT_SUPPORTED(fun_name, "dyn_type", dyn_type, "explicit, implicit, discrete");
+            MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "dyn_type", dyn_type, "explicit, implicit, discrete");
         }
     }
     else
@@ -291,7 +291,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else
     {
-        MEX_SOLVER_NOT_SUPPORTED(fun_name, "constr_type", constr_type, "bgh");
+        MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "constr_type", constr_type, "bgh");
     }
 
 
@@ -322,7 +322,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 #endif
     else
     {
-        MEX_SOLVER_NOT_SUPPORTED(fun_name, "qp_solver", qp_solver,
+        MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "qp_solver", qp_solver,
              "partial_condensing_hpipm, full_condensing_hpipm, full_condensing_qpoases");
     }
 
@@ -360,7 +360,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else
     {
-        MEX_SOLVER_NOT_SUPPORTED(fun_name, "regularize_method", regularize_method,
+        MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "regularize_method", regularize_method,
              "no_regularize, mirror, project, project_reduc_hess, convexify");
     }
 
@@ -969,7 +969,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else
     {
-        MEX_SOLVER_NOT_SUPPORTED(fun_name, "param_scheme", param_scheme,
+        MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "param_scheme", param_scheme,
                              "multiple_shooting, multiple_shooting_unif_grid");
     }
 

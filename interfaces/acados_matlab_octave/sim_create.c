@@ -107,7 +107,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else
     {
-        MEX_SOLVER_NOT_SUPPORTED(fun_name, "method", method, "erk, irk, irk_gnsf");
+        MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "method", method, "erk, irk, irk_gnsf");
     }
 
     sim_config *config = sim_config_create(plan);
