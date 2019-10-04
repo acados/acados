@@ -311,7 +311,7 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     if ( !config_ || !dims_ || !model_ || !value_ )
     {
         printf("ocp_nlp_cost_ls_model_set: got NULL pointer, setting field %s\n", field);
-        printf("config %p, dims %p model %p, %value %p \n", config_, dims_, model_, value_);
+        printf("config %p, dims %p model %p, value %p \n", config_, dims_, model_, value_);
         exit(1);
     }
 
@@ -763,7 +763,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
                 memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 
         // compute gradient
-		// res = \tilde{V}_x * x + \tilde{V}_u * u - \tilde{y}_ref
+        // res = \tilde{V}_x * x + \tilde{V}_u * u - \tilde{y}_ref
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
                 0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
 
@@ -773,7 +773,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
                 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
-		// TODO what about the exact hessian in the case of nz>0 ???
+        // TODO what about the exact hessian in the case of nz>0 ???
     }
     else
     {
