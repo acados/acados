@@ -60,15 +60,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* LHS */
     // field names of output struct
-    char *fieldnames[6];
+    char *fieldnames[7];
     fieldnames[0] = (char*)mxMalloc(50);
     fieldnames[1] = (char*)mxMalloc(50);
     fieldnames[2] = (char*)mxMalloc(50);
     fieldnames[3] = (char*)mxMalloc(50);
     fieldnames[4] = (char*)mxMalloc(50);
     fieldnames[5] = (char*)mxMalloc(50);
-    // TODO: add field method or plan to remember which integrator was created
-    // fieldnames[6] = (char*)mxMalloc(50);
+    fieldnames[6] = (char*)mxMalloc(50);
 
     memcpy(fieldnames[0],"config",sizeof("config"));
     memcpy(fieldnames[1],"dims",sizeof("dims"));
@@ -76,11 +75,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[3],"in",sizeof("in"));
     memcpy(fieldnames[4],"out",sizeof("out"));
     memcpy(fieldnames[5],"solver",sizeof("solver"));
-
-    // memcpy(fieldnames[6],"method",sizeof("method"));
-
+    memcpy(fieldnames[6],"method",sizeof("method"));
     // create output struct
-    plhs[0] = mxCreateStructMatrix(1, 1, 6, (const char **) fieldnames);
+    plhs[0] = mxCreateStructMatrix(1, 1, 7, (const char **) fieldnames);
 
     mxFree( fieldnames[0] );
     mxFree( fieldnames[1] );
@@ -88,6 +85,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxFree( fieldnames[3] );
     mxFree( fieldnames[4] );
     mxFree( fieldnames[5] );
+    mxFree( fieldnames[6] );
 
 
     /* plan & config */
@@ -315,6 +313,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) solver;
     mxSetField(plhs[0], 0, "solver", solver_mat);
 
+    // method
+    mxArray *method_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(method_mat);
+    l_ptr[0] = plan.sim_solver;
+    mxSetField(plhs[0], 0, "method", method_mat);
 
     return;
 
