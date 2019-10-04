@@ -1516,6 +1516,9 @@ int ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims,
     // nlp
     size += sizeof(ocp_nlp_workspace);
 
+	// tmp_nlp_out
+	size += ocp_nlp_out_calculate_size(config, dims);
+
     // array of pointers
     // cost
     size += (N+1)*sizeof(void *);
@@ -1632,6 +1635,10 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 
 	ocp_nlp_workspace *work = (ocp_nlp_workspace *) c_ptr;
     c_ptr += sizeof(ocp_nlp_workspace);
+
+	// tmp_nlp_out
+	work->tmp_nlp_out = ocp_nlp_out_assign(config, dims, c_ptr);
+	c_ptr += ocp_nlp_out_calculate_size(config, dims);
 
     // array of pointers
     //
@@ -1926,22 +1933,17 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *di
 
 
 
-void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-    int i, j;
 
-    int N = dims->N;
-    int *nv = dims->nv;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *ni = dims->ni;
-    int *nz = dims->nz;
+	int i, j;
 
-    // ocp_nlp_config *config = (ocp_nlp_config *) config_;
+	int N = dims->N;
+	int *nx = dims->nx;
+	int *ni = dims->ni;
 
+	double merit_fun = 0.0;
 
-
-#if 0 // XXX test piece of code
 	// compute fun value
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for
@@ -2009,15 +2011,73 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 		}
 	}
 
-	printf("\nfun value %e %e %e %e\n", cost_fun+dyn_fun+constr_fun, cost_fun, dyn_fun, constr_fun);
+	merit_fun = cost_fun + dyn_fun + constr_fun;
+
+	return merit_fun;
+}
+
+
+
+void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
+{
+    int i, j;
+
+    int N = dims->N;
+    int *nv = dims->nv;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *ni = dims->ni;
+    int *nz = dims->nz;
+
+    // ocp_nlp_config *config = (ocp_nlp_config *) config_;
+
+	// (fixed) step length
+    double alpha = opts->step_length;
+
+#if 0 // XXX test piece of code
+
+	// current point
+
+    for (i = 0; i <= N; i++)
+        blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+    
+    for (i = 0; i < N; i++)
+		blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->tmp_nlp_out->pi+i, 0);
+
+    for (i = 0; i <= N; i++)
+        blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->tmp_nlp_out->lam+i, 0);
+
+        // linear update of algebraic variables using state and input sensitivity
+//        if (i < N)
+//        {
+//            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0); 
+//        }
+
+	double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+	printf("\nmerit fun value %e\n", merit_fun0);
+
+	for (j=0; j<6; j++)
+	{
+
+		for (i = 0; i <= N; i++)
+			blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
+
+		double merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
+		printf("\ntmp merit fun value %e\n", merit_fun1);
+
+		if(merit_fun1 < merit_fun0)
+			break;
+
+		alpha *= 0.7;
+	
+	}
+
 #endif
 
 
 
 
 
-	// (fixed) step length
-    double alpha = opts->step_length;
 
 #if defined(ACADOS_WITH_OPENMP)
     #pragma omp parallel for

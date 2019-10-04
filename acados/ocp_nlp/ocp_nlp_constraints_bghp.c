@@ -811,6 +811,15 @@ void ocp_nlp_constraints_bghp_memory_set_lam_ptr(struct blasfeo_dvec *lam, void 
 
 
 
+void ocp_nlp_constraints_bghp_memory_set_tmp_lam_ptr(struct blasfeo_dvec *tmp_lam, void *memory_)
+{
+    ocp_nlp_constraints_bghp_memory *memory = memory_;
+
+    memory->tmp_lam = tmp_lam;
+}
+
+
+
 void ocp_nlp_constraints_bghp_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *memory_)
 {
     ocp_nlp_constraints_bghp_memory *memory = memory_;
@@ -1149,6 +1158,7 @@ void ocp_nlp_constraints_bghp_config_initialize_default(void *config_)
     config->memory_get_adj_ptr = &ocp_nlp_constraints_bghp_memory_get_adj_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_constraints_bghp_memory_set_ux_ptr;
     config->memory_set_lam_ptr = &ocp_nlp_constraints_bghp_memory_set_lam_ptr;
+    config->memory_set_tmp_lam_ptr = &ocp_nlp_constraints_bghp_memory_set_tmp_lam_ptr;
     config->memory_set_DCt_ptr = &ocp_nlp_constraints_bghp_memory_set_DCt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_bghp_memory_set_RSQrq_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_constraints_bghp_memory_set_z_alg_ptr;

@@ -74,7 +74,9 @@ typedef struct
     struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory);
     struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory);
     void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory);
+    void (*memory_set_tmp_ux_ptr)(struct blasfeo_dvec *tmp_ux, void *memory);
     void (*memory_set_lam_ptr)(struct blasfeo_dvec *lam, void *memory);
+    void (*memory_set_tmp_lam_ptr)(struct blasfeo_dvec *tmp_lam, void *memory);
     void (*memory_set_DCt_ptr)(struct blasfeo_dmat *DCt, void *memory);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z_alg, void *memory);
