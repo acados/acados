@@ -179,11 +179,10 @@ int ocp_nlp_constraints_bghp_workspace_calculate_size(void *config, void *dims, 
 //
 void ocp_nlp_constraints_bghp_config_initialize_default(void *config);
 //
-void ocp_nlp_constraints_bghp_initialize(void *config, void *dims, void *model, void *opts,
-                                    void *mem, void *work);
+void ocp_nlp_constraints_bghp_initialize(void *config, void *dims, void *model, void *opts, void *mem, void *work);
 //
-void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims, void *model_,
-                                            void *opts_, void *memory_, void *work_);
+void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
+void ocp_nlp_constraints_bghp_compute_fun(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
 
 
 

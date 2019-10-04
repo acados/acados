@@ -1118,6 +1118,14 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
 
 
 
+void ocp_nlp_constraints_bghp_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+{
+	printf("\nerror: ocp_nlp_constraints_bghp_compute_fun: not implemented yet\n");
+	exit(1);
+}
+
+
+
 void ocp_nlp_constraints_bghp_config_initialize_default(void *config_)
 {
     ocp_nlp_constraints_config *config = config_;
@@ -1150,6 +1158,7 @@ void ocp_nlp_constraints_bghp_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_nlp_constraints_bghp_workspace_calculate_size;
     config->initialize = &ocp_nlp_constraints_bghp_initialize;
     config->update_qp_matrices = &ocp_nlp_constraints_bghp_update_qp_matrices;
+    config->compute_fun = &ocp_nlp_constraints_bghp_compute_fun;
     config->config_initialize_default = &ocp_nlp_constraints_bghp_config_initialize_default;
 
 

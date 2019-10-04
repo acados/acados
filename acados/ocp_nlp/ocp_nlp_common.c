@@ -1959,29 +1959,57 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         // cost
         config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
     }
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (i=0; i<=N; i++)
+    {
+        // constr
+        config->constraints[i]->compute_fun(config->constraints[i], dims->constraints[i], in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+    }
+
+	double *tmp_fun;
+	double tmp;
+	struct blasfeo_dvec *tmp_fun_vec;
 
 	double cost_fun = 0.0;
-	double *tmp_fun;
 	for(i=0; i<=N; i++)
 	{
 		tmp_fun = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
 		cost_fun += *tmp_fun;
 	}
+
 	double dyn_fun = 0.0;
-	struct blasfeo_dvec *tmp_fun_vec;
 	for(i=0; i<N; i++)
 	{
 //		printf("\ni %d\n", i);
 		tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
 //		blasfeo_print_exp_tran_dvec(nx[i+1], tmp_fun_vec, 0);
-//		blasfeo_print_exp_tran_dvec(nx[i+1], mem->qp_out->pi+i, 0);
+//		blasfeo_print_exp_tran_dvec(nx[i+1], out->pi+i, 0);
 		for(j=0; j<nx[i+1]; j++)
 		{
-//			printf("\n%e %e\n", fabs(BLASFEO_DVECEL(mem->qp_out->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
-			dyn_fun += fabs(BLASFEO_DVECEL(mem->qp_out->pi+i, j)) * fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
+//			printf("\n%e %e\n", fabs(BLASFEO_DVECEL(out->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
+			dyn_fun += fabs(BLASFEO_DVECEL(out->pi+i, j)) * fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
 		}
 	}
-	printf("\nfun value %e %e %e\n", cost_fun+dyn_fun, cost_fun, dyn_fun);
+
+	double constr_fun = 0.0;
+	for(i=0; i<=N; i++)
+	{
+//		printf("\ni %d\n", i);
+		tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
+//		blasfeo_print_exp_tran_dvec(2*ni[i], tmp_fun_vec, 0);
+//		blasfeo_print_exp_tran_dvec(2*ni[i], out->lam+i, 0);
+		for(j=0; j<2*ni[i]; j++)
+		{
+			tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
+			tmp = tmp>0.0 ? tmp : 0.0;
+//			printf("\n%e %e\n", fabs(BLASFEO_DVECEL(out->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
+			constr_fun += fabs(BLASFEO_DVECEL(out->lam+i, j)) * tmp;
+		}
+	}
+
+	printf("\nfun value %e %e %e %e\n", cost_fun+dyn_fun+constr_fun, cost_fun, dyn_fun, constr_fun);
 #endif
 
 

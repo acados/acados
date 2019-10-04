@@ -128,7 +128,7 @@ typedef struct
     int *nv;  // number of primal variables (states+controls+slacks)
     int *nx;  // number of differential states
     int *nu;  // number of inputs
-    int *ni;  // number of two-sided inequality constraints TODO make one-sided ???
+    int *ni;  // number of two-sided inequality constraints: nb+ng+nh+ns
     int *nz;  // number of algebraic variables
     int *ns;  // number of slack variables
     int N;    // number of shooting nodes
