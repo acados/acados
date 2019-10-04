@@ -311,7 +311,7 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
     if ( !config_ || !dims_ || !model_ || !value_ )
     {
         printf("ocp_nlp_cost_ls_model_set: got NULL pointer, setting field %s\n", field);
-        printf("config %p, dims %p model %p, %value %p \n", config_, dims_, model_, value_);
+        printf("config %p, dims %p model %p, value %p \n", config_, dims_, model_, value_);
         exit(1);
     }
 
