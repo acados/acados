@@ -37,7 +37,7 @@ clear VARIABLES
 addpath('../linear_mass_spring_model/');
 
 %% arguments
-compile_interface = 'false';
+compile_interface = 'auto';
 codgen_model = 'true';
 method = 'irk';
 % method = 'IRK';

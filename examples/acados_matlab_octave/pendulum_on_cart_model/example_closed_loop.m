@@ -42,7 +42,7 @@ end
 
 
 %% options
-compile_interface = 'false'; % true, false
+compile_interface = 'auto'; % true, false
 codgen_model = 'true'; % true, false
 % simulation
 sim_method = 'irk'; % erk, irk, irk_gnsf

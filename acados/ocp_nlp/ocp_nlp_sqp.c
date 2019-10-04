@@ -798,7 +798,8 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
     for (ii = 0; ii < N; ii++)
     {
         // set T
-        config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
+        config->dynamics[ii]->model_set(config->dynamics[ii], dims->dynamics[ii],
+                                        nlp_in->dynamics[ii], "T", nlp_in->Ts+ii);
         // dynamics precompute
         status = config->dynamics[ii]->precompute(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii], opts->nlp_opts->dynamics[ii], nlp_mem->dynamics[ii], nlp_work->dynamics[ii]);
         if (status != ACADOS_SUCCESS)
