@@ -37,6 +37,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 // blasfeo
 #include "blasfeo/include/blasfeo_common.h"
@@ -1927,7 +1928,7 @@ void ocp_nlp_approximate_qp_vectors_sqp(ocp_nlp_config *config, ocp_nlp_dims *di
 
 void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_opts *opts, ocp_nlp_memory *mem, ocp_nlp_workspace *work)
 {
-    int i;
+    int i, j;
 
     int N = dims->N;
     int *nv = dims->nv;
@@ -1950,6 +1951,14 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
         // cost
         config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
     }
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (i=0; i<N; i++)
+    {
+        // cost
+        config->dynamics[i]->compute_fun(config->dynamics[i], dims->dynamics[i], in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+    }
 
 	double cost_fun = 0.0;
 	double *tmp_fun;
@@ -1958,7 +1967,21 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 		tmp_fun = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
 		cost_fun += *tmp_fun;
 	}
-	printf("\nfun value %e\n", cost_fun);
+	double dyn_fun = 0.0;
+	struct blasfeo_dvec *tmp_fun_vec;
+	for(i=0; i<N; i++)
+	{
+//		printf("\ni %d\n", i);
+		tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+//		blasfeo_print_exp_tran_dvec(nx[i+1], tmp_fun_vec, 0);
+//		blasfeo_print_exp_tran_dvec(nx[i+1], mem->qp_out->pi+i, 0);
+		for(j=0; j<nx[i+1]; j++)
+		{
+//			printf("\n%e %e\n", fabs(BLASFEO_DVECEL(mem->qp_out->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
+			dyn_fun += fabs(BLASFEO_DVECEL(mem->qp_out->pi+i, j)) * fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
+		}
+	}
+	printf("\nfun value %e %e %e\n", cost_fun+dyn_fun, cost_fun, dyn_fun);
 #endif
 
 

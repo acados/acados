@@ -189,14 +189,13 @@ void ocp_nlp_dynamics_cont_model_set(void *config_, void *dims_, void *model_, c
 //
 void ocp_nlp_dynamics_cont_config_initialize_default(void *config);
 //
-void ocp_nlp_dynamics_cont_initialize(void *config_, void *dims, void *model_, void *opts,
-                                      void *mem, void *work_);
+void ocp_nlp_dynamics_cont_initialize(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
-void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims, void *model_, void *opts,
-                                              void *mem, void *work_);
+void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
-int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims, void *model_, void *opts_,
-                                        void *mem_, void *work_);
+void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+//
+int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 
 
 #ifdef __cplusplus

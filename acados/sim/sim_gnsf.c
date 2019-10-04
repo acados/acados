@@ -345,6 +345,7 @@ void sim_gnsf_opts_initialize_default(void *config_, void *dims_, void *opts_)
 }
 
 
+
 void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
 {
     sim_opts *opts = opts_;
@@ -365,10 +366,20 @@ void sim_gnsf_opts_update(void *config_, void *dims, void *opts_)
     return;
 }
 
+
+
 void sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
     sim_opts *opts = (sim_opts *) opts_;
     sim_opts_set_(opts, field, value);
+}
+
+
+
+void sim_gnsf_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    sim_opts *opts = (sim_opts *) opts_;
+    sim_opts_get_(config_, opts, field, value);
 }
 
 
@@ -2930,6 +2941,7 @@ void sim_gnsf_config_initialize_default(void *config_)
     config->opts_initialize_default = &sim_gnsf_opts_initialize_default;
     config->opts_update = &sim_gnsf_opts_update;
     config->opts_set = &sim_gnsf_opts_set;
+    config->opts_get = &sim_gnsf_opts_get;
     // memory & workspace
     config->memory_calculate_size = &sim_gnsf_memory_calculate_size;
     config->memory_assign = &sim_gnsf_memory_assign;

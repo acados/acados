@@ -266,8 +266,15 @@ void ocp_nlp_dynamics_cont_opts_initialize_default(void *config_, void *dims_, v
     // sim opts
     config->sim_solver->opts_initialize_default(config->sim_solver, dims->sim, opts->sim_solver);
 
-    bool tmp_bool = false;
-    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
+	// overwrite defaults
+
+    bool sens_forw = true;
+    bool sens_adj = false;
+    bool sens_hess = false;
+
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_forw", &sens_forw);
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &sens_adj);
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &sens_hess);
 
     return;
 }
@@ -280,11 +287,11 @@ void ocp_nlp_dynamics_cont_opts_update(void *config_, void *dims_, void *opts_)
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
 
-    if (!opts->compute_hess)
-    {
-        bool tmp_bool = false;
-        config->sim_solver->opts_set( config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool );
-    }
+//    if (!opts->compute_hess)
+//    {
+//        bool bool_false = false;
+//        config->sim_solver->opts_set( config->sim_solver, opts->sim_solver, "sens_hess", &bool_false );
+//    }
     config->sim_solver->opts_update(config->sim_solver, dims->sim, opts->sim_solver);
 
     return;
@@ -303,6 +310,7 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     {
         int *int_ptr = value;
         opts->compute_adj = *int_ptr;
+		// TODO set in the sim solver too ???
     }
     else if (!strcmp(field, "compute_hess"))
     {
@@ -313,6 +321,7 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
         {
             tmp_bool = false;
         }
+        config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &tmp_bool);
         config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool);
     }
     else
@@ -657,16 +666,14 @@ void ocp_nlp_dynamics_cont_model_set(void *config_, void *dims_, void *model_, c
  * functions
  ************************************************/
 
-void ocp_nlp_dynamics_cont_initialize(void *config_, void *dims_, void *model_, void *opts_,
-                                      void *mem_, void *work_)
+void ocp_nlp_dynamics_cont_initialize(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
 {
     return;
 }
 
 
 
-void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *model_, void *opts_,
-                                              void *mem_, void *work_)
+void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
 {
     ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_);
 
@@ -782,6 +789,79 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
 
 
 
+void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
+{
+    ocp_nlp_dynamics_cont_cast_workspace(config_, dims_, opts_, work_);
+
+    ocp_nlp_dynamics_config *config = config_;
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+    ocp_nlp_dynamics_cont_opts *opts = opts_;
+    ocp_nlp_dynamics_cont_workspace *work = work_;
+    ocp_nlp_dynamics_cont_memory *mem = mem_;
+    ocp_nlp_dynamics_cont_model *model = model_;
+
+    int jj;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nz = dims->nz;
+    int nx1 = dims->nx1;
+    int nu1 = dims->nu1;
+
+    // setup model
+    work->sim_in->model = model->sim_model;
+    work->sim_in->T = model->T;
+
+    // pass state and control to integrator
+    blasfeo_unpack_dvec(nu, mem->ux, 0, work->sim_in->u);
+    blasfeo_unpack_dvec(nx, mem->ux, nu, work->sim_in->x);
+
+    // printf("sim_guess, bool %d\n", mem->set_sim_guess[0]);
+    // blasfeo_print_exp_dvec(nx + nz, mem->sim_guess, 0);
+
+    if (mem->set_sim_guess!=NULL && mem->set_sim_guess[0])
+    {
+        config->sim_solver->memory_set(config->sim_solver, work->sim_in->dims, mem->sim_solver, "guesses_blasfeo", mem->sim_guess);
+        // only use/pass the initial guess once
+        mem->set_sim_guess[0] = false;
+    }
+
+	// TODO get opts for sens as backup, and set them to false
+
+	// backup sens
+	bool sens_forw_bkp, sens_adj_bkp, sens_hess_bkp;
+    config->sim_solver->opts_get(config->sim_solver, opts->sim_solver, "sens_forw", &sens_forw_bkp);
+    config->sim_solver->opts_get(config->sim_solver, opts->sim_solver, "sens_adj", &sens_adj_bkp);
+    config->sim_solver->opts_get(config->sim_solver, opts->sim_solver, "sens_hess", &sens_hess_bkp);
+
+	// set all sens to false
+	bool sens_all = false;
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_forw", &sens_all);
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &sens_all);
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &sens_all);
+
+    // call integrator
+    config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out, opts->sim_solver,
+            mem->sim_solver, work->sim_solver);
+
+	// restore sens
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_forw", &sens_forw_bkp);
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_adj", &sens_adj_bkp);
+    config->sim_solver->opts_set(config->sim_solver, opts->sim_solver, "sens_hess", &sens_hess_bkp);
+
+    // TODO transition functions for changing dimensions not yet implemented!
+
+    // function
+    blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
+    blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
+    blasfeo_pack_dvec(nz, work->sim_out->zn, mem->z_alg, 0);
+
+    return;
+
+}
+
+
+
 int ocp_nlp_dynamics_cont_precompute(void *config_, void *dims_, void *model_, void *opts_,
                                         void *mem_, void *work_)
 {
@@ -840,6 +920,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;
     config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;
+    config->compute_fun = &ocp_nlp_dynamics_cont_compute_fun;
     config->precompute = &ocp_nlp_dynamics_cont_precompute;
     config->config_initialize_default = &ocp_nlp_dynamics_cont_config_initialize_default;
 

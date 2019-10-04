@@ -79,6 +79,7 @@ elseif (strcmp(model_struct.dyn_type, 'discrete'))
     % generate c for function and derivatives using casadi
     generate_c_code_disc_dyn(model_struct, opts_struct);
     % sources list
+    c_files{end+1} = [model_name, '_dyn_disc_phi_fun.c'];
     c_files{end+1} = [model_name, '_dyn_disc_phi_fun_jac.c'];
     c_files{end+1} = [model_name, '_dyn_disc_phi_fun_jac_hess.c'];
 else

@@ -152,6 +152,7 @@ int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, void *dims, voi
 
 typedef struct
 {
+    external_function_generic *disc_dyn_fun;
     external_function_generic *disc_dyn_fun_jac;
     external_function_generic *disc_dyn_fun_jac_hess;
 } ocp_nlp_dynamics_disc_model;
@@ -172,11 +173,11 @@ void ocp_nlp_dynamics_disc_model_set(void *config_, void *dims_, void *model_, c
 //
 void ocp_nlp_dynamics_disc_config_initialize_default(void *config);
 //
-void ocp_nlp_dynamics_disc_initialize(void *config_, void *dims, void *model_, void *opts,
-                                      void *mem, void *work_);
+void ocp_nlp_dynamics_disc_initialize(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 //
-void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *model_, void *opts,
-                                              void *mem, void *work_);
+void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+//
+void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
 
 
 
