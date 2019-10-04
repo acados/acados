@@ -62,20 +62,32 @@ classdef acados_sim < handle
                 end
             end
 
+            %% compile mex without model dependency
             % check if mex interface exists already
-            if is_octave()
-                mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
-                    '/sim_create.mex'), 'file');
+            if strcmp(obj.opts_struct.compile_interface, 'true')
+                compile_interface = true;
+            elseif strcmp(obj.opts_struct.compile_interface, 'false')
+                compile_interface = false;
+            elseif strcmp(obj.opts_struct.compile_interface, 'auto')
+                if is_octave()
+                    compile_interface = ~exist( fullfile(obj.opts_struct.output_dir,...
+                        '/sim_create.mex'), 'file');
+                else
+                    compile_interface = ~exist( fullfile(obj.opts_struct.output_dir,...
+                        '/sim_create.mexa64'), 'file');
+                end
             else
-                mex_exists = exist( fullfile(obj.opts_struct.output_dir,...
-                    '/sim_create.mexa64'), 'file');
+                obj.model_struct.cost_type
+                error('acados_sim: field compile_interface is , supported values are: true, false, auto');
             end
 
-            % compile mex without model dependency
-            if (strcmp(obj.opts_struct.compile_interface, 'true') || ~mex_exists)
+            if ( compile_interface )
                 sim_compile_interface(obj.opts_struct);
             end
+
             sim_check_dims(obj.model_struct);
+
+            % create C object
             obj.C_sim = sim_create(obj.model_struct, obj.opts_struct);
 
             % generate and compile casadi functions

@@ -88,7 +88,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ocp_nlp_plan_destroy(plan);
     ocp_nlp_config_destroy(config);
     ocp_nlp_dims_destroy(dims);
-    ocp_nlp_opts_destroy(opts);
+    ocp_nlp_solver_opts_destroy(opts);
     ocp_nlp_in_destroy(in);
     ocp_nlp_out_destroy(out);
     ocp_nlp_solver_destroy(solver);

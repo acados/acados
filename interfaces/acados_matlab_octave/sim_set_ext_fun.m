@@ -173,7 +173,11 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
             input_file = fopen(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'r');
             cflags_tmp = fscanf(input_file, '%[^\n]s');
             fclose(input_file);
-            cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
+            if ~ismac()
+                cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
+            else
+                cflags_tmp = [cflags_tmp, ' -std=c99'];
+            end
             input_file = fopen(fullfile(opts_struct.output_dir, 'cflags_octave.txt'), 'w');
             fprintf(input_file, '%s', cflags_tmp);
             fclose(input_file);
@@ -199,7 +203,17 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
             setenv('CFLAGS', cflags_tmp);
             mex(acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], fullfile(acados_mex_folder, 'sim_set_ext_fun_gen.c'));
         else
-            mex(mex_flags, 'CFLAGS=$CFLAGS -std=c99 -fopenmp', ['-DSET_FIELD=', set_fields{ii}], ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}], acados_include, acados_interfaces_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path, '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], fullfile(acados_mex_folder, 'sim_set_ext_fun_gen.c'));
+            if ~ismac()
+                FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
+            else
+                FLAGS = 'CFLAGS=$CFLAGS -std=c99';
+            end
+            mex( mex_flags, FLAGS, ['-DSET_FIELD=', set_fields{ii}],...
+                 ['-DMEX_FIELD=', mex_fields{ii}], ['-DFUN_NAME=', fun_names{ii}],...
+                 acados_include, acados_interfaces_include, acados_lib_path,...
+                 acados_matlab_octave_lib_path, model_lib_path, '-lacados',...
+                 '-lhpipm', '-lblasfeo', ['-l', model_name],...
+                 fullfile(acados_mex_folder, 'sim_set_ext_fun_gen.c'));
         end
         
 %        clear(mex_names{ii})

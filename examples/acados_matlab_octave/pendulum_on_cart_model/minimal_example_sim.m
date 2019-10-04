@@ -40,7 +40,7 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% arguments
-compile_interface = 'false';
+compile_interface = 'auto';
 method = 'erk'; % irk, irk_gnsf
 model_name = 'sim_pendulum';
 

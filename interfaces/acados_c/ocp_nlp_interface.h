@@ -288,12 +288,12 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
 ///
 /// \param config The configuration struct.
 /// \param dims The dimension struct.
-void *ocp_nlp_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
+void *ocp_nlp_solver_opts_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
 
 /// Destructor of the options.
 ///
 /// \param opts The options struct.
-void ocp_nlp_opts_destroy(void *opts);
+void ocp_nlp_solver_opts_destroy(void *opts);
 
 /// Sets an option.
 ///
@@ -301,26 +301,11 @@ void ocp_nlp_opts_destroy(void *opts);
 /// \param opts_ The options struct.
 /// \param field Name of the option.
 /// \param value Value of the option.
-void ocp_nlp_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void* value);
+void ocp_nlp_solver_opts_set(ocp_nlp_config *config, void *opts_, const char *field, void* value);
 
 
-/// Set the option for the dynamics in a given stage.
-/// More specifically options of the integrator in case of continuous dynamics
-///
-/// \param config The configuration struct.
-/// \param opts_ The options struct.
-/// \param stage Stage number.
-/// \param field Name of the option.
-/// \param value Value of the option.
-void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-        const char *field, void *value);
+void ocp_nlp_solver_opts_set_at_stage(ocp_nlp_config *config, void *opts_, int stage, const char *field, void* value);
 
-
-// TODO(oj): do we need these?
-// void ocp_nlp_cost_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-//         const char *field, void *value);
-// void ocp_nlp_constraints_opts_set(ocp_nlp_config *config, void *opts_, int stage,
-//         const char *field, void *value);
 
 /// TBC
 /// Updates the options.
@@ -328,7 +313,7 @@ void ocp_nlp_dynamics_opts_set(ocp_nlp_config *config, void *opts_, int stage,
 /// \param config The configuration struct.
 /// \param dims The dimension struct.
 /// \param opts_ The options struct.
-void ocp_nlp_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
+void ocp_nlp_solver_opts_update(ocp_nlp_config *config, ocp_nlp_dims *dims, void *opts_);
 
 
 /* solver */
