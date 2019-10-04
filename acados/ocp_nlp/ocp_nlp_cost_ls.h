@@ -182,12 +182,15 @@ typedef struct
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat *RSQrq;         ///< pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;             ///< pointer to Z in qp_in
+	double fun;                         ///< value of the cost function
 } ocp_nlp_cost_ls_memory;
 
 //
 int ocp_nlp_cost_ls_memory_calculate_size(void *config, void *dims, void *opts);
 //
 void *ocp_nlp_cost_ls_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
+//
+double *ocp_nlp_cost_ls_memory_get_fun_ptr(void *memory_);
 //
 struct blasfeo_dvec *ocp_nlp_cost_ls_memory_get_grad_ptr(void *memory_);
 //
@@ -215,6 +218,7 @@ typedef struct
     struct blasfeo_dmat Cyt_tilde;   // updated Cyt (after z elimination)
     struct blasfeo_dmat dzdux_tran;  // derivatives of z wrt u and x (tran)
     struct blasfeo_dvec tmp_ny;      // temporary vector of dimension ny
+    struct blasfeo_dvec tmp_2ns;     // temporary vector of dimension ny
     struct blasfeo_dvec tmp_nz;      // temporary vector of dimension nz
     struct blasfeo_dvec y_ref_tilde; // updated y_ref (after z elimination)
 } ocp_nlp_cost_ls_workspace;
@@ -233,11 +237,11 @@ int ocp_nlp_cost_ls_workspace_calculate_size(void *config, void *dims, void *opt
 //
 void ocp_nlp_cost_ls_config_initialize_default(void *config);
 //
-void ocp_nlp_cost_ls_initialize(void *config_, void *dims, void *model_, void *opts_, void *mem_,
-                                void *work_);
+void ocp_nlp_cost_ls_initialize(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 //
-void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_,
-                                        void *memory_, void *work_);
+void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
+//
+void ocp_nlp_cost_ls_compute_fun(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

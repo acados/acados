@@ -105,10 +105,7 @@ int ocp_nlp_cost_nls_model_calculate_size(void *config, void *dims);
 //
 void *ocp_nlp_cost_nls_model_assign(void *config, void *dims, void *raw_memory);
 //
-int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
-                               const char *field, void *value_);
-//
-void ocp_nlp_cost_nls_config_initialize_default(void *config);
+int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_, const char *field, void *value_);
 
 
 
@@ -149,12 +146,15 @@ typedef struct
     struct blasfeo_dmat *dzdux_tran;    ///< pointer to sensitivity of a wrt ux in sim_out
     struct blasfeo_dmat *RSQrq;  // pointer to RSQrq in qp_in
     struct blasfeo_dvec *Z;      // pointer to Z in qp_in
+	double fun;                         ///< value of the cost function
 } ocp_nlp_cost_nls_memory;
 
 //
 int ocp_nlp_cost_nls_memory_calculate_size(void *config, void *dims, void *opts);
 //
 void *ocp_nlp_cost_nls_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
+//
+double *ocp_nlp_cost_nls_memory_get_fun_ptr(void *memory_);
 //
 struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_grad_ptr(void *memory_);
 //
@@ -187,11 +187,13 @@ int ocp_nlp_cost_nls_workspace_calculate_size(void *config, void *dims, void *op
  ************************************************/
 
 //
-void ocp_nlp_cost_nls_initialize(void *config_, void *dims, void *model_, void *opts_, void *mem_,
-                                 void *work_);
+void ocp_nlp_cost_nls_config_initialize_default(void *config);
 //
-void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_,
-                                         void *memory_, void *work_);
+void ocp_nlp_cost_nls_initialize(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+//
+void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
+//
+void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

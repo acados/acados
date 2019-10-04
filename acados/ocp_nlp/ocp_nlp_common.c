@@ -1938,6 +1938,34 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 
     // ocp_nlp_config *config = (ocp_nlp_config *) config_;
 
+
+
+#if 0 // XXX test piece of code
+	// compute fun value
+#if defined(ACADOS_WITH_OPENMP)
+    #pragma omp parallel for
+#endif
+    for (i=0; i<=N; i++)
+    {
+        // cost
+        config->cost[i]->compute_fun(config->cost[i], dims->cost[i], in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+    }
+
+	double cost_fun = 0.0;
+	double *tmp_fun;
+	for(i=0; i<=N; i++)
+	{
+		tmp_fun = config->cost[i]->memory_get_fun_ptr(mem->cost[i]);
+		cost_fun += *tmp_fun;
+	}
+	printf("\nfun value %e\n", cost_fun);
+#endif
+
+
+
+
+
+	// (fixed) step length
     double alpha = opts->step_length;
 
 #if defined(ACADOS_WITH_OPENMP)

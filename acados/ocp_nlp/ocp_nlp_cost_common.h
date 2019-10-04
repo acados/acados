@@ -74,6 +74,7 @@ typedef struct
     void (*opts_update)(void *config, void *dims, void *opts);
     void (*opts_set)(void *config, void *opts, const char *field, void *value);
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
+	double *(*memory_get_fun_ptr)(void *memory);
     struct blasfeo_dvec *(*memory_get_grad_ptr)(void *memory);
     void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory);
     void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z_alg, void *memory);
@@ -82,10 +83,9 @@ typedef struct
     void (*memory_set_Z_ptr)(struct blasfeo_dvec *Z, void *memory);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
-    void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
-                       void *work_);
-    void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_,
-                               void *work_);
+    void (*initialize)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    void (*update_qp_matrices)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+    void (*compute_fun)(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
     void (*config_initialize_default)(void *config);
 } ocp_nlp_cost_config;
 

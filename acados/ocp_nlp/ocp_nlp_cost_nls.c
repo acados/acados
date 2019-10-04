@@ -496,6 +496,15 @@ void *ocp_nlp_cost_nls_memory_assign(void *config_, void *dims_, void *opts_, vo
 
 
 
+double *ocp_nlp_cost_nls_memory_get_fun_ptr(void *memory_)
+{
+    ocp_nlp_cost_nls_memory *memory = memory_;
+
+    return &memory->fun;
+}
+
+
+
 struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_grad_ptr(void *memory_)
 {
     ocp_nlp_cost_nls_memory *memory = memory_;
@@ -766,12 +775,22 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
         blasfeo_dvecsc(nu+nx+2*ns, model->scaling, &memory->grad, 0);
     }
 
+	// TODO compute fun
+
     // blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
     // blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
     // blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
     // exit(1);
 
     return;
+}
+
+
+
+void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+{
+	printf("\nerror: ocp_nlp_cost_nls_compute_fun: not implemented yet\n");
+	exit(1);
 }
 
 
@@ -795,6 +814,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->opts_set = &ocp_nlp_cost_nls_opts_set;
     config->memory_calculate_size = &ocp_nlp_cost_nls_memory_calculate_size;
     config->memory_assign = &ocp_nlp_cost_nls_memory_assign;
+    config->memory_get_fun_ptr = &ocp_nlp_cost_nls_memory_get_fun_ptr;
     config->memory_get_grad_ptr = &ocp_nlp_cost_nls_memory_get_grad_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_cost_nls_memory_set_ux_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_cost_nls_memory_set_z_alg_ptr;
@@ -804,6 +824,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config_)
     config->workspace_calculate_size = &ocp_nlp_cost_nls_workspace_calculate_size;
     config->initialize = &ocp_nlp_cost_nls_initialize;
     config->update_qp_matrices = &ocp_nlp_cost_nls_update_qp_matrices;
+    config->compute_fun = &ocp_nlp_cost_nls_compute_fun;
     config->config_initialize_default = &ocp_nlp_cost_nls_config_initialize_default;
 
     return;
