@@ -71,6 +71,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // in
     ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "in" ) );
     sim_in *in = (sim_in *) ptr[0];
+    // method
+    int method = mxGetScalar( mxGetField( C_sim, 0, "method" ) );
 
     // field
     char *field = mxArrayToString( prhs[4] );
@@ -81,9 +83,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // check dimension, set value
     if (!strcmp(field, "T"))
     {
-        acados_size = 1;
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        sim_in_set(config, dims, in, field, value);
+        if (method != GNSF)
+        {
+            acados_size = 1;
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            sim_in_set(config, dims, in, field, value);
+        }
+        else
+        {
+            MEX_FIELD_NOT_SUPPORTED_FOR_SOLVER(fun_name, field, "irk_gnsf")
+        }
     }
     else if (!strcmp(field, "x"))
     {
@@ -126,24 +135,44 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         sim_in_set(config, dims, in, field, value);
     }
-    else if(!strcmp(field, "xdot"))
+    else if (!strcmp(field, "xdot"))
     {
-        sim_dims_get(config, dims, "nx", &acados_size);
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        sim_solver_set(solver, field, value);
+        if (method == IRK || method == LIFTED_IRK)
+        {
+            sim_dims_get(config, dims, "nx", &acados_size);
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            sim_solver_set(solver, field, value);
+        }
+        else
+        {
+            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "irk");
+        }
     }
-    else if(!strcmp(field, "z"))
+    else if (!strcmp(field, "z"))
     {
-        sim_dims_get(config, dims, "nz", &acados_size);
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        sim_solver_set(solver, field, value);
+        if (method == IRK || method == LIFTED_IRK)
+        {
+            sim_dims_get(config, dims, "nz", &acados_size);
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            sim_solver_set(solver, field, value);
+        }
+        else
+        {
+            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "irk");
+        }
     }
-    else if(!strcmp(field, "phi_guess"))
+    else if (!strcmp(field, "phi_guess"))
     {
-        // TODO(oj): check if irk_gnsf
-        sim_dims_get(config, dims, "nout", &acados_size);
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        sim_solver_set(solver, field, value);
+        if (method == GNSF)
+        {
+            sim_dims_get(config, dims, "nout", &acados_size);
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+            sim_solver_set(solver, field, value);
+        }
+        else
+        {
+            MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "irk_gnsf");
+        }
     }
     else
     {

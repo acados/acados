@@ -77,40 +77,46 @@
 }
 
 #define MEX_FIELD_NOT_SUPPORTED(fun_name, field) {\
-    sprintf(buffer, "%s field %s not supported", fun_name, field);\
+    sprintf(buffer, "%s: field %s not supported", fun_name, field);\
     mexErrMsgTxt(buffer);\
 }
 
 #define MEX_FIELD_NOT_SUPPORTED_FOR_COST_STAGE(fun_name, field, cost, ii) {\
-    sprintf(buffer, "%s field %s not supported for cost type %d at stage %d", fun_name, field, cost, ii);\
+    sprintf(buffer, "%s: field %s not supported for cost type %d at stage %d", fun_name, field, cost, ii);\
     mexErrMsgTxt(buffer);\
 }
 
 #define MEX_MISSING_ARGUMENT(fun_name, field) {\
-    sprintf(buffer, "%s field %s not provided, is mandatory!", fun_name, field);\
+    sprintf(buffer, "%s: field %s not provided, is mandatory!", fun_name, field);\
     mexErrMsgTxt(buffer);\
 }
 
 #define MEX_SOLVER_NOT_SUPPORTED(fun_name, field, value, suggestions) {\
-    sprintf(buffer, "%s field %s does not support %s, supported values are:\n %s",\
+    sprintf(buffer, "%s: field %s does not support %s, supported values are:\n %s",\
             fun_name, field, value, suggestions);\
     mexErrMsgTxt(buffer);\
 }
 
 #define MEX_FIELD_NOT_SUPPORTED_GIVEN(fun_name, field, value, given, suggestions) {\
-    sprintf(buffer, "%s field %s does not support %s given %s, supported values are:\n %s",\
+    sprintf(buffer, "%s: field %s does not support %s given %s, supported values are:\n %s",\
             fun_name, field, value, given, suggestions);\
     mexErrMsgTxt(buffer);\
 }
 
 #define MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, solver) {\
-    sprintf(buffer, "%s field %s only supported for %s\n",\
+    sprintf(buffer, "%s: field %s only supported for %s\n",\
+            fun_name, field, solver);\
+    mexErrMsgTxt(buffer);\
+}
+
+#define MEX_FIELD_NOT_SUPPORTED_FOR_SOLVER(fun_name, field, solver) {\
+    sprintf(buffer, "%s: field %s not supported for %s\n",\
             fun_name, field, solver);\
     mexErrMsgTxt(buffer);\
 }
 
 #define MEX_MISSING_ARGUMENT_MODULE(fun_name, field, module) {\
-    sprintf(buffer, "%s field %s not provided, is mandatory for module %s!", fun_name, field, module);\
+    sprintf(buffer, "%s field: %s not provided, is mandatory for module %s!", fun_name, field, module);\
     mexErrMsgTxt(buffer);\
 }
 
@@ -128,6 +134,7 @@
         mexErrMsgTxt(buffer);\
     }\
 }
+
 
 #define MEX_CHECK_DIAGONALITY(fun_name, dim, mat, name){\
     for (int ii=0; ii<dim; ii++)\
