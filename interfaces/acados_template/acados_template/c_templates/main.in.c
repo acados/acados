@@ -148,7 +148,7 @@ int main() {
     if ({{ ocp.model_name }}_sim_opts->sens_forw){
         sim_out_get({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_out, "S_forw", S_forw_out);
         printf("\nS_forw_out: \n");
-        d_print_exp_mat({{ ocp.dims.nx }}, {{ ocp.dims.nx }} + {{ ocp.dims.nx }} + {{ ocp.dims.nu }}, S_forw_out, {{ ocp.dims.nx }});
+        d_print_exp_mat({{ ocp.dims.nx }}, {{ ocp.dims.nx }} + {{ ocp.dims.nu }}, S_forw_out, {{ ocp.dims.nx }});
     }
 
     int status = 0;

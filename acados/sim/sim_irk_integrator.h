@@ -92,7 +92,7 @@ typedef struct
     int *ipiv_one_stage;  // index of pivot vector (nx + nz)
     double *Z_work;  // used to perform computations to get out->zn (ns)
 
-    // df_dxdotz, dk0_dxu, only allocated if (opts->sens_algebraic)
+    // df_dxdotz, dk0_dxu, only allocated if (opts->sens_algebraic && opts->exact_z_output)
     //      used for algebraic sensitivity generation
     struct blasfeo_dmat df_dxdotz;  // temporary Jacobian of ode w.r.t. xdot,z (nx+nz, nx+nz);
     struct blasfeo_dmat dk0_dxu;    // intermediate result, (nx+nz, nx+nu)
@@ -162,7 +162,7 @@ int sim_irk_opts_calculate_size(void *config, void *dims);
 void *sim_irk_opts_assign(void *config, void *dims, void *raw_memory);
 void sim_irk_opts_initialize_default(void *config, void *dims, void *opts_);
 void sim_irk_opts_update(void *config_, void *dims, void *opts_);
-int sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value);
+void sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value);
 
 // memory
 int sim_irk_memory_calculate_size(void *config, void *dims, void *opts_);

@@ -17,7 +17,7 @@ exact Hessians, adjoint corrections, regularization, etc. However, for the time 
 generate a self-contained C library that can be deployed on an embedded system. For this purpose
 see the `acados emebedded` high-level interface below.
 
-Some examples for the use of this interface can be found in `<acados_root>/examples/matlab_mex`
+Some examples for the use of this interface can be found in `<acados_root>/examples/acados_matlab_octave`
 
 This interface uses the shared libraries created using the make command from the main `acados` folder
 

@@ -59,9 +59,7 @@ function build_acados {
 		-D ACADOS_LINT="${ACADOS_LINT}" \
 		-D ACADOS_INSTALL_DIR="${ACADOS_INSTALL_DIR}" \
 		-D Matlab_ROOT_DIR="${MATLAB_ROOT}" \
-		-D SWIG_MATLAB="${SWIG_MATLAB}" \
 		-D COVERAGE="${COVERAGE}" \
-		-D SWIG_PYTHON="${SWIG_PYTHON}" \
 		-D BUILD_SHARED_LIBS=ON \
 		-D ACADOS_EXAMPLES="${ACADOS_EXAMPLES}" \
 		-D MATLAB_EXECUTABLE="${MATLAB_EXECUTABLE}" \
@@ -78,7 +76,7 @@ function build_acados {
 
 	# Run ctest
 	# TODO: test matlab/python
-	cmake -E chdir build ctest --output-on-failure; # use -V for full output
+	cmake -E chdir build ctest -V; # use -V for full output # --output-on-failure for less
 
 	[ $? -ne 0 ] && exit 100;
 	if [ -n "${COVERAGE}" ]; then

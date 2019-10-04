@@ -59,7 +59,7 @@ int ocp_nlp_dynamics_cont_dims_calculate_size(void *config_)
 
     size += sizeof(ocp_nlp_dynamics_cont_dims);
 
-    size += sim_sol_config->dims_calculate_size(sim_sol_config);
+    size += sim_sol_config->dims_calculate_size();
 
     return size;
 }
@@ -188,6 +188,30 @@ void ocp_nlp_dynamics_cont_dims_set(void *config_, void *dims_, const char *fiel
 }
 
 
+void ocp_nlp_dynamics_cont_dims_get(void *config_, void *dims_, const char *field, int* value)
+{
+    ocp_nlp_dynamics_cont_dims *dims = dims_;
+    if (!strcmp(field, "nx"))
+    {
+        *value = dims->nx;
+    }
+    else if (!strcmp(field, "nu"))
+    {
+        *value = dims->nu;
+    }
+    else
+    {
+        // get GNSF dims from integrator module
+        ocp_nlp_dynamics_config *dyn_config = (ocp_nlp_dynamics_config *) config_;
+        ocp_nlp_dynamics_cont_dims *dims = (ocp_nlp_dynamics_cont_dims *) dims_;
+        sim_config *sim_config_ = (sim_config *) dyn_config->sim_solver;
+
+        sim_config_->dims_get(sim_config_, dims->sim, field, value);
+    }
+// printf("\nexiting: ocp_nlp_dynamics_cont_dims_get, %d\n", *value);
+
+}
+
 
 /************************************************
  * options
@@ -256,6 +280,11 @@ void ocp_nlp_dynamics_cont_opts_update(void *config_, void *dims_, void *opts_)
     ocp_nlp_dynamics_cont_dims *dims = dims_;
     ocp_nlp_dynamics_cont_opts *opts = opts_;
 
+    if (!opts->compute_hess)
+    {
+        bool tmp_bool = false;
+        config->sim_solver->opts_set( config->sim_solver, opts->sim_solver, "sens_hess", &tmp_bool );
+    }
     config->sim_solver->opts_update(config->sim_solver, dims->sim, opts->sim_solver);
 
     return;
@@ -270,17 +299,17 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     ocp_nlp_dynamics_cont_opts *opts = opts_;
     sim_config *sim_config_ = config->sim_solver;
 
-    if(!strcmp(field, "compute_adj"))
+    if (!strcmp(field, "compute_adj"))
     {
         int *int_ptr = value;
         opts->compute_adj = *int_ptr;
     }
-    else if(!strcmp(field, "compute_hess"))
+    else if (!strcmp(field, "compute_hess"))
     {
         int *int_ptr = value;
         opts->compute_hess = *int_ptr;
         bool tmp_bool = true;
-        if(*int_ptr==0)
+        if (*int_ptr==0)
         {
             tmp_bool = false;
         }
@@ -288,12 +317,7 @@ void ocp_nlp_dynamics_cont_opts_set(void *config_, void *opts_, const char *fiel
     }
     else
     {
-        int return_value = sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
-        if(return_value!=ACADOS_SUCCESS)
-        {
-            printf("\nerror: field %s not available in ocp_nlp_dynamics_cont_opts_set\n", field);
-            exit(1);
-        }
+        sim_config_->opts_set(sim_config_, opts->sim_solver, field, value);
     }
 
     return;
@@ -461,11 +485,12 @@ void ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr(struct blasfeo_dmat *mat, void 
 
 
 
-void ocp_nlp_dynamics_cont_memory_set_z_guess_ptr(struct blasfeo_dvec *vec, void *memory_)
+void ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr(struct blasfeo_dvec *vec, bool *bool_ptr, void *memory_)
 {
     ocp_nlp_dynamics_cont_memory *memory = memory_;
 
-    memory->z = vec;
+    memory->sim_guess = vec;
+    memory->set_sim_guess = bool_ptr;
 
     return;
 }
@@ -668,6 +693,17 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     blasfeo_unpack_dvec(nu, mem->ux, 0, work->sim_in->u);
     blasfeo_unpack_dvec(nx, mem->ux, nu, work->sim_in->x);
 
+    // printf("sim_guess, bool %d\n", mem->set_sim_guess[0]);
+    // blasfeo_print_exp_dvec(nx + nz, mem->sim_guess, 0);
+
+    if (mem->set_sim_guess!=NULL && mem->set_sim_guess[0])
+    {
+        config->sim_solver->memory_set(config->sim_solver, work->sim_in->dims, mem->sim_solver,
+                                        "guesses_blasfeo", mem->sim_guess);
+        // only use/pass the initial guess once
+        mem->set_sim_guess[0] = false;
+    }
+
     // initialize seeds
     // TODO fix dims if nx!=nx1 !!!!!!!!!!!!!!!!!
     // set S_forw = [eye(nx), zeros(nx x nu)]
@@ -700,14 +736,16 @@ void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, void *dims_, void *
     // function
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
     blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
-    blasfeo_pack_dvec(nz, work->sim_out->zn, mem->z_alg, 0); // TODO rename sim_out->zn into z0n ???
+    blasfeo_pack_dvec(nz, work->sim_out->zn, mem->z_alg, 0);
 
     // adjoint
     if (opts->compute_adj)
     {
-        // this is computed by the integrator if compute_hess!=0
-        // TODO other cases when it is computed in the integrator ???
-        if (opts->compute_hess)
+        // check if adjoints computed in integrator
+        bool adjoint_integrator;
+        sim_opts_get(config->sim_solver, opts->sim_solver, "sens_adj", &adjoint_integrator);
+
+        if (adjoint_integrator)
         {
             blasfeo_pack_dvec(nu, work->sim_out->S_adj+nx, &mem->adj, 0);
             blasfeo_pack_dvec(nx, work->sim_out->S_adj+0, &mem->adj, nu);
@@ -777,6 +815,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->dims_calculate_size = &ocp_nlp_dynamics_cont_dims_calculate_size;
     config->dims_assign = &ocp_nlp_dynamics_cont_dims_assign;
     config->dims_set = &ocp_nlp_dynamics_cont_dims_set;
+    config->dims_get = &ocp_nlp_dynamics_cont_dims_get;
     config->dims_initialize = &ocp_nlp_dynamics_cont_dims_initialize;
     config->model_calculate_size = &ocp_nlp_dynamics_cont_model_calculate_size;
     config->model_assign = &ocp_nlp_dynamics_cont_model_assign;
@@ -796,7 +835,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_cont_memory_set_BAbt_ptr;
     config->memory_set_RSQrq_ptr = &ocp_nlp_dynamics_cont_memory_set_RSQrq_ptr;
     config->memory_set_dzduxt_ptr = &ocp_nlp_dynamics_cont_memory_set_dzduxt_ptr;
-    config->memory_set_z_guess_ptr = &ocp_nlp_dynamics_cont_memory_set_z_guess_ptr;
+    config->memory_set_sim_guess_ptr = &ocp_nlp_dynamics_cont_memory_set_sim_guess_ptr;
     config->memory_set_z_alg_ptr = &ocp_nlp_dynamics_cont_memory_set_z_alg_ptr;
     config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
     config->initialize = &ocp_nlp_dynamics_cont_initialize;

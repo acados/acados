@@ -35,7 +35,7 @@
 /* 
  * Description: linear least-squares (LLS) cost module (ocp_nlp)
  *
- * min_w (Vx*x + Vu*u + Vz*z - yref)^T*W*(Vx*x + Vu*u + Vz*z - yref),
+ * min_w (Vx*x + Vu*u + Vz*z - yref)^T * W * (Vx*x + Vu*u + Vz*z - yref),
  *
  */
 
@@ -271,15 +271,20 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, void *dims_, void *raw_memory)
     // blasfeo_dmat
     // W
     assign_and_advance_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
+
     // Cyt
     assign_and_advance_blasfeo_dmat_mem(nu + nx, ny, &model->Cyt, &c_ptr);
+    blasfeo_dgese(nu+nx, ny, 0.0, &model->Cyt, 0, 0);
 
     // Vz
-    assign_and_advance_blasfeo_dmat_mem(nz, ny, &model->Vz, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(ny, nz, &model->Vz, &c_ptr);
+    blasfeo_dgese(ny, nz, 0.0, &model->Vz, 0, 0);
 
     // blasfeo_dvec
     // y_ref
     assign_and_advance_blasfeo_dvec_mem(ny, &model->y_ref, &c_ptr);
+    blasfeo_dvecse(ny, 0.0, &model->y_ref, 0);
+
     // Z
     assign_and_advance_blasfeo_dvec_mem(2 * ns, &model->Z, &c_ptr);
     // z
@@ -305,7 +310,8 @@ int ocp_nlp_cost_ls_model_set(void *config_, void *dims_, void *model_,
 
     if ( !config_ || !dims_ || !model_ || !value_ )
     {
-        printf("ocp_nlp_cost_ls_model_set: got NULL pointer \n");
+        printf("ocp_nlp_cost_ls_model_set: got NULL pointer, setting field %s\n", field);
+        printf("config %p, dims %p model %p, %value %p \n", config_, dims_, model_, value_);
         exit(1);
     }
 
@@ -454,7 +460,7 @@ void ocp_nlp_cost_ls_opts_set(void *config_, void *opts_, const char *field, voi
     // ocp_nlp_cost_config *config = config_;
     // ocp_nlp_cost_ls_opts *opts = opts_;
 
-    if(!strcmp(field, "exact_hess"))
+    if (!strcmp(field, "exact_hess"))
     {
         // do nothing: the exact hessian is always computed
     }
@@ -743,11 +749,11 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemm_nt(nu + nx, ny, nz, 1.0, memory->dzdux_tran, 0, 0,
                 &model->Vz, 0, 0, 1.0, &work->Cyt_tilde, 0, 0, &work->Cyt_tilde, 0, 0);
 
-        // update y_ref: y_ref_tilde = y_ref + Vz*dzdx*x + Vz*dzdu*u - Vz*z
-        blasfeo_dgemv_t(nx + nu, nz, -1.0, memory->dzdux_tran,
-                0, 0, memory->ux, 0, 1.0, memory->z_alg, 0, &work->tmp_nz, 0);
+        // update y_ref: y_ref_tilde = y_ref + Vz*(dzdx*x + dzdu*u - z)
+        blasfeo_dgemv_t(nx + nu, nz, 1.0, memory->dzdux_tran,
+                0, 0, memory->ux, 0, -1.0, memory->z_alg, 0, &work->tmp_nz, 0);
 
-        blasfeo_dgemv_n(ny, nz, -1.0, &model->Vz,
+        blasfeo_dgemv_n(ny, nz, +1.0, &model->Vz,
                 0, 0, &work->tmp_nz, 0, 1.0, &work->y_ref_tilde, 0, &work->y_ref_tilde, 0);
 
         blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &work->Cyt_tilde, 0, 0, &work->tmp_nv_ny, 0, 0);
@@ -757,6 +763,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
                 memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 
         // compute gradient
+		// res = \tilde{V}_x * x + \tilde{V}_u * u - \tilde{y}_ref
         blasfeo_dgemv_t(nu + nx, ny, 1.0, &work->Cyt_tilde, 0, 0, memory->ux,
                 0, -1.0, &work->y_ref_tilde, 0, &memory->res, 0);
 
@@ -766,7 +773,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_,
         blasfeo_dgemv_n(nu + nx, ny, 1.0, &work->Cyt_tilde,
                 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
-		// TODO what about the exact hessian in the case of nz>0 ?????????????????????????????????????
+		// TODO what about the exact hessian in the case of nz>0 ???
     }
     else
     {

@@ -1,5 +1,9 @@
 ## Roadmap
 
+#### core
+- [ ] propagate cost in integrator
+- [ ] restore download and compilation of OOQP
+
 #### documentation
 - [ ] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula in docs
     - [ ] closely stick to setter names!
@@ -8,22 +12,23 @@
     - [ ] MacOS Matlab
 
 #### `matlab interface`
-- [ ] separate `acados_ocp()` into generating the C object and setting the numerical data
-- [ ] code generation workflow!
-- [ ] support nonuniform grids?
-- [ ] OCP with DAEs
+- [ ] code generation workflow! # Mex templating
+- [x] separate `acados_ocp()` into generating the C object and setting the numerical data
+- [x] support nonuniform grids
+- [x] OCP with DAEs
+
+#### build
+- [ ] cmake: add openmp parallelization
 
 #### `templating`
 - [ ] add GNSF
-
-#### `general`
-- [ ] RTI implementation similar to ACADO
 
 #### `ocp_nlp`
 - [x] Gauss-Newton SQP
 - [x] exact Hessian SQP
 - [ ] partial tightening <!-- - [ ] HPNMPC (what?!) -->
 - [ ] blockSQP
+- [ ] RTI implementation similar to ACADO
 
 #### `ocp_qp`
 - [x] qpOASES v3.1

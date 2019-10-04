@@ -125,9 +125,9 @@ void ocp_qp_xcond_solver_config_free(ocp_qp_xcond_solver_config *config);
 /// \param N The number of variables.
 ocp_qp_dims *ocp_qp_dims_create(int N);
 
-/// Destructor of the dimensions struct.
+/// Destructor of The dimension struct.
 ///
-/// \param dims_ The dimensions struct.
+/// \param dims_ The dimension struct.
 void ocp_qp_dims_free(void *dims);
 
 
@@ -139,7 +139,7 @@ void ocp_qp_xcond_solver_dims_free(ocp_qp_xcond_solver_dims *dims_);
 /// Constructs an input object for the qp.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 ocp_qp_in *ocp_qp_in_create(ocp_qp_dims *dims);
 
 /// Destructor of the inputs struct.
@@ -151,19 +151,19 @@ void ocp_qp_in_free(void *in_);
 /// Constructs an outputs object for the qp.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 ocp_qp_out *ocp_qp_out_create(ocp_qp_dims *dims);
 
-/// Destructor of the outputs struct.
+/// Destructor of the output struct.
 ///
-/// \param out_ The outputs struct.
+/// \param out_ The output struct.
 void ocp_qp_out_free(void *out_);
 
 
 /// Constructs an options object for the qp.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 void *ocp_qp_xcond_solver_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims);
 
 /// Destructor of the options struct.
@@ -179,7 +179,7 @@ int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solve
 /// TBC Reserves memory? TBC Should this be private?
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 /// \param opts_ The options struct.
 /// \param raw_memory The TBD.
 ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_,
@@ -188,7 +188,7 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_so
 /// Creates a qp solver. Reserves memory.
 ///
 /// \param config The configuration struct.
-/// \param dims The dimensions struct.
+/// \param dims The dimension struct.
 /// \param opts_ The options struct.
 ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_solver_dims *dims, void *opts_);
 
@@ -196,7 +196,7 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_xcond_so
 ///
 /// \param solver The solver.
 /// \param qp_in The inputs struct.
-/// \param qp_out The outputs struct.
+/// \param qp_out The output struct.
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 
 
@@ -204,7 +204,7 @@ int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 ///
 /// \param solver The solver.
 /// \param qp_in The inputs struct.
-/// \param qp_out The outputs struct.
+/// \param qp_out The output struct.
 /// \param res Output array for the residuals.
 void ocp_qp_inf_norm_residuals(ocp_qp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out,
                                double *res);

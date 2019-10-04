@@ -196,7 +196,6 @@ typedef struct
 
     struct blasfeo_dvec yyu;
     struct blasfeo_dvec yyss;
-    struct blasfeo_dvec y_one_stage;
 
     struct blasfeo_dvec K1_val;
     struct blasfeo_dvec f_LO_val;
@@ -223,8 +222,7 @@ typedef struct
     struct blasfeo_dmat dK2_dvv;
     struct blasfeo_dmat dxf_dwn;
     struct blasfeo_dmat S_forw_new;
-    struct blasfeo_dmat S_forw;
-    struct blasfeo_dmat S_algebraic;
+    struct blasfeo_dmat S_algebraic_aux;
 
     struct blasfeo_dmat dPsi_dvv;
     struct blasfeo_dmat dPsi_dx;
@@ -234,18 +232,21 @@ typedef struct
     struct blasfeo_dvec z0;
 
     // memory only available if (opts->sens_algebraic)
-    struct blasfeo_dvec x0dot_1;
-    struct blasfeo_dmat dz10_dx1u;  // (nz1) * (nx1+nu);
-    struct blasfeo_dmat dr0_dvv0;  // (n_out * n_out)
-    struct blasfeo_dmat f_LO_jac0; // (nx2+nz2) * (2*nx1 + nz1 + nu)
-    struct blasfeo_dmat sens_z2_rhs; // (nx2 + nz2) * (nx1 + nu)
-    int *ipiv_vv0;
+    // struct blasfeo_dvec y_one_stage;
+    // struct blasfeo_dvec x0dot_1;
+    // struct blasfeo_dmat dz10_dx1u;  // (nz1) * (nx1+nu);
+    // struct blasfeo_dmat dr0_dvv0;  // (n_out * n_out)
+    // struct blasfeo_dmat f_LO_jac0; // (nx2+nz2) * (2*nx1 + nz1 + nu)
+    // struct blasfeo_dmat sens_z2_rhs; // (nx2 + nz2) * (nx1 + nu)
+    // int *ipiv_vv0;
 
 } gnsf_workspace;
 
 // memory
 typedef struct
 {
+    bool first_call;
+
     // simulation time for one step
     double dt;
 
@@ -256,6 +257,9 @@ typedef struct
 
     // value used to initialize integration variables - corresponding to value of phi
     double *phi_guess;  //  n_out
+
+    struct blasfeo_dmat S_forw;
+    struct blasfeo_dmat S_algebraic;
 
     // precomputed matrices
     struct blasfeo_dmat KKv;
@@ -287,27 +291,25 @@ typedef struct
     struct blasfeo_dvec ZZ0;
 
     // for algebraic sensitivities only;
-    struct blasfeo_dmat *Z0x;
-    struct blasfeo_dmat *Z0u;
-    struct blasfeo_dmat *Z0v;
+    // struct blasfeo_dmat *Z0x;
+    // struct blasfeo_dmat *Z0u;
+    // struct blasfeo_dmat *Z0v;
 
-    struct blasfeo_dmat *Y0x;
-    struct blasfeo_dmat *Y0u;
-    struct blasfeo_dmat *Y0v;
+    // struct blasfeo_dmat *Y0x;
+    // struct blasfeo_dmat *Y0u;
+    // struct blasfeo_dmat *Y0v;
 
-    struct blasfeo_dmat *K0x;
-    struct blasfeo_dmat *K0u;
-    struct blasfeo_dmat *K0v;
+    // struct blasfeo_dmat *K0x;
+    // struct blasfeo_dmat *K0u;
+    // struct blasfeo_dmat *K0v;
 
-    struct blasfeo_dmat *ELO_LU;
-    int *ipiv_ELO;
-    struct blasfeo_dmat *ELO_inv_ALO;
+    // struct blasfeo_dmat *ELO_LU;
+    // int *ipiv_ELO;
+    // struct blasfeo_dmat *ELO_inv_ALO;
 
-    struct blasfeo_dmat *Lx;
-    struct blasfeo_dmat *Lxdot;
-    struct blasfeo_dmat *Lz;
-
-    bool first_call;
+    // struct blasfeo_dmat *Lx;
+    // struct blasfeo_dmat *Lxdot;
+    // struct blasfeo_dmat *Lz;
 
 } sim_gnsf_memory;
 
@@ -324,7 +326,7 @@ int sim_gnsf_opts_calculate_size(void *config, void *dims);
 void *sim_gnsf_opts_assign(void *config, void *dims, void *raw_memory);
 void sim_gnsf_opts_initialize_default(void *config, void *dims, void *opts_);
 void sim_gnsf_opts_update(void *config_, void *dims, void *opts_);
-int sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value);
+void sim_gnsf_opts_set(void *config_, void *opts_, const char *field, void *value);
 
 // model
 int sim_gnsf_model_calculate_size(void *config, void *dims_);
