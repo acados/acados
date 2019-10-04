@@ -37,7 +37,7 @@ Afterwards, launch `Matlab` or Octave from the same shell.
 
 If you want to run the examples in a different folder, please close the current shell and open a new one to repeat the procedure: this ensures the correct setting of the environment variables.
 
-For a detailed explanation about the option available from this
+For a detailed explanation about the options available from this
 interface see: [matlab_interface_spreadsheet](https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing) (thanks to [@EnricaSo](https://github.com/EnricaSo)).
 
 ## acados embedded - Python
