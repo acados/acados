@@ -2,24 +2,24 @@
 
 
 ## C API
-The C API of acados is an efficient interface to the core functionalities of acados. 
-It provides setters and getters that can be used to interact with the core of acados with 
-negligible computation overhead. In order to learn about the acados C API, you 
+The C API of `acados` is an efficient interface to the core functionalities of `acados`.
+It provides setters and getters that can be used to interact with the core of `acados` with
+negligible computation overhead. In order to learn about the `acados` C API, you
 can look at the examples in
-[`acados/examples/c/`](https://github.com/acados/acados/tree/master/examples/c). 
+[`acados/examples/c/`](https://github.com/acados/acados/tree/master/examples/c).
 
 
 ## acados MATLAB (rapid prototyping)
 
-This interface makes a broad set of `acados` functionalities available from Matlab or Octave 
-for prototyping purpose. As of now, this closely tracks the latest developments in the core of acados, e.g.
-exact Hessians, adjoint corrections, regularization, etc. However, for the time being, it will not be possible to 
-generate a self-contained C library that can be deployed on an embedded system. For this purpose 
-see the `acados emebedded` high-level interface below. 
+This interface makes a broad set of `acados` functionalities available from `Matlab` or Octave
+for prototyping purpose. As of now, this closely tracks the latest developments in the core of `acados`, e.g.
+exact Hessians, adjoint corrections, regularization, etc. However, for the time being, it will not be possible to
+generate a self-contained C library that can be deployed on an embedded system. For this purpose
+see the `acados emebedded` high-level interface below.
 
 Some examples for the use of this interface can be found in `<acados_root>/examples/matlab_mex`
 
-This interface uses the shared libraries created using the make command from the main acados folder
+This interface uses the shared libraries created using the make command from the main `acados` folder
 
 ```bash
 make shared_library
@@ -31,19 +31,20 @@ export ACADOS_INSTALL_DIR="<acados_root>"
 source env.sh # Which can be found in the folder of one of the examples
 ```
 
-If `ACADOS_INSTALL_DIR` is not specified, it will be assumed that the examples are run from the sub-folders of the current folder (i.e. acados main folder is 2 folders up from the current folder).
+If `ACADOS_INSTALL_DIR` is not specified, it will be assumed that the examples are run from the sub-folders of the current folder (i.e. `acados` main folder is 2 folders up from the current folder).
 
-Afterwards, launch Matlab or Octave from the same shell.
+Afterwards, launch `Matlab` or Octave from the same shell.
 
 If you want to run the examples in a different folder, please close the current shell and open a new one to repeat the procedure: this ensures the correct setting of the environment variables.
 
-
+For a detailed explanation about the option available from this
+interface see: [matlab_interface_spreadsheet](https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing) (thanks to [@EnricaSo](https://github.com/EnricaSo)).
 
 ## acados embedded - Python
 
 
-`acados_template` is a Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them.
-In comparison with the MATLAB interface for rapid prototyping (see above), it supports less features, but it allows the user to generate a self-contained C library  
+`acados_template` is a Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the `acados` solvers to solve them.
+In comparison with the `Matlab` interface for rapid prototyping (see above), it supports less features, but it allows the user to generate a self-contained C library
 that can be easily deployed on an embedded system.
 
 The framework is based on templated C files which are rendered from Python using the templating engine `Jinja2`.
@@ -89,7 +90,7 @@ The `acados_template` interface makes some limiting assumptions on the problem f
 
 
 ### Installation
-1. Compile and install acados by running:
+1. Compile and install `acados` by running:
 ```bash
 cd <acados_root>/build
 cmake -DACADOS_WITH_QPOASES=ON ..
@@ -101,7 +102,7 @@ make install -j4
 pip3 install <acados_root>/interfaces/acados_template
 ```
 
-(Notice that, of course, you might need to use `pip` instead, if you run, for example, from within a Python virtual 
+(Notice that, of course, you might need to use `pip` instead, if you run, for example, from within a Python virtual
 environment) You should now be able to import it as a Python module and use it as shown in the examples in `<acados_root>/examples/acados_template/python/<example_name>/generate_c_code.py`
 
 For more information contact `@zanellia`
