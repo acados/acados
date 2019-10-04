@@ -81,6 +81,12 @@
     mexErrMsgTxt(buffer);\
 }
 
+#define MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, suggestions) {\
+    sprintf(buffer, "%s: field %s not supported, supported values are:\n%s\n", fun_name, field, suggestions);\
+    mexErrMsgTxt(buffer);\
+}
+
+
 #define MEX_FIELD_NOT_SUPPORTED_FOR_COST_STAGE(fun_name, field, cost, ii) {\
     sprintf(buffer, "%s: field %s not supported for cost type %d at stage %d", fun_name, field, cost, ii);\
     mexErrMsgTxt(buffer);\
@@ -92,13 +98,13 @@
 }
 
 #define MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, field, value, suggestions) {\
-    sprintf(buffer, "%s: field %s does not support %s, supported values are:\n %s",\
+    sprintf(buffer, "%s: field %s does not support %s, supported values are:\n%s\n",\
             fun_name, field, value, suggestions);\
     mexErrMsgTxt(buffer);\
 }
 
 #define MEX_FIELD_NOT_SUPPORTED_GIVEN(fun_name, field, value, given, suggestions) {\
-    sprintf(buffer, "%s: field %s does not support %s given %s, supported values are:\n %s",\
+    sprintf(buffer, "%s: field %s does not support %s given %s, supported values are:\n%s\n",\
             fun_name, field, value, given, suggestions);\
     mexErrMsgTxt(buffer);\
 }

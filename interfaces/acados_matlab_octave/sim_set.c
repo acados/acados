@@ -53,7 +53,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int acados_size, tmp;
     long long *ptr;
     char fun_name[50] = "sim_set";
-    char buffer [100]; // for error messages
+    char buffer [300]; // for error messages
 
     /* RHS */
     const mxArray *C_sim = prhs[2];
@@ -126,15 +126,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
         }
     }
-    else if (!strcmp(field, "seed_adj"))
-    {
-        sim_dims_get(config, dims, "nx", &acados_size);
-        // TODO(oj): in C, the backward seed is of dimension nx+nu, I think it should only be nx.
-        // sim_dims_get(config, dims, "nu", &tmp);
-        // acados_size += tmp;
-        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
-        sim_in_set(config, dims, in, field, value);
-    }
     else if (!strcmp(field, "xdot"))
     {
         if (method == IRK || method == LIFTED_IRK)
@@ -174,9 +165,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             MEX_FIELD_ONLY_SUPPORTED_FOR_SOLVER(fun_name, field, "irk_gnsf");
         }
     }
+    else if (!strcmp(field, "seed_adj"))
+    {
+        sim_dims_get(config, dims, "nx", &acados_size);
+        // TODO(oj): in C, the backward seed is of dimension nx+nu, I think it should only be nx.
+        // sim_dims_get(config, dims, "nu", &tmp);
+        // acados_size += tmp;
+        MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+        sim_in_set(config, dims, in, field, value);
+    }
     else
     {
-        MEX_FIELD_NOT_SUPPORTED(fun_name, field);
+        MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "T, x, u, p, xdot, z, phi_guess, seed_adj");
     }
 
     return;
