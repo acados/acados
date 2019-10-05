@@ -310,11 +310,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else
     {
-        MEX_FIELD_NOT_SUPPORTED(fun_name, field);
+        MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field,
+             "x, u, z, pi, sens_x, sens_u, sens_pi, status, sqp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat");
     }
 
     return;
 
 }
-
 
