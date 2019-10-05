@@ -2013,6 +2013,8 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 
 	merit_fun = cost_fun + dyn_fun + constr_fun;
 
+	printf("\n%e %e %e %e\n", merit_fun, cost_fun, dyn_fun, constr_fun);
+
 	return merit_fun;
 }
 
@@ -2053,24 +2055,32 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 //            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0); 
 //        }
 
+	printf("\n\nmerit fun value\n");
 	double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-	printf("\nmerit fun value %e\n", merit_fun0);
 
-	for (j=0; j<6; j++)
+	double alpha_min = 0.2;
+
+	for (j=0; j<10 & alpha>alpha_min; j++)
 	{
 
 		for (i = 0; i <= N; i++)
 			blasfeo_daxpy(nv[i], alpha, mem->qp_out->ux+i, 0, out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
 
+		printf("\n%d tmp merit fun value\n", j);
 		double merit_fun1 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);
-		printf("\ntmp merit fun value %e\n", merit_fun1);
 
 		if(merit_fun1 < merit_fun0)
+		{
 			break;
-
-		alpha *= 0.7;
+		}
+		else
+		{
+			alpha *= 0.7;
+		}
 	
 	}
+
+	printf("\nalpha %f\n", alpha);
 
 #endif
 

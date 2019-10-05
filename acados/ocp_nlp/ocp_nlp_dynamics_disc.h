@@ -108,8 +108,9 @@ typedef struct
     struct blasfeo_dvec fun;
     struct blasfeo_dvec adj;
     struct blasfeo_dvec *ux;     // pointer to ux in nlp_out at current stage
-    struct blasfeo_dvec *ux1;    // pointer to ux in nlp_out at next stage
     struct blasfeo_dvec *tmp_ux; // pointer to ux in tmp_nlp_out at current stage
+    struct blasfeo_dvec *ux1;    // pointer to ux in nlp_out at next stage
+    struct blasfeo_dvec *tmp_ux1;// pointer to ux in tmp_nlp_out at next stage
     struct blasfeo_dvec *pi;     // pointer to pi in nlp_out at current stage
     struct blasfeo_dvec *tmp_pi; // pointer to pi in tmp_nlp_out at current stage
     struct blasfeo_dmat *BAbt;   // pointer to BAbt in qp_in
@@ -127,9 +128,11 @@ struct blasfeo_dvec *ocp_nlp_dynamics_disc_memory_get_adj_ptr(void *memory);
 //
 void ocp_nlp_dynamics_disc_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory);
 //
+void ocp_nlp_dynamics_disc_memory_set_tmp_ux_ptr(struct blasfeo_dvec *tmp_ux, void *memory);
+//
 void ocp_nlp_dynamics_disc_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *memory);
 //
-void ocp_nlp_dynamics_disc_memory_set_tmp_ux_ptr(struct blasfeo_dvec *tmp_ux, void *memory);
+void ocp_nlp_dynamics_disc_memory_set_tmp_ux1_ptr(struct blasfeo_dvec *tmp_ux1, void *memory);
 //
 void ocp_nlp_dynamics_disc_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory);
 //

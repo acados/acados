@@ -439,6 +439,17 @@ void ocp_nlp_dynamics_cont_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
 
 
 
+void ocp_nlp_dynamics_cont_memory_set_tmp_ux_ptr(struct blasfeo_dvec *tmp_ux, void *memory_)
+{
+    ocp_nlp_dynamics_cont_memory *memory = memory_;
+
+    memory->tmp_ux = tmp_ux;
+
+    return;
+}
+
+
+
 void ocp_nlp_dynamics_cont_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *memory_)
 {
     ocp_nlp_dynamics_cont_memory *memory = memory_;
@@ -450,11 +461,11 @@ void ocp_nlp_dynamics_cont_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *me
 
 
 
-void ocp_nlp_dynamics_cont_memory_set_tmp_ux_ptr(struct blasfeo_dvec *tmp_ux, void *memory_)
+void ocp_nlp_dynamics_cont_memory_set_tmp_ux1_ptr(struct blasfeo_dvec *tmp_ux1, void *memory_)
 {
     ocp_nlp_dynamics_cont_memory *memory = memory_;
 
-    memory->tmp_ux = tmp_ux;
+    memory->tmp_ux1 = tmp_ux1;
 
     return;
 }
@@ -835,8 +846,8 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
     work->sim_in->T = model->T;
 
     // pass state and control to integrator
-    blasfeo_unpack_dvec(nu, mem->ux, 0, work->sim_in->u);
-    blasfeo_unpack_dvec(nx, mem->ux, nu, work->sim_in->x);
+    blasfeo_unpack_dvec(nu, mem->tmp_ux, 0, work->sim_in->u);
+    blasfeo_unpack_dvec(nx, mem->tmp_ux, nu, work->sim_in->x);
 
     // printf("sim_guess, bool %d\n", mem->set_sim_guess[0]);
     // blasfeo_print_exp_dvec(nx + nz, mem->sim_guess, 0);
@@ -875,8 +886,8 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
 
     // function
     blasfeo_pack_dvec(nx1, work->sim_out->xn, &mem->fun, 0);
-    blasfeo_daxpy(nx1, -1.0, mem->ux1, nu1, &mem->fun, 0, &mem->fun, 0);
-    blasfeo_pack_dvec(nz, work->sim_out->zn, mem->z_alg, 0);
+    blasfeo_daxpy(nx1, -1.0, mem->tmp_ux1, nu1, &mem->fun, 0, &mem->fun, 0);
+//    blasfeo_pack_dvec(nz, work->sim_out->zn, mem->z_alg, 0);
 
     return;
 
@@ -932,8 +943,9 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
     config->memory_get_fun_ptr = &ocp_nlp_dynamics_cont_memory_get_fun_ptr;
     config->memory_get_adj_ptr = &ocp_nlp_dynamics_cont_memory_get_adj_ptr;
     config->memory_set_ux_ptr = &ocp_nlp_dynamics_cont_memory_set_ux_ptr;
-    config->memory_set_ux1_ptr = &ocp_nlp_dynamics_cont_memory_set_ux1_ptr;
     config->memory_set_tmp_ux_ptr = &ocp_nlp_dynamics_cont_memory_set_tmp_ux_ptr;
+    config->memory_set_ux1_ptr = &ocp_nlp_dynamics_cont_memory_set_ux1_ptr;
+    config->memory_set_tmp_ux1_ptr = &ocp_nlp_dynamics_cont_memory_set_tmp_ux1_ptr;
     config->memory_set_pi_ptr = &ocp_nlp_dynamics_cont_memory_set_pi_ptr;
     config->memory_set_tmp_pi_ptr = &ocp_nlp_dynamics_cont_memory_set_tmp_pi_ptr;
     config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_cont_memory_set_BAbt_ptr;

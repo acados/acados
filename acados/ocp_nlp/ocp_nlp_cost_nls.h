@@ -91,6 +91,7 @@ typedef struct
 {
     // nls_fun(x,u) rplaces Cy * [x,u] in ls_cost
     // slack penalty has the form z^T * s + .5 * s^T * Z * s
+    external_function_generic *nls_res;       // evaluation of ls residuals
     external_function_generic *nls_res_jac;   // evaluation and jacobian of ls residuals
     external_function_generic *nls_hess;  // hessian*seeds of ls residuals
     struct blasfeo_dmat W;                //
@@ -180,6 +181,7 @@ typedef struct
     struct blasfeo_dmat tmp_nv_ny;
     struct blasfeo_dmat tmp_nv_nv;
     struct blasfeo_dvec tmp_ny;
+    struct blasfeo_dvec tmp_2ns;     // temporary vector of dimension ny
 } ocp_nlp_cost_nls_workspace;
 
 //

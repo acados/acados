@@ -1219,10 +1219,10 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
     void *ext_fun_out[3];
 
     // box
-    blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_ni, 0);
+    blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->tmp_ux, 0, &work->tmp_ni, 0);
 
     // general linear
-    blasfeo_dgemv_t(nu+nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_ni, nb, &work->tmp_ni, nb);
+    blasfeo_dgemv_t(nu+nx, ng, 1.0, memory->DCt, 0, 0, memory->tmp_ux, 0, 0.0, &work->tmp_ni, nb, &work->tmp_ni, nb);
 
     // nonlinear
     if (nh > 0)
@@ -1236,13 +1236,14 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
 		}
 
         struct blasfeo_dvec_args x_in;  // input x of external fun;
-        x_in.x = memory->ux;
+        x_in.x = memory->tmp_ux;
         x_in.xi = nu;
 
         struct blasfeo_dvec_args u_in;  // input u of external fun;
-        u_in.x = memory->ux;
+        u_in.x = memory->tmp_ux;
         u_in.xi = 0;
 
+		// TODO tmp_z_alg !!!
         struct blasfeo_dvec_args z_in;  // input z of external fun;
         z_in.x = memory->z_alg;
         z_in.xi = 0;

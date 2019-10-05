@@ -108,10 +108,12 @@ if (strcmp(model_struct.cost_type, 'nonlinear_ls') || strcmp(model_struct.cost_t
     generate_c_code_nonlinear_least_squares(model_struct, opts_struct);
     % sources list
     if isfield(model_struct, 'cost_expr_y')
+        c_files{end+1} = [model_name, '_cost_y_fun.c'];
         c_files{end+1} = [model_name, '_cost_y_fun_jac_ut_xt.c'];
         c_files{end+1} = [model_name, '_cost_y_hess.c'];
     end
     if isfield(model_struct, 'cost_expr_y_e')
+        c_files{end+1} = [model_name, '_cost_y_e_fun.c'];
         c_files{end+1} = [model_name, '_cost_y_e_fun_jac_ut_xt.c'];
         c_files{end+1} = [model_name, '_cost_y_e_hess.c'];
     end
@@ -122,10 +124,12 @@ if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_
     generate_c_code_ext_cost(model_struct, opts_struct);
     % sources list
     if isfield(model_struct, 'cost_expr_ext_cost')
-        c_files{end+1} = [model_name, '_cost_ext_cost_jac_hes.c'];
+        c_files{end+1} = [model_name, '_cost_ext_cost_fun.c'];
+        c_files{end+1} = [model_name, '_cost_ext_cost_fun_jac_hes.c'];
     end
     if isfield(model_struct, 'cost_expr_ext_cost_e')
-        c_files{end+1} = [model_name, '_cost_ext_cost_e_jac_hes.c'];
+        c_files{end+1} = [model_name, '_cost_ext_cost_e_fun.c'];
+        c_files{end+1} = [model_name, '_cost_ext_cost_e_fun_jac_hes.c'];
     end
 end
 

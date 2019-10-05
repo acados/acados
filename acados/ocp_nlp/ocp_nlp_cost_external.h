@@ -74,7 +74,8 @@ void ocp_nlp_cost_external_dims_get(void *config_, void *dims_, const char *fiel
 
 typedef struct
 {
-    external_function_generic *ext_cost;  // gradient and hessian
+    external_function_generic *ext_cost_fun;  // function
+    external_function_generic *ext_cost_fun_jac_hess;  // gradient and hessian
     struct blasfeo_dvec Z;
     struct blasfeo_dvec z;
     double scaling;
@@ -153,6 +154,7 @@ void ocp_nlp_cost_external_memory_set_dzdux_tran_ptr(struct blasfeo_dmat *dzdux_
 typedef struct
 {
     struct blasfeo_dmat tmp_nv_nv;
+    struct blasfeo_dvec tmp_2ns;     // temporary vector of dimension ny
 } ocp_nlp_cost_external_workspace;
 
 //

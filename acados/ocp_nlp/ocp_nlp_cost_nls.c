@@ -222,8 +222,9 @@ void *ocp_nlp_cost_nls_model_assign(void *config_, void *dims_, void *raw_memory
     ocp_nlp_cost_nls_model *model = (ocp_nlp_cost_nls_model *) c_ptr;
     c_ptr += sizeof(ocp_nlp_cost_nls_model);
 
-    model->nls_hess = NULL;
+    model->nls_res  = NULL;
     model->nls_res_jac  = NULL;
+    model->nls_hess = NULL;
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -313,6 +314,10 @@ int ocp_nlp_cost_nls_model_set(void *config_, void *dims_, void *model_,
     {
         double *zu = (double *) value_;
         blasfeo_pack_dvec(ns, zu, &model->z, ns);
+    }
+    else if (!strcmp(field, "nls_res"))
+    {
+        model->nls_res = (external_function_generic *) value_;
     }
     else if (!strcmp(field, "nls_res_jac"))
     {
@@ -590,6 +595,7 @@ int ocp_nlp_cost_nls_workspace_calculate_size(void *config_, void *dims_, void *
     int nx = dims->nx;
     int nu = dims->nu;
     int ny = dims->ny;
+    int ns = dims->ns;
 
     int size = 0;
 
@@ -598,9 +604,11 @@ int ocp_nlp_cost_nls_workspace_calculate_size(void *config_, void *dims_, void *
     size += 1 * blasfeo_memsize_dmat(nu + nx, ny);       // tmp_nv_ny
     size += 1 * blasfeo_memsize_dmat(nu + nx, nu + nx);  // tmp_nv_nv
     size += 1 * blasfeo_memsize_dvec(ny);                // tmp_ny
+    size += 1 * blasfeo_memsize_dvec(2*ns);              // tmp_2ns
 
     size += 64;  // blasfeo_mem align
-    size += 8;
+//    size += 8;
+
     return size;
 }
 
@@ -615,11 +623,12 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
     int nx = dims->nx;
     int nu = dims->nu;
     int ny = dims->ny;
+    int ns = dims->ns;
 
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_cost_nls_workspace);
 
-    align_char_to(8, &c_ptr);
+//    align_char_to(8, &c_ptr);
 
     // blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -633,8 +642,10 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
     // tmp_ny
     assign_and_advance_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);
 
-    assert((char *) work + ocp_nlp_cost_nls_workspace_calculate_size(config_, dims, opts_) >=
-           c_ptr);
+    // tmp_2ns
+    assign_and_advance_blasfeo_dvec_mem(2*ns, &work->tmp_2ns, &c_ptr);
+
+    assert((char *) work + ocp_nlp_cost_nls_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return;
 }
@@ -800,8 +811,69 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
 void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
-	printf("\nerror: ocp_nlp_cost_nls_compute_fun: not implemented yet\n");
-	exit(1);
+//	printf("\nerror: ocp_nlp_cost_nls_compute_fun: not implemented yet\n");
+//	exit(1);
+
+    ocp_nlp_cost_nls_dims *dims = dims_;
+    ocp_nlp_cost_nls_model *model = model_;
+    ocp_nlp_cost_nls_opts *opts = opts_;
+    ocp_nlp_cost_nls_memory *memory = memory_;
+    ocp_nlp_cost_nls_workspace *work = work_;
+
+    ocp_nlp_cost_nls_cast_workspace(config_, dims, opts_, work_);
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int ny = dims->ny;
+    int ns = dims->ns;
+
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_out[3];
+    void *ext_fun_out[3];
+
+    struct blasfeo_dvec_args x_in;  // input x of external fun;
+    struct blasfeo_dvec_args u_in;  // input u of external fun;
+
+    x_in.x = memory->tmp_ux;
+    x_in.xi = nu;
+
+    u_in.x = memory->tmp_ux;
+    u_in.xi = 0;
+
+    ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[0] = &x_in;
+
+    ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+    ext_fun_in[1] = &u_in;
+
+    ext_fun_type_out[0] = BLASFEO_DVEC;
+    ext_fun_out[0] = &memory->res;  // fun: ny
+
+    // evaluate external function
+    model->nls_res->evaluate(model->nls_res, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+    /* gradient */
+    // res = res - y_ref
+    blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
+
+	blasfeo_dtrmv_ltn(ny, 1.0, &memory->W_chol, 0, 0, &memory->res, 0, &work->tmp_ny, 0);
+
+	memory->fun = 0.5 * blasfeo_ddot(ny, &work->tmp_ny, 0, &work->tmp_ny, 0);
+
+    // slacks
+	blasfeo_dveccpsc(2*ns, 2.0, &model->z, 0, &work->tmp_2ns, 0);
+	blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->tmp_ux, nu+nx, &work->tmp_2ns, 0);
+	memory->fun += 0.5 * blasfeo_ddot(2*ns, &work->tmp_2ns, 0, memory->tmp_ux, nu+nx);
+
+    // scale
+    if(model->scaling!=1.0)
+    {
+        memory->fun *= model->scaling;
+    }
+
+	return;
+
 }
 
 

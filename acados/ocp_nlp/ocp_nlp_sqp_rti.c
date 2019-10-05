@@ -463,8 +463,9 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     for (ii = 0; ii < N; ii++)
     {
         config->dynamics[ii]->memory_set_ux_ptr(nlp_out->ux+ii, nlp_mem->dynamics[ii]);
-        config->dynamics[ii]->memory_set_ux1_ptr(nlp_out->ux+ii+1, nlp_mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_tmp_ux_ptr(nlp_work->tmp_nlp_out->ux+ii, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_ux1_ptr(nlp_out->ux+ii+1, nlp_mem->dynamics[ii]);
+        config->dynamics[ii]->memory_set_tmp_ux1_ptr(nlp_work->tmp_nlp_out->ux+ii+1, nlp_mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_pi_ptr(nlp_out->pi+ii, nlp_mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_tmp_pi_ptr(nlp_work->tmp_nlp_out->pi+ii, nlp_mem->dynamics[ii]);
         config->dynamics[ii]->memory_set_BAbt_ptr(nlp_mem->qp_in->BAbt+ii, nlp_mem->dynamics[ii]);
