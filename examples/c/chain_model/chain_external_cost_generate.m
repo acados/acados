@@ -38,7 +38,7 @@
 clear VARIABLES
 
 import casadi.*
-addpath('../../../experimental/interfaces/matlab/external_function_generation');
+addpath('../../../experimental/interfaces/matlab/external_function_generation/cost');
 
 for nm = 2:6
     source = strcat('xN_nm', num2str(nm), '.txt');
