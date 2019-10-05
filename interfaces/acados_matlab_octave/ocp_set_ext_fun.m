@@ -528,11 +528,13 @@ end
 %fileID = fopen('build/ocp_set_ext_fun_tmp.m', 'w');
 %fprintf(fileID, 'function C_ocp_ext_fun = ocp_set_ext_fun_tmp(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)\n');
 for ii=1:length(mex_names)
-	%disp(['eval ', mex_names{ii}]);
+%	disp(['eval ', mex_names{ii}]);
     C_ocp_ext_fun = eval([mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct)']);
+%	disp(['eval ', mex_names{ii}, ' done']);
 %    fprintf(fileID, [mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);\n']);
 end
 %fclose(fileID);
+%disp('done');
 
 % call mex files
 %ocp_set_ext_fun_tmp(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
