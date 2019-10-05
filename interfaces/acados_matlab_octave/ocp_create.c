@@ -740,7 +740,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                     fun_name, qp_solver_cond_N, N);
             mexErrMsgTxt(buffer);
         }
-        ocp_nlp_solver_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
+        else if ( plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM )
+        {
+            ocp_nlp_solver_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
+        }
+        #if defined( ACADOS_WITH_HPMPC )
+        else if ( plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPMPC )
+        {
+            ocp_nlp_solver_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
+        }
+        #endif
+        #if defined( ACADOS_WITH_OOQP )
+        else if ( plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_OOQP )
+        {
+            ocp_nlp_solver_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
+        }
+        #endif
+        #if defined( ACADOS_WITH_OSQP )
+        else if ( plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_OSQP )
+        {
+            ocp_nlp_solver_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
+        }
+        #endif
+        #if defined( ACADOS_WITH_QPDUNES )
+        else if ( plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_QPDUNES )
+        {
+            ocp_nlp_solver_opts_set(config, opts, "qp_cond_N", &qp_solver_cond_N);
+        }
+        #endif
     }
     else if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
     {
