@@ -2,6 +2,9 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     
     acados_template_folder = [getenv('ACADOS_INSTALL_DIR'), '/interfaces/acados_template/acados_template'];
 
+    if ~isfile([getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer'])
+        error('acados/bin/t_renderer not found! Please download the t_renderer binaries from https://github.com/acados/tera_renderer/releases and place them in acados/bin (strip version and extension from the binary name)')
+    end
     % get model name from json file
     acados_ocp = jsondecode(fileread(acados_ocp_nlp_json_file));
 

@@ -110,10 +110,7 @@ solver:
 
 example:
 	gcc $(ACADOS_FLAGS) -o main_{{ model.name}} $(OBJ) -L $(LIB_PATH) \
-	-L $(LIB_PATH)/acados \
-	-L $(LIB_PATH)/external/blasfeo \
-	-L $(LIB_PATH)/external/hpipm  \
-	-L $(LIB_PATH)/external/qpoases/lib \
+	-L $(LIB_PATH) \
 	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
@@ -122,11 +119,8 @@ example:
 	-I $(INCLUDE_PATH)/qpOASES_e/
 
 shared_lib: casadi_fun solver
-	gcc $(ACADOS_FLAGS) -shared -o acados_solver_{{ model.name }}.so $(OBJ) -L $(LIB_PATH)/acados \
+	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ model.name }}.so $(OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH) \
-	-L $(LIB_PATH)/external/blasfeo \
-	-L $(LIB_PATH)/external/hpipm  \
-	-L $(LIB_PATH)/external/qpoases/lib \
 	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
 
 clean:

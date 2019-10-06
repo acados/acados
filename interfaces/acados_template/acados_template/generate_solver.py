@@ -107,6 +107,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     # setting up loader and environment
     acados_path = os.path.dirname(os.path.abspath(__file__))
+    tera_path = acados_path + '/../../../bin/' 
     if USE_TERA == 0:
         file_loader = FileSystemLoader(acados_path + '/c_templates')
         env = Environment(loader = file_loader)
@@ -135,7 +136,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         template_file = 'main.in.c'
         out_file = 'main_' + model.name + '.c'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -155,7 +156,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         template_file = 'acados_solver.in.c'
         out_file = 'acados_solver_' + model.name + '.c'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -175,7 +176,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         template_file = 'acados_solver.in.h'
         out_file = 'acados_solver_' + model.name + '.h'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -195,7 +196,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         template_file = 'acados_sim_solver.in.c'
         out_file = 'acados_sim_solver_' + model.name + '.c'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -215,7 +216,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         template_file = 'acados_solver.in.h'
         out_file = 'acados_solver_' + model.name + '.h'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -235,7 +236,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         template_file = 'model.in.h'
         out_file = model.name + '_model.h'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -259,7 +260,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             template_file = 'p_constraint.in.h'
             out_file = acados_ocp.con_p.name + '_p_constraint.h'
             # output file
-            os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+            os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                     + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                     "\"" + ' ' + "\"" + out_file + "\""
 
@@ -283,7 +284,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             template_file = 'h_constraint.in.h'
             out_file = acados_ocp.con_h.name + '_h_constraint.h'
             # output file
-            os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+            os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                     + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                     "\"" + ' ' + "\"" + out_file + "\""
 
@@ -307,7 +308,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             template_file = 'h_e_constraint.in.h'
             out_file = acados_ocp.con_h_e.name + '_h_e_constraint.h'
             # output file
-            os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+            os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                     + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                     "\"" + ' ' + "\"" + out_file + "\""
 
@@ -328,7 +329,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         template_file = 'Makefile.in'
         out_file = 'Makefile'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -349,7 +350,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         template_file = 'acados_solver_sfun.in.c'
         out_file = 'acados_solver_sfunction_'  + model.name + '.c'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -370,7 +371,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         template_file = 'make_sfun.in.m'
         out_file = 'acados_solver_sfun.in.c'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
