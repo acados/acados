@@ -1,5 +1,5 @@
 function generate_solver_matlab(acados_ocp_nlp_json_file)
-    
+
     acados_template_folder = [getenv('ACADOS_INSTALL_DIR'), '/interfaces/acados_template/acados_template'];
 
     if ~isfile([getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer'])
@@ -11,53 +11,32 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     model_name = acados_ocp.model.name;
 
     % setting up loader and environment
-    template_glob = [acados_template_folder, '/c_templates_tera/*'];
+    template_dir = [acados_template_folder, '/c_templates_tera/*'];
     chdir('c_generated_code');
 
-    % render source template
+    %% render source template
     template_file = 'main.in.c';
     out_file = ['main_', model_name, '.c'];
-    % output file
-    os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
-    template_file, '"', ' ', '"', '../', acados_ocp_nlp_json_file, ...
-    '"', ' ', '"', out_file, '"'];
-    
-    system(os_cmd);
-
-    template_file = 'acados_solver.in.c';
-    out_file = ['acados_solver_', model_name, '.c'];
-
-    % output file
-    os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
-    template_file, '"', ' ', '"', '../', acados_ocp_nlp_json_file, ...
-    '"', ' ', '"', out_file, '"'];
-
-    system(os_cmd);
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
 
     % render solver template
+    template_file = 'acados_solver.in.c';
+    out_file = ['acados_solver_', model_name, '.c'];
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
+
     template_file = 'acados_solver.in.h';
     out_file = ['acados_solver_', model_name, '.h'];
-    % output file
-    os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
-            template_file, '"', ' ', '"', '../', acados_ocp_nlp_json_file, ...
-            '"', ' ', '"', out_file, '"'];
-
-    system(os_cmd);
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
 
     % render header templates
     chdir([model_name, '_model/']);
-    % render source template
     template_file = 'model.in.h';
     out_file = [model_name, '_model.h'];
-    % output file
-    os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
-            template_file, '"', ' ', '"', '../../', acados_ocp_nlp_json_file, ...
-            '"', ' ', '"', out_file, '"'];
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
 
-    system(os_cmd);
     chdir('..');
 
-    if(acados_ocp.dims.npd > 0)
+    if (acados_ocp.dims.npd > 0)
         % render header templates
         dir_name = [acados_ocp.con_p.name, '_p_constraint/'];
         if~(exist(dir_name, 'dir'))
@@ -67,17 +46,13 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
         % render source template
         template_file = 'p_constraint.in.h';
         out_file = [acados_ocp.con_p.name, '_p_constraint.h'];
-        % output file
-        os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
-                template_file, '"', ' ', '"', '../../', acados_ocp_nlp_json_file, ...
-                '"', ' ', '"', out_file, '"'];
+        render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
 
-        system(os_cmd);
         chdir('..');
     end
 
     if(acados_ocp.dims.nh > 0)
-    dir_name = [acados_ocp.con_h.name, '_h_constraint/'];
+        dir_name = [acados_ocp.con_h.name, '_h_constraint/'];
         if~(exist(dir_name, 'dir'))
             mkdir(dir_name);
         end
@@ -85,50 +60,31 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
         % render source template
         template_file = 'h_constraint.in.h';
         out_file = [acados_ocp.con_h.name, '_h_constraint.h'];
-        % output file
-        os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
-                template_file, '"', ' ', '"', '../../', acados_ocp_nlp_json_file, ...
-                '"', ' ', '"', out_file, '"'];
+        render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
 
-        system(os_cmd);
         chdir('..');
     end
 
     % render Makefile template
     template_file = 'Makefile.in';
     out_file = 'Makefile';
-    % output file
-    os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
-            template_file, '"', ' ', '"', '../', acados_ocp_nlp_json_file, ...
-            '"', ' ', '"', out_file, '"'];
-
-    system(os_cmd);
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
 
     % render source template
     template_file = 'acados_solver_sfun.in.c';
     out_file = ['acados_solver_sfunction_' , model_name, '.c'];
-    % output file
-    os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
-            template_file, '"', ' ', '"', '../', acados_ocp_nlp_json_file, ...
-            '"', ' ', '"', out_file, '"'];
-
-    system(os_cmd);
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
 
     % render MATLAB make script
     template_file = 'make_sfun.in.m';
     out_file = 'acados_solver_sfun.in.c';
-    % output file
-    os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"', template_glob, '"', ' ', '"', ...
-            template_file, '"', ' ', '"', '../', acados_ocp_nlp_json_file, ...
-            '"', ' ', '"', out_file, '"'];
-
-    system(os_cmd);
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
    
     fprintf('Successfully generated acados solver!\n');
 
     % build generated code
     if isunix || ismac 
-        % compile if on Mac and Unix platforms
+        % compile if on Mac or Unix platform
         system('make');
         system('make shared_lib');
     else
@@ -139,4 +95,20 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     chdir('..');
     fprintf('Successfully built generated code!\n');
 
+end
+
+
+%% auxilary function
+
+function render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
+
+    os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"',...
+        template_dir, '"', ' ', '"', template_file, '"', ' ', '"',...
+        '../', acados_ocp_nlp_json_file, '"', ' ', '"', out_file, '"'];
+    
+    [status,result] = system(os_cmd);
+    if status
+        error('rendering %s failed.\n command: %s\n returned status %d, got result: %s',...
+            template_file, os_cmd, status, result);
+    end
 end
