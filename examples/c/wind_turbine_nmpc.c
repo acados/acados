@@ -803,7 +803,7 @@ int main()
     ************************************************/
 
     // create opts
-    void *nlp_opts = ocp_nlp_opts_create(config, dims);
+    void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
 
     // nlp opts
     if (plan->nlp_solver == SQP)
@@ -815,11 +815,11 @@ int main()
 		double tol_ineq = 1e-8;
 		double tol_comp = 1e-8;
 
-		ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
-		ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
-		ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
-		ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
-		ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+		ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
+		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+		ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
     }
     else if (plan->nlp_solver == SQP_RTI)
     {
@@ -850,8 +850,8 @@ int main()
         {
             int ns = 4;
             int num_steps = 10;
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
         }
         else if (plan->sim_solver_plan[i].sim_solver == IRK)
         {
@@ -859,17 +859,17 @@ int main()
             int ns = 4;
             bool jac_reuse = true;
 
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse);
         }
         else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
             int num_steps = 1;
             int ns = 4;
 
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
         }
         else if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
@@ -878,10 +878,10 @@ int main()
             int newton_iter = 1;
             bool jac_reuse = true;
 
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "newton_iter", &newton_iter);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_newton_iter", &newton_iter);
         }
     }
 
@@ -889,11 +889,11 @@ int main()
     if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
     {
         int cond_N = 5;
-        ocp_nlp_opts_set(config, nlp_opts, "qp_cond_N", &cond_N);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "qp_cond_N", &cond_N);
     }
 
     // update opts after manual changes
-    ocp_nlp_opts_update(config, dims, nlp_opts);
+    ocp_nlp_solver_opts_update(config, dims, nlp_opts);
 
     /************************************************
     * ocp_nlp_out & solver
@@ -1074,7 +1074,7 @@ int main()
     free(phi_jac_y_uhat);
     free(f_lo_jac_x1_x1dot_u_z);
 
-    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_solver_opts_destroy(nlp_opts);
     ocp_nlp_in_destroy(nlp_in);
     ocp_nlp_out_destroy(nlp_out);
     ocp_nlp_out_destroy(sens_nlp_out);

@@ -12,7 +12,7 @@
     - [ ] MacOS Matlab
 
 #### `matlab interface`
-- [ ] code generation workflow!
+- [ ] code generation workflow! # Mex templating
 - [x] separate `acados_ocp()` into generating the C object and setting the numerical data
 - [x] support nonuniform grids
 - [x] OCP with DAEs
@@ -30,14 +30,12 @@
 - [ ] add GNSF
 - [ ] make compatible with octave (if possible) - jsonencode alternative?!
 
-#### `general`
-- [ ] RTI implementation similar to ACADO
-
 #### `ocp_nlp`
 - [x] Gauss-Newton SQP
 - [x] exact Hessian SQP
 - [ ] partial tightening <!-- - [ ] HPNMPC (what?!) -->
 - [ ] blockSQP
+- [ ] RTI implementation similar to ACADO
 
 #### `ocp_qp`
 - [x] qpOASES v3.1

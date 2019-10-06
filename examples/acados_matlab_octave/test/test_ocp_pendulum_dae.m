@@ -37,9 +37,9 @@ clear all
 addpath('../pendulum_dae/');
 
 %% options
-compile_interface = 'false'; % true, false
+compile_interface = 'auto'; % true, false
 codgen_model = 'true'; % true, false
-% compile_interface = 'false'; % true, false
+% compile_interface = 'auto'; % true, false
 % codgen_model = 'false'; % true, false
 % simulation
 gnsf_detect_struct = 'true'; % true, false

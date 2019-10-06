@@ -325,7 +325,7 @@ static void mdlStart(SimStruct *S)
         constraints[NUM_STAGES]->idxb[i] = idxb[i];
 
     // options
-    ocp_nlp_sqp_opts *nlp_opts = ocp_nlp_opts_create(config, dims);
+    ocp_nlp_sqp_opts *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
     nlp_opts->max_iter = 1;
 
     // out

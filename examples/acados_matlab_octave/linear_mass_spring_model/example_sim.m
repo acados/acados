@@ -45,7 +45,7 @@ end
 
 
 %% arguments
-compile_interface = 'false';
+compile_interface = 'auto';
 codgen_model = 'true';
 %method = 'erk';
 method = 'irk';
