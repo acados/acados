@@ -209,6 +209,9 @@ classdef acados_ocp_model < handle
                     end
                     if isfield(obj.model_struct, 'sym_z')
                         obj.acados_ocp_nlp_json.model.z = obj.model_struct.sym_z;
+					end
+					if isfield(obj.model_struct, 'sym_xdot')
+                        obj.acados_ocp_nlp_json.model.xdot = obj.model_struct.sym_xdot;
                     end
                     % obj.acados_ocp_nlp_json.model.name = 'dyn';
                     obj.acados_ocp_nlp_json.model.f_expl_expr = value;
@@ -222,6 +225,9 @@ classdef acados_ocp_model < handle
                     end
                     if isfield(obj.model_struct, 'sym_z')
                         obj.acados_ocp_nlp_json.model.z = obj.model_struct.sym_z;
+					end
+					if isfield(obj.model_struct, 'sym_xdot')
+                        obj.acados_ocp_nlp_json.model.xdot = obj.model_struct.sym_xdot;
                     end
                     % obj.acados_ocp_nlp_json.model.name = 'dyn';
                     obj.acados_ocp_nlp_json.model.f_impl_expr = value;
