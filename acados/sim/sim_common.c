@@ -391,6 +391,21 @@ int sim_out_get_(void *config_, void *dims_, sim_out *out, const char *field, vo
         for (int ii=0; ii < nz*(nu+nx); ii++)
             S_algebraic[ii] = out->S_algebraic[ii];
     }
+    else if (!strcmp(field, "CPUtime") || !strcmp(field, "time_tot"))
+    {
+        double *time = value;
+        *time = out->info->CPUtime;
+    }
+    else if (!strcmp(field, "ADtime") || !strcmp(field, "time_ad"))
+    {
+        double *time = value;
+        *time = out->info->ADtime;
+    }
+    else if (!strcmp(field, "LAtime") || !strcmp(field, "time_la"))
+    {
+        double *time = value;
+        *time = out->info->LAtime;
+    }
     else
     {
         printf("sim_out_get_: field %s not supported \n", field);

@@ -50,7 +50,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int acados_size;
     mxArray *mex_field;
     char fun_name[20] = "ocp_set";
-    char buffer [200]; // for error messages
+    char buffer [400]; // for error messages
 
 
     /* RHS */
@@ -438,7 +438,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else
     {
-        MEX_FIELD_NOT_SUPPORTED(fun_name, field);
+        MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "p, constr_x0, cost_y_ref[_e],\
+ cost_Vu, cost_Vx, cost_Vz, cost_W, cost_Z, cost_Zl, cost_Zu, cost_z,\
+ cost_zl, cost_zu, init_x, init_u, init_z, init_xdot, init_gnsf_phi,\
+ init_pi, nlp_solver_max_iter, qp_warm_start, warm_start_first_qp");
     }
 
     return;

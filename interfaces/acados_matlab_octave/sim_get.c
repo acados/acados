@@ -122,9 +122,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *S_algebraic = mxGetPr( plhs[0] );
         sim_out_get(config, dims, out, "S_algebraic", S_algebraic);
     }
+    else if (!strcmp(field, "time_tot"))
+    {
+        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+        double *time_tot = mxGetPr( plhs[0] );
+        sim_out_get(config, dims, out, "time_tot", time_tot);
+    }
+    else if (!strcmp(field, "time_la"))
+    {
+        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+        double *time_la = mxGetPr( plhs[0] );
+        sim_out_get(config, dims, out, "time_la", time_la);
+    }
+    else if (!strcmp(field, "time_ad"))
+    {
+        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+        double *time_ad = mxGetPr( plhs[0] );
+        sim_out_get(config, dims, out, "time_ad", time_ad);
+    }
     else
     {
-        MEX_FIELD_NOT_SUPPORTED(fun_name, field);
+        MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field,
+             "xn, zn, S_forw, Sx, Su, S_hess, S_algebraic, time_tot, time_la, time_ad");
     }
 
     return;
