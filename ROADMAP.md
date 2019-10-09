@@ -4,6 +4,7 @@
 - [ ] propagate cost in integrator
 - [ ] restore download and compilation of OOQP
 - [ ] split ocp solve into prepare and feedback
+- [ ] stage transition functions for changing model dimensions
 
 #### documentation
 - [ ] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula in docs
@@ -13,6 +14,8 @@
     - [ ] MacOS Matlab
 
 #### `matlab interface`
+- [ ] detect dimensions
+- [ ] structure detections for constraints
 - [ ] code generation workflow! # Mex templating
 - [x] separate `acados_ocp()` into generating the C object and setting the numerical data
 - [x] support nonuniform grids
