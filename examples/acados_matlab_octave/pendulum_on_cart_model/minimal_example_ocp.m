@@ -76,6 +76,7 @@ ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
 ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 
 %% constraints
+nbu = nu;
 Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
 lbu = -80*ones(nu, 1);
 ubu =  80*ones(nu, 1);
