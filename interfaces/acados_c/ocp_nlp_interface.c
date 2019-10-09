@@ -549,6 +549,12 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
                                             "nbu", &dims_value);
         return dims_value;
     }
+    else if (!strcmp(field, "lg") || !strcmp(field, "ug"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                                            "ng", &dims_value);
+        return dims_value;
+    }
     else if (!strcmp(field, "s"))
     {
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],

@@ -83,7 +83,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     char *field = mxArrayToString( prhs[4] );
     // value
     double *value = mxGetPr( prhs[5] );
+
+    // for checks
     int matlab_size = (int) mxGetNumberOfElements( prhs[5] );
+    int nrow = (int) mxGetM( prhs[5] );
+    int ncol = (int) mxGetN( prhs[5] );
+
     // mexPrintf("\nocp_set: %s, matlab_size %d\n", field, matlab_size);
 
     int N = dims->N;
@@ -117,12 +122,53 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int NN[] = {N, 1}; // size of phases, i.e. shooting nodes with same dimensions
 
     /* Set value */
+    // constraints
     if (!strcmp(field, "constr_x0"))
     {
         acados_size = nx;
         MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
         ocp_nlp_constraints_model_set(config, dims, in, 0, "lbx", value);
         ocp_nlp_constraints_model_set(config, dims, in, 0, "ubx", value);
+    }
+    else if (!strcmp(field, "constr_C"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            int ng = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "ug");
+            MEX_DIM_CHECK_MAT(fun_name, "constr_C", nrow, ncol, ng, nx);
+
+            ocp_nlp_constraints_model_set(config, dims, in, ii, "C", value);
+        }
+    }
+    else if (!strcmp(field, "constr_D"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            int ng = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "ug");
+            MEX_DIM_CHECK_MAT(fun_name, "constr_D", nrow, ncol, ng, nu);
+
+            ocp_nlp_constraints_model_set(config, dims, in, ii, "D", value);
+        }
+    }
+    else if (!strcmp(field, "constr_lg"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "lg");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+
+            ocp_nlp_constraints_model_set(config, dims, in, ii, "lg", value);
+        }
+    }
+    else if (!strcmp(field, "constr_ug"))
+    {
+        for (int ii=s0; ii<se; ii++)
+        {
+            acados_size = ocp_nlp_dims_get_from_attr(config, dims, out, ii, "ug");
+            MEX_DIM_CHECK_VEC(fun_name, field, matlab_size, acados_size);
+
+            ocp_nlp_constraints_model_set(config, dims, in, ii, "ug", value);
+        }
     }
     // cost:
     else if (!strcmp(field, "cost_y_ref"))
@@ -438,7 +484,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else
     {
-        MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "p, constr_x0, cost_y_ref[_e],\
+        MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field, "p, constr_x0,\
+ constr_C, constr_D, constr_lg, constr_ug, cost_y_ref[_e],\
  cost_Vu, cost_Vx, cost_Vz, cost_W, cost_Z, cost_Zl, cost_Zu, cost_z,\
  cost_zl, cost_zu, init_x, init_u, init_z, init_xdot, init_gnsf_phi,\
  init_pi, nlp_solver_max_iter, qp_warm_start, warm_start_first_qp");

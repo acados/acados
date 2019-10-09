@@ -258,6 +258,8 @@ for itest = 1:3
         if ng > 0
             ocp.set('constr_C', C, i);
             ocp.set('constr_D', D, i);
+            ocp.set('constr_ug', ubu, i);
+            ocp.set('constr_lg', lbu, i);
         end
     end
 
