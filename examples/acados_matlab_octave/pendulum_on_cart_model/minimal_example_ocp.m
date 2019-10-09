@@ -42,8 +42,7 @@ end
 
 %% discretization
 N = 100;
-h = 0.01;
-T = N*h; % time horizon length
+T = 1; % time horizon length
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
 nlp_solver_max_iter = 100;
@@ -56,42 +55,30 @@ sim_method = 'erk'; % erk, irk, irk_gnsf
 
 %% model dynamics
 model = pendulum_on_cart_model;
-
-%% model to create the solver
-ocp_model = acados_ocp_model();
-model_name = ['pendulum'];
-
-%% dimensions
 nx = model.nx;
 nu = model.nu;
 
-nh = nu;
-nh_e = 0;
-
-%% cost
-cost_type = 'auto';
-ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_type_e', cost_type);
-ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
-ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
-
-%% constraints
-nbu = nu;
-Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
-lbu = -80*ones(nu, 1);
-ubu =  80*ones(nu, 1);
+%% model to create the solver
+ocp_model = acados_ocp_model();
+model_name = 'pendulum';
 
 %% acados ocp model
 ocp_model.set('name', model_name);
 ocp_model.set('T', T);
 ocp_model.set('dim_nx', nx);
 ocp_model.set('dim_nu', nu);
-ocp_model.set('dim_nbu', nbu);
 
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
 ocp_model.set('sym_u', model.sym_u);
 ocp_model.set('sym_xdot', model.sym_xdot);
+
+% cost
+cost_type = 'auto';
+ocp_model.set('cost_type', cost_type);
+ocp_model.set('cost_type_e', cost_type);
+ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
+ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 
 % dynamics
 if (strcmp(sim_method, 'erk'))
@@ -101,12 +88,14 @@ else % irk irk_gnsf
     ocp_model.set('dyn_type', 'implicit');
     ocp_model.set('dyn_expr_f', model.expr_f_impl);
 end
+
 % constraints
 ocp_model.set('constr_expr_h', model.expr_h);
-ocp_model.set('constr_lh', lbu);
-ocp_model.set('constr_uh', ubu);
+U_max = 80;
+ocp_model.set('constr_lh', -U_max); % lower bound on h
+ocp_model.set('constr_uh', U_max);
+nh = nu;
 ocp_model.set('dim_nh', nh);
-ocp_model.set('dim_nh_e', nh_e);
 % ... see ocp_model.model_struct to see what other fields can be set
 
 %% acados ocp set opts
@@ -141,5 +130,5 @@ ocp.solve();
 utraj = ocp.get('u');
 xtraj = ocp.get('x');
 
-status = ocp.get('status');
+status = ocp.get('status'); % 0 - success
 ocp.print('stat')
