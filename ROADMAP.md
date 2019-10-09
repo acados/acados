@@ -3,6 +3,7 @@
 #### core
 - [ ] propagate cost in integrator
 - [ ] restore download and compilation of OOQP
+- [ ] split ocp solve into prepare and feedback
 
 #### documentation
 - [ ] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula in docs

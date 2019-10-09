@@ -1608,26 +1608,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
     // C
-    if (mxGetField( matlab_model, 0, "constr_C" )!=NULL)
+    const mxArray *C_matlab = mxGetField( matlab_model, 0, "constr_C" );
+    if (C_matlab != NULL)
     {
-        int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_C" ) );
-        int acados_size = ng*nx;
-        MEX_DIM_CHECK_VEC(fun_name, "constr_C", matlab_size, acados_size);
+        int nrow = (int) mxGetM( C_matlab );
+        int ncol = (int) mxGetN( C_matlab );
+        MEX_DIM_CHECK_MAT(fun_name, "constr_C", nrow, ncol, ng, nx);
 
-        double *C = mxGetPr( mxGetField( matlab_model, 0, "constr_C" ) );
+        double *C = mxGetPr( C_matlab );
         for (int ii=0; ii<N; ii++)
         {
             ocp_nlp_constraints_model_set(config, dims, in, ii, "C", C);
         }
     }
     // D
-    if (mxGetField( matlab_model, 0, "constr_D" )!=NULL)
+    const mxArray *D_matlab = mxGetField( matlab_model, 0, "constr_D" );
+    if (D_matlab!=NULL)
     {
-        int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_model, 0, "constr_D" ) );
-        int acados_size = ng*nu;
-        MEX_DIM_CHECK_VEC(fun_name, "constr_D", matlab_size, acados_size);
+        int nrow = (int) mxGetM( D_matlab );
+        int ncol = (int) mxGetN( D_matlab );
+        MEX_DIM_CHECK_MAT(fun_name, "constr_D", nrow, ncol, ng, nu);
 
-        double *D = mxGetPr( mxGetField( matlab_model, 0, "constr_D" ) );
+        double *D = mxGetPr( D_matlab );
         for (int ii=0; ii<N; ii++)
         {
             ocp_nlp_constraints_model_set(config, dims, in, ii, "D", D);
