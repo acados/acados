@@ -85,8 +85,16 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     % build generated code
     if isunix || ismac 
         % compile if on Mac or Unix platform
-        system('make');
-        system('make shared_lib');
+        [ status, result ] = system('make');
+        if status
+            error('building templated code failed.\nGot status %d, result: %s',...
+                  status, result);
+        end
+        [ status, result ] = system('make shared_lib');
+        if status
+            error('building templated code as shared library failed.\nGot status %d, result: %s',...
+                  status, result);
+        end
     else
         disp(['Commandline compilation of generated C code not yet supported under Windows.', ...
             'Please consider building the code in the c_generated_code folder from Windows Subsystem for Linux.'])
@@ -110,7 +118,7 @@ function render_file( acados_ocp_nlp_json_file, template_dir, template_file, out
         template_dir, '"', ' ', '"', template_file, '"', ' ', '"',...
         json_location, acados_ocp_nlp_json_file, '"', ' ', '"', out_file, '"'];
     
-    [status,result] = system(os_cmd);
+    [ status, result ] = system(os_cmd);
     if status
         error('rendering %s failed.\n command: %s\n returned status %d, got result: %s',...
             template_file, os_cmd, status, result);
