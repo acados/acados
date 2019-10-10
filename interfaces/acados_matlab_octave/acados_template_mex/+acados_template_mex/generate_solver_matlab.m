@@ -32,7 +32,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     chdir([model_name, '_model/']);
     template_file = 'model.in.h';
     out_file = [model_name, '_model.h'];
-    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, 1)
 
     chdir('..');
 
@@ -46,7 +46,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
         % render source template
         template_file = 'p_constraint.in.h';
         out_file = [acados_ocp.con_p.name, '_p_constraint.h'];
-        render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
+        render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, 1)
 
         chdir('..');
     end
@@ -60,7 +60,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
         % render source template
         template_file = 'h_constraint.in.h';
         out_file = [acados_ocp.con_h.name, '_h_constraint.h'];
-        render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
+        render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, 1)
 
         chdir('..');
     end
@@ -100,15 +100,21 @@ end
 
 %% auxilary function
 
-function render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
+function render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, subfolder_depth )
+    if nargin < 5
+        subfolder_depth = 0;
+    end
+    json_location = repmat('../', 1, subfolder_depth+1);
 
     os_cmd = [getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer ', '"',...
         template_dir, '"', ' ', '"', template_file, '"', ' ', '"',...
-        '../', acados_ocp_nlp_json_file, '"', ' ', '"', out_file, '"'];
+        json_location, acados_ocp_nlp_json_file, '"', ' ', '"', out_file, '"'];
     
     [status,result] = system(os_cmd);
     if status
         error('rendering %s failed.\n command: %s\n returned status %d, got result: %s',...
             template_file, os_cmd, status, result);
+%     else
+%         disp(['Redering ' template_file ': success!']);
     end
 end
