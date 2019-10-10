@@ -329,11 +329,12 @@ for ii=1:N_sim
 	ocp.set('init_u', u_traj_init);
 	ocp.set('init_pi', pi_traj_init);
 
-	% modify numerical data for a certain stage
+	% use ocp.set to modify numerical data for a certain stage
 	some_stages = 1:10:ocp_N-1;
 	for i = some_stages
-		ocp.set('cost_Vx', Vx, i); % cost_y_ref, cost_Vu, cost_Vx, cost_W, cost_Z, cost_Zl,...
-		 % cost_Zu, cost_z, cost_zl, cost_zu;
+        if strcmp( ocp.model_struct.cost_type, 'linear_ls')
+            ocp.set('cost_Vx', Vx, i);
+        end
 	end
 
 	% solve OCP
