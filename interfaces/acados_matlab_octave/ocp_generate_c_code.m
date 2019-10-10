@@ -9,14 +9,35 @@ function ocp_generate_c_code(obj)
             end
         end
 
-        % add checks for 
-        % 1) nonlinear least-squares (jeez)
-        % 2) Vz (already implemented?)
-        % 3) exact Hessian
-        % 4) external cost
-        % 5) GNSF
-        % 6) discrete dynamics
-                
+        % add checks for
+        if ~strcmp( obj.model_struct.cost_type, 'linear_ls' ) || ...
+           ~strcmp( obj.model_struct.cost_type_e, 'linear_ls' )
+            error('mex templating does only support linear_ls cost for now. %s',...
+                  'Got cost_type: %s, cost_type_e: %s.\n %s', obj.model_struct.cost_type, obj.model_struct.cost_type_e,...
+                'Notice that it might still be possible to solve the OCP from MATLAB.');
+            % TODO: add
+            % nonlinear least-squares
+            % external cost
+        elseif isfield( obj.model_struct, 'cost_Vz') && any(obj.model_struct.cost_Vz)
+            error('mex templating does not support nonzero cost_Vz for yet. %s',...
+                'Notice that it might still be possible to solve the OCP from MATLAB.');
+            % TODO add Vz (already implemented?)
+        elseif ~strcmp( obj.opts_struct.nlp_solver_exact_hessian, 'false')
+            error('mex templating does only support nlp_solver_exact_hessian = "false", %s',...
+                'i.e. Gauss-Newton Hessian approximation for now. %s',...
+                'got nlp_solver_exact_hessian = "%s",\n%s', obj.opts_struct.nlp_solver_exact_hessian,...
+                'Notice that it might still be possible to solve the OCP from MATLAB.');
+            % TODO: add exact Hessian
+        elseif strcmp( obj.model_struct.dyn_type, 'discrete')
+            error('mex templating does only support discrete dynamics for now. %s,',...
+                'Notice that it might still be possible to solve the OCP from MATLAB.');
+            % TODO: implement
+        elseif strcmp( obj.opts_struct.sim_method, 'irk_gnsf')
+            error('mex templating does not support irk_gnsf integrator yet. %s',...
+                'Notice that it might still be possible to solve the OCP from MATLAB.');
+            % TODO: implement
+        end
+        
         % set include and lib path
         acados_folder = getenv('ACADOS_INSTALL_DIR');
         obj.acados_ocp_nlp_json.acados_include_path = [acados_folder, '/include'];
