@@ -1024,7 +1024,7 @@ int acados_create() {
     {%- endif %}
 
     nlp_opts = ocp_nlp_solver_opts_create(nlp_config, nlp_dims);
-    
+
     {% if ocp.dims.nz > 0 %}
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 

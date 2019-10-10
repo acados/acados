@@ -109,12 +109,12 @@ else
 end
 
 %% generate C code
-    if ~isfolder('c_generated_code')
+    if ~exist('c_generated_code', 'dir')
         mkdir('c_generated_code');
     end
     cd 'c_generated_code'
     model_dir = [model_name, '_model'];
-    if ~isfolder(model_dir)
+    if ~exist(model_dir, 'dir')
         mkdir(model_dir);
     end
     model_dir_location = ['./', model_dir];

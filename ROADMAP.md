@@ -27,7 +27,14 @@
 - [ ] cmake: add openmp parallelization
 
 #### `templating`
+- [ ] remove duplicated code to generate external functions
+- [ ] add documentation
+  - [ ] how to set up trenderer
+  - [ ] ...
+- [ ] explore possibility to interact with generated C code
+- [ ] set up CI tests - matlab needed..
 - [ ] add GNSF
+- [ ] make compatible with octave (if possible) - jsonencode alternative?!
 
 #### `ocp_nlp`
 - [x] Gauss-Newton SQP
