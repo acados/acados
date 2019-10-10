@@ -248,6 +248,7 @@ ocp_opts.opts_struct
 
 %% acados ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
+ocp_model.set('name', model_name);
 
 
 %% acados sim model

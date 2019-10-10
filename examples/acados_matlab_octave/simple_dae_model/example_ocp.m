@@ -34,6 +34,8 @@
 %% test of native matlab interface
 clear all
 
+model_name = 'simple_dae';
+
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
@@ -113,6 +115,7 @@ x0 = [3; -1.8];
 ocp_model = acados_ocp_model();
 
 ocp_model.set('T', T);
+ocp_model.set('name', model_name);
 
 % dims
 ocp_model.set('dim_nx', nx);

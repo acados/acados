@@ -35,6 +35,7 @@ import numpy as np
 import json
 import os
 import sys
+from .casadi_functions import *
 
 class ocp_nlp_dims:
     """
@@ -330,25 +331,31 @@ class ocp_nlp_cost:
     """
     def __init__(self):
         # Lagrange term
-        self.__W     = []  #: :math:`W` - weight matrix
-        self.__Vx    = []  #: :math:`V_x` - x matrix coefficient
-        self.__Vu    = []  #: :math:`V_u` - u matrix coefficient
-        self.__Vz    = []  #: :math:`V_z` - z matrix coefficient
-        self.__yref  = []  #: :math:`y_{\text{ref}}` - reference
-        self.__Zl    = []  #: :math:`Z_l` - Hessian wrt lower slack 
-        self.__Zu    = []  #: :math:`Z_u` - Hessian wrt upper slack 
-        self.__zl    = []  #: :math:`z_l` - gradient wrt lower slack 
-        self.__zu    = []  #: :math:`z_u` - gradient wrt upper slack 
+        self.__cost_type   = 'LINEAR_LS'  #: cost type
+        self.__W           = []           #: :math:`W` - weight matrix
+        self.__Vx          = []           #: :math:`V_x` - x matrix coefficient
+        self.__Vu          = []           #: :math:`V_u` - u matrix coefficient
+        self.__Vz          = []           #: :math:`V_z` - z matrix coefficient
+        self.__yref        = []           #: :math:`y_{\text{ref}}` - reference
+        self.__Zl          = []           #: :math:`Z_l` - Hessian wrt lower slack 
+        self.__Zu          = []           #: :math:`Z_u` - Hessian wrt upper slack 
+        self.__zl          = []           #: :math:`z_l` - gradient wrt lower slack 
+        self.__zu          = []           #: :math:`z_u` - gradient wrt upper slack 
         # Mayer term
-        self.__W_e    = []  #: :math:`W^e` - weight matrix for Mayer term
-        self.__Vx_e   = []  #: :math:`V_x^e` - x matrix coefficient for Mayer term
-        self.__yref_e = []  #: :math:`y_{\text{ref}}^e` - reference for Mayer term
-        self.__Zl_e   = []  #: :math:`Z_l^e` - Hessian wrt lower slack for Mayer term
-        self.__Zu_e   = []  #: :math:`Z_u^e` - Hessian wrt upper slack for Mayer term
-        self.__zl_e   = []  #: :math:`z_l^e` - gradient wrt lower slack for Mayer term
-        self.__zu_e   = []  #: :math:`z_u^e` - gradient wrt upper slack for Mayer term
+        self.__cost_type_e = 'LINEAR_LS'  #: cost type for Mayer term
+        self.__W_e         = []           #: :math:`W^e` - weight matrix for Mayer term
+        self.__Vx_e        = []           #: :math:`V_x^e` - x matrix coefficient for Mayer term
+        self.__yref_e      = []           #: :math:`y_{\text{ref}}^e` - reference for Mayer term
+        self.__Zl_e        = []           #: :math:`Z_l^e` - Hessian wrt lower slack for Mayer term
+        self.__Zu_e        = []           #: :math:`Z_u^e` - Hessian wrt upper slack for Mayer term
+        self.__zl_e        = []           #: :math:`z_l^e` - gradient wrt lower slack for Mayer term
+        self.__zu_e        = []           #: :math:`z_u^e` - gradient wrt upper slack for Mayer term
 
     # Lagrange term
+    @property
+    def cost_type(self):
+        return self.__cost_type
+
     @property
     def W(self):
         return self.__W
@@ -384,6 +391,15 @@ class ocp_nlp_cost:
     @property
     def zu(self):
         return self.__zu
+
+    @cost_type.setter
+    def cost_type(self, cost_type):
+        cost_types = ('LINEAR_LS')
+
+        if type(cost_type) == str and cost_type in cost_types:
+            self.__cost_type = cost_type
+        else:
+            raise Exception('Invalid cost_type value. Exiting.')
 
     @W.setter
     def W(self, W):
@@ -450,6 +466,10 @@ class ocp_nlp_cost:
 
     # Mayer term
     @property
+    def cost_type_e(self):
+        return self.__cost_type_e
+
+    @property
     def W_e(self):
         return self.__W_e
 
@@ -476,6 +496,15 @@ class ocp_nlp_cost:
     @property
     def zu_e(self):
         return self.__zu_e
+
+    @cost_type_e.setter
+    def cost_type_e(self, cost_type_e):
+        cost_types = ('LINEAR_LS')
+
+        if type(cost_type_e) == str and cost_type_e in cost_types:
+            self.__cost_type_e = cost_type_e
+        else:
+            raise Exception('Invalid cost_type_e value. Exiting.')
 
     @W_e.setter
     def W_e(self, W_e):
@@ -534,54 +563,65 @@ class ocp_nlp_constraints:
     class containing the description of the constraints
     """
     def __init__(self):
+        self.__constr_type   = 'BGH' #: constraint type
+        self.__constr_type_e = 'BGH' #: constraint type
         # bounds on x and u
-        self.__lbx     = []  #: :math:`\underline{x}` - lower bounds on x
-        self.__lbu     = []  #: :math:`\underline{u}` - lower bounds on u
-        self.__ubx     = []  #: :math:`\bar{x}` - upper bounds on x 
-        self.__ubu     = []  #: :math:`\bar{u}` - upper bounds on u 
-        self.__idxbx   = []  #: indexes of bounds on x (defines :math:`\Pi_x`) 
-        self.__idxbu   = []  #: indexes of bounds on u (defines :math:`\Pi_u`)
+        self.__lbx     = []        #: :math:`\underline{x}` - lower bounds on x
+        self.__lbu     = []        #: :math:`\underline{u}` - lower bounds on u
+        self.__ubx     = []        #: :math:`\bar{x}` - upper bounds on x 
+        self.__ubu     = []        #: :math:`\bar{u}` - upper bounds on u 
+        self.__idxbx   = []        #: indexes of bounds on x (defines :math:`\Pi_x`) 
+        # self.__Jbx     = []        #: :math`J_x` - matrix coefficient for bounds on x 
+        self.__idxbu   = []        #: indexes of bounds on u (defines :math:`\Pi_u`)
+        # self.__Jbu     = []        #: :math`J_u` - matrix coefficient for bounds on u 
         # bounds on x at t=T
-        self.__lbx_e   = []  #: :math:`\underline{x}^e` - lower bounds on x at t=T 
-        self.__ubx_e   = []  #: :math:`\bar{x}^e` - upper bounds on x at t=T 
-        self.__idxbx_e = []  #: indexes for bounds on x at t=T (defines :math:`\Pi_x^e`) 
-        # soft bounds on x and u
-        self.__lsbx   = []  #: soft lower bounds on x
-        self.__lsbu   = []  #: soft lower bounds on u
-        self.__usbx   = []  #: soft upper bounds on x 
-        self.__usbu   = []  #: soft upper bounds on u 
-        self.__idxsbx = []  #: indexes of soft bounds on x 
-        self.__idxsbu = []  #: indexes of soft bounds on u
-        # soft bounds on nonlinear constraints
-        self.__lsh    = []  #: soft lower bounds for nonlinear constraints 
-        self.__ush    = []  #: soft upper bounds for nonlinear constraints 
-        self.__idxsh  = []  #: indexes of soft nonlinear constraints 
-        # soft bounds on x and u at t=T
-        self.__lsbx_e  = []  #: soft lower bounds on x at t=T
-        self.__usbx_e  = []  #: soft upper bounds on x at t=T
-        self.__idxsbx_e= []  #: indexes of soft bounds on x at t=T 
-        # soft bounds on nonlinear constraints
-        self.__lsh_e    = []  #: soft lower bounds for nonlinear constraints 
-        self.__ush_e    = []  #: soft upper bounds for nonlinear constraints 
-        self.__idxsh_e  = []  #: indexes of soft nonlinear constraints at t=T 
+        self.__lbx_e   = []        #: :math:`\underline{x}^e` - lower bounds on x at t=T 
+        self.__ubx_e   = []        #: :math:`\bar{x}^e` - upper bounds on x at t=T 
+        self.__idxbx_e = []        #: indexes for bounds on x at t=T (defines :math:`\Pi_x^e`) 
+        # self.__Jbx_e   = []         #: :math`J_{x}^e`indexes of bounds on x (defines :math:`\Pi_x`) 
         # polytopic constraints 
-        self.__lg      = []  #: :math:`\underline{c}` - lower bound for general polytopic inequalities 
-        self.__ug      = []  #: :math:`\bar{c}` - upper bound for general polytopic inequalities 
-        self.__D       = []  #: :math:`D` - D matrix in lg <= D * u + C * x <= ug
-        self.__C       = []  #: :math:`C` - C matrix in lg <= D * u + C * x <= ug
+        self.__lg      = []        #: :math:`\underline{c}` - lower bound for general polytopic inequalities 
+        self.__ug      = []        #: :math:`\bar{c}` - upper bound for general polytopic inequalities 
+        self.__D       = []        #: :math:`D` - D matrix in lg <= D * u + C * x <= ug
+        self.__C       = []        #: :math:`C` - C matrix in lg <= D * u + C * x <= ug
         # polytopic constraints at t=T 
-        self.__C_e     = []  #: :math:`C^e` - C matrix at t=T 
-        self.__lg_e    = []  #: :math:`\underline{c}^e` - lower bound on general polytopic inequalities at t=T 
-        self.__ug_e    = []  #: :math:`\bar{c}^e` - upper bound on general polytopic inequalities at t=T 
+        self.__C_e     = []        #: :math:`C^e` - C matrix at t=T 
+        self.__lg_e    = []        #: :math:`\underline{c}^e` - lower bound on general polytopic inequalities at t=T 
+        self.__ug_e    = []        #: :math:`\bar{c}^e` - upper bound on general polytopic inequalities at t=T 
         # nonlinear constraints
-        self.__lh      = []  #: :math:`\underline{h}` - lower bound for nonlinear inequalities 
-        self.__uh      = []  #: :math:`\bar{h}` - upper bound for nonlinear inequalities 
+        self.__lh      = []        #: :math:`\underline{h}` - lower bound for nonlinear inequalities 
+        self.__uh      = []        #: :math:`\bar{h}` - upper bound for nonlinear inequalities 
         # nonlinear constraints at t=T
-        self.__uh_e    = []  #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
-        self.__lh_e    = []  #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
-        self.__x0      = []  #: :math:`\bar{x}_0` - initial state 
-        self.__p       = []  #: :math:`p` - parameters 
+        self.__uh_e    = []        #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
+        self.__lh_e    = []        #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
+        # soft bounds on x and u
+        self.__lsbx   = []         #: soft lower bounds on x
+        self.__lsbu   = []         #: soft lower bounds on u
+        self.__usbx   = []         #: soft upper bounds on x 
+        self.__usbu   = []         #: soft upper bounds on u 
+        self.__idxsbx = []         #: indexes of soft bounds on x 
+        # self.__Jsbx   = []         #: :math`J_{s,x}` - matrix coefficient for soft bounds on x 
+        self.__idxsbu = []         #: indexes of soft bounds on u
+        # self.__Jsbu   = []         #: :math`J_{s,u}` - matrix coefficient for soft bounds on u 
+        # soft bounds on x at t=T
+        self.__lsbx_e  = []        #: soft lower bounds on x at t=T
+        self.__usbx_e  = []        #: soft upper bounds on x at t=T
+        self.__idxsbx_e= []        #: indexes of soft bounds on x at t=T 
+        # self.__Jsbx_e    = []      #: :math`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T 
+        # soft bounds on nonlinear constraints
+        self.__lsh    = []         #: soft lower bounds for nonlinear constraints 
+        self.__ush    = []         #: soft upper bounds for nonlinear constraints 
+        self.__idxsh  = []         #: indexes of soft nonlinear constraints 
+        # self.__Jsh    = []         #: :math`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints 
+        # soft bounds on nonlinear constraints at t=T
+        self.__lsh_e    = []       #: soft lower bounds for nonlinear constraints at t=T
+        self.__ush_e    = []       #: soft upper bounds for nonlinear constraints at t=T
+        self.__idxsh_e  = []       #: indexes of soft nonlinear constraints at t=T 
+        # self.__Jsh_e    = []       #: :math`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T 
+        self.__x0      = []        #: :math:`\bar{x}_0` - initial state 
+        self.__p       = []        #: :math:`p` - parameters 
 
+    # bounds on x and u
     @property
     def lbx(self):
         return self.__lbx
@@ -603,9 +643,83 @@ class ocp_nlp_constraints:
         return self.__idxbx
 
     @property
+    def Jbx(self):
+        return self.__Jbx
+
+    @property
     def idxbu(self):
         return self.__idxbu
 
+    @property
+    def Jbu(self):
+        return self.__Jbu
+
+    # bounds on x at t=T
+    @property
+    def lbx_e(self):
+        return self.__lbx_e
+
+    @property
+    def ubx_e(self):
+        return self.__ubx_e
+
+    @property
+    def idxbx_e(self):
+        return self.__idxbx_e
+
+    @property
+    def Jbx_e(self):
+        return self.__Jbx_e
+
+    # polytopic constraints 
+    @property
+    def C(self):
+        return self.__C
+
+    @property
+    def D(self):
+        return self.__D
+
+    @property
+    def lg(self):
+        return self.__lg
+
+    @property
+    def ug(self):
+        return self.__ug
+
+    # polytopic constraints at t=T 
+    @property
+    def C_e(self):
+        return self.__C_e
+
+    @property
+    def lg_e(self):
+        return self.__lg_e
+
+    @property
+    def ug_e(self):
+        return self.__ug_e
+
+    # nonlinear constraints
+    @property
+    def lh(self):
+        return self.__lh
+
+    @property
+    def uh(self):
+        return self.__uh
+
+    # nonlinear constraints at t=T
+    @property
+    def lh_e(self):
+        return self.__lh_e
+
+    @property
+    def uh_e(self):
+        return self.__uh_e
+
+    # soft bounds on x and u
     @property
     def lsbx(self):
         return self.__lsbx
@@ -627,22 +741,18 @@ class ocp_nlp_constraints:
         return self.__idxsbx
 
     @property
+    def Jsbx(self):
+        return self.__Jsbx
+
+    @property
     def idxsbu(self):
         return self.__idxsbu
 
     @property
-    def lsh(self):
-        return self.__lsh
+    def Jsbu(self):
+        return self.__Jsbu
 
-    @property
-    def ush(self):
-        return self.__ush
-
-    @property
-    def idxsh(self):
-        return self.__idxsh
-
-
+    # soft bounds on x at t=T
     @property
     def lsbx_e(self):
         return self.__lsbx_e
@@ -656,6 +766,28 @@ class ocp_nlp_constraints:
         return self.__idxsbx_e
 
     @property
+    def Jsbx_e(self):
+        return self.__Jsbx_e
+
+    # soft bounds on nonlinear constraints
+    @property
+    def lsh(self):
+        return self.__lsh
+
+    @property
+    def ush(self):
+        return self.__ush
+
+    @property
+    def idxsh(self):
+        return self.__idxsh
+
+    @property
+    def Jsh(self):
+        return self.__Jsh
+
+    # soft bounds on nonlinear constraints at t=T
+    @property
     def lsh_e(self):
         return self.__lsh_e
 
@@ -667,61 +799,10 @@ class ocp_nlp_constraints:
     def idxsh_e(self):
         return self.__idxsh_e
 
-    @property
-    def lg(self):
-        return self.__lg
 
     @property
-    def ug(self):
-        return self.__ug
-
-    @property
-    def lh(self):
-        return self.__lh
-
-    @property
-    def uh(self):
-        return self.__uh
-
-    @property
-    def D(self):
-        return self.__D
-
-    @property
-    def C(self):
-        return self.__C
-
-    @property
-    def lbx_e(self):
-        return self.__lbx_e
-
-    @property
-    def ubx_e(self):
-        return self.__ubx_e
-
-    @property
-    def idxbx_e(self):
-        return self.__idxbx_e
-
-    @property
-    def C_e(self):
-        return self.__C_e
-
-    @property
-    def lg_e(self):
-        return self.__lg_e
-
-    @property
-    def ug_e(self):
-        return self.__ug_e
-
-    @property
-    def lg_e(self):
-        return self.__lg_e
-
-    @property
-    def ug_e(self):
-        return self.__ug_e
+    def Jsh_e(self):
+        return self.__Jsh_e
 
     @property
     def x0(self):
@@ -731,6 +812,19 @@ class ocp_nlp_constraints:
     def p(self):
         return self.__p
 
+    def J_to_idx(self, J):
+        nrows = J.shape[0]
+        idx = np.zeros((nrows, ))
+        for i in range(nrows):
+            this_idx = np.nonzero(J[i,:])[0]
+            if len(this_idx) != 1: 
+                raise Exception('Invalid J matrix structure detected. Exiting.')
+            if J[i,this_idx[0]] != 1:
+                raise Exception('J matrices can only contain 1s. Exiting.')
+            idx[i] = this_idx[0]
+        return idx
+
+    # bounds on x and u
     @lbx.setter
     def lbx(self, lbx):
         if type(lbx) == np.ndarray:
@@ -751,6 +845,13 @@ class ocp_nlp_constraints:
             self.__idxbx = idxbx
         else:
             raise Exception('Invalid idxbx value. Exiting.')
+
+    @Jbx.setter
+    def Jbx(self, Jbx):
+        if type(Jbx) == np.ndarray:
+            self.__idxbx = self.J_to_idx(Jbx)
+        else:
+            raise Exception('Invalid Jbx value. Exiting.')
 
     @lbu.setter
     def lbu(self, lbu):
@@ -773,6 +874,124 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid idxbu value. Exiting.')
 
+    @Jbu.setter
+    def Jbu(self, Jbu):
+        if type(Jbu) == np.ndarray:
+            self.__idxbu = self.J_to_idx(Jbu)
+        else:
+            raise Exception('Invalid Jbu value. Exiting.')
+
+    # bounds on x at t=T
+    @lbx_e.setter
+    def lbx_e(self, lbx_e):
+        if type(lbx_e) == np.ndarray:
+            self.__lbx_e = lbx_e
+        else:
+            raise Exception('Invalid lbx_e value. Exiting.')
+
+    @ubx_e.setter
+    def ubx_e(self, ubx_e):
+        if type(ubx_e) == np.ndarray:
+            self.__ubx_e = ubx_e
+        else:
+            raise Exception('Invalid ubx_e value. Exiting.')
+
+    @idxbx_e.setter
+    def idxbx_e(self, idxbx_e):
+        if type(idxbx_e) == np.ndarray:
+            self.__idxbx_e = idxbx_e
+        else:
+            raise Exception('Invalid idxbx_e value. Exiting.')
+
+    @Jbx_e.setter
+    def Jbx_e(self, Jbx_e):
+        if type(Jbx_e) == np.ndarray:
+            self.__idxbx_e = self.J_to_idx(Jbx_e)
+        else:
+            raise Exception('Invalid Jbx_e value. Exiting.')
+
+    # polytopic constraints 
+    @D.setter
+    def D(self, D):
+        if type(D) == np.ndarray:
+            self.__D = D
+        else:
+            raise Exception('Invalid D value. Exiting.')
+
+    @C.setter
+    def C(self, C):
+        if type(C) == np.ndarray:
+            self.__C = C
+        else:
+            raise Exception('Invalid C value. Exiting.')
+
+    @lg.setter
+    def lg(self, lg):
+        if type(lg) == np.ndarray:
+            self.__lg = lg
+        else:
+            raise Exception('Invalid lg value. Exiting.')
+
+    @ug.setter
+    def ug(self, ug):
+        if type(ug) == np.ndarray:
+            self.__ug = ug
+        else:
+            raise Exception('Invalid ug value. Exiting.')
+
+    # polytopic constraints at t=T 
+    @C_e.setter
+    def C_e(self, C_e):
+        if type(C_e) == np.ndarray:
+            self.__C_e = C_e
+        else:
+            raise Exception('Invalid C_e value. Exiting.')
+
+    @lg_e.setter
+    def lg_e(self, lg_e):
+        if type(lg_e) == np.ndarray:
+            self.__lg_e = lg_e
+        else:
+            raise Exception('Invalid lg_e value. Exiting.')
+
+    @ug_e.setter
+    def ug_e(self, ug_e):
+        if type(ug_e) == np.ndarray:
+            self.__ug_e = ug_e
+        else:
+            raise Exception('Invalid ug_e value. Exiting.')
+
+    # nonlinear constraints
+    @lh.setter
+    def lh(self, lh):
+        if type(lh) == np.ndarray:
+            self.__lh = lh
+        else:
+            raise Exception('Invalid lh value. Exiting.')
+
+    @uh.setter
+    def uh(self, uh):
+        if type(uh) == np.ndarray:
+            self.__uh = uh
+        else:
+            raise Exception('Invalid uh value. Exiting.')
+
+    # nonlinear constraints at t=T
+    @lh_e.setter
+    def lh_e(self, lh_e):
+        if type(lh_e) == np.ndarray:
+            self.__lh_e = lh_e
+        else:
+            raise Exception('Invalid lh_e value. Exiting.')
+
+    @uh_e.setter
+    def uh_e(self, uh_e):
+        if type(uh_e) == np.ndarray:
+            self.__uh_e = uh_e
+        else:
+            raise Exception('Invalid uh_e value. Exiting.')
+
+    # soft bounds on x and u
     @lsbx.setter
     def lsbx(self, lsbx):
         if type(lsbx) == np.ndarray:
@@ -793,6 +1012,14 @@ class ocp_nlp_constraints:
             self.__idxsbx = idxsbx
         else:
             raise Exception('Invalid idxsbx value. Exiting.')
+
+    @Jsbx.setter
+    def Jsbx(self, Jsbx):
+        if type(Jsbx) == np.ndarray:
+            self.__idxsbx = self.J_to_idx(Jbsx)
+        else:
+            raise Exception('Invalid Jsbx value. Exiting.')
+
 
     @lsbu.setter
     def lsbu(self, lsbu):
@@ -815,27 +1042,14 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid idxsbu value. Exiting.')
 
-    @lsh.setter
-    def lsh(self, lsh):
-        if type(lsh) == np.ndarray:
-            self.__lsh = lsh
+    @Jsbu.setter
+    def Jsbu(self, Jsbu):
+        if type(Jsbu) == np.ndarray:
+            self.__idxsbu = self.J_to_idx(Jbsu)
         else:
-            raise Exception('Invalid lsh value. Exiting.')
+            raise Exception('Invalid Jsbu value. Exiting.')
 
-    @ush.setter
-    def ush(self, ush):
-        if type(ush) == np.ndarray:
-            self.__ush = ush
-        else:
-            raise Exception('Invalid ush value. Exiting.')
-
-    @idxsh.setter
-    def idxsh(self, idxsh):
-        if type(idxsh) == np.ndarray:
-            self.__idxsh = idxsh
-        else:
-            raise Exception('Invalid idxsh value. Exiting.')
-
+    # soft bounds on x at t=T
     @lsbx_e.setter
     def lsbx_e(self, lsbx_e):
         if type(lsbx_e) == np.ndarray:
@@ -857,6 +1071,37 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid idxsbx_e value. Exiting.')
 
+    @Jsbx_e.setter
+    def Jsbx_e(self, Jsbx_e):
+        if type(Jsbx_e) == np.ndarray:
+            self.__Jsbx_e = Jsbx_e
+            self.__idxsbx_e = self.J_to_idx(Jbsx_e)
+        else:
+            raise Exception('Invalid Jsbx_e value. Exiting.')
+
+    # soft bounds on nonlinear constraints
+    @lsh.setter
+    def lsh(self, lsh):
+        if type(lsh) == np.ndarray:
+            self.__lsh = lsh
+        else:
+            raise Exception('Invalid lsh value. Exiting.')
+
+    @ush.setter
+    def ush(self, ush):
+        if type(ush) == np.ndarray:
+            self.__ush = ush
+        else:
+            raise Exception('Invalid ush value. Exiting.')
+
+    @idxsh.setter
+    def idxsh(self, idxsh):
+        if type(idxsh) == np.ndarray:
+            self.__idxsh = idxsh
+        else:
+            raise Exception('Invalid idxsh value. Exiting.')
+
+    # soft bounds on nonlinear constraints at t=T
     @lsh_e.setter
     def lsh_e(self, lsh_e):
         if type(lsh_e) == np.ndarray:
@@ -877,76 +1122,6 @@ class ocp_nlp_constraints:
             self.__idxsh_e = idxsh_e
         else:
             raise Exception('Invalid idxsh_e value. Exiting.')
-
-    @lg.setter
-    def lg(self, lg):
-        if type(lg) == np.ndarray:
-            self.__lg = lg
-        else:
-            raise Exception('Invalid lg value. Exiting.')
-
-    @ug.setter
-    def ug(self, ug):
-        if type(ug) == np.ndarray:
-            self.__ug = ug
-        else:
-            raise Exception('Invalid ug value. Exiting.')
-
-    @lh.setter
-    def lh(self, lh):
-        if type(lh) == np.ndarray:
-            self.__lh = lh
-        else:
-            raise Exception('Invalid lh value. Exiting.')
-
-    @uh.setter
-    def uh(self, uh):
-        if type(uh) == np.ndarray:
-            self.__uh = uh
-        else:
-            raise Exception('Invalid uh value. Exiting.')
-
-    @D.setter
-    def D(self, D):
-        if type(D) == np.ndarray:
-            self.__D = D
-        else:
-            raise Exception('Invalid D value. Exiting.')
-
-    @C.setter
-    def C(self, C):
-        if type(C) == np.ndarray:
-            self.__C = C
-        else:
-            raise Exception('Invalid C value. Exiting.')
-
-    @C_e.setter
-    def C_e(self, C_e):
-        if type(C_e) == np.ndarray:
-            self.__C_e = C_e
-        else:
-            raise Exception('Invalid C_e value. Exiting.')
-
-    @lbx_e.setter
-    def lbx_e(self, lbx_e):
-        if type(lbx_e) == np.ndarray:
-            self.__lbx_e = lbx_e
-        else:
-            raise Exception('Invalid lbx_e value. Exiting.')
-
-    @ubx_e.setter
-    def ubx_e(self, ubx_e):
-        if type(ubx_e) == np.ndarray:
-            self.__ubx_e = ubx_e
-        else:
-            raise Exception('Invalid ubx_e value. Exiting.')
-
-    @idxbx_e.setter
-    def idxbx_e(self, idxbx_e):
-        if type(idxbx_e) == np.ndarray:
-            self.__idxbx_e = idxbx_e
-        else:
-            raise Exception('Invalid idxbx_e value. Exiting.')
 
     @x0.setter
     def x0(self, x0):
@@ -1045,18 +1220,21 @@ class ocp_nlp_solver_config:
 
 class acados_ocp_nlp:
     """
-    class containing the full description if the optimal control problem
+    class containing the full description of the optimal control problem
     """
     def __init__(self):
         self.dims = ocp_nlp_dims()
         self.cost = ocp_nlp_cost()
         self.constraints = ocp_nlp_constraints()
         self.solver_config = ocp_nlp_solver_config()
-        self.model_name  = None 
-        self.con_p_name  = None 
-        self.con_p_e_name = None 
-        self.con_h_name  = None 
-        self.con_h_e_name = None 
+        # self.con_p_name  = None 
+        # self.con_p_e_name = None 
+        # self.con_h_name  = None 
+        # self.con_h_e_name = None 
+        self.con_p   = acados_constraint() 
+        self.con_p_e = acados_constraint() 
+        self.con_h   = acados_constraint() 
+        self.con_h_e = acados_constraint() 
         # self.constants = {}
         self.acados_include_path = []
         self.acados_lib_path = []
@@ -1101,7 +1279,7 @@ def dict2json(d):
     return out
 
 def acados_ocp2json_layout(acados_ocp):
-    """ Convert acados ocp nlp object JSON format by stripping the 
+    """ Convert acados ocp nlp object to JSON format by stripping the 
     property mangling and adding array dimension info.
     ALL items of type String will be converted 
     to type ndarrray!
@@ -1234,7 +1412,7 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
         if 'ndarray' in ocp_nlp_layout[k]:
             if isinstance(v, int) or isinstance(v, float):
                 v = np.array([v])
-        if v_type == 'ndarray' or v_type__ == 'list':
+        if (v_type == 'ndarray' or v_type__ == 'list') and (ocp_nlp_layout[k][0] != 'str'):
             dims_l = []
             dims_names = []
             dim_keys = ocp_nlp_layout[k][1]
