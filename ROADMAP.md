@@ -13,6 +13,12 @@
 
 #### `matlab interface`
 - [ ] code generation workflow! # Mex templating
+    - 1) nonlinear least-squares 
+    - 2) Vz (already implemented?)
+    - 3) exact Hessian
+    - 4) external cost
+    - 5) GNSF
+    - 6) discrete dynamics
 - [x] separate `acados_ocp()` into generating the C object and setting the numerical data
 - [x] support nonuniform grids
 - [x] OCP with DAEs

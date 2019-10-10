@@ -145,6 +145,7 @@ classdef acados_ocp_model < handle
 					obj.acados_ocp_nlp_json.cost.Vx_e = value;
 				elseif (strcmp(field, 'cost_Vz'))
 					obj.model_struct.cost_Vz = value;
+                    % TODO(andrea): add V_z :P 
 				elseif (strcmp(field, 'cost_W'))
 					obj.model_struct.cost_W = value;
                     obj.acados_ocp_nlp_json.cost.W = value;

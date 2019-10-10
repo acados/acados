@@ -9,7 +9,14 @@ function ocp_generate_c_code(obj)
             end
         end
 
-        
+        % add checks for 
+        % 1) nonlinear least-squares (jeez)
+        % 2) Vz (already implemented?)
+        % 3) exact Hessian
+        % 4) external cost
+        % 5) GNSF
+        % 6) discrete dynamics
+                
         % set include and lib path
         acados_folder = getenv('ACADOS_INSTALL_DIR');
         obj.acados_ocp_nlp_json.acados_include_path = [acados_folder, '/include'];
