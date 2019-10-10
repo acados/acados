@@ -59,7 +59,7 @@ ocp_N = 100;
 %nlp_solver = 'sqp_rti';
 %nlp_solver_exact_hessian = 'false';
 nlp_solver = 'sqp'; % sqp, sqp_rti
-nlp_solver_exact_hessian = 'true';
+nlp_solver_exact_hessian = 'false';
 regularize_method = 'project_reduc_hess'; % no_regularize, project,...
 	% project_reduc_hess, mirror, convexify
 %regularize_method = 'mirror';
