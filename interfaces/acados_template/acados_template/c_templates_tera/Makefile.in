@@ -62,7 +62,7 @@ OBJ+= acados_solver_{{ model.name }}.o
 INCLUDE_PATH = {{ acados_include_path }}
 LIB_PATH = {{ acados_lib_path }}
 
-all: clean casadi_fun main solver example
+all: clean casadi_fun main solver sim_solver example
 
 CASADI_MODEL_SOURCE= 
 {% if  solver_config.integrator_type == "ERK" %}
@@ -109,7 +109,7 @@ solver:
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 sim_solver:
-	gcc $(ACADOS_FLAGS) -c acados_sim_solver_{{ ocp.model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
+	gcc $(ACADOS_FLAGS) -c acados_sim_solver_{{ model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 example:

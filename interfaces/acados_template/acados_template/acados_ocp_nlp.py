@@ -1250,15 +1250,6 @@ class acados_ocp_nlp:
         setter_to_call(tokens[1], value)
         return 
 
-def check_ra(ra):
-    """
-    (DEPRECATED) function that checks the consistency of the optimal control description
-    """
-    # TODO(andrea): dimensions check are already performed 
-    # on the JSON data and type checks should be enforced by the 
-    # property setters. Add extra checks here?
-    return
-
 def np_array_to_list(np_array):
     return np_array.tolist()
 

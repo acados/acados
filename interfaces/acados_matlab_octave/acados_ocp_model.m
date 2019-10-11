@@ -52,7 +52,7 @@ classdef acados_ocp_model < handle
                 if J(i,this_idx) ~= 1
                     error(['J_to_idx: J matrices can only contain 1s, got J(' num2str(i) ', ' num2str(this_idx) ') = ' num2str(J(i,this_idx)) ]);
                 end
-                idx(i) = this_idx - 1; % strore 0-based index
+                idx(i) = this_idx - 1; % store 0-based index
             end
         end
 
