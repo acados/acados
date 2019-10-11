@@ -60,7 +60,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     if acados_ocp.con_h_e.name is not None:
         # nonlinear part of nonlinear constraints 
-        generate_c_code_constraint(acados_ocp.con_h_e, '_h_e_constraint')
+        generate_c_code_constraint_e(acados_ocp.con_h_e, '_h_e_constraint')
     
     if acados_ocp.con_p.name is not None:
         # convex part of nonlinear constraints 
