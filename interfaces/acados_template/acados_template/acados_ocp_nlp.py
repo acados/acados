@@ -124,7 +124,7 @@ class ocp_nlp_dims:
 
     @property
     def nsbx_e(self):
-        return self.__nsbx
+        return self.__nsbx_e
 
     @property
     def nsbu(self):
@@ -250,14 +250,14 @@ class ocp_nlp_dims:
             raise Exception('Invalid nbu value. Exiting.')
 
     @nsbx.setter
-    def nsbx(self, nbx):
+    def nsbx(self, nsbx):
         if type(nsbx) == int and nsbx > -1:
             self.__nsbx = nsbx
         else:
             raise Exception('Invalid nsbx value. Exiting.')
 
     @nsbx_e.setter
-    def nsbx_e(self, nbx_e):
+    def nsbx_e(self, nsbx_e):
         if type(nsbx_e) == int and nsbx_e > -1:
             self.__nsbx_e = nsbx_e
         else:
