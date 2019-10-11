@@ -108,6 +108,10 @@ solver:
 	gcc $(ACADOS_FLAGS) -c acados_solver_{{ model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
+sim_solver:
+	gcc $(ACADOS_FLAGS) -c acados_sim_solver_{{ ocp.model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
+	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
+
 example:
 	gcc $(ACADOS_FLAGS) -o main_{{ model.name}} $(OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH) \
