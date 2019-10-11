@@ -1,5 +1,5 @@
-#ifndef ACADOS_SIM_{{ocp.model_name}}_H_
-#define ACADOS_SIM_{{ocp.model_name}}_H_
+#ifndef ACADOS_SIM_{{ocp.model.name}}_H_
+#define ACADOS_SIM_{{ocp.model.name}}_H_
 
 #include "acados_c/sim_interface.h"
 #include "acados_c/external_function_interface.h"
@@ -8,24 +8,24 @@
 extern "C" {
 #endif
 
-int {{ocp.model_name}}_acados_sim_create();
-int {{ocp.model_name}}_acados_sim_solve();
-int {{ocp.model_name}}_acados_sim_free();
+int {{ocp.model.name}}_acados_sim_create();
+int {{ocp.model.name}}_acados_sim_solve();
+int {{ocp.model.name}}_acados_sim_free();
 
-sim_config  * {{ocp.model_name}}_acados_get_sim_config();
-sim_in      * {{ocp.model_name}}_acados_get_sim_in();
-sim_out     * {{ocp.model_name}}_acados_get_sim_out();
-void        * {{ocp.model_name}}_acados_get_sim_dims();
-sim_opts    * {{ocp.model_name}}_acados_get_sim_opts();
-sim_solver  * {{ocp.model_name}}_acados_get_sim_solver();
+sim_config  * {{ocp.model.name}}_acados_get_sim_config();
+sim_in      * {{ocp.model.name}}_acados_get_sim_in();
+sim_out     * {{ocp.model.name}}_acados_get_sim_out();
+void        * {{ocp.model.name}}_acados_get_sim_dims();
+sim_opts    * {{ocp.model.name}}_acados_get_sim_opts();
+sim_solver  * {{ocp.model.name}}_acados_get_sim_solver();
 
 // ** global data **
-extern sim_config  * {{ocp.model_name}}_sim_config;
-extern sim_in      * {{ocp.model_name}}_sim_in;
-extern sim_out     * {{ocp.model_name}}_sim_out; 
-extern void        * {{ocp.model_name}}_sim_dims;
-extern sim_opts    * {{ocp.model_name}}_sim_opts;
-extern sim_solver  * {{ocp.model_name}}_sim_solver; 
+extern sim_config  * {{ocp.model.name}}_sim_config;
+extern sim_in      * {{ocp.model.name}}_sim_in;
+extern sim_out     * {{ocp.model.name}}_sim_out; 
+extern void        * {{ocp.model.name}}_sim_dims;
+extern sim_opts    * {{ocp.model.name}}_sim_opts;
+extern sim_solver  * {{ocp.model.name}}_sim_solver; 
 
 #ifdef __cplusplus
 }
@@ -60,4 +60,4 @@ extern external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
 
-#endif  // ACADOS_SIM_{{ocp.model_name}}_H_
+#endif  // ACADOS_SIM_{{ocp.model.name}}_H_

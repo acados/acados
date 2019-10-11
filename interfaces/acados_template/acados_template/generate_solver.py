@@ -37,6 +37,7 @@ from .generate_c_code_implicit_ode import *
 from .generate_c_code_constraint import *
 from .acados_ocp_nlp import *
 from ctypes import *
+from copy import deepcopy
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
@@ -65,7 +66,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         # convex part of nonlinear constraints 
         generate_c_code_constraint(acados_ocp.con_p, '_p_constraint')
 
-    ocp_nlp = acados_ocp
+    ocp_nlp = deepcopy(acados_ocp)
     ocp_nlp.cost = acados_ocp.cost.__dict__
     ocp_nlp.constraints = acados_ocp.constraints.__dict__
     ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
