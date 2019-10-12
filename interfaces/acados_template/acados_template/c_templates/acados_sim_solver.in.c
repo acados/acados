@@ -37,8 +37,8 @@
 
 // example specific
 
-#include "{{ ocp.model_name }}_model/{{ ocp.model_name }}_model.h"
-#include "acados_sim_solver_{{ ocp.model_name }}.h"
+#include "{{ ocp.model.name }}_model/{{ ocp.model.name }}_model.h"
+#include "acados_sim_solver_{{ ocp.model.name }}.h"
 
 #define NX_    {{ ocp.dims.nx }}
 #define NZ_    {{ ocp.dims.nz }}
@@ -50,7 +50,7 @@
 #define NU   NU_
 #define NP   NP_
 
-int {{ ocp.model_name}}_acados_sim_create() {
+int {{ ocp.model.name}}_acados_sim_create() {
 
 	// initialize
 
@@ -76,12 +76,12 @@ int {{ ocp.model_name}}_acados_sim_create() {
     {% endif %}
 
 	// external functions (implicit model)
-	sim_impl_dae_fun->casadi_fun  = &{{ ocp.model_name }}_impl_dae_fun;
-	sim_impl_dae_fun->casadi_work = &{{ ocp.model_name }}_impl_dae_fun_work;
-	sim_impl_dae_fun->casadi_sparsity_in = &{{ ocp.model_name }}_impl_dae_fun_sparsity_in;
-	sim_impl_dae_fun->casadi_sparsity_out = &{{ ocp.model_name }}_impl_dae_fun_sparsity_out;
-	sim_impl_dae_fun->casadi_n_in = &{{ ocp.model_name }}_impl_dae_fun_n_in;
-	sim_impl_dae_fun->casadi_n_out = &{{ ocp.model_name }}_impl_dae_fun_n_out;
+	sim_impl_dae_fun->casadi_fun  = &{{ ocp.model.name }}_impl_dae_fun;
+	sim_impl_dae_fun->casadi_work = &{{ ocp.model.name }}_impl_dae_fun_work;
+	sim_impl_dae_fun->casadi_sparsity_in = &{{ ocp.model.name }}_impl_dae_fun_sparsity_in;
+	sim_impl_dae_fun->casadi_sparsity_out = &{{ ocp.model.name }}_impl_dae_fun_sparsity_out;
+	sim_impl_dae_fun->casadi_n_in = &{{ ocp.model.name }}_impl_dae_fun_n_in;
+	sim_impl_dae_fun->casadi_n_out = &{{ ocp.model.name }}_impl_dae_fun_n_out;
 
     {% if ocp.dims.np < 1 %}
     external_function_casadi_create(sim_impl_dae_fun);
@@ -90,12 +90,12 @@ int {{ ocp.model_name}}_acados_sim_create() {
     {% endif %}
 
 	// external_function_casadi impl_dae_fun_jac_x_xdot_z;
-	sim_impl_dae_fun_jac_x_xdot_z->casadi_fun = &{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z;
-	sim_impl_dae_fun_jac_x_xdot_z->casadi_work = &{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z_work;
-	sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_in = &{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z_sparsity_in;
-	sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_out = &{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z_sparsity_out;
-	sim_impl_dae_fun_jac_x_xdot_z->casadi_n_in = &{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z_n_in;
-	sim_impl_dae_fun_jac_x_xdot_z->casadi_n_out = &{{ ocp.model_name }}_impl_dae_fun_jac_x_xdot_z_n_out;
+	sim_impl_dae_fun_jac_x_xdot_z->casadi_fun = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z;
+	sim_impl_dae_fun_jac_x_xdot_z->casadi_work = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_work;
+	sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_in = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_sparsity_in;
+	sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_out = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_sparsity_out;
+	sim_impl_dae_fun_jac_x_xdot_z->casadi_n_in = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_n_in;
+	sim_impl_dae_fun_jac_x_xdot_z->casadi_n_out = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_n_out;
 
     {% if ocp.dims.np < 1 %}
     external_function_casadi_create(sim_impl_dae_fun_jac_x_xdot_z);
@@ -104,12 +104,12 @@ int {{ ocp.model_name}}_acados_sim_create() {
     {% endif %}
 
 	// external_function_casadi impl_dae_jac_x_xdot_u_z;
-	sim_impl_dae_jac_x_xdot_u_z->casadi_fun = &{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z;
-	sim_impl_dae_jac_x_xdot_u_z->casadi_work = &{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z_work;
-	sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_in = &{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z_sparsity_in;
-	sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_out = &{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z_sparsity_out;
-	sim_impl_dae_jac_x_xdot_u_z->casadi_n_in = &{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z_n_in;
-	sim_impl_dae_jac_x_xdot_u_z->casadi_n_out = &{{ ocp.model_name }}_impl_dae_jac_x_xdot_u_z_n_out;
+	sim_impl_dae_jac_x_xdot_u_z->casadi_fun = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z;
+	sim_impl_dae_jac_x_xdot_u_z->casadi_work = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_work;
+	sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_in = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_sparsity_in;
+	sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_out = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_sparsity_out;
+	sim_impl_dae_jac_x_xdot_u_z->casadi_n_in = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_n_in;
+	sim_impl_dae_jac_x_xdot_u_z->casadi_n_out = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_n_out;
 
     {% if ocp.dims.np < 1 %}
     external_function_casadi_create(sim_impl_dae_jac_x_xdot_u_z);
@@ -127,12 +127,12 @@ int {{ ocp.model_name}}_acados_sim_create() {
     sim_expl_ode_fun_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     {% endif %}
 
-    sim_forw_vde_casadi->casadi_fun = &{{ ocp.model_name }}_expl_vde_forw;
-    sim_forw_vde_casadi->casadi_n_in = &{{ ocp.model_name }}_expl_vde_forw_n_in;
-    sim_forw_vde_casadi->casadi_n_out = &{{ ocp.model_name }}_expl_vde_forw_n_out;
-    sim_forw_vde_casadi->casadi_sparsity_in = &{{ ocp.model_name }}_expl_vde_forw_sparsity_in;
-    sim_forw_vde_casadi->casadi_sparsity_out = &{{ ocp.model_name }}_expl_vde_forw_sparsity_out;
-    sim_forw_vde_casadi->casadi_work = &{{ ocp.model_name }}_expl_vde_forw_work;
+    sim_forw_vde_casadi->casadi_fun = &{{ ocp.model.name }}_expl_vde_forw;
+    sim_forw_vde_casadi->casadi_n_in = &{{ ocp.model.name }}_expl_vde_forw_n_in;
+    sim_forw_vde_casadi->casadi_n_out = &{{ ocp.model.name }}_expl_vde_forw_n_out;
+    sim_forw_vde_casadi->casadi_sparsity_in = &{{ ocp.model.name }}_expl_vde_forw_sparsity_in;
+    sim_forw_vde_casadi->casadi_sparsity_out = &{{ ocp.model.name }}_expl_vde_forw_sparsity_out;
+    sim_forw_vde_casadi->casadi_work = &{{ ocp.model.name }}_expl_vde_forw_work;
 
     {% if ocp.dims.np < 1 %}
     external_function_casadi_create(sim_forw_vde_casadi);
@@ -140,12 +140,12 @@ int {{ ocp.model_name}}_acados_sim_create() {
     external_function_param_casadi_create(sim_forw_vde_casadi, {{ ocp.dims.np }});
     {% endif %}
 
-    sim_expl_ode_fun_casadi->casadi_fun = &{{ ocp.model_name }}_expl_ode_fun;
-    sim_expl_ode_fun_casadi->casadi_n_in = &{{ ocp.model_name }}_expl_ode_fun_n_in;
-    sim_expl_ode_fun_casadi->casadi_n_out = &{{ ocp.model_name }}_expl_ode_fun_n_out;
-    sim_expl_ode_fun_casadi->casadi_sparsity_in = &{{ ocp.model_name }}_expl_ode_fun_sparsity_in;
-    sim_expl_ode_fun_casadi->casadi_sparsity_out = &{{ ocp.model_name }}_expl_ode_fun_sparsity_out;
-    sim_expl_ode_fun_casadi->casadi_work = &{{ ocp.model_name }}_expl_ode_fun_work;
+    sim_expl_ode_fun_casadi->casadi_fun = &{{ ocp.model.name }}_expl_ode_fun;
+    sim_expl_ode_fun_casadi->casadi_n_in = &{{ ocp.model.name }}_expl_ode_fun_n_in;
+    sim_expl_ode_fun_casadi->casadi_n_out = &{{ ocp.model.name }}_expl_ode_fun_n_out;
+    sim_expl_ode_fun_casadi->casadi_sparsity_in = &{{ ocp.model.name }}_expl_ode_fun_sparsity_in;
+    sim_expl_ode_fun_casadi->casadi_sparsity_out = &{{ ocp.model.name }}_expl_ode_fun_sparsity_out;
+    sim_expl_ode_fun_casadi->casadi_work = &{{ ocp.model.name }}_expl_ode_fun_work;
 
     {% if ocp.dims.np < 1 %}
     external_function_casadi_create(sim_expl_ode_fun_casadi);
@@ -163,86 +163,86 @@ int {{ ocp.model_name}}_acados_sim_create() {
     plan.sim_solver = {{ ocp.solver_config.integrator_type }};
 
     // create correct config based on plan
-    {{ ocp.model_name }}_sim_config = sim_config_create(plan);
+    {{ ocp.model.name }}_sim_config = sim_config_create(plan);
 
     // sim dims
 
-    {{ ocp.model_name }}_sim_dims = sim_dims_create({{ ocp.model_name }}_sim_config);
-    sim_dims_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, "nx", &nx);
-    sim_dims_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, "nu", &nu);
-    sim_dims_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, "nz", &nz);
+    {{ ocp.model.name }}_sim_dims = sim_dims_create({{ ocp.model.name }}_sim_config);
+    sim_dims_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, "nx", &nx);
+    sim_dims_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, "nu", &nu);
+    sim_dims_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, "nz", &nz);
 
     // sim opts
 
-    {{ ocp.model_name }}_sim_opts = sim_opts_create({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims);
+    {{ ocp.model.name }}_sim_opts = sim_opts_create({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims);
 
-    {{ ocp.model_name }}_sim_opts->ns = 1; // number of stages in rk integrator
-    {{ ocp.model_name }}_sim_opts->num_steps = 1; // number of integration steps
-    {{ ocp.model_name }}_sim_opts->sens_adj = false;
-    {{ ocp.model_name }}_sim_opts->sens_forw = true;
+    {{ ocp.model.name }}_sim_opts->ns = 1; // number of stages in rk integrator
+    {{ ocp.model.name }}_sim_opts->num_steps = 1; // number of integration steps
+    {{ ocp.model.name }}_sim_opts->sens_adj = false;
+    {{ ocp.model.name }}_sim_opts->sens_forw = true;
     {% if ocp.solver_config.integrator_type == "IRK" %}
-    {{ ocp.model_name }}_sim_opts->sens_algebraic = false;
-    {{ ocp.model_name }}_sim_opts->output_z = false;
-    {{ ocp.model_name }}_sim_opts->newton_iter = 5;
-    {{ ocp.model_name }}_sim_opts->jac_reuse = false;
+    {{ ocp.model.name }}_sim_opts->sens_algebraic = false;
+    {{ ocp.model.name }}_sim_opts->output_z = false;
+    {{ ocp.model.name }}_sim_opts->newton_iter = 5;
+    {{ ocp.model.name }}_sim_opts->jac_reuse = false;
     {% endif %}
 
     // sim in / out
 
-    {{ ocp.model_name }}_sim_in  = sim_in_create({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims);
-    {{ ocp.model_name }}_sim_out = sim_out_create({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims);
+    {{ ocp.model.name }}_sim_in  = sim_in_create({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims);
+    {{ ocp.model.name }}_sim_out = sim_out_create({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims);
 
-    {{ ocp.model_name }}_sim_in->T = Td;
+    {{ ocp.model.name }}_sim_in->T = Td;
 
     // external functions
     {% if ocp.solver_config.integrator_type == "IRK" %}
-    {{ ocp.model_name }}_sim_config->model_set({{ ocp.model_name }}_sim_in->model, "impl_ode_fun", sim_impl_dae_fun);
-    {{ ocp.model_name }}_sim_config->model_set({{ ocp.model_name }}_sim_in->model, "impl_ode_fun_jac_x_xdot", sim_impl_dae_fun_jac_x_xdot_z);
-    {{ ocp.model_name }}_sim_config->model_set({{ ocp.model_name }}_sim_in->model, "impl_ode_jac_x_xdot_u", sim_impl_dae_jac_x_xdot_u_z);
+    {{ ocp.model.name }}_sim_config->model_set({{ ocp.model.name }}_sim_in->model, "impl_ode_fun", sim_impl_dae_fun);
+    {{ ocp.model.name }}_sim_config->model_set({{ ocp.model.name }}_sim_in->model, "impl_ode_fun_jac_x_xdot", sim_impl_dae_fun_jac_x_xdot_z);
+    {{ ocp.model.name }}_sim_config->model_set({{ ocp.model.name }}_sim_in->model, "impl_ode_jac_x_xdot_u", sim_impl_dae_jac_x_xdot_u_z);
 
     {% else %}
     {% if ocp.solver_config.integrator_type == "ERK" %} 
-    {{ ocp.model_name }}_sim_config->model_set({{ ocp.model_name }}_sim_in->model, "expl_vde_for", sim_forw_vde_casadi);
-    {{ ocp.model_name }}_sim_config->model_set({{ ocp.model_name }}_sim_in->model, "expl_ode_fun", sim_expl_ode_fun_casadi);
+    {{ ocp.model.name }}_sim_config->model_set({{ ocp.model.name }}_sim_in->model, "expl_vde_for", sim_forw_vde_casadi);
+    {{ ocp.model.name }}_sim_config->model_set({{ ocp.model.name }}_sim_in->model, "expl_ode_fun", sim_expl_ode_fun_casadi);
     {% endif %}
     {% endif %}
 
     // sim solver
 
-    {{ ocp.model_name }}_sim_solver = sim_solver_create({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_opts);
+    {{ ocp.model.name }}_sim_solver = sim_solver_create({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_opts);
     
     // initialize state and input to zero
     // x
     for (ii = 0; ii < NX; ii++)
-        {{ ocp.model_name }}_sim_in->x[ii] = 0.0;
+        {{ ocp.model.name }}_sim_in->x[ii] = 0.0;
     
     // u
     for (ii = 0; ii < NU; ii++)
-        {{ ocp.model_name }}_sim_in->u[ii] = 0.0;
+        {{ ocp.model.name }}_sim_in->u[ii] = 0.0;
     int status = 0;
 
     return status;
 }
 
-int {{ ocp.model_name }}_acados_sim_solve() {
+int {{ ocp.model.name }}_acados_sim_solve() {
 
     // integrate dynamics using acados sim_solver 
-    int status = sim_solve({{ ocp.model_name }}_sim_solver, {{ ocp.model_name }}_sim_in, {{ ocp.model_name }}_sim_out);
+    int status = sim_solve({{ ocp.model.name }}_sim_solver, {{ ocp.model.name }}_sim_in, {{ ocp.model.name }}_sim_out);
     if (status != 0)
-        printf("error in {{ ocp.model_name }}_acados_sim_solve()! Exiting.\n");
+        printf("error in {{ ocp.model.name }}_acados_sim_solve()! Exiting.\n");
 
     return status;
 }
 
-int {{ ocp.model_name }}_acados_sim_free() {
+int {{ ocp.model.name }}_acados_sim_free() {
 
     // free memory
-    sim_solver_destroy({{ ocp.model_name }}_sim_solver);
-    sim_in_destroy({{ ocp.model_name }}_sim_in);
-    sim_out_destroy({{ ocp.model_name }}_sim_out);
-    sim_opts_destroy({{ ocp.model_name }}_sim_opts);
-    sim_dims_destroy({{ ocp.model_name }}_sim_dims);
-    sim_config_destroy({{ ocp.model_name }}_sim_config);
+    sim_solver_destroy({{ ocp.model.name }}_sim_solver);
+    sim_in_destroy({{ ocp.model.name }}_sim_in);
+    sim_out_destroy({{ ocp.model.name }}_sim_out);
+    sim_opts_destroy({{ ocp.model.name }}_sim_opts);
+    sim_dims_destroy({{ ocp.model.name }}_sim_dims);
+    sim_config_destroy({{ ocp.model.name }}_sim_config);
 
     // free external function 
     {% if ocp.solver_config.integrator_type == "IRK" %}
@@ -268,21 +268,21 @@ int {{ ocp.model_name }}_acados_sim_free() {
     return 0;
 }
 
-sim_config  * {{ocp.model_name}}_acados_get_sim_config() {  
-    return {{ocp.model_name}}_sim_config; };
+sim_config  * {{ocp.model.name}}_acados_get_sim_config() {  
+    return {{ocp.model.name}}_sim_config; };
 
-sim_in      * {{ocp.model_name}}_acados_get_sim_in(){       
-    return {{ocp.model_name}}_sim_in; };
+sim_in      * {{ocp.model.name}}_acados_get_sim_in(){       
+    return {{ocp.model.name}}_sim_in; };
 
-sim_out     * {{ocp.model_name}}_acados_get_sim_out(){      
-    return {{ocp.model_name}}_sim_out; };
+sim_out     * {{ocp.model.name}}_acados_get_sim_out(){      
+    return {{ocp.model.name}}_sim_out; };
 
-void        * {{ocp.model_name}}_acados_get_sim_dims(){     
-    return {{ocp.model_name}}_sim_dims; };
+void        * {{ocp.model.name}}_acados_get_sim_dims(){     
+    return {{ocp.model.name}}_sim_dims; };
 
-sim_opts    * {{ocp.model_name}}_acados_get_sim_opts(){     
-    return {{ocp.model_name}}_sim_opts; };
+sim_opts    * {{ocp.model.name}}_acados_get_sim_opts(){     
+    return {{ocp.model.name}}_sim_opts; };
 
-sim_solver  * {{ocp.model_name}}_acados_get_sim_solver(){   
-    return {{ocp.model_name}}_sim_solver; };
+sim_solver  * {{ocp.model.name}}_acados_get_sim_solver(){   
+    return {{ocp.model.name}}_sim_solver; };
 
