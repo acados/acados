@@ -59,7 +59,7 @@ def generate_c_code_constraint( constraint, suffix_name ):
     nu = u.size()[0]
 
     # set up functions to be exported
-    fun_name = con_name + suffix_name
+    fun_name = con_name + '_h_constraint'
     if nr == 0: # BGH constraint
         jac_x = jacobian(con_expr, x);
         jac_u = jacobian(con_expr, u);
@@ -105,17 +105,19 @@ def generate_c_code_constraint( constraint, suffix_name ):
         constraint_fun_jac_tran_hess.generate(file_name, casadi_opts)
         os.chdir('..')
 
-        gen_dir = con_name + '_r_constraint'
+
+        jac_u = jacobian(con_r_expr, u);
+        jac_x = jacobian(con_r_expr, x);
+        fun_name = con_name + '_p_constraint'
+        constraint_residual_fun_jac_tran = Function(fun_name, [x, u], [con_r_expr, vertcat(transpose(jac_u), transpose(jac_x))])
+
+        gen_dir = con_name + '_p_constraint'
         if not os.path.exists(gen_dir):
             os.mkdir(gen_dir)
         gen_dir_location = './' + gen_dir
         os.chdir(gen_dir_location)
-        file_name = con_name + '_r_constraint'
-        constraint_fun_jac_tran_hess.generate(file_name, casadi_opts)
-
-        jac_u = jacobian(con_r_expr, u);
-        jac_x = jacobian(con_r_expr, x);
-        constraint_residual_fun_jac_tran = Function(fun_name, [x, u], [con_r_expr, vertcat(transpose(jac_u), transpose(jac_x))])
+        file_name = con_name + '_p_constraint'
+        constraint_residual_fun_jac_tran.generate(file_name, casadi_opts)
 
         os.chdir('../..')
 
