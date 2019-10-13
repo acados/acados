@@ -463,6 +463,12 @@
         ],
         "tf": [
             "float"
+        ],
+        "sim_method_num_stages": [
+            "int"
+        ],
+        "sim_method_num_steps": [
+            "int"
         ]
     }
 }

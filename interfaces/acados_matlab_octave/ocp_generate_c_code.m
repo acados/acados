@@ -61,13 +61,13 @@ function ocp_generate_c_code(obj)
         
         % post process numerical data (mostly cast scalars to 1-dimensional cells)
         constr = obj.acados_ocp_nlp_json.constraints;
-        %props = properties(constr);
+        % props = properties(constr);
         props = fieldnames(constr);
         for iprop = 1:length(props)
             thisprop = props{iprop};
-            %%%Add logic here if you want to work with select properties
+            % add logic here if you want to work with select properties
             thisprop_value = constr.(thisprop);
-            %%%Add logic here if you want to do something based on the property's value
+            % add logic here if you want to do something based on the property's value
             if size(thisprop_value) == [1 1]
                 constr.(thisprop) = num2cell(constr.(thisprop));
             end
@@ -75,7 +75,7 @@ function ocp_generate_c_code(obj)
         obj.acados_ocp_nlp_json.constraints = constr;
         
         cost = obj.acados_ocp_nlp_json.cost;
-        %props = properties(cost);
+        % props = properties(cost);
         props = fieldnames(cost);
         for iprop = 1:length(props)
             thisprop = props{iprop};
@@ -91,7 +91,7 @@ function ocp_generate_c_code(obj)
         % load JSON layout
         acados_folder = getenv('ACADOS_INSTALL_DIR');
 
-        acados_layout = jsondecode(fileread([acados_folder,...
+        acados_layout = jsondecode(fileread([acados_folder, ...
             '/interfaces/acados_template/acados_template/acados_layout.json']));
 
         dims = obj.acados_ocp_nlp_json.dims;
