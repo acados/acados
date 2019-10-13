@@ -48,7 +48,7 @@
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 {% if dims.npd > 0 %}
-#include "{{ con_p.name }}_p_constraint/{{ con_p.name }}_p_constraint.h"
+#include "{{ con_h.name }}_p_constraint/{{ con_h.name }}_p_constraint.h"
 {% endif %}
 {% if dims.nh > 0 %}
 #include "{{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.h"
@@ -480,12 +480,12 @@ int acados_create() {
     p_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear part of convex-composite constraint
-        p_constraint[i].casadi_fun = &{{ con_p.name }}_p_constraint;
-        p_constraint[i].casadi_n_in = &{{ con_p.name }}_p_constraint_n_in;
-        p_constraint[i].casadi_n_out = &{{ con_p.name }}_p_constraint_n_out;
-        p_constraint[i].casadi_sparsity_in = &{{ con_p.name }}_p_constraint_sparsity_in;
-        p_constraint[i].casadi_sparsity_out = &{{ con_p.name }}_p_constraint_sparsity_out;
-        p_constraint[i].casadi_work = &{{ con_p.name }}_p_constraint_work;
+        p_constraint[i].casadi_fun = &{{ con_h.name }}_p_constraint;
+        p_constraint[i].casadi_n_in = &{{ con_h.name }}_p_constraint_n_in;
+        p_constraint[i].casadi_n_out = &{{ con_h.name }}_p_constraint_n_out;
+        p_constraint[i].casadi_sparsity_in = &{{ con_h.name }}_p_constraint_sparsity_in;
+        p_constraint[i].casadi_sparsity_out = &{{ con_h.name }}_p_constraint_sparsity_out;
+        p_constraint[i].casadi_work = &{{ con_h.name }}_p_constraint_work;
 
         external_function_casadi_create(&p_constraint[i]);
     }
@@ -494,12 +494,12 @@ int acados_create() {
     {% if dims.npd_e > 0 %}
 	// nonlinear part of convex-composite constraint
 	external_function_casadi p_e_constraint;
-	p_e_constraint.casadi_fun = &{{ con_p_e.name }}_p_e_constraint;
-	p_e_constraint.casadi_n_in = &{{ con_p_e.name }}_p_e_constraint_n_in;
-	p_e_constraint.casadi_n_out = &{{ con_p_e.name }}_p_e_constraint_n_out;
-	p_e_constraint.casadi_sparsity_in = &{{ con_p_e.name }}_p_e_constraint_sparsity_in;
-	p_e_constraint.casadi_sparsity_out = &{{ con_p_e.name }}_p_e_constraint_sparsity_out;
-	p_e_constraint.casadi_work = &{{ con_p_e.name }}_p_e_constraint_work;
+	p_e_constraint.casadi_fun = &{{ con_h_e.name }}_p_e_constraint;
+	p_e_constraint.casadi_n_in = &{{ con_h_e.name }}_p_e_constraint_n_in;
+	p_e_constraint.casadi_n_out = &{{ con_h_e.name }}_p_e_constraint_n_out;
+	p_e_constraint.casadi_sparsity_in = &{{ con_h_e.name }}_p_e_constraint_sparsity_in;
+	p_e_constraint.casadi_sparsity_out = &{{ con_h_e.name }}_p_e_constraint_sparsity_out;
+	p_e_constraint.casadi_work = &{{ con_h_e.name }}_p_e_constraint_work;
 
     external_function_casadi_create(p_e_constraint);
     {% endif %}
