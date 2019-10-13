@@ -394,7 +394,7 @@ class ocp_nlp_cost:
 
     @cost_type.setter
     def cost_type(self, cost_type):
-        cost_types = ('LINEAR_LS')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS')
 
         if type(cost_type) == str and cost_type in cost_types:
             self.__cost_type = cost_type
@@ -499,7 +499,7 @@ class ocp_nlp_cost:
 
     @cost_type_e.setter
     def cost_type_e(self, cost_type_e):
-        cost_types = ('LINEAR_LS')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS')
 
         if type(cost_type_e) == str and cost_type_e in cost_types:
             self.__cost_type_e = cost_type_e
