@@ -83,6 +83,8 @@ setup(name='acados_template',
        'c_templates_tera/h_constraint.in.h',
        'c_templates_tera/h_e_constraint.in.h',
        'c_templates_tera/make_sfun.in.m',
+       'c_templates_tera/r_cost.in.h',
+       'c_templates_tera/r_e_cost.in.h',
        'acados_layout.json'
        ]},
    zip_safe=False
