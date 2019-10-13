@@ -39,6 +39,7 @@ import scipy.linalg
 from ctypes import *
 
 FORMULATION = 'NLS' # 'LS'
+# FORMULATION = 'LS' # 'LS'
 
 # create render arguments
 ocp = acados_ocp_nlp()
@@ -87,7 +88,11 @@ Q[3,3] = 1e-2
 R = np.eye(1)
 R[0,0] = 1e0
 
-nlp_cost.W = scipy.linalg.block_diag(Q, R) 
+if FORMULATION == 'NLS':
+    nlp_cost.W = scipy.linalg.block_diag(R, Q) 
+else:
+    nlp_cost.W = scipy.linalg.block_diag(Q, R) 
+
 nlp_cost.W_e = Q 
 
 # TODO(andrea): avoid this when using 'NLS'
@@ -114,18 +119,16 @@ nlp_cost.Vx_e = Vx_e
 if FORMULATION == 'NLS':
     x = SX.sym('x', 4, 1)
     u = SX.sym('u', 1, 1)
-    ocp.cost_r.expr = vertcat(x, u) 
+    ocp.cost_r.expr = vertcat(u, x) 
     ocp.cost_r.x = x 
     ocp.cost_r.u = u 
     ocp.cost_r.name = 'lin_res' 
     ocp.cost_r.ny = nx + nu 
 
-    ocp.cost_r_e.expr = model.x
-    ocp.cost_r_e.x = model.x 
+    ocp.cost_r_e.expr = x
+    ocp.cost_r_e.x = x 
     ocp.cost_r_e.name = 'lin_res' 
     ocp.cost_r_e.ny = nx 
-else:
-    raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
 
 
 nlp_cost.yref  = np.zeros((ny, ))
@@ -148,8 +151,8 @@ ocp.solver_config.integrator_type = 'ERK'
 
 # set prediction horizon
 ocp.solver_config.tf = Tf
-ocp.solver_config.nlp_solver_type = 'SQP'
-# ocp.solver_config.nlp_solver_type = 'SQP_RTI'
+# ocp.solver_config.nlp_solver_type = 'SQP'
+ocp.solver_config.nlp_solver_type = 'SQP_RTI'
 
 # set header path
 # ocp.acados_include_path  = '/usr/local/include'
