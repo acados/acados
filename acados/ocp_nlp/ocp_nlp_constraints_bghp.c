@@ -1095,7 +1095,9 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
             // double lam = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh) -
             //              blasfeo_dvecex1(memory->lam, nb + ng);
 
-            double lam_i = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh) + i;
+            double lam_i = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh + i);
+
+            // printf("lam_i = %f", lam_i);
 
             // andrea: this did not take into account the Hessian of the convex outer part
             // blasfeo_dsyrk_ln(nx + nu, np, 2 * lam, &work->jacobian_quadratic, 0, 0,
@@ -1106,9 +1108,15 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
                     0, 0, &work->tmp_np_nh_np, np * i, 0, 0.0, &work->tmp_nv_np, 0, 0, 
                     &work->tmp_nv_np, 0, 0);
 
-            blasfeo_dgemm_nn(nv, np, nv, 1.0, &work->tmp_nv_np, 
+            // printf("tmp_np_nh_np:\n");
+            // blasfeo_print_dmat(2, 2, &work->tmp_np_nh_np, 0, 0);
+            blasfeo_dgemm_nt(nv, np, nv, 1.0, &work->tmp_nv_np, 
                     0, 0, &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq, 0, 0, 
                     memory->RSQrq, 0, 0);
+            // printf("work->jacobian_quadratic:\n");
+            // blasfeo_print_dmat(2, 2, &work->jacobian_quadratic, 0, 0);
+            // printf("memory->RSQrq:\n");
+            // blasfeo_print_dmat(2, 2, memory->RSQrq, 0, 0);
         }
     }
 
