@@ -998,6 +998,8 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     int ns = dims->ns;
     int np = dims->np;
 
+    int nv = nx + nu;
+
     // XXX large enough ?
     ext_fun_arg_t ext_fun_type_in[3];
     void *ext_fun_in[3];
@@ -1102,11 +1104,11 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
             
             blasfeo_dgemm_nt(np, np, np, lam_i, &work->jacobian_quadratic, 
                     0, 0, &work->tmp_np_nh_np, np * i, 0, 0.0, &work->tmp_nv_np, 0, 0, 
-                    &work->tmp_nv_np);
+                    &work->tmp_nv_np, 0, 0);
 
             blasfeo_dgemm_nn(nv, np, nv, 1.0, &work->tmp_nv_np, 
                     0, 0, &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq, 0, 0, 
-                    memory->RSQrq);
+                    memory->RSQrq, 0, 0);
         }
     }
 
