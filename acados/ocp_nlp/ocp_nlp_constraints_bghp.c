@@ -1013,18 +1013,18 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     blasfeo_dgemv_t(nu + nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_ni, nb,
                     &work->tmp_ni, nb);
 
-    if (nz > 0) {
-        printf("ocp_nlp_constraints_bghp_update_qp_matrices: constraints with nz > 0 not yet implmented. Exiting.\n");
-        exit(1);
-    }
+    // if (nz > 0) {
+    //     printf("ocp_nlp_constraints_bghp_update_qp_matrices: constraints with nz > 0 not yet implmented. Exiting.\n");
+    //     exit(1);
+    // }
 
     // nonlinear
     if (nh > 0)
     {
-        if (nz > 0) {
-            printf("ocp_nlp_constraints_bghp: BGHP constraint are not available (yet) when nz > 0. Exiting.\n");
-            exit(1);
-        }
+        // if (nz > 0) {
+        //     printf("ocp_nlp_constraints_bghp: BGHP constraint are not available (yet) when nz > 0. Exiting.\n");
+        //     exit(1);
+        // }
 
         //
         struct blasfeo_dvec_args x_in;  // input x of external fun;
@@ -1092,7 +1092,7 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
         for (int i = 0; i < nh; i++) { 
             // TODO(andrea): @giaf: if the lower bound is active we shouldn't consider its contribution, right?
             // Removing this.
-            // double lam = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh) -
+            // double lam_i = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh) -
             //              blasfeo_dvecex1(memory->lam, nb + ng);
 
             double lam_i = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh + i);
