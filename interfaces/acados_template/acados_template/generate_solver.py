@@ -51,8 +51,8 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
     
-    if acados_ocp.con_p.name is not None and acados_ocp.con_h.name is None:
-        raise Exception('h constraint is missing!')
+    # if acados_ocp.con_p.name is not None and acados_ocp.con_h.name is None:
+    #     raise Exception('h constraint is missing!')
 
     if acados_ocp.con_h.name is not None:
         # nonlinear part of nonlinear constraints 
@@ -62,9 +62,9 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         # nonlinear part of nonlinear constraints 
         generate_c_code_constraint_e(acados_ocp.con_h_e, '_h_e_constraint')
     
-    if acados_ocp.con_p.name is not None:
-        # convex part of nonlinear constraints 
-        generate_c_code_constraint(acados_ocp.con_p, '_p_constraint')
+    # if acados_ocp.con_p.name is not None:
+    #     # convex part of nonlinear constraints 
+    #     generate_c_code_constraint(acados_ocp.con_p, '_p_constraint')
 
     ocp_nlp = deepcopy(acados_ocp)
     ocp_nlp.cost = acados_ocp.cost.__dict__

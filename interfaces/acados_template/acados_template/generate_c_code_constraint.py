@@ -48,8 +48,10 @@ def generate_c_code_constraint( constraint, suffix_name ):
     x = constraint.x
     u = constraint.u
     # nc = nh or np 
-    nc = constraint.nc 
-    con_exp = constraint.expr
+    nh = constraint.nh 
+    nr = constraint.nr
+    con_h_expr = constraint.con_h_expr
+    con_r_expr = constraint.con_r_expr
     con_name = constraint.name
 
     # get dimensions
@@ -58,23 +60,63 @@ def generate_c_code_constraint( constraint, suffix_name ):
 
     # set up functions to be exported
     fun_name = con_name + suffix_name
-    # TODO(andrea): first output seems to be ignored in the C code
-    jac_x = jacobian(con_exp, x);
-    jac_u = jacobian(con_exp, u);
-    constraint_fun_jac_tran = Function(fun_name, [x, u], [con_exp, vertcat(transpose(jac_u), transpose(jac_x))])
+    if nr == 0: # BGH constraint
+        jac_x = jacobian(con_expr, x);
+        jac_u = jacobian(con_expr, u);
+        constraint_fun_jac_tran = Function(fun_name, [x, u], [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x))])
 
-    # generate C code
-    if not os.path.exists('c_generated_code'):
-        os.mkdir('c_generated_code')
+        # generate C code
+        if not os.path.exists('c_generated_code'):
+            os.mkdir('c_generated_code')
 
-    os.chdir('c_generated_code')
-    gen_dir = con_name + suffix_name 
-    if not os.path.exists(gen_dir):
-        os.mkdir(gen_dir)
-    gen_dir_location = './' + gen_dir
-    os.chdir(gen_dir_location)
-    file_name = con_name + suffix_name
-    constraint_fun_jac_tran.generate(file_name, casadi_opts)
-    os.chdir('../..')
+        os.chdir('c_generated_code')
+        gen_dir = con_name + '_h_constraint'
+        if not os.path.exists(gen_dir):
+            os.mkdir(gen_dir)
+        gen_dir_location = './' + gen_dir
+        os.chdir(gen_dir_location)
+        file_name = con_name + '_h_constraint'
+        constraint_fun_jac_tran.generate(file_name, casadi_opts)
+        os.chdir('../..')
+    else: # BGHP constraint
+        jac_u = jacobian(con_h_expr, u);
+        jac_x = jacobian(con_h_expr, x);
+        w = vertcat(u, x) 
+
+        hess = hessian(con_h_expr[0], w)[0]
+        for i in range(1, nh):
+            vertcat(hess, hessian(con_h_expr[i], w))[0]
+
+        hess = vertcat(hess)
+
+        constraint_fun_jac_tran_hess = Function(fun_name, [x, u], [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x)), hess])
+
+        # generate C code
+        if not os.path.exists('c_generated_code'):
+            os.mkdir('c_generated_code')
+
+        os.chdir('c_generated_code')
+        gen_dir = con_name + '_h_constraint'
+        if not os.path.exists(gen_dir):
+            os.mkdir(gen_dir)
+        gen_dir_location = './' + gen_dir
+        os.chdir(gen_dir_location)
+        file_name = con_name + '_h_constraint'
+        constraint_fun_jac_tran_hess.generate(file_name, casadi_opts)
+        os.chdir('..')
+
+        gen_dir = con_name + '_r_constraint'
+        if not os.path.exists(gen_dir):
+            os.mkdir(gen_dir)
+        gen_dir_location = './' + gen_dir
+        os.chdir(gen_dir_location)
+        file_name = con_name + '_r_constraint'
+        constraint_fun_jac_tran_hess.generate(file_name, casadi_opts)
+
+        jac_u = jacobian(con_r_expr, u);
+        jac_x = jacobian(con_r_expr, x);
+        constraint_residual_fun_jac_tran = Function(fun_name, [x, u], [con_r_expr, vertcat(transpose(jac_u), transpose(jac_x))])
+
+        os.chdir('../..')
 
     return

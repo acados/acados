@@ -52,6 +52,17 @@ class acados_constraint():
         self.nc = None   #: number of constraints
         self.name = None #: name associated with the function
 
+class acados_constraint():
+    def __init__(self):
+        self.con_h_expr   = None #: CasADi expression for the constraint
+        self.con_r_expr = None #: CasADi expression for the constraint
+        self.x = None    #: CasADi variable describing the state of the system
+        self.u = None    #: CasADi variable describing the input of the system
+        self.z = None    #: CasADi variable describing the algebraic variables of the DAE
+        self.nh   = None   #: dimension of image of h
+        self.nr = None     #: dimension of image of nonlinear residuals 
+        self.name = None #: name associated with the function
+
 def acados_dae_strip_non_num(acados_constraint):
     out = acados_constraint
     if 'f_impl_expr' in out.keys(): 
