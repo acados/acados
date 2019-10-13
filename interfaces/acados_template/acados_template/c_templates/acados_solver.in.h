@@ -104,5 +104,11 @@ extern external_function_casadi * h_constraint;
 {% if ocp.dims.nh_e > 0 %}
 extern external_function_casadi h_e_constraint;
 {% endif %}
+{% if ocp.cost.cost_type == "NONLINEAR_LS" %}
+extern external_function_casadi * r_cost;
+{% endif %}
+{% if ocp.cost.cost_type_e == "NONLINEAR_LS" %}
+extern external_function_casadi r_e_cost;
+{% endif %}
 
 #endif  // ACADOS_SOLVER_{{ocp.model.name}}_H_
