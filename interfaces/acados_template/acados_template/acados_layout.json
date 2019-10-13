@@ -17,6 +17,16 @@
             "str"
         ]
      },
+     "cost_r": {
+         "name" : [
+            "str"
+        ]
+    },
+    "cost_r_e": {
+        "name" : [
+            "str"
+        ]
+     },
      "con_p": {
          "name" : [
             "str"

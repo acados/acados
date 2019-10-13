@@ -38,6 +38,8 @@ import numpy as np
 import scipy.linalg
 from ctypes import *
 
+FORMULATION = 'NLS' # 'LS'
+
 # create render arguments
 ocp = acados_ocp_nlp()
 
@@ -66,6 +68,16 @@ nlp_dims.N   = N
 
 # set weighting matrices
 nlp_cost = ocp.cost
+
+if FORMULATION == 'LS':
+    nlp_cost.cost_type = 'LINEAR_LS'
+    nlp_cost.cost_type_e = 'LINEAR_LS'
+elif FORMULATION == 'NLS':
+    nlp_cost.cost_type = 'NONLINEAR_LS'
+    nlp_cost.cost_type_e = 'NONLINEAR_LS'
+else:
+    raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
+
 Q = np.eye(4)
 Q[0,0] = 1e0
 Q[1,1] = 1e2
@@ -76,7 +88,9 @@ R = np.eye(1)
 R[0,0] = 1e0
 
 nlp_cost.W = scipy.linalg.block_diag(Q, R) 
+nlp_cost.W_e = Q 
 
+# TODO(andrea): avoid this when using 'NLS'
 Vx = np.zeros((ny, nx))
 Vx[0,0] = 1.0
 Vx[1,1] = 1.0
@@ -89,7 +103,6 @@ Vu = np.zeros((ny, nu))
 Vu[4,0] = 1.0
 nlp_cost.Vu = Vu
 
-nlp_cost.W_e = Q 
 
 Vx_e = np.zeros((ny_e, nx))
 Vx_e[0,0] = 1.0
@@ -98,6 +111,22 @@ Vx_e[2,2] = 1.0
 Vx_e[3,3] = 1.0
 
 nlp_cost.Vx_e = Vx_e
+if FORMULATION == 'NLS':
+    x = SX.sym('x', 4, 1)
+    u = SX.sym('u', 1, 1)
+    ocp.cost_r.expr = vertcat(x, u) 
+    ocp.cost_r.x = x 
+    ocp.cost_r.u = u 
+    ocp.cost_r.name = 'lin_res' 
+    ocp.cost_r.ny = nx + nu 
+
+    ocp.cost_r_e.expr = model.x
+    ocp.cost_r_e.x = model.x 
+    ocp.cost_r_e.name = 'lin_res' 
+    ocp.cost_r_e.ny = nx 
+else:
+    raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
+
 
 nlp_cost.yref  = np.zeros((ny, ))
 nlp_cost.yref_e = np.zeros((ny_e, ))

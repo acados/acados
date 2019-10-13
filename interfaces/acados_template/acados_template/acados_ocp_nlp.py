@@ -325,7 +325,7 @@ class ocp_nlp_dims:
 class ocp_nlp_cost:
     """
     class containing the description of the cost
-    (linear least-squares cost for the time being) 
+    (linear and nonlinear least-squares cost for the time being) 
     :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`, 
     :math:`m(x) = || V^e_x x - y_{\\text{ref}^e}||^2_{W^e}`
     """
@@ -1250,18 +1250,18 @@ class acados_ocp_nlp:
     """
     def __init__(self):
         self.dims = ocp_nlp_dims()
+        self.model = acados_dae()
         self.cost = ocp_nlp_cost()
         self.constraints = ocp_nlp_constraints()
         self.solver_config = ocp_nlp_solver_config()
-        # self.con_p_name  = None 
-        # self.con_p_e_name = None 
-        # self.con_h_name  = None 
-        # self.con_h_e_name = None 
+
         self.con_p   = acados_constraint() 
         self.con_p_e = acados_constraint() 
         self.con_h   = acados_constraint() 
         self.con_h_e = acados_constraint() 
-        # self.constants = {}
+        self.cost_r = acados_cost() 
+        self.cost_r_e = acados_cost() 
+
         self.acados_include_path = []
         self.acados_lib_path = []
 

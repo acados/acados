@@ -34,8 +34,9 @@
 from casadi import *
 import os
 
-def function generate_c_code_nls_cost( cost, suffix_name ):
+def generate_c_code_nls_cost( cost ):
 
+    suffix_name = '_r_cost'
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
@@ -44,8 +45,8 @@ def function generate_c_code_nls_cost( cost, suffix_name ):
         raise Exception('Please download and install CasADi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
 
     # load cost variables and expression
-    x = constraint.x
-    u = constraint.u
+    x = cost.x
+    u = cost.u
     cost_exp = cost.expr
     cost_name = cost.name
 
@@ -54,9 +55,9 @@ def function generate_c_code_nls_cost( cost, suffix_name ):
     nu = u.size()[0]
 
     # set up functions to be exported
-    fun_name = con_name + suffix_name
+    fun_name = cost_name + suffix_name
 
-    cost_jac_exp = jacobian(cost_exp, vertcat([u, x]))
+    cost_jac_exp = jacobian(cost_exp, vertcat(u, x))
     
     nls_cost_fun = Function( fun_name, [x, u], \
             [ cost_exp, cost_jac_exp ])
@@ -66,12 +67,12 @@ def function generate_c_code_nls_cost( cost, suffix_name ):
         os.mkdir('c_generated_code')
 
     os.chdir('c_generated_code')
-    gen_dir = con_name + suffix_name 
+    gen_dir = cost_name + suffix_name 
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
     gen_dir_location = './' + gen_dir
     os.chdir(gen_dir_location)
-    file_name = con_name + suffix_name
+    file_name = cost_name + suffix_name
 
     nls_cost_fun.generate( file_name, casadi_opts )
     
