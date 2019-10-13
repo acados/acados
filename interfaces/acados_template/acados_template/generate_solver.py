@@ -243,20 +243,20 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     if acados_ocp.dims.npd > 0:
         # create folder
-        if not os.path.exists('c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/'):
-            os.mkdir('c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/')
+        if not os.path.exists('c_generated_code/' + acados_ocp.con_h.name + '_p_constraint/'):
+            os.mkdir('c_generated_code/' + acados_ocp.con_h.name + '_p_constraint/')
         if USE_TERA == 0:
             # render header templates
             template = env.get_template('p_constraint.in.h')
             output = template.render(ocp=acados_ocp)
             # output file
-            out_file = open('./c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/' + acados_ocp.con_p.name + '_p_constraint.h', 'w+')
+            out_file = open('./c_generated_code/' + acados_ocp.con_h.name + '_p_constraint/' + acados_ocp.con_h.name + '_p_constraint.h', 'w+')
             out_file.write(output)
         else:
-            os.chdir('c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/')
+            os.chdir('c_generated_code/' + acados_ocp.con_h.name + '_p_constraint/')
             # render source template
             template_file = 'p_constraint.in.h'
-            out_file = acados_ocp.con_p.name + '_p_constraint.h'
+            out_file = acados_ocp.con_h.name + '_p_constraint.h'
             # output file
             os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                     + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \

@@ -89,9 +89,13 @@ def acados_constraint_strip_non_num(acados_constraint):
         del out['u']
     if 'z' in out.keys(): 
         del out['z']
-    if 'expr' in out.keys(): 
-        del out['expr']
-    if 'nc' in out.keys(): 
-        del out['nc']
+    if 'con_h_expr' in out.keys(): 
+        del out['con_h_expr']
+    if 'con_r_expr' in out.keys(): 
+        del out['con_r_expr']
+    if 'nh' in out.keys(): 
+        del out['nh']
+    if 'nr' in out.keys(): 
+        del out['nr']
     return out
 
