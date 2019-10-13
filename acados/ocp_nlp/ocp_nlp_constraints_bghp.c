@@ -1013,14 +1013,16 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     blasfeo_dgemv_t(nu + nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_ni, nb,
                     &work->tmp_ni, nb);
 
+    // TODO(andrea): how do we handle cases where nz > 0 only in one of the modules?
     // if (nz > 0) {
-    //     printf("ocp_nlp_constraints_bghp_update_qp_matrices: constraints with nz > 0 not yet implmented. Exiting.\n");
+    //     printf("ocp_nlp_constraints_bghp_update_qp_matrices: constraints with nz > 0 not yet implemented. Exiting.\n");
     //     exit(1);
     // }
 
     // nonlinear
     if (nh > 0)
     {
+        // TODO(andrea): how do we handle cases where nz > 0 only in one of the modules?
         // if (nz > 0) {
         //     printf("ocp_nlp_constraints_bghp: BGHP constraint are not available (yet) when nz > 0. Exiting.\n");
         //     exit(1);
