@@ -881,6 +881,8 @@ int ocp_nlp_constraints_bghp_workspace_calculate_size(void *config_, void *dims_
     int ns = dims->ns;
     int np = dims->np;
 
+    int nv = nx + nu;
+
     int size = 0;
 
     size += sizeof(ocp_nlp_constraints_bghp_workspace);
@@ -888,6 +890,8 @@ int ocp_nlp_constraints_bghp_workspace_calculate_size(void *config_, void *dims_
     size += 1 * blasfeo_memsize_dvec(nb + ng + nh + ns);  // tmp_ni
     size += np * (nx + nu) * sizeof(double);
     size += 1 * blasfeo_memsize_dmat(nx + nu, np);
+    size += 1 * blasfeo_memsize_dmat(np * nh, np);        // tmp_np_nh_np
+    size += 1 * blasfeo_memsize_dmat(nv, np);             // tmp_nv_np
 
     size += 2 * 64;  // blasfeo_mem align
 
@@ -911,6 +915,8 @@ static void ocp_nlp_constraints_bghp_cast_workspace(void *config_, void *dims_, 
     int ns = dims->ns;
     int np = dims->np;
 
+    int nv = nu + nx;
+
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_constraints_bghp_workspace);
 
@@ -922,7 +928,8 @@ static void ocp_nlp_constraints_bghp_cast_workspace(void *config_, void *dims_, 
     c_ptr += np * (nx + nu) * sizeof(double);
     align_char_to(64, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx + nu, np, &work->jacobian_quadratic, &c_ptr);
-
+    assign_and_advance_blasfeo_dmat_mem(np * nh, np, &work->tmp_np_nh_np, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nv, np, &work->tmp_nv_np, &c_ptr);
     assert((char *) work + ocp_nlp_constraints_bghp_workspace_calculate_size(config_, dims, opts_)
            >= c_ptr);
 
@@ -1012,18 +1019,23 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     // nonlinear
     if (nh > 0)
     {
+        if (nz > 0) {
+            printf("ocp_nlp_constraints_bghp: BGHP constraint are not available (yet) when nz > 0. Exiting.\n");
+            exit(1);
+        }
+
         //
         struct blasfeo_dvec_args x_in;  // input x of external fun;
         struct blasfeo_dvec_args u_in;  // input u of external fun;
-        struct blasfeo_dvec_args z_in;  // input z of external fun;
+        // struct blasfeo_dvec_args z_in;  // input z of external fun;
 
         x_in.x = memory->ux;
         u_in.x = memory->ux;
-        z_in.x = memory->z_alg;
+        // z_in.x = memory->z_alg;
 
         x_in.xi = nu;
         u_in.xi = 0;
-        z_in.xi = 0;
+        // z_in.xi = 0;
 
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
         ext_fun_in[0] = &x_in;
@@ -1031,33 +1043,34 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
         ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
         ext_fun_in[1] = &u_in;
 
-        ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-        ext_fun_in[2] = &z_in;
-        //
+        // ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+        // ext_fun_in[2] = &z_in;
+
         ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
         struct blasfeo_dvec_args h_args;
         h_args.x = &work->tmp_ni;
         h_args.xi = nb + ng;
         ext_fun_out[0] = &h_args;  // fun: nh
-        //
         ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
+
         struct blasfeo_dmat_args Jht_args;
         Jht_args.A = memory->DCt;
         Jht_args.ai = 0;
         Jht_args.aj = ng;
         ext_fun_out[1] = &Jht_args;  // jac': (nu+nx) * nh
 
+        struct blasfeo_dmat_args hess_out;
+        hess_out.A = &work->tmp_np_nh_np;
+        hess_out.ai = 0;
+        hess_out.aj = 0;
+        ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
+        ext_fun_out[2] = &hess_out;  // hess: nh * np * np
+
         model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
     }
 
     if (np > 0)
     {
-        if (nh != 1)
-        {
-            printf("BGHP-type constraint: nh!=1 not implemented. Exiting.");
-            exit(1);
-        }
-        //
         ext_fun_type_in[0] = BLASFEO_DVEC;
         ext_fun_in[0] = memory->ux;  // ux: nu+nx
 
@@ -1073,12 +1086,28 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
         model->p->evaluate(model->p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
         // SCQP Hessian
-        double lam = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh) -
-                     blasfeo_dvecex1(memory->lam, nb + ng);
+        
+        for (int i = 0; i < nh; i++) { 
+            // TODO(andrea): @giaf: if the lower bound is active we shouldn't consider its contribution, right?
+            // Removing this.
+            // double lam = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh) -
+            //              blasfeo_dvecex1(memory->lam, nb + ng);
 
-        blasfeo_dsyrk_ln(nx + nu, np, 2 * lam, &work->jacobian_quadratic, 0, 0,
-                         &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq,
-                         0, 0);
+            double lam_i = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh) + i;
+
+            // andrea: this did not take into account the Hessian of the convex outer part
+            // blasfeo_dsyrk_ln(nx + nu, np, 2 * lam, &work->jacobian_quadratic, 0, 0,
+            //                  &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq,
+            //                  0, 0);
+            
+            blasfeo_dgemm_nt(np, np, np, lam_i, &work->jacobian_quadratic, 
+                    0, 0, &work->tmp_np_nh_np, np * i, 0, 0.0, &work->tmp_nv_np, 0, 0, 
+                    &work->tmp_nv_np);
+
+            blasfeo_dgemm_nn(nv, np, nv, 1.0, &work->tmp_nv_np, 
+                    0, 0, &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq, 0, 0, 
+                    memory->RSQrq);
+        }
     }
 
     blasfeo_daxpy(nb + ng + nh, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
