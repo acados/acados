@@ -106,7 +106,13 @@ function ocp_generate_c_code(obj)
                 else
                     this_dims = [dims.(constr_l.(fields{i}){2}{1}), dims.(constr_l.(fields{i}){2}{1})];
                 end
-                constr.(fields{i}) = reshape(constr.(fields{i}), this_dims);
+                try
+                    constr.(fields{i}) = reshape(constr.(fields{i}), this_dims);
+                catch e
+                    keyboard
+                    error(['error while reshaping constr.' fields{i} ...
+                        ' to dimension ' num2str(this_dims), '. ' e.message]);
+                end
             end
         end
         obj.acados_ocp_nlp_json.constraints = constr;
