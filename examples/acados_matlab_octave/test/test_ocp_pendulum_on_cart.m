@@ -34,6 +34,7 @@
 %% test of native matlab interface
 clear all
 
+import casadi.*
 addpath('../pendulum_on_cart_model/');
 
 for itest = 1:3
@@ -175,7 +176,7 @@ for itest = 1:3
         ocp_model.set('constr_expr_h', model.expr_h);
         ocp_model.set('constr_lh', lbu);
         ocp_model.set('constr_uh', ubu);
-    else
+    elseif itest == 2
         nh = 0;
         ng = 1;
         C = zeros(ng, nx);
@@ -186,7 +187,20 @@ for itest = 1:3
 
         ocp_model.set('constr_lg', lbu);
         ocp_model.set('constr_ug', ubu);
+
+    elseif itest == 3
+        ng = 0;
+        ocp_model.set('constr_type', 'auto');
+        ocp_model.set('constr_expr_h', model.expr_h);
+        ocp_model.set('constr_lh', lbu);
+        ocp_model.set('constr_uh', ubu);
+%         ocp_model.set('constr_type_e', 'auto');
+%         ocp_model.set('constr_expr_h_e', SX.sym('terminal_constraint',0,0));
+%         ocp_model.set('constr_lh_e', []);
+%         ocp_model.set('constr_uh_e', []);
+
     end
+
     ng_e = 0;
     nh_e = 0;
     ocp_model.set('dim_ng', ng);

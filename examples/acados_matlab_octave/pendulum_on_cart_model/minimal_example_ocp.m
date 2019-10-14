@@ -90,12 +90,11 @@ else % irk irk_gnsf
 end
 
 % constraints
+ocp_model.set('constr_type', 'auto');
 ocp_model.set('constr_expr_h', model.expr_h);
 U_max = 80;
 ocp_model.set('constr_lh', -U_max); % lower bound on h
-ocp_model.set('constr_uh', U_max);
-nh = nu;
-ocp_model.set('dim_nh', nh);
+ocp_model.set('constr_uh', U_max);  % upper bound on h
 % ... see ocp_model.model_struct to see what other fields can be set
 
 %% acados ocp set opts
