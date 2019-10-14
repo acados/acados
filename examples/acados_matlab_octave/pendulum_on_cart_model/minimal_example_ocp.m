@@ -74,9 +74,6 @@ ocp_model.set('sym_u', model.sym_u);
 ocp_model.set('sym_xdot', model.sym_xdot);
 
 % cost
-cost_type = 'auto';
-ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_type_e', cost_type);
 ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
 ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 
