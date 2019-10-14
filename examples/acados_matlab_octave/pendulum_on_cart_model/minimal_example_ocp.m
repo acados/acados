@@ -65,8 +65,6 @@ model_name = 'pendulum';
 %% acados ocp model
 ocp_model.set('name', model_name);
 ocp_model.set('T', T);
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
 
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
