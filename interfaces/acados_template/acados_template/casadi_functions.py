@@ -58,6 +58,7 @@ class acados_constraint():
         self.con_r_expr = None #: CasADi expression for the constraint
         self.x = None    #: CasADi variable describing the state of the system
         self.u = None    #: CasADi variable describing the input of the system
+        self.r = None    #: CasADi variable describing the output of nonconvex part in convex-over nonconvex constraints
         self.z = None    #: CasADi variable describing the algebraic variables of the DAE
         self.nh   = None   #: dimension of image of h
         self.nr = None     #: dimension of image of nonlinear residuals 
@@ -89,6 +90,8 @@ def acados_constraint_strip_non_num(acados_constraint):
         del out['u']
     if 'z' in out.keys(): 
         del out['z']
+    if 'r' in out.keys(): 
+        del out['r']
     if 'con_h_expr' in out.keys(): 
         del out['con_h_expr']
     if 'con_r_expr' in out.keys(): 

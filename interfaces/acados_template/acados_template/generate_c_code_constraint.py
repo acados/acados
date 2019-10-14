@@ -47,6 +47,7 @@ def generate_c_code_constraint( constraint, suffix_name ):
     # load constraint variables and expression
     x = constraint.x
     u = constraint.u
+    r = constraint.r
     # nc = nh or np 
     nh = constraint.nh 
     nr = constraint.nr
@@ -57,6 +58,7 @@ def generate_c_code_constraint( constraint, suffix_name ):
     # get dimensions
     nx = x.size()[0]
     nu = u.size()[0]
+    nr = r.size()[0]
 
     # set up functions to be exported
     fun_name = con_name + '_h_constraint'
@@ -79,17 +81,17 @@ def generate_c_code_constraint( constraint, suffix_name ):
         constraint_fun_jac_tran.generate(file_name, casadi_opts)
         os.chdir('../..')
     else: # BGHP constraint
-        jac_u = jacobian(con_h_expr, u);
-        jac_x = jacobian(con_h_expr, x);
-        w = vertcat(u, x) 
+        con_h_expr_x_u = substitute(con_h_expr, r, con_r_expr)
+        jac_u = jacobian(con_h_expr_x_u, u)
+        jac_x = jacobian(con_h_expr_x_u, x)
 
-        hess = hessian(con_h_expr[0], w)[0]
+        hess = hessian(con_h_expr[0], r)[0]
         for i in range(1, nh):
-            vertcat(hess, hessian(con_h_expr[i], w))[0]
+            vertcat(hess, hessian(con_h_expr[i], r))[0]
 
         hess = vertcat(hess)
 
-        constraint_fun_jac_tran_hess = Function(fun_name, [x, u], [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x)), hess])
+        constraint_fun_jac_tran_hess = Function(fun_name, [x, u], [con_h_expr_x_u, vertcat(transpose(jac_u), transpose(jac_x)), hess])
 
         # generate C code
         if not os.path.exists('c_generated_code'):
