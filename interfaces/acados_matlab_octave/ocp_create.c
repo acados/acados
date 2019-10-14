@@ -281,10 +281,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         MEX_MISSING_ARGUMENT(fun_name, "constr_type");
     }
-
     if (!strcmp(constr_type, "bgh"))
     {
-        for (int ii=0; ii<=N; ii++)
+        for (int ii=0; ii<N; ii++)
         {
             plan->nlp_constraints[ii] = BGH;
         }
@@ -294,6 +293,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "constr_type", constr_type, "bgh");
     }
 
+    char *constr_type_e;
+    if (mxGetField( matlab_model, 0, "constr_type_e" )!=NULL)
+    {
+        constr_type_e = mxArrayToString( mxGetField( matlab_model, 0, "constr_type_e" ) );
+    }
+    else
+    {
+        MEX_MISSING_ARGUMENT(fun_name, "constr_type_e");
+    }
+    if (!strcmp(constr_type_e, "bgh"))
+    {
+        plan->nlp_constraints[N] = BGH;
+    }
+    else
+    {
+        MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "constr_type_e", constr_type_e, "bgh");
+    }
 
     // qp solver
     char *qp_solver;

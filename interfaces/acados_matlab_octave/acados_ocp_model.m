@@ -53,6 +53,7 @@ classdef acados_ocp_model < handle
 			obj.model_struct.cost_type_e = 'linear_ls';
 			obj.model_struct.dyn_type = 'implicit';
 			obj.model_struct.constr_type = 'bgh';
+			obj.model_struct.constr_type_e = 'bgh';
 		end
 
 
@@ -159,6 +160,8 @@ classdef acados_ocp_model < handle
 
 				if (strcmp(field, 'constr_type'))
 					obj.model_struct.constr_type = value;
+				elseif (strcmp(field, 'constr_type_e'))
+					obj.model_struct.constr_type_e = value;
 				elseif (strcmp(field, 'constr_x0'))
 					obj.model_struct.constr_x0 = value;
 				elseif (strcmp(field, 'constr_Jbx'))
