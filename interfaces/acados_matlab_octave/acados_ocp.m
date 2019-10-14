@@ -79,6 +79,9 @@ classdef acados_ocp < handle
                 obj.model_struct = detect_constr(obj.model_struct, 1);
             end
 
+            % detect dimensions
+            obj.model_struct = detect_dims_ocp(obj.model_struct);
+
             % compile mex interface (without model dependency)
             if ( strcmp(obj.opts_struct.compile_interface, 'true') )
                 compile_interface = true;
@@ -106,7 +109,8 @@ classdef acados_ocp < handle
                 end
             else
                 obj.model_struct.cost_type
-                error('acados_ocp: field compile_interface is , supported values are: true, false, auto');
+                error('acados_ocp: field compile_interface is %, supported values are: true, false, auto', ...
+                        obj.opts_struct.compile_interface);
             end
 
             if ( compile_interface )
