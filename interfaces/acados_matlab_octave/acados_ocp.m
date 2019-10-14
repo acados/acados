@@ -70,6 +70,14 @@ classdef acados_ocp < handle
                 obj.model_struct = detect_cost_type(obj.model_struct, 1);
             end
 
+            % detect constraint structure
+            if (strcmp(obj.model_struct.constr_type, 'auto'))
+                obj.model_struct = detect_constr(obj.model_struct, 0);
+            end
+            if (strcmp(obj.model_struct.constr_type_e, 'auto'))
+                obj.model_struct = detect_constr(obj.model_struct, 1);
+            end
+
 
             % compile mex interface (without model dependency)
             if ( strcmp(obj.opts_struct.compile_interface, 'true') )
