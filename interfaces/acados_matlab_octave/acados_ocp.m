@@ -38,6 +38,7 @@ classdef acados_ocp < handle
         C_ocp_ext_fun
         model_struct
         opts_struct
+        acados_ocp_nlp_json
     end % properties
 
 
@@ -48,6 +49,15 @@ classdef acados_ocp < handle
         function obj = acados_ocp(model, opts)
             obj.model_struct = model.model_struct;
             obj.opts_struct = opts.opts_struct;
+
+            % TODO(andrea): this is temporary. later on the solver_config
+            % object will separate from the OCP object
+            
+            model.acados_ocp_nlp_json.solver_config.qp_solver = upper(obj.opts_struct.qp_solver);
+            model.acados_ocp_nlp_json.solver_config.integrator_type = upper(obj.opts_struct.sim_method);
+            model.acados_ocp_nlp_json.solver_config.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
+            model.acados_ocp_nlp_json.dims.N = upper(obj.opts_struct.param_scheme_N);
+            obj.acados_ocp_nlp_json = model.acados_ocp_nlp_json;
 
             [~,~] = mkdir(obj.opts_struct.output_dir);
             addpath(obj.opts_struct.output_dir);
@@ -135,6 +145,13 @@ classdef acados_ocp < handle
         function solve(obj)
             ocp_solve(obj.C_ocp);
         end
+
+
+
+        function generate_c_code(obj)
+            ocp_generate_c_code(obj)
+        end
+
 
 
 

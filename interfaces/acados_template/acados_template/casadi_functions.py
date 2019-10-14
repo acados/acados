@@ -40,6 +40,7 @@ class acados_dae():
         self.xdot = None        #: CasADi variable describing the derivative of the state wrt time
         self.u = None           #: CasADi variable describing the input of the system
         self.z = None           #: CasADi variable describing the algebraic variables of the DAE
+        self.p = None           #: CasADi variable describing parameters of the DAE
         self.name = None        #: name associated with the function
 
 class acados_constraint():
@@ -48,5 +49,38 @@ class acados_constraint():
         self.x = None    #: CasADi variable describing the state of the system
         self.u = None    #: CasADi variable describing the input of the system
         self.z = None    #: CasADi variable describing the algebraic variables of the DAE
+        self.nc = None   #: number of constraints
         self.name = None #: name associated with the function
+
+def acados_dae_strip_non_num(acados_constraint):
+    out = acados_constraint
+    if 'f_impl_expr' in out.keys(): 
+        del out['f_impl_expr']
+    if 'f_expl_expr' in out.keys(): 
+        del out['f_expl_expr']
+    if 'x' in out.keys(): 
+        del out['x']
+    if 'xdot' in out.keys(): 
+        del out['xdot']
+    if 'u' in out.keys(): 
+        del out['u']
+    if 'z' in out.keys(): 
+        del out['z']
+    if 'p' in out.keys(): 
+        del out['p']
+    return out
+
+def acados_constraint_strip_non_num(acados_constraint):
+    out = acados_constraint
+    if 'x' in out.keys(): 
+        del out['x']
+    if 'u' in out.keys(): 
+        del out['u']
+    if 'z' in out.keys(): 
+        del out['z']
+    if 'expr' in out.keys(): 
+        del out['expr']
+    if 'nc' in out.keys(): 
+        del out['nc']
+    return out
 

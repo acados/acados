@@ -45,7 +45,7 @@ ocp = acados_ocp_nlp()
 model = export_ode_model()
 
 # set model_name 
-ocp.model_name = model.name
+ocp.model = model
 
 Tf = 2.0
 nx = model.x.size()[0]
@@ -111,9 +111,6 @@ nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
 # nlp_con.x0 = np.array([0.0, 0.5, 0.0, 0.0])
 nlp_con.idxbu = np.array([0])
 
-# set constants
-# ocp.constants['PI'] = 3.1415926535897932
-
 # set QP solver
 # ocp.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 ocp.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
@@ -126,10 +123,12 @@ ocp.solver_config.nlp_solver_type = 'SQP'
 # ocp.solver_config.nlp_solver_type = 'SQP_RTI'
 
 # set header path
-ocp.acados_include_path  = '/usr/local/include'
-ocp.acados_lib_path      = '/usr/local/lib'
+# ocp.acados_include_path  = '/usr/local/include'
+# ocp.acados_lib_path      = '/usr/local/lib'
+ocp.acados_include_path  = '~/acados/include'
+ocp.acados_lib_path      = '~/acados/lib'
 
-acados_solver = generate_solver(model, ocp, json_file = 'acados_ocp.json')
+acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
 
 Nsim = 100
 

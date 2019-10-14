@@ -37,42 +37,12 @@ from .generate_c_code_implicit_ode import *
 from .generate_c_code_constraint import *
 from .acados_ocp_nlp import *
 from ctypes import *
+from copy import deepcopy
 
-def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_pN=None, json_file='acados_ocp_nlp.json'):
+def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
-
-    ocp_nlp = acados_ocp
-    ocp_nlp.cost = acados_ocp.cost.__dict__
-    ocp_nlp.constraints = acados_ocp.constraints.__dict__
-    ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
-    ocp_nlp.dims = acados_ocp.dims.__dict__
-    ocp_nlp = ocp_nlp.__dict__
-
-    ocp_nlp = dict2json(ocp_nlp)
-
-    with open(json_file, 'w') as f:
-        json.dump(ocp_nlp, f, default=np_array_to_list)
-
-    with open(json_file, 'r') as f:
-        ocp_nlp_json = json.load(f)
-
-    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
-
-    acados_ocp = ocp_nlp_as_object(ocp_nlp_dict)
-    acados_ocp.cost = ocp_nlp_as_object(acados_ocp.cost)
-    acados_ocp.constraints = ocp_nlp_as_object(acados_ocp.constraints)
-    acados_ocp.solver_config = ocp_nlp_as_object(acados_ocp.solver_config)
-    acados_ocp.dims = ocp_nlp_as_object(acados_ocp.dims)
-
-    # setting up loader and environment
-    acados_path = os.path.dirname(os.path.abspath(__file__))
-    if USE_TERA == 0:
-        file_loader = FileSystemLoader(acados_path + '/c_templates')
-        env = Environment(loader = file_loader)
-    else:
-        template_glob = acados_path + '/c_templates_tera/*'
-        acados_template_path = acados_path + '/c_templates_tera'
-
+    
+    model = acados_ocp.model
     if acados_ocp.solver_config.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
@@ -81,19 +51,71 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
     
-    if con_p is not None and con_h is None:
+    if acados_ocp.con_p.name is not None and acados_ocp.con_h.name is None:
         raise Exception('h constraint is missing!')
 
-    if con_h is not None:
+    if acados_ocp.con_h.name is not None:
         # nonlinear part of nonlinear constraints 
-        generate_c_code_constraint(con_h, '_h_constraint')
+        generate_c_code_constraint(acados_ocp.con_h, '_h_constraint')
 
-    if con_p is not None:
+    if acados_ocp.con_h_e.name is not None:
+        # nonlinear part of nonlinear constraints 
+        generate_c_code_constraint_e(acados_ocp.con_h_e, '_h_e_constraint')
+    
+    if acados_ocp.con_p.name is not None:
         # convex part of nonlinear constraints 
-        generate_c_code_constraint(con_p, '_p_constraint')
+        generate_c_code_constraint(acados_ocp.con_p, '_p_constraint')
 
-    # check render arguments
-    check_ra(acados_ocp)
+    ocp_nlp = deepcopy(acados_ocp)
+    ocp_nlp.cost = acados_ocp.cost.__dict__
+    ocp_nlp.constraints = acados_ocp.constraints.__dict__
+    ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
+    ocp_nlp.dims = acados_ocp.dims.__dict__
+    ocp_nlp.con_h = acados_ocp.con_h.__dict__
+    ocp_nlp.con_h_e = acados_ocp.con_h_e.__dict__
+    ocp_nlp.con_p = acados_ocp.con_p.__dict__
+    ocp_nlp.con_p_e = acados_ocp.con_p_e.__dict__
+    ocp_nlp.model = acados_ocp.model.__dict__
+    ocp_nlp = ocp_nlp.__dict__
+
+    # need to strip non-numerical stuff from expressions for now
+    ocp_nlp['con_h'] = acados_constraint_strip_non_num(ocp_nlp['con_h'])
+    ocp_nlp['con_p'] = acados_constraint_strip_non_num(ocp_nlp['con_p'])
+    ocp_nlp['con_h_e'] = acados_constraint_strip_non_num(ocp_nlp['con_h_e'])
+    ocp_nlp['con_p_e'] = acados_constraint_strip_non_num(ocp_nlp['con_p_e'])
+
+    ocp_nlp['model'] = acados_dae_strip_non_num(ocp_nlp['model'])
+
+    ocp_nlp = dict2json(ocp_nlp)
+    
+    with open(json_file, 'w') as f:
+        json.dump(ocp_nlp, f, default=np_array_to_list)
+
+    if USE_TERA == 0:
+        with open(json_file, 'r') as f:
+            ocp_nlp_json = json.load(f)
+
+        ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
+        acados_ocp = ocp_nlp_as_object(ocp_nlp_dict)
+        acados_ocp.cost = ocp_nlp_as_object(acados_ocp.cost)
+        acados_ocp.constraints = ocp_nlp_as_object(acados_ocp.constraints)
+        acados_ocp.solver_config = ocp_nlp_as_object(acados_ocp.solver_config)
+        acados_ocp.dims = ocp_nlp_as_object(acados_ocp.dims)
+
+        acados_ocp.con_h = ocp_nlp_as_object(acados_ocp.con_h)
+        acados_ocp.con_h_e = ocp_nlp_as_object(acados_ocp.con_h_e)
+        acados_ocp.con_p = ocp_nlp_as_object(acados_ocp.con_p)
+        acados_ocp.con_p_e = ocp_nlp_as_object(acados_ocp.con_p_e)
+
+    # setting up loader and environment
+    acados_path = os.path.dirname(os.path.abspath(__file__))
+    tera_path = acados_path + '/../../../bin/' 
+    if USE_TERA == 0:
+        file_loader = FileSystemLoader(acados_path + '/c_templates')
+        env = Environment(loader = file_loader)
+    else:
+        template_glob = acados_path + '/c_templates_tera/*'
+        acados_template_path = acados_path + '/c_templates_tera'
 
     # create c_generated_code folder
     if not os.path.exists('c_generated_code'):
@@ -112,7 +134,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         template_file = 'main.in.c'
         out_file = 'main_' + model.name + '.c'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -132,7 +154,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         template_file = 'acados_solver.in.c'
         out_file = 'acados_solver_' + model.name + '.c'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -152,7 +174,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         template_file = 'acados_solver.in.h'
         out_file = 'acados_solver_' + model.name + '.h'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -172,7 +194,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         template_file = 'acados_sim_solver.in.c'
         out_file = 'acados_sim_solver_' + model.name + '.c'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -189,10 +211,10 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
     else:
         os.chdir('c_generated_code')
         # render source template
-        template_file = 'acados_solver.in.h'
-        out_file = 'acados_solver_' + model.name + '.h'
+        template_file = 'acados_sim_solver.in.h'
+        out_file = 'acados_sim_solver_' + model.name + '.h'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -212,7 +234,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         template_file = 'model.in.h'
         out_file = model.name + '_model.h'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -220,20 +242,23 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         os.chdir('../..')
 
     if acados_ocp.dims.npd > 0:
+        # create folder
+        if not os.path.exists('c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/'):
+            os.mkdir('c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/')
         if USE_TERA == 0:
             # render header templates
             template = env.get_template('p_constraint.in.h')
             output = template.render(ocp=acados_ocp)
             # output file
-            out_file = open('./c_generated_code/' + acados_ocp.con_p_name + '_p_constraint/' + acados_ocp.con_p_name + '_p_constraint.h', 'w+')
+            out_file = open('./c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/' + acados_ocp.con_p.name + '_p_constraint.h', 'w+')
             out_file.write(output)
         else:
-            os.chdir('c_generated_code/' + acados_ocp.con_p_name + '_p_constraint/')
+            os.chdir('c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/')
             # render source template
             template_file = 'p_constraint.in.h'
-            out_file = acados_ocp.con_p_name + '_p_constraint.h'
+            out_file = acados_ocp.con_p.name + '_p_constraint.h'
             # output file
-            os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+            os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                     + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                     "\"" + ' ' + "\"" + out_file + "\""
 
@@ -241,20 +266,47 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
             os.chdir('../..')
 
     if acados_ocp.dims.nh > 0:
+        # create folder
+        if not os.path.exists('c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/'):
+            os.mkdir('c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/')
         if USE_TERA == 0:
             # render header templates
             template = env.get_template('h_constraint.in.h')
             output = template.render(ocp=acados_ocp)
             # output file
-            out_file = open('./c_generated_code/' + acados_ocp.con_h_name + '_h_constraint/' + acados_ocp.con_h_name + '_h_constraint.h', 'w+')
+            out_file = open('./c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/' + acados_ocp.con_h.name + '_h_constraint.h', 'w+')
             out_file.write(output)
         else:
-            os.chdir('c_generated_code/' + acados_ocp.con_h_name + '_h_constraint/')
+            os.chdir('c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/')
             # render source template
             template_file = 'h_constraint.in.h'
-            out_file = acados_ocp.con_h_name + '_h_constraint.h'
+            out_file = acados_ocp.con_h.name + '_h_constraint.h'
             # output file
-            os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+            os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                    + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
+                    "\"" + ' ' + "\"" + out_file + "\""
+
+            os.system(os_cmd)
+            os.chdir('../..')
+
+    if acados_ocp.dims.nh_e > 0:
+        # create folder
+        if not os.path.exists('c_generated_code/' + acados_ocp.con_h_e.name + '_h_e_constraint/'):
+            os.mkdir('c_generated_code/' + acados_ocp.con_h_e.name + '_h_e_constraint/')
+        if USE_TERA == 0:
+            # render header templates
+            template = env.get_template('h_e_constraint.in.h')
+            output = template.render(ocp=acados_ocp)
+            # output file
+            out_file = open('./c_generated_code/' + acados_ocp.con_h_e.name + '_h_e_constraint/' + acados_ocp.con_h_e.name + '_h_e_constraint.h', 'w+')
+            out_file.write(output)
+        else:
+            os.chdir('c_generated_code/' + acados_ocp.con_h_e.name + '_h_e_constraint/')
+            # render source template
+            template_file = 'h_e_constraint.in.h'
+            out_file = acados_ocp.con_h_e.name + '_h_e_constraint.h'
+            # output file
+            os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                     + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                     "\"" + ' ' + "\"" + out_file + "\""
 
@@ -275,7 +327,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         template_file = 'Makefile.in'
         out_file = 'Makefile'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -296,7 +348,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         template_file = 'acados_solver_sfun.in.c'
         out_file = 'acados_solver_sfunction_'  + model.name + '.c'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
@@ -317,7 +369,7 @@ def generate_solver(model, acados_ocp, con_h=None, con_hN=None, con_p=None, con_
         template_file = 'make_sfun.in.m'
         out_file = 'acados_solver_sfun.in.c'
         # output file
-        os_cmd = 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
