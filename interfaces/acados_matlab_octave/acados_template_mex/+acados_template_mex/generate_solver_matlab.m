@@ -134,4 +134,9 @@ function render_file( acados_ocp_nlp_json_file, template_dir, template_file, out
 %     else
 %         disp(['Redering ' template_file ': success!']);
     end
+    % this should return status != 0, maybe fix in tera renderer?
+    if contains( result, 'Error' )
+        error('rendering %s failed.\n command: %s\n returned status %d, got result: %s',...
+            template_file, os_cmd, status, result);
+    end
 end
