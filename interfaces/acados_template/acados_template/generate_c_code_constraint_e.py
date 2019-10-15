@@ -46,6 +46,7 @@ def generate_c_code_constraint_e( constraint, suffix_name ):
 
     # load constraint variables and expression
     x = constraint.x
+    r = constraint.r
     nh = constraint.nh 
     nr = constraint.nr
     con_h_expr = constraint.con_h_expr
@@ -57,9 +58,11 @@ def generate_c_code_constraint_e( constraint, suffix_name ):
 
     # set up functions to be exported
     fun_name = con_name + '_h_constraint'
+    import pdb; pdb.set_trace()
     if nr == 0: # BGH constraint
-        jac_x = jacobian(con_exp, x);
-        constraint_fun_jac_tran = Function(fun_name, [x], [con_exp, transpose(jac_x)])
+        con_h_expr_x = substitute(con_h_expr, r, con_r_expr)
+        jac_x = jacobian(con_h_exp_x, x);
+        constraint_fun_jac_tran = Function(fun_name, [x], [con_h_exp_x, transpose(jac_x, x)])
 
         # generate C code
         if not os.path.exists('c_generated_code'):
@@ -76,7 +79,7 @@ def generate_c_code_constraint_e( constraint, suffix_name ):
         os.chdir('../..')
     else: # BGHP constraint
         jac_x = jacobian(con_h_expr, x);
-        w = x 
+        w = r 
 
         hess = hessian(con_h_expr[0], w)[0]
         for i in range(1, nh):
@@ -84,33 +87,33 @@ def generate_c_code_constraint_e( constraint, suffix_name ):
 
         hess = vertcat(hess)
 
-        constraint_fun_jac_tran_hess = Function(fun_name, [x], [con_h_expr, transpose(jac_x), hess])
+        constraint_fun_jac_tran_hess = Function(fun_name, [x], [con_r_expr, transpose(jac_x), hess])
 
         # generate C code
         if not os.path.exists('c_generated_code'):
             os.mkdir('c_generated_code')
 
         os.chdir('c_generated_code')
-        gen_dir = con_name + '_h_constraint'
+        gen_dir = con_name + '_h_e_constraint'
         if not os.path.exists(gen_dir):
             os.mkdir(gen_dir)
         gen_dir_location = './' + gen_dir
         os.chdir(gen_dir_location)
-        file_name = con_name + '_h_constraint'
+        file_name = con_name + '_h_e_constraint'
         constraint_fun_jac_tran_hess.generate(file_name, casadi_opts)
         os.chdir('..')
 
 
         jac_x = jacobian(con_r_expr, x);
-        fun_name = con_name + '_p_constraint'
+        fun_name = con_name + '_p_e_constraint'
         constraint_residual_fun_jac_tran = Function(fun_name, [x], [con_r_expr, transpose(jac_x)])
 
-        gen_dir = con_name + '_p_constraint'
+        gen_dir = con_name + '_p_e_constraint'
         if not os.path.exists(gen_dir):
             os.mkdir(gen_dir)
         gen_dir_location = './' + gen_dir
         os.chdir(gen_dir_location)
-        file_name = con_name + '_p_constraint'
+        file_name = con_name + '_p_e_constraint'
         constraint_residual_fun_jac_tran.generate(file_name, casadi_opts)
 
         os.chdir('../..')

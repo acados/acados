@@ -35,6 +35,7 @@ from jinja2 import Environment, FileSystemLoader
 from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
 from .generate_c_code_constraint import *
+from .generate_c_code_constraint_e import *
 from .acados_ocp_nlp import *
 from ctypes import *
 from copy import deepcopy
