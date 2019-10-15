@@ -35,7 +35,7 @@
 from casadi import *
 import os
 
-def generate_c_code_constraint( constraint, suffix_name ):
+def generate_c_code_constraint( constraint ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')

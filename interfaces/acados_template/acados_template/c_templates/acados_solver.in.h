@@ -96,7 +96,7 @@ extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 extern external_function_casadi * p_constraint;
 {% endif %}
 {% if ocp.dims.npd_e > 0 %}
-extern external_function_casadi * p_constraint_e;
+extern external_function_casadi p_e_constraint;
 {% endif %}
 {% if ocp.dims.nh > 0 %}
 extern external_function_casadi * h_constraint;

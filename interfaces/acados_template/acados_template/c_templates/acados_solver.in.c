@@ -49,6 +49,9 @@
 #include "{{ ocp.model.name }}_model/{{ ocp.model.name }}_model.h"
 {% if ocp.dims.npd > 0 %}
 #include "{{ ocp.con_h.name }}_p_constraint/{{ ocp.con_h.name }}_p_constraint.h"
+{% if ocp.dims.npd_e > 0 %}
+#include "{{ ocp.con_h_e.name }}_p_e_constraint/{{ ocp.con_h_e.name }}_p_e_constraint.h"
+{% endif %}
 {% endif %}
 {% if ocp.dims.nh > 0 %}
 #include "{{ ocp.con_h.name }}_h_constraint/{{ ocp.con_h.name }}_h_constraint.h"
@@ -708,15 +711,14 @@ int acados_create() {
 
     {%- if ocp.dims.npd_e > 0 %}
 	// nonlinear part of convex-composite constraint
-	external_function_casadi p_constraint_e;
-	p_constraint_e.casadi_fun = &{{ ocp.con_h_e.name }}_p_constraint_e;
-	p_constraint_e.casadi_n_in = &{{ ocp.con_h_e.name }}_p_constraint_e_n_in;
-	p_constraint_e.casadi_n_out = &{{ ocp.con_h_e.name }}_p_constraint_e_n_out;
-	p_constraint_e.casadi_sparsity_in = &{{ ocp.con_h_e.name }}_p_constraint_e_sparsity_in;
-	p_constraint_e.casadi_sparsity_out = &{{ ocp.con_h_e.name }}_p_constraint_e_sparsity_out;
-	p_constraint_e.casadi_work = &{{ ocp.con_h_e.name }}_p_constraint_e_work;
+	p_e_constraint.casadi_fun = &{{ ocp.con_h_e.name }}_p_e_constraint;
+	p_e_constraint.casadi_n_in = &{{ ocp.con_h_e.name }}_p_e_constraint_n_in;
+	p_e_constraint.casadi_n_out = &{{ ocp.con_h_e.name }}_p_e_constraint_n_out;
+	p_e_constraint.casadi_sparsity_in = &{{ ocp.con_h_e.name }}_p_e_constraint_sparsity_in;
+	p_e_constraint.casadi_sparsity_out = &{{ ocp.con_h_e.name }}_p_e_constraint_sparsity_out;
+	p_e_constraint.casadi_work = &{{ ocp.con_h_e.name }}_p_e_constraint_work;
 
-    external_function_casadi_create(p_constraint_e);
+    external_function_casadi_create(&p_e_constraint);
     {%- endif %}
 
     {%- if ocp.dims.nh > 0 %}
@@ -1011,7 +1013,7 @@ int acados_create() {
 
     {%- if ocp.dims.npd_e > 0 %}
     // convex-composite constraints for stage N
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_constraint_e[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_e_constraint);
     {%- endif %}
 
     {%- if ocp.dims.nh > 0 %}
