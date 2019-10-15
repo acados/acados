@@ -58,13 +58,16 @@ def generate_c_code_constraint( constraint ):
     # get dimensions
     nx = x.size()[0]
     nu = u.size()[0]
-    nr = r.size()[0]
+    if r is not None:
+        nr = r.size()[0]
+    else:
+        nr = 0
 
     # set up functions to be exported
     fun_name = con_name + '_h_constraint'
     if nr == 0: # BGH constraint
-        jac_x = jacobian(con_expr, x);
-        jac_u = jacobian(con_expr, u);
+        jac_x = jacobian(con_h_expr, x);
+        jac_u = jacobian(con_h_expr, u);
         constraint_fun_jac_tran = Function(fun_name, [x, u], [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x))])
 
         # generate C code

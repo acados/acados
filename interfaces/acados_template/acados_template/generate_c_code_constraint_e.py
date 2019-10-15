@@ -48,45 +48,50 @@ def generate_c_code_constraint_e( constraint ):
     x = constraint.x
     r = constraint.r
     nh = constraint.nh 
-    nr = constraint.nr
     con_h_expr = constraint.con_h_expr
     con_r_expr = constraint.con_r_expr
     con_name = constraint.name
 
     # get dimensions
     nx = x.size()[0]
+    if r is not None:
+        nr = r.size()[0]
+    else:
+        nr = 0
 
+    # create dummy u
+    u = SX.sym('u', 0, 0)
     # set up functions to be exported
     fun_name = con_name + '_h_e_constraint'
     if nr == 0: # BGH constraint
-        jac_x = jacobian(con_h_exp, x);
-        constraint_fun_jac_tran = Function(fun_name, [x], [con_h_exp, transpose(jac_x, x)])
+        jac_x = jacobian(con_h_expr, x);
+        constraint_fun_jac_tran = Function(fun_name, [x, u], [con_h_expr, transpose(jac_x)])
 
         # generate C code
         if not os.path.exists('c_generated_code'):
             os.mkdir('c_generated_code')
 
         os.chdir('c_generated_code')
-        gen_dir = con_name + '_h_constraint'
+        gen_dir = con_name + '_h_e_constraint'
         if not os.path.exists(gen_dir):
             os.mkdir(gen_dir)
         gen_dir_location = './' + gen_dir
         os.chdir(gen_dir_location)
-        file_name = con_name + '_h_constraint'
+        file_name = con_name + '_h_e_constraint'
         constraint_fun_jac_tran.generate(file_name, casadi_opts)
         os.chdir('../..')
     else: # BGHP constraint
         con_h_expr_x = substitute(con_h_expr, r, con_r_expr)
         jac_x = jacobian(con_h_expr_x, x);
-        w = r 
+        jac_u = jacobian(con_h_expr_x, u);
 
-        hess = hessian(con_h_expr[0], w)[0]
+        hess = hessian(con_h_expr[0], r)[0]
         for i in range(1, nh):
-            vertcat(hess, hessian(con_h_expr[i], w))[0]
+            vertcat(hess, hessian(con_h_expr[i], r))[0]
 
         hess = vertcat(hess)
 
-        constraint_fun_jac_tran_hess = Function(fun_name, [x], [con_h_expr_x, transpose(jac_x), hess])
+        constraint_fun_jac_tran_hess = Function(fun_name, [x, u], [con_h_expr_x, transpose(jac_x), hess])
 
         # generate C code
         if not os.path.exists('c_generated_code'):

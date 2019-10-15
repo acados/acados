@@ -329,11 +329,11 @@ static void ocp_nlp_constraints_bghp_get_ns(void *config_, void *dims_, int* val
 }
 
 
-// static void ocp_nlp_constraints_bghp_get_nsg(void *config_, void *dims_, int* value)
-// {
-//     ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
-//     *value = dims->nsg;
-// }
+static void ocp_nlp_constraints_bghp_get_nsg(void *config_, void *dims_, int* value)
+{
+    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+    *value = dims->nsg;
+}
 
 
 
@@ -380,7 +380,7 @@ void ocp_nlp_constraints_bghp_dims_get(void *config_, void *dims_, const char *f
     }
     else if (!strcmp(field, "nsg"))
     {
-        ocp_nlp_constraints_bghp_get_nsh(config_, dims_, value);
+        ocp_nlp_constraints_bghp_get_nsg(config_, dims_, value);
     }
     else
     {
@@ -1106,19 +1106,26 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
             //                  &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq,
             //                  0, 0);
             
-            blasfeo_dgemm_nt(np, np, np, lam_i, &work->jacobian_quadratic, 
+            // printf("memory->RSQrq:\n");
+            // blasfeo_dgese(0.0, nv, nv, memory->RSQrq, 0, 0);
+            // blasfeo_print_dmat(nv, nv, memory->RSQrq, 0, 0);
+
+            // printf("tmp_np_nh_np:\n");
+            // blasfeo_print_dmat(np * nh, np, &work->tmp_np_nh_np, 0, 0);
+
+            blasfeo_dgemm_nt(nv, np, np, lam_i, &work->jacobian_quadratic, 
                     0, 0, &work->tmp_np_nh_np, np * i, 0, 0.0, &work->tmp_nv_np, 0, 0, 
                     &work->tmp_nv_np, 0, 0);
 
-            // printf("tmp_np_nh_np:\n");
-            // blasfeo_print_dmat(2, 2, &work->tmp_np_nh_np, 0, 0);
-            blasfeo_dgemm_nt(nv, np, nv, 1.0, &work->tmp_nv_np, 
+            // printf("tmp_nv_np:\n");
+            // blasfeo_print_dmat(nv, np, &work->tmp_nv_np, 0, 0);
+            blasfeo_dgemm_nt(nv, nv, np, 1.0, &work->tmp_nv_np, 
                     0, 0, &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq, 0, 0, 
                     memory->RSQrq, 0, 0);
             // printf("work->jacobian_quadratic:\n");
-            // blasfeo_print_dmat(2, 2, &work->jacobian_quadratic, 0, 0);
+            // blasfeo_print_dmat(nv, np, &work->jacobian_quadratic, 0, 0);
             // printf("memory->RSQrq:\n");
-            // blasfeo_print_dmat(2, 2, memory->RSQrq, 0, 0);
+            // blasfeo_print_dmat(nv, nv, memory->RSQrq, 0, 0);
         }
     }
 
