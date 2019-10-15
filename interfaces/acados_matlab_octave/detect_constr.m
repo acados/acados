@@ -131,7 +131,6 @@ function model = detect_constr(model, is_e)
 
     
     if is_e
-        keyboard
         % checks
         if any(expr_constr.which_depends(u)) || ~isempty(lbu) || any(D)
             error('terminal constraint may not depend on control input.');
@@ -156,13 +155,12 @@ function model = detect_constr(model, is_e)
             model.dim_ng_e = length(lg);
         end
         % bounds x
-        % NOTE(oj): there is no Jbx_e, should maybe be added?!
-        % if length(lbx) > 0
-        %     model.constr_Jbx = Jbx;
-        %     model.constr_lbx = lbx;
-        %     model.constr_ubx = ubx;
-        %     model.dim_nbx = length(lbx);
-        % end
+        if ~isempty(lbx)
+            model.constr_Jbx_e = Jbx;
+            model.constr_lbx_e = lbx;
+            model.constr_ubx_e = ubx;
+            model.dim_nbx_e = length(lbx);
+        end
 
     else
 

@@ -166,6 +166,12 @@ classdef acados_ocp_model < handle
                     obj.model_struct.constr_lbx = value;
                 elseif (strcmp(field, 'constr_ubx'))
                     obj.model_struct.constr_ubx = value;
+                elseif (strcmp(field, 'constr_Jbx_e'))
+                    obj.model_struct.constr_Jbx_e = value;
+                elseif (strcmp(field, 'constr_lbx_e'))
+                    obj.model_struct.constr_lbx_e = value;
+                elseif (strcmp(field, 'constr_ubx_e'))
+                    obj.model_struct.constr_ubx_e = value;
                 elseif (strcmp(field, 'constr_Jbu'))
                     obj.model_struct.constr_Jbu = value;
                 elseif (strcmp(field, 'constr_lbu'))
@@ -254,6 +260,8 @@ classdef acados_ocp_model < handle
                     obj.model_struct.dim_ny_e = value;
                 elseif (strcmp(field, 'dim_nbx'))
                     obj.model_struct.dim_nbx = value;
+                elseif (strcmp(field, 'dim_nbx_e'))
+                    obj.model_struct.dim_nbx_e = value;
                 elseif (strcmp(field, 'dim_nbu'))
                     obj.model_struct.dim_nbu = value;
                 elseif (strcmp(field, 'dim_ng'))
