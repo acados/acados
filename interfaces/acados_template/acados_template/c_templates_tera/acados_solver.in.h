@@ -57,29 +57,16 @@ extern ocp_nlp_plan * nlp_solver_plan;
 extern ocp_nlp_config * nlp_config;
 extern ocp_nlp_dims * nlp_dims;
 {% if solver_config.integrator_type == "ERK" %}
-{% if dims.np < 1 %}
-extern external_function_casadi * forw_vde_casadi;
-{% else %}
 extern external_function_param_casadi * forw_vde_casadi;
-{% endif %}
 {% if solver_config.hessian_approx == "EXACT" %} 
-{% if dims.np < 1 %}
 extern external_function_casadi * hess_vde_casadi;
-{% else %}
 extern external_function_param_casadi * hess_vde_casadi;
-{% endif %}
 {% endif %}
 {% else %}
 {% if solver_config.integrator_type == "IRK" %}
-{% if dims.np < 1 %}
-extern external_function_casadi * impl_dae_fun;
-extern external_function_casadi * impl_dae_fun_jac_x_xdot_z;
-extern external_function_casadi * impl_dae_jac_x_xdot_u_z;
-{% else %}
 extern external_function_param_casadi * impl_dae_fun;
 extern external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
-{% endif %}
 {% endif %}
 {% endif %}
 {% if dims.npd > 0 %}

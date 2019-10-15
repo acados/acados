@@ -50,29 +50,15 @@ ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
 {% if solver_config.integrator_type == "ERK" %}
-{% if dims.np < 1 %}
-external_function_casadi * forw_vde_casadi;
-{% else %}
 external_function_param_casadi * forw_vde_casadi;
-{% endif %}
 {% if solver_config.hessian_approx == "EXACT" %} 
-{% if dims.np < 1 %}
-external_function_casadi * hess_vde_casadi;
-{% else %}
 external_function_param_casadi * hess_vde_casadi;
-{% endif %}
 {% endif %}
 {% else %}
 {% if solver_config.integrator_type == "IRK" %}
-{% if dims.np < 1 %}
-external_function_casadi * impl_dae_fun;
-external_function_casadi * impl_dae_fun_jac_x_xdot_z;
-external_function_casadi * impl_dae_jac_x_xdot_u_z;
-{% else %}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
-{% endif %}
 {% endif %}
 {% endif %}
 {% if dims.npd > 0 %}
@@ -106,14 +92,11 @@ int main() {
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", x0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x0);
 
-    {% if dims.np > 0%}
     double p[{{dims.np}}];
     {% for item in constraints.p %}
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
-    {% endif %}
     
-    {% if dims.np > 0%}
     {% if solver_config.integrator_type == "IRK" %}
     for (int ii = 0; ii < {{dims.N}}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
@@ -124,7 +107,6 @@ int main() {
     for (int ii = 0; ii < {{dims.N}}; ii++) {
     forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
-    {% endif %}
     {% endif %}
 
     double kkt_norm_inf = 1e12, elapsed_time;

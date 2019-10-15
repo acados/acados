@@ -32,31 +32,16 @@ extern sim_solver  * {{model.name}}_sim_solver;
 #endif
 
 {% if solver_config.integrator_type == "ERK" %}
-{% if dims.np < 1 %}
-extern external_function_casadi * sim_forw_vde_casadi;
-extern external_function_casadi * sim_expl_ode_fun_casadi;
-{% else %}
 extern external_function_param_casadi * sim_forw_vde_casadi;
 extern external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% endif %}
 {% if solver_config.hessian_approx == "EXACT" %}
-{% if dims.np < 1 %}
-extern external_function_casadi * sim_hess_vde_casadi;
-{% else %}
 extern external_function_param_casadi * sim_hess_vde_casadi;
-{% endif %}
 {% endif %}
 {% else %}
 {% if solver_config.integrator_type == "IRK" %}
-{% if dims.np < 1 %}
-extern external_function_casadi * sim_impl_dae_fun;
-extern external_function_casadi * sim_impl_dae_fun_jac_x_xdot_z;
-extern external_function_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% else %}
 extern external_function_param_casadi * sim_impl_dae_fun;
 extern external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
 extern external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% endif %}
 {% endif %}
 {% endif %}
 

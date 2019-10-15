@@ -64,16 +64,9 @@ int {{ model.name}}_acados_sim_create() {
     double Td = {{ solver_config.tf }}/ {{ dims.N }};
 
     {% if solver_config.integrator_type == "IRK" %}
-
-    {% if dims.np < 1 %}
-    sim_impl_dae_fun = (external_function_casadi *) malloc(sizeof(external_function_casadi));
-    sim_impl_dae_fun_jac_x_xdot_z = (external_function_casadi *) malloc(sizeof(external_function_casadi));
-    sim_impl_dae_jac_x_xdot_u_z = (external_function_casadi *) malloc(sizeof(external_function_casadi));
-    {% else %}
     sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     sim_impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     sim_impl_dae_jac_x_xdot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
-    {% endif %}
 
 	// external functions (implicit model)
 	sim_impl_dae_fun->casadi_fun  = &{{ model.name }}_impl_dae_fun;
@@ -83,11 +76,7 @@ int {{ model.name}}_acados_sim_create() {
 	sim_impl_dae_fun->casadi_n_in = &{{ model.name }}_impl_dae_fun_n_in;
 	sim_impl_dae_fun->casadi_n_out = &{{ model.name }}_impl_dae_fun_n_out;
 
-    {% if dims.np < 1 %}
-    external_function_casadi_create(sim_impl_dae_fun);
-    {% else %}
     external_function_param_casadi_create(sim_impl_dae_fun, {{ dims.np }});
-    {% endif %}
 
 	// external_function_casadi impl_dae_fun_jac_x_xdot_z;
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_fun = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z;
@@ -97,11 +86,7 @@ int {{ model.name}}_acados_sim_create() {
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_n_in = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_n_in;
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_n_out = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_n_out;
 
-    {% if dims.np < 1 %}
-    external_function_casadi_create(sim_impl_dae_fun_jac_x_xdot_z);
-    {% else %}
     external_function_param_casadi_create(sim_impl_dae_fun_jac_x_xdot_z, {{ dims.np }});
-    {% endif %}
 
 	// external_function_casadi impl_dae_jac_x_xdot_u_z;
 	sim_impl_dae_jac_x_xdot_u_z->casadi_fun = &{{ model.name }}_impl_dae_jac_x_xdot_u_z;
@@ -111,21 +96,12 @@ int {{ model.name}}_acados_sim_create() {
 	sim_impl_dae_jac_x_xdot_u_z->casadi_n_in = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_n_in;
 	sim_impl_dae_jac_x_xdot_u_z->casadi_n_out = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_n_out;
 
-    {% if dims.np < 1 %}
-    external_function_casadi_create(sim_impl_dae_jac_x_xdot_u_z);
-    {% else %}
     external_function_param_casadi_create(sim_impl_dae_jac_x_xdot_u_z, {{ dims.np }});
-    {% endif %}
 
     {% else %}
     // explicit ode
-    {% if dims.np < 1 %}
-    sim_forw_vde_casadi = (external_function_casadi *) malloc(sizeof(external_function_casadi));
-    sim_expl_ode_fun_casadi = (external_function_casadi *) malloc(sizeof(external_function_casadi));
-    {% else %}
     sim_forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     sim_expl_ode_fun_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
-    {% endif %}
 
     sim_forw_vde_casadi->casadi_fun = &{{ model.name }}_expl_vde_forw;
     sim_forw_vde_casadi->casadi_n_in = &{{ model.name }}_expl_vde_forw_n_in;
@@ -134,11 +110,7 @@ int {{ model.name}}_acados_sim_create() {
     sim_forw_vde_casadi->casadi_sparsity_out = &{{ model.name }}_expl_vde_forw_sparsity_out;
     sim_forw_vde_casadi->casadi_work = &{{ model.name }}_expl_vde_forw_work;
 
-    {% if dims.np < 1 %}
-    external_function_casadi_create(sim_forw_vde_casadi);
-    {% else %}
     external_function_param_casadi_create(sim_forw_vde_casadi, {{ dims.np }});
-    {% endif %}
 
     sim_expl_ode_fun_casadi->casadi_fun = &{{ model.name }}_expl_ode_fun;
     sim_expl_ode_fun_casadi->casadi_n_in = &{{ model.name }}_expl_ode_fun_n_in;
@@ -147,11 +119,7 @@ int {{ model.name}}_acados_sim_create() {
     sim_expl_ode_fun_casadi->casadi_sparsity_out = &{{ model.name }}_expl_ode_fun_sparsity_out;
     sim_expl_ode_fun_casadi->casadi_work = &{{ model.name }}_expl_ode_fun_work;
 
-    {% if dims.np < 1 %}
-    external_function_casadi_create(sim_expl_ode_fun_casadi);
-    {% else %}
     external_function_param_casadi_create(sim_expl_ode_fun_casadi, {{ dims.np }});
-    {% endif %}
 
     {% endif %}
 
@@ -246,23 +214,12 @@ int {{ model.name }}_acados_sim_free() {
 
     // free external function 
     {% if solver_config.integrator_type == "IRK" %}
-        {% if dims.np < 1 %}
-        external_function_casadi_free(sim_impl_dae_fun);
-        external_function_casadi_free(sim_impl_dae_fun_jac_x_xdot_z);
-        external_function_casadi_free(sim_impl_dae_jac_x_xdot_u_z);
-        {% else %}
         external_function_param_casadi_free(sim_impl_dae_fun);
         external_function_param_casadi_free(sim_impl_dae_fun_jac_x_xdot_z);
         external_function_param_casadi_free(sim_impl_dae_jac_x_xdot_u_z);
-        {% endif %}
     {% else %}
-        {% if dims.np < 1 %}
-        external_function_casadi_free(sim_forw_vde_casadi);
-        external_function_casadi_free(sim_expl_ode_fun_casadi);
-        {% else %}
         external_function_param_casadi_free(sim_forw_vde_casadi);
-        external_function_param_casadi_free(sim_expl_ode_fun_casadi_casadi);
-        {% endif %}
+        external_function_param_casadi_free(sim_expl_ode_fun_casadi);
     {% endif %}
     
     return 0;
