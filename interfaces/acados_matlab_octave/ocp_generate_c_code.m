@@ -1,7 +1,7 @@
 function ocp_generate_c_code(obj)
         % generate C code for CasADi functions
         if (strcmp(obj.model_struct.dyn_type, 'explicit'))
-            acados_template_mex.generate_c_code_explicit_ode(obj.acados_ocp_nlp_json.model);
+            generate_c_code_explicit_ode(obj.acados_ocp_nlp_json.model);
         elseif (strcmp(obj.model_struct.dyn_type, 'implicit'))
             if (strcmp(obj.opts_struct.sim_method, 'irk'))
                 opts.generate_hess = 1;
