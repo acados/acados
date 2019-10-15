@@ -140,7 +140,6 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if ocp_json.dims.nh > 0
         ocp_json.con_h.name = 'expr_h';
         ocp_json.con_h.expr = model.constr_expr_h;
-        keyboard
         ocp_json.constraints.lh = model.constr_lh;
         ocp_json.constraints.uh = model.constr_uh;
         % TODO(oj): can we get rid of the following?
@@ -290,7 +289,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'sym_xdot')
         ocp_json.model.xdot = model.sym_xdot;
     end
-    ocp_json
+
 end
 
 

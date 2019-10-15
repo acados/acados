@@ -49,7 +49,7 @@ function model = detect_constr(model, is_e)
     if strcmp(class(x(1)), 'casadi.SX')
         isSX = true;
     else
-        disp('constr detection only works for SX CasADi type!!!');
+        disp('constraint detection only works for SX CasADi type!!!');
         keyboard;
     end
 
@@ -68,17 +68,20 @@ function model = detect_constr(model, is_e)
         expr_constr = model.constr_expr_h_e;
         LB = model.constr_lh_e;
         UB = model.constr_uh_e;
+        fprintf('\nConstraint detection for terminal constraints.\n');
     else
         expr_constr = model.constr_expr_h;
         LB = model.constr_lh;
         UB = model.constr_uh;
+        fprintf('\nConstraint detection for path constraints.\n');
     end
     constr_fun = Function('constr_fun', {x, u, z}, {expr_constr});
 
+    % initialize
     constr_expr_h = SX.sym('constr_expr_h', 0, 0);
     lh = [];
     uh = [];
-    
+
     C = zeros(0, nx);
     D = zeros(0, nu);
     lg = [];
@@ -92,6 +95,7 @@ function model = detect_constr(model, is_e)
     lbu = [];
     ubu = [];
 
+    % loop over CasADi formulated constraints
     for ii = 1:length(expr_constr)
         c = expr_constr(ii);
         if any(c.which_depends(z)) || ~c.is_linear([ x; u ])
@@ -99,6 +103,9 @@ function model = detect_constr(model, is_e)
             constr_expr_h = vertcat(constr_expr_h, c);
             lh = [ lh; LB(ii)];
             uh = [ uh; UB(ii)];
+            disp(['constraint ', num2str(ii), ' is kept as nonlinear constraint.']);
+            disp(c);
+            disp(' ')
         else % c is linear in x and u
             Jc_fun = Function('Jc_fun', {x(1)}, {jacobian(c, [x;u])});
             Jc = full(Jc_fun(0));
@@ -112,12 +119,22 @@ function model = detect_constr(model, is_e)
                     Jbx(end, idb) = 1;
                     lbx = [lbx; LB(ii)/Jc(idb)];
                     ubx = [ubx; UB(ii)/Jc(idb)];
+                    disp(['constraint ', num2str(ii),...
+                          ' is reformulated as bound on x.']);
+                    disp(c);
+                    disp(' ')
+
                 else
                     % bound on u;
                     Jbu = [Jbu; zeros(1,nu)];
                     Jbu(end, idb-nx) = 1;
                     lbu = [lbu; LB(ii)/Jc(idb)];
                     ubu = [ubu; UB(ii)/Jc(idb)];
+                    disp(['constraint ', num2str(ii),...
+                          ' is reformulated as bound on u.']);
+                    disp(c);
+                    disp(' ')
+
                 end
             else
                 % c is general linear constraint
@@ -125,6 +142,11 @@ function model = detect_constr(model, is_e)
                 D = [D; Jc(nx+1:end)];
                 lg = [ lg; LB(ii)];
                 ug = [ ug; UB(ii)];
+                disp(['constraint ', num2str(ii),...
+                      ' is reformulated as general linear constraint.']);
+                disp(c);
+                disp(' ')
+                
             end
         end
     end
