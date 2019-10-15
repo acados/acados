@@ -28,6 +28,15 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     out_file = ['acados_solver_', model_name, '.h'];
     render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
 
+    % render sim_solver template
+    template_file = 'acados_sim_solver.in.c';
+    out_file = ['acados_sim_solver_', model_name, '.c'];
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
+
+    template_file = 'acados_sim_solver.in.h';
+    out_file = ['acados_sim_solver_', model_name, '.h'];
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file )
+
     % render header templates
     chdir([model_name, '_model/']);
     template_file = 'model.in.h';
