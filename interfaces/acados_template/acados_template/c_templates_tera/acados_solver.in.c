@@ -548,7 +548,7 @@ int acados_create() {
         forw_vde_casadi[i].casadi_work = &{{ model.name }}_expl_vde_forw_work;
         {% if ocp.dims.np < 1 %}
         external_function_casadi_create(&forw_vde_casadi[i]);
-		{% else: %}
+		{% else %}
         external_function_param_casadi_create(&forw_vde_casadi[i], {{ocp.dims.np}});
 		{% endif %}
     }
@@ -569,7 +569,7 @@ int acados_create() {
         hess_vde_casadi[i].casadi_work = &{{ model.name }}_expl_ode_hess_work;
         {% if ocp.dims.np < 1 %}
         external_function_casadi_create(&hess_vde_casadi[i]);
-		{% else: %}
+		{% else %}
         external_function_param_casadi_create(&hess_vde_casadi[i], {{ocp.dims.np}});
 		{% endif %}
     }
