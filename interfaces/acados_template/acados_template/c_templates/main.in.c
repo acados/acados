@@ -94,12 +94,12 @@ external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
+{% endif %}
 {% if ocp.dims.npd > 0 %}
 external_function_casadi * p_constraint;
 {% endif %}
 {% if ocp.dims.npd_e > 0 %}
 external_function_casadi * p_constraint_e;
-{% endif %}
 {% endif %}
 {% if ocp.dims.nh > 0 %}
 external_function_casadi * h_constraint;
@@ -184,7 +184,7 @@ int main() {
     }
     {% else %}
     for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
-    expl_vde_for[ii].set_param(expl_vde_for+ii, p);
+    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {% endif %}
     {% endif %}
