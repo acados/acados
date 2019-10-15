@@ -546,10 +546,10 @@ int acados_create() {
         forw_vde_casadi[i].casadi_sparsity_in = &{{ model.name }}_expl_vde_forw_sparsity_in;
         forw_vde_casadi[i].casadi_sparsity_out = &{{ model.name }}_expl_vde_forw_sparsity_out;
         forw_vde_casadi[i].casadi_work = &{{ model.name }}_expl_vde_forw_work;
-        {% if ocp.dims.np < 1 %}
+        {% if dims.np < 1 %}
         external_function_casadi_create(&forw_vde_casadi[i]);
 		{% else %}
-        external_function_param_casadi_create(&forw_vde_casadi[i], {{ocp.dims.np}});
+        external_function_param_casadi_create(&forw_vde_casadi[i], {{dims.np}});
 		{% endif %}
     }
 
@@ -567,10 +567,10 @@ int acados_create() {
         hess_vde_casadi[i].casadi_sparsity_in = &{{ model.name }}_expl_ode_hess_sparsity_in;
         hess_vde_casadi[i].casadi_sparsity_out = &{{ model.name }}_expl_ode_hess_sparsity_out;
         hess_vde_casadi[i].casadi_work = &{{ model.name }}_expl_ode_hess_work;
-        {% if ocp.dims.np < 1 %}
+        {% if dims.np < 1 %}
         external_function_casadi_create(&hess_vde_casadi[i]);
 		{% else %}
-        external_function_param_casadi_create(&hess_vde_casadi[i], {{ocp.dims.np}});
+        external_function_param_casadi_create(&hess_vde_casadi[i], {{dims.np}});
 		{% endif %}
     }
     {% endif %}
