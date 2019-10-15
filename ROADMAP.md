@@ -14,7 +14,7 @@
     - [ ] MacOS Matlab
 
 #### `matlab interface`
-- [ ] detect dimensions
+- [x] detect dimensions
 - [x] structure detections for constraints
 - [ ] code generation workflow! # Mex templating
     - 1) nonlinear least-squares 
