@@ -129,7 +129,7 @@ function render_file( acados_ocp_nlp_json_file, template_dir, template_file, out
     
     [ status, result ] = system(os_cmd);
     if status
-        error('rendering %s failed.\n command: %s\n returned status %d, got result: %s',...
+        error('rendering %s failed.\n command: %s\n returned status %d, got result:\n%s\n\n',...
             template_file, os_cmd, status, result);
 %     else
 %         disp(['Redering ' template_file ': success!']);

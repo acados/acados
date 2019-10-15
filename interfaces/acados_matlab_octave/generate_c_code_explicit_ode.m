@@ -61,47 +61,70 @@ generate_hess = 'true'; % TODO remove when not needed any more !!!
 
 %% load model
 % x
-x = model.sym_x;
-nx = length(x);
-% check type
-if class(x(1)) == 'casadi.SX'
-    isSX = true;
-else
-    isSX = false;
-end
-% u
-if isfield(model, 'sym_u')
-    u = model.sym_u;
+is_template = false;
+if isa(model, 'acados_template_mex.acados_dae')
+    is_template = true;
+    % names without sym
+    x = model.x;
+    nx = length(x);
+    % check type
+    if class(x(1)) == 'casadi.SX'
+        isSX = true;
+    else
+        isSX = false;
+    end
+    % u
+    u = model.u;
     nu = length(u);
-else
-    if isSX
-        u = SX.sym('u',0, 0);
-    else
-        u = MX.sym('u',0, 0);
-    end
-    nu = 0;
-end
-% p
-if isfield(model, 'sym_p')
-    p = model.sym_p;
+    % p
+    p = model.p;
     np = length(p);
-else
-    if isSX
-        p = SX.sym('p',0, 0);
-    else
-        p = MX.sym('p',0, 0);
-    end
-    np = 0;
-end
 
+
+else
+    x = model.sym_x;
+    nx = length(x);
+    % check type
+    if class(x(1)) == 'casadi.SX'
+        isSX = true;
+    else
+        isSX = false;
+    end
+    % u
+    if isfield(model, 'sym_u')
+        u = model.sym_u;
+        nu = length(u);
+    else
+        if isSX
+            u = SX.sym('u',0, 0);
+        else
+            u = MX.sym('u',0, 0);
+        end
+        nu = 0;
+    end
+    % p
+    if isfield(model, 'sym_p')
+        p = model.sym_p;
+        np = length(p);
+    else
+        if isSX
+            p = SX.sym('p',0, 0);
+        else
+            p = MX.sym('p',0, 0);
+        end
+        np = 0;
+    end
+end
 
 model_name = model.name;
 
 if isfield(model, 'dyn_expr_f')
     f_expl = model.dyn_expr_f;
     model_name = [model_name, '_dyn'];
-else
+elseif isfield(model, 'expr_f')
     f_expl = model.expr_f;
+else
+    f_expl = model.f_expl_expr;
 end
 
 
@@ -143,14 +166,30 @@ for j = 1:nx+nu
     end
 end
 
-expl_ode_hes = Function([model_name,'_expl_ode_hes'], {x, Sx, Su, lambdaX, u, p}, {adj, hess2});
+if is_template
+    if ~exist('c_generated_code', 'dir')
+        mkdir('c_generated_code');
+    end
+    cd 'c_generated_code'
+    model_dir = [model_name, '_model'];
+    if ~exist(model_dir, 'dir')
+        mkdir(model_dir);
+    end
+    cd(model_dir)
+end
+
+expl_ode_hes = Function([model_name,'_expl_ode_hess'], {x, Sx, Su, lambdaX, u, p}, {adj, hess2});
 
 %% generate C code
 expl_ode_fun.generate([model_name,'_expl_ode_fun'], casadi_opts);
-expl_vde_for.generate([model_name,'_expl_vde_for'], casadi_opts);
+expl_vde_for.generate([model_name,'_expl_vde_forw'], casadi_opts);
 expl_vde_adj.generate([model_name,'_expl_vde_adj'], casadi_opts);
 if strcmp(generate_hess, 'true')
-    expl_ode_hes.generate([model_name,'_expl_ode_hes'], casadi_opts);
+    expl_ode_hes.generate([model_name,'_expl_ode_hess'], casadi_opts);
+end
+
+if is_template
+    cd '../..'
 end
 
 end
