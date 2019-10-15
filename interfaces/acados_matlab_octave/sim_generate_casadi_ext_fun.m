@@ -41,9 +41,9 @@ if (strcmp(opts_struct.method, 'erk'))
     generate_c_code_explicit_ode(model_struct, opts_struct);
     % compile the code in a shared library
     c_files{end+1} = [model_name, '_dyn_expl_ode_fun.c'];
-    c_files{end+1} = [model_name, '_dyn_expl_vde_for.c'];
+    c_files{end+1} = [model_name, '_dyn_expl_vde_forw.c'];
     c_files{end+1} = [model_name, '_dyn_expl_vde_adj.c'];
-    c_files{end+1} = [model_name, '_dyn_expl_ode_hes.c'];
+    c_files{end+1} = [model_name, '_dyn_expl_ode_hess.c'];
 elseif (strcmp(opts_struct.method, 'irk'))
     % generate c for function and derivatives using casadi
     generate_c_code_implicit_ode(model_struct, opts_struct);

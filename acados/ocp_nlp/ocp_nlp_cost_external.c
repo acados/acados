@@ -209,7 +209,7 @@ int ocp_nlp_cost_external_model_set(void *config_, void *dims_, void *model_,
 
     int ns = dims->ns;
 
-    if (!strcmp(field, "ext_cost_jac_hes"))
+    if (!strcmp(field, "ext_cost_jac_hes") || !strcmp(field, "ext_cost_jac_hess"))
     {
         model->ext_cost = (external_function_generic *) value_;
     }

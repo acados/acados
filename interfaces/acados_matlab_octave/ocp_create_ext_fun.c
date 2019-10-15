@@ -49,7 +49,7 @@
 
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-    {
+{
 
 //    mexPrintf("\nin sim_impl_ext_fun_create\n");
 
@@ -83,9 +83,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     fieldnames[19] = (char*)mxMalloc(50);
 
     memcpy(fieldnames[0],"dyn_expl_ode_fun",sizeof("dyn_expl_ode_fun"));
-    memcpy(fieldnames[1],"dyn_expl_vde_for",sizeof("dyn_expl_vde_for"));
+    memcpy(fieldnames[1],"dyn_expl_vde_forw",sizeof("dyn_expl_vde_forw"));
     memcpy(fieldnames[2],"dyn_expl_vde_adj",sizeof("dyn_expl_vde_adj"));
-    memcpy(fieldnames[3],"dyn_expl_ode_hes",sizeof("dyn_expl_ode_hes"));
+    memcpy(fieldnames[3],"dyn_expl_ode_hess",sizeof("dyn_expl_ode_hess"));
     memcpy(fieldnames[4],"dyn_impl_ode_fun",sizeof("dyn_impl_ode_fun"));
     memcpy(fieldnames[5],"dyn_impl_ode_fun_jac_x_xdot_z",sizeof("dyn_impl_ode_fun_jac_x_xdot_z"));
     memcpy(fieldnames[6],"dyn_impl_ode_jac_x_xdot_u_z",sizeof("dyn_impl_ode_jac_x_xdot_u_z"));
@@ -101,7 +101,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[16],"constr_h_fun_jac_ut_xt_hess",sizeof("constr_h_fun_jac_ut_xt_hess"));
     memcpy(fieldnames[17],"cost_y_fun_jac_ut_xt",sizeof("cost_y_fun_jac_ut_xt"));
     memcpy(fieldnames[18],"cost_y_hess",sizeof("cost_y_hess"));
-    memcpy(fieldnames[19],"cost_ext_cost_jac_hes",sizeof("cost_ext_cost_jac_hes"));
+    memcpy(fieldnames[19],"cost_ext_cost_jac_hess",sizeof("cost_ext_cost_jac_hess"));
 
     // create output struct
     plhs[0] = mxCreateStructMatrix(1, 1, 20, (const char **) fieldnames);
@@ -131,9 +131,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int Nf = 1;
 
     mxSetField(plhs[0], 0, "dyn_expl_ode_fun", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
-    mxSetField(plhs[0], 0, "dyn_expl_vde_for", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
+    mxSetField(plhs[0], 0, "dyn_expl_vde_forw", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
     mxSetField(plhs[0], 0, "dyn_expl_vde_adj", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
-    mxSetField(plhs[0], 0, "dyn_expl_ode_hes", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
+    mxSetField(plhs[0], 0, "dyn_expl_ode_hess", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
     mxSetField(plhs[0], 0, "dyn_impl_ode_fun", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
     mxSetField(plhs[0], 0, "dyn_impl_ode_fun_jac_x_xdot_z", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
     mxSetField(plhs[0], 0, "dyn_impl_ode_jac_x_xdot_u_z", mxCreateNumericMatrix(1, Nf, mxINT64_CLASS, mxREAL));
@@ -149,12 +149,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxSetField(plhs[0], 0, "constr_h_fun_jac_ut_xt_hess", mxCreateNumericMatrix(1, Nf+1, mxINT64_CLASS, mxREAL));
     mxSetField(plhs[0], 0, "cost_y_fun_jac_ut_xt", mxCreateNumericMatrix(1, Nf+1, mxINT64_CLASS, mxREAL));
     mxSetField(plhs[0], 0, "cost_y_hess", mxCreateNumericMatrix(1, Nf+1, mxINT64_CLASS, mxREAL));
-    mxSetField(plhs[0], 0, "cost_ext_cost_jac_hes", mxCreateNumericMatrix(1, Nf+1, mxINT64_CLASS, mxREAL));
+    mxSetField(plhs[0], 0, "cost_ext_cost_jac_hess", mxCreateNumericMatrix(1, Nf+1, mxINT64_CLASS, mxREAL));
 
     return;
 
-    }
-
+}
 
 
 

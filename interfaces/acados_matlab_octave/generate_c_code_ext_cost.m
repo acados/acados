@@ -83,9 +83,9 @@ if isfield(model, 'cost_expr_ext_cost')
     hes_ux = jacobian(jac_x', u);
     hes_xx = jacobian(jac_x', x);
     % Set up functions
-    ext_cost_jac_hes = Function([model_name,'_cost_ext_cost_jac_hes'], {x, u, p}, {[jac_u'; jac_x'], [hes_uu, hes_xu; hes_ux, hes_xx]});
+    ext_cost_jac_hes = Function([model_name,'_cost_ext_cost_jac_hess'], {x, u, p}, {[jac_u'; jac_x'], [hes_uu, hes_xu; hes_ux, hes_xx]});
     % generate C code
-    ext_cost_jac_hes.generate([model_name,'_cost_ext_cost_jac_hes'], casadi_opts);
+    ext_cost_jac_hes.generate([model_name,'_cost_ext_cost_jac_hess'], casadi_opts);
 end
 
 if isfield(model, 'cost_expr_ext_cost_e')
@@ -95,9 +95,9 @@ if isfield(model, 'cost_expr_ext_cost_e')
     % generate hessians
     hes_xx_e = jacobian(jac_x', x);
     % Set up functions
-    ext_cost_e_jac_hes = Function([model_name,'_cost_ext_cost_e_jac_hes'], {x, p}, {jac_x_e', hes_xx_e});
+    ext_cost_e_jac_hes = Function([model_name,'_cost_ext_cost_e_jac_hess'], {x, p}, {jac_x_e', hes_xx_e});
     % generate C code
-    ext_cost_e_jac_hes.generate([model_name,'_cost_ext_cost_e_jac_hes'], casadi_opts);
+    ext_cost_e_jac_hes.generate([model_name,'_cost_ext_cost_e_jac_hess'], casadi_opts);
 end
 
 

@@ -128,7 +128,8 @@ classdef acados_ocp < handle
             obj.C_ocp_ext_fun = ocp_create_ext_fun();
 
             % compile mex with model dependency & set pointers for external functions in model
-            obj.C_ocp_ext_fun = ocp_set_ext_fun(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+            obj.C_ocp_ext_fun = ocp_set_ext_fun(obj.C_ocp, obj.C_ocp_ext_fun,...
+                                             obj.model_struct, obj.opts_struct);
 
             % precompute
             ocp_precompute(obj.C_ocp);
