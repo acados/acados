@@ -41,11 +41,11 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% discretization
-N = 100;
+N = 20;
 T = 1; % time horizon length
+x0 = [0; pi; 0; 0];
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
-nlp_solver_max_iter = 100;
 tol = 1e-8;
 qp_solver = 'partial_condensing_hpipm';
     % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
@@ -90,6 +90,8 @@ ocp_model.set('constr_expr_h', model.expr_h);
 U_max = 80;
 ocp_model.set('constr_lh', -U_max); % lower bound on h
 ocp_model.set('constr_uh', U_max);  % upper bound on h
+
+ocp_model.set('constr_x0', x0);
 % ... see ocp_model.model_struct to see what other fields can be set
 
 %% acados ocp set opts
@@ -107,10 +109,8 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
 
-x0 = [0; pi; 0; 0];
-
 %% call ocp solver
-% initial state
+% update initial state
 ocp.set('constr_x0', x0);
 
 % set trajectory initialization
@@ -126,3 +126,6 @@ xtraj = ocp.get('x');
 
 status = ocp.get('status'); % 0 - success
 ocp.print('stat')
+
+% to generate templated C code
+% ocp.generate_c_code;
