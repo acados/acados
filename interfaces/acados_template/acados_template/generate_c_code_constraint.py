@@ -90,11 +90,10 @@ def generate_c_code_constraint( constraint ):
 
         hess = hessian(con_h_expr[0], r)[0]
         for i in range(1, nh):
-            vertcat(hess, hessian(con_h_expr[i], r)[0])
-
-        hess = vertcat(hess)
+            hess = vertcat(hess, hessian(con_h_expr[i], r)[0])
 
         constraint_fun_jac_tran_hess = Function(fun_name, [x, u], [con_h_expr_x_u, vertcat(transpose(jac_u), transpose(jac_x)), hess])
+        import pdb; pdb.set_trace()
 
         # generate C code
         if not os.path.exists('c_generated_code'):

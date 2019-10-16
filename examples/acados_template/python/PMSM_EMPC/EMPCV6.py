@@ -444,9 +444,9 @@ if FORMULATION == 1:
     nlp_dims.ng = 3
     nlp_dims.ng_e = 3
     nlp_dims.nh  = 1                    # 1st torque constraint 
-    nlp_dims.npd  = nlp_dims.nh         # 1st torque constraint 
+    nlp_dims.npd  = 1                   # 1st torque constraint 
     nlp_dims.nh_e = 1                   # 1st torque constraint 
-    nlp_dims.npd_e = nlp_dims.nh_e      # 1st torque constraint 
+    nlp_dims.npd_e = 1                  # 1st torque constraint 
     nlp_dims.ns = 1
     nlp_dims.ns_e = 1 
     nlp_dims.nsh = 1
@@ -481,9 +481,9 @@ if FORMULATION == 4:
     nlp_dims.ng = 3
     nlp_dims.ng_e = 3
     nlp_dims.nh  = 2            # 1st torque constraint | 2nd voltage constraint
-    nlp_dims.npd  = 2           # 1st torque constraint | 2nd voltage constraint
+    nlp_dims.npd  = 3           # 1st torque constraint | 2nd voltage constraint
     nlp_dims.nh_e = 2           # 1st torque constraint | 2nd terminal set
-    nlp_dims.npd_e = 2          # 1st torque constraint | 2nd terminal set
+    nlp_dims.npd_e = 3          # 1st torque constraint | 2nd terminal set
     nlp_dims.ns = 1
     nlp_dims.ns_e = 1 
     nlp_dims.nsh = 1

@@ -87,9 +87,10 @@ def generate_c_code_constraint_e( constraint ):
 
         hess = hessian(con_h_expr[0], r)[0]
         for i in range(1, nh):
-            vertcat(hess, hessian(con_h_expr[i], r)[0])
+            hess = vertcat(hess, hessian(con_h_expr[i], r)[0])
 
-        hess = vertcat(hess)
+        # hess = vertcat(hess)
+        import pdb; pdb.set_trace()
 
         constraint_fun_jac_tran_hess = Function(fun_name, [x, u], [con_h_expr_x, transpose(jac_x), hess])
 
