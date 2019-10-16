@@ -92,13 +92,13 @@ external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 external_function_casadi * p_constraint;
 {% endif %}
 {% if dims.npd_e > 0 %}
-external_function_casadi * p_constraint_N;
+external_function_casadi p_e_constraint;
 {% endif %}
 {% if dims.nh > 0 %}
 external_function_casadi * h_constraint;
 {% endif %}
 {% if dims.nh_e > 0 %}
-external_function_casadi * h_constraint_N;
+external_function_casadi h_e_constraint;
 {% endif %}
 
 
@@ -138,7 +138,7 @@ static void mdlInitializeSizes (SimStruct *S)
     // specify the direct feedthrough status 
     ssSetInputPortDirectFeedThrough(S, 0, 1); // current state x0
     ssSetInputPortDirectFeedThrough(S, 1, 1); // y_ref
-    ssSetInputPortDirectFeedThrough(S, 2, 1); // y_ref_N
+    ssSetInputPortDirectFeedThrough(S, 2, 1); // y_ref_e
     {% if dims.np > 0 %}
     ssSetInputPortDirectFeedThrough(S, 3, 1); // parameter
     {% endif %}
@@ -185,7 +185,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // get input signals
     InputRealPtrsType in_x0_sign;
     InputRealPtrsType in_y_ref_sign;
-    InputRealPtrsType in_y_ref_N_sign;
+    InputRealPtrsType in_y_ref_e_sign;
     {% if dims.np > 0 %}
     InputRealPtrsType in_p_sign;
     {% endif %}
@@ -193,14 +193,14 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // local buffers
     real_t in_x0[{{ dims.nx }}];
     real_t in_y_ref[{{ dims.ny }}];
-    real_t in_y_ref_N[{{ dims.ny_e }}];
+    real_t in_y_ref_e[{{ dims.ny_e }}];
     {% if dims.np > 0 %}
     real_t in_p[{{ dims.np }}];
     {% endif %}
 
     in_x0_sign = ssGetInputPortRealSignalPtrs(S, 0);
     in_y_ref_sign = ssGetInputPortRealSignalPtrs(S, 1);
-    in_y_ref_N_sign = ssGetInputPortRealSignalPtrs(S, 2);
+    in_y_ref_e_sign = ssGetInputPortRealSignalPtrs(S, 2);
     {% if dims.np > 0 %}
     in_p_sign = ssGetInputPortRealSignalPtrs(S, 3);
     {% endif %}
@@ -208,7 +208,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // copy signals into local buffers
     for (int i = 0; i < {{ dims.nx }}; i++) in_x0[i] = (double)(*in_x0_sign[i]);
     for (int i = 0; i < {{ dims.ny }}; i++) in_y_ref[i] = (double)(*in_y_ref_sign[i]);
-    for (int i = 0; i < {{ dims.ny_e }}; i++) in_y_ref_N[i] = (double)(*in_y_ref_N_sign[i]);
+    for (int i = 0; i < {{ dims.ny_e }}; i++) in_y_ref_e[i] = (double)(*in_y_ref_e_sign[i]);
     {% if dims.np > 0 %}
     for (int i = 0; i < {{ dims.np }}; i++) in_p[i] = (double)(*in_p_sign[i]);
     {% endif %}
@@ -224,7 +224,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     for (int ii = 0; ii < {{dims.N}}; ii++)
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) in_y_ref);
 
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{dims.N}}, "yref", (void *) in_y_ref_N);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{dims.N}}, "yref", (void *) in_y_ref_e);
 
     // update value of parameters
     {% if dims.np > 0%}
@@ -236,7 +236,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     }
     {% else %}
     for (int ii = 0; ii < {{dims.N}}; ii++) {
-    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
+    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, in_p);
     }
     {% endif %}
     {% endif %}
