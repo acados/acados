@@ -135,7 +135,7 @@ int main()
     {%- endif %}
 
     // prepare evaluation
-    int NTIMINGS = 100;
+    int NTIMINGS = 10;
     double min_time = 1e12;
     double kkt_norm_inf;
     double elapsed_time;

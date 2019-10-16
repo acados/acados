@@ -247,14 +247,10 @@ ocp_opts.opts_struct
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-ocp
-ocp.C_ocp
-ocp.C_ocp_ext_fun
 
 if GENERATE_C_CODE == 1
     ocp.generate_c_code()
 end
-
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -384,27 +380,27 @@ end
 avg_time_solve = toc/N_sim
 
 
-
+DO_PLOT = 0;
 % figures
+if DO_PLOT
 
-for ii=1:N_sim+1
-	x_cur = x_sim(:,ii);
-% 	visualize;
-end
+    for ii=1:N_sim+1
+        x_cur = x_sim(:,ii);
+    % 	visualize;
+    end
+
+    figure;
+    subplot(2,1,1);
+    plot(0:N_sim, x_sim);
+    xlim([0 N_sim]);
+    legend('p', 'theta', 'v', 'omega');
+    subplot(2,1,2);
+    plot(0:N_sim-1, u_sim);
+    xlim([0 N_sim]);
+    legend('F');
 
 
-
-figure;
-subplot(2,1,1);
-plot(0:N_sim, x_sim);
-xlim([0 N_sim]);
-legend('p', 'theta', 'v', 'omega');
-subplot(2,1,2);
-plot(0:N_sim-1, u_sim);
-xlim([0 N_sim]);
-legend('F');
-
-
-if is_octave()
-    waitforbuttonpress;
+    if is_octave()
+        waitforbuttonpress;
+    end
 end

@@ -272,8 +272,10 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         ocp_json.cost.zu_e = model.cost_zu_e;
     end
 
-    if strcmp(obj.opts_struct.sim_method, 'erk') || strcmp(obj.opts_struct.sim_method, 'irk')
+    if strcmp(obj.opts_struct.sim_method, 'erk')
         ocp_json.model.f_expl_expr = model.dyn_expr_f;
+    elseif strcmp(obj.opts_struct.sim_method, 'irk')
+        ocp_json.model.f_impl_expr = model.dyn_expr_f;
     else
         error(['integrator ', obj.opts_struct.sim_method, ' not support for templating backend.'])
     end
