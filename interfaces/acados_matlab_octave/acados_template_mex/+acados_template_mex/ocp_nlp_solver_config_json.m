@@ -8,12 +8,11 @@ classdef ocp_nlp_solver_config_json < handle
     end
     methods
         function obj = ocp_nlp_solver_config_json()
-            obj.qp_solver       = "PARTIAL_CONDENSING_HPIPM"; 
-            obj.hessian_approx  = "GAUSS_NEWTON"; 
-            obj.integrator_type = "ERK"; 
-            obj.tf              = []; 
-            obj.nlp_solver_type = "SQP_RTI"; 
+            obj.qp_solver       = 'PARTIAL_CONDENSING_HPIPM';
+            obj.hessian_approx  = 'GAUSS_NEWTON';
+            obj.integrator_type = 'ERK';
+            obj.tf              = [];
+            obj.nlp_solver_type = 'SQP_RTI';
         end
     end
 end
-
