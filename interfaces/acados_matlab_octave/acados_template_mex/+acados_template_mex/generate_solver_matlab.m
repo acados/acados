@@ -96,11 +96,13 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
         % compile if on Mac or Unix platform
         [ status, result ] = system('make');
         if status
+            cd ..
             error('building templated code failed.\nGot status %d, result: %s',...
                   status, result);
         end
         [ status, result ] = system('make shared_lib');
         if status
+            cd ..
             error('building templated code as shared library failed.\nGot status %d, result: %s',...
                   status, result);
         end
@@ -129,6 +131,7 @@ function render_file( acados_ocp_nlp_json_file, template_dir, template_file, out
     
     [ status, result ] = system(os_cmd);
     if status
+        cd ..
         error('rendering %s failed.\n command: %s\n returned status %d, got result:\n%s\n\n',...
             template_file, os_cmd, status, result);
 %     else
@@ -136,6 +139,7 @@ function render_file( acados_ocp_nlp_json_file, template_dir, template_file, out
     end
     % this should return status != 0, maybe fix in tera renderer?
     if contains( result, 'Error' )
+        cd ..
         error('rendering %s failed.\n command: %s\n returned status %d, got result: %s',...
             template_file, os_cmd, status, result);
     end
