@@ -43,6 +43,8 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     ocp_json.solver_config.qp_solver = upper(obj.opts_struct.qp_solver);
     ocp_json.solver_config.integrator_type = upper(obj.opts_struct.sim_method);
     ocp_json.solver_config.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
+    ocp_json.solver_config.sim_method_num_steps = obj.opts_struct.sim_method_num_steps;
+    ocp_json.solver_config.sim_method_num_stages = obj.opts_struct.sim_method_num_stages;
     ocp_json.dims.N = upper(obj.opts_struct.param_scheme_N);
 
     ocp_json.solver_config.tf = model.T;
