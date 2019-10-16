@@ -697,8 +697,9 @@ ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 # ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
 # ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
+# ra.solver_config.integrator_type = 'IRK'
 ra.solver_config.integrator_type = 'ERK'
-ra.solver_config.sim_method_num_stages = 2  # 1: RK1, 2: RK2, 4: RK4    
+ra.solver_config.sim_method_num_stages = 4  # 1: RK1, 2: RK2, 4: RK4    
 # ra.solver_config.integrator_type = 'IRK'
 
 # set prediction horizon

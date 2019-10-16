@@ -89,9 +89,6 @@ def generate_c_code_constraint_e( constraint ):
         for i in range(1, nh):
             hess = vertcat(hess, hessian(con_h_expr[i], r)[0])
 
-        # hess = vertcat(hess)
-        import pdb; pdb.set_trace()
-
         constraint_fun_jac_tran_hess = Function(fun_name, [x, u], [con_h_expr_x, transpose(jac_x), hess])
 
         # generate C code
@@ -111,7 +108,7 @@ def generate_c_code_constraint_e( constraint ):
 
         jac_x = jacobian(con_r_expr, x);
         fun_name = con_name + '_p_e_constraint'
-        constraint_residual_fun_jac_tran = Function(fun_name, [x], [con_r_expr, transpose(jac_x)])
+        constraint_residual_fun_jac_tran = Function(fun_name, [x, u], [con_r_expr, transpose(jac_x)])
 
         gen_dir = con_name + '_p_e_constraint'
         if not os.path.exists(gen_dir):
@@ -121,6 +118,13 @@ def generate_c_code_constraint_e( constraint ):
         file_name = con_name + '_p_e_constraint'
         constraint_residual_fun_jac_tran.generate(file_name, casadi_opts)
 
+        # Jr_tran_eval = (constraint_residual_fun_jac_tran([0,0], [])[1]).full()
+        # hess_eval = (constraint_fun_jac_tran_hess([0,0], [])[2]).full()
+        # tmp1 = mtimes(Jr_tran_eval, hess_eval[0:3,0:3])
+        # HESS1 = mtimes(mtimes(Jr_tran_eval, hess_eval[0:3,0:3]), transpose(Jr_tran_eval))
+        # tmp2 = mtimes(Jr_tran_eval, hess_eval[3:6,0:3])
+        # HESS2= HESS1+ mtimes(mtimes(Jr_tran_eval, hess_eval[3:6, 0:3]), transpose(Jr_tran_eval))
+        # import pdb; pdb.set_trace()
         os.chdir('../..')
 
     return
