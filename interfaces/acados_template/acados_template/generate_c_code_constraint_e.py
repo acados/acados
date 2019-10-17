@@ -47,6 +47,7 @@ def generate_c_code_constraint_e( constraint ):
     # load constraint variables and expression
     x = constraint.x
     r = constraint.r
+    p = constraint.p
     nh = constraint.nh 
     con_h_expr = constraint.con_h_expr
     con_r_expr = constraint.con_r_expr
@@ -59,13 +60,22 @@ def generate_c_code_constraint_e( constraint ):
     else:
         nr = 0
 
+    if type(p) is list:
+        # check that z is empty
+        if len(p) == 0:
+            np = 0
+            p = SX.sym('p', 0, 0)
+        else:
+            raise Exception('p is a non-empty list. It should be either an empty list or an SX object.')
+    else:
+        np = p.size()[0]
     # create dummy u
     u = SX.sym('u', 0, 0)
     # set up functions to be exported
     fun_name = con_name + '_h_e_constraint'
     if nr == 0: # BGH constraint
         jac_x = jacobian(con_h_expr, x);
-        constraint_fun_jac_tran = Function(fun_name, [x, u], [con_h_expr, transpose(jac_x)])
+        constraint_fun_jac_tran = Function(fun_name, [x, u, p], [con_h_expr, transpose(jac_x)])
 
         # generate C code
         if not os.path.exists('c_generated_code'):
@@ -89,7 +99,7 @@ def generate_c_code_constraint_e( constraint ):
         for i in range(1, nh):
             hess = vertcat(hess, hessian(con_h_expr[i], r)[0])
 
-        constraint_fun_jac_tran_hess = Function(fun_name, [x, u], [con_h_expr_x, transpose(jac_x), hess])
+        constraint_fun_jac_tran_hess = Function(fun_name, [x, u, p], [con_h_expr_x, transpose(jac_x), hess])
 
         # generate C code
         if not os.path.exists('c_generated_code'):
@@ -108,7 +118,7 @@ def generate_c_code_constraint_e( constraint ):
 
         jac_x = jacobian(con_r_expr, x);
         fun_name = con_name + '_p_e_constraint'
-        constraint_residual_fun_jac_tran = Function(fun_name, [x, u], [con_r_expr, transpose(jac_x)])
+        constraint_residual_fun_jac_tran = Function(fun_name, [x, u, p], [con_r_expr, transpose(jac_x)])
 
         gen_dir = con_name + '_p_e_constraint'
         if not os.path.exists(gen_dir):
