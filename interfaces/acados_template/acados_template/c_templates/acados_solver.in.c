@@ -692,7 +692,7 @@ int acados_create() {
     {%- endif %}
 
     {%- if ocp.dims.npd > 0 %}
-    p_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
+    p_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear part of convex-composite constraint
         p_constraint[i].casadi_fun = &{{ ocp.con_p.name }}_p_constraint;
@@ -702,13 +702,13 @@ int acados_create() {
         p_constraint[i].casadi_sparsity_out = &{{ ocp.con_p.name }}_p_constraint_sparsity_out;
         p_constraint[i].casadi_work = &{{ ocp.con_p.name }}_p_constraint_work;
 
-        external_function_casadi_create(&p_constraint[i]);
+        external_function_param_casadi_create(&p_constraint[i], {{ocp.dims.np}});
     }
     {%- endif %}
 
     {%- if ocp.dims.npd_e > 0 %}
 	// nonlinear part of convex-composite constraint
-	external_function_casadi p_constraint_e;
+	external_function_param_casadi p_constraint_e;
 	p_constraint_e.casadi_fun = &{{ ocp.con_p_e.name }}_p_constraint_e;
 	p_constraint_e.casadi_n_in = &{{ ocp.con_p_e.name }}_p_constraint_e_n_in;
 	p_constraint_e.casadi_n_out = &{{ ocp.con_p_e.name }}_p_constraint_e_n_out;
@@ -716,11 +716,11 @@ int acados_create() {
 	p_constraint_e.casadi_sparsity_out = &{{ ocp.con_p_e.name }}_p_constraint_e_sparsity_out;
 	p_constraint_e.casadi_work = &{{ ocp.con_p_e.name }}_p_constraint_e_work;
 
-    external_function_casadi_create(p_constraint_e);
+    external_function_param_casadi_create(p_constraint_e, {{ocp.dims.np}});
     {%- endif %}
 
     {%- if ocp.dims.nh > 0 %}
-    h_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
+    h_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear constraint
         h_constraint[i].casadi_fun = &{{ ocp.con_h.name }}_h_constraint;
@@ -730,7 +730,7 @@ int acados_create() {
         h_constraint[i].casadi_sparsity_out = &{{ ocp.con_h.name }}_h_constraint_sparsity_out;
         h_constraint[i].casadi_work = &{{ ocp.con_h.name }}_h_constraint_work;
 
-        external_function_casadi_create(&h_constraint[i]);
+        external_function_param_casadi_create(&h_constraint[i], {{ocp.dims.np}});
     }
     {%- endif %}
 
@@ -743,16 +743,12 @@ int acados_create() {
 	h_e_constraint.casadi_sparsity_out = &{{ ocp.con_h_e.name }}_h_e_constraint_sparsity_out;
 	h_e_constraint.casadi_work = &{{ ocp.con_h_e.name }}_h_e_constraint_work;
 
-    external_function_casadi_create(&h_e_constraint);
+    external_function_param_casadi_create(&h_e_constraint, {{ ocp.dims.np }});
     {%- endif %}
 
     {% if ocp.solver_config.integrator_type == "ERK" %}
     // explicit ode
-    {% if ocp.dims.np < 1 %}
-    forw_vde_casadi = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else %}
     forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    {% endif %}
 
     for (int i = 0; i < N; ++i) {
         forw_vde_casadi[i].casadi_fun = &{{ ocp.model.name }}_expl_vde_forw;
@@ -761,20 +757,12 @@ int acados_create() {
         forw_vde_casadi[i].casadi_sparsity_in = &{{ ocp.model.name }}_expl_vde_forw_sparsity_in;
         forw_vde_casadi[i].casadi_sparsity_out = &{{ ocp.model.name }}_expl_vde_forw_sparsity_out;
         forw_vde_casadi[i].casadi_work = &{{ ocp.model.name }}_expl_vde_forw_work;
-        {% if ocp.dims.np < 1 %}
-        external_function_casadi_create(&forw_vde_casadi[i]);
-		{% else: %}
-        external_function_param_casadi_create(&forw_vde_casadi[i], {{ocp.dims.np}});
-		{% endif %}
+        external_function_param_casadi_create(&forw_vde_casadi[i], {{ ocp.dims.np }});
     }
 
     {% if ocp.solver_config.hessian_approx == "EXACT" %} 
-    external_function_casadi * hess_vde_casadi;
-    {% if ocp.dims.np < 1 %}
-    hess_vde_casadi = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else %}
+    external_function_param_casadi * hess_vde_casadi;
     hess_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    {% endif %}
     for (int i = 0; i < N; ++i) {
         hess_vde_casadi[i].casadi_fun = &{{ ocp.model.name }}_expl_ode_hess;
         hess_vde_casadi[i].casadi_n_in = &{{ ocp.model.name }}_expl_ode_hess_n_in;
@@ -782,21 +770,13 @@ int acados_create() {
         hess_vde_casadi[i].casadi_sparsity_in = &{{ ocp.model.name }}_expl_ode_hess_sparsity_in;
         hess_vde_casadi[i].casadi_sparsity_out = &{{ ocp.model.name }}_expl_ode_hess_sparsity_out;
         hess_vde_casadi[i].casadi_work = &{{ ocp.model.name }}_expl_ode_hess_work;
-        {% if ocp.dims.np < 1 %}
-        external_function_casadi_create(&hess_vde_casadi[i]);
-		{% else: %}
-        external_function_param_casadi_create(&hess_vde_casadi[i], {{ocp.dims.np}});
-		{% endif %}
+        external_function_param_casadi_create(&hess_vde_casadi[i], {{ ocp.dims.np }});
     }
     {% endif %}
     {% else %}
     {% if ocp.solver_config.integrator_type == "IRK" %}
     // implicit dae
-    {% if ocp.dims.np < 1 %}
-    impl_dae_fun = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else %}
     impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    {% endif %}
     for (int i = 0; i < N; ++i) {
         impl_dae_fun[i].casadi_fun = &{{ ocp.model.name }}_impl_dae_fun;
         impl_dae_fun[i].casadi_work = &{{ ocp.model.name }}_impl_dae_fun_work;
@@ -805,18 +785,10 @@ int acados_create() {
         impl_dae_fun[i].casadi_n_in = &{{ ocp.model.name }}_impl_dae_fun_n_in;
         impl_dae_fun[i].casadi_n_out = &{{ ocp.model.name }}_impl_dae_fun_n_out;
         // TODO(fix this!!)
-        {% if ocp.dims.np < 1 %}
-        external_function_casadi_create(&impl_dae_fun[i]);
-        {% else %}
-        external_function_param_casadi_create(&impl_dae_fun[i], {{ocp.dims.np}});
-        {% endif %}
+        external_function_param_casadi_create(&impl_dae_fun[i], {{ ocp.dims.np }});
     }
 
-    {% if ocp.dims.np < 1 %}
-    impl_dae_fun_jac_x_xdot_z = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else %}
     impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    {% endif %}
     for (int i = 0; i < N; ++i) {
         impl_dae_fun_jac_x_xdot_z[i].casadi_fun = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z;
         impl_dae_fun_jac_x_xdot_z[i].casadi_work = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_work;
@@ -824,18 +796,10 @@ int acados_create() {
         impl_dae_fun_jac_x_xdot_z[i].casadi_sparsity_out = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_sparsity_out;
         impl_dae_fun_jac_x_xdot_z[i].casadi_n_in = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_n_in;
         impl_dae_fun_jac_x_xdot_z[i].casadi_n_out = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_n_out;
-        {% if ocp.dims.np < 1 %}
-        external_function_casadi_create(&impl_dae_fun_jac_x_xdot_z[i]);
-        {% else %}
-        external_function_param_casadi_create(&impl_dae_fun_jac_x_xdot_z[i], {{ocp.dims.np}});
-        {% endif %}
+        external_function_param_casadi_create(&impl_dae_fun_jac_x_xdot_z[i], {{ ocp.dims.np }});
     }
 
-    {% if ocp.dims.np < 1 %}
-    impl_dae_jac_x_xdot_u_z = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else %}
     impl_dae_jac_x_xdot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    {% endif %}
     for (int i = 0; i < N; ++i) {
         impl_dae_jac_x_xdot_u_z[i].casadi_fun = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z;
         impl_dae_jac_x_xdot_u_z[i].casadi_work = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_work;
@@ -843,11 +807,7 @@ int acados_create() {
         impl_dae_jac_x_xdot_u_z[i].casadi_sparsity_out = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_sparsity_out;
         impl_dae_jac_x_xdot_u_z[i].casadi_n_in = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_n_in;
         impl_dae_jac_x_xdot_u_z[i].casadi_n_out = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_n_out;
-        {% if ocp.dims.np < 1 %}
-        external_function_casadi_create(&impl_dae_jac_x_xdot_u_z[i]);
-        {% else %}
         external_function_param_casadi_create(&impl_dae_jac_x_xdot_u_z[i], {{ocp.dims.np}});
-        {% endif %}
     }
     {% endif %}
     {% endif %}
@@ -1132,30 +1092,16 @@ int acados_free() {
 
     // free external function 
     {% if ocp.solver_config.integrator_type == "IRK" %}
-    for(int i = 0; i < {{ocp.dims.N}}; i++) {
-        {% if ocp.dims.np < 1 %}
-        external_function_casadi_free(&impl_dae_fun[i]);
-        external_function_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
-        external_function_casadi_free(&impl_dae_jac_x_xdot_u_z[i]);
-        {% else %}
+    for(int i = 0; i < {{ ocp.dims.N }}; i++) {
         external_function_param_casadi_free(&impl_dae_fun[i]);
         external_function_param_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
         external_function_param_casadi_free(&impl_dae_jac_x_xdot_u_z[i]);
-        {% endif %}
     }
     {% else %}
-    for(int i = 0; i < {{ocp.dims.N}}; i++) {
-        {% if ocp.dims.np < 1 %}
-        external_function_casadi_free(&forw_vde_casadi[i]);
-        {% else %}
+    for(int i = 0; i < {{ ocp.dims.N }}; i++) {
         external_function_param_casadi_free(&forw_vde_casadi[i]);
-        {% endif %}
     {% if ocp.solver_config.hessian_approx == "EXACT" %}
-        {% if ocp.dims.np < 1 %}
-        external_function_casadi_free(&hess_vde_casadi[i]);
-        {% else %}
         external_function_param_casadi_free(&hess_vde_casadi[i]);
-        {% endif %}
     {% endif %}
     }
     {% endif %}

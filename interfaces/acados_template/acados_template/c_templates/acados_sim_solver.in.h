@@ -66,15 +66,15 @@ extern sim_solver  * {{ocp.model.name}}_sim_solver;
 
 {% if ocp.solver_config.integrator_type == "ERK" %}
 {% if ocp.dims.np < 1 %}
-extern external_function_casadi * sim_forw_vde_casadi;
-extern external_function_casadi * sim_expl_ode_fun_casadi;
+extern external_function_param_casadi * sim_forw_vde_casadi;
+extern external_function_param_casadi * sim_expl_ode_fun_casadi;
 {% else %}
 extern external_function_param_casadi * sim_forw_vde_casadi;
 extern external_function_param_casadi * sim_expl_ode_fun_casadi;
 {% endif %}
 {% if ocp.solver_config.hessian_approx == "EXACT" %}
 {% if ocp.dims.np < 1 %}
-extern external_function_casadi * sim_hess_vde_casadi;
+extern external_function_param_casadi * sim_hess_vde_casadi;
 {% else %}
 extern external_function_param_casadi * sim_hess_vde_casadi;
 {% endif %}
@@ -82,9 +82,9 @@ extern external_function_param_casadi * sim_hess_vde_casadi;
 {% else %}
 {% if ocp.solver_config.integrator_type == "IRK" %}
 {% if ocp.dims.np < 1 %}
-extern external_function_casadi * sim_impl_dae_fun;
-extern external_function_casadi * sim_impl_dae_fun_jac_x_xdot_z;
-extern external_function_casadi * sim_impl_dae_jac_x_xdot_u_z;
+extern external_function_param_casadi * sim_impl_dae_fun;
+extern external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
+extern external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% else %}
 extern external_function_param_casadi * sim_impl_dae_fun;
 extern external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
