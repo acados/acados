@@ -1031,24 +1031,22 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
         //
         struct blasfeo_dvec_args x_in;  // input x of external fun;
         struct blasfeo_dvec_args u_in;  // input u of external fun;
-        // struct blasfeo_dvec_args z_in;  // input z of external fun;
+        struct blasfeo_dvec_args z_in;  // input z of external fun;
 
         x_in.x = memory->ux;
         u_in.x = memory->ux;
-        // z_in.x = memory->z_alg;
+        z_in.x = memory->z_alg;
 
         x_in.xi = nu;
         u_in.xi = 0;
-        // z_in.xi = 0;
+        z_in.xi = 0;
 
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
         ext_fun_in[0] = &x_in;
-
         ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
         ext_fun_in[1] = &u_in;
-
-        // ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-        // ext_fun_in[2] = &z_in;
+        ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[2] = &z_in;
 
         ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
         struct blasfeo_dvec_args h_args;
@@ -1075,8 +1073,8 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
 
     if (np > 0)
     {
-        ext_fun_type_in[0] = BLASFEO_DVEC;
-        ext_fun_in[0] = memory->ux;  // ux: nu+nx
+        // ext_fun_type_in[0] = BLASFEO_DVEC;
+        // ext_fun_in[0] = memory->ux;  // ux: nu+nx
 
         //
         ext_fun_type_out[0] = IGNORE_ARGUMENT;

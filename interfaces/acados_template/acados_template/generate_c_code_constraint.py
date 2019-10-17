@@ -48,6 +48,7 @@ def generate_c_code_constraint( constraint ):
     x = constraint.x
     u = constraint.u
     r = constraint.r
+    z = constraint.z
     p = constraint.p
     # nc = nh or np 
     nh = constraint.nh 
@@ -74,12 +75,22 @@ def generate_c_code_constraint( constraint ):
     else:
         np = p.size()[0]
 
+    if type(z) is list:
+        # check that z is empty
+        if len(z) == 0:
+            nz = 0
+            z = SX.sym('z', 0, 0)
+        else:
+            raise Exception('z is a non-empty list. It should be either an empty list or an SX object.')
+    else:
+        nz = z.size()[0]
+
     # set up functions to be exported
     fun_name = con_name + '_h_constraint'
     if nr == 0: # BGH constraint
         jac_x = jacobian(con_h_expr, x);
         jac_u = jacobian(con_h_expr, u);
-        constraint_fun_jac_tran = Function(fun_name, [x, u, p], [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x))])
+        constraint_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x))])
 
         # generate C code
         if not os.path.exists('c_generated_code'):
@@ -103,7 +114,7 @@ def generate_c_code_constraint( constraint ):
         for i in range(1, nh):
             hess = vertcat(hess, hessian(con_h_expr[i], r)[0])
 
-        constraint_fun_jac_tran_hess = Function(fun_name, [x, u, p], [con_h_expr_x_u, vertcat(transpose(jac_u), transpose(jac_x)), hess])
+        constraint_fun_jac_tran_hess = Function(fun_name, [x, u, z, p], [con_h_expr_x_u, vertcat(transpose(jac_u), transpose(jac_x)), hess])
 
         # generate C code
         if not os.path.exists('c_generated_code'):
@@ -123,7 +134,7 @@ def generate_c_code_constraint( constraint ):
         jac_u = jacobian(con_r_expr, u);
         jac_x = jacobian(con_r_expr, x);
         fun_name = con_name + '_p_constraint'
-        constraint_residual_fun_jac_tran = Function(fun_name, [x, u, p], [con_r_expr, vertcat(transpose(jac_u), transpose(jac_x))])
+        constraint_residual_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_r_expr, vertcat(transpose(jac_u), transpose(jac_x))])
 
         gen_dir = con_name + '_p_constraint'
         if not os.path.exists(gen_dir):

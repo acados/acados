@@ -718,7 +718,7 @@ int acados_create() {
 	p_e_constraint.casadi_sparsity_out = &{{ ocp.con_h_e.name }}_p_e_constraint_sparsity_out;
 	p_e_constraint.casadi_work = &{{ ocp.con_h_e.name }}_p_e_constraint_work;
 
-    external_function_casadi_create(&p_e_constraint);
+    external_function_param_casadi_create(&p_e_constraint, {{ ocp.dims.np }});
     {%- endif %}
 
     {%- if ocp.dims.nh > 0 %}
