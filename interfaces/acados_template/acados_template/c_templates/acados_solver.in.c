@@ -766,7 +766,11 @@ int acados_create() {
         forw_vde_casadi[i].casadi_sparsity_in = &{{ ocp.model.name }}_expl_vde_forw_sparsity_in;
         forw_vde_casadi[i].casadi_sparsity_out = &{{ ocp.model.name }}_expl_vde_forw_sparsity_out;
         forw_vde_casadi[i].casadi_work = &{{ ocp.model.name }}_expl_vde_forw_work;
+        {% if ocp.dims.np < 1 %}
         external_function_casadi_create(&forw_vde_casadi[i]);
+		{% else: %}
+        external_function_param_casadi_create(&forw_vde_casadi[i], {{ocp.dims.np}});
+		{% endif %}
     }
 
     {% if ocp.solver_config.hessian_approx == "EXACT" %} 
@@ -783,7 +787,11 @@ int acados_create() {
         hess_vde_casadi[i].casadi_sparsity_in = &{{ ocp.model.name }}_expl_ode_hess_sparsity_in;
         hess_vde_casadi[i].casadi_sparsity_out = &{{ ocp.model.name }}_expl_ode_hess_sparsity_out;
         hess_vde_casadi[i].casadi_work = &{{ ocp.model.name }}_expl_ode_hess_work;
+        {% if ocp.dims.np < 1 %}
         external_function_casadi_create(&hess_vde_casadi[i]);
+		{% else: %}
+        external_function_param_casadi_create(&hess_vde_casadi[i], {{ocp.dims.np}});
+		{% endif %}
     }
     {% endif %}
     {% else %}
@@ -1061,12 +1069,12 @@ int acados_create() {
     {% if ocp.dims.nz > 0 %}
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
-    int num_steps_val = 1; 
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
-    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
     {% endif %}
-    int ns_val = 1; 
+    int num_steps_val = {{ ocp.solver_config.sim_method_num_steps }}; 
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
+    int ns_val = {{ ocp.solver_config.sim_method_num_stages }}; 
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_ns", &ns_val);
     bool jac_reuse_val = true;
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse_val);
@@ -1128,7 +1136,7 @@ int acados_create() {
     }
     {% else %}
     for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
-    expl_vde_for[ii].set_param(expl_vde_for+ii, p);
+    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {% endif %}
     {% endif %}
