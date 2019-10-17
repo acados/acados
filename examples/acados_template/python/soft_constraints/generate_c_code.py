@@ -43,6 +43,8 @@ FORMULATION = 2 # 0 for linear soft bounds,
             # 2 for equivalent nonlinear soft constraint + 
             # terminal soft state constraint
 
+xmax = 1.0
+
 def export_nonlinear_constraint():
 
     con_name = 'nl_con'
