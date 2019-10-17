@@ -59,6 +59,7 @@ def generate_c_code_explicit_ode( model ):
         # check that z is empty
         if len(p) == 0:
             np = 0
+            p = SX.sym('p', 0, 0)
         else:
             raise Exception('p is a non-empty list. It should be either an empty list or an SX object.')
     else:
@@ -79,10 +80,7 @@ def generate_c_code_explicit_ode( model ):
     fun_name = model_name + '_expl_ode_fun'
 
     ## Set up functions
-    if np != 0:
-        expl_ode_fun = Function(fun_name, [x, u, p], [f_expl])
-    else:
-        expl_ode_fun = Function(fun_name, [x, u], [f_expl])
+    expl_ode_fun = Function(fun_name, [x, u, p], [f_expl])
 
     # TODO: Polish: get rid of SX.zeros
     if isinstance(f_expl, casadi.SX):
@@ -101,10 +99,7 @@ def generate_c_code_explicit_ode( model ):
 
     fun_name = model_name + '_expl_vde_forw'
 
-    if np != 0:
-        expl_vde_forw = Function(fun_name, [x, Sx, Sp, u, p], [f_expl,vdeX,vdeP])
-    else:
-        expl_vde_forw = Function(fun_name, [x, Sx, Sp, u], [f_expl,vdeX,vdeP])
+    expl_vde_forw = Function(fun_name, [x, Sx, Sp, u, p], [f_expl,vdeX,vdeP])
 
     if isinstance(f_expl, casadi.SX):
         jacX = SX.zeros(nx,nx) + jacobian(f_expl,x)
@@ -114,10 +109,7 @@ def generate_c_code_explicit_ode( model ):
     adj = jtimes(f_expl, vertcat(x, u), lambdaX, True)
 
     fun_name = model_name + '_expl_vde_adj'
-    if np != 0:
-        expl_vde_adj = Function(fun_name, [x, lambdaX, u, p], [adj])
-    else:
-        expl_vde_adj = Function(fun_name, [x, lambdaX, u], [adj])
+    expl_vde_adj = Function(fun_name, [x, lambdaX, u, p], [adj])
 
     S_forw = vertcat(horzcat(Sx, Sp), horzcat(DM.zeros(nu,nx), DM.eye(nu)))
     hess = mtimes(transpose(S_forw),jtimes(adj, vertcat(x,u), S_forw))
@@ -127,10 +119,7 @@ def generate_c_code_explicit_ode( model ):
             hess2 = vertcat(hess2, hess[i,j])
 
     fun_name = model_name + '_expl_ode_hess'
-    if np != 0:
-        expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u, p], [adj, hess2])
-    else:
-        expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u], [adj, hess2])
+    expl_ode_hess = Function(fun_name, [x, Sx, Sp, lambdaX, u, p], [adj, hess2])
 
     ## generate C code
     if not os.path.exists('c_generated_code'):

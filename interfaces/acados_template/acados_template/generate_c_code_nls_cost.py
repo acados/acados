@@ -31,61 +31,51 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-
 from casadi import *
 import os
 
-def generate_c_code_constraint_e( constraint, suffix_name ):
+def generate_c_code_nls_cost( cost ):
 
+    suffix_name = '_r_cost'
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
-    if  casadi_version not in ('3.4.5', '3.4.0'):
+    if casadi_version not in ('3.4.5', '3.4.0'):
         # old casadi versions
-        raise Exception('Please download and install Casadi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
+        raise Exception('Please download and install CasADi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
 
-    # load constraint variables and expression
-    x = constraint.x
-    u = constraint.u
-    p = constraint.p
-    # nc = nh or np 
-    nc = constraint.nc 
-    con_exp = constraint.expr
-    con_name = constraint.name
+    # load cost variables and expression
+    x = cost.x
+    u = cost.u
+    cost_exp = cost.expr
+    cost_name = cost.name
 
     # get dimensions
     nx = x.size()[0]
     nu = u.size()[0]
 
-    if type(p) is list:
-        # check that z is empty
-        if len(p) == 0:
-            np = 0
-            p = SX.sym('p', 0, 0)
-        else:
-            raise Exception('p is a non-empty list. It should be either an empty list or an SX object.')
-    else:
-        np = p.size()[0]
-
     # set up functions to be exported
-    fun_name = con_name + suffix_name
-    # TODO(andrea): first output seems to be ignored in the C code
-    jac_x = jacobian(con_exp, x);
-    # jac_u = jacobian(con_exp, u);
-    constraint_fun_jac_tran = Function(fun_name, [x, u, p], [con_exp, transpose(jac_x)])
+    fun_name = cost_name + suffix_name
+
+    cost_jac_exp = jacobian(cost_exp, vertcat(u, x))
+    
+    nls_cost_fun = Function( fun_name, [x, u], \
+            [ cost_exp, cost_jac_exp ])
 
     # generate C code
     if not os.path.exists('c_generated_code'):
         os.mkdir('c_generated_code')
 
     os.chdir('c_generated_code')
-    gen_dir = con_name + suffix_name 
+    gen_dir = cost_name + suffix_name 
     if not os.path.exists(gen_dir):
         os.mkdir(gen_dir)
     gen_dir_location = './' + gen_dir
     os.chdir(gen_dir_location)
-    file_name = con_name + suffix_name
-    constraint_fun_jac_tran.generate(file_name, casadi_opts)
-    os.chdir('../..')
+    file_name = cost_name + suffix_name
 
+    nls_cost_fun.generate( file_name, casadi_opts )
+    
+    os.chdir('../..')
     return
+

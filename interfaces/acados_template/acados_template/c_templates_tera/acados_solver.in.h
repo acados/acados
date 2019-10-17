@@ -81,6 +81,12 @@ extern external_function_casadi * h_constraint;
 {% if dims.nh_e > 0 %}
 extern external_function_casadi h_e_constraint;
 {% endif %}
+{% if cost.cost_type == "NONLINEAR_LS" %}
+extern external_function_casadi * r_cost;
+{% endif %}
+{% if cost.cost_type_e == "NONLINEAR_LS" %}
+extern external_function_casadi r_e_cost;
+{% endif %}
 
 
 #endif  // ACADOS_SOLVER_{{model.name}}_H_

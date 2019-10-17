@@ -32,6 +32,7 @@
 #
 
 from casadi import *
+# TODO(andrea): add properties for every class and move into main class
 class acados_dae():
     def __init__(self):
         self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
@@ -39,8 +40,8 @@ class acados_dae():
         self.x = None           #: CasADi variable describing the state of the system
         self.xdot = None        #: CasADi variable describing the derivative of the state wrt time
         self.u = None           #: CasADi variable describing the input of the system
-        self.z = None           #: CasADi variable describing the algebraic variables of the DAE
-        self.p = None           #: CasADi variable describing parameters of the DAE
+        self.z = []             #: CasADi variable describing the algebraic variables of the DAE
+        self.p = []             #: CasADi variable describing parameters of the DAE
         self.name = None        #: name associated with the function
 
 class acados_constraint():
@@ -48,9 +49,18 @@ class acados_constraint():
         self.expr = None #: CasADi expression for the constraint
         self.x = None    #: CasADi variable describing the state of the system
         self.u = None    #: CasADi variable describing the input of the system
-        self.z = None    #: CasADi variable describing the algebraic variables of the DAE
+        self.z = []      #: CasADi variable describing the algebraic variables in the constraints
+        self.p = []      #: CasADi variable describing parameters in the constraintas
         self.nc = None   #: number of constraints
         self.name = None #: name associated with the function
+
+class acados_cost():
+    def __init__(self):
+        self.expr = None     #: CasADi expression for the cost
+        self.x = None        #: CasADi variable describing the state of the system
+        self.u = None        #: CasADi variable describing the input of the system
+        self.ny = None       #: number of residuals
+        self.name = None     #: name associated with the function
 
 def acados_dae_strip_non_num(acados_constraint):
     out = acados_constraint
@@ -78,9 +88,22 @@ def acados_constraint_strip_non_num(acados_constraint):
         del out['u']
     if 'z' in out.keys(): 
         del out['z']
+    if 'p' in out.keys(): 
+        del out['p']
     if 'expr' in out.keys(): 
         del out['expr']
     if 'nc' in out.keys(): 
         del out['nc']
     return out
 
+def acados_cost_strip_non_num(acados_cost):
+    out = acados_cost
+    if 'x' in out.keys(): 
+        del out['x']
+    if 'u' in out.keys(): 
+        del out['u']
+    if 'expr' in out.keys(): 
+        del out['expr']
+    if 'ny' in out.keys(): 
+        del out['ny']
+    return out

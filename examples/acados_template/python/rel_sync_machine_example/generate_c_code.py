@@ -415,8 +415,8 @@ ra.solver_config.nlp_solver_type = 'SQP_RTI'
 # ra.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
-ra.acados_include_path = '/usr/local/include'
-ra.acados_lib_path = '/usr/local/lib'
+ra.acados_include_path = '../../../../../include'
+ra.acados_lib_path = '../../../../../lib'
 
 file_name = 'acados_ocp.json'
 

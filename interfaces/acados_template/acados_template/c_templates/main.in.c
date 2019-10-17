@@ -61,9 +61,9 @@ sim_solver  * {{ocp.model.name}}_sim_solver;
 
 {% if ocp.solver_config.integrator_type == "ERK" %}
 {% if ocp.dims.np < 1 %}
-external_function_casadi * forw_vde_casadi;
-external_function_casadi * sim_forw_vde_casadi;
-external_function_casadi * sim_expl_ode_fun_casadi;
+external_function_param_casadi * forw_vde_casadi;
+external_function_param_casadi * sim_forw_vde_casadi;
+external_function_param_casadi * sim_expl_ode_fun_casadi;
 {% else %}
 external_function_param_casadi * forw_vde_casadi;
 external_function_param_casadi * sim_forw_vde_casadi;
@@ -71,7 +71,7 @@ external_function_param_casadi * sim_expl_ode_fun_casadi;
 {% endif %}
 {% if ocp.solver_config.hessian_approx == "EXACT" %} 
 {% if ocp.dims.np < 1 %}
-external_function_casadi * hess_vde_casadi;
+external_function_param_casadi * hess_vde_casadi;
 {% else %}
 external_function_param_casadi * hess_vde_casadi;
 {% endif %}
@@ -79,12 +79,12 @@ external_function_param_casadi * hess_vde_casadi;
 {% else %}
 {% if ocp.solver_config.integrator_type == "IRK" %}
 {% if ocp.dims.np < 1 %}
-external_function_casadi * impl_dae_fun;
-external_function_casadi * impl_dae_fun_jac_x_xdot_z;
-external_function_casadi * impl_dae_jac_x_xdot_u_z;
-external_function_casadi * sim_impl_dae_fun;
-external_function_casadi * sim_impl_dae_fun_jac_x_xdot_z;
-external_function_casadi * sim_impl_dae_jac_x_xdot_u_z;
+external_function_param_casadi * impl_dae_fun;
+external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
+external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
+external_function_param_casadi * sim_impl_dae_fun;
+external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
+external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% else %}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
@@ -96,16 +96,22 @@ external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
 {% if ocp.dims.npd > 0 %}
-external_function_casadi * p_constraint;
+external_function_param_casadi * p_constraint;
 {% endif %}
 {% if ocp.dims.npd_e > 0 %}
-external_function_casadi * p_constraint_e;
+external_function_param_casadi * p_constraint_e;
 {% endif %}
 {% if ocp.dims.nh > 0 %}
-external_function_casadi * h_constraint;
+external_function_param_casadi * h_constraint;
 {% endif %}
 {% if ocp.dims.nh_e > 0 %}
-external_function_casadi h_e_constraint;
+external_function_param_casadi h_e_constraint;
+{% endif %}
+{% if ocp.cost.cost_type == "NONLINEAR_LS" %}
+external_function_casadi * r_cost;
+{% endif %}
+{% if ocp.cost.cost_type_e == "NONLINEAR_LS" %}
+external_function_casadi r_e_cost;
 {% endif %}
 
 int main() {
