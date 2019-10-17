@@ -95,7 +95,7 @@ typedef struct
     // initalize this struct with default values
     void (*config_initialize_default)(void *config);
     // general getter
-    void (*get)(void *config_, void *mem_, const char *field, void *return_value_);
+    void (*get)(void *config_, void *dims, void *mem_, const char *field, void *return_value_);
     // config structs of submodules
     ocp_qp_xcond_solver_config *qp_solver; // TODO rename xcond_solver
     ocp_nlp_dynamics_config **dynamics;
@@ -245,7 +245,8 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
 
 typedef struct
 {
-    void *qp_solver_opts;
+//    void *qp_solver_opts; // xcond solver opts instead ???
+    ocp_qp_xcond_solver_opts *qp_solver_opts; // xcond solver opts instead ???
     void *regularize;
     void **dynamics;     // dynamics_opts
     void **cost;         // cost_opts
@@ -277,7 +278,8 @@ void ocp_nlp_opts_set_at_stage(void *config, void *opts, int stage, const char *
 
 typedef struct
 {
-    void *qp_solver_mem;
+//    void *qp_solver_mem; // xcond solver mem instead ???
+    ocp_qp_xcond_solver_memory *qp_solver_mem; // xcond solver mem instead ???
     void *regularize_mem;
     void **dynamics;     // dynamics memory
     void **cost;         // cost memory
@@ -299,6 +301,8 @@ typedef struct
 
     bool *set_sim_guess; // indicate if there is new explicitly provided guess for integration variables
     struct blasfeo_dvec *sim_guess;
+
+	int *sqp_iter; // pointer to iteration number
 
 } ocp_nlp_memory;
 
@@ -322,6 +326,7 @@ typedef struct
     void **constraints;  // constraints_workspace
 
 	ocp_nlp_out *tmp_nlp_out;
+	ocp_nlp_out *weights_nlp_out;
 
 } ocp_nlp_workspace;
 

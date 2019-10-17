@@ -1519,6 +1519,9 @@ int ocp_nlp_workspace_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims,
 	// tmp_nlp_out
 	size += ocp_nlp_out_calculate_size(config, dims);
 
+	// weights_nlp_out
+	size += ocp_nlp_out_calculate_size(config, dims);
+
     // array of pointers
     // cost
     size += (N+1)*sizeof(void *);
@@ -1638,6 +1641,10 @@ ocp_nlp_workspace *ocp_nlp_workspace_assign(ocp_nlp_config *config, ocp_nlp_dims
 
 	// tmp_nlp_out
 	work->tmp_nlp_out = ocp_nlp_out_assign(config, dims, c_ptr);
+	c_ptr += ocp_nlp_out_calculate_size(config, dims);
+
+	// weights_nlp_out
+	work->weights_nlp_out = ocp_nlp_out_assign(config, dims, c_ptr);
 	c_ptr += ocp_nlp_out_calculate_size(config, dims);
 
     // array of pointers
@@ -1987,11 +1994,11 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 //		printf("\ni %d\n", i);
 		tmp_fun_vec = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
 //		blasfeo_print_exp_tran_dvec(nx[i+1], tmp_fun_vec, 0);
-//		blasfeo_print_exp_tran_dvec(nx[i+1], out->pi+i, 0);
+//		blasfeo_print_exp_tran_dvec(nx[i+1], work->weights_nlp_out->pi+i, 0);
 		for(j=0; j<nx[i+1]; j++)
 		{
-//			printf("\n%e %e\n", fabs(BLASFEO_DVECEL(out->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
-			dyn_fun += fabs(BLASFEO_DVECEL(out->pi+i, j)) * fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
+//			printf("\n%e %e\n", fabs(BLASFEO_DVECEL(work->weights_nlp_out->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
+			dyn_fun += fabs(BLASFEO_DVECEL(work->weights_nlp_out->pi+i, j)) * fabs(BLASFEO_DVECEL(tmp_fun_vec, j));
 		}
 	}
 
@@ -2001,13 +2008,13 @@ double ocp_nlp_evaluate_merit_fun(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
 //		printf("\ni %d\n", i);
 		tmp_fun_vec = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
 //		blasfeo_print_exp_tran_dvec(2*ni[i], tmp_fun_vec, 0);
-//		blasfeo_print_exp_tran_dvec(2*ni[i], out->lam+i, 0);
+//		blasfeo_print_exp_tran_dvec(2*ni[i], work->weights_nlp_out->lam+i, 0);
 		for(j=0; j<2*ni[i]; j++)
 		{
 			tmp = BLASFEO_DVECEL(tmp_fun_vec, j);
 			tmp = tmp>0.0 ? tmp : 0.0;
-//			printf("\n%e %e\n", fabs(BLASFEO_DVECEL(out->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
-			constr_fun += fabs(BLASFEO_DVECEL(out->lam+i, j)) * tmp;
+//			printf("\n%e %e\n", fabs(BLASFEO_DVECEL(work->weights_nlp_out->pi+i, j)), fabs(BLASFEO_DVECEL(tmp_fun_vec, j)));
+			constr_fun += fabs(BLASFEO_DVECEL(work->weights_nlp_out->lam+i, j)) * tmp;
 		}
 	}
 
@@ -2037,23 +2044,53 @@ void ocp_nlp_update_variables_sqp(ocp_nlp_config *config, ocp_nlp_dims *dims, oc
     double alpha = opts->step_length;
 
 #if 0 // XXX test piece of code
+	double tmp0, tmp1;
 
 	// current point
-
     for (i = 0; i <= N; i++)
         blasfeo_dveccp(nv[i], out->ux+i, 0, work->tmp_nlp_out->ux+i, 0);
     
-    for (i = 0; i < N; i++)
+	for (i = 0; i < N; i++)
 		blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->tmp_nlp_out->pi+i, 0);
 
-    for (i = 0; i <= N; i++)
-        blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->tmp_nlp_out->lam+i, 0);
+	for (i = 0; i <= N; i++)
+		blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->tmp_nlp_out->lam+i, 0);
 
         // linear update of algebraic variables using state and input sensitivity
 //        if (i < N)
 //        {
 //            blasfeo_dgemv_t(nu[i]+nx[i], nz[i], alpha, mem->dzduxt+i, 0, 0, mem->qp_out->ux+i, 0, 1.0, mem->z_alg+i, 0, out->z+i, 0); 
 //        }
+
+	// initialize weights
+	if(mem->sqp_iter[0]==0)
+	{
+		for (i = 0; i < N; i++)
+			blasfeo_dveccp(nx[i+1], out->pi+i, 0, work->weights_nlp_out->pi+i, 0);
+
+		for (i = 0; i <= N; i++)
+			blasfeo_dveccp(2*ni[i], out->lam+i, 0, work->weights_nlp_out->lam+i, 0);
+	}
+
+	// update weigths
+	for (i = 0; i < N; i++)
+	{
+		for(j=0; j<nx[i+1]; j++)
+		{
+			tmp0 = fabs(BLASFEO_DVECEL(work->weights_nlp_out->pi+i, j));
+			tmp1 = 0.5 * (tmp0 + fabs(BLASFEO_DVECEL(mem->qp_out->pi+i, j)));
+			BLASFEO_DVECEL(work->weights_nlp_out->pi+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
+		}
+	}
+	for (i = 0; i <= N; i++)
+	{
+		for(j=0; j<2*ni[i]; j++)
+		{
+			tmp0 = fabs(BLASFEO_DVECEL(work->weights_nlp_out->lam+i, j));
+			tmp1 = 0.5 * (tmp0 + fabs(BLASFEO_DVECEL(mem->qp_out->lam+i, j)));
+			BLASFEO_DVECEL(work->weights_nlp_out->lam+i, j) = tmp0>tmp1 ? tmp0 : tmp1;
+		}
+	}
 
 	printf("\n\nmerit fun value\n");
 	double merit_fun0 = ocp_nlp_evaluate_merit_fun(config, dims, in, out, opts, mem, work);

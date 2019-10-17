@@ -709,7 +709,7 @@ void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *field, int stage, int
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
                  const char *field, void *return_value_)
 {
-    solver->config->get(solver->config, solver->mem, field, return_value_);
+    solver->config->get(solver->config, solver->dims, solver->mem, field, return_value_);
 }
 
 
@@ -717,7 +717,7 @@ void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
         int stage, const char *field, void *value)
 {
     ocp_nlp_memory *mem;
-    config->get(config, solver->mem, "nlp_mem", &mem);
+    config->get(config, solver->dims, solver->mem, "nlp_mem", &mem);
     // printf("called getter: nlp_mem %p\n", mem);
 
     ocp_nlp_dims *dims = solver->dims;

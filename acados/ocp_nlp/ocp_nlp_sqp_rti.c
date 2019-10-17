@@ -541,6 +541,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         
 
     /* SQP body */
+	int sqp_iter = 0;
+	nlp_mem->sqp_iter = &sqp_iter;
 
     // linearizate NLP and update QP matrices
     acados_tic(&timer1);
@@ -753,9 +755,10 @@ void ocp_nlp_sqp_rti_eval_param_sens(void *config_, void *dims_, void *opts_, vo
 
 
 
-void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *return_value_)
+void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_)
 {
     // ocp_nlp_config *config = config_;
+	ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_rti_memory *mem = mem_;
 
     if (!strcmp("sqp_iter", field))
@@ -807,6 +810,21 @@ void ocp_nlp_sqp_rti_get(void *config_, void *mem_, const char *field, void *ret
     {
         void **value = return_value_;
         *value = mem->nlp_mem;
+    }
+    else if (!strcmp("qp_xcond_dims", field))
+    {
+        void **value = return_value_;
+        *value = dims->qp_solver->xcond_dims;
+    }
+    else if (!strcmp("qp_xcond_in", field))
+    {
+        void **value = return_value_;
+        *value = mem->nlp_mem->qp_solver_mem->xcond_qp_in;
+    }
+    else if (!strcmp("qp_xcond_out", field))
+    {
+        void **value = return_value_;
+        *value = mem->nlp_mem->qp_solver_mem->xcond_qp_out;
     }
     else
     {

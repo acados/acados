@@ -565,8 +565,11 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // main sqp loop
     int sqp_iter = 0;
+	nlp_mem->sqp_iter = &sqp_iter;
+
     for (; sqp_iter < opts->max_iter; sqp_iter++)
     {
+		
 //        printf("\n------- sqp iter %d (max_iter %d) --------\n", sqp_iter, opts->max_iter);
 //        if (sqp_iter==2)
 //        exit(1);
@@ -881,9 +884,10 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 
 
 
-void ocp_nlp_sqp_get(void *config_, void *mem_, const char *field, void *return_value_)
+void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_)
 {
     // ocp_nlp_config *config = config_;
+	ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_memory *mem = mem_;
 
     if (!strcmp("sqp_iter", field))
@@ -940,6 +944,21 @@ void ocp_nlp_sqp_get(void *config_, void *mem_, const char *field, void *return_
     {
         void **value = return_value_;
         *value = mem->nlp_mem;
+    }
+    else if (!strcmp("qp_xcond_dims", field))
+    {
+        void **value = return_value_;
+        *value = dims->qp_solver->xcond_dims;
+    }
+    else if (!strcmp("qp_xcond_in", field))
+    {
+        void **value = return_value_;
+        *value = mem->nlp_mem->qp_solver_mem->xcond_qp_in;
+    }
+    else if (!strcmp("qp_xcond_out", field))
+    {
+        void **value = return_value_;
+        *value = mem->nlp_mem->qp_solver_mem->xcond_qp_out;
     }
     else
     {

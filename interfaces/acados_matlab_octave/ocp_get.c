@@ -37,6 +37,7 @@
 #include <string.h>
 // acados
 #include "acados_c/ocp_nlp_interface.h"
+#include "acados/dense_qp/dense_qp_common.h"
 // mex
 #include "mex.h"
 #include "mex_macros.h"
@@ -71,6 +72,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // sens_out
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "sens_out" ) );
     ocp_nlp_out *sens_out = (ocp_nlp_out *) ptr[0];
+    // plan
+    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
+    ocp_nlp_plan *plan = (ocp_nlp_plan *) ptr[0];
 
     // field
     char *field = mxArrayToString( prhs[1] );
@@ -308,6 +312,32 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 mat_ptr[ii+(jj+1)*min_size] = stat[jj+ii*stat_n];
         }
     }
+    else if (!strcmp(field, "qp_solver_hessian"))
+    {
+		void *qp_in_;
+        ocp_nlp_get(config, solver, "qp_xcond_in", &qp_in_);
+		int solver_type = 0;
+		if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_HPIPM)
+			solver_type=1;
+#if defined(ACADOS_WITH_QPOASES)
+		if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_QPOASES)
+			solver_type=1;
+#endif
+		// dense solver
+		if(solver_type==1)
+		{
+			dense_qp_in *qp_in = qp_in_;
+			int nv = qp_in->dim->nv;
+			plhs[0] = mxCreateNumericMatrix(nv, nv, mxDOUBLE_CLASS, mxREAL);
+			double *mat_ptr = mxGetPr( plhs[0] );
+			blasfeo_unpack_dmat(nv, nv, qp_in->Hv, 0, 0, mat_ptr, nv);
+		}
+		// TODO ocp qp hessian
+		else
+		{
+			plhs[0] = mxCreateNumericMatrix(0, 0, mxDOUBLE_CLASS, mxREAL);
+		}
+	}
     else
     {
         MEX_FIELD_NOT_SUPPORTED(fun_name, field);
