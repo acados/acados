@@ -35,6 +35,8 @@ from jinja2 import Environment, FileSystemLoader
 from .generate_c_code_explicit_ode import *
 from .generate_c_code_implicit_ode import *
 from .generate_c_code_constraint import *
+from .generate_c_code_nls_cost import *
+from .generate_c_code_nls_cost_e import *
 from .acados_ocp_nlp import *
 from ctypes import *
 from copy import deepcopy
@@ -66,6 +68,12 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         # convex part of nonlinear constraints 
         generate_c_code_constraint(acados_ocp.con_p, '_p_constraint')
 
+    if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
+        generate_c_code_nls_cost(acados_ocp.cost_r)
+
+    if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
+        generate_c_code_nls_cost_e(acados_ocp.cost_r_e)
+
     ocp_nlp = deepcopy(acados_ocp)
     ocp_nlp.cost = acados_ocp.cost.__dict__
     ocp_nlp.constraints = acados_ocp.constraints.__dict__
@@ -75,6 +83,8 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp.con_h_e = acados_ocp.con_h_e.__dict__
     ocp_nlp.con_p = acados_ocp.con_p.__dict__
     ocp_nlp.con_p_e = acados_ocp.con_p_e.__dict__
+    ocp_nlp.cost_r = acados_ocp.cost_r.__dict__
+    ocp_nlp.cost_r_e = acados_ocp.cost_r_e.__dict__
     ocp_nlp.model = acados_ocp.model.__dict__
     ocp_nlp = ocp_nlp.__dict__
 
@@ -85,6 +95,9 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp['con_p_e'] = acados_constraint_strip_non_num(ocp_nlp['con_p_e'])
 
     ocp_nlp['model'] = acados_dae_strip_non_num(ocp_nlp['model'])
+
+    ocp_nlp['cost_r'] = acados_cost_strip_non_num(ocp_nlp['cost_r'])
+    ocp_nlp['cost_r_e'] = acados_cost_strip_non_num(ocp_nlp['cost_r_e'])
 
     ocp_nlp = dict2json(ocp_nlp)
     
@@ -106,6 +119,8 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         acados_ocp.con_h_e = ocp_nlp_as_object(acados_ocp.con_h_e)
         acados_ocp.con_p = ocp_nlp_as_object(acados_ocp.con_p)
         acados_ocp.con_p_e = ocp_nlp_as_object(acados_ocp.con_p_e)
+        acados_ocp.cost_r = ocp_nlp_as_object(acados_ocp.cost_r)
+        acados_ocp.cost_r_e = ocp_nlp_as_object(acados_ocp.cost_r_e)
 
     # setting up loader and environment
     acados_path = os.path.dirname(os.path.abspath(__file__))
@@ -305,6 +320,54 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             # render source template
             template_file = 'h_e_constraint.in.h'
             out_file = acados_ocp.con_h_e.name + '_h_e_constraint.h'
+            # output file
+            os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                    + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
+                    "\"" + ' ' + "\"" + out_file + "\""
+
+            os.system(os_cmd)
+            os.chdir('../..')
+
+    if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
+        # create folder
+        if not os.path.exists('c_generated_code/' + acados_ocp.cost_r.name + '_r_cost/'):
+            os.mkdir('c_generated_code/' + acados_ocp.cost_r.name + '_r_cost/')
+        if USE_TERA == 0:
+            # render header templates
+            template = env.get_template('r_cost.in.h')
+            output = template.render(ocp=acados_ocp)
+            # output file
+            out_file = open('./c_generated_code/' + acados_ocp.cost_r.name + '_r_cost/' + acados_ocp.cost_r.name + '_r_cost.h', 'w+')
+            out_file.write(output)
+        else:
+            os.chdir('c_generated_code/' + acados_ocp.cost_r.name + '_r_cost/')
+            # render source template
+            template_file = 'r_cost.in.h'
+            out_file = acados_ocp.cost_r.name + '_r_cost.h'
+            # output file
+            os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                    + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
+                    "\"" + ' ' + "\"" + out_file + "\""
+
+            os.system(os_cmd)
+            os.chdir('../..')
+
+    if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
+        # create folder
+        if not os.path.exists('c_generated_code/' + acados_ocp.cost_r_e.name + '_r_e_cost/'):
+            os.mkdir('c_generated_code/' + acados_ocp.cost_r_e.name + '_r_e_cost/')
+        if USE_TERA == 0:
+            # render header templates
+            template = env.get_template('r_e_cost.in.h')
+            output = template.render(ocp=acados_ocp)
+            # output file
+            out_file = open('./c_generated_code/' + acados_ocp.cost_r_e.name + '_r_e_cost/' + acados_ocp.cost_r_e.name + '_r_e_cost.h', 'w+')
+            out_file.write(output)
+        else:
+            os.chdir('c_generated_code/' + acados_ocp.cost_r_e.name + '_r_e_cost/')
+            # render source template
+            template_file = 'r_e_cost.in.h'
+            out_file = acados_ocp.cost_r_e.name + '_r_e_cost.h'
             # output file
             os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                     + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \

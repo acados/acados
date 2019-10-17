@@ -549,7 +549,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     mem->time_reg += acados_toc(&timer1);
 
     // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
-    // print_ocp_qp_in(mem->qp_in);
+    // print_ocp_qp_in(nlp_mem->qp_in);
     // exit(1);
 
     if (!opts->warm_start_first_qp)
@@ -584,8 +584,7 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     }
 
     // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
-    //  print_ocp_qp_out(mem->qp_out);
-    //  if (sqp_iter==1)
+    //  print_ocp_qp_out(nlp_mem->qp_out);
     //  exit(1);
 
     // save statistics

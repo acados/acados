@@ -31,12 +31,51 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from .casadi_functions import *
-from .generate_c_code_explicit_ode import *
-from .generate_c_code_implicit_ode import *
-from .generate_c_code_constraint import *
-from .generate_c_code_constraint_e import *
-from .generate_c_code_nls_cost import *
-from .generate_c_code_nls_cost_e import *
-from .acados_ocp_nlp import *
-from .generate_solver import *
+from casadi import *
+import os
+
+def generate_c_code_nls_cost( cost ):
+
+    suffix_name = '_r_cost'
+    casadi_version = CasadiMeta.version()
+    casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+
+    if casadi_version not in ('3.4.5', '3.4.0'):
+        # old casadi versions
+        raise Exception('Please download and install CasADi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
+
+    # load cost variables and expression
+    x = cost.x
+    u = cost.u
+    cost_exp = cost.expr
+    cost_name = cost.name
+
+    # get dimensions
+    nx = x.size()[0]
+    nu = u.size()[0]
+
+    # set up functions to be exported
+    fun_name = cost_name + suffix_name
+
+    cost_jac_exp = jacobian(cost_exp, vertcat(u, x))
+    
+    nls_cost_fun = Function( fun_name, [x, u], \
+            [ cost_exp, cost_jac_exp ])
+
+    # generate C code
+    if not os.path.exists('c_generated_code'):
+        os.mkdir('c_generated_code')
+
+    os.chdir('c_generated_code')
+    gen_dir = cost_name + suffix_name 
+    if not os.path.exists(gen_dir):
+        os.mkdir(gen_dir)
+    gen_dir_location = './' + gen_dir
+    os.chdir(gen_dir_location)
+    file_name = cost_name + suffix_name
+
+    nls_cost_fun.generate( file_name, casadi_opts )
+    
+    os.chdir('../..')
+    return
+

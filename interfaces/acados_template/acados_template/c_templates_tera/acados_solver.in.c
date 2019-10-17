@@ -56,25 +56,38 @@
 {% if dims.nh_e > 0 %}
 #include "{{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.h"
 {% endif %}
+{%- if cost.cost_type == "NONLINEAR_LS" %}
+#include "{{ cost_r.name }}_r_cost/{{ cost_r.name }}_r_cost.h"
+{% endif %}
+{%- if cost.cost_type_e == "NONLINEAR_LS" %}
+#include "{{ cost_r_e.name }}_r_e_cost/{{ cost_r_e.name }}_r_e_cost.h"
+{% endif %}
 
 #include "acados_solver_{{model.name}}.h"
 
-#define NX_   {{ dims.nx }}
-#define NZ_   {{ dims.nz }}
-#define NU_   {{ dims.nu }}
-#define NP_   {{ dims.np }}
-#define NBX_  {{ dims.nbx }}
-#define NBU_  {{ dims.nbu }}
-#define NG_   {{ dims.ng }}
-#define NBXN_ {{ dims.nbx_e }}
-#define NGN_  {{ dims.ng_e }}
-#define NY_   {{ dims.ny }}
-#define NYN_  {{ dims.ny_e }}
-#define N_    {{ dims.N }}
-#define NPD_  {{ dims.npd }}
-#define NPDN_ {{ dims.npd_e }}
-#define NH_   {{ dims.nh }}
-#define NHN_  {{ dims.nh_e }}
+#define NX_    {{ dims.nx }}
+#define NZ_    {{ dims.nz }}
+#define NU_    {{ dims.nu }}
+#define NP_    {{ dims.np }}
+#define NBX_   {{ dims.nbx }}
+#define NBU_   {{ dims.nbu }}
+#define NSBX_  {{ dims.nsbx }}
+#define NSBU_  {{ dims.nsbu }}
+#define NSH_  {{ dims.nsh }}
+#define NSHN_  {{ dims.nsh_e }}
+#define NSBXN_ {{ dims.nsbx_e }}
+#define NS_    {{ dims.ns }}
+#define NSN_   {{ dims.ns_e }}
+#define NG_    {{ dims.ng }}
+#define NBXN_  {{ dims.nbx_e }}
+#define NGN_   {{ dims.ng_e }}
+#define NY_    {{ dims.ny }}
+#define NYN_   {{ dims.ny_e }}
+#define N_     {{ dims.N }}
+#define NPD_   {{ dims.npd }}
+#define NPDN_  {{ dims.npd_e }}
+#define NH_    {{ dims.nh }}
+#define NHN_   {{ dims.nh_e }}
 
 #if NX_ < 1
 #define NX   1
@@ -110,6 +123,48 @@
 #define NBU   1
 #else
 #define NBU   NBU_
+#endif
+
+#if NSBX_ < 1
+#define NSBX   1
+#else
+#define NSBX   NSBX_
+#endif
+
+#if NSBU_ < 1
+#define NSBU   1
+#else
+#define NSBU   NSBU_
+#endif
+
+#if NSH_ < 1
+#define NSH   1
+#else
+#define NSH   NSH_
+#endif
+
+#if NSHN_ < 1
+#define NSHN   1
+#else
+#define NSHN   NSHN_
+#endif
+
+#if NS_ < 1
+#define NS   1
+#else
+#define NS   NS_
+#endif
+
+#if NSBXN_ < 1
+#define NSBXN   1
+#else
+#define NSBXN   NSBXN_
+#endif
+
+#if NSN_ < 1
+#define NSN   1
+#else
+#define NSN   NSN_
 #endif
 
 #if NG_ < 1
@@ -317,9 +372,17 @@ int acados_create() {
     double Vx[NY*NX];
     double Vu[NY*NU];
     double Vz[NY*NZ];
+    double Zl[NS];
+    double Zu[NS];
+    double zl[NS];
+    double zu[NS];
 
     double yref_e[NYN];
     double W_e[NYN*NYN];
+    double Zl_e[NSN];
+    double Zu_e[NSN];
+    double zl_e[NSN];
+    double zu_e[NSN];
 
     double Vx_e[NYN*NX];
     
@@ -350,6 +413,22 @@ int acados_create() {
         {%- endfor %}
     {%- endfor %}
 
+    {% for j in range(end=dims.ns) %}
+    Zl[{{j}}] = {{ cost.Zl[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns) %}
+    Zu[{{j}}] = {{ cost.Zu[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns) %}
+    zl[{{j}}] = {{ cost.zl[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns) %}
+    zu[{{j}}] = {{ cost.zu[j] }}; 
+    {%- endfor %}
+
     {% for j in range(end=dims.ny) %}
     yref[{{j}}] = {{ cost.yref[j] }}; 
     {%- endfor %}
@@ -364,6 +443,22 @@ int acados_create() {
         {%- for k in range(end=dims.nx) %}
     Vx_e[{{j}}+(NYN) * {{k}}] = {{ cost.Vx_e[j][k] }}; 
         {%- endfor %}
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns_e) %}
+    Zl_e[{{j}}] = {{ cost.Zl_e[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns_e) %}
+    Zu_e[{{j}}] = {{ cost.Zu_e[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns_e) %}
+    zl_e[{{j}}] = {{ cost.zl_e[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns_e) %}
+    zu_e[{{j}}] = {{ cost.zu_e[j] }}; 
     {%- endfor %}
 
     {% for j in range(end=dims.ny_e) %}
@@ -426,7 +521,7 @@ int acados_create() {
     {% endif %}
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_config.qp_solver }};
     for (int i = 0; i <= N; i++)
-        nlp_solver_plan->nlp_cost[i] = LINEAR_LS;
+        nlp_solver_plan->nlp_cost[i] = {{ cost.cost_type }};
     for (int i = 0; i < N; i++)
     {
         nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
@@ -640,34 +735,60 @@ int acados_create() {
     for (int i = 0; i < N; ++i)
         nlp_in->Ts[i] = Tf/N;
 
-    // NLP cost linear least squares
-    // C  // TODO(oj) this can be done using
-    // // ocp_nlp_cost_set_model(nlp_config, nlp_dims, nlp_in, i, "Cyt", Cyt);
-    // ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
-    // for (int i = 0; i <= N; ++i) {
-    //     blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
-    //     for (int j = 0; j < nu[i]; j++)
-    //         BLASFEO_DMATEL(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
-    //     for (int j = 0; j < nx[i]; j++)
-    //         BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
-    // }
-    // W
+    // NLP cost linear or nonlinear least squares
+    {%- if cost.cost_type == "NONLINEAR_LS" %}
+    r_cost = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
     for (int i = 0; i < N; ++i) {
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
+        // residual function
+        r_cost[i].casadi_fun = &{{ cost_r.name }}_r_cost;
+        r_cost[i].casadi_n_in = &{{ cost_r.name }}_r_cost_n_in;
+        r_cost[i].casadi_n_out = &{{ cost_r.name }}_r_cost_n_out;
+        r_cost[i].casadi_sparsity_in = &{{ cost_r.name }}_r_cost_sparsity_in;
+        r_cost[i].casadi_sparsity_out = &{{ cost_r.name }}_r_cost_sparsity_out;
+        r_cost[i].casadi_work = &{{ cost_r.name }}_r_cost_work;
+
+        external_function_casadi_create(&r_cost[i]);
     }
-    // W_e
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
+    {%- endif %}
 
+    {%- if cost.cost_type_e == "NONLINEAR_LS" %}
+    // residual function
+	r_e_cost.casadi_fun = &{{ cost_r_e.name }}_r_e_cost;
+	r_e_cost.casadi_n_in = &{{ cost_r_e.name }}_r_e_cost_n_in;
+	r_e_cost.casadi_n_out = &{{ cost_r_e.name }}_r_e_cost_n_out;
+	r_e_cost.casadi_sparsity_in = &{{ cost_r_e.name }}_r_e_cost_sparsity_in;
+	r_e_cost.casadi_sparsity_out = &{{ cost_r_e.name }}_r_e_cost_sparsity_out;
+	r_e_cost.casadi_work = &{{ cost_r_e.name }}_r_e_cost_work;
 
+    external_function_casadi_create(&r_e_cost);
+    {%- endif %}
 	for (int i = 0; i < N; ++i) {
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Zl", Zl);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Zu", Zu);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zl", zl);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zu", zu);
+        {% if cost.cost_type == "NONLINEAR_LS" %}
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_res_jac", &r_cost[i]);
+        {% else %}
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vx", Vx);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vu", Vu);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vz", Vz);
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
+        {% endif %}
 	}
 
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zl", Zl_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zu", Zu_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zl", zl_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zu", zu_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
+    {% if cost.cost_type_e == "NONLINEAR_LS" %}
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_res_jac", &r_e_cost);
+    {% else %}
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
+    {% endif %}
 
     // NLP dynamics
     int set_fun_status;
