@@ -5,7 +5,7 @@ function ocp_generate_c_code(obj)
     elseif (strcmp(obj.model_struct.dyn_type, 'implicit'))
         if (strcmp(obj.opts_struct.sim_method, 'irk'))
             opts.generate_hess = 1;
-            acados_template_mex.generate_c_code_implicit_ode(...
+            generate_c_code_implicit_ode(...
                 obj.acados_ocp_nlp_json.model, opts);
         end
     end
@@ -127,7 +127,7 @@ function ocp_generate_c_code(obj)
                 this_dims = [dims.(cost_l.(fields{i}){2}{1}), dims.(cost_l.(fields{i}){2}{2})];
             end
             try
-            cost.(fields{i}) = reshape(cost.(fields{i}), this_dims);
+                cost.(fields{i}) = reshape(cost.(fields{i}), this_dims);
             catch e
                     error(['error while reshaping cost.' fields{i} ...
                         ' to dimension ' num2str(this_dims), ', got ',...

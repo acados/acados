@@ -51,12 +51,12 @@ elseif (strcmp(model_struct.dyn_type, 'implicit'))
         % generate c for function and derivatives using casadi
         generate_c_code_implicit_ode(model_struct, opts_struct);
         % sources list
-        c_files{end+1} = [model_name, '_dyn_impl_ode_fun.c'];
-        c_files{end+1} = [model_name, '_dyn_impl_ode_fun_jac_x_xdot_z.c'];
-        c_files{end+1} = [model_name, '_dyn_impl_ode_fun_jac_x_xdot_u.c'];
-        c_files{end+1} = [model_name, '_dyn_impl_ode_jac_x_xdot_u_z.c'];
+        c_files{end+1} = [model_name, '_dyn_impl_dae_fun.c'];
+        c_files{end+1} = [model_name, '_dyn_impl_dae_fun_jac_x_xdot_z.c'];
+        c_files{end+1} = [model_name, '_dyn_impl_dae_fun_jac_x_xdot_u.c'];
+        c_files{end+1} = [model_name, '_dyn_impl_dae_jac_x_xdot_u_z.c'];
         if strcmp(opts_struct.nlp_solver_exact_hessian, 'true')
-            c_files{end+1} = [model_name, '_dyn_impl_ode_hess.c'];
+            c_files{end+1} = [model_name, '_dyn_impl_dae_hess.c'];
         end
     elseif (strcmp(opts_struct.sim_method, 'irk_gnsf'))
         % generate c for function and derivatives using casadi
