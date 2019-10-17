@@ -1,10 +1,45 @@
 function generate_solver_matlab(acados_ocp_nlp_json_file)
 
-    acados_template_folder = [getenv('ACADOS_INSTALL_DIR'), '/interfaces/acados_template/acados_template'];
+    acados_template_folder = [getenv('ACADOS_INSTALL_DIR'),...
+                          '/interfaces/acados_template/acados_template'];
 
-    if ~isfile([getenv('ACADOS_INSTALL_DIR'), '/bin/t_renderer'])
-        error('acados/bin/t_renderer not found! Please download the t_renderer binaries from https://github.com/acados/tera_renderer/releases and place them in acados/bin (strip version and extension from the binary name)')
+    %% check if t_renderer is available -> download if not
+    t_renderer_location = fullfile(getenv('ACADOS_INSTALL_DIR'),'bin/t_renderer');
+    if ~isfile( t_renderer_location )
+
+        message = ['\nDear acados user, we could not find the binaries of the ',...
+            't_renderer,\n which are needed to export templated C code from ',...
+            'Matlab.\n Press any key to proceed setting up the t_renderer automatically.',...
+            '\n Press "n" or "N" to exit, if you wish to set up t_renderer yourself.\n'];
+
+        In = input(message,'s');
+
+        if strcmpi( In, 'n')
+            error('Please set up t_renderer yourself and try again');
+        else
+            t_renderer_version = 'v0.0.20';
+            if isunix()
+                suffix = '-linux';
+            elseif ismac()
+                suffix = '-osx';
+            elseif ispc()
+                suffix = '-windows.exe';
+            end
+
+            tera_url = ['https://github.com/acados/tera_renderer/releases/download/', ...
+                    t_renderer_version '/t_renderer-', t_renderer_version, suffix];
+            destination = fullfile(getenv('ACADOS_INSTALL_DIR'), 'bin');
+            tmp_file = websave(destination, tera_url);
+            movefile(tmp_file, t_renderer_location);
+
+            if isunix() || ismac()
+                % make executable
+                system(['chmod a+x ', t_renderer_location]);
+            end
+            fprintf('\nSuccessfully set up t_renderer\n')
+        end
     end
+
     % get model name from json file
     acados_ocp = jsondecode(fileread(acados_ocp_nlp_json_file));
 
