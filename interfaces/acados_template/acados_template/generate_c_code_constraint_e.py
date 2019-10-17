@@ -47,6 +47,7 @@ def generate_c_code_constraint_e( constraint, suffix_name ):
     # load constraint variables and expression
     x = constraint.x
     u = constraint.u
+    p = constraint.p
     # nc = nh or np 
     nc = constraint.nc 
     con_exp = constraint.expr
@@ -56,12 +57,22 @@ def generate_c_code_constraint_e( constraint, suffix_name ):
     nx = x.size()[0]
     nu = u.size()[0]
 
+    if type(p) is list:
+        # check that z is empty
+        if len(p) == 0:
+            np = 0
+            p = SX.sym('p', 0, 0)
+        else:
+            raise Exception('p is a non-empty list. It should be either an empty list or an SX object.')
+    else:
+        np = p.size()[0]
+
     # set up functions to be exported
     fun_name = con_name + suffix_name
     # TODO(andrea): first output seems to be ignored in the C code
     jac_x = jacobian(con_exp, x);
     # jac_u = jacobian(con_exp, u);
-    constraint_fun_jac_tran = Function(fun_name, [x, u], [con_exp, transpose(jac_x)])
+    constraint_fun_jac_tran = Function(fun_name, [x, u, p], [con_exp, transpose(jac_x)])
 
     # generate C code
     if not os.path.exists('c_generated_code'):
