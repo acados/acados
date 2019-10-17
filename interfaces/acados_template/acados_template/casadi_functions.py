@@ -51,7 +51,7 @@ class acados_constraint():
         self.u = None    #: CasADi variable describing the input of the system
         self.r = None    #: CasADi variable describing the output of nonconvex part in convex-over nonconvex constraints
         self.z = []      #: CasADi variable describing the algebraic variables 
-        self.p = []      #: CasADi variable describing parameters in the constraintas
+        self.p = []      #: CasADi variable describing parameters in the constraints
         self.nh = None   #: dimension of image of h
         self.nr = None   #: dimension of image of nonlinear residuals 
         self.name = None #: name associated with the function

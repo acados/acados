@@ -90,7 +90,8 @@ def generate_c_code_constraint( constraint ):
     if nr == 0: # BGH constraint
         jac_x = jacobian(con_h_expr, x);
         jac_u = jacobian(con_h_expr, u);
-        constraint_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x))])
+        jac_z = jacobian(con_h_expr, z);
+        constraint_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x)), transpose(jac_z)])
 
         # generate C code
         if not os.path.exists('c_generated_code'):
