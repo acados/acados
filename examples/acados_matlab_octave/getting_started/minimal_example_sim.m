@@ -32,7 +32,9 @@
 %
 
 %% minimal example of acados integrator matlab interface
-clear VARIABLES
+clear all
+
+addpath('../pendulum_on_cart_model')
 
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
