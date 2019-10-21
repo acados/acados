@@ -9,8 +9,8 @@
 
 
 #### documentation
-- [ ] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula in docs
-    - [ ] closely stick to setter names!
+- [x] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula
+    - [x] closely stick to setter names!
 - [ ] Set up and document binary workflow
     - [ ] Windows Matlab
     - [ ] MacOS Matlab
