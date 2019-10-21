@@ -18,14 +18,11 @@
 \newcommand{\ind}[1]{_{\textrm{#1}}}
 \newcommand{\terminal}{^{\textrm{e}}}
 \begin{document}
-	
-
-	
 \section*{Problem Formulation}
-	
+
 \begin{align*}
 &\underset{\begin{subarray}{c}
-	x(\cdot),\,u(\cdot), \, z(\cdot), \, s(\cdot)
+	x(\cdot),\,u(\cdot), \, z(\cdot), \, s(\cdot), \, s\terminal
 	\end{subarray}}{\min}
 &&\int_0^T l(x(\tau), u(\tau), z(\tau), p)
  + \frac{1}{2} s(\tau)\tran Z s(\tau) + z_s\tran \abs{s(\tau)} \mathrm{d}\tau \; + \\
@@ -40,11 +37,13 @@
 &&&\underline{x} \leq J_{\textrm{bx}} x(t) + J_{\textrm{sbx}} s_{\textrm{bx}}(t) \leq \bar{x}, &&\quad t \in [0,\,T),\\
 &&&\underline{u} \leq J_{\textrm{bu}} u(t) + J_{\textrm{sbu}} s_{\textrm{bu}}(t)\leq \bar{u}, &&\quad t \in [0,\,T),\\
 &&&\underline{g} \leq Cx(t) + Du(t) + J_{\textrm{sg}} s_{\textrm{g}} \leq \bar{g}, &&\quad t \in [0,\,T), \\
-&&& && \\[-1em]
+&&& s(t) \geq 0, && \quad t \in [0,\,T)
+&&& && \\[1em]
 %% terminal constraints
 &&&\underline{h}\terminal \leq h\terminal(x(T), p)  + J\ind{sh}\terminal s\ind{h}\terminal \leq \bar{h}\terminal, &&\\
 &&&\underline{x}\terminal \leq J_{\textrm{bx}}\terminal x(T) + J\ind{sbx} s\ind{bx}\terminal \leq \bar{x}^{e}, &&\\ % TODO: add Jsbx_e?!
-&&&\underline{g}\terminal \leq C\terminal x(T)\leq \bar{g}\terminal  + J\ind{sg}\terminal s\ind{g}\terminal
+&&&\underline{g}\terminal \leq C\terminal x(T)\leq \bar{g}\terminal  + J\ind{sg}\terminal s\ind{g}\terminal, \\
+&&& s\terminal \geq 0
 \end{align*}
 Hereby:
 \begin{itemize}
@@ -52,7 +51,7 @@ Hereby:
 	\item $ u \in \mathbb{R}^{n_u} $ control vector
 	\item $ z \in \mathbb{R}^{n_z} $ algebraic state vector
 	\item $ s \in \mathbb{R}^{n_s} $ slack variables, which are concatenated as $ s = (s\ind{bu}, s\ind{bx}, s\ind{g}, s\ind{h}) $
-	\item $ s\terminal \in \mathbb{R}^{n_s} $ terminal slack variables, which are concatenated as $ s = (s\ind{bx}\terminal, s\ind{g}\terminal, s\ind{h}\terminal) $
+	\item $ s\terminal \in \mathbb{R}^{n_s} $ terminal slack variables, which are concatenated as $ s\terminal = (s\ind{bx}\terminal, s\ind{g}\terminal, s\ind{h}\terminal) $
 	\item $ p \in \mathbb{R}^{n_p} $ parameters
 \end{itemize}
 
