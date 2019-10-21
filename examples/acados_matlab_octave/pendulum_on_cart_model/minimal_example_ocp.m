@@ -41,11 +41,11 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% discretization
-N = 100;
+N = 20;
 T = 1; % time horizon length
+x0 = [0; pi; 0; 0];
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
-nlp_solver_max_iter = 100;
 tol = 1e-8;
 qp_solver = 'partial_condensing_hpipm';
     % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
@@ -65,8 +65,6 @@ model_name = 'pendulum';
 %% acados ocp model
 ocp_model.set('name', model_name);
 ocp_model.set('T', T);
-ocp_model.set('dim_nx', nx);
-ocp_model.set('dim_nu', nu);
 
 % symbolics
 ocp_model.set('sym_x', model.sym_x);
@@ -74,9 +72,6 @@ ocp_model.set('sym_u', model.sym_u);
 ocp_model.set('sym_xdot', model.sym_xdot);
 
 % cost
-cost_type = 'auto';
-ocp_model.set('cost_type', cost_type);
-ocp_model.set('cost_type_e', cost_type);
 ocp_model.set('cost_expr_ext_cost', model.expr_ext_cost);
 ocp_model.set('cost_expr_ext_cost_e', model.expr_ext_cost_e);
 
@@ -90,12 +85,13 @@ else % irk irk_gnsf
 end
 
 % constraints
+ocp_model.set('constr_type', 'auto');
 ocp_model.set('constr_expr_h', model.expr_h);
 U_max = 80;
 ocp_model.set('constr_lh', -U_max); % lower bound on h
-ocp_model.set('constr_uh', U_max);
-nh = nu;
-ocp_model.set('dim_nh', nh);
+ocp_model.set('constr_uh', U_max);  % upper bound on h
+
+ocp_model.set('constr_x0', x0);
 % ... see ocp_model.model_struct to see what other fields can be set
 
 %% acados ocp set opts
@@ -113,10 +109,8 @@ ocp = acados_ocp(ocp_model, ocp_opts);
 x_traj_init = zeros(nx, N+1);
 u_traj_init = zeros(nu, N);
 
-x0 = [0; pi; 0; 0];
-
 %% call ocp solver
-% initial state
+% update initial state
 ocp.set('constr_x0', x0);
 
 % set trajectory initialization
@@ -132,3 +126,6 @@ xtraj = ocp.get('x');
 
 status = ocp.get('status'); % 0 - success
 ocp.print('stat')
+
+% to generate templated C code
+% ocp.generate_c_code;

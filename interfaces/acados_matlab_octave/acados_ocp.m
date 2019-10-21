@@ -50,15 +50,6 @@ classdef acados_ocp < handle
             obj.model_struct = model.model_struct;
             obj.opts_struct = opts.opts_struct;
 
-            % TODO(andrea): this is temporary. later on the solver_config
-            % object will separate from the OCP object
-            
-            model.acados_ocp_nlp_json.solver_config.qp_solver = upper(obj.opts_struct.qp_solver);
-            model.acados_ocp_nlp_json.solver_config.integrator_type = upper(obj.opts_struct.sim_method);
-            model.acados_ocp_nlp_json.solver_config.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
-            model.acados_ocp_nlp_json.dims.N = upper(obj.opts_struct.param_scheme_N);
-            obj.acados_ocp_nlp_json = model.acados_ocp_nlp_json;
-
             [~,~] = mkdir(obj.opts_struct.output_dir);
             addpath(obj.opts_struct.output_dir);
 
@@ -80,6 +71,16 @@ classdef acados_ocp < handle
                 obj.model_struct = detect_cost_type(obj.model_struct, 1);
             end
 
+            % detect constraint structure
+            if (strcmp(obj.model_struct.constr_type, 'auto'))
+                obj.model_struct = detect_constr(obj.model_struct, 0);
+            end
+            if (strcmp(obj.model_struct.constr_type_e, 'auto'))
+                obj.model_struct = detect_constr(obj.model_struct, 1);
+            end
+
+            % detect dimensions
+            obj.model_struct = detect_dims_ocp(obj.model_struct);
 
             % compile mex interface (without model dependency)
             if ( strcmp(obj.opts_struct.compile_interface, 'true') )
@@ -108,7 +109,8 @@ classdef acados_ocp < handle
                 end
             else
                 obj.model_struct.cost_type
-                error('acados_ocp: field compile_interface is , supported values are: true, false, auto');
+                error('acados_ocp: field compile_interface is %, supported values are: true, false, auto', ...
+                        obj.opts_struct.compile_interface);
             end
 
             if ( compile_interface )
@@ -126,7 +128,8 @@ classdef acados_ocp < handle
             obj.C_ocp_ext_fun = ocp_create_ext_fun();
 
             % compile mex with model dependency & set pointers for external functions in model
-            obj.C_ocp_ext_fun = ocp_set_ext_fun(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+            obj.C_ocp_ext_fun = ocp_set_ext_fun(obj.C_ocp, obj.C_ocp_ext_fun,...
+                                             obj.model_struct, obj.opts_struct);
 
             % precompute
             ocp_precompute(obj.C_ocp);
@@ -141,6 +144,9 @@ classdef acados_ocp < handle
 
 
         function generate_c_code(obj)
+            % set up acados_ocp_nlp_json
+            obj.acados_ocp_nlp_json = set_up_acados_ocp_nlp_json(obj);
+            % render templated code
             ocp_generate_c_code(obj)
         end
 

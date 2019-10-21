@@ -33,24 +33,6 @@
 
 function [ gnsf ] = detect_affine_terms_reduce_nonlinearity( gnsf, model, print_info )
 
-%   This file is part of acados.
-%
-%   acados is free software; you can redistribute it and/or
-%   modify it under the terms of the GNU Lesser General Public
-%   License as published by the Free Software Foundation; either
-%   version 3 of the License, or (at your option) any later version.
-%
-%   acados is distributed in the hope that it will be useful,
-%   but WITHOUT ANY WARRANTY; without even the implied warranty of
-%   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-%   Lesser General Public License for more details.
-%
-%   You should have received a copy of the GNU Lesser General Public
-%   License along with acados; if not, write to the Free Software Foundation,
-%   Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-%
-%   Author: Jonathan Frey: jonathanpaulfrey(at)gmail.com
-
 %% Description
 % this function takes a gnsf structure with trivial model matrices (A, B,
 % E, c are zeros, and C is eye).

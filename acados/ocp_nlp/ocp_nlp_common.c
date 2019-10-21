@@ -1215,17 +1215,20 @@ void ocp_nlp_opts_set_at_stage(void *config_, void *opts_, int stage, const char
     // pass options to dynamics module
     if ( ptr_module!=NULL && (!strcmp(ptr_module, "dynamics")) )
     {
-        config->dynamics[stage]->opts_set(config->dynamics[stage], opts->dynamics[stage], field+module_length+1, value);
+        config->dynamics[stage]->opts_set( config->dynamics[stage], opts->dynamics[stage],
+                                           field+module_length+1, value );
     }
     // pass options to cost module
     else if ( ptr_module!=NULL && (!strcmp(ptr_module, "cost")) )
     {
-        config->cost[stage]->opts_set(config->cost[stage], opts->cost[stage], field+module_length+1, value);
+        config->cost[stage]->opts_set( config->cost[stage], opts->cost[stage],
+                                                 field+module_length+1, value);
     }
     // pass options to constraint module
     else if ( ptr_module!=NULL && (!strcmp(ptr_module, "constraints")) )
     {
-        config->constraints[stage]->opts_set(config->constraints[stage], opts->constraints[stage], (char *) field+module_length+1, value);
+        config->constraints[stage]->opts_set( config->constraints[stage], opts->constraints[stage],
+                                              (char *) field+module_length+1, value);
     }
 	else
 	{
@@ -1400,8 +1403,10 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_config *config, ocp_nlp_dims *dims
     // constraints
     for (int ii = 0; ii <= N; ii++)
     {
-        mem->constraints[ii] = constraints[ii]->memory_assign(constraints[ii], dims->constraints[ii], opts->constraints[ii], c_ptr);
-        c_ptr += constraints[ii]->memory_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+        mem->constraints[ii] = constraints[ii]->memory_assign(constraints[ii],
+                                            dims->constraints[ii], opts->constraints[ii], c_ptr);
+        c_ptr += constraints[ii]->memory_calculate_size( constraints[ii], dims->constraints[ii],
+                                                                 opts->constraints[ii]);
     }
 
     // set_sim_guess
