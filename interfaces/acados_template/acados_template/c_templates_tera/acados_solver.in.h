@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef ACADOS_SOLVER_{{model.name}}_H_
-#define ACADOS_SOLVER_{{model.name}}_H_
+#ifndef ACADOS_SOLVER_{{ model.name }}_H_
+#define ACADOS_SOLVER_{{ model.name }}_H_
 
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
@@ -89,4 +89,4 @@ extern external_function_casadi r_e_cost;
 {% endif %}
 
 
-#endif  // ACADOS_SOLVER_{{model.name}}_H_
+#endif  // ACADOS_SOLVER_{{ model.name }}_H_
