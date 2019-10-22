@@ -21,7 +21,7 @@ FORMULATION = 4         # Tracking MPC
 i_d_ref =  -125         # Setpoints only valid for Formulation 0, 5, 6 and 7
 i_q_ref =   10       
 # w_val = 1000.0          # do not change in this script, sometimes the values below calculate with a fix w_val = 2000 1/S
-w_val = 2000.0          # do not change in this script, sometimes the values below calculate with a fix w_val = 2000 1/S
+w_val = 4000.0          # do not change in this script, sometimes the values below calculate with a fix w_val = 2000 1/S
 
 # i_d_ref =  -124         # Setpoints only valid for Formulation 0, 5, 6 and 7
 # i_q_ref =   41       
@@ -45,7 +45,8 @@ rho = w_val**2*K_m**28
 
 phi = 0.0
 
-x0Start = nmp.array([0, 0])
+# x0Start = nmp.array([0, 0])
+x0Start = nmp.array([-70, 0])
 
 # N = 10      # N=6 and N=8
 N = 2      # N=6 and N=8
@@ -53,6 +54,12 @@ Ts_sim = 125e-6
 # Ts_sim = 500e-6
 
 WARMSTART_ITERS = 200
+
+INPUT_REG = 1e-2
+
+# TAU = 10 # 8 
+TAU = 5 # 8 
+
 
 # # setpoint MPC with hexagon (current slack)
 # if FORMULATION == 0:        # (works)
@@ -118,10 +125,6 @@ if FORMULATION == 7:    # (works)
     wq = 1
     Ts = 0.000125
     SLACK_TUNINGHessian =  0
-
-INPUT_REG = 1e-2
-
-TAU = 10 # 8 
 
 # Model of the PMSM
 #====================================================================
@@ -1025,7 +1028,7 @@ ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
 # ra.solver_config.integrator_type = 'IRK'
 ra.solver_config.integrator_type = 'ERK'
-ra.solver_config.sim_method_num_stages = 4  # 1: RK1, 2: RK2, 4: RK4    
+ra.solver_config.sim_method_num_stages = 2  # 1: RK1, 2: RK2, 4: RK4    
 
 # set prediction horizon
 ra.solver_config.tf = Tf
@@ -1280,16 +1283,16 @@ plt.grid(True)
 # plt.ylabel('x_q')
 # plt.grid(True)
 
-# plt.figure()
-# plt.plot(simXRN[:,0], simXRN[:,1],'bo')
-# plt.plot(simXRN[:,0], simXRN[:,1],'b')
-# plt.contour(XV, YV, FeaSetV,[0],colors='r')
-# plt.contour(XV, YV, S1,[-27.82562584,83.02562584],colors='k')
-# plt.contour(XV, YV, S2,[-0.11281292,55.31281292], colors='k')
-# plt.contour(XV, YV, S3,[-27.82562584,83.02562584],colors='k')
-# plt.contour(XV, YV, TauV,[TAU],colors='g')
-# plt.xlabel('x_d')
-# plt.ylabel('x_q')
-# plt.grid(True)
+plt.figure()
+plt.plot(simXRN[:,0], simXRN[:,1],'bo')
+plt.plot(simXRN[:,0], simXRN[:,1],'b')
+plt.contour(XV, YV, FeaSetV,[0],colors='r')
+plt.contour(XV, YV, S1,[-27.82562584,83.02562584],colors='k')
+plt.contour(XV, YV, S2,[-0.11281292,55.31281292], colors='k')
+plt.contour(XV, YV, S3,[-27.82562584,83.02562584],colors='k')
+plt.contour(XV, YV, TauV,[TAU],colors='g')
+plt.xlabel('x_d')
+plt.ylabel('x_q')
+plt.grid(True)
 
 plt.show()
