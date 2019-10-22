@@ -811,7 +811,6 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ug_e);
     {%- endif %}
 
-    
     {% if dims.npd > 0 %}
     // convex-composite constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
@@ -841,7 +840,7 @@ int acados_create()
     {% endif %}
 
     nlp_opts = ocp_nlp_solver_opts_create(nlp_config, nlp_dims);
-    
+
     {% if dims.nz > 0 -%}
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 

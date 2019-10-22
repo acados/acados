@@ -41,10 +41,6 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
-// TODO(oj) remove, when setters for Cyt,idxb available
-#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
-
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
@@ -74,16 +70,16 @@ external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
-{% if dims.npd > 0 %}
+{%- if dims.npd > 0 %}
 external_function_casadi * p_constraint;
 {% endif %}
-{% if dims.npd_e > 0 %}
+{%- if dims.npd_e > 0 %}
 external_function_casadi * p_constraint_N;
 {% endif %}
-{% if dims.nh > 0 %}
+{%- if dims.nh > 0 %}
 external_function_casadi * h_constraint;
 {% endif %}
-{% if dims.nh_e > 0 %}
+{%- if dims.nh_e > 0 %}
 external_function_casadi * h_constraint_N;
 {% endif %}
 
@@ -143,7 +139,7 @@ static void mdlSetOutputPortDimensionInfo(SimStruct *S, int_T port, const DimsIn
          return;
 }
 
-    #endif /* MATLAB_MEX_FILE */
+#endif /* MATLAB_MEX_FILE */
 
 
 static void mdlInitializeSampleTimes(SimStruct *S)
@@ -203,7 +199,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, in_p);
     impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, in_p);
     }
-    {% else %}
+    {% elif solver_config.integrator_type == 'ERK' %}
     for (int ii = 0; ii < {{ dims.N }}; ii++) {
     forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
