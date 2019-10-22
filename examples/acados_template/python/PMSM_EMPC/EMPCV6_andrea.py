@@ -21,7 +21,7 @@ FORMULATION = 4         # Tracking MPC
 i_d_ref =  -125         # Setpoints only valid for Formulation 0, 5, 6 and 7
 i_q_ref =   10       
 # w_val = 1000.0          # do not change in this script, sometimes the values below calculate with a fix w_val = 2000 1/S
-w_val = 4000.0          # do not change in this script, sometimes the values below calculate with a fix w_val = 2000 1/S
+w_val = 2000.0          # do not change in this script, sometimes the values below calculate with a fix w_val = 2000 1/S
 
 # i_d_ref =  -124         # Setpoints only valid for Formulation 0, 5, 6 and 7
 # i_q_ref =   41       
@@ -41,7 +41,7 @@ beta  = R_m**2 + w_val**2*L_q**2
 gamma = 2*R_m*w_val*(L_d-L_q)
 delta = 2*w_val**2*L_d*K_m
 epsilon = 2*R_m*w_val*K_m
-rho = w_val**2*K_m**28
+rho = w_val**2*K_m**2
 
 phi = 0.0
 
@@ -57,8 +57,8 @@ WARMSTART_ITERS = 200
 
 INPUT_REG = 1e-2
 
-# TAU = 10 # 8 
-TAU = 5 # 8 
+TAU = 10 # 8 
+# TAU = 5 # 8 
 
 
 # # setpoint MPC with hexagon (current slack)
@@ -91,8 +91,8 @@ if FORMULATION == 4:        # (works)
     SLACK_E_TUNING =  1e3
     wd = 1
     wq = 1
-    # Ts = 0.000250
-    Ts = 0.000500
+    Ts = 0.000250
+    # Ts = 0.000500
     SLACK_TUNINGHessian =  0
 
 # setpoint MPC with hexagon (current slack)
