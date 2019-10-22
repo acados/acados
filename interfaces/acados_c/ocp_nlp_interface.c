@@ -509,6 +509,11 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_unpack_dvec(dims->nx[stage+1], &out->pi[stage], 0, double_values);
     }
+    else if ((!strcmp(field, "kkt_norm_inf")) || (!strcmp(field, "kkt_norm")))
+    {
+        double *double_values = value;
+        double_values[0] = out->inf_norm_res;
+    }
     else
     {
         printf("\nerror: ocp_nlp_out_get: field %s not available\n", field);

@@ -1,20 +1,34 @@
 /*
- *    This file is part of acados.
+ * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
+ * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
+ * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
+ * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
  *
- *    acados is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation; either
- *    version 3 of the License, or (at your option) any later version.
+ * This file is part of acados.
  *
- *    acados is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
+ * The 2-Clause BSD License
  *
- *    You should have received a copy of the GNU Lesser General Public
- *    License along with acados; if not, write to the Free Software Foundation,
- *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.;
  */
 
 // standard
@@ -65,15 +79,9 @@ int {{ ocp.model.name}}_acados_sim_create() {
 
     {% if ocp.solver_config.integrator_type == "IRK" %}
 
-    {% if ocp.dims.np < 1 %}
-    sim_impl_dae_fun = (external_function_casadi *) malloc(sizeof(external_function_casadi));
-    sim_impl_dae_fun_jac_x_xdot_z = (external_function_casadi *) malloc(sizeof(external_function_casadi));
-    sim_impl_dae_jac_x_xdot_u_z = (external_function_casadi *) malloc(sizeof(external_function_casadi));
-    {% else %}
     sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     sim_impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     sim_impl_dae_jac_x_xdot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
-    {% endif %}
 
 	// external functions (implicit model)
 	sim_impl_dae_fun->casadi_fun  = &{{ ocp.model.name }}_impl_dae_fun;
@@ -83,13 +91,9 @@ int {{ ocp.model.name}}_acados_sim_create() {
 	sim_impl_dae_fun->casadi_n_in = &{{ ocp.model.name }}_impl_dae_fun_n_in;
 	sim_impl_dae_fun->casadi_n_out = &{{ ocp.model.name }}_impl_dae_fun_n_out;
 
-    {% if ocp.dims.np < 1 %}
-    external_function_casadi_create(sim_impl_dae_fun);
-    {% else %}
     external_function_param_casadi_create(sim_impl_dae_fun, {{ ocp.dims.np }});
-    {% endif %}
 
-	// external_function_casadi impl_dae_fun_jac_x_xdot_z;
+	// external_function_param_casadi impl_dae_fun_jac_x_xdot_z;
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_fun = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z;
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_work = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_work;
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_in = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_sparsity_in;
@@ -97,13 +101,9 @@ int {{ ocp.model.name}}_acados_sim_create() {
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_n_in = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_n_in;
 	sim_impl_dae_fun_jac_x_xdot_z->casadi_n_out = &{{ ocp.model.name }}_impl_dae_fun_jac_x_xdot_z_n_out;
 
-    {% if ocp.dims.np < 1 %}
-    external_function_casadi_create(sim_impl_dae_fun_jac_x_xdot_z);
-    {% else %}
     external_function_param_casadi_create(sim_impl_dae_fun_jac_x_xdot_z, {{ ocp.dims.np }});
-    {% endif %}
 
-	// external_function_casadi impl_dae_jac_x_xdot_u_z;
+	// external_function_param_casadi impl_dae_jac_x_xdot_u_z;
 	sim_impl_dae_jac_x_xdot_u_z->casadi_fun = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z;
 	sim_impl_dae_jac_x_xdot_u_z->casadi_work = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_work;
 	sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_in = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_sparsity_in;
@@ -111,21 +111,12 @@ int {{ ocp.model.name}}_acados_sim_create() {
 	sim_impl_dae_jac_x_xdot_u_z->casadi_n_in = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_n_in;
 	sim_impl_dae_jac_x_xdot_u_z->casadi_n_out = &{{ ocp.model.name }}_impl_dae_jac_x_xdot_u_z_n_out;
 
-    {% if ocp.dims.np < 1 %}
-    external_function_casadi_create(sim_impl_dae_jac_x_xdot_u_z);
-    {% else %}
     external_function_param_casadi_create(sim_impl_dae_jac_x_xdot_u_z, {{ ocp.dims.np }});
-    {% endif %}
 
     {% else %}
     // explicit ode
-    {% if ocp.dims.np < 1 %}
-    sim_forw_vde_casadi = (external_function_casadi *) malloc(sizeof(external_function_casadi));
-    sim_expl_ode_fun_casadi = (external_function_casadi *) malloc(sizeof(external_function_casadi));
-    {% else %}
     sim_forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     sim_expl_ode_fun_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
-    {% endif %}
 
     sim_forw_vde_casadi->casadi_fun = &{{ ocp.model.name }}_expl_vde_forw;
     sim_forw_vde_casadi->casadi_n_in = &{{ ocp.model.name }}_expl_vde_forw_n_in;
@@ -134,11 +125,7 @@ int {{ ocp.model.name}}_acados_sim_create() {
     sim_forw_vde_casadi->casadi_sparsity_out = &{{ ocp.model.name }}_expl_vde_forw_sparsity_out;
     sim_forw_vde_casadi->casadi_work = &{{ ocp.model.name }}_expl_vde_forw_work;
 
-    {% if ocp.dims.np < 1 %}
-    external_function_casadi_create(sim_forw_vde_casadi);
-    {% else %}
     external_function_param_casadi_create(sim_forw_vde_casadi, {{ ocp.dims.np }});
-    {% endif %}
 
     sim_expl_ode_fun_casadi->casadi_fun = &{{ ocp.model.name }}_expl_ode_fun;
     sim_expl_ode_fun_casadi->casadi_n_in = &{{ ocp.model.name }}_expl_ode_fun_n_in;
@@ -147,11 +134,7 @@ int {{ ocp.model.name}}_acados_sim_create() {
     sim_expl_ode_fun_casadi->casadi_sparsity_out = &{{ ocp.model.name }}_expl_ode_fun_sparsity_out;
     sim_expl_ode_fun_casadi->casadi_work = &{{ ocp.model.name }}_expl_ode_fun_work;
 
-    {% if ocp.dims.np < 1 %}
-    external_function_casadi_create(sim_expl_ode_fun_casadi);
-    {% else %}
     external_function_param_casadi_create(sim_expl_ode_fun_casadi, {{ ocp.dims.np }});
-    {% endif %}
 
     {% endif %}
 
@@ -176,8 +159,8 @@ int {{ ocp.model.name}}_acados_sim_create() {
 
     {{ ocp.model.name }}_sim_opts = sim_opts_create({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims);
 
-    {{ ocp.model.name }}_sim_opts->ns = 1; // number of stages in rk integrator
-    {{ ocp.model.name }}_sim_opts->num_steps = 1; // number of integration steps
+    {{ ocp.model.name }}_sim_opts->ns = {{ ocp.solver_config.sim_method_num_stages }}; // number of stages in rk integrator
+    {{ ocp.model.name }}_sim_opts->num_steps = {{ ocp.solver_config.sim_method_num_steps }}; // number of integration steps
     {{ ocp.model.name }}_sim_opts->sens_adj = false;
     {{ ocp.model.name }}_sim_opts->sens_forw = true;
     {% if ocp.solver_config.integrator_type == "IRK" %}
@@ -246,23 +229,12 @@ int {{ ocp.model.name }}_acados_sim_free() {
 
     // free external function 
     {% if ocp.solver_config.integrator_type == "IRK" %}
-        {% if ocp.dims.np < 1 %}
-        external_function_casadi_free(sim_impl_dae_fun);
-        external_function_casadi_free(sim_impl_dae_fun_jac_x_xdot_z);
-        external_function_casadi_free(sim_impl_dae_jac_x_xdot_u_z);
-        {% else %}
         external_function_param_casadi_free(sim_impl_dae_fun);
         external_function_param_casadi_free(sim_impl_dae_fun_jac_x_xdot_z);
         external_function_param_casadi_free(sim_impl_dae_jac_x_xdot_u_z);
-        {% endif %}
     {% else %}
-        {% if ocp.dims.np < 1 %}
-        external_function_casadi_free(sim_forw_vde_casadi);
-        external_function_casadi_free(sim_expl_ode_fun_casadi);
-        {% else %}
         external_function_param_casadi_free(sim_forw_vde_casadi);
-        external_function_param_casadi_free(sim_expl_ode_fun_casadi_casadi);
-        {% endif %}
+        external_function_param_casadi_free(sim_expl_ode_fun_casadi);
     {% endif %}
     
     return 0;

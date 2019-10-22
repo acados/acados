@@ -325,7 +325,7 @@ class ocp_nlp_dims:
 class ocp_nlp_cost:
     """
     class containing the description of the cost
-    (linear least-squares cost for the time being) 
+    (linear and nonlinear least-squares cost for the time being) 
     :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`, 
     :math:`m(x) = || V^e_x x - y_{\\text{ref}^e}||^2_{W^e}`
     """
@@ -394,7 +394,7 @@ class ocp_nlp_cost:
 
     @cost_type.setter
     def cost_type(self, cost_type):
-        cost_types = ('LINEAR_LS')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS')
 
         if type(cost_type) == str and cost_type in cost_types:
             self.__cost_type = cost_type
@@ -499,7 +499,7 @@ class ocp_nlp_cost:
 
     @cost_type_e.setter
     def cost_type_e(self, cost_type_e):
-        cost_types = ('LINEAR_LS')
+        cost_types = ('LINEAR_LS', 'NONLINEAR_LS')
 
         if type(cost_type_e) == str and cost_type_e in cost_types:
             self.__cost_type_e = cost_type_e
@@ -595,28 +595,28 @@ class ocp_nlp_constraints:
         self.__uh_e    = []        #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
         self.__lh_e    = []        #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
         # soft bounds on x and u
-        self.__lsbx   = []         #: soft lower bounds on x
-        self.__lsbu   = []         #: soft lower bounds on u
-        self.__usbx   = []         #: soft upper bounds on x 
-        self.__usbu   = []         #: soft upper bounds on u 
-        self.__idxsbx = []         #: indexes of soft bounds on x 
+        self.__lsbx   = []         #: lower bounds on slacks corresponding to soft lower bounds on x
+        self.__lsbu   = []         #: lower bounds on slacks corresponding to soft lower bounds on u
+        self.__usbx   = []         #: lower bounds on slacks corresponding to soft upper bounds on x
+        self.__usbu   = []         #: lower bounds on slacks corresponding to soft upper bounds on u
+        self.__idxsbx = []         #: indexes of soft bounds on x within the indices of bounds on x
         # self.__Jsbx   = []         #: :math`J_{s,x}` - matrix coefficient for soft bounds on x 
-        self.__idxsbu = []         #: indexes of soft bounds on u
+        self.__idxsbu = []         #: indexes of soft bounds on u within the indices of bounds on u
         # self.__Jsbu   = []         #: :math`J_{s,u}` - matrix coefficient for soft bounds on u 
         # soft bounds on x at t=T
-        self.__lsbx_e  = []        #: soft lower bounds on x at t=T
-        self.__usbx_e  = []        #: soft upper bounds on x at t=T
-        self.__idxsbx_e= []        #: indexes of soft bounds on x at t=T 
+        self.__lsbx_e  = []        #: lower bounds on slacks corresponding to soft lower bounds on x at t=T
+        self.__usbx_e  = []        #: lower bounds on slacks corresponding to soft upper bounds on x at t=T
+        self.__idxsbx_e= []        #: indexes of soft bounds on x at t=T, within the indices of bounds on x at t=T
         # self.__Jsbx_e    = []      #: :math`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T 
         # soft bounds on nonlinear constraints
-        self.__lsh    = []         #: soft lower bounds for nonlinear constraints 
-        self.__ush    = []         #: soft upper bounds for nonlinear constraints 
-        self.__idxsh  = []         #: indexes of soft nonlinear constraints 
-        # self.__Jsh    = []         #: :math`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints 
+        self.__lsh    = []         #: lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
+        self.__ush    = []         #: lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
+        self.__idxsh  = []         #: indexes of soft nonlinear constraints within the indices of nonlinear constraints
+        # self.__Jsh    = []         #: :math`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints
         # soft bounds on nonlinear constraints at t=T
-        self.__lsh_e    = []       #: soft lower bounds for nonlinear constraints at t=T
-        self.__ush_e    = []       #: soft upper bounds for nonlinear constraints at t=T
-        self.__idxsh_e  = []       #: indexes of soft nonlinear constraints at t=T 
+        self.__lsh_e    = []       #: lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at t=T
+        self.__ush_e    = []       #: lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints at t=T
+        self.__idxsh_e  = []       #: indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
         # self.__Jsh_e    = []       #: :math`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T 
         self.__x0      = []        #: :math:`\bar{x}_0` - initial state 
         self.__p       = []        #: :math:`p` - parameters 
@@ -1150,6 +1150,8 @@ class ocp_nlp_solver_config:
         self.__integrator_type  = 'ERK'                       #: integrator type
         self.__tf               = None                        #: prediction horizon
         self.__nlp_solver_type  = 'SQP_RTI'                   #: NLP solver 
+        self.__sim_method_num_stages = 1                      #: number of stages in the integrator
+        self.__sim_method_num_steps  = 1                      #: number of steps in the integrator
 
     @property
     def qp_solver(self):
@@ -1166,6 +1168,14 @@ class ocp_nlp_solver_config:
     @property
     def nlp_solver_type(self):
         return self.__nlp_solver_type
+
+    @property
+    def sim_method_num_stages(self):
+        return self.__sim_method_num_stages
+
+    @property
+    def sim_method_num_steps(self):
+        return self.__sim_method_num_steps
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
@@ -1205,6 +1215,22 @@ class ocp_nlp_solver_config:
     def tf(self, tf):
         self.__tf = tf
 
+    @sim_method_num_stages.setter
+    def sim_method_num_stages(self, sim_method_num_stages):
+
+        if type(sim_method_num_stages) == int: 
+            self.__sim_method_num_stages = sim_method_num_stages
+        else:
+            raise Exception('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer. Exiting.')
+
+    @sim_method_num_steps.setter
+    def sim_method_num_steps(self, sim_method_num_steps):
+
+        if type(sim_method_num_steps) == int: 
+            self.__sim_method_num_steps = sim_method_num_steps
+        else:
+            raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
+
     @nlp_solver_type.setter
     def nlp_solver_type(self, nlp_solver_type):
         nlp_solver_types = ('SQP', 'SQP_RTI')
@@ -1215,6 +1241,22 @@ class ocp_nlp_solver_config:
             raise Exception('Invalid nlp_solver_type value. Possible values are:\n\n' \
                     + ',\n'.join(nlp_solver_types) + '.\n\nYou have: ' + nlp_solver_type + '.\n\nExiting.')
 
+    @sim_method_num_stages.setter
+    def sim_method_num_stages(self, sim_method_num_stages):
+
+        if type(sim_method_num_stages) == int: 
+            self.__sim_method_num_stages = sim_method_num_stages
+        else:
+            raise Exception('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer. Exiting.')
+
+    @sim_method_num_steps.setter
+    def sim_method_num_steps(self, sim_method_num_steps):
+
+        if type(sim_method_num_steps) == int: 
+            self.__sim_method_num_steps = sim_method_num_steps
+        else:
+            raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
+
     def set(self, attr, value):
         setattr(self, attr, value)
 
@@ -1224,18 +1266,18 @@ class acados_ocp_nlp:
     """
     def __init__(self):
         self.dims = ocp_nlp_dims()
+        self.model = acados_dae()
         self.cost = ocp_nlp_cost()
         self.constraints = ocp_nlp_constraints()
         self.solver_config = ocp_nlp_solver_config()
-        # self.con_p_name  = None 
-        # self.con_p_e_name = None 
-        # self.con_h_name  = None 
-        # self.con_h_e_name = None 
+
         self.con_p   = acados_constraint() 
         self.con_p_e = acados_constraint() 
         self.con_h   = acados_constraint() 
         self.con_h_e = acados_constraint() 
-        # self.constants = {}
+        self.cost_r = acados_cost() 
+        self.cost_r_e = acados_cost() 
+
         self.acados_include_path = []
         self.acados_lib_path = []
 
@@ -1249,15 +1291,6 @@ class acados_ocp_nlp:
 
         setter_to_call(tokens[1], value)
         return 
-
-def check_ra(ra):
-    """
-    (DEPRECATED) function that checks the consistency of the optimal control description
-    """
-    # TODO(andrea): dimensions check are already performed 
-    # on the JSON data and type checks should be enforced by the 
-    # property setters. Add extra checks here?
-    return
 
 def np_array_to_list(np_array):
     return np_array.tolist()

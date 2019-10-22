@@ -626,19 +626,21 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         // regularize Hessian
         acados_tic(&timer1);
-        config->regularize->regularize_hessian(config->regularize, dims->regularize, opts->nlp_opts->regularize, nlp_mem->regularize_mem);
+        config->regularize->regularize_hessian(config->regularize, dims->regularize,
+                                               opts->nlp_opts->regularize, nlp_mem->regularize_mem);
         mem->time_reg += acados_toc(&timer1);
 
-//        printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
-//        print_ocp_qp_in(mem->qp_in);
-//        if (sqp_iter==1)
-//        exit(1);
+        // printf("\n------- qp_in (sqp iter %d) --------\n", sqp_iter);
+        // print_ocp_qp_in(nlp_mem->qp_in);
+        // if (sqp_iter==1)
+        // exit(1);
 
         // (typically) no warm start at first iteration
         if (sqp_iter == 0 && !opts->warm_start_first_qp)
         {
             int tmp_int = 0;
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "warm_start", &tmp_int);
+            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts,
+                                         "warm_start", &tmp_int);
         }
 
         // solve qp
@@ -656,7 +658,8 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         // restore default warm start
         if (sqp_iter==0)
         {
-            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts, "warm_start", &opts->qp_warm_start);
+            config->qp_solver->opts_set(config->qp_solver, opts->nlp_opts->qp_solver_opts,
+                                        "warm_start", &opts->qp_warm_start);
         }
 
         // TODO move into QP solver memory ???

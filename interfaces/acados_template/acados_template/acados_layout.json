@@ -17,6 +17,16 @@
             "str"
         ]
      },
+     "cost_r": {
+         "name" : [
+            "str"
+        ]
+    },
+    "cost_r_e": {
+        "name" : [
+            "str"
+        ]
+     },
      "con_p": {
          "name" : [
             "str"
@@ -463,6 +473,12 @@
         ],
         "tf": [
             "float"
+        ],
+        "sim_method_num_stages": [
+            "int"
+        ],
+        "sim_method_num_steps": [
+            "int"
         ]
     }
 }

@@ -89,7 +89,7 @@ void ocp_nlp_cost_nls_dims_get(void *config_, void *dims_, const char *field, in
 
 typedef struct
 {
-    // nls_fun(x,u) rplaces Cy * [x,u] in ls_cost
+    // nls_fun(x,u) replaces Cy * [x,u] in ls_cost
     // slack penalty has the form z^T * s + .5 * s^T * Z * s
     external_function_generic *nls_res_jac;   // evaluation and jacobian of ls residuals
     external_function_generic *nls_hess;  // hessian*seeds of ls residuals

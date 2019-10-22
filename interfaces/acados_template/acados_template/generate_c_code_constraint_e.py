@@ -35,7 +35,7 @@
 from casadi import *
 import os
 
-def generate_c_code_constraint( constraint, suffix_name ):
+def generate_c_code_constraint_e( constraint, suffix_name ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -71,8 +71,8 @@ def generate_c_code_constraint( constraint, suffix_name ):
     fun_name = con_name + suffix_name
     # TODO(andrea): first output seems to be ignored in the C code
     jac_x = jacobian(con_exp, x);
-    jac_u = jacobian(con_exp, u);
-    constraint_fun_jac_tran = Function(fun_name, [x, u, p], [con_exp, vertcat(transpose(jac_u), transpose(jac_x))])
+    # jac_u = jacobian(con_exp, u);
+    constraint_fun_jac_tran = Function(fun_name, [x, u, p], [con_exp, transpose(jac_x)])
 
     # generate C code
     if not os.path.exists('c_generated_code'):
