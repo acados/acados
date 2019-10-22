@@ -64,7 +64,7 @@
 #define NU   NU_
 #define NP   NP_
 
-int {{ model.name}}_acados_sim_create() {
+int {{ model.name }}_acados_sim_create() {
 
 	// initialize
 
@@ -239,21 +239,21 @@ int {{ model.name }}_acados_sim_free() {
     return 0;
 }
 
-sim_config  * {{model.name}}_acados_get_sim_config() {  
-    return {{model.name}}_sim_config; };
+sim_config  * {{ model.name }}_acados_get_sim_config() {
+    return {{ model.name }}_sim_config; };
 
-sim_in      * {{model.name}}_acados_get_sim_in(){       
-    return {{model.name}}_sim_in; };
+sim_in      * {{ model.name }}_acados_get_sim_in(){
+    return {{ model.name }}_sim_in; };
 
-sim_out     * {{model.name}}_acados_get_sim_out(){      
-    return {{model.name}}_sim_out; };
+sim_out     * {{ model.name }}_acados_get_sim_out(){
+    return {{ model.name }}_sim_out; };
 
-void        * {{model.name}}_acados_get_sim_dims(){     
-    return {{model.name}}_sim_dims; };
+void        * {{ model.name }}_acados_get_sim_dims(){
+    return {{ model.name }}_sim_dims; };
 
-sim_opts    * {{model.name}}_acados_get_sim_opts(){     
-    return {{model.name}}_sim_opts; };
+sim_opts    * {{ model.name }}_acados_get_sim_opts(){
+    return {{ model.name }}_sim_opts; };
 
-sim_solver  * {{model.name}}_acados_get_sim_solver(){   
-    return {{model.name}}_sim_solver; };
+sim_solver  * {{ model.name }}_acados_get_sim_solver(){
+    return {{ model.name }}_sim_solver; };
 

@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#define S_FUNCTION_NAME   acados_solver_sfunction_{{model.name}}
+#define S_FUNCTION_NAME   acados_solver_sfunction_{{ model.name }}
 #define S_FUNCTION_LEVEL  2
 
 #define MDL_START
@@ -191,20 +191,20 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", in_x0);
 
     // update reference
-    for (int ii = 0; ii < {{dims.N}}; ii++)
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) in_y_ref);
 
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{dims.N}}, "yref", (void *) in_y_ref_N);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) in_y_ref_N);
 
     // update value of parameters
     {% if solver_config.integrator_type == 'IRK' %}
-    for (int ii = 0; ii < {{dims.N}}; ii++) {
+    for (int ii = 0; ii < {{ dims.N }}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, in_p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, in_p);
     impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, in_p);
     }
     {% else %}
-    for (int ii = 0; ii < {{dims.N}}; ii++) {
+    for (int ii = 0; ii < {{ dims.N }}; ii++) {
     forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {% endif %}

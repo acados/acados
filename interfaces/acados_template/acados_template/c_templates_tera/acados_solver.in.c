@@ -521,7 +521,7 @@ int acados_create()
     for (int i = 0; i < N; i++)
     {
         nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-        nlp_solver_plan->sim_solver_plan[i].sim_solver = {{ solver_config.integrator_type}};
+        nlp_solver_plan->sim_solver_plan[i].sim_solver = {{ solver_config.integrator_type }};
     }
 
     for (int i = 0; i < N; i++) {
