@@ -10,7 +10,7 @@ import json
 CODE_GEN = 1
 COMPILE = 1
 
-FORMULATION = 0         # Tracking MPC
+FORMULATION = 4         # Tracking MPC
                         # ===================
                         # 0 for hexagon (no terminalset) | 5 hexagon + currentslack| 6 PDC Voltage + Hexagon + torque equation | 7 PDC Voltage + currentslack
 
@@ -20,6 +20,7 @@ FORMULATION = 0         # Tracking MPC
                         
 i_d_ref =  -125         # Setpoints only valid for Formulation 0, 5, 6 and 7
 i_q_ref =   10       
+# w_val = 1000.0          # do not change in this script, sometimes the values below calculate with a fix w_val = 2000 1/S
 w_val = 2000.0          # do not change in this script, sometimes the values below calculate with a fix w_val = 2000 1/S
 
 # i_d_ref =  -124         # Setpoints only valid for Formulation 0, 5, 6 and 7
@@ -46,6 +47,13 @@ phi = 0.0
 
 x0Start = nmp.array([0, 0])
 
+# N = 10      # N=6 and N=8
+N = 2      # N=6 and N=8
+Ts_sim = 125e-6
+# Ts_sim = 500e-6
+
+WARMSTART_ITERS = 200
+
 # # setpoint MPC with hexagon (current slack)
 # if FORMULATION == 0:        # (works)
 #     Weight_TUNING = 1
@@ -70,19 +78,20 @@ if FORMULATION == 0:
 
 # full EMPC
 if FORMULATION == 4:        # (works)
-    Weight_TUNING = 1e-6
-    Weight_E_TUNING = 1e-9 
-    SLACK_TUNING   =  1e2
+    Weight_TUNING = 1e-1
+    Weight_E_TUNING = 1e-1
+    SLACK_TUNING   =  1e3
     SLACK_E_TUNING =  1e3
     wd = 1
     wq = 1
-    Ts = 0.000250
+    # Ts = 0.000250
+    Ts = 0.000500
     SLACK_TUNINGHessian =  0
 
 # setpoint MPC with hexagon (current slack)
 if FORMULATION == 5:        # (works)
     Weight_TUNING = 1e2
-    Weight_E_TUNING = 1e2
+    Weight_E_TUNING = 1e3
     SLACK_TUNING   =  0
     SLACK_E_TUNING =  0
     wd = 1
@@ -110,10 +119,9 @@ if FORMULATION == 7:    # (works)
     Ts = 0.000125
     SLACK_TUNINGHessian =  0
 
-INPUT_REG = 1e-3
+INPUT_REG = 1e-2
 
 TAU = 10 # 8 
-N = 1      # N=6 and N=8
 
 # Model of the PMSM
 #====================================================================
@@ -146,12 +154,12 @@ def export_ode_model():
     fexpl = vertcat(-(R_m/L_d)*i_d + (L_q/L_d)*omega*i_q + u_d/L_d, \
                     -(L_d/L_q)*omega*i_d - (R_m/L_q)*i_q + u_q/L_q - (omega*K_m)/L_q)
 
-    # fimpl = vertcat(-i_d_dot-(R_m/L_d)*i_d + (L_q/L_d)*omega*i_q + u_d/L_d, \
-    #                 -i_q_dot-(L_d/L_q)*omega*i_d - (R_m/L_q)*i_q + u_q/L_q - (omega*K_m)/L_q)
+    fimpl = vertcat(-i_d_dot-(R_m/L_d)*i_d + (L_q/L_d)*omega*i_q + u_d/L_d, \
+                    -i_q_dot-(L_d/L_q)*omega*i_d - (R_m/L_q)*i_q + u_q/L_q - (omega*K_m)/L_q)
 
     model = acados_dae()
 
-    model.f_impl_expr = []
+    model.f_impl_expr = fimpl
     model.f_expl_expr = fexpl
     model.x = x
     model.xdot = xdot
@@ -1011,9 +1019,9 @@ if FORMULATION == 7:
 nlp_con.p = nmp.array([w_val, 0.0, 0.0])
 
 # set QP solver
-# ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-# ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
-ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
+ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
+# ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
 # ra.solver_config.integrator_type = 'IRK'
 ra.solver_config.integrator_type = 'ERK'
@@ -1025,10 +1033,10 @@ ra.solver_config.nlp_solver_type = 'SQP_RTI'
 # ra.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
-ra.acados_include_path = '/mnt/c/Austauch/projects/SCQPAndrea/acados/include'
-ra.acados_lib_path = '/mnt/c/Austauch/projects/SCQPAndrea/acados/lib'
-# ra.acados_include_path = '~/acados/include'
-# ra.acados_lib_path = '~/acados/lib'
+# ra.acados_include_path = '/mnt/c/Austauch/projects/SCQPAndrea/acados/include'
+# ra.acados_lib_path = '/mnt/c/Austauch/projects/SCQPAndrea/acados/lib'
+ra.acados_include_path = '~/acados/include'
+ra.acados_lib_path = '~/acados/lib'
 
 file_name = 'acados_ocp.json'
 
@@ -1097,6 +1105,10 @@ simXR[0,1] = x0Start[1]
 
 xvec = nmp.matrix([[x0Start[0]],[x0Start[1]]])
 
+# compute warm-start
+for i in range(WARMSTART_ITERS):
+    status = acados_solver.solve()
+
 for i in range(Nsim):
     print("\n")
     print("SimulationStep = ", i)
@@ -1105,7 +1117,7 @@ for i in range(Nsim):
 
     if status != 0:
         print('acados returned status {}. Exiting.'.format(status))
-        # import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
     # get solution
     x0 = acados_solver.get(0, "x")
     x1 = acados_solver.get(1, "x")
@@ -1137,7 +1149,7 @@ for i in range(Nsim):
 
     # Z-Transformation
     #========================
-    Ad = scipy.linalg.expm(A*Ts)
+    Ad = scipy.linalg.expm(A*Ts_sim)
     invA = nmp.linalg.inv(A)
     Bd = invA*(Ad-nmp.eye(2))*B
     fd = invA*(Ad-nmp.eye(2))*f
@@ -1248,9 +1260,9 @@ plt.plot(simXR[:,0], simXR[:,1],'b')
 plt.plot(simX[:,0], simX[:,1],'r')
 plt.plot(simX[:,0], simX[:,1],'r*')
 plt.contour(XV, YV, FeaSetV,[0],colors='r')
-plt.contour(XV, YV, S1,[-27.82562584,83.02562584],colors='k')
-plt.contour(XV, YV, S2,[-0.11281292,55.31281292], colors='k')
-plt.contour(XV, YV, S3,[-27.82562584,83.02562584],colors='k')
+# plt.contour(XV, YV, S1,[-27.82562584,83.02562584],colors='k')
+# plt.contour(XV, YV, S2,[-0.11281292,55.31281292], colors='k')
+# plt.contour(XV, YV, S3,[-27.82562584,83.02562584],colors='k')
 plt.contour(XV, YV, TauV,[TAU],colors='g')
 plt.xlabel('x_d')
 plt.ylabel('x_q')
