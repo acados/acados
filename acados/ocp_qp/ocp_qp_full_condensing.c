@@ -174,7 +174,7 @@ int ocp_qp_full_condensing_opts_calculate_size(void *dims_)
 
 void *ocp_qp_full_condensing_opts_assign(void *dims_, void *raw_memory)
 {
-    ocp_qp_full_condensing_dims *dims = dims_;
+    // ocp_qp_full_condensing_dims *dims = dims_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -196,7 +196,7 @@ void *ocp_qp_full_condensing_opts_assign(void *dims_, void *raw_memory)
     d_cond_qp_arg_create(opts->hpipm_opts, c_ptr);
     c_ptr += opts->hpipm_opts->memsize;
 
-    assert((char *) raw_memory + ocp_qp_full_condensing_opts_calculate_size(dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_qp_full_condensing_opts_calculate_size(dims_) >= c_ptr);
 
     return opts;
 }

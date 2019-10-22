@@ -201,6 +201,7 @@ ocp_model.set('dim_nu', nu);
 ocp_model.set('dim_ny', ny);
 ocp_model.set('dim_ny_e', ny_e);
 ocp_model.set('dim_nbx', nbx);
+ocp_model.set('dim_nbx_e', nbx);
 ocp_model.set('dim_nbu', nbu);
 ocp_model.set('dim_nh', nh);
 ocp_model.set('dim_nh_e', nh_e);
@@ -245,6 +246,9 @@ end
 ocp_model.set('constr_Jbx', Jbx);
 ocp_model.set('constr_lbx', lbx);
 ocp_model.set('constr_ubx', ubx);
+ocp_model.set('constr_Jbx_e', Jbx);
+ocp_model.set('constr_lbx_e', lbx);
+ocp_model.set('constr_ubx_e', ubx);
 % input bounds
 ocp_model.set('constr_Jbu', Jbu);
 ocp_model.set('constr_lbu', lbu);

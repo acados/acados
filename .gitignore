@@ -111,3 +111,4 @@ build*
 _autogen
 tags
 compile_commands.json
+bin/

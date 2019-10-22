@@ -34,6 +34,7 @@
 %% test of native matlab interface
 clear all
 
+import casadi.*
 addpath('../pendulum_on_cart_model/');
 
 for itest = 1:3
@@ -98,10 +99,6 @@ for itest = 1:3
 
     nbx = 0;
     nbu = 0;
-    ng = 0;
-    ng_e = 0;
-    nh = nu;
-    nh_e = 0;
 
     % cost
     Vu = zeros(ny, nu); for ii=1:nu Vu(ii,ii)=1.0; end % input-to-output matrix in lagrange term
@@ -138,10 +135,7 @@ for itest = 1:3
     end
     ocp_model.set('dim_nbx', nbx);
     ocp_model.set('dim_nbu', nbu);
-    ocp_model.set('dim_ng', ng);
-    ocp_model.set('dim_ng_e', ng_e);
-    ocp_model.set('dim_nh', nh);
-    ocp_model.set('dim_nh_e', nh_e);
+
     % symbolics
     ocp_model.set('sym_x', model.sym_x);
     if isfield(model, 'sym_u')
@@ -173,14 +167,48 @@ for itest = 1:3
         ocp_model.set('dyn_type', 'implicit');
         ocp_model.set('dyn_expr_f', model.expr_f_impl);
     end
-    % constraints
+
+    %% constraints
     ocp_model.set('constr_x0', x0);
-    ocp_model.set('constr_expr_h', model.expr_h);
-    ocp_model.set('constr_lh', lbu);
-    ocp_model.set('constr_uh', ubu);
+    if itest == 1
+        nh = nu;
+        ng = 0;
+        ocp_model.set('constr_expr_h', model.expr_h);
+        ocp_model.set('constr_lh', lbu);
+        ocp_model.set('constr_uh', ubu);
+    elseif itest == 2
+        nh = 0;
+        ng = 1;
+        C = zeros(ng, nx);
+        D = zeros(ng, nu);
+        D(1, nu) = 1;
+        ocp_model.set('constr_D', D);
+        ocp_model.set('constr_C', C);
+
+        ocp_model.set('constr_lg', lbu);
+        ocp_model.set('constr_ug', ubu);
+
+    elseif itest == 3
+        ng = 0;
+        ocp_model.set('constr_type', 'auto');
+        ocp_model.set('constr_expr_h', model.expr_h);
+        ocp_model.set('constr_lh', lbu);
+        ocp_model.set('constr_uh', ubu);
+%         ocp_model.set('constr_type_e', 'auto');
+%         ocp_model.set('constr_expr_h_e', SX.sym('terminal_constraint',0,0));
+%         ocp_model.set('constr_lh_e', []);
+%         ocp_model.set('constr_uh_e', []);
+
+    end
+
+    ng_e = 0;
+    nh_e = 0;
+    ocp_model.set('dim_ng', ng);
+    ocp_model.set('dim_ng_e', ng_e);
+    ocp_model.set('dim_nh', nh);
+    ocp_model.set('dim_nh_e', nh_e);
     % disp('ocp_model.model_struct')
     % disp(ocp_model.model_struct)
-
 
     %% acados ocp opts
     ocp_opts = acados_ocp_opts();
@@ -215,18 +243,10 @@ for itest = 1:3
         ocp_opts.set('gnsf_detect_struct', gnsf_detect_struct);
     end
 
-    % disp('ocp_opts');
-    % disp(ocp_opts.opts_struct);
-
 
     %% acados ocp
     % create ocp
     ocp = acados_ocp(ocp_model, ocp_opts);
-    % disp('ocp.C_ocp');
-    % disp(ocp.C_ocp);
-    % disp('ocp.C_ocp_ext_fun');
-    % disp(ocp.C_ocp_ext_fun);
-
 
     % set trajectory initialization
     %x_traj_init = zeros(nx, N+1);
@@ -243,11 +263,17 @@ for itest = 1:3
     % modify numerical data for a certain stage
     some_stages = 1:10:N-1;
     for i = some_stages
-        if          (strcmp(cost_type, 'linear_ls'))
+        if (strcmp(cost_type, 'linear_ls'))
             ocp.set('cost_Vx', Vx, i); % cost_y_ref, cost_Vu, cost_Vx, cost_W, cost_Z, cost_Zl,...
              % cost_Zu, cost_z, cost_zl, cost_zu;
             ocp.set('cost_Vu', Vu, i);
             ocp.set('cost_y_ref', yr, i);
+        end
+        if ng > 0
+            ocp.set('constr_C', C, i);
+            ocp.set('constr_D', D, i);
+            ocp.set('constr_ug', ubu, i);
+            ocp.set('constr_lg', lbu, i);
         end
     end
 
@@ -283,7 +309,6 @@ for itest = 1:3
         end
     end
 
-
     if status~=0
         error('test_ocp_pendulum_on_cart: solution failed!');
     elseif tol < max(stat(end,2:5))
@@ -291,6 +316,10 @@ for itest = 1:3
     elseif sqp_iter > 9
         error('test_ocp_pendulum_on_cart: sqp_iter > 9, this problem is typically solved within less iterations!');
     end
+% For debugging
+%     figure;
+%     plot(1:N+1, xtraj);
+%     legend('p', 'theta', 'v', 'omega');
 
 end
 fprintf('\ntest_ocp_pendulum_on_cart: success!\n');

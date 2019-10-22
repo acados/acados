@@ -39,44 +39,50 @@
 #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
-
-// blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 // example specific
-#include "{{ model_name }}_model/{{ model_name }}_model.h"
+#include "{{ model.name }}_model/{{ model.name }}_model.h"
 {% if dims.npd > 0 %}
-#include "{{ con_p_name }}_p_constraint/{{ con_p_name }}_p_constraint.h"
+#include "{{ con_p.name }}_p_constraint/{{ con_p.name }}_p_constraint.h"
 {% endif %}
 {% if dims.nh > 0 %}
-#include "{{ con_h_name }}_h_constraint/{{ con_h_name }}_h_constraint.h"
+#include "{{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.h"
+{% endif %}
+{% if dims.nh_e > 0 %}
+#include "{{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.h"
+{% endif %}
+{%- if cost.cost_type == "NONLINEAR_LS" %}
+#include "{{ cost_r.name }}_r_cost/{{ cost_r.name }}_r_cost.h"
+{% endif %}
+{%- if cost.cost_type_e == "NONLINEAR_LS" %}
+#include "{{ cost_r_e.name }}_r_e_cost/{{ cost_r_e.name }}_r_e_cost.h"
 {% endif %}
 
-#include "acados_solver_{{model_name}}.h"
+#include "acados_solver_{{ model.name }}.h"
 
-{% if constants | length > 0 %}
-{% for value, key in constants %}
-#define {{ value }} {{ key }}
-{% endfor %}
-{% endif %}
-#define NX_   {{ dims.nx }}
-#define NZ_   {{ dims.nz }}
-#define NU_   {{ dims.nu }}
-#define NP_   {{ dims.np }}
-#define NBX_  {{ dims.nbx }}
-#define NBU_  {{ dims.nbu }}
-#define NG_   {{ dims.ng }}
-#define NBXN_ {{ dims.nbx_e }}
-#define NGN_  {{ dims.ng_e }}
-#define NY_   {{ dims.ny }}
-#define NYN_  {{ dims.ny_e }}
-#define N_    {{ dims.N }}
-#define NPD_  {{ dims.npd }}
-#define NPDN_ {{ dims.npd_e }}
-#define NH_   {{ dims.nh }}
-#define NHN_  {{ dims.nh_e }}
+#define NX_    {{ dims.nx }}
+#define NZ_    {{ dims.nz }}
+#define NU_    {{ dims.nu }}
+#define NP_    {{ dims.np }}
+#define NBX_   {{ dims.nbx }}
+#define NBU_   {{ dims.nbu }}
+#define NSBX_  {{ dims.nsbx }}
+#define NSBU_  {{ dims.nsbu }}
+#define NSH_  {{ dims.nsh }}
+#define NSHN_  {{ dims.nsh_e }}
+#define NSBXN_ {{ dims.nsbx_e }}
+#define NS_    {{ dims.ns }}
+#define NSN_   {{ dims.ns_e }}
+#define NG_    {{ dims.ng }}
+#define NBXN_  {{ dims.nbx_e }}
+#define NGN_   {{ dims.ng_e }}
+#define NY_    {{ dims.ny }}
+#define NYN_   {{ dims.ny_e }}
+#define N_     {{ dims.N }}
+#define NPD_   {{ dims.npd }}
+#define NPDN_  {{ dims.npd_e }}
+#define NH_    {{ dims.nh }}
+#define NHN_   {{ dims.nh_e }}
 
 #if NX_ < 1
 #define NX   1
@@ -112,6 +118,48 @@
 #define NBU   1
 #else
 #define NBU   NBU_
+#endif
+
+#if NSBX_ < 1
+#define NSBX   1
+#else
+#define NSBX   NSBX_
+#endif
+
+#if NSBU_ < 1
+#define NSBU   1
+#else
+#define NSBU   NSBU_
+#endif
+
+#if NSH_ < 1
+#define NSH   1
+#else
+#define NSH   NSH_
+#endif
+
+#if NSHN_ < 1
+#define NSHN   1
+#else
+#define NSHN   NSHN_
+#endif
+
+#if NS_ < 1
+#define NS   1
+#else
+#define NS   NS_
+#endif
+
+#if NSBXN_ < 1
+#define NSBXN   1
+#else
+#define NSBXN   NSBXN_
+#endif
+
+#if NSN_ < 1
+#define NSN   1
+#else
+#define NSN   NSN_
 #endif
 
 #if NG_ < 1
@@ -174,7 +222,8 @@
 #define NHN   NHN_
 #endif
 
-int acados_create() {
+int acados_create()
+{
 
     int status = 0;
 
@@ -184,25 +233,25 @@ int acados_create() {
     // u
     int idxbu0[NBU];
     {% for i in range(end=dims.nbu) %}
-    idxbu0[{{i}}] = {{constraints.idxbu[i]}};
+    idxbu0[{{ i }}] = {{ constraints.idxbu[i] }};
     {%- endfor %}
     double lbu0[NBU]; 
     double ubu0[NBU];
     {% for i in range(end=dims.nbu) %}
-    lbu0[{{i}}] = {{ constraints.lbu[i] }};
-    ubu0[{{i}}] = {{ constraints.ubu[i] }};
+    lbu0[{{ i }}] = {{ constraints.lbu[i] }};
+    ubu0[{{ i }}] = {{ constraints.ubu[i] }};
     {%- endfor %}
     
     // x
     int idxbx0[NX];
     {% for i in range(end=dims.nx) %}
-    idxbx0[{{i}}] = {{i}};
+    idxbx0[{{ i }}] = {{ i }};
     {%- endfor %}
     double lbx0[NX]; 
     double ubx0[NX];
     {% for i in range(end=dims.nx) %}
-    lbx0[{{i}}] = {{ constraints.x0[i] }};
-    ubx0[{{i}}] = {{ constraints.x0[i] }};
+    lbx0[{{ i }}] = {{ constraints.x0[i] }};
+    ubx0[{{ i }}] = {{ constraints.x0[i] }};
     {%- endfor %}
 
 
@@ -210,25 +259,25 @@ int acados_create() {
     // u
     int idxbu[NBU];
     {% for i in range(end=dims.nbu) %}
-    idxbu[{{i}}] = {{constraints.idxbu[i]}};
+    idxbu[{{ i }}] = {{ constraints.idxbu[i] }};
     {%- endfor %}
     double lbu[NBU]; 
     double ubu[NBU];
     {% for i in range(end=dims.nbu) %}
-    lbu[{{i}}] = {{ constraints.lbu[i] }};
-    ubu[{{i}}] = {{ constraints.ubu[i] }};
+    lbu[{{ i }}] = {{ constraints.lbu[i] }};
+    ubu[{{ i }}] = {{ constraints.ubu[i] }};
     {%- endfor %}
     
     // x
     int idxbx[NBX];
     {% for i in range(end=dims.nbx) %}
-    idxbx[{{i}}] = {{constraints.idxbx[i]}};
+    idxbx[{{ i }}] = {{ constraints.idxbx[i] }};
     {%- endfor %}
     double lbx[NBX]; 
     double ubx[NBX];
     {% for i in range(end=dims.nbx) %}
-    lbx[{{i}}] = {{ constraints.lbx[i] }};
-    ubx[{{i}}] = {{ constraints.ubx[i] }};
+    lbx[{{ i }}] = {{ constraints.lbx[i] }};
+    ubx[{{ i }}] = {{ constraints.ubx[i] }};
     {%- endfor %}
 
     // set up general constraints for stage 0 to N-1 
@@ -239,22 +288,22 @@ int acados_create() {
 
     {% for j in range(end=dims.ng) %}
         {%- for k in range(end=dims.nx) %}
-    D[{{j}}+NG * {{k}}] = {{ constraints.D[j][k] }}; 
+    D[{{ j }}+NG * {{ k }}] = {{ constraints.D[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(end=dims.ng) %}
         {%- for k in range(end=dims.nu) %}
-    C[{{j}}+NG * {{k}}] = {{ constraints.C[j][k] }}; 
+    C[{{ j }}+NG * {{ k }}] = {{ constraints.C[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for i in range(end=dims.ng) %}
-    lg[{{i}}] = {{ constraints.lg[i] }};
+    lg[{{ i }}] = {{ constraints.lg[i] }};
     {%- endfor %}
 
     {% for i in range(end=dims.ng) %}
-    ug[{{i}}] = {{ constraints.ug[i] }};
+    ug[{{ i }}] = {{ constraints.ug[i] }};
     {%- endfor %}
 
     // set up nonlinear constraints for stage 0 to N-1 
@@ -262,24 +311,24 @@ int acados_create() {
     double uh[NH];
 
     {% for i in range(end=dims.nh) %}
-    lh[{{i}}] = {{ constraints.lh[i] }};
+    lh[{{ i }}] = {{ constraints.lh[i] }};
     {%- endfor %}
 
     {% for i in range(end=dims.nh) %}
-    uh[{{i}}] = {{ constraints.uh[i] }};
+    uh[{{ i }}] = {{ constraints.uh[i] }};
     {%- endfor %}
     
     // set up bounds for last stage
     // x
     int idxbx_e[NBXN];
     {% for i in range(end=dims.nbx_e) %}
-    idxbx_e[{{i}}] = {{constraints.idxbx_e[i]}};
+    idxbx_e[{{ i }}] = {{ constraints.idxbx_e[i] }};
     {%- endfor %}
     double lbx_e[NBXN]; 
     double ubx_e[NBXN];
     {% for i in range(end=dims.nbx_e) %}
-    lbx_e[{{i}}] = {{ constraints.lbx_e[i] }};
-    ubx_e[{{i}}] = {{ constraints.ubx_e[i] }};
+    lbx_e[{{ i }}] = {{ constraints.lbx_e[i] }};
+    ubx_e[{{ i }}] = {{ constraints.ubx_e[i] }};
     {%- endfor %}
     
     // set up general constraints for last stage 
@@ -289,16 +338,16 @@ int acados_create() {
 
     {% for j in range(end=dims.ng_e) %}
         {%- for k in range(end=dims.nu) %}
-    C_e[{{j}}+NG * {{k}}] = {{ constraints.C_e[j][k] }}; 
+    C_e[{{ j }}+NG * {{ k }}] = {{ constraints.C_e[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for i in range(end=dims.ng_e) %}
-    lg_e[{{i}}] = {{ constraints.lg_e[i] }};
+    lg_e[{{ i }}] = {{ constraints.lg_e[i] }};
     {%- endfor %}
 
     {% for i in range(end=dims.ng_e) %}
-    ug_e[{{i}}] = {{ constraints.ug_e[i] }};
+    ug_e[{{ i }}] = {{ constraints.ug_e[i] }};
     {%- endfor %}
 
     // set up nonlinear constraints for last stage 
@@ -306,11 +355,11 @@ int acados_create() {
     double uh_e[NHN];
 
     {% for i in range(end=dims.nh_e) %}
-    lh_e[{{i}}] = {{ constraints.lh_e[i] }};
+    lh_e[{{ i }}] = {{ constraints.lh_e[i] }};
     {%- endfor %}
 
     {% for i in range(end=dims.nh_e) %}
-    uh_e[{{i}}] = {{ constraints.uh_e[i] }};
+    uh_e[{{ i }}] = {{ constraints.uh_e[i] }};
     {%- endfor %}
 
     double yref[NY];
@@ -319,9 +368,17 @@ int acados_create() {
     double Vx[NY*NX];
     double Vu[NY*NU];
     double Vz[NY*NZ];
+    double Zl[NS];
+    double Zu[NS];
+    double zl[NS];
+    double zu[NS];
 
     double yref_e[NYN];
     double W_e[NYN*NYN];
+    double Zl_e[NSN];
+    double Zu_e[NSN];
+    double zl_e[NSN];
+    double zu_e[NSN];
 
     double Vx_e[NYN*NX];
     
@@ -330,46 +387,78 @@ int acados_create() {
 
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.ny) %}
-    W[{{j}}+(NY) * {{k}}] = {{ cost.W[j][k] }}; 
+    W[{{ j }}+(NY) * {{ k }}] = {{ cost.W[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.nx) %}
-    Vx[{{j}}+(NY) * {{k}}] = {{ cost.Vx[j][k] }}; 
+    Vx[{{ j }}+(NY) * {{ k }}] = {{ cost.Vx[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.nu) %}
-    Vu[{{j}}+(NY) * {{k}}] = {{ cost.Vu[j][k] }}; 
+    Vu[{{ j }}+(NY) * {{ k }}] = {{ cost.Vu[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.nz) %}
-    Vz[{{j}}+(NY) * {{k}}] = {{ cost.Vz[j][k] }}; 
+    Vz[{{ j }}+(NY) * {{ k }}] = {{ cost.Vz[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
 
+    {% for j in range(end=dims.ns) %}
+    Zl[{{ j }}] = {{ cost.Zl[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns) %}
+    Zu[{{ j }}] = {{ cost.Zu[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns) %}
+    zl[{{ j }}] = {{ cost.zl[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns) %}
+    zu[{{ j }}] = {{ cost.zu[j] }}; 
+    {%- endfor %}
+
     {% for j in range(end=dims.ny) %}
-    yref[{{j}}] = {{ cost.yref[j] }}; 
+    yref[{{ j }}] = {{ cost.yref[j] }}; 
     {%- endfor %}
 
     {% for j in range(end=dims.ny_e) %}
         {%- for k in range(end=dims.ny_e) %}
-    W_e[{{j}}+(NYN) * {{k}}] = {{ cost.W_e[j][k] }}; 
+    W_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.W_e[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
 
     {% for j in range(end=dims.ny_e) %}
         {%- for k in range(end=dims.nx) %}
-    Vx_e[{{j}}+(NYN) * {{k}}] = {{ cost.Vx_e[j][k] }}; 
+    Vx_e[{{ j }}+(NYN) * {{ k }}] = {{ cost.Vx_e[j][k] }}; 
         {%- endfor %}
     {%- endfor %}
 
+    {% for j in range(end=dims.ns_e) %}
+    Zl_e[{{ j }}] = {{ cost.Zl_e[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns_e) %}
+    Zu_e[{{ j }}] = {{ cost.Zu_e[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns_e) %}
+    zl_e[{{ j }}] = {{ cost.zl_e[j] }}; 
+    {%- endfor %}
+
+    {% for j in range(end=dims.ns_e) %}
+    zu_e[{{ j }}] = {{ cost.zu_e[j] }}; 
+    {%- endfor %}
+
     {% for j in range(end=dims.ny_e) %}
-    yref_e[{{j}}] = {{ cost.yref_e[j] }}; 
+    yref_e[{{ j }}] = {{ cost.yref_e[j] }}; 
     {%- endfor %}
 
     int max_num_sqp_iterations = 100;
@@ -388,7 +477,7 @@ int acados_create() {
     int npd[N+1];
     int npd_e[N+1];
 
-    for(int i = 0; i < N+1; i++) {
+    for (int i = 0; i < N+1; i++) {
         nx[i]  = NX_;
         nu[i]  = NU_;
         nbx[i] = NBX_;
@@ -428,7 +517,7 @@ int acados_create() {
     {% endif %}
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_config.qp_solver }};
     for (int i = 0; i <= N; i++)
-        nlp_solver_plan->nlp_cost[i] = LINEAR_LS;
+        nlp_solver_plan->nlp_cost[i] = {{ cost.cost_type }};
     for (int i = 0; i < N; i++)
     {
         nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
@@ -438,9 +527,9 @@ int acados_create() {
     for (int i = 0; i < N; i++) {
         {% if dims.npd > 0 %}
         nlp_solver_plan->nlp_constraints[i] = BGHP;
-        {% else %}
+        {%- else -%}
         nlp_solver_plan->nlp_constraints[i] = BGH;
-        {% endif %}
+        {%- endif %}
     }
 
     {% if dims.npd_e > 0 %}
@@ -470,52 +559,52 @@ int acados_create() {
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
     }
 
-    {% if dims.npd > 0 %}
+    {%- if dims.npd > 0 %}
     for (int i = 0; i < N; i++) 
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "np", &npd[i]);
-    {% endif %}
-    {% if dims.npd_e > 0 %}
+    {%- endif %}
+    {%- if dims.npd_e > 0 %}
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "np", &npd[N]);
-    {% endif %}
+    {%- endif %}
 
-    {% if dims.npd > 0 %}
+    {%- if dims.npd > 0 %}
     p_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear part of convex-composite constraint
-        p_constraint[i].casadi_fun = &{{ con_p_name }}_p_constraint;
-        p_constraint[i].casadi_n_in = &{{ con_p_name }}_p_constraint_n_in;
-        p_constraint[i].casadi_n_out = &{{ con_p_name }}_p_constraint_n_out;
-        p_constraint[i].casadi_sparsity_in = &{{ con_p_name }}_p_constraint_sparsity_in;
-        p_constraint[i].casadi_sparsity_out = &{{ con_p_name }}_p_constraint_sparsity_out;
-        p_constraint[i].casadi_work = &{{ con_p_name }}_p_constraint_work;
+        p_constraint[i].casadi_fun = &{{ con_p.name }}_p_constraint;
+        p_constraint[i].casadi_n_in = &{{ con_p.name }}_p_constraint_n_in;
+        p_constraint[i].casadi_n_out = &{{ con_p.name }}_p_constraint_n_out;
+        p_constraint[i].casadi_sparsity_in = &{{ con_p.name }}_p_constraint_sparsity_in;
+        p_constraint[i].casadi_sparsity_out = &{{ con_p.name }}_p_constraint_sparsity_out;
+        p_constraint[i].casadi_work = &{{ con_p.name }}_p_constraint_work;
 
         external_function_casadi_create(&p_constraint[i]);
     }
-    {% endif %}
+    {%- endif %}
 
     {% if dims.npd_e > 0 %}
 	// nonlinear part of convex-composite constraint
-	external_function_casadi p_constraint_e;
-	p_constraint_e.casadi_fun = &{{ con_p_e_name }}_p_constraint_e;
-	p_constraint_e.casadi_n_in = &{{ con_p_e_name }}_p_constraint_e_n_in;
-	p_constraint_e.casadi_n_out = &{{ con_p_e_name }}_p_constraint_e_n_out;
-	p_constraint_e.casadi_sparsity_in = &{{ con_p_e_name }}_p_constraint_e_sparsity_in;
-	p_constraint_e.casadi_sparsity_out = &{{ con_p_e_name }}_p_constraint_e_sparsity_out;
-	p_constraint_e.casadi_work = &{{ con_p_e_name }}_p_constraint_e_work;
+	external_function_casadi p_e_constraint;
+	p_e_constraint.casadi_fun = &{{ con_p_e.name }}_p_e_constraint;
+	p_e_constraint.casadi_n_in = &{{ con_p_e.name }}_p_e_constraint_n_in;
+	p_e_constraint.casadi_n_out = &{{ con_p_e.name }}_p_e_constraint_n_out;
+	p_e_constraint.casadi_sparsity_in = &{{ con_p_e.name }}_p_e_constraint_sparsity_in;
+	p_e_constraint.casadi_sparsity_out = &{{ con_p_e.name }}_p_e_constraint_sparsity_out;
+	p_e_constraint.casadi_work = &{{ con_p_e.name }}_p_e_constraint_work;
 
-    external_function_casadi_create(p_constraint_e);
+    external_function_casadi_create(p_e_constraint);
     {% endif %}
 
     {% if dims.nh > 0 %}
     h_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear constraint
-        h_constraint[i].casadi_fun = &{{ con_h_name }}_h_constraint;
-        h_constraint[i].casadi_n_in = &{{ con_h_name }}_h_constraint_n_in;
-        h_constraint[i].casadi_n_out = &{{ con_h_name }}_h_constraint_n_out;
-        h_constraint[i].casadi_sparsity_in = &{{ con_h_name }}_h_constraint_sparsity_in;
-        h_constraint[i].casadi_sparsity_out = &{{ con_h_name }}_h_constraint_sparsity_out;
-        h_constraint[i].casadi_work = &{{ con_h_name }}_h_constraint_work;
+        h_constraint[i].casadi_fun = &{{ con_h.name }}_h_constraint;
+        h_constraint[i].casadi_n_in = &{{ con_h.name }}_h_constraint_n_in;
+        h_constraint[i].casadi_n_out = &{{ con_h.name }}_h_constraint_n_out;
+        h_constraint[i].casadi_sparsity_in = &{{ con_h.name }}_h_constraint_sparsity_in;
+        h_constraint[i].casadi_sparsity_out = &{{ con_h.name }}_h_constraint_sparsity_out;
+        h_constraint[i].casadi_work = &{{ con_h.name }}_h_constraint_work;
 
         external_function_casadi_create(&h_constraint[i]);
     }
@@ -523,110 +612,77 @@ int acados_create() {
 
     {% if dims.nh_e > 0 %}
 	// nonlinear constraint
-	external_function_casadi h_constraint_e;
-	h_constraint_e.casadi_fun = &{{ con_h_e_name }}_h_constraint_e;
-	h_constraint_e.casadi_n_in = &{{ con_h_e_name }}_h_constraint_e_n_in;
-	h_constraint_e.casadi_n_out = &{{ con_h_e_name }}_h_constraint_e_n_out;
-	h_constraint_e.casadi_sparsity_in = &{{ con_h_e_name }}_h_constraint_e_sparsity_in;
-	h_constraint_e.casadi_sparsity_out = &{{ con_h_e_name }}_h_constraint_e_sparsity_out;
-	p_constraint_e.casadi_work = &{{ con_h_e_name }}_h_constraint_e_work;
+	h_e_constraint.casadi_fun = &{{ con_h_e.name }}_h_e_constraint;
+	h_e_constraint.casadi_n_in = &{{ con_h_e.name }}_h_e_constraint_n_in;
+	h_e_constraint.casadi_n_out = &{{ con_h_e.name }}_h_e_constraint_n_out;
+	h_e_constraint.casadi_sparsity_in = &{{ con_h_e.name }}_h_e_constraint_sparsity_in;
+	h_e_constraint.casadi_sparsity_out = &{{ con_h_e.name }}_h_e_constraint_sparsity_out;
+	h_e_constraint.casadi_work = &{{ con_h_e.name }}_h_e_constraint_work;
 
-    external_function_casadi_create(h_constraint_e);
+    external_function_casadi_create(&h_e_constraint);
     {% endif %}
 
     {% if solver_config.integrator_type == "ERK" %}
     // explicit ode
-    {% if dims.np < 1 %}
-    forw_vde_casadi = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else %}
     forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    {% endif %}
 
     for (int i = 0; i < N; ++i) {
-        forw_vde_casadi[i].casadi_fun = &{{ model_name }}_expl_vde_forw;
-        forw_vde_casadi[i].casadi_n_in = &{{ model_name }}_expl_vde_forw_n_in;
-        forw_vde_casadi[i].casadi_n_out = &{{ model_name }}_expl_vde_forw_n_out;
-        forw_vde_casadi[i].casadi_sparsity_in = &{{ model_name }}_expl_vde_forw_sparsity_in;
-        forw_vde_casadi[i].casadi_sparsity_out = &{{ model_name }}_expl_vde_forw_sparsity_out;
-        forw_vde_casadi[i].casadi_work = &{{ model_name }}_expl_vde_forw_work;
-        external_function_casadi_create(&forw_vde_casadi[i]);
+        forw_vde_casadi[i].casadi_fun = &{{ model.name }}_expl_vde_forw;
+        forw_vde_casadi[i].casadi_n_in = &{{ model.name }}_expl_vde_forw_n_in;
+        forw_vde_casadi[i].casadi_n_out = &{{ model.name }}_expl_vde_forw_n_out;
+        forw_vde_casadi[i].casadi_sparsity_in = &{{ model.name }}_expl_vde_forw_sparsity_in;
+        forw_vde_casadi[i].casadi_sparsity_out = &{{ model.name }}_expl_vde_forw_sparsity_out;
+        forw_vde_casadi[i].casadi_work = &{{ model.name }}_expl_vde_forw_work;
+        external_function_param_casadi_create(&forw_vde_casadi[i], {{ dims.np }});
     }
 
     {% if solver_config.hessian_approx == "EXACT" %} 
     external_function_casadi * hess_vde_casadi;
-    {% if dims.np < 1 %}
-    hess_vde_casadi = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else %}
     hess_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    {% endif %}
     for (int i = 0; i < N; ++i) {
-        hess_vde_casadi[i].casadi_fun = &{{ model_name }}_expl_ode_hess;
-        hess_vde_casadi[i].casadi_n_in = &{{ model_name }}_expl_ode_hess_n_in;
-        hess_vde_casadi[i].casadi_n_out = &{{ model_name }}_expl_ode_hess_n_out;
-        hess_vde_casadi[i].casadi_sparsity_in = &{{ model_name }}_expl_ode_hess_sparsity_in;
-        hess_vde_casadi[i].casadi_sparsity_out = &{{ model_name }}_expl_ode_hess_sparsity_out;
-        hess_vde_casadi[i].casadi_work = &{{ model_name }}_expl_ode_hess_work;
-        external_function_casadi_create(&hess_vde_casadi[i]);
+        hess_vde_casadi[i].casadi_fun = &{{ model.name }}_expl_ode_hess;
+        hess_vde_casadi[i].casadi_n_in = &{{ model.name }}_expl_ode_hess_n_in;
+        hess_vde_casadi[i].casadi_n_out = &{{ model.name }}_expl_ode_hess_n_out;
+        hess_vde_casadi[i].casadi_sparsity_in = &{{ model.name }}_expl_ode_hess_sparsity_in;
+        hess_vde_casadi[i].casadi_sparsity_out = &{{ model.name }}_expl_ode_hess_sparsity_out;
+        hess_vde_casadi[i].casadi_work = &{{ model.name }}_expl_ode_hess_work;
+        external_function_param_casadi_create(&hess_vde_casadi[i], {{ dims.np }});
     }
     {% endif %}
+
     {% elif solver_config.integrator_type == "IRK" %}
     // implicit dae
-    {% if dims.np < 1 %}
-    impl_dae_fun = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else %}
     impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    {% endif %}
     for (int i = 0; i < N; ++i) {
-        impl_dae_fun[i].casadi_fun = &{{ model_name }}_impl_dae_fun;
-        impl_dae_fun[i].casadi_work = &{{ model_name }}_impl_dae_fun_work;
-        impl_dae_fun[i].casadi_sparsity_in = &{{ model_name }}_impl_dae_fun_sparsity_in;
-        impl_dae_fun[i].casadi_sparsity_out = &{{ model_name }}_impl_dae_fun_sparsity_out;
-        impl_dae_fun[i].casadi_n_in = &{{ model_name }}_impl_dae_fun_n_in;
-        impl_dae_fun[i].casadi_n_out = &{{ model_name }}_impl_dae_fun_n_out;
-        // TODO(fix this!!)
-        {% if dims.np < 1 %}
-        external_function_casadi_create(&impl_dae_fun[i]);
-        {% else %}
-        external_function_param_casadi_create(&impl_dae_fun[i], {{dims.np}});
-        {% endif %}
+        impl_dae_fun[i].casadi_fun = &{{ model.name }}_impl_dae_fun;
+        impl_dae_fun[i].casadi_work = &{{ model.name }}_impl_dae_fun_work;
+        impl_dae_fun[i].casadi_sparsity_in = &{{ model.name }}_impl_dae_fun_sparsity_in;
+        impl_dae_fun[i].casadi_sparsity_out = &{{ model.name }}_impl_dae_fun_sparsity_out;
+        impl_dae_fun[i].casadi_n_in = &{{ model.name }}_impl_dae_fun_n_in;
+        impl_dae_fun[i].casadi_n_out = &{{ model.name }}_impl_dae_fun_n_out;
+        external_function_param_casadi_create(&impl_dae_fun[i], {{ dims.np }});
     }
 
-    {% if dims.np < 1 %}
-    impl_dae_fun_jac_x_xdot_z = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else %}
     impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    {% endif %}
     for (int i = 0; i < N; ++i) {
-        impl_dae_fun_jac_x_xdot_z[i].casadi_fun = &{{ model_name }}_impl_dae_fun_jac_x_xdot_z;
-        impl_dae_fun_jac_x_xdot_z[i].casadi_work = &{{ model_name }}_impl_dae_fun_jac_x_xdot_z_work;
-        impl_dae_fun_jac_x_xdot_z[i].casadi_sparsity_in = &{{ model_name }}_impl_dae_fun_jac_x_xdot_z_sparsity_in;
-        impl_dae_fun_jac_x_xdot_z[i].casadi_sparsity_out = &{{ model_name }}_impl_dae_fun_jac_x_xdot_z_sparsity_out;
-        impl_dae_fun_jac_x_xdot_z[i].casadi_n_in = &{{ model_name }}_impl_dae_fun_jac_x_xdot_z_n_in;
-        impl_dae_fun_jac_x_xdot_z[i].casadi_n_out = &{{ model_name }}_impl_dae_fun_jac_x_xdot_z_n_out;
-        {% if dims.np < 1 %}
-        external_function_casadi_create(&impl_dae_fun_jac_x_xdot_z[i]);
-        {% else %}
-        external_function_param_casadi_create(&impl_dae_fun_jac_x_xdot_z[i], {{dims.np}});
-        {% endif %}
+        impl_dae_fun_jac_x_xdot_z[i].casadi_fun = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z;
+        impl_dae_fun_jac_x_xdot_z[i].casadi_work = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_work;
+        impl_dae_fun_jac_x_xdot_z[i].casadi_sparsity_in = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_sparsity_in;
+        impl_dae_fun_jac_x_xdot_z[i].casadi_sparsity_out = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_sparsity_out;
+        impl_dae_fun_jac_x_xdot_z[i].casadi_n_in = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_n_in;
+        impl_dae_fun_jac_x_xdot_z[i].casadi_n_out = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_n_out;
+        external_function_param_casadi_create(&impl_dae_fun_jac_x_xdot_z[i], {{ dims.np }});
     }
 
-    {% if dims.np < 1 %}
-    impl_dae_jac_x_xdot_u_z = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
-    {% else %}
     impl_dae_jac_x_xdot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    {% endif %}
     for (int i = 0; i < N; ++i) {
-        impl_dae_jac_x_xdot_u_z[i].casadi_fun = &{{ model_name }}_impl_dae_jac_x_xdot_u_z;
-        impl_dae_jac_x_xdot_u_z[i].casadi_work = &{{ model_name }}_impl_dae_jac_x_xdot_u_z_work;
-        impl_dae_jac_x_xdot_u_z[i].casadi_sparsity_in = &{{ model_name }}_impl_dae_jac_x_xdot_u_z_sparsity_in;
-        impl_dae_jac_x_xdot_u_z[i].casadi_sparsity_out = &{{ model_name }}_impl_dae_jac_x_xdot_u_z_sparsity_out;
-        impl_dae_jac_x_xdot_u_z[i].casadi_n_in = &{{ model_name }}_impl_dae_jac_x_xdot_u_z_n_in;
-        impl_dae_jac_x_xdot_u_z[i].casadi_n_out = &{{ model_name }}_impl_dae_jac_x_xdot_u_z_n_out;
-        {% if dims.np < 1 %}
-        external_function_casadi_create(&impl_dae_jac_x_xdot_u_z[i]);
-        {% else %}
-        external_function_param_casadi_create(&impl_dae_jac_x_xdot_u_z[i], {{dims.np}});
-        {% endif %}
+        impl_dae_jac_x_xdot_u_z[i].casadi_fun = &{{ model.name }}_impl_dae_jac_x_xdot_u_z;
+        impl_dae_jac_x_xdot_u_z[i].casadi_work = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_work;
+        impl_dae_jac_x_xdot_u_z[i].casadi_sparsity_in = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_sparsity_in;
+        impl_dae_jac_x_xdot_u_z[i].casadi_sparsity_out = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_sparsity_out;
+        impl_dae_jac_x_xdot_u_z[i].casadi_n_in = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_n_in;
+        impl_dae_jac_x_xdot_u_z[i].casadi_n_out = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_n_out;
+        external_function_param_casadi_create(&impl_dae_jac_x_xdot_u_z[i], {{ dims.np }});
     }
     {% endif %}
 
@@ -635,34 +691,60 @@ int acados_create() {
     for (int i = 0; i < N; ++i)
         nlp_in->Ts[i] = Tf/N;
 
-    // NLP cost linear least squares
-    // C  // TODO(oj) this can be done using
-    // // ocp_nlp_cost_set_model(nlp_config, nlp_dims, nlp_in, i, "Cyt", Cyt);
-    // ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
-    // for (int i = 0; i <= N; ++i) {
-    //     blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
-    //     for (int j = 0; j < nu[i]; j++)
-    //         BLASFEO_DMATEL(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
-    //     for (int j = 0; j < nx[i]; j++)
-    //         BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
-    // }
-    // W
+    // NLP cost linear or nonlinear least squares
+    {%- if cost.cost_type == "NONLINEAR_LS" %}
+    r_cost = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
     for (int i = 0; i < N; ++i) {
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
+        // residual function
+        r_cost[i].casadi_fun = &{{ cost_r.name }}_r_cost;
+        r_cost[i].casadi_n_in = &{{ cost_r.name }}_r_cost_n_in;
+        r_cost[i].casadi_n_out = &{{ cost_r.name }}_r_cost_n_out;
+        r_cost[i].casadi_sparsity_in = &{{ cost_r.name }}_r_cost_sparsity_in;
+        r_cost[i].casadi_sparsity_out = &{{ cost_r.name }}_r_cost_sparsity_out;
+        r_cost[i].casadi_work = &{{ cost_r.name }}_r_cost_work;
+
+        external_function_casadi_create(&r_cost[i]);
     }
-    // W_e
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
+    {%- endif %}
 
+    {%- if cost.cost_type_e == "NONLINEAR_LS" %}
+    // residual function
+	r_e_cost.casadi_fun = &{{ cost_r_e.name }}_r_e_cost;
+	r_e_cost.casadi_n_in = &{{ cost_r_e.name }}_r_e_cost_n_in;
+	r_e_cost.casadi_n_out = &{{ cost_r_e.name }}_r_e_cost_n_out;
+	r_e_cost.casadi_sparsity_in = &{{ cost_r_e.name }}_r_e_cost_sparsity_in;
+	r_e_cost.casadi_sparsity_out = &{{ cost_r_e.name }}_r_e_cost_sparsity_out;
+	r_e_cost.casadi_work = &{{ cost_r_e.name }}_r_e_cost_work;
 
+    external_function_casadi_create(&r_e_cost);
+    {%- endif %}
 	for (int i = 0; i < N; ++i) {
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Zl", Zl);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Zu", Zu);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zl", zl);
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zu", zu);
+        {% if cost.cost_type == "NONLINEAR_LS" %}
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_res_jac", &r_cost[i]);
+        {% else %}
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vx", Vx);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vu", Vu);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vz", Vz);
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
+        {% endif %}
 	}
 
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zl", Zl_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zu", Zu_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zl", zl_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "zu", zu_e);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
+    {% if cost.cost_type_e == "NONLINEAR_LS" %}
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "nls_res_jac", &r_e_cost);
+    {% else %}
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
+    {% endif %}
 
     // NLP dynamics
     int set_fun_status;
@@ -685,8 +767,6 @@ int acados_create() {
     }
 
     // NLP constraints
-    // TODO(oj) remove this when idxb setter available
-
     // bounds for stage 0
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
@@ -705,8 +785,8 @@ int acados_create() {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lbu", lbu);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubu", ubu);
     }
-   
-    {% if dims.ng > 0 %} 
+
+    {%- if dims.ng > 0 -%}
     // general constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
     {
@@ -715,35 +795,35 @@ int acados_create() {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lg", lg);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ug", ug);
     }
-    {% endif %}
-    
-    {% if dims.nbx_e > 0 %} 
+    {%- endif %}
+
+    {%- if dims.nbx_e > 0 %}
     // bounds for last
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubx_e);
-    {% endif %}
+    {%- endif %}
     
     {% if dims.ng_e > 0 %} 
     // general constraints for last stage
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "C", C_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", lg_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ug_e);
-    {% endif %}
+    {%- endif %}
 
     
     {% if dims.npd > 0 %}
     // convex-composite constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "p", &p_constraint[i]);
-    {% endif %}
+    {%- endif %}
 
-    {% if dims.npd_e > 0 %}
+    {% if dims.npd_e > 0 -%}
     // convex-composite constraints for stage N
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_constraint_e[i]);
-    {% endif %}
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_e_constraint[i]);
+    {%- endif %}
 
-    {% if dims.nh > 0 %}
+    {% if dims.nh > 0 -%}
     // nonlinear constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
     {
@@ -751,32 +831,32 @@ int acados_create() {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lh", lh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uh", uh);
     }
-    {% endif %}
+    {%- endif %}
 
-    {% if dims.nh_e > 0 %}
+    {%- if dims.nh_e > 0 %}
     // nonlinear constraints for stage N
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_constraint_e[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_e_constraint);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
     {% endif %}
 
     nlp_opts = ocp_nlp_solver_opts_create(nlp_config, nlp_dims);
     
-    {% if dims.nz > 0 %}
+    {% if dims.nz > 0 -%}
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
-    int num_steps_val = 1; 
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
-    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
     {% endif %}
-    int ns_val = 1; 
+    int num_steps_val = {{ solver_config.sim_method_num_steps }}; 
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
+    int ns_val = {{ solver_config.sim_method_num_stages }}; 
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_ns", &ns_val);
     bool jac_reuse_val = true;
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse_val);
 
-    {% if solver_config.nlp_solver_type == "SQP" %}
-
+    {% if solver_config.nlp_solver_type == "SQP" -%}
+    // set SQP specific options
     int max_iter = max_num_sqp_iterations;
     double tol_stat = 1e-6;
     double tol_eq   = 1e-6;
@@ -789,15 +869,12 @@ int acados_create() {
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_ineq", &tol_ineq);
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "tol_comp", &tol_comp);
 
-
-    {% else %}
+    {%- else -%}
     // ocp_nlp_sqp_rti_opts *sqp_opts = (ocp_nlp_sqp_rti_opts *) nlp_opts;
-    {% endif %}
-    {% if solver_config.hessian_approx == "EXACT" %}
+    {%- endif %}
+    {%- if solver_config.hessian_approx == "EXACT" -%}
     for (int i = 0; i < N; ++i)
     {
-        // TODO(oj) is the following needed, and what does it do? do we
-        // ((ocp_nlp_dynamics_cont_opts *) sqp_opts->dynamics[i])->compute_hess = true;
         int num_steps = 5;
         bool sens_hess = true;
         bool sens_adj = true;
@@ -806,36 +883,55 @@ int acados_create() {
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_hess", &sens_hess);
         ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_adj", &sens_adj);
     }
-    {% endif %}
+    {%- endif %}
 
     nlp_out = ocp_nlp_out_create(nlp_config, nlp_dims);
-    for (int i = 0; i <= N; ++i) {
-        blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
+
+    // initialize primal solution
+    double x0[{{ dims.nx }}];
+    {% for item in constraints.x0 %}
+    x0[{{ loop.index0 }}] = {{ item }};
+    {%- endfor %}
+
+    double u0[NU];
+    {% for i in range(end=dims.nu) %}
+    u0[{{ i }}] = 0.0;
+    {%- endfor %}
+
+    for (int i = 0; i <= N; ++i)
+    {
+        // x0
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", x0);
+        // u0
+        ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
     }
     
     nlp_solver = ocp_nlp_solver_create(nlp_config, nlp_dims, nlp_opts);
 
+    {% if dims.np > 0 %}
     // initialize parameters to nominal value
-    {% if dims.np > 0%}
-    double p[{{dims.np}}];
+    double p[{{ dims.np }}];
     {% for i in range(end=dims.np) %}
-    p[{{i}}] = {{constraints.p[i]}};
+    p[{{ i }}] = {{ constraints.p[i] }};
     {%- endfor %}
     {% if solver_config.integrator_type == "IRK" %}
-    for (int ii = 0; ii < {{dims.N}}; ii++) {
-    impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
-    impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
-    impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
+    {
+        impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
+        impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
+        impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
     }
-    {% else %}
-    for (int ii = 0; ii < {{dims.N}}; ii++) {
-    expl_vde_for[ii].set_param(expl_vde_for+ii, p);
+    {% elif solver_config.integrator_type == "ERK" %}
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
+    {
+        forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {% endif %}
     {% endif %}
 
     return status;
 }
+
 
 int acados_solve() {
 
@@ -844,6 +940,7 @@ int acados_solve() {
 
     return solver_status;
 }
+
 
 int acados_free() {
 
@@ -858,30 +955,17 @@ int acados_free() {
 
     // free external function 
     {% if solver_config.integrator_type == "IRK" %}
-    for(int i = 0; i < {{dims.N}}; i++) {
-        {% if dims.np < 1 %}
-        external_function_casadi_free(&impl_dae_fun[i]);
-        external_function_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
-        external_function_casadi_free(&impl_dae_jac_x_xdot_u_z[i]);
-        {% else %}
+    for (int i = 0; i < {{ dims.N }}; i++) {
         external_function_param_casadi_free(&impl_dae_fun[i]);
         external_function_param_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
         external_function_param_casadi_free(&impl_dae_jac_x_xdot_u_z[i]);
-        {% endif %}
     }
     {% else %}
-    for(int i = 0; i < {{dims.N}}; i++) {
-        {% if dims.np < 1 %}
-        external_function_casadi_free(&forw_vde_casadi[i]);
-        {% else %}
+    for (int i = 0; i < {{ dims.N }}; i++)
+    {
         external_function_param_casadi_free(&forw_vde_casadi[i]);
-        {% endif %}
     {% if solver_config.hessian_approx == "EXACT" %}
-        {% if dims.np < 1 %}
-        external_function_casadi_free(&hess_vde_casadi[i]);
-        {% else %}
         external_function_param_casadi_free(&hess_vde_casadi[i]);
-        {% endif %}
     {% endif %}
     }
     {% endif %}

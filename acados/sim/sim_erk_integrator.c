@@ -165,7 +165,7 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
 //    printf("\nsim_erk_model_set expl_ode_fun\n");
         model->expl_ode_fun = value;
     }
-    else if (!strcmp(field, "expl_vde_for"))
+    else if (!strcmp(field, "expl_vde_for") || !strcmp(field, "expl_vde_forw"))
     {
         model->expl_vde_for = value;
     }
@@ -173,7 +173,7 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
     {
         model->expl_vde_adj = value;
     }
-    else if (!strcmp(field, "expl_ode_hes"))
+    else if (!strcmp(field, "expl_ode_hes") || !strcmp(field, "expl_ode_hess"))
     {
         model->expl_ode_hes = value;
     }

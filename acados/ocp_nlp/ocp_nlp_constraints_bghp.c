@@ -89,7 +89,7 @@ void *ocp_nlp_constraints_bghp_dims_assign(void *config_, void *raw_memory)
 
 
 void ocp_nlp_constraints_bghp_dims_initialize(void *config_, void *dims_, int nx, int nu, int nz,
-		int nbx, int nbu, int ng, int nh, int np, int ns)
+        int nbx, int nbu, int ng, int nh, int np, int ns)
 {
     ocp_nlp_constraints_bghp_dims *dims = dims_;
 
@@ -329,11 +329,11 @@ static void ocp_nlp_constraints_bghp_get_ns(void *config_, void *dims_, int* val
 }
 
 
-static void ocp_nlp_constraints_bghp_get_nsg(void *config_, void *dims_, int* value)
-{
-    ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
-    *value = dims->nsg;
-}
+// static void ocp_nlp_constraints_bghp_get_nsg(void *config_, void *dims_, int* value)
+// {
+//     ocp_nlp_constraints_bghp_dims *dims = (ocp_nlp_constraints_bghp_dims *) dims_;
+//     *value = dims->nsg;
+// }
 
 
 
@@ -1021,11 +1021,11 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
     // general linear
     blasfeo_dgemv_t(nu + nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_ni, nb,
                     &work->tmp_ni, nb);
-	
-	if (nz > 0) {
-		printf("ocp_nlp_constraints_bghp_update_qp_matrices: constraints with nz > 0 not yet implmented. Exiting.\n");
-		exit(1);
-	}
+
+    // if (nz > 0) {
+    //     printf("ocp_nlp_constraints_bghp_update_qp_matrices: constraints with nz > 0 not yet implemented. Exiting.\n");
+    //     exit(1);
+    // }
 
     // nonlinear
     if (nh > 0)
@@ -1041,7 +1041,7 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
 
         x_in.xi = nu;
         u_in.xi = 0;
-		z_in.xi = 0;
+        z_in.xi = 0;
 
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
         ext_fun_in[0] = &x_in;
@@ -1049,8 +1049,8 @@ void ocp_nlp_constraints_bghp_update_qp_matrices(void *config_, void *dims_, voi
         ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
         ext_fun_in[1] = &u_in;
 
-		ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
-		ext_fun_in[2] = &z_in;
+        ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+        ext_fun_in[2] = &z_in;
         //
         ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
         struct blasfeo_dvec_args h_args;

@@ -167,29 +167,29 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
 {
     irk_model *model = model_;
 
-    if (!strcmp(field, "impl_ode_fun"))
+    if (!strcmp(field, "impl_ode_fun") || !strcmp(field, "impl_dae_fun"))
     {
         model->impl_ode_fun = value;
     }
-    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot"))
+    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot") || !strcmp(field, "impl_dae_fun_jac_x_xdot"))
     {
         // TODO(oj): remove this case and fix dependencies
         model->impl_ode_fun_jac_x_xdot_z = value;
     }
-    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot_z"))
+    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot_z") || !strcmp(field, "impl_dae_fun_jac_x_xdot_z"))
     {
         model->impl_ode_fun_jac_x_xdot_z = value;
     }
-    else if (!strcmp(field, "impl_ode_jac_x_xdot_u"))
+    else if (!strcmp(field, "impl_ode_jac_x_xdot_u") || !strcmp(field, "impl_dae_jac_x_xdot_u"))
     {
         // TODO(oj): remove this and update with z everywhere
         model->impl_ode_jac_x_xdot_u_z = value;
     }
-    else if (!strcmp(field, "impl_ode_jac_x_xdot_u_z"))
+    else if (!strcmp(field, "impl_ode_jac_x_xdot_u_z") || !strcmp(field, "impl_dae_jac_x_xdot_u_z"))
     {
         model->impl_ode_jac_x_xdot_u_z = value;
     }
-    else if (!strcmp(field, "impl_ode_hes") | !strcmp(field, "impl_ode_hess"))
+    else if (!strcmp(field, "impl_ode_hes") | !strcmp(field, "impl_ode_hess") | !strcmp(field, "impl_dae_hess"))
     {
         model->impl_ode_hess = value;
     }

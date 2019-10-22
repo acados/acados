@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#define S_FUNCTION_NAME   acados_solver_sfunction_{{ocp.model_name}}
+#define S_FUNCTION_NAME   acados_solver_sfunction_{{ocp.model.name}}
 #define S_FUNCTION_LEVEL  2
 
 #define MDL_START
@@ -50,8 +50,8 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 // example specific
-#include "{{ ocp.model_name }}_model/{{ ocp.model_name }}_model.h"
-#include "acados_solver_{{ ocp.model_name }}.h"
+#include "{{ ocp.model.name }}_model/{{ ocp.model.name }}_model.h"
+#include "acados_solver_{{ ocp.model.name }}.h"
 
 #include "simstruc.h"
 
@@ -65,40 +65,26 @@ ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
 {% if ocp.solver_config.integrator_type == 'ERK' %}
-{% if ocp.dims.np < 1 %}
-external_function_casadi * forw_vde_casadi;
-{% else %}
 external_function_param_casadi * forw_vde_casadi;
-{% endif %}
 {% if ocp.solver_config.hessian_approx == 'EXACT' %} 
-{% if ocp.dims.np < 1 %}
-external_function_casadi * hess_vde_casadi;
-{% else %}
 external_function_param_casadi * hess_vde_casadi;
 {% endif %}
-{% endif %}
 {% elif ocp.solver_config.integrator_type == 'IRK' %}
-{% if ocp.dims.np < 1 %}
-external_function_casadi * impl_dae_fun;
-external_function_casadi * impl_dae_fun_jac_x_xdot_z;
-external_function_casadi * impl_dae_jac_x_xdot_u_z;
-{% else %}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
-{% endif %}
 {% if ocp.dims.npd > 0 %}
-external_function_casadi * p_constraint;
+external_function_param_casadi * p_constraint;
 {% endif %}
 {% if ocp.dims.npd_e > 0 %}
-external_function_casadi * p_constraint_e;
+external_function_param_casadi * p_constraint_e;
 {% endif %}
 {% if ocp.dims.nh > 0 %}
-external_function_casadi * h_constraint;
+external_function_param_casadi * h_constraint;
 {% endif %}
 {% if ocp.dims.nh_e > 0 %}
-external_function_casadi * h_constraint_e;
+external_function_param_casadi * h_constraint_e;
 {% endif %}
 
 
@@ -239,7 +225,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     }
     {% else %}
     for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
-    expl_vde_for[ii].set_param(expl_vde_for+ii, in_p);
+    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {% endif %}
     {% endif %}

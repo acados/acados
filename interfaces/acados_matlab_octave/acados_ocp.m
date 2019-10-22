@@ -38,6 +38,7 @@ classdef acados_ocp < handle
         C_ocp_ext_fun
         model_struct
         opts_struct
+        acados_ocp_nlp_json
     end % properties
 
 
@@ -70,6 +71,16 @@ classdef acados_ocp < handle
                 obj.model_struct = detect_cost_type(obj.model_struct, 1);
             end
 
+            % detect constraint structure
+            if (strcmp(obj.model_struct.constr_type, 'auto'))
+                obj.model_struct = detect_constr(obj.model_struct, 0);
+            end
+            if (strcmp(obj.model_struct.constr_type_e, 'auto'))
+                obj.model_struct = detect_constr(obj.model_struct, 1);
+            end
+
+            % detect dimensions
+            obj.model_struct = detect_dims_ocp(obj.model_struct);
 
             % compile mex interface (without model dependency)
             if ( strcmp(obj.opts_struct.compile_interface, 'true') )
@@ -98,7 +109,8 @@ classdef acados_ocp < handle
                 end
             else
                 obj.model_struct.cost_type
-                error('acados_ocp: field compile_interface is , supported values are: true, false, auto');
+                error('acados_ocp: field compile_interface is %, supported values are: true, false, auto', ...
+                        obj.opts_struct.compile_interface);
             end
 
             if ( compile_interface )
@@ -116,7 +128,8 @@ classdef acados_ocp < handle
             obj.C_ocp_ext_fun = ocp_create_ext_fun();
 
             % compile mex with model dependency & set pointers for external functions in model
-            obj.C_ocp_ext_fun = ocp_set_ext_fun(obj.C_ocp, obj.C_ocp_ext_fun, obj.model_struct, obj.opts_struct);
+            obj.C_ocp_ext_fun = ocp_set_ext_fun(obj.C_ocp, obj.C_ocp_ext_fun,...
+                                             obj.model_struct, obj.opts_struct);
 
             % precompute
             ocp_precompute(obj.C_ocp);
@@ -127,6 +140,16 @@ classdef acados_ocp < handle
         function solve(obj)
             ocp_solve(obj.C_ocp);
         end
+
+
+
+        function generate_c_code(obj)
+            % set up acados_ocp_nlp_json
+            obj.acados_ocp_nlp_json = set_up_acados_ocp_nlp_json(obj);
+            % render templated code
+            ocp_generate_c_code(obj)
+        end
+
 
 
 

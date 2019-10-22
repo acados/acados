@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef ACADOS_SOLVER_{{model_name}}_H_
-#define ACADOS_SOLVER_{{model_name}}_H_
+#ifndef ACADOS_SOLVER_{{ model.name }}_H_
+#define ACADOS_SOLVER_{{ model.name }}_H_
 
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
@@ -57,29 +57,16 @@ extern ocp_nlp_plan * nlp_solver_plan;
 extern ocp_nlp_config * nlp_config;
 extern ocp_nlp_dims * nlp_dims;
 {% if solver_config.integrator_type == "ERK" %}
-{% if dims.np < 1 %}
-extern external_function_casadi * forw_vde_casadi;
-{% else %}
 extern external_function_param_casadi * forw_vde_casadi;
-{% endif %}
 {% if solver_config.hessian_approx == "EXACT" %} 
-{% if dims.np < 1 %}
 extern external_function_casadi * hess_vde_casadi;
-{% else %}
 extern external_function_param_casadi * hess_vde_casadi;
-{% endif %}
 {% endif %}
 {% else %}
 {% if solver_config.integrator_type == "IRK" %}
-{% if dims.np < 1 %}
-extern external_function_casadi * impl_dae_fun;
-extern external_function_casadi * impl_dae_fun_jac_x_xdot_z;
-extern external_function_casadi * impl_dae_jac_x_xdot_u_z;
-{% else %}
 extern external_function_param_casadi * impl_dae_fun;
 extern external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
-{% endif %}
 {% endif %}
 {% endif %}
 {% if dims.npd > 0 %}
@@ -92,8 +79,14 @@ extern external_function_casadi * p_constraint_e;
 extern external_function_casadi * h_constraint;
 {% endif %}
 {% if dims.nh_e > 0 %}
-extern external_function_casadi * h_constraint_e;
+extern external_function_casadi h_e_constraint;
+{% endif %}
+{% if cost.cost_type == "NONLINEAR_LS" %}
+extern external_function_casadi * r_cost;
+{% endif %}
+{% if cost.cost_type_e == "NONLINEAR_LS" %}
+extern external_function_casadi r_e_cost;
 {% endif %}
 
 
-#endif  // ACADOS_SOLVER_{{model_name}}_H_
+#endif  // ACADOS_SOLVER_{{ model.name }}_H_

@@ -111,9 +111,13 @@ function model = detect_cost_type(model, is_e)
             i = i+1;
         end
 
+        xuz = [x; u; z];
+        sym_y = xuz(xuz_idx);
+        jac_fun = Function('jac_fun', {sym_y}, {jacobian(expr_cost, sym_y)'});
+        y_ref = .5 * full(jac_fun(zeros(ny,1)));
 
-        y = Vx * x + Vu * u;
-        if nz>0
+        y = -y_ref + Vx * x + Vu * u;
+        if nz > 0
             y = y + Vz * z;
         end
         lls_cost_fun = Function('lls_cost_fun', {x, u, z}, {y' * W * y});
@@ -139,6 +143,7 @@ function model = detect_cost_type(model, is_e)
                 error('Cost mayer term cannot depend on control input u!');
             end
             model.cost_W_e = W;
+            model.cost_y_ref_e = y_ref;
         else
             model.cost_type = 'linear_ls';
             model.dim_ny = ny;
@@ -146,6 +151,7 @@ function model = detect_cost_type(model, is_e)
             model.cost_Vu = Vu;
             model.cost_Vz = Vz;
             model.cost_W = W;
+            model.cost_y_ref = y_ref;
         end
     % elseif 
     %  TODO: can nonlinear_ls be detected?!

@@ -61,6 +61,7 @@ def generate_c_code_implicit_ode( model, opts ):
         # check that z is empty
         if len(z) == 0:
             nz = 0
+            z  = SX.sym('z', 0, 0) 
         else:
             raise Exception('z is a non-empty list. It should be either an empty list or an SX object.')
     else:
@@ -70,6 +71,7 @@ def generate_c_code_implicit_ode( model, opts ):
         # check that z is empty
         if len(p) == 0:
             np = 0
+            p = SX.sym('p', 0, 0)
         else:
             raise Exception('p is a non-empty list. It should be either an empty list or an SX object.')
     else:
@@ -103,50 +105,31 @@ def generate_c_code_implicit_ode( model, opts ):
     # HESS_multiplied = HESS_multiplied.simplify()
 
     ## Set up functions
-    if np != 0:
-        p = model.p
-        fun_name = model_name + '_impl_dae_fun'
-        impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
+    p = model.p
+    fun_name = model_name + '_impl_dae_fun'
+    impl_dae_fun = Function(fun_name, [x, xdot, u, z, p], [f_impl])
 
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
+    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
+    impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
 
-        # fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        # impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
+    # fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
+    # impl_dae_fun_jac_x_xdot = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_z])
 
-        # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
-        # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
-        
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-        impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
+    # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
+    # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
+    
+    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
+    impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
 
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
-        impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
+    fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u'
+    impl_dae_fun_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u])
 
-        fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-        impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
+    fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
+    impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
 
-        
-        fun_name = model_name + '_impl_dae_hess'
-        impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
-    else:
-        fun_name = model_name + '_impl_dae_fun'
-        if nz > 0:
-            impl_dae_fun = Function(fun_name, [x, xdot, u, z], [f_impl])
-        else:
-            impl_dae_fun = Function(fun_name, [x, xdot, u], [f_impl])
-        
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
-        impl_dae_fun_jac_x_xdot_z = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_z])
-        
-        fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
-        impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
-
-        fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
-        impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z], [jac_x, jac_xdot, jac_u, jac_z])
-        
-        fun_name = model_name + '_impl_dae_hess'
-        impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat], [HESS_multiplied])
+    
+    fun_name = model_name + '_impl_dae_hess'
+    impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
 
     # generate C code
     if not os.path.exists('c_generated_code'):

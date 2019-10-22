@@ -38,6 +38,9 @@ import numpy as np
 import scipy.linalg
 from ctypes import *
 
+FORMULATION = 'NLS' # 'LS'
+# FORMULATION = 'LS' # 'LS'
+
 # create render arguments
 ocp = acados_ocp_nlp()
 
@@ -45,7 +48,7 @@ ocp = acados_ocp_nlp()
 model = export_ode_model()
 
 # set model_name 
-ocp.model_name = model.name
+ocp.model = model
 
 Tf = 2.0
 nx = model.x.size()[0]
@@ -66,6 +69,16 @@ nlp_dims.N   = N
 
 # set weighting matrices
 nlp_cost = ocp.cost
+
+if FORMULATION == 'LS':
+    nlp_cost.cost_type = 'LINEAR_LS'
+    nlp_cost.cost_type_e = 'LINEAR_LS'
+elif FORMULATION == 'NLS':
+    nlp_cost.cost_type = 'NONLINEAR_LS'
+    nlp_cost.cost_type_e = 'NONLINEAR_LS'
+else:
+    raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
+
 Q = np.eye(4)
 Q[0,0] = 1e0
 Q[1,1] = 1e2
@@ -75,8 +88,14 @@ Q[3,3] = 1e-2
 R = np.eye(1)
 R[0,0] = 1e0
 
-nlp_cost.W = scipy.linalg.block_diag(Q, R) 
+if FORMULATION == 'NLS':
+    nlp_cost.W = scipy.linalg.block_diag(R, Q) 
+else:
+    nlp_cost.W = scipy.linalg.block_diag(Q, R) 
 
+nlp_cost.W_e = Q 
+
+# TODO(andrea): avoid this when using 'NLS'
 Vx = np.zeros((ny, nx))
 Vx[0,0] = 1.0
 Vx[1,1] = 1.0
@@ -89,7 +108,6 @@ Vu = np.zeros((ny, nu))
 Vu[4,0] = 1.0
 nlp_cost.Vu = Vu
 
-nlp_cost.W_e = Q 
 
 Vx_e = np.zeros((ny_e, nx))
 Vx_e[0,0] = 1.0
@@ -98,6 +116,20 @@ Vx_e[2,2] = 1.0
 Vx_e[3,3] = 1.0
 
 nlp_cost.Vx_e = Vx_e
+if FORMULATION == 'NLS':
+    x = SX.sym('x', 4, 1)
+    u = SX.sym('u', 1, 1)
+    ocp.cost_r.expr = vertcat(u, x) 
+    ocp.cost_r.x = x 
+    ocp.cost_r.u = u 
+    ocp.cost_r.name = 'lin_res' 
+    ocp.cost_r.ny = nx + nu 
+
+    ocp.cost_r_e.expr = x
+    ocp.cost_r_e.x = x 
+    ocp.cost_r_e.name = 'lin_res' 
+    ocp.cost_r_e.ny = nx 
+
 
 nlp_cost.yref  = np.zeros((ny, ))
 nlp_cost.yref_e = np.zeros((ny_e, ))
@@ -111,9 +143,6 @@ nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
 # nlp_con.x0 = np.array([0.0, 0.5, 0.0, 0.0])
 nlp_con.idxbu = np.array([0])
 
-# set constants
-# ocp.constants['PI'] = 3.1415926535897932
-
 # set QP solver
 # ocp.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 ocp.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
@@ -122,14 +151,16 @@ ocp.solver_config.integrator_type = 'ERK'
 
 # set prediction horizon
 ocp.solver_config.tf = Tf
-ocp.solver_config.nlp_solver_type = 'SQP'
-# ocp.solver_config.nlp_solver_type = 'SQP_RTI'
+# ocp.solver_config.nlp_solver_type = 'SQP'
+ocp.solver_config.nlp_solver_type = 'SQP_RTI'
 
 # set header path
-ocp.acados_include_path  = '/usr/local/include'
-ocp.acados_lib_path      = '/usr/local/lib'
+# ocp.acados_include_path  = '/usr/local/include'
+# ocp.acados_lib_path      = '/usr/local/lib'
+ocp.acados_include_path  = '~/acados/include'
+ocp.acados_lib_path      = '~/acados/lib'
 
-acados_solver = generate_solver(model, ocp, json_file = 'acados_ocp.json')
+acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
 
 Nsim = 100
 

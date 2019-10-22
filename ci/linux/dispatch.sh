@@ -58,6 +58,7 @@ elif [ "${SECTION}" = 'install' ]; then
 
 		source "${SCRIPT_DIR}/install_octave.sh";
 		export OCTAVE_PATH="${ACADOS_SOURCE_DIR}/interfaces/acados_matlab_octave":$OCTAVE_PATH;
+		export OCTAVE_PATH="${ACADOS_SOURCE_DIR}/interfaces/acados_matlab_octave/acados_template_mex":$OCTAVE_PATH;
 		echo "OCTAVE_PATH=$OCTAVE_PATH";
 	fi
 

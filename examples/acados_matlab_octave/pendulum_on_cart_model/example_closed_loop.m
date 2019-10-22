@@ -34,6 +34,10 @@
 %% test of native matlab interface
 clear all
 
+GENERATE_C_CODE = 0;
+
+model_name = 'ocp_pendulum';
+
 % check that env.sh has been run
 env_run = getenv('ENV_RUN');
 if (~strcmp(env_run, 'true'))
@@ -55,7 +59,7 @@ ocp_N = 100;
 %nlp_solver = 'sqp_rti';
 %nlp_solver_exact_hessian = 'false';
 nlp_solver = 'sqp'; % sqp, sqp_rti
-nlp_solver_exact_hessian = 'true';
+nlp_solver_exact_hessian = 'false';
 regularize_method = 'project_reduc_hess'; % no_regularize, project,...
 	% project_reduc_hess, mirror, convexify
 %regularize_method = 'mirror';
@@ -132,6 +136,7 @@ ubu =  80*ones(nu, 1);
 
 %% acados ocp model
 ocp_model = acados_ocp_model();
+ocp_model.set('name', model_name);
 ocp_model.set('T', T);
 
 % dims
@@ -242,11 +247,10 @@ ocp_opts.opts_struct
 %% acados ocp
 % create ocp
 ocp = acados_ocp(ocp_model, ocp_opts);
-ocp
-ocp.C_ocp
-ocp.C_ocp_ext_fun
 
-
+if GENERATE_C_CODE == 1
+    ocp.generate_c_code()
+end
 
 %% acados sim model
 sim_model = acados_sim_model();
@@ -321,11 +325,12 @@ for ii=1:N_sim
 	ocp.set('init_u', u_traj_init);
 	ocp.set('init_pi', pi_traj_init);
 
-	% modify numerical data for a certain stage
+	% use ocp.set to modify numerical data for a certain stage
 	some_stages = 1:10:ocp_N-1;
 	for i = some_stages
-		ocp.set('cost_Vx', Vx, i); % cost_y_ref, cost_Vu, cost_Vx, cost_W, cost_Z, cost_Zl,...
-		 % cost_Zu, cost_z, cost_zl, cost_zu;
+        if strcmp( ocp.model_struct.cost_type, 'linear_ls')
+            ocp.set('cost_Vx', Vx, i);
+        end
 	end
 
 	% solve OCP
@@ -375,27 +380,27 @@ end
 avg_time_solve = toc/N_sim
 
 
-
+DO_PLOT = 0;
 % figures
+if DO_PLOT
 
-for ii=1:N_sim+1
-	x_cur = x_sim(:,ii);
-% 	visualize;
-end
+    for ii=1:N_sim+1
+        x_cur = x_sim(:,ii);
+    % 	visualize;
+    end
+
+    figure;
+    subplot(2,1,1);
+    plot(0:N_sim, x_sim);
+    xlim([0 N_sim]);
+    legend('p', 'theta', 'v', 'omega');
+    subplot(2,1,2);
+    plot(0:N_sim-1, u_sim);
+    xlim([0 N_sim]);
+    legend('F');
 
 
-
-figure;
-subplot(2,1,1);
-plot(0:N_sim, x_sim);
-xlim([0 N_sim]);
-legend('p', 'theta', 'v', 'omega');
-subplot(2,1,2);
-plot(0:N_sim-1, u_sim);
-xlim([0 N_sim]);
-legend('F');
-
-
-if is_octave()
-    waitforbuttonpress;
+    if is_octave()
+        waitforbuttonpress;
+    end
 end
