@@ -141,7 +141,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
 
     % render MATLAB make script
     template_file = 'make_sfun.in.m';
-    out_file = 'acados_solver_sfun.in.c';
+    out_file = 'make_sfun.m';
     render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, t_renderer_location, json_location )
    
     fprintf('Successfully generated acados solver!\n');
