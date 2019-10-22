@@ -341,12 +341,12 @@ int main()
 		for(jj=0; jj<N-1; jj++)
 			ocp_nlp_out_set(config, dims, nlp_out, jj, "z", z_sol+(jj+1)*nz_);
 
-		config->get(config, solver->mem, "sqp_iter", &sqp_iter);
-		config->get(config, solver->mem, "time_tot", &time_tot);
+		config->get(config, dims, solver->mem, "sqp_iter", &sqp_iter);
+		config->get(config, dims, solver->mem, "time_tot", &time_tot);
 #if 0
-		config->get(config, solver->mem, "stat_m", &stat_m);
-		config->get(config, solver->mem, "stat_n", &stat_n);
-		config->get(config, solver->mem, "stat", &stat);
+		config->get(config, dims, solver->mem, "stat_m", &stat_m);
+		config->get(config, dims, solver->mem, "stat_n", &stat_n);
+		config->get(config, dims, solver->mem, "stat", &stat);
 		printf("\niter\tres_g\t\tres_b\t\tres_d\t\tres_m\t\tqp_stat\tqp_iter\tqp_res_g\tqp_res_b\tqp_res_d\tqp_res_m\t");
 		for(jj=0; jj<sqp_iter+1; jj++)
 		{
