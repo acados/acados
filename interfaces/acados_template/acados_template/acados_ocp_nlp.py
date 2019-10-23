@@ -1269,12 +1269,6 @@ class acados_ocp_nlp:
         self.cost = ocp_nlp_cost()
         self.constraints = ocp_nlp_constraints()
         self.solver_config = ocp_nlp_solver_config()
-        # self.con_p_name  = None 
-        # self.con_p_e_name = None 
-        # self.con_h_name  = None 
-        # self.con_h_e_name = None 
-        self.con_p   = acados_constraint() 
-        self.con_p_e = acados_constraint() 
         self.con_h   = acados_constraint() 
         self.con_h_e = acados_constraint() 
         # self.constants = {}
