@@ -93,9 +93,9 @@ int main()
         exit(1);
     }
 
-    // initial condition
-    double x0[{{dims.nx}}];
-    {%- for item in constraints.x0 %}
+    // set initial condition
+    double x0[{{ dims.nx }}];
+    {% for item in constraints.x0 %}
     x0[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", x0);
@@ -125,20 +125,33 @@ int main()
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
     
-    {%- if solver_config.integrator_type == "IRK" -%}
-    for (int ii = 0; ii < {{dims.N}}; ii++)
-    {
-        impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
-        impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
-        impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
+    {%- if solver_config.integrator_type == "IRK" %}
+    for (int ii = 0; ii < {{ dims.N }}; ii++) {
+    impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
+    impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
+    impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
     }
-    {%- else -%}
-    for (int ii = 0; ii < {{dims.N}}; ii++)
-    {
-        forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
+    {%- else %}
+    for (int ii = 0; ii < {{ dims.N }}; ii++) {
+    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {%- endif %}
+    for (int ii = 0; ii < {{ dims.N }}; ++ii) {
+        {%- if dims.npd > 0 %}
+        p_constraint[ii].set_param(p_constraint+ii, p);
+        {% endif %}
+        {%- if dims.nh > 0 %}
+        h_constraint[ii].set_param(h_constraint+ii, p);
+        {% endif %}
+    }
+    {%- if dims.npd_e > 0 %}
+    p_e_constraint.set_param(&p_e_constraint, p);
     {%- endif %}
+    {%- if dims.nh_e > 0 %}
+    h_e_constraint.set_param(&h_e_constraint, p);
+    {%- endif %}
+
+    double kkt_norm_inf = 1e12, elapsed_time;
 
     // prepare evaluation
     int NTIMINGS = 10;

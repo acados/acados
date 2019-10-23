@@ -166,7 +166,7 @@ int main() {
         exit(1); }
 
     // set initial condition
-    double x0[{{ocp.dims.nx}}];
+    double x0[{{ ocp.dims.nx }}];
     {% for item in ocp.constraints.x0 %}
     x0[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
@@ -175,7 +175,7 @@ int main() {
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x0);
 
     {% if ocp.dims.np > 0%}
-    double p[{{ocp.dims.np}}];
+    double p[{{ ocp.dims.np }}];
     {% for item in ocp.constraints.p %}
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
@@ -183,15 +183,29 @@ int main() {
     
     {% if ocp.dims.np > 0%}
     {% if ocp.solver_config.integrator_type == "IRK" %}
-    for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
+    for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
     impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
     }
     {% else %}
-    for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
+    for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
     forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
+    {% endif %}
+    for (int ii = 0; ii < {{ ocp.dims.N }}; ++ii) {
+        {%- if ocp.dims.npd > 0 %}
+        p_constraint[ii].set_param(p_constraint+ii, p);
+        {% endif %}
+        {%- if ocp.dims.nh > 0 %}
+        h_constraint[ii].set_param(h_constraint+ii, p);
+        {% endif %}
+    }
+    {%- if ocp.dims.npd_e > 0 %}
+    p_e_constraint.set_param(&p_e_constraint, p);
+    {% endif %}
+    {%- if ocp.dims.nh_e > 0 %}
+    h_e_constraint.set_param(&h_e_constraint, p);
     {% endif %}
     {% endif %}
 
