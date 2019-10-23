@@ -546,11 +546,11 @@ int acados_create() {
         forw_vde_casadi[i].casadi_sparsity_in = &{{ model.name }}_expl_vde_forw_sparsity_in;
         forw_vde_casadi[i].casadi_sparsity_out = &{{ model.name }}_expl_vde_forw_sparsity_out;
         forw_vde_casadi[i].casadi_work = &{{ model.name }}_expl_vde_forw_work;
-        {% if ocp.dims.np < 1 %}
+        {% if dims.np < 1 %}
         external_function_casadi_create(&forw_vde_casadi[i]);
 
 		{% else %}
-        external_function_param_casadi_create(&forw_vde_casadi[i], {{ocp.dims.np}});
+        external_function_param_casadi_create(&forw_vde_casadi[i], {{dims.np}});
 		{% endif %}
     }
 
@@ -568,11 +568,11 @@ int acados_create() {
         hess_vde_casadi[i].casadi_sparsity_in = &{{ model.name }}_expl_ode_hess_sparsity_in;
         hess_vde_casadi[i].casadi_sparsity_out = &{{ model.name }}_expl_ode_hess_sparsity_out;
         hess_vde_casadi[i].casadi_work = &{{ model.name }}_expl_ode_hess_work;
-        {% if ocp.dims.np < 1 %}
+        {% if dims.np < 1 %}
         external_function_casadi_create(&hess_vde_casadi[i]);
 
 		{% else %}
-        external_function_param_casadi_create(&hess_vde_casadi[i], {{ocp.dims.np}});
+        external_function_param_casadi_create(&hess_vde_casadi[i], {{dims.np}});
 		{% endif %}
     }
     {% endif %}
@@ -777,10 +777,10 @@ int acados_create() {
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
     {% endif %}
 
-    int num_steps_val = {{ ocp.solver_config.sim_method_num_steps }}; 
+    int num_steps_val = {{ solver_config.sim_method_num_steps }}; 
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
 
-    int ns_val = {{ ocp.solver_config.sim_method_num_stages }}; 
+    int ns_val = {{ solver_config.sim_method_num_stages }}; 
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &ns_val);
     bool jac_reuse_val = true;
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse_val);
@@ -841,6 +841,20 @@ int acados_create() {
     for (int ii = 0; ii < {{dims.N}}; ii++) {
     forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
+    {% endif %}
+    for (int ii = 0; ii < {{dims.N}}; ++ii) {
+        {%- if dims.npd > 0 %}
+        p_constraint[ii].set_param(p_constraint+ii, p);
+        {% endif %}
+        {%- if dims.nh > 0 %}
+        h_constraint[ii].set_param(h_constraint+ii, p);
+        {% endif %}
+    }
+    {%- if dims.npd_e > 0 %}
+    p_e_constraint.set_param(&p_e_constraint, p);
+    {% endif %}
+    {%- if dims.nh_e > 0 %}
+    h_e_constraint.set_param(&h_e_constraint, p);
     {% endif %}
     {% endif %}
 

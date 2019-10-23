@@ -1069,6 +1069,20 @@ int acados_create() {
     forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {% endif %}
+    for (int ii = 0; ii < N; ++ii) {
+        {%- if ocp.dims.npd > 0 %}
+        p_constraint[ii].set_param(p_constraint+ii, p);
+        {% endif %}
+        {%- if ocp.dims.nh > 0 %}
+        h_constraint[ii].set_param(h_constraint+ii, p);
+        {% endif %}
+    }
+    {%- if ocp.dims.npd_e > 0 %}
+    p_e_constraint.set_param(&p_e_constraint, p);
+    {% endif %}
+    {%- if ocp.dims.nh_e > 0 %}
+    h_e_constraint.set_param(&h_e_constraint, p);
+    {% endif %}
     {% endif %}
 
     return status;
