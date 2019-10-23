@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 int acados_create();
-int acados_solve();
+int acados_update_param();
 int acados_free();
 
 ocp_nlp_in * acados_get_nlp_in();

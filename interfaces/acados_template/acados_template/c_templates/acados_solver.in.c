@@ -1126,6 +1126,36 @@ int acados_solve() {
     return solver_status;
 }
 
+int acados_update_params(int stage, double *p) {
+    int solver_status = 0;
+    {% if ocp.dims.np > 0%}
+    if (stage < {{ ocp.dims.N }}) {
+        {% if ocp.solver_config.integrator_type == "IRK" %}
+        impl_dae_fun[stage].set_param(impl_dae_fun+stage, p);
+        impl_dae_fun_jac_x_xdot_z[stage].set_param(impl_dae_fun_jac_x_xdot_z+stage, p);
+        impl_dae_jac_x_xdot_u_z[stage].set_param(impl_dae_jac_x_xdot_u_z+stage, p);
+        {% else %}
+        forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
+        {% endif %}
+        {%- if ocp.dims.npd > 0 %}
+        p_constraint[stage].set_param(p_constraint+stage, p);
+        {% endif %}
+        {%- if ocp.dims.nh > 0 %}
+        h_constraint[stage].set_param(h_constraint+stage, p);
+        {% endif %}
+    } else {
+    {%- if ocp.dims.npd_e > 0 %}
+    p_e_constraint.set_param(&p_e_constraint, p);
+    {% endif %}
+    {%- if ocp.dims.nh_e > 0 %}
+    h_e_constraint.set_param(&h_e_constraint, p);
+    {% endif %}
+    }
+    {% endif %}
+
+    return solver_status;
+}
+
 int acados_free() {
 
     // free memory
