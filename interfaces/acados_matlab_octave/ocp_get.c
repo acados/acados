@@ -37,6 +37,7 @@
 #include <string.h>
 // acados
 #include "acados_c/ocp_nlp_interface.h"
+#include "acados/dense_qp/dense_qp_common.h"
 // mex
 #include "mex.h"
 #include "mex_macros.h"
@@ -71,6 +72,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // sens_out
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "sens_out" ) );
     ocp_nlp_out *sens_out = (ocp_nlp_out *) ptr[0];
+    // plan
+    ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
+    ocp_nlp_plan *plan = (ocp_nlp_plan *) ptr[0];
 
     // field
     char *field = mxArrayToString( prhs[1] );
@@ -308,10 +312,60 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 mat_ptr[ii+(jj+1)*min_size] = stat[jj+ii*stat_n];
         }
     }
+    else if (!strcmp(field, "qp_solver_H"))
+    {
+		void *qp_in_;
+        ocp_nlp_get(config, solver, "qp_xcond_in", &qp_in_);
+		int solver_type = 0;
+		if (plan->ocp_qp_solver_plan.qp_solver==PARTIAL_CONDENSING_HPIPM)
+			solver_type=1;
+		if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_HPIPM)
+			solver_type=2;
+#if defined(ACADOS_WITH_QPOASES)
+		if (plan->ocp_qp_solver_plan.qp_solver==FULL_CONDENSING_QPOASES)
+			solver_type=2;
+#endif
+		// ocp solver
+		if(solver_type==1)
+		{
+			ocp_qp_in *qp_in = qp_in_;
+			int N = qp_in->dim->N;
+			int *nu = qp_in->dim->nx;
+			int *nx = qp_in->dim->nu;
+
+			mxArray *cell_array = mxCreateCellMatrix(N+1, 1);
+			plhs[0] = cell_array;
+
+			mxArray *tmp_mat;
+
+			for (ii=0; ii<=N; ii++)
+			{
+				tmp_mat = mxCreateNumericMatrix(nu[ii]+nx[ii], nu[ii]+nx[ii], mxDOUBLE_CLASS, mxREAL);
+				double *mat_ptr = mxGetPr( tmp_mat );
+				blasfeo_unpack_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii], qp_in->RSQrq+ii, 0, 0, mat_ptr, nu[ii]+nx[ii]);
+
+				mxSetCell(cell_array, ii, tmp_mat);
+			}
+		}
+		// dense solver
+		else if(solver_type==2)
+		{
+			dense_qp_in *qp_in = qp_in_;
+			int nv = qp_in->dim->nv;
+			plhs[0] = mxCreateNumericMatrix(nv, nv, mxDOUBLE_CLASS, mxREAL);
+			double *mat_ptr = mxGetPr( plhs[0] );
+			blasfeo_unpack_dmat(nv, nv, qp_in->Hv, 0, 0, mat_ptr, nv);
+		}
+		else
+		{
+			mexPrintf("\nerror: ocp_get: qp_solver_H: unsupported solver\n");
+			exit(1);
+		}
+	}
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field,
-             "x, u, z, pi, sens_x, sens_u, sens_pi, status, sqp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat");
+             "x, u, z, pi, sens_x, sens_u, sens_pi, status, sqp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat, qp_solver_H");
     }
 
     return;

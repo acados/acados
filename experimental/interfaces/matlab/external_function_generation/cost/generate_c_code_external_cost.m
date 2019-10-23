@@ -27,7 +27,7 @@ function generate_c_code_external_cost(  model, cost, opts )
     cost_hes = jacobian( cost_jac, [u;x]);
     
     external_cost_fun = Function( [name, '_external_cost'], {x, u}, ...
-        { cost_jac', cost_hes });
+        { external_cost, cost_jac', cost_hes });
     external_cost_fun.generate( [name, '_external_cost'], casadi_opts );
 
     

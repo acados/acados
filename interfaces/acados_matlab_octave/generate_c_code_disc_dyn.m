@@ -88,9 +88,11 @@ if isfield(model, 'dyn_expr_phi')
     % generate hessian
     hess_ux = jacobian(adj_ux, [u; x]);
     % Set up functions
+    phi_fun = Function([model_name,'_dyn_disc_phi_fun'], {x, u, p}, {phi});
     phi_fun_jac_ut_xt = Function([model_name,'_dyn_disc_phi_fun_jac'], {x, u, p}, {phi, jac_ux'});
     phi_fun_jac_ut_xt_hess = Function([model_name,'_dyn_disc_phi_fun_jac_hess'], {x, u, lam, p}, {phi, jac_ux', hess_ux});
     % generate C code
+    phi_fun.generate([model_name,'_dyn_disc_phi_fun'], casadi_opts);
     phi_fun_jac_ut_xt.generate([model_name,'_dyn_disc_phi_fun_jac'], casadi_opts);
     phi_fun_jac_ut_xt_hess.generate([model_name,'_dyn_disc_phi_fun_jac_hess'], casadi_opts);
 end

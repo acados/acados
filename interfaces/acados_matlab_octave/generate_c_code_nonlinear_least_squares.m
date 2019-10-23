@@ -88,9 +88,11 @@ if isfield(model, 'cost_expr_y')
     y_adj = jtimes(fun, [u; x], y, true);
     y_hess = jacobian(y_adj, [u; x]);
     % Set up functions
+    y_fun = Function([model_name,'_cost_y_fun'], {x, u, p}, {fun});
     y_fun_jac_ut_xt = Function([model_name,'_cost_y_fun_jac_ut_xt'], {x, u, p}, {fun, [jac_u'; jac_x']});
     y_hess = Function([model_name,'_cost_y_hess'], {x, u, y, p}, {y_hess});
     % generate C code
+    y_fun.generate([model_name,'_cost_y_fun'], casadi_opts);
     y_fun_jac_ut_xt.generate([model_name,'_cost_y_fun_jac_ut_xt'], casadi_opts);
     y_hess.generate([model_name,'_cost_y_hess'], casadi_opts);
 end
@@ -110,9 +112,11 @@ if isfield(model, 'cost_expr_y_e')
     y_e_adj = jtimes(fun, x, y_e, true);
     y_e_hess = jacobian(y_e_adj, x);
     % Set up functions
+    y_e_fun = Function([model_name,'_cost_y_e_fun'], {x, p}, {fun_e});
     y_e_fun_jac_ut_xt = Function([model_name,'_cost_y_e_fun_jac_ut_xt'], {x, p}, {fun_e, jac_x_e'});
     y_e_hess = Function([model_name,'_cost_y_e_hess'], {x, y_e, p}, {y_e_hess});
     % generate C code
+    y_e_fun.generate([model_name,'_cost_y_e_fun'], casadi_opts);
     y_e_fun_jac_ut_xt.generate([model_name,'_cost_y_e_fun_jac_ut_xt'], casadi_opts);
     y_e_hess.generate([model_name,'_cost_y_e_hess'], casadi_opts);
 end
