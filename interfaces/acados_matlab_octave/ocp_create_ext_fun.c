@@ -109,7 +109,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[20],"cost_y_fun_jac_ut_xt",sizeof("cost_y_fun_jac_ut_xt"));
     memcpy(fieldnames[21],"cost_y_hess",sizeof("cost_y_hess"));
     memcpy(fieldnames[22],"cost_ext_cost_fun",sizeof("cost_ext_cost_fun"));
-    memcpy(fieldnames[23],"cost_ext_cost_fun_jac_hess",sizeof("cost_ext_cost_fun_jac_hes"));
+    memcpy(fieldnames[23],"cost_ext_cost_fun_jac_hess",sizeof("cost_ext_cost_fun_jac_hess"));
 
     // create output struct
     plhs[0] = mxCreateStructMatrix(1, 1, 24, (const char **) fieldnames);
