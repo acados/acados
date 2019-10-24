@@ -43,20 +43,20 @@ if (strcmp(model_struct.dyn_type, 'explicit'))
     generate_c_code_explicit_ode(model_struct, opts_struct);
     % sources list
     c_files{end+1} = [model_name, '_dyn_expl_ode_fun.c'];
-    c_files{end+1} = [model_name, '_dyn_expl_vde_for.c'];
+    c_files{end+1} = [model_name, '_dyn_expl_vde_forw.c'];
     c_files{end+1} = [model_name, '_dyn_expl_vde_adj.c'];
-    c_files{end+1} = [model_name, '_dyn_expl_ode_hes.c'];
+    c_files{end+1} = [model_name, '_dyn_expl_ode_hess.c'];
 elseif (strcmp(model_struct.dyn_type, 'implicit'))
     if (strcmp(opts_struct.sim_method, 'irk'))
         % generate c for function and derivatives using casadi
         generate_c_code_implicit_ode(model_struct, opts_struct);
         % sources list
-        c_files{end+1} = [model_name, '_dyn_impl_ode_fun.c'];
-        c_files{end+1} = [model_name, '_dyn_impl_ode_fun_jac_x_xdot_z.c'];
-        c_files{end+1} = [model_name, '_dyn_impl_ode_fun_jac_x_xdot_u.c'];
-        c_files{end+1} = [model_name, '_dyn_impl_ode_jac_x_xdot_u_z.c'];
+        c_files{end+1} = [model_name, '_dyn_impl_dae_fun.c'];
+        c_files{end+1} = [model_name, '_dyn_impl_dae_fun_jac_x_xdot_z.c'];
+        c_files{end+1} = [model_name, '_dyn_impl_dae_fun_jac_x_xdot_u.c'];
+        c_files{end+1} = [model_name, '_dyn_impl_dae_jac_x_xdot_u_z.c'];
         if strcmp(opts_struct.nlp_solver_exact_hessian, 'true')
-            c_files{end+1} = [model_name, '_dyn_impl_ode_hess.c'];
+            c_files{end+1} = [model_name, '_dyn_impl_dae_hess.c'];
         end
     elseif (strcmp(opts_struct.sim_method, 'irk_gnsf'))
         % generate c for function and derivatives using casadi
@@ -79,6 +79,7 @@ elseif (strcmp(model_struct.dyn_type, 'discrete'))
     % generate c for function and derivatives using casadi
     generate_c_code_disc_dyn(model_struct, opts_struct);
     % sources list
+    c_files{end+1} = [model_name, '_dyn_disc_phi_fun.c'];
     c_files{end+1} = [model_name, '_dyn_disc_phi_fun_jac.c'];
     c_files{end+1} = [model_name, '_dyn_disc_phi_fun_jac_hess.c'];
 else
@@ -91,10 +92,12 @@ if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'constr_ex
     generate_c_code_nonlinear_constr(model_struct, opts_struct);
     % sources list
     if isfield(model_struct, 'constr_expr_h')
+        c_files{end+1} = [model_name, '_constr_h_fun.c'];
         c_files{end+1} = [model_name, '_constr_h_fun_jac_ut_xt.c'];
         c_files{end+1} = [model_name, '_constr_h_fun_jac_ut_xt_hess.c'];
     end
     if isfield(model_struct, 'constr_expr_h_e')
+        c_files{end+1} = [model_name, '_constr_h_e_fun.c'];
         c_files{end+1} = [model_name, '_constr_h_e_fun_jac_ut_xt.c'];
         c_files{end+1} = [model_name, '_constr_h_e_fun_jac_ut_xt_hess.c'];
     end
@@ -105,10 +108,12 @@ if (strcmp(model_struct.cost_type, 'nonlinear_ls') || strcmp(model_struct.cost_t
     generate_c_code_nonlinear_least_squares(model_struct, opts_struct);
     % sources list
     if isfield(model_struct, 'cost_expr_y')
+        c_files{end+1} = [model_name, '_cost_y_fun.c'];
         c_files{end+1} = [model_name, '_cost_y_fun_jac_ut_xt.c'];
         c_files{end+1} = [model_name, '_cost_y_hess.c'];
     end
     if isfield(model_struct, 'cost_expr_y_e')
+        c_files{end+1} = [model_name, '_cost_y_e_fun.c'];
         c_files{end+1} = [model_name, '_cost_y_e_fun_jac_ut_xt.c'];
         c_files{end+1} = [model_name, '_cost_y_e_hess.c'];
     end
@@ -119,10 +124,12 @@ if (strcmp(model_struct.cost_type, 'ext_cost') || strcmp(model_struct.cost_type_
     generate_c_code_ext_cost(model_struct, opts_struct);
     % sources list
     if isfield(model_struct, 'cost_expr_ext_cost')
-        c_files{end+1} = [model_name, '_cost_ext_cost_jac_hes.c'];
+        c_files{end+1} = [model_name, '_cost_ext_cost_fun.c'];
+        c_files{end+1} = [model_name, '_cost_ext_cost_fun_jac_hess.c'];
     end
     if isfield(model_struct, 'cost_expr_ext_cost_e')
-        c_files{end+1} = [model_name, '_cost_ext_cost_e_jac_hes.c'];
+        c_files{end+1} = [model_name, '_cost_ext_cost_e_fun.c'];
+        c_files{end+1} = [model_name, '_cost_ext_cost_e_fun_jac_hess.c'];
     end
 end
 

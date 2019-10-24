@@ -4,6 +4,9 @@
 - [ ] propagate cost in integrator
 - [ ] restore download and compilation of OOQP
 - [ ] split ocp solve into prepare and feedback
+- [ ] stage transition functions for changing model dimensions
+- [ ] fix bghp constraints to have np != 1;
+
 
 #### documentation
 - [ ] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula in docs
@@ -13,6 +16,9 @@
     - [ ] MacOS Matlab
 
 #### `matlab interface`
+- [x] detect dimensions
+- [x] structure detections for constraints
+- [ ] getting started folder
 - [ ] code generation workflow! # Mex templating
     - 1) nonlinear least-squares 
     - 2) Vz (already implemented?)

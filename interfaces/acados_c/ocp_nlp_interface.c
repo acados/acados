@@ -509,6 +509,11 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_unpack_dvec(dims->nx[stage+1], &out->pi[stage], 0, double_values);
     }
+    else if ((!strcmp(field, "kkt_norm_inf")) || (!strcmp(field, "kkt_norm")))
+    {
+        double *double_values = value;
+        double_values[0] = out->inf_norm_res;
+    }
     else
     {
         printf("\nerror: ocp_nlp_out_get: field %s not available\n", field);
@@ -715,7 +720,7 @@ void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *field, int stage, int
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
                  const char *field, void *return_value_)
 {
-    solver->config->get(solver->config, solver->mem, field, return_value_);
+    solver->config->get(solver->config, solver->dims, solver->mem, field, return_value_);
 }
 
 
@@ -723,7 +728,7 @@ void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
         int stage, const char *field, void *value)
 {
     ocp_nlp_memory *mem;
-    config->get(config, solver->mem, "nlp_mem", &mem);
+    config->get(config, solver->dims, solver->mem, "nlp_mem", &mem);
     // printf("called getter: nlp_mem %p\n", mem);
 
     ocp_nlp_dims *dims = solver->dims;

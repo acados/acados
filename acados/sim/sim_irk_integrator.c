@@ -167,29 +167,29 @@ int sim_irk_model_set(void *model_, const char *field, void *value)
 {
     irk_model *model = model_;
 
-    if (!strcmp(field, "impl_ode_fun"))
+    if (!strcmp(field, "impl_ode_fun") || !strcmp(field, "impl_dae_fun"))
     {
         model->impl_ode_fun = value;
     }
-    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot"))
+    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot") || !strcmp(field, "impl_dae_fun_jac_x_xdot"))
     {
         // TODO(oj): remove this case and fix dependencies
         model->impl_ode_fun_jac_x_xdot_z = value;
     }
-    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot_z"))
+    else if (!strcmp(field, "impl_ode_fun_jac_x_xdot_z") || !strcmp(field, "impl_dae_fun_jac_x_xdot_z"))
     {
         model->impl_ode_fun_jac_x_xdot_z = value;
     }
-    else if (!strcmp(field, "impl_ode_jac_x_xdot_u"))
+    else if (!strcmp(field, "impl_ode_jac_x_xdot_u") || !strcmp(field, "impl_dae_jac_x_xdot_u"))
     {
         // TODO(oj): remove this and update with z everywhere
         model->impl_ode_jac_x_xdot_u_z = value;
     }
-    else if (!strcmp(field, "impl_ode_jac_x_xdot_u_z"))
+    else if (!strcmp(field, "impl_ode_jac_x_xdot_u_z") || !strcmp(field, "impl_dae_jac_x_xdot_u_z"))
     {
         model->impl_ode_jac_x_xdot_u_z = value;
     }
-    else if (!strcmp(field, "impl_ode_hes") | !strcmp(field, "impl_ode_hess"))
+    else if (!strcmp(field, "impl_ode_hes") | !strcmp(field, "impl_ode_hess") | !strcmp(field, "impl_dae_hess"))
     {
         model->impl_ode_hess = value;
     }
@@ -303,6 +303,8 @@ void sim_irk_opts_initialize_default(void *config_, void *dims_, void *opts_)
     return;
 }
 
+
+
 void sim_irk_opts_update(void *config_, void *dims, void *opts_)
 {
     sim_opts *opts = opts_;
@@ -324,11 +326,22 @@ void sim_irk_opts_update(void *config_, void *dims, void *opts_)
 }
 
 
+
 void sim_irk_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
     sim_opts *opts = (sim_opts *) opts_;
     sim_opts_set_(opts, field, value);
 }
+
+
+
+void sim_irk_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    sim_opts *opts = (sim_opts *) opts_;
+    sim_opts_get_(config_, opts, field, value);
+}
+
+
 
 /************************************************
  * memory
@@ -1500,6 +1513,7 @@ void sim_irk_config_initialize_default(void *config_)
     config->opts_initialize_default = &sim_irk_opts_initialize_default;
     config->opts_update = &sim_irk_opts_update;
     config->opts_set = &sim_irk_opts_set;
+    config->opts_get = &sim_irk_opts_get;
     config->memory_calculate_size = &sim_irk_memory_calculate_size;
     config->memory_assign = &sim_irk_memory_assign;
     config->memory_set = &sim_irk_memory_set;

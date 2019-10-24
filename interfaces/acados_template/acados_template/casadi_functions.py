@@ -32,6 +32,7 @@
 #
 
 from casadi import *
+# TODO(andrea): add properties for every class and move into main class
 class acados_dae():
     def __init__(self):
         self.f_impl_expr = None #: CasADi expression for the implicit dynamics :math:`F(\dot{x}, x, u, z) = 0`
@@ -55,6 +56,14 @@ class acados_constraint():
         self.nh = None   #: dimension of image of h
         self.nr = None   #: dimension of image of nonlinear residuals 
         self.name = None #: name associated with the function
+
+class acados_cost():
+    def __init__(self):
+        self.expr = None     #: CasADi expression for the cost
+        self.x = None        #: CasADi variable describing the state of the system
+        self.u = None        #: CasADi variable describing the input of the system
+        self.ny = None       #: number of residuals
+        self.name = None     #: name associated with the function
 
 def acados_dae_strip_non_num(acados_constraint):
     out = acados_constraint
@@ -96,3 +105,14 @@ def acados_constraint_strip_non_num(acados_constraint):
         del out['nr']
     return out
 
+def acados_cost_strip_non_num(acados_cost):
+    out = acados_cost
+    if 'x' in out.keys(): 
+        del out['x']
+    if 'u' in out.keys(): 
+        del out['u']
+    if 'expr' in out.keys(): 
+        del out['expr']
+    if 'ny' in out.keys(): 
+        del out['ny']
+    return out

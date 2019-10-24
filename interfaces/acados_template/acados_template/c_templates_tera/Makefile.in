@@ -57,6 +57,12 @@ OBJ+= {{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.o
 {% if dims.nh_e > 0 %}
 OBJ+= {{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.o
 {% endif %}
+{% if cost.cost_type == "NONLINEAR_LS" %}
+OBJ+= {{ cost_r.name }}_r_cost/{{ cost_r.name }}_r_cost.c 
+{% endif %}
+{% if cost.cost_type_e == "NONLINEAR_LS" %}
+OBJ+= {{ cost_r_e.name }}_r_e_cost/{{ cost_r_e.name }}_r_e_cost.c 
+{% endif %}
 OBJ+= acados_solver_{{ model.name }}.o
 
 INCLUDE_PATH = {{ acados_include_path }}
@@ -87,6 +93,14 @@ CASADI_CON_H_SOURCE+= {{ con_h.name }}_h_constraint.c
 {% if dims.nh_e > 0 %}
 CASADI_CON_H_E_SOURCE+= {{ con_h_e.name }}_h_e_constraint.c 
 {% endif %}
+CASADI_COST_R_SOURCE=
+CASADI_COST_R_E_SOURCE=
+{% if cost.cost_type == "NONLINEAR_LS" %}
+CASADI_COST_R_SOURCE+= {{ cost_r.name }}_r_cost.c 
+{% endif %}
+{% if cost.cost_type_e == "NONLINEAR_LS" %}
+CASADI_COST_R_E_SOURCE+= {{ cost_r_e.name }}_r_e_cost.c 
+{% endif %}
 
 casadi_fun:
 	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE))
@@ -98,6 +112,12 @@ casadi_fun:
 	{% endif %}
 	{% if dims.nh_e > 0 %}
 	( cd {{ con_h_e.name }}_h_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_E_SOURCE))
+	{% endif %}
+	{% if cost.cost_type == "NONLINEAR_LS" %}
+	( cd {{ cost_r.name }}_r_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_SOURCE))
+	{% endif %}
+	{% if cost.cost_type_e == "NONLINEAR_LS" %}
+	( cd {{ cost_r_e.name }}_r_e_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_E_SOURCE))
 	{% endif %}
 
 main:

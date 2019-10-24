@@ -1,3 +1,4 @@
+#! /usr/bin/bash
 #
 # Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
 # Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
@@ -31,12 +32,41 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-from .casadi_functions import *
-from .generate_c_code_explicit_ode import *
-from .generate_c_code_implicit_ode import *
-from .generate_c_code_constraint import *
-from .generate_c_code_constraint_e import *
-from .generate_c_code_nls_cost import *
-from .generate_c_code_nls_cost_e import *
-from .acados_ocp_nlp import *
-from .generate_solver import *
+
+#if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
+#then
+#	echo "Script is being sourced"
+#else
+#	echo "ERROR: Script is a subshell"
+#	echo "To affect your current shell enviroment source this script with:"
+#	echo "source env.sh"
+#	exit
+#fi
+
+# check that this file is run
+#export ENV_RUN=true
+
+# if acados folder not specified assume parent of the folder of the single examples
+ACADOS_INSTALL_DIR=${ACADOS_INSTALL_DIR:-"$(pwd)/../../.."}
+export ACADOS_INSTALL_DIR
+echo
+echo "ACADOS_INSTALL_DIR=$ACADOS_INSTALL_DIR"
+
+# export casadi folder and matlab/octave mex folder
+# MATLAB case
+export MATLABPATH=$MATLABPATH:$ACADOS_INSTALL_DIR/external/casadi-matlab/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/
+echo
+echo "MATLABPATH=$MATLABPATH"
+# Octave case
+export OCTAVE_PATH=$OCTAVE_PATH:$ACADOS_INSTALL_DIR/external/casadi-octave/:$ACADOS_INSTALL_DIR/interfaces/acados_matlab_octave/
+echo
+echo "OCTAVE_PATH=$OCTAVE_PATH"
+
+# export acados mex flags
+#export ACADOS_MEX_FLAGS="GCC=/usr/bin/gcc-4.9"
+
+# if model folder not specified assume this folder
+#MODEL_FOLDER=${MODEL_FOLDER:-"./build"}
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
+#echo
+#echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"

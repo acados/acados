@@ -155,7 +155,7 @@ static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, 
 
 
 // hand-generated external function for externally provided hessian and gradient
-void ext_cost(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
+void ext_cost(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
     int ii;
 
@@ -173,10 +173,12 @@ void ext_cost(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_
 	int ui = u_args->xi;
 
 	// extract outputs
-	// 0: [grad_u; grad_x], size: nu+nx, type: BLASFEO_DVEC
-	struct blasfeo_dvec *grad = out[0];
-	// 1: [hess_uu, hess_ux; hess_xu, hess_xx], size: (nu+nx)*(nu+nx), type: BLASFEO_DMAT
-	struct blasfeo_dmat *hess = out[1];
+	// 0: fun: COLMAJ
+	double *fun = out[0];
+	// 1: [grad_u; grad_x], size: nu+nx, type: BLASFEO_DVEC
+	struct blasfeo_dvec *grad = out[1];
+	// 2: [hess_uu, hess_ux; hess_xu, hess_xx], size: (nu+nx)*(nu+nx), type: BLASFEO_DMAT
+	struct blasfeo_dmat *hess = out[2];
 
     // Hessian
 	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
@@ -190,6 +192,14 @@ void ext_cost(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_
         BLASFEO_DVECEL(grad, ii) = BLASFEO_DMATEL(hess, ii, ii) * BLASFEO_DVECEL(u, ui+ii); // r
     for(ii=0; ii<nx; ii++)
         BLASFEO_DVECEL(grad, nu+ii) = BLASFEO_DMATEL(hess, nu+ii, nu+ii) * BLASFEO_DVECEL(x, xi+ii); // q
+	
+	// function
+	*fun = 0.0;
+    for(ii=0; ii<nu; ii++)
+        *fun += BLASFEO_DVECEL(grad, ii) * BLASFEO_DVECEL(u, ui+ii); // r
+    for(ii=0; ii<nx; ii++)
+        *fun += BLASFEO_DVECEL(grad, nu+ii) * BLASFEO_DVECEL(x, xi+ii); // q
+	*fun += 0.5;
 
     return;
 
@@ -197,7 +207,7 @@ void ext_cost(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_
 
 
 
-void ext_costN(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
+void ext_costN(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
     int ii;
@@ -214,11 +224,14 @@ void ext_costN(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type
 	struct blasfeo_dvec_args *u_args = in[1];
 	struct blasfeo_dvec *u = u_args->x;
 	int ui = u_args->xi;
+
 	// extract outputs
-	// 0: [grad_u; grad_x], size: nu+nx, type: BLASFEO_DVEC
-	struct blasfeo_dvec *grad = out[0];
-	// 0: [hess_uu, hess_ux; hess_xu, hess_xx], size: (nu+nx)*(nu+nx), type: BLASFEO_DMAT
-	struct blasfeo_dmat *hess = out[1];
+	// 0: fun: COLMAJ
+	double *fun = out[0];
+	// 1: [grad_u; grad_x], size: nu+nx, type: BLASFEO_DVEC
+	struct blasfeo_dvec *grad = out[1];
+	// 2: [hess_uu, hess_ux; hess_xu, hess_xx], size: (nu+nx)*(nu+nx), type: BLASFEO_DMAT
+	struct blasfeo_dmat *hess = out[2];
 
     // Hessian
 	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
@@ -232,6 +245,14 @@ void ext_costN(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type
         BLASFEO_DVECEL(grad, ii) = BLASFEO_DMATEL(hess, ii, ii) * BLASFEO_DVECEL(u, ui+ii); // r
     for(ii=0; ii<nx; ii++)
         BLASFEO_DVECEL(grad, nu+ii) = BLASFEO_DMATEL(hess, nu+ii, nu+ii) * BLASFEO_DVECEL(x, xi+ii); // q
+
+	// function
+	*fun = 0.0;
+    for(ii=0; ii<nu; ii++)
+        *fun += BLASFEO_DVECEL(grad, ii) * BLASFEO_DVECEL(u, ui+ii); // r
+    for(ii=0; ii<nx; ii++)
+        *fun += BLASFEO_DVECEL(grad, nu+ii) * BLASFEO_DVECEL(x, xi+ii); // q
+	*fun += 0.5;
 
     return;
 
@@ -646,9 +667,9 @@ int main() {
 
     for (int i=0; i<N; i++)
     {
-        cost[i]->ext_cost = &ext_cost_generic;
+        cost[i]->ext_cost_fun_jac_hess = &ext_cost_generic;
     }
-    cost[N]->ext_cost = &ext_costN_generic;
+    cost[N]->ext_cost_fun_jac_hess = &ext_costN_generic;
 
     blasfeo_pack_dvec(ns[0], Zl0, &cost[0]->Z, 0);
     blasfeo_pack_dvec(ns[0], Zu0, &cost[0]->Z, ns[0]);

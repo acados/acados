@@ -134,6 +134,7 @@ for itest = 1:2;
     elseif cost_variant==1
         ocp_model.set('cost_type', 'linear_ls');
         ocp_model.set('cost_Vu', Vu);
+        ocp_model.set('cost_Vx', zeros(ny,nx));
         ocp_model.set('cost_Vz', Vx);
     else
         ocp_model.set('cost_type', 'nonlinear_ls');
@@ -228,3 +229,4 @@ for itest = 1:2;
     end
 end % itest
 
+fprintf('\ntest_ocp_linear_dae: success!\n');
