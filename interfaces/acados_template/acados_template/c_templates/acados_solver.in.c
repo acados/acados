@@ -1126,28 +1126,83 @@ int acados_solve() {
     return solver_status;
 }
 
-int acados_update_params(int stage, double *p) {
+int acados_update_params(int stage, double *p, int np) {
     int solver_status = 0;
+    int casadi_np = 0;
     {% if ocp.dims.np > 0%}
     if (stage < {{ ocp.dims.N }}) {
         {% if ocp.solver_config.integrator_type == "IRK" %}
+        casadi_np = (impl_dae_fun+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in impl_dae_fun which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
         impl_dae_fun[stage].set_param(impl_dae_fun+stage, p);
+        casadi_np = (impl_dae_fun_jac_x_xdot_z+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters " 
+                "in impl_dae_fun_jac_x_xdot_z which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
         impl_dae_fun_jac_x_xdot_z[stage].set_param(impl_dae_fun_jac_x_xdot_z+stage, p);
+        casadi_np = (impl_dae_jac_x_xdot_u_z+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters " 
+                "in impl_dae_jac_x_xdot_u_z which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
         impl_dae_jac_x_xdot_u_z[stage].set_param(impl_dae_jac_x_xdot_u_z+stage, p);
         {% else %}
+        casadi_np = (impl_dae_jac_x_xdot_u_z+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in impl_dae_jac_x_xdot_u_z which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        casadi_np = (forw_vde_casadi+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in forw_vde_casad which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
         forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
         {% endif %}
         {%- if ocp.dims.npd > 0 %}
+        casadi_np = (p_constraint+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters " 
+                "in p_constraint which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
         p_constraint[stage].set_param(p_constraint+stage, p);
         {% endif %}
         {%- if ocp.dims.nh > 0 %}
+        casadi_np = (h_constraint+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in h_constraint which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
         h_constraint[stage].set_param(h_constraint+stage, p);
         {% endif %}
     } else {
     {%- if ocp.dims.npd_e > 0 %}
+    casadi_np = (&p_e_constraint+stage)->np;
+    if (casadi_np != np) {
+        printf("acados_update_params: trying to set %i parameters "
+            "in p_e_constraint which only has %i. Exiting.\n", np, casadi_np);
+        exit(1);
+    }
     p_e_constraint.set_param(&p_e_constraint, p);
     {% endif %}
     {%- if ocp.dims.nh_e > 0 %}
+    casadi_np = (&h_e_constraint+stage)->np;
+    if (casadi_np != np) {
+        printf("acados_update_params: trying to set %i parameters " 
+            "in h_e_constraint which only has %i. Exiting.\n", np, casadi_np);
+        exit(1);
+    }
     h_e_constraint.set_param(&h_e_constraint, p);
     {% endif %}
     }
