@@ -43,7 +43,7 @@ from ctypes import *
 from copy import deepcopy
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
-    USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
+    USE_TERA = 1 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
     
     model = acados_ocp.model
     if acados_ocp.solver_config.integrator_type == 'ERK':
@@ -520,7 +520,7 @@ class acados_solver:
             self.shared_lib.acados_update_params.argtypes = [c_int, POINTER(c_double)]
             self.shared_lib.acados_update_params.restype = c_int
             value_data = cast(value_.ctypes.data, POINTER(c_double))
-            self.shared_lib.acados_update_params(stage, value_data)
+            self.shared_lib.acados_update_params(stage, value_data, value_.shape[0])
         else:
             if (field_ not in constraints_fields) and (field_ not in cost_fields) and (field_ not in out_fields):
                 raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\

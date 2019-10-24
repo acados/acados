@@ -63,22 +63,22 @@ external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {%- endif %}
 {%- endif %}
 {% if dims.npd > 0 %}
-external_function_casadi * p_constraint;
+external_function_param_casadi * p_constraint;
 {%- endif %}
 {% if dims.npd_e > 0 %}
-external_function_casadi * p_e_constraint;
+external_function_param_casadi * p_e_constraint;
 {%- endif %}
 {% if dims.nh > 0 %}
-external_function_casadi * h_constraint;
+external_function_param_casadi * h_constraint;
 {%- endif %}
 {% if dims.nh_e > 0 %}
-external_function_casadi h_e_constraint;
+external_function_param_casadi h_e_constraint;
 {% endif %}
 {% if cost.cost_type == "NONLINEAR_LS" %}
-external_function_casadi * r_cost;
+external_function_param_casadi * r_cost;
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
-external_function_casadi r_e_cost;
+external_function_param_casadi r_e_cost;
 {% endif %}
 
 int main()
@@ -150,8 +150,7 @@ int main()
     {%- if dims.nh_e > 0 %}
     h_e_constraint.set_param(&h_e_constraint, p);
     {%- endif %}
-
-    double kkt_norm_inf = 1e12, elapsed_time;
+    {%- endif %}
 
     // prepare evaluation
     int NTIMINGS = 10;
