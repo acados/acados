@@ -472,6 +472,7 @@ void ocp_nlp_reg_project_reduc_hess_regularize_hessian(void *config, ocp_nlp_reg
 		// apply shur to P
 		blasfeo_dgecp(nx[ss], nx[ss], L, nu[ss], nu[ss], P, 0, 0);
 		if(do_reg)
+//		if(0)
 		{
 			// P
 			blasfeo_dgead(nx[ss], nx[ss], 1.0, L3, nu[ss], nu[ss], P, 0, 0);
