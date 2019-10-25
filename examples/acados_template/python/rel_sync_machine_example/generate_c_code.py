@@ -157,44 +157,40 @@ def export_voltage_sphere_con():
     # voltage sphere
     constraint = acados_constraint()
 
-    r = SX.sym('r', 2, 1)
-    constraint.con_h_expr = r[0]**2 + r[1]**2
-    constraint.con_r_expr = vertcat(u_d, u_q)
+    constraint.expr = u_d**2 + u_q**2
+    # constraint.expr = u_d + u_q
     constraint.x = x
     constraint.u = u
-    constraint.r = r
-    constraint.nr = 2
-    constraint.nh = 1
+    constraint.nc = 1
     constraint.name = con_name
 
     return constraint
 
-# def export_nonlinear_part_voltage_constraint():
+def export_nonlinear_part_voltage_constraint():
 
-#     con_name = 'v_sphere_nl'
+    con_name = 'v_sphere_nl'
 
-#     # set up states
-#     psi_d = SX.sym('psi_d')
-#     psi_q = SX.sym('psi_q')
-#     x = vertcat(psi_d, psi_q)
+    # set up states
+    psi_d = SX.sym('psi_d')
+    psi_q = SX.sym('psi_q')
+    x = vertcat(psi_d, psi_q)
 
-#     # set up controls
-#     u_d = SX.sym('u_d')
-#     u_q = SX.sym('u_q')
-#     u = vertcat(u_d, u_q)
+    # set up controls
+    u_d = SX.sym('u_d')
+    u_q = SX.sym('u_q')
+    u = vertcat(u_d, u_q)
 
-#     # voltage sphere
-#     constraint = acados_constraint()
+    # voltage sphere
+    constraint = acados_constraint()
 
-#     constraint.expr = vertcat(u_d, u_q)
-#     # constraint.expr = u_d + u_q
-#     constraint.x = x
-#     constraint.u = u
-#     constraint.nc = 2
-#     constraint.name = con_name
+    constraint.expr = vertcat(u_d, u_q)
+    # constraint.expr = u_d + u_q
+    constraint.x = x
+    constraint.u = u
+    constraint.nc = 2
+    constraint.name = con_name
 
-#     return constraint
-
+    return constraint
 def get_general_constraints_DC(u_max):
 
     # polytopic constraint on the input
@@ -249,7 +245,7 @@ model = export_dae_model()
 
 # export constraint description
 constraint = export_voltage_sphere_con()
-# constraint_nl = export_nonlinear_part_voltage_constraint()
+constraint_nl = export_nonlinear_part_voltage_constraint()
 
 # set model_name
 ra.model = model
@@ -261,7 +257,7 @@ if FORMULATION == 1:
 if FORMULATION == 2:
     # constraints name
     ra.con_h = constraint
-    # ra.con_p = constraint_nl
+    ra.con_p = constraint_nl
 
 # Ts  = 0.0016
 # Ts  = 0.0012

@@ -48,10 +48,7 @@
 // example specific
 #include "{{ ocp.model.name }}_model/{{ ocp.model.name }}_model.h"
 {% if ocp.dims.npd > 0 %}
-#include "{{ ocp.con_h.name }}_p_constraint/{{ ocp.con_h.name }}_p_constraint.h"
-{% if ocp.dims.npd_e > 0 %}
-#include "{{ ocp.con_h_e.name }}_p_e_constraint/{{ ocp.con_h_e.name }}_p_e_constraint.h"
-{% endif %}
+#include "{{ ocp.con_p.name }}_p_constraint/{{ ocp.con_p.name }}_p_constraint.h"
 {% endif %}
 {% if ocp.dims.nh > 0 %}
 #include "{{ ocp.con_h.name }}_h_constraint/{{ ocp.con_h.name }}_h_constraint.h"
@@ -703,12 +700,12 @@ int acados_create() {
     p_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear part of convex-composite constraint
-        p_constraint[i].casadi_fun = &{{ ocp.con_h.name }}_p_constraint;
-        p_constraint[i].casadi_n_in = &{{ ocp.con_h.name }}_p_constraint_n_in;
-        p_constraint[i].casadi_n_out = &{{ ocp.con_h.name }}_p_constraint_n_out;
-        p_constraint[i].casadi_sparsity_in = &{{ ocp.con_h.name }}_p_constraint_sparsity_in;
-        p_constraint[i].casadi_sparsity_out = &{{ ocp.con_h.name }}_p_constraint_sparsity_out;
-        p_constraint[i].casadi_work = &{{ ocp.con_h.name }}_p_constraint_work;
+        p_constraint[i].casadi_fun = &{{ ocp.con_p.name }}_p_constraint;
+        p_constraint[i].casadi_n_in = &{{ ocp.con_p.name }}_p_constraint_n_in;
+        p_constraint[i].casadi_n_out = &{{ ocp.con_p.name }}_p_constraint_n_out;
+        p_constraint[i].casadi_sparsity_in = &{{ ocp.con_p.name }}_p_constraint_sparsity_in;
+        p_constraint[i].casadi_sparsity_out = &{{ ocp.con_p.name }}_p_constraint_sparsity_out;
+        p_constraint[i].casadi_work = &{{ ocp.con_p.name }}_p_constraint_work;
 
         external_function_param_casadi_create(&p_constraint[i], {{ocp.dims.np}});
     }
@@ -716,14 +713,15 @@ int acados_create() {
 
     {%- if ocp.dims.npd_e > 0 %}
 	// nonlinear part of convex-composite constraint
-	p_e_constraint.casadi_fun = &{{ ocp.con_h_e.name }}_p_e_constraint;
-	p_e_constraint.casadi_n_in = &{{ ocp.con_h_e.name }}_p_e_constraint_n_in;
-	p_e_constraint.casadi_n_out = &{{ ocp.con_h_e.name }}_p_e_constraint_n_out;
-	p_e_constraint.casadi_sparsity_in = &{{ ocp.con_h_e.name }}_p_e_constraint_sparsity_in;
-	p_e_constraint.casadi_sparsity_out = &{{ ocp.con_h_e.name }}_p_e_constraint_sparsity_out;
-	p_e_constraint.casadi_work = &{{ ocp.con_h_e.name }}_p_e_constraint_work;
+	external_function_param_casadi p_constraint_e;
+	p_constraint_e.casadi_fun = &{{ ocp.con_p_e.name }}_p_constraint_e;
+	p_constraint_e.casadi_n_in = &{{ ocp.con_p_e.name }}_p_constraint_e_n_in;
+	p_constraint_e.casadi_n_out = &{{ ocp.con_p_e.name }}_p_constraint_e_n_out;
+	p_constraint_e.casadi_sparsity_in = &{{ ocp.con_p_e.name }}_p_constraint_e_sparsity_in;
+	p_constraint_e.casadi_sparsity_out = &{{ ocp.con_p_e.name }}_p_constraint_e_sparsity_out;
+	p_constraint_e.casadi_work = &{{ ocp.con_p_e.name }}_p_constraint_e_work;
 
-    external_function_param_casadi_create(&p_e_constraint, {{ ocp.dims.np }});
+    external_function_param_casadi_create(p_constraint_e, {{ocp.dims.np}});
     {%- endif %}
 
     {%- if ocp.dims.nh > 0 %}
@@ -1006,7 +1004,7 @@ int acados_create() {
 
     {%- if ocp.dims.npd_e > 0 %}
     // convex-composite constraints for stage N
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_e_constraint);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_constraint_e[i]);
     {%- endif %}
 
     {%- if ocp.dims.nh > 0 %}
@@ -1031,14 +1029,13 @@ int acados_create() {
     {% if ocp.dims.nz > 0 %}
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
-
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
     {% endif %}
     int num_steps_val = {{ ocp.solver_config.sim_method_num_steps }}; 
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
     int ns_val = {{ ocp.solver_config.sim_method_num_stages }}; 
-    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &ns_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_ns", &ns_val);
     bool jac_reuse_val = true;
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse_val);
 

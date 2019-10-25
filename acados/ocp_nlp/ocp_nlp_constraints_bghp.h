@@ -175,8 +175,6 @@ typedef struct
 {
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dmat jacobian_quadratic;
-    struct blasfeo_dmat tmp_np_nh_np;
-    struct blasfeo_dmat tmp_nv_np;
 } ocp_nlp_constraints_bghp_workspace;
 
 //
