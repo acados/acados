@@ -312,7 +312,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 mat_ptr[ii+(jj+1)*min_size] = stat[jj+ii*stat_n];
         }
     }
-    else if (!strcmp(field, "qp_solver_H"))
+    else if (!strcmp(field, "qp_solver_cond_H"))
     {
 		void *qp_in_;
         ocp_nlp_get(config, solver, "qp_xcond_in", &qp_in_);
@@ -330,8 +330,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		{
 			ocp_qp_in *qp_in = qp_in_;
 			int N = qp_in->dim->N;
-			int *nu = qp_in->dim->nx;
-			int *nx = qp_in->dim->nu;
+			int *nu = qp_in->dim->nu;
+			int *nx = qp_in->dim->nx;
 
 			mxArray *cell_array = mxCreateCellMatrix(N+1, 1);
 			plhs[0] = cell_array;
@@ -358,14 +358,37 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 		else
 		{
-			mexPrintf("\nerror: ocp_get: qp_solver_H: unsupported solver\n");
+			mexPrintf("\nerror: ocp_get: qp_solver_cond_H: unsupported solver\n");
 			exit(1);
+		}
+	}
+    else if (!strcmp(field, "qp_solver_A"))
+    {
+		ocp_qp_in *qp_in;
+        ocp_nlp_get(config, solver, "qp_in", &qp_in);
+
+		int N = qp_in->dim->N;
+		int *nu = qp_in->dim->nu;
+		int *nx = qp_in->dim->nx;
+
+		mxArray *cell_array = mxCreateCellMatrix(N, 1);
+		plhs[0] = cell_array;
+
+		mxArray *tmp_mat;
+
+		for (ii=0; ii<N; ii++)
+		{
+			tmp_mat = mxCreateNumericMatrix(nx[ii+1], nx[ii], mxDOUBLE_CLASS, mxREAL);
+			double *mat_ptr = mxGetPr( tmp_mat );
+			blasfeo_unpack_tran_dmat(nx[ii], nx[ii+1], qp_in->BAbt+ii, nu[ii], 0, mat_ptr, nx[ii+1]);
+
+			mxSetCell(cell_array, ii, tmp_mat);
 		}
 	}
     else
     {
         MEX_FIELD_NOT_SUPPORTED_SUGGEST(fun_name, field,
-             "x, u, z, pi, sens_x, sens_u, sens_pi, status, sqp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat, qp_solver_H");
+             "x, u, z, pi, sens_x, sens_u, sens_pi, status, sqp_iter, time_tot, time_lin, time_reg, time_qp_sol, stat, qp_solver_cond_H, qp_solver_A");
     }
 
     return;

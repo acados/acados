@@ -121,19 +121,19 @@ casadi_fun:
 	{% endif %}
 
 main:
-	gcc $(ACADOS_FLAGS) -c main_{{ model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
+	gcc $(ACADOS_FLAGS) -c main_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 solver:
-	gcc $(ACADOS_FLAGS) -c acados_solver_{{ model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
+	gcc $(ACADOS_FLAGS) -c acados_solver_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 sim_solver:
-	gcc $(ACADOS_FLAGS) -c acados_sim_solver_{{ model.name}}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
+	gcc $(ACADOS_FLAGS) -c acados_sim_solver_{{ model.name }}.c -I $(INCLUDE_PATH)/blasfeo/include/ -I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) -I $(INCLUDE_PATH)/acados/ -I $(INCLUDE_PATH)/qpOASES_e/
 
 example:
-	gcc $(ACADOS_FLAGS) -o main_{{ model.name}} $(OBJ) -L $(LIB_PATH) \
+	gcc $(ACADOS_FLAGS) -o main_{{ model.name }} $(OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH) \
 	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
@@ -150,4 +150,4 @@ shared_lib: casadi_fun solver
 clean:
 	rm -f *.o
 	rm -f *.so
-	rm -f main_{{ model.name}}
+	rm -f main_{{ model.name }}
