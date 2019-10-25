@@ -1188,7 +1188,7 @@ int acados_update_params(int stage, double *p, int np) {
         {% endif %}
     } else {
     {%- if ocp.dims.npd_e > 0 %}
-    casadi_np = (&p_e_constraint+stage)->np;
+    casadi_np = (&p_e_constraint)->np;
     if (casadi_np != np) {
         printf("acados_update_params: trying to set %i parameters "
             "in p_e_constraint which only has %i. Exiting.\n", np, casadi_np);
@@ -1197,7 +1197,7 @@ int acados_update_params(int stage, double *p, int np) {
     p_e_constraint.set_param(&p_e_constraint, p);
     {% endif %}
     {%- if ocp.dims.nh_e > 0 %}
-    casadi_np = (&h_e_constraint+stage)->np;
+    casadi_np = (&h_e_constraint)->np;
     if (casadi_np != np) {
         printf("acados_update_params: trying to set %i parameters " 
             "in h_e_constraint which only has %i. Exiting.\n", np, casadi_np);
