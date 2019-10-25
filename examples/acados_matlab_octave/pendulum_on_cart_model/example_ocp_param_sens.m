@@ -71,7 +71,7 @@ qp_solver = 'partial_condensing_hpipm';
 qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
-qp_solver_warm_start = 1;
+qp_solver_warm_start = 0;
 qp_solver_max_iter = 100;
 %sim_method = 'erk';
 sim_method = 'irk';
@@ -337,6 +337,60 @@ if status==0
 else
 	fprintf('\nsolution failed!\n\n');
 end
+
+
+% paramteric sensitivity of solution
+
+if 1
+%if !strcmp(qp_solver, 'full_condensing_qpoases')
+
+	field = 'ex'; % equality constraint on states
+	stage = 0;
+	index = 0;
+	ocp.eval_param_sens(field, stage, index);
+
+	sens_u = ocp.get('sens_u');
+	sens_x = ocp.get('sens_x');
+
+	% plot sensitivity
+	figure
+	subplot(2,1,1);
+	plot(0:N, sens_x);
+	xlim([0 N]);
+	legend('p', 'theta', 'v', 'omega');
+	subplot(2,1,2);
+	plot(0:N-1, sens_u);
+	xlim([0 N]);
+	legend('F');
+
+	% plot predicted solution
+	figure
+	subplot(2,1,1);
+	plot(0:N, x+sens_x);
+	xlim([0 N]);
+	legend('p', 'theta', 'v', 'omega');
+	subplot(2,1,2);
+	plot(0:N-1, u+sens_u);
+	xlim([0 N]);
+	legend('F');
+
+	for ii=1:N+1
+		x_cur = x(:,ii)+sens_x(:,ii);
+	%	visualize;
+	end
+
+end
+
+
+%qp_hess = ocp.get('qp_solver_H');
+%nv = size(qp_hess, 1);
+%% make full
+%for jj=1:nv
+%	for ii=jj+1:nv
+%		qp_hess(jj,ii) = qp_hess(ii,jj);
+%	end
+%end
+%qp_hessian_cond_num = cond(qp_hess)
 
 
 if is_octave()
