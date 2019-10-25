@@ -52,6 +52,7 @@ h = 0.01;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
+nlp_solver_step_length = 1.0;
 %nlp_solver_exact_hessian = 'false';
 nlp_solver_exact_hessian = 'true';
 %regularize_method = 'no_regularize';
@@ -65,13 +66,13 @@ nlp_solver_tol_eq   = 1e-8;
 nlp_solver_tol_ineq = 1e-8;
 nlp_solver_tol_comp = 1e-8;
 nlp_solver_ext_qp_res = 1;
-qp_solver = 'partial_condensing_hpipm';
-%qp_solver = 'full_condensing_hpipm';
+%qp_solver = 'partial_condensing_hpipm';
+qp_solver = 'full_condensing_hpipm';
 %qp_solver = 'full_condensing_qpoases';
 qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
-qp_solver_warm_start = 1;
+qp_solver_warm_start = 0;
 qp_solver_max_iter = 100;
 %sim_method = 'erk';
 sim_method = 'irk';
@@ -115,13 +116,18 @@ Vx_e = zeros(ny_e, nx); for ii=1:nx Vx_e(ii,ii)=1.0; end % state-to-output matri
 W = eye(ny); % weight matrix in lagrange term
 for ii=1:nu W(ii,ii)=1e-2; end
 for ii=nu+1:nu+nx/2 W(ii,ii)=1e3; end
+%for ii=nu+1:nu+nx/2 W(ii,ii)=1e1; end
 for ii=nu+nx/2+1:nu+nx W(ii,ii)=1e-2; end
 W_e = W(nu+1:nu+nx, nu+1:nu+nx); % weight matrix in mayer term
 yr = zeros(ny, 1); % output reference in lagrange term
 yr_e = zeros(ny_e, 1); % output reference in mayer term
 
+%yr(2:end) = [0; pi; 0; 0];
+%yr_e = [0; pi; 0; 0];
+
 % constraints
 x0 = [0; pi; 0; 0];
+%x0 = [0; pi; 0; 1];
 %Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,ii)=1.0; end
 %lbx = -4*ones(nbx, 1);
 %ubx =  4*ones(nbx, 1);
@@ -217,6 +223,7 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
+ocp_opts.set('nlp_solver_step_length', nlp_solver_step_length);
 if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 	ocp_opts.set('nlp_solver_tol_stat', nlp_solver_tol_stat);
@@ -271,8 +278,79 @@ ocp.set('init_u', u_traj_init);
 % solve
 tic;
 
-% solve ocp
-ocp.solve();
+if 0
+
+	% solve ocp
+	ocp.solve();
+
+else
+
+	% do one step at the time
+	ocp.set('nlp_solver_max_iter', 1);
+
+	for ii=1:nlp_solver_max_iter
+
+		disp(['iteration number ', num2str(ii)])
+
+		% solve the system using 1 SQP iteration
+		ocp.solve();
+
+		% print 1-iteration stat
+		ocp.print('stat');
+
+		% check stability of qp
+		qp_A = ocp.get('qp_solver_A');
+		qp_A_eig_max = 0;
+		for jj=1:length(qp_A)
+			tmp_A = qp_A{jj};
+			qp_A_eig = eig(tmp_A);
+			tmp = max(abs(qp_A_eig));
+			if tmp>qp_A_eig_max
+				qp_A_eig_max = tmp;
+			end
+		end
+		fprintf('A eig max %e\n', qp_A_eig_max);
+
+		% compute conditioning number and eigenvalues of hessian of (partial) cond qp
+		qp_cond_H = ocp.get('qp_solver_cond_H');
+		if iscell(qp_cond_H)
+
+			for jj=1:length(qp_cond_H)
+
+				tmp_H = qp_cond_H{jj};
+				nv = size(tmp_H, 1);
+				% make full
+				for jj=1:nv
+					for ii=jj+1:nv
+						tmp_H(jj,ii) = tmp_H(ii,jj);
+					end
+				end
+				qp_H_cond_num = cond(tmp_H);
+				qp_H_eig = eig(tmp_H);
+				fprintf('cond H condition number %e %e %e\n', qp_H_cond_num, min(qp_H_eig), max(qp_H_eig));
+
+			end
+
+		else
+			
+			nv = size(qp_cond_H, 1);
+			% make full
+			for jj=1:nv
+				for ii=jj+1:nv
+					qp_cond_H(jj,ii) = qp_cond_H(ii,jj);
+				end
+			end
+			qp_H_cond_num = cond(qp_cond_H);
+			qp_H_eig = eig(qp_cond_H);
+			fprintf('cond H condition number %e %e %e\n', qp_H_cond_num, min(qp_H_eig), max(qp_H_eig));
+
+		end
+
+		fprintf('\n\n');
+
+	end
+
+end
 
 time_ext = toc;
 % TODO: add getter for internal timing
@@ -299,7 +377,7 @@ ocp.print('stat');
 
 for ii=1:N+1
 	x_cur = x(:,ii);
-%	visualize;
+%visualize;
 end
 
 figure;

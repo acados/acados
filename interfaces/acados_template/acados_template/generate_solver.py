@@ -431,7 +431,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         os.chdir('c_generated_code/') 
         # render source template
         template_file = 'make_sfun.in.m'
-        out_file = 'acados_solver_sfun.in.c'
+        out_file = 'make_sfun.m'
         # output file
         os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../' + json_file + \

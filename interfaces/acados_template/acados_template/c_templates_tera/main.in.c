@@ -40,7 +40,7 @@
 #include "acados/utils/math.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
-#include "acados_solver_{{model.name}}.h"
+#include "acados_solver_{{ model.name }}.h"
 
 // ** global data **
 ocp_nlp_in * nlp_in;
@@ -93,47 +93,49 @@ int main()
         exit(1);
     }
 
-    // set initial condition
+    // initial condition
     double x0[{{ dims.nx }}];
-    {% for item in constraints.x0 %}
+    {%- for item in constraints.x0 %}
     x0[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", x0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x0);
 
     // initialization for state values
-    double x_init[{{dims.nx}}];
+    double x_init[{{ dims.nx }}];
     {%- for i in range(end=dims.nx) %}
     x_init[{{ i }}] = 0.0;
     {%- endfor %}
 
     // initial value for control input
-    double u0[{{dims.nu}}];
+    double u0[{{ dims.nu }}];
     {%- for i in range(end=dims.nu) %}
-    u0[{{i}}] = 0.0;
+    u0[{{ i }}] = 0.0;
     {%- endfor %}
 
     // xtraj
-    double xtraj[{{dims.nx}} * ({{dims.N}}+1)];
+    double xtraj[{{ dims.nx }} * ({{ dims.N }}+1)];
     // utraj
-    double utraj[{{dims.nu}} * ({{dims.N}})];
+    double utraj[{{ dims.nu }} * ({{ dims.N }})];
 
     {%- if dims.np > 0%}
     // set parameters
-    double p[{{dims.np}}];
+    double p[{{ dims.np }}];
     {% for item in constraints.p %}
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
     
-    {%- if solver_config.integrator_type == "IRK" %}
-    for (int ii = 0; ii < {{ dims.N }}; ii++) {
-    impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
-    impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
-    impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
+    {%- if solver_config.integrator_type == "IRK" -%}
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
+    {
+        impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
+        impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
+        impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
     }
-    {%- else %}
-    for (int ii = 0; ii < {{ dims.N }}; ii++) {
-    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
+    {%- else -%}
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
+    {
+        forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {%- endif %}
     for (int ii = 0; ii < {{ dims.N }}; ++ii) {
@@ -175,14 +177,14 @@ int main()
 
     /* print solution and statistics */
     for (int ii = 0; ii <= nlp_dims->N; ii++)
-        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "x", &xtraj[ii*{{dims.nx}}]);
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "x", &xtraj[ii*{{ dims.nx }}]);
     for (int ii = 0; ii < nlp_dims->N; ii++)
-        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "u", &utraj[ii*{{dims.nu}}]);
+        ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "u", &utraj[ii*{{ dims.nu }}]);
 
     printf("\n--- xtraj ---\n");
-    d_print_exp_tran_mat( {{dims.nx}}, {{dims.N}}+1, xtraj, {{dims.nx}} );
+    d_print_exp_tran_mat( {{ dims.nx }}, {{ dims.N }}+1, xtraj, {{ dims.nx }} );
     printf("\n--- utraj ---\n");
-    d_print_exp_tran_mat( {{dims.nu}}, {{dims.N}}, utraj, {{dims.nu}} );
+    d_print_exp_tran_mat( {{ dims.nu }}, {{ dims.N }}, utraj, {{ dims.nu }} );
     // ocp_nlp_out_print(nlp_solver->dims, nlp_out);
 
     printf("\nsolved ocp %d times, solution printed above\n\n", NTIMINGS);
