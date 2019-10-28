@@ -49,7 +49,7 @@ function build_acados {
 		ACADOS_LINT='OFF';
 	fi
 
-	if [ "${ACADOS_UNIT_TESTS}" = 'ON' || "${ACADOS_PYTHON}" = ON ]; then
+	if [ "${ACADOS_UNIT_TESTS}" = 'ON' || "${ACADOS_PYTHON}" = 'ON' ]; then
 		ACADOS_WITH_QPOASES='ON';
 	fi
 
