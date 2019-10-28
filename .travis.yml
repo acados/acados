@@ -67,10 +67,10 @@ matrix:
         - ACADOS_OCTAVE="OFF"
         - ACADOS_UNIT_TESTS="ON"
         # - ACADOS_EXAMPLES="OFF"
-    - name: Linux Gcc5
-      env:
-        - DEPLOY_NAME="linux-python-gcc5"
-        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+    # - name: Linux Gcc5
+    #   env:
+    #     - DEPLOY_NAME="linux-python-gcc5"
+    #     - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
 
 cache:
   ccache: true
