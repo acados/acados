@@ -43,7 +43,7 @@ from ctypes import *
 from copy import deepcopy
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
-    USE_TERA = 1 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
+    USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
     
     model = acados_ocp.model
     if acados_ocp.solver_config.integrator_type == 'ERK':
