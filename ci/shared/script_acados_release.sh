@@ -83,7 +83,7 @@ function build_acados {
     if [[ "${ACADOS_PYTHON}" = 'ON' ]] ;
     then
         source "${SCRIPT_DIR}/install_python_dependencies.sh";
-        pushd interfaces/acadoe_template;
+        pushd interfaces/acados_template;
             pip install -e .
         popd;
 		mkdir -p bin;
