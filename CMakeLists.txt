@@ -163,7 +163,7 @@ if(ACADOS_LINT)
     endif()
 endif()
 
-if(ACADOS_MATLAB OR ACADOS_OCTAVE) #TODO: OR ACADOS_PYTHON
+if(ACADOS_MATLAB OR ACADOS_OCTAVE OR ACADOS_PYHON) 
     add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces)
 endif()
 

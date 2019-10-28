@@ -44,11 +44,12 @@ elif [ "${SECTION}" = 'install' ]; then
 	source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
 	source "${SCRIPT_DIR}/install_python.sh";
 
-	if [[ "${TEMPLATE_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ||
-	   [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
-		"${DEV_MATLAB}" = 'ON';
-		then
-		source "${SCRIPT_DIR}/install_casadi.sh";
+    if  "${TEMPLATE_MATLAB}" = 'ON' ||
+	    [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
+        [[ "${ACADOS_PYTHON}" = 'ON' ]] || 
+        "${DEV_MATLAB}" = 'ON';
+        then
+        source "${SCRIPT_DIR}/install_casadi.sh";
 	fi
 
 	if [ "${ACADOS_OCTAVE}" = 'ON' ] ;
@@ -78,9 +79,12 @@ elif [ "${SECTION}" = 'install' ]; then
 		echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 	fi
 
-	if [[ "${TEMPLATE_PYTHON}" = 'ON' ]] ;
+	if [[ "${ACADOS_PYTHON}" = 'ON' ]] ;
 	then
 		source "${SCRIPT_DIR}/install_python_dependencies.sh";
+		pushd examples/acados_template/python/test;
+			export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
+		popd;
 	fi
 
 	if [[ "${TEMPLATE_MATLAB}" = 'ON' ]] ||
