@@ -40,6 +40,10 @@ from ctypes import *
 import json
 import argparse
 
+# set to 'True' to generate test data
+GENERATE_DATA = False
+TEST_TOL = 1e-6
+
 parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
 parser.add_argument('--FORMULATION', dest='FORMULATION', 
                     default='LS',
@@ -239,7 +243,18 @@ for i in range(Nsim):
     acados_solver.set(N, "yref", np.array([0, 0, 0, 0]))
 
 # dump result to JSON file for unit testing
-with open('results/generate_c_code_out_' + FORMULATION + '_' + QP_SOLVER + '_' + \
-        INTEGRATOR_TYPE + '_' + SOLVER_TYPE + '.json', 'w') as f:
-    json.dump({"simX": simX.tolist(), "simU": simU.tolist()}, f)
+test_file_name = 'test_data/generate_c_code_out_' + FORMULATION + '_' + QP_SOLVER + '_' + \
+            INTEGRATOR_TYPE + '_' + SOLVER_TYPE + '.json'
 
+if GENERATE_DATA:
+    with open(test_file_name, 'w') as f:
+        json.dump({"simX": simX.tolist(), "simU": simU.tolist()}, f)
+else:
+    with open(test_file_name, 'r') as f:
+        test_data = json.load(f)
+    simX_error = np.linalg.norm(test_data['simX'] - simX)
+    simU_error = np.linalg.norm(test_data['simU'] - simU)
+    if  simX_error > TEST_TOL or  simU_error > TEST_TOL:
+        raise Exception("Python acados test failure on pendulum example! Exiting.\n")
+    else: 
+        print('Test passed with accuracy {:.2E}'.format(max(simU_error, simX_error)))
