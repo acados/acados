@@ -89,6 +89,7 @@ function build_acados {
 		mkdir -p bin;
         pushd bin;
             wget -O t_renderer "${TERA_RENDERER_URL}";
+            chmod +x t_renderer
         popd;
     fi
 
