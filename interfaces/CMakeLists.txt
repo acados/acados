@@ -42,3 +42,7 @@ add_test(NAME octave_test_sim
 add_test(NAME octave_test_ocp
          COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
          octave --no-gui --no-window-system ./run_tests_ocp.m)
+
+add_test(NAME python_test_ocp 
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_template/python/test
+        python generate_c_code.py)
