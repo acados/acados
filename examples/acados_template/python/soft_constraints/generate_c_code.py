@@ -235,8 +235,8 @@ ocp.solver_config.tf = Tf
 ocp.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
-ocp.acados_include_path  = '/usr/local/include'
-ocp.acados_lib_path      = '/usr/local/lib'
+ocp.acados_include_path  = '~/acados/include'
+ocp.acados_lib_path      = '~/acados/lib'
 
 # json_layout = acados_ocp2json_layout(ocp)
 # with open('acados_layout.json', 'w') as f:
