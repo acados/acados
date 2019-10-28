@@ -155,10 +155,8 @@ ocp.solver_config.tf = Tf
 ocp.solver_config.nlp_solver_type = 'SQP_RTI'
 
 # set header path
-# ocp.acados_include_path  = '/usr/local/include'
-# ocp.acados_lib_path      = '/usr/local/lib'
-ocp.acados_include_path  = '~/acados/include'
-ocp.acados_lib_path      = '~/acados/lib'
+ocp.acados_include_path  = '../../../../../include'
+ocp.acados_lib_path      = '../../../../../lib'
 
 acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
 
@@ -190,21 +188,3 @@ for i in range(Nsim):
     for j in range(N):
         acados_solver.set(j, "yref", np.array([0, 0, 0, 0, 0]))
     acados_solver.set(N, "yref", np.array([0, 0, 0, 0]))
-
-# plot results
-import matplotlib
-import matplotlib.pyplot as plt
-t = np.linspace(0.0, Tf/N, Nsim)
-plt.subplot(2, 1, 1)
-plt.step(t, simU, color='r')
-plt.title('closed-loop simulation')
-plt.ylabel('u')
-plt.xlabel('t')
-plt.grid(True)
-plt.subplot(2, 1, 2)
-plt.plot(t, simX[:,1])
-plt.ylabel('theta')
-plt.xlabel('t')
-plt.grid(True)
-plt.show()
-
