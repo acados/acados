@@ -14,7 +14,6 @@ test_parameters = { 'FORMULATION_values': FORMULATION_values,
 all_test_parameters = sorted(test_parameters)
 combinations = list(it.product(*(test_parameters[Name] for Name in all_test_parameters)))
 
-# combinations = [('LS', 'IRK', 'PARTIAL_CONDENSING_HPIPM', 'SQP')]
 for parameters in combinations:
     os_cmd = ("python generate_c_code.py" + 
         " --FORMULATION {}".format(parameters[0]) + 

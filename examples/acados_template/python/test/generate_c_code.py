@@ -257,4 +257,4 @@ else:
     if  simX_error > TEST_TOL or  simU_error > TEST_TOL:
         raise Exception("Python acados test failure on pendulum example! Exiting.\n")
     else: 
-        print('Test passed with accuracy {:.2E}'.format(max(simU_error, simX_error)))
+        print('Python test passed with accuracy {:.2E}'.format(max(simU_error, simX_error)))

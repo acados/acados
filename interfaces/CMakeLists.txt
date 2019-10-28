@@ -48,5 +48,5 @@ endif()
 if(ACADOS_PYTHON) 
 add_test(NAME python_test_ocp 
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_template/python/test
-        python generate_c_code.py)
+        python main_test.py)
 endif()
