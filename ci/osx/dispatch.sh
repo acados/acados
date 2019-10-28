@@ -47,7 +47,7 @@ elif [ "${SECTION}" = 'install' ]; then
 
     if  "${TEMPLATE_MATLAB}" = 'ON' ||
         [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
-        [[ "${ACADOS_PYTHON}" = 'ON']] ||
+        [[ "${ACADOS_PYTHON}" = 'ON' ]] || 
         "${DEV_MATLAB}" = 'ON';
         then
         source "${SCRIPT_DIR}/install_casadi.sh";
