@@ -591,8 +591,8 @@ int ocp_nlp_sqp_rti(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
     }
 
     // printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
-    // print_ocp_qp_out(nlp_mem->qp_out);
-    // exit(1);
+    //  print_ocp_qp_out(nlp_mem->qp_out);
+    //  exit(1);
 
     // save statistics
     mem->stat[mem->stat_n*1+0] = qp_status;

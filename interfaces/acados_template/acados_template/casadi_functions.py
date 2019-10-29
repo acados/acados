@@ -46,15 +46,12 @@ class acados_dae():
 
 class acados_constraint():
     def __init__(self):
-        self.con_h_expr   = None #: CasADi expression for the constraint
-        self.con_r_expr = None #: CasADi expression for the constraint
+        self.expr = None #: CasADi expression for the constraint
         self.x = None    #: CasADi variable describing the state of the system
         self.u = None    #: CasADi variable describing the input of the system
-        self.r = None    #: CasADi variable describing the output of nonconvex part in convex-over nonconvex constraints
-        self.z = []      #: CasADi variable describing the algebraic variables 
-        self.p = []      #: CasADi variable describing parameters in the constraints
-        self.nh = None   #: dimension of image of h
-        self.nr = None   #: dimension of image of nonlinear residuals 
+        self.z = []      #: CasADi variable describing the algebraic variables in the constraints
+        self.p = []      #: CasADi variable describing parameters in the constraintas
+        self.nc = None   #: number of constraints
         self.name = None #: name associated with the function
 
 class acados_cost():
@@ -93,16 +90,10 @@ def acados_constraint_strip_non_num(acados_constraint):
         del out['z']
     if 'p' in out.keys(): 
         del out['p']
-    if 'r' in out.keys(): 
-        del out['r']
-    if 'con_h_expr' in out.keys(): 
-        del out['con_h_expr']
-    if 'con_r_expr' in out.keys(): 
-        del out['con_r_expr']
-    if 'nh' in out.keys(): 
-        del out['nh']
-    if 'nr' in out.keys(): 
-        del out['nr']
+    if 'expr' in out.keys(): 
+        del out['expr']
+    if 'nc' in out.keys(): 
+        del out['nc']
     return out
 
 def acados_cost_strip_non_num(acados_cost):

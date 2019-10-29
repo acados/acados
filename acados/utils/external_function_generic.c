@@ -755,7 +755,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
 
             default:
                 printf("\ntype in %d\n", type_in[ii]);
-                printf("\nUnknown external function argument type for argument %i\n\n", ii);
+                printf("\nUnknown external function argument type\n\n");
                 exit(1);
         }
     }
@@ -802,7 +802,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
 
             default:
                 printf("\ntype out %d\n", type_out[ii]);
-                printf("\nUnknown external function argument type for output %i\n\n", ii);
+                printf("\nUnknown external function argument type\n\n");
                 exit(1);
         }
     }
@@ -1023,13 +1023,8 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
                                           (int *) fun->casadi_sparsity_in(ii));
                 break;
 
-            case IGNORE_ARGUMENT:
-                // do nothing
-                break;
-
             default:
-                printf("\ntype in %d\n", type_in[ii]);
-                printf("\nUnknown external function argument type for argument %i\n\n", ii);
+                printf("\nUnknown external function argument type\n\n");
                 exit(1);
         }
     }
@@ -1073,13 +1068,8 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
                                           (int *) fun->casadi_sparsity_out(ii), out[ii]);
                 break;
 
-            case IGNORE_ARGUMENT:
-                // do nothing
-                break;
-
             default:
-                printf("\ntype in %d\n", type_out[ii]);
-                printf("\nUnknown external function argument type for output %i\n\n", ii);
+                printf("\nUnknown external function argument type\n\n");
                 exit(1);
         }
     }
