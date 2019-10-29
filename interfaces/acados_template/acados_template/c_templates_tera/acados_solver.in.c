@@ -1,35 +1,3 @@
-/*
- * Copyright 2019 Gianluca Frison, Dimitris Kouzoupis, Robin Verschueren,
- * Andrea Zanelli, Niels van Duijkeren, Jonathan Frey, Tommaso Sartor,
- * Branimir Novoselnik, Rien Quirynen, Rezart Qelibari, Dang Doan,
- * Jonas Koenemann, Yutao Chen, Tobias Schöls, Jonas Schlagenhauf, Moritz Diehl
- *
- * This file is part of acados.
- *
- * The 2-Clause BSD License
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.;
- */
 
 
 // standard
@@ -42,12 +10,12 @@
 
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
-{% if constraint.constraint_type == "BGP" %}
-#include "{{ con_r.name }}_r_constraint/{{ con_r.name }}_r_constraint.h"
+{% if constraints.constr_type == "BGP" %}
+#include "{{ con_phi.name }}_r_constraint/{{ con_phi.name }}_r_constraint.h"
 #include "{{ con_phi.name }}_phi_constraint/{{ con_phi.name }}_phi_constraint.h"
 {% endif %}
-{% if constraint.constraint_type_e == "BGP" %}
-#include "{{ con_r_e.name }}_r_e_constraint/{{ con_r_e.name }}_r_e_constraint.h"
+{% if constraints.constr_type_e == "BGP" %}
+#include "{{ con_phi_e.name }}_r_e_constraint/{{ con_phi_e.name }}_r_e_constraint.h"
 #include "{{ con_phi_e.name }}_phi_e_constraint/{{ con_phi_e.name }}_phi_e_constraint.h"
 {% endif %}
 {% if dims.nh > 0 %}
@@ -57,10 +25,10 @@
 #include "{{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.h"
 {% endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
-#include "{{ cost_r.name }}_r_cost/{{ cost_r.name }}_r_cost.h"
+#include "{{ cost_phi.name }}_r_cost/{{ cost_r.name }}_r_cost.h"
 {% endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-#include "{{ cost_r_e.name }}_r_e_cost/{{ cost_r_e.name }}_r_e_cost.h"
+#include "{{ cost_phi_e.name }}_r_e_cost/{{ cost_r_e.name }}_r_e_cost.h"
 {% endif %}
 
 #include "acados_solver_{{ model.name }}.h"
@@ -86,7 +54,7 @@
 #define N_     {{ dims.N }}
 #define NH_    {{ dims.nh }}
 #define NHN_   {{ dims.nh_e }}
-#define NR_   {{ dims.nr }}
+#define NR_    {{ dims.nr }}
 #define NRN_   {{ dims.nr_e }}
 
 #if NX_ < 1
@@ -490,7 +458,7 @@ int acados_create()
         nb[i]  = NBU_ + NBX_;
         ng[i]  = NG_;
         nh[i]  = NH_;
-        nr[i] = NPD_;
+        nr[i] = NR_;
         ns[i]  = 0;
         nz[i]  = NZ_;
         nv[i]  = NX_ + NU_;
@@ -505,7 +473,7 @@ int acados_create()
     nx[N]  = NX_;
     nz[N]  = 0;
     nh[N]  = NHN_;
-    nr[N]  = NPDN_;
+    nr[N]  = NR_;
     nv[N]  = NX_; 
     ny[N]  = NYN_;
     nbu[N] = 0;
@@ -530,14 +498,14 @@ int acados_create()
     }
 
     for (int i = 0; i < N; i++) {
-        {% if constraint.constraint_type == "BGP" %}
+        {% if constraints.constr_type == "BGP" %}
         nlp_solver_plan->nlp_constraints[i] = BGP;
         {%- else -%}
         nlp_solver_plan->nlp_constraints[i] = BGH;
         {%- endif %}
     }
 
-    {% if constraint.constraint_type_e == "BGP" %}
+    {% if constraints.constr_type_e == "BGP" %}
     nlp_solver_plan->nlp_constraints[N] = BGP;
     {% else %}
     nlp_solver_plan->nlp_constraints[N] = BGH;
@@ -564,17 +532,18 @@ int acados_create()
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
     }
 
-    {%- if constraints.constraint_type == "BGP" %}
+    {% if constraints.constr_type == "BGP" %}
     for (int i = 0; i < N; i++) 
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nr", &nr[i]);
     {%- endif %}
-    {%- if constraints.constraint_type_e == "BGP" %}
+    {%- if constraints.constr_type_e == "BGP" %}
     ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nr", &nr[N]);
     {%- endif %}
 
-    {%- if constraints.constraint_type == "BGP" %}
+    {%- if constraints.constr_type == "BGP" %}
     r_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nphi", &nphi[i]);
         // convex part of convex-composite constraint
         phi_constraint[i].casadi_fun = &{{ con_phi.name }}_phi_constraint;
         phi_constraint[i].casadi_n_in = &{{ con_phi.name }}_phi_constraint_n_in;
@@ -586,38 +555,39 @@ int acados_create()
         external_function_param_casadi_create(&phi_constraint[i], {{ dims.np }});
 
         // nonlinear part of convex-composite constraint
-        r_constraint[i].casadi_fun = &{{ con_r.name }}_r_constraint;
-        r_constraint[i].casadi_n_in = &{{ con_r.name }}_r_constraint_n_in;
-        r_constraint[i].casadi_n_out = &{{ con_r.name }}_r_constraint_n_out;
-        r_constraint[i].casadi_sparsity_in = &{{ con_r.name }}_r_constraint_sparsity_in;
-        r_constraint[i].casadi_sparsity_out = &{{ con_r.name }}_r_constraint_sparsity_out;
-        r_constraint[i].casadi_work = &{{ con_r.name }}_r_constraint_work;
+        r_constraint[i].casadi_fun = &{{ con_phi.name }}_r_constraint;
+        r_constraint[i].casadi_n_in = &{{ con_phi.name }}_r_constraint_n_in;
+        r_constraint[i].casadi_n_out = &{{ con_phi.name }}_r_constraint_n_out;
+        r_constraint[i].casadi_sparsity_in = &{{ con_phi.name }}_r_constraint_sparsity_in;
+        r_constraint[i].casadi_sparsity_out = &{{ con_phi.name }}_r_constraint_sparsity_out;
+        r_constraint[i].casadi_work = &{{ con_phi.name }}_r_constraint_work;
 
         external_function_param_casadi_create(&r_constraint[i], {{ dims.np }});
     }
     {%- endif %}
 
-    {%- if constraints.constraint_type_e == "BGP" %}
-        // convex part of convex-composite constraint
-        phi_e_constraint[i].casadi_fun = &{{ con_phi_e.name }}_phi_e_constraint;
-        phi_e_constraint[i].casadi_n_in = &{{ con_phi_e.name }}_phi_e_constraint_n_in;
-        phi_e_constraint[i].casadi_n_out = &{{ con_phi_e.name }}_phi_e_constraint_n_out;
-        phi_e_constraint[i].casadi_sparsity_in = &{{ con_phi_e.name }}_phi_e_constraint_sparsity_in;
-        phi_e_constraint[i].casadi_sparsity_out = &{{ con_phi_e.name }}_phi_e_constraint_sparsity_out;
-        phi_e_constraint[i].casadi_work = &{{ con_phi_e.name }}_phi_e_constraint_work;
+    {%- if constraints.constr_type_e == "BGP" %}
+    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nphi", &nphi[N]);
+    // convex part of convex-composite constraint
+    phi_e_constraint.casadi_fun = &{{ con_phi_e.name }}_phi_e_constraint;
+    phi_e_constraint.casadi_n_in = &{{ con_phi_e.name }}_phi_e_constraint_n_in;
+    phi_e_constraint.casadi_n_out = &{{ con_phi_e.name }}_phi_e_constraint_n_out;
+    phi_e_constraint.casadi_sparsity_in = &{{ con_phi_e.name }}_phi_e_constraint_sparsity_in;
+    phi_e_constraint.casadi_sparsity_out = &{{ con_phi_e.name }}_phi_e_constraint_sparsity_out;
+    phi_e_constraint.casadi_work = &{{ con_phi_e.name }}_phi_e_constraint_work;
 
-        external_function_param_casadi_create(&phi_e_constraint[i], {{ dims.np }});
+    external_function_param_casadi_create(&phi_e_constraint, {{ dims.np }});
 
-        // nonlinear part of convex-composite constraint
-        external_function_casadi r_e_constraint;
-        r_e_constraint.casadi_fun = &{{ con_r_e.name }}_r_e_constraint;
-        r_e_constraint.casadi_n_in = &{{ con_r_e.name }}_r_e_constraint_n_in;
-        r_e_constraint.casadi_n_out = &{{ con_r_e.name }}_r_e_constraint_n_out;
-        r_e_constraint.casadi_sparsity_in = &{{ con_r_e.name }}_r_e_constraint_sparsity_in;
-        r_e_constraint.casadi_sparsity_out = &{{ con_r_e.name }}_r_e_constraint_sparsity_out;
-        r_e_constraint.casadi_work = &{{ con_r_e.name }}_r_e_constraint_work;
+    // nonlinear part of convex-composite constraint
+    external_function_casadi r_e_constraint;
+    r_e_constraint.casadi_fun = &{{ con_phi_e.name }}_r_e_constraint;
+    r_e_constraint.casadi_n_in = &{{ con_phi_e.name }}_r_e_constraint_n_in;
+    r_e_constraint.casadi_n_out = &{{ con_phi_e.name }}_r_e_constraint_n_out;
+    r_e_constraint.casadi_sparsity_in = &{{ con_phi_e.name }}_r_e_constraint_sparsity_in;
+    r_e_constraint.casadi_sparsity_out = &{{ con_phi_e.name }}_r_e_constraint_sparsity_out;
+    r_e_constraint.casadi_work = &{{ con_phi_e.name }}_r_e_constraint_work;
 
-        external_function_param_casadi_create(r_e_constraint, {{ dims.np }});
+    external_function_param_casadi_create(r_e_constraint, {{ dims.np }});
     {% endif %}
 
     {% if dims.nh > 0 %}
@@ -836,7 +806,7 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ug_e);
     {%- endif %}
 
-    {%- if constraints.constraint_type == "BGP" %}
+    {%- if constraints.constr_type == "BGP" %}
     // convex-composite constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_r_fun_jac", &r_constraint[i]);
@@ -845,7 +815,7 @@ int acados_create()
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lphi", uphi);
     {%- endif %}
 
-    {%- if constraints.constraint_type_e == "BGP" %}
+    {%- if constraints.constr_type_e == "BGP" %}
     // convex-composite constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_r_fun_jac", &r_e_constraint);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_phi_fun_jac", &r_e_constraint);
@@ -962,7 +932,7 @@ int acados_create()
     }
     {% endif %}
     for (int ii = 0; ii < {{ dims.N }}; ++ii) {
-        {%- if constraint.constraint_type == "BGP" > 0 %}
+        {%- if constraints.constr_type == "BGP" %}
         r_constraint[ii].set_param(r_constraint+ii, p);
         phi_constraint[ii].set_param(phi_constraint+ii, p);
         {% endif %}
@@ -970,7 +940,7 @@ int acados_create()
         h_constraint[ii].set_param(h_constraint+ii, p);
         {% endif %}
     }
-    {%- if constraint.constraint_type_e == "BGP" > 0 %}
+    {%- if constraints.constr_type_e == "BGP" %}
     r_e_constraint.set_param(&r_e_constraint, p);
     phi_e_constraint.set_param(&phi_e_constraint, p);
     {% endif %}
@@ -986,7 +956,7 @@ int acados_create()
 int acados_update_params(int stage, double *p, int np) {
     int solver_status = 0;
     int casadi_np = 0;
-    {% if dims.np > 0%}
+    {% if dims.np > 0 %}
     if (stage < {{ dims.N }}) {
         {% if solver_config.integrator_type == "IRK" %}
         casadi_np = (impl_dae_fun+stage)->np;
@@ -1019,7 +989,7 @@ int acados_update_params(int stage, double *p, int np) {
         }
         forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
         {% endif %}
-        {% if constraint.constraint_type == "BGP" %}
+        {% if constraints.constr_type == "BGP" %}
         casadi_np = (r_constraint+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters " 
@@ -1045,7 +1015,7 @@ int acados_update_params(int stage, double *p, int np) {
         h_constraint[stage].set_param(h_constraint+stage, p);
         {% endif %}
     } else {
-    {% if constraint.constraint_type_e == "BGP" %}
+    {% if constraints.constr_type_e == "BGP" %}
     casadi_np = (&r_e_constraint)->np;
     if (casadi_np != np) {
         printf("acados_update_params: trying to set %i parameters "

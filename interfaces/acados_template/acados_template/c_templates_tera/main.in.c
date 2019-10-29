@@ -140,22 +140,22 @@ int main()
     }
     {% endif %}
     for (int ii = 0; ii < {{ dims.N }}; ++ii) {
-        {%- if dims.npd > 0 %}
-        p_constraint[ii].set_param(p_constraint+ii, p);
+        {%- if constraints.constr_type == "BGP" %}
+        r_constraint[ii].set_param(r_constraint+ii, p);
+        phi_constraint[ii].set_param(phi_constraint+ii, p);
         {% endif %}
         {%- if dims.nh > 0 %}
         h_constraint[ii].set_param(h_constraint+ii, p);
         {% endif %}
     }
-    {%- if dims.npd_e > 0 %}
-    p_e_constraint.set_param(&p_e_constraint, p);
+    {%- if constraints.constr_type_e == "BGP" %}
+    r_e_constraint[ii].set_param(r_e_constraint+ii, p);
+    phi_e_constraint[ii].set_param(phi_e_constraint+ii, p);
     {% endif %}
     {%- if dims.nh_e > 0 %}
     h_e_constraint.set_param(&h_e_constraint, p);
     {% endif %}
     {% endif %}
-
-    double kkt_norm_inf = 1e12, elapsed_time;
 
     // prepare evaluation
     int NTIMINGS = 10;

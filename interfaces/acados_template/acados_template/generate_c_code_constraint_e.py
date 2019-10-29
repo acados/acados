@@ -104,6 +104,7 @@ def generate_c_code_constraint_e( constraint ):
         constraint_fun_jac_tran.generate(file_name, casadi_opts)
         os.chdir('../..')
     else: # BGP constraint
+        gen_dir = con_name + '_phi_e_constraint'
         fun_name = con_name + '_phi_e_constraint'
         con_phi_expr_x = substitute(con_phi_expr, r, con_r_expr)
         jac_x = jacobian(con_phi_expr_x, x);

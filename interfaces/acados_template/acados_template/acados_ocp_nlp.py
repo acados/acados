@@ -621,6 +621,14 @@ class ocp_nlp_constraints:
         self.__x0      = []        #: :math:`\bar{x}_0` - initial state 
         self.__p       = []        #: :math:`p` - parameters 
 
+    @property
+    def constr_type(self):
+        return self.__constr_type
+
+    @property
+    def constr_type_e(self):
+        return self.__constr_type_e
+    
     # bounds on x and u
     @property
     def lbx(self):
@@ -823,6 +831,33 @@ class ocp_nlp_constraints:
                 raise Exception('J matrices can only contain 1s. Exiting.')
             idx[i] = this_idx[0]
         return idx
+
+    @constr_type.setter
+    def constr_type(self, constr_type):
+        constr_types = ('BGHP', 'BGP')
+
+        if type(constr_type) == str and constr_type in constr_types:
+            self.__constr_type = constr_type
+        else:
+            raise Exception('Invalid constr_type value. Possible values are:\n\n' \
+                    + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type + '.\n\nExiting.')
+
+    @constr_type_e.setter
+    def constr_type_e(self, constr_type_e):
+        constr_types = ('BGHP', 'BGP')
+
+        if type(constr_type_e) == str and constr_type_e in constr_types:
+            self.__constr_type_e = constr_type_e
+        else:
+            raise Exception('Invalid constr_type_e value. Possible values are:\n\n' \
+                    + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type_e + '.\n\nExiting.')
+
+    @ubx.setter
+    def ubx(self, ubx):
+        if type(ubx) == np.ndarray:
+            self.__ubx = ubx
+        else:
+            raise Exception('Invalid ubx value. Exiting.')
 
     # bounds on x and u
     @lbx.setter

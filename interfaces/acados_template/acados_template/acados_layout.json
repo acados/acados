@@ -436,10 +436,16 @@
         "np": [
             "int"
         ],
-        "npd": [
+        "nr": [
             "int"
         ],
-        "npd_e": [
+        "nr_e": [
+            "int"
+        ],
+        "nphi": [
+            "int"
+        ],
+        "nphi_e": [
             "int"
         ],
         "nu": [

@@ -58,7 +58,6 @@ def generate_c_code_constraint( constraint ):
     con_phi_expr = constraint.con_phi_expr
     con_r_expr = constraint.con_r_expr
     con_name = constraint.name
-    import pdb; pdb.set_trace()
 
     # get dimensions
     nx = x.size()[0]

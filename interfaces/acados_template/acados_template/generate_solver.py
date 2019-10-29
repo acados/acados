@@ -56,18 +56,18 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     # if acados_ocp.con_p.name is not None and acados_ocp.con_h.name is None:
     #     raise Exception('h constraint is missing!')
 
-    if acados_ocp.con_h.name is not None:
+    if acados_ocp.constraints.constr_type == 'BGP':
         # nonlinear part of nonlinear constraints 
+        generate_c_code_constraint(acados_ocp.con_phi)
+    elif acados_ocp.constraints.constr_type  == 'BGH': 
         generate_c_code_constraint(acados_ocp.con_h)
 
-    if acados_ocp.con_h_e.name is not None:
+    if acados_ocp.constraints.constr_type  == 'BGP':
         # nonlinear part of nonlinear constraints 
-        generate_c_code_constraint_e(acados_ocp.con_h_e)
+        generate_c_code_constraint_e(acados_ocp.con_phi_e)
+    elif acados_ocp.constraints.constr_type_e  == 'BGH': 
+        generate_c_code_constraint(acados_ocp.con_h_e)
     
-    # if acados_ocp.con_p.name is not None:
-    #     # convex part of nonlinear constraints 
-    #     generate_c_code_constraint(acados_ocp.con_p, '_p_constraint')
-
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         generate_c_code_nls_cost(acados_ocp.cost_r)
 
@@ -107,12 +107,8 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     # setting up loader and environment
     acados_path = os.path.dirname(os.path.abspath(__file__))
     tera_path = acados_path + '/../../../bin/' 
-    if USE_TERA == 0:
-        file_loader = FileSystemLoader(acados_path + '/c_templates')
-        env = Environment(loader = file_loader)
-    else:
-        template_glob = acados_path + '/c_templates_tera/*'
-        acados_template_path = acados_path + '/c_templates_tera'
+    template_glob = acados_path + '/c_templates_tera/*'
+    acados_template_path = acados_path + '/c_templates_tera'
 
     # create c_generated_code folder
     if not os.path.exists('c_generated_code'):
@@ -190,32 +186,58 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     os.system(os_cmd)
     os.chdir('../..')
 
-    if acados_ocp.constraints.constraint_type == 'BGP':
+    if acados_ocp.constraints.constr_type == 'BGP':
         # create folder
         if not os.path.exists('c_generated_code/' + acados_ocp.con_phi.name + '_phi_constraint/'):
             os.mkdir('c_generated_code/' + acados_ocp.con_phi.name + '_phi_constraint/')
-        if not os.path.exists('c_generated_code/' + acados_ocp.con_r.name + '_r_constraint/'):
-            os.mkdir('c_generated_code/' + acados_ocp.con_r.name + '_r_constraint/')
-        os.chdir('c_generated_code/' + acados_ocp.con_h.name + '_p_constraint/')
+        os.chdir('c_generated_code/' + acados_ocp.con_phi.name + '_phi_constraint/')
         # render source template
-        template_file = 'p_constraint.in.h'
-        out_file = acados_ocp.con_h.name + '_p_constraint.h'
+        template_file = 'phi_constraint.in.h'
+        out_file = acados_ocp.con_phi.name + '_phi_constraint.h'
         # output file
         os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
+        os.chdir('../..')
+        # create folder
+        if not os.path.exists('c_generated_code/' + acados_ocp.con_phi.name + '_r_constraint/'):
+            import pdb; pdb.set_trace()
+            os.mkdir('c_generated_code/' + acados_ocp.con_phi.name + '_r_constraint/')
+        os.chdir('c_generated_code/' + acados_ocp.con_phi.name + '_r_constraint/')
+        # render source template
+        template_file = 'r_constraint.in.h'
+        out_file = acados_ocp.con_phi.name + '_r_constraint.h'
+        # output file
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
+
+
         os.system(os_cmd)
         os.chdir('../..')
 
-    if acados_ocp.dims.npd_e > 0:
+    if acados_ocp.constraints.constr_type_e == 'BGP':
         # create folder
-        if not os.path.exists('c_generated_code/' + acados_ocp.con_h_e.name + '_p_e_constraint/'):
-            os.mkdir('c_generated_code/' + acados_ocp.con_h_e.name + '_p_e_constraint/')
-        os.chdir('c_generated_code/' + acados_ocp.con_h_e.name + '_p_e_constraint/')
+        if not os.path.exists('c_generated_code/' + acados_ocp.con_phi_e.name + '_phi_e_constraint/'):
+            os.mkdir('c_generated_code/' + acados_ocp.con_phi_e.name + '_phi_e_constraint/')
+        os.chdir('c_generated_code/' + acados_ocp.con_phi_e.name + '_phi_e_constraint/')
         # render source template
-        template_file = 'p_e_constraint.in.h'
-        out_file = acados_ocp.con_h_e.name + '_p_e_constraint.h'
+        template_file = 'phi_e_constraint.in.h'
+        out_file = acados_ocp.con_phi_e.name + '_phi_e_constraint.h'
+        # output file
+        os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
+                "\"" + ' ' + "\"" + out_file + "\""
+
+        os.chdir('../..')
+        # create folder
+        if not os.path.exists('c_generated_code/' + acados_ocp.con_phi_e.name + '_r_e_constraint/'):
+            os.mkdir('c_generated_code/' + acados_ocp.con_phi_e.name + '_r_e_constraint/')
+        os.chdir('c_generated_code/' + acados_ocp.con_phi_e.name + '_r_e_constraint/')
+        # render source template
+        template_file = 'r_e_constraint.in.h'
+        out_file = acados_ocp.con_phi_e.name + '_r_e_constraint.h'
         # output file
         os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
