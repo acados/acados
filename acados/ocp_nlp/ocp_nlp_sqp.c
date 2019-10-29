@@ -961,6 +961,16 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
         void **value = return_value_;
         *value = mem->nlp_mem->qp_solver_mem->xcond_qp_out;
     }
+    else if (!strcmp("qp_in", field))
+    {
+        void **value = return_value_;
+        *value = mem->nlp_mem->qp_in;
+    }
+    else if (!strcmp("qp_out", field))
+    {
+        void **value = return_value_;
+        *value = mem->nlp_mem->qp_out;
+    }
     else
     {
         printf("\nerror: field %s not available in ocp_nlp_sqp_get\n", field);

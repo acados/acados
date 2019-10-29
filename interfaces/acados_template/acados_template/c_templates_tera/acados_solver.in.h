@@ -38,6 +38,7 @@
 #include "acados_c/external_function_interface.h"
 
 int acados_create();
+int acados_update_param(int stage, double *value, int np);
 int acados_solve();
 int acados_free();
 
@@ -59,7 +60,7 @@ extern ocp_nlp_dims * nlp_dims;
 {% if solver_config.integrator_type == "ERK" %}
 extern external_function_param_casadi * forw_vde_casadi;
 {% if solver_config.hessian_approx == "EXACT" %} 
-extern external_function_casadi * hess_vde_casadi;
+extern external_function_param_casadi * hess_vde_casadi;
 extern external_function_param_casadi * hess_vde_casadi;
 {% endif %}
 {% else %}
@@ -70,22 +71,22 @@ extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
 {% if dims.npd > 0 %}
-extern external_function_casadi * p_constraint;
+extern external_function_param_casadi * p_constraint;
 {% endif %}
 {% if dims.npd_e > 0 %}
-extern external_function_casadi * p_constraint_e;
+extern external_function_param_casadi * p_constraint_e;
 {% endif %}
 {% if dims.nh > 0 %}
-extern external_function_casadi * h_constraint;
+extern external_function_param_casadi * h_constraint;
 {% endif %}
 {% if dims.nh_e > 0 %}
-extern external_function_casadi h_e_constraint;
+extern external_function_param_casadi h_e_constraint;
 {% endif %}
 {% if cost.cost_type == "NONLINEAR_LS" %}
-extern external_function_casadi * r_cost;
+extern external_function_param_casadi * r_cost;
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
-extern external_function_casadi r_e_cost;
+extern external_function_param_casadi r_e_cost;
 {% endif %}
 
 
