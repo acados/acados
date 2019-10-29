@@ -103,7 +103,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     with open(json_file, 'r') as f:
         ocp_nlp_json = json.load(f)
 
-    # ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
+    ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
 
     # setting up loader and environment
     acados_path = os.path.dirname(os.path.abspath(__file__))
@@ -189,12 +189,12 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     if acados_ocp.constraints.constr_type == 'BGP':
         # create folder
-        if not os.path.exists('c_generated_code/' + acados_ocp.con_h.name + '_phi_constraint/'):
-            os.mkdir('c_generated_code/' + acados_ocp.con_h.name + '_phi_constraint/')
-        os.chdir('c_generated_code/' + acados_ocp.con_h.name + '_phi_constraint/')
+        if not os.path.exists('c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/'):
+            os.mkdir('c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/')
+        os.chdir('c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/')
         # render source template
-        template_file = 'phi_constraint.in.h'
-        out_file = acados_ocp.con_h.name + '_phi_constraint.h'
+        template_file = 'h_constraint.in.h'
+        out_file = acados_ocp.con_h.name + '_h_constraint.h'
         # output file
         os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
@@ -221,12 +221,12 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     if acados_ocp.constraints.constr_type_e == 'BGP':
         # create folder
-        if not os.path.exists('c_generated_code/' + acados_ocp.con_h_e.name + '_phi_e_constraint/'):
-            os.mkdir('c_generated_code/' + acados_ocp.con_h_e.name + '_phi_e_constraint/')
-        os.chdir('c_generated_code/' + acados_ocp.con_h_e.name + '_phi_e_constraint/')
+        if not os.path.exists('c_generated_code/' + acados_ocp.con_h_e.name + '_h_e_constraint/'):
+            os.mkdir('c_generated_code/' + acados_ocp.con_h_e.name + '_h_e_constraint/')
+        os.chdir('c_generated_code/' + acados_ocp.con_h_e.name + '_h_e_constraint/')
         # render source template
-        template_file = 'phi_e_constraint.in.h'
-        out_file = acados_ocp.con_h_e.name + '_phi_e_constraint.h'
+        template_file = 'h_e_constraint.in.h'
+        out_file = acados_ocp.con_h_e.name + '_h_e_constraint.h'
         # output file
         os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \

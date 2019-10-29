@@ -48,8 +48,8 @@ class ocp_nlp_dims:
         self.__np     = 0     #: :math:`n_p` - number of parameters 
         self.__ny     = None  #: :math:`n_y` - number of residuals in Lagrange term 
         self.__ny_e   = None  #: :math:`n_{y}^e` - number of residuals in Mayer term 
-        self.__npd    = 0     #: :math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints 
-        self.__npd_e  = 0     #: :math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints
+        self.__nr     = 0     #: :math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints 
+        self.__nr_e   = 0     #: :math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints
         self.__nh     = 0     #: :math:`n_h` - number of nonlinear constraints 
         self.__nh_e   = 0     #: :math:`n_{h}^e` - number of nonlinear constraints at t=T 
         self.__nbx    = 0     #: :math:`n_{b_x}` - number of state bounds 
@@ -91,12 +91,12 @@ class ocp_nlp_dims:
         return self.__ny_e
 
     @property
-    def npd(self):
-        return self.__npd
+    def nr(self):
+        return self.__nr
 
     @property
-    def npd_e(self):
-        return self.__npd_e
+    def nr_e(self):
+        return self.__nr_e
 
     @property
     def nh(self):
@@ -200,19 +200,19 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid ny_e value. Exiting.')
 
-    @npd.setter
-    def npd(self, npd):
-        if type(npd) == int and npd > -1:
-            self.__npd = npd
+    @nr.setter
+    def nr(self, nr):
+        if type(nr) == int and nr > -1:
+            self.__nr = nr
         else:
-            raise Exception('Invalid npd value. Exiting.')
+            raise Exception('Invalid nr value. Exiting.')
 
-    @npd_e.setter
-    def npd_e(self, npd_e):
-        if type(npd_e) == int and npd_e > -1:
-            self.__npd_e = npd_e
+    @nr_e.setter
+    def nr_e(self, nr_e):
+        if type(nr_e) == int and nr_e > -1:
+            self.__nr_e = nr_e
         else:
-            raise Exception('Invalid npd_e value. Exiting.')
+            raise Exception('Invalid nr_e value. Exiting.')
 
     @nh.setter
     def nh(self, nh):
@@ -1496,9 +1496,7 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
             else:
                 v = np.array(v)
                 v_dims = v.shape
-                try: 
-                    v = np.reshape(v, dims)
-                except:  
+                if dims !=v_dims:    
                     raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, v_dims, dims_names, dims))
         out[k.replace(k, out_key)] = v
     return out

@@ -40,12 +40,12 @@ extern "C" {
 
 {% if dims.nh > 0 %}
 // implicit ODE
-int {{ con_h.name }}_phi_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ con_h.name }}_phi_constraint_work(int *, int *, int *, int *);
-const int *{{ con_h.name }}_phi_constraint_sparsity_in(int);
-const int *{{ con_h.name }}_phi_constraint_sparsity_out(int);
-int {{ con_h.name }}_phi_constraint_n_in();
-int {{ con_h.name }}_phi_constraint_n_out();
+int {{ con_h.name }}_h_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ con_h.name }}_h_constraint_work(int *, int *, int *, int *);
+const int *{{ con_h.name }}_h_constraint_sparsity_in(int);
+const int *{{ con_h.name }}_h_constraint_sparsity_out(int);
+int {{ con_h.name }}_h_constraint_n_in();
+int {{ con_h.name }}_h_constraint_n_out();
 {% endif %}
 
 #ifdef __cplusplus
