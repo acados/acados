@@ -834,7 +834,7 @@ class ocp_nlp_constraints:
 
     @constr_type.setter
     def constr_type(self, constr_type):
-        constr_types = ('BGHP', 'BGP')
+        constr_types = ('BGH', 'BGP')
 
         if type(constr_type) == str and constr_type in constr_types:
             self.__constr_type = constr_type
@@ -844,7 +844,7 @@ class ocp_nlp_constraints:
 
     @constr_type_e.setter
     def constr_type_e(self, constr_type_e):
-        constr_types = ('BGHP', 'BGP')
+        constr_types = ('BGH', 'BGP')
 
         if type(constr_type_e) == str and constr_type_e in constr_types:
             self.__constr_type_e = constr_type_e

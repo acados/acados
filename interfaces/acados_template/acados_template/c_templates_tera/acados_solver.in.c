@@ -39,7 +39,7 @@
 #define NBU_   {{ dims.nbu }}
 #define NSBX_  {{ dims.nsbx }}
 #define NSBU_  {{ dims.nsbu }}
-#define NSH_  {{ dims.nsh }}
+#define NSH_   {{ dims.nsh }}
 #define NSHN_  {{ dims.nsh_e }}
 #define NSBXN_ {{ dims.nsbx_e }}
 #define NS_    {{ dims.ns }}
@@ -471,7 +471,7 @@ int acados_create()
     nx[N]  = NX_;
     nz[N]  = 0;
     nh[N]  = NHN_;
-    nr[N]  = NR_;
+    nr[N]  = NRN_;
     nv[N]  = NX_; 
     ny[N]  = NYN_;
     nbu[N] = 0;
