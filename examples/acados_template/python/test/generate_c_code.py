@@ -42,7 +42,7 @@ import argparse
 
 # set to 'True' to generate test data
 GENERATE_DATA = False
-TEST_TOL = 1e-6
+TEST_TOL = 1e-8
 
 parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
 parser.add_argument('--FORMULATION', dest='FORMULATION', 
