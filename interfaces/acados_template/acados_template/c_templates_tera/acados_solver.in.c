@@ -12,11 +12,9 @@
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 {% if constraints.constr_type == "BGP" %}
 #include "{{ con_h.name }}_r_constraint/{{ con_h.name }}_r_constraint.h"
-#include "{{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.h"
 {% endif %}
 {% if constraints.constr_type_e == "BGP" %}
 #include "{{ con_h_e.name }}_r_e_constraint/{{ con_h_e.name }}_r_e_constraint.h"
-#include "{{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.h"
 {% endif %}
 {% if dims.nh > 0 %}
 #include "{{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.h"
@@ -543,17 +541,6 @@ int acados_create()
     {%- if constraints.constr_type == "BGP" %}
     r_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
-        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
-        // convex part of convex-composite constraint
-        h_constraint[i].casadi_fun = &{{ con_h.name }}_h_constraint;
-        h_constraint[i].casadi_n_in = &{{ con_h.name }}_h_constraint_n_in;
-        h_constraint[i].casadi_n_out = &{{ con_h.name }}_h_constraint_n_out;
-        h_constraint[i].casadi_sparsity_in = &{{ con_h.name }}_h_constraint_sparsity_in;
-        h_constraint[i].casadi_sparsity_out = &{{ con_h.name }}_h_constraint_sparsity_out;
-        h_constraint[i].casadi_work = &{{ con_h.name }}_h_constraint_work;
-
-        external_function_param_casadi_create(&h_constraint[i], {{ dims.np }});
-
         // nonlinear part of convex-composite constraint
         r_constraint[i].casadi_fun = &{{ con_h.name }}_r_constraint;
         r_constraint[i].casadi_n_in = &{{ con_h.name }}_r_constraint_n_in;
@@ -567,19 +554,7 @@ int acados_create()
     {%- endif %}
 
     {%- if constraints.constr_type_e == "BGP" %}
-    ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, N, "nh", &nh[N]);
-    // convex part of convex-composite constraint
-    h_e_constraint.casadi_fun = &{{ con_h_e.name }}_h_e_constraint;
-    h_e_constraint.casadi_n_in = &{{ con_h_e.name }}_h_e_constraint_n_in;
-    h_e_constraint.casadi_n_out = &{{ con_h_e.name }}_h_e_constraint_n_out;
-    h_e_constraint.casadi_sparsity_in = &{{ con_h_e.name }}_h_e_constraint_sparsity_in;
-    h_e_constraint.casadi_sparsity_out = &{{ con_h_e.name }}_h_e_constraint_sparsity_out;
-    h_e_constraint.casadi_work = &{{ con_h_e.name }}_h_e_constraint_work;
-
-    external_function_param_casadi_create(&h_e_constraint, {{ dims.np }});
-
     // nonlinear part of convex-composite constraint
-    external_function_param_casadi r_e_constraint;
     r_e_constraint.casadi_fun = &{{ con_h_e.name }}_r_e_constraint;
     r_e_constraint.casadi_n_in = &{{ con_h_e.name }}_r_e_constraint_n_in;
     r_e_constraint.casadi_n_out = &{{ con_h_e.name }}_r_e_constraint_n_out;
@@ -811,18 +786,12 @@ int acados_create()
     for (int i = 0; i < N; ++i)
     {
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_r_fun_jac", &r_constraint[i]);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_h_fun_jac", &h_constraint[i]);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lh", lh);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lh", uh);
     }
     {%- endif %}
 
     {%- if constraints.constr_type_e == "BGP" %}
     // convex-composite constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_r_fun_jac", &r_e_constraint);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &r_e_constraint);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", uh_e);
     {%- endif %}
 
     {% if dims.nh > 0 -%}

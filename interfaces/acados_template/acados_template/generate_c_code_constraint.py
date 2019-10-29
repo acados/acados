@@ -110,7 +110,6 @@ def generate_c_code_constraint( constraint ):
         os.chdir('../..')
     else: # BGP constraint
         fun_name = con_name + '_h_constraint'
-        import pdb; pdb.set_trace()
         con_h_expr_x_u = substitute(con_h_expr, r, con_r_expr)
         jac_u = jacobian(con_h_expr_x_u, u)
         jac_x = jacobian(con_h_expr_x_u, x)

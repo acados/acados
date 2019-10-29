@@ -64,11 +64,9 @@ external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {%- endif %}
 {% if constraints.constr_type == "BGP" %}
 external_function_param_casadi * r_constraint;
-external_function_param_casadi * h_constraint;
 {% endif %}
 {% if constraints.constr_type_e == "BGP" %}
 external_function_param_casadi r_e_constraint;
-external_function_param_casadi h_e_constraint;
 {% endif %}
 {% if dims.nh > 0 %}
 external_function_param_casadi * h_constraint;
@@ -142,7 +140,6 @@ int main()
     for (int ii = 0; ii < {{ dims.N }}; ++ii) {
         {%- if constraints.constr_type == "BGP" %}
         r_constraint[ii].set_param(r_constraint+ii, p);
-        h_constraint[ii].set_param(h_constraint+ii, p);
         {% endif %}
         {%- if dims.nh > 0 %}
         h_constraint[ii].set_param(h_constraint+ii, p);
@@ -150,7 +147,6 @@ int main()
     }
     {%- if constraints.constr_type_e == "BGP" %}
     r_e_constraint.set_param(&r_e_constraint, p);
-    h_e_constraint.set_param(&h_e_constraint, p);
     {% endif %}
     {%- if dims.nh_e > 0 %}
     h_e_constraint.set_param(&h_e_constraint, p);
