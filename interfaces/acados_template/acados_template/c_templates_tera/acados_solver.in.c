@@ -239,6 +239,30 @@ int acados_create()
     ubu[{{ i }}] = {{ constraints.ubu[i] }};
     {%- endfor %}
     
+    // set up soft bounds for u
+    int idxsbu[NSBU];
+    {% for i in range(end=dims.nsbu) %}
+    idsxbu[{{ i }}] = {{ constraints.idxsbu[i] }};
+    {%- endfor %}
+    double lsbu[NSBU]; 
+    double usbu[NSBU];
+    {% for i in range(end=dims.nsbu) %}
+    lsbu[{{ i }}] = {{ constraints.lsbu[i] }};
+    usbu[{{ i }}] = {{ constraints.usbu[i] }};
+    {%- endfor %}
+    
+    // set up soft bounds for nonlinear constraints
+    int idxsh[NSBU];
+    {% for i in range(end=dims.idxsh) %}
+    idsxbu[{{ i }}] = {{ constraints.idxsh[i] }};
+    {%- endfor %}
+    double lsh[NSH]; 
+    double ush[NSH];
+    {% for i in range(end=dims.nsh) %}
+    lsh[{{ i }}] = {{ constraints.lsh[i] }};
+    ush[{{ i }}] = {{ constraints.ush[i] }};
+    {%- endfor %}
+
     // x
     int idxbx[NBX];
     {% for i in range(end=dims.nbx) %}
@@ -251,6 +275,18 @@ int acados_create()
     ubx[{{ i }}] = {{ constraints.ubx[i] }};
     {%- endfor %}
 
+    // soft bounds on x
+    int idxsbx[NSBX];
+    {% for i in range(end=dims.nsbx) %}
+    idsxbx[{{ i }}] = {{ constraints.idxsbx[i] }};
+    {%- endfor %}
+    double lsbx[NSBX]; 
+    double usbx[NSBX];
+    {% for i in range(end=dims.nsbx) %}
+    lsbx[{{ i }}] = {{ constraints.lsbx[i] }};
+    usbx[{{ i }}] = {{ constraints.usbx[i] }};
+    {%- endfor %}
+    
     // set up general constraints for stage 0 to N-1 
     double D[NG*NU];
     double C[NG*NX];
@@ -438,34 +474,44 @@ int acados_create()
     int nu[N+1];
     int nbx[N+1];
     int nbu[N+1];
+    int nsbx[N+1];
+    int nsbu[N+1];
+    int nsh[N+1];
+    int ns[N+1];
     int nb[N+1];
     int ng[N+1];
     int nh[N+1];
-    int ns[N+1];
     int nz[N+1];
     int nv[N+1];
     int ny[N+1];
     int nr[N+1];
     int nr_e[N+1];
 
-    for (int i = 0; i < N+1; i++) {
-        nx[i]  = NX_;
-        nu[i]  = NU_;
-        nbx[i] = NBX_;
-        nbu[i] = NBU_;
-        nb[i]  = NBU_ + NBX_;
-        ng[i]  = NG_;
-        nh[i]  = NH_;
-        nr[i] = NR_;
-        ns[i]  = 0;
-        nz[i]  = NZ_;
-        nv[i]  = NX_ + NU_;
-        ny[i]  = NY_;
+    for(int i = 0; i < N+1; i++) {
+        nx[i]   = NX_;
+        nu[i]   = NU_;
+        nbx[i]  = NBX_;
+        nbu[i]  = NBU_;
+        nb[i]   = NBU_ + NBX_;
+        nsbx[i] = NSBX_;
+        nsbu[i] = NSBU_;
+        nsh[i]  = NSH_;
+        ns[i]   = NS_;
+        ng[i]   = NG_;
+        nh[i]   = NH_;
+        nr[i]   = NR_;
+        nz[i]   = NZ_;
+        nv[i]   = NX_ + NU_;
+        ny[i]   = NY_;
     }
 
     nbx[0] = NX_;
     nbu[0] = NBU_;
     nb[0]  = NX_ + NBU_;
+    nsbx[N]  = NSBXN_;
+    nsbu[N]  = 0;
+    nsh[N]  = NSHN_;
+    ns[N]  = NSN_;
 
     nu[N]  = 0;
     nx[N]  = NX_;
@@ -475,9 +521,6 @@ int acados_create()
     nv[N]  = NX_; 
     ny[N]  = NYN_;
     nbu[N] = 0;
-    nbx[N] = NBXN_;
-    ng[N]  = NGN_;
-    nb[N]  = NBXN_;
 
     // Make plan
     nlp_solver_plan = ocp_nlp_plan_create(N);
@@ -741,9 +784,28 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", ubx0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbu", idxbu0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbu", lbu0);
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubu", ubu0);
+
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbu", idxbu);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbu", lbu);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubu", ubu);
+
+    {%- if dims.nsbx > 0 %} 
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsbx", idxsbx);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsbx", lsbx);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbx", usbx);
+    {%- endif %}
+    
+    {%- if dims.nsbu > 0 %} 
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsbu", idxsbu);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsbu", lsbu);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbu", usbu);
+    {%- endif %}
+    
+    {%- if dims.nsh > 0 %} 
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsh", idxsh);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsh", lsh);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ush", ush);
+    {%- endif %}
 
     // bounds for intermediate stages
     for (int i = 1; i < N; ++i)
@@ -751,12 +813,32 @@ int acados_create()
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxbx", idxbx);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lbx", lbx);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubx", ubx);
+        
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxbu", idxbu);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lbu", lbu);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ubu", ubu);
-    }
 
-    {%- if dims.ng > 0 -%}
+        {%- if dims.nsbx > 0 %} 
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsbx", idxsbx);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsbx", lsbx);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "usbx", usbx);
+        {%- endif %}
+        
+        {%- if dims.nsbu > 0 %} 
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsbu", idxsbu);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsbu", lsbu);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "usbu", usbu);
+        {%- endif %}
+
+        {%- if dims.nsh > 0 %} 
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsh", idxsh);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsh", lsh);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ush", ush);
+        {%- endif %}
+
+    }
+   
+    {%- if dims.ng > 0 %} 
     // general constraints for stages 0 to N-1
     for (int i = 0; i < N; ++i)
     {
@@ -766,15 +848,27 @@ int acados_create()
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ug", ug);
     }
     {%- endif %}
-
-    {%- if dims.nbx_e > 0 %}
+    
+    {%- if dims.nbx_e > 0 %} 
     // bounds for last
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubx_e);
     {%- endif %}
+
+    {%- if dims.nsbx_e > 0 %} 
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsbx", idxsbx_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsbx", lsbx_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usbx", usbx_e);
+    {%- endif %}
     
-    {% if dims.ng_e > 0 %} 
+    {%- if dims.nsh_e > 0 %} 
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsh", idxsh_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsh", lsh_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ush", ush_e);
+    {%- endif %}
+
+    {%- if dims.ng_e > 0 %} 
     // general constraints for last stage
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "C", C_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lg", lg_e);
