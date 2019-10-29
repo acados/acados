@@ -149,8 +149,8 @@ int main()
         {% endif %}
     }
     {%- if constraints.constr_type_e == "BGP" %}
-    r_e_constraint[ii].set_param(r_e_constraint+ii, p);
-    phi_e_constraint[ii].set_param(phi_e_constraint+ii, p);
+    r_e_constraint.set_param(&r_e_constraint, p);
+    phi_e_constraint.set_param(&phi_e_constraint, p);
     {% endif %}
     {%- if dims.nh_e > 0 %}
     h_e_constraint.set_param(&h_e_constraint, p);

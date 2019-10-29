@@ -79,10 +79,10 @@ external_function_param_casadi r_e_constraint;
 external_function_param_casadi phi_e_constraint;
 {% endif %}
 {%- if dims.nh > 0 %}
-external_function_casadi * h_constraint;
+external_function_param_casadi * h_constraint;
 {% endif %}
 {%- if dims.nh_e > 0 %}
-external_function_casadi h_e_constraint;
+external_function_param_casadi h_e_constraint;
 {% endif %}
 
 
