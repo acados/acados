@@ -31,25 +31,25 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef {{ ocp.con_h.name }}_P_CONSTRAINT
-#define {{ ocp.con_h.name }}_P_CONSTRAINT
+
+#ifndef {{ cost_r.name }}_R_COST
+#define {{ cost_r.name }}_R_COST
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-{% if ocp.dims.npd > 0 %}
-// implicit ODE
-int {{ ocp.con_h.name }}_p_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ ocp.con_h.name }}_p_constraint_work(int *, int *, int *, int *);
-const int *{{ ocp.con_h.name }}_p_constraint_sparsity_in(int);
-const int *{{ ocp.con_h.name }}_p_constraint_sparsity_out(int);
-int {{ ocp.con_h.name }}_p_constraint_n_in();
-int {{ ocp.con_h.name }}_p_constraint_n_out();
+{% if cost.cost_type == "NONLINEAR_LS" %}
+int {{ cost_r.name }}_r_cost(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ cost_r.name }}_r_cost_work(int *, int *, int *, int *);
+const int *{{ cost_r.name }}_r_cost_sparsity_in(int);
+const int *{{ cost_r.name }}_r_cost_sparsity_out(int);
+int {{ cost_r.name }}_r_cost_n_in();
+int {{ cost_r.name }}_r_cost_n_out();
 {% endif %}
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // {{ ocp.con_h.name }}_P_CONSTRAINT
+#endif  // {{ cost_r.name }}_R_COST

@@ -703,7 +703,7 @@ int acados_create()
         r_cost[i].casadi_sparsity_out = &{{ cost_r.name }}_r_cost_sparsity_out;
         r_cost[i].casadi_work = &{{ cost_r.name }}_r_cost_work;
 
-        external_function_param_casadi_create(&r_cost[i]);
+        external_function_param_casadi_create(&r_cost[i], {{ dims.np }});
     }
     {%- endif %}
 
@@ -716,7 +716,7 @@ int acados_create()
 	r_e_cost.casadi_sparsity_out = &{{ cost_r_e.name }}_r_e_cost_sparsity_out;
 	r_e_cost.casadi_work = &{{ cost_r_e.name }}_r_e_cost_work;
 
-    external_function_param_casadi_create(&r_e_cost);
+    external_function_param_casadi_create(&r_e_cost, {{ dims.np }});
     {%- endif %}
 	for (int i = 0; i < N; ++i) {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);

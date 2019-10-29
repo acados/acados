@@ -187,9 +187,9 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", in_x0);
     
     // update value of parameters
-    {% if ocp.dims.np > 0%}
-    for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) 
-        acados_update_params(ii, in_p, {{ ocp.dims.np }});
+    {% if dims.np > 0%}
+    for (int ii = 0; ii < {{ dims.N }}; ii++) 
+        acados_update_params(ii, in_p, {{ dims.np }});
     {% endif %}
     
     // assign pointers to output signals 
