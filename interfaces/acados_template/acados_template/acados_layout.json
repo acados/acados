@@ -12,7 +12,7 @@
             "str"
             ]   
     },
-    "con_p_e": {
+    "con_phi_e": {
         "name" : [
             "str"
         ]
@@ -27,7 +27,7 @@
             "str"
         ]
      },
-     "con_p": {
+     "con_phi": {
          "name" : [
             "str"
         ]

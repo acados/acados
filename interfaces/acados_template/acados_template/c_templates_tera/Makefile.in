@@ -48,8 +48,13 @@ OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_fun.o
 OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_fun_jac_x_xdot_z.o
 OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_jac_x_xdot_u_z.o
 {% endif %}
-{% if dims.npd > 0 %}
-OBJ+= {{ con_h.name }}_p_constraint/{{ con_h.name }}_p_constraint.o
+{% if constraints.constraint_type == "BGP" %}
+OBJ+= {{ con_r.name }}_r_constraint/{{ con_r.name }}_r_constraint.o
+OBJ+= {{ con_phi.name }}_phi_constraint/{{ con_phi.name }}_phi_constraint.o
+{% endif %}
+{% if constraints.constraint_type_e == "BGP" %}
+OBJ+= {{ con_r_e.name }}_r_e_constraint/{{ con_r_e.name }}_r_e_constraint.o
+OBJ+= {{ con_phi_e.name }}_phi_e_constraint/{{ con_phi_e.name }}_phi_e_constraint.o
 {% endif %}
 {% if dims.nh > 0 %}
 OBJ+= {{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.o
@@ -83,8 +88,14 @@ CASADI_MODEL_SOURCE+=	{{ model.name }}_impl_dae_fun_jac_x_xdot_z.c
 CASADI_MODEL_SOURCE+=	{{ model.name }}_impl_dae_jac_x_xdot_u_z.c 
 {% endif %}
 CASADI_CON_P_SOURCE=
-{% if dims.npd > 0 %}
-CASADI_CON_P_SOURCE+=  {{ con_h.name }}_p_constraint.c 
+{% if constraints.constraint_type == "BGP" %}
+CASADI_CON_P_SOURCE+=  {{ con_phi.name }}_phi_constraint.c 
+CASADI_CON_P_SOURCE+=  {{ con_r.name }}_r_constraint.c 
+{% endif %}
+CASADI_CON_P_E_SOURCE=
+{% if constraints.constraint_type_e == "BGP" %}
+CASADI_CON_P_E_SOURCE+=  {{ con_phi_e.name }}_phi_e_constraint.c 
+CASADI_CON_P_E_SOURCE+=  {{ con_r_e.name }}_r_e_constraint.c 
 {% endif %}
 CASADI_CON_H_SOURCE=
 {% if dims.nh > 0 %}
@@ -104,8 +115,11 @@ CASADI_COST_R_E_SOURCE+= {{ cost_r_e.name }}_r_e_cost.c
 
 casadi_fun:
 	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE))
-	{% if dims.npd > 0 %}
-	( cd {{ con_h.name }}_p_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_P_SOURCE))
+	{% if constraints.constraint_type == "BGP" %}
+	( cd {{ con_phi.name }}_phi_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_P_SOURCE))
+	{% endif %}
+	{% if constraints.constraint_type_e == "BGP" %}
+	( cd {{ con_phi_e.name }}_phi_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_P_E_SOURCE))
 	{% endif %}
 	{% if dims.nh > 0 %}
 	( cd {{ con_h.name }}_h_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))

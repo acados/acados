@@ -1088,7 +1088,7 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
         ext_fun_out[2] = &hess_out;  // hess: nphi * nr * nr
 
-        model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+        model->nl_constr_phi_fun_jac->evaluate(model->nl_constr_phi_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
     }
 
     if (nr > 0)
@@ -1105,7 +1105,7 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         Jp_args.ai = 0;
         Jp_args.aj = 0;
         ext_fun_out[1] = &Jp_args;  // jac': (nu+nx) * nr
-        model->p->evaluate(model->p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+        model->nl_constr_r_fun_jac->evaluate(model->nl_constr_r_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
         // SCQP Hessian
         
