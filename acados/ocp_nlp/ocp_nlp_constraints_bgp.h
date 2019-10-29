@@ -59,17 +59,17 @@ typedef struct
     int nx;
     int nu;
     int nz;
-    int nb;  // nbx + nbu
+    int nb;   // nbx + nbu
     int nbu;
     int nbx;
-    int ng;  // number of general linear constraints
-    int nh;  // number of nonlinear path constraints
-    int ns;  // nsbu + nsbx + nsg + nsh
-    int nsbu;  // number of softened input bounds
-    int nsbx;  // number of softened state bounds
+    int ng;   // number of general linear constraints
+    int nphi; // dimension of convex outer part 
+    int ns;   // nsbu + nsbx + nsg + nsh
+    int nsbu; // number of softened input bounds
+    int nsbx; // number of softened state bounds
     int nsg;  // number of softened general linear constraints
     int nsh;  // number of softened nonlinear constraints
-    int np;  // dimension of nonlinear function in quadratic_over_nonlinear constraint
+    int nr;   // dimension of nonlinear function in convex_over_nonlinear constraint
 } ocp_nlp_constraints_bgp_dims;
 
 //
@@ -78,7 +78,7 @@ int ocp_nlp_constraints_bgp_dims_calculate_size(void *config);
 void *ocp_nlp_constraints_bgp_dims_assign(void *config, void *raw_memory);
 //
 void ocp_nlp_constraints_bgp_dims_initialize(void *config, void *dims, int nx, int nu, int nz, 
-		int nbx, int nbu, int ng, int nh, int nq, int ns);
+		int nbx, int nbu, int ng, int nphi, int nq, int ns);
 //
 void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *field, int* value);
 
@@ -92,8 +92,8 @@ typedef struct
     int *idxs;
     struct blasfeo_dvec d;
     struct blasfeo_dmat DCt;
-    external_function_generic *nl_constr_h_fun_jac;
-    external_function_generic *p;
+    external_function_generic *nl_constr_phi_fun_jac;
+    external_function_generic *nl_constr_r_fun_jac;
 } ocp_nlp_constraints_bgp_model;
 
 //
@@ -175,8 +175,8 @@ typedef struct
 {
     struct blasfeo_dvec tmp_ni;
     struct blasfeo_dmat jacobian_quadratic;
-    struct blasfeo_dmat tmp_np_nh_np;
-    struct blasfeo_dmat tmp_nv_np;
+    struct blasfeo_dmat tmp_nr_nphi_nr;
+    struct blasfeo_dmat tmp_nv_nr;
 } ocp_nlp_constraints_bgp_workspace;
 
 //

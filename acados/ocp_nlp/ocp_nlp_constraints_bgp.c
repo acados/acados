@@ -75,13 +75,13 @@ void *ocp_nlp_constraints_bgp_dims_assign(void *config_, void *raw_memory)
     dims->nbx = 0;
     dims->nbu = 0;
     dims->ng = 0;
-    dims->nh = 0;
+    dims->nphi = 0;
     dims->ns = 0;
     dims->nsbu = 0;
     dims->nsbx = 0;
     dims->nsg = 0;
     dims->nsh = 0;
-    dims->np = 0;
+    dims->nr = 0;
 
     return dims;
 }
@@ -89,7 +89,7 @@ void *ocp_nlp_constraints_bgp_dims_assign(void *config_, void *raw_memory)
 
 
 void ocp_nlp_constraints_bgp_dims_initialize(void *config_, void *dims_, int nx, int nu, int nz,
-        int nbx, int nbu, int ng, int nh, int np, int ns)
+        int nbx, int nbu, int ng, int nphi, int nr, int ns)
 {
     ocp_nlp_constraints_bgp_dims *dims = dims_;
 
@@ -100,8 +100,8 @@ void ocp_nlp_constraints_bgp_dims_initialize(void *config_, void *dims_, int nx,
     dims->nbu = nbu;
     dims->nb = nbx + nbu;
     dims->ng = ng;
-    dims->nh = nh;
-    dims->np = np;
+    dims->nphi = nphi;
+    dims->nr = nr;
     dims->ns = ns;
 
     return;
@@ -160,10 +160,10 @@ static void ocp_nlp_constraints_bgp_set_ng(void *config_, void *dims_, const int
 
 
 
-static void ocp_nlp_constraints_bgp_set_nh(void *config_, void *dims_, const int *nh)
+static void ocp_nlp_constraints_bgp_set_nphi(void *config_, void *dims_, const int *nphi)
 {
     ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->nh = *nh;
+    dims->nphi = *nphi;
 }
 
 
@@ -204,10 +204,10 @@ static void ocp_nlp_constraints_bgp_set_nsh(void *config_, void *dims_, const in
 
 
 
-static void ocp_nlp_constraints_bgp_set_np(void *config_, void *dims_, const int *np)
+static void ocp_nlp_constraints_bgp_set_nr(void *config_, void *dims_, const int *nr)
 {
     ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    dims->np = *np;
+    dims->nr = *nr;
 }
 
 
@@ -239,9 +239,9 @@ void ocp_nlp_constraints_bgp_dims_set(void *config_, void *dims_,
     {
         ocp_nlp_constraints_bgp_set_ng(config_, dims_, value);
     }
-    else if (!strcmp(field, "nh"))
+    else if (!strcmp(field, "nphi"))
     {
-        ocp_nlp_constraints_bgp_set_nh(config_, dims_, value);
+        ocp_nlp_constraints_bgp_set_nphi(config_, dims_, value);
     }
     else if (!strcmp(field, "nsbu"))
     {
@@ -259,9 +259,9 @@ void ocp_nlp_constraints_bgp_dims_set(void *config_, void *dims_,
     {
         ocp_nlp_constraints_bgp_set_nsh(config_, dims_, value);
     }
-    else if (!strcmp(field, "np"))
+    else if (!strcmp(field, "nr"))
     {
-        ocp_nlp_constraints_bgp_set_np(config_, dims_, value);
+        ocp_nlp_constraints_bgp_set_nr(config_, dims_, value);
     }
     else
     {
@@ -276,7 +276,7 @@ void ocp_nlp_constraints_bgp_dims_set(void *config_, void *dims_,
 static void ocp_nlp_constraints_bgp_get_ni(void *config_, void *dims_, int* value)
 {
     ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nbx + dims->nbu + dims->ng + dims->nh + dims->ns;
+    *value = dims->nbx + dims->nbu + dims->ng + dims->nphi + dims->ns;
     // TODO(oj): @giaf or robin: + nq?!;
 }
 
@@ -314,10 +314,10 @@ static void ocp_nlp_constraints_bgp_get_ng(void *config_, void *dims_, int* valu
 
 
 
-static void ocp_nlp_constraints_bgp_get_nh(void *config_, void *dims_, int* value)
+static void ocp_nlp_constraints_bgp_get_nphi(void *config_, void *dims_, int* value)
 {
     ocp_nlp_constraints_bgp_dims *dims = (ocp_nlp_constraints_bgp_dims *) dims_;
-    *value = dims->nh;
+    *value = dims->nphi;
 }
 
 
@@ -366,9 +366,9 @@ void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *fi
     {
         ocp_nlp_constraints_bgp_get_ng(config_, dims_, value);
     }
-    else if (!strcmp(field, "nh"))
+    else if (!strcmp(field, "nphi"))
     {
-        ocp_nlp_constraints_bgp_get_nh(config_, dims_, value);
+        ocp_nlp_constraints_bgp_get_nphi(config_, dims_, value);
     }
     else if (!strcmp(field, "ns"))
     {
@@ -401,7 +401,7 @@ int ocp_nlp_constraints_bgp_model_calculate_size(void *config, void *dims_)
     int nu = dims->nu;
     int nb = dims->nb;
     int ng = dims->ng;
-    int nh = dims->nh;
+    int nphi = dims->nphi;
     int ns = dims->ns;
 
     int size = 0;
@@ -410,7 +410,7 @@ int ocp_nlp_constraints_bgp_model_calculate_size(void *config, void *dims_)
 
     size += sizeof(int) * nb;                                         // idxb
     size += sizeof(int) * ns;                                         // idxs
-    size += blasfeo_memsize_dvec(2 * nb + 2 * ng + 2 * nh + 2 * ns);  // d
+    size += blasfeo_memsize_dvec(2 * nb + 2 * ng + 2 * nphi + 2 * ns);  // d
     size += blasfeo_memsize_dmat(nu + nx, ng);                        // DCt
 
     size += 64;  // blasfeo_mem align
@@ -431,7 +431,7 @@ void *ocp_nlp_constraints_bgp_model_assign(void *config, void *dims_, void *raw_
     int nu = dims->nu;
     int nb = dims->nb;
     int ng = dims->ng;
-    int nh = dims->nh;
+    int nphi = dims->nphi;
     int ns = dims->ns;
 
     // struct
@@ -450,9 +450,9 @@ void *ocp_nlp_constraints_bgp_model_assign(void *config, void *dims_, void *raw_
 
     // blasfeo_dvec
     // d
-    assign_and_advance_blasfeo_dvec_mem(2 * nb + 2 * ng + 2 * nh + 2 * ns, &model->d, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(2 * nb + 2 * ng + 2 * nphi + 2 * ns, &model->d, &c_ptr);
     // default initialization to zero
-    blasfeo_dvecse(2*nb+2*ng+2*nh+2*ns, 0.0, &model->d, 0);
+    blasfeo_dvecse(2*nb+2*ng+2*nphi+2*ns, 0.0, &model->d, 0);
 
     // int
     // idxb
@@ -491,7 +491,7 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     int nx = dims->nx;
     int nb = dims->nb;
     int ng = dims->ng;
-    int nh = dims->nh;
+    int nphi = dims->nphi;
     int ns = dims->ns;
     int nsbu = dims->nsbu;
     int nsbx = dims->nsbx;
@@ -505,7 +505,7 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "ub")) // TODO(fuck_lint) remove !!!
     {
-        blasfeo_pack_dvec(nb, value, &model->d, nb+ng+nh);
+        blasfeo_pack_dvec(nb, value, &model->d, nb+ng+nphi);
     }
     else if (!strcmp(field, "idxbx"))
     {
@@ -519,7 +519,7 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "ubx"))
     {
-        blasfeo_pack_dvec(nbx, value, &model->d, nb + ng + nh + nbu);
+        blasfeo_pack_dvec(nbx, value, &model->d, nb + ng + nphi + nbu);
     }
     else if (!strcmp(field, "idxbu"))
     {
@@ -533,7 +533,7 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "ubu"))
     {
-        blasfeo_pack_dvec(nbu, value, &model->d, nb + ng + nh);
+        blasfeo_pack_dvec(nbu, value, &model->d, nb + ng + nphi);
     }
     else if (!strcmp(field, "C"))
     {
@@ -549,23 +549,23 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "ug"))
     {
-        blasfeo_pack_dvec(ng, value, &model->d, 2*nb+ng+nh);
+        blasfeo_pack_dvec(ng, value, &model->d, 2*nb+ng+nphi);
     }
-    else if (!strcmp(field, "nl_constr_h_fun_jac"))
+    else if (!strcmp(field, "nl_constr_phi_fun_jac"))
     {
-        model->nl_constr_h_fun_jac = value;
+        model->nl_constr_phi_fun_jac = value;
     }
-    else if (!strcmp(field, "p"))
+    else if (!strcmp(field, "nl_constr_r_fun_jac"))
     {
-        model->p = value;
+        model->nl_constr_r_fun_jac = value;
     }
-    else if (!strcmp(field, "lh")) // TODO(fuck_lint) remove
+    else if (!strcmp(field, "lphi")) // TODO(fuck_lint) remove
     {
-        blasfeo_pack_dvec(nh, value, &model->d, nb+ng);
+        blasfeo_pack_dvec(nphi, value, &model->d, nb+ng);
     }
-    else if (!strcmp(field, "uh"))
+    else if (!strcmp(field, "uphi"))
     {
-        blasfeo_pack_dvec(nh, value, &model->d, 2*nb+2*ng+nh);
+        blasfeo_pack_dvec(nphi, value, &model->d, 2*nb+2*ng+nphi);
     }
     else if (!strcmp(field, "idxsbu"))
     {
@@ -575,11 +575,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsbu"))
     {
-        blasfeo_pack_dvec(nsbu, value, &model->d, 2*nb+2*ng+2*nh);
+        blasfeo_pack_dvec(nsbu, value, &model->d, 2*nb+2*ng+2*nphi);
     }
     else if (!strcmp(field, "usbu"))
     {
-        blasfeo_pack_dvec(nsbu, value, &model->d, 2*nb+2*ng+2*nh+ns);
+        blasfeo_pack_dvec(nsbu, value, &model->d, 2*nb+2*ng+2*nphi+ns);
     }
     else if (!strcmp(field, "idxsbx"))
     {
@@ -589,11 +589,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsbx"))
     {
-        blasfeo_pack_dvec(nsbx, value, &model->d, 2*nb+2*ng+2*nh+nsbu);
+        blasfeo_pack_dvec(nsbx, value, &model->d, 2*nb+2*ng+2*nphi+nsbu);
     }
     else if (!strcmp(field, "usbx"))
     {
-        blasfeo_pack_dvec(nsbx, value, &model->d, 2*nb+2*ng+2*nh+ns+nsbu);
+        blasfeo_pack_dvec(nsbx, value, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu);
     }
     else if (!strcmp(field, "idxsg"))
     {
@@ -603,11 +603,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsg"))
     {
-        blasfeo_pack_dvec(nsg, value, &model->d, 2*nb+2*ng+2*nh+nsbu+nsbx);
+        blasfeo_pack_dvec(nsg, value, &model->d, 2*nb+2*ng+2*nphi+nsbu+nsbx);
     }
     else if (!strcmp(field, "usg"))
     {
-        blasfeo_pack_dvec(nsg, value, &model->d, 2*nb+2*ng+2*nh+ns+nsbu+nsbx);
+        blasfeo_pack_dvec(nsg, value, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu+nsbx);
     }
     else if (!strcmp(field, "idxsh"))
     {
@@ -617,11 +617,11 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     }
     else if (!strcmp(field, "lsh"))
     {
-        blasfeo_pack_dvec(nsh, value, &model->d, 2*nb+2*ng+2*nh+nsbu+nsbx+nsg);
+        blasfeo_pack_dvec(nsh, value, &model->d, 2*nb+2*ng+2*nphi+nsbu+nsbx+nsg);
     }
     else if (!strcmp(field, "ush"))
     {
-        blasfeo_pack_dvec(nsh, value, &model->d, 2*nb+2*ng+2*nh+ns+nsbu+nsbx+nsg);
+        blasfeo_pack_dvec(nsh, value, &model->d, 2*nb+2*ng+2*nphi+ns+nsbu+nsbx+nsg);
     }
     else
     {
@@ -722,14 +722,14 @@ int ocp_nlp_constraints_bgp_memory_calculate_size(void *config_, void *dims_, vo
     int nu = dims->nu;
     int nb = dims->nb;
     int ng = dims->ng;
-    int nh = dims->nh;
+    int nphi = dims->nphi;
     int ns = dims->ns;
 
     int size = 0;
 
     size += sizeof(ocp_nlp_constraints_bgp_memory);
 
-    size += 1 * blasfeo_memsize_dvec(2 * nb + 2 * ng + 2 * nh + 2 * ns);  // fun
+    size += 1 * blasfeo_memsize_dvec(2 * nb + 2 * ng + 2 * nphi + 2 * ns);  // fun
     size += 1 * blasfeo_memsize_dvec(nu + nx + 2 * ns);                   // adj
 
     size += 1 * 64;  // blasfeo_mem align
@@ -751,7 +751,7 @@ void *ocp_nlp_constraints_bgp_memory_assign(void *config_, void *dims_, void *op
     int nu = dims->nu;
     int nb = dims->nb;
     int ng = dims->ng;
-    int nh = dims->nh;
+    int nphi = dims->nphi;
     int ns = dims->ns;
 
     // struct
@@ -762,7 +762,7 @@ void *ocp_nlp_constraints_bgp_memory_assign(void *config_, void *dims_, void *op
     align_char_to(64, &c_ptr);
 
     // fun
-    assign_and_advance_blasfeo_dvec_mem(2 * nb + 2 * ng + 2 * nh + 2 * ns, &memory->fun, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(2 * nb + 2 * ng + 2 * nphi + 2 * ns, &memory->fun, &c_ptr);
     // adj
     assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->adj, &c_ptr);
 
@@ -895,9 +895,9 @@ int ocp_nlp_constraints_bgp_workspace_calculate_size(void *config_, void *dims_,
     int nu = dims->nu;
     int nb = dims->nb;
     int ng = dims->ng;
-    int nh = dims->nh;
+    int nphi = dims->nphi;
     int ns = dims->ns;
-    int np = dims->np;
+    int nr = dims->nr;
 
     int nv = nx + nu;
 
@@ -905,11 +905,11 @@ int ocp_nlp_constraints_bgp_workspace_calculate_size(void *config_, void *dims_,
 
     size += sizeof(ocp_nlp_constraints_bgp_workspace);
 
-    size += 1 * blasfeo_memsize_dvec(nb + ng + nh + ns);  // tmp_ni
-    size += np * (nx + nu) * sizeof(double);
-    size += 1 * blasfeo_memsize_dmat(nx + nu, np);
-    size += 1 * blasfeo_memsize_dmat(np * nh, np);        // tmp_np_nh_np
-    size += 1 * blasfeo_memsize_dmat(nv, np);             // tmp_nv_np
+    size += 1 * blasfeo_memsize_dvec(nb + ng + nphi + ns);  // tmp_ni
+    size += nr * (nx + nu) * sizeof(double);
+    size += 1 * blasfeo_memsize_dmat(nx + nu, nr);
+    size += 1 * blasfeo_memsize_dmat(nr * nphi, nr);        // tmp_nr_nphi_nr
+    size += 1 * blasfeo_memsize_dmat(nv, nr);             // tmp_nv_nr
 
     size += 2 * 64;  // blasfeo_mem align
 
@@ -929,9 +929,9 @@ static void ocp_nlp_constraints_bgp_cast_workspace(void *config_, void *dims_, v
     int nu = dims->nu;
     int nb = dims->nb;
     int ng = dims->ng;
-    int nh = dims->nh;
+    int nphi = dims->nphi;
     int ns = dims->ns;
-    int np = dims->np;
+    int nr = dims->nr;
 
     int nv = nu + nx;
 
@@ -942,12 +942,12 @@ static void ocp_nlp_constraints_bgp_cast_workspace(void *config_, void *dims_, v
     align_char_to(64, &c_ptr);
 
     // tmp_ni
-    assign_and_advance_blasfeo_dvec_mem(nb + ng + nh + ns, &work->tmp_ni, &c_ptr);
-    c_ptr += np * (nx + nu) * sizeof(double);
+    assign_and_advance_blasfeo_dvec_mem(nb + ng + nphi + ns, &work->tmp_ni, &c_ptr);
+    c_ptr += nr * (nx + nu) * sizeof(double);
     align_char_to(64, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx + nu, np, &work->jacobian_quadratic, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(np * nh, np, &work->tmp_np_nh_np, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nv, np, &work->tmp_nv_np, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx + nu, nr, &work->jacobian_quadratic, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nr * nphi, nr, &work->tmp_nr_nphi_nr, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nv, nr, &work->tmp_nv_nr, &c_ptr);
     assert((char *) work + ocp_nlp_constraints_bgp_workspace_calculate_size(config_, dims, opts_)
            >= c_ptr);
 
@@ -1012,9 +1012,9 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
     int nz = dims->nz;
     int nb = dims->nb;
     int ng = dims->ng;
-    int nh = dims->nh;
+    int nphi = dims->nphi;
     int ns = dims->ns;
-    int np = dims->np;
+    int nr = dims->nr;
 
     int nv = nx + nu;
 
@@ -1038,7 +1038,7 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
     // }
 
     // nonlinear
-    if (nh > 0)
+    if (nphi > 0)
     {
         // TODO(andrea): how do we handle cases where nz > 0 only in one of the modules?
         // if (nz > 0) {
@@ -1048,16 +1048,18 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
 
         //
         struct blasfeo_dvec_args x_in;  // input x of external fun;
-        struct blasfeo_dvec_args u_in;  // input u of external fun;
-        struct blasfeo_dvec_args z_in;  // input z of external fun;
-
         x_in.x = memory->ux;
-        u_in.x = memory->ux;
-        z_in.x = memory->z_alg;
-
         x_in.xi = nu;
+
+        struct blasfeo_dvec_args u_in;  // input u of external fun;
+        u_in.x = memory->ux;
         u_in.xi = 0;
+
+        struct blasfeo_dvec_args z_in;  // input z of external fun;
+        z_in.x = memory->z_alg;
         z_in.xi = 0;
+
+
 
         ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
         ext_fun_in[0] = &x_in;
@@ -1070,26 +1072,26 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         struct blasfeo_dvec_args h_args;
         h_args.x = &work->tmp_ni;
         h_args.xi = nb + ng;
-        ext_fun_out[0] = &h_args;  // fun: nh
+        ext_fun_out[0] = &h_args;  // fun: nphi
         ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
 
         struct blasfeo_dmat_args Jht_args;
         Jht_args.A = memory->DCt;
         Jht_args.ai = 0;
         Jht_args.aj = ng;
-        ext_fun_out[1] = &Jht_args;  // jac': (nu+nx) * nh
+        ext_fun_out[1] = &Jht_args;  // jac': (nu+nx) * nphi
 
         struct blasfeo_dmat_args hess_out;
-        hess_out.A = &work->tmp_np_nh_np;
+        hess_out.A = &work->tmp_nr_nphi_nr;
         hess_out.ai = 0;
         hess_out.aj = 0;
         ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
-        ext_fun_out[2] = &hess_out;  // hess: nh * np * np
+        ext_fun_out[2] = &hess_out;  // hess: nphi * nr * nr
 
         model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
     }
 
-    if (np > 0)
+    if (nr > 0)
     {
         // ext_fun_type_in[0] = BLASFEO_DVEC;
         // ext_fun_in[0] = memory->ux;  // ux: nu+nx
@@ -1102,23 +1104,23 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         Jp_args.A = &work->jacobian_quadratic;
         Jp_args.ai = 0;
         Jp_args.aj = 0;
-        ext_fun_out[1] = &Jp_args;  // jac': (nu+nx) * np
+        ext_fun_out[1] = &Jp_args;  // jac': (nu+nx) * nr
         model->p->evaluate(model->p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
         // SCQP Hessian
         
-        for (int i = 0; i < nh; i++) { 
+        for (int i = 0; i < nphi; i++) { 
             // TODO(andrea): @giaf: if the lower bound is active we shouldn't consider its contribution, right?
             // Removing this.
-            // double lam_i = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh) -
+            // double lam_i = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nphi) -
             //              blasfeo_dvecex1(memory->lam, nb + ng);
 
-            double lam_i = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh + i);
+            double lam_i = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nphi + i);
 
             // printf("lam_i = %f", lam_i);
 
             // andrea: this did not take into account the Hessian of the convex outer part
-            // blasfeo_dsyrk_ln(nx + nu, np, 2 * lam, &work->jacobian_quadratic, 0, 0,
+            // blasfeo_dsyrk_ln(nx + nu, nr, 2 * lam, &work->jacobian_quadratic, 0, 0,
             //                  &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq,
             //                  0, 0);
             
@@ -1126,48 +1128,48 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
             // blasfeo_dgese(0.0, nv, nv, memory->RSQrq, 0, 0);
             // blasfeo_print_dmat(nv, nv, memory->RSQrq, 0, 0);
 
-            // printf("tmp_np_nh_np:\n");
-            // blasfeo_print_dmat(np * nh, np, &work->tmp_np_nh_np, 0, 0);
+            // printf("tmp_nr_nphi_nr:\n");
+            // blasfeo_print_dmat(nr * nphi, nr, &work->tmp_nr_nphi_nr, 0, 0);
 
-            blasfeo_dgemm_nt(nv, np, np, lam_i, &work->jacobian_quadratic, 
-                    0, 0, &work->tmp_np_nh_np, np * i, 0, 0.0, &work->tmp_nv_np, 0, 0, 
-                    &work->tmp_nv_np, 0, 0);
+            blasfeo_dgemm_nt(nv, nr, nr, lam_i, &work->jacobian_quadratic, 
+                    0, 0, &work->tmp_nr_nphi_nr, nr * i, 0, 0.0, &work->tmp_nv_nr, 0, 0, 
+                    &work->tmp_nv_nr, 0, 0);
 
-            // printf("tmp_nv_np:\n");
-            // blasfeo_print_dmat(nv, np, &work->tmp_nv_np, 0, 0);
-            blasfeo_dgemm_nt(nv, nv, np, 1.0, &work->tmp_nv_np, 
+            // printf("tmp_nv_nr:\n");
+            // blasfeo_print_dmat(nv, nr, &work->tmp_nv_nr, 0, 0);
+            blasfeo_dgemm_nt(nv, nv, nr, 1.0, &work->tmp_nv_nr, 
                     0, 0, &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq, 0, 0, 
                     memory->RSQrq, 0, 0);
             // printf("work->jacobian_quadratic:\n");
-            // blasfeo_print_dmat(nv, np, &work->jacobian_quadratic, 0, 0);
+            // blasfeo_print_dmat(nv, nr, &work->jacobian_quadratic, 0, 0);
             // printf("memory->RSQrq:\n");
             // blasfeo_print_dmat(nv, nv, memory->RSQrq, 0, 0);
         }
     }
 
-    blasfeo_daxpy(nb + ng + nh, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
-    blasfeo_daxpy(nb + ng + nh, -1.0, &model->d, nb + ng + nh, &work->tmp_ni, 0, &memory->fun,
-                  nb + ng + nh);
+    blasfeo_daxpy(nb + ng + nphi, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
+    blasfeo_daxpy(nb + ng + nphi, -1.0, &model->d, nb + ng + nphi, &work->tmp_ni, 0, &memory->fun,
+                  nb + ng + nphi);
 
     // soft
     blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu + nx, model->idxs, &memory->fun, 0);
-    blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu + nx + ns, model->idxs, &memory->fun, nb + ng + nh);
+    blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu + nx + ns, model->idxs, &memory->fun, nb + ng + nphi);
 
-    blasfeo_daxpy(2 * ns, -1.0, memory->ux, nu + nx, &model->d, 2 * nb + 2 * ng + 2 * nh,
-                  &memory->fun, 2 * nb + 2 * ng + 2 * nh);
+    blasfeo_daxpy(2 * ns, -1.0, memory->ux, nu + nx, &model->d, 2 * nb + 2 * ng + 2 * nphi,
+                  &memory->fun, 2 * nb + 2 * ng + 2 * nphi);
 
     // nlp_mem: ineq_adj
     if (opts->compute_adj)
     {
         blasfeo_dvecse(nu + nx + 2 * ns, 0.0, &memory->adj, 0);
-        blasfeo_daxpy(nb+ng+nh, -1.0, memory->lam, nb + ng + nh, memory->lam, 0, &work->tmp_ni, 0);
+        blasfeo_daxpy(nb+ng+nphi, -1.0, memory->lam, nb + ng + nphi, memory->lam, 0, &work->tmp_ni, 0);
         blasfeo_dvecad_sp(nb, 1.0, &work->tmp_ni, 0, model->idxb, &memory->adj, 0);
-        blasfeo_dgemv_n(nu+nx, ng+nh, 1.0, memory->DCt, 0, 0, &work->tmp_ni, nb, 1.0, &memory->adj,
+        blasfeo_dgemv_n(nu+nx, ng+nphi, 1.0, memory->DCt, 0, 0, &work->tmp_ni, nb, 1.0, &memory->adj,
                         0, &memory->adj, 0);
         // soft
         blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, 0, &memory->adj, nu + nx);
-        blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb+ng+nh, &memory->adj, nu+nx+ns);
-        blasfeo_daxpy(2 * ns, 1.0, memory->lam, 2 * nb + 2 * ng + 2 * nh, &memory->adj, nu + nx,
+        blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb+ng+nphi, &memory->adj, nu+nx+ns);
+        blasfeo_daxpy(2 * ns, 1.0, memory->lam, 2 * nb + 2 * ng + 2 * nphi, &memory->adj, nu + nx,
                       &memory->adj, nu + nx);
     }
 
