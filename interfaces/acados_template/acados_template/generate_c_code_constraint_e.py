@@ -102,7 +102,7 @@ def generate_c_code_constraint_e( constraint ):
         file_name = con_name + '_h_e_constraint'
         constraint_fun_jac_tran.generate(file_name, casadi_opts)
         os.chdir('../..')
-    else: # BGHP constraint
+    else: # BGP constraint
         con_h_expr_x = substitute(con_h_expr, r, con_r_expr)
         jac_x = jacobian(con_h_expr_x, x);
         jac_u = jacobian(con_h_expr_x, u);

@@ -655,14 +655,14 @@ int acados_create() {
 
     for (int i = 0; i < N; i++) {
         {%- if ocp.dims.npd > 0 %}
-        nlp_solver_plan->nlp_constraints[i] = BGHP;
+        nlp_solver_plan->nlp_constraints[i] = BGP;
         {%- else %}
         nlp_solver_plan->nlp_constraints[i] = BGH;
         {%- endif %}
     }
 
     {%- if ocp.dims.npd_e > 0 %}
-    nlp_solver_plan->nlp_constraints[N] = BGHP;
+    nlp_solver_plan->nlp_constraints[N] = BGP;
     {%- else %}
     nlp_solver_plan->nlp_constraints[N] = BGH;
     {%- endif %}
