@@ -54,20 +54,20 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
     
-    if acados_ocp.con_p.name is not None and acados_ocp.con_h.name is None:
-        raise Exception('h constraint is missing!')
+    # if acados_ocp.con_p.name is not None and acados_ocp.con_h.name is None:
+    #     raise Exception('h constraint is missing!')
 
     if acados_ocp.con_h.name is not None:
         # nonlinear part of nonlinear constraints 
-        generate_c_code_constraint(acados_ocp.con_h, '_h_constraint')
+        generate_c_code_constraint(acados_ocp.con_h)
 
     if acados_ocp.con_h_e.name is not None:
         # nonlinear part of nonlinear constraints 
-        generate_c_code_constraint_e(acados_ocp.con_h_e, '_h_e_constraint')
+        generate_c_code_constraint_e(acados_ocp.con_h_e)
     
-    if acados_ocp.con_p.name is not None:
-        # convex part of nonlinear constraints 
-        generate_c_code_constraint(acados_ocp.con_p, '_p_constraint')
+    # if acados_ocp.con_p.name is not None:
+    #     # convex part of nonlinear constraints 
+    #     generate_c_code_constraint(acados_ocp.con_p, '_p_constraint')
 
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         generate_c_code_nls_cost(acados_ocp.cost_r)
@@ -259,20 +259,44 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     if acados_ocp.dims.npd > 0:
         # create folder
-        if not os.path.exists('c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/'):
-            os.mkdir('c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/')
+        if not os.path.exists('c_generated_code/' + acados_ocp.con_h.name + '_p_constraint/'):
+            os.mkdir('c_generated_code/' + acados_ocp.con_h.name + '_p_constraint/')
         if USE_TERA == 0:
             # render header templates
             template = env.get_template('p_constraint.in.h')
             output = template.render(ocp=acados_ocp)
             # output file
-            out_file = open('./c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/' + acados_ocp.con_p.name + '_p_constraint.h', 'w+')
+            out_file = open('./c_generated_code/' + acados_ocp.con_h.name + '_p_constraint/' + acados_ocp.con_h.name + '_p_constraint.h', 'w+')
             out_file.write(output)
         else:
-            os.chdir('c_generated_code/' + acados_ocp.con_p.name + '_p_constraint/')
+            os.chdir('c_generated_code/' + acados_ocp.con_h.name + '_p_constraint/')
             # render source template
             template_file = 'p_constraint.in.h'
-            out_file = acados_ocp.con_p.name + '_p_constraint.h'
+            out_file = acados_ocp.con_h.name + '_p_constraint.h'
+            # output file
+            os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
+                    + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
+                    "\"" + ' ' + "\"" + out_file + "\""
+
+            os.system(os_cmd)
+            os.chdir('../..')
+
+    if acados_ocp.dims.npd_e > 0:
+        # create folder
+        if not os.path.exists('c_generated_code/' + acados_ocp.con_h_e.name + '_p_e_constraint/'):
+            os.mkdir('c_generated_code/' + acados_ocp.con_h_e.name + '_p_e_constraint/')
+        if USE_TERA == 0:
+            # render header templates
+            template = env.get_template('p_e_constraint.in.h')
+            output = template.render(ocp=acados_ocp)
+            # output file
+            out_file = open('./c_generated_code/' + acados_ocp.con_h_e.name + '_p_e_constraint/' + acados_ocp.con_h_e.name + '_p_e_constraint.h', 'w+')
+            out_file.write(output)
+        else:
+            os.chdir('c_generated_code/' + acados_ocp.con_h_e.name + '_p_e_constraint/')
+            # render source template
+            template_file = 'p_e_constraint.in.h'
+            out_file = acados_ocp.con_h_e.name + '_p_e_constraint.h'
             # output file
             os_cmd = tera_path + 't_renderer ' + "\"" + template_glob + "\"" + ' ' + "\"" \
                     + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \

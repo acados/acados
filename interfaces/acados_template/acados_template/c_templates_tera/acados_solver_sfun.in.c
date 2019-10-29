@@ -159,24 +159,24 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // get input signals
     InputRealPtrsType in_x0_sign;
     InputRealPtrsType in_y_ref_sign;
-    InputRealPtrsType in_y_ref_N_sign;
+    InputRealPtrsType in_y_ref_e_sign;
     InputRealPtrsType in_p_sign;
     
     // local buffers
     real_t in_x0[{{ dims.nx }}];
     real_t in_y_ref[{{ dims.ny }}];
-    real_t in_y_ref_N[{{ dims.ny_e }}];
+    real_t in_y_ref_e[{{ dims.ny_e }}];
     real_t in_p[{{ dims.np }}];
 
     in_x0_sign = ssGetInputPortRealSignalPtrs(S, 0);
     in_y_ref_sign = ssGetInputPortRealSignalPtrs(S, 1);
-    in_y_ref_N_sign = ssGetInputPortRealSignalPtrs(S, 2);
+    in_y_ref_e_sign = ssGetInputPortRealSignalPtrs(S, 2);
     in_p_sign = ssGetInputPortRealSignalPtrs(S, 3);
 
     // copy signals into local buffers
     for (int i = 0; i < {{ dims.nx }}; i++) in_x0[i] = (double)(*in_x0_sign[i]);
     for (int i = 0; i < {{ dims.ny }}; i++) in_y_ref[i] = (double)(*in_y_ref_sign[i]);
-    for (int i = 0; i < {{ dims.ny_e }}; i++) in_y_ref_N[i] = (double)(*in_y_ref_N_sign[i]);
+    for (int i = 0; i < {{ dims.ny_e }}; i++) in_y_ref_e[i] = (double)(*in_y_ref_e_sign[i]);
     for (int i = 0; i < {{ dims.np }}; i++) in_p[i] = (double)(*in_p_sign[i]);
 
     // for (int i = 0; i < 4; i++) ssPrintf("x0[%d] = %f\n", i, in_x0[i]);
@@ -185,11 +185,24 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // set initial condition
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", in_x0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", in_x0);
-    
+
+    // update reference
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
+        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) in_y_ref);
+
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) in_y_ref_e);
+
     // update value of parameters
-    {% if ocp.dims.np > 0%}
-    for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) 
-        acados_update_params(ii, in_p, {{ ocp.dims.np }});
+    {% if solver_config.integrator_type == 'IRK' %}
+    for (int ii = 0; ii < {{ dims.N }}; ii++) {
+    impl_dae_fun[ii].set_param(impl_dae_fun+ii, in_p);
+    impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, in_p);
+    impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, in_p);
+    }
+    {% elif solver_config.integrator_type == 'ERK' %}
+    for (int ii = 0; ii < {{ dims.N }}; ii++) {
+    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
+    }
     {% endif %}
     
     // assign pointers to output signals 

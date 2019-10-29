@@ -35,7 +35,7 @@
 from casadi import *
 import os
 
-def generate_c_code_constraint_e( constraint, suffix_name ):
+def generate_c_code_constraint_e( constraint ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -46,16 +46,20 @@ def generate_c_code_constraint_e( constraint, suffix_name ):
 
     # load constraint variables and expression
     x = constraint.x
-    u = constraint.u
+    r = constraint.r
+    z = constraint.z
     p = constraint.p
-    # nc = nh or np 
-    nc = constraint.nc 
-    con_exp = constraint.expr
+    nh = constraint.nh 
+    con_h_expr = constraint.con_h_expr
+    con_r_expr = constraint.con_r_expr
     con_name = constraint.name
 
     # get dimensions
     nx = x.size()[0]
-    nu = u.size()[0]
+    if r is not None:
+        nr = r.size()[0]
+    else:
+        nr = 0
 
     if type(p) is list:
         # check that z is empty
@@ -67,6 +71,17 @@ def generate_c_code_constraint_e( constraint, suffix_name ):
     else:
         np = p.size()[0]
 
+    if type(z) is list:
+        # check that z is empty
+        if len(z) == 0:
+            nz = 0
+            z = SX.sym('z', 0, 0)
+        else:
+            raise Exception('z is a non-empty list. It should be either an empty list or an SX object.')
+    else:
+        nz = z.size()[0]
+    # create dummy u
+    u = SX.sym('u', 0, 0)
     # set up functions to be exported
     fun_name = con_name + '_h_e_constraint'
     if nr == 0: # BGH constraint
