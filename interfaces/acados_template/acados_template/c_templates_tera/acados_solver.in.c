@@ -292,6 +292,18 @@ int acados_create()
     lsh[{{ i }}] = {{ constraints.lsh[i] }};
     ush[{{ i }}] = {{ constraints.ush[i] }};
     {%- endfor %}
+    
+    // set up soft bounds for convex-over-nonlinear constraints
+    int idxsphi[NSPHI];
+    {% for i in range(end=dims.nsphi) %}
+    idxsphi[{{ i }}] = {{ constraints.idxsphi[i] }};
+    {%- endfor %}
+    double lsphi[NSPHI]; 
+    double usphi[NSPHI];
+    {% for i in range(end=dims.nsphi) %}
+    lsphi[{{ i }}] = {{ constraints.lsphi[i] }};
+    usphi[{{ i }}] = {{ constraints.usphi[i] }};
+    {%- endfor %}
 
     // x
     int idxbx[NBX];
@@ -929,7 +941,6 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usbu", usbu);
     {%- endif %}
     
-    {%- if dims.nsh > 0 %} 
     {% if constraints.constr_type == "BGH" %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsh", idxsh);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsh", lsh);
@@ -939,7 +950,6 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsphi", idxsphi);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsphi", lsphi);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usphi", usphi);
-    {%- endif %}
     {%- endif %}
 
     // bounds for intermediate stages
@@ -965,7 +975,6 @@ int acados_create()
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "usbu", usbu);
         {%- endif %}
 
-        {%- if dims.nsh > 0 %} 
         {% if constraints.constr_type == "BGH" %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsh", idxsh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsh", lsh);
@@ -975,7 +984,6 @@ int acados_create()
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsphi", idxsphi);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsphi", lsphi);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "usphi", usphi);
-        {%- endif %}
         {%- endif %}
 
     }
@@ -1004,7 +1012,6 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usbx", usbx_e);
     {%- endif %}
     
-    {%- if dims.nsh_e > 0 %} 
     {% if constraints.constr_type == "BGH" %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsh", idxsh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsh", lsh_e);
@@ -1014,7 +1021,6 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsphi", idxsphi_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsphi", lsphi_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usphi", usphi_e);
-    {%- endif %}
     {%- endif %}
 
     {%- if dims.ng_e > 0 %} 

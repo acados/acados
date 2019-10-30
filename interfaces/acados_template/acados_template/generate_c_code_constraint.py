@@ -53,7 +53,6 @@ def generate_c_code_constraint( constraint ):
     # nc = nh or np 
     nh = constraint.nh 
     nphi = constraint.nphi 
-    import pdb; pdb.set_trace()
     if nh > 0 and nphi > 0:
         raise Exception("cannot have both nh and nphi > 0.")
 
