@@ -555,7 +555,7 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     {
         model->nl_constr_phi_fun_jac = value;
     }
-phi   else if (!strcmp(field, "nl_constr_r_fun_jac"))
+    else if (!strcmp(field, "nl_constr_r_fun_jac"))
     {
         model->nl_constr_r_fun_jac = value;
     }
@@ -1088,7 +1088,7 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
         ext_fun_out[2] = &hess_out;  // hess: nphi * nr * nr
 
-        model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+        model->nl_constr_phi_fun_jac->evaluate(model->nl_constr_phi_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
     }
 
     if (nr > 0)

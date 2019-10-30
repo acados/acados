@@ -594,30 +594,47 @@ class ocp_nlp_constraints:
         # nonlinear constraints at t=T
         self.__uh_e    = []        #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
         self.__lh_e    = []        #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
+        # convex-over-nonlinear constraints
+        self.__lphi    = []        #: :math:`\underline{\phi}` - lower bound for convex-over-nonlinear inequalities 
+        self.__uphi    = []        #: :math:`\bar{\phi}` - upper bound for convex-over-nonlinear inequalities 
+        # nonlinear constraints at t=T
+        self.__uh_e    = []        #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
+        self.__lh_e    = []        #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
+        # nonlinear constraints at t=T
+        self.__uphi_e    = []      #: :math:`\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities at t=T 
+        self.__lphi_e    = []      #: :math:`\underline{\phi}^e` - lower bound on convex-over-nonlinear inequalities at t=T 
         # soft bounds on x and u
         self.__lsbx   = []         #: lower bounds on slacks corresponding to soft lower bounds on x
         self.__lsbu   = []         #: lower bounds on slacks corresponding to soft lower bounds on u
         self.__usbx   = []         #: lower bounds on slacks corresponding to soft upper bounds on x
         self.__usbu   = []         #: lower bounds on slacks corresponding to soft upper bounds on u
         self.__idxsbx = []         #: indexes of soft bounds on x within the indices of bounds on x
-        # self.__Jsbx   = []         #: :math`J_{s,x}` - matrix coefficient for soft bounds on x 
+        # self.__Jsbx   = []       #: :math`J_{s,x}` - matrix coefficient for soft bounds on x 
         self.__idxsbu = []         #: indexes of soft bounds on u within the indices of bounds on u
-        # self.__Jsbu   = []         #: :math`J_{s,u}` - matrix coefficient for soft bounds on u 
+        # self.__Jsbu   = []       #: :math`J_{s,u}` - matrix coefficient for soft bounds on u 
         # soft bounds on x at t=T
         self.__lsbx_e  = []        #: lower bounds on slacks corresponding to soft lower bounds on x at t=T
         self.__usbx_e  = []        #: lower bounds on slacks corresponding to soft upper bounds on x at t=T
         self.__idxsbx_e= []        #: indexes of soft bounds on x at t=T, within the indices of bounds on x at t=T
-        # self.__Jsbx_e    = []      #: :math`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T 
+        # self.__Jsbx_e    = []    #: :math`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T 
         # soft bounds on nonlinear constraints
         self.__lsh    = []         #: lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
         self.__ush    = []         #: lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
         self.__idxsh  = []         #: indexes of soft nonlinear constraints within the indices of nonlinear constraints
-        # self.__Jsh    = []         #: :math`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints
+        # soft bounds on nonlinear constraints
+        self.__lsphi  = []         #: lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints
+        self.__usphi  = []         #: lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints
+        self.__idxsphi  = []       #: indexes of soft convex-over-nonlinear constraints within the indices of nonlinear constraints
+        # self.__Jsh    = []       #: :math`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints
         # soft bounds on nonlinear constraints at t=T
         self.__lsh_e    = []       #: lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at t=T
         self.__ush_e    = []       #: lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints at t=T
         self.__idxsh_e  = []       #: indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
-        # self.__Jsh_e    = []       #: :math`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T 
+        # soft bounds on nonlinear constraints at t=T
+        self.__lsphi_e    = []     #: lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at t=T
+        self.__usphi_e    = []     #: lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at t=T
+        self.__idxsphi_e  = []     #: indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
+        # self.__Jsh_e    = []     #: :math`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T 
         self.__x0      = []        #: :math:`\bar{x}_0` - initial state 
         self.__p       = []        #: :math:`p` - parameters 
 
@@ -718,6 +735,15 @@ class ocp_nlp_constraints:
     def uh(self):
         return self.__uh
 
+    # convex-over-nonlinear constraints
+    @property
+    def lphi(self):
+        return self.__lphi
+
+    @property
+    def uphi(self):
+        return self.__uphi
+
     # nonlinear constraints at t=T
     @property
     def lh_e(self):
@@ -726,6 +752,15 @@ class ocp_nlp_constraints:
     @property
     def uh_e(self):
         return self.__uh_e
+
+    # convex-over-nonlinear constraints at t=T
+    @property
+    def lphi_e(self):
+        return self.__lphi_e
+
+    @property
+    def uphi_e(self):
+        return self.__uphi_e
 
     # soft bounds on x and u
     @property
@@ -794,7 +829,42 @@ class ocp_nlp_constraints:
     def Jsh(self):
         return self.__Jsh
 
+    # soft bounds on convex-over-nonlinear constraints
+    @property
+    def lsh(self):
+        return self.__lsh
+
+    @property
+    def ush(self):
+        return self.__ush
+
+    @property
+    def idxsh(self):
+        return self.__idxsh
+
+    @property
+    def Jsh(self):
+        return self.__Jsh
+
     # soft bounds on nonlinear constraints at t=T
+    @property
+    def lsh_e(self):
+        return self.__lsh_e
+
+    @property
+    def ush_e(self):
+        return self.__ush_e
+
+    @property
+    def idxsh_e(self):
+        return self.__idxsh_e
+
+
+    @property
+    def Jsh_e(self):
+        return self.__Jsh_e
+
+    # soft bounds on convex-over-nonlinear constraints at t=T
     @property
     def lsh_e(self):
         return self.__lsh_e
