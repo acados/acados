@@ -376,7 +376,8 @@ void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *fi
     // TODO(andrea): this is necessary due to non-modularity in ocp_nlp_common...
     else if (!strcmp(field, "nh"))
     {
-        ocp_nlp_constraints_bgp_get_nphi(config_, dims_, value);
+        // ocp_nlp_constraints_bgp_get_nphi(config_, dims_, value);
+        *value = 0;
     }
     else if (!strcmp(field, "nphi"))
     {
@@ -389,7 +390,7 @@ void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *fi
     // TODO(andrea): this is necessary due to non-modularity in ocp_nlp_common...
     else if (!strcmp(field, "nsh"))
     {
-        ocp_nlp_constraints_bgp_get_nsphi(config_, dims_, value);
+        *value = 0;
     }
     else if (!strcmp(field, "nsphi"))
     {

@@ -374,6 +374,10 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
     {
         ocp_nlp_constraints_bgh_get_nh(config_, dims_, value);
     }
+    else if (!strcmp(field, "nphi"))
+    {
+        *value = 0;
+    }
     else if (!strcmp(field, "ns"))
     {
         ocp_nlp_constraints_bgh_get_ns(config_, dims_, value);
@@ -393,6 +397,10 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
     else if (!strcmp(field, "nsh"))
     {
         ocp_nlp_constraints_bgh_get_nsh(config_, dims_, value);
+    }
+    else if (!strcmp(field, "nsphi"))
+    {
+        *value = 0;
     }
     else
     {
