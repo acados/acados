@@ -242,7 +242,7 @@ int acados_create()
     // set up soft bounds for u
     int idxsbu[NSBU];
     {% for i in range(end=dims.nsbu) %}
-    idsxbu[{{ i }}] = {{ constraints.idxsbu[i] }};
+    idxsbu[{{ i }}] = {{ constraints.idxsbu[i] }};
     {%- endfor %}
     double lsbu[NSBU]; 
     double usbu[NSBU];
@@ -252,9 +252,9 @@ int acados_create()
     {%- endfor %}
     
     // set up soft bounds for nonlinear constraints
-    int idxsh[NSBU];
-    {% for i in range(end=dims.idxsh) %}
-    idsxbu[{{ i }}] = {{ constraints.idxsh[i] }};
+    int idxsh[NSH];
+    {% for i in range(end=dims.nsh) %}
+    idxsh[{{ i }}] = {{ constraints.idxsh[i] }};
     {%- endfor %}
     double lsh[NSH]; 
     double ush[NSH];
@@ -336,6 +336,30 @@ int acados_create()
     {% for i in range(end=dims.nbx_e) %}
     lbx_e[{{ i }}] = {{ constraints.lbx_e[i] }};
     ubx_e[{{ i }}] = {{ constraints.ubx_e[i] }};
+    {%- endfor %}
+    //
+    // set up soft bounds for nonlinear constraints
+    int idxsh_e[NSHN];
+    {% for i in range(end=dims.nsh_e) %}
+    idxsh_e[{{ i }}] = {{ constraints.idxsh_e[i] }};
+    {%- endfor %}
+    double lsh_e[NSHN]; 
+    double ush_e[NSHN];
+    {% for i in range(end=dims.nsh_e) %}
+    lsh_e[{{ i }}] = {{ constraints.lsh_e[i] }};
+    ush_e[{{ i }}] = {{ constraints.ush_e[i] }};
+    {%- endfor %}
+
+    // soft bounds on x
+    int idxsbx_e[NSBXN];
+    {% for i in range(end=dims.nsbx_e) %}
+    idsxbx_e[{{ i }}] = {{ constraints.idxsbx_e[i] }};
+    {%- endfor %}
+    double lsbx_e[NSBXN]; 
+    double usbx_e[NSBXN];
+    {% for i in range(end=dims.nsbx_e) %}
+    lsbx_e[{{ i }}] = {{ constraints.lsbx_e[i] }};
+    usbx_e[{{ i }}] = {{ constraints.usbx_e[i] }};
     {%- endfor %}
     
     // set up general constraints for last stage 
