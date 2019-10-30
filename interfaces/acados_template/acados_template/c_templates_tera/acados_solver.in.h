@@ -70,16 +70,18 @@ extern external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
-{% if dims.npd > 0 %}
-extern external_function_param_casadi * p_constraint;
+{% if constraints.constr_type == "BGP" %}
+extern external_function_param_casadi * phi_constraint;
+extern external_function_param_casadi * r_constraint;
 {% endif %}
-{% if dims.npd_e > 0 %}
-extern external_function_param_casadi * p_constraint_e;
+{% if constraints.constr_type_e == "BGP" %}
+extern external_function_param_casadi phi_e_constraint;
+extern external_function_param_casadi r_e_constraint;
 {% endif %}
-{% if dims.nh > 0 %}
+{% if constraints.constr_type == "BGH" %}
 extern external_function_param_casadi * h_constraint;
 {% endif %}
-{% if dims.nh_e > 0 %}
+{% if constraints.constr_type_e == "BGH" %}
 extern external_function_param_casadi h_e_constraint;
 {% endif %}
 {% if cost.cost_type == "NONLINEAR_LS" %}

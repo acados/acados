@@ -42,29 +42,33 @@ class ocp_nlp_dims:
     class containing the dimensions of the optimal control problem
     """
     def __init__(self):
-        self.__nx     = None  #: :math:`n_x` - number of states 
-        self.__nz     = 0     #: :math:`n_z` - number of algebraic variables 
-        self.__nu     = None  #: :math:`n_u` - number of inputs 
-        self.__np     = 0     #: :math:`n_p` - number of parameters 
-        self.__ny     = None  #: :math:`n_y` - number of residuals in Lagrange term 
-        self.__ny_e   = None  #: :math:`n_{y}^e` - number of residuals in Mayer term 
-        self.__npd    = 0     #: :math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints 
-        self.__npd_e  = 0     #: :math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints
-        self.__nh     = 0     #: :math:`n_h` - number of nonlinear constraints 
-        self.__nh_e   = 0     #: :math:`n_{h}^e` - number of nonlinear constraints at t=T 
-        self.__nbx    = 0     #: :math:`n_{b_x}` - number of state bounds 
-        self.__nbx_e  = 0     #: :math:`n_{b_x}` - number of state bounds at t=T 
-        self.__nbu    = 0     #: :math:`n_{b_u}` - number of input bounds 
-        self.__nsbx   = 0     #: :math:`n_{{sb}_x}` - number of soft state bounds 
-        self.__nsbx_e = 0     #: :math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T 
-        self.__nsbu   = 0     #: :math:`n_{{sb}_u}` - number of soft input bounds 
-        self.__nsh    = 0     #: :math:`n_{{sb}_u}` - number of soft nonlinear constraints 
-        self.__nsh_e  = 0     #: :math:`n_{{sb}_u}` - number of soft nonlinear constraints 
-        self.__ns     = 0     #: :math:`n_{s}` - total number of slacks 
-        self.__ns_e   = 0     #: :math:`n_{s}^e` - total number of slacks at t=T 
-        self.__ng     = 0     #: :math:`n_{g}` - number of general polytopic constraints 
-        self.__ng_e   = 0     #: :math:`n_{g}^e` - number of general polytopic constraints at t=T 
-        self.__N      = None  #: :math:`N` - prediction horizon  
+        self.__nx      = None  #: :math:`n_x` - number of states 
+        self.__nz      = 0     #: :math:`n_z` - number of algebraic variables 
+        self.__nu      = None  #: :math:`n_u` - number of inputs 
+        self.__np      = 0     #: :math:`n_p` - number of parameters 
+        self.__ny      = None  #: :math:`n_y` - number of residuals in Lagrange term 
+        self.__ny_e    = None  #: :math:`n_{y}^e` - number of residuals in Mayer term 
+        self.__nr      = 0     #: :math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints 
+        self.__nr_e    = 0     #: :math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints
+        self.__nh      = 0     #: :math:`n_h` - number of nonlinear constraints 
+        self.__nh_e    = 0     #: :math:`n_{h}^e` - number of nonlinear constraints at t=T 
+        self.__nphi    = 0     #: :math:`n_{\phi}` - number of convex-over-nonlinear constraints 
+        self.__nphi_e  = 0     #: :math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at t=T 
+        self.__nbx     = 0     #: :math:`n_{b_x}` - number of state bounds 
+        self.__nbx_e   = 0     #: :math:`n_{b_x}` - number of state bounds at t=T 
+        self.__nbu     = 0     #: :math:`n_{b_u}` - number of input bounds 
+        self.__nsbx    = 0     #: :math:`n_{{sb}_x}` - number of soft state bounds 
+        self.__nsbx_e  = 0     #: :math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T 
+        self.__nsbu    = 0     #: :math:`n_{{sb}_u}` - number of soft input bounds 
+        self.__nsh     = 0     #: :math:`n_{{sh}}` - number of soft nonlinear constraints 
+        self.__nsh_e   = 0     #: :math:`n_{{sh}}^e` - number of soft nonlinear constraints at t=T 
+        self.__nsphi   = 0     #: :math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints 
+        self.__nsphi_e = 0     #: :math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at t=T 
+        self.__ns      = 0     #: :math:`n_{s}` - total number of slacks 
+        self.__ns_e    = 0     #: :math:`n_{s}^e` - total number of slacks at t=T 
+        self.__ng      = 0     #: :math:`n_{g}` - number of general polytopic constraints 
+        self.__ng_e    = 0     #: :math:`n_{g}^e` - number of general polytopic constraints at t=T 
+        self.__N       = None  #: :math:`N` - prediction horizon  
 
     @property
     def nx(self):
@@ -91,12 +95,12 @@ class ocp_nlp_dims:
         return self.__ny_e
 
     @property
-    def npd(self):
-        return self.__npd
+    def nr(self):
+        return self.__nr
 
     @property
-    def npd_e(self):
-        return self.__npd_e
+    def nr_e(self):
+        return self.__nr_e
 
     @property
     def nh(self):
@@ -105,6 +109,14 @@ class ocp_nlp_dims:
     @property
     def nh_e(self):
         return self.__nh_e
+
+    @property
+    def nphi(self):
+        return self.__nphi
+
+    @property
+    def nphi_e(self):
+        return self.__nphi_e
 
     @property
     def nbx(self):
@@ -137,6 +149,14 @@ class ocp_nlp_dims:
     @property
     def nsh_e(self):
         return self.__nsh_e
+
+    @property
+    def nsphi(self):
+        return self.__nsphi
+
+    @property
+    def nsphi_e(self):
+        return self.__nsphi_e
 
     @property
     def ns(self):
@@ -200,19 +220,19 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid ny_e value. Exiting.')
 
-    @npd.setter
-    def npd(self, npd):
-        if type(npd) == int and npd > -1:
-            self.__npd = npd
+    @nr.setter
+    def nr(self, nr):
+        if type(nr) == int and nr > -1:
+            self.__nr = nr
         else:
-            raise Exception('Invalid npd value. Exiting.')
+            raise Exception('Invalid nr value. Exiting.')
 
-    @npd_e.setter
-    def npd_e(self, npd_e):
-        if type(npd_e) == int and npd_e > -1:
-            self.__npd_e = npd_e
+    @nr_e.setter
+    def nr_e(self, nr_e):
+        if type(nr_e) == int and nr_e > -1:
+            self.__nr_e = nr_e
         else:
-            raise Exception('Invalid npd_e value. Exiting.')
+            raise Exception('Invalid nr_e value. Exiting.')
 
     @nh.setter
     def nh(self, nh):
@@ -227,6 +247,20 @@ class ocp_nlp_dims:
             self.__nh_e = nh_e
         else:
             raise Exception('Invalid nh_e value. Exiting.')
+
+    @nphi.setter
+    def nphi(self, nphi):
+        if type(nphi) == int and nphi > -1:
+            self.__nphi = nphi
+        else:
+            raise Exception('Invalid nphi value. Exiting.')
+
+    @nphi_e.setter
+    def nphi_e(self, nphi_e):
+        if type(nphi_e) == int and nphi_e > -1:
+            self.__nphi_e = nphi_e
+        else:
+            raise Exception('Invalid nphi_e value. Exiting.')
 
     @nbx.setter
     def nbx(self, nbx):
@@ -283,6 +317,20 @@ class ocp_nlp_dims:
             self.__nsh_e = nsh_e
         else:
             raise Exception('Invalid nsh_e value. Exiting.')
+
+    @nsphi.setter
+    def nsphi(self, nsphi):
+        if type(nsphi) == int and nsphi > -1:
+            self.__nsphi = nsphi
+        else:
+            raise Exception('Invalid nsphi value. Exiting.')
+
+    @nsphi_e.setter
+    def nsphi_e(self, nsphi_e):
+        if type(nsphi_e) == int and nsphi_e > -1:
+            self.__nsphi_e = nsphi_e
+        else:
+            raise Exception('Invalid nsphi_e value. Exiting.')
 
     @ns.setter
     def ns(self, ns):
@@ -594,33 +642,58 @@ class ocp_nlp_constraints:
         # nonlinear constraints at t=T
         self.__uh_e    = []        #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
         self.__lh_e    = []        #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
+        # convex-over-nonlinear constraints
+        self.__lphi    = []        #: :math:`\underline{\phi}` - lower bound for convex-over-nonlinear inequalities 
+        self.__uphi    = []        #: :math:`\bar{\phi}` - upper bound for convex-over-nonlinear inequalities 
+        # nonlinear constraints at t=T
+        self.__uh_e    = []        #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
+        self.__lh_e    = []        #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
+        # nonlinear constraints at t=T
+        self.__uphi_e    = []      #: :math:`\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities at t=T 
+        self.__lphi_e    = []      #: :math:`\underline{\phi}^e` - lower bound on convex-over-nonlinear inequalities at t=T 
         # soft bounds on x and u
         self.__lsbx   = []         #: lower bounds on slacks corresponding to soft lower bounds on x
         self.__lsbu   = []         #: lower bounds on slacks corresponding to soft lower bounds on u
         self.__usbx   = []         #: lower bounds on slacks corresponding to soft upper bounds on x
         self.__usbu   = []         #: lower bounds on slacks corresponding to soft upper bounds on u
         self.__idxsbx = []         #: indexes of soft bounds on x within the indices of bounds on x
-        # self.__Jsbx   = []         #: :math`J_{s,x}` - matrix coefficient for soft bounds on x 
+        # self.__Jsbx   = []       #: :math`J_{s,x}` - matrix coefficient for soft bounds on x 
         self.__idxsbu = []         #: indexes of soft bounds on u within the indices of bounds on u
-        # self.__Jsbu   = []         #: :math`J_{s,u}` - matrix coefficient for soft bounds on u 
+        # self.__Jsbu   = []       #: :math`J_{s,u}` - matrix coefficient for soft bounds on u 
         # soft bounds on x at t=T
         self.__lsbx_e  = []        #: lower bounds on slacks corresponding to soft lower bounds on x at t=T
         self.__usbx_e  = []        #: lower bounds on slacks corresponding to soft upper bounds on x at t=T
         self.__idxsbx_e= []        #: indexes of soft bounds on x at t=T, within the indices of bounds on x at t=T
-        # self.__Jsbx_e    = []      #: :math`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T 
+        # self.__Jsbx_e    = []    #: :math`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T 
         # soft bounds on nonlinear constraints
         self.__lsh    = []         #: lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
         self.__ush    = []         #: lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
         self.__idxsh  = []         #: indexes of soft nonlinear constraints within the indices of nonlinear constraints
-        # self.__Jsh    = []         #: :math`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints
+        # soft bounds on nonlinear constraints
+        self.__lsphi  = []         #: lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints
+        self.__usphi  = []         #: lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints
+        self.__idxsphi  = []       #: indexes of soft convex-over-nonlinear constraints within the indices of nonlinear constraints
+        # self.__Jsh    = []       #: :math`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints
         # soft bounds on nonlinear constraints at t=T
         self.__lsh_e    = []       #: lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at t=T
         self.__ush_e    = []       #: lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints at t=T
         self.__idxsh_e  = []       #: indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
-        # self.__Jsh_e    = []       #: :math`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T 
+        # soft bounds on nonlinear constraints at t=T
+        self.__lsphi_e    = []     #: lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at t=T
+        self.__usphi_e    = []     #: lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at t=T
+        self.__idxsphi_e  = []     #: indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
+        # self.__Jsh_e    = []     #: :math`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T 
         self.__x0      = []        #: :math:`\bar{x}_0` - initial state 
         self.__p       = []        #: :math:`p` - parameters 
 
+    @property
+    def constr_type(self):
+        return self.__constr_type
+
+    @property
+    def constr_type_e(self):
+        return self.__constr_type_e
+    
     # bounds on x and u
     @property
     def lbx(self):
@@ -710,6 +783,15 @@ class ocp_nlp_constraints:
     def uh(self):
         return self.__uh
 
+    # convex-over-nonlinear constraints
+    @property
+    def lphi(self):
+        return self.__lphi
+
+    @property
+    def uphi(self):
+        return self.__uphi
+
     # nonlinear constraints at t=T
     @property
     def lh_e(self):
@@ -718,6 +800,15 @@ class ocp_nlp_constraints:
     @property
     def uh_e(self):
         return self.__uh_e
+
+    # convex-over-nonlinear constraints at t=T
+    @property
+    def lphi_e(self):
+        return self.__lphi_e
+
+    @property
+    def uphi_e(self):
+        return self.__uphi_e
 
     # soft bounds on x and u
     @property
@@ -786,6 +877,23 @@ class ocp_nlp_constraints:
     def Jsh(self):
         return self.__Jsh
 
+    # soft bounds on convex-over-nonlinear constraints
+    @property
+    def lsphi(self):
+        return self.__lsphi
+
+    @property
+    def usphi(self):
+        return self.__usphi
+
+    @property
+    def idxsphi(self):
+        return self.__idxsphi
+
+    @property
+    def Jsphi(self):
+        return self.__Jsphi
+
     # soft bounds on nonlinear constraints at t=T
     @property
     def lsh_e(self):
@@ -803,6 +911,24 @@ class ocp_nlp_constraints:
     @property
     def Jsh_e(self):
         return self.__Jsh_e
+
+    # soft bounds on convex-over-nonlinear constraints at t=T
+    @property
+    def lsphi_e(self):
+        return self.__lsphi_e
+
+    @property
+    def usphi_e(self):
+        return self.__usphi_e
+
+    @property
+    def idxsphi_e(self):
+        return self.__idxsphi_e
+
+
+    @property
+    def Jsphi_e(self):
+        return self.__Jsphi_e
 
     @property
     def x0(self):
@@ -823,6 +949,33 @@ class ocp_nlp_constraints:
                 raise Exception('J matrices can only contain 1s. Exiting.')
             idx[i] = this_idx[0]
         return idx
+
+    @constr_type.setter
+    def constr_type(self, constr_type):
+        constr_types = ('BGH', 'BGP')
+
+        if type(constr_type) == str and constr_type in constr_types:
+            self.__constr_type = constr_type
+        else:
+            raise Exception('Invalid constr_type value. Possible values are:\n\n' \
+                    + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type + '.\n\nExiting.')
+
+    @constr_type_e.setter
+    def constr_type_e(self, constr_type_e):
+        constr_types = ('BGH', 'BGP')
+
+        if type(constr_type_e) == str and constr_type_e in constr_types:
+            self.__constr_type_e = constr_type_e
+        else:
+            raise Exception('Invalid constr_type_e value. Possible values are:\n\n' \
+                    + ',\n'.join(constr_types) + '.\n\nYou have: ' + constr_type_e + '.\n\nExiting.')
+
+    @ubx.setter
+    def ubx(self, ubx):
+        if type(ubx) == np.ndarray:
+            self.__ubx = ubx
+        else:
+            raise Exception('Invalid ubx value. Exiting.')
 
     # bounds on x and u
     @lbx.setter
@@ -976,6 +1129,21 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid uh value. Exiting.')
 
+    # convex-over-nonlinear constraints
+    @lphi.setter
+    def lphi(self, lphi):
+        if type(lphi) == np.ndarray:
+            self.__lphi = lphi
+        else:
+            raise Exception('Invalid lphi value. Exiting.')
+
+    @uphi.setter
+    def uphi(self, uphi):
+        if type(uphi) == np.ndarray:
+            self.__uphi = uphi
+        else:
+            raise Exception('Invalid uphi value. Exiting.')
+
     # nonlinear constraints at t=T
     @lh_e.setter
     def lh_e(self, lh_e):
@@ -990,6 +1158,21 @@ class ocp_nlp_constraints:
             self.__uh_e = uh_e
         else:
             raise Exception('Invalid uh_e value. Exiting.')
+
+    # convex-over-nonlinear constraints at t=T
+    @lphi_e.setter
+    def lphi_e(self, lphi_e):
+        if type(lphi_e) == np.ndarray:
+            self.__lphi_e = lphi_e
+        else:
+            raise Exception('Invalid lphi_e value. Exiting.')
+
+    @uphi_e.setter
+    def uphi_e(self, uphi_e):
+        if type(uphi_e) == np.ndarray:
+            self.__uphi_e = uphi_e
+        else:
+            raise Exception('Invalid uphi_e value. Exiting.')
 
     # soft bounds on x and u
     @lsbx.setter
@@ -1101,6 +1284,28 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid idxsh value. Exiting.')
 
+    # soft bounds on convex-over-nonlinear constraints
+    @lsphi.setter
+    def lsphi(self, lsphi):
+        if type(lsphi) == np.ndarray:
+            self.__lsphi = lsphi
+        else:
+            raise Exception('Invalid lsphi value. Exiting.')
+
+    @usphi.setter
+    def usphi(self, usphi):
+        if type(usphi) == np.ndarray:
+            self.__usphi = usphi
+        else:
+            raise Exception('Invalid usphi value. Exiting.')
+
+    @idxsphi.setter
+    def idxsphi(self, idxsphi):
+        if type(idxsphi) == np.ndarray:
+            self.__idxsphi = idxsphi
+        else:
+            raise Exception('Invalid idxsphi value. Exiting.')
+
     # soft bounds on nonlinear constraints at t=T
     @lsh_e.setter
     def lsh_e(self, lsh_e):
@@ -1122,6 +1327,28 @@ class ocp_nlp_constraints:
             self.__idxsh_e = idxsh_e
         else:
             raise Exception('Invalid idxsh_e value. Exiting.')
+
+    # soft bounds on convex-over-nonlinear constraints at t=T
+    @lsphi_e.setter
+    def lsphi_e(self, lsphi_e):
+        if type(lsphi_e) == np.ndarray:
+            self.__lsphi_e = lsphi_e
+        else:
+            raise Exception('Invalid lsphi_e value. Exiting.')
+
+    @usphi_e.setter
+    def usphi_e(self, usphi_e):
+        if type(usphi_e) == np.ndarray:
+            self.__usphi_e = usphi_e
+        else:
+            raise Exception('Invalid usphi_e value. Exiting.')
+
+    @idxsphi_e.setter
+    def idxsphi_e(self, idxsphi_e):
+        if type(idxsphi_e) == np.ndarray:
+            self.__idxsphi_e = idxsphi_e
+        else:
+            raise Exception('Invalid idxsphi_e value. Exiting.')
 
     @x0.setter
     def x0(self, x0):
@@ -1271,10 +1498,10 @@ class acados_ocp_nlp:
         self.constraints = ocp_nlp_constraints()
         self.solver_config = ocp_nlp_solver_config()
 
-        self.con_p   = acados_constraint() 
-        self.con_p_e = acados_constraint() 
         self.con_h   = acados_constraint() 
         self.con_h_e = acados_constraint() 
+        self.con_phi   = acados_constraint() 
+        self.con_phi_e = acados_constraint() 
         self.cost_r = acados_cost() 
         self.cost_r_e = acados_cost() 
 
@@ -1463,9 +1690,7 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
             else:
                 v = np.array(v)
                 v_dims = v.shape
-                try: 
-                    v = np.reshape(v, dims)
-                except:  
+                if dims !=v_dims:    
                     raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, v_dims, dims_names, dims))
         out[k.replace(k, out_key)] = v
     return out

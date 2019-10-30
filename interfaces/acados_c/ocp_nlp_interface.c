@@ -48,7 +48,7 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
-#include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgp.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_convexify.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_mirror.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_project.h"
@@ -300,8 +300,8 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             case BGH:
                 ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i]);
                 break;
-            case BGHP:
-                ocp_nlp_constraints_bghp_config_initialize_default(config->constraints[i]);
+            case BGP:
+                ocp_nlp_constraints_bgp_config_initialize_default(config->constraints[i]);
                 break;
             case INVALID_CONSTRAINT:
                 printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_constraints\n");
