@@ -111,6 +111,14 @@ class ocp_nlp_dims:
         return self.__nh_e
 
     @property
+    def nphi(self):
+        return self.__nphi
+
+    @property
+    def nphi_e(self):
+        return self.__nphi_e
+
+    @property
     def nbx(self):
         return self.__nbx
 
@@ -141,6 +149,14 @@ class ocp_nlp_dims:
     @property
     def nsh_e(self):
         return self.__nsh_e
+
+    @property
+    def nsphi(self):
+        return self.__nsphi
+
+    @property
+    def nsphi_e(self):
+        return self.__nsphi_e
 
     @property
     def ns(self):
@@ -232,6 +248,20 @@ class ocp_nlp_dims:
         else:
             raise Exception('Invalid nh_e value. Exiting.')
 
+    @nphi.setter
+    def nphi(self, nphi):
+        if type(nphi) == int and nphi > -1:
+            self.__nphi = nphi
+        else:
+            raise Exception('Invalid nphi value. Exiting.')
+
+    @nphi_e.setter
+    def nphi_e(self, nphi_e):
+        if type(nphi_e) == int and nphi_e > -1:
+            self.__nphi_e = nphi_e
+        else:
+            raise Exception('Invalid nphi_e value. Exiting.')
+
     @nbx.setter
     def nbx(self, nbx):
         if type(nbx) == int and nbx > -1:
@@ -287,6 +317,20 @@ class ocp_nlp_dims:
             self.__nsh_e = nsh_e
         else:
             raise Exception('Invalid nsh_e value. Exiting.')
+
+    @nsphi.setter
+    def nsphi(self, nsphi):
+        if type(nsphi) == int and nsphi > -1:
+            self.__nsphi = nsphi
+        else:
+            raise Exception('Invalid nsphi value. Exiting.')
+
+    @nsphi_e.setter
+    def nsphi_e(self, nsphi_e):
+        if type(nsphi_e) == int and nsphi_e > -1:
+            self.__nsphi_e = nsphi_e
+        else:
+            raise Exception('Invalid nsphi_e value. Exiting.')
 
     @ns.setter
     def ns(self, ns):
@@ -835,20 +879,20 @@ class ocp_nlp_constraints:
 
     # soft bounds on convex-over-nonlinear constraints
     @property
-    def lsh(self):
-        return self.__lsh
+    def lsphi(self):
+        return self.__lsphi
 
     @property
-    def ush(self):
-        return self.__ush
+    def usphi(self):
+        return self.__usphi
 
     @property
-    def idxsh(self):
-        return self.__idxsh
+    def idxsphi(self):
+        return self.__idxsphi
 
     @property
-    def Jsh(self):
-        return self.__Jsh
+    def Jsphi(self):
+        return self.__Jsphi
 
     # soft bounds on nonlinear constraints at t=T
     @property
@@ -870,21 +914,21 @@ class ocp_nlp_constraints:
 
     # soft bounds on convex-over-nonlinear constraints at t=T
     @property
-    def lsh_e(self):
-        return self.__lsh_e
+    def lsphi_e(self):
+        return self.__lsphi_e
 
     @property
-    def ush_e(self):
-        return self.__ush_e
+    def usphi_e(self):
+        return self.__usphi_e
 
     @property
-    def idxsh_e(self):
-        return self.__idxsh_e
+    def idxsphi_e(self):
+        return self.__idxsphi_e
 
 
     @property
-    def Jsh_e(self):
-        return self.__Jsh_e
+    def Jsphi_e(self):
+        return self.__Jsphi_e
 
     @property
     def x0(self):
@@ -1085,6 +1129,21 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid uh value. Exiting.')
 
+    # convex-over-nonlinear constraints
+    @lphi.setter
+    def lphi(self, lphi):
+        if type(lphi) == np.ndarray:
+            self.__lphi = lphi
+        else:
+            raise Exception('Invalid lphi value. Exiting.')
+
+    @uphi.setter
+    def uphi(self, uphi):
+        if type(uphi) == np.ndarray:
+            self.__uphi = uphi
+        else:
+            raise Exception('Invalid uphi value. Exiting.')
+
     # nonlinear constraints at t=T
     @lh_e.setter
     def lh_e(self, lh_e):
@@ -1099,6 +1158,21 @@ class ocp_nlp_constraints:
             self.__uh_e = uh_e
         else:
             raise Exception('Invalid uh_e value. Exiting.')
+
+    # convex-over-nonlinear constraints at t=T
+    @lphi_e.setter
+    def lphi_e(self, lphi_e):
+        if type(lphi_e) == np.ndarray:
+            self.__lphi_e = lphi_e
+        else:
+            raise Exception('Invalid lphi_e value. Exiting.')
+
+    @uphi_e.setter
+    def uphi_e(self, uphi_e):
+        if type(uphi_e) == np.ndarray:
+            self.__uphi_e = uphi_e
+        else:
+            raise Exception('Invalid uphi_e value. Exiting.')
 
     # soft bounds on x and u
     @lsbx.setter
@@ -1210,6 +1284,28 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid idxsh value. Exiting.')
 
+    # soft bounds on convex-over-nonlinear constraints
+    @lsphi.setter
+    def lsphi(self, lsphi):
+        if type(lsphi) == np.ndarray:
+            self.__lsphi = lsphi
+        else:
+            raise Exception('Invalid lsphi value. Exiting.')
+
+    @usphi.setter
+    def usphi(self, usphi):
+        if type(usphi) == np.ndarray:
+            self.__usphi = usphi
+        else:
+            raise Exception('Invalid usphi value. Exiting.')
+
+    @idxsphi.setter
+    def idxsphi(self, idxsphi):
+        if type(idxsphi) == np.ndarray:
+            self.__idxsphi = idxsphi
+        else:
+            raise Exception('Invalid idxsphi value. Exiting.')
+
     # soft bounds on nonlinear constraints at t=T
     @lsh_e.setter
     def lsh_e(self, lsh_e):
@@ -1231,6 +1327,28 @@ class ocp_nlp_constraints:
             self.__idxsh_e = idxsh_e
         else:
             raise Exception('Invalid idxsh_e value. Exiting.')
+
+    # soft bounds on convex-over-nonlinear constraints at t=T
+    @lsphi_e.setter
+    def lsphi_e(self, lsphi_e):
+        if type(lsphi_e) == np.ndarray:
+            self.__lsphi_e = lsphi_e
+        else:
+            raise Exception('Invalid lsphi_e value. Exiting.')
+
+    @usphi_e.setter
+    def usphi_e(self, usphi_e):
+        if type(usphi_e) == np.ndarray:
+            self.__usphi_e = usphi_e
+        else:
+            raise Exception('Invalid usphi_e value. Exiting.')
+
+    @idxsphi_e.setter
+    def idxsphi_e(self, idxsphi_e):
+        if type(idxsphi_e) == np.ndarray:
+            self.__idxsphi_e = idxsphi_e
+        else:
+            raise Exception('Invalid idxsphi_e value. Exiting.')
 
     @x0.setter
     def x0(self, x0):

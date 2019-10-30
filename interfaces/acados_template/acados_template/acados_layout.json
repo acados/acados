@@ -27,11 +27,6 @@
             "str"
         ]
      },
-     "con_phi": {
-         "name" : [
-            "str"
-        ]
-    },
      "model": {
          "name" : [
             "str"
@@ -170,6 +165,30 @@
                 "nh_e"
             ]
         ],
+        "lphi": [
+            "ndarray",
+            [
+                "nphi"
+            ]
+        ],
+        "uphi": [
+            "ndarray",
+            [
+                "nphi"
+            ]
+        ],
+        "lphi_e": [
+            "ndarray",
+            [
+                "nphi_e"
+            ]
+        ],
+        "uphi_e": [
+            "ndarray",
+            [
+                "nphi_e"
+            ]
+        ],
         "lsbx": [
             "ndarray",
                 [
@@ -258,6 +277,42 @@
             "ndarray",
             [
                 "nsh_e"
+            ]
+        ],
+        "lsphi": [
+            "ndarray",
+            [
+                "nsphi"
+            ]
+        ],
+        "usphi": [
+            "ndarray",
+            [
+                "nsphi"
+            ]
+        ],
+        "idxsphi": [
+            "ndarray",
+            [
+                "nsphi"
+            ]
+        ],
+        "lsphi_e": [
+            "ndarray",
+            [
+                "nsphi_e"
+            ]
+        ],
+        "usphi_e": [
+            "ndarray",
+            [
+                "nsphi_e"
+            ]
+        ],
+        "idxsphi_e": [
+            "ndarray",
+            [
+                "nsphi_e"
             ]
         ],
         "p": [
@@ -411,6 +466,12 @@
         "nsh_e": [
             "int"
         ],
+        "nsphi": [
+            "int"
+        ],
+        "nsphi_e": [
+            "int"
+        ],
         "ns": [
             "int"
         ],
@@ -436,6 +497,12 @@
             "int"
         ],
         "nh_e": [
+            "int"
+        ],
+        "nphi": [
+            "int"
+        ],
+        "nphi_e": [
             "int"
         ],
         "nu": [

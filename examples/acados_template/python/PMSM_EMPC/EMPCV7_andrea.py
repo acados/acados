@@ -294,14 +294,14 @@ def export_torqueline_pd():
     # torque and voltage constraints
     constraint = acados_constraint()
     r = SX.sym('r', 3, 1)
-    constraint.con_h_expr = vertcat(r[0], r[1]**2 + r[2]**2)
+    constraint.con_phi_expr = vertcat(r[0], r[1]**2 + r[2]**2)
     constraint.con_r_expr =  vertcat(tau_des - 1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q), u_d, u_q)
     constraint.x = x
     constraint.u = u 
     constraint.r = r
     constraint.p = p
     constraint.nr = 3
-    constraint.nh = 2
+    constraint.nphi = 2
     constraint.name = con_name
 
     return constraint 
@@ -409,14 +409,14 @@ def export_torquelineEnd_pd():
     # torque and voltage constraints
     constraint = acados_constraint()
     r = SX.sym('r', 3, 1)
-    constraint.con_h_expr = vertcat(r[0], alpha*r[1]**2 + beta*r[2]**2 + gamma*r[1]*r[2] + delta*r[1] + epsilon*r[2] + rho)
+    constraint.con_phi_expr = vertcat(r[0], alpha*r[1]**2 + beta*r[2]**2 + gamma*r[1]*r[2] + delta*r[1] + epsilon*r[2] + rho)
     constraint.con_r_expr = vertcat(tau_des - 1.5*N_P*((L_d-L_q)*i_d*i_q + K_m*i_q), i_d, i_q)
     constraint.x = x
     constraint.u = u 
     constraint.r = r
     constraint.p = p
     constraint.nr = 3
-    constraint.nh = 2
+    constraint.nphi = 2
     constraint.name = con_name
 
     return constraint
@@ -642,14 +642,14 @@ if FORMULATION == 4:
     nlp_dims.nbu = 0
     nlp_dims.ng = 3
     nlp_dims.ng_e = 3
-    nlp_dims.nh  = 2            # 1st torque constraint | 2nd voltage constraint
+    nlp_dims.nphi  = 2            # 1st torque constraint | 2nd voltage constraint
     nlp_dims.nr = 3           # 1st torque constraint | 2nd voltage constraint
-    nlp_dims.nh_e = 2           # 1st torque constraint | 2nd terminal set
+    nlp_dims.nphi_e = 2           # 1st torque constraint | 2nd terminal set
     nlp_dims.nr_e = 3          # 1st torque constraint | 2nd terminal set
     nlp_dims.ns = 1
     nlp_dims.ns_e = 1 
-    nlp_dims.nsh = 1
-    nlp_dims.nsh_e = 1 
+    nlp_dims.nsphi = 1
+    nlp_dims.nsphi_e = 1 
 
 # if FORMULATION == 6:        
 #     nlp_dims.nbu = 0
@@ -850,18 +850,18 @@ if FORMULATION == 4:
     nlp_cost.zu_e = SLACK_E_TUNING*nmp.array([1])     
     nlp_cost.Zu_e = SLACK_TUNINGHessian*nmp.ones((1,))              # hessian   
 
-    nlp_con.lh = nmp.array([0, -1e9])                       # 1st torque constraint | 2nd voltage constraint 
-    nlp_con.uh = nmp.array([0, u_max**2/3])
-    nlp_con.lsh = nmp.array([0])                            # soft lower bounds --> greater than 0
-    nlp_con.ush = nmp.array([0])                            # soft upper bounds --> greater than 0
+    nlp_con.lphi = nmp.array([0, -1e9])                       # 1st torque constraint | 2nd voltage constraint 
+    nlp_con.uphi = nmp.array([0, u_max**2/3])
+    nlp_con.lsphi = nmp.array([0])                            # soft lower bounds --> greater than 0
+    nlp_con.usphi = nmp.array([0])                            # soft upper bounds --> greater than 0
     #_e
-    nlp_con.lh_e = nmp.array([0, -1e9])                     # 1st torque constraint | 2nd terminal set 
-    nlp_con.uh_e = nmp.array([0, u_max**2/3])
-    nlp_con.lsh_e = nmp.array([0])      
-    nlp_con.ush_e = nmp.array([0])      
+    nlp_con.lphi_e = nmp.array([0, -1e9])                     # 1st torque constraint | 2nd terminal set 
+    nlp_con.uphi_e = nmp.array([0, u_max**2/3])
+    nlp_con.lsphi_e = nmp.array([0])      
+    nlp_con.usphi_e = nmp.array([0])      
 
-    nlp_con.idxsh = nmp.array([0])
-    nlp_con.idxsh_e = nmp.array([0])  
+    nlp_con.idxsphi = nmp.array([0])
+    nlp_con.idxsphi_e = nmp.array([0])  
 
     nlp_con.x0 = x0Start
 

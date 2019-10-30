@@ -47,14 +47,15 @@ class acados_dae():
 class acados_constraint():
     def __init__(self):
         self.con_h_expr   = None #: CasADi expression for the constraint
-        self.con_h_expr = None #: CasADi expression for the constraint
+        self.con_phi_expr = None   #: CasADi expression for the constraint
         self.con_r_expr   = None #: CasADi expression for the constraint
         self.x = None            #: CasADi variable describing the state of the system
         self.u = None            #: CasADi variable describing the input of the system
         self.r = None            #: CasADi variable describing the output of nonconvex part in convex-over nonconvex constraints
         self.z = []              #: CasADi variable describing the algebraic variables 
         self.p = []              #: CasADi variable describing parameters in the constraints
-        self.nh = None           #: dimension of image of h
+        self.nh = 0              #: dimension of image of h
+        self.nphi = 0            #: dimension of image of h
         self.nr = None           #: dimension of image of nonlinear residuals 
         self.name = None         #: name associated with the function
 
@@ -96,14 +97,16 @@ def acados_constraint_strip_non_num(acados_constraint):
         del out['p']
     if 'r' in out.keys(): 
         del out['r']
-    if 'con_h_expr' in out.keys(): 
-        del out['con_h_expr']
+    if 'con_phi_expr' in out.keys(): 
+        del out['con_phi_expr']
     if 'con_h_expr' in out.keys(): 
         del out['con_h_expr']
     if 'con_r_expr' in out.keys(): 
         del out['con_r_expr']
     if 'nh' in out.keys(): 
         del out['nh']
+    if 'nphi' in out.keys(): 
+        del out['nphi']
     if 'nh' in out.keys(): 
         del out['nh']
     if 'nr' in out.keys(): 
