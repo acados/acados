@@ -60,39 +60,20 @@ sim_opts    * {{ocp.model.name}}_sim_opts;
 sim_solver  * {{ocp.model.name}}_sim_solver; 
 
 {% if ocp.solver_config.integrator_type == "ERK" %}
-{% if ocp.dims.np < 1 %}
 external_function_param_casadi * forw_vde_casadi;
 external_function_param_casadi * sim_forw_vde_casadi;
 external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% else %}
-external_function_param_casadi * forw_vde_casadi;
-external_function_param_casadi * sim_forw_vde_casadi;
-external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% endif %}
 {% if ocp.solver_config.hessian_approx == "EXACT" %} 
-{% if ocp.dims.np < 1 %}
 external_function_param_casadi * hess_vde_casadi;
-{% else %}
-external_function_param_casadi * hess_vde_casadi;
-{% endif %}
 {% endif %}
 {% else %}
 {% if ocp.solver_config.integrator_type == "IRK" %}
-{% if ocp.dims.np < 1 %}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 external_function_param_casadi * sim_impl_dae_fun;
 external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% else %}
-external_function_param_casadi * impl_dae_fun;
-external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
-external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
-external_function_param_casadi * sim_impl_dae_fun;
-external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
-external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% endif %}
 {% endif %}
 {% endif %}
 {% if ocp.dims.npd > 0 %}
@@ -166,7 +147,7 @@ int main() {
         exit(1); }
 
     // set initial condition
-    double x0[{{ocp.dims.nx}}];
+    double x0[{{ ocp.dims.nx }}];
     {% for item in ocp.constraints.x0 %}
     x0[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
@@ -175,7 +156,7 @@ int main() {
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x0);
 
     {% if ocp.dims.np > 0%}
-    double p[{{ocp.dims.np}}];
+    double p[{{ ocp.dims.np }}];
     {% for item in ocp.constraints.p %}
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
@@ -183,15 +164,29 @@ int main() {
     
     {% if ocp.dims.np > 0%}
     {% if ocp.solver_config.integrator_type == "IRK" %}
-    for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
+    for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
     impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
     }
     {% else %}
-    for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
+    for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
     forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
+    {% endif %}
+    for (int ii = 0; ii < {{ ocp.dims.N }}; ++ii) {
+        {%- if ocp.dims.npd > 0 %}
+        p_constraint[ii].set_param(p_constraint+ii, p);
+        {% endif %}
+        {%- if ocp.dims.nh > 0 %}
+        h_constraint[ii].set_param(h_constraint+ii, p);
+        {% endif %}
+    }
+    {%- if ocp.dims.npd_e > 0 %}
+    p_e_constraint.set_param(&p_e_constraint, p);
+    {% endif %}
+    {%- if ocp.dims.nh_e > 0 %}
+    h_e_constraint.set_param(&h_e_constraint, p);
     {% endif %}
     {% endif %}
 

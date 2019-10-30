@@ -31,22 +31,29 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import itertools as it
+import os
 
-# add_test(NAME matlab_test_sim_pendulum 
-#         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model ${MATLAB_EXECUTABLE} -nodisplay -nodesktop -r  "run('./run_tests.m');")
+FORMULATION_values = ['LS', 'NLS']
+QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES']
+INTEGRATOR_TYPE_values = ['ERK', 'IRK']
+SOLVER_TYPE_values = ['SQP', 'SQP_RTI']
 
-if(ACADOS_MATLAB OR ACADOS_OCTAVE) 
-add_test(NAME octave_test_sim 
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-        octave --no-gui --no-window-system ./run_tests_sim.m)
+test_parameters = { 'FORMULATION_values': FORMULATION_values, 
+                    'QP_SOLVER_values': QP_SOLVER_values, 
+                    'INTEGRATOR_TYPE_values': INTEGRATOR_TYPE_values,
+                    'SOLVER_TYPE_values': SOLVER_TYPE_values} 
 
-add_test(NAME octave_test_ocp
-         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
-         octave --no-gui --no-window-system ./run_tests_ocp.m)
-endif()
+all_test_parameters = sorted(test_parameters)
+combinations = list(it.product(*(test_parameters[Name] for Name in all_test_parameters)))
 
-if(ACADOS_PYTHON) 
-add_test(NAME python_test_ocp 
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_template/python/test
-        python main_test.py)
-endif()
+for parameters in combinations:
+    os_cmd = ("python generate_c_code.py" + 
+        " --FORMULATION {}".format(parameters[0]) + 
+        " --INTEGRATOR_TYPE {}".format(parameters[1]) +   
+        " --QP_SOLVER {}".format(parameters[2]) +
+        " --SOLVER_TYPE {}".format(parameters[3])) 
+    status = os.system(os_cmd)
+    if status != 0:
+        raise Exception("acados status  = {} on test {}. Exiting\n".format(status, parameters))
+

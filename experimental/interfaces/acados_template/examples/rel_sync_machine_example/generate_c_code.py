@@ -458,6 +458,15 @@ for i in range(Nsim):
     # update initial condition
     x0 = acados_solver.get(1, "x")
 
+    if i > Nsim/3 and i < Nsim/2:
+        # update params
+        for i in range(N):
+            acados_solver.set(i, "p", nmp.array([w_val/2.0, 0, 0]))
+    else:
+        # update params
+        for i in range(N):
+            acados_solver.set(i, "p", nmp.array([w_val, 0, 0]))
+
     acados_solver.set(0, "lbx", x0)
     acados_solver.set(0, "ubx", x0)
 
