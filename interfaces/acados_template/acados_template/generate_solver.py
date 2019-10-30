@@ -55,16 +55,16 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     # if acados_ocp.con_p.name is not None and acados_ocp.con_h.name is None:
     #     raise Exception('h constraint is missing!')
 
-    if acados_ocp.constraints.constr_type == 'BGP':
+    if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
         # nonlinear part of nonlinear constraints 
         generate_c_code_constraint(acados_ocp.con_phi)
-    elif acados_ocp.constraints.constr_type  == 'BGH': 
+    elif acados_ocp.constraints.constr_type  == 'BGH' and acados_ocp.dims.nh > 0: 
         generate_c_code_constraint(acados_ocp.con_h)
 
-    if acados_ocp.constraints.constr_type  == 'BGP':
+    if acados_ocp.constraints.constr_type_e  == 'BGP' and acados_ocp.dims.nphi_e > 0:
         # nonlinear part of nonlinear constraints 
         generate_c_code_constraint_e(acados_ocp.con_phi_e)
-    elif acados_ocp.constraints.constr_type_e  == 'BGH': 
+    elif acados_ocp.constraints.constr_type_e  == 'BGH' and acados_ocp.dims.nh_e > 0: 
         generate_c_code_constraint(acados_ocp.con_h_e)
     
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
@@ -190,7 +190,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     os.system(os_cmd)
     os.chdir('../..')
 
-    if acados_ocp.constraints.constr_type == 'BGP':
+    if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
         # create folder
         if not os.path.exists('c_generated_code/' + acados_ocp.con_phi.name + '_phi_constraint/'):
             os.mkdir('c_generated_code/' + acados_ocp.con_phi.name + '_phi_constraint/')
@@ -221,7 +221,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         os.system(os_cmd)
         os.chdir('../..')
 
-    if acados_ocp.constraints.constr_type_e == 'BGP':
+    if acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0:
         # create folder
         if not os.path.exists('c_generated_code/' + acados_ocp.con_phi_e.name + '_phi_e_constraint/'):
             os.mkdir('c_generated_code/' + acados_ocp.con_phi_e.name + '_phi_e_constraint/')
@@ -251,7 +251,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         os.system(os_cmd)
         os.chdir('../..')
 
-    if acados_ocp.constraints.constr_type == 'BGH':
+    if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0:
         # create folder
         if not os.path.exists('c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/'):
             os.mkdir('c_generated_code/' + acados_ocp.con_h.name + '_h_constraint/')
@@ -267,7 +267,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         os.system(os_cmd)
         os.chdir('../..')
 
-    if acados_ocp.constraints.constr_type_e == 'BGH':
+    if acados_ocp.constraints.constr_type_e == 'BGH' and acados_ocp.dims.nh_e > 0:
         # create folder
         if not os.path.exists('c_generated_code/' + acados_ocp.con_h_e.name + '_h_e_constraint/'):
             os.mkdir('c_generated_code/' + acados_ocp.con_h_e.name + '_h_e_constraint/')
