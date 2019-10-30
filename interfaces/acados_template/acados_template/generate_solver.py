@@ -43,8 +43,20 @@ from ctypes import *
 from copy import deepcopy
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
-    USE_TERA = 0 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
-    
+    USE_TERA = 1 # EXPERIMENTAL: use Tera standalone parser instead of Jinja2
+        
+    acados_path = os.path.dirname(os.path.abspath(__file__))
+    tera_path = acados_path + '/../../../bin/' 
+    t_renderer_path = tera_path + 't_renderer'
+    if (os.path.exists(t_renderer_path) is False):
+        raise Exception('t_renderer binaries not found. In order to be able to ' + \
+                'successfully render C code templates, you need to download the ' + \
+                't_renderer binaries for your platform from ' + \
+                'https://github.com/acados/tera_renderer/releases/ and ' + \
+                'place them in <acados_root>/bin (please strip the ' + \
+                'version and platform from the binaries e.g. ' + \
+                't_renderer-v0.0.20 -> t_renderer).')
+
     model = acados_ocp.model
     if acados_ocp.solver_config.integrator_type == 'ERK':
         # explicit model -- generate C code
@@ -124,8 +136,6 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         acados_ocp.cost_r_e = ocp_nlp_as_object(acados_ocp.cost_r_e)
 
     # setting up loader and environment
-    acados_path = os.path.dirname(os.path.abspath(__file__))
-    tera_path = acados_path + '/../../../bin/' 
     if USE_TERA == 0:
         file_loader = FileSystemLoader(acados_path + '/c_templates')
         env = Environment(loader = file_loader)

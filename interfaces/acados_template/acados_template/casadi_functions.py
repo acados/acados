@@ -50,7 +50,7 @@ class acados_constraint():
         self.x = None    #: CasADi variable describing the state of the system
         self.u = None    #: CasADi variable describing the input of the system
         self.z = []      #: CasADi variable describing the algebraic variables in the constraints
-        self.p = []      #: CasADi variable describing parameters in the constraintas
+        self.p = []      #: CasADi variable describing parameters in the constraints
         self.nc = None   #: number of constraints
         self.name = None #: name associated with the function
 
@@ -59,6 +59,7 @@ class acados_cost():
         self.expr = None     #: CasADi expression for the cost
         self.x = None        #: CasADi variable describing the state of the system
         self.u = None        #: CasADi variable describing the input of the system
+        self.p = []          #: CasADi variable describing parameters in the cost
         self.ny = None       #: number of residuals
         self.name = None     #: name associated with the function
 
@@ -102,6 +103,8 @@ def acados_cost_strip_non_num(acados_cost):
         del out['x']
     if 'u' in out.keys(): 
         del out['u']
+    if 'p' in out.keys(): 
+        del out['p']
     if 'expr' in out.keys(): 
         del out['expr']
     if 'ny' in out.keys(): 
