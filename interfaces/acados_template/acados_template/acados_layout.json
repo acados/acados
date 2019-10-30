@@ -12,7 +12,7 @@
             "str"
             ]   
     },
-    "con_p_e": {
+    "con_h_e": {
         "name" : [
             "str"
         ]
@@ -27,7 +27,7 @@
             "str"
         ]
      },
-     "con_p": {
+     "con_phi": {
          "name" : [
             "str"
         ]
@@ -318,14 +318,12 @@
         "Zl": [
             "ndarray",
             [
-                "ns",
                 "ns"
             ]
         ],
         "Zu": [
             "ndarray",
             [
-                "ns",
                 "ns"
             ]
         ],
@@ -363,14 +361,12 @@
         "Zl_e": [
             "ndarray",
             [
-                "ns_e",
                 "ns_e"
             ]
         ],
         "Zu_e": [
             "ndarray",
             [
-                "ns_e",
                 "ns_e"
             ]
         ],
@@ -427,19 +423,19 @@
         "ng_e": [
             "int"
         ],
+        "np": [
+            "int"
+        ],
+        "nr": [
+            "int"
+        ],
+        "nr_e": [
+            "int"
+        ],
         "nh": [
             "int"
         ],
         "nh_e": [
-            "int"
-        ],
-        "np": [
-            "int"
-        ],
-        "npd": [
-            "int"
-        ],
-        "npd_e": [
             "int"
         ],
         "nu": [
