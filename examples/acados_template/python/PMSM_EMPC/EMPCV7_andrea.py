@@ -1016,8 +1016,8 @@ if CODE_GEN == 1:
     #     ra.con_h_e = constraint_nltorquelineEnd
     #     acados_solver = generate_solver(ra, json_file = file_name)
     if FORMULATION == 4:
-        ra.con_h = constraint_nltorqueline
-        ra.con_h_e = constraint_nltorquelineEnd
+        ra.con_phi = constraint_nltorqueline
+        ra.con_phi_e = constraint_nltorquelineEnd
         nlp_con.constr_type = 'BGP'
         nlp_con.constr_type_e = 'BGP'
         acados_solver = generate_solver(ra, json_file = file_name)

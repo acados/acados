@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef {{ con_h_e.name }}_R_E_CONSTRAINT
-#define {{ con_h_e.name }}_R_E_CONSTRAINT
+#ifndef {{ con_phi_e.name }}_R_E_CONSTRAINT
+#define {{ con_phi_e.name }}_R_E_CONSTRAINT
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,16 +40,16 @@ extern "C" {
 
 {% if dims.nr_e > 0 %}
 // implicit ODE
-int {{ con_h_e.name }}_r_e_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ con_h_e.name }}_r_e_constraint_work(int *, int *, int *, int *);
-const int *{{ con_h_e.name }}_r_e_constraint_sparsity_in(int);
-const int *{{ con_h_e.name }}_r_e_constraint_sparsity_out(int);
-int {{ con_h_e.name }}_r_e_constraint_n_in();
-int {{ con_h_e.name }}_r_e_constraint_n_out();
+int {{ con_phi_e.name }}_r_e_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ con_phi_e.name }}_r_e_constraint_work(int *, int *, int *, int *);
+const int *{{ con_phi_e.name }}_r_e_constraint_sparsity_in(int);
+const int *{{ con_phi_e.name }}_r_e_constraint_sparsity_out(int);
+int {{ con_phi_e.name }}_r_e_constraint_n_in();
+int {{ con_phi_e.name }}_r_e_constraint_n_out();
 {% endif %}
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // {{ con_h_e.name }}_R_CONSTRAINT
+#endif  // {{ con_phi_e.name }}_R_CONSTRAINT

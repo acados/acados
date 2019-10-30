@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef {{ con_h.name }}_R_CONSTRAINT
-#define {{ con_h.name }}_R_CONSTRAINT
+#ifndef {{ con_phi.name }}_R_CONSTRAINT
+#define {{ con_phi.name }}_R_CONSTRAINT
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,16 +40,16 @@ extern "C" {
 
 {% if dims.nr > 0 %}
 // implicit ODE
-int {{ con_h.name }}_r_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ con_h.name }}_r_constraint_work(int *, int *, int *, int *);
-const int *{{ con_h.name }}_r_constraint_sparsity_in(int);
-const int *{{ con_h.name }}_r_constraint_sparsity_out(int);
-int {{ con_h.name }}_r_constraint_n_in();
-int {{ con_h.name }}_r_constraint_n_out();
+int {{ con_phi.name }}_r_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ con_phi.name }}_r_constraint_work(int *, int *, int *, int *);
+const int *{{ con_phi.name }}_r_constraint_sparsity_in(int);
+const int *{{ con_phi.name }}_r_constraint_sparsity_out(int);
+int {{ con_phi.name }}_r_constraint_n_in();
+int {{ con_phi.name }}_r_constraint_n_out();
 {% endif %}
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // {{ con_h.name }}_R_CONSTRAINT
+#endif  // {{ con_phi.name }}_R_CONSTRAINT

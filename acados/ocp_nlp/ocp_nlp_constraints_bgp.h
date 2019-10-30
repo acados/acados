@@ -64,11 +64,11 @@ typedef struct
     int nbx;
     int ng;   // number of general linear constraints
     int nphi; // dimension of convex outer part 
-    int ns;   // nsbu + nsbx + nsg + nsh
+    int ns;   // nsbu + nsbx + nsg + nsphi
     int nsbu; // number of softened input bounds
     int nsbx; // number of softened state bounds
     int nsg;  // number of softened general linear constraints
-    int nsh;  // number of softened nonlinear constraints
+    int nsphi;  // number of softened nonlinear constraints
     int nr;   // dimension of nonlinear function in convex_over_nonlinear constraint
 } ocp_nlp_constraints_bgp_dims;
 

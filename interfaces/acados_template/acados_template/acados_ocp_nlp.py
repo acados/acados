@@ -1500,6 +1500,8 @@ class acados_ocp_nlp:
 
         self.con_h   = acados_constraint() 
         self.con_h_e = acados_constraint() 
+        self.con_phi   = acados_constraint() 
+        self.con_phi_e = acados_constraint() 
         self.cost_r = acados_cost() 
         self.cost_r_e = acados_cost() 
 

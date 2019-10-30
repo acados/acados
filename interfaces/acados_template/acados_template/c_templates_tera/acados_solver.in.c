@@ -11,15 +11,17 @@
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 {% if constraints.constr_type == "BGP" %}
-#include "{{ con_h.name }}_r_constraint/{{ con_h.name }}_r_constraint.h"
+#include "{{ con_phi.name }}_phi_constraint/{{ con_phi.name }}_phi_constraint.h"
+#include "{{ con_phi.name }}_r_constraint/{{ con_phi.name }}_r_constraint.h"
 {% endif %}
 {% if constraints.constr_type_e == "BGP" %}
-#include "{{ con_h_e.name }}_r_e_constraint/{{ con_h_e.name }}_r_e_constraint.h"
+#include "{{ con_phi_e.name }}_phi_e_constraint/{{ con_phi_e.name }}_phi_e_constraint.h"
+#include "{{ con_phi_e.name }}_r_e_constraint/{{ con_phi_e.name }}_r_e_constraint.h"
 {% endif %}
-{% if dims.nh > 0 %}
+{% if constraints.constr_type == "BGH" %}
 #include "{{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.h"
 {% endif %}
-{% if dims.nh_e > 0 %}
+{% if constraints.constr_type_e == "BGH" %}
 #include "{{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.h"
 {% endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
@@ -31,29 +33,33 @@
 
 #include "acados_solver_{{ model.name }}.h"
 
-#define NX_    {{ dims.nx }}
-#define NZ_    {{ dims.nz }}
-#define NU_    {{ dims.nu }}
-#define NP_    {{ dims.np }}
-#define NBX_   {{ dims.nbx }}
-#define NBU_   {{ dims.nbu }}
-#define NSBX_  {{ dims.nsbx }}
-#define NSBU_  {{ dims.nsbu }}
-#define NSH_   {{ dims.nsh }}
-#define NSHN_  {{ dims.nsh_e }}
-#define NSBXN_ {{ dims.nsbx_e }}
-#define NS_    {{ dims.ns }}
-#define NSN_   {{ dims.ns_e }}
-#define NG_    {{ dims.ng }}
-#define NBXN_  {{ dims.nbx_e }}
-#define NGN_   {{ dims.ng_e }}
-#define NY_    {{ dims.ny }}
-#define NYN_   {{ dims.ny_e }}
-#define N_     {{ dims.N }}
-#define NH_    {{ dims.nh }}
-#define NHN_   {{ dims.nh_e }}
-#define NR_    {{ dims.nr }}
-#define NRN_   {{ dims.nr_e }}
+#define NX_     {{ dims.nx }}
+#define NZ_     {{ dims.nz }}
+#define NU_     {{ dims.nu }}
+#define NP_     {{ dims.np }}
+#define NBX_    {{ dims.nbx }}
+#define NBU_    {{ dims.nbu }}
+#define NSBX_   {{ dims.nsbx }}
+#define NSBU_   {{ dims.nsbu }}
+#define NSH_    {{ dims.nsh }}
+#define NSPHI_  {{ dims.nsphi }}
+#define NSHN_   {{ dims.nsh_e }}
+#define NSPHIN_ {{ dims.nsphi_e }}
+#define NSBXN_  {{ dims.nsbx_e }}
+#define NS_     {{ dims.ns }}
+#define NSN_    {{ dims.ns_e }}
+#define NG_     {{ dims.ng }}
+#define NBXN_   {{ dims.nbx_e }}
+#define NGN_    {{ dims.ng_e }}
+#define NY_     {{ dims.ny }}
+#define NYN_    {{ dims.ny_e }}
+#define N_      {{ dims.N }}
+#define NH_     {{ dims.nh }}
+#define NPHI_   {{ dims.nphi }}
+#define NHN_    {{ dims.nh_e }}
+#define NPHIN_  {{ dims.nphi_e }}
+#define NR_     {{ dims.nr }}
+#define NRN_    {{ dims.nr_e }}
 
 #if NX_ < 1
 #define NX   1
@@ -113,6 +119,18 @@
 #define NSHN   1
 #else
 #define NSHN   NSHN_
+#endif
+
+#if NSPHI_ < 1
+#define NSPHI   1
+#else
+#define NSPHI   NSPHI_
+#endif
+
+#if NSPHIN_ < 1
+#define NSPHIN   1
+#else
+#define NSPHIN   NSPHIN_
 #endif
 
 #if NS_ < 1
@@ -191,6 +209,18 @@
 #define NHN   1
 #else
 #define NHN   NHN_
+#endif
+
+#if NPHI_ < 1
+#define NPHI   1
+#else
+#define NPHI   NPHI_
+#endif
+
+#if NPHIN_ < 1
+#define NPHIN   1
+#else
+#define NPHIN   NPHIN_
 #endif
 
 int acados_create()
@@ -325,6 +355,18 @@ int acados_create()
     uh[{{ i }}] = {{ constraints.uh[i] }};
     {%- endfor %}
     
+    // set up convex-over-nonlinear constraints for stage 0 to N-1 
+    double lphi[NPHI];
+    double uphi[NPHI];
+
+    {% for i in range(end=dims.nphi) %}
+    lphi[{{ i }}] = {{ constraints.lphi[i] }};
+    {%- endfor %}
+
+    {% for i in range(end=dims.nphi) %}
+    uphi[{{ i }}] = {{ constraints.uphi[i] }};
+    {%- endfor %}
+    
     // set up bounds for last stage
     // x
     int idxbx_e[NBXN];
@@ -337,7 +379,7 @@ int acados_create()
     lbx_e[{{ i }}] = {{ constraints.lbx_e[i] }};
     ubx_e[{{ i }}] = {{ constraints.ubx_e[i] }};
     {%- endfor %}
-    //
+    
     // set up soft bounds for nonlinear constraints
     int idxsh_e[NSHN];
     {% for i in range(end=dims.nsh_e) %}
@@ -349,6 +391,19 @@ int acados_create()
     lsh_e[{{ i }}] = {{ constraints.lsh_e[i] }};
     ush_e[{{ i }}] = {{ constraints.ush_e[i] }};
     {%- endfor %}
+    
+    // set up soft bounds for convex-over-nonlinear constraints
+    int idxsphi_e[NSPHIN];
+    {% for i in range(end=dims.nsphi_e) %}
+    idxsphi_e[{{ i }}] = {{ constraints.idxsphi_e[i] }};
+    {%- endfor %}
+    double lsphi_e[NSPHIN]; 
+    double usphi_e[NSPHIN];
+    {% for i in range(end=dims.nsphi_e) %}
+    lsphi_e[{{ i }}] = {{ constraints.lsphi_e[i] }};
+    usphi_e[{{ i }}] = {{ constraints.usphi_e[i] }};
+    {%- endfor %}
+
 
     // soft bounds on x
     int idxsbx_e[NSBXN];
@@ -391,6 +446,18 @@ int acados_create()
 
     {% for i in range(end=dims.nh_e) %}
     uh_e[{{ i }}] = {{ constraints.uh_e[i] }};
+    {%- endfor %}
+
+    // set up convex-over-nonlinear constraints for last stage 
+    double lphi_e[NHN];
+    double uphi_e[NHN];
+
+    {% for i in range(end=dims.nphi_e) %}
+    lphi_e[{{ i }}] = {{ constraints.lphi_e[i] }};
+    {%- endfor %}
+
+    {% for i in range(end=dims.nphi_e) %}
+    uphi_e[{{ i }}] = {{ constraints.uphi_e[i] }};
     {%- endfor %}
 
     double yref[NY];
@@ -501,10 +568,12 @@ int acados_create()
     int nsbx[N+1];
     int nsbu[N+1];
     int nsh[N+1];
+    int nsphi[N+1];
     int ns[N+1];
     int nb[N+1];
     int ng[N+1];
     int nh[N+1];
+    int nphi[N+1];
     int nz[N+1];
     int nv[N+1];
     int ny[N+1];
@@ -512,39 +581,43 @@ int acados_create()
     int nr_e[N+1];
 
     for(int i = 0; i < N+1; i++) {
-        nx[i]   = NX_;
-        nu[i]   = NU_;
-        nbx[i]  = NBX_;
-        nbu[i]  = NBU_;
-        nb[i]   = NBU_ + NBX_;
-        nsbx[i] = NSBX_;
-        nsbu[i] = NSBU_;
-        nsh[i]  = NSH_;
-        ns[i]   = NS_;
-        ng[i]   = NG_;
-        nh[i]   = NH_;
-        nr[i]   = NR_;
-        nz[i]   = NZ_;
-        nv[i]   = NX_ + NU_;
-        ny[i]   = NY_;
+        nx[i]     = NX_;
+        nu[i]     = NU_;
+        nbx[i]    = NBX_;
+        nbu[i]    = NBU_;
+        nb[i]     = NBU_ + NBX_;
+        nsbx[i]   = NSBX_;
+        nsbu[i]   = NSBU_;
+        nsh[i]    = NSH_;
+        nsphi[i]  = NSPHI_;
+        ns[i]     = NS_;
+        ng[i]     = NG_;
+        nh[i]     = NH_;
+        nphi[i]   = NPHI_;
+        nr[i]     = NR_;
+        nz[i]     = NZ_;
+        nv[i]     = NX_ + NU_;
+        ny[i]     = NY_;
     }
 
-    nbx[0] = NX_;
-    nbu[0] = NBU_;
-    nb[0]  = NX_ + NBU_;
+    nbx[0]   = NX_;
+    nbu[0]   = NBU_;
+    nb[0]    = NX_ + NBU_;
     nsbx[N]  = NSBXN_;
     nsbu[N]  = 0;
-    nsh[N]  = NSHN_;
-    ns[N]  = NSN_;
+    nsh[N]   = NSHN_;
+    nsphi[N] = NSPHIN_;
+    ns[N]    = NSN_;
 
-    nu[N]  = 0;
-    nx[N]  = NX_;
-    nz[N]  = 0;
-    nh[N]  = NHN_;
-    nr[N]  = NRN_;
-    nv[N]  = NX_; 
-    ny[N]  = NYN_;
-    nbu[N] = 0;
+    nu[N]   = 0;
+    nx[N]   = NX_;
+    nz[N]   = 0;
+    nh[N]   = NHN_;
+    nphi[N] = NPHIN_;
+    nr[N]   = NRN_;
+    nv[N]   = NX_; 
+    ny[N]   = NYN_;
+    nbu[N]  = 0;
 
     // Make plan
     nlp_solver_plan = ocp_nlp_plan_create(N);
@@ -596,8 +669,14 @@ int acados_create()
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbx", &nsbx[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsbu", &nsbu[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "ng", &ng[i]);
+        {% if constraints.constr_type == "BGH" %}
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsh", &nsh[i]);
+        {%- endif %}
+        {% if constraints.constr_type == "BGP" %}
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nphi", &nphi[i]);
+        ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsphi", &nsphi[i]);
+        {%- endif %}
     }
 
     {% if constraints.constr_type == "BGP" %}
@@ -609,15 +688,27 @@ int acados_create()
     {%- endif %}
 
     {%- if constraints.constr_type == "BGP" %}
+    phi_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    for (int i = 0; i < N; ++i) {
+        // nonlinear part of convex-composite constraint
+        phi_constraint[i].casadi_fun = &{{ con_phi.name }}_phi_constraint;
+        phi_constraint[i].casadi_n_in = &{{ con_phi.name }}_phi_constraint_n_in;
+        phi_constraint[i].casadi_n_out = &{{ con_phi.name }}_phi_constraint_n_out;
+        phi_constraint[i].casadi_sparsity_in = &{{ con_phi.name }}_phi_constraint_sparsity_in;
+        phi_constraint[i].casadi_sparsity_out = &{{ con_phi.name }}_phi_constraint_sparsity_out;
+        phi_constraint[i].casadi_work = &{{ con_phi.name }}_phi_constraint_work;
+
+        external_function_param_casadi_create(&phi_constraint[i], {{ dims.np }});
+    }
     r_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear part of convex-composite constraint
-        r_constraint[i].casadi_fun = &{{ con_h.name }}_r_constraint;
-        r_constraint[i].casadi_n_in = &{{ con_h.name }}_r_constraint_n_in;
-        r_constraint[i].casadi_n_out = &{{ con_h.name }}_r_constraint_n_out;
-        r_constraint[i].casadi_sparsity_in = &{{ con_h.name }}_r_constraint_sparsity_in;
-        r_constraint[i].casadi_sparsity_out = &{{ con_h.name }}_r_constraint_sparsity_out;
-        r_constraint[i].casadi_work = &{{ con_h.name }}_r_constraint_work;
+        r_constraint[i].casadi_fun = &{{ con_phi.name }}_r_constraint;
+        r_constraint[i].casadi_n_in = &{{ con_phi.name }}_r_constraint_n_in;
+        r_constraint[i].casadi_n_out = &{{ con_phi.name }}_r_constraint_n_out;
+        r_constraint[i].casadi_sparsity_in = &{{ con_phi.name }}_r_constraint_sparsity_in;
+        r_constraint[i].casadi_sparsity_out = &{{ con_phi.name }}_r_constraint_sparsity_out;
+        r_constraint[i].casadi_work = &{{ con_phi.name }}_r_constraint_work;
 
         external_function_param_casadi_create(&r_constraint[i], {{ dims.np }});
     }
@@ -625,17 +716,27 @@ int acados_create()
 
     {%- if constraints.constr_type_e == "BGP" %}
     // nonlinear part of convex-composite constraint
-    r_e_constraint.casadi_fun = &{{ con_h_e.name }}_r_e_constraint;
-    r_e_constraint.casadi_n_in = &{{ con_h_e.name }}_r_e_constraint_n_in;
-    r_e_constraint.casadi_n_out = &{{ con_h_e.name }}_r_e_constraint_n_out;
-    r_e_constraint.casadi_sparsity_in = &{{ con_h_e.name }}_r_e_constraint_sparsity_in;
-    r_e_constraint.casadi_sparsity_out = &{{ con_h_e.name }}_r_e_constraint_sparsity_out;
-    r_e_constraint.casadi_work = &{{ con_h_e.name }}_r_e_constraint_work;
+    phi_e_constraint.casadi_fun = &{{ con_phi_e.name }}_phi_e_constraint;
+    phi_e_constraint.casadi_n_in = &{{ con_phi_e.name }}_phi_e_constraint_n_in;
+    phi_e_constraint.casadi_n_out = &{{ con_phi_e.name }}_phi_e_constraint_n_out;
+    phi_e_constraint.casadi_sparsity_in = &{{ con_phi_e.name }}_phi_e_constraint_sparsity_in;
+    phi_e_constraint.casadi_sparsity_out = &{{ con_phi_e.name }}_phi_e_constraint_sparsity_out;
+    phi_e_constraint.casadi_work = &{{ con_phi_e.name }}_phi_e_constraint_work;
+
+    external_function_param_casadi_create(&phi_e_constraint, {{ dims.np }});
+    
+    // nonlinear part of convex-composite constraint
+    r_e_constraint.casadi_fun = &{{ con_phi_e.name }}_r_e_constraint;
+    r_e_constraint.casadi_n_in = &{{ con_phi_e.name }}_r_e_constraint_n_in;
+    r_e_constraint.casadi_n_out = &{{ con_phi_e.name }}_r_e_constraint_n_out;
+    r_e_constraint.casadi_sparsity_in = &{{ con_phi_e.name }}_r_e_constraint_sparsity_in;
+    r_e_constraint.casadi_sparsity_out = &{{ con_phi_e.name }}_r_e_constraint_sparsity_out;
+    r_e_constraint.casadi_work = &{{ con_phi_e.name }}_r_e_constraint_work;
 
     external_function_param_casadi_create(&r_e_constraint, {{ dims.np }});
     {% endif %}
 
-    {% if dims.nh > 0 %}
+    {%- if constraints.constr_type == "BGH" %}
     h_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear constraint
@@ -650,7 +751,7 @@ int acados_create()
     }
     {% endif %}
 
-    {% if dims.nh_e > 0 %}
+    {%- if constraints.constr_type_e == "BGH" %}
 	// nonlinear constraint
 	h_e_constraint.casadi_fun = &{{ con_h_e.name }}_h_e_constraint;
 	h_e_constraint.casadi_n_in = &{{ con_h_e.name }}_h_e_constraint_n_in;
@@ -829,9 +930,16 @@ int acados_create()
     {%- endif %}
     
     {%- if dims.nsh > 0 %} 
+    {% if constraints.constr_type == "BGH" %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsh", idxsh);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsh", lsh);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ush", ush);
+    {%- endif %}
+    {% if constraints.constr_type == "BGP" %}
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxsphi", idxsphi);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lsphi", lsphi);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "usphi", usphi);
+    {%- endif %}
     {%- endif %}
 
     // bounds for intermediate stages
@@ -858,9 +966,16 @@ int acados_create()
         {%- endif %}
 
         {%- if dims.nsh > 0 %} 
+        {% if constraints.constr_type == "BGH" %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsh", idxsh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsh", lsh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ush", ush);
+        {%- endif %}
+        {% if constraints.constr_type == "BGP" %}
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsphi", idxsphi);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsphi", lsphi);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "usphi", usphi);
+        {%- endif %}
         {%- endif %}
 
     }
@@ -890,9 +1005,16 @@ int acados_create()
     {%- endif %}
     
     {%- if dims.nsh_e > 0 %} 
+    {% if constraints.constr_type == "BGH" %}
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsh", idxsh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsh", lsh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ush", ush_e);
+    {%- endif %}
+    {% if constraints.constr_type == "BGP" %}
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxsphi", idxsphi_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lsphi", lsphi_e);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "usphi", usphi_e);
+    {%- endif %}
     {%- endif %}
 
     {%- if dims.ng_e > 0 %} 
@@ -902,35 +1024,45 @@ int acados_create()
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ug", ug_e);
     {%- endif %}
 
-    {%- if constraints.constr_type == "BGP" %}
-    // convex-composite constraints for stages 0 to N-1
-    for (int i = 0; i < N; ++i)
-    {
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_r_fun_jac", &r_constraint[i]);
-    }
-    {%- endif %}
 
     {%- if constraints.constr_type_e == "BGP" %}
     // convex-composite constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_r_fun_jac", &r_e_constraint);
     {%- endif %}
 
-    {% if dims.nh > 0 -%}
-    // nonlinear constraints for stages 0 to N-1
+    {% if constraints.constr_type == "BGH" %}
     for (int i = 0; i < N; ++i)
     {
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_h_fun_jac", &h_constraint[i]);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lh", lh);
-        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uh", uh);
+    // nonlinear constraints for stages 0 to N-1
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_h_fun_jac", &h_constraint[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lh", lh);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uh", uh);
+    }
+    {%- endif %}
+    {% if constraints.constr_type == "BGP" %}
+    for (int i = 0; i < N; ++i)
+    {
+    // convex-composite constraints for stages 0 to N-1
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_r_fun_jac", &r_constraint[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "nl_constr_phi_fun_jac", &phi_constraint[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lphi", lphi);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uphi", uphi);
     }
     {%- endif %}
 
-    {%- if dims.nh_e > 0 %}
+    {% if constraints.constr_type_e == "BGH" %}
     // nonlinear constraints for stage N
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_h_fun_jac", &h_e_constraint);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lh", lh_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uh", uh_e);
-    {% endif %}
+    {%- endif %}
+    {% if constraints.constr_type_e == "BGP" %}
+    // convex-composite constraints for stage N
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_r_fun_jac", &r_e_constraint);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "nl_constr_phi_fun_jac", &phi_e_constraint);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lphi", lphi);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "uphi", uphi);
+    {%- endif %}
 
     nlp_opts = ocp_nlp_solver_opts_create(nlp_config, nlp_dims);
 
@@ -1026,7 +1158,7 @@ int acados_create()
     for (int ii = 0; ii < {{ dims.N }}; ++ii) {
         {%- if constraints.constr_type == "BGP" %}
         r_constraint[ii].set_param(r_constraint+ii, p);
-        h_constraint[ii].set_param(h_constraint+ii, p);
+        phi_constraint[ii].set_param(phi_constraint+ii, p);
         {% endif %}
         {%- if dims.nh > 0 %}
         h_constraint[ii].set_param(h_constraint+ii, p);
@@ -1034,7 +1166,7 @@ int acados_create()
     }
     {%- if constraints.constr_type_e == "BGP" %}
     r_e_constraint.set_param(&r_e_constraint, p);
-    h_e_constraint.set_param(&h_e_constraint, p);
+    phi_e_constraint.set_param(&phi_e_constraint, p);
     {% endif %}
     {%- if dims.nh_e > 0 %}
     h_e_constraint.set_param(&h_e_constraint, p);
@@ -1088,16 +1220,16 @@ int acados_update_params(int stage, double *p, int np) {
                 "in r_constraint which only has %i. Exiting.\n", np, casadi_np);
             exit(1);
         }
-        h_constraint[stage].set_param(h_constraint+stage, p);
-        casadi_np = (h_constraint+stage)->np;
+        phi_constraint[stage].set_param(phi_constraint+stage, p);
+        casadi_np = (phi_constraint+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters " 
-                "in h_constraint which only has %i. Exiting.\n", np, casadi_np);
+                "in phi_constraint which only has %i. Exiting.\n", np, casadi_np);
             exit(1);
         }
-        h_constraint[stage].set_param(h_constraint+stage, p);
+        phi_constraint[stage].set_param(phi_constraint+stage, p);
         {% endif %}
-        {%- if dims.nh > 0 %}
+        {% if constraints.constr_type == "BGH" %}
         casadi_np = (h_constraint+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
@@ -1115,15 +1247,15 @@ int acados_update_params(int stage, double *p, int np) {
         exit(1);
     }
     r_e_constraint.set_param(&r_e_constraint, p);
-    casadi_np = (&h_e_constraint)->np;
+    casadi_np = (&phi_e_constraint)->np;
     if (casadi_np != np) {
         printf("acados_update_params: trying to set %i parameters " 
-            "in h_e_constraint which only has %i. Exiting.\n", np, casadi_np);
+            "in phi_e_constraint which only has %i. Exiting.\n", np, casadi_np);
         exit(1);
     }
-    h_e_constraint.set_param(&h_e_constraint, p);
+    phi_e_constraint.set_param(&phi_e_constraint, p);
     {% endif %}
-    {%- if dims.nh_e > 0 %}
+    {% if constraints.constr_type_e == "BGH" %}
     casadi_np = (&h_e_constraint)->np;
     if (casadi_np != np) {
         printf("acados_update_params: trying to set %i parameters " 
