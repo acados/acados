@@ -17,6 +17,30 @@
 \newcommand{\abs}[1]{\left\lvert#1\right\rvert}
 \newcommand{\ind}[1]{_{\textrm{#1}}}
 \newcommand{\terminal}{^{\textrm{e}}}
+\newcommand{\matr}[2]{\left[\begin{array}{#1}#2\end{array}\right]}
+\newcommand{\upind}[1]{\ensuremath{{^{\textrm{#1}}}}}
+% slack indices
+\newcommand{\Lower}{\ind{l}}
+\newcommand{\lowerh}{\ind{l,h}}
+\newcommand{\lowerbx}{\ind{l,bx}}
+\newcommand{\lowerbu}{\ind{l,bu}}
+\newcommand{\lowerg}{\ind{l,g}}
+
+\newcommand{\upper}{\ind{u}}
+\newcommand{\upperh}{\ind{u,h}}
+\newcommand{\upperbx}{\ind{u,bx}}
+\newcommand{\upperbu}{\ind{u,bu}}
+\newcommand{\upperg}{\ind{u,g}}
+
+\newcommand{\mathComment}[1]{\texttt{/* #1 */}}
+\newcommand{\R}{\mathbb{R}}
+
+\newcommand{\nx}{n\ind{x}}
+\newcommand{\nuu}{n\ind{u}}
+\newcommand{\nz}{n\ind{z}}
+\newcommand{\np}{n\ind{p}}
+\newcommand{\ns}{n\ind{s}}
+
 \begin{document}
 	
 
@@ -24,40 +48,77 @@
 \section*{Problem Formulation}
 	
 \begin{align*}
-&\underset{\begin{subarray}{c}
-	x(\cdot),\,u(\cdot), \, z(\cdot), \, s(\cdot)
-	\end{subarray}}{\min}
-&&\int_0^T l(x(\tau), u(\tau), z(\tau), p)
- + \frac{1}{2} s(\tau)\tran Z s(\tau) + z_s\tran \abs{s(\tau)} \mathrm{d}\tau \; + \\
- &&& \quad \quad m(x(T), z(T), s(T), p) + \frac{1}{2} s(T)\tran Z\terminal s(T) + {z\terminal_s}\tran \abs{s(T)}\\
-&\,\,\,\quad \text{s.t.}    &&x(0) - \bar{x}_0 = 0, &&\\
-&&& && \\[-1em]
-%% dynamics
-&&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t), p) = 0, &&\quad t \in [0,\,T),\\
-&&& && \\[-1em]
-%% path constraints
-&&&\underline{h} \leq h(x(t), u(t), p) + J_{\textrm{sh}} s_{\textrm{h}} \leq \bar{h}, &&\quad t \in [0,\,T),\\
-&&&\underline{x} \leq J_{\textrm{bx}} x(t) + J_{\textrm{sbx}} s_{\textrm{bx}}(t) \leq \bar{x}, &&\quad t \in [0,\,T),\\
-&&&\underline{u} \leq J_{\textrm{bu}} u(t) + J_{\textrm{sbu}} s_{\textrm{bu}}(t)\leq \bar{u}, &&\quad t \in [0,\,T),\\
-&&&\underline{g} \leq Cx(t) + Du(t) + J_{\textrm{sg}} s_{\textrm{g}} \leq \bar{g}, &&\quad t \in [0,\,T), \\
-&&& && \\[-1em]
-%% terminal constraints
-&&&\underline{h}\terminal \leq h\terminal(x(T), p)  + J\ind{sh}\terminal s\ind{h}\terminal \leq \bar{h}\terminal, &&\\
-&&&\underline{x}\terminal \leq J_{\textrm{bx}}\terminal x(T) + J\ind{sbx} s\ind{bx}\terminal \leq \bar{x}^{e}, &&\\ % TODO: add Jsbx_e?!
-&&&\underline{g}\terminal \leq C\terminal x(T)\leq \bar{g}\terminal  + J\ind{sg}\terminal s\ind{g}\terminal
+% cost
+	&&&\mathComment{Cost Function}\\
+	&\underset{\begin{subarray}{c}
+		x(\cdot),\,u(\cdot), \, z(\cdot), \, s(\cdot), \, s\terminal
+		\end{subarray}}{\min}
+	&&\int_0^T l(x(\tau), u(\tau), z(\tau), p)
+	 + \frac{1}{2} \matr{c}{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \tran
+	  \matr{ccc} { Z\Lower & 0 & z\Lower \\
+	  0 & Z\upper & z\upper \\
+		{z\Lower}\tran & {z\upper}\tran & 0}
+	\matr{c}{s\Lower(\tau) \\ s\upper(\tau) \\ 1} \mathrm{d}\tau \; + \\
+	 &&& \quad \quad m(x(T), z(T), p) +
+	  \frac{1}{2} \matr{c}{s\Lower\terminal \\ s\upper\terminal \\ 1} \tran
+	 \matr{ccc} { Z\Lower\terminal & 0 & z\Lower\terminal \\
+	 	0 & Z\upper\terminal & z\upper\terminal \\
+	 	{z\Lower\terminal}\tran & {z\upper\terminal}\tran & 0}
+	 \matr{c}{s\Lower\terminal \\ s\upper\terminal \\ 1}
+	 \\
+	% constraints
+	&&&\mathComment{Initial value}\\
+	&\,\,\,\quad \text{s.t.}    &&x(0) - \bar{x}_0 = 0, &&\\
+	&&& && \\[-1em]
+	&&&\mathComment{Dynamics}\\
+	%% dynamics
+	&&& f\ind{impl}(x(t), \dot{x}(t), u(t), z(t), p) = 0, &&\quad t \in [0,\,T),\\
+	&&& && \\[-1em]
+	&&&\mathComment{Path Constraints with lower bound}\\
+	%% path constraints with lower slack
+	&&&\underline{h} \leq h(x(t), u(t), p) + J_{\textrm{sh}} s\lowerh(t), &&\quad t \in [0,\,T),\\
+	&&&\underline{x} \leq J_{\textrm{bx}} x(t) + J_{\textrm{sbx}} s\lowerbx(t), &&\quad t \in [0,\,T),\\
+	&&&\underline{u} \leq J_{\textrm{bu}} u(t) + J_{\textrm{sbu}} s\lowerbu(t), &&\quad t \in [0,\,T),\\
+	&&&\underline{g} \leq Cx(t) + Du(t) + J_{\textrm{sg}} s\lowerg(t), &&\quad t \in [0,\,T), \\
+	&&& s\lowerh (t), s\lowerbx(t), s\lowerbu(t), s\lowerg(t) \geq 0, &&\quad t \in [0,\,T), \\
+	&&& && \\[-1em]
+	&&&\mathComment{Path Constraints with upper bound}\\
+	%% path constraints with upper slack
+	&&& h(x(t), u(t), p) - J_{\textrm{sh}} s\upperh(t) \leq \bar{h}, &&\quad t \in [0,\,T),\\
+	&&& J_{\textrm{bx}} x(t) - J_{\textrm{sbx}} s\upperbx(t) \leq \bar{x}, &&\quad t \in [0,\,T),\\
+	&&& J_{\textrm{bu}} u(t) - J_{\textrm{sbu}} s\upperbu(t)\leq \bar{u}, &&\quad t \in [0,\,T),\\
+	&&&Cx(t) + Du(t) - J_{\textrm{sg}} s\upperg \leq \bar{g}, &&\quad t \in [0,\,T), \\
+	&&& s\upperh(t), s\upperbx(t), s\upperbu(t), s\upperg(t) \geq 0, &&\quad t \in [0,\,T), \\
+	&&& && \\[-1em]
+	%% lower terminal constraints
+	&&&\mathComment{Terminal Constraints with lower bound}\\
+	&&&\underline{h}\terminal \leq h\terminal(x(T), p) + J\ind{sh}\terminal s\lowerh\terminal, &&\\
+	&&&\underline{x}\terminal \leq J_{\textrm{bx}}\terminal x(T) + J\ind{sbx} s\lowerbx\terminal, &&\\ % TODO: add Jsbx_e?!
+	&&&\underline{g}\terminal \leq C\terminal x(T) + J\ind{sg}\terminal s\lowerg\terminal \leq \bar{g}\terminal, && \\
+	&&& s\lowerh\terminal, s\lowerbx\terminal, s\lowerbu\terminal, s\lowerg\terminal \geq 0, \\
+	&&& && \\[-1em]
+	%% upper terminal constraints
+	&&&\mathComment{Terminal Constraints with upper bound}\\
+	&&& h\terminal(x(T), p) - J\ind{sh}\terminal s\ind{h}\terminal \leq \bar{h}\terminal, &&\\
+	&&& J_{\textrm{bx}}\terminal x(T) - J\ind{sbx} s\ind{bx}\terminal \leq \bar{x}^{e}, &&\\ % TODO: add Jsbx_e?!
+	&&& C\terminal x(T) - J\ind{sg}\terminal s\ind{g}\terminal \leq \bar{g}\terminal \\
+	&&& s\upperh\terminal, s\upperbx\terminal, s\upperbu\terminal, s\upperg\terminal \geq 0,
 \end{align*}
-Hereby:
+
+
+with
 \begin{itemize}
-	\item $ x \in \mathbb{R}^{n_x} $ state vector
-	\item $ u \in \mathbb{R}^{n_u} $ control vector
-	\item $ z \in \mathbb{R}^{n_z} $ algebraic state vector
-	\item $ s \in \mathbb{R}^{n_s} $ slack variables, which are concatenated as $ s = (s\ind{bu}, s\ind{bx}, s\ind{g}, s\ind{h}) $
-	\item $ s\terminal \in \mathbb{R}^{n_s} $ terminal slack variables, which are concatenated as $ s = (s\ind{bx}\terminal, s\ind{g}\terminal, s\ind{h}\terminal) $
-	\item $ p \in \mathbb{R}^{n_p} $ parameters
+\item state vector $ x: \R \rightarrow \R^{\nx} $
+\item control vector $ u: \R \rightarrow \R^{\nuu} $
+\item algebraic state vector $ z: \R \rightarrow \R^{\nz} $
+\item model parameters $ p \in \R^{\np} $
+\item slacks for path constraints $ s\Lower(t) = (s\lowerbu, s\lowerbx, s\lowerg, s\lowerh) \in \R^{\ns} $ and $ s\upper(t) = (s\upperbu, s\upperbx, s\upperg, s\upperh) \in \R^{\ns} $
+\item slacks for terminal constraints $ s\Lower\terminal(t) = (s\lowerbx\terminal, s\lowerg\terminal, s\lowerh\terminal) \in \R^{\ns\terminal} $ and $ s\upper\terminal(t) = (s\upperbx\terminal, s\upperg\terminal, s\upperh\terminal) \in \R^{\ns\terminal} $
 \end{itemize}
 
+
 \section{Dynamics}
-The function $ f\ind{impl}: \mathbb{R}^{n_x}\times\mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_x+n_z}$ describes the dynamics as a fully implicit DAE.\\
+The function $ f\ind{impl}: \mathbb{R}^{\nx}\times\mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz}\times\mathbb{R}^{\np} \rightarrow \mathbb{R}^{\nx+\nz}$ describes the dynamics as a fully implicit DAE.\\
 We offer to discretize $ F $ with a classic implicit Runge-Kutta (\code{irk}) or a structure exploiting implicit Runge-Kutta method (\code{irk\_gnsf}).\\
 Additionally, we offer an explicit Runge-Kutta integrator (\code{erk}), which can be used with explicit ODE models, i.e. models of the form
 \begin{align*}
@@ -78,8 +139,8 @@ f\ind{expl}(x,u,p) = \dot{x}
 \section{Cost}
 There are different \acados~modules to model the cost functions.
 \begin{itemize}
-\item $ l: \mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z} \rightarrow \mathbb{R}$ is the Lagrange objective term.
-\item $ m: \mathbb{R}^{n_x}\times\mathbb{R}^{n_z} \rightarrow \mathbb{R} $ is the Mayer objective term.
+\item $ l: \mathbb{R}^{\nx}\times\mathbb{R}^{\nuu}\times\mathbb{R}^{\nz} \rightarrow \mathbb{R}$ is the Lagrange objective term.
+\item $ m: \mathbb{R}^{\nx}\times\mathbb{R}^{\nz} \rightarrow \mathbb{R} $ is the Mayer objective term.
 \end{itemize}
 to decide which one is used set \code{cost\_type} for $ l $, \code{cost\_type\_e} for $ m $.
 
