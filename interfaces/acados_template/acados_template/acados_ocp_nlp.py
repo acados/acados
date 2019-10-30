@@ -42,29 +42,33 @@ class ocp_nlp_dims:
     class containing the dimensions of the optimal control problem
     """
     def __init__(self):
-        self.__nx     = None  #: :math:`n_x` - number of states 
-        self.__nz     = 0     #: :math:`n_z` - number of algebraic variables 
-        self.__nu     = None  #: :math:`n_u` - number of inputs 
-        self.__np     = 0     #: :math:`n_p` - number of parameters 
-        self.__ny     = None  #: :math:`n_y` - number of residuals in Lagrange term 
-        self.__ny_e   = None  #: :math:`n_{y}^e` - number of residuals in Mayer term 
-        self.__nr     = 0     #: :math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints 
-        self.__nr_e   = 0     #: :math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints
-        self.__nh     = 0     #: :math:`n_h` - number of nonlinear constraints 
-        self.__nh_e   = 0     #: :math:`n_{h}^e` - number of nonlinear constraints at t=T 
-        self.__nbx    = 0     #: :math:`n_{b_x}` - number of state bounds 
-        self.__nbx_e  = 0     #: :math:`n_{b_x}` - number of state bounds at t=T 
-        self.__nbu    = 0     #: :math:`n_{b_u}` - number of input bounds 
-        self.__nsbx   = 0     #: :math:`n_{{sb}_x}` - number of soft state bounds 
-        self.__nsbx_e = 0     #: :math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T 
-        self.__nsbu   = 0     #: :math:`n_{{sb}_u}` - number of soft input bounds 
-        self.__nsh    = 0     #: :math:`n_{{sb}_u}` - number of soft nonlinear constraints 
-        self.__nsh_e  = 0     #: :math:`n_{{sb}_u}` - number of soft nonlinear constraints 
-        self.__ns     = 0     #: :math:`n_{s}` - total number of slacks 
-        self.__ns_e   = 0     #: :math:`n_{s}^e` - total number of slacks at t=T 
-        self.__ng     = 0     #: :math:`n_{g}` - number of general polytopic constraints 
-        self.__ng_e   = 0     #: :math:`n_{g}^e` - number of general polytopic constraints at t=T 
-        self.__N      = None  #: :math:`N` - prediction horizon  
+        self.__nx      = None  #: :math:`n_x` - number of states 
+        self.__nz      = 0     #: :math:`n_z` - number of algebraic variables 
+        self.__nu      = None  #: :math:`n_u` - number of inputs 
+        self.__np      = 0     #: :math:`n_p` - number of parameters 
+        self.__ny      = None  #: :math:`n_y` - number of residuals in Lagrange term 
+        self.__ny_e    = None  #: :math:`n_{y}^e` - number of residuals in Mayer term 
+        self.__nr      = 0     #: :math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints 
+        self.__nr_e    = 0     #: :math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints
+        self.__nh      = 0     #: :math:`n_h` - number of nonlinear constraints 
+        self.__nh_e    = 0     #: :math:`n_{h}^e` - number of nonlinear constraints at t=T 
+        self.__nphi    = 0     #: :math:`n_{\phi}` - number of convex-over-nonlinear constraints 
+        self.__nphi_e  = 0     #: :math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at t=T 
+        self.__nbx     = 0     #: :math:`n_{b_x}` - number of state bounds 
+        self.__nbx_e   = 0     #: :math:`n_{b_x}` - number of state bounds at t=T 
+        self.__nbu     = 0     #: :math:`n_{b_u}` - number of input bounds 
+        self.__nsbx    = 0     #: :math:`n_{{sb}_x}` - number of soft state bounds 
+        self.__nsbx_e  = 0     #: :math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T 
+        self.__nsbu    = 0     #: :math:`n_{{sb}_u}` - number of soft input bounds 
+        self.__nsh     = 0     #: :math:`n_{{sh}}` - number of soft nonlinear constraints 
+        self.__nsh_e   = 0     #: :math:`n_{{sh}}^e` - number of soft nonlinear constraints at t=T 
+        self.__nsphi   = 0     #: :math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints 
+        self.__nsphi_e = 0     #: :math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at t=T 
+        self.__ns      = 0     #: :math:`n_{s}` - total number of slacks 
+        self.__ns_e    = 0     #: :math:`n_{s}^e` - total number of slacks at t=T 
+        self.__ng      = 0     #: :math:`n_{g}` - number of general polytopic constraints 
+        self.__ng_e    = 0     #: :math:`n_{g}^e` - number of general polytopic constraints at t=T 
+        self.__N       = None  #: :math:`N` - prediction horizon  
 
     @property
     def nx(self):
