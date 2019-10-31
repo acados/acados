@@ -977,8 +977,8 @@ if FORMULATION == 4:
 nlp_con.p = nmp.array([w_val, 0.0, 0.0, tau_wal])
 
 # set QP solver
-# ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
+ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+# ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
 # ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
 # ra.solver_config.integrator_type = 'IRK'

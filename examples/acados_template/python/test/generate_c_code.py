@@ -41,56 +41,63 @@ import json
 import argparse
 
 # set to 'True' to generate test data
-GENERATE_DATA = False
+GENERATE_DATA = True
+LOCAL_TEST = False
 TEST_TOL = 1e-8
 
-parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
-parser.add_argument('--FORMULATION', dest='FORMULATION', 
-                    default='LS',
-                    help='FORMULATION: linear least-squares (LS) or nonlinear \
-                            least-squares (NLS) (default: LS)')
+if LOCAL_TEST is True:
+    FORMULATION = 'LS'
+    SOLVER_TYPE = 'SQP_RTI'
+    QP_SOLVER = 'FULL_CONDENSING_QPOASES'
+    INTEGRATOR_TYPE = 'IRK'
+else:
+    parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
+    parser.add_argument('--FORMULATION', dest='FORMULATION', 
+                        default='LS',
+                        help='FORMULATION: linear least-squares (LS) or nonlinear \
+                                least-squares (NLS) (default: LS)')
 
-parser.add_argument('--QP_SOLVER', dest='QP_SOLVER', 
-                    default='PARTIAL_CONDENSING_HPIPM',
-                    help='QP_SOLVER: PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_HPIPM, ' \
-                            'FULL_CONDENSING_HPIPM (default: PARTIAL_CONDENSING_HPIPM)')
+    parser.add_argument('--QP_SOLVER', dest='QP_SOLVER', 
+                        default='PARTIAL_CONDENSING_HPIPM',
+                        help='QP_SOLVER: PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_HPIPM, ' \
+                                'FULL_CONDENSING_HPIPM (default: PARTIAL_CONDENSING_HPIPM)')
 
-parser.add_argument('--INTEGRATOR_TYPE', dest='INTEGRATOR_TYPE', 
-                    default='ERK',
-                    help='INTEGRATOR_TYPE: explicit (ERK) or implicit (IRK) ' \
-                            ' Runge-Kutta (default: ERK)')
+    parser.add_argument('--INTEGRATOR_TYPE', dest='INTEGRATOR_TYPE', 
+                        default='ERK',
+                        help='INTEGRATOR_TYPE: explicit (ERK) or implicit (IRK) ' \
+                                ' Runge-Kutta (default: ERK)')
 
-parser.add_argument('--SOLVER_TYPE', dest='SOLVER_TYPE', 
-                    default='SQP_RTI',
-                    help='SOLVER_TYPE: (full step) sequential quadratic programming (SQP) or ' \
-                            ' real-time iteration (SQP-RTI) (default: SQP-RTI)')
+    parser.add_argument('--SOLVER_TYPE', dest='SOLVER_TYPE', 
+                        default='SQP_RTI',
+                        help='SOLVER_TYPE: (full step) sequential quadratic programming (SQP) or ' \
+                                ' real-time iteration (SQP-RTI) (default: SQP-RTI)')
 
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-FORMULATION = args.FORMULATION
-FORMULATION_values = ['LS', 'NLS']
-if FORMULATION not in FORMULATION_values:
-    raise Exception('Invalid unit test value {} for parameter FORMULATION. Possible values are' \
-            ' {}. Exiting.'.format(FORMULATION, FORMULATION_values))
+    FORMULATION = args.FORMULATION
+    FORMULATION_values = ['LS', 'NLS']
+    if FORMULATION not in FORMULATION_values:
+        raise Exception('Invalid unit test value {} for parameter FORMULATION. Possible values are' \
+                ' {}. Exiting.'.format(FORMULATION, FORMULATION_values))
 
-QP_SOLVER = args.QP_SOLVER
-QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES']
-if QP_SOLVER not in QP_SOLVER_values:
-    raise Exception('Invalid unit test value {} for parameter QP_SOLVER. Possible values are' \
-            ' {}. Exiting.'.format(QP_SOLVER, QP_SOLVER_values))
+    QP_SOLVER = args.QP_SOLVER
+    QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES']
+    if QP_SOLVER not in QP_SOLVER_values:
+        raise Exception('Invalid unit test value {} for parameter QP_SOLVER. Possible values are' \
+                ' {}. Exiting.'.format(QP_SOLVER, QP_SOLVER_values))
 
-INTEGRATOR_TYPE = args.INTEGRATOR_TYPE
-INTEGRATOR_TYPE_values = ['ERK', 'IRK']
-if INTEGRATOR_TYPE not in INTEGRATOR_TYPE:
-    raise Exception('Invalid unit test value {} for parameter INTEGRATOR_TYPE. Possible values are' \
-            ' {}. Exiting.'.format(INTEGRATOR_TYPE, INTEGRATOR_TYPE_values))
+    INTEGRATOR_TYPE = args.INTEGRATOR_TYPE
+    INTEGRATOR_TYPE_values = ['ERK', 'IRK']
+    if INTEGRATOR_TYPE not in INTEGRATOR_TYPE:
+        raise Exception('Invalid unit test value {} for parameter INTEGRATOR_TYPE. Possible values are' \
+                ' {}. Exiting.'.format(INTEGRATOR_TYPE, INTEGRATOR_TYPE_values))
 
-SOLVER_TYPE = args.SOLVER_TYPE
-SOLVER_TYPE_values = ['SQP', 'SQP-RTI']
-if SOLVER_TYPE not in SOLVER_TYPE:
-    raise Exception('Invalid unit test value {} for parameter SOLVER_TYPE. Possible values are' \
-            ' {}. Exiting.'.format(SOLVER_TYPE, SOLVER_TYPE_values))
+    SOLVER_TYPE = args.SOLVER_TYPE
+    SOLVER_TYPE_values = ['SQP', 'SQP-RTI']
+    if SOLVER_TYPE not in SOLVER_TYPE:
+        raise Exception('Invalid unit test value {} for parameter SOLVER_TYPE. Possible values are' \
+                ' {}. Exiting.'.format(SOLVER_TYPE, SOLVER_TYPE_values))
 
 # create render arguments
 ocp = acados_ocp_nlp()
@@ -255,6 +262,6 @@ else:
     simX_error = np.linalg.norm(test_data['simX'] - simX)
     simU_error = np.linalg.norm(test_data['simU'] - simU)
     if  simX_error > TEST_TOL or  simU_error > TEST_TOL:
-        raise Exception("Python acados test failure on pendulum example! Exiting.\n")
+        raise Exception("Python acados test failure with accuracies {:.2E} and {:.2E} ({:.2E} required) on pendulum example! Exiting.\n".format(simX_error, simU_error, TEST_TOL))
     else: 
         print('Python test passed with accuracy {:.2E}'.format(max(simU_error, simX_error)))

@@ -25,10 +25,10 @@
 #include "{{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.h"
 {% endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
-#include "{{ cost_phi.name }}_r_cost/{{ cost_r.name }}_r_cost.h"
+#include "{{ cost_r.name }}_r_cost/{{ cost_r.name }}_r_cost.h"
 {% endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-#include "{{ cost_h_e.name }}_r_e_cost/{{ cost_r_e.name }}_r_e_cost.h"
+#include "{{ cost_r_e.name }}_r_e_cost/{{ cost_r_e.name }}_r_e_cost.h"
 {% endif %}
 
 #include "acados_solver_{{ model.name }}.h"
