@@ -46,19 +46,22 @@ def generate_c_code_nls_cost_e( cost ):
 
     # load cost variables and expression
     x = cost.x
+    p = cost.p
     cost_exp = cost.expr
     cost_name = cost.name
 
     # get dimensions
     nx = x.size()[0]
 
+    u = SX.sym('u', 0, 0)
+
     # set up functions to be exported
     fun_name = cost_name + suffix_name
 
-    cost_jac_exp = jacobian(cost_exp, x)
+    cost_jac_exp = transpose(jacobian(cost_exp, vertcat(u, x)))
     
-    nls_cost_fun = Function( fun_name, [x], \
-            [ cost_exp, cost_jac_exp ])
+    nls_cost_fun = Function( fun_name, [x, u, p], \
+            [ cost_exp, cost_jac_exp])
 
     # generate C code
     if not os.path.exists('c_generated_code'):

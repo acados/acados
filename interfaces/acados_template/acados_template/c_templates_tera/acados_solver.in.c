@@ -568,7 +568,7 @@ int acados_create()
     {%- endif %}
 
     {%- if dims.npd > 0 %}
-    p_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
+    p_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear part of convex-composite constraint
         p_constraint[i].casadi_fun = &{{ con_p.name }}_p_constraint;
@@ -578,13 +578,13 @@ int acados_create()
         p_constraint[i].casadi_sparsity_out = &{{ con_p.name }}_p_constraint_sparsity_out;
         p_constraint[i].casadi_work = &{{ con_p.name }}_p_constraint_work;
 
-        external_function_casadi_create(&p_constraint[i]);
+        external_function_param_casadi_create(&p_constraint[i], {{ dims.np }});
     }
     {%- endif %}
 
     {% if dims.npd_e > 0 %}
 	// nonlinear part of convex-composite constraint
-	external_function_casadi p_e_constraint;
+	external_function_param_casadi p_e_constraint;
 	p_e_constraint.casadi_fun = &{{ con_p_e.name }}_p_e_constraint;
 	p_e_constraint.casadi_n_in = &{{ con_p_e.name }}_p_e_constraint_n_in;
 	p_e_constraint.casadi_n_out = &{{ con_p_e.name }}_p_e_constraint_n_out;
@@ -592,11 +592,11 @@ int acados_create()
 	p_e_constraint.casadi_sparsity_out = &{{ con_p_e.name }}_p_e_constraint_sparsity_out;
 	p_e_constraint.casadi_work = &{{ con_p_e.name }}_p_e_constraint_work;
 
-    external_function_casadi_create(p_e_constraint);
+    external_function_param_casadi_create(p_e_constraint, {{ dims.np }});
     {% endif %}
 
     {% if dims.nh > 0 %}
-    h_constraint = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
+    h_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear constraint
         h_constraint[i].casadi_fun = &{{ con_h.name }}_h_constraint;
@@ -606,7 +606,7 @@ int acados_create()
         h_constraint[i].casadi_sparsity_out = &{{ con_h.name }}_h_constraint_sparsity_out;
         h_constraint[i].casadi_work = &{{ con_h.name }}_h_constraint_work;
 
-        external_function_casadi_create(&h_constraint[i]);
+        external_function_param_casadi_create(&h_constraint[i], {{ dims.np }});
     }
     {% endif %}
 
@@ -619,7 +619,7 @@ int acados_create()
 	h_e_constraint.casadi_sparsity_out = &{{ con_h_e.name }}_h_e_constraint_sparsity_out;
 	h_e_constraint.casadi_work = &{{ con_h_e.name }}_h_e_constraint_work;
 
-    external_function_casadi_create(&h_e_constraint);
+    external_function_param_casadi_create(&h_e_constraint);
     {% endif %}
 
     {% if solver_config.integrator_type == "ERK" %}
@@ -637,7 +637,7 @@ int acados_create()
     }
 
     {% if solver_config.hessian_approx == "EXACT" %} 
-    external_function_casadi * hess_vde_casadi;
+    external_function_param_casadi * hess_vde_casadi;
     hess_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
         hess_vde_casadi[i].casadi_fun = &{{ model.name }}_expl_ode_hess;
@@ -693,7 +693,7 @@ int acados_create()
 
     // NLP cost linear or nonlinear least squares
     {%- if cost.cost_type == "NONLINEAR_LS" %}
-    r_cost = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
+    r_cost = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // residual function
         r_cost[i].casadi_fun = &{{ cost_r.name }}_r_cost;
@@ -703,7 +703,7 @@ int acados_create()
         r_cost[i].casadi_sparsity_out = &{{ cost_r.name }}_r_cost_sparsity_out;
         r_cost[i].casadi_work = &{{ cost_r.name }}_r_cost_work;
 
-        external_function_casadi_create(&r_cost[i]);
+        external_function_param_casadi_create(&r_cost[i], {{ dims.np }});
     }
     {%- endif %}
 
@@ -716,7 +716,7 @@ int acados_create()
 	r_e_cost.casadi_sparsity_out = &{{ cost_r_e.name }}_r_e_cost_sparsity_out;
 	r_e_cost.casadi_work = &{{ cost_r_e.name }}_r_e_cost_work;
 
-    external_function_casadi_create(&r_e_cost);
+    external_function_param_casadi_create(&r_e_cost, {{ dims.np }});
     {%- endif %}
 	for (int i = 0; i < N; ++i) {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
@@ -847,10 +847,12 @@ int acados_create()
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
     {% endif %}
+
     int num_steps_val = {{ solver_config.sim_method_num_steps }}; 
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
+
     int ns_val = {{ solver_config.sim_method_num_stages }}; 
-    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_ns", &ns_val);
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &ns_val);
     bool jac_reuse_val = true;
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse_val);
 
@@ -926,10 +928,105 @@ int acados_create()
         forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {% endif %}
+    for (int ii = 0; ii < {{dims.N}}; ++ii) {
+        {%- if dims.npd > 0 %}
+        p_constraint[ii].set_param(p_constraint+ii, p);
+        {% endif %}
+        {%- if dims.nh > 0 %}
+        h_constraint[ii].set_param(h_constraint+ii, p);
+        {% endif %}
+    }
+    {%- if dims.npd_e > 0 %}
+    p_e_constraint.set_param(&p_e_constraint, p);
+    {% endif %}
+    {%- if dims.nh_e > 0 %}
+    h_e_constraint.set_param(&h_e_constraint, p);
+    {% endif %}
     {% endif %}
 
     return status;
 }
+
+
+int acados_update_params(int stage, double *p, int np) {
+    int solver_status = 0;
+    int casadi_np = 0;
+    {% if dims.np > 0%}
+    if (stage < {{ dims.N }}) {
+        {% if solver_config.integrator_type == "IRK" %}
+        casadi_np = (impl_dae_fun+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in impl_dae_fun which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        impl_dae_fun[stage].set_param(impl_dae_fun+stage, p);
+        casadi_np = (impl_dae_fun_jac_x_xdot_z+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters " 
+                "in impl_dae_fun_jac_x_xdot_z which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        impl_dae_fun_jac_x_xdot_z[stage].set_param(impl_dae_fun_jac_x_xdot_z+stage, p);
+        casadi_np = (impl_dae_jac_x_xdot_u_z+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters " 
+                "in impl_dae_jac_x_xdot_u_z which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        impl_dae_jac_x_xdot_u_z[stage].set_param(impl_dae_jac_x_xdot_u_z+stage, p);
+        {% else %}
+        casadi_np = (forw_vde_casadi+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in forw_vde_casad which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
+        {% endif %}
+        {%- if dims.npd > 0 %}
+        casadi_np = (p_constraint+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters " 
+                "in p_constraint which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        p_constraint[stage].set_param(p_constraint+stage, p);
+        {% endif %}
+        {%- if dims.nh > 0 %}
+        casadi_np = (h_constraint+stage)->np;
+        if (casadi_np != np) {
+            printf("acados_update_params: trying to set %i parameters "
+                "in h_constraint which only has %i. Exiting.\n", np, casadi_np);
+            exit(1);
+        }
+        h_constraint[stage].set_param(h_constraint+stage, p);
+        {% endif %}
+    } else {
+    {%- if dims.npd_e > 0 %}
+    casadi_np = (&p_e_constraint)->np;
+    if (casadi_np != np) {
+        printf("acados_update_params: trying to set %i parameters "
+            "in p_e_constraint which only has %i. Exiting.\n", np, casadi_np);
+        exit(1);
+    }
+    p_e_constraint.set_param(&p_e_constraint, p);
+    {% endif %}
+    {%- if dims.nh_e > 0 %}
+    casadi_np = (&h_e_constraint)->np;
+    if (casadi_np != np) {
+        printf("acados_update_params: trying to set %i parameters " 
+            "in h_e_constraint which only has %i. Exiting.\n", np, casadi_np);
+        exit(1);
+    }
+    h_e_constraint.set_param(&h_e_constraint, p);
+    {% endif %}
+    }
+    {% endif %}
+
+    return solver_status;
+}
+
 
 
 int acados_solve() {

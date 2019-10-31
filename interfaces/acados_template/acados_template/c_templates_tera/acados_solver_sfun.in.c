@@ -74,13 +74,13 @@ external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 external_function_casadi * p_constraint;
 {% endif %}
 {%- if dims.npd_e > 0 %}
-external_function_casadi * p_constraint_N;
+external_function_casadi p_e_constraint;
 {% endif %}
 {%- if dims.nh > 0 %}
 external_function_casadi * h_constraint;
 {% endif %}
 {%- if dims.nh_e > 0 %}
-external_function_casadi * h_constraint_N;
+external_function_casadi h_e_constraint;
 {% endif %}
 
 
@@ -185,24 +185,11 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // set initial condition
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", in_x0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", in_x0);
-
-    // update reference
-    for (int ii = 0; ii < {{ dims.N }}; ii++)
-        ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) in_y_ref);
-
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) in_y_ref_N);
-
+    
     // update value of parameters
-    {% if solver_config.integrator_type == 'IRK' %}
-    for (int ii = 0; ii < {{ dims.N }}; ii++) {
-    impl_dae_fun[ii].set_param(impl_dae_fun+ii, in_p);
-    impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, in_p);
-    impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, in_p);
-    }
-    {% elif solver_config.integrator_type == 'ERK' %}
-    for (int ii = 0; ii < {{ dims.N }}; ii++) {
-    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
-    }
+    {% if dims.np > 0%}
+    for (int ii = 0; ii < {{ dims.N }}; ii++) 
+        acados_update_params(ii, in_p, {{ dims.np }});
     {% endif %}
     
     // assign pointers to output signals 
