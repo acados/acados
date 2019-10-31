@@ -17,6 +17,8 @@ exact Hessians, adjoint corrections, regularization, etc.
 
 To get started with this interface we recommend the examples in `<acados_root>/examples/acados_matlab_octave/getting_started`.
 
+The problem formulation is stated in [this PDF](https://github.com/acados/acados/tree/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf)
+
 This interface uses the shared libraries created using the make command from the main acados folder
 
 ```bash
