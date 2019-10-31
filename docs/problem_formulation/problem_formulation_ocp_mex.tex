@@ -124,13 +124,16 @@ Additionally, we offer an explicit Runge-Kutta integrator (\code{erk}), which ca
 \begin{align*}
 f\ind{expl}(x,u,p) = \dot{x}
 \end{align*}
+
+\newcommand{\mandatory}{yes}
+\newcommand{\optional}{no}
 \begin{table}[h!]
 	\centering
-	\begin{tabular}{|c|c|c|}
+	\begin{tabular}{|c|c|c|c|}
 		\toprule
-		Mathematical Expression                    & string identifier & data type \\ \midrule
-		$ f\ind{impl} $ respectively $ f\ind{expl} $ & \code{dyn\_expr\_f}    & \casadi~expression    \\ \midrule
-		- & \code{dyn\_type}    & string (\code{explicit} or \code{implicit})    \\
+		Mathematical Expression & string identifier & data type & required \\ \midrule
+		$ f\ind{impl} $ respectively $ f\ind{expl} $ & \code{dyn\_expr\_f}    & \casadi~expression & \mandatory \\ \midrule
+		- & \code{dyn\_type}    & string (\code{explicit} or \code{implicit}) & \mandatory \\
 		\bottomrule
 	\end{tabular}
 \end{table}
@@ -144,22 +147,40 @@ There are different \acados~modules to model the cost functions.
 \end{itemize}
 to decide which one is used set \code{cost\_type} for $ l $, \code{cost\_type\_e} for $ m $.
 
-\subsection*{Cost module: \code{auto}}
-Set \code{cost\_type} to \code{auto} (default).
-Hereby we detect if the cost function specified is a linear least squares term and transcribe it in the corresponding form.
-Otherwise, it is formulated using the external cost module.
-Note: slack penalties are optional and will be detected form the expressions in future versions.
+Setting the slack penalties is done in the same way for all cost modules, namely:
 \begin{table}[h!]
 	\centering
-	\begin{tabular}{|c|c|c|}
+	\begin{tabular}{|c|c|c|c|}
 		\toprule
-		Mathematical Expression                    & string identifier & data type \\ \midrule
-		$ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression    \\ \midrule
-		$ m $ & \code{cost\_expr\_ext\_cost\_e}    & \casadi~expression    \\ \midrule
-		$ Z $ & \code{cost\_Z}    & double    \\ \midrule
-		$ z_s $ & \code{cost\_z}    & double    \\ \midrule
-		$ Z\terminal $ & \code{cost\_Z\_e}    & double    \\ \midrule
-		$ z_s\terminal $ & \code{cost\_z\_e}    & double    \\
+		Mathematical Expression  & string identifier & data type & required \\ \midrule
+		$ Z\Lower $ & \code{cost\_Zl}    & double  & \optional \\ \midrule
+		$ Z\upper $ & \code{cost\_Zu}    & double  & \optional   \\ \midrule
+		$ z\Lower $ & \code{cost\_zl}    & double  & \optional   \\ \midrule
+		$ z\upper $ & \code{cost\_zu}    & double  & \optional   \\ \midrule
+		$ Z\Lower\terminal $ & \code{cost\_Zl\_e}    & double  & \optional   \\ \midrule
+		$ Z\upper\terminal $ & \code{cost\_Zu\_e}    & double  & \optional   \\ \midrule
+		$ z\Lower\terminal $ & \code{cost\_zl\_e}    & double  & \optional   \\ \midrule
+		$ z\upper\terminal $ & \code{cost\_zu\_e}    & double  & \optional   \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+Moreover, you can specify \texttt{cost\_Z}, to set $ Z\Lower, Z\upper $ to the same values, i.e. use a symmetric L2 slack penalty.
+Similarly, \texttt{cost\_z}, \texttt{cost\_Z\_e}, \texttt{cost\_z\_e} can be used to set symmetric slack L1 penalties, respectively penalties for the terminal slack variables.
+
+
+\subsection*{Cost module: \code{auto}}
+Set \code{cost\_type} to \code{auto} (default).
+In this case we detect if the cost function specified is a linear least squares term and transcribe it in the corresponding form.
+Otherwise, it is formulated using the external cost module.
+Note: slack penalties are optional and we plan to detected them form the expressions in future versions.
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+		\toprule
+		Mathematical Expression & string identifier & data type & required \\ \midrule
+		$ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\ \midrule
+		$ m $ & \code{cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \mandatory \\
 		\bottomrule
 	\end{tabular}
 \end{table}
@@ -169,15 +190,11 @@ Note: slack penalties are optional and will be detected form the expressions in 
 Set \code{cost\_type} to \code{ext\_cost}. % TODO: rename to 'external'?!
 \begin{table}[h!]
 	\centering
-	\begin{tabular}{|c|c|c|}
+	\begin{tabular}{|c|c|c|c|}
 		\toprule
-		Mathematical Expression                    & string identifier & data type \\ \midrule
-		$ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression    \\ \midrule
-		$ m $ & \code{cost\_expr\_ext\_cost\_e}    & \casadi~expression    \\ \midrule
-		$ Z $ & \code{cost\_Z}    & double    \\ \midrule
-		$ z_s $ & \code{cost\_z}    & double    \\ \midrule
-		$ Z\terminal $ & \code{cost\_Z\_e}    & double    \\ \midrule
-		$ z_s\terminal $ & \code{cost\_z\_e}    & double    \\
+		Mathematical Expression & string identifier & data type & required \\ \midrule
+		$ l $ & \code{cost\_expr\_ext\_cost}    & \casadi~expression   & \mandatory  \\ \midrule
+		$ m $ & \code{cost\_expr\_ext\_cost\_e}    & \casadi~expression  & \mandatory \\
 		\bottomrule
 	\end{tabular}
 \end{table}
@@ -196,21 +213,17 @@ m(x, u, z) = \norm{ \underbrace{V_x\terminal x}_{y\terminal} - y\terminal_{\text
 with matrices $ V\terminal_x, W\terminal $ of appropriate dimensions.
 \begin{table}[h!]
 	\centering
-	\begin{tabular}{|c|c|c|}
+	\begin{tabular}{|c|c|c|c|}
 		\toprule
-		Mathematical Expression                    & string identifier & data type \\ \midrule
-		$ V_x $ & \code{cost\_V\_x}    & double    \\ \midrule
-		$ V_u $ & \code{cost\_V\_u}    & double    \\ \midrule
-		$ V_z $ & \code{cost\_V\_z}    & double    \\ \midrule
-		$ W $ & \code{cost\_W}    & double    \\ \midrule
-		$ y_{\textrm{ref}} $ & \code{cost\_y\_ref}    & double    \\ \midrule
-		$ V_x\terminal $ & \code{cost\_V\_x\_e}    & double    \\ \midrule
-		$ W\terminal $ & \code{cost\_W\_e}    & double    \\ \midrule
-		$ y_{\textrm{ref}}\terminal $ & \code{cost\_y\_ref\_e}    & double    \\ \midrule
-		$ Z $ & \code{cost\_Z}    & double    \\ \midrule
-		$ z_s $ & \code{cost\_z}    & double    \\ \midrule
-		$ Z\terminal $ & \code{cost\_Z\_e}    & double    \\ \midrule
-		$ z_s\terminal $ & \code{cost\_z\_e}    & double    \\
+		Mathematical Expression & string identifier & data type & required \\ \midrule
+		$ V_x $ & \code{cost\_V\_x}    & double & \mandatory   \\ \midrule
+		$ V_u $ & \code{cost\_V\_u}    & double & \mandatory   \\ \midrule
+		$ V_z $ & \code{cost\_V\_z}    & double & \mandatory  \\ \midrule
+		$ W $ & \code{cost\_W}    & double & \mandatory  \\ \midrule
+		$ y_{\textrm{ref}} $ & \code{cost\_y\_ref}    & double & \mandatory   \\ \midrule
+		$ V_x\terminal $ & \code{cost\_V\_x\_e}    & double  & \mandatory  \\ \midrule
+		$ W\terminal $ & \code{cost\_W\_e}    & double & \mandatory   \\ \midrule
+		$ y_{\textrm{ref}}\terminal $ & \code{cost\_y\_ref\_e}   & double & \mandatory   \\
 		\bottomrule
 	\end{tabular}
 \end{table}
@@ -223,69 +236,66 @@ The only difference is that $ y $, respectively $ y\terminal $ are defined as \c
 
 \begin{table}[h!]
 	\centering
-	\begin{tabular}{|c|c|c|}
+	\begin{tabular}{|c|c|c|c|}
 		\toprule
-		Mathematical Expression                    & string identifier & data type \\ \midrule
-		$ y $ & \code{cost\_expr\_y}    & \casadi~expression    \\ \midrule
-		$ W $ & \code{cost\_W}    & double    \\ \midrule
-		$ y_{\textrm{ref}} $ & \code{cost\_y\_ref}    & double    \\ \midrule
-		$ y\terminal $ & \code{cost\_expr\_y\_e}    & \casadi~expression    \\ \midrule
-		$ y_{\textrm{ref}}\terminal $ & \code{cost\_y\_ref\_e}    & double    \\ \midrule
-		$ Z $ & \code{cost\_Z}    & double    \\ \midrule
-		$ z_s $ & \code{cost\_z}    & double    \\ \midrule
-		$ Z\terminal $ & \code{cost\_Z\_e}    & double    \\ \midrule
-		$ z_s\terminal $ & \code{cost\_z\_e}    & double    \\
+		Mathematical Expression & string identifier & data type & required \\ \midrule
+		$ y $ & \code{cost\_expr\_y}    & \casadi~expression  & \mandatory   \\ \midrule
+		$ W $ & \code{cost\_W}    & double  & \mandatory   \\ \midrule
+		$ y_{\textrm{ref}} $ & \code{cost\_y\_ref}    & double & \mandatory    \\ \midrule
+		$ y\terminal $ & \code{cost\_expr\_y\_e}    & \casadi~expression  & \mandatory   \\ \midrule
+		$ y_{\textrm{ref}}\terminal $ & \code{cost\_y\_ref\_e}    & double  & \mandatory   \\
 		\bottomrule
 	\end{tabular}
 \end{table}
-\newpage
+%\newpage
 \section{Path Constraints}
 \begin{table}[h]
 	\centering
-	\begin{tabular}{|c|c|c|}
+	\begin{tabular}{|c|c|c|c|}
 		\toprule
-		Mathematical Expression                    & string identifier & data type \\ \midrule
-		$ \bar{x}_0 $ & \code{constr\_x0} & double \\ \midrule
-		$J_{\textrm{bx}}$ & \code{constr\_Jbx}    & double    \\
-		$\underline{x} $    & \code{constr\_lbx}     & double    \\
-		$\bar{x} $         & \code{constr\_ubx}     & double   \\ \midrule
-		$J_{\textrm{bu}}$ & \code{constr\_Jbu}    & double    \\
-		$\underline{u} $    & \code{constr\_lbu}     & double    \\
-		$\bar{u} $         & \code{constr\_ubu}     & double   \\ \midrule
-		$C$ & \code{constr\_C}    & double    \\
+		Mathematical Expression & string identifier & data type & required \\ \midrule
+		$ \bar{x}_0 $ & \code{constr\_x0} & double & \mandatory \\ \midrule
+		$J_{\textrm{bx}}$ & \code{constr\_Jbx}    & double  & \optional  \\
+		$\underline{x} $    & \code{constr\_lbx}     & double  & \optional  \\
+		$\bar{x} $         & \code{constr\_ubx}     & double  & \optional   \\ \midrule
+		$J_{\textrm{bu}}$ & \code{constr\_Jbu}    & double  & \optional    \\
+		$\underline{u} $    & \code{constr\_lbu}     & double   & \optional   \\
+		$\bar{u} $         & \code{constr\_ubu}     & double  & \optional   \\ \midrule
+		$C$ & \code{constr\_C}    & double  & \optional    \\
 		$D $    & \code{constr\_D}     & double    \\
-		$\underline{g} $    & \code{constr\_lg}     & double    \\
-		$\bar{g} $         & \code{constr\_ug}     & double   \\ \midrule
-		$ h $ & \code{constr\_expr\_h}    & \casadi~expression   \\
-		$\underline{h} $    & \code{constr\_lh}     & double    \\
-		$\bar{h} $         & \code{constr\_uh}     & double   \\ \midrule
-		$ J\ind{sbx} $ & \code{constr\_Jsbx} & double \\
-		$ J\ind{sbu} $ & \code{constr\_Jsbu} & double \\
-		$ J\ind{sg} $ & \code{constr\_Jsg} & double \\
-		$ J\ind{sbx} $ & \code{constr\_Jsh} & double \\
+		$\underline{g} $    & \code{constr\_lg}     & double  & \optional    \\
+		$\bar{g} $         & \code{constr\_ug}     & double  & \optional   \\ \midrule
+		$ h $ & \code{constr\_expr\_h}    & \casadi~expression  & \optional   \\
+		$\underline{h} $    & \code{constr\_lh}     & double   & \optional   \\
+		$\bar{h} $         & \code{constr\_uh}     & double  & \optional   \\ \midrule
+		$ J\ind{sbx} $ & \code{constr\_Jsbx} & double & \optional  \\
+		$ J\ind{sbu} $ & \code{constr\_Jsbu} & double  & \optional \\
+		$ J\ind{sg} $ & \code{constr\_Jsg} & double & \optional  \\
+		$ J\ind{sbx} $ & \code{constr\_Jsh} & double  & \optional  \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
 \section{Terminal Constraints}
 \begin{table}[h]
 	\centering
-	\begin{tabular}{|c|c|c|}
+	\begin{tabular}{|c|c|c|c|}
 		\toprule
-		Mathematical Expression                    & string identifier & data type \\ \midrule
-		$J_{\textrm{bx}}$ & \code{constr\_Jbx\_e}    & double    \\
-		$\underline{x}\terminal $    & \code{constr\_lbx\_e}     & double    \\
-		$\bar{x}\terminal $         & \code{constr\_ubx\_e}     & double   \\ \midrule
-		$ C\terminal $ & \code{constr\_C\_e}    & double    \\
-		$\underline{g}\terminal $    & \code{constr\_lg}     & double    \\
-		$\bar{g}\terminal $         & \code{constr\_ug}     & double   \\ \midrule
-		$ h\terminal $ & \code{constr\_expr\_h\_e}    & \casadi~expression   \\
-		$\underline{h}\terminal $    & \code{constr\_lh\_e}     & double    \\
-		$\bar{h}\terminal $         & \code{constr\_uh\_e}     & double   \\ \midrule
-		$ J\ind{sbx} $ & \code{constr\_Jsbx} & double \\
-		$ J\ind{sg}\terminal $ & \code{constr\_Jsg\_e} & double \\
-		$ J\ind{sbx}\terminal $ & \code{constr\_Jsh\_e} & double \\
+		Mathematical Expression & string identifier & data type  & required \\ \midrule
+		$J_{\textrm{bx}}$ & \code{constr\_Jbx\_e}    & double   & \optional   \\
+		$\underline{x}\terminal $    & \code{constr\_lbx\_e}     & double  & \optional   \\
+		$\bar{x}\terminal $         & \code{constr\_ubx\_e}     & double   & \optional  \\ \midrule
+		$ C\terminal $ & \code{constr\_C\_e}    & double   & \optional   \\
+		$\underline{g}\terminal $    & \code{constr\_lg}     & double   & \optional   \\
+		$\bar{g}\terminal $         & \code{constr\_ug}     & double   & \optional  \\ \midrule
+		$ h\terminal $ & \code{constr\_expr\_h\_e}    & \casadi~expression   & \optional  \\
+		$\underline{h}\terminal $    & \code{constr\_lh\_e}     & double   & \optional   \\
+		$\bar{h}\terminal $         & \code{constr\_uh\_e}     & double  & \optional   \\ \midrule
+		$ J\ind{sbx} $ & \code{constr\_Jsbx} & double  & \optional \\
+		$ J\ind{sg}\terminal $ & \code{constr\_Jsg\_e} & double & \optional  \\
+		$ J\ind{sbx}\terminal $ & \code{constr\_Jsh\_e} & double  & \optional  \\
 		\bottomrule
 	\end{tabular}
 \end{table}
