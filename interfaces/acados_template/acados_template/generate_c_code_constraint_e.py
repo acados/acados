@@ -70,11 +70,6 @@ def generate_c_code_constraint_e( constraint ):
         else:
             nx = 0
 
-        if u is not None:
-            nu = u.size()[0]
-        else:
-            nu = 0
-
         if type(p) is list:
             # check that z is empty
             if len(p) == 0:
