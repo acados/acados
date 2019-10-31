@@ -54,7 +54,15 @@ Please choose one and proceed with the corresponding paragraph.
 - The interface is written in `MEX`
 - To get started
     - install `acados` as described above
-    - Octave users: provide a [`CasADi version`](https://web.casadi.org/get/) in `<acados_root>/external/casadi_octave/`. We recommend version 3.4.5. For Matlab, a `CasADi` version should be provided in `<acados_root>/external/casadi_matlab/`, however, this is done automatically when using the examples in the `getting_started` folder.
+    - Octave users: provide a [`CasADi version`](https://web.casadi.org/get/) in `<acados_root>/external/casadi_octave/`.
+      We recommend version 3.4.5. For Matlab, a `CasADi` version should be provided in `<acados_root>/external/casadi_matlab/`, however, this is done automatically when using the examples in the `getting_started` folder.
+      On Linux machines with Octave 4.4.1. or later this can be done as follows:
+      ```
+        cd external
+        wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.5/casadi-linux-octave-4.4.1-v3.4.5.tar.gz
+        mkdir -p casadi-octave
+        tar -xf casadi-linux-octave-4.4.1-v3.4.5.tar.gz -C casadi-octave
+        ```
     - Linux and MacOS users:
         - in a terminal navigate to `<acados_root>/examples/acados_matlab_octave/getting_started`
         - run `source env.sh` and start Matlab/Octave
