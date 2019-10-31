@@ -30,7 +30,7 @@ R_m = 18.15e-3
 K_m = 13.8e-3
 N_P = 5.0
 u_max = 48
-i_max = 155.0     # only for simulation
+i_max = 155.0          # only for simulation
 
 phi = 0.0
 
@@ -39,7 +39,7 @@ x0Start = nmp.array([0, 0])
 N = 2      
 Ts_sim = 125e-6
 
-# WARMSTART_ITERS = 200
+WARMSTART_ITERS = 200
 
 INPUT_REG = 1e-2
 
@@ -977,13 +977,13 @@ if FORMULATION == 4:
 nlp_con.p = nmp.array([w_val, 0.0, 0.0, tau_wal])
 
 # set QP solver
-ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-# ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
+# ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
 # ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
-# ra.solver_config.integrator_type = 'IRK'
-ra.solver_config.integrator_type = 'ERK'
-ra.solver_config.sim_method_num_stages = 2  # 1: RK1, 2: RK2, 4: RK4    
+ra.solver_config.integrator_type = 'IRK'
+# ra.solver_config.integrator_type = 'ERK'
+ra.solver_config.sim_method_num_stages = 1  # 1: RK1, 2: RK2, 4: RK4    
 
 # set prediction horizon
 ra.solver_config.tf = Tf
@@ -1065,8 +1065,8 @@ simXR[0,1] = x0Start[1]
 xvec = nmp.matrix([[x0Start[0]],[x0Start[1]]])
 
 # compute warm-start
-# for i in range(WARMSTART_ITERS):
-#     status = acados_solver.solve()
+for i in range(WARMSTART_ITERS):
+    status = acados_solver.solve()
 
 for i in range(Nsim):
     print("\n")
@@ -1076,6 +1076,7 @@ for i in range(Nsim):
 
     if status != 0:
         print('acados returned status {}. Exiting.'.format(status))
+        import pdb; pdb.set_trace()
 
     # get solution
     x0 = acados_solver.get(0, "x")
