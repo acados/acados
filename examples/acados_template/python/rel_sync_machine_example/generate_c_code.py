@@ -158,13 +158,13 @@ def export_voltage_sphere_con():
     constraint = acados_constraint()
 
     r = SX.sym('r', 2, 1)
-    constraint.con_h_expr = r[0]**2 + r[1]**2
+    constraint.con_phi_expr = r[0]**2 + r[1]**2
     constraint.con_r_expr = vertcat(u_d, u_q)
     constraint.x = x
     constraint.u = u
     constraint.r = r
     constraint.nr = 2
-    constraint.nh = 1
+    constraint.nphi = 1
     constraint.name = con_name
 
     return constraint
@@ -295,10 +295,9 @@ if FORMULATION == 1:
     nlp_dims.nh  = 1
 
 if FORMULATION == 2:
-    nlp_dims.ng  = 2
-    nlp_dims.npd  = 2
-    nlp_dims.nh  = 1
-    nlp_dims.nh_e = 0
+    nlp_dims.ng   = 2
+    nlp_dims.nr   = 2
+    nlp_dims.nphi = 1
 
 # nlp_dims.nbu  = 2
 # nlp_dims.ng   = 2
@@ -383,8 +382,8 @@ nlp_con.lbu = lbu
 nlp_con.ubu = ubu
 
 if FORMULATION > 0:
-    nlp_con.lh = nmp.array([-1.0e8])
-    nlp_con.uh = nmp.array([(u_max*sqrt(3)/2)**2])
+    nlp_con.lphi = nmp.array([-1.0e8])
+    nlp_con.uphi = nmp.array([(u_max*sqrt(3)/2)**2])
 
 nlp_con.x0 = nmp.array([0.0, -0.0])
 
@@ -395,15 +394,9 @@ if FORMULATION == 0 or FORMULATION == 2:
     nlp_con.C   = C
     nlp_con.lg  = lg
     nlp_con.ug  = ug
-    # nlp_con.C_e  = ...
-    # nlp_con.lg_e = ...
-    # nlp_con.ug_e = ...
 
 # setting parameters
 nlp_con.p = nmp.array([w_val, 0.0, 0.0])
-
-# set constants
-# ra.constants = []
 
 # set QP solver
 ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
