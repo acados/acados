@@ -255,7 +255,7 @@ test_file_name = 'test_data/generate_c_code_out_' + FORMULATION + '_' + QP_SOLVE
 
 if GENERATE_DATA:
     with open(test_file_name, 'w') as f:
-        json.dump({"simX": simX.tolist(), "simU": simU.tolist()}, f)
+        json.dump({"simX": simX.tolist(), "simU": simU.tolist()}, f, indent=4, sort_keys=True)
 else:
     with open(test_file_name, 'r') as f:
         test_data = json.load(f)
