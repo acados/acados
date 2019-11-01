@@ -64,10 +64,10 @@ def export_nonlinear_constraint():
     # voltage sphere
     constraint = acados_constraint()
 
-    constraint.expr = u
+    constraint.con_h_expr = u
     constraint.x = x
     constraint.u = u
-    constraint.nc = 1
+    constraint.nh = 1
     constraint.name = con_name
 
     return constraint
@@ -91,10 +91,10 @@ def export_terminal_nonlinear_constraint():
     # voltage sphere
     constraint = acados_constraint()
 
-    constraint.expr = x1
+    constraint.con_h_expr = x1
     constraint.x = x
     constraint.u = u
-    constraint.nc = 1
+    constraint.nh = 1
     constraint.name = con_name
 
     return constraint
@@ -182,15 +182,15 @@ nlp_cost.Vx_e = Vx_e
 nlp_cost.yref  = np.zeros((ny, ))
 nlp_cost.yref_e = np.zeros((ny_e, ))
 
-nlp_cost.zl = 500*np.ones((1, ))
-nlp_cost.Zl = 0*np.ones((1, 1))
-nlp_cost.zu = 500*np.ones((1, ))
-nlp_cost.Zu = 0*np.ones((1, 1))
+nlp_cost.zl = 500*np.ones((1,))
+nlp_cost.Zl = 0*np.ones((1,))
+nlp_cost.zu = 500*np.ones((1,))
+nlp_cost.Zu = 0*np.ones((1,))
 
-nlp_cost.zl_e = 5000*np.ones((1, ))
-nlp_cost.Zl_e = 0*np.ones((1, 1))
-nlp_cost.zu_e = 5000*np.ones((1, ))
-nlp_cost.Zu_e = 0*np.ones((1, 1))
+nlp_cost.zl_e = 5000*np.ones((1,))
+nlp_cost.Zl_e = 0*np.ones((1,))
+nlp_cost.zu_e = 5000*np.ones((1,))
+nlp_cost.Zu_e = 0*np.ones((1,))
 
 # setting bounds
 Fmax = 2.0
