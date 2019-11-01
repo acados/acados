@@ -580,6 +580,10 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     {
         model->nl_constr_phi_fun_jac = value;
     }
+    else if (!strcmp(field, "nl_constr_phi_fun"))
+    {
+        model->nl_constr_phi_fun_jac = value;
+    }
     else if (!strcmp(field, "nl_constr_r_fun_jac"))
     {
         model->nl_constr_r_fun_jac = value;
@@ -1205,8 +1209,85 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
 
 void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
-	printf("\nerror: ocp_nlp_constraints_bgp_compute_fun: not implemented yet\n");
-	exit(1);
+    ocp_nlp_constraints_bgp_dims *dims = dims_;
+    ocp_nlp_constraints_bgp_model *model = model_;
+    ocp_nlp_constraints_bgp_opts *opts = opts_;
+    ocp_nlp_constraints_bgp_memory *memory = memory_;
+    ocp_nlp_constraints_bgp_workspace *work = work_;
+
+    ocp_nlp_constraints_bgp_cast_workspace(config_, dims, opts_, work_);
+
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nz = dims->nz;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nphi = dims->nphi;
+    int ns = dims->ns;
+
+    ext_fun_arg_t ext_fun_type_in[3];
+    void *ext_fun_in[3];
+    ext_fun_arg_t ext_fun_type_out[3];
+    void *ext_fun_out[3];
+
+    // box
+    blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->tmp_ux, 0, &work->tmp_ni, 0);
+
+    // general linear
+    blasfeo_dgemv_t(nu+nx, ng, 1.0, memory->DCt, 0, 0, memory->tmp_ux, 0, 0.0, &work->tmp_ni, nb, &work->tmp_ni, nb);
+
+    // nonlinear
+    if (nphi > 0)
+    {
+		if(nz > 0)
+		{
+			// TODO
+			printf("\nerror: ocp_nlp_constraints_bgp_compute_fun: not implemented yet for nz>0\n");
+			exit(1);
+		}
+
+        struct blasfeo_dvec_args x_in;  // input x of external fun;
+        x_in.x = memory->tmp_ux;
+        x_in.xi = nu;
+
+        struct blasfeo_dvec_args u_in;  // input u of external fun;
+        u_in.x = memory->tmp_ux;
+        u_in.xi = 0;
+
+		// TODO tmp_z_alg !!!
+        struct blasfeo_dvec_args z_in;  // input z of external fun;
+        z_in.x = memory->z_alg;
+        z_in.xi = 0;
+
+        struct blasfeo_dvec_args fun_out;
+        fun_out.x = &work->tmp_ni;
+        fun_out.xi = nb + ng;
+
+		ext_fun_type_in[0] = BLASFEO_DVEC_ARGS;
+		ext_fun_in[0] = &x_in;
+		ext_fun_type_in[1] = BLASFEO_DVEC_ARGS;
+		ext_fun_in[1] = &u_in;
+		ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
+		ext_fun_in[2] = &z_in;
+
+		ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+		ext_fun_out[0] = &fun_out;  // fun: nphi
+
+		model->nl_constr_phi_fun->evaluate(model->nl_constr_phi_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+	}
+
+    blasfeo_daxpy(nb+ng+nphi, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
+    blasfeo_daxpy(nb+ng+nphi, -1.0, &model->d, nb+ng+nphi, &work->tmp_ni, 0, &memory->fun, nb+ng+nphi);
+
+    // soft
+    blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx, model->idxs, &memory->fun, 0);
+    blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nphi);
+
+    blasfeo_daxpy(2*ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nphi, &memory->fun, 2*nb+2*ng+2*nphi);
+
+    return;
+
 }
 
 
