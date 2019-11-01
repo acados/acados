@@ -1079,17 +1079,17 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
         fun_out.x = &work->tmp_ni;
         fun_out.xi = nb + ng;
 
-        struct blasfeo_dmat_args jac_out;
-        jac_out.A = memory->DCt;
-        jac_out.ai = 0;
-        jac_out.aj = ng;
+        struct blasfeo_dmat_args jac_tran_out;
+        jac_tran_out.A = memory->DCt;
+        jac_tran_out.ai = 0;
+        jac_tran_out.aj = ng;
 
-        struct blasfeo_dmat_args jac_z_out; // Jacobian dhdz treated separately
+        struct blasfeo_dmat_args jac_z_tran_out; // Jacobian dhdz treated separately
         if (nz > 0)
         { 
-            jac_z_out.A = &work->tmp_nz_nh;
-            jac_z_out.ai = 0;
-            jac_z_out.aj = 0;
+            jac_z_tran_out.A = &work->tmp_nz_nh;
+            jac_z_tran_out.ai = 0;
+            jac_z_tran_out.aj = 0;
         }
 
 		// TODO check that it is correct, as it prevents convergence !!!!!
@@ -1123,7 +1123,7 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
             ext_fun_out[0] = &fun_out;  // fun: nh
             ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
-            ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nh
+            ext_fun_out[1] = &jac_tran_out;  // jac': (nu+nx) * nh
             ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
             ext_fun_out[2] = &hess_out;  // hess*mult: (nu+nx) * (nu+nx)
 
@@ -1145,9 +1145,9 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
             ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
             ext_fun_out[0] = &fun_out;  // fun: nh
             ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
-            ext_fun_out[1] = &jac_out;  // jac': (nu+nx) * nh
+            ext_fun_out[1] = &jac_tran_out;  // jac': (nu+nx) * nh
 			ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
-			ext_fun_out[2] = &jac_z_out;  // jac': nz * nh
+			ext_fun_out[2] = &jac_z_tran_out;  // jac': nz * nh
 			
             model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
@@ -1162,14 +1162,9 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
 			// (dhdx + dhdz*dzdx)*(x - \bar{x}) +  
 			// (dhdu + dhdz*dzdu)*(u - \bar{u})  
 			
-			// TODO(andrea): check residual computation
 			// update DCt
-			// printf("memory->dzduxt=n");
-			// blasfeo_print_dmat(nu+nx, nh, memory->dzduxt, 0, 0);
 			blasfeo_dgemm_nn(nu+nx, nh, nz, 1.0, memory->dzduxt, 0, 0, &work->tmp_nz_nh, 0, 0, 0.0, &work->tmp_nv_nh, 0, 0, &work->tmp_nv_nh, 0, 0);
 		    blasfeo_dgead(nu+nx, nh, 1.0, &work->tmp_nv_nh, 0, 0, memory->DCt, ng, 0);	
-			// printf("tmp_nv_nh=\n");
-			// blasfeo_print_dmat(nu+nx, nh, &work->tmp_nv_nh, 0, 0);
 			// update memory->fun	
 			blasfeo_dgemv_t(nu+nx, nh, -1.0, &work->tmp_nv_nh, 0, 0, memory->ux, 0, 1.0, &memory->fun, 0, &memory->fun, 0);
         }
