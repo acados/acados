@@ -373,12 +373,6 @@ void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *fi
     {
         ocp_nlp_constraints_bgp_get_ng(config_, dims_, value);
     }
-    // TODO(andrea): this is necessary due to non-modularity in ocp_nlp_common...
-    else if (!strcmp(field, "nh"))
-    {
-        // ocp_nlp_constraints_bgp_get_nphi(config_, dims_, value);
-        *value = 0;
-    }
     else if (!strcmp(field, "nphi"))
     {
         ocp_nlp_constraints_bgp_get_nphi(config_, dims_, value);
@@ -386,11 +380,6 @@ void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *fi
     else if (!strcmp(field, "ns"))
     {
         ocp_nlp_constraints_bgp_get_ns(config_, dims_, value);
-    }
-    // TODO(andrea): this is necessary due to non-modularity in ocp_nlp_common...
-    else if (!strcmp(field, "nsh"))
-    {
-        *value = 0;
     }
     else if (!strcmp(field, "nsphi"))
     {
@@ -403,6 +392,20 @@ void ocp_nlp_constraints_bgp_dims_get(void *config_, void *dims_, const char *fi
     else if (!strcmp(field, "nr"))
     {
         ocp_nlp_constraints_bgp_get_nr(config_, dims_, value);
+    }
+    else if (!strcmp(field, "ng_qp_solver"))
+    {
+        int ng, nphi;
+        ocp_nlp_constraints_bgp_get_ng(config_, dims_, &ng);
+        ocp_nlp_constraints_bgp_get_nphi(config_, dims_, &nphi);
+        *value = ng + nphi;
+    }
+    else if (!strcmp(field, "nsg_qp_solver"))
+    {
+        int nsg, nsphi;
+        ocp_nlp_constraints_bgp_get_nsg(config_, dims_, &nsg);
+        ocp_nlp_constraints_bgp_get_nsphi(config_, dims_, &nsphi);
+        *value = nsg + nsphi;
     }
     else
     {

@@ -398,9 +398,19 @@ void ocp_nlp_constraints_bgh_dims_get(void *config_, void *dims_, const char *fi
     {
         ocp_nlp_constraints_bgh_get_nsh(config_, dims_, value);
     }
-    else if (!strcmp(field, "nsphi"))
+    else if (!strcmp(field, "ng_qp_solver"))
     {
-        *value = 0;
+        int ng, nh;
+        ocp_nlp_constraints_bgh_get_ng(config_, dims_, &ng);
+        ocp_nlp_constraints_bgh_get_nh(config_, dims_, &nh);
+        *value = ng + nh;
+    }
+    else if (!strcmp(field, "nsg_qp_solver"))
+    {
+        int nsg, nsh;
+        ocp_nlp_constraints_bgh_get_nsg(config_, dims_, &nsg);
+        ocp_nlp_constraints_bgh_get_nsh(config_, dims_, &nsh);
+        *value = nsg + nsh;
     }
     else
     {
