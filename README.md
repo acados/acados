@@ -52,6 +52,7 @@ Please choose one and proceed with the corresponding paragraph.
 
 ### `MATLAB` and `Octave` interface
 - The interface is written in `MEX`
+- It deals with the problem formulation described in [this PDF](https://github.com/acados/acados/tree/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf)
 - To get started
     - install `acados` as described above
     - Octave users: provide a [`CasADi version`](https://web.casadi.org/get/) in `<acados_root>/external/casadi_octave/`.
