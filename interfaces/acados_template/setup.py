@@ -55,10 +55,6 @@ setup(name='acados_template',
       'casadi>=3.4'
    ],
    package_data={'': [
-       'c_templates/main.in.c',
-       'c_templates/Makefile.in',
-       'c_templates/model.in.h',
-       'c_templates/main.in.h',
        'c_templates_tera/main.in.c',
        'c_templates_tera/Makefile.in',
        'c_templates_tera/model.in.h',
