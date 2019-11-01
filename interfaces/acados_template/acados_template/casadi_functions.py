@@ -56,7 +56,7 @@ class acados_constraint():
         self.p = []              #: CasADi variable describing parameters in the constraints
         self.nh = 0              #: dimension of image of h
         self.nphi = 0            #: dimension of image of h
-        self.nr = None           #: dimension of image of nonlinear residuals 
+        self.nr = 0              #: dimension of image of nonlinear residuals 
         self.name = None         #: name associated with the function
 
 class acados_cost():

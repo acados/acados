@@ -52,9 +52,6 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
     
-    # if acados_ocp.con_p.name is not None and acados_ocp.con_h.name is None:
-    #     raise Exception('h constraint is missing!')
-
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
         # nonlinear part of nonlinear constraints 
         generate_c_code_constraint(acados_ocp.con_phi)
@@ -65,7 +62,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         # nonlinear part of nonlinear constraints 
         generate_c_code_constraint_e(acados_ocp.con_phi_e)
     elif acados_ocp.constraints.constr_type_e  == 'BGH' and acados_ocp.dims.nh_e > 0: 
-        generate_c_code_constraint(acados_ocp.con_h_e)
+        generate_c_code_constraint_e(acados_ocp.con_h_e)
     
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         generate_c_code_nls_cost(acados_ocp.cost_r)
