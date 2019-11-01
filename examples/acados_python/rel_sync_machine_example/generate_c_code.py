@@ -537,4 +537,8 @@ ax.set_xlim([-1.5*u_max, 1.5*u_max])
 ax.set_ylim([-1.5*u_max, 1.5*u_max])
 circle = plt.Circle((0, 0), u_max*nmp.sqrt(3)/2, color='red', fill=False)
 ax.add_artist(circle)
-plt.show()
+# avoid plotting when running on Travis
+if os.environ.get('ACADOS_ON_TRAVIS') is None: 
+    plt.show()
+
+

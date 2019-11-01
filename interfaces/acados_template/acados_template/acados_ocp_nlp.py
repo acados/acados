@@ -1385,6 +1385,11 @@ class ocp_nlp_solver_options:
         self.__qp_solver_tol_eq   = None                      #: QP solver equality tolerance
         self.__qp_solver_tol_ineq = None                      #: QP solver inequality
         self.__qp_solver_tol_comp = None                      #: QP solver complementarity
+        self.__nlp_solver_tol_stat = None                     #: NLP solver stationarity tolerance
+        self.__nlp_solver_tol_eq   = None                     #: NLP solver equality tolerance
+        self.__nlp_solver_tol_ineq = None                     #: NLP solver inequality
+        self.__nlp_solver_tol_comp = None                     #: NLP solver complementarity
+        self.__nlp_solver_max_iter = None                     #: NLP solver maximum number of iterations
 
     @property
     def qp_solver(self):
@@ -1433,6 +1438,26 @@ class ocp_nlp_solver_options:
     @property
     def qp_solver_tol_comp(self):
         return self.__qp_solver_tol_comp
+
+    @property
+    def nlp_solver_tol_stat(self):
+        return self.__nlp_solver_tol_stat
+
+    @property
+    def nlp_solver_tol_eq(self):
+        return self.__nlp_solver_tol_eq
+
+    @property
+    def nlp_solver_tol_ineq(self):
+        return self.__nlp_solver_tol_ineq
+
+    @property
+    def nlp_solver_tol_comp(self):
+        return self.__nlp_solver_tol_comp
+
+    @property
+    def nlp_solver_max_iter(self):
+        return self.__nlp_solver_max_iter
 
     @property
     def tf(self):
@@ -1546,12 +1571,45 @@ class ocp_nlp_solver_options:
         else:
             raise Exception('Invalid qp_solver_tol_ineq value. qp_solver_tol_ineq must be a positive float. Exiting')
 
+    @qp_solver_tol_comp.setter
     def qp_solver_tol_comp(self, qp_solver_tol_comp):
 
         if type(qp_solver_tol_comp) == float and qp_solver_tol_comp > 0:
             self.__qp_solver_tol_comp = qp_solver_tol_comp
         else:
             raise Exception('Invalid qp_solver_tol_comp value. qp_solver_tol_comp must be a positive float. Exiting')
+
+    @nlp_solver_tol_stat.setter
+    def nlp_solver_tol_stat(self, nlp_solver_tol_stat):
+
+        if type(nlp_solver_tol_stat) == float and nlp_solver_tol_stat > 0:
+            self.__nlp_solver_tol_stat = nlp_solver_tol_stat
+        else:
+            raise Exception('Invalid nlp_solver_tol_stat value. nlp_solver_tol_stat must be a positive float. Exiting')
+
+    @nlp_solver_tol_eq.setter
+    def nlp_solver_tol_eq(self, nlp_solver_tol_eq):
+
+        if type(nlp_solver_tol_eq) == float and nlp_solver_tol_eq > 0:
+            self.__nlp_solver_tol_eq = nlp_solver_tol_eq
+        else:
+            raise Exception('Invalid nlp_solver_tol_eq value. nlp_solver_tol_eq must be a positive float. Exiting')
+
+    @nlp_solver_tol_ineq.setter
+    def nlp_solver_tol_ineq(self, nlp_solver_tol_ineq):
+
+        if type(nlp_solver_tol_ineq) == float and nlp_solver_tol_ineq > 0:
+            self.__nlp_solver_tol_ineq = nlp_solver_tol_ineq
+        else:
+            raise Exception('Invalid nlp_solver_tol_ineq value. nlp_solver_tol_ineq must be a positive float. Exiting')
+
+    @nlp_solver_max_iter.setter
+    def nlp_solver_max_iter(self, nlp_solver_max_iter):
+
+        if type(nlp_solver_max_iter) == int and nlp_solver_max_iter > 0:
+            self.__nlp_solver_max_iter = nlp_solver_max_iter
+        else:
+            raise Exception('Invalid nlp_solver_max_iter value. nlp_solver_max_iter must be a positive int. Exiting')
 
     def set(self, attr, value):
         setattr(self, attr, value)

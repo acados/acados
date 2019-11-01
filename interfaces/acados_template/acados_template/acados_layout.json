@@ -536,6 +536,9 @@
         "nlp_solver_type": [
             "str"
         ],
+        "nlp_solver_step_length": [
+            "float"
+        ],
         "qp_solver": [
             "str"
         ],
@@ -546,6 +549,36 @@
             "int"
         ],
         "sim_method_num_steps": [
+            "int"
+        ],
+        "sim_method_newton_iter": [
+            "int"
+        ],
+        "qp_solver_tol_stat": [
+            "float"
+        ],
+        "qp_solver_tol_eq": [
+            "float"
+        ],
+        "qp_solver_tol_ineq": [
+            "float"
+        ],
+        "qp_solver_tol_comp": [
+            "float"
+        ],
+        "nlp_solver_tol_stat": [
+            "float"
+        ],
+        "nlp_solver_tol_eq": [
+            "float"
+        ],
+        "nlp_solver_tol_ineq": [
+            "float"
+        ],
+        "nlp_solver_tol_comp": [
+            "float"
+        ],
+        "nlp_solver_max_iter": [
             "int"
         ]
     }

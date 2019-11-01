@@ -291,5 +291,7 @@ plt.plot(t, simX[:,1])
 plt.ylabel('x')
 plt.xlabel('t')
 plt.grid(True)
-plt.show()
+# avoid plotting when running on Travis
+if os.environ.get('ACADOS_ON_TRAVIS') is None: 
+    plt.show()
 

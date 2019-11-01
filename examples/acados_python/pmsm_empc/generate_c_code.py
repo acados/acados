@@ -23,6 +23,7 @@ i_q_ref =    10
 w_val = 2000.0          # do not change in this script, sometimes the values below calculate with a fix w_val = 2000 1/S
 tau_wal = 10.0 
 
+
 # constants
 L_d = 107e-6
 L_q = 150e-6
@@ -562,13 +563,13 @@ def export_torquelineEnd_pd():
 #     return constraint
 
 # create render arguments
-ra = acados_ocp_nlp()
+ocp = acados_ocp_nlp()
 
 # export model
 model = export_ode_model()
 
 # set model_name
-ra.model = model
+ocp.model = model
 
 # export constraint description
 # if FORMULATION == 1:
@@ -602,7 +603,7 @@ ny_e = nx
 Tf = N*Ts
 
 # set ocp_nlp_dimensions
-nlp_dims = ra.dims
+nlp_dims = ocp.dims
 nlp_dims.nx = nx
 nlp_dims.nu = nu
 nlp_dims.np = np
@@ -682,7 +683,7 @@ nlp_dims.nbx_e = 0
 nlp_dims.N = N
 
 # set weighting matrices
-nlp_cost = ra.cost
+nlp_cost = ocp.cost
 
 Q = nmp.eye(nx)
 Q[0,0] = wd*Weight_TUNING*Tf/N
@@ -746,7 +747,7 @@ lge = res["lge"]
 uge = res["uge"]
 
 # setting bounds
-nlp_con = ra.constraints
+nlp_con = ocp.constraints
 
 if FORMULATION == 0: 
     # setting general constraints --> lg <= D*u + C*u <= ug
@@ -977,22 +978,27 @@ if FORMULATION == 4:
 nlp_con.p = nmp.array([w_val, 0.0, 0.0, tau_wal])
 
 # set QP solver
-# ra.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ra.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
-# ra.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
-ra.solver_options.hessian_approx = 'GAUSS_NEWTON'
-ra.solver_options.integrator_type = 'IRK'
-# ra.solver_options.integrator_type = 'ERK'
-ra.solver_options.sim_method_num_stages = 1  # 1: RK1, 2: RK2, 4: RK4    
+# ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
+# ocp.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+ocp.solver_options.integrator_type = 'IRK'
+# ocp.solver_options.integrator_type = 'ERK'
+ocp.solver_options.sim_method_num_stages = 1  # 1: RK1, 2: RK2, 4: RK4    
+
+# ocp.solver_options.qp_solver_tol_stat = 1e-4
+ocp.solver_options.qp_solver_tol_eq = 1e-4
+ocp.solver_options.qp_solver_tol_ineq = 1e-4
+ocp.solver_options.qp_solver_tol_comp = 1e-4
 
 # set prediction horizon
-ra.solver_options.tf = Tf
-ra.solver_options.nlp_solver_type = 'SQP_RTI'
-# ra.solver_options.nlp_solver_type = 'SQP'
+ocp.solver_options.tf = Tf
+ocp.solver_options.nlp_solver_type = 'SQP_RTI'
+# ocp.solver_options.nlp_solver_type = 'SQP'
 
 # set header path
-ra.acados_include_path = '../../../../include'
-ra.acados_lib_path = '../../../../lib'
+ocp.acados_include_path = '../../../../include'
+ocp.acados_lib_path = '../../../../lib'
 
 file_name = 'acados_ocp.json'
 
@@ -1000,37 +1006,37 @@ file_name = 'acados_ocp.json'
 
 if CODE_GEN == 1:
     if FORMULATION == 0:
-        acados_solver = generate_solver(ra, json_file = file_name)
+        acados_solver = generate_solver(ocp, json_file = file_name)
     # if FORMULATION == 1:
-    #     ra.con_h = constraint_nltorqueline
-    #     ra.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ra, json_file = file_name)
+    #     ocp.con_h = constraint_nltorqueline
+    #     ocp.con_h_e = constraint_nltorquelineEnd
+    #     acados_solver = generate_solver(ocp, json_file = file_name)
     # if FORMULATION == 2:
-    #     ra.con_h = constraint_nltorqueline
-    #     ra.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ra, json_file = file_name)
+    #     ocp.con_h = constraint_nltorqueline
+    #     ocp.con_h_e = constraint_nltorquelineEnd
+    #     acados_solver = generate_solver(ocp, json_file = file_name)
     # if FORMULATION == 3:
-    #     ra.con_h = constraint_nltorqueline
-    #     ra.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ra, json_file = file_name)
+    #     ocp.con_h = constraint_nltorqueline
+    #     ocp.con_h_e = constraint_nltorquelineEnd
+    #     acados_solver = generate_solver(ocp, json_file = file_name)
     if FORMULATION == 4:
-        ra.con_phi = constraint_nltorqueline
-        ra.con_phi_e = constraint_nltorquelineEnd
+        ocp.con_phi = constraint_nltorqueline
+        ocp.con_phi_e = constraint_nltorquelineEnd
         nlp_con.constr_type = 'BGP'
         nlp_con.constr_type_e = 'BGP'
-        acados_solver = generate_solver(ra, json_file = file_name)
+        acados_solver = generate_solver(ocp, json_file = file_name)
     # if FORMULATION == 5:
-    #     ra.con_h = constraint_nltorqueline
-    #     ra.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ra, json_file = file_name)
+    #     ocp.con_h = constraint_nltorqueline
+    #     ocp.con_h_e = constraint_nltorquelineEnd
+    #     acados_solver = generate_solver(ocp, json_file = file_name)
     # if FORMULATION == 6:
-    #     ra.con_h = constraint_nltorqueline
-    #     ra.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ra, json_file = file_name)
+    #     ocp.con_h = constraint_nltorqueline
+    #     ocp.con_h_e = constraint_nltorquelineEnd
+    #     acados_solver = generate_solver(ocp, json_file = file_name)
     # if FORMULATION == 7:
-    #     ra.con_h = constraint_nltorqueline
-    #     ra.con_h_e = constraint_nltorquelineEnd
-    #     acados_solver = generate_solver(ra, json_file = file_name)
+    #     ocp.con_h = constraint_nltorqueline
+    #     ocp.con_h_e = constraint_nltorquelineEnd
+    #     acados_solver = generate_solver(ocp, json_file = file_name)
 
 if COMPILE == 1:
     # make 
@@ -1231,4 +1237,6 @@ plt.xlabel('x_d')
 plt.ylabel('x_q')
 plt.grid(True)
 
-plt.show()
+# avoid plotting when running on Travis
+if os.environ.get('ACADOS_ON_TRAVIS') is None: 
+    plt.show()

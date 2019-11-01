@@ -204,5 +204,7 @@ plt.plot(t, simX[:,1])
 plt.ylabel('theta')
 plt.xlabel('t')
 plt.grid(True)
-plt.show()
+# avoid plotting when running on Travis
+if os.environ.get('ACADOS_ON_TRAVIS') is None: 
+    plt.show()
 
