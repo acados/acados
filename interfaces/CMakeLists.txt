@@ -51,8 +51,5 @@ add_test(NAME python_test_ocp
         python main_test.py)
 add_test(NAME python_examples 
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_example
-        python generate_c_code.py
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/soft_constraints
-        python generate_c_code.py
-        )
+        python generate_c_code.py)
 endif()
