@@ -1156,7 +1156,7 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
                     0, 0, &work->tmp_nr_nphi_nr, nr * i, 0, 0.0, 
                     &work->tmp_nv_nr, 0, 0, &work->tmp_nv_nr, 0, 0);
 
-            blasfeo_dgemm_nt(nv, nv, nr, 1.0, &work->tmp_nv_nr, 0, 0,
+            blasfeo_dsyrk_ln(nv, nr, 1.0, &work->tmp_nv_nr, 0, 0,
                     &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq,
                     0, 0, memory->RSQrq, 0, 0);
         }
