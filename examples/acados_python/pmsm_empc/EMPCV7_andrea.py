@@ -991,10 +991,8 @@ ra.solver_config.nlp_solver_type = 'SQP_RTI'
 # ra.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
-# ra.acados_include_path = '/mnt/c/Austauch/projects/SCQPAndrea/acados/include'
-# ra.acados_lib_path = '/mnt/c/Austauch/projects/SCQPAndrea/acados/lib'
-ra.acados_include_path = '~/acados/include'
-ra.acados_lib_path = '~/acados/lib'
+ra.acados_include_path = '../../../../include'
+ra.acados_lib_path = '../../../../lib'
 
 file_name = 'acados_ocp.json'
 

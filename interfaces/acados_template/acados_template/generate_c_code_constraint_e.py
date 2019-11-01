@@ -47,7 +47,6 @@ def generate_c_code_constraint_e( constraint ):
     # load constraint variables and expression
     x = constraint.x
     r = constraint.r
-    z = constraint.z
     p = constraint.p
     nh = constraint.nh 
     nphi = constraint.nphi 
@@ -71,7 +70,7 @@ def generate_c_code_constraint_e( constraint ):
             nx = 0
 
         if type(p) is list:
-            # check that z is empty
+            # check that p is empty
             if len(p) == 0:
                 np = 0
                 p = SX.sym('p', 0, 0)
@@ -80,24 +79,17 @@ def generate_c_code_constraint_e( constraint ):
         else:
             np = p.size()[0]
 
-        if type(z) is list:
-            # check that z is empty
-            if len(z) == 0:
-                nz = 0
-                z = SX.sym('z', 0, 0)
-            else:
-                raise Exception('z is a non-empty list. It should be either an empty list or an SX object.')
-        else:
-            nz = z.size()[0]
         # create dummy u
         u = SX.sym('u', 0, 0)
+        # create dummy r
+        z = SX.sym('z', 0, 0)
         # set up functions to be exported
         fun_name = con_name + '_h_e_constraint'
         if nr == 0: # BGH constraint
             con_h_expr = constraint.con_h_expr
             jac_x = jacobian(con_h_expr, x);
             jac_z = jacobian(con_h_expr, z);
-            constraint_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_h_expr, transpose(jac_x)])
+            constraint_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_h_expr, transpose(jac_x), transpose(jac_z)])
 
             # generate C code
             if not os.path.exists('c_generated_code'):
@@ -120,12 +112,13 @@ def generate_c_code_constraint_e( constraint ):
             con_phi_expr_x = substitute(con_phi_expr, r, con_r_expr)
             jac_x = jacobian(con_phi_expr_x, x);
             jac_u = jacobian(con_phi_expr_x, u);
+            jac_z = jacobian(con_phi_expr_x, z);
 
             hess = hessian(con_phi_expr[0], r)[0]
             for i in range(1, nh):
                 hess = vertcat(hess, hessian(con_phi_expr[i], r)[0])
 
-            constraint_fun_jac_tran_hess = Function(fun_name, [x, u, z, p], [con_phi_expr_x, transpose(jac_x), hess])
+            constraint_fun_jac_tran_hess = Function(fun_name, [x, u, z, p], [con_phi_expr_x, transpose(jac_x), transpose(jac_z), hess])
 
             # generate C code
             if not os.path.exists('c_generated_code'):

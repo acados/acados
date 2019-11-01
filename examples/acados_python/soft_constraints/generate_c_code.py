@@ -38,8 +38,66 @@ import numpy as np
 import scipy.linalg
 from ctypes import *
 
-FORMULATION = 'NLS' # 'LS'
-# FORMULATION = 'LS' # 'LS'
+FORMULATION = 2 # 0 for linear soft bounds, 
+            # 1 for equivalent nonlinear soft constraint
+            # 2 for equivalent nonlinear soft constraint + 
+            # terminal soft state constraint
+
+xmax = 1.0
+
+def export_nonlinear_constraint():
+
+    con_name = 'nl_con'
+
+    # set up states & controls
+    x1      = SX.sym('x1')
+    theta   = SX.sym('theta')
+    v1      = SX.sym('v1')
+    dtheta  = SX.sym('dtheta')
+    
+    x = vertcat(x1, v1, theta, dtheta)
+
+    # controls
+    F = SX.sym('F')
+    u = vertcat(F)
+
+    # voltage sphere
+    constraint = acados_constraint()
+
+    constraint.con_h_expr = u
+    constraint.x = x
+    constraint.u = u
+    constraint.nh = 1
+    constraint.name = con_name
+
+    return constraint
+
+def export_terminal_nonlinear_constraint():
+
+    con_name = 'nl_state_con'
+
+    # set up states & controls
+    x1      = SX.sym('x1')
+    theta   = SX.sym('theta')
+    v1      = SX.sym('v1')
+    dtheta  = SX.sym('dtheta')
+    
+    x = vertcat(x1, v1, theta, dtheta)
+
+    # controls
+    F = SX.sym('F')
+    u = vertcat(F)
+
+    # voltage sphere
+    constraint = acados_constraint()
+
+    constraint.con_h_expr = x1
+    constraint.x = x
+    constraint.u = u
+    constraint.nh = 1
+    constraint.name = con_name
+
+    return constraint
 
 # create render arguments
 ocp = acados_ocp_nlp()
@@ -63,22 +121,31 @@ nlp_dims.nx  = nx
 nlp_dims.ny  = ny 
 nlp_dims.ny_e = ny_e 
 nlp_dims.nbx = 0
-nlp_dims.nbu = nu 
 nlp_dims.nu  = model.u.size()[0]
+nlp_dims.ns = nu 
 nlp_dims.N   = N
+
+if FORMULATION == 1:
+    nlp_dims.nh   = model.u.size()[0]
+    nlp_dims.nsh  = model.u.size()[0] 
+    nlp_dims.nbu  = 0 
+    nlp_dims.nsbu = 0 
+elif FORMULATION == 0:
+    nlp_dims.nh   = 0
+    nlp_dims.nsh  = 0
+    nlp_dims.nbu  = model.u.size()[0]
+    nlp_dims.nsbu = model.u.size()[0]
+elif FORMULATION == 2:
+    nlp_dims.ns_e = 1
+    nlp_dims.nh    = model.u.size()[0]
+    nlp_dims.nsh   = model.u.size()[0] 
+    nlp_dims.nh_e  = 1
+    nlp_dims.nsh_e = 1 
+    nlp_dims.nbu   = 0 
+    nlp_dims.nsbu  = 0 
 
 # set weighting matrices
 nlp_cost = ocp.cost
-
-if FORMULATION == 'LS':
-    nlp_cost.cost_type = 'LINEAR_LS'
-    nlp_cost.cost_type_e = 'LINEAR_LS'
-elif FORMULATION == 'NLS':
-    nlp_cost.cost_type = 'NONLINEAR_LS'
-    nlp_cost.cost_type_e = 'NONLINEAR_LS'
-else:
-    raise Exception('Unknown FORMULATION. Possible values are \'LS\' and \'NLS\'.')
-
 Q = np.eye(4)
 Q[0,0] = 1e0
 Q[1,1] = 1e2
@@ -88,14 +155,8 @@ Q[3,3] = 1e-2
 R = np.eye(1)
 R[0,0] = 1e0
 
-if FORMULATION == 'NLS':
-    nlp_cost.W = scipy.linalg.block_diag(R, Q) 
-else:
-    nlp_cost.W = scipy.linalg.block_diag(Q, R) 
+nlp_cost.W = scipy.linalg.block_diag(Q, R) 
 
-nlp_cost.W_e = Q 
-
-# TODO(andrea): avoid this when using 'NLS'
 Vx = np.zeros((ny, nx))
 Vx[0,0] = 1.0
 Vx[1,1] = 1.0
@@ -108,6 +169,7 @@ Vu = np.zeros((ny, nu))
 Vu[4,0] = 1.0
 nlp_cost.Vu = Vu
 
+nlp_cost.W_e = Q 
 
 Vx_e = np.zeros((ny_e, nx))
 Vx_e[0,0] = 1.0
@@ -116,51 +178,74 @@ Vx_e[2,2] = 1.0
 Vx_e[3,3] = 1.0
 
 nlp_cost.Vx_e = Vx_e
-if FORMULATION == 'NLS':
-    x = SX.sym('x', 4, 1)
-    u = SX.sym('u', 1, 1)
-    ocp.cost_r.expr = vertcat(u, x) 
-    ocp.cost_r.x = x 
-    ocp.cost_r.u = u 
-    ocp.cost_r.name = 'lin_res' 
-    ocp.cost_r.ny = nx + nu 
-
-    ocp.cost_r_e.expr = x
-    ocp.cost_r_e.x = x 
-    ocp.cost_r_e.name = 'lin_res' 
-    ocp.cost_r_e.ny = nx 
-
 
 nlp_cost.yref  = np.zeros((ny, ))
 nlp_cost.yref_e = np.zeros((ny_e, ))
 
+nlp_cost.zl = 500*np.ones((1,))
+nlp_cost.Zl = 0*np.ones((1,))
+nlp_cost.zu = 500*np.ones((1,))
+nlp_cost.Zu = 0*np.ones((1,))
+
+nlp_cost.zl_e = 5000*np.ones((1,))
+nlp_cost.Zl_e = 0*np.ones((1,))
+nlp_cost.zu_e = 5000*np.ones((1,))
+nlp_cost.Zu_e = 0*np.ones((1,))
+
 # setting bounds
 Fmax = 2.0
 nlp_con = ocp.constraints
-nlp_con.lbu = np.array([-Fmax])
-nlp_con.ubu = np.array([+Fmax])
 nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
-# nlp_con.x0 = np.array([0.0, 0.5, 0.0, 0.0])
-nlp_con.idxbu = np.array([0])
+
+con_h = export_nonlinear_constraint()
+con_h_e = export_terminal_nonlinear_constraint()
+if FORMULATION == 1:
+    nlp_con.lh = np.array([-Fmax])
+    nlp_con.uh = np.array([+Fmax])
+    nlp_con.lsh = 0*np.array([-Fmax])
+    nlp_con.ush = 0*np.array([+Fmax])
+    nlp_con.idxsh = np.array([0])
+elif FORMULATION == 0:
+    nlp_con.lbu = np.array([-Fmax])
+    nlp_con.ubu = np.array([+Fmax])
+    nlp_con.lsbu = 0*np.array([-Fmax])
+    nlp_con.usbu = 0*np.array([+Fmax])
+    nlp_con.idxbu = np.array([0])
+    nlp_con.idxsbu = np.array([0])
+elif FORMULATION == 2:
+    nlp_con.lh = np.array([-Fmax])
+    nlp_con.uh = np.array([+Fmax])
+    nlp_con.lsh = 0*np.array([-Fmax])
+    nlp_con.ush = 0*np.array([+Fmax])
+    nlp_con.idxsh = np.array([0])
+    nlp_con.lh_e = np.array([-xmax])
+    nlp_con.uh_e = np.array([+xmax])
+    nlp_con.lsh_e = 0*np.array([-Fmax])
+    nlp_con.ush_e = 0*np.array([+Fmax])
+    nlp_con.idxsh_e = np.array([0])
 
 # set QP solver
-# ocp.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ocp.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
+ocp.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
 ocp.solver_config.hessian_approx = 'GAUSS_NEWTON'
 ocp.solver_config.integrator_type = 'ERK'
 
 # set prediction horizon
 ocp.solver_config.tf = Tf
-# ocp.solver_config.nlp_solver_type = 'SQP'
-ocp.solver_config.nlp_solver_type = 'SQP_RTI'
+ocp.solver_config.nlp_solver_type = 'SQP'
 
 # set header path
-# ocp.acados_include_path  = '/usr/local/include'
-# ocp.acados_lib_path      = '/usr/local/lib'
-ocp.acados_include_path  = '~/acados/include'
-ocp.acados_lib_path      = '~/acados/lib'
+ocp.acados_include_path  = '../../../../include'
+ocp.acados_lib_path      = '../../../../lib'
 
-acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
+if FORMULATION == 1:
+    ocp.con_h = con_h
+    acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
+elif FORMULATION == 0:
+    acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
+elif FORMULATION == 2:
+    ocp.con_h = con_h
+    ocp.con_h_e = con_h_e
+    acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
 
 Nsim = 100
 
@@ -186,11 +271,6 @@ for i in range(Nsim):
     acados_solver.set(0, "lbx", x0)
     acados_solver.set(0, "ubx", x0)
 
-    # update reference
-    for j in range(N):
-        acados_solver.set(j, "yref", np.array([0, 0, 0, 0, 0]))
-    acados_solver.set(N, "yref", np.array([0, 0, 0, 0]))
-
 # plot results
 import matplotlib
 import matplotlib.pyplot as plt
@@ -204,6 +284,11 @@ plt.grid(True)
 plt.subplot(2, 1, 2)
 plt.plot(t, simX[:,1])
 plt.ylabel('theta')
+plt.xlabel('t')
+plt.grid(True)
+plt.subplot(3, 1, 3)
+plt.plot(t, simX[:,1])
+plt.ylabel('x')
 plt.xlabel('t')
 plt.grid(True)
 plt.show()

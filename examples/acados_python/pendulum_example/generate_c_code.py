@@ -37,67 +37,9 @@ from export_ode_model import *
 import numpy as np
 import scipy.linalg
 from ctypes import *
-import json
-import argparse
 
-# set to 'True' to generate test data
-GENERATE_DATA = True
-LOCAL_TEST = False
-TEST_TOL = 1e-8
-
-if LOCAL_TEST is True:
-    FORMULATION = 'LS'
-    SOLVER_TYPE = 'SQP_RTI'
-    QP_SOLVER = 'FULL_CONDENSING_QPOASES'
-    INTEGRATOR_TYPE = 'IRK'
-else:
-    parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
-    parser.add_argument('--FORMULATION', dest='FORMULATION', 
-                        default='LS',
-                        help='FORMULATION: linear least-squares (LS) or nonlinear \
-                                least-squares (NLS) (default: LS)')
-
-    parser.add_argument('--QP_SOLVER', dest='QP_SOLVER', 
-                        default='PARTIAL_CONDENSING_HPIPM',
-                        help='QP_SOLVER: PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_HPIPM, ' \
-                                'FULL_CONDENSING_HPIPM (default: PARTIAL_CONDENSING_HPIPM)')
-
-    parser.add_argument('--INTEGRATOR_TYPE', dest='INTEGRATOR_TYPE', 
-                        default='ERK',
-                        help='INTEGRATOR_TYPE: explicit (ERK) or implicit (IRK) ' \
-                                ' Runge-Kutta (default: ERK)')
-
-    parser.add_argument('--SOLVER_TYPE', dest='SOLVER_TYPE', 
-                        default='SQP_RTI',
-                        help='SOLVER_TYPE: (full step) sequential quadratic programming (SQP) or ' \
-                                ' real-time iteration (SQP-RTI) (default: SQP-RTI)')
-
-
-    args = parser.parse_args()
-
-    FORMULATION = args.FORMULATION
-    FORMULATION_values = ['LS', 'NLS']
-    if FORMULATION not in FORMULATION_values:
-        raise Exception('Invalid unit test value {} for parameter FORMULATION. Possible values are' \
-                ' {}. Exiting.'.format(FORMULATION, FORMULATION_values))
-
-    QP_SOLVER = args.QP_SOLVER
-    QP_SOLVER_values = ['PARTIAL_CONDENSING_HPIPM', 'FULL_CONDENSING_HPIPM', 'FULL_CONDENSING_QPOASES']
-    if QP_SOLVER not in QP_SOLVER_values:
-        raise Exception('Invalid unit test value {} for parameter QP_SOLVER. Possible values are' \
-                ' {}. Exiting.'.format(QP_SOLVER, QP_SOLVER_values))
-
-    INTEGRATOR_TYPE = args.INTEGRATOR_TYPE
-    INTEGRATOR_TYPE_values = ['ERK', 'IRK']
-    if INTEGRATOR_TYPE not in INTEGRATOR_TYPE:
-        raise Exception('Invalid unit test value {} for parameter INTEGRATOR_TYPE. Possible values are' \
-                ' {}. Exiting.'.format(INTEGRATOR_TYPE, INTEGRATOR_TYPE_values))
-
-    SOLVER_TYPE = args.SOLVER_TYPE
-    SOLVER_TYPE_values = ['SQP', 'SQP-RTI']
-    if SOLVER_TYPE not in SOLVER_TYPE:
-        raise Exception('Invalid unit test value {} for parameter SOLVER_TYPE. Possible values are' \
-                ' {}. Exiting.'.format(SOLVER_TYPE, SOLVER_TYPE_values))
+FORMULATION = 'NLS' # 'LS'
+# FORMULATION = 'LS' # 'LS'
 
 # create render arguments
 ocp = acados_ocp_nlp()
@@ -153,6 +95,7 @@ else:
 
 nlp_cost.W_e = Q 
 
+# TODO(andrea): avoid this when using 'NLS'
 Vx = np.zeros((ny, nx))
 Vx[0,0] = 1.0
 Vx[1,1] = 1.0
@@ -197,22 +140,23 @@ nlp_con = ocp.constraints
 nlp_con.lbu = np.array([-Fmax])
 nlp_con.ubu = np.array([+Fmax])
 nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
+# nlp_con.x0 = np.array([0.0, 0.5, 0.0, 0.0])
 nlp_con.idxbu = np.array([0])
 
 # set QP solver
-ocp.solver_config.qp_solver = QP_SOLVER
+# ocp.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+ocp.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
 ocp.solver_config.hessian_approx = 'GAUSS_NEWTON'
-ocp.solver_config.integrator_type = INTEGRATOR_TYPE
-ocp.solver_config.sim_method_num_stages = 2
-ocp.solver_config.sim_method_num_steps = 5
+ocp.solver_config.integrator_type = 'ERK'
 
 # set prediction horizon
 ocp.solver_config.tf = Tf
-ocp.solver_config.nlp_solver_type = SOLVER_TYPE
+# ocp.solver_config.nlp_solver_type = 'SQP'
+ocp.solver_config.nlp_solver_type = 'SQP_RTI'
 
 # set header path
-ocp.acados_include_path  = '../../../../../include'
-ocp.acados_lib_path      = '../../../../../lib'
+ocp.acados_include_path  = '../../../../include'
+ocp.acados_lib_path      = '../../../../acados/lib'
 
 acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')
 
@@ -223,10 +167,6 @@ simU = np.ndarray((Nsim, nu))
 
 for i in range(Nsim):
     status = acados_solver.solve()
-
-    if status !=0:
-        print("acados failure! Exiting. \n")
-        sys.exit(status)
 
     # get solution
     x0 = acados_solver.get(0, "x")
@@ -249,19 +189,20 @@ for i in range(Nsim):
         acados_solver.set(j, "yref", np.array([0, 0, 0, 0, 0]))
     acados_solver.set(N, "yref", np.array([0, 0, 0, 0]))
 
-# dump result to JSON file for unit testing
-test_file_name = 'test_data/generate_c_code_out_' + FORMULATION + '_' + QP_SOLVER + '_' + \
-            INTEGRATOR_TYPE + '_' + SOLVER_TYPE + '.json'
+# plot results
+import matplotlib
+import matplotlib.pyplot as plt
+t = np.linspace(0.0, Tf/N, Nsim)
+plt.subplot(2, 1, 1)
+plt.step(t, simU, color='r')
+plt.title('closed-loop simulation')
+plt.ylabel('u')
+plt.xlabel('t')
+plt.grid(True)
+plt.subplot(2, 1, 2)
+plt.plot(t, simX[:,1])
+plt.ylabel('theta')
+plt.xlabel('t')
+plt.grid(True)
+plt.show()
 
-if GENERATE_DATA:
-    with open(test_file_name, 'w') as f:
-        json.dump({"simX": simX.tolist(), "simU": simU.tolist()}, f)
-else:
-    with open(test_file_name, 'r') as f:
-        test_data = json.load(f)
-    simX_error = np.linalg.norm(test_data['simX'] - simX)
-    simU_error = np.linalg.norm(test_data['simU'] - simU)
-    if  simX_error > TEST_TOL or  simU_error > TEST_TOL:
-        raise Exception("Python acados test failure with accuracies {:.2E} and {:.2E} ({:.2E} required) on pendulum example! Exiting.\n".format(simX_error, simU_error, TEST_TOL))
-    else: 
-        print('Python test passed with accuracy {:.2E}'.format(max(simU_error, simX_error)))
