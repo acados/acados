@@ -1049,8 +1049,8 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
     // XXX large enough ?
     ext_fun_arg_t ext_fun_type_in[3];
     void *ext_fun_in[3];
-    ext_fun_arg_t ext_fun_type_out[3];
-    void *ext_fun_out[3];
+    ext_fun_arg_t ext_fun_type_out[4];
+    void *ext_fun_out[4];
 
     // box
     blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_ni, 0);
@@ -1064,7 +1064,6 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
     // nonlinear
     if (nphi > 0)
     {
-        //
         struct blasfeo_dvec_args x_in;  // input x of external fun;
         x_in.x = memory->ux;
         x_in.xi = nu;
@@ -1084,30 +1083,26 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         ext_fun_type_in[2] = BLASFEO_DVEC_ARGS;
         ext_fun_in[2] = &z_in;
 
-        ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
         struct blasfeo_dvec_args fun_out;
         fun_out.x = &work->tmp_ni;
         fun_out.xi = nb + ng;
+        ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
         ext_fun_out[0] = &fun_out;  // fun: nphi
-        ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
 
         struct blasfeo_dmat_args jac_phi_tran_out;
         jac_phi_tran_out.A = memory->DCt;
         jac_phi_tran_out.ai = 0;
         jac_phi_tran_out.aj = ng;
+        ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
         ext_fun_out[1] = &jac_phi_tran_out;  // jac': (nu+nx) * nphi
 
-
         struct blasfeo_dmat_args jac_phi_z_tran_out; // Jacobian dphidz treated separately
+
+        jac_phi_z_tran_out.A = &work->tmp_nz_nphi;
+        jac_phi_z_tran_out.ai = 0;
+        jac_phi_z_tran_out.aj = 0;
         ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
         ext_fun_out[2] = &jac_phi_z_tran_out;  // jac': nz * nphi
-
-        if (nz > 0)
-        { 
-            jac_phi_z_tran_out.A = &work->tmp_nz_nphi;
-            jac_phi_z_tran_out.ai = 0;
-            jac_phi_z_tran_out.aj = 0;
-        }
 
         struct blasfeo_dmat_args hess_out;
         hess_out.A = &work->tmp_nr_nphi_nr;
