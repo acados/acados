@@ -75,9 +75,9 @@ int {{ ocp.model.name}}_acados_sim_create() {
     int nu = NU;
     int nz = NZ;
 
-    double Td = {{ ocp.solver_config.tf }}/ {{ ocp.dims.N }};
+    double Td = {{ ocp.solver_options.tf }}/ {{ ocp.dims.N }};
 
-    {% if ocp.solver_config.integrator_type == "IRK" %}
+    {% if ocp.solver_options.integrator_type == "IRK" %}
 
     sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     sim_impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
@@ -143,7 +143,7 @@ int {{ ocp.model.name}}_acados_sim_create() {
     // choose plan
     sim_solver_plan plan;
 
-    plan.sim_solver = {{ ocp.solver_config.integrator_type }};
+    plan.sim_solver = {{ ocp.solver_options.integrator_type }};
 
     // create correct config based on plan
     {{ ocp.model.name }}_sim_config = sim_config_create(plan);
@@ -159,11 +159,11 @@ int {{ ocp.model.name}}_acados_sim_create() {
 
     {{ ocp.model.name }}_sim_opts = sim_opts_create({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims);
 
-    {{ ocp.model.name }}_sim_opts->ns = {{ ocp.solver_config.sim_method_num_stages }}; // number of stages in rk integrator
-    {{ ocp.model.name }}_sim_opts->num_steps = {{ ocp.solver_config.sim_method_num_steps }}; // number of integration steps
+    {{ ocp.model.name }}_sim_opts->ns = {{ ocp.solver_options.sim_method_num_stages }}; // number of stages in rk integrator
+    {{ ocp.model.name }}_sim_opts->num_steps = {{ ocp.solver_options.sim_method_num_steps }}; // number of integration steps
     {{ ocp.model.name }}_sim_opts->sens_adj = false;
     {{ ocp.model.name }}_sim_opts->sens_forw = true;
-    {% if ocp.solver_config.integrator_type == "IRK" %}
+    {% if ocp.solver_options.integrator_type == "IRK" %}
     {{ ocp.model.name }}_sim_opts->sens_algebraic = false;
     {{ ocp.model.name }}_sim_opts->output_z = false;
     {{ ocp.model.name }}_sim_opts->newton_iter = 5;
@@ -178,13 +178,13 @@ int {{ ocp.model.name}}_acados_sim_create() {
     {{ ocp.model.name }}_sim_in->T = Td;
 
     // external functions
-    {% if ocp.solver_config.integrator_type == "IRK" %}
+    {% if ocp.solver_options.integrator_type == "IRK" %}
     {{ ocp.model.name }}_sim_config->model_set({{ ocp.model.name }}_sim_in->model, "impl_ode_fun", sim_impl_dae_fun);
     {{ ocp.model.name }}_sim_config->model_set({{ ocp.model.name }}_sim_in->model, "impl_ode_fun_jac_x_xdot", sim_impl_dae_fun_jac_x_xdot_z);
     {{ ocp.model.name }}_sim_config->model_set({{ ocp.model.name }}_sim_in->model, "impl_ode_jac_x_xdot_u", sim_impl_dae_jac_x_xdot_u_z);
 
     {% else %}
-    {% if ocp.solver_config.integrator_type == "ERK" %} 
+    {% if ocp.solver_options.integrator_type == "ERK" %} 
     {{ ocp.model.name }}_sim_config->model_set({{ ocp.model.name }}_sim_in->model, "expl_vde_for", sim_forw_vde_casadi);
     {{ ocp.model.name }}_sim_config->model_set({{ ocp.model.name }}_sim_in->model, "expl_ode_fun", sim_expl_ode_fun_casadi);
     {% endif %}
@@ -228,7 +228,7 @@ int {{ ocp.model.name }}_acados_sim_free() {
     sim_config_destroy({{ ocp.model.name }}_sim_config);
 
     // free external function 
-    {% if ocp.solver_config.integrator_type == "IRK" %}
+    {% if ocp.solver_options.integrator_type == "IRK" %}
         external_function_param_casadi_free(sim_impl_dae_fun);
         external_function_param_casadi_free(sim_impl_dae_fun_jac_x_xdot_z);
         external_function_param_casadi_free(sim_impl_dae_jac_x_xdot_u_z);

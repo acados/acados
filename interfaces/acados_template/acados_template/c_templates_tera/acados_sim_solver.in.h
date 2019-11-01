@@ -31,14 +31,14 @@ extern sim_solver  * {{ model.name }}_sim_solver;
 }
 #endif
 
-{% if solver_config.integrator_type == "ERK" %}
+{% if solver_options.integrator_type == "ERK" %}
 extern external_function_param_casadi * sim_forw_vde_casadi;
 extern external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% if solver_config.hessian_approx == "EXACT" %}
+{% if solver_options.hessian_approx == "EXACT" %}
 extern external_function_param_casadi * sim_hess_vde_casadi;
 {% endif %}
 {% else %}
-{% if solver_config.integrator_type == "IRK" %}
+{% if solver_options.integrator_type == "IRK" %}
 extern external_function_param_casadi * sim_impl_dae_fun;
 extern external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
 extern external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;

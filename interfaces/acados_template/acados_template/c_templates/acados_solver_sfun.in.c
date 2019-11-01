@@ -64,12 +64,12 @@ void * nlp_opts;
 ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
-{% if ocp.solver_config.integrator_type == 'ERK' %}
+{% if ocp.solver_options.integrator_type == 'ERK' %}
 external_function_param_casadi * forw_vde_casadi;
-{% if ocp.solver_config.hessian_approx == 'EXACT' %} 
+{% if ocp.solver_options.hessian_approx == 'EXACT' %} 
 external_function_param_casadi * hess_vde_casadi;
 {% endif %}
-{% elif ocp.solver_config.integrator_type == 'IRK' %}
+{% elif ocp.solver_options.integrator_type == 'IRK' %}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
@@ -217,7 +217,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     // update value of parameters
     {% if ocp.dims.np > 0%}
-    {% if ocp.solver_config.integrator_type == 'IRK' %}
+    {% if ocp.solver_options.integrator_type == 'IRK' %}
     for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, in_p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, in_p);

@@ -200,15 +200,15 @@ nlp_con.x0 = np.array([0.0, 3.14, 0.0, 0.0])
 nlp_con.idxbu = np.array([0])
 
 # set QP solver
-ocp.solver_config.qp_solver = QP_SOLVER
-ocp.solver_config.hessian_approx = 'GAUSS_NEWTON'
-ocp.solver_config.integrator_type = INTEGRATOR_TYPE
-ocp.solver_config.sim_method_num_stages = 2
-ocp.solver_config.sim_method_num_steps = 5
+ocp.solver_options.qp_solver = QP_SOLVER
+ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+ocp.solver_options.integrator_type = INTEGRATOR_TYPE
+ocp.solver_options.sim_method_num_stages = 2
+ocp.solver_options.sim_method_num_steps = 5
 
 # set prediction horizon
-ocp.solver_config.tf = Tf
-ocp.solver_config.nlp_solver_type = SOLVER_TYPE
+ocp.solver_options.tf = Tf
+ocp.solver_options.nlp_solver_type = SOLVER_TYPE
 
 # set header path
 ocp.acados_include_path  = '../../../../include'

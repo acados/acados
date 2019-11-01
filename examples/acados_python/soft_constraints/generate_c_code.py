@@ -225,13 +225,13 @@ elif FORMULATION == 2:
     nlp_con.idxsh_e = np.array([0])
 
 # set QP solver
-ocp.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ocp.solver_config.hessian_approx = 'GAUSS_NEWTON'
-ocp.solver_config.integrator_type = 'ERK'
+ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+ocp.solver_options.integrator_type = 'ERK'
 
 # set prediction horizon
-ocp.solver_config.tf = Tf
-ocp.solver_config.nlp_solver_type = 'SQP'
+ocp.solver_options.tf = Tf
+ocp.solver_options.nlp_solver_type = 'SQP'
 
 # set header path
 ocp.acados_include_path  = '../../../../include'

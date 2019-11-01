@@ -44,7 +44,7 @@ from copy import deepcopy
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     model = acados_ocp.model
-    if acados_ocp.solver_config.integrator_type == 'ERK':
+    if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
     else:
@@ -76,7 +76,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp = deepcopy(acados_ocp)
     ocp_nlp.cost = acados_ocp.cost.__dict__
     ocp_nlp.constraints = acados_ocp.constraints.__dict__
-    ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
+    ocp_nlp.solver_options = acados_ocp.solver_options.__dict__
     ocp_nlp.dims = acados_ocp.dims.__dict__
     ocp_nlp.con_h = acados_ocp.con_h.__dict__
     ocp_nlp.con_h_e = acados_ocp.con_h_e.__dict__

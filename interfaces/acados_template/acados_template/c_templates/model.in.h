@@ -38,7 +38,7 @@
 extern "C" {
 #endif
 
-{% if ocp.solver_config.integrator_type != "ERK" %}
+{% if ocp.solver_options.integrator_type != "ERK" %}
 // implicit ODE
 int {{ ocp.model.name }}_impl_dae_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ ocp.model.name }}_impl_dae_fun_work(int *, int *, int *, int *);

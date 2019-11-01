@@ -1022,18 +1022,18 @@ if FORMULATION == 7:
 nlp_con.p = nmp.array([w_val, 0.0, 0.0])
 
 # set QP solver
-ra.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ra.solver_config.qp_solver = 'FULL_CONDENSING_HPIPM'
-# ra.solver_config.qp_solver = 'FULL_CONDENSING_QPOASES'
-ra.solver_config.hessian_approx = 'GAUSS_NEWTON'
-# ra.solver_config.integrator_type = 'IRK'
-ra.solver_config.integrator_type = 'ERK'
-ra.solver_config.sim_method_num_stages = 2  # 1: RK1, 2: RK2, 4: RK4    
+ra.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+ra.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
+# ra.solver_options.qp_solver = 'FULL_CONDENSING_QPOASES'
+ra.solver_options.hessian_approx = 'GAUSS_NEWTON'
+# ra.solver_options.integrator_type = 'IRK'
+ra.solver_options.integrator_type = 'ERK'
+ra.solver_options.sim_method_num_stages = 2  # 1: RK1, 2: RK2, 4: RK4    
 
 # set prediction horizon
-ra.solver_config.tf = Tf
-ra.solver_config.nlp_solver_type = 'SQP_RTI'
-# ra.solver_config.nlp_solver_type = 'SQP'
+ra.solver_options.tf = Tf
+ra.solver_options.nlp_solver_type = 'SQP_RTI'
+# ra.solver_options.nlp_solver_type = 'SQP'
 
 # set header path
 # ra.acados_include_path = '/mnt/c/Austauch/projects/SCQPAndrea/acados/include'

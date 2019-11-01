@@ -34,10 +34,10 @@
 
 SOURCES = [ 'acados_solver_sfunction_{{ ocp.model.name }}.c ', ...
             'acados_solver_{{ ocp.model.name }}.c ', ...
-            {%- if  ocp.solver_config.integrator_type == 'ERK' %}
+            {%- if  ocp.solver_options.integrator_type == 'ERK' %}
             '{{ ocp.model.name }}_model/{{ ocp.model.name }}_expl_ode_fun.c ', ...
             '{{ ocp.model.name }}_model/{{ ocp.model.name }}_expl_vde_forw.c ',...
-            {% if ocp.solver_config.hessian_approx == 'EXACT' -%} 
+            {% if ocp.solver_options.hessian_approx == 'EXACT' -%} 
             {% endif -%}
             {% else %}
             '{{ ocp.model.name }}_model/{{ ocp.model.name }}_impl_dae_fun.c ', ...
@@ -67,7 +67,7 @@ INCS = [ ' -I', INC_PATH, '/blasfeo/include/ ', ...
 
 CFLAGS  = ' -O';
 
-{% if  ocp.solver_config.qp_solver == 'FULL_CONDENSING_QPOASES' %}
+{% if  ocp.solver_options.qp_solver == 'FULL_CONDENSING_QPOASES' %}
 CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPOASES ' ];
 {% endif %}
 

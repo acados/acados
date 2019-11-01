@@ -526,7 +526,7 @@
             "int"
         ]
     },
-    "solver_config": {
+    "solver_options": {
         "hessian_approx": [
             "str"
         ],
