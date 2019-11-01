@@ -41,7 +41,7 @@ import json
 import argparse
 
 # set to 'True' to generate test data
-GENERATE_DATA = True
+GENERATE_DATA = False
 LOCAL_TEST = False
 TEST_TOL = 1e-8
 
