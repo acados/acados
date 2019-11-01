@@ -49,7 +49,16 @@ if(ACADOS_PYTHON)
 add_test(NAME python_test_ocp 
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/test
         python main_test.py)
-add_test(NAME python_examples 
+add_test(NAME python_pendulum_example
         COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pendulum_example
+        python generate_c_code.py)
+add_test(NAME python_soft_constraints_example
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/soft_constraints_example
+        python generate_c_code.py)
+add_test(NAME python_pmsm_example 
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/pmsm_example
+        python generate_c_code.py)
+add_test(NAME python_rsm_example 
+        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_python/rsm_example
         python generate_c_code.py)
 endif()
