@@ -1114,23 +1114,21 @@ for i in range(Nsim):
     invA = nmp.linalg.inv(A)
     Bd = invA*(Ad-nmp.eye(2))*B
     fd = invA*(Ad-nmp.eye(2))*f
-    xvec = nmp.squeeze((Ad*xvec + Bd*uvec + fd).flatten())  
-    xvec_arg = nmp.zeros((2,))
-    xvec_arg[0] = xvec[0,0]
-    xvec_arg[1] = xvec[0,1]
+    xvec = Ad*xvec + Bd*uvec + fd   
 
     print("States= ", xvec)
     print("Controls= ", uvec)
     print("\n")
 
     # update initial condition xk+1
-    import pdb; pdb.set_trace()
-    acados_solver.constraints.set(0, "lbx",  xvec_arg)
-    acados_solver.constraints.set(0, "ubx",  xvec_arg)
+    acados_solver.set(0, "lbx",  xvec)
+    acados_solver.set(0, "ubx",  xvec)
 
-    for i in range(N):
-        acados_solver.cost.set(0, "zl",  nlp_cost.zl)
-    # acados_solver.cost.set(N, "W",  nlp_cost.W_e)
+    # update initial condition
+    # ============================================
+    # x0 = acados_solver.get(1, "x")
+    # acados_solver.set(0, "lbx",  x0)
+    # acados_solver.set(0, "ubx",  x0)
 
     simXR[i+1,0] = xvec[0]
     simXR[i+1,1] = xvec[1]
