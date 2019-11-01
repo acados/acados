@@ -1367,9 +1367,9 @@ class ocp_nlp_constraints:
     def set(self, attr, value):
         setattr(self, attr, value)
 
-class ocp_nlp_solver_config:
+class ocp_nlp_solver_options:
     """
-    class containing the description of the solver configuration
+    class containing the description of the solver options
     """
     def __init__(self):
         self.__qp_solver        = 'PARTIAL_CONDENSING_HPIPM'  #: qp solver to be used in the NLP solver
@@ -1377,8 +1377,14 @@ class ocp_nlp_solver_config:
         self.__integrator_type  = 'ERK'                       #: integrator type
         self.__tf               = None                        #: prediction horizon
         self.__nlp_solver_type  = 'SQP_RTI'                   #: NLP solver 
-        self.__sim_method_num_stages = 1                      #: number of stages in the integrator
-        self.__sim_method_num_steps  = 1                      #: number of steps in the integrator
+        self.__nlp_solver_step_length = 1.0                   #: fixed Newton step length
+        self.__sim_method_num_stages  = 1                     #: number of stages in the integrator
+        self.__sim_method_num_steps   = 1                     #: number of steps in the integrator
+        self.__sim_method_newton_iter = 3                     #: number of Newton iterations in simulation method
+        self.__qp_solver_tol_stat = None                      #: QP solver stationarity tolerance
+        self.__qp_solver_tol_eq   = None                      #: QP solver equality tolerance
+        self.__qp_solver_tol_ineq = None                      #: QP solver inequality
+        self.__qp_solver_tol_comp = None                      #: QP solver complementarity
 
     @property
     def qp_solver(self):
@@ -1397,12 +1403,40 @@ class ocp_nlp_solver_config:
         return self.__nlp_solver_type
 
     @property
+    def nlp_solver_step_length(self):
+        return self.__nlp_solver_step_length
+
+    @property
     def sim_method_num_stages(self):
         return self.__sim_method_num_stages
 
     @property
     def sim_method_num_steps(self):
         return self.__sim_method_num_steps
+
+    @property
+    def sim_method_newton_iter(self):
+        return self.__sim_method_newton_iter
+
+    @property
+    def qp_solver_tol_stat(self):
+        return self.__qp_solver_tol_stat
+
+    @property
+    def qp_solver_tol_eq(self):
+        return self.__qp_solver_tol_eq
+
+    @property
+    def qp_solver_tol_ineq(self):
+        return self.__qp_solver_tol_ineq
+
+    @property
+    def qp_solver_tol_comp(self):
+        return self.__qp_solver_tol_comp
+
+    @property
+    def tf(self):
+        return self.__tf
 
     @qp_solver.setter
     def qp_solver(self, qp_solver):
@@ -1414,10 +1448,6 @@ class ocp_nlp_solver_config:
         else:
             raise Exception('Invalid qp_solver value. Possible values are:\n\n' \
                     + ',\n'.join(qp_solvers) + '.\n\nYou have: ' + qp_solver + '.\n\nExiting.')
-    @property
-    def tf(self):
-        return self.__tf
-
     @hessian_approx.setter
     def hessian_approx(self, hessian_approx):
         hessian_approxs = ('GAUSS_NEWTON')
@@ -1468,6 +1498,14 @@ class ocp_nlp_solver_config:
             raise Exception('Invalid nlp_solver_type value. Possible values are:\n\n' \
                     + ',\n'.join(nlp_solver_types) + '.\n\nYou have: ' + nlp_solver_type + '.\n\nExiting.')
 
+    @nlp_solver_step_length.setter
+    def nlp_solver_step_length(self, nlp_solver_step_length):
+
+        if type(nlp_solver_step_length) == float and nlp_solver_step_length > 0:
+            self.__nlp_solver_step_length = nlp_solver_step_length
+        else:
+            raise Exception('Invalid nlp_solver_step_length value. nlp_solver_step_length must be a positive float. Exiting')
+
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
 
@@ -1484,6 +1522,37 @@ class ocp_nlp_solver_config:
         else:
             raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
 
+    @qp_solver_tol_stat.setter
+    def qp_solver_tol_stat(self, qp_solver_tol_stat):
+
+        if type(qp_solver_tol_stat) == float and qp_solver_tol_stat > 0:
+            self.__qp_solver_tol_stat = qp_solver_tol_stat
+        else:
+            raise Exception('Invalid qp_solver_tol_stat value. qp_solver_tol_stat must be a positive float. Exiting')
+
+    @qp_solver_tol_eq.setter
+    def qp_solver_tol_eq(self, qp_solver_tol_eq):
+
+        if type(qp_solver_tol_eq) == float and qp_solver_tol_eq > 0:
+            self.__qp_solver_tol_eq = qp_solver_tol_eq
+        else:
+            raise Exception('Invalid qp_solver_tol_eq value. qp_solver_tol_eq must be a positive float. Exiting')
+
+    @qp_solver_tol_ineq.setter
+    def qp_solver_tol_ineq(self, qp_solver_tol_ineq):
+
+        if type(qp_solver_tol_ineq) == float and qp_solver_tol_ineq > 0:
+            self.__qp_solver_tol_ineq = qp_solver_tol_ineq
+        else:
+            raise Exception('Invalid qp_solver_tol_ineq value. qp_solver_tol_ineq must be a positive float. Exiting')
+
+    def qp_solver_tol_comp(self, qp_solver_tol_comp):
+
+        if type(qp_solver_tol_comp) == float and qp_solver_tol_comp > 0:
+            self.__qp_solver_tol_comp = qp_solver_tol_comp
+        else:
+            raise Exception('Invalid qp_solver_tol_comp value. qp_solver_tol_comp must be a positive float. Exiting')
+
     def set(self, attr, value):
         setattr(self, attr, value)
 
@@ -1496,7 +1565,7 @@ class acados_ocp_nlp:
         self.model = acados_dae()
         self.cost = ocp_nlp_cost()
         self.constraints = ocp_nlp_constraints()
-        self.solver_config = ocp_nlp_solver_config()
+        self.solver_options = ocp_nlp_solver_options()
 
         self.con_h   = acados_constraint() 
         self.con_h_e = acados_constraint() 
@@ -1557,7 +1626,7 @@ def acados_ocp2json_layout(acados_ocp):
     ocp_nlp = acados_ocp
     ocp_nlp.cost = acados_ocp.cost.__dict__
     ocp_nlp.constraints = acados_ocp.constraints.__dict__
-    ocp_nlp.solver_config = acados_ocp.solver_config.__dict__
+    ocp_nlp.solver_options = acados_ocp.solver_options.__dict__
     ocp_nlp.dims = acados_ocp.dims.__dict__
     ocp_nlp = ocp_nlp.__dict__
     json_layout = dict2json_layout(ocp_nlp)
