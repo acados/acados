@@ -1079,8 +1079,7 @@ for i in range(Nsim):
     status = acados_solver.solve()
 
     if status != 0:
-        print('acados returned status {}. Exiting.'.format(status))
-        import pdb; pdb.set_trace()
+        raise Exception('acados returned status {}. Exiting.'.format(status))
 
     # get solution
     x0 = acados_solver.get(0, "x")

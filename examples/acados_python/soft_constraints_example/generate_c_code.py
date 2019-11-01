@@ -255,6 +255,9 @@ simU = np.ndarray((Nsim, nu))
 for i in range(Nsim):
     status = acados_solver.solve()
 
+    if status != 0:
+        raise Exception('acados returned status {}. Exiting.'.format(status))
+
     # get solution
     x0 = acados_solver.get(0, "x")
     u0 = acados_solver.get(0, "u")
