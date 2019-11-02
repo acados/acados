@@ -974,7 +974,7 @@ static void ocp_nlp_constraints_bgp_cast_workspace(void *config_, void *dims_, v
     assign_and_advance_blasfeo_dvec_mem(nb + ng + nphi + ns, &work->tmp_ni, &c_ptr);
     c_ptr += nr * (nx + nu) * sizeof(double);
     align_char_to(64, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx + nu, nr, &work->jacobian_quadratic, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx + nu, nr, &work->jac_r_ux_tran, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nr * nphi, nr, &work->tmp_nr_nphi_nr, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nv, nr, &work->tmp_nv_nr, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nz, nphi, &work->tmp_nz_nphi, &c_ptr);
@@ -1052,7 +1052,7 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
     // XXX large enough ?
     ext_fun_arg_t ext_fun_type_in[3];
     void *ext_fun_in[3];
-    ext_fun_arg_t ext_fun_type_out[4];
+    ext_fun_arg_t ext_fun_type_out[5];
     void *ext_fun_out[5];
 
     // box
@@ -1100,7 +1100,6 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         ext_fun_out[1] = &jac_phi_tran_out;  // jac': (nu+nx) * nphi
 
         struct blasfeo_dmat_args jac_phi_z_tran_out; // Jacobian dphidz treated separately
-
         jac_phi_z_tran_out.A = &work->tmp_nz_nphi;
         jac_phi_z_tran_out.ai = 0;
         jac_phi_z_tran_out.aj = 0;
@@ -1115,9 +1114,10 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         ext_fun_out[3] = &hess_out;  // hess: nphi * nr * nr
 
         struct blasfeo_dmat_args jac_r_tran_out;
-        jac_r_tran_out.A = &work->jacobian_quadratic;
+        jac_r_tran_out.A = &work->jac_r_ux_tran;
         jac_r_tran_out.ai = 0;
         jac_r_tran_out.aj = 0;
+        ext_fun_type_out[4] = BLASFEO_DMAT_ARGS;
         ext_fun_out[4] = &jac_r_tran_out;  // jac': (nu+nx) * nr
 
         model->nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux->evaluate(
@@ -1147,12 +1147,12 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         double lam_i = blasfeo_dvecex1(memory->lam, 
                 2 * (nb + ng) + nphi + i);
 
-        blasfeo_dgemm_nt(nv, nr, nr, lam_i, &work->jacobian_quadratic, 
+        blasfeo_dgemm_nt(nv, nr, nr, lam_i, &work->jac_r_ux_tran, 
                 0, 0, &work->tmp_nr_nphi_nr, nr * i, 0, 0.0, 
                 &work->tmp_nv_nr, 0, 0, &work->tmp_nv_nr, 0, 0);
 
         blasfeo_dsyrk_ln(nv, nr, 1.0, &work->tmp_nv_nr, 0, 0,
-                &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq,
+                &work->jac_r_ux_tran, 0, 0, 1.0, memory->RSQrq,
                 0, 0, memory->RSQrq, 0, 0);
     }
 

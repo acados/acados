@@ -110,15 +110,18 @@ def generate_c_code_constraint_e( constraint ):
             gen_dir = con_name + '_phi_e_constraint'
             fun_name = con_name + '_phi_e_constraint'
             con_phi_expr_x = substitute(con_phi_expr, r, con_r_expr)
-            jac_x = jacobian(con_phi_expr_x, x);
-            jac_u = jacobian(con_phi_expr_x, u);
-            jac_z = jacobian(con_phi_expr_x, z);
+            phi_jac_x = jacobian(con_phi_expr_x, x);
+            phi_jac_u = jacobian(con_phi_expr_x, u);
+            phi_jac_z = jacobian(con_phi_expr_x, z);
+
+            r_jac_x = jacobian(con_r_expr, x);
+            r_jac_u = jacobian(con_r_expr, u);
 
             hess = hessian(con_phi_expr[0], r)[0]
             for i in range(1, nh):
                 hess = vertcat(hess, hessian(con_phi_expr[i], r)[0])
 
-            constraint_fun_jac_tran_hess = Function(fun_name, [x, u, z, p], [con_phi_expr_x, transpose(jac_x), transpose(jac_z), hess])
+            constraint_phi = Function(fun_name, [x, u, z, p], [con_phi_expr_x, transpose(phi_jac_x), transpose(phi_jac_z), hess, transpose(r_jac_x)])
 
             # generate C code
             if not os.path.exists('c_generated_code'):
@@ -131,21 +134,20 @@ def generate_c_code_constraint_e( constraint ):
             gen_dir_location = './' + gen_dir
             os.chdir(gen_dir_location)
             file_name = con_name + '_phi_e_constraint'
-            constraint_fun_jac_tran_hess.generate(file_name, casadi_opts)
-            os.chdir('..')
+            constraint_phi.generate(file_name, casadi_opts)
+            os.chdir('../..')
 
+            # jac_x = jacobian(con_r_expr, x);
+            # fun_name = con_name + '_r_e_constraint'
+            # constraint_residual_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_r_expr, transpose(jac_x)])
 
-            jac_x = jacobian(con_r_expr, x);
-            fun_name = con_name + '_r_e_constraint'
-            constraint_residual_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_r_expr, transpose(jac_x)])
-
-            gen_dir = con_name + '_r_e_constraint'
-            if not os.path.exists(gen_dir):
-                os.mkdir(gen_dir)
-            gen_dir_location = './' + gen_dir
-            os.chdir(gen_dir_location)
-            file_name = con_name + '_r_e_constraint'
-            constraint_residual_fun_jac_tran.generate(file_name, casadi_opts)
+            # gen_dir = con_name + '_r_e_constraint'
+            # if not os.path.exists(gen_dir):
+            #     os.mkdir(gen_dir)
+            # gen_dir_location = './' + gen_dir
+            # os.chdir(gen_dir_location)
+            # file_name = con_name + '_r_e_constraint'
+            # constraint_residual_fun_jac_tran.generate(file_name, casadi_opts)
 
             # Jr_tran_eval = (constraint_residual_fun_jac_tran([0,0], [])[1]).full()
             # hess_eval = (constraint_fun_jac_tran_hess([0,0], [])[2]).full()
@@ -154,6 +156,6 @@ def generate_c_code_constraint_e( constraint ):
             # tmp2 = mtimes(Jr_tran_eval, hess_eval[3:6,0:3])
             # HESS2= HESS1+ mtimes(mtimes(Jr_tran_eval, hess_eval[3:6, 0:3]), transpose(Jr_tran_eval))
             # import pdb; pdb.set_trace()
-            os.chdir('../..')
+            # os.chdir('../..')
 
     return

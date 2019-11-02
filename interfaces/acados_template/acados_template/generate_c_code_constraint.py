@@ -123,17 +123,20 @@ def generate_c_code_constraint( constraint ):
             con_r_expr = constraint.con_r_expr
             fun_name = con_name + '_phi_constraint'
             con_phi_expr_x_u_z = substitute(con_phi_expr, r, con_r_expr)
-            jac_u = jacobian(con_phi_expr_x_u_z, u)
-            jac_x = jacobian(con_phi_expr_x_u_z, x)
-            jac_z = jacobian(con_phi_expr_x_u_z, z)
+            phi_jac_u = jacobian(con_phi_expr_x_u_z, u)
+            phi_jac_x = jacobian(con_phi_expr_x_u_z, x)
+            phi_jac_z = jacobian(con_phi_expr_x_u_z, z)
 
             hess = hessian(con_phi_expr[0], r)[0]
             for i in range(1, nphi):
                 hess = vertcat(hess, hessian(con_phi_expr[i], r)[0])
 
-            constraint_fun_jac_tran_hess = Function(fun_name, [x, u, z, p], \
-                    [con_phi_expr_x_u_z, vertcat(transpose(jac_u), transpose(jac_x)), transpose(jac_z), \
-                    hess])
+            r_jac_u = jacobian(con_r_expr, u);
+            r_jac_x = jacobian(con_r_expr, x);
+
+            constraint_phi = Function(fun_name, [x, u, z, p], \
+                    [con_phi_expr_x_u_z, vertcat(transpose(phi_jac_u), transpose(phi_jac_x)), transpose(phi_jac_z), \
+                    hess, vertcat(transpose(r_jac_u), transpose(r_jac_x))])
 
             # generate C code
             if not os.path.exists('c_generated_code'):
@@ -146,23 +149,20 @@ def generate_c_code_constraint( constraint ):
             gen_dir_location = './' + gen_dir
             os.chdir(gen_dir_location)
             file_name = con_name + '_phi_constraint'
-            constraint_fun_jac_tran_hess.generate(file_name, casadi_opts)
-            os.chdir('..')
-
-
-            jac_u = jacobian(con_r_expr, u);
-            jac_x = jacobian(con_r_expr, x);
-            fun_name = con_name + '_r_constraint'
-            constraint_residual_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_r_expr, vertcat(transpose(jac_u), transpose(jac_x))])
-
-            gen_dir = con_name + '_r_constraint'
-            if not os.path.exists(gen_dir):
-                os.mkdir(gen_dir)
-            gen_dir_location = './' + gen_dir
-            os.chdir(gen_dir_location)
-            file_name = con_name + '_r_constraint'
-            constraint_residual_fun_jac_tran.generate(file_name, casadi_opts)
-
+            constraint_phi.generate(file_name, casadi_opts)
             os.chdir('../..')
+
+            # fun_name = con_name + '_r_constraint'
+            # constraint_residual_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_r_expr, vertcat(transpose(jac_u), transpose(jac_x))])
+
+            # gen_dir = con_name + '_r_constraint'
+            # if not os.path.exists(gen_dir):
+            #     os.mkdir(gen_dir)
+            # gen_dir_location = './' + gen_dir
+            # os.chdir(gen_dir_location)
+            # file_name = con_name + '_r_constraint'
+            # constraint_residual_fun_jac_tran.generate(file_name, casadi_opts)
+
+            # os.chdir('../..')
 
     return

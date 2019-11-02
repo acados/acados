@@ -175,7 +175,7 @@ void ocp_nlp_constraints_bgp_memory_set_idxs_ptr(int *idxs, void *memory_);
 typedef struct
 {
     struct blasfeo_dvec tmp_ni;
-    struct blasfeo_dmat jacobian_quadratic;
+    struct blasfeo_dmat jac_r_ux_tran;
     struct blasfeo_dmat tmp_nr_nphi_nr;
     struct blasfeo_dmat tmp_nv_nr;
     struct blasfeo_dmat tmp_nv_nphi;
