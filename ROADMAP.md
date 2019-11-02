@@ -9,8 +9,8 @@
 
 
 #### documentation
-- [ ] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula in docs
-    - [ ] closely stick to setter names!
+- [x] provide OCP NLP formulation that is handled by `ocp_nlp` as a formula
+    - [x] closely stick to setter names!
 - [ ] Set up and document binary workflow
     - [ ] Windows Matlab
     - [ ] MacOS Matlab
@@ -18,14 +18,14 @@
 #### `matlab interface`
 - [x] detect dimensions
 - [x] structure detections for constraints
-- [ ] getting started folder
-- [ ] code generation workflow! # Mex templating
-    - 1) nonlinear least-squares 
-    - 2) Vz (already implemented?)
-    - 3) exact Hessian
-    - 4) external cost
-    - 5) GNSF
-    - 6) discrete dynamics
+- [x] getting started folder
+- [ ] add Mex templating support for: ( in prioritized order )
+    - [ ] nonlinear least-squares 
+    - [ ] Vz (already implemented?)
+    - [ ] exact Hessian
+    - [ ] external cost
+    - [ ] GNSF
+    - [ ] discrete dynamics
 - [x] separate `acados_ocp()` into generating the C object and setting the numerical data
 - [x] support nonuniform grids
 - [x] OCP with DAEs
@@ -34,9 +34,9 @@
 - [ ] cmake: add openmp parallelization
 
 #### `templating`
-- [ ] remove duplicated code to generate external functions
+- [x] remove duplicated code to generate external functions
 - [ ] add documentation
-  - [ ] how to set up trenderer
+  - [x] how to set up trenderer
   - [ ] ...
 - [ ] explore possibility to interact with generated C code
 - [ ] set up CI tests - matlab needed..

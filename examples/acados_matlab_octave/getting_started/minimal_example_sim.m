@@ -32,12 +32,11 @@
 %
 
 %% minimal example of acados integrator matlab interface
-clear VARIABLES
+clear all
 
-env_run = getenv('ENV_RUN');
-if (~strcmp(env_run, 'true'))
-	error('env.sh has not been sourced! Before executing this example, run: source env.sh');
-end
+addpath('../pendulum_on_cart_model')
+
+check_acados_requirements()
 
 %% arguments
 compile_interface = 'auto';
