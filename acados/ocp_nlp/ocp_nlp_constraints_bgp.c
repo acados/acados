@@ -486,7 +486,7 @@ void *ocp_nlp_constraints_bgp_model_assign(void *config, void *dims_, void *raw_
     assign_and_advance_int(ns, &model->idxs, &c_ptr);
 
     // h
-    //  model->nl_constr_phi_fun_jac = NULL;
+    //  model->nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux = NULL;
 
     // assert
     assert((char *) raw_memory + ocp_nlp_constraints_bgp_model_calculate_size(config, dims) >=
@@ -576,17 +576,13 @@ int ocp_nlp_constraints_bgp_model_set(void *config_, void *dims_,
     {
         blasfeo_pack_dvec(ng, value, &model->d, 2*nb+ng+nphi);
     }
-    else if (!strcmp(field, "nl_constr_phi_fun_jac"))
+    else if (!strcmp(field, "nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux"))
     {
-        model->nl_constr_phi_fun_jac = value;
+        model->nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux = value;
     }
-    else if (!strcmp(field, "nl_constr_phi_fun"))
+    else if (!strcmp(field, "nl_constr_phi_o_r_fun"))
     {
-        model->nl_constr_phi_fun_jac = value;
-    }
-    else if (!strcmp(field, "nl_constr_r_fun_jac"))
-    {
-        model->nl_constr_r_fun_jac = value;
+        model->nl_constr_phi_o_r_fun = value;
     }
     else if (!strcmp(field, "lphi")) // TODO(fuck_lint) remove
     {
@@ -1057,7 +1053,7 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
     ext_fun_arg_t ext_fun_type_in[3];
     void *ext_fun_in[3];
     ext_fun_arg_t ext_fun_type_out[4];
-    void *ext_fun_out[4];
+    void *ext_fun_out[5];
 
     // box
     blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_ni, 0);
@@ -1118,7 +1114,15 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         ext_fun_type_out[3] = BLASFEO_DMAT_ARGS;
         ext_fun_out[3] = &hess_out;  // hess: nphi * nr * nr
 
-        model->nl_constr_phi_fun_jac->evaluate(model->nl_constr_phi_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+        struct blasfeo_dmat_args jac_r_tran_out;
+        jac_r_tran_out.A = &work->jacobian_quadratic;
+        jac_r_tran_out.ai = 0;
+        jac_r_tran_out.aj = 0;
+        ext_fun_out[4] = &jac_r_tran_out;  // jac': (nu+nx) * nr
+
+        model->nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux->evaluate(
+                model->nl_constr_phi_o_r_fun_phi_jac_ux_z_phi_hess_r_jac_ux, 
+                ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
         
         // expand phi:
         // phi(x, u, z) ~
@@ -1137,20 +1141,6 @@ void ocp_nlp_constraints_bgp_update_qp_matrices(void *config_, void *dims_, void
         // update memory->fun	
         blasfeo_dgemv_t(nu+nx, nphi, -1.0, &work->tmp_nv_nphi, 0, 0, memory->ux, 0, 1.0, &memory->fun, 0, &memory->fun, 0);
     }
-
-    // ext_fun_type_in[0] = BLASFEO_DVEC;
-    // ext_fun_in[0] = memory->ux;  // ux: nu+nx
-
-    //
-    ext_fun_type_out[0] = IGNORE_ARGUMENT;
-    //
-    ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
-    struct blasfeo_dmat_args jac_r_tran_out;
-    jac_r_tran_out.A = &work->jacobian_quadratic;
-    jac_r_tran_out.ai = 0;
-    jac_r_tran_out.aj = 0;
-    ext_fun_out[1] = &jac_r_tran_out;  // jac': (nu+nx) * nr
-    model->nl_constr_r_fun_jac->evaluate(model->nl_constr_r_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     // add SCQP Hessian contribution
     for (int i = 0; i < nphi; i++) { 
@@ -1271,7 +1261,7 @@ void ocp_nlp_constraints_bgp_compute_fun(void *config_, void *dims_, void *model
 		ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
 		ext_fun_out[0] = &fun_out;  // fun: nphi
 
-		model->nl_constr_phi_fun->evaluate(model->nl_constr_phi_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+		model->nl_constr_phi_o_r_fun->evaluate(model->nl_constr_phi_o_r_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 	}
 
     blasfeo_daxpy(nb+ng+nphi, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
