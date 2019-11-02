@@ -248,13 +248,24 @@ The only difference is that $ y $, respectively $ y\terminal $ are defined as \c
 	\end{tabular}
 \end{table}
 %\newpage
-\section{Path Constraints}
+\section{Constraints}
+\subsection{Initial State}
+Note: An initial state is not required.
+For example for MHE problems it should not be set.
 \begin{table}[h]
 	\centering
 	\begin{tabular}{|c|c|c|c|}
 		\toprule
 		Mathematical Expression & string identifier & data type & required \\ \midrule
-		$ \bar{x}_0 $ & \code{constr\_x0} & double & \mandatory \\ \midrule
+		$ \bar{x}_0 $ & \code{constr\_x0} & double & \optional \\ 		\bottomrule
+	\end{tabular}
+\end{table}
+\subsection{Path Constraints}
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+		\toprule
+		Mathematical Expression & string identifier & data type & required \\ \midrule
 		$J_{\textrm{bx}}$ & \code{constr\_Jbx}    & double  & \optional  \\
 		$\underline{x} $    & \code{constr\_lbx}     & double  & \optional  \\
 		$\bar{x} $  & \code{constr\_ubx}     & double  & \optional   \\ \midrule
@@ -278,7 +289,7 @@ The only difference is that $ y $, respectively $ y\terminal $ are defined as \c
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
-\section{Terminal Constraints}
+\subsection{Terminal Constraints}
 \begin{table}[h]
 	\centering
 	\begin{tabular}{|c|c|c|c|}

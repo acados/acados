@@ -42,7 +42,7 @@ There is the option to generate embeddable `C` code from Matlab.
 The workflow uses the same templates as the Python interface (see below) and the `Tera` renderer.
 After creating an acados solver `ocp`, you can use the routine `ocp.generate_c_code` to generate `C` code which can be used for embedded applications.
 
-Note: This part of the MATLAB/Octave interface does not support all features of the one mentioned before.
+Note: This part of the MATLAB/Octave interface does not yet support all features of the one mentioned before.
 
 
 
