@@ -48,7 +48,10 @@
 // example specific
 #include "{{ ocp.model.name }}_model/{{ ocp.model.name }}_model.h"
 {% if ocp.dims.npd > 0 %}
-#include "{{ ocp.con_p.name }}_p_constraint/{{ ocp.con_p.name }}_p_constraint.h"
+#include "{{ ocp.con_h.name }}_p_constraint/{{ ocp.con_h.name }}_p_constraint.h"
+{% if ocp.dims.npd_e > 0 %}
+#include "{{ ocp.con_h_e.name }}_p_e_constraint/{{ ocp.con_h_e.name }}_p_e_constraint.h"
+{% endif %}
 {% endif %}
 {% if ocp.dims.nh > 0 %}
 #include "{{ ocp.con_h.name }}_h_constraint/{{ ocp.con_h.name }}_h_constraint.h"
@@ -233,7 +236,7 @@ int acados_create() {
 
     int status = 0;
 
-    double Tf = {{ ocp.solver_config.tf }};
+    double Tf = {{ ocp.solver_options.tf }};
 
     // initial state x0
     int idxbx0[NX];
@@ -636,35 +639,35 @@ int acados_create() {
 
     // Make plan
     nlp_solver_plan = ocp_nlp_plan_create(N);
-    {% if ocp.solver_config.nlp_solver_type == "SQP" %}
+    {% if ocp.solver_options.nlp_solver_type == "SQP" %}
     nlp_solver_plan->nlp_solver = SQP;
     {% else %}
     nlp_solver_plan->nlp_solver = SQP_RTI;
     {% endif %}
-    nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ ocp.solver_config.qp_solver }};
+    nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ ocp.solver_options.qp_solver }};
     for (int i = 0; i <= N; i++)
         nlp_solver_plan->nlp_cost[i] = {{ ocp.cost.cost_type }};
     for (int i = 0; i < N; i++)
     {
         nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-        nlp_solver_plan->sim_solver_plan[i].sim_solver = {{ ocp.solver_config.integrator_type}};
+        nlp_solver_plan->sim_solver_plan[i].sim_solver = {{ ocp.solver_options.integrator_type}};
     }
 
     for (int i = 0; i < N; i++) {
         {%- if ocp.dims.npd > 0 %}
-        nlp_solver_plan->nlp_constraints[i] = BGHP;
+        nlp_solver_plan->nlp_constraints[i] = BGP;
         {%- else %}
         nlp_solver_plan->nlp_constraints[i] = BGH;
         {%- endif %}
     }
 
     {%- if ocp.dims.npd_e > 0 %}
-    nlp_solver_plan->nlp_constraints[N] = BGHP;
+    nlp_solver_plan->nlp_constraints[N] = BGP;
     {%- else %}
     nlp_solver_plan->nlp_constraints[N] = BGH;
     {%- endif %}
 
-    {% if ocp.solver_config.hessian_approx == "EXACT" %} 
+    {% if ocp.solver_options.hessian_approx == "EXACT" %} 
     nlp_solver_plan->regularization = CONVEXIFICATION;
     {% endif %}
     nlp_config = ocp_nlp_config_create(*nlp_solver_plan);
@@ -700,12 +703,12 @@ int acados_create() {
     p_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // nonlinear part of convex-composite constraint
-        p_constraint[i].casadi_fun = &{{ ocp.con_p.name }}_p_constraint;
-        p_constraint[i].casadi_n_in = &{{ ocp.con_p.name }}_p_constraint_n_in;
-        p_constraint[i].casadi_n_out = &{{ ocp.con_p.name }}_p_constraint_n_out;
-        p_constraint[i].casadi_sparsity_in = &{{ ocp.con_p.name }}_p_constraint_sparsity_in;
-        p_constraint[i].casadi_sparsity_out = &{{ ocp.con_p.name }}_p_constraint_sparsity_out;
-        p_constraint[i].casadi_work = &{{ ocp.con_p.name }}_p_constraint_work;
+        p_constraint[i].casadi_fun = &{{ ocp.con_h.name }}_p_constraint;
+        p_constraint[i].casadi_n_in = &{{ ocp.con_h.name }}_p_constraint_n_in;
+        p_constraint[i].casadi_n_out = &{{ ocp.con_h.name }}_p_constraint_n_out;
+        p_constraint[i].casadi_sparsity_in = &{{ ocp.con_h.name }}_p_constraint_sparsity_in;
+        p_constraint[i].casadi_sparsity_out = &{{ ocp.con_h.name }}_p_constraint_sparsity_out;
+        p_constraint[i].casadi_work = &{{ ocp.con_h.name }}_p_constraint_work;
 
         external_function_param_casadi_create(&p_constraint[i], {{ocp.dims.np}});
     }
@@ -713,15 +716,14 @@ int acados_create() {
 
     {%- if ocp.dims.npd_e > 0 %}
 	// nonlinear part of convex-composite constraint
-	external_function_param_casadi p_constraint_e;
-	p_constraint_e.casadi_fun = &{{ ocp.con_p_e.name }}_p_constraint_e;
-	p_constraint_e.casadi_n_in = &{{ ocp.con_p_e.name }}_p_constraint_e_n_in;
-	p_constraint_e.casadi_n_out = &{{ ocp.con_p_e.name }}_p_constraint_e_n_out;
-	p_constraint_e.casadi_sparsity_in = &{{ ocp.con_p_e.name }}_p_constraint_e_sparsity_in;
-	p_constraint_e.casadi_sparsity_out = &{{ ocp.con_p_e.name }}_p_constraint_e_sparsity_out;
-	p_constraint_e.casadi_work = &{{ ocp.con_p_e.name }}_p_constraint_e_work;
+	p_e_constraint.casadi_fun = &{{ ocp.con_h_e.name }}_p_e_constraint;
+	p_e_constraint.casadi_n_in = &{{ ocp.con_h_e.name }}_p_e_constraint_n_in;
+	p_e_constraint.casadi_n_out = &{{ ocp.con_h_e.name }}_p_e_constraint_n_out;
+	p_e_constraint.casadi_sparsity_in = &{{ ocp.con_h_e.name }}_p_e_constraint_sparsity_in;
+	p_e_constraint.casadi_sparsity_out = &{{ ocp.con_h_e.name }}_p_e_constraint_sparsity_out;
+	p_e_constraint.casadi_work = &{{ ocp.con_h_e.name }}_p_e_constraint_work;
 
-    external_function_param_casadi_create(p_constraint_e, {{ocp.dims.np}});
+    external_function_param_casadi_create(&p_e_constraint, {{ ocp.dims.np }});
     {%- endif %}
 
     {%- if ocp.dims.nh > 0 %}
@@ -751,7 +753,7 @@ int acados_create() {
     external_function_param_casadi_create(&h_e_constraint, {{ ocp.dims.np }});
     {%- endif %}
 
-    {% if ocp.solver_config.integrator_type == "ERK" %}
+    {% if ocp.solver_options.integrator_type == "ERK" %}
     // explicit ode
     forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
 
@@ -765,7 +767,7 @@ int acados_create() {
         external_function_param_casadi_create(&forw_vde_casadi[i], {{ ocp.dims.np }});
     }
 
-    {% if ocp.solver_config.hessian_approx == "EXACT" %} 
+    {% if ocp.solver_options.hessian_approx == "EXACT" %} 
     external_function_param_casadi * hess_vde_casadi;
     hess_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
@@ -779,7 +781,7 @@ int acados_create() {
     }
     {% endif %}
     {% else %}
-    {% if ocp.solver_config.integrator_type == "IRK" %}
+    {% if ocp.solver_options.integrator_type == "IRK" %}
     // implicit dae
     impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; ++i) {
@@ -880,15 +882,15 @@ int acados_create() {
     // NLP dynamics
     int set_fun_status;
     for (int i = 0; i < N; ++i) {
-    {% if ocp.solver_config.integrator_type == "ERK" %} 
+    {% if ocp.solver_options.integrator_type == "ERK" %} 
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
         if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
-        {% if ocp.solver_config.hessian_approx == "EXACT" %} 
+        {% if ocp.solver_options.hessian_approx == "EXACT" %} 
             set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
             if (set_fun_status != 0) { printf("Error while setting expl_ode_hes[%i]\n", i);  exit(1); }
         {% endif %}
     {% else %}
-    {% if ocp.solver_config.integrator_type == "IRK" %} 
+    {% if ocp.solver_options.integrator_type == "IRK" %} 
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun[%i]\n", i);  exit(1); }
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun_jac_x_xdot", &impl_dae_fun_jac_x_xdot_z[i]);
@@ -1004,7 +1006,7 @@ int acados_create() {
 
     {%- if ocp.dims.npd_e > 0 %}
     // convex-composite constraints for stage N
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_constraint_e[i]);
+    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "p", &p_e_constraint);
     {%- endif %}
 
     {%- if ocp.dims.nh > 0 %}
@@ -1029,17 +1031,18 @@ int acados_create() {
     {% if ocp.dims.nz > 0 %}
     bool output_z_val = true; 
     bool sens_algebraic_val = true; 
+
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_output_z", &output_z_val);
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_sens_algebraic", &sens_algebraic_val);
     {% endif %}
-    int num_steps_val = {{ ocp.solver_config.sim_method_num_steps }}; 
+    int num_steps_val = {{ ocp.solver_options.sim_method_num_steps }}; 
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_steps", &num_steps_val);
-    int ns_val = {{ ocp.solver_config.sim_method_num_stages }}; 
-    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_ns", &ns_val);
+    int ns_val = {{ ocp.solver_options.sim_method_num_stages }}; 
+    for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_num_stages", &ns_val);
     bool jac_reuse_val = true;
     for (int i = 0; i < N; i++) ocp_nlp_solver_opts_set_at_stage(nlp_config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse_val);
 
-    {% if ocp.solver_config.nlp_solver_type == "SQP" %}
+    {% if ocp.solver_options.nlp_solver_type == "SQP" %}
 
     int max_iter = max_num_sqp_iterations;
     double tol_stat = 1e-6;
@@ -1057,7 +1060,7 @@ int acados_create() {
     {% else %}
     // ocp_nlp_sqp_rti_opts *sqp_opts = (ocp_nlp_sqp_rti_opts *) nlp_opts;
     {% endif %}
-    {% if ocp.solver_config.hessian_approx == "EXACT" %}
+    {% if ocp.solver_options.hessian_approx == "EXACT" %}
     for (int i = 0; i < N; ++i)
     {
         // TODO(oj) is the following needed, and what does it do? do we
@@ -1088,7 +1091,7 @@ int acados_create() {
     {%- for item in ocp.constraints.p %}
     p[{{ loop.index0 }}] = {{ item }};
     {%- endfor %}
-    {% if ocp.solver_config.integrator_type == "IRK" %}
+    {% if ocp.solver_options.integrator_type == "IRK" %}
     for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
@@ -1131,7 +1134,7 @@ int acados_update_params(int stage, double *p, int np) {
     int casadi_np = 0;
     {% if ocp.dims.np > 0%}
     if (stage < {{ ocp.dims.N }}) {
-        {% if ocp.solver_config.integrator_type == "IRK" %}
+        {% if ocp.solver_options.integrator_type == "IRK" %}
         casadi_np = (impl_dae_fun+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
@@ -1217,7 +1220,7 @@ int acados_free() {
     ocp_nlp_plan_destroy(nlp_solver_plan);
 
     // free external function 
-    {% if ocp.solver_config.integrator_type == "IRK" %}
+    {% if ocp.solver_options.integrator_type == "IRK" %}
     for(int i = 0; i < {{ ocp.dims.N }}; i++) {
         external_function_param_casadi_free(&impl_dae_fun[i]);
         external_function_param_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
@@ -1226,7 +1229,7 @@ int acados_free() {
     {% else %}
     for(int i = 0; i < {{ ocp.dims.N }}; i++) {
         external_function_param_casadi_free(&forw_vde_casadi[i]);
-    {% if ocp.solver_config.hessian_approx == "EXACT" %}
+    {% if ocp.solver_options.hessian_approx == "EXACT" %}
         external_function_param_casadi_free(&hess_vde_casadi[i]);
     {% endif %}
     }

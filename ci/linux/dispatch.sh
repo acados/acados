@@ -82,7 +82,7 @@ elif [ "${SECTION}" = 'install' ]; then
     if [[ "${ACADOS_PYTHON}" = 'ON' ]] ;
     then
         source "${SCRIPT_DIR}/install_python_dependencies.sh";
-        pushd examples/acados_template/python/test;
+        pushd examples/acados_python/test;
             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
         popd;
     fi

@@ -587,14 +587,11 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 		// qp solver
         config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, field, int_value);
     }
-    else if ( (!strcmp(field, "ng")) || (!strcmp(field, "nh")) )
+    else if ( (!strcmp(field, "ng")) || (!strcmp(field, "nh")) || (!strcmp(field, "nphi")))
     {
         // update ng_qp_solver in qp_solver
-        int ng, nh, ng_qp_solver;
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ng", &ng);
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nh", &nh);
-
-        ng_qp_solver = ng + nh;
+        int ng_qp_solver;
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "ng_qp_solver", &ng_qp_solver);
 
 		// qp solver
         config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "ng", &ng_qp_solver);
@@ -602,14 +599,11 @@ void ocp_nlp_dims_set_constraints(void *config_, void *dims_, int stage, const c
 		// regularization
         config->regularize->dims_set(config->regularize, dims->regularize, i, "ng", &ng_qp_solver);
     }
-    else if ( (!strcmp(field, "nsg")) || (!strcmp(field, "nsh")) )
+    else if ( (!strcmp(field, "nsg")) || (!strcmp(field, "nsh")) || (!strcmp(field, "nsphi")))
     {
         // update ng_qp_solver in qp_solver
-        int nsg, nsh, nsg_qp_solver;
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg", &nsg);
-        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsh", &nsh);
-
-        nsg_qp_solver = nsg + nsh;
+        int nsg_qp_solver;
+        config->constraints[i]->dims_get(config->constraints[i], dims->constraints[i], "nsg_qp_solver", &nsg_qp_solver);
 
 		// qp solver
         config->qp_solver->dims_set(config->qp_solver, dims->qp_solver, i, "nsg", &nsg_qp_solver);

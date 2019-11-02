@@ -12,7 +12,12 @@
             "str"
             ]   
     },
-    "con_p_e": {
+    "con_phi": {
+        "name"   : [
+            "str"
+            ]   
+    },
+    "con_phi_e": {
         "name" : [
             "str"
         ]
@@ -27,11 +32,6 @@
             "str"
         ]
      },
-     "con_p": {
-         "name" : [
-            "str"
-        ]
-    },
      "model": {
          "name" : [
             "str"
@@ -170,6 +170,30 @@
                 "nh_e"
             ]
         ],
+        "lphi": [
+            "ndarray",
+            [
+                "nphi"
+            ]
+        ],
+        "uphi": [
+            "ndarray",
+            [
+                "nphi"
+            ]
+        ],
+        "lphi_e": [
+            "ndarray",
+            [
+                "nphi_e"
+            ]
+        ],
+        "uphi_e": [
+            "ndarray",
+            [
+                "nphi_e"
+            ]
+        ],
         "lsbx": [
             "ndarray",
                 [
@@ -260,6 +284,42 @@
                 "nsh_e"
             ]
         ],
+        "lsphi": [
+            "ndarray",
+            [
+                "nsphi"
+            ]
+        ],
+        "usphi": [
+            "ndarray",
+            [
+                "nsphi"
+            ]
+        ],
+        "idxsphi": [
+            "ndarray",
+            [
+                "nsphi"
+            ]
+        ],
+        "lsphi_e": [
+            "ndarray",
+            [
+                "nsphi_e"
+            ]
+        ],
+        "usphi_e": [
+            "ndarray",
+            [
+                "nsphi_e"
+            ]
+        ],
+        "idxsphi_e": [
+            "ndarray",
+            [
+                "nsphi_e"
+            ]
+        ],
         "p": [
             "ndarray",
             [
@@ -318,14 +378,12 @@
         "Zl": [
             "ndarray",
             [
-                "ns",
                 "ns"
             ]
         ],
         "Zu": [
             "ndarray",
             [
-                "ns",
                 "ns"
             ]
         ],
@@ -363,14 +421,12 @@
         "Zl_e": [
             "ndarray",
             [
-                "ns_e",
                 "ns_e"
             ]
         ],
         "Zu_e": [
             "ndarray",
             [
-                "ns_e",
                 "ns_e"
             ]
         ],
@@ -415,6 +471,12 @@
         "nsh_e": [
             "int"
         ],
+        "nsphi": [
+            "int"
+        ],
+        "nsphi_e": [
+            "int"
+        ],
         "ns": [
             "int"
         ],
@@ -427,19 +489,25 @@
         "ng_e": [
             "int"
         ],
+        "np": [
+            "int"
+        ],
+        "nr": [
+            "int"
+        ],
+        "nr_e": [
+            "int"
+        ],
         "nh": [
             "int"
         ],
         "nh_e": [
             "int"
         ],
-        "np": [
+        "nphi": [
             "int"
         ],
-        "npd": [
-            "int"
-        ],
-        "npd_e": [
+        "nphi_e": [
             "int"
         ],
         "nu": [
@@ -458,7 +526,7 @@
             "int"
         ]
     },
-    "solver_config": {
+    "solver_options": {
         "hessian_approx": [
             "str"
         ],
@@ -467,6 +535,9 @@
         ],
         "nlp_solver_type": [
             "str"
+        ],
+        "nlp_solver_step_length": [
+            "float"
         ],
         "qp_solver": [
             "str"
@@ -478,6 +549,36 @@
             "int"
         ],
         "sim_method_num_steps": [
+            "int"
+        ],
+        "sim_method_newton_iter": [
+            "int"
+        ],
+        "qp_solver_tol_stat": [
+            "float"
+        ],
+        "qp_solver_tol_eq": [
+            "float"
+        ],
+        "qp_solver_tol_ineq": [
+            "float"
+        ],
+        "qp_solver_tol_comp": [
+            "float"
+        ],
+        "nlp_solver_tol_stat": [
+            "float"
+        ],
+        "nlp_solver_tol_eq": [
+            "float"
+        ],
+        "nlp_solver_tol_ineq": [
+            "float"
+        ],
+        "nlp_solver_tol_comp": [
+            "float"
+        ],
+        "nlp_solver_max_iter": [
             "int"
         ]
     }

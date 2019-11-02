@@ -40,7 +40,6 @@ TERA_RENDERER_URL="${_TERA_RENDERER_GITHUB_RELEASES}/t_renderer-v${TERA_RENDERER
 
 export MATLABPATH="${ACADOS_INSTALL_DIR}/lib:${MATLABPATH}";
 
-
 function build_acados {
 	BUILD_TYPE="Debug";  # Release or Debug
 	[ -z "$_JAIL" ] && echo "Empty: Yes" || echo "Empty: No"

@@ -38,7 +38,7 @@
 extern "C" {
 #endif
 
-{% if solver_config.integrator_type == "IRK" %}
+{% if solver_options.integrator_type == "IRK" %}
 // implicit ODE
 int {{ model.name }}_impl_dae_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
 int {{ model.name }}_impl_dae_fun_work(int *, int *, int *, int *);
@@ -120,7 +120,7 @@ int {{ model.name }}_impl_dae_jac_x_xdot_u_z_n_out();
 // int        {{ model.name }}_f_lo_fun_jac_x1k1uz_n_in();
 // int        {{ model.name }}_f_lo_fun_jac_x1k1uz_n_out();
 
-{% elif solver_config.integrator_type == "ERK" %}
+{% elif solver_options.integrator_type == "ERK" %}
 /* explicit ODE */
 
 // explicit ODE

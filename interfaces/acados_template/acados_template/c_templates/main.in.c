@@ -59,15 +59,15 @@ void        * {{ocp.model.name}}_sim_dims;
 sim_opts    * {{ocp.model.name}}_sim_opts;
 sim_solver  * {{ocp.model.name}}_sim_solver; 
 
-{% if ocp.solver_config.integrator_type == "ERK" %}
+{% if ocp.solver_options.integrator_type == "ERK" %}
 external_function_param_casadi * forw_vde_casadi;
 external_function_param_casadi * sim_forw_vde_casadi;
 external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% if ocp.solver_config.hessian_approx == "EXACT" %} 
+{% if ocp.solver_options.hessian_approx == "EXACT" %} 
 external_function_param_casadi * hess_vde_casadi;
 {% endif %}
 {% else %}
-{% if ocp.solver_config.integrator_type == "IRK" %}
+{% if ocp.solver_options.integrator_type == "IRK" %}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
@@ -80,7 +80,7 @@ external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 external_function_param_casadi * p_constraint;
 {% endif %}
 {% if ocp.dims.npd_e > 0 %}
-external_function_param_casadi * p_constraint_e;
+external_function_param_casadi p_e_constraint;
 {% endif %}
 {% if ocp.dims.nh > 0 %}
 external_function_param_casadi * h_constraint;
@@ -119,7 +119,7 @@ int main() {
     for (int ii = 0; ii < {{ocp.dims.nx}}; ii++)
         {{ ocp.model.name }}_sim_in->S_forw[ii * ({{ocp.dims.nx}} + 1)] = 1.0;
 
-    double Td = {{ ocp.solver_config.tf }}/ {{ ocp.dims.N }};
+    double Td = {{ ocp.solver_options.tf }}/ {{ ocp.dims.N }};
     sim_in_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_in, "T", &Td);
     sim_in_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_in, "x", x_sim);
     sim_in_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_in, "u", u_sim);
@@ -163,7 +163,7 @@ int main() {
     {% endif %}
     
     {% if ocp.dims.np > 0%}
-    {% if ocp.solver_config.integrator_type == "IRK" %}
+    {% if ocp.solver_options.integrator_type == "IRK" %}
     for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);

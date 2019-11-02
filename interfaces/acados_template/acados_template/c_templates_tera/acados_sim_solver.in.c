@@ -65,9 +65,9 @@ int {{ model.name }}_acados_sim_create() {
     int nu = NU;
     int nz = NZ;
 
-    double Td = {{ solver_config.tf }}/ {{ dims.N }};
+    double Td = {{ solver_options.tf }}/ {{ dims.N }};
 
-    {% if solver_config.integrator_type == "IRK" %}
+    {% if solver_options.integrator_type == "IRK" %}
     sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     sim_impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     sim_impl_dae_jac_x_xdot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
@@ -102,7 +102,7 @@ int {{ model.name }}_acados_sim_create() {
 
     external_function_param_casadi_create(sim_impl_dae_jac_x_xdot_u_z, {{ dims.np }});
 
-    {% elif solver_config.integrator_type == "ERK" %}
+    {% elif solver_options.integrator_type == "ERK" %}
     // explicit ode
     sim_forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
     sim_expl_ode_fun_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
@@ -132,7 +132,7 @@ int {{ model.name }}_acados_sim_create() {
     // choose plan
     sim_solver_plan plan;
 
-    plan.sim_solver = {{ solver_config.integrator_type }};
+    plan.sim_solver = {{ solver_options.integrator_type }};
 
     // create correct config based on plan
     {{ model.name }}_sim_config = sim_config_create(plan);
@@ -148,11 +148,11 @@ int {{ model.name }}_acados_sim_create() {
 
     {{ model.name }}_sim_opts = sim_opts_create({{ model.name }}_sim_config, {{ model.name }}_sim_dims);
 
-    {{ model.name }}_sim_opts->ns = {{ solver_config.sim_method_num_stages }}; // number of stages in rk integrator
-    {{ model.name }}_sim_opts->num_steps = {{ solver_config.sim_method_num_steps }}; // number of integration steps
+    {{ model.name }}_sim_opts->ns = {{ solver_options.sim_method_num_stages }}; // number of stages in rk integrator
+    {{ model.name }}_sim_opts->num_steps = {{ solver_options.sim_method_num_steps }}; // number of integration steps
     {{ model.name }}_sim_opts->sens_adj = false;
     {{ model.name }}_sim_opts->sens_forw = true;
-    {% if solver_config.integrator_type == "IRK" %}
+    {% if solver_options.integrator_type == "IRK" %}
     {{ model.name }}_sim_opts->sens_algebraic = false;
     {{ model.name }}_sim_opts->output_z = false;
     {{ model.name }}_sim_opts->newton_iter = 5;
@@ -167,11 +167,11 @@ int {{ model.name }}_acados_sim_create() {
     {{ model.name }}_sim_in->T = Td;
 
     // external functions
-    {% if solver_config.integrator_type == "IRK" %}
+    {% if solver_options.integrator_type == "IRK" %}
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model, "impl_ode_fun", sim_impl_dae_fun);
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model, "impl_ode_fun_jac_x_xdot", sim_impl_dae_fun_jac_x_xdot_z);
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model, "impl_ode_jac_x_xdot_u", sim_impl_dae_jac_x_xdot_u_z);
-    {% elif solver_config.integrator_type == "ERK" %}
+    {% elif solver_options.integrator_type == "ERK" %}
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model, "expl_vde_for", sim_forw_vde_casadi);
     {{ model.name }}_sim_config->model_set({{ model.name }}_sim_in->model, "expl_ode_fun", sim_expl_ode_fun_casadi);
     {% endif %}
@@ -214,11 +214,11 @@ int {{ model.name }}_acados_sim_free() {
     sim_config_destroy({{ model.name }}_sim_config);
 
     // free external function 
-    {% if solver_config.integrator_type == "IRK" %}
+    {% if solver_options.integrator_type == "IRK" %}
         external_function_param_casadi_free(sim_impl_dae_fun);
         external_function_param_casadi_free(sim_impl_dae_fun_jac_x_xdot_z);
         external_function_param_casadi_free(sim_impl_dae_jac_x_xdot_u_z);
-    {% elif solver_config.integrator_type == "ERK" %}
+    {% elif solver_options.integrator_type == "ERK" %}
         external_function_param_casadi_free(sim_forw_vde_casadi);
         external_function_param_casadi_free(sim_expl_ode_fun_casadi);
     {% endif %}
