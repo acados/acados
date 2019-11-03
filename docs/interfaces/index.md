@@ -52,9 +52,9 @@ Note: This part of the MATLAB/Octave interface does not yet support all features
 In comparison with the MATLAB interface for rapid prototyping (see above), it supports less features, but it allows the user to generate a self-contained C library  
 that can be easily deployed on an embedded system.
 
-The framework is based on templated C files which are rendered from Python using the templating engine `Jinja2` or `Tera`.
+The framework is based on templated C files which are rendered from Python using the templating engine `Tera`.
 
-The currently supported formulations reads as
+The currently supported formulation reads as
 
 ```math
 \begin{equation}
@@ -109,6 +109,12 @@ pip3 install <acados_root>/interfaces/acados_template
 
 (Notice that, of course, you might need to use `pip` instead, if you run, for example, from within a Python virtual 
 environment) You should now be able to import it as a Python module and use it as shown in the examples in `<acados_root>/examples/acados_template/python/<example_name>/generate_c_code.py`
+
+In order to be able to successfully render C code templates, 
+you need to download the `t_renderer` binaries for your platform 
+from <https://github.com/acados/tera_renderer/releases/> and 
+place them in `<acados_root>/bin` (please strip the version and platform from the binaries (e.g. 
+`t_renderer-v0.0.20 -> t_renderer`). Notice that you might need to make `t_renderer` executable.
 
 For more information contact `@zanellia`
 

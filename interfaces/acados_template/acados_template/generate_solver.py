@@ -43,6 +43,19 @@ from ctypes import *
 from copy import deepcopy
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
+
+    acados_path = os.path.dirname(os.path.abspath(__file__))
+    tera_path = acados_path + '/../../../bin/' 
+    t_renderer_path = tera_path + 't_renderer'
+    if (os.path.exists(t_renderer_path) is False):
+        raise Exception('t_renderer binaries not found. In order to be able to ' + \
+                'successfully render C code templates, you need to download the ' + \
+                't_renderer binaries for your platform from ' + \
+                'https://github.com/acados/tera_renderer/releases/ and ' + \
+                'place them in <acados_root>/bin (please strip the ' + \
+                'version and platform from the binaries e.g. ' + \
+                't_renderer-v0.0.20 -> t_renderer).')
+
     model = acados_ocp.model
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
@@ -124,7 +137,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
             "\"" + ' ' + "\"" + out_file + "\""
 
-    os.system(os_cmd)
+    status = os.system(os_cmd)
+    if (status != 0):
+        raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
     os.chdir('..')
         
     os.chdir('c_generated_code')
@@ -136,7 +152,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
             "\"" + ' ' + "\"" + out_file + "\""
 
-    os.system(os_cmd)
+    status = os.system(os_cmd)
+    if (status != 0):
+        raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
     os.chdir('..')
 
     os.chdir('c_generated_code')
@@ -148,7 +167,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
             "\"" + ' ' + "\"" + out_file + "\""
 
-    os.system(os_cmd)
+    status = os.system(os_cmd)
+    if (status != 0):
+        raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
     os.chdir('..')
 
     os.chdir('c_generated_code')
@@ -160,7 +182,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
             "\"" + ' ' + "\"" + out_file + "\""
 
-    os.system(os_cmd)
+    status = os.system(os_cmd)
+    if (status != 0):
+        raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
     os.chdir('..')
 
     os.chdir('c_generated_code')
@@ -172,7 +197,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
             "\"" + ' ' + "\"" + out_file + "\""
 
-    os.system(os_cmd)
+    status = os.system(os_cmd)
+    if (status != 0):
+        raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
     os.chdir('..')
 
     os.chdir('c_generated_code/' + model.name + '_model/')
@@ -184,7 +212,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
             "\"" + ' ' + "\"" + out_file + "\""
 
-    os.system(os_cmd)
+    status = os.system(os_cmd)
+    if (status != 0):
+        raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
     os.chdir('../..')
 
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
@@ -200,7 +231,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
-        os.system(os_cmd)
+        status = os.system(os_cmd)
+        if (status != 0):
+            raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
         os.chdir('../..')
         # create folder
         if not os.path.exists('c_generated_code/' + acados_ocp.con_phi.name + '_r_constraint/'):
@@ -214,8 +248,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
+        status = os.system(os_cmd)
+        if (status != 0):
+            raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
 
-        os.system(os_cmd)
         os.chdir('../..')
 
     if acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0:
@@ -231,7 +267,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
-        os.system(os_cmd)
+        status = os.system(os_cmd)
+        if (status != 0):
+            raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
         os.chdir('../..')
         # create folder
         if not os.path.exists('c_generated_code/' + acados_ocp.con_phi_e.name + '_r_e_constraint/'):
@@ -245,7 +284,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
-        os.system(os_cmd)
+        status = os.system(os_cmd)
+        if (status != 0):
+            raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
         os.chdir('../..')
 
     if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0:
@@ -261,7 +303,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
-        os.system(os_cmd)
+        status = os.system(os_cmd)
+        if (status != 0):
+            raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
         os.chdir('../..')
 
     if acados_ocp.constraints.constr_type_e == 'BGH' and acados_ocp.dims.nh_e > 0:
@@ -277,7 +322,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
-        os.system(os_cmd)
+        status = os.system(os_cmd)
+        if (status != 0):
+            raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
         os.chdir('../..')
 
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
@@ -293,7 +341,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
-        os.system(os_cmd)
+        status = os.system(os_cmd)
+        if (status != 0):
+            raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
         os.chdir('../..')
 
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
@@ -309,7 +360,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
                 + template_file + "\"" + ' ' + "\"" + '../../' + json_file + \
                 "\"" + ' ' + "\"" + out_file + "\""
 
-        os.system(os_cmd)
+        status = os.system(os_cmd)
+        if (status != 0):
+            raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
         os.chdir('../..')
 
     os.chdir('c_generated_code/') 
@@ -321,7 +375,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
             "\"" + ' ' + "\"" + out_file + "\""
 
-    os.system(os_cmd)
+    status = os.system(os_cmd)
+    if (status != 0):
+        raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
     os.chdir('..')
 
     os.chdir('c_generated_code/') 
@@ -333,7 +390,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
             "\"" + ' ' + "\"" + out_file + "\""
 
-    os.system(os_cmd)
+    status = os.system(os_cmd)
+    if (status != 0):
+        raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
     os.chdir('..')
 
     os.chdir('c_generated_code/') 
@@ -345,7 +405,10 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
             + template_file + "\"" + ' ' + "\"" + '../' + json_file + \
             "\"" + ' ' + "\"" + out_file + "\""
 
-    os.system(os_cmd)
+    status = os.system(os_cmd)
+    if (status != 0):
+        raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
+
     os.chdir('..')
 
     # make 
