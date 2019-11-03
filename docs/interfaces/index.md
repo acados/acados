@@ -111,10 +111,10 @@ pip3 install <acados_root>/interfaces/acados_template
 environment) You should now be able to import it as a Python module and use it as shown in the examples in `<acados_root>/examples/acados_template/python/<example_name>/generate_c_code.py`
 
 In order to be able to successfully render C code templates, 
-you need to download the t_renderer binaries for your platform 
+you need to download the `t_renderer` binaries for your platform 
 from <https://github.com/acados/tera_renderer/releases/> and 
 place them in `<acados_root>/bin` (please strip the version and platform from the binaries (e.g. 
-`t_renderer-v0.0.20 -> t_renderer`).
+`t_renderer-v0.0.20 -> t_renderer`). Notice that you might need to make `t_renderer` executable.
 
 For more information contact `@zanellia`
 
