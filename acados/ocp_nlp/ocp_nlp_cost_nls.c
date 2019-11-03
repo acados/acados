@@ -816,7 +816,7 @@ void ocp_nlp_cost_nls_compute_fun(void *config_, void *dims_, void *model_, void
 
     ocp_nlp_cost_nls_dims *dims = dims_;
     ocp_nlp_cost_nls_model *model = model_;
-    ocp_nlp_cost_nls_opts *opts = opts_;
+    // ocp_nlp_cost_nls_opts *opts = opts_;
     ocp_nlp_cost_nls_memory *memory = memory_;
     ocp_nlp_cost_nls_workspace *work = work_;
 

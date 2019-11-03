@@ -1207,7 +1207,7 @@ void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
     ocp_nlp_constraints_bgh_model *model = model_;
-    ocp_nlp_constraints_bgh_opts *opts = opts_;
+    // ocp_nlp_constraints_bgh_opts *opts = opts_;
     ocp_nlp_constraints_bgh_memory *memory = memory_;
     ocp_nlp_constraints_bgh_workspace *work = work_;
 

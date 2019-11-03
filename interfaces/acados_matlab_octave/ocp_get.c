@@ -49,7 +49,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     long long *ptr;
     char fun_name[50] = "ocp_get";
-    char buffer [200]; // for error messages
+    char buffer [300]; // for error messages
 
     int ii, jj;
 

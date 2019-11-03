@@ -199,7 +199,8 @@ void ext_cost(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
         *fun += BLASFEO_DVECEL(grad, ii) * BLASFEO_DVECEL(u, ui+ii); // r
     for(ii=0; ii<nx; ii++)
         *fun += BLASFEO_DVECEL(grad, nu+ii) * BLASFEO_DVECEL(x, xi+ii); // q
-	*fun += 0.5;
+
+    *fun += 0.5;
 
     return;
 
@@ -251,7 +252,9 @@ void ext_costN(void *ext_fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *
     for(ii=0; ii<nu; ii++)
         *fun += BLASFEO_DVECEL(grad, ii) * BLASFEO_DVECEL(u, ui+ii); // r
     for(ii=0; ii<nx; ii++)
+    {
         *fun += BLASFEO_DVECEL(grad, nu+ii) * BLASFEO_DVECEL(x, xi+ii); // q
+    }
 	*fun += 0.5;
 
     return;
