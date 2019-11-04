@@ -114,7 +114,7 @@ function model = detect_cost_type(model, is_e)
         xuz = [x; u; z];
         sym_y = xuz(xuz_idx);
         jac_fun = Function('jac_fun', {sym_y}, {jacobian(expr_cost, sym_y)'});
-        y_ref = .5 * full(jac_fun(zeros(ny,1)));
+        y_ref = -W \ ( .5 * full(jac_fun(zeros(ny,1))) );
 
         y = -y_ref + Vx * x + Vu * u;
         if nz > 0
@@ -126,8 +126,9 @@ function model = detect_cost_type(model, is_e)
             x0 = rand(nx,1);
             u0 = rand(nu,1);
             z0 = rand(nz,1);
-            val1 = lls_cost_fun(x0, z0, u0);
-            val2 = cost_fun(x0, z0, u0);
+
+            val1 = lls_cost_fun(x0, u0, z0);
+            val2 = cost_fun(x0, u0, z0);
             if norm(full(val1 - val2))> 1e-13
                 disp('something went wrong when reformulating with linear least square cost');
                 keyboard
