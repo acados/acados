@@ -44,8 +44,12 @@ from copy import deepcopy
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
-    acados_path = os.path.dirname(os.path.abspath(__file__))
-    tera_path = acados_path + '/../../../bin/' 
+    if os.environ.get('ACADOS_SOURCE_DIR') is None: 
+        acados_path = os.path.dirname(os.path.abspath(__file__))
+        tera_path = acados_path + '/../../../bin/' 
+    else:
+        acados_path = os.environ.get('ACADOS_SOURCE_DIR')
+        tera_path = acados_path + '/bin/'
     t_renderer_path = tera_path + 't_renderer'
     if (os.path.exists(t_renderer_path) is False):
         raise Exception('t_renderer binaries not found. In order to be able to ' + \
@@ -119,8 +123,6 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
 
     # setting up loader and environment
-    acados_path = os.path.dirname(os.path.abspath(__file__))
-    tera_path = acados_path + '/../../../bin/' 
     template_glob = acados_path + '/c_templates_tera/*'
     acados_template_path = acados_path + '/c_templates_tera'
 

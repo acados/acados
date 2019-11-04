@@ -83,7 +83,7 @@ function build_acados {
     then
         source "${SCRIPT_DIR}/install_python_dependencies.sh";
         pushd interfaces/acados_template;
-            pip install -e .
+            pip install .
         popd;
 		mkdir -p bin;
         pushd bin;
