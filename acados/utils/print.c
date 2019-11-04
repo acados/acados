@@ -268,22 +268,36 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     printf("DCt =\n");
     for (int ii = 0; ii < N + 1; ii++)
     {
-        blasfeo_print_dmat(nu[ii] + nx[ii], ng[ii], &qp_in->DCt[ii], 0, 0);
+        if (ng[ii] > 0)
+            blasfeo_print_dmat(nu[ii] + nx[ii], ng[ii], &qp_in->DCt[ii], 0, 0);
     }
 
     printf("d_s =\n");
     for (int ii = 0; ii <= N; ii++)
-        blasfeo_print_tran_dvec(2 * ns[ii], &qp_in->d[ii], 2 * nb[ii] + 2 * ng[ii]);
+    {
+        if (ns[ii] > 0)
+            blasfeo_print_tran_dvec(2 * ns[ii], &qp_in->d[ii], 2 * nb[ii] + 2 * ng[ii]);
+    }
 
     printf("idxs =\n");
-    for (int ii = 0; ii <= N; ii++) int_print_mat(1, ns[ii], qp_in->idxs[ii], 1);
+    for (int ii = 0; ii <= N; ii++)
+    {
+        if (ns[ii] > 0)
+            int_print_mat(1, ns[ii], qp_in->idxs[ii], 1);
+    }
 
     printf("Z =\n");
-    for (int ii = 0; ii <= N; ii++) blasfeo_print_tran_dvec(2 * ns[ii], &qp_in->Z[ii], 0);
-
+    for (int ii = 0; ii <= N; ii++)
+    {
+        if (ns[ii] > 0)
+            blasfeo_print_tran_dvec(2 * ns[ii], &qp_in->Z[ii], 0);
+    }
     printf("z =\n");
     for (int ii = 0; ii <= N; ii++)
-        blasfeo_print_tran_dvec(2 * ns[ii], &qp_in->rqz[ii], nu[ii] + nx[ii]);
+    {
+        if (ns[ii] > 0)
+            blasfeo_print_tran_dvec(2 * ns[ii], &qp_in->rqz[ii], nu[ii] + nx[ii]);
+    }
 
 #else
 
