@@ -52,7 +52,8 @@ setup(name='acados_template',
       'jinja2',
       'numpy',
       'scipy',
-      'casadi>=3.4'
+      'casadi==3.4',
+      'matplotlib'
    ],
    package_data={'': [
        'c_templates_tera/main.in.c',
