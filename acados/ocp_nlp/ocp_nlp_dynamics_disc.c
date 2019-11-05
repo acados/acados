@@ -721,12 +721,12 @@ void ocp_nlp_dynamics_disc_compute_fun(void *config_, void *dims_, void *model_,
 
     // ocp_nlp_dynamics_config *config = config_;
     ocp_nlp_dynamics_disc_dims *dims = dims_;
-    ocp_nlp_dynamics_disc_opts *opts = opts_;
-    ocp_nlp_dynamics_disc_workspace *work = work_;
+    // ocp_nlp_dynamics_disc_opts *opts = opts_;
+    // ocp_nlp_dynamics_disc_workspace *work = work_;
     ocp_nlp_dynamics_disc_memory *memory = mem_;
     ocp_nlp_dynamics_disc_model *model = model_;
 
-    int nx = dims->nx;
+    // int nx = dims->nx;
     int nu = dims->nu;
     int nx1 = dims->nx1;
     int nu1 = dims->nu1;

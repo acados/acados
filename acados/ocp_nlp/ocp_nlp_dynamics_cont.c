@@ -833,11 +833,9 @@ void ocp_nlp_dynamics_cont_compute_fun(void *config_, void *dims_, void *model_,
     ocp_nlp_dynamics_cont_memory *mem = mem_;
     ocp_nlp_dynamics_cont_model *model = model_;
 
-    int jj;
-
     int nx = dims->nx;
     int nu = dims->nu;
-    int nz = dims->nz;
+    // int nz = dims->nz;
     int nx1 = dims->nx1;
     int nu1 = dims->nu1;
 
