@@ -36,27 +36,25 @@ SOURCES = [ 'acados_solver_sfunction_{{ model.name }}.c ', ...
             {%- if  solver_options.integrator_type == 'ERK' %}
             '{{ model.name }}_model/{{ model.name }}_expl_ode_fun.c ', ...
             '{{ model.name }}_model/{{ model.name }}_expl_vde_forw.c ',...
-            {% if solver_options.hessian_approx == 'EXACT' -%} 
-            {% endif -%}
-            {% else %}
+            {%- if solver_options.hessian_approx == 'EXACT' %} 
+            {%- endif %}
+            {%- else %}
             '{{ model.name }}_model/{{ model.name }}_impl_dae_fun.c ', ...
             '{{ model.name }}_model/{{ model.name }}_impl_dae_fun_jac_x_xdot_z.c ', ...
             '{{ model.name }}_model/{{ model.name }}_impl_dae_jac_x_xdot_u_z.c ', ...
-            {% endif -%}
-            {% if constraints.constr_type == "BGP" and dims.nphi > 0 %}
+            {%- endif -%}
+            {%- if constraints.constr_type == "BGP" and dims.nphi > 0 %}
             '{{ con_phi.name }}_phi_constraint/{{ con_phi.name }}_phi_constraint.c ', ...
-            '{{ con_phi.name }}_r_constraint/{{ con_phi.name }}_r_constraint.c ', ...
-            {% endif -%}
-            {% if constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
+            {%- endif -%}
+            {%- if constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
             '{{ con_phi_e.name }}_phi_e_constraint/{{ con_phi_e.name }}_phi_e_constraint.c ', ...
-            '{{ con_phi_e.name }}_r_e_constraint/{{ con_phi_e.name }}_r_e_constraint.c ', ...
-            {% endif -%}
-            {% if constraints.constr_type == "BGH"  and dims.nh > 0 %}
+            {%- endif -%}
+            {%- if constraints.constr_type == "BGH"  and dims.nh > 0 %}
             '{{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.c ', ...
-            {% endif -%}
-            {% if constraints.constr_type_e == "BGH"  and dims.nh_e > 0 %}
+            {%- endif -%}
+            {%- if constraints.constr_type_e == "BGH"  and dims.nh_e > 0 %}
             '{{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.c ', ...
-            {% endif -%}
+            {%- endif %}
           ];
 
 INC_PATH = '{{ acados_include_path }}';
