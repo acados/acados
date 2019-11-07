@@ -196,7 +196,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     // update value of parameters
     {% if dims.np > 0%}
-    for (int ii = 0; ii < {{ dims.N }}; ii++) 
+    for (int ii = 0; ii <= {{ dims.N }}; ii++) 
         acados_update_params(ii, in_p, {{ dims.np }});
     {% endif %}
     
