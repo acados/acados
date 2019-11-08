@@ -69,19 +69,19 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         # implicit model -- generate C code
         opts = dict(generate_hess=1)
         generate_c_code_implicit_ode(model, opts)
-    
+
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
-        # nonlinear part of nonlinear constraints 
+        # nonlinear part of nonlinear constraints
         generate_c_code_constraint(acados_ocp.con_phi)
-    elif acados_ocp.constraints.constr_type  == 'BGH' and acados_ocp.dims.nh > 0: 
+    elif acados_ocp.constraints.constr_type  == 'BGH' and acados_ocp.dims.nh > 0:
         generate_c_code_constraint(acados_ocp.con_h)
 
     if acados_ocp.constraints.constr_type_e  == 'BGP' and acados_ocp.dims.nphi_e > 0:
-        # nonlinear part of nonlinear constraints 
+        # nonlinear part of nonlinear constraints
         generate_c_code_constraint_e(acados_ocp.con_phi_e)
-    elif acados_ocp.constraints.constr_type_e  == 'BGH' and acados_ocp.dims.nh_e > 0: 
+    elif acados_ocp.constraints.constr_type_e  == 'BGH' and acados_ocp.dims.nh_e > 0:
         generate_c_code_constraint_e(acados_ocp.con_h_e)
-    
+
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         generate_c_code_nls_cost(acados_ocp.cost_r)
 
@@ -114,7 +114,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp['cost_r_e'] = acados_cost_strip_non_num(ocp_nlp['cost_r_e'])
 
     ocp_nlp = dict2json(ocp_nlp)
-    
+
     with open(json_file, 'w') as f:
         json.dump(ocp_nlp, f, default=np_array_to_list)
 
@@ -145,7 +145,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         raise Exception('Rendering of {} failed! Exiting.\n'.format(template_file))
 
     os.chdir('..')
-        
+
     os.chdir('c_generated_code')
     # render source template
     template_file = 'acados_solver.in.c'
@@ -369,7 +369,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
         os.chdir('../..')
 
-    os.chdir('c_generated_code/') 
+    os.chdir('c_generated_code/')
     # render source template
     template_file = 'Makefile.in'
     out_file = 'Makefile'
@@ -384,7 +384,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     os.chdir('..')
 
-    os.chdir('c_generated_code/') 
+    os.chdir('c_generated_code/')
     # render source template
     template_file = 'acados_solver_sfun.in.c'
     out_file = 'acados_solver_sfunction_'  + model.name + '.c'
@@ -399,7 +399,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     os.chdir('..')
 
-    os.chdir('c_generated_code/') 
+    os.chdir('c_generated_code/')
     # render source template
     template_file = 'make_sfun.in.m'
     out_file = 'make_sfun.m'
@@ -414,7 +414,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     os.chdir('..')
 
-    # make 
+    # make
     os.chdir('c_generated_code')
     os.system('make')
     os.system('make shared_lib')
@@ -475,7 +475,7 @@ class acados_solver:
         return out
 
     def set(self, stage_, field_, value_):
-        
+
         cost_fields = ['y_ref', 'yref']
         constraints_fields = ['lbx', 'ubx', 'lbu', 'ubu']
         out_fields = ['x', 'u']
@@ -504,8 +504,8 @@ class acados_solver:
             self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
 
             dims = self.shared_lib.ocp_nlp_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field)
-             
-            if value_.shape[0] != dims: 
+
+            if value_.shape[0] != dims:
                 raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_,dims, value_.shape[0]))
 
             value_data = cast(value_.ctypes.data, POINTER(c_double))
