@@ -1696,8 +1696,7 @@ def dict2json(d):
 def acados_ocp2json_layout(acados_ocp):
     """ Convert acados ocp nlp object to JSON format by stripping the
     property mangling and adding array dimension info.
-    ALL items of type String will be converted
-    to type ndarrray!
+    ALL items of type String will be converted to type ndarray!
 
     Parameters
     ----------
@@ -1722,8 +1721,7 @@ def dict2json_layout(d):
     """ Convert dictionary containing the description of
     of the ocp_nlp to JSON format by stripping the
     property mangling and adding array dimension info.
-    ALL items of type String will be converted
-    to type ndarrray!
+    ALL items of type String will be converted to type ndarray!
 
     Parameters
     ----------
