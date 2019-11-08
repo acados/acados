@@ -44,22 +44,24 @@ from copy import deepcopy
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
-    if os.environ.get('ACADOS_SOURCE_DIR') is None: 
+    if os.environ.get('ACADOS_SOURCE_DIR') is None:
         acados_template_path = os.path.dirname(os.path.abspath(__file__))
         acados_path = acados_template_path + '/../../../'
-        tera_path = acados_path + '/bin/' 
+        tera_path = acados_path + '/bin/'
     else:
         acados_path = os.environ.get('ACADOS_SOURCE_DIR')
         tera_path = acados_path + '/bin/'
     t_renderer_path = tera_path + 't_renderer'
-    if (os.path.exists(t_renderer_path) is False):
-        raise Exception('t_renderer binaries not found. In order to be able to ' + \
-                'successfully render C code templates, you need to download the ' + \
-                't_renderer binaries for your platform from ' + \
-                'https://github.com/acados/tera_renderer/releases/ and ' + \
-                'place them in <acados_root>/bin (please strip the ' + \
-                'version and platform from the binaries e.g. ' + \
-                't_renderer-v0.0.20 -> t_renderer).')
+    if not os.path.exists(t_renderer_path):
+        raise Exception(
+            f'{t_renderer_path} Not found.\n'
+            'In order to be able to successfully render C code templates,'
+            'you need to download the t_renderer binaries for your platform from '
+            'https://github.com/acados/tera_renderer/releases/ and '
+            'place them in <acados_root>/bin (please strip the '
+            'version and platform from the binaries e.g. '
+            't_renderer-v0.0.20 -> t_renderer).'
+    )
 
     model = acados_ocp.model
     if acados_ocp.solver_options.integrator_type == 'ERK':
