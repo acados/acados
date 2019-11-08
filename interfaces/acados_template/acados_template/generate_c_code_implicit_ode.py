@@ -31,18 +31,20 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-
-from casadi import *
 import os
+from casadi import *
+from .utils import ALLOWED_CASADI_VERSIONS
 
 def generate_c_code_implicit_ode( model, opts ):
 
     casadi_version = CasadiMeta.version()
-    if  casadi_version not in ('3.4.5', '3.4.0'):
-        # old casadi versions
-        raise Exception('Please download and install Casadi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
-
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
+    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
+        raise Exception(
+            f'Please download and install CasADi {" or ".join(ALLOWED_CASADI_VERSIONS)}'
+            'to ensure compatibility with acados.\n'
+            f'Version {casadi_version} currently in use.')
+
     generate_hess = opts["generate_hess"]
 
     ## load model
@@ -61,7 +63,7 @@ def generate_c_code_implicit_ode( model, opts ):
         # check that z is empty
         if len(z) == 0:
             nz = 0
-            z  = SX.sym('z', 0, 0) 
+            z  = SX.sym('z', 0, 0)
         else:
             raise Exception('z is a non-empty list. It should be either an empty list or an SX object.')
     else:
@@ -117,7 +119,7 @@ def generate_c_code_implicit_ode( model, opts ):
 
     # fun_name = model_name + '_impl_dae_jac_x_xdot_u'
     # impl_dae_jac_x_xdot_u = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
-    
+
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_u_z'
     impl_dae_fun_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [f_impl, jac_x, jac_xdot, jac_u, jac_z])
 
@@ -127,7 +129,7 @@ def generate_c_code_implicit_ode( model, opts ):
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
     impl_dae_jac_x_xdot_u_z = Function(fun_name, [x, xdot, u, z, p], [jac_x, jac_xdot, jac_u, jac_z])
 
-    
+
     fun_name = model_name + '_impl_dae_hess'
     impl_dae_hess = Function(fun_name, [x, xdot, u, z, multiplier, multiply_mat, p], [HESS_multiplied])
 
@@ -147,7 +149,7 @@ def generate_c_code_implicit_ode( model, opts ):
 
     fun_name = model_name + '_impl_dae_fun_jac_x_xdot_z'
     impl_dae_fun_jac_x_xdot_z.generate(fun_name, casadi_opts)
-    
+
     fun_name = model_name + '_impl_dae_jac_x_xdot_u_z'
     impl_dae_jac_x_xdot_u_z.generate(fun_name, casadi_opts)
 
