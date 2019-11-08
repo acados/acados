@@ -52,7 +52,7 @@ ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
 {% if solver_options.integrator_type == "ERK" %}
 external_function_param_casadi * forw_vde_casadi;
-{% if solver_options.hessian_approx == "EXACT" %} 
+{% if solver_options.hessian_approx == "EXACT" %}
 external_function_param_casadi * hess_vde_casadi;
 {%- endif %}
 {% else %}
@@ -90,8 +90,8 @@ int main()
     status = acados_create();
 
     if (status)
-    { 
-        printf("acados_create() returned status %d. Exiting.\n", status); 
+    {
+        printf("acados_create() returned status %d. Exiting.\n", status);
         exit(1);
     }
 
@@ -126,7 +126,7 @@ int main()
     {% for item in constraints.p %}
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
-    
+
 
     {%- if solver_options.integrator_type == "IRK" -%}
     for (int ii = 0; ii < {{ dims.N }}; ii++) {
@@ -198,7 +198,7 @@ int main()
     }
     else
     {
-        printf("acados_solve() failed with status %d.\n", status); 
+        printf("acados_solve() failed with status %d.\n", status);
     }
 
     // get solution
@@ -211,8 +211,8 @@ int main()
 
     // free solver
     status = acados_free();
-    if (status) { 
-        printf("acados_free() returned status %d. \n", status); 
+    if (status) {
+        printf("acados_free() returned status %d. \n", status);
     }
 
     return status;
