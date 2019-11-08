@@ -32,6 +32,7 @@
 #
 
 import numpy as np
+import casadi as ca
 import json
 import os
 import sys
@@ -1665,7 +1666,16 @@ class acados_ocp_nlp:
         return
 
 def np_array_to_list(np_array):
-    return np_array.tolist()
+    if  isinstance(np_array, (np.ndarray)):
+        return np_array.tolist()
+    elif  isinstance(np_array, (ca.SX)):
+        return ca.DM(np_array).full()
+    elif  isinstance(np_array, (ca.DX)):
+        return np_array.full()
+    else:
+        raise(Exception(
+            f"Cannot convert to list type {type(np_array)}"
+        ))
 
 class ocp_nlp_as_object:
         def __init__(self, d):
