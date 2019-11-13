@@ -37,6 +37,10 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int acados_create();
 int acados_update_param(int stage, double *value, int np);
 int acados_solve();
@@ -48,6 +52,10 @@ ocp_nlp_solver * acados_get_nlp_solver();
 ocp_nlp_config * acados_get_nlp_config();
 void * acados_get_nlp_opts();
 ocp_nlp_dims * acados_get_nlp_dims();
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 // ** global data **
 extern ocp_nlp_in * nlp_in;
