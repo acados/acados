@@ -38,7 +38,16 @@
 #include "acados/utils/print.h"
 #include "acados_c/sim_interface.h"
 #include "acados_c/external_function_interface.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/sim/sim_common.h"
+#include "acados/utils/external_function_generic.h"
+
+#include "acados_c/external_function_interface.h"
+#include "acados_c/sim_interface.h"
+
+// blasfeo
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 // example specific
 
@@ -54,6 +63,37 @@
 #define NZ   NZ_
 #define NU   NU_
 #define NP   NP_
+
+sim_config  * {{model.name}}_sim_config;
+sim_in      * {{model.name}}_sim_in;
+sim_out     * {{model.name}}_sim_out;
+void        * {{model.name}}_sim_dims;
+sim_opts    * {{model.name}}_sim_opts;
+sim_solver  * {{model.name}}_sim_solver;
+
+{% if solver_options.integrator_type == "ERK" %}
+external_function_param_casadi * sim_forw_vde_casadi;
+external_function_param_casadi * sim_expl_ode_fun_casadi;
+{% else %}
+{% if solver_options.integrator_type == "IRK" %}
+external_function_param_casadi * sim_impl_dae_fun;
+external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
+external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
+{% endif %}
+{% if dims.npd > 0 %}
+external_function_casadi * p_constraint;
+{% endif %}
+{% if dims.npd_e > 0 %}
+external_function_casadi * p_constraint_e;
+{% endif %}
+{% endif %}
+{% if dims.nh > 0 %}
+external_function_casadi * h_constraint;
+{% endif %}
+{% if dims.nh_e > 0 %}
+external_function_casadi * h_constraint_e;
+{% endif %}
+
 
 int {{ model.name }}_acados_sim_create() {
 
@@ -184,7 +224,7 @@ int {{ model.name }}_acados_sim_create() {
     // x
     for (ii = 0; ii < NX; ii++)
         {{ model.name }}_sim_in->x[ii] = 0.0;
-    
+
     // u
     for (ii = 0; ii < NU; ii++)
         {{ model.name }}_sim_in->u[ii] = 0.0;

@@ -36,6 +36,7 @@ ACADOS_FLAGS = -fPIC
 ACADOS_FLAGS += -DACADOS_WITH_QPOASES
 {% endif %}
 OBJ =
+SIM_OBJ =
 OBJ+= main_{{ model.name }}.o
 {% if  solver_options.integrator_type == "ERK" %}
 OBJ+= {{ model.name }}_model/{{ model.name }}_expl_ode_fun.o
@@ -69,6 +70,8 @@ OBJ+= {{ cost_r.name }}_r_cost/{{ cost_r.name }}_r_cost.c
 OBJ+= {{ cost_r_e.name }}_r_e_cost/{{ cost_r_e.name }}_r_e_cost.c 
 {% endif %}
 OBJ+= acados_solver_{{ model.name }}.o
+
+SIM_OBJ+= acados_sim_solver_{{ model.name }}.o
 
 INCLUDE_PATH = {{ acados_include_path }}
 LIB_PATH = {{ acados_lib_path }}
@@ -152,7 +155,6 @@ sim_solver:
 
 example:
 	gcc $(ACADOS_FLAGS) -o main_{{ model.name }} $(OBJ) -L $(LIB_PATH) \
-	-L $(LIB_PATH) \
 	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
@@ -160,8 +162,8 @@ example:
 	-I $(INCLUDE_PATH)/acados/ \
 	-I $(INCLUDE_PATH)/qpOASES_e/
 
-shared_lib: casadi_fun solver
-	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ model.name }}.so $(OBJ) -L $(LIB_PATH) \
+shared_lib: casadi_fun solver sim_solver
+	gcc $(ACADOS_FLAGS) -shared -o libacados_solver_{{ model.name }}.so $(OBJ) $(SIM_OBJ) -L $(LIB_PATH) \
 	-L $(LIB_PATH) \
 	-lacados -lhpipm -lblasfeo -lqpOASES_e -lm \
 
