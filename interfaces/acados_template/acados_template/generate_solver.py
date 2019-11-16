@@ -475,7 +475,7 @@ class acados_solver:
 
         if (field_ not in out_fields):
             raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
-                    \n Possible values are {}. Exiting.".format(out_fields, fields))
+                    \n Possible values are {}. Exiting.".format(out_fields))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
