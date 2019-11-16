@@ -626,9 +626,6 @@ void *ocp_qp_osqp_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts->osqp_opts = (OSQPSettings *) c_ptr;
     c_ptr += sizeof(OSQPSettings);
 
-    opts->verbose = 0;  // default value, disable printing
-    opts->polish = 1; // default value, enable polishing
-
     assert((char *) raw_memory + ocp_qp_osqp_opts_calculate_size(config_, dims_) == c_ptr);
 
     return (void *) opts;
@@ -641,8 +638,9 @@ void ocp_qp_osqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     ocp_qp_osqp_opts *opts = opts_;
 
     osqp_set_default_settings(opts->osqp_opts);
-    opts->osqp_opts->verbose = opts->verbose;
-    opts->osqp_opts->polish = opts->polish;
+    opts->osqp_opts->verbose = 0;
+    opts->osqp_opts->polish = 1;
+	opts->osqp_opts->check_termination = 5;
 
     return;
 }
@@ -662,11 +660,8 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
 
     if (!strcmp(field, "iter_max"))
     {
-		// TODO set solver exit iter
-//		int *tmp_ptr = value;
-//		opts->osqp_opts->max_iter = *tmp_ptr;
-//		printf("\n%d\n", opts->osqp_opts->max_iter);
-//		exit(1);
+		int *tmp_ptr = value;
+		opts->osqp_opts->max_iter = *tmp_ptr;
     }
     else if (!strcmp(field, "tol_stat"))
     {
@@ -686,7 +681,12 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
     }
     else if (!strcmp(field, "warm_start"))
     {
-		// TODO set solver warm start
+		// XXX after the first call to the solver, this doesn't work any more, as in osqp the settings are copied in the work !!!!!
+		// XXX i.e. as it is, it gets permanently set to zero if warm start is disabled at the fist iteration !!!!!
+		int *tmp_ptr = value;
+//		int tmp_ptr[] = {1};
+		opts->osqp_opts->warm_start = *tmp_ptr;
+//		printf("\nwarm start %d\n", opts->osqp_opts->warm_start);
     }
 	else
 	{
