@@ -336,6 +336,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
     }
 #endif
+#if defined(ACADOS_WITH_HPMPC)
+    else if (!strcmp(qp_solver, "partial_condensing_hpmpc"))
+    {
+        plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
+    }
+#endif
 #if defined(ACADOS_WITH_OSQP)
     else if (!strcmp(qp_solver, "partial_condensing_osqp"))
     {
@@ -345,7 +351,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else
     {
         MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "qp_solver", qp_solver,
-             "partial_condensing_hpipm, full_condensing_hpipm, full_condensing_qpoases, partial_condensing_osqp");
+             "partial_condensing_hpipm, full_condensing_hpipm, full_condensing_qpoases, partial_condensing_osqp, partial_condensing_hpmpc");
     }
 
 

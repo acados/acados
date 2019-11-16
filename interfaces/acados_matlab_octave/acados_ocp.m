@@ -101,6 +101,9 @@ classdef acados_ocp < handle
                     if ~isempty(strfind(obj.opts_struct.qp_solver,'qpoases'))
                         flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_qpoases.txt');
                         compile_interface = ~exist(flag_file, 'file');
+                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'hpmpc'))
+                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_hpmpc.txt');
+                        compile_interface = ~exist(flag_file, 'file');
                     elseif ~isempty(strfind(obj.opts_struct.qp_solver,'osqp'))
                         flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_osqp.txt');
                         compile_interface = ~exist(flag_file, 'file');

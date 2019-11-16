@@ -94,6 +94,9 @@ if is_octave()
     if (strcmp(opts.qp_solver, 'partial_condensing_osqp'))
         cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_OSQP'];
     end
+    if (strcmp(opts.qp_solver, 'partial_condensing_hpmpc'))
+        cflags_tmp = [cflags_tmp, ' -DACADOS_WITH_HPMPC'];
+    end
 
     setenv('CFLAGS', cflags_tmp);
 
@@ -107,8 +110,8 @@ else
 end
 
 % is qpOASES?
-with_qp_oases = ~isempty(strfind(opts.qp_solver, 'qpoases'));
-if with_qp_oases
+with_qp_qpoases = ~isempty(strfind(opts.qp_solver, 'qpoases'));
+if with_qp_qpoases
     % flag file to remember if compiled with qpOASES
     flag_file = fullfile(opts.output_dir, '_compiled_with_qpoases.txt');
     flagID = fopen(flag_file, 'w');
@@ -122,15 +125,26 @@ if with_qp_osqp
     flagID = fopen(flag_file, 'w');
     fclose(flagID);
 end
+% is HPMPC?
+with_qp_hpmpc = ~isempty(strfind(opts.qp_solver, 'hpmpc'));
+if with_qp_hpmpc
+    % flag file to remember if compiled with OSQP
+    flag_file = fullfile(opts.output_dir, '_compiled_with_hpmpc.txt');
+    flagID = fopen(flag_file, 'w');
+    fclose(flagID);
+end
 
 
 for ii=1:length(mex_files)
     disp(['compiling ', mex_files{ii}])
     if is_octave()
 %        mkoctfile -p CFLAGS
-        if with_qp_oases
+        if with_qp_qpoases
             mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
+        elseif with_qp_hpmpc
+            mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lhpmpc', mex_files{ii})
         elseif with_qp_osqp
             mex(acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-losqp', mex_files{ii})
@@ -139,10 +153,14 @@ for ii=1:length(mex_files)
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
         end
     else
-        if with_qp_oases
+        if with_qp_qpoases
             FLAGS = [FLAGS, ' -DACADOS_WITH_QPOASES'];
             mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
                 acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lqpOASES_e', mex_files{ii})
+        elseif with_qp_hpmpc
+            FLAGS = [FLAGS, ' -DACADOS_WITH_OSQP'];
+            mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...
+                acados_lib_path, '-lacados', '-lhpipm', '-lblasfeo', '-lhpmpc', mex_files{ii})
         elseif with_qp_osqp
             FLAGS = [FLAGS, ' -DACADOS_WITH_OSQP'];
             mex(mex_flags, FLAGS, acados_include, acados_interfaces_include, external_include, blasfeo_include, hpipm_include,...

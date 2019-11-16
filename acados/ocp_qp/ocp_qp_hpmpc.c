@@ -118,7 +118,12 @@ void ocp_qp_hpmpc_opts_set(void *config_, void *opts_, const char *field, void *
 {
     ocp_qp_hpmpc_opts *opts = opts_;
 
-    if (!strcmp(field, "tol_stat"))
+    if (!strcmp(field, "iter_max"))
+    {
+		int *tmp_ptr = value;
+		opts->max_iter = *tmp_ptr;
+    }
+    else if (!strcmp(field, "tol_stat"))
     {
 		// TODO set solver exit tolerance
     }
@@ -132,11 +137,13 @@ void ocp_qp_hpmpc_opts_set(void *config_, void *opts_, const char *field, void *
     }
     else if (!strcmp(field, "tol_comp"))
     {
-		// TODO set solver exit tolerance
+		double *tmp_ptr = value;
+		opts->tol = *tmp_ptr;
     }
     else if (!strcmp(field, "warm_start"))
     {
-		// TODO set solver warm start
+		int *tmp_ptr = value;
+		opts->warm_start = *tmp_ptr;
     }
 	else
 	{
