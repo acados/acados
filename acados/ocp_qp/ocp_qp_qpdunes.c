@@ -331,6 +331,28 @@ void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_
 
 
 
+void ocp_qp_qpdunes_memory_get(void *config_, void *mem_, const char *field, void* value)
+{
+    qp_solver_config *config = config_;
+	ocp_qp_qpdunes_memory *mem = mem_;
+
+	if(!strcmp(field, "time_qp_solver_call"))
+	{
+		double *tmp_ptr = value;
+		*tmp_ptr = mem->time_qp_solver_call;
+	}
+	else
+	{
+		printf("\nerror: ocp_qp_qpdunes_memory_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 static void form_H(double *H, int nx, int nu, struct blasfeo_dmat *sRSQrq)
 {
     // make Q full
@@ -465,7 +487,7 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx, int nu
 
 
 /************************************************
- * workspcae
+ * workspace
  ************************************************/
 
 int ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
@@ -807,6 +829,8 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     qpdunes_status = qpDUNES_solve(&(mem->qpData));
     info->solve_QP_time = acados_toc(&qp_timer);
 
+	mem->time_qp_solver_call = info->solve_QP_time;
+
     acados_tic(&interface_timer);
     fill_in_qp_out(in, out, mem);
     ocp_qp_compute_t(in, out);
@@ -847,6 +871,7 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
         (int (*)(void *, void *, void *)) & ocp_qp_qpdunes_memory_calculate_size;
     config->memory_assign =
         (void *(*) (void *, void *, void *, void *) ) & ocp_qp_qpdunes_memory_assign;
+    config->memory_get = &ocp_qp_qpdunes_memory_get;
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & ocp_qp_qpdunes_workspace_calculate_size;
     config->evaluate = (int (*)(void *, void *, void *, void *, void *, void *)) & ocp_qp_qpdunes;

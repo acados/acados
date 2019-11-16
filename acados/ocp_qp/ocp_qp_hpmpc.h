@@ -97,6 +97,8 @@ typedef struct ocp_qp_hpmpc_memory_
 
     int out_iter;
 
+	double time_qp_solver_call;
+
 } ocp_qp_hpmpc_memory;
 
 int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims);

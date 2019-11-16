@@ -95,6 +95,8 @@ typedef struct dense_qp_qore_memory_
     QoreProblemDense *QP;
     int num_iter;
     dense_qp_in *qp_stacked;
+	double time_qp_solver_call;
+
 } dense_qp_qore_memory;
 
 int dense_qp_qore_opts_calculate_size(void *config, dense_qp_dims *dims);

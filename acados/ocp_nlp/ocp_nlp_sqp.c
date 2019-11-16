@@ -459,7 +459,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // zero timers
     double total_time = 0.0;
+	double tmp_time;
     mem->time_qp_sol = 0.0;
+    mem->time_qp_solver_call = 0.0;
     mem->time_lin = 0.0;
     mem->time_reg = 0.0;
     mem->time_tot = 0.0;
@@ -656,6 +658,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
         qp_status = qp_solver->evaluate(qp_solver, dims->qp_solver, nlp_mem->qp_in, nlp_mem->qp_out,
                                         opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
         mem->time_qp_sol += acados_toc(&timer1);
+
+		qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
+		mem->time_qp_solver_call += tmp_time;
 
         // compute correct dual solution in case of Hessian regularization
         acados_tic(&timer1);
@@ -885,9 +890,10 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 
 
 
+// TODO rename memory_get ???
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_)
 {
-    // ocp_nlp_config *config = config_;
+    ocp_nlp_config *config = config_;
 	ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_memory *mem = mem_;
 
@@ -910,6 +916,11 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     {
         double *value = return_value_;
         *value = mem->time_qp_sol;
+    }
+    else if (!strcmp("time_qp_solver_call", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_qp_solver_call;
     }
     else if (!strcmp("time_lin", field))
     {

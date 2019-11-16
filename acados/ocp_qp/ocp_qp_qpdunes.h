@@ -69,6 +69,8 @@ typedef struct ocp_qp_qpdunes_memory_
     int nz;
     int nDmax;  // max(dims->ng)
     qpData_t qpData;
+	double time_qp_solver_call;
+
 } ocp_qp_qpdunes_memory;
 
 typedef struct ocp_qp_qpdunes_workspace_

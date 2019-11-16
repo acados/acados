@@ -100,6 +100,7 @@ typedef struct
     ocp_nlp_res *nlp_res;
 
     double time_qp_sol;
+    double time_qp_solver_call;
     double time_lin;
     double time_reg;
     double time_tot;

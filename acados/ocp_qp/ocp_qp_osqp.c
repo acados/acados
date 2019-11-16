@@ -660,7 +660,15 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
 {
     ocp_qp_osqp_opts *opts = opts_;
 
-    if (!strcmp(field, "tol_stat"))
+    if (!strcmp(field, "iter_max"))
+    {
+		// TODO set solver exit iter
+//		int *tmp_ptr = value;
+//		opts->osqp_opts->max_iter = *tmp_ptr;
+//		printf("\n%d\n", opts->osqp_opts->max_iter);
+//		exit(1);
+    }
+    else if (!strcmp(field, "tol_stat"))
     {
 		// TODO set solver exit tolerance
     }
@@ -1165,11 +1173,40 @@ void *ocp_qp_osqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     return mem;
 }
 
+
+
+void ocp_qp_osqp_memory_get(void *config_, void *mem_, const char *field, void* value)
+{
+    qp_solver_config *config = config_;
+	ocp_qp_osqp_memory *mem = mem_;
+
+	if(!strcmp(field, "time_qp_solver_call"))
+	{
+		double *tmp_ptr = value;
+		*tmp_ptr = mem->time_qp_solver_call;
+	}
+	else
+	{
+		printf("\nerror: ocp_qp_osqp_memory_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 /************************************************
  * workspace
  ************************************************/
 
-int ocp_qp_osqp_workspace_calculate_size(void *config_, void *dims_, void *opts_) { return 0; }
+int ocp_qp_osqp_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+{
+	return 0;
+}
+
+
 
 /************************************************
  * functions
@@ -1254,7 +1291,7 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     // print_ocp_qp_in(qp_in);
 
     qp_info *info = (qp_info *) qp_out->misc;
-    acados_timer tot_timer, qp_timer, interface_timer;
+    acados_timer tot_timer, qp_timer, interface_timer, solver_call_timer;
 
     acados_tic(&tot_timer);
     // cast data structures
@@ -1283,7 +1320,12 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     }
 
     // solve OSQP
+    acados_tic(&solver_call_timer);
+
     osqp_solve(mem->osqp_work);
+
+    mem->time_qp_solver_call = acados_toc(&solver_call_timer);
+
     fill_in_qp_out(qp_in, qp_out, mem);
     ocp_qp_compute_t(qp_in, qp_out);
 
@@ -1322,6 +1364,7 @@ void ocp_qp_osqp_config_initialize_default(void *config_)
     config->opts_set = &ocp_qp_osqp_opts_set;
     config->memory_calculate_size = &ocp_qp_osqp_memory_calculate_size;
     config->memory_assign = &ocp_qp_osqp_memory_assign;
+    config->memory_get = &ocp_qp_osqp_memory_get;
     config->workspace_calculate_size = &ocp_qp_osqp_workspace_calculate_size;
     config->evaluate = &ocp_qp_osqp;
     config->eval_sens = &ocp_qp_osqp_eval_sens;
