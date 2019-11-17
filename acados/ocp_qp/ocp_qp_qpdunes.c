@@ -341,6 +341,11 @@ void ocp_qp_qpdunes_memory_get(void *config_, void *mem_, const char *field, voi
 		double *tmp_ptr = value;
 		*tmp_ptr = mem->time_qp_solver_call;
 	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
 	else
 	{
 		printf("\nerror: ocp_qp_qpdunes_memory_get: field %s not available\n", field);
@@ -830,6 +835,7 @@ int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, v
     info->solve_QP_time = acados_toc(&qp_timer);
 
 	mem->time_qp_solver_call = info->solve_QP_time;
+    mem->iter = mem->qpData.log.numIter;
 
     acados_tic(&interface_timer);
     fill_in_qp_out(in, out, mem);

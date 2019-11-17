@@ -1185,6 +1185,11 @@ void ocp_qp_osqp_memory_get(void *config_, void *mem_, const char *field, void* 
 		double *tmp_ptr = value;
 		*tmp_ptr = mem->time_qp_solver_call;
 	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
 	else
 	{
 		printf("\nerror: ocp_qp_osqp_memory_get: field %s not available\n", field);
@@ -1325,6 +1330,7 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     osqp_solve(mem->osqp_work);
 
     mem->time_qp_solver_call = acados_toc(&solver_call_timer);
+	mem->iter = mem->osqp_work->info->iter;
 
     fill_in_qp_out(qp_in, qp_out, mem);
     ocp_qp_compute_t(qp_in, qp_out);

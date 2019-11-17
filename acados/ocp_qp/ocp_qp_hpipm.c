@@ -100,7 +100,8 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts
     // ocp_qp_dims *dims = dims_;
     ocp_qp_hpipm_opts *opts = opts_;
 
-    d_ocp_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
+    d_ocp_qp_ipm_arg_set_default(SPEED, opts->hpipm_opts);
+//    d_ocp_qp_ipm_arg_set_default(BALANCE, opts->hpipm_opts);
     // overwrite some default options
     opts->hpipm_opts->res_g_max = 1e-6;
     opts->hpipm_opts->res_b_max = 1e-8;
@@ -199,6 +200,11 @@ void ocp_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, void*
 		double *tmp_ptr = value;
 		*tmp_ptr = mem->time_qp_solver_call;
 	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
 	else
 	{
 		printf("\nerror: ocp_qp_hpipm_memory_get: field %s not available\n", field);
@@ -265,6 +271,7 @@ int ocp_qp_hpipm(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     info->t_computed = 1;
 
 	mem->time_qp_solver_call = info->solve_QP_time;
+	mem->iter = mem->hpipm_workspace->iter;
 
     // check exit conditions
     int acados_status = hpipm_status;

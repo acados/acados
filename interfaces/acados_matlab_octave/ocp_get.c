@@ -299,6 +299,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *mat_ptr = mxGetPr( plhs[0] );
         ocp_nlp_get(config, solver, "time_qp_solver_call", mat_ptr);
     }
+    else if (!strcmp(field, "qp_iter"))
+    {
+        plhs[0] = mxCreateNumericMatrix(1, 1, mxDOUBLE_CLASS, mxREAL);
+        double *mat_ptr = mxGetPr( plhs[0] );
+        int qp_iter;
+        ocp_nlp_get(config, solver, "qp_iter", &qp_iter);
+        *mat_ptr = (double) qp_iter;
+   }
     else if (!strcmp(field, "stat"))
     {
         int sqp_iter;

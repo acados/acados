@@ -736,6 +736,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double nlp_solver_step_length = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_step_length" ) );
         ocp_nlp_solver_opts_set(config, opts, "step_length", &nlp_solver_step_length);
     }
+    // nlp solver: warm start first
+    if (mxGetField( matlab_opts, 0, "nlp_solver_warm_start_first_qp" )!=NULL)
+    {
+        int nlp_solver_warm_start_first_qp = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_warm_start_first_qp" ) );
+        ocp_nlp_solver_opts_set(config, opts, "warm_start_first_qp", &nlp_solver_warm_start_first_qp);
+    }
     // iter_max
     if (mxGetField( matlab_opts, 0, "qp_solver_iter_max" )!=NULL)
     {
@@ -826,12 +832,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int qp_solver_warm_start = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_warm_start" ) );
         ocp_nlp_solver_opts_set(config, opts, "qp_warm_start", &qp_solver_warm_start);
-    }
-    // qp solver: warm start first
-    if (mxGetField( matlab_opts, 0, "warm_start_first_qp" )!=NULL)
-    {
-        int warm_start_first_qp = mxGetScalar( mxGetField( matlab_opts, 0, "warm_start_first_qp" ) );
-        ocp_nlp_solver_opts_set(config, opts, "warm_start_first_qp", &warm_start_first_qp);
     }
 
     // sim_method_num_stages

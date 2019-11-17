@@ -111,6 +111,7 @@ typedef struct ocp_qp_ooqp_memory_
     char *icupp;
     int nnz;  // max(nnzQ, nnzA, nnzC)
 	double time_qp_solver_call;
+	int iter;
 
 } ocp_qp_ooqp_memory;
 

@@ -844,6 +844,10 @@ void ocp_nlp_sqp_rti_get(void *config_, void *dims_, void *mem_, const char *fie
         void **value = return_value_;
         *value = mem->nlp_mem->qp_out;
     }
+    else if (!strcmp("qp_iter", field))
+    {
+		config->qp_solver->memory_get(config->qp_solver, mem->nlp_mem->qp_solver_mem, "iter", return_value_);
+    }
     else
     {
         printf("\nerror: output type %s not available in ocp_nlp_sqp_rti module\n", field);

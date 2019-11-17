@@ -291,6 +291,11 @@ void dense_qp_qore_memory_get(void *config_, void *mem_, const char *field, void
 		double *tmp_ptr = value;
 		*tmp_ptr = mem->time_qp_solver_call;
 	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
 	else
 	{
 		printf("\nerror: dense_qp_qore_memory_get: field %s not available\n", field);
@@ -531,6 +536,7 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     info->num_iter = num_iter;
 
 	mem->time_qp_solver_call = info->solve_QP_time;
+    mem->iter = num_iter;
 
     // compute slacks
     if (opts->compute_t)

@@ -96,6 +96,7 @@ typedef struct dense_qp_qore_memory_
     int num_iter;
     dense_qp_in *qp_stacked;
 	double time_qp_solver_call;
+	int iter;
 
 } dense_qp_qore_memory;
 

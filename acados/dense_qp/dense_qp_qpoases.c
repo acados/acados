@@ -366,6 +366,11 @@ void dense_qp_qpoases_memory_get(void *config_, void *mem_, const char *field, v
 		double *tmp_ptr = value;
 		*tmp_ptr = mem->time_qp_solver_call;
 	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
 	else
 	{
 		printf("\nerror: dense_qp_qpoases_memory_get: field %s not available\n", field);
@@ -735,7 +740,8 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = nwsr;
 
-	mem->time_qp_solver_call = info->solve_QP_time;
+	memory->time_qp_solver_call = info->solve_QP_time;
+    memory->iter = nwsr;
 
     // compute slacks
     if (opts->compute_t)

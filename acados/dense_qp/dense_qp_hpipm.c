@@ -190,6 +190,11 @@ void dense_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, voi
 		double *tmp_ptr = value;
 		*tmp_ptr = mem->time_qp_solver_call;
 	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
 	else
 	{
 		printf("\nerror: dense_qp_hpipm_memory_get: field %s not available\n", field);
@@ -250,6 +255,7 @@ int dense_qp_hpipm(void *config, void *qp_in_, void *qp_out_, void *opts_, void 
     info->t_computed = 1;
 
 	mem->time_qp_solver_call = info->solve_QP_time;
+    mem->iter = mem->hpipm_workspace->iter;
 
     // check exit conditions
     int acados_status = hpipm_status;

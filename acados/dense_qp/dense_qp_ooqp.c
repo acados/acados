@@ -477,6 +477,11 @@ void dense_qp_ooqp_memory_get(void *config_, void *mem_, const char *field, void
 		double *tmp_ptr = value;
 		*tmp_ptr = mem->time_qp_solver_call;
 	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
 	else
 	{
 		printf("\nerror: dense_qp_ooqp_memory_get: field %s not available\n", field);
@@ -585,6 +590,7 @@ int_t dense_qp_ooqp(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, voi
     info->solve_QP_time = acados_toc(&qp_timer);
 
 	mem->time_qp_solver_call = info->solve_QP_time;
+    mem->iter = -1;
 
     if (0) print_outputs(mem, work, ooqp_status);
     acados_tic(&interface_timer);

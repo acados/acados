@@ -339,6 +339,11 @@ void ocp_qp_hpmpc_memory_get(void *config_, void *mem_, const char *field, void*
 		double *tmp_ptr = value;
 		*tmp_ptr = mem->time_qp_solver_call;
 	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
 	else
 	{
 		printf("\nerror: ocp_qp_hpipm_memory_get: field %s not available\n", field);
@@ -524,6 +529,7 @@ int ocp_qp_hpmpc(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
     mem->out_iter = kk;  // TODO(dimitris): obsolete
 
 	mem->time_qp_solver_call = info->solve_QP_time;
+    mem->iter = kk;
 
     // copy result to qp_out
     for (ii = 0; ii < N; ii++) blasfeo_dveccp(nx[ii + 1], &mem->hpi[ii + 1], 0, &qp_out->pi[ii], 0);

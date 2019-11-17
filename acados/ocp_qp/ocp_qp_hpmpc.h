@@ -98,6 +98,7 @@ typedef struct ocp_qp_hpmpc_memory_
     int out_iter;
 
 	double time_qp_solver_call;
+	int iter;
 
 } ocp_qp_hpmpc_memory;
 

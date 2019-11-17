@@ -55,21 +55,27 @@ sim_num_steps = 4;
 % ocp
 ocp_N = 40;
 ocp_param_scheme = 'multiple_shooting_unif_grid';
-ocp_nlp_solver = 'sqp';
-%ocp_nlp_solver = 'sqp_rti';
-%ocp_nlp_solver_exact_hessian = 'false';
-ocp_nlp_solver_exact_hessian = 'true';
-%regularize_method = 'no_regularize';
+%ocp_nlp_solver = 'sqp';
+ocp_nlp_solver = 'sqp_rti';
+ocp_nlp_solver_exact_hessian = 'false';
+%ocp_nlp_solver_exact_hessian = 'true';
+regularize_method = 'no_regularize';
 %regularize_method = 'project';
-regularize_method = 'project_reduc_hess';
+%regularize_method = 'project_reduc_hess';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
-nlp_solver_max_iter = 100;
+ocp_nlp_solver_max_iter = 100;
+ocp_nlp_solver_ext_qp_res = 1;
+ocp_nlp_solver_warm_start_first_qp = 1;
 ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_hpipm';
+%ocp_qp_solver = 'full_condensing_qpoases';
+%ocp_qp_solver = 'partial_condensing_osqp';
 ocp_qp_solver_cond_N = 5;
 ocp_qp_solver_cond_ric_alg = 0;
 ocp_qp_solver_ric_alg = 0;
+ocp_qp_solver_warm_start = 0;
+ocp_qp_solver_max_iter = 100;
 %ocp_sim_method = 'erk';
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
@@ -202,13 +208,19 @@ ocp_opts.set('param_scheme_N', ocp_N);
 ocp_opts.set('nlp_solver', ocp_nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', ocp_nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
+ocp_opts.set('nlp_solver_ext_qp_res', ocp_nlp_solver_ext_qp_res);
+ocp_opts.set('nlp_solver_warm_start_first_qp', ocp_nlp_solver_warm_start_first_qp);
 if (strcmp(ocp_nlp_solver, 'sqp'))
-	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
+	ocp_opts.set('nlp_solver_max_iter', ocp_nlp_solver_max_iter);
 end
 ocp_opts.set('qp_solver', ocp_qp_solver);
-if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
+ocp_opts.set('qp_solver_iter_max', ocp_qp_solver_max_iter);
+ocp_opts.set('qp_solver_warm_start', ocp_qp_solver_warm_start);
+ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
+if (~isempty(strfind(ocp_qp_solver, 'partial_condensing')))
 	ocp_opts.set('qp_solver_cond_N', ocp_qp_solver_cond_N);
-	ocp_opts.set('qp_solver_cond_ric_alg', ocp_qp_solver_cond_ric_alg);
+end
+if (strcmp(ocp_qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_ric_alg', ocp_qp_solver_ric_alg);
 end
 ocp_opts.set('sim_method', ocp_sim_method);
@@ -311,9 +323,15 @@ for ii=1:n_sim
 		sqp_iter = ocp.get('sqp_iter');
 		time_tot = ocp.get('time_tot');
 		time_lin = ocp.get('time_lin');
+		time_reg = ocp.get('time_reg');
 		time_qp_sol = ocp.get('time_qp_sol');
+		time_qp_solver_call = ocp.get('time_qp_solver_call');
+		qp_iter = ocp.get('qp_iter');
 
-		fprintf('\nstatus = %d, sqp_iter = %d, time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3);
+		fprintf('\nstatus = %d, sqp_iter = %d, time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms] (time_qp_solver_call = %f [ms]), time_reg = %f [ms])\n', status, sqp_iter, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_qp_solver_call*1e3, time_reg*1e3);
+%		fprintf('%e %d\n', time_qp_solver_call, qp_iter);
+
+%		ocp.print('stat');
 	end
 
 	% get solution
