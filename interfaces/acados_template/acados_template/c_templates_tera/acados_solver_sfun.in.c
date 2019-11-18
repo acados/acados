@@ -72,16 +72,16 @@ external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% if constraints.constr_type == "BGP" %}
 // external_function_param_casadi * r_constraint;
-external_function_param_casadi * h_constraint;
+external_function_param_casadi * phi_constraint;
 {% endif %}
 {% if constraints.constr_type_e == "BGP" %}
 // external_function_param_casadi r_e_constraint;
-external_function_param_casadi h_e_constraint;
+external_function_param_casadi phi_e_constraint;
 {% endif %}
-{%- if dims.nh > 0 %}
+{% if constraints.constr_type == "BGH" %}
 external_function_param_casadi * h_constraint;
 {% endif %}
-{%- if dims.nh_e > 0 %}
+{% if constraints.constr_type_e == "BGH" %}
 external_function_param_casadi h_e_constraint;
 {% endif %}
 
@@ -196,7 +196,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     // update value of parameters
     {% if dims.np > 0%}
-    for (int ii = 0; ii < {{ dims.N }}; ii++) 
+    for (int ii = 0; ii <= {{ dims.N }}; ii++) 
         acados_update_params(ii, in_p, {{ dims.np }});
     {% endif %}
     

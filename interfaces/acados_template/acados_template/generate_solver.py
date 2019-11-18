@@ -44,8 +44,13 @@ from copy import deepcopy
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
-    acados_path = os.path.dirname(os.path.abspath(__file__))
-    tera_path = acados_path + '/../../../bin/' 
+    if os.environ.get('ACADOS_SOURCE_DIR') is None: 
+        acados_template_path = os.path.dirname(os.path.abspath(__file__))
+        acados_path = acados_template_path + '/../../../'
+        tera_path = acados_path + '/bin/' 
+    else:
+        acados_path = os.environ.get('ACADOS_SOURCE_DIR')
+        tera_path = acados_path + '/bin/'
     t_renderer_path = tera_path + 't_renderer'
     if (os.path.exists(t_renderer_path) is False):
         raise Exception('t_renderer binaries not found. In order to be able to ' + \
@@ -119,10 +124,8 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp_dict = json2dict(ocp_nlp_json, ocp_nlp_json['dims'])
 
     # setting up loader and environment
-    acados_path = os.path.dirname(os.path.abspath(__file__))
-    tera_path = acados_path + '/../../../bin/' 
-    template_glob = acados_path + '/c_templates_tera/*'
-    acados_template_path = acados_path + '/c_templates_tera'
+    template_glob = acados_path + '/interfaces/acados_template/acados_template/c_templates_tera/*'
+    acados_template_path = acados_path + '/interfaces/acados_template/acados_template/c_templates_tera'
 
     # create c_generated_code folder
     if not os.path.exists('c_generated_code'):
@@ -440,11 +443,29 @@ class acados_solver:
         self.shared_lib.acados_get_nlp_in.restype = c_void_p
         self.nlp_in = self.shared_lib.acados_get_nlp_in()
 
+        self.shared_lib.acados_get_nlp_solver.restype = c_void_p
+        self.nlp_solver = self.shared_lib.acados_get_nlp_solver()
+
         self.acados_ocp = acados_ocp
 
     def solve(self):
         status = self.shared_lib.acados_solve()
         return status
+
+    def get_stats(self, field_):
+        fields = ['time_tot']
+        field = field_
+        field = field.encode('utf-8')
+        if (field_ not in fields):
+            raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
+                    \n Possible values are {}. Exiting.".format(fields, fields))
+        out = np.ascontiguousarray(np.zeros((1,)), dtype=np.float64)
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data);
+
+        return out
 
     def get(self, stage_, field_):
 
@@ -454,7 +475,7 @@ class acados_solver:
 
         if (field_ not in out_fields):
             raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
-                    \nPossible values are {} and {}. Exiting.".format(field, cost, constraints))
+                    \n Possible values are {}. Exiting.".format(out_fields))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int
