@@ -115,6 +115,9 @@ classdef acados_ocp < handle
 
             if ( compile_interface )
                 ocp_compile_interface(obj.opts_struct);
+                disp('acados MEX interface compiled successfully')
+            else
+                disp('found compiled acados MEX interface')
             end
 
             % create C object
