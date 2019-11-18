@@ -107,6 +107,9 @@ classdef acados_sim < handle
 
 
         function set(obj, field, value)
+            if ~isa(field, 'char')
+                error('field must be a char vector, use '' ''');
+            end
             sim_set(obj.model_struct, obj.opts_struct, obj.C_sim, obj.C_sim_ext_fun, field, value);
         end
 
@@ -117,6 +120,9 @@ classdef acados_sim < handle
 
 
         function value = get(obj, field)
+            if ~isa(field, 'char')
+                error('field must be a char vector, use '' ''');
+            end
             value = sim_get(obj.C_sim, field);
         end
 
