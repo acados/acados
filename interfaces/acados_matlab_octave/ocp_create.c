@@ -1481,6 +1481,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ocp_nlp_constraints_model_set(config, dims, in, 0, "idxbx", i_ptr);
     free(i_ptr);
 
+    int ptr_size = nbx>nbx_e?nbx:nbx_e;
     tmp_idx = malloc(nbx*sizeof(int));
 
     double *Jbx;    bool set_Jbx = false;
@@ -1581,8 +1582,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //        }
     }
 
-    free(tmp_idx);
-
     // Jbx_e
     const mxArray *Jbx_e_matlab = mxGetField( matlab_model, 0, "constr_Jbx_e" );
     if (Jbx_e_matlab!=NULL)
@@ -1615,6 +1614,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_constraints_model_set(config, dims, in, N, "idxbx", tmp_idx);
     }
 
+    free(tmp_idx);
 
     // Jbu
     const mxArray *Jbu_matlab = mxGetField( matlab_model, 0, "constr_Jbu" );

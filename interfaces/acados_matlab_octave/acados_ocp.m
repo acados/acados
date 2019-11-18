@@ -115,6 +115,9 @@ classdef acados_ocp < handle
 
             if ( compile_interface )
                 ocp_compile_interface(obj.opts_struct);
+                disp('acados MEX interface compiled successfully')
+            else
+                disp('found compiled acados MEX interface')
             end
 
             % create C object
@@ -159,15 +162,15 @@ classdef acados_ocp < handle
 
 
         function set(varargin)
+            obj = varargin{1};
+            field = varargin{2};
+            value = varargin{3};
+            if ~isa(field, 'char')
+                error('field must be a char vector, use '' ''');
+            end
             if nargin==3
-                obj = varargin{1};
-                field = varargin{2};
-                value = varargin{3};
                 ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
             elseif nargin==4
-                obj = varargin{1};
-                field = varargin{2};
-                value = varargin{3};
                 stage = varargin{4};
                 ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
             else
@@ -178,13 +181,15 @@ classdef acados_ocp < handle
 
 
         function value = get(varargin)
+            obj = varargin{1};
+            field = varargin{2};
+            if ~isa(field, 'char')
+                error('field must be a char vector, use '' ''');
+            end
+
             if nargin==2
-                obj = varargin{1};
-                field = varargin{2};
                 value = ocp_get(obj.C_ocp, field);
             elseif nargin==3
-                obj = varargin{1};
-                field = varargin{2};
                 stage = varargin{3};
                 value = ocp_get(obj.C_ocp, field, stage);
             else
