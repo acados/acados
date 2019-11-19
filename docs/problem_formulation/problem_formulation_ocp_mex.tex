@@ -203,12 +203,12 @@ Set \code{cost\_type} to \code{ext\_cost}. % TODO: rename to 'external'?!
 Set \code{cost\_type} to \code{linear\_ls}.\\
 The Lagrange cost term has the form
 \begin{align*}
-l(x, u, z) = \norm{ \underbrace{V_x x + V_u u + V_z z}_y - y_{\textrm{ref}}}_W^2
+l(x, u, z) = \frac{1}{2} \norm{ \underbrace{V_x x + V_u u + V_z z}_y - y_{\textrm{ref}}}_W^2
 \end{align*}
 with matrices $ V_x, V_u, V_z, W $ of appropriate dimensions.\\
 Similarly, the Mayer cost term has the form
 \begin{align*}
-m(x, u, z) = \norm{ \underbrace{V_x\terminal x}_{y\terminal} - y\terminal_{\textrm{ref}}}_{W\terminal}^2
+m(x, u, z) = \frac{1}{2} \norm{ \underbrace{V_x\terminal x}_{y\terminal} - y\terminal_{\textrm{ref}}}_{W\terminal}^2
 \end{align*}
 with matrices $ V\terminal_x, W\terminal $ of appropriate dimensions.
 \begin{table}[h!]
