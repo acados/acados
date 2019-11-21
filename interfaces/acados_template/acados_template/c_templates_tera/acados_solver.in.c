@@ -320,7 +320,7 @@ int acados_create()
     // soft bounds on x
     int idxsbx[NSBX];
     {% for i in range(end=dims.nsbx) %}
-    idsxbx[{{ i }}] = {{ constraints.idxsbx[i] }};
+    idxsbx[{{ i }}] = {{ constraints.idxsbx[i] }};
     {%- endfor %}
     double lsbx[NSBX]; 
     double usbx[NSBX];
@@ -420,7 +420,7 @@ int acados_create()
     // soft bounds on x
     int idxsbx_e[NSBXN];
     {% for i in range(end=dims.nsbx_e) %}
-    idsxbx_e[{{ i }}] = {{ constraints.idxsbx_e[i] }};
+    idxsbx_e[{{ i }}] = {{ constraints.idxsbx_e[i] }};
     {%- endfor %}
     double lsbx_e[NSBXN]; 
     double usbx_e[NSBXN];
@@ -613,6 +613,8 @@ int acados_create()
     nbx[0]   = NX_;
     nbu[0]   = NBU_;
     nb[0]    = NX_ + NBU_;
+
+    nbx[N]   = NBXN_;
     nsbx[N]  = NSBXN_;
     nsbu[N]  = 0;
     nsh[N]   = NSHN_;
