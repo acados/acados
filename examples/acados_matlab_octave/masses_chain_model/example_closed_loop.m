@@ -72,10 +72,11 @@ ocp_qp_solver = 'partial_condensing_hpipm';
 %ocp_qp_solver = 'full_condensing_qpoases';
 %ocp_qp_solver = 'partial_condensing_osqp';
 ocp_qp_solver_cond_N = 5;
+%ocp_qp_solver_cond_N = ocp_N;
 ocp_qp_solver_cond_ric_alg = 0;
 ocp_qp_solver_ric_alg = 0;
-ocp_qp_solver_warm_start = 0;
-ocp_qp_solver_max_iter = 100;
+ocp_qp_solver_warm_start = 1;
+ocp_qp_solver_max_iter = 50;
 %ocp_sim_method = 'erk';
 ocp_sim_method = 'irk';
 ocp_sim_method_num_stages = 4;
@@ -116,12 +117,13 @@ yr_e = model.x_ref; % output reference in mayer term
 
 % constraints
 x0 = model.x0;
+%x0 = model.x_ref;
 Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,2+6*(ii-1))=1.0; end
 lbx = wall*ones(nbx, 1);
 ubx = 1e+4*ones(nbx, 1);
 Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
-lbu = -10.0*ones(nbu, 1);
-ubu =  10.0*ones(nbu, 1);
+lbu = -1.0*ones(nbu, 1);
+ubu =  1.0*ones(nbu, 1);
 
 
 
@@ -347,6 +349,11 @@ for ii=1:n_sim
 	% get solution for sim
 	u_sim(:,ii) = ocp.get('u', 0);
 
+	% overwrite control to perturb the system
+%	if(ii<=5)
+%		u_sim(:,ii) = [-1; 1; 1];
+%	end
+
 	% set initial state of sim
 	sim.set('x', x_sim(:,ii));
 	% set input in sim
@@ -363,6 +370,8 @@ end
 avg_time_solve = toc/n_sim
 
 
+u_sim;
+x_sim;
 
 % print solution
 for ii=1:n_sim+1

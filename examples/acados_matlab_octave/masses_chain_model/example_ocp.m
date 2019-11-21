@@ -61,13 +61,15 @@ regularize_method = 'no_regularize';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
 nlp_solver_ext_qp_res = 1;
+nlp_solver_warm_start_first_qp = 0;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
+%qp_solver = 'full_condensing_qpoases';
 %qp_solver = 'partial_condensing_osqp';
 qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
-qp_solver_warm_start = 2;
+qp_solver_warm_start = 0;
 qp_solver_max_iter = 100;
 %dyn_type = 'explicit';
 dyn_type = 'implicit';
@@ -117,8 +119,8 @@ Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,2+6*(ii-1))=1.0; end
 lbx = wall*ones(nbx, 1);
 ubx = 1e+4*ones(nbx, 1);
 Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
-lbu = -10.0*ones(nbu, 1);
-ubu =  10.0*ones(nbu, 1);
+lbu = -1.0*ones(nbu, 1);
+ubu =  1.0*ones(nbu, 1);
 
 
 %% acados ocp model
@@ -216,6 +218,7 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
+ocp_opts.set('nlp_solver_warm_start_first_qp', nlp_solver_warm_start_first_qp);
 if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 end

@@ -79,7 +79,7 @@ endif
 EXAMPLES =
 EXAMPLES += dense_qp
 ##EXAMPLES += ocp_qp
-EXAMPLES += pendulum_scqp
+#EXAMPLES += pendulum_scqp
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_pendulum_dae
@@ -106,7 +106,7 @@ examples: $(EXAMPLES)
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_dense_qp
 ##RUN_EXAMPLES += run_ocp_qp
-RUN_EXAMPLES += run_pendulum_scqp
+#RUN_EXAMPLES += run_pendulum_scqp
 RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
 RUN_EXAMPLES += run_sim_pendulum_dae
@@ -131,6 +131,7 @@ RUN_EXAMPLES += run_simple_dae_example
 #RUN_EXAMPLES = run_mass_spring_nmpc_example
 #RUN_EXAMPLES = run_regularization
 #RUN_EXAMPLES = run_mass_spring_example
+#RUN_EXAMPLES = run_nonlinear_chain_ocp_nlp
 
 run_examples: $(RUN_EXAMPLES)
 
