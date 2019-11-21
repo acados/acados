@@ -824,7 +824,8 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
 
 
 
-void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *mem_, void *work_, char *field, int stage, int index, void *sens_nlp_out_)
+void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *mem_, void *work_,
+                                 char *field, int stage, int index, void *sens_nlp_out_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
@@ -849,7 +850,8 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 
 //        d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
 
-        config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out, opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
+        config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out,
+                               opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
 
 //        d_ocp_qp_sol_print(work->tmp_qp_out->dim, work->tmp_qp_out);
 //        exit(1);

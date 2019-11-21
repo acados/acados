@@ -1085,7 +1085,10 @@ for i in range(Nsim):
     x0 = acados_solver.get(0, "x")
     xN = acados_solver.get(N, "x")
     u0 = acados_solver.get(0, "u")
-    
+
+    # get computation time
+    CPU_time = acados_solver.get_stats("time_tot")
+
     for j in range(nx):
         simX[i,j] = x0[j]
         simXRN[i,j] = xN[j]
