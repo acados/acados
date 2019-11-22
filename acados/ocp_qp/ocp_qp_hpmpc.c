@@ -118,7 +118,12 @@ void ocp_qp_hpmpc_opts_set(void *config_, void *opts_, const char *field, void *
 {
     ocp_qp_hpmpc_opts *opts = opts_;
 
-    if (!strcmp(field, "tol_stat"))
+    if (!strcmp(field, "iter_max"))
+    {
+		int *tmp_ptr = value;
+		opts->max_iter = *tmp_ptr;
+    }
+    else if (!strcmp(field, "tol_stat"))
     {
 		// TODO set solver exit tolerance
     }
@@ -132,11 +137,13 @@ void ocp_qp_hpmpc_opts_set(void *config_, void *opts_, const char *field, void *
     }
     else if (!strcmp(field, "tol_comp"))
     {
-		// TODO set solver exit tolerance
+		double *tmp_ptr = value;
+		opts->tol = *tmp_ptr;
     }
     else if (!strcmp(field, "warm_start"))
     {
-		// TODO set solver warm start
+		int *tmp_ptr = value;
+		opts->warm_start = *tmp_ptr;
     }
 	else
 	{
@@ -320,6 +327,35 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
     return raw_memory;
 }
 
+
+
+void ocp_qp_hpmpc_memory_get(void *config_, void *mem_, const char *field, void* value)
+{
+    qp_solver_config *config = config_;
+	ocp_qp_hpmpc_memory *mem = mem_;
+
+	if(!strcmp(field, "time_qp_solver_call"))
+	{
+		double *tmp_ptr = value;
+		*tmp_ptr = mem->time_qp_solver_call;
+	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
+	else
+	{
+		printf("\nerror: ocp_qp_hpipm_memory_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 /************************************************
  * workspace
  ************************************************/
@@ -492,6 +528,9 @@ int ocp_qp_hpmpc(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *
 
     mem->out_iter = kk;  // TODO(dimitris): obsolete
 
+	mem->time_qp_solver_call = info->solve_QP_time;
+    mem->iter = kk;
+
     // copy result to qp_out
     for (ii = 0; ii < N; ii++) blasfeo_dveccp(nx[ii + 1], &mem->hpi[ii + 1], 0, &qp_out->pi[ii], 0);
 
@@ -539,6 +578,7 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
         (int (*)(void *, void *, void *)) & ocp_qp_hpmpc_memory_calculate_size;
     config->memory_assign =
         (void *(*) (void *, void *, void *, void *) ) & ocp_qp_hpmpc_memory_assign;
+    config->memory_get = &ocp_qp_hpmpc_memory_get;
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & ocp_qp_hpmpc_workspace_calculate_size;
     config->evaluate = &ocp_qp_hpmpc;

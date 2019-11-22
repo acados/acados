@@ -61,18 +61,22 @@ regularize_method = 'no_regularize';
 %regularize_method = 'convexify';
 nlp_solver_max_iter = 100;
 nlp_solver_ext_qp_res = 1;
+nlp_solver_warm_start_first_qp = 0;
 qp_solver = 'partial_condensing_hpipm';
 %qp_solver = 'full_condensing_hpipm';
+%qp_solver = 'full_condensing_qpoases';
+%qp_solver = 'partial_condensing_osqp';
 qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 0;
+qp_solver_max_iter = 100;
 %dyn_type = 'explicit';
 dyn_type = 'implicit';
 %dyn_type = 'discrete';
 %sim_method = 'erk';
-%sim_method = 'irk';
-sim_method = 'irk_gnsf';
+sim_method = 'irk';
+%sim_method = 'irk_gnsf';
 sim_method_num_stages = 4;
 sim_method_num_steps = 2;
 cost_type = 'linear_ls';
@@ -115,8 +119,8 @@ Jbx = zeros(nbx, nx); for ii=1:nbx Jbx(ii,2+6*(ii-1))=1.0; end
 lbx = wall*ones(nbx, 1);
 ubx = 1e+4*ones(nbx, 1);
 Jbu = zeros(nbu, nu); for ii=1:nbu Jbu(ii,ii)=1.0; end
-lbu = -10.0*ones(nbu, 1);
-ubu =  10.0*ones(nbu, 1);
+lbu = -1.0*ones(nbu, 1);
+ubu =  1.0*ones(nbu, 1);
 
 
 %% acados ocp model
@@ -214,15 +218,19 @@ ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('nlp_solver_exact_hessian', nlp_solver_exact_hessian);
 ocp_opts.set('regularize_method', regularize_method);
 ocp_opts.set('nlp_solver_ext_qp_res', nlp_solver_ext_qp_res);
+ocp_opts.set('nlp_solver_warm_start_first_qp', nlp_solver_warm_start_first_qp);
 if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_max_iter', nlp_solver_max_iter);
 end
 ocp_opts.set('qp_solver', qp_solver);
-if (strcmp(qp_solver, 'partial_condensing_hpipm'))
+ocp_opts.set('qp_solver_iter_max', qp_solver_max_iter);
+ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
+ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
+if (~isempty(strfind(qp_solver, 'partial_condensing')))
 	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-	ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
+end
+if (strcmp(qp_solver, 'partial_condensing_hpipm'))
 	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
-	ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
 end
 if (strcmp(dyn_type, 'explicit') || strcmp(dyn_type, 'implicit'))
 	ocp_opts.set('sim_method', sim_method);
@@ -270,8 +278,9 @@ time_tot = ocp.get('time_tot');
 time_lin = ocp.get('time_lin');
 time_reg = ocp.get('time_reg');
 time_qp_sol = ocp.get('time_qp_sol');
+time_qp_solver_call = ocp.get('time_qp_solver_call');
 
-fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms], time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_reg*1e3);
+fprintf('\nstatus = %d, sqp_iter = %d, time_ext = %f [ms], time_int = %f [ms] (time_lin = %f [ms], time_qp_sol = %f [ms] (time_qp_solver_call = %f [ms]), time_reg = %f [ms])\n', status, sqp_iter, time_ext*1e3, time_tot*1e3, time_lin*1e3, time_qp_sol*1e3, time_qp_solver_call*1e3, time_reg*1e3);
 
 ocp.print('stat');
 
@@ -296,11 +305,11 @@ end
 stat = ocp.get('stat');
 if (strcmp(nlp_solver, 'sqp'))
 	figure();
-	semilogy(0: size(stat,1)-1, stat(:,2), 'r-x');
+	plot(0: size(stat,1)-1, log10(stat(:,2)), 'r-x');
 	hold on
-	semilogy(0: size(stat,1)-1, stat(:,3), 'b-x');
-	semilogy(0: size(stat,1)-1, stat(:,4), 'g-x');
-	semilogy(0: size(stat,1)-1, stat(:,5), 'k-x');
+	plot(0: size(stat,1)-1, log10(stat(:,3)), 'b-x');
+	plot(0: size(stat,1)-1, log10(stat(:,4)), 'g-x');
+	plot(0: size(stat,1)-1, log10(stat(:,5)), 'k-x');
 	hold off
 	xlabel('iter')
 	ylabel('residuals')
