@@ -36,18 +36,18 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     model = obj.model_struct;
     % create
     ocp_json = acados_template_mex.acados_ocp_nlp_json();
-    % TODO(andrea): this is temporary. later on the solver_config
+    % TODO(andrea): this is temporary. later on the solver_options
     % object will separate from the OCP object
 
     % general
-    ocp_json.solver_config.qp_solver = upper(obj.opts_struct.qp_solver);
-    ocp_json.solver_config.integrator_type = upper(obj.opts_struct.sim_method);
-    ocp_json.solver_config.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
-    ocp_json.solver_config.sim_method_num_steps = obj.opts_struct.sim_method_num_steps;
-    ocp_json.solver_config.sim_method_num_stages = obj.opts_struct.sim_method_num_stages;
+    ocp_json.solver_options.qp_solver = upper(obj.opts_struct.qp_solver);
+    ocp_json.solver_options.integrator_type = upper(obj.opts_struct.sim_method);
+    ocp_json.solver_options.nlp_solver_type = upper(obj.opts_struct.nlp_solver);
+    ocp_json.solver_options.sim_method_num_steps = obj.opts_struct.sim_method_num_steps;
+    ocp_json.solver_options.sim_method_num_stages = obj.opts_struct.sim_method_num_stages;
     ocp_json.dims.N = upper(obj.opts_struct.param_scheme_N);
 
-    ocp_json.solver_config.tf = model.T;
+    ocp_json.solver_options.tf = model.T;
     ocp_json.model.name = model.name;
 
     %% dims

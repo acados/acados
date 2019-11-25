@@ -48,6 +48,12 @@ function model = detect_dims_ocp(model)
         model.dim_nz = 0;
     end
 
+    if isfield(model, 'sym_p')
+        model.dim_np = length(model.sym_p);
+    else
+        model.dim_np = 0;
+    end
+
     %% cost
     % path
     if strcmp( model.cost_type, 'linear_ls')

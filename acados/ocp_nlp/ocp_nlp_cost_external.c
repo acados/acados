@@ -609,7 +609,8 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
     ext_fun_out[2] = &work->tmp_nv_nv;   // hess: (nu+nx) * (nu+nx)
 
     // evaluate external function
-    model->ext_cost_fun_jac_hess->evaluate(model->ext_cost_fun_jac_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    model->ext_cost_fun_jac_hess->evaluate(model->ext_cost_fun_jac_hess, ext_fun_type_in,
+                                           ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     // TODO(zanellia, giaf): check scaling
     blasfeo_dgead(nx+nu, nx+nu, model->scaling, &work->tmp_nv_nv, 0, 0, memory->RSQrq, 0, 0);
