@@ -3,7 +3,7 @@ classdef acados_ocp_nlp_json < handle
         dims 
         cost 
         constraints 
-        solver_config 
+        solver_options
         model 
         con_p 
         con_p_e 
@@ -17,7 +17,7 @@ classdef acados_ocp_nlp_json < handle
             obj.dims = acados_template_mex.ocp_nlp_dims_json(); 
             obj.cost = acados_template_mex.ocp_nlp_cost_json();
             obj.constraints = acados_template_mex.ocp_nlp_constraints_json();
-            obj.solver_config = acados_template_mex.ocp_nlp_solver_config_json(); 
+            obj.solver_options = acados_template_mex.ocp_nlp_solver_config_json(); 
             obj.model = acados_template_mex.acados_dae(); 
             obj.con_p = acados_template_mex.acados_constraint();
             obj.con_p_e = acados_template_mex.acados_constraint();

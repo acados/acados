@@ -49,6 +49,19 @@ classdef ocp_nlp_constraints_json < handle
         uh_e     % upper bound on nonlinear inequalities at t=T 
         p       % nominal value of the parameter 
         x0      % initial state 
+        % convex over nonlinear constraint (BGP) to work with json
+        % TODO: implement in MEX..
+        lphi   % lower bound on convex over nonlinear constraint
+        uphi   % upper bound on convex over nonlinear constraint
+        lphi_e   % lower bound on convex over nonlinear constraint at t=T
+        uphi_e   % upper bound on convex over nonlinear constraint at t=T
+        lsphi   % lower bound on convex over nonlinear constraint
+        usphi   % upper bound on convex over nonlinear constraint
+        lsphi_e   % lower bound on convex over nonlinear constraint at t=T
+        usphi_e   % upper bound on convex over nonlinear constraint at t=T
+        idxsphi % indexes of soft convex over nonlinear constraints
+        idxsphi_e % indexes of soft convex over nonlinear constraints at t=T
+
     end
     methods
         function obj = ocp_nlp_constraints_json()
@@ -83,7 +96,17 @@ classdef ocp_nlp_constraints_json < handle
             obj.lh_e            = [];
             obj.uh_e            = [];
             obj.x0              = [];
-            obj.p              = [];
+            obj.lphi            = [];
+            obj.uphi            = [];
+            obj.lsphi            = [];
+            obj.usphi            = [];
+            obj.lphi_e            = [];
+            obj.uphi_e            = [];
+            obj.lsphi_e            = [];
+            obj.usphi_e            = [];
+            obj.idxsphi = [];
+            obj.idxsphi_e = [];
+            obj.p               = [];
         end
     end
 end
