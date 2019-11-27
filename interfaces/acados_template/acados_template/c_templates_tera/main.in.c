@@ -120,7 +120,7 @@ int main()
     // utraj
     double utraj[{{ dims.nu }} * ({{ dims.N }})];
 
-    {%- if dims.np > 0%}
+    {%- if dims.np > 0 %}
     // set parameters
     double p[{{ dims.np }}];
     {% for item in constraints.p %}
@@ -129,21 +129,23 @@ int main()
     
 
     {%- if solver_options.integrator_type == "IRK" -%}
-    for (int ii = 0; ii < {{ dims.N }}; ii++) {
-    impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
-    impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
-    impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
+    {
+        impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
+        impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
+        impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
     }
-    {% else %}
-    for (int ii = 0; ii < {{ dims.N }}; ii++) {
-    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
+    {% elif solver_options.integrator_type == "ERK" %}
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
+    {
+        forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
-    {% endif %}
+    {%- endif %}
     for (int ii = 0; ii < {{ dims.N }}; ++ii) {
         {%- if constraints.constr_type == "BGP" %}
         // r_constraint[ii].set_param(r_constraint+ii, p);
         phi_constraint[ii].set_param(phi_constraint+ii, p);
-        {% endif %}
+        {%- endif %}
         {%- if dims.nh > 0 %}
         h_constraint[ii].set_param(h_constraint+ii, p);
         {% endif %}
@@ -155,7 +157,7 @@ int main()
     {%- if dims.nh_e > 0 %}
     h_e_constraint.set_param(&h_e_constraint, p);
     {% endif %}
-    {% endif %}
+    {% endif %}{# if np > 0 #}
 
     // prepare evaluation
     int NTIMINGS = 10;

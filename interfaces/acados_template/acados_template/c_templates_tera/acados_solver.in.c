@@ -491,9 +491,6 @@ int acados_create()
     double Zu_e[NSN];
     double zl_e[NSN];
     double zu_e[NSN];
-    
-    for (int ii = 0; ii < NU + NX; ii++)
-        yref[ii] = 0.0;
 
     {% for j in range(end=dims.ny) %}
         {%- for k in range(end=dims.ny) %}
@@ -589,7 +586,8 @@ int acados_create()
     int nr[N+1];
     int nr_e[N+1];
 
-    for (int i = 0; i < N+1; i++) {
+    for (int i = 0; i < N+1; i++)
+    {
         // common
         nx[i]     = NX_;
         nu[i]     = NU_;
@@ -634,11 +632,12 @@ int acados_create()
 
     // Make plan
     nlp_solver_plan = ocp_nlp_plan_create(N);
-    {% if solver_options.nlp_solver_type == "SQP" %}
+    {%- if solver_options.nlp_solver_type == "SQP" %}
     nlp_solver_plan->nlp_solver = SQP;
     {% else %}
     nlp_solver_plan->nlp_solver = SQP_RTI;
-    {% endif %}
+    {%- endif %}
+
     nlp_solver_plan->ocp_qp_solver_plan.qp_solver = {{ solver_options.qp_solver }};
     for (int i = 0; i <= N; i++)
         nlp_solver_plan->nlp_cost[i] = {{ cost.cost_type }};
@@ -648,7 +647,8 @@ int acados_create()
         nlp_solver_plan->sim_solver_plan[i].sim_solver = {{ solver_options.integrator_type }};
     }
 
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++)
+    {
         {% if constraints.constr_type == "BGP" %}
         nlp_solver_plan->nlp_constraints[i] = BGP;
         {%- else -%}
@@ -675,7 +675,8 @@ int acados_create()
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "nz", nz);
     ocp_nlp_dims_set_opt_vars(nlp_config, nlp_dims, "ns", ns);
 
-    for (int i = 0; i <= N; i++) {
+    for (int i = 0; i <= N; i++)
+    {
         ocp_nlp_dims_set_cost(nlp_config, nlp_dims, i, "ny", &ny[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbx", &nbx[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nbu", &nbu[i]);
@@ -685,8 +686,7 @@ int acados_create()
         {%- if constraints.constr_type == "BGH" and dims.nh > 0 %}
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nh", &nh[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsh", &nsh[i]);
-        {%- endif %}
-        {%- if constraints.constr_type == "BGP" %}
+        {%- elif constraints.constr_type == "BGP" %}
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nphi", &nphi[i]);
         ocp_nlp_dims_set_constraints(nlp_config, nlp_dims, i, "nsphi", &nsphi[i]);
         {%- endif %}
@@ -702,7 +702,8 @@ int acados_create()
 
     {%- if constraints.constr_type == "BGP" %}
     phi_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    for (int i = 0; i < N; ++i) {
+    for (int i = 0; i < N; ++i)
+    {
         // nonlinear part of convex-composite constraint
         phi_constraint[i].casadi_fun = &{{ con_phi.name }}_phi_constraint;
         phi_constraint[i].casadi_n_in = &{{ con_phi.name }}_phi_constraint_n_in;
@@ -872,20 +873,21 @@ int acados_create()
 
     external_function_param_casadi_create(&r_e_cost, {{ dims.np }});
     {%- endif %}
-	for (int i = 0; i < N; ++i) {
+	for (int i = 0; i < N; ++i)
+    {
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "W", W);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "yref", yref);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Zl", Zl);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Zu", Zu);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zl", zl);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "zu", zu);
-        {% if cost.cost_type == "NONLINEAR_LS" %}
+        {%- if cost.cost_type == "NONLINEAR_LS" %}
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "nls_res_jac", &r_cost[i]);
-        {% elif cost.cost_type == "LINEAR_LS" %}
+        {%- elif cost.cost_type == "LINEAR_LS" %}
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vx", Vx);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vu", Vu);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, i, "Vz", Vz);
-        {% endif %}
+        {%- endif %}
 	}
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
@@ -903,7 +905,7 @@ int acados_create()
     // NLP dynamics
     int set_fun_status;
     for (int i = 0; i < N; ++i) {
-    {% if solver_options.integrator_type == "ERK" %} 
+    {%- if solver_options.integrator_type == "ERK" %} 
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
         if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
         {% if solver_options.hessian_approx == "EXACT" %} 
@@ -917,7 +919,7 @@ int acados_create()
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun_jac_x_xdot_z[%i]\n", i);  exit(1); }
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_jac_x_xdot_u", &impl_dae_jac_x_xdot_u_z[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_jac_x_xdot_u_z[%i]\n", i);  exit(1); }
-    {% endif %}
+    {%- endif %}
     }
 
     // NLP constraints
@@ -976,12 +978,11 @@ int acados_create()
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "usbu", usbu);
         {%- endif %}
 
-        {% if constraints.constr_type == "BGH" and dims.nh > 0 %}
+        {%- if constraints.constr_type == "BGH" and dims.nh > 0 %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsh", idxsh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsh", lsh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ush", ush);
-        {%- endif %}
-        {% if constraints.constr_type == "BGP" %}
+        {%- elif constraints.constr_type == "BGP" %}
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "idxsphi", idxsphi);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lsphi", lsphi);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "usphi", usphi);
@@ -1254,7 +1255,7 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         impl_dae_jac_x_xdot_u_z[stage].set_param(impl_dae_jac_x_xdot_u_z+stage, p);
-        {% else %}
+        {% elif solver_options.integrator_type == "ERK" %}
         casadi_np = (forw_vde_casadi+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
@@ -1262,7 +1263,7 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         forw_vde_casadi[stage].set_param(forw_vde_casadi+stage, p);
-        {%- endif %}
+        {%- endif %}{# integrator_type #}
         {% if constraints.constr_type == "BGP" %}
         // casadi_np = (r_constraint+stage)->np;
         // if (casadi_np != np) {
@@ -1306,8 +1307,7 @@ int acados_update_params(int stage, double *p, int np) {
         exit(1);
     }
     phi_e_constraint.set_param(&phi_e_constraint, p);
-    {% endif %}
-    {% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
+    {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
     casadi_np = (&h_e_constraint)->np;
     if (casadi_np != np) {
         printf("acados_update_params: trying to set %i parameters " 
@@ -1346,12 +1346,13 @@ int acados_free() {
 
     // free external function 
     {% if solver_options.integrator_type == "IRK" %}
-    for (int i = 0; i < {{ dims.N }}; i++) {
+    for (int i = 0; i < {{ dims.N }}; i++)
+    {
         external_function_param_casadi_free(&impl_dae_fun[i]);
         external_function_param_casadi_free(&impl_dae_fun_jac_x_xdot_z[i]);
         external_function_param_casadi_free(&impl_dae_jac_x_xdot_u_z[i]);
     }
-    {% else %}
+    {% elif solver_options.integrator_type == "ERK"%}
     for (int i = 0; i < {{ dims.N }}; i++)
     {
         external_function_param_casadi_free(&forw_vde_casadi[i]);
@@ -1360,7 +1361,7 @@ int acados_free() {
     {% endif %}
     }
     {% endif %}
-    
+
     return 0;
 }
 
