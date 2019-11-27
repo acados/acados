@@ -180,7 +180,9 @@ function model = detect_cost_type(model, is_e)
         disp(W);
         fprintf('\ny_ref\n');
         disp(y_ref);
-        fprintf('\nNOTE: these numerical values can be updated online using the appropriate setters.\n');
+        fprintf('\ny (symbolic)\n');
+        disp(sym_y);
+        fprintf('\nNOTE: These numerical values can be updated online using the appropriate setters.\n');
 % elseif
     %  TODO: can nonlinear_ls be detected?!
     else
