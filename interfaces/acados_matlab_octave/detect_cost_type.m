@@ -85,11 +85,12 @@ function model = detect_cost_type(model, is_e)
         H_xuz = full(Hxuz_fun(0));
 
         xuz_idx = [];
-        for i = 1:(nx+nu+nz)
-            if ~isempty(find(H_xuz(i,:), 1) )
-                xuz_idx = union(xuz_idx, i);
-            end
-        end
+        % for i = 1:(nx+nu+nz)
+        %     if ~isempty(find(H_xuz(i,:), 1) )
+        %         xuz_idx = union(xuz_idx, i);
+        %     end
+        % end
+        xuz_idx = 1:(nx+nu+nz);
         x_idx = intersect(1:nx, xuz_idx);
         u_idx = intersect(1+nx:nx+nu, xuz_idx);
         z_idx = intersect(1+nx+nu : nx+nu+nz, xuz_idx);
