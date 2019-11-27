@@ -61,8 +61,12 @@ INC_PATH = '{{ acados_include_path }}';
 
 INCS = [ ' -I', INC_PATH, '/blasfeo/include/ ', ...
          '-I', INC_PATH, '/hpipm/include/ ', ...
-         '-I', INC_PATH, ' -I', INC_PATH, '/acados/ ', ...
-         '-I', INC_PATH, '/qpOASES_e/' ];
+         '-I', INC_PATH, ' -I', INC_PATH, '/acados/ ',];
+
+{% if  solver_options.qp_solver == "QPOASES" %}
+    INCS = strcat(INCS, '-I', INC_PATH, '/qpOASES_e/')
+{% endif %}
+
 CFLAGS  = ' -O';
 
 {% if  solver_options.qp_solver == "QPOASES" %}
@@ -71,10 +75,30 @@ CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPOASES ' ];
 
 LIB_PATH = '{{ acados_lib_path }}';
 
-LIBS = '-lacados -lhpipm -lblasfeo {% if  solver_options.qp_solver == "QPOASES" %}-lqpOASES_e{% endif %} -lm'; 
-    
+LIBS = '-lacados -lhpipm -lblasfeo -lm'; 
+
+{% if  solver_options.qp_solver == "QPOASES" %}
+LIBS = strcat(LIBS, ' -lqpOASES_e'); 
+{% endif %}
+
 eval( [ 'mex -v -output  acados_solver_sfunction_{{ model.name }} ', ...
     CFLAGS, INCS, ' ', SOURCES, ' -L', LIB_PATH, ' ', LIBS ]);
 
-disp( [ 'acados_solver_sfunction_{{ model.name }}', '.', ...
-    eval('mexext'), ' successfully created!'] );
+fprintf( [ '\n\nSuccessfully created sfunction:\nacados_solver_sfunction_{{ model.name }}', '.', ...
+    eval('mexext')] );
+
+%% print note on usage of s-function
+fprintf('\n\nNote:\n')
+input_note = 'Inputs are:\n 1) x0[{{ dims.nx }}]\n 2) y_ref[{{ dims.ny }}]\n 3) y_ref_e[{{ dims.ny_e }}]\n ';
+
+{%- if dims.np > 0 %}
+strcat(input_note, ' 4) parameters[[{{ dims.np }}]]\n ')
+{%- endif %}
+
+fprintf(input_note)
+
+disp(' ')
+
+output_note = 'Outputs are:\n 1) u[{{ dims.nu }}] - optimal input\n 2) KKT residual\n 3) first state \n 4) CPU time\n';
+
+fprintf(output_note)

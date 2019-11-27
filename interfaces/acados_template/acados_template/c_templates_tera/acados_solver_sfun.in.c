@@ -116,8 +116,8 @@ static void mdlInitializeSizes (SimStruct *S)
 
     // specify dimension information for the output ports 
     ssSetOutputPortVectorDimension(S, 0, {{ dims.nu }} ); // optimal input
-    ssSetOutputPortVectorDimension(S, 1, 1 );                // solver status
-    ssSetOutputPortVectorDimension(S, 2, 1 );                // KKT residuals
+    ssSetOutputPortVectorDimension(S, 1, 1 ); // solver status
+    ssSetOutputPortVectorDimension(S, 2, 1 ); // KKT residuals
     ssSetOutputPortVectorDimension(S, 3, {{ dims.nx }} ); // first state
     ssSetOutputPortVectorDimension(S, 4, 1); // computation times
 
