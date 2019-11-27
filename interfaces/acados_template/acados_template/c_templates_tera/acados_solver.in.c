@@ -620,15 +620,17 @@ int acados_create()
     // cost
     ny[N]   = NYN_;
     // constraint
+    nbx[N]   = NBXN_;
     nbu[N]   = 0;
-    nsbx[N]  = NSBXN_;
-    nsbu[N]  = 0;
-    nsh[N]   = NSHN_;
-    nsphi[N] = NSPHIN_;
     ng[N]    = NGN_;
     nh[N]    = NHN_;
     nphi[N]  = NPHIN_;
     nr[N]    = NRN_;
+
+    nsbx[N]  = NSBXN_;
+    nsbu[N]  = 0;
+    nsh[N]   = NSHN_;
+    nsphi[N] = NSPHIN_;
 
     // Make plan
     nlp_solver_plan = ocp_nlp_plan_create(N);
