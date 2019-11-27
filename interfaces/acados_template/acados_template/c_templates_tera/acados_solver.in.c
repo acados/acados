@@ -491,8 +491,6 @@ int acados_create()
     double Zu_e[NSN];
     double zl_e[NSN];
     double zu_e[NSN];
-
-    double Vx_e[NYN*NX];
     
     for (int ii = 0; ii < NU + NX; ii++)
         yref[ii] = 0.0;
