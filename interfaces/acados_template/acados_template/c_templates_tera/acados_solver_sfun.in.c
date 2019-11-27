@@ -52,6 +52,7 @@
 #include "simstruc.h"
 
 #define SAMPLINGTIME -1
+
 // ** global data **
 ocp_nlp_in * nlp_in;
 ocp_nlp_out * nlp_out;
@@ -60,9 +61,10 @@ void * nlp_opts;
 ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
-{% if solver_options.integrator_type == 'ERK' %}
+
+{%- if solver_options.integrator_type == 'ERK' -%}
 external_function_param_casadi * forw_vde_casadi;
-{% if solver_options.hessian_approx == 'EXACT' %} 
+{%- if solver_options.hessian_approx == 'EXACT' %} 
 external_function_param_casadi * hess_vde_casadi;
 {% endif %}
 {% elif solver_options.integrator_type == 'IRK' %}
@@ -70,20 +72,20 @@ external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
-{% if constraints.constr_type == "BGP" %}
+{%- if constraints.constr_type == "BGP" %}
 // external_function_param_casadi * r_constraint;
 external_function_param_casadi * phi_constraint;
-{% endif %}
-{% if constraints.constr_type_e == "BGP" %}
+{%- endif %}
+{%- if constraints.constr_type_e == "BGP" -%}
 // external_function_param_casadi r_e_constraint;
 external_function_param_casadi phi_e_constraint;
-{% endif %}
-{% if constraints.constr_type == "BGH" %}
+{%- endif %}
+{%- if constraints.constr_type == "BGH" %}
 external_function_param_casadi * h_constraint;
-{% endif %}
-{% if constraints.constr_type_e == "BGH" %}
+{%- endif %}
+{%- if constraints.constr_type_e == "BGH" %}
 external_function_param_casadi h_e_constraint;
-{% endif %}
+{%- endif %}
 
 
 static void mdlInitializeSizes (SimStruct *S)
@@ -92,8 +94,12 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetNumContStates(S, 0);
     ssSetNumDiscStates(S, 0);
 
-    // specify the number of input ports 
+    // specify the number of input ports
+    {%- if dims.np > 0 %}
     if ( !ssSetNumInputPorts(S, 4) )
+    {%- else %}
+    if ( !ssSetNumInputPorts(S, 3) )
+    {%- endif %}
         return;
 
     // specify the number of output ports 
@@ -104,7 +110,9 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, 0, {{ dims.nx }});
     ssSetInputPortVectorDimension(S, 1, {{ dims.ny }});
     ssSetInputPortVectorDimension(S, 2, {{ dims.ny_e }});
+    {%- if dims.np > 0%}
     ssSetInputPortVectorDimension(S, 3, {{ dims.np }});
+    {%- endif %}
 
     // specify dimension information for the output ports 
     ssSetOutputPortVectorDimension(S, 0, {{ dims.nu }} ); // optimal input
@@ -168,20 +176,30 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     real_t in_x0[{{ dims.nx }}];
     real_t in_y_ref[{{ dims.ny }}];
     real_t in_y_ref_e[{{ dims.ny_e }}];
+    {%- if dims.np > 0%}
     real_t in_p[{{ dims.np }}];
+    {%- endif %}
 
     in_x0_sign = ssGetInputPortRealSignalPtrs(S, 0);
     in_y_ref_sign = ssGetInputPortRealSignalPtrs(S, 1);
     in_y_ref_e_sign = ssGetInputPortRealSignalPtrs(S, 2);
+    {%- if dims.np > 0 %}
     in_p_sign = ssGetInputPortRealSignalPtrs(S, 3);
+    {%- endif %}
 
     // copy signals into local buffers
-    for (int i = 0; i < {{ dims.nx }}; i++) in_x0[i] = (double)(*in_x0_sign[i]);
-    for (int i = 0; i < {{ dims.ny }}; i++) in_y_ref[i] = (double)(*in_y_ref_sign[i]);
-    for (int i = 0; i < {{ dims.ny_e }}; i++) in_y_ref_e[i] = (double)(*in_y_ref_e_sign[i]);
-    for (int i = 0; i < {{ dims.np }}; i++) in_p[i] = (double)(*in_p_sign[i]);
+    for (int i = 0; i < {{ dims.nx }}; i++)
+        in_x0[i] = (double)(*in_x0_sign[i]);
+    for (int i = 0; i < {{ dims.ny }}; i++)
+        in_y_ref[i] = (double)(*in_y_ref_sign[i]);
+    for (int i = 0; i < {{ dims.ny_e }}; i++)
+        in_y_ref_e[i] = (double)(*in_y_ref_e_sign[i]);
+    {%- if dims.np > 0 %}
+    for (int i = 0; i < {{ dims.np }}; i++)
+        in_p[i] = (double)(*in_p_sign[i]);
+    {%- endif %}
 
-    // for (int i = 0; i < 4; i++) ssPrintf("x0[%d] = %f\n", i, in_x0[i]);
+    // for (int i = 0; i < {{ dims.nx }}; i++) ssPrintf("x0[%d] = %f\n", i, in_x0[i]);
     // ssPrintf("\n");
 
     // set initial condition
@@ -194,12 +212,12 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) in_y_ref_e);
 
+    {%- if dims.np > 0 %}
     // update value of parameters
-    {% if dims.np > 0%}
     for (int ii = 0; ii <= {{ dims.N }}; ii++) 
         acados_update_params(ii, in_p, {{ dims.np }});
-    {% endif %}
-    
+    {%- endif %}
+
     // assign pointers to output signals 
     real_t *out_u0, *out_status, *out_KKT_res, *out_x1, *out_cpu_time;
 
@@ -212,6 +230,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // call acados_solve()
     int acados_status = acados_solve();
 
+    // extract solver info
     *out_status = (real_t) acados_status;
     *out_KKT_res = (real_t) nlp_out->inf_norm_res;
     *out_cpu_time = (real_t) nlp_out->total_time;
