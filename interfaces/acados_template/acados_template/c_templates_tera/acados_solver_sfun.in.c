@@ -110,7 +110,7 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortVectorDimension(S, 0, {{ dims.nx }});
     ssSetInputPortVectorDimension(S, 1, {{ dims.ny }});
     ssSetInputPortVectorDimension(S, 2, {{ dims.ny_e }});
-    {%- if dims.np > 0%}
+    {%- if dims.np > 0 %}
     ssSetInputPortVectorDimension(S, 3, {{ dims.np }});
     {%- endif %}
 
@@ -125,7 +125,9 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortDirectFeedThrough(S, 0, 1); // current state x0
     ssSetInputPortDirectFeedThrough(S, 1, 1); // y_ref
     ssSetInputPortDirectFeedThrough(S, 2, 1); // y_ref_N
+    {%- if dims.np > 0 %}
     ssSetInputPortDirectFeedThrough(S, 3, 1); // parameter
+    {%- endif %}
 
     // one sample time 
     ssSetNumSampleTimes(S, 1);
