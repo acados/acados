@@ -101,6 +101,12 @@ classdef acados_ocp < handle
                     if ~isempty(strfind(obj.opts_struct.qp_solver,'qpoases'))
                         flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_qpoases.txt');
                         compile_interface = ~exist(flag_file, 'file');
+                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'hpmpc'))
+                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_hpmpc.txt');
+                        compile_interface = ~exist(flag_file, 'file');
+                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'osqp'))
+                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_osqp.txt');
+                        compile_interface = ~exist(flag_file, 'file');
                     else
                         compile_interface = false;
                     end
@@ -226,9 +232,16 @@ classdef acados_ocp < handle
                     end
                     fprintf('\n');
                 elseif strcmp(ocp_solver_string, 'sqp_rti')
-                    fprintf('\niter\tqp_status\tqp_iter\n');
+                    fprintf('\niter\tqp_status\tqp_iter');
+                    if size(stat,2)>3
+                        fprintf('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
+                    end
+                    fprintf('\n');
                     for jj=1:size(stat,1)
                         fprintf('%d\t%d\t\t%d', stat(jj,1), stat(jj,2), stat(jj,3));
+                        if size(stat,2)>3
+                            fprintf('\t%e\t%e\t%e\t%e', stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7));
+                        end
                         fprintf('\n');
                     end
                 end
