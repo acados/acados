@@ -1,16 +1,17 @@
 language: c
 env:
   global:
-    - BLASFEO_TARGET=X64_INTEL_HASWELL
+    - BLASFEO_TARGET=X64_AUTOMATIC
     - HPIPM_TARGET=AVX
     - ACADOS_UNIT_TESTS="ON"
     - ACADOS_EXAMPLES="ON"
     - ACADOS_WITH_QPOASES="ON"
     - ACADOS_LINT="OFF"
-    - TEMPLATE_PYTHON="OFF"
     - TEMPLATE_MATLAB="OFF"
     - ACADOS_MATLAB="OFF"
     - ACADOS_OCTAVE="OFF"
+    - ACADOS_PYTHON="OFF"
+    - ACADOS_ON_TRAVIS="ON"
     # TODO(oj): can we recover / remove these?!
     # - secure: "YNhdXD3zhKsQeLVXHiZ3U6S1ERm+AHeUd7402ZHkxoIEefgVyvSy41XIPlgl5FKHq9PW8ecVktteFJldv7DLdXyK3mmKiyFmQWbtJabC4CGhXZ8eGWq95Hak1yW+t3qxmXRD/XDI7baPXryKopyX5epRFnpp2pB5Dmi1JVkJRXhhDtwsOAbolhdWrQ8SGq1wxejzjQa5XqKIDknZy6DTTUmZZYalmY8G3ETBEj2wamOiny6D2xQZQi1hOaRCTPLzSfvZIn3k9oT1kZ3gnI9e/Scg36EMIRlpkt0jUyNSB0IUv/RZdNFFAmn2xHr/sxAGtuyzYK9D4pZI0mc7WvXV3DpEyjbDCGA4RWhblOYFEfcDkqsTBQZ53zLCsx3MGcw2VOZ07FKtrI6JC2Z400UTFXDglpsc8e2MNZOUctkjUoMCn4GpbyZoY5csaUQrvylldZv7F/pYjoSHqcRI6ytq0kVhrXn4A7oYeQcIqdhvq9lf5vtmP68PUp/bBTXZkiHAhf5fMBTAMs9f/VRJ++JH2yu3zOM8VXa40xWSmszFeHlXx4xQrPrI5o7qGBxYGU0GdvJNYDsqAfqKc1bXl2ULQw3UHX2K7XPjUD2/n/W2JCVnTsX3xfEFoHFP4/pxH4G3l7rb82D803SQ3U7++2RATj02ZN4LBdTq9nnqjksC224="
     # - secure: "W8Z9V5SCq19cis+UpX3XPv8BPXpZeQmsDVzkGRdbAS3rd5rkBBIGHFJxEZLtoZtcbEFZkjBEZVZWlelUXwuDWDUyXfsE0HgidGfyLtHh+a86KsjNbmkG7tCAJkVWET0DKttVkzlDrNjqextrEIVCN1NsFC6xuCu1n9ZL9W6wPBB8o0P8Sa7Lu/pO2rm2nEP7dJG4bN18PxxXx/iK7zaEHiu9mVVQ9CXExa9E0Sy0uYdV0cAetb8Th+jJqCEtvi0gXEdhmqhecDPVLaP67Mkc32MTE4tDCyGXeJW/8B5ia8QwuKAFRhTufSgJfIULfe652abRWm26HgmWNr93/GU9MkmPdveBRLUNft74UrnLksnGVk3o5XBczK606dCJI5aejheyHIjNMED/z1NgYfdTtKy83hQxIbsbGg0/plrtGzAS0limsO0i8lIzYDiR/enikioRKZdhBe6m4lJhyObxTXps8tDG2yNtbk/sV9LUyNrk8w9JIdb/YEuDysHi4LrukZmRxazYhhPoISBHzEvxpBsnIPuvMmQqZFuxGQNc1Sms9qMCvbSBGDQzkSq5RQ0ICDgkD7ecm78cs7JPV87lZgZrYjLGjs0cS31ELgVS++VY1gBIzW1TJVn8qC/rLOHgHuOlrI40IntxJaQ/gdkPljxIHg4H+znh4y4/YzkfXOQ="
@@ -20,6 +21,9 @@ sudo: required
 dist: xenial
 
 group: travis_latest
+
+services:
+  - xvfb
 
 addons:
   apt:
@@ -42,6 +46,14 @@ matrix:
         - DEPLOY_NAME="linux octave gcc6"
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
         - ACADOS_OCTAVE="ON"
+        - ACADOS_EXAMPLES="OFF"
+        - ACADOS_UNIT_TESTS="OFF"
+
+    - name: Linux Gcc6 - Python interface
+      env:
+        - DEPLOY_NAME="linux python gcc6"
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+        - ACADOS_PYTHON="ON"
         - ACADOS_EXAMPLES="OFF"
         - ACADOS_UNIT_TESTS="OFF"
 

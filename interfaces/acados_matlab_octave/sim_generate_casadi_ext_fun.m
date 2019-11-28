@@ -41,19 +41,19 @@ if (strcmp(opts_struct.method, 'erk'))
     generate_c_code_explicit_ode(model_struct, opts_struct);
     % compile the code in a shared library
     c_files{end+1} = [model_name, '_dyn_expl_ode_fun.c'];
-    c_files{end+1} = [model_name, '_dyn_expl_vde_for.c'];
+    c_files{end+1} = [model_name, '_dyn_expl_vde_forw.c'];
     c_files{end+1} = [model_name, '_dyn_expl_vde_adj.c'];
-    c_files{end+1} = [model_name, '_dyn_expl_ode_hes.c'];
+    c_files{end+1} = [model_name, '_dyn_expl_ode_hess.c'];
 elseif (strcmp(opts_struct.method, 'irk'))
     % generate c for function and derivatives using casadi
     generate_c_code_implicit_ode(model_struct, opts_struct);
     % compile the code in a shared library
-    c_files{end+1} = [model_name, '_dyn_impl_ode_fun.c'];
-    c_files{end+1} = [model_name, '_dyn_impl_ode_fun_jac_x_xdot_z.c'];
-    c_files{end+1} = [model_name, '_dyn_impl_ode_fun_jac_x_xdot_u.c'];
-    c_files{end+1} = [model_name, '_dyn_impl_ode_jac_x_xdot_u_z.c'];
+    c_files{end+1} = [model_name, '_dyn_impl_dae_fun.c'];
+    c_files{end+1} = [model_name, '_dyn_impl_dae_fun_jac_x_xdot_z.c'];
+    c_files{end+1} = [model_name, '_dyn_impl_dae_fun_jac_x_xdot_u.c'];
+    c_files{end+1} = [model_name, '_dyn_impl_dae_jac_x_xdot_u_z.c'];
     if strcmp(opts_struct.sens_hess, 'true')
-        c_files{end+1} = [model_name, '_dyn_impl_ode_hess.c'];
+        c_files{end+1} = [model_name, '_dyn_impl_dae_hess.c'];
     end
 elseif (strcmp(opts_struct.method, 'irk_gnsf'))
     % generate c for function and derivatives using casadi

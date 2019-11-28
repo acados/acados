@@ -88,7 +88,7 @@ typedef enum
 
     /// Comprises simple bounds, polytopic constraints,
     /// general non-linear constraints, and positive definite constraints.
-    BGHP,
+    BGP,
 
     INVALID_CONSTRAINT,
 } ocp_nlp_constraints_t;

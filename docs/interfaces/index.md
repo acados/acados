@@ -11,13 +11,13 @@ can look at the examples in
 
 ## acados MATLAB (rapid prototyping)
 
-This interface makes a broad set of `acados` functionalities available from `Matlab` or Octave
-for prototyping purpose. As of now, this closely tracks the latest developments in the core of `acados`, e.g.
-exact Hessians, adjoint corrections, regularization, etc. However, for the time being, it will not be possible to
-generate a self-contained C library that can be deployed on an embedded system. For this purpose
-see the `acados emebedded` high-level interface below.
+This interface makes a broad set of `acados` functionalities available from Matlab or Octave.
+As of now, this closely tracks the latest developments in the core of acados, e.g.
+exact Hessians, adjoint corrections, regularization, etc.
 
-Some examples for the use of this interface can be found in `<acados_root>/examples/acados_matlab_octave`
+To get started with this interface we recommend the examples in `<acados_root>/examples/acados_matlab_octave/getting_started`.
+
+The problem formulation is stated in [this PDF](https://github.com/acados/acados/tree/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf)
 
 This interface uses the shared libraries created using the make command from the main `acados` folder
 
@@ -40,16 +40,23 @@ If you want to run the examples in a different folder, please close the current 
 For a detailed explanation about the options available from this
 interface see: [matlab_interface_spreadsheet](https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing) (thanks to [@EnricaSo](https://github.com/EnricaSo)).
 
+### acados MATLAB (going embedded)
+There is the option to generate embeddable `C` code from Matlab.
+The workflow uses the same templates as the Python interface (see below) and the `Tera` renderer.
+After creating an acados solver `ocp`, you can use the routine `ocp.generate_c_code` to generate `C` code which can be used for embedded applications.
+
+Note: This part of the MATLAB/Octave interface does not yet support all features of the one mentioned before.
+
+
 ## acados embedded - Python
 
-
-`acados_template` is a Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the `acados` solvers to solve them.
-In comparison with the `Matlab` interface for rapid prototyping (see above), it supports less features, but it allows the user to generate a self-contained C library
+`acados_template` is a Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them.
+In comparison with the MATLAB interface for rapid prototyping (see above), it supports less features, but it allows the user to generate a self-contained C library
 that can be easily deployed on an embedded system.
 
-The framework is based on templated C files which are rendered from Python using the templating engine `Jinja2`.
+The framework is based on templated C files which are rendered from Python using the templating engine `Tera`.
 
-The currently supported formulations reads as
+The currently supported formulation reads as
 
 ```math
 \begin{equation}
@@ -103,9 +110,17 @@ pip3 install <acados_root>/interfaces/acados_template
 ```
 
 (Notice that, of course, you might need to use `pip` instead, if you run, for example, from within a Python virtual
-environment) You should now be able to import it as a Python module and use it as shown in the examples in `<acados_root>/examples/acados_template/python/<example_name>/generate_c_code.py`
+environment) You should now be able to import it as a Python module and use it as shown in the examples in `<acados_root>/examples/acados_template/python/<example_name>/generate_c_code.py`.
 
-For more information contact `@zanellia`
+In order to be able to successfully render C code templates,
+you need to download the `t_renderer` binaries for your platform
+from <https://github.com/acados/tera_renderer/releases/> and
+place them in `<acados_root>/bin` (please strip the version and platform from the binaries (e.g.
+`t_renderer-v0.0.20 -> t_renderer`). Notice that you might need to make `t_renderer` executable. Run
+`export ACADOS_SOURCE_DIR=<acados_root>` such that the location of acados will be known to the Python
+package at run time. Additionally, you will have to make sure that the environment variable `LD_LIBRARY_PATH` contains the path to `libacados.so` (default path is `<acados_root/lib>`). Notice that, if you want to run the examples from a location that differs from '<acados_root>/interfaces/acados_template' or you want the generated Makefile to refer to a specific path (e.g. when cross-compiling or compiling from a location different from the one where you generate the C code), you will have to adapt 'ocp.acados_include_path' and 'ocp.acados_lib_path' accordingly in the generating Python code.
+
+For more information contact `@zanellia`.
 
 ### optimal control description
 ``` eval_rst
@@ -121,5 +136,3 @@ For more information contact `@zanellia`
     :exclude-members: acados_ocp2json_layout, cast_ocp_nlp, dict2json_layout, dict2json_layout_rec, check_ra, json2dict_rec
 
 ```
-## acados embedded - MATLAB
-TODO!

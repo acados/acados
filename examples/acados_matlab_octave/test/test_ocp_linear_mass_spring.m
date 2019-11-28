@@ -282,7 +282,7 @@ if status~=0
 elseif sqp_iter > 2
     error('ocp can be solved in 2 iterations!');
 else
-	fprintf('\nsuccess!\n');
+	fprintf('\ntest_ocp_linear_mass_spring: success!\n');
 end
 
 % plot result

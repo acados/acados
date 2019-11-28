@@ -48,7 +48,7 @@
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
-#include "acados/ocp_nlp/ocp_nlp_constraints_bghp.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints_bgp.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_convexify.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_mirror.h"
 #include "acados/ocp_nlp/ocp_nlp_reg_project.h"
@@ -300,8 +300,8 @@ ocp_nlp_config *ocp_nlp_config_create(ocp_nlp_plan plan)
             case BGH:
                 ocp_nlp_constraints_bgh_config_initialize_default(config->constraints[i]);
                 break;
-            case BGHP:
-                ocp_nlp_constraints_bghp_config_initialize_default(config->constraints[i]);
+            case BGP:
+                ocp_nlp_constraints_bgp_config_initialize_default(config->constraints[i]);
                 break;
             case INVALID_CONSTRAINT:
                 printf("\nerror: ocp_nlp_config_create: forgot to initialize plan->nlp_constraints\n");
@@ -509,6 +509,11 @@ void ocp_nlp_out_get(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_nlp_out *ou
         double *double_values = value;
         blasfeo_unpack_dvec(dims->nx[stage+1], &out->pi[stage], 0, double_values);
     }
+    else if ((!strcmp(field, "kkt_norm_inf")) || (!strcmp(field, "kkt_norm")))
+    {
+        double *double_values = value;
+        double_values[0] = out->inf_norm_res;
+    }
     else
     {
         printf("\nerror: ocp_nlp_out_get: field %s not available\n", field);
@@ -547,6 +552,12 @@ int ocp_nlp_dims_get_from_attr(ocp_nlp_config *config, ocp_nlp_dims *dims, ocp_n
     {
         config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
                                             "nbu", &dims_value);
+        return dims_value;
+    }
+    else if (!strcmp(field, "lg") || !strcmp(field, "ug"))
+    {
+        config->constraints[stage]->dims_get(config->constraints[stage], dims->constraints[stage],
+                                            "ng", &dims_value);
         return dims_value;
     }
     else if (!strcmp(field, "s"))
@@ -709,7 +720,7 @@ void ocp_nlp_eval_param_sens(ocp_nlp_solver *solver, char *field, int stage, int
 void ocp_nlp_get(ocp_nlp_config *config, ocp_nlp_solver *solver,
                  const char *field, void *return_value_)
 {
-    solver->config->get(solver->config, solver->mem, field, return_value_);
+    solver->config->get(solver->config, solver->dims, solver->mem, field, return_value_);
 }
 
 
@@ -717,7 +728,7 @@ void ocp_nlp_set(ocp_nlp_config *config, ocp_nlp_solver *solver,
         int stage, const char *field, void *value)
 {
     ocp_nlp_memory *mem;
-    config->get(config, solver->mem, "nlp_mem", &mem);
+    config->get(config, solver->dims, solver->mem, "nlp_mem", &mem);
     // printf("called getter: nlp_mem %p\n", mem);
 
     ocp_nlp_dims *dims = solver->dims;

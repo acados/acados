@@ -112,14 +112,14 @@ ocp.set('constraints_idxbu', np.array([0])
 # ocp.constants['PI'] = 3.1415926535897932
 
 # set QP solver
-# ocp.solver_config.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
-ocp.set('solver_config_qp_solver', 'FULL_CONDENSING_QPOASES')
-ocp.set('solver_config_hessian_approx', 'GAUSS_NEWTON')
-ocp.set('solver_config_integrator_type', 'ERK')
+# ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM'
+ocp.set('solver_options_qp_solver', 'FULL_CONDENSING_QPOASES')
+ocp.set('solver_options_hessian_approx', 'GAUSS_NEWTON')
+ocp.set('solver_options_integrator_type', 'ERK')
 
 # set prediction horizon
-ocp.set('solver_config_tf', Tf)
-ocp.set('solver_config_nlp_solver_type', 'SQP')
+ocp.set('solver_options_tf', Tf)
+ocp.set('solver_options_nlp_solver_type', 'SQP')
 
 # set header path
 ocp.set('acados_include_path', '/usr/local/include')

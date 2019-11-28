@@ -48,7 +48,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 ### Defaults
 
 set(ACADOS_INSTALL_DIR "${PROJECT_SOURCE_DIR}" CACHE STRING  "Installation path to PROJECT_SOURCE_DIR")
-set(BLASFEO_TARGET "X64_INTEL_HASWELL" CACHE STRING "BLASFEO Target architecture")
+set(BLASFEO_TARGET "X64_AUTOMATIC" CACHE STRING "BLASFEO Target architecture")
 set(HPIPM_TARGET "AVX" CACHE STRING "HPIPM Target architecture")
 set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
 
@@ -71,10 +71,10 @@ option(ACADOS_WITH_QPDUNES "qpDUNES solver" OFF)
 option(ACADOS_WITH_OSQP "OSQP solver" OFF)
 # Interfaces
 option(TEMPLATE_MATLAB "Template Matlab Interface" OFF)
-option(TEMPLATE_PYTHON "Template Python Interface" OFF)
 option(DEV_MATLAB "Developer Matlab Interface" OFF)
 option(ACADOS_MATLAB "The Matlab Interface" OFF)
 option(ACADOS_OCTAVE "The Octave Interface" OFF)
+option(ACADOS_PYTHON "Python Interface" OFF)
 
 # Set custom path
 set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
@@ -163,7 +163,7 @@ if(ACADOS_LINT)
     endif()
 endif()
 
-if(ACADOS_MATLAB OR ACADOS_OCTAVE) #TODO: OR ACADOS_PYTHON
+if(ACADOS_MATLAB OR ACADOS_OCTAVE OR ACADOS_PYTHON) 
     add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces)
 endif()
 

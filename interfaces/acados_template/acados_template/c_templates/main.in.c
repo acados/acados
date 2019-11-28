@@ -39,8 +39,9 @@
 #include "acados/utils/print.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
-#include "acados_solver_{{ocp.model_name}}.h"
-#include "acados_sim_solver_{{ocp.model_name}}.h"
+#include "acados_solver_{{ocp.model.name}}.h"
+#include "acados_sim_solver_{{ocp.model.name}}.h"
+
 
 // ** global data **
 ocp_nlp_in * nlp_in;
@@ -51,40 +52,22 @@ ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
 
-sim_config  * {{ocp.model_name}}_sim_config;
-sim_in      * {{ocp.model_name}}_sim_in;
-sim_out     * {{ocp.model_name}}_sim_out; 
-void        * {{ocp.model_name}}_sim_dims;
-sim_opts    * {{ocp.model_name}}_sim_opts;
-sim_solver  * {{ocp.model_name}}_sim_solver; 
+sim_config  * {{ocp.model.name}}_sim_config;
+sim_in      * {{ocp.model.name}}_sim_in;
+sim_out     * {{ocp.model.name}}_sim_out; 
+void        * {{ocp.model.name}}_sim_dims;
+sim_opts    * {{ocp.model.name}}_sim_opts;
+sim_solver  * {{ocp.model.name}}_sim_solver; 
 
-{% if ocp.solver_config.integrator_type == "ERK" %}
-{% if ocp.dims.np < 1 %}
-external_function_casadi * forw_vde_casadi;
-external_function_casadi * sim_forw_vde_casadi;
-external_function_casadi * sim_expl_ode_fun_casadi;
-{% else %}
+{% if ocp.solver_options.integrator_type == "ERK" %}
 external_function_param_casadi * forw_vde_casadi;
 external_function_param_casadi * sim_forw_vde_casadi;
 external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% endif %}
-{% if ocp.solver_config.hessian_approx == "EXACT" %} 
-{% if ocp.dims.np < 1 %}
-external_function_casadi * hess_vde_casadi;
-{% else %}
+{% if ocp.solver_options.hessian_approx == "EXACT" %} 
 external_function_param_casadi * hess_vde_casadi;
 {% endif %}
-{% endif %}
 {% else %}
-{% if ocp.solver_config.integrator_type == "IRK" %}
-{% if ocp.dims.np < 1 %}
-external_function_casadi * impl_dae_fun;
-external_function_casadi * impl_dae_fun_jac_x_xdot_z;
-external_function_casadi * impl_dae_jac_x_xdot_u_z;
-external_function_casadi * sim_impl_dae_fun;
-external_function_casadi * sim_impl_dae_fun_jac_x_xdot_z;
-external_function_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% else %}
+{% if ocp.solver_options.integrator_type == "IRK" %}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
@@ -94,24 +77,29 @@ external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% endif %}
 {% endif %}
 {% if ocp.dims.npd > 0 %}
-external_function_casadi * p_constraint;
+external_function_param_casadi * p_constraint;
 {% endif %}
 {% if ocp.dims.npd_e > 0 %}
-external_function_casadi * p_constraint_e;
-{% endif %}
+external_function_param_casadi p_e_constraint;
 {% endif %}
 {% if ocp.dims.nh > 0 %}
-external_function_casadi * h_constraint;
+external_function_param_casadi * h_constraint;
 {% endif %}
 {% if ocp.dims.nh_e > 0 %}
-external_function_casadi * h_constraint_e;
+external_function_param_casadi h_e_constraint;
+{% endif %}
+{% if ocp.cost.cost_type == "NONLINEAR_LS" %}
+external_function_casadi * r_cost;
+{% endif %}
+{% if ocp.cost.cost_type_e == "NONLINEAR_LS" %}
+external_function_casadi r_e_cost;
 {% endif %}
 
 int main() {
 
     // test integrator first
     int sim_status = 0;
-    sim_status = {{ ocp.model_name }}_acados_sim_create();
+    sim_status = {{ ocp.model.name }}_acados_sim_create();
 
     // set sim input
     double x_sim[{{ocp.dims.nx}}];
@@ -127,26 +115,26 @@ int main() {
     
     // seeds forw
     for (int ii = 0; ii < {{ocp.dims.nx}} * ({{ocp.dims.nx}} + {{ocp.dims.nu}}); ii++)
-        {{ ocp.model_name }}_sim_in->S_forw[ii] = 0.0;
+        {{ ocp.model.name }}_sim_in->S_forw[ii] = 0.0;
     for (int ii = 0; ii < {{ocp.dims.nx}}; ii++)
-        {{ ocp.model_name }}_sim_in->S_forw[ii * ({{ocp.dims.nx}} + 1)] = 1.0;
+        {{ ocp.model.name }}_sim_in->S_forw[ii * ({{ocp.dims.nx}} + 1)] = 1.0;
 
-    double Td = {{ ocp.solver_config.tf }}/ {{ ocp.dims.N }};
-    sim_in_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_in, "T", &Td);
-    sim_in_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_in, "x", x_sim);
-    sim_in_set({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_in, "u", u_sim);
+    double Td = {{ ocp.solver_options.tf }}/ {{ ocp.dims.N }};
+    sim_in_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_in, "T", &Td);
+    sim_in_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_in, "x", x_sim);
+    sim_in_set({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_in, "u", u_sim);
 
 
-    sim_status = {{ ocp.model_name }}_acados_sim_solve();
+    sim_status = {{ ocp.model.name }}_acados_sim_solve();
     // get and print output
     double *xn_out = calloc( {{ ocp.dims.nx }}, sizeof(double));
-    sim_out_get({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_out, "xn", xn_out);
+    sim_out_get({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_out, "xn", xn_out);
     printf("\nxn: \n");
     d_print_exp_mat(1, {{ ocp.dims.nx }}, xn_out, 1);
 
     double *S_forw_out = calloc({{ ocp.dims.nx }}*({{ ocp.dims.nx }}+{{ ocp.dims.nu }}), sizeof(double));
-    if ({{ ocp.model_name }}_sim_opts->sens_forw){
-        sim_out_get({{ ocp.model_name }}_sim_config, {{ ocp.model_name }}_sim_dims, {{ ocp.model_name }}_sim_out, "S_forw", S_forw_out);
+    if ({{ ocp.model.name }}_sim_opts->sens_forw){
+        sim_out_get({{ ocp.model.name }}_sim_config, {{ ocp.model.name }}_sim_dims, {{ ocp.model.name }}_sim_out, "S_forw", S_forw_out);
         printf("\nS_forw_out: \n");
         d_print_exp_mat({{ ocp.dims.nx }}, {{ ocp.dims.nx }} + {{ ocp.dims.nu }}, S_forw_out, {{ ocp.dims.nx }});
     }
@@ -159,7 +147,7 @@ int main() {
         exit(1); }
 
     // set initial condition
-    double x0[{{ocp.dims.nx}}];
+    double x0[{{ ocp.dims.nx }}];
     {% for item in ocp.constraints.x0 %}
     x0[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
@@ -168,23 +156,37 @@ int main() {
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", x0);
 
     {% if ocp.dims.np > 0%}
-    double p[{{ocp.dims.np}}];
+    double p[{{ ocp.dims.np }}];
     {% for item in ocp.constraints.p %}
     p[{{ loop.index0 }}] = {{ item }};
     {% endfor %}
     {% endif %}
     
     {% if ocp.dims.np > 0%}
-    {% if ocp.solver_config.integrator_type == "IRK" %}
-    for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
+    {% if ocp.solver_options.integrator_type == "IRK" %}
+    for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
     impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
     impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
     impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
     }
     {% else %}
-    for (int ii = 0; ii < {{ocp.dims.N}}; ii++) {
-    expl_vde_for[ii].set_param(expl_vde_for+ii, p);
+    for (int ii = 0; ii < {{ ocp.dims.N }}; ii++) {
+    forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
+    {% endif %}
+    for (int ii = 0; ii < {{ ocp.dims.N }}; ++ii) {
+        {%- if ocp.dims.npd > 0 %}
+        p_constraint[ii].set_param(p_constraint+ii, p);
+        {% endif %}
+        {%- if ocp.dims.nh > 0 %}
+        h_constraint[ii].set_param(h_constraint+ii, p);
+        {% endif %}
+    }
+    {%- if ocp.dims.npd_e > 0 %}
+    p_e_constraint.set_param(&p_e_constraint, p);
+    {% endif %}
+    {%- if ocp.dims.nh_e > 0 %}
+    h_e_constraint.set_param(&h_e_constraint, p);
     {% endif %}
     {% endif %}
 

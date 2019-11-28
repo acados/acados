@@ -41,7 +41,7 @@ CASADI_OCTAVE_URL="${_CASADI_GITHUB_RELEASES}/casadi-linux-octave-v${CASADI_VERS
 echo "installing CasADi"
 
 pushd external;
-	if [[ "${TEMPLATE_PYTHON}" = 'ON' ]] ;
+	if [[ "${ACADOS_PYTHON}" = 'ON' ]] ;
 	then
 		wget -O casadi-linux-py35.tar.gz "${CASADI_PYTHON_URL}";
 		mkdir -p casadi-linux-py35;

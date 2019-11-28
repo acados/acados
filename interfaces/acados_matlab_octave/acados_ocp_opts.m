@@ -114,6 +114,8 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.nlp_solver_ext_qp_res = value;
             elseif (strcmp(field, 'nlp_solver_step_length'))
                 obj.opts_struct.nlp_solver_step_length = value;
+            elseif (strcmp(field, 'nlp_solver_warm_start_first_qp'))
+                obj.opts_struct.nlp_solver_warm_start_first_qp = value;
             elseif (strcmp(field, 'qp_solver'))
                 obj.opts_struct.qp_solver = value;
             elseif (strcmp(field, 'qp_solver_tol_stat'))
@@ -134,8 +136,6 @@ classdef acados_ocp_opts < handle
                 obj.opts_struct.qp_solver_ric_alg = value;
             elseif (strcmp(field, 'qp_solver_warm_start'))
                 obj.opts_struct.qp_solver_warm_start = value;
-            elseif (strcmp(field, 'warm_start_first_qp'))
-                obj.opts_struct.warm_start_first_qp = value;
             elseif (strcmp(field, 'sim_method'))
                 obj.opts_struct.sim_method = value;
             elseif (strcmp(field, 'sim_method_num_stages'))

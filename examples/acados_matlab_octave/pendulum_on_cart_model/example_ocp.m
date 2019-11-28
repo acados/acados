@@ -41,7 +41,7 @@ if (~strcmp(env_run, 'true'))
 end
 
 %% arguments
-compile_interface = 'auto';
+compile_interface = 'true'; %'auto';
 codgen_model = 'true';
 gnsf_detect_struct = 'true';
 
@@ -52,14 +52,14 @@ h = 0.01;
 
 nlp_solver = 'sqp';
 %nlp_solver = 'sqp_rti';
-nlp_solver_exact_hessian = 'false';
-%nlp_solver_exact_hessian = 'true';
-regularize_method = 'no_regularize';
+%nlp_solver_exact_hessian = 'false';
+nlp_solver_exact_hessian = 'true';
+%regularize_method = 'no_regularize';
 %regularize_method = 'project';
-%regularize_method = 'project_reduc_hess';
+regularize_method = 'project_reduc_hess';
 %regularize_method = 'mirror';
 %regularize_method = 'convexify';
-nlp_solver_max_iter = 100;
+nlp_solver_max_iter = 20; %100;
 nlp_solver_tol_stat = 1e-8;
 nlp_solver_tol_eq   = 1e-8;
 nlp_solver_tol_ineq = 1e-8;
@@ -72,6 +72,7 @@ qp_solver_cond_N = 5;
 qp_solver_cond_ric_alg = 0;
 qp_solver_ric_alg = 0;
 qp_solver_warm_start = 2;
+qp_solver_max_iter = 100;
 %sim_method = 'erk';
 sim_method = 'irk';
 %sim_method = 'irk_gnsf';
@@ -224,12 +225,15 @@ if (strcmp(nlp_solver, 'sqp'))
 	ocp_opts.set('nlp_solver_tol_comp', nlp_solver_tol_comp);
 end
 ocp_opts.set('qp_solver', qp_solver);
-if (strcmp(qp_solver, 'partial_condensing_hpipm'))
-	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
-	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
-end
 ocp_opts.set('qp_solver_cond_ric_alg', qp_solver_cond_ric_alg);
 ocp_opts.set('qp_solver_warm_start', qp_solver_warm_start);
+ocp_opts.set('qp_solver_iter_max', qp_solver_max_iter);
+if (~isempty(strfind(qp_solver, 'partial_condensing')))
+	ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
+end
+if (strcmp(qp_solver, 'partial_condensing_hpipm'))
+	ocp_opts.set('qp_solver_ric_alg', qp_solver_ric_alg);
+end
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('sim_method_num_stages', sim_method_num_stages);
 ocp_opts.set('sim_method_num_steps', sim_method_num_steps);
@@ -268,7 +272,10 @@ ocp.set('init_u', u_traj_init);
 
 % solve
 tic;
+
+% solve ocp
 ocp.solve();
+
 time_ext = toc;
 % TODO: add getter for internal timing
 fprintf(['time for ocp.solve (matlab tic-toc): ', num2str(time_ext), ' s\n'])
@@ -310,16 +317,16 @@ legend('F');
 stat = ocp.get('stat');
 if (strcmp(nlp_solver, 'sqp'))
 	figure;
-% 	plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
-% 	hold on
-% 	plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');
-% 	plot([0: size(stat,1)-1], log10(stat(:,4)), 'g-x');
-% 	plot([0: size(stat,1)-1], log10(stat(:,5)), 'k-x');
-	semilogy(0: size(stat,1)-1, stat(:,2), 'r-x');
-	hold on
-	semilogy(0: size(stat,1)-1, stat(:,3), 'b-x');
-	semilogy(0: size(stat,1)-1, stat(:,4), 'g-x');
-	semilogy(0: size(stat,1)-1, stat(:,5), 'k-x');
+ 	plot([0: size(stat,1)-1], log10(stat(:,2)), 'r-x');
+ 	hold on
+ 	plot([0: size(stat,1)-1], log10(stat(:,3)), 'b-x');
+ 	plot([0: size(stat,1)-1], log10(stat(:,4)), 'g-x');
+ 	plot([0: size(stat,1)-1], log10(stat(:,5)), 'k-x');
+%	semilogy(0: size(stat,1)-1, stat(:,2), 'r-x');
+%	hold on
+%	semilogy(0: size(stat,1)-1, stat(:,3), 'b-x');
+%	semilogy(0: size(stat,1)-1, stat(:,4), 'g-x');
+%	semilogy(0: size(stat,1)-1, stat(:,5), 'k-x');
     hold off
 	xlabel('iter')
 	ylabel('res')
@@ -331,44 +338,6 @@ if status==0
 	fprintf('\nsuccess!\n\n');
 else
 	fprintf('\nsolution failed!\n\n');
-end
-
-
-% paramteric sensitivity of solution
-
-field = 'ex'; % equality constraint on states
-stage = 0;
-index = 0;
-ocp.eval_param_sens(field, stage, index);
-
-sens_u = ocp.get('sens_u');
-sens_x = ocp.get('sens_x');
-
-% plot sensitivity
-figure
-subplot(2,1,1);
-plot(0:N, sens_x);
-xlim([0 N]);
-legend('p', 'theta', 'v', 'omega');
-subplot(2,1,2);
-plot(0:N-1, sens_u);
-xlim([0 N]);
-legend('F');
-
-% plot predicted solution
-figure
-subplot(2,1,1);
-plot(0:N, x+sens_x);
-xlim([0 N]);
-legend('p', 'theta', 'v', 'omega');
-subplot(2,1,2);
-plot(0:N-1, u+sens_u);
-xlim([0 N]);
-legend('F');
-
-for ii=1:N+1
-	x_cur = x(:,ii)+sens_x(:,ii);
-%	visualize;
 end
 
 

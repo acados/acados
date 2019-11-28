@@ -40,7 +40,7 @@ for integrator = {'irk_gnsf', 'irk', 'erk'}
     method = integrator{1}; %'irk'; 'irk_gnsf'; 'erk';
 
     %% arguments
-    compile_interface = 'true';
+    compile_interface = 'auto';
     codgen_model = 'true';
     sens_forw = 'true';
     jac_reuse = 'true';

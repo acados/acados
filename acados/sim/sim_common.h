@@ -165,6 +165,7 @@ typedef struct
     void (*opts_initialize_default)(void *config_, void *dims, void *opts);
     void (*opts_update)(void *config_, void *dims, void *opts);
     void (*opts_set)(void *config_, void *opts_, const char *field, void *value);
+    void (*opts_get)(void *config_, void *opts_, const char *field, void *value);
     // mem
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);

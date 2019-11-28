@@ -165,7 +165,7 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
 //    printf("\nsim_erk_model_set expl_ode_fun\n");
         model->expl_ode_fun = value;
     }
-    else if (!strcmp(field, "expl_vde_for"))
+    else if (!strcmp(field, "expl_vde_for") || !strcmp(field, "expl_vde_forw"))
     {
         model->expl_vde_for = value;
     }
@@ -173,7 +173,7 @@ int sim_erk_model_set(void *model_, const char *field, void *value)
     {
         model->expl_vde_adj = value;
     }
-    else if (!strcmp(field, "expl_ode_hes"))
+    else if (!strcmp(field, "expl_ode_hes") || !strcmp(field, "expl_ode_hess"))
     {
         model->expl_ode_hes = value;
     }
@@ -240,6 +240,14 @@ void sim_erk_opts_set(void *config_, void *opts_, const char *field, void *value
 {
     sim_opts *opts = (sim_opts *) opts_;
     sim_opts_set_(opts, field, value);
+}
+
+
+
+void sim_erk_opts_get(void *config_, void *opts_, const char *field, void *value)
+{
+    sim_opts *opts = (sim_opts *) opts_;
+    sim_opts_get_(config_, opts, field, value);
 }
 
 
@@ -941,6 +949,7 @@ void sim_erk_config_initialize_default(void *config_)
     config->opts_initialize_default = &sim_erk_opts_initialize_default;
     config->opts_update = &sim_erk_opts_update;
     config->opts_set = &sim_erk_opts_set;
+    config->opts_get = &sim_erk_opts_get;
     config->memory_calculate_size = &sim_erk_memory_calculate_size;
     config->memory_assign = &sim_erk_memory_assign;
     config->memory_set = &sim_erk_memory_set;

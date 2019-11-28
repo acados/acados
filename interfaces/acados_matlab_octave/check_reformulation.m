@@ -100,7 +100,7 @@ else
 end
 
 % create functions
-impl_ode_fun = Function('impl_ode_fun', {x, xdot, u, z, p}, {model.dyn_expr_f});
+impl_dae_fun = Function('impl_dae_fun', {x, xdot, u, z, p}, {model.dyn_expr_f});
 phi_fun = Function('phi_fun',{y, uhat, p}, {gnsf.phi_expr});
 f_lo_fun = Function('f_lo_fun',{x(1:nx1), xdot(1:nx1), z, u, p}, {gnsf.f_lo_expr});
 
@@ -127,11 +127,11 @@ for i_check = 1:num_eval
     % eval functions
     % if isparametric
         p0 = rand(np, 1);
-        f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0, p0));
+        f_impl_val = full(impl_dae_fun(x0, x0dot, u0, z0, p0));
         phi_val = phi_fun( y0, uhat0, p0);
         f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0(I_z1), u0, p0);
     % else
-    %     f_impl_val = full(impl_ode_fun(x0, x0dot, u0, z0));
+    %     f_impl_val = full(impl_dae_fun(x0, x0dot, u0, z0));
     %     phi_val = phi_fun( y0, uhat0);
     %     f_lo_val = f_lo_fun(x0(I_x1), x0dot(I_x1), z0(I_z1), u0);
     % end

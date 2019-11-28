@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#define S_FUNCTION_NAME   acados_solver_sfunction_{{model_name}}
+#define S_FUNCTION_NAME   acados_solver_sfunction_{{ model.name }}
 #define S_FUNCTION_LEVEL  2
 
 #define MDL_START
@@ -41,17 +41,13 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
-// TODO(oj) remove, when setters for Cyt,idxb available
-#include "acados/ocp_nlp/ocp_nlp_constraints_bgh.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
-
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 // example specific
-#include "{{ model_name }}_model/{{ model_name }}_model.h"
-#include "acados_solver_{{ model_name }}.h"
+#include "{{ model.name }}_model/{{ model.name }}_model.h"
+#include "acados_solver_{{ model.name }}.h"
 
 #include "simstruc.h"
 
@@ -64,41 +60,29 @@ void * nlp_opts;
 ocp_nlp_plan * nlp_solver_plan;
 ocp_nlp_config * nlp_config;
 ocp_nlp_dims * nlp_dims;
-{% if solver_config.integrator_type == 'ERK' %}
-{% if dims.np < 1 %}
-external_function_casadi * forw_vde_casadi;
-{% else %}
+{% if solver_options.integrator_type == 'ERK' %}
 external_function_param_casadi * forw_vde_casadi;
-{% endif %}
-{% if solver_config.hessian_approx == 'EXACT' %} 
-{% if dims.np < 1 %}
-external_function_casadi * hess_vde_casadi;
-{% else %}
+{% if solver_options.hessian_approx == 'EXACT' %} 
 external_function_param_casadi * hess_vde_casadi;
 {% endif %}
-{% endif %}
-{% elif solver_config.integrator_type == 'IRK' %}
-{% if dims.np < 1 %}
-external_function_casadi * impl_dae_fun;
-external_function_casadi * impl_dae_fun_jac_x_xdot_z;
-external_function_casadi * impl_dae_jac_x_xdot_u_z;
-{% else %}
+{% elif solver_options.integrator_type == 'IRK' %}
 external_function_param_casadi * impl_dae_fun;
 external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
 {% endif %}
+{% if constraints.constr_type == "BGP" %}
+// external_function_param_casadi * r_constraint;
+external_function_param_casadi * phi_constraint;
 {% endif %}
-{% if dims.npd > 0 %}
-external_function_casadi * p_constraint;
+{% if constraints.constr_type_e == "BGP" %}
+// external_function_param_casadi r_e_constraint;
+external_function_param_casadi phi_e_constraint;
 {% endif %}
-{% if dims.npdN > 0 %}
-external_function_casadi * p_constraint_N;
+{% if constraints.constr_type == "BGH" %}
+external_function_param_casadi * h_constraint;
 {% endif %}
-{% if dims.nh > 0 %}
-external_function_casadi * h_constraint;
-{% endif %}
-{% if dims.nhN > 0 %}
-external_function_casadi * h_constraint_N;
+{% if constraints.constr_type_e == "BGH" %}
+external_function_param_casadi h_e_constraint;
 {% endif %}
 
 
@@ -109,11 +93,7 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetNumDiscStates(S, 0);
 
     // specify the number of input ports 
-    {% if dims.np > 0 %}
     if ( !ssSetNumInputPorts(S, 4) )
-    {% else %}
-    if ( !ssSetNumInputPorts(S, 3) )
-    {% endif %}
         return;
 
     // specify the number of output ports 
@@ -123,10 +103,8 @@ static void mdlInitializeSizes (SimStruct *S)
     // specify dimension information for the input ports 
     ssSetInputPortVectorDimension(S, 0, {{ dims.nx }});
     ssSetInputPortVectorDimension(S, 1, {{ dims.ny }});
-    ssSetInputPortVectorDimension(S, 2, {{ dims.nyN }});
-    {% if dims.np > 0 %}
+    ssSetInputPortVectorDimension(S, 2, {{ dims.ny_e }});
     ssSetInputPortVectorDimension(S, 3, {{ dims.np }});
-    {% endif %}
 
     // specify dimension information for the output ports 
     ssSetOutputPortVectorDimension(S, 0, {{ dims.nu }} ); // optimal input
@@ -139,13 +117,11 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortDirectFeedThrough(S, 0, 1); // current state x0
     ssSetInputPortDirectFeedThrough(S, 1, 1); // y_ref
     ssSetInputPortDirectFeedThrough(S, 2, 1); // y_ref_N
-    {% if dims.np > 0 %}
     ssSetInputPortDirectFeedThrough(S, 3, 1); // parameter
-    {% endif %}
 
     // one sample time 
     ssSetNumSampleTimes(S, 1);
-    }
+}
 
 
 #if defined(MATLAB_MEX_FILE)
@@ -165,7 +141,7 @@ static void mdlSetOutputPortDimensionInfo(SimStruct *S, int_T port, const DimsIn
          return;
 }
 
-    #endif /* MATLAB_MEX_FILE */
+#endif /* MATLAB_MEX_FILE */
 
 
 static void mdlInitializeSampleTimes(SimStruct *S)
@@ -185,33 +161,25 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // get input signals
     InputRealPtrsType in_x0_sign;
     InputRealPtrsType in_y_ref_sign;
-    InputRealPtrsType in_y_ref_N_sign;
-    {% if dims.np > 0 %}
+    InputRealPtrsType in_y_ref_e_sign;
     InputRealPtrsType in_p_sign;
-    {% endif %}
     
     // local buffers
     real_t in_x0[{{ dims.nx }}];
     real_t in_y_ref[{{ dims.ny }}];
-    real_t in_y_ref_N[{{ dims.nyN }}];
-    {% if dims.np > 0 %}
+    real_t in_y_ref_e[{{ dims.ny_e }}];
     real_t in_p[{{ dims.np }}];
-    {% endif %}
 
     in_x0_sign = ssGetInputPortRealSignalPtrs(S, 0);
     in_y_ref_sign = ssGetInputPortRealSignalPtrs(S, 1);
-    in_y_ref_N_sign = ssGetInputPortRealSignalPtrs(S, 2);
-    {% if dims.np > 0 %}
+    in_y_ref_e_sign = ssGetInputPortRealSignalPtrs(S, 2);
     in_p_sign = ssGetInputPortRealSignalPtrs(S, 3);
-    {% endif %}
 
     // copy signals into local buffers
     for (int i = 0; i < {{ dims.nx }}; i++) in_x0[i] = (double)(*in_x0_sign[i]);
     for (int i = 0; i < {{ dims.ny }}; i++) in_y_ref[i] = (double)(*in_y_ref_sign[i]);
-    for (int i = 0; i < {{ dims.nyN }}; i++) in_y_ref_N[i] = (double)(*in_y_ref_N_sign[i]);
-    {% if dims.np > 0 %}
+    for (int i = 0; i < {{ dims.ny_e }}; i++) in_y_ref_e[i] = (double)(*in_y_ref_e_sign[i]);
     for (int i = 0; i < {{ dims.np }}; i++) in_p[i] = (double)(*in_p_sign[i]);
-    {% endif %}
 
     // for (int i = 0; i < 4; i++) ssPrintf("x0[%d] = %f\n", i, in_x0[i]);
     // ssPrintf("\n");
@@ -221,24 +189,15 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", in_x0);
 
     // update reference
-    for (int ii = 0; ii < {{dims.N}}; ii++)
+    for (int ii = 0; ii < {{ dims.N }}; ii++)
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) in_y_ref);
 
-    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{dims.N}}, "yref", (void *) in_y_ref_N);
+    ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, {{ dims.N }}, "yref", (void *) in_y_ref_e);
 
     // update value of parameters
     {% if dims.np > 0%}
-    {% if solver_config.integrator_type == 'IRK' %}
-    for (int ii = 0; ii < {{dims.N}}; ii++) {
-    impl_dae_fun[ii].set_param(impl_dae_fun+ii, in_p);
-    impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, in_p);
-    impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, in_p);
-    }
-    {% else %}
-    for (int ii = 0; ii < {{dims.N}}; ii++) {
-    expl_vde_for[ii].set_param(expl_vde_for+ii, in_p);
-    }
-    {% endif %}
+    for (int ii = 0; ii <= {{ dims.N }}; ii++) 
+        acados_update_params(ii, in_p, {{ dims.np }});
     {% endif %}
     
     // assign pointers to output signals 

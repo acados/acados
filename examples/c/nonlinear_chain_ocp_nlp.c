@@ -1197,7 +1197,7 @@ int main()
 
 			case EXTERNALLY_PROVIDED:
 
-				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "ext_cost_jac_hes", &external_cost[i]);
+				ocp_nlp_cost_model_set(config, dims, nlp_in, i, "ext_cost_fun_jac_hes", &external_cost[i]);
 
 				assert(i < NN && "externally provided cost not implemented for last stage!");
 
