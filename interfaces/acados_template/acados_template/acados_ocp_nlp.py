@@ -1515,92 +1515,92 @@ class ocp_nlp_solver_options:
 
     @property
     def qp_solver(self):
-        """#: qp solver to be used in the NLP solver"""
+        """QP solver to be used in the NLP solver"""
         return self.__qp_solver
 
     @property
     def hessian_approx(self):
-        """#: hessian approximation"""
+        """Hessian approximation"""
         return self.__hessian_approx
 
     @property
     def integrator_type(self):
-        """#: integrator type"""
+        """Integrator type"""
         return self.__integrator_type
 
     @property
     def nlp_solver_type(self):
-        """#: NLP solver"""
+        """NLP solver"""
         return self.__nlp_solver_type
 
     @property
     def nlp_solver_step_length(self):
-        """#: fixed Newton step length"""
+        """Fixed Newton step length"""
         return self.__nlp_solver_step_length
 
     @property
     def sim_method_num_stages(self):
-        """#: number of stages in the integrator"""
+        """Number of stages in the integrator"""
         return self.__sim_method_num_stages
 
     @property
     def sim_method_num_steps(self):
-        """#: number of steps in the integrator"""
+        """Number of steps in the integrator"""
         return self.__sim_method_num_steps
 
     @property
     def sim_method_newton_iter(self):
-        """#: number of Newton iterations in simulation method"""
+        """Number of Newton iterations in simulation method"""
         return self.__sim_method_newton_iter
 
     @property
     def qp_solver_tol_stat(self):
-        """#: QP solver stationarity tolerance"""
+        """QP solver stationarity tolerance"""
         return self.__qp_solver_tol_stat
 
     @property
     def qp_solver_tol_eq(self):
-        """#: QP solver equality tolerance"""
+        """QP solver equality tolerance"""
         return self.__qp_solver_tol_eq
 
     @property
     def qp_solver_tol_ineq(self):
-        """#: QP solver inequality"""
+        """QP solver inequality"""
         return self.__qp_solver_tol_ineq
 
     @property
     def qp_solver_tol_comp(self):
-        """#: QP solver complementarity"""
+        """QP solver complementarity"""
         return self.__qp_solver_tol_comp
 
     @property
     def nlp_solver_tol_stat(self):
-        """#: NLP solver stationarity tolerance"""
+        """NLP solver stationarity tolerance"""
         return self.__nlp_solver_tol_stat
 
     @property
     def nlp_solver_tol_eq(self):
-        """#: NLP solver equality tolerance"""
+        """NLP solver equality tolerance"""
         return self.__nlp_solver_tol_eq
 
     @property
     def nlp_solver_tol_ineq(self):
-        """#: NLP solver inequality"""
+        """NLP solver inequality"""
         return self.__nlp_solver_tol_ineq
 
     @property
     def nlp_solver_tol_comp(self):
-        """#: NLP solver complementarity"""
+        """NLP solver complementarity"""
         return self.__nlp_solver_tol_comp
 
     @property
     def nlp_solver_max_iter(self):
-        """#: NLP solver maximum number of iterations"""
+        """NLP solver maximum number of iterations"""
         return self.__nlp_solver_max_iter
 
     @property
     def tf(self):
-        """#: prediction horizon"""
+        """Prediction horizon"""
         return self.__tf
 
     @qp_solver.setter
