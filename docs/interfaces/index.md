@@ -17,7 +17,10 @@ exact Hessians, adjoint corrections, regularization, etc.
 
 To get started with this interface we recommend the examples in `<acados_root>/examples/acados_matlab_octave/getting_started`.
 
-The problem formulation is stated in [this PDF](https://github.com/acados/acados/tree/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf)
+The problem formulation is stated in [this PDF](https://github.com/acados/acados/tree/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
+
+The explanation of the various options can be found also in a spreadsheet style at this [link](https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing) (thanks to [@EnricaSo](https://github.com/EnricaSo)).
+
 
 This interface uses the shared libraries created using the make command from the main `acados` folder
 
@@ -36,9 +39,6 @@ If `ACADOS_INSTALL_DIR` is not specified, it will be assumed that the examples a
 Afterwards, launch `Matlab` or Octave from the same shell.
 
 If you want to run the examples in a different folder, please close the current shell and open a new one to repeat the procedure: this ensures the correct setting of the environment variables.
-
-For a detailed explanation about the options available from this
-interface see: [matlab_interface_spreadsheet](https://docs.google.com/spreadsheets/d/1rVRycLnCyaWJLwnV47u30Vokp7vRu68og3OhlDbSjDU/edit?usp=sharing) (thanks to [@EnricaSo](https://github.com/EnricaSo)).
 
 ### MATLAB/Octave (templates, Work In Progress)
 There is the option to generate embeddable `C` code from Matlab.
