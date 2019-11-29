@@ -758,12 +758,12 @@ class ocp_nlp_constraints:
 
     @property
     def ubx(self):
-        """:math:`\bar{x}` - upper bounds on x"""
+        """:math:`\\bar{x}` - upper bounds on x"""
         return self.__ubx
 
     @property
     def ubu(self):
-        """:math:`\bar{u}` - upper bounds on u"""
+        """:math:`\\bar{u}` - upper bounds on u"""
         return self.__ubu
 
     @property
@@ -773,7 +773,7 @@ class ocp_nlp_constraints:
 
     @property
     def Jbx(self):
-        """:math`J_x` - matrix coefficient for bounds on x"""
+        """:math:`J_x` - matrix coefficient for bounds on x"""
         return self.__Jbx
 
     @property
@@ -783,7 +783,7 @@ class ocp_nlp_constraints:
 
     @property
     def Jbu(self):
-        """:math: `J_u` - matrix coefficient for bounds on u"""
+        """:math:`J_u` - matrix coefficient for bounds on u"""
         return self.__Jbu
 
     # bounds on x at t=T
@@ -794,7 +794,7 @@ class ocp_nlp_constraints:
 
     @property
     def ubx_e(self):
-        """:math:`\bar{x}^e` - upper bounds on x at t=T"""
+        """:math:`\\bar{x}^e` - upper bounds on x at t=T"""
         return self.__ubx_e
 
     @property
@@ -804,7 +804,7 @@ class ocp_nlp_constraints:
 
     @property
     def Jbx_e(self):
-        """:math: `J_{x}^e`indexes of bounds on x (defines :math:`\Pi_x`)"""
+        """:math:`J_{x}^e`indexes of bounds on x (defines :math:`\Pi_x`)"""
         return self.__Jbx_e
 
     # polytopic constraints
@@ -825,7 +825,7 @@ class ocp_nlp_constraints:
 
     @property
     def ug(self):
-        """:math:`\bar{g}` - upper bound for general polytopic inequalities"""
+        """:math:`\\bar{g}` - upper bound for general polytopic inequalities"""
         return self.__ug
 
     # polytopic constraints at t=T
@@ -841,7 +841,7 @@ class ocp_nlp_constraints:
 
     @property
     def ug_e(self):
-        """:math:`\bar{c}^e` - upper bound on general polytopic inequalities at t=T"""
+        """:math:`\\bar{c}^e` - upper bound on general polytopic inequalities at t=T"""
         return self.__ug_e
 
     # nonlinear constraints
@@ -852,7 +852,7 @@ class ocp_nlp_constraints:
 
     @property
     def uh(self):
-        """:math:`\bar{h}` - upper bound for nonlinear inequalities"""
+        """:math:`\\bar{h}` - upper bound for nonlinear inequalities"""
         return self.__uh
 
     # convex-over-nonlinear constraints
@@ -863,13 +863,13 @@ class ocp_nlp_constraints:
 
     @property
     def uphi(self):
-        """:math:`\bar{\phi}` - upper bound for convex-over-nonlinear inequalities"""
+        """:math:`\\bar{\phi}` - upper bound for convex-over-nonlinear inequalities"""
         return self.__uphi
 
     # nonlinear constraints at t=T
     @property
     def lh_e(self):
-        """:math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T"""
+        """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities at t=T"""
         return self.__lh_e
 
     @property
@@ -885,7 +885,7 @@ class ocp_nlp_constraints:
 
     @property
     def uphi_e(self):
-        """:math:`\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities at t=T"""
+        """:math:`\\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities at t=T"""
         return self.__uphi_e
 
     # soft bounds on x and u
@@ -1036,7 +1036,7 @@ class ocp_nlp_constraints:
 
     @property
     def x0(self):
-        """:math:`\bar{x}_0` - initial state"""
+        """:math:`\\bar{x}_0` - initial state"""
         return self.__x0
 
     @property
