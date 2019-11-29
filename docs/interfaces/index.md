@@ -8,8 +8,7 @@ negligible computation overhead. In order to learn about the `acados` C API, you
 can look at the examples in
 [`acados/examples/c/`](https://github.com/acados/acados/tree/master/examples/c).
 
-##  Python, MATLAB/Octave
-### MATLAB/Octave (rapid prototyping)
+## MATLAB/Octave (rapid prototyping)
 
 This interface makes a broad set of `acados` functionalities available from Matlab or Octave.
 As of now, this closely tracks the latest developments in the core of acados, e.g.
@@ -40,14 +39,14 @@ Afterwards, launch `Matlab` or Octave from the same shell.
 
 If you want to run the examples in a different folder, please close the current shell and open a new one to repeat the procedure: this ensures the correct setting of the environment variables.
 
-### MATLAB/Octave (templates, Work In Progress)
+## MATLAB/Octave (templates, Work In Progress)
 There is the option to generate embeddable `C` code from Matlab.
 The workflow uses the same templates as the Python interface (see below) and the `Tera` renderer.
 After creating an acados solver `ocp`, you can use the routine `ocp.generate_c_code` to generate `C` code which can be used for embedded applications.
 
 Note: This part of the MATLAB/Octave interface does not yet support all features of the one mentioned before.
 
-### Python (templates)
+## Python (templates)
 
 `acados_template` is a Python package that can be used to specify optimal control problems from Python and to generate self-contained C code that uses the acados solvers to solve them.
 In comparison with the MATLAB interface for rapid prototyping (see above), it supports less features, but it allows the user to generate a self-contained C library
@@ -55,6 +54,7 @@ that can be easily deployed on an embedded system.
 
 The framework is based on templated C files which are rendered from Python using the templating engine `Tera`.
 
+### Optimal Control Problem description
 The currently supported formulation reads as
 
 ```math
@@ -95,7 +95,7 @@ The `acados_template` interface makes some limiting assumptions on the problem f
 ```
 
 
-## Installation
+### Installation
 1. Compile and install `acados` by running:
 ```bash
 cd <acados_root>/build
@@ -121,7 +121,7 @@ package at run time. Additionally, you will have to make sure that the environme
 
 For more information contact `@zanellia`.
 
-## Optimal Control Problem description
+### Python API
 ``` eval_rst
 .. automodule:: acados_template.casadi_functions
     :members:
