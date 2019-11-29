@@ -42,140 +42,168 @@ class ocp_nlp_dims:
     class containing the dimensions of the optimal control problem
     """
     def __init__(self):
-        self.__nx      = None  #: :math:`n_x` - number of states 
-        self.__nz      = 0     #: :math:`n_z` - number of algebraic variables 
-        self.__nu      = None  #: :math:`n_u` - number of inputs 
-        self.__np      = 0     #: :math:`n_p` - number of parameters 
-        self.__ny      = None  #: :math:`n_y` - number of residuals in Lagrange term 
-        self.__ny_e    = None  #: :math:`n_{y}^e` - number of residuals in Mayer term 
-        self.__nr      = 0     #: :math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints 
-        self.__nr_e    = 0     #: :math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints
-        self.__nh      = 0     #: :math:`n_h` - number of nonlinear constraints 
-        self.__nh_e    = 0     #: :math:`n_{h}^e` - number of nonlinear constraints at t=T 
-        self.__nphi    = 0     #: :math:`n_{\phi}` - number of convex-over-nonlinear constraints 
-        self.__nphi_e  = 0     #: :math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at t=T 
-        self.__nbx     = 0     #: :math:`n_{b_x}` - number of state bounds 
-        self.__nbx_e   = 0     #: :math:`n_{b_x}` - number of state bounds at t=T 
-        self.__nbu     = 0     #: :math:`n_{b_u}` - number of input bounds 
-        self.__nsbx    = 0     #: :math:`n_{{sb}_x}` - number of soft state bounds 
-        self.__nsbx_e  = 0     #: :math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T 
-        self.__nsbu    = 0     #: :math:`n_{{sb}_u}` - number of soft input bounds 
-        self.__nsh     = 0     #: :math:`n_{{sh}}` - number of soft nonlinear constraints 
-        self.__nsh_e   = 0     #: :math:`n_{{sh}}^e` - number of soft nonlinear constraints at t=T 
-        self.__nsphi   = 0     #: :math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints 
-        self.__nsphi_e = 0     #: :math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at t=T 
-        self.__ns      = 0     #: :math:`n_{s}` - total number of slacks 
-        self.__ns_e    = 0     #: :math:`n_{s}^e` - total number of slacks at t=T 
-        self.__ng      = 0     #: :math:`n_{g}` - number of general polytopic constraints 
-        self.__ng_e    = 0     #: :math:`n_{g}^e` - number of general polytopic constraints at t=T 
-        self.__N       = None  #: :math:`N` - prediction horizon  
+        self.__nx      = None
+        self.__nz      = 0
+        self.__nu      = None
+        self.__np      = 0
+        self.__ny      = None
+        self.__ny_e    = None
+        self.__nr      = 0
+        self.__nr_e    = 0
+        self.__nh      = 0
+        self.__nh_e    = 0
+        self.__nphi    = 0
+        self.__nphi_e  = 0
+        self.__nbx     = 0
+        self.__nbx_e   = 0
+        self.__nbu     = 0
+        self.__nsbx    = 0
+        self.__nsbx_e  = 0
+        self.__nsbu    = 0
+        self.__nsh     = 0
+        self.__nsh_e   = 0
+        self.__nsphi   = 0
+        self.__nsphi_e = 0
+        self.__ns      = 0
+        self.__ns_e    = 0
+        self.__ng      = 0
+        self.__ng_e    = 0
+        self.__N       = None
+
 
     @property
     def nx(self):
+        """:math:`n_x` - number of states"""
         return self.__nx
 
     @property
     def nz(self):
+        """:math:`n_z` - number of algebraic variables"""
         return self.__nz
 
     @property
     def nu(self):
+        """:math:`n_u` - number of inputs"""
         return self.__nu
 
     @property
     def np(self):
+        """:math:`n_p` - number of parameters"""
         return self.__np
 
     @property
     def ny(self):
+        """:math:`n_y` - number of residuals in Lagrange term"""
         return self.__ny
 
     @property
     def ny_e(self):
+        """:math:`n_{y}^e` - number of residuals in Mayer term"""
         return self.__ny_e
 
     @property
     def nr(self):
+        """:math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints"""
         return self.__nr
 
     @property
     def nr_e(self):
+        """:math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints"""
         return self.__nr_e
 
     @property
     def nh(self):
+        """:math:`n_h` - number of nonlinear constraints"""
         return self.__nh
 
     @property
     def nh_e(self):
+        """:math:`n_{h}^e` - number of nonlinear constraints at t=T"""
         return self.__nh_e
 
     @property
     def nphi(self):
+        """:math:`n_{\phi}` - number of convex-over-nonlinear constraints"""
         return self.__nphi
 
     @property
     def nphi_e(self):
+        """:math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at t=T"""
         return self.__nphi_e
 
     @property
     def nbx(self):
+        """:math:`n_{b_x}` - number of state bounds"""
         return self.__nbx
 
     @property
     def nbx_e(self):
+        """:math:`n_{b_x}` - number of state bounds at t=T"""
         return self.__nbx_e
 
     @property
     def nbu(self):
+        """:math:`n_{b_u}` - number of input bounds"""
         return self.__nbu
 
     @property
     def nsbx(self):
+        """:math:`n_{{sb}_x}` - number of soft state bounds"""
         return self.__nsbx
 
     @property
     def nsbx_e(self):
+        """:math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T"""
         return self.__nsbx_e
 
     @property
     def nsbu(self):
+        """:math:`n_{{sb}_u}` - number of soft input bounds"""
         return self.__nsbu
 
     @property
     def nsh(self):
+        """:math:`n_{{sh}}` - number of soft nonlinear constraints"""
         return self.__nsh
 
     @property
     def nsh_e(self):
+        """:math:`n_{{sh}}^e` - number of soft nonlinear constraints at t=T"""
         return self.__nsh_e
 
     @property
     def nsphi(self):
+        """:math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints"""
         return self.__nsphi
 
     @property
     def nsphi_e(self):
+        """:math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at t=T"""
         return self.__nsphi_e
 
     @property
     def ns(self):
+        """:math:`n_{s}` - total number of slacks"""
         return self.__ns
 
     @property
     def ns_e(self):
+        """:math:`n_{s}^e` - total number of slacks at t=T"""
         return self.__ns_e
 
     @property
     def ng(self):
+        """:math:`n_{g}` - number of general polytopic constraints"""
         return self.__ng
 
     @property
     def ng_e(self):
+        """:math:`n_{g}^e` - number of general polytopic constraints at t=T"""
         return self.__ng_e
 
     @property
     def N(self):
+        """:math:`N` - prediction horizon"""
         return self.__N
 
     @nx.setter
@@ -373,75 +401,86 @@ class ocp_nlp_dims:
 class ocp_nlp_cost:
     """
     class containing the description of the cost
-    (linear and nonlinear least-squares cost for the time being) 
-    :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`, 
+    (linear and nonlinear least-squares cost for the time being)
+    :math:`l(x,u,z) = || V_x x + V_u u + V_z z - y_{\\text{ref}}||^2_W`,
     :math:`m(x) = || V^e_x x - y_{\\text{ref}^e}||^2_{W^e}`
     """
     def __init__(self):
         # Lagrange term
-        self.__cost_type   = 'LINEAR_LS'  #: cost type
-        self.__W           = []           #: :math:`W` - weight matrix
-        self.__Vx          = []           #: :math:`V_x` - x matrix coefficient
-        self.__Vu          = []           #: :math:`V_u` - u matrix coefficient
-        self.__Vz          = []           #: :math:`V_z` - z matrix coefficient
-        self.__yref        = []           #: :math:`y_{\text{ref}}` - reference
-        self.__Zl          = []           #: :math:`Z_l` - Hessian wrt lower slack 
-        self.__Zu          = []           #: :math:`Z_u` - Hessian wrt upper slack 
-        self.__zl          = []           #: :math:`z_l` - gradient wrt lower slack 
-        self.__zu          = []           #: :math:`z_u` - gradient wrt upper slack 
+        self.__cost_type   = 'LINEAR_LS'  # cost type
+        self.__W           = []           # weight matrix
+        self.__Vx          = []           # x matrix coefficient
+        self.__Vu          = []           # u matrix coefficient
+        self.__Vz          = []           # z matrix coefficient
+        self.__yref        = []           # reference
+        self.__Zl          = []           # Hessian wrt lower slack
+        self.__Zu          = []           # Hessian wrt upper slack
+        self.__zl          = []           # gradient wrt lower slack
+        self.__zu          = []           # gradient wrt upper slack
         # Mayer term
-        self.__cost_type_e = 'LINEAR_LS'  #: cost type for Mayer term
-        self.__W_e         = []           #: :math:`W^e` - weight matrix for Mayer term
-        self.__Vx_e        = []           #: :math:`V_x^e` - x matrix coefficient for Mayer term
-        self.__yref_e      = []           #: :math:`y_{\text{ref}}^e` - reference for Mayer term
-        self.__Zl_e        = []           #: :math:`Z_l^e` - Hessian wrt lower slack for Mayer term
-        self.__Zu_e        = []           #: :math:`Z_u^e` - Hessian wrt upper slack for Mayer term
-        self.__zl_e        = []           #: :math:`z_l^e` - gradient wrt lower slack for Mayer term
-        self.__zu_e        = []           #: :math:`z_u^e` - gradient wrt upper slack for Mayer term
+        self.__cost_type_e = 'LINEAR_LS'  # cost type for Mayer term
+        self.__W_e         = []           # weight matrix for Mayer term
+        self.__Vx_e        = []           # x matrix coefficient for Mayer term
+        self.__yref_e      = []           # reference for Mayer term
+        self.__Zl_e        = []           # Hessian wrt lower slack for Mayer term
+        self.__Zu_e        = []           # Hessian wrt upper slack for Mayer term
+        self.__zl_e        = []           # gradient wrt lower slack for Mayer term
+        self.__zu_e        = []           # gradient wrt upper slack for Mayer term
 
     # Lagrange term
     @property
     def cost_type(self):
+        """cost type"""
         return self.__cost_type
 
     @property
     def W(self):
+        """:math:`W` - weight matrix"""
         return self.__W
 
     @property
     def Vx(self):
+        """:math:`V_x` - x matrix coefficient"""
         return self.__Vx
 
     @property
     def Vu(self):
+        """:math:`V_u` - u matrix coefficient"""
         return self.__Vu
 
     @property
     def Vz(self):
+        """:math:`V_z` - z matrix coefficient"""
         return self.__Vz
 
     @property
     def yref(self):
+        """:math:`y_{\text{ref}}` - reference"""
         return self.__yref
 
     @property
     def Zl(self):
+        """:math:`Z_l` - Hessian wrt lower slack"""
         return self.__Zl
 
     @property
     def Zu(self):
+        """:math:`Z_u` - Hessian wrt upper slack"""
         return self.__Zu
 
     @property
     def zl(self):
+        """:math:`z_l` - gradient wrt lower slack"""
         return self.__zl
 
     @property
     def zu(self):
+        """:math:`z_u` - gradient wrt upper slack"""
         return self.__zu
 
     @cost_type.setter
     def cost_type(self, cost_type):
+
         cost_types = ('LINEAR_LS', 'NONLINEAR_LS')
 
         if type(cost_type) == str and cost_type in cost_types:
@@ -455,14 +494,14 @@ class ocp_nlp_cost:
             self.__W = W
         else:
             raise Exception('Invalid W value. Exiting.')
-    
+
     @Vx.setter
     def Vx(self, Vx):
         if type(Vx) == np.ndarray:
             self.__Vx = Vx
         else:
             raise Exception('Invalid Vx value. Exiting.')
-    
+
     @Vu.setter
     def Vu(self, Vu):
         if type(Vu) == np.ndarray:
@@ -515,34 +554,42 @@ class ocp_nlp_cost:
     # Mayer term
     @property
     def cost_type_e(self):
+        """cost type for Mayer term, either LINEAR_LS, NONLINEAR_LS, AUTO"""
         return self.__cost_type_e
 
     @property
     def W_e(self):
+        """:math:`W` - weight matrix"""
         return self.__W_e
 
     @property
     def Vx_e(self):
+        """:math:`W^e` - weight matrix for Mayer term"""
         return self.__Vx_e
 
     @property
     def yref_e(self):
+        """:math:`V_x^e` - x matrix coefficient for Mayer term"""
         return self.__yref_e
 
     @property
     def Zl_e(self):
+        """:math:`y_{\text{ref}}^e` - reference for Mayer term"""
         return self.__Zl_e
 
     @property
     def Zu_e(self):
+        """:math:`Z_l^e` - Hessian wrt lower slack for Mayer term"""
         return self.__Zu_e
 
     @property
     def zl_e(self):
+        """:math:`z_l^e` - gradient wrt lower slack for Mayer term"""
         return self.__zl_e
 
     @property
     def zu_e(self):
+        """:math:`z_u^e` - gradient wrt upper slack for Mayer term"""
         return self.__zu_e
 
     @cost_type_e.setter
@@ -560,7 +607,7 @@ class ocp_nlp_cost:
             self.__W_e = W_e
         else:
             raise Exception('Invalid W_e value. Exiting.')
-    
+
     @Vx_e.setter
     def Vx_e(self, Vx_e):
         if type(Vx_e) == np.ndarray:
@@ -611,333 +658,390 @@ class ocp_nlp_constraints:
     class containing the description of the constraints
     """
     def __init__(self):
-        self.__constr_type   = 'BGH' #: constraint type
-        self.__constr_type_e = 'BGH' #: constraint type
-        # bounds on x and u
-        self.__lbx     = []        #: :math:`\underline{x}` - lower bounds on x
-        self.__lbu     = []        #: :math:`\underline{u}` - lower bounds on u
-        self.__ubx     = []        #: :math:`\bar{x}` - upper bounds on x 
-        self.__ubu     = []        #: :math:`\bar{u}` - upper bounds on u 
-        self.__idxbx   = []        #: indexes of bounds on x (defines :math:`\Pi_x`) 
-        # self.__Jbx     = []        #: :math`J_x` - matrix coefficient for bounds on x 
-        self.__idxbu   = []        #: indexes of bounds on u (defines :math:`\Pi_u`)
-        # self.__Jbu     = []        #: :math`J_u` - matrix coefficient for bounds on u 
+        self.__constr_type   = 'BGH'                  # constraint type
+        self.__constr_type_e = 'BGH'                  # constraint type
+        self.__lbx     = []                           # lower bounds on x
+        self.__lbu     = []                           # lower bounds on u
+        self.__ubx     = []                           # upper bounds on x
+        self.__ubu     = []                           # upper bounds on u
+        self.__idxbx   = []                           # indexes of bounds on x (defines :math:`\Pi_x`)
+        # self.__Jbx     = []                         # matrix coefficient for bounds on x
+        self.__idxbu   = []                           # indexes of bounds on u (defines :math:`\Pi_u`)
+        # self.__Jbu     = []                         # matrix coefficient for bounds on u
         # bounds on x at t=T
-        self.__lbx_e   = []        #: :math:`\underline{x}^e` - lower bounds on x at t=T 
-        self.__ubx_e   = []        #: :math:`\bar{x}^e` - upper bounds on x at t=T 
-        self.__idxbx_e = []        #: indexes for bounds on x at t=T (defines :math:`\Pi_x^e`) 
-        # self.__Jbx_e   = []         #: :math`J_{x}^e`indexes of bounds on x (defines :math:`\Pi_x`) 
-        # polytopic constraints 
-        self.__lg      = []        #: :math:`\underline{c}` - lower bound for general polytopic inequalities 
-        self.__ug      = []        #: :math:`\bar{c}` - upper bound for general polytopic inequalities 
-        self.__D       = []        #: :math:`D` - D matrix in lg <= D * u + C * x <= ug
-        self.__C       = []        #: :math:`C` - C matrix in lg <= D * u + C * x <= ug
-        # polytopic constraints at t=T 
-        self.__C_e     = []        #: :math:`C^e` - C matrix at t=T 
-        self.__lg_e    = []        #: :math:`\underline{c}^e` - lower bound on general polytopic inequalities at t=T 
-        self.__ug_e    = []        #: :math:`\bar{c}^e` - upper bound on general polytopic inequalities at t=T 
+        self.__lbx_e   = []                           # lower bounds on x at t=T
+        self.__ubx_e   = []                           # upper bounds on x at t=T
+        self.__idxbx_e = []                           # indexes for bounds on x at t=T (defines :math:`\Pi_x^e`)
+        # self.__Jbx_e   = []                         # indexes of bounds on x (defines :math:`\Pi_x`)
+        # polytopic constraints
+        self.__lg      = []                           # lower bound for general polytopic inequalities
+        self.__ug      = []                           # upper bound for general polytopic inequalities
+        self.__D       = []                           # D matrix in lg <= D * u + C * x <= ug
+        self.__C       = []                           # C matrix in lg <= D * u + C * x <= ug
+        # polytopic constraints at t=T
+        self.__C_e     = []                           # C matrix at t=T
+        self.__lg_e    = []                           # lower bound on general polytopic inequalities at t=T
+        self.__ug_e    = []                           # upper bound on general polytopic inequalities at t=T
         # nonlinear constraints
-        self.__lh      = []        #: :math:`\underline{h}` - lower bound for nonlinear inequalities 
-        self.__uh      = []        #: :math:`\bar{h}` - upper bound for nonlinear inequalities 
+        self.__lh      = []                           # lower bound for nonlinear inequalities
+        self.__uh      = []                           # upper bound for nonlinear inequalities
         # nonlinear constraints at t=T
-        self.__uh_e    = []        #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
-        self.__lh_e    = []        #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
+        self.__uh_e    = []                           # upper bound on nonlinear inequalities at t=T
+        self.__lh_e    = []                           # lower bound on nonlinear inequalities at t=T
         # convex-over-nonlinear constraints
-        self.__lphi    = []        #: :math:`\underline{\phi}` - lower bound for convex-over-nonlinear inequalities 
-        self.__uphi    = []        #: :math:`\bar{\phi}` - upper bound for convex-over-nonlinear inequalities 
+        self.__lphi    = []                           # lower bound for convex-over-nonlinear inequalities
+        self.__uphi    = []                           # upper bound for convex-over-nonlinear inequalities
         # nonlinear constraints at t=T
-        self.__uh_e    = []        #: :math:`\bar{h}^e` - upper bound on nonlinear inequalities at t=T 
-        self.__lh_e    = []        #: :math:`\underline{h}^e` - lower bound on nonlinear inequalities at t=T 
+        self.__uh_e    = []                           # upper bound on nonlinear inequalities at t=T
+        self.__lh_e    = []                           # lower bound on nonlinear inequalities at t=T
         # nonlinear constraints at t=T
-        self.__uphi_e    = []      #: :math:`\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities at t=T 
-        self.__lphi_e    = []      #: :math:`\underline{\phi}^e` - lower bound on convex-over-nonlinear inequalities at t=T 
+        self.__uphi_e    = []                         # upper bound on convex-over-nonlinear inequalities at t=T
+        self.__lphi_e    = []                         # lower bound on convex-over-nonlinear inequalities at t=T
         # soft bounds on x and u
-        self.__lsbx   = []         #: lower bounds on slacks corresponding to soft lower bounds on x
-        self.__lsbu   = []         #: lower bounds on slacks corresponding to soft lower bounds on u
-        self.__usbx   = []         #: lower bounds on slacks corresponding to soft upper bounds on x
-        self.__usbu   = []         #: lower bounds on slacks corresponding to soft upper bounds on u
-        self.__idxsbx = []         #: indexes of soft bounds on x within the indices of bounds on x
-        # self.__Jsbx   = []       #: :math`J_{s,x}` - matrix coefficient for soft bounds on x 
-        self.__idxsbu = []         #: indexes of soft bounds on u within the indices of bounds on u
-        # self.__Jsbu   = []       #: :math`J_{s,u}` - matrix coefficient for soft bounds on u 
+        self.__lsbx   = []                            # lower bounds on slacks corresponding to soft lower bounds on x
+        self.__lsbu   = []                            # lower bounds on slacks corresponding to soft lower bounds on u
+        self.__usbx   = []                            # lower bounds on slacks corresponding to soft upper bounds on x
+        self.__usbu   = []                            # lower bounds on slacks corresponding to soft upper bounds on u
+        self.__idxsbx = []                            # indexes of soft bounds on x within the indices of bounds on x
+        # self.__Jsbx   = []                          # matrix coefficient for soft bounds on x
+        self.__idxsbu = []                            # indexes of soft bounds on u within the indices of bounds on u
+        # self.__Jsbu   = []                          # matrix coefficient for soft bounds on u
         # soft bounds on x at t=T
-        self.__lsbx_e  = []        #: lower bounds on slacks corresponding to soft lower bounds on x at t=T
-        self.__usbx_e  = []        #: lower bounds on slacks corresponding to soft upper bounds on x at t=T
-        self.__idxsbx_e= []        #: indexes of soft bounds on x at t=T, within the indices of bounds on x at t=T
-        # self.__Jsbx_e    = []    #: :math`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T 
+        self.__lsbx_e  = []                           # lower bounds on slacks corresponding to soft lower bounds on x at t=T
+        self.__usbx_e  = []                           # lower bounds on slacks corresponding to soft upper bounds on x at t=T
+        self.__idxsbx_e= []                           # indexes of soft bounds on x at t=T, within the indices of bounds on x at t=T
+        # self.__Jsbx_e    = []                       # matrix coefficient for soft bounds on x at t=T
         # soft bounds on nonlinear constraints
-        self.__lsh    = []         #: lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
-        self.__ush    = []         #: lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
-        self.__idxsh  = []         #: indexes of soft nonlinear constraints within the indices of nonlinear constraints
-        # self.__Jsh    = []       #: :math`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints
+        self.__lsh    = []                            # lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints
+        self.__ush    = []                            # lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints
+        self.__idxsh  = []                            # indexes of soft nonlinear constraints within the indices of nonlinear constraints
+        # self.__Jsh    = []                          # matrix coefficient for soft bounds on nonlinear constraints
         # soft bounds on nonlinear constraints
-        self.__lsphi  = []         #: lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints
-        self.__usphi  = []         #: lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints
-        self.__idxsphi  = []       #: indexes of soft convex-over-nonlinear constraints within the indices of nonlinear constraints
-        # self.__Jsphi  = []       #: :math`J_{s,h}` - matrix coefficient for soft bounds on convex-over-nonlinear constraints
+        self.__lsphi  = []                            # lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints
+        self.__usphi  = []                            # lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints
+        self.__idxsphi  = []                          # indexes of soft convex-over-nonlinear constraints within the indices of nonlinear constraints
+        # self.__Jsphi  = []                          # matrix coefficient for soft bounds on convex-over-nonlinear constraints
         # soft bounds on nonlinear constraints at t=T
-        self.__lsh_e    = []       #: lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at t=T
-        self.__ush_e    = []       #: lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints at t=T
-        self.__idxsh_e  = []       #: indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
-        # self.__Jsh_e    = []     #: :math`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T 
+        self.__lsh_e    = []                          # lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at t=T
+        self.__ush_e    = []                          # lower bounds on slacks corresponding to soft upper bounds for nonlinear constraints at t=T
+        self.__idxsh_e  = []                          # indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
+        # self.__Jsh_e    = []                        # matrix coefficient for soft bounds on nonlinear constraints at t=T
         # soft bounds on nonlinear constraints at t=T
-        self.__lsphi_e    = []     #: lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at t=T
-        self.__usphi_e    = []     #: lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at t=T
-        self.__idxsphi_e  = []     #: indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
-        # self.__Jsphi_e  = []     #: :math`J_{s,h}^e` - matrix coefficient for soft bounds on convex-over-nonlinear constraints at t=T 
-        self.__x0      = []        #: :math:`\bar{x}_0` - initial state 
-        self.__p       = []        #: :math:`p` - parameters 
+        self.__lsphi_e    = []                        # lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at t=T
+        self.__usphi_e    = []                        # lower bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at t=T
+        self.__idxsphi_e  = []                        # indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T
+        # self.__Jsphi_e  = []                        # matrix coefficient for soft bounds on convex-over-nonlinear constraints at t=T
+        self.__x0      = []                           # initial state
+        self.__p       = []                           # parameters
+
 
     @property
     def constr_type(self):
+        """Constraints type"""
         return self.__constr_type
 
     @property
     def constr_type_e(self):
+        """Constraints type t=T"""
         return self.__constr_type_e
-    
+
     # bounds on x and u
     @property
     def lbx(self):
+        """:math:`\\underline{x}` - lower bounds on x"""
         return self.__lbx
 
     @property
     def lbu(self):
+        """:math:`\\underline{u}` - lower bounds on u"""
         return self.__lbu
-    
+
     @property
     def ubx(self):
+        """:math:`\\bar{x}` - upper bounds on x"""
         return self.__ubx
 
     @property
     def ubu(self):
+        """:math:`\\bar{u}` - upper bounds on u"""
         return self.__ubu
 
     @property
     def idxbx(self):
+        """indexes of bounds on x (defines :math:`\Pi_x`)"""
         return self.__idxbx
 
     @property
     def Jbx(self):
+        """:math:`J_x` - matrix coefficient for bounds on x"""
         return self.__Jbx
 
     @property
     def idxbu(self):
+        """indexes of bounds on u (defines :math:`\Pi_u`)"""
         return self.__idxbu
 
     @property
     def Jbu(self):
+        """:math:`J_u` - matrix coefficient for bounds on u"""
         return self.__Jbu
 
     # bounds on x at t=T
     @property
     def lbx_e(self):
+        """:math:`\\underline{x}^e` - lower bounds on x at t=T"""
         return self.__lbx_e
 
     @property
     def ubx_e(self):
+        """:math:`\\bar{x}^e` - upper bounds on x at t=T"""
         return self.__ubx_e
 
     @property
     def idxbx_e(self):
+        """indexes for bounds on x at t=T (defines :math:`\Pi_x^e`)"""
         return self.__idxbx_e
 
     @property
     def Jbx_e(self):
+        """:math:`J_{x}^e`indexes of bounds on x (defines :math:`\Pi_x`)"""
         return self.__Jbx_e
 
-    # polytopic constraints 
+    # polytopic constraints
     @property
     def C(self):
+        """:math:`C` - C matrix in lg <= D * u + C * x <= ug"""
         return self.__C
 
     @property
     def D(self):
+        """:math:`D` - D matrix in lg <= D * u + C * x <= ug"""
         return self.__D
 
     @property
     def lg(self):
+        """:math:`\\underline{g}` - lower bound for general polytopic inequalities"""
         return self.__lg
 
     @property
     def ug(self):
+        """:math:`\\bar{g}` - upper bound for general polytopic inequalities"""
         return self.__ug
 
-    # polytopic constraints at t=T 
+    # polytopic constraints at t=T
     @property
     def C_e(self):
+        """:math:`C^e` - C matrix at t=T"""
         return self.__C_e
 
     @property
     def lg_e(self):
+        """:math:`\\underline{c}^e` - lower bound on general polytopic inequalities at t=T"""
         return self.__lg_e
 
     @property
     def ug_e(self):
+        """:math:`\\bar{c}^e` - upper bound on general polytopic inequalities at t=T"""
         return self.__ug_e
 
     # nonlinear constraints
     @property
     def lh(self):
+        """:math:`\\underline{h}` - lower bound for nonlinear inequalities"""
         return self.__lh
 
     @property
     def uh(self):
+        """:math:`\\bar{h}` - upper bound for nonlinear inequalities"""
         return self.__uh
 
     # convex-over-nonlinear constraints
     @property
     def lphi(self):
+        """:math:`\\underline{\phi}` - lower bound for convex-over-nonlinear inequalities"""
         return self.__lphi
 
     @property
     def uphi(self):
+        """:math:`\\bar{\phi}` - upper bound for convex-over-nonlinear inequalities"""
         return self.__uphi
 
     # nonlinear constraints at t=T
     @property
     def lh_e(self):
+        """:math:`\\bar{h}^e` - upper bound on nonlinear inequalities at t=T"""
         return self.__lh_e
 
     @property
     def uh_e(self):
+        """:math:`\\underline{h}^e` - lower bound on nonlinear inequalities at t=T"""
         return self.__uh_e
 
     # convex-over-nonlinear constraints at t=T
     @property
     def lphi_e(self):
+        """:math:`\\underline{\phi}^e` - lower bound on convex-over-nonlinear inequalities at t=T"""
         return self.__lphi_e
 
     @property
     def uphi_e(self):
+        """:math:`\\bar{\phi}^e` - upper bound on convex-over-nonlinear inequalities at t=T"""
         return self.__uphi_e
 
     # soft bounds on x and u
     @property
     def lsbx(self):
+        """lower bounds on slacks corresponding to soft lower bounds on x"""
         return self.__lsbx
 
     @property
     def lsbu(self):
+        """lower bounds on slacks corresponding to soft lower bounds on u"""
         return self.__lsbu
-    
+
     @property
     def usbx(self):
+        """upper bounds on slacks corresponding to soft upper bounds on x"""
         return self.__usbx
 
     @property
     def usbu(self):
+        """upper bounds on slacks corresponding to soft upper bounds on u"""
         return self.__usbu
 
     @property
     def idxsbx(self):
+        """indexes of soft bounds on x within the indices of bounds on x"""
         return self.__idxsbx
 
     @property
     def Jsbx(self):
+        """:math:`J_{s,x}` - matrix coefficient for soft bounds on x"""
         return self.__Jsbx
 
     @property
     def idxsbu(self):
+        """indexes of soft bounds on u within the indices of bounds on u"""
         return self.__idxsbu
 
     @property
     def Jsbu(self):
+        """:math:`J_{s,u}` - matrix coefficient for soft bounds on u"""
         return self.__Jsbu
 
-    # soft bounds on x at t=T
     @property
     def lsbx_e(self):
+        """lower bounds on slacks corresponding to soft lower bounds on x at t=T"""
         return self.__lsbx_e
 
     @property
     def usbx_e(self):
+        """upper bounds on slacks corresponding to soft upper bounds on x at t=T"""
         return self.__usbx_e
 
     @property
     def idxsbx_e(self):
+        """indexes of soft bounds on x at t=T, within the indices of bounds on x at t=T"""
         return self.__idxsbx_e
 
     @property
     def Jsbx_e(self):
+        """:math:`J_{s,x}^e` - matrix coefficient for soft bounds on x at t=T"""
         return self.__Jsbx_e
 
-    # soft bounds on nonlinear constraints
     @property
     def lsh(self):
+        """lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints"""
         return self.__lsh
 
     @property
     def ush(self):
+        """upper bounds on slacks corresponding to soft upper bounds for nonlinear constraints"""
         return self.__ush
 
     @property
     def idxsh(self):
+        """indexes of soft nonlinear constraints within the indices of nonlinear constraints"""
         return self.__idxsh
 
     @property
     def Jsh(self):
+        """:math:`J_{s,h}` - matrix coefficient for soft bounds on nonlinear constraints"""
         return self.__Jsh
 
     # soft bounds on convex-over-nonlinear constraints
     @property
     def lsphi(self):
+        """lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints"""
         return self.__lsphi
 
     @property
     def usphi(self):
+        """upper bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints"""
         return self.__usphi
 
     @property
     def idxsphi(self):
+        """indexes of soft convex-over-nonlinear constraints within the indices of nonlinear constraints"""
         return self.__idxsphi
 
     @property
     def Jsphi(self):
+        """:math:`J_{s,h}` - matrix coefficient for soft bounds on convex-over-nonlinear constraints"""
         return self.__Jsphi
 
     # soft bounds on nonlinear constraints at t=T
     @property
     def lsh_e(self):
+        """lower bounds on slacks corresponding to soft lower bounds for nonlinear constraints at t=T"""
         return self.__lsh_e
 
     @property
     def ush_e(self):
+        """upper bounds on slacks corresponding to soft upper bounds for nonlinear constraints at t=T"""
         return self.__ush_e
 
     @property
     def idxsh_e(self):
+        """indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T"""
         return self.__idxsh_e
 
 
     @property
     def Jsh_e(self):
+        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on nonlinear constraints at t=T"""
         return self.__Jsh_e
 
     # soft bounds on convex-over-nonlinear constraints at t=T
     @property
     def lsphi_e(self):
+        """lower bounds on slacks corresponding to soft lower bounds for convex-over-nonlinear constraints at t=T"""
         return self.__lsphi_e
 
     @property
     def usphi_e(self):
+        """upper bounds on slacks corresponding to soft upper bounds for convex-over-nonlinear constraints at t=T"""
         return self.__usphi_e
 
     @property
     def idxsphi_e(self):
+        """indexes of soft nonlinear constraints at t=T within the indices of nonlinear constraints at t=T"""
         return self.__idxsphi_e
 
 
     @property
     def Jsphi_e(self):
+        """:math:`J_{s,h}^e` - matrix coefficient for soft bounds on convex-over-nonlinear constraints at t=T"""
         return self.__Jsphi_e
 
     @property
     def x0(self):
+        """:math:`\\bar{x}_0` - initial state"""
         return self.__x0
 
     @property
     def p(self):
+        """:math:`p` - parameters"""
         return self.__p
 
     def J_to_idx(self, J):
@@ -945,7 +1049,7 @@ class ocp_nlp_constraints:
         idx = np.zeros((nrows, ))
         for i in range(nrows):
             this_idx = np.nonzero(J[i,:])[0]
-            if len(this_idx) != 1: 
+            if len(this_idx) != 1:
                 raise Exception('Invalid J matrix structure detected. Exiting.')
             if J[i,this_idx[0]] != 1:
                 raise Exception('J matrices can only contain 1s. Exiting.')
@@ -1021,7 +1125,7 @@ class ocp_nlp_constraints:
             self.__ubu = ubu
         else:
             raise Exception('Invalid ubu value. Exiting.')
-    
+
     @idxbu.setter
     def idxbu(self, idxbu):
         if type(idxbu) == np.ndarray:
@@ -1065,7 +1169,7 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid Jbx_e value. Exiting.')
 
-    # polytopic constraints 
+    # polytopic constraints
     @D.setter
     def D(self, D):
         if type(D) == np.ndarray:
@@ -1094,7 +1198,7 @@ class ocp_nlp_constraints:
         else:
             raise Exception('Invalid ug value. Exiting.')
 
-    # polytopic constraints at t=T 
+    # polytopic constraints at t=T
     @C_e.setter
     def C_e(self, C_e):
         if type(C_e) == np.ndarray:
@@ -1219,7 +1323,7 @@ class ocp_nlp_constraints:
             self.__usbu = usbu
         else:
             raise Exception('Invalid usbu value. Exiting.')
-    
+
     @idxsbu.setter
     def idxsbu(self, idxsbu):
         if type(idxsbu) == np.ndarray:
@@ -1390,95 +1494,113 @@ class ocp_nlp_solver_options:
     class containing the description of the solver options
     """
     def __init__(self):
-        self.__qp_solver        = 'PARTIAL_CONDENSING_HPIPM'  #: qp solver to be used in the NLP solver
-        self.__hessian_approx   = 'GAUSS_NEWTON'              #: hessian approximation
-        self.__integrator_type  = 'ERK'                       #: integrator type
-        self.__tf               = None                        #: prediction horizon
-        self.__nlp_solver_type  = 'SQP_RTI'                   #: NLP solver 
-        self.__nlp_solver_step_length = 1.0                   #: fixed Newton step length
-        self.__sim_method_num_stages  = 1                     #: number of stages in the integrator
-        self.__sim_method_num_steps   = 1                     #: number of steps in the integrator
-        self.__sim_method_newton_iter = 3                     #: number of Newton iterations in simulation method
-        self.__qp_solver_tol_stat = None                      #: QP solver stationarity tolerance
-        self.__qp_solver_tol_eq   = None                      #: QP solver equality tolerance
-        self.__qp_solver_tol_ineq = None                      #: QP solver inequality
-        self.__qp_solver_tol_comp = None                      #: QP solver complementarity
-        self.__nlp_solver_tol_stat = None                     #: NLP solver stationarity tolerance
-        self.__nlp_solver_tol_eq   = None                     #: NLP solver equality tolerance
-        self.__nlp_solver_tol_ineq = None                     #: NLP solver inequality
-        self.__nlp_solver_tol_comp = None                     #: NLP solver complementarity
-        self.__nlp_solver_max_iter = None                     #: NLP solver maximum number of iterations
+        self.__qp_solver        = 'PARTIAL_CONDENSING_HPIPM'  # qp solver to be used in the NLP solver
+        self.__hessian_approx   = 'GAUSS_NEWTON'              # hessian approximation
+        self.__integrator_type  = 'ERK'                       # integrator type
+        self.__tf               = None                        # prediction horizon
+        self.__nlp_solver_type  = 'SQP_RTI'                   # NLP solver
+        self.__nlp_solver_step_length = 1.0                   # fixed Newton step length
+        self.__sim_method_num_stages  = 1                     # number of stages in the integrator
+        self.__sim_method_num_steps   = 1                     # number of steps in the integrator
+        self.__sim_method_newton_iter = 3                     # number of Newton iterations in simulation method
+        self.__qp_solver_tol_stat = None                      # QP solver stationarity tolerance
+        self.__qp_solver_tol_eq   = None                      # QP solver equality tolerance
+        self.__qp_solver_tol_ineq = None                      # QP solver inequality
+        self.__qp_solver_tol_comp = None                      # QP solver complementarity
+        self.__nlp_solver_tol_stat = None                     # NLP solver stationarity tolerance
+        self.__nlp_solver_tol_eq   = None                     # NLP solver equality tolerance
+        self.__nlp_solver_tol_ineq = None                     # NLP solver inequality
+        self.__nlp_solver_tol_comp = None                     # NLP solver complementarity
+        self.__nlp_solver_max_iter = None                     # NLP solver maximum number of iterations
 
     @property
     def qp_solver(self):
+        """QP solver to be used in the NLP solver"""
         return self.__qp_solver
 
     @property
     def hessian_approx(self):
+        """Hessian approximation"""
         return self.__hessian_approx
 
     @property
     def integrator_type(self):
+        """Integrator type"""
         return self.__integrator_type
 
     @property
     def nlp_solver_type(self):
+        """NLP solver"""
         return self.__nlp_solver_type
 
     @property
     def nlp_solver_step_length(self):
+        """Fixed Newton step length"""
         return self.__nlp_solver_step_length
 
     @property
     def sim_method_num_stages(self):
+        """Number of stages in the integrator"""
         return self.__sim_method_num_stages
 
     @property
     def sim_method_num_steps(self):
+        """Number of steps in the integrator"""
         return self.__sim_method_num_steps
 
     @property
     def sim_method_newton_iter(self):
+        """Number of Newton iterations in simulation method"""
         return self.__sim_method_newton_iter
 
     @property
     def qp_solver_tol_stat(self):
+        """QP solver stationarity tolerance"""
         return self.__qp_solver_tol_stat
 
     @property
     def qp_solver_tol_eq(self):
+        """QP solver equality tolerance"""
         return self.__qp_solver_tol_eq
 
     @property
     def qp_solver_tol_ineq(self):
+        """QP solver inequality"""
         return self.__qp_solver_tol_ineq
 
     @property
     def qp_solver_tol_comp(self):
+        """QP solver complementarity"""
         return self.__qp_solver_tol_comp
 
     @property
     def nlp_solver_tol_stat(self):
+        """NLP solver stationarity tolerance"""
         return self.__nlp_solver_tol_stat
 
     @property
     def nlp_solver_tol_eq(self):
+        """NLP solver equality tolerance"""
         return self.__nlp_solver_tol_eq
 
     @property
     def nlp_solver_tol_ineq(self):
+        """NLP solver inequality"""
         return self.__nlp_solver_tol_ineq
 
     @property
     def nlp_solver_tol_comp(self):
+        """NLP solver complementarity"""
         return self.__nlp_solver_tol_comp
 
     @property
     def nlp_solver_max_iter(self):
+        """NLP solver maximum number of iterations"""
         return self.__nlp_solver_max_iter
 
     @property
     def tf(self):
+        """Prediction horizon"""
         return self.__tf
 
     @qp_solver.setter
@@ -1518,7 +1640,7 @@ class ocp_nlp_solver_options:
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
 
-        if type(sim_method_num_stages) == int: 
+        if type(sim_method_num_stages) == int:
             self.__sim_method_num_stages = sim_method_num_stages
         else:
             raise Exception('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer. Exiting.')
@@ -1526,7 +1648,7 @@ class ocp_nlp_solver_options:
     @sim_method_num_steps.setter
     def sim_method_num_steps(self, sim_method_num_steps):
 
-        if type(sim_method_num_steps) == int: 
+        if type(sim_method_num_steps) == int:
             self.__sim_method_num_steps = sim_method_num_steps
         else:
             raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
@@ -1552,7 +1674,7 @@ class ocp_nlp_solver_options:
     @sim_method_num_stages.setter
     def sim_method_num_stages(self, sim_method_num_stages):
 
-        if type(sim_method_num_stages) == int: 
+        if type(sim_method_num_stages) == int:
             self.__sim_method_num_stages = sim_method_num_stages
         else:
             raise Exception('Invalid sim_method_num_stages value. sim_method_num_stages must be an integer. Exiting.')
@@ -1560,7 +1682,7 @@ class ocp_nlp_solver_options:
     @sim_method_num_steps.setter
     def sim_method_num_steps(self, sim_method_num_steps):
 
-        if type(sim_method_num_steps) == int: 
+        if type(sim_method_num_steps) == int:
             self.__sim_method_num_steps = sim_method_num_steps
         else:
             raise Exception('Invalid sim_method_num_steps value. sim_method_num_steps must be an integer. Exiting.')
@@ -1643,18 +1765,18 @@ class acados_ocp_nlp:
         self.constraints = ocp_nlp_constraints()
         self.solver_options = ocp_nlp_solver_options()
 
-        self.con_h   = acados_constraint() 
-        self.con_h_e = acados_constraint() 
-        self.con_phi   = acados_constraint() 
-        self.con_phi_e = acados_constraint() 
-        self.cost_r = acados_cost() 
-        self.cost_r_e = acados_cost() 
+        self.con_h   = acados_constraint()
+        self.con_h_e = acados_constraint()
+        self.con_phi   = acados_constraint()
+        self.con_phi_e = acados_constraint()
+        self.cost_r = acados_cost()
+        self.cost_r_e = acados_cost()
 
         self.acados_include_path = []
         self.acados_lib_path = []
 
     def set(self, attr, value):
-        # tokenize string 
+        # tokenize string
         tokens = attr.split('_', 1)
         if len(tokens) > 1:
             setter_to_call = getattr(getattr(self, tokens[0]), 'set')
@@ -1662,7 +1784,7 @@ class acados_ocp_nlp:
             setter_to_call = getattr(self, 'set')
 
         setter_to_call(tokens[1], value)
-        return 
+        return
 
 def np_array_to_list(np_array):
     return np_array.tolist()
@@ -1684,19 +1806,19 @@ def dict2json(d):
     return out
 
 def acados_ocp2json_layout(acados_ocp):
-    """ Convert acados ocp nlp object to JSON format by stripping the 
+    """ Convert acados ocp nlp object to JSON format by stripping the
     property mangling and adding array dimension info.
-    ALL items of type String will be converted 
+    ALL items of type String will be converted
     to type ndarrray!
-     
+
     Parameters
     ----------
     acados_ocp : class
         object of type acados_ocp_nlp.
-    
+
     Returns
     ------
-    out: dict 
+    out: dict
         acados_layout
     """
     ocp_nlp = acados_ocp
@@ -1709,21 +1831,21 @@ def acados_ocp2json_layout(acados_ocp):
     return json_layout
 
 def dict2json_layout(d):
-    """ Convert dictionary containing the description of 
-    of the ocp_nlp to JSON format by stripping the 
+    """ Convert dictionary containing the description of
+    of the ocp_nlp to JSON format by stripping the
     property mangling and adding array dimension info.
-    ALL items of type String will be converted 
+    ALL items of type String will be converted
     to type ndarrray!
-     
+
     Parameters
     ----------
     d : dict
-        dictionary containing the description of 
+        dictionary containing the description of
         the ocp_nlp.
-    
+
     Returns
     ------
-    out: dict 
+    out: dict
         postprocessed dictionary.
     """
     out = {}
@@ -1741,22 +1863,22 @@ def dict2json_layout(d):
         out_key = k.split('__', 1)[-1]
 
         if isinstance(v, dict):
-            out[k.replace(k, out_key)] = v  
+            out[k.replace(k, out_key)] = v
         else:
-            out[k.replace(k, out_key)] = [v_type] 
-    
+            out[k.replace(k, out_key)] = [v_type]
+
     return out
 
 def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
-    """ MATLAB does not allow distinction between e.g a = [1,1,1] and b = [1,1,1].' 
-    or a = 1 and b = [1]. Hence, we need to do some postprocessing of the JSON 
+    """ MATLAB does not allow distinction between e.g a = [1,1,1] and b = [1,1,1].'
+    or a = 1 and b = [1]. Hence, we need to do some postprocessing of the JSON
     file generated from MATLAB.
-     
+
     Parameters
     ----------
     ocp_nlp : dict
         ocp_nlp dictionary to be postprocessed.
-    
+
     ocp_nlp_layout : dict
         acados ocp_nlp target layout
     Returns
@@ -1774,7 +1896,7 @@ def cast_ocp_nlp(ocp_nlp, ocp_nlp_layout):
             if isinstance(v, int) or isinstance(v, float):
                 v = np.array([v])
         out[k] = v
-    return out 
+    return out
 
 def json2dict(ocp_nlp, ocp_nlp_dims):
     # load JSON layout
@@ -1791,18 +1913,18 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
     lists to arrays for easier handling.
     Parameters
     ---------
-    ocp_nlp : dict 
+    ocp_nlp : dict
         dictionary loaded from JSON to be post-processed.
-    
-    ocp_nlp_dims : dict 
+
+    ocp_nlp_dims : dict
         dictionary containing the ocp_nlp dimensions.
 
-    ocp_nlp_layout : dict 
+    ocp_nlp_layout : dict
         acados ocp_nlp layout.
 
     Returns
     -------
-    out : dict 
+    out : dict
         post-processed dictionary.
     """
     out = {}
@@ -1827,15 +1949,15 @@ def json2dict_rec(ocp_nlp, ocp_nlp_dims, ocp_nlp_layout):
             dims = tuple(dims_l)
             if v == []:
                 # v = None
-                try: 
+                try:
                     v = np.reshape(v, dims)
-                except:  
+                except:
                     raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, [], dims_names, dims))
                 # v = []
             else:
                 v = np.array(v)
                 v_dims = v.shape
-                if dims !=v_dims:    
+                if dims !=v_dims:
                     raise Exception('acados -- mismatching dimensions for field {0}. Provided data has dimensions {1}, while associated dimensions {2} are {3}'.format(out_key, v_dims, dims_names, dims))
         out[k.replace(k, out_key)] = v
     return out
