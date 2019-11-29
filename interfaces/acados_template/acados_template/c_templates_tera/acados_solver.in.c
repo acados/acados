@@ -33,6 +33,7 @@
 
 #include "acados_solver_{{ model.name }}.h"
 
+{# TODO: why is that logic needed? suggest to use "if (corresponding dim = 0 in renderer logic)" #}
 #define NX_     {{ dims.nx }}
 #define NZ_     {{ dims.nz }}
 #define NU_     {{ dims.nu }}
@@ -225,7 +226,6 @@
 
 int acados_create()
 {
-
     int status = 0;
 
     double Tf = {{ solver_options.tf }};
@@ -908,10 +908,10 @@ int acados_create()
     {%- if solver_options.integrator_type == "ERK" %} 
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_vde_for", &forw_vde_casadi[i]);
         if (set_fun_status != 0) { printf("Error while setting expl_vde_for[%i]\n", i);  exit(1); }
-        {% if solver_options.hessian_approx == "EXACT" %} 
+        {%- if solver_options.hessian_approx == "EXACT" %} 
             set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_hes", &hess_vde_casadi[i]);
             if (set_fun_status != 0) { printf("Error while setting expl_ode_hes[%i]\n", i);  exit(1); }
-        {% endif %}
+        {%- endif %}
     {% elif solver_options.integrator_type == "IRK" %} 
         set_fun_status = ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_ode_fun", &impl_dae_fun[i]);
         if (set_fun_status != 0) { printf("Error while setting impl_dae_fun[%i]\n", i);  exit(1); }
@@ -1175,7 +1175,7 @@ int acados_create()
     u0[{{ i }}] = 0.0;
     {%- endfor %}
 
-    for (int i = 0; i < N; ++i)
+    for (int i = 0; i < N; i++)
     {
         // x0
         ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", x0);
@@ -1205,7 +1205,7 @@ int acados_create()
         forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {% endif %}
-    for (int ii = 0; ii < N; ++ii) {
+    for (int ii = 0; ii < N; ii++) {
         {%- if constraints.constr_type == "BGP" %}
         // r_constraint[ii].set_param(r_constraint+ii, p);
         phi_constraint[ii].set_param(phi_constraint+ii, p);

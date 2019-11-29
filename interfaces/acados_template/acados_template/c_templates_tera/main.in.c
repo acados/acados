@@ -115,12 +115,8 @@ int main()
     u0[{{ i }}] = 0.0;
     {%- endfor %}
 
-    // xtraj
-    double xtraj[{{ dims.nx }} * ({{ dims.N }}+1)];
-    // utraj
-    double utraj[{{ dims.nu }} * ({{ dims.N }})];
 
-    {%- if dims.np > 0 %}
+  {%- if dims.np > 0 %}
     // set parameters
     double p[{{ dims.np }}];
     {% for item in constraints.p %}
@@ -141,7 +137,7 @@ int main()
         forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
     }
     {%- endif %}
-    for (int ii = 0; ii < {{ dims.N }}; ++ii) {
+    for (int ii = 0; ii < {{ dims.N }}; ii++) {
         {%- if constraints.constr_type == "BGP" %}
         // r_constraint[ii].set_param(r_constraint+ii, p);
         phi_constraint[ii].set_param(phi_constraint+ii, p);
@@ -157,7 +153,7 @@ int main()
     {%- if dims.nh_e > 0 %}
     h_e_constraint.set_param(&h_e_constraint, p);
     {% endif %}
-    {% endif %}{# if np > 0 #}
+  {% endif %}{# if np > 0 #}
 
     // prepare evaluation
     int NTIMINGS = 10;
@@ -166,11 +162,14 @@ int main()
     double elapsed_time;
     int sqp_iter;
 
+    double xtraj[{{ dims.nx }} * ({{ dims.N }}+1)];
+    double utraj[{{ dims.nu }} * ({{ dims.N }})];
+
     // solve ocp in loop
-    for (int ii = 0; ii < NTIMINGS; ii ++)
+    for (int ii = 0; ii < NTIMINGS; ii++)
     {
         // initialize solution
-        for (int i = 0; i <= nlp_dims->N; ++i)
+        for (int i = 0; i <= nlp_dims->N; i++)
         {
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", x_init);
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "u", u0);
@@ -195,13 +194,9 @@ int main()
     printf("\nsolved ocp %d times, solution printed above\n\n", NTIMINGS);
 
     if (status == ACADOS_SUCCESS)
-    {
         printf("acdos_solve(): SUCCESS!\n");
-    }
     else
-    {
-        printf("acados_solve() failed with status %d.\n", status); 
-    }
+        printf("acados_solve() failed with status %d.\n", status);
 
     // get solution
     ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, 0, "kkt_norm_inf", &kkt_norm_inf);
