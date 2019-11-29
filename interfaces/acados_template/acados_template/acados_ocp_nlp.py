@@ -42,140 +42,168 @@ class ocp_nlp_dims:
     class containing the dimensions of the optimal control problem
     """
     def __init__(self):
-        self.__nx      = None  #: :math:`n_x` - number of states 
-        self.__nz      = 0     #: :math:`n_z` - number of algebraic variables 
-        self.__nu      = None  #: :math:`n_u` - number of inputs 
-        self.__np      = 0     #: :math:`n_p` - number of parameters 
-        self.__ny      = None  #: :math:`n_y` - number of residuals in Lagrange term 
-        self.__ny_e    = None  #: :math:`n_{y}^e` - number of residuals in Mayer term 
-        self.__nr      = 0     #: :math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints 
-        self.__nr_e    = 0     #: :math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints
-        self.__nh      = 0     #: :math:`n_h` - number of nonlinear constraints 
-        self.__nh_e    = 0     #: :math:`n_{h}^e` - number of nonlinear constraints at t=T 
-        self.__nphi    = 0     #: :math:`n_{\phi}` - number of convex-over-nonlinear constraints 
-        self.__nphi_e  = 0     #: :math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at t=T 
-        self.__nbx     = 0     #: :math:`n_{b_x}` - number of state bounds 
-        self.__nbx_e   = 0     #: :math:`n_{b_x}` - number of state bounds at t=T 
-        self.__nbu     = 0     #: :math:`n_{b_u}` - number of input bounds 
-        self.__nsbx    = 0     #: :math:`n_{{sb}_x}` - number of soft state bounds 
-        self.__nsbx_e  = 0     #: :math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T 
-        self.__nsbu    = 0     #: :math:`n_{{sb}_u}` - number of soft input bounds 
-        self.__nsh     = 0     #: :math:`n_{{sh}}` - number of soft nonlinear constraints 
-        self.__nsh_e   = 0     #: :math:`n_{{sh}}^e` - number of soft nonlinear constraints at t=T 
-        self.__nsphi   = 0     #: :math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints 
-        self.__nsphi_e = 0     #: :math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at t=T 
-        self.__ns      = 0     #: :math:`n_{s}` - total number of slacks 
-        self.__ns_e    = 0     #: :math:`n_{s}^e` - total number of slacks at t=T 
-        self.__ng      = 0     #: :math:`n_{g}` - number of general polytopic constraints 
-        self.__ng_e    = 0     #: :math:`n_{g}^e` - number of general polytopic constraints at t=T 
-        self.__N       = None  #: :math:`N` - prediction horizon  
+        self.__nx      = None
+        self.__nz      = 0
+        self.__nu      = None
+        self.__np      = 0
+        self.__ny      = None
+        self.__ny_e    = None
+        self.__nr      = 0
+        self.__nr_e    = 0
+        self.__nh      = 0
+        self.__nh_e    = 0
+        self.__nphi    = 0
+        self.__nphi_e  = 0
+        self.__nbx     = 0
+        self.__nbx_e   = 0
+        self.__nbu     = 0
+        self.__nsbx    = 0
+        self.__nsbx_e  = 0
+        self.__nsbu    = 0
+        self.__nsh     = 0
+        self.__nsh_e   = 0
+        self.__nsphi   = 0
+        self.__nsphi_e = 0
+        self.__ns      = 0
+        self.__ns_e    = 0
+        self.__ng      = 0
+        self.__ng_e    = 0
+        self.__N       = None
+
 
     @property
     def nx(self):
+        """:math:`n_x` - number of states"""
         return self.__nx
 
     @property
     def nz(self):
+        """:math:`n_z` - number of algebraic variables"""
         return self.__nz
 
     @property
     def nu(self):
+        """:math:`n_u` - number of inputs"""
         return self.__nu
 
     @property
     def np(self):
+        """:math:`n_p` - number of parameters"""
         return self.__np
 
     @property
     def ny(self):
+        """:math:`n_y` - number of residuals in Lagrange term"""
         return self.__ny
 
     @property
     def ny_e(self):
+        """:math:`n_{y}^e` - number of residuals in Mayer term"""
         return self.__ny_e
 
     @property
     def nr(self):
+        """:math:`n_{\pi}` - dimension of the image of the inner nonlinear function in positive definite constraints"""
         return self.__nr
 
     @property
     def nr_e(self):
+        """:math:`n_{\pi}^e` - dimension of the image of the inner nonlinear function in positive definite constraints"""
         return self.__nr_e
 
     @property
     def nh(self):
+         """:math:`n_h` - number of nonlinear constraints"""
         return self.__nh
 
     @property
     def nh_e(self):
+        """:math:`n_{h}^e` - number of nonlinear constraints at t=T"""
         return self.__nh_e
 
     @property
     def nphi(self):
+        """:math:`n_{\phi}` - number of convex-over-nonlinear constraints"""
         return self.__nphi
 
     @property
     def nphi_e(self):
+        """:math:`n_{\phi}^e` - number of convex-over-nonlinear constraints at t=T"""
         return self.__nphi_e
 
     @property
     def nbx(self):
+        """:math:`n_{b_x}` - number of state bounds"""
         return self.__nbx
 
     @property
     def nbx_e(self):
+        """:math:`n_{b_x}` - number of state bounds at t=T"""
         return self.__nbx_e
 
     @property
     def nbu(self):
+        """:math:`n_{b_u}` - number of input bounds"""
         return self.__nbu
 
     @property
     def nsbx(self):
+        """:math:`n_{{sb}_x}` - number of soft state bounds"""
         return self.__nsbx
 
     @property
     def nsbx_e(self):
+        """:math:`n_{{sb}^e_{x}}` - number of soft state bounds at t=T"""
         return self.__nsbx_e
 
     @property
     def nsbu(self):
+        """:math:`n_{{sb}_u}` - number of soft input bounds"""
         return self.__nsbu
 
     @property
     def nsh(self):
+        """:math:`n_{{sh}}` - number of soft nonlinear constraints"""
         return self.__nsh
 
     @property
     def nsh_e(self):
+        """:math:`n_{{sh}}^e` - number of soft nonlinear constraints at t=T"""
         return self.__nsh_e
 
     @property
     def nsphi(self):
+        """:math:`n_{{s\phi}}` - number of soft convex-over-nonlinear constraints"""
         return self.__nsphi
 
     @property
     def nsphi_e(self):
+        """:math:`n_{{s\phi}^e}` - number of soft convex-over-nonlinear constraints at t=T"""
         return self.__nsphi_e
 
     @property
     def ns(self):
+        """:math:`n_{s}` - total number of slacks"""
         return self.__ns
 
     @property
     def ns_e(self):
+        """:math:`n_{s}^e` - total number of slacks at t=T"""
         return self.__ns_e
 
     @property
     def ng(self):
+        """:math:`n_{g}` - number of general polytopic constraints"""
         return self.__ng
 
     @property
     def ng_e(self):
+        """:math:`n_{g}^e` - number of general polytopic constraints at t=T"""
         return self.__ng_e
 
     @property
     def N(self):
+        """:math:`N` - prediction horizon"""
         return self.__N
 
     @nx.setter
