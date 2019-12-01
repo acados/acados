@@ -1674,7 +1674,7 @@ def np_array_to_list(np_array):
         return np_array.full()
     else:
         raise(Exception(
-            f"Cannot convert to list type {type(np_array)}"
+            "Cannot convert to list type {}".format(type(np_array))
         ))
 
 class ocp_nlp_as_object:

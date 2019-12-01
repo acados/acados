@@ -41,10 +41,10 @@ def generate_c_code_constraint_e( constraint ):
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
     if casadi_version not in (ALLOWED_CASADI_VERSIONS):
-        raise Exception(
-            f'Please download and install CasADi {" or ".join(ALLOWED_CASADI_VERSIONS)}'
-            'to ensure compatibility with acados.\n'
-            f'Version {casadi_version} currently in use.')
+        msg = 'Please download and install CasADi {}'.format(" or ".join(ALLOWED_CASADI_VERSIONS))
+        msg += 'to ensure compatibility with acados.\n'
+        msg += 'Version {casadi_version} currently in use.'
+        raise Exception(msg)
 
     # load constraint variables and expression
     x = constraint.x

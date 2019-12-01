@@ -35,13 +35,13 @@ from setuptools import setup, find_packages
 
 import sys
 print(sys.version_info)
-if sys.version_info < (3,6):
-    sys.exit('Python version 3.6 or later required. Exiting.')
+if sys.version_info < (3,5):
+    sys.exit('Python version 3.5 or later required. Exiting.')
 
 
 setup(name='acados_template',
    version='0.1',
-   python_requires='>=3.6',
+   python_requires='>=3.5',
    description='A templating framework for acados',
    url='http://github.com/zanellia/acados',
    author='Andrea Zanelli',

@@ -52,15 +52,13 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         tera_path = acados_path + '/bin/'
     t_renderer_path = tera_path + 't_renderer'
     if not os.path.exists(t_renderer_path):
-        raise Exception(
-            f'{t_renderer_path} Not found.\n'
-            'In order to be able to successfully render C code templates,'
-            'you need to download the t_renderer binaries for your platform from '
-            'https://github.com/acados/tera_renderer/releases/ and '
-            'place them in <acados_root>/bin (please strip the '
-            'version and platform from the binaries e.g. '
-            't_renderer-v0.0.20 -> t_renderer).'
-    )
+        msg = '{} Not found.\n'.format(t_renderer_path)
+        msg += 'In order to be able to successfully render C code templates,\n'
+        msg += 'you need to download the t_renderer binaries for your platform from '
+        msg += 'https://github.com/acados/tera_renderer/releases/ and\n'
+        msg += 'place them in <acados_root>/bin (please strip the '
+        msg += 'version and platform from the binaries as t_renderer-v0.0.20 -> t_renderer).'
+        raise Exception(msg)
 
     model = acados_ocp.model
     if acados_ocp.solver_options.integrator_type == 'ERK':
