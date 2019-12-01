@@ -89,16 +89,16 @@ fprintf( [ '\n\nSuccessfully created sfunction:\nacados_solver_sfunction_{{ mode
 
 %% print note on usage of s-function
 fprintf('\n\nNote:\n')
-input_note = 'Inputs are:\n 1) x0[{{ dims.nx }}]\n 2) y_ref[{{ dims.ny }}]\n 3) y_ref_e[{{ dims.ny_e }}]\n ';
+input_note = 'Inputs are:\n 1) x0, initial state, size [{{ dims.nx }}]\n 2) y_ref, size [{{ dims.ny }}]\n 3) y_ref_e, size [{{ dims.ny_e }}]\n ';
 
 {%- if dims.np > 0 %}
-strcat(input_note, ' 4) parameters[[{{ dims.np }}]]\n ')
+strcat(input_note, ' 4) parameters, size [{{ dims.np }}]\n ')
 {%- endif %}
 
 fprintf(input_note)
 
 disp(' ')
 
-output_note = 'Outputs are:\n 1) u[{{ dims.nu }}] - optimal input\n 2) KKT residual\n 3) first state \n 4) CPU time\n';
+output_note = 'Outputs are:\n 1) u0 - optimal input, size [{{ dims.nu }}]\n 2) KKT residual\n 3) first state \n 4) CPU time\n';
 
 fprintf(output_note)

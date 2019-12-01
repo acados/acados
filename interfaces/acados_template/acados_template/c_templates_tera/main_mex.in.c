@@ -39,7 +39,6 @@
 #include "acados/utils/print.h"
 #include "acados/utils/math.h"
 #include "acados_c/ocp_nlp_interface.h"
-#include "acados_c/external_function_interface.h"
 #include "acados_solver_{{ model.name }}.h"
 // mex
 #include "mex.h"
@@ -114,46 +113,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {%- for i in range(end=dims.nu) %}
     u0[{{ i }}] = 0.0;
     {%- endfor %}
-
-
-
-  {%- if dims.np > 0 %}
-    // set parameters
-    double p[{{ dims.np }}];
-    {% for item in constraints.p %}
-    p[{{ loop.index0 }}] = {{ item }};
-    {% endfor %}
-
-    {%- if solver_options.integrator_type == "IRK" -%}
-    for (int ii = 0; ii < {{ dims.N }}; ii++)
-    {
-        impl_dae_fun[ii].set_param(impl_dae_fun+ii, p);
-        impl_dae_fun_jac_x_xdot_z[ii].set_param(impl_dae_fun_jac_x_xdot_z+ii, p);
-        impl_dae_jac_x_xdot_u_z[ii].set_param(impl_dae_jac_x_xdot_u_z+ii, p);
-    }
-    {% elif solver_options.integrator_type == "ERK" %}
-    for (int ii = 0; ii < {{ dims.N }}; ii++)
-    {
-        forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, p);
-    }
-    {%- endif %}
-    for (int ii = 0; ii < {{ dims.N }}; ii++) {
-        {%- if constraints.constr_type == "BGP" %}
-        // r_constraint[ii].set_param(r_constraint+ii, p);
-        phi_constraint[ii].set_param(phi_constraint+ii, p);
-        {%- endif %}
-        {%- if dims.nh > 0 %}
-        h_constraint[ii].set_param(h_constraint+ii, p);
-        {% endif %}
-    }
-    {%- if constraints.constr_type_e == "BGP" %}
-    // r_e_constraint.set_param(&r_e_constraint, p);
-    phi_e_constraint.set_param(&phi_e_constraint, p);
-    {% endif %}
-    {%- if dims.nh_e > 0 %}
-    h_e_constraint.set_param(&h_e_constraint, p);
-    {% endif %}
-  {% endif %}{# if np > 0 #}
 
     // prepare evaluation
     int NTIMINGS = 10;

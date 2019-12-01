@@ -31,7 +31,7 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function build_mex(opts)
+function build_mex()
 
 opts.output_dir = pwd;
 
@@ -40,7 +40,7 @@ acados_folder = getenv('ACADOS_INSTALL_DIR');
 
 % set paths
 acados_include = ['-I' fullfile(acados_folder, 'include')];
-template_lib_include = ['-l' 'acados_solver_guc_wt'];
+template_lib_include = ['-l' 'acados_solver_{{ model.name }}'];
 template_lib_path = ['-L' fullfile(pwd)];
 
 acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
@@ -57,8 +57,7 @@ for k=1:length(mex_names)
     mex_files{k} = fullfile([mex_names{k}, '.c']);
 end
 
-
-%% compile mex
+%% octave C flags
 if is_octave()
     if ~exist(fullfile(opts.output_dir, 'cflags_octave.txt'), 'file')
         diary(fullfile(opts.output_dir, 'cflags_octave.txt'));
@@ -84,6 +83,7 @@ if is_octave()
     setenv('CFLAGS', cflags_tmp);
 end
 
+%% compile mex
 for ii=1:length(mex_files)
     disp(['compiling ', mex_files{ii}])
     if is_octave()
@@ -96,24 +96,10 @@ for ii=1:length(mex_files)
         else
             FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
         end
-        FLAGS
-        acados_include
-        template_lib_include
-        acados_lib_path
         mex(FLAGS, acados_include, template_lib_include, external_include, blasfeo_include, hpipm_include,...
              acados_lib_path, template_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
     end
 end
 
-
-% if is_octave()
-%     movefile('*.o', opts.output_dir);
-% end
-% 
-% for k=1:length(mex_names)
-%     clear(mex_names{k})
-%     [status, message] = copyfile([mex_names{k}, '.', mexext], opts.output_dir);
-%     delete([mex_names{k}, '.', mexext]);
-% end
 
 end
