@@ -459,7 +459,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
     // zero timers
     double total_time = 0.0;
+	double tmp_time;
     mem->time_qp_sol = 0.0;
+    mem->time_qp_solver_call = 0.0;
     mem->time_lin = 0.0;
     mem->time_reg = 0.0;
     mem->time_tot = 0.0;
@@ -657,6 +659,9 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
                                         opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
         mem->time_qp_sol += acados_toc(&timer1);
 
+		qp_solver->memory_get(qp_solver, nlp_mem->qp_solver_mem, "time_qp_solver_call", &tmp_time);
+		mem->time_qp_solver_call += tmp_time;
+
         // compute correct dual solution in case of Hessian regularization
         acados_tic(&timer1);
         config->regularize->correct_dual_sol(config->regularize, dims->regularize,
@@ -701,7 +706,7 @@ int ocp_nlp_sqp(void *config_, void *dims_, void *nlp_in_, void *nlp_out_,
 
         if ((qp_status!=ACADOS_SUCCESS) & (qp_status!=ACADOS_MAXITER))
         {
-            //   print_ocp_qp_in(mem->qp_in);
+            // print_ocp_qp_in(nlp_mem->qp_in);
 
             // save sqp iterations number
             mem->sqp_iter = sqp_iter;
@@ -819,7 +824,8 @@ int ocp_nlp_sqp_precompute(void *config_, void *dims_, void *nlp_in_, void *nlp_
 
 
 
-void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *mem_, void *work_, char *field, int stage, int index, void *sens_nlp_out_)
+void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *mem_, void *work_,
+                                 char *field, int stage, int index, void *sens_nlp_out_)
 {
     ocp_nlp_dims *dims = dims_;
     ocp_nlp_config *config = config_;
@@ -844,7 +850,8 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 
 //        d_ocp_qp_print(work->tmp_qp_in->dim, work->tmp_qp_in);
 
-        config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out, opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
+        config->qp_solver->eval_sens(config->qp_solver, dims->qp_solver, work->tmp_qp_in, work->tmp_qp_out,
+                               opts->nlp_opts->qp_solver_opts, nlp_mem->qp_solver_mem, nlp_work->qp_work);
 
 //        d_ocp_qp_sol_print(work->tmp_qp_out->dim, work->tmp_qp_out);
 //        exit(1);
@@ -885,9 +892,10 @@ void ocp_nlp_sqp_eval_param_sens(void *config_, void *dims_, void *opts_, void *
 
 
 
+// TODO rename memory_get ???
 void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, void *return_value_)
 {
-    // ocp_nlp_config *config = config_;
+    ocp_nlp_config *config = config_;
 	ocp_nlp_dims *dims = dims_;
     ocp_nlp_sqp_memory *mem = mem_;
 
@@ -910,6 +918,11 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     {
         double *value = return_value_;
         *value = mem->time_qp_sol;
+    }
+    else if (!strcmp("time_qp_solver_call", field))
+    {
+        double *value = return_value_;
+        *value = mem->time_qp_solver_call;
     }
     else if (!strcmp("time_lin", field))
     {
@@ -970,6 +983,10 @@ void ocp_nlp_sqp_get(void *config_, void *dims_, void *mem_, const char *field, 
     {
         void **value = return_value_;
         *value = mem->nlp_mem->qp_out;
+    }
+    else if (!strcmp("qp_iter", field))
+    {
+		config->qp_solver->memory_get(config->qp_solver, mem->nlp_mem->qp_solver_mem, "iter", return_value_);
     }
     else
     {

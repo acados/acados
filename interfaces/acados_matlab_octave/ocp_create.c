@@ -336,10 +336,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
     }
 #endif
+#if defined(ACADOS_WITH_HPMPC)
+    else if (!strcmp(qp_solver, "partial_condensing_hpmpc"))
+    {
+        plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
+    }
+#endif
+#if defined(ACADOS_WITH_OSQP)
+    else if (!strcmp(qp_solver, "partial_condensing_osqp"))
+    {
+        plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_OSQP;
+    }
+#endif
     else
     {
         MEX_FIELD_VALUE_NOT_SUPPORTED_SUGGEST(fun_name, "qp_solver", qp_solver,
-             "partial_condensing_hpipm, full_condensing_hpipm, full_condensing_qpoases");
+             "partial_condensing_hpipm, full_condensing_hpipm, full_condensing_qpoases, partial_condensing_osqp, partial_condensing_hpmpc");
     }
 
 
@@ -724,6 +736,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double nlp_solver_step_length = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_step_length" ) );
         ocp_nlp_solver_opts_set(config, opts, "step_length", &nlp_solver_step_length);
     }
+    // nlp solver: warm start first
+    if (mxGetField( matlab_opts, 0, "nlp_solver_warm_start_first_qp" )!=NULL)
+    {
+        int nlp_solver_warm_start_first_qp = mxGetScalar( mxGetField( matlab_opts, 0, "nlp_solver_warm_start_first_qp" ) );
+        ocp_nlp_solver_opts_set(config, opts, "warm_start_first_qp", &nlp_solver_warm_start_first_qp);
+    }
     // iter_max
     if (mxGetField( matlab_opts, 0, "qp_solver_iter_max" )!=NULL)
     {
@@ -814,12 +832,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         int qp_solver_warm_start = mxGetScalar( mxGetField( matlab_opts, 0, "qp_solver_warm_start" ) );
         ocp_nlp_solver_opts_set(config, opts, "qp_warm_start", &qp_solver_warm_start);
-    }
-    // qp solver: warm start first
-    if (mxGetField( matlab_opts, 0, "warm_start_first_qp" )!=NULL)
-    {
-        int warm_start_first_qp = mxGetScalar( mxGetField( matlab_opts, 0, "warm_start_first_qp" ) );
-        ocp_nlp_solver_opts_set(config, opts, "warm_start_first_qp", &warm_start_first_qp);
     }
 
     // sim_method_num_stages
@@ -1481,6 +1493,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ocp_nlp_constraints_model_set(config, dims, in, 0, "idxbx", i_ptr);
     free(i_ptr);
 
+    int ptr_size = nbx>nbx_e?nbx:nbx_e;
     tmp_idx = malloc(nbx*sizeof(int));
 
     double *Jbx;    bool set_Jbx = false;
@@ -1581,8 +1594,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 //        }
     }
 
-    free(tmp_idx);
-
     // Jbx_e
     const mxArray *Jbx_e_matlab = mxGetField( matlab_model, 0, "constr_Jbx_e" );
     if (Jbx_e_matlab!=NULL)
@@ -1615,6 +1626,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_constraints_model_set(config, dims, in, N, "idxbx", tmp_idx);
     }
 
+    free(tmp_idx);
 
     // Jbu
     const mxArray *Jbu_matlab = mxGetField( matlab_model, 0, "constr_Jbu" );

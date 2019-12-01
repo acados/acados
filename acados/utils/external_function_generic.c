@@ -1094,10 +1094,11 @@ void external_function_param_casadi_set_param(void *self, double *p)
     // cast into external casadi function
     external_function_param_casadi *fun = self;
 
-    // loop index
-    int ii;
-
-    for (ii = 0; ii < fun->np; ii++) fun->p[ii] = p[ii];
+    // set value for all parameters
+    for (int ii = 0; ii < fun->np; ii++)
+    {
+        fun->p[ii] = p[ii];
+    }
 
     return;
 }

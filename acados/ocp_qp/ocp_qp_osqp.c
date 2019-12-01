@@ -626,9 +626,6 @@ void *ocp_qp_osqp_opts_assign(void *config_, void *dims_, void *raw_memory)
     opts->osqp_opts = (OSQPSettings *) c_ptr;
     c_ptr += sizeof(OSQPSettings);
 
-    opts->verbose = 0;  // default value, disable printing
-    opts->polish = 1; // default value, enable polishing
-
     assert((char *) raw_memory + ocp_qp_osqp_opts_calculate_size(config_, dims_) == c_ptr);
 
     return (void *) opts;
@@ -641,8 +638,9 @@ void ocp_qp_osqp_opts_initialize_default(void *config_, void *dims_, void *opts_
     ocp_qp_osqp_opts *opts = opts_;
 
     osqp_set_default_settings(opts->osqp_opts);
-    opts->osqp_opts->verbose = opts->verbose;
-    opts->osqp_opts->polish = opts->polish;
+    opts->osqp_opts->verbose = 0;
+    opts->osqp_opts->polish = 1;
+	opts->osqp_opts->check_termination = 5;
 
     return;
 }
@@ -660,7 +658,12 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
 {
     ocp_qp_osqp_opts *opts = opts_;
 
-    if (!strcmp(field, "tol_stat"))
+    if (!strcmp(field, "iter_max"))
+    {
+		int *tmp_ptr = value;
+		opts->osqp_opts->max_iter = *tmp_ptr;
+    }
+    else if (!strcmp(field, "tol_stat"))
     {
 		// TODO set solver exit tolerance
     }
@@ -678,7 +681,12 @@ void ocp_qp_osqp_opts_set(void *config_, void *opts_, const char *field, void *v
     }
     else if (!strcmp(field, "warm_start"))
     {
-		// TODO set solver warm start
+		// XXX after the first call to the solver, this doesn't work any more, as in osqp the settings are copied in the work !!!!!
+		// XXX i.e. as it is, it gets permanently set to zero if warm start is disabled at the fist iteration !!!!!
+		int *tmp_ptr = value;
+//		int tmp_ptr[] = {1};
+		opts->osqp_opts->warm_start = *tmp_ptr;
+//		printf("\nwarm start %d\n", opts->osqp_opts->warm_start);
     }
 	else
 	{
@@ -1165,11 +1173,45 @@ void *ocp_qp_osqp_memory_assign(void *config_, void *dims_, void *opts_, void *r
     return mem;
 }
 
+
+
+void ocp_qp_osqp_memory_get(void *config_, void *mem_, const char *field, void* value)
+{
+    qp_solver_config *config = config_;
+	ocp_qp_osqp_memory *mem = mem_;
+
+	if(!strcmp(field, "time_qp_solver_call"))
+	{
+		double *tmp_ptr = value;
+		*tmp_ptr = mem->time_qp_solver_call;
+	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
+	else
+	{
+		printf("\nerror: ocp_qp_osqp_memory_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 /************************************************
  * workspace
  ************************************************/
 
-int ocp_qp_osqp_workspace_calculate_size(void *config_, void *dims_, void *opts_) { return 0; }
+int ocp_qp_osqp_workspace_calculate_size(void *config_, void *dims_, void *opts_)
+{
+	return 0;
+}
+
+
 
 /************************************************
  * functions
@@ -1254,7 +1296,7 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     // print_ocp_qp_in(qp_in);
 
     qp_info *info = (qp_info *) qp_out->misc;
-    acados_timer tot_timer, qp_timer, interface_timer;
+    acados_timer tot_timer, qp_timer, interface_timer, solver_call_timer;
 
     acados_tic(&tot_timer);
     // cast data structures
@@ -1283,7 +1325,13 @@ int ocp_qp_osqp(void *config_, void *qp_in_, void *qp_out_, void *opts_, void *m
     }
 
     // solve OSQP
+    acados_tic(&solver_call_timer);
+
     osqp_solve(mem->osqp_work);
+
+    mem->time_qp_solver_call = acados_toc(&solver_call_timer);
+	mem->iter = mem->osqp_work->info->iter;
+
     fill_in_qp_out(qp_in, qp_out, mem);
     ocp_qp_compute_t(qp_in, qp_out);
 
@@ -1322,6 +1370,7 @@ void ocp_qp_osqp_config_initialize_default(void *config_)
     config->opts_set = &ocp_qp_osqp_opts_set;
     config->memory_calculate_size = &ocp_qp_osqp_memory_calculate_size;
     config->memory_assign = &ocp_qp_osqp_memory_assign;
+    config->memory_get = &ocp_qp_osqp_memory_get;
     config->workspace_calculate_size = &ocp_qp_osqp_workspace_calculate_size;
     config->evaluate = &ocp_qp_osqp;
     config->eval_sens = &ocp_qp_osqp_eval_sens;

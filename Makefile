@@ -139,6 +139,7 @@ CLEAN_DEPS += qore_clean
 endif
 ifeq ($(ACADOS_WITH_OSQP), 1)
 STATIC_DEPS += osqp_static
+SHARED_DEPS += osqp_shared
 CLEAN_DEPS += osqp_clean
 endif
 
@@ -250,6 +251,12 @@ osqp_static: $(OSQP_LIB_STATIC)
 	mkdir -p lib
 	cp -r $(OSQP_PATH)/include/* include/osqp/include
 	mv libosqp.a lib
+
+osqp_shared: $(OSQP_LIB_SHARED)
+	mkdir -p include/osqp/include
+	mkdir -p lib
+	cp -r $(OSQP_PATH)/include/* include/osqp/include
+	mv libosqp.so lib
 
 examples_c: static_library
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )

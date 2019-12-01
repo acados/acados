@@ -354,6 +354,35 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     return mem;
 }
 
+
+
+void dense_qp_qpoases_memory_get(void *config_, void *mem_, const char *field, void* value)
+{
+    qp_solver_config *config = config_;
+	dense_qp_qpoases_memory *mem = mem_;
+
+	if(!strcmp(field, "time_qp_solver_call"))
+	{
+		double *tmp_ptr = value;
+		*tmp_ptr = mem->time_qp_solver_call;
+	}
+	else if(!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
+	else
+	{
+		printf("\nerror: dense_qp_qpoases_memory_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 /************************************************
  * workspcae
  ************************************************/
@@ -362,6 +391,8 @@ int dense_qp_qpoases_workspace_calculate_size(void *config_, dense_qp_dims *dims
 {
     return 0;
 }
+
+
 
 /************************************************
  * functions
@@ -709,6 +740,9 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = nwsr;
 
+	memory->time_qp_solver_call = info->solve_QP_time;
+    memory->iter = nwsr;
+
     // compute slacks
     if (opts->compute_t)
     {
@@ -746,6 +780,7 @@ void dense_qp_qpoases_config_initialize_default(void *config_)
         (int (*)(void *, void *, void *)) & dense_qp_qpoases_memory_calculate_size;
     config->memory_assign =
         (void *(*) (void *, void *, void *, void *) ) & dense_qp_qpoases_memory_assign;
+    config->memory_get = &dense_qp_qpoases_memory_get;
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & dense_qp_qpoases_workspace_calculate_size;
     config->eval_sens = &dense_qp_qpoases_eval_sens;

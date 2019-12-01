@@ -442,11 +442,29 @@ class acados_solver:
         self.shared_lib.acados_get_nlp_in.restype = c_void_p
         self.nlp_in = self.shared_lib.acados_get_nlp_in()
 
+        self.shared_lib.acados_get_nlp_solver.restype = c_void_p
+        self.nlp_solver = self.shared_lib.acados_get_nlp_solver()
+
         self.acados_ocp = acados_ocp
 
     def solve(self):
         status = self.shared_lib.acados_solve()
         return status
+
+    def get_stats(self, field_):
+        fields = ['time_tot']
+        field = field_
+        field = field.encode('utf-8')
+        if (field_ not in fields):
+            raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
+                    \n Possible values are {}. Exiting.".format(fields, fields))
+        out = np.ascontiguousarray(np.zeros((1,)), dtype=np.float64)
+        out_data = cast(out.ctypes.data, POINTER(c_double))
+
+        self.shared_lib.ocp_nlp_get.argtypes = [c_void_p, c_void_p, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_get(self.nlp_config, self.nlp_solver, field, out_data);
+
+        return out
 
     def get(self, stage_, field_):
 
@@ -456,7 +474,7 @@ class acados_solver:
 
         if (field_ not in out_fields):
             raise Exception("acados_solver: {} is not a valid key for method `set(value)`.\
-                    \nPossible values are {} and {}. Exiting.".format(field, cost, constraints))
+                    \n Possible values are {}. Exiting.".format(out_fields))
 
         self.shared_lib.ocp_nlp_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p]
         self.shared_lib.ocp_nlp_dims_get_from_attr.restype = c_int

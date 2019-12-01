@@ -48,8 +48,6 @@ extern "C" {
 
 typedef struct ocp_qp_osqp_opts_
 {
-    c_int verbose; // enable or disable printing
-    c_int polish; // enable or disable polishing
     OSQPSettings *osqp_opts;
 } ocp_qp_osqp_opts;
 
@@ -74,6 +72,9 @@ typedef struct ocp_qp_osqp_memory_
 
     OSQPData *osqp_data;
     OSQPWorkspace *osqp_work;
+
+	double time_qp_solver_call;
+	int iter;
 
 } ocp_qp_osqp_memory;
 

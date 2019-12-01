@@ -101,6 +101,12 @@ classdef acados_ocp < handle
                     if ~isempty(strfind(obj.opts_struct.qp_solver,'qpoases'))
                         flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_qpoases.txt');
                         compile_interface = ~exist(flag_file, 'file');
+                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'hpmpc'))
+                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_hpmpc.txt');
+                        compile_interface = ~exist(flag_file, 'file');
+                    elseif ~isempty(strfind(obj.opts_struct.qp_solver,'osqp'))
+                        flag_file = fullfile(obj.opts_struct.output_dir, '_compiled_with_osqp.txt');
+                        compile_interface = ~exist(flag_file, 'file');
                     else
                         compile_interface = false;
                     end
@@ -115,6 +121,9 @@ classdef acados_ocp < handle
 
             if ( compile_interface )
                 ocp_compile_interface(obj.opts_struct);
+                disp('acados MEX interface compiled successfully')
+            else
+                disp('found compiled acados MEX interface')
             end
 
             % create C object
@@ -159,15 +168,15 @@ classdef acados_ocp < handle
 
 
         function set(varargin)
+            obj = varargin{1};
+            field = varargin{2};
+            value = varargin{3};
+            if ~isa(field, 'char')
+                error('field must be a char vector, use '' ''');
+            end
             if nargin==3
-                obj = varargin{1};
-                field = varargin{2};
-                value = varargin{3};
                 ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
             elseif nargin==4
-                obj = varargin{1};
-                field = varargin{2};
-                value = varargin{3};
                 stage = varargin{4};
                 ocp_set(obj.model_struct, obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
             else
@@ -178,13 +187,15 @@ classdef acados_ocp < handle
 
 
         function value = get(varargin)
+            obj = varargin{1};
+            field = varargin{2};
+            if ~isa(field, 'char')
+                error('field must be a char vector, use '' ''');
+            end
+
             if nargin==2
-                obj = varargin{1};
-                field = varargin{2};
                 value = ocp_get(obj.C_ocp, field);
             elseif nargin==3
-                obj = varargin{1};
-                field = varargin{2};
                 stage = varargin{3};
                 value = ocp_get(obj.C_ocp, field, stage);
             else
@@ -221,9 +232,16 @@ classdef acados_ocp < handle
                     end
                     fprintf('\n');
                 elseif strcmp(ocp_solver_string, 'sqp_rti')
-                    fprintf('\niter\tqp_status\tqp_iter\n');
+                    fprintf('\niter\tqp_status\tqp_iter');
+                    if size(stat,2)>3
+                        fprintf('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
+                    end
+                    fprintf('\n');
                     for jj=1:size(stat,1)
                         fprintf('%d\t%d\t\t%d', stat(jj,1), stat(jj,2), stat(jj,3));
+                        if size(stat,2)>3
+                            fprintf('\t%e\t%e\t%e\t%e', stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7));
+                        end
                         fprintf('\n');
                     end
                 end
