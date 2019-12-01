@@ -80,12 +80,6 @@ external_function_param_casadi * sim_impl_dae_fun;
 external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% endif %}
-{% if dims.npd > 0 %}
-external_function_casadi * p_constraint;
-{% endif %}
-{% if dims.npd_e > 0 %}
-external_function_casadi * p_constraint_e;
-{% endif %}
 {% endif %}
 {% if dims.nh > 0 %}
 external_function_casadi * h_constraint;
@@ -122,23 +116,23 @@ int {{ model.name }}_acados_sim_create() {
 
     external_function_param_casadi_create(sim_impl_dae_fun, {{ dims.np }});
 
-	  // external_function_param_casadi impl_dae_fun_jac_x_xdot_z;
-	  sim_impl_dae_fun_jac_x_xdot_z->casadi_fun = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z;
-	  sim_impl_dae_fun_jac_x_xdot_z->casadi_work = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_work;
-	  sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_in = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_sparsity_in;
-	  sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_out = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_sparsity_out;
-	  sim_impl_dae_fun_jac_x_xdot_z->casadi_n_in = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_n_in;
-	  sim_impl_dae_fun_jac_x_xdot_z->casadi_n_out = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_n_out;
+    // external_function_param_casadi impl_dae_fun_jac_x_xdot_z;
+    sim_impl_dae_fun_jac_x_xdot_z->casadi_fun = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z;
+    sim_impl_dae_fun_jac_x_xdot_z->casadi_work = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_work;
+    sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_in = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_sparsity_in;
+    sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_out = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_sparsity_out;
+    sim_impl_dae_fun_jac_x_xdot_z->casadi_n_in = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_n_in;
+    sim_impl_dae_fun_jac_x_xdot_z->casadi_n_out = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_n_out;
 
     external_function_param_casadi_create(sim_impl_dae_fun_jac_x_xdot_z, {{ dims.np }});
 
-	  // external_function_param_casadi impl_dae_jac_x_xdot_u_z;
-	  sim_impl_dae_jac_x_xdot_u_z->casadi_fun = &{{ model.name }}_impl_dae_jac_x_xdot_u_z;
-	  sim_impl_dae_jac_x_xdot_u_z->casadi_work = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_work;
-	  sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_in = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_sparsity_in;
-	  sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_out = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_sparsity_out;
-	  sim_impl_dae_jac_x_xdot_u_z->casadi_n_in = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_n_in;
-	  sim_impl_dae_jac_x_xdot_u_z->casadi_n_out = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_n_out;
+    // external_function_param_casadi impl_dae_jac_x_xdot_u_z;
+    sim_impl_dae_jac_x_xdot_u_z->casadi_fun = &{{ model.name }}_impl_dae_jac_x_xdot_u_z;
+    sim_impl_dae_jac_x_xdot_u_z->casadi_work = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_work;
+    sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_in = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_sparsity_in;
+    sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_out = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_sparsity_out;
+    sim_impl_dae_jac_x_xdot_u_z->casadi_n_in = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_n_in;
+    sim_impl_dae_jac_x_xdot_u_z->casadi_n_out = &{{ model.name }}_impl_dae_jac_x_xdot_u_z_n_out;
 
     external_function_param_casadi_create(sim_impl_dae_jac_x_xdot_u_z, {{ dims.np }});
 
@@ -235,7 +229,7 @@ int {{ model.name }}_acados_sim_create() {
 
 int {{ model.name }}_acados_sim_solve() {
 
-    // integrate dynamics using acados sim_solver 
+    // integrate dynamics using acados sim_solver
     int status = sim_solve({{ model.name }}_sim_solver, {{ model.name }}_sim_in, {{ model.name }}_sim_out);
     if (status != 0)
         printf("error in {{ model.name }}_acados_sim_solve()! Exiting.\n");
@@ -253,7 +247,7 @@ int {{ model.name }}_acados_sim_free() {
     sim_dims_destroy({{ model.name }}_sim_dims);
     sim_config_destroy({{ model.name }}_sim_config);
 
-    // free external function 
+    // free external function
     {% if solver_options.integrator_type == "IRK" %}
         external_function_param_casadi_free(sim_impl_dae_fun);
         external_function_param_casadi_free(sim_impl_dae_fun_jac_x_xdot_z);
@@ -262,7 +256,7 @@ int {{ model.name }}_acados_sim_free() {
         external_function_param_casadi_free(sim_forw_vde_casadi);
         external_function_param_casadi_free(sim_expl_ode_fun_casadi);
     {% endif %}
-    
+
     return 0;
 }
 
