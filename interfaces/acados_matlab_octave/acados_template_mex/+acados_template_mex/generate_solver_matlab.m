@@ -64,8 +64,19 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     %% render source template
     json_location = fullfile('..');
     
+    % main
     template_file = 'main.in.c';
     out_file = ['main_', model_name, '.c'];
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, t_renderer_location, json_location )
+
+    % make_main_mex
+    template_file = 'make_main_mex.in.m';
+    out_file = ['make_main_mex_', model_name, '.m'];
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, t_renderer_location, json_location )
+
+    % main for matlab/octave
+    template_file = 'main_mex.in.c';
+    out_file = ['main_mex_', model_name, '.c'];
     render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, t_renderer_location, json_location )
 
     % render solver template
