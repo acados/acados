@@ -52,7 +52,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         tera_path = acados_path + '/bin/'
     t_renderer_path = tera_path + 't_renderer'
     if not os.path.exists(t_renderer_path):
-        msg = '{} Not found.\n'.format(t_renderer_path)
+        msg =  '{} Not found.\n'.format(t_renderer_path)
         msg += 'In order to be able to successfully render C code templates,\n'
         msg += 'you need to download the t_renderer binaries for your platform from '
         msg += 'https://github.com/acados/tera_renderer/releases/ and\n'
