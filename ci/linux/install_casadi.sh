@@ -32,7 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-CASADI_VERSION='3.4.5';
+CASADI_VERSION='3.5.1';
 _CASADI_GITHUB_RELEASES="https://github.com/casadi/casadi/releases/download/${CASADI_VERSION}";
 CASADI_PYTHON_URL="${_CASADI_GITHUB_RELEASES}/casadi-linux-py35-v${CASADI_VERSION}-64bit.tar.gz";
 CASADI_MATLAB_URL="${_CASADI_GITHUB_RELEASES}/casadi-linux-matlabR2014b-v${CASADI_VERSION}.tar.gz";
