@@ -52,22 +52,22 @@ if LOCAL_TEST is True:
     INTEGRATOR_TYPE = 'IRK'
 else:
     parser = argparse.ArgumentParser(description='test Python interface on pendulum example.')
-    parser.add_argument('--FORMULATION', dest='FORMULATION', 
+    parser.add_argument('--FORMULATION', dest='FORMULATION',
                         default='LS',
                         help='FORMULATION: linear least-squares (LS) or nonlinear \
                                 least-squares (NLS) (default: LS)')
 
-    parser.add_argument('--QP_SOLVER', dest='QP_SOLVER', 
+    parser.add_argument('--QP_SOLVER', dest='QP_SOLVER',
                         default='PARTIAL_CONDENSING_HPIPM',
                         help='QP_SOLVER: PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_HPIPM, ' \
                                 'FULL_CONDENSING_HPIPM (default: PARTIAL_CONDENSING_HPIPM)')
 
-    parser.add_argument('--INTEGRATOR_TYPE', dest='INTEGRATOR_TYPE', 
+    parser.add_argument('--INTEGRATOR_TYPE', dest='INTEGRATOR_TYPE',
                         default='ERK',
                         help='INTEGRATOR_TYPE: explicit (ERK) or implicit (IRK) ' \
                                 ' Runge-Kutta (default: ERK)')
 
-    parser.add_argument('--SOLVER_TYPE', dest='SOLVER_TYPE', 
+    parser.add_argument('--SOLVER_TYPE', dest='SOLVER_TYPE',
                         default='SQP_RTI',
                         help='SOLVER_TYPE: (full step) sequential quadratic programming (SQP) or ' \
                                 ' real-time iteration (SQP-RTI) (default: SQP-RTI)')
@@ -102,10 +102,10 @@ else:
 # create render arguments
 ocp = acados_ocp_nlp()
 
-# export model 
+# export model
 model = export_ode_model()
 
-# set model_name 
+# set model_name
 ocp.model = model
 
 Tf = 2.0
@@ -117,11 +117,11 @@ N = 50
 
 # set ocp_nlp_dimensions
 nlp_dims     = ocp.dims
-nlp_dims.nx  = nx 
-nlp_dims.ny  = ny 
-nlp_dims.ny_e = ny_e 
+nlp_dims.nx  = nx
+nlp_dims.ny  = ny
+nlp_dims.ny_e = ny_e
 nlp_dims.nbx = 0
-nlp_dims.nbu = nu 
+nlp_dims.nbu = nu
 nlp_dims.nu  = model.u.size()[0]
 nlp_dims.N   = N
 
@@ -147,11 +147,11 @@ R = np.eye(1)
 R[0,0] = 1e0
 
 if FORMULATION == 'NLS':
-    nlp_cost.W = scipy.linalg.block_diag(R, Q) 
+    nlp_cost.W = scipy.linalg.block_diag(R, Q)
 else:
-    nlp_cost.W = scipy.linalg.block_diag(Q, R) 
+    nlp_cost.W = scipy.linalg.block_diag(Q, R)
 
-nlp_cost.W_e = Q 
+nlp_cost.W_e = Q
 
 Vx = np.zeros((ny, nx))
 Vx[0,0] = 1.0
@@ -176,16 +176,16 @@ nlp_cost.Vx_e = Vx_e
 if FORMULATION == 'NLS':
     x = SX.sym('x', 4, 1)
     u = SX.sym('u', 1, 1)
-    ocp.cost_r.expr = vertcat(u, x) 
-    ocp.cost_r.x = x 
-    ocp.cost_r.u = u 
-    ocp.cost_r.name = 'lin_res' 
-    ocp.cost_r.ny = nx + nu 
+    ocp.cost_r.expr = vertcat(u, x)
+    ocp.cost_r.x = x
+    ocp.cost_r.u = u
+    ocp.cost_r.name = 'lin_res'
+    ocp.cost_r.ny = nx + nu
 
     ocp.cost_r_e.expr = x
-    ocp.cost_r_e.x = x 
-    ocp.cost_r_e.name = 'lin_res' 
-    ocp.cost_r_e.ny = nx 
+    ocp.cost_r_e.x = x
+    ocp.cost_r_e.name = 'lin_res'
+    ocp.cost_r_e.ny = nx
 
 
 nlp_cost.yref  = np.zeros((ny, ))
@@ -231,13 +231,13 @@ for i in range(Nsim):
     # get solution
     x0 = acados_solver.get(0, "x")
     u0 = acados_solver.get(0, "u")
-    
+
     for j in range(nx):
         simX[i,j] = x0[j]
 
     for j in range(nu):
         simU[i,j] = u0[j]
-    
+
     # update initial condition
     x0 = acados_solver.get(1, "x")
 
@@ -263,5 +263,5 @@ else:
     simU_error = np.linalg.norm(test_data['simU'] - simU)
     if  simX_error > TEST_TOL or  simU_error > TEST_TOL:
         raise Exception("Python acados test failure with accuracies {:.2E} and {:.2E} ({:.2E} required) on pendulum example! Exiting.\n".format(simX_error, simU_error, TEST_TOL))
-    else: 
+    else:
         print('Python test passed with accuracy {:.2E}'.format(max(simU_error, simX_error)))

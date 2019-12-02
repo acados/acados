@@ -37,6 +37,10 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int acados_create();
 int acados_update_param(int stage, double *value, int np);
 int acados_solve();
@@ -49,6 +53,10 @@ ocp_nlp_config * acados_get_nlp_config();
 void * acados_get_nlp_opts();
 ocp_nlp_dims * acados_get_nlp_dims();
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 // ** global data **
 extern ocp_nlp_in * nlp_in;
 extern ocp_nlp_out * nlp_out;
@@ -59,7 +67,7 @@ extern ocp_nlp_config * nlp_config;
 extern ocp_nlp_dims * nlp_dims;
 {% if solver_options.integrator_type == "ERK" %}
 extern external_function_param_casadi * forw_vde_casadi;
-{% if solver_options.hessian_approx == "EXACT" %} 
+{% if solver_options.hessian_approx == "EXACT" %}
 extern external_function_param_casadi * hess_vde_casadi;
 extern external_function_param_casadi * hess_vde_casadi;
 {% endif %}
