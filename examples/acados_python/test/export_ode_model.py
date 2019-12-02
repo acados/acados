@@ -47,13 +47,13 @@ def export_ode_model():
     theta   = SX.sym('theta')
     v1      = SX.sym('v1')
     dtheta  = SX.sym('dtheta')
-    
+
     x = vertcat(x1, v1, theta, dtheta)
 
     # controls
     F = SX.sym('F')
     u = vertcat(F)
-    
+
     # xdot
     x1_dot      = SX.sym('x1_dot')
     theta_dot   = SX.sym('theta_dot')
@@ -61,19 +61,19 @@ def export_ode_model():
     dtheta_dot  = SX.sym('dtheta_dot')
 
     xdot = vertcat(x1_dot, theta_dot, v1_dot, dtheta_dot)
-    
+
     # algebraic variables
     z = []
 
     # parameters
     p = []
-    
-    # dynamics     
+
+    # dynamics
     denominator = M + m - m*cos(theta)*cos(theta)
     f_expl = vertcat(v1, dtheta, (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator, (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator))
-    
+
     f_impl = xdot - f_expl
-   
+
     model = acados_dae()
 
     model.f_impl_expr = f_impl
@@ -85,5 +85,4 @@ def export_ode_model():
     model.p = p
     model.name = model_name
 
-    return model 
-
+    return model

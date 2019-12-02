@@ -31,18 +31,19 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-
-from casadi import *
 import os
+from casadi import *
+from .utils import ALLOWED_CASADI_VERSIONS
 
 def generate_c_code_explicit_ode( model ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
-
-    if  casadi_version not in ('3.4.5', '3.4.0'):
-        # old casadi versions
-        raise Exception('Please download and install Casadi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
+    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
+        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
+        msg += 'to ensure compatibility with acados.\n'
+        msg += 'Version {} currently in use.'.format(casadi_version)
+        raise Exception(msg)
 
     # load model
     x = model.x
@@ -85,14 +86,14 @@ def generate_c_code_explicit_ode( model ):
     # TODO: Polish: get rid of SX.zeros
     if isinstance(f_expl, casadi.SX):
         vdeX = SX.zeros(nx,nx)
-    else: 
+    else:
         vdeX = MX.zeros(nx,nx)
 
     vdeX = vdeX + jtimes(f_expl,x,Sx)
 
     if isinstance(f_expl, casadi.SX):
         vdeP = SX.zeros(nx,nu) + jacobian(f_expl,u)
-    else: 
+    else:
         vdeP = MX.zeros(nx,nu) + jacobian(f_expl,u)
 
     vdeP = vdeP + jtimes(f_expl,x,Sp)
@@ -103,7 +104,7 @@ def generate_c_code_explicit_ode( model ):
 
     if isinstance(f_expl, casadi.SX):
         jacX = SX.zeros(nx,nx) + jacobian(f_expl,x)
-    else: 
+    else:
         jacX = MX.zeros(nx,nx) + jacobian(f_expl,x)
 
     adj = jtimes(f_expl, vertcat(x, u), lambdaX, True)
@@ -136,10 +137,10 @@ def generate_c_code_explicit_ode( model ):
 
     fun_name = model_name + '_expl_vde_forw'
     expl_vde_forw.generate(fun_name, casadi_opts)
-    
+
     fun_name = model_name + '_expl_vde_adj'
     expl_vde_adj.generate(fun_name, casadi_opts)
-    
+
     fun_name = model_name + '_expl_ode_hess'
     expl_ode_hess.generate(fun_name, casadi_opts)
     os.chdir('../..')

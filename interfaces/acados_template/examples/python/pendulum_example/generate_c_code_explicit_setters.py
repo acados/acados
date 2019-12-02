@@ -41,10 +41,10 @@ from ctypes import *
 # create render arguments
 ocp = acados_ocp_nlp()
 
-# export model 
+# export model
 model = export_ode_model()
 
-# set model_name 
+# set model_name
 ocp.model_name = model.name
 
 Tf = 1.0
@@ -56,13 +56,13 @@ N = 100
 
 # set ocp_nlp_dimensions
 
-ocp.set('dims_nx', nx) 
-ocp.set('dims_ny', ny) 
-ocp.set('dims_ny_e', ny_e) 
-ocp.set('dims_nbx', 0) 
-ocp.set('dims_nbu', nu) 
-ocp.set('dims_nu', model.u.size()[0]) 
-ocp.set('dims_N', N) 
+ocp.set('dims_nx', nx)
+ocp.set('dims_ny', ny)
+ocp.set('dims_ny_e', ny_e)
+ocp.set('dims_nbx', 0)
+ocp.set('dims_nbu', nu)
+ocp.set('dims_nu', model.u.size()[0])
+ocp.set('dims_N', N)
 
 # set weighting matrices
 Q = np.eye(4)
@@ -74,7 +74,7 @@ Q[3,3] = 1e-2
 R = np.eye(1)
 R[0,0] = 1e-2
 
-ocp.set('cost_W', scipy.linalg.block_diag(Q, R)) 
+ocp.set('cost_W', scipy.linalg.block_diag(Q, R))
 
 Vx = np.zeros((ny, nx))
 Vx[0,0] = 1.0
@@ -88,7 +88,7 @@ Vu = np.zeros((ny, nu))
 Vu[4,0] = 1.0
 ocp.set('cost_Vu', Vu)
 
-ocp.set('cost_W_e', Q) 
+ocp.set('cost_W_e', Q)
 
 Vx_e = np.zeros((ny_e, nx))
 Vx_e[0,0] = 1.0
@@ -143,13 +143,13 @@ for i in range(Nsim):
     # get solution
     x0 = acados_solver.get(0, "x")
     u0 = acados_solver.get(0, "u")
-    
+
     for j in range(nx):
         simX[i,j] = x0[j]
 
     for j in range(nu):
         simU[i,j] = u0[j]
-    
+
     # update initial condition
     x0 = acados_solver.get(1, "x")
 
@@ -172,4 +172,3 @@ plt.ylabel('theta')
 plt.xlabel('t')
 plt.grid(True)
 plt.show()
-
