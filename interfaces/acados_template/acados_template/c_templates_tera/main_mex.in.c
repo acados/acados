@@ -166,8 +166,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // free solver
     status = acados_free();
-    if (status) { 
-        mexPrintf("acados_free() returned status %d. \n", status); 
+    if (status)
+    {
+        mexPrintf("acados_free() returned status %d.\n", status);
     }
 
     return;

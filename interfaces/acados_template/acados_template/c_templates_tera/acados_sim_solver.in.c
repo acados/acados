@@ -73,7 +73,6 @@ external_function_param_casadi * sim_impl_dae_fun;
 external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% endif %}
-{% endif %}
 
 
 int {{ model.name }}_acados_sim_create() {
