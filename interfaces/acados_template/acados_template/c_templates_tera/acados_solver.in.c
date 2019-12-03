@@ -1371,3 +1371,4 @@ ocp_nlp_solver * acados_get_nlp_solver() { return  nlp_solver; }
 ocp_nlp_config * acados_get_nlp_config() { return  nlp_config; }
 void * acados_get_nlp_opts() { return  nlp_opts; }
 ocp_nlp_dims * acados_get_nlp_dims() { return  nlp_dims; }
+ocp_nlp_plan * acados_get_nlp_plan() { return  nlp_solver_plan; }

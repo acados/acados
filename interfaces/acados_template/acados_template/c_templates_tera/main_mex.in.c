@@ -80,7 +80,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     status = acados_create();
 
     if (status)
-    { 
+    {
         mexPrintf("acados_create() returned status %d. Exiting.\n", status); 
         exit(1);
     }
@@ -127,7 +127,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // solve ocp in loop
     for (int ii = 0; ii < NTIMINGS; ii++)
     {
-        // initialize solution
+        // initialize primal solution
         for (int i = 0; i <= nlp_dims->N; i++)
         {
             ocp_nlp_out_set(nlp_config, nlp_dims, nlp_out, i, "x", x_init);
