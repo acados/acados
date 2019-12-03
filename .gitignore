@@ -102,7 +102,7 @@ cmakelint
 *.srctrldb
 *.srctrlprj
 .vs
-examples/python/__pycache__/
+__pycache__
 build*
 *rti1401
 *.asv
