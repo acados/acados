@@ -38,19 +38,13 @@
 #include "acados/utils/print.h"
 #include "acados_c/sim_interface.h"
 #include "acados_c/external_function_interface.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"
 
-// blasfeo
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-
 // example specific
-
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 #include "acados_sim_solver_{{ model.name }}.h"
 
@@ -74,18 +68,11 @@ sim_solver  * {{model.name}}_sim_solver;
 {% if solver_options.integrator_type == "ERK" %}
 external_function_param_casadi * sim_forw_vde_casadi;
 external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% else %}
-{% if solver_options.integrator_type == "IRK" %}
+{% elif solver_options.integrator_type == "IRK" %}
 external_function_param_casadi * sim_impl_dae_fun;
 external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
 external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
 {% endif %}
-{% endif %}
-{% if dims.nh > 0 %}
-external_function_casadi * h_constraint;
-{% endif %}
-{% if dims.nh_e > 0 %}
-external_function_casadi * h_constraint_e;
 {% endif %}
 
 
@@ -116,7 +103,6 @@ int {{ model.name }}_acados_sim_create() {
 
     external_function_param_casadi_create(sim_impl_dae_fun, {{ dims.np }});
 
-    // external_function_param_casadi impl_dae_fun_jac_x_xdot_z;
     sim_impl_dae_fun_jac_x_xdot_z->casadi_fun = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z;
     sim_impl_dae_fun_jac_x_xdot_z->casadi_work = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_work;
     sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_in = &{{ model.name }}_impl_dae_fun_jac_x_xdot_z_sparsity_in;
@@ -227,6 +213,7 @@ int {{ model.name }}_acados_sim_create() {
     return status;
 }
 
+
 int {{ model.name }}_acados_sim_solve() {
 
     // integrate dynamics using acados sim_solver
@@ -236,6 +223,7 @@ int {{ model.name }}_acados_sim_solve() {
 
     return status;
 }
+
 
 int {{ model.name }}_acados_sim_free() {
 
@@ -260,21 +248,35 @@ int {{ model.name }}_acados_sim_free() {
     return 0;
 }
 
-sim_config  * {{ model.name }}_acados_get_sim_config() {
-    return {{ model.name }}_sim_config; };
 
-sim_in      * {{ model.name }}_acados_get_sim_in(){
-    return {{ model.name }}_sim_in; };
+/* getters pointers to C objects*/
+sim_config * {{ model.name }}_acados_get_sim_config()
+{
+    return {{ model.name }}_sim_config;
+};
 
-sim_out     * {{ model.name }}_acados_get_sim_out(){
-    return {{ model.name }}_sim_out; };
+sim_in * {{ model.name }}_acados_get_sim_in()
+{
+    return {{ model.name }}_sim_in;
+};
 
-void        * {{ model.name }}_acados_get_sim_dims(){
-    return {{ model.name }}_sim_dims; };
+sim_out * {{ model.name }}_acados_get_sim_out()
+{
+    return {{ model.name }}_sim_out;
+};
 
-sim_opts    * {{ model.name }}_acados_get_sim_opts(){
-    return {{ model.name }}_sim_opts; };
+void * {{ model.name }}_acados_get_sim_dims()
+{
+    return {{ model.name }}_sim_dims;
+};
 
-sim_solver  * {{ model.name }}_acados_get_sim_solver(){
-    return {{ model.name }}_sim_solver; };
+sim_opts * {{ model.name }}_acados_get_sim_opts()
+{
+    return {{ model.name }}_sim_opts;
+};
+
+sim_solver  * {{ model.name }}_acados_get_sim_solver()
+{
+    return {{ model.name }}_sim_solver;
+};
 

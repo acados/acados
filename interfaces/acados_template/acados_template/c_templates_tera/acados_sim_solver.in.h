@@ -68,14 +68,13 @@ extern sim_solver  * {{ model.name }}_sim_solver;
 extern external_function_param_casadi * sim_forw_vde_casadi;
 extern external_function_param_casadi * sim_expl_ode_fun_casadi;
 {% if solver_options.hessian_approx == "EXACT" %}
+// note: not used for simulation.
 extern external_function_param_casadi * sim_hess_vde_casadi;
 {% endif %}
-{% else %}
-{% if solver_options.integrator_type == "IRK" %}
+{% elif solver_options.integrator_type == "IRK" %}
 extern external_function_param_casadi * sim_impl_dae_fun;
 extern external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
 extern external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% endif %}
 {% endif %}
 
 #endif  // ACADOS_SIM_{{ model.name }}_H_
