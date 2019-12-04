@@ -79,6 +79,26 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     out_file = ['main_mex_', model_name, '.c'];
     render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, t_renderer_location, json_location )
 
+    % make_mex
+    template_file = 'make_mex.in.m';
+    out_file = ['make_mex_', model_name, '.m'];
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, t_renderer_location, json_location )
+
+    % MEX constructor
+    template_file = 'acados_mex_create.in.c';
+    out_file = ['acados_mex_create_', model_name, '.c'];
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, t_renderer_location, json_location )
+
+    % MEX destructor
+    template_file = 'acados_mex_free.in.c';
+    out_file = ['acados_mex_free_', model_name, '.c'];
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, t_renderer_location, json_location )
+
+    % MEX solve
+    template_file = 'acados_mex_solve.in.c';
+    out_file = ['acados_mex_solve_', model_name, '.c'];
+    render_file( acados_ocp_nlp_json_file, template_dir, template_file, out_file, t_renderer_location, json_location )
+
     % render solver template
     template_file = 'acados_solver.in.c';
     out_file = ['acados_solver_', model_name, '.c'];
