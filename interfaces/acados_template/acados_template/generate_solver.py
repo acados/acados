@@ -40,25 +40,12 @@ from .generate_c_code_nls_cost_e import *
 from .acados_ocp_nlp import *
 from ctypes import *
 from copy import deepcopy
+from .utils import ACADOS_PATH, get_tera
 
 def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
-    if os.environ.get('ACADOS_SOURCE_DIR') is None:
-        acados_template_path = os.path.dirname(os.path.abspath(__file__))
-        acados_path = acados_template_path + '/../../../'
-        tera_path = acados_path + '/bin/'
-    else:
-        acados_path = os.environ.get('ACADOS_SOURCE_DIR')
-        tera_path = acados_path + '/bin/'
-    t_renderer_path = tera_path + 't_renderer'
-    if not os.path.exists(t_renderer_path):
-        msg =  '{} Not found.\n'.format(t_renderer_path)
-        msg += 'In order to be able to successfully render C code templates,\n'
-        msg += 'you need to download the t_renderer binaries for your platform from '
-        msg += 'https://github.com/acados/tera_renderer/releases/ and\n'
-        msg += 'place them in <acados_root>/bin (please strip the '
-        msg += 'version and platform from the binaries as t_renderer-v0.0.20 -> t_renderer).'
-        raise Exception(msg)
+    # get tera renderer
+    tera_path = get_tera()
 
     model = acados_ocp.model
     if acados_ocp.solver_options.integrator_type == 'ERK':

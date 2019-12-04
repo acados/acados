@@ -31,4 +31,65 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
+import os, sys
+import urllib.request
+import shutil
+
 ALLOWED_CASADI_VERSIONS = ('3.5.1', '3.4.5', '3.4.0')
+TERA_VERSION = "0.0.20"
+
+ACADOS_PATH = os.environ.get('ACADOS_SOURCE_DIR')
+if not ACADOS_PATH:
+    acados_template_path = os.path.dirname(os.path.abspath(__file__))
+    acados_path = os.path.join(acados_template_path, '../../../')
+    ACADOS_PATH = os.path.realpath(acados_path)
+
+TERA_EXEC_PATH = os.path.join(ACADOS_PATH, 'bin/t_renderer')
+
+platform2tera = {
+    "linux": "linux",
+    "darwin": "osx",
+    "win32": "window.exe"
+}
+
+def get_tera():
+    tera_path = TERA_EXEC_PATH
+
+    if os.path.exists(tera_path) and os.access(tera_path, os.X_OK):
+        return tera_path
+
+    repo_url = "https://github.com/acados/tera_renderer/releases"
+    url = "{}/download/v{}/t_renderer-v{}-{}".format(
+        repo_url, TERA_VERSION, TERA_VERSION, platform2tera[sys.platform])
+
+    manual_install = 'For manual installation follow these instructions:\n'
+    manual_install += '1 Download binaries from {}\n'.format(url)
+    manual_install += '2 Copy them in {}/bin\n'.format(ACADOS_PATH)
+    manual_install += '3 Strip the version and platform from the binaries: '
+    manual_install += 'as t_renderer-v0.0.20-X -> t_renderer)\n'
+    manual_install += '4 Enable execution privilege on the file "t_renderer" with:\n'
+    manual_install += '"chmod +x {}"\n\n'.format(tera_path)
+
+    msg = "\n"
+    msg +=  'Tera template render executable not found!.\n'
+    msg += 'While looking in path: {}\n'.format(tera_path)
+    msg += 'In order to be able to render C code templates, '
+    msg += 'you need to download the tera renderer binaries from:\n'
+    msg += '{}\n\n'.format(repo_url)
+    msg += manual_install
+    msg += 'y/N? (press y to download tera or any key for manual installation)\n'
+
+    if input(msg) == 'y':
+        print("Dowloading {}".format(url))
+        with urllib.request.urlopen(url) as response, open(tera_path, 'wb') as out_file:
+            shutil.copyfileobj(response, out_file)
+        print("Successfully downloaded t_renderer")
+        os.chmod(tera_path, 0o755)
+        return tera_path
+
+    msg_cancel = "\nYou cancelled automatic download\n\n"
+    msg_cancel += manual_install
+    msg_cancel += "Once installed re-run your script\n\n"
+    print(msg_cancel)
+
+    sys.exit(1)
