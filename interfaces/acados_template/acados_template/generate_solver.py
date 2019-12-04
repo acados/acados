@@ -102,7 +102,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     ocp_nlp = dict2json(ocp_nlp)
 
     with open(json_file, 'w') as f:
-        json.dump(ocp_nlp, f, default=np_array_to_list)
+        json.dump(ocp_nlp, f, default=np_array_to_list, indent=4, sort_keys=True)
 
     with open(json_file, 'r') as f:
         ocp_nlp_json = json.load(f)
