@@ -71,25 +71,25 @@ def get_tera():
     manual_install += '"chmod +x {}"\n\n'.format(tera_path)
 
     msg = "\n"
-    msg +=  'Tera template render executable not found!.\n'
-    msg += 'While looking in path: {}\n'.format(tera_path)
-    msg += 'In order to be able to render C code templates, '
+    msg += 'Tera template render executable not found, '
+    msg += 'while looking in path:\n{}\n'.format(tera_path)
+    msg += 'In order to be able to render the templates, '
     msg += 'you need to download the tera renderer binaries from:\n'
     msg += '{}\n\n'.format(repo_url)
-    msg += manual_install
+    msg += 'Do you wish to set up Tera renderer automatically?\n'
     msg += 'y/N? (press y to download tera or any key for manual installation)\n'
 
     if input(msg) == 'y':
         print("Dowloading {}".format(url))
         with urllib.request.urlopen(url) as response, open(tera_path, 'wb') as out_file:
             shutil.copyfileobj(response, out_file)
-        print("Successfully downloaded t_renderer")
+        print("Successfully downloaded t_renderer.")
         os.chmod(tera_path, 0o755)
         return tera_path
 
-    msg_cancel = "\nYou cancelled automatic download\n\n"
+    msg_cancel = "\nYou cancelled automatic download.\n\n"
     msg_cancel += manual_install
-    msg_cancel += "Once installed re-run your script\n\n"
+    msg_cancel += "Once installed re-run your script.\n\n"
     print(msg_cancel)
 
     sys.exit(1)
