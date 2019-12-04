@@ -152,7 +152,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mexPrintf("\nsolved ocp %d times, solution printed above\n\n", NTIMINGS);
 
     if (status == ACADOS_SUCCESS)
-        mexPrintf("acdos_solve(): SUCCESS!\n");
+        mexPrintf("acados_solve(): SUCCESS!\n");
     else
         mexPrintf("acados_solve() failed with status %d.\n", status);
 

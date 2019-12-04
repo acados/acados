@@ -195,7 +195,7 @@ int main()
 
     if (status == ACADOS_SUCCESS)
     {
-        printf("acdos_solve(): SUCCESS!\n");
+        printf("acados_solve(): SUCCESS!\n");
     }
     else
     {
