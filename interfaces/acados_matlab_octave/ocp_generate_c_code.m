@@ -1,5 +1,6 @@
 function ocp_generate_c_code(obj)
-    % generate C code for CasADi functions
+    %% generate C code for CasADi functions
+    % dynamics
     if (strcmp(obj.model_struct.dyn_type, 'explicit'))
         generate_c_code_explicit_ode(obj.acados_ocp_nlp_json.model);
     elseif (strcmp(obj.model_struct.dyn_type, 'implicit'))
@@ -9,7 +10,6 @@ function ocp_generate_c_code(obj)
                 obj.acados_ocp_nlp_json.model, opts);
         end
     end
-
     % add checks for
     if ~strcmp( obj.model_struct.cost_type, 'linear_ls' ) || ...
         ~strcmp( obj.model_struct.cost_type_e, 'linear_ls' )
@@ -32,6 +32,18 @@ function ocp_generate_c_code(obj)
     elseif strcmp( obj.opts_struct.sim_method, 'irk_gnsf')
         error('mex templating does not support irk_gnsf integrator yet. Notice that it might still be possible to solve the OCP from MATLAB.');
         % TODO: implement
+    end
+
+    % TODO: implement nh > 0 , nh_e > 0
+    if (strcmp(obj.model_struct.constr_type, 'bgh') && obj.model_struct.dim_nh > 0)
+        error(['mex templating does only support general nonlinear constraints for now.',...
+            'Got dim_nh: %d, must be 0.\nNotice that it might still',...
+            'be possible to solve the OCP from MATLAB.\n'], obj.model_struct.dim_nh);
+    end
+    if (strcmp(obj.model_struct.constr_type_e, 'bgh') && obj.model_struct.dim_nh_e > 0)
+        error(['mex templating does only support general nonlinear constraints for now.',...
+            'Got dim_nh_e: %d, must be 0.\nNotice that it might still',...
+            'be possible to solve the OCP from MATLAB.'], obj.model_struct.dim_nh_e);
     end
 
     % set include and lib path
