@@ -205,13 +205,13 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
         # terminal constraints on outer fuction
         template_dir = 'c_generated_code/{}_phi_e_constraint/'.format(acados_ocp.con_phi_e.name)
         in_file = 'phi_e_constraint.in.h'
-        out_file =  '{}_phi_e_constraint.h'.format(acados_ocp.con_phi.name)
+        out_file =  '{}_phi_e_constraint.h'.format(acados_ocp.con_phi_e.name)
         render_template(in_file, out_file, template_dir)
 
         # terminal constraints on inner function
         template_dir = 'c_generated_code/{}_r_e_constraint/'.format(acados_ocp.con_phi_e.name)
         in_file = 'r_e_constraint.in.h'
-        out_file = '{}_r_e_constraint.h'.format(acados_ocp.con_phi.name)
+        out_file = '{}_r_e_constraint.h'.format(acados_ocp.con_phi_e.name)
         render_template(in_file, out_file, template_dir)
 
     # nonlinear constraints
