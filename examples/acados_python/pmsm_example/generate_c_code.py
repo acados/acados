@@ -1066,7 +1066,7 @@ print("iq0 = ", x0Start[1])
 simXR[0,0] = x0Start[0]
 simXR[0,1] = x0Start[1]
 
-xvec = nmp.matrix([[x0Start[0]],[x0Start[1]]])
+xvec = nmp.array([[x0Start[0]], [x0Start[1]]])
 
 # compute warm-start
 for i in range(WARMSTART_ITERS):
@@ -1096,12 +1096,12 @@ for i in range(Nsim):
     for j in range(nu):
         simU[i,j] = u0[j]
 
-    uvec = nmp.matrix([[u0[0]],[u0[1]]])
+    uvec = nmp.array([[u0[0]], [u0[1]]])
 
     # real Simulation 
-    A = nmp.matrix([[-R_m/L_d, w_val*L_q/L_d],[-w_val*L_d/L_q, -R_m/L_q]],dtype=float)
-    B = nmp.matrix([[1.0/L_d,0.0],[0.0,1.0/L_q]],dtype=float)
-    f = nmp.matrix([[0.0],[-K_m*w_val/L_q]],dtype=float)
+    A = nmp.array([[-R_m/L_d, w_val*L_q/L_d],[-w_val*L_d/L_q, -R_m/L_q]],dtype=float)
+    B = nmp.array([[1.0/L_d,0.0],[0.0,1.0/L_q]],dtype=float)
+    f = nmp.array([[0.0],[-K_m*w_val/L_q]],dtype=float)
 
     # Euler
     #========================
@@ -1115,25 +1115,25 @@ for i in range(Nsim):
     #========================
     Ad = scipy.linalg.expm(A*Ts_sim)
     invA = nmp.linalg.inv(A)
-    Bd = invA*(Ad-nmp.eye(2))*B
-    fd = invA*(Ad-nmp.eye(2))*f
-    xvec = nmp.squeeze((Ad*xvec + Bd*uvec + fd).flatten())  
+    Bd = nmp.dot(invA, nmp.dot((Ad-nmp.eye(2)), B))
+    fd = nmp.dot(invA, nmp.dot((Ad-nmp.eye(2)), f))
+    xvec = nmp.dot(Ad,xvec) + nmp.dot(Bd, uvec) + fd
+    # xvec_arg = nmp.zeros((2,0))
     xvec_arg = nmp.zeros((2,))
     xvec_arg[0] = xvec[0,0]
-    xvec_arg[1] = xvec[0,1]
+    xvec_arg[1] = xvec[1,0]
 
     print("States= ", xvec)
     print("Controls= ", uvec)
     print("\n")
 
     # update initial condition xk+1
-    import pdb; pdb.set_trace()
     acados_solver.constraints.set(0, "lbx",  xvec_arg)
     acados_solver.constraints.set(0, "ubx",  xvec_arg)
 
-    for i in range(N):
-        acados_solver.cost.set(0, "zl",  nlp_cost.zl)
-    # acados_solver.cost.set(N, "W",  nlp_cost.W_e)
+    for j in range(N):
+        acados_solver.cost.set(j, "W",  nlp_cost.W)
+    acados_solver.cost.set(N, "W",  nlp_cost.W_e)
 
     simXR[i+1,0] = xvec[0]
     simXR[i+1,1] = xvec[1]

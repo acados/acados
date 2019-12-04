@@ -447,8 +447,12 @@ class acados_solver_constraints:
 
         self.shared_lib.ocp_nlp_constraint_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field, dims_data)
          
-        if value_.shape != tuple(dims): 
-            raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_.shape))
+        value_shape = value_.shape
+        if len(value_shape) == 1:
+            value_shape = (value_shape[0], 0)
+
+        if value_shape != tuple(dims): 
+            raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
 
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
@@ -480,9 +484,13 @@ class acados_solver_cost:
         dims_data = cast(dims.ctypes.data, POINTER(c_int))
 
         self.shared_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field, dims_data)
+
+        value_shape = value_.shape
+        if len(value_shape) == 1:
+            value_shape = (value_shape[0], 0)
          
-        if value_.shape != tuple(dims): 
-            raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_.shape))
+        if value_shape != tuple(dims): 
+            raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
 
         value_data = cast(value_.ctypes.data, POINTER(c_double))
         value_data_p = cast((value_data), c_void_p)
