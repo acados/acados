@@ -31,75 +31,75 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-function build_mex()
+function make_main_mex_{{ model.name }}()
 
-opts.output_dir = pwd;
+    opts.output_dir = pwd;
 
-% get acados folder
-acados_folder = getenv('ACADOS_INSTALL_DIR');
+    % get acados folder
+    acados_folder = getenv('ACADOS_INSTALL_DIR');
 
-% set paths
-acados_include = ['-I' fullfile(acados_folder, 'include')];
-template_lib_include = ['-l' 'acados_solver_{{ model.name }}'];
-template_lib_path = ['-L' fullfile(pwd)];
+    % set paths
+    acados_include = ['-I' fullfile(acados_folder, 'include')];
+    template_lib_include = ['-l' 'acados_solver_{{ model.name }}'];
+    template_lib_path = ['-L' fullfile(pwd)];
 
-acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
-external_include = ['-I', fullfile(acados_folder, 'external')];
-blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
-hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];
+    acados_lib_path = ['-L' fullfile(acados_folder, 'lib')];
+    external_include = ['-I', fullfile(acados_folder, 'external')];
+    blasfeo_include = ['-I', fullfile(acados_folder, 'external', 'blasfeo', 'include')];
+    hpipm_include = ['-I', fullfile(acados_folder, 'external', 'hpipm', 'include')];
 
-mex_names = { ...
-    'main_mex_{{ model.name }}' ...
-};
+    mex_names = { ...
+        'main_mex_{{ model.name }}' ...
+    };
 
-mex_files = cell(length(mex_names), 1);
-for k=1:length(mex_names)
-    mex_files{k} = fullfile([mex_names{k}, '.c']);
-end
+    mex_files = cell(length(mex_names), 1);
+    for k=1:length(mex_names)
+        mex_files{k} = fullfile([mex_names{k}, '.c']);
+    end
 
-%% octave C flags
-if is_octave()
-    if ~exist(fullfile(opts.output_dir, 'cflags_octave.txt'), 'file')
-        diary(fullfile(opts.output_dir, 'cflags_octave.txt'));
-        diary on
-        mkoctfile -p CFLAGS
-        diary off
+    %% octave C flags
+    if is_octave()
+        if ~exist(fullfile(opts.output_dir, 'cflags_octave.txt'), 'file')
+            diary(fullfile(opts.output_dir, 'cflags_octave.txt'));
+            diary on
+            mkoctfile -p CFLAGS
+            diary off
+            input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
+            cflags_tmp = fscanf(input_file, '%[^\n]s');
+            fclose(input_file);
+            if ~ismac()
+                cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
+            else
+                cflags_tmp = [cflags_tmp, ' -std=c99'];
+            end
+            input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');
+            fprintf(input_file, '%s', cflags_tmp);
+            fclose(input_file);
+        end
+        % read cflags from file
         input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
         cflags_tmp = fscanf(input_file, '%[^\n]s');
         fclose(input_file);
-        if ~ismac()
-            cflags_tmp = [cflags_tmp, ' -std=c99 -fopenmp'];
-        else
-            cflags_tmp = [cflags_tmp, ' -std=c99'];
-        end
-        input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'w');
-        fprintf(input_file, '%s', cflags_tmp);
-        fclose(input_file);
+        setenv('CFLAGS', cflags_tmp);
     end
-    % read cflags from file
-    input_file = fopen(fullfile(opts.output_dir, 'cflags_octave.txt'), 'r');
-    cflags_tmp = fscanf(input_file, '%[^\n]s');
-    fclose(input_file);
-    setenv('CFLAGS', cflags_tmp);
-end
 
-%% compile mex
-for ii=1:length(mex_files)
-    disp(['compiling ', mex_files{ii}])
-    if is_octave()
-%        mkoctfile -p CFLAGS
-        mex(acados_include, template_lib_include, external_include, blasfeo_include, hpipm_include,...
-        acados_lib_path, template_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
-    else
-        if ismac()
-            FLAGS = 'CFLAGS=$CFLAGS -std=c99';
+    %% compile mex
+    for ii=1:length(mex_files)
+        disp(['compiling ', mex_files{ii}])
+        if is_octave()
+    %        mkoctfile -p CFLAGS
+            mex(acados_include, template_lib_include, external_include, blasfeo_include, hpipm_include,...
+            acados_lib_path, template_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
         else
-            FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
+            if ismac()
+                FLAGS = 'CFLAGS=$CFLAGS -std=c99';
+            else
+                FLAGS = 'CFLAGS=$CFLAGS -std=c99 -fopenmp';
+            end
+            mex(FLAGS, acados_include, template_lib_include, external_include, blasfeo_include, hpipm_include,...
+                acados_lib_path, template_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
         end
-        mex(FLAGS, acados_include, template_lib_include, external_include, blasfeo_include, hpipm_include,...
-             acados_lib_path, template_lib_path, '-lacados', '-lhpipm', '-lblasfeo', mex_files{ii})
     end
-end
 
 
 end
