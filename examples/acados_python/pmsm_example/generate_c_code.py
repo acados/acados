@@ -1128,12 +1128,12 @@ for i in range(Nsim):
     print("\n")
 
     # update initial condition xk+1
-    acados_solver.constraints.set(0, "lbx",  xvec_arg)
-    acados_solver.constraints.set(0, "ubx",  xvec_arg)
+    acados_solver.constraints_set(0, "lbx",  xvec_arg)
+    acados_solver.constraints_set(0, "ubx",  xvec_arg)
 
     for j in range(N):
-        acados_solver.cost.set(j, "W",  nlp_cost.W)
-    acados_solver.cost.set(N, "W",  nlp_cost.W_e)
+        acados_solver.cost_set(j, "W",  nlp_cost.W)
+    acados_solver.cost_set(N, "W",  nlp_cost.W_e)
 
     simXR[i+1,0] = xvec[0]
     simXR[i+1,1] = xvec[1]
