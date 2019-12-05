@@ -21,10 +21,10 @@ function generate_c_code_explicit_ode( model )
 import casadi.*
 
     casadi_version = CasadiMeta.version();
-    if strcmp(casadi_version(1:3),'3.4') % require casadi 3.4.x
+    if ( strcmp(casadi_version(1:3),'3.4') || strcmp(casadi_version(1:3),'3.5')) % require casadi 3.4.x
         casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
     else % old casadi versions
-        error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
+        error('Please provide CasADi version 3.4 or 3.5 to ensure compatibility with acados')
     end
 
 %% load model

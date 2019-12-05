@@ -31,25 +31,30 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef {{ con_h_e.name }}_P_E_CONSTRAINT
-#define {{ con_h_e.name }}_P_E_CONSTRAINT
+// system
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+// acados
+// #include "acados_c/ocp_nlp_interface.h"
+#include "acados_solver_{{ model.name }}.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+// mex
+#include "mex.h"
 
-{% if dims.npd > 0 %}
-// implicit ODE
-int {{ con_h_e.name }}_p_e_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ con_h_e.name }}_p_e_constraint_work(int *, int *, int *, int *);
-const int *{{ con_h_e.name }}_p_e_constraint_sparsity_in(int);
-const int *{{ con_h_e.name }}_p_e_constraint_sparsity_out(int);
-int {{ con_h_e.name }}_p_e_constraint_n_in();
-int {{ con_h_e.name }}_p_e_constraint_n_out();
-{% endif %}
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
 
-#endif  // {{ con_h_e.name }}_P_CONSTRAINT
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+
+    int status = 0;
+
+    status = acados_solve();
+    // if (status)
+    // {
+        mexPrintf("acados_solve() returned status %d.\n", status);
+    // }
+
+    return;
+
+}

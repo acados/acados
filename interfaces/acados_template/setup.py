@@ -49,10 +49,9 @@ setup(name='acados_template',
    packages = find_packages(),
    include_package_data = True,
    install_requires=[
-      'jinja2',
       'numpy',
       'scipy',
-      'casadi==3.4',
+      'casadi==3.5.1',
       'matplotlib'
    ],
    package_data={'': [

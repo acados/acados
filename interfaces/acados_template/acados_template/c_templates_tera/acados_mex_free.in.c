@@ -31,50 +31,34 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef ACADOS_SIM_{{ model.name }}_H_
-#define ACADOS_SIM_{{ model.name }}_H_
+// system
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+// acados
+// #include "acados_c/ocp_nlp_interface.h"
+#include "acados_solver_{{ model.name }}.h"
 
-#include "acados_c/sim_interface.h"
-#include "acados_c/external_function_interface.h"
+// mex
+#include "mex.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-int {{ model.name }}_acados_sim_create();
-int {{ model.name }}_acados_sim_solve();
-int {{ model.name }}_acados_sim_free();
 
-sim_config  * {{ model.name }}_acados_get_sim_config();
-sim_in      * {{ model.name }}_acados_get_sim_in();
-sim_out     * {{ model.name }}_acados_get_sim_out();
-void        * {{ model.name }}_acados_get_sim_dims();
-sim_opts    * {{ model.name }}_acados_get_sim_opts();
-sim_solver  * {{ model.name }}_acados_get_sim_solver();
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
 
-// ** global data **
-extern sim_config  * {{ model.name }}_sim_config;
-extern sim_in      * {{ model.name }}_sim_in;
-extern sim_out     * {{ model.name }}_sim_out;
-extern void        * {{ model.name }}_sim_dims;
-extern sim_opts    * {{ model.name }}_sim_opts;
-extern sim_solver  * {{ model.name }}_sim_solver;
+    int status = 0;
 
-#ifdef __cplusplus
+    mexPrintf("\nin mex_acados_free\n");
+
+    // free solver
+    status = acados_free();
+    if (status)
+    {
+        mexPrintf("acados_free() returned status %d.\n", status);
+    }
+
+    return;
+
 }
-#endif
 
-{% if solver_options.integrator_type == "ERK" %}
-extern external_function_param_casadi * sim_forw_vde_casadi;
-extern external_function_param_casadi * sim_expl_ode_fun_casadi;
-{% if solver_options.hessian_approx == "EXACT" %}
-// note: not used for simulation.
-extern external_function_param_casadi * sim_hess_vde_casadi;
-{% endif %}
-{% elif solver_options.integrator_type == "IRK" %}
-extern external_function_param_casadi * sim_impl_dae_fun;
-extern external_function_param_casadi * sim_impl_dae_fun_jac_x_xdot_z;
-extern external_function_param_casadi * sim_impl_dae_jac_x_xdot_u_z;
-{% endif %}
-
-#endif  // ACADOS_SIM_{{ model.name }}_H_

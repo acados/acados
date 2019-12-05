@@ -37,6 +37,10 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int acados_create();
 int acados_update_param(int stage, double *value, int np);
 int acados_solve();
@@ -48,8 +52,14 @@ ocp_nlp_solver * acados_get_nlp_solver();
 ocp_nlp_config * acados_get_nlp_config();
 void * acados_get_nlp_opts();
 ocp_nlp_dims * acados_get_nlp_dims();
+ocp_nlp_plan * acados_get_nlp_plan();
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 // ** global data **
+// acados objects
 extern ocp_nlp_in * nlp_in;
 extern ocp_nlp_out * nlp_out;
 extern ocp_nlp_solver * nlp_solver;
@@ -57,39 +67,40 @@ extern void * nlp_opts;
 extern ocp_nlp_plan * nlp_solver_plan;
 extern ocp_nlp_config * nlp_config;
 extern ocp_nlp_dims * nlp_dims;
+
+// external functions
 {% if solver_options.integrator_type == "ERK" %}
 extern external_function_param_casadi * forw_vde_casadi;
-{% if solver_options.hessian_approx == "EXACT" %} 
+{% if solver_options.hessian_approx == "EXACT" %}
 extern external_function_param_casadi * hess_vde_casadi;
 extern external_function_param_casadi * hess_vde_casadi;
-{% endif %}
-{% else %}
-{% if solver_options.integrator_type == "IRK" %}
+{%- endif %}
+{% elif solver_options.integrator_type == "IRK" %}
 extern external_function_param_casadi * impl_dae_fun;
 extern external_function_param_casadi * impl_dae_fun_jac_x_xdot_z;
 extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
-{% endif %}
-{% endif %}
-{% if constraints.constr_type == "BGP" %}
+{%- endif %}
+
+{%- if constraints.constr_type == "BGP" %}
 extern external_function_param_casadi * phi_constraint;
 // extern external_function_param_casadi * r_constraint;
+{% elif constraints.constr_type == "BGH" %}
+extern external_function_param_casadi * h_constraint;
 {% endif %}
+
 {% if constraints.constr_type_e == "BGP" %}
 extern external_function_param_casadi phi_e_constraint;
 // extern external_function_param_casadi r_e_constraint;
-{% endif %}
-{% if constraints.constr_type == "BGH" %}
-extern external_function_param_casadi * h_constraint;
-{% endif %}
-{% if constraints.constr_type_e == "BGH" %}
+{% elif constraints.constr_type_e == "BGH" %}
 extern external_function_param_casadi h_e_constraint;
-{% endif %}
+{%- endif %}
+
 {% if cost.cost_type == "NONLINEAR_LS" %}
 extern external_function_param_casadi * r_cost;
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
 extern external_function_param_casadi r_e_cost;
-{% endif %}
+{%- endif %}
 
 
 #endif  // ACADOS_SOLVER_{{ model.name }}_H_

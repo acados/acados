@@ -31,28 +31,30 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-
-from casadi import *
 import os
+from casadi import *
+from .utils import ALLOWED_CASADI_VERSIONS
 
 def generate_c_code_constraint_e( constraint ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
 
-    if  casadi_version not in ('3.4.5', '3.4.0'):
-        # old casadi versions
-        raise Exception('Please download and install Casadi 3.4.0 to ensure compatibility with acados. Version ' + casadi_version + ' currently in use.')
+    if casadi_version not in (ALLOWED_CASADI_VERSIONS):
+        msg =  'Please download and install CasADi {} '.format(" or ".join(ALLOWED_CASADI_VERSIONS))
+        msg += 'to ensure compatibility with acados.\n'
+        msg += 'Version {} currently in use.'.format(casadi_version)
+        raise Exception(msg)
 
     # load constraint variables and expression
     x = constraint.x
     r = constraint.r
     p = constraint.p
-    nh = constraint.nh 
-    nphi = constraint.nphi 
-    if nh > 0 and nphi > 0: 
+    nh = constraint.nh
+    nphi = constraint.nphi
+    if nh > 0 and nphi > 0:
         raise Exception('cannot have both nh_e and phi_e > 0.')
-    
+
     if nh > 0 or nphi > 0:
 
         con_name = constraint.name
