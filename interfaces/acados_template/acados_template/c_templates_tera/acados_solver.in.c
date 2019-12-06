@@ -656,11 +656,11 @@ int acados_create()
         {%- endif %}
     }
 
-    {% if constraints.constr_type_e == "BGP" %}
+    {%- if constraints.constr_type_e == "BGP" %}
     nlp_solver_plan->nlp_constraints[N] = BGP;
     {% else %}
     nlp_solver_plan->nlp_constraints[N] = BGH;
-    {% endif %}
+    {%- endif %}
 
     {% if solver_options.hessian_approx == "EXACT" %} 
     nlp_solver_plan->regularization = CONVEXIFICATION;
@@ -1045,8 +1045,7 @@ int acados_create()
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lh", lh);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "uh", uh);
     }
-    {%- endif %}
-    {% if constraints.constr_type == "BGP" %}
+    {%- elif constraints.constr_type == "BGP" %}
     for (int i = 0; i < N; ++i)
     {
         // convex-composite constraints for stages 0 to N-1
@@ -1223,6 +1222,13 @@ int acados_create()
     {%- endif %}
     {% endif %}{# if dims.np #}
 
+    status = ocp_nlp_precompute(nlp_solver, nlp_in, nlp_out);
+
+    if (status != ACADOS_SUCCESS)
+    {
+        printf("\nocp_precompute failed!\n\n");
+    }
+
     return status;
 }
 
@@ -1279,8 +1285,7 @@ int acados_update_params(int stage, double *p, int np) {
             exit(1);
         }
         phi_constraint[stage].set_param(phi_constraint+stage, p);
-        {% endif %}
-        {% if constraints.constr_type == "BGH" and dims.nh > 0 %}
+        {% elif constraints.constr_type == "BGH" and dims.nh > 0 %}
         casadi_np = (h_constraint+stage)->np;
         if (casadi_np != np) {
             printf("acados_update_params: trying to set %i parameters "
@@ -1290,7 +1295,7 @@ int acados_update_params(int stage, double *p, int np) {
         h_constraint[stage].set_param(h_constraint+stage, p);
         {% endif %}
     }
-    else
+    else // stage == N
     {
     {% if constraints.constr_type_e == "BGP" %}
     // casadi_np = (&r_e_constraint)->np;
