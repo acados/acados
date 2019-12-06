@@ -36,7 +36,7 @@ function check = sim_check_dims(model)
 check = 1;
 
 if isfield(model, 'sym_x')
-    if ~isempty(model.sym_x)
+    if all(size(model.sym_x))
         nx = length(model.sym_x);
     else
         nx = 0;
@@ -48,7 +48,7 @@ if isfield(model, 'sym_x')
 end
 
 if isfield(model, 'sym_u')
-    if ~isempty(model.sym_u)
+    if all(size(model.sym_u))
         nu = length(model.sym_u);
     else
         nu = 0;
@@ -61,7 +61,7 @@ end
 
 
 if isfield(model, 'sym_p')
-    if ~isempty(model.sym_p)
+    if all(size(model.sym_p))
         np = length(model.sym_p);
     else
         np = 0;
@@ -74,7 +74,7 @@ end
 
 
 if isfield(model, 'sym_z')
-    if ~isempty(model.sym_z)
+    if all(size(model.sym_z))
         nz = length(model.sym_z);
     else
         nz = 0;
