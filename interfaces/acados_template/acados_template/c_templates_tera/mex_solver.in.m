@@ -35,7 +35,7 @@ classdef {{ model.name }}_mex_solver < handle
 
     properties
         C_ocp
-        % C_ocp_ext_fun
+        C_ocp_ext_fun
     end % properties
 
 
@@ -45,9 +45,7 @@ classdef {{ model.name }}_mex_solver < handle
         % constructor
         function obj = {{ model.name }}_mex_solver()
             make_mex_{{ model.name }}();
-            obj.C_ocp = acados_mex_create_{{ model.name }}();
-            % TODO: get all external function pointers
-            % obj.C_ocp_ext_fun = zeros(1,1);
+            [obj.C_ocp, obj.C_ocp_ext_fun] = acados_mex_create_{{ model.name }}();
         end
 
         % destructor

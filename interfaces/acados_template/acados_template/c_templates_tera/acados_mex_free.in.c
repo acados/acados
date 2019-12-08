@@ -36,22 +36,18 @@
 #include <stdio.h>
 #include <string.h>
 // acados
-// #include "acados_c/ocp_nlp_interface.h"
 #include "acados_solver_{{ model.name }}.h"
 
 // mex
 #include "mex.h"
 
 
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-
     int status = 0;
 
-    mexPrintf("\nin mex_acados_free\n");
+    // mexPrintf("\nin mex_acados_free\n");
 
-    // free solver
     status = acados_free();
     if (status)
     {
@@ -59,6 +55,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 
     return;
-
 }
 
