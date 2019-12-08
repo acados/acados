@@ -54,8 +54,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
     /* RHS */
-    const mxArray *matlab_model = prhs[0];
-    const mxArray *C_ocp = prhs[2];
+    const mxArray *C_ocp = prhs[1];
     // plan
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "plan" ) );
     ocp_nlp_plan *plan = (ocp_nlp_plan *) ptr[0];
@@ -78,16 +77,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ptr = (long long *) mxGetData( mxGetField( C_ocp, 0, "solver" ) );
     ocp_nlp_solver *solver = (ocp_nlp_solver *) ptr[0];
 
-    const mxArray *C_ext_fun_pointers = prhs[3];
+    const mxArray *C_ext_fun_pointers = prhs[2];
     // field
-    char *field = mxArrayToString( prhs[4] );
+    char *field = mxArrayToString( prhs[3] );
     // value
-    double *value = mxGetPr( prhs[5] );
+    double *value = mxGetPr( prhs[4] );
 
     // for checks
-    int matlab_size = (int) mxGetNumberOfElements( prhs[5] );
-    int nrow = (int) mxGetM( prhs[5] );
-    int ncol = (int) mxGetN( prhs[5] );
+    int matlab_size = (int) mxGetNumberOfElements( prhs[4] );
+    int nrow = (int) mxGetM( prhs[4] );
+    int ncol = (int) mxGetN( prhs[4] );
 
     // mexPrintf("\nocp_set: %s, matlab_size %d\n", field, matlab_size);
 
@@ -97,14 +96,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // stage
     int s0, se;
-    if (nrhs==6)
+    if (nrhs==5)
     {
         s0 = 0;
         se = N;
     }
-    else if (nrhs==7)
+    else if (nrhs==6)
     {
-        s0 = mxGetScalar( prhs[6] );
+        s0 = mxGetScalar( prhs[5] );
         if (s0 > N)
         {
             sprintf(buffer, "ocp_set: N < specified stage = %d\n", s0);
@@ -335,7 +334,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // initializations
     else if (!strcmp(field, "init_x"))
     {
-        if (nrhs!=6)
+        if (nrhs!=5)
             MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
 
         acados_size = (N+1) * nx;
@@ -347,7 +346,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "init_u"))
     {
-        if (nrhs!=6)
+        if (nrhs!=5)
             MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
 
         acados_size = N*nu;
@@ -364,7 +363,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (type == IRK)
         {
             int nz = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "z");
-            if (nrhs!=6)
+            if (nrhs!=5)
                 MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
 
             acados_size = N*nz;
@@ -386,7 +385,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (type == IRK)
         {
             int nx = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "x");
-            if (nrhs!=6)
+            if (nrhs!=5)
                 MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
 
             acados_size = N*nx;
@@ -407,9 +406,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         sim_solver_t type = sim_plan.sim_solver;
         if (type == GNSF)
         {
-            // int nx = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "x");
-            int nout = mxGetScalar( mxGetField( matlab_model, 0, "dim_gnsf_nout" ) );
-            if (nrhs!=6)
+            int nout = ocp_nlp_dims_get_from_attr(config, dims, out, 0, "init_gnsf_phi");
+
+            if (nrhs!=5)
                 MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
 
             acados_size = N*nout;
@@ -426,7 +425,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (!strcmp(field, "init_pi"))
     {
-        if (nrhs!=6)
+        if (nrhs!=5)
             MEX_SETTER_NO_STAGE_SUPPORT(fun_name, field)
 
         acados_size = N*nx;
@@ -457,7 +456,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 // mexPrintf("ocp_set p: jj %d ext_fun_param_ptr %p \n", jj, ext_fun_param_ptr);
                 if (ext_fun_param_ptr!=0)
                 {
-                    if (nrhs==6)
+                    if (nrhs==5)
                     {
                         for (int kk=0; kk<NN[jj]; kk++)
                         {
@@ -466,9 +465,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                             (ext_fun_param_ptr+kk)->set_param(ext_fun_param_ptr+kk, value);
                         }
                     }
-                    else if (nrhs==7)
+                    else if (nrhs==6)
                     {
-                        int stage = mxGetScalar( prhs[6] );
+                        int stage = mxGetScalar( prhs[5] );
                         if (stage>=Nf_sum & stage<Nf_sum+NN[jj])
                         {
                             acados_size = (ext_fun_param_ptr+stage)->np;
