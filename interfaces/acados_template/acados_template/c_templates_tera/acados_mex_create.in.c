@@ -72,28 +72,29 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     void *nlp_opts = acados_get_nlp_opts();
 
     mexPrintf("acados: got pointer to objectes!\n");
-    
-
 
     // field names of output struct
-    char *fieldnames[7];
-    fieldnames[0] = (char*)mxMalloc(50);
-    fieldnames[1] = (char*)mxMalloc(50);
-    fieldnames[2] = (char*)mxMalloc(50);
-    fieldnames[3] = (char*)mxMalloc(50);
-    fieldnames[4] = (char*)mxMalloc(50);
-    fieldnames[5] = (char*)mxMalloc(50);
-    fieldnames[6] = (char*)mxMalloc(50);
+    char *fieldnames[8];
+    fieldnames[0] = (char*) mxMalloc(50);
+    fieldnames[1] = (char*) mxMalloc(50);
+    fieldnames[2] = (char*) mxMalloc(50);
+    fieldnames[3] = (char*) mxMalloc(50);
+    fieldnames[4] = (char*) mxMalloc(50);
+    fieldnames[5] = (char*) mxMalloc(50);
+    fieldnames[6] = (char*) mxMalloc(50);
+    fieldnames[7] = (char*) mxMalloc(50);
 
-    memcpy(fieldnames[0],"plan",sizeof("plan"));
-    memcpy(fieldnames[1],"config",sizeof("config"));
-    memcpy(fieldnames[2],"dims",sizeof("dims"));
-    memcpy(fieldnames[3],"opts",sizeof("opts"));
-    memcpy(fieldnames[4],"in",sizeof("in"));
-    memcpy(fieldnames[5],"out",sizeof("out"));
-    memcpy(fieldnames[6],"solver",sizeof("solver"));
+    memcpy(fieldnames[0],"config",sizeof("config"));
+    memcpy(fieldnames[1],"dims",sizeof("dims"));
+    memcpy(fieldnames[2],"opts",sizeof("opts"));
+    memcpy(fieldnames[3],"in",sizeof("in"));
+    memcpy(fieldnames[4],"out",sizeof("out"));
+    memcpy(fieldnames[5],"solver",sizeof("solver"));
+    memcpy(fieldnames[6],"sens_out",sizeof("sens_out"));
+    memcpy(fieldnames[7],"plan",sizeof("plan"));
+
     // create output struct
-    plhs[0] = mxCreateStructMatrix(1, 1, 7, (const char **) fieldnames);
+    plhs[0] = mxCreateStructMatrix(1, 1, 8, (const char **) fieldnames);
 
     mxFree( fieldnames[0] );
     mxFree( fieldnames[1] );
@@ -102,6 +103,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxFree( fieldnames[4] );
     mxFree( fieldnames[5] );
     mxFree( fieldnames[6] );
+    mxFree( fieldnames[7] );
 
     // MEX: config, dims, opts, in, out, solver, sens_out, plan
     // plan
@@ -146,11 +148,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) nlp_solver;
     mxSetField(plhs[0], 0, "solver", solver_mat);
 
+    // TODO: sens_out not actually implemented in templates..
     // sens_out
-    // mxArray *sens_out_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    // l_ptr = mxGetData(sens_out_mat);
-    // l_ptr[0] = (long long) sens_out;
-    // mxSetField(plhs[0], 0, "sens_out", sens_out_mat);
+    mxArray *sens_out_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(sens_out_mat);
+    l_ptr[0] = (long long) 1;
+    mxSetField(plhs[0], 0, "sens_out", sens_out_mat);
 
     return;
 }
