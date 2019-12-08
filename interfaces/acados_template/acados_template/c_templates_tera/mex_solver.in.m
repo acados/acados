@@ -72,10 +72,10 @@ classdef {{ model.name }}_mex_solver < handle
                 error('field must be a char vector, use '' ''');
             end
             if nargin==3
-                ocp_set(obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
+                ocp_set(obj.C_ocp, obj.C_ocp_ext_fun, field, value);
             elseif nargin==4
                 stage = varargin{4};
-                ocp_set(obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
+                ocp_set(obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
             else
                 disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
             end
@@ -150,7 +150,6 @@ classdef {{ model.name }}_mex_solver < handle
         %     end
 
         % end
-
 
     end % methods
 

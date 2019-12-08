@@ -151,15 +151,12 @@ classdef acados_ocp < handle
         end
 
 
-
         function generate_c_code(obj)
             % set up acados_ocp_nlp_json
             obj.acados_ocp_nlp_json = set_up_acados_ocp_nlp_json(obj);
             % render templated code
             ocp_generate_c_code(obj)
         end
-
-
 
 
         function eval_param_sens(obj, field, stage, index)
@@ -175,10 +172,10 @@ classdef acados_ocp < handle
                 error('field must be a char vector, use '' ''');
             end
             if nargin==3
-                ocp_set(obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value);
+                ocp_set(obj.C_ocp, obj.C_ocp_ext_fun, field, value);
             elseif nargin==4
                 stage = varargin{4};
-                ocp_set(obj.opts_struct, obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
+                ocp_set(obj.C_ocp, obj.C_ocp_ext_fun, field, value, stage);
             else
                 disp('acados_ocp.set: wrong number of input arguments (2 or 3 allowed)');
             end
@@ -265,8 +262,6 @@ classdef acados_ocp < handle
 
 
     end % methods
-
-
 
 end % class
 
