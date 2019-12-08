@@ -280,6 +280,65 @@ class acados_solver:
 
         self.acados_ocp = acados_ocp
 
+    def cost_set(self, stage_, field_, value_):
+        # cast value_ to avoid conversion issues
+        value_ = value_.astype(float)
+
+        field = field_
+        field = field.encode('utf-8')
+
+        stage = c_int(stage_)
+        self.shared_lib.ocp_nlp_cost_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
+        self.shared_lib.ocp_nlp_cost_dims_get_from_attr.restype = c_int
+
+        dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+        dims_data = cast(dims.ctypes.data, POINTER(c_int))
+
+        self.shared_lib.ocp_nlp_cost_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field, dims_data)
+
+        value_shape = value_.shape
+        if len(value_shape) == 1:
+            value_shape = (value_shape[0], 0)
+         
+        if value_shape != tuple(dims): 
+            raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
+
+        value_data = cast(value_.ctypes.data, POINTER(c_double))
+        value_data_p = cast((value_data), c_void_p)
+
+        self.shared_lib.ocp_nlp_cost_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_cost_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
+
+    def constraints_set(self, stage_, field_, value_):
+        # cast value_ to avoid conversion issues
+        value_ = value_.astype(float)
+
+        field = field_
+        field = field.encode('utf-8')
+
+        stage = c_int(stage_)
+        self.shared_lib.ocp_nlp_constraint_dims_get_from_attr.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, POINTER(c_int)]
+        self.shared_lib.ocp_nlp_constraint_dims_get_from_attr.restype = c_int
+
+        dims = np.ascontiguousarray(np.zeros((2,)), dtype=np.intc)
+        dims_data = cast(dims.ctypes.data, POINTER(c_int))
+
+        self.shared_lib.ocp_nlp_constraint_dims_get_from_attr(self.nlp_config, self.nlp_dims, self.nlp_out, stage_, field, dims_data)
+         
+        value_shape = value_.shape
+        if len(value_shape) == 1:
+            value_shape = (value_shape[0], 0)
+
+        if value_shape != tuple(dims): 
+            raise Exception('acados_solver.set(): mismatching dimension for field "{}" with dimension {} (you have {})'.format(field_, tuple(dims), value_shape))
+
+        value_data = cast(value_.ctypes.data, POINTER(c_double))
+        value_data_p = cast((value_data), c_void_p)
+
+        self.shared_lib.ocp_nlp_constraints_model_set.argtypes = [c_void_p, c_void_p, c_void_p, c_int, c_char_p, c_void_p]
+        self.shared_lib.ocp_nlp_constraints_model_set(self.nlp_config, self.nlp_dims, self.nlp_in, stage, field, value_data_p);
+
+
     def solve(self):
         status = self.shared_lib.acados_solve()
         return status
