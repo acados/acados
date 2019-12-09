@@ -1006,7 +1006,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     {
         if (mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" )!=NULL)
         {
-            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_opts, 0, "param_scheme_shooting_nodes" ) );
+            int matlab_size = (int) mxGetNumberOfElements( mxGetField( matlab_opts, 0,
+                                                            "param_scheme_shooting_nodes" ) );
             int acados_size = N+1;
             MEX_DIM_CHECK_VEC(fun_name, "param_scheme_shooting_nodes", matlab_size, acados_size);
 
