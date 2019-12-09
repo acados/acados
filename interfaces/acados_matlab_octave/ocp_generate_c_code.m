@@ -160,6 +160,9 @@ function ocp_generate_c_code(obj)
 
     %% dump JSON file
     json_string = jsonencode(obj.acados_ocp_nlp_json);
+    json_string = strrep(json_string, ',', sprintf(',\r'));
+    json_string = strrep(json_string, '[{', sprintf('[\r{\r'));
+    json_string = strrep(json_string, '}]', sprintf('\r}\r]'));
     fid = fopen('acados_ocp_nlp.json', 'w');
     if fid == -1, error('Cannot create JSON file'); end
     fwrite(fid, json_string, 'char');

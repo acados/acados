@@ -46,6 +46,8 @@ classdef {{ model.name }}_mex_solver < handle
         function obj = {{ model.name }}_mex_solver()
             make_mex_{{ model.name }}();
             [obj.C_ocp, obj.C_ocp_ext_fun] = acados_mex_create_{{ model.name }}();
+            % to have path to destructor when changing directory
+            addpath('.')
         end
 
         % destructor
@@ -60,8 +62,7 @@ classdef {{ model.name }}_mex_solver < handle
             acados_mex_solve_{{ model.name }}();
         end
 
-        % TODO: make this work
-        % set
+        % set -- borrowed from MEX interface
         function set(varargin)
             obj = varargin{1};
             field = varargin{2};
@@ -80,7 +81,7 @@ classdef {{ model.name }}_mex_solver < handle
         end
 
 
-        % get
+        % get -- borrowed from MEX interface
         function value = get(varargin)
             % usage:
             % obj.get(field, value, [stage])
@@ -100,54 +101,54 @@ classdef {{ model.name }}_mex_solver < handle
             end
         end
 
-% TODO: make thsi work, outsource into function in MEX proto
-        % function print(varargin)
-        %     if nargin < 2
-        %         field = 'stat';
-        %     else
-        %         field = varargin{2};
-        %     end
 
-        %     obj = varargin{1};
-        %     ocp_solver_string = obj.opts_struct.nlp_solver;
+        % print
+        function print(varargin)
+            if nargin < 2
+                field = 'stat';
+            else
+                field = varargin{2};
+            end
 
-        %     if strcmp(field, 'stat')
-        %         stat = obj.get('stat');
-        %         if strcmp(ocp_solver_string, 'sqp')
-        %             fprintf('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter');
-        %             if size(stat,2)>7
-        %                 fprintf('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
-        %             end
-        %             fprintf('\n');
-        %             for jj=1:size(stat,1)
-        %                 fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(jj,1), stat(jj,2), stat(jj,3), stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7));
-        %                 if size(stat,2)>7
-        %                     fprintf('\t%e\t%e\t%e\t%e', stat(jj,8), stat(jj,9), stat(jj,10), stat(jj,11));
-        %                 end
-        %                 fprintf('\n');
-        %             end
-        %             fprintf('\n');
-        %         elseif strcmp(ocp_solver_string, 'sqp_rti')
-        %             fprintf('\niter\tqp_status\tqp_iter');
-        %             if size(stat,2)>3
-        %                 fprintf('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
-        %             end
-        %             fprintf('\n');
-        %             for jj=1:size(stat,1)
-        %                 fprintf('%d\t%d\t\t%d', stat(jj,1), stat(jj,2), stat(jj,3));
-        %                 if size(stat,2)>3
-        %                     fprintf('\t%e\t%e\t%e\t%e', stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7));
-        %                 end
-        %                 fprintf('\n');
-        %             end
-        %         end
+            obj = varargin{1};
 
-        %     else
-        %         fprintf('unsupported field in function print of acados_ocp, got %s', field);
-        %         keyboard
-        %     end
+            if strcmp(field, 'stat')
+                stat = obj.get('stat');
+                {%- if solver_options.nlp_solver_type == "SQP" %}
+                fprintf('\niter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tqp_stat\tqp_iter');
+                if size(stat,2)>7
+                    fprintf('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
+                end
+                fprintf('\n');
+                for jj=1:size(stat,1)
+                    fprintf('%d\t%e\t%e\t%e\t%e\t%d\t%d', stat(jj,1), stat(jj,2), stat(jj,3), stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7));
+                    if size(stat,2)>7
+                        fprintf('\t%e\t%e\t%e\t%e', stat(jj,8), stat(jj,9), stat(jj,10), stat(jj,11));
+                    end
+                    fprintf('\n');
+                end
+                fprintf('\n');
+                {%- else %}
+                fprintf('\niter\tqp_status\tqp_iter');
+                if size(stat,2)>3
+                    fprintf('\tqp_res_stat\tqp_res_eq\tqp_res_ineq\tqp_res_comp');
+                end
+                fprintf('\n');
+                for jj=1:size(stat,1)
+                    fprintf('%d\t%d\t\t%d', stat(jj,1), stat(jj,2), stat(jj,3));
+                    if size(stat,2)>3
+                        fprintf('\t%e\t%e\t%e\t%e', stat(jj,4), stat(jj,5), stat(jj,6), stat(jj,7));
+                    end
+                    fprintf('\n');
+                end
+                {% endif %}
 
-        % end
+            else
+                fprintf('unsupported field in function print of acados_ocp.print, got %s', field);
+                keyboard
+            end
+
+        end
 
     end % methods
 

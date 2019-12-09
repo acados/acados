@@ -244,7 +244,7 @@ classdef acados_ocp < handle
                 end
 
             else
-                fprintf('unsupported field in function print of acados_ocp, got %s', field);
+                fprintf('unsupported field in function print of acados_ocp.print, got %s', field);
                 keyboard
             end
 
