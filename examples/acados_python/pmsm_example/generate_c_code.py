@@ -686,16 +686,16 @@ nlp_dims.N = N
 nlp_cost = ocp.cost
 
 Q = nmp.eye(nx)
-Q[0,0] = wd*Weight_TUNING*Tf/N
-Q[1,1] = wq*Weight_TUNING*Tf/N
+Q[0,0] = wd*Weight_TUNING
+Q[1,1] = wq*Weight_TUNING
 
 Q_e = nmp.eye(nx)
 Q_e[0,0] = wd*Weight_E_TUNING*Tf/N
 Q_e[1,1] = wq*Weight_E_TUNING*Tf/N
 
 R = nmp.eye(nu)
-R[0,0] = INPUT_REG*Tf/N
-R[1,1] = INPUT_REG*Tf/N
+R[0,0] = INPUT_REG
+R[1,1] = INPUT_REG
 
 nlp_cost.W = scipy.linalg.block_diag(Q, R)   # weight matrix
 nlp_cost.W_e = Q_e                           # weight matrix for Mayer term

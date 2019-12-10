@@ -313,12 +313,12 @@ nlp_dims.N    = N
 # set weighting matrices
 nlp_cost = ra.cost
 Q = nmp.eye(nx)
-Q[0,0] = 5e2*Tf/N
-Q[1,1] = 5e2*Tf/N
+Q[0,0] = 5e2
+Q[1,1] = 5e2
 
 R = nmp.eye(nu)
-R[0,0] = 1e-4*Tf/N
-R[1,1] = 1e-4*Tf/N
+R[0,0] = 1e-4
+R[1,1] = 1e-4
 # R[0,0] = 1e1
 # R[1,1] = 1e1
 
