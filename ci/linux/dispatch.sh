@@ -66,10 +66,6 @@ elif [ "${SECTION}" = 'install' ]; then
     # Prepare ctest with Matlab/Octave interface
     if [[ "${ACADOS_OCTAVE}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]]; then
         # Export paths
-        # MATLAB_TEST_FOLDER=${ACADOS_SOURCE_DIR}/examples/acados_matlab_octave/test/build;
-        # PENDULUM_FOLDER=${ACADOS_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model/build;
-        # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MATLAB_TEST_FOLDER:$PENDULUM_FOLDER;
-
         pushd examples/acados_matlab_octave/pendulum_on_cart_model;
             MODEL_FOLDER=${MODEL_FOLDER:-"./build"}
             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
@@ -84,6 +80,13 @@ elif [ "${SECTION}" = 'install' ]; then
         source "${SCRIPT_DIR}/install_python_dependencies.sh";
         pushd examples/acados_python/test;
             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
+        popd;
+    fi
+
+    if [[ "${ACADOS_DOCS}" = 'ON' ]] ;
+    then
+        pushd docs;
+            pip install -r requirements.txt;
         popd;
     fi
 

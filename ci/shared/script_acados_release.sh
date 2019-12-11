@@ -92,6 +92,13 @@ function build_acados {
         popd;
     fi
 
+    if [[ "${ACADOS_DOCS}" = 'ON' ]] ;
+    then
+        pushd docs;
+            make;
+        popd;
+    fi
+
 	# Run ctest
 	# TODO: test matlab/python
 	cmake -E chdir build ctest -V; # use -V for full output # --output-on-failure for less

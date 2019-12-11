@@ -75,6 +75,8 @@ option(DEV_MATLAB "Developer Matlab Interface" OFF)
 option(ACADOS_MATLAB "The Matlab Interface" OFF)
 option(ACADOS_OCTAVE "The Octave Interface" OFF)
 option(ACADOS_PYTHON "Python Interface" OFF)
+# Docs
+option(ACADOS_DOCS "acados documentation" OFF)
 
 # Set custom path
 set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
