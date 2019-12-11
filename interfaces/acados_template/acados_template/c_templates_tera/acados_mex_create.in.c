@@ -39,7 +39,6 @@
 
 // acados
 #include "acados/utils/print.h"
-#include "acados/utils/math.h"
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_solver_{{ model.name }}.h"
 
@@ -73,12 +72,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // mexPrintf("acados: got pointer to objectes!\n");
 
     // field names of output struct
-    int fields_ocp = 8;
-    int fields_ext_fun = 11;
-    int nfields = MAX(fields_ext_fun, fields_ocp);
-    char *fieldnames[nfields];
+    #define FIELDS_OCP 8
+    #define FIELDS_EXT_FUN 11
+    #define MAX_FIELDS 11
+    char *fieldnames[MAX_FIELDS];
 
-    for (int i = 0; i < nfields; i++)
+    for (int i = 0; i < MAX_FIELDS; i++)
     {
         fieldnames[i] = (char*) mxMalloc(50);
     }
@@ -145,7 +144,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) 1;
     mxSetField(plhs[0], 0, "sens_out", sens_out_mat);
 
-/* store external funciton pointers */
+    /* store external funciton pointers */
     memcpy(fieldnames[0],"forw_vde",sizeof("forw_vde"));
     memcpy(fieldnames[1],"hess_vde",sizeof("hess_vde"));
     memcpy(fieldnames[2],"impl_dae_fun",sizeof("impl_dae_fun"));
@@ -159,10 +158,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[10],"r_cost_e",sizeof("r_cost_e"));
 
     // create output struct - C_ocp_ext_fun
-    plhs[1] = mxCreateStructMatrix(1, 1, nfields, (const char **) fieldnames);
+    plhs[1] = mxCreateStructMatrix(1, 1, MAX_FIELDS, (const char **) fieldnames);
 
 
-    for (int i = 0; i < nfields; i++)
+    for (int i = 0; i < MAX_FIELDS; i++)
     {
         mxFree( fieldnames[i] );
     }
