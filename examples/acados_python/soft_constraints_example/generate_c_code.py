@@ -155,6 +155,10 @@ Q[3,3] = 1e-2
 R = np.eye(1)
 R[0,0] = 1e0
 
+unscale = N/Tf
+Q = Q * unscale
+R = R * unscale
+
 nlp_cost.W = scipy.linalg.block_diag(Q, R) 
 
 Vx = np.zeros((ny, nx))
@@ -169,7 +173,7 @@ Vu = np.zeros((ny, nu))
 Vu[4,0] = 1.0
 nlp_cost.Vu = Vu
 
-nlp_cost.W_e = Q 
+nlp_cost.W_e = Q/unscale
 
 Vx_e = np.zeros((ny_e, nx))
 Vx_e[0,0] = 1.0
@@ -182,10 +186,10 @@ nlp_cost.Vx_e = Vx_e
 nlp_cost.yref  = np.zeros((ny, ))
 nlp_cost.yref_e = np.zeros((ny_e, ))
 
-nlp_cost.zl = 500*np.ones((1,))
-nlp_cost.Zl = 0*np.ones((1,))
-nlp_cost.zu = 500*np.ones((1,))
-nlp_cost.Zu = 0*np.ones((1,))
+nlp_cost.zl = 500*np.ones((1,)) * unscale
+nlp_cost.Zl = 0*np.ones((1,)) * unscale
+nlp_cost.zu = 500*np.ones((1,)) * unscale
+nlp_cost.Zu = 0*np.ones((1,)) * unscale
 
 nlp_cost.zl_e = 5000*np.ones((1,))
 nlp_cost.Zl_e = 0*np.ones((1,))

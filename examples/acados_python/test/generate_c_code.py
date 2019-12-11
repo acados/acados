@@ -152,16 +152,16 @@ Q[3,3] = 1e-2
 R = np.eye(1)
 R[0,0] = 1e0
 
-# unscale = N/Tf
-# Q = Q * unscale
-# R = R * unscale
+unscale = N/Tf
+Q = Q * unscale
+R = R * unscale
 
 if FORMULATION == 'NLS':
     nlp_cost.W = scipy.linalg.block_diag(R, Q)
 else:
     nlp_cost.W = scipy.linalg.block_diag(Q, R)
 
-nlp_cost.W_e = Q
+nlp_cost.W_e = Q/unscale
 
 Vx = np.zeros((ny, nx))
 Vx[0,0] = 1.0
