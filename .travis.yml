@@ -57,11 +57,10 @@ matrix:
         - ACADOS_EXAMPLES="OFF"
         - ACADOS_UNIT_TESTS="OFF"
 
-    - name: Linux Gcc4.9 - Octave interface + coverage
+    - name: Linux Gcc4.9 - Octave interface
       env:
-        - DEPLOY_NAME="linux-octave-coverage-gcc49"
+        - DEPLOY_NAME="linux octave gcc4.9"
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-        - COVERAGE="lcov"
         - ACADOS_OCTAVE="ON"
 
     - name: Linux Clang

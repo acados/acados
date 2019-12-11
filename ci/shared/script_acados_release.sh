@@ -32,7 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.;
 #
 
-COVERAGE="${COVERAGE:-}";
+# COVERAGE="${COVERAGE:-}";
 
 TERA_RENDERER_VERSION='0.0.20';
 _TERA_RENDERER_GITHUB_RELEASES="https://github.com/acados/tera_renderer/releases/download/v${TERA_RENDERER_VERSION}/";
