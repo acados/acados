@@ -63,12 +63,10 @@ elif [ "${SECTION}" = 'install' ]; then
     fi
 
     # Prepare ctest with Matlab/Octave interface
-    if [[ "${ACADOS_OCTAVE}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]]; then
+    if "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ||
+        [[ "${ACADOS_OCTAVE}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
+    then
         # Export paths
-        # MATLAB_TEST_FOLDER=${ACADOS_SOURCE_DIR}/examples/acados_matlab_octave/test/build;
-        # PENDULUM_FOLDER=${ACADOS_SOURCE_DIR}/examples/acados_matlab_octave/pendulum_on_cart_model/build;
-        # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MATLAB_TEST_FOLDER:$PENDULUM_FOLDER;
-
         pushd examples/acados_matlab_octave/pendulum_on_cart_model;
             MODEL_FOLDER=${MODEL_FOLDER:-"./build"}
             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ACADOS_INSTALL_DIR/lib:$MODEL_FOLDER
