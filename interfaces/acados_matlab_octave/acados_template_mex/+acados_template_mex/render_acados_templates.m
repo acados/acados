@@ -1,4 +1,4 @@
-function generate_solver_matlab(acados_ocp_nlp_json_file)
+function render_acados_templates(acados_ocp_nlp_json_file)
 
     acados_root_dir = getenv('ACADOS_INSTALL_DIR');
     acados_template_folder = fullfile(acados_root_dir,...
@@ -10,7 +10,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     else
         t_renderer_location = fullfile(acados_root_dir,'bin','t_renderer');
     end
-    
+
     if ~exist( t_renderer_location, 'file' )
         set_up_t_renderer()
     end
@@ -89,7 +89,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
 
     % header files
     chdir([model_name, '_model']);
-    
+
     template_file = 'model.in.h';
     out_file = [model_name, '_model.h'];
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
@@ -138,30 +138,9 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
     template_file = 'make_sfun.in.m';
     out_file = 'make_sfun.m';
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-   
-    fprintf('Successfully generated acados solver!\n');
 
-    %% build main file
-    if isunix || ismac 
-        % compile if on Mac or Unix platform
-        [ status, result ] = system('make');
-        if status
-            cd ..
-            error('building templated code failed.\nGot status %d, result: %s',...
-                  status, result);
-        end
-        [ status, result ] = system('make shared_lib');
-        if status
-            cd ..
-            error('building templated code as shared library failed.\nGot status %d, result: %s',...
-                  status, result);
-        end
-    else
-        disp(['Commandline compilation of generated C code not yet supported under Windows.', ...
-            'Please consider building the code in the c_generated_code folder from Windows Subsystem for Linux.'])
-    end
-    chdir('..');
-    fprintf('Successfully built main file!\n');
+    fprintf('Successfully generated acados solver!\n');
+    cd ..
 
 end
 
@@ -173,7 +152,7 @@ function render_file( json_fullfile, template_dir, template_file, out_file, ...
     os_cmd = [t_renderer_location, ' "',...
         template_dir, '"', ' ', '"', template_file, '"', ' ', '"',...
         json_fullfile, '"', ' ', '"', out_file, '"'];
-    
+
     [ status, result ] = system(os_cmd);
     if status
         cd ..

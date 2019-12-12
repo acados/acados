@@ -186,8 +186,8 @@ function ocp_generate_c_code(obj)
     if fid == -1, error('Cannot create JSON file'); end
     fwrite(fid, json_string, 'char');
     fclose(fid);
-    % render templated C code
-    % old call (Python + Jinja)
-    % acados_template_mex.generate_solver('acados_ocp_nlp.json', '/home/andrea/.acados_t/bin/python3')
-    acados_template_mex.generate_solver_matlab('acados_ocp_nlp.json')
+    %% render templated code
+    acados_template_mex.render_acados_templates('acados_ocp_nlp.json')
+    %% build main
+    acados_template_mex.compile_main()
 end
