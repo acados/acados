@@ -118,7 +118,7 @@ function ocp_generate_c_code(obj)
     for i = 1:numel(fields)
         if strcmp(constr_l.(fields{i}){1}, 'ndarray')
             if length(constr_l.(fields{i}){2}) == 1
-                this_dims = [dims.(constr_l.(fields{i}){2}{1}), 1];
+                this_dims = [1, dims.(constr_l.(fields{i}){2}{1})];
             else
                 this_dims = [dims.(constr_l.(fields{i}){2}{1}), dims.(constr_l.(fields{i}){2}{1})];
             end
@@ -141,7 +141,7 @@ function ocp_generate_c_code(obj)
     for i = 1:numel(fields)
         if strcmp(cost_l.(fields{i}){1}, 'ndarray')
             if length(cost_l.(fields{i}){2}) == 1
-                this_dims = [dims.(cost_l.(fields{i}){2}{1}), 1];
+                this_dims = [1, dims.(cost_l.(fields{i}){2}{1})];
             else
                 this_dims = [dims.(cost_l.(fields{i}){2}{1}), dims.(cost_l.(fields{i}){2}{2})];
             end
