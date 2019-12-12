@@ -10,7 +10,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
         t_renderer_location = fullfile(getenv('ACADOS_INSTALL_DIR'),'bin','t_renderer');
     end
     
-    if ~isfile( t_renderer_location )
+    if ~exist( t_renderer_location, 'file' )
 
         message = ['\nDear acados user, we could not find t_renderer binaries,',...
             '\n which are needed to export templated C code from ',...
@@ -148,7 +148,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
         chdir('..');
     end
 
-    if(acados_ocp.dims.nh > 0)
+    if (acados_ocp.dims.nh > 0)
         dir_name = [acados_ocp.con_h.name, '_h_constraint'];
         if~(exist(dir_name, 'dir'))
             mkdir(dir_name);
@@ -182,7 +182,7 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
    
     fprintf('Successfully generated acados solver!\n');
 
-    % build generated code
+    %% build generated code
     if isunix || ismac 
         % compile if on Mac or Unix platform
         [ status, result ] = system('make');
@@ -222,11 +222,9 @@ function render_file( acados_ocp_nlp_json_file, template_dir, template_file, out
         cd ..
         error('rendering %s failed.\n command: %s\n returned status %d, got result:\n%s\n\n',...
             template_file, os_cmd, status, result);
-%     else
-%         disp(['Redering ' template_file ': success!']);
     end
-    % this should return status != 0, maybe fix in tera renderer?
-    if contains( result, 'Error' )
+    % NOTE: this should return status != 0, maybe fix in tera renderer?
+    if ~isempty(strfind( result, 'Error' ))
         cd ..
         error('rendering %s failed.\n command: %s\n returned status %d, got result: %s',...
             template_file, os_cmd, status, result);

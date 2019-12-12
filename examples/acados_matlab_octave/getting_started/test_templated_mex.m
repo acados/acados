@@ -1,3 +1,4 @@
+warning('off')
 minimal_example_ocp;
 u_ref = ocp.get('u');
 x_ref = ocp.get('x');
@@ -15,9 +16,9 @@ x_t = t_ocp.get('x');
 
 
 % comparison
+format short e
 err_u = max(abs(u_ref - u_t))
 err_ = max(max(abs(x_ref - x_t)))
 cd ..
-keyboard
 clear all
 
