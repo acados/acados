@@ -102,12 +102,12 @@ function ocp_generate_c_code(obj)
     %% load JSON layout
     acados_folder = getenv('ACADOS_INSTALL_DIR');
     json_layout_filename = fullfile(acados_folder, 'interfaces','acados_template','acados_template','acados_layout.json')
-    if is_octave()
-        addpath(fullfile(acados_folder, 'external', 'jsonlab'))
-        acados_layout = loadjson(fileread(json_layout_filename));
-    else % Matlab
-        acados_layout = jsondecode(fileread(json_layout_filename));
-    end
+    % if is_octave()
+    addpath(fullfile(acados_folder, 'external', 'jsonlab'))
+    acados_layout = loadjson(fileread(json_layout_filename));
+    % else % Matlab
+    %     acados_layout = jsondecode(fileread(json_layout_filename));
+    % end
     dims = obj.acados_ocp_nlp_json.dims;
 
 
@@ -166,7 +166,7 @@ function ocp_generate_c_code(obj)
     obj.acados_ocp_nlp_json.cost = cost;
 
     %% dump JSON file
-    if is_octave()
+    % if is_octave()
         % savejson does not work for classes!
         % -> consider making the acados_ocp_nlp_json properties structs directly.
         ocp_json_struct = struct(obj.acados_ocp_nlp_json);
@@ -176,18 +176,15 @@ function ocp_generate_c_code(obj)
         ocp_json_struct.solver_options = struct(ocp_json_struct.solver_options);
 
         json_string = savejson('',ocp_json_struct, 'ForceRootName', 0);
-    else % Matlab
-        json_string = jsonencode(obj.acados_ocp_nlp_json);
-    end
-    json_string = strrep(json_string, ',', sprintf(',\r'));
-    json_string = strrep(json_string, '[{', sprintf('[\r{\r'));
-    json_string = strrep(json_string, '}]', sprintf('\r}\r]'));
+    % else % Matlab
+    %     json_string = jsonencode(obj.acados_ocp_nlp_json);
+    % end
     fid = fopen('acados_ocp_nlp.json', 'w');
     if fid == -1, error('Cannot create JSON file'); end
     fwrite(fid, json_string, 'char');
     fclose(fid);
     %% render templated code
     acados_template_mex.render_acados_templates('acados_ocp_nlp.json')
-    %% build main
+    %% compile main
     acados_template_mex.compile_main()
 end

@@ -49,11 +49,11 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     end
 
     %% load json data
-    if is_octave()
-        acados_ocp = loadjson(fileread(acados_ocp_nlp_json_file));
-    else % Matlab
-        acados_ocp = jsondecode(fileread(acados_ocp_nlp_json_file));
-    end
+    % if is_octave()
+    acados_ocp = loadjson(fileread(acados_ocp_nlp_json_file));
+    % else % Matlab
+    %     acados_ocp = jsondecode(fileread(acados_ocp_nlp_json_file));
+    % end
     % get model name from json file
     model_name = acados_ocp.model.name;
 
