@@ -48,7 +48,7 @@ function build_acados {
 		ACADOS_LINT='OFF';
 	fi
 
-	if [ "${ACADOS_UNIT_TESTS}" = 'ON' || "${ACADOS_PYTHON}" = 'ON' ]; then
+	if [[ "${ACADOS_UNIT_TESTS}" = 'ON' || "${ACADOS_PYTHON}" = 'ON' ]]; then
 		ACADOS_WITH_QPOASES='ON';
 	fi
 
@@ -79,7 +79,7 @@ function build_acados {
 	cmake --build build;
 	cmake --build build --target install;
 
-    if [[ "${ACADOS_PYTHON}" = 'ON' || "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ]] ;
+    if [[ "${ACADOS_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ;
     then
         source "${SCRIPT_DIR}/install_python_dependencies.sh";
         pushd interfaces/acados_template;

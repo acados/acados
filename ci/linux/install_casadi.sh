@@ -59,7 +59,7 @@ pushd external;
 		export MATLABPATH=$(pwd)/casadi-linux-matlabR2014b:$MATLABPATH;
 	fi
 
-	if [ "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ];
+	if [[ "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]];
 	then
 		wget -O casadi-linux-octave.tar.gz "${CASADI_OCTAVE_URL}";
 		mkdir -p casadi-octave;

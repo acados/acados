@@ -70,8 +70,8 @@ matrix:
         - DEPLOY_NAME="linux-python-clang37"
         - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
         - ACADOS_OCTAVE="OFF"
-        - ACADOS_UNIT_TESTS="ON"
-        # - ACADOS_EXAMPLES="OFF"
+        - ACADOS_UNIT_TESTS="OFF"
+        - ACADOS_EXAMPLES="OFF"
     # - name: Linux Gcc5
     #   env:
     #     - DEPLOY_NAME="linux-python-gcc5"
