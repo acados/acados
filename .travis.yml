@@ -41,11 +41,12 @@ matrix:
       env:
         - DEPLOY_NAME="osx-python"
 
-    - name: Linux Gcc6 - Octave interface
+    - name: Linux Gcc6 - Octave template
       env:
         - DEPLOY_NAME="linux octave gcc6"
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-        - ACADOS_OCTAVE="ON"
+        - ACADOS_OCTAVE="OFF"
+        - ACADOS_OCTAVE_TEMPLATE="ON"
         - ACADOS_EXAMPLES="OFF"
         - ACADOS_UNIT_TESTS="OFF"
 
