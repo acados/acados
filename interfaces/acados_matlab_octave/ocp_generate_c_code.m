@@ -101,11 +101,15 @@ function ocp_generate_c_code(obj)
 
     %% load JSON layout
     acados_folder = getenv('ACADOS_INSTALL_DIR');
-
-    acados_layout = jsondecode(fileread([acados_folder, ...
-        '/interfaces/acados_template/acados_template/acados_layout.json']));
-
+    json_layout_filename = fullfile(acados_folder, 'interfaces','acados_template','acados_template','acados_layout.json')
+    if is_octave()
+        addpath(fullfile(acados_folder, 'external', 'jsonlab'))
+        acados_layout = loadjson(fileread(json_layout_filename));
+    else % Matlab
+        acados_layout = jsondecode(fileread(json_layout_filename));
+    end
     dims = obj.acados_ocp_nlp_json.dims;
+
 
     %% reshape constraints
     constr = obj.acados_ocp_nlp_json.constraints;
@@ -162,7 +166,19 @@ function ocp_generate_c_code(obj)
     obj.acados_ocp_nlp_json.cost = cost;
 
     %% dump JSON file
-    json_string = jsonencode(obj.acados_ocp_nlp_json);
+    if is_octave()
+        % savejson does not work for classes!
+        % -> consider making the acados_ocp_nlp_json properties structs directly.
+        ocp_json_struct = struct(obj.acados_ocp_nlp_json);
+        ocp_json_struct.dims = struct(ocp_json_struct.dims);
+        ocp_json_struct.cost = struct(ocp_json_struct.cost);
+        ocp_json_struct.constraints = struct(ocp_json_struct.constraints);
+        ocp_json_struct.solver_options = struct(ocp_json_struct.solver_options);
+
+        json_string = savejson('',ocp_json_struct, 'ForceRootName', 0);
+    else % Matlab
+        json_string = jsonencode(obj.acados_ocp_nlp_json);
+    end
     json_string = strrep(json_string, ',', sprintf(',\r'));
     json_string = strrep(json_string, '[{', sprintf('[\r{\r'));
     json_string = strrep(json_string, '}]', sprintf('\r}\r]'));

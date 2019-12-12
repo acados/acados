@@ -52,18 +52,21 @@ function generate_solver_matlab(acados_ocp_nlp_json_file)
         end
     end
 
-    % get model name from json file
-    acados_ocp = jsondecode(fileread(acados_ocp_nlp_json_file));
+    % load ocp formulation from json file
+    if is_octave()
+        acados_ocp = loadjson(fileread(acados_ocp_nlp_json_file));
+    else % Matlab
+        acados_ocp = jsondecode(fileread(acados_ocp_nlp_json_file));
+    end
 
+    % get model name from json file
     model_name = acados_ocp.model.name;
 
-    % setting up loader and environment
+    %% render templates
     template_dir = fullfile(acados_template_folder, 'c_templates_tera','*');
+    json_location = pwd;
     chdir('c_generated_code');
 
-    %% render source template
-    json_location = fullfile('..');
-    
     % main
     template_file = 'main.in.c';
     out_file = ['main_', model_name, '.c'];
