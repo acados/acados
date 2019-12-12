@@ -167,7 +167,7 @@ for j = 1:nx+nu
 end
 
 if is_template
-    if ~exist('c_generated_code', 'dir')
+    if ~exist( fullfile(pwd,'c_generated_code'), 'dir')
         mkdir('c_generated_code');
     end
     cd 'c_generated_code'

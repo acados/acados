@@ -101,17 +101,17 @@ function ocp_generate_c_code(obj)
 
     %% load JSON layout
     acados_folder = getenv('ACADOS_INSTALL_DIR');
-    json_layout_filename = fullfile(acados_folder, 'interfaces','acados_template','acados_template','acados_layout.json')
+    json_layout_filename = fullfile(acados_folder, 'interfaces',...
+                                   'acados_template','acados_template','acados_layout.json');
     % if is_octave()
     addpath(fullfile(acados_folder, 'external', 'jsonlab'))
     acados_layout = loadjson(fileread(json_layout_filename));
     % else % Matlab
     %     acados_layout = jsondecode(fileread(json_layout_filename));
     % end
-    dims = obj.acados_ocp_nlp_json.dims;
-
 
     %% reshape constraints
+    dims = obj.acados_ocp_nlp_json.dims;
     constr = obj.acados_ocp_nlp_json.constraints;
     constr_l = acados_layout.constraints;
     fields = fieldnames(constr_l);
