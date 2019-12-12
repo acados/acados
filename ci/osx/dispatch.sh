@@ -47,8 +47,7 @@ elif [ "${SECTION}" = 'install' ]; then
 
     if  "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ||
         [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
-        [[ "${ACADOS_PYTHON}" = 'ON' ]] || 
-        "${DEV_MATLAB}" = 'ON';
+        [[ "${ACADOS_PYTHON}" = 'ON' ]];
         then
         source "${SCRIPT_DIR}/install_casadi.sh";
     fi
@@ -61,8 +60,7 @@ elif [ "${SECTION}" = 'install' ]; then
         popd;
     fi
 
-    if [[ "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ]] ||
-       [[ "${DEV_MATLAB}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
+    if [[ "${ACADOS_MATLAB}" = 'ON' ]];
     then
         source "${SHARED_SCRIPT_DIR}/install_matlab.sh";
     fi
