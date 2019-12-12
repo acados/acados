@@ -77,7 +77,7 @@ Please choose one and proceed with the corresponding paragraph.
 ### `Python` interface
 - The interface is based on templated `C` code, header files and Makefiles, that is rendered with the templating engine `Jinja2` or `Tera`.
 - The generated C code can be easily deployed on embedded platforms.
-- The problem same problem formulation as for the MATLAB interface is used (see [here](https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf)).
+- The same problem formulation as for the MATLAB interface is used (see [here](https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf)).
 - The `ctypes` package is used to interact with the rendered Code.
 - CasADi is required, which can be set up as follows:
 
