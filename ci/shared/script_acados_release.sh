@@ -80,7 +80,7 @@ function build_acados {
 	cmake --build build;
 	cmake --build build --target install;
 
-    if [[ "${ACADOS_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ;
+    if [[ "${ACADOS_PYTHON}" = 'ON' || "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ]] ;
     then
         source "${SCRIPT_DIR}/install_python_dependencies.sh";
         pushd interfaces/acados_template;

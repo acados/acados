@@ -32,6 +32,7 @@
 %
 
 %% check that environment variables are provided
+disp('in run_tests_templates')
 try
     require_env_variable('LD_LIBRARY_PATH');
     require_env_variable('ACADOS_INSTALL_DIR');
@@ -48,6 +49,7 @@ end
 
 %% ocp tests
 try
+    disp('attempt to test_templated_mex')
     test_templated_mex;
 catch exception
     exit_with_error(exception);
