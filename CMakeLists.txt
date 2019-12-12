@@ -70,10 +70,10 @@ option(ACADOS_WITH_OOQP "OOQP solver" OFF)
 option(ACADOS_WITH_QPDUNES "qpDUNES solver" OFF)
 option(ACADOS_WITH_OSQP "OSQP solver" OFF)
 # Interfaces
-option(TEMPLATE_MATLAB "Template Matlab Interface" OFF)
 option(DEV_MATLAB "Developer Matlab Interface" OFF)
 option(ACADOS_MATLAB "The Matlab Interface" OFF)
 option(ACADOS_OCTAVE "The Octave Interface" OFF)
+option(ACADOS_OCTAVE_TEMPLATE "Template MEX Interface" OFF)
 option(ACADOS_PYTHON "Python Interface" OFF)
 
 # Set custom path

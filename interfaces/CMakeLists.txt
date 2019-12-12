@@ -45,7 +45,7 @@ add_test(NAME octave_test_ocp
          octave --no-gui --no-window-system ./run_tests_ocp.m)
 endif()
 
-if(TEMPLATE_MATLAB)
+if(ACADOS_OCTAVE_TEMPLATE)
 add_test(NAME octave_test_templates
          COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/acados_matlab_octave/test
          octave --no-gui --no-window-system ./run_tests_templates.m)

@@ -44,7 +44,7 @@ elif [ "${SECTION}" = 'install' ]; then
     source "${SHARED_SCRIPT_DIR}/install_eigen.sh";
     source "${SCRIPT_DIR}/install_python.sh";
 
-    if  "${TEMPLATE_MATLAB}" = 'ON' ||
+    if  "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ||
         [[ "${ACADOS_MATLAB}" = 'ON' || "${ACADOS_OCTAVE}" = 'ON' ]] ||
         [[ "${ACADOS_PYTHON}" = 'ON' ]] || 
         "${DEV_MATLAB}" = 'ON';
@@ -87,7 +87,7 @@ elif [ "${SECTION}" = 'install' ]; then
         popd;
     fi
 
-    if [[ "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+    if [[ "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ]] ||
        [[ "${DEV_MATLAB}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
     then
         source "${SHARED_SCRIPT_DIR}/install_matlab.sh";

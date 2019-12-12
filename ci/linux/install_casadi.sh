@@ -51,7 +51,7 @@ pushd external;
 		export PYTHONPATH=$(pwd)/casadi-linux-py35:$PYTHONPATH;
 	fi
 
-	if [[ "${TEMPLATE_MATLAB}" = 'ON' ]] ||
+	if [[ "${ACADOS_OCTAVE_TEMPLATE}" = 'ON' ]] ||
  	   [[ "${DEV_MATLAB}" = 'ON' || "${ACADOS_MATLAB}" = 'ON' ]];
 	then
 		wget -O casadi-linux-matlabR2014b.tar.gz "${CASADI_MATLAB_URL}";
