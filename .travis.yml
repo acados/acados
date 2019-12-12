@@ -57,11 +57,13 @@ matrix:
         - ACADOS_EXAMPLES="OFF"
         - ACADOS_UNIT_TESTS="OFF"
 
-    - name: Linux Gcc4.9 - Octave interface
+    - name: Linux Gcc4.9 - Octave interface + template
       env:
         - DEPLOY_NAME="linux octave gcc4.9"
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
         - ACADOS_OCTAVE="ON"
+        - TEMPLATE_MATLAB="ON"
+
 
     - name: Linux Clang
       env:

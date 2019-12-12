@@ -79,7 +79,7 @@ function build_acados {
 	cmake --build build;
 	cmake --build build --target install;
 
-    if [[ "${ACADOS_PYTHON}" = 'ON' ]] ;
+    if [[ "${ACADOS_PYTHON}" = 'ON' || "${TEMPLATE_MATLAB}" = 'ON' ]] ;
     then
         source "${SCRIPT_DIR}/install_python_dependencies.sh";
         pushd interfaces/acados_template;
@@ -93,7 +93,6 @@ function build_acados {
     fi
 
 	# Run ctest
-	# TODO: test matlab/python
 	cmake -E chdir build ctest -V; # use -V for full output # --output-on-failure for less
 
 	[ $? -ne 0 ] && exit 100;
