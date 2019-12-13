@@ -191,10 +191,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) impl_dae_fun_jac_x_xdot_z;
     mxSetField(plhs[1], 0, "impl_dae_fun_jac_x_xdot_z", impl_dae_fun_jac_x_xdot_z_mat);
     // extern external_function_param_casadi * impl_dae_jac_x_xdot_u_z;
-    mxArray *impl_dae_fun_jac_x_xdot_u_z_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(impl_dae_fun_jac_x_xdot_u_z_mat);
-    l_ptr[0] = (long long) impl_dae_fun_jac_x_xdot_u_z;
-    mxSetField(plhs[1], 0, "impl_dae_fun_jac_x_xdot_u_z", impl_dae_fun_jac_x_xdot_u_z_mat);
+    mxArray *impl_dae_jac_x_xdot_u_z_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+    l_ptr = mxGetData(impl_dae_jac_x_xdot_u_z_mat);
+    l_ptr[0] = (long long) impl_dae_jac_x_xdot_u_z;
+    mxSetField(plhs[1], 0, "impl_dae_jac_x_xdot_u_z", impl_dae_jac_x_xdot_u_z_mat);
 {%- endif %}
 
 {%- if constraints.constr_type == "BGP" %}
