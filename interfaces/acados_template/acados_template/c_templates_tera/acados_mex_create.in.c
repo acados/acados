@@ -144,7 +144,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     l_ptr[0] = (long long) 1;
     mxSetField(plhs[0], 0, "sens_out", sens_out_mat);
 
-    /* store external funciton pointers */
+    /* store external function pointers */
     memcpy(fieldnames[0],"forw_vde",sizeof("forw_vde"));
     memcpy(fieldnames[1],"hess_vde",sizeof("hess_vde"));
     memcpy(fieldnames[2],"impl_dae_fun",sizeof("impl_dae_fun"));
