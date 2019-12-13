@@ -35,7 +35,7 @@ import os
 from casadi import *
 from .utils import ALLOWED_CASADI_VERSIONS
 
-def generate_c_code_constraint( constraint ):
+def generate_c_code_constraint( constraint, con_name ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -60,7 +60,6 @@ def generate_c_code_constraint( constraint ):
     if nh > 0 or nphi > 0:
 
         nr = constraint.nr
-        con_name = constraint.name
 
         # get dimensions
         if x is not None:

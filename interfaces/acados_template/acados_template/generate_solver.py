@@ -48,6 +48,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     tera_path = get_tera()
 
     model = acados_ocp.model
+    name = model.name
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
@@ -58,15 +59,15 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
         # nonlinear part of nonlinear constraints
-        generate_c_code_constraint(acados_ocp.con_phi)
+        generate_c_code_constraint(acados_ocp.con_phi, name)
     elif acados_ocp.constraints.constr_type  == 'BGH' and acados_ocp.dims.nh > 0:
-        generate_c_code_constraint(acados_ocp.con_h)
+        generate_c_code_constraint(acados_ocp.con_h, name)
 
     if acados_ocp.constraints.constr_type_e  == 'BGP' and acados_ocp.dims.nphi_e > 0:
         # nonlinear part of nonlinear constraints
-        generate_c_code_constraint_e(acados_ocp.con_phi_e)
+        generate_c_code_constraint_e(acados_ocp.con_phi_e, name)
     elif acados_ocp.constraints.constr_type_e  == 'BGH' and acados_ocp.dims.nh_e > 0:
-        generate_c_code_constraint_e(acados_ocp.con_h_e)
+        generate_c_code_constraint_e(acados_ocp.con_h_e, name)
 
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         generate_c_code_nls_cost(acados_ocp.cost_r)

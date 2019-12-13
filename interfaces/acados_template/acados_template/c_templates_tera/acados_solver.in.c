@@ -11,12 +11,12 @@
 // example specific
 #include "{{ model.name }}_model/{{ model.name }}_model.h"
 {% if constraints.constr_type == "BGP" and dims.nphi %}
-#include "{{ con_phi.name }}_phi_constraint/{{ con_phi.name }}_phi_constraint.h"
-// #include "{{ con_phi.name }}_r_constraint/{{ con_phi.name }}_r_constraint.h"
+#include "{{ model.name }}_phi_constraint/{{ model.name }}_phi_constraint.h"
+// #include "{{ model.name }}_r_constraint/{{ model.name }}_r_constraint.h"
 {% endif %}
 {% if constraints.constr_type_e == "BGP" and dims.nphi_e > 0 %}
-#include "{{ con_phi_e.name }}_phi_e_constraint/{{ con_phi_e.name }}_phi_e_constraint.h"
-// #include "{{ con_phi_e.name }}_r_e_constraint/{{ con_phi_e.name }}_r_e_constraint.h"
+#include "{{ model.name }}_phi_e_constraint/{{ model.name }}_phi_e_constraint.h"
+// #include "{{ model.name }}_r_e_constraint/{{ model.name }}_r_e_constraint.h"
 {% endif %}
 {% if constraints.constr_type == "BGH" and dims.nh > 0 %}
 #include "{{ model.name }}_h_constraint/{{ model.name }}_h_constraint.h"
@@ -706,24 +706,24 @@ int acados_create()
     for (int i = 0; i < N; i++)
     {
         // nonlinear part of convex-composite constraint
-        phi_constraint[i].casadi_fun = &{{ con_phi.name }}_phi_constraint;
-        phi_constraint[i].casadi_n_in = &{{ con_phi.name }}_phi_constraint_n_in;
-        phi_constraint[i].casadi_n_out = &{{ con_phi.name }}_phi_constraint_n_out;
-        phi_constraint[i].casadi_sparsity_in = &{{ con_phi.name }}_phi_constraint_sparsity_in;
-        phi_constraint[i].casadi_sparsity_out = &{{ con_phi.name }}_phi_constraint_sparsity_out;
-        phi_constraint[i].casadi_work = &{{ con_phi.name }}_phi_constraint_work;
+        phi_constraint[i].casadi_fun = &{{ model.name }}_phi_constraint;
+        phi_constraint[i].casadi_n_in = &{{ model.name }}_phi_constraint_n_in;
+        phi_constraint[i].casadi_n_out = &{{ model.name }}_phi_constraint_n_out;
+        phi_constraint[i].casadi_sparsity_in = &{{ model.name }}_phi_constraint_sparsity_in;
+        phi_constraint[i].casadi_sparsity_out = &{{ model.name }}_phi_constraint_sparsity_out;
+        phi_constraint[i].casadi_work = &{{ model.name }}_phi_constraint_work;
 
         external_function_param_casadi_create(&phi_constraint[i], {{ dims.np }});
     }
     // r_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     // for (int i = 0; i < N; i++) {
     //     // nonlinear part of convex-composite constraint
-    //     r_constraint[i].casadi_fun = &{{ con_phi.name }}_r_constraint;
-    //     r_constraint[i].casadi_n_in = &{{ con_phi.name }}_r_constraint_n_in;
-    //     r_constraint[i].casadi_n_out = &{{ con_phi.name }}_r_constraint_n_out;
-    //     r_constraint[i].casadi_sparsity_in = &{{ con_phi.name }}_r_constraint_sparsity_in;
-    //     r_constraint[i].casadi_sparsity_out = &{{ con_phi.name }}_r_constraint_sparsity_out;
-    //     r_constraint[i].casadi_work = &{{ con_phi.name }}_r_constraint_work;
+    //     r_constraint[i].casadi_fun = &{{ model.name }}_r_constraint;
+    //     r_constraint[i].casadi_n_in = &{{ model.name }}_r_constraint_n_in;
+    //     r_constraint[i].casadi_n_out = &{{ model.name }}_r_constraint_n_out;
+    //     r_constraint[i].casadi_sparsity_in = &{{ model.name }}_r_constraint_sparsity_in;
+    //     r_constraint[i].casadi_sparsity_out = &{{ model.name }}_r_constraint_sparsity_out;
+    //     r_constraint[i].casadi_work = &{{ model.name }}_r_constraint_work;
 
     //     external_function_param_casadi_create(&r_constraint[i], {{ dims.np }});
     // }
@@ -731,22 +731,22 @@ int acados_create()
 
     {%- if constraints.constr_type_e == "BGP" %}
     // nonlinear part of convex-composite constraint
-    phi_e_constraint.casadi_fun = &{{ con_phi_e.name }}_phi_e_constraint;
-    phi_e_constraint.casadi_n_in = &{{ con_phi_e.name }}_phi_e_constraint_n_in;
-    phi_e_constraint.casadi_n_out = &{{ con_phi_e.name }}_phi_e_constraint_n_out;
-    phi_e_constraint.casadi_sparsity_in = &{{ con_phi_e.name }}_phi_e_constraint_sparsity_in;
-    phi_e_constraint.casadi_sparsity_out = &{{ con_phi_e.name }}_phi_e_constraint_sparsity_out;
-    phi_e_constraint.casadi_work = &{{ con_phi_e.name }}_phi_e_constraint_work;
+    phi_e_constraint.casadi_fun = &{{ model.name }}_phi_e_constraint;
+    phi_e_constraint.casadi_n_in = &{{ model.name }}_phi_e_constraint_n_in;
+    phi_e_constraint.casadi_n_out = &{{ model.name }}_phi_e_constraint_n_out;
+    phi_e_constraint.casadi_sparsity_in = &{{ model.name }}_phi_e_constraint_sparsity_in;
+    phi_e_constraint.casadi_sparsity_out = &{{ model.name }}_phi_e_constraint_sparsity_out;
+    phi_e_constraint.casadi_work = &{{ model.name }}_phi_e_constraint_work;
 
     external_function_param_casadi_create(&phi_e_constraint, {{ dims.np }});
     
     // nonlinear part of convex-composite constraint
-    // r_e_constraint.casadi_fun = &{{ con_phi_e.name }}_r_e_constraint;
-    // r_e_constraint.casadi_n_in = &{{ con_phi_e.name }}_r_e_constraint_n_in;
-    // r_e_constraint.casadi_n_out = &{{ con_phi_e.name }}_r_e_constraint_n_out;
-    // r_e_constraint.casadi_sparsity_in = &{{ con_phi_e.name }}_r_e_constraint_sparsity_in;
-    // r_e_constraint.casadi_sparsity_out = &{{ con_phi_e.name }}_r_e_constraint_sparsity_out;
-    // r_e_constraint.casadi_work = &{{ con_phi_e.name }}_r_e_constraint_work;
+    // r_e_constraint.casadi_fun = &{{ model.name }}_r_e_constraint;
+    // r_e_constraint.casadi_n_in = &{{ model.name }}_r_e_constraint_n_in;
+    // r_e_constraint.casadi_n_out = &{{ model.name }}_r_e_constraint_n_out;
+    // r_e_constraint.casadi_sparsity_in = &{{ model.name }}_r_e_constraint_sparsity_in;
+    // r_e_constraint.casadi_sparsity_out = &{{ model.name }}_r_e_constraint_sparsity_out;
+    // r_e_constraint.casadi_work = &{{ model.name }}_r_e_constraint_work;
 
     // external_function_param_casadi_create(&r_e_constraint, {{ dims.np }});
     {% endif %}

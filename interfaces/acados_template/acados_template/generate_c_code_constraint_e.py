@@ -35,7 +35,7 @@ import os
 from casadi import *
 from .utils import ALLOWED_CASADI_VERSIONS
 
-def generate_c_code_constraint_e( constraint ):
+def generate_c_code_constraint_e( constraint, con_name ):
 
     casadi_version = CasadiMeta.version()
     casadi_opts = dict(mex=False, casadi_int='int', casadi_real='double')
@@ -56,8 +56,6 @@ def generate_c_code_constraint_e( constraint ):
         raise Exception('cannot have both nh_e and phi_e > 0.')
 
     if nh > 0 or nphi > 0:
-
-        con_name = constraint.name
 
         # get dimensions
         nx = x.size()[0]
