@@ -134,3 +134,5 @@ if isfield(model, 'constr_expr_h_e')
     h_e_fun_jac_ut_xt.generate([model_name,'_constr_h_e_fun_jac_ut_xt'], casadi_opts);
     h_e_fun_jac_ut_xt_hess.generate([model_name,'_constr_h_e_fun_jac_ut_xt_hess'], casadi_opts);
 end
+
+end
