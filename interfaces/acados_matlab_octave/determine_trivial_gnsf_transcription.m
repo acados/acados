@@ -65,7 +65,7 @@ model_name_prefix = model.name;
 x = model.sym_x;
 nx = length(x);
 % check type
-if class(x(1)) == 'casadi.SX'
+if isa(x(1), 'casadi.SX')
     isSX = true;
 else
     disp('GNSF detection only works for SX CasADi type!!!');

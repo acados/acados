@@ -91,7 +91,7 @@ if isfield(model, 'sym_p')
     p = model.sym_p;
     np = length(p);
 else
-    if class(x(1)) == 'casadi.SX'
+    if isa(x(1), 'casadi.SX')
         p = SX.sym('p',0, 0);
     else
         p = MX.sym('p',0, 0);

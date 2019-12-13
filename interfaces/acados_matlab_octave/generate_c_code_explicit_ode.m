@@ -68,7 +68,7 @@ if isa(model, 'acados_template_mex.acados_dae')
     x = model.x;
     nx = length(x);
     % check type
-    if class(x(1)) == 'casadi.SX'
+    if isa(x(1), 'casadi.SX')
         isSX = true;
     else
         isSX = false;
@@ -85,7 +85,7 @@ else
     x = model.sym_x;
     nx = length(x);
     % check type
-    if class(x(1)) == 'casadi.SX'
+    if isa(x(1), 'casadi.SX')
         isSX = true;
     else
         isSX = false;
