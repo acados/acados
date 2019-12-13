@@ -42,6 +42,7 @@ import argparse
 
 # set to 'True' to generate test data
 GENERATE_DATA = False
+
 LOCAL_TEST = False
 TEST_TOL = 1e-8
 
@@ -99,6 +100,11 @@ else:
         raise Exception('Invalid unit test value {} for parameter SOLVER_TYPE. Possible values are' \
                 ' {}. Exiting.'.format(SOLVER_TYPE, SOLVER_TYPE_values))
 
+
+# print test setting
+print("Running test with:\n\tformulation:", FORMULATION, "\n\tqp solver: ", QP_SOLVER,\
+      "\n\tintergrator: ", INTEGRATOR_TYPE, "\n\tsolver: ", SOLVER_TYPE)
+
 # create render arguments
 ocp = acados_ocp_nlp()
 
@@ -146,12 +152,16 @@ Q[3,3] = 1e-2
 R = np.eye(1)
 R[0,0] = 1e0
 
+unscale = N/Tf
+Q = Q * unscale
+R = R * unscale
+
 if FORMULATION == 'NLS':
     nlp_cost.W = scipy.linalg.block_diag(R, Q)
 else:
     nlp_cost.W = scipy.linalg.block_diag(Q, R)
 
-nlp_cost.W_e = Q
+nlp_cost.W_e = Q/unscale
 
 Vx = np.zeros((ny, nx))
 Vx[0,0] = 1.0

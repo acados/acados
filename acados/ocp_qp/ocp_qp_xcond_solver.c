@@ -346,17 +346,17 @@ void ocp_qp_xcond_solver_memory_get(void *config_, void *mem_, const char *field
 {
     ocp_qp_xcond_solver_config *config = config_;
     qp_solver_config *qp_solver = config->qp_solver;
-	ocp_qp_xcond_config *xcond = config->xcond;
+	// ocp_qp_xcond_config *xcond = config->xcond;
 
 	ocp_qp_xcond_solver_memory *mem = mem_;
 
 	// TODO extract module name as for opts_set
 
-	if(!strcmp(field, "time_qp_solver_call"))
+	if (!strcmp(field, "time_qp_solver_call"))
 	{
 		qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
 	}
-	else if(!strcmp(field, "iter"))
+	else if (!strcmp(field, "iter"))
 	{
 		qp_solver->memory_get(qp_solver, mem->solver_memory, field, value);
 	}

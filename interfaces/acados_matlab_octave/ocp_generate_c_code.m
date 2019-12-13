@@ -45,6 +45,9 @@ function ocp_generate_c_code(obj)
             'Got dim_nh_e: %d, must be 0.\nNotice that it might still',...
             'be possible to solve the OCP from MATLAB.'], obj.model_struct.dim_nh_e);
     end
+    if ~(strcmp(obj.opts_struct.param_scheme, 'multiple_shooting_unif_grid'))
+        error(['mex templating does only support uniform discretizations for shooting nodes']);
+    end
 
     % set include and lib path
     acados_folder = getenv('ACADOS_INSTALL_DIR');
@@ -160,6 +163,9 @@ function ocp_generate_c_code(obj)
 
     %% dump JSON file
     json_string = jsonencode(obj.acados_ocp_nlp_json);
+    json_string = strrep(json_string, ',', sprintf(',\r'));
+    json_string = strrep(json_string, '[{', sprintf('[\r{\r'));
+    json_string = strrep(json_string, '}]', sprintf('\r}\r]'));
     fid = fopen('acados_ocp_nlp.json', 'w');
     if fid == -1, error('Cannot create JSON file'); end
     fwrite(fid, json_string, 'char');

@@ -192,15 +192,15 @@ void *ocp_qp_hpipm_memory_assign(void *config_, void *dims_, void *opts_, void *
 
 void ocp_qp_hpipm_memory_get(void *config_, void *mem_, const char *field, void* value)
 {
-    qp_solver_config *config = config_;
+    // qp_solver_config *config = config_;
 	ocp_qp_hpipm_memory *mem = mem_;
 
-	if(!strcmp(field, "time_qp_solver_call"))
+	if (!strcmp(field, "time_qp_solver_call"))
 	{
 		double *tmp_ptr = value;
 		*tmp_ptr = mem->time_qp_solver_call;
 	}
-	else if(!strcmp(field, "iter"))
+	else if (!strcmp(field, "iter"))
 	{
 		int *tmp_ptr = value;
 		*tmp_ptr = mem->iter;

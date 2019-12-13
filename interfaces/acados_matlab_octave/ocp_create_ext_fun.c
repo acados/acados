@@ -51,14 +51,6 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
 
-//    mexPrintf("\nin sim_impl_ext_fun_create\n");
-
-    /* RHS */
-
-
-
-    /* LHS */
-
     // field names of output struct
     char *fieldnames[24];
     fieldnames[0] = (char*)mxMalloc(50);

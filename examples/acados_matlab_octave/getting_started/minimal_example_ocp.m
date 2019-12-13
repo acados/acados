@@ -44,7 +44,6 @@ T = 1; % time horizon length
 x0 = [0; pi; 0; 0];
 
 nlp_solver = 'sqp'; % sqp, sqp_rti
-tol = 1e-8;
 qp_solver = 'partial_condensing_hpipm';
     % full_condensing_hpipm, partial_condensing_hpipm, full_condensing_qpoases
 qp_solver_cond_N = 5; % for partial condensing
