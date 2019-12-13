@@ -60,10 +60,10 @@
 #include "{{ ocp.model.name }}_h_e_constraint/{{ ocp.model.name }}_h_e_constraint.h"
 {% endif %}
 {%- if ocp.cost.cost_type == "NONLINEAR_LS" %}
-#include "{{ ocp.cost_r.name }}_r_cost/{{ ocp.cost_r.name }}_r_cost.h"
+#include "{{ ocp.model.name }}_r_cost/{{ ocp.model.name }}_r_cost.h"
 {% endif %}
 {%- if ocp.cost.cost_type_e == "NONLINEAR_LS" %}
-#include "{{ ocp.cost_r_e.name }}_r_e_cost/{{ ocp.cost_r_e.name }}_r_e_cost.h"
+#include "{{ ocp.model.name }}_r_e_cost/{{ ocp.model.name }}_r_e_cost.h"
 {% endif %}
 #include "acados_solver_{{ ocp.model.name }}.h"
 
@@ -829,12 +829,12 @@ int acados_create() {
     r_cost = (external_function_casadi *) malloc(sizeof(external_function_casadi)*N);
     for (int i = 0; i < N; ++i) {
         // residual function
-        r_cost[i].casadi_fun = &{{ ocp.cost_r.name }}_r_cost;
-        r_cost[i].casadi_n_in = &{{ ocp.cost_r.name }}_r_cost_n_in;
-        r_cost[i].casadi_n_out = &{{ ocp.cost_r.name }}_r_cost_n_out;
-        r_cost[i].casadi_sparsity_in = &{{ ocp.cost_r.name }}_r_cost_sparsity_in;
-        r_cost[i].casadi_sparsity_out = &{{ ocp.cost_r.name }}_r_cost_sparsity_out;
-        r_cost[i].casadi_work = &{{ ocp.cost_r.name }}_r_cost_work;
+        r_cost[i].casadi_fun = &{{ ocp.model.name }}_r_cost;
+        r_cost[i].casadi_n_in = &{{ ocp.model.name }}_r_cost_n_in;
+        r_cost[i].casadi_n_out = &{{ ocp.model.name }}_r_cost_n_out;
+        r_cost[i].casadi_sparsity_in = &{{ ocp.model.name }}_r_cost_sparsity_in;
+        r_cost[i].casadi_sparsity_out = &{{ ocp.model.name }}_r_cost_sparsity_out;
+        r_cost[i].casadi_work = &{{ ocp.model.name }}_r_cost_work;
 
         external_function_casadi_create(&r_cost[i]);
     }
@@ -842,12 +842,12 @@ int acados_create() {
 
     {%- if ocp.cost.cost_type_e == "NONLINEAR_LS" %}
     // residual function
-	r_e_cost.casadi_fun = &{{ ocp.cost_r_e.name }}_r_e_cost;
-	r_e_cost.casadi_n_in = &{{ ocp.cost_r_e.name }}_r_e_cost_n_in;
-	r_e_cost.casadi_n_out = &{{ ocp.cost_r_e.name }}_r_e_cost_n_out;
-	r_e_cost.casadi_sparsity_in = &{{ ocp.cost_r_e.name }}_r_e_cost_sparsity_in;
-	r_e_cost.casadi_sparsity_out = &{{ ocp.cost_r_e.name }}_r_e_cost_sparsity_out;
-	r_e_cost.casadi_work = &{{ ocp.cost_r_e.name }}_r_e_cost_work;
+	r_e_cost.casadi_fun = &{{ ocp.model.name }}_r_e_cost;
+	r_e_cost.casadi_n_in = &{{ ocp.model.name }}_r_e_cost_n_in;
+	r_e_cost.casadi_n_out = &{{ ocp.model.name }}_r_e_cost_n_out;
+	r_e_cost.casadi_sparsity_in = &{{ ocp.model.name }}_r_e_cost_sparsity_in;
+	r_e_cost.casadi_sparsity_out = &{{ ocp.model.name }}_r_e_cost_sparsity_out;
+	r_e_cost.casadi_work = &{{ ocp.model.name }}_r_e_cost_work;
 
     external_function_casadi_create(&r_e_cost);
     {%- endif %}

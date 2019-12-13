@@ -61,10 +61,10 @@ OBJ+= {{ ocp.model.name }}_h_constraint/{{ ocp.model.name }}_h_constraint.o
 OBJ+= {{ ocp.model.name }}_h_e_constraint/{{ ocp.model.name }}_h_e_constraint.o
 {% endif %}
 {% if ocp.cost.cost_type == "NONLINEAR_LS" %}
-OBJ+= {{ ocp.cost_r.name }}_r_cost/{{ ocp.cost_r.name }}_r_cost.c 
+OBJ+= {{ ocp.model.name }}_r_cost/{{ ocp.model.name }}_r_cost.c 
 {% endif %}
 {% if ocp.cost.cost_type_e == "NONLINEAR_LS" %}
-OBJ+= {{ ocp.cost_r_e.name }}_r_e_cost/{{ ocp.cost_r_e.name }}_r_e_cost.c 
+OBJ+= {{ ocp.model.name }}_r_e_cost/{{ ocp.model.name }}_r_e_cost.c 
 {% endif %}
 
 
@@ -108,10 +108,10 @@ CASADI_CON_H_E_SOURCE+= {{ ocp.model.name }}_h_e_constraint.c
 CASADI_COST_R_SOURCE=
 CASADI_COST_R_E_SOURCE=
 {% if ocp.cost.cost_type == "NONLINEAR_LS" %}
-CASADI_COST_R_SOURCE+= {{ ocp.cost_r.name }}_r_cost.c 
+CASADI_COST_R_SOURCE+= {{ ocp.model.name }}_r_cost.c 
 {% endif %}
 {% if ocp.cost.cost_type_e == "NONLINEAR_LS" %}
-CASADI_COST_R_E_SOURCE+= {{ ocp.cost_r_e.name }}_r_e_cost.c 
+CASADI_COST_R_E_SOURCE+= {{ ocp.model.name }}_r_e_cost.c 
 {% endif %}
 
 casadi_fun:
@@ -129,10 +129,10 @@ casadi_fun:
 	( cd {{ ocp.model.name }}_h_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_E_SOURCE))
 	{% endif %}
 	{% if ocp.cost.cost_type == "NONLINEAR_LS" %}
-	( cd {{ ocp.cost_r.name }}_r_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_SOURCE))
+	( cd {{ ocp.model.name }}_r_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_SOURCE))
 	{% endif %}
 	{% if ocp.cost.cost_type_e == "NONLINEAR_LS" %}
-	( cd {{ ocp.cost_r_e.name }}_r_e_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_E_SOURCE))
+	( cd {{ ocp.model.name }}_r_e_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_E_SOURCE))
 	{% endif %}
 
 main:

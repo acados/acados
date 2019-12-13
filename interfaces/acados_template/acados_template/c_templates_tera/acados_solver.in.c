@@ -25,10 +25,10 @@
 #include "{{ model.name }}_h_e_constraint/{{ model.name }}_h_e_constraint.h"
 {% endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
-#include "{{ cost_r.name }}_r_cost/{{ cost_r.name }}_r_cost.h"
+#include "{{ model.name }}_r_cost/{{ model.name }}_r_cost.h"
 {% endif %}
 {%- if cost.cost_type_e == "NONLINEAR_LS" %}
-#include "{{ cost_r_e.name }}_r_e_cost/{{ cost_r_e.name }}_r_e_cost.h"
+#include "{{ model.name }}_r_e_cost/{{ model.name }}_r_e_cost.h"
 {% endif %}
 
 #include "acados_solver_{{ model.name }}.h"
@@ -847,12 +847,12 @@ int acados_create()
     r_cost = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         // residual function
-        r_cost[i].casadi_fun = &{{ cost_r.name }}_r_cost;
-        r_cost[i].casadi_n_in = &{{ cost_r.name }}_r_cost_n_in;
-        r_cost[i].casadi_n_out = &{{ cost_r.name }}_r_cost_n_out;
-        r_cost[i].casadi_sparsity_in = &{{ cost_r.name }}_r_cost_sparsity_in;
-        r_cost[i].casadi_sparsity_out = &{{ cost_r.name }}_r_cost_sparsity_out;
-        r_cost[i].casadi_work = &{{ cost_r.name }}_r_cost_work;
+        r_cost[i].casadi_fun = &{{ model.name }}_r_cost;
+        r_cost[i].casadi_n_in = &{{ model.name }}_r_cost_n_in;
+        r_cost[i].casadi_n_out = &{{ model.name }}_r_cost_n_out;
+        r_cost[i].casadi_sparsity_in = &{{ model.name }}_r_cost_sparsity_in;
+        r_cost[i].casadi_sparsity_out = &{{ model.name }}_r_cost_sparsity_out;
+        r_cost[i].casadi_work = &{{ model.name }}_r_cost_work;
 
         external_function_param_casadi_create(&r_cost[i], {{ dims.np }});
     }
@@ -860,12 +860,12 @@ int acados_create()
 
     {%- if cost.cost_type_e == "NONLINEAR_LS" %}
     // residual function
-	r_e_cost.casadi_fun = &{{ cost_r_e.name }}_r_e_cost;
-	r_e_cost.casadi_n_in = &{{ cost_r_e.name }}_r_e_cost_n_in;
-	r_e_cost.casadi_n_out = &{{ cost_r_e.name }}_r_e_cost_n_out;
-	r_e_cost.casadi_sparsity_in = &{{ cost_r_e.name }}_r_e_cost_sparsity_in;
-	r_e_cost.casadi_sparsity_out = &{{ cost_r_e.name }}_r_e_cost_sparsity_out;
-	r_e_cost.casadi_work = &{{ cost_r_e.name }}_r_e_cost_work;
+	r_e_cost.casadi_fun = &{{ model.name }}_r_e_cost;
+	r_e_cost.casadi_n_in = &{{ model.name }}_r_e_cost_n_in;
+	r_e_cost.casadi_n_out = &{{ model.name }}_r_e_cost_n_out;
+	r_e_cost.casadi_sparsity_in = &{{ model.name }}_r_e_cost_sparsity_in;
+	r_e_cost.casadi_sparsity_out = &{{ model.name }}_r_e_cost_sparsity_out;
+	r_e_cost.casadi_work = &{{ model.name }}_r_e_cost_work;
 
     external_function_param_casadi_create(&r_e_cost, {{ dims.np }});
     {%- endif %}

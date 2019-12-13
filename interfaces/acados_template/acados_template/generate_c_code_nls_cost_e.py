@@ -35,7 +35,7 @@ import os
 from casadi import *
 from .utils import ALLOWED_CASADI_VERSIONS
 
-def generate_c_code_nls_cost_e( cost ):
+def generate_c_code_nls_cost_e( cost, cost_name ):
 
     suffix_name = '_r_e_cost'
     casadi_version = CasadiMeta.version()
@@ -51,7 +51,6 @@ def generate_c_code_nls_cost_e( cost ):
     x = cost.x
     p = cost.p
     cost_exp = cost.expr
-    cost_name = cost.name
 
     # get dimensions
     nx = x.size()[0]
