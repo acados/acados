@@ -19,10 +19,10 @@
 // #include "{{ con_phi_e.name }}_r_e_constraint/{{ con_phi_e.name }}_r_e_constraint.h"
 {% endif %}
 {% if constraints.constr_type == "BGH" and dims.nh > 0 %}
-#include "{{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.h"
+#include "{{ model.name }}_h_constraint/{{ model.name }}_h_constraint.h"
 {% endif %}
 {% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-#include "{{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.h"
+#include "{{ model.name }}_h_e_constraint/{{ model.name }}_h_e_constraint.h"
 {% endif %}
 {%- if cost.cost_type == "NONLINEAR_LS" %}
 #include "{{ cost_r.name }}_r_cost/{{ cost_r.name }}_r_cost.h"
@@ -755,12 +755,12 @@ int acados_create()
     h_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         // nonlinear constraint
-        h_constraint[i].casadi_fun = &{{ con_h.name }}_h_constraint;
-        h_constraint[i].casadi_n_in = &{{ con_h.name }}_h_constraint_n_in;
-        h_constraint[i].casadi_n_out = &{{ con_h.name }}_h_constraint_n_out;
-        h_constraint[i].casadi_sparsity_in = &{{ con_h.name }}_h_constraint_sparsity_in;
-        h_constraint[i].casadi_sparsity_out = &{{ con_h.name }}_h_constraint_sparsity_out;
-        h_constraint[i].casadi_work = &{{ con_h.name }}_h_constraint_work;
+        h_constraint[i].casadi_fun = &{{ model.name }}_h_constraint;
+        h_constraint[i].casadi_n_in = &{{ model.name }}_h_constraint_n_in;
+        h_constraint[i].casadi_n_out = &{{ model.name }}_h_constraint_n_out;
+        h_constraint[i].casadi_sparsity_in = &{{ model.name }}_h_constraint_sparsity_in;
+        h_constraint[i].casadi_sparsity_out = &{{ model.name }}_h_constraint_sparsity_out;
+        h_constraint[i].casadi_work = &{{ model.name }}_h_constraint_work;
 
         external_function_param_casadi_create(&h_constraint[i], {{ dims.np }});
     }
@@ -768,12 +768,12 @@ int acados_create()
 
     {%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
 	// nonlinear constraint
-	h_e_constraint.casadi_fun = &{{ con_h_e.name }}_h_e_constraint;
-	h_e_constraint.casadi_n_in = &{{ con_h_e.name }}_h_e_constraint_n_in;
-	h_e_constraint.casadi_n_out = &{{ con_h_e.name }}_h_e_constraint_n_out;
-	h_e_constraint.casadi_sparsity_in = &{{ con_h_e.name }}_h_e_constraint_sparsity_in;
-	h_e_constraint.casadi_sparsity_out = &{{ con_h_e.name }}_h_e_constraint_sparsity_out;
-	h_e_constraint.casadi_work = &{{ con_h_e.name }}_h_e_constraint_work;
+	h_e_constraint.casadi_fun = &{{ model.name }}_h_e_constraint;
+	h_e_constraint.casadi_n_in = &{{ model.name }}_h_e_constraint_n_in;
+	h_e_constraint.casadi_n_out = &{{ model.name }}_h_e_constraint_n_out;
+	h_e_constraint.casadi_sparsity_in = &{{ model.name }}_h_e_constraint_sparsity_in;
+	h_e_constraint.casadi_sparsity_out = &{{ model.name }}_h_e_constraint_sparsity_out;
+	h_e_constraint.casadi_work = &{{ model.name }}_h_e_constraint_work;
 
     external_function_param_casadi_create(&h_e_constraint, {{ dims.np }});
     {%- endif %}

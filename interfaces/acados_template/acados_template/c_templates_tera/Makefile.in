@@ -58,10 +58,10 @@ OBJ+= {{ con_phi_e.name }}_phi_e_constraint/{{ con_phi_e.name }}_phi_e_constrain
 # OBJ+= {{ con_phi_e.name }}_r_e_constraint/{{ con_phi_e.name }}_r_e_constraint.o
 {% endif %}
 {% if constraints.constr_type == "BGH"  and dims.nh > 0 %}
-OBJ+= {{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.o
+OBJ+= {{ model.name }}_h_constraint/{{ model.name }}_h_constraint.o
 {% endif %}
 {% if constraints.constr_type_e == "BGH"  and dims.nh_e > 0 %}
-OBJ+= {{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.o
+OBJ+= {{ model.name }}_h_e_constraint/{{ model.name }}_h_e_constraint.o
 {% endif %}
 {% if cost.cost_type == "NONLINEAR_LS" %}
 OBJ+= {{ cost_r.name }}_r_cost/{{ cost_r.name }}_r_cost.c 
@@ -104,10 +104,10 @@ CASADI_CON_PHI_E_SOURCE+=  {{ con_phi_e.name }}_phi_e_constraint.c
 {% endif %}
 {% if dims.nh > 0 %}
 CASADI_CON_H_SOURCE=
-CASADI_CON_H_SOURCE+= {{ con_h.name }}_h_constraint.c 
+CASADI_CON_H_SOURCE+= {{ model.name }}_h_constraint.c 
 {% endif %}
 {% if dims.nh_e > 0 %}
-CASADI_CON_H_E_SOURCE+= {{ con_h_e.name }}_h_e_constraint.c 
+CASADI_CON_H_E_SOURCE+= {{ model.name }}_h_e_constraint.c 
 {% endif %}
 CASADI_COST_R_SOURCE=
 CASADI_COST_R_E_SOURCE=
@@ -129,10 +129,10 @@ casadi_fun:
 	# ( cd {{ con_phi_e.name }}_r_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_E_SOURCE))
 	{% endif %}
 	{% if constraints.constr_type == "BGH" and dims.nh > 0 %}
-	( cd {{ con_h.name }}_h_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))
+	( cd {{ model.name }}_h_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))
 	{% endif %}
 	{% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-	( cd {{ con_h_e.name }}_h_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_E_SOURCE))
+	( cd {{ model.name }}_h_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_E_SOURCE))
 	{% endif %}
 	{% if cost.cost_type == "NONLINEAR_LS" %}
 	( cd {{ cost_r.name }}_r_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_SOURCE))
