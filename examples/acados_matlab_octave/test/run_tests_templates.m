@@ -49,8 +49,8 @@ end
 
 %% ocp tests
 try
-    test_templated_mex;
-    test_ocp_linear_dae;
+    test_template_pendulum_ocp;
+    test_template_ocp_linear_dae;
 catch exception
     exit_with_error(exception);
 end
