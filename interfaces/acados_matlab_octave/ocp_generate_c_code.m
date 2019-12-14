@@ -53,7 +53,8 @@ function ocp_generate_c_code(obj)
     
     % constraints
     if strcmp(obj.model_struct.constr_type, 'bgh') && obj.model_struct.dim_nh > 0
-        generate_c_code_nonlinear_constr( obj.model_struct, obj.opts_struct )
+        generate_c_code_nonlinear_constr( obj.model_struct, obj.opts_struct,...
+              fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_h_constraint']) );
     end
 
     % set include and lib path
@@ -64,18 +65,6 @@ function ocp_generate_c_code(obj)
     %% remove non-numerical data
     model.name = obj.acados_ocp_nlp_json.model.name;
     obj.acados_ocp_nlp_json.model = model;
-
-    con_h.name = obj.acados_ocp_nlp_json.con_h.name;
-    obj.acados_ocp_nlp_json.con_h = con_h;
-
-    con_h_e.name = obj.acados_ocp_nlp_json.con_h_e.name;
-    obj.acados_ocp_nlp_json.con_h_e = con_h_e;
-
-    con_p.name = obj.acados_ocp_nlp_json.con_p.name;
-    obj.acados_ocp_nlp_json.con_p = con_p;
-
-    con_p_e.name = obj.acados_ocp_nlp_json.con_p_e.name;
-    obj.acados_ocp_nlp_json.con_p_e = con_p_e;
 
     %% post process numerical data (mostly cast scalars to 1-dimensional cells)
     constr = obj.acados_ocp_nlp_json.constraints;

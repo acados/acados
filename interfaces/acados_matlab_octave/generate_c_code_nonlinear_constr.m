@@ -32,7 +32,7 @@
 %
 
 
-function generate_c_code_nonlinear_constr( model, opts )
+function generate_c_code_nonlinear_constr( model, opts, target_dir )
 
 %% import casadi
 import casadi.*
@@ -84,6 +84,15 @@ end
 
 model_name = model.name;
 
+% cd to target folder
+if nargin > 2
+    original_dir = pwd;
+    if ~exist(target_dir, 'dir')
+        mkdir(target_dir);
+    end
+    chdir(target_dir)
+end
+
 if isfield(model, 'constr_expr_h')
     h = model.constr_expr_h;
     % multipliers for hessian
@@ -134,5 +143,10 @@ if isfield(model, 'constr_expr_h_e')
     h_e_fun_jac_ut_xt.generate([model_name,'_constr_h_e_fun_jac_ut_xt'], casadi_opts);
     h_e_fun_jac_ut_xt_hess.generate([model_name,'_constr_h_e_fun_jac_ut_xt_hess'], casadi_opts);
 end
+
+if nargin > 2
+    chdir(original_dir)
+end
+
 
 end

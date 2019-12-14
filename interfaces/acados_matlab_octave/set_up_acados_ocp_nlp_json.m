@@ -140,7 +140,6 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
 
     if ocp_json.dims.nh > 0
-        ocp_json.con_h.name = 'expr_h';
         ocp_json.con_h.expr = model.constr_expr_h;
         ocp_json.constraints.lh = model.constr_lh;
         ocp_json.constraints.uh = model.constr_uh;
@@ -202,7 +201,6 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
 
     if ocp_json.dims.nh_e > 0    
-        ocp_json.con_h_e.name = 'expr_h_e';
         ocp_json.con_h_e.expr = model.constr_expr_h_e;
         ocp_json.constraints.lh_e = model.constr_lh_e;
         ocp_json.constraints.uh_e = model.constr_uh_e;

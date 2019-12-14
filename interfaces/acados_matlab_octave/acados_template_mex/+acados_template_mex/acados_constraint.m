@@ -37,17 +37,15 @@ classdef acados_constraint < handle
         x
         u
         z
-        name
         nc
     end
     methods
         function obj = acados_constraint()
-        obj.expr = [];
-        obj.x = [];
-        obj.u = [];
-        obj.z = [];
-        obj.nc = [];
-        obj.name = [];
+            obj.expr = [];
+            obj.x = [];
+            obj.u = [];
+            obj.z = [];
+            obj.nc = [];
         end
     end
 end
