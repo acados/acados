@@ -84,11 +84,11 @@ def generate_c_code_constraint_e( constraint, con_name ):
         # create dummy r
         z = SX.sym('z', 0, 0)
         # set up functions to be exported
-        fun_name = con_name + '_h_e_constraint'
+        fun_name = con_name + '_constr_h_e'
         if nr == 0: # BGH constraint
             con_h_expr = constraint.con_h_expr
-            jac_x = jacobian(con_h_expr, x);
-            jac_z = jacobian(con_h_expr, z);
+            jac_x = jacobian(con_h_expr, x)
+            jac_z = jacobian(con_h_expr, z)
             constraint_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_h_expr, transpose(jac_x), transpose(jac_z)])
 
             # generate C code
@@ -110,12 +110,12 @@ def generate_c_code_constraint_e( constraint, con_name ):
             gen_dir = con_name + '_phi_e_constraint'
             fun_name = con_name + '_phi_e_constraint'
             con_phi_expr_x = substitute(con_phi_expr, r, con_r_expr)
-            phi_jac_x = jacobian(con_phi_expr_x, x);
-            phi_jac_u = jacobian(con_phi_expr_x, u);
-            phi_jac_z = jacobian(con_phi_expr_x, z);
+            phi_jac_x = jacobian(con_phi_expr_x, x)
+            phi_jac_u = jacobian(con_phi_expr_x, u)
+            phi_jac_z = jacobian(con_phi_expr_x, z)
 
-            r_jac_x = jacobian(con_r_expr, x);
-            r_jac_u = jacobian(con_r_expr, u);
+            r_jac_x = jacobian(con_r_expr, x)
+            r_jac_u = jacobian(con_r_expr, u)
 
             hess = hessian(con_phi_expr[0], r)[0]
             for i in range(1, nh):

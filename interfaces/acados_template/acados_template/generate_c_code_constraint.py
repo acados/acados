@@ -100,10 +100,10 @@ def generate_c_code_constraint( constraint, con_name ):
         # set up functions to be exported
         if nr == 0: # BGH constraint
             con_h_expr = constraint.con_h_expr
-            fun_name = con_name + '_h_constraint'
-            jac_x = jacobian(con_h_expr, x);
-            jac_u = jacobian(con_h_expr, u);
-            jac_z = jacobian(con_h_expr, z);
+            fun_name = con_name + '_constr_h'
+            jac_x = jacobian(con_h_expr, x)
+            jac_u = jacobian(con_h_expr, u)
+            jac_z = jacobian(con_h_expr, z)
             constraint_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x)), transpose(jac_z)])
 
             # generate C code

@@ -41,12 +41,12 @@ extern "C" {
 
 {% if ocp.dims.nh > 0 %}
 // implicit ODE
-int {{ ocp.model.name }}_h_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ ocp.model.name }}_h_constraint_work(int *, int *, int *, int *);
-const int *{{ ocp.model.name }}_h_constraint_sparsity_in(int);
-const int *{{ ocp.model.name }}_h_constraint_sparsity_out(int);
-int {{ ocp.model.name }}_h_constraint_n_in();
-int {{ ocp.model.name }}_h_constraint_n_out();
+int {{ ocp.model.name }}_constr_h(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ ocp.model.name }}_constr_h_work(int *, int *, int *, int *);
+const int *{{ ocp.model.name }}_constr_h_sparsity_in(int);
+const int *{{ ocp.model.name }}_constr_h_sparsity_out(int);
+int {{ ocp.model.name }}_constr_h_n_in();
+int {{ ocp.model.name }}_constr_h_n_out();
 {% endif %}
 
 #ifdef __cplusplus

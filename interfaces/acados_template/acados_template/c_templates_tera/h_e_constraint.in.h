@@ -40,12 +40,12 @@ extern "C" {
 #endif
 
 {% if dims.nh_e > 0 %}
-int {{ model.name }}_h_e_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ model.name }}_h_e_constraint_work(int *, int *, int *, int *);
-const int *{{ model.name }}_h_e_constraint_sparsity_in(int);
-const int *{{ model.name }}_h_e_constraint_sparsity_out(int);
-int {{ model.name }}_h_e_constraint_n_in();
-int {{ model.name }}_h_e_constraint_n_out();
+int {{ model.name }}_constr_h_e(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_e_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_e_sparsity_in(int);
+const int *{{ model.name }}_constr_h_e_sparsity_out(int);
+int {{ model.name }}_constr_h_e_n_in();
+int {{ model.name }}_constr_h_e_n_out();
 {% endif %}
 
 #ifdef __cplusplus

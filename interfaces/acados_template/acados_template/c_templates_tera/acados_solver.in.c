@@ -755,12 +755,12 @@ int acados_create()
     h_constraint = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
         // nonlinear constraint
-        h_constraint[i].casadi_fun = &{{ model.name }}_h_constraint;
-        h_constraint[i].casadi_n_in = &{{ model.name }}_h_constraint_n_in;
-        h_constraint[i].casadi_n_out = &{{ model.name }}_h_constraint_n_out;
-        h_constraint[i].casadi_sparsity_in = &{{ model.name }}_h_constraint_sparsity_in;
-        h_constraint[i].casadi_sparsity_out = &{{ model.name }}_h_constraint_sparsity_out;
-        h_constraint[i].casadi_work = &{{ model.name }}_h_constraint_work;
+        h_constraint[i].casadi_fun = &{{ model.name }}_constr_h;
+        h_constraint[i].casadi_n_in = &{{ model.name }}_constr_h_n_in;
+        h_constraint[i].casadi_n_out = &{{ model.name }}_constr_h_n_out;
+        h_constraint[i].casadi_sparsity_in = &{{ model.name }}_constr_h_sparsity_in;
+        h_constraint[i].casadi_sparsity_out = &{{ model.name }}_constr_h_sparsity_out;
+        h_constraint[i].casadi_work = &{{ model.name }}_constr_h_work;
 
         external_function_param_casadi_create(&h_constraint[i], {{ dims.np }});
     }
@@ -768,12 +768,12 @@ int acados_create()
 
     {%- if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
 	// nonlinear constraint
-	h_e_constraint.casadi_fun = &{{ model.name }}_h_e_constraint;
-	h_e_constraint.casadi_n_in = &{{ model.name }}_h_e_constraint_n_in;
-	h_e_constraint.casadi_n_out = &{{ model.name }}_h_e_constraint_n_out;
-	h_e_constraint.casadi_sparsity_in = &{{ model.name }}_h_e_constraint_sparsity_in;
-	h_e_constraint.casadi_sparsity_out = &{{ model.name }}_h_e_constraint_sparsity_out;
-	h_e_constraint.casadi_work = &{{ model.name }}_h_e_constraint_work;
+	h_e_constraint.casadi_fun = &{{ model.name }}_constr_h_e;
+	h_e_constraint.casadi_n_in = &{{ model.name }}_constr_h_e_n_in;
+	h_e_constraint.casadi_n_out = &{{ model.name }}_constr_h_e_n_out;
+	h_e_constraint.casadi_sparsity_in = &{{ model.name }}_constr_h_e_sparsity_in;
+	h_e_constraint.casadi_sparsity_out = &{{ model.name }}_constr_h_e_sparsity_out;
+	h_e_constraint.casadi_work = &{{ model.name }}_constr_h_e_work;
 
     external_function_param_casadi_create(&h_e_constraint, {{ dims.np }});
     {%- endif %}
