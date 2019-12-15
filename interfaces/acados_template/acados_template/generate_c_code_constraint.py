@@ -116,7 +116,7 @@ def generate_c_code_constraint( constraint, con_name ):
                 os.mkdir(gen_dir)
             gen_dir_location = './' + gen_dir
             os.chdir(gen_dir_location)
-            file_name = con_name + '_h_constraint'
+            file_name = con_name + '_constr_h_fun_jac'
             constraint_fun_jac_tran.generate(file_name, casadi_opts)
             os.chdir('../..')
         else: # BGP constraint

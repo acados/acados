@@ -58,10 +58,10 @@ OBJ+= {{ model.name }}_phi_e_constraint/{{ model.name }}_phi_e_constraint.o
 # OBJ+= {{ model.name }}_r_e_constraint/{{ model.name }}_r_e_constraint.o
 {% endif %}
 {% if constraints.constr_type == "BGH"  and dims.nh > 0 %}
-OBJ+= {{ model.name }}_h_constraint/{{ model.name }}_h_constraint.o
+OBJ+= {{ model.name }}_h_constraint/{{ model.name }}_constr_h_fun_jac.o
 {% endif %}
 {% if constraints.constr_type_e == "BGH"  and dims.nh_e > 0 %}
-OBJ+= {{ model.name }}_h_e_constraint/{{ model.name }}_h_e_constraint.o
+OBJ+= {{ model.name }}_h_e_constraint/{{ model.name }}_constr_h_e_fun_jac.o
 {% endif %}
 {% if cost.cost_type == "NONLINEAR_LS" %}
 OBJ+= {{ model.name }}_r_cost/{{ model.name }}_r_cost.c 
@@ -104,10 +104,10 @@ CASADI_CON_PHI_E_SOURCE+=  {{ model.name }}_phi_e_constraint.c
 {% endif %}
 {% if dims.nh > 0 %}
 CASADI_CON_H_SOURCE=
-CASADI_CON_H_SOURCE+= {{ model.name }}_h_constraint.c 
+CASADI_CON_H_SOURCE+= {{ model.name }}_constr_h_fun_jac.c 
 {% endif %}
 {% if dims.nh_e > 0 %}
-CASADI_CON_H_E_SOURCE+= {{ model.name }}_h_e_constraint.c 
+CASADI_CON_H_E_SOURCE+= {{ model.name }}_constr_h_e_fun_jac.c 
 {% endif %}
 CASADI_COST_R_SOURCE=
 CASADI_COST_R_E_SOURCE=
