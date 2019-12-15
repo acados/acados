@@ -40,12 +40,12 @@ extern "C" {
 
 {% if dims.nh > 0 %}
 // implicit ODE
-int {{ model.name }}_constr_h(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ model.name }}_constr_h_work(int *, int *, int *, int *);
-const int *{{ model.name }}_constr_h_sparsity_in(int);
-const int *{{ model.name }}_constr_h_sparsity_out(int);
-int {{ model.name }}_constr_h_n_in();
-int {{ model.name }}_constr_h_n_out();
+int {{ model.name }}_constr_h_fun_jac(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_constr_h_fun_jac_work(int *, int *, int *, int *);
+const int *{{ model.name }}_constr_h_fun_jac_sparsity_in(int);
+const int *{{ model.name }}_constr_h_fun_jac_sparsity_out(int);
+int {{ model.name }}_constr_h_fun_jac_n_in();
+int {{ model.name }}_constr_h_fun_jac_n_out();
 {% endif %}
 
 #ifdef __cplusplus
