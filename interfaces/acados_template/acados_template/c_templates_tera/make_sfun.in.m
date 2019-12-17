@@ -75,7 +75,7 @@ CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPOASES ' ];
 
 LIB_PATH = '{{ acados_lib_path }}';
 
-LIBS = '-lacados -lhpipm -lblasfeo -lm'; 
+LIBS = '-lacados -lhpipm -lblasfeo';
 
 {% if  solver_options.qp_solver == "QPOASES" %}
 LIBS = strcat(LIBS, ' -lqpOASES_e'); 
