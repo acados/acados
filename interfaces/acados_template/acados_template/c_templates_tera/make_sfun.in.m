@@ -59,12 +59,12 @@ SOURCES = [ 'acados_solver_sfunction_{{ model.name }}.c ', ...
 
 INC_PATH = '{{ acados_include_path }}';
 
-INCS = [ ' -I', INC_PATH, '/blasfeo/include/ ', ...
-         '-I', INC_PATH, '/hpipm/include/ ', ...
-         '-I', INC_PATH, ' -I', INC_PATH, '/acados/ ',];
+INCS = [ ' -I', fullfile(INC_PATH, 'blasfeo', 'include'), ...
+         ' -I', fullfile(INC_PATH, 'hpipm', 'include'), ...
+        ' -I', INC_PATH, ' -I', fullfile(INC_PATH, 'acados'), ' '];
 
 {% if  solver_options.qp_solver == "QPOASES" %}
-    INCS = strcat(INCS, '-I', INC_PATH, '/qpOASES_e/')
+    INCS = strcat(INCS, '-I', fullfile(INC_PATH, 'qpOASES_e') )
 {% endif %}
 
 CFLAGS  = ' -O';
