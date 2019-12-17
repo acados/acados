@@ -60,7 +60,7 @@ endif()
 
 # Additional targets
 option(ACADOS_UNIT_TESTS "Compile Unit tests" OFF)
-option(ACADOS_EXAMPLES "Compile Examples" ON)
+option(ACADOS_EXAMPLES "Compile Examples" OFF)
 option(ACADOS_LINT "Compile Lint" OFF)
 # Extarnal libs
 option(ACADOS_WITH_QPOASES  "qpOASES solver" OFF)
