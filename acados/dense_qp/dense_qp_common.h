@@ -58,7 +58,6 @@ typedef struct d_dense_qp_res_ws dense_qp_res_ws;
 #define QP_SOLVER_CONFIG_
 typedef struct
 {
-    // TODO(dimitris): pass dims to evaluate?
     void (*dims_set)(void *config_, void *dims_, const char *field, const int* value);
     int (*opts_calculate_size)(void *config, void *dims);
     void *(*opts_assign)(void *config, void *dims, void *raw_memory);
@@ -67,6 +66,7 @@ typedef struct
     void (*opts_set)(void *config_, void *opts_, const char *field, void* value);
     int (*memory_calculate_size)(void *config, void *dims, void *args);
     void *(*memory_assign)(void *config, void *dims, void *args, void *raw_memory);
+    void (*memory_get)(void *config_, void *mem_, const char *field, void* value);
     int (*workspace_calculate_size)(void *config, void *dims, void *args);
     int (*evaluate)(void *config, void *qp_in, void *qp_out, void *args, void *mem, void *work);
     void (*eval_sens)(void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);

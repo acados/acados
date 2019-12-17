@@ -34,6 +34,10 @@
 
 COVERAGE="${COVERAGE:-}";
 
+TERA_RENDERER_VERSION='0.0.20';
+_TERA_RENDERER_GITHUB_RELEASES="https://github.com/acados/tera_renderer/releases/download/v${TERA_RENDERER_VERSION}/";
+TERA_RENDERER_URL="${_TERA_RENDERER_GITHUB_RELEASES}/t_renderer-v${TERA_RENDERER_VERSION}-linux";
+
 export MATLABPATH="${ACADOS_INSTALL_DIR}/lib:${MATLABPATH}";
 
 function build_acados {
@@ -44,7 +48,7 @@ function build_acados {
 		ACADOS_LINT='OFF';
 	fi
 
-	if [ "${ACADOS_UNIT_TESTS}" = 'ON' ]; then
+	if [ "${ACADOS_UNIT_TESTS}" = 'ON' || "${ACADOS_PYTHON}" = 'ON' ]; then
 		ACADOS_WITH_QPOASES='ON';
 	fi
 
@@ -59,14 +63,13 @@ function build_acados {
 		-D ACADOS_LINT="${ACADOS_LINT}" \
 		-D ACADOS_INSTALL_DIR="${ACADOS_INSTALL_DIR}" \
 		-D Matlab_ROOT_DIR="${MATLAB_ROOT}" \
-		-D SWIG_MATLAB="${SWIG_MATLAB}" \
 		-D COVERAGE="${COVERAGE}" \
-		-D SWIG_PYTHON="${SWIG_PYTHON}" \
 		-D BUILD_SHARED_LIBS=ON \
 		-D ACADOS_EXAMPLES="${ACADOS_EXAMPLES}" \
 		-D MATLAB_EXECUTABLE="${MATLAB_EXECUTABLE}" \
 		-D ACADOS_MATLAB="${ACADOS_MATLAB}" \
 		-D ACADOS_OCTAVE="${ACADOS_OCTAVE}" \
+		-D ACADOS_PYTHON="${ACADOS_PYTHON}" \
 		..;
 	if [ "${ACADOS_LINT}" = 'ON' ]; then
 		cmake --build build --target lint;
@@ -76,9 +79,22 @@ function build_acados {
 	cmake --build build;
 	cmake --build build --target install;
 
+    if [[ "${ACADOS_PYTHON}" = 'ON' ]] ;
+    then
+        source "${SCRIPT_DIR}/install_python_dependencies.sh";
+        pushd interfaces/acados_template;
+            pip install .
+        popd;
+		mkdir -p bin;
+        pushd bin;
+            wget -O t_renderer "${TERA_RENDERER_URL}";
+            chmod +x t_renderer
+        popd;
+    fi
+
 	# Run ctest
 	# TODO: test matlab/python
-	cmake -E chdir build ctest --output-on-failure; # use -V for full output
+	cmake -E chdir build ctest -V; # use -V for full output # --output-on-failure for less
 
 	[ $? -ne 0 ] && exit 100;
 	if [ -n "${COVERAGE}" ]; then

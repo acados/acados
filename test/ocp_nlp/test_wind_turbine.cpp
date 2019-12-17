@@ -668,25 +668,25 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
 
     // explicit model
     external_function_param_casadi *expl_vde_for =
-    (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+    (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     // implicit model
     external_function_param_casadi *impl_ode_fun =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *impl_ode_fun_jac_x_xdot =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *impl_ode_jac_x_xdot_u =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *impl_ode_fun_jac_x_xdot_u =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     // gnsf model
     external_function_param_casadi *phi_fun =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *phi_fun_jac_y =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *phi_jac_y_uhat =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
     external_function_param_casadi *f_lo_jac_x1_x1dot_u_z =
-        (external_function_param_casadi *) malloc(NN*sizeof(external_function_param_casadi));
+        (external_function_param_casadi *) malloc(NN*external_function_param_casadi_struct_size());
 
     select_dynamics_wt_casadi(NN, expl_vde_for, impl_ode_fun, impl_ode_fun_jac_x_xdot,
         impl_ode_jac_x_xdot_u, impl_ode_fun_jac_x_xdot_u, phi_fun, phi_fun_jac_y, phi_jac_y_uhat,
@@ -905,7 +905,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     * sqp opts
     ************************************************/
 
-    void *nlp_opts = ocp_nlp_opts_create(config, dims);
+    void *nlp_opts = ocp_nlp_solver_opts_create(config, dims);
 
     // sim opts
     for (int i = 0; i < NN; ++i)
@@ -915,8 +915,8 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
         {
             int ns = 4;
             int num_steps = 10;
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
         }
         else if (plan->sim_solver_plan[i].sim_solver == IRK)
         {
@@ -924,17 +924,17 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             int ns = 4;
             bool jac_reuse = true;
 
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse);
         }
         else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
         {
             int num_steps = 1;
             int ns = 4;
 
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
         }
         else if (plan->sim_solver_plan[i].sim_solver == GNSF)
         {
@@ -943,10 +943,10 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
             int newton_iter = 1;
             bool jac_reuse = true;
 
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "num_steps", &num_steps);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "ns", &ns);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "jac_reuse", &jac_reuse);
-            ocp_nlp_dynamics_opts_set(config, nlp_opts, i, "newton_iter", &newton_iter);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_num_steps", &num_steps);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_ns", &ns);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_jac_reuse", &jac_reuse);
+            ocp_nlp_solver_opts_set_at_stage(config, nlp_opts, i, "dynamics_newton_iter", &newton_iter);
         }
     }
 
@@ -956,18 +956,18 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     double tol_ineq = 1e-8;
     double tol_comp = 1e-8;
 
-    ocp_nlp_opts_set(config, nlp_opts, "max_iter", &max_iter);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
-    ocp_nlp_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "max_iter", &max_iter);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_stat", &tol_stat);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_eq", &tol_eq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_ineq", &tol_ineq);
+    ocp_nlp_solver_opts_set(config, nlp_opts, "tol_comp", &tol_comp);
 
 
     // partial condensing
     if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
     {
         int cond_N = 10;
-        ocp_nlp_opts_set(config, nlp_opts, "qp_cond_N", &cond_N);
+        ocp_nlp_solver_opts_set(config, nlp_opts, "qp_cond_N", &cond_N);
     }
 
     config->opts_update(config, dims, nlp_opts);
@@ -1137,7 +1137,7 @@ void setup_and_solve_nlp(std::string const& integrator_str, std::string const& q
     free(phi_jac_y_uhat);
     free(f_lo_jac_x1_x1dot_u_z);
 
-    ocp_nlp_opts_destroy(nlp_opts);
+    ocp_nlp_solver_opts_destroy(nlp_opts);
     ocp_nlp_in_destroy(nlp_in);
     ocp_nlp_out_destroy(nlp_out);
     ocp_nlp_solver_destroy(solver);

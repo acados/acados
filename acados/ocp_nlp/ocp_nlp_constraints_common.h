@@ -60,7 +60,7 @@ typedef struct
 {
     int (*dims_calculate_size)(void *config);
     void *(*dims_assign)(void *config, void *raw_memory);
-    void (*dims_initialize)(void *config, void *dims, int nx, int nu, int nbx, int nbu, int ng,
+    void (*dims_initialize)(void *config, void *dims, int nx, int nu, int nz, int nbx, int nbu, int ng,
                             int nh, int nq, int ns);
     int (*model_calculate_size)(void *config, void *dims);
     void *(*model_assign)(void *config, void *dims, void *raw_memory);
@@ -74,16 +74,20 @@ typedef struct
     struct blasfeo_dvec *(*memory_get_fun_ptr)(void *memory);
     struct blasfeo_dvec *(*memory_get_adj_ptr)(void *memory);
     void (*memory_set_ux_ptr)(struct blasfeo_dvec *ux, void *memory);
+    void (*memory_set_tmp_ux_ptr)(struct blasfeo_dvec *tmp_ux, void *memory);
     void (*memory_set_lam_ptr)(struct blasfeo_dvec *lam, void *memory);
+    void (*memory_set_tmp_lam_ptr)(struct blasfeo_dvec *tmp_lam, void *memory);
     void (*memory_set_DCt_ptr)(struct blasfeo_dmat *DCt, void *memory);
     void (*memory_set_RSQrq_ptr)(struct blasfeo_dmat *RSQrq, void *memory);
+    void (*memory_set_z_alg_ptr)(struct blasfeo_dvec *z_alg, void *memory);
+    void (*memory_set_dzdux_tran_ptr)(struct blasfeo_dmat *dzduxt, void *memory);
     void (*memory_set_idxb_ptr)(int *idxb, void *memory);
     void (*memory_set_idxs_ptr)(int *idxs, void *memory);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size)(void *config, void *dims, void *opts);
     void (*initialize)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
-    void (*update_qp_matrices)(void *config, void *dims, void *model, void *opts, void *mem,
-                               void *work);
+    void (*update_qp_matrices)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
+    void (*compute_fun)(void *config, void *dims, void *model, void *opts, void *mem, void *work);
     void (*config_initialize_default)(void *config);
     // dimension setters
     void (*dims_set)(void *config_, void *dims_, const char *field, const int *value);

@@ -175,16 +175,16 @@ file(GLOB WT_MODEL_NX6P2_SRC
 )
 
 file(GLOB INV_PENDULUM_SRC
-    inverted_pendulum_model/inv_pendulum_impl_ode_fun.c
-    inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_z.c
-    inverted_pendulum_model/inv_pendulum_impl_ode_jac_x_xdot_u_z.c
-    inverted_pendulum_model/inv_pendulum_impl_ode_fun_jac_x_xdot_u.c
-    inverted_pendulum_model/inv_pendulum_impl_ode_hess.c
-    inverted_pendulum_model/inv_pendulum_phi_fun.c
-    inverted_pendulum_model/inv_pendulum_phi_fun_jac_y.c
-    inverted_pendulum_model/inv_pendulum_phi_jac_y_uhat.c
-    inverted_pendulum_model/inv_pendulum_f_lo_fun_jac_x1k1uz.c
-    inverted_pendulum_model/inv_pendulum_get_matrices_fun.c
+    pendulum_dae_model/pendulum_dae_dyn_impl_ode_fun.c
+    pendulum_dae_model/pendulum_dae_dyn_impl_ode_fun_jac_x_xdot.c
+    pendulum_dae_model/pendulum_dae_dyn_impl_ode_jac_x_xdot_u.c
+    pendulum_dae_model/pendulum_dae_dyn_impl_ode_fun_jac_x_xdot_u.c
+    pendulum_dae_model/pendulum_dae_dyn_impl_ode_hess.c
+    pendulum_dae_model/pendulum_dae_dyn_gnsf_phi_fun.c
+    pendulum_dae_model/pendulum_dae_dyn_gnsf_phi_fun_jac_y.c
+    pendulum_dae_model/pendulum_dae_dyn_gnsf_phi_jac_y_uhat.c
+    pendulum_dae_model/pendulum_dae_dyn_gnsf_f_lo_fun_jac_x1k1uz.c
+    pendulum_dae_model/pendulum_dae_dyn_gnsf_get_matrices_fun.c
 )
 
 file(GLOB GNSF_CRANE_SRC
@@ -219,10 +219,10 @@ add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6P2_SR
 target_link_libraries(wind_turbine_nmpc_example acados)
 add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
 
-# -------------------- sim_inverted_pendulum
-add_executable(sim_inverted_pendulum sim_inverted_pendulum.c ${INV_PENDULUM_SRC})
-target_link_libraries(sim_inverted_pendulum acados)
-add_test(sim_inverted_pendulum sim_inverted_pendulum)
+# -------------------- sim_pendulum_dae
+add_executable(sim_pendulum_dae sim_pendulum_dae.c ${INV_PENDULUM_SRC})
+target_link_libraries(sim_pendulum_dae acados)
+add_test(sim_pendulum_dae sim_pendulum_dae)
 
 # -------------------- sim_wt_nx6
 add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
@@ -238,20 +238,21 @@ add_test(sim_gnsf_crane sim_gnsf_crane)
 add_executable(simple_dae_example simple_dae_example.c
     simple_dae_model/simple_dae_impl_ode_fun.c
     simple_dae_model/simple_dae_impl_ode_jac_x_xdot_u_z.c
-    simple_dae_model/simple_dae_impl_ode_fun_jac_x_xdot_z.c)
+    simple_dae_model/simple_dae_impl_ode_fun_jac_x_xdot_z.c
+    simple_dae_model/simple_dae_constr_h_fun_jac_ut_xt.c
+    simple_dae_model/simple_dae_constr_h_fun_jac_ut_xt_hess.c)
     
 target_link_libraries(simple_dae_example acados)
 add_test(simple_dae_example simple_dae_example)
 
-# -------------------- pendulum_scqp
-if(NOT EMBEDDED_TARGET MATCHES XILINX_NONE_ELF ) #Xilinx bare-metal
-	add_executable(pendulum_scqp pendulum_scqp.cpp
-		pendulum_model/pendulum_ode_expl_vde_forw.c
-		pendulum_model/constraint.c
-		pendulum_model/position.c)
-	target_link_libraries(pendulum_scqp acados)
-	add_test(pendulum_scqp pendulum_scqp)
-endif()
+# # -------------------- pendulum_scqp
+# add_executable(pendulum_scqp pendulum_scqp.cpp
+#     pendulum_model/pendulum_ode_expl_vde_forw.c
+#     pendulum_model/constraint.c
+#     pendulum_model/position.c)
+# target_link_libraries(pendulum_scqp acados)
+# add_test(pendulum_scqp pendulum_scqp)
+>>>>>>> upstream/master
 
 # -------------------- mass_spring
 add_executable(mass_spring_example no_interface_examples/mass_spring_example.c no_interface_examples/mass_spring_model/mass_spring_qp.c)

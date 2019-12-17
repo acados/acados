@@ -140,6 +140,7 @@ typedef struct
 
     bool output_z;        // 1 -- if zn should be computed
     bool sens_algebraic;  // 1 -- if S_algebraic should be computed
+    bool exact_z_output;  // 1 -- if z, S_algebraic should be computed exactly, extra Newton iterations
 
     // for explicit integrators: newton_iter == 0 && scheme == NULL
     // && jac_reuse=false
@@ -163,7 +164,8 @@ typedef struct
     void *(*opts_assign)(void *config_, void *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config_, void *dims, void *opts);
     void (*opts_update)(void *config_, void *dims, void *opts);
-    int (*opts_set)(void *config_, void *opts_, const char *field, void *value);
+    void (*opts_set)(void *config_, void *opts_, const char *field, void *value);
+    void (*opts_get)(void *config_, void *opts_, const char *field, void *value);
     // mem
     int (*memory_calculate_size)(void *config, void *dims, void *opts);
     void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
@@ -211,7 +213,8 @@ int sim_out_get_(void *config, void *dims, sim_out *out, const char *field, void
 
 /* opts */
 //
-int sim_opts_set_(sim_opts *opts, const char *field, void *value);
-
+void sim_opts_set_(sim_opts *opts, const char *field, void *value);
+//
+void sim_opts_get_(sim_config *config, sim_opts *opts, const char *field, void *value);
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

@@ -41,10 +41,10 @@ function [ model ] = export_simple_dae_model()
     %% CasADi
     import casadi.*
     casadi_version = CasadiMeta.version();
-    if strcmp(casadi_version(1:3),'3.4') % require casadi 3.4.x
+    if ( strcmp(casadi_version(1:3),'3.4') || strcmp(casadi_version(1:3),'3.5')) % require casadi 3.4.x
         casadi_opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
     else % old casadi versions
-        error('Please download and install CasADi version 3.4.x to ensure compatibility with acados')
+        error('Please provide CasADi version 3.4 or 3.5 to ensure compatibility with acados')
     end
     model_name_prefix = 'simple_dae';
        
@@ -73,21 +73,22 @@ function [ model ] = export_simple_dae_model()
     %% Dynamics: implicit DAE formulation (index-1)
     % x = vertcat(xpos, ypos, alpha, vx, vy, valpha);
     % z = vertcat(ax, ay, aalpha, Fx, Fy);
-    f_impl = vertcat(x1_dot+x1-0.1*z2-u1, ...
-                     x2_dot+x2-0.1*z1-u2,  ...
+    f_impl = vertcat(x1_dot-0.1*x1+0.1*z2-u1, ...
+                     x2_dot+x2+0.01*z1-u2,  ...
                      z1-x1, ...
                      z2-x2);
+ 
     
     %% initial value
     %     x0 = [0.1; -0.1];
     %     z0 = [0.0, 0.0];
     %     u0 = 0;
 
-    model.f_impl_expr = f_impl;
-    model.x = x;
-    model.xdot = xdot;
-    model.u = u;
-    model.z = z;
+    model.expr_f = f_impl;
+    model.sym_x = x;
+    model.sym_xdot = xdot;
+    model.sym_u = u;
+    model.sym_z = z;
     model.name = model_name_prefix;
     
 end

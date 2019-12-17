@@ -75,9 +75,9 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/print.h"
+#include "acados/utils/math.h"
 
 #include "acados_c/dense_qp_interface.h"
-
 
 
 /************************************************
@@ -121,6 +121,7 @@ void dense_qp_qpoases_opts_initialize_default(void *config_, dense_qp_dims *dims
     opts->hotstart = 0;
     opts->set_acado_opts = 1;
     opts->compute_t = 1;
+    opts->tolerance = 1e-4;
 
     return;
 }
@@ -138,35 +139,64 @@ void dense_qp_qpoases_opts_update(void *config_, dense_qp_dims *dims, void *opts
 
 void dense_qp_qpoases_opts_set(void *config_, void *opts_, const char *field, void *value)
 {
-    // dense_qp_qpoases_opts *opts = opts_;
+    dense_qp_qpoases_opts *opts = opts_;
 
     if (!strcmp(field, "tol_stat"))
     {
-		// TODO set solver exit tolerance
+        double *tol = value;
+        opts->tolerance = MIN(opts->tolerance, *tol);
     }
     else if (!strcmp(field, "tol_eq"))
     {
-		// TODO set solver exit tolerance
+        double *tol = value;
+        opts->tolerance = MIN(opts->tolerance, *tol);
     }
     else if (!strcmp(field, "tol_ineq"))
     {
-		// TODO set solver exit tolerance
+        double *tol = value;
+        opts->tolerance = MIN(opts->tolerance, *tol);
     }
     else if (!strcmp(field, "tol_comp"))
     {
-		// TODO set solver exit tolerance
+        double *tol = value;
+        opts->tolerance = MIN(opts->tolerance, *tol);
     }
     else if (!strcmp(field, "warm_start"))
     {
-		// TODO set solver warm start
+        int *warm_start = value;
+        if (*warm_start == 0)
+        {
+            opts->warm_start = 0;
+            opts->hotstart = 0;
+        }
+        else if (*warm_start == 1)
+        {
+            opts->warm_start = 1;
+            opts->hotstart = 0;
+        }
+        else if (*warm_start == 2)
+        {
+            opts->warm_start = 1;
+            opts->hotstart = 1;
+        }
+        else
+        {
+            printf("\ndense_qp_qpoases: setting warm_start: supported values are: 0 - cold, 1 - warm, 2 - hot\n");
+            exit(1);
+        }
     }
-	else
-	{
-		printf("\nerror: dense_qp_qpoases_opts_set: wrong field: %s\n", field);
-		exit(1);
-	}
+    else if (!strcmp(field, "iter_max"))
+    {
+        int *max_iter = value;
+        opts->max_nwsr = *max_iter;
+    }
+    else
+    {
+        printf("\nerror: dense_qp_qpoases_opts_set: wrong field: %s\n", field);
+        exit(1);
+    }
 
-	return;
+    return;
 }
 
 
@@ -324,6 +354,35 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
     return mem;
 }
 
+
+
+void dense_qp_qpoases_memory_get(void *config_, void *mem_, const char *field, void* value)
+{
+    // qp_solver_config *config = config_;
+	dense_qp_qpoases_memory *mem = mem_;
+
+	if (!strcmp(field, "time_qp_solver_call"))
+	{
+		double *tmp_ptr = value;
+		*tmp_ptr = mem->time_qp_solver_call;
+	}
+	else if (!strcmp(field, "iter"))
+	{
+		int *tmp_ptr = value;
+		*tmp_ptr = mem->iter;
+	}
+	else
+	{
+		printf("\nerror: dense_qp_qpoases_memory_get: field %s not available\n", field);
+		exit(1);
+	}
+
+	return;
+
+}
+
+
+
 /************************************************
  * workspcae
  ************************************************/
@@ -332,6 +391,8 @@ int dense_qp_qpoases_workspace_calculate_size(void *config_, dense_qp_dims *dims
 {
     return 0;
 }
+
+
 
 /************************************************
  * functions
@@ -461,6 +522,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
                 {
                     static Options options;
                     Options_setToMPC(&options);
+                    options.terminationTolerance = opts->tolerance;
                     QProblem_setOptions(QP, options);
                 }
 
@@ -493,6 +555,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
                 {
                     static Options options;
                     Options_setToMPC(&options);
+                    options.terminationTolerance = opts->tolerance;
                     QProblem_setOptions(QP, options);
                 }
                 QProblemB_init(QPB, H, g, d_lb, d_ub, &nwsr, &cputime);
@@ -520,10 +583,13 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             QProblem_printProperties(QP);
             if (opts->use_precomputed_cholesky == 1)
             {
+                // NOTE(oj): why are there no options set in this case?
                 // static Options options;
                 // Options_setToDefault( &options );
                 // options.initialStatusBounds = ST_INACTIVE;
+                // options.terminationTolerance = opts->tolerance;
                 // QProblem_setOptions( QP, options );
+
 
                 qpoases_status = (ns > 0) ?
                     QProblem_initW(QP, HH, gg, CC, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
@@ -541,13 +607,15 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
                 {
                     static Options options;
                     Options_setToMPC(&options);
+                    options.terminationTolerance = opts->tolerance;
                     QProblem_setOptions(QP, options);
                 }
                 if (opts->warm_start)
                 {
                     qpoases_status = (ns > 0) ?
-                        QProblem_initW(QP, HH, gg, CC, d_lb, d_ub, d_lg, d_ug, &nwsr,
-                                       &cputime, NULL, dual_sol, NULL, NULL, NULL) :
+                        QProblem_initW(QP, HH, gg, CC, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
+                                      /* primal_sol */ NULL, dual_sol, /* guessed bounds */ NULL,
+                                      /* guessed constraints */ NULL, /* R */ NULL) :
                         QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg0, d_ug0, &nwsr,
                                        &cputime, NULL, dual_sol, NULL, NULL, NULL);
                 }
@@ -569,6 +637,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
             QProblemB_printProperties(QPB);
             if (opts->use_precomputed_cholesky == 1)
             {
+                // NOTE(oj): why are there no options set in this case?
                 // static Options options;
                 // Options_setToDefault( &options );
                 // options.initialStatusBounds = ST_INACTIVE;
@@ -584,6 +653,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
                 {
                     static Options options;
                     Options_setToMPC(&options);
+                    options.terminationTolerance = opts->tolerance;
                     QProblemB_setOptions(QPB, options);
                 }
                 if (opts->warm_start)
@@ -670,6 +740,9 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = nwsr;
 
+	memory->time_qp_solver_call = info->solve_QP_time;
+    memory->iter = nwsr;
+
     // compute slacks
     if (opts->compute_t)
     {
@@ -687,8 +760,8 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
 void dense_qp_qpoases_eval_sens(void *config_, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_)
 {
-	printf("\nerror: dense_qp_qpoases_eval_sens: not implemented yet\n");
-	exit(1);
+    printf("\nerror: dense_qp_qpoases_eval_sens: not implemented yet\n");
+    exit(1);
 }
 
 
@@ -707,6 +780,7 @@ void dense_qp_qpoases_config_initialize_default(void *config_)
         (int (*)(void *, void *, void *)) & dense_qp_qpoases_memory_calculate_size;
     config->memory_assign =
         (void *(*) (void *, void *, void *, void *) ) & dense_qp_qpoases_memory_assign;
+    config->memory_get = &dense_qp_qpoases_memory_get;
     config->workspace_calculate_size =
         (int (*)(void *, void *, void *)) & dense_qp_qpoases_workspace_calculate_size;
     config->eval_sens = &dense_qp_qpoases_eval_sens;

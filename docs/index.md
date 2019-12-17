@@ -6,6 +6,10 @@
 
 Fast and embedded solvers for nonlinear optimal control.
 
+```eval_rst
+Documentation latest build: |today|
+```
+
 
 ```eval_rst
 .. toctree::
@@ -23,6 +27,7 @@ Fast and embedded solvers for nonlinear optimal control.
 ```
 
 
+
 <!-- # Contents -->
 <!-- * [Getting started](get_started/index.md) -->
 <!-- * [Interfaces](interfaces/index.md) -->
@@ -30,5 +35,3 @@ Fast and embedded solvers for nonlinear optimal control.
 <!-- * [Installation](installation/index.md) -->
 <!-- * [FAQ](faq/index.md) -->
 <!-- * [Citing](citing.md) -->
-
-

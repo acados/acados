@@ -66,57 +66,57 @@ void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb, do
     return;
 }
 
-void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y)
-{
-    int ii, jj;
+// void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y)
+// {
+//     int ii, jj;
 
-    for (jj = 0; jj < n; jj++)
-    {
-        for (ii = 0; ii < m; ii++)
-        {
-            y[ii] += A[ii + lda * jj] * x[jj];
-        }
-    }
+//     for (jj = 0; jj < n; jj++)
+//     {
+//         for (ii = 0; ii < m; ii++)
+//         {
+//             y[ii] += A[ii + lda * jj] * x[jj];
+//         }
+//     }
 
-    return;
-}
+//     return;
+// }
 
-void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y)
-{
-    int ii, jj;
+// void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y)
+// {
+//     int ii, jj;
 
-    for (ii = 0; ii < n; ii++)
-    {
-        for (jj = 0; jj < m; jj++)
-        {
-            y[ii] += A[jj + lda * ii] * x[jj];
-        }
-    }
+//     for (ii = 0; ii < n; ii++)
+//     {
+//         for (jj = 0; jj < m; jj++)
+//         {
+//             y[ii] += A[jj + lda * ii] * x[jj];
+//         }
+//     }
 
-    return;
-}
+//     return;
+// }
 
-void dcopy_3l(int n, double *x, int incx, double *y, int incy)
-{
-    int ii;
+// void dcopy_3l(int n, double *x, int incx, double *y, int incy)
+// {
+//     int ii;
 
-    if (incx == 1 && incy == 1)
-    {
-        for (ii = 0; ii < n; ii++)
-        {
-            y[ii] = x[ii];
-        }
-    }
-    else
-    {
-        for (ii = 0; ii < n; ii++)
-        {
-            y[ii * incy] = x[ii * incx];
-        }
-    }
+//     if (incx == 1 && incy == 1)
+//     {
+//         for (ii = 0; ii < n; ii++)
+//         {
+//             y[ii] = x[ii];
+//         }
+//     }
+//     else
+//     {
+//         for (ii = 0; ii < n; ii++)
+//         {
+//             y[ii * incy] = x[ii * incx];
+//         }
+//     }
 
-    return;
-}
+//     return;
+// }
 
 void daxpy_3l(int n, double da, double *dx, double *dy)
 {
@@ -419,13 +419,13 @@ double onenorm(int row, int col, double *ptrA)
 }
 
 /* two norm of a vector */
-double twonormv(int n, double *ptrv)
-{
-    double temp;
-    temp = 0;
-    for (int i = 0; i < n; i++) temp += ptrv[i] * ptrv[i];
-    return (double) sqrt(temp);
-}
+// double twonormv(int n, double *ptrv)
+// {
+//     double temp;
+//     temp = 0;
+//     for (int i = 0; i < n; i++) temp += ptrv[i] * ptrv[i];
+//     return (double) sqrt(temp);
+// }
 
 /* computes the Pade approximation of degree m of the matrix A */
 void padeapprox(int m, int row, double *A)
@@ -780,39 +780,40 @@ void expm(int row, double *A)
 }
 
 // TODO(dimitris): move this to condensing module once implemented
+// NOTE(oj): probably done!
 // compute the memory size of condensing for [x u] order of bounds (instead of [u x] in hpipm)
-void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
-                                     int *nvd, int *ned, int *nbd, int *ngd)
-{
-    int ii, jj;
+// void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
+//                                      int *nvd, int *ned, int *nbd, int *ngd)
+// {
+//     int ii, jj;
 
-    *nvd = 0;
-    *ned = 0;
-    *nbd = 0;
-    *ngd = 0;
+//     *nvd = 0;
+//     *ned = 0;
+//     *nbd = 0;
+//     *ngd = 0;
 
-    // first stage
-    *nvd += nx[0] + nu[0];
-    *nbd += nb[0];
-    *ngd += ng[0];
-    // remaining stages
-    for (ii = 1; ii <= N; ii++)
-    {
-        *nvd += nu[ii];
-        for (jj = 0; jj < nb[ii]; jj++)
-        {
-            if (hidxb[ii][jj] < nx[ii])
-            {  // state constraint
-                (*ngd)++;
-            }
-            else
-            {  // input constraint
-                (*nbd)++;
-            }
-        }
-        *ngd += ng[ii];
-    }
-}
+//     // first stage
+//     *nvd += nx[0] + nu[0];
+//     *nbd += nb[0];
+//     *ngd += ng[0];
+//     // remaining stages
+//     for (ii = 1; ii <= N; ii++)
+//     {
+//         *nvd += nu[ii];
+//         for (jj = 0; jj < nb[ii]; jj++)
+//         {
+//             if (hidxb[ii][jj] < nx[ii])
+//             {  // state constraint
+//                 (*ngd)++;
+//             }
+//             else
+//             {  // input constraint
+//                 (*nbd)++;
+//             }
+//         }
+//         *ngd += ng[ii];
+//     }
+// }
 
 
 
@@ -1089,41 +1090,6 @@ void acados_eigen_decomposition(int dim, double *A, double *V, double *d, double
 
     return;
 }
-
-
-
-void eigen_decomposition(int dim, double *A, double *V, double *d)
-{
-    int i, j;
-
-    for (i=0; i<dim; i++)
-        for (j=0; j<dim; j++)
-            V[i*dim+j] = A[i*dim+j];
-
-    double *e = (double *) calloc(dim, sizeof(double));
-
-    tred2(dim, V, d, e);
-    tql2(dim, V, d, e);
-
-    free(e);
-
-    return;
-}
-
-
-
-
-/* cutting regularization */
-/*void regularize(real_t *A) {
-int i;
-real_t V[dim*dim];
-real_t d[dim];
-eigen_decomposition(A, V, d);
-for (i = 0; i < dim; i++) {
-    if( d[i] <= ACADOS_EPS ) d[i] = ACADOS_EPS;
-}
-reconstruct_A(A, V, d);
-}*/
 
 
 

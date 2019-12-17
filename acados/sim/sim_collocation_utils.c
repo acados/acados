@@ -35,6 +35,7 @@
 #include "acados/sim/sim_collocation_utils.h"
 
 #include <math.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -169,22 +170,9 @@ int gauss_nodes_work_calculate_size(int ns)
 }
 
 
-
+// TODO(all): understand how this works and leave a comment!
 void gauss_nodes(int ns, double *nodes, void *work)
 {
-    //    if ( ns == 1 ) {         // GL2
-    //        nodes[0] = 1.0/2.0;
-    //    } else if ( ns == 2 ) {  // GL4
-    //        memcpy(nodes,
-    //                ((double[]) {1.0/2.0+sqrt(3.0)/6.0,
-    //                1.0/2.0-sqrt(3.0)/6.0}), sizeof(*nodes) * (ns));
-    //    } else if ( ns == 3 ) {  // GL6
-    //        memcpy(nodes,
-    //                ((double[]) {1.0/2.0-sqrt(15.0)/10.0, 1.0/2.0,
-    //                1.0/2.0+sqrt(15.0)/10.0}), sizeof(*nodes) * (ns));
-    //    } else {
-    //        // throw error somehow?
-    //    }
     int N = ns - 1;
     int N1 = N + 1;
     int N2 = N + 2;
@@ -209,7 +197,7 @@ void gauss_nodes(int ns, double *nodes, void *work)
     double *der_lgvm = (double *) c_ptr;
     c_ptr += N1 * sizeof(double);
 
-    // TODO(all): assert !!!
+    assert((char *) work + gauss_nodes_work_calculate_size(ns) >= c_ptr);
 
     double a = 0.0;
     double b = 1.0;  // code for collocation interval [a,b]
@@ -252,7 +240,8 @@ void gauss_nodes(int ns, double *nodes, void *work)
             if (err < fabs(y[i] - y_prev[i])) err = fabs(y[i] - y_prev[i]);
         }
     }
-    for (int i = 0; i < N1; i++) nodes[i] = (a * (1 - y[i]) + 0.5 * b * (1 + y[i]));
+    for (int i = 0; i < N1; i++)
+        nodes[i] = (a * (1 - y[i]) + 0.5 * b * (1 + y[i]));
 
     return;
 }
@@ -272,7 +261,7 @@ int gauss_simplified_work_calculate_size(int ns)
 }
 
 
-
+// TODO(all): understand how this works and leave a comment!
 void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
 {
     char *c_ptr = work;
@@ -293,7 +282,7 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work)
     int *perm = (int *) c_ptr;
     c_ptr += ns * sizeof(int);
 
-    // TODO(all): assert !!!
+    assert((char *) work + gauss_simplified_work_calculate_size(ns) >= c_ptr);
 
     char simplified[MAX_STR_LEN];
 
@@ -420,7 +409,7 @@ void butcher_table(int ns, double *nodes, double *b, double *A, void *work)
     int *perm = (int *) c_ptr;
     c_ptr += ns * sizeof(int);
 
-    // TODO(all): assert !!!
+    assert((char *) work + butcher_table_work_calculate_size(ns) >= c_ptr);
 
     for (j = 0; j < ns; j++)
     {

@@ -54,7 +54,7 @@ OBJS += acados/ocp_nlp/ocp_nlp_cost_nls.o
 OBJS += acados/ocp_nlp/ocp_nlp_cost_external.o
 OBJS += acados/ocp_nlp/ocp_nlp_constraints_common.o
 OBJS += acados/ocp_nlp/ocp_nlp_constraints_bgh.o
-OBJS += acados/ocp_nlp/ocp_nlp_constraints_bghp.o
+OBJS += acados/ocp_nlp/ocp_nlp_constraints_bgp.o
 OBJS += acados/ocp_nlp/ocp_nlp_dynamics_common.o
 OBJS += acados/ocp_nlp/ocp_nlp_dynamics_cont.o
 OBJS += acados/ocp_nlp/ocp_nlp_dynamics_disc.o
@@ -139,6 +139,7 @@ CLEAN_DEPS += qore_clean
 endif
 ifeq ($(ACADOS_WITH_OSQP), 1)
 STATIC_DEPS += osqp_static
+SHARED_DEPS += osqp_shared
 CLEAN_DEPS += osqp_clean
 endif
 
@@ -250,6 +251,12 @@ osqp_static: $(OSQP_LIB_STATIC)
 	mkdir -p lib
 	cp -r $(OSQP_PATH)/include/* include/osqp/include
 	mv libosqp.a lib
+
+osqp_shared: $(OSQP_LIB_SHARED)
+	mkdir -p include/osqp/include
+	mkdir -p lib
+	cp -r $(OSQP_PATH)/include/* include/osqp/include
+	mv libosqp.so lib
 
 examples_c: static_library
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )

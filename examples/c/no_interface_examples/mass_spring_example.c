@@ -128,7 +128,7 @@ int main() {
     // choose ocp qp solvers
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
-		PARTIAL_CONDENSING_HPIPM,
+        PARTIAL_CONDENSING_HPIPM,
 
         FULL_CONDENSING_HPIPM,
 
@@ -165,41 +165,48 @@ int main() {
 
     for (int ii = 0; ii < ii_max; ii++)
     {
-		// plan
+        // plan
         ocp_qp_solver_plan plan;
         plan.qp_solver = ocp_qp_solvers[ii];
 
-		// config
+        // config
         ocp_qp_xcond_solver_config *config = ocp_qp_xcond_solver_config_create(plan);
 
-		// dims
+        // dims
 #ifdef SOFT_CONSTRAINTS
-		// TODO
-		ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring_soft_constr(N, nx_, nu_, nb_, ng_, ngN);
+        // TODO
+        ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring_soft_constr(N, nx_, nu_, nb_, ng_, ngN);
 #else
-		ocp_qp_xcond_solver_dims *qp_dims = create_ocp_qp_dims_mass_spring(config, N, nx_, nu_, nb_, ng_, ngN);
+        ocp_qp_xcond_solver_dims *qp_dims = create_ocp_qp_dims_mass_spring(config, N, nx_, nu_, nb_, ng_, ngN);
 #endif
 
-		// qp in
+        // qp in
 #ifdef SOFT_CONSTRAINTS
-		// TODO
-		ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring_soft_constr(qp_dims->orig_dims);
+        // TODO
+        ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring_soft_constr(qp_dims->orig_dims);
 #else
-		ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(qp_dims->orig_dims);
+        ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(qp_dims->orig_dims);
 #endif
 
-		// qp out
-		ocp_qp_out *qp_out = ocp_qp_out_create(qp_dims->orig_dims);
+        // qp out
+        ocp_qp_out *qp_out = ocp_qp_out_create(qp_dims->orig_dims);
 
 
         ocp_qp_xcond_solver_opts *opts = ocp_qp_xcond_solver_opts_create(config, qp_dims);
 //        bool ok = false;
 //        if (ok == true) config++; // dummy command to shut up Werror in Release
 
+#ifdef ACADOS_WITH_QPDUNES
+        int clipping;
+#endif
+
+#ifdef SOFT_CONSTRAINTS
+        double mu0 = 1e2;
+#endif
+
         for (int jj = 0; jj < num_N2_values; jj++)
         {
-			int N2, max_iter, clipping, warm_start;
-			double mu0;
+            int N2, max_iter, warm_start;
 
             // NOTE(nielsvd): needs to be implemented using the acados_c/options.h interface
             switch (plan.qp_solver)
@@ -207,10 +214,10 @@ int main() {
                 case PARTIAL_CONDENSING_HPIPM:
                     printf("\nPartial condensing + HPIPM (N2 = %d):\n\n", N2);
 
-					N2 = N2_values[jj];
-					config->opts_set(config, opts, "cond_N", &N2);
-					max_iter = 30;
-					config->opts_set(config, opts, "iter_max", &max_iter);
+                    N2 = N2_values[jj];
+                    config->opts_set(config, opts, "cond_N", &N2);
+                    max_iter = 30;
+                    config->opts_set(config, opts, "iter_max", &max_iter);
 //                    ok = set_option_double(opts, "sparse_hpipm.res_g_max", 1e-8);
 //                    assert(ok = true && "specified option not found!");
 //                    ok = set_option_double(opts, "sparse_hpipm.res_b_max", 1e-8);
@@ -220,8 +227,8 @@ int main() {
 //                    ok = set_option_double(opts, "sparse_hpipm.res_m_max", 1e-8);
 //                    assert(ok = true && "specified option not found!");
 #ifdef SOFT_CONSTRAINTS
-					mu0 = 1e2;
-					config->opts_set(config, opts, "mu0", &mu0);
+                    mu0 = 1e2;
+                    config->opts_set(config, opts, "mu0", &mu0);
 #endif
 
                     break;
@@ -229,10 +236,10 @@ int main() {
                 case PARTIAL_CONDENSING_HPMPC:
                     printf("\nPartial condensing + HPMPC (N2 = %d):\n\n", N2);
 
-					N2 = N2_values[jj];
-					config->opts_set(config, opts, "cond_N", &N2);
-					max_iter = 30;
-					config->opts_set(config, opts, "iter_max", &max_iter);
+                    N2 = N2_values[jj];
+                    config->opts_set(config, opts, "cond_N", &N2);
+                    max_iter = 30;
+                    config->opts_set(config, opts, "iter_max", &max_iter);
                     break;
 #endif
 #ifdef ACADOS_WITH_QPDUNES
@@ -243,24 +250,24 @@ int main() {
                 #endif
 
                 #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-					clipping = 0;
-					config->opts_set(config, opts, "clipping", &clipping);
+                    clipping = 0;
+                    config->opts_set(config, opts, "clipping", &clipping);
                 #else
                     if (N2 == N)
                     {
-						clipping = 1;
-						config->opts_set(config, opts, "clipping", &clipping);
+                        clipping = 1;
+                        config->opts_set(config, opts, "clipping", &clipping);
                     } else
                     {
-						clipping = 0;
-						config->opts_set(config, opts, "clipping", &clipping);
+                        clipping = 0;
+                        config->opts_set(config, opts, "clipping", &clipping);
                     }
                 #endif
-					warm_start = 0;
-					config->opts_set(config, opts, "warm_start", &warm_start);
+                    warm_start = 0;
+                    config->opts_set(config, opts, "warm_start", &warm_start);
 
-					N2 = N2_values[jj];
-					config->opts_set(config, opts, "cond_N", &N2);
+                    N2 = N2_values[jj];
+                    config->opts_set(config, opts, "cond_N", &N2);
                     break;
 #endif
                 case FULL_CONDENSING_HPIPM:
@@ -276,15 +283,15 @@ int main() {
 #ifdef ACADOS_WITH_QPOASES
                 case FULL_CONDENSING_QPOASES:
                     printf("\nFull condensing + QPOASES:\n\n");
-					warm_start = 0;
-					config->opts_set(config, opts, "warm_start", &warm_start);
+                    warm_start = 0;
+                    config->opts_set(config, opts, "warm_start", &warm_start);
                     break;
 #endif
 #ifdef ACADOS_WITH_OOQP
                 case PARTIAL_CONDENSING_OOQP:
                     printf("\nPartial condensing + OOQP (N2 = %d):\n\n", N2);
-					N2 = N2_values[jj];
-					config->opts_set(config, opts, "cond_N", &N2);
+                    N2 = N2_values[jj];
+                    config->opts_set(config, opts, "cond_N", &N2);
                     break;
 
                 case FULL_CONDENSING_OOQP:
@@ -294,8 +301,8 @@ int main() {
 #ifdef ACADOS_WITH_OSQP
                 case PARTIAL_CONDENSING_OSQP:
                     printf("\nPartial condensing + OSQP (N2 = %d):\n\n", N2);
-					N2 = N2_values[jj];
-					config->opts_set(config, opts, "cond_N", &N2);
+                    N2 = N2_values[jj];
+                    config->opts_set(config, opts, "cond_N", &N2);
                     break;
 
 #endif
@@ -304,12 +311,12 @@ int main() {
 
             }
 
-//			ocp_qp_full_condensing_dims *xcond_dims = qp_dims->xcond_dims;
-//			printf("%d %d\n", xcond_dims->fcond_dims->nv, xcond_dims->fcond_dims->ne);
-//			printf("\nbefore solver create\n");
+//            ocp_qp_full_condensing_dims *xcond_dims = qp_dims->xcond_dims;
+//            printf("%d %d\n", xcond_dims->fcond_dims->nv, xcond_dims->fcond_dims->ne);
+//            printf("\nbefore solver create\n");
             ocp_qp_solver *qp_solver = ocp_qp_create(config, qp_dims, opts);
-//			printf("\nafter solver create\n");
-//			exit(1);
+//            printf("\nafter solver create\n");
+//            exit(1);
 
             int acados_return = 0;
 
@@ -361,7 +368,7 @@ int main() {
              * print solutions and stats
              ************************************************/
 
-		    print_ocp_qp_out(qp_out);
+            print_ocp_qp_out(qp_out);
 
             printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
 
@@ -374,8 +381,8 @@ int main() {
         }
         ocp_qp_xcond_solver_config_free(config);
         ocp_qp_xcond_solver_opts_free(opts);
-		free(qp_in); // TODO specific free !!!!!
-		free(qp_out); // TODO specific free !!!!!
+        ocp_qp_in_free(qp_in);
+        ocp_qp_out_free(qp_out);
     }
 
     printf("\nsuccess!\n\n");
