@@ -31,27 +31,28 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-classdef acados_dae < handle
-    properties
-        f_impl_expr
-        f_expl_expr
-        x
-        xdot
-        u
-        z
-        name
-        p
+%% check that environment variables are provided
+try
+    check_casadi_availibility();
+    require_env_variable('LD_LIBRARY_PATH');
+    require_env_variable('ACADOS_INSTALL_DIR');
+    if is_octave()
+        require_env_variable('OCTAVE_PATH');
+    else
+        require_env_variable('MATLABPATH');
     end
-    methods
-        function obj = acados_dae()
-            obj.f_impl_expr = [];
-            obj.f_expl_expr = [];
-            obj.x = [];
-            obj.xdot = [];
-            obj.u = [];
-            obj.z = [];
-            obj.name = [];
-            obj.p = [];
-        end
-    end
+catch exception
+    exit_with_error(exception);
 end
+
+
+
+%% ocp tests
+try
+    test_template_pendulum_ocp;
+    test_template_ocp_linear_dae;
+catch exception
+    exit_with_error(exception);
+end
+
+fprintf('\nrun_tests_templates: success!\n\n');

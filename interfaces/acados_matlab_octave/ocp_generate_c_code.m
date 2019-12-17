@@ -14,7 +14,7 @@ function ocp_generate_c_code(obj)
     if ~strcmp( obj.model_struct.cost_type, 'linear_ls' ) || ...
         ~strcmp( obj.model_struct.cost_type_e, 'linear_ls' )
         error(['mex templating does only support linear_ls cost for now.',...
-            'Got cost_type: %s, cost_type_e: %s.\nNotice that it might still',...
+            ' Got cost_type: %s, cost_type_e: %s.\nNotice that it might still',...
             'be possible to solve the OCP from MATLAB.'], obj.model_struct.cost_type,...
             obj.model_struct.cost_type_e);
         % TODO: add
@@ -101,20 +101,24 @@ function ocp_generate_c_code(obj)
 
     %% load JSON layout
     acados_folder = getenv('ACADOS_INSTALL_DIR');
-
-    acados_layout = jsondecode(fileread([acados_folder, ...
-        '/interfaces/acados_template/acados_template/acados_layout.json']));
-
-    dims = obj.acados_ocp_nlp_json.dims;
+    json_layout_filename = fullfile(acados_folder, 'interfaces',...
+                                   'acados_template','acados_template','acados_layout.json');
+    % if is_octave()
+    addpath(fullfile(acados_folder, 'external', 'jsonlab'))
+    acados_layout = loadjson(fileread(json_layout_filename));
+    % else % Matlab
+    %     acados_layout = jsondecode(fileread(json_layout_filename));
+    % end
 
     %% reshape constraints
+    dims = obj.acados_ocp_nlp_json.dims;
     constr = obj.acados_ocp_nlp_json.constraints;
     constr_l = acados_layout.constraints;
     fields = fieldnames(constr_l);
     for i = 1:numel(fields)
         if strcmp(constr_l.(fields{i}){1}, 'ndarray')
             if length(constr_l.(fields{i}){2}) == 1
-                this_dims = [dims.(constr_l.(fields{i}){2}{1}), 1];
+                this_dims = [1, dims.(constr_l.(fields{i}){2}{1})];
             else
                 this_dims = [dims.(constr_l.(fields{i}){2}{1}), dims.(constr_l.(fields{i}){2}{1})];
             end
@@ -137,7 +141,7 @@ function ocp_generate_c_code(obj)
     for i = 1:numel(fields)
         if strcmp(cost_l.(fields{i}){1}, 'ndarray')
             if length(cost_l.(fields{i}){2}) == 1
-                this_dims = [dims.(cost_l.(fields{i}){2}{1}), 1];
+                this_dims = [1, dims.(cost_l.(fields{i}){2}{1})];
             else
                 this_dims = [dims.(cost_l.(fields{i}){2}{1}), dims.(cost_l.(fields{i}){2}{2})];
             end
@@ -162,16 +166,25 @@ function ocp_generate_c_code(obj)
     obj.acados_ocp_nlp_json.cost = cost;
 
     %% dump JSON file
-    json_string = jsonencode(obj.acados_ocp_nlp_json);
-    json_string = strrep(json_string, ',', sprintf(',\r'));
-    json_string = strrep(json_string, '[{', sprintf('[\r{\r'));
-    json_string = strrep(json_string, '}]', sprintf('\r}\r]'));
+    % if is_octave()
+        % savejson does not work for classes!
+        % -> consider making the acados_ocp_nlp_json properties structs directly.
+        ocp_json_struct = struct(obj.acados_ocp_nlp_json);
+        ocp_json_struct.dims = struct(ocp_json_struct.dims);
+        ocp_json_struct.cost = struct(ocp_json_struct.cost);
+        ocp_json_struct.constraints = struct(ocp_json_struct.constraints);
+        ocp_json_struct.solver_options = struct(ocp_json_struct.solver_options);
+
+        json_string = savejson('',ocp_json_struct, 'ForceRootName', 0);
+    % else % Matlab
+    %     json_string = jsonencode(obj.acados_ocp_nlp_json);
+    % end
     fid = fopen('acados_ocp_nlp.json', 'w');
     if fid == -1, error('Cannot create JSON file'); end
     fwrite(fid, json_string, 'char');
     fclose(fid);
-    % render templated C code
-    % old call (Python + Jinja)
-    % acados_template_mex.generate_solver('acados_ocp_nlp.json', '/home/andrea/.acados_t/bin/python3')
-    acados_template_mex.generate_solver_matlab('acados_ocp_nlp.json')
+    %% render templated code
+    acados_template_mex.render_acados_templates('acados_ocp_nlp.json')
+    %% compile main
+    acados_template_mex.compile_main()
 end

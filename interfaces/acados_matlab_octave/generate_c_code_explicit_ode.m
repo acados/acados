@@ -68,7 +68,7 @@ if isa(model, 'acados_template_mex.acados_dae')
     x = model.x;
     nx = length(x);
     % check type
-    if class(x(1)) == 'casadi.SX'
+    if isa(x(1), 'casadi.SX')
         isSX = true;
     else
         isSX = false;
@@ -85,7 +85,7 @@ else
     x = model.sym_x;
     nx = length(x);
     % check type
-    if class(x(1)) == 'casadi.SX'
+    if isa(x(1), 'casadi.SX')
         isSX = true;
     else
         isSX = false;
@@ -167,7 +167,7 @@ for j = 1:nx+nu
 end
 
 if is_template
-    if ~exist('c_generated_code', 'dir')
+    if ~exist( fullfile(pwd,'c_generated_code'), 'dir')
         mkdir('c_generated_code');
     end
     cd 'c_generated_code'

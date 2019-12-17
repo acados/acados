@@ -69,7 +69,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     if isfield(model, 'dim_nsbx')
         ocp_json.dims.nsbx = model.dim_nsbx;
     end
-    if isfield(model, 'dim_nsbx')
+    if isfield(model, 'dim_nsbu')
         ocp_json.dims.nsbu = model.dim_nsbu;
     end
     
@@ -157,19 +157,35 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     end
 
     if ocp_json.dims.nsbx > 0
-        ocp_json.constraints.idxsbx = J_to_idx_slack(model.Jsbx);
-        ocp_json.constraints.lsbx = model.lsbx;
-        ocp_json.constraints.usbx = model.usbx;
+        ocp_json.constraints.idxsbx = J_to_idx_slack(model.constr_Jsbx);
+        if isfield(model, 'constr_lsbx')
+            ocp_json.constraints.lsbx = model.constr_lsbx;
+        else
+            ocp_json.constraints.lsbx = zeros(ocp_json.dims.nsbx, 1);
+        end
+        if isfield(model, 'constr_usbx')
+            ocp_json.constraints.usbx = model.constr_usbx;
+        else
+            ocp_json.constraints.usbx = zeros(ocp_json.dims.nsbx, 1);
+        end
     end
 
     if ocp_json.dims.nsbu > 0
         ocp_json.constraints.idxsbu = J_to_idx_slack(model.Jsbu);
-        ocp_json.constraints.lsbu = model.lsbu;
-        ocp_json.constraints.usbu = model.usbu;
+        if isfield(model, 'constr_lsbu')
+            ocp_json.constraints.lsbu = model.constr_lsbu;
+        else
+            ocp_json.constraints.lsbu = zeros(ocp_json.dims.nsbu, 1);
+        end
+        if isfield(model, 'constr_usbu')
+            ocp_json.constraints.usbu = model.constr_usbu;
+        else
+            ocp_json.constraints.usbu = zeros(ocp_json.dims.nsbu, 1);
+        end
     end
 
     if ocp_json.dims.nsh > 0
-        ocp_json.constraints.idxsh = J_to_idx_slack(model.Jsh);
+        ocp_json.constraints.idxsh = J_to_idx_slack(model.constr_Jsh);
     end
 
     if isfield(model, 'dim_nsg') && model.dim_nsg > 0
@@ -209,7 +225,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
 
 
     if ocp_json.dims.nsh_e > 0
-        ocp_json.constraints.idxsh_e = J_to_idx_slack(model.Jsh_e);
+        ocp_json.constraints.idxsh_e = J_to_idx_slack(model.constr_Jsh_e);
     end
 
     %% Cost
@@ -274,6 +290,7 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
         ocp_json.cost.zu_e = model.cost_zu_e;
     end
 
+    %% dynamics
     if strcmp(obj.opts_struct.sim_method, 'erk')
         ocp_json.model.f_expl_expr = model.dyn_expr_f;
     elseif strcmp(obj.opts_struct.sim_method, 'irk')
@@ -284,15 +301,10 @@ function ocp_json = set_up_acados_ocp_nlp_json(obj)
     %  TODO(oj): add gnsf support;
 
     ocp_json.model.x = model.sym_x;
-    if isfield(model, 'sym_u')
-        ocp_json.model.u = model.sym_u;
-    end
-    if isfield(model, 'sym_z')
-        ocp_json.model.z = model.sym_z;
-    end
-    if isfield(model, 'sym_xdot')
-        ocp_json.model.xdot = model.sym_xdot;
-    end
+    ocp_json.model.u = model.sym_u;
+    ocp_json.model.z = model.sym_z;
+    ocp_json.model.xdot = model.sym_xdot;
+    ocp_json.model.p = model.sym_p;
 
 end
 

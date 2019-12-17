@@ -36,7 +36,7 @@ clear all
 
 addpath('../simple_dae_model/');
 
-for itest = 1:2;
+for itest = 1:2
     %% options
     compile_interface = 'auto'; % true, false
     codgen_model = 'true'; % true, false
@@ -63,15 +63,16 @@ for itest = 1:2;
     qp_solver_ric_alg = 1; % HPIPM specific
     if itest == 1
         ocp_sim_method = 'irk_gnsf'; % irk, irk_gnsf
+        constr_variant = 1; % 0: x bounds; 1: z bounds
     else
         ocp_sim_method = 'irk'; % irk, irk_gnsf
+        constr_variant = 0; % 0: x bounds; 1: z bounds
     end
     ocp_sim_method_num_stages = 6; % scalar or vector of size ocp_N;
     ocp_sim_method_num_steps = 4; % scalar or vector of size ocp_N;
     ocp_sim_method_newton_iter = 3; % scalar or vector of size ocp_N;
 
     % selectors for example variants
-    constr_variant = 1; % 0: x bounds; 1: z bounds
     cost_variant = 1; % 0: ls on u,x; 1: ls on u,z; (not implemented yet: 2: nls on u,z)
 
     name = ['toy_dae' num2str(itest)];
@@ -99,8 +100,6 @@ for itest = 1:2;
     ub = [4;  2];
 
     x0 = [3; -1.8];
-
-
 
     %% acados ocp model
     ocp_model = acados_ocp_model();
@@ -230,3 +229,23 @@ for itest = 1:2;
 end % itest
 
 fprintf('\ntest_ocp_linear_dae: success!\n');
+
+ocp.generate_c_code;
+cd c_generated_code/
+command = strcat('t_ocp = ', name, '_mex_solver');
+eval( command );
+t_ocp.solve();
+t_ocp.print;
+t_x = t_ocp.get('x');
+t_u = t_ocp.get('u');
+t_z = t_ocp.get('z');
+
+%
+err_x = max(max(abs(x_traj - t_x)))
+err_u = max(max(abs(u_traj - t_u)))
+err_z = max(max(abs(z_traj - t_z)))
+
+if any([err_x, err_u, err_z] > 1e-11)
+    error(['test_ocp_templated_mex: solution of templated MEX and original MEX',...
+         ' differ too much. Should be < 1e-11 ']);
+end

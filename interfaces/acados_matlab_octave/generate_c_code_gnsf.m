@@ -76,7 +76,7 @@ idx_perm_f = model.dyn_gnsf_idx_perm_f;
 x = model.sym_x;
 x1 = x(model.dyn_gnsf_idx_perm_x(1:model.dim_gnsf_nx1));
 % check type
-if class(x(1)) == 'casadi.SX'
+if isa(x(1), 'casadi.SX')
     isSX = true;
 else
     isSX = false;

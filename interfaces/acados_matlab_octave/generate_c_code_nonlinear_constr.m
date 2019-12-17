@@ -49,7 +49,7 @@ end
 x = model.sym_x;
 nx = length(x);
 % check type
-if class(x(1)) == 'casadi.SX'
+if isa(x(1), 'casadi.SX')
     isSX = true;
 else
     isSX = false;

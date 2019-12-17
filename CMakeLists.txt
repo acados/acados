@@ -70,10 +70,9 @@ option(ACADOS_WITH_OOQP "OOQP solver" OFF)
 option(ACADOS_WITH_QPDUNES "qpDUNES solver" OFF)
 option(ACADOS_WITH_OSQP "OSQP solver" OFF)
 # Interfaces
-option(TEMPLATE_MATLAB "Template Matlab Interface" OFF)
-option(DEV_MATLAB "Developer Matlab Interface" OFF)
 option(ACADOS_MATLAB "The Matlab Interface" OFF)
 option(ACADOS_OCTAVE "The Octave Interface" OFF)
+option(ACADOS_OCTAVE_TEMPLATE "Template MEX Interface" OFF)
 option(ACADOS_PYTHON "Python Interface" OFF)
 
 # Set custom path
@@ -163,7 +162,7 @@ if(ACADOS_LINT)
     endif()
 endif()
 
-if(ACADOS_MATLAB OR ACADOS_OCTAVE OR ACADOS_PYTHON) 
+if(ACADOS_MATLAB OR ACADOS_OCTAVE OR ACADOS_OCTAVE_TEMPLATE OR ACADOS_PYTHON)
     add_subdirectory(${PROJECT_SOURCE_DIR}/interfaces)
 endif()
 
@@ -209,6 +208,7 @@ message(STATUS "Target: BLASFEO is ${BLASFEO_TARGET}, HPIPM is ${HPIPM_TARGET}")
 message(STATUS "Linear algebra: ${LA}")
 message(STATUS "Matlab MEX (${ACADOS_MATLAB})")
 message(STATUS "Octave MEX (${ACADOS_OCTAVE})")
+message(STATUS "Octave Templates (${ACADOS_OCTAVE_TEMPLATE})")
 message(STATUS "System name:version ${CMAKE_SYSTEM_NAME}:${CMAKE_SYSTEM_VERSION}")
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")

@@ -34,10 +34,8 @@
 %% test of native matlab interface
 clear all
 
-model_path = fullfile(pwd,'..','pendulum_on_cart_model')
+model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
-
-check_acados_requirements()
 
 %% discretization
 N = 20;
@@ -119,11 +117,55 @@ ocp.set('init_pi', zeros(nx, N))
 % solve
 ocp.solve();
 % get solution
-utraj = ocp.get('u');
-xtraj = ocp.get('x');
+u_ref = ocp.get('u');
+x_ref = ocp.get('x');
 
 status = ocp.get('status'); % 0 - success
-ocp.print('stat')
 
-% to generate templated C code
-% ocp.generate_c_code;
+
+if status~=0
+    error('test_ocp_templated_mex: solution of original MEX failed!');
+else
+    fprintf('\ntest_ocp_templated_mex: original MEX success!\n');
+end
+
+warning('off');
+
+
+ocp.generate_c_code
+cd c_generated_code/
+
+% templated MEX
+t_ocp = pendulum_mex_solver;
+t_ocp.solve
+t_ocp.print
+u_t = t_ocp.get('u');
+x_t = t_ocp.get('x');
+status = t_ocp.get('status');
+
+if status~=0
+    error('test_ocp_templated_mex: solution of templated MEX failed!');
+else
+    fprintf('\ntest_ocp_templated_mex: templated MEX success!\n');
+end
+
+
+% comparison
+format short e
+err_u = max(abs(u_ref - u_t))
+err_x = max(max(abs(x_ref - x_t)))
+
+tol_x = 1e-6;
+tol_u = 1e-5;
+if err_x > tol_x
+    error(['test_ocp_templated_mex: solution of templated MEX and original MEX',...
+         ' differ too much. error in states is ', num2str(err_x),...
+         '. Should be less then ', num2str(tol_x) ]);
+elseif err_u > tol_u
+    error(['test_ocp_templated_mex: solution of templated MEX and original MEX',...
+         ' differ too much. error in controls is ', num2str(err_x),...
+         '. Should be less then ', num2str(tol_x) ]);
+end
+
+cd ..
+clear all

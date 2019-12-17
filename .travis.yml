@@ -7,7 +7,7 @@ env:
     - ACADOS_EXAMPLES="ON"
     - ACADOS_WITH_QPOASES="ON"
     - ACADOS_LINT="OFF"
-    - TEMPLATE_MATLAB="OFF"
+    - ACADOS_OCTAVE_TEMPLATE="OFF"
     - ACADOS_MATLAB="OFF"
     - ACADOS_OCTAVE="OFF"
     - ACADOS_PYTHON="OFF"
@@ -41,11 +41,12 @@ matrix:
       env:
         - DEPLOY_NAME="osx-python"
 
-    - name: Linux Gcc6 - Octave interface
+    - name: Linux Gcc6 - Octave template
       env:
         - DEPLOY_NAME="linux octave gcc6"
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-        - ACADOS_OCTAVE="ON"
+        - ACADOS_OCTAVE="OFF"
+        - ACADOS_OCTAVE_TEMPLATE="ON"
         - ACADOS_EXAMPLES="OFF"
         - ACADOS_UNIT_TESTS="OFF"
 
@@ -57,20 +58,21 @@ matrix:
         - ACADOS_EXAMPLES="OFF"
         - ACADOS_UNIT_TESTS="OFF"
 
-    - name: Linux Gcc4.9 - Octave interface + coverage
+    - name: Linux Gcc4.9 - Octave interface + template
       env:
-        - DEPLOY_NAME="linux-octave-coverage-gcc49"
+        - DEPLOY_NAME="linux octave gcc4.9"
         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-        - COVERAGE="lcov"
         - ACADOS_OCTAVE="ON"
+        - ACADOS_OCTAVE_TEMPLATE="ON"
+
 
     - name: Linux Clang
       env:
         - DEPLOY_NAME="linux-python-clang37"
         - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
         - ACADOS_OCTAVE="OFF"
-        - ACADOS_UNIT_TESTS="ON"
-        # - ACADOS_EXAMPLES="OFF"
+        - ACADOS_UNIT_TESTS="OFF"
+        - ACADOS_EXAMPLES="OFF"
     # - name: Linux Gcc5
     #   env:
     #     - DEPLOY_NAME="linux-python-gcc5"

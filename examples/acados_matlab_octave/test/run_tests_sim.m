@@ -35,6 +35,7 @@
 
 
 try
+    check_casadi_availibility();
     require_env_variable('LD_LIBRARY_PATH');
     require_env_variable('ACADOS_INSTALL_DIR');
     if is_octave()

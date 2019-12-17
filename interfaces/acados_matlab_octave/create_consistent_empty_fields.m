@@ -31,27 +31,28 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-classdef acados_dae < handle
-    properties
-        f_impl_expr
-        f_expl_expr
-        x
-        xdot
-        u
-        z
-        name
-        p
+function model = create_consistent_empty_fields(model)
+    % xdot, u, p, z might not exist in model
+    % this function empty fields of consistent types
+    import casadi.*
+    x = model.sym_x;
+    if isa(x(1), 'casadi.SX')
+        empty_var = SX.sym('empty_var', 0, 0);
+    else
+        empty_var = MX.sym('empty_var', 0, 0);
     end
-    methods
-        function obj = acados_dae()
-            obj.f_impl_expr = [];
-            obj.f_expl_expr = [];
-            obj.x = [];
-            obj.xdot = [];
-            obj.u = [];
-            obj.z = [];
-            obj.name = [];
-            obj.p = [];
-        end
+
+    if ~isfield(model, 'sym_p')
+        model.sym_p = empty_var;
     end
+    if ~isfield(model, 'sym_xdot')
+        model.sym_xdot = empty_var;
+    end
+    if ~isfield(model, 'sym_z')
+        model.sym_z = empty_var;
+    end
+    if ~isfield(model, 'sym_u')
+        model.sym_u = empty_var;
+    end
+
 end
