@@ -252,7 +252,6 @@ add_test(simple_dae_example simple_dae_example)
 #     pendulum_model/position.c)
 # target_link_libraries(pendulum_scqp acados)
 # add_test(pendulum_scqp pendulum_scqp)
->>>>>>> upstream/master
 
 # -------------------- mass_spring
 add_executable(mass_spring_example no_interface_examples/mass_spring_example.c no_interface_examples/mass_spring_model/mass_spring_qp.c)
