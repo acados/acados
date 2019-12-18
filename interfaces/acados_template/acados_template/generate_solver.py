@@ -72,11 +72,11 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
         acados_ocp.cost.Vx = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nx))
         acados_ocp.cost.Vu = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nu))
-        generate_c_code_nls_cost(acados_ocp.cost_r)
+        generate_c_code_nls_cost(acados_ocp.cost_r, name)
 
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
         acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
-        generate_c_code_nls_cost_e(acados_ocp.cost_r_e)
+        generate_c_code_nls_cost_e(acados_ocp.cost_r_e, name)
 
     ocp_nlp = deepcopy(acados_ocp)
     ocp_nlp.cost = acados_ocp.cost.__dict__
