@@ -152,10 +152,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     memcpy(fieldnames[4],"impl_dae_jac_x_xdot_u_z",sizeof("impl_dae_jac_x_xdot_u_z"));
     memcpy(fieldnames[5],"phi_constraint",sizeof("phi_constraint"));
     memcpy(fieldnames[6],"h_constraint",sizeof("h_constraint"));
-    memcpy(fieldnames[7],"phi_e_constraint",sizeof("phi_e_constraint"));
-    memcpy(fieldnames[8],"h_e_constraint",sizeof("h_e_constraint"));
-    memcpy(fieldnames[9],"r_cost",sizeof("r_cost"));
-    memcpy(fieldnames[10],"r_cost_e",sizeof("r_cost_e"));
+    // memcpy(fieldnames[7],"phi_e_constraint",sizeof("phi_e_constraint"));
+    // memcpy(fieldnames[8],"h_e_constraint",sizeof("h_e_constraint"));
+    // memcpy(fieldnames[9],"r_cost",sizeof("r_cost"));
+    // memcpy(fieldnames[10],"r_cost_e",sizeof("r_cost_e"));
 
     // create output struct - C_ocp_ext_fun
     plhs[1] = mxCreateStructMatrix(1, 1, MAX_FIELDS, (const char **) fieldnames);
@@ -211,31 +211,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxSetField(plhs[1], 0, "h_constraint", h_constraint_mat);
 {% endif %}
 
-{% if constraints.constr_type_e == "BGP" %}
-    mxArray *phi_e_constraint_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(phi_e_constraint_mat);
-    l_ptr[0] = (long long) phi_e_constraint;
-    mxSetField(plhs[1], 0, "phi_e_constraint", phi_e_constraint_mat);
-    // extern external_function_param_casadi r_e_constraint;
-{% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-    mxArray *h_e_constraint_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(h_e_constraint_mat);
-    l_ptr[0] = (long long) h_e_constraint;
-    mxSetField(plhs[1], 0, "h_e_constraint", h_e_constraint_mat);
-{%- endif %}
+// {% if constraints.constr_type_e == "BGP" %}
+//     mxArray *phi_e_constraint_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+//     l_ptr = mxGetData(phi_e_constraint_mat);
+//     l_ptr[0] = (long long) phi_e_constraint;
+//     mxSetField(plhs[1], 0, "phi_e_constraint", phi_e_constraint_mat);
+//     // extern external_function_param_casadi r_e_constraint;
+// {% elif constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
+//     mxArray *h_e_constraint_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+//     l_ptr = mxGetData(h_e_constraint_mat);
+//     l_ptr[0] = (long long) h_e_constraint;
+//     mxSetField(plhs[1], 0, "h_e_constraint", h_e_constraint_mat);
+// {%- endif %}
 
-{% if cost.cost_type == "NONLINEAR_LS" %}
-    mxArray *r_cost_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(r_cost_mat);
-    l_ptr[0] = (long long) r_cost;
-    mxSetField(plhs[1], 0, "r_cost", r_cost_mat);
-{% endif %}
-{% if cost.cost_type_e == "NONLINEAR_LS" %}
-    mxArray *r_e_cost_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-    l_ptr = mxGetData(r_e_cost_mat);
-    l_ptr[0] = (long long) r_e_cost;
-    mxSetField(plhs[1], 0, "r_e_cost", r_e_cost_mat);
-{%- endif %}
+// {% if cost.cost_type == "NONLINEAR_LS" %}
+//     mxArray *r_cost_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+//     l_ptr = mxGetData(r_cost_mat);
+//     l_ptr[0] = (long long) r_cost;
+//     mxSetField(plhs[1], 0, "r_cost", r_cost_mat);
+// {% endif %}
+// {% if cost.cost_type_e == "NONLINEAR_LS" %}
+//     mxArray *r_e_cost_mat  = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+//     l_ptr = mxGetData(r_e_cost_mat);
+//     l_ptr[0] = (long long) r_e_cost;
+//     mxSetField(plhs[1], 0, "r_e_cost", r_e_cost_mat);
+// {%- endif %}
 
     return;
 }
