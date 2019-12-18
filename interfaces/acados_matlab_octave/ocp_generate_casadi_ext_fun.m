@@ -98,8 +98,8 @@ if (strcmp(model_struct.constr_type, 'bgh') && (isfield(model_struct, 'constr_ex
     end
     if isfield(model_struct, 'constr_expr_h_e')
         c_files{end+1} = [model_name, '_constr_h_e_fun.c'];
-        c_files{end+1} = [model_name, '_constr_h_e_fun_jac_ut_xt.c'];
-        c_files{end+1} = [model_name, '_constr_h_e_fun_jac_ut_xt_hess.c'];
+        c_files{end+1} = [model_name, '_constr_h_e_fun_jac_uxt_zt.c'];
+        c_files{end+1} = [model_name, '_constr_h_e_fun_jac_uxt_zt_hess.c'];
     end
 end
 % nonlinear least squares
