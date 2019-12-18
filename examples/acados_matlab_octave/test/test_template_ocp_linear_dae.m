@@ -245,7 +245,8 @@ err_x = max(max(abs(x_traj - t_x)))
 err_u = max(max(abs(u_traj - t_u)))
 err_z = max(max(abs(z_traj - t_z)))
 
-if any([err_x, err_u, err_z] > 1e-11)
+if any([err_x, err_u, err_z] > 1e-9)
     error(['test_ocp_templated_mex: solution of templated MEX and original MEX',...
-         ' differ too much. Should be < 1e-11 ']);
+         ' differ too much. Should be < 1e-9 ']);
 end
+clear all
