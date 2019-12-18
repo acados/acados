@@ -110,12 +110,12 @@ if isfield(model, 'constr_expr_h')
     % generate hessian
     hess_ux = jacobian(adj_ux, [u; x]);
     % Set up functions
-    h_fun = Function([model_name,'_constr_h_fun'], {x, u, z, p}, {h}); % TODO(andrea): change function names to include z
-    h_fun_jac_ut_xt = Function([model_name,'_constr_h_fun_jac_ut_xt'], {x, u, z, p}, {h, jac_ux', jac_z'}); % TODO(andrea): change function names to include z
+    h_fun = Function([model_name,'_constr_h_fun'], {x, u, z, p}, {h});
+    h_fun_jac_uxt_zt = Function([model_name,'_constr_h_fun_jac_uxt_zt'], {x, u, z, p}, {h, jac_ux', jac_z'});
     h_fun_jac_ut_xt_hess = Function([model_name,'_constr_h_fun_jac_ut_xt_hess'], {x, u, lam_h, z, p}, {h, jac_ux', hess_ux});
     % generate C code
-    h_fun.generate([model_name,'_constr_h_fun'], casadi_opts); % TODO(andrea): change function names to include z
-    h_fun_jac_ut_xt.generate([model_name,'_constr_h_fun_jac_ut_xt'], casadi_opts); % TODO(andrea): change function names to include z
+    h_fun.generate([model_name,'_constr_h_fun'], casadi_opts);
+    h_fun_jac_uxt_zt.generate([model_name,'_constr_h_fun_jac_uxt_zt'], casadi_opts);
     h_fun_jac_ut_xt_hess.generate([model_name,'_constr_h_fun_jac_ut_xt_hess'], casadi_opts);
 end
 
