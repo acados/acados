@@ -84,7 +84,7 @@ def generate_c_code_constraint_e( constraint, con_name ):
         # create dummy r
         z = SX.sym('z', 0, 0)
         # set up functions to be exported
-        fun_name = con_name + '_constr_h_e_fun_jac'
+        fun_name = con_name + '_constr_h_e_fun_jac_uxt_zt'
         if nr == 0: # BGH constraint
             con_h_expr = constraint.con_h_expr
             jac_x = jacobian(con_h_expr, x)
@@ -101,7 +101,7 @@ def generate_c_code_constraint_e( constraint, con_name ):
                 os.mkdir(gen_dir)
             gen_dir_location = './' + gen_dir
             os.chdir(gen_dir_location)
-            file_name = con_name + '_constr_h_e_fun_jac'
+            file_name = con_name + '_constr_h_e_fun_jac_uxt_zt'
             constraint_fun_jac_tran.generate(file_name, casadi_opts)
             os.chdir('../..')
         else: # BGP constraint

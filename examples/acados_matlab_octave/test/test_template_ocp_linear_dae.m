@@ -66,7 +66,7 @@ for itest = 1:2
         constr_variant = 1; % 0: x bounds; 1: z bounds
     else
         ocp_sim_method = 'irk'; % irk, irk_gnsf
-        constr_variant = 0; % 0: x bounds; 1: z bounds
+        constr_variant = 1; % 0: x bounds; 1: z bounds
     end
     ocp_sim_method_num_stages = 6; % scalar or vector of size ocp_N;
     ocp_sim_method_num_steps = 4; % scalar or vector of size ocp_N;
