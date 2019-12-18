@@ -100,11 +100,12 @@ def generate_c_code_constraint( constraint, con_name ):
         # set up functions to be exported
         if nr == 0: # BGH constraint
             con_h_expr = constraint.con_h_expr
-            fun_name = con_name + '_constr_h_fun_jac'
+            fun_name = con_name + '_constr_h_fun_jac_uxt_zt'
             jac_x = jacobian(con_h_expr, x)
             jac_u = jacobian(con_h_expr, u)
             jac_z = jacobian(con_h_expr, z)
-            constraint_fun_jac_tran = Function(fun_name, [x, u, z, p], [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x)), transpose(jac_z)])
+            constraint_fun_jac_tran = Function(fun_name, [x, u, z, p],
+                                               [con_h_expr, vertcat(transpose(jac_u), transpose(jac_x)), transpose(jac_z)])
 
             # generate C code
             if not os.path.exists('c_generated_code'):
@@ -116,7 +117,7 @@ def generate_c_code_constraint( constraint, con_name ):
                 os.mkdir(gen_dir)
             gen_dir_location = './' + gen_dir
             os.chdir(gen_dir_location)
-            file_name = con_name + '_constr_h_fun_jac'
+            file_name = con_name + '_constr_h_fun_jac_uxt_zt'
             constraint_fun_jac_tran.generate(file_name, casadi_opts)
             os.chdir('../..')
         else: # BGP constraint
@@ -132,8 +133,8 @@ def generate_c_code_constraint( constraint, con_name ):
             for i in range(1, nphi):
                 hess = vertcat(hess, hessian(con_phi_expr[i], r)[0])
 
-            r_jac_u = jacobian(con_r_expr, u);
-            r_jac_x = jacobian(con_r_expr, x);
+            r_jac_u = jacobian(con_r_expr, u)
+            r_jac_x = jacobian(con_r_expr, x)
 
             constraint_phi = Function(fun_name, [x, u, z, p], \
                     [con_phi_expr_x_u_z, vertcat(transpose(phi_jac_u), transpose(phi_jac_x)), transpose(phi_jac_z), \
