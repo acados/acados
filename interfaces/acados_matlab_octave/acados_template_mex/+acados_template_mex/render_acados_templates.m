@@ -127,35 +127,28 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     out_file = [model_name, '_model.h'];
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
-    chdir('..');
+    cd ..
+
+    % constraints
+    constr_dir = [model_name, '_constraints'];
+    if ~(exist(constr_dir, 'dir'))
+        mkdir(constr_dir);
+    end
+    chdir(constr_dir)
 
     if (acados_ocp.dims.npd > 0)
-        dir_name = [model_name, '_p_constraint'];
-        if ~(exist(dir_name, 'dir'))
-            mkdir(dir_name);
-        end
-        chdir(dir_name);
-        % render source template
         template_file = 'p_constraint.in.h';
         out_file = [model_name, '_p_constraint.h'];
         render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-        chdir('..');
     end
 
     if (acados_ocp.dims.nh > 0)
-        dir_name = [model_name, '_h_constraint'];
-        if ~(exist(dir_name, 'dir'))
-            mkdir(dir_name);
-        end
-        chdir(dir_name)
         % render source template
         template_file = 'h_constraint.in.h';
         out_file = [model_name, '_h_constraint.h'];
         render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-        chdir('..');
     end
+    cd ..
 
     % Makefile
     template_file = 'Makefile.in';

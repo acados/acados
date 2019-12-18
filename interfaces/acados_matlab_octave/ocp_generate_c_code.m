@@ -54,7 +54,7 @@ function ocp_generate_c_code(obj)
     % constraints
     if strcmp(obj.model_struct.constr_type, 'bgh') && obj.model_struct.dim_nh > 0
         generate_c_code_nonlinear_constr( obj.model_struct, obj.opts_struct,...
-              fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_h_constraint']) );
+              fullfile(pwd, 'c_generated_code', [obj.model_struct.name '_constraints']) );
     end
 
     % set include and lib path
