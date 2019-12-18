@@ -9,6 +9,7 @@ Fast and embedded solvers for nonlinear optimal control.
 - `acados` offers interfaces to the programming languages `C`, `Python`, `MATLAB` and `Octave`
 - Documentation can be found on [docs.acados.org](https://docs.acados.org/)
 - Forum: If you have any acados-related question, feel free to post on our forum [discourse.acados.org](https://discourse.acados.org/).
+- Citing acados: references can be found [here](https://arxiv.org/abs/1910.13753) and [here](https://www.sciencedirect.com/science/article/pii/S2405896318327204).
 
 ## Installation
 
@@ -74,11 +75,12 @@ Please choose one and proceed with the corresponding paragraph.
 - More documentation can be found on [docs.acados.org/interfaces/](https://docs.acados.org/interfaces/)
 
 
-### Python interface
+### `Python` interface
 - The interface is based on templated `C` code, header files and Makefiles, that is rendered with the templating engine `Jinja2` or `Tera`.
+- The generated C code can be easily deployed on embedded platforms.
+- The same problem formulation as for the MATLAB interface is used (see [here](https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf)).
 - The `ctypes` package is used to interact with the rendered Code.
-- Requirement - Download CasADi:
-To create external function for your problem, we suggest to use CasADi from `<acados_root>/external`. You can set it up as follows:
+- CasADi is required, which can be set up as follows:
 
     ```
     cd external
@@ -87,4 +89,5 @@ To create external function for your problem, we suggest to use CasADi from `<ac
     tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-py35-v3.4.0-64bit
     cd ..
     ```
-* soon: binaries for all operating systems available for download (see Releases)
+ - More documentation can be found on [docs.acados.org/interfaces/](https://docs.acados.org/interfaces/)
+

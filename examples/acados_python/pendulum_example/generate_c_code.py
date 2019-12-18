@@ -95,28 +95,28 @@ else:
 
 nlp_cost.W_e = Q 
 
-# TODO(andrea): avoid this when using 'NLS'
-Vx = np.zeros((ny, nx))
-Vx[0,0] = 1.0
-Vx[1,1] = 1.0
-Vx[2,2] = 1.0
-Vx[3,3] = 1.0
+if FORMULATION == 'LS':
+    Vx = np.zeros((ny, nx))
+    Vx[0,0] = 1.0
+    Vx[1,1] = 1.0
+    Vx[2,2] = 1.0
+    Vx[3,3] = 1.0
 
-nlp_cost.Vx = Vx
+    nlp_cost.Vx = Vx
 
-Vu = np.zeros((ny, nu))
-Vu[4,0] = 1.0
-nlp_cost.Vu = Vu
+    Vu = np.zeros((ny, nu))
+    Vu[4,0] = 1.0
+    nlp_cost.Vu = Vu
 
 
-Vx_e = np.zeros((ny_e, nx))
-Vx_e[0,0] = 1.0
-Vx_e[1,1] = 1.0
-Vx_e[2,2] = 1.0
-Vx_e[3,3] = 1.0
+    Vx_e = np.zeros((ny_e, nx))
+    Vx_e[0,0] = 1.0
+    Vx_e[1,1] = 1.0
+    Vx_e[2,2] = 1.0
+    Vx_e[3,3] = 1.0
 
-nlp_cost.Vx_e = Vx_e
-if FORMULATION == 'NLS':
+    nlp_cost.Vx_e = Vx_e
+elif FORMULATION == 'NLS':
     x = SX.sym('x', 4, 1)
     u = SX.sym('u', 1, 1)
     ocp.cost_r.expr = vertcat(u, x) 
@@ -129,6 +129,8 @@ if FORMULATION == 'NLS':
     ocp.cost_r_e.x = x 
     ocp.cost_r_e.name = 'lin_res' 
     ocp.cost_r_e.ny = nx 
+else:
+    raise Exception("Invalid cost formulation. Exiting.")
 
 
 nlp_cost.yref  = np.zeros((ny, ))

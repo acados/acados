@@ -55,45 +55,7 @@ that can be easily deployed on an embedded system.
 The framework is based on templated C files which are rendered from Python using the templating engine `Tera`.
 
 ### Optimal Control Problem description
-The currently supported formulation reads as
-
-```math
-\begin{equation}
-\begin{aligned}
-&\underset{\begin{subarray}{c}
-    x(\cdot),\,u(\cdot), \, z(\cdot)
-\end{subarray}}{\min}	    &&\int_0^T l(x(\tau), u(\tau), z(\tau), p)\mathrm{d}\tau + m(x(T), z(T), p)\\ 
-&\,\,\,\quad \text{s.t.}    &&x(0) - \bar{x}_0 = 0, &&\\
-&&&F(x(t), \dot{x}(t), u(t), z(t), p) = 0, &&\quad t \in [0,\,T),\\
-&&&\underline{h} \leq h(x(t), u(t), p) \leq \bar{h}, &&\quad t \in [0,\,T),\\
-&&&\underline{x} \leq \Pi_{x}x(t) \leq \bar{x}, &&\quad t \in [0,\,T),\\
-&&&\underline{u} \leq \Pi_{u}u(t) \leq \bar{u}, &&\quad t \in [0,\,T),\\
-&&&\underline{c} \leq Cx(t) + Du(t)\leq \bar{c}, &&\quad t \in [0,\,T), \\
-&&& && \\[-1em]
-&&&\underline{h}^e \leq h^e(x(T), p) \leq \bar{h}^e, &&\\
-&&&\underline{x}^e \leq \Pi_{x}^e x(T) \leq \bar{x}^{e}, &&\\
-&&&\underline{c}^e \leq C^e x(T)\leq \bar{c}^e, &&\\
-\end{aligned}
-\end{equation}
-```
-```eval_rst
-Where:
-
-* :math:`l: \mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z} \rightarrow \mathbb{R}` is the Lagrange objective term.
-* :math:`m: \mathbb{R}^{n_x}\times\mathbb{R}^{n_z} \rightarrow \mathbb{R}` is the Mayer objective term.
-
-* :math:`F: \mathbb{R}^{n_x}\times\mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_x+n_z}` describes the (potentially) fully implicit dynamics.
-
-* :math:`h: \mathbb{R}^{n_x}\times\mathbb{R}^{n_u}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_h}` and :math:`h^e: \mathbb{R}^{n_x}\times\mathbb{R}^{n_z}\times\mathbb{R}^{n_p} \rightarrow \mathbb{R}^{n_{h_e}}` are general nonlinear functions.
-
-* :math:`C,\,D,\,C^e,\,\Pi_x,\,\Pi_u,\,\Pi_x^e` are matrices of appropriate dimensions defining the polytopic and box constraints.
-
-The `acados_template` interface makes some limiting assumptions on the problem formulation above, namely:
-* :math:`l` must be in linear least-squares form :math:`l = \frac{1}{2}\| V_x x(t) + V_u u(t) + V_z z(t) - y_{\text{ref}}\|_W^2`
-* :math:`m` must be in linear least-squares form :math:`m = \frac{1}{2}\| V^e_x x(t) - y_{\text{ref}}^e\|_{W^e}^2`
-* Constraints cannot depend on algebraic variables (yet)
-```
-
+The Python interface relies on the same problem formulation as the MATLAB interface [see here](https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf).
 
 ### Installation
 1. Compile and install `acados` by running:
