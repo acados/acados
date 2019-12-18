@@ -117,16 +117,16 @@ CASADI_COST_R_E_SOURCE+= {{ ocp.model.name }}_r_e_cost.c
 casadi_fun:
 	( cd {{ ocp.model.name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE))
 	{% if ocp.dims.npd > 0 %}
-	( cd {{ ocp.model.name }}_p_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_P_SOURCE))
+	( cd {{ ocp.model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_P_SOURCE))
 	{% endif %}
 	{% if ocp.dims.npd_e > 0 %}
-	( cd {{ ocp.model.name }}_p_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_P_E_SOURCE))
+	( cd {{ ocp.model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_P_E_SOURCE))
 	{% endif %}
 	{% if ocp.dims.nh > 0 %}
-	( cd {{ ocp.model.name }}_h_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))
+	( cd {{ ocp.model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))
 	{% endif %}
 	{% if ocp.dims.nh_e > 0 %}
-	( cd {{ ocp.model.name }}_h_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_E_SOURCE))
+	( cd {{ ocp.model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_E_SOURCE))
 	{% endif %}
 	{% if ocp.cost.cost_type == "NONLINEAR_LS" %}
 	( cd {{ ocp.model.name }}_r_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_SOURCE))

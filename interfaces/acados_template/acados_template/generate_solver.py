@@ -193,13 +193,13 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     # constraints on convex over nonlinear fuction
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
         # constraints on outer fuction
-        template_dir = 'c_generated_code/{}_phi_constraint/'.format(name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'phi_constraint.in.h'
         out_file =  '{}_phi_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir)
 
         # constraints on inner fuction
-        template_dir = 'c_generated_code/{}_r_constraint/'.format(name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'r_constraint.in.h'
         out_file = '{}_r_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir)
@@ -207,27 +207,27 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     # terminal constraints on convex over nonlinear fuction
     if acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0:
         # terminal constraints on outer fuction
-        template_dir = 'c_generated_code/{}_phi_e_constraint/'.format(name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'phi_e_constraint.in.h'
         out_file =  '{}_phi_e_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir)
 
         # terminal constraints on inner function
-        template_dir = 'c_generated_code/{}_r_e_constraint/'.format(name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'r_e_constraint.in.h'
         out_file = '{}_r_e_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir)
 
     # nonlinear constraints
     if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0:
-        template_dir = 'c_generated_code/{}_h_constraint/'.format(acados_ocp.model.name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(acados_ocp.model.name)
         in_file = 'h_constraint.in.h'
         out_file = '{}_h_constraint.h'.format(acados_ocp.model.name)
         render_template(in_file, out_file, template_dir)
 
     # terminal nonlinear constraints
     if acados_ocp.constraints.constr_type_e == 'BGH' and acados_ocp.dims.nh_e > 0:
-        template_dir = 'c_generated_code/{}_h_e_constraint/'.format(acados_ocp.model.name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(acados_ocp.model.name)
         in_file = 'h_e_constraint.in.h'
         out_file = '{}_h_e_constraint.h'.format(acados_ocp.model.name)
         render_template(in_file, out_file, template_dir)
