@@ -99,6 +99,9 @@ fprintf(input_note)
 
 disp(' ')
 
-output_note = 'Outputs are:\n 1) u0 - optimal input, size [{{ dims.nu }}]\n 2) KKT residual\n 3) first state \n 4) CPU time\n';
+output_note = strcat('Outputs are:\n', ...
+                ' 1) u0 - optimal input, size [{{ dims.nu }}]\n',...
+                ' 2) acados solver status (0 = SUCCESS)\n',...
+                ' 3) KKT residual\n 4) first state \n 5) CPU time\n');
 
 fprintf(output_note)
