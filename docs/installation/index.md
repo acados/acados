@@ -2,13 +2,13 @@
 
 ## Linux/Mac
 
+### Prerequisites
+We assume you have: git, make, cmake installed on your system.
+
 ### Clone acados
+Clone acados and its submodules by running:
 ```
 git clone https://github.com/acados/acados.git
-```
-
-### Initialize submodules
-```
 git submodule update --recursive --init
 ```
 
@@ -85,3 +85,44 @@ tar -xf casadi-linux-octave-v3.4.0.tar.gz -C casadi-octave
 cd ..
 ```
 
+
+
+## Windows (for use with Matlab)
+
+### Prerequisites
+You should have the following software installed on your machine.
+- Recent Matlab version, with 
+- CMake for Windows
+- [Windows Git Client](https://git-scm.com/download/win)
+
+### Prepare acados build
+- Locate the `cmake.exe` file. The default location is `C:\Program Files\CMake311\bin`.
+- Add this path to your environment variable PATH, using the GUI.
+
+- Install mingw from MATLAB add-ons manager.
+- Locate this mingw installation. The default location is `C:\ProgramData\MATLAB\SupportPackages\R2018a\3P.instrset\mingw_w64.instrset`.
+- Add the subfolders `bin` and `x86_64-w64-mingw32\bin` of the above mentioned mingw installation to your environment variable PATH.
+
+### Clone acados
+Clone acados and its submodules by running the following from your Git shell:
+```
+git clone https://github.com/acados/acados.git
+git submodule update --recursive --init
+```
+
+### Build acados
+Run from your terminal:
+```
+mkdir -p build
+cd build
+cmake.exe -G "MinGW Makefiles" -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D ACADOS_INSTALL_DIR=../lib -DBUILD_SHARED_LIBS=OFF -DACADOS_EXAMPLES=OFF -DACADOS_UNIT_TESTS=OFF ..
+mingw32-make.exe -j4
+mingw32-make.exe install
+```
+
+### Try a Matlab example
+- Open Matlab
+- go to `<acados_root_folder>/examples/acados_matlab_octave`
+- run `acados_env_variables_windows`
+- go to the `getting_started` subfolder
+- run `minimal_example_ocp`
