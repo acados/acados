@@ -62,6 +62,9 @@ doxygen:
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
+upload:
+	rsync -aP -e ssh $(BUILDDIR)/* acados_website@syscop.de:~/website_public/
+
 clean:
 	@echo Clean Sphinx
 	@for file in *.rst; do rm "$(BUILDDIR)/$${file%.*}.html" 2> /dev/null || true; done
