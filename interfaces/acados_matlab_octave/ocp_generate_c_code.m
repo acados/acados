@@ -57,17 +57,6 @@ function ocp_generate_c_code(obj)
         % TODO: implement
     end
 
-    % TODO: implement nh > 0 , nh_e > 0
-%     if (strcmp(obj.model_struct.constr_type, 'bgh') && obj.model_struct.dim_nh > 0)
-%         error(['mex templating does not support general nonlinear constraints for now.',...
-%             'Got dim_nh: %d, must be 0.\nNotice that it might still',...
-%             'be possible to solve the OCP from MATLAB.\n'], obj.model_struct.dim_nh);
-%     end
-%     if (strcmp(obj.model_struct.constr_type_e, 'bgh') && obj.model_struct.dim_nh_e > 0)
-%         error(['mex templating does not support general nonlinear constraints for now.',...
-%             'Got dim_nh_e: %d, must be 0.\nNotice that it might still',...
-%             'be possible to solve the OCP from MATLAB.'], obj.model_struct.dim_nh_e);
-%     end
     if ~(strcmp(obj.opts_struct.param_scheme, 'multiple_shooting_unif_grid'))
         error(['mex templating does only support uniform discretizations for shooting nodes']);
     end
