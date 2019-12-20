@@ -32,7 +32,7 @@
 %
 
 
-example_dir = fileparts(which('acados_examples_env'));
+example_dir = fileparts(which('acados_env_variables_windows'));
 
 acados_dir = fullfile(example_dir, '..', '..');
 casadi_dir = fullfile(acados_dir, 'external', 'casadi-matlab');

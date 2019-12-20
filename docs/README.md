@@ -2,55 +2,33 @@
 
 Based on `sphinx` and markdown
 
-## Linux
 
-### Prerequisites
+## Prerequisites
+
+### Linux
 
 * Get and install doxygen and graphviz:
 ```
 sudo apt-get install doxygen graphviz
 ```
+
 ### Python virtual environment
 
 * Get python3.5 or later if not already present.
-
-<!-- ####  -->
-<!-- Get and install miniconda (follow the installation instructions, best to keep default path ~/miniconda3, and say yes to initialize miniconda in your bashrc): -->
-<!-- ``` -->
-<!-- wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -->
-<!-- sh Miniconda3-latest-Linux-x86_64.sh -->
-<!-- source ~/.bashrc # or restart your terminal -->
-<!-- ``` -->
-
-<!-- Create an environment for python and activate the environment -->
-<!-- ``` -->
-<!-- conda create -n acados_doc python=3.7 -->
-<!-- conda activate acados_doc -->
-<!-- ``` -->
-<!-- conda install sphinx=1.8 # or pip install sphinx -->
-
-<!-- Create a python virtualenv and install `sphinx` and `recommonmark` -->
-
-<!-- ``` -->
-<!-- pip install -r requirements.txt -->
-<!-- ``` -->
-
 * Optionally create and activate a python virtual environment
-
 ```
-python3 -m venv /path/to/new/virtual/environment
-source /path/to/new/virtual/environment/bin/activate
+python3 -m venv <path_to_virtual_env> # you can use path_to_virtual_env = "env"
+source <path_to_virtual_env>/bin/activate
 ```
 
 * Install requirements:
 ```
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
 
-### Building the webpage
+## Build the webpage
 
-After doing your modification to the webpage, you can build the webpage
-in the folder with the following command:
+To build the website run the following command:
 
 ```
 # For Linux, MacOS
@@ -62,4 +40,19 @@ make
 # For Windows
 cd docs
 make.bat
+```
+
+## Check the generated page
+To check the generated html run:
+```
+# For Linux, MacOS
+firefox _build/index.html
+```
+
+
+## Upload the generated files to the server
+To upload the webpage you built to syscop.de, run:
+```
+# For Linux, MacOS -- your ssh key must be authorized on the server.
+make upload
 ```

@@ -59,12 +59,12 @@ SOURCES = [ 'acados_solver_sfunction_{{ model.name }}.c ', ...
 
 INC_PATH = '{{ acados_include_path }}';
 
-INCS = [ ' -I', INC_PATH, '/blasfeo/include/ ', ...
-         '-I', INC_PATH, '/hpipm/include/ ', ...
-         '-I', INC_PATH, ' -I', INC_PATH, '/acados/ ',];
+INCS = [ ' -I', fullfile(INC_PATH, 'blasfeo', 'include'), ...
+         ' -I', fullfile(INC_PATH, 'hpipm', 'include'), ...
+        ' -I', INC_PATH, ' -I', fullfile(INC_PATH, 'acados'), ' '];
 
 {% if  solver_options.qp_solver == "QPOASES" %}
-    INCS = strcat(INCS, '-I', INC_PATH, '/qpOASES_e/')
+    INCS = strcat(INCS, '-I', fullfile(INC_PATH, 'qpOASES_e') )
 {% endif %}
 
 CFLAGS  = ' -O';
@@ -75,7 +75,7 @@ CFLAGS = [ CFLAGS, ' -DACADOS_WITH_QPOASES ' ];
 
 LIB_PATH = '{{ acados_lib_path }}';
 
-LIBS = '-lacados -lhpipm -lblasfeo -lm'; 
+LIBS = '-lacados -lhpipm -lblasfeo';
 
 {% if  solver_options.qp_solver == "QPOASES" %}
 LIBS = strcat(LIBS, ' -lqpOASES_e'); 
@@ -99,6 +99,9 @@ fprintf(input_note)
 
 disp(' ')
 
-output_note = 'Outputs are:\n 1) u0 - optimal input, size [{{ dims.nu }}]\n 2) KKT residual\n 3) first state \n 4) CPU time\n';
+output_note = strcat('Outputs are:\n', ...
+                ' 1) u0 - optimal input, size [{{ dims.nu }}]\n',...
+                ' 2) acados solver status (0 = SUCCESS)\n',...
+                ' 3) KKT residual\n 4) first state \n 5) CPU time\n');
 
 fprintf(output_note)

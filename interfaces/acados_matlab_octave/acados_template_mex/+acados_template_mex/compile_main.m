@@ -48,10 +48,10 @@ function compile_main()
             error('building templated code as shared library failed.\nGot status %d, result: %s',...
                   status, result);
         end
+        fprintf('Successfully built main file!\n');
     else
         disp(['Commandline compilation of generated C code not yet supported under Windows.', ...
             'Please consider building the code in the c_generated_code folder from Windows Subsystem for Linux.'])
     end
     cd ..
-    fprintf('Successfully built main file!\n');
 end
