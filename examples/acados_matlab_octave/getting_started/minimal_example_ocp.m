@@ -34,7 +34,7 @@
 %% test of native matlab interface
 clear all
 
-model_path = fullfile(pwd,'..','pendulum_on_cart_model')
+model_path = fullfile(pwd,'..','pendulum_on_cart_model');
 addpath(model_path)
 
 check_acados_requirements()

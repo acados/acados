@@ -230,15 +230,20 @@ end % itest
 
 fprintf('\ntest_ocp_linear_dae: success!\n');
 
+% create templated mex solver object: t_ocp
 ocp.generate_c_code;
 cd c_generated_code/
 command = strcat('t_ocp = ', name, '_mex_solver');
 eval( command );
+
 t_ocp.solve();
 t_ocp.print;
 t_x = t_ocp.get('x');
 t_u = t_ocp.get('u');
 t_z = t_ocp.get('z');
+
+% test setting parameters
+t_ocp.set('p',[]);
 
 %
 err_x = max(max(abs(x_traj - t_x)))
@@ -249,4 +254,5 @@ if any([err_x, err_u, err_z] > 1e-9)
     error(['test_ocp_templated_mex: solution of templated MEX and original MEX',...
          ' differ too much. Should be < 1e-9 ']);
 end
+
 clear all
