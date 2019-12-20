@@ -510,6 +510,7 @@ if (strcmp(opts_struct.compile_interface, 'true') || strcmp(opts_struct.codgen_m
                 acados_include, acados_interfaces_include, external_include, blasfeo_include,...
                 hpipm_include, acados_lib_path, acados_matlab_octave_lib_path, model_lib_path,...
                 '-lacados', '-lhpipm', '-lblasfeo', ['-l', model_name], mex_files{1});
+            disable_last_warning();
         end
         
 %        clear(mex_names{ii})
@@ -533,13 +534,6 @@ for ii=1:length(mex_names)
 %    fprintf(fileID, [mex_names{ii}, '(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);\n']);
 end
 %fclose(fileID);
-%disp('done');
 
-% call mex files
-%ocp_set_ext_fun_tmp(C_ocp, C_ocp_ext_fun, model_struct, opts_struct);
-
-%C_ocp_ext_fun
-
-return;
 
 end
