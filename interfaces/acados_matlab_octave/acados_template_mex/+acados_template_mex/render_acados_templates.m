@@ -45,7 +45,7 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     end
 
     if ~exist( t_renderer_location, 'file' )
-        set_up_t_renderer()
+        set_up_t_renderer( t_renderer_location )
     end
 
     %% load json data
@@ -201,7 +201,7 @@ function render_file( json_fullfile, template_dir, template_file, out_file, ...
 end
 
 
-function set_up_t_renderer()
+function set_up_t_renderer( t_renderer_location )
     message = ['\nDear acados user, we could not find t_renderer binaries,',...
         '\n which are needed to export templated C code from ',...
         'Matlab.\n Press any key to proceed setting up the t_renderer automatically.',...
@@ -221,6 +221,7 @@ function set_up_t_renderer()
         elseif ispc()
             suffix = '-windows.exe';
         end
+        acados_root_dir = getenv('ACADOS_INSTALL_DIR');
 
         tera_url = ['https://github.com/acados/tera_renderer/releases/download/', ...
                 t_renderer_version '/t_renderer-', t_renderer_version, suffix];
