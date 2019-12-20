@@ -50,9 +50,9 @@ Depending on the environment you want to use to generate CasADi functions from, 
 
 ```
 cd external
-wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-py35-v3.4.0-64bit.tar.gz
-mkdir -p casadi-py35-v3.4.0-64bit
-tar -xf casadi-linux-py35-v3.4.0-64bit.tar.gz -C casadi-py35-v3.4.0-64bit
+wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.5.1/casadi-linux-py35-v3.5.1-64bit.tar.gz
+mkdir -p casadi-py35-v3.5.1-64bit
+tar -xf casadi-linux-py35-v3.5.1-64bit.tar.gz -C casadi-py35-v3.5.1-64bit
 cd ..
 ```
 
