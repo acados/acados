@@ -17,7 +17,8 @@ Documentation latest build: |today|
    :maxdepth: 2
    :caption: User Documentation
 
-   get_started/index
+   about_acados/index
+   problem_formulation/index
    installation/index
    interfaces/index
    c_api/index
