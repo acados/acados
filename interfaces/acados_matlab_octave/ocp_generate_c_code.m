@@ -84,35 +84,33 @@ function ocp_generate_c_code(obj)
     obj.acados_ocp_nlp_json.acados_include_path = [acados_folder, '/include'];
     obj.acados_ocp_nlp_json.acados_lib_path = [acados_folder, '/lib'];
 
-    %% remove non-numerical data
+    %% remove CasADi objects from model
     model.name = obj.acados_ocp_nlp_json.model.name;
     obj.acados_ocp_nlp_json.model = model;
 
     %% post process numerical data (mostly cast scalars to 1-dimensional cells)
     constr = obj.acados_ocp_nlp_json.constraints;
-    % props = properties(constr);
     props = fieldnames(constr);
     for iprop = 1:length(props)
-        thisprop = props{iprop};
+        this_prop = props{iprop};
         % add logic here if you want to work with select properties
-        thisprop_value = constr.(thisprop);
+        this_prop_value = constr.(this_prop);
         % add logic here if you want to do something based on the property's value
-        if size(thisprop_value) == [1 1]
-            constr.(thisprop) = num2cell(constr.(thisprop));
+        if all(size(this_prop_value) == [1 1])
+            constr.(this_prop) = num2cell(constr.(this_prop));
         end
     end
     obj.acados_ocp_nlp_json.constraints = constr;
 
     cost = obj.acados_ocp_nlp_json.cost;
-    % props = properties(cost);
     props = fieldnames(cost);
     for iprop = 1:length(props)
-        thisprop = props{iprop};
-        %%%Add logic here if you want to work with select properties
-        thisprop_value = cost.(thisprop);
-        %%%Add logic here if you want to do something based on the property's value
-        if norm(size(thisprop_value) - [1, 1]) == 0
-            cost.(thisprop) = num2cell(cost.(thisprop));
+        this_prop = props{iprop};
+        % add logic here if you want to work with select properties
+        this_prop_value = cost.(this_prop);
+        % add logic here if you want to do something based on the property's value
+        if all(size(this_prop_value) == [1, 1])
+            cost.(this_prop) = num2cell(cost.(this_prop));
         end
     end
     obj.acados_ocp_nlp_json.cost = cost;
@@ -131,14 +129,15 @@ function ocp_generate_c_code(obj)
     %% reshape constraints
     dims = obj.acados_ocp_nlp_json.dims;
     constr = obj.acados_ocp_nlp_json.constraints;
-    constr_l = acados_layout.constraints;
-    fields = fieldnames(constr_l);
+    constr_layout = acados_layout.constraints;
+    fields = fieldnames(constr_layout);
     for i = 1:numel(fields)
-        if strcmp(constr_l.(fields{i}){1}, 'ndarray')
-            if length(constr_l.(fields{i}){2}) == 1
-                this_dims = [1, dims.(constr_l.(fields{i}){2}{1})];
-            else
-                this_dims = [dims.(constr_l.(fields{i}){2}{1}), dims.(constr_l.(fields{i}){2}{1})];
+        if strcmp(constr_layout.(fields{i}){1}, 'ndarray')
+            property_dim_names = constr_layout.(fields{i}){2};
+            if length(property_dim_names) == 1 % vector
+                this_dims = [1, dims.(property_dim_names{1})];
+            else % matrix
+                this_dims = [dims.(property_dim_names{1}), dims.(property_dim_names{2})];
             end
             try
                 constr.(fields{i}) = reshape(constr.(fields{i}), this_dims);
@@ -154,14 +153,15 @@ function ocp_generate_c_code(obj)
 
     %% reshape cost
     cost = obj.acados_ocp_nlp_json.cost;
-    cost_l = acados_layout.cost;
-    fields = fieldnames(cost_l);
+    cost_layout = acados_layout.cost;
+    fields = fieldnames(cost_layout);
     for i = 1:numel(fields)
-        if strcmp(cost_l.(fields{i}){1}, 'ndarray')
-            if length(cost_l.(fields{i}){2}) == 1
-                this_dims = [1, dims.(cost_l.(fields{i}){2}{1})];
-            else
-                this_dims = [dims.(cost_l.(fields{i}){2}{1}), dims.(cost_l.(fields{i}){2}{2})];
+        if strcmp(cost_layout.(fields{i}){1}, 'ndarray')
+            property_dim_names = cost_layout.(fields{i}){2};
+            if length(property_dim_names) == 1 % vector
+                this_dims = [1, dims.(property_dim_names{1})];
+            else % matrix
+                this_dims = [dims.(property_dim_names{1}), dims.(property_dim_names{2})];
             end
             try
                 cost.(fields{i}) = reshape(cost.(fields{i}), this_dims);
@@ -170,14 +170,6 @@ function ocp_generate_c_code(obj)
                         ' to dimension ' num2str(this_dims), ', got ',...
                         num2str( size(cost.(fields{i}) )) , ' .\n ',...
                         e.message ]);
-            end
-            % convert 1-dimensional arrays to cells
-            if length(cost_l.(fields{i}){2}) == 2 && (this_dims(1) == 1 || this_dims(2) == 1)
-                field_as_cell = {};
-                for j = 1:max(this_dims(1), this_dims(2))
-                    field_as_cell{end+1} = num2cell(cost.(fields{i})(j));
-                end
-                cost.(fields{i}) = field_as_cell;
             end
         end
     end
