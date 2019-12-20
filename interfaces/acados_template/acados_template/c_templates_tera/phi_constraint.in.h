@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef {{ con_phi.name }}_PHI_CONSTRAINT
-#define {{ con_phi.name }}_PHI_CONSTRAINT
+#ifndef {{ model.name }}_PHI_CONSTRAINT
+#define {{ model.name }}_PHI_CONSTRAINT
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,16 +40,16 @@ extern "C" {
 
 {% if dims.nphi > 0 %}
 // implicit ODE
-int {{ con_phi.name }}_phi_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ con_phi.name }}_phi_constraint_work(int *, int *, int *, int *);
-const int *{{ con_phi.name }}_phi_constraint_sparsity_in(int);
-const int *{{ con_phi.name }}_phi_constraint_sparsity_out(int);
-int {{ con_phi.name }}_phi_constraint_n_in();
-int {{ con_phi.name }}_phi_constraint_n_out();
+int {{ model.name }}_phi_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_phi_constraint_work(int *, int *, int *, int *);
+const int *{{ model.name }}_phi_constraint_sparsity_in(int);
+const int *{{ model.name }}_phi_constraint_sparsity_out(int);
+int {{ model.name }}_phi_constraint_n_in();
+int {{ model.name }}_phi_constraint_n_out();
 {% endif %}
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // {{ con_phi.name }}_PHI_CONSTRAINT
+#endif  // {{ model.name }}_PHI_CONSTRAINT

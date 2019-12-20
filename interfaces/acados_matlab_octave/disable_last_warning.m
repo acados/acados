@@ -31,22 +31,11 @@
 % POSSIBILITY OF SUCH DAMAGE.;
 %
 
-classdef acados_constraint < handle
-    properties
-        expr
-        x
-        u
-        z
-        nc
-    end
-    methods
-        function obj = acados_constraint()
-            obj.expr = [];
-            obj.x = [];
-            obj.u = [];
-            obj.z = [];
-            obj.nc = [];
-        end
+function disable_last_warning()
+    % to print warning only once:
+    w = warning('query','last');
+    if ~isempty(w)
+        id = w.identifier;
+        warning('off',id);
     end
 end
-    

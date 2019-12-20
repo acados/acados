@@ -48,6 +48,7 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     tera_path = get_tera()
 
     model = acados_ocp.model
+    name = model.name
     if acados_ocp.solver_options.integrator_type == 'ERK':
         # explicit model -- generate C code
         generate_c_code_explicit_ode(model)
@@ -58,25 +59,24 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
 
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
         # nonlinear part of nonlinear constraints
-        generate_c_code_constraint(acados_ocp.con_phi)
+        generate_c_code_constraint(acados_ocp.con_phi, name)
     elif acados_ocp.constraints.constr_type  == 'BGH' and acados_ocp.dims.nh > 0:
-        generate_c_code_constraint(acados_ocp.con_h)
+        generate_c_code_constraint(acados_ocp.con_h, name)
 
     if acados_ocp.constraints.constr_type_e  == 'BGP' and acados_ocp.dims.nphi_e > 0:
         # nonlinear part of nonlinear constraints
-        generate_c_code_constraint_e(acados_ocp.con_phi_e)
+        generate_c_code_constraint_e(acados_ocp.con_phi_e, name)
     elif acados_ocp.constraints.constr_type_e  == 'BGH' and acados_ocp.dims.nh_e > 0:
-        generate_c_code_constraint_e(acados_ocp.con_h_e)
+        generate_c_code_constraint_e(acados_ocp.con_h_e, name)
 
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
-
         acados_ocp.cost.Vx = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nx))
         acados_ocp.cost.Vu = np.zeros((acados_ocp.dims.ny, acados_ocp.dims.nu))
-        generate_c_code_nls_cost(acados_ocp.cost_r)
+        generate_c_code_nls_cost(acados_ocp.cost_r, name)
 
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
         acados_ocp.cost.Vx_e = np.zeros((acados_ocp.dims.ny_e, acados_ocp.dims.nx))
-        generate_c_code_nls_cost_e(acados_ocp.cost_r_e)
+        generate_c_code_nls_cost_e(acados_ocp.cost_r_e, name)
 
     ocp_nlp = deepcopy(acados_ocp)
     ocp_nlp.cost = acados_ocp.cost.__dict__
@@ -193,57 +193,57 @@ def generate_solver(acados_ocp, json_file='acados_ocp_nlp.json'):
     # constraints on convex over nonlinear fuction
     if acados_ocp.constraints.constr_type == 'BGP' and acados_ocp.dims.nphi > 0:
         # constraints on outer fuction
-        template_dir = 'c_generated_code/{}_phi_constraint/'.format(acados_ocp.con_phi.name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'phi_constraint.in.h'
-        out_file =  '{}_phi_constraint.h'.format(acados_ocp.con_phi.name)
+        out_file =  '{}_phi_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir)
 
         # constraints on inner fuction
-        template_dir = 'c_generated_code/{}_r_constraint/'.format(acados_ocp.con_phi.name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'r_constraint.in.h'
-        out_file = '{}_r_constraint.h'.format(acados_ocp.con_phi.name)
+        out_file = '{}_r_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir)
 
     # terminal constraints on convex over nonlinear fuction
     if acados_ocp.constraints.constr_type_e == 'BGP' and acados_ocp.dims.nphi_e > 0:
         # terminal constraints on outer fuction
-        template_dir = 'c_generated_code/{}_phi_e_constraint/'.format(acados_ocp.con_phi_e.name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'phi_e_constraint.in.h'
-        out_file =  '{}_phi_e_constraint.h'.format(acados_ocp.con_phi_e.name)
+        out_file =  '{}_phi_e_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir)
 
         # terminal constraints on inner function
-        template_dir = 'c_generated_code/{}_r_e_constraint/'.format(acados_ocp.con_phi_e.name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(name)
         in_file = 'r_e_constraint.in.h'
-        out_file = '{}_r_e_constraint.h'.format(acados_ocp.con_phi_e.name)
+        out_file = '{}_r_e_constraint.h'.format(name)
         render_template(in_file, out_file, template_dir)
 
     # nonlinear constraints
     if acados_ocp.constraints.constr_type == 'BGH' and acados_ocp.dims.nh > 0:
-        template_dir = 'c_generated_code/{}_h_constraint/'.format(acados_ocp.con_h.name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(acados_ocp.model.name)
         in_file = 'h_constraint.in.h'
-        out_file = '{}_h_constraint.h'.format(acados_ocp.con_h.name)
+        out_file = '{}_h_constraint.h'.format(acados_ocp.model.name)
         render_template(in_file, out_file, template_dir)
 
     # terminal nonlinear constraints
     if acados_ocp.constraints.constr_type_e == 'BGH' and acados_ocp.dims.nh_e > 0:
-        template_dir = 'c_generated_code/{}_h_e_constraint/'.format(acados_ocp.con_h_e.name)
+        template_dir = 'c_generated_code/{}_constraints/'.format(acados_ocp.model.name)
         in_file = 'h_e_constraint.in.h'
-        out_file = '{}_h_e_constraint.h'.format(acados_ocp.con_h_e.name)
+        out_file = '{}_h_e_constraint.h'.format(acados_ocp.model.name)
         render_template(in_file, out_file, template_dir)
 
     # nonlinear cost function
     if acados_ocp.cost.cost_type == 'NONLINEAR_LS':
-        template_dir = 'c_generated_code/{}_r_cost/'.format(acados_ocp.cost_r.name)
+        template_dir = 'c_generated_code/{}_r_cost/'.format(name)
         in_file = 'r_cost.in.h'
-        out_file = '{}_r_cost.h'.format(acados_ocp.cost_r.name)
+        out_file = '{}_r_cost.h'.format(name)
         render_template(in_file, out_file, template_dir)
 
     # terminal nonlinear cost function
     if acados_ocp.cost.cost_type_e == 'NONLINEAR_LS':
-        template_dir = 'c_generated_code/{}_r_e_cost/'.format(acados_ocp.cost_r_e.name)
+        template_dir = 'c_generated_code/{}_r_e_cost/'.format(name)
         in_file = 'r_e_cost.in.h'
-        out_file = '{}_r_e_cost.h'.format(acados_ocp.cost_r_e.name)
+        out_file = '{}_r_e_cost.h'.format(name)
         render_template(in_file, out_file, template_dir)
 
     ## Compile solver

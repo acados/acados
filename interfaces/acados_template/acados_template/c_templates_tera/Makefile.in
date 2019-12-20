@@ -50,24 +50,24 @@ OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_fun_jac_x_xdot_z.o
 OBJ+= {{ model.name }}_model/{{ model.name }}_impl_dae_jac_x_xdot_u_z.o
 {% endif %}
 {% if constraints.constr_type == "BGP" and dims.nphi > 0 %}
-OBJ+= {{ con_phi.name }}_phi_constraint/{{ con_phi.name }}_phi_constraint.o
-# OBJ+= {{ con_phi.name }}_r_constraint/{{ con_phi.name }}_r_constraint.o
+OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_constraint.o
+# OBJ+= {{ model.name }}_constraints/{{ model.name }}_r_constraint.o
 {% endif %}
 {% if constraints.constr_type_e == "BGP"  and dims.nphi_e > 0 %}
-OBJ+= {{ con_phi_e.name }}_phi_e_constraint/{{ con_phi_e.name }}_phi_e_constraint.o
-# OBJ+= {{ con_phi_e.name }}_r_e_constraint/{{ con_phi_e.name }}_r_e_constraint.o
+OBJ+= {{ model.name }}_constraints/{{ model.name }}_phi_e_constraint.o
+# OBJ+= {{ model.name }}_constraints/{{ model.name }}_r_e_constraint.o
 {% endif %}
 {% if constraints.constr_type == "BGH"  and dims.nh > 0 %}
-OBJ+= {{ con_h.name }}_h_constraint/{{ con_h.name }}_h_constraint.o
+OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_fun_jac_uxt_zt.o
 {% endif %}
 {% if constraints.constr_type_e == "BGH"  and dims.nh_e > 0 %}
-OBJ+= {{ con_h_e.name }}_h_e_constraint/{{ con_h_e.name }}_h_e_constraint.o
+OBJ+= {{ model.name }}_constraints/{{ model.name }}_constr_h_e_fun_jac_uxt_zt.o
 {% endif %}
 {% if cost.cost_type == "NONLINEAR_LS" %}
-OBJ+= {{ cost_r.name }}_r_cost/{{ cost_r.name }}_r_cost.c 
+OBJ+= {{ model.name }}_r_cost/{{ model.name }}_r_cost.c 
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
-OBJ+= {{ cost_r_e.name }}_r_e_cost/{{ cost_r_e.name }}_r_e_cost.c 
+OBJ+= {{ model.name }}_r_e_cost/{{ model.name }}_r_e_cost.c 
 {% endif %}
 OBJ+= acados_solver_{{ model.name }}.o
 
@@ -93,52 +93,52 @@ CASADI_MODEL_SOURCE+=	{{ model.name }}_impl_dae_jac_x_xdot_u_z.c
 {% if constraints.constr_type == "BGP" %}
 CASADI_CON_PHI_SOURCE=
 # CASADI_CON_R_SOURCE=
-CASADI_CON_PHI_SOURCE+=  {{ con_phi.name }}_phi_constraint.c 
-# CASADI_CON_R_SOURCE+=  {{ con_phi.name }}_r_constraint.c 
+CASADI_CON_PHI_SOURCE+=  {{ model.name }}_phi_constraint.c
+# CASADI_CON_R_SOURCE+=  {{ model.name }}_r_constraint.c
 {% endif %}
 {% if constraints.constr_type_e == "BGP" %}
 CASADI_CON_PHI_E_SOURCE=
 CASADI_CON_R_E_SOURCE=
-CASADI_CON_PHI_E_SOURCE+=  {{ con_phi_e.name }}_phi_e_constraint.c 
-# CASADI_CON_R_E_SOURCE+=  {{ con_phi_e.name }}_r_e_constraint.c 
+CASADI_CON_PHI_E_SOURCE+=  {{ model.name }}_phi_e_constraint.c 
+# CASADI_CON_R_E_SOURCE+=  {{ model.name }}_r_e_constraint.c 
 {% endif %}
 {% if dims.nh > 0 %}
 CASADI_CON_H_SOURCE=
-CASADI_CON_H_SOURCE+= {{ con_h.name }}_h_constraint.c 
+CASADI_CON_H_SOURCE+= {{ model.name }}_constr_h_fun_jac_uxt_zt.c
 {% endif %}
 {% if dims.nh_e > 0 %}
-CASADI_CON_H_E_SOURCE+= {{ con_h_e.name }}_h_e_constraint.c 
+CASADI_CON_H_E_SOURCE+= {{ model.name }}_constr_h_e_fun_jac_uxt_zt.c
 {% endif %}
 CASADI_COST_R_SOURCE=
 CASADI_COST_R_E_SOURCE=
 {% if cost.cost_type == "NONLINEAR_LS" %}
-CASADI_COST_R_SOURCE+= {{ cost_r.name }}_r_cost.c 
+CASADI_COST_R_SOURCE+= {{ model.name }}_r_cost.c 
 {% endif %}
 {% if cost.cost_type_e == "NONLINEAR_LS" %}
-CASADI_COST_R_E_SOURCE+= {{ cost_r_e.name }}_r_e_cost.c 
+CASADI_COST_R_E_SOURCE+= {{ model.name }}_r_e_cost.c 
 {% endif %}
 
 casadi_fun:
 	( cd {{ model.name }}_model; gcc $(ACADOS_FLAGS) -c  $(CASADI_MODEL_SOURCE))
 	{% if constraints.constr_type == "BGP"  and dims.nphi > 0 %}
-	( cd {{ con_phi.name }}_phi_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_SOURCE))
-	# ( cd {{ con_phi.name }}_r_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_SOURCE))
+	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_SOURCE))
+	# ( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_SOURCE))
 	{% endif %}
 	{% if constraints.constr_type_e == "BGP"  and dims.nphi_e > 0 %}
-	( cd {{ con_phi_e.name }}_phi_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_E_SOURCE))
-	# ( cd {{ con_phi_e.name }}_r_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_E_SOURCE))
+	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_PHI_E_SOURCE))
+	# ( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_R_E_SOURCE))
 	{% endif %}
 	{% if constraints.constr_type == "BGH" and dims.nh > 0 %}
-	( cd {{ con_h.name }}_h_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))
+	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_SOURCE))
 	{% endif %}
 	{% if constraints.constr_type_e == "BGH" and dims.nh_e > 0 %}
-	( cd {{ con_h_e.name }}_h_e_constraint; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_E_SOURCE))
+	( cd {{ model.name }}_constraints; gcc $(ACADOS_FLAGS) -c  $(CASADI_CON_H_E_SOURCE))
 	{% endif %}
 	{% if cost.cost_type == "NONLINEAR_LS" %}
-	( cd {{ cost_r.name }}_r_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_SOURCE))
+	( cd {{ model.name }}_r_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_SOURCE))
 	{% endif %}
 	{% if cost.cost_type_e == "NONLINEAR_LS" %}
-	( cd {{ cost_r_e.name }}_r_e_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_E_SOURCE))
+	( cd {{ model.name }}_r_e_cost; gcc $(ACADOS_FLAGS) -c  $(CASADI_COST_R_E_SOURCE))
 	{% endif %}
 
 main:

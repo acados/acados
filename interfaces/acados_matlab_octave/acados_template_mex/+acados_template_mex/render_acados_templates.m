@@ -127,35 +127,38 @@ function render_acados_templates(acados_ocp_nlp_json_file)
     out_file = [model_name, '_model.h'];
     render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
 
-    chdir('..');
+    cd ..
+
+    % constraints
+    constr_dir = [model_name, '_constraints'];
+    if ~(exist(constr_dir, 'dir'))
+        mkdir(constr_dir);
+    end
+    chdir(constr_dir)
 
     if (acados_ocp.dims.npd > 0)
-        dir_name = [acados_ocp.con_p.name, '_p_constraint'];
-        if ~(exist(dir_name, 'dir'))
-            mkdir(dir_name);
-        end
-        chdir(dir_name);
-        % render source template
         template_file = 'p_constraint.in.h';
-        out_file = [acados_ocp.con_p.name, '_p_constraint.h'];
+        out_file = [model_name, '_p_constraint.h'];
         render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-        chdir('..');
     end
-
     if (acados_ocp.dims.nh > 0)
-        dir_name = [acados_ocp.con_h.name, '_h_constraint'];
-        if ~(exist(dir_name, 'dir'))
-            mkdir(dir_name);
-        end
-        chdir(dir_name)
         % render source template
         template_file = 'h_constraint.in.h';
-        out_file = [acados_ocp.con_h.name, '_h_constraint.h'];
+        out_file = [model_name, '_h_constraint.h'];
         render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
-
-        chdir('..');
     end
+    if (acados_ocp.dims.nh_e > 0)
+        % render source template
+        template_file = 'h_e_constraint.in.h';
+        out_file = [model_name, '_h_e_constraint.h'];
+        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    end
+    if (acados_ocp.dims.npd_e > 0)
+        template_file = 'p_e_constraint.in.h';
+        out_file = [model_name, '_p_e_constraint.h'];
+        render_file( json_fullfile, template_dir, template_file, out_file, t_renderer_location )
+    end
+    cd ..
 
     % Makefile
     template_file = 'Makefile.in';

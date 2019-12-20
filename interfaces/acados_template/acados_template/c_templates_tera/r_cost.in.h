@@ -32,24 +32,24 @@
  */
 
 
-#ifndef {{ cost_r.name }}_R_COST
-#define {{ cost_r.name }}_R_COST
+#ifndef {{ model.name }}_R_COST
+#define {{ model.name }}_R_COST
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 {% if cost.cost_type == "NONLINEAR_LS" %}
-int {{ cost_r.name }}_r_cost(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int {{ cost_r.name }}_r_cost_work(int *, int *, int *, int *);
-const int *{{ cost_r.name }}_r_cost_sparsity_in(int);
-const int *{{ cost_r.name }}_r_cost_sparsity_out(int);
-int {{ cost_r.name }}_r_cost_n_in();
-int {{ cost_r.name }}_r_cost_n_out();
+int {{ model.name }}_r_cost(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int {{ model.name }}_r_cost_work(int *, int *, int *, int *);
+const int *{{ model.name }}_r_cost_sparsity_in(int);
+const int *{{ model.name }}_r_cost_sparsity_out(int);
+int {{ model.name }}_r_cost_n_in();
+int {{ model.name }}_r_cost_n_out();
 {% endif %}
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // {{ cost_r.name }}_R_COST
+#endif  // {{ model.name }}_R_COST

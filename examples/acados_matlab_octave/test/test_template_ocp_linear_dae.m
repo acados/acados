@@ -66,7 +66,7 @@ for itest = 1:2
         constr_variant = 1; % 0: x bounds; 1: z bounds
     else
         ocp_sim_method = 'irk'; % irk, irk_gnsf
-        constr_variant = 0; % 0: x bounds; 1: z bounds
+        constr_variant = 1; % 0: x bounds; 1: z bounds
     end
     ocp_sim_method_num_stages = 6; % scalar or vector of size ocp_N;
     ocp_sim_method_num_steps = 4; % scalar or vector of size ocp_N;
@@ -230,22 +230,29 @@ end % itest
 
 fprintf('\ntest_ocp_linear_dae: success!\n');
 
+% create templated mex solver object: t_ocp
 ocp.generate_c_code;
 cd c_generated_code/
 command = strcat('t_ocp = ', name, '_mex_solver');
 eval( command );
+
 t_ocp.solve();
 t_ocp.print;
 t_x = t_ocp.get('x');
 t_u = t_ocp.get('u');
 t_z = t_ocp.get('z');
 
+% test setting parameters
+t_ocp.set('p',[]);
+
 %
 err_x = max(max(abs(x_traj - t_x)))
 err_u = max(max(abs(u_traj - t_u)))
 err_z = max(max(abs(z_traj - t_z)))
 
-if any([err_x, err_u, err_z] > 1e-11)
+if any([err_x, err_u, err_z] > 1e-9)
     error(['test_ocp_templated_mex: solution of templated MEX and original MEX',...
-         ' differ too much. Should be < 1e-11 ']);
+         ' differ too much. Should be < 1e-9 ']);
 end
+
+clear all

@@ -1155,7 +1155,8 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
 			ext_fun_type_out[2] = BLASFEO_DMAT_ARGS;
 			ext_fun_out[2] = &jac_z_tran_out;  // jac': nz * nh
 			
-            model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+            model->nl_constr_h_fun_jac->evaluate(model->nl_constr_h_fun_jac, ext_fun_type_in,
+                                                    ext_fun_in, ext_fun_type_out, ext_fun_out);
 
 			// expand h:
 			// h(x, u, z) ~
@@ -1169,10 +1170,12 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
 			// (dhdu + dhdz*dzdu)*(u - \bar{u})  
 			
 			// update DCt
-			blasfeo_dgemm_nn(nu+nx, nh, nz, 1.0, memory->dzduxt, 0, 0, &work->tmp_nz_nh, 0, 0, 0.0, &work->tmp_nv_nh, 0, 0, &work->tmp_nv_nh, 0, 0);
+			blasfeo_dgemm_nn(nu+nx, nh, nz, 1.0, memory->dzduxt, 0, 0, &work->tmp_nz_nh, 0, 0, 0.0,
+                             &work->tmp_nv_nh, 0, 0, &work->tmp_nv_nh, 0, 0);
 		    blasfeo_dgead(nu+nx, nh, 1.0, &work->tmp_nv_nh, 0, 0, memory->DCt, ng, 0);	
 			// update memory->fun	
-			blasfeo_dgemv_t(nu+nx, nh, -1.0, &work->tmp_nv_nh, 0, 0, memory->ux, 0, 1.0, &memory->fun, 0, &memory->fun, 0);
+			blasfeo_dgemv_t(nu+nx, nh, -1.0, &work->tmp_nv_nh, 0, 0, memory->ux, 0, 1.0,
+                            &memory->fun, 0, &memory->fun, 0);
         }
     }
 
@@ -1203,7 +1206,8 @@ void ocp_nlp_constraints_bgh_update_qp_matrices(void *config_, void *dims_, void
 
 
 
-void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
+void ocp_nlp_constraints_bgh_compute_fun(void *config_, void *dims_, void *model_,
+                                            void *opts_, void *memory_, void *work_)
 {
     ocp_nlp_constraints_bgh_dims *dims = dims_;
     ocp_nlp_constraints_bgh_model *model = model_;
