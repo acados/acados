@@ -2,7 +2,7 @@
 
 ![](https://secure.travis-ci.org/acados/acados.png?branch=master)
 ![](https://ci.appveyor.com/api/projects/status/q0b2nohk476u5clg?svg=true)
-![](https://codecov.io/gh/acados/acados/branch/master/graph/badge.svg)
+<!-- ![](https://codecov.io/gh/acados/acados/branch/master/graph/badge.svg) -->
 
 Fast and embedded solvers for nonlinear optimal control.
 
@@ -29,7 +29,7 @@ Documentation latest build: |today|
 
 
 <!-- # Contents -->
-<!-- * [Getting started](get_started/index.md) -->
+<!-- * [About acados](get_started/index.md) -->
 <!-- * [Interfaces](interfaces/index.md) -->
 <!-- * [Examples](examples/index.md) -->
 <!-- * [Installation](installation/index.md) -->

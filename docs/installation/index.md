@@ -41,6 +41,7 @@ make run_examples_c
 ### Interfaces installation
 For the installation of Python/MATLAB/Octave interfaces, please refer to the [Interfaces](../interfaces/index.md) page.
 
+
 ### Download CasADi:
 To create external function for your problem, we suggest to use CasADi from the folder `<acados_root_folder>/external`.
 Depending on the environment you want to use to generate CasADi functions from, proceed with the corresponding paragraph (Python, MATLAB, Octave):
@@ -76,7 +77,6 @@ tar -xf casadi-linux-octave-4.4.1-v3.4.5.tar.gz -C casadi-octave
 
 #### **Octave version 4.2 or earliear**
 Put CasADi binaries into `<acados_root_folder>/external/casadi-octave` :
-
 ```
 cd external
 wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.4.0/casadi-linux-octave-v3.4.0.tar.gz
@@ -111,17 +111,18 @@ git submodule update --recursive --init
 ```
 
 ### Build acados
-Run from your terminal:
+Run the following from your terminal in the `<acados_root_folder>`:
 ```
 mkdir -p build
 cd build
-cmake.exe -G "MinGW Makefiles" -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D ACADOS_INSTALL_DIR=../lib -DBUILD_SHARED_LIBS=OFF -DACADOS_EXAMPLES=OFF -DACADOS_UNIT_TESTS=OFF ..
+cmake.exe -G "MinGW Makefiles" -D BLASFEO_TARGET=GENERIC -D HPIPM_TARGET=GENERIC -D ACADOS_INSTALL_DIR=.. -DBUILD_SHARED_LIBS=OFF -DACADOS_EXAMPLES=OFF -DACADOS_UNIT_TESTS=OFF ..
 mingw32-make.exe -j4
 mingw32-make.exe install
 ```
 
 ### Try a Matlab example
 - Open Matlab
+- selet MinGW compiler using `mbuild`/ `mex`
 - go to `<acados_root_folder>/examples/acados_matlab_octave`
 - run `acados_env_variables_windows`
 - go to the `getting_started` subfolder
