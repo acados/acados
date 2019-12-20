@@ -76,18 +76,9 @@ Please choose one and proceed with the corresponding paragraph.
 
 
 ### `Python` interface
-- The interface is based on templated `C` code, header files and Makefiles, that is rendered with the templating engine `Tera`.
-- The generated C code can be easily deployed on embedded platforms.
+- The interface is based on templated `C` code, header files and a Makefile, which are rendered with the templating engine [`Tera`](https://docs.rs/tera/0.10.0/tera/struct.Tera.html).
+- The generated `C` code can be easily deployed on embedded platforms.
 - The same problem formulation as for the MATLAB interface is used (see [here](https://github.com/acados/acados/blob/master/docs/problem_formulation/problem_formulation_ocp_mex.pdf)).
 - The `ctypes` package is used to interact with the rendered Code.
-- CasADi is required, which can be set up as follows:
-
-    ```
-    cd external
-    wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.5.1/casadi-linux-py35-v3.5.1-64bit.tar.gz
-    mkdir -p casadi-py35-v3.5.1-64bit
-    tar -xf casadi-linux-py35-v3.5.1-64bit.tar.gz -C casadi-py35-v3.5.1-64bit
-    cd ..
-    ```
- - More documentation can be found on [docs.acados.org/interfaces/](https://docs.acados.org/interfaces/)
-
+- `CasADi` is required and is downloaded automatically, [when installing the Python interface using `pip`](https://docs.acados.org/interfaces/index.html#python-templates)
+- More documentation can be found on [docs.acados.org/interfaces/](https://docs.acados.org/interfaces/)

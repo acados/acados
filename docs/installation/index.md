@@ -44,17 +44,8 @@ For the installation of Python/MATLAB/Octave interfaces, please refer to the [In
 
 ### Download CasADi:
 To create external function for your problem, we suggest to use CasADi from the folder `<acados_root_folder>/external`.
-Depending on the environment you want to use to generate CasADi functions from, proceed with the corresponding paragraph (Python, MATLAB, Octave):
-
-#### **Python**
-
-```
-cd external
-wget -q -nc --show-progress https://github.com/casadi/casadi/releases/download/3.5.1/casadi-linux-py35-v3.5.1-64bit.tar.gz
-mkdir -p casadi-py35-v3.5.1-64bit
-tar -xf casadi-linux-py35-v3.5.1-64bit.tar.gz -C casadi-py35-v3.5.1-64bit
-cd ..
-```
+Depending on the environment you want to use to generate CasADi functions from, proceed with the corresponding paragraph (MATLAB, Octave).
+For Python, CasADi is automatically downloaded when installing the interface using `pip`.
 
 #### **Matlab**
 Put CasADi binaries into `<acados_root_folder>/external/casadi-matlab` :
