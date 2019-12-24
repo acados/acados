@@ -1773,8 +1773,13 @@ class acados_ocp_nlp:
         self.cost_r = acados_cost()
         self.cost_r_e = acados_cost()
 
-        self.acados_include_path = []
-        self.acados_lib_path = []
+        acados_source_path = os.environ.get('ACADOS_SOURCE_DIR', None)
+        if acados_source_path:
+            self.acados_include_path = acados_source_path + '/include'
+            self.acados_lib_path = acados_source_path + '/lib'
+        else:
+            self.acados_include_path = []
+            self.acados_lib_path = []
 
     def set(self, attr, value):
         # tokenize string
