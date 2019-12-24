@@ -237,10 +237,6 @@ ocp.solver_options.integrator_type = 'ERK'
 ocp.solver_options.tf = Tf
 ocp.solver_options.nlp_solver_type = 'SQP'
 
-# set header path
-ocp.acados_include_path  = '../../../../include'
-ocp.acados_lib_path      = '../../../../lib'
-
 if FORMULATION == 1:
     ocp.con_h = con_h
     acados_solver = generate_solver(ocp, json_file = 'acados_ocp.json')

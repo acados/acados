@@ -182,10 +182,6 @@ def acados_settings(Tf,N,track_file):
     # ocp.solver_options.qp_solver_tol_ineq = 1e-2
     # ocp.solver_options.qp_solver_tol_comp = 1e-2
 
-    # set header path
-    ocp.acados_include_path  = '~/acados/include'
-    ocp.acados_lib_path      = '~/acados/lib'
-
     # create solver
     acados_solver = generate_solver(ocp, json_file='acados_ocp.json')
 

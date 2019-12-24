@@ -411,10 +411,6 @@ ra.solver_options.tf = Tf
 ra.solver_options.nlp_solver_type = 'SQP_RTI'
 # ra.solver_options.nlp_solver_type = 'SQP'
 
-# set header path
-ra.acados_include_path = '../../../../include'
-ra.acados_lib_path = '../../../../lib'
-
 file_name = 'acados_ocp.json'
 
 if CODE_GEN == 1:
